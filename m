@@ -1,74 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:54787 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754321AbYIOUUN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 16:20:13 -0400
-Subject: Re: [RFC][PATCH] TX status reporting with help of an ack queue
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1221507988.3700.84.camel@johannes.berg>
-References: <1221494693.14102.22.camel@virkkmi-linux>
-	 <200809151911.32834.IvDoorn@gmail.com> <1221501417.4511.49.camel@localhost>
-	 (sfid-20080915_195731_733752_74D2117C)  <1221501786.3700.68.camel@johannes.berg>
-	 <1221505251.4511.77.camel@localhost>
-	 (sfid-20080915_210128_632488_FB448E33)  <1221506496.3700.81.camel@johannes.berg>
-	 <1221507551.4511.89.camel@localhost>
-	 (sfid-20080915_213946_840165_74EE062B)  <1221507988.3700.84.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 15 Sep 2008 22:20:09 +0200
-Message-Id: <1221510009.4511.99.camel@localhost> (sfid-20080915_222018_454070_D5F512EA)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43781 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752013AbYIKUlX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 16:41:23 -0400
+Date: Thu, 11 Sep 2008 16:32:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2008-09-11
+Message-ID: <20080911203205.GK3423@tuxdriver.com> (sfid-20080911_224129_742399_514C5EC6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-15 at 21:46 +0200, Johannes Berg wrote:
-> On Mon, 2008-09-15 at 21:39 +0200, Mattias Nissler wrote:
-> 
-> > > Yes, but we could also make the ack queue processing part of mac80211,
-> > > i.e. we stick the packet on the queue before ->tx() and add a few new
-> > > flags to the status callback which can then process the queue.
-> > 
-> > Just to get this straight: By queue you mean the to-be-introduced
-> > unknown status queue?
-> 
-> Yes.
-> 
-> > Of course you can do it that way, but then you'll have all the flags and
-> > data structures built into mac80211 unconditionally instead of letting
-> > the driver developer decide.
-> 
-> Oh, I'm fine with building them in there as long as the code paths
-> aren't actually used for drivers that don't need them. This isn't a big
-> thing.
+Dave,
 
-Well, I'm a big fan of modularizing everything in a clean way. This
-whole mac80211 thingy is complex enough... But I don't really care as
-long as everybody here is happy with it. Let's wait what Mikko says,
-it's his code so far.
+The latest round of patches intended for 2.6.28.  Johannes has returned,
+so there is of course a ton of mac80211 stuff (mostly cleanups, etc).  :-)
 
-> 
-> > > > Good point :-) So I suggest we have one function that adds new packets
-> > > > to the ACK queue (which is represented by a struct an instance of which
-> > > > a driver can keep in its queue information) and another one that matches
-> > > > a received ACK with the queue, reports the status to mac80211 and purges
-> > > > the queue entries up to the match (reporting them as failed).
-> > > 
-> > > can we stop talking about "ACK queue"? It really is a "unknown status
-> > > queue" or something like that.
-> > 
-> > Ok, I don't really care how it's called as long as the one writing that
-> > stuff chooses an appropriate name in the code :-)
-> 
-> :)
-> But ACK is getting confusing, we're just reporting status based on
-> reception (or non-reception!) of ACKs :) How about retries in the hw?
+Please let me know if there are problems!
 
-Retries in the hw? I don't understand? You mean that as a name?
+Thanks,
 
-Mattias
+John
+---
 
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
+
+---
+
+The following changes since commit 1e493d1946a0b26b79001c18d7312d536156ff5a:
+  David S. Miller (1):
+        ipv6: On interface down/unregister, purge icmp routes too.
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+
+Abhijeet Kolekar (1):
+      iwl3945 : Code cleanup
+
+Anna Neal (1):
+      libertas: Improvements on automatic tx power control via SIOCSIWTXPOW.
+
+Christian Lamparter (5):
+      p54: 32-bit tsf timestamps
+      p54: add more rx filters
+      p54: add lots of useful rx/tx statistics
+      p54: control output power levels
+      p54: 802.11a 5GHz phy support
+
+Dan Williams (1):
+      libertas: clear current command on card removal
+
+Ehud Gavron (1):
+      b43legacy: Fix to enhance TX speed
+
+Emmanuel Grumbach (1):
+      iwlwifi: remove uneeded declarations
+
+Grumbach, Emmanuel (1):
+      iwlwifi: use the results from disconnected antenna algorithm
+
+Guy Cohen (2):
+      iwlwifi: fix searching for best rate in new search column
+      iwlwifi: Added support for 3 antennas
+
+Ivo van Doorn (3):
+      rt2x00: Revert "rt2x00: Fix the beacon length bug"
+      rt2x00: Make RFKILL enabled by default
+      rt2x00: Make rt2x00 LEDS invisible config option
+
+Johannes Berg (25):
+      mac80211: move some RCU locking into an if branch
+      mac80211: make conf_tx non-atomic
+      mac80211: BSS info: check channel first
+      mac80211: fix action frame length checks
+      mac80211: fix typo in action frame handling
+      mac80211: move IE parsing to util file
+      mac80211: reorder mlme code
+      mac80211: use sdata pointer for scan interface
+      mac80211: remove useless non-NULL tests from scan results code
+      mac80211: start moving scan code from mlme
+      mac80211: refactor and move scan RX code
+      mac80211: move BSS handling to scan code
+      mac80211: move some HT code out of mlme.c
+      mac80211: move some HT code out of main.c
+      mac80211: clarify scan request
+      mac80211: simplify scan start
+      mac80211: remove useless 'ibss' parameter
+      mac80211: reorder frame code in mlme
+      mac80211: consolidate deauth/disassoc
+      mac80211: split ieee80211_sta_def_wmm_params
+      mac80211: initialise queue QoS parameters at hw start
+      mac80211: make BA session handling independent of STA mode
+      mac80211: move spectrum management code out
+      mac80211: make ieee80211_rx_h_mgmt more readable
+      mac80211: move frame TX function
+
+Jouni Malinen (1):
+      mac80211: Reorder debugfs calls during netdev deinit
+
+Larry Finger (1):
+      b43legacy: Fix failure in rate-adjustment mechanism
+
+Michael Buesch (3):
+      b43: Fix QoS defaults
+      b43 G-PHY: Remove mmiowb()
+      b43: Remove QoS update workqueue
+
+Ron Rindjunsky (1):
+      iwlwifi: rename ps_mode to sm_ps
+
+Tomas Winkler (5):
+      mac80211: change MIMO_PS to SM_PS
+      mac80211: restructure disassoc/deauth flows
+      mac80211: disassociate when moving to new BSS
+      mac80211: remove disassociation code from ieee80211_set_associated
+      mac80211: stop queues before carrier off
+
+Zhu Yi (1):
+      iwlwifi: fix compile warning
+
+ drivers/net/wireless/ath9k/main.c          |    2 +-
+ drivers/net/wireless/b43/b43.h             |    7 +-
+ drivers/net/wireless/b43/main.c            |  119 +-
+ drivers/net/wireless/b43/phy_g.c           |    1 -
+ drivers/net/wireless/b43legacy/phy.c       |   32 +-
+ drivers/net/wireless/b43legacy/xmit.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c    |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |  163 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h  |   29 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-calib.c   |   15 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c    |   66 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h    |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h     |   62 +-
+ drivers/net/wireless/iwlwifi/iwl-power.c   |   34 +-
+ drivers/net/wireless/iwlwifi/iwl-power.h   |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c    |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c      |    9 +-
+ drivers/net/wireless/libertas/cmd.c        |   64 +
+ drivers/net/wireless/libertas/cmd.h        |    6 +
+ drivers/net/wireless/libertas/defs.h       |    9 +
+ drivers/net/wireless/libertas/host.h       |    1 +
+ drivers/net/wireless/libertas/hostcmd.h    |   24 +-
+ drivers/net/wireless/libertas/main.c       |   20 +-
+ drivers/net/wireless/libertas/wext.c       |   31 +-
+ drivers/net/wireless/p54/p54.h             |    9 +
+ drivers/net/wireless/p54/p54common.c       |  256 ++-
+ drivers/net/wireless/p54/p54common.h       |   23 +-
+ drivers/net/wireless/rt2x00/Kconfig        |   75 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c    |   16 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c    |   16 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c    |   20 +-
+ drivers/net/wireless/rt2x00/rt2x00rfkill.c |   50 +-
+ drivers/net/wireless/rt2x00/rt61pci.c      |   20 +-
+ drivers/net/wireless/rt2x00/rt73usb.c      |   20 +-
+ include/linux/ieee80211.h                  |   30 +-
+ include/net/mac80211.h                     |    2 +-
+ net/mac80211/Makefile                      |    3 +
+ net/mac80211/ht.c                          |  992 +++++++++
+ net/mac80211/ieee80211_i.h                 |   79 +-
+ net/mac80211/iface.c                       |    4 +-
+ net/mac80211/main.c                        |  388 +----
+ net/mac80211/mesh_hwmp.c                   |    8 +-
+ net/mac80211/mesh_plink.c                  |    6 +-
+ net/mac80211/mlme.c                        | 3121 ++++++----------------------
+ net/mac80211/rx.c                          |   90 +-
+ net/mac80211/scan.c                        |  933 +++++++++
+ net/mac80211/spectmgmt.c                   |   86 +
+ net/mac80211/util.c                        |  184 ++
+ 51 files changed, 3855 insertions(+), 3328 deletions(-)
+ create mode 100644 net/mac80211/ht.c
+ create mode 100644 net/mac80211/scan.c
+ create mode 100644 net/mac80211/spectmgmt.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-09-11.patch.bz2
+
+-- 
+John W. Linville
+linville@tuxdriver.com
