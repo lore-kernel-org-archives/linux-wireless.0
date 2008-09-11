@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33584 "EHLO vs166246.vserver.de"
+Received: from mail.atheros.com ([12.36.123.2]:39373 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753232AbYILSjo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 14:39:44 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] p54: Fix sparse warnings
-Date: Fri, 12 Sep 2008 20:39:21 +0200
-Cc: John W Linville <linville@tuxdriver.com>, chunkeey@web.de,
-	linux-wireless@vger.kernel.org
-References: <48cab1e3.m0lac7LoL3DFxIu6%Larry.Finger@lwfinger.net> <200809122036.03553.mb@bu3sch.de>
-In-Reply-To: <200809122036.03553.mb@bu3sch.de>
+	id S1752233AbYIKQuX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 12:50:23 -0400
+Date: Thu, 11 Sep 2008 09:50:11 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/18] mac80211 cleanups and fixes
+Message-ID: <20080911165011.GA6049@tesla> (sfid-20080911_185028_074791_AD3BD971)
+References: <20080910220145.707263000@sipsolutions.net> <18632.55008.411078.289830@gargle.gargle.HOWL> <1221139351.6986.26.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809122039.21179.mb@bu3sch.de> (sfid-20080912_203947_927627_0A97D082)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1221139351.6986.26.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 12 September 2008 20:36:03 Michael Buesch wrote:
-> On Friday 12 September 2008 20:16:03 Larry Finger wrote:
-> >  struct bootrec {
-> >  	__le32 code;
-> >  	__le32 len;
-> > -	u32 data[0];
-> > +	/* Most references to the data section that follows are for u32
-> > +	 * quantities; however, one is for an le16 quantity. The union
-> > +	 * below avoids a cast and makes the usage clearer. */
-> > +	union {
-> > +		u32 data[0];
-> > +		__le16 data16[0];
-> > +	};
-> >  } __attribute__((packed));
+On Thu, Sep 11, 2008 at 06:22:31AM -0700, Johannes Berg wrote:
+> On Thu, 2008-09-11 at 13:59 +0530, Sujith wrote:
 > 
-> I suggest you change
-> 	u32 data[0];
-> to
-> 	__le32 data_le32[0];
-> and also add
-> 	__be32 data_be32[0];
-> to the union. This avoids another few casts.
-> (Maybe you don't even need the __le32 variant. I didn't check all the code).
+> >  > I'd been talking with Sujith about this one:
+> >  > 
+> >  >  * mac80211: share STA information with driver
+> >  > 
+> >  > and decided to just do it; as it stands it's not very useful
+> >  > but I expect it to be used soon, if not we can remove the
+> >  > EXPORT_SYMBOL again.
+> >  > 
+> > 
+> > This would be very useful for ath9k. Making use of the
+> > private area for each STA can enable removal of the node list
+> > that is maintained currently.
+> 
+> I had actually tried
+> (http://johannes.sipsolutions.net/patches/kernel/ath9k-sta-node.patch)
+> but you're using refcounting for the nodes while mac80211 RCU-protects
+> them, so I didn't get very far.
 
-Ah and I think you should also add packed attribute to the union
-to tell the compiler to avoid any padding.
+Good thing I read RCU docs yesterday.
 
--- 
-Greetings Michael.
+We should be able to remove ref counts and simply use RCU and
+sychronize_rcu() before deletion.
+
+> It needs a bit more effort to make sure
+> you don't have node pointers stick around in some tx descriptor after
+> mac80211 decides to remove a node (which may very well happen while
+> frames are queued)
+
+We can call_rcu() here no, and let the driver deal with what it needs to
+prior to deletion?
+
+  Luis
