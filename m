@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:38315 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756173AbYITBPO (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58303 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752150AbYIKKhD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 21:15:14 -0400
-Received: by gxk9 with SMTP id 9so1399898gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 18:15:12 -0700 (PDT)
-Message-ID: <43e72e890809191815k3aad680cx6bc27759191e201@mail.gmail.com> (sfid-20080920_031535_875727_CF3B1ADE)
-Date: Fri, 19 Sep 2008 18:15:12 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Steven Noonan" <steven@uplinklabs.net>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Senthilkumar Balasubramanian"
-	<Senthilkumar.Balasubramanian@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Ingo Molnar" <mingo@elte.hu>
-In-Reply-To: <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
-	 <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com>
-	 <20080919142801.GA5816@senthil-lnx.users.atheros.com>
-	 <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net>
-	 <20080919175824.GA5626@senthil-lnx.users.atheros.com>
-	 <20080919182322.GB7027@tesla>
-	 <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
-	 <20080919235305.GD11665@tesla>
-	 <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com>
-	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
+	Thu, 11 Sep 2008 06:37:03 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com> (sfid-20080911_100535_000722_EE099914)
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 (sfid-20080911_100535_000722_EE099914)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PhMp4Sat3cQvsjTjlAqG"
+Date: Thu, 11 Sep 2008 12:36:22 +0200
+Message-Id: <1221129382.6986.0.camel@johannes.berg> (sfid-20080911_123708_508365_E72921FB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 6:13 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
 
-> That is capital "i", this will show you the monitor results of number
-> of interrupts on IRQ 17. You want to see if the rate of change is huge
-> when you have latency issues. If not then its most likely
+--=-PhMp4Sat3cQvsjTjlAqG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I meant most likely *NOT* an interrupt storm.
+On Thu, 2008-09-11 at 10:04 +0200, Marcel Holtmann wrote:
+> Hi guys,
+>=20
+> so since a few 2.6.27 kernels I haven an issue when using my 4965 =20
+> wireless card. So the machine in question is an X61 and when enabling =20
+> WiFi and Bluetooth at the same time it will freeze hard after a few =20
+> minutes. It seems activating Bluetooth has something to do with it, =20
+> but I have been using the machine for Bluetooth qualification testing =20
+> (with WiFi disabled) and everything works fine.
+>=20
+> However I tried to reproduce it without Bluetooth enabled, it didn't =20
+> show or I didn't wait long enough. Once I started bluetoothd it showed =20
+> within a few minutes.
+>=20
+> So the best I got was the attached screenshot of an oops. It is =20
+> clearly the iwlwifi driver crashing here and killing the machine, but =20
+> I have no idea why.
 
-> an interrupt
-> storm by ath9k (which is my suspect right now) but something else.
->
->  Luis
->
+That looks like the use-after-free BUG_ON I've been getting with a 5k
+card, do you have sl*b debugging enabled?
+
+johannes
+
+--=-PhMp4Sat3cQvsjTjlAqG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIyPSjAAoJEKVg1VMiehFYJWUP+gMXhBbBdNIVAbppiVg9xdzH
+8ZjBuh4jGkLwv4uSfwqK3oYoUGfFkOgc83XRYsAmFghulM6sWB4yZTNz2WISE+oi
+53KRycpSFIwSJzq0Jd7rv+VOovTnmDOpr1n5KAFdmmd4kcyzKvf8YoB+mznapQz5
+OUlJFNpQDDRCx3N11KvieYSAV11kG4kKEjAZF75ufx5JTBJRDK/OfwUmT9mFwmaY
+LP63p+lLOzdyH5y2gLP1aZzBqaAPZ7oEjAhPlfSpwkrViVkZAcjrW1yDpwXmKPTu
+ovS22k48Lm0An58wI2LnjDJplOxh3usxZ8pL9H0uoIOiJt57pt2udWdVLK4ZoqlV
+Vf0kuE8K86KfFDB8RW3yqZ+XCzZAeJ0Ihq1VEwtdvNN9IMnRnBWnNoz61c7ljMSs
+Zp3M8bZz8IgseR/rc8gAqwE2PUPRXSKCyzxrZRqhjASjbZoKWvWMk6I5V/Ju0XeI
+InCjD0pzn3wGEoQs89CaafzK5aTX7g+huvgsTnA3sqXuEtgdMp0Kkzrbp7s6ptTy
+S4WkoK4DVQChIrhSqJF6QxMeMRumIEQF2npKhtsfrPS7xshOHh5h1/Xay227Sqse
+6maXc0YVWxZQXfd7GmuvnaI0a8KfXxQ4thc2/HPg6D5DRKqNT5eCskN+eKGf2hvh
+zGJE0YlbAWgSGuhVmW4b
+=6tcm
+-----END PGP SIGNATURE-----
+
+--=-PhMp4Sat3cQvsjTjlAqG--
+
