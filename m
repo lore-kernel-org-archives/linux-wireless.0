@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34092 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752382AbYILHq6 (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.228]:27488 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689AbYIKOUR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 03:46:58 -0400
-Subject: Re: [PATCH] mac80211 hwsim: make radio list dynamic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1221184233.11498.4.camel@californication>
-References: <1221172622.5956.10.camel@johannes.berg>
-	 <1221184233.11498.4.camel@californication>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PVt251pewb703owTMj62"
-Date: Fri, 12 Sep 2008 09:46:21 +0200
-Message-Id: <1221205581.11204.2.camel@johannes.berg> (sfid-20080912_094701_874011_5E4E284C)
-Mime-Version: 1.0
+	Thu, 11 Sep 2008 10:20:17 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so217163wri.5
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2008 07:20:15 -0700 (PDT)
+Message-ID: <40f31dec0809110720x38902672pc60426a7178de5e3@mail.gmail.com> (sfid-20080911_162022_041775_07D7D979)
+Date: Thu, 11 Sep 2008 17:20:15 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Martin Michlmayr" <tbm@cyrius.com>
+Subject: Re: [ath5k-devel] ath5k: bad udelay call, build failure on ARM
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080910093638.GA16874@deprecation.cyrius.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080825115715.GA13506@deprecation.cyrius.com>
+	 <20080825190811.GC17297@tuxdriver.com>
+	 <40f31dec0808251236qad2118dv2b781b147d366415@mail.gmail.com>
+	 <20080910093638.GA16874@deprecation.cyrius.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/9/10 Martin Michlmayr <tbm@cyrius.com>:
+> * Nick Kossifidis <mickflemm@gmail.com> [2008-08-25 22:36]:
+>> > There are "udelay(2300)" calls in phy.c and hw.c.  How important is
+>> > that exact number?  Could those be replaced by mdelay(3) instead?
+>> >
+>> > Of course, looking in include/linux/delay.h, mdelay(3) may still
+>> > translate to __bad_udelay on arm.  It would be nice if the ARM guys
+>> > and delay.h could at least agree on the maximum value allowed to be
+>> > passed to udelay...
+>> >
+>> > John
+>>
+>> Sorry for that i just haven't tested 5210 code much (these are older
+>> chips that need more delay). I'll do some tests asap and tweak this
+>> value to be in range.
+>
+> Did you have a chance to do these tests yet?
 
---=-PVt251pewb703owTMj62
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Next week i hope, sorry for the delay ;-(
 
-On Fri, 2008-09-12 at 03:50 +0200, Marcel Holtmann wrote:
-> Hi Johannes,
->=20
-> > This paves the way for dynamic radio additions while the module
-> > is loaded. Also restrict the number of radios to 100 because
-> > creating that many already takes forever.
->=20
-> any plans to do this via configfs in a fully dynamic way. This would
-> allow us to emulate hardware hotplug :)
 
-Something like that, yeah. I just didn't want to throw it all into one
-patch.
 
-johannes
-
---=-PVt251pewb703owTMj62
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIyh5IAAoJEKVg1VMiehFYZB8P/j4R/vMPebZ4PYl9sDDLmiZP
-/kuG0RwwTDlP/2KAmLKFOfjdAP9+Vb7rt+qKCsDXqCCqF4A6IwUdjmeWodi37iYu
-PomoXhv3NngWYa8iIgJQJ4/fB0wA2IYu1qEF58k+MTz+B31BJyfRcEGgtShf30hp
-hCE4yFGH9PcREoYc0e1PHp1VtA2tDKqdYVp65B4vTOksrNU0ca4vTmDmMPXLuPsX
-eydgSfyLElPGt186+bzdhYB68fT8Sk7TiazJPMBd6fsUkzwQLGwNJMX/cdZhK6df
-vn+pqctggQ9oEeQBMyb8fwiXwxWmWf7Xly/zZpt6M8QALESi/negkfQcfPo3u1j5
-8mQCeNQj4gug/i/GKA5juPekHJ0MqWuO/G/CSaH7hvLwTtM9ptAeSDjl/2TfGPug
-wWVgg2qFgA3K4MCFzJkxYqLFlulCnRSGVWkOXuHCBAYET0KrQ3LIxxvsyex9xBs/
-8ouqE4ZCfKLT1yEP001se9u05IJtpfc0w7IKNmFJape6j8ELBbVnu9R4XeI4Gdbf
-RPjjx7I3AxFHXlpPMgToctwNs4L8FO30Qm+ue6cQcjkDr7El/5VKmZ0WgRkfv1U2
-WgOWIMUnuKDn9R0WfXp6/Adax68lx5WoCuG2NVjXXbFiUBTO5jbiicWzPXsddVbE
-/IIgPCKMlXQom1R6AJ2V
-=/8s7
------END PGP SIGNATURE-----
-
---=-PVt251pewb703owTMj62--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
