@@ -1,79 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15586 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755272AbYICDbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:31:41 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 35/39] iwlwifi: remove bad language from the comments
-Date: Wed,  3 Sep 2008 11:26:55 +0800
-Message-Id: <1220412419-15404-36-git-send-email-yi.zhu@intel.com> (sfid-20080903_055043_408896_F12CC812)
-In-Reply-To: <1220412419-15404-35-git-send-email-yi.zhu@intel.com>
-References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-23-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-24-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-25-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-26-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-27-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-28-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-29-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-30-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-31-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-32-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-33-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-34-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-35-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44565 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754232AbYIKVTs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 17:19:48 -0400
+Subject: Re: wireless-testing build failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Davide Pesavento <davidepesa@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <2da21fe50809111407w23ffe5e4r1c46dc0d6907de9@mail.gmail.com> (sfid-20080911_230716_503931_D6EDD0C6)
+References: <2da21fe50809111407w23ffe5e4r1c46dc0d6907de9@mail.gmail.com>
+	 (sfid-20080911_230716_503931_D6EDD0C6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XU8/qwWVYzhgpv40HMll"
+Date: Thu, 11 Sep 2008 23:19:08 +0200
+Message-Id: <1221167948.3742.0.camel@johannes.berg> (sfid-20080911_232002_908427_5A468A49)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch removes bad language in the comments in iwl-agn-rs.c.
+--=-XU8/qwWVYzhgpv40HMll
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+On Thu, 2008-09-11 at 23:07 +0200, Davide Pesavento wrote:
+> Hi,
+>=20
+> after the last pull, compilation fails with the following error:
+>=20
+>   CC [M]  net/mac80211/mlme.o
+> net/mac80211/mlme.c: In function 'ieee80211_rx_bss_info':
+> net/mac80211/mlme.c:1537: error: 'struct sta_info' has no member named
+> 'supp_rates'
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 169c548..4fc3a0f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2218,8 +2218,7 @@ static void rs_rate_init(void *priv_rate, void *priv_sta,
- 			sta->txrate_idx = i;
- 
- 	sta->last_txrate_idx = sta->txrate_idx;
--	/* WTF is with this bogus comment? A doesn't have cck rates */
--	/* For MODE_IEEE80211A, cck rates are at end of rate table */
-+	/* For MODE_IEEE80211A, skip over cck rates in global rate table */
- 	if (local->hw.conf.channel->band == IEEE80211_BAND_5GHZ)
- 		sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
- 
--- 
-1.5.3.6
+Ah, IBSS debug, will send a fix. Sorry about that.
+
+johannes
+
+--=-XU8/qwWVYzhgpv40HMll
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIyYtIAAoJEKVg1VMiehFY8fkQAMWpMAQaOUzrQfmK6D6hQ3kP
+M1OA+QpBV82s8zw77xD4efAeWgbCpws1//YHvalz2NDHzUebKBjSqfXHWrR+66iN
+8lfkTdHKKg74xvHygiBP//5uPpzGDWJy4TrSR0datIbc6U1hcsbd2rdzXlYpRoup
+rRePoZCaDHpCWlYJsFGonJgVOi4seJ89wIbxuwgCXvidraB76YvR82gc731WfjhX
+fsc4cE2fXyNOxRjYb8brhVXNmltOb16PpXkpLgUr786LQZ3rfkg/5EucRhEsOe+E
+8yizkhy3q0GywbEXgyrEmPYRahDhEyzU2iNj6DDQk9wy4krmA5HXxIY4Qbn5s9EA
+oMTcnyQzUNTuC/iNGi3NmCqlBETJzTHSS54O91XMLsXkUNn6uGWuJYZNkINT4zHO
+5wc379IKAUWL/0/ChUmdUfkrMGhGALN6BIt4KF6+GkA11lbLQGObi51zgqeUkxPZ
+GQKJ0jKwiWmCI/5Nkaly79F3WipiUdpjvZ6eE85ncFYZ0irZ5m/XnUvsiYxJlQUG
+wKZ7JNH478oljUfF/TmP1qva07mEn+jjbeNUoq04cVfekZIziqGHzxuP5yR7dsmQ
+88iG1EPvYQc/+ExTh7syFZ9Cjc9TKWK4FgnqVBzenyRbQ7pRuXHcsQcKwBTfpacP
+nT3xd1KNwWPVBkamRUaj
+=PjYm
+-----END PGP SIGNATURE-----
+
+--=-XU8/qwWVYzhgpv40HMll--
 
