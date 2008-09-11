@@ -1,63 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47173 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:39331 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751121AbYIBNaL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 09:30:11 -0400
-Subject: Re: new: regression iwl3945/mac80211 endless after suspend
-	associate/deassociate loop
-From: Dan Williams <dcbw@redhat.com>
-To: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org,
-	Jan-Espen Pettersen <sigsegv@radiotube.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20080902130429.GB19172@google.com>
-References: <20080901160658.GA11063@google.com>
-	 <1220319536.28282.128.camel@debian.sh.intel.com>
-	 <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net>
-	 <20080902130429.GB19172@google.com>
-Content-Type: text/plain
-Date: Tue, 02 Sep 2008 09:30:01 -0400
-Message-Id: <1220362201.3176.4.camel@borkbork.foobar.com> (sfid-20080902_153016_096638_E55A8494)
-Mime-Version: 1.0
+	id S1752422AbYIKRyv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 13:54:51 -0400
+Date: Thu, 11 Sep 2008 10:54:42 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/18] mac80211 cleanups and fixes
+Message-ID: <20080911175442.GE6049@tesla> (sfid-20080911_195454_468131_34718D63)
+References: <20080910220145.707263000@sipsolutions.net> <18632.55008.411078.289830@gargle.gargle.HOWL> <1221139351.6986.26.camel@johannes.berg> <20080911165011.GA6049@tesla> <1221151995.6986.33.camel@johannes.berg> <20080911173335.GD6049@tesla> <1221154777.6986.43.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1221154777.6986.43.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-09-02 at 16:04 +0300, Michael S. Tsirkin wrote:
-> On Tue, Sep 02, 2008 at 08:10:09AM +0200, Johannes Berg wrote:
-> > Zhu Yi wrote:
-> > > On Mon, 2008-09-01 at 19:07 +0300, Michael S. Tsirkin wrote:
-> > >> [16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
-> > >> [16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX
-> > >> (capab=0x411 status=0 aid=1)
-> > >> [16482.918564] eth1: associated
-> > >> [16492.920224] eth1: disassociating by local choice (reason=3)
-> > >> [16492.920986] eth1: disassociating by local choice (reason=3)
-> > >
-> > > It is exactly 10 seconds the local STA sends the deauth_leaving frame
-> > > before associated everytime. I wonder if it is the timeout for some
-> > > wireless config tools. NM?
+On Thu, Sep 11, 2008 at 10:39:37AM -0700, Johannes Berg wrote:
+> On Thu, 2008-09-11 at 10:33 -0700, Luis R. Rodriguez wrote:
+> > On Thu, Sep 11, 2008 at 09:53:15AM -0700, Johannes Berg wrote:
+> > > On Thu, 2008-09-11 at 09:50 -0700, Luis R. Rodriguez wrote:
+> > > > > I had actually tried
+> > > > > (http://johannes.sipsolutions.net/patches/kernel/ath9k-sta-node.patch)
 > > 
-> > "by local choice" means wext requested this, not a kernel bug.
+> > Just a comment so far from the patch.
 > > 
-> > johannes
+> > > +     rcu_read_unlock();
+> > > +
+> > > +     /* the "!an" here is fine even outside RCU lock */
+> > 
+> > Why is that? I fail to see that.
 > 
-> Sure, it's wpa_supplicant in ubuntu gutsy doing it.
+> Well take the larger bit of code:
 > 
-> $wpa_supplicant -version
->  wpa_supplicant v0.5.8
->  Copyright (c) 2003-2007, Jouni Malinen <j@w1.fi> and contributors
+> 	struct something *an = NULL;
 > 
-> But it happens to work fine without 8ab65b03b7893da4a49009e7e356e36e27b0c407.
+> ...
+> 
+> 	rcu_read_lock();
+> 	sta = ieee80211_find_sta(hw, hdr->addr2);
+> 	if (sta)
+> 		an = (void *) sta->drv_priv;
+>  
+>  	if (an) {
+>  		ath_rx_input(sc, an,
+>  			     hw->conf.ht_conf.ht_supported,
+>  			     skb, status, &st);
+>  	}
+> 	rcu_read_unlock();
+> 
+> 	/* the "!an" here is fine even outside RCU lock */
+>  	if (!an || (st != ATH_RX_CONSUMED))
+>  		__ieee80211_rx(hw, skb, &rx_status);
+> 
+> 
+> So at this point it's only checking whether above it had a pointer, it's
+> not accessing it. Think of the "an" variable, after rcu_read_unlock(),
+> as a bool indicating whether or not the code that just happened had
+> access to the node or not.
 
-That's really odd; that patch (the don't-send-empty-extended-rates-IE
-patch) shouldn't have anything to do with this behavior, if it did you
-wouldn't get associated to the AP in the first place I think.  You're
-100% sure that this patch is causing the problem?  Can you post the
-output of running wpa_supplicant with the "-dddt" flags and also post
-the 'iwlist scan' output for your AP?
+I see now, thanks :)
 
-Dan
-
+  Luis
