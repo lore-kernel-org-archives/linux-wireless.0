@@ -1,70 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:42898 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752667AbYIQCds (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43783 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753122AbYIKUlf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 22:33:48 -0400
-Date: Tue, 16 Sep 2008 23:33:34 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Carlos Corbacho <carlos@strangeworlds.co.uk>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Regression in 2.6.27-rcX caused by commit
-	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-Message-ID: <20080917023334.GA1187@khazad-dum.debian.net> (sfid-20080917_043359_810823_E0456CD8)
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <200809162018.28548.carlos@strangeworlds.co.uk> <48D0095B.40403@lwfinger.net> <20080916233240.GA18574@srcf.ucam.org>
+	Thu, 11 Sep 2008 16:41:35 -0400
+Date: Thu, 11 Sep 2008 16:13:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2008-09-11
+Message-ID: <20080911201308.GJ3423@tuxdriver.com> (sfid-20080911_224145_712215_D3F2ED7B)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080916233240.GA18574@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Sep 2008, Matthew Garrett wrote:
-> that's not a criticism of anyone involved - the documentation's 
-> confusing and there weren't any good examples of how it should be 
-> implemented).
+Dave,
 
-I sure hope you mean "the documentation WAS confusing"... because if it is
-still confusing, I have not got any comments or ideas about how it could be
-improved yet... (HINT!).
+Here is one fix for 2.6.27.  It is a backport of a patch that is already
+in net-next-2.6.  Since it is for a new driver (ath9k) and since it
+fixes a reported bug (http://bugzilla.kernel.org/show_bug.cgi?id=11394)
+I think it should be OK to pass it to Linus for the current cycle.
 
-> The real question is how the LED state is supposed to be being toggled, 
-> and what that's got to do with rfkill. I /think/ that the current state 
-> of events is:
-> 
-> 1) User toggles state
-> 2) State toggle is used by b43 to generate KEY_WLAN (this is broken)
-> 3) rfkill-input toggles the rfkill state, changing the LED state in the 
-> process
+John
 
-Actually 2 and 3 will fight each other, and weird things will happen.
+---
 
-> What *should* be happening is:
-> 
-> 1) User toggles state
-> 2) b43 changes rfkill state (by using rfkill_force_state). The LED state 
-> should also be changed in the process.
+Individual patch is available here:
 
-Correct.
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
 
-However, rfkill_force_state() is NOT updating LED states (I just checked).
-I will sleep on the issue, and send in a patch tomorrow.
+---
 
-This probably means a small patch to rfkill + Matthew's fixed patch to use
-rfkill_force_state() in b43 will fix the regression in the right way.
+The following changes since commit e550dfb0c2c31b6363aa463a035fc9f8dcaa3c9b:
+  Neil Horman (1):
+        ipv6: Fix OOPS in ip6_dst_lookup_tail().
 
-I don't care either way which kind of fix goes to 2.6.27, though.
+are available in the git repository at:
 
-The proper fix for rfkill will be in two stages. A small fix now, and a
-complete change on the LED handling to use the blocking notifier chain
-instead later on (which will clean up rfkill code somewhat).
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
 
+Jouni Malinen (1):
+      ath9k: Assign seq# when mac80211 requests this
+
+ drivers/net/wireless/ath9k/beacon.c |   13 +++++++++++++
+ drivers/net/wireless/ath9k/core.h   |    1 +
+ drivers/net/wireless/ath9k/main.c   |   14 ++++++++++++++
+ 3 files changed, 28 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
+index caf5694..00a0eaa 100644
+--- a/drivers/net/wireless/ath9k/beacon.c
++++ b/drivers/net/wireless/ath9k/beacon.c
+@@ -209,6 +209,7 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
+ 	unsigned int curlen;
+ 	struct ath_txq *cabq;
+ 	struct ath_txq *mcastq;
++	struct ieee80211_tx_info *info;
+ 	avp = sc->sc_vaps[if_id];
+ 
+ 	mcastq = &avp->av_mcastq;
+@@ -232,6 +233,18 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
+ 	 */
+ 	curlen = skb->len;
+ 
++	info = IEEE80211_SKB_CB(skb);
++	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
++		/*
++		 * TODO: make sure the seq# gets assigned properly (vs. other
++		 * TX frames)
++		 */
++		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++		sc->seq_no += 0x10;
++		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
++		hdr->seq_ctrl |= cpu_to_le16(sc->seq_no);
++	}
++
+ 	/* XXX: spin_lock_bh should not be used here, but sparse bitches
+ 	 * otherwise. We should fix sparse :) */
+ 	spin_lock_bh(&mcastq->axq_lock);
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 673b3d8..4ee695b 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -992,6 +992,7 @@ struct ath_softc {
+ 	u32 sc_txintrperiod;	/* tx interrupt batching */
+ 	int sc_haltype2q[ATH9K_WME_AC_VO+1]; /* HAL WME	AC -> h/w qnum */
+ 	u32 sc_ant_tx[8];	/* recent tx frames/antenna */
++	u16 seq_no; /* TX sequence number */
+ 
+ 	/* Beacon */
+ 	struct ath9k_tx_queue_info sc_beacon_qi;
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index c5107f2..99badf1 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -369,6 +369,20 @@ static int ath9k_tx(struct ieee80211_hw *hw,
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	int hdrlen, padsize;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	/*
++	 * As a temporary workaround, assign seq# here; this will likely need
++	 * to be cleaned up to work better with Beacon transmission and virtual
++	 * BSSes.
++	 */
++	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
++		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++			sc->seq_no += 0x10;
++		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
++		hdr->seq_ctrl |= cpu_to_le16(sc->seq_no);
++	}
+ 
+ 	/* Add the padding after the header if this is not already done */
+ 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+John W. Linville
+linville@tuxdriver.com
