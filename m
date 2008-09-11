@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43133 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752055AbYI2VAU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 17:00:20 -0400
-Subject: Re: [PATCH] libertas: Improvements on automatic tx power control
-	via SIOCSIWTXPOW.
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Anna Neal <anna@cozybit.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <20080926162643.GB3483@tuxdriver.com>
-References: <48dc2080.14be600a.433d.fffffde3@mx.google.com>
-	 <20080926162643.GB3483@tuxdriver.com>
-Content-Type: text/plain
-Date: Mon, 29 Sep 2008 16:59:37 -0400
-Message-Id: <1222721977.27930.45.camel@localhost.localdomain> (sfid-20080929_230027_319406_874F3163)
+Received: from xc.sipsolutions.net ([83.246.72.84]:51578 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754038AbYIKWjN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 18:39:13 -0400
+Subject: Re: [PATCH] mac80211 hwsim: make radio list dynamic
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <1221172622.5956.10.camel@johannes.berg> (sfid-20080912_003741_082920_D8B45771)
+References: <1221172622.5956.10.camel@johannes.berg>
+	 (sfid-20080912_003741_082920_D8B45771)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f8NElbJI16Y8FopjVWTX"
+Date: Fri, 12 Sep 2008 00:38:38 +0200
+Message-Id: <1221172718.5956.11.camel@johannes.berg> (sfid-20080912_003916_868171_3F62FCE6)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-09-26 at 12:26 -0400, John W. Linville wrote:
-> On Thu, Sep 25, 2008 at 04:19:31PM -0700, Anna Neal wrote:
-> > iwconfig txpower can now be used to set tx power to fixed or auto. If set to
-> > auto the default firmware settings are used.
-> > 
-> > The command CMD_802_11_PA_CFG is only sent to older firmware, as Dan Williams
-> > noted the command was no longer supported in firmware V9+.
-> > 
-> > Signed-off-by: Anna Neal <anna@cozybit.com>
-> > Signed-off-by: Javier Cardona <javier@cozybit.com>
-> 
-> I had already committed an earlier version.  I believe I have
-> incorporated all the changes in "libertas: Improvements on automatic tx
-> power control via SIOCSIWTXPOW (fixups)" -- please feel free to verify.
 
-A few missing bits, sorry for the confusion.  Merge fixups against
-current wireless-testing below.
+--=-f8NElbJI16Y8FopjVWTX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index aee19fa..a912fb6 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1949,7 +1949,7 @@ int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 	cmd.action = cpu_to_le16(CMD_ACT_SET);
- 	cmd.enable = !!enable;
--	cmd.usesnr = !!enable;
-+	cmd.usesnr = !!usesnr;
- 	cmd.P0 = p0;
- 	cmd.P1 = p1;
- 	cmd.P2 = p2;
-diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
-index d21bb4e..076a636 100644
---- a/drivers/net/wireless/libertas/defs.h
-+++ b/drivers/net/wireless/libertas/defs.h
-@@ -189,16 +189,6 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
- #define MRVDRV_CMD_UPLD_RDY		0x0008
- #define MRVDRV_CARDEVENT		0x0010
- 
--
--/* Automatic TX control default levels */
--#define POW_ADAPT_DEFAULT_P0 13
--#define POW_ADAPT_DEFAULT_P1 15
--#define POW_ADAPT_DEFAULT_P2 18
--#define TPC_DEFAULT_P0 5
--#define TPC_DEFAULT_P1 10
--#define TPC_DEFAULT_P2 13
--
--
- /* Automatic TX control default levels */
- #define POW_ADAPT_DEFAULT_P0 13
- #define POW_ADAPT_DEFAULT_P1 15
+>  static inline void hwsim_check_magic(struct ieee80211_vif *vif)
+>  {
+>  	struct hwsim_vif_priv *vp =3D (void *)vif->drv_priv;
+> -	WARN_ON(vp->magic !=3D HWSIM_VIF_MAGIC);
+> +	if (WARN_ON(vp->magic !=3D HWSIM_VIF_MAGIC))
+> +		printk(KERN_DEBUG "iface type is %d!\n", vif->type);
+
+Oops, that hunk wasn't supposed to be there.
+
+johannes
+
+--=-f8NElbJI16Y8FopjVWTX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIyZ3qAAoJEKVg1VMiehFYvyEP/035lyIeKjxEfNE963u+yi8p
+iYm+1e2qV8OqZH//ubYoXvh1nhZpHFb/UdJ+CcWPnAdTzJZn+svZOfN+S1FeXaP0
+E3taxelm3O8rJEtKYySSEd5KotKJotCyH18OIQBFTB6vfCwVIIqQpo9le4EDvwvc
+JMmMujUrM+M9MVrE1V3nKmX6SR0yLxxfjHQywIxcU9M4wFhKTFja8LOzwyG8tL+B
+mxGLSQxMkgfAdtEKbkYEXVezyMovb/za09vsaIjlMmG8e/rAaISdG3kZVjMeNTZq
+tTMk4/CK4azIVL70LRO0qujLGVg8BsvXnCaY2eWlS3QLSVw1XN9D2wmjJWE1DSSv
+v8Kcj9zyIK46LCztmeMgC/C1TIH5xZhIF3xsS2EjWvlhTFQerR/mUO/k6cTD0ees
+YIvzW5F25iNY1alBXVraEo5WvhpsH83dlew5bEsV9SxYhRDlA0da32DKj2V2etyF
+K4ZjGZMBg+MtYQMhrXB9QQ0MqPuTixCGsLuqcX+oEZ72iBdVNtx9nKalbyxvHuGr
+j5h0uxXXrU3H9K8xPC/rUrM2fKXo7qtLreDMlCzMY0f+S8HrWpovVOiNXtL4we1O
+zrzmKyvbxC+lDIkBsbRV4QeqkOayYRm938mBb/Yx6TDoA85UR5s0JpC10EoWLy/9
+FbkzzwT1PFqCi31CYsL6
+=9U0Z
+-----END PGP SIGNATURE-----
+
+--=-f8NElbJI16Y8FopjVWTX--
 
