@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47850 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516AbYIFRXK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 13:23:10 -0400
-Subject: Re: [PATCH] Ath9k: Add RF kill support.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-In-Reply-To: <1220721572.10102.0.camel@johannes.berg> (sfid-20080906_192003_595621_9791F144)
-References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com>
-	 <1220721347.6714.114.camel@californication>
-	 (sfid-20080906_191538_728310_1EC0FE5D)  <1220721572.10102.0.camel@johannes.berg>
-	 (sfid-20080906_192003_595621_9791F144)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ivoudtRfgz6WIl2qFLg3"
-Date: Sat, 06 Sep 2008 19:23:08 +0200
-Message-Id: <1220721788.10102.3.camel@johannes.berg> (sfid-20080906_192314_597964_10EBA16C)
+Received: from mga11.intel.com ([192.55.52.93]:5772 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752512AbYIKJCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 05:02:55 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Zhu Yi <yi.zhu@intel.com>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+Content-Type: text/plain
+Date: Thu, 11 Sep 2008 17:02:59 +0800
+Message-Id: <1221123779.2513.88.camel@debian.sh.intel.com> (sfid-20080911_110259_705263_9B4920F4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Marcel!
 
---=-ivoudtRfgz6WIl2qFLg3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2008-09-11 at 10:04 +0200, Marcel Holtmann wrote:
+> However I tried to reproduce it without Bluetooth enabled, it didn't  
+> show or I didn't wait long enough. Once I started bluetoothd it showed  
+> within a few minutes.
+> 
+> So the best I got was the attached screenshot of an oops. It is  
+> clearly the iwlwifi driver crashing here and killing the machine, but  
+> I have no idea why.
 
-On Sat, 2008-09-06 at 19:19 +0200, Johannes Berg wrote:
-> On Sat, 2008-09-06 at 19:15 +0200, Marcel Holtmann wrote:
-> > Hi Vasanthakumar,
-> >=20
-> > > CONFIG_ATH9K_RFKILL needs to be set
-> > > to enable this support.
-> >=20
-> > why do we have to introduce yet another config option for this? What is
-> > the advantage of disabling RFKILL support? I really don't see it and al=
-l
-> > these extra config options are rather confusing than useful.
->=20
-> "if EMBEDDED", I think you may want to build a router without rfkill
-> stuff.
+>From the screenshot line:
 
-Although I don't like all the select business, can't we just have this
-be an invisible option and make it depend on RFKILL? That way, when
-RFKILL isn't selected, ath9k-rfkill won't be compiled, but if it is, it
-will be, and RFKILL can be "default y" and "if EMBEDDED"
+iwl_tx_cmd_complete+0x43/0x245
 
-johannes
+It should be triggered by the BUG_ON() in the function. Are you able to
+confirm it with netconsole or maybe even a frame buffer enabled console
+(it just shows more lines)? If this is the culprit, Tomas has been
+already working on it. But your BT coexist finding should help us
+reproducing the bug.
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703
 
---=-ivoudtRfgz6WIl2qFLg3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIwrx4AAoJEKVg1VMiehFYqvYP/RPjRqQvfT9NP/aNiefdDobQ
-5+ybjKFCGsGxV2PhK08NbLJam3Yj4D3JdJDkpubldeAJGEO/mjis1TakWYdOb7PB
-h35UcI/fnfPv+FxxZHIkW4GK45ZrFmeDTDh1Q87iC7zF+L+Oe0vFJvwJZyY4nWzl
-JiOw0Gi9YuAhlzhs8jjpfXnxoQjxNo6Y+cTT74ZAdjFvH5/PvRMcoNIqRqB++f1o
-/MBusQXmH6aNeOHlusOErnPWoAjEmnJ2qhZ66+KZ9uMbsUWClMQGMAczURfQjwiD
-8wgnGUxfyZ3dD95l3AFWpOa995w8nUXTOCEsMrwbPhTdry07+vC1IEl2AszUEXUZ
-bro6OtgGqnUvtSAy61SmZ+ix5pLBHTz0UVDtM6U2Bf4/uBv73t+jTLL2po+HaJHq
-o+W/DkDf3SDkCwx+PDIJ9cgWnOrvR8Y3bbTuH5VGxUkkPOeO1xpMefSBM/pFDcgv
-SXau0aBOgMk+BXLPNyspR2iUuhpkDilDV5zSQUZ2mR4q/QHUmjWWtkKwSH8D6vnp
-zTSnrAvViJodjXAczmf/xpje7t8yEZvuZyoXX+hp9nKuX6bZp8bGd7ydfIusmtuD
-oV075EOLTNLPpvNzOeHKDFGcWRk71KDi25FHJDwFabrzdDE+6tk4b0x9bv7Z6r88
-2JbT4aL/abKBENfYzbm7
-=u+6L
------END PGP SIGNATURE-----
-
---=-ivoudtRfgz6WIl2qFLg3--
+Thanks,
+-yi
 
