@@ -1,263 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:58238 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751151AbYIXOg5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2008 10:36:57 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2] basic background scan
-Date: Wed, 24 Sep 2008 16:36:38 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200809241636.38762.hschaa@suse.de> (sfid-20080924_163702_526314_BA1E6C4A)
+Received: from xc.sipsolutions.net ([83.246.72.84]:37455 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505AbYIKAEF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2008 20:04:05 -0400
+Subject: [PATCH 19/18] mac80211: small rate control changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080910220145.707263000@sipsolutions.net> (sfid-20080911_001619_033062_98BAB5F3)
+References: <20080910220145.707263000@sipsolutions.net>
+	 (sfid-20080911_001619_033062_98BAB5F3)
+Content-Type: text/plain
+Date: Thu, 11 Sep 2008 02:03:28 +0200
+Message-Id: <1221091408.3804.58.camel@johannes.berg> (sfid-20080911_020408_173289_410A83FA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch basically enhances the scanning state machine by two further
-states (SCAN_SET_OPER_CHANNEL & SCAN_OPERATION). In state SCAN_SET_OPER_CHANNEL
-the driver is advised to switch back to the operating channel while
-SCAN_OPERATION tells the access point about being back from power saving and
-restarts the tx queue. Just before SCAN_SET_CHANNEL sets the next channel to
-scan it notifies the access point about going to power save state and stops
-the tx queue.
+This patch fixes mac80211 to not rely on the rate control
+algorithm to update sta->tx_retry_failed and sta->tx_retry_count
+(even if we don't currently use them), removes a number of
+completely unused values we don't even show in debugfs and
+changes the code in ieee80211_tx_status() to not look up the
+sta_info repeatedly.
 
-It does not add any periodic scan behavior, it only reduces the impact of a
-scan onto the traffic (multiple short interruptions instead of one long)
-which results in a smoother user experience.
+The only behaviour change here would be not calling the rate
+control function rate_control_tx_status() when no sta_info is
+found, but all rate control algorithms ignore such calls anyway.
 
-Signed-off-by: Helmut Schaa <hschaa@suse.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+Now we can also change it to pass in the actual rate control information
+to the algorithm, saving all the lookups there and the cross-dir header
+inclusion! :)
 
-Could somebody please have a look at the TODO comments (I have no idea how
-to wait until all null-func frames are ACKed)? Thanks.
+ net/mac80211/main.c             |   50 ++++++++++++++++++++--------------------
+ net/mac80211/rc80211_pid_algo.c |   11 --------
+ net/mac80211/sta_info.h         |    7 -----
+ 3 files changed, 25 insertions(+), 43 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3912fba..21c623d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -646,11 +647,11 @@ struct ieee80211_local {
+--- everything.orig/net/mac80211/sta_info.h	2008-09-11 01:51:51.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-09-11 01:51:51.000000000 +0200
+@@ -195,9 +195,6 @@ struct sta_ampdu_mlme {
+  * @tx_filtered_count: TBD
+  * @tx_retry_failed: TBD
+  * @tx_retry_count: TBD
+- * @tx_num_consecutive_failures: TBD
+- * @tx_num_mpdu_ok: TBD
+- * @tx_num_mpdu_fail: TBD
+  * @fail_avg: moving percentage of failed MSDUs
+  * @tx_packets: number of RX/TX MSDUs
+  * @tx_bytes: TBD
+@@ -273,10 +270,6 @@ struct sta_info {
+ 	/* Updated from TX status path only, no locking requirements */
+ 	unsigned long tx_filtered_count;
+ 	unsigned long tx_retry_failed, tx_retry_count;
+-	/* TODO: update in generic code not rate control? */
+-	u32 tx_num_consecutive_failures;
+-	u32 tx_num_mpdu_ok;
+-	u32 tx_num_mpdu_fail;
+ 	/* moving percentage of failed MSDUs */
+ 	unsigned int fail_avg;
  
- 
- 	/* Scanning and BSS list */
--	bool sw_scanning, hw_scanning;
-+	bool sw_scanning, hw_scanning, bg_scanning;
- 	int scan_channel_idx;
- 	enum ieee80211_band scan_band;
- 
--	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
-+	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE, SCAN_SET_OPER_CHANNEL, SCAN_OPERATION } scan_state;
- 	unsigned long last_scan_completed;
- 	struct delayed_work scan_work;
- 	struct ieee80211_sub_if_data *scan_sdata;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 92d898b..49b5c29 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -414,7 +414,7 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
- 		return RX_QUEUED;
+--- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-09-11 01:51:50.000000000 +0200
++++ everything/net/mac80211/rc80211_pid_algo.c	2008-09-11 01:51:51.000000000 +0200
+@@ -282,17 +282,6 @@ static void rate_control_pid_tx_status(v
+ 		spinfo->tx_num_xmit++;
  	}
  
--	if (unlikely(rx->flags & IEEE80211_RX_IN_SCAN)) {
-+	if (unlikely((rx->flags & IEEE80211_RX_IN_SCAN) && !local->bg_scanning)) {
- 		/* scanning finished during invoking of handlers */
- 		I802_DEBUG_INC(local->rx_handlers_drop_passive_scan);
- 		return RX_DROP_UNUSABLE;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 8e6685e..9120e6b 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -29,6 +29,7 @@
- #define IEEE80211_PROBE_DELAY (HZ / 33)
- #define IEEE80211_CHANNEL_TIME (HZ / 33)
- #define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 5)
-+#define IEEE80211_BG_SCAN_INTERRUPT (HZ / 4)
+-	if (info->status.excessive_retries) {
+-		sta->tx_retry_failed++;
+-		sta->tx_num_consecutive_failures++;
+-		sta->tx_num_mpdu_fail++;
+-	} else {
+-		sta->tx_num_consecutive_failures = 0;
+-		sta->tx_num_mpdu_ok++;
+-	}
+-	sta->tx_retry_count += info->status.retry_count;
+-	sta->tx_num_mpdu_fail += info->status.retry_count;
+-
+ 	/* Update PID controller state. */
+ 	period = (HZ * pinfo->sampling_period + 500) / 1000;
+ 	if (!period)
+--- everything.orig/net/mac80211/main.c	2008-09-11 01:51:51.000000000 +0200
++++ everything/net/mac80211/main.c	2008-09-11 01:51:51.000000000 +0200
+@@ -546,29 +546,27 @@ void ieee80211_tx_status(struct ieee8021
  
- void ieee80211_rx_bss_list_init(struct ieee80211_local *local)
- {
-@@ -455,6 +456,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 	}
- 
- 	local->sw_scanning = false;
-+	local->bg_scanning = false;
- 	if (ieee80211_hw_config(local))
- 		printk(KERN_DEBUG "%s: failed to restore operational "
- 		       "channel after scan\n", wiphy_name(local->hw.wiphy));
-@@ -510,6 +512,36 @@ void ieee80211_scan_work(struct work_struct *work)
- 
- 	switch (local->scan_state) {
- 	case SCAN_SET_CHANNEL:
-+		if (local->bg_scanning) {
-+			/*
-+			 * background scan is in progress, notify all associated 
-+			 * access points about us leaving the channel and
-+			 * update the filter flags
-+			 */
-+			local->sw_scanning = 1;
-+
-+			rcu_read_lock();
-+			list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+				if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+				    (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)) {
-+					ieee80211_send_nullfunc(local, sdata, 1);
-+					/* TODO: wait until all nullfunc frames are ACKed */
-+					msleep(1);
-+					netif_tx_stop_all_queues(sdata->dev);
-+				}
-+			}
-+			rcu_read_unlock();
-+
-+			netif_tx_lock_bh(local->mdev);
-+			local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
-+			local->ops->configure_filter(local_to_hw(local),
-+						     FIF_BCN_PRBRESP_PROMISC,
-+						     &local->filter_flags,
-+						     local->mdev->mc_count,
-+						     local->mdev->mc_list);
-+			netif_tx_unlock_bh(local->mdev);
-+		}
-+
- 		/*
- 		 * Get current scan band. scan_band may be IEEE80211_NUM_BANDS
- 		 * after we successfully scanned the last channel of the last
-@@ -574,7 +606,10 @@ void ieee80211_scan_work(struct work_struct *work)
- 		break;
- 	case SCAN_SEND_PROBE:
- 		next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
--		local->scan_state = SCAN_SET_CHANNEL;
-+		if (!local->bg_scanning)
-+			local->scan_state = SCAN_SET_CHANNEL;
-+		else
-+			local->scan_state = SCAN_SET_OPER_CHANNEL;
- 
- 		if (local->scan_channel->flags & IEEE80211_CHAN_PASSIVE_SCAN)
- 			break;
-@@ -582,6 +617,49 @@ void ieee80211_scan_work(struct work_struct *work)
- 					 local->scan_ssid_len);
- 		next_delay = IEEE80211_CHANNEL_TIME;
- 		break;
-+	case SCAN_SET_OPER_CHANNEL:
-+		local->scan_state = SCAN_OPERATION;
-+		/* interrupt the current scan */
-+		local->sw_scanning = 0;
-+
-+		/* switch back to the operating channel */
-+		if (ieee80211_hw_config(local))
-+			printk(KERN_DEBUG "%s: failed to restore operational "
-+			       "channel after scan\n", sdata->dev->name);
-+
-+		/* reconfigure filter flags*/
-+		netif_tx_lock_bh(local->mdev);
-+		local->filter_flags &= ~FIF_BCN_PRBRESP_PROMISC;
-+		local->ops->configure_filter(local_to_hw(local),
-+					     FIF_BCN_PRBRESP_PROMISC,
-+					     &local->filter_flags,
-+					     local->mdev->mc_count,
-+					     local->mdev->mc_list);
-+
-+		netif_tx_unlock_bh(local->mdev);
-+
-+		/* wait for the channel switch */
-+		next_delay = usecs_to_jiffies(local->hw.channel_change_time);
-+		break;
-+
-+	case SCAN_OPERATION:	
-+		rcu_read_lock();
-+		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+			/* Tell AP we're back */
-+			if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+			    sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
-+				ieee80211_send_nullfunc(local, sdata, 0);
-+				/* TODO: wait until all nullfunc frames are ACKed */
-+				msleep(1);
-+				netif_tx_wake_all_queues(sdata->dev);
-+			}
-+		}
-+		rcu_read_unlock();
-+
-+		next_delay = IEEE80211_BG_SCAN_INTERRUPT;
-+		local->scan_state = SCAN_SET_CHANNEL;
-+
-+		break;
- 	}
- 
- 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
-@@ -615,7 +693,7 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
- 	  * ResultCode: SUCCESS, INVALID_PARAMETERS
- 	 */
- 
--	if (local->sw_scanning || local->hw_scanning) {
-+	if (local->sw_scanning || local->hw_scanning || local->bg_scanning) {
- 		if (local->scan_sdata == scan_sdata)
- 			return 0;
- 		return -EBUSY;
-@@ -636,18 +714,28 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
- 
- 	local->sw_scanning = true;
- 
-+	/*
-+	 * if at least one station interface is associated start a background scan
-+	 * instead of a common software scan
-+	 */
  	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
--				netif_tx_stop_all_queues(sdata->dev);
--				ieee80211_send_nullfunc(local, sdata, 1);
-+				/*
-+				 * no need to stop station interaces here, that will be done in
-+				 * the scan handler
-+				 */
-+				local->bg_scanning = true;
- 			}
- 		} else
- 			netif_tx_stop_all_queues(sdata->dev);
- 	}
- 	rcu_read_unlock();
  
-+	if (!local->bg_scanning)
-+		local->sw_scanning = true;
+-	if (info->status.excessive_retries) {
+-		sta = sta_info_get(local, hdr->addr1);
+-		if (sta) {
+-			if (test_sta_flags(sta, WLAN_STA_PS)) {
+-				/*
+-				 * The STA is in power save mode, so assume
+-				 * that this TX packet failed because of that.
+-				 */
+-				ieee80211_handle_filtered_frame(local, sta, skb);
+-				rcu_read_unlock();
+-				return;
+-			}
++	sta = sta_info_get(local, hdr->addr1);
 +
- 	if (ssid) {
- 		local->scan_ssid_len = ssid_len;
- 		memcpy(local->scan_ssid, ssid, ssid_len);
-@@ -658,14 +746,16 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
- 	local->scan_band = IEEE80211_BAND_2GHZ;
- 	local->scan_sdata = scan_sdata;
++	if (sta) {
++		if (info->status.excessive_retries &&
++		    test_sta_flags(sta, WLAN_STA_PS)) {
++			/*
++			 * The STA is in power save mode, so assume
++			 * that this TX packet failed because of that.
++			 */
++			ieee80211_handle_filtered_frame(local, sta, skb);
++			rcu_read_unlock();
++			return;
+ 		}
+-	}
  
--	netif_addr_lock_bh(local->mdev);
--	local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
--	local->ops->configure_filter(local_to_hw(local),
--				     FIF_BCN_PRBRESP_PROMISC,
--				     &local->filter_flags,
--				     local->mdev->mc_count,
--				     local->mdev->mc_list);
--	netif_addr_unlock_bh(local->mdev);
-+	if (!local->bg_scanning) {
-+		netif_addr_lock_bh(local->mdev);
-+		local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
-+		local->ops->configure_filter(local_to_hw(local),
-+					     FIF_BCN_PRBRESP_PROMISC,
-+					     &local->filter_flags,
-+					     local->mdev->mc_count,
-+					     local->mdev->mc_list);
-+		netif_addr_unlock_bh(local->mdev);
+-	fc = hdr->frame_control;
++		fc = hdr->frame_control;
++
++		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
++		    (ieee80211_is_data_qos(fc))) {
++			u16 tid, ssn;
++			u8 *qc;
+ 
+-	if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
+-	    (ieee80211_is_data_qos(fc))) {
+-		u16 tid, ssn;
+-		u8 *qc;
+-		sta = sta_info_get(local, hdr->addr1);
+-		if (sta) {
+ 			qc = ieee80211_get_qos_ctl(hdr);
+ 			tid = qc[0] & 0xf;
+ 			ssn = ((le16_to_cpu(hdr->seq_ctrl) + 0x10)
+@@ -576,17 +574,19 @@ void ieee80211_tx_status(struct ieee8021
+ 			ieee80211_send_bar(sta->sdata, hdr->addr1,
+ 					   tid, ssn);
+ 		}
+-	}
+ 
+-	if (info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
+-		sta = sta_info_get(local, hdr->addr1);
+-		if (sta) {
++		if (info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
+ 			ieee80211_handle_filtered_frame(local, sta, skb);
+ 			rcu_read_unlock();
+ 			return;
++		} else {
++			if (info->status.excessive_retries)
++				sta->tx_retry_failed++;
++			sta->tx_retry_count += info->status.retry_count;
+ 		}
+-	} else
++
+ 		rate_control_tx_status(local->mdev, skb);
 +	}
  
- 	/* TODO: start scan as soon as all nullfunc frames are ACKed */
- 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 7e0d53a..fd7783a 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -566,7 +566,7 @@ static int ieee80211_ioctl_giwscan(struct net_device *dev,
+ 	rcu_read_unlock();
  
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (local->sw_scanning || local->hw_scanning)
-+	if (local->sw_scanning || local->hw_scanning || local->bg_scanning)
- 		return -EAGAIN;
- 
- 	res = ieee80211_scan_results(local, info, extra, data->length);
+
+
