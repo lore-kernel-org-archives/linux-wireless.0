@@ -1,58 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:44749 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751355AbYI2QZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 12:25:11 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1KkLYV-0006YZ-3v
-	for linux-wireless@vger.kernel.org; Mon, 29 Sep 2008 16:25:03 +0000
-Received: from barriere.frankfurter-softwarefabrik.de ([217.11.197.1])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 16:25:03 +0000
-Received: from niemayer by barriere.frankfurter-softwarefabrik.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 16:25:03 +0000
-To: linux-wireless@vger.kernel.org
-From: Peter Niemayer <niemayer@isg.de>
-Subject: "ip link set address" fails with ath5k and newer madwifi drivers
-Date: Mon, 29 Sep 2008 18:23:10 +0200
-Message-ID: <gbqvde$e4l$1@ger.gmane.org> (sfid-20080929_182517_115390_FC32597A)
+Received: from xc.sipsolutions.net ([83.246.72.84]:54029 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751585AbYIKNXN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 09:23:13 -0400
+Subject: Re: [PATCH 00/18] mac80211 cleanups and fixes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <18632.55008.411078.289830@gargle.gargle.HOWL>
+References: <20080910220145.707263000@sipsolutions.net>
+	 <18632.55008.411078.289830@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+nATz7pNlnJ9STuJKOwG"
+Date: Thu, 11 Sep 2008 15:22:31 +0200
+Message-Id: <1221139351.6986.26.camel@johannes.berg> (sfid-20080911_152321_192695_3F0A6C6A)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
 
-I recently noticed that changing the MAC address of an
-atheros WLAN adapter fails with all ath5k and newer
-madwifi drivers.
+--=-+nATz7pNlnJ9STuJKOwG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-To reproduce, just say something like
+On Thu, 2008-09-11 at 13:59 +0530, Sujith wrote:
 
-  ip link set <yourdevice> address 11:22:33:44:55:66
+>  > I'd been talking with Sujith about this one:
+>  >=20
+>  >  * mac80211: share STA information with driver
+>  >=20
+>  > and decided to just do it; as it stands it's not very useful
+>  > but I expect it to be used soon, if not we can remove the
+>  > EXPORT_SYMBOL again.
+>  >=20
+>=20
+> This would be very useful for ath9k. Making use of the
+> private area for each STA can enable removal of the node list
+> that is maintained currently.
 
-before attaching to your access point. This worked
-fine with old madwifi drivers. (Alas, I cannot narrow
-down "old" much finer, must have been ~2 years)
+I had actually tried
+(http://johannes.sipsolutions.net/patches/kernel/ath9k-sta-node.patch)
+but you're using refcounting for the nodes while mac80211 RCU-protects
+them, so I didn't get very far. It needs a bit more effort to make sure
+you don't have node pointers stick around in some tx descriptor after
+mac80211 decides to remove a node (which may very well happen while
+frames are queued)
 
-With a current ath5k driver, the attachment to the AP
-fails, and if I look into the NIC registers using
-athtool, I can see the new MAC address has not consistently
-been stored there.
+johannes
 
-With a current madwifi driver, the attachment to the AP
-works, and the NIC registers do contain the newly set
-address. But any further communication fails, as packets
-sent from the local machine to the AP contain the wrong
-(old, original, before "ip link set ...") MAC source
-address.
+--=-+nATz7pNlnJ9STuJKOwG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Is this a known problem? Does anybody have a hint on
-where to look for a resolution?
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Thanks in advance,
+iQIcBAABAgAGBQJIyRuTAAoJEKVg1VMiehFY3j4QAJfzbIQQbZacRrjcaNUkn4dt
+8ItWQ366x0V/huaEcJ42Nss3BC9B1M3dh94aeyMBwEjmmaCON6k8EB1NYnpmy2hT
+8DCSNLJDLjFVHedlJ0T9Z9GKZ9wOySSQGPtj7/2kCDuZWNwHafIt1FmOVjYcD5PC
+b7Djrj5hPriboCNIf/AQ7cl97ev9L93qQo0r9QqIHGUOnBwVSyb+MoxnVwbRTc6m
+7TmOvGQ+/BONUiAMGiRP2rno8DoYZxiIRISKPKGfU5xNjx5V57G+wFsgd6AM8LQe
+HBcu1y2K5WNgmTwsPgEvgOfGgEGCLvEIqcIPtNncIf6Bk2WbXNfqeYwmq3HecZaE
+1Gkbdy8XYDh2cY24q8dT9LdWs6sPTw3Z8HDwCxh4qNAs+LhxAyaVBznpaUgyz2fj
+AbBxMYL9S/I3xv85g/FBUJPgrGk9FdUDCpfDMUWdsMBpLmE+3AlUPO+jYbu25beG
+RnscmvS15M06nAr4hLtlqKjuzf91epK4XUPkhbMfcwKIKXp+3R0EZ5p+1fGa0ojR
+frnJVRUKwUszNCOCWcVXQ87vsbuFRw9NCfbhMqRW3AxrJ7ABx8ZFph7fq0seqqQN
+o3A+T2+qNP/zXGfW7kZxtLG0i58dQO5OAvF7KHVEiJ3JVRkGjk/0bdIg5Y3AqMAc
+1rSZ8+eh1+NdviQ4MSlM
+=um7K
+-----END PGP SIGNATURE-----
 
-Peter Niemayer
+--=-+nATz7pNlnJ9STuJKOwG--
 
