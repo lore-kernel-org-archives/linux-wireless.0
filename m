@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35133 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756970AbYIPSc5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 14:32:57 -0400
-Subject: [PATCH] mac80211: refuse invalid interface configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 16 Sep 2008 20:32:04 +0200
-Message-Id: <1221589924.8916.52.camel@johannes.berg> (sfid-20080916_203323_424249_F57B27E3)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:39292 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751298AbYIKRLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 13:11:08 -0400
+Date: Thu, 11 Sep 2008 10:10:59 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/18] mac80211 cleanups and fixes
+Message-ID: <20080911171059.GB6049@tesla> (sfid-20080911_191126_996649_D4BD3DEC)
+References: <20080910220145.707263000@sipsolutions.net> <18632.55008.411078.289830@gargle.gargle.HOWL> <1221139351.6986.26.camel@johannes.berg> <20080911165011.GA6049@tesla> <1221151995.6986.33.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1221151995.6986.33.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refuse setting mesh_id on non-mesh or monitor flags on non-monitor
-interfaces.
+On Thu, Sep 11, 2008 at 09:53:15AM -0700, Johannes Berg wrote:
+> On Thu, 2008-09-11 at 09:50 -0700, Luis R. Rodriguez wrote:
+> 
+> > > I had actually tried
+> > > (http://johannes.sipsolutions.net/patches/kernel/ath9k-sta-node.patch)
+> > > but you're using refcounting for the nodes while mac80211 RCU-protects
+> > > them, so I didn't get very far.
+> > 
+> > Good thing I read RCU docs yesterday.
+> 
+> Heh.
+> 
+> > We should be able to remove ref counts and simply use RCU and
+> > sychronize_rcu() before deletion.
+> 
+> Well you don't get to control deletion then, that's another thing.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/cfg.c |   17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+Does it matter? Our driver won't care as long as the entry still exists.
+Just as with stale routing tables, does it matter if we keep thinking we
+have a node for a few moments later?
 
---- everything.orig/net/mac80211/cfg.c	2008-09-16 20:24:53.000000000 +0200
-+++ everything/net/mac80211/cfg.c	2008-09-16 20:28:14.000000000 +0200
-@@ -105,14 +105,21 @@ static int ieee80211_change_iface(struct
- 	if (netif_running(sdata->dev))
- 		return -EBUSY;
- 
--	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
--		ieee80211_sdata_set_mesh_id(sdata,
--					    params->mesh_id_len,
--					    params->mesh_id);
-+	if (params->mesh_id_len) {
-+		if (ieee80211_vif_is_mesh(&sdata->vif))
-+			ieee80211_sdata_set_mesh_id(sdata,
-+						    params->mesh_id_len,
-+						    params->mesh_id);
-+		else
-+			return -EINVAL;
-+	}
- 
--	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
-+	if (!flags)
- 		return 0;
- 
-+	if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		return -EINVAL;
-+
- 	sdata->u.mntr_flags = *flags;
- 	return 0;
- }
+> > > It needs a bit more effort to make sure
+> > > you don't have node pointers stick around in some tx descriptor after
+> > > mac80211 decides to remove a node (which may very well happen while
+> > > frames are queued)
+> > 
+> > We can call_rcu() here no, and let the driver deal with what it needs to
+> > prior to deletion?
+> 
+> The driver already gets notified via sta_notify() that the sta is about
+> to be deleted, it must make sure that no matter what sort of references
+> it kept, the sta will not be accessed after that sta_notify call.
 
+Ah good point. Then what is the issue?
 
+  Luis
