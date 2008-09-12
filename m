@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:50044 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752310AbYIVKhk (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60450 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761078AbYILU7h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 06:37:40 -0400
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John Linville" <linville@tuxdriver.com>
-Subject: Re: stlc45xx: mac80211 driver for N800 and N810
-References: <877i98iw4h.fsf@nokia.com>
-	<1221819119.10419.75.camel@johannes.berg> <87abe3mdu4.fsf@nokia.com>
-	<43e72e890809201409h456f189ar2157a1f3167d174f@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 22 Sep 2008 13:37:21 +0300
-In-Reply-To: <43e72e890809201409h456f189ar2157a1f3167d174f@mail.gmail.com> (ext Luis R. Rodriguez's message of "Sat\, 20 Sep 2008 14\:09\:57 -0700")
-Message-ID: <878wtk31r2.fsf@nokia.com> (sfid-20080922_123744_833046_9D306A79)
+	Fri, 12 Sep 2008 16:59:37 -0400
+Message-ID: <48CAD837.9060909@lwfinger.net> (sfid-20080912_225949_443737_121A8E85)
+Date: Fri, 12 Sep 2008 15:59:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: The new regulatory code kills my wireless
+References: <48CAA8D6.1030605@lwfinger.net> <20080912174036.GC6134@tesla> <48CAB90C.5090302@lwfinger.net> <20080912191919.GA7722@tesla> <1221250959.5576.10.camel@johannes.berg> <20080912203438.GB7722@tesla>
+In-Reply-To: <20080912203438.GB7722@tesla>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <mcgrof@gmail.com> writes:
+Luis R. Rodriguez wrote:
+> 
+> Sorry, I forgot to factor in lazy people, that's important. I hope
+> there are no lazy distributions.
 
-> Hey just saw this device supports reporting signal strength in RCPI,
-> we'll need to add that flag now,
+There may or may not be any of them, but there will be lots of people 
+that are running kernels later than the standard for their distro - me 
+as one example. Not all of them will have the skills or inclination to 
+build CRDA. For them, I expect that the distro kernels will have the 
+old stuff enabled as long as that option lives.
 
-Nah, I don't think it's worth the trouble.
+Note: The prerequisites for building CRDA should include netlink. That 
+was the last stumbling block for me.
 
-> or I guess we can keep the dbm as the software can do the direct
-> mapping.
-
-I think so too.
-
-> Anyway, cool stuff.
-
-Thanks.
-
--- 
-Kalle Valo
+Larry
