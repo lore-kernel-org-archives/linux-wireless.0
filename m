@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:50890 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751864AbYIMMk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2008 08:40:27 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] p54: Fix sparse warnings
-Date: Sat, 13 Sep 2008 14:40:01 +0200
-Cc: John W Linville <linville@tuxdriver.com>, chunkeey@web.de,
-	linux-wireless@vger.kernel.org
-References: <48cab1e3.m0lac7LoL3DFxIu6%Larry.Finger@lwfinger.net> <200809122036.03553.mb@bu3sch.de> <48CABA84.2060404@lwfinger.net>
-In-Reply-To: <48CABA84.2060404@lwfinger.net>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:46900 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753161AbYILRh2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2008 13:37:28 -0400
+Message-ID: <48CAA8D6.1030605@lwfinger.net> (sfid-20080912_193732_617417_711F79A6)
+Date: Fri, 12 Sep 2008 12:37:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809131440.01505.mb@bu3sch.de> (sfid-20080913_144049_117616_E30E3F07)
+To: John Linville <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: The new regulatory code kills my wireless
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 12 September 2008 20:52:52 Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Friday 12 September 2008 20:16:03 Larry Finger wrote:
-> >>  struct bootrec {
-> >>  	__le32 code;
-> >>  	__le32 len;
-> >> -	u32 data[0];
-> >> +	/* Most references to the data section that follows are for u32
-> >> +	 * quantities; however, one is for an le16 quantity. The union
-> >> +	 * below avoids a cast and makes the usage clearer. */
-> >> +	union {
-> >> +		u32 data[0];
-> >> +		__le16 data16[0];
-> >> +	};
-> >>  } __attribute__((packed));
-> > 
-> > I suggest you change
-> > 	u32 data[0];
-> > to
-> > 	__le32 data_le32[0];
-> > and also add
-> > 	__be32 data_be32[0];
-> > to the union. This avoids another few casts.
-> > (Maybe you don't even need the __le32 variant. I didn't check all the code).
-> 
-> No, it won't avoid any casts. The program uses the data area 7 times 
-> in native-cpu order, once as be32, and once in little-endian order 
+After pulling the latest git from wireless-testing, my wireless 
+failed. I bisected this to be commit 
+544ec9a11fdef5142a76a8eb4b186a80a272c035, "cfg80211: Add new wireless 
+regulatory infrastructure". I have not yet implemented CRDA, thus I 
+selected the CONFIG_WIRELESS_OLD_REGULATORY option.
 
-Is the native use correct? Smells fishy.
+The symptoms are that my devices (b43 and p54usb) receive no scan 
+information.
 
--- 
-Greetings Michael.
+The pertinent dmesg output follows:
+
+cfg80211: Using old static regulatory domain:
+cfg80211: Regulatory domain: US
+         (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+         (239200 KHz - 248200 KHz @ 4000 KHz), (600 mBi, 2700 mBm)
+         (516000 KHz - 520000 KHz @ 4000 KHz), (600 mBi, 2300 mBm)
+         (518000 KHz - 522000 KHz @ 4000 KHz), (600 mBi, 2300 mBm)
+         (520000 KHz - 524000 KHz @ 4000 KHz), (600 mBi, 2300 mBm)
+         (522000 KHz - 534000 KHz @ 4000 KHz), (600 mBi, 2300 mBm)
+         (572500 KHz - 584500 KHz @ 4000 KHz), (600 mBi, 3000 mBm)
+cfg80211: Calling CRDA for country: US
+
+Thanks,
+
+Larry
