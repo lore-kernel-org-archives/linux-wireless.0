@@ -1,245 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2767 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752966AbYIPHfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 03:35:32 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, ron.rindjunsky@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [RFC V2] mac80211: re-enable aggregation on 2.6.27
-Date: Tue, 16 Sep 2008 10:35:08 +0300
-Message-Id: <1221550508-3338-1-git-send-email-tomas.winkler@intel.com> (sfid-20080916_093540_882243_61D51DD4)
-In-Reply-To: <>
-References: <>
-Content-Type: text/plain; charset="us-ascii"
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:42506 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753022AbYILSQH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2008 14:16:07 -0400
+Date: Fri, 12 Sep 2008 13:16:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC/RFT] p54: Fix sparse warnings
+Message-ID: <48cab1e3.m0lac7LoL3DFxIu6%Larry.Finger@lwfinger.net> (sfid-20080912_201612_457625_29302D45)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Re-enable aggregation by addressing skb->cb overwrites
-after insertion into the qdisc. Aggregation was disabled
-after the new TX multiqueue changes were introduced. Instead
-of relying on the skb->cb we use two flags on the skb.
+When this patch is ready, I will use the commit message below.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Question: Does anyone use either p54pci or p54usb on a big-endian machine?
+
+Thanks,
+
+Larry
+
+=====================================================================
+
+The command
+
+make C=2 CF="-D__CHECK_ENDIAN__" drivers/net/wireless/p54/
+
+generates the following warnings:
+
+.../p54common.c:152:38: warning: incorrect type in argument 1 (different base types)
+.../p54common.c:152:38:    expected restricted __be32 const [usertype] *p
+.../p54common.c:152:38:    got unsigned int *<noident>
+.../p54common.c:184:15: warning: restricted __le32 degrades to integer
+.../p54common.c:185:29: warning: cast to restricted __le16
+.../p54common.c:309:11: warning: symbol 'p54_rf_chips' was not declared.
+		        Should it be static?
+.../p54common.c:313:5: warning: symbol 'p54_parse_eeprom' was not declared.
+		       Should it be static?
+.../p54common.c:620:43: warning: incorrect type in argument 3 (different base types)
+.../p54common.c:620:43:    expected unsigned long [unsigned] [usertype] len
+.../p54common.c:620:43:    got restricted __le16 [usertype] len
+.../p54common.c:780:41: warning: restricted __le16 degrades to integer
+.../p54common.c:781:32: warning: restricted __le16 degrades to integer
+.../p54common.c:1250:28: warning: incorrect type in argument 2 (different base types)
+.../p54common.c:1250:28:    expected unsigned short [unsigned] [usertype] filter_type
+.../p54common.c:1250:28:    got restricted __le16 [usertype] filter_type
+.../p54common.c:1252:28: warning: incorrect type in argument 2 (different base types)
+.../p54common.c:1252:28:    expected unsigned short [unsigned] [usertype] filter_type
+.../p54common.c:1252:28:    got restricted __le16 [usertype] filter_type
+.../p54common.c:1257:42: warning: incorrect type in argument 2 (different base types)
+.../p54common.c:1257:42:    expected unsigned short [unsigned] [usertype] filter_type
+.../p54common.c:1257:42:    got restricted __le16
+.../p54common.c:1260:42: warning: incorrect type in argument 2 (different base types)
+.../p54common.c:1260:42:    expected unsigned short [unsigned] [usertype] filter_type
+.../p54common.c:1260:42:    got restricted __le16
+.../p54usb.c:228:10: warning: restricted __le32 degrades to integer
+.../p54usb.c:228:23: warning: restricted __le32 degrades to integer
+.../p54usb.c:228:7: warning: incorrect type in assignment (different base types)
+.../p54usb.c:228:7:    expected restricted __le32 [assigned] [usertype] chk
+.../p54usb.c:228:7:    got unsigned int
+.../p54usb.c:221:8: warning: symbol 'p54u_lm87_chksum' was not declared.
+		    Should it be static?
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
 
-Users have been reporting low rates on 2.6.27 with 11n drivers, the
-problem is been 11n aggregation was disabled due to the new TX multique
-changes. We should have addressed this sooner but we just got to it now.
-
-Without addressing this we won't get 11n aggregation on 2.6.27. I tried
-to minimize the changes required. I'm about to test this, it compiles.
-
-If this doesn't get upstream for 27 perhaps distributions are willing to
-carry it around then and if so oh well (grr...).
-
-V2:
- 1. removed skbuff ->is_part_ampdu
- 2. fixed compilation warnings
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- include/linux/skbuff.h |    4 ++++
- include/net/mac80211.h |    2 --
- net/mac80211/main.c    |    7 ++-----
- net/mac80211/rx.c      |    7 ++-----
- net/mac80211/tx.c      |    3 +++
- net/mac80211/wme.c     |   19 ++++---------------
- 6 files changed, 15 insertions(+), 27 deletions(-)
-
-diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
-index 9099237..4724211 100644
---- a/include/linux/skbuff.h
-+++ b/include/linux/skbuff.h
-@@ -244,6 +244,9 @@ typedef unsigned char *sk_buff_data_t;
-  *	@tc_verd: traffic control verdict
-  *	@ndisc_nodetype: router type (from link layer)
-  *	@do_not_encrypt: set to prevent encryption of this frame
-+ *	@requeue: set to indicate that the wireless core should attempt
-+ *		a software retry on this frame if we failed to
-+ *		receive an ACK for it
-  *	@dma_cookie: a cookie to one of several possible DMA operations
-  *		done by skb DMA functions
-  *	@secmark: security marking
-@@ -319,6 +322,7 @@ struct sk_buff {
- #endif
- #if defined(CONFIG_MAC80211) || defined(CONFIG_MAC80211_MODULE)
- 	__u8			do_not_encrypt:1;
-+	__u8			requeue:1;
- #endif
- 	/* 0/13/14 bit hole */
- 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ff137fd..cce2e79 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -215,7 +215,6 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_CTL_RATE_CTRL_PROBE: TBD
-  * @IEEE80211_TX_CTL_CLEAR_PS_FILT: clear powersave filter for destination
-  *	station
-- * @IEEE80211_TX_CTL_REQUEUE: TBD
-  * @IEEE80211_TX_CTL_FIRST_FRAGMENT: this is a first fragment of the frame
-  * @IEEE80211_TX_CTL_SHORT_PREAMBLE: TBD
-  * @IEEE80211_TX_CTL_LONG_RETRY_LIMIT: this frame should be send using the
-@@ -257,7 +256,6 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_NO_ACK			= BIT(4),
- 	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(5),
- 	IEEE80211_TX_CTL_CLEAR_PS_FILT		= BIT(6),
--	IEEE80211_TX_CTL_REQUEUE		= BIT(7),
- 	IEEE80211_TX_CTL_FIRST_FRAGMENT		= BIT(8),
- 	IEEE80211_TX_CTL_SHORT_PREAMBLE		= BIT(9),
- 	IEEE80211_TX_CTL_LONG_RETRY_LIMIT	= BIT(10),
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index aa5a191..6d57eac 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1293,8 +1293,6 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
- 					    struct sta_info *sta,
- 					    struct sk_buff *skb)
- {
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--
- 	sta->tx_filtered_count++;
- 
- 	/*
-@@ -1341,10 +1339,9 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
- 		return;
- 	}
- 
--	if (!test_sta_flags(sta, WLAN_STA_PS) &&
--	    !(info->flags & IEEE80211_TX_CTL_REQUEUE)) {
-+	if (!test_sta_flags(sta, WLAN_STA_PS) && !skb->requeue) {
- 		/* Software retry the packet once */
--		info->flags |= IEEE80211_TX_CTL_REQUEUE;
-+		skb->requeue = 1;
- 		ieee80211_remove_tx_extra(local, sta->key, skb);
- 		dev_queue_xmit(skb);
- 		return;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6db8545..3e3c870 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -666,7 +666,6 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
- 	struct sk_buff *skb;
- 	int sent = 0;
- 	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_tx_info *info;
- 	DECLARE_MAC_BUF(mac);
- 
- 	sdata = sta->sdata;
-@@ -685,13 +684,11 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
- 
- 	/* Send all buffered frames to the station */
- 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
--		info = IEEE80211_SKB_CB(skb);
- 		sent++;
--		info->flags |= IEEE80211_TX_CTL_REQUEUE;
-+		skb->requeue = 1;
- 		dev_queue_xmit(skb);
- 	}
- 	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
--		info = IEEE80211_SKB_CB(skb);
- 		local->total_ps_buffered--;
- 		sent++;
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-@@ -699,7 +696,7 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
- 		       "since STA not sleeping anymore\n", dev->name,
- 		       print_mac(mac, sta->addr), sta->aid);
- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
--		info->flags |= IEEE80211_TX_CTL_REQUEUE;
-+		skb->requeue = 1;
- 		dev_queue_xmit(skb);
- 	}
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 4788f7b..b25113f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -655,6 +655,9 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
- 	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
- 	seq = &tx->sta->tid_seq[tid];
- 
-+	if (tx->sta->ampdu_mlme.tid_state_tx[tid] == HT_AGG_STATE_OPERATIONAL)
-+		info->flags |= IEEE80211_TX_CTL_AMPDU;
-+
- 	hdr->seq_ctrl = cpu_to_le16(*seq);
- 
- 	/* Increase the sequence number. */
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 4310e2f..c53bd56 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -113,11 +113,11 @@ static u16 classify80211(struct sk_buff *skb, struct net_device *dev)
- 	return ieee802_1d_to_ac[skb->priority];
+Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
++++ wireless-testing/drivers/net/wireless/p54/p54usb.c
+@@ -218,17 +218,17 @@ static void p54u_tx_3887(struct ieee8021
+ 	usb_submit_urb(data_urb, GFP_ATOMIC);
  }
  
-+/* XXX: Remove usage of tid_to_tx_q and only map frames to an AC */
- u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+-__le32 p54u_lm87_chksum(const u32 *data, size_t length)
++static __le32 p54u_lm87_chksum(const u32 *data, size_t length)
  {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct sta_info *sta;
- 	u16 queue;
- 	u8 tid;
-@@ -126,7 +126,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
- 	if (unlikely(queue >= local->hw.queues))
- 		queue = local->hw.queues - 1;
+-	__le32 chk = 0;
++	u32 chk = 0;
  
--	if (info->flags & IEEE80211_TX_CTL_REQUEUE) {
-+	if (skb->requeue) {
- 		rcu_read_lock();
- 		sta = sta_info_get(local, hdr->addr1);
- 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
-@@ -135,12 +135,8 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
- 			int ampdu_queue = sta->tid_to_tx_q[tid];
+ 	length >>= 2;
+ 	while (length--) {
+-		chk ^= cpu_to_le32(*data++);
++		chk ^= *data++;
+ 		chk = (chk >> 5) ^ (chk << 3);
+ 	}
  
- 			if ((ampdu_queue < ieee80211_num_queues(hw)) &&
--			    test_bit(ampdu_queue, local->queue_pool)) {
-+			    test_bit(ampdu_queue, local->queue_pool))
- 				queue = ampdu_queue;
--				info->flags |= IEEE80211_TX_CTL_AMPDU;
--			} else {
--				info->flags &= ~IEEE80211_TX_CTL_AMPDU;
--			}
- 		}
- 		rcu_read_unlock();
+-	return chk;
++	return cpu_to_le32(chk);
+ }
  
-@@ -169,12 +165,8 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
- 			struct ieee80211_hw *hw = &local->hw;
+ static void p54u_tx_lm87(struct ieee80211_hw *dev,
+Index: wireless-testing/drivers/net/wireless/p54/p54common.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/p54common.c
++++ wireless-testing/drivers/net/wireless/p54/p54common.c
+@@ -149,7 +149,7 @@ int p54_parse_firmware(struct ieee80211_
+ 		u32 code = le32_to_cpu(bootrec->code);
+ 		switch (code) {
+ 		case BR_CODE_COMPONENT_ID:
+-			priv->fw_interface = be32_to_cpup(bootrec->data);
++			priv->fw_interface = be32_to_cpup((const __be32 *)bootrec->data);
+ 			switch (priv->fw_interface) {
+ 			case FW_FMAC:
+ 				printk(KERN_INFO "p54: FreeMAC firmware\n");
+@@ -181,9 +181,8 @@ int p54_parse_firmware(struct ieee80211_
+ 			priv->rx_end = le32_to_cpu(desc->rx_end) - 0x3500;
+ 			priv->headroom = desc->headroom;
+ 			priv->tailroom = desc->tailroom;
+-			if (bootrec->len == 11)
+-				priv->rx_mtu = (size_t) le16_to_cpu(
+-					(__le16)bootrec->data[10]);
++			if (le32_to_cpu(bootrec->len) == 11)
++				priv->rx_mtu = le16_to_cpu(bootrec->data16[20]);
+ 			else
+ 				priv->rx_mtu = (size_t)
+ 					0x620 - priv->tx_hdr_len;
+@@ -306,11 +305,11 @@ static int p54_convert_rev1(struct ieee8
+ 	return 0;
+ }
  
- 			if ((ampdu_queue < ieee80211_num_queues(hw)) &&
--			    test_bit(ampdu_queue, local->queue_pool)) {
-+			    test_bit(ampdu_queue, local->queue_pool))
- 				queue = ampdu_queue;
--				info->flags |= IEEE80211_TX_CTL_AMPDU;
--			} else {
--				info->flags &= ~IEEE80211_TX_CTL_AMPDU;
--			}
- 		}
+-const char* p54_rf_chips[] = { "NULL", "Indigo?", "Duette",
++static const char *p54_rf_chips[] = { "NULL", "Indigo?", "Duette",
+                               "Frisbee", "Xbow", "Longbow" };
+ static int p54_init_xbow_synth(struct ieee80211_hw *dev);
  
- 		rcu_read_unlock();
-@@ -188,9 +180,6 @@ int ieee80211_ht_agg_queue_add(struct ieee80211_local *local,
+-int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
++static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
  {
- 	int i;
+ 	struct p54_common *priv = dev->priv;
+ 	struct eeprom_pda_wrap *wrap = NULL;
+@@ -617,7 +616,7 @@ static void p54_rx_eeprom_readback(struc
+ 	if (!priv->eeprom)
+ 		return ;
  
--	/* XXX: currently broken due to cb/requeue use */
--	return -EPERM;
--
- 	/* prepare the filter and save it for the SW queue
- 	 * matching the received HW queue */
+-	memcpy(priv->eeprom, eeprom->data, eeprom->len);
++	memcpy(priv->eeprom, eeprom->data, le16_to_cpu(eeprom->len));
  
--- 
-1.5.4.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+ 	complete(&priv->eeprom_comp);
+ }
+@@ -777,8 +776,9 @@ int p54_read_eeprom(struct ieee80211_hw
+ 		hdr->len = cpu_to_le16(blocksize + sizeof(*eeprom_hdr));
+ 		eeprom_hdr->offset = cpu_to_le16(offset);
+ 		eeprom_hdr->len = cpu_to_le16(blocksize);
+-		p54_assign_address(dev, NULL, hdr, hdr->len + sizeof(*hdr));
+-	        priv->tx(dev, hdr, hdr->len + sizeof(*hdr), 0);
++		p54_assign_address(dev, NULL, hdr, le16_to_cpu(hdr->len) +
++				   sizeof(*hdr));
++		priv->tx(dev, hdr, le16_to_cpu(hdr->len) + sizeof(*hdr), 0);
+ 
+ 		if (!wait_for_completion_interruptible_timeout(&priv->eeprom_comp, HZ)) {
+ 			printk(KERN_ERR "%s: device does not respond!\n",
+@@ -1247,18 +1247,20 @@ static void p54_configure_filter(struct
+ 
+ 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
+ 		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
+-			p54_set_filter(dev, priv->filter_type, NULL);
++			p54_set_filter(dev, le16_to_cpu(priv->filter_type),
++				 NULL);
+ 		else
+-			p54_set_filter(dev, priv->filter_type, priv->bssid);
++			p54_set_filter(dev, le16_to_cpu(priv->filter_type),
++				 priv->bssid);
+ 	}
+ 
+ 	if (changed_flags & FIF_PROMISC_IN_BSS) {
+ 		if (*total_flags & FIF_PROMISC_IN_BSS)
+-			p54_set_filter(dev, priv->filter_type |
+-				cpu_to_le16(0x8), NULL);
++			p54_set_filter(dev, le16_to_cpu(priv->filter_type) |
++				0x8, NULL);
+ 		else
+-			p54_set_filter(dev, priv->filter_type &
+-				~cpu_to_le16(0x8), priv->bssid);
++			p54_set_filter(dev, le16_to_cpu(priv->filter_type) &
++				~0x8, priv->bssid);
+ 	}
+ }
+ 
+Index: wireless-testing/drivers/net/wireless/p54/p54common.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/p54common.h
++++ wireless-testing/drivers/net/wireless/p54/p54common.h
+@@ -18,7 +18,13 @@
+ struct bootrec {
+ 	__le32 code;
+ 	__le32 len;
+-	u32 data[0];
++	/* Most references to the data section that follows are for u32
++	 * quantities; however, one is for an le16 quantity. The union
++	 * below avoids a cast and makes the usage clearer. */
++	union {
++		u32 data[0];
++		__le16 data16[0];
++	};
+ } __attribute__((packed));
+ 
+ struct bootrec_exp_if {
