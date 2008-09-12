@@ -1,30 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:8196 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818AbYIZHYw (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57831 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754436AbYILCNV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 03:24:52 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so142671yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 00:24:51 -0700 (PDT)
-Message-ID: <43e72e890809260024ob134358me80ae1c169e4da8e@mail.gmail.com> (sfid-20080926_092457_807913_1768D225)
-Date: Fri, 26 Sep 2008 00:24:51 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Getting country alpha2 on network manager and using it for crda
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+	Thu, 11 Sep 2008 22:13:21 -0400
+Message-ID: <48C9D040.8010107@lwfinger.net> (sfid-20080912_041325_780740_942C2F98)
+Date: Thu, 11 Sep 2008 21:13:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: LKML <linux-kernel@vger.kernel.org>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: I need help with a sparse warning
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So since this may not happen for a while I figure I can give a shot.
-But I'm curious where we should get our country alpha2 from? Does LSB
-define a country has to be somewhere? Maybe the locale? Timezone?
-Anyway, in the end the user should be able to change the country too.
+In file drivers/net/wireless/p54/p54common.c, the statement
 
-I'm thinking to start by just letting the user pick a country for now.
-We can figure out where the hell it gets the country by default later
-but if you have ideas that'd be great. It seems reasonable to ask for
-this upon installation time (?)
+        priv->rx_mtu = (size_t) le16_to_cpu((__le16)bootrec->data[10]);
 
-  Luis
+generates the sparse warning
+
+.../p54common.c:185:29: warning: cast to restricted __le16
+
+where bootrec->data is u32, and priv->rx_mtu is u16.
+
+What should be done to eliminate this warning?
+
+Thanks,
+
+Larry
+
