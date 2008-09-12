@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39613 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753385AbYIIOZe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 10:25:34 -0400
-Date: Tue, 9 Sep 2008 10:05:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing rebased again?
-Message-ID: <20080909140556.GA4291@tuxdriver.com> (sfid-20080909_162539_653638_5B274A48)
-References: <1220858698.28282.324.camel@debian.sh.intel.com> <20080908142117.GA24557@tuxdriver.com> <873ak9hnux.fsf@nokia.com>
+Received: from mail.atheros.com ([12.36.123.2]:39324 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755967AbYILVP2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2008 17:15:28 -0400
+Date: Fri, 12 Sep 2008 14:15:19 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: The new regulatory code kills my wireless
+Message-ID: <20080912211518.GD7722@tesla> (sfid-20080912_231532_528680_A1707D21)
+References: <48CAA8D6.1030605@lwfinger.net> <20080912174036.GC6134@tesla> <48CAB90C.5090302@lwfinger.net> <20080912191919.GA7722@tesla> <1221250959.5576.10.camel@johannes.berg> <20080912203438.GB7722@tesla> <48CAD837.9060909@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <873ak9hnux.fsf@nokia.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <48CAD837.9060909@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 09, 2008 at 08:47:34AM +0300, Kalle Valo wrote:
-> John W. Linville <linville@tuxdriver.com> writes:
+On Fri, Sep 12, 2008 at 01:59:35PM -0700, Larry Finger wrote:
+> Luis R. Rodriguez wrote:
+> >
+> > Sorry, I forgot to factor in lazy people, that's important. I hope
+> > there are no lazy distributions.
 > 
-> > On Mon, Sep 08, 2008 at 03:24:58PM +0800, Zhu Yi wrote:
-> >
-> >> I find the wireless-testing GIT has been rebased twice in less than one
-> >> month. Does it mean you give up making it a long lived merge-able tree?
-> >> This may affect to the downstream wireless drivers code management. At
-> >> least for iwlwifi, we'd expect to merge with wireless-testing everytime.
-> >
-> > There must be some mistake, it has not been rebased at all -- at
-> > least not as far as git is concerned.  I have done my now customary
-> > "revert everything, pull from Linus re-apply" thing that I call a
-> > virtual rebase, but the history has remained continuous.
-> >
-> > The non-master branches do get rebased of course.  Perhaps you saw
-> > that and thought that master had been rebased as well?
+> There may or may not be any of them, but there will be lots of people
+> that are running kernels later than the standard for their distro - me
+> as one example. Not all of them will have the skills or inclination to
+> build CRDA. For them, I expect that the distro kernels will have the
+> old stuff enabled as long as that option lives.
 > 
-> FWIW, I also have had conflicts while pulling wireless-testing#master
-> and I similarly thought that you have rebased it. But if you didn't I
-> don't know what happened.
+> Note: The prerequisites for building CRDA should include netlink. That
+> was the last stumbling block for me.
 
-It is possible that I mistakenly copied the wrong tree out there or
-something like that -- it has happened occasionally.  Generally I know
-when I've done that and correct it immediately, but it is possible
-that it happened and the wrong tree was sitting under wireless-testing
-for a day or two.  If so, then I apologize.
+Yeah good point.
 
-John
+  Luis
