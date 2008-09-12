@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48858 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754642AbYILRmI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 13:42:08 -0400
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: yi.zhu@intel.com, Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Subject: [PATCH] mac80211 : Fix mode change hard_start_xmit function
-Date: Fri, 12 Sep 2008 10:42:07 -0700
-Message-Id: <1221241327-15720-1-git-send-email-abhijeet.kolekar@intel.com> (sfid-20080912_194212_937819_A2160941)
-In-Reply-To: <>
-References: <>
+Received: from sj-iport-5.cisco.com ([171.68.10.87]:24424 "EHLO
+	sj-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754403AbYILCkv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 22:40:51 -0400
+From: Roland Dreier <rdreier@cisco.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: I need help with a sparse warning
+References: <48C9D040.8010107@lwfinger.net>
+Date: Thu, 11 Sep 2008 19:39:49 -0700
+In-Reply-To: <48C9D040.8010107@lwfinger.net> (Larry Finger's message of "Thu,
+	11 Sep 2008 21:13:20 -0500")
+Message-ID: <ada4p4mm6iy.fsf@cisco.com> (sfid-20080912_044058_316145_87CAAEA2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When monitor mode is changed to BSS or IBSS, data trasnfer can not happen
-because proper transmit function is not assigend for BSS ,IBSS mode.
-This patch fixes this problem assigning the ieee80211_subif_start_xmit
-to device's hard_start_xmit function.
+ > In file drivers/net/wireless/p54/p54common.c, the statement
+ > 
+ >        priv->rx_mtu = (size_t) le16_to_cpu((__le16)bootrec->data[10]);
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/iface.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+[I don't see this code in Linus's tree]
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 672cec6..df9d617 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -97,12 +97,14 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 
- 	switch (type) {
- 	case IEEE80211_IF_TYPE_AP:
-+		sdata->dev->hard_start_xmit = ieee80211_subif_start_xmit;
- 		skb_queue_head_init(&sdata->u.ap.ps_bc_buf);
- 		INIT_LIST_HEAD(&sdata->u.ap.vlans);
- 		break;
- 	case IEEE80211_IF_TYPE_MESH_POINT:
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
-+		sdata->dev->hard_start_xmit = ieee80211_subif_start_xmit;
- 		ifsta = &sdata->u.sta;
- 		INIT_WORK(&ifsta->work, ieee80211_sta_work);
- 		setup_timer(&ifsta->timer, ieee80211_sta_timer,
--- 
-1.5.4.3
+ > 
+ > generates the sparse warning
+ > 
+ > .../p54common.c:185:29: warning: cast to restricted __le16
+ > 
+ > where bootrec->data is u32, and priv->rx_mtu is u16.
+ > 
+ > What should be done to eliminate this warning?
 
+the code in question looks buggy to me.  Since bootrec->data[10] is u32,
+casting it to a 16-bit type is going to take a different 2 bytes out of
+the 4 bytes depending on the endianness of the system the driver is
+built for.  And I assume you are parsing some fixed-layout thing that
+the firmware is giving you or something like that.
+
+I would guess you want something like:
+
+	priv->rx_mtu = le16_to_cpu(((__force __le16 *) bootrec->data)[20]);
+
+(__force is what shuts up sparse, and as far as I can see, the size_t
+cast is useless, since the result will be promoted anyway)
+
+ - R.
