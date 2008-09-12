@@ -1,67 +1,314 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:64770 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752503AbYIZIj4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 04:39:56 -0400
-Message-ID: <48DC9F31.4010807@cn.fujitsu.com> (sfid-20080926_104001_437100_81E82E6E)
-Date: Fri, 26 Sep 2008 16:37:05 +0800
-From: Wang Chen <wangchen@cn.fujitsu.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Dan Williams <dcbw@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	NETDEV <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/18] netdevice airo: Convert directly reference of	netdev->priv
- to netdev->ml_priv
-References: <48C0A219.2030004@cn.fujitsu.com>	 <48C0A72B.9050407@cn.fujitsu.com>  <20080905125036.GA3027@tuxdriver.com> <1220634383.6430.14.camel@localhost.localdomain> <48C24F66.1090803@cn.fujitsu.com>
-In-Reply-To: <48C24F66.1090803@cn.fujitsu.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from xc.sipsolutions.net ([83.246.72.84]:39806 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758619AbYILUwy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2008 16:52:54 -0400
+Subject: [PATCH v3] mac80211: fix virtual interfaces vs. injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1221231237.5576.2.camel@johannes.berg> (sfid-20080912_221803_802287_33BFC808)
+References: <1221172545.5956.7.camel@johannes.berg>
+	 (sfid-20080912_003625_890683_38C8ADDA)  <1221173167.5956.16.camel@johannes.berg>
+	 (sfid-20080912_004647_949138_0EDBD3E9)  <1221231237.5576.2.camel@johannes.berg>
+	 (sfid-20080912_221803_802287_33BFC808)
+Content-Type: text/plain
+Date: Fri, 12 Sep 2008 22:52:47 +0200
+Message-Id: <1221252767.5576.25.camel@johannes.berg> (sfid-20080912_225312_297071_12B06CB7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wang Chen said the following on 2008-9-6 17:37:
->>>> We have some reasons to kill netdev->priv:
->>>> 1. netdev->priv is equal to netdev_priv().
->>>> 2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
->>>>    netdev_priv() is more flexible than netdev->priv.
->>>> But we cann't kill netdev->priv, because so many drivers reference to it
->>>> directly.
->>>>
->>>> OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
->>>> and I want to kill netdev->priv later, I decided to convert all the direct
->>>> reference of netdev->priv first.
->>>>
->>>> Different to readonly reference of netdev->priv, in this driver, netdev->priv
->>>> was changed. I use netdev->ml_priv to replace netdev->priv.
->>>>
->>>> Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
->>> Thank you for your patch.  However, I do not understand why you didn't
->>> simply replace netdev->priv with netdev_priv()?  Can you explain?
->> Yeah, that would have been my first choice too...
->>
-> 
-> 1. Why I don't use netdev_priv() to replace netdev->priv here?
-> Because, here
->> @@ -2665,7 +2666,7 @@ static struct net_device *init_wifidev(struct airo_info *ai,
->>  	struct net_device *dev = alloc_netdev(0, "wifi%d", wifi_setup);
->>  	if (!dev)
->>  		return NULL;
->> -	dev->priv = ethdev->priv;
->> +	dev->ml_priv = ethdev->ml_priv;
->> @@ -2766,7 +2767,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
->>  		return NULL;
->>  	}
->>  
->> -	ai = dev->priv;
->> +	ai = dev->ml_priv = netdev_priv(dev);
-> netdev->priv was changed here, but it shouldn't, the memory was allocated when alloc_netdev and
-> netdev->priv should always pointed to that memory.
-> 
-> 2. Why I use netdev->ml_priv here to replace netdev->priv?
-> In this driver, netdev->priv are shared by multi wifidevs, that means wifidevs need
-> mid-layer private data, which are all same as their parent netdev.
-> This usage is same as Dave's commit "syncppp: Fix crashes."
-> 
+Currently, virtual interface pointers passed to drivers might be
+from monitor interfaces and as such completely uninitialised
+because we do not tell the driver about monitor interfaces when
+those are created. Instead of passing them, we should therefore
+indicate to the driver that there is no information; do that by
+passing a NULL value and adjust drivers to cope with it.
 
-John, do you have any comments about my answer?
+As a result, some mac80211 API functions also need to cope with
+a NULL vif pointer so drivers can still call them unconditionally.
+
+Also, when injecting frames we really don't want to pass NULL all
+the time, if we know we are the source address of a frame and have
+a local interface for that address, we can to use that interface.
+This also helps with processing the frame correctly for that
+interface which will help the 802.11w implementation. It's not
+entirely correct for VLANs or WDS interfaces because there the MAC
+address isn't unique, but it's already a lot better than what we
+do now.
+
+Finally, when injecting without a matching local interface, don't
+assign sequence numbers at all.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+fold in the fix
+
+ drivers/net/wireless/mac80211_hwsim.c     |    3 -
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   21 ++++++---
+ include/net/mac80211.h                    |    1 
+ net/mac80211/tx.c                         |   64 ++++++++++++++++++++++++++++--
+ net/mac80211/util.c                       |   37 +++++++++++------
+ 5 files changed, 101 insertions(+), 25 deletions(-)
+
+--- everything.orig/include/net/mac80211.h	2008-09-12 10:56:28.000000000 +0200
++++ everything/include/net/mac80211.h	2008-09-12 22:51:49.000000000 +0200
+@@ -330,6 +330,7 @@ struct ieee80211_tx_info {
+ 
+ 	union {
+ 		struct {
++			/* NB: vif can be NULL for injected frames */
+ 			struct ieee80211_vif *vif;
+ 			struct ieee80211_key_conf *hw_key;
+ 			struct ieee80211_sta *sta;
+--- everything.orig/drivers/net/wireless/mac80211_hwsim.c	2008-09-12 10:56:28.000000000 +0200
++++ everything/drivers/net/wireless/mac80211_hwsim.c	2008-09-12 22:51:58.000000000 +0200
+@@ -258,7 +258,8 @@ static int mac80211_hwsim_tx(struct ieee
+ 
+ 	txi = IEEE80211_SKB_CB(skb);
+ 
+-	hwsim_check_magic(txi->control.vif);
++	if (txi->control.vif)
++		hwsim_check_magic(txi->control.vif);
+ 	if (txi->control.sta)
+ 		hwsim_check_sta_magic(txi->control.sta);
+ 
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00queue.c	2008-09-12 10:56:28.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00queue.c	2008-09-12 14:18:19.000000000 +0200
+@@ -155,7 +155,6 @@ static void rt2x00queue_create_tx_descri
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
+-	struct rt2x00_intf *intf = vif_to_intf(tx_info->control.vif);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)entry->skb->data;
+ 	struct ieee80211_rate *rate =
+ 	    ieee80211_get_tx_rate(rt2x00dev->hw, tx_info);
+@@ -278,16 +277,22 @@ static void rt2x00queue_create_tx_descri
+ 	 * sequence counter given by mac80211.
+ 	 */
+ 	if (tx_info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+-		spin_lock_irqsave(&intf->seqlock, irqflags);
++		if (likely(tx_info->control.vif)) {
++			struct rt2x00_intf *intf;
+ 
+-		if (test_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc->flags))
+-			intf->seqno += 0x10;
+-		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+-		hdr->seq_ctrl |= cpu_to_le16(intf->seqno);
++			intf = vif_to_intf(tx_info->control.vif);
+ 
+-		spin_unlock_irqrestore(&intf->seqlock, irqflags);
++			spin_lock_irqsave(&intf->seqlock, irqflags);
+ 
+-		__set_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags);
++			if (test_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc->flags))
++				intf->seqno += 0x10;
++			hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
++			hdr->seq_ctrl |= cpu_to_le16(intf->seqno);
++
++			spin_unlock_irqrestore(&intf->seqlock, irqflags);
++
++			__set_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags);
++		}
+ 	}
+ 
+ 	/*
+--- everything.orig/net/mac80211/tx.c	2008-09-12 11:02:31.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-09-12 22:52:06.000000000 +0200
+@@ -624,7 +624,14 @@ ieee80211_tx_h_sequence(struct ieee80211
+ 	u8 *qc;
+ 	int tid;
+ 
+-	/* only for injected frames */
++	/*
++	 * Packet injection may want to control the sequence
++	 * number, if we have no matching interface then we
++	 * neither assign one ourselves nor ask the driver to.
++	 */
++	if (unlikely(!info->control.vif))
++		return TX_CONTINUE;
++
+ 	if (unlikely(ieee80211_is_ctl(hdr->frame_control)))
+ 		return TX_CONTINUE;
+ 
+@@ -849,7 +856,6 @@ __ieee80211_parse_tx_radiotap(struct iee
+ 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
+ 
+ 	skb->do_not_encrypt = 1;
+-	info->flags |= IEEE80211_TX_CTL_INJECTED;
+ 	tx->flags &= ~IEEE80211_TX_FRAGMENTED;
+ 
+ 	/*
+@@ -981,7 +987,7 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 
+ 	/* process and remove the injection radiotap header */
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
++	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED)) {
+ 		if (__ieee80211_parse_tx_radiotap(tx, skb) == TX_DROP)
+ 			return TX_DROP;
+ 
+@@ -1300,6 +1306,11 @@ int ieee80211_master_start_xmit(struct s
+ 	struct ieee80211_sub_if_data *osdata;
+ 	int headroom;
+ 	bool may_encrypt;
++	enum {
++		NOT_MONITOR,
++		FOUND_SDATA,
++		UNKNOWN_ADDRESS,
++	} monitor_iface = NOT_MONITOR;
+ 	int ret;
+ 
+ 	if (skb->iif)
+@@ -1335,6 +1346,50 @@ int ieee80211_master_start_xmit(struct s
+ 				IEEE80211_IFSTA_MESH_CTR_INC(&osdata->u.mesh,
+ 							     fwded_frames);
+ 		}
++	} else if (unlikely(osdata->vif.type == NL80211_IFTYPE_MONITOR)) {
++		struct ieee80211_sub_if_data *sdata;
++		struct ieee80211_local *local = osdata->local;
++		struct ieee80211_hdr *hdr;
++		int hdrlen;
++		u16 len_rthdr;
++
++		info->flags |= IEEE80211_TX_CTL_INJECTED;
++		monitor_iface = UNKNOWN_ADDRESS;
++
++		len_rthdr = ieee80211_get_radiotap_len(skb->data);
++		hdr = (struct ieee80211_hdr *)skb->data + len_rthdr;
++		hdrlen = ieee80211_hdrlen(hdr->frame_control);
++
++		/* check the header is complete in the frame */
++		if (likely(skb->len >= len_rthdr + hdrlen)) {
++			/*
++			 * We process outgoing injected frames that have a
++			 * local address we handle as though they are our
++			 * own frames.
++			 * This code here isn't entirely correct, the local
++			 * MAC address is not necessarily enough to find
++			 * the interface to use; for that proper VLAN/WDS
++			 * support we will need a different mechanism.
++			 */
++
++			rcu_read_lock();
++			list_for_each_entry_rcu(sdata, &local->interfaces,
++						list) {
++				if (!netif_running(sdata->dev))
++					continue;
++				if (compare_ether_addr(sdata->dev->dev_addr,
++						       hdr->addr2)) {
++					dev_hold(sdata->dev);
++					dev_put(odev);
++					osdata = sdata;
++					odev = osdata->dev;
++					skb->iif = sdata->dev->ifindex;
++					monitor_iface = FOUND_SDATA;
++					break;
++				}
++			}
++			rcu_read_unlock();
++		}
+ 	}
+ 
+ 	may_encrypt = !skb->do_not_encrypt;
+@@ -1355,7 +1410,8 @@ int ieee80211_master_start_xmit(struct s
+ 		osdata = container_of(osdata->bss,
+ 				      struct ieee80211_sub_if_data,
+ 				      u.ap);
+-	info->control.vif = &osdata->vif;
++	if (likely(monitor_iface != UNKNOWN_ADDRESS))
++		info->control.vif = &osdata->vif;
+ 	ret = ieee80211_tx(odev, skb);
+ 	dev_put(odev);
+ 
+--- everything.orig/net/mac80211/util.c	2008-09-12 10:56:28.000000000 +0200
++++ everything/net/mac80211/util.c	2008-09-12 14:18:19.000000000 +0200
+@@ -231,16 +231,21 @@ __le16 ieee80211_generic_frame_duration(
+ 					struct ieee80211_rate *rate)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_sub_if_data *sdata;
+ 	u16 dur;
+ 	int erp;
++	bool short_preamble = false;
+ 
+ 	erp = 0;
+-	if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
+-		erp = rate->flags & IEEE80211_RATE_ERP_G;
++	if (vif) {
++		sdata = vif_to_sdata(vif);
++		short_preamble = sdata->bss_conf.use_short_preamble;
++		if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
++			erp = rate->flags & IEEE80211_RATE_ERP_G;
++	}
+ 
+ 	dur = ieee80211_frame_duration(local, frame_len, rate->bitrate, erp,
+-				       sdata->bss_conf.use_short_preamble);
++				       short_preamble);
+ 
+ 	return cpu_to_le16(dur);
+ }
+@@ -252,7 +257,7 @@ __le16 ieee80211_rts_duration(struct iee
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_rate *rate;
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_sub_if_data *sdata;
+ 	bool short_preamble;
+ 	int erp;
+ 	u16 dur;
+@@ -260,13 +265,17 @@ __le16 ieee80211_rts_duration(struct iee
+ 
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 
+-	short_preamble = sdata->bss_conf.use_short_preamble;
++	short_preamble = false;
+ 
+ 	rate = &sband->bitrates[frame_txctl->control.rts_cts_rate_idx];
+ 
+ 	erp = 0;
+-	if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
+-		erp = rate->flags & IEEE80211_RATE_ERP_G;
++	if (vif) {
++		sdata = vif_to_sdata(vif);
++		short_preamble = sdata->bss_conf.use_short_preamble;
++		if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
++			erp = rate->flags & IEEE80211_RATE_ERP_G;
++	}
+ 
+ 	/* CTS duration */
+ 	dur = ieee80211_frame_duration(local, 10, rate->bitrate,
+@@ -289,7 +298,7 @@ __le16 ieee80211_ctstoself_duration(stru
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_rate *rate;
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_sub_if_data *sdata;
+ 	bool short_preamble;
+ 	int erp;
+ 	u16 dur;
+@@ -297,12 +306,16 @@ __le16 ieee80211_ctstoself_duration(stru
+ 
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 
+-	short_preamble = sdata->bss_conf.use_short_preamble;
++	short_preamble = false;
+ 
+ 	rate = &sband->bitrates[frame_txctl->control.rts_cts_rate_idx];
+ 	erp = 0;
+-	if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
+-		erp = rate->flags & IEEE80211_RATE_ERP_G;
++	if (vif) {
++		sdata = vif_to_sdata(vif);
++		short_preamble = sdata->bss_conf.use_short_preamble;
++		if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
++			erp = rate->flags & IEEE80211_RATE_ERP_G;
++	}
+ 
+ 	/* Data frame duration */
+ 	dur = ieee80211_frame_duration(local, frame_len, rate->bitrate,
+
+
