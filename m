@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:15204 "EHLO mga11.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:21886 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752511AbYIEH6G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 03:58:06 -0400
-Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k
-	on	ubuntu hardy
-From: Zhu Yi <yi.zhu@intel.com>
-To: Karol Szkudlarek <karol@mikronika.com.pl>
+	id S1752478AbYILBDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 21:03:10 -0400
+Subject: Re: BMC4310 support (03f0:171d)
+From: Pavel Roskin <proski@gnu.org>
+To: Nadav Kavalerchik <nadavkav@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20080903T181136-957@post.gmane.org>
-References: <48BC47C5.2070807@mikronika.com.pl>
-	 <1220425598.28282.190.camel@debian.sh.intel.com>
-	 <loom.20080903T181136-957@post.gmane.org>
+In-Reply-To: <4219988b0809091241l565fa8fcpebe2fb552782c4d4@mail.gmail.com>
+References: <4219988b0809011331j4acb1582u3239218c6b7ff573@mail.gmail.com>
+	 <4219988b0809011349i640d36e0p497eb8cefe303d0@mail.gmail.com>
+	 <200809012333.58897.mb@bu3sch.de>
+	 <4219988b0809091240s970c580k763054a56ef740b3@mail.gmail.com>
+	 <4219988b0809091241l565fa8fcpebe2fb552782c4d4@mail.gmail.com>
 Content-Type: text/plain
-Date: Fri, 05 Sep 2008 15:55:00 +0800
-Message-Id: <1220601300.28282.291.camel@debian.sh.intel.com> (sfid-20080905_095810_624638_D1CEA0E2)
+Date: Thu, 11 Sep 2008 21:03:07 -0400
+Message-Id: <1221181387.1351.6.camel@dv> (sfid-20080912_030316_904116_3F429AA7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-09-03 at 18:22 +0000, Karol Szkudlarek wrote:
-> Tests I performed with
-> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2 which
-> is
-> compat-wireless-2008-08-06 and git-describe v2.6.26-rc9-14214-g9cb3010
-> and compat-wireless-2008-07-25 and git-describe
-> v2.6.26-rc9-14207-ga520bdb
-> with the same result...
+On Tue, 2008-09-09 at 22:41 +0300, Nadav Kavalerchik wrote:
+> anything i can do to help ?
+> 
+>  ndiswrapper can handle the vista drivers ver 6.1 so i am stuck :-(
 
-Please see if 2.6.27-rc kernels fix this problem. The wme_qdisc stuff is
-removed in .27.
+I guess that you mean that it cannot.
 
-Thanks,
--yi
+>  throw me a bone :-)
 
+svn co https://ndiswrapper.svn.sourceforge.net/svnroot/ndiswrapper/branches/ndisv6/ndiswrapper
+
+That's an experimental version of ndiswrapper that supports NDIS v6
+only.  As far as I know, it's not fully functional, but at least you
+don't have to wait for reverse engineering.  NDIS is documented.  I
+believe x86_64 has better chances to work than i386.
+
+Just a reminder - please don't discuss issues with ndiswrapper in this
+list.  It has a list of its own.
+
+-- 
+Regards,
+Pavel Roskin
