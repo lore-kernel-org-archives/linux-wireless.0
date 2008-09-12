@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48227 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754281AbYIMJUn (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:51747 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756817AbYILDFC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2008 05:20:43 -0400
-Subject: Re: The new regulatory code kills my wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
+	Thu, 11 Sep 2008 23:05:02 -0400
+Message-ID: <48C9DC5C.3040109@lwfinger.net> (sfid-20080912_050528_446723_4D64905A)
+Date: Thu, 11 Sep 2008 22:05:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Roland Dreier <rdreier@cisco.com>
+CC: LKML <linux-kernel@vger.kernel.org>,
 	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1221272779.6695.22.camel@californication>
-References: <48CAA8D6.1030605@lwfinger.net> <20080912174036.GC6134@tesla>
-	 <48CAB90C.5090302@lwfinger.net>  <20080912191919.GA7722@tesla>
-	 (sfid-20080912_211933_280898_C5E534CA)  <1221250959.5576.10.camel@johannes.berg>
-	 <1221272779.6695.22.camel@californication>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Rjx0ba4uX0mkJ0cyrOZ+"
-Date: Sat, 13 Sep 2008 10:33:30 +0200
-Message-Id: <1221294810.3700.3.camel@johannes.berg> (sfid-20080913_112046_991546_7D6E8D90)
-Mime-Version: 1.0
+Subject: Re: I need help with a sparse warning
+References: <48C9D040.8010107@lwfinger.net> <ada4p4mm6iy.fsf@cisco.com>
+In-Reply-To: <ada4p4mm6iy.fsf@cisco.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Roland Dreier wrote:
+>  > In file drivers/net/wireless/p54/p54common.c, the statement
+>  > 
+>  >        priv->rx_mtu = (size_t) le16_to_cpu((__le16)bootrec->data[10]);
+> 
+> [I don't see this code in Linus's tree]
 
---=-Rjx0ba4uX0mkJ0cyrOZ+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It is in wireless-testing.
 
-Hi Marcel,
+> 
+> the code in question looks buggy to me.  Since bootrec->data[10] is u32,
+> casting it to a 16-bit type is going to take a different 2 bytes out of
+> the 4 bytes depending on the endianness of the system the driver is
+> built for.  And I assume you are parsing some fixed-layout thing that
+> the firmware is giving you or something like that.
+> 
+> I would guess you want something like:
+> 
+> 	priv->rx_mtu = le16_to_cpu(((__force __le16 *) bootrec->data)[20]);
+> 
+> (__force is what shuts up sparse, and as far as I can see, the size_t
+> cast is useless, since the result will be promoted anyway)
 
-> I am pretty happy that you caught it, because that was my whole point
-> from the discussion we had at OLS. The userspace part might not be in
-> place and we must ensure that everything still works as before :)
+Yes, that one works. As you suspected, this section is parsing data 
+from the firmware.
 
-I thought your point was that you wanted regulatory_hint_regdom(...)
-that the driver can use to tell us what the EEPROM regulatory is, which
-wouldn't have been affected by this bug :) But anyway, yeah, it's a bug.
+When I started, there were 18 sparse warnings, and a number of them 
+were accesses of little-endian variables without an appropriate 
+leXX_to_cpu() conversion. Obviously, this code has never been tested 
+on a big-endian machine.
 
-johannes
+Thanks,
 
---=-Rjx0ba4uX0mkJ0cyrOZ+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIy3rWAAoJEKVg1VMiehFYgPkP/0CltSEobbELct96QsajCqCr
-JnetpmQkN/rSDVuCm5hcG5IDe6p7WGJt6kSzVldbZuRyEksQgXKMTYk/7o1Mw5g6
-TfBDf6q2nskVCNMWNKjrmgE8dE+a4foi9qK/noYcBSH2I3iq6ZIQyNEcqcZ0kXcA
-tvyOBJkGEIFj6mDjC/zPl0cSISq8aUFVriyQMllngpfFB8Mo/mfpg7P0M84l6lt+
-bsGrj3IA6hPWQZRA/jb+wiQh4khnzEMdpf2EiADYNdOI2ymsj0ZapIvpobiXpa4B
-D/WID4dvXgKjPRQWZMLUGH/6aHzKqsEPSsWHu7o5AVzRc7QkoI7GkOLQWw3BiXW2
-WOtZLr+5bcidak9AAZoWmend1+i7Ugoh+h3CP4U1lL4MCnYr/n0pdR44vUm/yk6r
-tFbMiqJq4YAwzx4X2WAVoBIypqIHbnWFcNveCRRMHX2kxHsE6f/Qo85Y3tCHMu73
-8YTBcNM5kDphGrWWEAXzM2D/Ron36K3MPxNyaVA11hsu66Z6TT3Sw6XEUXbIATwC
-RSEXJcPPC/JwqerjaLhDDvY+ykYSGTKtVjdqpLR4+b2A/04zBJMLHKQNHF/kSxNv
-hSY2knNG8+X6W48iSMQPxQd0xV2I8piZn1TH2sSsFejl4B4/TDu4ZGbYU5oRsDBx
-ycjOqaIxL6K2x4s7vbIy
-=C7rj
------END PGP SIGNATURE-----
-
---=-Rjx0ba4uX0mkJ0cyrOZ+--
+Larry
 
