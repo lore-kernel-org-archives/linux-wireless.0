@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40607 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502AbYIHIIQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 04:08:16 -0400
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com> (sfid-20080908_011410_000288_CE56DC5D)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220794765.31304.8.camel@johannes.berg>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 (sfid-20080908_011410_000288_CE56DC5D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9n5wxn+S7wchaq8GvS4d"
-Date: Mon, 08 Sep 2008 09:58:29 +0200
-Message-Id: <1220860709.31304.19.camel@johannes.berg> (sfid-20080908_100821_650312_89B0FA5E)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:48858 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754642AbYILRmI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2008 13:42:08 -0400
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: yi.zhu@intel.com, Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Subject: [PATCH] mac80211 : Fix mode change hard_start_xmit function
+Date: Fri, 12 Sep 2008 10:42:07 -0700
+Message-Id: <1221241327-15720-1-git-send-email-abhijeet.kolekar@intel.com> (sfid-20080912_194212_937819_A2160941)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When monitor mode is changed to BSS or IBSS, data trasnfer can not happen
+because proper transmit function is not assigend for BSS ,IBSS mode.
+This patch fixes this problem assigning the ieee80211_subif_start_xmit
+to device's hard_start_xmit function.
 
---=-9n5wxn+S7wchaq8GvS4d
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/iface.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-On Mon, 2008-09-08 at 02:14 +0300, Tomas Winkler wrote:
-
-> why I'm hitting unathorized prot messag for subif_start_xmit.
-> Shouldn't carrier_off(stada->dev) stop the queue?  I haven't seen this
-
-and no, netif_carrier_off() doesn't immediately stop the queues, it just
-schedules the link watch which will _eventually_ remove the qdiscs and
-attach the noop qdisc.
-
-johannes
-
---=-9n5wxn+S7wchaq8GvS4d
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIxNsiAAoJEKVg1VMiehFYZCkP/A9h4WrE0f/Wt/zCPwbwGKft
-rJ5RACRk4QQB2DtDFu8nDUwpzeSnfdiUrsEZx7aTk2vc2noNQjkOZRx8oKngO9YM
-NpifWYEmpntbVNilzSJWwN5TVTNEdrSe3SAFSADMzDt+bEddpcX/o6AAeMbq0ZnC
-fWtKubbe1Xd8Ho1mOSGZ20mCN85Brx8jyEVsRYKyAcuArY66GAvBIeyzd/Z1Ja9M
-9DbKt9XqaXOTYrvuH0kXjcaco+sw4RWhCv8nJgMSxvsoFxn8Bsc/GymiRMBhHUdS
-+iweILXKo3OeQB/wzwqP98DgrvK7TY+FpyRBDrtOgv3FGnmREKK1l3wJLMY4seKN
-3vuY7zu8gsl1Lhnd0VpTwPQuS1uqbYNJceDJBs2xfXz9I0jmUNPJCb33kZ6L/iJX
-2Ff2YaJ8OZCs6ZlGDhrVxSt/C9e/83Y/AWHAUL0ceVd4xGdmUeq3zciYGwdEzdjo
-UBcrh3ufNXYQdk8c0NNdaJCIEMncZE+Zvvu7o8PXek/9ijH9ky3+MFrTl64nj1uq
-OETcLGqh8GEUAvNZpZUIk9KyUhJfjLjRNNQaxPG4RIn5Aza+Yx9kJ0Dmv7QQ9vy4
-i6co3DXGOcdDK5R1XTOsJz5W8nrVcrjpqOrs+NJBo8dsNtnyTsPFp9kffU0dzSRe
-28ALpSEuSSY8Tb3YXlw7
-=HZVB
------END PGP SIGNATURE-----
-
---=-9n5wxn+S7wchaq8GvS4d--
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 672cec6..df9d617 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -97,12 +97,14 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 
+ 	switch (type) {
+ 	case IEEE80211_IF_TYPE_AP:
++		sdata->dev->hard_start_xmit = ieee80211_subif_start_xmit;
+ 		skb_queue_head_init(&sdata->u.ap.ps_bc_buf);
+ 		INIT_LIST_HEAD(&sdata->u.ap.vlans);
+ 		break;
+ 	case IEEE80211_IF_TYPE_MESH_POINT:
+ 	case IEEE80211_IF_TYPE_STA:
+ 	case IEEE80211_IF_TYPE_IBSS:
++		sdata->dev->hard_start_xmit = ieee80211_subif_start_xmit;
+ 		ifsta = &sdata->u.sta;
+ 		INIT_WORK(&ifsta->work, ieee80211_sta_work);
+ 		setup_timer(&ifsta->timer, ieee80211_sta_timer,
+-- 
+1.5.4.3
 
