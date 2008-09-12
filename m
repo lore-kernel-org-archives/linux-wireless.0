@@ -1,63 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:61388 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755358AbYIRUmJ (ORCPT
+Received: from phoenix.slamd64.com ([217.10.145.2]:38714 "EHLO
+	phoenix.slamd64.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753167AbYILWE2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 16:42:09 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so36021eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 13:42:06 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Date: Thu, 18 Sep 2008 22:42:02 +0200
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809182217.41186.IvDoorn@gmail.com> <20080918202845.GV1583@khazad-dum.debian.net>
-In-Reply-To: <20080918202845.GV1583@khazad-dum.debian.net>
+	Fri, 12 Sep 2008 18:04:28 -0400
+From: Carlos Corbacho <carlos@strangeworlds.co.uk>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: [RFC] acer-wmi: Add rfkill support for wireless and bluetooth (v5)
+Date: Fri, 12 Sep 2008 23:04:19 +0100
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+References: <200808301206.56279.carlos@strangeworlds.co.uk> <200809122044.27418.carlos@strangeworlds.co.uk> <20080912164039.ZZRA012@mailhub.coreip.homeip.net>
+In-Reply-To: <20080912164039.ZZRA012@mailhub.coreip.homeip.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200809182242.02322.IvDoorn@gmail.com> (sfid-20080918_224213_110507_6A18EF45)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200809122304.21000.carlos@strangeworlds.co.uk> (sfid-20080913_000433_928815_B68B375A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
-> On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> > On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
-> > > On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> > > > This depends on the hardware, for b43 the toggle() callback might not be needed,
-> > > > but for rt2x00 it does (Since the key press will only raise a GPIO bit and does not
-> > > > affect the radio in any way).
-> > > 
-> > > Hmm... please correct me if I misunderstood, but wouldn't that mean that
-> > > rt2x00 does not have a hardware rfkill line at all, and that instead it has
-> > > a GPIO pin that is used to communicate the desire to software-rfkill the
-> > > transmitter...  and the driver needs to do everything.
-> > 
-> > That is correct.
-> 
-> Yeah, thanks <deity> I noticed this post :-)  That will make it MUCH easier
-> for me to sync with you and actually grok what you are saying.
+This patch implements rfkill support for the wireless and bluetooth devices
+commonly found on Acer laptops.
 
-Hehe :)
+For now, we will always poll these devices once a second to guarantee we can
+catch state changes. On newer Acer laptops, it may be possible to rely on WMI
+events to do this instead, and experimental support for this will be added in
+a later patch.
 
-> > > And if you don't emulate HARD_BLOCKED, you have to handle the input device
-> > > inside the rt2x00 driver, because the world outside (and that includes the
-> > > rfkill core and everything else) sure as heck won't know if you SOFT_BLOCKED
-> > > because of that GPIO pin, or because of something else.
-> > 
-> > Currently rt2x00 polls the GPIO pin every second (no interrupts are raised when the
-> > GPIO pin is toggled) and uses rfkill_force_state(SOFT_BLOCK/UNBLOCK) to rfkill
-> 
-> I just sent a post about it.  If you get a bit that tells you HW RFKILL
-> ACTIVE/INACTIVE (as opposed to "please toggle it"), you don't need to care
-> about whatever else is reading that thing.  You can always register an input
-> device, and issue EV_SW SW_WLAN or EV_SW SW_RFKILL_ALL (I'd sugest making it
-> configurable).  But do NOT issue EV_KEY, THAT one breaks if anything else is
-> also listening to that input signal.
+3G has been deliberately left off for now, as we still have no way to detect
+it, (nor, AFAIK, has any Linux user tried the code) and on laptops that don't
+support 3G, trying to poll for the status will leave the logs full of ACPI
+tracebacks.
 
-Ok.
+The old sysfs interface for wireless and 3G will be removed in a later patch.
 
-Ivo
+Signed-off-by: Carlos Corbacho <carlos@strangeworlds.co.uk>
+---
+
+ drivers/misc/Kconfig    |    1 
+ drivers/misc/acer-wmi.c |  130 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 130 insertions(+), 1 deletions(-)
+
+
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index a726f3b..6abb959 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -145,6 +145,7 @@ config ACER_WMI
+ 	depends on NEW_LEDS
+ 	depends on BACKLIGHT_CLASS_DEVICE
+ 	depends on SERIO_I8042
++	depends on RFKILL
+ 	select ACPI_WMI
+ 	---help---
+ 	  This is a driver for newer Acer (and Wistron) laptops. It adds
+diff --git a/drivers/misc/acer-wmi.c b/drivers/misc/acer-wmi.c
+index b2d9878..11263f0 100644
+--- a/drivers/misc/acer-wmi.c
++++ b/drivers/misc/acer-wmi.c
+@@ -33,6 +33,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/acpi.h>
+ #include <linux/i8042.h>
++#include <linux/rfkill.h>
++#include <linux/workqueue.h>
+ #include <linux/debugfs.h>
+ 
+ #include <acpi/acpi_drivers.h>
+@@ -157,6 +159,9 @@ struct acer_debug {
+ 	u32 wmid_devices;
+ };
+ 
++static struct rfkill *wireless_rfkill;
++static struct rfkill *bluetooth_rfkill;
++
+ /* Each low-level interface must define at least some of the following */
+ struct wmi_interface {
+ 	/* The WMI device type */
+@@ -930,6 +935,125 @@ static void acer_backlight_exit(void)
+ }
+ 
+ /*
++ * Rfkill devices
++ */
++static struct workqueue_struct *rfkill_workqueue;
++
++static void acer_rfkill_update(struct work_struct *ignored);
++static DECLARE_DELAYED_WORK(acer_rfkill_work, acer_rfkill_update);
++static void acer_rfkill_update(struct work_struct *ignored)
++{
++	u32 state;
++	acpi_status status;
++
++	status = get_u32(&state, ACER_CAP_WIRELESS);
++	if (ACPI_SUCCESS(status))
++		rfkill_force_state(wireless_rfkill, state ?
++			RFKILL_STATE_UNBLOCKED : RFKILL_STATE_SOFT_BLOCKED);
++
++	if (has_cap(ACER_CAP_BLUETOOTH)) {
++		status = get_u32(&state, ACER_CAP_BLUETOOTH);
++		if (ACPI_SUCCESS(status))
++			rfkill_force_state(bluetooth_rfkill, state ?
++				RFKILL_STATE_UNBLOCKED :
++				RFKILL_STATE_SOFT_BLOCKED);
++	}
++
++	queue_delayed_work(rfkill_workqueue, &acer_rfkill_work,
++		round_jiffies_relative(HZ));
++}
++
++static int acer_rfkill_set(void *data, enum rfkill_state state)
++{
++	acpi_status status;
++	u32 *cap = data;
++	status = set_u32((u32) (state == RFKILL_STATE_UNBLOCKED), *cap);
++	if (ACPI_FAILURE(status))
++		return -ENODEV;
++	return 0;
++}
++
++static struct rfkill * acer_rfkill_register(struct device *dev,
++enum rfkill_type type, char *name, u32 cap)
++{
++	int err;
++	u32 state;
++	u32 *data;
++	struct rfkill *rfkill_dev;
++
++	rfkill_dev = rfkill_allocate(dev, type);
++	if (!rfkill_dev)
++		return ERR_PTR(-ENOMEM);
++	rfkill_dev->name = name;
++	get_u32(&state, cap);
++	rfkill_dev->state = state ? RFKILL_STATE_UNBLOCKED :
++		RFKILL_STATE_SOFT_BLOCKED;
++	data = kzalloc(sizeof(u32), GFP_KERNEL);
++	if (!data) {
++		rfkill_free(rfkill_dev);
++		return ERR_PTR(-ENOMEM);
++	}
++	*data = cap;
++	rfkill_dev->data = data;
++	rfkill_dev->toggle_radio = acer_rfkill_set;
++	rfkill_dev->user_claim_unsupported = 1;
++
++	err = rfkill_register(rfkill_dev);
++	if (err) {
++		kfree(rfkill_dev->data);
++		rfkill_free(rfkill_dev);
++		return ERR_PTR(err);
++	}
++	return rfkill_dev;
++}
++
++static int acer_rfkill_init(struct device *dev)
++{
++	wireless_rfkill = acer_rfkill_register(dev, RFKILL_TYPE_WLAN,
++		"acer-wireless", ACER_CAP_WIRELESS);
++	if (IS_ERR(wireless_rfkill))
++		return PTR_ERR(wireless_rfkill);
++
++	if (has_cap(ACER_CAP_BLUETOOTH)) {
++		bluetooth_rfkill = acer_rfkill_register(dev,
++			RFKILL_TYPE_BLUETOOTH, "acer-bluetooth",
++			ACER_CAP_BLUETOOTH);
++		if (IS_ERR(bluetooth_rfkill)) {
++			kfree(wireless_rfkill->data);
++			rfkill_unregister(wireless_rfkill);
++			return PTR_ERR(bluetooth_rfkill);
++		}
++	}
++
++	rfkill_workqueue = create_singlethread_workqueue("rfkill_workqueue");
++	if (!rfkill_workqueue) {
++		if (has_cap(ACER_CAP_BLUETOOTH)) {
++			kfree(bluetooth_rfkill->data);
++			rfkill_unregister(bluetooth_rfkill);
++		}
++		kfree(wireless_rfkill->data);
++		rfkill_unregister(wireless_rfkill);
++		return -ENOMEM;
++	}
++	queue_delayed_work(rfkill_workqueue, &acer_rfkill_work, HZ);
++
++	return 0;
++}
++
++static void acer_rfkill_exit(void)
++{
++	cancel_delayed_work_sync(&acer_rfkill_work);
++	destroy_workqueue(rfkill_workqueue);
++	kfree(wireless_rfkill->data);
++	rfkill_unregister(wireless_rfkill);
++	if (has_cap(ACER_CAP_BLUETOOTH)) {
++		kfree(wireless_rfkill->data);
++		rfkill_unregister(bluetooth_rfkill);
++	}
++	return;
++}
++
++/*
+  * Read/ write bool sysfs macro
+  */
+ #define show_set_bool(value, cap) \
+@@ -1023,7 +1147,9 @@ static int __devinit acer_platform_probe(struct platform_device *device)
+ 			goto error_brightness;
+ 	}
+ 
+-	return 0;
++	err = acer_rfkill_init(&device->dev);
++
++	return err;
+ 
+ error_brightness:
+ 	acer_led_exit();
+@@ -1037,6 +1163,8 @@ static int acer_platform_remove(struct platform_device *device)
+ 		acer_led_exit();
+ 	if (has_cap(ACER_CAP_BRIGHTNESS))
+ 		acer_backlight_exit();
++
++	acer_rfkill_exit();
+ 	return 0;
+ }
+ 
