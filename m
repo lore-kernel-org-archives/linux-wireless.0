@@ -1,83 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:30423 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827AbYISRCN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44041 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755967AbYILU0E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 13:02:13 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so204013nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 10:02:11 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Date: Fri, 19 Sep 2008 19:02:03 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809182241.00906.IvDoorn@gmail.com> <20080918213657.GY1583@khazad-dum.debian.net>
-In-Reply-To: <20080918213657.GY1583@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809191902.03467.IvDoorn@gmail.com> (sfid-20080919_190229_744994_236E1A90)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 12 Sep 2008 16:26:04 -0400
+Subject: Re: [PATCH] mac80211 : Fix mode change hard_start_xmit function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com
+In-Reply-To: <1221241327-15720-1-git-send-email-abhijeet.kolekar@intel.com> (sfid-20080912_194212_937819_A2160941)
+References: <>
+	 <1221241327-15720-1-git-send-email-abhijeet.kolekar@intel.com>
+	 (sfid-20080912_194212_937819_A2160941)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ccyCLvu5LADoM/oCg+d7"
+Date: Fri, 12 Sep 2008 22:25:58 +0200
+Message-Id: <1221251158.5576.14.camel@johannes.berg> (sfid-20080912_222609_625283_0AF6BAD8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
-> On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> > On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
-> > > On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> > > > On Thursday 18 September 2008, Johannes Berg wrote:
-> > > > > On Thu, 2008-09-18 at 19:52 +0200, Ivo van Doorn wrote:
-> > > > > > From rfkill.h:
-> > > > > > 	RFKILL_STATE_SOFT_BLOCKED = 0,	/* Radio output blocked */
-> > > > > > 	RFKILL_STATE_UNBLOCKED    = 1,	/* Radio output allowed */
-> > > > > > 	RFKILL_STATE_HARD_BLOCKED = 2,	/* Output blocked, non-overrideable */
-> > > > > > 
-> > > > > > Since b43 has a rfkill mechanism that does switch of the radio when RFKILL is set to BLOCK
-> > > > > > after a key press, it should send RFKILL_STATE_HARD_BLOCKED because rfkill cannot override
-> > > > > > it.
-> > > > > > 
-> > > > > > rt2x00 hardware does not change the radio state when RFKILL is set to BLOCK after a key press,
-> > > > > > the state is therefor overridable and it can send RFKILL_STATE_SOFT_BLOCKED to rfkill.
-> > > > > 
-> > > > > If rt2x00 has no meaning of "hardware blocked", why is the button not a
-> > > > > simple input device?
-> > > > 
-> > > > Because I had that discussion with Henrique and that ended with a "it isn't a input device"...
-> > > 
-> > > Because I NEVER UNDERSTOOD it was not a hardware rfkill line until a few
-> > > posts ago in this thread.  Argh.  My deepest apologies for that screw up.
-> > > 
-> > > Now that I do, my answer is "depends on how the platform used that input pin".
-> > > 
-> > > If it is directly connected to a switch (you get on/off from it) or a button
-> > > (you get "I have been pressed, please toggle the state"), it is an input
-> > > device.  [a]
-> > > 
-> > > If it is directly connected to some crap inside the platform, that is
-> > > controlled by firmware, it is NOT an input device.  [b]
-> > 
-> > Ok, rt2x00 is definately [a]
-> > 
-> > > I hope it is a switch, and that you can just always provide an input device
-> > > that issues some sort of EV_SW event (if you need it, we ask Dmitry to add
-> > > EV_SW SW_WLAN).
-> > 
-> > Ok, I'll readd the input_polldev to rt2x00 again then. :)
-> 
-> But do use EV_SW if it is a switch, please :-)
 
-Sure.
+--=-ccyCLvu5LADoM/oCg+d7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Even if that means a need to 
-> get EV_SW SW_WLAN out of Dmitry...  I don't know if rt2x000 wants SW_WLAN or
-> SW_RFKILL_ALL.
+On Fri, 2008-09-12 at 10:42 -0700, Abhijeet Kolekar wrote:
+> When monitor mode is changed to BSS or IBSS, data trasnfer can not happen
+> because proper transmit function is not assigend for BSS ,IBSS mode.
+> This patch fixes this problem assigning the ieee80211_subif_start_xmit
+> to device's hard_start_xmit function.
+>=20
+> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> Acked-by: Zhu Yi <yi.zhu@intel.com>
 
-Not sure either, there is no way to determine which of the 2 should be used.
+Thanks for the fix. Unfortunately, you missed WDS and VLAN. Please just
+do the assignment once before the switch so that only monitor gets
+changed.
 
-Oh an to make sure I get it completely right this time:
-When I implement the input polldev, I no longer have to use rfkill_force_state() right?
+johannes
 
-Ivo
+--=-ccyCLvu5LADoM/oCg+d7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIytBSAAoJEKVg1VMiehFY5H0QALuf9D1T/JajIAEpKerssHoV
+fGBEqq/WavQiBgZZ5EJoseqpgRYhyv9je3T6EUOH1vEkVYdqP/AR0pyq6kNrNaEI
+It6T0ukxPJCodDDfi/ei8kTV/k9/mxPKVWpsNNdR0sHTUVBxYPIiCcejVdN6T8by
+PMarjshJqbyPTH81Suy51Kg95JPkZQytcbCClMisJ3mjRvaW/D07Y1ZwEWvdgTaM
+OPmTj/khwwMlaNJsWEhBr6zqAWFTW/K6hnlzpx8Vj30eXQQIjx8vrloMvLIiGvCA
+zCOF4oFFwdciah0iEZbM/XtNuCpUQS5+DfzyNC9Jd85d/wKHKNzIHaEVfe51N8vs
+H83YoWn+zxefP5RioMnymWNcG3lYcP1rci7wXnw7gsW7pcfXg8kbQAI4rIj4P37Y
+Hx0ATtwWHYSy2IxWdJoyH7tqK8ZyFL4t7BRkAwW2WY7krHpWpeFuNnXmstE5KPoc
+qRlC6HxInY/BpluR+/hbWCzFmv7tJvqCak4mn8UkZCQKr1OB7DL56OBw9yIHjn2J
+yOlXlr9Tuj3awtml1joMbtc9jzqsdvUN3M3/FutcutXreLcfPE18NSkcHKSMlJwW
+IGcU0N5EI99T4+4ZTu2Zd1UjN8+HlcTeeQF1Ajauf/WO3s1nFejXQnXfnJibAhDP
+LtSPZjeL0sTcSAw3v5s0
+=eUbE
+-----END PGP SIGNATURE-----
+
+--=-ccyCLvu5LADoM/oCg+d7--
+
