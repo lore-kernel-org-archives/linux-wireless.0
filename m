@@ -1,136 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:52621 "EHLO vs166246.vserver.de"
+Received: from main.gmane.org ([80.91.229.2]:33080 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751948AbYIFO0v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 10:26:51 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix QoS defaults
-Date: Sat, 6 Sep 2008 16:21:47 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Lorenzo Nava <pipe1984@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200809061621.48449.mb@bu3sch.de> (sfid-20080906_162656_925402_BA486F0A)
+	id S1755142AbYILXBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2008 19:01:18 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1KeHdZ-0002ib-9k
+	for linux-wireless@vger.kernel.org; Fri, 12 Sep 2008 23:01:13 +0000
+Received: from 77.21.167.158 ([77.21.167.158])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2008 23:01:13 +0000
+Received: from feldmann_markus by 77.21.167.158 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2008 23:01:13 +0000
+To: linux-wireless@vger.kernel.org
+From: feldmaus <feldmann_markus@gmx.de>
+Subject: Re: Do not get BCM4303 to work
+Date: Sat, 13 Sep 2008 01:02:58 +0200
+Message-ID: <gaesbd$nv8$1@ger.gmane.org> (sfid-20080913_010123_311855_05295261)
+References: <ga2fra$9q$1@ger.gmane.org> <48C5777B.9070106@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <48C5777B.9070106@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the initialization of the default QoS parameters.
-This got broken by 0b57664cf2393bc1eff594ff7e5ff26533843fe6
+Larry Finger schrieb:
+> feldmaus wrote:
+>> Hi All,
+>>
+>> i do not get my Wlan Card with BCM4303 Chip to work.
+>>
+>> I am not sure whether this Card is active, because <dmesg> show me,
+>> [  409.752921] b43legacy-phy0: Radio hardware status changed to DISABLED
+> 
+> Your card can receive, but not transmit due to a problem with the rfkill 
+> switch handling in b43legacy. I'm working on this problem with a Ubuntu 
+> user, and will post patches as soon as the problem is fixed.
+> 
+> Larry
+Thanks for your Support.
 
-Reported-by: Lorenzo Nava
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+I installed the Kernel 2.6.26-1 as Maximilian said.
+I hope i can try to get my Card to work.
+If you need some Messages then let me know.
 
----
+Regards Markus
 
-John, please queue for the next merge window, as I'm not interested
-in finding explanations for applying this to 2.6.27 (2.6.27 already has
-this bug)
-
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-09-06 15:09:16.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-09-06 15:45:09.000000000 +0200
-@@ -3056,37 +3056,40 @@ static void b43_qos_params_upload(struct
- 					shm_offset + (i * 2),
- 					params[i]);
- 		}
- 	}
- }
- 
-+/* Mapping of mac80211 queue numbers to b43 QoS SHM offsets. */
-+static const u16 b43_qos_shm_offsets[] = {
-+	/* [mac80211-queue-nr] = SHM_OFFSET, */
-+	[0] = B43_QOS_VOICE,
-+	[1] = B43_QOS_VIDEO,
-+	[2] = B43_QOS_BESTEFFORT,
-+	[3] = B43_QOS_BACKGROUND,
-+};
-+
- /* Update the QOS parameters in hardware. */
- static void b43_qos_update(struct b43_wldev *dev)
- {
- 	struct b43_wl *wl = dev->wl;
- 	struct b43_qos_params *params;
- 	unsigned long flags;
- 	unsigned int i;
- 
--	/* Mapping of mac80211 queues to b43 SHM offsets. */
--	static const u16 qos_shm_offsets[] = {
--		[0] = B43_QOS_VOICE,
--		[1] = B43_QOS_VIDEO,
--		[2] = B43_QOS_BESTEFFORT,
--		[3] = B43_QOS_BACKGROUND,
--	};
--	BUILD_BUG_ON(ARRAY_SIZE(qos_shm_offsets) != ARRAY_SIZE(wl->qos_params));
-+	BUILD_BUG_ON(ARRAY_SIZE(b43_qos_shm_offsets) !=
-+		     ARRAY_SIZE(wl->qos_params));
- 
- 	b43_mac_suspend(dev);
- 	spin_lock_irqsave(&wl->irq_lock, flags);
- 
- 	for (i = 0; i < ARRAY_SIZE(wl->qos_params); i++) {
- 		params = &(wl->qos_params[i]);
- 		if (params->need_hw_update) {
- 			b43_qos_params_upload(dev, &(params->p),
--					      qos_shm_offsets[i]);
-+					      b43_qos_shm_offsets[i]);
- 			params->need_hw_update = 0;
- 		}
- 	}
- 
- 	spin_unlock_irqrestore(&wl->irq_lock, flags);
- 	b43_mac_enable(dev);
-@@ -3094,17 +3097,48 @@ static void b43_qos_update(struct b43_wl
- 
- static void b43_qos_clear(struct b43_wl *wl)
- {
- 	struct b43_qos_params *params;
- 	unsigned int i;
- 
-+	/* Initialize QoS parameters to sane defaults. */
-+
-+	BUILD_BUG_ON(ARRAY_SIZE(b43_qos_shm_offsets) !=
-+		     ARRAY_SIZE(wl->qos_params));
-+
- 	for (i = 0; i < ARRAY_SIZE(wl->qos_params); i++) {
- 		params = &(wl->qos_params[i]);
- 
--		memset(&(params->p), 0, sizeof(params->p));
--		params->p.aifs = -1;
-+		switch (b43_qos_shm_offsets[i]) {
-+		case B43_QOS_VOICE:
-+			params->p.txop = 0;
-+			params->p.aifs = 2;
-+			params->p.cw_min = 0x0001;
-+			params->p.cw_max = 0x0001;
-+			break;
-+		case B43_QOS_VIDEO:
-+			params->p.txop = 0;
-+			params->p.aifs = 2;
-+			params->p.cw_min = 0x0001;
-+			params->p.cw_max = 0x0001;
-+			break;
-+		case B43_QOS_BESTEFFORT:
-+			params->p.txop = 0;
-+			params->p.aifs = 3;
-+			params->p.cw_min = 0x0001;
-+			params->p.cw_max = 0x03FF;
-+			break;
-+		case B43_QOS_BACKGROUND:
-+			params->p.txop = 0;
-+			params->p.aifs = 7;
-+			params->p.cw_min = 0x0001;
-+			params->p.cw_max = 0x03FF;
-+			break;
-+		default:
-+			B43_WARN_ON(1);
-+		}
- 		params->need_hw_update = 1;
- 	}
- }
- 
- /* Initialize the core's QOS capabilities */
- static void b43_qos_init(struct b43_wldev *dev)
