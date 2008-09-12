@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:35173 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751719AbYIZFKf (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.226]:47517 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758046AbYILUiN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 01:10:35 -0400
-Date: Fri, 26 Sep 2008 00:10:37 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Fix Bluetooth Coexistence SPROM programming error
- for HP 12f8 version of BCM4306
-Message-ID: <48dc6ecd.LsMPm/7J/Wp9iyzP%Larry.Finger@lwfinger.net> (sfid-20080926_071058_100698_423747CD)
+	Fri, 12 Sep 2008 16:38:13 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so961244rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2008 13:38:12 -0700 (PDT)
+Message-ID: <2da21fe50809121338s26106a07iddaa54faf3c68ada@mail.gmail.com> (sfid-20080912_223831_629870_6D7F86E5)
+Date: Fri, 12 Sep 2008 22:38:12 +0200
+From: "Davide Pesavento" <davidepesa@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: ath9k: unable to reset hardware
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yet another BCM4306 card with the Bluetooth Coexistence SPROM programming
-error has been found.
+Hi!
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+[ 4342.364205] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[ 4342.364957] ath9k_start: Unable to complete ath_open
+[ 4372.412478] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[ 4372.420685] ath9k_start: Unable to complete ath_open
+[ 4373.101414] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[ 4373.102549] ath9k_start: Unable to complete ath_open
 
-John,
+I'm using 2.6.27-rc5-wl-16606-g643e533 on a MacBookPro2,2 (AR5418).
+rmmod ath9k && modprobe ath9k is enough to fix the issue, but
+connectivity becomes a lot more unstable after that.
 
-Owners of these cards keep crawling out of the woodwork. This is
-2.6.28 material.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c
-+++ wireless-testing/drivers/net/wireless/b43/main.c
-@@ -4543,6 +4543,7 @@ static void b43_sprom_fixup(struct ssb_b
- 		pdev = bus->host_pci;
- 		if (IS_PDEV(pdev, BROADCOM, 0x4318, ASUSTEK, 0x100F) ||
- 		    IS_PDEV(pdev, BROADCOM, 0x4320,    DELL, 0x0003) ||
-+		    IS_PDEV(pdev, BROADCOM, 0x4320,      HP, 0x12f8) ||
- 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
- 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0014) ||
- 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
+Regards,
+Davide Pesavento
