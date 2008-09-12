@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:43738 "EHLO
-	viefep24-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752883AbYIOQBO (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.241]:36175 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579AbYILS5o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 12:01:14 -0400
-Received: from gollum.odi.ch ([84.74.148.76]) by viefep24-int.chello.at
-          (InterMail vM.7.08.02.00 201-2186-121-20061213) with ESMTP
-          id <20080915160055.GHRY891.viefep24-int.chello.at@gollum.odi.ch>
-          for <linux-wireless@vger.kernel.org>;
-          Mon, 15 Sep 2008 18:00:55 +0200
-Received: from [192.168.111.10] (mithril [192.168.111.10])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by gollum.odi.ch (Postfix) with ESMTPSA id AD77F3BE6
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 18:00:54 +0200 (CEST)
-Message-ID: <48CE86B6.6080704@odi.ch> (sfid-20080915_180118_027162_C9C60EF5)
-Date: Mon, 15 Sep 2008 18:00:54 +0200
-From: =?UTF-8?B?T3J0d2luIEdsw7xjaw==?= <odi@odi.ch>
+	Fri, 12 Sep 2008 14:57:44 -0400
+Received: by an-out-0708.google.com with SMTP id d40so120574and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2008 11:57:41 -0700 (PDT)
+Message-ID: <69e28c910809121157qaaad7c8w67d626e60e807892@mail.gmail.com> (sfid-20080912_205747_776282_8E3CD289)
+Date: Fri, 12 Sep 2008 20:57:40 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Mike Cui" <cuicui@gmail.com>
+Subject: Re: BMC4310 support (03f0:171d)
+Cc: "Nadav Kavalerchik" <nadavkav@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <7c8826910809120133o13c744d0pbfae5a18dd72787f@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] Don't destroy authentication algorithm before	authenticating.
-References: <48CE8452.9080604@odi.ch> (sfid-20080915_175050_484202_3CD78757) <1221494039.3700.47.camel@johannes.berg>
-In-Reply-To: <1221494039.3700.47.camel@johannes.berg>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4219988b0809011331j4acb1582u3239218c6b7ff573@mail.gmail.com>
+	 <4219988b0809011349i640d36e0p497eb8cefe303d0@mail.gmail.com>
+	 <200809012333.58897.mb@bu3sch.de>
+	 <4219988b0809091240s970c580k763054a56ef740b3@mail.gmail.com>
+	 <4219988b0809091241l565fa8fcpebe2fb552782c4d4@mail.gmail.com>
+	 <7c8826910809120133o13c744d0pbfae5a18dd72787f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Sep 12, 2008 at 10:33 AM, Mike Cui <cuicui@gmail.com> wrote:
+> What's the PCI ID? I have a BCM 4315 which is misidentified as BCM4310
+> by lspci. In any case,  Dell releases NDIS 5.1 drivers for broadcom,
+> while HP doesn't. Try googling for Dell wireless 1395. It works for
+> me.
 
+It is not a "BCM4315", it is a BCM4310. There is no such thing as a
+BCM4315. Chip ID != PCI ID!
+Most chip IDs match with their respective PCI IDs, but here are some exceptions:
+0x4320 is BCM4306.
+0x4315 is BCM4310.
+0x4328 is BCM4321.
+0x432b is BCM4322.
 
-Johannes Berg wrote:
-> On Mon, 2008-09-15 at 17:50 +0200, Ortwin Gl=C3=BCck wrote:
->> reset_auth is called before each authentication try. So it should no=
-t destroy
->> the auth_alg that was set before.
->>
->> NB: this may have side-effects with automatic algorithm selection if=
- AP responds=20
->> with alg not supported.
->=20
-> This seems entirely wrong.
->=20
-> Is your AP not capable of/configured to do open auth and _also_ doesn=
-'t
-> reject the attempt? That is, the AP is just completely broken?
-
-Well, I see that with other (binary) drivers it actively rejects such=20
-authentication attempts. But with this driver it doesnt. The only diffe=
-rence=20
-that I can see from the packet logs is that mac80211 sends no probes be=
-fore the=20
-authentication, and that the sequence number is being reset. So maybe t=
-hat keeps=20
-this Netgear AP (yes it's crap) from rejecting. Or then it's something =
-in ath9k=20
-that causes the AP not to receive the packets in the first place.
-
-Ortwin
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
