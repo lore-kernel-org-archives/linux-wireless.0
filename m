@@ -1,79 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:13543 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754298AbYIRTAy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42764 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753066AbYILNJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 15:00:54 -0400
-Received: by ug-out-1314.google.com with SMTP id k3so811215ugf.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 12:00:52 -0700 (PDT)
-Message-ID: <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com> (sfid-20080918_210100_379578_70EDDA5A)
-Date: Thu, 18 Sep 2008 12:00:50 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: LKML <linux-kernel@vger.kernel.org>, "Ingo Molnar" <mingo@elte.hu>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-In-Reply-To: <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
-	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
-	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
+	Fri, 12 Sep 2008 09:09:43 -0400
+Subject: Re: rate control vs. bands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <j@w1.fi>, Tomas Winkler <tomas.winkler@intel.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1221223890.11204.33.camel@johannes.berg> (sfid-20080912_145214_760432_1456136F)
+References: <1221223890.11204.33.camel@johannes.berg>
+	 (sfid-20080912_145214_760432_1456136F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-n4mzVXd/jI7/5DZlfkb9"
+Date: Fri, 12 Sep 2008 15:09:07 +0200
+Message-Id: <1221224947.11204.44.camel@johannes.berg> (sfid-20080912_150946_708211_6C1D1B78)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2008 at 11:42 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Sep 18, 2008 at 11:34 AM, Luis R. Rodriguez
->> irqpoll is a monster of evil and that should make your system crawl to
->> its knees. I would advise instead we work with you fixing the the
->> missed interrupts issue upon rmmod.
->
-> Also, please provide the output of
->
-> cat /proc/interrupts
 
-Note that the problem necessitating use of irqpoll in the first place
-seems to only happen under certain conditions. I am unsure what these
-conditions are. Before 'ath9k: connectivity is lost after Group
-rekeying is done', I had used rmmod/modprobe as my solution to the
-issue, which triggered the IRQ issue.
+--=-n4mzVXd/jI7/5DZlfkb9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-alcarin steven # cat /proc/interrupts
-           CPU0       CPU1
-0x0:      63227          0   IO-APIC-edge      hpet
-0x8:          1          0   IO-APIC-edge      rtc0
-0x9:      13080          0   IO-APIC-fasteoi   acpi
-0xe:       8195          0   IO-APIC-edge      ide0
-0xf:          0          0   IO-APIC-edge      ide1
-0x10:         36          0   IO-APIC-fasteoi   uhci_hcd:usb5
-0x11:      10645          0   IO-APIC-fasteoi   ath
-0x12:         42          0   IO-APIC-fasteoi   uhci_hcd:usb4
-0x17:        919          0   IO-APIC-fasteoi   ehci_hcd:usb1, uhci_hcd:usb2
-0x13:      32885          0   IO-APIC-fasteoi   uhci_hcd:usb3,
-ata_piix, ohci1394
-0x200100:          1          0   PCI-MSI-edge      eth0
-0x16:        223          0   IO-APIC-fasteoi   HDA Intel
-NMI:          0          0   Non-maskable interrupts
-LOC:      78087      95718   Local timer interrupts
-RES:      11576      16384   Rescheduling interrupts
-CAL:       6862       8889   Function call interrupts
-TLB:         54         41   TLB shootdowns
-TRM:          0          0   Thermal event interrupts
-THR:          0          0   Threshold APIC interrupts
-SPU:          0          0   Spurious interrupts
-ERR:          0
+On Fri, 2008-09-12 at 14:51 +0200, Johannes Berg wrote:
 
+> For the rate control algorithms, I was just thinking about removing the
+> rate_init() callback because this can just as well be done when
+> allocating the station. However, currently we don't pass the band to the
+> alloc_sta function, so that isn't possible right now.
 
->
-> and also please do not cross post to all these lists, just use
-> linux-wireless or ath9k.
->
+Oh, and for anyone thinking about enabling mesh with a driver that
+doesn't use the default PID RC algorithm -- there's a problem in that
+rate_init isn't called for mesh peers at all, hence you'll want to fix
+that problem in mac80211 if you really want to do it right now... I
+guess it mostly works now for PID because index 0 is a valid supported
+rate all the time.
 
-Sorry, but in the past I've posted to linux-wireless, ath9k-devel, and
-all the maintainers of ath9k and didn't get a single response (except
-a 'me too' from a fellow ath9k user). I didn't just want to hear
-crickets this time.
+johannes
 
-- Steven
+--=-n4mzVXd/jI7/5DZlfkb9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIymnvAAoJEKVg1VMiehFYiqoP/08M3dcLH9I5ScwS26gyYlKj
+fCLmh1tXygcoOdeVdG+7O7BA0co7wWYIgRjbWYJ5pzuyiJKrob/r9omwjiBPPV9h
+R2JoFqoqJyrqfGWjc5VRdoja1rNMV4CsqfjQIUoIPgCk/GQwjyHHLQxLSuogY6Pd
+nh+8rRrO0SuMrq1CW5MXjT2vwRqDihni/Apud5xeyPYiwCzbABGIo2+GG3OmXEcS
+dpffnKpC87Wg+ehboZTarksSS5DxuBZJrGxJ4BPQSWICrNcxv2hZx+yNIYDlk9BU
+n4G6Ps+DfOlH8tSrGDo70Tuk0pnlw1EqUBt3lBTKJFkAc1i0KXODQdSSQnMHshgy
+5YmcUZxabs9DdmfVXY0XK3SuTZsYNdrOTE+zdWHxZwb26+F6ngPQOeVfOSIDLnji
+Smob/9avObSjbFxpKVvZzoasSO1M+3eU/uFqWddBoKw1Upl88oiDC8epO+CIz7U3
+XZhlJHQMrv8DUrWsW+8/LGWoHUZSaJTw6tEVr3HRxmL2fFSemsS/ZXxy0NkBzxnU
+3BMU1sA66Lc2NjWYmjYliovfrWpG3vzL/RsBLBNo9nCiGRabbbuL/vQb6msaRtLM
+zlsITfFb2Lxe5apYjvgeG6de7SHp4UfgZ2aTWE8NDowKZk5TtUZeKgiDKmXXA0NQ
+fDdiCDk1En+a9dQ4puug
+=D/c3
+-----END PGP SIGNATURE-----
+
+--=-n4mzVXd/jI7/5DZlfkb9--
+
