@@ -1,88 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42184 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103AbYI0KBa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2008 06:01:30 -0400
-Subject: wireless vs. network namespaces (part II)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sKARt9uUGGt7Q4El8lIZ"
-Date: Sat, 27 Sep 2008 12:01:25 +0200
-Message-Id: <1222509685.3798.59.camel@johannes.berg> (sfid-20080927_120135_884237_17499304)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:39443 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755395AbYILUes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2008 16:34:48 -0400
+Date: Fri, 12 Sep 2008 13:34:38 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: The new regulatory code kills my wireless
+Message-ID: <20080912203438.GB7722@tesla> (sfid-20080912_223454_117582_BD0C6C10)
+References: <48CAA8D6.1030605@lwfinger.net> <20080912174036.GC6134@tesla> <48CAB90C.5090302@lwfinger.net> <20080912191919.GA7722@tesla> <1221250959.5576.10.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1221250959.5576.10.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Sep 12, 2008 at 01:22:38PM -0700, Johannes Berg wrote:
+> On Fri, 2008-09-12 at 12:19 -0700, Luis R. Rodriguez wrote:
+> > Well no, IMHO people *should not* use the old regulatory stuff if
+> > possible, the idea is to kill it ASAP, you should only use the old
+> > regulatory stuff if you *need* to, meaning you have some dependency
+> > on the old module parameter for some strange odd ball reason or if
+> > you cannot compile and install crda or iw.
+> 
+> Well, TBH, I was just too lazy to do that ;)
 
---=-sKARt9uUGGt7Q4El8lIZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sorry, I forgot to factor in lazy people, that's important. I hope
+there are no lazy distributions.
 
-Eric,
-
-You wrote, over a year ago:
-
-> 2) Advanced routing.  Where someone is doing some weird thing like=20
->    testing sending packets and receiving them on the same machine.
-
-and I was just thinking of doing exactly that :)
-
-When looking into it, though, I noticed that you can generate some
-breakage with wireless and network namespaces: you can move a wireless
-netdev to a different namespace and then things will break down because
-we internally use init_net to find it.
-
-What I'd like to do in wireless is not allow moving netdevs between
-namespaces, but rather move entire hardware devices between namespaces,
-I see little value and great pain in trying to support virtual
-interfaces from a single physical device showing up in different
-namespaces, but I do see value in binding a physical device (wiphy) to a
-namespace.
-
-As far as I understand, to disallow moving them, I should set the
-NETIF_F_NETNS_LOCAL flag on all devices, although that is sort of a
-misnomer then because I'd be using it to indicate 'cannot switch
-namespace'.=20
-
-To really support this though, it seems we need to
- * put the wiphy list into struct net (this is currently a simple
-   list_head, no fancy hashing)
- * give each struct wiphy a backpointer to the struct net, like netdev
-   in the netdev struct
- * ensure that all netdevs created for this wiphy will have the right
-   netns.
-
-The latter part I'm unsure on, alloc_netdev_mq seems to always use
-init_net so I can't put them into the right namespace to start with, but
-because they're all "in there together" I can't allow switching
-namespaces either.. Ideas?
-
-johannes
-
---=-sKARt9uUGGt7Q4El8lIZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI3gRxAAoJEKVg1VMiehFYyykQALBygrWuPrtzGv9SmdfyBI2j
-sVl86IWX8Sxz6eYp4PtKbCgf5P+F/cPTkN9XlqZ7nkHPSErR4+8zaxt4vzmlLyvm
-CsJ0918CvgL+chGGxqndhgYDDOXHKiB27XLykg/u71YXEqfSK/rKZUSyAkQZOuoX
-/1I6HZmE4YjMis/BzV21nIPnddIUKFnH8+begMRV3JermsO4Cm68m39j7sEMXl9Z
-NSAR6ZzVT2fX+Bs/MI518ns9jqFQurULam+F99lFr6a9tTt7ow6x+u5n/veVEA0J
-77POmndeaR6q/UzF8Mz3Jm63h2r5vLAqp9g1DEgxncrTvPqyq2oiZmM7mgo5U+yP
-5PgF4STAc+nyJYuwzgU0SG1iRk8EMbwSAMM0L1HInV7GkW9EDmxX3a9EKZ1SZQmH
-Qn8dgkw2XwESAW+VYMDZEupem/fcfBfbbQoOQPC/a2tSaZqwIV/dHr49zgD2PJQD
-2+HIsk19eFe7HuE2NRavAf2paKpS1jB8o+097ik4BzQ0vWbKB98uj2mwmDfrqcAD
-4sAAM2sehReP4mBIYCW3i1Hq3YdxAiCh3gD3rQorlRVdsF8nk99qo5UyjUpVjKpi
-XPnf/+8xmcp1OF2OwaTu5xMWBjx20PzgvQyog32DqfVP+/Z1+BU6QvwGHtVhHKSY
-+FYls1zj3bdBDdKx0pHy
-=jjOE
------END PGP SIGNATURE-----
-
---=-sKARt9uUGGt7Q4El8lIZ--
-
+  Luis
