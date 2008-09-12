@@ -1,274 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:50378 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750721AbYIOFnb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 01:43:31 -0400
-Subject: Re: [PATCH] libertas: Improvements on automatic tx power control
-	via SIOCSIWTXPOW.
-From: Dan Williams <dcbw@redhat.com>
-To: Anna Neal <anna@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <48c964bf.1b018e0a.75a0.0ecf@mx.google.com>
-References: <48c964bf.1b018e0a.75a0.0ecf@mx.google.com>
-Content-Type: text/plain
-Date: Mon, 15 Sep 2008 01:44:08 -0400
-Message-Id: <1221457448.27102.50.camel@localhost.localdomain> (sfid-20080915_074337_620563_DFDA699C)
+Received: from xc.sipsolutions.net ([83.246.72.84]:44660 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758389AbYILUqa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2008 16:46:30 -0400
+Subject: Re: [PATCH V2] mac80211 : Fix mode change hard_start_xmit function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com
+In-Reply-To: <1221252248-5830-1-git-send-email-abhijeet.kolekar@intel.com> (sfid-20080912_224415_246861_12E7D8D4)
+References: <> <1221252248-5830-1-git-send-email-abhijeet.kolekar@intel.com>
+	 (sfid-20080912_224415_246861_12E7D8D4)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SLxQRJ1sD8pOEGy3Cj6q"
+Date: Fri, 12 Sep 2008 22:46:24 +0200
+Message-Id: <1221252384.5576.22.camel@johannes.berg> (sfid-20080912_224640_039207_B61E4609)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-09-11 at 11:17 -0700, Anna Neal wrote:
-> iwconfig txpower can now be used to set tx power to fixed or auto. If set to
-> auto the default firmware settings are used.
-> 
-> The command CMD_802_11_PA_CFG is only sent to older firmware, as Dan Williams
-> noted the command was no longer supported in firmware V9+.
 
-Updated patch looks ok, but two last questions... (see below)
+--=-SLxQRJ1sD8pOEGy3Cj6q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Signed-off-by: Anna Neal <anna@cozybit.com>
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
-> ---
->  drivers/net/wireless/libertas/cmd.c     |   64 +++++++++++++++++++++++++++++++
->  drivers/net/wireless/libertas/cmd.h     |    6 +++
->  drivers/net/wireless/libertas/defs.h    |    9 ++++
->  drivers/net/wireless/libertas/host.h    |    1 +
->  drivers/net/wireless/libertas/hostcmd.h |   24 +++++++++--
->  drivers/net/wireless/libertas/wext.c    |   31 ++++++++++++++-
->  6 files changed, 128 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> index 802547e..5fef05f 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -1971,6 +1971,70 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv)
->  }
->  
-> 
-> +/**
-> + * @brief Configures the transmission power control functionality.
-> + *
-> + * @param priv		A pointer to struct lbs_private structure
-> + * @param enable	Transmission power control enable
-> + * @param p0		Power level when link quality is good (dBm).
-> + * @param p1		Power level when link quality is fair (dBm).
-> + * @param p2		Power level when link quality is poor (dBm).
-> + * @param usesnr	Use Signal to Noise Ratio in TPC
-> + *
-> + * @return 0 on success
-> + */
-> +int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
-> +		int8_t p2, int usesnr)
-> +{
-> +	struct cmd_ds_802_11_tpc_cfg cmd;
-> +	int ret;
-> +
-> +	memset(&cmd, 0, sizeof(cmd));
-> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-> +	cmd.action = cpu_to_le16(CMD_ACT_SET);
-> +	cmd.enable = !!enable;
-> +	cmd.usesnr = !!enable;
+On Fri, 2008-09-12 at 13:44 -0700, Abhijeet Kolekar wrote:
+> When monitor mode is changed to BSS or IBSS, data trasnfer can not happen
+> because proper transmit function is not assigend for BSS ,IBSS mode.
+> This patch fixes this problem by assigning the ieee80211_subif_start_xmit
+> to device's hard_start_xmit function.
 
-Hmm, do you mean !!usesnr here instead of !!enable?  Otherwise the
-usesnr parameter goes unused and you can remove it from the parameter
-list.  But I think you probably meant to use it :)
+>  	/* and set some type-dependent values */
+>  	sdata->vif.type =3D type;
+> +	sdata->dev->hard_start_xmit =3D ieee80211_subif_start_xmit;
+> =20
+>  	/* only monitor differs */
+>  	sdata->dev->type =3D ARPHRD_ETHER;
 
-> +	cmd.P0 = p0;
-> +	cmd.P1 = p1;
-> +	cmd.P2 = p2;
-> +
-> +	ret = lbs_cmd_with_response(priv, CMD_802_11_TPC_CFG, &cmd);
-> +
-> +	return ret;
-> +}
-> +
-> +/**
-> + * @brief Configures the power adaptation settings.
-> + *
-> + * @param priv		A pointer to struct lbs_private structure
-> + * @param enable	Power adaptation enable
-> + * @param p0		Power level for 1, 2, 5.5 and 11 Mbps (dBm).
-> + * @param p1		Power level for 6, 9, 12, 18, 22, 24 and 36 Mbps (dBm).
-> + * @param p2		Power level for 48 and 54 Mbps (dBm).
-> + *
-> + * @return 0 on Success
-> + */
-> +
-> +int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
-> +		int8_t p1, int8_t p2)
-> +{
-> +	struct cmd_ds_802_11_pa_cfg cmd;
-> +	int ret;
-> +
-> +	memset(&cmd, 0, sizeof(cmd));
-> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-> +	cmd.action = cpu_to_le16(CMD_ACT_SET);
-> +	cmd.enable = !!enable;
-> +	cmd.P0 = p0;
-> +	cmd.P1 = p1;
-> +	cmd.P2 = p2;
-> +
-> +	ret = lbs_cmd_with_response(priv, CMD_802_11_PA_CFG , &cmd);
-> +
-> +	return ret;
-> +}
-> +
-> +
->  static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
->  	uint16_t command, struct cmd_header *in_cmd, int in_cmd_size,
->  	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-> index 11ac996..336a181 100644
-> --- a/drivers/net/wireless/libertas/cmd.h
-> +++ b/drivers/net/wireless/libertas/cmd.h
-> @@ -26,6 +26,12 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
->  	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
->  	      unsigned long callback_arg);
->  
-> +int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
-> +		int8_t p1, int8_t p2);
-> +
-> +int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
-> +		int8_t p2, int usesnr);
-> +
->  int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
->  		     struct cmd_header *resp);
->  
-> diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
-> index 4b2428a..c89d7a1 100644
-> --- a/drivers/net/wireless/libertas/defs.h
-> +++ b/drivers/net/wireless/libertas/defs.h
-> @@ -189,6 +189,15 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
->  #define MRVDRV_CMD_UPLD_RDY		0x0008
->  #define MRVDRV_CARDEVENT		0x0010
->  
-> +
-> +/* Automatic TX control default levels */
-> +#define POW_ADAPT_DEFAULT_P0 13
-> +#define POW_ADAPT_DEFAULT_P1 15
-> +#define POW_ADAPT_DEFAULT_P2 18
-> +#define TPC_DEFAULT_P0 5
-> +#define TPC_DEFAULT_P1 10
-> +#define TPC_DEFAULT_P2 13
-> +
->  /** TxPD status */
->  
->  /*	Station firmware use TxPD status field to report final Tx transmit
-> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-> index da618fc..a916bb9 100644
-> --- a/drivers/net/wireless/libertas/host.h
-> +++ b/drivers/net/wireless/libertas/host.h
-> @@ -83,6 +83,7 @@
->  #define CMD_802_11_INACTIVITY_TIMEOUT		0x0067
->  #define CMD_802_11_SLEEP_PERIOD			0x0068
->  #define CMD_802_11_TPC_CFG			0x0072
-> +#define CMD_802_11_PA_CFG			0x0073
->  #define CMD_802_11_FW_WAKE_METHOD		0x0074
->  #define CMD_802_11_SUBSCRIBE_EVENT		0x0075
->  #define CMD_802_11_RATE_ADAPT_RATESET		0x0076
-> diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-> index d27c276..630b799 100644
-> --- a/drivers/net/wireless/libertas/hostcmd.h
-> +++ b/drivers/net/wireless/libertas/hostcmd.h
-> @@ -607,14 +607,28 @@ struct cmd_ds_802_11_eeprom_access {
->  } __attribute__ ((packed));
->  
->  struct cmd_ds_802_11_tpc_cfg {
-> +	struct cmd_header hdr;
-> +
->  	__le16 action;
-> -	u8 enable;
-> -	s8 P0;
-> -	s8 P1;
-> -	s8 P2;
-> -	u8 usesnr;
-> +	uint8_t enable;
-> +	int8_t P0;
-> +	int8_t P1;
-> +	int8_t P2;
-> +	uint8_t usesnr;
->  } __attribute__ ((packed));
->  
-> +
-> +struct cmd_ds_802_11_pa_cfg {
-> +	struct cmd_header hdr;
-> +
-> +	__le16 action;
-> +	uint8_t enable;
-> +	int8_t P0;
-> +	int8_t P1;
-> +	int8_t P2;
-> +} __attribute__ ((packed));
-> +
-> +
->  struct cmd_ds_802_11_led_ctrl {
->  	__le16 action;
->  	__le16 numled;
-> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-> index 426f1fe..e8cadad 100644
-> --- a/drivers/net/wireless/libertas/wext.c
-> +++ b/drivers/net/wireless/libertas/wext.c
-> @@ -1820,7 +1820,21 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
->  	}
->  
->  	if (vwrq->fixed == 0) {
-> -		/* Auto power control */
-> +		/* User requests automatic tx power control, however there are
-> +		 * many auto tx settings.  For now use firmware defaults until
-> +		 * we come up with a good way to expose these to the user. */
-> +		if (priv->fwrelease < 0x09000000) {
-> +			ret = lbs_set_power_adapt_cfg(priv, 1,
-> +					POW_ADAPT_DEFAULT_P0,
-> +					POW_ADAPT_DEFAULT_P1,
-> +					POW_ADAPT_DEFAULT_P2);
-> +			if (ret)
-> +				goto out;
-> +		}
-> +		ret = lbs_set_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
+I'd have prefered if you'd put it along with "only monitor mode differs"
+but heh :)
 
-Did you mean to disable TPC here when the user specified "auto" power
-control?  This would mean that PA gets used at every rate and TPC is
-disabled, while enabling TPC here would mean TPC gets used at the
-highest rate, and PA gets used at all other rates.  What was your intent
-here?  If you really mean to use '0' here to disable TPC, you might want
-to put the rationale in a comment.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Thanks!
-Dan
+johannes
 
-> +				TPC_DEFAULT_P2, 1);
-> +		if (ret)
-> +			goto out;
->  		dbm = priv->txpower_max;
->  	} else {
->  		/* Userspace check in iwrange if it should use dBm or mW,
-> @@ -1830,7 +1844,8 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
->  			goto out;
->  		}
->  
-> -		/* Validate requested power level against firmware allowed levels */
-> +		/* Validate requested power level against firmware allowed
-> +		 * levels */
->  		if (priv->txpower_min && (dbm < priv->txpower_min)) {
->  			ret = -EINVAL;
->  			goto out;
-> @@ -1840,6 +1855,18 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
->  			ret = -EINVAL;
->  			goto out;
->  		}
-> +		if (priv->fwrelease < 0x09000000) {
-> +			ret = lbs_set_power_adapt_cfg(priv, 0,
-> +					POW_ADAPT_DEFAULT_P0,
-> +					POW_ADAPT_DEFAULT_P1,
-> +					POW_ADAPT_DEFAULT_P2);
-> +			if (ret)
-> +				goto out;
-> +		}
-> +		ret = lbs_set_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
-> +				TPC_DEFAULT_P2, 1);
-> +		if (ret)
-> +			goto out;
->  	}
->  
->  	/* If the radio was off, turn it on */
+--=-SLxQRJ1sD8pOEGy3Cj6q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIytUdAAoJEKVg1VMiehFYQu4QAKAyEmE9QzEocM89yX3DTuAQ
+pyXrIrPhGYD/yY1iApG+CUNMAYhrx9cG+qyv9HMT+O/Kj886YVTEnaXjhr1oOx1f
+Kg5YuCYOOw+GxCekczpgItMl5tolFFEKs2ukSolvn14g75JAZXqR+EneDcwDWlTm
+LYBEU9QM2sI9cCmJX4xCZwpQHhQMdqAGepm6DWjArO34DiBFRDdM1o2PnIM9G5Az
+nVj18vrILwZ9t9aTLpGkyGFDrSRMvp5n91VnIxschC9hpyUZm92vlphCSIc03+hm
+kQFIfzUzt/FnPYYQInBK0Hzcz7i8sQyDVMebMFuyvndrcy5T/JDh2a7tw2tqtrsr
+xWCvqD24EJKmqopsg0bEPqrSMH/2aZ7tx2uTUBbmWpZzym/CgdV6T97ieASdzq5t
+0ntHqEe9DPNIjVoj7/k0nUzzKhv0103b9fCm+bZXxOci1LXDo4fOrDMrTcoNbyCO
+acJMDD6wUVQ1Zr51ZljpLVLD+d4jF6gZ+N7RCJNqhwLJFmIVK0QXI2rW7Z3IJAPF
+HhASg6gGF01Lhid7GBBfXLOKBn+M63PDnu+P5AuAkA+yk2X/t+UZPY21zHgGopTD
+KeARp9Jmh5qPVu4wXyOXyM8eqTD5E5qkMCeLvFm70UexWHuOq7LA5EhWv3i0ouEf
+Rj4GIJGZVpdcR5tJ+jMd
+=V1eo
+-----END PGP SIGNATURE-----
+
+--=-SLxQRJ1sD8pOEGy3Cj6q--
 
