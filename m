@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web34804.mail.mud.yahoo.com ([209.191.68.168]:37714 "HELO
-	web34804.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751601AbYIMQT3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2008 12:19:29 -0400
-Date: Sat, 13 Sep 2008 09:12:47 -0700 (PDT)
-From: Edgar Velasco <ingeideas@yahoo.com>
-Reply-To: ingeideas@yahoo.com
-Subject: Bug report compat-wireless-2.6-old
-To: linux-wireless@vger.kernel.org
+Received: from sj-iport-1.cisco.com ([171.71.176.70]:15866 "EHLO
+	sj-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298AbYILDEk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 23:04:40 -0400
+From: Roland Dreier <rdreier@cisco.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Steven Noonan <steven@uplinklabs.net>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: I need help with a sparse warning
+References: <48C9D040.8010107@lwfinger.net>
+	<f488382f0809111932v1cc1eb44kbe0bc0e97347c834@mail.gmail.com>
+	<48C9DACE.5040308@lwfinger.net>
+Date: Thu, 11 Sep 2008 20:04:38 -0700
+In-Reply-To: <48C9DACE.5040308@lwfinger.net> (Larry Finger's message of "Thu,
+	11 Sep 2008 21:58:22 -0500")
+Message-ID: <adavdx2kqt5.fsf@cisco.com> (sfid-20080912_050444_248248_2B67049D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <201197.56850.qm@web34804.mail.mud.yahoo.com> (sfid-20080913_181934_270201_155E35CA)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm reporting a bug.=20
-Went I make, this is what I get:
+ > This one gets rid of the sparse warning.
+ > 
+ >        priv->rx_mtu = le16_to_cpu((__le16 __force)
+ >                                   bootrec->data[10]);
 
-compat-wireless-2.6-old # make
-/root/compat-wireless-2.6-old/config.mk:30: *** "ERROR: There is a bug =
-with compat-wireless on 2.6.22. Remove me if you want to fix me".  Stop=
-=2E
+Yes but does it actually work on both big and little endian systems?
+(See my previous email)
 
-How can I fix it?
-Edgar Velasco
-
-
-      _________________________________________________________________=
-___________________
-Yahoo! MTV Blog & Rock &gt;=A1Cu=E9ntanos tu historia, inspira una canc=
-i=F3n y g=E1nate un viaje a los Premios MTV! Participa aqu=ED http://mt=
-vla.yahoo.com/
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ - R.
