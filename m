@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:19473 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753853AbYIYVg1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 17:36:27 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so592825fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 14:36:26 -0700 (PDT)
-Message-ID: <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com> (sfid-20080925_233631_832168_61576470)
-Date: Fri, 26 Sep 2008 00:36:25 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
-Cc: "Hauke Mehrtens" <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48DC0008.2070802@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:60591 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753000AbYILSgf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2008 14:36:35 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC/RFT] p54: Fix sparse warnings
+Date: Fri, 12 Sep 2008 20:36:03 +0200
+Cc: John W Linville <linville@tuxdriver.com>, chunkeey@web.de,
+	linux-wireless@vger.kernel.org
+References: <48cab1e3.m0lac7LoL3DFxIu6%Larry.Finger@lwfinger.net>
+In-Reply-To: <48cab1e3.m0lac7LoL3DFxIu6%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809122036.03553.mb@bu3sch.de> (sfid-20080912_203642_897460_6A6FC93A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 26, 2008 at 12:18 AM, Larry Finger
-<Larry.Finger@lwfinger.net> wrote:
-> Hauke Mehrtens wrote:
->> After upgrading from wireless-testing-2008-09-12 to
->> wireless-testing-2008-09-24 I got the following kernel panic short after
->> starting linux.
->>
->> It happens at every start. After starting an older linux version
->> everything works as it should.
->>
->> I think it happens in the connecting process.
->>
->> I am using Ubuntu Hardy with network manager 0.7
->> I have got an rtl8187 chip on my Asus P5B Deluxe wifi.
->
-> I can confirm this with and without my RTL8187B inserted.
->
-> Larry
->
-wild guess try to revert:
-'mac80211: make master iface not wireless'
+On Friday 12 September 2008 20:16:03 Larry Finger wrote:
+>  struct bootrec {
+>  	__le32 code;
+>  	__le32 len;
+> -	u32 data[0];
+> +	/* Most references to the data section that follows are for u32
+> +	 * quantities; however, one is for an le16 quantity. The union
+> +	 * below avoids a cast and makes the usage clearer. */
+> +	union {
+> +		u32 data[0];
+> +		__le16 data16[0];
+> +	};
+>  } __attribute__((packed));
 
-Tomas
+I suggest you change
+	u32 data[0];
+to
+	__le32 data_le32[0];
+and also add
+	__be32 data_be32[0];
+to the union. This avoids another few casts.
+(Maybe you don't even need the __le32 variant. I didn't check all the code).
+
+-- 
+Greetings Michael.
