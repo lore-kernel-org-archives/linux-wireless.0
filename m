@@ -1,83 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55373 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751971AbYIPV5A (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:42318 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbYILCKC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 17:57:00 -0400
-Subject: Re: iw packaging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1221601739.17084.22.camel@dv>
-References: <1221596962.9262.12.camel@johannes.berg>
-	 <1221598208.17084.11.camel@dv>  <1221599460.9262.16.camel@johannes.berg>
-	 (sfid-20080916_231152_167035_625A9793)  <1221599757.9262.19.camel@johannes.berg>
-	 <1221600232.17084.16.camel@dv>  <1221601136.9262.23.camel@johannes.berg>
-	 <1221601739.17084.22.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-E00AClj9Cfe5K6qghBVp"
-Date: Tue, 16 Sep 2008 23:56:04 +0200
-Message-Id: <1221602164.9262.28.camel@johannes.berg> (sfid-20080916_235712_566446_6F909BE5)
+	Thu, 11 Sep 2008 22:10:02 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1221184060.11498.3.camel@californication>
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 <1221123779.2513.88.camel@debian.sh.intel.com>
+	 <1221184060.11498.3.camel@californication>
+Content-Type: text/plain
+Date: Fri, 12 Sep 2008 04:10:32 +0200
+Message-Id: <1221185432.6695.0.camel@californication> (sfid-20080912_041007_653566_F8146EC3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Yi,
 
---=-E00AClj9Cfe5K6qghBVp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > It should be triggered by the BUG_ON() in the function. Are you able to
+> > confirm it with netconsole or maybe even a frame buffer enabled console
+> > (it just shows more lines)? If this is the culprit, Tomas has been
+> > already working on it. But your BT coexist finding should help us
+> > reproducing the bug.
+> > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703
+> 
+> so I was looking through the bug and switched some options around based
+> on wild assumptions made in that bug. The current settings are this:
+> 
+> CONFIG_IWLWIFI=m
+> CONFIG_IWLCORE=m
+> # CONFIG_IWLWIFI_LEDS is not set
+> CONFIG_IWLWIFI_RFKILL=y
+> # CONFIG_IWLWIFI_DEBUG is not set
+> CONFIG_IWLAGN=m
+> # CONFIG_IWLAGN_SPECTRUM_MEASUREMENT is not set
+> # CONFIG_IWLAGN_LEDS is not set
+> CONFIG_IWL4965=y
+> # CONFIG_IWL5000 is not set
+> # CONFIG_IWL3945 is not set
+> 
+> these seem to be stable and have no problems. I tried to crash the
+> kernel, but didn't manage it.
+> 
+> Previously I had IWLWIFI_RFKILL off (wich was an oversight) and
+> IWLAGN_LEDS on.
+> 
+> So my guess is either disabling RFKILL or enabling LEDS makes the
+> difference. This is another reason to not have all these config options,
+> because nobody find any bugs :(
 
-On Tue, 2008-09-16 at 17:48 -0400, Pavel Roskin wrote:
+I take this back. It took a couple of hours, but it crashed again.
 
-> $ nm iw | grep __cmd |sort
-> 0000000000403d20 A __start___cmd
-> 0000000000403d20 r __cmd_handle_infoNL80211_CMD_GET_WIPHYCIB_NONE
-> 0000000000403d60 r __cmd_handle_infoNL80211_CMD_GET_WIPHYCIB_PHY
-> 0000000000403da0 r __cmd_handle_nameNL80211_CMD_SET_WIPHYCIB_PHY
-> ...
->=20
-> The next command is at 0x403d60, but the code expects it at 0x403d50.
+Regards
 
-I suspected as much, but right now I don't know how to fix that. I'd
-have thought the rules here would be just like in an array but clearly I
-was wrong.
+Marcel
 
-This would probably "fix" it, but it's ugly:
-
---- a/iw.h
-+++ b/iw.h
-@@ -35,6 +35,7 @@ struct cmd {
-        int (*handler)(struct nl_cb *cb,
-                       struct nl_msg *msg,
-                       int argc, char **argv);
-+       void *dummy[0] __attribute__((__aligned__(0x40)));
- };
-=20
- #define __COMMAND(sect, name, args, nlcmd, flags, idby, handler)       \
-
-
-johannes
-
---=-E00AClj9Cfe5K6qghBVp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0CtwAAoJEKVg1VMiehFY7rEP/RZyLv+t/BxN3Beg1lHUG95J
-mtetZWsawQReusmGBIX+DDAsMc2O/dU4XGd01GFj7V+L5Zsm1PEju0MZQHcrEE0N
-irKwCIHW+px6gdNvqqRmkrPZ9NK21K7R400QxVY98CeA3UgB9Iwwr7Km0B4IP8a/
-7fomdSSW5zRlGaVmK1TMTGXeKW7AWsjvDlDUCyt46xQkTZhMIFLplbPw40qJKUZo
-lfg/EQ9mfE3oiBQi4HjQftT9oKbXywHdKwxmmai+VF58Jh+6iBaWURn6PHkUnw6m
-slj4MxZY9OBhd+Fkipp/u/pyA3P2XfBXMmt3wATYF52Nicd02HsFftahIAf/weoO
-U0T5prgjGtmrCU0zaZAqXvHgVVJLXkplj0SLoiTj+w2f0tVXHFEZX9T/US5Bjw+R
-/GEEdmUmO6fmu5UXAs/JwzpSFf9tm1o9nAsdEpZH9xtbJAv6phUfPOe6k2CqhQbV
-MN7k3oru5P3l8MV10+T9keNw8Gw+GuuK8bT6DRhASHxtT+oFw74P/pvD750d023v
-xKw/Y++7uq1kD4iRhDrKnw0VeptvAZeYy3FjgJtFRoWGvdLsUiFDdAXwSYfWc7/q
-JoSrTOpruCDMZDZqXdVOf8bzPQoQ5oVKAPBu7DMCE2FtlPAkFuc4yF0MA0qVSOIc
-KQFYjvKM63XjeaM+DRDN
-=H1VR
------END PGP SIGNATURE-----
-
---=-E00AClj9Cfe5K6qghBVp--
 
