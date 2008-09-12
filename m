@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.186]:16646 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750766AbYIHIqn (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58361 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752004AbYILHyB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 04:46:43 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so161657gvc.37
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 01:46:41 -0700 (PDT)
-Message-ID: <1ba2fa240809080146o93200eetcf8e142f6ef4a2b1@mail.gmail.com> (sfid-20080908_104646_717295_53D9A2A9)
-Date: Mon, 8 Sep 2008 11:46:41 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1220863139.31304.33.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220794765.31304.8.camel@johannes.berg>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 <1220863139.31304.33.camel@johannes.berg>
+	Fri, 12 Sep 2008 03:54:01 -0400
+Subject: [PATCH] mac80211: fix sta_info kernel-doc warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 12 Sep 2008 09:53:27 +0200
+Message-Id: <1221206007.11204.7.camel@johannes.berg> (sfid-20080912_095406_865631_961E711C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 8, 2008 at 11:38 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-09-08 at 02:14 +0300, Tomas Winkler wrote:
->
->> Shouldn't carrier_off(stada->dev) stop the queue?  I haven't seen this
->> before.
->
-> The other question is whether we should be doing netif_carrier_off() at
-> all since that throws away frames from the queue and attaches a noop
-> qdisc. When we're roaming quickly between two APs, we don't necessarily
-> want that, but we don't actually know whether or not we'll be able to
-> get back to an AP quickly when we disassociate for whatever reason.
->
-we should stop the wlan0 not the master device. Only data frames
-should be stopped.
-Tomas
+Sorry, forgot to run kernel-doc and just got the output from the nightly
+run by email, this fixes a warning which I introduced when doing the
+first RC API cleanups.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/sta_info.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- everything.orig/net/mac80211/sta_info.h	2008-09-12 09:50:48.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-09-12 09:51:09.000000000 +0200
+@@ -197,7 +197,7 @@ struct sta_ampdu_mlme {
+  * @tx_packets: number of RX/TX MSDUs
+  * @tx_bytes: TBD
+  * @tx_fragments: number of transmitted MPDUs
+- * @txrate_idx: TBD
++ * @last_txrate_idx: Index of the last used transmit rate
+  * @tid_seq: TBD
+  * @wme_tx_queue: TBD
+  * @ampdu_mlme: TBD
+
+
