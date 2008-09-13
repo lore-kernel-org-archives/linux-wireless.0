@@ -1,28 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.hevs.ch ([153.109.23.10]:57648 "EHLO mail.hevs.ch"
+Received: from c60.cesmail.net ([216.154.195.49]:50092 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258AbYI2OTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 10:19:24 -0400
-From: Marc Pignat <marc.pignat@hevs.ch>
-To: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [RFC, PATCH] ath5k: compilation fix for ARM
-Date: Mon, 29 Sep 2008 16:19:17 +0200
-Cc: mickflemm@gmail.com, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-References: <200809291607.33690.marc.pignat@hevs.ch> <48E0E36B.9060807@gmail.com>
-In-Reply-To: <48E0E36B.9060807@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809291619.17828.marc.pignat@hevs.ch> (sfid-20080929_161927_490626_D13E9905)
+	id S1750939AbYIMER6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Sep 2008 00:17:58 -0400
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
+From: Pavel Roskin <proski@gnu.org>
+To: jt@hpl.hp.com
+Cc: Dan Williams <dcbw@redhat.com>, kilroyd@googlemail.com,
+	linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+In-Reply-To: <20080908183203.GA7090@bougret.hpl.hp.com>
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
+	 <1217825304.10989.20.camel@dv>
+	 <1217864060.3139.10.camel@localhost.localdomain>
+	 <20080805162238.GA6294@bougret.hpl.hp.com>
+	 <20080902230621.GA28885@bougret.hpl.hp.com> <1220878110.2369.3.camel@dv>
+	 <20080908183203.GA7090@bougret.hpl.hp.com>
+Content-Type: text/plain
+Date: Sat, 13 Sep 2008 00:17:55 -0400
+Message-Id: <1221279475.14059.29.camel@dv> (sfid-20080913_061818_614674_041DC2AF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 29 September 2008, Jiri Slaby wrote:
-> On 09/29/2008 04:07 PM, Marc Pignat wrote:
-> Thanks, but Nick already fixed that:
-> http://kerneltrap.org/mailarchive/linux-ath5k-devel/2008/9/17/3317654
-> 
+On Mon, 2008-09-08 at 11:32 -0700, Jean Tourrilhes wrote:
 
-fine ;)
+> 	Try the attached patch.
 
+It's working on x86_64!  Thank you!
+
+> diff -u -p linux/drivers/net/wireless/orinoco.p1.c linux/drivers/net/wireless/orinoco.c
+> --- linux/drivers/net/wireless/orinoco.p1.c	2008-09-08 11:28:01.000000000 -0700
+> +++ linux/drivers/net/wireless/orinoco.c	2008-09-08 11:29:59.000000000 -0700
+> @@ -3953,7 +3953,7 @@ static int orinoco_ioctl_getrid(struct n
+>  /* Trigger a scan (look for other cells in the vicinity */
+>  static int orinoco_ioctl_setscan(struct net_device *dev,
+>  				 struct iw_request_info *info,
+> -				 struct iw_param *srq,
+> +				 struct iw_point *srq,
+>  				 char *extra)
+
+The same problem exists in airo and atmel, but they don't use that
+argument.  Several drivers, including mac80211 use union iwreq_data,
+which is fragile.  Fortunately, most drivers don't use that argument or
+use the "data" field, which is correct.
+
+The only incorrect use of union iwreq_data is in rndis_wlan.  It would
+ignore ESSID on x86_64.
+
+I think the use of union iwreq_data is dangerous and should be avoided.
+
+-- 
+Regards,
+Pavel Roskin
