@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57081 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752902AbYIOTQ0 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:37496 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752667AbYIMNEe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 15:16:26 -0400
-Subject: Re: [RFC] Redesigning aggregation on mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890809151203p213fae37ia3bd6871c3bfe2c2@mail.gmail.com> (sfid-20080915_210344_710978_CE092643)
-References: <43e72e890809151203p213fae37ia3bd6871c3bfe2c2@mail.gmail.com>
-	 (sfid-20080915_210344_710978_CE092643)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dJTxK8x3aO6ADMIzuVxb"
-Date: Mon, 15 Sep 2008 21:15:42 +0200
-Message-Id: <1221506142.3700.75.camel@johannes.berg> (sfid-20080915_211640_834517_0D147859)
-Mime-Version: 1.0
+	Sat, 13 Sep 2008 09:04:34 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1225366wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Sep 2008 06:04:33 -0700 (PDT)
+Message-ID: <69e28c910809130604nb23b212vadddbcf571a13020@mail.gmail.com> (sfid-20080913_150449_290323_CC5D7732)
+Date: Sat, 13 Sep 2008 15:04:33 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Mike Cui" <cuicui@gmail.com>
+Subject: Re: BMC4310 support (03f0:171d)
+Cc: "Nadav Kavalerchik" <nadavkav@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <7c8826910809122011i23587a6bta838f2e0a7c39744@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4219988b0809011331j4acb1582u3239218c6b7ff573@mail.gmail.com>
+	 <4219988b0809011349i640d36e0p497eb8cefe303d0@mail.gmail.com>
+	 <200809012333.58897.mb@bu3sch.de>
+	 <4219988b0809091240s970c580k763054a56ef740b3@mail.gmail.com>
+	 <4219988b0809091241l565fa8fcpebe2fb552782c4d4@mail.gmail.com>
+	 <7c8826910809120133o13c744d0pbfae5a18dd72787f@mail.gmail.com>
+	 <69e28c910809121157qaaad7c8w67d626e60e807892@mail.gmail.com>
+	 <7c8826910809122011i23587a6bta838f2e0a7c39744@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 13, 2008 at 5:11 AM, Mike Cui <cuicui@gmail.com> wrote:
+>> It is not a "BCM4315", it is a BCM4310. There is no such thing as a
+>> BCM4315. Chip ID != PCI ID!
+>> Most chip IDs match with their respective PCI IDs, but here are some exceptions:
+>> 0x4320 is BCM4306.
+>> 0x4315 is BCM4310.
+>> 0x4328 is BCM4321.
+>> 0x432b is BCM4322.
+>
+> Maybe...
+>
+> But on the miniPCIe chip itself, there is a sticker that says Broadcom
+> 4312. But it's not a BCM4312 either, because BCM4312 actually works...
+>
 
---=-dJTxK8x3aO6ADMIzuVxb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Maybe we should refine the list a bit then, as follows:
+0x4320 is BCM4306
+0x4311 is BCM4311BG (colloquially "BCM4311")
+0x4312 is BCM4311ABG (colloquially "BCM4312")
+0x4315 is BCM4312 (colloquially "BCM4310")
+0x4318 can be both BCM4318 and BCM4318E
+0x4328 is BCM4321 (colloquially "BCM4328")
+0x432b is BCM4322
 
-On Mon, 2008-09-15 at 12:03 -0700, Luis R. Rodriguez wrote:
-
-> I'll start with Atheros hardware and mac80211. Atheros hardware uses 4
-> main HW queues, one for each AC, and we also have one for beacons,
-> another for queued stuff after beacon (aka "Crap After Beacon") where
-> things like queued frames for broadcast / multicast or for frames for
-> stations in power save mode, and I think another hw queue for uapsd.
-> Right now mac80211 queues skb's for drivers into the netdev_queues.
-> Under the current mac80211 design we have 4 netdev_queues, one for
-> each AC and then there is a number of "aggregation queues". We
-> essentially just declare one "aggregation" queue as we do our own
-> queue mapping internally to our own hardware queues -- and that
-> consist of just mapping frames to each HQ queue as per AC.
-
-Except that declaring one "aggregation queue" also limits you to a
-single aggregation session, no big deal in STA mode but punishable by
-death in AP mode.
-
-> Anyone know about Marvell's stuff? How about Broadcom?
-
-Consider Broadcom's stuff to work just as yours. Details may differ, but
-not by much.
-
-johannes
-
---=-dJTxK8x3aO6ADMIzuVxb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIzrRbAAoJEKVg1VMiehFY1NsP/jCtd+Bxx+bmlq0ppO5IYElF
-0qDEUrhU6f28r+Wsu34JSWd85jLskpg1vIYpju9rH/yahm9co3M+Y2MwPmFfzyJx
-9f9PcSAPrppzOXuFwBUMq0ay0wD01FZVAqSJl1He0Hlgmqgamw847Jdpem+a2Hlf
-3bjIGilZg+YoCxBr/xfCsBfZIcYKYu1XsgEmI9MAQkVBNzW7RnQ4OtO9OZBGWIfo
-CjgRt/MnUBr4lHeBPaxNsdwkn0jD1n6AQo+4GAE5qBxdY+QfmOp84NR4udUfKxCq
-FttMhVwyx93ZE9ugSxOybidKNxPWHm96+14UEkmQjkAVQzzB2ckv1YGigforgfmg
-PeVDc9bsmyzDSP4vUTvcpkA5EYsskQ4pMTWK13M9bLqKpxjTsNCHtvjkvQpI+Tgk
-4yIMaqj2KhhvRULuZdE1Sfao3ojnOTmY7MaWUx4QrImDyNjTLh3OydbagRvHXTWJ
-rKowAgMMi5flmTgYm6wJVP7gHsse9azDvNplZ/m3SJgyVctdC5obeXnVA8IAB5RU
-fmm+dtjQpezG5za3K52ZPmoNw7Zfav+UFVueBQ89neGrSfkQDjOTGnrPAKXRyeQP
-f6+FH4jwbUla956+8NuOIZRBvBCKSYmcpYBfrhWKyj5sKAdoOb9MRzHAB1DDLQtx
-Xqx9zFlXSWh4AuZopHOm
-=+XRe
------END PGP SIGNATURE-----
-
---=-dJTxK8x3aO6ADMIzuVxb--
-
+In that case, is "BCM4309" actually BCM4306ABG?
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
