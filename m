@@ -1,105 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54817 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752481AbYIKARr (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:45800 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752004AbYIMLWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 20:17:47 -0400
-Subject: [PATCH v2 18/18] mac80211 hwsim: verify sta pointers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080910220428.687397000@sipsolutions.net> (sfid-20080911_001645_613218_891667FD)
-References: <20080910220145.707263000@sipsolutions.net>
-	 <20080910220428.687397000@sipsolutions.net>
-	 (sfid-20080911_001645_613218_891667FD)
-Content-Type: text/plain
-Date: Thu, 11 Sep 2008 02:17:01 +0200
-Message-Id: <1221092221.3804.64.camel@johannes.berg> (sfid-20080911_021750_311355_0C7FD146)
-Mime-Version: 1.0
+	Sat, 13 Sep 2008 07:22:12 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so541628eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Sep 2008 04:22:10 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: proski@gnu.org, jt@hpl.hp.com, simon@thekelleys.org.uk,
+	jussi.kivilinna@mbnet.fi, David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH] wireless: Read scan flags correctly on x86-64
+Date: Sat, 13 Sep 2008 12:22:05 +0100
+Message-Id: <1221304925-13057-1-git-send-email-kilroyd@googlemail.com> (sfid-20080913_132217_778303_A0181885)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In analogy with the previous patch to make mac80211-hwsim
-verify that the virtual interface pointers are correct,
-this makes it very that it knows about all station structs.
+The SIOCSIWSCAN handler is passed data in an iw_point structure. Some
+drivers erronously use an iw_param instead.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On 32 bit architectures the difference isn't noticed as the flags
+parameter tends to be the only one used by scan handlers and is at the
+same offset.
+
+On 64 bit architectures the pointer in the iw_point structure means the
+flag parameter is at different offsets in these structures.
+
+Thanks to Jean Tourrilhes for tracking this down for orinoco, and Pavel
+Roskin for confirming the fix and identifying other suspect handlers.
+
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c |   43 ++++++++++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
 
---- everything.orig/drivers/net/wireless/mac80211_hwsim.c	2008-09-11 02:15:29.000000000 +0200
-+++ everything/drivers/net/wireless/mac80211_hwsim.c	2008-09-11 02:15:34.000000000 +0200
-@@ -52,6 +52,30 @@ static inline void hwsim_clear_magic(str
- 	vp->magic = 0;
- }
- 
-+struct hwsim_sta_priv {
-+	u32 magic;
-+};
-+
-+#define HWSIM_STA_MAGIC	0x6d537748
-+
-+static inline void hwsim_check_sta_magic(struct ieee80211_sta *sta)
-+{
-+	struct hwsim_sta_priv *sp = (void *)sta->drv_priv;
-+	WARN_ON(sp->magic != HWSIM_VIF_MAGIC);
-+}
-+
-+static inline void hwsim_set_sta_magic(struct ieee80211_sta *sta)
-+{
-+	struct hwsim_sta_priv *sp = (void *)sta->drv_priv;
-+	sp->magic = HWSIM_VIF_MAGIC;
-+}
-+
-+static inline void hwsim_clear_sta_magic(struct ieee80211_sta *sta)
-+{
-+	struct hwsim_sta_priv *sp = (void *)sta->drv_priv;
-+	sp->magic = 0;
-+}
-+
- static struct class *hwsim_class;
- 
- static struct ieee80211_hw **hwsim_radios;
-@@ -235,6 +259,8 @@ static int mac80211_hwsim_tx(struct ieee
- 	txi = IEEE80211_SKB_CB(skb);
- 
- 	hwsim_check_magic(txi->control.vif);
-+	if (txi->control.sta)
-+		hwsim_check_sta_magic(txi->control.sta);
- 
- 	memset(&txi->status, 0, sizeof(txi->status));
- 	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK)) {
-@@ -394,6 +420,22 @@ static void mac80211_hwsim_sta_notify(st
- 				      struct ieee80211_sta *sta)
+This is a latent bug in airo, atmel and orinoco drivers on 2.6.27-rcs.
+The addition of ESSID specific scanning to the orinoco driver triggers
+the bug in wireless-next.
+
+---
+ drivers/net/wireless/airo.c       |    2 +-
+ drivers/net/wireless/atmel.c      |    2 +-
+ drivers/net/wireless/orinoco.c    |    2 +-
+ drivers/net/wireless/rndis_wlan.c |    3 +--
+ 4 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index ae58a12..370133e 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -7107,7 +7107,7 @@ static int airo_get_aplist(struct net_device *dev,
+  */
+ static int airo_set_scan(struct net_device *dev,
+ 			 struct iw_request_info *info,
+-			 struct iw_param *vwrq,
++			 struct iw_point *dwrq,
+ 			 char *extra)
  {
- 	hwsim_check_magic(vif);
-+	switch (cmd) {
-+	case STA_NOTIFY_ADD:
-+		hwsim_set_sta_magic(sta);
-+		break;
-+	case STA_NOTIFY_REMOVE:
-+		hwsim_clear_sta_magic(sta);
-+		break;
-+	}
-+}
-+
-+static int mac80211_hwsim_set_tim(struct ieee80211_hw *hw,
-+				  struct ieee80211_sta *sta,
-+				  bool set)
-+{
-+	hwsim_check_sta_magic(sta);
-+	return 0;
- }
+ 	struct airo_info *ai = dev->priv;
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index bd35bb0..695a119 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -2257,7 +2257,7 @@ static int atmel_get_freq(struct net_device *dev,
  
- static const struct ieee80211_ops mac80211_hwsim_ops =
-@@ -408,6 +450,7 @@ static const struct ieee80211_ops mac802
- 	.config_interface = mac80211_hwsim_config_interface,
- 	.bss_info_changed = mac80211_hwsim_bss_info_changed,
- 	.sta_notify = mac80211_hwsim_sta_notify,
-+	.set_tim = mac80211_hwsim_set_tim,
- };
+ static int atmel_set_scan(struct net_device *dev,
+ 			  struct iw_request_info *info,
+-			  struct iw_param *vwrq,
++			  struct iw_point *dwrq,
+ 			  char *extra)
+ {
+ 	struct atmel_private *priv = netdev_priv(dev);
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index 9a2fcc0..5090477 100644
+--- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -5291,7 +5291,7 @@ static int orinoco_ioctl_getrid(struct net_device *dev,
+ /* Trigger a scan (look for other cells in the vicinity) */
+ static int orinoco_ioctl_setscan(struct net_device *dev,
+ 				 struct iw_request_info *info,
+-				 struct iw_param *srq,
++				 struct iw_point *srq,
+ 				 char *extra)
+ {
+ 	struct orinoco_private *priv = netdev_priv(dev);
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 00e965b..2b41489 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -1627,7 +1627,6 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
+ static int rndis_iw_set_scan(struct net_device *dev,
+     struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+ {
+-	struct iw_param *param = &wrqu->param;
+ 	struct usbnet *usbdev = dev->priv;
+ 	union iwreq_data evt;
+ 	int ret = -EINVAL;
+@@ -1635,7 +1634,7 @@ static int rndis_iw_set_scan(struct net_device *dev,
  
+ 	devdbg(usbdev, "SIOCSIWSCAN");
  
-
+-	if (param->flags == 0) {
++	if (wrqu->data.flags == 0) {
+ 		tmp = ccpu2(1);
+ 		ret = rndis_set_oid(usbdev, OID_802_11_BSSID_LIST_SCAN, &tmp,
+ 								sizeof(tmp));
+-- 
+1.5.6.4
 
