@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:47463 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751169AbYIPUe6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 16:34:58 -0400
-Subject: Re: [PATCH] Use the kernel source tree for includes, not the
-	kernel build tree
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1221596322.9262.7.camel@johannes.berg>
-References: <20080916200828.13928.55864.stgit@dv.roinet.com>
-	 <1221596322.9262.7.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 16 Sep 2008 16:34:56 -0400
-Message-Id: <1221597296.17084.4.camel@dv> (sfid-20080916_223501_421246_4F6C07E9)
-Mime-Version: 1.0
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:38310 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751392AbYIMPk6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Sep 2008 11:40:58 -0400
+Message-ID: <48CBDF0B.5080303@lwfinger.net> (sfid-20080913_174103_590206_2E8BA8EE)
+Date: Sat, 13 Sep 2008 10:40:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: John W Linville <linville@tuxdriver.com>, chunkeey@web.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] p54: Fix sparse warnings
+References: <48cab1e3.m0lac7LoL3DFxIu6%Larry.Finger@lwfinger.net> <200809122036.03553.mb@bu3sch.de> <48CABA84.2060404@lwfinger.net> <200809131440.01505.mb@bu3sch.de>
+In-Reply-To: <200809131440.01505.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-09-16 at 22:18 +0200, Johannes Berg wrote:
-
-> > diff --git a/Makefile b/Makefile
-> > index 74cb1e1..9e79381 100644
-> > --- a/Makefile
-> > +++ b/Makefile
-> > @@ -6,7 +6,7 @@ INSTALL ?= install
-> >  PREFIX ?= /usr
-> >  CC ?= "gcc"
-> >  CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
-> > -CFLAGS += -I/lib/modules/`uname -r`/build/include
-> > +CFLAGS += -I/lib/modules/`uname -r`/source/include
+Michael Buesch wrote:
+> On Friday 12 September 2008 20:52:52 Larry Finger wrote:
+>> No, it won't avoid any casts. The program uses the data area 7 times 
+>> in native-cpu order, once as be32, and once in little-endian order 
 > 
-> I'll remove that line entirely though.
+> Is the native use correct? Smells fishy.
 
-In Makefile?  Please make sure that .config remains optional.
+It does to me as well. I just got a copy of Intersil's data sheet for
+the MAC and everything looks little endian, but until we get a tester
+with a big-endian machine, we won't know. So far, no volunteers have
+come forward.
 
--- 
-Regards,
-Pavel Roskin
+Larry
+
+
+
