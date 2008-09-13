@@ -1,74 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:40379 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755816AbYIROiA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 10:38:00 -0400
-Date: Thu, 18 Sep 2008 11:37:54 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Message-ID: <20080918143754.GH1583@khazad-dum.debian.net> (sfid-20080918_163817_315503_1A27C52F)
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181519.12366.IvDoorn@gmail.com> <20080918141006.GE1583@khazad-dum.debian.net> <200809181624.53050.IvDoorn@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:56766 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752679AbYIMUDz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Sep 2008 16:03:55 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Mike Cui" <cuicui@gmail.com>
+Subject: Re: BMC4310 support (03f0:171d)
+Date: Sat, 13 Sep 2008 22:03:23 +0200
+Cc: "Stefanik =?utf-8?q?G=C3=A1bor?=" <netrolller.3d@gmail.com>,
+	"Nadav Kavalerchik" <nadavkav@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <4219988b0809011331j4acb1582u3239218c6b7ff573@mail.gmail.com> <69e28c910809121157qaaad7c8w67d626e60e807892@mail.gmail.com> <7c8826910809122011i23587a6bta838f2e0a7c39744@mail.gmail.com>
+In-Reply-To: <7c8826910809122011i23587a6bta838f2e0a7c39744@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809181624.53050.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200809132203.24007.mb@bu3sch.de> (sfid-20080913_220359_322140_8EB8A934)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
-> > On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> > > If it is something coming from mac80211, then you do not want
-> > > to send a SOFT_BLOCKED event since that will cause all other radios
-> > > to be switched off simply because the b43 interface has not been
-> > > enabled.
-> > 
-> > Drivers ARE supposed to be able to set their radio state to their heart's
-> > content, without messing with any other devices.  There are no constraints
-> > to calls to rfkill_force_state(), other than the current issue that it must
-> > not be done from an atomic context.
+On Saturday 13 September 2008 05:11:50 Mike Cui wrote:
+> > It is not a "BCM4315", it is a BCM4310. There is no such thing as a
+> > BCM4315. Chip ID != PCI ID!
+> > Most chip IDs match with their respective PCI IDs, but here are some exceptions:
+> > 0x4320 is BCM4306.
+> > 0x4315 is BCM4310.
+> > 0x4328 is BCM4321.
+> > 0x432b is BCM4322.
 > 
-> My main point was that when the radio is not enabled because the user
-> did something like "iwconfig wlan0 txpower off" then this is not an rfkill
-> SOFT_BLOCKED event. Since that command has nothing to do with the
-> entire rfkill layer.
+> Maybe...
+> 
+> But on the miniPCIe chip itself, there is a sticker that says Broadcom
+> 4312. But it's not a BCM4312 either, because BCM4312 actually works...
 
-We had some threads about it, and I don't recall any real conclusions if we
-should have "tx power off" be treated the same way as a software rfkill
-block request would, or not.  I believe it ended up as "do whatever you want
-in your driver" (i.e. no real conclusion).
+the numbers printed on the chip package are package IDs. These are
+different from chip-ids sometimes. ;)
 
-So, the rfkill core is not even aware of any tx power changes, unless the
-wireless device drivers decides to make it so by actively feeding it new
-states through rfkill_force_state() when the tx power changes from off to
-something else, and from something else to off.
+The only way to find out the chipid really is to load b43 and look
+for the message saying "found Broadcom XXXX WLAN".
 
-rfkill will work right whether you do it or not...
-
-> When you consider such commands as rfkill events you get wrong behavior
-> because it would trigger a SOFT_BLOCK in rfkill which will be send to all
-> registered drivers who can disable their radio off as well. And that is
-> definately not what you want...
-
-...because this is incorrect.
-
-No transmitter-specific rfkill events cause this, at least as far as the
-rfkill core is concerned.  They are sent to userspace and the notify chain,
-yes.  And either userspace or another kernel module might, if it is feeling
-wrong on the head, change that event into a request to mess with all radios.
-
-But right now, none will.  rfkill-input only cares about INPUT EVENTS, but
-the rfkill core never *issues* any input events, ever.
-
-Unless b43 is still issuing INPUT EVENTS even after the patch?  It
-shouldn't.
+But still, having a chip with the same chipid and/or package ids doesn't
+mean it's the same chip. :)
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Greetings Michael.
