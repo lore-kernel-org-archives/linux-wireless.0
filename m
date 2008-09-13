@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:54426 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751501AbYIFX2a (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:46128 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755392AbYIMCZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 19:28:30 -0400
-Message-ID: <48C3121C.9090309@lwfinger.net> (sfid-20080907_012832_747343_77D00D9E)
-Date: Sat, 06 Sep 2008 18:28:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: gavron@wetwork.net
-CC: Broadcom Wireless <bcm43xx-dev@berlios.de>,
+	Fri, 12 Sep 2008 22:25:46 -0400
+Subject: Re: The new regulatory code kills my wireless
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	John Linville <linville@tuxdriver.com>,
 	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Speed enhancement for BCM4306/2
-References: <48C1BA91.7050106@lwfinger.net> <48C20928.10202@wetwork.net> <48C20BD7.6080605@lwfinger.net> <48C20F64.1000700@wetwork.net> <48C2A1F5.6020607@lwfinger.net> <48C30B3E.2040302@wetwork.net>
-In-Reply-To: <48C30B3E.2040302@wetwork.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1221250959.5576.10.camel@johannes.berg>
+References: <48CAA8D6.1030605@lwfinger.net> <20080912174036.GC6134@tesla>
+	 <48CAB90C.5090302@lwfinger.net>  <20080912191919.GA7722@tesla>
+	 (sfid-20080912_211933_280898_C5E534CA)  <1221250959.5576.10.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sat, 13 Sep 2008 04:26:19 +0200
+Message-Id: <1221272779.6695.22.camel@californication> (sfid-20080913_042551_082098_09D4D4DC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gavron@wetwork.net wrote:
-> I haven't tried a build yet, but please let me know if I'm on the right 
-> track.
+Hi Johannes,
+
+> > Well no, IMHO people *should not* use the old regulatory stuff if
+> > possible, the idea is to kill it ASAP, you should only use the old
+> > regulatory stuff if you *need* to, meaning you have some dependency
+> > on the old module parameter for some strange odd ball reason or if
+> > you cannot compile and install crda or iw.
 > 
-> E
-> # diff -uN /tmp/phy.c drivers/net/wireless/b43legacy/phy.c
-> --- /tmp/phy.c    2008-09-06 15:13:33.000000000 -0700
-> +++ drivers/net/wireless/b43legacy/phy.c    2008-09-06 
-> 15:54:03.000000000 -0700
-> @@ -1010,7 +1010,7 @@
->         b43legacy_phy_initb5(dev);
->     else
->         b43legacy_phy_initb6(dev);
-> -    if (phy->rev >= 2 || phy->gmode)
-> +    if (phy->rev >= 2 && phy->gmode)
->         b43legacy_phy_inita(dev);
-> 
->     if (phy->rev >= 2) {
-> @@ -1021,21 +1021,26 @@
->         b43legacy_phy_write(dev, 0x0811, 0x0000);
->         b43legacy_phy_write(dev, 0x0015, 0x00C0);
->     }
-> -    if (phy->rev > 5) {
-> +    if (phy->rev >= 3) {
+> Well, TBH, I was just too lazy to do that ;)
 
-AFAIK, this change is an error in the specs. I have since changed it. 
-Sorry I didn't catch it earlier.
+I am pretty happy that you caught it, because that was my whole point
+from the discussion we had at OLS. The userspace part might not be in
+place and we must ensure that everything still works as before :)
 
-Otherwise, this patch seems to be correct. All you need now are the 
-fixes for b43legacy_phy_initb5() and b43legacy_phy_initb6().
+Regards
 
-Larry
+Marcel
+
+
