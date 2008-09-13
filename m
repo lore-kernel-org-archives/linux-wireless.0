@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43360
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755298AbYICDff (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:35:35 -0400
-Date: Tue, 02 Sep 2008 20:35:28 -0700 (PDT)
-Message-Id: <20080902.203528.185666587.davem@davemloft.net> (sfid-20080903_055043_531128_3B244FCB)
-To: yi.zhu@intel.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mohamed.abbas@intel.com, tomas.winkler@intel.com
-Subject: Re: [PATCH 3/9] iwlwifi: remove false rxon if rx chain changes
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1220411930-15216-4-git-send-email-yi.zhu@intel.com>
-References: <1220411930-15216-2-git-send-email-yi.zhu@intel.com>
-	<1220411930-15216-3-git-send-email-yi.zhu@intel.com>
-	<1220411930-15216-4-git-send-email-yi.zhu@intel.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from c60.cesmail.net ([216.154.195.49]:46067 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752513AbYIMNY1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Sep 2008 09:24:27 -0400
+Message-ID: <20080913092425.9yzzmpzysoc0ggkc-cebfxv@webmail.spamcop.net> (sfid-20080913_152436_113967_534859E3)
+Date: Sat, 13 Sep 2008 09:24:25 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, jt@hpl.hp.com,
+	simon@thekelleys.org.uk, jussi.kivilinna@mbnet.fi
+Subject: Re: [PATCH] wireless: Read scan flags correctly on x86-64
+References: <1221304925-13057-1-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1221304925-13057-1-git-send-email-kilroyd@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
-Date: Wed,  3 Sep 2008 11:18:44 +0800
+Quoting David Kilroy <kilroyd@googlemail.com>:
 
-> From: Mohamed Abbas <mohamed.abbas@intel.com>
-> 
-> Rx chain might change during power save transitions but it doesn't
-> require sending Full-ROXN command to the firmware. Full-RXON requires
-> reconnection to an AP and thus affects user experience. The patch
-> avoids the Full-RXON by removing the rx_chain modification check in
-> iwl_full_rxon_required function.
-> 
-> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> The SIOCSIWSCAN handler is passed data in an iw_point structure. Some
+> drivers erronously use an iw_param instead.
+>
+> On 32 bit architectures the difference isn't noticed as the flags
+> parameter tends to be the only one used by scan handlers and is at the
+> same offset.
+>
+> On 64 bit architectures the pointer in the iw_point structure means the
+> flag parameter is at different offsets in these structures.
+>
+> Thanks to Jean Tourrilhes for tracking this down for orinoco, and Pavel
+> Roskin for confirming the fix and identifying other suspect handlers.
+>
+> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Acked-by: Pavel Roskin <proski@gnu.org>
+
+-- 
+Regards,
+Pavel Roskin
