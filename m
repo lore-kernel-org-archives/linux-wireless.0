@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39662 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752771AbYILDQ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 23:16:57 -0400
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43218 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbYINB2Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Sep 2008 21:28:16 -0400
+Date: Sat, 13 Sep 2008 20:52:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: The new regulatory code kills my wireless
+Message-ID: <20080914005256.GA32339@tuxdriver.com> (sfid-20080914_032822_816503_37EBCD4E)
+References: <48CAA8D6.1030605@lwfinger.net> <20080912174036.GC6134@tesla> <48CAB90C.5090302@lwfinger.net> <20080912191919.GA7722@tesla> <1221250959.5576.10.camel@johannes.berg> <1221272779.6695.22.camel@californication> <1221294810.3700.3.camel@johannes.berg> <1221324673.6695.31.camel@californication>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18633.57010.19741.838935@gargle.gargle.HOWL> (sfid-20080912_051701_232533_29EE7319)
-Date: Fri, 12 Sep 2008 08:44:58 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/18] mac80211 cleanups and fixes
-In-Reply-To: <1221139351.6986.26.camel@johannes.berg>
-References: <20080910220145.707263000@sipsolutions.net>
-	<18632.55008.411078.289830@gargle.gargle.HOWL>
-	<1221139351.6986.26.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1221324673.6695.31.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
- > I had actually tried
- > (http://johannes.sipsolutions.net/patches/kernel/ath9k-sta-node.patch)
- > but you're using refcounting for the nodes while mac80211 RCU-protects
- > them, so I didn't get very far. It needs a bit more effort to make sure
- > you don't have node pointers stick around in some tx descriptor after
- > mac80211 decides to remove a node (which may very well happen while
- > frames are queued)
+On Sat, Sep 13, 2008 at 06:51:13PM +0200, Marcel Holtmann wrote:
+> Hi Johannes,
+> 
+> > > I am pretty happy that you caught it, because that was my whole point
+> > > from the discussion we had at OLS. The userspace part might not be in
+> > > place and we must ensure that everything still works as before :)
+> > 
+> > I thought your point was that you wanted regulatory_hint_regdom(...)
+> > that the driver can use to tell us what the EEPROM regulatory is, which
+> > wouldn't have been affected by this bug :) But anyway, yeah, it's a bug.
+> 
+> of course I want regulatory_hint_regdom :)
+> 
+> I was just trying to make clear how important it is to make sure we work
+> with a broken userspace or without userspace support at all
 
-Well, the node stuff is sprinkled throughout ath9k right now, I'll start
-cleaning up all that and revamp the aggregation logic in the process too.
-Do you mind if I build on this patch ?
+Which is, of course, why I asked Luis to implement the compatibility
+option, and why I decided to let it cook for a bit in wireless-testing
+before sending it to Dave for net-next-2.6... :-)
 
-Sujith
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
