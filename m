@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52864 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752112AbYITNKQ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60628 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbYINHwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 09:10:16 -0400
-Date: Sat, 20 Sep 2008 10:10:10 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Sun, 14 Sep 2008 03:52:50 -0400
+Subject: Re: [BUG] latest changes in mac80211 & b43
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Artem Antonov <artem.v.antonov@gmail.com>
+Cc: bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
 	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Message-ID: <20080920131010.GB16430@khazad-dum.debian.net> (sfid-20080920_151023_193763_8B189750)
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809182241.00906.IvDoorn@gmail.com> <20080918213657.GY1583@khazad-dum.debian.net> <200809191902.03467.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809191902.03467.IvDoorn@gmail.com>
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1221327886.3700.13.camel@johannes.berg> (sfid-20080914_093153_425361_0FC25BA1)
+References: <6bc534830809131008s7011fd43g7a694caec50e6b48@mail.gmail.com>
+	 (sfid-20080913_190812_156748_27DE21A9)  <1221327886.3700.13.camel@johannes.berg>
+	 (sfid-20080914_093153_425361_0FC25BA1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+sBXng3pGmxeJZIaH0gw"
+Date: Sun, 14 Sep 2008 09:52:44 +0200
+Message-Id: <1221378764.3700.18.camel@johannes.berg> (sfid-20080914_095253_642517_FA64900D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 19 Sep 2008, Ivo van Doorn wrote:
-> > Even if that means a need to 
-> > get EV_SW SW_WLAN out of Dmitry...  I don't know if rt2x000 wants SW_WLAN or
-> > SW_RFKILL_ALL.
-> 
-> Not sure either, there is no way to determine which of the 2 should be used.
 
-Should be an module parameter or runtime (sysfs?) parameter, then...
+--=-+sBXng3pGmxeJZIaH0gw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Oh an to make sure I get it completely right this time:
-> When I implement the input polldev, I no longer have to use rfkill_force_state() right?
+On Sat, 2008-09-13 at 19:44 +0200, Johannes Berg wrote:
 
-Correct.  It has nothing to do with the rfkill class part of your driver at
-all, since there is no effect on the hardware.  It is just an input device
-that issues EV_SW events.
+> The actual problem seems to be that we're sending those EAPOL frames
+> encrypted, I'll take a look tomorrow or Monday.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+It's a problem in hostapd, patch posted.
+
+johannes
+
+--=-+sBXng3pGmxeJZIaH0gw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIzMLIAAoJEKVg1VMiehFY0cAP/iNNIWbay9964L17dn7uJRCU
+vudLoogFtQxBWMXvP0sHKm/9huVX+XOCQ1KTp29bNyci0o7luklIVCw8/KvZIT/w
+fKIg371Gfwv3nikhECDdT3rRMPOkpUHyI3g7wFatV+/6WPccFMWuy9ExQsIsVZmR
+zj8Qcc8SMBRQMgHbGMAPME0CG8FMwzk45XgoRORU84Wz+Q2T+IqFeamLxNDBv3bO
+amDQuaVlR40Rwn4ebDWNusVWlr0EVpFeiL2HgxbTxGUTgJKD82fSw8k20jhLsHGL
+T+jP1lOkkJvh2UKeRpguWAq4whjL+YYtqBRukKqp4BUrB4UMQadkAMV16yh8MC4L
+CUjEAM85TJbL5BKwzc9nj2sxlAAVxq0Uc8dZelSn3BdJvDo/ypUPL1OXfOOULbXe
+IkjHJ3Ibom524v4IRNm+3S/2zOh7qguAgELD3kVBMAA+N5MtlasPWmdUpB4Nqb3a
+2Psnmr1FfLpaGhISFo1VwxdNHzRGI4a83nYZtkyRVTM6mF5eZV+RhxPKmWK+8uvX
+cb6/lDXlSZuGHzzr+NdenGV9FGTtSS07FMiUO1dFSfpvXPslx9HUfV1McVuBh6jJ
+kMwzB8neJJHLB5FuWVQ34bU1+xr6pT7IyVrylgHdUOlHfXNePX2jZ9BQjiXV1Jdh
+2jG3+8Dh9hXjyKYcY/SV
+=Mfgf
+-----END PGP SIGNATURE-----
+
+--=-+sBXng3pGmxeJZIaH0gw--
+
