@@ -1,77 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.188]:3887 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751726AbYIBO65 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57081 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752902AbYIOTQ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 10:58:57 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so59392gvc.37
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 07:58:52 -0700 (PDT)
-Date: Tue, 2 Sep 2008 17:58:41 +0300
-From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org,
-	Jan-Espen Pettersen <sigsegv@radiotube.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: new: regression iwl3945/mac80211 endless after suspend
-	associate/deassociate loop
-Message-ID: <20080902145840.GE19172@google.com> (sfid-20080902_165903_228546_BDB901C4)
-References: <20080901160658.GA11063@google.com> <1220319536.28282.128.camel@debian.sh.intel.com> <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net> <20080902130429.GB19172@google.com> <1220362201.3176.4.camel@borkbork.foobar.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1220362201.3176.4.camel@borkbork.foobar.com>
+	Mon, 15 Sep 2008 15:16:26 -0400
+Subject: Re: [RFC] Redesigning aggregation on mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890809151203p213fae37ia3bd6871c3bfe2c2@mail.gmail.com> (sfid-20080915_210344_710978_CE092643)
+References: <43e72e890809151203p213fae37ia3bd6871c3bfe2c2@mail.gmail.com>
+	 (sfid-20080915_210344_710978_CE092643)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dJTxK8x3aO6ADMIzuVxb"
+Date: Mon, 15 Sep 2008 21:15:42 +0200
+Message-Id: <1221506142.3700.75.camel@johannes.berg> (sfid-20080915_211640_834517_0D147859)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 02, 2008 at 09:30:01AM -0400, Dan Williams wrote:
-> On Tue, 2008-09-02 at 16:04 +0300, Michael S. Tsirkin wrote:
-> > On Tue, Sep 02, 2008 at 08:10:09AM +0200, Johannes Berg wrote:
-> > > Zhu Yi wrote:
-> > > > On Mon, 2008-09-01 at 19:07 +0300, Michael S. Tsirkin wrote:
-> > > >> [16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
-> > > >> [16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX
-> > > >> (capab=0x411 status=0 aid=1)
-> > > >> [16482.918564] eth1: associated
-> > > >> [16492.920224] eth1: disassociating by local choice (reason=3)
-> > > >> [16492.920986] eth1: disassociating by local choice (reason=3)
-> > > >
-> > > > It is exactly 10 seconds the local STA sends the deauth_leaving frame
-> > > > before associated everytime. I wonder if it is the timeout for some
-> > > > wireless config tools. NM?
-> > > 
-> > > "by local choice" means wext requested this, not a kernel bug.
-> > > 
-> > > johannes
-> > 
-> > Sure, it's wpa_supplicant in ubuntu gutsy doing it.
-> > 
-> > $wpa_supplicant -version
-> >  wpa_supplicant v0.5.8
-> >  Copyright (c) 2003-2007, Jouni Malinen <j@w1.fi> and contributors
-> > 
-> > But it happens to work fine without 8ab65b03b7893da4a49009e7e356e36e27b0c407.
-> 
-> That's really odd; that patch (the don't-send-empty-extended-rates-IE
-> patch) shouldn't have anything to do with this behavior, if it did you
-> wouldn't get associated to the AP in the first place I think.  You're
-> 100% sure that this patch is causing the problem?
 
-No, not sure. But reverting it seems to have helped.
-And there does not seem to be anything else relevant between rc4 and
-rc5.
+--=-dJTxK8x3aO6ADMIzuVxb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->  Can you post the
-> output of running wpa_supplicant with the "-dddt" flags
+On Mon, 2008-09-15 at 12:03 -0700, Luis R. Rodriguez wrote:
 
-I put up a (sanitized) -dd output here
-http://bugzilla.kernel.org/show_bug.cgi?id=11476
+> I'll start with Atheros hardware and mac80211. Atheros hardware uses 4
+> main HW queues, one for each AC, and we also have one for beacons,
+> another for queued stuff after beacon (aka "Crap After Beacon") where
+> things like queued frames for broadcast / multicast or for frames for
+> stations in power save mode, and I think another hw queue for uapsd.
+> Right now mac80211 queues skb's for drivers into the netdev_queues.
+> Under the current mac80211 design we have 4 netdev_queues, one for
+> each AC and then there is a number of "aggregation queues". We
+> essentially just declare one "aggregation" queue as we do our own
+> queue mapping internally to our own hardware queues -- and that
+> consist of just mapping frames to each HQ queue as per AC.
 
-> and also post
-> the 'iwlist scan' output for your AP?
-> 
-> Dan
+Except that declaring one "aggregation queue" also limits you to a
+single aggregation session, no big deal in STA mode but punishable by
+death in AP mode.
 
-OK, I will look into collecting this data.
+> Anyone know about Marvell's stuff? How about Broadcom?
+
+Consider Broadcom's stuff to work just as yours. Details may differ, but
+not by much.
+
+johannes
+
+--=-dJTxK8x3aO6ADMIzuVxb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIzrRbAAoJEKVg1VMiehFY1NsP/jCtd+Bxx+bmlq0ppO5IYElF
+0qDEUrhU6f28r+Wsu34JSWd85jLskpg1vIYpju9rH/yahm9co3M+Y2MwPmFfzyJx
+9f9PcSAPrppzOXuFwBUMq0ay0wD01FZVAqSJl1He0Hlgmqgamw847Jdpem+a2Hlf
+3bjIGilZg+YoCxBr/xfCsBfZIcYKYu1XsgEmI9MAQkVBNzW7RnQ4OtO9OZBGWIfo
+CjgRt/MnUBr4lHeBPaxNsdwkn0jD1n6AQo+4GAE5qBxdY+QfmOp84NR4udUfKxCq
+FttMhVwyx93ZE9ugSxOybidKNxPWHm96+14UEkmQjkAVQzzB2ckv1YGigforgfmg
+PeVDc9bsmyzDSP4vUTvcpkA5EYsskQ4pMTWK13M9bLqKpxjTsNCHtvjkvQpI+Tgk
+4yIMaqj2KhhvRULuZdE1Sfao3ojnOTmY7MaWUx4QrImDyNjTLh3OydbagRvHXTWJ
+rKowAgMMi5flmTgYm6wJVP7gHsse9azDvNplZ/m3SJgyVctdC5obeXnVA8IAB5RU
+fmm+dtjQpezG5za3K52ZPmoNw7Zfav+UFVueBQ89neGrSfkQDjOTGnrPAKXRyeQP
+f6+FH4jwbUla956+8NuOIZRBvBCKSYmcpYBfrhWKyj5sKAdoOb9MRzHAB1DDLQtx
+Xqx9zFlXSWh4AuZopHOm
+=+XRe
+-----END PGP SIGNATURE-----
+
+--=-dJTxK8x3aO6ADMIzuVxb--
 
