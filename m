@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:5967 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844AbYIFWoF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 18:44:05 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so429481eyi.37
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2008 15:44:03 -0700 (PDT)
+Received: from mail.gmx.net ([213.165.64.20]:54787 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754321AbYIOUUN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 16:20:13 -0400
+Subject: Re: [RFC][PATCH] TX status reporting with help of an ack queue
+From: Mattias Nissler <mattias.nissler@gmx.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: make conf_tx non-atomic
-Date: Sun, 7 Sep 2008 00:43:59 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1220717588.5376.0.camel@johannes.berg> <200809061950.36213.IvDoorn@gmail.com> <1220725734.10102.7.camel@johannes.berg>
-In-Reply-To: <1220725734.10102.7.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200809070044.00074.IvDoorn@gmail.com> (sfid-20080907_004408_975009_E3309192)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <1221507988.3700.84.camel@johannes.berg>
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <200809151911.32834.IvDoorn@gmail.com> <1221501417.4511.49.camel@localhost>
+	 (sfid-20080915_195731_733752_74D2117C)  <1221501786.3700.68.camel@johannes.berg>
+	 <1221505251.4511.77.camel@localhost>
+	 (sfid-20080915_210128_632488_FB448E33)  <1221506496.3700.81.camel@johannes.berg>
+	 <1221507551.4511.89.camel@localhost>
+	 (sfid-20080915_213946_840165_74EE062B)  <1221507988.3700.84.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 15 Sep 2008 22:20:09 +0200
+Message-Id: <1221510009.4511.99.camel@localhost> (sfid-20080915_222018_454070_D5F512EA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 06 September 2008, Johannes Berg wrote:
-> On Sat, 2008-09-06 at 19:50 +0200, Ivo van Doorn wrote:
-> > On Saturday 06 September 2008, Johannes Berg wrote:
-> > > The conf_tx callback currently needs to be atomic, this requirement
-> > > is just because it can be called from scanning. This rearranges it
-> > > slightly to only update while not scanning (which is fine, we'll be
-> > > getting beacons when associated) and thus removes the atomic
-> > > requirement.
-> > 
-> > Oops. Ehm how many oopses were reported since I submitted patch:
-> > 	47909b24a7e6c67ad635f36f5312839e04c7617c
-> > 	rt2x00: Initialize txop during conf_tx() callback
-> > 
-> > Because apparently that patch broke rt73usb (I completely overlooked
-> > the conf_tx() atomic requirements). :S
+On Mon, 2008-09-15 at 21:46 +0200, Johannes Berg wrote:
+> On Mon, 2008-09-15 at 21:39 +0200, Mattias Nissler wrote:
 > 
-> Heh, I don't know.
+> > > Yes, but we could also make the ack queue processing part of mac80211,
+> > > i.e. we stick the packet on the queue before ->tx() and add a few new
+> > > flags to the status callback which can then process the queue.
+> > 
+> > Just to get this straight: By queue you mean the to-be-introduced
+> > unknown status queue?
 > 
-> > Fortunately this patch would fix it again. :)
+> Yes.
+> 
+> > Of course you can do it that way, but then you'll have all the flags and
+> > data structures built into mac80211 unconditionally instead of letting
+> > the driver developer decide.
+> 
+> Oh, I'm fine with building them in there as long as the code paths
+> aren't actually used for drivers that don't need them. This isn't a big
+> thing.
+
+Well, I'm a big fan of modularizing everything in a clean way. This
+whole mac80211 thingy is complex enough... But I don't really care as
+long as everybody here is happy with it. Let's wait what Mikko says,
+it's his code so far.
+
+> 
+> > > > Good point :-) So I suggest we have one function that adds new packets
+> > > > to the ACK queue (which is represented by a struct an instance of which
+> > > > a driver can keep in its queue information) and another one that matches
+> > > > a received ACK with the queue, reports the status to mac80211 and purges
+> > > > the queue entries up to the match (reporting them as failed).
+> > > 
+> > > can we stop talking about "ACK queue"? It really is a "unknown status
+> > > queue" or something like that.
+> > 
+> > Ok, I don't really care how it's called as long as the one writing that
+> > stuff chooses an appropriate name in the code :-)
 > 
 > :)
-> 
-> > >  	/* Do not send changes to driver if we are scanning. This removes
-> > > -	 * requirement that driver's bss_info_changed function needs to be
-> > > -	 * atomic. */
-> > > +	 * requirement that a driver's bss_info_changed/conf_tx functions
-> > > +	 * need to be atomic.
-> > > +	 * This is really ugly code, we should rewrite scanning and make
-> > > +	 * all this more understandable for humans.
-> > > +	 */
-> > 
-> > So bss_info_changed() is now non-atomic as well? Because that would be
-> > very useful for rt2x00. :)
-> 
-> Yeah, it's been for a while, in fact.
+> But ACK is getting confusing, we're just reporting status based on
+> reception (or non-reception!) of ACKs :) How about retries in the hw?
 
-Ah ok. Well I'll create a oatch to cleanup rt2x00 then. :)
+Retries in the hw? I don't understand? You mean that as a name?
 
-Thanks,
+Mattias
 
-Ivo
