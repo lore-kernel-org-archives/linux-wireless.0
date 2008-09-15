@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outpost1.zedat.fu-berlin.de ([130.133.4.66]:38965 "EHLO
-	outpost1.zedat.fu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751308AbYHGR6P (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:26076 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753392AbYIOPRr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 13:58:15 -0400
-Subject: [PATCH] ath5k: Don't fiddle with MSI on suspend/resume.
-From: Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@gmail.com
-Content-Type: text/plain
-Date: Thu, 07 Aug 2008 19:34:01 +0200
-Message-Id: <1218130441.18466.150.camel@hermes2.karcher.local> (sfid-20080807_195820_219301_D10E3B3D)
-Mime-Version: 1.0
+	Mon, 15 Sep 2008 11:17:47 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: notify the user space about low signal quality
+Date: Mon, 15 Sep 2008 17:17:24 +0200
+Cc: Dan Williams <dcbw@redhat.com>, Helmut Schaa <hschaa@suse.de>
+References: <200809151416.07552.hschaa@suse.de> <200809151435.28933.hschaa@suse.de> <1221487652.10177.23.camel@localhost.localdomain>
+In-Reply-To: <1221487652.10177.23.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200809151717.24978.hs4233@mail.mn-solutions.de> (sfid-20080915_171750_893672_0629C113)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 256b152b005e319f985f50f2a910a75ba0def74f has removed msi support,
-but overlooked the suspend/resume code. This patch completes msi removal.
+> If you're concerned about polling or something, we could fix
+> that by  sending periodic quality events (which would rock!
+> then I don't have to poll in NM) on a standardized basis with a
+> sliding scale of frequency based on the signal strength
+> reported by the card like so:
 
-I don't consider this patch copyrightable, and thus put it into the
-public domain. The result is of course a base.c file dual-licensed under
-3-clause-BSD and GPL.
+Ah, I wrote me previous e-mail before I read the rest of your 
+mail. A thing one, errm, I, shouldn't do :-)
 
-Signed-off-by: Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>
 
----
- drivers/net/wireless/ath5k/base.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+The event that Helmut's code could send could be containing the 
+current quality. For now, it could be just sent in case of "lost 
+AP" condition, but we, errm, you, could later submit a patch 
+that would periodically send this event according to your 
+suggested schedule or something more cleverer (e.g. only send it 
+when it significantly changes from the last-sent value, there's 
+no need to have periodicity here).
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index ebf19bc..d092a23 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -589,7 +589,6 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 	ath5k_stop_hw(sc);
- 
- 	free_irq(pdev->irq, sc);
--	pci_disable_msi(pdev);
- 	pci_save_state(pdev);
- 	pci_disable_device(pdev);
- 	pci_set_power_state(pdev, PCI_D3hot);
-@@ -618,12 +617,10 @@ ath5k_pci_resume(struct pci_dev *pdev)
- 	 */
- 	pci_write_config_byte(pdev, 0x41, 0);
- 
--	pci_enable_msi(pdev);
--
- 	err = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
- 	if (err) {
- 		ATH5K_ERR(sc, "request_irq failed\n");
--		goto err_msi;
-+		goto err_no_irq;
- 	}
- 
- 	err = ath5k_init(sc);
-@@ -644,8 +641,7 @@ ath5k_pci_resume(struct pci_dev *pdev)
- 	return 0;
- err_irq:
- 	free_irq(pdev->irq, sc);
--err_msi:
--	pci_disable_msi(pdev);
-+err_no_irq:
- 	pci_disable_device(pdev);
- 	return err;
- }
--- 
-1.5.5.4
-
+A flag would could then define other things beside the quality, 
+e.g. a FLAG_LOST_AP or FLAG_LOST_BEACON or whatever fit's into 
+the nl80211 model (which I'm don't know in detail).
