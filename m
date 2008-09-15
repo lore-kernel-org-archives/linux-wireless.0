@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39906 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363AbYIYIo2 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.224]:24311 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754452AbYIOWGq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 04:44:28 -0400
-Subject: Re: [PATCH] wireless: consolidate on a single escape_essid
-	implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <200809250834.07781.hs4233@mail.mn-solutions.de> (sfid-20080925_083440_223989_866F07A7)
-References: <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
-	 <20080924232453.GG9187@tesla> <20080924233234.GE3639@tuxdriver.com>
-	 <200809250834.07781.hs4233@mail.mn-solutions.de>
-	 (sfid-20080925_083440_223989_866F07A7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-k6tYFjKt4/ShKYNtXNYu"
-Date: Thu, 25 Sep 2008 10:43:25 +0200
-Message-Id: <1222332205.10563.26.camel@johannes.berg> (sfid-20080925_104431_992738_1AB28F4D)
-Mime-Version: 1.0
+	Mon, 15 Sep 2008 18:06:46 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2352334rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 15:06:44 -0700 (PDT)
+Message-ID: <2da21fe50809151506p57c9193g6a9e97d682e0064a@mail.gmail.com> (sfid-20080916_000648_621309_B334D940)
+Date: Tue, 16 Sep 2008 00:06:44 +0200
+From: "Davide Pesavento" <davidepesa@gmail.com>
+To: ath9k-devel@lists.ath9k.org
+Subject: Re: frustrating ath9k issues
+Cc: linux-wireless@vger.kernel.org, jmalinen@atheros.com,
+	lrodriguez@atheros.com, "Steven Noonan" <steven@uplinklabs.net>
+In-Reply-To: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/9/15 Steven Noonan <steven@uplinklabs.net>:
+>
+> More recently, I had another incident where it disassociated and
+> refused to reassociate. I got about 100 of these in my dmesg (fixed by
+> unloading and reloading ath9k):
+>
+> [...]
+> [ 1279.031033] ath_set_channel: unable to reset channel 149 (5745Mhz)
+> flags 0x30142 hal status 4294967277
+> [ 1279.031203] ath9k_config: Unable to set channel
+> [ 1279.323427] ath_set_channel: unable to reset channel 153 (5765Mhz)
+> flags 0x50142 hal status 4294967277
+> [ 1279.323577] ath9k_config: Unable to set channel
+> [ 1279.624562] ath_set_channel: unable to reset channel 157 (5785Mhz)
+> flags 0x30142 hal status 4294967277
+> [ 1279.624687] ath9k_config: Unable to set channel
+> [ 1279.916441] ath_set_channel: unable to reset channel 161 (5805Mhz)
+> flags 0x50142 hal status 4294967277
+> [ 1279.916586] ath9k_config: Unable to set channel
+> [ 1280.207274] ath_set_channel: unable to reset channel 165 (5825Mhz)
+> flags 0x10142 hal status 4294967277
+> [ 1280.207387] ath9k_config: Unable to set channel
+> [...]
+>
 
---=-k6tYFjKt4/ShKYNtXNYu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I am experiencing this same issue from time to time, too. rmmod ath9k
+&& modprobe ath9k fixes it. My card is AR5418 on a MacBook Pro.
 
-On Thu, 2008-09-25 at 08:34 +0200, Holger Schurig wrote:
-> > the libertas, ipw2100, and ipw2200 drivers don't use cfg80211
-> > (at least for now).
->=20
-> Yeah, Dan once spoke about using cfg80211 for libertas, but at=20
-> that time I didn't saw the point.
->=20
-> Hmm, I actually don't see the point now :-)
-
-Well, you'll want to take advantage of the regulatory code and the
-scanning stuff I'm working on...
-
-johannes
-
---=-k6tYFjKt4/ShKYNtXNYu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI208pAAoJEKVg1VMiehFY8hoP/A2PlDsBEFNyrSGj6hBWFavB
-oYRIlXLL0o6VzI3U5+2ch1jI9aJsoUJODWvFLERt3YVE8CJ9EjwL7TWSYwJHZR+W
-jRs11cnvbaMXrQ/mopIswYXd3Dlcc4qqGs0DWQho2VpWZgd8PdsXBV6gDybn03gb
-Iif3dwo3rQtGzD2md15QTNhzWAgsBNZUgQrdp7SAwWp0SkV9JUFOdMqzvs6HDQMZ
-KEvrPMxk1dSzfDiKpbmk19bPb3JE1vvuUrOqzkLxw9T8En6jzyvX5+5G0a8NJZod
-ymZ7k29wNjBGqbSObs1B6wSSHXTWGm5zUjhMAznHdqz1xF25AuaHmEszsm/mPCNg
-6N/7Cws7DLQr/9DLy4/oFiPLXkLjq4sXDPJiBVcumt7XvJFKwLBytp3TscAc+++b
-VSUSEzhYDX05ESRj7lgf8EX4CrjtiYaK2faqmasr3RFCpiqaRSvGA1l5YmGQXKeE
-6eSnfXVkXtOqaX3l1IQHLQ7Gr2OGRIjBdHfHfxk1Z6ft+jDfOSNOWtAxJY7AThLi
-876FATN66PG7tH9n1niW1vCF1snvyJFCeNMn7QQbbSNpFwSyZyqIiSjdtn1G45r3
-VE2cMRjN6YqBIMe98/tX6YhziPUKaUfP9D0x/Tet05wTn2rWtoO4f84kZu/MVV0h
-FRE5y5NpRzHDNlGHwINr
-=1XMq
------END PGP SIGNATURE-----
-
---=-k6tYFjKt4/ShKYNtXNYu--
-
+Regards,
+Davide Pesavento
