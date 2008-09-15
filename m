@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:44046 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751588AbYIRMnY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 08:43:24 -0400
-Date: Thu, 18 Sep 2008 09:43:18 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: Re: [PATCH] rfkill: update LEDs for all state changes
-Message-ID: <20080918124318.GB1583@khazad-dum.debian.net> (sfid-20080918_144339_815154_342F138A)
-References: <20080917023334.GA1187@khazad-dum.debian.net> <1221682077-21170-1-git-send-email-hmh@hmh.eng.br> <48D16EDB.8090700@lwfinger.net>
+Received: from ns1.suse.de ([195.135.220.2]:40920 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753273AbYIOMQN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 08:16:13 -0400
+Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 143BF41739
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 14:16:13 +0200 (CEST)
+From: Helmut Schaa <hschaa@suse.de>
+To: linux-wireless@vger.kernel.org
+Subject: More thoughts about roaming ...
+Date: Mon, 15 Sep 2008 14:16:06 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48D16EDB.8090700@lwfinger.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200809151416.07552.hschaa@suse.de> (sfid-20080915_141617_495623_6940B46A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Sep 2008, Larry Finger wrote:
-> Henrique de Moraes Holschuh wrote:
-> > The LED state was not being updated by rfkill_force_state(), which will
-> > cause regressions in wireless drivers that had old-style rfkill support and
-> > are updated to use rfkill_force_state().
-> > 
-> > The LED state was not being updated when a change was detected through the
-> > rfkill->get_state() hook, either.
-> > 
-> > Move the LED trigger update calls into notify_rfkill_state_change(), where
-> > it should have been in the first place.  This takes care of both issues.
-> > 
-> > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> > ---
-> >  net/rfkill/rfkill.c |    5 ++---
-> >  1 files changed, 2 insertions(+), 3 deletions(-)
-> > 
-> >  John, this one is quite likely something that should be sent for
-> >  merge in mainline BEFORE 2.6.27 is released.
-> > 
-> >  I am NOT sure it fixes regressions, that depends on whether the drivers
-> >  using rfkill that are in 2.6.27 had working LED support before rfkill
-> >  support was added to them.  Unfortunately, it cannot fix the b43
-> >  regression by itself.
-> 
-> The b43 regression is not fixed with this patch and the one from
-> Matthew that starts out with "Oh, hey, I suck. This one might stand a
-> better chance of not falling over."
+Hi,
 
-Curious.  My patch to rfkill WAS tested, and it DOES fix the same issue you
-reported (hardware state changes to HARD_BLOCKED do not update the LEDs) in
-thinkpad-acpi.  It is also an "obviously correct" patch.
+As a result of the thread "Pondering: how to improve mac80211 roaming ..."
+I thought a bit more about that topic. Here is a quick suggestion for a first
+version:
 
-What this probably means is that b43 would need a little more rfkill surgery
-than what Matthew's patch already did.  I will look over Matthew's patch,
-but my guess is that Michael's comments about the need to add some extra
-code to b43 to actually synthesize the rfkill state from the separate HW and
-SW rfkill input lines are a strong hint of where the problem might be.
+* Enhance mac80211 software scan to interrupt the current scan and switch
+  back to the operating channel every once in a while (only if at least one STA
+  interface is associated) => background scan.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+* Enhance mac80211 to check the signal quality frequently (or any other
+  indicator like beacon misses) and decide when the signal quality is too low.
+  Indicate that to the user space.
+
+* wpa_supplicant (or any other user space application) gets notified about
+  the low signal quality and triggers a scan in order to find a better AP.
+  wpa_supplicant already chooses the AP with the best signal strength.
+
+The reason behind not triggering the scan directly from mac80211 is that the
+supplicant (or any other user space application) might know more about the
+current environment and could for example trigger a scan restricted to specific
+channels (in the future) which should speed up the scan. Hence let the user
+space decide what to do with a low signal.
+
+However the detection of when the signal quality is low should still be done in
+mac80211 or the driver as some cards seem to have the needed functionality
+implemented in firmware (e.g. missed beacon interrupt).
+
+I'll send some proof-of-concept patches in a few minutes which implement
+background scanning in software and the user space indication. I've tested them
+a bit already and they work quite well with an iwl4965.
+
+Helmut
