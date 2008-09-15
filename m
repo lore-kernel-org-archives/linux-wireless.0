@@ -1,56 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39785 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([66.187.233.31]:45397 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751588AbYIVRaU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 13:30:20 -0400
-Date: Mon, 22 Sep 2008 10:30:10 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Howard Chu <hyc@symas.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k problems
-Message-ID: <20080922173010.GD6048@tesla> (sfid-20080922_193024_357587_1E7847AB)
-References: <48D5CAD0.1080909@symas.com> <f488382f0809202122v4c77bc96r54edd24bdf365724@mail.gmail.com> <20080922064831.GB19580@tesla> <48D760D8.3050501@symas.com> <43e72e890809220245j77dcf385mb31e505308225ba9@mail.gmail.com> <48D78215.1050403@symas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <48D78215.1050403@symas.com>
+	id S1752920AbYIOOTy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 10:19:54 -0400
+Subject: Re: Channel scan during the AP re-association increases delay
+From: Dan Williams <dcbw@redhat.com>
+To: Pavan <pavan.k.pujari@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20080915T110100-223@post.gmane.org>
+References: <loom.20080915T110100-223@post.gmane.org>
+Content-Type: text/plain
+Date: Mon, 15 Sep 2008 10:20:32 -0400
+Message-Id: <1221488432.10177.37.camel@localhost.localdomain> (sfid-20080915_161956_787826_FEBAE579)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2008 at 04:31:33AM -0700, Howard Chu wrote:
-> Luis R. Rodriguez wrote:
-> > On Mon, Sep 22, 2008 at 2:09 AM, Howard Chu<hyc@symas.com>  wrote:
-> >> >  For example - I added DPRINTFs to all the places that called ath9_hw_reset()
-> >> >  to see why the ForceXPAon message was occurring so often, and got the
-> >> >  attached log. I note that ForceXPAon doesn't occur on every call to
-> >> >  hw_reset, and sometimes there are repeated identical calls to set the
-> >> >  channel (e.g. at 22:06:36 in the log).
-> >> >
-> >> >  It associates successfully with my AP on channel 8, but shortly thereafter
-> >> >  loses the association, scans again, and starts over again, ad nauseam. This
-> >> >  behavior was made even worse when I upgraded my freeradius server (was
-> >> >  authenticating with WPA EAP/PEAP) and configured TLS session caching - there
-> >> >  seems to be a bug in freeradius there so subsequent reassociation attempts
-> >> >  would always fail until I turned off session caching. (Haven't had time to
-> >> >  chase that down yet.)
-> >
-> > Howard, did you apply the pending group key patch yet?
+On Mon, 2008-09-15 at 11:18 +0000, Pavan wrote:
+> Hi All,
 > 
-> Yes, the patch didn't improve the situation on my wireless-testing build. It
-> works fine on my 2.6.27-rc6 build though.
+> I am working on fast handovers to APs during roaming of wireless devices. I have
+> been looking through the mac80211 code to understand how the re-associations are
+> initiated in wireless STAs. To my surprise, I see that everytime I issue a
+> associate command using the `iwconfig' utility, it starts with scanning on all
+> channels collecting information from each AP in the ESSID set. Subsequently,
 
-Can you provide a long of your wireless-testing run with the group key
-patch applied? Also, please try running wpa_supplicant manually, but
-first be sure to disable Network Manager completely by doing:
+mac80211 should just be scanning for the specified configured SSID or
+BSSID.  If it's doing a broadcast passive scan every association, that
+seems quite wrong.  By doing the active SSID probe scan you can cut down
+the time quite a bit because you're expecting the probe response and you
+don't need to eat up the entire dwell time.  The same goes for channel
+and everything; if there's a locked channel, the card probably shouldn't
+scan any other channel looking for the AP.
 
-# Red Hat based systems
-sudo /sbin/service NetworkMananger stop
-# Debian based systems (Ubuntu is one)
-sudo /etc/init.d/NetworkManager stop
-sudo killall -TERM wpa_supplicant
+It should probably also just be doing the scan-on-associate if the most
+recent scan was more than 5 or 10 seconds in the past, or that most
+recent scan was was a filtered scan on some other SSID, channel, or
+BSSID.
 
-Please read:
+It's useful to scan on the association request to ensure that you have
+all the correct information from the AP, like WPA IEs, capability bits,
+beacon information, etc.  Without that associations would fail quite a
+bit more often due to outdated information.
 
-http://wireless.kernel.org/en/users/Reporting_bugs
+Summary: I think there's a lot of tweaking that can be done here to
+speed things up.
 
-  Luis
+> begins the authentication and association process. This results in large
+> re-association delays which is unacceptable to real time traffic like voice.
+> 
+> As I went through the code, I could trace that `hw->scan' is initiated before
+> authentication and association process. I could not figure the exact reason for
+> having a channel scan every time an association command is issued, instead it
+> could be done passively when the STAs are immobile or experiencing good channel
+> conditions (as one of the conditions). This way a lot of time could be saved
+> during roaming to bring down the total re-association delays. 
+
+Yes, it could be.  But passive scanning takes a _lot_ more time than
+active probe scanning because you have to dwell on each channel for long
+enough to get beacons for a good number of APs on the channel.  That's
+anywhere from 75 to 200 ms per channel (default beacon interval for most
+stuff is 100ms so you should wait at least 105 or 110 or so).  Channel
+switch time may take some ms too.  So if you're running VOIP or SSH or
+something, you really don't want to start a passive scan.
+
+You can obviously monitor beacons from the channel you're currently on,
+but that doesn't help much because if you're doing a handoff the AP
+you're going to associate with next is going to be on a different
+channel if the network admin is worth anything.
+
+Are you working in SSID -> SSID handoffs, or BSSID -> BSSID handoffs
+within the same SSID?  Isn't this some of what pre-auth is supposed to
+handle?  It seems to me that the the cfg80211 API needs to be rich
+enough for the supplicant to be able to say things like "I know this AP
+is in-range and I'm pre-authed with it already, so don't bother to
+re-scan".  That sort of thing combined with scan optimizations ought to
+cover most things, right?
+
+Dan
+
+
