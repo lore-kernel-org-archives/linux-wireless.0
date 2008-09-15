@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52332 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753592AbYIQVw4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 17:52:56 -0400
-Subject: Re: iw packaging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Davide Pesavento <davidepesa@gmail.com>
-Cc: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <2da21fe50809171446y56cd5b2ctc864650be6030621@mail.gmail.com> (sfid-20080917_234700_559966_9B8DC833)
-References: <1221596962.9262.12.camel@johannes.berg>
-	 <48D0DEF0.2060407@scram.de> <1221648205.9262.48.camel@johannes.berg>
-	 <48D0E463.70008@le-vert.net> <1221649638.9262.50.camel@johannes.berg>
-	 <48D0E5CE.8050401@le-vert.net> <1221650286.9262.57.camel@johannes.berg>
-	 <69e28c910809171319r30d763cse24744a198e41f92@mail.gmail.com>
-	 <1221683467.7412.6.camel@localhost>
-	 <2da21fe50809171446y56cd5b2ctc864650be6030621@mail.gmail.com>
-	 (sfid-20080917_234700_559966_9B8DC833)
+Received: from mx1.redhat.com ([66.187.233.31]:41123 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752697AbYION6m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 09:58:42 -0400
+Subject: Re: More thoughts about roaming ...
+From: Dan Williams <dcbw@redhat.com>
+To: Helmut Schaa <hschaa@suse.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200809151416.07552.hschaa@suse.de>
+References: <200809151416.07552.hschaa@suse.de>
 Content-Type: text/plain
-Date: Wed, 17 Sep 2008 23:52:46 +0200
-Message-Id: <1221688366.7412.13.camel@localhost> (sfid-20080917_235258_927075_57271CEB)
+Date: Mon, 15 Sep 2008 09:59:20 -0400
+Message-Id: <1221487160.10177.14.camel@localhost.localdomain> (sfid-20080915_155847_116921_9A9B4FFA)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-09-17 at 23:46 +0200, Davide Pesavento wrote:
-> $ make
->  GEN  version.h
->  CC   iw.o
->  CC   info.o
-> info.c: In function 'print_phy_handler':
-> info.c:108: error: 'NL80211_ATTR_SUPPORTED_IFTYPES' undeclared (first
-> use in this function)
-> info.c:108: error: (Each undeclared identifier is reported only once
-> info.c:108: error: for each function it appears in.)
-> make: *** [info.o] Error 1
+On Mon, 2008-09-15 at 14:16 +0200, Helmut Schaa wrote:
+> Hi,
 > 
-> I guess I have to build iw against >=2.6.27-rcX kernel headers, right?
+> As a result of the thread "Pondering: how to improve mac80211 roaming ..."
+> I thought a bit more about that topic. Here is a quick suggestion for a first
+> version:
+> 
+> * Enhance mac80211 software scan to interrupt the current scan and switch
+>   back to the operating channel every once in a while (only if at least one STA
+>   interface is associated) => background scan.
+> 
+> * Enhance mac80211 to check the signal quality frequently (or any other
+>   indicator like beacon misses) and decide when the signal quality is too low.
+>   Indicate that to the user space.
+> 
+> * wpa_supplicant (or any other user space application) gets notified about
+>   the low signal quality and triggers a scan in order to find a better AP.
+>   wpa_supplicant already chooses the AP with the best signal strength.
 
-Actually this one is new in wireless-testing, I have a branch you can
-build against 2.6.27 but it's not very up-to-date.
+I'm pretty sure it doesn't.  The code in wpa_supplicant_select_bss()
+doesn't have any logic to detect signal strength, nor does any driver
+report signal strength to the supplicant.  Drivers set the level (well,
+only wext/nl80211, ndis, iphone/osx, and bsd) but I'm pretty sure
+nothing in the supplicant uses it.
 
-Any ideas how to handle this are welcome. Should it just ship the header
-file? I'd prefer not to, otoh doing it isn't really harmful because when
-adding a new command clearly you need to edit iw sources.
+Maybe now is the time to switch that on.  That needs to be coupled with
+some additions to cfg80211 to turn firmware/driver roaming on and off,
+along with a capability bit somewhere to indicate that the
+driver/firmware support turning roaming on/off.
 
-johannes
+Dan
+
+
+> The reason behind not triggering the scan directly from mac80211 is that the
+> supplicant (or any other user space application) might know more about the
+> current environment and could for example trigger a scan restricted to specific
+> channels (in the future) which should speed up the scan. Hence let the user
+> space decide what to do with a low signal.
+> 
+> However the detection of when the signal quality is low should still be done in
+> mac80211 or the driver as some cards seem to have the needed functionality
+> implemented in firmware (e.g. missed beacon interrupt).
+> 
+> I'll send some proof-of-concept patches in a few minutes which implement
+> background scanning in software and the user space indication. I've tested them
+> a bit already and they work quite well with an iwl4965.
+> 
+> Helmut
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
