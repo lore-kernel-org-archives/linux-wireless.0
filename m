@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48397 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752167AbYIHJYL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 05:24:11 -0400
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240809080206u42908ef6yc6641435d747155a@mail.gmail.com> (sfid-20080908_110640_740319_9DE6828D)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220794765.31304.8.camel@johannes.berg>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 <1220863139.31304.33.camel@johannes.berg>
-	 <1ba2fa240809080146o93200eetcf8e142f6ef4a2b1@mail.gmail.com>
-	 <1220864314.31304.38.camel@johannes.berg>
-	 <1ba2fa240809080206u42908ef6yc6641435d747155a@mail.gmail.com>
-	 (sfid-20080908_110640_740319_9DE6828D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7jmL8nUT19YSVFFw3cvv"
-Date: Mon, 08 Sep 2008 11:24:03 +0200
-Message-Id: <1220865843.31304.48.camel@johannes.berg> (sfid-20080908_112415_748911_932F5CA0)
+Received: from mx1.redhat.com ([66.187.233.31]:51793 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754051AbYIOP2L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 11:28:11 -0400
+Subject: Re: [RFC] mac80211: notify the user space about low signal quality
+From: Dan Williams <dcbw@redhat.com>
+To: Helmut Schaa <hschaa@suse.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200809151634.06448.hschaa@suse.de>
+References: <200809151416.07552.hschaa@suse.de>
+	 <200809151435.28933.hschaa@suse.de>
+	 <1221487652.10177.23.camel@localhost.localdomain>
+	 <200809151634.06448.hschaa@suse.de>
+Content-Type: text/plain
+Date: Mon, 15 Sep 2008 11:28:49 -0400
+Message-Id: <1221492529.10177.76.camel@localhost.localdomain> (sfid-20080915_172816_252391_61B52C2C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-09-15 at 16:34 +0200, Helmut Schaa wrote:
+> Am Montag, 15. September 2008 16:07:31 schrieb Dan Williams:
+> > On Mon, 2008-09-15 at 14:35 +0200, Helmut Schaa wrote:
+> > > This patch adds a new wext event that notifies the user space about a low
+> > > signal quality. The currently used indicator is as follows: If three
+> > > successive beacons are received with a signal quality lower then 40%
+> > > user space gets informed.
+> > >
+> > > Any ideas about which indicators should be used? Comments?
+> >
+> > So why does this need a new event?  Can't wpa_supplicant monitor the
+> > signal quality (or level/noise if the driver doesn't provide "quality")
+> > and do what it needs to do without any changes to the kernel at all?
+> 
+> I thought about that as well but I'm not sure if the signal quality/strength 
+> is a well enough indicator.
 
---=-7jmL8nUT19YSVFFw3cvv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Beacon misses should be a factor in quality, just like failed
+decryptions or excessive retries.  Any of these are indications that the
+"link" sucks and you might want to try finding a better AP.  Beacon
+misses are just one piece of the whole quality thing.
 
-On Mon, 2008-09-08 at 12:06 +0300, Tomas Winkler wrote:
+> For example if we want to consider the number of missed beacons the current 
+> IWEVQUAL event is not enough to expose this information.
+> Additionally some devices can report missed beacons. Maybe even the quality 
+> values reported by the drivers are not comparable at all (although they are 
+> normalized to be between 0 and 100). Hence my intention was that mac80211 and 
+> the driver might know better which indicators matter.
 
-> > How exactly are you triggering that "unauthorized port" message? I can'=
-t
-> > seem to reproduce to see if stopping the queue helps, but I'm fairly
-> > sure, try the patch below that fixes this.
->=20
-> Powering off AP, I think I've seen only Cisco AP that are able to send
-> deauth packet on power off. So this was without.
+So if the values aren't comparable, we _make_ them comparable.  The
+drivers can certainly tell mac80211 which things they are capable of
+reporting for quality and the stack can figure them in to the final
+"quality" measurement.  However, I do agree that having separate
+indicators for the different factors is a good thing.  Thus something
+like what Holger suggests would be better from my perspective than an
+ethereal concept like a "roaming threshold".  Maybe just a poor choice
+of terms?
 
-Alright, I have an AP where I can log in and turn off the radio :))
+Dan
 
-I've been able to trigger the message _without_ your patches, but not
-_with_ your patches so far!
-
-I still think we should add the queue stopping so we can't run into the
-messages. Do you want me to send them out then?
-
-johannes
-
---=-7jmL8nUT19YSVFFw3cvv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIxO8sAAoJEKVg1VMiehFY6sYP/ApGEGIgD3GJ9QzR+Z2tfdqN
-Gg9TPvDn3WivaLel2BYD/S46H8ep2fnHLZYbGWPmleXljyFi/oQ9aKtaRVnjMAK6
-DCMwi3+Ms1G1T/ZMo+j2zxFzRwd2ujCTsNjMPiyZDD/Qav1N9MFBfL6yxlGhQ/qa
-bsvTKxgioNWDW8UJ1V9pvuyZAgOjJNx1X1DdePz9Cb/WffMjUMK/uNsfX0gUByNJ
-4dGY6kkvNdrUwesaECX/J9ERcPP5EPZBjtYz3uoZvF5Qc5nzvq8o/TCzMN1saKCf
-VO5qTCExt24uigtUrxLhxMcs4hohdT51HS7ngo14rqkuBXXm2iTzHYbbmyzuKGeL
-WGRdoM/6qiEoVyIe7CkzNoreMonpcVvXUoqYahcTcO4Jo/xxzXDeH9I2/q9Wur06
-1k7W5HhMc4zjfNXoGvuLxi5nPdGYkIxfH+qIY9P89q1LOr+Yro+bvvxDbLH4L9EB
-qgg/RZRBjAxYZEs1RqSz93xux+qsMzRDqXM0pM4N/5Zd2r+vmWg1apT2lSU33F+a
-p1nyHs8lE66mozQRj2MR3zKqQ7NJOHEd5DRQMa4jbIDQozFVK626OAmKKFh9u63B
-46VScWcnPS7Ww4+k7FcnHJ41L070ieHEdxAc+9sT559WHKjMW50sKpV/GmYajtmG
-odxip/a60Bqo7DEU/c3r
-=7lwL
------END PGP SIGNATURE-----
-
---=-7jmL8nUT19YSVFFw3cvv--
 
