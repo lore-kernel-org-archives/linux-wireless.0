@@ -1,68 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ro.mikronika.com.pl ([213.17.224.85]:22076 "EHLO
-	cluster1.mikronika.com.pl" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751672AbYIZN2m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 09:28:42 -0400
-Received: from [192.168.3.203] (szkudlarekk-lap.mikronika.com.pl [192.168.3.203])
-	(authenticated bits=0)
-	by cluster1.mikronika.com.pl (8.13.4/8.13.4) with ESMTP id m8QDSe7a024761
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 15:28:41 +0200
-Message-ID: <48DCE386.1050800@mikronika.com.pl> (sfid-20080926_152846_108856_F6BF3ABF)
-Date: Fri, 26 Sep 2008 15:28:38 +0200
-From: Karol Szkudlarek <karol@mikronika.com.pl>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: compilation error of compat-wireless-2008-09-26 with ETH_P_PAE
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Received: from mail.gmx.net ([213.165.64.20]:57338 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753597AbYIOR5E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 13:57:04 -0400
+Subject: Re: [RFC][PATCH] TX status reporting with help of an ack queue
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <200809151911.32834.IvDoorn@gmail.com>
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <200809151911.32834.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Date: Mon, 15 Sep 2008 19:56:57 +0200
+Message-Id: <1221501417.4511.49.camel@localhost> (sfid-20080915_195709_305734_C1180D7F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
-I have the following compilation error of the latest compat-wireless=20
-drivers.
-I am using Ubuntu Hardy Heron with 2.6.27-4 linux kernel.
+[ I've added Johannes to the CC, I hope he can provide us with some mor=
+e
+informed comments regarding mac80211 architecture ]
 
-karol@szkudlarekk-lap:~/tmp/downloads/compat-wireless-2008-09-26$ make
-make -C /lib/modules/2.6.27-4-generic/build=20
-M=3D/home/karol/tmp/downloads/compat-wireless-2008-09-26 modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.27-4-generic'
-CC [M]=20
-/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.o
-/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.c:=
-=20
-In function 'ieee80211_frame_allowed':
-/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.c:=
-1198:=20
-error: 'ETH_P_PAE' undeclared (first use in this function)
-/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.c:=
-1198:=20
-error: (Each undeclared identifier is reported only once
-/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.c:=
-1198:=20
-error: for each function it appears in.)
-make[3]: ***=20
-[/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.o=
-]=20
-Error 1
-make[2]: ***=20
-[/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211] Err=
-or 2
-make[1]: ***=20
-[_module_/home/karol/tmp/downloads/compat-wireless-2008-09-26] Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.27-4-generic'
+On Mon, 2008-09-15 at 19:11 +0200, Ivo van Doorn wrote:
+> On Monday 15 September 2008, Mikko Virkkil=E4 wrote:
+> > Modeled after the waiting-for-ack queue in the zd1211rw
+> > driver, this patch adds a similar queue to the rt2x00. If
+> > the tx state of a packet is unknown and a tx ack or
+> > tx fail is needed, then the packet is pushed to a
+> > waiting-for-ack queue. Each time an ack is received the
+> > queue is checked and a possible match is reported to
+> > mac80211 as a tx ack.
+> >=20
+> > If the queue gets filled up the oldest waiting packet
+> > will be discarded and a tx fail will be reported.
+>=20
+> I believe it was mentioned it earlier as well, but this code belongs
+> to mac80211 rather than being copied in all individual drivers.
+>=20
+> I think the best solution would be:
+>  - Drivers set *unknown TX status* flag for mac80211
+>  - Mac80211 sets the FIF_CONTROL flag for the RX filter (or adds a ne=
+w
+>    more specific flag FIF_ACK for hardware that allows this specific =
+filtering (rt2800))
+>  - Driver will set a *unknown TX status* flag per send out frame
+>  - Mac80211 keeps track of ACK responses, and decides what to do when
+>    no ACK has been received for the frame.
 
+I've also spent some time thinking about this. IMHO, he difficult part
+is to come up with an interface between mac80211 and the driver which i=
+s
+convenient to use for driver writers and integrates well with mac80211.
+The following ideas came to my mind:
 
---=20
-Karol Szkudlarek
-Mikronika
-ul. Wykopy 2/4
-60-001 POZNA=C3=91
-tel. +48 61 6655600
-fax +48 61 6655602
-e-mail karol@mikronika.com.pl
+1. Add another callback to struct ieee80211_ops that would be used for
+TX frame housekeeping. The standard implementation would just pass the
+frame on the regular tx handler, but we could provide an alternate
+implementation that keeps track of the packets we are expecting ACKs fo=
+r
+before handing the packet to the hardware. Similarly, the RX path would
+provide new functions in addition to the existing ieee80211_rx[_irqsafe=
+]
+handlers that would do the matching ACK matching and pass the packet on
+to ieee80211_rx() afterwards.
+
+2. Make the ACK queue approach generic and wrap it in some library
+functions that become part of mac80211 and are called from the driver's
+tx and rx handlers, respectively. This has the advantage that it is les=
+s
+invasive than 1. It is essentially what Ivo has described above. Driver
+writers would be free to use this framework, but are not required to do
+so.
+
+3. Make mac80211 unconditionally keep track about the packets it has
+passed down to the driver and do TX status matching on all ACKs that ar=
+e
+received in the mac80211 rx path. (Note that this has the tendency of
+duplicating the ring buffers that most drivers probably already have fo=
+r
+their TX queues. Maybe introduce a generic ring buffer framework and
+allow the drivers to store private data in data and that?) The advantag=
+e
+of this approach is that mac80211 has information about all packets tha=
+t
+are still in processing (don't know if that actually helps) and it's
+more convenient for driver writers.
+
+>=20
+> Note that rt61 might be tricky since that does support TX status repo=
+rting,
+> but it fails in only 1% of the cases to do this, which means enabling=
+ this for rt61
+> would be far too much overhead.
+
+I'd opt for the overhead. We have seen that the hardware/firmware
+doesn't behave as expected, so I'd rather see a clean approach in
+software.
+
+>=20
+> > This doesn't use timers so a message might in theory be
+> > stuck in the queue indefinitely.
+>=20
+> Well you wouldn't need timers actually, if you have a list of packets
+> waiting to be acked you can expect the frames to be acked in the orde=
+r
+> of which they were send (when using the same queue).
+
+Agreed.
+
+Mattias
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
