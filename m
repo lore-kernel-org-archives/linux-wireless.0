@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50500 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493AbYIIMzP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 08:55:15 -0400
-Subject: [PATCH] mac80211: make ieee80211_rx_h_mgmt more readable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 09 Sep 2008 14:55:09 +0200
-Message-Id: <1220964909.31304.171.camel@johannes.berg> (sfid-20080909_145524_265558_D2EA479E)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:39774 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755420AbYIOXKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 19:10:05 -0400
+Date: Mon, 15 Sep 2008 16:09:52 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: re-enable aggregation on 2.6.27
+Message-ID: <20080915230952.GG22572@tesla> (sfid-20080916_011008_453704_2EBA9080)
+References: <1221503192-28502-1-git-send-email-lrodriguez@atheros.com> <1ba2fa240809151606l31fe9d8jbdc34e179910ec8f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1ba2fa240809151606l31fe9d8jbdc34e179910ec8f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That function isn't exactly easy to read especially since it
-does something in an if branch that continues after the if
-because the else returns. Express it in a more readable way.
+On Mon, Sep 15, 2008 at 04:06:18PM -0700, Tomas Winkler wrote:
+> On Mon, Sep 15, 2008 at 9:26 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > Re-enable aggregation by addressing skb->cb overwrites
+> > after insertion into the qdisc. Aggregation was disabled
+> > after the new TX multiqueue changes were introduced. Instead
+> > of relying on the skb->cb we use two flags on the skb.
+> >
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >
+> > Users have been reporting low rates on 2.6.27 with 11n drivers, the
+> > problem isbeen 11n aggregation was disabled due to the new TX multique
+> > changes. We should have addressed this sooner but we just got to it now.
+> >
+> > Without addressing this we won't get 11n aggregation on 2.6.27. I tried
+> > to minimize the changes required. I'm about to test this, it compiles.
+> >
+> > If this doesn't get upstream for 27 perhaps distributions are willing to
+> > carry it around then and if so oh well (grr...).
+> >
+> I'm cleaning this up.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/rx.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Great.
 
---- everything.orig/net/mac80211/rx.c	2008-09-09 14:49:42.000000000 +0200
-+++ everything/net/mac80211/rx.c	2008-09-09 14:51:25.000000000 +0200
-@@ -1586,20 +1586,20 @@ ieee80211_rx_h_action(struct ieee80211_r
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
- 
- 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
- 		return RX_DROP_MONITOR;
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
--	if ((sdata->vif.type == IEEE80211_IF_TYPE_STA ||
--	     sdata->vif.type == IEEE80211_IF_TYPE_IBSS ||
--	     sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) &&
--	    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
--		ieee80211_sta_rx_mgmt(sdata, rx->skb, rx->status);
--	else
-+	if (sdata->vif.type != IEEE80211_IF_TYPE_STA &&
-+	    sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
-+	    sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
-+		return RX_DROP_MONITOR;
-+
-+	if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME)
- 		return RX_DROP_MONITOR;
- 
-+	ieee80211_sta_rx_mgmt(sdata, rx->skb, rx->status);
- 	return RX_QUEUED;
- }
- 
+> I will probably drop skb->is_part_ampdu so no
+> changes in the drivers will be required.
 
+How so? I mean, if the flag is modified it'll need modification.
 
+  Luis
