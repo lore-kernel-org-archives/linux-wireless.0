@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:11967 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750988AbYISIEc (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:62408 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753308AbYIOTZT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 04:04:32 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so298555fkq.5
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 01:04:30 -0700 (PDT)
-Message-ID: <1ba2fa240809190104t361ea3fcyd9df6a204f6eac00@mail.gmail.com> (sfid-20080919_100437_148784_74732658)
-Date: Fri, 19 Sep 2008 11:04:30 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
+	Mon, 15 Sep 2008 15:25:19 -0400
+Received: by gxk9 with SMTP id 9so25908291gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 12:25:17 -0700 (PDT)
+Message-ID: <43e72e890809151225u34673bf4ub9b2e3d7f00c756b@mail.gmail.com> (sfid-20080915_212522_007359_F4718B8C)
+Date: Mon, 15 Sep 2008 12:25:17 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: probe with correct SSID
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1221793834.10419.0.camel@johannes.berg>
+Subject: Re: [RFC] Redesigning aggregation on mac80211
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1221506142.3700.75.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1221793834.10419.0.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890809151203p213fae37ia3bd6871c3bfe2c2@mail.gmail.com>
+	 <1221506142.3700.75.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 6:10 AM, Johannes Berg
+On Mon, Sep 15, 2008 at 12:15 PM, Johannes Berg
 <johannes@sipsolutions.net> wrote:
-> While associated, we should probe with the SSID we're associated to,
-> not the scan SSID.
+> On Mon, 2008-09-15 at 12:03 -0700, Luis R. Rodriguez wrote:
 >
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/mac80211/mlme.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>> I'll start with Atheros hardware and mac80211. Atheros hardware uses 4
+>> main HW queues, one for each AC, and we also have one for beacons,
+>> another for queued stuff after beacon (aka "Crap After Beacon") where
+>> things like queued frames for broadcast / multicast or for frames for
+>> stations in power save mode, and I think another hw queue for uapsd.
+>> Right now mac80211 queues skb's for drivers into the netdev_queues.
+>> Under the current mac80211 design we have 4 netdev_queues, one for
+>> each AC and then there is a number of "aggregation queues". We
+>> essentially just declare one "aggregation" queue as we do our own
+>> queue mapping internally to our own hardware queues -- and that
+>> consist of just mapping frames to each HQ queue as per AC.
 >
-> --- everything.orig/net/mac80211/mlme.c 2008-09-19 01:46:33.000000000 +0200
-> +++ everything/net/mac80211/mlme.c      2008-09-19 01:46:47.000000000 +0200
-> @@ -973,8 +973,8 @@ static void ieee80211_associated(struct
->                                disassoc = 1;
->                        } else
->                                ieee80211_send_probe_req(sdata, ifsta->bssid,
-> -                                                        local->scan_ssid,
-> -                                                        local->scan_ssid_len);
-> +                                                        ifsta->ssid,
-> +                                                        ifsta->ssid_len);
->                        ifsta->flags ^= IEEE80211_STA_PROBEREQ_POLL;
->                } else {
->                        ifsta->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
->
-Acked-by: Tomas Winkler <tomas.winkler@intel.com>
+> Except that declaring one "aggregation queue" also limits you to a
+> single aggregation session, no big deal in STA mode but punishable by
+> death in AP mode.
+
+Or IBSS/Mesh although I think only IBSS speaks aggregation as per the
+specs so far.
+
+  Luis
