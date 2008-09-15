@@ -1,185 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:56324 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754418AbYICDbX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:31:23 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 21/39] iwlwifi: fix rx_chain computation
-Date: Wed,  3 Sep 2008 11:26:41 +0800
-Message-Id: <1220412419-15404-22-git-send-email-yi.zhu@intel.com> (sfid-20080903_055042_628842_A9536B32)
-In-Reply-To: <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
-References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
+Received: from viefep27-int.chello.at ([62.179.121.47]:63891 "EHLO
+	viefep27-int.chello.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463AbYIOIbz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 04:31:55 -0400
+Received: from gollum.odi.ch ([84.74.148.76]) by viefep27-int.chello.at
+          (InterMail vM.7.08.02.02 201-2186-121-104-20070414) with ESMTP
+          id <20080915083151.BWTH184.viefep27-int.chello.at@gollum.odi.ch>
+          for <linux-wireless@vger.kernel.org>;
+          Mon, 15 Sep 2008 10:31:51 +0200
+Received: from [10.11.1.201] (cvs.logobject.ch [81.7.230.226])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by gollum.odi.ch (Postfix) with ESMTPSA id D25B2235A17
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 10:31:50 +0200 (CEST)
+Message-ID: <48CE1D67.8010802@odi.ch> (sfid-20080915_103158_093638_233F5931)
+Date: Mon, 15 Sep 2008 10:31:35 +0200
+From: =?UTF-8?B?T3J0d2luIEdsw7xjaw==?= <odi@odi.ch>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: WEP and enc restricted
+References: <48CD314C.40105@odi.ch> <1221456248.27102.43.camel@localhost.localdomain>
+In-Reply-To: <1221456248.27102.43.camel@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Dan Williams wrote:
+> It looks like ieee80211_rx_mgmt_auth() in mlme.c should be cycling
+> through the various auth methods when it gets an "auth not supported"
+> response from the AP.  I wonder why that's not working in your case.
+> Can you put some printks in there and see if that code gets triggered
+> and if not, poke around a bit to see why?
 
-This patch fixes and simplifies rx_chain computation.
+Yes, I've seen that. I'll have to check the packet log again, but as far as I
+remember the AP doesn't respond at all to these authentication packets. So the
+cycling will never happen.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   77 ++++++++++++++++++------------
- 1 files changed, 46 insertions(+), 31 deletions(-)
+> It looks like it does get set from the SIWAUTH handler if you pass in
+> the right auth algs bits; but you're correct in that SIWENCODE won't set
+> the auth alg.  The patch seems to be correct.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 129b0a3..e55a62d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -592,12 +592,11 @@ static void iwlcore_free_geos(struct iwl_priv *priv)
- 	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
- }
- 
--static u8 is_single_rx_stream(struct iwl_priv *priv)
-+static bool is_single_rx_stream(struct iwl_priv *priv)
- {
- 	return !priv->current_ht_config.is_ht ||
- 	       ((priv->current_ht_config.supp_mcs_set[1] == 0) &&
--		(priv->current_ht_config.supp_mcs_set[2] == 0)) ||
--	       priv->ps_mode == IWL_MIMO_PS_STATIC;
-+		(priv->current_ht_config.supp_mcs_set[2] == 0));
- }
- 
- static u8 iwl_is_channel_extension(struct iwl_priv *priv,
-@@ -704,33 +703,39 @@ EXPORT_SYMBOL(iwl_set_rxon_ht);
-  * MIMO (dual stream) requires at least 2, but works better with 3.
-  * This does not determine *which* chains to use, just how many.
-  */
--static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
--					u8 *idle_state, u8 *rx_state)
-+static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
- {
--	u8 is_single = is_single_rx_stream(priv);
--	u8 is_cam = test_bit(STATUS_POWER_PMI, &priv->status) ? 0 : 1;
-+	bool is_single = is_single_rx_stream(priv);
-+	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
- 
- 	/* # of Rx chains to use when expecting MIMO. */
- 	if (is_single || (!is_cam && (priv->ps_mode == IWL_MIMO_PS_STATIC)))
--		*rx_state = 2;
-+		return 2;
- 	else
--		*rx_state = 3;
-+		return 3;
-+}
- 
-+static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
-+{
-+	int idle_cnt;
-+	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
- 	/* # Rx chains when idling and maybe trying to save power */
- 	switch (priv->ps_mode) {
- 	case IWL_MIMO_PS_STATIC:
- 	case IWL_MIMO_PS_DYNAMIC:
--		*idle_state = (is_cam) ? 2 : 1;
-+		idle_cnt = (is_cam) ? 2 : 1;
- 		break;
- 	case IWL_MIMO_PS_NONE:
--		*idle_state = (is_cam) ? *rx_state : 1;
-+		idle_cnt = (is_cam) ? active_cnt : 1;
- 		break;
-+	case IWL_MIMO_PS_INVALID:
- 	default:
--		*idle_state = 1;
-+		IWL_ERROR("invalide mimo ps mode %d\n", priv->ps_mode);
-+		WARN_ON(1);
-+		idle_cnt = -1;
- 		break;
- 	}
--
--	return 0;
-+	return idle_cnt;
- }
- 
- /**
-@@ -741,34 +746,44 @@ static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
-  */
- void iwl_set_rxon_chain(struct iwl_priv *priv)
- {
--	u8 is_single = is_single_rx_stream(priv);
--	u8 idle_state, rx_state;
--
--	priv->staging_rxon.rx_chain = 0;
--	rx_state = idle_state = 3;
-+	bool is_single = is_single_rx_stream(priv);
-+	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
-+	u8 idle_rx_cnt, active_rx_cnt;
-+	u16 rx_chain;
- 
- 	/* Tell uCode which antennas are actually connected.
- 	 * Before first association, we assume all antennas are connected.
- 	 * Just after first association, iwl_chain_noise_calibration()
- 	 *    checks which antennas actually *are* connected. */
--	priv->staging_rxon.rx_chain |=
--		    cpu_to_le16(priv->hw_params.valid_rx_ant <<
--						 RXON_RX_CHAIN_VALID_POS);
-+	rx_chain = priv->hw_params.valid_rx_ant << RXON_RX_CHAIN_VALID_POS;
- 
- 	/* How many receivers should we use? */
--	iwlcore_get_rx_chain_counter(priv, &idle_state, &rx_state);
--	priv->staging_rxon.rx_chain |=
--		cpu_to_le16(rx_state << RXON_RX_CHAIN_MIMO_CNT_POS);
--	priv->staging_rxon.rx_chain |=
--		cpu_to_le16(idle_state << RXON_RX_CHAIN_CNT_POS);
--
--	if (!is_single && (rx_state >= 2) &&
--	    !test_bit(STATUS_POWER_PMI, &priv->status))
-+	active_rx_cnt = iwl_get_active_rx_chain_count(priv);
-+	idle_rx_cnt = iwl_get_idle_rx_chain_count(priv, active_rx_cnt);
-+
-+	/* correct rx chain count accoridng hw settings */
-+	if (priv->hw_params.rx_chains_num < active_rx_cnt)
-+		active_rx_cnt = priv->hw_params.rx_chains_num;
-+
-+	if (priv->hw_params.rx_chains_num < idle_rx_cnt)
-+		idle_rx_cnt = priv->hw_params.rx_chains_num;
-+
-+	rx_chain |= active_rx_cnt << RXON_RX_CHAIN_MIMO_CNT_POS;
-+	rx_chain |= idle_rx_cnt  << RXON_RX_CHAIN_CNT_POS;
-+
-+	priv->staging_rxon.rx_chain = cpu_to_le16(rx_chain);
-+
-+	if (!is_single && (active_rx_cnt >= 2) && is_cam)
- 		priv->staging_rxon.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
- 	else
- 		priv->staging_rxon.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
- 
--	IWL_DEBUG_ASSOC("rx chain %X\n", priv->staging_rxon.rx_chain);
-+	IWL_DEBUG_ASSOC("rx_chain=0x%Xi active=%d idle=%d\n",
-+			priv->staging_rxon.rx_chain,
-+			active_rx_cnt, idle_rx_cnt);
-+
-+	WARN_ON(active_rx_cnt == 0 || idle_rx_cnt == 0 ||
-+		active_rx_cnt < idle_rx_cnt);
- }
- EXPORT_SYMBOL(iwl_set_rxon_chain);
- 
--- 
-1.5.3.6
+In SIWAUTH only the available algorithms are set, not the actual one. It's a
+different variable:
+  sdata->u.sta.auth_alg*s* = data->value;
+
+> However, the submission format needs a few things
+
+I'll resend the patch in the correct format.
+
+Cheers
+
+Ortwin
 
