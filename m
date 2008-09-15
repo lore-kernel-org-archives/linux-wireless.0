@@ -1,43 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33267 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752002AbYIBGK5 (ORCPT
+Received: from viefep27-int.chello.at ([62.179.121.47]:57846 "EHLO
+	viefep27-int.chello.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753499AbYIOPur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 02:10:57 -0400
-Message-ID: <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net>
-In-Reply-To: <1220319536.28282.128.camel@debian.sh.intel.com>
-References: <20080901160658.GA11063@google.com>
-    <1220319536.28282.128.camel@debian.sh.intel.com>
-Date: Tue, 2 Sep 2008 08:10:09 +0200 (CEST)
-Subject: Re: new: regression iwl3945/mac80211 endless after suspend
-     associate/deassociate loop
-From: "Johannes Berg" <johannes@sipsolutions.net>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Cc: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"LKML" <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Jan-Espen Pettersen" <sigsegv@radiotube.org>,
-	"John W. Linville" <linville@tuxdriver.com>
+	Mon, 15 Sep 2008 11:50:47 -0400
+Received: from gollum.odi.ch ([84.74.148.76]) by viefep27-int.chello.at
+          (InterMail vM.7.08.02.02 201-2186-121-104-20070414) with ESMTP
+          id <20080915155043.FDFN184.viefep27-int.chello.at@gollum.odi.ch>
+          for <linux-wireless@vger.kernel.org>;
+          Mon, 15 Sep 2008 17:50:43 +0200
+Received: from [192.168.111.10] (mithril [192.168.111.10])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by gollum.odi.ch (Postfix) with ESMTPSA id E8DBC42FC
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 17:50:42 +0200 (CEST)
+Message-ID: <48CE8452.9080604@odi.ch> (sfid-20080915_175050_484202_3CD78757)
+Date: Mon, 15 Sep 2008 17:50:42 +0200
+From: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] Don't destroy authentication algorithm before authenticating.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zhu Yi wrote:
-> On Mon, 2008-09-01 at 19:07 +0300, Michael S. Tsirkin wrote:
->> [16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
->> [16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX
->> (capab=0x411 status=0 aid=1)
->> [16482.918564] eth1: associated
->> [16492.920224] eth1: disassociating by local choice (reason=3)
->> [16492.920986] eth1: disassociating by local choice (reason=3)
->
-> It is exactly 10 seconds the local STA sends the deauth_leaving frame
-> before associated everytime. I wonder if it is the timeout for some
-> wireless config tools. NM?
+reset_auth is called before each authentication try. So it should not destroy
+the auth_alg that was set before.
 
-"by local choice" means wext requested this, not a kernel bug.
+NB: this may have side-effects with automatic algorithm selection if AP responds 
+with alg not supported.
 
-johannes
+Signed-off-by: Ortwin Glueck <odi@odi.ch>
+---
+  net/mac80211/mlme.c |   10 +---------
+  1 files changed, 1 insertions(+), 9 deletions(-)
 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 902cac1..5dbe012 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3420,6 +3420,7 @@ static void ieee80211_sta_reset_auth(struct net_device *dev,
+  				     struct ieee80211_if_sta *ifsta)
+  {
+  	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+
+  	if (local->ops->reset_tsf) {
+  		/* Reset own TSF to allow time synchronization work. */
+@@ -3428,15 +3429,6 @@ static void ieee80211_sta_reset_auth(struct net_device *dev,
+
+  	ifsta->wmm_last_param_set = -1; /* allow any WMM update */
+
+-
+-	if (ifsta->auth_algs & IEEE80211_AUTH_ALG_OPEN)
+-		ifsta->auth_alg = WLAN_AUTH_OPEN;
+-	else if (ifsta->auth_algs & IEEE80211_AUTH_ALG_SHARED_KEY)
+-		ifsta->auth_alg = WLAN_AUTH_SHARED_KEY;
+-	else if (ifsta->auth_algs & IEEE80211_AUTH_ALG_LEAP)
+-		ifsta->auth_alg = WLAN_AUTH_LEAP;
+-	else
+-		ifsta->auth_alg = WLAN_AUTH_OPEN;
+  	ifsta->auth_transaction = -1;
+  	ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
+  	ifsta->auth_tries = ifsta->assoc_tries = 0;
+-- 
+1.5.6.4
