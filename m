@@ -1,41 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:58610 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750870AbYIVHVx (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.226]:32882 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754312AbYIOWFZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 03:21:53 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so443284nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 00:21:52 -0700 (PDT)
-Message-ID: <f488382f0809220021qc1a3abatada16972eea1d44c@mail.gmail.com> (sfid-20080922_092157_194738_26AD6C78)
-Date: Mon, 22 Sep 2008 00:21:52 -0700
+	Mon, 15 Sep 2008 18:05:25 -0400
+Received: by qb-out-0506.google.com with SMTP id f11so3796232qba.17
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 15:05:22 -0700 (PDT)
+Message-ID: <f488382f0809151505g54c0e59qfcf3bbdbf9428ba1@mail.gmail.com> (sfid-20080916_000529_467240_3136D1B0)
+Date: Mon, 15 Sep 2008 15:05:21 -0700
 From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: ath9k problems
-Cc: "Howard Chu" <hyc@symas.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080922064831.GB19580@tesla>
+To: ath9k-devel@lists.ath9k.org,
+	wireless <linux-wireless@vger.kernel.org>, jmalinen@atheros.com,
+	lrodriguez@atheros.com
+Subject: Re: frustrating ath9k issues
+In-Reply-To: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <48D5CAD0.1080909@symas.com>
-	 <f488382f0809202122v4c77bc96r54edd24bdf365724@mail.gmail.com>
-	 <20080922064831.GB19580@tesla>
+References: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 21, 2008 at 11:48 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
->> but wireless-testing is pretty outdated
+On Mon, Sep 15, 2008 at 2:50 PM, Steven Noonan <steven@uplinklabs.net> wrote:
+> More recently, I had another incident where it disassociated and
+> refused to reassociate. I got about 100 of these in my dmesg (fixed by
+> unloading and reloading ath9k):
 >
-> This is not accurate.
+> [...]
+> [ 1279.031033] ath_set_channel: unable to reset channel 149 (5745Mhz)
+> flags 0x30142 hal status 4294967277
+> [ 1279.031203] ath9k_config: Unable to set channel
+> [ 1279.323427] ath_set_channel: unable to reset channel 153 (5765Mhz)
+> flags 0x50142 hal status 4294967277
+> [ 1279.323577] ath9k_config: Unable to set channel
+> [ 1279.624562] ath_set_channel: unable to reset channel 157 (5785Mhz)
+> flags 0x30142 hal status 4294967277
+> [ 1279.624687] ath9k_config: Unable to set channel
+> [ 1279.916441] ath_set_channel: unable to reset channel 161 (5805Mhz)
+> flags 0x50142 hal status 4294967277
+> [ 1279.916586] ath9k_config: Unable to set channel
+> [ 1280.207274] ath_set_channel: unable to reset channel 165 (5825Mhz)
+> flags 0x10142 hal status 4294967277
+> [ 1280.207387] ath9k_config: Unable to set channel
+> [...]
 >
-> It lacks new patches from Linus' tree, but it has the latest
-> and greatest possible wireless patches. John maintains Linux
-> wireless so he'll always have more updated patches for wireless than
-> Linus.
+> And finally, I'm most certainly not getting 802.11n connection speeds
+> with this driver. The connection speed seems to be about equivalent to
+> 802.11g (54mb/s), but I can't tell for certain with the messed up
+> bitrate reporting from iwconfig.
 >
 
-I've had much less luck running wireless-testing than I have had
-running -tip or Linus' trees. Perhaps it -is- inaccurate that it's
-outdated, but it's certainly less usable, from what I've seen.
-
-- Steven
+Another incident of the same thing. I let it go a bit longer and it had this:
+[...]
+[22558.757888] ath_set_channel: unable to reset channel 56 (5280Mhz)
+flags 0x10142 hal status 4294967277
+[22558.757917] ath9k_config: Unable to set channel
+[22559.048662] ath_set_channel: unable to reset channel 60 (5300Mhz)
+flags 0x10142 hal status 4294967277
+[22559.048692] ath9k_config: Unable to set channel
+[22559.339607] ath_set_channel: unable to reset channel 64 (5320Mhz)
+flags 0x10142 hal status 4294967277
+[22559.339734] ath9k_config: Unable to set channel
+[22559.632215] ath_set_channel: unable to reset channel 149 (5745Mhz)
+flags 0x30142 hal status 4294967277
+[22559.632261] ath9k_config: Unable to set channel
+[22559.922479] ath_set_channel: unable to reset channel 153 (5765Mhz)
+flags 0x50142 hal status 4294967277
+[22559.922511] ath9k_config: Unable to set channel
+[22560.212400] ath_set_channel: unable to reset channel 157 (5785Mhz)
+flags 0x30142 hal status 4294967277
+[22560.212418] ath9k_config: Unable to set channel
+[22560.503130] ath_set_channel: unable to reset channel 161 (5805Mhz)
+flags 0x50142 hal status 4294967277
+[22560.503149] ath9k_config: Unable to set channel
+[22560.795592] ath_set_channel: unable to reset channel 165 (5825Mhz)
+flags 0x10142 hal status 4294967277
+[22560.795632] ath9k_config: Unable to set channel
+[22561.086033] ath_set_channel: unable to reset channel 6 (2437Mhz)
+flags 0x700e2 hal status 4294967277
+[22561.086053] ath9k_config: Unable to set channel
+[22561.704924] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[22561.704970] ath9k_start: Unable to complete ath_open
+[22561.875781] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[22561.875932] ath9k_start: Unable to complete ath_open
+[22562.149045] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[22562.149058] ath9k_start: Unable to complete ath_open
+[22562.292357] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[22562.292386] ath9k_start: Unable to complete ath_open
+[22574.671761] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[22574.671856] ath9k_start: Unable to complete ath_open
+[22579.628460] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[22579.629153] ath9k_start: Unable to complete ath_open
+[22583.631045] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[22583.631076] ath9k_start: Unable to complete ath_open
+[22587.615757] ath_open: unable to reset hardware; hal status
+4294967277 (freq 2437 flags 0x700e2)
+[22587.615789] ath9k_start: Unable to complete ath_open
