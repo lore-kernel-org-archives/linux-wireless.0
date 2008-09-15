@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:32808 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753099AbYISSdQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 14:33:16 -0400
-Received: by gxk9 with SMTP id 9so1086667gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 11:33:15 -0700 (PDT)
-Message-ID: <43e72e890809191133gee5fe3h8647460d6adb6782@mail.gmail.com> (sfid-20080919_203319_885312_38534921)
-Date: Fri, 19 Sep 2008 11:33:15 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Celejar <celejar@gmail.com>
-Subject: Re: Can't connect to AP with hidden essid with 2.6.27-rc6
-Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <20080919142740.60e2c0e8.celejar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080916220904.75283811.celejar@gmail.com>
-	 <48D1E42C.70904@lwfinger.net>
-	 <20080918015202.8c5f6381.celejar@gmail.com>
-	 <48D24911.80101@lwfinger.net>
-	 <20080918160957.94ea063d.celejar@gmail.com>
-	 <48D2D728.6070105@lwfinger.net>
-	 <20080919001050.d9ed273a.celejar@gmail.com>
-	 <48D3CFBC.6070504@lwfinger.net>
-	 <43e72e890809191105p26841666l50a4a139a7177590@mail.gmail.com>
-	 <20080919142740.60e2c0e8.celejar@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:58711 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754799AbYIOVBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 17:01:31 -0400
+Subject: Re: [RFC][PATCH] TX status reporting with help of an ack queue
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1221510785.3700.87.camel@johannes.berg>
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <200809151911.32834.IvDoorn@gmail.com> <1221501417.4511.49.camel@localhost>
+	 (sfid-20080915_195731_733752_74D2117C)  <1221501786.3700.68.camel@johannes.berg>
+	 <1221505251.4511.77.camel@localhost>
+	 (sfid-20080915_210128_632488_FB448E33)  <1221506496.3700.81.camel@johannes.berg>
+	 <1221507551.4511.89.camel@localhost>
+	 (sfid-20080915_213946_840165_74EE062B)  <1221507988.3700.84.camel@johannes.berg>
+	 <1221510009.4511.99.camel@localhost>
+	 (sfid-20080915_222042_138159_E2373F89)  <1221510785.3700.87.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 15 Sep 2008 23:01:27 +0200
+Message-Id: <1221512487.4511.105.camel@localhost> (sfid-20080915_230135_247504_A19B3A6B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 11:27 AM, Celejar <celejar@gmail.com> wrote:
-> On Fri, 19 Sep 2008 11:05:35 -0700
+On Mon, 2008-09-15 at 22:33 +0200, Johannes Berg wrote:
+> On Mon, 2008-09-15 at 22:20 +0200, Mattias Nissler wrote:
+> 
+> > Well, I'm a big fan of modularizing everything in a clean way. This
+> > whole mac80211 thingy is complex enough... But I don't really care as
+> > long as everybody here is happy with it. Let's wait what Mikko says,
+> > it's his code so far.
+> 
+> Sure. If you manage to split it out entirely, maybe by some struct that
+> drivers embed in their private vif struct, that'd be great too.
+> 
+> 
+> > > But ACK is getting confusing, we're just reporting status based on
+> > > reception (or non-reception!) of ACKs :) How about retries in the hw?
+> > 
+> > Retries in the hw? I don't understand? You mean that as a name?
+> 
+> Well, with all this we won't know how many times the hardware attempted
+> to send a frame before it got an ACK, if it got one at all. We'd like to
+> know this too, I guess, for the rate control algorithm.
 
-> I (the user) am currently connecting successfully with CRDA to a hidden
-> essid AP.  I previously had claimed that it was still not working, even
-> though the iw channel output looked good, but it currently seems to be
-> okay.  I may have previously done something wrong, such as not
-> rebuilding CRDA for the current kernel, although in that case I'm not
-> sure why the iw output would have been correct.  In any event, at this
-> point it seems that it may have been some mistake on my part.  Thanks
-> for the help, sorry for the noise, and I'll report back if I see any
-> more trouble.
+That's right, the rate control algorithm might want to know. However,
+the PID algorithm doesn't care too much about the number of retries, it
+just classifies frames into the categories: successfull, single retry,
+multiple retries (IIRC, that is).
 
-Thanks for letting us know.
+Btw. lately I've been thinking about a new RC algo that simply
+calculates the throughput achievable by a specific rate (based on the
+estimated frame transmission failure ratio and transmission times) and
+then selects the one that provides the best throughput. It's still a
+very vague idea, but I think it might be interesting to try.
 
-  Luis
+Mattias
+
