@@ -1,172 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:50097 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756024AbYICUWX (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.177]:14091 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754195AbYIOVuS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 16:22:23 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] p54: set_filter refactoring
-Date: Wed, 3 Sep 2008 22:25:20 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 15 Sep 2008 17:50:18 -0400
+Received: by ik-out-1112.google.com with SMTP id c30so2101140ika.5
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 14:50:16 -0700 (PDT)
+Message-ID: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com> (sfid-20080915_235022_203106_F18976FF)
+Date: Mon, 15 Sep 2008 14:50:16 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: ath9k-devel@lists.ath9k.org,
+	wireless <linux-wireless@vger.kernel.org>, jmalinen@atheros.com,
+	lrodriguez@atheros.com
+Subject: Fwd: frustrating ath9k issues
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809032225.21224.chunkeey@web.de> (sfid-20080903_222237_144590_097EFF6D)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-p54_set_filter has a way too many unnecessary "magic" parameters and values.
-This patch axes all superfluous parameters and gives most of the magic values appropriate names. 
+I sent this message to the linux-kernel list 3 days ago and then
+realized I'd probably get more replies if I'd actually sent it to the
+right people. I've updated this message with anything that's changed
+since I sent it, and -hopefully- I'm sending to all the right people.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-09-02 21:29:47.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-09-03 20:29:27.000000000 +0200
-@@ -788,8 +788,7 @@ static int p54_tx(struct ieee80211_hw *d
- }
- 
- static int p54_set_filter(struct ieee80211_hw *dev, u16 filter_type,
--			  const u8 *dst, const u8 *src, u8 antenna,
--			  u32 magic3, u32 magic8, u32 magic9)
-+			  const u8 *bssid)
- {
- 	struct p54_common *priv = dev->priv;
- 	struct p54_control_hdr *hdr;
-@@ -808,19 +807,19 @@ static int p54_set_filter(struct ieee802
- 	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*filter));
- 	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_FILTER_SET);
- 
--	filter->filter_type = cpu_to_le16(filter_type);
--	memcpy(filter->dst, dst, ETH_ALEN);
--	if (!src)
--		memset(filter->src, ~0, ETH_ALEN);
-+	priv->filter_type = filter->filter_type = cpu_to_le16(filter_type);
-+	memcpy(filter->mac_addr, priv->mac_addr, ETH_ALEN);
-+	if (!bssid)
-+		memset(filter->bssid, ~0, ETH_ALEN);
- 	else
--		memcpy(filter->src, src, ETH_ALEN);
--	filter->antenna = antenna;
--	filter->magic3 = cpu_to_le32(magic3);
-+		memcpy(filter->bssid, bssid, ETH_ALEN);
-+
-+	filter->rx_antenna = priv->rx_antenna;
-+	filter->basic_rate_mask = cpu_to_le32(0x15F);
- 	filter->rx_addr = cpu_to_le32(priv->rx_end);
- 	filter->max_rx = cpu_to_le16(priv->rx_mtu);
- 	filter->rxhw = cpu_to_le16(priv->rxhw);
--	filter->magic8 = cpu_to_le16(magic8);
--	filter->magic9 = cpu_to_le16(magic9);
-+	filter->wakeup_timer = cpu_to_le16(500);
- 
- 	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*filter), 1);
- 	return 0;
-@@ -1046,12 +1045,11 @@ static int p54_add_interface(struct ieee
- 
- 	memcpy(priv->mac_addr, conf->mac_addr, ETH_ALEN);
- 
--	p54_set_filter(dev, 0, priv->mac_addr, NULL, 0, 1, 0, 0xF642);
--	p54_set_filter(dev, 0, priv->mac_addr, NULL, 1, 0, 0, 0xF642);
-+	p54_set_filter(dev, 0, NULL);
- 
- 	switch (conf->type) {
- 	case IEEE80211_IF_TYPE_STA:
--		p54_set_filter(dev, 1, priv->mac_addr, NULL, 0, 0x15F, 0x1F4, 0);
-+		p54_set_filter(dev, 1, NULL);
- 		break;
- 	default:
- 		BUG();	/* impossible */
-@@ -1069,7 +1067,7 @@ static void p54_remove_interface(struct 
- 	struct p54_common *priv = dev->priv;
- 	priv->mode = IEEE80211_IF_TYPE_MNTR;
- 	memset(priv->mac_addr, 0, ETH_ALEN);
--	p54_set_filter(dev, 0, priv->mac_addr, NULL, 2, 0, 0, 0);
-+	p54_set_filter(dev, 0, NULL);
- }
- 
- static int p54_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
-@@ -1078,6 +1076,8 @@ static int p54_config(struct ieee80211_h
- 	struct p54_common *priv = dev->priv;
- 
- 	mutex_lock(&priv->conf_mutex);
-+	priv->rx_antenna = (conf->antenna_sel_rx == 0) ?
-+		2 : conf->antenna_sel_tx - 1;
- 	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
- 	p54_set_vdcf(dev);
- 	mutex_unlock(&priv->conf_mutex);
-@@ -1091,8 +1091,7 @@ static int p54_config_interface(struct i
- 	struct p54_common *priv = dev->priv;
- 
- 	mutex_lock(&priv->conf_mutex);
--	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 0, 1, 0, 0xF642);
--	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 2, 0, 0, 0);
-+	p54_set_filter(dev, 0, conf->bssid);
- 	p54_set_leds(dev, 1, !is_multicast_ether_addr(conf->bssid), 0);
- 	memcpy(priv->bssid, conf->bssid, ETH_ALEN);
- 	mutex_unlock(&priv->conf_mutex);
-@@ -1110,11 +1109,9 @@ static void p54_configure_filter(struct 
- 
- 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
- 		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
--			p54_set_filter(dev, 0, priv->mac_addr,
--				       NULL, 2, 0, 0, 0);
-+			p54_set_filter(dev, 0, NULL);
- 		else
--			p54_set_filter(dev, 0, priv->mac_addr,
--				       priv->bssid, 2, 0, 0, 0);
-+			p54_set_filter(dev, 0, priv->bssid);
- 	}
- }
- 
-diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
---- a/drivers/net/wireless/p54/p54common.h	2008-09-02 19:39:10.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.h	2008-09-03 20:17:51.000000000 +0200
-@@ -214,17 +214,17 @@ struct p54_tx_control_allocdata {
- 
- struct p54_tx_control_filter {
- 	__le16 filter_type;
--	u8 dst[ETH_ALEN];
--	u8 src[ETH_ALEN];
--	u8 antenna;
--	u8 debug;
--	__le32 magic3;
--	u8 rates[8];	// FIXME: what's this for?
-+	u8 mac_addr[ETH_ALEN];
-+	u8 bssid[ETH_ALEN];
-+	u8 rx_antenna;
-+	u8 rx_align;
-+	__le32 basic_rate_mask;
-+	u8 rts_rates[8];
- 	__le32 rx_addr;
- 	__le16 max_rx;
- 	__le16 rxhw;
--	__le16 magic8;
--	__le16 magic9;
-+	__le16 wakeup_timer;
-+	__le16 unalloc;
- } __attribute__ ((packed));
- 
- struct p54_tx_control_channel {
-diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
---- a/drivers/net/wireless/p54/p54.h	2008-09-02 19:39:26.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54.h	2008-09-03 20:28:20.000000000 +0200
-@@ -63,6 +63,7 @@ struct p54_common {
- 	struct mutex conf_mutex;
- 	u8 mac_addr[ETH_ALEN];
- 	u8 bssid[ETH_ALEN];
-+	__le16 filter_type;
- 	struct pda_iq_autocal_entry *iq_autocal;
- 	unsigned int iq_autocal_len;
- 	struct pda_channel_output_limit *output_limit;
-@@ -70,6 +71,7 @@ struct p54_common {
- 	struct pda_pa_curve_data *curve_data;
- 	u16 rxhw;
- 	u8 version;
-+	u8 rx_antenna;
- 	unsigned int tx_hdr_len;
- 	void *cached_vdcf;
- 	unsigned int fw_var;
+And before I go on, I want to say that I -much- appreciate the
+development of this driver. Being forced to use ndiswrapper on a
+32-bit Linux install was getting on my nerves!
 
+
+
+I'm having some problems with ath9k in the 2.6.27-rc6 kernel, -tip
+kernel, etc (all the latest code). First of all, it incorrectly
+reports the connection bitrate as 1 megabit per second, which is more
+of a cosmetic issue:
+
+wlan0     IEEE 802.11abgn  ESSID:"Introversion"
+         Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1E:52:79:4D:01
+         Bit Rate=1 Mb/s   Tx-Power=23 dBm
+         Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+         Encryption key: [snip]   Security mode:open
+         Power Management:off
+         Link Quality=67/100  Signal level:-52 dBm  Noise level=-95 dBm
+         Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+         Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+Second, it frequently drops the connection (could it possibly be
+related to the message 'wlan0 (WE) : Wireless Event too big (320)'?).
+One time, the connection dropped and I couldn't get it to reassociate,
+and the dmesg showed the following:
+
+[53963.201797] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[53964.809889] wlan0: authenticate with AP 00:1e:52:79:4d:01
+[53964.811598] wlan0: authenticated
+[53964.811742] wlan0: associate with AP 00:1e:52:79:4d:01
+[53965.011340] wlan0: associate with AP 00:1e:52:79:4d:01
+[53965.211343] wlan0: associate with AP 00:1e:52:79:4d:01
+[53965.411345] wlan0: association with AP 00:1e:52:79:4d:01 timed out
+[53976.532464] wlan0: authenticate with AP 00:1e:52:79:4d:01
+[53976.542516] wlan0: authenticate with AP 00:1e:52:79:4d:01
+[53976.751331] wlan0: authenticate with AP 00:1e:52:79:4d:01
+[53976.752757] wlan0: authenticated
+[53976.752762] wlan0: associate with AP 00:1e:52:79:4d:01
+[53976.760374] wlan0: RX AssocResp from 00:1e:52:79:4d:01 (capab=0x431
+status=0 aid=1)
+[53976.760380] wlan0: associated
+[53976.760721] wlan0 (WE) : Wireless Event too big (320)
+[53976.772243] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+
+Despite -saying- it associated, I couldn't get 'route' to print a
+table (it just decided to hang), and I couldn't get an IP address.
+
+So I figured I'd try unloading and reloading the ath9k module. This
+was the result:
+
+[53997.493777] ath9k: driver unloaded
+[54001.098532] ath9k: 0.1
+[54001.098833] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[54001.099013] ath9k 0000:03:00.0: setting latency timer to 64
+[54001.233825] phy1: Selected rate control algorithm 'ath9k_rate_control'
+[54001.236980] phy1: Atheros 5416: mem=0xffffc20000060000, irq=17
+[54002.136218] irq 17: nobody cared (try booting with the "irqpoll" option)
+[54002.136229] Pid: 0, comm: swapper Tainted: P
+2.6.27-rc6-00036-ga551b98 #2
+[54002.136234]
+[54002.136235] Call Trace:
+[54002.136241]  <IRQ>  [<ffffffff80265231>] __report_bad_irq+0x3d/0x81
+[54002.136258]  [<ffffffff80265477>] note_interrupt+0x202/0x267
+[54002.136265]  [<ffffffff80265bfc>] handle_fasteoi_irq+0xba/0xe4
+[54002.136273]  [<ffffffff8020e7ff>] do_IRQ+0x115/0x191
+[54002.136279]  [<ffffffff8020bc01>] ret_from_intr+0x0/0xa
+[54002.136283]  <EOI>  [<ffffffff802541bb>] ?
+tick_nohz_stop_sched_tick+0x2c5/0x2d4
+[54002.136296]  [<ffffffff8020a69f>] ? cpu_idle+0x2d/0xed
+[54002.136304]  [<ffffffff8060d741>] ? rest_init+0x75/0x77
+[54002.136309]
+[54002.136312] handlers:
+[54002.136315] [<ffffffffa0209016>] (ath_isr+0x0/0x160 [ath9k])
+[54002.136340] Disabling IRQ #17
+
+I could unload and reload the driver multiple times but got the same
+IRQ issue at that point. As a result of the 'nobody cared', I'm now
+using irqpoll at boot. Not sure what sort of impact this has had on
+anything, except I haven't seen a single 'nobody cared' in my dmesg
+since.
+
+More recently, I had another incident where it disassociated and
+refused to reassociate. I got about 100 of these in my dmesg (fixed by
+unloading and reloading ath9k):
+
+[...]
+[ 1279.031033] ath_set_channel: unable to reset channel 149 (5745Mhz)
+flags 0x30142 hal status 4294967277
+[ 1279.031203] ath9k_config: Unable to set channel
+[ 1279.323427] ath_set_channel: unable to reset channel 153 (5765Mhz)
+flags 0x50142 hal status 4294967277
+[ 1279.323577] ath9k_config: Unable to set channel
+[ 1279.624562] ath_set_channel: unable to reset channel 157 (5785Mhz)
+flags 0x30142 hal status 4294967277
+[ 1279.624687] ath9k_config: Unable to set channel
+[ 1279.916441] ath_set_channel: unable to reset channel 161 (5805Mhz)
+flags 0x50142 hal status 4294967277
+[ 1279.916586] ath9k_config: Unable to set channel
+[ 1280.207274] ath_set_channel: unable to reset channel 165 (5825Mhz)
+flags 0x10142 hal status 4294967277
+[ 1280.207387] ath9k_config: Unable to set channel
+[...]
+
+And finally, I'm most certainly not getting 802.11n connection speeds
+with this driver. The connection speed seems to be about equivalent to
+802.11g (54mb/s), but I can't tell for certain with the messed up
+bitrate reporting from iwconfig.
