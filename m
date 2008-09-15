@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45541 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbYISI70 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 04:59:26 -0400
-Subject: Re: stlc45xx: mac80211 driver for N800 and N810
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
+Received: from cantor.suse.de ([195.135.220.2]:37456 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753579AbYIOQp4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 12:45:56 -0400
+From: Helmut Schaa <hschaa@suse.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [RFC] mac80211: notify the user space about low signal quality
+Date: Mon, 15 Sep 2008 18:45:35 +0200
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <877i98iw4h.fsf@nokia.com> (sfid-20080919_064357_959180_9A8473C3)
-References: <877i98iw4h.fsf@nokia.com>
-	 (sfid-20080919_064357_959180_9A8473C3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IS4UClenpfaCIyXSyS/U"
-Date: Fri, 19 Sep 2008 10:58:50 +0200
-Message-Id: <1221814730.10419.21.camel@johannes.berg> (sfid-20080919_105929_162735_D7F8D63F)
-Mime-Version: 1.0
+References: <200809151416.07552.hschaa@suse.de> <200809151634.06448.hschaa@suse.de> <1221492529.10177.76.camel@localhost.localdomain>
+In-Reply-To: <1221492529.10177.76.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809151845.35841.hschaa@suse.de> (sfid-20080915_184559_140211_92A544A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Montag, 15. September 2008 schrieb Dan Williams:
+> On Mon, 2008-09-15 at 16:34 +0200, Helmut Schaa wrote:
+> > Am Montag, 15. September 2008 16:07:31 schrieb Dan Williams:
+> > > On Mon, 2008-09-15 at 14:35 +0200, Helmut Schaa wrote:
+> > > > This patch adds a new wext event that notifies the user space about a low
+> > > > signal quality. The currently used indicator is as follows: If three
+> > > > successive beacons are received with a signal quality lower then 40%
+> > > > user space gets informed.
+> > > >
+> > > > Any ideas about which indicators should be used? Comments?
+> > >
+> > > So why does this need a new event?  Can't wpa_supplicant monitor the
+> > > signal quality (or level/noise if the driver doesn't provide "quality")
+> > > and do what it needs to do without any changes to the kernel at all?
+> > 
+> > I thought about that as well but I'm not sure if the signal quality/strength 
+> > is a well enough indicator.
+> 
+> Beacon misses should be a factor in quality, just like failed
+> decryptions or excessive retries.  Any of these are indications that the
+> "link" sucks and you might want to try finding a better AP.  Beacon
+> misses are just one piece of the whole quality thing.
 
---=-IS4UClenpfaCIyXSyS/U
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Right.
 
-On Fri, 2008-09-19 at 07:43 +0300, Kalle Valo wrote:
-> Hello all,
->=20
-> Nokia yesterday published stlc45xx, which is a mac80211 driver for
-> N800 and N810. Webpage here:
->=20
-> http://stlc45xx.garage.maemo.org/
+> > For example if we want to consider the number of missed beacons the current 
+> > IWEVQUAL event is not enough to expose this information.
+> > Additionally some devices can report missed beacons. Maybe even the quality 
+> > values reported by the drivers are not comparable at all (although they are 
+> > normalized to be between 0 and 100). Hence my intention was that mac80211 and 
+> > the driver might know better which indicators matter.
+> 
+> So if the values aren't comparable, we _make_ them comparable.  The
+> drivers can certainly tell mac80211 which things they are capable of
+> reporting for quality and the stack can figure them in to the final
+> "quality" measurement.  However, I do agree that having separate
+> indicators for the different factors is a good thing.  Thus something
+> like what Holger suggests would be better from my perspective than an
+> ethereal concept like a "roaming threshold".  Maybe just a poor choice
+> of terms?
 
-Cool, thanks for posting.
+Ok, I'll sum that up. Moving the policy into user space is a good thing if the
+quality values are comparable. Once mac80211 recognices a noticable quality
+change we could use IWEVQUAL to notify user space about it. Furthermore (if
+desired) the signal could be extended to not only report a value between 0
+and 100 but could also contain flags indicating lost beacons, excessive retries
+etc.
 
-johannes
-
---=-IS4UClenpfaCIyXSyS/U
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI02nGAAoJEKVg1VMiehFYWuEQAJTdHjJ84jBy3rbhPUo+oe4s
-YfW3zUsOO76aPMA2zm4M0yXkWdDjbttQzXLsLWNy65EokfEZwY2iaMnwZTLgSdbp
-9cXgsJp+G7jBkeeH4IqF100zVjwbBn1Xqx0yMfVMfBzHxqmLo00qY/vzUOqRJSZm
-g3f5xPNruTicuD4ymCSPZekX8rF1GNmIFLDlJlDYEbDPs+RWtahkMew1C8DrHvjK
-tZ32bT744yL2evQlWlID41d8t4zxwgK9+zEcQ25EbnONDD79Iwd5sPxwT/29s80u
-4ZrY3h7L0sQOCv7mWS2gnDaESLgD7Kcs0WjE/uA1jOm++hec40YwHfMoanlCwOsn
-IZH3tDKbE2GEfSHEk4rbuPRYloC13e+DJ7WD9uYUteazZHimpG6YItPD8RdUshGX
-d8uIB4Ikb6GK71ZAyMjUe13SDAgiO1cbT5GwWS1xhmsXe1f8p7Txuhliao2Kj4RQ
-e+9XwHx6KQHTl0hKjImodspciQSeSlEi/UNK/rlbB9NXqDj5pIA1FInNZ+mTxvm9
-HQEZos1UG/z4V6BoW6IRvrOimthnmzE9OUtHmtfPJbJl6LsMUDrfP4AQ4iXcHu31
-gTW5fjaPFTbGtduyTbcD/NACdZJiD+Q+CYYhEO0lkrEnHEkOMSEMm5DT6KkCCRmY
-vkDwkBavRpIOwskVmh8i
-=3o0P
------END PGP SIGNATURE-----
-
---=-IS4UClenpfaCIyXSyS/U--
-
+Helmut
