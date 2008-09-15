@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57109 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbYIHPsd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 11:48:33 -0400
-Subject: Re: [PATCH 4/4] mac80211: stop queues before carrier off
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, tomasw@gmail.com
-In-Reply-To: <20080908153510.167807000@sipsolutions.net> (sfid-20080908_173726_285754_4F1FC0CD)
-References: <20080908153336.891710000@sipsolutions.net>
-	 <20080908153510.167807000@sipsolutions.net>
-	 (sfid-20080908_173726_285754_4F1FC0CD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7TUpwc4ZqUKf4vds22Fe"
-Date: Mon, 08 Sep 2008 17:48:28 +0200
-Message-Id: <1220888908.31304.78.camel@johannes.berg> (sfid-20080908_174839_188317_F9C9ADFC)
+Received: from main.gmane.org ([80.91.229.2]:56779 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752677AbYIOLZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 07:25:06 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1KfCCV-00044v-9y
+	for linux-wireless@vger.kernel.org; Mon, 15 Sep 2008 11:25:03 +0000
+Received: from 220.227.207.12 ([220.227.207.12])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 11:25:03 +0000
+Received: from pavan.k.pujari by 220.227.207.12 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 11:25:03 +0000
+To: linux-wireless@vger.kernel.org
+From: Pavan <pavan.k.pujari@gmail.com>
+Subject: Channel scan during the AP re-association increases delay
+Date: Mon, 15 Sep 2008 11:18:53 +0000 (UTC)
+Message-ID: <loom.20080915T110100-223@post.gmane.org> (sfid-20080915_132524_401693_4106696E)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi All,
 
---=-7TUpwc4ZqUKf4vds22Fe
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I am working on fast handovers to APs during roaming of wireless devices. I have
+been looking through the mac80211 code to understand how the re-associations are
+initiated in wireless STAs. To my surprise, I see that everytime I issue a
+associate command using the `iwconfig' utility, it starts with scanning on all
+channels collecting information from each AP in the ESSID set. Subsequently,
+begins the authentication and association process. This results in large
+re-association delays which is unacceptable to real time traffic like voice.
 
-Oops, sorry, quilt ate the attribution (From header line), can you add
-those for the first three patches? I had
+As I went through the code, I could trace that `hw->scan' is initiated before
+authentication and association process. I could not figure the exact reason for
+having a channel scan every time an association command is issued, instead it
+could be done passively when the STAs are immobile or experiencing good channel
+conditions (as one of the conditions). This way a lot of time could be saved
+during roaming to bring down the total re-association delays. 
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+I would appreciate any help in this regard.
 
-as in the original mails Tomas sent. Alternatively, I can resend?
+Thanks,
+Pavan
 
-johannes
 
---=-7TUpwc4ZqUKf4vds22Fe
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIxUlJAAoJEKVg1VMiehFYJgkP/RYdRlGbIXPQks40njBAsBKU
-z4voytQ1NGWXD8y6BfM9qwdkLLXhIUtYIL2LNa5hTtb1dEEYECdH1Qp9NMLGJpvd
-MEmOyulpoNV6fp66tMnTZt2Q3Hb18ju6TEnSRNNlz8fJ4tiDnHgjofBmjhZnVZgi
-bL/TlHlH6Mo/2c5bGskVHL/KKmEqlMZLlzAzu8AsQdsawjvMRnzhMDGiQoY4haIM
-fIex/h4P2tBI7Dhk0nnDZYCQeVHekH6lp0ywfo1f2cozx970rxIQDpoYgZXd1CRR
-U6zMQ8swiHt9anUwiH1+Hh/nO0V+eOlozYzlcBp2JF9RWIx3rokXGkbuze6xoggM
-ah8fugO3Qm8JuBk6Dyi5w4SUgyQX5gwTnk4KFepXgNV11fK/pIRa9XGMN0nfW2+3
-+TVSYZFZ7X925kMzqzXKoPaJzzATJuyIs60L7idsMvHSxJmTgs84/yLJ5J8HIrdc
-wD5Xn6muNSJLhDoSA24yHG4Uhi6TGn7JN6WIJq9OTMcPF8ECLvHt2OF773F4sszM
-0UTP/ZqHok30p2yHz3LMXmeGxFwwTS2t9gam5qipWg0aJPV+4vzbHiKgxCk5GUUE
-pmiln2rzZo8V0z2Ml4D1J6XI/Uu7Rz+XY0bOG38pKDNQbcyDF+/Y3Kjk32WVKuUp
-mrJ/Sx/3oUIuLYxF6bXs
-=i5az
------END PGP SIGNATURE-----
-
---=-7TUpwc4ZqUKf4vds22Fe--
 
