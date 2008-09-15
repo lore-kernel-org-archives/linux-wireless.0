@@ -1,82 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:3797 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752576AbYIZSSr (ORCPT
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:7550 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755191AbYIOVUN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 14:18:47 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so409484nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 11:18:45 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH RFC] mac80211: notify mac80211 about rfkill events
-Date: Fri, 26 Sep 2008 20:18:40 +0200
-Cc: Tomas Winkler <tomasw@gmail.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, hmh@hmh.eng.br, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-References: <1222357719-26294-1-git-send-email-tomas.winkler@intel.com> <1ba2fa240809251505p342d8a6do51cf870624e0c8dd@mail.gmail.com> <1222426905.10563.100.camel@johannes.berg>
-In-Reply-To: <1222426905.10563.100.camel@johannes.berg>
+	Mon, 15 Sep 2008 17:20:13 -0400
+Date: Mon, 15 Sep 2008 14:17:15 -0700
+To: Pavel Roskin <proski@gnu.org>
+Cc: Dan Williams <dcbw@redhat.com>, kilroyd@googlemail.com,
+	linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
+Message-ID: <20080915211715.GA4633@bougret.hpl.hp.com> (sfid-20080915_232017_961535_B7B172A8)
+Reply-To: jt@hpl.hp.com
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com> <1217672073-7094-2-git-send-email-kilroyd@gmail.com> <1217825304.10989.20.camel@dv> <1217864060.3139.10.camel@localhost.localdomain> <20080805162238.GA6294@bougret.hpl.hp.com> <20080902230621.GA28885@bougret.hpl.hp.com> <1220878110.2369.3.camel@dv> <20080908183203.GA7090@bougret.hpl.hp.com> <1221279475.14059.29.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200809262018.40777.IvDoorn@gmail.com> (sfid-20080926_201902_204707_09792CC0)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1221279475.14059.29.camel@dv>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 September 2008, Johannes Berg wrote:
-> On Fri, 2008-09-26 at 01:05 +0300, Tomas Winkler wrote:
+On Sat, Sep 13, 2008 at 12:17:55AM -0400, Pavel Roskin wrote:
+> On Mon, 2008-09-08 at 11:32 -0700, Jean Tourrilhes wrote:
 > 
-> > > I am not sure if registring a notifier would be the best solution,
-> > > persionally I was thinking of implementing the rfkill structure into ieee80211_local
-> > > and make it listen to events directly.
+> > 	Try the attached patch.
 > 
-> I think I like this better.
+> It's working on x86_64!  Thank you!
+
+	Great, so it's not only me ;-)
+
+> The same problem exists in airo and atmel, but they don't use that
+> argument.  Several drivers, including mac80211 use union iwreq_data,
+> which is fragile.  Fortunately, most drivers don't use that argument or
+> use the "data" field, which is correct.
 > 
-> > That's definitely other option we wanted to suggest that mac80211
-> > would register itself to rfkill subsystem and will provide to driver
-> > appropriate callbacks.  The question is how  drivers vary in the rfkil
-> > implementation and whether it wouldn't be more complex, in that case
-> > the notification is quite clean solution.
+> The only incorrect use of union iwreq_data is in rndis_wlan.  It would
+> ignore ESSID on x86_64.
 > 
-> How complex does it have to be?
+> I think the use of union iwreq_data is dangerous and should be avoided.
 
-Not really, probably it only needs to be a wrapper around rfkill_force_state
-where we can use the RFKILL_ defines to indicate the BLOCKED status.
+	Note, as soon as you are using the data for real, as opposed
+to only the flags, you would have noticed that something was
+amiss. So, in essence it should be self correcting.
+	The way I found the cause is that I wanted to dump the ESSID
+in the driver for debugging purpose. You can't access the ESSID
+through a iw_param ;-)
+	Note that as you mentionned, the other faulty drivers are not
+using the arguments, and all drivers using the argument seems to have
+the right bits.
 
-> > > That means that the only change needed in ieee80211_ioctl_siwtxpower() is
-> > > only allowing the enabling of the radio when RFKILL is not set to BLOCKED.
-> > 
-> > That's just complicates everything and moving the policy  decisions to
-> > the driver after all even
-> > form txpower off you implement it as soft rfkill.
+> Regards,
+> Pavel Roskin
 
-Why does it complicate things? It means that mac80211 doesn't use
-rfkill_force_state() when the user triggers a radio state change using
-iw/iwconfig/ifconfig or whatever userspace tool.
+	Thanks, and have fun...
 
-mac80211 doesn't generate rfkill events because it isn't tied to any device
-keys/buttons/sliders. That is what the drivers do. And they should only listen
-to that key/button/slider.
-
-> > I would suggest just remove the support for txpower off in mac80211
-> > now when appropriate or sync it with soft block after all it coming
-> > from user space as a software event.
-> 
-> I think what we should do is in mac80211 simply synthesize the
-> "radio_enabled" state that the config callback has from both rfkill and
-> txpower off. Anything wrong with that?
-
-Come to think of it, there is a bug in the previous patch since it doesn't handle
-the case when the interface is brought up during a BLOCKED state.
-
-So all that has to be done is:
-	* rfkill BLOCK event received in mac80211
-	* set flag to indicate the BLOCKED state
-	* disable radio
-	* prevent radio being enabled through ifup
-	* prevent radio being enabled through iwconfig txpower on
-
-	* rfkill UNBLOCK event received from mac80211
-	* clear flag to indicate UNBLOCKED state
-	* restore radio to the by iwconfig/ifup configured state
-
-Ivo
+	Jean
