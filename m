@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38458 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266AbYITUvt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 16:51:49 -0400
-Subject: Re: [PATCH] b43: Fix Bluetooth coexistence SPROM coding error for
-	Motorola 7010 variant of BCM4306
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bbullins@triad.rr.com, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200809201744.55571.mb@bu3sch.de> (sfid-20080920_174550_869772_E28C99C2)
-References: <48d401da.Q+F4HRESoxeIVa3r%Larry.Finger@lwfinger.net>
-	 <200809201744.55571.mb@bu3sch.de> (sfid-20080920_174550_869772_E28C99C2)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/at1znZOQ7ksl++lSPqP"
-Date: Sat, 20 Sep 2008 22:51:35 +0200
-Message-Id: <1221943895.3023.1.camel@johannes.berg> (sfid-20080920_225155_420426_63F4995C)
+Received: from mx1.redhat.com ([66.187.233.31]:59836 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753352AbYIOO1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 10:27:14 -0400
+Subject: Re: Problem with Libertas USB8388 WLAN card firmware
+From: Dan Williams <dcbw@redhat.com>
+To: Anadi Mishra <reachanadi@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <e001a6370809150258t10873497jcf04e68005db566b@mail.gmail.com>
+References: <e001a6370809150258t10873497jcf04e68005db566b@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 15 Sep 2008 10:27:51 -0400
+Message-Id: <1221488871.10177.44.camel@localhost.localdomain> (sfid-20080915_162718_182514_C41120C7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-09-15 at 15:28 +0530, Anadi Mishra wrote:
+> Hi all,
+>         I am using Libertas USB8388 WLAN card with Ubuntu 8.04 but am
+> not able to get it working.
+> 
+>         The error(dmesg) says "unable to load firmware" even if the
+> usb8388.bin file is there in the /lib/firmware.
+> 
+>         dmesg also says "probe of 3-1:1.1 failed with error -12"
+> 
+> Any help would be gr8.
 
---=-/at1znZOQ7ksl++lSPqP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What exact kernel version are you using?
 
-On Sat, 2008-09-20 at 17:44 +0200, Michael Buesch wrote:
-> On Friday 19 September 2008 21:47:38 Larry Finger wrote:
-> > An additional BCM4306 has been found with the Bluetooth coexistence
-> > SPROM coding error.
+Also, please remove and re-insert insert the libertas.ko module like so:
 
-Does anyone actually make laptops that use these bluetooth coexistence
-pins? All CSR bluetooth chips do it automatically I'm told, maybe we
-should just kill them completely.
+/sbin/modprobe libertas libertas_debug=0x1a43a7
 
-johannes
+then plug the adapter in and post the output from 'dmesg' in a reply to
+this message.  We need a bit more information to find out what might be
+going wrong.
 
---=-/at1znZOQ7ksl++lSPqP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Also, where did you get the firmware from?  It might be the wrong
+firmware file format.  There are two formats, the first being the
+driver-loadable format, the second is meant for flashing directly to the
+EEPROM if the dongle has any.  The second format is not used by the
+driver because it does not have any verification method like blocks or
+embedded CRCs.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Dan
 
-iQIcBAABAgAGBQJI1WJUAAoJEKVg1VMiehFYkAEQAI4BZmff2A6tKJtP9e9dcfeW
-B+PWWiMiyIE6kr3KXy/u05tqPAU+nYedTAgFTnTBY5ySZ3jijc2qdMeYFjXuFoxA
-SpPviia9NNiJkVq1NiEF3MDe09cyG/VAHbmtJ2d67jD+Im4qYc71bZRrV/vIpMs7
-+GOfZpIHjZce5wC0dMQMwNqsMjYiDOfSY6sFUNnG52IQaaUjkMqEpsxuNfDRiJe3
-fQfLCx832dZFrdq34Wny2xkYZK69oQcBh0MUEk6Z8NNHaJn1mUiZqgDeFrB7KiTf
-I0a5mUYn0vp65m8+uNf3FLYkGfI2rDoCLWYQEn7I+NeDObffVdyuivLGGhi6+ePU
-eaMK5BOugtWXqWhrGSP3YmQeLkeLPFhd0RYKZPf1avUkzSgN/eapzhTL07J7qlFW
-womP1e8X0u05gE1FZjoERc0WZeNMLkjlN5Ric21TEDzKeurB/YCT8LbBYb+VPG6s
-6fE4eYNJH+EYl8PCJ6Z+tCRGDINnlQAYa7lnk4ThNKlCs4h6eOwx+zw3q8ZnHhjw
-Ua3EgjNihP8UVkjJdXnLMtJ7o5U6ZUL6AZLzTfSqWwbYc99cP4c2Wtsn6vT15vbv
-PpyoPWz7Gi22lO+y36LGGjXSwq3JCm9YSoHnlPNqXeqvS5y+YC3M4Kx0KjxjQDUI
-VcceWx+efziyyOl2TLhA
-=AQyb
------END PGP SIGNATURE-----
-
---=-/at1znZOQ7ksl++lSPqP--
 
