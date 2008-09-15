@@ -1,62 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51578 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754038AbYIKWjN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 18:39:13 -0400
-Subject: Re: [PATCH] mac80211 hwsim: make radio list dynamic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1221172622.5956.10.camel@johannes.berg> (sfid-20080912_003741_082920_D8B45771)
-References: <1221172622.5956.10.camel@johannes.berg>
-	 (sfid-20080912_003741_082920_D8B45771)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f8NElbJI16Y8FopjVWTX"
-Date: Fri, 12 Sep 2008 00:38:38 +0200
-Message-Id: <1221172718.5956.11.camel@johannes.berg> (sfid-20080912_003916_868171_3F62FCE6)
-Mime-Version: 1.0
+Received: from hostap.isc.org ([149.20.54.63]:59639 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756860AbYIOVIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 17:08:19 -0400
+Message-ID: <48CECF5D.7070605@w1.fi> (sfid-20080915_230827_953486_468A945A)
+Date: Tue, 16 Sep 2008 00:10:53 +0300
+From: Jouni Malinen <j@w1.fi>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: adm8211 driver usage
+References: <43e72e890809151359n45c5ecdateff5a4eed3f4067e@mail.gmail.com>
+In-Reply-To: <43e72e890809151359n45c5ecdateff5a4eed3f4067e@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis R. Rodriguez wrote:
+> Just curious, anyone using the adm8211 driver? My understanding was
+> there was not much hardware out -- if any at all -- for it. If no one
+> is using it maybe we can remove it. I don't know a single soul using
+> it except maybe Michael and maybe a year ago.
 
---=-f8NElbJI16Y8FopjVWTX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Umm.. Sure there is hardware out there and I would assume the driver is
+used, too. I have a card at home, but don't really use it that much.
+Anyway, I don't see any justification for removing the driver.
 
-
->  static inline void hwsim_check_magic(struct ieee80211_vif *vif)
->  {
->  	struct hwsim_vif_priv *vp =3D (void *)vif->drv_priv;
-> -	WARN_ON(vp->magic !=3D HWSIM_VIF_MAGIC);
-> +	if (WARN_ON(vp->magic !=3D HWSIM_VIF_MAGIC))
-> +		printk(KERN_DEBUG "iface type is %d!\n", vif->type);
-
-Oops, that hunk wasn't supposed to be there.
-
-johannes
-
---=-f8NElbJI16Y8FopjVWTX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIyZ3qAAoJEKVg1VMiehFYvyEP/035lyIeKjxEfNE963u+yi8p
-iYm+1e2qV8OqZH//ubYoXvh1nhZpHFb/UdJ+CcWPnAdTzJZn+svZOfN+S1FeXaP0
-E3taxelm3O8rJEtKYySSEd5KotKJotCyH18OIQBFTB6vfCwVIIqQpo9le4EDvwvc
-JMmMujUrM+M9MVrE1V3nKmX6SR0yLxxfjHQywIxcU9M4wFhKTFja8LOzwyG8tL+B
-mxGLSQxMkgfAdtEKbkYEXVezyMovb/za09vsaIjlMmG8e/rAaISdG3kZVjMeNTZq
-tTMk4/CK4azIVL70LRO0qujLGVg8BsvXnCaY2eWlS3QLSVw1XN9D2wmjJWE1DSSv
-v8Kcj9zyIK46LCztmeMgC/C1TIH5xZhIF3xsS2EjWvlhTFQerR/mUO/k6cTD0ees
-YIvzW5F25iNY1alBXVraEo5WvhpsH83dlew5bEsV9SxYhRDlA0da32DKj2V2etyF
-K4ZjGZMBg+MtYQMhrXB9QQ0MqPuTixCGsLuqcX+oEZ72iBdVNtx9nKalbyxvHuGr
-j5h0uxXXrU3H9K8xPC/rUrM2fKXo7qtLreDMlCzMY0f+S8HrWpovVOiNXtL4we1O
-zrzmKyvbxC+lDIkBsbRV4QeqkOayYRm938mBb/Yx6TDoA85UR5s0JpC10EoWLy/9
-FbkzzwT1PFqCi31CYsL6
-=9U0Z
------END PGP SIGNATURE-----
-
---=-f8NElbJI16Y8FopjVWTX--
-
+- Jouni
