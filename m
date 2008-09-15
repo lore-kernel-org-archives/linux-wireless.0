@@ -1,71 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53995 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbYIIGdb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 02:33:31 -0400
-Subject: Re: HT action frame code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Ron Rindjunsky <rindjon@googlemail.com>,
+Received: from mail.gmx.net ([213.165.64.20]:55036 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753215AbYIOTjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 15:39:17 -0400
+Subject: Re: [RFC][PATCH] TX status reporting with help of an ack queue
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48C5868B.8060103@w1.fi>
-References: <1220883730.31304.60.camel@johannes.berg>
-	 <48C5868B.8060103@w1.fi>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ze0wkO35GbWbSE6S/Zt1"
-Date: Tue, 09 Sep 2008 08:33:24 +0200
-Message-Id: <1220942004.31304.101.camel@johannes.berg> (sfid-20080909_083334_051395_13CC1F86)
+In-Reply-To: <1221506496.3700.81.camel@johannes.berg>
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <200809151911.32834.IvDoorn@gmail.com> <1221501417.4511.49.camel@localhost>
+	 (sfid-20080915_195731_733752_74D2117C)  <1221501786.3700.68.camel@johannes.berg>
+	 <1221505251.4511.77.camel@localhost>
+	 (sfid-20080915_210128_632488_FB448E33)  <1221506496.3700.81.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 15 Sep 2008 21:39:11 +0200
+Message-Id: <1221507551.4511.89.camel@localhost> (sfid-20080915_213921_815666_5E374E5A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-09-15 at 21:21 +0200, Johannes Berg wrote:
+> On Mon, 2008-09-15 at 21:00 +0200, Mattias Nissler wrote:
+> 
+> > Ok. If we take this path I think we do not need to add more flags to
+> > mac80211 and the drivers that enable special processing w.r.t. the
+> > device packet filters (as suggested by Ivo previously). Instead, the
+> > driver itself should take whatever action is necessary to tell the
+> > hardware to deliver ACK frames.
+> 
+> Yes, but we could also make the ack queue processing part of mac80211,
+> i.e. we stick the packet on the queue before ->tx() and add a few new
+> flags to the status callback which can then process the queue.
 
---=-ze0wkO35GbWbSE6S/Zt1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Just to get this straight: By queue you mean the to-be-introduced
+unknown status queue?
 
-On Mon, 2008-09-08 at 23:09 +0300, Jouni Malinen wrote:
-> Johannes Berg wrote:
-> > When we're an AP, shouldn't we also in some way honour the block-ack
-> > action frames? Or will that be done in hostapd, which then sets up
-> > block-ack via some unspecified way?
->=20
-> The current design assumes that hostapd takes care of all management=20
-> frames, so eyes, these would need to go to hostapd for processing and=20
-> then setup back to mac80211 through some new command..
+Of course you can do it that way, but then you'll have all the flags and
+data structures built into mac80211 unconditionally instead of letting
+the driver developer decide.
 
-Well we can always pick out those action frames in the kernel if we want
-to, that's not the problem, is it?
+> 
+> > Johannes, could you recap for me
+> > whether the driver should report these additional ACKs to mac80211 or
+> > keep quiet if they weren't requested?
+> 
+> This is largely theoretical right now as mac80211 is _always_ requesting
+> status reports via IEEE80211_TX_CTL_REQ_TX_STATUS. This is something I
+> can't talk much about, you helped designed the rate control algorithm
+> and I think you're in a much better position to evaluate how this should
+> work with respect to rate control.
+> 
+> Then again, I think I'm misunderstanding you, are you thinking whether
+> it should hand those frames to mac80211? It doesn't matter to mac80211,
+> to be honest.
 
-Should the design be changed? It seems that this is more related to the
-rate scale algorithm and the "can we support aggregation for this STA"
-question, both of which we currently have information about in the
-kernel and not hostapd.
+Ok, that's what I meant.
 
-johannes
+> 
+> > Good point :-) So I suggest we have one function that adds new packets
+> > to the ACK queue (which is represented by a struct an instance of which
+> > a driver can keep in its queue information) and another one that matches
+> > a received ACK with the queue, reports the status to mac80211 and purges
+> > the queue entries up to the match (reporting them as failed).
+> 
+> can we stop talking about "ACK queue"? It really is a "unknown status
+> queue" or something like that.
 
---=-ze0wkO35GbWbSE6S/Zt1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Ok, I don't really care how it's called as long as the one writing that
+stuff chooses an appropriate name in the code :-)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIxhiwAAoJEKVg1VMiehFYrnUP/i+Njh4mmucc8Jvo1qYESbt2
-/Rq7TTNFGC3W8s9xo3XAYkeJwvBmxk453k9w8xdB6Gklow+23HlilyUepqviBgzL
-SFGxFE0edp0D+TUQ4Jn0VrmN2rh0E+3+saCexfy7x90tnNpHYD4jge54N4buAcWr
-x5Ml/Diec4ONmG9wLZFXB2RIEzY7k9ldUHQhjvhd9oc2vN80bWfxI/7YUBIi+/hr
-WFULt9D7k3kHpkhSiXMOt+yJIw9rcntj4pKUN2z8PdLBmjYapxMo7gSm5iAHAdE6
-6HKyL+akSXhtPzmfQhjjbdYV3eaj9Wzy1vlLvq4BdOK3ygATWe71H5INdWvXwRzN
-E997SuIxWS8xawWidkKa+mQHIjtAlLsZrDGWTfMvDTP4XzIoa2AfK+6pocosdcO2
-IRXdMbpVqTWNvfGBJnBEBKPbGSbFI/Z64yCWmZMGq5N6664AEu2By8odiuSnYaLV
-TdLRN3VbgVvjwTkqj4EBXQ1u9ib4lL6enwyGr06cyj48bLo3KX5ZVHkff5iKkGdX
-5hCnw7fREBrwYTOfcn15hbJ8N9NacZ/h6vLZOFkN5kfDNEwPxZ39VtU7EPSm1gsy
-D0om//tQevpe8KtXcJGZQI+dhx59CRjDCdXfcjbLZYoiiwonTQZA+3NfgErsrEEO
-r9Edx57u29gx+QGh/YJG
-=yjnJ
------END PGP SIGNATURE-----
-
---=-ze0wkO35GbWbSE6S/Zt1--
+Mattias
 
