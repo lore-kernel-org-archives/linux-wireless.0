@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:63214 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751028AbYIPUIb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 16:08:31 -0400
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] Use the kernel source tree for includes,
-	not the kernel build tree
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 16 Sep 2008 16:08:29 -0400
-Message-ID: <20080916200828.13928.55864.stgit@dv.roinet.com> (sfid-20080916_220835_875694_2074F537)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from xc.sipsolutions.net ([83.246.72.84]:35133 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756970AbYIPSc5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 14:32:57 -0400
+Subject: [PATCH] mac80211: refuse invalid interface configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 16 Sep 2008 20:32:04 +0200
+Message-Id: <1221589924.8916.52.camel@johannes.berg> (sfid-20080916_203323_424249_F57B27E3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the build is done outside the source tree, nl80211.h won't be in the
-build tree.  We only need only definitions from the sources, not the
-kernel configuration.
+Refuse setting mesh_id on non-mesh or monitor flags on non-monitor
+interfaces.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- Makefile  |    2 +-
- defconfig |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c |   17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 74cb1e1..9e79381 100644
---- a/Makefile
-+++ b/Makefile
-@@ -6,7 +6,7 @@ INSTALL ?= install
- PREFIX ?= /usr
- CC ?= "gcc"
- CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
--CFLAGS += -I/lib/modules/`uname -r`/build/include
-+CFLAGS += -I/lib/modules/`uname -r`/source/include
- CFLAGS += -O2 -g
- LDFLAGS += -lnl
+--- everything.orig/net/mac80211/cfg.c	2008-09-16 20:24:53.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-09-16 20:28:14.000000000 +0200
+@@ -105,14 +105,21 @@ static int ieee80211_change_iface(struct
+ 	if (netif_running(sdata->dev))
+ 		return -EBUSY;
  
-diff --git a/defconfig b/defconfig
-index 346f699..0081911 100644
---- a/defconfig
-+++ b/defconfig
-@@ -11,7 +11,7 @@
+-	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
+-		ieee80211_sdata_set_mesh_id(sdata,
+-					    params->mesh_id_len,
+-					    params->mesh_id);
++	if (params->mesh_id_len) {
++		if (ieee80211_vif_is_mesh(&sdata->vif))
++			ieee80211_sdata_set_mesh_id(sdata,
++						    params->mesh_id_len,
++						    params->mesh_id);
++		else
++			return -EINVAL;
++	}
  
- # Kernel location for GIT NL80211 kernel code (assumed to be running,
- # by default); only required if your installed nl80211.h is out of date.
--CONFIG_KERNEL_LOC = /lib/modules/`uname -r`/build/
-+CONFIG_KERNEL_LOC = /lib/modules/`uname -r`/source/
- CFLAGS += -I$(CONFIG_KERNEL_LOC)/include
+-	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
++	if (!flags)
+ 		return 0;
  
- # LibNL location
++	if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
++		return -EINVAL;
++
+ 	sdata->u.mntr_flags = *flags;
+ 	return 0;
+ }
+
+
