@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:50693 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752986AbYIZHOV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 03:14:21 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 3/3] iwlwifi: use correct DMA_MASK
-Date: Fri, 26 Sep 2008 15:09:34 +0800
-Message-Id: <1222412974-18221-3-git-send-email-yi.zhu@intel.com> (sfid-20080926_091424_681249_F94BDF3E)
-In-Reply-To: <1222412974-18221-2-git-send-email-yi.zhu@intel.com>
-References: <1222412974-18221-1-git-send-email-yi.zhu@intel.com>
- <1222412974-18221-2-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:52163 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753717AbYIPSWx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 14:22:53 -0400
+Subject: cfg80211: allow set_interface without type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 16 Sep 2008 20:22:09 +0200
+Message-Id: <1221589329.8916.47.camel@johannes.berg> (sfid-20080916_202256_196441_97193038)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+Which then causes no type change.
 
-Use correct DMA_MASK: 4964 and 5000 support 36 bit addresses for
-pci express memory access.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ net/wireless/nl80211.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index a589f7e..204abab 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4243,13 +4243,13 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+--- everything.orig/net/wireless/nl80211.c	2008-09-16 20:15:08.000000000 +0200
++++ everything/net/wireless/nl80211.c	2008-09-16 20:16:01.000000000 +0200
+@@ -422,19 +422,20 @@ static int nl80211_set_interface(struct 
  
- 	pci_set_master(pdev);
+ 	memset(&params, 0, sizeof(params));
  
--	err = pci_set_dma_mask(pdev, DMA_64BIT_MASK);
-+	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(36));
- 	if (!err)
--		err = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
-+		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(36));
- 	if (err) {
--		err = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
-+		err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
- 		if (!err)
--			err = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
-+			err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
- 		/* both attempts failed: */
- 		if (err) {
- 			printk(KERN_WARNING "%s: No suitable DMA available.\n",
--- 
-1.5.3.6
+-	if (info->attrs[NL80211_ATTR_IFTYPE]) {
+-		type = nla_get_u32(info->attrs[NL80211_ATTR_IFTYPE]);
+-		if (type > NL80211_IFTYPE_MAX)
+-			return -EINVAL;
+-	} else
+-		return -EINVAL;
+-
+ 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
+ 	if (err)
+ 		return err;
+ 	ifindex = dev->ifindex;
++	type = dev->ieee80211_ptr->iftype;
+ 	dev_put(dev);
+ 
++	err = -EINVAL;
++	if (info->attrs[NL80211_ATTR_IFTYPE]) {
++		type = nla_get_u32(info->attrs[NL80211_ATTR_IFTYPE]);
++		if (type > NL80211_IFTYPE_MAX)
++			goto unlock;
++	}
++
+ 	if (!drv->ops->change_virtual_intf ||
+ 	    !(drv->wiphy.interface_modes & (1 << type))) {
+ 		err = -EOPNOTSUPP;
+
 
