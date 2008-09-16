@@ -1,84 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:5041 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbYIWHzi (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:46901 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752486AbYIPIZw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 03:55:38 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so657526nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 00:55:36 -0700 (PDT)
-Message-ID: <f488382f0809230055m498d411fn59a5fbb1c6b2e970@mail.gmail.com> (sfid-20080923_095543_223369_6D4AC3B7)
-Date: Tue, 23 Sep 2008 00:55:35 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Senthilkumar Balasubramanian"
-	<Senthilkumar.Balasubramanian@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Ingo Molnar" <mingo@elte.hu>
-In-Reply-To: <f488382f0809230022v582df76esa8df8c747ab600df@mail.gmail.com>
+	Tue, 16 Sep 2008 04:25:52 -0400
+To: "Dan Williams" <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, Helmut Schaa <hschaa@suse.de>
+Subject: Re: [RFC] mac80211: notify the user space about low signal quality
+References: <200809151416.07552.hschaa@suse.de>
+	<200809151435.28933.hschaa@suse.de>
+	<1221487652.10177.23.camel@localhost.localdomain>
+	<200809151710.43827.hs4233@mail.mn-solutions.de>
+	<1221491952.10177.65.camel@localhost.localdomain>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 16 Sep 2008 11:25:10 +0300
+In-Reply-To: <1221491952.10177.65.camel@localhost.localdomain> (ext Dan Williams's message of "Mon\, 15 Sep 2008 11\:19\:12 -0400")
+Message-ID: <87fxo0zee1.fsf@nokia.com> (sfid-20080916_102603_629755_1AEFEE3E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
-References: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
-	 <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com>
-	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
-	 <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
-	 <20080922065453.GD19580@tesla>
-	 <f488382f0809220026u9afa355g1ff2cc7a3fe88333@mail.gmail.com>
-	 <20080922080632.GA20446@tesla>
-	 <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
-	 <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com>
-	 <f488382f0809230022v582df76esa8df8c747ab600df@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MjAwOC85LzIzIFN0ZXZlbiBOb29uYW4gPHN0ZXZlbkB1cGxpbmtsYWJzLm5ldD46Cj4gT24gTW9u
-LCBTZXAgMjIsIDIwMDggYXQgOTowMSBBTSwgTHVpcyBSLiBSb2RyaWd1ZXoKPiA8bHJvZHJpZ3Vl
-ekBhdGhlcm9zLmNvbT4gd3JvdGU6Cj4+IE9uIE1vbiwgU2VwIDIyLCAyMDA4IGF0IDg6MTEgQU0s
-IFN0ZXZlbiBOb29uYW4gPHN0ZXZlbkB1cGxpbmtsYWJzLm5ldD4gd3JvdGU6Cj4+PiBPbiBNb24s
-IFNlcCAyMiwgMjAwOCBhdCAxOjA2IEFNLCBMdWlzIFIuIFJvZHJpZ3Vlego+Pj4gPGxyb2RyaWd1
-ZXpAYXRoZXJvcy5jb20+IHdyb3RlOgo+Pj4+IFBsZWFzZSB0ZXN0IHRoZSBmb2xsb3dpbmcgcGF0
-Y2guCj4+Pj4KPj4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoOWsvY29y
-ZS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoOWsvY29yZS5jCj4+Pj4gaW5kZXggYzI2MmVm
-Mi4uOWE1MTczOSAxMDA2NDQKPj4+PiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg5ay9j
-b3JlLmMKPj4+PiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg5ay9jb3JlLmMKPj4+PiBA
-QCAtNjgxLDEwICs2ODEsMTIgQEAgaW50IGF0aF9vcGVuKHN0cnVjdCBhdGhfc29mdGMgKnNjLCBz
-dHJ1Y3QgYXRoOWtfY2hhbm5lbCAqaW5pdGlhbF9jaGFuKQo+Pj4+ICAgICAgICAgKiBFbmFibGUg
-TUlCIGludGVycnVwdHMgd2hlbiB0aGVyZSBhcmUgaGFyZHdhcmUgcGh5IGNvdW50ZXJzLgo+Pj4+
-ICAgICAgICAgKiBOb3RlIHdlIG9ubHkgZG8gdGhpcyAoYXQgdGhlIG1vbWVudCkgZm9yIHN0YXRp
-b24gbW9kZS4KPj4+PiAgICAgICAgICovCj4+Pj4gKyNpZiAwCj4+Pj4gICAgICAgIGlmIChhdGg5
-a19od19waHljb3VudGVycyhhaCkgJiYKPj4+PiAgICAgICAgICAgICgoc2MtPnNjX2FoLT5haF9v
-cG1vZGUgPT0gQVRIOUtfTV9TVEEpIHx8Cj4+Pj4gICAgICAgICAgICAgKHNjLT5zY19haC0+YWhf
-b3Btb2RlID09IEFUSDlLX01fSUJTUykpKQo+Pj4+ICAgICAgICAgICAgICAgIHNjLT5zY19pbWFz
-ayB8PSBBVEg5S19JTlRfTUlCOwo+Pj4+ICsjZW5kaWYKPj4+PiAgICAgICAgLyoKPj4+PiAgICAg
-ICAgICogU29tZSBoYXJkd2FyZSBwcm9jZXNzZXMgdGhlIFRJTSBJRSBhbmQgZmlyZXMgYW4KPj4+
-PiAgICAgICAgICogaW50ZXJydXB0IHdoZW4gdGhlIFRJTSBiaXQgaXMgc2V0LiAgRm9yIGhhcmR3
-YXJlCj4+Pj4KPj4+Cj4+PiBJdCBkaWRuJ3QgYXBwbHkgdG8gLXJjNywgYnV0IEkgbWFuYWdlZCB0
-byBhcHBseSBpdCBtYW51YWxseQo+Pj4gKGFwcGFyZW50bHkgeW91IG1hZGUgdGhpcyBmb3Igd2ly
-ZWxlc3MtdGVzdGluZz8pIGFuZCBhZGRlZCB0aGUgI2lmIDAuCj4+PiBBZnRlciA3IGhvdXJzIHVw
-dGltZSB3aXRoIHRoZSBkcml2ZXIsIG5vIGFwcGFyZW50IGludGVycnVwdCBzdG9ybS4KPj4+Cj4+
-PiBJJ2xsIGRvIG1vcmUgdGhvcm91Z2ggdGVzdGluZyBsYXRlciwgYnV0IEkgaGF2ZSBhIDMgaG91
-ciBkcml2ZSB0b2RheSwKPj4+IGFuZCBzb21lIHBhY2tpbmcgdG8gZG8sIHNvIGl0J2xsIG5lZWQg
-dG8gd2FpdCBhIGJpdC4KPj4KPj4gWWVhaCBJIGRpZCBpdCBmb3Igd2lyZWxlc3MtdGVzdGluZy4g
-R29vZCB0byBoZWFyIHRoaXMgc28gZmFyIGhhcwo+PiBzb2x2ZWQgdGhlIGlzc3VlLiBJJ2xsIHBv
-cnQgaXQgdG8gMjcgYW5kIHBvc3QgaXQgb25jZSBJIGdldCB5b3VyCj4+IGJsZXNzaW5ncyB0aGF0
-IHRoaXMgZml4ZWQgaXQgYnkgYSBUZXN0ZWQtYnkuCj4+Cj4KPiBPa2F5LiBJJ20gaW4gU2VhdHRs
-ZSBub3cuCj4KPiBZZXMsIGl0IHNvbHZlZCB0aGUgaXNzdWUsIGJ1dCBzdXJlbHkgYW4gI2lmIDAg
-aXNuJ3QgYSBwcm9wZXIgc29sdXRpb24uCj4gV2hhdCdzIHRoZSBhY3R1YWwgYnVnIGhlcmU/IEkn
-bSBhZnJhaWQgdGhlIG1lYW5pbmcgb2Ygd2hhdCdzIGdvaW5nIG9uCj4gaGVyZSBpc24ndCBleGFj
-dGx5IGludHVpdGl2ZS4KPgo+IEFsc28sIEknbSBkb2luZyBhbiA4IGhvdXIgcnVuIHdpdGggdGhp
-cyBwYXRjaCB0b25pZ2h0LiBNYXliZSBtb3JlLAo+IGRlcGVuZHMgb24gd2hlbiBJIHdha2UgdXAu
-IDspCj4KPiBJIHRoaW5rIGlmIHRoaXMgcmVzb2x2ZXMgdGhlIGlzc3VlIG9uIHR3byBzZXBhcmF0
-ZSCXOCBob3VyIHJ1bnMsIGl0Cj4gc2hvdWxkIGJlIGNvbnNpZGVyZWQgdGhlIHNvbHV0aW9uIHRv
-IHRoZSBpc3N1ZSwgdW5sZXNzIGl0IHJlc3VyZmFjZXMuCj4KCkkgYW0gb25seSAyNSBtaW51dGVz
-IGludG8gdGhlIHJ1biwgYnV0IEkgZmVlbCB0aGlzIGlzIHdvcnRoIHJlcG9ydGluZwpiZWZvcmUg
-SSBmb3JnZXQuIE5vIElSUSBzdG9ybSB0aHVzIGZhciwgYnV0IHRoZSBjb25uZWN0aW9uIGtlZXBz
-CmRyb3BwaW5nLiBPciByYXRoZXIsIGl0IGRvZXNuJ3QgZGlzYXNzb2NpYXRlLCBidXQgd2hpbGUg
-SSB3YXMKdHJhbnNmZXJyaW5nIGEgbGFyZ2UgZmlsZSwgaXQgaGFkIHBvaW50cyBvZiB0aW1lIHdo
-ZXJlIGl0IHN1ZGRlbmx5Cmxvc3QgYW5kIHJlYWNxdWlyZWQgdGhlIGNvbm5lY3Rpb24gKHNpZ25h
-bCBzdHJlbmd0aCBmbHVjdHVhdGVzIHdpbGRseQpiZXR3ZWVuIDcwLTkwJSBhbmQgdGhlbiAwJSBm
-b3IgYSBzZWNvbmQsIGFuZCB0aGVuIGJhY2sgdG8KZmx1Y3R1YXRpbmcpLiBQZXJoYXBzIHRoaXMg
-aXMgcmVsYXRlZCB0byB0aGUgbGFjayBvZiBhZ2dyZWdhdGlvbj8KCi0gU3RldmVuCg==
+Dan Williams <dcbw@redhat.com> writes:
+
+> On Mon, 2008-09-15 at 17:10 +0200, Holger Schurig wrote:
+>> > So why does this need a new event?  Can't wpa_supplicant
+>> > monitor the signal quality (or level/noise if the driver
+>> > doesn't provide "quality") and do what it needs to do without
+>> > any changes to the kernel at all?
+>> 
+>> It could, but to do this, wpa_supplicant (or whatever) would have 
+>> to periodically get awake, send the query command to mac80211 
+>> and get the result.
+>> 
+>> With an event, it just sits sleeping until some interesting event 
+>> arrives. Nicer programming idiom, AFAIK.
+
+I agree, this is the kind of design we should strive for. 
+
+> Except that everything that listens to WEXT events gets woken up every
+> time an event comes in anyway.  So any card doing background scanning
+> will wake up the supplicant too
+
+No, in good condition there won't be scanning going on and hence
+nothing will wake up supplicant. And with good hardware design (with
+beacon filtering) not even the CPU is woken up. But you are proposing
+means that the suplicant (and hence the CPU) would be waken all the
+time, despite the signal condition. Not good.
+
+> I honestly think that every few seconds is OK here.
+
+No, it really isn't ok. There are CPUs, like TI's OMAP 3430, where CPU
+wake up takes a relatively long time and is expensive from power
+consumption point of view. Useless periodic timers are a bad idea.
+
+> My main problem is that adding a beacon threshold to mac80211 isn't a
+> great idea because it's not a standard value and it's not something
+> really applicable to mac80211; it's policy which is different for
+> different programs, and the way you've implemented it here it's global
+> for the interface.
+
+Still I don't see a problem here, all the mac80211 drivers should
+already now report similar signal strenght to the mac80211 in
+comparable level. And I doubt that there's that much need for the
+applications to adjust the roaming thershold itself. I would assume it
+would be more like enable and disable, if not even that. 
+
+Of course it would be nice to be able to configure the threshold from
+user space, but I find that as an extra feature. We should try get
+good default values by testing.
+
+-- 
+Kalle Valo
