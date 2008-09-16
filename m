@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:64669 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754659AbYIFRul (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37797 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752373AbYIPLHS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 13:50:41 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so398322eyi.37
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2008 10:50:39 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: make conf_tx non-atomic
-Date: Sat, 6 Sep 2008 19:50:36 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1220717588.5376.0.camel@johannes.berg>
-In-Reply-To: <1220717588.5376.0.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200809061950.36213.IvDoorn@gmail.com> (sfid-20080906_195057_309478_8D25FC16)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 16 Sep 2008 07:07:18 -0400
+Subject: Re: [RFC] Implement basic background scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <hschaa@suse.de>
+Cc: Kalle Valo <kalle.valo@nokia.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <200809161120.09728.hschaa@suse.de>
+References: <200809151416.07552.hschaa@suse.de> <877i9czdjd.fsf@nokia.com>
+	 <b2d017be9e6908538faef3d96845500c.squirrel@secure.sipsolutions.net>
+	 <200809161120.09728.hschaa@suse.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uhQOpwr2nuLVwlEwts+D"
+Date: Tue, 16 Sep 2008 13:06:36 +0200
+Message-Id: <1221563196.8916.21.camel@johannes.berg> (sfid-20080916_130723_782603_0E78F827)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 06 September 2008, Johannes Berg wrote:
-> The conf_tx callback currently needs to be atomic, this requirement
-> is just because it can be called from scanning. This rearranges it
-> slightly to only update while not scanning (which is fine, we'll be
-> getting beacons when associated) and thus removes the atomic
-> requirement.
 
-Oops. Ehm how many oopses were reported since I submitted patch:
-	47909b24a7e6c67ad635f36f5312839e04c7617c
-	rt2x00: Initialize txop during conf_tx() callback
+--=-uhQOpwr2nuLVwlEwts+D
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Because apparently that patch broke rt73usb (I completely overlooked
-the conf_tx() atomic requirements). :S
+On Tue, 2008-09-16 at 11:20 +0200, Helmut Schaa wrote:
 
-Fortunately this patch would fix it again. :)
+> Ok, would you accept a hardware flag that indicates if a card is able to
+> do background scanning? And if the flag is not set we could just use a=20
+> software background scan as fallback?
 
->  	/* Do not send changes to driver if we are scanning. This removes
-> -	 * requirement that driver's bss_info_changed function needs to be
-> -	 * atomic. */
-> +	 * requirement that a driver's bss_info_changed/conf_tx functions
-> +	 * need to be atomic.
-> +	 * This is really ugly code, we should rewrite scanning and make
-> +	 * all this more understandable for humans.
-> +	 */
+No, I'd think that it the scan offload is incapable of doing background
+scanning then it's useless and shouldn't be used.
 
-So bss_info_changed() is now non-atomic as well? Because that would be
-very useful for rt2x00. :)
+johannes
 
-Ivo
+--=-uhQOpwr2nuLVwlEwts+D
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIz5M5AAoJEKVg1VMiehFYv28QAKHHowPXmMkogoVj0Q9kTtYb
+VYl0+89k+Qv65Qbvv0cOx3OK7dYPwsbGtj/hCf7yUER3cQPs6rruLFZTeMbXjpeG
+vPtZ/5E8RUFy59C/M+t37KTkZFB9OUPdns01Woo/cD+QVu9HOV9K+7KI+zacxvtb
+Vh5qEBSUks5Hcx7bacL7Ntpau2ydw4nETSyaAA6HSEm3i8Lchm8Im6vFURe7k0oQ
++7sPrGdkMuL3dIYMJsyFt+H/En/COe+FdQHEH9s+ldV8cP90YoG3rMwjBN1whZRj
+fgPxiKjt9W51bwyqvVOjEi8KKTtQPkArTXjEdRFUmZkOFzgXqRqu5dSiA1XLLyso
+G3Yid6R13SXdJBaOlBIhZrmp/BADmdVZX31tCdxVHknnfdAg5OAwdCH05Hlj29GU
+KPwqeOuo3aMsYAmxVC3fsN5rY4Rqiml2KLpgDV3nV6TOhVEc+STGPOfv9I6l1UKQ
+8hyZKdOZwFlh8aDk76U870VsZIBPw14QUZkk02RA1FKzHi/3j7OC9M460IZgN95q
+ZvAZYGyPWexsQpoTFyz9xdhB6ZaL4oyEtuHbQ8QzeNXCJdtZ+ufHowrnrFj7v07p
+oQ6/ifk1eAU2flEixHo+blTy/NJNPFvRsOVhOP5SX9zZvEl+k10b4bQDThw/8aNQ
+GDNbyz0P0DZxgKEaF8n8
+=Yi9u
+-----END PGP SIGNATURE-----
+
+--=-uhQOpwr2nuLVwlEwts+D--
+
