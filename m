@@ -1,41 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:8660 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751925AbYIHMsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 08:48:33 -0400
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-From: Pavel Roskin <proski@gnu.org>
-To: jt@hpl.hp.com
-Cc: Dan Williams <dcbw@redhat.com>, kilroyd@googlemail.com,
-	linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-In-Reply-To: <20080902230621.GA28885@bougret.hpl.hp.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
-	 <1217825304.10989.20.camel@dv>
-	 <1217864060.3139.10.camel@localhost.localdomain>
-	 <20080805162238.GA6294@bougret.hpl.hp.com>
-	 <20080902230621.GA28885@bougret.hpl.hp.com>
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 08:48:30 -0400
-Message-Id: <1220878110.2369.3.camel@dv> (sfid-20080908_144838_599219_67C1E88C)
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.105.134]:44844 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222AbYIPHzM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 03:55:12 -0400
+To: "Dan Williams" <dcbw@redhat.com>
+Cc: Helmut Schaa <hschaa@suse.de>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: notify the user space about low signal quality
+References: <200809151416.07552.hschaa@suse.de>
+	<200809151435.28933.hschaa@suse.de>
+	<1221487652.10177.23.camel@localhost.localdomain>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 16 Sep 2008 10:53:51 +0300
+In-Reply-To: <1221487652.10177.23.camel@localhost.localdomain> (ext Dan Williams's message of "Mon\, 15 Sep 2008 10\:07\:31 -0400")
+Message-ID: <874p4g1q7k.fsf@nokia.com> (sfid-20080916_095524_106465_5D6E3DBB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-09-02 at 16:06 -0700, Jean Tourrilhes wrote:
+Dan Williams <dcbw@redhat.com> writes:
 
-> 	By the way, the breakage of iwlist scan in Wireless Tools 30
-> on 64 bits should be fixed in 30.pre7.
+> On Mon, 2008-09-15 at 14:35 +0200, Helmut Schaa wrote:
+>> This patch adds a new wext event that notifies the user space about a low
+>> signal quality. The currently used indicator is as follows: If three
+>> successive beacons are received with a signal quality lower then 40%
+>> user space gets informed.
+>> 
+>> Any ideas about which indicators should be used? Comments?
+>
+> So why does this need a new event?  Can't wpa_supplicant monitor the
+> signal quality (or level/noise if the driver doesn't provide "quality")
+> and do what it needs to do without any changes to the kernel at all?
 
-No, it's still not fixed on x86_64.  scanflags in print_scanning_info()
-in iwlist.c is 2, but srq->flags is 0 in orinoco_ioctl_setscan() in
-orinoco.c.
+Because that's polling. 10 years ago polling might be acceptable, but
+not anymore. We need to improve our power consumption and to do that
+we have to avoid waking up CPU (and rest of the system) as much as
+possible.
 
-On i386,  srq->flags is 2 as expected and the scan results are correctly
-influenced by the ESSID.
+> That's what any userspace process already does.  If you're concerned
+> about polling or something, we could fix that by sending periodic
+> quality events
+
+Periodic events are as worse as polling, still the CPU is waken up
+unnecessarily.
+
+> I'm concerned about adding arbitrary "roaming thresholds" to the
+> stack, since that can certainly mean different things to different
+> programs. It's not necessarily a system-wide value, and adding it as
+> another tweakable seems unnecessary.
+
+I don't see a problem here. We have to have a threshold somewhere and,
+in my opinion, mac80211 is the best place to have it. That way it's
+easier in the future when we want to improve the roaming logic because
+mac80211 has the best information available to make the decision of
+bad coverage to the AP.
+
+> We've already got IWEVQUAL, why don't we use it?
+
+Maybe, if we can provide all the necessary information to user space.
+Remember that this is not all about signal level, I'm sure we will
+want to use other parameters as well.
+
+But what's so bad of adding a new event to WE? This is clearly a new
+feature in WE and I don't see why we have to start overloading old
+events.
 
 -- 
-Regards,
-Pavel Roskin
+Kalle Valo
