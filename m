@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:9854 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753680AbYIVBNZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 21:13:25 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1352746rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Sep 2008 18:13:24 -0700 (PDT)
-Message-ID: <1197ff4c0809211813o26648b28vb881c42dbc9fcb69@mail.gmail.com> (sfid-20080922_031341_625542_0681ACA7)
-Date: Mon, 22 Sep 2008 09:13:24 +0800
-From: YanBo <dreamfly281@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH v3] mac80211: mesh portal functionality support
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Javier Cardona" <javier@cozybit.com>,
-	"Luis Carlos Cobo" <luisca@cozybit.com>
-In-Reply-To: <1222032877.3023.61.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1222003802.3023.26.camel@johannes.berg>
-	 <1222032877.3023.61.camel@johannes.berg>
+Received: from c60.cesmail.net ([216.154.195.49]:47463 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751169AbYIPUe6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 16:34:58 -0400
+Subject: Re: [PATCH] Use the kernel source tree for includes, not the
+	kernel build tree
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1221596322.9262.7.camel@johannes.berg>
+References: <20080916200828.13928.55864.stgit@dv.roinet.com>
+	 <1221596322.9262.7.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 16 Sep 2008 16:34:56 -0400
+Message-Id: <1221597296.17084.4.camel@dv> (sfid-20080916_223501_421246_4F6C07E9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2008 at 5:34 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2008-09-21 at 15:30 +0200, Johannes Berg wrote:
->>
->> +                       u8 broadcast[ETH_ALEN] = {0xFF, 0xFF, 0xFF,
->> +                                                 0xFF, 0xFF, 0xFF};
->
-> One more thing, heh, this can be static const.
->
-> johannes
->
+On Tue, 2008-09-16 at 22:18 +0200, Johannes Berg wrote:
 
-Will be fixed later :)
+> > diff --git a/Makefile b/Makefile
+> > index 74cb1e1..9e79381 100644
+> > --- a/Makefile
+> > +++ b/Makefile
+> > @@ -6,7 +6,7 @@ INSTALL ?= install
+> >  PREFIX ?= /usr
+> >  CC ?= "gcc"
+> >  CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
+> > -CFLAGS += -I/lib/modules/`uname -r`/build/include
+> > +CFLAGS += -I/lib/modules/`uname -r`/source/include
+> 
+> I'll remove that line entirely though.
+
+In Makefile?  Please make sure that .config remains optional.
+
+-- 
+Regards,
+Pavel Roskin
