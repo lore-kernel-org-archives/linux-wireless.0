@@ -1,74 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59056 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:55373 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323AbYI2Kp2 (ORCPT
+	with ESMTP id S1751971AbYIPV5A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 06:45:28 -0400
-Subject: Re: NL80211_CMD_GET_WIPHY reply doesn't fit into nl message buffer
+	Tue, 16 Sep 2008 17:57:00 -0400
+Subject: Re: iw packaging
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-In-Reply-To: <1222684501.7064.20.camel@johannes.berg> (sfid-20080929_123524_129815_BF576526)
-References: <48E0A65A.2060102@gmail.com>
-	 <1222682480.7064.16.camel@johannes.berg> <20080929102021.GE10429@jm.kir.nu>
-	 <1222683923.7064.18.camel@johannes.berg>
-	 (sfid-20080929_122532_241162_27D0B6E7)  <1222684501.7064.20.camel@johannes.berg>
-	 (sfid-20080929_123524_129815_BF576526)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MyvjBcS3lq8BicZXG50A"
-Date: Mon, 29 Sep 2008 12:45:24 +0200
-Message-Id: <1222685124.7064.22.camel@johannes.berg> (sfid-20080929_124531_755378_0069A6D1)
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1221601739.17084.22.camel@dv>
+References: <1221596962.9262.12.camel@johannes.berg>
+	 <1221598208.17084.11.camel@dv>  <1221599460.9262.16.camel@johannes.berg>
+	 (sfid-20080916_231152_167035_625A9793)  <1221599757.9262.19.camel@johannes.berg>
+	 <1221600232.17084.16.camel@dv>  <1221601136.9262.23.camel@johannes.berg>
+	 <1221601739.17084.22.camel@dv>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-E00AClj9Cfe5K6qghBVp"
+Date: Tue, 16 Sep 2008 23:56:04 +0200
+Message-Id: <1221602164.9262.28.camel@johannes.berg> (sfid-20080916_235712_566446_6F909BE5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-MyvjBcS3lq8BicZXG50A
+--=-E00AClj9Cfe5K6qghBVp
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-09-29 at 12:35 +0200, Johannes Berg wrote:
-> On Mon, 2008-09-29 at 12:25 +0200, Johannes Berg wrote:
->=20
-> > I recently rewrote the handling in iw completely to make it easier to
-> > follow, will post an equivalent patch for hostapd in a minute.
->=20
-> How does this look?
->=20
-> http://johannes.sipsolutions.net/patches/hostap/all/2008-09-29-10%3a34/00=
-2-nl80211-resync.patch
->=20
-> Haven't tested it yet though.
+On Tue, 2008-09-16 at 17:48 -0400, Pavel Roskin wrote:
 
-Couldn't possibly work, better version here:
+> $ nm iw | grep __cmd |sort
+> 0000000000403d20 A __start___cmd
+> 0000000000403d20 r __cmd_handle_infoNL80211_CMD_GET_WIPHYCIB_NONE
+> 0000000000403d60 r __cmd_handle_infoNL80211_CMD_GET_WIPHYCIB_PHY
+> 0000000000403da0 r __cmd_handle_nameNL80211_CMD_SET_WIPHYCIB_PHY
+> ...
+>=20
+> The next command is at 0x403d60, but the code expects it at 0x403d50.
 
-http://johannes.sipsolutions.net/patches/hostap/all/2008-09-29-10%3a44/002-=
-nl80211-resync.patch
+I suspected as much, but right now I don't know how to fix that. I'd
+have thought the rules here would be just like in an array but clearly I
+was wrong.
+
+This would probably "fix" it, but it's ugly:
+
+--- a/iw.h
++++ b/iw.h
+@@ -35,6 +35,7 @@ struct cmd {
+        int (*handler)(struct nl_cb *cb,
+                       struct nl_msg *msg,
+                       int argc, char **argv);
++       void *dummy[0] __attribute__((__aligned__(0x40)));
+ };
+=20
+ #define __COMMAND(sect, name, args, nlcmd, flags, idby, handler)       \
+
 
 johannes
 
---=-MyvjBcS3lq8BicZXG50A
+--=-E00AClj9Cfe5K6qghBVp
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI4LHAAAoJEKVg1VMiehFYa+0P/ihrDBnJbama7eRGbAAWkc5x
-zZOigaAQKtbaVk/zPRXAsFTr0YMjoM40ibMikhGw/bZrJKFQwBEmhzMlVHaUMHwc
-W4Lm5E/XBcoH9dE1UK31dB06tyT89gz9Zy9de9GuB0kAzbkPYq11eTXTIpx9L0kh
-UBEy18GkOEAOcBma0wCThuumM20eVgzKZxOQz1qIZiZ9HWIgWkyYX3oz62bQlvvk
-cY0ZRTrgmeTXCsOw/+hrgOfT9Qkkj+UuIpbIwqAOGwlhJMZg3XjhHRjmemZhPm29
-hvAUa9x2h6w1tsLVoDVxjmN4VaeHs1SnyztIUue+bBNIxXO+D66n71DxsGQfEJ7q
-jbGiZ2wQoXWaCY3hdwhNsLPYynh6TWI9XDslNETH3Z2l5L+IF3t6W4wuDWPJKw6V
-OKCyi7f34fSt3vjDuigxeGJwNg2o9iLCyuwVvpP/7S0rTu12XYMcH+HNIVEBUIHg
-abk45eztBXD/uEti8rSe6+VlflWDV/d92WNKXyoAcyeoLOaLt+bRmK1rfVba2mTZ
-wKGfq0aaW7CDNl4RbjM/Yc4hBV1BEI9PM/UHEYSJ/fn2b8ygUycHBtAhZr9MMFMz
-s6W5SOjCaauV7SZMFLzGyNXx40yOMLAIRQ2eZjwTo9W8+MRO6lyYA9+M+Z1Z4jhV
-+Ktk8+q25zy3O5UBEWOO
-=9oPM
+iQIcBAABAgAGBQJI0CtwAAoJEKVg1VMiehFY7rEP/RZyLv+t/BxN3Beg1lHUG95J
+mtetZWsawQReusmGBIX+DDAsMc2O/dU4XGd01GFj7V+L5Zsm1PEju0MZQHcrEE0N
+irKwCIHW+px6gdNvqqRmkrPZ9NK21K7R400QxVY98CeA3UgB9Iwwr7Km0B4IP8a/
+7fomdSSW5zRlGaVmK1TMTGXeKW7AWsjvDlDUCyt46xQkTZhMIFLplbPw40qJKUZo
+lfg/EQ9mfE3oiBQi4HjQftT9oKbXywHdKwxmmai+VF58Jh+6iBaWURn6PHkUnw6m
+slj4MxZY9OBhd+Fkipp/u/pyA3P2XfBXMmt3wATYF52Nicd02HsFftahIAf/weoO
+U0T5prgjGtmrCU0zaZAqXvHgVVJLXkplj0SLoiTj+w2f0tVXHFEZX9T/US5Bjw+R
+/GEEdmUmO6fmu5UXAs/JwzpSFf9tm1o9nAsdEpZH9xtbJAv6phUfPOe6k2CqhQbV
+MN7k3oru5P3l8MV10+T9keNw8Gw+GuuK8bT6DRhASHxtT+oFw74P/pvD750d023v
+xKw/Y++7uq1kD4iRhDrKnw0VeptvAZeYy3FjgJtFRoWGvdLsUiFDdAXwSYfWc7/q
+JoSrTOpruCDMZDZqXdVOf8bzPQoQ5oVKAPBu7DMCE2FtlPAkFuc4yF0MA0qVSOIc
+KQFYjvKM63XjeaM+DRDN
+=H1VR
 -----END PGP SIGNATURE-----
 
---=-MyvjBcS3lq8BicZXG50A--
+--=-E00AClj9Cfe5K6qghBVp--
 
