@@ -1,36 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:50457 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752217AbYIKTu1 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59129 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbYIPUhy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 15:50:27 -0400
-Message-ID: <48C97682.6010109@lwfinger.net> (sfid-20080911_215033_090541_EB52660B)
-Date: Thu, 11 Sep 2008 14:50:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-CC: wireless <linux-wireless@vger.kernel.org>, furlot@free.fr
-Subject: Re: Compaq laptop RFKILL problems
-References: <48C80241.4000409@lwfinger.net> <20080911120002.GA1387@srcf.ucam.org>
-In-Reply-To: <20080911120002.GA1387@srcf.ucam.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 16 Sep 2008 16:37:54 -0400
+Subject: Re: [PATCH] Use the kernel source tree for includes, not the
+	kernel build tree
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1221597296.17084.4.camel@dv>
+References: <20080916200828.13928.55864.stgit@dv.roinet.com>
+	 <1221596322.9262.7.camel@johannes.berg>  <1221597296.17084.4.camel@dv>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-i1kpqfw0bdrYHYb+2aJA"
+Date: Tue, 16 Sep 2008 22:37:02 +0200
+Message-Id: <1221597422.9262.14.camel@johannes.berg> (sfid-20080916_223757_171246_FE443F37)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthew Garrett wrote:
-> On Wed, Sep 10, 2008 at 12:22:09PM -0500, Larry Finger wrote:
->> I'm trying to help a Ubuntu user get his BCM4303 working on a Compaq 
->> Presario R3215. His radio is hardware disabled, but the RFKILL switch 
->> does not issue a scancode when pushed. Obviously, the Windows software 
->> polls that key in some manner, but we have no idea what it does.
-> 
-> Can you try the hp-wmi driver?
 
-Trying to build hp-wmi for his 2.6.24.3 kernel wouldn't be worth the 
-effort; however, Ubuntu has a kernel based on 2.6.27-rc6 that was 
-accepted yesterday. It will be tried ASAP.
+--=-i1kpqfw0bdrYHYb+2aJA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Tue, 2008-09-16 at 16:34 -0400, Pavel Roskin wrote:
+> On Tue, 2008-09-16 at 22:18 +0200, Johannes Berg wrote:
+>=20
+> > > diff --git a/Makefile b/Makefile
+> > > index 74cb1e1..9e79381 100644
+> > > --- a/Makefile
+> > > +++ b/Makefile
+> > > @@ -6,7 +6,7 @@ INSTALL ?=3D install
+> > >  PREFIX ?=3D /usr
+> > >  CC ?=3D "gcc"
+> > >  CFLAGS +=3D -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-st=
+rict-aliasing -fno-common -Werror-implicit-function-declaration
+> > > -CFLAGS +=3D -I/lib/modules/`uname -r`/build/include
+> > > +CFLAGS +=3D -I/lib/modules/`uname -r`/source/include
+> >=20
+> > I'll remove that line entirely though.
+>=20
+> In Makefile?  Please make sure that .config remains optional.
 
-Larry
+Yes; we actually ship nl80211.h out of the kernel already. So if your
+installed kernel headers are new enough, you don't need .config, if they
+aren't you might need .config, before you had to have it always anyway.
+
+johannes
+
+--=-i1kpqfw0bdrYHYb+2aJA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI0BjqAAoJEKVg1VMiehFYtUkP/32LE7uJlq7SGH1/+s1CGpk1
+KZq7sXRsSHnTw27HQ/Y2x3kPyXv48Y6AN6gGR1fLaQbhHZZnRfshcNAqy2ujP7LY
+MO6vGYUoiCqgld7WYzr6BVhUmZqy+1yodZ/yGL/XqHsEMLBbCJg/VfjLrSkmeqqJ
+LueaUwYCDZnC5qOK1CfuxHmRoG3N77taLH9lyPhRHedtLAo1nO1q8/LZco5Z7GJ9
+psmxS5JwiFigcj712DzkXguY3OVHwtzNffxMbhPL0svqyCPCy1DlGj+XXBJUB6Rb
+JRwKAolejAdPXmfKqUTAiWBj3f6VDRb7B9+IvkdZjyDnlxr67yidd9wSvmAb17od
+hXHqDaLe67411HKF9wv5zsNU6Ffe2M5efXWsBZcLVI8ona4zYX67QulZO0JfJ4Kc
+iml9GgWriNg4XK2ycMp8A02Q6kIi2fqr8bPLTbuvDi0wR6SrR6bDgQqZraR2Mipo
+ZmiLSdSi/FYSbhVLYalxGhGefTEMouYpixmkTflXhnlsbkW8iC7Sf5502udwY7ss
+F8c7D4ZATJh3X0FKkNXSJGtFSYwVBkvK4P/6V5hJ72OdXJh+mf0Axt3CTmLmRIIE
+25mkWaQfWpTQ5BYYmUW0YVxCZ8j3+SBTWoqhEwGSUL8qN5cyldDHZoO1NT5TOgM2
+g32N2Yrng+jUa9CFxaE7
+=G2qO
+-----END PGP SIGNATURE-----
+
+--=-i1kpqfw0bdrYHYb+2aJA--
 
