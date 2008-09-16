@@ -1,112 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26034 "EHLO mail.atheros.com"
+Received: from c60.cesmail.net ([216.154.195.49]:43912 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752749AbYIZIrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 04:47:47 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 01:47:47 -0700
-Date: Fri, 26 Sep 2008 01:47:38 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Tomas Winkler <tomasw@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
-Message-ID: <20080926084738.GA6331@tesla> (sfid-20080926_104751_875121_193C3984)
-References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net> <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com> <48DC51AF.6000900@lwfinger.net> <43e72e890809260006kfc833fdsccbe3f22b3ad4c56@mail.gmail.com> <43e72e890809260043n1b31dea9yaad2e7a2d80ed819@mail.gmail.com> <1ba2fa240809260111i217ff844q73036685e6d74aee@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1ba2fa240809260111i217ff844q73036685e6d74aee@mail.gmail.com>
+	id S1751378AbYIPUuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 16:50:10 -0400
+Subject: Re: iw packaging
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1221596962.9262.12.camel@johannes.berg>
+References: <1221596962.9262.12.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 16 Sep 2008 16:50:08 -0400
+Message-Id: <1221598208.17084.11.camel@dv> (sfid-20080916_225015_099672_595F0E11)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 26, 2008 at 01:11:53AM -0700, Tomas Winkler wrote:
-> On Fri, Sep 26, 2008 at 10:43 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Fri, Sep 26, 2008 at 12:06 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> >> On Thu, Sep 25, 2008 at 8:06 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> >>> Tomas Winkler wrote:
-> >>>> wild guess try to revert:
-> >>>> 'mac80211: make master iface not wireless'
-> >>>
-> >>> You win the prize. Bisection shows that
-> >>> 84b0ba8ed0423a3c56a28e701b735daae3e15766 is first bad commit
-> >>>
-> >>> commit 84b0ba8ed0423a3c56a28e701b735daae3e15766
-> >>> Author: Johannes Berg <johannes@sipsolutions.net>
-> >>> Date:   Tue Sep 16 14:18:59 2008 +0200
-> >>>
-> >>>    mac80211: make master iface not wireless
-> >>>
-> >>>
-> >>> The actual crash is in the following routine from include/net/wireless.h:
-> >>>
-> >>> /**
-> >>>  * wiphy_priv - return priv from wiphy
-> >>>  */
-> >>> static inline void *wiphy_priv(struct wiphy *wiphy)
-> >>> {
-> >>>        BUG_ON(!wiphy);
-> >>>        return &wiphy->priv;
-> >>> }
-> >>>
-> >>> I'm still looking to see where it goes wrong.
-> >>
-> >> Actually wouldn't you get a stack trace here?
-> >
-> > Yeah not sure I tested against !wiphy on its callers and didn't find a
-> > case where it hit. I don't think this is it.
+On Tue, 2008-09-16 at 22:29 +0200, Johannes Berg wrote:
+> Hi,
 > 
-> u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
-> {
->         struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
->         struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> --- this is the line
+> I've just tagged iw version 0.9 (and 0.9.1 after a small build fix)
+> because I think the tool is now actually usable in a limited way, unlike
+> before where it would never properly report errors etc.
+> 
+> Anyone want to pick it up for the various distros?
 
---- This is the fix
+Sorry for diverting the thread, but the current git head (which is
+tagged as 0.9.1) is broken.
 
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 6748ded..7d114bd 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -75,8 +75,16 @@ static int wme_downgrade_ac(struct sk_buff *skb)
- /* Indicate which queue to use.  */
- static u16 classify80211(struct sk_buff *skb, struct net_device *dev)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_local *local;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_master_priv *mpriv;
-+
-+	/* this is not for wiphys, just for mdev */
-+	BUG_ON (dev->ieee80211_ptr);
-+
-+	mpriv = netdev_priv(dev);
-+	local = mpriv->local;
-+
- 
- 	if (!ieee80211_is_data(hdr->frame_control)) {
- 		/* management frames go on AC_VO queue, but are sent
-@@ -114,12 +122,19 @@ static u16 classify80211(struct sk_buff *skb, struct net_device *dev)
- u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_local *local;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_master_priv *mpriv;
- 	struct sta_info *sta;
- 	u16 queue;
- 	u8 tid;
- 
-+	/* this is not for wiphys, just for mdev */
-+	BUG_ON (dev->ieee80211_ptr);
-+
-+	mpriv = netdev_priv(dev);
-+	local = mpriv->local;
-+
- 	queue = classify80211(skb, dev);
- 	if (unlikely(queue >= local->hw.queues))
- 		queue = local->hw.queues - 1;
+$ ./iw 
+Usage:  ./iw [options] command
+Options:
+        --debug         enable netlink debugging
+        --version       show version
+Commands:
+        list
+        Segmentation fault (core dumped)
+
+Debugging shows:
+
+82              fprintf(stderr, "Commands:\n");
+(gdb) 
+Commands:
+83              for (cmd = &__start___cmd; cmd < &__stop___cmd; cmd++) {
+(gdb) p __start___cmd
+$1 = {section = 0x0, name = 0x403d02 "info", args = 0x0, cmd = NL80211_CMD_GET_WIPHY, 
+  nl_msg_flags = 0, idby = CIB_PHY, handler = 0x402403 <handle_info>}
+(gdb) p *(&__start___cmd + 1)
+$2 = {section = 0x0, name = 0x0, args = 0x0, cmd = 4209927, nl_msg_flags = 0, idby = CIB_NONE, 
+  handler = 0x30000000001}
+(gdb)
+
+That means, __start___cmd points to "info".  The next command has no
+name (and appears to be a complete mess).  The clever section trick
+doesn't seem to work properly.
+
+I'm using Fedora 9 x86_64 with all updates.
+
+-- 
+Regards,
+Pavel Roskin
