@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.2ka.mipt.ru ([194.85.80.65]:49281 "EHLO 2ka.mipt.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751462AbYIURYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 13:24:16 -0400
-Date: Sun, 21 Sep 2008 21:23:17 +0400
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-To: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921172316.GA6306@2ka.mipt.ru> (sfid-20080921_192421_701863_F482AADC)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51833 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755201AbYIPTar (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 15:30:47 -0400
+Message-ID: <48D0095B.40403@lwfinger.net> (sfid-20080916_213117_478515_0EA7EAB0)
+Date: Tue, 16 Sep 2008 14:30:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Carlos Corbacho <carlos@strangeworlds.co.uk>
+CC: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <200809162018.28548.carlos@strangeworlds.co.uk>
+In-Reply-To: <200809162018.28548.carlos@strangeworlds.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+Carlos Corbacho wrote:
+> On Tuesday 16 September 2008 18:08:48 Larry Finger wrote:
+>> I agree with Michael. From what I know, the only possible reason for
+>> having [RFKILL_STATE_HARD_BLOCKED] would be if user space could
+>> somehow affect the state of the hardware switch.
+> 
+> When I disable the b43 device in my laptop via acer-wmi (which in turn, calls 
+> into the laptops firmware), b43 physically cannot re-enable it (a not 
+> uncommon case on a lot of laptops). In which case, as far as b43 is 
+> concerned, the wireless radio is then in RFKILL_STATE_HARD_BLOCKED, since b43 
+> is unable to re-enable the radio on the hardware.
+> 
+> So yes, it is quite possible for b43 to be in RFKILL_STATE_HARD_BLOCKED.
 
-Following bug exists in the ipw2100 driver/firmware for years and Intel
-folks never responded to zillions bugzilla entries and forum notices in
-the internet with some patch or firmware update (although did request
-dmesg and debug info, and received them).
+I didn't say it was not possible. What I said is that _ONLY_ the
+operator's finger could change the state, just like in your laptop.
+Thus it makes absolutely no difference what state RFKILL thinks it is
+in. The driver knows what state the software wants, and can read but
+not write the hardware state. There has to be a bug in RFKILL that got
+exposed when this commit was included. This regression needs to be
+fixed ASAP, otherwise 2.6.27 will be released with it. If the RFKILL
+guys want to fix their bug, I'll be happy to test code, but not now.
 
-ipw2100: Fatal interrupt. Scheduling firmware restart.
-
-I believe it is a firmware bug because after driver is unloaded and
-loaded back again wireless adapter usually starts working (for small
-amount of time though). My conspiracy feeling can suggest, that it may
-be kind of a force to buy a new one, or trivial error in the firmware,
-when it writes to the same place in the flash and essentially given cell
-became dead or whatever else.
-
-Intel folks, please fix this problem, I see no other way to force you to do
-this than to mark ipw2100 driver as broken, since that is what it is.
-
-Bug exists at least in .15 upto .24 kernels, just search above dmesg
-line. I cought it with 2.6.24-19-386 ubuntu kernel, 1.3 firmware
-version. lspci:
-
-02:04.0 Network controller: Intel Corporation PRO/Wireless LAN 2100 3B Mini PCI Adapter (rev 04)
-	Subsystem: Intel Corporation Samsung X10/P30 integrated WLAN
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64 (500ns min, 8500ns max), Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 11
-	Region 0: Memory at 90080000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: [dc] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=1 PME-
-
-dmesg is pretty usual.
-
-Signed-off-by: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 9931b5a..c24fc6a 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -125,7 +125,7 @@ config PCMCIA_RAYCS
- 
- config IPW2100
- 	tristate "Intel PRO/Wireless 2100 Network Connection"
--	depends on PCI && WLAN_80211
-+	depends on PCI && WLAN_80211 && BROKEN
- 	select WIRELESS_EXT
- 	select FW_LOADER
- 	select IEEE80211
-
--- 
-	Evgeniy Polyakov
+Larry
