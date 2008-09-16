@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41622 "EHLO mga01.intel.com"
+Received: from main.gmane.org ([80.91.229.2]:42919 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751822AbYICDa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:30:56 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 00/39] iwlwifi driver 09/03 updates
-Date: Wed,  3 Sep 2008 11:26:20 +0800
-Message-Id: <1220412419-15404-1-git-send-email-yi.zhu@intel.com> (sfid-20080903_053059_656487_9E2A4B01)
+	id S1753214AbYIPBzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 21:55:07 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1KfPmR-0007YJ-15
+	for linux-wireless@vger.kernel.org; Tue, 16 Sep 2008 01:55:03 +0000
+Received: from 129.96.153.230 ([129.96.153.230])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2008 01:55:03 +0000
+Received: from podge by 129.96.153.230 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2008 01:55:03 +0000
+To: linux-wireless@vger.kernel.org
+From: Shawn Haggett <podge@podgeweb.com>
+Subject: Re: [PATCH 2.6.27-rc4] mac80211: don't send empty extended rates IE
+Date: Tue, 16 Sep 2008 10:33:54 +0930
+Message-ID: <gan0ln$ikd$1@ger.gmane.org> (sfid-20080916_035524_958836_2586E488)
+References: <200808251832.m7PIW6kA071701@enterprise.localnet.radiotube.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Jan-Espen Pettersen wrote:
 
-Below are iwlwifi patches (1 for mac80211 and 1 for ath9k) against
-wireless-testing GIT tip. Patches 01 ~ 11 are resubmitted.
+> The association request includes a list of supported data rates.
+> 
+> 802.11b: 4 supported rates.
+> 802.11g: 12 (8 + 4) supported rates.
+> 802.11a: 8 supported rates.
+> 
+> The rates tag of the assoc request has room for only 8 rates. In case of
+> 802.11g an extended rate tag is appended. However in net/wireless/mlme.c
+> an extended (empty) rate tag is also appended if the number of rates is
+> exact 8. This empty (length=0) extended rates tag causes some APs to
+> deny association with code 18 (unsupported rates). These APs include my
+> ZyXEL G-570U, and according to Tomas Winkler som Cisco APs.
+> 
+> 'If count == 8' has been used to check for the need for an extended rates
+> tag. But count would also be equal to 8 if the for loop exited because of
+> no more supported rates. Therefore a check for count being less than
+> rates_len would seem more correct.
+> 
+> Thanks to:
+>  * Dan Williams for newbie guidance
+>  * Tomas Winkler for confirming the problem
+> 
+> Signed-off-by: Jan-Espen Pettersen
 
-Thanks,
--yi
+Just to add to this. I've had a long standing issue with my laptop not
+associating to my AP at home and this patch has fixed my issue as well. My
+AP however is a Billion 7404VGO-M ADSL modem/router/802.11b/g and my
+wireless card an Intel Wireless 4965AGN chipset.
 
-[PATCH 01/39] iwlwifi : Added bss_info_changed callback to 3945
-[PATCH 02/39] iwlwifi: W/A for the TSF correction in IBSS
-[PATCH 03/39] iwlwifi: clean up hw scan handler
-[PATCH 04/39] iwlwifi: remove obsolete 4965 forward declarations
-[PATCH 05/39] iwlwifi: allow consecutive scans in unassociated state
-[PATCH 06/39] iwlwifi: align set channel with mac80211
-[PATCH 07/39] iwl3945: fix unbalanced mutex
-[PATCH 08/39] iwl3945: replace association and beacon hooks with bss_info_changed cb
-[PATCH 09/39] iwlwifi: fix hidden ssid discovery in passive channels
-[PATCH 10/39] iwl3945: removed bg_post_associate work
-[PATCH 11/39] iwl3945: avoid redundant iwl3945_get_active_dwell_time
-[PATCH 12/39] iwlwifi: use strict_strtoul instead of simple_strtoul
-[PATCH 13/39] iwlwifi: void full rxon on rx chain changes
-[PATCH 14/39] iwlwifi: replace readl and writel with io/read/write/32
-[PATCH 15/39] iwlwifi: remove rfkill warning from iwl-io
-[PATCH 16/39] iwlwifi: fix apm_stop function
-[PATCH 17/39] iwlwifi: generic init calibrations framework
-[PATCH 18/39] iwlwifi: call apm stop on exit
-[PATCH 19/39] iwlwifi: fix strict_strtoul error checking
-[PATCH 20/39] iwlwifi: use station's mimo power save values
-[PATCH 21/39] iwlwifi: fix rx_chain computation
-[PATCH 22/39] iwlwifi: fix 64bit platform firmware loading
-[PATCH 23/39] mac80211: change MIMO_PS to SM_PS
-[PATCH 24/39] iwlwifi: change MIMO_PS to SM_PS
-[PATCH 25/39] ath9k: change MIMO_PS to SM_PS
-[PATCH 26/39] iwlwifi: remove double definition of SM PS
-[PATCH 27/39] iwlwifi: rename ps_mode to sm_ps
-[PATCH 28/39] iwlwifi: workaround interrupt handling no some platforms
-[PATCH 29/39] iwlwifi: cleanup PCI register handling
-[PATCH 30/39] iwlwifi: allow association on radar channel in power save
-[PATCH 31/39] iwlwifi: fix memory allocation of TX command
-[PATCH 32/39] iwlwifi: fix host command header according the HW spec
-[PATCH 33/39] iwlwifi: use the results from disconnected antenna algorithm
-[PATCH 34/39] iwlwifi: take a fresh set of supported rates at each cycle
-[PATCH 35/39] iwlwifi: remove bad language from the comments
-[PATCH 36/39] iwlwifi: remove uneeded declarations
-[PATCH 37/39] iwlwifi: fix compile warning
-[PATCH 38/39] iwl3945: enable active scanning on active channels
-[PATCH 39/39] iwlwifi: enable packet injection for iwlagn
+Previous behaviour was the card would associate, then drop out, then
+associate again... over and over. Never any traffic, but would work fine on
+other APs. I applied this patch to my 2.6.26 kernel and now it works fine.
+
+Thanks!
+
