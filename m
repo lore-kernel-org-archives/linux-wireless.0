@@ -1,92 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35721 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864AbYIHOzt (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:44426 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008AbYIPVJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 10:55:49 -0400
-Subject: Re: [PATCH 1/1] mac80211: scan on IBSS mode like on STA mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Ester Kummer <ester.kummer@intel.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>
-In-Reply-To: <1220880686-5620-1-git-send-email-tomas.winkler@intel.com>
-References: <1220880686-5620-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jwsPDghcZ07IEehSRBIV"
-Date: Mon, 08 Sep 2008 16:55:42 +0200
-Message-Id: <1220885742.31304.67.camel@johannes.berg> (sfid-20080908_165552_656021_8FF20D03)
-Mime-Version: 1.0
+	Tue, 16 Sep 2008 17:09:27 -0400
+Date: Tue, 16 Sep 2008 22:09:20 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Message-ID: <20080916210920.GC16470@srcf.ucam.org> (sfid-20080916_230931_101275_98EE062D)
+References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <20080916195134.GB14879@srcf.ucam.org> <48D0183E.9010301@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48D0183E.9010301@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Oh, hey, I suck. This one might stand a better chance of not falling 
+over.
 
---=-jwsPDghcZ07IEehSRBIV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+index fec5645..991e318 100644
+--- a/drivers/net/wireless/b43/rfkill.c
++++ b/drivers/net/wireless/b43/rfkill.c
+@@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev *dev)
+ 	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+ 
+ 	if (!dev->radio_hw_enable) {
+-		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
++		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
+ 		return;
+ 	}
+ 
+ 	if (!dev->phy.radio_on)
+-		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
++		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
+ 	else
+-		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
+-
++		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
+ }
+ 
+-/* The poll callback for the hardware button. */
+-static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
++static void b43_rfkill_update(struct b43_wldev *dev)
+ {
+-	struct b43_wldev *dev = poll_dev->private;
+ 	struct b43_wl *wl = dev->wl;
+ 	bool enabled;
+ 	bool report_change = 0;
+@@ -82,13 +79,25 @@ static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
+ 			enabled ? "ENABLED" : "DISABLED");
+ 	}
+ 	mutex_unlock(&wl->mutex);
++}
+ 
+-	/* send the radio switch event to the system - note both a key press
+-	 * and a release are required */
+-	if (unlikely(report_change)) {
+-		input_report_key(poll_dev->input, KEY_WLAN, 1);
+-		input_report_key(poll_dev->input, KEY_WLAN, 0);
+-	}
++static void b43_rfkill_poll(unsigned long data)
++{
++	struct b43_rfkill *rfkill = (struct b43_rfkill *)data;
++	schedule_work(&rfkill->poll_queue);
++}
++
++static void b43_rfkill_work(struct work_struct *work)
++{
++	struct b43_rfkill *rfk = container_of(work, struct b43_rfkill, 
++					      poll_queue);
++	struct b43_wl *wl = container_of(rfk, struct b43_wl, rfkill);
++	struct b43_wldev *dev = wl->current_dev;
++
++	b43_rfkill_update(dev);
++	rfk->poll_timer.function = b43_rfkill_poll;
++	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
++	add_timer(&rfk->poll_timer);
+ }
+ 
+ /* Called when the RFKILL toggled in software. */
+@@ -158,48 +167,23 @@ void b43_rfkill_init(struct b43_wldev *dev)
+ 	rfk->rfkill->toggle_radio = b43_rfkill_soft_toggle;
+ 	rfk->rfkill->user_claim_unsupported = 1;
+ 
+-	rfk->poll_dev = input_allocate_polled_device();
+-	if (!rfk->poll_dev) {
+-		rfkill_free(rfk->rfkill);
+-		goto err_freed_rfk;
+-	}
+-
+-	rfk->poll_dev->private = dev;
+-	rfk->poll_dev->poll = b43_rfkill_poll;
+-	rfk->poll_dev->poll_interval = 1000; /* msecs */
+-
+-	rfk->poll_dev->input->name = rfk->name;
+-	rfk->poll_dev->input->id.bustype = BUS_HOST;
+-	rfk->poll_dev->input->id.vendor = dev->dev->bus->boardinfo.vendor;
+-	rfk->poll_dev->input->evbit[0] = BIT(EV_KEY);
+-	set_bit(KEY_WLAN, rfk->poll_dev->input->keybit);
+-
+ 	err = rfkill_register(rfk->rfkill);
+ 	if (err)
+-		goto err_free_polldev;
++		goto err_free_rfk;
+ 
+-#ifdef CONFIG_RFKILL_INPUT_MODULE
+-	/* B43 RF-kill isn't useful without the rfkill-input subsystem.
+-	 * Try to load the module. */
+-	err = request_module("rfkill-input");
+-	if (err)
+-		b43warn(wl, "Failed to load the rfkill-input module. "
+-			"The built-in radio LED will not work.\n");
+-#endif /* CONFIG_RFKILL_INPUT */
++	rfk->registered = 1;
+ 
+-	err = input_register_polled_device(rfk->poll_dev);
+-	if (err)
+-		goto err_unreg_rfk;
++	INIT_WORK(&rfk->poll_queue, b43_rfkill_work);
+ 
+-	rfk->registered = 1;
++	init_timer(&rfk->poll_timer);
++	rfk->poll_timer.function = b43_rfkill_poll;
++	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
++	rfk->poll_timer.data = (unsigned long)rfk;
++	add_timer(&rfk->poll_timer);
+ 
+ 	return;
+-err_unreg_rfk:
+-	rfkill_unregister(rfk->rfkill);
+-err_free_polldev:
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
+-err_freed_rfk:
++err_free_rfk:
++	rfkill_free(rfk->rfkill);
+ 	rfk->rfkill = NULL;
+ out_error:
+ 	rfk->registered = 0;
+@@ -214,9 +198,8 @@ void b43_rfkill_exit(struct b43_wldev *dev)
+ 		return;
+ 	rfk->registered = 0;
+ 
+-	input_unregister_polled_device(rfk->poll_dev);
++	del_timer(&rfk->poll_timer);
++
+ 	rfkill_unregister(rfk->rfkill);
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
+ 	rfk->rfkill = NULL;
+ }
+diff --git a/drivers/net/wireless/b43/rfkill.h b/drivers/net/wireless/b43/rfkill.h
+index adacf93..1a4a719 100644
+--- a/drivers/net/wireless/b43/rfkill.h
++++ b/drivers/net/wireless/b43/rfkill.h
+@@ -7,14 +7,14 @@ struct b43_wldev;
+ #ifdef CONFIG_B43_RFKILL
+ 
+ #include <linux/rfkill.h>
+-#include <linux/input-polldev.h>
+-
+ 
+ struct b43_rfkill {
+ 	/* The RFKILL subsystem data structure */
+ 	struct rfkill *rfkill;
+-	/* The poll device for the RFKILL input button */
+-	struct input_polled_dev *poll_dev;
++	/* The timer list for the RFKILL polling */
++	struct timer_list poll_timer;
++	/* Workqueue for the RFKILL polling */
++	struct work_struct poll_queue;
+ 	/* Did initialization succeed? Used for freeing. */
+ 	bool registered;
+ 	/* The unique name of this rfkill switch */
 
-On Mon, 2008-09-08 at 16:31 +0300, Tomas Winkler wrote:
-> From: Ester Kummer <ester.kummer@intel.com>
->=20
-> This patch handle scanning on IBSS mode like on STA mode.
-> When queuing the scan work we don't refer to the return value of
-> ieee80211_sta_start_scan so if we are in the last scan period, we will
-> return 0 to ieee80211_ioctl_siwscan and not -EAGAIN, and then iwlist will
-> call ieee80211_ioctl_giwscan to get the scan results and will not fail.
-
-
-Can you explain why? Or can anybody else explain why we do this
-difference at all? And how should mesh behave?
-
-> Signed-off-by: Ester Kummer <ester.kummer@intel.com>
-> Acked-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  net/mac80211/mlme.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 2564553..72d5fe2 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -4090,7 +4090,8 @@ int ieee80211_sta_req_scan(struct ieee80211_sub_if_=
-data *sdata, u8 *ssid, size_t
->  	struct ieee80211_if_sta *ifsta =3D &sdata->u.sta;
->  	struct ieee80211_local *local =3D sdata->local;
-> =20
-> -	if (sdata->vif.type !=3D IEEE80211_IF_TYPE_STA)
-> +	if (sdata->vif.type !=3D IEEE80211_IF_TYPE_STA ||
-> +	    sdata->vif.type !=3D IEEE80211_IF_TYPE_IBSS)
->  		return ieee80211_sta_start_scan(sdata, ssid, ssid_len);
-
-This is wrong.
-
-a !=3D 1 || a !=3D 2
-
-has to be true at all times, I think you mean &&.
-
-johannes
-
---=-jwsPDghcZ07IEehSRBIV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIxTzmAAoJEKVg1VMiehFYTY8P/1zbMQm7yMghRQ6Eq0dxxm0T
-SJBXcEJ7iz4qrPQyWpx0VKzTkoRHGCHV6/48guxPBqJtKac+RpZq0UVu22xFZIhk
-X/M5ys0WbldzyRwx4eqg02ywGOMTPNhSblY5vZpnnyYotqSJPKHCddhPrkzbctAU
-7OxbEbi4xabiPaGmNV8Mb9eUG/m/whqgvlpjoNehsbznQ5NHHWBnZZ9WDucTLKI6
-uf1yjgNZNmt16l8Sg9TZfYAh/8gtvAwcJvMrbPpuSt+HqjoUk8FBA7uDul9raJmW
-WSL+G4FlIFCpW0STNm6a1ATpPfUPWsf9VWkhDLI4JVBGb0PtGrPgPeUNrw6dryGn
-UZONaITJ/O2tkru380r4NCcxkr4UmbtQvgWW9BfLF9tusMVRW+H8MbJzdVS6raSl
-HEV9Ia2TDuY5RK4tR7mAwH50tyO53IrBn1amfqKiv7ftMbKRPZbdbJccjdrxhs41
-xKuCqGaLwac1iVD+0Y4TygQ1Nas8E6JRwy2tiMy9NU94gapF/irh4xCe3hUUEqgP
-RIcLUXPs0uYszcC7sygRhHGJa+fmQuiWxSr8IZFzdrhDByagRkpKZfAmQ05XjnUL
-itEEkvgg/26ZFisbrTTZvhlGqsfEeXg3/rlnoD6WkIN/9ZymxTYQttE38iN9GUHg
-morkXdTVoutx2k+Jg7n+
-=gOwL
------END PGP SIGNATURE-----
-
---=-jwsPDghcZ07IEehSRBIV--
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
