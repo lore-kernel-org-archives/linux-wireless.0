@@ -1,57 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39292 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:48770 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751298AbYIKRLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 13:11:08 -0400
-Date: Thu, 11 Sep 2008 10:10:59 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/18] mac80211 cleanups and fixes
-Message-ID: <20080911171059.GB6049@tesla> (sfid-20080911_191126_996649_D4BD3DEC)
-References: <20080910220145.707263000@sipsolutions.net> <18632.55008.411078.289830@gargle.gargle.HOWL> <1221139351.6986.26.camel@johannes.berg> <20080911165011.GA6049@tesla> <1221151995.6986.33.camel@johannes.berg>
+	id S1754148AbYIPTZt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 15:25:49 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Carlos Corbacho <carlos@strangeworlds.co.uk>
+Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Date: Tue, 16 Sep 2008 21:25:18 +0200
+Cc: bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48CFC03A.8020708@lwfinger.net> <48CFE820.7010305@lwfinger.net> <200809162018.28548.carlos@strangeworlds.co.uk>
+In-Reply-To: <200809162018.28548.carlos@strangeworlds.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1221151995.6986.33.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809162125.18978.mb@bu3sch.de> (sfid-20080916_212553_519145_9328F5C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 11, 2008 at 09:53:15AM -0700, Johannes Berg wrote:
-> On Thu, 2008-09-11 at 09:50 -0700, Luis R. Rodriguez wrote:
+On Tuesday 16 September 2008 21:18:27 Carlos Corbacho wrote:
+> On Tuesday 16 September 2008 18:08:48 Larry Finger wrote:
+> > I agree with Michael. From what I know, the only possible reason for
+> > having [RFKILL_STATE_HARD_BLOCKED] would be if user space could
+> > somehow affect the state of the hardware switch.
 > 
-> > > I had actually tried
-> > > (http://johannes.sipsolutions.net/patches/kernel/ath9k-sta-node.patch)
-> > > but you're using refcounting for the nodes while mac80211 RCU-protects
-> > > them, so I didn't get very far.
-> > 
-> > Good thing I read RCU docs yesterday.
+> When I disable the b43 device in my laptop via acer-wmi (which in turn, calls 
+> into the laptops firmware), b43 physically cannot re-enable it (a not 
+> uncommon case on a lot of laptops). In which case, as far as b43 is 
+> concerned, the wireless radio is then in RFKILL_STATE_HARD_BLOCKED, since b43 
+> is unable to re-enable the radio on the hardware.
 > 
-> Heh.
-> 
-> > We should be able to remove ref counts and simply use RCU and
-> > sychronize_rcu() before deletion.
-> 
-> Well you don't get to control deletion then, that's another thing.
+> So yes, it is quite possible for b43 to be in RFKILL_STATE_HARD_BLOCKED.
 
-Does it matter? Our driver won't care as long as the entry still exists.
-Just as with stale routing tables, does it matter if we keep thinking we
-have a node for a few moments later?
+Sure it is. It's the common case, if there's a button.
 
-> > > It needs a bit more effort to make sure
-> > > you don't have node pointers stick around in some tx descriptor after
-> > > mac80211 decides to remove a node (which may very well happen while
-> > > frames are queued)
-> > 
-> > We can call_rcu() here no, and let the driver deal with what it needs to
-> > prior to deletion?
-> 
-> The driver already gets notified via sta_notify() that the sta is about
-> to be deleted, it must make sure that no matter what sort of references
-> it kept, the sta will not be accessed after that sta_notify call.
+But I don't know how to tell the rfkill subsystem about the states and
+I do not _want_ to. See, that crap code _always_ blew up for every single
+patch we did. I'm tired of this and I am not interested in that anymore.
+Please revert that patch and if that makes it work I'm fine with it.
 
-Ah good point. Then what is the issue?
+I'm still waiting for the sane rfkill API where we have three functions
+rfkill-allocate
+rfkill-hw-state-changed
+rfkill-free
 
-  Luis
+That's all I need. All that input stuff, which was _the_ way to go some
+months ago, but is now deprecated it seems (but I don't know what it it
+replaced by) is just so really confusing.
+
+-- 
+Greetings Michael.
