@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:49060 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055AbYIFQc6 (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:59053 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753664AbYIPJPY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 12:32:58 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so506148tic.23
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2008 09:32:56 -0700 (PDT)
-Message-ID: <43f51f830809060932x2abb70f7u8c71ac82718ebb07@mail.gmail.com> (sfid-20080906_183302_223784_C46FA913)
-Date: Sun, 7 Sep 2008 00:32:55 +0800
-From: "Josh Yin" <epaulin@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: ath9k doesn't work on Ubuntu hardy 64bit
+	Tue, 16 Sep 2008 05:15:24 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1432835nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2008 02:15:23 -0700 (PDT)
+Message-ID: <1ba2fa240809160215w4b990f2eo26805b62fb056ce5@mail.gmail.com> (sfid-20080916_111533_772438_16E8FE9D)
+Date: Tue, 16 Sep 2008 12:15:22 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: [RFC] Implement basic background scanning
+Cc: "Helmut Schaa" <hschaa@suse.de>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <877i9czdjd.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200809151416.07552.hschaa@suse.de>
+	 <200809151429.46638.hschaa@suse.de>
+	 <1221494383.3700.52.camel@johannes.berg>
+	 <200809151835.03786.hschaa@suse.de> <877i9czdjd.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+On Tue, Sep 16, 2008 at 11:43 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> Helmut Schaa <hschaa@suse.de> writes:
+>
+>>> This doesn't play well at all with hardware assisted scan as far as I
+>>> can tell.
+>>
+>> Correct. The patch only adapts software scan code. The hardware
+>> assisted scan is not touched at all but should also not be affected
+>> in an odd way.
+>
+> I would guess that some firmwares support similar scanning in
+> hardware. In the future we might add support for background scanning
+> in hardware with a flag in hw_scan(), or something like that.
 
-I have a AR5418 wireless card within Macbook pro 3rd, i have been
-using Madwifi(svn-3637) which is working great.
-When linux kernel 2.6.27-rc5 getting released, I decided to git ath9k
-a try, but unfortunately it doesn't working for me.
+In iwwlifi we can trigger scan anytime during association so this is
+not an issue.
 
-My system is Ubuntu hardy 64bit, here is the log from kernel.log:
+The common point for sw and hw  is when to trigger scanning and what
+are scanning parameters.
 
-{{{
+The objective is that this affect performance, therefore the scan can
+be triggered on
+1. On limited number of channels
+    a. After first scan we know which channels are active or activated
+(passive channels with traffic)
+    b. We can scan only channels with possible roaming candidates
+(same SSID or list of possible SSIDs)
+2. Group scanning
+  Issue scanning in small group of channels and returning back to the
+serving channel. The size of group
+   is affected by current traffic rate and quality. Size of group
+effects off channel time (#channels * dwell time)
 
- 8811 Sep  6 02:34:48 matrix kernel: [   17.279302] NET: Registered
-protocol family 17
- 8812 Sep  6 02:34:48 matrix kernel: [   17.318620] ath9k: 0.1
- 8813 Sep  6 02:34:48 matrix kernel: [   17.318890] ath9k
-0000:0b:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
- 8814 Sep  6 02:34:48 matrix kernel: [   17.318974] ath9k
-0000:0b:00.0: setting latency timer to 64
- 8815 Sep  6 02:34:48 matrix kernel: [   17.448317] phy0: Selected
-rate control algorithm 'ath9k_rate_control'
-....
- 8885 Sep  6 02:35:16 matrix kernel: [   54.175476] ath0: authenticate
-with AP 00:1b:11:a2:a6:ca
- 8886 Sep  6 02:35:16 matrix kernel: [   54.175524] ath0: privacy
-configuration mismatch and mixed-cell disabled - disassociate
- 8887 Sep  6 02:35:16 matrix kernel: [   54.177783] ath0: authenticated
- 8888 Sep  6 02:35:16 matrix kernel: [   54.177790] ath0: associate
-with AP 00:1b:11:a2:a6:ca
- 8889 Sep  6 02:35:16 matrix kernel: [   54.177795] ath0: mismatch in
-privacy configuration and mixed-cell disabled - abort association
-
-}}}
-
-The router is D-Link 624+A using WPA2 for authentication, the software
-I'm using to management the network is wicd,
-which has no problem with Madwifi.
-
-If you need any detail information, feel free to contract me.
-
-Thanks!
-
--- 
-Regards,
-Josh.Yin/殷海明/A.K.A epaulin
+Thanks
+Tomas
