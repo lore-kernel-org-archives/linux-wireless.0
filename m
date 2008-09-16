@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39914 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752451AbYIFSlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 14:41:46 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
-Date: Sat, 6 Sep 2008 20:41:05 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	linux-wireless@vger.kernel.org
-References: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net>
-In-Reply-To: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net>
+Received: from mx51.mymxserver.com ([85.199.173.110]:40867 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752486AbYIPIvS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 04:51:18 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Kalle Valo <kalle.valo@nokia.com>
+Subject: Re: [RFC] mac80211: notify the user space about low signal quality
+Date: Tue, 16 Sep 2008 10:50:41 +0200
+Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	Helmut Schaa <hschaa@suse.de>
+References: <200809151416.07552.hschaa@suse.de> <1221491952.10177.65.camel@localhost.localdomain> <87fxo0zee1.fsf@nokia.com>
+In-Reply-To: <87fxo0zee1.fsf@nokia.com>
 MIME-Version: 1.0
-Message-Id: <200809062041.06035.mb@bu3sch.de> (sfid-20080906_204149_605477_EAD0EDFF)
 Content-Type: text/plain;
   charset="iso-8859-1"
+Message-Id: <200809161050.41482.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 06 September 2008 20:34:02 Larry Finger wrote:
-> A coding error present since b43legacy was incorporated into the
-> kernel has prevented the driver from using the rate-setting mechanism
-> of mac80211. The driver has been forced to remain at a 1 Mb/s rate.
+On Tuesday 16 September 2008 10:25:10 Kalle Valo wrote:
 
-Does version3 firmware have a different bitlayout for the status?
+>> My main problem is that adding a beacon threshold to mac80211 
+>> isn't a
 
-> Although this is not strictly a regression, it is a bug. I hope
-> it can be sent to 2.6.27.
+> Still I don't see a problem here, all the mac80211 drivers
+> should already now report similar signal strenght to the
+> mac80211 in comparable level.
 
-The new rules don't allow us to fix bugs after the merge window.
-Only regressions.
+And we could later allow something similar to "iwconfig ethX sens 
+Y" to modify the the threshold (or whatever else we use, even 
+some arbitrary calculated quality value). The possibility to 
+modify this would allow the user to define how eager mac80211 is 
+when it comes to roaming.
 
--- 
-Greetings Michael.
+
+I actually believe that we shouldn't use Quality as roaming 
+decision base. From what I know, Quality also counts in 
+re-transmissions, transfer speed (1 MBit/s is worse then 54 
+MBit/s) and whatever else. Therefore you can calculate quality 
+only for the current conection. 
+
+But when you scan, you only see signal strength and/or SNR of the 
+APs in sight. You won't know their quality of those APs.
+
+But you could compare your current signal strength and/or SNR to 
+the signal strength/SNR of the APs in sight.
+
+
+
+That would mean that you can use the Quality still for a 
+decision "Should I do a background scan or not?". But you cannot 
+use it for a decision "Should I switch to this AP or not?".
+
+And so I wonder why I should use quality in the first place if it 
+brings me only so far ...
