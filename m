@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44758 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755501AbYIRXRd (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:2062 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753142AbYIPSFg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 19:17:33 -0400
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
-	(rc5, rc6, probably others)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Steven Noonan <steven@uplinklabs.net>, Ingo Molnar <mingo@elte.hu>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-In-Reply-To: <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> (sfid-20080919_011057_085624_6416966D)
-References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
-	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
-	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
-	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
-	 <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
-	 <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com>
-	 <20080918220102.GE7408@tesla>
-	 <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com>
-	 <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
-	 <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com>
-	 (sfid-20080919_011057_085624_6416966D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zE7o6hXv06OLEw/g2PnP"
-Date: Fri, 19 Sep 2008 01:16:49 +0200
-Message-Id: <1221779810.23409.0.camel@johannes.berg> (sfid-20080919_011737_514801_218DFB3D)
-Mime-Version: 1.0
+	Tue, 16 Sep 2008 14:05:36 -0400
+Received: by ug-out-1314.google.com with SMTP id k3so162645ugf.37
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2008 11:05:35 -0700 (PDT)
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [RFC] Redesigning aggregation on mac80211
+Date: Tue, 16 Sep 2008 20:05:29 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <43e72e890809151203p213fae37ia3bd6871c3bfe2c2@mail.gmail.com>
+In-Reply-To: <43e72e890809151203p213fae37ia3bd6871c3bfe2c2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200809162005.30002.IvDoorn@gmail.com> (sfid-20080916_200541_645838_730315AA)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-zE7o6hXv06OLEw/g2PnP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> We're considering redesigning how aggregation works on mac80211 to
+> ensure its vendor neutral and to remove as much as redundant code in
+> drivers. We'd like some feedback from people and driver developers,
+> even those who haven't *yet* posted their new shiny 11n drivers, like
+> Marvell or Ralink driver developers.
 
-On Thu, 2008-09-18 at 16:10 -0700, Luis R. Rodriguez wrote:
-> On Thu, Sep 18, 2008 at 4:04 PM, Steven Noonan
-> > I always get "1 megabit/sec". It actually measures (at best) to be a
-> > throughput of 8mbits/sec, though the average (due to strange random
-> > packet loss) is about 4mbits/sec. --
->=20
-> Yeah, iwconfig reports a wrong rate, should be easy to fix but I
-> haven't yet looked at it. If you can fix it it'd be appreciated.
+Well technically speaking there are 2 Ralink drivers in the Kernel already
+which *should* support aggregation (rt61 and rt73).
 
-the rate patch I posted today will fix it. not for .27 though
+I'm sorry I have not read the entire thread on the new aggregation support
+yet, but I'll write what I know from rt61/rt73/rt2800 here anyway. :)
 
-johannes
+> Ivo, are you familiar yet with how aggregation works on Ralink
+> hardware? Does the new 11n hardware require firmware? Specifically
+> we're curious about how the hardware queues are managed.
 
---=-zE7o6hXv06OLEw/g2PnP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Ralink defines 4 queues, 1 Management queue (can be abused as regular TX queue)
+and a Beacon queue.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+There is no such thing as seperate aggregation queues, as soon as the device
+wants to perform aggregation it grabs a normal entry from the TX queue,
+and assignes all frames to it.
 
-iQIcBAABAgAGBQJI0uFdAAoJEKVg1VMiehFYeB8QAIL4j68uwBueyVRKgyr9pX33
-ka/Kb+6fcey3gp/yq1/pPNrd3kGgGACMC+PJeZd5cq9FnB/dGvL3w8EeDiaS6Kwb
-uelBBSWEWcZ/rDiwY1W6m+nu3zenyKs1MARpYBYA2walmr8ybKnOJn0DVvKSym5U
-tNyIYBKYVqw7c6brerL3IgbocpJL05T3viZGQNZFOiZAponJ/LmJLrNrMUVfe2YD
-EJQhAeDNCJak1DR4blBUxpTj7U0uJVNPJAh4K4oGQn0iJ2IDWbmYOAvMB2K2EluL
-egO12HAG7NiZ6aHb07jIpsZ6FT1R08yQ5LfDylIARcfAn29GaTuHD+AXYnrNmmGi
-LkYc0LDtx1aF5J0X7XWYJxtDzuaW/yldWyfMHynTl7AZhkVIGgwXESSe+PMKUDow
-Ty7HRkNQAjP1fLIrfYuv9bYmvboDvcSa8qhwavIf/3W0KZsEBVTKuKRHGqlXaW2Q
-pM6PmB51qf+V0qqNDjjLVtUJp5DV352giOTVDit53KCU3yD4fbiJzWpHRCXk6tha
-dMJVCrnqrq2nKxtwwyzbfAzX9uG9MA8b29QWCdZvvtA9B43xBJRWOVCVX1NChHm+
-BSsS9o3GgjBkY16TSZ2nwRWY2D9qAW+eB+2Y/w+47j+CtTRj1Bh9q0NsJnpkIx9t
-0IMlf0Cyx3zrhlbnzaQB
-=aGaL
------END PGP SIGNATURE-----
+rt61: 5 addresses can be provided for Aggrated frames, I am not sure
+if the first is a header only frame or not.
+rt73: Not sure what should be done
+rt2800: 2 addresses can be provided, where the first is a header/descriptor
+only address. In the second address frames can be provided.
 
---=-zE7o6hXv06OLEw/g2PnP--
+Because the aggregated frame is created directly into a TX entry, no other
+frames should go through that queue until the aggregated frame has been
+completed.
 
+I'm afraid that is currently all the information I got at this time,
+It is only a little, but I never got around to fully look into the aggregation support,
+although I definately want it implemented in the drivers to increase the
+performance a bit. :)
+
+Ivo
