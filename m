@@ -1,238 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45943 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753927AbYI3Soq (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:52872 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbYIPTvk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 14:44:46 -0400
-Subject: Re: [PATCH 1/3] mac80211: free up 2 bytes in skb->cb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48E20BFC.6040904@openwrt.org>
-References: <48E20B7C.2040405@openwrt.org>  <48E20BFC.6040904@openwrt.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fVgZYVKMAN1bmAJiFcQk"
-Date: Tue, 30 Sep 2008 20:44:42 +0200
-Message-Id: <1222800282.7064.62.camel@johannes.berg> (sfid-20080930_204525_032287_1796ADD1)
-Mime-Version: 1.0
+	Tue, 16 Sep 2008 15:51:40 -0400
+Date: Tue, 16 Sep 2008 20:51:34 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Message-ID: <20080916195134.GB14879@srcf.ucam.org> (sfid-20080916_215200_096430_2C25C6A8)
+References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48CFE820.7010305@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Sep 16, 2008 at 12:08:48PM -0500, Larry Finger wrote:
 
---=-fVgZYVKMAN1bmAJiFcQk
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I agree with Michael. From what I know, the only possible reason for
+> having this state would be if user space could somehow affect the
+> state of the hardware switch. As the user's finger is the only such
+> thing, then there is no use for the RFKILL_STATE_HARD_BLOCKED state,
+> particularly when it breaks LED operations.
 
-On Tue, 2008-09-30 at 13:22 +0200, Felix Fietkau wrote:
-> Free up 2 bytes in skb->cb to be used for multi-rate retry.
-> Move iv_len and icv_len initialization into key alloc.
->=20
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+RFKILL_STATE_HARD_BLOCKED indicates that the hardware is disabled in a 
+way that userspace can't influence, so sounds like exactly the right 
+state to have here. I still have absolutely no idea what b43 rfkill is 
+supposed to be doing - why on earth is it requesting rfkill-input, and 
+why does it generate keypress events? I /think/ it should e something 
+like the following (untested, I'm not near any of my b43 hardware at the 
+moment). This basically does the following:
 
-The mac80211 changes look good to me, the driver stuff I cannot really
-judge.
+1) Split the update function in two, so it can be called by either 
+polling or an interrupt driven event on newer hardware (not implemented 
+yet)
+2) Remove all the input handling
+3) Change the state updates to use rfkill_force_state, which will 
+generate an event that gets sent up to userland
+4) Retains the RFKILL_STATE_HARD_BLOCKED code
 
->=20
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -337,8 +337,6 @@
->  			unsigned long jiffies;
->  			s8 rts_cts_rate_idx, alt_retry_rate_idx;
->  			u8 retry_limit;
-> -			u8 icv_len;
-> -			u8 iv_len;
->  		} control;
->  		struct {
->  			u64 ampdu_ack_map;
-> @@ -635,6 +633,8 @@
->   */
->  struct ieee80211_key_conf {
->  	enum ieee80211_key_alg alg;
-> +	u8 icv_len;
-> +	u8 iv_len;
->  	u8 hw_key_idx;
->  	u8 flags;
->  	s8 keyidx;
-> --- a/drivers/net/wireless/b43/xmit.c
-> +++ b/drivers/net/wireless/b43/xmit.c
-> @@ -252,7 +252,7 @@
->  		}
-> =20
->  		/* Hardware appends ICV. */
-> -		plcp_fragment_len +=3D info->control.icv_len;
-> +		plcp_fragment_len +=3D info->control.hw_key->icv_len;
-> =20
->  		key_idx =3D b43_kidx_to_fw(dev, key_idx);
->  		mac_ctl |=3D (key_idx << B43_TXH_MAC_KEYIDX_SHIFT) &
-> @@ -260,7 +260,7 @@
->  		mac_ctl |=3D (key->algorithm << B43_TXH_MAC_KEYALG_SHIFT) &
->  			   B43_TXH_MAC_KEYALG;
->  		wlhdr_len =3D ieee80211_hdrlen(fctl);
-> -		iv_len =3D min((size_t) info->control.iv_len,
-> +		iv_len =3D min((size_t) info->control.hw_key->iv_len,
->  			     ARRAY_SIZE(txhdr->iv));
->  		memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
->  	}
-> --- a/drivers/net/wireless/b43legacy/xmit.c
-> +++ b/drivers/net/wireless/b43legacy/xmit.c
-> @@ -243,7 +243,7 @@
-> =20
->  		if (key->enabled) {
->  			/* Hardware appends ICV. */
-> -			plcp_fragment_len +=3D info->control.icv_len;
-> +			plcp_fragment_len +=3D info->control.hw_key->icv_len;
-> =20
->  			key_idx =3D b43legacy_kidx_to_fw(dev, key_idx);
->  			mac_ctl |=3D (key_idx << B43legacy_TX4_MAC_KEYIDX_SHIFT) &
-> @@ -252,7 +252,7 @@
->  				   B43legacy_TX4_MAC_KEYALG_SHIFT) &
->  				   B43legacy_TX4_MAC_KEYALG;
->  			wlhdr_len =3D ieee80211_hdrlen(wlhdr->frame_control);
-> -			iv_len =3D min((size_t)info->control.iv_len,
-> +			iv_len =3D min((size_t)info->control.hw_key->iv_len,
->  				     ARRAY_SIZE(txhdr->iv));
->  			memcpy(txhdr->iv, ((u8 *)wlhdr) + wlhdr_len, iv_len);
->  		} else {
-> --- a/net/mac80211/wep.c
-> +++ b/net/mac80211/wep.c
-> @@ -313,9 +313,6 @@
->  {
->  	struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
-> =20
-> -	info->control.iv_len =3D WEP_IV_LEN;
-> -	info->control.icv_len =3D WEP_ICV_LEN;
-> -
->  	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
->  		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
->  			return -1;
-> --- a/net/mac80211/wpa.c
-> +++ b/net/mac80211/wpa.c
-> @@ -152,9 +152,6 @@
->  	int len, tail;
->  	u8 *pos;
-> =20
-> -	info->control.icv_len =3D TKIP_ICV_LEN;
-> -	info->control.iv_len =3D TKIP_IV_LEN;
-> -
->  	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
->  	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
->  		/* hwaccel - with no need for preallocated room for IV/ICV */
-> @@ -374,9 +371,6 @@
->  	u8 *pos, *pn;
->  	int i;
-> =20
-> -	info->control.icv_len =3D CCMP_MIC_LEN;
-> -	info->control.iv_len =3D CCMP_HDR_LEN;
-> -
->  	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
->  	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
->  		/* hwaccel - with no need for preallocated room for CCMP "
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1164,7 +1164,7 @@
-> =20
->  	if (info->control.hw_key) {
->  		keyidx =3D info->control.hw_key->hw_key_idx;
-> -		pktlen +=3D info->control.icv_len;
-> +		pktlen +=3D info->control.hw_key->icv_len;
->  	}
->  	ret =3D ah->ah_setup_tx_desc(ah, ds, pktlen,
->  		ieee80211_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
-> --- a/drivers/net/wireless/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath9k/xmit.c
-> @@ -237,7 +237,7 @@
-> =20
->  	if (tx_info->control.hw_key) {
->  		txctl->keyix =3D tx_info->control.hw_key->hw_key_idx;
-> -		txctl->frmlen +=3D tx_info->control.icv_len;
-> +		txctl->frmlen +=3D tx_info->control.hw_key->icv_len;
-> =20
->  		if (tx_info->control.hw_key->alg =3D=3D ALG_WEP)
->  			txctl->keytype =3D ATH9K_KEY_TYPE_WEP;
-> --- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-> @@ -56,10 +56,10 @@
->  	 * note that these lengths should only be added when
->  	 * mac80211 does not generate it.
->  	 */
-> -	overhead +=3D tx_info->control.icv_len;
-> +	overhead +=3D key->icv_len;
-> =20
->  	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_IV))
-> -		overhead +=3D tx_info->control.iv_len;
-> +		overhead +=3D key->iv_len;
-> =20
->  	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)) {
->  		if (key->alg =3D=3D ALG_TKIP)
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -374,7 +374,7 @@
->  	struct queue_entry *entry =3D rt2x00queue_get_entry(queue, Q_INDEX);
->  	struct txentry_desc txdesc;
->  	struct skb_frame_desc *skbdesc;
-> -	unsigned int iv_len =3D IEEE80211_SKB_CB(skb)->control.iv_len;
-> +	unsigned int iv_len;
-> =20
->  	if (unlikely(rt2x00queue_full(queue)))
->  		return -EINVAL;
-> @@ -410,8 +410,11 @@
->  	 * the frame so we can provide it to the driver seperately.
->  	 */
->  	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc.flags) &&
-> -	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags))
-> +	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags) &&
-> +		(IEEE80211_SKB_CB(skb)->control.hw_key !=3D NULL)) {
-> +		iv_len =3D IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
->  		rt2x00crypto_tx_remove_iv(skb, iv_len);
-> +	}
-> =20
->  	/*
->  	 * It could be possible that the queue was corrupted and this
-> --- a/net/mac80211/key.c
-> +++ b/net/mac80211/key.c
-> @@ -281,6 +281,20 @@
->  	key->conf.alg =3D alg;
->  	key->conf.keyidx =3D idx;
->  	key->conf.keylen =3D key_len;
-> +	switch (alg) {
-> +	case ALG_WEP:
-> +		key->conf.iv_len =3D WEP_IV_LEN;
-> +		key->conf.icv_len =3D WEP_ICV_LEN;
-> +		break;
-> +	case ALG_TKIP:
-> +		key->conf.iv_len =3D TKIP_IV_LEN;
-> +		key->conf.icv_len =3D TKIP_ICV_LEN;
-> +		break;
-> +	case ALG_CCMP:
-> +		key->conf.iv_len =3D CCMP_HDR_LEN;
-> +		key->conf.icv_len =3D CCMP_MIC_LEN;
-> +		break;
-> +	}
->  	memcpy(key->conf.key, key_data, key_len);
->  	INIT_LIST_HEAD(&key->list);
->  	INIT_LIST_HEAD(&key->todo);
->=20
+When the user flicks a switch or presses a button that physically 
+disables the radio, the state will now automatically change to 
+RFKILL_STATE_HARD_BLOCKED. If they have a key that generates KEY_WLAN 
+but doesn't change the radio state, rfkill-input will trigger a change 
+to RFKILL_STATE_SOFT_BLOCKED.
 
---=-fVgZYVKMAN1bmAJiFcQk
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Like I said, this is only build-tested - I won't be back at a b43 until 
+next week. If someone could give this a go, that would be great.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+index fec5645..e8b2acb 100644
+--- a/drivers/net/wireless/b43/rfkill.c
++++ b/drivers/net/wireless/b43/rfkill.c
+@@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev *dev)
+ 	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+ 
+ 	if (!dev->radio_hw_enable) {
+-		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
++		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
+ 		return;
+ 	}
+ 
+ 	if (!dev->phy.radio_on)
+-		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
++		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
+ 	else
+-		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
+-
++		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
+ }
+ 
+-/* The poll callback for the hardware button. */
+-static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
++static void b43_rfkill_update(struct b43_wldev *dev)
+ {
+-	struct b43_wldev *dev = poll_dev->private;
+ 	struct b43_wl *wl = dev->wl;
+ 	bool enabled;
+ 	bool report_change = 0;
+@@ -82,13 +79,25 @@ static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
+ 			enabled ? "ENABLED" : "DISABLED");
+ 	}
+ 	mutex_unlock(&wl->mutex);
++}
+ 
+-	/* send the radio switch event to the system - note both a key press
+-	 * and a release are required */
+-	if (unlikely(report_change)) {
+-		input_report_key(poll_dev->input, KEY_WLAN, 1);
+-		input_report_key(poll_dev->input, KEY_WLAN, 0);
+-	}
++static void b43_rfkill_poll(unsigned long data)
++{
++	struct b43_rfkill *rfkill = (struct b43_rfkill *)data;
++	schedule_work(&rfkill->poll_queue);
++}
++
++static void b43_rfkill_work(struct work_struct *work)
++{
++	struct b43_rfkill *rfk = container_of(work, struct b43_rfkill, 
++					      poll_queue);
++	struct b43_wl *wl = container_of(rfk, struct b43_wl, rfkill);
++	struct b43_wldev *dev = wl->current_dev;
++
++	b43_rfkill_update(dev);
++	rfk->poll_timer.function = b43_rfkill_poll;
++	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
++	add_timer(&rfk->poll_timer);
+ }
+ 
+ /* Called when the RFKILL toggled in software. */
+@@ -158,48 +167,23 @@ void b43_rfkill_init(struct b43_wldev *dev)
+ 	rfk->rfkill->toggle_radio = b43_rfkill_soft_toggle;
+ 	rfk->rfkill->user_claim_unsupported = 1;
+ 
+-	rfk->poll_dev = input_allocate_polled_device();
+-	if (!rfk->poll_dev) {
+-		rfkill_free(rfk->rfkill);
+-		goto err_freed_rfk;
+-	}
+-
+-	rfk->poll_dev->private = dev;
+-	rfk->poll_dev->poll = b43_rfkill_poll;
+-	rfk->poll_dev->poll_interval = 1000; /* msecs */
+-
+-	rfk->poll_dev->input->name = rfk->name;
+-	rfk->poll_dev->input->id.bustype = BUS_HOST;
+-	rfk->poll_dev->input->id.vendor = dev->dev->bus->boardinfo.vendor;
+-	rfk->poll_dev->input->evbit[0] = BIT(EV_KEY);
+-	set_bit(KEY_WLAN, rfk->poll_dev->input->keybit);
+-
+ 	err = rfkill_register(rfk->rfkill);
+ 	if (err)
+-		goto err_free_polldev;
++		goto err_free_rfk;
+ 
+-#ifdef CONFIG_RFKILL_INPUT_MODULE
+-	/* B43 RF-kill isn't useful without the rfkill-input subsystem.
+-	 * Try to load the module. */
+-	err = request_module("rfkill-input");
+-	if (err)
+-		b43warn(wl, "Failed to load the rfkill-input module. "
+-			"The built-in radio LED will not work.\n");
+-#endif /* CONFIG_RFKILL_INPUT */
++	rfk->registered = 1;
+ 
+-	err = input_register_polled_device(rfk->poll_dev);
+-	if (err)
+-		goto err_unreg_rfk;
++	INIT_WORK(&rfk->poll_queue, b43_rfkill_work);
+ 
+-	rfk->registered = 1;
++	init_timer(&rfk->poll_timer);
++	rfk->poll_timer.function = b43_rfkill_poll;
++	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
++	rfk->poll_timer.data = (unsigned long)dev;
++	add_timer(&rfk->poll_timer);
+ 
+ 	return;
+-err_unreg_rfk:
+-	rfkill_unregister(rfk->rfkill);
+-err_free_polldev:
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
+-err_freed_rfk:
++err_free_rfk:
++	rfkill_free(rfk->rfkill);
+ 	rfk->rfkill = NULL;
+ out_error:
+ 	rfk->registered = 0;
+@@ -214,9 +198,8 @@ void b43_rfkill_exit(struct b43_wldev *dev)
+ 		return;
+ 	rfk->registered = 0;
+ 
+-	input_unregister_polled_device(rfk->poll_dev);
++	del_timer(&rfk->poll_timer);
++
+ 	rfkill_unregister(rfk->rfkill);
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
+ 	rfk->rfkill = NULL;
+ }
+diff --git a/drivers/net/wireless/b43/rfkill.h b/drivers/net/wireless/b43/rfkill.h
+index adacf93..1a4a719 100644
+--- a/drivers/net/wireless/b43/rfkill.h
++++ b/drivers/net/wireless/b43/rfkill.h
+@@ -7,14 +7,14 @@ struct b43_wldev;
+ #ifdef CONFIG_B43_RFKILL
+ 
+ #include <linux/rfkill.h>
+-#include <linux/input-polldev.h>
+-
+ 
+ struct b43_rfkill {
+ 	/* The RFKILL subsystem data structure */
+ 	struct rfkill *rfkill;
+-	/* The poll device for the RFKILL input button */
+-	struct input_polled_dev *poll_dev;
++	/* The timer list for the RFKILL polling */
++	struct timer_list poll_timer;
++	/* Workqueue for the RFKILL polling */
++	struct work_struct poll_queue;
+ 	/* Did initialization succeed? Used for freeing. */
+ 	bool registered;
+ 	/* The unique name of this rfkill switch */
 
-iQIcBAABAgAGBQJI4nOWAAoJEKVg1VMiehFYoboQAIHqytg8xr8Yzx+e4yFi6SXC
-LxTHbEetmCfjku0/g7QVayUlWrs6IgvHaywUifVudnnBiK56BZbIstPbP3ICy3N5
-PK+NVzd1AmZfzvCbp6jeMOdtypu5RgHFJ5qHoHy0a2QZm3WD7Y45aActs903oFZJ
-djfnc+MMdjgPO5JqvWm1YffLiXd3Cz+9YMmhG4Dp+h4EvR7gR7XizxYEs028KRCn
-/SQHDsKy8I9gx5CGmi53qn3wDgY8Da+VcYw5pIkchNpG7kez0Zf9vPnjf9uKgj/x
-E55m2biBZCWhug11o0tBEmiSr1U3uWnyjrOeIrQftVnLUUvviUC/nsifn6qOOkGu
-FkpNFCr8RKZtrkg3dlstTmKJ2bP5mk+LkXmhoj6D68NEKuFMcaKFOPORi3tCmR/a
-FSxUvS8goBd69jkvtvPTfVuBA/uz5JqTAsluTyY+Le4r6XlZyz0eq9qpBSwdQL0G
-bhHyLVDz8cBQ4Bxl6IZD8hdJZU8v2iwqpGD2c+ESyBbYy/nnOC3wY6kaxsb77LkA
-BcDV5bO1A4Ob7ahz68kGXyJ3zNUkSYnXhLg3Kq64N36pRVo+Op3F1K84LY1lwodP
-6hG0feBOTtARXbCBjINWUDm44votu9IiyXwoeNcPLiQawMkNfA9zDk2Mqwc0t1Oh
-8q32ZRslE7wJLUUozJJ5
-=cErB
------END PGP SIGNATURE-----
 
---=-fVgZYVKMAN1bmAJiFcQk--
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
