@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:47197 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753446AbYIRJAj (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:26473 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399AbYIPIIg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 05:00:39 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so1596540eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 02:00:38 -0700 (PDT)
-Message-ID: <f488382f0809180200mebef85cxa7051b71e44b673d@mail.gmail.com> (sfid-20080918_110043_672825_30529AE5)
-Date: Thu, 18 Sep 2008 02:00:37 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath9k-devel] ath9k constantly drops network connection
-Cc: "Mats Johannesson" <spamcan1@abrasax.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890809180146q2a4062b8hf4e0911d3782c943@mail.gmail.com>
+	Tue, 16 Sep 2008 04:08:36 -0400
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Helmut Schaa" <hschaa@suse.de>, "Dan Williams" <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Jouni Malinen" <j@w1.fi>
+Subject: Re: [RFC] mac80211: notify the user space about low signal quality
+References: <200809151416.07552.hschaa@suse.de>
+	<200809151634.06448.hschaa@suse.de>
+	<1221492529.10177.76.camel@localhost.localdomain>
+	<200809151845.35841.hschaa@suse.de>
+	<43e72e890809151821h5d40e750q10c78f4d20d27c79@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 16 Sep 2008 11:07:35 +0300
+In-Reply-To: <43e72e890809151821h5d40e750q10c78f4d20d27c79@mail.gmail.com> (ext Luis R. Rodriguez's message of "Mon\, 15 Sep 2008 18\:21\:17 -0700")
+Message-ID: <87r67kzf7c.fsf@nokia.com> (sfid-20080916_100844_742738_D3E5EF9B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <e14212e0809170305v46b0c512i63c1a2874e730274@mail.gmail.com>
-	 <20080917191003.GC6198@tesla> <20080918044618.0cd64cd9@loke.fish.not>
-	 <20080918103628.5a6ab12c@loke.fish.not>
-	 <43e72e890809180146q2a4062b8hf4e0911d3782c943@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2008 at 1:46 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Sep 18, 2008 at 1:36 AM, Mats Johannesson <spamcan1@abrasax.se> wrote:
->> Anyhow, writing now to share the good news that the patch you refer to:
->> [PATCH] ath9k: connectivity is lost after Group rekeying is done
->> (Click on [Download message RAW] at
->> http://marc.info/?l=linux-wireless&m=122163541519736&w=2 to get a clean
->> copy) completely fixes the regression between -rc5 and -rc6 I reported
->> in:
->>
->> [ath9k-devel] 2.6.27-rc6 (and forwartd to -rc6-git3) dies silently.
->> https://lists.ath9k.org/pipermail/ath9k-devel/2008-September/000263.html
->>
->> Patching -rc6-git3 I've now run 4 hours without a connection drop.
->> Strangely enough it also allowed me to again make the connection
->> 'sticky' over a reboot (Wicd Manager).
->>
->> This patch is a must have for 2.6.27 no matter what merging policy is
->> in effect.
+Luis R. Rodriguez <mcgrof@gmail.com> writes:
+
+> On Mon, Sep 15, 2008 at 9:45 AM, Helmut Schaa <hschaa@suse.de> wrote:
 >
-> John please consider merging this for 27 as well as it fixes issues
-> reported due to lost of connectivity.
+>> Ok, I'll sum that up. Moving the policy into user space is a good
+>> thing if the quality values are comparable. Once mac80211
+>> recognices a noticable quality change we could use IWEVQUAL to
+>> notify user space about it. Furthermore (if desired) the signal
+>> could be extended to not only report a value between 0 and 100 but
+>> could also contain flags indicating lost beacons, excessive retries
+>> etc.
 >
->  Luis
+> If you are going to add a new sort of notification can you please use
+> nl80211? No need to keep wireless extensions on life support.
 
-Dang! I just developed a pretty much identical patch locally to solve
-my wireless connection loss issues and was about 20 minutes into a 5
-hour test to make certain it worked correctly. I wish I'd been faster
-at getting mine tested and out the door. Oh well, at least -somebody-
-got a fix up.
+>From my point of view WE is not on life support (yet) but instead very
+widely used. As an example, I still haven't seen any cfg80211/nl80211
+user space tools in debian unstable. (Please correct me if I'm wrong.)
+There has been a lot of talk about cfg80211/nl80211 but unfortunately
+the migration progress has been very slow.
 
-Indeed, please merge this to 2.6.27 ASAP. Having a problem like this
-hit the 2.6.27 final release would -really- suck.
+I definitely want to see this background scan support in Wireless
+Extensions as well, otherwise it might prevent the real use of the
+feature.
 
-- Steven
+-- 
+Kalle Valo
