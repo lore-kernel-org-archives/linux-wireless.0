@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:50116 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751144AbYIPVtC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 17:49:02 -0400
-Subject: Re: iw packaging
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1221601136.9262.23.camel@johannes.berg>
-References: <1221596962.9262.12.camel@johannes.berg>
-	 <1221598208.17084.11.camel@dv>  <1221599460.9262.16.camel@johannes.berg>
-	 (sfid-20080916_231152_167035_625A9793)  <1221599757.9262.19.camel@johannes.berg>
-	 <1221600232.17084.16.camel@dv>  <1221601136.9262.23.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 16 Sep 2008 17:48:59 -0400
-Message-Id: <1221601739.17084.22.camel@dv> (sfid-20080916_234907_186069_1A0FD3BB)
-Mime-Version: 1.0
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:49800 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753319AbYIPCFt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2008 22:05:49 -0400
+Received: by gxk9 with SMTP id 9so26403665gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 19:05:48 -0700 (PDT)
+Message-ID: <43e72e890809151905j4213dc1etec1f65bca89c9e20@mail.gmail.com> (sfid-20080916_040553_169589_DE3050C6)
+Date: Mon, 15 Sep 2008 19:05:48 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: Re: [RFC] mac80211: re-enable aggregation on 2.6.27
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890809151704s252f6189tf711c700ee829760@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1221503192-28502-1-git-send-email-lrodriguez@atheros.com>
+	 <43e72e890809151555u3a79bd89h763fa0a6ba07e752@mail.gmail.com>
+	 <43e72e890809151624g3540f308r90808e281b22314e@mail.gmail.com>
+	 <43e72e890809151704s252f6189tf711c700ee829760@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-09-16 at 23:38 +0200, Johannes Berg wrote:
+On Mon, Sep 15, 2008 at 5:04 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Mon, Sep 15, 2008 at 4:24 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>
+> So the problem with ath9k is we report only 1 ampdu queue and when we
+> try to map tid 6 to a queue we cannot do it as we already have one for
+> tid 0 with the ap.
+>
+> [ 9653.596135] Open BA session requested for 00:03:7f:0c:e0:bc tid 6
+> [ 9653.596146] BA request denied - queue unavailable for tid 6
+> [ 9653.688091] Open BA session requested for 00:03:7f:0c:e0:bc tid 6
+> [ 9653.688095] BA request denied - queue unavailable for tid 6
+>
+> If I up the "ampdu" queues to >= 2 on ath9k I then am able to allocate
+> more TID sessions to more "ampdu queues". But my results are pretty
+> horrible:
+>
+> [  5] local 192.168.1.5 port 5001 connected with 192.168.1.11 port 52651
+> [  5]  0.0- 1.0 sec  1.99 MBytes  16.7 Mbits/sec
+> [  5]  1.0- 2.0 sec  2.63 MBytes  22.0 Mbits/sec
+> [  5]  2.0- 3.0 sec  1.26 MBytes  10.6 Mbits/sec
+> [  5]  3.0- 4.0 sec    740 KBytes  6.06 Mbits/sec
+> [  5]  4.0- 5.0 sec  1.48 MBytes  12.4 Mbits/sec
+> [  5]  5.0- 6.0 sec  1.57 MBytes  13.2 Mbits/sec
+> [  5]  6.0- 7.0 sec  2.78 MBytes  23.3 Mbits/sec
+> [  5]  7.0- 8.0 sec    250 KBytes  2.05 Mbits/sec
+> [  5]  8.0- 9.0 sec  2.00 MBytes  16.8 Mbits/sec
+> [  5]  9.0-10.0 sec  1.80 MBytes  15.1 Mbits/sec
+> [  5]  0.0-10.4 sec  16.7 MBytes  13.5 Mbits/sec
+>
+> Something is up...
 
-> I think what may be happening is that alignment is somehow messing
-> things up. Can you please try the patch below?
+With AR9280 I get better results, yet fishy.
 
-The patch doesn't help:
+[  4] local 192.168.1.5 port 5001 connected with 192.168.1.13 port 36835
+[  4]  0.0- 1.0 sec  3.58 MBytes  30.0 Mbits/sec
+[  4]  1.0- 2.0 sec  4.76 MBytes  39.9 Mbits/sec
+[  4]  2.0- 3.0 sec  5.62 MBytes  47.2 Mbits/sec
+[  4]  3.0- 4.0 sec  7.27 MBytes  60.9 Mbits/sec
+[  4]  4.0- 5.0 sec  5.65 MBytes  47.4 Mbits/sec
+[  4]  5.0- 6.0 sec  7.10 MBytes  59.6 Mbits/sec
+[  4]  6.0- 7.0 sec  4.63 MBytes  38.9 Mbits/sec
+[  4]  7.0- 8.0 sec  6.20 MBytes  52.0 Mbits/sec
+[  4]  8.0- 9.0 sec  4.54 MBytes  38.1 Mbits/sec
+[  4]  9.0-10.0 sec  6.64 MBytes  55.7 Mbits/sec
+[  4]  0.0-10.2 sec  56.7 MBytes  46.6 Mbits/sec
 
-$ ./iw 
-Usage:  ./iw [options] command
-Options:
-        --debug         enable netlink debugging
-        --version       show version
-Commands:
-        list
-        Segmentation fault (core dumped)
-
-(gdb) p __start___cmd
-$1 = 0x403d20
-(gdb) p *__start___cmd
-$2 = {section = 0x0, name = 0x403865 "list", args = 0x0, cmd = NL80211_CMD_GET_WIPHY, 
-  nl_msg_flags = 768, idby = CIB_NONE, handler = 0x401da0 <handle_info>}
-(gdb) p __start___cmd[0]
-$3 = {section = 0x0, name = 0x403865 "list", args = 0x0, cmd = NL80211_CMD_GET_WIPHY, 
-  nl_msg_flags = 768, idby = CIB_NONE, handler = 0x401da0 <handle_info>}
-(gdb) p __start___cmd[1]
-$4 = {section = 0x0, name = 0x0, args = 0x0, cmd = 4208746, nl_msg_flags = 0, idby = CIB_NONE, 
-  handler = 0x1}
-(gdb) p &__start___cmd[0]
-$5 = (struct cmd *) 0x403d20
-(gdb) p &__start___cmd[1]
-$6 = (struct cmd *) 0x403d50
-
-$ nm iw | grep __cmd |sort
-0000000000403d20 A __start___cmd
-0000000000403d20 r __cmd_handle_infoNL80211_CMD_GET_WIPHYCIB_NONE
-0000000000403d60 r __cmd_handle_infoNL80211_CMD_GET_WIPHYCIB_PHY
-0000000000403da0 r __cmd_handle_nameNL80211_CMD_SET_WIPHYCIB_PHY
-...
-
-The next command is at 0x403d60, but the code expects it at 0x403d50.
-gdb confirms it:
-
-(gdb) p *(struct cmd *) 0x403d60
-$1 = {section = 0x0, name = 0x40386a "info", args = 0x0, cmd = NL80211_CMD_GET_WIPHY, 
-  nl_msg_flags = 0, idby = CIB_PHY, handler = 0x401da0 <handle_info>}
-(gdb) p *(struct cmd *) 0x403da0
-$2 = {section = 0x403878 "set", name = 0x40387c "name", args = 0x403881 "<new name>", 
-  cmd = NL80211_CMD_SET_WIPHY, nl_msg_flags = 0, idby = CIB_PHY, 
-  handler = 0x402230 <handle_name>}
-(gdb)
-
--- 
-Regards,
-Pavel Roskin
+  Luis
