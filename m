@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35129 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752533AbYIWRTa (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:56106 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222AbYIPUaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 13:19:30 -0400
-Subject: [PATCH v2] iwlagn: downgrade BUG_ON in interrupt
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1222190062.18015.34.camel@johannes.berg> (sfid-20080923_191515_468904_B9897FB7)
-References: <1222190062.18015.34.camel@johannes.berg>
-	 (sfid-20080923_191515_468904_B9897FB7)
-Content-Type: text/plain
-Date: Tue, 23 Sep 2008 19:18:43 +0200
-Message-Id: <1222190323.18015.36.camel@johannes.berg> (sfid-20080923_191933_679277_9A4743CA)
-Mime-Version: 1.0
+	Tue, 16 Sep 2008 16:30:25 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Julius Rafft <juliusrafft@yahoo.com>
+Subject: Re: p54 not working with SMC2802W EU
+Date: Tue, 16 Sep 2008 22:33:50 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <251662.40630.qm@web59813.mail.ac4.yahoo.com>
+In-Reply-To: <251662.40630.qm@web59813.mail.ac4.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809162233.51924.chunkeey@web.de> (sfid-20080916_223027_772596_BBAAA0EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This BUG_ON really shouldn't trigger, but if it does, as on my machine,
-it leaves you wondering what happened because you won't see it. Let's
-instead leak a bit of state and memory and at least make it possible to
-report it to the kerneloops project to track it.
+On Monday 15 September 2008 16:52:15 Julius Rafft wrote:
+> Hi,
+>
+> relevant dmesg bits:
+>
+> [ 2482.340701] prism54pci 0000:04:02.0: PCI INT A -> GSI 23 (level, low) ->
+> IRQ 23 [ 2482.390380] firmware: requesting isl3886
+> [ 2482.393546] p54: LM86 firmware
+> [ 2482.393552] p54: FW rev 2.5.3.0 - Softmac protocol 3.0
+> [ 2483.236740] p54: unknown eeprom code : 0x1
+> [ 2483.238706] phy0: Selected rate control algorithm 'pid'
+> [ 2483.241611] phy0: hwaddr 00:04:e2:ec:b1:4b, isl3886
+> [ 2487.309923] firmware: requesting isl3886
+> [ 2487.345457] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [ 2487.480817] phy0: unknown frame RXed (0x65)
+> [ 2487.487612] phy0: unknown frame RXed (0x20)
+>[...]
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
+> Note I use the 2.5.3.0 firmware since it is the one included
+> in the windows driver that came with my card. I also tried
+> the others (2.7.0.0 and 2.13.1.0) but also no joy.
+Do you have some sort of a big-endian architecture?
 
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-tx.c	2008-09-23 13:00:01.096489715 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-tx.c	2008-09-23 19:07:14.107323109 +0200
-@@ -1200,10 +1200,9 @@ void iwl_tx_cmd_complete(struct iwl_priv
- 	/* If a Tx command is being handled and it isn't in the actual
- 	 * command queue then there a command routing bug has been introduced
- 	 * in the queue management code. */
--	if (txq_id != IWL_CMD_QUEUE_NUM)
--		IWL_ERROR("Error wrong command queue %d command id 0x%X\n",
--			  txq_id, pkt->hdr.cmd);
--	BUG_ON(txq_id != IWL_CMD_QUEUE_NUM);
-+	if (WARN(txq_id != IWL_CMD_QUEUE_NUM,
-+		 "wrong command queue %d, command id 0x%X\n", txq_id, pkt->hdr.cmd))
-+		return;
- 
- 	cmd_index = get_cmd_index(&priv->txq[IWL_CMD_QUEUE_NUM].q, index, huge);
- 	cmd = priv->txq[IWL_CMD_QUEUE_NUM].cmd[cmd_index];
+Anyway, 2.13.1.0 is only useful if you are working with wireless-testing/
+wireless-next git tree, it won't work with any older driver.
 
+So please, checkout the current wireless-next and see what it does.
+>
+> with 2.5.3.0 it actually managed to associate, but only
+> once, only for a couple of seconds and even then it
+> didn't manage to "authenticate" (despite having no
+> encryption/security whatsoever in this access point)
+>
+???
+No?... If a card can't authenticate, it won't even try to associate.
 
+Maybe the firmware crashes shortly after the first few successful 
+transmission. At least there are some hints (unknown frame RXed) that 
+something fishy is going on. Maybe another wlan device in monitor
+mode can help here.... but let's try the simple solutions first ;-)
+
+Regards,
+	Chr
