@@ -1,78 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35574 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519AbYITU7C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 16:59:02 -0400
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
-	(rc5, rc6, probably others)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Steven Noonan <steven@uplinklabs.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Ingo Molnar <mingo@elte.hu>
-In-Reply-To: <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com> (sfid-20080920_225745_416096_AAE736FF)
-References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
-	 <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net>
-	 <20080919175824.GA5626@senthil-lnx.users.atheros.com>
-	 <20080919182322.GB7027@tesla>
-	 <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
-	 <20080919235305.GD11665@tesla>
-	 <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com>
-	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
-	 <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
-	 <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
-	 <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com>
-	 (sfid-20080920_225745_416096_AAE736FF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mthL+089pEEIp5Cj08k3"
-Date: Sat, 20 Sep 2008 22:58:58 +0200
-Message-Id: <1221944338.3023.8.camel@johannes.berg> (sfid-20080920_225908_681866_72EF8D16)
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:49988 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751540AbYIPGF3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 02:05:29 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 2/2] iwlwifi: make PS use named constants
+Date: Tue, 16 Sep 2008 14:01:04 +0800
+Message-Id: <1221544864-9494-2-git-send-email-yi.zhu@intel.com> (sfid-20080916_080535_808236_7AF3D2D3)
+In-Reply-To: <1221544864-9494-1-git-send-email-yi.zhu@intel.com>
+References: <1221544864-9494-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-mthL+089pEEIp5Cj08k3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch adds named constants for configuring MIMO power save
+chain settings.
 
-On Sat, 2008-09-20 at 13:57 -0700, Luis R. Rodriguez wrote:
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   19 ++++++++++++-------
+ 1 files changed, 12 insertions(+), 7 deletions(-)
 
-> mcgrof@tesla ~/tmp/irq $ sar -f irqlog-storm.sar -A
-> Invalid system activity file: irqlog-storm.sar
->=20
-> Perhaps we its a different format than what my sar can read...
-
-It changes like every release... Not a very useful thing, that.
-
-johannes
-
---=-mthL+089pEEIp5Cj08k3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI1WQOAAoJEKVg1VMiehFYbyEP/3189JlMdjPh1vc20nmBTU3R
-AilkuUG1IiLtp8N8gf66IG1ETM+GXmJMrTrimgXYfmA3Xgi9plGqegbjAVYNlouH
-RHxapnzcpc5uuUsm+yXVwsesNsZ0QTZhMfmjDOLUDEQebbu90XaRipT912aw0X2i
-KOJash7nhO1kiOj2s/fqP7q21PUL9Y0fMkJhuXEBG+0wlxw1bIw+sIlYao4L8WHY
-CUvuYWYEvOu57kydkD+tgC2lnhiCc8b2S36R+ACGVM4vLuc2kCgJlwB/xmyqlgGw
-piIxqGPEkyW4yEjQOPoWW6cR0pROKRC1xOZf4l6vhLFxv4c41ty0/56pJBd0uN0Y
-oavN7BPeezq82VsOQV3tgmqXT6vlUeRhqH/tsdi9MHxApNJosjMQ1JBpkvVSzL0S
-/kQ1BHBfVeTrAIqhKXgqzygRRAMlYs50FHFSJ/BPJuwrq8VA74u4yU9nTjkGZ7K5
-x8y3nNYXgdmztrjVb0iUZXiqU26oOTVnxk9VVlguqvYnvkvlsxwAhTG0zDQ/CdM0
-sYUL0sPROLIgpx2wWD+1w8D7owYGOK+sgxqzSI6Jl9l+1EeW2z6khggIvqKTY7+9
-rNR25WSFUge8+znKjshvIM7OezMFcXTWfrnSw9qd5P1TBPf4z7jqbyN/U7IpFJRV
-Qw62CFF2JgdDhe3q8Vui
-=A5bn
------END PGP SIGNATURE-----
-
---=-mthL+089pEEIp5Cj08k3--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index d80184e..8203887 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -697,8 +697,12 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
+ }
+ EXPORT_SYMBOL(iwl_set_rxon_ht);
+ 
+-/*
+- * Determine how many receiver/antenna chains to use.
++#define IWL_NUM_RX_CHAINS_MULTIPLE	3
++#define IWL_NUM_RX_CHAINS_SINGLE	2
++#define IWL_NUM_IDLE_CHAINS_DUAL	2
++#define IWL_NUM_IDLE_CHAINS_SINGLE	1
++
++/* Determine how many receiver/antenna chains to use.
+  * More provides better reception via diversity.  Fewer saves power.
+  * MIMO (dual stream) requires at least 2, but works better with 3.
+  * This does not determine *which* chains to use, just how many.
+@@ -711,9 +715,9 @@ static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
+ 	/* # of Rx chains to use when expecting MIMO. */
+ 	if (is_single || (!is_cam && (priv->current_ht_config.sm_ps ==
+ 						 WLAN_HT_CAP_SM_PS_STATIC)))
+-		return 2;
++		return IWL_NUM_RX_CHAINS_SINGLE;
+ 	else
+-		return 3;
++		return IWL_NUM_RX_CHAINS_MULTIPLE;
+ }
+ 
+ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
+@@ -724,10 +728,11 @@ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
+ 	switch (priv->current_ht_config.sm_ps) {
+ 	case WLAN_HT_CAP_SM_PS_STATIC:
+ 	case WLAN_HT_CAP_SM_PS_DYNAMIC:
+-		idle_cnt = (is_cam) ? 2 : 1;
++		idle_cnt = (is_cam) ? IWL_NUM_IDLE_CHAINS_DUAL :
++					IWL_NUM_IDLE_CHAINS_SINGLE;
+ 		break;
+ 	case WLAN_HT_CAP_SM_PS_DISABLED:
+-		idle_cnt = (is_cam) ? active_cnt : 1;
++		idle_cnt = (is_cam) ? active_cnt : IWL_NUM_IDLE_CHAINS_SINGLE;
+ 		break;
+ 	case WLAN_HT_CAP_SM_PS_INVALID:
+ 	default:
+@@ -796,7 +801,7 @@ void iwl_set_rxon_chain(struct iwl_priv *priv)
+ 
+ 	priv->staging_rxon.rx_chain = cpu_to_le16(rx_chain);
+ 
+-	if (!is_single && (active_rx_cnt >= 2) && is_cam)
++	if (!is_single && (active_rx_cnt >= IWL_NUM_RX_CHAINS_SINGLE) && is_cam)
+ 		priv->staging_rxon.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
+ 	else
+ 		priv->staging_rxon.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
+-- 
+1.5.3.6
 
