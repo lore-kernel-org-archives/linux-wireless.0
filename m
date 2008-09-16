@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:23358 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860AbYIIJwE (ORCPT
+Received: from phoenix.slamd64.com ([217.10.145.2]:45832 "EHLO
+	phoenix.slamd64.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751203AbYIPUod (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 05:52:04 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so1088387yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2008 02:52:03 -0700 (PDT)
-Message-ID: <1ba2fa240809090252u44c5a016m98845379ac213df9@mail.gmail.com> (sfid-20080909_115210_240964_2D6DA7B3)
-Date: Tue, 9 Sep 2008 12:52:02 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: HT action frame code
-Cc: "Jouni Malinen" <j@w1.fi>,
-	"Ron Rindjunsky" <rindjon@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1220953379.31304.124.camel@johannes.berg>
+	Tue, 16 Sep 2008 16:44:33 -0400
+Message-ID: <39295.87.81.255.5.1221597846.squirrel@phoenix.slamd64.com> (sfid-20080916_224451_491715_88F0E904)
+In-Reply-To: <20080916195134.GB14879@srcf.ucam.org>
+References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de>
+    <48CFE820.7010305@lwfinger.net>
+    <20080916195134.GB14879@srcf.ucam.org>
+Date: Tue, 16 Sep 2008 20:44:06 -0000 (UTC)
+Subject: Re: Regression in 2.6.27-rcX caused by commit
+     bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+From: "Carlos Corbacho" <carlos@strangeworlds.co.uk>
+To: "Matthew Garrett" <mjg59@srcf.ucam.org>
+Cc: "Larry Finger" <larry.finger@lwfinger.net>,
+	"Adel Gadllah" <adel.gadllah@gmail.com>,
+	"wireless" <linux-wireless@vger.kernel.org>,
+	"LKML" <linux-kernel@vger.kernel.org>,
+	"Michael Buesch" <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1220883730.31304.60.camel@johannes.berg> <48C5868B.8060103@w1.fi>
-	 <1220942004.31304.101.camel@johannes.berg>
-	 <1ba2fa240809090114u67086f2duc5cc9addd384e30d@mail.gmail.com>
-	 <1220948427.31304.107.camel@johannes.berg>
-	 <1ba2fa240809090146p612083aclf3a2a924a81e75e9@mail.gmail.com>
-	 <1220950358.31304.112.camel@johannes.berg>
-	 <1ba2fa240809090241g2604e3ddhfd39359fd8eb0f8b@mail.gmail.com>
-	 <1220953379.31304.124.camel@johannes.berg>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 9, 2008 at 12:42 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-09-09 at 12:41 +0300, Tomas Winkler wrote:
+> diff --git a/drivers/net/wireless/b43/rfkill.c
+> b/drivers/net/wireless/b43/rfkill.c
+> index fec5645..e8b2acb 100644
+> --- a/drivers/net/wireless/b43/rfkill.c
+> +++ b/drivers/net/wireless/b43/rfkill.c
+> @@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev
+> *dev)
+>  	struct b43_rfkill *rfk = &(dev->wl->rfkill);
 >
->> >> Meaning that other management frames are forward to user space while
->> >> BA action frames
->> >> are treated inside mac80211.
->> >
->> > Can you point out where? I don't see it.
->> It's should be visible in AP code Yi has posted, unfortunately don't
->> have it open right now. Anyhow since then the rx flow has changed a
->> lot as you know :) so it has to be reinvented.
+>  	if (!dev->radio_hw_enable) {
+> -		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
+> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
+>  		return;
+>  	}
 >
-> Ok, so it's not in the current code and I'm not entirely stupid for not
-> finding it, heh :) I don't think I even still have the patches on this
-> box so I won't look.
->
->> >> > Also, I'm not talking about the AP triggering the aggregation session,
->> >> > this is entirely done with the rate scaling right now, but about an
->> >> > associated STA wanting to start an aggregation session. Aren't
->> >> > aggregation sessions always triggered by whoever wants to send? So if a
->> >> > STA notices it has lots of upload going on it could want to trigger a BA
->> >> > session, which is something we don't currently support afaict.
->> >>
->> >> In iwl-agn-rs.c There is not difference if the peer is STA or AP. So
->> >> we support this already.
->> >
->> > Not sure what this has to do with the Intel RS algorithm?
->>
->> Just the trigger for aggregation is implemented there. Otherwise
->> nothing special.
->
-> Well yes, but that just triggers when aggregation on our end, what I'd
-> been thinking about was when the remote side wants to start aggregation.
+>  	if (!dev->phy.radio_on)
+> -		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
+> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
+>  	else
+> -		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
+> -
+> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
+>  }
 
-There is some misunderstanding. I hope I'm explaining the problematic
-part.  Aggregation is always initialized by TX side it's one direction
-only. So if there AP and STA wants to start aggregation. Both will
-open a stream. The streams are independent.
-Tomas
+Just this should be enough to fix the regression for 2.6.27 (and should be
+trivial to port to b43legacy) in the immediate term (I was planning to
+send something similar).
 
+The rest of the patch is out-of-scope for 2.6.27, but is definitely along
+he right lines, IMHO (and it would be good if we can get a working version
+of it in to 2.6.28). I may try and look at it later, as I do have my b43
+hardware handy.
 
-> johannes
->
+-Carlos
+-- 
+E-Mail: carlos@strangeworlds.co.uk
+Web: strangeworlds.co.uk
+GPG Key ID: 0x23EE722D
