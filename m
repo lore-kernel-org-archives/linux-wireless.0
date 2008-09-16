@@ -1,105 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:2288 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753658AbYIRSXJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40555 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbYIPGiT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 14:23:09 -0400
-Received: by ug-out-1314.google.com with SMTP id k3so801536ugf.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 11:23:07 -0700 (PDT)
-Message-ID: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com> (sfid-20080918_202314_494232_4DDE74DF)
-Date: Thu, 18 Sep 2008 11:23:07 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: LKML <linux-kernel@vger.kernel.org>, "Ingo Molnar" <mingo@elte.hu>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Sep 2008 02:38:19 -0400
+Subject: Re: [PATCH v2] mac80211: re-enable aggregation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1221535073-6937-1-git-send-email-lrodriguez@atheros.com>
+References: <1221535073-6937-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-O3oZPPvsgh4zcQogacec"
+Date: Tue, 16 Sep 2008 08:37:16 +0200
+Message-Id: <1221547036.8916.1.camel@johannes.berg> (sfid-20080916_083823_606337_AC2CCBC3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm encountering a very odd issue which only seems to crop up while I
-sleep at night. In the morning, I go back to my Linux machine and
-there's a ridiculously bad latency I immediately notice in Firefox's
-redraw which I cannot explain. glxgears shows the typical 5K FPS, so
-it seems like graphics are normal, but there's something causing
-horrendous redraw times for Firefox. If I exit X11, the problem then
-extends to my virtual terminals. If I switch a VT, it takes about a
-second to redraw the whole screen top-to-bottom[1]. I can also get the
-same issue if I do page-up/page-down in less, or pretty much anything
-that causes the screen to redraw.
 
-I'm using 2.6.27-rc6-tip right now, but this problem occurs on
-pristine rc5 and rc6 as well. uptime is only 7 hours, and this problem
-seems to get progressively worse over time. Strangely enough,
-unloading the 'ath9k' driver causes the latency to outright -vanish-
-instantaneously (I only discovered this -after- I made the YouTube
-video cited below, so the video doesn't demonstrate this tidbit,
-unfortunately). I wish I knew what these symptoms are pointing to,
-because this makes no sense to me at all. Is there some hardware
-interrupt going bonkers? The only thing I can think of is that I've
-got 'irqpoll' on the command line. I have it because I had to reload
-the ath9k driver at one point, and this was the result (caused ath9k
-to become a useless driver until I rebooted, which re-enabled IRQ 17):
+--=-O3oZPPvsgh4zcQogacec
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[53997.493777] ath9k: driver unloaded
-[54001.098532] ath9k: 0.1
-[54001.098833] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[54001.099013] ath9k 0000:03:00.0: setting latency timer to 64
-[54001.233825] phy1: Selected rate control algorithm 'ath9k_rate_control'
-[54001.236980] phy1: Atheros 5416: mem=0xffffc20000060000, irq=17
-[54002.136218] irq 17: nobody cared (try booting with the "irqpoll" option)
-[54002.136229] Pid: 0, comm: swapper Tainted: P 2.6.27-rc6-00036-ga551b98 #2
-[54002.136234]
-[54002.136235] Call Trace:
-[54002.136241] <IRQ> [<ffffffff80265231>] __report_bad_irq+0x3d/0x81
-[54002.136258] [<ffffffff80265477>] note_interrupt+0x202/0x267
-[54002.136265] [<ffffffff80265bfc>] handle_fasteoi_irq+0xba/0xe4
-[54002.136273] [<ffffffff8020e7ff>] do_IRQ+0x115/0x191
-[54002.136279] [<ffffffff8020bc01>] ret_from_intr+0x0/0xa
-[54002.136283] <EOI> [<ffffffff802541bb>] ?
-tick_nohz_stop_sched_tick+0x2c5/0x2d4
-[54002.136296] [<ffffffff8020a69f>] ? cpu_idle+0x2d/0xed
-[54002.136304] [<ffffffff8060d741>] ? rest_init+0x75/0x77
-[54002.136309]
-[54002.136312] handlers:
-[54002.136315] [<ffffffffa0209016>] (ath_isr+0x0/0x160 [ath9k])
-[54002.136340] Disabling IRQ #17
+On Mon, 2008-09-15 at 20:17 -0700, Luis R. Rodriguez wrote:
 
+> +/**
+> + * is_part_ampdu - tells us whether this buffer is part of an AMPDU
+> + *
+> + * @skb: the buffer we want to check
+> + * @hw: the &struct ieee80211_hw to check the queue mapping on
+> + */
+> +static inline bool is_part_ampdu(struct sk_buff *skb, struct ieee80211_h=
+w *hw)
+> +{
+> +	return (skb_get_queue_mapping(skb) >=3D
+> +		ieee80211_num_regular_queues(hw));
+> +}
+> +
 
-latencytop did not give me anything useful while the enormous latency
-was showing up, except during one case where 'less' was taking forever
-and a half to redraw:
+This is making the patch needlessly large and makes it change drivers
+etc, please just keep the flag and set it based on this in master xmit
+after we've cleared the info.
 
-Cause                                                Maximum     Percentage
-down acquire_console_sem con_flush_chars write_cha1140.9 msec         70.0 %
-Scheduler: waiting for cpu                         79.6 msec         21.0 %
-do_sys_poll sys_poll system_call_fastpath           4.8 msec          4.1 %
-down acquire_console_sem vt_waitactive vt_ioctl tt  0.9 msec          4.8 %
-down acquire_console_sem do_con_write con_write wr  0.8 msec          0.1 %
+johannes
 
-Process less (5550)                        Total: 1145.3 msec
-down acquire_console_sem con_flush_chars write_cha1140.9 msec
-99.6 %write system_call_fastpath
-Scheduler: waiting for cpu                          1.3 msec          0.3 %
-down acquire_console_sem do_con_write con_write wr  0.8 msec
-0.1 %ite sys_write system_call_fastpath
+--=-O3oZPPvsgh4zcQogacec
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-latencytop only showed the redraw delay once, couldn't pin Firefox or
-VT switch latency on anything. 'top' also doesn't show anything taking
-a ridiculous amount of CPU. I can't figure out what precisely the
-explanation is for ath9k's horrendous slowdown of the system.
+iQIbBAABAgAGBQJIz1QYAAoJEKVg1VMiehFYSVMP+NbM4/idFlnAPKN/6fRKselu
+/aY+vc7G95RIF7NctHeLXEutTzgc/0hYOwDxhFNsDEsQo3KsaD8ohh2UZ0ndzMmW
+toOB9KiJhUcCRQai28w2SXyxfR+tq4VWZJGkQFPEq07HlGstQ3w9aLqxXRioIGbV
+Vjr0PwpowAXf7RIoIcY6Wui0C2UKarOqejnfsWuVwf4x4/iqgoVONiGkw/q7bBFs
+ODpA1cAuIvXP8UpFkVgh8AvQ1D/YFI5rzRj7rnJwRsGT1YZ3JK6djbxqygQHHvt0
+MOZOq0SJSDcsoSViLQTMWcWqAg+yCdha+lzNcESMqeUN9OYH+auWykfA9LpcVedI
+3aKFpcmtebcfNJLpN4pwSCElHicxKhu6NU0y5s0Vo0ZFqS9efgS+csd/aK7+zLOD
+TH62gV5+BbaPREjxkl6XFGm3p/wgSbAEVajYeJkK/hIfDf+FemFMdQf6iK5uWQ1P
+eSdaJL7QZ27v6L3iiaFfmr/8w9Ff+t2hxbC3b9jKDS3RaNbPBVRWGI+zYWl/djXd
+6+MVMke7+TBVCXjkwnHVj4UcKv6ast1zfacPzt6eKBsJKpHeFzlw2s/0BTYhTFn1
+5dX02AHL3twVXOGlvEy9u6QlZpbmeioWYeymFNjLTKrRYgS+uN1tj/ytwWey0tkX
+OF788DWgc66dHS9UuCY=
+=QHNZ
+-----END PGP SIGNATURE-----
 
-This problem isn't easily bisectable either, because the only way I
-can reproduce this problem is by leaving Linux running with ath9k
-loaded overnight, and then finding it running like a tortoise in the
-morning. I also don't know what kernels this -does not- happen on,
-because I just recently put Linux on this particular machine, and I've
-only used 2.6.27-rc5 through rc6 and above.
+--=-O3oZPPvsgh4zcQogacec--
 
-- Steven
-
-[1] http://www.youtube.com/watch?v=4GeCx1gZMpA -- took a quick video
-of the problem in progress. be prepared to be absolutely horrified.
