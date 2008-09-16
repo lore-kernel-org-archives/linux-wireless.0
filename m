@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:58715 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751113AbYIBNUz (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:16932 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753885AbYIPSme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 09:20:55 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so1173461eyi.37
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 06:20:53 -0700 (PDT)
-Date: Tue, 2 Sep 2008 16:20:48 +0300
-From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net,
-	Jan-Espen Pettersen <sigsegv@radiotube.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: new: regression iwl3945/mac80211 endless after suspend
-	associate/deassociate loop
-Message-ID: <20080902132045.GD19172@google.com> (sfid-20080902_152059_287923_F564955E)
-References: <20080901160658.GA11063@google.com>
+	Tue, 16 Sep 2008 14:42:34 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so844595ywe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2008 11:42:33 -0700 (PDT)
+Message-ID: <43e72e890809161142t7d16b042gb179e126db14df9@mail.gmail.com> (sfid-20080916_204237_352821_83C191D5)
+Date: Tue, 16 Sep 2008 11:42:33 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomas.winkler@intel.com>
+Subject: Re: [RFC V2] mac80211: re-enable aggregation on 2.6.27
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, ron.rindjunsky@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1221550508-3338-1-git-send-email-tomas.winkler@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080901160658.GA11063@google.com>
+Content-Type: text/plain; charset=UTF-8
+References: <1221550508-3338-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 01, 2008 at 07:06:58PM +0300, Michael S. Tsirkin wrote:
-> Starting with 2.6.27-rc5, my T60p sometimes fails to associate
-> with an access point after suspend to ram/resume.
-> 
-> This does not seem to ever happen on 2.6.27-rc4.
-> 
-> When this happens, I observe the following messages in dmesg:
-> (AP mac masked out with XX):
-> 
-> ...
->  
-> Reverting 8ab65b03b7893da4a49009e7e356e36e27b0c407 seems to make
-> the card associate properly after suspend, for me.
+On Tue, Sep 16, 2008 at 12:35 AM, Tomas Winkler <tomas.winkler@intel.com> wrote:
 
-FYI I created a bugzilla entry to track this:
-http://bugzilla.kernel.org/show_bug.cgi?id=11476
+> V2:
+>  1. removed skbuff ->is_part_ampdu
+>  2. fixed compilation warnings
 
--- 
-MST
+Very nice indeed, I'll work on top of this one.
 
-
-
+  Luis
