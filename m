@@ -1,77 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48109 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751415AbYIXAAQ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52195 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752842AbYIPSXo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 20:00:16 -0400
-Date: Tue, 23 Sep 2008 16:59:21 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.arm.linux.org.uk
-Subject: ath9k on arm
-Message-Id: <20080923165921.983b2b6c.akpm@linux-foundation.org> (sfid-20080924_020022_405002_BB552EC2)
+	Tue, 16 Sep 2008 14:23:44 -0400
+Subject: [PATCH] mac80211: allow interface settings changes only when down
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 16 Sep 2008 20:22:21 +0200
+Message-Id: <1221589341.8916.48.camel@johannes.berg> (sfid-20080916_202348_022661_03CAA616)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-/usr/src/devel/arch/arm/include/asm/string.h:42:1: warning: this is the location of the previous definition
-In file included from drivers/net/wireless/ath9k/recv.c:21:
-drivers/net/wireless/ath9k/core.h:88:1: warning: "memzero" redefined
-In file included from include/linux/string.h:19,
-                 from include/linux/bitmap.h:8,
-                 from include/linux/nodemask.h:89,
-                 from include/linux/mmzone.h:16,
-                 from include/linux/gfp.h:4,
-                 from include/linux/kmod.h:22,
-                 from include/linux/module.h:13,
-                 from drivers/net/wireless/ath9k/core.h:23,
-                 from drivers/net/wireless/ath9k/recv.c:21:
-/usr/src/devel/arch/arm/include/asm/string.h:42:1: warning: this is the location of the previous definition
-In file included from drivers/net/wireless/ath9k/xmit.c:21:
-drivers/net/wireless/ath9k/core.h:88:1: warning: "memzero" redefined
-In file included from include/linux/string.h:19,
-                 from include/linux/bitmap.h:8,
-                 from include/linux/nodemask.h:89,
-                 from include/linux/mmzone.h:16,
-                 from include/linux/gfp.h:4,
-                 from include/linux/kmod.h:22,
-                 from include/linux/module.h:13,
-                 from drivers/net/wireless/ath9k/core.h:23,
-                 from drivers/net/wireless/ath9k/xmit.c:21:
-/usr/src/devel/arch/arm/include/asm/string.h:42:1: warning: this is the location of the previous definition
-In file included from drivers/net/wireless/ath9k/rc.c:22:
-drivers/net/wireless/ath9k/core.h:88:1: warning: "memzero" redefined
-In file included from include/linux/string.h:19,
-                 from include/linux/bitmap.h:8,
-                 from include/linux/nodemask.h:89,
-                 from include/linux/mmzone.h:16,
-                 from include/linux/gfp.h:4,
-                 from include/linux/kmod.h:22,
-                 from include/linux/module.h:13,
-                 from drivers/net/wireless/ath9k/core.h:23,
-                 from drivers/net/wireless/ath9k/rc.c:22:
-/usr/src/devel/arch/arm/include/asm/string.h:42:1: warning: this is the location of the previous definition
-In file included from drivers/net/wireless/ath9k/core.c:19:
-drivers/net/wireless/ath9k/core.h:88:1: warning: "memzero" redefined
-In file included from include/linux/string.h:19,
-                 from include/linux/bitmap.h:8,
-                 from include/linux/nodemask.h:89,
-                 from include/linux/mmzone.h:16,
-                 from include/linux/gfp.h:4,
-                 from include/linux/kmod.h:22,
-                 from include/linux/module.h:13,
-                 from drivers/net/wireless/ath9k/core.h:23,
-                 from drivers/net/wireless/ath9k/core.c:19:
-/usr/src/devel/arch/arm/include/asm/string.h:42:1: warning: this is the location of the previous definition
-(etc)
+We currently allow monitor flags changes and mesh ID changes when
+the interface is up, which can lead to trouble. Change it to only
+allow when down.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+--- everything.orig/net/mac80211/cfg.c	2008-09-16 20:19:48.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-09-16 20:20:37.000000000 +0200
+@@ -102,6 +102,9 @@ static int ieee80211_change_iface(struct
+ 	if (ret)
+ 		return ret;
+ 
++	if (netif_running(sdata->dev))
++		return -EBUSY;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
+ 		ieee80211_sdata_set_mesh_id(sdata,
+ 					    params->mesh_id_len,
 
 
-/* XXX: remove */
-#define memzero(_buf, _len) memset(_buf, 0, _len)
-
-I agree. asap, please.
-
-
-Practically nothing in arm uses memzero() so I'd suggest that this
-quite risky definition be removed from arm also.  Just use memset.
