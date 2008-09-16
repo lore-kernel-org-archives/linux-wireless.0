@@ -1,34 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s25.bay0.hotmail.com ([65.54.246.225]:52596 "EHLO
-	bay0-omc3-s25.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750741AbYIFAkQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 20:40:16 -0400
-Message-ID: <BAY118-W272ED23066D58EE95965A6DB5B0@phx.gbl> (sfid-20080906_024022_401255_D8343B1F)
-From: Greg White <pcguy11@live.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: rt2x00 and packet injection
-Date: Fri, 5 Sep 2008 19:34:04 -0500
-Content-Type: text/plain; charset=Windows-1252
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41254 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751671AbYIPVHK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 17:07:10 -0400
+Message-ID: <48D01FFB.1010302@lwfinger.net> (sfid-20080916_230715_212033_3031776E)
+Date: Tue, 16 Sep 2008 16:07:07 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Carlos Corbacho <carlos@strangeworlds.co.uk>
+CC: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Regression in 2.6.27-rcX caused by commit      bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de>    <48CFE820.7010305@lwfinger.net>    <20080916195134.GB14879@srcf.ucam.org> <39295.87.81.255.5.1221597846.squirrel@phoenix.slamd64.com>
+In-Reply-To: <39295.87.81.255.5.1221597846.squirrel@phoenix.slamd64.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Carlos Corbacho wrote:
+>> diff --git a/drivers/net/wireless/b43/rfkill.c
+>> b/drivers/net/wireless/b43/rfkill.c
+>> index fec5645..e8b2acb 100644
+>> --- a/drivers/net/wireless/b43/rfkill.c
+>> +++ b/drivers/net/wireless/b43/rfkill.c
+>> @@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev
+>> *dev)
+>>  	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+>>
+>>  	if (!dev->radio_hw_enable) {
+>> -		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
+>> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
+>>  		return;
+>>  	}
+>>
+>>  	if (!dev->phy.radio_on)
+>> -		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
+>> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
+>>  	else
+>> -		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
+>> -
+>> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
+>>  }
+> 
+> Just this should be enough to fix the regression for 2.6.27 (and should be
+> trivial to port to b43legacy) in the immediate term (I was planning to
+> send something similar).
+> 
+> The rest of the patch is out-of-scope for 2.6.27, but is definitely along
+> he right lines, IMHO (and it would be good if we can get a working version
+> of it in to 2.6.28). I may try and look at it later, as I do have my b43
+> hardware handy.
 
-Hi,
+This one doesn't crash, but it doesn't turn the light off.
 
-What is the status of packet injection in the rt2x00 driver?  From my t=
-esting of 2.6.27 rc3 and reading 2.6.27 doesn't seem likely.  Is there =
-a todo list in priority order?
+I'm done testing for now!
 
-Thanks,
+John,
+
+Revert the patch until the rfkill guys get their house in order.
+
+Larry
 
 
-_________________________________________________________________
-See how Windows Mobile brings your life together=97at home, work, or on=
- the go.
-http://clk.atdmt.com/MRT/go/msnnkwxp1020093182mrt/direct/01/--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
