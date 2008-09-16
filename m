@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:40761 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069AbYIVLWz (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:48520 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751376AbYIPWkp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 07:22:55 -0400
-From: Chr <chunkeey@web.de>
-To: Kalle Valo <kalle.valo@nokia.com>
-Subject: Re: stlc45xx: mac80211 driver for N800 and N810
-Date: Mon, 22 Sep 2008 13:22:41 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <877i98iw4h.fsf@nokia.com> <43e72e890809191055o4085fab1k8a85fe9266ae8aab@mail.gmail.com> <87wsh438r6.fsf@nokia.com>
-In-Reply-To: <87wsh438r6.fsf@nokia.com>
+	Tue, 16 Sep 2008 18:40:45 -0400
+Date: Tue, 16 Sep 2008 19:40:37 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Carlos Corbacho <carlos@strangeworlds.co.uk>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Regression in 2.6.27-rcX caused by commit
+	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Message-ID: <20080916224036.GD26035@khazad-dum.debian.net> (sfid-20080917_004048_783720_9E70EB69)
+References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <20080916195134.GB14879@srcf.ucam.org> <39295.87.81.255.5.1221597846.squirrel@phoenix.slamd64.com> <48D01FFB.1010302@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809221322.41239.chunkeey@web.de> (sfid-20080922_132300_101575_A8203D13)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48D01FFB.1010302@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 September 2008 10:06:05 Kalle Valo wrote:
-> Luis R. Rodriguez <mcgrof@gmail.com> writes:
-> I don't have the p54 hardware (for regression testing) or the time to
-> add stlc45xx support to p54, and most probably there might be even
-> some legal implications which might prevent me of doing the work. So
-> somebody else would have to do the converge between p54 and stlc45xx.
->
-Hmm, don't worry... you won't break p54 hardware with these chances,
-we did this before and I still could connect to my APs.
-Even better, Johannes wrote most of the code for "p54spi.c" already.
-I guess, we can reuse and fix his code, rather than reinventing the wheel once again.
-I'll take a look what can be done when I'm back next week.
+On Tue, 16 Sep 2008, Larry Finger wrote:
+> This one doesn't crash, but it doesn't turn the light off.
 
-OT: Do you know if there's some way to get a card with a stlc45xx for or in a normal PC?
+Hmm... if this lack of LED control when HARD_BLOCKED is a problem in rfkill,
+I will track it down and fix it.
 
-> > Is this driver targeted for inclusion upstream?
->
-> I'm very interested in mac80211 and would like to see it suitable for
-> embedded devices like N800/N810. The just announced stlc45xx driver
-> would be a perfect tool for that kind of development and having the
-> driver upstream would make development a lot easier.
->
-> Features that I am interested in, just from the top of my head, are
-> proper roaming support, power save mode and beacon filtering. In my
-> opinion the biggest areas needing work are everything related to
-> mobility or the power consumption.
-Yes, this is definitely stuff that should go right into mac80211 stack and nowhere else.
-Therefore FULL ACK.
+The rest of the stuff (b43's usage of rfkill), is a problem for the people
+who know the b43 driver to fix, I don't dare touch it and break it further.
 
-Regards,
-	Chr
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
