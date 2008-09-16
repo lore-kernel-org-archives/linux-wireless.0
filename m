@@ -1,336 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:60074 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517AbYIHQqg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 12:46:36 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so437734nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 09:46:34 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Make RFKILL enabled by default
-Date: Mon, 8 Sep 2008 18:46:29 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809081846.30096.IvDoorn@gmail.com> (sfid-20080908_184639_885494_50BF0975)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:2767 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752966AbYIPHfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 03:35:32 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, ron.rindjunsky@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [RFC V2] mac80211: re-enable aggregation on 2.6.27
+Date: Tue, 16 Sep 2008 10:35:08 +0300
+Message-Id: <1221550508-3338-1-git-send-email-tomas.winkler@intel.com> (sfid-20080916_093540_882243_61D51DD4)
+In-Reply-To: <>
+References: <>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RFKILL should be enabled for _all_ hardware whether
-or not they feature a rfkill button or not.
+Re-enable aggregation by addressing skb->cb overwrites
+after insertion into the qdisc. Aggregation was disabled
+after the new TX multiqueue changes were introduced. Instead
+of relying on the skb->cb we use two flags on the skb.
 
-Remove driver specific RFKILL configuration options
-and make the rt2x00lib version depend on CONFIG_RFKILL
-and defaulting to 'y' to make sure it will always
-be enabled when RFKILL was enabled.
-
-This also fixes some bugs where RFKILL wasn't initialized
-and didn't respond to RFKILL key presses.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/rt2x00/Kconfig        |   30 +---------------
- drivers/net/wireless/rt2x00/rt2400pci.c    |    8 ++--
- drivers/net/wireless/rt2x00/rt2500pci.c    |    8 ++--
- drivers/net/wireless/rt2x00/rt2x00rfkill.c |   50 +++++++++++++++------------
- drivers/net/wireless/rt2x00/rt61pci.c      |    8 ++--
- 5 files changed, 42 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index 11f590d..c896c99 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -40,7 +40,8 @@ config RT2X00_LIB_CRYPTO
- config RT2X00_LIB_RFKILL
- 	boolean
- 	depends on RT2X00_LIB
--	select RFKILL
-+	depends on RFKILL
-+	default y
+Users have been reporting low rates on 2.6.27 with 11n drivers, the
+problem is been 11n aggregation was disabled due to the new TX multique
+changes. We should have addressed this sooner but we just got to it now.
+
+Without addressing this we won't get 11n aggregation on 2.6.27. I tried
+to minimize the changes required. I'm about to test this, it compiles.
+
+If this doesn't get upstream for 27 perhaps distributions are willing to
+carry it around then and if so oh well (grr...).
+
+V2:
+ 1. removed skbuff ->is_part_ampdu
+ 2. fixed compilation warnings
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/linux/skbuff.h |    4 ++++
+ include/net/mac80211.h |    2 --
+ net/mac80211/main.c    |    7 ++-----
+ net/mac80211/rx.c      |    7 ++-----
+ net/mac80211/tx.c      |    3 +++
+ net/mac80211/wme.c     |   19 ++++---------------
+ 6 files changed, 15 insertions(+), 27 deletions(-)
+
+diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+index 9099237..4724211 100644
+--- a/include/linux/skbuff.h
++++ b/include/linux/skbuff.h
+@@ -244,6 +244,9 @@ typedef unsigned char *sk_buff_data_t;
+  *	@tc_verd: traffic control verdict
+  *	@ndisc_nodetype: router type (from link layer)
+  *	@do_not_encrypt: set to prevent encryption of this frame
++ *	@requeue: set to indicate that the wireless core should attempt
++ *		a software retry on this frame if we failed to
++ *		receive an ACK for it
+  *	@dma_cookie: a cookie to one of several possible DMA operations
+  *		done by skb DMA functions
+  *	@secmark: security marking
+@@ -319,6 +322,7 @@ struct sk_buff {
+ #endif
+ #if defined(CONFIG_MAC80211) || defined(CONFIG_MAC80211_MODULE)
+ 	__u8			do_not_encrypt:1;
++	__u8			requeue:1;
+ #endif
+ 	/* 0/13/14 bit hole */
  
- config RT2X00_LIB_LEDS
- 	boolean
-@@ -57,15 +58,6 @@ config RT2400PCI
- 
- 	  When compiled as a module, this driver will be called "rt2400pci.ko".
- 
--config RT2400PCI_RFKILL
--	bool "Ralink rt2400 rfkill support"
--	depends on RT2400PCI
--	select RT2X00_LIB_RFKILL
--	---help---
--	  This adds support for integrated rt2400 hardware that features a
--	  hardware button to control the radio state.
--	  This feature depends on the RF switch subsystem rfkill.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ff137fd..cce2e79 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -215,7 +215,6 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_CTL_RATE_CTRL_PROBE: TBD
+  * @IEEE80211_TX_CTL_CLEAR_PS_FILT: clear powersave filter for destination
+  *	station
+- * @IEEE80211_TX_CTL_REQUEUE: TBD
+  * @IEEE80211_TX_CTL_FIRST_FRAGMENT: this is a first fragment of the frame
+  * @IEEE80211_TX_CTL_SHORT_PREAMBLE: TBD
+  * @IEEE80211_TX_CTL_LONG_RETRY_LIMIT: this frame should be send using the
+@@ -257,7 +256,6 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_NO_ACK			= BIT(4),
+ 	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(5),
+ 	IEEE80211_TX_CTL_CLEAR_PS_FILT		= BIT(6),
+-	IEEE80211_TX_CTL_REQUEUE		= BIT(7),
+ 	IEEE80211_TX_CTL_FIRST_FRAGMENT		= BIT(8),
+ 	IEEE80211_TX_CTL_SHORT_PREAMBLE		= BIT(9),
+ 	IEEE80211_TX_CTL_LONG_RETRY_LIMIT	= BIT(10),
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index aa5a191..6d57eac 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1293,8 +1293,6 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 					    struct sta_info *sta,
+ 					    struct sk_buff *skb)
+ {
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 -
- config RT2400PCI_LEDS
- 	bool "Ralink rt2400 leds support"
- 	depends on RT2400PCI && NEW_LEDS
-@@ -85,15 +77,6 @@ config RT2500PCI
- 
- 	  When compiled as a module, this driver will be called "rt2500pci.ko".
- 
--config RT2500PCI_RFKILL
--	bool "Ralink rt2500 rfkill support"
--	depends on RT2500PCI
--	select RT2X00_LIB_RFKILL
--	---help---
--	  This adds support for integrated rt2500 hardware that features a
--	  hardware button to control the radio state.
--	  This feature depends on the RF switch subsystem rfkill.
--
- config RT2500PCI_LEDS
- 	bool "Ralink rt2500 leds support"
- 	depends on RT2500PCI && NEW_LEDS
-@@ -116,15 +99,6 @@ config RT61PCI
- 
- 	  When compiled as a module, this driver will be called "rt61pci.ko".
- 
--config RT61PCI_RFKILL
--	bool "Ralink rt2501/rt61 rfkill support"
--	depends on RT61PCI
--	select RT2X00_LIB_RFKILL
--	---help---
--	  This adds support for integrated rt61 hardware that features a
--	  hardware button to control the radio state.
--	  This feature depends on the RF switch subsystem rfkill.
--
- config RT61PCI_LEDS
- 	bool "Ralink rt2501/rt61 leds support"
- 	depends on RT61PCI && NEW_LEDS
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 18b703c..0083e7e 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -231,7 +231,7 @@ static const struct rt2x00debug rt2400pci_rt2x00debug = {
- };
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
- 
--#ifdef CONFIG_RT2400PCI_RFKILL
-+#ifdef CONFIG_RT2X00_LIB_RFKILL
- static int rt2400pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
- {
- 	u32 reg;
-@@ -241,7 +241,7 @@ static int rt2400pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
- }
- #else
- #define rt2400pci_rfkill_poll	NULL
--#endif /* CONFIG_RT2400PCI_RFKILL */
-+#endif /* CONFIG_RT2X00_LIB_RFKILL */
- 
- #ifdef CONFIG_RT2400PCI_LEDS
- static void rt2400pci_brightness_set(struct led_classdev *led_cdev,
-@@ -1386,10 +1386,10 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Detect if this device has an hardware controlled radio.
- 	 */
--#ifdef CONFIG_RT2400PCI_RFKILL
-+#ifdef CONFIG_RT2X00_LIB_RFKILL
- 	if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_HARDWARE_RADIO))
- 		__set_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags);
--#endif /* CONFIG_RT2400PCI_RFKILL */
-+#endif /* CONFIG_RT2X00_LIB_RFKILL */
+ 	sta->tx_filtered_count++;
  
  	/*
- 	 * Check if the BBP tuning should be enabled.
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 2a96a01..d8c9d67 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -231,7 +231,7 @@ static const struct rt2x00debug rt2500pci_rt2x00debug = {
- };
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
- 
--#ifdef CONFIG_RT2500PCI_RFKILL
-+#ifdef CONFIG_RT2X00_LIB_RFKILL
- static int rt2500pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
- {
- 	u32 reg;
-@@ -241,7 +241,7 @@ static int rt2500pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
- }
- #else
- #define rt2500pci_rfkill_poll	NULL
--#endif /* CONFIG_RT2500PCI_RFKILL */
-+#endif /* CONFIG_RT2X00_LIB_RFKILL */
- 
- #ifdef CONFIG_RT2500PCI_LEDS
- static void rt2500pci_brightness_set(struct led_classdev *led_cdev,
-@@ -1545,10 +1545,10 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Detect if this device has an hardware controlled radio.
- 	 */
--#ifdef CONFIG_RT2500PCI_RFKILL
-+#ifdef CONFIG_RT2X00_LIB_RFKILL
- 	if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_HARDWARE_RADIO))
- 		__set_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags);
--#endif /* CONFIG_RT2500PCI_RFKILL */
-+#endif /* CONFIG_RT2X00_LIB_RFKILL */
- 
- 	/*
- 	 * Check if the BBP tuning should be enabled.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-index 8a2fefb..55eff58 100644
---- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-@@ -45,16 +45,15 @@ static int rt2x00rfkill_toggle_radio(void *data, enum rfkill_state state)
- 		return 0;
- 
- 	if (state == RFKILL_STATE_UNBLOCKED) {
--		INFO(rt2x00dev, "Hardware button pressed, enabling radio.\n");
-+		INFO(rt2x00dev, "RFKILL event: enabling radio.\n");
- 		clear_bit(DEVICE_STATE_DISABLED_RADIO_HW, &rt2x00dev->flags);
- 		retval = rt2x00lib_enable_radio(rt2x00dev);
- 	} else if (state == RFKILL_STATE_SOFT_BLOCKED) {
--		INFO(rt2x00dev, "Hardware button pressed, disabling radio.\n");
-+		INFO(rt2x00dev, "RFKILL event: disabling radio.\n");
- 		set_bit(DEVICE_STATE_DISABLED_RADIO_HW, &rt2x00dev->flags);
- 		rt2x00lib_disable_radio(rt2x00dev);
- 	} else {
--		WARNING(rt2x00dev, "Received unexpected rfkill state %d.\n",
--			state);
-+		WARNING(rt2x00dev, "RFKILL event: unknown state %d.\n", state);
- 	}
- 
- 	return retval;
-@@ -64,7 +63,12 @@ static int rt2x00rfkill_get_state(void *data, enum rfkill_state *state)
- {
- 	struct rt2x00_dev *rt2x00dev = data;
- 
--	*state = rt2x00dev->rfkill->state;
-+	/*
-+	 * rfkill_poll reports 1 when the key has been pressed and the
-+	 * radio should be blocked.
-+	 */
-+	*state = rt2x00dev->ops->lib->rfkill_poll(rt2x00dev) ?
-+	    RFKILL_STATE_SOFT_BLOCKED : RFKILL_STATE_UNBLOCKED;
- 
- 	return 0;
- }
-@@ -73,19 +77,18 @@ static void rt2x00rfkill_poll(struct work_struct *work)
- {
- 	struct rt2x00_dev *rt2x00dev =
- 	    container_of(work, struct rt2x00_dev, rfkill_work.work);
--	int state;
-+	enum rfkill_state state;
- 
--	if (!test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
-+	if (!test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state) ||
-+	    !test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags))
- 		return;
- 
- 	/*
--	 * rfkill_poll reports 1 when the key has been pressed and the
--	 * radio should be blocked.
-+	 * Poll latest state and report it to rfkill who should sort
-+	 * out if the state should be toggled or not.
- 	 */
--	state = !rt2x00dev->ops->lib->rfkill_poll(rt2x00dev) ?
--	    RFKILL_STATE_UNBLOCKED : RFKILL_STATE_SOFT_BLOCKED;
--
--	rfkill_force_state(rt2x00dev->rfkill, state);
-+	if (!rt2x00rfkill_get_state(rt2x00dev, &state))
-+		rfkill_force_state(rt2x00dev->rfkill, state);
- 
- 	queue_delayed_work(rt2x00dev->hw->workqueue,
- 			   &rt2x00dev->rfkill_work, RFKILL_POLL_INTERVAL);
-@@ -93,8 +96,8 @@ static void rt2x00rfkill_poll(struct work_struct *work)
- 
- void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
- {
--	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags) ||
--	    !test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
-+	if (!test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state) ||
-+	    test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
- 		return;
- 
- 	if (rfkill_register(rt2x00dev->rfkill)) {
-@@ -114,7 +117,7 @@ void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
- 
- void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev)
- {
--	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags) ||
-+	if (!test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state) ||
- 	    !test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
- 		return;
- 
-@@ -127,21 +130,25 @@ void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev)
- 
- void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
- {
--	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags))
-+	struct device *dev = wiphy_dev(rt2x00dev->hw->wiphy);
-+
-+	if (test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
- 		return;
- 
--	rt2x00dev->rfkill =
--	    rfkill_allocate(wiphy_dev(rt2x00dev->hw->wiphy), RFKILL_TYPE_WLAN);
-+	rt2x00dev->rfkill = rfkill_allocate(dev, RFKILL_TYPE_WLAN);
- 	if (!rt2x00dev->rfkill) {
- 		ERROR(rt2x00dev, "Failed to allocate rfkill handler.\n");
+@@ -1341,10 +1339,9 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
  		return;
  	}
  
-+	__set_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state);
-+
- 	rt2x00dev->rfkill->name = rt2x00dev->ops->name;
- 	rt2x00dev->rfkill->data = rt2x00dev;
- 	rt2x00dev->rfkill->state = -1;
- 	rt2x00dev->rfkill->toggle_radio = rt2x00rfkill_toggle_radio;
--	rt2x00dev->rfkill->get_state = rt2x00rfkill_get_state;
-+	if (test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags))
-+		rt2x00dev->rfkill->get_state = rt2x00rfkill_get_state;
- 
- 	INIT_DELAYED_WORK(&rt2x00dev->rfkill_work, rt2x00rfkill_poll);
- 
-@@ -150,8 +157,7 @@ void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
- 
- void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
- {
--	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags) ||
--	    !test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
-+	if (!test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->flags))
+-	if (!test_sta_flags(sta, WLAN_STA_PS) &&
+-	    !(info->flags & IEEE80211_TX_CTL_REQUEUE)) {
++	if (!test_sta_flags(sta, WLAN_STA_PS) && !skb->requeue) {
+ 		/* Software retry the packet once */
+-		info->flags |= IEEE80211_TX_CTL_REQUEUE;
++		skb->requeue = 1;
+ 		ieee80211_remove_tx_extra(local, sta->key, skb);
+ 		dev_queue_xmit(skb);
  		return;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6db8545..3e3c870 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -666,7 +666,6 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
+ 	struct sk_buff *skb;
+ 	int sent = 0;
+ 	struct ieee80211_sub_if_data *sdata;
+-	struct ieee80211_tx_info *info;
+ 	DECLARE_MAC_BUF(mac);
  
- 	cancel_delayed_work_sync(&rt2x00dev->rfkill_work);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index d740f56..a5c9352 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -271,7 +271,7 @@ static const struct rt2x00debug rt61pci_rt2x00debug = {
- };
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+ 	sdata = sta->sdata;
+@@ -685,13 +684,11 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
  
--#ifdef CONFIG_RT61PCI_RFKILL
-+#ifdef CONFIG_RT2X00_LIB_RFKILL
- static int rt61pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
- {
- 	u32 reg;
-@@ -281,7 +281,7 @@ static int rt61pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
+ 	/* Send all buffered frames to the station */
+ 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
+-		info = IEEE80211_SKB_CB(skb);
+ 		sent++;
+-		info->flags |= IEEE80211_TX_CTL_REQUEUE;
++		skb->requeue = 1;
+ 		dev_queue_xmit(skb);
+ 	}
+ 	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
+-		info = IEEE80211_SKB_CB(skb);
+ 		local->total_ps_buffered--;
+ 		sent++;
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+@@ -699,7 +696,7 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
+ 		       "since STA not sleeping anymore\n", dev->name,
+ 		       print_mac(mac, sta->addr), sta->aid);
+ #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
+-		info->flags |= IEEE80211_TX_CTL_REQUEUE;
++		skb->requeue = 1;
+ 		dev_queue_xmit(skb);
+ 	}
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 4788f7b..b25113f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -655,6 +655,9 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
+ 	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
+ 	seq = &tx->sta->tid_seq[tid];
+ 
++	if (tx->sta->ampdu_mlme.tid_state_tx[tid] == HT_AGG_STATE_OPERATIONAL)
++		info->flags |= IEEE80211_TX_CTL_AMPDU;
++
+ 	hdr->seq_ctrl = cpu_to_le16(*seq);
+ 
+ 	/* Increase the sequence number. */
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 4310e2f..c53bd56 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -113,11 +113,11 @@ static u16 classify80211(struct sk_buff *skb, struct net_device *dev)
+ 	return ieee802_1d_to_ac[skb->priority];
  }
- #else
- #define rt61pci_rfkill_poll	NULL
--#endif /* CONFIG_RT61PCI_RFKILL */
-+#endif /* CONFIG_RT2X00_LIB_RFKILL */
  
- #ifdef CONFIG_RT61PCI_LEDS
- static void rt61pci_brightness_set(struct led_classdev *led_cdev,
-@@ -2313,10 +2313,10 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Detect if this device has an hardware controlled radio.
- 	 */
--#ifdef CONFIG_RT61PCI_RFKILL
-+#ifdef CONFIG_RT2X00_LIB_RFKILL
- 	if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_HARDWARE_RADIO))
- 		__set_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags);
--#endif /* CONFIG_RT61PCI_RFKILL */
-+#endif /* CONFIG_RT2X00_LIB_RFKILL */
++/* XXX: Remove usage of tid_to_tx_q and only map frames to an AC */
+ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct sta_info *sta;
+ 	u16 queue;
+ 	u8 tid;
+@@ -126,7 +126,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+ 	if (unlikely(queue >= local->hw.queues))
+ 		queue = local->hw.queues - 1;
  
- 	/*
- 	 * Read frequency offset and RF programming sequence.
+-	if (info->flags & IEEE80211_TX_CTL_REQUEUE) {
++	if (skb->requeue) {
+ 		rcu_read_lock();
+ 		sta = sta_info_get(local, hdr->addr1);
+ 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+@@ -135,12 +135,8 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+ 			int ampdu_queue = sta->tid_to_tx_q[tid];
+ 
+ 			if ((ampdu_queue < ieee80211_num_queues(hw)) &&
+-			    test_bit(ampdu_queue, local->queue_pool)) {
++			    test_bit(ampdu_queue, local->queue_pool))
+ 				queue = ampdu_queue;
+-				info->flags |= IEEE80211_TX_CTL_AMPDU;
+-			} else {
+-				info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+-			}
+ 		}
+ 		rcu_read_unlock();
+ 
+@@ -169,12 +165,8 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+ 			struct ieee80211_hw *hw = &local->hw;
+ 
+ 			if ((ampdu_queue < ieee80211_num_queues(hw)) &&
+-			    test_bit(ampdu_queue, local->queue_pool)) {
++			    test_bit(ampdu_queue, local->queue_pool))
+ 				queue = ampdu_queue;
+-				info->flags |= IEEE80211_TX_CTL_AMPDU;
+-			} else {
+-				info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+-			}
+ 		}
+ 
+ 		rcu_read_unlock();
+@@ -188,9 +180,6 @@ int ieee80211_ht_agg_queue_add(struct ieee80211_local *local,
+ {
+ 	int i;
+ 
+-	/* XXX: currently broken due to cb/requeue use */
+-	return -EPERM;
+-
+ 	/* prepare the filter and save it for the SW queue
+ 	 * matching the received HW queue */
+ 
 -- 
-1.5.6.1
+1.5.4.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
