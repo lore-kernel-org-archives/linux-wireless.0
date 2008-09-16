@@ -1,93 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bluegiga.fi ([194.100.31.45]:8404 "EHLO darkblue.bluegiga.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754300AbYISOUg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 10:20:36 -0400
-Subject: Re: ACK matching [was: TX status reporting with help of an ack
-	queue]
-From: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
-	kune@deine-taler.de, j@w1.fi
-In-Reply-To: <1221832302.4514.6.camel@localhost>
-References: <1221494693.14102.22.camel@virkkmi-linux>
-	 <1221505251.4511.77.camel@localhost>
-	 <1221541089.14102.44.camel@virkkmi-linux>
-	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
-	 <1221776990.4563.19.camel@localhost>
-	 <1221815294.19539.15.camel@virkkmi-linux>
-	 <1221817584.4491.29.camel@localhost>
-	 (sfid-20080919_114701_416600_478C4255)  <1221818057.10419.58.camel@johannes.berg>
-	 <1221819579.4491.34.camel@localhost>
-	 (sfid-20080919_122011_765612_F53F8EFC)  <1221820265.10419.78.camel@johannes.berg>
-	 <1221832302.4514.6.camel@localhost>
-Content-Type: text/plain
-Date: Fri, 19 Sep 2008 17:20:33 +0300
-Message-Id: <1221834033.22224.22.camel@virkkmi-linux> (sfid-20080919_162051_200212_7F7F0979)
-Mime-Version: 1.0
+Received: from xc.sipsolutions.net ([83.246.72.84]:43499 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696AbYIPJIz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 05:08:55 -0400
+Message-ID: <9f26451d5e126b98b80e38137152ef55.squirrel@secure.sipsolutions.net>
+In-Reply-To: <1ba2fa240809160136w7af27d48ud979c0e3d68b933@mail.gmail.com> 
+References: <1221550508-3338-1-git-send-email-tomas.winkler@intel.com>
+    <1221552471.8916.17.camel@johannes.berg>
+    <1ba2fa240809160136w7af27d48ud979c0e3d68b933@mail.gmail.com>
+Date: Tue, 16 Sep 2008 11:08:48 +0200 (CEST)
+Subject: Re: [RFC V2] mac80211: re-enable aggregation on 2.6.27
+From: "Johannes Berg" <johannes@sipsolutions.net>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com, ron.rindjunsky@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-09-19 at 15:51 +0200, Mattias Nissler wrote:
-> On Fri, 2008-09-19 at 12:31 +0200, Johannes Berg wrote:
-> > On Fri, 2008-09-19 at 12:19 +0200, Mattias Nissler wrote:
-> > 
-> > > Well, maybe we can work around this requirement? I still need to learn
-> > > about the details, but what happens for example if the STA sends the ACK
-> > > and then resets due to a crash? I guess the AP is able to cope with
-> > > that, no? So maybe we can relax the rules a bit (unless we become really
-> > > incompliant with the standard of course).
-> > 
-> > I don't really see how to. We can't just assume the station got the
-> > frame properly and advance our state machine. The case you're citing is
-> > quite different, we'll advance the state machine but it won't work
-> > because the STA crashed; if we advance but the station simply hasn't
-> > gotten the frame we'll get out of sync and stuff will fail for no real
-> > reason.
-> 
-> Well, I understand that we need synchronization of the state machines,
-> maybe we can advance optimistically and detect in the next state that
-> the STA didn't receive the last message? Just some random thoughts, I
-> see it'll at least be tricky, I just wanted your opinion on whether you
-> see a chance :-) As I said, I'll look into it when I find some time.
-> 
+Tomas Winkler wrote:
+> On Tue, Sep 16, 2008 at 11:07 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Tue, 2008-09-16 at 10:35 +0300, Tomas Winkler wrote:
+>>> Re-enable aggregation by addressing skb->cb overwrites
+>>> after insertion into the qdisc. Aggregation was disabled
+>>> after the new TX multiqueue changes were introduced. Instead
+>>> of relying on the skb->cb we use two flags on the skb.
+>>>
+>>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>> ---
+>>>
+>>> Users have been reporting low rates on 2.6.27 with 11n drivers, the
+>>> problem is been 11n aggregation was disabled due to the new TX multique
+>>> changes. We should have addressed this sooner but we just got to it
+>>> now.
+>>>
+>>> Without addressing this we won't get 11n aggregation on 2.6.27. I tried
+>>> to minimize the changes required. I'm about to test this, it compiles.
+>>>
+>>> If this doesn't get upstream for 27 perhaps distributions are willing
+>>> to
+>>> carry it around then and if so oh well (grr...).
+>>>
+>>> V2:
+>>>  1. removed skbuff ->is_part_ampdu
+>>>  2. fixed compilation warnings
+>>
+>> Looks better. However, still problems remain.
+>>
+>> ieee80211_start_tx_ba_session has a comment saying
+>>
+>>                /* No need to requeue the packets in the agg queue, since
+>> we
+>>                 * held the tx lock: no packet could be enqueued to the
+>> newly
+>>                 * allocated queue */
+>>
+>> which is clearly no longer true since there is no TX lock. You should
+>> maintain a similar invariant instead, namely that sta->tid_to_tx_q[tid]
+>> isn't updated until after ampdu_action(), in which case also no frames
+>> will go to the aggregation queue.
+>>
+>> However, to avoid reordering issues at aggregation start, you also need
+>> to stop the AC queue the TID falls into, to restart it only after
+>> ieee80211_requeue. This is tricky as it might be stopped due to a scan
+>> starting at the same time, so additional bookkeeping about who stopped a
+>> queue for what reason will be needed so you don't enable a queue that
+>> the scan has stopped or vice versa.
+>>
+>> As for ieee80211_requeue, it will need to be run from process context to
+>> be able to synchronize_rcu() at the beginning of the function to make
+>> sure any concurrent select_queue() has finished. That way, it can be
+>> sure that all frames on the queues will be properly classified: when
+>> aggregation was just _enabled_ frames after synchronize_rcu() will go to
+>> the aggregation queue and we can safely requeue the frames on the AC
+>> queue; when aggregation was just _disabled_ after synchronize_rcu() no
+>> frames will go to the aggregation queue any more.
+>>
+>> Note that for both cases both queues have to be stopped, the aggregation
+>> queue is easy to handle since it can just start out in stopped until
+>> ieee80211_requeue is run from the workqueue, but for the AC queue as I
+>> mentioned this requires extra bookkeeping to not collide with the driver
+>> or the scan stopping queues. Incidentally, it looks as though the scan
+>> might collide with the driver here, the fact that we allow pending
+>> packets probably rescues us here, but we cannot rely on that for
+>> aggregation because there we need it for correct ordering.
+>>
+>> I think that covers it all, but I might be wrong.
+>
+> Try to address these.  Scan is no issue if HW scan is enabled, haven't
+> look if athk9 is using sw or hw scan.
 
-Just as a side note: it's the mac80211 stack which converts a missing
-TX_ACK flag to be a IEEE80211_RADIOTAP_F_TX_FAIL flag. The hostapd sees
-that TX_FAIL and assumes TX failed.
+ath9k is sw scan. I just had another idea, it might be possible to do
+everything under the sta spinlock to avoid having to stop queues, but I'm
+not sure that can work out.
 
-> > 
-> > But you can do workarounds all you want in hostapd, I don't care.
-> 
-> :-)
-> 
-> > However, I do think that if the hardware just isn't up to the job you
-> > should probably buy new hardware, after all, it's dirt cheap. :)
-> 
-> I totally agree with you. I'm just curious to see whether there is a
-> chance to help our users. I'm perfectly fine if it turns out there is no
-> chance to do it properly, and I'll rather accept that fact instead of
-> trying to introduce workarounds that are known to be incorrect. The sad
-> thing is that if we controlled the firmware, we could probably arrange
-> to have the necessary information passed to the driver.
-> 
-> Mattias
-> 
-
-I'd really love for some workaround that would allow AP mode to work. 
-
-It would be great if it could be deemed that the protocol doesn't really
-require CTS protection/status information, and can be made reliable and
-standards compliant without support for it from the driver.
-Unfortunately I don't have high hopes for that, but I wonder what's Mr.
-Malinen's opinion?
-
-- Mikko
-
-
-
-
+johannes
