@@ -1,83 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58213 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57740 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbYISKbu (ORCPT
+	with ESMTP id S1752172AbYIQL0S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 06:31:50 -0400
-Subject: Re: ACK matching [was: TX status reporting with help of an ack
-	queue]
+	Wed, 17 Sep 2008 07:26:18 -0400
+Subject: Re: iw packaging
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
-	kune@deine-taler.de
-In-Reply-To: <1221819579.4491.34.camel@localhost> (sfid-20080919_122011_765612_F53F8EFC)
-References: <1221494693.14102.22.camel@virkkmi-linux>
-	 <1221505251.4511.77.camel@localhost>
-	 <1221541089.14102.44.camel@virkkmi-linux>
-	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
-	 <1221776990.4563.19.camel@localhost>
-	 <1221815294.19539.15.camel@virkkmi-linux>
-	 <1221817584.4491.29.camel@localhost>
-	 (sfid-20080919_114701_416600_478C4255)  <1221818057.10419.58.camel@johannes.berg>
-	 <1221819579.4491.34.camel@localhost> (sfid-20080919_122011_765612_F53F8EFC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qJuC1QYbim19cU9PEq/p"
-Date: Fri, 19 Sep 2008 12:31:05 +0200
-Message-Id: <1221820265.10419.78.camel@johannes.berg> (sfid-20080919_123154_683503_DFDB462A)
+To: "\"Adam" =?ISO-8859-1?Q?C=E9cile?= "(Le_Vert)\""
+	<gandalf@le-vert.net>
+Cc: Jochen Friedrich <jochen@scram.de>, linux-wireless@vger.kernel.org,
+	Thomas d'Otreppe <tdotreppe@aircrack-ng.org>
+In-Reply-To: <1221650286.9262.57.camel@johannes.berg> (sfid-20080917_131902_131893_ED5266A7)
+References: <1221596962.9262.12.camel@johannes.berg>
+	 <48D0DEF0.2060407@scram.de> <1221648205.9262.48.camel@johannes.berg>
+	 <48D0E463.70008@le-vert.net> <1221649638.9262.50.camel@johannes.berg>
+	 <48D0E5CE.8050401@le-vert.net>  <1221650286.9262.57.camel@johannes.berg>
+	 (sfid-20080917_131902_131893_ED5266A7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/FLiKiM/TM3ph+oAh/Mp"
+Date: Wed, 17 Sep 2008 13:25:29 +0200
+Message-Id: <1221650729.9262.59.camel@johannes.berg> (sfid-20080917_132638_501947_7A619287)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-qJuC1QYbim19cU9PEq/p
+--=-/FLiKiM/TM3ph+oAh/Mp
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2008-09-19 at 12:19 +0200, Mattias Nissler wrote:
+On Wed, 2008-09-17 at 13:18 +0200, Johannes Berg wrote:
 
-> Well, maybe we can work around this requirement? I still need to learn
-> about the details, but what happens for example if the STA sends the ACK
-> and then resets due to a crash? I guess the AP is able to cope with
-> that, no? So maybe we can relax the rules a bit (unless we become really
-> incompliant with the standard of course).
+>  * removing interfaces now works like this:
+>      iw dev monitor0 del
+>    I didn't feel inclined to keep the old syntax because it's rather
+>    ugly but if this is a big problem for you I can add a hidden command
+>    so you can continue doing "iw dev monitor0 interface del".
 
-I don't really see how to. We can't just assume the station got the
-frame properly and advance our state machine. The case you're citing is
-quite different, we'll advance the state machine but it won't work
-because the STA crashed; if we advance but the station simply hasn't
-gotten the frame we'll get out of sync and stuff will fail for no real
-reason.
-
-But you can do workarounds all you want in hostapd, I don't care.
-However, I do think that if the hardware just isn't up to the job you
-should probably buy new hardware, after all, it's dirt cheap. :)
+I've gone ahead and done that since anyway who knows what else is
+already relying on this...
 
 johannes
 
---=-qJuC1QYbim19cU9PEq/p
+--=-/FLiKiM/TM3ph+oAh/Mp
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI039mAAoJEKVg1VMiehFYR7IQALd3goiXVIdVzGpUfdiCIOCo
-mKdbcI9QJ+iT4Pr+m6JCLcaYuL8AlmA1oE3Tm6hNkMa4fuLyriUD/RHC0LMbe3s8
-7VTbQMuRKB350OPZK3saxR00f738WLlhD2XRHWJKgsFsIH7JBS6ZPjarLjqBmwuy
-HVC9SDIxY2ic1vKmkEvnhORgenRlhvVP/TNWhqqLrpa3wAAH9QpbKjF23/F63jNf
-OTCJGsOWt7OhyXgEaYPo4z9ZHwP29Ocm1s0yTg/B5ULbLhAsSU4b8cTZPQ0oQisO
-DRdECC8ABscTaYr8Bjxxd6VvVzc6muwmV8l0aEOZN9TzAKo4L/HL1p0H9GLXCjih
-0dqPrxc/z212g5AGRj1mMCjsilJ02vp14zW7QtK9osNGXGysW3rQCqFh4YkLiJCL
-SGW55As333YTbVTbqRSVoij8BlTFAw3+ZMSGAtHNGTFUPWRFAMM2MUHd8ZY+3xVz
-HCDdJtATGp4ckE9AXICF9sfI8zxx0kfJEVKI+pnmSn53mBSXh0KdRc5Su+lgT/jo
-+TEnep3DhubPDnqnTb0z0sLs5tAmJmKImAfVzwluE9TZhZ4bMtGpxMpybBGk+bpS
-UKqOYzGNTI0Q2dNYbK0FSvJ+ipxHNSeJSgmcb9kFKfcra5Xg8U0+Th8+/zVMz+Ko
-j8HMoH6fRcuWt+lTZO8N
-=rP/u
+iQIcBAABAgAGBQJI0OklAAoJEKVg1VMiehFYYvIP/0RbuBWd4oOCukp4rwSpxkVW
+zcFLFZBwFbB+x2dfXsoBex3X8uI7YTjAQZk3ZFvKgekxEcnuY7ItNeR2lLbieEe2
+OhtZdfdQy7D7lhwy2Igu8cydfPMJuK0F7grtJ90ifBH0D1Y/zJYFCsEPpZtnX2gy
+HT2my2hkp7/25NKvIOUJK/KehsXwSvNoCAvSwpOIFbp/w6gZqnbfXseZEV+9+6RB
+n0CuzOwDVwGfulDX7wuvRSf0A+NHas6ZyA7TypxZ9TMZoQA/AMETqv6TVriv+iLx
+xcu2OqD6Qbwx4XykfIV4VgF2/0gmfVkfoj+Y1LyBDq3wtaeHODvClnMkp15thYfm
+TTMFhvu5anIkhW4/XoQkZ34/byms5DWj+bVBwViJ95acPFdg5Gdq1vytx9jV+9d4
+Qwat53IaBx9k85MDpGsO21d0QWnGl38AatV7ZIikGzloS4mieBfRzuOIyffoo/c/
+61N5KDPzepqW8Yuhh3OYCmbKnExzYymbU6jUq9SVhDjJSsp6/v2kel8oEqcULbNB
+IiA0lEOvh0pFy7QY38ykAja9zO0QUJ3XcHMmMv+hP9b3BAjrH3xSZDk5YiFQr+pZ
+2VAOmL9lFKXznQnUKlBFtfLcYkoq72/uw+iCTZlAhuABxZ51hlNGFa+e4R1GGp0s
+eFSKGDi3UAZAOF/7c++7
+=Qnnh
 -----END PGP SIGNATURE-----
 
---=-qJuC1QYbim19cU9PEq/p--
+--=-/FLiKiM/TM3ph+oAh/Mp--
 
