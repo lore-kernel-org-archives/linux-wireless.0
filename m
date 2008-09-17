@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:26473 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752399AbYIPIIg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50980 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025AbYIQKoQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 04:08:36 -0400
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Helmut Schaa" <hschaa@suse.de>, "Dan Williams" <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Jouni Malinen" <j@w1.fi>
-Subject: Re: [RFC] mac80211: notify the user space about low signal quality
-References: <200809151416.07552.hschaa@suse.de>
-	<200809151634.06448.hschaa@suse.de>
-	<1221492529.10177.76.camel@localhost.localdomain>
-	<200809151845.35841.hschaa@suse.de>
-	<43e72e890809151821h5d40e750q10c78f4d20d27c79@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 16 Sep 2008 11:07:35 +0300
-In-Reply-To: <43e72e890809151821h5d40e750q10c78f4d20d27c79@mail.gmail.com> (ext Luis R. Rodriguez's message of "Mon\, 15 Sep 2008 18\:21\:17 -0700")
-Message-ID: <87r67kzf7c.fsf@nokia.com> (sfid-20080916_100844_742738_D3E5EF9B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 17 Sep 2008 06:44:16 -0400
+Subject: Re: iw packaging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jochen Friedrich <jochen@scram.de>
+Cc: linux-wireless@vger.kernel.org, gandalf@le-vert.net
+In-Reply-To: <48D0DEF0.2060407@scram.de>
+References: <1221596962.9262.12.camel@johannes.berg>
+	 <48D0DEF0.2060407@scram.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nFeK0z2k+imKylzT7uAP"
+Date: Wed, 17 Sep 2008 12:43:25 +0200
+Message-Id: <1221648205.9262.48.camel@johannes.berg> (sfid-20080917_124419_964243_84D12C48)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <mcgrof@gmail.com> writes:
 
-> On Mon, Sep 15, 2008 at 9:45 AM, Helmut Schaa <hschaa@suse.de> wrote:
->
->> Ok, I'll sum that up. Moving the policy into user space is a good
->> thing if the quality values are comparable. Once mac80211
->> recognices a noticable quality change we could use IWEVQUAL to
->> notify user space about it. Furthermore (if desired) the signal
->> could be extended to not only report a value between 0 and 100 but
->> could also contain flags indicating lost beacons, excessive retries
->> etc.
->
-> If you are going to add a new sort of notification can you please use
-> nl80211? No need to keep wireless extensions on life support.
+--=-nFeK0z2k+imKylzT7uAP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->From my point of view WE is not on life support (yet) but instead very
-widely used. As an example, I still haven't seen any cfg80211/nl80211
-user space tools in debian unstable. (Please correct me if I'm wrong.)
-There has been a lot of talk about cfg80211/nl80211 but unfortunately
-the migration progress has been very slow.
+On Wed, 2008-09-17 at 12:41 +0200, Jochen Friedrich wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>=20
+> Johannes Berg schrieb:
+>=20
+> > I've just tagged iw version 0.9 (and 0.9.1 after a small build fix)
+> > because I think the tool is now actually usable in a limited way, unlik=
+e
+> > before where it would never properly report errors etc.
+> >=20
+> > Anyone want to pick it up for the various distros?
+>=20
+> In Debian, iw seems to be already packaged as part of aircrack-ng which n=
+ow needs
+> to be packaged seperately.
 
-I definitely want to see this background scan support in Wireless
-Extensions as well, otherwise it might prevent the real use of the
-feature.
+Yeah, it's also a pre-release version that the aircrack developers are
+distributing. I'm not very happy with that and have filed a bug against
+aircrack-ng (but it seems to not have gone through yet)
 
--- 
-Kalle Valo
+johannes
+
+--=-nFeK0z2k+imKylzT7uAP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI0N9JAAoJEKVg1VMiehFY5N4P/31mduB2e8VxptT0wLd7oh0w
+snRAQMTSm7Sy7nQbUUlWERNryEw1FiRaCJ+SfIEQHoaooZIq2YLNS6HOmDhuhK9v
+fmVXeHYQ7O70ZmSsGi/fTSYCCOyDtMxvkX1VwFjB4bo1w1Fo/8QrSsWp+go75ZzJ
+5KGikxudlhjhE5xAeVip5cVvoVWUClodGGyai/z58rAM5YaDCI9sXktiykU6Dv6D
+GLxBwxZgnWxal8B2qJLUtI2Jr/I/RYx6oDHgeCbPBxidgBOc5fne0rQ4DVNQ1FLv
+R5GNN0fqscurRLtzFr1QwL1qTrzgmk45YMpPIW8hbVuHtS8qC/5X/stj1jsTBiQO
+53C3lWJRQqYRMn0N8BKuL6NF4kGlywpFZv2RnWBFgrWJncG5WrDMWqxbdHXa7oy2
+THzWe1hTrK4j0AckW50V4rXMGFw9P4sZj6ugVHbUTB8aIa2IBpy6NBbAT8jkx4pG
+oXJLktdpm1KCAhBKMTSSDDXJCcBf1UY6o/rDiUnq3wVyiXCsxmnog7+eiUTxp1yx
+FYW2s2O6P50Xl7cMGNHeY5Tku0iotP+8NOcgelc4IVvor2mG8CSXyxyuwIQ524hO
+DjWLmvCacY+nzzAPQRYgz0masimhO3GzFYH6xEYcuR7IVnjPI4pEDgJ/+/N8vBA9
+L8CHyolq5Te32FnLkkUH
+=um7x
+-----END PGP SIGNATURE-----
+
+--=-nFeK0z2k+imKylzT7uAP--
+
