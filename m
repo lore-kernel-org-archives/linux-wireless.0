@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7151 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752215AbYIVOKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 10:10:15 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/1] mac80211: fix led behavior in IBSS
-Date: Mon, 22 Sep 2008 17:10:10 +0300
-Message-Id: <1222092610-25374-1-git-send-email-tomas.winkler@intel.com> (sfid-20080922_161021_132282_6A58AABD)
-Content-Type: text/plain; charset="us-ascii"
+Received: from fg-out-1718.google.com ([72.14.220.153]:49439 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352AbYIQU5t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2008 16:57:49 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2122474fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 13:57:47 -0700 (PDT)
+Message-ID: <1ba2fa240809171357p1b190760h19c3e521e100f7e4@mail.gmail.com> (sfid-20080917_225753_426599_893D453D)
+Date: Wed, 17 Sep 2008 23:57:47 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: re-enable aggregation
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1221547036.8916.1.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1221535073-6937-1-git-send-email-lrodriguez@atheros.com>
+	 <1221547036.8916.1.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-This patch fixes the led behavior in IBSS. After we joined an IBSS cell we
-need to inform the led that we got associated. Although there is no 802.11
-association in IBSS mode, the semantic of "There is a link" is relevant.
-This allows the led to blink in IBSS mode (at least this solves a bug for
-iwlwifi).
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/mlme.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2e55208..2bae226 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1483,6 +1483,8 @@ static int ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	ifsta->state = IEEE80211_STA_MLME_IBSS_JOINED;
- 	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
- 
-+	ieee80211_led_assoc(local, true);
-+
- 	memset(&wrqu, 0, sizeof(wrqu));
- 	memcpy(wrqu.ap_addr.sa_data, bss->bssid, ETH_ALEN);
- 	wireless_send_event(sdata->dev, SIOCGIWAP, &wrqu, NULL);
--- 
-1.5.4.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+On Tue, Sep 16, 2008 at 9:37 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-09-15 at 20:17 -0700, Luis R. Rodriguez wrote:
+>
+>> +/**
+>> + * is_part_ampdu - tells us whether this buffer is part of an AMPDU
+>> + *
+>> + * @skb: the buffer we want to check
+>> + * @hw: the &struct ieee80211_hw to check the queue mapping on
+>> + */
+>> +static inline bool is_part_ampdu(struct sk_buff *skb, struct ieee80211_hw *hw)
+>> +{
+>> +     return (skb_get_queue_mapping(skb) >=
+>> +             ieee80211_num_regular_queues(hw));
+>> +}
+>> +
+>
+> This is making the patch needlessly large and makes it change drivers
+> etc, please just keep the flag and set it based on this in master xmit
+> after we've cleared the info.
+>
+Yes, please keep the flag. Otherwise our rate scale algorithm won't work
+Thanks
+Tomas
