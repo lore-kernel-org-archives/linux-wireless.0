@@ -1,132 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:43581 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753132AbYISUB0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 16:01:26 -0400
-Received: by ug-out-1314.google.com with SMTP id k3so1067510ugf.37
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 13:01:24 -0700 (PDT)
-Date: Fri, 19 Sep 2008 16:01:15 -0400
-From: Celejar <celejar@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+Received: from bu3sch.de ([62.75.166.246]:43057 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752325AbYIQOT7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2008 10:19:59 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Date: Wed, 17 Sep 2008 16:19:33 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
 	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Subject: Re: Can't connect to AP with hidden essid with 2.6.27-rc6
-Message-Id: <20080919160115.c591532c.celejar@gmail.com> (sfid-20080919_220130_940373_CB00ECA8)
-In-Reply-To: <48D3FB0F.1000909@lwfinger.net>
-References: <20080916220904.75283811.celejar@gmail.com>
-	<48D06B9E.70307@lwfinger.net>
-	<20080918004509.23a4bdc9.celejar@gmail.com>
-	<48D1E42C.70904@lwfinger.net>
-	<20080918015202.8c5f6381.celejar@gmail.com>
-	<48D24911.80101@lwfinger.net>
-	<20080918160957.94ea063d.celejar@gmail.com>
-	<48D2D728.6070105@lwfinger.net>
-	<20080919001050.d9ed273a.celejar@gmail.com>
-	<48D3CFBC.6070504@lwfinger.net>
-	<43e72e890809191105p26841666l50a4a139a7177590@mail.gmail.com>
-	<20080919142740.60e2c0e8.celejar@gmail.com>
-	<48D3FB0F.1000909@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	bcm43xx-dev@lists.berlios.de
+References: <48CFC03A.8020708@lwfinger.net> <48D0183E.9010301@lwfinger.net> <20080916210920.GC16470@srcf.ucam.org>
+In-Reply-To: <20080916210920.GC16470@srcf.ucam.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809171619.33377.mb@bu3sch.de> (sfid-20080917_162006_289798_3F5EB9D7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 19 Sep 2008 14:18:39 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> Celejar wrote:
-> > On Fri, 19 Sep 2008 11:05:35 -0700
-> > "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
-> > 
-> >> On Fri, Sep 19, 2008 at 9:13 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> >>
-> >>> I do not think a bisection is necessary. Your successful test of the
-> >>> old regulatory code suggests to me that there is some kind of problem
-> >>> with the CRDA database.
-> >> BTW the "old regulatory code" is actually not "old regulatory code"
-> >> but instead static regulatory definitions slapped in the kernel just
-> >> as they were before but under the new regulatory infrastructure guise.
-> >>
-> >>> Luis - to fill you in, he can connect to an AP with a hidden essid
-> >>> using the old regulatory code, but not using CRDA. There seems to be
-> >>> some critical difference between them.
-> >> Thanks for bringing this up Larry.
-> >>
-> >> If by old regulatory code you mean with CONFIG_WIRELESS_OLD_REGULATORY
-> >> then I would narrow the search down to testing as follows:
-> >>
-> >> --- Without crda:
-> >>
-> >> mv /sbin/crda /sbin/crda-foo
-> >> sudo rmmod your_driver mac80211 cfg80211
-> >> sudo modprobe your_driver
-> >>
-> >> # Check channels using iw
-> >>
-> >> --- With crda:
-> >> mv /sbin/crda-foo /sbin/crda
-> >> sudo rmmod your_driver mac80211 cfg80211
-> >> sudo modprobe your_driver
-> >>
-> >> # check channels using iw
-> >> ---
-> >>
-> >> By default when CONFIG_WIRELESS_OLD_REGULATORY is set the built-in
-> >> "US" static regulatory domain is used. If crda is present though a new
-> >> regulatory domain will be updated onto the kernel, so we'll get the
-> >> new regulatory domain built by crda from the original db.txt. Without
-> >> crda present the static regulatory domain shall be used.
-> >>
-> >> What frequency is the AP on?
-> > 
-> > I (the user) am currently connecting successfully with CRDA to a hidden
-> > essid AP.  I previously had claimed that it was still not working, even
-> > though the iw channel output looked good, but it currently seems to be
-> > okay.  I may have previously done something wrong, such as not
-> > rebuilding CRDA for the current kernel, although in that case I'm not
-> > sure why the iw output would have been correct.  In any event, at this
-> > point it seems that it may have been some mistake on my part.  Thanks
-> > for the help, sorry for the noise, and I'll report back if I see any
-> > more trouble.
+On Tuesday 16 September 2008 23:09:20 Matthew Garrett wrote:
+> Oh, hey, I suck. This one might stand a better chance of not falling 
+> over.
 > 
-> Is it correct that your current setup has
-> CONFIG_WIRELESS_OLD_REGULATORY set? If I remember correctly, your
-> previous failure with CRDA was with CONFIG_WIRELESS_OLD_REGULATORY
-> unset. If that is true, could you please unset it and try again. The
-> code paths are different.
+> diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+> index fec5645..991e318 100644
+> --- a/drivers/net/wireless/b43/rfkill.c
+> +++ b/drivers/net/wireless/b43/rfkill.c
+> @@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev *dev)
+>  	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+>  
+>  	if (!dev->radio_hw_enable) {
+> -		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
+> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
+>  		return;
+>  	}
+>  
+>  	if (!dev->phy.radio_on)
+> -		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
+> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
+>  	else
+> -		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
+> -
+> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
+>  }
 
-My current setup does not have CONFIG_WIRELESS_OLD_REGULATORY set.
+I still thing that it is really wrong to check and change the software
+rfkill state from within the _hardware_ rfkill state handler.
+So let's say this handler sets the state to SOFT_BLOCKED. Who is going
+to set it back to unblocked, if the user unblocks the radio?
 
-> I think that CRDA runs in userspace and should be relatively
-> independent of kernel version.
+We can turn the radio on/off from the mac80211 config callback. Possibly
+we must tell rfkill about it (I'm not sure. I don't understand the API).
+I think this is pretty hard to get right, actually. HW-block and SW-block
+are two completely independent states in b43. You can HW-block and SW-block
+the device at the same time. So one must make sure that at any time the rfkill
+is in a sane state if _either_ HW-block or SW-block changes. Currently I think
+we only change rfkill state if HW-block state changes. Which is wrong.
 
-You are right.  I had thought that although it runs in userspace, since
-the build seems to use headers specific to the running kernel, that
-might be significant, but I have tested and it does not seem to make a
-difference, at least between the two fairly recent -rc6 kernel that I
-tried. From the CRDA Makefile:
 
-ifeq ($(origin $(KLIB)), undefined)
-KLIB:=          /lib/modules/$(shell uname -r)
-endif
-KLIB_BUILD ?=   $(KLIB)/build
+In the end, I do not care about this crap anymore.
+Feel free to remove my copyright notice from that file and put yours in
+there. So feel free to send any patch to the rfkill code to john, but please
+handle any regressions resulting from it. If not, I will handle them by reverting
+patches until it starts to work again. ;)
 
-...
-
-CFLAGS += -I$(KLIB_BUILD)/include -DUSE_GCRYPT
-
-I think the problem I had was that on boot, the b43 / 80211 modules get
-loaded, but they don't seem to be calling CRDA, and I can't access my
-hidden essid AP.  Doing the module removal and reloading that Luis
-suggested causes CRDA to be called, and then things work fine.
-
-> Larry
-
-Celejar
---
-mailmin.sourceforge.net - remote access via secure (OpenPGP) email
-ssuds.sourceforge.net - A Simple Sudoku Solver and Generator
-
+-- 
+Greetings Michael.
