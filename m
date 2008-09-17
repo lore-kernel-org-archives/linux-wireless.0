@@ -1,92 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:57379 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754631AbYIRPTc (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:37758 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671AbYIQXpc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 11:19:32 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH] rfkill: clarify usage of rfkill_force_state() and rfkill->get_state()
-Date: Thu, 18 Sep 2008 12:19:26 -0300
-Message-Id: <1221751166-9927-1-git-send-email-hmh@hmh.eng.br> (sfid-20080918_171946_280689_99B00F19)
-In-Reply-To: <20080918145236.GJ1583@khazad-dum.debian.net>
-References: <20080918145236.GJ1583@khazad-dum.debian.net>
+	Wed, 17 Sep 2008 19:45:32 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so35603fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 16:45:30 -0700 (PDT)
+Message-ID: <1ba2fa240809171645ra6e7561ld96e8f505fc28c09@mail.gmail.com> (sfid-20080918_014535_934016_5802C52F)
+Date: Thu, 18 Sep 2008 02:45:30 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: re-enable aggregation
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240809171620g99e5332y690091373e8476f2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1221535073-6937-1-git-send-email-lrodriguez@atheros.com>
+	 <1221547036.8916.1.camel@johannes.berg>
+	 <1ba2fa240809171357p1b190760h19c3e521e100f7e4@mail.gmail.com>
+	 <43e72e890809171545k5aeaa52dje2223bdbeb97ce7e@mail.gmail.com>
+	 <1ba2fa240809171557i498cb5e1rcacb5961d8e1c3c6@mail.gmail.com>
+	 <20080917230357.GA7410@tesla> <1221692757.7412.22.camel@localhost>
+	 <1ba2fa240809171620g99e5332y690091373e8476f2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill_force_state() is used to update the rfkill core's idea of what is
-really happening RIGHT NOW to the transmitter hardware in a PUSH model.
+On Thu, Sep 18, 2008 at 2:20 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Thu, Sep 18, 2008 at 2:05 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Wed, 2008-09-17 at 16:03 -0700, Luis R. Rodriguez wrote:
+>>
+>>> > What I need to next is to add is rtnl_lock
+>>> > qdisc_root_lock requires this. This root lock is held during requeuing
+>>> > which can be triggered by removal or addition of an aggregation queue.
+>>>
+>>> I saw that, but rtnl_lock() is mutex basd so no good. Hence we need
+>>> something that works around this.
+>>
+>> As I outlined earlier I'm pretty much convinced you need to go to the
+>> workqueue anyway. Use schedule_work though, not the mac80211 workqueue,
+>> you can't take the rtnl on the mac80211 wq.
+>
+> The Addition is done from
+> 1. Rate scale - tx_status context (tasklet) - need schedule here, but
+> I don't like this conceptually
 
-rfkill->get_state() does the same, in a PULL model.
-
-Neither of them change the real hardware radio state through a call to
-rfkill->toggle_radio() or anything of the sort, so they must deal with the
-real, current state of the hardware.
-
-Change some documentation to make that more clear (I hope).
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
----
- Documentation/rfkill.txt |   10 ++++++++++
- include/linux/rfkill.h   |    3 +++
- net/rfkill/rfkill.c      |    3 +++
- 3 files changed, 16 insertions(+), 0 deletions(-)
-
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index b65f079..0143f1e 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -461,6 +461,16 @@ mandatory when the device has a hardware rfkill line, or when something else
- like the firmware could cause its state to be changed without going through the
- rfkill class.
- 
-+**** ATTENTION ****
-+Both the state returned by the rfkill->get_state() hook, and the state
-+passed to rfkill_force_state() MUST BE THE REAL, CURRENT STATE OF THE
-+HARDWARE TRANSMITTER.  Never use for these functions the "desired" state,
-+"user requested" state, or anything of the sort.
-+
-+Also, be warned that rfkill_force_state() cannot be called from atomic context,
-+so interrupt handlers will have to make use of a workqueue to do it.
-+**** ATTENTION ****
-+
- Some hardware provides events when its status changes.  In these cases, it is
- best for the driver to not provide a get_state hook, and instead register the
- rfkill class *already* with the correct status, and keep it updated using
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 4cd64b0..92b9c72 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -80,6 +80,9 @@ enum rfkill_state {
-  *      may be called from atomic context, should return 0 on success.
-  *      Either this handler OR judicious use of rfkill_force_state() is
-  *      MANDATORY for any driver capable of RFKILL_STATE_HARD_BLOCKED.
-+ *      THIS HOOK MUST RETURN THE CURRENT, REAL STATE OF THE HARDWARE
-+ *      TRANSMITTER, and not the "desired state", "user requested state"
-+ *      or anything of the sort.
-  * @led_trigger: A LED trigger for this button's LED.
-  * @dev: Device structure integrating the switch into device tree.
-  * @node: Used to place switch into list of all switches known to the
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index f949a48..64a53f1 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -333,6 +333,9 @@ EXPORT_SYMBOL_GPL(rfkill_restore_states);
-  * a notification by the firmware/hardware of the current *real*
-  * state of the radio rfkill switch.
-  *
-+ * The state passed to this function MUST MATCH THE CURRENT,
-+ * REAL HARDWARE STATE OF THE TRANSMITTER.
-+ *
-  * Devices which are subject to external changes on their rfkill
-  * state (such as those caused by a hardware rfkill line) MUST
-  * have their driver arrange to call rfkill_force_state() as soon
--- 
-1.5.6.5
-
+This is a real mess. Need to pass tid, addr and hw into work item,
+which in current late hour I can only think
+of adding a global list.
+Anyone....more ideas here....
+Thanks
+Tomas
