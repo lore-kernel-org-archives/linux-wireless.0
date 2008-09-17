@@ -1,48 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:18592 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750867AbYITIRo (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:47747 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752610AbYIQPS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 04:17:44 -0400
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: stlc45xx: mac80211 driver for N800 and N810
-References: <877i98iw4h.fsf@nokia.com>
-	<1221819119.10419.75.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Sat, 20 Sep 2008 11:16:51 +0300
-In-Reply-To: <1221819119.10419.75.camel@johannes.berg> (ext Johannes Berg's message of "Fri\, 19 Sep 2008 12\:11\:59 +0200")
-Message-ID: <87abe3mdu4.fsf@nokia.com> (sfid-20080920_101746_879158_6B776EF7)
+	Wed, 17 Sep 2008 11:18:28 -0400
+Date: Wed, 17 Sep 2008 12:18:22 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: Regression in 2.6.27-rcX caused by commit
+	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Message-ID: <20080917151822.GB5186@khazad-dum.debian.net> (sfid-20080917_171833_107455_4B4A4871)
+References: <48CFC03A.8020708@lwfinger.net> <48D0183E.9010301@lwfinger.net> <20080916210920.GC16470@srcf.ucam.org> <200809171619.33377.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200809171619.33377.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Wed, 17 Sep 2008, Michael Buesch wrote:
+> On Tuesday 16 September 2008 23:09:20 Matthew Garrett wrote:
+> > Oh, hey, I suck. This one might stand a better chance of not falling 
+> > over.
+> > 
+> > diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+> > index fec5645..991e318 100644
+> > --- a/drivers/net/wireless/b43/rfkill.c
+> > +++ b/drivers/net/wireless/b43/rfkill.c
+> > @@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev *dev)
+> >  	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+> >  
+> >  	if (!dev->radio_hw_enable) {
+> > -		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
+> > +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
+> >  		return;
+> >  	}
+> >  
+> >  	if (!dev->phy.radio_on)
+> > -		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
+> > +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
+> >  	else
+> > -		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
+> > -
+> > +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
+> >  }
+> 
+> I still thing that it is really wrong to check and change the software
+> rfkill state from within the _hardware_ rfkill state handler.
+> So let's say this handler sets the state to SOFT_BLOCKED. Who is going
+> to set it back to unblocked, if the user unblocks the radio?
 
-> On Fri, 2008-09-19 at 07:43 +0300, Kalle Valo wrote:
->> Hello all,
->> 
->> Nokia yesterday published stlc45xx, which is a mac80211 driver for
->> N800 and N810. Webpage here:
->> 
->> http://stlc45xx.garage.maemo.org/
->
-> quick look at the code
+I would suggest reading the updated docs, but I know you'd rather just stay
+away from rfkill.
 
-Thanks a lot! I didn't send any code for review yet because, as you
-noticed, the code is in early stages still. I will go through your
-comments next week and fix them.
+For reference:
 
-> Overall looks pretty good, I'm concerned that the binary helper is
-> _required_, we had this with ipw3945 and it wasn't accepted. Any way to
-> make it not required?
+Basically, your wireless device driver has to monitor any hardware rfkill
+lines and call rfkill_force_state() accordingly (you don't even need to
+track if the state changed, rfkill core will do that).
 
-I guess I'll have to find a way. Maybe have very convervative default
-values in the driver which the binary tool can update? That way the
-driver would work without stlc45xx-cal (with the cost of worse
-performance) and still our requirements would be fulfilled.
+The call to rfkill_force_state() should set state to HARD_BLOCKED (any of
+the hardware rfkill lines are active), SOFT_BLOCKED (no hardware rfkill
+lines are active, but one of the software rfkill lines are active), or
+UNBLOCKED (no rfkill lines of any type are active).
+
+Whether this is to be done through interrupts or pooling is something that
+depends on your driver and the hardware.
+
+User and userspace interaction is taken care of by the rfkill core.  You do
+nothing of the sort in the wireless device driver.
+
+There are *very few* exceptions for the above as far as wireless device
+drivers go.  They are explained in the docs, and I know of no wireless
+device driver that would require any them.
+
+> We can turn the radio on/off from the mac80211 config callback. Possibly
+> we must tell rfkill about it (I'm not sure. I don't understand the API).
+> I think this is pretty hard to get right, actually. HW-block and SW-block
+> are two completely independent states in b43. You can HW-block and SW-block
+> the device at the same time. So one must make sure that at any time the rfkill
+> is in a sane state if _either_ HW-block or SW-block changes. Currently I think
+> we only change rfkill state if HW-block state changes. Which is wrong.
+
+Again, for reference:
+
+You need to synthesize a single state (unblock/soft-block/hard-block) for a
+transmitter from every rfkill line that affects that transmitter.  This
+happens because the interface is a SINGLE ONE rfkill class per independent
+wireless interface ("transmitter").
+
+> In the end, I do not care about this crap anymore.
+
+That's quite understandable...  b43 is one of the drivers (if not THE
+driver) that suffered most from rfkill bugs, as it was an early adopter and
+the old rfkill API was just plain broken for the kind of stuff b43 needed it
+for.
 
 -- 
-Kalle Valo
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
