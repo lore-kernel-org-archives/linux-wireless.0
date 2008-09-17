@@ -1,49 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:5769 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752179AbYIZWCo (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:42898 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752667AbYIQCds (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 18:02:44 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1333497wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 15:02:43 -0700 (PDT)
-Message-ID: <40f31dec0809261502o284597fwa105cb2651c74bc0@mail.gmail.com> (sfid-20080927_000248_598707_3A1C3CF2)
-Date: Sat, 27 Sep 2008 01:02:43 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: Release of Atheros 802.11abg HAL under the ISC
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20080926215701.GC5972@tesla>
+	Tue, 16 Sep 2008 22:33:48 -0400
+Date: Tue, 16 Sep 2008 23:33:34 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Carlos Corbacho <carlos@strangeworlds.co.uk>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Regression in 2.6.27-rcX caused by commit
+	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Message-ID: <20080917023334.GA1187@khazad-dum.debian.net> (sfid-20080917_043359_810823_E0456CD8)
+References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <200809162018.28548.carlos@strangeworlds.co.uk> <48D0095B.40403@lwfinger.net> <20080916233240.GA18574@srcf.ucam.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080926215701.GC5972@tesla>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080916233240.GA18574@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/9/27 Luis R. Rodriguez <lrodriguez@atheros.com>:
-> As part of our commitment to help support all of our Atheros devices
-> under Linux we'd like to announce the release of our Atheros HAL for
-> our 802.11abg chipsets under the ISC license.
->
-> You can find it here:
->
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/legacy-hal.tar.bz2
->
-> This can be used as a source of documentation to help ath5k move
-> forward to support our 802.11abg chipsets as best as possible in
-> the Linux kernel. We look forward to keep working strongly with the
-> community on advancing support of all our Atheros chipsets under Linux.
->
->  Luis
+On Wed, 17 Sep 2008, Matthew Garrett wrote:
+> that's not a criticism of anyone involved - the documentation's 
+> confusing and there weren't any good examples of how it should be 
+> implemented).
 
-Thanks a lot for this !!!
+I sure hope you mean "the documentation WAS confusing"... because if it is
+still confusing, I have not got any comments or ideas about how it could be
+improved yet... (HINT!).
 
-Can't wait to get my hands dirty ;-)
+> The real question is how the LED state is supposed to be being toggled, 
+> and what that's got to do with rfkill. I /think/ that the current state 
+> of events is:
+> 
+> 1) User toggles state
+> 2) State toggle is used by b43 to generate KEY_WLAN (this is broken)
+> 3) rfkill-input toggles the rfkill state, changing the LED state in the 
+> process
 
-I 'll start merging stuff on ath5k asap !!!
+Actually 2 and 3 will fight each other, and weird things will happen.
 
+> What *should* be happening is:
+> 
+> 1) User toggles state
+> 2) b43 changes rfkill state (by using rfkill_force_state). The LED state 
+> should also be changed in the process.
+
+Correct.
+
+However, rfkill_force_state() is NOT updating LED states (I just checked).
+I will sleep on the issue, and send in a patch tomorrow.
+
+This probably means a small patch to rfkill + Matthew's fixed patch to use
+rfkill_force_state() in b43 will fix the regression in the right way.
+
+I don't care either way which kind of fix goes to 2.6.27, though.
+
+The proper fix for rfkill will be in two stages. A small fix now, and a
+complete change on the LED handling to use the blocking notifier chain
+instead later on (which will clean up rfkill code somewhat).
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
