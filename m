@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.vol.cz ([195.250.128.75]:50693 "EHLO smtp2.vol.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751900AbYIWFwW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 01:52:22 -0400
-Received: from webmail1.vol.cz (webmail1.vol.cz [195.250.155.226])
-	by smtp2.vol.cz (Postfix) with ESMTP id A037A288BB
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 07:30:41 +0200 (CEST)
-Received: from webmail1.vol.cz (localhost.vol.cz [127.0.0.1])
-	by webmail1.vol.cz (8.13.8/8.13.8) with ESMTP id m8N5UfKq096249
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 07:30:41 +0200 (CEST)
-	(envelope-from msladek@volny.cz)
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:32990 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753350AbYIQP23 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2008 11:28:29 -0400
+Message-ID: <48D1221B.1000601@lwfinger.net> (sfid-20080917_172840_184817_8F971491)
+Date: Wed, 17 Sep 2008 10:28:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Subject: =?iso-8859-2?Q?Re:_Problem_compiling_compat-wireless?=
-From: msladek@volny.cz
-To: linux-wireless@vger.kernel.org
-Date: Tue, 23 Sep 2008 07:30:41 +0200 (CEST)
-Message-ID: <f629eb4e2300e0bbbf8416a53c269257@www1.mail.volny.cz> (sfid-20080923_075239_732817_C5B8A3FA)
-Content-Type: text/plain; charset="utf-8"
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+CC: Michael Buesch <mb@bu3sch.de>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Carlos Corbacho <carlos@strangeworlds.co.uk>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Regression in 2.6.27-rcX caused by commit	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+References: <48CFC03A.8020708@lwfinger.net> <48D0095B.40403@lwfinger.net> <20080916233240.GA18574@srcf.ucam.org> <200809171622.55882.mb@bu3sch.de> <20080917145007.GA5186@khazad-dum.debian.net>
+In-Reply-To: <20080917145007.GA5186@khazad-dum.debian.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGVsbG8hDQoNCkkgaGF2ZSBleGFjdGx5IHRoZSBzYW1lIHByb2JsZW0gYXMg
-ZGVzY3JpYmVkIGJlbGxvdy4gSSB0cmllZCB0byBjb21waWxlDQpsYXRlc3Qg
-c25hcHNob3Qgb2YgY29tcGF0LXdpcmVsZXNzIGFnYWluc3QgYm90aCAyLjYu
-MjctcmM2IGFuZCAyLjYuMjctcmM3DQprZXJuZWxzIGFuZCBJIGFsd2F5cyBn
-b3QgdGhlIGVycm9yOg0KDQrigJhFVEhfUF9QQUXigJkgdW5kZWNsYXJlZA0K
-DQpEbyB5b3UgaGF2ZSBhbnkgc3VnZ2VzdGlvbnM/IEFueSBoZWxwIHdpbGwg
-YmUgYXBwcmVjaWF0ZWQuDQoNCk1pY2hhbA0KDQoNCkZyb206IEFtaXQgU29v
-ZCA8YXMyMl8yMDAwQC4uLj4NClN1YmplY3Q6IFByb2JsZW0gY29tcGlsaW5n
-IGNvbXBhdC13aXJlbGVzcw0KTmV3c2dyb3VwczogZ21hbmUubGludXgua2Vy
-bmVsLndpcmVsZXNzLmdlbmVyYWwNCkRhdGU6IDIwMDgtMDktMTkgMDU6MDk6
-NTQgR01UICg0IGRheXMgYW5kIDE1IG1pbnV0ZXMgYWdvKQ0KDQpIaSwNCg0K
-UmVjZW50bHkgZG93bmxvYWRlZCB0aGUgY29tcGF0LXdpcmVsZXNzICYgd2Fz
-IHRyeWluZyB0byBjb21waWxlIGl0IG9uDQpsaW51eC0yLjI3LXJjNiBrZXJu
-ZWwuIER1cmluZyB0aGUNCmNvbXBpbGF0aW9uIEknbSBnZXR0aW5nIGZyb2xs
-b3dpbmcgZXJyb3I6DQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCi91c3Ivc3JjL2NvbXBh
-dC13aXJlbGVzcy0yMDA4LTA5LTE5L25ldC9tYWM4MDIxMS9yeC5jOiBJbiBm
-dW5jdGlvbiDigJhpZWVlODAyMTFfZnJhbWVfYWxsb3dlZOKAmToNCi91c3Iv
-c3JjL2NvbXBhdC13aXJlbGVzcy0yMDA4LTA5LTE5L25ldC9tYWM4MDIxMS9y
-eC5jOjExOTY6IGVycm9yOiDigJhFVEhfUF9QQUXigJkNCnVuZGVjbGFyZWQN
-CihmaXJzdCB1c2UgaW4gdGhpcyBmdW5jdGlvbikNCi91c3Ivc3JjL2NvbXBh
-dC13aXJlbGVzcy0yMDA4LTA5LTE5L25ldC9tYWM4MDIxMS9yeC5jOjExOTY6
-IGVycm9yOiAoRWFjaA0KdW5kZWNsYXJlZCBpZGVudGlmaWVyDQppcyByZXBv
-cnRlZCBvbmx5IG9uY2UNCi91c3Ivc3JjL2NvbXBhdC13aXJlbGVzcy0yMDA4
-LTA5LTE5L25ldC9tYWM4MDIxMS9yeC5jOjExOTY6IGVycm9yOiBmb3INCmVh
-Y2ggZnVuY3Rpb24gaXQgYXBwZWFycyBpbi4pDQptYWtlWzNdOiAqKiogWy91
-c3Ivc3JjL2NvbXBhdC13aXJlbGVzcy0yMDA4LTA5LTE5L25ldC9tYWM4MDIx
-MS9yeC5vXQ0KRXJyb3IgMQ0KbWFrZVsyXTogKioqIFsvdXNyL3NyYy9jb21w
-YXQtd2lyZWxlc3MtMjAwOC0wOS0xOS9uZXQvbWFjODAyMTFdIEVycm9yDQoy
-DQptYWtlWzFdOiAqKiogW19tb2R1bGVfL3Vzci9zcmMvY29tcGF0LXdpcmVs
-ZXNzLTIwMDgtMDktMTldIEVycm9yIDINCm1ha2VbMV06IExlYXZpbmcgZGly
-ZWN0b3J5IGAvc3RvcmFnZS91c3Ivc3JjL2xpbnV4LTIuNi1vcmlnJw0KbWFr
-ZTogKioqIFttb2R1bGVzXSBFcnJvciAyDQo9PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PQ0KDQpraW5kbHkgYXNzaXN0Lg0KDQpyZWdhcmRzLA0KDQotYW1pdC0N
-Cg0K
+Henrique de Moraes Holschuh wrote:
+> 
+> He means rfkill_force_state() should change the LED state in the process,
+> which it isn't doing.
+> 
+> It is an one-line patch, I am testing it now.
+> 
 
+If your one-line patch fixes my regression, then I'll ACK it for 2.6.27.
+
+Larry
