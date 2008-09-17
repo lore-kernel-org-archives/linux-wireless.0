@@ -1,52 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:48033 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753080AbYIGAVn (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:15335 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752789AbYIQUT5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 20:21:43 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1046242fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2008 17:21:41 -0700 (PDT)
-Message-ID: <1ba2fa240809061721k2082d038j63c272f5b29a66c6@mail.gmail.com> (sfid-20080907_022146_775575_95FC37A5)
-Date: Sun, 7 Sep 2008 03:21:41 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
+	Wed, 17 Sep 2008 16:19:57 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so994314yxm.1
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 13:19:55 -0700 (PDT)
+Message-ID: <69e28c910809171319r30d763cse24744a198e41f92@mail.gmail.com> (sfid-20080917_222001_364223_B7371FC0)
+Date: Wed, 17 Sep 2008 22:19:55 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2 V2] mac80211: add direct probe before association
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+Subject: Re: iw packaging
+Cc: "=?ISO-8859-1?Q?Adam_C=E9cile_(Le=5FVert)?=" <gandalf@le-vert.net>,
+	"Jochen Friedrich" <jochen@scram.de>,
 	linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1220744663.21016.28.camel@johannes.berg>
+	"Thomas d'Otreppe" <tdotreppe@aircrack-ng.org>
+In-Reply-To: <1221650286.9262.57.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1218240139-5009-1-git-send-email-tomas.winkler@intel.com>
-	 <1220744663.21016.28.camel@johannes.berg>
+References: <1221596962.9262.12.camel@johannes.berg>
+	 <48D0DEF0.2060407@scram.de> <1221648205.9262.48.camel@johannes.berg>
+	 <48D0E463.70008@le-vert.net> <1221649638.9262.50.camel@johannes.berg>
+	 <48D0E5CE.8050401@le-vert.net>
+	 <1221650286.9262.57.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 7, 2008 at 2:44 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
+On Wed, Sep 17, 2008 at 1:18 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-09-17 at 13:11 +0200, "Adam C=E9cile (Le_Vert)" wrote:
 >
-> I was just pondering rewriting parts of the state machine (and you've
-> already seen the other cleanups I did today) and found this:
+>> Why not having a talk with aircrack-ng main developper ?
+>> I'm sure he would be happy to work with you and avoid having a patch=
+ed
+>> version of iw.
 >
->> +     /* Direct probe is sent to broadcast address as some APs
->> +      * will not answer to direct packet in unassociated state.
->> +      */
->> +     ieee80211_send_probe_req(dev, NULL,
->> +                              ifsta->ssid, ifsta->ssid_len);
+> Because I have no idea who to contact and figured that they'd notice
+> quickly enough? :)
 >
->> +     /* direct probe may be part of the association flow */
->> +     if (test_and_clear_bit(IEEE80211_STA_REQ_DIRECT_PROBE,
->> +                                                     &ifsta->request)) {
->> +             printk(KERN_DEBUG "%s direct probe responded\n", dev->name);
->> +             ieee80211_authenticate(dev, ifsta);
 >
-> Doesn't the latter code have to check that the sender is the correct
-> one? First we broadcast the probe request, and then we may be getting
-> one from a different AP but still clear our direct probe association
-> flow step, no?
+> Thomas, since people seem to be relying on iw more and more (I had be=
+en
+> hoping somebody else would take it and transform it into something
+> usable) I have gone ahead and cleaned up the code, made a few
+> modifications to it and released it as version 0.9 (and a few 0.9.x
+> fixes, my bad).
+>
+> There are two changes that might interest you:
+>  * removing interfaces now works like this:
+>     iw dev monitor0 del
+>   I didn't feel inclined to keep the old syntax because it's rather
+>   ugly but if this is a big problem for you I can add a hidden comman=
+d
+>   so you can continue doing "iw dev monitor0 interface del".
+>  * if you've been using
+>     iw dev wmaster0 interface add monitor0 type monitor
+>   this will stop working in future kernel releases, the master
+>   interface really is no good for actually configuring wireless and w=
+e
+>   want to get rid of it completely in the medium term. I suspect you
+>   have been using
+>     iw dev wlan0 interface add monitor0 type monitor
+>   which will continue to work.
+>
+> johannes
+>
 
-Yep, this is not covered. Don't remember why it wasn't straight
-forward to implement...will look at it again after sunrise.
+By the way, currently I am the one maintaining the mac80211/nl80211
+support in aircrack-ng.
 
-Thanks
-Tomas
+Using iw was an intentional decision, as the airmon-ng command (used
+to set interfaces into monitor mode/create monitor interfaces
+automatically) is a Bash script, meaning that it can't access nl80211
+directly. Rewriting airmon-ng in C is a 2.0 goal, and it definitely
+won't make 1.0. (I will try to push it into 1.1, but it's mostly
+Thomas' decision to allow it or not.)
+Prior to 2.6.24, it was possible to create/remove interfaces using
+sysfs, but this feature was removed from 2.6.24, "in favor of
+nl80211", which I interpreted to apply to Bash scripts as "in favor of
+iw".
+
+The actual code used in aircrack-ng for adding interfaces is:
+IW_ERROR=3D`iw dev $iface interface add $MONDEV type monitor 2>&1 | gre=
+p
+"nl80211 not found"`
+where $iface is the interface supplied by the user (not the associated
+master), while $MONDEV is a generated interface name, which is
+generated by the following method:
+1. The value of the $MON_PREFIX variable ("mon" by default) is taken.
+2. A number (starting with 0) is appended to $MON_PREFIX, and the
+resulting interface is checked for existence. If it does exist, the
+number is incremented.
+3. When the first nonexistent interface is found, it is written to $MON=
+DEV.
+
+So, the actual command used, for example, is:
+iw dev wlan0 interface add mon0 type monitor
+
+Similarly, the code used for removing interfaces is
+IW_ERROR=3D`iw dev "$iface" interface del 2>&1 | grep "nl80211 not foun=
+d"`
+If I interpret your mail correctly, then this should be changed to:
+IW_ERROR=3D`iw dev "$iface" del 2>&1 | grep "nl80211 not found"`
+
+Will the same syntax change be made for the add feature? I mean this:
+iw dev wlan0 add mon0 type monitor
+
+Also, the following syntax would be even better:
+iw --add mon0 --dev=3Dwlan0 --type=3Dmonitor
+or:
+iw -dwlan0 -tmonitor add mon0
+
+Or at least allowing stuff like this:
+iw type monitor add mon0 dev wlan0
+
+The purpose of the customized version of iw used by aircrack-ng is to
+allow it to compile on 2.6.24 without having to install mismatching
+kernel headers, and to enable installing iw without git (this second
+point is moot now that there are official tarballs). The only major
+changes are the removal of .config dependency and the use of a local
+nl80211.h. A "make install" feature was also added, as many users may
+be uncomfortable with copying binaries around.
+An experimental branch of aircrack-ng contains a slightly different
+version, which also has these additional changes:
+-Mesh support has been removed (as I couldn't get it compile with
+-Wall -Werror, which is a requirement for inclusion into aircrack-ng)
+-It was renamed to nl80211-ng (to avoid overwriting the full iw binary)
+-It is built by aircrack-ng's own make system, with no extra makefile.
+-The help text was changed, as this version is specifically expected
+to be used through airmon-ng. (It essentially acts as a bridge between
+the C-only nl80211 and airmon-ng, a Bash script.)
+
+These were needed because there was no true "release" of iw, and its
+development was focused on implementing all new features in the
+bleeding-edge wireless-testing kernel, with little focus on backwards
+compatibility with released kernels.
+
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
