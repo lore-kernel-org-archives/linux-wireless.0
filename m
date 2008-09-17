@@ -1,121 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41622 "EHLO mga01.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:38552 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754297AbYICDbA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:31:00 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 03/39] iwlwifi: clean up hw scan handler
-Date: Wed,  3 Sep 2008 11:26:23 +0800
-Message-Id: <1220412419-15404-4-git-send-email-yi.zhu@intel.com> (sfid-20080903_053104_517322_953B7612)
-In-Reply-To: <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
-References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+	id S1752460AbYIQOIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2008 10:08:30 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V2] b43: Issue warning when RFKILL_INPUT is not enabled
+Date: Wed, 17 Sep 2008 16:07:55 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <48d00f81./8rb7yGSb9PmJx+R%Larry.Finger@lwfinger.net>
+In-Reply-To: <48d00f81./8rb7yGSb9PmJx+R%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809171607.55403.mb@bu3sch.de> (sfid-20080917_160841_289661_99A9C74A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Tuesday 16 September 2008 21:56:49 Larry Finger wrote:
+> If the system is misconfigured with CONFIG_RFKILL set but CONFIG_RFKILL_INPUT
+> not set, the built-in radio LEDs will not work. In the current code, no warning
+> is issued.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> John,
+> 
+> This is material for the next merge.
 
-This patch cleans up iwl_mac_hw_scan handler.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   35 ++++++++++++++-----------------
- 1 files changed, 16 insertions(+), 19 deletions(-)
+ACK
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 1badcf3..1073fa0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3179,9 +3179,9 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
- 
- }
- 
--static int iwl4965_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
-+static int iwl_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t ssid_len)
- {
--	int rc = 0;
-+	int ret;
- 	unsigned long flags;
- 	struct iwl_priv *priv = hw->priv;
- 
-@@ -3191,41 +3191,38 @@ static int iwl4965_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
- 	spin_lock_irqsave(&priv->lock, flags);
- 
- 	if (!iwl_is_ready_rf(priv)) {
--		rc = -EIO;
-+		ret = -EIO;
- 		IWL_DEBUG_MAC80211("leave - not ready or exit pending\n");
- 		goto out_unlock;
- 	}
- 
- 	if (priv->iw_mode == IEEE80211_IF_TYPE_AP) {	/* APs don't scan */
--		rc = -EIO;
-+		ret = -EIO;
- 		IWL_ERROR("ERROR: APs don't scan\n");
- 		goto out_unlock;
- 	}
- 
- 	/* we don't schedule scan within next_scan_jiffies period */
- 	if (priv->next_scan_jiffies &&
--			time_after(priv->next_scan_jiffies, jiffies)) {
--		rc = -EAGAIN;
-+	    time_after(priv->next_scan_jiffies, jiffies)) {
-+		ret = -EAGAIN;
- 		goto out_unlock;
- 	}
- 	/* if we just finished scan ask for delay */
--	if (priv->last_scan_jiffies && time_after(priv->last_scan_jiffies +
--				IWL_DELAY_NEXT_SCAN, jiffies)) {
--		rc = -EAGAIN;
-+	if (priv->last_scan_jiffies &&
-+	    time_after(priv->last_scan_jiffies + IWL_DELAY_NEXT_SCAN, jiffies)) {
-+		ret = -EAGAIN;
- 		goto out_unlock;
- 	}
--	if (len) {
--		IWL_DEBUG_SCAN("direct scan for %s [%d]\n ",
--			       iwl_escape_essid(ssid, len), (int)len);
--
-+	if (ssid_len) {
- 		priv->one_direct_scan = 1;
--		priv->direct_ssid_len = (u8)
--		    min((u8) len, (u8) IW_ESSID_MAX_SIZE);
-+		priv->direct_ssid_len =  min_t(u8, ssid_len, IW_ESSID_MAX_SIZE);
- 		memcpy(priv->direct_ssid, ssid, priv->direct_ssid_len);
--	} else
-+	} else {
- 		priv->one_direct_scan = 0;
-+	}
- 
--	rc = iwl_scan_initiate(priv);
-+	ret = iwl_scan_initiate(priv);
- 
- 	IWL_DEBUG_MAC80211("leave\n");
- 
-@@ -3233,7 +3230,7 @@ out_unlock:
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 	mutex_unlock(&priv->mutex);
- 
--	return rc;
-+	return ret;
- }
- 
- static void iwl4965_mac_update_tkip_key(struct ieee80211_hw *hw,
-@@ -4140,7 +4137,7 @@ static struct ieee80211_ops iwl4965_hw_ops = {
- 	.reset_tsf = iwl4965_mac_reset_tsf,
- 	.bss_info_changed = iwl4965_bss_info_changed,
- 	.ampdu_action = iwl4965_mac_ampdu_action,
--	.hw_scan = iwl4965_mac_hw_scan
-+	.hw_scan = iwl_mac_hw_scan
- };
- 
- static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+> Larry
+> 
+> 
+> Index: wireless-testing/drivers/net/wireless/b43/rfkill.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/rfkill.c
+> +++ wireless-testing/drivers/net/wireless/b43/rfkill.c
+> @@ -188,6 +188,11 @@ void b43_rfkill_init(struct b43_wldev *d
+>  			"The built-in radio LED will not work.\n");
+>  #endif /* CONFIG_RFKILL_INPUT */
+>  
+> +#if !defined(CONFIG_RFKILL_INPUT) && !defined(CONFIG_RFKILL_INPUT_MODULE)
+> +	b43warn(wl, "The rfkill-input subsystem is not available. "
+> +		"The built-in radio LED will not work.\n");
+> +#endif
+> +
+>  	err = input_register_polled_device(rfk->poll_dev);
+>  	if (err)
+>  		goto err_unreg_rfk;
+> 
+> 
+
+
+
 -- 
-1.5.3.6
-
+Greetings Michael.
