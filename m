@@ -1,74 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50303 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880AbYISKnV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 06:43:21 -0400
-Subject: Re: technology preview: scan with cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <1ba2fa240809190337ke17d2aanaca6d0f194b11f03@mail.gmail.com> (sfid-20080919_123751_089196_5A4138C5)
-References: <1221794329.10419.9.camel@johannes.berg>
-	 <1221795715.10419.15.camel@johannes.berg>
-	 <1ba2fa240809190103i69c66978he4762fd350ab2e5d@mail.gmail.com>
-	 <1221814565.10419.19.camel@johannes.berg>
-	 <1ba2fa240809190337ke17d2aanaca6d0f194b11f03@mail.gmail.com>
-	 (sfid-20080919_123751_089196_5A4138C5)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ta4THADysiw8Eu0S/0jb"
-Date: Fri, 19 Sep 2008 12:42:46 +0200
-Message-Id: <1221820966.10419.81.camel@johannes.berg> (sfid-20080919_124325_018934_D9DF50A1)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:22587 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752667AbYIQCOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2008 22:14:31 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] iwlwifi: remove HT flags from RXON when not in HT anymore
+Date: Wed, 17 Sep 2008 10:10:05 +0800
+Message-Id: <1221617405-14583-1-git-send-email-yi.zhu@intel.com> (sfid-20080917_041458_867336_C6FEBD5E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---=-ta4THADysiw8Eu0S/0jb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch removes the HT flags from RXON when moving from HT to legacy.
+This avoids keeping those flags set and possibly miss configuring firmware.
 
-On Fri, 2008-09-19 at 13:37 +0300, Tomas Winkler wrote:
+If we are configured in HT, fat channel: channel 1 above, and move later
+to legacy channel 11, we need to clear the FAT channel control flags in
+RXON. If we don't, the firmware will understand this as channel 11 above
+which is not possible due to regulatory constraints, leading to firmware
+crash.
 
-> > Hey, unfair! ;) I did leave a lot of TODOs but this wasn't one of them.
-> > You can provide a channel list and it'll scan only those (except hw sca=
-n
-> > right now but that'll be fixed once we pass the scan request struct
-> > through)
->=20
-> Agree, this would be the correct approach.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-core.c |    8 +++++++-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-Yeah, but I pulled this together in about five hours :)
-
-Wrt. the SSIDs, how many SSIDs do you think we should allow scanning for
-at the same time? Three? Four? Five? I was thinking something like that,
-sending out more probe requests is probably not too great an idea. I
-guess we would set the default to something we decide on in mac80211's
-alloc_hw and the driver gets to overwrite it if it has hw scan offload.
-
-johannes
-
---=-ta4THADysiw8Eu0S/0jb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI04IiAAoJEKVg1VMiehFYBvwP/3/HyjJN7glUIWpTWQa1jZ1A
-ENWX2tLvj1NaR5UCFvIf2edjTiO3WNxMyxL0D6Roq8OQF9DU9EhbA6dvRaMfQTpF
-AkZIl/4V6VmNy9wbViVUWL/SsuGpQfkxY1QhXVFiERYogTYwY8/HIyfPao6hh62c
-WA7eU903/1GgTpK7Rwp+Wj+7Mj4Y2hIwhDrZg38E0Bvglm0mqLwL+OFoFuTsYWys
-in1DcQj36yXuqWXeZ3ozXDLHVsWksCzxWKyumulu9zYCIcwnD3yeX7KtkgBwYchx
-1Lyk8kxgaruxRcZQf9Hf6kjsM3HBTBaCaOj4FUnrXJ7YuTpBw+tPKAfyGYxlJYMP
-cc3aCxf8Q/z4jTVscXBdIzH8PW12aijxDINxlKzxCJ5OuymlWa1e7sKfLWathOWb
-kHAMkA+MQEN2MOrMreLYFxWzV7U+ThpcunoMiiRguNpina5kp3XWWWH5FPXjnJQB
-imkkAwjxImEU/7vlV7aZkJv63R1+620dh08USRcJUXwOUf3CYF3LDUmnZ2VPcZVJ
-DZfym2Ol8BKOjvfRGKNAoyHvOwoGqHAVVxt4/mwyF4AQHwGxw1QUGX4Fowe5MK3I
-TPcJZ4dEXMWaPxBQpNbz88TnSvVJt2aCtWLDut29wrEnj+NULXtAGPCU6MSK87GD
-dIbW32wZ37d9lnMc3YN3
-=5o8d
------END PGP SIGNATURE-----
-
---=-ta4THADysiw8Eu0S/0jb--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 2652672..c31adf6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2504,8 +2504,7 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
+ 
+ 	priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
+ 
+-	if (priv->current_ht_config.is_ht)
+-		iwl_set_rxon_ht(priv, &priv->current_ht_config);
++	iwl_set_rxon_ht(priv, &priv->current_ht_config);
+ 
+ 	iwl_set_rxon_chain(priv);
+ 	priv->staging_rxon.assoc_id = cpu_to_le16(priv->assoc_id);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 8203887..4c312c5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -646,8 +646,14 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
+ 	struct iwl_rxon_cmd *rxon = &priv->staging_rxon;
+ 	u32 val;
+ 
+-	if (!ht_info->is_ht)
++	if (!ht_info->is_ht) {
++		rxon->flags &= ~(RXON_FLG_CHANNEL_MODE_MIXED_MSK |
++			RXON_FLG_CHANNEL_MODE_PURE_40_MSK |
++			RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK |
++			RXON_FLG_FAT_PROT_MSK |
++			RXON_FLG_HT_PROT_MSK);
+ 		return;
++	}
+ 
+ 	/* Set up channel bandwidth:  20 MHz only, or 20/40 mixed if fat ok */
+ 	if (iwl_is_fat_tx_allowed(priv, NULL))
+-- 
+1.5.3.6
 
