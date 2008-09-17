@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:33877 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753559AbYIVVB6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 17:01:58 -0400
-Subject: Re: what is the states of rt2800 driver?
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "Xu, Martin" <martin.xu@intel.com>, linux-wireless@vger.kernel.org,
-	"Selbak, Rolla N" <rolla.n.selbak@intel.com>
-In-Reply-To: <200809221937.35900.IvDoorn@gmail.com>
-References: <200808272222.53719.IvDoorn@gmail.com>
-	 <97006967741E44428360DF36A929F3EE01D3F978@pdsmsx415.ccr.corp.intel.com>
-	 <200809221937.35900.IvDoorn@gmail.com>
-Content-Type: text/plain
-Date: Mon, 22 Sep 2008 23:01:54 +0200
-Message-Id: <1222117314.4670.10.camel@localhost> (sfid-20080922_230220_592484_CAE0E31F)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:46027 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755443AbYIQO0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2008 10:26:53 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Date: Wed, 17 Sep 2008 16:26:28 +0200
+Cc: Carlos Corbacho <carlos@strangeworlds.co.uk>,
+	bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48CFC03A.8020708@lwfinger.net> <200809162125.18978.mb@bu3sch.de> <20080916223729.GC26035@khazad-dum.debian.net>
+In-Reply-To: <20080916223729.GC26035@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809171626.28782.mb@bu3sch.de> (sfid-20080917_162758_614360_F2F22414)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-22 at 19:37 +0200, Ivo van Doorn wrote:
-> On Monday 22 September 2008, Xu, Martin wrote:
-> > Hi:
-> > I am the engineer from intel, and we are working on Moblin project(
-> > www.moblin.org). Now we work on eeepc901 platform. The rt2860 wireless
-> > device is used by the platform. We hope the device driver can be
-> > supported in the kernel mainline.
-> > Could you please tell me the states of the device driver? Do you have
-> > schedule on it? 
+On Wednesday 17 September 2008 00:37:29 Henrique de Moraes Holschuh wrote:
+> On Tue, 16 Sep 2008, Michael Buesch wrote:
+> > But I don't know how to tell the rfkill subsystem about the states and
 > 
-> Nothing has changed since my last announcement to the linux-wireless list
-> regarding the rt2800 drivers.
-> That means that the drivers are not ready, and I have abandonded all schedules
-> which could indicate when the first test version of the driver can be released.
-> 
-> Mattias Nissler has joined the rt2800 development party, so I really hope
-> he has some fresh ideas an how to get the driver development forward again.
+> rfkill_force_state().  Must NOT be called from within atomic contextes,
+> something I haven't got around to find a proper way of fixing, and nobody
+> else seems to be on a rfkill coding frenzy right now.
 
-Indeed, I started poking around today. Ivo, do you have version of the
-legacy rt2870 usb driver that compiles and works on recent development
-kernels?
+That's a showstopper for us, as we have to change the state from
+within an interrupt tasklet.
 
-Mattias
+> I won't go on the rfkill-allocate/-free stuff, messing with that API means
+> you need to fix a lot of other people's drivers.  But you have the
+> rfkill-hw-state-changed now, it is called rfkill_force_state().  The only
+> crap is that it cannot be called from atomic contexts.
 
+Yeah well. I didn't know. I lost interest in rfkill pretty much when it
+stopped blowing up (until it started again when somebody merged a patch
+recently).
+
+-- 
+Greetings Michael.
