@@ -1,33 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53606 "EHLO vs166246.vserver.de"
+Received: from mail.atheros.com ([12.36.123.2]:39786 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753010AbYIVVRm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 17:17:42 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Date: Mon, 22 Sep 2008 23:16:47 +0200
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809201520.28717.IvDoorn@gmail.com> <20080922030137.GA1817@khazad-dum.debian.net>
-In-Reply-To: <20080922030137.GA1817@khazad-dum.debian.net>
+	id S1750730AbYIQEql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2008 00:46:41 -0400
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809222316.47466.mb@bu3sch.de> (sfid-20080922_231746_686905_58323898)
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18640.35637.877669.967377@gargle.gargle.HOWL> (sfid-20080917_064646_018037_C0409299)
+Date: Wed, 17 Sep 2008 10:14:37 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 0/3] Beacon handling fixes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 September 2008 05:01:37 Henrique de Moraes Holschuh wrote:
-> As long as the drivers based on mac80211 still know it is rfkill they're
-> dealing with (i.e. as long as they will know they MUST NOT emit energy from
-> the transmitter when they're soft-blocked),
+John,
 
-That's the only policy that makes sense. So I don't think it would be a problem.
-IMO that's how the mac80211 config API is defined, currently.
+A couple of fixes for beacon handling in IBSS mode.
 
--- 
-Greetings Michael.
+Sujith
+
+Sujith (3):
+  ath9k: Whitespace cleanup
+  ath9k: Fix nexttbtt calculation
+  ath9k: Fix TSF Adjust usage
+
+ drivers/net/wireless/ath9k/beacon.c |  145 ++++++++++++++++-------------------
+ drivers/net/wireless/ath9k/core.c   |    3 +-
+ drivers/net/wireless/ath9k/core.h   |    1 +
+ 3 files changed, 69 insertions(+), 80 deletions(-)
+
