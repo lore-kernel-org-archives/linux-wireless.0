@@ -1,48 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:45127 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbYIBTJC (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36213 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463AbYIQLS6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 15:09:02 -0400
-Message-ID: <48BD8F0C.5010209@oracle.com> (sfid-20080902_210908_190142_614215B8)
-Date: Tue, 02 Sep 2008 12:07:56 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	akpm <akpm@linux-foundation.org>
-CC: lrodriguez@atheros.com, jmalinen@atheros.com
-Subject: [PATCH -next] ath9k: uses/needs led_classdev_[un]register
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 17 Sep 2008 07:18:58 -0400
+Subject: Re: iw packaging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "\"Adam" =?ISO-8859-1?Q?C=E9cile?= "(Le_Vert)\""
+	<gandalf@le-vert.net>
+Cc: Jochen Friedrich <jochen@scram.de>, linux-wireless@vger.kernel.org,
+	Thomas d'Otreppe <tdotreppe@aircrack-ng.org>
+In-Reply-To: <48D0E5CE.8050401@le-vert.net>
+References: <1221596962.9262.12.camel@johannes.berg>
+	 <48D0DEF0.2060407@scram.de> <1221648205.9262.48.camel@johannes.berg>
+	 <48D0E463.70008@le-vert.net> <1221649638.9262.50.camel@johannes.berg>
+	 <48D0E5CE.8050401@le-vert.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nQoJl5VatQUhUYEVt83V"
+Date: Wed, 17 Sep 2008 13:18:06 +0200
+Message-Id: <1221650286.9262.57.camel@johannes.berg> (sfid-20080917_131902_131893_ED5266A7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
 
-ath9k uses LED classdev functions, so it needs to either select or depend
-on them.  This patch uses the same selects that ath5k uses...
+--=-nQoJl5VatQUhUYEVt83V
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-drivers/built-in.o: In function `ath_unregister_led':
-main.c:(.text+0x138c1d): undefined reference to `led_classdev_unregister'
-drivers/built-in.o: In function `ath_register_led':
-main.c:(.text+0x139c16): undefined reference to `led_classdev_register'
-make[1]: *** [.tmp_vmlinux1] Error 1
+On Wed, 2008-09-17 at 13:11 +0200, "Adam C=C3=A9cile (Le_Vert)" wrote:
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-cc: Luis R. Rodriguez <lrodriguez@atheros.com>
-cc: Jouni Malinen <jmalinen@atheros.com>
----
- drivers/net/wireless/ath9k/Kconfig |    3 +++
- 1 file changed, 3 insertions(+)
+> Why not having a talk with aircrack-ng main developper ?
+> I'm sure he would be happy to work with you and avoid having a patched=20
+> version of iw.
 
---- linux-next-20080902.orig/drivers/net/wireless/ath9k/Kconfig
-+++ linux-next-20080902/drivers/net/wireless/ath9k/Kconfig
-@@ -1,6 +1,9 @@
- config ATH9K
- 	tristate "Atheros 802.11n wireless cards support"
- 	depends on PCI && MAC80211 && WLAN_80211
-+	select MAC80211_LEDS
-+	select LEDS_CLASS
-+	select NEW_LEDS
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros IEEE 802.11n AR5008 and AR9001 family of chipsets.
+Because I have no idea who to contact and figured that they'd notice
+quickly enough? :)
+
+
+Thomas, since people seem to be relying on iw more and more (I had been
+hoping somebody else would take it and transform it into something
+usable) I have gone ahead and cleaned up the code, made a few
+modifications to it and released it as version 0.9 (and a few 0.9.x
+fixes, my bad).
+
+There are two changes that might interest you:
+ * removing interfaces now works like this:
+     iw dev monitor0 del
+   I didn't feel inclined to keep the old syntax because it's rather
+   ugly but if this is a big problem for you I can add a hidden command
+   so you can continue doing "iw dev monitor0 interface del".
+ * if you've been using
+     iw dev wmaster0 interface add monitor0 type monitor
+   this will stop working in future kernel releases, the master
+   interface really is no good for actually configuring wireless and we
+   want to get rid of it completely in the medium term. I suspect you
+   have been using
+     iw dev wlan0 interface add monitor0 type monitor
+   which will continue to work.
+
+johannes
+
+--=-nQoJl5VatQUhUYEVt83V
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI0OdqAAoJEKVg1VMiehFYpsgQAKOwxE1IhnfkCh0prIaDD0WC
+VivXYq2jU6pOINe30ccYnAxyZmbaxKYVvD05LMq+Q9IuNzLVdNsL0HUccEsPdkQe
+V1rQALzTPkaLE6OLFi1pC8S1lthIKrWkNJbygaBk3eqT3thXVPr7q5W90SZLSTnS
+WxhoXFbc1jeYz6m2WVywej3OpN6kBaMcsz19KOQJHZQVS771Fme95TN7ED1JwzZb
+hb7Pt+OOKf93vrc7dKbbl91PEctxOtPrag8PveLYUztA+eqi3207bbq5649UI+fv
+wiR/Ab8vChbzB7MluDHcyJsDaoYkeKXQu+gZc74UISJ3TI5AnvP8gdI4P2mv8SxS
++x8uIIn6/rp6DyMJUaTtKBiX9qQD94n7V/PCWLLUImXkiOhEefHqE2v3E9P7pboP
+V52LDBzf9ub9Igl3wq/tqzPminQGCCqtZVIcd+yYDPrMUyaR3swEweK7nZI6sivx
+H/CJAjnotXUMBb5wtBJ5tEi3ztIvtPpcLaxs1AH9Uca0D+5bJAS/4W60vB632tmW
+pZGbbPcGGSVr3yVBGmTKZLrJr5M1ZyLFCO/B9xKD5vyW2zvBOHoTynYl25sGGhK6
+XXt9qlvAyggGjWVV54OKG8Z80dbBRGlmy0NTNvdxQol5MaaHygMXHSXHaC0espgS
+VhXtmyCzSU65OPikaVkH
+=a6jb
+-----END PGP SIGNATURE-----
+
+--=-nQoJl5VatQUhUYEVt83V--
+
