@@ -1,131 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:50693 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751890AbYIZHOT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 03:14:19 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 1/3] iwlwifi: refactor rx register initialization
-Date: Fri, 26 Sep 2008 15:09:32 +0800
-Message-Id: <1222412974-18221-1-git-send-email-yi.zhu@intel.com> (sfid-20080926_091423_290173_A154DA6D)
+Received: from py-out-1112.google.com ([64.233.166.178]:52026 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752926AbYIQV6l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2008 17:58:41 -0400
+Received: by py-out-1112.google.com with SMTP id p76so2561919pyb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 14:58:39 -0700 (PDT)
+Message-ID: <69e28c910809171458q70763189lde2e2710c64fc70c@mail.gmail.com> (sfid-20080917_235847_516604_3C180009)
+Date: Wed, 17 Sep 2008 23:58:39 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iw packaging
+Cc: "Davide Pesavento" <davidepesa@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1221688366.7412.13.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1221596962.9262.12.camel@johannes.berg>
+	 <1221648205.9262.48.camel@johannes.berg> <48D0E463.70008@le-vert.net>
+	 <1221649638.9262.50.camel@johannes.berg>
+	 <48D0E5CE.8050401@le-vert.net>
+	 <1221650286.9262.57.camel@johannes.berg>
+	 <69e28c910809171319r30d763cse24744a198e41f92@mail.gmail.com>
+	 <1221683467.7412.6.camel@localhost>
+	 <2da21fe50809171446y56cd5b2ctc864650be6030621@mail.gmail.com>
+	 <1221688366.7412.13.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+On Wed, Sep 17, 2008 at 11:52 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-09-17 at 23:46 +0200, Davide Pesavento wrote:
+>> $ make
+>>  GEN  version.h
+>>  CC   iw.o
+>>  CC   info.o
+>> info.c: In function 'print_phy_handler':
+>> info.c:108: error: 'NL80211_ATTR_SUPPORTED_IFTYPES' undeclared (first
+>> use in this function)
+>> info.c:108: error: (Each undeclared identifier is reported only once
+>> info.c:108: error: for each function it appears in.)
+>> make: *** [info.o] Error 1
+>>
+>> I guess I have to build iw against >=2.6.27-rcX kernel headers, right?
+>
+> Actually this one is new in wireless-testing, I have a branch you can
+> build against 2.6.27 but it's not very up-to-date.
+>
+> Any ideas how to handle this are welcome. Should it just ship the header
+> file? I'd prefer not to, otoh doing it isn't really harmful because when
+> adding a new command clearly you need to edit iw sources.
+>
+> johannes
+>
+>
 
-The patch adds HW bug W/A FH_RCSR_CHNL0_RX_IGNORE_RXF_EMPTY so that we
-can enable again interrupt coalescing. It also uses named constants for
-open code.
+IMO that's the best thing to do - in fact, that's exactly why I
+branched. Distros likely won't ship kernel headers that don't match
+the kernel binaries and sources. (This is likely why Debian is
+shipping my branched version, rather than the official.)
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-csr.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-fh.h  |    9 +++++----
- drivers/net/wireless/iwlwifi/iwl-rx.c  |   30 +++++++++++++++++++-----------
- 3 files changed, 25 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 52629fb..662edf4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -64,7 +64,7 @@
- #define CSR_BASE    (0x000)
- 
- #define CSR_HW_IF_CONFIG_REG    (CSR_BASE+0x000) /* hardware interface config */
--#define CSR_INT_COALESCING      (CSR_BASE+0x004) /* accum ints, 32-usec units */
-+#define CSR_INT_COALESCING     (CSR_BASE+0x004) /* accum ints, 32-usec units */
- #define CSR_INT                 (CSR_BASE+0x008) /* host interrupt status/ack */
- #define CSR_INT_MASK            (CSR_BASE+0x00c) /* host interrupt enable */
- #define CSR_FH_INT_STATUS       (CSR_BASE+0x010) /* busmaster int status/ack*/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index cd11c0c..a72efdf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -247,8 +247,8 @@
- #define FH_RCSR_CHNL0_RX_CONFIG_RBDBC_SIZE_MSK (0x00F00000) /* bits 20-23 */
- #define FH_RCSR_CHNL0_RX_CONFIG_DMA_CHNL_EN_MSK (0xC0000000) /* bits 30-31*/
- 
--#define FH_RCSR_RX_CONFIG_RBDCB_SIZE_BITSHIFT	(20)
--#define FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_BITSHIFT	(4)
-+#define FH_RCSR_RX_CONFIG_RBDCB_SIZE_POS	(20)
-+#define FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_POS	(4)
- #define RX_RB_TIMEOUT	(0x10)
- 
- #define FH_RCSR_RX_CONFIG_CHNL_EN_PAUSE_VAL         (0x00000000)
-@@ -260,8 +260,9 @@
- #define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_12K   (0x00020000)
- #define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_16K   (0x00030000)
- 
--#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL       (0x00000000)
--#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL     (0x00001000)
-+#define FH_RCSR_CHNL0_RX_IGNORE_RXF_EMPTY              (0x00000004)
-+#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL    (0x00000000)
-+#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL  (0x00001000)
- 
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 38b2946..7cde9d7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -376,7 +376,9 @@ int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- {
- 	int ret;
- 	unsigned long flags;
--	unsigned int rb_size;
-+	u32 rb_size;
-+	const u32 rfdnlog = RX_QUEUE_SIZE_LOG; /* 256 RBDs */
-+	const u32 rb_timeout = 0; /* FIXME: RX_RB_TIMEOUT why this stalls RX */
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 	ret = iwl_grab_nic_access(priv);
-@@ -398,26 +400,32 @@ int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 
- 	/* Tell device where to find RBD circular buffer in DRAM */
- 	iwl_write_direct32(priv, FH_RSCSR_CHNL0_RBDCB_BASE_REG,
--			   rxq->dma_addr >> 8);
-+			   (u32)(rxq->dma_addr >> 8));
- 
- 	/* Tell device where in DRAM to update its Rx status */
- 	iwl_write_direct32(priv, FH_RSCSR_CHNL0_STTS_WPTR_REG,
- 			   (priv->shared_phys + priv->rb_closed_offset) >> 4);
- 
--	/* Enable Rx DMA, enable host interrupt, Rx buffer size 4k, 256 RBDs */
-+	/* Enable Rx DMA
-+	 * FH_RCSR_CHNL0_RX_IGNORE_RXF_EMPTY is set becuase of HW bug in
-+	 *      the credit mechanism in 5000 HW RX FIFO
-+	 * Direct rx interrupts to hosts
-+	 * Rx buffer size 4 or 8k
-+	 * RB timeout 0x10
-+	 * 256 RBDs
-+	 */
- 	iwl_write_direct32(priv, FH_MEM_RCSR_CHNL0_CONFIG_REG,
- 			   FH_RCSR_RX_CONFIG_CHNL_EN_ENABLE_VAL |
-+			   FH_RCSR_CHNL0_RX_IGNORE_RXF_EMPTY |
- 			   FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL |
--			   rb_size |
--			     /* 0x10 << 4 | */
--			   (RX_QUEUE_SIZE_LOG <<
--			      FH_RCSR_RX_CONFIG_RBDCB_SIZE_BITSHIFT));
--
--	/*
--	 * iwl_write32(priv,CSR_INT_COAL_REG,0);
--	 */
-+			   rb_size|
-+			   (rb_timeout << FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_POS)|
-+			   (rfdnlog << FH_RCSR_RX_CONFIG_RBDCB_SIZE_POS));
- 
- 	iwl_release_nic_access(priv);
-+
-+	iwl_write32(priv, CSR_INT_COALESCING, 0x40);
-+
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
- 	return 0;
 -- 
-1.5.3.6
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
