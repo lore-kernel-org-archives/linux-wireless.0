@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60659 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752404AbYIHIjF (ORCPT
+Received: from le-vert.net ([81.56.196.209]:37355 "EHLO mail.le-vert.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750915AbYIQLPw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 04:39:05 -0400
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com> (sfid-20080908_011417_213526_BE6D478D)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220794765.31304.8.camel@johannes.berg>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 (sfid-20080908_011417_213526_BE6D478D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UYLLlAhoxb+M1DS+LFY6"
-Date: Mon, 08 Sep 2008 10:38:59 +0200
-Message-Id: <1220863139.31304.33.camel@johannes.berg> (sfid-20080908_103910_345877_3B623B07)
-Mime-Version: 1.0
+	Wed, 17 Sep 2008 07:15:52 -0400
+Message-ID: <48D0E463.70008@le-vert.net> (sfid-20080917_131556_499860_AC6500AC)
+Date: Wed, 17 Sep 2008 13:05:07 +0200
+From: =?ISO-8859-1?Q?=22Adam_C=E9cile_=28Le=5FVert=29=22?=
+	<gandalf@le-vert.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jochen Friedrich <jochen@scram.de>, linux-wireless@vger.kernel.org,
+	499246-quiet@bugs.debian.org
+Subject: Re: iw packaging
+References: <1221596962.9262.12.camel@johannes.berg>	 <48D0DEF0.2060407@scram.de> <1221648205.9262.48.camel@johannes.berg>
+In-Reply-To: <1221648205.9262.48.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Johannes,
 
---=-UYLLlAhoxb+M1DS+LFY6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm aware of this issue. It has been done to have a fully working=20
+aircrack-ng for lenny release.
+I'll package iw seperatly once lenny has been released.
 
-On Mon, 2008-09-08 at 02:14 +0300, Tomas Winkler wrote:
+Regards, Adam.
 
-> Shouldn't carrier_off(stada->dev) stop the queue?  I haven't seen this
-> before.
+Johannes Berg a =E9crit :
+> On Wed, 2008-09-17 at 12:41 +0200, Jochen Friedrich wrote:
+>  =20
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA1
+>>
+>> Johannes Berg schrieb:
+>>
+>>    =20
+>>> I've just tagged iw version 0.9 (and 0.9.1 after a small build fix)
+>>> because I think the tool is now actually usable in a limited way, u=
+nlike
+>>> before where it would never properly report errors etc.
+>>>
+>>> Anyone want to pick it up for the various distros?
+>>>      =20
+>> In Debian, iw seems to be already packaged as part of aircrack-ng wh=
+ich now needs
+>> to be packaged seperately.
+>>    =20
+>
+> Yeah, it's also a pre-release version that the aircrack developers ar=
+e
+> distributing. I'm not very happy with that and have filed a bug again=
+st
+> aircrack-ng (but it seems to not have gone through yet)
+>
+> johannes
+>  =20
 
-The other question is whether we should be doing netif_carrier_off() at
-all since that throws away frames from the queue and attaches a noop
-qdisc. When we're roaming quickly between two APs, we don't necessarily
-want that, but we don't actually know whether or not we'll be able to
-get back to an AP quickly when we disassociate for whatever reason.
-
-johannes
-
---=-UYLLlAhoxb+M1DS+LFY6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIxOSfAAoJEKVg1VMiehFYazEP+gL1MDPUqNfyAxHWM4xcrcdR
-lmnH3jjGSBk867F5mlBPxCITRwrKv9kD4p5RHufBrwkI4HL5HLE2m5RblLOXPNam
-T8gpJIVIy7lAon89JWpndjfbJ9wVM7Qp/XNBCLwvL+YrfLqemC0UGoSyv6mtwAJT
-JkhJwTJHC6UleRgiAOCdTTFQJn8firiEfMkpJ+qq4nfaQNVxe6EV6ggHKUKwyMTn
-QqiuX9MpAaWRAZ/z+SoirxsffmbcaTvsOkkPIam9iEHLKl0t2pR+wLXj1pZqhuaR
-y+4KuAbrvbr5xSL8BlLps1lUhDKcwBh31duK6Ebm492M36AiMi4twP6W92wNIuYh
-HKRCSGPEAuZRw0A67sYCx3rgnSU78Gr4fS1dgJQUQ4d3OyA9vnA9mNMyywxtiC1m
-ECINa9OG4YJ+4dV3iNjvun/9TMxzolj40RLuPyHa+iqtkjY2QwgKHDxpQNhuowHC
-AzhOxvreH5hqHuJLoJN7NhCySJwovdrQmC85VvbRtUJ7WJPOvwZhi0saDcsPVMG6
-OkZ52Lhz3Udp+JjOa6kuvEoFoGFNSCpU4HwFN91dJFvTLGpWiRtlgBH8D21RDfed
-Kwh229YduWU5+8FuOjENemdDHKds8bNQpZaLUWXMU05LoE5O5DtaXTFNEjhxVCA/
-k6VocVHTZNmzrgmbgcsm
-=umLx
------END PGP SIGNATURE-----
-
---=-UYLLlAhoxb+M1DS+LFY6--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
