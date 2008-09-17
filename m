@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39927 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:48935 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751984AbYISXxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 19:53:25 -0400
-Date: Fri, 19 Sep 2008 16:53:05 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Steven Noonan <steven@uplinklabs.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
-	(rc5, rc6, probably others)
-Message-ID: <20080919235305.GD11665@tesla> (sfid-20080920_015330_191040_99437B59)
-References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com> <20080919030125.GG7408@tesla> <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com> <20080919142801.GA5816@senthil-lnx.users.atheros.com> <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net> <20080919175824.GA5626@senthil-lnx.users.atheros.com> <20080919182322.GB7027@tesla> <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
+	id S1752361AbYIQOeG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2008 10:34:06 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Date: Wed, 17 Sep 2008 16:33:41 +0200
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <48CFC03A.8020708@lwfinger.net> <200809171626.28782.mb@bu3sch.de> <20080917142931.GF5407@tuxdriver.com>
+In-Reply-To: <20080917142931.GF5407@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809171633.41397.mb@bu3sch.de> (sfid-20080917_163417_574872_413674D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 04:31:20PM -0700, Steven Noonan wrote:
+On Wednesday 17 September 2008 16:29:31 John W. Linville wrote:
+> On Wed, Sep 17, 2008 at 04:26:28PM +0200, Michael Buesch wrote:
+> > On Wednesday 17 September 2008 00:37:29 Henrique de Moraes Holschuh wrote:
+> > > On Tue, 16 Sep 2008, Michael Buesch wrote:
+> > > > But I don't know how to tell the rfkill subsystem about the states and
+> > > 
+> > > rfkill_force_state().  Must NOT be called from within atomic contextes,
+> > > something I haven't got around to find a proper way of fixing, and nobody
+> > > else seems to be on a rfkill coding frenzy right now.
+> > 
+> > That's a showstopper for us, as we have to change the state from
+> > within an interrupt tasklet.
 > 
-> On Fri, 19 Sep 2008, Luis R. Rodriguez wrote:
-> > Thanks for the patch Senthil. He is on Linus' v2.6.27-rc, you are on
-> > wireless-testing so I've ported it (no changes, it just applies cleanly
-> > now). This is also untested by me:
-> 
-> I'm seeing the same latency issue I reported originally with the latest
-> -tip kernel and WITHOUT irqpoll.
+> Workqueue?
 
-Damn it.
+Yeah, that's possible to implement yet another workaround using a workqueue.
+However it would be nice to have rfkill either support atomic context
+or implement the workaround in the rfkill core, as I'm sure there are more
+devices that report rfkill changes via interrupt.
 
-> Apparently there's something else to this...
-
-Steven,
-
-Can you reproduce this? If so can you tell us how? If you can reproduce
-can you try to test this with wireless-testing as well? That is still
-based on 2.6.26-rc6 but its just has all the new wireless development
-stuff queued up for 2.6.28 so far. Everything else is the same.
-
-  Luis
+-- 
+Greetings Michael.
