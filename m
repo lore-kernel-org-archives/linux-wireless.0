@@ -1,64 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52840 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888AbYICNPb (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.187]:51998 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754351AbYIQSX7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 09:15:31 -0400
-Date: Wed, 3 Sep 2008 09:04:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Kalle Valo <kalle.valo@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: at76_usb.[ch] gone fishing from wireless-testing ?
-Message-ID: <20080903130439.GJ3050@tuxdriver.com> (sfid-20080903_151535_796206_8150204D)
-References: <43e72e890809021953o29c6ba53wcdf7630d4ff10b30@mail.gmail.com> <87vdxedje8.fsf@nokia.com> <43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com> <20080903125352.GI3050@tuxdriver.com>
+	Wed, 17 Sep 2008 14:23:59 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so2452818muf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 11:23:57 -0700 (PDT)
+Message-ID: <aa050c750809171123g17d953aeq70f378a5ea0946a2@mail.gmail.com> (sfid-20080917_202405_772818_6434090B)
+Date: Wed, 17 Sep 2008 11:23:57 -0700
+From: "Anna Neal" <anna@cozybit.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH] libertas: Improvements on automatic tx power control via SIOCSIWTXPOW.
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <1221457448.27102.50.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080903125352.GI3050@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48c964bf.1b018e0a.75a0.0ecf@mx.google.com>
+	 <1221457448.27102.50.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 03, 2008 at 08:53:52AM -0400, John W. Linville wrote:
-> On Tue, Sep 02, 2008 at 08:03:32PM -0700, Luis R. Rodriguez wrote:
-> > On Tue, Sep 2, 2008 at 7:59 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> > > Luis R. Rodriguez <mcgrof@gmail.com> writes:
-> > >
-> > >> A few times now I've git-fetch'd origin and noticed at76_usb.[ch]
-> > >> missing on origin/master. Strange, wondering if you're aware of any
-> > >> such type of issues or its just me.
-> > >
-> > > Good point, I don't see it either. But at76_usb is quite broken
-> > > currently, so maybe John decided just to drop it? Good choice, at
-> > > least for now.
-> > >
-> > > And it's not just that, also -wl suffix is missing from the version.
-> > >
-> > > My HEAD is currently:
-> > >
-> > > commit 18c8adeb0244f823ba78a51e23f813fe68bc3c54
-> > > Author: Michael Buesch <mb@bu3sch.de>
-> > > Date:   Thu Aug 28 19:33:40 2008 +0200
-> > >
-> > >    b43: Rewrite TX power adjustment
-> > 
-> > I'm at:
-> > 
-> > commit 908dd0b965e64fcc2eb64152bac65f2876c34e0b
-> > Author: Senthil Balasubramanian <senthilkumar@atheros.com>
-> > Date:   Mon Sep 1 19:58:20 2008 +0530
-> >     ath9: Fix ath_rx_flush_tid() for IRQs disabled kernel warning message.
-> > 
-> > Reason I find it strange is on one box it went through and I still see
-> > history for it, and in another I don't. I was going to do a fresh pull
-> > to test but figure I rather ask as bandwidth is crummy at work.
-> 
-> Crap, I botched my lastest update.  I'll pull in the part that adds
-> -wl to the version for sure.  Anyone want to talk me out of pulling-in
-> the at76 parts?
+On Sun, Sep 14, 2008 at 10:44 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Thu, 2008-09-11 at 11:17 -0700, Anna Neal wrote:
+>> iwconfig txpower can now be used to set tx power to fixed or auto. If set to
+>> auto the default firmware settings are used.
+>>
+>> The command CMD_802_11_PA_CFG is only sent to older firmware, as Dan Williams
+>> noted the command was no longer supported in firmware V9+.
+>
+> Updated patch looks ok, but two last questions... (see below)
+>
+>> Signed-off-by: Anna Neal <anna@cozybit.com>
+>> Signed-off-by: Javier Cardona <javier@cozybit.com>
+>> ---
+>>  drivers/net/wireless/libertas/cmd.c     |   64 +++++++++++++++++++++++++++++++
+>>  drivers/net/wireless/libertas/cmd.h     |    6 +++
+>>  drivers/net/wireless/libertas/defs.h    |    9 ++++
+>>  drivers/net/wireless/libertas/host.h    |    1 +
+>>  drivers/net/wireless/libertas/hostcmd.h |   24 +++++++++--
+>>  drivers/net/wireless/libertas/wext.c    |   31 ++++++++++++++-
+>>  6 files changed, 128 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+>> index 802547e..5fef05f 100644
+>> --- a/drivers/net/wireless/libertas/cmd.c
+>> +++ b/drivers/net/wireless/libertas/cmd.c
+>> @@ -1971,6 +1971,70 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv)
+>>  }
+>>
+>>
+>> +/**
+>> + * @brief Configures the transmission power control functionality.
+>> + *
+>> + * @param priv               A pointer to struct lbs_private structure
+>> + * @param enable     Transmission power control enable
+>> + * @param p0         Power level when link quality is good (dBm).
+>> + * @param p1         Power level when link quality is fair (dBm).
+>> + * @param p2         Power level when link quality is poor (dBm).
+>> + * @param usesnr     Use Signal to Noise Ratio in TPC
+>> + *
+>> + * @return 0 on success
+>> + */
+>> +int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
+>> +             int8_t p2, int usesnr)
+>> +{
+>> +     struct cmd_ds_802_11_tpc_cfg cmd;
+>> +     int ret;
+>> +
+>> +     memset(&cmd, 0, sizeof(cmd));
+>> +     cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+>> +     cmd.action = cpu_to_le16(CMD_ACT_SET);
+>> +     cmd.enable = !!enable;
+>> +     cmd.usesnr = !!enable;
+>
+> Hmm, do you mean !!usesnr here instead of !!enable?  Otherwise the
+> usesnr parameter goes unused and you can remove it from the parameter
+> list.  But I think you probably meant to use it :)
 
-Hmmm...upon further review, both my local copy and the one at
-kernel.org seem to have the proper bits AFAICT...?
+Sorry, yes I did, thanks for finding this.  I will send an update soon.
 
--- 
-John W. Linville
-linville@tuxdriver.com
+>
+>> +     cmd.P0 = p0;
+>> +     cmd.P1 = p1;
+>> +     cmd.P2 = p2;
+>> +
+>> +     ret = lbs_cmd_with_response(priv, CMD_802_11_TPC_CFG, &cmd);
+>> +
+>> +     return ret;
+>> +}
+>> +
+>> +/**
+>> + * @brief Configures the power adaptation settings.
+>> + *
+>> + * @param priv               A pointer to struct lbs_private structure
+>> + * @param enable     Power adaptation enable
+>> + * @param p0         Power level for 1, 2, 5.5 and 11 Mbps (dBm).
+>> + * @param p1         Power level for 6, 9, 12, 18, 22, 24 and 36 Mbps (dBm).
+>> + * @param p2         Power level for 48 and 54 Mbps (dBm).
+>> + *
+>> + * @return 0 on Success
+>> + */
+>> +
+>> +int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
+>> +             int8_t p1, int8_t p2)
+>> +{
+>> +     struct cmd_ds_802_11_pa_cfg cmd;
+>> +     int ret;
+>> +
+>> +     memset(&cmd, 0, sizeof(cmd));
+>> +     cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+>> +     cmd.action = cpu_to_le16(CMD_ACT_SET);
+>> +     cmd.enable = !!enable;
+>> +     cmd.P0 = p0;
+>> +     cmd.P1 = p1;
+>> +     cmd.P2 = p2;
+>> +
+>> +     ret = lbs_cmd_with_response(priv, CMD_802_11_PA_CFG , &cmd);
+>> +
+>> +     return ret;
+>> +}
+>> +
+>> +
+>>  static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
+>>       uint16_t command, struct cmd_header *in_cmd, int in_cmd_size,
+>>       int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+>> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+>> index 11ac996..336a181 100644
+>> --- a/drivers/net/wireless/libertas/cmd.h
+>> +++ b/drivers/net/wireless/libertas/cmd.h
+>> @@ -26,6 +26,12 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
+>>             int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+>>             unsigned long callback_arg);
+>>
+>> +int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
+>> +             int8_t p1, int8_t p2);
+>> +
+>> +int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
+>> +             int8_t p2, int usesnr);
+>> +
+>>  int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
+>>                    struct cmd_header *resp);
+>>
+>> diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
+>> index 4b2428a..c89d7a1 100644
+>> --- a/drivers/net/wireless/libertas/defs.h
+>> +++ b/drivers/net/wireless/libertas/defs.h
+>> @@ -189,6 +189,15 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
+>>  #define MRVDRV_CMD_UPLD_RDY          0x0008
+>>  #define MRVDRV_CARDEVENT             0x0010
+>>
+>> +
+>> +/* Automatic TX control default levels */
+>> +#define POW_ADAPT_DEFAULT_P0 13
+>> +#define POW_ADAPT_DEFAULT_P1 15
+>> +#define POW_ADAPT_DEFAULT_P2 18
+>> +#define TPC_DEFAULT_P0 5
+>> +#define TPC_DEFAULT_P1 10
+>> +#define TPC_DEFAULT_P2 13
+>> +
+>>  /** TxPD status */
+>>
+>>  /*   Station firmware use TxPD status field to report final Tx transmit
+>> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+>> index da618fc..a916bb9 100644
+>> --- a/drivers/net/wireless/libertas/host.h
+>> +++ b/drivers/net/wireless/libertas/host.h
+>> @@ -83,6 +83,7 @@
+>>  #define CMD_802_11_INACTIVITY_TIMEOUT                0x0067
+>>  #define CMD_802_11_SLEEP_PERIOD                      0x0068
+>>  #define CMD_802_11_TPC_CFG                   0x0072
+>> +#define CMD_802_11_PA_CFG                    0x0073
+>>  #define CMD_802_11_FW_WAKE_METHOD            0x0074
+>>  #define CMD_802_11_SUBSCRIBE_EVENT           0x0075
+>>  #define CMD_802_11_RATE_ADAPT_RATESET                0x0076
+>> diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+>> index d27c276..630b799 100644
+>> --- a/drivers/net/wireless/libertas/hostcmd.h
+>> +++ b/drivers/net/wireless/libertas/hostcmd.h
+>> @@ -607,14 +607,28 @@ struct cmd_ds_802_11_eeprom_access {
+>>  } __attribute__ ((packed));
+>>
+>>  struct cmd_ds_802_11_tpc_cfg {
+>> +     struct cmd_header hdr;
+>> +
+>>       __le16 action;
+>> -     u8 enable;
+>> -     s8 P0;
+>> -     s8 P1;
+>> -     s8 P2;
+>> -     u8 usesnr;
+>> +     uint8_t enable;
+>> +     int8_t P0;
+>> +     int8_t P1;
+>> +     int8_t P2;
+>> +     uint8_t usesnr;
+>>  } __attribute__ ((packed));
+>>
+>> +
+>> +struct cmd_ds_802_11_pa_cfg {
+>> +     struct cmd_header hdr;
+>> +
+>> +     __le16 action;
+>> +     uint8_t enable;
+>> +     int8_t P0;
+>> +     int8_t P1;
+>> +     int8_t P2;
+>> +} __attribute__ ((packed));
+>> +
+>> +
+>>  struct cmd_ds_802_11_led_ctrl {
+>>       __le16 action;
+>>       __le16 numled;
+>> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+>> index 426f1fe..e8cadad 100644
+>> --- a/drivers/net/wireless/libertas/wext.c
+>> +++ b/drivers/net/wireless/libertas/wext.c
+>> @@ -1820,7 +1820,21 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+>>       }
+>>
+>>       if (vwrq->fixed == 0) {
+>> -             /* Auto power control */
+>> +             /* User requests automatic tx power control, however there are
+>> +              * many auto tx settings.  For now use firmware defaults until
+>> +              * we come up with a good way to expose these to the user. */
+>> +             if (priv->fwrelease < 0x09000000) {
+>> +                     ret = lbs_set_power_adapt_cfg(priv, 1,
+>> +                                     POW_ADAPT_DEFAULT_P0,
+>> +                                     POW_ADAPT_DEFAULT_P1,
+>> +                                     POW_ADAPT_DEFAULT_P2);
+>> +                     if (ret)
+>> +                             goto out;
+>> +             }
+>> +             ret = lbs_set_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
+>
+> Did you mean to disable TPC here when the user specified "auto" power
+> control?  This would mean that PA gets used at every rate and TPC is
+> disabled, while enabling TPC here would mean TPC gets used at the
+> highest rate, and PA gets used at all other rates.  What was your intent
+> here?  If you really mean to use '0' here to disable TPC, you might want
+> to put the rationale in a comment.
+
+My rationale for this was to keep the default functionality until we
+could devise a way to control the PA and TPC functionality more
+elegantly.  I will add this to a comment like you suggest.
+
+Thanks,
+Anna
+
+>
+> Thanks!
+> Dan
+>
+>> +                             TPC_DEFAULT_P2, 1);
+>> +             if (ret)
+>> +                     goto out;
+>>               dbm = priv->txpower_max;
+>>       } else {
+>>               /* Userspace check in iwrange if it should use dBm or mW,
+>> @@ -1830,7 +1844,8 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+>>                       goto out;
+>>               }
+>>
+>> -             /* Validate requested power level against firmware allowed levels */
+>> +             /* Validate requested power level against firmware allowed
+>> +              * levels */
+>>               if (priv->txpower_min && (dbm < priv->txpower_min)) {
+>>                       ret = -EINVAL;
+>>                       goto out;
+>> @@ -1840,6 +1855,18 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+>>                       ret = -EINVAL;
+>>                       goto out;
+>>               }
+>> +             if (priv->fwrelease < 0x09000000) {
+>> +                     ret = lbs_set_power_adapt_cfg(priv, 0,
+>> +                                     POW_ADAPT_DEFAULT_P0,
+>> +                                     POW_ADAPT_DEFAULT_P1,
+>> +                                     POW_ADAPT_DEFAULT_P2);
+>> +                     if (ret)
+>> +                             goto out;
+>> +             }
+>> +             ret = lbs_set_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
+>> +                             TPC_DEFAULT_P2, 1);
+>> +             if (ret)
+>> +                     goto out;
+>>       }
+>>
+>>       /* If the radio was off, turn it on */
+>
+>
