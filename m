@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:25354 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752128AbYIKU3k (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:61652 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753350AbYIQRQs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 16:29:40 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so496329wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2008 13:29:38 -0700 (PDT)
-Message-ID: <2da21fe50809111329q2d0cbaaayea6b57acdd6a6e28@mail.gmail.com> (sfid-20080911_222944_824589_D49EB2D8)
-Date: Thu, 11 Sep 2008 22:29:38 +0200
-From: "Davide Pesavento" <davidepesa@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Frequent disconnections with ath9k
+	Wed, 17 Sep 2008 13:16:48 -0400
+Message-ID: <48D13B7F.7070806@lwfinger.net> (sfid-20080917_191652_740193_88FDC5F6)
+Date: Wed, 17 Sep 2008 12:16:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Pavel Roskin <proski@gnu.org>
+CC: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>, chunkeey@web.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] p54: Fix sparse warnings
+References: <48cab1e3.m0lac7LoL3DFxIu6%Larry.Finger@lwfinger.net>	 <200809122036.03553.mb@bu3sch.de> <48CABA84.2060404@lwfinger.net>	 <200809131440.01505.mb@bu3sch.de>  <48CBDF0B.5080303@lwfinger.net> <1221668131.18202.10.camel@dv>
+In-Reply-To: <1221668131.18202.10.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Pavel Roskin wrote:
+> 
+> I have a PowerMac and a Prism54 card, so I can test.
+> 
 
-I'm running a recent kernel from the wireless-testing tree (using
-ath9k driver) and I'm experiencing disconnections very frequently.
-Versions before 2.6.27-rc4 were working much better... The regression
-was probably introduced between 2.6.27-rc4-wl-15768-g4829c3c and
-2.6.27-rc4-wl-16055-g46160f5, but I'm not completely sure.
+I gather you have not yet tested. I'm pretty sure that it does not
+work without the patch I posted, but wonder if it does with it.
 
-This is what dmesg shows:
+Thanks,
 
-[ 3416.627799] wlan0: No ProbeResp from current AP 00:1b:2f:XX:XX:XX -
-assume out of range
-[ 3416.628680] phy0: Removed STA 00:1b:2f:XX:XX:XX
-[ 3416.667944] phy0: Destroyed STA 00:1b:2f:XX:XX:XX
-
-(a bunch of "phy0: HW CONFIG: freq=....", I guess it's doing a scan)
-
-[ 3419.012381] wlan0: authenticate with AP 00:1b:2f:XX:XX:XX
-[ 3419.209948] wlan0: authenticate with AP 00:1b:2f:XX:XX:XX
-[ 3419.409965] wlan0: authenticate with AP 00:1b:2f:XX:XX:XX
-[ 3419.609927] wlan0: authentication with AP 00:1b:2f:XX:XX:XX timed out
-
-Sometimes it gets really annoying because it disconnects 3 or 4 times
-in less than a minute.
-iwconfig reports a link quality of 25-35/100 and a fixed bitrate of 1
-Mb/s, but under MacOS X the card works pretty fine: it never
-disconnects and I get good transmission rates.
-
-Regards,
-Davide Pesavento
+Larry
