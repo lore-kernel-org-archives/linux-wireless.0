@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:41858 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbYIFXYg (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:41591 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752610AbYIQPgn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 19:24:36 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1037475fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2008 16:24:34 -0700 (PDT)
-Message-ID: <1ba2fa240809061624n2ec9537n6f280c5ef6641181@mail.gmail.com> (sfid-20080907_012440_004625_7680B732)
-Date: Sun, 7 Sep 2008 02:24:34 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC PATCH 1/3] mac80211: restructure disassoc/deauth flows
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1220740939.21016.19.camel@johannes.berg>
+	Wed, 17 Sep 2008 11:36:43 -0400
+Date: Wed, 17 Sep 2008 12:36:37 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Carlos Corbacho <carlos@strangeworlds.co.uk>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Regression in 2.6.27-rcX caused by commit
+	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
+Message-ID: <20080917153637.GD5186@khazad-dum.debian.net> (sfid-20080917_173648_185543_ECD829D7)
+References: <48CFC03A.8020708@lwfinger.net> <48D0095B.40403@lwfinger.net> <20080916233240.GA18574@srcf.ucam.org> <200809171622.55882.mb@bu3sch.de> <20080917145007.GA5186@khazad-dum.debian.net> <48D1221B.1000601@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
-	 <1220739930.21016.6.camel@johannes.berg>
-	 <1ba2fa240809061532s4f8e08c1xe59f99768ce440c0@mail.gmail.com>
-	 <1220740939.21016.19.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48D1221B.1000601@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 7, 2008 at 1:42 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sun, 2008-09-07 at 01:32 +0300, Tomas Winkler wrote:
->> On Sun, Sep 7, 2008 at 1:25 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> >
->> >>
->> >> +static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
->> >> +                                  struct ieee80211_if_sta *ifsta, int deauth,
->> >> +                                  int self_disconnected, u16 reason)
->> >
->> > I think you should use bool for those two (deauth, self)
->>
->> I'm thinking rather using some enum values just for readability
->> foo(DEAUTH, ORIGIN_SELF) vs foo(tree,true)
->> foo(DISASSOC, ORIGIN_PEER)  vs foo(false, false)
->
-> That works too, sure, though seems a little overkill, the function is
-> called what, three times? Anyway, whatever you prefer, I just don't like
-> bare "int" as a bool.
+On Wed, 17 Sep 2008, Larry Finger wrote:
+> Henrique de Moraes Holschuh wrote:
+> > He means rfkill_force_state() should change the LED state in the process,
+> > which it isn't doing.
+> > 
+> > It is an one-line patch, I am testing it now.
+> 
+> If your one-line patch fixes my regression, then I'll ACK it for 2.6.27.
 
-Do u think it is sane using IEEE80211_STYPE_DISASSOC and
-IEEE80211_STYPE_DEAUTH for this?
-Thanks
-Tomas
+Sorry, it can't fix that regression by itself, since b43 is not using
+rfkill_force_state() in mainline.
+
+It will fix the same issue you are experiencing on b43 in anything that uses
+rfkill_force_state(), which means (for mainline): iwlwifi, rt2x00,
+thinkpad-acpi and hp-wmi.
+
+It is a regression only on b43 and thinkpad-acpi, as the other drivers above
+didn't use rfkill_force_state() in 2.6.26.
+
+To fix the regression in b43, you'd be faced with the need of both my simple
+patch AND Matthew's more complex one.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
