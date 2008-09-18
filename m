@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39267 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751561AbYITU4O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 16:56:14 -0400
-Date: Sat, 20 Sep 2008 13:56:11 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Steven Noonan <steven@uplinklabs.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
-	(rc5, rc6, probably others)
-Message-ID: <20080920205611.GB8996@tesla> (sfid-20080920_225628_972708_6B5CEF2B)
-References: <20080919142801.GA5816@senthil-lnx.users.atheros.com> <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net> <20080919175824.GA5626@senthil-lnx.users.atheros.com> <20080919182322.GB7027@tesla> <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net> <20080919235305.GD11665@tesla> <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com> <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com> <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com> <f488382f0809192040k317660f3yb99806bbdce60449@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <f488382f0809192040k317660f3yb99806bbdce60449@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:34289 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754235AbYIRS3P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 14:29:15 -0400
+Subject: Re: temorarily out of range -> no TCP?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Anders Eriksson <aeriksson@fastmail.fm>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080918141955.0119E93CCA7@tippex.mynet.homeunix.org> (sfid-20080918_162007_153222_33378A12)
+References: <20080918141955.0119E93CCA7@tippex.mynet.homeunix.org>
+	 (sfid-20080918_162007_153222_33378A12)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JNA5DtQRBah4xRF3UZ+j"
+Date: Thu, 18 Sep 2008 20:28:40 +0200
+Message-Id: <1221762520.20772.2.camel@johannes.berg> (sfid-20080918_202919_507273_68C8E316)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 08:40:04PM -0700, Steven Noonan wrote:
-> On Fri, Sep 19, 2008 at 8:29 PM, Steven Noonan <steven@uplinklabs.net> wrote:
-> > Anyway, there definitely is an interrupt storm here. Let me demonstrate...
-> 
-> Worth noting that this change (modified version of the patch by
-> Senthil from earlier) made it so it didn't give an 'IRQ 17: nobody
-> cared' when I reloaded ath9k during the IRQ storm...
 
-Thanks, for letting us know -- John, seems that IRQ patch by Senthil is
-27 material as it fixes an IRQ issue (nobody cared complaint, and it
-disables the IRQ otherwise) upon rmmod during an IRQ storm.
+--=-JNA5DtQRBah4xRF3UZ+j
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Thu, 2008-09-18 at 16:19 +0200, Anders Eriksson wrote:
+
+> Sep 17 12:22:07 tippex wlan0: No ProbeResp from current AP 00:18:39:c0:5f=
+:50 - assume out of range
+
+
+> Am I missing something?
+
+For one, telling us which driver you're using.
+
+johannes
+
+--=-JNA5DtQRBah4xRF3UZ+j
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI0p3VAAoJEKVg1VMiehFYxGIQALqsyXM8ignwGn/41eJrFzvA
+j075Qjje+LpZvuHFX7tV0cFiIlde2Ry7YQYrKRB67S1oGTR1sPn5GAlqOhkMq5Hc
+iB9X3cG4u8gQAo6tUsmaGFUDi6JvokyBvsBdWRMvhO54TmhPPveLtbdQ4gjKyPJP
+82hZlEwptmCq0k8pes9eTm3UW5uzeWXcCDRbMENbgyHq8c6/Z1Nq1Rs5RzqGVMR5
+aek52684tNzN8rIqAUYPshXXwOsl3vZ+OS4pSSDsrGGfWSx4Cj29R6h4pxmaVVjS
+R3qRlgN7USZ8rhlKRmyTKn0/KAxGpfri87JMt3sA3YRTfoyecp6GnK3IeebjTMWD
+n1R1x5vZRhpnrPyPJzOL2POLHaV+YM9jCNMByawfQmds+HFIs9QHnsRY4Ina3nl1
+ivljUwCStmD3dWpfOwo8ZYidx+yQ9GdvOEz2rr6Gu0Nc20FOT8LowOLL3RdDhNAn
+0pCNsCpecgjPvvaSRjTahhHb76mlshOg44FiS0LyV0XXQ7ka4KLVaDwUm2umb3W+
+haUZrgC0wA0/5yQHjZvgyeRYhDZrDRXY7gYOzsGgFkNKY27JYuygEZrwEMpyXhOa
+djqBRjzcv8JwPjIW3sUFrn02Qyj44fGo6KbMMkDhTDGbX946hU+HvTd+j/lxDEZf
+gzXkgXKrEWjzhhv3gc1N
+=5zxD
+-----END PGP SIGNATURE-----
+
+--=-JNA5DtQRBah4xRF3UZ+j--
+
