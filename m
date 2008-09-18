@@ -1,74 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:44815 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754781AbYIJUSh (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43253 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754352AbYIRR3c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 16:18:37 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so9422ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Sep 2008 13:18:36 -0700 (PDT)
-Message-ID: <43e72e890809101318o771100f0jcac9bbea6b863ccb@mail.gmail.com> (sfid-20080910_221844_245575_CED9B720)
-Date: Wed, 10 Sep 2008 13:18:36 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Marcel Holtmann" <holtmann@linux.intel.com>
-Subject: Re: [PATCH 1/2 v6] cfg80211: Add new wireless regulatory infrastructure
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <1221070650.13336.20.camel@californication>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1221027589-19203-1-git-send-email-lrodriguez@atheros.com>
-	 <1221027589-19203-2-git-send-email-lrodriguez@atheros.com>
-	 <1221070650.13336.20.camel@californication>
+	Thu, 18 Sep 2008 13:29:32 -0400
+Subject: Re: [PATCH] iw: add kernel version checks for pending upstream
+	kernel features
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1221758783.6782.29.camel@californication>
+References: <>  <1221748533-11000-1-git-send-email-linville@tuxdriver.com>
+	 <1221752489.9262.81.camel@johannes.berg>
+	 <1221758783.6782.29.camel@californication>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dbIUxST91flkfo4k+Boc"
+Date: Thu, 18 Sep 2008 19:28:54 +0200
+Message-Id: <1221758934.9262.89.camel@johannes.berg> (sfid-20080918_192935_606145_21164576)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 10, 2008 at 11:17 AM, Marcel Holtmann
-<holtmann@linux.intel.com> wrote:
-> Hi Luis,
->
->> This adds the new wireless regulatory infrastructure. The
->> main motiviation behind this was to centralize regulatory
->> code as each driver was implementing their own regulatory solution,
->> and to replace the initial centralized code we have where:
->>
->> * only 3 regulatory domains are supported: US, JP and EU
->> * regulatory domains can only be changed through module parameter
->> * all rules were built statically in the kernel
->>
->> We now have support for regulatory domains for many countries
->> and regulatory domains are now queried through a userspace agent
->> through udev allowing distributions to update regulatory rules
->> without updating the kernel.
->>
->> Each driver can regulatory_hint() a regulatory domain
->> based on either their EEPROM mapped regulatory domain value to a
->> respective ISO/IEC 3166-1 country code or pass an internally built
->> regulatory domain. We also add support to let the user set the
->> regulatory domain through userspace in case of faulty EEPROMs to
->> further help compliance.
->
-> thanks for the write-up and examples. I like it a lot and gives driver
-> maintainers a nice understanding what to do.
 
-Thanks :)
+--=-dbIUxST91flkfo4k+Boc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> While reading through it, I came to think about regulatory_hint(). So is
-> there a use case where would give it the alpha2 code and the domain
-> itself at the same time? If not, then it would make more sense to split
-> this into two functions.
+Hi Marcel,
 
-Nope, you either pass an alpha2 or an rd domain which is built by you
-(and in that rd structure you can set the alpha2 to your iso3166
-alpha2 or "99" if unknown).
+On Thu, 2008-09-18 at 19:26 +0200, Marcel Holtmann wrote:
 
-> Maybe something regulatory_alpha2_hint() and
-> regulatory_domain_hint(). Just a thought.
+> if the numbers you are planning to use are stable, then please use the
+> above approach to just add the missing defines to it. Like adding a
+> compat.h file with
+>=20
+> #ifndef NL80211_ATTR_SUPPORTED_IFTYPES
+> #define NL80211_ATTR_SUPPORTED_IFTYPES boo
+> #endif
 
-That's how I had it originally but decided to condense it to one
-routine since as you could see they pretty much do the same thing
-except the case where the rd is provided it calls set_regdom().
-Setting it back to use two routines if fine by me too. What is better?
-Can we just get this merged and then we can flip it around if
-necessary? :) I'm tired of carrying this around.
+Well, at that point I can also just copy nl80211.h from wireless-testing
+whenever I think the numbers will remain stable, no? And that doesn't
+work as-is anyway since nl80211.h uses an enum to define the numbers,
+not #defines.
 
-  Luis
+I guess it's the lesser of all the evils. I'm not too fond of copying in
+the header file, it creates more work and doesn't make all that much
+sense, but all the other proposals take even more work, and as long as
+we don't change the numbers after putting things into wireless-testing
+we should be fine.
+
+johannes
+
+--=-dbIUxST91flkfo4k+Boc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI0o/TAAoJEKVg1VMiehFYvjMP/iudPA9qCpR2LjVcdcsM5y8X
+cIWcLfHWMv7srwXd3yBjaYpiWJAqIu5Bn1sIeoXg/Ivxe/vb0eFlz3qKy0+oRSrV
++iNqDhyuGR9UDfSFrKQHcppBBufMxoNoxXMAthQAnzezBK0cXtK86jah/8TYdPP2
+CIwkTMs0+Z8ZtZ5SdWJPFNOZDdUWmNzaxrfXIIQ9RSOZdwt1limc79QxlC8lpiN3
+U52VZP2MBeDN61NeSmRYrExaxeQKf24X4h/c+SkCZ+3lfi4qsfylpj0ixpGxlAjN
+NChwkLlEya0DxB/P2LGMw4lxFqn7oAgWIBCSrgKuTh5z8GlBVPJZVGG0XTexiqs7
+qKriUjyp7kTRZQ0Okj1Gc+42kmNhSB/3lpalsxf3Rvi54D2GySbiG6kEqQeSisrE
+iqecAeLJWi282KJokqrwX1uzLGMYG4AsOuogiPXgZQSHAAziuUhK+yrLSk6G1wy6
+Riccms+A6cijwpvfyUH8LBYNRhFcSMEZ54A6DXSeOP8C0Zk71mS1Asl/1YbMqoEp
+WUJBJYzIxno6xYBUAyy5Ztv9IXDHPzgi8TueFUdflvJKdPzNflhRLnny8P+yjsuF
+t0oG/LmN3ssS2RCDrVm6QWC7JOT/Ra7fuEWacO7mVYI7WEw6teNiWhCGLLqcmFS6
+PtM1V3bZRrh3sMI5G3YW
+=nsMt
+-----END PGP SIGNATURE-----
+
+--=-dbIUxST91flkfo4k+Boc--
+
