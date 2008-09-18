@@ -1,137 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:5607 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907AbYIETLu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36707 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752989AbYIRSOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 15:11:50 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so344846yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2008 12:11:49 -0700 (PDT)
-Message-ID: <43e72e890809051211r3db3ca12m671c9ed9615b9e1b@mail.gmail.com> (sfid-20080905_211157_560757_56BB7D1E)
-Date: Fri, 5 Sep 2008 12:11:49 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/2 v4] cfg80211: Add new wireless regulatory infrastructure
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1220640389.11109.15.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1220636669-8153-1-git-send-email-lrodriguez@atheros.com>
-	 <1220640389.11109.15.camel@johannes.berg>
+	Thu, 18 Sep 2008 14:14:30 -0400
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200809182006.58620.IvDoorn@gmail.com> (sfid-20080918_200703_023992_1E2D0C69)
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net>
+	 <200809181952.15770.IvDoorn@gmail.com>
+	 <1221760449.9262.96.camel@johannes.berg>
+	 <200809182006.58620.IvDoorn@gmail.com>
+	 (sfid-20080918_200703_023992_1E2D0C69)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eH5XxzepH8qRiK/0x7T6"
+Date: Thu, 18 Sep 2008 20:13:46 +0200
+Message-Id: <1221761626.20772.0.camel@johannes.berg> (sfid-20080918_201434_323193_919282A5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 5, 2008 at 11:46 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> +enum nl80211_reg_rule_flags {
->> +     NL80211_RRF_NO_OFDM             = 1<<0,
->> +     NL80211_RRF_NO_CCK              = 1<<1,
->> +     NL80211_RRF_NO_INDOOR           = 1<<2,
->> +     NL80211_RRF_NO_OUTDOOR          = 1<<3,
->
->> +     NL80211_RRF_DFS                 = 1<<4,
->> +     NL80211_RRF_PTP_ONLY            = 1<<4,
->> +     NL80211_RRF_PTMP_ONLY           = 1<<4,
->> +     NL80211_RRF_PASSIVE_SCAN        = 1<<4,
->
-> That seems a bit wrong?
 
-You got it.
+--=-eH5XxzepH8qRiK/0x7T6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->> +     NL80211_RRF_NO_IBSS             = 1<<8,
->> +     /* hole at 9, used to be NO_HT20  */
->> +     NL80211_RRF_NO_HT40             = 1<<10,
->
-> and I'm still not sure we should be using the same bit assignments as in
-> the userspace part, that'll just make people think we have to do that,
-> while we don't really, I'd rather see a clean set here and have the
-> userspace code contain an internal mapping from its values to the kernel
-> values.
+On Thu, 2008-09-18 at 20:06 +0200, Ivo van Doorn wrote:
+> On Thursday 18 September 2008, Johannes Berg wrote:
+> > On Thu, 2008-09-18 at 19:52 +0200, Ivo van Doorn wrote:
+> >=20
+> > > From rfkill.h:
+> > > 	RFKILL_STATE_SOFT_BLOCKED =3D 0,	/* Radio output blocked */
+> > > 	RFKILL_STATE_UNBLOCKED    =3D 1,	/* Radio output allowed */
+> > > 	RFKILL_STATE_HARD_BLOCKED =3D 2,	/* Output blocked, non-overrideable=
+ */
+> > >=20
+> > > Since b43 has a rfkill mechanism that does switch of the radio when R=
+FKILL is set to BLOCK
+> > > after a key press, it should send RFKILL_STATE_HARD_BLOCKED because r=
+fkill cannot override
+> > > it.
+> > >=20
+> > > rt2x00 hardware does not change the radio state when RFKILL is set to=
+ BLOCK after a key press,
+> > > the state is therefor overridable and it can send RFKILL_STATE_SOFT_B=
+LOCKED to rfkill.
+> >=20
+> > If rt2x00 has no meaning of "hardware blocked", why is the button not a
+> > simple input device?
+>=20
+> Because I had that discussion with Henrique and that ended with a "it isn=
+'t a input device"...
 
-This is not merged yet so technically we can start fresh and just
-modify regdb.h. What do you think.
+Why isn't it? If it doesn't affect the hardware itself it might as well
+be connected to the ps/2 port for all I care.
 
->> +struct ieee80211_freq_range {
->> +     u32 start_freq;
->> +     u32 end_freq;
->> +     u32 max_bandwidth;
->
-> u32 seems excessive for the bandwidth, no?
+johannes
 
-I think its fine, remember this is in KHz.
+--=-eH5XxzepH8qRiK/0x7T6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
->> +struct ieee80211_reg_rule {
->> +     struct ieee80211_freq_range freq_range;
->> +     struct ieee80211_power_rule power_rule;
->> +     u32 flags;
->
-> a note what those flags are would probably be good.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Sure.
+iQIcBAABAgAGBQJI0ppWAAoJEKVg1VMiehFYEgIP/0Y+TtcHUfSMyH3pJSIj4oh1
+ukuURiPOfFZkUIVk35jW5X5zzY/aPQTQltVoV3PlV50Xt66B84V/SXD9/HzVq0P+
+eSnyrvuOX/bUh0WVLAstXL1G5M984amokjBPYpsoDZ8fqfbp3x5QEjBMBvPoJMMm
+sMC2HO/hQ9/IvY4otVbmqk9FFt3rYjhEPtqzRttQkS9jBTiEZZMiPCR1I2WLecti
+1H83Zwqv9Bf0zukIVz1Xu+Z5REIWJU/WAf7/8O8EeUnOXjY7XMoR+GuzlIymCXQw
+KsWU4gxrBwt2SSZDjf9WWQLtxvzohGW1eFHvDpK0MLYofaRBjsqJSSgFimmjpiS4
+mQwkZmKMaSAtMTz7X0xjrxctD0Eg1Qy1Tp04zgxxiXBk+l1h1Gsynp0QLHzT3spa
+YcafrKQz5jHeb1/siETggq/0Ld/Aw0IN61x1kI0zRG3oVcOJBLgFaiUVohskLclC
+ZMVEeJOR15kRTykTJB0o64ofYALP5c5EvIZxr7dLeEwola6IphhRrourDq2/Dur3
+umhFXjhuI/FmvF9/xA3GEtJO0iClmo1uY0O3XTpzCeg2CYIwDobCwsDg26X+ahGX
+Ul54S3YVIWCYKkQ8k/yhEkXc8+5ZJNgErgEeedeLxJwxYz8IaIGCgg3TIeSZh/RT
+mJDnQcvsoTiw1sCPxF5w
+=z2yE
+-----END PGP SIGNATURE-----
 
->>       u16 center_freq;
->> +     u8 max_bandwidth;
->
-> and here you're using u8 anyway :)
+--=-eH5XxzepH8qRiK/0x7T6--
 
-and this is in MHz
-
->> +extern int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
->> +             const char *alpha2, struct ieee80211_regdomain *rd);
->
-> generally extern is left out at least in code I did, but I don't care
-> much; however, why is this one exported in the global header file?
->
->> +             /* IEEE 802.11b/g, channels 1..11 */
->> +             REG_RULE(2412-40, 2462+40, 40, 6, 27, 0),
->
-> that's wrong, should be -20/+20, same for all the others. Also, doesn't
-> it have to be in KHz? I can't really tell right now.
-
-Dah yes.
-
->> + * In addition to all this we provide an extra layer of regulatory
->> + * comformance. For drivers which do not have any regulatory
->
-> typo, conformance
-
-Thanks.
-
->> + * Note: When number of rules --> infinity we will not be able to
->> + * index on alpha2 any more, instead we'll probably have to
->> + * rely on some SHA1 checksum of the regdomain for example.
->
-> don't understand?
-
-Well my crystal ball tells me we may have dynamic regulatory domains
-in the future to enhance communication on the fly, an sha1sum of the
-regdomain would seem fit then to identify it. I don't expect to see
-this for a while though.
-
->> +     /* ASCII 0 */
->> +     if (alpha2[0] == 48 && alpha2[1] == 48)
->
-> You could use '0' instead of 48 and save the comment :)
-
-Sure.
-
->> +                             if (alpha2_equal(alpha2,
->> +                                             cfg80211_regdomain->alpha2))
->> +                                     return -EALREADY;
->> +                             /* Driver should not be trying to hint
->> +                              * different regulatory domains! */
->> +                             BUG_ON(!alpha2_equal(alpha2,
->> +                                             cfg80211_regdomain->alpha2));
->
-> Huh? Doesn't that like always trigger due to the if above?
-
-Yes, seemed better then BUG_ON(1) though.
-
->> +EXPORT_SYMBOL(__regulatory_hint);
->
-> For whom does that need to be exported?
-
-For 11d work which is not in place yet, for example. This allows other
-parts of the kernel regulatory_hint() other than drivers.
-
-  Luis
