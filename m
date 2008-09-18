@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55622
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755331AbYICDjA (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:46367 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754347AbYIRTIw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:39:00 -0400
-Date: Tue, 02 Sep 2008 20:38:53 -0700 (PDT)
-Message-Id: <20080902.203853.05555772.davem@davemloft.net> (sfid-20080903_053904_930482_7D8B056B)
-To: yi.zhu@intel.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	gregory.greenman@intel.com, mohamed.abbas@intel.com,
-	tomas.winkler@intel.com
-Subject: Re: [PATCH 8/9] iwlwifi: call apm stop on exit
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1220411930-15216-9-git-send-email-yi.zhu@intel.com>
-References: <1220411930-15216-7-git-send-email-yi.zhu@intel.com>
-	<1220411930-15216-8-git-send-email-yi.zhu@intel.com>
-	<1220411930-15216-9-git-send-email-yi.zhu@intel.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 18 Sep 2008 15:08:52 -0400
+Date: Thu, 18 Sep 2008 16:08:44 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Message-ID: <20080918190844.GO1583@khazad-dum.debian.net> (sfid-20080918_210855_443805_A91C56D4)
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181553.29140.IvDoorn@gmail.com> <200809181937.38257.mb@bu3sch.de> <200809181948.27507.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200809181948.27507.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
-Date: Wed,  3 Sep 2008 11:18:49 +0800
+On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> This depends on the hardware, for b43 the toggle() callback might not be needed,
+> but for rt2x00 it does (Since the key press will only raise a GPIO bit and does not
+> affect the radio in any way).
 
-> From: Gregory Greenman <gregory.greenman@intel.com>
-> 
-> This patch calls apm stop on exit and suspend. Without this patch
-> hardware consumes power even after driver is removed or suspended.
-> 
-> Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Hmm... please correct me if I misunderstood, but wouldn't that mean that
+rt2x00 does not have a hardware rfkill line at all, and that instead it has
+a GPIO pin that is used to communicate the desire to software-rfkill the
+transmitter...  and the driver needs to do everything.
 
-I'm happy to see those worms get fixed.
+If the above is wrong, don't bother with the rest of this email.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+If the above is correct, you'd not have HARD_BLOCKED at all in rt2x00, just
+SOFT_BLOCK.  Unless you somehow emulated HARD_BLOCKED.
+
+Without a real hardware rfkill line, the only way to have HARD_BLOCKED is
+through software emulation inside the driver, but that is only safe if you
+are absolutely SURE no firmware or other crap will poke at the hardware
+behind your back.
+
+And if you don't emulate HARD_BLOCKED, you have to handle the input device
+inside the rt2x00 driver, because the world outside (and that includes the
+rfkill core and everything else) sure as heck won't know if you SOFT_BLOCKED
+because of that GPIO pin, or because of something else.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
