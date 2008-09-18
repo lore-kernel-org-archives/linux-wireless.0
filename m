@@ -1,121 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:6067 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751823AbYIWRvI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 13:51:08 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so756131nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 10:51:05 -0700 (PDT)
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH -mm] rt2x00: fix Kconfig dependencies
-Date: Tue, 23 Sep 2008 19:51:00 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
-References: <48D82A43.7040604@oracle.com> <200809230907.46130.IvDoorn@gmail.com> <48D9188A.2090003@oracle.com>
-In-Reply-To: <48D9188A.2090003@oracle.com>
+Received: from bu3sch.de ([62.75.166.246]:54678 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754570AbYIRRxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 13:53:49 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Date: Thu, 18 Sep 2008 19:53:22 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181934.03026.mb@bu3sch.de> <200809181942.29122.IvDoorn@gmail.com>
+In-Reply-To: <200809181942.29122.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200809231951.00872.IvDoorn@gmail.com> (sfid-20080923_195113_515128_0DE222CD)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200809181953.22746.mb@bu3sch.de> (sfid-20080918_195352_679568_EC1D2EF3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 23 September 2008, Randy Dunlap wrote:
-> Ivo van Doorn wrote:
-> > On Tuesday 23 September 2008, Randy Dunlap wrote:
-> >> From: Randy Dunlap <randy.dunlap@oracle.com>
-> >>
-> >> If RT2X00=y but RFKILL=m, these build errors happen:
-> >>
-> >> (.text+0x7c7d6): undefined reference to `rfkill_free'
-> >> rt2x00rfkill.c:(.text+0x7c830): undefined reference to `rfkill_force_state'
-> >> (.text+0x7c88d): undefined reference to `rfkill_unregister'
-> >> (.text+0x7c8cd): undefined reference to `rfkill_register'
-> >> (.text+0x7ca1a): undefined reference to `rfkill_allocate'
-> >>
-> >> so restrict RT2X00's RFKILL config level to that of the main RFKILL option.
-> >> This is done by making the former a tristate instead of a bool
-> >> config option.
-> >>
-> >>
-> >> If RT2X00=y but LEDS_CLASS=m, these build errors happen:
-> >>
-> >> (.text+0x11859f): undefined reference to `led_classdev_resume'
-> >> (.text+0x1185b3): undefined reference to `led_classdev_resume'
-> >> (.text+0x1185c7): undefined reference to `led_classdev_resume'
-> >> (.text+0x1185e4): undefined reference to `led_classdev_suspend'
-> >> (.text+0x1185f8): undefined reference to `led_classdev_suspend'
-> >> (.text+0x11860c): undefined reference to `led_classdev_suspend'
-> >> rt2x00leds.c:(.text+0x118620): undefined reference to `led_classdev_unregister'
-> >> rt2x00leds.c:(.text+0x118695): undefined reference to `led_classdev_register'
-> >>
-> >> so restrict RT2X00's LEDS config level to that of the main LEDS_CLASS option.
-> >> This is done by making the former a tristate instead of a bool
-> >> config option.
+On Thursday 18 September 2008 19:42:28 Ivo van Doorn wrote:
+> On Thursday 18 September 2008, Michael Buesch wrote:
+> > On Thursday 18 September 2008 15:47:42 Larry Finger wrote:
+> > > Ivo van Doorn wrote:
+> > > 
+> > > > Is dev->phy.radio_on set when mac80211 has send an instruction
+> > > > to the driver to enable the radio (start() or config() callback)
+> > > > or does it represent the key state in the hardware?
+> > > > 
+> > > > If it is something coming from mac80211, then you do not want
+> > > > to send a SOFT_BLOCKED event since that will cause all other radios
+> > > > to be switched off simply because the b43 interface has not been
+> > > > enabled.
+> > > > 
+> > > > Off course when it represents the key state in the hardware then the
+> > > > code would be fine...
+> > > 
+> > > The state comes from mac80211 and is set in the config() callback.
+> > > 
+> > > What state should be sent at the point when the hardware block is
+> > > removed? It seems to me that forcing an UNBLOCKED state gives the
+> > > wrong result. Perhaps RFKILL does need to have 4 states so that an
+> > > RFKILL_STATE_HW_UNBLOCKED state can be transmitted.
 > > 
-> > Is that really going to work correctly?
-> > rfkill and leds support should be compiled into rt2x00lib.ko, which means that
-> > should become a module instead of the rfkill/leds support part only.
+> > If sw is unblocked, but hw is still blocked, you must not announce
+> > unblocked state to rfkill.
 > 
-> I wondered about that lib.ko.  Any working build fix is OK with me.
-> What do you suggest?
-
-Actually I was hoping that you answer to my question was going to be "yes it will be working correctly" ;)
-
-Would this work?
-
-config RT2X00_LIB_RFKILL
-	tristate
-  	depends on RFKILL
-  	default y
-  
-config RT2X00_LIB_LEDS
-	tristate
-  	depends on NEW_LEDS
-  	depends on LEDS_CLASS
-	default y
-
-config RT2X00_LIB
-	tristate
-	depends on RT2X00_LIB_RFKILL if (RT2X00_LIB_RFKILL != n)
-	depends on RT2X00_LIB_LEDS if (RT2X00_LIB_LEDS != n)
-
-It's ugly, and I can't test this right now, but perhaps you have an idea if this could do the trick?
-
-> Currently kconfig is converting an =m to =y because of tristate -> boolean.
-> This is not good.  It breaks things, as demonstrated here.
-> The Kconfig cannot stay like this AFAIK.
-
-Agreed.
-
-> > Ivo
-> > 
-> >> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-> >> ---
-> >>  drivers/net/wireless/rt2x00/Kconfig |    4 ++--
-> >>  1 file changed, 2 insertions(+), 2 deletions(-)
-> >>
-> >> --- mmotm-2008-0922-0136.orig/drivers/net/wireless/rt2x00/Kconfig
-> >> +++ mmotm-2008-0922-0136/drivers/net/wireless/rt2x00/Kconfig
-> >> @@ -38,13 +38,13 @@ config RT2X00_LIB_CRYPTO
-> >>  	depends on RT2X00_LIB
-> >>  
-> >>  config RT2X00_LIB_RFKILL
-> >> -	boolean
-> >> +	tristate
-> >>  	depends on RT2X00_LIB
-> >>  	depends on RFKILL
-> >>  	default y
-> >>  
-> >>  config RT2X00_LIB_LEDS
-> >> -	boolean
-> >> +	tristate
-> >>  	depends on RT2X00_LIB
-> >>  	depends on NEW_LEDS
-> >>  	depends on LEDS_CLASS
-> >>
-> >> --
+> Well from my perspective:
+> Note that 'sw' is the RADIO state as requested by mac80211 and
+> 'hw' is the RFKILL state as indicated by the hardware
 > 
+> radio: block, rfkill: block => BLOCK
+> radio: block, rfkill: unblock => UNBLOCK
 
+If the radio is physically blocked by the hardware rfkill switch,
+why on earth would we want to announce unblocked state?
+Or did I get your table wrong?
 
+(Still note that software and hardware states are _independent_ in b43.
+Think of it as two independent bits that can each turn the radio off, where
+the hardware state bit is readonly and is triggered by the hw-button).
+
+-- 
+Greetings Michael.
