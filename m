@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:38901 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975AbYIPHJ6 (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:44850 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756131AbYIRSk4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 03:09:58 -0400
-To: "Helmut Schaa" <hschaa@suse.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: More thoughts about roaming ...
-References: <200809151416.07552.hschaa@suse.de>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 16 Sep 2008 10:09:47 +0300
-In-Reply-To: <200809151416.07552.hschaa@suse.de> (ext Helmut Schaa's message of "Mon\, 15 Sep 2008 14\:16\:06 +0200")
-Message-ID: <87zlm8d0sk.fsf@nokia.com> (sfid-20080916_091003_168667_AD475544)
+	Thu, 18 Sep 2008 14:40:56 -0400
+Received: by gxk9 with SMTP id 9so31666561gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 11:40:55 -0700 (PDT)
+Message-ID: <43e72e890809181140w4a8383a8m894ad3eb063a9325@mail.gmail.com> (sfid-20080918_204100_449880_B8E116E6)
+Date: Thu, 18 Sep 2008 11:40:55 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Gordon, Charles" <Charles.Gordon@digi.com>
+Subject: Re: What is the state of 802.11h support?
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <8DCC153EAFE67A4B990A840E829F704B718874D96D@mtk-sms-exch01.digi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+References: <AckZmy0eHmfRhhimQY2qv8c0gfzxmQ==>
+	 <8DCC153EAFE67A4B990A840E829F704B718874D96D@mtk-sms-exch01.digi.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Helmut Schaa" <hschaa@suse.de> writes:
-
-> Hi,
-
-Hello,
-
-very good that you have been working on this. Like we discussed
-earlier, this in an area where we need to improve mac80211.
-
-Due to travelling (ad: Maemo Summit at Berlin) I don't have time to
-test your patches this week, but hopefully next week. Few comments
-first:
-
-> * Enhance mac80211 to check the signal quality frequently (or any other
->   indicator like beacon misses) and decide when the signal quality is too low.
->   Indicate that to the user space.
+On Thu, Sep 18, 2008 at 7:31 AM, Gordon, Charles
+<Charles.Gordon@digi.com> wrote:
+> Can someone tell me how much of 802.11h is supported by Linux?  What is the plan for completing it enough so that it implements a client which complies with the specification?
 >
-> * wpa_supplicant (or any other user space application) gets notified about
->   the low signal quality and triggers a scan in order to find a better AP.
->   wpa_supplicant already chooses the AP with the best signal strength.
+> What needs to be implemented in the wireless NIC driver to support 802.11h?  My company is working on a wireless NIC driver for Linux.
 
-I think we should have two signals with different states. One for
-informing that low signal condition has started and another one for
-telling that low signal condition has ended (ie. the device has good
-signal to the AP).
+We have no 11h support in mac80211. Not too sure what part would be
+required in drivers. First step would be to disable using all 11h
+channels for now as we don't have support for it. In wireless-testing
+you can check for this if the channel flag has IEEE80211_CHAN_RADAR.
+Some initial 11h patches were posted a while back for RFC, you can
+search for those as well. We will soon look into this as well if its
+not yet completed.
 
-In the low signal state wpa_supplicant would then periodically scan
-for better APs.
-
-> The reason behind not triggering the scan directly from mac80211 is
-> that the supplicant (or any other user space application) might know
-> more about the current environment and could for example trigger a
-> scan restricted to specific channels (in the future) which should
-> speed up the scan. Hence let the user space decide what to do with a
-> low signal.
-
-Exactly.
-
-> However the detection of when the signal quality is low should still
-> be done in mac80211 or the driver as some cards seem to have the
-> needed functionality implemented in firmware (e.g. missed beacon
-> interrupt).
-
-I agree.
-
--- 
-Kalle Valo
+  Luis
