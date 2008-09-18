@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39743 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbYIPUaK (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:46889 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753599AbYIRU2u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 16:30:10 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1KfhBX-00038s-Jd
-	for linux-wireless@vger.kernel.org; Tue, 16 Sep 2008 22:30:08 +0200
-Subject: iw packaging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hHnD0lyt0wn79JOgNbHI"
-Date: Tue, 16 Sep 2008 22:29:22 +0200
-Message-Id: <1221596962.9262.12.camel@johannes.berg> (sfid-20080916_223014_839497_9B1B1EB5)
-Mime-Version: 1.0
+	Thu, 18 Sep 2008 16:28:50 -0400
+Date: Thu, 18 Sep 2008 17:28:45 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Message-ID: <20080918202845.GV1583@khazad-dum.debian.net> (sfid-20080918_222854_141155_F7C8C231)
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181948.27507.IvDoorn@gmail.com> <20080918190844.GO1583@khazad-dum.debian.net> <200809182217.41186.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200809182217.41186.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> > On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> > > This depends on the hardware, for b43 the toggle() callback might not be needed,
+> > > but for rt2x00 it does (Since the key press will only raise a GPIO bit and does not
+> > > affect the radio in any way).
+> > 
+> > Hmm... please correct me if I misunderstood, but wouldn't that mean that
+> > rt2x00 does not have a hardware rfkill line at all, and that instead it has
+> > a GPIO pin that is used to communicate the desire to software-rfkill the
+> > transmitter...  and the driver needs to do everything.
+> 
+> That is correct.
 
---=-hHnD0lyt0wn79JOgNbHI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, thanks <deity> I noticed this post :-)  That will make it MUCH easier
+for me to sync with you and actually grok what you are saying.
 
-Hi,
+> > And if you don't emulate HARD_BLOCKED, you have to handle the input device
+> > inside the rt2x00 driver, because the world outside (and that includes the
+> > rfkill core and everything else) sure as heck won't know if you SOFT_BLOCKED
+> > because of that GPIO pin, or because of something else.
+> 
+> Currently rt2x00 polls the GPIO pin every second (no interrupts are raised when the
+> GPIO pin is toggled) and uses rfkill_force_state(SOFT_BLOCK/UNBLOCK) to rfkill
 
-I've just tagged iw version 0.9 (and 0.9.1 after a small build fix)
-because I think the tool is now actually usable in a limited way, unlike
-before where it would never properly report errors etc.
+I just sent a post about it.  If you get a bit that tells you HW RFKILL
+ACTIVE/INACTIVE (as opposed to "please toggle it"), you don't need to care
+about whatever else is reading that thing.  You can always register an input
+device, and issue EV_SW SW_WLAN or EV_SW SW_RFKILL_ALL (I'd sugest making it
+configurable).  But do NOT issue EV_KEY, THAT one breaks if anything else is
+also listening to that input signal.
 
-Anyone want to pick it up for the various distros?
-
-johannes
-
---=-hHnD0lyt0wn79JOgNbHI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0BceAAoJEKVg1VMiehFY/agQAKe2jwWP6R59YkksXYJtlgKL
-YONQ+Xg1cjGJ9S6/PqQ58Ovp1RRKhZ6ESadbsILenxZUkvWS3RTlrpDonxiONvJ5
-odP8sLeZNipg3vGva1Wpb0D9fEEBgjN2SD6ocf7KZ5GteJ5cH/wmevZixilXDiCI
-qovYRZvsuvkQo/KdpiGVbB8xaJezpH2qPqSYEAzzwP3Lv0I7gw8il54Zo7vDOI27
-zwqz/e39TmWXj2fnL1Mbyaj9bjQHuN4WwX82XU+uSG3nwdv77MlyUiGO7DikxmoU
-EZEn0ByMsSRhEyEVkbUUjekkt21IwUv/rY9QYePd3F7dxNDqiFa13bMbxJxs6nUN
-6LM6HswW0icg1qg/yK4esppYgqLZtupu/HHLkkEWQ2BgG4MZMyiOCmQimo5tIwL/
-ci1ADRcimB4p2yyd1GojXbHIXZimHCq4rsMJGxFoL/geoQfSjtIEbg9yHnTJj9OY
-j/TbbkyWszoqxVmAaRz+8YtcfZOHX10zaTdwpEc/v43ByMNpX5JnHWoBN/XnBcVL
-bjgbX9aJq2hVsYjL+2id44snomPYaIAymPOXe3DMntGEj4tpa5hUHZXhAAvmZ6YJ
-eJlyY4JbB0wUrTRZbm1HYGlcS/RjtTDffNbCcKl80v5ME61XAntAN40gVQF6pCNW
-vy7/wZLeovMCw5hsEhAz
-=N6fI
------END PGP SIGNATURE-----
-
---=-hHnD0lyt0wn79JOgNbHI--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
