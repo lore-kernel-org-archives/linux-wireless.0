@@ -1,45 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:43604 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751567AbYIBMaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 08:30:06 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1KaV1G-0005mc-Md
-	for linux-wireless@vger.kernel.org; Tue, 02 Sep 2008 12:30:02 +0000
-Received: from ni.mikronika.com.pl ([213.17.224.83])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 12:30:02 +0000
-Received: from karol by ni.mikronika.com.pl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 12:30:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Karol Szkudlarek <karol@mikronika.com.pl>
-Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k on ubuntu hardy
-Date: Tue, 2 Sep 2008 12:27:20 +0000 (UTC)
-Message-ID: <loom.20080902T122358-652@post.gmane.org> (sfid-20080902_143011_503119_9CF33CA6)
-References: <48BC47C5.2070807@mikronika.com.pl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from nf-out-0910.google.com ([64.233.182.187]:37589 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754929AbYIRRka (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 13:40:30 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so6560nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 10:40:28 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] rfkill: clarify usage of rfkill_force_state() and rfkill->get_state()
+Date: Thu, 18 Sep 2008 19:40:24 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <20080918145236.GJ1583@khazad-dum.debian.net> <200809181724.03723.IvDoorn@gmail.com> <20080918164339.GM1583@khazad-dum.debian.net>
+In-Reply-To: <20080918164339.GM1583@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809181940.24727.IvDoorn@gmail.com> (sfid-20080918_194034_623794_99D71BBC)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Karol Szkudlarek <karol@...> writes:
-
+On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> > On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> > > rfkill_force_state() is used to update the rfkill core's idea of what is
+> > > really happening RIGHT NOW to the transmitter hardware in a PUSH model.
+> > > 
+> > > rfkill->get_state() does the same, in a PULL model.
+> > > 
+> > > Neither of them change the real hardware radio state through a call to
+> > > rfkill->toggle_radio() or anything of the sort, so they must deal with the
+> > > real, current state of the hardware.
+> > > 
+> > > Change some documentation to make that more clear (I hope).
+> > > 
+> > > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> > > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> > 
+> > See my other mail I just send out.
 > 
-> Hello!
+> I did, and just replied to it.
 > 
-> I'm using Ubuntu 8.04 with compiled 1.2.26k linux wireless driver for 
-> iwl3945 network card on my hp6710b laptop.
-> Script during suspend trying to remove the iwl3945 module and I receive 
-> kernel crash.
-> This is repeatable. I attached screenshot of kernel stack. Has somebody 
-> of iwl3945 developers can look on it?
+> But only now do I think I realised what you meant:  That even if the driver
+> tries to keep set txpower off separate from rfkill, if it uses the hardware
+> soft-rfkill bit to implement both, it cannot use that to feed information to
+> rfkill_force_state() directly.
 > 
-> Greets and regards,
+> Argh.
+
+Indeed, you need to differentiate between RFKILL and RADIO states.
+
+> > But I don't quite agree on this change of rfkill event interpretation.
 > 
+> Well, there is no intended change in interpretation, but I don't know how to
+> word it in a way that means "the real current hardware state as far as
+> rfkill is concerned".
 
-Beacuse my email attachement is not visible on the mailing list the screenshot
-is also available here http://ksi.mikronika.com.pl/~karol/P1180965_s.JPG
+Well my interpretation is that rfkill events and thus rfkill_force_state() calls
+should be done for RFKILL state changes only. And RADIO state should be
+ignored since they don't matter for rfkill.
 
+> Because suppose it is a driver doing txpower off AND software rfkill using
+> the *same* hardware bit (a sigle software rfkill bit).
+>
+> Now it must do something like this in pseudo-code:
+> 
+> 	1. if (the bit is disabled (i.e. SW rfkill is NOT ACTIVE)) {
+> 		rfkill-SW-status = disabled;
+> 	   }  else if (the bit is enabled (i.e. SW rfkill is ACTIVE)) {
+> 		if (tx power off is NOT ACTIVE)
+> 			rfkill-SW-status = enabled;
+> 		else
+> 			rfkill-SW-status = whatever the user asked
+> 	   }
+> 
+> THEN, it should use rfkill-sw-status, along with the hw rfkill line status,
+> to synthesize the state it must pass to rfkill_force_status().
+> 
+> ICK.  Of course, if the driver has another way to implement txpower off that
+> does not clash with sw rfkill, the above is unneeded.
+> 
+> How would you put that into words for the rfkill documentation?
 
+The driver is required to keep track of the userspace configuration settings,
+when rfkill sends BLOCK to driver it should disable the radio, when rfkill
+send UNBLOCK to the driver it should restore to the userspace configuration
+settings (which can either be an enabled or disabled radio).
+
+Ivo
