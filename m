@@ -1,122 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:63016 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752986AbYIWWej (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:47197 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753446AbYIRJAj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 18:34:39 -0400
-Date: Tue, 23 Sep 2008 15:30:43 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
-Subject: Re: [PATCH -mm] rt2x00: fix Kconfig dependencies
-Message-Id: <20080923153043.7aa806b8.randy.dunlap@oracle.com> (sfid-20080924_003444_646848_3AB06C9F)
-In-Reply-To: <200809240009.32167.IvDoorn@gmail.com>
-References: <48D82A43.7040604@oracle.com>
-	<20080923140309.ecf8d030.randy.dunlap@oracle.com>
-	<48D96647.2050509@lwfinger.net>
-	<200809240009.32167.IvDoorn@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 18 Sep 2008 05:00:39 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so1596540eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 02:00:38 -0700 (PDT)
+Message-ID: <f488382f0809180200mebef85cxa7051b71e44b673d@mail.gmail.com> (sfid-20080918_110043_672825_30529AE5)
+Date: Thu, 18 Sep 2008 02:00:37 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k constantly drops network connection
+Cc: "Mats Johannesson" <spamcan1@abrasax.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890809180146q2a4062b8hf4e0911d3782c943@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <e14212e0809170305v46b0c512i63c1a2874e730274@mail.gmail.com>
+	 <20080917191003.GC6198@tesla> <20080918044618.0cd64cd9@loke.fish.not>
+	 <20080918103628.5a6ab12c@loke.fish.not>
+	 <43e72e890809180146q2a4062b8hf4e0911d3782c943@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 24 Sep 2008 00:09:31 +0200 Ivo van Doorn wrote:
+On Thu, Sep 18, 2008 at 1:46 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, Sep 18, 2008 at 1:36 AM, Mats Johannesson <spamcan1@abrasax.se> wrote:
+>> Anyhow, writing now to share the good news that the patch you refer to:
+>> [PATCH] ath9k: connectivity is lost after Group rekeying is done
+>> (Click on [Download message RAW] at
+>> http://marc.info/?l=linux-wireless&m=122163541519736&w=2 to get a clean
+>> copy) completely fixes the regression between -rc5 and -rc6 I reported
+>> in:
+>>
+>> [ath9k-devel] 2.6.27-rc6 (and forwartd to -rc6-git3) dies silently.
+>> https://lists.ath9k.org/pipermail/ath9k-devel/2008-September/000263.html
+>>
+>> Patching -rc6-git3 I've now run 4 hours without a connection drop.
+>> Strangely enough it also allowed me to again make the connection
+>> 'sticky' over a reboot (Wicd Manager).
+>>
+>> This patch is a must have for 2.6.27 no matter what merging policy is
+>> in effect.
+>
+> John please consider merging this for 27 as well as it fixes issues
+> reported due to lost of connectivity.
+>
+>  Luis
 
-> On Tuesday 23 September 2008, Larry Finger wrote:
-> > Randy Dunlap wrote:
-> > > On Tue, 23 Sep 2008 19:51:00 +0200 Ivo van Doorn wrote:
-> > > 
-> > >> On Tuesday 23 September 2008, Randy Dunlap wrote:
-> > >>> Ivo van Doorn wrote:
-> > >>>> On Tuesday 23 September 2008, Randy Dunlap wrote:
-> > >>>>> From: Randy Dunlap <randy.dunlap@oracle.com>
-> > >>>>>
-> > >>>>> If RT2X00=y but RFKILL=m, these build errors happen:
-> > >>>>>
-> > >>>>> (.text+0x7c7d6): undefined reference to `rfkill_free'
-> > >>>>> rt2x00rfkill.c:(.text+0x7c830): undefined reference to `rfkill_force_state'
-> > >>>>> (.text+0x7c88d): undefined reference to `rfkill_unregister'
-> > >>>>> (.text+0x7c8cd): undefined reference to `rfkill_register'
-> > >>>>> (.text+0x7ca1a): undefined reference to `rfkill_allocate'
-> > >>>>>
-> > >>>>> so restrict RT2X00's RFKILL config level to that of the main RFKILL option.
-> > >>>>> This is done by making the former a tristate instead of a bool
-> > >>>>> config option.
-> > >>>>>
-> > >>>>>
-> > >>>>> If RT2X00=y but LEDS_CLASS=m, these build errors happen:
-> > >>>>>
-> > >>>>> (.text+0x11859f): undefined reference to `led_classdev_resume'
-> > >>>>> (.text+0x1185b3): undefined reference to `led_classdev_resume'
-> > >>>>> (.text+0x1185c7): undefined reference to `led_classdev_resume'
-> > >>>>> (.text+0x1185e4): undefined reference to `led_classdev_suspend'
-> > >>>>> (.text+0x1185f8): undefined reference to `led_classdev_suspend'
-> > >>>>> (.text+0x11860c): undefined reference to `led_classdev_suspend'
-> > >>>>> rt2x00leds.c:(.text+0x118620): undefined reference to `led_classdev_unregister'
-> > >>>>> rt2x00leds.c:(.text+0x118695): undefined reference to `led_classdev_register'
-> > >>>>>
-> > >>>>> so restrict RT2X00's LEDS config level to that of the main LEDS_CLASS option.
-> > >>>>> This is done by making the former a tristate instead of a bool
-> > >>>>> config option.
-> > >>>> Is that really going to work correctly?
-> > >>>> rfkill and leds support should be compiled into rt2x00lib.ko, which means that
-> > >>>> should become a module instead of the rfkill/leds support part only.
-> > >>> I wondered about that lib.ko.  Any working build fix is OK with me.
-> > >>> What do you suggest?
-> > >> Actually I was hoping that you answer to my question was going to be "yes it will be working correctly" ;)
-> > >>
-> > >> Would this work?
-> > >>
-> > >> config RT2X00_LIB_RFKILL
-> > >> 	tristate
-> > >>   	depends on RFKILL
-> > >>   	default y
-> > >>   
-> > >> config RT2X00_LIB_LEDS
-> > >> 	tristate
-> > >>   	depends on NEW_LEDS
-> > >>   	depends on LEDS_CLASS
-> > >> 	default y
-> > >>
-> > >> config RT2X00_LIB
-> > >> 	tristate
-> > >> 	depends on RT2X00_LIB_RFKILL if (RT2X00_LIB_RFKILL != n)
-> > >> 	depends on RT2X00_LIB_LEDS if (RT2X00_LIB_LEDS != n)
-> > >>
-> > >> It's ugly, and I can't test this right now, but perhaps you have an idea if this could do the trick?
-> > > 
-> > > I tried it:
-> > > 
-> > > drivers/net/wireless/rt2x00/Kconfig:22: invalid option
-> > > drivers/net/wireless/rt2x00/Kconfig:23: invalid option
-> > > 
-> > > "depends ... if ..." is invalid.  Would be nice to have that.
-> > > Maybe there is some other way to express that...
-> > 
-> > Wouldn't this do it?
-> > 
-> > depends on (RT2X00_LIB_RFKILL == m) || (RT2X00_LIB_RFKILL == y)
-> > 
-> > In b43, what I think is a similar configuration statement is written as
-> > 
-> > depends on B43 && (RFKILL = y || RFKILL = B43) && RFKILL_INPUT &&
-> > (INPUT_POLLDEV = y || INPUT_POLLDEV = B43)
-> 
-> Wouldn't that completely disable the config option when the rfkill is build
-> as module and b43 buildin? I think what you want in that scenario would be
+Dang! I just developed a pretty much identical patch locally to solve
+my wireless connection loss issues and was about 20 minutes into a 5
+hour test to make certain it worked correctly. I wish I'd been faster
+at getting mine tested and out the door. Oh well, at least -somebody-
+got a fix up.
 
-Yes, it does.
+Indeed, please merge this to 2.6.27 ASAP. Having a problem like this
+hit the 2.6.27 final release would -really- suck.
 
-> building b43 as module instead.
-> On the other hand, such Kconfig expression is apparently not possible,
-> which means your approach would be the closest match.
-
-Ivo, please explain what rt2x00 module(s) you want to be built.  In English
-if possible, not in Kconfig language...
-
-Thanks.
-
----
-~Randy
+- Steven
