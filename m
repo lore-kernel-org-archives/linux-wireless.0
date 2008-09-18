@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.184]:46301 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758116AbYILUpS (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:27624 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754114AbYIRSCp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 16:45:18 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so775365rnd.17
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2008 13:45:16 -0700 (PDT)
-Message-ID: <43e72e890809121345o57fe769bhcb90c398d7672682@mail.gmail.com> (sfid-20080912_224525_511105_9220486A)
-Date: Fri, 12 Sep 2008 13:45:16 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Davide Pesavento" <davidepesa@gmail.com>
-Subject: Re: ath9k: unable to reset hardware
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <2da21fe50809121338s26106a07iddaa54faf3c68ada@mail.gmail.com>
+	Thu, 18 Sep 2008 14:02:45 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so18985fkq.5
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 11:02:42 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Date: Thu, 18 Sep 2008 20:02:39 +0200
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181942.29122.IvDoorn@gmail.com> <1221760169.9262.91.camel@johannes.berg>
+In-Reply-To: <1221760169.9262.91.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2da21fe50809121338s26106a07iddaa54faf3c68ada@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200809182002.39497.IvDoorn@gmail.com> (sfid-20080918_200249_593955_7051D9A6)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 12, 2008 at 1:38 PM, Davide Pesavento <davidepesa@gmail.com> wrote:
-> Hi!
->
-> [ 4342.364205] ath_open: unable to reset hardware; hal status
-> 4294967277 (freq 2437 flags 0x700e2)
-> [ 4342.364957] ath9k_start: Unable to complete ath_open
-> [ 4372.412478] ath_open: unable to reset hardware; hal status
-> 4294967277 (freq 2437 flags 0x700e2)
-> [ 4372.420685] ath9k_start: Unable to complete ath_open
-> [ 4373.101414] ath_open: unable to reset hardware; hal status
-> 4294967277 (freq 2437 flags 0x700e2)
-> [ 4373.102549] ath9k_start: Unable to complete ath_open
->
-> I'm using 2.6.27-rc5-wl-16606-g643e533 on a MacBookPro2,2 (AR5418).
-> rmmod ath9k && modprobe ath9k is enough to fix the issue, but
-> connectivity becomes a lot more unstable after that.
+On Thursday 18 September 2008, Johannes Berg wrote:
+> On Thu, 2008-09-18 at 19:42 +0200, Ivo van Doorn wrote:
+> 
+> > Well from my perspective:
+> > Note that 'sw' is the RADIO state as requested by mac80211 and
+> > 'hw' is the RFKILL state as indicated by the hardware
+> > 
+> > radio: block, rfkill: block => BLOCK
+> > radio: block, rfkill: unblock => UNBLOCK
+> > radio: unblock, rfkill: block => BLOCK
+> > radio: unblock, rfkill: unblock => UNBLOCK
+> 
+> Can't that crap just live in rfkill?
 
-Thanks for the report, we will look into this.
+Rfkill is intended to listen for RFKILL state changes and report
+those to userspace. _Optionally_ it can handle it internally through
+rfkill-input which will call toggle() to change the radio state.
 
-  Luis
+It is not intended as the library through which all radio state changes
+should go through. Because then we must change mac80211 to not
+send the enable_radio command to the drivers, but should directly send
+it to rfkill.
+
+> rfkill_announce_softstate(OPEN/BLOCKED)
+> rfkill_announce_hardstate(OPEN/BLOCKED)
+> 
+> and all the other junk happens there. And make sure this can be called
+> from interrupts.
+
+I think that limitation came from the notifier_block functions, but
+Henrique knows more about those details.
+
+Ivo
