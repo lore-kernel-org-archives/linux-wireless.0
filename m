@@ -1,210 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpo-eml03.kpnxchange.com ([213.75.38.152]:13412 "EHLO
-	cpsmtpo-eml03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751968AbYI1NQZ (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:36929 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753892AbYIRPYK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2008 09:16:25 -0400
-Message-ID: <48DF83A4.1050901@kpnplanet.nl> (sfid-20080928_151629_831574_B93B429B)
-Date: Sun, 28 Sep 2008 15:16:20 +0200
-From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+	Thu, 18 Sep 2008 11:24:10 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so1657440eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 08:24:09 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] rfkill: clarify usage of rfkill_force_state() and rfkill->get_state()
+Date: Thu, 18 Sep 2008 17:24:03 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <20080918145236.GJ1583@khazad-dum.debian.net> <1221751166-9927-1-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1221751166-9927-1-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: Randy Dunlap <randy.dunlap@oracle.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
-Subject: Re: [PATCH -mm] rt2x00: fix Kconfig dependencies
-References: <48D82A43.7040604@oracle.com> <200809240045.28976.IvDoorn@gmail.com> <48DF4863.9070806@kpnplanet.nl> <200809281124.07434.IvDoorn@gmail.com>
-In-Reply-To: <200809281124.07434.IvDoorn@gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------020506080803030205050708"
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200809181724.03723.IvDoorn@gmail.com> (sfid-20080918_172415_657434_96B02FF3)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020506080803030205050708
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> rfkill_force_state() is used to update the rfkill core's idea of what is
+> really happening RIGHT NOW to the transmitter hardware in a PUSH model.
+> 
+> rfkill->get_state() does the same, in a PULL model.
+> 
+> Neither of them change the real hardware radio state through a call to
+> rfkill->toggle_radio() or anything of the sort, so they must deal with the
+> real, current state of the hardware.
+> 
+> Change some documentation to make that more clear (I hope).
+> 
+> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
 
-Ivo van Doorn wrote:
-> On Sunday 28 September 2008, Gertjan van Wingerde wrote:
->    
->> Ivo,
->>
->> Ivo van Doorn wrote:
->>      
->>>> Ivo, please explain what rt2x00 module(s) you want to be built. In
->>>> English
->>>> if possible, not in Kconfig language...
->>>>
->>>>          
->>> There are 3 kind of rt2x00 modules:
->>> 	rt2x00lib
->>> 	rt2x00pci/usb
->>> 	rt2x00 driver (rt2400pci, rt2500pci, rt61pci, rt2500usb, rt73usb)
->>>
->>> When the user selects any of the rt2x00 drivers, the rt2x00pci/usb and rt2x00lib
->>> are selected. For rt2x00lib there are some additional configuration options like
->>> RT2X00_LIB_RFKILL and RT2X00_LIB_LEDS which will build into rt2x00lib.
->>>
->>> This means that when rt2400pci is selected as module, rt2x00pci and rt2x00lib
->>> must be built as modules as well and when rt2400pci is selected as buildin
->>> rt2x00pci and rt2x00lib must be buildin as well.
->>>
->>> But with the optional rt2x00lib configuration options the breakage you reported
->>> is possible. So we either need:
->>> 	1) Force rt2x00lib / driver to be compiled as module when RFKILL/LEDS were
->>> 	    compiled as module
->>> 	2) Disable config option when invalid config combination is found
->>>
->>> Personally I would favor 1), because 2) could lead to confusion to users
->>> who think they selected everything they needed to enable support for it in
->>> rt2x00.
->>>
->>>        
->> Find attached a patch that implements option 2, along with adding a
->> warning to the user when rfkill support in rt2x00 is disabled due to the
->> invalid config combination. I've looked at implementing option 1, but
->> couldn't find a way to do it without disabling the entire rt2x00 module
->> when rfkill wasn't available.
->>
->> I guess we can live with this option for now, until we have figured out
->> how to do option 1.
->>      
->
-> Sounds good, but please change RT2X00 in RT2X00_LIB
->
-> 	default y if (RT2X00=y&&  RFKILL=y) || (RT2X00=m&&  RFKILL!=n)
->
-> Could you also do a similar thing for the LED handling?
-> That way we can fix the entire thing with a single patch. :)
+See my other mail I just send out.
+But I don't quite agree on this change of rfkill event interpretation.
 
-Here is an updated patch. This required some more surgery to the Kconfig 
-file, as symbols had to be moved in the file.
-This patch fixes the build issues for both rfkill and leds support.
+Ivo
 
----
-Gertjan.
-
---------------020506080803030205050708
-Content-Type: text/plain;
- name="0001-rt2x00-Fix-build-errors-due-to-modularized-rfkill-o.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename*0="0001-rt2x00-Fix-build-errors-due-to-modularized-rfkill-o.pat";
- filename*1="ch"
-
->From 0638bdd1e7b578c9fb0a91c768c105a369ff6ac1 Mon Sep 17 00:00:00 2001
-From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-Date: Sun, 28 Sep 2008 15:11:38 +0200
-Subject: [PATCH] rt2x00: Fix build errors due to modularized rfkill or leds and built-in rt2x00.
-
-Fix by disabling rt2x00 rfkill support when rt2x00 is built-in and rfkill has been modularized, and
-a similar scheme for the relationship between leds_class and rt2x00..
-Also, give a warning to the end-user when rfkill-/leds-support is disabled this way, so that the
-end-user has at least some clues on what is going on.
-
-Proper fixing required some general updates of the Kconfig-structure for the rt2x00 driver, whereby
-internal configuration symbols had to be moved to after the user-visible configuration symbols.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
----
- drivers/net/wireless/rt2x00/Kconfig |   69 +++++++++++++++++------------------
- 1 files changed, 34 insertions(+), 35 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index b686dc4..f839ce0 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -1,5 +1,5 @@
--config RT2X00
--	tristate "Ralink driver support"
-+menuconfig RT2X00
-+	bool "Ralink driver support"
- 	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
- 	---help---
- 	  This will enable the experimental support for the Ralink drivers,
-@@ -17,39 +17,6 @@ config RT2X00
- 
- if RT2X00
- 
--config RT2X00_LIB
--	tristate
--
--config RT2X00_LIB_PCI
--	tristate
--	select RT2X00_LIB
--
--config RT2X00_LIB_USB
--	tristate
--	select RT2X00_LIB
--
--config RT2X00_LIB_FIRMWARE
--	boolean
--	depends on RT2X00_LIB
--	select FW_LOADER
--
--config RT2X00_LIB_CRYPTO
--	boolean
--	depends on RT2X00_LIB
--
--config RT2X00_LIB_RFKILL
--	boolean
--	depends on RT2X00_LIB
--	depends on RFKILL
--	default y
--
--config RT2X00_LIB_LEDS
--	boolean
--	depends on RT2X00_LIB
--	depends on NEW_LEDS
--	depends on LEDS_CLASS
--	default y
--
- config RT2400PCI
- 	tristate "Ralink rt2400 (PCI/PCMCIA) support"
- 	depends on PCI
-@@ -109,6 +76,38 @@ config RT73USB
- 
- 	  When compiled as a module, this driver will be called "rt73usb.ko".
- 
-+config RT2X00_LIB_PCI
-+	tristate
-+	select RT2X00_LIB
-+
-+config RT2X00_LIB_USB
-+	tristate
-+	select RT2X00_LIB
-+
-+config RT2X00_LIB
-+	tristate
-+
-+config RT2X00_LIB_FIRMWARE
-+	boolean
-+	select FW_LOADER
-+
-+config RT2X00_LIB_CRYPTO
-+	boolean
-+
-+config RT2X00_LIB_RFKILL
-+	boolean
-+	default y if (RT2X00_LIB=y && RFKILL=y) || (RT2X00_LIB=m && RFKILL!=n)
-+
-+comment "rt2x00 rfkill support disabled due to modularized RFKILL and built-in rt2x00"
-+	depends on RT2X00_LIB=y && RFKILL=m
-+
-+config RT2X00_LIB_LEDS
-+	boolean
-+	default y if (RT2X00_LIB=y && LEDS_CLASS=y) || (RT2X00_LIB=m && LEDS_CLASS!=n)
-+
-+comment "rt2x00 leds support disabled due to modularized LEDS_CLASS and built-in rt2x00"
-+	depends on RT2X00_LIB=y && LEDS_CLASS=m
-+
- config RT2X00_LIB_DEBUGFS
- 	bool "Ralink debugfs support"
- 	depends on RT2X00_LIB && MAC80211_DEBUGFS
--- 
-1.5.6.5
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>  Documentation/rfkill.txt |   10 ++++++++++
+>  include/linux/rfkill.h   |    3 +++
+>  net/rfkill/rfkill.c      |    3 +++
+>  3 files changed, 16 insertions(+), 0 deletions(-)
+> 
+> diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+> index b65f079..0143f1e 100644
+> --- a/Documentation/rfkill.txt
+> +++ b/Documentation/rfkill.txt
+> @@ -461,6 +461,16 @@ mandatory when the device has a hardware rfkill line, or when something else
+>  like the firmware could cause its state to be changed without going through the
+>  rfkill class.
+>  
+> +**** ATTENTION ****
+> +Both the state returned by the rfkill->get_state() hook, and the state
+> +passed to rfkill_force_state() MUST BE THE REAL, CURRENT STATE OF THE
+> +HARDWARE TRANSMITTER.  Never use for these functions the "desired" state,
+> +"user requested" state, or anything of the sort.
+> +
+> +Also, be warned that rfkill_force_state() cannot be called from atomic context,
+> +so interrupt handlers will have to make use of a workqueue to do it.
+> +**** ATTENTION ****
+> +
+>  Some hardware provides events when its status changes.  In these cases, it is
+>  best for the driver to not provide a get_state hook, and instead register the
+>  rfkill class *already* with the correct status, and keep it updated using
+> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> index 4cd64b0..92b9c72 100644
+> --- a/include/linux/rfkill.h
+> +++ b/include/linux/rfkill.h
+> @@ -80,6 +80,9 @@ enum rfkill_state {
+>   *      may be called from atomic context, should return 0 on success.
+>   *      Either this handler OR judicious use of rfkill_force_state() is
+>   *      MANDATORY for any driver capable of RFKILL_STATE_HARD_BLOCKED.
+> + *      THIS HOOK MUST RETURN THE CURRENT, REAL STATE OF THE HARDWARE
+> + *      TRANSMITTER, and not the "desired state", "user requested state"
+> + *      or anything of the sort.
+>   * @led_trigger: A LED trigger for this button's LED.
+>   * @dev: Device structure integrating the switch into device tree.
+>   * @node: Used to place switch into list of all switches known to the
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index f949a48..64a53f1 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -333,6 +333,9 @@ EXPORT_SYMBOL_GPL(rfkill_restore_states);
+>   * a notification by the firmware/hardware of the current *real*
+>   * state of the radio rfkill switch.
+>   *
+> + * The state passed to this function MUST MATCH THE CURRENT,
+> + * REAL HARDWARE STATE OF THE TRANSMITTER.
+> + *
+>   * Devices which are subject to external changes on their rfkill
+>   * state (such as those caused by a hardware rfkill line) MUST
+>   * have their driver arrange to call rfkill_force_state() as soon
 
 
---------------020506080803030205050708--
