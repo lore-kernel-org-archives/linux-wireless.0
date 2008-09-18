@@ -1,33 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39927 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753460AbYIOREM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 13:04:12 -0400
-Date: Mon, 15 Sep 2008 10:04:00 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: sHittmeyer <hittmeyer@corscience.de>
-CC: "linux-wireless@vger.kernel.org >> linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-Subject: Re: couldn't configure AR5416
-Message-ID: <20080915170400.GE22572@tesla> (sfid-20080915_190416_258515_652CBE9F)
-References: <48CE1DA2.2030406@corscience.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <48CE1DA2.2030406@corscience.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:57659 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515AbYIRKY6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 06:24:58 -0400
+Subject: [PATCH] mac80211: fix mesh action frame handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Li YanBo <dreamfly281@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 18 Sep 2008 12:24:20 +0200
+Message-Id: <1221733460.9262.68.camel@johannes.berg> (sfid-20080918_122517_754795_385EDD0A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 15, 2008 at 01:32:34AM -0700, sHittmeyer wrote:
-> additionally I installed the actual "wireless tools for Linux"-Package
-> in version 29 from
-> http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html to be
-> compatible with the
-> new stack from compat-wireless-2.6-old.
-> But trying to configure the device creates the following
-> Kernel-error-message:
+When I split off the action frame handling I made the code drop
+all action frames we don't want to handle. This is wrong since
+some action frames are actually handled via rx_h_mgmt through
+being queued to the sta/mesh implementations.
 
-compat-wireless-old just got a new update, give that a shot. But also be
-aware that compat-wireless-old is just that -- old so resources are
-dedicated more to >= 2.6.27 right now; at least for ath9k.
+Thanks to Li YanBo for noticing the problem.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Li YanBo <dreamfly281@gmail.com>
+---
+ net/mac80211/rx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- everything.orig/net/mac80211/rx.c	2008-09-18 12:21:47.000000000 +0200
++++ everything/net/mac80211/rx.c	2008-09-18 12:21:54.000000000 +0200
+@@ -1534,7 +1534,7 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 	 */
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+ 	    sdata->vif.type != NL80211_IFTYPE_ADHOC)
+-		return RX_DROP_MONITOR;
++		return RX_CONTINUE;
+ 
+ 	switch (mgmt->u.action.category) {
+ 	case WLAN_CATEGORY_BACK:
+
+
