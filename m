@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:43176 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752084AbYIFUHl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 16:07:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
-Date: Sat, 6 Sep 2008 22:07:09 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	bcm43xx-dev@lists.berlios.de,
-	John W Linville <linville@tuxdriver.com>,
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:60505 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755205AbYIRUWH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 16:22:07 -0400
+Date: Thu, 18 Sep 2008 17:21:58 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
 	linux-wireless@vger.kernel.org
-References: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net> <1220730115.10102.15.camel@johannes.berg> <48C2E13B.9020203@lwfinger.net>
-In-Reply-To: <48C2E13B.9020203@lwfinger.net>
+Subject: Re: [RFC V2] b43: A patch for control of the radio LED using rfkill
+Message-ID: <20080918202158.GT1583@khazad-dum.debian.net> (sfid-20080918_222212_010102_2F2DFC7E)
+References: <48d260b7.SG5SGntEQ00lxFKi%Larry.Finger@lwfinger.net> <20080918162440.GL1583@khazad-dum.debian.net> <48D2867D.6010501@lwfinger.net> <200809181920.10416.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809062207.10158.mb@bu3sch.de> (sfid-20080906_220743_772084_8C92A248)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200809181920.10416.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 06 September 2008 21:59:55 Larry Finger wrote:
-> Johannes Berg wrote:
+On Thu, 18 Sep 2008, Michael Buesch wrote:
+> On Thursday 18 September 2008 18:49:01 Larry Finger wrote:
+> > Henrique de Moraes Holschuh wrote:
+> > > The problem is in the "should".
+> > > 
+> > > Maybe something else than b43 (like firmware) changed the radio software
+> > > rfkill bit, and it does not match what mac80211 and userland requested
+> > > anymore.
+> > > 
+> > > What you need to pass to rfkill_force_state() is what the radio is currently
+> > > doing.  So, the state you need to send to rfkill_force_state has to be based
+> > > on the real state of the hardware's "soft switch bit".
 > > 
-> > The mechanism depends on the card revision, but according to
-> > drivers/net/wireless/b43legacy/dma.c it's always via the dma/pio
-> > mechanism for legacy cards:
-> > 
-> >         if (dev->dev->id.revision < 5) {
-> >                 ring = b43legacy_setup_dmaring(dev, 3, 0, type);
-> >                 if (!ring)
-> >                         goto err_destroy_rx0;
-> >                 dma->rx_ring3 = ring;
-> >         }
+> > The hardware does not have such a bit. Once it is initialized and
+> > mac80211 sends it a packet, it will try to send it. That is true even
+> > if the hardware switch is off. It just will not succeed.
 > 
-> In the V3 specs, I found
-> 
-> "Transmit Status
-> 
-> When this interrupt is set, the retrieve the TransmitStatus. Note that 
-> on cores with revision < 5, the last DMA controller or PIO queue can 
-> also also get the DMA recieve done interrupt, which also triggers the 
-> TransmitStatus retrieval process. The driver should be prepared to 
-> deal with both interrupts at any time, on any revision. In AP mode, 
-> this interrupt also initiates the sending of powersave responses."
-> 
-> The implication is that the interrupt will only be generated if we use 
-> the last (i.e. #5) DMA controller. As we are only using #3, no 
-> interrupts and handle_irq_status() is dead code.
+> Right, b43 does have two "bits". One read-only bit that tells the hardware
+> block state. This state can only be changed by physically pressing rfkill
+> button. The other "bit" is a read/write "bit" to turn off the radio in software.
+> If _either_ one bit is blocking the radio, it will be physically blocked.
 
-Ok. I'm pretty sure that the current code is correct for the register
-mechanism, _however_ it is dead code and will never be called for
-b43legacy. So I'd suggest you just do something like this (manually-hacked patch):
+A software-emulated rfkill line is still a SW rfkill line, and the rfkill
+core needs to know about it [but you don't want to have set txpower off
+state mixed in whatever you send back to the rfkill core].
 
-Index: wireless-testing/drivers/net/wireless/b43legacy/xmit.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/xmit.c
-+++ wireless-testing/drivers/net/wireless/b43legacy/xmit.c
-@@ -629,7 +629,7 @@ void b43legacy_handle_hwtxstatus(struct
-.......
-+ 	tmp <<= 1;
-.......
-        status.pm_indicated = !!(tmp & 0x80);
-        status.intermediate = !!(tmp & 0x40);
-        status.for_ampdu = !!(tmp & 0x20);
-        status.acked = !!(tmp & 0x02);
- 
-        b43legacy_handle_txstatus(dev, &status);
- }
+Since nothing can change an emulater rfkill line behind your driver's back
+(bugs and memory corruption don't count :p), you can just use the desired
+state of that rfkill line, since it will always match reality.
 
-
-Just leave handle_irq_transmit_status as is.
-
+So yes, V2 is correct, as long as whatever you are reading from mac80211
+doesn't have "set txpower off" stuff mixed in it (as I said, I don't know
+mac80211).
 
 -- 
-Greetings Michael.
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
