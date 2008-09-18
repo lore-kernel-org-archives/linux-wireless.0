@@ -1,34 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.2ka.mipt.ru ([194.85.80.65]:41120 "EHLO 2ka.mipt.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752505AbYIUVLz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 17:11:55 -0400
-Date: Mon, 22 Sep 2008 01:10:40 +0400
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Arjan van de Ven <arjan@infradead.org>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921211038.GC2135@2ka.mipt.ru> (sfid-20080921_231202_171903_48C73797)
-References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org> <20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org> <20080921190050.GA20484@2ka.mipt.ru> <20080921205744.2d78f1fa@lxorguk.ukuu.org.uk>
+Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:52469 "EHLO
+	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754749AbYIRTMS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 15:12:18 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Anders Eriksson <aeriksson@fastmail.fm>,
+	linux-wireless@vger.kernel.org
+Subject: Re: temorarily out of range -> no TCP?
+In-reply-to: <1221762520.20772.2.camel@johannes.berg>
+References: <20080918141955.0119E93CCA7@tippex.mynet.homeunix.org> (sfid-20080918_162007_153222_33378A12) <1221762520.20772.2.camel@johannes.berg>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080921205744.2d78f1fa@lxorguk.ukuu.org.uk>
+Date: Thu, 18 Sep 2008 21:12:08 +0200
+From: Anders Eriksson <aeriksson@fastmail.fm>
+Message-Id: <20080918191208.8D42093CCA7@tippex.mynet.homeunix.org> (sfid-20080918_211221_861779_A19ECC9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 21, 2008 at 08:57:44PM +0100, Alan Cox (alan@lxorguk.ukuu.org.uk) wrote:
-> Try putting it into D3 counting to 10 and powering it back up. Thats
-> about as close as you can get to pulling the plug when it hangs.
 
-I will experiment with this, thanks Alan.
-Unfortunately my machine builds this only
-updated driver for about 10 minutes, so
-results will appear not too quickly.
-I will start tests tomorrow.
+johannes@sipsolutions.net said:
+> For one, telling us which driver you're using.
+> johannes
 
--- 
-	Evgeniy Polyakov
+On both rt2500pci and iwl3945 on an old PII-200 and an HP nc6400 laptop, 
+respectively. As it is on two drivers I figured it was driver unrelated.
+
+2.6.26.3
+
