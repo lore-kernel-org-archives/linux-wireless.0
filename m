@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:46367 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754347AbYIRTIw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 15:08:52 -0400
-Date: Thu, 18 Sep 2008 16:08:44 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Received: from bu3sch.de ([62.75.166.246]:48411 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754080AbYIRRiD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 13:38:03 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Date: Thu, 18 Sep 2008 19:37:38 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
 	John W Linville <linville@tuxdriver.com>,
 	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Message-ID: <20080918190844.GO1583@khazad-dum.debian.net> (sfid-20080918_210855_443805_A91C56D4)
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181553.29140.IvDoorn@gmail.com> <200809181937.38257.mb@bu3sch.de> <200809181948.27507.IvDoorn@gmail.com>
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <48D25BFE.6020708@lwfinger.net> <200809181553.29140.IvDoorn@gmail.com>
+In-Reply-To: <200809181553.29140.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809181948.27507.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809181937.38257.mb@bu3sch.de> (sfid-20080918_193808_138271_8F580029)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> This depends on the hardware, for b43 the toggle() callback might not be needed,
-> but for rt2x00 it does (Since the key press will only raise a GPIO bit and does not
-> affect the radio in any way).
+On Thursday 18 September 2008 15:53:28 Ivo van Doorn wrote:
+> On Thursday 18 September 2008, Larry Finger wrote:
+> > Ivo van Doorn wrote:
+> > 
+> > > Is dev->phy.radio_on set when mac80211 has send an instruction
+> > > to the driver to enable the radio (start() or config() callback)
+> > > or does it represent the key state in the hardware?
+> > > 
+> > > If it is something coming from mac80211, then you do not want
+> > > to send a SOFT_BLOCKED event since that will cause all other radios
+> > > to be switched off simply because the b43 interface has not been
+> > > enabled.
+> > > 
+> > > Off course when it represents the key state in the hardware then the
+> > > code would be fine...
+> > 
+> > The state comes from mac80211 and is set in the config() callback.
+> > 
+> > What state should be sent at the point when the hardware block is
+> > removed? It seems to me that forcing an UNBLOCKED state gives the
+> > wrong result. Perhaps RFKILL does need to have 4 states so that an
+> > RFKILL_STATE_HW_UNBLOCKED state can be transmitted.
+> 
+> When the key is pressed to unblock the device, then simply send state
+> RFKILL_STATE_UNBLOCKED to rfkill. That will generate a trigger to the
+> driver to enable the radio,
 
-Hmm... please correct me if I misunderstood, but wouldn't that mean that
-rt2x00 does not have a hardware rfkill line at all, and that instead it has
-a GPIO pin that is used to communicate the desire to software-rfkill the
-transmitter...  and the driver needs to do everything.
+The radio is enabled in _hardware_. There doesn't need to be any trigger.
+It's already on. In fact, such a trigger (done through rfkill->toggle callback)
+would deadlock wl->mutex with the current patch.
 
-If the above is wrong, don't bother with the rest of this email.
+> and at that time you can check if mac80211 
+> wants the radio on or not (aka you check dev->phy.radio_on or the mac80211
+> config structure).
 
-If the above is correct, you'd not have HARD_BLOCKED at all in rt2x00, just
-SOFT_BLOCK.  Unless you somehow emulated HARD_BLOCKED.
+No!
+Software and hardware rfkill states are completely different and _independent_
+states on the b43 hardware. You set the software state from the mac80211 callback
+no matter what hardware state the device is in. You just have to announce the
+state correctly to the rfkill subsystem if mac80211 changed the software
+state.
 
-Without a real hardware rfkill line, the only way to have HARD_BLOCKED is
-through software emulation inside the driver, but that is only safe if you
-are absolutely SURE no firmware or other crap will poke at the hardware
-behind your back.
-
-And if you don't emulate HARD_BLOCKED, you have to handle the input device
-inside the rt2x00 driver, because the world outside (and that includes the
-rfkill core and everything else) sure as heck won't know if you SOFT_BLOCKED
-because of that GPIO pin, or because of something else.
+Do not change any software state from within the hardware state change handler.
+This will blow up.
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Greetings Michael.
