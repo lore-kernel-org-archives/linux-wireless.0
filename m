@@ -1,103 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:43111 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753268AbYIOMlx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 08:41:53 -0400
-Received: from Relay1.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id 8A6AE41769
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 14:41:52 +0200 (CEST)
-From: Helmut Schaa <hschaa@suse.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC] wpa_supplicant: trigger a scan if signal quality is low
-Date: Mon, 15 Sep 2008 14:41:50 +0200
-References: <200809151416.07552.hschaa@suse.de>
-In-Reply-To: <200809151416.07552.hschaa@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809151441.50699.hschaa@suse.de> (sfid-20080915_144156_883259_B1B61877)
+Received: from xc.sipsolutions.net ([83.246.72.84]:57658 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753452AbYIRQqT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 12:46:19 -0400
+Subject: Re: [PATCH] rfkill: clarify usage of rfkill_force_state() and
+	rfkill->get_state()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <20080918164339.GM1583@khazad-dum.debian.net> (sfid-20080918_184349_935626_1261357F)
+References: <20080918145236.GJ1583@khazad-dum.debian.net>
+	 <1221751166-9927-1-git-send-email-hmh@hmh.eng.br>
+	 <200809181724.03723.IvDoorn@gmail.com>
+	 <20080918164339.GM1583@khazad-dum.debian.net>
+	 (sfid-20080918_184349_935626_1261357F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-b7eJR4XjKi7of7rMOJqF"
+Date: Thu, 18 Sep 2008 18:45:39 +0200
+Message-Id: <1221756339.9262.86.camel@johannes.berg> (sfid-20080918_184623_462256_259FF26B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is the appropriate wpa_supplicant patch for reference.
-It simply triggers a new scan once a "low signal notification" was received.
 
-diff -ur wpa_supplicant-0.6.4/src/common/wireless_copy.h wpa_supplicant-0.6.4_2//src/common/wireless_copy.h
---- wpa_supplicant-0.6.4/src/common/wireless_copy.h	2008-08-10 19:33:12.000000000 +0200
-+++ wpa_supplicant-0.6.4_2//src/common/wireless_copy.h	2008-09-15 11:38:14.000000000 +0200
-@@ -396,6 +396,8 @@
- 					 * pre-authentication
- 					 * (struct iw_pmkid_cand) */
- 
-+#define IWEVROAM	0x8C0A		/* roaming threshold exceeded */
-+
- #define IWEVFIRST	0x8C00
- #define IW_EVENT_IDX(cmd)	((cmd) - IWEVFIRST)
- 
-diff -ur wpa_supplicant-0.6.4/src/drivers/driver.h wpa_supplicant-0.6.4_2//src/drivers/driver.h
---- wpa_supplicant-0.6.4/src/drivers/driver.h	2008-08-10 19:33:12.000000000 +0200
-+++ wpa_supplicant-0.6.4_2//src/drivers/driver.h	2008-09-15 11:30:50.000000000 +0200
-@@ -1052,7 +1052,13 @@
- 	 * FT authentication sequence from the AP. The FT IEs are included in
- 	 * the extra information in union wpa_event_data::ft_ies.
- 	 */
--	EVENT_FT_RESPONSE
-+	EVENT_FT_RESPONSE,
-+
-+	/**
-+	 * EVENT_ROAMING_THRESHOLD - Roaming threshold exceeded
-+	 */
-+	EVENT_ROAMING_THRESHOLD
-+
- } wpa_event_type;
- 
- 
-diff -ur wpa_supplicant-0.6.4/src/drivers/driver_wext.c wpa_supplicant-0.6.4_2//src/drivers/driver_wext.c
---- wpa_supplicant-0.6.4/src/drivers/driver_wext.c	2008-08-10 19:33:12.000000000 +0200
-+++ wpa_supplicant-0.6.4_2//src/drivers/driver_wext.c	2008-09-15 11:40:50.000000000 +0200
-@@ -497,8 +497,7 @@
- 
- 	return 0;
- }
--
--
-+	
- static int wpa_driver_wext_event_wireless_pmkidcand(
- 	struct wpa_driver_wext_data *drv, const char *ev, size_t len)
- {
-@@ -684,6 +683,9 @@
- 			wpa_driver_wext_event_wireless_pmkidcand(
- 				drv, custom, iwe->u.data.length);
- 			break;
-+		case IWEVROAM:
-+			wpa_supplicant_event(ctx, EVENT_ROAMING_THRESHOLD, NULL);
-+			break;
- 		}
- 
- 		pos += iwe->len;
-diff -ur wpa_supplicant-0.6.4/wpa_supplicant/events.c wpa_supplicant-0.6.4_2//wpa_supplicant/events.c
---- wpa_supplicant-0.6.4/wpa_supplicant/events.c	2008-08-10 19:33:12.000000000 +0200
-+++ wpa_supplicant-0.6.4_2//wpa_supplicant/events.c	2008-09-15 12:14:13.000000000 +0200
-@@ -613,6 +613,10 @@
- }
- #endif /* CONFIG_NO_SCAN_PROCESSING */
- 
-+static void wpa_supplicant_event_roaming_threshold(struct wpa_supplicant *wpa_s)
-+{
-+	wpa_supplicant_req_scan(wpa_s, 0, 0);
-+}
- 
- static void wpa_supplicant_event_associnfo(struct wpa_supplicant *wpa_s,
- 					   union wpa_event_data *data)
-@@ -955,6 +959,9 @@
- 		wpa_supplicant_event_ft_response(wpa_s, data);
- 		break;
- #endif /* CONFIG_IEEE80211R */
-+	case EVENT_ROAMING_THRESHOLD:
-+		wpa_supplicant_event_roaming_threshold(wpa_s);
-+		break;
- 	default:
- 		wpa_printf(MSG_INFO, "Unknown event %d", event);
- 		break;
+--=-b7eJR4XjKi7of7rMOJqF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2008-09-18 at 13:43 -0300, Henrique de Moraes Holschuh wrote:
+
+> Now it must do something like this in pseudo-code:
+>=20
+> 	1. if (the bit is disabled (i.e. SW rfkill is NOT ACTIVE)) {
+> 		rfkill-SW-status =3D disabled;
+> 	   }  else if (the bit is enabled (i.e. SW rfkill is ACTIVE)) {
+> 		if (tx power off is NOT ACTIVE)
+> 			rfkill-SW-status =3D enabled;
+> 		else
+> 			rfkill-SW-status =3D whatever the user asked
+> 	   }
+>=20
+> THEN, it should use rfkill-sw-status, along with the hw rfkill line statu=
+s,
+> to synthesize the state it must pass to rfkill_force_status().
+>=20
+> ICK.  Of course, if the driver has another way to implement txpower off t=
+hat
+> does not clash with sw rfkill, the above is unneeded.
+
+Why are we not handling soft-rfkill in mac80211 entirely?
+
+johannes
+
+--=-b7eJR4XjKi7of7rMOJqF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI0oWuAAoJEKVg1VMiehFYmg4P/R2ix8QvQ8C/Tc5HVbwk2k8r
+HxcdL7ksGsZzKRi6RU/fkap+JHqHlTEOJDlFo8Bm/1rg+JydMHweSCGWjPJKYNTe
+XLQf1CymVg4Y07NwYdLfi2AZyxzaegIH1PPV63aAYCM5kVaTXY6+n7z7bofeD5fa
+TLb2ET3Y7IJChiGbvMa7kK5a8cSYiGm5vWTct64/XAOLyHxODzwhu+vTnGqMb351
+XoEhCT44H93X/MIFeJk/4jsxaPglAGZn/iJe5n1a83x1/t02stBFtObTSSJnIyhf
+/8qxvHpUCaSnAnc3EGHYv37JLqxWWPwfahs45T7Hiau87uVpl2LIRaZfDQidGp6y
+EZdw1kLyVfpcCfZaK4dW1Pk2OumZZsDSw9F5HHGnKA4yrcWmQvU6CgkdF2G12Luv
+7vhgTrCtg+9SFvzpYiHpnPJoaB2PD4Mr4qvZepUuyDnq3BlpVIJroON1XriBXGZn
++8TOBSJGdImtf/Bh/i538ZBm3H//2YiNaUyKrueDW9jEuUZUUg8JFx+KfKJWn2Hc
+sycxOt+CZFfFejYQBPceMRZkx4ifM2Wfsy4SCz5vvoLsJ7ex4ZiCvRNaLBz8jHhM
+RpcsFzkzewRB+D4nivdArhbH+L6Q1FA5ri/sStB+C5SaG2V8SX34Kl+HyANlwjMt
+IBZ7rCI+EgD+Z61HUfNm
+=oaZO
+-----END PGP SIGNATURE-----
+
+--=-b7eJR4XjKi7of7rMOJqF--
+
