@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from otrok.post.sk ([85.248.69.172]:44586 "EHLO otrok.post.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751561AbYIPUof (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 16:44:35 -0400
-Message-ID: <48D017C9.000004.04390@kamasutra> (sfid-20080916_224453_952659_2DF8CDDA)
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=ISO-8859-2
-From: Ineya Ineya <ineya@post.sk>
-To: <linux-wireless@vger.kernel.org>
-Subject: iwlagn/iwl4965 problems with WEP and rmmod
-Date: 16 Sep 2008 22:32:09 +0200 (CEST)
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:57769 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754356AbYIRPRZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 11:17:25 -0400
+Message-ID: <48D27103.1050709@lwfinger.net> (sfid-20080918_171743_470866_793ACA13)
+Date: Thu, 18 Sep 2008 10:17:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+CC: Ivo van Doorn <ivdoorn@gmail.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC V2] b43: A patch for control of the radio LED using rfkill
+References: <48d260b7.SG5SGntEQ00lxFKi%Larry.Finger@lwfinger.net> <20080918142405.GG1583@khazad-dum.debian.net> <200809181628.22544.IvDoorn@gmail.com> <20080918144836.GI1583@khazad-dum.debian.net>
+In-Reply-To: <20080918144836.GI1583@khazad-dum.debian.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,=0D
-=0D
-I\'m using Debian Etc: 2.6.24-etchnhalf.1-amd64 #1 SMP kernel, =0D
-and I downloaded compat-wireless-old-2008-09-15.tar.bz2 and iwlwifi-496=
-5-ucode-228.57.2.21.tgz.=0D
-=0D
-1st problem was during compilation, because iwl4965.c wasn\'t compiled =
-at all, so edited Makefile and added it to iwlagn objects: =0D
-=0D
-iwlagn-objs             :=3D iwl-agn.o iwl-4965.o iwl-agn-rs.o=0D
-=0D
-after this change I could insert modules to kernel and my card seems to=
- work, I could sniff all traffic in monitor mode (not just beacon packe=
-ts as in debian\'s original driver).=0D
-=0D
-2nd problem came, when I was trying to authenticate with my router usin=
-g WEP, this failed immeadiately with messages:=0D
-Sep 16 21:06:32 ladovec kernel: wlan0: authenticate with AP 00:19:5b:e0=
-:f3:20=0D
-Sep 16 21:06:32 ladovec kernel: wlan0: authenticate with AP 00:19:5b:e0=
-:f3:20=0D
-Sep 16 21:06:33 ladovec kernel: wlan0: authentication with AP 00:19:5b:=
-e0:f3:20 timed out=0D
-Sep 16 21:08:06 ladovec kernel: wlan0: authenticate with AP 00:19:5b:e0=
-:f3:20=0D
-Sep 16 21:08:06 ladovec last message repeated 2 times=0D
-Sep 16 21:08:06 ladovec kernel: wlan0: authentication with AP 00:19:5b:=
-e0:f3:20 timed out=0D
-Sep 16 21:08:26 ladovec kernel: wlan0: authenticate with AP 00:19:5b:e0=
-:f3:20=0D
-Sep 16 21:08:26 ladovec last message repeated 2 times=0D
-Sep 16 21:08:26 ladovec kernel: wlan0: authentication with AP 00:19:5b:=
-e0:f3:20 timed out=0D
-Sep 16 21:09:04 ladovec kernel: wlan0: authenticate with AP 00:19:5b:e0=
-:f3:20=0D
-Sep 16 21:09:05 ladovec last message repeated 2 times=0D
-Sep 16 21:09:05 ladovec kernel: wlan0: authentication with AP 00:19:5b:=
-e0:f3:20 timed out=0D
-=0D
-using the debian\'s original driver iwl4965 I can authenticate with no =
-problem.=0D
-=0D
-3rd problem is when I try to rmmod the iwlagn module, kernel crashes=0D
-but I was able to get any hint, which would suggest why=0D
-=0D
-=0D
-Is there anything I can try to fix the 2nd problem (the WEP authenticat=
-ion)?=0D
-=0D
+Henrique de Moraes Holschuh wrote:
+> 
+> IMHO if tx power off is handled by the wireless device driver through the
+> software rfkill line, it DOES MEAN the radio goes into rfkill SOFT_BLOCK.
+> 
+> As long as the rfkill class is kept syncronized with reality through the use
+> of rfkill_force_state(), this WILL work just fine, because no input events
+> that change any other devices are ever sent by the rfkill core.
+> 
+> Now, if any input event generation (by the wireless device driver, since
+> rfkill core NEVER does it) is in the picture, it could be more complicated
+> (or not... after all, an *INPUT DEVICE* switch would simply *always* match
+> the *particular* hardware rfkill input line it is tied to, regardless of
+> radio state -- the input device does not CARE at all about the software
+> rfkill lines, other hardware rfkill lines, wireless tx power state, or phase
+> of the moon).
 
+OK, now I'm totally confused. I realize that English is probably not
+your first language, but simple declarative sentences would be nice.
 
+The situation with b43 is as follows:
 
-__________
-Najpopul=E1rnej=B9=ED blog na Slovensku - http://blog.sme.sk/
+(a) When the hardware switch is off, the radio is hardware blocked.
 
+(b) When the hardware switch is on, the radio should follow whatever
+mac80211 and userland wants.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+What should b43 do to make this happen? Does V2 do it right?
+
+Larry
