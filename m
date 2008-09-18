@@ -1,130 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:24578 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752500AbYIQBTq (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:61388 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755358AbYIRUmJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 21:19:46 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2789714wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2008 18:19:46 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org, dcbw@redhat.com
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 16 Sep 2008 18:08:39 -0700
-Subject: [PATCH v2] libertas: Reduce the WPA key installation time.
-Message-ID: <48d05b30.09038e0a.6b12.ffffb982@mx.google.com> (sfid-20080917_031950_822985_528F32A6)
+	Thu, 18 Sep 2008 16:42:09 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so36021eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 13:42:06 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Date: Thu, 18 Sep 2008 22:42:02 +0200
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809182217.41186.IvDoorn@gmail.com> <20080918202845.GV1583@khazad-dum.debian.net>
+In-Reply-To: <20080918202845.GV1583@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809182242.02322.IvDoorn@gmail.com> (sfid-20080918_224213_110507_6A18EF45)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WPA requires that the PTK is installed immediately after the 4-way handshake
-in order to properly decrypt the subsequent incoming EAPOL-GTK frame.  If the
-PTK is not enabled by the time the EAPOL-GTK frame arrives, the frame is
-dropped and the supplicant does not receive the group key.
+On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> > On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> > > On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> > > > This depends on the hardware, for b43 the toggle() callback might not be needed,
+> > > > but for rt2x00 it does (Since the key press will only raise a GPIO bit and does not
+> > > > affect the radio in any way).
+> > > 
+> > > Hmm... please correct me if I misunderstood, but wouldn't that mean that
+> > > rt2x00 does not have a hardware rfkill line at all, and that instead it has
+> > > a GPIO pin that is used to communicate the desire to software-rfkill the
+> > > transmitter...  and the driver needs to do everything.
+> > 
+> > That is correct.
+> 
+> Yeah, thanks <deity> I noticed this post :-)  That will make it MUCH easier
+> for me to sync with you and actually grok what you are saying.
 
-This will happen with fast Access Points that send the EAPOL-GTK frame before
-the suplicant has successfully installed and enabled the PTK.  To mitigate
-this situation, this patch simplifies and accelerates the SIOCSIWENCODEEXT
-execution.
+Hehe :)
 
-This patch resolves OLPC ticket 7825 (http://dev.laptop.org/ticket/7825)
+> > > And if you don't emulate HARD_BLOCKED, you have to handle the input device
+> > > inside the rt2x00 driver, because the world outside (and that includes the
+> > > rfkill core and everything else) sure as heck won't know if you SOFT_BLOCKED
+> > > because of that GPIO pin, or because of something else.
+> > 
+> > Currently rt2x00 polls the GPIO pin every second (no interrupts are raised when the
+> > GPIO pin is toggled) and uses rfkill_force_state(SOFT_BLOCK/UNBLOCK) to rfkill
+> 
+> I just sent a post about it.  If you get a bit that tells you HW RFKILL
+> ACTIVE/INACTIVE (as opposed to "please toggle it"), you don't need to care
+> about whatever else is reading that thing.  You can always register an input
+> device, and issue EV_SW SW_WLAN or EV_SW SW_RFKILL_ALL (I'd sugest making it
+> configurable).  But do NOT issue EV_KEY, THAT one breaks if anything else is
+> also listening to that input signal.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/libertas/dev.h  |    1 +
- drivers/net/wireless/libertas/wext.c |   36 +++++++++++++++++++++++++++++++--
- 2 files changed, 34 insertions(+), 3 deletions(-)
+Ok.
 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index acb889e..f6f3753 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -58,6 +58,7 @@ struct lbs_802_11_security {
- 	u8 WPA2enabled;
- 	u8 wep_enabled;
- 	u8 auth_mode;
-+	u32 key_mgmt;
- };
- 
- /** Current Basic Service Set State Structure */
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index d86fcf0..5436b34 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -30,6 +30,14 @@ static inline void lbs_postpone_association_work(struct lbs_private *priv)
- 	queue_delayed_work(priv->work_thread, &priv->assoc_work, HZ / 2);
- }
- 
-+static inline void lbs_do_association_work(struct lbs_private *priv)
-+{
-+	if (priv->surpriseremoved)
-+		return;
-+	cancel_delayed_work(&priv->assoc_work);
-+	queue_delayed_work(priv->work_thread, &priv->assoc_work, 0);
-+}
-+
- static inline void lbs_cancel_association_work(struct lbs_private *priv)
- {
- 	cancel_delayed_work(&priv->assoc_work);
-@@ -1585,12 +1593,26 @@ static int lbs_set_encodeext(struct net_device *dev,
- 			set_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags);
- 		}
- 
--		disable_wep (assoc_req);
-+		/* Only disable wep if necessary: can't waste time here. */
-+		if (priv->mac_control & CMD_ACT_MAC_WEP_ENABLE)
-+			disable_wep(assoc_req);
- 	}
- 
- out:
- 	if (ret == 0) {
--		lbs_postpone_association_work(priv);
-+		/* 802.1x and WPA rekeying must happen as quickly as possible,
-+		 * especially during the 4-way handshake; thus if in
-+		 * infrastructure mode, and either (a) 802.1x is enabled or
-+		 * (b) WPA is being used, set the key right away.
-+		 */
-+		if (assoc_req->mode == IW_MODE_INFRA &&
-+		    ((assoc_req->secinfo.key_mgmt & IW_AUTH_KEY_MGMT_802_1X) ||
-+		     (assoc_req->secinfo.key_mgmt & IW_AUTH_KEY_MGMT_PSK) ||
-+		      assoc_req->secinfo.WPAenabled ||
-+		      assoc_req->secinfo.WPA2enabled)) {
-+			lbs_do_association_work(priv);
-+		} else
-+			lbs_postpone_association_work(priv);
- 	} else {
- 		lbs_cancel_association_work(priv);
- 	}
-@@ -1698,13 +1720,17 @@ static int lbs_set_auth(struct net_device *dev,
- 	case IW_AUTH_TKIP_COUNTERMEASURES:
- 	case IW_AUTH_CIPHER_PAIRWISE:
- 	case IW_AUTH_CIPHER_GROUP:
--	case IW_AUTH_KEY_MGMT:
- 	case IW_AUTH_DROP_UNENCRYPTED:
- 		/*
- 		 * libertas does not use these parameters
- 		 */
- 		break;
- 
-+	case IW_AUTH_KEY_MGMT:
-+		assoc_req->secinfo.key_mgmt = dwrq->value;
-+		updated = 1;
-+		break;
-+
- 	case IW_AUTH_WPA_VERSION:
- 		if (dwrq->value & IW_AUTH_WPA_VERSION_DISABLED) {
- 			assoc_req->secinfo.WPAenabled = 0;
-@@ -1784,6 +1810,10 @@ static int lbs_get_auth(struct net_device *dev,
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
- 	switch (dwrq->flags & IW_AUTH_INDEX) {
-+	case IW_AUTH_KEY_MGMT:
-+		dwrq->value = priv->secinfo.key_mgmt;
-+		break;
-+
- 	case IW_AUTH_WPA_VERSION:
- 		dwrq->value = 0;
- 		if (priv->secinfo.WPAenabled)
--- 
-1.5.2.4
-
-
-
+Ivo
