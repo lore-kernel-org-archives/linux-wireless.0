@@ -1,80 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:13059 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753826AbYIQWOk (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59965 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755682AbYIRR6F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 18:14:40 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so2517303muf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 15:14:37 -0700 (PDT)
-Message-ID: <1ba2fa240809171514y72b070d0t775702ea48360331@mail.gmail.com> (sfid-20080918_001444_488164_BED522F5)
-Date: Thu, 18 Sep 2008 01:14:37 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [RFC] Redesigning aggregation on mac80211
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <200809162005.30002.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <43e72e890809151203p213fae37ia3bd6871c3bfe2c2@mail.gmail.com>
-	 <200809162005.30002.IvDoorn@gmail.com>
+	Thu, 18 Sep 2008 13:58:05 -0400
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200809181952.15770.IvDoorn@gmail.com> (sfid-20080918_195224_932237_E9E182C0)
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net>
+	 <200809181624.53050.IvDoorn@gmail.com> <200809181944.10018.mb@bu3sch.de>
+	 <200809181952.15770.IvDoorn@gmail.com>
+	 (sfid-20080918_195224_932237_E9E182C0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nQ9xGt5hIsp8/apOv+OE"
+Date: Thu, 18 Sep 2008 19:54:09 +0200
+Message-Id: <1221760449.9262.96.camel@johannes.berg> (sfid-20080918_195809_195505_EC84DF43)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 16, 2008 at 9:05 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> Hi,
->
->> We're considering redesigning how aggregation works on mac80211 to
->> ensure its vendor neutral and to remove as much as redundant code in
->> drivers. We'd like some feedback from people and driver developers,
->> even those who haven't *yet* posted their new shiny 11n drivers, like
->> Marvell or Ralink driver developers.
->
-> Well technically speaking there are 2 Ralink drivers in the Kernel already
-> which *should* support aggregation (rt61 and rt73).
->
-> I'm sorry I have not read the entire thread on the new aggregation support
-> yet, but I'll write what I know from rt61/rt73/rt2800 here anyway. :)
->
->> Ivo, are you familiar yet with how aggregation works on Ralink
->> hardware? Does the new 11n hardware require firmware? Specifically
->> we're curious about how the hardware queues are managed.
->
-> Ralink defines 4 queues, 1 Management queue (can be abused as regular TX queue)
-> and a Beacon queue.
->
-> There is no such thing as seperate aggregation queues, as soon as the device
-> wants to perform aggregation it grabs a normal entry from the TX queue,
-> and assignes all frames to it.
->
-> rt61: 5 addresses can be provided for Aggrated frames, I am not sure
-> if the first is a header only frame or not.
-> rt73: Not sure what should be done
-> rt2800: 2 addresses can be provided, where the first is a header/descriptor
-> only address. In the second address frames can be provided.
 
-> Because the aggregated frame is created directly into a TX entry, no other
-> frames should go through that queue until the aggregated frame has been
-> completed.
->
+--=-nQ9xGt5hIsp8/apOv+OE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-What type of aggregation is this? AMSDU or AMPDU? In AMPDU you need
-somehow handle
-out of order resend of the packets.  rt61 and rt2800 looks more like
-AMSDU (Not sure) we don't support that in iwlwifi TX side of it yet,
-it just doesn't outperform AMPDU aggregation.
-Tomas
+On Thu, 2008-09-18 at 19:52 +0200, Ivo van Doorn wrote:
 
+> From rfkill.h:
+> 	RFKILL_STATE_SOFT_BLOCKED =3D 0,	/* Radio output blocked */
+> 	RFKILL_STATE_UNBLOCKED    =3D 1,	/* Radio output allowed */
+> 	RFKILL_STATE_HARD_BLOCKED =3D 2,	/* Output blocked, non-overrideable */
+>=20
+> Since b43 has a rfkill mechanism that does switch of the radio when RFKIL=
+L is set to BLOCK
+> after a key press, it should send RFKILL_STATE_HARD_BLOCKED because rfkil=
+l cannot override
+> it.
+>=20
+> rt2x00 hardware does not change the radio state when RFKILL is set to BLO=
+CK after a key press,
+> the state is therefor overridable and it can send RFKILL_STATE_SOFT_BLOCK=
+ED to rfkill.
 
-> I'm afraid that is currently all the information I got at this time,
-> It is only a little, but I never got around to fully look into the aggregation support,
-> although I definately want it implemented in the drivers to increase the
-> performance a bit. :)
+If rt2x00 has no meaning of "hardware blocked", why is the button not a
+simple input device?
 
-Need to find out what kind of aggregation the cards support. For TX
-AMSDU we need add more code into mac80211, the AMSDU sub frames have
-14 bytes (eth) headers.
+johannes
 
-Thanks
-Tomas
+--=-nQ9xGt5hIsp8/apOv+OE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI0pW+AAoJEKVg1VMiehFYmv4P/jNkFvmUDi6P+ziftjQcND8N
+Cm9NS3S5UGa3lriZCY+HevrPKzAxPDZ8NRioH20o6xKdOxsYvkQLSNBoRyMmjAHA
+8n40Zc8LWwQLh+fFHCtbEQ4fC4R2fjwxSBbeDtg9GwaZZGwObCGnP3XRMHOkE7mW
+q4gTJtCObnggqm7+ekiCkgcXkCchO4wuuY2O96zAcSaE7SS0hubDwjLE2K4cB1g6
+uGtEoU3t+BufKoEHpXitBco0kOhIMDnLjfwj6ovO66vICGRmw3kwkHHJWRqoWG8Z
+0IFQDnMGTdfI2mFWpaFTaCQuRRQzJG30+nRLVGMJRYyDfBH3CEkl6NTi9yQv2Oz+
+OFqft+7MXqEAnzXdiV4lkrDP9csyro6W/bi2c1X+UVs1I8+vN/E3C99F0cZ6Jts8
+R2280s3fvpXo0la0qQ36vQe+2YFIhO7WIjKm9kxCmNie88PjzcRQbwSjmOALNqxj
+ajQYxuEGX6IbDuIUIVb0t/K+ww2NT3ans6ELNuzMqACjXLLkpoCb8xlozhlA1j72
+NoUdU8pZsNokdqwtJNfGqgjg+fzYngCIyi7QplvQUBJ5+gdkIvLzkaESeQCt678d
+m+8RvlUZoK5gXEShLeXb3Fh+iMOcLk1FP5jMMbrj24JULRXBAyx1k3U6sCoiZrdW
+/Wfl9lP4BfpwonZXLBpx
+=wLdr
+-----END PGP SIGNATURE-----
+
+--=-nQ9xGt5hIsp8/apOv+OE--
+
