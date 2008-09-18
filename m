@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:42863 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752640AbYIQOuP (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:38224 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755271AbYIRXKx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 10:50:15 -0400
-Date: Wed, 17 Sep 2008 11:50:08 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Carlos Corbacho <carlos@strangeworlds.co.uk>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Regression in 2.6.27-rcX caused by commit
-	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-Message-ID: <20080917145007.GA5186@khazad-dum.debian.net> (sfid-20080917_165020_603359_0EED7F1D)
-References: <48CFC03A.8020708@lwfinger.net> <48D0095B.40403@lwfinger.net> <20080916233240.GA18574@srcf.ucam.org> <200809171622.55882.mb@bu3sch.de>
+	Thu, 18 Sep 2008 19:10:53 -0400
+Received: by gxk9 with SMTP id 9so109508gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 16:10:52 -0700 (PDT)
+Message-ID: <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> (sfid-20080919_011057_085624_6416966D)
+Date: Thu, 18 Sep 2008 16:10:52 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Steven Noonan" <steven@uplinklabs.net>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: "Ingo Molnar" <mingo@elte.hu>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809171622.55882.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
+References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
+	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
+	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
+	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
+	 <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
+	 <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com>
+	 <20080918220102.GE7408@tesla>
+	 <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com>
+	 <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Sep 2008, Michael Buesch wrote:
-> On Wednesday 17 September 2008 01:32:40 Matthew Garrett wrote:
-> > On Tue, Sep 16, 2008 at 02:30:35PM -0500, Larry Finger wrote:
-> > 
-> > > I didn't say it was not possible. What I said is that _ONLY_ the
-> > > operator's finger could change the state, just like in your laptop.
-> > > Thus it makes absolutely no difference what state RFKILL thinks it is
-> > > in.
-> > 
-> > Of course it makes a difference. The reason why two states are provided 
-> > is to allow userspace to distinguish whether it can unblock the device 
-> > or not. It's clear that b43's rfkill code is astonishingly broken (and 
-> > that's not a criticism of anyone involved - the documentation's 
-> > confusing and there weren't any good examples of how it should be 
-> > implemented).
-> > 
-> > The real question is how the LED state is supposed to be being toggled, 
-> > and what that's got to do with rfkill. I /think/ that the current state 
-> > of events is:
-> 
-> Read the rfkill code. It toggles a LED trigger if the state changes from
-> UNBLOCKED to BLOCKED. b43 uses that trigger to run the radio LED.
-> 
-> > 1) User toggles state
-> > 2) b43 changes rfkill state (by using rfkill_force_state). The LED state 
-> > should also be changed in the process.
-> 
-> No it shouldn't. LEDs are entirely handled by triggers. We must _never_ toggle
-> the LED state from within b43 directly via hardcoded stuff.
-> rfkill is responsible for handling the radio LEDs in the machine.
+On Thu, Sep 18, 2008 at 4:04 PM, Steven Noonan
+> I always get "1 megabit/sec". It actually measures (at best) to be a
+> throughput of 8mbits/sec, though the average (due to strange random
+> packet loss) is about 4mbits/sec. --
 
-He means rfkill_force_state() should change the LED state in the process,
-which it isn't doing.
+Yeah, iwconfig reports a wrong rate, should be easy to fix but I
+haven't yet looked at it. If you can fix it it'd be appreciated.
 
-It is an one-line patch, I am testing it now.
+> And that was with aggregation
+> re-enabled via your patch.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+That patch just fixes aggregation for mac80211 after the TX MQ
+changes, its seems ath9k aggregation is broken. Looking into that now.
+
+> Without, it never exceeds 1mbit/sec
+> (actual, not just as indicated by iwconfig.
+
+Right.
+
+  Luis
