@@ -1,90 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49451 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbYIJVhr (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.191]:22693 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752773AbYIRIqa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 17:37:47 -0400
-Subject: Re: [PATCH 1/1] mac80211: scan on IBSS mode like on STA mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Ester Kummer <ester.kummer@intel.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>
-In-Reply-To: <1ba2fa240809101432u23bf198bqcf9bd0e9f91a2ae8@mail.gmail.com> (sfid-20080910_233253_312411_FCC1C92C)
-References: <1220880686-5620-1-git-send-email-tomas.winkler@intel.com>
-	 <1220885742.31304.67.camel@johannes.berg>
-	 <1220886337.31304.71.camel@johannes.berg>
-	 <1220887018.31304.74.camel@johannes.berg>
-	 <1ba2fa240809080953mfe2ab86l5417679e4cb29df1@mail.gmail.com>
-	 <1220897594.31304.83.camel@johannes.berg>
-	 <1ba2fa240809081524ia1860e3o3327a64c933a09a3@mail.gmail.com>
-	 <1ba2fa240809101432u23bf198bqcf9bd0e9f91a2ae8@mail.gmail.com>
-	 (sfid-20080910_233253_312411_FCC1C92C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y3sI06H9ioBdMmEC+FEb"
-Date: Wed, 10 Sep 2008 23:37:09 +0200
-Message-Id: <1221082630.3804.43.camel@johannes.berg> (sfid-20080910_233750_405651_C86222E3)
-Mime-Version: 1.0
+	Thu, 18 Sep 2008 04:46:30 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so2079015rnd.17
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 01:46:29 -0700 (PDT)
+Message-ID: <43e72e890809180146q2a4062b8hf4e0911d3782c943@mail.gmail.com> (sfid-20080918_104635_262895_1800A4EF)
+Date: Thu, 18 Sep 2008 01:46:29 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Mats Johannesson" <spamcan1@abrasax.se>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ath9k-devel] ath9k constantly drops network connection
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080918103628.5a6ab12c@loke.fish.not>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <e14212e0809170305v46b0c512i63c1a2874e730274@mail.gmail.com>
+	 <20080917191003.GC6198@tesla> <20080918044618.0cd64cd9@loke.fish.not>
+	 <20080918103628.5a6ab12c@loke.fish.not>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Sep 18, 2008 at 1:36 AM, Mats Johannesson <spamcan1@abrasax.se> wrote:
+> On Thu, 18 Sep 2008 04:46:18 +0200 Mats Johannesson wrote:
+>> On Wed, 17 Sep 2008 12:10:03 -0700 Luis R. Rodriguez wrote:
+>> > On Wed, Sep 17, 2008 at 03:05:59AM -0700, Partha Bagchi wrote:
+>> [...]
+>> > > 03:42:27 EDT 2008 i686 i686 i386 GNU/Linux
+>> >
+>> > Please try appling the patch titled:
+>> >
+>> > "[PATCH] ath9k: connectivity is lost after Group rekeying is done"
+>> >
+>> > which was posted on linux-wireless. If that fixes your issue I can
+>>
+>> A question Luis. Looking at the code (and not knowing _anything_ about
+>> wireless internals):
+>>
+>> -             if (sc->sc_keytype == ATH9K_CIPHER_WEP)
+>> +             if (tx_info->control.hw_key->alg == ALG_WEP)
+>>                       txctl->keytype = ATH9K_KEY_TYPE_WEP;
+>> -             else if (sc->sc_keytype == ATH9K_CIPHER_TKIP)
+>> +             else if (tx_info->control.hw_key->alg == ALG_TKIP)
+>>                       txctl->keytype = ATH9K_KEY_TYPE_TKIP;
+>> -             else if (sc->sc_keytype == ATH9K_CIPHER_AES_CCM)
+>> +             else if (tx_info->control.hw_key->alg == ALG_CCMP)
+>>                       txctl->keytype = ATH9K_KEY_TYPE_AES;
+>>
+>> I'm confused regarding the AES cypher. My AP is set through its
+>> interface as:
+>>
+>> Security Mode: WPA-Personal
+>> WPA Mode: WPA2 Only
+>> Cipher Type: AES
+>> Group Key Update Interval: 2461 seconds (~41 minutes)
+>> Pre-Shared Key: Loooong long key.
+>>
+>> But the output from "iwlist scan" tells another story:
+>>
+>>                     Encryption key:on
+>>                     IE: IEEE 802.11i/WPA2 Version 1
+>>                         Group Cipher : TKIP
+>>                         Pairwise Ciphers (1) : TKIP
+>>                         Authentication Suites (1) : PSK
+>>
+>> So someones lying... Does this effect ath9k?
+>>
+>> I'll compile another kernel and try to get rid of TKIP stuff
+>> completely to test this out. At the moment the environment looks like
+>> this:
+>>
+>> grep -i tkip my-.config
+>> grep -i michael my-.config
+>> # CONFIG_CRYPTO_MICHAEL_MIC is not set
+>> grep -i ecb my-.config
+>> CONFIG_CRYPTO_ECB=m
+>> grep -i aes my-.config
+>> CONFIG_CRYPTO_AES=m
+>> CONFIG_CRYPTO_AES_X86_64=m
+>>
+>> loke@sleipner:~$ lsmod|grep -i ecb
+>> ecb                     1344  2
+>> crypto_blkcipher        8964  1 ecb
+>> crypto_algapi           6336  6
+>> aes_x86_64,aes_generic,arc4,ecb,crypto_blkcipher,cryptomgr
+>>
+>> loke@sleipner:~$ lsmod|grep -i aes
+>> aes_x86_64              6784  3
+>> aes_generic            25576  1 aes_x86_64
+>> crypto_algapi           6336  6
+>> aes_x86_64,aes_generic,arc4,ecb,crypto_blkcipher,cryptomgr
+>>
+>> Perhaps I'll break ath9k if the kernel lets me compile without an ecb
+>> module...
+>
+> Well, it didn't let me deselect ecb since that is selected by MAC80211
+> (as is arc4).
+>
+> Anyhow, writing now to share the good news that the patch you refer to:
+> [PATCH] ath9k: connectivity is lost after Group rekeying is done
+> (Click on [Download message RAW] at
+> http://marc.info/?l=linux-wireless&m=122163541519736&w=2 to get a clean
+> copy) completely fixes the regression between -rc5 and -rc6 I reported
+> in:
+>
+> [ath9k-devel] 2.6.27-rc6 (and forwartd to -rc6-git3) dies silently.
+> https://lists.ath9k.org/pipermail/ath9k-devel/2008-September/000263.html
+>
+> Patching -rc6-git3 I've now run 4 hours without a connection drop.
+> Strangely enough it also allowed me to again make the connection
+> 'sticky' over a reboot (Wicd Manager).
+>
+> This patch is a must have for 2.6.27 no matter what merging policy is
+> in effect.
 
---=-y3sI06H9ioBdMmEC+FEb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+John please consider merging this for 27 as well as it fixes issues
+reported due to lost of connectivity.
 
-On Thu, 2008-09-11 at 00:32 +0300, Tomas Winkler wrote:
-
-> Okay so here is the scenario. Iwlwifi reject scan that is triggered
-> withing fixed period after
-> association to leave time to finish EAPOL exchange.
-
-Why is iwlwifi thinking it's associating in an IBSS?
-
-> We never hit the problem in STA mode because of this code
->=20
->  if (sdata->vif.type !=3D IEEE80211_IF_TYPE_STA)
-> 		return ieee80211_sta_start_scan(dev, ssid, ssid_len);
->=20
-> which makes it go through the work queue, just pure timing luck.
-
-Well the remainder of the code makes it go through, but yeah.
-
-> I will remove this delay for IBSS, there is no association and no 1X
-> is going on.
-
-Ok, makes sense.
-
-> For BSS I suggest to enforce similar delay already mac80211, iwlwifi I
-> just return empty scan completion and buffered results will be
-> returned.
-
-We might want to enforce a similar delay like that in mac80211 instead
-of iwlwifi, yeah.
-
-johannes
-
---=-y3sI06H9ioBdMmEC+FEb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIyD4CAAoJEKVg1VMiehFYHMAQAJ83zU0YB1PRl9nWGd3ik6QK
-HofR+m9ePXNbQhQLYqvsbgm5Lal2/CsVWAv6fN9RytrdcmsSXbKxiwulns8mgFOP
-LwhV79IyJljNCzQhbf1cqZc01UFJloDAgMyGTYsxs44eVqSSQrOE/qYuTk0khQvO
-DgwXYAsHLdvv41SoA+ayTwh3Mo2XPHzn8iswP0SbqjRCTQ3Zy2HqAHA/OfKAW+IP
-AjEU8UxX0Z2tMXeC5JnY6zHBFVUIUuyUsQkeMkLNAYNezY/CoFUaSt/XYN1qJkzG
-O/vVNWqLtmR3wcgqO3TuEMcpGbBusxjU+YW7YrWlTRxrEbYpzDgtBk8uvwxkSa7P
-9OVl+Hcy6lqW1WyX8DXWZCHxuNxvnGh0FqtsAOiWIg/6iApjolCzr1+JkJF0qBrH
-r0zgRdBqBILrnEKDkmu6fJuVZ3I9kXy3JAX1EjQVi0NudtZOjNfJxaZgs9GBpy/X
-C4UyBs6D0WUYFY6nOf97k9WVMKGgFGOIgficleY+CZDQolsYW1+zbxRbb8S6MBOB
-8F38nTFN4MsOtOBrJaR4uvqtVPewuwhx76dEPSMFb+PyiVuvjR/cGW+iKix/52GM
-SuBx75NPD+8/LdKXXuE511tw7lv50UrJybBFcCwzEefByNQ13HcJU4qFXJ7jfCGv
-UcLZlhRom6BFUC8jVxf0
-=bHvy
------END PGP SIGNATURE-----
-
---=-y3sI06H9ioBdMmEC+FEb--
-
+  Luis
