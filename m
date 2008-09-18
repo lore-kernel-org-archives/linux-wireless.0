@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39651 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752682AbYIIFsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 01:48:11 -0400
-Date: Mon, 8 Sep 2008 22:48:05 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2 v5] cfg80211: Add new wireless regulatory
-	infrastructure
-Message-ID: <20080909054805.GB15742@tesla> (sfid-20080909_074815_743116_EBCE2F72)
-References: <1220643824-11398-1-git-send-email-lrodriguez@atheros.com> <1220668394.6714.109.camel@californication>
+Received: from nf-out-0910.google.com ([64.233.182.190]:50778 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754356AbYIRTXN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 15:23:13 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so29581nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 12:23:11 -0700 (PDT)
+Message-ID: <f488382f0809181223n6131290w6c68171c236ac032@mail.gmail.com> (sfid-20080918_212318_100315_56EF1056)
+Date: Thu, 18 Sep 2008 12:23:11 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: LKML <linux-kernel@vger.kernel.org>, "Ingo Molnar" <mingo@elte.hu>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1220668394.6714.109.camel@californication>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
+	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
+	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
+	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 05, 2008 at 07:33:14PM -0700, Marcel Holtmann wrote:
-> can we get a small document in Documentation/ that describes what has to
-> be done for CRDA. That would help to ease the adaption and would allow
-> us to point people to it. Nothing fancy, but some quick notes where to
-> find it and what to put where.
+On Thu, Sep 18, 2008 at 12:00 PM, Steven Noonan <steven@uplinklabs.net> wrote:
+> On Thu, Sep 18, 2008 at 11:42 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Thu, Sep 18, 2008 at 11:34 AM, Luis R. Rodriguez
+>>> irqpoll is a monster of evil and that should make your system crawl to
+>>> its knees. I would advise instead we work with you fixing the the
+>>> missed interrupts issue upon rmmod.
+>>
+>> Also, please provide the output of
+>>
+>> cat /proc/interrupts
+>
+> Note that the problem necessitating use of irqpoll in the first place
+> seems to only happen under certain conditions. I am unsure what these
+> conditions are. Before 'ath9k: connectivity is lost after Group
+> rekeying is done', I had used rmmod/modprobe as my solution to the
+> issue, which triggered the IRQ issue.
 
-Sure, I'm putting this together now.
+I wonder if this is related:
 
-> > Each driver can regulatory_hint() a regulatory domain
-> > based on either their EEPROM mapped regulatory domain value to a
-> > respective ISO/IEC 3166-1 country code or pass an internally built
-> > regulatory domain. We also add support to let the user set the
-> > regulatory domain through userspace in case of faulty EEPROMs to
-> > further help compliance.
-> 
-> Do we have an example for all the possible ways? I think about something
-> to help driver maintainers to move over and use the infrastructure the
-> right way.
-
-The only case I didn't test was the case for Intel's drivers, all other
-drivers would use regulatory_hint() based on an alpha2 and that worked
-swell. I found some issues with the case of providing a built regulatory
-domain so I'm updating it now and am also updating some other parts of the
-code for the old regulatory infrastructure, it seems there were a few
-obvious issues we didn't catch there yet.
-
-I hope to have the new doc for you with a few fixes and an example as to
-what Intel drivers can do soon. I was hoping to get it all done by today but
-that didn't happen.
-
-  Luis
+alcarin ~ # dmesg | grep GPE
+[    0.166806] ACPI: EC: GPE = 0x17, I/O: command/status = 0x66, data = 0x62
+[  685.409077] ACPI: EC: GPE storm detected, disabling EC GPE
