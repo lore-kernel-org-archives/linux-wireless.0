@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.177]:24817 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbYIVVSt (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:55878 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755500AbYIRXEs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 17:18:49 -0400
-Received: by ik-out-1112.google.com with SMTP id c30so996130ika.5
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 14:18:47 -0700 (PDT)
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: what is the states of rt2800 driver?
-Date: Mon, 22 Sep 2008 23:18:44 +0200
-Cc: "Xu, Martin" <martin.xu@intel.com>, linux-wireless@vger.kernel.org,
-	"Selbak, Rolla N" <rolla.n.selbak@intel.com>
-References: <200808272222.53719.IvDoorn@gmail.com> <200809221937.35900.IvDoorn@gmail.com> <1222117314.4670.10.camel@localhost>
-In-Reply-To: <1222117314.4670.10.camel@localhost>
+	Thu, 18 Sep 2008 19:04:48 -0400
+Received: by ug-out-1314.google.com with SMTP id k3so863987ugf.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 16:04:47 -0700 (PDT)
+Message-ID: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> (sfid-20080919_010453_887073_BC88B6A8)
+Date: Thu, 18 Sep 2008 16:04:47 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: "Ingo Molnar" <mingo@elte.hu>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200809222318.44222.IvDoorn@gmail.com> (sfid-20080922_231852_829710_365A0013)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
+	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
+	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
+	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
+	 <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
+	 <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com>
+	 <20080918220102.GE7408@tesla>
+	 <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 September 2008, Mattias Nissler wrote:
-> On Mon, 2008-09-22 at 19:37 +0200, Ivo van Doorn wrote:
-> > On Monday 22 September 2008, Xu, Martin wrote:
-> > > Hi:
-> > > I am the engineer from intel, and we are working on Moblin project(
-> > > www.moblin.org). Now we work on eeepc901 platform. The rt2860 wireless
-> > > device is used by the platform. We hope the device driver can be
-> > > supported in the kernel mainline.
-> > > Could you please tell me the states of the device driver? Do you have
-> > > schedule on it? 
-> > 
-> > Nothing has changed since my last announcement to the linux-wireless list
-> > regarding the rt2800 drivers.
-> > That means that the drivers are not ready, and I have abandonded all schedules
-> > which could indicate when the first test version of the driver can be released.
-> > 
-> > Mattias Nissler has joined the rt2800 development party, so I really hope
-> > he has some fresh ideas an how to get the driver development forward again.
-> 
-> Indeed, I started poking around today. Ivo, do you have version of the
-> legacy rt2870 usb driver that compiles and works on recent development
-> kernels?
+On Thu, Sep 18, 2008 at 3:08 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, Sep 18, 2008 at 3:01 PM, Luis R. Rodriguez
+>
+>>> Which is far more important, I agree. It's annoying to get speeds
+>>> <802.11b on my pre-802.11n capable chipset and network. ;)
+>
+> Oh and you should at least get some 11n rates, just not aggregation :)
+>
+>  Luis
+>
 
-I only managed to compile it on 2.6.25 (but haven't tried hard to get it working
-for 2.6.26 and higher), is that recent enough?
+I always get "1 megabit/sec". It actually measures (at best) to be a
+throughput of 8mbits/sec, though the average (due to strange random
+packet loss) is about 4mbits/sec. -- And that was with aggregation
+re-enabled via your patch. Without, it never exceeds 1mbit/sec
+(actual, not just as indicated by iwconfig.
 
-Ivo
-
+- Steven
