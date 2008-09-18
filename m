@@ -1,106 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.232]:55030 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754464AbYISQmN (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:53617 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753368AbYIRVbF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 12:42:13 -0400
-Received: by qb-out-0506.google.com with SMTP id f11so428402qba.17
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 09:42:12 -0700 (PDT)
-Date: Fri, 19 Sep 2008 09:42:04 -0700 (PDT)
-From: Steven Noonan <steven@uplinklabs.net>
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Ingo Molnar <mingo@elte.hu>,
+	Thu, 18 Sep 2008 17:31:05 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so118981wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 14:31:04 -0700 (PDT)
+Message-ID: <dd18b0c30809181431j605faffu41d436145fd0d732@mail.gmail.com> (sfid-20080918_233110_723350_60935E5E)
+Date: Thu, 18 Sep 2008 14:31:04 -0700
+From: "Justin Mattock" <justinmattock@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: "Steven Noonan" <steven@uplinklabs.net>,
+	"Ingo Molnar" <mingo@elte.hu>,
 	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5,
- rc6, probably others)
-In-Reply-To: <20080919142801.GA5816@senthil-lnx.users.atheros.com>
-Message-ID: <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net> (sfid-20080919_184248_585112_6020CD3C)
-References: <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com> <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com> <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com> <20080918220102.GE7408@tesla>
- <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com> <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com>
- <20080919030125.GG7408@tesla> <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com> <20080919142801.GA5816@senthil-lnx.users.atheros.com>
+In-Reply-To: <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
+	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
+	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
+	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
+	 <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Sep 18, 2008 at 1:44 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, Sep 18, 2008 at 12:00 PM, Steven Noonan <steven@uplinklabs.net> wrote:
+>> On Thu, Sep 18, 2008 at 11:42 AM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
+>>> On Thu, Sep 18, 2008 at 11:34 AM, Luis R. Rodriguez
+>>>> irqpoll is a monster of evil and that should make your system crawl to
+>>>> its knees. I would advise instead we work with you fixing the the
+>>>> missed interrupts issue upon rmmod.
+>>>
+>>> Also, please provide the output of
+>>>
+>>> cat /proc/interrupts
+>>
+>> Note that the problem necessitating use of irqpoll in the first place
+>> seems to only happen under certain conditions. I am unsure what these
+>> conditions are. Before 'ath9k: connectivity is lost after Group
+>> rekeying is done',
+>
+> You mean this patch:
+>
+> [PATCH] ath9k: connectivity is lost after Group rekeying is done
+> http://marc.info/?l=linux-wireless&m=122163541519736&w=2
+>
+> So let me get this straight -- you applied this new patch, and haven't
+> tried disabling irqpoll now?
+>
+>> I had used rmmod/modprobe as my solution to the
+>> issue, which triggered the IRQ issue.
+>
+> Understood, but I also have used this before with ath9k and I got
+> exactly the same results you did -- I just refused to use it again and
+> just try to fix the issues present.
+>
+> ath9k issues tons of interrupts, not sure why irqpoll option would
+> cause latency so bad as the interrupts *are* handled. Not sure
+> *exactly* how irqpoll works but its description mentions using it
+> forces each interrupt handler on the IRQ line to check the interrupt
+> is for it. You have to keep in mind that not only are ath9k interrupts
+> then being sent to the devices on its line but it would seem that all
+> other devices on each line would suffer from the interrupts of the
+> other guys. Why ath9k would be the *only* culprit of causing latency
+> when using irqpoll if the irq line it son is clean? Beats me.
+>
+>> alcarin steven # cat /proc/interrupts
+>>           CPU0       CPU1
+>> 0x0:      63227          0   IO-APIC-edge      hpet
+>> 0x8:          1          0   IO-APIC-edge      rtc0
+>> 0x9:      13080          0   IO-APIC-fasteoi   acpi
+>> 0xe:       8195          0   IO-APIC-edge      ide0
+>> 0xf:          0          0   IO-APIC-edge      ide1
+>> 0x10:         36          0   IO-APIC-fasteoi   uhci_hcd:usb5
+>> 0x11:      10645          0   IO-APIC-fasteoi   ath
+>
+> In this case your 11n Atheros device is on a clean line.
+>
+>> 0x12:         42          0   IO-APIC-fasteoi   uhci_hcd:usb4
+>> 0x17:        919          0   IO-APIC-fasteoi   ehci_hcd:usb1, uhci_hcd:usb2
+>
+> But it was this interrupt line which had an interrupt not handled.
+>
+> I'm not sure why this would happen. Can't we rule out ath9k then since
+> its on a different interrupt line?
+>
+>> 0x13:      32885          0   IO-APIC-fasteoi   uhci_hcd:usb3,
+>> ata_piix, ohci1394
+>> 0x200100:          1          0   PCI-MSI-edge      eth0
+>> 0x16:        223          0   IO-APIC-fasteoi   HDA Intel
+>> NMI:          0          0   Non-maskable interrupts
+>> LOC:      78087      95718   Local timer interrupts
+>> RES:      11576      16384   Rescheduling interrupts
+>> CAL:       6862       8889   Function call interrupts
+>> TLB:         54         41   TLB shootdowns
+>> TRM:          0          0   Thermal event interrupts
+>> THR:          0          0   Threshold APIC interrupts
+>> SPU:          0          0   Spurious interrupts
+>> ERR:          0
+>
+> Can you try to reproduce the irq not handled again?
+>
+>>>
+>>> and also please do not cross post to all these lists, just use
+>>> linux-wireless or ath9k.
+>>>
+>>
+>> Sorry, but in the past I've posted to linux-wireless, ath9k-devel, and
+>> all the maintainers of ath9k and didn't get a single response (except
+>> a 'me too' from a fellow ath9k user). I didn't just want to hear
+>> crickets this time.
+>
+> Patches speak more than words, but yeah sorry, we should have
+> addressed this there. I've personally have just been busy with
+> tackling aggregation.
+>
+>  Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
 
+Appologize about that, I'm wondering
+what is or was the main commit that might be causing
+all of these disable irq #'s in usb, wireless, etc..
+just doing a quick search one cant help but to think
+maybe this is something with tick.(but could be wrong);
 
-On Fri, 19 Sep 2008, Senthil Balasubramanian wrote:
-
-> On Fri, Sep 19, 2008 at 12:59:29PM +0530, Steven Noonan wrote:
-> > On Thu, Sep 18, 2008 at 8:01 PM, Luis R. Rodriguez
-> > <lrodriguez@atheros.com> wrote:
-> > > Thanks for testing, and glad to see this is resolved.
-> > >
-> > 
-> > Damn. It's back. I was using wireless normally this evening. Browsing
-> > the web, that kind of thing, and then the wireless inexplicably
-> > dropped (even with the group rekeying patch), so I unloaded/reloaded
-> > the module. This popped up in dmesg:
-> > 
-> > [ 3834.375658] vendor=8086 device=27d2
-> > [ 3834.375666] ath9k 0000:03:00.0: PCI INT A disabled
-> > [ 3834.375716] ath9k: driver unloaded
-> > [ 3838.552419] ath9k: 0.1
-> > [ 3838.552502] vendor=8086 device=27d2
-> > [ 3838.552511] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> > [ 3838.552532] ath9k 0000:03:00.0: setting latency timer to 64
-> > [ 3838.688924] phy1: Selected rate control algorithm 'ath9k_rate_control'
-> > [ 3838.693652] phy1: Atheros 5416: mem=0xffffc20000060000, irq=17
-> > [ 3839.427125] irq 17: nobody cared (try booting with the "irqpoll" option)
-> > [ 3839.427136] Pid: 0, comm: swapper Tainted: P
-> > 2.6.27-rc6-tip-00478-g74f1a36 #1
-> > [ 3839.427141] Call Trace:
-> > [ 3839.427145]  <IRQ>  [<ffffffff802219c5>] ? read_hpet+0x9/0x1c
-> > [ 3839.427165]  [<ffffffff8026af71>] __report_bad_irq+0x3d/0x8c
-> > [ 3839.427172]  [<ffffffff8026b0c6>] note_interrupt+0x106/0x160
-> > [ 3839.427180]  [<ffffffff8026b801>] handle_fasteoi_irq+0xad/0xda
-> > [ 3839.427188]  [<ffffffff8020f7b0>] do_IRQ+0x10c/0x190
-> > [ 3839.427194]  [<ffffffff8020c551>] ret_from_intr+0x0/0xa
-> > [ 3839.427198]  <EOI>  [<ffffffff8026c6f0>] rcu_pending+0x62/0x6e
-> > [ 3839.427211]  [<ffffffff8025bc11>] ? tick_nohz_stop_sched_tick+0x2e4/0x2f3
-> > [ 3839.427218]  [<ffffffff8020ad94>] cpu_idle+0x7b/0xdb
-> > [ 3839.427226]  [<ffffffff8060c921>] rest_init+0x75/0x77
-> > [ 3839.427231] handlers:
-> > [ 3839.427234] [<ffffffffa0240238>] (ath_isr+0x0/0x170 [ath9k])
-> > [ 3839.427263] Disabling IRQ #17
-> > [ 3842.263699] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> > [ 3848.035003] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> > [ 3848.432701] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> > [ 3850.216947] wlan0: authenticate with AP 00:1e:52:79:4d:01
-> > [ 3850.217027] wlan0: authenticate with AP 00:1e:52:79:4d:01
-> > [ 3850.228326] wlan0: authenticated
-> > [ 3850.228336] wlan0: associate with AP 00:1e:52:79:4d:01
-> > [ 3850.428140] wlan0: associate with AP 00:1e:52:79:4d:01
-> > [ 3850.628151] wlan0: associate with AP 00:1e:52:79:4d:01
-> > [ 3850.728305] wlan0: RX AssocResp from 00:1e:52:79:4d:01 (capab=0x431
-> > status=0 aid=1)
-> > [ 3850.728314] wlan0: associated
-> > [ 3850.728655] wlan0 (WE) : Wireless Event too big (320)
-> > [ 3850.743377] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> > [ 3860.855104] wlan0: no IPv6 routers present
-> > 
-> > I rebuilt the module with DBG_ATH_INTERRUPT, but it somehow stumbled
-> > itself back into working order while I was compiling. I can't keep the
-> > interrupt debugging on all the time because it's just -too verbose-,
-> > and when I pop a debug version of the module in, then it's too late to
-> > track the issue....
-> 
-> I am able to reproduce this IRQ nobody cared issue in my setup and the
-> following patch seems to be fixing the issue. Please try it out and let
-> me know if it solves your issue in your setup.
-
-The patch you prvide doesn't want to apply. What code did you base this 
-on?
-
-The first change listed doesn't work because there is no tasklet_kill() in 
-core.c, and the line immediately after ath_stop there has 
-"!sc->sc_invalid" instead of the "!(sc->sc_flags & SC_OP_INVALID)".
-
-The second fails because SC_OP_INVALID isn't defined.
-
-However, if your patch did apply to my code, I bet it'd solve the issue, 
-based on what it says it does.
+-- 
+Justin P. Mattock
