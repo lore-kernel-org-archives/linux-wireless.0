@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49678 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080AbYI1Q0M (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:38593 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753477AbYIRNrn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2008 12:26:12 -0400
-Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS
-	mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1ba2fa240809280924n1505e049w7800e3ef28449e8e@mail.gmail.com> (sfid-20080928_182426_075205_738DB644)
-References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
-	 <1222618769.7064.0.camel@johannes.berg>
-	 <1ba2fa240809280924n1505e049w7800e3ef28449e8e@mail.gmail.com>
-	 (sfid-20080928_182426_075205_738DB644)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-x0fM/al2e2ygUINKRWEQ"
-Date: Sun, 28 Sep 2008 18:26:08 +0200
-Message-Id: <1222619168.7064.3.camel@johannes.berg> (sfid-20080928_182614_922570_C55CAD75)
-Mime-Version: 1.0
+	Thu, 18 Sep 2008 09:47:43 -0400
+Message-ID: <48D25BFE.6020708@lwfinger.net> (sfid-20080918_154748_651187_3B0B74F8)
+Date: Thu, 18 Sep 2008 08:47:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181519.12366.IvDoorn@gmail.com>
+In-Reply-To: <200809181519.12366.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ivo van Doorn wrote:
 
---=-x0fM/al2e2ygUINKRWEQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Is dev->phy.radio_on set when mac80211 has send an instruction
+> to the driver to enable the radio (start() or config() callback)
+> or does it represent the key state in the hardware?
+> 
+> If it is something coming from mac80211, then you do not want
+> to send a SOFT_BLOCKED event since that will cause all other radios
+> to be switched off simply because the b43 interface has not been
+> enabled.
+> 
+> Off course when it represents the key state in the hardware then the
+> code would be fine...
 
-On Sun, 2008-09-28 at 19:24 +0300, Tomas Winkler wrote:
+The state comes from mac80211 and is set in the config() callback.
 
-> >> This patch makes mac80211 able to send action frames when toggling
-> >> (SM PS) Spacial Multiplexing Power Save mode.
+What state should be sent at the point when the hardware block is
+removed? It seems to me that forcing an UNBLOCKED state gives the
+wrong result. Perhaps RFKILL does need to have 4 states so that an
+RFKILL_STATE_HW_UNBLOCKED state can be transmitted.
 
-> > Why is the driver managing the PS mode to start with?
->=20
-> What PS mode, SM PS mode or traditional PS mode? Please be more
-> verbose so I don't have to guess what you mean.
-
-This was mostly concerned about SM PS mode so that's what I'm asking. I
-don't actually know what that is anyway though, hence the question. We
-keep adding API in mac80211 and nobody really knows when to call it.
-Maybe you should (maybe team up with Atheros for it) write a "HT
-hardware with mac80211" chapter in the documentation?
-
-johannes
-
---=-x0fM/al2e2ygUINKRWEQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI37AcAAoJEKVg1VMiehFYk0wQAKoOGbUjJXhZr6iTaZjo6BJp
-9PwVFXyH5FRyGDt5jThNVRWZKvqdi6Q6avVXrrv3xORxLWbyeXs0luPYV7niKFFv
-tX0oxaPMbuRA16woJbTBAjlDou6YT346i+FOR8MiGZXRP5dgsQQE5p8od1eGI9ry
-lFXR73UrAbT3gDPHGQgT2XgEVeq9a4nBsTilDI0h2bqZTp+Xtgvng6Yf6F/qoIER
-35KJa5Gya2DATggfQhDyovWBnCJIjSQxB9Ll1RHvbSxXpeZVJgJhDThdancoBdqZ
-OBUCVAdMBfJE4XPIwcdmZiyiJiMjehjjCfXQNyJhHls2FZJX6xgLPNB0SM2HAwt4
-1Aiw+nrS0bvDYJx2WfcJ6VB8OWBfADCP8eTqh2hPHXUwaF5LRX4c2bzA7RNCj4bX
-h4KnH71Aj+HdkyJinD6jyBerI1ZRSPiQK/cJwps7ei5KLmLPf8RWVO22jVi5Uj2P
-OUj7Ci9kIpjJ/NK+dSUjUYFWP5xl+S5pVZUF/sC9lVNZXmu3p9VP21ZLICFEeaVS
-0tvZPDWWoE9Syh7KNaIN68Cb9yig4iDL4oNRMSHYSDuLNoi0uAh8gxGKFLoAYfHD
-YA4gIoVG/EWN41rAFk6V4tRvc6Me5SFwFn0U5svOsqLHHkVfC/A44MBCPRcm/wFO
-LFVcqf1W9QAID7BeNvbY
-=YIrS
------END PGP SIGNATURE-----
-
---=-x0fM/al2e2ygUINKRWEQ--
-
+Larry
