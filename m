@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:53029 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752605AbYIOKCJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 06:02:09 -0400
-Received: by gxk9 with SMTP id 9so24452450gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 03:02:08 -0700 (PDT)
-Message-ID: <40f31dec0809150302m31b2aa76r4d0e7bf1d395a6f8@mail.gmail.com> (sfid-20080915_120213_060240_E16C788F)
-Date: Mon, 15 Sep 2008 13:02:07 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Brian Prodoehl" <bprodoehl@gmail.com>
-Subject: Re: ath5k, higher bitrates (>24M) not working in IBSS mode
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <415f2dc40809142020n5647007bm6538158317817c01@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <415f2dc40809142020n5647007bm6538158317817c01@mail.gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:52570 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753736AbYIRPNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 11:13:36 -0400
+Subject: Re: [PATCH] iw: add kernel version checks for pending upstream
+	kernel features
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1221748533-11000-1-git-send-email-linville@tuxdriver.com>
+References: <>  <1221748533-11000-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 18 Sep 2008 11:13:33 -0400
+Message-Id: <1221750813.5565.12.camel@dv> (sfid-20080918_171340_043885_B2DCC427)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/9/15 Brian Prodoehl <bprodoehl@gmail.com>:
-> I'm testing the driver (2008-09-12 compat-wireless-old snapshot) doing
-> point to point communication in ad-hoc mode with some XR2's (AR5414)
-> on an ixp425 platform running kernel 2.6.25.1.  "iwlist scanning"
-> reports RSSI around -30dBm.  I'm setting the bitrate with iwconfig,
-> and all rates from 1M to 24M work beautifully, but if I set the rate
-> to 36M, 48M or 54M, absolutely no data gets through at those rates.
-> Its not like it gets really lossy or anything, absolutely nothing
-> (except broadcasts) get through.
->
+On Thu, 2008-09-18 at 10:35 -0400, John W. Linville wrote:
+> Add checks for kernel version to enable features in the iw tool.  This
+> allows packagers to get pre-package the tool without requiring precise
+> timing to stage the tool into their distributions.
 
-It's a known problem, not only for IBSS mode. We don't initialize RF
-parts correctly, we are not doing any power calibration nor adaptive
-noise immunity (ANI). Depending on your environment and your card you
-might not be able to set any rate above 18M or you might get 25 -
-27Mbits @ 54Mbits (i have seen both behaviours during my tests).
+I'm afraid it's not a good approach.  Suppose a distro takes this
+version of iw and Linux 2.6.27.  Later it issues an update for the
+kernel that updates it to 2.6.28.  Userspace tools don't normally depend
+on the specific version of the kernel, and that's a good thing.  But in
+this case, it means that iw won't be recompiled and updated unless the
+distro has some mechanism in place to detect such need.  Since the
+kernel version detection is done on the compiler level, I suspect such
+need won't be detected.
 
-Right now this is work in progress, i hope we 'll have something soon
-(at least for ANI). Broadcasts might get through because they don't
-need to be ACKed from the card (to mark a frame as txed card must sent
-the frame and receive an ack for it, if the noack flag is set then it
-only has to send it and doesn't wait for an ack, so if rx path has
-problems on some rates -due to bad rf initailization- card might be
-able to send a frame but unable to receive the ack, so you get packet
-loss for non-multicast frames).
+The end result is that iw won't be able to access all functionality of
+the kernel.
 
+I believe userspace tools should always do the best effort to support
+all functionality they can support, but fail gracefully if any kernel
+functionality is not available.
+
+Keeping a local version of nl80211.h in iw sources seems the most
+sensible solution to me.  It has its downsides, but the upside is that
+there is a clear separation between the userspace and the kernel code.
+
+I know something about Fedora packaging and I assisted developers of
+other userspace tools with similar issues.  Of course, opinions of the
+actual package maintainers would have more weight.
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Regards,
+Pavel Roskin
