@@ -1,109 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:34433 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731AbYI2Id3 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:30788 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754235AbYIRPQ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 04:33:29 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1354817fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 01:33:27 -0700 (PDT)
-Message-ID: <1ba2fa240809290133n79a4e116x6bc205a7b2c81f09@mail.gmail.com> (sfid-20080929_103333_187163_94BFA7A0)
-Date: Mon, 29 Sep 2008 11:33:26 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS mode
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <43e72e890809290114w5010c397od3d17101db263109@mail.gmail.com>
+	Thu, 18 Sep 2008 11:16:29 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so1656102eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 08:16:28 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Date: Thu, 18 Sep 2008 17:16:24 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181624.53050.IvDoorn@gmail.com> <20080918143754.GH1583@khazad-dum.debian.net>
+In-Reply-To: <20080918143754.GH1583@khazad-dum.debian.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
-	 <43e72e890809290114w5010c397od3d17101db263109@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809181716.24355.IvDoorn@gmail.com> (sfid-20080918_171633_332132_C97D9DFE)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 29, 2008 at 11:14 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Sun, Sep 28, 2008 at 9:14 AM, Tomas Winkler <tomas.winkler@intel.com> wrote:
->> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->>
->> This patch makes mac80211 able to send action frames when toggling
->> (SM PS) Spacial Multiplexing Power Save mode.
->
-> I have no clue what this is as I haven't yet peeked at this section of
-> the draft. If we can provide a brief explanation as to what this is
-> would be useful to other developers without access to the 11n draft.
-> Even it its just enhancing the comment in the code.
+On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> > On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> > > On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> > > > If it is something coming from mac80211, then you do not want
+> > > > to send a SOFT_BLOCKED event since that will cause all other radios
+> > > > to be switched off simply because the b43 interface has not been
+> > > > enabled.
+> > > 
+> > > Drivers ARE supposed to be able to set their radio state to their heart's
+> > > content, without messing with any other devices.  There are no constraints
+> > > to calls to rfkill_force_state(), other than the current issue that it must
+> > > not be done from an atomic context.
+> > 
+> > My main point was that when the radio is not enabled because the user
+> > did something like "iwconfig wlan0 txpower off" then this is not an rfkill
+> > SOFT_BLOCKED event. Since that command has nothing to do with the
+> > entire rfkill layer.
+> 
+> We had some threads about it, and I don't recall any real conclusions if we
+> should have "tx power off" be treated the same way as a software rfkill
+> block request would, or not.  I believe it ended up as "do whatever you want
+> in your driver" (i.e. no real conclusion).
+> 
+> So, the rfkill core is not even aware of any tx power changes, unless the
+> wireless device drivers decides to make it so by actively feeding it new
+> states through rfkill_force_state() when the tx power changes from off to
+> something else, and from something else to off.
+> 
+> rfkill will work right whether you do it or not...
 
-On the way
+Well as far as I am concerned, userspace configuration actions are not rfkill events
+and thus should rfkill not raise them as such. rfkill events are triggered by
+buttons/keys/switches/sliders whatever the manufacturer considered as a nice idea
+to control the wireless device.
 
->> Example:
->> 1.
->> Low lever driver may close some of RX chains in power save mode
->> and needs to announce to AP that a RTS frame is need in order to wake all
->> RX chains, on other hand SM PS can be disabled on CAM mode
->
-> What's CAM mode?
+Abusing rfkill to make userspace commands like "iwconfig txpower on/off" configurable
+by triggering rfkill events is just plain wrong and will mess up userspace tools/notifier chain
+listeners or whatever other tool is listening to rfkill.
 
-Continuously Aware Mode (No power save)
+The rfkill layer was added for a specific reason:
+	Control the wireless radios when the rfkill buttons/keys/switches/sliders was pressed.
+This was needed for areas where no RF radios are allowed (i.e. airplanes).
 
->> or if HW is able
->> to wake all chains without RTS frame.
->
-> Should we add a HW capability bit for mac80211 drivers to indicate this?
+Apparently we are now changing it to a global library where is displays the state of
+all radios grouped by type, and are basically providing a new interface for the user to
+where all configuration changes done in userspace result into new events reported to
+userspace.
 
-The patch is in internal  review and testing, will be published soon.
+When the userspace tool listens to rfkill events it is not, or most accurate, should not
+be interested in the events from userspace (which it probably caused itself)
+but from the events coming from the hardware.
 
->
->> 2.
->> iwlwifi can call this function when it detects that only
->> one antenna can effectively receive
->
-> When would this happen? Would this happen when any 11n mac80211
-> capable driver is going to PS mode and it doesn't have the capability
-> of detecting when it needs to to turn on its antennas?
->
->> then MS PS
->
-> Did you mean SM PS mode?
+If the user has userspace tools which listen to rfkill events, and the user performs
+a "iwconfig wlan0 txpower off" he does not want the userspace tool to listen to
+the event and raises a "hey somebody killed a radio, lets kill all other radios as well"
 
-Typo, will resend the fix.
+Or should the user now first disable his rfkill-listener daemon before applying
+configuration actions to his wireless interface just to prevent events from occuring?
 
->> mode is set to STATIC
->
-> Can we elaborate a bit on what this vs Dynamic is in the comments if possible?
+> > When you consider such commands as rfkill events you get wrong behavior
+> > because it would trigger a SOFT_BLOCK in rfkill which will be send to all
+> > registered drivers who can disable their radio off as well. And that is
+> > definately not what you want...
+> 
+> ...because this is incorrect.
+> 
+> No transmitter-specific rfkill events cause this, at least as far as the
+> rfkill core is concerned.  They are sent to userspace and the notify chain,
+> yes.  And either userspace or another kernel module might, if it is feeling
+> wrong on the head, change that event into a request to mess with all radios.
+> 
+> But right now, none will.  rfkill-input only cares about INPUT EVENTS, but
+> the rfkill core never *issues* any input events, ever.
 
-We cannot copy the whole spec into code :) On the way.
+True, but I am not talking about rfkill-input alone.
+I am talking about whatever rfkill event listener, and that can be either rfkill-input
+notify chain listener or a uevent listener.
+They are all allowed to perform actions based on the rfkill events.
+ 
+> Unless b43 is still issuing INPUT EVENTS even after the patch?  It
+> shouldn't.
 
->
->> +static void ieee80211_send_sm_ps(struct ieee80211_sub_if_data *sdata, u8 mode)
->> +{
->> +       struct ieee80211_local *local = sdata->local;
->> +       struct ieee80211_mgmt *mgmt;
->> +       struct sk_buff *skb;
->> +       DECLARE_MAC_BUF(mac);
->> +
->> +       struct ieee80211_if_sta *ifsta = &sdata->u.sta;
->> +       struct net_device *dev = sdata->dev;
->> +
->> +       /* Implemented for STA only */
->> +       if (sdata->vif.type != NL80211_IFTYPE_STATION)
->> +               return;
->
-> <-- snip -->
->
->> +       if (ifsta->flags & IEEE80211_STA_ASSOCIATED)
->> +               ieee80211_tx_skb(sdata, skb, 0);
->
-> You can move this ending branch above to return early so we don't go
-> through the entire routine for no good reason. So something like:
->
->       if (sdata->vif.type != NL80211_IFTYPE_STATION ||
->                      ifsta->flags & IEEE80211_STA_ASSOCIATED)
->               return;
->
->  Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+That part is being removed with this patch.
+
+Ivo
+
+
