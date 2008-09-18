@@ -1,79 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:54612 "EHLO
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:40260 "EHLO
 	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753368AbYIRQnp (ORCPT
+	by vger.kernel.org with ESMTP id S1757245AbYIRUcm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 12:43:45 -0400
-Date: Thu, 18 Sep 2008 13:43:39 -0300
+	Thu, 18 Sep 2008 16:32:42 -0400
+Date: Thu, 18 Sep 2008 17:32:35 -0300
 From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] rfkill: clarify usage of rfkill_force_state() and
-	rfkill->get_state()
-Message-ID: <20080918164339.GM1583@khazad-dum.debian.net> (sfid-20080918_184349_935626_1261357F)
-References: <20080918145236.GJ1583@khazad-dum.debian.net> <1221751166-9927-1-git-send-email-hmh@hmh.eng.br> <200809181724.03723.IvDoorn@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC V2] b43: A patch for control of the radio LED using rfkill
+Message-ID: <20080918203235.GW1583@khazad-dum.debian.net> (sfid-20080918_223248_949100_EFC57CD8)
+References: <48d260b7.SG5SGntEQ00lxFKi%Larry.Finger@lwfinger.net> <20080918162440.GL1583@khazad-dum.debian.net> <48D2867D.6010501@lwfinger.net> <200809181920.10416.mb@bu3sch.de> <20080918202158.GT1583@khazad-dum.debian.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809181724.03723.IvDoorn@gmail.com>
+In-Reply-To: <20080918202158.GT1583@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
-> > rfkill_force_state() is used to update the rfkill core's idea of what is
-> > really happening RIGHT NOW to the transmitter hardware in a PUSH model.
+On Thu, 18 Sep 2008, Henrique de Moraes Holschuh wrote:
+> On Thu, 18 Sep 2008, Michael Buesch wrote:
+> > On Thursday 18 September 2008 18:49:01 Larry Finger wrote:
+> > > Henrique de Moraes Holschuh wrote:
+> > > > The problem is in the "should".
+> > > > 
+> > > > Maybe something else than b43 (like firmware) changed the radio software
+> > > > rfkill bit, and it does not match what mac80211 and userland requested
+> > > > anymore.
+> > > > 
+> > > > What you need to pass to rfkill_force_state() is what the radio is currently
+> > > > doing.  So, the state you need to send to rfkill_force_state has to be based
+> > > > on the real state of the hardware's "soft switch bit".
+> > > 
+> > > The hardware does not have such a bit. Once it is initialized and
+> > > mac80211 sends it a packet, it will try to send it. That is true even
+> > > if the hardware switch is off. It just will not succeed.
 > > 
-> > rfkill->get_state() does the same, in a PULL model.
-> > 
-> > Neither of them change the real hardware radio state through a call to
-> > rfkill->toggle_radio() or anything of the sort, so they must deal with the
-> > real, current state of the hardware.
-> > 
-> > Change some documentation to make that more clear (I hope).
-> > 
-> > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> > Right, b43 does have two "bits". One read-only bit that tells the hardware
+> > block state. This state can only be changed by physically pressing rfkill
+> > button. The other "bit" is a read/write "bit" to turn off the radio in software.
+> > If _either_ one bit is blocking the radio, it will be physically blocked.
 > 
-> See my other mail I just send out.
+> A software-emulated rfkill line is still a SW rfkill line, and the rfkill
+> core needs to know about it [but you don't want to have set txpower off
+> state mixed in whatever you send back to the rfkill core].
 
-I did, and just replied to it.
+I forgot to add that you don't always need to do a rfkill_force_state() just
+because a SW rfkill line changed.
 
-But only now do I think I realised what you meant:  That even if the driver
-tries to keep set txpower off separate from rfkill, if it uses the hardware
-soft-rfkill bit to implement both, it cannot use that to feed information to
-rfkill_force_state() directly.
+If that change can only come through the rfkill core (i.e. through the
+toggle_radio() hook), the rfkill core already knows about it.
 
-Argh.
-
-> But I don't quite agree on this change of rfkill event interpretation.
-
-Well, there is no intended change in interpretation, but I don't know how to
-word it in a way that means "the real current hardware state as far as
-rfkill is concerned".
-
-Because suppose it is a driver doing txpower off AND software rfkill using
-the *same* hardware bit (a sigle software rfkill bit).
-
-Now it must do something like this in pseudo-code:
-
-	1. if (the bit is disabled (i.e. SW rfkill is NOT ACTIVE)) {
-		rfkill-SW-status = disabled;
-	   }  else if (the bit is enabled (i.e. SW rfkill is ACTIVE)) {
-		if (tx power off is NOT ACTIVE)
-			rfkill-SW-status = enabled;
-		else
-			rfkill-SW-status = whatever the user asked
-	   }
-
-THEN, it should use rfkill-sw-status, along with the hw rfkill line status,
-to synthesize the state it must pass to rfkill_force_status().
-
-ICK.  Of course, if the driver has another way to implement txpower off that
-does not clash with sw rfkill, the above is unneeded.
-
-How would you put that into words for the rfkill documentation?
+You *still* take the sw rfkill line into account when you do
+rfkill_force_state().  It just might not be reason enough to actually call
+rfkill_force_state().
 
 -- 
   "One disk to rule them all, One disk to find them. One disk to bring
