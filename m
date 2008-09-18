@@ -1,60 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39259 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752230AbYIKWOI (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:61105 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753265AbYIRUqU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 18:14:08 -0400
-Subject: Re: [PATCH] mac80211: fix build failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Davide Pesavento <davidepesa@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <2da21fe50809111436v5bf231aeo13ac0eedcb59ce75@mail.gmail.com> (sfid-20080911_233638_382316_17A9D50F)
-References: <1221168191.3742.2.camel@johannes.berg>
-	 <2da21fe50809111436v5bf231aeo13ac0eedcb59ce75@mail.gmail.com>
-	 (sfid-20080911_233638_382316_17A9D50F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-klwTNXPR/j4MIrMRh2o3"
-Date: Fri, 12 Sep 2008 00:13:32 +0200
-Message-Id: <1221171212.5956.3.camel@johannes.berg> (sfid-20080912_001412_514785_C238A864)
-Mime-Version: 1.0
+	Thu, 18 Sep 2008 16:46:20 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so23106yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 13:46:19 -0700 (PDT)
+Message-ID: <43e72e890809181346o22793701r21d594ee79d6954c@mail.gmail.com> (sfid-20080918_224624_203418_85CB4F3E)
+Date: Thu, 18 Sep 2008 13:46:19 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: What is the state of 802.11h support?
+Cc: "Gordon, Charles" <Charles.Gordon@digi.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240809181323n2fba2c93j7e884a437efbfe58@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <8DCC153EAFE67A4B990A840E829F704B718874D96D@mtk-sms-exch01.digi.com>
+	 <1ba2fa240809181323n2fba2c93j7e884a437efbfe58@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Sep 18, 2008 at 1:23 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Thu, Sep 18, 2008 at 5:31 PM, Gordon, Charles
+> <Charles.Gordon@digi.com> wrote:
+>> Can someone tell me how much of 802.11h is supported by Linux?  What is the plan for completing it enough so that it implements a client which complies with the specification?
+>>
+>> What needs to be implemented in the wireless NIC driver to support 802.11h?  My company is working on a wireless NIC driver for Linux.
+>>
+> What part of 11h are you looking for. We have pending implementation
+> for everything that is under must requirement for BSS mode. Radar
+> detection is not implemented.
 
---=-klwTNXPR/j4MIrMRh2o3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Please post the patches, even if its in a temp directory.
 
-On Thu, 2008-09-11 at 23:36 +0200, Davide Pesavento wrote:
-
-> Thank you, this patch fixes the build failure I reported, but there's
-> another one... :P
-
-All these weird configurations ;)
-
-johannes
-
---=-klwTNXPR/j4MIrMRh2o3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIyZgIAAoJEKVg1VMiehFYOKAP/i3cmq1Dw1QisjUSZ+oH4BFD
-yD6zUCyOpmxuOtkGIL2AHzBrsYZ7YO/7qmORuxd8/QyNc8HBzRIDcWHkA/HmdUUc
-SdTQisMf2CGfIQQt325rhUG26r5MTaFNJFRVAMApl6y4ifyCnEnSaTPN3RNK48Mv
-FGaRZjz9VhWk0tyLVNYpReScEu6KFeGiVX9fzbNDd81otcjznTd7HQ4vzqJl8qcb
-s64REyGuu7pJ+SoEwndvJCx5YJ48xHHlAvMqKrQQwpWt0hrMqzIJv3nW5JaYs/ya
-yPRrOOlC4k6I92vQdW7o7muveeFhFyzH723LYN82pkHxOKqRwwusL1dUdeEl4c1n
-vmM63x1E+CeK41PShbSY05yaxCqHSr+xDPMRR8/NshQMrCHz+Y9Il1fK5FXZqXfY
-3W1ATEGFn65Fh4w5J3Z3Ew9aAml0X1aA7gVlt+b8/P1LQyWbCFIC3dc8y10R8W9p
-8VQnwFsFmmbYfY41+EZoi6Es6Vo4ZFAdcW8mcY4Qh85DUIHY98nvvQ2GgBsP+dac
-JGg7UWe7D9Eke/AuAOu/Vls+7r4c74cphBxesCo9fYQKzHFxEENP0TMB2S6vrRQK
-7FqS7YLQ90ZkvntMRhM67z3MAFpIXfxD8oSmQ9xev0nPnzQUshUjr3sWL+yxitjR
-QpeVInJsY+jt9lpVoeox
-=ZLsh
------END PGP SIGNATURE-----
-
---=-klwTNXPR/j4MIrMRh2o3--
-
+  Luis
