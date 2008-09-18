@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:43002 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725AbYIDUNh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2008 16:13:37 -0400
-Received: by gxk9 with SMTP id 9so6717714gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2008 13:13:35 -0700 (PDT)
-Message-ID: <43e72e890809041313x421afedfx64c25b16c5e20ba4@mail.gmail.com> (sfid-20080904_221340_262813_A87255EC)
-Date: Thu, 4 Sep 2008 13:13:35 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "=?UTF-8?Q?Lars_R=C3=A6der_Clausen?=" <lrc@amplex.dk>
-Subject: Re: Documentation errors
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <fec9d0970809041307w5eb74ff2r62062a6016bed1c3@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <fec9d0970809041307w5eb74ff2r62062a6016bed1c3@mail.gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:51739 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754399AbYIRTTK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 15:19:10 -0400
+Subject: Re: [PATCH] iw: add kernel version checks for pending upstream
+	kernel features
+From: Pavel Roskin <proski@gnu.org>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1221758783.6782.29.camel@californication>
+References: <>  <1221748533-11000-1-git-send-email-linville@tuxdriver.com>
+	 <1221752489.9262.81.camel@johannes.berg>
+	 <1221758783.6782.29.camel@californication>
+Content-Type: text/plain
+Date: Thu, 18 Sep 2008 15:19:07 -0400
+Message-Id: <1221765547.9477.4.camel@dv> (sfid-20080918_211914_007427_4CBE1C40)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCBTZXAgNCwgMjAwOCBhdCAxOjA3IFBNLCBMYXJzIFLDpmRlciBDbGF1c2VuIDxscmNA
-YW1wbGV4LmRrPiB3cm90ZToKPiBJIGZvdW5kIGEgY291cGxlIGRvY3VtZW50YXRpb24gcHJvYmxl
-bXMgd2hpbGUgZm9sbG93aW5nIHRoZQo+IGluc3RydWN0aW9ucyBvbiBodHRwOi8vd2lyZWxlc3Mu
-a2VybmVsLm9yZy9lbi91c2Vycy9Eb3dubG9hZCBmb3IgYQo+IDIuNi4yNCBrZXJuZWwgb24gYSBJ
-Qk0gVGhpbmtQYWQgVDYwcCAoMzk0NUFCRyBjb250cm9sbGVyKToKPgo+IFRoZSAtb2xkIHRhcmJh
-bGwgcmVmZXJlbmNlZCBoYXMgYSBmaWxlIGluY2x1ZGUvbGludXgvY29tcGF0X2F1dG9jb25mLmgK
-PiB3aGljaCBjb250YWlucyAiWW91IG5lZWQgZ2l0IHRvIGdlbmVyYXRlIGNvbXBhdC1yZWxlYXNl
-IGZpbGUiLCBjYXVzaW5nCj4gbWFrZSAob24gVWJ1bnR1IEhhcmR5IEhlcm9uKSB0byBmYWlsIHdp
-dGg6Cj4KPiAvaG9tZS9sYXJzL1NvZnR3YXJlL2NvbXBhdC13aXJlbGVzcy0yLjYtb2xkLTIwMDgt
-MDktMDQvaW5jbHVkZS9saW51eC9jb21wYXRfYXV0b2NvbmYuaDoxOgo+IGVycm9yOiBleHBlY3Rl
-ZCAnPScsICcsJywgJzsnLCAnYXNtJyBvciAnX19hdHRyaWJ1dGVfXycgYmVmb3JlICduZWVkJwo+
-IG1ha2VbM106ICoqKiBbL2hvbWUvbGFycy9Tb2Z0d2FyZS9jb21wYXQtd2lyZWxlc3MtMi42LW9s
-ZC0yMDA4LTA5LTA0L2RyaXZlcnMvbWlzYy9lZXByb21fOTNjeDYub10KPiBFcnJvciAxCj4gbWFr
-ZVsyXTogKioqIFsvaG9tZS9sYXJzL1NvZnR3YXJlL2NvbXBhdC13aXJlbGVzcy0yLjYtb2xkLTIw
-MDgtMDktMDQvZHJpdmVycy9taXNjXQo+IEVycm9yIDIKPiBtYWtlWzFdOiAqKiogW19tb2R1bGVf
-L2hvbWUvbGFycy9Tb2Z0d2FyZS9jb21wYXQtd2lyZWxlc3MtMi42LW9sZC0yMDA4LTA5LTA0XQo+
-IEVycm9yIDIKPiBtYWtlWzFdOiBMZWF2aW5nIGRpcmVjdG9yeSBgL3Vzci9zcmMvbGludXgtaGVh
-ZGVycy0yLjYuMjQtMTktZ2VuZXJpYycKPiBtYWtlOiAqKiogW21vZHVsZXNdIEVycm9yIDIKPgo+
-IEVpdGhlciB0aGF0IGZpbGUgc2hvdWxkIGJlIGZpeGVkIGluIHRoZSB0YXJiYWxsLCBvciBpdCBz
-aG91bGQgYmUKPiBtZW50aW9uZWQgdGhhdCBkb3dubG9hZCB1c2luZyBnaXQgaXMgcmVxdWlyZWQu
-CgpIbSwgSSBnb3R0YSBmaXggdGhhdC4KCj4gQWxzbywgaXMgdGhlcmUgbm8gYXJjaGl2ZSBvZiB0
-aGUgLW9sZCB0YXJiYWxscyBsaWtlIHRoZSBpcyBvZiB0aGUKPiByZWd1bGFyIG9uZXM/IEkgdHVy
-bmVkIG91dCBub3QgdG8gbmVlZCBpdCBhZnRlciBhbGwsIGJ1dCBvdGhlcnMgbWlnaHQKPiBsaWtl
-IGl0LgoKSSBoYXZlIHRvIHNldCBhcmNoaXZpbmcgZm9yIHRoZSAtb2xkIHRhcmJhbGxzLiBJJ2xs
-IGRvIHNvIHNvb24uCgogIEx1aXMK
+On Thu, 2008-09-18 at 19:26 +0200, Marcel Holtmann wrote:
+
+> if the numbers you are planning to use are stable, then please use the
+> above approach to just add the missing defines to it. Like adding a
+> compat.h file with
+> 
+> #ifndef NL80211_ATTR_SUPPORTED_IFTYPES
+> #define NL80211_ATTR_SUPPORTED_IFTYPES boo
+> #endif
+
+I'm sure the numbers used to communicate between the kernel and the
+userspace are meant to be stable.
+
+> That would make a distro complied binary work with an updates kernel and
+> we don't end up with the issue the iwconfig current has when it has been
+> compiled for an older kernel.
+
+Having the include file in the sources would have the same effect.
+
+But your approach is easier to get wrong.  Some numbers are from enum,
+not from preprocessor defines.  It's easy to put a wrong number into the
+compatibility code.  This code will need to be tested on older kernels.
+
+-- 
+Regards,
+Pavel Roskin
