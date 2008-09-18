@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:51755 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751574AbYIPRIu (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:28280 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752361AbYIRSmt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 13:08:50 -0400
-Message-ID: <48CFE820.7010305@lwfinger.net> (sfid-20080916_190858_882390_180705FD)
-Date: Tue, 16 Sep 2008 12:08:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 18 Sep 2008 14:42:49 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so10451yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 11:42:48 -0700 (PDT)
+Message-ID: <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com> (sfid-20080918_204252_665197_EE5E1564)
+Date: Thu, 18 Sep 2008 11:42:48 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Steven Noonan" <steven@uplinklabs.net>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: LKML <linux-kernel@vger.kernel.org>, "Ingo Molnar" <mingo@elte.hu>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de,
-	John Linville <linville@tuxdriver.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de>
-In-Reply-To: <200809161742.15527.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
+	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Tuesday 16 September 2008 16:18:34 Larry Finger wrote:
->> Since commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f entitled
->> "b43/b43legacy: add RFKILL_STATE_HARD_BLOCKED support", the radio LED
->> no longer responds to rfkill switch events.
->>
->> ATM, I do not have a fix, other than reversion of this commit.
-> 
-> It's kind of bogus that it pokes with the software rfkill state
-> from within the hardware rfkill handler.
-> 
-> Please revert this patch. The commit log says nothing about
-> why this is needed and I don't see a point in overriding the state
-> in the rfkill-private data structure from within the driver.
+On Thu, Sep 18, 2008 at 11:34 AM, Luis R. Rodriguez
+> irqpoll is a monster of evil and that should make your system crawl to
+> its knees. I would advise instead we work with you fixing the the
+> missed interrupts issue upon rmmod.
 
-I agree with Michael. From what I know, the only possible reason for
-having this state would be if user space could somehow affect the
-state of the hardware switch. As the user's finger is the only such
-thing, then there is no use for the RFKILL_STATE_HARD_BLOCKED state,
-particularly when it breaks LED operations.
+Also, please provide the output of
 
-Please revert the patch.
+cat /proc/interrupts
 
-Larry
+and also please do not cross post to all these lists, just use
+linux-wireless or ath9k.
+
+  Luis
