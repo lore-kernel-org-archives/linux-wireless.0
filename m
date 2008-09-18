@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36909 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58766 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752821AbYIYPsq (ORCPT
+	with ESMTP id S1756089AbYIROiM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 11:48:46 -0400
-Date: Thu, 25 Sep 2008 11:47:54 -0400
+	Thu, 18 Sep 2008 10:38:12 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: pull request: wireless-2.6 2008-09-24
-Message-ID: <20080925154753.GA3277@tuxdriver.com> (sfid-20080925_174852_471914_7CD0A258)
-References: <20080924231720.GD3639@tuxdriver.com> <1222321622.2510.455.camel@debian.sh.intel.com> <20080925114133.GA5044@tuxdriver.com> <1ba2fa240809250757x32aa450k523d71e555c221e4@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240809250757x32aa450k523d71e555c221e4@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iw: add kernel version checks for pending upstream kernel features
+Date: Thu, 18 Sep 2008 10:35:33 -0400
+Message-Id: <1221748533-11000-1-git-send-email-linville@tuxdriver.com> (sfid-20080918_163818_284690_A833D90B)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 25, 2008 at 05:57:33PM +0300, Tomas Winkler wrote:
-> On Thu, Sep 25, 2008 at 2:41 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Thu, Sep 25, 2008 at 01:47:02PM +0800, Zhu Yi wrote:
-> >> On Wed, 2008-09-24 at 17:17 -0600, John W. Linville wrote:
-> >> > Dave,
-> >> >
-> >> > One more for 2.6.27 -- a fix for a possible interrupt storm.  There is
-> >> > even a link in the commit log to a youtube video of the storm in
-> >> > progress. :-)
-> >> >
-> >> > Let me know if there are problems!
-> >>
-> >> Can you also add this one? It doesn't panic the kernel when a frame from
-> >> firmware is invalid.
-> >>
-> >> http://marc.info/?l=linux-wireless&m=122219037706528&w=2
-> >
-> > Is there an open bug report for that anywhere?  Is this something
-> > that real users (no offense to Johannes) are likely to hit?
-> 
-> I'm just exporting the major bugs from our internal database to
-> buzilla, 5000 is new so
-> we are hitting the problems during testing  before users report them.
-> 
-> Now I don't know if it was good idea to push the driver upstream same
-> time as it hits the market.
+Add checks for kernel version to enable features in the iw tool.  This
+allows packagers to get pre-package the tool without requiring precise
+timing to stage the tool into their distributions.
 
-You're right -- pushing it sooner rather than sitting on it internally
-probably would have helped to give it more visibility sooner.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ info.c |    4 ++++
+ reg.c  |    6 ++++++
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
-John
+diff --git a/info.c b/info.c
+index 0dc05c1..4b7d191 100644
+--- a/info.c
++++ b/info.c
+@@ -1,4 +1,5 @@
+ #include <errno.h>
++#include <linux/version.h>
+ #include <linux/nl80211.h>
+ #include <net/if.h>
+ 
+@@ -105,12 +106,15 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 		}
+ 	}
+ 
++/* This funcionality first appears "officially" in 2.6.28... */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
+ 	if (!tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES])
+ 		return NL_SKIP;
+ 
+ 	printf("\tSupported interface modes:\n");
+ 	nla_for_each_nested(nl_mode, tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES], rem_mode)
+ 		printf("\t\t * %s\n", iftype_name(nl_mode->nla_type));
++#endif
+ 
+ 	return NL_SKIP;
+ }
+diff --git a/reg.c b/reg.c
+index 2892117..ce039ae 100644
+--- a/reg.c
++++ b/reg.c
+@@ -1,3 +1,4 @@
++#include <linux/version.h>
+ #include <linux/nl80211.h>
+ #include <net/if.h>
+ #include <errno.h>
+@@ -11,6 +12,9 @@
+ 
+ #include "iw.h"
+ 
++/* This funcionality first appears "officially" in 2.6.28... */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
++
+ int isalpha_upper(char letter)
+ {
+ 	if (letter >= 65 && letter <= 90)
+@@ -67,3 +71,5 @@ static int handle_reg_set(struct nl_cb *cb,
+ }
+ COMMAND(reg, set, "<ISO/IEC 3166-1 alpha2>",
+ 	NL80211_CMD_REQ_SET_REG, 0, CIB_NONE, handle_reg_set);
++
++#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) */
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+1.5.4.3
+
