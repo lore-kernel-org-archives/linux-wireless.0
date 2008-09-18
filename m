@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:55034 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752908AbYIGKZO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2008 06:25:14 -0400
-Received: from lyakh (helo=localhost)
-	by axis700.grange with local-esmtp (Exim 4.63)
-	(envelope-from <g.liakhovetski@gmx.de>)
-	id 1KcHZo-0001FY-D9
-	for linux-wireless@vger.kernel.org; Sun, 07 Sep 2008 12:33:04 +0200
-Date: Sun, 7 Sep 2008 12:33:04 +0200 (CEST)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-To: linux-wireless@vger.kernel.org
-Subject: Broadcom Corporation BCM4310 USB Controller
-Message-ID: <Pine.LNX.4.64.0809071146590.3981@axis700.grange> (sfid-20080907_122524_883926_343CF12F)
+Received: from nf-out-0910.google.com ([64.233.182.185]:44472 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755329AbYIRSMX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 14:12:23 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so13643nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 11:12:22 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] rfkill: clarify usage of rfkill_force_state() and rfkill->get_state()
+Date: Thu, 18 Sep 2008 20:12:18 +0200
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <20080918145236.GJ1583@khazad-dum.debian.net> <200809181932.58272.IvDoorn@gmail.com> <1221760328.9262.94.camel@johannes.berg>
+In-Reply-To: <1221760328.9262.94.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200809182012.18723.IvDoorn@gmail.com> (sfid-20080918_201227_237446_E496479C)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Thursday 18 September 2008, Johannes Berg wrote:
+> On Thu, 2008-09-18 at 19:32 +0200, Ivo van Doorn wrote:
+> 
+> > Ideal situation would indeed be that mac80211 registers a rfkill structure
+> > and listens to rfkill events. This would help drivers by only needing to
+> > register a rfkill structure for state-change events without any need for
+> > listeners.
+> 
+> Yup.
+> 
+> > I was considering such a patch some time ago, but needed to figure out
+> > how to work with the state-override capabilities (HW_BLOCK and SOFT_BLOCK)
+> > and didn't work on it any further since.
+> 
+> So make the struct part of the hw structure? Then drivers can just use
+> that to force hard events. Or actually, no, don't do this, make a new
+> mac80211 call:
+> 
+> 	ieee80211_inform_hardblocked(BLOCK/OPEN)
+> 
+> which makes sure we can also try to not associate in this case in the
+> future...
 
-The above adapter is installed in my ACER Extensa 5220, googling around I 
-found various references to this chip, the main resume seems to be "works 
-only with ndiswrapper." Is it true and if it is ATM, is it going to 
-change?:-) Any work in progress or plans to support it natively? lspci -vv 
-output is at http://home.arcor.de/g.liakhovetski/extensa5220/.
+Yeah, unfortunately that wasn't the probablematic part. ;)
+Anyway when I have some time available I'll see if I can sort it out and
+make it work. But that will not be for another week or 2.
 
-Tried brutally adding the PCI ID to the ssb driver and ssb ID to the b43 
-driver. Here's the result:
-
-ACPI: PCI interrupt for device 0000:04:00.0 disabled
-ACPI: PCI Interrupt 0000:04:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-PCI: Setting latency timer of device 0000:04:00.0 to 64
-ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor 0x4243)
-ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F, vendor 0x4243)
-ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
-ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
-ssb: WARNING: Invalid SPROM CRC (corrupt SPROM)
-ssb: SPROM revision 255 detected.
-ssb: Unsupported SPROM revision 255 detected. Will extract v1
-ssb: Sonics Silicon Backplane found on PCI device 0000:04:00.0
-b43-phy1: Broadcom 4312 WLAN found
-b43-phy1 ERROR: FOUND UNSUPPORTED PHY (Analog 6, Type 5, Revision 1)
-b43: probe of ssb0:0 failed with error -95
-Broadcom 43xx driver loaded [ Features: P, Firmware-ID: FW13 ]
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
+Ivo
