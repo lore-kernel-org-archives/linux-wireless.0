@@ -1,52 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:37266 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751721AbYIWRao (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 13:30:44 -0400
-Date: Tue, 23 Sep 2008 13:30:30 -0400
-From: Kyle McMartin <kyle@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Chr <chunkeey@web.de>, Dan Williams <dcbw@redhat.com>,
-	Philippe Waroquiers <philippe.waroquiers@skynet.be>,
-	linux-wireless@vger.kernel.org, kyle@redhat.com
-Subject: Re: prism54 stopped working after upgrade from kernel 2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
-Message-ID: <20080923173030.GB2831@kibblesnbits.boston.devel.redhat.com> (sfid-20080923_193048_307292_FC2F0EED)
-References: <CB9B2237C21D46F3B852E45F75E91C52@soleil> <200809222332.00500.chunkeey@web.de> <1221947069.11865.11.camel@localhost.localdomain> <200809222359.40354.chunkeey@web.de> <20080922221321.GF3660@tuxdriver.com>
-Mime-Version: 1.0
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:58735 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756140AbYIRTXa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 15:23:30 -0400
+Date: Thu, 18 Sep 2008 16:23:23 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Message-ID: <20080918192323.GP1583@khazad-dum.debian.net> (sfid-20080918_212349_352078_DBF7FF33)
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809182017.12685.mb@bu3sch.de> <200809182023.21751.IvDoorn@gmail.com> <200809182034.00801.mb@bu3sch.de>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080922221321.GF3660@tuxdriver.com>
+In-Reply-To: <200809182034.00801.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2008 at 06:13:21PM -0400, John W. Linville wrote:
-> On Mon, Sep 22, 2008 at 11:59:40PM +0200, Chr wrote:
-> > On Saturday 20 September 2008 23:44:29 Dan Williams wrote:
-> > > On Mon, 2008-09-22 at 23:32 +0200, Chr wrote:
-> > > > > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=co
-> > > > > >mmit ;h=aaa1553512b9105699113ea7e2ea726f3d9d4de2
-> > > > >
-> > > > > Is that commit not in stable 2.6.26 yet or something?
-> > > >
-> > > > Hmm, no? AFAIK The mac80211 multiqueue changes went in somewhere in the
-> > > > 2.6.27-rc cycle. so 2.6.26.stable doesn't need any extra patches, right?
-> > >
-> > > Ah yeah right; I guess I don't understand the link you posted then.  I'd
-> > > thought it was something like "you need this patch which Fedora doesn't
-> > > have in their kernel".
-> > Hmm? I though fedora backported multiqueue back into their 2.6.26?
-> > 
-> > Atleast, the original (but with a buggy p54) multiqueue patch seems to be in 
-> > the linux-wirless-2.6-pending.diff/patch file... but this fix is nowhere to 
-> > be found inside fedora's kernel source?
-> > 
-> > So, Dan? can you add that patch to the next fedora's 2.6.26 kernel release? 
-> 
-> I pinged Kyle McMartin about it -- he has been doing the wireless
-> kernel updates in Fedora for a little while now.
-> 
+On Thu, 18 Sep 2008, Michael Buesch wrote:
+> Nono. I will try to explain it once again. It's really easy.
 
-Applied and building in F-9 now... I'll push them into F-8 as well
-assuming the build succeeds.
+It is also a textbook design for rfkill input lines, and handled in the
+obvious way by rfkill.  If it is not, I don't get what Ivo means either.
 
-Thanks for the heads ups,
-	Kyle
+> Think of b43 having two independent registers for rfkill. (the actual hardware
+> is different, but that doesn't matter. It's a driver internal implementation detail).
+
+> One of these registers is readonly and it does indicate the physical rfkill button state.
+> If that register indicates BLOCK, we can't do anything about it. The radio is blocked.
+> However, we can still write to the second register and turn the radio off through
+> that, too. We can also write to the second register to turn the radio on, _but_ it won't
+> physically turn on until the physical button is pressed and the first register changes
+> to Unblocked.
+
+Then you use the standard function I posted elsewhere in this thread:
+
+if (any_of_the_hw_rfkill_lines_is_active_RIGHT_NOW)
+	return RFKILL_STATE_HARD_BLOCKED;
+else if (any_of_the_sw_rfkill_lines_is_active_RIGHT_NOW)
+	return RFKILL_STATE_SOFT_BLOCKED;
+else
+	return RFKILL_STATE_UNBLOCKED;
+
+You can use that as your rfkill->get_state() if you need it, and it is what
+you should send to rfkill_force_state when
+"any_of_the_hw_rfkill_lines_is_active_RIGHT_NOW" or
+"any_of_the_sw_rfkill_lines_is_active_RIGHT_NOW" could have changed.
+
+The devil is in the details of how you get
+any_of_the_hw_rfkill_lines_is_active_RIGHT_NOW, and
+any_of_the_sw_rfkill_lines_is_active_RIGHT_NOW.
+
+You have to make sure "set txpower off" and such non-rfkill stuff doesn't
+interfere with them, and Ivo will be happy :-)   You should also query the
+hardware to make sure nothing poked it while you were looking elsewhere, but
+that is impossible if the hardware is write-only.
+
+I posted a sample code fragment to do that too, for drivers that implement
+txpower off and rfkill SOFT_BLOCKED through the same hardware register.
+
+> So you say that rfkill should only be notified about changes in the first read-only
+> hardware intication bit? If that's the case, it would be possible to turn the radio off
+
+Well, it only needs to be notified of changes due to the SW bit, if they can
+happen because of external factors (such as laptop firmware).
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
