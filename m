@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:37138 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752667AbYIQCwO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 22:52:14 -0400
-Message-ID: <48D070DC.80007@lwfinger.net> (sfid-20080917_045221_000561_3061A574)
-Date: Tue, 16 Sep 2008 21:52:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:51099 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754941AbYIRRoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 13:44:34 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Date: Thu, 18 Sep 2008 19:44:09 +0200
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <20080918141006.GE1583@khazad-dum.debian.net> <200809181624.53050.IvDoorn@gmail.com>
+In-Reply-To: <200809181624.53050.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Carlos Corbacho <carlos@strangeworlds.co.uk>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Regression in 2.6.27-rcX caused by commit	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <200809162018.28548.carlos@strangeworlds.co.uk> <48D0095B.40403@lwfinger.net> <20080916233240.GA18574@srcf.ucam.org> <20080917023334.GA1187@khazad-dum.debian.net>
-In-Reply-To: <20080917023334.GA1187@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809181944.10018.mb@bu3sch.de> (sfid-20080918_194438_480365_B693EC7C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
+On Thursday 18 September 2008 16:24:52 Ivo van Doorn wrote:
+> On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> > On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> > > If it is something coming from mac80211, then you do not want
+> > > to send a SOFT_BLOCKED event since that will cause all other radios
+> > > to be switched off simply because the b43 interface has not been
+> > > enabled.
+> > 
+> > Drivers ARE supposed to be able to set their radio state to their heart's
+> > content, without messing with any other devices.  There are no constraints
+> > to calls to rfkill_force_state(), other than the current issue that it must
+> > not be done from an atomic context.
 > 
-> However, rfkill_force_state() is NOT updating LED states (I just checked).
-> I will sleep on the issue, and send in a patch tomorrow.
+> My main point was that when the radio is not enabled because the user
+> did something like "iwconfig wlan0 txpower off" then this is not an rfkill
+> SOFT_BLOCKED event. Since that command has nothing to do with the
+> entire rfkill layer.
 > 
-> This probably means a small patch to rfkill + Matthew's fixed patch to use
-> rfkill_force_state() in b43 will fix the regression in the right way.
-> 
-> I don't care either way which kind of fix goes to 2.6.27, though.
-> 
-> The proper fix for rfkill will be in two stages. A small fix now, and a
-> complete change on the LED handling to use the blocking notifier chain
-> instead later on (which will clean up rfkill code somewhat).
-> 
+> When you consider such commands as rfkill events you get wrong behavior
+> because it would trigger a SOFT_BLOCK in rfkill which will be send to all
+> registered drivers who can disable their radio off as well. And that is
+> definately not what you want...
 
-I do not dispute that rfkill-handling in b43 is broken; however, prior
-to the commit in question, it worked.
+Well, if that's the definition of the API, we must not force rfkill
+state to anything other than HW_BLOCKED or UNBLOCKED.
+I dunno how the API is defined...
 
-I also think we can agree that we need to get it working before 2.6.27
-is released. If the small fix now is the reversion of bc19d6e, then I
-think this is the correct path. We will then have a couple of weeks to
-get the code working correctly before the 2.6.28 merge starts.
-
-I admit that I never tested any of the RFKILL patches as they went in.
-One of the reasons is that the development process seemed rather
-untidy to an outsider, and I wasn't sure that any of the code would
-ever be in the kernel. As such, it snuck up on me. I'll not let that
-happen again. After the reversion, I will again test any suggested
-code changes, but do not expect me to work out any of the changes. I
-have enough to do.
-
-Larry
-
+-- 
+Greetings Michael.
