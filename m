@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54924 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755678AbYISB0i (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:40319 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754298AbYIRRdG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 21:26:38 -0400
-Date: Thu, 18 Sep 2008 21:25:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	Thu, 18 Sep 2008 13:33:06 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so4912nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 10:33:02 -0700 (PDT)
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iw: add kernel version checks for pending upstream
-	kernel features
-Message-ID: <20080919012553.GD3306@tuxdriver.com> (sfid-20080919_032643_218619_F557A668)
-References: <1221748533-11000-1-git-send-email-linville@tuxdriver.com> <1221752489.9262.81.camel@johannes.berg>
+Subject: Re: [PATCH] rfkill: clarify usage of rfkill_force_state() and rfkill->get_state()
+Date: Thu, 18 Sep 2008 19:32:58 +0200
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <20080918145236.GJ1583@khazad-dum.debian.net> <20080918164339.GM1583@khazad-dum.debian.net> <1221756339.9262.86.camel@johannes.berg>
+In-Reply-To: <1221756339.9262.86.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1221752489.9262.81.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200809181932.58272.IvDoorn@gmail.com> (sfid-20080918_193311_686607_D75AF890)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2008 at 05:41:28PM +0200, Johannes Berg wrote:
-> On Thu, 2008-09-18 at 10:35 -0400, John W. Linville wrote:
-> >  
-> > +/* This funcionality first appears "officially" in 2.6.28... */
-> > +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
+On Thursday 18 September 2008, Johannes Berg wrote:
+> On Thu, 2008-09-18 at 13:43 -0300, Henrique de Moraes Holschuh wrote:
 > 
-> This bites all developers of the tool. I'd use #ifdef
-> NL80211_ATTR_SUPPORTED_IFTYPES like Jouni did for a bunch of things but
-> I forgot to add
-> #define NL80211_ATTR_SUPPORTED_IFTYPES NL80211_ATTR_SUPPORTED_IFTYPES
-> to nl80211.h
+> > Now it must do something like this in pseudo-code:
+> > 
+> > 	1. if (the bit is disabled (i.e. SW rfkill is NOT ACTIVE)) {
+> > 		rfkill-SW-status = disabled;
+> > 	   }  else if (the bit is enabled (i.e. SW rfkill is ACTIVE)) {
+> > 		if (tx power off is NOT ACTIVE)
+> > 			rfkill-SW-status = enabled;
+> > 		else
+> > 			rfkill-SW-status = whatever the user asked
+> > 	   }
+> > 
+> > THEN, it should use rfkill-sw-status, along with the hw rfkill line status,
+> > to synthesize the state it must pass to rfkill_force_status().
+> > 
+> > ICK.  Of course, if the driver has another way to implement txpower off that
+> > does not clash with sw rfkill, the above is unneeded.
+> 
+> Why are we not handling soft-rfkill in mac80211 entirely?
 
-That seems a bit error prone, but probably manageable.  As for
-the developers, we _could_ have a nicer check that also tested for
-DEVELOPER_MODE or something.
+Ideal situation would indeed be that mac80211 registers a rfkill structure
+and listens to rfkill events. This would help drivers by only needing to
+register a rfkill structure for state-change events without any need for
+listeners.
 
-> On the other hand, I'm with Pavel in that it sucks if you have a tool
-> which your distro compiled against 2.6.27 and then suddenly you want to
-> upgrade your kernel to 2.6.28 and the features don't work...
+I was considering such a patch some time ago, but needed to figure out
+how to work with the state-override capabilities (HW_BLOCK and SOFT_BLOCK)
+and didn't work on it any further since.
 
-FWIW, I don't see that as any worse than having a tool that supports
-functionality that your kernel can't support.  Besides, if the new
-functionality is worth having, some user will be happy to remind the
-iw maintainer to rebuild and push an update (at least in the land
-of Fedora).
-
-> I don't know. Tell me what to do. I don't really like shipping the
-> header file either but it may be the lesser of two evils?
-
-It was still early in the morning here on the left coast, so I was
-forgetting that netlink-based API could be loosely couple w/ the
-kernel, so it would be OK to have the tool know about options that
-the kernel didn't support.  I think the best option is probably to
-snapshot nl80211.h (or possible a sanitized version of it) inside
-the iw source tree.
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Ivo
