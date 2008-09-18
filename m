@@ -1,74 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35961 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286AbYI1QTh (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:53714 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754195AbYIROHz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2008 12:19:37 -0400
-Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS
-	mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
-References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z8EKpMBOjO/4gptsT1J0"
-Date: Sun, 28 Sep 2008 18:19:29 +0200
-Message-Id: <1222618769.7064.0.camel@johannes.berg> (sfid-20080928_181949_544577_58025ED2)
-Mime-Version: 1.0
+	Thu, 18 Sep 2008 10:07:55 -0400
+Date: Thu, 18 Sep 2008 09:07:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: ivdoorn@gmail.com
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [RFC V2] b43: A patch for control of the radio LED using rfkill
+Message-ID: <48d260b7.SG5SGntEQ00lxFKi%Larry.Finger@lwfinger.net> (sfid-20080918_160759_313282_792038D2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The changes below, along with Henriques patch "[PATCH] rfkill: update
+LEDs for all state changes", and the reversion of commit bc19d6e make
+the wireless LED toggle correctly.
 
---=-z8EKpMBOjO/4gptsT1J0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This version passes UNBLOCKED to rfkill when the hardware switch enables the radio.
 
-On Sun, 2008-09-28 at 19:14 +0300, Tomas Winkler wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->=20
-> This patch makes mac80211 able to send action frames when toggling
-> (SM PS) Spacial Multiplexing Power Save mode.
->=20
-> Example:
-> 1.
-> Low lever driver may close some of RX chains in power save mode
-> and needs to announce to AP that a RTS frame is need in order to wake all
-> RX chains, on other hand SM PS can be disabled on CAM mode or if HW is ab=
-le
-> to wake all chains without RTS frame.
->=20
-> 2.
-> iwlwifi can call this function when it detects that only
-> one antenna can effectively receive then MS PS mode is set to STATIC and
-> AP is asked not to send MIMO rates packets.
+Most of this material comes from Matthew Garrett.
 
-Why is the driver managing the PS mode to start with?
+Larry
 
-johannes
-
---=-z8EKpMBOjO/4gptsT1J0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI366OAAoJEKVg1VMiehFYlsEQALvwHE03XaPM0luWvasloMqr
-DNzVHSo4DuK0oJ/avNE3y9o/BvHwJD/+PELBrdtnVvUMzRiVP10zQQkBc6kb9l9I
-TDBsPF+TZiHD7Ydy1AMxs2/kiqdiJr+KVFU1c3vjA4NBq5dnwjdEamsmXihCJxSu
-wwT8RzjpHcWhoDP+7dcxhBvuD5h1Y1M3DDgq252u0MS3Zby7jBeuZJw2aCfwe7fR
-O+jzb6p3cXeoZ/sa8/7PpI5g0VzZKy/jGyqJV5a7aiI4qoznY4YZUOYgAvkRBNpg
-ZVtPcTsPHsXr/ALP3jju8WpJkkmjGD7ye6LuIkj2G69+7DaS2f61sjIwgVsZhUYO
-GXMhe8WdlZ7/PufZKqlJ9C7jlWq9UHtm317iBtPFqu/IJlFqC8xxpErvwBzAZ2sP
-Ey1VgDkHSFTHyq8MkfiivVsVFZYPrVi8WK/Dzq1s73y9oeg6DQ4P7FQQiSCbEvgg
-RZFSTNIlYumJuvVDj0hY6OoLTL36w3h95zQQ2TyjCZ9Oi+OHNJTkf13UnhlgkjEQ
-HUZxE6bZcf/7hIeJ80I4mKgLOQyM+Oz5ElFDPjIdUBzuxPBlSBZLtfPjo3Owqd2m
-TEbKdECHS1Jck0S9+1XnD98Qy8ogA0VIqT1rBZyD8KTSkeGxkQbOjYAFJpx/B4ZM
-sbOBRWFaGcH7zqRwsfKC
-=mZHg
------END PGP SIGNATURE-----
-
---=-z8EKpMBOjO/4gptsT1J0--
-
+Index: wireless-testing/drivers/net/wireless/b43/rfkill.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/rfkill.c
++++ wireless-testing/drivers/net/wireless/b43/rfkill.c
+@@ -44,13 +44,11 @@ static bool b43_is_hw_radio_enabled(stru
+ 	return 0;
+ }
+ 
+-/* The poll callback for the hardware button. */
+-static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
++static void b43_rfkill_update(struct b43_wldev *dev)
+ {
+-	struct b43_wldev *dev = poll_dev->private;
+ 	struct b43_wl *wl = dev->wl;
+ 	bool enabled;
+-	bool report_change = 0;
++	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+ 
+ 	mutex_lock(&wl->mutex);
+ 	if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED)) {
+@@ -60,18 +58,35 @@ static void b43_rfkill_poll(struct input
+ 	enabled = b43_is_hw_radio_enabled(dev);
+ 	if (unlikely(enabled != dev->radio_hw_enable)) {
+ 		dev->radio_hw_enable = enabled;
+-		report_change = 1;
+ 		b43info(wl, "Radio hardware status changed to %s\n",
+ 			enabled ? "ENABLED" : "DISABLED");
++		if (!enabled)
++			rfkill_force_state(rfk->rfkill,
++					   RFKILL_STATE_HARD_BLOCKED);
++		else
++			rfkill_force_state(rfk->rfkill,
++					   RFKILL_STATE_UNBLOCKED);
+ 	}
+ 	mutex_unlock(&wl->mutex);
++}
+ 
+-	/* send the radio switch event to the system - note both a key press
+-	 * and a release are required */
+-	if (unlikely(report_change)) {
+-		input_report_key(poll_dev->input, KEY_WLAN, 1);
+-		input_report_key(poll_dev->input, KEY_WLAN, 0);
+-	}
++static void b43_rfkill_poll(unsigned long data)
++{
++	struct b43_rfkill *rfkill = (struct b43_rfkill *)data;
++	schedule_work(&rfkill->poll_queue);
++}
++
++static void b43_rfkill_work(struct work_struct *work)
++{
++	struct b43_rfkill *rfk = container_of(work, struct b43_rfkill,
++					      poll_queue);
++	struct b43_wl *wl = container_of(rfk, struct b43_wl, rfkill);
++	struct b43_wldev *dev = wl->current_dev;
++
++	b43_rfkill_update(dev);
++	rfk->poll_timer.function = b43_rfkill_poll;
++	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
++	add_timer(&rfk->poll_timer);
+ }
+ 
+ /* Called when the RFKILL toggled in software. */
+@@ -141,48 +156,23 @@ void b43_rfkill_init(struct b43_wldev *d
+ 	rfk->rfkill->toggle_radio = b43_rfkill_soft_toggle;
+ 	rfk->rfkill->user_claim_unsupported = 1;
+ 
+-	rfk->poll_dev = input_allocate_polled_device();
+-	if (!rfk->poll_dev) {
+-		rfkill_free(rfk->rfkill);
+-		goto err_freed_rfk;
+-	}
+-
+-	rfk->poll_dev->private = dev;
+-	rfk->poll_dev->poll = b43_rfkill_poll;
+-	rfk->poll_dev->poll_interval = 1000; /* msecs */
+-
+-	rfk->poll_dev->input->name = rfk->name;
+-	rfk->poll_dev->input->id.bustype = BUS_HOST;
+-	rfk->poll_dev->input->id.vendor = dev->dev->bus->boardinfo.vendor;
+-	rfk->poll_dev->input->evbit[0] = BIT(EV_KEY);
+-	set_bit(KEY_WLAN, rfk->poll_dev->input->keybit);
+-
+ 	err = rfkill_register(rfk->rfkill);
+ 	if (err)
+-		goto err_free_polldev;
++		goto err_free_rfk;
+ 
+-#ifdef CONFIG_RFKILL_INPUT_MODULE
+-	/* B43 RF-kill isn't useful without the rfkill-input subsystem.
+-	 * Try to load the module. */
+-	err = request_module("rfkill-input");
+-	if (err)
+-		b43warn(wl, "Failed to load the rfkill-input module. "
+-			"The built-in radio LED will not work.\n");
+-#endif /* CONFIG_RFKILL_INPUT */
++	rfk->registered = 1;
+ 
+-	err = input_register_polled_device(rfk->poll_dev);
+-	if (err)
+-		goto err_unreg_rfk;
++	INIT_WORK(&rfk->poll_queue, b43_rfkill_work);
+ 
+-	rfk->registered = 1;
++	init_timer(&rfk->poll_timer);
++	rfk->poll_timer.function = b43_rfkill_poll;
++	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
++	rfk->poll_timer.data = (unsigned long)rfk;
++	add_timer(&rfk->poll_timer);
+ 
+ 	return;
+-err_unreg_rfk:
+-	rfkill_unregister(rfk->rfkill);
+-err_free_polldev:
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
+-err_freed_rfk:
++err_free_rfk:
++	rfkill_free(rfk->rfkill);
+ 	rfk->rfkill = NULL;
+ out_error:
+ 	rfk->registered = 0;
+@@ -197,9 +187,8 @@ void b43_rfkill_exit(struct b43_wldev *d
+ 		return;
+ 	rfk->registered = 0;
+ 
+-	input_unregister_polled_device(rfk->poll_dev);
++	del_timer(&rfk->poll_timer);
++
+ 	rfkill_unregister(rfk->rfkill);
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
+ 	rfk->rfkill = NULL;
+ }
+Index: wireless-testing/drivers/net/wireless/b43/rfkill.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/rfkill.h
++++ wireless-testing/drivers/net/wireless/b43/rfkill.h
+@@ -7,14 +7,14 @@ struct b43_wldev;
+ #ifdef CONFIG_B43_RFKILL
+ 
+ #include <linux/rfkill.h>
+-#include <linux/input-polldev.h>
+-
+ 
+ struct b43_rfkill {
+ 	/* The RFKILL subsystem data structure */
+ 	struct rfkill *rfkill;
+-	/* The poll device for the RFKILL input button */
+-	struct input_polled_dev *poll_dev;
++	/* The timer list for the RFKILL polling */
++	struct timer_list poll_timer;
++	/* Workqueue for the RFKILL polling */
++	struct work_struct poll_queue;
+ 	/* Did initialization succeed? Used for freeing. */
+ 	bool registered;
+ 	/* The unique name of this rfkill switch */
