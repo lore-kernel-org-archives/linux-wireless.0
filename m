@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751820AbYIHPhT (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:31929 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752738AbYIRKRt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 11:37:19 -0400
-Message-Id: <20080908153509.159561000@sipsolutions.net> (sfid-20080908_173723_848103_0FF014BE)
-References: <20080908153336.891710000@sipsolutions.net>
-Date: Mon, 08 Sep 2008 17:33:38 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, tomasw@gmail.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2/4] mac80211: disassociate when moving to new BSS
-Mime-Version: 1.0
+	Thu, 18 Sep 2008 06:17:49 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3475745wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 03:17:48 -0700 (PDT)
+Message-ID: <1197ff4c0809180309p7cd5c2b4y30db3799d91bdc6b@mail.gmail.com> (sfid-20080918_121754_340967_31B87781)
+Date: Thu, 18 Sep 2008 18:09:49 +0800
+From: YanBo <dreamfly281@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: Enable mesh point handle action packet
+Cc: LiYanbo <dreamfly281@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes the MLME cleanly disassociate from the current BSS
-when leaving it for a new one. This is not just nicer to the old AP
-(we're leaving it, might as well tell it!) but also required for some
-drivers that keep track of the station we're associated with, they'd
-get confused because they'd think we are associated with two APs.
+This patch enable vif in mesh_point mode can handle the action packet.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Li YanBo <dreamfly281@gmail.com>
 ---
- net/mac80211/mlme.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+net/mac80211/rx.c |    3 ++-
+1 files changed, 2 insertions(+), 1 deletions(-)
 
---- everything.orig/net/mac80211/mlme.c	2008-09-08 16:39:55.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-09-08 16:39:57.000000000 +0200
-@@ -3272,9 +3272,14 @@ void ieee80211_sta_req_auth(struct ieee8
- 		return;
- 
- 	if ((ifsta->flags & (IEEE80211_STA_BSSID_SET |
--				IEEE80211_STA_AUTO_BSSID_SEL)) &&
-+			     IEEE80211_STA_AUTO_BSSID_SEL)) &&
- 	    (ifsta->flags & (IEEE80211_STA_SSID_SET |
--				IEEE80211_STA_AUTO_SSID_SEL))) {
-+			     IEEE80211_STA_AUTO_SSID_SEL))) {
-+
-+		if (ifsta->state == IEEE80211_STA_MLME_ASSOCIATED)
-+			ieee80211_set_disassoc(sdata, ifsta, true, true,
-+					       WLAN_REASON_DEAUTH_LEAVING);
-+
- 		set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
- 		queue_work(local->hw.workqueue, &ifsta->work);
- 	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 92d898b..763c7ea 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1537,7 +1537,8 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 	 *	  of these frames in other modes as well!
+ 	 */
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+-	    sdata->vif.type != NL80211_IFTYPE_ADHOC)
++	    sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++ 	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
+ 		return RX_DROP_MONITOR;
 
--- 
-
+ 	switch (mgmt->u.action.category) {
