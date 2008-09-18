@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:60133 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753651AbYIPSRi (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34114 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755569AbYIRSdD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 14:17:38 -0400
-Received: by ug-out-1314.google.com with SMTP id k3so165841ugf.37
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2008 11:17:37 -0700 (PDT)
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: [RFC][PATCH] TX status reporting with help of an ack queue
-Date: Tue, 16 Sep 2008 20:17:31 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mikko =?iso-8859-15?q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1221494693.14102.22.camel@virkkmi-linux> <200809152328.50471.IvDoorn@gmail.com> <1221514881.4511.118.camel@localhost>
-In-Reply-To: <1221514881.4511.118.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200809162017.31956.IvDoorn@gmail.com> (sfid-20080916_201747_252010_96E5638D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 18 Sep 2008 14:33:03 -0400
+Subject: Re: temorarily out of range -> no TCP?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Anders Eriksson <aeriksson@fastmail.fm>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080918141955.0119E93CCA7@tippex.mynet.homeunix.org> (sfid-20080918_162007_153222_33378A12)
+References: <20080918141955.0119E93CCA7@tippex.mynet.homeunix.org>
+	 (sfid-20080918_162007_153222_33378A12)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gvetb/TsSkqfmXUcBUG8"
+Date: Thu, 18 Sep 2008 20:32:28 +0200
+Message-Id: <1221762748.20772.7.camel@johannes.berg> (sfid-20080918_203309_675989_C648A086)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 15 September 2008, Mattias Nissler wrote:
-> On Mon, 2008-09-15 at 23:28 +0200, Ivo van Doorn wrote:
-> > On Monday 15 September 2008, Johannes Berg wrote:
-> > > On Mon, 2008-09-15 at 22:20 +0200, Mattias Nissler wrote:
-> > > 
-> > > > Well, I'm a big fan of modularizing everything in a clean way. This
-> > > > whole mac80211 thingy is complex enough... But I don't really care as
-> > > > long as everybody here is happy with it. Let's wait what Mikko says,
-> > > > it's his code so far.
-> > > 
-> > > Sure. If you manage to split it out entirely, maybe by some struct that
-> > > drivers embed in their private vif struct, that'd be great too.
-> > 
-> > I think the ACK handling could become quite complex, and although it
-> > would be nice to modularize it a bit, however I am not really sure about
-> > what the best approach would be for the implementation other then that
-> > the driver should do as little as possible. ;)
-> 
-> Huh? I think a single function call for the matching in the rx path is
-> enough. You call it in the rx handler for every received frame. It
-> returns true if it found a match and reported the tx status (in which
-> case you stop processing) or false and you can go on doing with the
-> frame whatever you want. Am I missing something?
 
-Although this isn't much overhead for a driver, but if it comes down
-to a single function call anyway, why not handle it in mac80211 completely?
+--=-gvetb/TsSkqfmXUcBUG8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+On Thu, 2008-09-18 at 16:19 +0200, Anders Eriksson wrote:
+
+> As I have a fixed IP address for the client, I see no reason why the tcp =
+must=20
+> die just because the link level device is temporarily gone. IMO, it shoul=
+d
+> hang there waiting for a route to send it's packets, and a suitable route
+> _is_ provided when I modprobe/dhcpc the client.
+
+Oh and that works just fine for me, I do it all the time. ssh can take a
+long time to recover though, for some reason, so I tend to kill it (I do
+everything in screen anyway).
+
+johannes
+
+--=-gvetb/TsSkqfmXUcBUG8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI0p64AAoJEKVg1VMiehFYNcQQAK1tQ/2+J3g0UfUXi6iKZjEm
+rC2ruJjphxyHptAOKMa+MLgK0Rl9Hs3SoVMkX4dvRsJB8EQ9HGIjD0auSEp68BuT
+2IhP1wh5XxhHxLwWR6spwzsbSWyehCKxwroV9iR9cQ4f2agUGa8odJ+LxXE4Mzj2
+U069Gb43VV3B8xk/GNGtllNyH/DLDbRhDnBg3wWiLWlAhMRKNwQ9tPXgGSXjnU6J
+2h2B7vWwpKUnjMj/T+zi3zP2I+Noi9V02zJ6CG1GQeyDmgqttbTqgqCiuripwgUI
+eyuUyAuwR06UWKQEZTJFFc6kOmwKOWzq5eWnyFjtNs/kYz57nMs9mYeuDTe0ixoU
+oiFUI88OfOZjugsZlkN2k1HBhv29EoDK/oHF2pd9Fru21qzMrS9jzfvq7MRH0vfX
+FotzgmeGE973qOD2uS/Zw/J5x/pDv2vUhhIS03DA+o70BqpjUQsAVRiNQCgbX2VH
+WvhVFptcbUbk9UmJXQ7xYmJIkma/o2Cq/gOIxko+uwvHiKA22yAN9NFJtJ5dexJI
+6TNGIMASNLvlHTjOYyEG/cUHIHNrYHdwE50Ea4prshvPaWwgR9OTpigolbQhldNK
+/PGNuH41k6Y/PkyLxksfaQthhtxQKqyA1PXzrmsCG23BadBm7W3lfvuus11URt0/
+Jju0QJ2ondDMxfxFhv+K
+=ZRo3
+-----END PGP SIGNATURE-----
+
+--=-gvetb/TsSkqfmXUcBUG8--
+
