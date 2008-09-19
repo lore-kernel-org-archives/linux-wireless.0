@@ -1,38 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37583 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751535AbYIXA6o (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:46493 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753705AbYISSFg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 20:58:44 -0400
-Date: Tue, 23 Sep 2008 20:59:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Mikko =?iso-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
-	rt2400-devel@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC][PATCH] TX status reporting with help of an ack queue
-Message-ID: <20080924005931.GB3780@tuxdriver.com> (sfid-20080924_025854_960733_3F95C9B8)
-References: <200809151911.32834.IvDoorn@gmail.com> <1221501417.4511.49.camel@localhost> <1221501786.3700.68.camel@johannes.berg> <1221505251.4511.77.camel@localhost> <1221506496.3700.81.camel@johannes.berg> <1221507551.4511.89.camel@localhost> <1221507988.3700.84.camel@johannes.berg> <1221510009.4511.99.camel@localhost> <1221510785.3700.87.camel@johannes.berg> <1221512487.4511.105.camel@localhost>
+	Fri, 19 Sep 2008 14:05:36 -0400
+Received: by gxk9 with SMTP id 9so1051569gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 11:05:35 -0700 (PDT)
+Message-ID: <43e72e890809191105p26841666l50a4a139a7177590@mail.gmail.com> (sfid-20080919_200551_727232_69BB6929)
+Date: Fri, 19 Sep 2008 11:05:35 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: Can't connect to AP with hidden essid with 2.6.27-rc6
+Cc: Celejar <celejar@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <48D3CFBC.6070504@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1221512487.4511.105.camel@localhost>
+Content-Type: text/plain; charset=UTF-8
+References: <20080916220904.75283811.celejar@gmail.com>
+	 <48D06B9E.70307@lwfinger.net>
+	 <20080918004509.23a4bdc9.celejar@gmail.com>
+	 <48D1E42C.70904@lwfinger.net>
+	 <20080918015202.8c5f6381.celejar@gmail.com>
+	 <48D24911.80101@lwfinger.net>
+	 <20080918160957.94ea063d.celejar@gmail.com>
+	 <48D2D728.6070105@lwfinger.net>
+	 <20080919001050.d9ed273a.celejar@gmail.com>
+	 <48D3CFBC.6070504@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 15, 2008 at 11:01:27PM +0200, Mattias Nissler wrote:
+On Fri, Sep 19, 2008 at 9:13 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-> Btw. lately I've been thinking about a new RC algo that simply
-> calculates the throughput achievable by a specific rate (based on the
-> estimated frame transmission failure ratio and transmission times) and
-> then selects the one that provides the best throughput. It's still a
-> very vague idea, but I think it might be interesting to try.
+> I do not think a bisection is necessary. Your successful test of the
+> old regulatory code suggests to me that there is some kind of problem
+> with the CRDA database.
 
-This sounds like a reasonable approach.  Isn't this more-or-less what
-Minstrel does?
+BTW the "old regulatory code" is actually not "old regulatory code"
+but instead static regulatory definitions slapped in the kernel just
+as they were before but under the new regulatory infrastructure guise.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+> Luis - to fill you in, he can connect to an AP with a hidden essid
+> using the old regulatory code, but not using CRDA. There seems to be
+> some critical difference between them.
+
+Thanks for bringing this up Larry.
+
+If by old regulatory code you mean with CONFIG_WIRELESS_OLD_REGULATORY
+then I would narrow the search down to testing as follows:
+
+--- Without crda:
+
+mv /sbin/crda /sbin/crda-foo
+sudo rmmod your_driver mac80211 cfg80211
+sudo modprobe your_driver
+
+# Check channels using iw
+
+--- With crda:
+mv /sbin/crda-foo /sbin/crda
+sudo rmmod your_driver mac80211 cfg80211
+sudo modprobe your_driver
+
+# check channels using iw
+---
+
+By default when CONFIG_WIRELESS_OLD_REGULATORY is set the built-in
+"US" static regulatory domain is used. If crda is present though a new
+regulatory domain will be updated onto the kernel, so we'll get the
+new regulatory domain built by crda from the original db.txt. Without
+crda present the static regulatory domain shall be used.
+
+What frequency is the AP on?
+
+  Luis
