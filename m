@@ -1,158 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:63905 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755272AbYICDb5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:31:57 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	=?utf-8?q?Stefanik=20G=C3=A1bor?= <netrolller.3d@gmail.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 39/39] iwlwifi: enable packet injection for iwlagn
-Date: Wed,  3 Sep 2008 11:26:59 +0800
-Message-Id: <1220412419-15404-40-git-send-email-yi.zhu@intel.com> (sfid-20080903_055041_778633_365BC4AA)
-In-Reply-To: <1220412419-15404-39-git-send-email-yi.zhu@intel.com>
-References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-23-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-24-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-25-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-26-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-27-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-28-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-29-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-30-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-31-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-32-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-33-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-34-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-35-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-36-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-37-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-38-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-39-git-send-email-yi.zhu@intel.com>
+Received: from nf-out-0910.google.com ([64.233.182.184]:30423 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbYISRCN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 13:02:13 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so204013nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 10:02:11 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Date: Fri, 19 Sep 2008 19:02:03 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809182241.00906.IvDoorn@gmail.com> <20080918213657.GY1583@khazad-dum.debian.net>
+In-Reply-To: <20080918213657.GY1583@khazad-dum.debian.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809191902.03467.IvDoorn@gmail.com> (sfid-20080919_190229_744994_236E1A90)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=46rom: Stefanik G=C3=A1bor <netrolller.3d@gmail.com>
+On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> > On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
+> > > On Thu, 18 Sep 2008, Ivo van Doorn wrote:
+> > > > On Thursday 18 September 2008, Johannes Berg wrote:
+> > > > > On Thu, 2008-09-18 at 19:52 +0200, Ivo van Doorn wrote:
+> > > > > > From rfkill.h:
+> > > > > > 	RFKILL_STATE_SOFT_BLOCKED = 0,	/* Radio output blocked */
+> > > > > > 	RFKILL_STATE_UNBLOCKED    = 1,	/* Radio output allowed */
+> > > > > > 	RFKILL_STATE_HARD_BLOCKED = 2,	/* Output blocked, non-overrideable */
+> > > > > > 
+> > > > > > Since b43 has a rfkill mechanism that does switch of the radio when RFKILL is set to BLOCK
+> > > > > > after a key press, it should send RFKILL_STATE_HARD_BLOCKED because rfkill cannot override
+> > > > > > it.
+> > > > > > 
+> > > > > > rt2x00 hardware does not change the radio state when RFKILL is set to BLOCK after a key press,
+> > > > > > the state is therefor overridable and it can send RFKILL_STATE_SOFT_BLOCKED to rfkill.
+> > > > > 
+> > > > > If rt2x00 has no meaning of "hardware blocked", why is the button not a
+> > > > > simple input device?
+> > > > 
+> > > > Because I had that discussion with Henrique and that ended with a "it isn't a input device"...
+> > > 
+> > > Because I NEVER UNDERSTOOD it was not a hardware rfkill line until a few
+> > > posts ago in this thread.  Argh.  My deepest apologies for that screw up.
+> > > 
+> > > Now that I do, my answer is "depends on how the platform used that input pin".
+> > > 
+> > > If it is directly connected to a switch (you get on/off from it) or a button
+> > > (you get "I have been pressed, please toggle the state"), it is an input
+> > > device.  [a]
+> > > 
+> > > If it is directly connected to some crap inside the platform, that is
+> > > controlled by firmware, it is NOT an input device.  [b]
+> > 
+> > Ok, rt2x00 is definately [a]
+> > 
+> > > I hope it is a switch, and that you can just always provide an input device
+> > > that issues some sort of EV_SW event (if you need it, we ask Dmitry to add
+> > > EV_SW SW_WLAN).
+> > 
+> > Ok, I'll readd the input_polldev to rt2x00 again then. :)
+> 
+> But do use EV_SW if it is a switch, please :-)
 
-Handle station IDs of transmitted packets when in monitor mode, and
-remove the various anti-injection checks from the iwl4965 driver.
-This makes injection work on iwl4965 and iwl5000. Tested on both cards.
+Sure.
 
-Note: To inject management frames with encryption, HW crypto support
-must be disabled using the "swcrypto=3D1" modparam (or "swcrypto50=3D1"
-for iwl5000). Otherwise most management frames won't be transmitted.
+> Even if that means a need to 
+> get EV_SW SW_WLAN out of Dmitry...  I don't know if rt2x000 wants SW_WLAN or
+> SW_RFKILL_ALL.
 
-Signed-off-by: G=C3=A1bor Stefanik <netrolller.3d@gmail.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    6 ------
- drivers/net/wireless/iwlwifi/iwl-sta.c |    5 +++++
- drivers/net/wireless/iwlwifi/iwl-tx.c  |   13 +++++--------
- 3 files changed, 10 insertions(+), 14 deletions(-)
+Not sure either, there is no way to determine which of the 2 should be used.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wirel=
-ess/iwlwifi/iwl-agn.c
-index cf882bf..31ea288 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2734,12 +2734,6 @@ static int iwl4965_mac_tx(struct ieee80211_hw *h=
-w, struct sk_buff *skb)
-=20
- 	IWL_DEBUG_MACDUMP("enter\n");
-=20
--	if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
--		IWL_DEBUG_MAC80211("leave - monitor\n");
--		dev_kfree_skb_any(skb);
--		return 0;
--	}
--
- 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
- 		     ieee80211_get_tx_rate(hw, IEEE80211_SKB_CB(skb))->bitrate);
-=20
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wirel=
-ess/iwlwifi/iwl-sta.c
-index 3c0204c..a72569f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -968,6 +968,11 @@ int iwl_get_sta_id(struct iwl_priv *priv, struct i=
-eee80211_hdr *hdr)
- 		iwl_print_hex_dump(priv, IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
- 		return priv->hw_params.bcast_sta_id;
-=20
-+	/* If we are in monitor mode, use BCAST. This is required for
-+	 * packet injection. */
-+	case IEEE80211_IF_TYPE_MNTR:
-+		return priv->hw_params.bcast_sta_id;
-+
- 	default:
- 		IWL_WARNING("Unknown mode of operation: %d\n", priv->iw_mode);
- 		return priv->hw_params.bcast_sta_id;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wirele=
-ss/iwlwifi/iwl-tx.c
-index 9ef6451..9d5bcf4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -793,11 +793,6 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_bu=
-ff *skb)
- 		goto drop_unlock;
- 	}
-=20
--	if (!priv->vif) {
--		IWL_DEBUG_DROP("Dropping - !priv->vif\n");
--		goto drop_unlock;
--	}
--
- 	if ((ieee80211_get_tx_rate(priv->hw, info)->hw_value & 0xFF) =3D=3D
- 	     IWL_INVALID_RATE) {
- 		IWL_ERROR("ERROR: No TX rate available.\n");
-@@ -819,9 +814,11 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_bu=
-ff *skb)
-=20
- 	/* drop all data frame if we are not associated */
- 	if (ieee80211_is_data(fc) &&
--	   (!iwl_is_associated(priv) ||
--	    ((priv->iw_mode =3D=3D IEEE80211_IF_TYPE_STA) && !priv->assoc_id)=
- ||
--	    !priv->assoc_station_added)) {
-+	    (priv->iw_mode !=3D IEEE80211_IF_TYPE_MNTR ||
-+	    !(info->flags & IEEE80211_TX_CTL_INJECTED)) && /* packet injectio=
-n */
-+	    (!iwl_is_associated(priv) ||
-+	     ((priv->iw_mode =3D=3D IEEE80211_IF_TYPE_STA) && !priv->assoc_id=
-) ||
-+	     !priv->assoc_station_added)) {
- 		IWL_DEBUG_DROP("Dropping - !iwl_is_associated\n");
- 		goto drop_unlock;
- 	}
---=20
-1.5.3.6
+Oh an to make sure I get it completely right this time:
+When I implement the input polldev, I no longer have to use rfkill_force_state() right?
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ivo
