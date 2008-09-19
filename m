@@ -1,58 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:7550 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755191AbYIOVUN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 17:20:13 -0400
-Date: Mon, 15 Sep 2008 14:17:15 -0700
-To: Pavel Roskin <proski@gnu.org>
-Cc: Dan Williams <dcbw@redhat.com>, kilroyd@googlemail.com,
-	linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-Message-ID: <20080915211715.GA4633@bougret.hpl.hp.com> (sfid-20080915_232017_961535_B7B172A8)
-Reply-To: jt@hpl.hp.com
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com> <1217672073-7094-2-git-send-email-kilroyd@gmail.com> <1217825304.10989.20.camel@dv> <1217864060.3139.10.camel@localhost.localdomain> <20080805162238.GA6294@bougret.hpl.hp.com> <20080902230621.GA28885@bougret.hpl.hp.com> <1220878110.2369.3.camel@dv> <20080908183203.GA7090@bougret.hpl.hp.com> <1221279475.14059.29.camel@dv>
+Received: from mail.atheros.com ([12.36.123.2]:39383 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750846AbYISO2I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 10:28:08 -0400
+Date: Fri, 19 Sep 2008 19:58:01 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: Steven Noonan <steven@uplinklabs.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
+	(rc5, rc6, probably others)
+Message-ID: <20080919142801.GA5816@senthil-lnx.users.atheros.com> (sfid-20080919_162814_691747_C048ED25)
+References: <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com> <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com> <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com> <20080918220102.GE7408@tesla> <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com> <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com> <20080919030125.GG7408@tesla> <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1221279475.14059.29.camel@dv>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 13, 2008 at 12:17:55AM -0400, Pavel Roskin wrote:
-> On Mon, 2008-09-08 at 11:32 -0700, Jean Tourrilhes wrote:
+On Fri, Sep 19, 2008 at 12:59:29PM +0530, Steven Noonan wrote:
+> On Thu, Sep 18, 2008 at 8:01 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > Thanks for testing, and glad to see this is resolved.
+> >
 > 
-> > 	Try the attached patch.
+> Damn. It's back. I was using wireless normally this evening. Browsing
+> the web, that kind of thing, and then the wireless inexplicably
+> dropped (even with the group rekeying patch), so I unloaded/reloaded
+> the module. This popped up in dmesg:
 > 
-> It's working on x86_64!  Thank you!
-
-	Great, so it's not only me ;-)
-
-> The same problem exists in airo and atmel, but they don't use that
-> argument.  Several drivers, including mac80211 use union iwreq_data,
-> which is fragile.  Fortunately, most drivers don't use that argument or
-> use the "data" field, which is correct.
+> [ 3834.375658] vendor=8086 device=27d2
+> [ 3834.375666] ath9k 0000:03:00.0: PCI INT A disabled
+> [ 3834.375716] ath9k: driver unloaded
+> [ 3838.552419] ath9k: 0.1
+> [ 3838.552502] vendor=8086 device=27d2
+> [ 3838.552511] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> [ 3838.552532] ath9k 0000:03:00.0: setting latency timer to 64
+> [ 3838.688924] phy1: Selected rate control algorithm 'ath9k_rate_control'
+> [ 3838.693652] phy1: Atheros 5416: mem=0xffffc20000060000, irq=17
+> [ 3839.427125] irq 17: nobody cared (try booting with the "irqpoll" option)
+> [ 3839.427136] Pid: 0, comm: swapper Tainted: P
+> 2.6.27-rc6-tip-00478-g74f1a36 #1
+> [ 3839.427141] Call Trace:
+> [ 3839.427145]  <IRQ>  [<ffffffff802219c5>] ? read_hpet+0x9/0x1c
+> [ 3839.427165]  [<ffffffff8026af71>] __report_bad_irq+0x3d/0x8c
+> [ 3839.427172]  [<ffffffff8026b0c6>] note_interrupt+0x106/0x160
+> [ 3839.427180]  [<ffffffff8026b801>] handle_fasteoi_irq+0xad/0xda
+> [ 3839.427188]  [<ffffffff8020f7b0>] do_IRQ+0x10c/0x190
+> [ 3839.427194]  [<ffffffff8020c551>] ret_from_intr+0x0/0xa
+> [ 3839.427198]  <EOI>  [<ffffffff8026c6f0>] rcu_pending+0x62/0x6e
+> [ 3839.427211]  [<ffffffff8025bc11>] ? tick_nohz_stop_sched_tick+0x2e4/0x2f3
+> [ 3839.427218]  [<ffffffff8020ad94>] cpu_idle+0x7b/0xdb
+> [ 3839.427226]  [<ffffffff8060c921>] rest_init+0x75/0x77
+> [ 3839.427231] handlers:
+> [ 3839.427234] [<ffffffffa0240238>] (ath_isr+0x0/0x170 [ath9k])
+> [ 3839.427263] Disabling IRQ #17
+> [ 3842.263699] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [ 3848.035003] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [ 3848.432701] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [ 3850.216947] wlan0: authenticate with AP 00:1e:52:79:4d:01
+> [ 3850.217027] wlan0: authenticate with AP 00:1e:52:79:4d:01
+> [ 3850.228326] wlan0: authenticated
+> [ 3850.228336] wlan0: associate with AP 00:1e:52:79:4d:01
+> [ 3850.428140] wlan0: associate with AP 00:1e:52:79:4d:01
+> [ 3850.628151] wlan0: associate with AP 00:1e:52:79:4d:01
+> [ 3850.728305] wlan0: RX AssocResp from 00:1e:52:79:4d:01 (capab=0x431
+> status=0 aid=1)
+> [ 3850.728314] wlan0: associated
+> [ 3850.728655] wlan0 (WE) : Wireless Event too big (320)
+> [ 3850.743377] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> [ 3860.855104] wlan0: no IPv6 routers present
 > 
-> The only incorrect use of union iwreq_data is in rndis_wlan.  It would
-> ignore ESSID on x86_64.
-> 
-> I think the use of union iwreq_data is dangerous and should be avoided.
+> I rebuilt the module with DBG_ATH_INTERRUPT, but it somehow stumbled
+> itself back into working order while I was compiling. I can't keep the
+> interrupt debugging on all the time because it's just -too verbose-,
+> and when I pop a debug version of the module in, then it's too late to
+> track the issue....
 
-	Note, as soon as you are using the data for real, as opposed
-to only the flags, you would have noticed that something was
-amiss. So, in essence it should be self correcting.
-	The way I found the cause is that I wanted to dump the ESSID
-in the driver for debugging purpose. You can't access the ESSID
-through a iw_param ;-)
-	Note that as you mentionned, the other faulty drivers are not
-using the arguments, and all drivers using the argument seems to have
-the right bits.
+I am able to reproduce this IRQ nobody cared issue in my setup and the
+following patch seems to be fixing the issue. Please try it out and let
+me know if it solves your issue in your setup.
 
-> Regards,
-> Pavel Roskin
+**********
+IRQs should be disabled before calling free_irq. Also clear pending IRQs.
 
-	Thanks, and have fun...
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath9k/core.c |    2 ++
+ drivers/net/wireless/ath9k/main.c |    8 +++++++-
+ 2 files changed, 9 insertions(+), 1 deletions(-)
 
-	Jean
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index c262ef2..c007dd2 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -1183,6 +1183,8 @@ void ath_deinit(struct ath_softc *sc)
+ 
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "%s\n", __func__);
+ 
++	tasklet_kill(&sc->intr_tq);
++	tasklet_kill(&sc->bcon_tasklet);
+ 	ath_stop(sc);
+ 	if (!(sc->sc_flags & SC_OP_INVALID))
+ 		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index aca893a..559e0e8 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1781,10 +1781,16 @@ static void ath_pci_remove(struct pci_dev *pdev)
+ {
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath_softc *sc = hw->priv;
++	enum ath9k_int status;
+ 
+-	if (pdev->irq)
++	if (pdev->irq) {
++		ath9k_hw_set_interrupts(sc->sc_ah, 0);
++		ath9k_hw_getisr(sc->sc_ah, &status);	/* NB: clears ISR too */
++		sc->sc_flags |= SC_OP_INVALID;
+ 		free_irq(pdev->irq, sc);
++	}
+ 	ath_detach(sc);
++
+ 	pci_iounmap(pdev, sc->mem);
+ 	pci_release_region(pdev, 0);
+ 	pci_disable_device(pdev);
+-- 
+1.5.5
+
