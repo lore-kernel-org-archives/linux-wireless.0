@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.infineon.com ([217.10.60.23]:56255 "EHLO
-	smtp2.infineon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871AbYIELeK convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:39371 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753767AbYISTrj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 07:34:10 -0400
-From: <Friedrich.Beckmann@infineon.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <illth@gmx.de>
-Date: Fri, 5 Sep 2008 13:34:07 +0200
-Subject: RE: minimum payload size for FEC
-Message-ID: <8469FC7DDCBE054D9653D8506E1FF0F001F63D75EC@mucse406.eu.infineon.com> (sfid-20080905_133415_687009_018526BF)
-References: <1220541926.17106.46.camel@pcmik05.zmk.uni-kl.de>
-In-Reply-To: <1220541926.17106.46.camel@pcmik05.zmk.uni-kl.de>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 19 Sep 2008 15:47:39 -0400
+Date: Fri, 19 Sep 2008 14:47:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, bbullins@triad.rr.com
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: Fix Bluetooth coexistence SPROM coding error for
+ Motorola 7010 variant of BCM4306
+Message-ID: <48d401da.Q+F4HRESoxeIVa3r%Larry.Finger@lwfinger.net> (sfid-20080919_214743_829054_90911EB9)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Subject: minimum payload size for FEC
->
-> So here is my question:
->
-> Is there any situation where the payload to the Viterbi FEC
-> is less than
-> 256 bits (= 32 bytes) ? (ie. a beacon and such stuff?)
->
+An additional BCM4306 has been found with the Bluetooth coexistence
+SPROM coding error.
 
-I guess the ACK packet is shorter than that (14 Bytes), if I
-remember correctly. You can have a look in the standard IEEE 802.11.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Regards
+John,
 
-Friedrich
+These devices work with bcm43xx, but not with b43. I'll let you
+decide if this is a regression.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c
++++ wireless-testing/drivers/net/wireless/b43/main.c
+@@ -4545,7 +4545,8 @@ static void b43_sprom_fixup(struct ssb_b
+ 		    IS_PDEV(pdev, BROADCOM, 0x4320,    DELL, 0x0003) ||
+ 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
+ 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0014) ||
+-		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
++		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013) ||
++		    IS_PDEV(pdev, BROADCOM, 0x4320, MOTOROLA, 0x7010))
+ 			bus->sprom.boardflags_lo &= ~B43_BFL_BTCOEXIST;
+ 	}
+ }
