@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s9.bay0.hotmail.com ([65.54.246.209]:36541 "EHLO
-	bay0-omc3-s9.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752150AbYIFThX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 15:37:23 -0400
-Message-ID: <BAY118-W35E84AAD3187213E9B24F6DB5B0@phx.gbl> (sfid-20080906_213729_319379_FBAE820F)
-From: Greg White <pcguy11@live.com>
-To: =?iso-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: rt2x00 and packet injection
-Date: Sat, 6 Sep 2008 14:37:22 -0500
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:52347 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751116AbYISNvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 09:51:46 -0400
+Subject: Re: ACK matching [was: TX status reporting with help of an ack
+	queue]
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
+	kune@deine-taler.de
+In-Reply-To: <1221820265.10419.78.camel@johannes.berg>
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <1221505251.4511.77.camel@localhost>
+	 <1221541089.14102.44.camel@virkkmi-linux>
+	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
+	 <1221776990.4563.19.camel@localhost>
+	 <1221815294.19539.15.camel@virkkmi-linux>
+	 <1221817584.4491.29.camel@localhost>
+	 (sfid-20080919_114701_416600_478C4255)  <1221818057.10419.58.camel@johannes.berg>
+	 <1221819579.4491.34.camel@localhost>
+	 (sfid-20080919_122011_765612_F53F8EFC)  <1221820265.10419.78.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 19 Sep 2008 15:51:42 +0200
+Message-Id: <1221832302.4514.6.camel@localhost> (sfid-20080919_155150_403866_8B13BB9F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-09-19 at 12:31 +0200, Johannes Berg wrote:
+> On Fri, 2008-09-19 at 12:19 +0200, Mattias Nissler wrote:
+> 
+> > Well, maybe we can work around this requirement? I still need to learn
+> > about the details, but what happens for example if the STA sends the ACK
+> > and then resets due to a crash? I guess the AP is able to cope with
+> > that, no? So maybe we can relax the rules a bit (unless we become really
+> > incompliant with the standard of course).
+> 
+> I don't really see how to. We can't just assume the station got the
+> frame properly and advance our state machine. The case you're citing is
+> quite different, we'll advance the state machine but it won't work
+> because the STA crashed; if we advance but the station simply hasn't
+> gotten the frame we'll get out of sync and stuff will fail for no real
+> reason.
 
-> On Sat, Sep 6, 2008 at 2:34 AM, Greg wrote:
->>
->> Hi,
->>
->> What is the status of packet injection in the rt2x00 driver? From my testing of 2.6.27 rc3 and reading 2.6.27 doesn't seem likely. Is there a todo list in priority order?
->>
->> Thanks,
->>
->
-> I don't know about other sub-drivers, but rt73usb has no problems with
-> packet injection whatsoever. As with all other mac80211-based drivers,
-> an injector application with Radiotap header support is required.
->
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Well, I understand that we need synchronization of the state machines,
+maybe we can advance optimistically and detect in the next state that
+the STA didn't receive the last message? Just some random thoughts, I
+see it'll at least be tricky, I just wanted your opinion on whether you
+see a chance :-) As I said, I'll look into it when I find some time.
 
-I tried aircrack-ng and 2.6.27-rc3 and the two don't want to work together.  Yes I dowloaded and compiled iw and libnl.  I have to use the driver from http://homepages.tu-darmstadt.de/~p_larbig/wlan/ to get aircrack-ng to work right.  Any suggestions?
+> 
+> But you can do workarounds all you want in hostapd, I don't care.
 
-Thanks,
+:-)
 
-_________________________________________________________________
-Get more out of the Web. Learn 10 hidden secrets of Windows Live.
-http://windowslive.com/connect/post/jamiethomson.spaces.live.com-Blog-cns!550F681DAD532637!5295.entry?ocid=TXT_TAGLM_WL_domore_092008
+> However, I do think that if the hardware just isn't up to the job you
+> should probably buy new hardware, after all, it's dirt cheap. :)
+
+I totally agree with you. I'm just curious to see whether there is a
+chance to help our users. I'm perfectly fine if it turns out there is no
+chance to do it properly, and I'll rather accept that fact instead of
+trying to introduce workarounds that are known to be incorrect. The sad
+thing is that if we controlled the firmware, we could probably arrange
+to have the necessary information passed to the driver.
+
+Mattias
+
