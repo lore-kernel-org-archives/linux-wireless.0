@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44565 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754232AbYIKVTs (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:21342 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751299AbYISM2z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 17:19:48 -0400
-Subject: Re: wireless-testing build failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Davide Pesavento <davidepesa@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <2da21fe50809111407w23ffe5e4r1c46dc0d6907de9@mail.gmail.com> (sfid-20080911_230716_503931_D6EDD0C6)
-References: <2da21fe50809111407w23ffe5e4r1c46dc0d6907de9@mail.gmail.com>
-	 (sfid-20080911_230716_503931_D6EDD0C6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XU8/qwWVYzhgpv40HMll"
-Date: Thu, 11 Sep 2008 23:19:08 +0200
-Message-Id: <1221167948.3742.0.camel@johannes.berg> (sfid-20080911_232002_908427_5A468A49)
-Mime-Version: 1.0
+	Fri, 19 Sep 2008 08:28:55 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so549263fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 05:28:53 -0700 (PDT)
+Date: Fri, 19 Sep 2008 16:28:51 +0400
+From: Cyrill Gorcunov <gorcunov@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ingo Molnar <mingo@elte.hu>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	LWML <linux-wireless@vger.kernel.org>,
+	"Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: Re: [PATCH -tip/master] x86: io-apic - interrupt remapping fix
+Message-ID: <20080919122850.GE7222@lenovo> (sfid-20080919_142859_409895_E004F72C)
+References: <20080919115758.GD7222@lenovo> <1221826437.10419.86.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1221826437.10419.86.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+[Johannes Berg - Fri, Sep 19, 2008 at 02:13:57PM +0200]
+| On Fri, 2008-09-19 at 15:57 +0400, Cyrill Gorcunov wrote:
+| > Interrupt remapping could lead to NULL dereference in case of
+| > kzalloc failed and memory leak in other way. So fix the
+| > both cases.
+| 
+| wireless? Wrong mailing list?
+| 
+| johannes
 
---=-XU8/qwWVYzhgpv40HMll
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Oh...sorry :( Of course should be LKML. Sorry again.
 
-On Thu, 2008-09-11 at 23:07 +0200, Davide Pesavento wrote:
-> Hi,
->=20
-> after the last pull, compilation fails with the following error:
->=20
->   CC [M]  net/mac80211/mlme.o
-> net/mac80211/mlme.c: In function 'ieee80211_rx_bss_info':
-> net/mac80211/mlme.c:1537: error: 'struct sta_info' has no member named
-> 'supp_rates'
-
-Ah, IBSS debug, will send a fix. Sorry about that.
-
-johannes
-
---=-XU8/qwWVYzhgpv40HMll
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIyYtIAAoJEKVg1VMiehFY8fkQAMWpMAQaOUzrQfmK6D6hQ3kP
-M1OA+QpBV82s8zw77xD4efAeWgbCpws1//YHvalz2NDHzUebKBjSqfXHWrR+66iN
-8lfkTdHKKg74xvHygiBP//5uPpzGDWJy4TrSR0datIbc6U1hcsbd2rdzXlYpRoup
-rRePoZCaDHpCWlYJsFGonJgVOi4seJ89wIbxuwgCXvidraB76YvR82gc731WfjhX
-fsc4cE2fXyNOxRjYb8brhVXNmltOb16PpXkpLgUr786LQZ3rfkg/5EucRhEsOe+E
-8yizkhy3q0GywbEXgyrEmPYRahDhEyzU2iNj6DDQk9wy4krmA5HXxIY4Qbn5s9EA
-oMTcnyQzUNTuC/iNGi3NmCqlBETJzTHSS54O91XMLsXkUNn6uGWuJYZNkINT4zHO
-5wc379IKAUWL/0/ChUmdUfkrMGhGALN6BIt4KF6+GkA11lbLQGObi51zgqeUkxPZ
-GQKJ0jKwiWmCI/5Nkaly79F3WipiUdpjvZ6eE85ncFYZ0irZ5m/XnUvsiYxJlQUG
-wKZ7JNH478oljUfF/TmP1qva07mEn+jjbeNUoq04cVfekZIziqGHzxuP5yR7dsmQ
-88iG1EPvYQc/+ExTh7syFZ9Cjc9TKWK4FgnqVBzenyRbQ7pRuXHcsQcKwBTfpacP
-nT3xd1KNwWPVBkamRUaj
-=PjYm
------END PGP SIGNATURE-----
-
---=-XU8/qwWVYzhgpv40HMll--
-
+		- Cyrill -
