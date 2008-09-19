@@ -1,84 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:3447 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751868AbYI2QaC (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:47151 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbYISIWn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 12:30:02 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so327583ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 09:30:01 -0700 (PDT)
-Message-ID: <40f31dec0809290930t350ac275j42e53fac60829fa@mail.gmail.com> (sfid-20080929_183007_825508_E4490ED2)
-Date: Mon, 29 Sep 2008 19:30:01 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: write beacon control register twice when resetting tsf
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080928160943.GA30901@hash.localnet>
+	Fri, 19 Sep 2008 04:22:43 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so117225nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 01:22:41 -0700 (PDT)
+Message-ID: <f488382f0809190122k1b30cd9q22fd076c1e3eaa18@mail.gmail.com> (sfid-20080919_102247_518281_CCEDD395)
+Date: Fri, 19 Sep 2008 01:22:41 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Ingo Molnar" <mingo@elte.hu>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <20080919081733.GC19491@elte.hu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080928160943.GA30901@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
+	 <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com>
+	 <20080918220102.GE7408@tesla>
+	 <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com>
+	 <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+	 <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com>
+	 <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com>
+	 <20080919030125.GG7408@tesla>
+	 <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com>
+	 <20080919081733.GC19491@elte.hu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/9/28 Bob Copeland <me@bobcopeland.com>:
-> According to the newly-released Atheros HAL code, asserting the
-> TSF reset bit will toggle a hardware internal state, resulting in a
-> spurious reset on the next chip reset.  Whenever we force a TSF bit,
-> write the bit twice to clear the internal signal.
+On Fri, Sep 19, 2008 at 1:17 AM, Ingo Molnar <mingo@elte.hu> wrote:
+> in tip/master there's an ftrace_printk() facility. You can just replace
+> the verbose printk()s with ftrace_printk() and see the result in
+> /debug/tracing/trace.
 >
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
+> This sort of tracing has very low overhead and can be used in an easy
+> ad-hoc manner with no extra infrastructure. Here's a few quick-start
+> links about how to enable the scheduler tracer:
 >
-> This was the only major difference I found between code we're currently
-> using in pcu.c and its equivalents in the HAL.  See comment in
-> ar5212ResetTsf.  This is only compile-tested.
+>  http://redhat.com/~mingo/sched-devel.git/readme-tracer.txt
+>  http://redhat.com/~mingo/sched-devel.git/howto-trace-latencies.txt
 >
-> (There are other differences but they are in the key setup code or
-> beacon setup code that we are not using right now.)
+> any ftrace_printk() you add in the kernel will show up in that trace.
 >
->  drivers/net/wireless/ath5k/pcu.c |   14 +++++++++++++-
->  1 files changed, 13 insertions(+), 1 deletions(-)
+> (If the scheduling events are uninteresting and clutter the output then
+> you might want to remove the scheduler tracing entries from kernel/*.c
+> by removing the trace_sched_*() calls or use a less noisy tracer.)
 >
-> diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
-> index c77cee2..c8f9170 100644
-> --- a/drivers/net/wireless/ath5k/pcu.c
-> +++ b/drivers/net/wireless/ath5k/pcu.c
-> @@ -633,8 +633,20 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah)
->  */
->  void ath5k_hw_reset_tsf(struct ath5k_hw *ah)
->  {
-> +       u32 val;
-> +
->        ATH5K_TRACE(ah->ah_sc);
-> -       AR5K_REG_ENABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_RESET_TSF);
-> +
-> +       val = ath5k_hw_reg_read(ah, AR5K_BEACON) | AR5K_BEACON_RESET_TSF;
-> +
-> +       /*
-> +        * Each write to the RESET_TSF bit toggles a hardware internal
-> +        * signal to reset TSF, but if left high it will cause a TSF reset
-> +        * on the next chip reset as well.  Thus we always write the value
-> +        * twice to clear the signal.
-> +        */
-> +       ath5k_hw_reg_write(ah, val, AR5K_BEACON);
-> +       ath5k_hw_reg_write(ah, val, AR5K_BEACON);
->  }
->
->  /*
-> --
-> 1.5.4.2.182.gb3092
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
-> _______________________________________________
-> ath5k-devel mailing list
-> ath5k-devel@lists.ath5k.org
-> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
+> to get enough of a trace history you might want to increase the number
+> of trace entries in /debug/tracing/trace_entries from 16K to 128K or so.
 >
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Thanks for the suggestion, I'll do that. :)
