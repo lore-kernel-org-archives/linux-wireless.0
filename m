@@ -1,60 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:44461 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752986AbYIGAc6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54760 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389AbYISN4g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 20:32:58 -0400
-Message-ID: <48C32138.4000700@lwfinger.net> (sfid-20080907_023301_936959_019D6F3E)
-Date: Sat, 06 Sep 2008 19:32:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Pavel Roskin <proski@gnu.org>, Tomas Winkler <tomasw@gmail.com>
-Subject: Re: [PATCH v2] p54usb: support LM87 firmwares
-References: <200809022139.12969.chunkeey@web.de> <200809070119.45720.chunkeey@web.de> <48C31349.7060401@lwfinger.net> <200809070225.41177.chunkeey@web.de>
-In-Reply-To: <200809070225.41177.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Fri, 19 Sep 2008 09:56:36 -0400
+Subject: Re: ACK matching [was: TX status reporting with help of an ack
+	queue]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
+	kune@deine-taler.de
+In-Reply-To: <1221832302.4514.6.camel@localhost> (sfid-20080919_155215_459241_3CF3BD6F)
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <1221505251.4511.77.camel@localhost>
+	 <1221541089.14102.44.camel@virkkmi-linux>
+	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
+	 <1221776990.4563.19.camel@localhost>
+	 <1221815294.19539.15.camel@virkkmi-linux>
+	 <1221817584.4491.29.camel@localhost>
+	 (sfid-20080919_114701_416600_478C4255)  <1221818057.10419.58.camel@johannes.berg>
+	 <1221819579.4491.34.camel@localhost>
+	 (sfid-20080919_122011_765612_F53F8EFC)  <1221820265.10419.78.camel@johannes.berg>
+	 <1221832302.4514.6.camel@localhost> (sfid-20080919_155215_459241_3CF3BD6F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mclMJJ/FzHlRIHGrIBnZ"
+Date: Fri, 19 Sep 2008 15:55:47 +0200
+Message-Id: <1221832547.12059.14.camel@johannes.berg> (sfid-20080919_155639_964161_BBA99161)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
-> On Sunday 07 September 2008 01:33:29 Larry Finger wrote:
->> Chr wrote:
->>> But, for newer firmwares you'll need "p54: better firmware support"
->>> (cc4b0cbf4ab) as well. This changes were merged about 25-26 hours ago
->>> into wireless-testing, the only thing that isn't in yet is 802.11a
->>> support....
->>>
->>> the LM87 firmware is this one:
->>> http://daemonizer.de/prism54/prism54-fw/fw-usb/2.13.1.0.arm.1
->>>
->>> This link can be found on the driver's site too:
->>> http://linuxwireless.org/en/users/Drivers/p54
->> Thanks. That one fixed the ping problem. I had the latest
->> wireless-testing, and have added the patches you posted earlier today.
->>
-> Well, since you already do some testing here.  Want more? ;-)
-> 
-> I will be off for about 4-5 weeks and it would be very nice if someone with lots of broadcom
-> hardware can test if the p54 works ADHOC & AP mode with them.
-> 
-> i've already (successfully) tested Intel's 2915 & 4965, several atheros chipsets and another prism54
-> on different operating systems.
-> 
-> But there could be problems with some broadcom chips.
 
-I'll see what I can do.
+--=-mclMJJ/FzHlRIHGrIBnZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-After loading the new firmware, p54usb crapped out after the following 
-message was logged:
+On Fri, 2008-09-19 at 15:51 +0200, Mattias Nissler wrote:
 
-phy9: not handling 0x02 type control frame
+> Well, I understand that we need synchronization of the state machines,
+> maybe we can advance optimistically and detect in the next state that
+> the STA didn't receive the last message? Just some random thoughts, I
+> see it'll at least be tricky, I just wanted your opinion on whether you
+> see a chance :-) As I said, I'll look into it when I find some time.
 
-After this, I had to unload and reload the driver. I have not yet had 
-time to check on it.
+To be honest, I'm not familiar enough with it to be able to answer that
+question. I know it's currently needed and I vaguely remember seeing and
+discussing that it's pretty important (and the stuff I already wrote),
+but that's about it.
 
-Larry
+> > However, I do think that if the hardware just isn't up to the job you
+> > should probably buy new hardware, after all, it's dirt cheap. :)
+>=20
+> I totally agree with you. I'm just curious to see whether there is a
+> chance to help our users. I'm perfectly fine if it turns out there is no
+> chance to do it properly, and I'll rather accept that fact instead of
+> trying to introduce workarounds that are known to be incorrect. The sad
+> thing is that if we controlled the firmware, we could probably arrange
+> to have the necessary information passed to the driver.
 
+Indeed; at least for those cards where there is firmware. But I guess
+you always only get as much out of the hardware as the vendor wants you
+to, rt61pci for example doesn't report frame timestamps so it's fairly
+useless for monitoring.
+
+johannes
+
+--=-mclMJJ/FzHlRIHGrIBnZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI069gAAoJEKVg1VMiehFYGFwP/A+bHwFDNypr8eY5r+1fAWLF
+0mqwm0J2uVCwRfUEOsdWs5zkB66h0nGAXQYSzKq5p8Gmr/UtByMxyjq6OihDAJFt
+B1HLYTw3lA7vO/nyng6hBu77ywlBy0Lun8CQFcq1BFsyrq/ZXKQIxnjXZyr41NWV
++TJw8xL3+6s76YGLbPeYc+DTwXxnmIv2WIB6wUVbGtMjjjObyqFBMV/lhnAJMP7Z
+fSvVQ4Bl3uzDRbUMpwhOwCV7ldF4rCTYUVGPqI2z01kUfmZGa7q/vv4+x3XIHYr4
+A8x3rcynuCMxcYMlomDNZaGJtFjlQZc5ns6ct7nSWQ+pJkgo6O7C+N/pXyUG0TeK
+oXLXnC04xtCp5OiixkO1abO9mc/wenGSJdIzdV1wQSSylnGB87X0Ll5P40XNaMDh
+BHEn5Cf7K+MSgWJ0cUABAGK5jtTq2evLfiCU4H4NLcSiXz7IFObOIyo6jbNZDUix
+QiYKuyoV8zrJ/asSd+l6oDlCqLPrIRgaBW1BqpkTaoO2Ctaac2XG0yDlwoTb+o6v
+tgbi+BWtTEqqR3yMptZh2gxpfLY2ykcZf76Shvl04y8VRu+G7xBacMpkvor/YASR
+TGfHot7H3JN+IYuviJtubvZ8It/Fw6n8A4zy5CC0Gj57fHwjSbQQZppXYNrBAztp
+L7T9SDKvlBtN6mff988g
+=NYDY
+-----END PGP SIGNATURE-----
+
+--=-mclMJJ/FzHlRIHGrIBnZ--
 
