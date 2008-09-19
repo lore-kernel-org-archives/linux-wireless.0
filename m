@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:53768 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753375AbYIFU5A (ORCPT
+Received: from n2a.bullet.in.yahoo.com ([202.43.219.19]:48164 "HELO
+	n2a.bullet.in.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750737AbYISFJ5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 16:57:00 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so979081wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2008 13:56:59 -0700 (PDT)
-Message-ID: <69e28c910809061356s44cc1c0clcc009736e45f2737@mail.gmail.com> (sfid-20080906_225707_687417_9C0D8F9D)
-Date: Sat, 6 Sep 2008 22:56:59 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Greg White" <pcguy11@live.com>
-Subject: Re: rt2x00 and packet injection
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <BAY118-W35E84AAD3187213E9B24F6DB5B0@phx.gbl>
+	Fri, 19 Sep 2008 01:09:57 -0400
+Date: Fri, 19 Sep 2008 10:39:54 +0530 (IST)
+From: Amit Sood <as22_2000@yahoo.com>
+Subject: Problem compiling compat-wireless
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <BAY118-W35E84AAD3187213E9B24F6DB5B0@phx.gbl>
+Content-Type: text/plain; charset=utf-8
+Message-ID: <959954.87694.qm@web95013.mail.in2.yahoo.com> (sfid-20080919_071013_816200_607A9146)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 6, 2008 at 9:37 PM, Greg White <pcguy11@live.com> wrote:
-> I tried aircrack-ng and 2.6.27-rc3 and the two don't want to work together.  Yes I dowloaded and compiled iw and libnl.  I have to use the driver from http://homepages.tu-darmstadt.de/~p_larbig/wlan/ to get aircrack-ng to work right.  Any suggestions?
->
-> Thanks,
+Hi,
 
-There is another requirement to use aircrack-ng/aireplay-ng (or any
-other osdep-based injector) with a mac80211-based driver: you must use
-the latest version (1.0-rc1 or newer) of aircrack-ng. Also, the
-monitor interface (mon0) must be created with airmon-ng - some drivers
-will refuse to inject on wlan0, even if it's set to monitor mode. In
-addition, the interfaces must always be on the same channel (as there
-is only 1 radio), so it's important that both interfaces remain on the
-desired channel.
+Recently downloaded the compat-wireless & was trying to compile it on l=
+inux-2.27-rc6 kernel. During the compilation I'm getting frollowing err=
+or:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+/usr/src/compat-wireless-2008-09-19/net/mac80211/rx.c: In function =E2=80=
+=98ieee80211_frame_allowed=E2=80=99:
+/usr/src/compat-wireless-2008-09-19/net/mac80211/rx.c:1196: error: =E2=80=
+=98ETH_P_PAE=E2=80=99 undeclared (first use in this function)
+/usr/src/compat-wireless-2008-09-19/net/mac80211/rx.c:1196: error: (Eac=
+h undeclared identifier is reported only once
+/usr/src/compat-wireless-2008-09-19/net/mac80211/rx.c:1196: error: for =
+each function it appears in.)
+make[3]: *** [/usr/src/compat-wireless-2008-09-19/net/mac80211/rx.o] Er=
+ror 1
+make[2]: *** [/usr/src/compat-wireless-2008-09-19/net/mac80211] Error 2
+make[1]: *** [_module_/usr/src/compat-wireless-2008-09-19] Error 2
+make[1]: Leaving directory `/storage/usr/src/linux-2.6-orig'
+make: *** [modules] Error 2
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-BTW which sub-driver are you trying to use? rt73usb?
+kindly assist.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+regards,
+
+-amit-
+
+
+      Check out the all-new face of Yahoo! India. Go to http://in.yahoo=
+=2Ecom/
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
