@@ -1,95 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Viola.Opus1.COM ([192.245.12.8]:1158 "EHLO Viola.Opus1.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752872AbYIFW7P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 18:59:15 -0400
-Received: from [172.17.0.188] ([61.8.118.66])
- by Opus1.COM (PMDF V6.2-X27 #9830) with ESMTPSA id
- <01MZ8WHG6GY88X4NGL@Opus1.COM> for linux-wireless@vger.kernel.org; Sat,
- 06 Sep 2008 15:59:13 -0700 (MST)
-Date: Sat, 06 Sep 2008 15:59:10 -0700
-From: gavron@wetwork.net
-Subject: Re: Speed enhancement for BCM4306/2
-In-reply-to: <48C2A1F5.6020607@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Broadcom Wireless <bcm43xx-dev@berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Message-id: <48C30B3E.2040302@wetwork.net> (sfid-20080907_005923_980428_A232CF5F)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <48C1BA91.7050106@lwfinger.net> <48C20928.10202@wetwork.net>
- <48C20BD7.6080605@lwfinger.net> <48C20F64.1000700@wetwork.net>
- <48C2A1F5.6020607@lwfinger.net>
+Received: from ug-out-1314.google.com ([66.249.92.175]:33782 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846AbYISSJw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 14:09:52 -0400
+Received: by ug-out-1314.google.com with SMTP id k3so1043962ugf.37
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 11:09:45 -0700 (PDT)
+To: rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] Resend: [PATCH] rt2x00: Consolidate definition of CSR_OFFSET
+Date: Fri, 19 Sep 2008 20:09:42 +0200
+Cc: John Daiker <daikerjohn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <48D2F0C6.9080409@gmail.com>
+In-Reply-To: <48D2F0C6.9080409@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+Message-Id: <200809192009.42870.IvDoorn@gmail.com> (sfid-20080919_200955_903919_1B3E17D1)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 19 September 2008, John Daiker wrote:
+> Resend: Premature send to Linville only... this version copies=20
+> linux-wireless and rt2400-devel.
+
+I was in the BCC list, but here goes my official reply. :)
+
+> This consolidates the definition of CSR_OFFSET when=20
+> CONFIG_RT2X00_LIB_DEBUG is also set.
+> The original definition appeared in 5 files, but was moved to a commo=
+n
+> .h file instead.
+>=20
+> Compile-tested only, as I don't have any rt2x00 HW in a working machi=
+ne.
+
+NACK
+This patch does more then consolidating =A0the CRS_OFFSET definition si=
+nce it
+changes several lines for adding/removing whitespaces as well.
+It completely breaks rt2500usb, and I really dislike using define
+names in rt2x00.h
+while the define itself is declared in the register headers only (and
+is thus not really
+visible in rt2x00.h, even though the compiler would accept it and it
+would work as
+expected).
+
+Ivo
+
+> Signed-off-by: John Daiker <daikerjohn@gmail.com>
+>=20
+> ---
+>=20
+>=20
+>=20
 
 
-Larry Finger wrote:
-> gavron@wetwork.net wrote:
->>
->>
->>
->> Ok, here's try #2.
->> E
-...
->
-> This hunk does not match the specs. In addition, I think there are too 
-> many right-hand curly braces for it to compile.
->
-> Larry
->
-I haven't tried a build yet, but please let me know if I'm on the right 
-track.
-
-E
-# diff -uN /tmp/phy.c drivers/net/wireless/b43legacy/phy.c
---- /tmp/phy.c    2008-09-06 15:13:33.000000000 -0700
-+++ drivers/net/wireless/b43legacy/phy.c    2008-09-06 
-15:54:03.000000000 -0700
-@@ -1010,7 +1010,7 @@
-         b43legacy_phy_initb5(dev);
-     else
-         b43legacy_phy_initb6(dev);
--    if (phy->rev >= 2 || phy->gmode)
-+    if (phy->rev >= 2 && phy->gmode)
-         b43legacy_phy_inita(dev);
- 
-     if (phy->rev >= 2) {
-@@ -1021,21 +1021,26 @@
-         b43legacy_phy_write(dev, 0x0811, 0x0000);
-         b43legacy_phy_write(dev, 0x0015, 0x00C0);
-     }
--    if (phy->rev > 5) {
-+    if (phy->rev >= 3) {
-         b43legacy_phy_write(dev, 0x0811, 0x0400);
-         b43legacy_phy_write(dev, 0x0015, 0x00C0);
-     }
--    if (phy->rev >= 2 || phy->gmode) {
-+    if (phy->gmode) {
-         tmp = b43legacy_phy_read(dev, 0x0400) & 0xFF;
--        if (tmp == 3 || tmp == 5) {
-+        if (tmp == 3) {
-+            b43legacy_phy_write(dev, 0x04C2, 0x1816);
-+            b43legacy_phy_write(dev, 0x04C3, 0x8606);
-+        }
-+        if (tmp == 4 || tmp == 5) {
-             b43legacy_phy_write(dev, 0x04C2, 0x1816);
-             b43legacy_phy_write(dev, 0x04C3, 0x8006);
--            if (tmp == 5)
--                b43legacy_phy_write(dev, 0x04CC,
--                            (b43legacy_phy_read(dev,
--                             0x04CC) & 0x00FF) |
--                             0x1F00);
-+            b43legacy_phy_write(dev, 0x04CC,
-+                        (b43legacy_phy_read(dev,
-+                        0x04CC) & 0x00FF) |
-+                        0x1F00);
-         }
-+    }
-+    if (phy-->rev >= 2)
-         b43legacy_phy_write(dev, 0x047E, 0x0078);
-     }
-     if (phy->radio_rev == 8) {
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
