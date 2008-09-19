@@ -1,168 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:13474 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751784AbYIZSjj (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:10863 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011AbYISL6F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 14:39:39 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1026254fkq.5
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 11:39:37 -0700 (PDT)
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: hostapd - mac80211 - rt2x00 - rt73usb  AP mode bug
-Date: Fri, 26 Sep 2008 20:39:34 +0200
-Cc: Iwo Mergler <iwo@call-direct.com.au>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
-	hostap@lists.shmoo.com
-References: <48C9CD51.1060107@call-direct.com.au> <20080926165007.GP4791@jm.kir.nu>
-In-Reply-To: <20080926165007.GP4791@jm.kir.nu>
+	Fri, 19 Sep 2008 07:58:05 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so541638fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 04:58:02 -0700 (PDT)
+Date: Fri, 19 Sep 2008 15:57:58 +0400
+From: Cyrill Gorcunov <gorcunov@gmail.com>
+To: Ingo Molnar <mingo@elte.hu>,
+	Suresh Siddha <suresh.b.siddha@intel.com>
+Cc: LWML <linux-wireless@vger.kernel.org>,
+	"Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: [PATCH -tip/master] x86: io-apic - interrupt remapping fix
+Message-ID: <20080919115758.GD7222@lenovo> (sfid-20080919_135810_966871_A18CC967)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809262039.34276.IvDoorn@gmail.com> (sfid-20080926_203943_673706_EBD255EB)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 September 2008, Jouni Malinen wrote:
-> (fixed linux-wireless address to get this to more appropriate people)
-> 
-> On Fri, Sep 12, 2008 at 12:00:49PM +1000, Iwo Mergler wrote:
-> 
-> > I'm trying to get to the bottom of a bug that stops me from using
-> > hostapd - mac80211 - rt2x00 - rt73usb as an access point.
-> > 
-> > Initially, I assumed a bug within the rt2x00 driver and added some
-> > tracing code to that. However, it now looks like the error is more
-> > likely within mac80211 or hostapd.
-> 
-> > I'm testing this on two systems, vmware-based x86 and ARM. The bug
-> > exists on both, but on the x86 the AP actually emits beacons, while
-> > on the ARM the system crashes on a bad spinlock.
-> > 
-> > The reason for the problem is the driver private data (vif), which
-> > doesn't get initialised, due to a missing call from mac80211.
-> 
-> This works with other drivers.. Not that that would automatically mean
-> that something wouldn't be wrong in mac80211 ;-). As far as I can tell,
-> hostapd does things the way it is supposed to and the main question
-> would be in the area of what mac80211 does with frames injected through
-> a monitor event.
+Interrupt remapping could lead to NULL dereference in case of
+kzalloc failed and memory leak in other way. So fix the
+both cases.
 
-It probably works with other drivers because those use hardware sequence
-counters for their hardware. ;)
+Signed-off-by: Cyrill Gorcunov <gorcunov@gmail.com>
+---
 
-> As far as the crash itself is concerned, this may be an issue in the
-> driver. Please note that net/mac80211.h explicitly notes that vif can be
-> NULL for injected frames (i.e., frame from monitor interface). rt2x00
-> seems to be doing some kind of mapping from vif to rt2x00_intf with
-> vif_to_intf() in rt2x00queue_create_tx_descriptor(). That function
-> handles the NULL case by not allocating a sequence number which itself
-> seems incorrect; all the virtual interfaces sharing the same STA/AP
-> interface should share the same sequence number space.
+Ingo, the patch is on top of applied one.
 
-So to what AP is a monitor interface associated with then?
-Or to which virtual interface has it been tied with?
+If I remember correctly Suresh was involved in
+this - so I think he could take a look and review
+the patch (please).
 
-Please note that som ehardware support multiple Master mode interfaces,
-so it doesn't know which monitor interface would be tied to which Monitor interface
-to share the sequence counter with.
-
-Note that the vif structure is only created when the add_interface() callback
-function is used. When you send a frame, it is fine to send it over the monitor
-interface as long as you don't expect the driver to control the sequence counter
-for that interface.
-
-> I don't have the debug code that produced the BUG shown in the output
-> below, so I'm not sure what exactly it was trying to do. However, it if
-> expect the vif to be always set, it will fail. The odd part here is that
-> the vif reported in the driver is not NULL; I would have expected that
-> to be the case.. Again, not having the debug code makes it difficult to
-> figure out what happened. If mac80211 is indeed setting struct
-> ieee80211_tx_info.control.vif to point to the monitor interface and not
-> NULL, that would likely be an issue in mac80211; otherwise, the driver
-> (and/or debug code) is likely to do something wrong with the vif
-> pointer.
-
-Ok, so that would mean there are 2 issues in mac80211.
-One is that it is not setting the vif to NULL for monitor interfaces,
-and the second one is that it requests a sequence number from the
-driver for injected frames which go into the monitor interface.
-
-Ivo
-
-> I'll leave the following details in for whoever is reading
-> linux-wireless and may have missed the original message..
-> 
-> > The trace below was captured during hostapd startup. Sometimes there
-> > is a discrepancy of 4 bytes between the printed pointer values of a
-> > particular vif - it's still the same vif.
-> > 
-> > Here goes:
-> > 
-> > [T87]ieee80211_open:194: dev->name=mon.wlan0
-> > [T87]ieee80211_open:309: sdata->dev->name=mon.wlan0
-> > [T87]ieee80211_open:310: sdata->vif.type=5, &sdata->vif=c3b957b4
-> > [T87]ieee80211_open:316: IEEE80211_IF_TYPE_MNTR
-> > 
-> > Hostapd has opened the monitor interface. Because the type is
-> > IEEE80211_IF_TYPE_MNTR, the driver's add_interface method is
-> > not called. This leaves vif=c3b957b4 uninitialised.
-> > 
-> > 
-> > [T87]ieee80211_open:194: dev->name=wlan0
-> > [T87]ieee80211_open:309: sdata->dev->name=wlan0
-> > [T87]ieee80211_open:310: sdata->vif.type=1, &sdata->vif=c3a197b4
-> > [T87]ieee80211_open:345: Calling local->ops->add_interface()
-> > [T87]rt2x00mac_add_interface:211: vif=c3a197b4
-> > [T87]rt2x00mac_add_interface:307: Canary Check c3a197b8
-> > 
-> > Here, hostapd has opened wlan0 in AP mode (sdata->vif.type=1).
-> > This code path in ieee80211_open calls the add_interface method
-> > which ends up to be rt2x00mac_add_interface in our case. This
-> > initialises vif=c3a197b4. The 'canary' is a couple of known
-> > magic values I use to detect uninitialised vif data.
-> > 
-> > Next, hostapd attempts to send a packet to the monitor interface:
-> > 
-> > [T87]ieee80211_monitor_start_xmit:1397: skb=c2c0e710, vif=00000004
-> > [T87]ieee80211_master_start_xmit:1332: odev=c3b95000 (.name=mon.wlan0)
-> > [T87]ieee80211_master_start_xmit:1339: osdata=c3b95460, &osdata->vif=c3b957b4
-> > [T87]ieee80211_master_start_xmit:1378: skb=c2c0e710, vif=c3b957b8
-> > 
-> > ieee80211_master_start_xmit finds the correct vif=c3b957b8
-> > (which is not initialised) and calls the driver.
-> > 
-> > [T87]__ieee80211_tx:1063: skb=c2c0e710, vif=c3b957b8
-> > [T87]rt2x00mac_tx:117: skb=c2c0e710, vif=c3b957b8
-> > [T87]rt2x00queue_write_tx_frame:405: skb=c2c0e710, vif=c3b957b8
-> > [T87]rt2x00queue_create_tx_descriptor:171: enter (1)
-> > [T87]rt2x00queue_create_tx_descriptor:175: skb=c2c0e710, vif=c3b957b8
-> > [T87]rt2x00queue_create_tx_descriptor:178: Canary Check c3b957b8
-> > [T87]rt2x00queue_create_tx_descriptor:178: The canary died. canary1=00000000, canary2=00000000, lock=1
-> > kernel BUG at drivers/net/wireless/rt2x00/rt2x00queue.c:178!
-> > ...
-> > 
-> > The debugging code detected the uninitialised vif and called BUG().
-> > 
-> > ====
-> > 
-> > As far as I can see, there are two possible reasons for this.
-> > 
-> > 1) Hostapd shouldn't have sent packets out of the monitor interface.
-> > In that case, mac80211 should have thrown an error at hostapd.
-> > 
-> > 2) ieee80211_open should have called the add_interface method, even
-> > for monitor mode.
-> > 
-> > I asked Ivo van Doorn (the author of the rt2x00 drivers) about this,
-> > here is the reply:
-> > 
-> > Ivo van Doorn wrote:
-> > > 
-> > > Well sending through the monitor interface is fine, as long as the userspace agent
-> > > that does this sets the sequence number. There is no way rt2x00 can create correct
-> > > sequence numbers for multiple interfaces when it has to keep monitor interfaces into account.
-> > > 
-> 
-> 
-
-
+Index: linux-2.6.git/arch/x86/kernel/apic.c
+===================================================================
+--- linux-2.6.git.orig/arch/x86/kernel/apic.c	2008-09-19 12:12:54.000000000 +0400
++++ linux-2.6.git/arch/x86/kernel/apic.c	2008-09-19 13:57:04.000000000 +0400
+@@ -1360,7 +1360,12 @@ void enable_IR_x2apic(void)
+ 
+ 	local_irq_save(flags);
+ 	mask_8259A();
+-	save_mask_IO_APIC_setup();
++
++	ret = save_mask_IO_APIC_setup();
++	if (ret) {
++		printk(KERN_INFO "Saving IO-APIC state failed: %d\n", ret);
++		goto end;
++	}
+ 
+ 	ret = enable_intr_remapping(1);
+ 
+@@ -1370,14 +1375,15 @@ void enable_IR_x2apic(void)
+ 	}
+ 
+ 	if (ret)
+-		goto end;
++		goto end_restore;
+ 
+ 	if (!x2apic) {
+ 		x2apic = 1;
+ 		apic_ops = &x2apic_ops;
+ 		enable_x2apic();
+ 	}
+-end:
++
++end_restore:
+ 	if (ret)
+ 		/*
+ 		 * IR enabling failed
+@@ -1386,6 +1392,7 @@ end:
+ 	else
+ 		reinit_intr_remapped_IO_APIC(x2apic_preenabled);
+ 
++end:
+ 	unmask_8259A();
+ 	local_irq_restore(flags);
+ 
+Index: linux-2.6.git/arch/x86/kernel/io_apic.c
+===================================================================
+--- linux-2.6.git.orig/arch/x86/kernel/io_apic.c	2008-09-19 12:12:54.000000000 +0400
++++ linux-2.6.git/arch/x86/kernel/io_apic.c	2008-09-19 13:33:01.000000000 +0400
+@@ -831,7 +831,7 @@ int save_mask_IO_APIC_setup(void)
+ 			kzalloc(sizeof(struct IO_APIC_route_entry) *
+ 				nr_ioapic_registers[apic], GFP_KERNEL);
+ 		if (!early_ioapic_entries[apic])
+-			return -ENOMEM;
++			goto nomem;
+ 	}
+ 
+ 	for (apic = 0; apic < nr_ioapics; apic++)
+@@ -845,7 +845,17 @@ int save_mask_IO_APIC_setup(void)
+ 				ioapic_write_entry(apic, pin, entry);
+ 			}
+ 		}
++
+ 	return 0;
++
++nomem:
++	for (; apic > 0; apic--)
++		kfree(early_ioapic_entries[apic]);
++	kfree(early_ioapic_entries[apic]);
++	memset(early_ioapic_entries, 0,
++		ARRAY_SIZE(early_ioapic_entries));
++
++	return -ENOMEM;
+ }
+ 
+ void restore_IO_APIC_setup(void)
+@@ -853,12 +863,13 @@ void restore_IO_APIC_setup(void)
+ 	int apic, pin;
+ 
+ 	for (apic = 0; apic < nr_ioapics; apic++) {
+-		/* FIXME: it should be handled at allocation time --cvg */
+ 		if (!early_ioapic_entries[apic])
+ 			break;
+ 		for (pin = 0; pin < nr_ioapic_registers[apic]; pin++)
+ 			ioapic_write_entry(apic, pin,
+ 					   early_ioapic_entries[apic][pin]);
++		kfree(early_ioapic_entries[apic]);
++		early_ioapic_entries[apic] = NULL;
+ 	}
+ }
+ 
