@@ -1,193 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:14354 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753324AbYIOToa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 15:44:30 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2298922rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 12:44:30 -0700 (PDT)
-Message-ID: <45e8e6c40809151244n6c337ef4x65ecce0bcfea3e05@mail.gmail.com> (sfid-20080915_214434_871911_603FF374)
-Date: Mon, 15 Sep 2008 12:44:29 -0700
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [RFC PATCH] libertas_tf: clear current command on remove
-Cc: "Luis Carlos Cobo" <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1221463292.27102.93.camel@localhost.localdomain>
+Received: from mail.atheros.com ([12.36.123.2]:39138 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751235AbYISR6a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 13:58:30 -0400
+Date: Fri, 19 Sep 2008 23:28:24 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: Steven Noonan <steven@uplinklabs.net>
+CC: Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
+	(rc5, rc6, probably others)
+Message-ID: <20080919175824.GA5626@senthil-lnx.users.atheros.com> (sfid-20080919_195834_382513_D7D81B96)
+References: <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com> <20080918220102.GE7408@tesla> <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com> <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com> <20080919030125.GG7408@tesla> <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com> <20080919142801.GA5816@senthil-lnx.users.atheros.com> <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1220906082.1618.22.camel@localhost.localdomain>
-	 <45e8e6c40809111535k153af71fga6e80e43aef6cbef@mail.gmail.com>
-	 <1221463292.27102.93.camel@localhost.localdomain>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, I get the same oops after that change as well.
+On Fri, Sep 19, 2008 at 10:12:04PM +0530, Steven Noonan wrote:
+> 
+> 
+> On Fri, 19 Sep 2008, Senthil Balasubramanian wrote:
+> 
+> > On Fri, Sep 19, 2008 at 12:59:29PM +0530, Steven Noonan wrote:
+> > > On Thu, Sep 18, 2008 at 8:01 PM, Luis R. Rodriguez
+> > > <lrodriguez@atheros.com> wrote:
+> > > > Thanks for testing, and glad to see this is resolved.
+> > > >
+> > >
+> > > Damn. It's back. I was using wireless normally this evening. Browsing
+> > > the web, that kind of thing, and then the wireless inexplicably
+> > > dropped (even with the group rekeying patch), so I unloaded/reloaded
+> > > the module. This popped up in dmesg:
+> > >
+> > > [ 3834.375658] vendor=8086 device=27d2
+> > > [ 3834.375666] ath9k 0000:03:00.0: PCI INT A disabled
+> > > [ 3834.375716] ath9k: driver unloaded
+> > > [ 3838.552419] ath9k: 0.1
+> > > [ 3838.552502] vendor=8086 device=27d2
+> > > [ 3838.552511] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> > > [ 3838.552532] ath9k 0000:03:00.0: setting latency timer to 64
+> > > [ 3838.688924] phy1: Selected rate control algorithm 'ath9k_rate_control'
+> > > [ 3838.693652] phy1: Atheros 5416: mem=0xffffc20000060000, irq=17
+> > > [ 3839.427125] irq 17: nobody cared (try booting with the "irqpoll" option)
+> > > [ 3839.427136] Pid: 0, comm: swapper Tainted: P
+> > > 2.6.27-rc6-tip-00478-g74f1a36 #1
+> > > [ 3839.427141] Call Trace:
+> > > [ 3839.427145]  <IRQ>  [<ffffffff802219c5>] ? read_hpet+0x9/0x1c
+> > > [ 3839.427165]  [<ffffffff8026af71>] __report_bad_irq+0x3d/0x8c
+> > > [ 3839.427172]  [<ffffffff8026b0c6>] note_interrupt+0x106/0x160
+> > > [ 3839.427180]  [<ffffffff8026b801>] handle_fasteoi_irq+0xad/0xda
+> > > [ 3839.427188]  [<ffffffff8020f7b0>] do_IRQ+0x10c/0x190
+> > > [ 3839.427194]  [<ffffffff8020c551>] ret_from_intr+0x0/0xa
+> > > [ 3839.427198]  <EOI>  [<ffffffff8026c6f0>] rcu_pending+0x62/0x6e
+> > > [ 3839.427211]  [<ffffffff8025bc11>] ? tick_nohz_stop_sched_tick+0x2e4/0x2f3
+> > > [ 3839.427218]  [<ffffffff8020ad94>] cpu_idle+0x7b/0xdb
+> > > [ 3839.427226]  [<ffffffff8060c921>] rest_init+0x75/0x77
+> > > [ 3839.427231] handlers:
+> > > [ 3839.427234] [<ffffffffa0240238>] (ath_isr+0x0/0x170 [ath9k])
+> > > [ 3839.427263] Disabling IRQ #17
+> > > [ 3842.263699] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > > [ 3848.035003] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > > [ 3848.432701] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > > [ 3850.216947] wlan0: authenticate with AP 00:1e:52:79:4d:01
+> > > [ 3850.217027] wlan0: authenticate with AP 00:1e:52:79:4d:01
+> > > [ 3850.228326] wlan0: authenticated
+> > > [ 3850.228336] wlan0: associate with AP 00:1e:52:79:4d:01
+> > > [ 3850.428140] wlan0: associate with AP 00:1e:52:79:4d:01
+> > > [ 3850.628151] wlan0: associate with AP 00:1e:52:79:4d:01
+> > > [ 3850.728305] wlan0: RX AssocResp from 00:1e:52:79:4d:01 (capab=0x431
+> > > status=0 aid=1)
+> > > [ 3850.728314] wlan0: associated
+> > > [ 3850.728655] wlan0 (WE) : Wireless Event too big (320)
+> > > [ 3850.743377] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> > > [ 3860.855104] wlan0: no IPv6 routers present
+> > >
+> > > I rebuilt the module with DBG_ATH_INTERRUPT, but it somehow stumbled
+> > > itself back into working order while I was compiling. I can't keep the
+> > > interrupt debugging on all the time because it's just -too verbose-,
+> > > and when I pop a debug version of the module in, then it's too late to
+> > > track the issue....
+> >
+> > I am able to reproduce this IRQ nobody cared issue in my setup and the
+> > following patch seems to be fixing the issue. Please try it out and let
+> > me know if it solves your issue in your setup.
+> 
+> The patch you prvide doesn't want to apply. What code did you base this
+> on?
+> 
+> The first change listed doesn't work because there is no tasklet_kill() in
+> core.c, and the line immediately after ath_stop there has
+> "!sc->sc_invalid" instead of the "!(sc->sc_flags & SC_OP_INVALID)".
+> 
+> The second fails because SC_OP_INVALID isn't defined.
+> 
+> However, if your patch did apply to my code, I bet it'd solve the issue,
+> based on what it says it does.
 
-On Mon, Sep 15, 2008 at 12:21 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Thu, 2008-09-11 at 15:35 -0700, Andrey Yurovsky wrote:
->> Hi Dan.  With this patch, I get a NULL pointer dereference if I pull
->> the card while scanning:
->
-> So the USB disconnect calls lbs_remove_card(), which first calls
-> lbtf_free_adapter() (clearing the entire command array), and then it
-> calls ieee80211_unregister_hw(), which calls lbs_op_stop(), which clears
-> the current command node, and then ieee80211_unregister_hw() calls
-> flush_workqueue() on the work queue that the scan could currently be
-> pending in.
->
-> The scan command, currently blocking in __lbtf_cmd() in
-> wait_event_interruptible(), now gets woken up because of my patch to
-> lbs_op_stop().  Its flow continues through __lbtf_cmd() until
-> __lbtf_cleanup_and_insert_cmd(), where it tries a
-> memset(cmdnode->cmdbuf, 0, ...).  Unfortunately, cmdnode->cmdbuf is now
-> NULL, having been cleared in lbtf_free_cmd_buffer() already by
-> lbtf_free_adapter() quite early in the device removal chain.  Explosion.
->
-> About all I can think of right now is something like:
->
-> diff --git a/drivers/net/wireless/libertas_tf/cmd.c b/drivers/net/wireless/libertas_tf/cmd.c
-> index fdbcf8b..481d189 100644
-> --- a/drivers/net/wireless/libertas_tf/cmd.c
-> +++ b/drivers/net/wireless/libertas_tf/cmd.c
-> @@ -550,11 +550,16 @@ int __lbtf_cmd(struct lbtf_private *priv, uint16_t command,
->        might_sleep();
->        ret = wait_event_interruptible(cmdnode->cmdwait_q,
->                                       cmdnode->cmdwaitqwoken);
-> -       if (ret)        {
-> +       if (ret) {
->                printk(KERN_DEBUG
->                       "libertastf: command 0x%04x interrupted by signal",
->                       command);
->                return ret;
-> +       } else if (priv->surpriseremoved) {
-> +               printk(KERN_DEBUG
-> +                      "libertastf: command 0x%04x interrupted by device "
-> +                      "disconnect", command);
-> +               return -ENODEV;
->        }
->
->        spin_lock_irqsave(&priv->driver_lock, flags);
->
-> Does that fix it for you?  If so, I'll roll this one up with the
-> previous patch and resubmit.
->
-> Dan
->
->> 6>[  131.596162] libertastf: URB in failure status: -71
->> <6>[  131.712016] usb 4-5: USB disconnect, address 5
->> <7>[  131.933390] libertastf: command 0x001d failed: -2
->> <1>[  131.933429] BUG: unable to handle kernel NULL pointer
->> dereference at 00000000
->> <1>[  131.933437] IP: [<f8d71d7e>]
->> :libertas_tf:__lbtf_cleanup_and_insert_cmd+0x2e/0x60
->> <4>[  131.933452] *pde = 00000000
->> <0>[  131.933511] Oops: 0002 [#1] SMP
->> <4>[  131.933519] Modules linked in: arc4 ecb crypto_blkcipher
->> libertas_tf_usb libertas_tf mac80211 cfg80211 binfmt_misc radeon drm
->> rfcomm l2cap bluetooth nfsd auth_rpcgss exportfs speedstep_lib
->> cpufreq_userspace cpufreq_stats cpufreq_powersave cpufreq_ondemand
->> freq_table cpufreq_conservative video output rfkill input_polldev sbs
->> sbshc battery nfs lockd nfs_acl sunrpc iptable_filter ip_tables
->> x_tables ac ppdev psmouse serio_raw yenta_socket rsrc_nonstatic
->> container parport_pc parport pcspkr iTCO_wdt iTCO_vendor_support
->> button intel_agp agpgart shpchp pci_hotplug ipv6 evdev ext3 jbd
->> mbcache usbhid hid sg sr_mod sd_mod cdrom ata_piix pata_acpi b44
->> floppy ata_generic libata scsi_mod dock ssb pcmcia pcmcia_core mii
->> ehci_hcd uhci_hcd usbcore thermal processor fan thermal_sys fuse
->> <4>[  131.934926]
->> <4>[  131.934931] Pid: 6090, comm: usb Not tainted (2.6.27-rc6-wl #1)
->> <4>[  131.934963] EIP: 0060:[<f8d71d7e>] EFLAGS: 00010046 CPU: 0
->> <4>[  131.934999] EIP is at __lbtf_cleanup_and_insert_cmd+0x2e/0x60
->> [libertas_tf]
->> <4>[  131.935032] EAX: 00000000 EBX: f4f372f0 ECX: 00000200 EDX: f4f372f0
->> <4>[  131.935037] ESI: f751ee60 EDI: 00000000 EBP: f751ee60 ESP: f40efecc
->> <4>[  131.935069]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
->> <0>[  131.935101] Process usb (pid: 6090, ti=f40ee000 task=f7530fc0
->> task.ti=f40ee000)
->> <0>[  131.935106] Stack: f751f7d4 fffffffe 00000282 f8d72133 f8d72e88
->> 0000001d fffffffe 0000001d
->> <0>[  131.935177]        f4f372f0 00000000 f7530fc0 c013c580 f40efefc
->> f40efefc f751e1a0 f751fb48
->> <0>[  131.935275]        f751f938 f4110480 f8d7225a 00000030 f8d725d0
->> f40eff24 00300001 c0102c05
->> <0>[  131.935478] Call Trace:
->> <0>[  131.935509]  [<f8d72133>] __lbtf_cmd+0xd3/0x130 [libertas_tf]
->> <0>[  131.935551]  [<c013c580>] autoremove_wake_function+0x0/0x40
->> <0>[  131.935589]  [<f8d7225a>] lbtf_set_channel+0x3a/0x40 [libertas_tf]
->> <0>[  131.935600]  [<f8d725d0>] lbtf_cmd_copyback+0x0/0x50 [libertas_tf]
->> <0>[  131.935637]  [<c0102c05>] __switch_to+0xa5/x160
->> <0>[  131.935644]  [<c0123e8f>] finish_task_switch+0x1f/0xb0
->> <0>[  131.935652]  [<c0324e6b>] schedule+0x25b/0x6a0
->> <0>[  131.935660]  [<f8d7176>] lbtf_op_config+0x26/0x0 [libertas_tf]
->> <0>[  11.935750]  [<f8d91056> ieee80211_hw_config+056/0x70 [mac80211]
->> <0[  131.935803]  [<f8d9e49>] ieee80211_sta_scn_work+0x179/0x1e0 [ma80211]
->> <0>[  131.93585]  [<c01397b4>] queue_elayed_work_on+0x84/0x0
->> <0>[  131.935887]  [c013909a>] run_workquee+0xca/0x170
->> <0>[  131935949]  [<c0326ae1>]_spin_lock_irqsave+0x3/0x50
->> <0>[  131.936036] [<f8d97cd0>] ieee8021_sta_scan_work+0x0/0xe0 [mac80211]
->> <0>[  13.936085]  [<c0139980>]worker_thread+0x0/0xe0
->> 0>[  131.936119]  [<c139a00>] worker_thread+x80/0xe0
->> <0>[  131.93679]  [<c013c580>] autoemove_wake_function+0x/0x40
->> <0>[  131.936239  [<c0139980>] workerthread+0x0/0xe0
->> <0>[  31.936299]  [<c013c262] kthread+0x42/0x70
->> <0013c20>] kthread+0x0/0x70
->> <0[  131.936392]  [<c0100d7>] kernel_thread_heper+0x7/0x10
->> <0>[  131936453]  ======================
->> <0>[  131.93509] Code: 85 d2 89 1c24 89 d3 89 74 24 04 8 c6 89 7c 24
->> 08 74 33 c 42 0c 00 00 00 00 31 0 b9 00 02 00 00 c7 4210 00 00 00 00
->> 8b 7a 1 <f3> ab 8b 96 68 09 0 00 8d 86 64 09 00 00 9 9e 68 09 00 00 89
->> <>[  131.937384] EIP: [f8d71d7e>]
->> __lbtf_clenup_and_insert_cmd+0x2/0x60 [libertas_tf] SSESP
->> 0068:f40efecc
->> <4>[ 131.937384] ---[ endtrace 32fe8679f56e2101]---
->>
->>
->> On Mon, Sep 8, 2008 at 1:34 PM, Dan Williams <dcbw@redhat.com> wrote:
->> > Ensure that the current command is torn down when cleaning up.
->> >
->> > Signed-off-by: Dan Williams <dcbw@redhat.com>
->> > ---
->> >
->> > Completely untested but based on the libertas patch for the same
->> > problem.  Luis, can you give it a shot and make sure there aren't any
->> > regressions when pulling the card or rmmod-ing the driver?
->> >
->> > diff --git a/drivers/net/wireless/libertas_tf/main.c b/drivers/net/wireless/libertas_tf/main.c
->> > index c948021..5f7bf04 100644
->> > --- a/drivers/net/wireless/libertas_tf/main.c
->> > +++ b/drivers/net/wireless/libertas_tf/main.c
->> > @@ -296,8 +296,8 @@ static void lbtf_op_stop(struct ieee80211_hw *hw)
->> >        struct lbtf_private *priv = hw->priv;
->> >        unsigned long flags;
->> >        struct sk_buff *skb;
->> > -
->> >        struct cmd_ctrl_node *cmdnode;
->> > +
->> >        /* Flush pending command nodes */
->> >        spin_lock_irqsave(&priv->driver_lock, flags);
->> >        list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
->> > @@ -306,7 +306,14 @@ static void lbtf_op_stop(struct ieee80211_hw *hw)
->> >                wake_up_interruptible(&cmdnode->cmdwait_q);
->> >        }
->> >
->> > +       /* Flush the command the card is currently processing */
->> > +       if (priv->cur_cmd) {
->> > +               priv->cur_cmd->result = -ENOENT;
->> > +               priv->cur_cmd->cmdwaitqwoken = 1;
->> > +               wake_up_interruptible(&priv->cur_cmd->cmdwait_q);
->> > +       }
->> >        spin_unlock_irqrestore(&priv->driver_lock, flags);
->> > +
->> >        cancel_work_sync(&priv->cmd_work);
->> >        cancel_work_sync(&priv->tx_work);
->> >        while ((skb = skb_dequeue(&priv->bc_ps_buf)))
->> >
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >
->
->
+I am on 2.6.27-rc6 and this patch is on top of my earlier patch
+titled "[PATCH] ath9k: connectivity is lost after Group rekeying is
+done". However this patch can be applied on top of latest wireless testing
+too. I could apply this patch succesfully on top of wireless testing
+git tree.
+
+My git-describe says v2.6.27-rc6-1378-g34e512f.
+
+There is no sc_invalid flag in "struct ath_softc" today. Where did
+you get this variable from? It was removed in the following commit
+
+-----------------------------------------------
+commit f2c9705a05ecbc0d94216a3b042d5641e8bf70b1
+Author: Sujith <Sujith.Manoharan@atheros.com>
+Date:   Mon Aug 11 14:05:08 2008 +0530
+
+    ath9k: Use bitfields for sc operations
+
+    Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+-----------------------------------------------
+
+Which code base are you using?
