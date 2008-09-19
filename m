@@ -1,67 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49479 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909AbYI2KfI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 06:35:08 -0400
-Subject: Re: NL80211_CMD_GET_WIPHY reply doesn't fit into nl message buffer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-In-Reply-To: <1222683923.7064.18.camel@johannes.berg> (sfid-20080929_122532_241162_27D0B6E7)
-References: <48E0A65A.2060102@gmail.com>
-	 <1222682480.7064.16.camel@johannes.berg> <20080929102021.GE10429@jm.kir.nu>
-	 <1222683923.7064.18.camel@johannes.berg>
-	 (sfid-20080929_122532_241162_27D0B6E7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CnDGJCI1KzqJdSkhryLg"
-Date: Mon, 29 Sep 2008 12:35:01 +0200
-Message-Id: <1222684501.7064.20.camel@johannes.berg> (sfid-20080929_123524_129815_BF576526)
+Received: from bluegiga.fi ([194.100.31.45]:8404 "EHLO darkblue.bluegiga.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754300AbYISOUg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 10:20:36 -0400
+Subject: Re: ACK matching [was: TX status reporting with help of an ack
+	queue]
+From: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
+	kune@deine-taler.de, j@w1.fi
+In-Reply-To: <1221832302.4514.6.camel@localhost>
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <1221505251.4511.77.camel@localhost>
+	 <1221541089.14102.44.camel@virkkmi-linux>
+	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
+	 <1221776990.4563.19.camel@localhost>
+	 <1221815294.19539.15.camel@virkkmi-linux>
+	 <1221817584.4491.29.camel@localhost>
+	 (sfid-20080919_114701_416600_478C4255)  <1221818057.10419.58.camel@johannes.berg>
+	 <1221819579.4491.34.camel@localhost>
+	 (sfid-20080919_122011_765612_F53F8EFC)  <1221820265.10419.78.camel@johannes.berg>
+	 <1221832302.4514.6.camel@localhost>
+Content-Type: text/plain
+Date: Fri, 19 Sep 2008 17:20:33 +0300
+Message-Id: <1221834033.22224.22.camel@virkkmi-linux> (sfid-20080919_162051_200212_7F7F0979)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-09-19 at 15:51 +0200, Mattias Nissler wrote:
+> On Fri, 2008-09-19 at 12:31 +0200, Johannes Berg wrote:
+> > On Fri, 2008-09-19 at 12:19 +0200, Mattias Nissler wrote:
+> > 
+> > > Well, maybe we can work around this requirement? I still need to learn
+> > > about the details, but what happens for example if the STA sends the ACK
+> > > and then resets due to a crash? I guess the AP is able to cope with
+> > > that, no? So maybe we can relax the rules a bit (unless we become really
+> > > incompliant with the standard of course).
+> > 
+> > I don't really see how to. We can't just assume the station got the
+> > frame properly and advance our state machine. The case you're citing is
+> > quite different, we'll advance the state machine but it won't work
+> > because the STA crashed; if we advance but the station simply hasn't
+> > gotten the frame we'll get out of sync and stuff will fail for no real
+> > reason.
+> 
+> Well, I understand that we need synchronization of the state machines,
+> maybe we can advance optimistically and detect in the next state that
+> the STA didn't receive the last message? Just some random thoughts, I
+> see it'll at least be tricky, I just wanted your opinion on whether you
+> see a chance :-) As I said, I'll look into it when I find some time.
+> 
 
---=-CnDGJCI1KzqJdSkhryLg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Just as a side note: it's the mac80211 stack which converts a missing
+TX_ACK flag to be a IEEE80211_RADIOTAP_F_TX_FAIL flag. The hostapd sees
+that TX_FAIL and assumes TX failed.
 
-On Mon, 2008-09-29 at 12:25 +0200, Johannes Berg wrote:
+> > 
+> > But you can do workarounds all you want in hostapd, I don't care.
+> 
+> :-)
+> 
+> > However, I do think that if the hardware just isn't up to the job you
+> > should probably buy new hardware, after all, it's dirt cheap. :)
+> 
+> I totally agree with you. I'm just curious to see whether there is a
+> chance to help our users. I'm perfectly fine if it turns out there is no
+> chance to do it properly, and I'll rather accept that fact instead of
+> trying to introduce workarounds that are known to be incorrect. The sad
+> thing is that if we controlled the firmware, we could probably arrange
+> to have the necessary information passed to the driver.
+> 
+> Mattias
+> 
 
-> I recently rewrote the handling in iw completely to make it easier to
-> follow, will post an equivalent patch for hostapd in a minute.
+I'd really love for some workaround that would allow AP mode to work. 
 
-How does this look?
+It would be great if it could be deemed that the protocol doesn't really
+require CTS protection/status information, and can be made reliable and
+standards compliant without support for it from the driver.
+Unfortunately I don't have high hopes for that, but I wonder what's Mr.
+Malinen's opinion?
 
-http://johannes.sipsolutions.net/patches/hostap/all/2008-09-29-10%3a34/002-=
-nl80211-resync.patch
+- Mikko
 
-Haven't tested it yet though.
 
-johannes
 
---=-CnDGJCI1KzqJdSkhryLg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI4K9SAAoJEKVg1VMiehFYm5MQAMAzDlMHA9Yh+YQgpp3adIqQ
-3UWOEgu2kCvzmTARJQsop4QKoP63TvnptTUZG8xeJevwxh4fl+6oIvcxThs8t9os
-K7pMYu6HIRNdY8iQaN2DT6sRK6sw4oFiKb2Y4hnVkj4b3OQIfVaB1oBDrQlCXcfn
-/cIaOsNScSIqrDnvKABF5eg1xqNvPwYgquMgvkyEA3y8333W2C5T1Y9doY9l7ukM
-Vprs7rnCoYP8cM53JRMTqq9GdcsdrH2RKRzVAslPNluI3RvXf2PF29mWBbz4oxr5
-dGxTGLWHdxFD+2uKdciLYtxbm9ecyRSrgFuhbaCK0F+flI49P7mukthRKGGv392s
-rkMNbO73uW2h2TkOIQnS63vWH+Zyv8nyW/m4+38u3OIIok4IKeOsbGYPUNBLnFNc
-g6qkoDOHMb9EWlJUHeauvOY1vw9/CgVllsndB1pphC9cWI6CPd3A8kO/3Sgx0Aon
-L+h8iVhcxxnX5jOje3zytKBMwM+cl5JNg//tF0c74D221EPISUJjmQlqvuyAoHNV
-PmgNyHzpOlwozlzZGLWGoAX70oO3Y+eePlBVo08enp38csW52WynXEaaTTe4VOCS
-OL33RqNW13B4bMF0w41nerqbVsCiePJ3+510FxOOI7jRD7qGJL4BxzHuf6bA4ufh
-Q3u7Clw3l0E3rKS4akST
-=xzBj
------END PGP SIGNATURE-----
-
---=-CnDGJCI1KzqJdSkhryLg--
 
