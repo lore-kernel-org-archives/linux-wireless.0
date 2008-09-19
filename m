@@ -1,73 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52108 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751823AbYIQUIG (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:32946 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751645AbYISLyo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 16:08:06 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH] rfkill: update LEDs for all state changes
-Date: Wed, 17 Sep 2008 17:07:56 -0300
-Message-Id: <1221682077-21170-1-git-send-email-hmh@hmh.eng.br> (sfid-20080917_220811_882622_EA9D937A)
-In-Reply-To: <20080917023334.GA1187@khazad-dum.debian.net>
-References: <20080917023334.GA1187@khazad-dum.debian.net>
+	Fri, 19 Sep 2008 07:54:44 -0400
+Subject: Re: technology preview: scan with cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <1ba2fa240809190445v370ee80dk316d3b474db86132@mail.gmail.com> (sfid-20080919_134504_592540_694D3B3F)
+References: <1221794329.10419.9.camel@johannes.berg>
+	 <1221795715.10419.15.camel@johannes.berg>
+	 <1ba2fa240809190103i69c66978he4762fd350ab2e5d@mail.gmail.com>
+	 <1221814565.10419.19.camel@johannes.berg>
+	 <1ba2fa240809190337ke17d2aanaca6d0f194b11f03@mail.gmail.com>
+	 <1221820966.10419.81.camel@johannes.berg>
+	 <1ba2fa240809190445v370ee80dk316d3b474db86132@mail.gmail.com>
+	 (sfid-20080919_134504_592540_694D3B3F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jnG5Fyy36qwdfJfYXsMx"
+Date: Fri, 19 Sep 2008 13:54:06 +0200
+Message-Id: <1221825246.10419.84.camel@johannes.berg> (sfid-20080919_135450_301743_EA322F0B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The LED state was not being updated by rfkill_force_state(), which will
-cause regressions in wireless drivers that had old-style rfkill support and
-are updated to use rfkill_force_state().
 
-The LED state was not being updated when a change was detected through the
-rfkill->get_state() hook, either.
+--=-jnG5Fyy36qwdfJfYXsMx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Move the LED trigger update calls into notify_rfkill_state_change(), where
-it should have been in the first place.  This takes care of both issues.
+On Fri, 2008-09-19 at 14:45 +0300, Tomas Winkler wrote:
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+> iwlwifi  HW is able to issue 10 probes per channel in a single scan.
+> Empirically this probably maximum of networks/SSIDs an average user
+> will be interested in.   But we can go with less for example 5  probes
+> per scan if we for example round robin SSID list in background scans.
 
- John, this one is quite likely something that should be sent for
- merge in mainline BEFORE 2.6.27 is released.
+Yeah but then 10 would be the number we should announce to userspace I
+guess. Not sure yet.
 
- I am NOT sure it fixes regressions, that depends on whether the drivers
- using rfkill that are in 2.6.27 had working LED support before rfkill
- support was added to them.  Unfortunately, it cannot fix the b43
- regression by itself.
+Thanks for the info. I'm limiting iwlwifi to a single one right now and
+mac80211 to four.
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index ea0dc04..f949a48 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -125,6 +125,7 @@ static void rfkill_led_trigger_activate(struct led_classdev *led)
- 
- static void notify_rfkill_state_change(struct rfkill *rfkill)
- {
-+	rfkill_led_trigger(rfkill, rfkill->state);
- 	blocking_notifier_call_chain(&rfkill_notifier_list,
- 			RFKILL_STATE_CHANGED,
- 			rfkill);
-@@ -217,10 +218,8 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
- 			rfkill->state = state;
- 	}
- 
--	if (force || rfkill->state != oldstate) {
--		rfkill_led_trigger(rfkill, rfkill->state);
-+	if (force || rfkill->state != oldstate)
- 		notify_rfkill_state_change(rfkill);
--	}
- 
- 	return retval;
- }
--- 
-1.5.6.5
+johannes
+
+--=-jnG5Fyy36qwdfJfYXsMx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI05LaAAoJEKVg1VMiehFY3AoQAL/dFwWtEbBzDrOe5bE1uhvR
+3/+lxkrmQGr+aD8/Ej4VqEiIbsLURmJVuCMsX8hKdi/d7ixyg8zDt1EOjGec8Uao
+dxA5X4MVLvjZIgjWB5H9FlJYE/fsjLBac8SYTkE9u4FbbjXe7nSaE7vJfS+i9qjF
+GQkXqGMXIxhhjYpeCklVQ0yESrlxdGaSO2SaP1MIeCeLms5HwQP/Mq2LpmK0tjvt
+c69X66WugJ4uRouXCXx/9ZYXZJRgrwI5/WHXbpOOS5c0DwabZH0g03xNusLAfs49
+r4dGCUuBuRAiVL0Ma1LxxsElAg9E7Vhr1UmRS9AzM8W+rdFduxKMtL6dA9Cj3Bdv
+dCaNb7N0vQLKXqk3tNKooTEp4hB34CM2uvmuGFooRJN1AcDHJRLmFjoZXPKb9Nlp
+YBDctEE/d4r9J+gmPkpKb6uaKM2y4D+lzdkEF8TtH0Vu53LNZgOL4WfpKzUEeOyT
+yLxxkeFIKxXeKQ80P6zJe/Shg0Cc1n2kThAvxWsZFWmQ4a1qaxBkfWi/ZxkG40cX
+Gxpyj+3QJFG4FZr9iLZdnXnkaZk8Ons8guAZKRMJ2RH3uaoMpxLInkHbqoPHSeFX
+7Z8OwCoxLkDkjk5/m99JvZM0H/nJFCszdThhkucvV2OXRQKL1N+ssdA+3f2wrOGe
+ilQwXMtgtVG3JsuYvRuQ
+=6B9G
+-----END PGP SIGNATURE-----
+
+--=-jnG5Fyy36qwdfJfYXsMx--
 
