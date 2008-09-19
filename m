@@ -1,50 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.2ka.mipt.ru ([194.85.80.65]:39808 "EHLO 2ka.mipt.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752784AbYIUU2N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 16:28:13 -0400
-Date: Mon, 22 Sep 2008 00:26:56 +0400
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-To: Cyrill Gorcunov <gorcunov@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arjan van de Ven <arjan@infradead.org>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921202656.GC25052@2ka.mipt.ru> (sfid-20080921_222818_185317_D3D1BE9D)
-References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org> <20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org> <20080921190050.GA20484@2ka.mipt.ru> <1222024444.3023.53.camel@johannes.berg> <20080921193809.GA8735@2ka.mipt.ru> <20080921200518.GK7736@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080921200518.GK7736@localhost>
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:49391 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753546AbYISTSo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 15:18:44 -0400
+Message-ID: <48D3FB0F.1000909@lwfinger.net> (sfid-20080919_211846_164727_96D0D608)
+Date: Fri, 19 Sep 2008 14:18:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Celejar <celejar@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Subject: Re: Can't connect to AP with hidden essid with 2.6.27-rc6
+References: <20080916220904.75283811.celejar@gmail.com>	<48D06B9E.70307@lwfinger.net>	<20080918004509.23a4bdc9.celejar@gmail.com>	<48D1E42C.70904@lwfinger.net>	<20080918015202.8c5f6381.celejar@gmail.com>	<48D24911.80101@lwfinger.net>	<20080918160957.94ea063d.celejar@gmail.com>	<48D2D728.6070105@lwfinger.net>	<20080919001050.d9ed273a.celejar@gmail.com>	<48D3CFBC.6070504@lwfinger.net>	<43e72e890809191105p26841666l50a4a139a7177590@mail.gmail.com> <20080919142740.60e2c0e8.celejar@gmail.com>
+In-Reply-To: <20080919142740.60e2c0e8.celejar@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2008 at 12:05:18AM +0400, Cyrill Gorcunov (gorcunov@gmail.com) wrote:
-> Since it's that serious maybe we should change
+Celejar wrote:
+> On Fri, 19 Sep 2008 11:05:35 -0700
+> "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
 > 
-> 		IPW_DEBUG_INFO("%s: Fatal error value: 0x%08X\n",
-> 			       priv->net_dev->name, priv->fatal_error);
+>> On Fri, Sep 19, 2008 at 9:13 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>
+>>> I do not think a bisection is necessary. Your successful test of the
+>>> old regulatory code suggests to me that there is some kind of problem
+>>> with the CRDA database.
+>> BTW the "old regulatory code" is actually not "old regulatory code"
+>> but instead static regulatory definitions slapped in the kernel just
+>> as they were before but under the new regulatory infrastructure guise.
+>>
+>>> Luis - to fill you in, he can connect to an AP with a hidden essid
+>>> using the old regulatory code, but not using CRDA. There seems to be
+>>> some critical difference between them.
+>> Thanks for bringing this up Larry.
+>>
+>> If by old regulatory code you mean with CONFIG_WIRELESS_OLD_REGULATORY
+>> then I would narrow the search down to testing as follows:
+>>
+>> --- Without crda:
+>>
+>> mv /sbin/crda /sbin/crda-foo
+>> sudo rmmod your_driver mac80211 cfg80211
+>> sudo modprobe your_driver
+>>
+>> # Check channels using iw
+>>
+>> --- With crda:
+>> mv /sbin/crda-foo /sbin/crda
+>> sudo rmmod your_driver mac80211 cfg80211
+>> sudo modprobe your_driver
+>>
+>> # check channels using iw
+>> ---
+>>
+>> By default when CONFIG_WIRELESS_OLD_REGULATORY is set the built-in
+>> "US" static regulatory domain is used. If crda is present though a new
+>> regulatory domain will be updated onto the kernel, so we'll get the
+>> new regulatory domain built by crda from the original db.txt. Without
+>> crda present the static regulatory domain shall be used.
+>>
+>> What frequency is the AP on?
 > 
-> to printk(KERN_WARN)? And here is why - as I see now we can't say what
-> exactly is wrong - Evgeniy said he has a suspicious about firmware so
-> this WARNS will be collected by Arjan thru kerneloops and we could not
-> ask users to change debug level and repost problem - oops will have it
-> by default - and if it really firmware problem - firmware engineers could
-> find this _additional_ info usefull and resolve it (probably).
+> I (the user) am currently connecting successfully with CRDA to a hidden
+> essid AP.  I previously had claimed that it was still not working, even
+> though the iw channel output looked good, but it currently seems to be
+> okay.  I may have previously done something wrong, such as not
+> rebuilding CRDA for the current kernel, although in that case I'm not
+> sure why the iw output would have been correct.  In any event, at this
+> point it seems that it may have been some mistake on my part.  Thanks
+> for the help, sorry for the noise, and I'll report back if I see any
+> more trouble.
 
-The only reason for this change is to make a mark at the kerneloops.
-I.e. users know, there is a bug. Developers know, there is a bug.
-Everyone knows that there is a bug, but until it is at the special place
-we look to each other just like there is no bug.
+Is it correct that your current setup has
+CONFIG_WIRELESS_OLD_REGULATORY set? If I remember correctly, your
+previous failure with CRDA was with CONFIG_WIRELESS_OLD_REGULATORY
+unset. If that is true, could you please unset it and try again. The
+code paths are different.
 
-Here are dumps for example:
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=245
+I think that CRDA runs in userspace and should be relatively
+independent of kernel version.
 
-Bug existed even with 1.2 firmware and .11 kernel.
-Intel, that's a great marketing slogan: stability everywhere!
-
--- 
-	Evgeniy Polyakov
+Larry
