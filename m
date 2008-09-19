@@ -1,185 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:44426 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008AbYIPVJ1 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:29812 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751875AbYISCwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 17:09:27 -0400
-Date: Tue, 16 Sep 2008 22:09:20 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
+	Thu, 18 Sep 2008 22:52:18 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so71388eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 19:52:16 -0700 (PDT)
+Message-ID: <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com> (sfid-20080919_045231_207195_CEBC0A8A)
+Date: Thu, 18 Sep 2008 19:52:16 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: "Ingo Molnar" <mingo@elte.hu>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-Message-ID: <20080916210920.GC16470@srcf.ucam.org> (sfid-20080916_230931_101275_98EE062D)
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <20080916195134.GB14879@srcf.ucam.org> <48D0183E.9010301@lwfinger.net>
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48D0183E.9010301@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
+	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
+	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
+	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
+	 <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
+	 <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com>
+	 <20080918220102.GE7408@tesla>
+	 <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com>
+	 <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+	 <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oh, hey, I suck. This one might stand a better chance of not falling 
-over.
+This IRQ debugging is lots of fun. My /var/log/messages jumped in size
+to 241MB. :)
 
-diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-index fec5645..991e318 100644
---- a/drivers/net/wireless/b43/rfkill.c
-+++ b/drivers/net/wireless/b43/rfkill.c
-@@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev *dev)
- 	struct b43_rfkill *rfk = &(dev->wl->rfkill);
- 
- 	if (!dev->radio_hw_enable) {
--		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
-+		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
- 		return;
- 	}
- 
- 	if (!dev->phy.radio_on)
--		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
-+		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
- 	else
--		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
--
-+		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
- }
- 
--/* The poll callback for the hardware button. */
--static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
-+static void b43_rfkill_update(struct b43_wldev *dev)
- {
--	struct b43_wldev *dev = poll_dev->private;
- 	struct b43_wl *wl = dev->wl;
- 	bool enabled;
- 	bool report_change = 0;
-@@ -82,13 +79,25 @@ static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
- 			enabled ? "ENABLED" : "DISABLED");
- 	}
- 	mutex_unlock(&wl->mutex);
-+}
- 
--	/* send the radio switch event to the system - note both a key press
--	 * and a release are required */
--	if (unlikely(report_change)) {
--		input_report_key(poll_dev->input, KEY_WLAN, 1);
--		input_report_key(poll_dev->input, KEY_WLAN, 0);
--	}
-+static void b43_rfkill_poll(unsigned long data)
-+{
-+	struct b43_rfkill *rfkill = (struct b43_rfkill *)data;
-+	schedule_work(&rfkill->poll_queue);
-+}
-+
-+static void b43_rfkill_work(struct work_struct *work)
-+{
-+	struct b43_rfkill *rfk = container_of(work, struct b43_rfkill, 
-+					      poll_queue);
-+	struct b43_wl *wl = container_of(rfk, struct b43_wl, rfkill);
-+	struct b43_wldev *dev = wl->current_dev;
-+
-+	b43_rfkill_update(dev);
-+	rfk->poll_timer.function = b43_rfkill_poll;
-+	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
-+	add_timer(&rfk->poll_timer);
- }
- 
- /* Called when the RFKILL toggled in software. */
-@@ -158,48 +167,23 @@ void b43_rfkill_init(struct b43_wldev *dev)
- 	rfk->rfkill->toggle_radio = b43_rfkill_soft_toggle;
- 	rfk->rfkill->user_claim_unsupported = 1;
- 
--	rfk->poll_dev = input_allocate_polled_device();
--	if (!rfk->poll_dev) {
--		rfkill_free(rfk->rfkill);
--		goto err_freed_rfk;
--	}
--
--	rfk->poll_dev->private = dev;
--	rfk->poll_dev->poll = b43_rfkill_poll;
--	rfk->poll_dev->poll_interval = 1000; /* msecs */
--
--	rfk->poll_dev->input->name = rfk->name;
--	rfk->poll_dev->input->id.bustype = BUS_HOST;
--	rfk->poll_dev->input->id.vendor = dev->dev->bus->boardinfo.vendor;
--	rfk->poll_dev->input->evbit[0] = BIT(EV_KEY);
--	set_bit(KEY_WLAN, rfk->poll_dev->input->keybit);
--
- 	err = rfkill_register(rfk->rfkill);
- 	if (err)
--		goto err_free_polldev;
-+		goto err_free_rfk;
- 
--#ifdef CONFIG_RFKILL_INPUT_MODULE
--	/* B43 RF-kill isn't useful without the rfkill-input subsystem.
--	 * Try to load the module. */
--	err = request_module("rfkill-input");
--	if (err)
--		b43warn(wl, "Failed to load the rfkill-input module. "
--			"The built-in radio LED will not work.\n");
--#endif /* CONFIG_RFKILL_INPUT */
-+	rfk->registered = 1;
- 
--	err = input_register_polled_device(rfk->poll_dev);
--	if (err)
--		goto err_unreg_rfk;
-+	INIT_WORK(&rfk->poll_queue, b43_rfkill_work);
- 
--	rfk->registered = 1;
-+	init_timer(&rfk->poll_timer);
-+	rfk->poll_timer.function = b43_rfkill_poll;
-+	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
-+	rfk->poll_timer.data = (unsigned long)rfk;
-+	add_timer(&rfk->poll_timer);
- 
- 	return;
--err_unreg_rfk:
--	rfkill_unregister(rfk->rfkill);
--err_free_polldev:
--	input_free_polled_device(rfk->poll_dev);
--	rfk->poll_dev = NULL;
--err_freed_rfk:
-+err_free_rfk:
-+	rfkill_free(rfk->rfkill);
- 	rfk->rfkill = NULL;
- out_error:
- 	rfk->registered = 0;
-@@ -214,9 +198,8 @@ void b43_rfkill_exit(struct b43_wldev *dev)
- 		return;
- 	rfk->registered = 0;
- 
--	input_unregister_polled_device(rfk->poll_dev);
-+	del_timer(&rfk->poll_timer);
-+
- 	rfkill_unregister(rfk->rfkill);
--	input_free_polled_device(rfk->poll_dev);
--	rfk->poll_dev = NULL;
- 	rfk->rfkill = NULL;
- }
-diff --git a/drivers/net/wireless/b43/rfkill.h b/drivers/net/wireless/b43/rfkill.h
-index adacf93..1a4a719 100644
---- a/drivers/net/wireless/b43/rfkill.h
-+++ b/drivers/net/wireless/b43/rfkill.h
-@@ -7,14 +7,14 @@ struct b43_wldev;
- #ifdef CONFIG_B43_RFKILL
- 
- #include <linux/rfkill.h>
--#include <linux/input-polldev.h>
--
- 
- struct b43_rfkill {
- 	/* The RFKILL subsystem data structure */
- 	struct rfkill *rfkill;
--	/* The poll device for the RFKILL input button */
--	struct input_polled_dev *poll_dev;
-+	/* The timer list for the RFKILL polling */
-+	struct timer_list poll_timer;
-+	/* Workqueue for the RFKILL polling */
-+	struct work_struct poll_queue;
- 	/* Did initialization succeed? Used for freeing. */
- 	bool registered;
- 	/* The unique name of this rfkill switch */
+My test case was a file transfer that basically copies 50MB from a
+remote machine's /dev/urandom and writes it to /dev/null locally. That
+should be a pretty nice large RX. And jeez, I'm seeing tremendous
+download speeds now and I have no idea what is different about my
+configuration. I'm getting up to 24 megabit per second transfer rates
+(actual), which is incredibly unusual for ath9k.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+I wasn't able to reproduce the IRQ problems on -tip or Linus' current
+tree (both with the group rekeying fix applied, which may or may not
+be a good idea for reproducing the issue). Even tried doing
+rmmod/modprobe in fast succession multiple times. Couldn't get it to
+throw up.
+
+I wonder... My rmmod/modprobe originally was used after the improper
+group rekeying before in order to get it back to normal. Perhaps the
+encryption has to go wonky before this IRQ issue surfaces? Another
+possibility is the earlier mentioned "ACPI: EC: GPE storm detected,
+disabling EC GPE". I don't know if it's related or not, but I haven't
+waited for it to show up before testing.
+
+Oh well, if the IRQ problem resurfaces (or if I get a ridiculous
+latency tomorrow morning with irqpoll off), I'll try to get some
+useful data to help debug it.
