@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:2641 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751814AbYIIC7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 22:59:05 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 1/3] iwl3945 : Code cleanup
-Date: Tue,  9 Sep 2008 10:54:52 +0800
-Message-Id: <1220928894-17998-2-git-send-email-yi.zhu@intel.com> (sfid-20080909_045918_035731_9116D851)
-In-Reply-To: <1220928894-17998-1-git-send-email-yi.zhu@intel.com>
-References: <1220928894-17998-1-git-send-email-yi.zhu@intel.com>
+Received: from yx-out-2324.google.com ([74.125.44.28]:51219 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbYISF5u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 01:57:50 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so49401yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 22:57:48 -0700 (PDT)
+Message-ID: <43e72e890809182257r65da8757g1de0ce4f132bf019@mail.gmail.com> (sfid-20080919_075910_170016_8805CBD1)
+Date: Thu, 18 Sep 2008 22:57:48 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: stlc45xx: mac80211 driver for N800 and N810
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <877i98iw4h.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <877i98iw4h.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+On Thu, Sep 18, 2008 at 9:43 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> Hello all,
+>
+> Nokia yesterday published stlc45xx, which is a mac80211 driver for
+> N800 and N810. Webpage here:
+>
+> http://stlc45xx.garage.maemo.org/
+>
+> The driver has been implemented with support from ST NXP Wireless, the
+> chip manufacturer for stlc4550 and stlc4560 found in N800 and N810,
+> respectively.
+>
+> After the driver has received some serious cleanup I would like to try
+> to to get it into wireless-testing tree. But I'll send another email
+> later on.
 
-Simplify pass_packet_to_mac80211 code block.
+Cool! I thought n810 basically used a p54 type chipset over SPI?
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |   14 +-------------
- 1 files changed, 1 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 1377c81..3d100e8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -681,19 +681,7 @@ static void iwl3945_rx_reply_rx(struct iwl3945_priv *priv,
- 		priv->last_rx_noise = rx_status.noise;
- 	}
- 
--	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
--		iwl3945_pass_packet_to_mac80211(priv, rxb, &rx_status);
--		return;
--	}
--
--	switch (le16_to_cpu(header->frame_control) & IEEE80211_FCTL_FTYPE) {
--	case IEEE80211_FTYPE_MGMT:
--	case IEEE80211_FTYPE_DATA:
--		/* fall through */
--	default:
--		iwl3945_pass_packet_to_mac80211(priv, rxb, &rx_status);
--		break;
--	}
-+	iwl3945_pass_packet_to_mac80211(priv, rxb, &rx_status);
- }
- 
- int iwl3945_hw_txq_attach_buf_to_tfd(struct iwl3945_priv *priv, void *ptr,
--- 
-1.5.3.6
-
+  Luis
