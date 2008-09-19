@@ -1,70 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751628AbYIHIcA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 04:32:00 -0400
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1220862604.31304.27.camel@johannes.berg> (sfid-20080908_103017_215937_0F16C34A)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220794765.31304.8.camel@johannes.berg>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 <1220860709.31304.19.camel@johannes.berg>
-	 <1ba2fa240809080118p26b4d984k57ce0b20a5d2c36a@mail.gmail.com>
-	 (sfid-20080908_101843_062010_878B2F97)  <1220862604.31304.27.camel@johannes.berg>
-	 (sfid-20080908_103017_215937_0F16C34A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dUJuQjKaKi1S2IHmbbYg"
-Date: Mon, 08 Sep 2008 10:31:54 +0200
-Message-Id: <1220862714.31304.30.camel@johannes.berg> (sfid-20080908_103203_075018_9482BE09)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:39560 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754566AbYISUtQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 16:49:16 -0400
+Date: Fri, 19 Sep 2008 13:49:01 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Celejar <celejar@gmail.com>, Dan Williams <dcbw@redhat.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: Can't connect to AP with hidden essid with 2.6.27-rc6
+Message-ID: <20080919204901.GE7027@tesla> (sfid-20080919_224923_625795_3D8906C1)
+References: <20080918015202.8c5f6381.celejar@gmail.com> <48D24911.80101@lwfinger.net> <20080918160957.94ea063d.celejar@gmail.com> <48D2D728.6070105@lwfinger.net> <20080919001050.d9ed273a.celejar@gmail.com> <48D3CFBC.6070504@lwfinger.net> <43e72e890809191105p26841666l50a4a139a7177590@mail.gmail.com> <20080919142740.60e2c0e8.celejar@gmail.com> <48D3FB0F.1000909@lwfinger.net> <20080919160115.c591532c.celejar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20080919160115.c591532c.celejar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Sep 19, 2008 at 01:01:15PM -0700, Celejar wrote:
+> I think the problem I had was that on boot, the b43 / 80211 modules get
+> loaded, but they don't seem to be calling CRDA, and I can't access my
+> hidden essid AP.  Doing the module removal and reloading that Luis
+> suggested causes CRDA to be called, and then things work fine.
 
---=-dUJuQjKaKi1S2IHmbbYg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+b43 drivers don't yet use regulatory_hint() so you get stuck with the
+defualt regulatory domain, which is world. To get out of world you
+can use iw to set the regulatory domain as follows:
 
-On Mon, 2008-09-08 at 10:30 +0200, Johannes Berg wrote:
+iw reg set US
 
-> When you shut down the AP, it probably sends you a deauth.=20
+this would be for the United States regulatory domain. To find your
+alpha2 please check:
 
-and if it doesn't, you run into the same situation, the old code however
-should have run into the same situation too if it didn't deauth frames,
-because in the case where the AP simply suddenly stopped responding to
-probe requests we removed the sta_info too. Hence my assumption it does
-send deauth frames because you haven't seen this problem before.
+http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 
-johannes
+Our current database can be viewed here:
 
---=-dUJuQjKaKi1S2IHmbbYg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Web view:
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+http://wireless.kernel.org/en/developers/Regulatory/Database
 
-iQIcBAABAgAGBQJIxOL3AAoJEKVg1VMiehFY8X8QALNsH0C0wt7XBKs3UwS+FvvR
-zcB/n9iPjxigjg/RLuo9zGkolvM2GcbbUSyNAOcpcnMde/BHip+xWN2Z5NbNMZgO
-N3k27h0slViRtGzBeS02uV4gMWL+OG7pXrdZdbTVlYEoG029SCoNXBWOhn85tKAb
-Yjrk66mJ39WRR4k+z4pl7yuiXsqU+vUz1uE7joZkUYLME1gpq51n2SF8Ge3oePjJ
-Nw9/Y0D5AF5ghwWZWsYv4mXza/1TSIeS96x/HV5BM9QT5LyoltdjJkyvqx81wHQZ
-mhXV64gzEIbaK+r4XcrL0guwey6Jn3I2+bgjaxGLI5/lLIJH/BnGnK8wvwb2I4so
-dhefw+Qhlqv6Qj7iiiCQlv93L3Y6AB45AVbZZ29VU/bAwB6R4IIBf6XZu+ii2hRj
-VMW7dBEAk+NzmQh3fO3bosbVn0Pi1VNSeyJU2jU97Y9yJg1qOb8hOAIAkCXdMdKu
-Uv5Mlq9bHc9lPCrwrDo92hc1ALYXBpXshceu/D3Azgz+NLy73q9CQ+LtXPPvuch5
-JDsLyApsy1OZpsSvTIKLKBpiOnotyWRhLLBfmx7MH0CF8UEfDbisIAR/vNss0reZ
-yrnQmNw6T5q7pn1dKPkpofMtN/IBghpGGKqHHzA+JfgoscA9bIGrjyqStXTJ0lSz
-+zZO/quL6LfTLZioeOnD
-=khI3
------END PGP SIGNATURE-----
+gitweb:
 
---=-dUJuQjKaKi1S2IHmbbYg--
+http://git.kernel.org/?p=linux/kernel/git/mcgrof/crda.git;a=blob;f=db.txt;hb=HEAD
 
+(Note: this database will soon be moved to another separate tree apart
+from crda)
+
+If you have updates for this database please read this:
+
+http://wireless.kernel.org/en/developers/Regulatory#Sendingupdatestotheregulatorydatabase
+
+Please note though that you *don't have to reload the module* to fix
+this issue, all you have to do is to use iw to set the regulatory domain.
+Eventually what can be done is userspace networking applets like
+NetworkManager can send the same nl80211 request to the wireless core
+after bootup. A country can then be configurable by the user through the
+applet.
+
+Another alternative is for distributions to call the iw command on the
+country alpha2 based on the locale. Basically there's many ways to do
+it. Drivers can also just call the regulatory hint based on their
+EEPROM, an example driver doing this already is zd1211rw.
+
+  Luis
