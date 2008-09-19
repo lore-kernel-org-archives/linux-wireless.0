@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37812 "EHLO vs166246.vserver.de"
+Received: from mail.atheros.com ([12.36.123.2]:39769 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751602AbYI2Tvi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 15:51:38 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Increase loop tries in do_dummy_tx
-Date: Mon, 29 Sep 2008 21:51:12 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48e12a41.fSr2FmkheZiPQYjZ%Larry.Finger@lwfinger.net>
-In-Reply-To: <48e12a41.fSr2FmkheZiPQYjZ%Larry.Finger@lwfinger.net>
+	id S1755944AbYISDBk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2008 23:01:40 -0400
+Date: Thu, 18 Sep 2008 20:01:25 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Steven Noonan <steven@uplinklabs.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
+	(rc5, rc6, probably others)
+Message-ID: <20080919030125.GG7408@tesla> (sfid-20080919_050144_201244_05F40CC2)
+References: <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com> <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com> <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com> <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com> <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com> <20080918220102.GE7408@tesla> <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com> <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809292151.12279.mb@bu3sch.de> (sfid-20080929_215143_558150_9CAAA2CC)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 29 September 2008 21:19:29 Larry Finger wrote:
-> One of the spin-on-condition loops in routine do_dummy_tx always exits before
-> the condition is satisfied. The hardware might be left in an inconsistent
-> state that might be the cause of the PHY transmission errors seen by some
-> users.
+On Thu, Sep 18, 2008 at 07:52:16PM -0700, Steven Noonan wrote:
+> This IRQ debugging is lots of fun. My /var/log/messages jumped in size
+> to 241MB. :)
 > 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> My test case was a file transfer that basically copies 50MB from a
+> remote machine's /dev/urandom and writes it to /dev/null locally. That
+> should be a pretty nice large RX. And jeez, I'm seeing tremendous
+> download speeds now and I have no idea what is different about my
+> configuration. I'm getting up to 24 megabit per second transfer rates
+> (actual), which is incredibly unusual for ath9k.
+> 
+> I wasn't able to reproduce the IRQ problems on -tip or Linus' current
+> tree (both with the group rekeying fix applied, which may or may not
+> be a good idea for reproducing the issue). Even tried doing
+> rmmod/modprobe in fast succession multiple times. Couldn't get it to
+> throw up.
+> 
+> I wonder... My rmmod/modprobe originally was used after the improper
+> group rekeying before in order to get it back to normal. Perhaps the
+> encryption has to go wonky before this IRQ issue surfaces? Another
+> possibility is the earlier mentioned "ACPI: EC: GPE storm detected,
+> disabling EC GPE". I don't know if it's related or not, but I haven't
+> waited for it to show up before testing.
+> 
+> Oh well, if the IRQ problem resurfaces (or if I get a ridiculous
+> latency tomorrow morning with irqpoll off), I'll try to get some
+> useful data to help debug it.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Thanks for testing, and glad to see this is resolved.
 
-> ---
-> 
-> John,
-> 
-> This is 2.6.28 material.
-> 
-> Larry
-> ---
-> 
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index 7205a93..af60122 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -814,7 +814,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
->  			break;
->  		udelay(10);
->  	}
-> -	for (i = 0x00; i < 0x0A; i++) {
-> +	for (i = 0x00; i < 0x19; i++) {
->  		value = b43_read16(dev, 0x0690);
->  		if (!(value & 0x0100))
->  			break;
-
--- 
-Greetings Michael.
+  Luis
