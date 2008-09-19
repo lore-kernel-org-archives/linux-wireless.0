@@ -1,111 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:24807 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170AbYIWWJi (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.232]:55030 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754464AbYISQmN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 18:09:38 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so686084eyi.37
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 15:09:36 -0700 (PDT)
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH -mm] rt2x00: fix Kconfig dependencies
-Date: Wed, 24 Sep 2008 00:09:31 +0200
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
-References: <48D82A43.7040604@oracle.com> <20080923140309.ecf8d030.randy.dunlap@oracle.com> <48D96647.2050509@lwfinger.net>
-In-Reply-To: <48D96647.2050509@lwfinger.net>
+	Fri, 19 Sep 2008 12:42:13 -0400
+Received: by qb-out-0506.google.com with SMTP id f11so428402qba.17
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 09:42:12 -0700 (PDT)
+Date: Fri, 19 Sep 2008 09:42:04 -0700 (PDT)
+From: Steven Noonan <steven@uplinklabs.net>
+To: Senthil Balasubramanian <senthilkumar@atheros.com>
+cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5,
+ rc6, probably others)
+In-Reply-To: <20080919142801.GA5816@senthil-lnx.users.atheros.com>
+Message-ID: <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net> (sfid-20080919_184248_585112_6020CD3C)
+References: <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com> <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com> <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com> <20080918220102.GE7408@tesla>
+ <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com> <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com>
+ <20080919030125.GG7408@tesla> <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com> <20080919142801.GA5816@senthil-lnx.users.atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809240009.32167.IvDoorn@gmail.com> (sfid-20080924_000943_183358_12302E6E)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 23 September 2008, Larry Finger wrote:
-> Randy Dunlap wrote:
-> > On Tue, 23 Sep 2008 19:51:00 +0200 Ivo van Doorn wrote:
-> > 
-> >> On Tuesday 23 September 2008, Randy Dunlap wrote:
-> >>> Ivo van Doorn wrote:
-> >>>> On Tuesday 23 September 2008, Randy Dunlap wrote:
-> >>>>> From: Randy Dunlap <randy.dunlap@oracle.com>
-> >>>>>
-> >>>>> If RT2X00=y but RFKILL=m, these build errors happen:
-> >>>>>
-> >>>>> (.text+0x7c7d6): undefined reference to `rfkill_free'
-> >>>>> rt2x00rfkill.c:(.text+0x7c830): undefined reference to `rfkill_force_state'
-> >>>>> (.text+0x7c88d): undefined reference to `rfkill_unregister'
-> >>>>> (.text+0x7c8cd): undefined reference to `rfkill_register'
-> >>>>> (.text+0x7ca1a): undefined reference to `rfkill_allocate'
-> >>>>>
-> >>>>> so restrict RT2X00's RFKILL config level to that of the main RFKILL option.
-> >>>>> This is done by making the former a tristate instead of a bool
-> >>>>> config option.
-> >>>>>
-> >>>>>
-> >>>>> If RT2X00=y but LEDS_CLASS=m, these build errors happen:
-> >>>>>
-> >>>>> (.text+0x11859f): undefined reference to `led_classdev_resume'
-> >>>>> (.text+0x1185b3): undefined reference to `led_classdev_resume'
-> >>>>> (.text+0x1185c7): undefined reference to `led_classdev_resume'
-> >>>>> (.text+0x1185e4): undefined reference to `led_classdev_suspend'
-> >>>>> (.text+0x1185f8): undefined reference to `led_classdev_suspend'
-> >>>>> (.text+0x11860c): undefined reference to `led_classdev_suspend'
-> >>>>> rt2x00leds.c:(.text+0x118620): undefined reference to `led_classdev_unregister'
-> >>>>> rt2x00leds.c:(.text+0x118695): undefined reference to `led_classdev_register'
-> >>>>>
-> >>>>> so restrict RT2X00's LEDS config level to that of the main LEDS_CLASS option.
-> >>>>> This is done by making the former a tristate instead of a bool
-> >>>>> config option.
-> >>>> Is that really going to work correctly?
-> >>>> rfkill and leds support should be compiled into rt2x00lib.ko, which means that
-> >>>> should become a module instead of the rfkill/leds support part only.
-> >>> I wondered about that lib.ko.  Any working build fix is OK with me.
-> >>> What do you suggest?
-> >> Actually I was hoping that you answer to my question was going to be "yes it will be working correctly" ;)
-> >>
-> >> Would this work?
-> >>
-> >> config RT2X00_LIB_RFKILL
-> >> 	tristate
-> >>   	depends on RFKILL
-> >>   	default y
-> >>   
-> >> config RT2X00_LIB_LEDS
-> >> 	tristate
-> >>   	depends on NEW_LEDS
-> >>   	depends on LEDS_CLASS
-> >> 	default y
-> >>
-> >> config RT2X00_LIB
-> >> 	tristate
-> >> 	depends on RT2X00_LIB_RFKILL if (RT2X00_LIB_RFKILL != n)
-> >> 	depends on RT2X00_LIB_LEDS if (RT2X00_LIB_LEDS != n)
-> >>
-> >> It's ugly, and I can't test this right now, but perhaps you have an idea if this could do the trick?
-> > 
-> > I tried it:
-> > 
-> > drivers/net/wireless/rt2x00/Kconfig:22: invalid option
-> > drivers/net/wireless/rt2x00/Kconfig:23: invalid option
-> > 
-> > "depends ... if ..." is invalid.  Would be nice to have that.
-> > Maybe there is some other way to express that...
-> 
-> Wouldn't this do it?
-> 
-> depends on (RT2X00_LIB_RFKILL == m) || (RT2X00_LIB_RFKILL == y)
-> 
-> In b43, what I think is a similar configuration statement is written as
-> 
-> depends on B43 && (RFKILL = y || RFKILL = B43) && RFKILL_INPUT &&
-> (INPUT_POLLDEV = y || INPUT_POLLDEV = B43)
 
-Wouldn't that completely disable the config option when the rfkill is build
-as module and b43 buildin? I think what you want in that scenario would be
-building b43 as module instead.
-On the other hand, such Kconfig expression is apparently not possible,
-which means your approach would be the closest match.
 
-Ivo
+On Fri, 19 Sep 2008, Senthil Balasubramanian wrote:
+
+> On Fri, Sep 19, 2008 at 12:59:29PM +0530, Steven Noonan wrote:
+> > On Thu, Sep 18, 2008 at 8:01 PM, Luis R. Rodriguez
+> > <lrodriguez@atheros.com> wrote:
+> > > Thanks for testing, and glad to see this is resolved.
+> > >
+> > 
+> > Damn. It's back. I was using wireless normally this evening. Browsing
+> > the web, that kind of thing, and then the wireless inexplicably
+> > dropped (even with the group rekeying patch), so I unloaded/reloaded
+> > the module. This popped up in dmesg:
+> > 
+> > [ 3834.375658] vendor=8086 device=27d2
+> > [ 3834.375666] ath9k 0000:03:00.0: PCI INT A disabled
+> > [ 3834.375716] ath9k: driver unloaded
+> > [ 3838.552419] ath9k: 0.1
+> > [ 3838.552502] vendor=8086 device=27d2
+> > [ 3838.552511] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> > [ 3838.552532] ath9k 0000:03:00.0: setting latency timer to 64
+> > [ 3838.688924] phy1: Selected rate control algorithm 'ath9k_rate_control'
+> > [ 3838.693652] phy1: Atheros 5416: mem=0xffffc20000060000, irq=17
+> > [ 3839.427125] irq 17: nobody cared (try booting with the "irqpoll" option)
+> > [ 3839.427136] Pid: 0, comm: swapper Tainted: P
+> > 2.6.27-rc6-tip-00478-g74f1a36 #1
+> > [ 3839.427141] Call Trace:
+> > [ 3839.427145]  <IRQ>  [<ffffffff802219c5>] ? read_hpet+0x9/0x1c
+> > [ 3839.427165]  [<ffffffff8026af71>] __report_bad_irq+0x3d/0x8c
+> > [ 3839.427172]  [<ffffffff8026b0c6>] note_interrupt+0x106/0x160
+> > [ 3839.427180]  [<ffffffff8026b801>] handle_fasteoi_irq+0xad/0xda
+> > [ 3839.427188]  [<ffffffff8020f7b0>] do_IRQ+0x10c/0x190
+> > [ 3839.427194]  [<ffffffff8020c551>] ret_from_intr+0x0/0xa
+> > [ 3839.427198]  <EOI>  [<ffffffff8026c6f0>] rcu_pending+0x62/0x6e
+> > [ 3839.427211]  [<ffffffff8025bc11>] ? tick_nohz_stop_sched_tick+0x2e4/0x2f3
+> > [ 3839.427218]  [<ffffffff8020ad94>] cpu_idle+0x7b/0xdb
+> > [ 3839.427226]  [<ffffffff8060c921>] rest_init+0x75/0x77
+> > [ 3839.427231] handlers:
+> > [ 3839.427234] [<ffffffffa0240238>] (ath_isr+0x0/0x170 [ath9k])
+> > [ 3839.427263] Disabling IRQ #17
+> > [ 3842.263699] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > [ 3848.035003] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > [ 3848.432701] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > [ 3850.216947] wlan0: authenticate with AP 00:1e:52:79:4d:01
+> > [ 3850.217027] wlan0: authenticate with AP 00:1e:52:79:4d:01
+> > [ 3850.228326] wlan0: authenticated
+> > [ 3850.228336] wlan0: associate with AP 00:1e:52:79:4d:01
+> > [ 3850.428140] wlan0: associate with AP 00:1e:52:79:4d:01
+> > [ 3850.628151] wlan0: associate with AP 00:1e:52:79:4d:01
+> > [ 3850.728305] wlan0: RX AssocResp from 00:1e:52:79:4d:01 (capab=0x431
+> > status=0 aid=1)
+> > [ 3850.728314] wlan0: associated
+> > [ 3850.728655] wlan0 (WE) : Wireless Event too big (320)
+> > [ 3850.743377] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> > [ 3860.855104] wlan0: no IPv6 routers present
+> > 
+> > I rebuilt the module with DBG_ATH_INTERRUPT, but it somehow stumbled
+> > itself back into working order while I was compiling. I can't keep the
+> > interrupt debugging on all the time because it's just -too verbose-,
+> > and when I pop a debug version of the module in, then it's too late to
+> > track the issue....
+> 
+> I am able to reproduce this IRQ nobody cared issue in my setup and the
+> following patch seems to be fixing the issue. Please try it out and let
+> me know if it solves your issue in your setup.
+
+The patch you prvide doesn't want to apply. What code did you base this 
+on?
+
+The first change listed doesn't work because there is no tasklet_kill() in 
+core.c, and the line immediately after ath_stop there has 
+"!sc->sc_invalid" instead of the "!(sc->sc_flags & SC_OP_INVALID)".
+
+The second fails because SC_OP_INVALID isn't defined.
+
+However, if your patch did apply to my code, I bet it'd solve the issue, 
+based on what it says it does.
