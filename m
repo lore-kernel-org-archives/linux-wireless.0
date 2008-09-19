@@ -1,97 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29095 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750789AbYIXGC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2008 02:02:27 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] iwl3945: added channel sysfs entry
-Date: Wed, 24 Sep 2008 13:57:45 +0800
-Message-Id: <1222235866-19805-1-git-send-email-yi.zhu@intel.com> (sfid-20080924_080231_170139_3D180880)
+Received: from fg-out-1718.google.com ([72.14.220.154]:7597 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751618AbYISLpE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 07:45:04 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so538533fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 04:45:03 -0700 (PDT)
+Message-ID: <1ba2fa240809190445v370ee80dk316d3b474db86132@mail.gmail.com> (sfid-20080919_134513_465236_A03C9782)
+Date: Fri, 19 Sep 2008 14:45:03 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: technology preview: scan with cfg80211
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Dan Williams" <dcbw@redhat.com>
+In-Reply-To: <1221820966.10419.81.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1221794329.10419.9.camel@johannes.berg>
+	 <1221795715.10419.15.camel@johannes.berg>
+	 <1ba2fa240809190103i69c66978he4762fd350ab2e5d@mail.gmail.com>
+	 <1221814565.10419.19.camel@johannes.berg>
+	 <1ba2fa240809190337ke17d2aanaca6d0f194b11f03@mail.gmail.com>
+	 <1221820966.10419.81.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+On Fri, Sep 19, 2008 at 1:42 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2008-09-19 at 13:37 +0300, Tomas Winkler wrote:
+>
+>> > Hey, unfair! ;) I did leave a lot of TODOs but this wasn't one of them.
+>> > You can provide a channel list and it'll scan only those (except hw scan
+>> > right now but that'll be fixed once we pass the scan request struct
+>> > through)
+>>
+>> Agree, this would be the correct approach.
+>
+> Yeah, but I pulled this together in about five hours :)
+>
+> Wrt. the SSIDs, how many SSIDs do you think we should allow scanning for
+> at the same time? Three? Four? Five? I was thinking something like that,
+> sending out more probe requests is probably not too great an idea.
 
-The patch adds channels sysfs entry for iwl3945. Make it consistent
-with iwlagn.
+iwlwifi  HW is able to issue 10 probes per channel in a single scan.
+Empirically this probably maximum of networks/SSIDs an average user
+will be interested in.   But we can go with less for example 5  probes
+per scan if we for example round robin SSID list in background scans.
+This number are based on user feedback we've been collecting for few
+years. For example 2 years ago it was increased from 5 to 10 according
+to user feedback.
+ As I understand the second approach is better as it lowers collisions
+on the air and is more flexible as it's not dependent on HW limitation
+(10 in iwlwifi) but requires more book keeping.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   56 ++++++++++++++++++++++++++-
- 1 files changed, 54 insertions(+), 2 deletions(-)
+> guess we would set the default to something we decide on in mac80211's
+> alloc_hw and the driver gets to overwrite it if it has hw scan offload.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 62b26be..cf41edf 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -7666,8 +7666,60 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRUSR, show_power_level,
- static ssize_t show_channels(struct device *d,
- 			     struct device_attribute *attr, char *buf)
- {
--	/* all this shit doesn't belong into sysfs anyway */
--	return 0;
-+	struct iwl3945_priv *priv = dev_get_drvdata(d);
-+	struct ieee80211_channel *channels = NULL;
-+	const struct ieee80211_supported_band *supp_band = NULL;
-+	int len = 0, i;
-+	int count = 0;
-+
-+	if (!test_bit(STATUS_GEO_CONFIGURED, &priv->status))
-+		return -EAGAIN;
-+
-+	supp_band = iwl3945_get_band(priv, IEEE80211_BAND_2GHZ);
-+	channels = supp_band->channels;
-+	count = supp_band->n_channels;
-+
-+	len += sprintf(&buf[len],
-+			"Displaying %d channels in 2.4GHz band "
-+			"(802.11bg):\n", count);
-+
-+	for (i = 0; i < count; i++)
-+		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
-+				ieee80211_frequency_to_channel(
-+				channels[i].center_freq),
-+				channels[i].max_power,
-+				channels[i].flags & IEEE80211_CHAN_RADAR ?
-+				" (IEEE 802.11h required)" : "",
-+				(!(channels[i].flags & IEEE80211_CHAN_NO_IBSS)
-+				|| (channels[i].flags &
-+				IEEE80211_CHAN_RADAR)) ? "" :
-+				", IBSS",
-+				channels[i].flags &
-+				IEEE80211_CHAN_PASSIVE_SCAN ?
-+				"passive only" : "active/passive");
-+
-+	supp_band = iwl3945_get_band(priv, IEEE80211_BAND_5GHZ);
-+	channels = supp_band->channels;
-+	count = supp_band->n_channels;
-+
-+	len += sprintf(&buf[len], "Displaying %d channels in 5.2GHz band "
-+			"(802.11a):\n", count);
-+
-+	for (i = 0; i < count; i++)
-+		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
-+				ieee80211_frequency_to_channel(
-+				channels[i].center_freq),
-+				channels[i].max_power,
-+				channels[i].flags & IEEE80211_CHAN_RADAR ?
-+				" (IEEE 802.11h required)" : "",
-+				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
-+				|| (channels[i].flags &
-+				IEEE80211_CHAN_RADAR)) ? "" :
-+				", IBSS",
-+				channels[i].flags &
-+				IEEE80211_CHAN_PASSIVE_SCAN ?
-+				"passive only" : "active/passive");
-+	return len;
- }
- 
- static DEVICE_ATTR(channels, S_IRUSR, show_channels, NULL);
--- 
-1.5.3.6
+Sounds good.
 
+Tomas
