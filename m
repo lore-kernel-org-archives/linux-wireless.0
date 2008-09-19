@@ -1,67 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:53214 "EHLO hostap.isc.org"
+Received: from mail.atheros.com ([12.36.123.2]:39202 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753289AbYIBRZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 13:25:28 -0400
-Date: Tue, 2 Sep 2008 20:24:09 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org,
-	Jan-Espen Pettersen <sigsegv@radiotube.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: new: regression iwl3945/mac80211 endless after suspend
-	associate/deassociate loop
-Message-ID: <20080902172409.GJ17345@jm.kir.nu> (sfid-20080902_192535_924050_EB23F715)
-References: <20080901160658.GA11063@google.com> <1220319536.28282.128.camel@debian.sh.intel.com> <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net> <20080902130429.GB19172@google.com> <1220362201.3176.4.camel@borkbork.foobar.com> <20080902145840.GE19172@google.com> <1220368238.8041.4.camel@borkbork.foobar.com>
+	id S1751498AbYISSXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 14:23:36 -0400
+Date: Fri, 19 Sep 2008 11:23:22 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+CC: Steven Noonan <steven@uplinklabs.net>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
+	(rc5, rc6, probably others)
+Message-ID: <20080919182322.GB7027@tesla> (sfid-20080919_202341_348923_BDDF0311)
+References: <20080918220102.GE7408@tesla> <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com> <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com> <20080919030125.GG7408@tesla> <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com> <20080919142801.GA5816@senthil-lnx.users.atheros.com> <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net> <20080919175824.GA5626@senthil-lnx.users.atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1220368238.8041.4.camel@borkbork.foobar.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20080919175824.GA5626@senthil-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 02, 2008 at 11:10:38AM -0400, Dan Williams wrote:
-> On Tue, 2008-09-02 at 17:58 +0300, Michael S. Tsirkin wrote:
-> > On Tue, Sep 02, 2008 at 09:30:01AM -0400, Dan Williams wrote:
-> > > On Tue, 2008-09-02 at 16:04 +0300, Michael S. Tsirkin wrote:
+On Fri, Sep 19, 2008 at 10:58:24AM -0700, Senthilkumar Balasubramanian wrote:
+> 
+> I am on 2.6.27-rc6 and this patch is on top of my earlier patch
+> titled "[PATCH] ath9k: connectivity is lost after Group rekeying is
+> done". However this patch can be applied on top of latest wireless testing
+> too. I could apply this patch succesfully on top of wireless testing
+> git tree.
+> 
+> My git-describe says v2.6.27-rc6-1378-g34e512f.
+> 
+> There is no sc_invalid flag in "struct ath_softc" today. Where did
+> you get this variable from? It was removed in the following commit
+> 
+> -----------------------------------------------
+> commit f2c9705a05ecbc0d94216a3b042d5641e8bf70b1
+> Author: Sujith <Sujith.Manoharan@atheros.com>
+> Date:   Mon Aug 11 14:05:08 2008 +0530
+> 
+>     ath9k: Use bitfields for sc operations
+> 
+>     Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> -----------------------------------------------
+> 
+> Which code base are you using?
 
-> > > > On Tue, Sep 02, 2008 at 08:10:09AM +0200, Johannes Berg wrote:
-> > > > > "by local choice" means wext requested this, not a kernel bug.
+Thanks for the patch Senthil. He is on Linus' v2.6.27-rc, you are on
+wireless-testing so I've ported it (no changes, it just applies cleanly
+now). This is also untested by me:
 
-Well.. The disassociation part not, but what is trickering that
-(association/authentication timeout) may still be ;-).
-
-
-> > I put up a (sanitized) -dd output here
-> > http://bugzilla.kernel.org/show_bug.cgi?id=11476
-
-Would it be possible to get unsanitized version and with -t (i.e.,
-timestamps)? If you don't want to post it publicly, feel free to send
-one directly to me. The one attached to that bug removed quite a bit of
-information that would have been useful in figuring out what happened.
-
-> Logs seem to indicate a normal failure of the 4 way handshake; are you
-> sure your PSK is correct?  It actually looks like the AP doesn't ever
-> get message #2 from your machine, and just retransmits message #1 of the
-> handshake.  I'm pretty sure that if
-> 8ab65b03b7893da4a49009e7e356e36e27b0c407 had anything to do with it, you
-> wouldn't be getting this far and the AP would have denied association in
-> the first place.
-
-There are more than one different types of issues shown in the log. I'm
-not sure which one would be the key one here. Anyway, I would agree that
-the commit that removed an empty ext. supp rates IE has nothing to do
-with this.
-
-
-As far as suspend is concerned, which distro is used here? Does it
-unload the driver (i.e., remove the netdev) on suspend? If yes, you will
-need to update wpa_supplicant 0.6.4 which handles that disappearing and
-reappearing interface. If this is something else, I would need to get
-more complete debug log from wpa_supplicant..
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index f6c4528..9a432e5 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -1336,6 +1336,8 @@ void ath_deinit(struct ath_softc *sc)
+ 
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "%s\n", __func__);
+ 
++	tasklet_kill(&sc->intr_tq);
++	tasklet_kill(&sc->bcon_tasklet);
+ 	ath_stop(sc);
+ 	if (!sc->sc_invalid)
+ 		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index c5107f2..75acf54 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1400,10 +1400,16 @@ static void ath_pci_remove(struct pci_dev *pdev)
+ {
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath_softc *sc = hw->priv;
++	enum ath9k_int status;
+ 
+-	if (pdev->irq)
++	if (pdev->irq) {
++		ath9k_hw_set_interrupts(sc->sc_ah, 0);
++		ath9k_hw_getisr(sc->sc_ah, &status);	/* NB: clears ISR too */
++		sc->sc_flags |= SC_OP_INVALID;
+ 		free_irq(pdev->irq, sc);
++	}
+ 	ath_detach(sc);
++
+ 	pci_iounmap(pdev, sc->mem);
+ 	pci_release_region(pdev, 0);
+ 	pci_disable_device(pdev);
