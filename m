@@ -1,81 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26083 "EHLO mail.atheros.com"
+Received: from bluegiga.fi ([194.100.31.45]:61963 "EHLO darkblue.bluegiga.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755270AbYIZJBe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 05:01:34 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 02:01:34 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Fix oops on wme.c where mdev is assumed to be a wiphy
-Date: Fri, 26 Sep 2008 02:01:27 -0700
-Message-ID: <1222419687-7106-1-git-send-email-lrodriguez@atheros.com> (sfid-20080926_110153_430052_F995BFEF)
-MIME-Version: 1.0
+	id S1750908AbYISJIS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 05:08:18 -0400
+Subject: Re: ACK matching [was: TX status reporting with help of an ack
+	queue]
+From: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
+	kune@deine-taler.de
+In-Reply-To: <1221776990.4563.19.camel@localhost>
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <1221505251.4511.77.camel@localhost>
+	 <1221541089.14102.44.camel@virkkmi-linux>
+	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
+	 <1221776990.4563.19.camel@localhost>
 Content-Type: text/plain
+Date: Fri, 19 Sep 2008 12:08:14 +0300
+Message-Id: <1221815294.19539.15.camel@virkkmi-linux> (sfid-20080919_110822_128934_95B1985A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After Johannes' patch which set mdev as non wiphy
-there were some remaining bits of code which required
-changing the assumption that mdev was a wiphy. We
-change two callers to get to struct ieee80211_local
-the non-wiphy and actual mdev way.
+On Thu, 2008-09-18 at 22:29 +0000, Mattias Nissler wrote:
+> [I've added the zd1211rw maintainers to the CC, I hope they can shed
+> some light on the question whether the ack queue mechanism that driver
+> has is actually correct]
+> 
+> I've had a closer look at the idea of deciding whether a frame has
+> been
+> transmitted succesfully by monitoring incoming ACK frames and I've hit
+> a
+> fundamental problem: How do you correlate incoming ACK frames to the
+> frames that were actually transmitted? The ACK frame only carries the
+> address of the station that transmitted the frame being acked, no
+> further information. Now this means if you have the hardware TX two
+> frames and receive one ACK frame in the RX path, you cannot know which
+> TX frame the ACK belongs to, because they will be identical, right?
+> 
+> The hardware, however, knows, because the ACKs are required to be
+> transmitted directly after the corresponding frame is received, but we
+> don't know in the driver about this timing information, at least not for
+> rt2x00.
+> 
+> I wonder whether the ack queue idea Mikko found in the zd1211rw driver
+> is actually working correctly for that driver? I've only had a short
+> look, but found that incoming ACKs are only matched against transmitted
+> frames by means of the address carried within the ACK. So I'd think in
+> the situation I outlined above, the zd1211rw driver will also be unable
+> to match the ACK to the correct frame. Any comments on this?
+> 
+> Mattiass
+> 
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+AFAIK your analysis is correct and I think this is somewhat of a known
+problem with the implementation in zd1211rw driver. I haven't come
+across a way of getting around the problem. I read some suggestions
+about stopping all transmission to a certain address until we get a
+status update for the previous packet sent to that address, but iirc
+this was deemed impractical. On the other hand the current
+implementation in zd1211rw (and hopefully soon in rt2x00) doesn't really
+break anything that works without it and on rt2x00 it gets AP-mode in a
+somewhat more usable state. 
 
-Tested with ath5k on v2.6.27-rc7-1972-gfb8961a.
-
- net/mac80211/wme.c |   19 +++++++++++++++++--
- 1 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 6748ded..7d114bd 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -75,8 +75,16 @@ static int wme_downgrade_ac(struct sk_buff *skb)
- /* Indicate which queue to use.  */
- static u16 classify80211(struct sk_buff *skb, struct net_device *dev)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_local *local;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_master_priv *mpriv;
-+
-+	/* this is not for wiphys, just for mdev */
-+	BUG_ON (dev->ieee80211_ptr);
-+
-+	mpriv = netdev_priv(dev);
-+	local = mpriv->local;
-+
- 
- 	if (!ieee80211_is_data(hdr->frame_control)) {
- 		/* management frames go on AC_VO queue, but are sent
-@@ -114,12 +122,19 @@ static u16 classify80211(struct sk_buff *skb, struct net_device *dev)
- u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_local *local;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_master_priv *mpriv;
- 	struct sta_info *sta;
- 	u16 queue;
- 	u8 tid;
- 
-+	/* this is not for wiphys, just for mdev */
-+	BUG_ON (dev->ieee80211_ptr);
-+
-+	mpriv = netdev_priv(dev);
-+	local = mpriv->local;
-+
- 	queue = classify80211(skb, dev);
- 	if (unlikely(queue >= local->hw.queues))
- 		queue = local->hw.queues - 1;
--- 
-1.5.6.rc2.15.g457bb.dirty
-
+- Mikko
