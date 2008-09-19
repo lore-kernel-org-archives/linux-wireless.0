@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:49988 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751470AbYIPGF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 02:05:28 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 1/2] iwlwifi: don't delay scan in IBSS mode
-Date: Tue, 16 Sep 2008 14:01:03 +0800
-Message-Id: <1221544864-9494-1-git-send-email-yi.zhu@intel.com> (sfid-20080916_080534_864320_B18780DE)
+Received: from mail.gmx.net ([213.165.64.20]:52517 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750800AbYISKTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2008 06:19:42 -0400
+Subject: Re: ACK matching [was: TX status reporting with help of an ack
+	queue]
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
+	kune@deine-taler.de
+In-Reply-To: <1221818057.10419.58.camel@johannes.berg>
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <1221505251.4511.77.camel@localhost>
+	 <1221541089.14102.44.camel@virkkmi-linux>
+	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
+	 <1221776990.4563.19.camel@localhost>
+	 <1221815294.19539.15.camel@virkkmi-linux>
+	 <1221817584.4491.29.camel@localhost>
+	 (sfid-20080919_114701_416600_478C4255)  <1221818057.10419.58.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 19 Sep 2008 12:19:39 +0200
+Message-Id: <1221819579.4491.34.camel@localhost> (sfid-20080919_121946_278020_F992CF6D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Fri, 2008-09-19 at 11:54 +0200, Johannes Berg wrote:
+> On Fri, 2008-09-19 at 11:46 +0200, Mattias Nissler wrote:
+> 
+> > This brings up the question whether we can do without tx status
+> > reporting. Does anyone know why hostapd requires the tx status? As far
+> > as I understand, mac80211 only uses the tx status reporting only for the
+> > tx rate control. Rate control algos that don't use tx status are
+> > definitely feasible (and in fact we'll need one for rt73).
+> 
+> mac80211 also uses it for reporting the sent frame to userspace on
+> monitor interfaces.
 
-Scan need to be delayed only after association to allow EAPOL
-exchange. We don't need the delay for IBSS mode.
+Yeah, that's what hostapd relies on. But mac80211 really does not care
+to much how userspace uses the information.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> > I'll look into hostapd to figure out whether the tx status reporting is
+> > really required when I find some time.
+> 
+> hostapd requires this because it needs to know whether a station
+> acknowledged a frame or not to proceed its state machine, it's just how
+> it has to work. If the hardware can't deal with that I guess you can't
+> implement AP mode properly.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 2737627..2652672 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2568,8 +2568,6 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
- 	iwl_chain_noise_reset(priv);
- 	priv->start_calib = 1;
- 
--	/* we have just associated, don't start scan too early */
--	priv->next_scan_jiffies = jiffies + IWL_DELAY_NEXT_SCAN;
- }
- 
- static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
-@@ -3171,6 +3169,10 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
- 			priv->power_data.dtim_period = bss_conf->dtim_period;
- 			priv->timestamp = bss_conf->timestamp;
- 			priv->assoc_capability = bss_conf->assoc_capability;
-+
-+			/* we have just associated, don't start scan too early
-+			 * leave time for EAPOL echange complete
-+			 */
- 			priv->next_scan_jiffies = jiffies +
- 					IWL_DELAY_NEXT_SCAN_AFTER_ASSOC;
- 			mutex_lock(&priv->mutex);
--- 
-1.5.3.6
+Well, maybe we can work around this requirement? I still need to learn
+about the details, but what happens for example if the STA sends the ACK
+and then resets due to a crash? I guess the AP is able to cope with
+that, no? So maybe we can relax the rules a bit (unless we become really
+incompliant with the standard of course).
+
+Mattias
 
