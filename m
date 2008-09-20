@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47735 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752872AbYIFRTk (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:36275 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751723AbYITNUf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 13:19:40 -0400
-Subject: Re: [PATCH] Ath9k: Add RF kill support.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-In-Reply-To: <1220721347.6714.114.camel@californication> (sfid-20080906_191538_728310_1EC0FE5D)
-References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com>
-	 <1220721347.6714.114.camel@californication>
-	 (sfid-20080906_191538_728310_1EC0FE5D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yAjsWVCj+7ofkCvaG7NI"
-Date: Sat, 06 Sep 2008 19:19:32 +0200
-Message-Id: <1220721572.10102.0.camel@johannes.berg> (sfid-20080906_192003_595621_9791F144)
-Mime-Version: 1.0
+	Sat, 20 Sep 2008 09:20:35 -0400
+Received: by ug-out-1314.google.com with SMTP id k3so1146238ugf.37
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 06:20:33 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+Date: Sat, 20 Sep 2008 15:20:27 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809191902.03467.IvDoorn@gmail.com> <20080920131010.GB16430@khazad-dum.debian.net>
+In-Reply-To: <20080920131010.GB16430@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809201520.28717.IvDoorn@gmail.com> (sfid-20080920_152051_725120_63A4D01E)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 20 September 2008, Henrique de Moraes Holschuh wrote:
+> On Fri, 19 Sep 2008, Ivo van Doorn wrote:
+> > > Even if that means a need to 
+> > > get EV_SW SW_WLAN out of Dmitry...  I don't know if rt2x000 wants SW_WLAN or
+> > > SW_RFKILL_ALL.
+> > 
+> > Not sure either, there is no way to determine which of the 2 should be used.
+> 
+> Should be an module parameter or runtime (sysfs?) parameter, then...
 
---=-yAjsWVCj+7ofkCvaG7NI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Module parameter sounds best, I doubt people would want to change the value
+at runtime (when it is just easier to do it at loadtime).
 
-On Sat, 2008-09-06 at 19:15 +0200, Marcel Holtmann wrote:
-> Hi Vasanthakumar,
->=20
-> > CONFIG_ATH9K_RFKILL needs to be set
-> > to enable this support.
->=20
-> why do we have to introduce yet another config option for this? What is
-> the advantage of disabling RFKILL support? I really don't see it and all
-> these extra config options are rather confusing than useful.
+> > Oh an to make sure I get it completely right this time:
+> > When I implement the input polldev, I no longer have to use rfkill_force_state() right?
+> 
+> Correct.  It has nothing to do with the rfkill class part of your driver at
+> all, since there is no effect on the hardware.  It is just an input device
+> that issues EV_SW events.
 
-"if EMBEDDED", I think you may want to build a router without rfkill
-stuff.
+Ok, thanks. :)
 
-johannes
+I'll remove rfkill from rt2x00, implement input_polldev as seperate module,
+move rfkill support into mac80211 to make mac80211 drivers automatically
+detect the rfkill notifications.
 
---=-yAjsWVCj+7ofkCvaG7NI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIwrugAAoJEKVg1VMiehFY4S8P/3efaPTiVgd6oD7Dcl1e+JyK
-JkWkRSvW2JseDQcwD1AhwALPMTN6bO1Ypq/8CO54aQCI1DLa+LDNCJYIls94HJPC
-6Iygu+pW/sOdt7vX6nPJAMbTvHjw99TBz+QgNrhwIGbgylmoGEkxKeDbRi5L097o
-3C+pMP+Vv+6qH64tOepKrK/t8YAYSdvUIzD0qfId4ZrnJTGD85ika5RFhiGnyvPn
-BcEG+N+v/kX28gfnxkHypzvHMKZrKGfCnd67UZOdmKlsJAvfKX0q8oYqyFz/gUEB
-TExv9qWT6neVWUeKhsRf4wzGVZJzY5hU89u6dZNv5qS6AeBSU383wECRl1jo7yRx
-5hcRRIek8gyc8Oi8f6eTBgoDM9D1HgMUbx8he7fHaoKxkEHpw51+7sXsiSDL6Vko
-NbIu7rNTx+OWYM4QqZ9DVip7wScTark4aJY0AXeXBfWvwG7FcPPc7NynXyYj4wu4
-TNjatfM+vFeF45kRWR9/QRCxDwK827aepOPQMD8d96Vb+RNQAg/pQdW1+TFF6Xcw
-ENNDKoCfQDglNjDj0ecUM0HKC0BZvGhunzPAt8u9+BGOXVH38mvmzHTD8cRcY/7a
-WO6f19MUmPfjeuRiI/MeLeZ+Y8M2mQ614KQoKk+LWXEH2GC8Elov+AB80g0pTtE9
-jHrIJpRwIvdepEKqs2aV
-=GGqk
------END PGP SIGNATURE-----
-
---=-yAjsWVCj+7ofkCvaG7NI--
-
+Ivo
