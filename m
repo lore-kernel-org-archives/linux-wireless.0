@@ -1,34 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36589
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752312AbYIKXKA (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:53723 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbYITPVM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 19:10:00 -0400
-Date: Thu, 11 Sep 2008 16:09:52 -0700 (PDT)
-Message-Id: <20080911.160952.107319416.davem@davemloft.net> (sfid-20080912_011006_582212_2FBB7DC1)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sfr@canb.auug.org.au
-Subject: Re: pull request: wireless-2.6 2008-09-11
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080911203552.GL3423@tuxdriver.com>
-References: <20080911201308.GJ3423@tuxdriver.com>
-	<20080911203552.GL3423@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 20 Sep 2008 11:21:12 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so315978nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 08:21:10 -0700 (PDT)
+Message-ID: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com> (sfid-20080920_172122_158719_C8FB9EF8)
+Date: Sat, 20 Sep 2008 08:21:09 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Senthilkumar Balasubramanian"
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+	 <20080919142801.GA5816@senthil-lnx.users.atheros.com>
+	 <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net>
+	 <20080919175824.GA5626@senthil-lnx.users.atheros.com>
+	 <20080919182322.GB7027@tesla>
+	 <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
+	 <20080919235305.GD11665@tesla>
+	 <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com>
+	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
+	 <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 11 Sep 2008 16:35:53 -0400
-
-> BTW, this (obviously) introduces a merge conflict between
-> wireless-2.6 and wireless-next-2.6.  The solution is trivial -- just
-> take the wireless-next-2.6 version of the affected files.  Still, I
-> have a sample merge available here:
+On Fri, Sep 19, 2008 at 8:29 PM, Steven Noonan <steven@uplinklabs.net> wrote:
+> And here's the change as I unload and reload ath9k:
 >
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git merge-test
+> [...]
+> 20:21:38          sum  20138.83
+> 20:21:40          sum  21576.09
+> 20:21:41          sum  17678.38
+> 20:21:42          sum  19834.34
+> 20:21:43          sum  19845.10
+> 20:21:44          sum  19470.00
+> 20:21:45          sum   9273.00  <--- ath9k unloaded/reloaded
+> 20:21:46          sum    187.00
+> 20:21:47          sum   1066.00
+> 20:21:48          sum    610.00
+> 20:21:49          sum    106.93
+> 20:21:50          sum    670.00
+> 20:21:51          sum    742.00
+> 20:21:52          sum    781.00
+> Average:          sum  19562.56
+>
 
-Ok, I just did the merge, please double check my work.
+I think it might help if you can see the .sar file yourself. I've
+uploaded a gzipped copy (great compression ratio in this case for
+merely using gzip!).
 
-Thanks!
+http://www.uplinklabs.net/~tycho/linux/irqlog-storm.sar.gz
+
+- Steven
