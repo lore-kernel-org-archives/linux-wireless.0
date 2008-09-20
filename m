@@ -1,105 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:62818 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752912AbYIWVFK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35574 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751519AbYITU7C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 17:05:10 -0400
-Date: Tue, 23 Sep 2008 14:03:09 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
-Subject: Re: [PATCH -mm] rt2x00: fix Kconfig dependencies
-Message-Id: <20080923140309.ecf8d030.randy.dunlap@oracle.com> (sfid-20080923_230522_783483_AA71B7DB)
-In-Reply-To: <200809231951.00872.IvDoorn@gmail.com>
-References: <48D82A43.7040604@oracle.com>
-	<200809230907.46130.IvDoorn@gmail.com>
-	<48D9188A.2090003@oracle.com>
-	<200809231951.00872.IvDoorn@gmail.com>
+	Sat, 20 Sep 2008 16:59:02 -0400
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
+	(rc5, rc6, probably others)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Steven Noonan <steven@uplinklabs.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Ingo Molnar <mingo@elte.hu>
+In-Reply-To: <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com> (sfid-20080920_225745_416096_AAE736FF)
+References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+	 <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net>
+	 <20080919175824.GA5626@senthil-lnx.users.atheros.com>
+	 <20080919182322.GB7027@tesla>
+	 <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
+	 <20080919235305.GD11665@tesla>
+	 <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com>
+	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
+	 <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
+	 <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+	 <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com>
+	 (sfid-20080920_225745_416096_AAE736FF)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mthL+089pEEIp5Cj08k3"
+Date: Sat, 20 Sep 2008 22:58:58 +0200
+Message-Id: <1221944338.3023.8.camel@johannes.berg> (sfid-20080920_225908_681866_72EF8D16)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 23 Sep 2008 19:51:00 +0200 Ivo van Doorn wrote:
 
-> On Tuesday 23 September 2008, Randy Dunlap wrote:
-> > Ivo van Doorn wrote:
-> > > On Tuesday 23 September 2008, Randy Dunlap wrote:
-> > >> From: Randy Dunlap <randy.dunlap@oracle.com>
-> > >>
-> > >> If RT2X00=y but RFKILL=m, these build errors happen:
-> > >>
-> > >> (.text+0x7c7d6): undefined reference to `rfkill_free'
-> > >> rt2x00rfkill.c:(.text+0x7c830): undefined reference to `rfkill_force_state'
-> > >> (.text+0x7c88d): undefined reference to `rfkill_unregister'
-> > >> (.text+0x7c8cd): undefined reference to `rfkill_register'
-> > >> (.text+0x7ca1a): undefined reference to `rfkill_allocate'
-> > >>
-> > >> so restrict RT2X00's RFKILL config level to that of the main RFKILL option.
-> > >> This is done by making the former a tristate instead of a bool
-> > >> config option.
-> > >>
-> > >>
-> > >> If RT2X00=y but LEDS_CLASS=m, these build errors happen:
-> > >>
-> > >> (.text+0x11859f): undefined reference to `led_classdev_resume'
-> > >> (.text+0x1185b3): undefined reference to `led_classdev_resume'
-> > >> (.text+0x1185c7): undefined reference to `led_classdev_resume'
-> > >> (.text+0x1185e4): undefined reference to `led_classdev_suspend'
-> > >> (.text+0x1185f8): undefined reference to `led_classdev_suspend'
-> > >> (.text+0x11860c): undefined reference to `led_classdev_suspend'
-> > >> rt2x00leds.c:(.text+0x118620): undefined reference to `led_classdev_unregister'
-> > >> rt2x00leds.c:(.text+0x118695): undefined reference to `led_classdev_register'
-> > >>
-> > >> so restrict RT2X00's LEDS config level to that of the main LEDS_CLASS option.
-> > >> This is done by making the former a tristate instead of a bool
-> > >> config option.
-> > > 
-> > > Is that really going to work correctly?
-> > > rfkill and leds support should be compiled into rt2x00lib.ko, which means that
-> > > should become a module instead of the rfkill/leds support part only.
-> > 
-> > I wondered about that lib.ko.  Any working build fix is OK with me.
-> > What do you suggest?
-> 
-> Actually I was hoping that you answer to my question was going to be "yes it will be working correctly" ;)
-> 
-> Would this work?
-> 
-> config RT2X00_LIB_RFKILL
-> 	tristate
->   	depends on RFKILL
->   	default y
->   
-> config RT2X00_LIB_LEDS
-> 	tristate
->   	depends on NEW_LEDS
->   	depends on LEDS_CLASS
-> 	default y
-> 
-> config RT2X00_LIB
-> 	tristate
-> 	depends on RT2X00_LIB_RFKILL if (RT2X00_LIB_RFKILL != n)
-> 	depends on RT2X00_LIB_LEDS if (RT2X00_LIB_LEDS != n)
-> 
-> It's ugly, and I can't test this right now, but perhaps you have an idea if this could do the trick?
+--=-mthL+089pEEIp5Cj08k3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I tried it:
+On Sat, 2008-09-20 at 13:57 -0700, Luis R. Rodriguez wrote:
 
-drivers/net/wireless/rt2x00/Kconfig:22: invalid option
-drivers/net/wireless/rt2x00/Kconfig:23: invalid option
+> mcgrof@tesla ~/tmp/irq $ sar -f irqlog-storm.sar -A
+> Invalid system activity file: irqlog-storm.sar
+>=20
+> Perhaps we its a different format than what my sar can read...
 
-"depends ... if ..." is invalid.  Would be nice to have that.
-Maybe there is some other way to express that...
+It changes like every release... Not a very useful thing, that.
 
+johannes
 
-> > Currently kconfig is converting an =m to =y because of tristate -> boolean.
-> > This is not good.  It breaks things, as demonstrated here.
-> > The Kconfig cannot stay like this AFAIK.
-> 
-> Agreed.
+--=-mthL+089pEEIp5Cj08k3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
----
-~Randy
+iQIcBAABAgAGBQJI1WQOAAoJEKVg1VMiehFYbyEP/3189JlMdjPh1vc20nmBTU3R
+AilkuUG1IiLtp8N8gf66IG1ETM+GXmJMrTrimgXYfmA3Xgi9plGqegbjAVYNlouH
+RHxapnzcpc5uuUsm+yXVwsesNsZ0QTZhMfmjDOLUDEQebbu90XaRipT912aw0X2i
+KOJash7nhO1kiOj2s/fqP7q21PUL9Y0fMkJhuXEBG+0wlxw1bIw+sIlYao4L8WHY
+CUvuYWYEvOu57kydkD+tgC2lnhiCc8b2S36R+ACGVM4vLuc2kCgJlwB/xmyqlgGw
+piIxqGPEkyW4yEjQOPoWW6cR0pROKRC1xOZf4l6vhLFxv4c41ty0/56pJBd0uN0Y
+oavN7BPeezq82VsOQV3tgmqXT6vlUeRhqH/tsdi9MHxApNJosjMQ1JBpkvVSzL0S
+/kQ1BHBfVeTrAIqhKXgqzygRRAMlYs50FHFSJ/BPJuwrq8VA74u4yU9nTjkGZ7K5
+x8y3nNYXgdmztrjVb0iUZXiqU26oOTVnxk9VVlguqvYnvkvlsxwAhTG0zDQ/CdM0
+sYUL0sPROLIgpx2wWD+1w8D7owYGOK+sgxqzSI6Jl9l+1EeW2z6khggIvqKTY7+9
+rNR25WSFUge8+znKjshvIM7OezMFcXTWfrnSw9qd5P1TBPf4z7jqbyN/U7IpFJRV
+Qw62CFF2JgdDhe3q8Vui
+=A5bn
+-----END PGP SIGNATURE-----
+
+--=-mthL+089pEEIp5Cj08k3--
+
