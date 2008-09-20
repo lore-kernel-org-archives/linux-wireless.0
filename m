@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:24196 "EHLO
-	viefep33-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755425AbYINPpa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43285 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751578AbYITVNS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Sep 2008 11:45:30 -0400
-Received: from gollum.odi.ch ([84.74.148.76]) by viefep27-int.chello.at
-          (InterMail vM.7.08.02.02 201-2186-121-104-20070414) with ESMTP
-          id <20080914154413.BXMS5786.viefep27-int.chello.at@gollum.odi.ch>
-          for <linux-wireless@vger.kernel.org>;
-          Sun, 14 Sep 2008 17:44:13 +0200
-Received: from [192.168.111.10] (mithril [192.168.111.10])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by gollum.odi.ch (Postfix) with ESMTPSA id 397D6967AB
-	for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2008 17:44:12 +0200 (CEST)
-Message-ID: <48CD314C.40105@odi.ch> (sfid-20080914_174551_302067_71E225F3)
-Date: Sun, 14 Sep 2008 17:44:12 +0200
-From: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: WEP and enc restricted
-Content-Type: multipart/mixed;
- boundary="------------030206050106060902030205"
+	Sat, 20 Sep 2008 17:13:18 -0400
+Subject: Re: [PATCH] b43: Fix Bluetooth coexistence SPROM coding error for
+	Motorola 7010 variant of BCM4306
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <48D56659.5060209@lwfinger.net>
+References: <48d401da.Q+F4HRESoxeIVa3r%Larry.Finger@lwfinger.net>
+	 <200809201744.55571.mb@bu3sch.de>
+	 (sfid-20080920_174550_869772_E28C99C2) <1221943895.3023.1.camel@johannes.berg>
+	 <48D56659.5060209@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZJqJzdsDp/Vx3q0tV3BJ"
+Date: Sat, 20 Sep 2008 23:13:09 +0200
+Message-Id: <1221945189.3023.17.camel@johannes.berg> (sfid-20080920_231320_922548_BE4AA0DB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030206050106060902030205
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
 
-Hi,
+--=-ZJqJzdsDp/Vx3q0tV3BJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I am pretty sure that the mac80211 code doesn't handle WEP with shared keys 
-correctly. Using the ath9k driver on my MacBook I am unable to put the driver 
-into restricted mode (shared key). It stays in open mode. That is the following 
-command has no effect: iwconfig wlan0 enc restricted. I can also confirm this 
-when looking at the authentication packets that go over the air: they are sent 
-with the open flag, and not the shared key flag.
+On Sat, 2008-09-20 at 16:08 -0500, Larry Finger wrote:
 
-Surprisingly nowhere in the mac80211 code the ifsta->auth_alg is set to 
-WLAN_AUTH_SHARED_KEY so far. The attached small patch does just that. I am not 
-100% sure if that's the way to do it, so please review carefully.
+> I don't know, but I really wouldn't want to blindly kill bluetooth
+> coexistence. After all, most cards have their SPROMs programmed
+> correctly. Only the PCI-versions of the BCM4306 and the ASUS BCM4318
+> seem to have the problem.
 
-With this patch authentication works. The AP now denies association, but that is 
-another problem.
+Yeah, true, it's mostly fine. Maybe we're missing something in the specs
+that makes the original driver work? Otherwise, I suspect they'd be
+getting these cards back in bunches...
 
-Cheers
+> I have been working the openSUSE and Ubuntu support forums, which is
+> where I have been getting these new devices to add to the work-around.
 
-Ortwin
+Yeah, I still wonder where you get the patience to deal with support
+forums, but I think everybody very much appreciates that :)
 
---------------030206050106060902030205
-Content-Type: text/plain;
- name="patch.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch.diff"
+johannes
 
---- wext.c.orig	2008-07-21 22:18:29.000000000 +0200
-+++ wext.c	2008-09-14 16:46:09.000000000 +0200
-@@ -929,6 +929,14 @@
- 	else
- 		idx--;
- 
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
-+		struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+		if (erq->flags & IW_ENCODE_OPEN)
-+			ifsta->auth_alg = WLAN_AUTH_OPEN;
-+		else if (erq->flags & IW_ENCODE_RESTRICTED)
-+			ifsta->auth_alg = WLAN_AUTH_SHARED_KEY;
-+	}
-+
- 	if (erq->flags & IW_ENCODE_DISABLED)
- 		remove = 1;
- 	else if (erq->length == 0) {
+--=-ZJqJzdsDp/Vx3q0tV3BJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
---------------030206050106060902030205--
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI1WdhAAoJEKVg1VMiehFYIWMP/j2ZyiUuPxFnPzzLt6cXqvNK
+umZ2D1xwgRrLzj81nRxTenoRxHrFmPyqSTBcZVFblmoJiAkYWRBBjqoG2o1CG349
+/1nzq/LWKhYuXzBWHyFhlCGHhj8VIaS5GJS6EODXlf4pGuNc4D2dyA49oIlVUdEi
+zwWXo3n2NePqG8b303bw/o2KbkJQNcFFOzQHcl/3ZRCDP2hq2Sak/SCJVVXhnZ7B
+Yfz45WcDC9pwBxeoDEuD/EQTCGqV2tg3NtQcOj6vuYqK/ZsKfJgIP3/UWlW39Mbz
+bz6DAeufXYJaJpbACkeFLifclq1ClOm5++syGQlUjaF5TcuK+9IMVQPKEDwEJbSo
+m2WA834a0KEXJRW4sdSWAWAVoZj49HMxosN2dg79QAjI9xZjxdw4+gk91ipaldty
+WnUewLqs4pKf5dN1cMUReTrrgt83MVxVC50q3zz9AnOVabOEo77uYFl+XwakQyuP
+CAN1TWq/thRFUV2+ck698X06IeTxZyheIIsdl2ERV/tcenNKbRyvZKCifV+z7kMe
+MydYxTpqoy8Wahhc7KpaqohGDLDXb7FN2I6qRKSqVj09YMGZhRUC/8zCVQZG1CoL
+7Wd16WSeb/AT2Caa3YaPoWzjirLi84LbOOr+ybcdDhGViiHCAEHHrostyh6pb8tF
+szt6zm1NteyhJgxfZ/ps
+=4ZNq
+-----END PGP SIGNATURE-----
+
+--=-ZJqJzdsDp/Vx3q0tV3BJ--
+
