@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:38286 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141AbYIVUF2 (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:33975 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751519AbYITVx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 16:05:28 -0400
-From: Chr <chunkeey@web.de>
-To: "Philippe Waroquiers" <philippe.waroquiers@skynet.be>
-Subject: Re: prism54 stopped working after upgrade from kernel 2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
-Date: Mon, 22 Sep 2008 22:05:28 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <CB9B2237C21D46F3B852E45F75E91C52@soleil>
-In-Reply-To: <CB9B2237C21D46F3B852E45F75E91C52@soleil>
+	Sat, 20 Sep 2008 17:53:56 -0400
+Message-ID: <48D570F0.3070500@lwfinger.net> (sfid-20080920_235400_305964_07EBE196)
+Date: Sat, 20 Sep 2008 16:53:52 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809222205.28754.chunkeey@web.de> (sfid-20080922_220531_611766_4C6017EC)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Fix Bluetooth coexistence SPROM coding error for
+ Motorola 7010 variant of BCM4306
+References: <48d401da.Q+F4HRESoxeIVa3r%Larry.Finger@lwfinger.net>	<200809201744.55571.mb@bu3sch.de>	(sfid-20080920_174550_869772_E28C99C2)	<1221943895.3023.1.camel@johannes.berg>	<48D56659.5060209@lwfinger.net> <1221945189.3023.17.camel@johannes.berg>
+In-Reply-To: <1221945189.3023.17.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 September 2008 20:38:04 Philippe Waroquiers wrote:
-> With the new kernel 2.6.26.3-14.fc8, I see that the prism54 card looks in a
-> correct working mode (e.g. /sbin/iwlist wlan0 scan shows good scan
-> results).
-> But after that, wpa_supplicant cannot associate (gets a timeout)
-> (while it works ok with 2.6.25.14-69.fc8)
-> I have put below the output of wpa_supplicant for the bad case
-> and for the good case.
->
-> What can I do to further see what is going wrong ?
->
+Johannes Berg wrote:
+> Yeah, I still wonder where you get the patience to deal with support
+> forums, but I think everybody very much appreciates that :)
 
-Well, you can blame the fedora people if you want.
+For the past month, we have been providing day care for our 22-month
+old grandson. That pretty much precludes any project that requires
+large chunks of time to think a problem through. The support forums
+only take a few minutes in each instance. Yes, it gets frustrating at
+times. The worst has been when it took 4 tries for a user to get the
+command '/sbin/lspci -nnv' entered correctly, and he got it only when
+someone else gave him every character that had to be typed.
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=aaa1553512b9105699113ea7e2ea726f3d9d4de2
-
-Regards,
-	Chr
+Larry
