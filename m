@@ -1,55 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:39354 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753251AbYIVVt4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 17:49:56 -0400
-Subject: Re: what is the states of rt2800 driver?
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "Xu, Martin" <martin.xu@intel.com>, linux-wireless@vger.kernel.org,
-	"Selbak, Rolla N" <rolla.n.selbak@intel.com>
-In-Reply-To: <200809222318.44222.IvDoorn@gmail.com>
-References: <200808272222.53719.IvDoorn@gmail.com>
-	 <200809221937.35900.IvDoorn@gmail.com> <1222117314.4670.10.camel@localhost>
-	 <200809222318.44222.IvDoorn@gmail.com>
-Content-Type: text/plain
-Date: Mon, 22 Sep 2008 23:49:53 +0200
-Message-Id: <1222120193.4587.1.camel@localhost> (sfid-20080922_234959_893801_D2603C3C)
-Mime-Version: 1.0
+Received: from ey-out-2122.google.com ([74.125.78.24]:5168 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651AbYITVWs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Sep 2008 17:22:48 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so281400eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 14:22:46 -0700 (PDT)
+Message-ID: <f488382f0809201422rdabeff4g435bf3d4a7e9fa3@mail.gmail.com> (sfid-20080920_232252_784435_578CABDC)
+Date: Sat, 20 Sep 2008 14:22:46 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Senthilkumar Balasubramanian"
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <43e72e890809201403w2c4511fdv2fe26bbcf49ccdd7@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+	 <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
+	 <20080919235305.GD11665@tesla>
+	 <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com>
+	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
+	 <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
+	 <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+	 <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com>
+	 <1221944338.3023.8.camel@johannes.berg>
+	 <43e72e890809201403w2c4511fdv2fe26bbcf49ccdd7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-22 at 23:18 +0200, Ivo van Doorn wrote:
-> On Monday 22 September 2008, Mattias Nissler wrote:
-> > On Mon, 2008-09-22 at 19:37 +0200, Ivo van Doorn wrote:
-> > > On Monday 22 September 2008, Xu, Martin wrote:
-> > > > Hi:
-> > > > I am the engineer from intel, and we are working on Moblin project(
-> > > > www.moblin.org). Now we work on eeepc901 platform. The rt2860 wireless
-> > > > device is used by the platform. We hope the device driver can be
-> > > > supported in the kernel mainline.
-> > > > Could you please tell me the states of the device driver? Do you have
-> > > > schedule on it? 
-> > > 
-> > > Nothing has changed since my last announcement to the linux-wireless list
-> > > regarding the rt2800 drivers.
-> > > That means that the drivers are not ready, and I have abandonded all schedules
-> > > which could indicate when the first test version of the driver can be released.
-> > > 
-> > > Mattias Nissler has joined the rt2800 development party, so I really hope
-> > > he has some fresh ideas an how to get the driver development forward again.
-> > 
-> > Indeed, I started poking around today. Ivo, do you have version of the
-> > legacy rt2870 usb driver that compiles and works on recent development
-> > kernels?
-> 
-> I only managed to compile it on 2.6.25 (but haven't tried hard to get it working
-> for 2.6.26 and higher), is that recent enough?
+On Sat, Sep 20, 2008 at 2:03 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+>
+> OK so yeah you have an interrupt storm, this is evident.
 
-Hm, I'm trying to get it to run current rt2x00.git/experimental, so I
-can directly compare I/O that's going to the device without rebooting.
-I'm having some trouble with the threads used in the Ralink driver, but
-I think I'll have that sorted out shortly.
+Indeedy.
 
-Mattias
+>
+> Do you think there is a way you can try to trigger the interrupt storm
+> so it happens < than after 7 hours or however long its taking you? If
+> so then it'd be good to get your debug out using the interrupt debug.
+> If that's not useful then we can enable all debug stuff (file will be
+> huge).
 
+It's apparently 7 idle hours and ~1-2 hours when I'm actively browsing
+the web. I don't know what in particular triggers it, so I guess I'd
+just need to enable debug logging and then start running through all
+my webcomics, or perhaps perusing Wikipedia.
+
+> Try turning on the microwave, turn on all  your bluetooth devices, use
+> your 2.4 GHz wireless phone, use your xbox 360 controllers and ps3
+> controllers all at once :D
+
+Heh. I don't have an Xbox 360 or PS3 (sad, I know). Do have several
+2.4GHz phones. ;)
