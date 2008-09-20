@@ -1,95 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35049 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052AbYIUMLQ (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.182]:61535 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751519AbYITU5l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 08:11:16 -0400
-Subject: Re: [RFC V2] mac80211: mesh portal functionality support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: YanBo <dreamfly281@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Javier Cardona <javier@cozybit.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>
-In-Reply-To: <1197ff4c0809210450u556538actc6f37390d3079fbc@mail.gmail.com> (sfid-20080921_135057_878688_51244EC5)
-References: <1197ff4c0809170200l701ce25bg6035734a394f8c83@mail.gmail.com>
-	 <1197ff4c0809210450u556538actc6f37390d3079fbc@mail.gmail.com>
-	 (sfid-20080921_135057_878688_51244EC5)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Tdz5CAWl7VePO/pWcrkz"
-Date: Sun, 21 Sep 2008 14:11:11 +0200
-Message-Id: <1221999071.3023.21.camel@johannes.berg> (sfid-20080921_141119_837589_98143D2F)
-Mime-Version: 1.0
+	Sat, 20 Sep 2008 16:57:41 -0400
+Received: by el-out-1112.google.com with SMTP id z25so227890ele.1
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 13:57:38 -0700 (PDT)
+Message-ID: <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com> (sfid-20080920_225745_416096_AAE736FF)
+Date: Sat, 20 Sep 2008 13:57:37 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Steven Noonan" <steven@uplinklabs.net>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Senthilkumar Balasubramanian"
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+	 <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net>
+	 <20080919175824.GA5626@senthil-lnx.users.atheros.com>
+	 <20080919182322.GB7027@tesla>
+	 <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
+	 <20080919235305.GD11665@tesla>
+	 <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com>
+	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
+	 <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
+	 <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 20, 2008 at 8:21 AM, Steven Noonan <steven@uplinklabs.net> wrote:
+> On Fri, Sep 19, 2008 at 8:29 PM, Steven Noonan <steven@uplinklabs.net> wrote:
+>> And here's the change as I unload and reload ath9k:
+>>
+>> [...]
+>> 20:21:38          sum  20138.83
+>> 20:21:40          sum  21576.09
+>> 20:21:41          sum  17678.38
+>> 20:21:42          sum  19834.34
+>> 20:21:43          sum  19845.10
+>> 20:21:44          sum  19470.00
+>> 20:21:45          sum   9273.00  <--- ath9k unloaded/reloaded
+>> 20:21:46          sum    187.00
+>> 20:21:47          sum   1066.00
+>> 20:21:48          sum    610.00
+>> 20:21:49          sum    106.93
+>> 20:21:50          sum    670.00
+>> 20:21:51          sum    742.00
+>> 20:21:52          sum    781.00
+>> Average:          sum  19562.56
+>>
+>
+> I think it might help if you can see the .sar file yourself. I've
+> uploaded a gzipped copy (great compression ratio in this case for
+> merely using gzip!).
+>
+> http://www.uplinklabs.net/~tycho/linux/irqlog-storm.sar.gz
 
---=-Tdz5CAWl7VePO/pWcrkz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+mcgrof@tesla ~/tmp/irq $ sar -f irqlog-storm.sar -A
+Invalid system activity file: irqlog-storm.sar
 
-On Sun, 2008-09-21 at 19:50 +0800, YanBo wrote:
+Perhaps we its a different format than what my sar can read...
 
-> @@ -226,6 +227,8 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
->  void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata);
->  struct mesh_path *mesh_path_lookup(u8 *dst,
->  		struct ieee80211_sub_if_data *sdata);
-> +struct mesh_path *mpp_path_lookup(u8 *dst, struct
-> ieee80211_sub_if_data *sdata);
+So here's what we need to do -- try to zero on in what causes this IRQ
+storm. Most likely its some strange event that triggers it, perhaps
+some sort of noise which makes the device try to adapt and hits a path
+we are not handling correctly yet. Can you provide the initial log of
+when ath9k gets loaded? This tells us what card it is, like AR5416 or
+AR9280, etc.
 
-there's a line-wrap here for some reason
-
-
->  static struct mesh_table *mesh_paths;
-> +static struct mesh_table *mpp_paths; /* Store pathes for MPP&MAP */
-
-Can you add a note why we need a separate hash table at all?
-
-> @@ -475,11 +589,19 @@ static int mesh_path_node_copy(struct hlist_node
-> *p, struct mesh_table *newtbl)
->  int mesh_pathtbl_init(void)
->  {
->  	mesh_paths =3D mesh_table_alloc(INIT_PATHS_SIZE_ORDER);
-> +	if (!mesh_paths)
-> +		return -ENOMEM;
->  	mesh_paths->free_node =3D &mesh_path_node_free;
->  	mesh_paths->copy_node =3D &mesh_path_node_copy;
->  	mesh_paths->mean_chain_len =3D MEAN_CHAIN_LEN;
-> -	if (!mesh_paths)
-> -		return -ENOMEM;
-> +
-> +	mpp_paths =3D mesh_table_alloc(INIT_PATHS_SIZE_ORDER);
-> +	if (!mpp_paths)
-> + 		return -ENOMEM;
-
-This leaks 'mesh_paths'.
-
-> +	if (mesh_hdr->flags =3D=3D 2){
-
-that should use the constant you introduced
-
-johannes
-
---=-Tdz5CAWl7VePO/pWcrkz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI1jnaAAoJEKVg1VMiehFYmtAP+wYYWQ+FNRAOTuiIPcPG6zQx
-d9NY/feqCzE9Eipu4/IIKRt5mmqI6jgL1t5zpszCiA2xQJcfkVWQoEG2TgDchSJJ
-RpopnksUF5dMTTx2RRndz5m37+TWDyvI6RTmof9Tr969eVza2EqSaA5Dqr0l7xzX
-+fJK4bOSI2dI8BapJvtq+HmY480LJj2C5bIk/1rqXDudDlLzc0BVHigrPE+pDbWF
-wZSwMnjS5n28r5x1OFDO7MyY2gzPKXzwhoSIlrxWxfBT8xYKkt2BOA+SQ8IKQF23
-4fn0jPHJjRO9MQbY9Xz/5nOQbbpfJNjx5TiOJMBqMMVfDSMmUpEjzdJ+ogJz7CDa
-kdxARDkPFiICQCA3cxiZxn8fLhdIVaondMCXbm08KXiJlCeSZ3Bqps6Vx8qDBafr
-cNrI64Sa2dZx0QYIiwy+bEbvbd978k0nIeZusfCiz08tODpTT9OPQlTI/NFyBGV9
-P3AQ9ntM4DfOes5aEHiuvBuWojt4sPAJNQPj15FA4fB97I+FGCr8o+/SloTvM7w0
-Tiiwc3V6d+3iHcsIOMe1PERb/YCQ/B2qqM4CnFnPBL/JhlqbHFGaqaJH3fkP+mXZ
-m1vb0y6SAZf2pXM99yaAcmXahQ1YpfGFeoaeVqyN4jwsszj+g1zp7FPoCx8bKm+K
-G1Fdc+NxP+R0e/WJuux7
-=2HpZ
------END PGP SIGNATURE-----
-
---=-Tdz5CAWl7VePO/pWcrkz--
-
+  Luis
