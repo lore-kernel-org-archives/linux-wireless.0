@@ -1,68 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:37456 "EHLO mx1.suse.de"
+Received: from mail.atheros.com ([12.36.123.2]:39267 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753579AbYIOQp4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 12:45:56 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [RFC] mac80211: notify the user space about low signal quality
-Date: Mon, 15 Sep 2008 18:45:35 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200809151416.07552.hschaa@suse.de> <200809151634.06448.hschaa@suse.de> <1221492529.10177.76.camel@localhost.localdomain>
-In-Reply-To: <1221492529.10177.76.camel@localhost.localdomain>
+	id S1751561AbYITU4O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Sep 2008 16:56:14 -0400
+Date: Sat, 20 Sep 2008 13:56:11 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Steven Noonan <steven@uplinklabs.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
+	(rc5, rc6, probably others)
+Message-ID: <20080920205611.GB8996@tesla> (sfid-20080920_225628_972708_6B5CEF2B)
+References: <20080919142801.GA5816@senthil-lnx.users.atheros.com> <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net> <20080919175824.GA5626@senthil-lnx.users.atheros.com> <20080919182322.GB7027@tesla> <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net> <20080919235305.GD11665@tesla> <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com> <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com> <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com> <f488382f0809192040k317660f3yb99806bbdce60449@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809151845.35841.hschaa@suse.de> (sfid-20080915_184559_140211_92A544A4)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <f488382f0809192040k317660f3yb99806bbdce60449@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 15. September 2008 schrieb Dan Williams:
-> On Mon, 2008-09-15 at 16:34 +0200, Helmut Schaa wrote:
-> > Am Montag, 15. September 2008 16:07:31 schrieb Dan Williams:
-> > > On Mon, 2008-09-15 at 14:35 +0200, Helmut Schaa wrote:
-> > > > This patch adds a new wext event that notifies the user space about a low
-> > > > signal quality. The currently used indicator is as follows: If three
-> > > > successive beacons are received with a signal quality lower then 40%
-> > > > user space gets informed.
-> > > >
-> > > > Any ideas about which indicators should be used? Comments?
-> > >
-> > > So why does this need a new event?  Can't wpa_supplicant monitor the
-> > > signal quality (or level/noise if the driver doesn't provide "quality")
-> > > and do what it needs to do without any changes to the kernel at all?
-> > 
-> > I thought about that as well but I'm not sure if the signal quality/strength 
-> > is a well enough indicator.
+On Fri, Sep 19, 2008 at 08:40:04PM -0700, Steven Noonan wrote:
+> On Fri, Sep 19, 2008 at 8:29 PM, Steven Noonan <steven@uplinklabs.net> wrote:
+> > Anyway, there definitely is an interrupt storm here. Let me demonstrate...
 > 
-> Beacon misses should be a factor in quality, just like failed
-> decryptions or excessive retries.  Any of these are indications that the
-> "link" sucks and you might want to try finding a better AP.  Beacon
-> misses are just one piece of the whole quality thing.
+> Worth noting that this change (modified version of the patch by
+> Senthil from earlier) made it so it didn't give an 'IRQ 17: nobody
+> cared' when I reloaded ath9k during the IRQ storm...
 
-Right.
+Thanks, for letting us know -- John, seems that IRQ patch by Senthil is
+27 material as it fixes an IRQ issue (nobody cared complaint, and it
+disables the IRQ otherwise) upon rmmod during an IRQ storm.
 
-> > For example if we want to consider the number of missed beacons the current 
-> > IWEVQUAL event is not enough to expose this information.
-> > Additionally some devices can report missed beacons. Maybe even the quality 
-> > values reported by the drivers are not comparable at all (although they are 
-> > normalized to be between 0 and 100). Hence my intention was that mac80211 and 
-> > the driver might know better which indicators matter.
-> 
-> So if the values aren't comparable, we _make_ them comparable.  The
-> drivers can certainly tell mac80211 which things they are capable of
-> reporting for quality and the stack can figure them in to the final
-> "quality" measurement.  However, I do agree that having separate
-> indicators for the different factors is a good thing.  Thus something
-> like what Holger suggests would be better from my perspective than an
-> ethereal concept like a "roaming threshold".  Maybe just a poor choice
-> of terms?
-
-Ok, I'll sum that up. Moving the policy into user space is a good thing if the
-quality values are comparable. Once mac80211 recognices a noticable quality
-change we could use IWEVQUAL to notify user space about it. Furthermore (if
-desired) the signal could be extended to not only report a value between 0
-and 100 but could also contain flags indicating lost beacons, excessive retries
-etc.
-
-Helmut
+  Luis
