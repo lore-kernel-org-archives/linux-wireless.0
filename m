@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51833 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755201AbYIPTar (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:52015 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595AbYITVD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 15:30:47 -0400
-Message-ID: <48D0095B.40403@lwfinger.net> (sfid-20080916_213117_478515_0EA7EAB0)
-Date: Tue, 16 Sep 2008 14:30:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Carlos Corbacho <carlos@strangeworlds.co.uk>
-CC: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
+	Sat, 20 Sep 2008 17:03:56 -0400
+Received: by gxk9 with SMTP id 9so1858459gxk.13
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 14:03:55 -0700 (PDT)
+Message-ID: <43e72e890809201403w2c4511fdv2fe26bbcf49ccdd7@mail.gmail.com> (sfid-20080920_230400_695641_95E01484)
+Date: Sat, 20 Sep 2008 14:03:54 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <200809162018.28548.carlos@strangeworlds.co.uk>
-In-Reply-To: <200809162018.28548.carlos@strangeworlds.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+	"Senthilkumar Balasubramanian"
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <1221944338.3023.8.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+	 <20080919182322.GB7027@tesla>
+	 <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
+	 <20080919235305.GD11665@tesla>
+	 <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com>
+	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
+	 <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
+	 <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+	 <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com>
+	 <1221944338.3023.8.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Carlos Corbacho wrote:
-> On Tuesday 16 September 2008 18:08:48 Larry Finger wrote:
->> I agree with Michael. From what I know, the only possible reason for
->> having [RFKILL_STATE_HARD_BLOCKED] would be if user space could
->> somehow affect the state of the hardware switch.
-> 
-> When I disable the b43 device in my laptop via acer-wmi (which in turn, calls 
-> into the laptops firmware), b43 physically cannot re-enable it (a not 
-> uncommon case on a lot of laptops). In which case, as far as b43 is 
-> concerned, the wireless radio is then in RFKILL_STATE_HARD_BLOCKED, since b43 
-> is unable to re-enable the radio on the hardware.
-> 
-> So yes, it is quite possible for b43 to be in RFKILL_STATE_HARD_BLOCKED.
+2008/9/20 Johannes Berg <johannes@sipsolutions.net>:
+> On Sat, 2008-09-20 at 13:57 -0700, Luis R. Rodriguez wrote:
+>
+>> mcgrof@tesla ~/tmp/irq $ sar -f irqlog-storm.sar -A
+>> Invalid system activity file: irqlog-storm.sar
+>>
+>> Perhaps we its a different format than what my sar can read...
+>
+> It changes like every release... Not a very useful thing, that.
 
-I didn't say it was not possible. What I said is that _ONLY_ the
-operator's finger could change the state, just like in your laptop.
-Thus it makes absolutely no difference what state RFKILL thinks it is
-in. The driver knows what state the software wants, and can read but
-not write the hardware state. There has to be a bug in RFKILL that got
-exposed when this commit was included. This regression needs to be
-fixed ASAP, otherwise 2.6.27 will be released with it. If the RFKILL
-guys want to fix their bug, I'll be happy to test code, but not now.
+Ah -- oh well.
 
-Larry
+OK so yeah you have an interrupt storm, this is evident.
+
+Do you think there is a way you can try to trigger the interrupt storm
+so it happens < than after 7 hours or however long its taking you? If
+so then it'd be good to get your debug out using the interrupt debug.
+If that's not useful then we can enable all debug stuff (file will be
+huge).
+
+Try turning on the microwave, turn on all  your bluetooth devices, use
+your 2.4 GHz wireless phone, use your xbox 360 controllers and ps3
+controllers all at once :D
+
+  Luis
