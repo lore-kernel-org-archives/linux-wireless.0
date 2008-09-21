@@ -1,29 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.2ka.mipt.ru ([194.85.80.65]:54792 "EHLO 2ka.mipt.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752675AbYIUXqd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 19:46:33 -0400
-Date: Mon, 22 Sep 2008 03:45:32 +0400
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+Received: from relay2.globalproof.net ([194.146.153.25]:32980 "EHLO
+	relay2.globalproof.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752636AbYIUWRr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 18:17:47 -0400
+From: Denys Fedoryshchenko <denys@visp.net.lb>
+To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
+Date: Mon, 22 Sep 2008 00:43:07 +0300
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
 	ipw2100-devel@lists.sourceforge.net,
 	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
 	reinette.chatre@intel.com, jgarzik@pobox.com,
 	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921234531.GB17946@2ka.mipt.ru>
-References: <20080921172316.GA6306@2ka.mipt.ru> <20080921224210.GA24461@srcf.ucam.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080921224210.GA24461@srcf.ucam.org>
+References: <20080921182835.GA11473@2ka.mipt.ru> <20080921140203.4698a2ee@infradead.org> <20080921210554.GA2135@2ka.mipt.ru>
+In-Reply-To: <20080921210554.GA2135@2ka.mipt.ru>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809220043.07345.denys@visp.net.lb>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 21, 2008 at 11:42:10PM +0100, Matthew Garrett (mjg59@srcf.ucam.org) wrote:
-> Try D3ing the chip in the firmware restart code. Yes, it's retarded.
+On Monday 22 September 2008, Evgeniy Polyakov wrote:
+> On Sun, Sep 21, 2008 at 02:02:03PM -0700, Arjan van de Ven 
+(arjan@infradead.org) wrote:
+> > > That allows to dump whatever number of warnings you want. The more we
+> > > have, the louder will be customers scream.
+> >
+> > artificially increasing numbers isn't going to do that; it just shows
+> > you're more interested in making a stink than in getting something
+> > improved ;(
+>
+> As practice shows, I'm the only one who is interested in getting
+> something improved, and Intel, as we see right now, is not interested in
+> it at all, since you ask me not only decrease error verbosity, but also
+> do not work towards fixing the bug by trying to understand where it
+> lives.
 
-Thank you, I will start tests tomorrow.
+You are not right. I had totaly disfunctional Intel driver on two laptops and 
+reported about issue to Intel. Yes it took time, they took all debugs and 
+went coma mode (i was thinking that), but suddently i got mail from them, and 
+next kernel/firmware release worked for me flawlessly. So they did perfect 
+job.
 
--- 
-	Evgeniy Polyakov
+Don't be negative and prepare yourself for giving long debug outputs. Patience 
+and only patience.
