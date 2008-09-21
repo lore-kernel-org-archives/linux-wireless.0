@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56155
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752312AbYIKXET (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 19:04:19 -0400
-Date: Thu, 11 Sep 2008 16:04:12 -0700 (PDT)
-Message-Id: <20080911.160412.204624680.davem@davemloft.net> (sfid-20080912_010424_007532_4B76426E)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-09-11
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080911203205.GK3423@tuxdriver.com>
-References: <20080911203205.GK3423@tuxdriver.com>
+Received: from relay.2ka.mipt.ru ([194.85.80.65]:38758 "EHLO 2ka.mipt.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750996AbYIUS36 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 14:29:58 -0400
+Date: Sun, 21 Sep 2008 22:28:38 +0400
+From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
+Message-ID: <20080921182835.GA11473@2ka.mipt.ru> (sfid-20080921_203008_322375_30B98471)
+References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080921110422.1d010b96@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 11 Sep 2008 16:32:05 -0400
+On Sun, Sep 21, 2008 at 11:04:22AM -0700, Arjan van de Ven (arjan@infradead.org) wrote:
+> so now you go from an occasional burp to having nothing at all.
+> How about you run with this patch on your own machine only?
 
-> The latest round of patches intended for 2.6.28.  Johannes has returned,
-> so there is of course a ton of mac80211 stuff (mostly cleanups, etc).  :-)
-> 
-> Please let me know if there are problems!
+And how else user can get attention to the problem which is not fixed by
+the vendor? We close our eyes and there is no problem, since we do not
+see it. I just brought a lamp: no user can see that essentially driver
+is broken so he can run it on his own risk.
 
-Pulled and pushed back out to net-next-2.6, thanks John.  I'll
-deal with the merge conflict you mentioned next.
+> or.. since you say a reload of the driver fixes it.. why don't you make
+> a patch for the driver that does basically the actions of a reload
+> automatically when the driver detects the issue?
+> (and stick a WARN_ON in for good measure so that kerneloops.org can
+> start tracking these burps)
 
-Wireless is accumulating lots more warnings during the build for
-me, please look into this.
+It stops after several seconds (or packets?). Sometimes (but rarely)
+it works several minutes, sometimes it fires above dmesg line and
+continues to work, sometimes it fires it for a while and then stops
+writing it, although driver does not send or receive anything (at
+least ifconfig counters do not change).
 
-Thanks again.
+Actually, I do not think it is a driver problem, since what it does is
+pretty much straightforward, but if you will tell me how else can we fix
+this issue, I will print it and glue near the window so this gotcha
+could be used with other problems. Or you can (as everyone else who do)
+just said that this is damn wrong and forget about problem for the next
+several years.
 
-drivers/net/wireless/orinoco.c: In function 'orinoco_ioctl_get_encodeext':
-drivers/net/wireless/orinoco.c:4780: warning: comparison of distinct pointer types lacks a cast
-drivers/net/wireless/orinoco.c: In function 'orinoco_translate_ext_scan':
-drivers/net/wireless/orinoco.c:5691: warning: format '%016llx' expects type 'long long unsigned int', but argument 4 has type 'long unsigned int'
-drivers/net/wireless/orinoco.c:5691: warning: format '%016llx' expects type 'long long unsigned int', but argument 4 has type 'long unsigned int'
-drivers/net/wireless/b43/phy_g.c: In function 'b43_gphy_op_recalc_txpower':
-drivers/net/wireless/b43/phy_g.c:3191: warning: unused variable 'dbm'
-drivers/net/wireless/iwlwifi/iwl-scan.c:92: warning: 'iwl_escape_essid' defined but not used
-drivers/net/wireless/libertas/cmd.c: In function 'lbs_set_channel':
-drivers/net/wireless/libertas/cmd.c:861: warning: unused variable 'old_channel'
-drivers/net/wireless/libertas_tf/if_usb.c: In function '__if_usb_submit_rx_urb':
-drivers/net/wireless/libertas_tf/if_usb.c:334: warning: cast to pointer from integer of different size
+-- 
+	Evgeniy Polyakov
