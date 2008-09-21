@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:35830 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751724AbYIIVqt (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:29949 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733AbYIUEW6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 17:46:49 -0400
-Date: Tue, 9 Sep 2008 14:44:47 -0700
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Dave <kilroyd@googlemail.com>, Pavel Roskin <proski@gnu.org>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-Message-ID: <20080909214447.GA29934@bougret.hpl.hp.com> (sfid-20080909_234704_669571_09C43C95)
-Reply-To: jt@hpl.hp.com
-References: <1217672073-7094-2-git-send-email-kilroyd@gmail.com> <1217825304.10989.20.camel@dv> <1217864060.3139.10.camel@localhost.localdomain> <20080805162238.GA6294@bougret.hpl.hp.com> <20080902230621.GA28885@bougret.hpl.hp.com> <1220878110.2369.3.camel@dv> <20080908183203.GA7090@bougret.hpl.hp.com> <48C6C262.7010803@gmail.com> <20080909193303.GA28424@bougret.hpl.hp.com> <1ba2fa240809091420w11d3a317vdbb863c85c30e59e@mail.gmail.com>
+	Sun, 21 Sep 2008 00:22:58 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so296265eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 21:22:56 -0700 (PDT)
+Message-ID: <f488382f0809202122v4c77bc96r54edd24bdf365724@mail.gmail.com> (sfid-20080921_062302_839245_61811586)
+Date: Sat, 20 Sep 2008 21:22:56 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Howard Chu" <hyc@symas.com>
+Subject: Re: ath9k problems
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <48D5CAD0.1080909@symas.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240809091420w11d3a317vdbb863c85c30e59e@mail.gmail.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48D5CAD0.1080909@symas.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 10, 2008 at 12:20:26AM +0300, Tomas Winkler wrote:
-> On Tue, Sep 9, 2008 at 10:33 PM, Jean Tourrilhes <jt@hpl.hp.com> wrote:
-> > On Tue, Sep 09, 2008 at 07:37:22PM +0100, Dave wrote:
-> >>
-> >> Thanks for finding that Jean! I've double checked, and agree it's the right
-> >> fix.
-> >>
-> >> FWIW, I've verified this compiles and (still) works as expected on my 32
-> >> bit system.
-> >
-> >        My pleasure. Sorry for beeing so late...
-> >        By the way, I would not mind people looking at Wireless Tools
-> > v30.pre7 so that I can get feedback and make a final release.
-> >
-> My little report :)
-> I've tested the power (save) command. It fixes the issues in 'saving'
-> parameter  that are in v29.
-> Tomas
+On Sat, Sep 20, 2008 at 9:17 PM, Howard Chu <hyc@symas.com> wrote:
+> With the 2.6.27-rc6 kernel I find that my wireless connection dies after a
+> few minutes. Using nm-applet I have to disable wireless and re-enable it
+> before I can re-establish a session (using WPA).
 
-	Thanks for testing. The fact that this bug went into v29 show
-how many people are using that feature...
+Yeah, you need this patch:
+http://marc.info/?l=linux-wireless&m=122163541519736&w=2
 
-	Jean
+> I tried pulling the wireless-testing branch and found it behaved strangely
+> as well - within about 30 seconds of idle time it would die. But, it would
+> usually immediately begin to reconnect (and succeed). My logs were full of
+> "ForceXPAon: 0" messages which I found were from ath9_hw_reset(), which were
+> all being called from set_channel, during the scan that took place when the
+> card was not associated with the AP. It typically occurred every 30-35
+> seconds.
+
+I'm sure the ath9k guys can be more informative about what
+'ForceXPAon: 0' is all about, but wireless-testing is pretty outdated
+now. Strange, too, because it seems that even Linus' tree has newer
+code than wireless-testing.
+
+> I also found that if I kept a ping session to my wifi router running, then
+> the wireless connection would not die, it would operate normally.
+>
+> It seems that it all worked fine in 2.6.27-rc4...
+
+Yeah, did a git-bisect on the issue. Again, see the above link to get
+the patch for it. :)
+
+- Steven
