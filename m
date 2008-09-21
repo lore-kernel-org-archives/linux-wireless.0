@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39774 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755420AbYIOXKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 19:10:05 -0400
-Date: Mon, 15 Sep 2008 16:09:52 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: re-enable aggregation on 2.6.27
-Message-ID: <20080915230952.GG22572@tesla> (sfid-20080916_011008_453704_2EBA9080)
-References: <1221503192-28502-1-git-send-email-lrodriguez@atheros.com> <1ba2fa240809151606l31fe9d8jbdc34e179910ec8f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1ba2fa240809151606l31fe9d8jbdc34e179910ec8f@mail.gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40303 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751462AbYIUT60 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 15:58:26 -0400
+Date: Sun, 21 Sep 2008 20:57:44 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Cc: Arjan van de Ven <arjan@infradead.org>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
+ restart.
+Message-ID: <20080921205744.2d78f1fa@lxorguk.ukuu.org.uk> (sfid-20080921_215832_811271_1860C94D)
+In-Reply-To: <20080921190050.GA20484@2ka.mipt.ru>
+References: <20080921172316.GA6306@2ka.mipt.ru>
+	<20080921110422.1d010b96@infradead.org>
+	<20080921182835.GA11473@2ka.mipt.ru>
+	<20080921113513.16677c4e@infradead.org>
+	<20080921190050.GA20484@2ka.mipt.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 15, 2008 at 04:06:18PM -0700, Tomas Winkler wrote:
-> On Mon, Sep 15, 2008 at 9:26 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > Re-enable aggregation by addressing skb->cb overwrites
-> > after insertion into the qdisc. Aggregation was disabled
-> > after the new TX multiqueue changes were introduced. Instead
-> > of relying on the skb->cb we use two flags on the skb.
-> >
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
-> >
-> > Users have been reporting low rates on 2.6.27 with 11n drivers, the
-> > problem isbeen 11n aggregation was disabled due to the new TX multique
-> > changes. We should have addressed this sooner but we just got to it now.
-> >
-> > Without addressing this we won't get 11n aggregation on 2.6.27. I tried
-> > to minimize the changes required. I'm about to test this, it compiles.
-> >
-> > If this doesn't get upstream for 27 perhaps distributions are willing to
-> > carry it around then and if so oh well (grr...).
-> >
-> I'm cleaning this up.
+> Getting the fact, that rmmod/insmod does not always fix the problem (but
+> most of the time for a short period of time), I again want to point,
+> that it looks like a firmware problem related to some inner timings. You
+> ask me to fix the driver and do not even listen to what I said
+> previously and do not get that into account and analyze.
 
-Great.
+Try putting it into D3 counting to 10 and powering it back up. Thats
+about as close as you can get to pulling the plug when it hangs.
 
-> I will probably drop skb->is_part_ampdu so no
-> changes in the drivers will be required.
-
-How so? I mean, if the flag is modified it'll need modification.
-
-  Luis
+Alan
