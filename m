@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:59456 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751550AbYIVJcE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 05:32:04 -0400
-Received: from eagle4.localnet (koln-4db444db.pool.einsundeins.de [77.180.68.219])
-	by whisper-net.dyndns.org (Postfix) with ESMTP id A8CD01A032
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 11:43:40 +0200 (CEST)
-From: Julian Pietron <julian@whisper-net.de>
-To: linux-wireless@vger.kernel.org
-Subject: Problems with zd1211rw and TL-WN322G (TP-Link)
-Date: Mon, 22 Sep 2008 11:31:54 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200809221131.55266.julian@whisper-net.de> (sfid-20080922_113209_182569_D92010EE)
+Received: from relay.2ka.mipt.ru ([194.85.80.65]:54804 "EHLO 2ka.mipt.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752402AbYIUXr3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 19:47:29 -0400
+Date: Mon, 22 Sep 2008 03:46:13 +0400
+From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+To: Denys Fedoryshchenko <denys@visp.net.lb>
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
+Message-ID: <20080921234613.GC17946@2ka.mipt.ru>
+References: <20080921182835.GA11473@2ka.mipt.ru> <200809220043.07345.denys@visp.net.lb> <20080921220708.GA31413@2ka.mipt.ru> <200809220116.00133.denys@visp.net.lb>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200809220116.00133.denys@visp.net.lb>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hallo,
+On Mon, Sep 22, 2008 at 01:15:59AM +0300, Denys Fedoryshchenko (denys@visp.net.lb) wrote:
+> > Just to be clear, did it take 4 years? :)
+> Any bugzilla entry? I cannot find on 
+> http://www.intellinuxwireless.org/bugzilla/ anything about this bug.
+> 
+> I submit two reports in my case, one in kernel bugzilla, one in intel linux 
+> wireless project..
 
-I bought a TP-Link TL-WN322G with ZyDas-Chipset. If I try to use it with the 
-zd1211rw driver, the device is recognized, but an accesspoint scan via iwlist 
-wlan1 scan fails with "Network is down". Trying to set up the interface 
-manually using ifconfig wlan1 up fails with "SIOCSIFFLAGS: No such device".
+Lucky you :)
 
-The complete dmesg-output from plugging the stick in until the above error 
-message reads as follows:
-
-usb 2-2: new high speed USB device using ehci_hcd and address 8
-usb 2-2: configuration #1 chosen from 1 choice
-usb 2-2: reset high speed USB device using ehci_hcd and address 8
-phy1: Selected rate control algorithm 'pid'
-zd1211rw 2-2:1.0: phy1
-firmware: requesting zd1211/zd1211b_ub
-firmware: requesting zd1211/zd1211b_uphr
-zd1211rw 2-2:1.0: RF MAXIM_NEW_RF 0x8 is not supported
-
-After that, the red led of the stick is off and ifconfig wlan1 up or other 
-commands involving the device don't work anymore (they hang until the stick is 
-plugged off).
-Used kernel is 2.6.26, but I encountered the same errors with a 2.6.22 and 
-2.6.24 kernel.
-
-I hope someone can give me a hint how to get this device to work properly.
-
-Thanks in advance,
-J. Pietron
+-- 
+	Evgeniy Polyakov
