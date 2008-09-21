@@ -1,47 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:48818 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923AbYI1CtI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35049 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052AbYIUMLQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2008 22:49:08 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so441729eyi.37
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2008 19:49:06 -0700 (PDT)
-Message-ID: <f488382f0809271949j3c39a1aag8a57b1cb03a5c001@mail.gmail.com> (sfid-20080928_044926_787569_C581FE07)
-Date: Sat, 27 Sep 2008 19:49:06 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RFC V3] mac80211: re-enable aggregation on 2.6.27
-Cc: "Tomas Winkler" <tomas.winkler@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"yi.zhu@intel.com" <yi.zhu@intel.com>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <f488382f0809251945u3eb1f0bdgfe8587e8c103b009@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1222371297-24498-1-git-send-email-tomas.winkler@intel.com>
-	 <f488382f0809251243x472ff579n8ada22e8f7110aae@mail.gmail.com>
-	 <20080926015100.GR6204@tesla>
-	 <f488382f0809251945u3eb1f0bdgfe8587e8c103b009@mail.gmail.com>
+	Sun, 21 Sep 2008 08:11:16 -0400
+Subject: Re: [RFC V2] mac80211: mesh portal functionality support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: YanBo <dreamfly281@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Javier Cardona <javier@cozybit.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+In-Reply-To: <1197ff4c0809210450u556538actc6f37390d3079fbc@mail.gmail.com> (sfid-20080921_135057_878688_51244EC5)
+References: <1197ff4c0809170200l701ce25bg6035734a394f8c83@mail.gmail.com>
+	 <1197ff4c0809210450u556538actc6f37390d3079fbc@mail.gmail.com>
+	 (sfid-20080921_135057_878688_51244EC5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Tdz5CAWl7VePO/pWcrkz"
+Date: Sun, 21 Sep 2008 14:11:11 +0200
+Message-Id: <1221999071.3023.21.camel@johannes.berg> (sfid-20080921_141119_837589_98143D2F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 25, 2008 at 7:45 PM, Steven Noonan <steven@uplinklabs.net> wrote:
-> On Thu, Sep 25, 2008 at 6:51 PM, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
->>
->> Please test and let us know, try HT40 on 11a. We're keen on resolving
->> this just as with the MIB interrupt issue you say ;)
->
-> Will do. It will have to wait until Monday though, because I stupidly
-> left my AirPort Extreme router's AC adapter at home (3 hours away).
 
-I just realized I happened to have a Linksys WRT300N router with me
-(completely forgot I even owned one). Anyway, I'm running with HT40,
-and it seems to work fine. Throughput is certainly lower than on Mac
-OS X (I get about 8 megabytes per second sustained transfer rate on OS
-X), as I'm only getting about 2 megabytes per second with ath9k on
-Linux.  The aggregation patch does make a difference, but not by a
-whole lot.
+--=-Tdz5CAWl7VePO/pWcrkz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-- Steven
+On Sun, 2008-09-21 at 19:50 +0800, YanBo wrote:
+
+> @@ -226,6 +227,8 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+>  void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata);
+>  struct mesh_path *mesh_path_lookup(u8 *dst,
+>  		struct ieee80211_sub_if_data *sdata);
+> +struct mesh_path *mpp_path_lookup(u8 *dst, struct
+> ieee80211_sub_if_data *sdata);
+
+there's a line-wrap here for some reason
+
+
+>  static struct mesh_table *mesh_paths;
+> +static struct mesh_table *mpp_paths; /* Store pathes for MPP&MAP */
+
+Can you add a note why we need a separate hash table at all?
+
+> @@ -475,11 +589,19 @@ static int mesh_path_node_copy(struct hlist_node
+> *p, struct mesh_table *newtbl)
+>  int mesh_pathtbl_init(void)
+>  {
+>  	mesh_paths =3D mesh_table_alloc(INIT_PATHS_SIZE_ORDER);
+> +	if (!mesh_paths)
+> +		return -ENOMEM;
+>  	mesh_paths->free_node =3D &mesh_path_node_free;
+>  	mesh_paths->copy_node =3D &mesh_path_node_copy;
+>  	mesh_paths->mean_chain_len =3D MEAN_CHAIN_LEN;
+> -	if (!mesh_paths)
+> -		return -ENOMEM;
+> +
+> +	mpp_paths =3D mesh_table_alloc(INIT_PATHS_SIZE_ORDER);
+> +	if (!mpp_paths)
+> + 		return -ENOMEM;
+
+This leaks 'mesh_paths'.
+
+> +	if (mesh_hdr->flags =3D=3D 2){
+
+that should use the constant you introduced
+
+johannes
+
+--=-Tdz5CAWl7VePO/pWcrkz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI1jnaAAoJEKVg1VMiehFYmtAP+wYYWQ+FNRAOTuiIPcPG6zQx
+d9NY/feqCzE9Eipu4/IIKRt5mmqI6jgL1t5zpszCiA2xQJcfkVWQoEG2TgDchSJJ
+RpopnksUF5dMTTx2RRndz5m37+TWDyvI6RTmof9Tr969eVza2EqSaA5Dqr0l7xzX
++fJK4bOSI2dI8BapJvtq+HmY480LJj2C5bIk/1rqXDudDlLzc0BVHigrPE+pDbWF
+wZSwMnjS5n28r5x1OFDO7MyY2gzPKXzwhoSIlrxWxfBT8xYKkt2BOA+SQ8IKQF23
+4fn0jPHJjRO9MQbY9Xz/5nOQbbpfJNjx5TiOJMBqMMVfDSMmUpEjzdJ+ogJz7CDa
+kdxARDkPFiICQCA3cxiZxn8fLhdIVaondMCXbm08KXiJlCeSZ3Bqps6Vx8qDBafr
+cNrI64Sa2dZx0QYIiwy+bEbvbd978k0nIeZusfCiz08tODpTT9OPQlTI/NFyBGV9
+P3AQ9ntM4DfOes5aEHiuvBuWojt4sPAJNQPj15FA4fB97I+FGCr8o+/SloTvM7w0
+Tiiwc3V6d+3iHcsIOMe1PERb/YCQ/B2qqM4CnFnPBL/JhlqbHFGaqaJH3fkP+mXZ
+m1vb0y6SAZf2pXM99yaAcmXahQ1YpfGFeoaeVqyN4jwsszj+g1zp7FPoCx8bKm+K
+G1Fdc+NxP+R0e/WJuux7
+=2HpZ
+-----END PGP SIGNATURE-----
+
+--=-Tdz5CAWl7VePO/pWcrkz--
+
