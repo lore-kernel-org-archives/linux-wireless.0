@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:42780 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751747AbYIQQPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 12:15:34 -0400
-Subject: Re: [RFC/RFT] p54: Fix sparse warnings
-From: Pavel Roskin <proski@gnu.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	John W Linville <linville@tuxdriver.com>, chunkeey@web.de,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <48CBDF0B.5080303@lwfinger.net>
-References: <48cab1e3.m0lac7LoL3DFxIu6%Larry.Finger@lwfinger.net>
-	 <200809122036.03553.mb@bu3sch.de> <48CABA84.2060404@lwfinger.net>
-	 <200809131440.01505.mb@bu3sch.de>  <48CBDF0B.5080303@lwfinger.net>
-Content-Type: text/plain
-Date: Wed, 17 Sep 2008 12:15:31 -0400
-Message-Id: <1221668131.18202.10.camel@dv> (sfid-20080917_181538_569710_8F505FD2)
+Received: from casper.infradead.org ([85.118.1.10]:56371 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752536AbYIUVCI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 17:02:08 -0400
+Date: Sun, 21 Sep 2008 14:02:03 -0700
+From: Arjan van de Ven <arjan@infradead.org>
+To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Cc: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
+ restart.
+Message-ID: <20080921140203.4698a2ee@infradead.org> (sfid-20080921_230223_115344_CB6AD01D)
+In-Reply-To: <20080921205706.GA24545@2ka.mipt.ru>
+References: <20080921172316.GA6306@2ka.mipt.ru>
+	<20080921110422.1d010b96@infradead.org>
+	<20080921182835.GA11473@2ka.mipt.ru>
+	<20080921113513.16677c4e@infradead.org>
+	<20080921190050.GA20484@2ka.mipt.ru>
+	<1222024444.3023.53.camel@johannes.berg>
+	<20080921193809.GA8735@2ka.mipt.ru>
+	<20080921124332.67ddc13a@infradead.org>
+	<20080921202057.GB25052@2ka.mipt.ru>
+	<20080921132753.5689b564@infradead.org>
+	<20080921205706.GA24545@2ka.mipt.ru>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-09-13 at 10:40 -0500, Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Friday 12 September 2008 20:52:52 Larry Finger wrote:
-> >> No, it won't avoid any casts. The program uses the data area 7 times 
-> >> in native-cpu order, once as be32, and once in little-endian order 
+On Mon, 22 Sep 2008 00:57:06 +0400
+Evgeniy Polyakov <johnpol@2ka.mipt.ru> wrote:
+
+> > > Consider for inclusing for the upcoming kernel to get wider
+> > > notifications. Yes, it is not a bugfix, I know.
 > > 
-> > Is the native use correct? Smells fishy.
+> > still more complex than needed; a WARN_ON_ONCE() will be enough.
 > 
-> It does to me as well.
+> That allows to dump whatever number of warnings you want. The more we
+> have, the louder will be customers scream.
 
-I think we should assume fixed byte order unless the hardware is
-programmed differently for big-endian hosts (e.g. Atheros chipsets can
-byte-swap some registers).  If the driver is working on little-endian
-systems, we should assume little-endian data unless testing proves us to
-be wrong.
+artificially increasing numbers isn't going to do that; it just shows
+you're more interested in making a stink than in getting something
+improved ;(
 
->  I just got a copy of Intersil's data sheet for
-> the MAC and everything looks little endian, but until we get a tester
-> with a big-endian machine, we won't know. So far, no volunteers have
-> come forward.
+> 
 
-I have a PowerMac and a Prism54 card, so I can test.
 
 -- 
-Regards,
-Pavel Roskin
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
