@@ -1,81 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58096 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521AbYI3KVJ (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.233]:60932 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752364AbYIUBsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 06:21:09 -0400
-Subject: Re: [PATCH v2] mac80211: change rate control API to allow
-	multi-rate retry
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48E1F554.5030700@openwrt.org> (sfid-20080930_114621_415973_341ED20E)
-References: <48E1F554.5030700@openwrt.org>
-	 (sfid-20080930_114621_415973_341ED20E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mC9QSaDAIBzsJd5Y8R6L"
-Date: Tue, 30 Sep 2008 12:21:03 +0200
-Message-Id: <1222770063.7064.57.camel@johannes.berg> (sfid-20080930_122113_218574_E61FD639)
-Mime-Version: 1.0
+	Sat, 20 Sep 2008 21:48:09 -0400
+Received: by qb-out-0506.google.com with SMTP id f11so770230qba.17
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 18:48:08 -0700 (PDT)
+Message-ID: <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com> (sfid-20080921_034846_544861_D10B8048)
+Date: Sat, 20 Sep 2008 18:48:05 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Senthilkumar Balasubramanian"
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
+	 <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
+	 <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+	 <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com>
+	 <1221944338.3023.8.camel@johannes.berg>
+	 <43e72e890809201403w2c4511fdv2fe26bbcf49ccdd7@mail.gmail.com>
+	 <f488382f0809201422rdabeff4g435bf3d4a7e9fa3@mail.gmail.com>
+	 <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com>
+	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 20, 2008 at 2:48 PM, Steven Noonan <steven@uplinklabs.net> wrote:
+> On Sat, Sep 20, 2008 at 2:26 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Sat, Sep 20, 2008 at 2:22 PM, Steven Noonan <steven@uplinklabs.net> wrote:
+>>
+>>> Heh. I don't have an Xbox 360 or PS3 (sad, I know). Do have several
+>>> 2.4GHz phones. ;)
+>>
+>> Microwaves are the best to make the signal wet poop BTW, if you have
+>> that option available. Not sure if we can trigger the device that way
+>> but I'm just brainstorming here.
+>>
+>
+> Well, I've got the thing set to ATH_DBG_ANY (I want this damn bug
+> found!), which will certainly be *interesting*. In 5 minutes, the log
+> has jumped 9 megabytes.
+>
+> I've also got sadc monitoring IRQs so I know for certain when the
+> interrupt storm starts.
+>
+> I'll let you know how this goes.
 
---=-mC9QSaDAIBzsJd5Y8R6L
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+OK, here's the time index at which it b0rked:
 
-On Tue, 2008-09-30 at 11:45 +0200, Felix Fietkau wrote:
+18:28:38          sum   1106.00
+18:28:39          sum   1037.62
+18:28:40          sum   1069.00
+18:28:41          sum   1167.00
+18:28:42          sum   1155.00
+18:28:43          sum   1339.00
+18:28:44          sum  18355.00
+18:28:45          sum  17845.45
+18:28:46          sum  15285.00
+18:28:47          sum  17511.00
+18:28:48          sum  17568.69
+18:28:49          sum  17704.04
+18:28:50          sum  18566.67
+18:28:51          sum  18913.13
 
-> @@ -374,7 +374,7 @@
->  	struct queue_entry *entry =3D rt2x00queue_get_entry(queue, Q_INDEX);
->  	struct txentry_desc txdesc;
->  	struct skb_frame_desc *skbdesc;
-> -	unsigned int iv_len =3D IEEE80211_SKB_CB(skb)->control.iv_len;
-> +	unsigned int iv_len =3D IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
+And the entire log of the minute 18:28 is here:
+http://www.uplinklabs.net/~tycho/linux/18.28.00-59.log.gz
 
-Won't that explode when hw_key is unset?
+It looks pretty crazy.
 
-> --- a/net/mac80211/wep.c
-> +++ b/net/mac80211/wep.c
-> @@ -313,8 +313,8 @@
->  {
->         struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
-> =20
-> -       info->control.iv_len =3D WEP_IV_LEN;
-> -       info->control.icv_len =3D WEP_ICV_LEN;
-> +       info->control.hw_key->iv_len =3D WEP_IV_LEN;
-> +       info->control.hw_key->icv_len =3D WEP_ICV_LEN;
-> =20
->         if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
->                 if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
-
-I don't think you should set this here, just set it when the key
-algorithm is fixed initially, that way it's also already valid when the
-key is put into hw accel.
-
-johannes
-
---=-mC9QSaDAIBzsJd5Y8R6L
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI4f2MAAoJEKVg1VMiehFYniUP/jb2CqcTtbzHpG7sbZpMLFG0
-upuntr9CcFFXXmbvRyX35odxbGeyxMmnzcOCDbnKDlgSCeAuidVqVOZbvymrkRIV
-TkD/rw2SS6ayb2wzXkjuar5ouVq4HxmDOvf64Y9hgLCf192d3/AGSFnHZZ7w7K/G
-VuoOlnKx8PeX3g6E6UU643uVi6+pJflUAI7etKXBpEs5XjfMZHonpO0BVFiGNdMR
-lK7+uSzXboGdZbhq3kypKGvGpSv0qMwKJgVrcmzJCMU037KbzYTWy0NlkfL2yHaL
-EMiBjXIVRe4iuffhL+dZ9VFZRxsJMR3EkAi+V0Wrp6nxNmflEB/qq/LXrZgz6OmT
-lueG8irtJm1qquDkvrYjhhf0rUevLmVIorsAmYHZwqIdWXiq4Omr8t0ewcMuMUZz
-KZAdXmYp9FyASj9mnyMLezYZh+OeZxIftDiVu88ob+ib7a33PcNyEj4PN9Nwp/yk
-3Jfx+roT304rtpaCckeJ+x7mh5vBDxcH+MSG/pHSYXI9lPOmN+BcD5zl8oPEf8uu
-MFJjtP/7S4madlfETx+hx+PMkhaKzkbcFkgM5PMTKmKWmsdwG1/eU4PS8YwoxqL9
-N/PI3WM2dQWKE3M6jAQ0kYCmEH1AZjQ0n5IQB+Sv2kYHXbXtUjHi9NgOthHn0M1A
-PmW/PYqD6tMBkCNfh0gH
-=YsrE
------END PGP SIGNATURE-----
-
---=-mC9QSaDAIBzsJd5Y8R6L--
-
+- Steven
