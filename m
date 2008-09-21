@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:34228 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750851AbYIPUeI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 16:34:08 -0400
-Message-ID: <48D0183E.9010301@lwfinger.net> (sfid-20080916_223411_900851_E148C015)
-Date: Tue, 16 Sep 2008 15:34:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail1.acecape.com ([66.114.74.12]:47902 "EHLO mail1.acecape.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751052AbYIUTAR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 15:00:17 -0400
+Message-ID: <48D697F5.9050802@acedsl.com> (sfid-20080921_210023_746202_3F125557)
+Date: Sun, 21 Sep 2008 14:52:37 -0400
+From: Wei Weng <wweng@acedsl.com>
 MIME-Version: 1.0
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <20080916195134.GB14879@srcf.ucam.org>
-In-Reply-To: <20080916195134.GB14879@srcf.ucam.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Arjan van de Ven <arjan@infradead.org>
+CC: Evgeniy Polyakov <johnpol@2ka.mipt.ru>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
+ restart.
+References: <20080921172316.GA6306@2ka.mipt.ru>	<20080921110422.1d010b96@infradead.org>	<20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org>
+In-Reply-To: <20080921113513.16677c4e@infradead.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthew Garrett wrote:
-> On Tue, Sep 16, 2008 at 12:08:48PM -0500, Larry Finger wrote:
+Arjan van de Ven wrote:
+> On Sun, 21 Sep 2008 22:28:38 +0400
+> Evgeniy Polyakov <johnpol@2ka.mipt.ru> wrote:
 > 
->> I agree with Michael. From what I know, the only possible reason for
->> having this state would be if user space could somehow affect the
->> state of the hardware switch. As the user's finger is the only such
->> thing, then there is no use for the RFKILL_STATE_HARD_BLOCKED state,
->> particularly when it breaks LED operations.
+>> On Sun, Sep 21, 2008 at 11:04:22AM -0700, Arjan van de Ven
+>> (arjan@infradead.org) wrote:
+>>> so now you go from an occasional burp to having nothing at all.
+>>> How about you run with this patch on your own machine only?
+>> And how else user can get attention to the problem which is not fixed
+>> by the vendor? 
 > 
-> RFKILL_STATE_HARD_BLOCKED indicates that the hardware is disabled in a 
-> way that userspace can't influence, so sounds like exactly the right 
-> state to have here. I still have absolutely no idea what b43 rfkill is 
-> supposed to be doing - why on earth is it requesting rfkill-input, and 
-> why does it generate keypress events? I /think/ it should e something 
-> like the following (untested, I'm not near any of my b43 hardware at the 
-> moment). This basically does the following:
+> ... or the community
 > 
-> 1) Split the update function in two, so it can be called by either 
-> polling or an interrupt driven event on newer hardware (not implemented 
-> yet)
-> 2) Remove all the input handling
-> 3) Change the state updates to use rfkill_force_state, which will 
-> generate an event that gets sent up to userland
-> 4) Retains the RFKILL_STATE_HARD_BLOCKED code
+>> We close our eyes and there is no problem, since we do
+>> not see it. I just brought a lamp: no user can see that essentially
+>> driver is broken so he can run it on his own risk.
+>>
+>>> or.. since you say a reload of the driver fixes it.. why don't you
+>>> make a patch for the driver that does basically the actions of a
+>>> reload automatically when the driver detects the issue?
+>>> (and stick a WARN_ON in for good measure so that kerneloops.org can
+>>> start tracking these burps)
+>> It stops after several seconds (or packets?). Sometimes (but rarely)
+>> it works several minutes, sometimes it fires above dmesg line and
+>> continues to work, sometimes it fires it for a while and then stops
+>> writing it, although driver does not send or receive anything (at
+>> least ifconfig counters do not change).
 > 
-> When the user flicks a switch or presses a button that physically 
-> disables the radio, the state will now automatically change to 
-> RFKILL_STATE_HARD_BLOCKED. If they have a key that generates KEY_WLAN 
-> but doesn't change the radio state, rfkill-input will trigger a change 
-> to RFKILL_STATE_SOFT_BLOCKED.
+> again.. so how about you detect this condition and do, in the driver
+> code, the equivalent of rmmod/insmod to the hardware. I'm sure people
+> who have the hardware would appreciate that type of patch a lot more
+> than the one you sent out.
 > 
-> Like I said, this is only build-tested - I won't be back at a b43 until 
-> next week. If someone could give this a go, that would be great.
 
-It locks up tight with a kernel panic when booting. I have a screen
-picture that I will send separately to Matthew.
+I guess it is your way of "middle finger" to all the IPW2100 customers who try
+to use it on a Linux machine.
 
-Larry
+
+Thanks
+Wei
+
+
