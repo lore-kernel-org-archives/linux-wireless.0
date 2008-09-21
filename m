@@ -1,91 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:63896 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731AbYI2IO5 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:54213 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877AbYIUTej (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 04:14:57 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so293466yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 01:14:56 -0700 (PDT)
-Message-ID: <43e72e890809290114w5010c397od3d17101db263109@mail.gmail.com> (sfid-20080929_101502_449678_57475562)
-Date: Mon, 29 Sep 2008 01:14:56 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomas.winkler@intel.com>
-Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS mode
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
+	Sun, 21 Sep 2008 15:34:39 -0400
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
+	restart.
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+In-Reply-To: <20080921172316.GA6306@2ka.mipt.ru>
+References: <20080921172316.GA6306@2ka.mipt.ru>
+Content-Type: text/plain
+Date: Sun, 21 Sep 2008 21:35:31 +0200
+Message-Id: <1222025731.6782.117.camel@californication> (sfid-20080921_213449_097232_3CEB89DF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 28, 2008 at 9:14 AM, Tomas Winkler <tomas.winkler@intel.com> wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->
-> This patch makes mac80211 able to send action frames when toggling
-> (SM PS) Spacial Multiplexing Power Save mode.
+Hi Evgeniy,
 
-I have no clue what this is as I haven't yet peeked at this section of
-the draft. If we can provide a brief explanation as to what this is
-would be useful to other developers without access to the 11n draft.
-Even it its just enhancing the comment in the code.
+> Following bug exists in the ipw2100 driver/firmware for years and Intel
+> folks never responded to zillions bugzilla entries and forum notices in
+> the internet with some patch or firmware update (although did request
+> dmesg and debug info, and received them).
+> 
+> ipw2100: Fatal interrupt. Scheduling firmware restart.
+> 
+> I believe it is a firmware bug because after driver is unloaded and
+> loaded back again wireless adapter usually starts working (for small
+> amount of time though). My conspiracy feeling can suggest, that it may
+> be kind of a force to buy a new one, or trivial error in the firmware,
+> when it writes to the same place in the flash and essentially given cell
+> became dead or whatever else.
 
-> Example:
-> 1.
-> Low lever driver may close some of RX chains in power save mode
-> and needs to announce to AP that a RTS frame is need in order to wake all
-> RX chains, on other hand SM PS can be disabled on CAM mode
+I don't know if it is for this bug or a different one, but Matthew
+Garrett seem to have some pending patches. At least that is what he told
+me at PlumbersConf. Lets see if these patches do help. And please follow
+up with Arjan's suggestion and put a WARN_ON in the upstream code
+instead of waving CONFIG_BROKEN around.
 
-What's CAM mode?
+Regards
 
-> or if HW is able
-> to wake all chains without RTS frame.
-
-Should we add a HW capability bit for mac80211 drivers to indicate this?
-
-> 2.
-> iwlwifi can call this function when it detects that only
-> one antenna can effectively receive
-
-When would this happen? Would this happen when any 11n mac80211
-capable driver is going to PS mode and it doesn't have the capability
-of detecting when it needs to to turn on its antennas?
-
-> then MS PS
-
-Did you mean SM PS mode?
-
-> mode is set to STATIC
-
-Can we elaborate a bit on what this vs Dynamic is in the comments if possible?
+Marcel
 
 
-> +static void ieee80211_send_sm_ps(struct ieee80211_sub_if_data *sdata, u8 mode)
-> +{
-> +       struct ieee80211_local *local = sdata->local;
-> +       struct ieee80211_mgmt *mgmt;
-> +       struct sk_buff *skb;
-> +       DECLARE_MAC_BUF(mac);
-> +
-> +       struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-> +       struct net_device *dev = sdata->dev;
-> +
-> +       /* Implemented for STA only */
-> +       if (sdata->vif.type != NL80211_IFTYPE_STATION)
-> +               return;
-
-<-- snip -->
-
-> +       if (ifsta->flags & IEEE80211_STA_ASSOCIATED)
-> +               ieee80211_tx_skb(sdata, skb, 0);
-
-You can move this ending branch above to return early so we don't go
-through the entire routine for no good reason. So something like:
-
-       if (sdata->vif.type != NL80211_IFTYPE_STATION ||
-                      ifsta->flags & IEEE80211_STA_ASSOCIATED)
-               return;
-
-  Luis
