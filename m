@@ -1,117 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ro.mikronika.com.pl ([213.17.224.85]:4617 "EHLO
-	cluster1.mikronika.com.pl" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751606AbYIINiK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38104 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052AbYIUTOV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 09:38:10 -0400
-Message-ID: <48C67C3A.5090806@mikronika.com.pl> (sfid-20080909_153814_801775_AAC89983)
-Date: Tue, 09 Sep 2008 15:38:02 +0200
-From: Karol Szkudlarek <karol@mikronika.com.pl>
-MIME-Version: 1.0
-To: Tim Gardner <tim.gardner@canonical.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k	on	ubuntu
- hardy
-References: <48BC47C5.2070807@mikronika.com.pl>	 <1220425598.28282.190.camel@debian.sh.intel.com>	 <loom.20080903T181136-957@post.gmane.org> <1220601300.28282.291.camel@debian.sh.intel.com> <48C0EA41.5050103@mikronika.com.pl> <48C14AA2.1040202@lwfinger.net> <48C15A5E.6000301@canonical.com> <48C62D3C.8080907@mikronika.com.pl> <48C6696F.7070004@canonical.com>
-In-Reply-To: <48C6696F.7070004@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+	Sun, 21 Sep 2008 15:14:21 -0400
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
+	restart.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Cc: Arjan van de Ven <arjan@infradead.org>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+In-Reply-To: <20080921190050.GA20484@2ka.mipt.ru> (sfid-20080921_210242_482049_43D40C50)
+References: <20080921172316.GA6306@2ka.mipt.ru>
+	 <20080921110422.1d010b96@infradead.org>
+	 <20080921182835.GA11473@2ka.mipt.ru>
+	 <20080921113513.16677c4e@infradead.org>
+	 <20080921190050.GA20484@2ka.mipt.ru> (sfid-20080921_210242_482049_43D40C50)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P4pWs/jhFbewJryBGqCD"
+Date: Sun, 21 Sep 2008 21:14:04 +0200
+Message-Id: <1222024444.3023.53.camel@johannes.berg> (sfid-20080921_211430_568530_CD7EDE3D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tim Gardner pisze:
-> Karol Szkudlarek wrote:
->> Tim Gardner pisze:
->>> Larry Finger wrote:
->>>> Karol Szkudlarek wrote:
->>>>> Hello Zhu!
->>>>>
->>>>> It will be tough to see in 2.6.27-rc kernels beacuse I use Ubuntu=
- 8.04
->>>>> LTS
->>>>> which uses 2.6.24 linux kernel. :-(
->>>>>
->>>> The Ubuntu team has a 2.6.27 kernel available. To quote the text o=
-f a
->>>> message in a BCM4306 thread "1)  If you are comfortable installing
->>>> packages on your own, the linux-image-2.6.27-* package is currentl=
-y
->>>> available for you to install and test."
->>>>
->>>> Larry
->>>> --=20
->>>> To unsubscribe from this list: send the line "unsubscribe
->>>> linux-wireless" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>> There is a Hardy package for the 2.6.27 kernel at
->>>
->>> http://ppa.launchpad.net/timg-tpi/ubuntu
->>>
->>> It is currently based on -rc5. I'll be updating it throughout the .=
-27
->>> development and stable cycle.
->>>
->>> rtg
->> I would like try 2.6.27 so today I checked
->> http://ppa.launchpad.net/timg-tpi/ubuntu/dists/hardy/main/binary-i38=
-6/Packages
->>
->> and I don't see any 2.6.27 packages...
->>
->> Second question: do you precompiled also all modules? I need them to
->> perform an upgrade and got the running system.
->>
->=20
-> I found I could not have 2 packages with the same name but different
-> versions in one PPA, so I moved the 2.6.27 package to the kernel team
-> PPA at:
->=20
-> http://ppa.launchpad.net/kernel-ppa/ubuntu
->=20
-> Sorry for the confusion.
->=20
-> rtg
->=20
-OK. I downloaded the packages and during installation I got the=20
-following error, please help me: :-)
 
-# apt-get install linux-headers-2.6.27-3 linux-image-2.6.27-3-generic
-Reading package lists... Done
-Building dependency tree
-Reading state information... Done
-linux-headers-2.6.27-3 is already the newest version.
-linux-image-2.6.27-3-generic is already the newest version.
-0 upgraded, 0 newly installed, 0 to remove and 8 not upgraded.
-1 not fully installed or removed.
-After this operation, 0B of additional disk space will be used.
-Setting up linux-image-2.6.27-3-generic (2.6.27-3.4) ...
-Running depmod.
-update-initramfs: Generating /boot/initrd.img-2.6.27-3-generic
-cpio: not implemented or invalid option --
+--=-P4pWs/jhFbewJryBGqCD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-gzip: stdin: unexpected end of file
-update-initramfs: failed for /boot/initrd.img-2.6.27-3-generic
-=46ailed to create initrd image.
-dpkg: error processing linux-image-2.6.27-3-generic (--configure):
-  subprocess post-installation script returned error exit status 2
-Errors were encountered while processing:
-  linux-image-2.6.27-3-generic
-E: Sub-process /usr/bin/dpkg returned an error code (1)
+On Sun, 2008-09-21 at 23:00 +0400, Evgeniy Polyakov wrote:
 
+> Do you want me to implement ipw2100 driver as a big work structure
+> which will run ipw2100_init()/wait/ipw2100_exit() in a loop?
+> And that will be the fix suggested by Intel? That would explain a lot.
 
---=20
-Karol Szkudlarek
-Mikronika
-ul. Wykopy 2/4
-60-001 POZNA=D1
-tel. +48 61 6655600
-fax +48 61 6655602
-e-mail karol@mikronika.com.pl
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think what Arjan is saying is that it would be better to put pressure
+on the responsible folks (I don't think Arjan is anywhere near them at
+all) if you'd put in a WARN_ON() for this error and that would make the
+top entry on kerneloops.org all the time... And additionally put in a
+workaround for yourself for now.
+
+And can we keep the flames off this list please? That comment from Wei
+Weng was absolutely uncalled for, and inciting a flamewar (as you have
+already blogged) was not really productive either.
+
+johannes
+
+--=-P4pWs/jhFbewJryBGqCD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI1pz3AAoJEKVg1VMiehFYFTUQAMXGPaS6Ec7oPwiOp2SGm2Om
+o8hTLtj+ZpIkBVdVLrm+gukxsEh3NENUdBHWaRuA5BKeOL8yXzTAFoBxGp6RhJfU
+4wLIY0ju3BQIpnau6a1LIe5PHaQXKUs/B70zfrY7WC+/bEbUCB5cBYklhzIVCtih
+PjSbtE4Ljrv4Mb8AzNVNm6ZKvRZ57HA0gycWirziD5LbbbssIvupIJ3mXA5jtmJ6
+s8ljlkcp2UXT+jTDaFHUeBhzNVYnJQ+M+F2E0ZMW9/v/S5an+dq5zVFqQ7f/Icp5
+Pr6W6ZwGjfx9w+BQuvKMKtT+8UeEuRzAcSFi23x1BVtV776/ZoH9J5t6SnhXZpJ9
+hNCxruP8vdlP9bp6izJlrSNA3qEDhnxwZQqbr1h6e65uzcwNO/d9qTXgzpu0MDpp
+9WX6j6A5VmHTQ2R+YGRXRSRiSKsXa5ADLqcQncMJs7jIgfoHHtXGfleUhy/3JTU4
+iD9rBXh5sHoviIzmtfaj72JGeflPjDOvOWdEBTfL3KuVfVcYN4PaAGAT96yXUwpp
+SB7129nIDLDwbu/mm+7TkIHCRK2q/mvz4e499uiLt6eIhYmopXKmS/+KK7SLRDi1
+nqu3ztZhSJrKceHpjMlgaadVRv3oTi3xADwhsm6sW3xuCko8uJs33jS3m7oN4PuS
+1U9xyn52TP88ON++vREd
+=i2O6
+-----END PGP SIGNATURE-----
+
+--=-P4pWs/jhFbewJryBGqCD--
+
