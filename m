@@ -1,13 +1,11 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:52948 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752533AbYIUX0z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 19:26:55 -0400
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
-	restart.
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Received: from relay.2ka.mipt.ru ([194.85.80.65]:35402 "EHLO 2ka.mipt.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752454AbYIUWIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 18:08:10 -0400
+Date: Mon, 22 Sep 2008 02:07:08 +0400
+From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+To: Denys Fedoryshchenko <denys@visp.net.lb>
 Cc: Arjan van de Ven <arjan@infradead.org>,
 	Johannes Berg <johannes@sipsolutions.net>,
 	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -15,47 +13,34 @@ Cc: Arjan van de Ven <arjan@infradead.org>,
 	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
 	reinette.chatre@intel.com, jgarzik@pobox.com,
 	linville@tuxdriver.com, davem@davemloft.net
-In-Reply-To: <20080921210554.GA2135@2ka.mipt.ru>
-References: <20080921182835.GA11473@2ka.mipt.ru>
-	 <20080921113513.16677c4e@infradead.org>
-	 <20080921190050.GA20484@2ka.mipt.ru>
-	 <1222024444.3023.53.camel@johannes.berg>
-	 <20080921193809.GA8735@2ka.mipt.ru> <20080921124332.67ddc13a@infradead.org>
-	 <20080921202057.GB25052@2ka.mipt.ru>
-	 <20080921132753.5689b564@infradead.org>
-	 <20080921205706.GA24545@2ka.mipt.ru>
-	 <20080921140203.4698a2ee@infradead.org> <20080921210554.GA2135@2ka.mipt.ru>
-Content-Type: text/plain
-Date: Mon, 22 Sep 2008 01:27:47 +0200
-Message-Id: <1222039667.6782.125.camel@californication>
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
+Message-ID: <20080921220708.GA31413@2ka.mipt.ru>
+References: <20080921182835.GA11473@2ka.mipt.ru> <20080921140203.4698a2ee@infradead.org> <20080921210554.GA2135@2ka.mipt.ru> <200809220043.07345.denys@visp.net.lb>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200809220043.07345.denys@visp.net.lb>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Evgeniy,
+On Mon, Sep 22, 2008 at 12:43:07AM +0300, Denys Fedoryshchenko (denys@visp.net.lb) wrote:
+> You are not right. I had totaly disfunctional Intel driver on two laptops and 
+> reported about issue to Intel. Yes it took time, they took all debugs and 
+> went coma mode (i was thinking that), but suddently i got mail from them, and 
+> next kernel/firmware release worked for me flawlessly. So they did perfect 
+> job.
 
-> > > That allows to dump whatever number of warnings you want. The more we
-> > > have, the louder will be customers scream.
-> > 
-> > artificially increasing numbers isn't going to do that; it just shows
-> > you're more interested in making a stink than in getting something
-> > improved ;(
-> 
-> As practice shows, I'm the only one who is interested in getting
-> something improved, and Intel, as we see right now, is not interested in
-> it at all, since you ask me not only decrease error verbosity, but also
-> do not work towards fixing the bug by trying to understand where it
-> lives.
+I'm talking about current situation.
 
-as Arjan and Alan pointed out already, WARN_ON_ONCE is enough and I
-agree with them. Just to make this perfectly clear, this is with my
-community hat on.
+> Don't be negative and prepare yourself for giving long debug outputs. Patience 
+> and only patience.
 
-Please send a proper patch with a simple WARN_ON_ONCE and I am happy to
-sign off on it.
+Just to be clear, did it take 4 years? :)
 
-Regards
+Anyway, I already made conclusions, as probably others: I will
+experiment with different 'workarounds' for this bug, maybe I will
+succeed, maybe Intel will decided to fix it, maybe LHC will crash the
+world. Verbose warning about the bug was frowned upon, so its up to uses
+to make a progress here...
 
-Marcel
-
-
+-- 
+	Evgeniy Polyakov
