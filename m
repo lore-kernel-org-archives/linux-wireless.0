@@ -1,100 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:47442 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbYIFAww (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46236 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752743AbYIUVb3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 20:52:52 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] p54: 32-bit tsf timestamps
-Date: Sat, 6 Sep 2008 02:56:04 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809060256.04842.chunkeey@web.de> (sfid-20080906_025258_255343_C417D6E3)
+	Sun, 21 Sep 2008 17:31:29 -0400
+Subject: Re: [PATCH v3] mac80211: mesh portal functionality support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	Yanbo Li <dreamfly281@gmail.com>
+In-Reply-To: <445f43ac0809211031k310bd226x3b0b19e15846ba38@mail.gmail.com> (sfid-20080921_193219_897330_61ECA379)
+References: <1222003802.3023.26.camel@johannes.berg>
+	 <445f43ac0809211031k310bd226x3b0b19e15846ba38@mail.gmail.com>
+	 (sfid-20080921_193219_897330_61ECA379)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jJasGcEu9qrxFIVbxkdy"
+Date: Sun, 21 Sep 2008 23:31:22 +0200
+Message-Id: <1222032682.3023.59.camel@johannes.berg> (sfid-20080921_233144_000425_889CB04B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-tcpdump:
-02:15:42.874518 61112184us tsft 48.0 Mb/s 2437 MHz (0x0480) antenna 1 [0x0000000e] CF +QoS Data IV
-02:15:42.874557 >>>4356079526us<<< tsft 24.0 Mb/s 2437 MHz (0x0480) antenna 1 [0x0000000e] Acknowledgment 
-02:15:42.976844 61214513us tsft 1.0 Mb/s 2437 MHz (0x0480) antenna 0 [0x0000000e] Beacon
+--=-jJasGcEu9qrxFIVbxkdy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-as one can see on the huge jump, it's very plausible that firmware does not report the
-full 64-bit mac time, just the lower 32bit and some kinds of flags... 
-Therefore if we want a useful timestamp we have to emulate the high bits.
- 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-John,
 
-these are the last patches with new features for longer time for wireless-next.
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-09-04 11:58:24.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-09-05 21:02:22.000000000 +0200
-@@ -426,10 +426,12 @@ EXPORT_SYMBOL_GPL(p54_parse_eeprom);
- 
- static int p54_rx_data(struct ieee80211_hw *dev, struct sk_buff *skb)
+> > +/* Mesh extent address flags */
+> > +#define MESH_DATA_NO_EADDR     0x0
+> > +#define MESH_DATA_EADD1_EADD2  0x2
+>=20
+> Just for consistency with the draft I suggest adding/renaming:
+>=20
+> #define MESH_AE_ADD4                         0x1
+> #define MESH_AE_ADD5_ADD6              0x2
+> #define MESH_AE_ADD4_ADD5_ADD6  0x3
+
+Actually, now that I look at it, should we just define
+
+#define MESH_FLAGS_AE_A4     0x1
+#define MESH_FLAGS_AE_A5_A6  0x2
+#define MESH_FLAGS_PS_DEEP   0x4
+
+
+> > +                       if (meshdr->flags =3D=3D MESH_DATA_EADD1_EADD2)=
  {
-+	struct p54_common *priv = dev->priv;
- 	struct p54_rx_hdr *hdr = (struct p54_rx_hdr *) skb->data;
- 	struct ieee80211_rx_status rx_status = {0};
- 	u16 freq = le16_to_cpu(hdr->freq);
- 	size_t header_len = sizeof(*hdr);
-+	u32 tsf32;
- 
- 	rx_status.signal = hdr->rssi;
- 	/* XX correct? */
-@@ -438,7 +440,13 @@ static int p54_rx_data(struct ieee80211_
- 	rx_status.freq = freq;
- 	rx_status.band = IEEE80211_BAND_2GHZ;
- 	rx_status.antenna = hdr->antenna;
--	rx_status.mactime = le64_to_cpu(hdr->timestamp);
-+
-+	tsf32 = le32_to_cpu(hdr->tsf32);
-+	if (tsf32 < priv->tsf_low32)
-+		priv->tsf_high32++;
-+	rx_status.mactime = ((u64)priv->tsf_high32) << 32 | tsf32;
-+	priv->tsf_low32 = tsf32;
-+
- 	rx_status.flag |= RX_FLAG_TSFT;
- 
- 	if (hdr->magic & cpu_to_le16(0x4000))
-@@ -1037,6 +1045,7 @@ static void p54_stop(struct ieee80211_hw
- 	while ((skb = skb_dequeue(&priv->tx_queue)))
- 		kfree_skb(skb);
- 	priv->stop(dev);
-+	priv->tsf_high32 = priv->tsf_low32 = 0;
- 	priv->mode = IEEE80211_IF_TYPE_INVALID;
- }
- 
-diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
---- a/drivers/net/wireless/p54/p54common.h	2008-09-03 21:53:40.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.h	2008-09-04 14:42:49.000000000 +0200
-@@ -185,7 +185,8 @@ struct p54_rx_hdr {
- 	u8 rssi;
- 	u8 quality;
- 	u16 unknown2;
--	__le64 timestamp;
-+	__le32 tsf32;
-+	__le32 unalloc0;
- 	u8 align[0];
- } __attribute__ ((packed));
- 
-diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
---- a/drivers/net/wireless/p54/p54.h	2008-09-03 21:41:19.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54.h	2008-09-04 14:43:07.000000000 +0200
-@@ -87,6 +87,8 @@ struct p54_common {
- 	void *cached_vdcf;
- 	unsigned int fw_var;
- 	unsigned int fw_interface;
-+	u32 tsf_low32;
-+	u32 tsf_high32;
- 	struct ieee80211_tx_queue_stats tx_stats[8];
- 	void *eeprom;
- 	struct completion eeprom_comp;
+
+> > +       if (mesh_hdr->flags =3D=3D MESH_DATA_EADD1_EADD2){
+>=20
+> There are other assigned and reserved bits in the flags field.  It's
+> probably better to do...
+
+and then in these two places use
+
+if (..->flags & MESH_FLAGS_AE_A5_A6)
+
+?
+
+It seems to me that these are actually defined bitwise, 0x1 indicates A4
+is in the AE and 0x2 indicates A5 and A6 are present.
+
+johannes
+
+--=-jJasGcEu9qrxFIVbxkdy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI1r0mAAoJEKVg1VMiehFYA0IP/jyPzbh0NG21ZYyv4CjBrUut
+sUi/AIFtnm3/jLAPpeXjTuonsfYTgWCNQlgeBGpQfu3rtkmq+g6U7+nzxljnFqYy
+lALoK3sSMfJyUelntOGPhcC/h+n0s0XgWJqkgfWabnIiR7tUZGHocJZlhpcG2zA6
+vH8fxbSQhuKQnVYT+vDtQj3Iz73wQb+JJ6d4sa8ipvRPO1aS1yhV4JymGRgUuBw0
+zGKSISc3/cvBYSbdkKfHNQqiMrUHjerbbYjLjk6N2RHwHzrutiO0/mRwGCwv8zOJ
+/Ie3bVq9y3/rGBoGjv0vXxAn+I2+pywGcEzKQGwNC688CiWjb+qvbqOQSfdlD0V/
+dva5uy4p8g8I9QvxDqHX4D1F1lSQMtfWOTXqqzQErAlF4Rg2tUEDnNtQLZgKzBFz
+81YB0gBxdoE8YNq+97uetumQvT351tRwQwleuLIQ/9coF4joKYxA7oJr1W5SP1W/
+PzRqBNSxPydxWOegBXe1Lf8i60acHLAM2zsPpjZ/ktvPZJQiKak/wume1LTIG83B
+XUkRWN0KGtNTK6p0nLtMmHUUWlMhl2f4zGv37djYklX2Y8yLCB7v0zjw8mIkPblm
+raxLx1MM11MdsJXhE4YZ7kY6ayxzdGyTuFC9cos6prVSwtQyDPvxvpWwvphJ2BYl
+d2I0+PwNiwD1tOHQHDEd
+=ltfa
+-----END PGP SIGNATURE-----
+
+--=-jJasGcEu9qrxFIVbxkdy--
 
