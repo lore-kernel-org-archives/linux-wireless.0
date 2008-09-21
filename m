@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:7597 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751618AbYISLpE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 07:45:04 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so538533fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 04:45:03 -0700 (PDT)
-Message-ID: <1ba2fa240809190445v370ee80dk316d3b474db86132@mail.gmail.com> (sfid-20080919_134513_465236_A03C9782)
-Date: Fri, 19 Sep 2008 14:45:03 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: technology preview: scan with cfg80211
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Dan Williams" <dcbw@redhat.com>
-In-Reply-To: <1221820966.10419.81.camel@johannes.berg>
+Received: from bu3sch.de ([62.75.166.246]:46542 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750831AbYIURgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 13:36:49 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
+Date: Sun, 21 Sep 2008 19:36:00 +0200
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+References: <20080921172316.GA6306@2ka.mipt.ru>
+In-Reply-To: <20080921172316.GA6306@2ka.mipt.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1221794329.10419.9.camel@johannes.berg>
-	 <1221795715.10419.15.camel@johannes.berg>
-	 <1ba2fa240809190103i69c66978he4762fd350ab2e5d@mail.gmail.com>
-	 <1221814565.10419.19.camel@johannes.berg>
-	 <1ba2fa240809190337ke17d2aanaca6d0f194b11f03@mail.gmail.com>
-	 <1221820966.10419.81.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809211936.00414.mb@bu3sch.de> (sfid-20080921_193654_426660_E511CA09)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 1:42 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2008-09-19 at 13:37 +0300, Tomas Winkler wrote:
->
->> > Hey, unfair! ;) I did leave a lot of TODOs but this wasn't one of them.
->> > You can provide a channel list and it'll scan only those (except hw scan
->> > right now but that'll be fixed once we pass the scan request struct
->> > through)
->>
->> Agree, this would be the correct approach.
->
-> Yeah, but I pulled this together in about five hours :)
->
-> Wrt. the SSIDs, how many SSIDs do you think we should allow scanning for
-> at the same time? Three? Four? Five? I was thinking something like that,
-> sending out more probe requests is probably not too great an idea.
+On Sunday 21 September 2008 19:23:17 Evgeniy Polyakov wrote:
+> Hi.
+> 
+> Following bug exists in the ipw2100 driver/firmware for years and Intel
+> folks never responded to zillions bugzilla entries and forum notices in
+> the internet with some patch or firmware update (although did request
+> dmesg and debug info, and received them).
+> 
+> ipw2100: Fatal interrupt. Scheduling firmware restart.
+> 
+> I believe it is a firmware bug because after driver is unloaded and
+> loaded back again wireless adapter usually starts working (for small
+> amount of time though). My conspiracy feeling can suggest, that it may
+> be kind of a force to buy a new one, or trivial error in the firmware,
+> when it writes to the same place in the flash and essentially given cell
+> became dead or whatever else.
+> 
+> Intel folks, please fix this problem, I see no other way to force you to do
+> this than to mark ipw2100 driver as broken, since that is what it is.
 
-iwlwifi  HW is able to issue 10 probes per channel in a single scan.
-Empirically this probably maximum of networks/SSIDs an average user
-will be interested in.   But we can go with less for example 5  probes
-per scan if we for example round robin SSID list in background scans.
-This number are based on user feedback we've been collecting for few
-years. For example 2 years ago it was increased from 5 to 10 according
-to user feedback.
- As I understand the second approach is better as it lowers collisions
-on the air and is more flexible as it's not dependent on HW limitation
-(10 in iwlwifi) but requires more book keeping.
+You are pretty funny, actually. :)
 
-> guess we would set the default to something we decide on in mac80211's
-> alloc_hw and the driver gets to overwrite it if it has hw scan offload.
+I think the bug should be fixed, but what makes _you_ think you can _force_
+anybody to do so?
 
-Sounds good.
+> Signed-off-by: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+> 
+> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> index 9931b5a..c24fc6a 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -125,7 +125,7 @@ config PCMCIA_RAYCS
+>  
+>  config IPW2100
+>  	tristate "Intel PRO/Wireless 2100 Network Connection"
+> -	depends on PCI && WLAN_80211
+> +	depends on PCI && WLAN_80211 && BROKEN
+>  	select WIRELESS_EXT
+>  	select FW_LOADER
+>  	select IEEE80211
+> 
 
-Tomas
+
+
+-- 
+Greetings Michael.
