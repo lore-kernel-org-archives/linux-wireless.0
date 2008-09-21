@@ -1,32 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58822
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753773AbYIWBlh (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52887 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777AbYIUVel (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 21:41:37 -0400
-Date: Mon, 22 Sep 2008 18:41:25 -0700 (PDT)
-Message-Id: <20080922.184125.147225416.davem@davemloft.net> (sfid-20080923_034142_081472_3834D6E2)
-To: tomas.winkler@intel.com
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	emmanuel.grumbach@intel.com
-Subject: Re: [PATCH 1/1] iwlwifi 2.6.27: send all the calibration results
- instead of the last one only
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1222128868-16763-1-git-send-email-tomas.winkler@intel.com>
-References: <1222128868-16763-1-git-send-email-tomas.winkler@intel.com>
+	Sun, 21 Sep 2008 17:34:41 -0400
+Subject: Re: [PATCH v3] mac80211: mesh portal functionality support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Javier Cardona <javier@cozybit.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	Yanbo Li <dreamfly281@gmail.com>
+In-Reply-To: <1222003802.3023.26.camel@johannes.berg> (sfid-20080921_153022_013249_40F33585)
+References: <1222003802.3023.26.camel@johannes.berg>
+	 (sfid-20080921_153022_013249_40F33585)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hPZeDvrkZxCN7rgWPt4q"
+Date: Sun, 21 Sep 2008 23:34:37 +0200
+Message-Id: <1222032877.3023.61.camel@johannes.berg> (sfid-20080921_233446_687428_68CDC098)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
-Date: Tue, 23 Sep 2008 03:14:28 +0300
 
-> Note this patch effects only 5000 HW (nor 3946 or 4965) so doesn't
-> resolve or create any regression. Anyhow it was thoroughly tested.
+--=-hPZeDvrkZxCN7rgWPt4q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-You haven't learned the first time.
+On Sun, 2008-09-21 at 15:30 +0200, Johannes Berg wrote:
+>=20
+> +                       u8 broadcast[ETH_ALEN] =3D {0xFF, 0xFF, 0xFF,
+> +                                                 0xFF, 0xFF, 0xFF};
 
-This kind of stuff is not appropriate outside of the merge window, I'm
-not pulling this change into my tree if John tries to send it to me.
+One more thing, heh, this can be static const.
+
+johannes
+
+--=-hPZeDvrkZxCN7rgWPt4q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI1r3qAAoJEKVg1VMiehFYmxUP+gNhft2l+nPYbcNJ5j450mDX
+8BygVaImdXyhM5HqDMNxIYSV39aDMjCa0hnTc2CLOgeZ6OzItlNQRoUdsY5wAJsu
+TXaw5uj0i+wI86RoU7VOkEnqJLG/9IyEFVJQi8pxqoo8EaEUrNRU688qdWo3feVL
+xeC43ULa1SaBurQowHbhRKIgSu+KSnQ+6RLpr9VgC+EpiU1gJLvGrLUKU8LLDxNc
+O7vaoG3Fm6hC5+VVORye5Vm5K65Rp3pcShw23ee95E0Y165pdmmWSC8qJzY02YwU
+iS7O17R417fyOpfS76GnuDO6k6zcfTJL4dpkfKrgQN+uTty92uLspeM3qLglt30S
+W85yTrbFaXbwDAedHCh+0qZdRtR4XWCX+KDFC7yCKR/dc19mHldxfj4DOKLHQXCC
+fpGz/YaE02VgdLYXin+dDFOUTINjmsrVkkuxiGnY/cjaq+hkuf5p55h8+RtXj2Iq
+d+Pzin8nKS5yWx4u05vducKOLcgGDLcbBDfVJKlv5Mtxr8qUxNMu+37kZqtRywgS
+rIoNjkmP7TtQ65NR1jTHfAwOsB0wk7UU66AXa1OEZYqQTe1mXYDaV7fN6hFWBVPL
+VHi1goOHlDqjlTP5b22OWPzdpr7odtBvTl8g6/Ao8buGuaDBy/Xqg6dgfYC2dA4d
+puH/C/aju1+IT+QQSzy1
+=bO+I
+-----END PGP SIGNATURE-----
+
+--=-hPZeDvrkZxCN7rgWPt4q--
+
