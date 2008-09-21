@@ -1,46 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39767 "EHLO mail.atheros.com"
+Received: from relay.2ka.mipt.ru ([194.85.80.65]:44914 "EHLO 2ka.mipt.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751225AbYIVGy4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 02:54:56 -0400
-Date: Sun, 21 Sep 2008 23:54:53 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Steven Noonan <steven@uplinklabs.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Ingo Molnar <mingo@elte.hu>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
-	(rc5, rc6, probably others)
-Message-ID: <20080922065453.GD19580@tesla> (sfid-20080922_085501_231996_815879C3)
-References: <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com> <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com> <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com> <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com> <1221944338.3023.8.camel@johannes.berg> <43e72e890809201403w2c4511fdv2fe26bbcf49ccdd7@mail.gmail.com> <f488382f0809201422rdabeff4g435bf3d4a7e9fa3@mail.gmail.com> <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com> <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com> <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
+	id S1752460AbYIUVIL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 17:08:11 -0400
+Date: Mon, 22 Sep 2008 01:06:49 +0400
+From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+To: Cyrill Gorcunov <gorcunov@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arjan van de Ven <arjan@infradead.org>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
+Message-ID: <20080921210649.GB2135@2ka.mipt.ru> (sfid-20080921_230816_219946_D5FC0FE3)
+References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org> <20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org> <20080921190050.GA20484@2ka.mipt.ru> <1222024444.3023.53.camel@johannes.berg> <20080921193809.GA8735@2ka.mipt.ru> <20080921200518.GK7736@localhost> <20080921202656.GC25052@2ka.mipt.ru> <20080921203503.GL7736@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080921203503.GL7736@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 20, 2008 at 06:48:05PM -0700, Steven Noonan wrote:
-> 
-> OK, here's the time index at which it b0rked:
-> 
-> 18:28:42          sum   1155.00
-> 18:28:43          sum   1339.00
-> 18:28:44          sum  18355.00
-> 18:28:45          sum  17845.45
-> 
-> And the entire log of the minute 18:28 is here:
-> http://www.uplinklabs.net/~tycho/linux/18.28.00-59.log.gz
-> 
-> It looks pretty crazy.
+On Mon, Sep 22, 2008 at 12:35:03AM +0400, Cyrill Gorcunov (gorcunov@gmail.com) wrote:
+> yes Evgeniy - all could know that but this register info could help
+> firmware engineers to distinguish problems (without additional efforts
+> like ask users to pass debug argument - kerneloops will have it
+> by default) if there not only one exist. I mean I don't think anyone
+> would reject additional info about problem ever :)
 
-Thanks, I'll take a look when I get a chance (remember aggretion
-is in the queue too) unless someone beats me to it. Asking in advance
--- if you can also provide a log of minutes 43, 44 and 45 that would
-be great, but this may just be enough.
+Agreed.
 
-  Luis
+diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
+index 19a401c..36cdd57 100644
+--- a/drivers/net/wireless/ipw2100.c
++++ b/drivers/net/wireless/ipw2100.c
+@@ -206,6 +206,9 @@ MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
+ 
+ static u32 ipw2100_debug_level = IPW_DL_NONE;
+ 
++static int ipw2100_max_fatal_ints = 10;
++module_param(ipw2100_max_fatal_ints, int, 0644);
++
+ #ifdef CONFIG_IPW2100_DEBUG
+ #define IPW_DEBUG(level, message...) \
+ do { \
+@@ -3174,16 +3177,21 @@ static void ipw2100_irq_tasklet(struct ipw2100_priv *priv)
+ 	if (inta & IPW2100_INTA_FATAL_ERROR) {
+ 		printk(KERN_WARNING DRV_NAME
+ 		       ": Fatal interrupt. Scheduling firmware restart.\n");
++
++		printk(KERN_WARNING DRV_NAME ": INTA: 0x%08lX\n",
++			(unsigned long)inta & IPW_INTERRUPT_MASK);
++
+ 		priv->inta_other++;
+ 		write_register(dev, IPW_REG_INTA, IPW2100_INTA_FATAL_ERROR);
+ 
+ 		read_nic_dword(dev, IPW_NIC_FATAL_ERROR, &priv->fatal_error);
+-		IPW_DEBUG_INFO("%s: Fatal error value: 0x%08X\n",
++		printk(KERN_WARNING "%s: Fatal error value: 0x%08X\n",
+ 			       priv->net_dev->name, priv->fatal_error);
+ 
+ 		read_nic_dword(dev, IPW_ERROR_ADDR(priv->fatal_error), &tmp);
+-		IPW_DEBUG_INFO("%s: Fatal error address value: 0x%08X\n",
++		printk(KERN_WARNING "%s: Fatal error address value: 0x%08X\n",
+ 			       priv->net_dev->name, tmp);
++		WARN_ON(ipw2100_max_fatal_ints-- >= 0);
+ 
+ 		/* Wake up any sleeping jobs */
+ 		schedule_reset(priv);
+
+
+-- 
+	Evgeniy Polyakov
