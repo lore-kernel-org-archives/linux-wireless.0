@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:41357 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752482AbYIUWpM (ORCPT
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58234 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752495AbYIUWlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 18:45:12 -0400
-Date: Sun, 21 Sep 2008 23:45:06 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Evgeniy Polyakov <johnpol@2ka.mipt.ru>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
+	Sun, 21 Sep 2008 18:41:06 -0400
+Date: Sun, 21 Sep 2008 23:38:19 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net,
 	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
 	reinette.chatre@intel.com, jgarzik@pobox.com,
 	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921224506.GB24461@srcf.ucam.org>
-References: <20080921172316.GA6306@2ka.mipt.ru> <1222025731.6782.117.camel@californication>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1222025731.6782.117.camel@californication>
+Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
+ restart.
+Message-ID: <20080921233819.32714483@lxorguk.ukuu.org.uk>
+In-Reply-To: <20080921205706.GA24545@2ka.mipt.ru>
+References: <20080921172316.GA6306@2ka.mipt.ru>
+	<20080921110422.1d010b96@infradead.org>
+	<20080921182835.GA11473@2ka.mipt.ru>
+	<20080921113513.16677c4e@infradead.org>
+	<20080921190050.GA20484@2ka.mipt.ru>
+	<1222024444.3023.53.camel@johannes.berg>
+	<20080921193809.GA8735@2ka.mipt.ru>
+	<20080921124332.67ddc13a@infradead.org>
+	<20080921202057.GB25052@2ka.mipt.ru>
+	<20080921132753.5689b564@infradead.org>
+	<20080921205706.GA24545@2ka.mipt.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 21, 2008 at 09:35:31PM +0200, Marcel Holtmann wrote:
+> > still more complex than needed; a WARN_ON_ONCE() will be enough.
+> 
+> That allows to dump whatever number of warnings you want. The more we
+> have, the louder will be customers scream.
 
-> I don't know if it is for this bug or a different one, but Matthew
-> Garrett seem to have some pending patches. At least that is what he told
-> me at PlumbersConf. Lets see if these patches do help. And please follow
-> up with Arjan's suggestion and put a WARN_ON in the upstream code
-> instead of waving CONFIG_BROKEN around.
+But if Intel don't care then you can scream all you like 8)
 
-The fix I had for this was actually for ipw2200, but it ought to be 
-applicable for 2100 as well. The ideal fix is probably to ensure that 
-ipw*_down D3s the card and *_up D0s it, which brings enhanced runtime 
-power saving and also has the nice side effect of actually resetting the 
-damned POS in error cases.
+A WARN_ON_ONCE is sufficient to capture an idea of how many people it is
+effecting and maybe to figure out what the trigger is from their reports,
+at that point there is some chance to get it fixed (especially if its
+remotely triggerable ;))
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Alan
