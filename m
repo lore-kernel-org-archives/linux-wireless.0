@@ -1,61 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:35838 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751352AbYICJXu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 05:23:50 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2137660fkq.5
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2008 02:23:48 -0700 (PDT)
-Message-ID: <1ba2fa240809030223m56ce47aqf9f41fab7d3453ca@mail.gmail.com> (sfid-20080903_112355_739239_63D4237F)
-Date: Wed, 3 Sep 2008 12:23:48 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcel Holtmann" <holtmann@linux.intel.com>
-Subject: Re: [PATCH 4/9] iwlwifi: generic init calibrations framework
-Cc: "David Miller" <davem@davemloft.net>, yi.zhu@intel.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	emmanuel.grumbach@intel.com
-In-Reply-To: <1220429411.6714.17.camel@californication>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1220411930-15216-3-git-send-email-yi.zhu@intel.com>
-	 <1220411930-15216-4-git-send-email-yi.zhu@intel.com>
-	 <1220411930-15216-5-git-send-email-yi.zhu@intel.com>
-	 <20080902.203634.127434142.davem@davemloft.net>
-	 <1220429411.6714.17.camel@californication>
+Received: from relay.2ka.mipt.ru ([194.85.80.65]:49281 "EHLO 2ka.mipt.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751462AbYIURYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 13:24:16 -0400
+Date: Sun, 21 Sep 2008 21:23:17 +0400
+From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+To: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, jgarzik@pobox.com,
+	linville@tuxdriver.com, davem@davemloft.net
+Subject: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
+Message-ID: <20080921172316.GA6306@2ka.mipt.ru> (sfid-20080921_192421_701863_F482AADC)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 3, 2008 at 11:10 AM, Marcel Holtmann
-<holtmann@linux.intel.com> wrote:
-> Hi Tomas,
->
->> > This patch fixes a critical bug that only the last calibration result
->> > was applied. On reception of one calibration result all the calibration
->> > results were freed therefore only last was applied. The patch fixes this
->> > problem by introducing a generic init calibration framework which allows
->> > variable number of init calibrations and allows addition new HW.
->> >
->> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
->>
->> This is borderline, I would rather hold off on such a sizable change
->> for 2.6.27 as I'll have a hard time justifying it.
->
-> do you see any way for fixing (or improving) this with the current code
-> and hold the whole framework change off until the next merge window.
->
-> Maybe instead of iwl_free_calib_results(priv); just freeing them
-> individually in their case statements.
-> You know the hardware better than I do, but that should just work
-> (judging from the code).
->
-> Regards
->
-> Marcel
+Hi.
 
-In general it's possible, but we've already tested this fix. Because
-this is sensitive, even if the code looks okay I cannot approve it
-until we run the whole validation cycle and measurements in the lab so
-it will take some time. Last time we broke it code also looked good :)
-Tomas
+Following bug exists in the ipw2100 driver/firmware for years and Intel
+folks never responded to zillions bugzilla entries and forum notices in
+the internet with some patch or firmware update (although did request
+dmesg and debug info, and received them).
+
+ipw2100: Fatal interrupt. Scheduling firmware restart.
+
+I believe it is a firmware bug because after driver is unloaded and
+loaded back again wireless adapter usually starts working (for small
+amount of time though). My conspiracy feeling can suggest, that it may
+be kind of a force to buy a new one, or trivial error in the firmware,
+when it writes to the same place in the flash and essentially given cell
+became dead or whatever else.
+
+Intel folks, please fix this problem, I see no other way to force you to do
+this than to mark ipw2100 driver as broken, since that is what it is.
+
+Bug exists at least in .15 upto .24 kernels, just search above dmesg
+line. I cought it with 2.6.24-19-386 ubuntu kernel, 1.3 firmware
+version. lspci:
+
+02:04.0 Network controller: Intel Corporation PRO/Wireless LAN 2100 3B Mini PCI Adapter (rev 04)
+	Subsystem: Intel Corporation Samsung X10/P30 integrated WLAN
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 64 (500ns min, 8500ns max), Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 11
+	Region 0: Memory at 90080000 (32-bit, non-prefetchable) [size=4K]
+	Capabilities: [dc] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 PME-Enable- DSel=0 DScale=1 PME-
+
+dmesg is pretty usual.
+
+Signed-off-by: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 9931b5a..c24fc6a 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -125,7 +125,7 @@ config PCMCIA_RAYCS
+ 
+ config IPW2100
+ 	tristate "Intel PRO/Wireless 2100 Network Connection"
+-	depends on PCI && WLAN_80211
++	depends on PCI && WLAN_80211 && BROKEN
+ 	select WIRELESS_EXT
+ 	select FW_LOADER
+ 	select IEEE80211
+
+-- 
+	Evgeniy Polyakov
