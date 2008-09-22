@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756498AbYIKAAe (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:49400 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754219AbYIVV7k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 20:00:34 -0400
-Subject: sta_info->fail_avg
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-H/ZuSkIzQXUEsLwir0PE"
-Date: Thu, 11 Sep 2008 01:59:58 +0200
-Message-Id: <1221091198.3804.55.camel@johannes.berg> (sfid-20080911_020052_308297_5283E89D)
-Mime-Version: 1.0
+	Mon, 22 Sep 2008 17:59:40 -0400
+From: Chr <chunkeey@web.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: prism54 stopped working after upgrade from kernel 2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
+Date: Mon, 22 Sep 2008 23:59:40 +0200
+Cc: Philippe Waroquiers <philippe.waroquiers@skynet.be>,
+	linux-wireless@vger.kernel.org
+References: <CB9B2237C21D46F3B852E45F75E91C52@soleil> <200809222332.00500.chunkeey@web.de> <1221947069.11865.11.camel@localhost.localdomain>
+In-Reply-To: <1221947069.11865.11.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200809222359.40354.chunkeey@web.de> (sfid-20080922_235950_863585_299DAED8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 20 September 2008 23:44:29 Dan Williams wrote:
+> On Mon, 2008-09-22 at 23:32 +0200, Chr wrote:
+> > > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=co
+> > > >mmit ;h=aaa1553512b9105699113ea7e2ea726f3d9d4de2
+> > >
+> > > Is that commit not in stable 2.6.26 yet or something?
+> >
+> > Hmm, no? AFAIK The mac80211 multiqueue changes went in somewhere in the
+> > 2.6.27-rc cycle. so 2.6.26.stable doesn't need any extra patches, right?
+>
+> Ah yeah right; I guess I don't understand the link you posted then.  I'd
+> thought it was something like "you need this patch which Fedora doesn't
+> have in their kernel".
+Hmm? I though fedora backported multiqueue back into their 2.6.26?
 
---=-H/ZuSkIzQXUEsLwir0PE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Atleast, the original (but with a buggy p54) multiqueue patch seems to be in 
+the linux-wirless-2.6-pending.diff/patch file... but this fix is nowhere to 
+be found inside fedora's kernel source?
 
-Hi Luis,
+So, Dan? can you add that patch to the next fedora's 2.6.26 kernel release? 
 
-Can you explain what you're using this for in the mesh code? I can't
-figure it out, but I do know that neither ath9k's nor Intel's rate
-control algorithms ever set it so it'll always be zero.
+Regards,
+	Chr
 
-johannes
-
---=-H/ZuSkIzQXUEsLwir0PE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIyF97AAoJEKVg1VMiehFYfxUP/A4aZKFI5zdQN8xdjz1MgN3O
-IsUGjBSYWvkPZ3pq8p1mqDTJlTK/78V4m6MpM2ERgoV97uQ2bmuDrWqNQCCI1PRV
-R+rG76SOH0v5mF8KFbnj7Lcg1yHJtCT6iSej9/0nuYys/h47Ss/WqiOUu727G7OP
-5cGGpXVx3FRaVN02aqYX5JyD3pTeQ7aLKHISF6hUeOvLrNAyhSQITXUvwoGtFeMY
-GJC0rIAHCL/8ACjs8kevj9NXaoEzQcFnYk/Cm0WDJNnOGJBPSNtTFY3wg4TyVDYS
-24nScRA8oGy5myNz5057nUWzSl/puxpdgK51kawCI5Pvo8f7mx7QTOgL+BsInNje
-X3UD0/SfoDzovBYxtKdzAkE7iCnNHuhQrf2MetoGaET83YN2sygwnC89Xy03E6Ln
-XB0SluPnj66IlULf+8WgN8Qzz0tttsUItG/DaNCgZFe1sGfqDP61eq9P0PVEJKPw
-BNFhjw2cklWJnIA8Jv8l5T0uLT9ztL9i0bNWq8ekt7ZNgpeonywKt+REhbuL1Cxl
-YOs0ODeIUWtJVeJ04/ky0QX+PiMShNgQcKWeKLZXkBqIVJb8CRCNg9EqOM0jdlEJ
-3SfvOD/3QWqCpCpQRv955VzuqDbsTxbchbm0NLJO8jdmA3T83W9q1QBYYcvNZnDf
-Vt6PSUeBfRt17Ymxiqs3
-=yuXg
------END PGP SIGNATURE-----
-
---=-H/ZuSkIzQXUEsLwir0PE--
 
