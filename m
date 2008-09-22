@@ -1,50 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.globalproof.net ([194.146.153.25]:32980 "EHLO
-	relay2.globalproof.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636AbYIUWRr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 18:17:47 -0400
-From: Denys Fedoryshchenko <denys@visp.net.lb>
+Received: from l2mail1.panix.com ([166.84.1.75]:59406 "EHLO l2mail1.panix.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751036AbYIVQ1p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 12:27:45 -0400
+Date: Mon, 22 Sep 2008 09:21:51 -0700 (PDT)
+From: Kenneth Crudup <kenny@panix.com>
 To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Date: Mon, 22 Sep 2008 00:43:07 +0300
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-References: <20080921182835.GA11473@2ka.mipt.ru> <20080921140203.4698a2ee@infradead.org> <20080921210554.GA2135@2ka.mipt.ru>
-In-Reply-To: <20080921210554.GA2135@2ka.mipt.ru>
+cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jgarzik@pobox.com, davem@davemloft.net
+Subject: Re: [Ipw2100-devel] Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling
+ firmware restart.
+In-Reply-To: <20080921172316.GA6306@2ka.mipt.ru>
+Message-ID: <Pine.LNX.4.64.0809220920100.16493@hp9800.localdomain>
+References: <20080921172316.GA6306@2ka.mipt.ru>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809220043.07345.denys@visp.net.lb>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 September 2008, Evgeniy Polyakov wrote:
-> On Sun, Sep 21, 2008 at 02:02:03PM -0700, Arjan van de Ven 
-(arjan@infradead.org) wrote:
-> > > That allows to dump whatever number of warnings you want. The more we
-> > > have, the louder will be customers scream.
-> >
-> > artificially increasing numbers isn't going to do that; it just shows
-> > you're more interested in making a stink than in getting something
-> > improved ;(
->
-> As practice shows, I'm the only one who is interested in getting
-> something improved, and Intel, as we see right now, is not interested in
-> it at all, since you ask me not only decrease error verbosity, but also
-> do not work towards fixing the bug by trying to understand where it
-> lives.
 
-You are not right. I had totaly disfunctional Intel driver on two laptops and 
-reported about issue to Intel. Yes it took time, they took all debugs and 
-went coma mode (i was thinking that), but suddently i got mail from them, and 
-next kernel/firmware release worked for me flawlessly. So they did perfect 
-job.
+I gotta admit, those "firmware restarts" were pretty annoying, and I'd
+always wondered why Intel themselves couldn't be bothered to fix 'em.
 
-Don't be negative and prepare yourself for giving long debug outputs. Patience 
-and only patience.
+	-Kenny
+
+-- 
+Kenneth R. Crudup  Sr. SW Engineer, Scott County Consulting, Los Angeles
+O: 3630 S. Sepulveda Blvd. #138, L.A., CA 90034-6809      (888) 454-8181
