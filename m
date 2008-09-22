@@ -1,74 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47117 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490AbYITVDA (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:47220 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbYIVPbj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 17:03:00 -0400
-Subject: Re: [PATCH] b43: Fix Bluetooth coexistence SPROM coding error for
-	Motorola 7010 variant of BCM4306
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, bbullins@triad.rr.com,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <43e72e890809201359kb65f3d3qb618129ae6b528f4@mail.gmail.com> (sfid-20080920_225942_127028_DB247EB0)
-References: <48d401da.Q+F4HRESoxeIVa3r%Larry.Finger@lwfinger.net>
-	 <200809201744.55571.mb@bu3sch.de> <1221943895.3023.1.camel@johannes.berg>
-	 <43e72e890809201359kb65f3d3qb618129ae6b528f4@mail.gmail.com>
-	 (sfid-20080920_225942_127028_DB247EB0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-o+kXQtgoo531ZIqdF8hP"
-Date: Sat, 20 Sep 2008 23:02:55 +0200
-Message-Id: <1221944575.3023.10.camel@johannes.berg> (sfid-20080920_230304_164973_0E721979)
-Mime-Version: 1.0
+	Mon, 22 Sep 2008 11:31:39 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1400628fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 08:31:37 -0700 (PDT)
+Message-ID: <1ba2fa240809220831q46cea34cq13d73d7a98f876b5@mail.gmail.com> (sfid-20080922_173143_383202_D86D0CB6)
+Date: Mon, 22 Sep 2008 18:31:37 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] mac80211: fix led behavior in IBSS
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1222096710.3023.85.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1222092610-25374-1-git-send-email-tomas.winkler@intel.com>
+	 <1222095543.3023.83.camel@johannes.berg>
+	 <1ba2fa240809220812v2d91bb18k4b78072fffd85e2c@mail.gmail.com>
+	 <1222096710.3023.85.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Sep 22, 2008 at 6:18 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-09-22 at 18:12 +0300, Tomas Winkler wrote:
+>> On Mon, Sep 22, 2008 at 5:59 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Mon, 2008-09-22 at 17:10 +0300, Tomas Winkler wrote:
+>> >> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> >>
+>> >> This patch fixes the led behavior in IBSS. After we joined an IBSS cell we
+>> >> need to inform the led that we got associated. Although there is no 802.11
+>> >> association in IBSS mode, the semantic of "There is a link" is relevant.
+>> >> This allows the led to blink in IBSS mode (at least this solves a bug for
+>> >> iwlwifi).
+>> >
+>> > Doesn't it also have to be turned off again at some point? Or is that
+>> > done? Other than that looks fine to me.
+>>
+>> I've asked my self the same question  the answer is not clear. We
+>> switch the led off on close/ifdown by radio led trigger.
+>> Note in IBSS is always connected, carrier is always on if I'm not mistaken.
+>
+> I think you can configure it off though, by setting the "essid" (oh how
+> I hate that) to "off" or something?
 
---=-o+kXQtgoo531ZIqdF8hP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Let see if we hit real world scenario, this patch fixes bug opened for
+long time.
 
-On Sat, 2008-09-20 at 13:59 -0700, Luis R. Rodriguez wrote:
-> On Sat, Sep 20, 2008 at 1:51 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Sat, 2008-09-20 at 17:44 +0200, Michael Buesch wrote:
-> >> On Friday 19 September 2008 21:47:38 Larry Finger wrote:
-> >> > An additional BCM4306 has been found with the Bluetooth coexistence
-> >> > SPROM coding error.
-> >
-> > Does anyone actually make laptops that use these bluetooth coexistence
-> > pins? All CSR bluetooth chips do it automatically I'm told, maybe we
-> > should just kill them completely.
->=20
-> Regardless of the wireless card? Or just for bcm?
+ Not sure, and we can always fix it
+> when we see the problem, I don't really care much about the LEDs, I
+> don't have any.
 
-Well just for b43(legacy), but out of curiosity, does any BT chip use
-these pins anyway? Well I guess _somebody_ has to buy BCMs BT chips,
-but ...
-
-johannes
-
---=-o+kXQtgoo531ZIqdF8hP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI1WT6AAoJEKVg1VMiehFYNQ8P/3KNMxB21wm+hQPoZXK86svb
-hDj5UYisro+a3ArZN2FrBvuRn1U6i5DcRILi+ZQUAxsx7diTgduexlFRTXHwaNiA
-T5fvQzeSi96nKKhaIDphtZQDqquQl7/r59H90P38XtNm8qRl0LjGfmVJmrehiGnz
-QCiOk4sxL2zmuRuCiyyAk6Ae5OGbHCyvAZIr17/9f3cOOyahPDBInN3uti79Ecj7
-PfreTvT3XDEfsN22P1RxjVFWpCl/fllGIzM1mSOmRzst6HM1OIjM7pyD9GFtMDn6
-O7+slulFZu+A2F37kLwR0sKAAGZPIt35hsxr+jPou8eENN5N1Ihwpcnb1pG+GqhE
-O6w9Z8/6zDWdorPhG08R74lfrbv2royTFRCf9YXNahQAjoaVr6tDgnIAK4BvuSuV
-AGDEp8s8olIgitzLC6FcFe1SOHknGXwQshAEzPHOcJhBY8KjPyMyzWZrphG6HPWU
-pRFYhM6b05jQn+Q3zIgDaLnvxgux3dzIP45rya1dyE1BKmYv2phZdQxkFCtJfqAZ
-sN34VGUkoz0GenXfq0juQgoGHMTpoTtt1w12wW6GYThtY1zVdarTqjx0qh4OrTC+
-lVZvWBAcEl1ZsWPxjb0L34oYW+QP5sHLqGt+OknVbFK7t9VE8CzDWijzhMIyoJ3v
-vDlsg4lU8CPLQTci7sfo
-=mFQa
------END PGP SIGNATURE-----
-
---=-o+kXQtgoo531ZIqdF8hP--
-
+Can send you few, just pick a color :)
+Tomas
