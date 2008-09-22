@@ -1,122 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43783 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753122AbYIKUlf (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:46332 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752573AbYIVVcA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 16:41:35 -0400
-Date: Thu, 11 Sep 2008 16:13:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2008-09-11
-Message-ID: <20080911201308.GJ3423@tuxdriver.com> (sfid-20080911_224145_712215_D3F2ED7B)
+	Mon, 22 Sep 2008 17:32:00 -0400
+From: Chr <chunkeey@web.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: prism54 stopped working after upgrade from kernel 2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
+Date: Mon, 22 Sep 2008 23:32:00 +0200
+Cc: Philippe Waroquiers <philippe.waroquiers@skynet.be>,
+	linux-wireless@vger.kernel.org
+References: <CB9B2237C21D46F3B852E45F75E91C52@soleil> <200809222205.28754.chunkeey@web.de> <1221944909.11865.9.camel@localhost.localdomain>
+In-Reply-To: <1221944909.11865.9.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200809222332.00500.chunkeey@web.de> (sfid-20080922_233205_682002_93495589)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+On Saturday 20 September 2008 23:08:29 Dan Williams wrote:
+> On Mon, 2008-09-22 at 22:05 +0200, Chr wrote:
+> > On Monday 22 September 2008 20:38:04 Philippe Waroquiers wrote:
+> > > With the new kernel 2.6.26.3-14.fc8, I see that the prism54 card looks
+> > > in a correct working mode (e.g. /sbin/iwlist wlan0 scan shows good scan
+> > > results).
+> > > But after that, wpa_supplicant cannot associate (gets a timeout)
+> > > (while it works ok with 2.6.25.14-69.fc8)
+> > > I have put below the output of wpa_supplicant for the bad case
+> > > and for the good case.
+> > >
+> > > What can I do to further see what is going wrong ?
+> >
+> > Well, you can blame the fedora people if you want.
+> >
+> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit
+> >;h=aaa1553512b9105699113ea7e2ea726f3d9d4de2
+>
+> Is that commit not in stable 2.6.26 yet or something?
+Hmm, no? AFAIK The mac80211 multiqueue changes went in somewhere in the 
+2.6.27-rc cycle. so 2.6.26.stable doesn't need any extra patches, right?
 
-Here is one fix for 2.6.27.  It is a backport of a patch that is already
-in net-next-2.6.  Since it is for a new driver (ath9k) and since it
-fixes a reported bug (http://bugzilla.kernel.org/show_bug.cgi?id=11394)
-I think it should be OK to pass it to Linus for the current cycle.
-
-John
-
----
-
-Individual patch is available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
-
----
-
-The following changes since commit e550dfb0c2c31b6363aa463a035fc9f8dcaa3c9b:
-  Neil Horman (1):
-        ipv6: Fix OOPS in ip6_dst_lookup_tail().
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Jouni Malinen (1):
-      ath9k: Assign seq# when mac80211 requests this
-
- drivers/net/wireless/ath9k/beacon.c |   13 +++++++++++++
- drivers/net/wireless/ath9k/core.h   |    1 +
- drivers/net/wireless/ath9k/main.c   |   14 ++++++++++++++
- 3 files changed, 28 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
-index caf5694..00a0eaa 100644
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -209,6 +209,7 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
- 	unsigned int curlen;
- 	struct ath_txq *cabq;
- 	struct ath_txq *mcastq;
-+	struct ieee80211_tx_info *info;
- 	avp = sc->sc_vaps[if_id];
- 
- 	mcastq = &avp->av_mcastq;
-@@ -232,6 +233,18 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
- 	 */
- 	curlen = skb->len;
- 
-+	info = IEEE80211_SKB_CB(skb);
-+	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-+		/*
-+		 * TODO: make sure the seq# gets assigned properly (vs. other
-+		 * TX frames)
-+		 */
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+		sc->seq_no += 0x10;
-+		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+		hdr->seq_ctrl |= cpu_to_le16(sc->seq_no);
-+	}
-+
- 	/* XXX: spin_lock_bh should not be used here, but sparse bitches
- 	 * otherwise. We should fix sparse :) */
- 	spin_lock_bh(&mcastq->axq_lock);
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 673b3d8..4ee695b 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -992,6 +992,7 @@ struct ath_softc {
- 	u32 sc_txintrperiod;	/* tx interrupt batching */
- 	int sc_haltype2q[ATH9K_WME_AC_VO+1]; /* HAL WME	AC -> h/w qnum */
- 	u32 sc_ant_tx[8];	/* recent tx frames/antenna */
-+	u16 seq_no; /* TX sequence number */
- 
- 	/* Beacon */
- 	struct ath9k_tx_queue_info sc_beacon_qi;
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index c5107f2..99badf1 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -369,6 +369,20 @@ static int ath9k_tx(struct ieee80211_hw *hw,
- {
- 	struct ath_softc *sc = hw->priv;
- 	int hdrlen, padsize;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	/*
-+	 * As a temporary workaround, assign seq# here; this will likely need
-+	 * to be cleaned up to work better with Beacon transmission and virtual
-+	 * BSSes.
-+	 */
-+	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-+			sc->seq_no += 0x10;
-+		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+		hdr->seq_ctrl |= cpu_to_le16(sc->seq_no);
-+	}
- 
- 	/* Add the padding after the header if this is not already done */
- 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
--- 
-John W. Linville
-linville@tuxdriver.com
+Regards,
+	Chr
