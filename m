@@ -1,50 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59836 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:39168 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753352AbYIOO1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 10:27:14 -0400
-Subject: Re: Problem with Libertas USB8388 WLAN card firmware
-From: Dan Williams <dcbw@redhat.com>
-To: Anadi Mishra <reachanadi@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <e001a6370809150258t10873497jcf04e68005db566b@mail.gmail.com>
-References: <e001a6370809150258t10873497jcf04e68005db566b@mail.gmail.com>
+	id S1751686AbYIVIOF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 04:14:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Add a few comments about mibevents
+Date: Mon, 22 Sep 2008 01:14:02 -0700
+Message-ID: <1222071242-21149-1-git-send-email-lrodriguez@atheros.com> (sfid-20080922_101410_655081_3DC31A47)
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Mon, 15 Sep 2008 10:27:51 -0400
-Message-Id: <1221488871.10177.44.camel@localhost.localdomain> (sfid-20080915_162718_182514_C41120C7)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-15 at 15:28 +0530, Anadi Mishra wrote:
-> Hi all,
->         I am using Libertas USB8388 WLAN card with Ubuntu 8.04 but am
-> not able to get it working.
-> 
->         The error(dmesg) says "unable to load firmware" even if the
-> usb8388.bin file is there in the /lib/firmware.
-> 
->         dmesg also says "probe of 3-1:1.1 failed with error -12"
-> 
-> Any help would be gr8.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |   18 ++++++++++++++++--
+ 1 files changed, 16 insertions(+), 2 deletions(-)
 
-What exact kernel version are you using?
-
-Also, please remove and re-insert insert the libertas.ko module like so:
-
-/sbin/modprobe libertas libertas_debug=0x1a43a7
-
-then plug the adapter in and post the output from 'dmesg' in a reply to
-this message.  We need a bit more information to find out what might be
-going wrong.
-
-Also, where did you get the firmware from?  It might be the wrong
-firmware file format.  There are two formats, the first being the
-driver-loadable format, the second is meant for flashing directly to the
-EEPROM if the dongle has any.  The second format is not used by the
-driver because it does not have any verification method like blocks or
-embedded CRCs.
-
-Dan
-
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 0251e59..272c758 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -2526,6 +2526,11 @@ static void ath9k_ani_reset(struct ath_hal *ah)
+ 	}
+ }
+ 
++/*
++ * Process a MIB interrupt.  We may potentially be invoked because
++ * any of the MIB counters overflow/trigger so don't assume we're
++ * here because a PHY error counter triggered.
++ */
+ void ath9k_hw_procmibevent(struct ath_hal *ah,
+ 			   const struct ath9k_node_stats *stats)
+ {
+@@ -2533,18 +2538,20 @@ void ath9k_hw_procmibevent(struct ath_hal *ah,
+ 	u32 phyCnt1, phyCnt2;
+ 
+ 	DPRINTF(ah->ah_sc, ATH_DBG_ANI, "Processing Mib Intr\n");
+-
++	/* Reset these counters regardless */
+ 	REG_WRITE(ah, AR_FILT_OFDM, 0);
+ 	REG_WRITE(ah, AR_FILT_CCK, 0);
+ 	if (!(REG_READ(ah, AR_SLP_MIB_CTRL) & AR_SLP_MIB_PENDING))
+ 		REG_WRITE(ah, AR_SLP_MIB_CTRL, AR_SLP_MIB_CLEAR);
+ 
++	/* Clear the mib counters and save them in the stats */
+ 	ath9k_hw_update_mibstats(ah, &ahp->ah_mibStats);
+ 	ahp->ah_stats.ast_nodestats = *stats;
+ 
+ 	if (!DO_ANI(ah))
+ 		return;
+ 
++	/* NB: these are not reset-on-read */
+ 	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
+ 	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
+ 	if (((phyCnt1 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK) ||
+@@ -2552,6 +2559,7 @@ void ath9k_hw_procmibevent(struct ath_hal *ah,
+ 		struct ar5416AniState *aniState = ahp->ah_curani;
+ 		u32 ofdmPhyErrCnt, cckPhyErrCnt;
+ 
++		/* NB: only use ast_ani_*errs with AH_PRIVATE_DIAG */
+ 		ofdmPhyErrCnt = phyCnt1 - aniState->ofdmPhyErrBase;
+ 		ahp->ah_stats.ast_ani_ofdmerrs +=
+ 			ofdmPhyErrCnt - aniState->ofdmPhyErrCount;
+@@ -2562,11 +2570,17 @@ void ath9k_hw_procmibevent(struct ath_hal *ah,
+ 			cckPhyErrCnt - aniState->cckPhyErrCount;
+ 		aniState->cckPhyErrCount = cckPhyErrCnt;
+ 
++		/*
++		 * NB: figure out which counter triggered.  If both
++		 * trigger we'll only deal with one as the processing
++		 * clobbers the error counter so the trigger threshold
++		 * check will never be true.
++		 */
+ 		if (aniState->ofdmPhyErrCount > aniState->ofdmTrigHigh)
+ 			ath9k_hw_ani_ofdm_err_trigger(ah);
+ 		if (aniState->cckPhyErrCount > aniState->cckTrigHigh)
+ 			ath9k_hw_ani_cck_err_trigger(ah);
+-
++		/* NB: always restart to insure the h/w counters are reset */
+ 		ath9k_ani_restart(ah);
+ 	}
+ }
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
