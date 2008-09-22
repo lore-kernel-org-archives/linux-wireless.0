@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:48940 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754195AbYIRTuT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 15:50:19 -0400
-Date: Thu, 18 Sep 2008 16:50:10 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Message-ID: <20080918195010.GQ1583@khazad-dum.debian.net> (sfid-20080918_215023_682167_BD959F75)
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181942.29122.IvDoorn@gmail.com> <1221760169.9262.91.camel@johannes.berg> <200809182002.39497.IvDoorn@gmail.com>
+Received: from lirone.symas.net ([64.71.152.235]:59909 "EHLO lirone.symas.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751445AbYIVLbj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 07:31:39 -0400
+Message-ID: <48D78215.1050403@symas.com> (sfid-20080922_133143_625980_0973629D)
+Date: Mon, 22 Sep 2008 04:31:33 -0700
+From: Howard Chu <hyc@symas.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809182002.39497.IvDoorn@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k problems
+References: <48D5CAD0.1080909@symas.com>	 <f488382f0809202122v4c77bc96r54edd24bdf365724@mail.gmail.com>	 <20080922064831.GB19580@tesla> <48D760D8.3050501@symas.com> <43e72e890809220245j77dcf385mb31e505308225ba9@mail.gmail.com>
+In-Reply-To: <43e72e890809220245j77dcf385mb31e505308225ba9@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> > rfkill_announce_softstate(OPEN/BLOCKED)
-> > rfkill_announce_hardstate(OPEN/BLOCKED)
+Luis R. Rodriguez wrote:
+> On Mon, Sep 22, 2008 at 2:09 AM, Howard Chu<hyc@symas.com>  wrote:
+>> >  For example - I added DPRINTFs to all the places that called ath9_hw_reset()
+>> >  to see why the ForceXPAon message was occurring so often, and got the
+>> >  attached log. I note that ForceXPAon doesn't occur on every call to
+>> >  hw_reset, and sometimes there are repeated identical calls to set the
+>> >  channel (e.g. at 22:06:36 in the log).
+>> >
+>> >  It associates successfully with my AP on channel 8, but shortly thereafter
+>> >  loses the association, scans again, and starts over again, ad nauseam. This
+>> >  behavior was made even worse when I upgraded my freeradius server (was
+>> >  authenticating with WPA EAP/PEAP) and configured TLS session caching - there
+>> >  seems to be a bug in freeradius there so subsequent reassociation attempts
+>> >  would always fail until I turned off session caching. (Haven't had time to
+>> >  chase that down yet.)
+>
+> Howard, did you apply the pending group key patch yet?
 
-We could, but it wouldn't help much.  WHEN you are allowed to call these
-(well, mostly rfkill_announce_softstat) is the real problem.
-
-And if you are forced to give both soft and hard states at once when you
-update the rfkill core state, you guard yourself against stuff messing with
-the rfkill state of your hardware behind your driver's back.
-
-> > and all the other junk happens there. And make sure this can be called
-> > from interrupts.
-> 
-> I think that limitation came from the notifier_block functions, but
-> Henrique knows more about those details.
-
-No, it would not be that trivial, but it would be doable.   Were that the
-only problem, I would have done that already.
-
-The problem is in the locking of rfkill->state, that is, rfkill->mutex.
-
-Changing rfkill->mutex to a spinlock would work, but the issue here is how
-much time rfkill->mutex spends locked.  It can stay locked for a while, the
-longest path in the rfkill core includes a call to rfkill->get_state() plus
-a call to rfkill->toggle_radio().
-
-And we have no idea what get_state() and toggle_radio() might need to do, or
-how much time would they take to do it.
-
-If someone could help with it, it would be really nice if we could somehow
-make unlocked access to rfkill->state safe...
+Yes, the patch didn't improve the situation on my wireless-testing build. It 
+works fine on my 2.6.27-rc6 build though.
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+   -- Howard Chu
+   CTO, Symas Corp.           http://www.symas.com
+   Director, Highland Sun     http://highlandsun.com/hyc/
+   Chief Architect, OpenLDAP  http://www.openldap.org/project/
