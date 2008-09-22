@@ -1,437 +1,673 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:36226 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039AbYIGAW3 (ORCPT
+Received: from mailrelay005.isp.belgacom.be ([195.238.6.171]:47445 "EHLO
+	mailrelay005.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752890AbYIVSiK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 20:22:29 -0400
-From: Chr <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] p54usb: support LM87 firmwares
-Date: Sun, 7 Sep 2008 02:25:40 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Pavel Roskin <proski@gnu.org>, Tomas Winkler <tomasw@gmail.com>
-References: <200809022139.12969.chunkeey@web.de> <200809070119.45720.chunkeey@web.de> <48C31349.7060401@lwfinger.net>
-In-Reply-To: <48C31349.7060401@lwfinger.net>
+	Mon, 22 Sep 2008 14:38:10 -0400
+Message-ID: <CB9B2237C21D46F3B852E45F75E91C52@soleil> (sfid-20080922_203816_878598_AC98161B)
+From: "Philippe Waroquiers" <philippe.waroquiers@skynet.be>
+To: <linux-wireless@vger.kernel.org>
+Subject: prism54 stopped working after upgrade from kernel 2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
+Date: Mon, 22 Sep 2008 20:38:04 +0200
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200809070225.41177.chunkeey@web.de> (sfid-20080907_022233_396399_5377CA8A)
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 07 September 2008 01:33:29 Larry Finger wrote:
-> Chr wrote:
-> > But, for newer firmwares you'll need "p54: better firmware support"
-> > (cc4b0cbf4ab) as well. This changes were merged about 25-26 hours ago
-> > into wireless-testing, the only thing that isn't in yet is 802.11a
-> > support....
-> >
-> > the LM87 firmware is this one:
-> > http://daemonizer.de/prism54/prism54-fw/fw-usb/2.13.1.0.arm.1
-> >
-> > This link can be found on the driver's site too:
-> > http://linuxwireless.org/en/users/Drivers/p54
->
-> Thanks. That one fixed the ping problem. I had the latest
-> wireless-testing, and have added the patches you posted earlier today.
->
-Well, since you already do some testing here.  Want more? ;-)
+With the new kernel 2.6.26.3-14.fc8, I see that the prism54 card looks in a correct working mode
+(e.g. /sbin/iwlist wlan0 scan shows good scan results).
+But after that, wpa_supplicant cannot associate (gets a timeout)
+(while it works ok with 2.6.25.14-69.fc8)
+I have put below the output of wpa_supplicant for the bad case
+and for the good case.
 
-I will be off for about 4-5 weeks and it would be very nice if someone with lots of broadcom
-hardware can test if the p54 works ADHOC & AP mode with them.
+What can I do to further see what is going wrong ?
 
-i've already (successfully) tested Intel's 2915 & 4965, several atheros chipsets and another prism54
-on different operating systems.
+Thanks
 
-But there could be problems with some broadcom chips.
 
-Regards,
-	Chr
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-09-06 14:09:16.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-09-07 02:04:31.000000000 +0200
-@@ -589,10 +589,19 @@ static void p54_rx_frame_sent(struct iee
- 				else
- 					info->status.excessive_retries = 1;
- 			}
-+			if (payload->status & 0x04)
-+				info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
-+			info->status.retry_count = payload->retries - 1;
- 			info->status.retry_count = payload->retries - 1;
- 			info->status.ack_signal = p54_rssi_to_dbm(dev,
- 					le16_to_cpu(payload->ack_rssi));
- 			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
-+			if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-+				struct ieee80211_hdr *ieee80211hdr =
-+					(struct ieee80211_hdr *)entry->data;
-+				ieee80211hdr->seq_ctrl |=
-+					cpu_to_le16(payload->seq);
-+			}
- 			ieee80211_tx_status_irqsafe(dev, entry);
- 			goto out;
- 		} else
-@@ -803,25 +812,130 @@ free:
- }
- EXPORT_SYMBOL_GPL(p54_read_eeprom);
- 
-+static int p54_sta_unlock(struct ieee80211_hw *dev, u8 *addr)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_control_hdr *hdr;
-+	struct p54_tx_control_sta_unlock *sta;
-+
-+	if (is_multicast_ether_addr(addr))
-+		return 0;
-+
-+	hdr = kmalloc(sizeof(*hdr) + sizeof(*sta) +
-+		      priv->tx_hdr_len, GFP_ATOMIC);
-+	if (!hdr)
-+		return -ENOMEM;
-+
-+	hdr = (void *)hdr + priv->tx_hdr_len;
-+	hdr->magic1 = cpu_to_le16(0x8001);
-+	hdr->len = cpu_to_le16(sizeof(*sta));
-+	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_PSM_STA_UNLOCK);
-+	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*sta));
-+
-+	sta = (struct p54_tx_control_sta_unlock *) hdr->data;
-+	memcpy(sta->addr, addr, ETH_ALEN);
-+
-+	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*sta), 1);
-+
-+	return 0;
-+}
-+
-+static int p54_set_tim(struct ieee80211_hw *dev, int aid, int set)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_control_hdr *hdr;
-+	struct p54_tx_control_tim *tim;
-+
-+	hdr = kmalloc(sizeof(*hdr) + sizeof(*tim) +
-+		      priv->tx_hdr_len, GFP_KERNEL);
-+	if (!hdr)
-+		return -ENOMEM;
-+
-+	hdr = (void *)hdr + priv->tx_hdr_len;
-+	hdr->magic1 = cpu_to_le16(0x8001);
-+	hdr->len = cpu_to_le16(sizeof(*tim));
-+	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_TIM);
-+	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*tim));
-+
-+	tim = (struct p54_tx_control_tim *) hdr->data;
-+	tim->count = 1;
-+	tim->entry[0] = cpu_to_le16(set ? (aid | 0x8000) : aid);
-+
-+	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*tim), 1);
-+
-+	return 0;
-+}
-+
-+static int p54_tx_fill_header(struct ieee80211_hw *dev,
-+	struct ieee80211_hdr *hdr, struct ieee80211_tx_info *info,
-+	u8 *queue, u16 *flags, u16 *aid)
-+{
-+	struct p54_common *priv = dev->priv;
-+	u16 fc = le16_to_cpu(hdr->frame_control);
-+	int ret = 1;
-+
-+	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)
-+		switch (fc & IEEE80211_FCTL_STYPE) {
-+		case IEEE80211_STYPE_PROBE_RESP:
-+			*aid = 0;
-+			*queue = 2;
-+			*flags = 0x22;
-+			return 0;
-+		case IEEE80211_STYPE_BEACON:
-+			*aid = 0;
-+			*queue = 0;
-+			*flags = 0x02;
-+			return 0;
-+		default:
-+			*queue = 2;
-+			ret = 0;
-+		}
-+	else
-+		*queue += 4;
-+
-+	if (is_multicast_ether_addr(hdr->addr1)) {
-+		*queue = 3;
-+		*aid = 0;
-+		return 0;
-+	}
-+
-+	if (priv->mode != IEEE80211_IF_TYPE_STA) {
-+		*aid = info->control.aid;
-+		if (!info->control.aid)
-+			*flags = 0x20;
-+	} else
-+		*aid = 1;
-+
-+	return ret;
-+}
-+
- static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_queue_stats *current_queue;
-+	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
- 	struct p54_common *priv = dev->priv;
- 	struct p54_control_hdr *hdr;
--	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
- 	struct p54_tx_control_allocdata *txhdr;
- 	size_t padding, len;
--	u8 rate;
--	u8 cts_rate = 0x20;
-+	u16 aid, hdr_flags = 0x0000;
-+	u8 queue, rate, cts_rate = 0x20;
-+
-+	queue = skb_get_queue_mapping(skb);
- 
--	current_queue = &priv->tx_stats[skb_get_queue_mapping(skb) + 4];
--	if (unlikely(current_queue->len > current_queue->limit))
--		return NETDEV_TX_BUSY;
--	current_queue->len++;
--	current_queue->count++;
--	if (current_queue->len == current_queue->limit)
--		ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
-+	if (likely(p54_tx_fill_header(dev, ieee80211hdr, info,
-+				      &queue, &hdr_flags, &aid))) {
-+		current_queue = &priv->tx_stats[queue];
-+		if (unlikely(current_queue->len > current_queue->limit))
-+			return NETDEV_TX_BUSY;
-+		current_queue->len++;
-+		current_queue->count++;
-+		if (current_queue->len == current_queue->limit)
-+			ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
-+	}
-+
-+	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
-+		p54_sta_unlock(dev, ieee80211hdr->addr1);
- 
- 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
- 	len = skb->len;
-@@ -831,13 +945,12 @@ static int p54_tx(struct ieee80211_hw *d
- 	hdr = (struct p54_control_hdr *) skb_push(skb, sizeof(*hdr));
- 
- 	if (padding)
--		hdr->magic1 = cpu_to_le16(0x4010);
--	else
--		hdr->magic1 = cpu_to_le16(0x0010);
-+		hdr_flags = 0x4000;
-+
-+	hdr->magic1 = cpu_to_le16(hdr_flags);
- 	hdr->len = cpu_to_le16(len);
--	hdr->type = (info->flags & IEEE80211_TX_CTL_NO_ACK) ? 0 : cpu_to_le16(1);
-+	hdr->type = cpu_to_le16(aid);
- 	hdr->retry1 = hdr->retry2 = info->control.retry_limit;
--
- 	/* TODO: add support for alternate retry TX rates */
- 	rate = ieee80211_get_tx_rate(dev, info)->hw_value;
- 	if (info->flags & IEEE80211_TX_CTL_SHORT_PREAMBLE) {
-@@ -854,7 +967,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	memset(txhdr->rateset, rate, 8);
- 	txhdr->key_type = 0;
- 	txhdr->key_len = 0;
--	txhdr->hw_queue = skb_get_queue_mapping(skb) + 4;
-+	txhdr->hw_queue = queue;
- 	txhdr->tx_antenna = (info->antenna_sel_tx == 0) ?
- 		2 : info->antenna_sel_tx - 1;
- 	txhdr->output_power = priv->output_power;
-@@ -870,17 +983,12 @@ static int p54_tx(struct ieee80211_hw *d
- 	 * patch places the sequence number in the hardware state, which
- 	 * limits us to a single virtual state.
- 	 */
--	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
--		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
--			priv->seqno += 0x10;
--		ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
--		ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
--	}
- 	/* modifies skb->cb and with it info, so must be last! */
- 	p54_assign_address(dev, skb, hdr, skb->len);
- 
- 	priv->tx(dev, hdr, skb->len, 0);
- 	return 0;
-+
- }
- 
- static int p54_set_filter(struct ieee80211_hw *dev, u16 filter_type,
-@@ -1170,6 +1278,9 @@ static int p54_add_interface(struct ieee
- 
- 	switch (conf->type) {
- 	case IEEE80211_IF_TYPE_STA:
-+	case IEEE80211_IF_TYPE_AP:
-+	case IEEE80211_IF_TYPE_MNTR:
-+	case IEEE80211_IF_TYPE_IBSS:
- 		priv->mode = conf->type;
- 		break;
- 	default:
-@@ -1184,6 +1295,15 @@ static int p54_add_interface(struct ieee
- 	case IEEE80211_IF_TYPE_STA:
- 		p54_set_filter(dev, 1, NULL);
- 		break;
-+	case IEEE80211_IF_TYPE_IBSS:
-+		p54_set_filter(dev, 0x02, NULL);
-+		break;
-+	case IEEE80211_IF_TYPE_MNTR:
-+		p54_set_filter(dev, 0x10, NULL);
-+		break;
-+	case IEEE80211_IF_TYPE_AP:
-+		p54_set_filter(dev, 0x04, NULL);
-+		break;
- 	default:
- 		BUG();	/* impossible */
- 		break;
-@@ -1211,25 +1331,114 @@ static int p54_config(struct ieee80211_h
- 	mutex_lock(&priv->conf_mutex);
- 	priv->rx_antenna = (conf->antenna_sel_rx == 0) ?
- 		2 : conf->antenna_sel_tx - 1;
--	priv->output_power = conf->power_level << 2;
-+	priv->output_power = (conf->power_level << 2) & ~0x80;
- 	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
- 	p54_set_vdcf(dev);
- 	mutex_unlock(&priv->conf_mutex);
- 	return ret;
- }
- 
-+static void p54_beacon_tim(struct sk_buff *skb)
-+{
-+	/*
-+	 * the good excuse for this mess is ... the firmware.
-+	 * The dummy TIM MUST be at the end of the beacon frame,
-+	 * because it'll be overwritten!
-+	 */
-+
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+	u8 *pos, *end;
-+
-+	if (skb->len <= sizeof(mgmt))
-+		return ;
-+
-+	pos = (u8 *)mgmt->u.beacon.variable;
-+	end = skb->data + skb->len;
-+	while (pos < end) {
-+		if (pos + 2 + pos[1] > end) {
-+			printk(KERN_ERR "p54: parsing beacon failed\n");
-+			return;
-+		}
-+
-+		if (pos[0] == WLAN_EID_TIM) {
-+			u8 dtim_len = pos[1];
-+			u8 *next = pos + 2 + dtim_len;
-+
-+			memmove(pos, next, end - next);
-+
-+			if (dtim_len > 3)
-+				skb_trim(skb, skb->len - (dtim_len - 3));
-+			if (dtim_len < 3)
-+				skb_put(skb, skb->len + (3 - dtim_len));
-+
-+			pos = end - (dtim_len + 2);
-+
-+			/* add the dummy at the end */
-+			pos[0] = WLAN_EID_TIM;
-+			pos[1] = 3;
-+			pos[2] = 0;
-+			pos[3] = 1; /* FIX MAC80211: get the real dtim period
-+				       from the bss struct... */
-+			pos[4] = 0;
-+			return ;
-+		}
-+		pos += 2 + pos[1];
-+	}
-+}
-+
-+static int p54_beacon_update(struct ieee80211_hw *dev,
-+			struct ieee80211_vif *vif)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct sk_buff *beacon = ieee80211_beacon_get(dev, vif);
-+
-+	if (!beacon)
-+		return -ENOMEM;
-+
-+	p54_beacon_tim(beacon);
-+	p54_tx(dev, beacon);
-+	priv->tsf_high32 = 0;
-+	priv->tsf_low32 = 0;
-+
-+	return 0;
-+}
-+
- static int p54_config_interface(struct ieee80211_hw *dev,
- 				struct ieee80211_vif *vif,
- 				struct ieee80211_if_conf *conf)
- {
- 	struct p54_common *priv = dev->priv;
-+	int ret = 0;
- 
--	mutex_lock(&priv->conf_mutex);
--	p54_set_filter(dev, 0, conf->bssid);
--	p54_set_leds(dev, 1, !is_multicast_ether_addr(conf->bssid), 0);
--	memcpy(priv->bssid, conf->bssid, ETH_ALEN);
--	mutex_unlock(&priv->conf_mutex);
--	return 0;
-+	switch (priv->mode) {
-+	case IEEE80211_IF_TYPE_STA:
-+		mutex_lock(&priv->conf_mutex);
-+		memcpy(priv->bssid, conf->bssid, ETH_ALEN);
-+		p54_set_filter(dev, 0x1, conf->bssid);
-+		p54_set_leds(dev, 1, !is_multicast_ether_addr(conf->bssid), 0);
-+		mutex_unlock(&priv->conf_mutex);
-+		break;
-+	case IEEE80211_IF_TYPE_AP:
-+	case IEEE80211_IF_TYPE_IBSS:
-+		mutex_lock(&priv->conf_mutex);
-+		memcpy(priv->bssid, conf->bssid, ETH_ALEN);
-+		p54_set_freq(dev, dev->conf.channel->center_freq);
-+		p54_set_filter(dev, priv->filter_type, priv->bssid);
-+		mutex_unlock(&priv->conf_mutex);
-+
-+		if (conf->changed & IEEE80211_IFCC_BEACON) {
-+			ret = p54_beacon_update(dev, vif);
-+			if (ret)
-+				return ret;
-+
-+			mutex_lock(&priv->conf_mutex);
-+			p54_set_vdcf(dev);
-+			mutex_unlock(&priv->conf_mutex);
-+		}
-+		break;
-+	}
-+
-+	return ret;
- }
- 
- static void p54_configure_filter(struct ieee80211_hw *dev,
-@@ -1366,6 +1575,7 @@ static const struct ieee80211_ops p54_op
- 	.config_interface	= p54_config_interface,
- 	.configure_filter	= p54_configure_filter,
- 	.conf_tx		= p54_conf_tx,
-+	.set_tim		= p54_set_tim,
- 	.get_stats		= p54_get_stats,
- 	.get_tx_stats		= p54_get_tx_stats
- };
-diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
---- a/drivers/net/wireless/p54/p54common.h	2008-09-06 13:57:06.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.h	2008-09-07 01:55:21.000000000 +0200
-@@ -321,4 +321,15 @@ struct p54_tx_control_xbow_synth {
- 	u32 padding[5];
- } __attribute__ ((packed));
- 
-+struct p54_tx_control_sta_unlock {
-+	u8 addr[ETH_ALEN];
-+	u16 padding;
-+} __attribute__ ((packed));
-+
-+struct p54_tx_control_tim {
-+	u8 count;
-+	u8 unalloc0[3];
-+	__le16 entry[8];
-+} __attribute__ ((packed));
-+
- #endif /* P54COMMON_H */
+
+02:00.0 Network controller: Intersil Corporation ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
+        Subsystem: Z-Com, Inc. Unknown device 0036
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx+
+        Latency: 32 (2500ns min, 7000ns max), Cache Line Size: 128 bytes
+        Interrupt: pin A routed to IRQ 16
+        Region 0: Memory at fa400000 (32-bit, non-prefetchable) [size=8K]
+        Capabilities: [dc] Power Management version 1
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Kernel driver in use: prism54pci
+        Kernel modules: p54pci, prism54
+
+bad:
+*******************************
+ioctl[SIOCSIWAUTH]: Operation not supported
+WEXT auth param 4 value 0x0 - Initializing interface 'wlan0' conf '/etc/wpa_supplicant/wpa_supplicant.conf' driver 'default' 
+ctrl_interface 'N/A' bridge 'N/A'
+Configuration file '/etc/wpa_supplicant/wpa_supplicant.conf' -> '/etc/wpa_supplicant/wpa_supplicant.conf'
+Reading configuration file '/etc/wpa_supplicant/wpa_supplicant.conf'
+ctrl_interface='/var/run/wpa_supplicant'
+ctrl_interface_group='wheel' (DEPRECATED)
+Priority group 0
+   id=0 ssid='USR9111'
+Initializing interface (2) 'wlan0'
+EAPOL: SUPP_PAE entering state DISCONNECTED
+EAPOL: KEY_RX entering state NO_KEY_RECEIVE
+EAPOL: SUPP_BE entering state INITIALIZE
+EAP: EAP entering state DISABLED
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
+  capabilities: key_mgmt 0xf enc 0xf
+WEXT: Operstate: linkmode=1, operstate=5
+Own MAC address: 00:60:b3:a1:8b:81
+wpa_driver_wext_set_wpa
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_countermeasures
+wpa_driver_wext_set_drop_unencrypted
+Setting scan request: 0 sec 100000 usec
+ctrl_interface_group=10 (from group name 'wheel')
+Added interface wlan0
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=8
+State: DISCONNECTED -> SCANNING
+Starting AP scan (specific SSID)
+Scan SSID - hexdump_ascii(len=7):
+     55 53 52 39 31 31 31                              USR9111
+Trying to get current scan results first without requesting a new scan to speed up initial association
+Received 312 bytes of scan results (1 BSSes)
+Scan results: 1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   selected based on RSN IE
+   selected WPA AP 00:14:c1:2a:38:12 ssid='USR9111'
+Try to find non-WPA AP
+Trying to associate with 00:14:c1:2a:38:12 (SSID='USR9111' freq=2462 MHz)
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: set AP WPA IE - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 04 01 00 00 50 f2 04 01 00 00 50 f2 02
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 01 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+wpa_driver_wext_set_drop_unencrypted
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+Setting authentication timeout: 20 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: External notification - EAP fail=0
+EAPOL: External notification - portControl=Auto
+RSN: added PMKSA cache candidate 00:14:c1:2a:38:12 prio 1000
+RSN: processing PMKSA candidate list
+RSN: not in suitable state for new pre-authentication
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b04 len=12
+Authentication with 00:14:c1:2a:38:12 timed out.
+Added BSSID 00:14:c1:2a:38:12 into blacklist
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+EAPOL: External notification - EAP success=0
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Starting AP scan (broadcast SSID)
+Scan requested (ret=0) - scan timeout 5 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b19 len=8
+Received 311 bytes of scan results (1 BSSes)
+Scan results: 1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   selected based on RSN IE
+   selected WPA AP 00:14:c1:2a:38:12 ssid='USR9111'
+Try to find non-WPA AP
+Trying to associate with 00:14:c1:2a:38:12 (SSID='USR9111' freq=2462 MHz)
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: set AP WPA IE - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 04 01 00 00 50 f2 04 01 00 00 50 f2 02
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 01 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+wpa_driver_wext_set_drop_unencrypted
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+Setting authentication timeout: 20 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: External notification - EAP fail=0
+EAPOL: External notification - portControl=Auto
+RSN: added PMKSA cache candidate 00:14:c1:2a:38:12 prio 1000
+RSN: processing PMKSA candidate list
+RSN: not in suitable state for new pre-authentication
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b04 len=12
+Authentication with 00:14:c1:2a:38:12 timed out.
+BSSID 00:14:c1:2a:38:12 blacklist count incremented to 2
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+EAPOL: External notification - EAP success=0
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Starting AP scan (specific SSID)
+Scan SSID - hexdump_ascii(len=7):
+     55 53 52 39 31 31 31                              USR9111
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b19 len=8
+Received 312 bytes of scan results (1 BSSes)
+Scan results: 1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   skip - blacklisted
+Try to find non-WPA AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   skip - blacklisted
+No APs found - clear blacklist and try again
+Removed BSSID 00:14:c1:2a:38:12 from blacklist (clear)
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   selected based on RSN IE
+   selected WPA AP 00:14:c1:2a:38:12 ssid='USR9111'
+Try to find non-WPA AP
+Trying to associate with 00:14:c1:2a:38:12 (SSID='USR9111' freq=2462 MHz)
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: set AP WPA IE - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 04 01 00 00 50 f2 04 01 00 00 50 f2 02
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 01 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+wpa_driver_wext_set_drop_unencrypted
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+Setting authentication timeout: 20 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: External notification - EAP fail=0
+EAPOL: External notification - portControl=Auto
+RSN: added PMKSA cache candidate 00:14:c1:2a:38:12 prio 1000
+RSN: processing PMKSA candidate list
+RSN: not in suitable state for new pre-authentication
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b04 len=12
+Authentication with 00:14:c1:2a:38:12 timed out.
+Added BSSID 00:14:c1:2a:38:12 into blacklist
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+EAPOL: External notification - EAP success=0
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Starting AP scan (broadcast SSID)
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b19 len=8
+Received 311 bytes of scan results (1 BSSes)
+Scan results: 1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   selected based on RSN IE
+   selected WPA AP 00:14:c1:2a:38:12 ssid='USR9111'
+Try to find non-WPA AP
+Trying to associate with 00:14:c1:2a:38:12 (SSID='USR9111' freq=2462 MHz)
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: set AP WPA IE - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 04 01 00 00 50 f2 04 01 00 00 50 f2 02
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 01 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+wpa_driver_wext_set_drop_unencrypted
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+Setting authentication timeout: 20 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: External notification - EAP fail=0
+EAPOL: External notification - portControl=Auto
+RSN: added PMKSA cache candidate 00:14:c1:2a:38:12 prio 1000
+RSN: processing PMKSA candidate list
+RSN: not in suitable state for new pre-authentication
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b04 len=12
+Authentication with 00:14:c1:2a:38:12 timed out.
+BSSID 00:14:c1:2a:38:12 blacklist count incremented to 2
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+EAPOL: External notification - EAP success=0
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Starting AP scan (specific SSID)
+Scan SSID - hexdump_ascii(len=7):
+     55 53 52 39 31 31 31                              USR9111
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b19 len=8
+Received 311 bytes of scan results (1 BSSes)
+Scan results: 1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   skip - blacklisted
+Try to find non-WPA AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   skip - blacklisted
+No APs found - clear blacklist and try again
+Removed BSSID 00:14:c1:2a:38:12 from blacklist (clear)
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   selected based on RSN IE
+   sell2_packet_receive - recvfrom: Network is down
+ected WPA AP 00:14:c1:2a:38:12 ssid='USR9111'
+Try to find non-WPA AP
+Trying to associate with 00:14:c1:2a:38:12 (SSID='USR9111' freq=2462 MHz)
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: set AP WPA IE - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 04 01 00 00 50 f2 04 01 00 00 50 f2 02
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 01 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+wpa_driver_wext_set_drop_unencrypted
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+Setting authentication timeout: 20 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: External notification - EAP fail=0
+EAPOL: External notification - portControl=Auto
+RSN: added PMKSA cache candidate 00:14:c1:2a:38:12 prio 1000
+RSN: processing PMKSA candidate list
+RSN: not in suitable state for new pre-authentication
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b04 len=12
+Authentication with 00:14:c1:2a:38:12 timed out.
+Added BSSID 00:14:c1:2a:38:12 into blacklist
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+EAPOL: External notification - EAP success=0
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Starting AP scan (broadcast SSID)
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b19 len=8
+Received 311 bytes of scan results (1 BSSes)
+Scan results: 1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   selected based on RSN IE
+   selected WPA AP 00:14:c1:2a:38:12 ssid='USR9111'
+Try to find non-WPA AP
+Trying to associate with 00:14:c1:2a:38:12 (SSID='USR9111' freq=2462 MHz)
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: set AP WPA IE - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 04 01 00 00 50 f2 04 01 00 00 50 f2 02
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 01 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+wpa_driver_wext_set_drop_unencrypted
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+Setting authentication timeout: 20 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: External notification - EAP fail=0
+EAPOL: External notification - portControl=Auto
+RSN: added PMKSA cache candidate 00:14:c1:2a:38:12 prio 1000
+RSN: processing PMKSA candidate list
+RSN: not in suitable state for new pre-authentication
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b04 len=12
+Ignore event for foreign ifindex 3
+RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+CTRL-EVENT-TERMINATING - signal 15 received
+Removing interface wlan0
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Opeioctl[SIOCSIWAUTH]: Operation not supported
+WEXT auth param 4 value 0x0 - rstate: linkmode=-1, operstate=5
+No keys have been configured - skip key clearing
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+wpa_driver_wext_set_wpa
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_countermeasures
+No keys have been configured - skip key clearing
+Removed BSSID 00:14:c1:2a:38:12 from blacklist (clear)
+Cancelling scan request
+Cancelling authentication timeout
+WEXT: Operstate: linkmode=0, operstate=6
+
+
+
+good:
+**********************************************
+ioctl[SIOCSIWAUTH]: Operation not supported
+WEXT auth param 4 value 0x0 - Initializing interface 'wlan0' conf '/etc/wpa_supplicant/wpa_supplicant.conf' driver 'default' 
+ctrl_interface 'N/A' bridge 'N/A'
+Configuration file '/etc/wpa_supplicant/wpa_supplicant.conf' -> '/etc/wpa_supplicant/wpa_supplicant.conf'
+Reading configuration file '/etc/wpa_supplicant/wpa_supplicant.conf'
+ctrl_interface='/var/run/wpa_supplicant'
+ctrl_interface_group='wheel' (DEPRECATED)
+Priority group 0
+   id=0 ssid='USR9111'
+Initializing interface (2) 'wlan0'
+EAPOL: SUPP_PAE entering state DISCONNECTED
+EAPOL: KEY_RX entering state NO_KEY_RECEIVE
+EAPOL: SUPP_BE entering state INITIALIZE
+EAP: EAP entering state DISABLED
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
+  capabilities: key_mgmt 0xf enc 0xf
+WEXT: Operstate: linkmode=1, operstate=5
+Own MAC address: 00:60:b3:a1:8b:81
+wpa_driver_wext_set_wpa
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_countermeasures
+wpa_driver_wext_set_drop_unencrypted
+Setting scan request: 0 sec 100000 usec
+ctrl_interface_group=10 (from group name 'wheel')
+Added interface wlan0
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=8
+State: DISCONNECTED -> SCANNING
+Starting AP scan (specific SSID)
+Scan SSID - hexdump_ascii(len=7):
+     55 53 52 39 31 31 31                              USR9111
+Trying to get current scan results first without requesting a new scan to speed up initial association
+Received 312 bytes of scan results (1 BSSes)
+Scan results: 1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:14:c1:2a:38:12 ssid='USR9111' wpa_ie_len=24 rsn_ie_len=22 caps=0x11
+   selected based on RSN IE
+   selected WPA AP 00:14:c1:2a:38:12 ssid='USR9111'
+Try to find non-WPA AP
+Trying to associate with 00:14:c1:2a:38:12 (SSID='USR9111' freq=2462 MHz)
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: set AP WPA IE - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 04 01 00 00 50 f2 04 01 00 00 50 f2 02
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 01 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+wpa_driver_wext_set_drop_unencrypted
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+Setting authentication timeout: 20 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: External notification - EAP fail=0
+EAPOL: External notification - portControl=Auto
+RSN: added PMKSA cache candidate 00:14:c1:2a:38:12 prio 1000
+RSN: processing PMKSA candidate list
+RSN: not in suitable state for new pre-authentication
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b04 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8c02 len=161
+Association info event
+req_ies - hexdump(len=47): 00 07 55 53 52 39 31 31 31 01 08 02 04 0b 16 0c 12 18 24 32 04 30 48 60 6c 30 14 01 00 00 0f ac 04 01 00 
+00 0f ac 04 01 00 00 0f ac 02 00 00
+resp_ies - hexdump(len=16): 01 08 82 84 8b 96 0c 12 18 24 32 04 30 48 60 6c
+WPA: set own WPA/RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
+Wireless event: cmd=0x8b15 len=20
+Wireless event: new AP: 00:14:c1:2a:38:12
+State: ASSOCIATING -> ASSOCIATED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+Associated to a new BSS: BSSID=00:14:c1:2a:38:12
+No keys have been configured - skip key clearing
+Associated with 00:14:c1:2a:38:12
+WPA: Association event - clear replay counter
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+EAPOL: External notification - EAP success=0
+EAPOL: External notification - portEnabled=1
+EAPOL: SUPP_PAE entering state CONNECTING
+EAPOL: SUPP_BE entering state IDLE
+Setting authentication timeout: 10 sec 0 usec
+Cancelling scan request
+RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+RX EAPOL from 00:14:c1:2a:38:12
+Setting authentication timeout: 10 sec 0 usec
+IEEE 802.1X RX: version=1 type=3 length=117
+  EAPOL-Key type=2
+  key_info 0x8a (ver=2 keyidx=0 rsvd=0 Pairwise Ack)
+  key_length=16 key_data_length=22
+  replay_counter - hexdump(len=8): 00 00 00 00 00 00 02 91
+  key_nonce - hexdump(len=32): d8 8b 4f 2a 57 96 ef 62 ed 9c 0d 33 fb 0a 15 5e fe 3a 66 e3 a7 bf 49 09 e9 fd 7b d2 a7 46 c7 98
+  key_iv - hexdump(len=16): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  key_rsc - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_id (reserved) - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_mic - hexdump(len=16): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+State: ASSOCIATED -> 4WAY_HANDSHAKE
+WPA: RX message 1 of 4-Way Handshake from 00:14:c1:2a:38:12 (ver=2)
+RSN: msg 1/4 key data - hexdump(len=22): dd 14 00 0f ac 04 36 2d b4 7d a8 db 2b 82 2c d2 ed dc 01 5f 2a 40
+RSN: PMKID from Authenticator - hexdump(len=16): 36 2d b4 7d a8 db 2b 82 2c d2 ed dc 01 5f 2a 40
+RSN: no matching PMKID found
+WPA: Renewed SNonce - hexdump(len=32): 8b e6 d2 87 c3 7c cd eb 78 f6 49 6b 78 75 c7 14 3d b8 7a 7d dc 17 51 37 d7 04 0d f8 4f 28 35 
+61
+WPA: PMK - hexdump(len=32): [REMOVED]
+WPA: PTK - hexdump(len=64): [REMOVED]
+WPA: WPA IE for msg 2/4 - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+WPA: Sending EAPOL-Key 2/4
+RX EAPOL from 00:14:c1:2a:38:12
+IEEE 802.1X RX: version=1 type=3 length=151
+  EAPOL-Key type=2
+  key_info 0x13ca (ver=2 keyidx=0 rsvd=0 Pairwise Install Ack MIC Secure Encr)
+  key_length=16 key_data_length=56
+  replay_counter - hexdump(len=8): 00 00 00 00 00 00 02 92
+  key_nonce - hexdump(len=32): d8 8b 4f 2a 57 96 ef 62 ed 9c 0d 33 fb 0a 15 5e fe 3a 66 e3 a7 bf 49 09 e9 fd 7b d2 a7 46 c7 98
+  key_iv - hexdump(len=16): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  key_rsc - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_id (reserved) - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_mic - hexdump(len=16): 68 00 60 9a 0a 9d f3 43 9d 56 dc 95 c4 fa eb 7f
+RSN: encrypted key data - hexdump(len=56): 85 00 74 bf e3 30 0d 7f 1a 61 0b af 88 8a a1 18 eb a7 41 27 dc e8 7f 66 a4 9e 25 79 50 8b 
+ca 7d 85 44 a8 3d ae fc ec bb c7 ca 3c ad 61 47 fb 47 a6 60 ff 2d 89 02 63 0c
+WPA: decrypted EAPOL-Key key data - hexdump(len=48): [REMOVED]
+State: 4WAY_HANDSHAKE -> 4WAY_HANDSHAKE
+WPA: RX message 3 of 4-Way Handshake from 00:14:c1:2a:38:12 (ver=2)
+WPA: IE KeyData - hexdump(len=48): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 01 00 dd 16 00 0f ac 01 02 00 cb 69 
+43 2d 9f eb ae 44 7d 2e 92 85 8e b7 d0 ac dd 00
+WPA: Sending EAPOL-Key 4/4
+WPA: Installing PTK to the driver.
+wpa_driver_wext_set_key: alg=3 key_idx=0 set_tx=1 seq_len=6 key_len=16
+EAPOL: External notification - portValid=1
+State: 4WAY_HANDSHAKE -> GROUP_HANDSHAKE
+RSN: received GTK in pairwise handshake - hexdump(len=18): [REMOVED]
+WPA: Group Key - hexdump(len=16): [REMOVED]
+WPA: Installing GTK to the driver (keyidx=2 tx=0).
+WPA: RSC - hexdump(len=6): 00 00 00 00 00 00
+wpa_driver_wext_set_key: alg=3 key_idx=2 set_tx=0 seq_len=6 key_len=16
+WPA: Key negotiation completed with 00:14:c1:2a:38:12 [PTK=CCMP GTK=CCMP]
+Cancelling authentication timeout
+State: GROUP_HANDSHAKE -> COMPLETED
+CTRL-EVENT-CONNECTED - Connection to 00:14:c1:2a:38:12 completed (auth) [id=0 id_str=]
+wpa_driver_wext_set_operstate: operstate 0->1 (UP)
+WEXT: Operstate: linkmode=-1, operstate=6
+EAPOL: External notification - portValid=1
+EAPOL: External notification - EAP success=1
+EAPOL: SUPP_PAE entering state AUTHENTICATING
+EAPOL: SUPP_BE entering state SUCCESS
+EAP: EAP entering state DISABLED
+EAPOL: SUPP_PAE entering state AUTHENTICATED
+EAPOL: SUPP_BE entering state IDLE
+RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+RSN: processing PMKSA candidate list
+RSN: not in suitable state for new pre-authentication
+EAPOL: startWhen --> 0
+RX EAPOL from 00:14:c1:2a:38:12
+IEEE 802.1X RX: version=1 type=3 length=127
+  EAPOL-Key type=2
+  key_info 0x1382 (ver=2 keyidx=0 rsvd=0 Group Ack MIC Secure Encr)
+  key_length=0 key_data_length=32
+  replay_counter - hexdump(len=8): 00 00 00 00 00 00 02 93
+  key_nonce - hexdump(len=32): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  key_iv - hexdump(len=16): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  key_rsc - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_id (reserved) - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_mic - hexdump(len=16): d6 a2 eb bb 78 d0 00 fe d7 c8 6c 9d d6 d0 b6 a2
+RSN: encrypted key data - hexdump(len=32): d0 a1 f4 c4 17 be 4d 26 5f eb 1f 08 fb 7c cd 3a a4 16 de 9a 99 12 70 76 5a 1c 49 37 88 d9 
+4d 50
+WPA: decrypted EAPOL-Key key data - hexdump(len=24): [REMOVED]
+WPA: RX message 1 of Group Key Handshake from 00:14:c1:2a:38:12 (ver=2)
+RSN: msg 1/2 key data - hexdump(len=24): dd 16 00 0f ac 01 03 00 03 ea f8 37 c1 df 36 ae 54 65 ca 9a 0b 87 44 23
+RSN: received GTK in group key handshake - hexdump(len=18): 03 00 03 ea f8 37 c1 df 36 ae 54 65 ca 9a 0b 87 44 23
+State: COMPLETED -> GROUP_HANDSHAKE
+WPA: Group Key - hexdump(len=16): [REMOVED]
+WPA: Installing GTK to the driver (keyidx=3 tx=0).
+WPA: RSC - hexdump(len=6): 00 00 00 00 00 00
+wpa_driver_wext_set_key: alg=3 key_idx=3 set_tx=0 seq_len=6 key_len=16
+WPA: Sending EAPOL-Key 2/2
+WPA: Group rekeying completed with 00:14:c1:2a:38:12 [GTK=CCMP]
+State: GROUP_HANDSHAKE -> COMPLETED
+RX EAPOL from 00:14:c1:2a:38:12
+IEEE 802.1X RX: version=1 type=3 length=127
+  EAPOL-Key type=2
+  key_info 0x1382 (ver=2 keyidx=0 rsvd=0 Group Ack MIC Secure Encr)
+  key_length=0 key_data_length=32
+  replay_counter - hexdump(len=8): 00 00 00 00 00 00 02 94
+  key_nonce - hexdump(len=32): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  key_iv - hexdump(len=16): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  key_rsc - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_id (reserved) - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_mic - hexdump(len=16): b7 2f f0 aa 0b 0f 9b 1e 10 21 46 a2 c0 42 7b 58
+RSN: encrypted key data - hexdump(len=32): a7 b3 e8 31 81 8d 2c b6 2f 9c 16 46 00 5a 93 10 5a a3 1c c9 1a ba 59 72 9a be e3 4c 1a 7e 
+b8 ae
+WPA: decrypted EAPOL-Key key data - hexdump(len=24): [REMOVED]
+WPA: RX message 1 of Group Key Handshake from 00:14:c1:2a:38:12 (ver=2)
+RSN: msg 1/2 key data - hexdump(len=24): dd 16 00 0f ac 01 02 00 8d 82 fd a0 fe 23 09 16 44 7b d3 7d e2 75 ea 57
+RSN: received GTK in group key handshake - hexdump(len=18): 02 00 8d 82 fd a0 fe 23 09 16 44 7b d3 7d e2 75 ea 57
+State: COMPLETED -> GROUP_HANDSHAKE
+WPA: Group Key - hexdump(len=16): [REMOVED]
+WPA: Installing GTK to the driver (keyidx=2 tx=0).
+WPA: RSC - hexdump(len=6): 00 00 00 00 00 00
+wpa_driver_wext_set_key: alg=3 key_idx=2 set_tx=0 seq_len=6 key_len=16
+WPA: Sending EAPOL-Key 2/2
+WPA: Group rekeying completed with 00:14:c1:2a:38:12 [GTK=CCMP]
+State: GROUP_HANDSHAKE -> COMPLETED
+CTRL-EVENT-TERMINATING - signal 15 received
+Removing interface wlan0
+State: COMPLETED -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 1->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_deauthenticate
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idxioctl[SIOCSIWAUTH]: Operation not supported
+WEXT auth param 4 value 0x0 - =0 set_tx=0 seq_len=0 key_len=0
+EAPOL: External notification - portEnabled=0
+EAPOL: SUPP_PAE entering state DISCONNECTED
+EAPOL: SUPP_BE entering state INITIALIZE
+EAPOL: External notification - portValid=0
+wpa_driver_wext_set_wpa
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_countermeasures
+No keys have been configured - skip key clearing
+Cancelling scan request
+Cancelling authentication timeout
+WEXT: Operstate: linkmode=0, operstate=6
 
