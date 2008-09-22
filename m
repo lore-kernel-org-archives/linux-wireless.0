@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:38312 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757919AbYIOVLj (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:40761 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069AbYIVLWz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 17:11:39 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so715593ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 14:11:38 -0700 (PDT)
-Message-ID: <43e72e890809151411h60a2379cw1fd2959794b97771@mail.gmail.com> (sfid-20080915_231156_292288_6728E6EE)
-Date: Mon, 15 Sep 2008 14:11:37 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jouni Malinen" <j@w1.fi>
-Subject: Re: adm8211 driver usage
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <48CECF5D.7070605@w1.fi>
+	Mon, 22 Sep 2008 07:22:55 -0400
+From: Chr <chunkeey@web.de>
+To: Kalle Valo <kalle.valo@nokia.com>
+Subject: Re: stlc45xx: mac80211 driver for N800 and N810
+Date: Mon, 22 Sep 2008 13:22:41 +0200
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <877i98iw4h.fsf@nokia.com> <43e72e890809191055o4085fab1k8a85fe9266ae8aab@mail.gmail.com> <87wsh438r6.fsf@nokia.com>
+In-Reply-To: <87wsh438r6.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890809151359n45c5ecdateff5a4eed3f4067e@mail.gmail.com>
-	 <48CECF5D.7070605@w1.fi>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809221322.41239.chunkeey@web.de> (sfid-20080922_132300_101575_A8203D13)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 15, 2008 at 2:10 PM, Jouni Malinen <j@w1.fi> wrote:
-> Luis R. Rodriguez wrote:
->>
->> Just curious, anyone using the adm8211 driver? My understanding was
->> there was not much hardware out -- if any at all -- for it. If no one
->> is using it maybe we can remove it. I don't know a single soul using
->> it except maybe Michael and maybe a year ago.
+On Monday 22 September 2008 10:06:05 Kalle Valo wrote:
+> Luis R. Rodriguez <mcgrof@gmail.com> writes:
+> I don't have the p54 hardware (for regression testing) or the time to
+> add stlc45xx support to p54, and most probably there might be even
+> some legal implications which might prevent me of doing the work. So
+> somebody else would have to do the converge between p54 and stlc45xx.
 >
-> Umm.. Sure there is hardware out there and I would assume the driver is
-> used, too. I have a card at home, but don't really use it that much.
-> Anyway, I don't see any justification for removing the driver.
+Hmm, don't worry... you won't break p54 hardware with these chances,
+we did this before and I still could connect to my APs.
+Even better, Johannes wrote most of the code for "p54spi.c" already.
+I guess, we can reuse and fix his code, rather than reinventing the wheel once again.
+I'll take a look what can be done when I'm back next week.
 
-Thanks, didn't know it was, from what Michael had told me it was *very
-rare* that's why I asked
+OT: Do you know if there's some way to get a card with a stlc45xx for or in a normal PC?
 
- Luis
+> > Is this driver targeted for inclusion upstream?
+>
+> I'm very interested in mac80211 and would like to see it suitable for
+> embedded devices like N800/N810. The just announced stlc45xx driver
+> would be a perfect tool for that kind of development and having the
+> driver upstream would make development a lot easier.
+>
+> Features that I am interested in, just from the top of my head, are
+> proper roaming support, power save mode and beacon filtering. In my
+> opinion the biggest areas needing work are everything related to
+> mobility or the power consumption.
+Yes, this is definitely stuff that should go right into mac80211 stack and nowhere else.
+Therefore FULL ACK.
+
+Regards,
+	Chr
+
