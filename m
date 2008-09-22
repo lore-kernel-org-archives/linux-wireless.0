@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39338 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745AbYIJSRF (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:51573 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069AbYIVNZg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 14:17:05 -0400
-Subject: Re: [PATCH 1/2 v6] cfg80211: Add new wireless regulatory
-	infrastructure
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <1221027589-19203-2-git-send-email-lrodriguez@atheros.com>
-References: <1221027589-19203-1-git-send-email-lrodriguez@atheros.com>
-	 <1221027589-19203-2-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain
-Date: Wed, 10 Sep 2008 20:17:30 +0200
-Message-Id: <1221070650.13336.20.camel@californication> (sfid-20080910_201710_268530_48CBC48F)
-Mime-Version: 1.0
+	Mon, 22 Sep 2008 09:25:36 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so219472yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 06:25:35 -0700 (PDT)
+Message-ID: <31436f4a0809220625s240a786cl7602dcb35f7039a5@mail.gmail.com> (sfid-20080922_152540_976377_245B9C56)
+Date: Mon, 22 Sep 2008 16:25:34 +0300
+From: "David Shwatrz" <dshwatrz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: A question about setting Master mode and ieee80211_ioctl_siwmode() handler
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
-
-> This adds the new wireless regulatory infrastructure. The
-> main motiviation behind this was to centralize regulatory
-> code as each driver was implementing their own regulatory solution,
-> and to replace the initial centralized code we have where:
-> 
-> * only 3 regulatory domains are supported: US, JP and EU
-> * regulatory domains can only be changed through module parameter
-> * all rules were built statically in the kernel
-> 
-> We now have support for regulatory domains for many countries
-> and regulatory domains are now queried through a userspace agent
-> through udev allowing distributions to update regulatory rules
-> without updating the kernel.
-> 
-> Each driver can regulatory_hint() a regulatory domain
-> based on either their EEPROM mapped regulatory domain value to a
-> respective ISO/IEC 3166-1 country code or pass an internally built
-> regulatory domain. We also add support to let the user set the
-> regulatory domain through userspace in case of faulty EEPROMs to
-> further help compliance.
-
-thanks for the write-up and examples. I like it a lot and gives driver
-maintainers a nice understanding what to do.
-
-While reading through it, I came to think about regulatory_hint(). So is
-there a use case where would give it the alpha2 code and the domain
-itself at the same time? If not, then it would make more sense to split
-this into two functions. Maybe something regulatory_alpha2_hint() and
-regulatory_domain_hint(). Just a thought.
-
-Regards
-
-Marcel
+Hello,
+I have a short question:
+  I wonder how can a command like :
+"iwconfig wlan0 mode Master"
+should succeed ;
+I did tried it on some wireless NIC, which probably does not support
+master mode, and got:
+"Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlan0 ; Invalid argument."
 
 
+The reason is this:
+I look at the kernel code which implements receiving the set mode IOCTL.
+
+The method is ieee80211_ioctl_siwmode(), in net/mac80211/wext.c.
+
+(I am looking at the last git wireless tree; it appears here below).
+
+As far as I can see, we don't handle the "Master" mode in the case
+sentence , so when we try to set the mode to Master,
+by :
+"iwconfig wlan0 mode Master"
+we will always get to the default and exit with
+		"return -EINVAL"
+
+Am I wrong here ? can somebody please explain?
+
+static int ieee80211_ioctl_siwmode(struct net_device *dev,
+				   struct iw_request_info *info,
+				   __u32 *mode, char *extra)
+{
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+	int type;
+
+	if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN)
+		return -EOPNOTSUPP;
+
+	switch (*mode) {
+	case IW_MODE_INFRA:
+		type = IEEE80211_IF_TYPE_STA;
+		break;
+	case IW_MODE_ADHOC:
+		type = IEEE80211_IF_TYPE_IBSS;
+		break;
+	case IW_MODE_REPEAT:
+		type = IEEE80211_IF_TYPE_WDS;
+		break;
+	case IW_MODE_MONITOR:
+		type = IEEE80211_IF_TYPE_MNTR;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return ieee80211_if_change_type(sdata, type);
+}
+
+
+Any ideas?
+Regards,
+DS
