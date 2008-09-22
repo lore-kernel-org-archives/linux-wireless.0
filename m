@@ -1,32 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35271 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753256AbYIOOkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 10:40:47 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [RFC] Implement basic background scanning
-Date: Mon, 15 Sep 2008 16:40:43 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200809151416.07552.hschaa@suse.de> <200809151429.46638.hschaa@suse.de> <200809151632.00966.mb@bu3sch.de>
-In-Reply-To: <200809151632.00966.mb@bu3sch.de>
+Received: from mailrelay001.isp.belgacom.be ([195.238.6.51]:30189 "EHLO
+	mailrelay001.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751205AbYIVTWZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 15:22:25 -0400
+Message-ID: <48C2B90652754533BE59C0FF46601C50@soleil> (sfid-20080922_212228_881727_338A3BBF)
+From: "Philippe Waroquiers" <philippe.waroquiers@skynet.be>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>
+References: <CB9B2237C21D46F3B852E45F75E91C52@soleil> <43e72e890809221142i44c8e81apce14c6856a1e87d9@mail.gmail.com>
+Subject: Re: prism54 stopped working after upgrade from kernel 2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
+Date: Mon, 22 Sep 2008 21:22:20 +0200
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809151640.43841.hschaa@suse.de> (sfid-20080915_164051_486270_C9D6656F)
+	format=flowed;
+	charset="UTF-8";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 15. September 2008 16:32:00 schrieb Michael Buesch:
-> On Monday 15 September 2008 14:29:46 Helmut Schaa wrote:
-> > -	if (unlikely(rx->flags & IEEE80211_RX_IN_SCAN)) {
-> > +	if (unlikely(rx->flags & IEEE80211_RX_IN_SCAN && !local->bg_scanning))
-> > {
->
-> Does & have precedence over && or the other way around?
+> Are you using prism54 or p54 in each kernel?
+> 
+> lsmod | egrep "p54|prism54"
 
-AFAIK & has precedence ;) 
+p54pci and p54common are found in both kernel
+no modules matching prism54
 
-> I don't know and I don't want to. Please use parens ;)
+In fact, a few months ago, after a kernel upgrade, I had to blacklist prism54.
+(prism54 is still in the blacklist).
 
-Anyway parentheses make it definitively more readable.
+Philippe
+
