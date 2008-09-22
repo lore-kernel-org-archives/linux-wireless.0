@@ -1,91 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39792 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751333AbYIAOP2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2008 10:15:28 -0400
-Date: Mon, 1 Sep 2008 19:45:21 +0530
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH] ath9k: Incorrect key used when group and pairwise ciphers
-	are different.
-Message-ID: <20080901141521.GA6106@senthil-lnx.users.atheros.com> (sfid-20080901_161532_856632_CBA88016)
+Received: from wr-out-0506.google.com ([64.233.184.238]:17131 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751570AbYIVJoM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 05:44:12 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so478680wri.5
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 02:44:11 -0700 (PDT)
+Message-ID: <43e72e890809220244r638c4beh315701f361d27dd3@mail.gmail.com> (sfid-20080922_114420_483769_89764C2B)
+Date: Mon, 22 Sep 2008 02:44:11 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Senthil Balasubramanian" <senthilkumar@atheros.com>
+Subject: Re: [PATCH] ath9k: Fix IRQ nobody cared issue with ath9k
+Cc: linux-wireless@vger.kernel.org,
+	"John Linville" <linville@tuxdriver.com>,
+	"Steven Noonan" <steven@uplinklabs.net>,
+	"Jouni Malinen" <jouni.malinen@atheros.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <20080922085239.GA6379@senthil-lnx.users.atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
+References: <20080922085239.GA6379@senthil-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Updating sc_keytype multiple times when groupwise and pairwise
-ciphers are different results in incorrect pairwise key type
-assumed for TX control and normal ping fails. This works fine
-for cases where both groupwise and pairwise ciphers are same.
+On Mon, Sep 22, 2008 at 1:52 AM, Senthil Balasubramanian
+<senthilkumar@atheros.com> wrote:
+> IRQs should be disabled before calling free_irq. Also flush pending
+> IRQs. Pasted the kernel log message for reference.
+>
+> kernel: irq 17: nobody cared (try booting with the "irqpoll" option)
+> kernel:  [<c0252d2c>] __report_bad_irq+0x2e/0x6f
+> kernel:  [<c0252f22>] note_interrupt+0x1b5/0x207
+> kernel:  [<c025258b>] ? handle_IRQ_event+0x21/0x48
+> kernel:  [<c02534cb>] handle_fasteoi_irq+0x8e/0xad
+> kernel:  [<c0205650>] do_IRQ+0x6c/0x84
+> kernel:  [<c020425f>] common_interrupt+0x23/0x28
+> kernel:  [<c034f6f6>] ? acpi_idle_enter_simple+0x198/0x205
+> kernel:  [<c044686c>] ? menu_select+0x5c/0x78
+> kernel:  [<c0445a95>] cpuidle_idle_call+0x59/0x89
+> kernel:  [<c02029d7>] cpu_idle+0xae/0xcf
+> kernel:  [<c0543102>] rest_init+0x4e/0x50
+> kernel:  =======================
+> kernel: handlers:
+> kernel: [<f88fdd26>] (ath_isr+0x0/0x13a [ath9k])
+> kernel: Disabling IRQ #17
+>
+> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+> Tested-by: Steven Noonan <steven@uplinklabs.net>
 
-Also use mac80211 provided enums for key length calculation.
+This is 2.6.27 material, if you don't want interrupts disabled there as well.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath9k/hw.c   |    8 ++++----
- drivers/net/wireless/ath9k/main.c |    6 ++++--
- 2 files changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index 2578411..4ccbbc0 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -7236,15 +7236,15 @@ ath9k_hw_set_keycache_entry(struct ath_hal *ah, u16 entry,
- 		}
- 		break;
- 	case ATH9K_CIPHER_WEP:
--		if (k->kv_len < 40 / NBBY) {
-+		if (k->kv_len < LEN_WEP40) {
- 			DPRINTF(ah->ah_sc, ATH_DBG_KEYCACHE,
- 				 "%s: WEP key length %u too small\n",
- 				 __func__, k->kv_len);
- 			return false;
- 		}
--		if (k->kv_len <= 40 / NBBY)
-+		if (k->kv_len <= LEN_WEP40)
- 			keyType = AR_KEYTABLE_TYPE_40;
--		else if (k->kv_len <= 104 / NBBY)
-+		else if (k->kv_len <= LEN_WEP104)
- 			keyType = AR_KEYTABLE_TYPE_104;
- 		else
- 			keyType = AR_KEYTABLE_TYPE_128;
-@@ -7264,7 +7264,7 @@ ath9k_hw_set_keycache_entry(struct ath_hal *ah, u16 entry,
- 	key2 = get_unaligned_le32(k->kv_val + 6) ^ xorMask;
- 	key3 = (get_unaligned_le16(k->kv_val + 10) ^ xorMask) & 0xffff;
- 	key4 = get_unaligned_le32(k->kv_val + 12) ^ xorMask;
--	if (k->kv_len <= 104 / NBBY)
-+	if (k->kv_len <= LEN_WEP104)
- 		key4 &= 0xff;
- 
- 	if (keyType == AR_KEYTABLE_TYPE_TKIP && ATH9K_IS_MIC_ENABLED(ah)) {
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index dc45eef..72c9f8b 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -204,7 +204,8 @@ static int ath_key_config(struct ath_softc *sc,
- 	if (!ret)
- 		return -EIO;
- 
--	sc->sc_keytype = hk.kv_type;
-+	if (mac)
-+		sc->sc_keytype = hk.kv_type;
- 	return 0;
- }
- 
-@@ -781,7 +782,8 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 			key->hw_key_idx = key->keyidx;
- 			/* push IV and Michael MIC generation to stack */
- 			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
--			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-+			if (key->alg == ALG_TKIP)
-+				key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
- 		}
- 		break;
- 	case DISABLE_KEY:
--- 
-1.5.5
-
+ Luis
