@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40567 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753388AbYIIAhY (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:50044 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752310AbYIVKhk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 20:37:24 -0400
-Subject: Re: [PATCH] b43legacy: Fix to enhance TX speed
-From: David Woodhouse <dwmw2@infradead.org>
-To: gavron@wetwork.net
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	Larry Finger <larry.finger@lwfinger.net>
-In-Reply-To: <48C358C8.3080607@wetwork.net>
-References: <48C358C8.3080607@wetwork.net>
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 19:37:23 -0500
-Message-Id: <1220920643.5748.22.camel@shinybook.infradead.org> (sfid-20080909_023728_962253_C7E2F555)
-Mime-Version: 1.0
+	Mon, 22 Sep 2008 06:37:40 -0400
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John Linville" <linville@tuxdriver.com>
+Subject: Re: stlc45xx: mac80211 driver for N800 and N810
+References: <877i98iw4h.fsf@nokia.com>
+	<1221819119.10419.75.camel@johannes.berg> <87abe3mdu4.fsf@nokia.com>
+	<43e72e890809201409h456f189ar2157a1f3167d174f@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 22 Sep 2008 13:37:21 +0300
+In-Reply-To: <43e72e890809201409h456f189ar2157a1f3167d174f@mail.gmail.com> (ext Luis R. Rodriguez's message of "Sat\, 20 Sep 2008 14\:09\:57 -0700")
+Message-ID: <878wtk31r2.fsf@nokia.com> (sfid-20080922_123744_833046_9D306A79)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-09-06 at 21:30 -0700, gavron@wetwork.net wrote:
-> Recent changes in the specifications have improved the performance
-> of the BCM4306/2 devices that use b43legacy as the driver. These
-> "errors" in the specs have been present from the very first
-> implementation of bcm43xx.
+Luis R. Rodriguez <mcgrof@gmail.com> writes:
 
-I haven't verified any speed improvement, but certainly this patch (when
-applied on top of the Fedora 9 kernel) doesn't make my shinybook get bus
-errors, which has been a common problem when updating this part of the
-code to match the specs.
+> Hey just saw this device supports reporting signal strength in RCPI,
+> we'll need to add that flag now,
+
+Nah, I don't think it's worth the trouble.
+
+> or I guess we can keep the dbm as the software can do the direct
+> mapping.
+
+I think so too.
+
+> Anyway, cool stuff.
+
+Thanks.
 
 -- 
-David Woodhouse                            Open Source Technology Centre
-David.Woodhouse@intel.com                              Intel Corporation
-
+Kalle Valo
