@@ -1,131 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:43814 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754418AbYICDbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:31:06 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 08/39] iwl3945: replace association and beacon hooks with bss_info_changed cb
-Date: Wed,  3 Sep 2008 11:26:28 +0800
-Message-Id: <1220412419-15404-9-git-send-email-yi.zhu@intel.com> (sfid-20080903_053112_984921_AFC1F0BC)
-In-Reply-To: <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
-References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+Received: from yw-out-2324.google.com ([74.125.46.31]:64713 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752374AbYIVQBt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 12:01:49 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so238248ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 09:01:48 -0700 (PDT)
+Message-ID: <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com> (sfid-20080922_180154_713315_9C5815C9)
+Date: Mon, 22 Sep 2008 09:01:48 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Steven Noonan" <steven@uplinklabs.net>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Senthilkumar Balasubramanian"
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+	 <43e72e890809201403w2c4511fdv2fe26bbcf49ccdd7@mail.gmail.com>
+	 <f488382f0809201422rdabeff4g435bf3d4a7e9fa3@mail.gmail.com>
+	 <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com>
+	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
+	 <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
+	 <20080922065453.GD19580@tesla>
+	 <f488382f0809220026u9afa355g1ff2cc7a3fe88333@mail.gmail.com>
+	 <20080922080632.GA20446@tesla>
+	 <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+On Mon, Sep 22, 2008 at 8:11 AM, Steven Noonan <steven@uplinklabs.net> wrote:
+> On Mon, Sep 22, 2008 at 1:06 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> Please test the following patch.
+>>
+>> diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+>> index c262ef2..9a51739 100644
+>> --- a/drivers/net/wireless/ath9k/core.c
+>> +++ b/drivers/net/wireless/ath9k/core.c
+>> @@ -681,10 +681,12 @@ int ath_open(struct ath_softc *sc, struct ath9k_channel *initial_chan)
+>>         * Enable MIB interrupts when there are hardware phy counters.
+>>         * Note we only do this (at the moment) for station mode.
+>>         */
+>> +#if 0
+>>        if (ath9k_hw_phycounters(ah) &&
+>>            ((sc->sc_ah->ah_opmode == ATH9K_M_STA) ||
+>>             (sc->sc_ah->ah_opmode == ATH9K_M_IBSS)))
+>>                sc->sc_imask |= ATH9K_INT_MIB;
+>> +#endif
+>>        /*
+>>         * Some hardware processes the TIM IE and fires an
+>>         * interrupt when the TIM bit is set.  For hardware
+>>
+>
+> It didn't apply to -rc7, but I managed to apply it manually
+> (apparently you made this for wireless-testing?) and added the #if 0.
+> After 7 hours uptime with the driver, no apparent interrupt storm.
+>
+> I'll do more thorough testing later, but I have a 3 hour drive today,
+> and some packing to do, so it'll need to wait a bit.
 
-Let mac80211 and bss_info_changed callback handle the association and
-beacon changes.
+Yeah I did it for wireless-testing. Good to hear this so far has
+solved the issue. I'll port it to 27 and post it once I get your
+blessings that this fixed it by a Tested-by.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |   81 -------------------------------
- 1 files changed, 0 insertions(+), 81 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 8dc26ad..1377c81 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -688,87 +688,6 @@ static void iwl3945_rx_reply_rx(struct iwl3945_priv *priv,
- 
- 	switch (le16_to_cpu(header->frame_control) & IEEE80211_FCTL_FTYPE) {
- 	case IEEE80211_FTYPE_MGMT:
--		switch (le16_to_cpu(header->frame_control) &
--			IEEE80211_FCTL_STYPE) {
--		case IEEE80211_STYPE_PROBE_RESP:
--		case IEEE80211_STYPE_BEACON:{
--				/* If this is a beacon or probe response for
--				 * our network then cache the beacon
--				 * timestamp */
--				if ((((priv->iw_mode == IEEE80211_IF_TYPE_STA)
--				      && !compare_ether_addr(header->addr2,
--							     priv->bssid)) ||
--				     ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS)
--				      && !compare_ether_addr(header->addr3,
--							     priv->bssid)))) {
--					struct ieee80211_mgmt *mgmt =
--					    (struct ieee80211_mgmt *)header;
--					__le32 *pos;
--					pos = (__le32 *)&mgmt->u.beacon.
--					    timestamp;
--					priv->timestamp0 = le32_to_cpu(pos[0]);
--					priv->timestamp1 = le32_to_cpu(pos[1]);
--					priv->beacon_int = le16_to_cpu(
--					    mgmt->u.beacon.beacon_int);
--					if (priv->call_post_assoc_from_beacon &&
--					    (priv->iw_mode ==
--						IEEE80211_IF_TYPE_STA))
--						queue_work(priv->workqueue,
--						    &priv->post_associate.work);
--
--					priv->call_post_assoc_from_beacon = 0;
--				}
--
--				break;
--			}
--
--		case IEEE80211_STYPE_ACTION:
--			/* TODO: Parse 802.11h frames for CSA... */
--			break;
--
--			/*
--			 * TODO: Use the new callback function from
--			 * mac80211 instead of sniffing these packets.
--			 */
--		case IEEE80211_STYPE_ASSOC_RESP:
--		case IEEE80211_STYPE_REASSOC_RESP:{
--				struct ieee80211_mgmt *mgnt =
--				    (struct ieee80211_mgmt *)header;
--
--				/* We have just associated, give some
--				 * time for the 4-way handshake if
--				 * any. Don't start scan too early. */
--				priv->next_scan_jiffies = jiffies +
--					IWL_DELAY_NEXT_SCAN_AFTER_ASSOC;
--
--				priv->assoc_id = (~((1 << 15) | (1 << 14)) &
--						  le16_to_cpu(mgnt->u.
--							      assoc_resp.aid));
--				priv->assoc_capability =
--				    le16_to_cpu(mgnt->u.assoc_resp.capab_info);
--				if (priv->beacon_int)
--					queue_work(priv->workqueue,
--					    &priv->post_associate.work);
--				else
--					priv->call_post_assoc_from_beacon = 1;
--				break;
--			}
--
--		case IEEE80211_STYPE_PROBE_REQ:{
--				DECLARE_MAC_BUF(mac1);
--				DECLARE_MAC_BUF(mac2);
--				DECLARE_MAC_BUF(mac3);
--				if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS)
--					IWL_DEBUG_DROP
--					    ("Dropping (non network): %s"
--					     ", %s, %s\n",
--					     print_mac(mac1, header->addr1),
--					     print_mac(mac2, header->addr2),
--					     print_mac(mac3, header->addr3));
--				return;
--			}
--		}
--
- 	case IEEE80211_FTYPE_DATA:
- 		/* fall through */
- 	default:
--- 
-1.5.3.6
-
+  Luis
