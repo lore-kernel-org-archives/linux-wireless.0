@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:54031 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752010AbYICN0A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 09:26:00 -0400
-Date: Wed, 3 Sep 2008 16:24:48 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: at76_usb.[ch] gone fishing from wireless-testing ?
-Message-ID: <20080903132448.GT17345@jm.kir.nu> (sfid-20080903_152603_581846_2435A8AA)
-References: <43e72e890809021953o29c6ba53wcdf7630d4ff10b30@mail.gmail.com> <87vdxedje8.fsf@nokia.com> <43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com> <20080903125352.GI3050@tuxdriver.com> <20080903130439.GJ3050@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080903130439.GJ3050@tuxdriver.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47885
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753221AbYIVWrP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 18:47:15 -0400
+Date: Mon, 22 Sep 2008 15:47:02 -0700 (PDT)
+Message-Id: <20080922.154702.251968919.davem@davemloft.net> (sfid-20080923_004719_659406_4B5045BF)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-09-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080922220619.GD3660@tuxdriver.com>
+References: <20080922220619.GD3660@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 03, 2008 at 09:04:40AM -0400, John W. Linville wrote:
-> On Wed, Sep 03, 2008 at 08:53:52AM -0400, John W. Linville wrote:
-> > Crap, I botched my lastest update.  I'll pull in the part that adds
-> > -wl to the version for sure.  Anyone want to talk me out of pulling-in
-> > the at76 parts?
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 22 Sep 2008 18:06:19 -0400
+
+> Here are a few more for 2.6.27.  The ath9k patches fix an oops and a
+> kernel.org bugzilla (11570).  The zd1211rw patch is just a PCI ID --
+> hopefully that is not still outside the lines even at this stage.
 > 
-> Hmmm...upon further review, both my local copy and the one at
-> kernel.org seem to have the proper bits AFAICT...?
+> Please let me know if there are problems!
 
-I don't see -wl in EXTRAVERSION in kernel.org version (1) or my own
-clone. Both are at commit 908dd0b965e64fcc2eb64152bac65f2876c34e0b. I
-noticed this disappearing at one of the updates since I had to add a
-local patch to be able to update my modules without rebooting..
-
-(1)
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob_plain;f=Makefile;hb=908dd0b965e64fcc2eb64152bac65f2876c34e0b
-
-
-However, at76_usb.[ch] seems to be present in both..
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Looks good, pulled, thanks a lot John.
