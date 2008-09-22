@@ -1,190 +1,423 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:9233 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753115AbYI3UHc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 16:07:32 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] mac80211: modify SM_PS state upon change in power save state
-Date: Tue, 30 Sep 2008 23:07:25 +0300
-Message-Id: <1222805245-31166-2-git-send-email-tomas.winkler@intel.com> (sfid-20080930_220736_415710_7E589876)
-In-Reply-To: <1222805245-31166-1-git-send-email-tomas.winkler@intel.com>
-References: <1222805245-31166-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from wf-out-1314.google.com ([209.85.200.174]:20427 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752876AbYIVBMj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 21:12:39 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1361020wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Sep 2008 18:12:38 -0700 (PDT)
+Message-ID: <1197ff4c0809211812h7c7c0404lc4c169150d63af72@mail.gmail.com> (sfid-20080922_031256_325754_73D7DBD1)
+Date: Mon, 22 Sep 2008 09:12:38 +0800
+From: YanBo <dreamfly281@gmail.com>
+To: "Javier Cardona" <javier@cozybit.com>
+Subject: Re: [PATCH v3] mac80211: mesh portal functionality support
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis Carlos Cobo" <luisca@cozybit.com>
+In-Reply-To: <445f43ac0809211031k310bd226x3b0b19e15846ba38@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1222003802.3023.26.camel@johannes.berg>
+	 <445f43ac0809211031k310bd226x3b0b19e15846ba38@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, Sep 22, 2008 at 1:31 AM, Javier Cardona <javier@cozybit.com> wrote:
+> Yanbo,
+>
+> This is a great contribution!  We'll try it out in our testbed next
+> week.  But until we complete a full review, a couple of comments
+> follow:
+>
+Welcome any comment :)
 
-Upon change in power save state the driver may want to change also the SM_PS
-state. PS and SM_PS are generally independent but it's logical to tight them together
-to narrow the interface.
-In PS mode driver if switches off RX chains, it also might need to change
-to DYNAMIC SM_PS state.
-When going back to CAM mode, the driver may need to go to DISABLE SM_PS state.
+> On Sun, Sep 21, 2008 at 6:30 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> From: Li YanBo <dreamfly281@gmail.com>
+>>
+>> Currently the mesh code doesn't support bridging mesh point interfaces
+>> with wired ethernet or AP to construct an MPP or MAP. This patch adds
+>> code to support the "6 address frame format packet" functionality to
+>> mesh point interfaces. Now the mesh network can be used as backhaul
+>> for end to end communication.
+>>
+>> Signed-off-by: Li YanBo <dreamfly281@gmail.com>
+>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> ---
+>>  include/linux/ieee80211.h   |    5 ++
+>>  net/mac80211/mesh.h         |    3 +
+>>  net/mac80211/mesh_pathtbl.c |  129 ++++++++++++++++++++++++++++++++++++++++++-
+>>  net/mac80211/rx.c           |   32 +++++++++-
+>>  net/mac80211/tx.c           |   45 +++++++++++++--
+>>  5 files changed, 202 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+>> index abc1abc..db1bb0c 100644
+>> --- a/include/linux/ieee80211.h
+>> +++ b/include/linux/ieee80211.h
+>> @@ -471,6 +471,11 @@ struct ieee80211s_hdr {
+>>        u8 eaddr3[6];
+>>  } __attribute__ ((packed));
+>>
+>> +/* Mesh extent address flags */
+>> +#define MESH_DATA_NO_EADDR     0x0
+>> +#define MESH_DATA_EADD1_EADD2  0x2
+>
+> Just for consistency with the draft I suggest adding/renaming:
+>
+> #define MESH_AE_ADD4                         0x1
+> #define MESH_AE_ADD5_ADD6              0x2
+> #define MESH_AE_ADD4_ADD5_ADD6  0x3
+>
 
-This patch allows the driver to configure which SM_SP state to switch to
-upon change in power state.
+Good point, but as johill said,maybe bitwise should better
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- include/net/mac80211.h |    8 ++++++++
- net/mac80211/ht.c      |    5 +++++
- net/mac80211/main.c    |    5 +++++
- net/mac80211/mlme.c    |    3 +++
- net/mac80211/wext.c    |   32 ++++++++++++++++++++++----------
- 5 files changed, 43 insertions(+), 10 deletions(-)
+#define MESH_FLAGS_AE_A4     0x1
+#define MESH_FLAGS_AE_A5_A6  0x2
+#define MESH_FLAGS_PS_DEEP   0x4
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f15e495..0edcd18 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -459,6 +459,8 @@ enum ieee80211_conf_flags {
-  * @max_antenna_gain: maximum antenna gain (in dBi)
-  * @antenna_sel_tx: transmit antenna selection, 0: default/diversity,
-  *	1/2: antenna 0/1
-+ * @sm_ps_mode: spatial multiplexing power save mode
-+ * 	takes values of: WLAN_HT_CAP_SM_PS_YYYY
-  * @antenna_sel_rx: receive antenna selection, like @antenna_sel_tx
-  * @ht_conf: describes current self configuration of 802.11n HT capabilies
-  * @ht_bss_conf: describes current BSS configuration of 802.11n HT parameters
-@@ -474,6 +476,8 @@ struct ieee80211_conf {
- 	int max_antenna_gain;
- 	u8 antenna_sel_tx;
- 	u8 antenna_sel_rx;
-+	u8 sm_ps_mode;
-+
- 
- 	struct ieee80211_channel *channel;
- 
-@@ -828,6 +832,8 @@ enum ieee80211_hw_flags {
-  *	within &struct ieee80211_vif.
-  * @sta_data_size: size (in bytes) of the drv_priv data area
-  *	within &struct ieee80211_sta.
-+ * @sm_ps_psp_mode: what sm_ps mode should be use while in PSP mode
-+ * @sm_ps_cam_mode: what sm_ps mode should be use while in CAM mode
-  */
- struct ieee80211_hw {
- 	struct ieee80211_conf conf;
-@@ -843,6 +849,8 @@ struct ieee80211_hw {
- 	u16 queues;
- 	u16 ampdu_queues;
- 	u16 max_listen_interval;
-+	u8 sm_ps_psp_mode;
-+	u8 sm_ps_cam_mode;
- 	s8 max_signal;
- };
- 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index e468137..c0f7454 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -1061,11 +1061,16 @@ void ieee80211_sm_ps_update(struct ieee80211_hw *hw, u8 new_mode)
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_local *local = hw_to_local(hw);
- 
-+	if (local->hw.conf.sm_ps_mode == new_mode)
-+		return;
-+
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		ieee80211_send_sm_ps(sdata, new_mode);
- 	}
- 	rcu_read_unlock();
-+
-+	local->hw.conf.sm_ps_mode = new_mode;
- }
- EXPORT_SYMBOL(ieee80211_sm_ps_update);
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index d608c44..ba5834b 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -760,6 +760,11 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	local->short_retry_limit = 7;
- 	local->long_retry_limit = 4;
- 	local->hw.conf.radio_enabled = 1;
-+	
-+	local->hw.sm_ps_psp_mode = WLAN_HT_CAP_SM_PS_DISABLED;
-+	local->hw.sm_ps_cam_mode = WLAN_HT_CAP_SM_PS_DISABLED;
-+	local->hw.conf.sm_ps_mode = WLAN_HT_CAP_SM_PS_DISABLED;
-+	
- 
- 	INIT_LIST_HEAD(&local->interfaces);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4c9dc81..1ead57b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -416,6 +416,9 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
- 			break;
- 		}
- 
-+		cap &= ~IEEE80211_HT_CAP_SM_PS;
-+		cap |= local->hw.conf.sm_ps_mode << 2;
-+
- 		tmp = cpu_to_le16(cap);
- 		pos = skb_put(skb, sizeof(struct ieee80211_ht_cap)+2);
- 		*pos++ = WLAN_EID_HT_CAPABILITY;
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 7e0d53a..ba907f4 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -977,21 +977,33 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_conf *conf = &local->hw.conf;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	u8 sm_ps_mode;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP)
-+		return -EOPNOTSUPP;
- 
- 	if (wrq->disabled) {
- 		conf->flags &= ~IEEE80211_CONF_PS;
--		return ieee80211_hw_config(local);
-+		sm_ps_mode = local->hw.sm_ps_cam_mode;
-+	} else {
-+		switch (wrq->flags & IW_POWER_MODE) {
-+		case IW_POWER_ON:       /* If not specified */
-+		case IW_POWER_MODE:     /* If set all mask */
-+		case IW_POWER_ALL_R:    /* If explicitely state all */
-+			conf->flags |= IEEE80211_CONF_PS;
-+			sm_ps_mode = local->hw.sm_ps_psp_mode;
-+			break;
-+		default:                /* Otherwise we don't support it */
-+			return -EINVAL;
-+		}
- 	}
- 
--	switch (wrq->flags & IW_POWER_MODE) {
--	case IW_POWER_ON:       /* If not specified */
--	case IW_POWER_MODE:     /* If set all mask */
--	case IW_POWER_ALL_R:    /* If explicitely state all */
--		conf->flags |= IEEE80211_CONF_PS;
--		break;
--	default:                /* Otherwise we don't support it */
--		return -EINVAL;
--	}
-+	if (sdata->bss_conf.assoc_ht)
-+		/* we need to update the AP about the change.
-+		 * If we are in HT, then we are in STA mode
-+		 * conf->sm_ps_mode is updated insde the function*/
-+		ieee80211_sm_ps_update(&local->hw, sm_ps_mode);
- 
- 	return ieee80211_hw_config(local);
- }
--- 
-1.5.4.3
+>> +
+>> +
+>>  /**
+>>  * struct ieee80211_quiet_ie
+>>  *
+>> diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+>> index 8ee414a..5b18d2b 100644
+>> --- a/net/mac80211/mesh.h
+>> +++ b/net/mac80211/mesh.h
+>> @@ -71,6 +71,7 @@ enum mesh_path_flags {
+>>  */
+>>  struct mesh_path {
+>>        u8 dst[ETH_ALEN];
+>> +       u8 mpp[ETH_ALEN];       /* used for MPP or MAP */
+>>        struct ieee80211_sub_if_data *sdata;
+>>        struct sta_info *next_hop;
+>>        struct timer_list timer;
+>> @@ -226,6 +227,8 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+>>  void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata);
+>>  struct mesh_path *mesh_path_lookup(u8 *dst,
+>>                struct ieee80211_sub_if_data *sdata);
+>> +struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata);
+>> +int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata);
+>>  struct mesh_path *mesh_path_lookup_by_idx(int idx,
+>>                struct ieee80211_sub_if_data *sdata);
+>>  void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop);
+>> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+>> index e4fa290..f202eac 100644
+>> --- a/net/mac80211/mesh_pathtbl.c
+>> +++ b/net/mac80211/mesh_pathtbl.c
+>> @@ -36,6 +36,7 @@ struct mpath_node {
+>>  };
+>>
+>>  static struct mesh_table *mesh_paths;
+>> +static struct mesh_table *mpp_paths; /* Store pathes for MPP&MAP */
+>>
+>>  /* This lock will have the grow table function as writer and add / delete nodes
+>>  * as readers. When reading the table (i.e. doing lookups) we are well protected
+>> @@ -94,6 +95,34 @@ struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
+>>        return NULL;
+>>  }
+>>
+>> +struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
+>> +{
+>> +       struct mesh_path *mpath;
+>> +       struct hlist_node *n;
+>> +       struct hlist_head *bucket;
+>> +       struct mesh_table *tbl;
+>> +       struct mpath_node *node;
+>> +
+>> +       tbl = rcu_dereference(mpp_paths);
+>> +
+>> +       bucket = &tbl->hash_buckets[mesh_table_hash(dst, sdata, tbl)];
+>> +       hlist_for_each_entry_rcu(node, n, bucket, list) {
+>> +               mpath = node->mpath;
+>> +               if (mpath->sdata == sdata &&
+>> +                   memcmp(dst, mpath->dst, ETH_ALEN) == 0) {
+>> +                       if (MPATH_EXPIRED(mpath)) {
+>> +                               spin_lock_bh(&mpath->state_lock);
+>> +                               if (MPATH_EXPIRED(mpath))
+>> +                                       mpath->flags &= ~MESH_PATH_ACTIVE;
+>> +                               spin_unlock_bh(&mpath->state_lock);
+>> +                       }
+>> +                       return mpath;
+>> +               }
+>> +       }
+>> +       return NULL;
+>> +}
+>> +
+>> +
+>>  /**
+>>  * mesh_path_lookup_by_idx - look up a path in the mesh path table by its index
+>>  * @idx: index
+>> @@ -226,6 +255,91 @@ err_path_alloc:
+>>  }
+>>
+>>
+>> +int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
+>> +{
+>> +       struct mesh_path *mpath, *new_mpath;
+>> +       struct mpath_node *node, *new_node;
+>> +       struct hlist_head *bucket;
+>> +       struct hlist_node *n;
+>> +       int grow = 0;
+>> +       int err = 0;
+>> +       u32 hash_idx;
+>> +
+>> +
+>> +       if (memcmp(dst, sdata->dev->dev_addr, ETH_ALEN) == 0)
+>> +               /* never add ourselves as neighbours */
+>> +               return -ENOTSUPP;
+>> +
+>> +       if (is_multicast_ether_addr(dst))
+>> +               return -ENOTSUPP;
+>> +
+>> +       err = -ENOMEM;
+>> +       new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
+>> +       if (!new_mpath)
+>> +               goto err_path_alloc;
+>> +
+>> +       new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
+>> +       if (!new_node)
+>> +               goto err_node_alloc;
+>> +
+>> +       read_lock(&pathtbl_resize_lock);
+>> +       memcpy(new_mpath->dst, dst, ETH_ALEN);
+>> +       memcpy(new_mpath->mpp, mpp, ETH_ALEN);
+>> +       new_mpath->sdata = sdata;
+>> +       new_mpath->flags = 0;
+>> +       skb_queue_head_init(&new_mpath->frame_queue);
+>> +       new_node->mpath = new_mpath;
+>> +       new_mpath->exp_time = jiffies;
+>> +       spin_lock_init(&new_mpath->state_lock);
+>> +
+>> +       hash_idx = mesh_table_hash(dst, sdata, mpp_paths);
+>> +       bucket = &mpp_paths->hash_buckets[hash_idx];
+>> +
+>> +       spin_lock(&mpp_paths->hashwlock[hash_idx]);
+>> +
+>> +       err = -EEXIST;
+>> +       hlist_for_each_entry(node, n, bucket, list) {
+>> +               mpath = node->mpath;
+>> +               if (mpath->sdata == sdata && memcmp(dst, mpath->dst, ETH_ALEN) == 0)
+>> +                       goto err_exists;
+>> +       }
+>> +
+>> +       hlist_add_head_rcu(&new_node->list, bucket);
+>> +       if (atomic_inc_return(&mpp_paths->entries) >=
+>> +               mpp_paths->mean_chain_len * (mpp_paths->hash_mask + 1))
+>> +               grow = 1;
+>> +
+>> +       spin_unlock(&mpp_paths->hashwlock[hash_idx]);
+>> +       read_unlock(&pathtbl_resize_lock);
+>> +       if (grow) {
+>> +               struct mesh_table *oldtbl, *newtbl;
+>> +
+>> +               write_lock(&pathtbl_resize_lock);
+>> +               oldtbl = mpp_paths;
+>> +               newtbl = mesh_table_grow(mpp_paths);
+>> +               if (!newtbl) {
+>> +                       write_unlock(&pathtbl_resize_lock);
+>> +                       return 0;
+>> +               }
+>> +               rcu_assign_pointer(mpp_paths, newtbl);
+>> +               write_unlock(&pathtbl_resize_lock);
+>> +
+>> +               synchronize_rcu();
+>> +               mesh_table_free(oldtbl, false);
+>> +       }
+>> +       return 0;
+>> +
+>> +err_exists:
+>> +       spin_unlock(&mpp_paths->hashwlock[hash_idx]);
+>> +       read_unlock(&pathtbl_resize_lock);
+>> +       kfree(new_node);
+>> +err_node_alloc:
+>> +       kfree(new_mpath);
+>> +err_path_alloc:
+>> +       return err;
+>> +}
+>> +
+>> +
+>>  /**
+>>  * mesh_plink_broken - deactivates paths and sends perr when a link breaks
+>>  *
+>> @@ -475,11 +589,21 @@ static int mesh_path_node_copy(struct hlist_node *p, struct mesh_table *newtbl)
+>>  int mesh_pathtbl_init(void)
+>>  {
+>>        mesh_paths = mesh_table_alloc(INIT_PATHS_SIZE_ORDER);
+>> +       if (!mesh_paths)
+>> +               return -ENOMEM;
+>>        mesh_paths->free_node = &mesh_path_node_free;
+>>        mesh_paths->copy_node = &mesh_path_node_copy;
+>>        mesh_paths->mean_chain_len = MEAN_CHAIN_LEN;
+>> -       if (!mesh_paths)
+>> -               return -ENOMEM;
+>> +
+>> +       mpp_paths = mesh_table_alloc(INIT_PATHS_SIZE_ORDER);
+>> +       if (!mpp_paths) {
+>> +               mesh_table_free(mesh_paths, true);
+>> +               return -ENOMEM;
+>> +       }
+>> +       mpp_paths->free_node = &mesh_path_node_free;
+>> +       mpp_paths->copy_node = &mesh_path_node_copy;
+>> +       mpp_paths->mean_chain_len = MEAN_CHAIN_LEN;
+>> +
+>>        return 0;
+>>  }
+>>
+>> @@ -511,4 +635,5 @@ void mesh_path_expire(struct ieee80211_sub_if_data *sdata)
+>>  void mesh_pathtbl_unregister(void)
+>>  {
+>>        mesh_table_free(mesh_paths, true);
+>> +       mesh_table_free(mpp_paths, true);
+>>  }
+>> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+>> index 763c7ea..ff7e813 100644
+>> --- a/net/mac80211/rx.c
+>> +++ b/net/mac80211/rx.c
+>> @@ -1112,10 +1112,6 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+>>
+>>        hdrlen = ieee80211_hdrlen(hdr->frame_control);
+>>
+>> -       if (ieee80211_vif_is_mesh(&sdata->vif))
+>> -               hdrlen += ieee80211_get_mesh_hdrlen(
+>> -                               (struct ieee80211s_hdr *) (skb->data + hdrlen));
+>> -
+>>        /* convert IEEE 802.11 header + possible LLC headers into Ethernet
+>>         * header
+>>         * IEEE 802.11 address fields:
+>> @@ -1139,6 +1135,15 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+>>                if (unlikely(sdata->vif.type != NL80211_IFTYPE_WDS &&
+>>                             sdata->vif.type != NL80211_IFTYPE_MESH_POINT))
+>>                        return -1;
+>> +               if (ieee80211_vif_is_mesh(&sdata->vif)) {
+>> +                       struct ieee80211s_hdr *meshdr = (struct ieee80211s_hdr *)
+>> +                               (skb->data + hdrlen);
+>> +                       hdrlen += ieee80211_get_mesh_hdrlen(meshdr);
+>> +                       if (meshdr->flags == MESH_DATA_EADD1_EADD2) {
+>> +                               memcpy(dst, meshdr->eaddr1, ETH_ALEN);
+>> +                               memcpy(src, meshdr->eaddr2, ETH_ALEN);
+>> +                       }
+>> +               }
+>>                break;
+>>        case __constant_cpu_to_le16(IEEE80211_FCTL_FROMDS):
+>>                if (sdata->vif.type != NL80211_IFTYPE_STATION ||
+>> @@ -1398,6 +1403,25 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+>>                /* illegal frame */
+>>                return RX_DROP_MONITOR;
+>>
+>> +       if (mesh_hdr->flags == MESH_DATA_EADD1_EADD2){
+>
+> There are other assigned and reserved bits in the flags field.  It's
+> probably better to do...
+>
+>  +       if ((mesh_hdr->flags & IEEE80211S_FLAGS_AE) == MESH_DATA_EADD1_EADD2){
+>
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Yes, it will be fixed later.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+>> +               struct ieee80211_sub_if_data *sdata;
+>> +               struct mesh_path *mppath;
+>> +
+>> +               sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+>> +               rcu_read_lock();
+>> +               mppath = mpp_path_lookup(mesh_hdr->eaddr2, sdata);
+>> +               if (!mppath) {
+>> +                       mpp_path_add(mesh_hdr->eaddr2, hdr->addr4, sdata);
+>> +               } else {
+>> +                       spin_lock_bh(&mppath->state_lock);
+>> +                       mppath->exp_time = jiffies;
+>> +                       if (compare_ether_addr(mppath->mpp, hdr->addr4) != 0)
+>> +                               memcpy(mppath->mpp, hdr->addr4, ETH_ALEN);
+>> +                       spin_unlock_bh(&mppath->state_lock);
+>> +               }
+>> +               rcu_read_unlock();
+>> +       }
+>> +
+>>        if (compare_ether_addr(rx->dev->dev_addr, hdr->addr3) == 0)
+>>                return RX_CONTINUE;
+>>
+>> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+>> index 20d6836..e1e11dc 100644
+>> --- a/net/mac80211/tx.c
+>> +++ b/net/mac80211/tx.c
+>> @@ -1498,18 +1498,51 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+>>  #ifdef CONFIG_MAC80211_MESH
+>>        case NL80211_IFTYPE_MESH_POINT:
+>>                fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
+>> -               /* RA TA DA SA */
+>> -               memset(hdr.addr1, 0, ETH_ALEN);
+>> -               memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
+>> -               memcpy(hdr.addr3, skb->data, ETH_ALEN);
+>> -               memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
+>> +
+>>                if (!sdata->u.mesh.mshcfg.dot11MeshTTL) {
+>>                        /* Do not send frames with mesh_ttl == 0 */
+>>                        sdata->u.mesh.mshstats.dropped_frames_ttl++;
+>>                        ret = 0;
+>>                        goto fail;
+>>                }
+>> -               meshhdrlen = ieee80211_new_mesh_header(&mesh_hdr, sdata);
+>> +               if (compare_ether_addr(dev->dev_addr,
+>> +                                         skb->data + ETH_ALEN) == 0) {
+>> +                       /* RA TA DA SA */
+>> +                       memset(hdr.addr1, 0, ETH_ALEN);
+>> +                       memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
+>> +                       memcpy(hdr.addr3, skb->data, ETH_ALEN);
+>> +                       memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
+>> +                       meshhdrlen = ieee80211_new_mesh_header(&mesh_hdr, sdata);
+>> +               } else {
+>> +                       /* packet from other interface */
+>> +                       struct mesh_path *mppath;
+>> +                       u8 broadcast[ETH_ALEN] = {0xFF, 0xFF, 0xFF,
+>> +                                                 0xFF, 0xFF, 0xFF};
+>> +
+>> +                       memset(hdr.addr1, 0, ETH_ALEN);
+>> +                       memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
+>> +                       memcpy(hdr.addr4, dev->dev_addr, ETH_ALEN);
+>> +
+>> +                       if (is_multicast_ether_addr(skb->data))
+>> +                               memcpy(hdr.addr3, skb->data, ETH_ALEN);
+>> +                       else {
+>> +                               rcu_read_lock();
+>> +                               mppath = mpp_path_lookup(skb->data, sdata);
+>> +                               if (mppath)
+>> +                                       memcpy(hdr.addr3, mppath->mpp, ETH_ALEN);
+>> +                               else
+>> +                                       memcpy(hdr.addr3, broadcast, ETH_ALEN);
+>> +                               rcu_read_unlock();
+>> +                       }
+>> +
+>> +                       mesh_hdr.flags = MESH_DATA_EADD1_EADD2;
+>> +                       mesh_hdr.ttl = sdata->u.mesh.mshcfg.dot11MeshTTL;
+>> +                       put_unaligned(cpu_to_le32(sdata->u.mesh.mesh_seqnum), &mesh_hdr.seqnum);
+>> +                       memcpy(mesh_hdr.eaddr1, skb->data, ETH_ALEN);
+>> +                       memcpy(mesh_hdr.eaddr2, skb->data + ETH_ALEN, ETH_ALEN);
+>> +                       sdata->u.mesh.mesh_seqnum++;
+>> +                       meshhdrlen = 18;
+>> +               }
+>>                hdrlen = 30;
+>>                break;
+>>  #endif
+>>
+>>
+>>
+>
 
+Another question is the function of mpp_path_lookup or mpp_path_add is
+90% similar with the function mesh_path_lookup and mesh_path_add, just
+reference different paths table. so I think we can merge  them into
+one function to decrease the code size?
+
+And in currently implementation, A separate hash table is used for the
+MPP or MAP to record all mac address that go through it, that is
+because the MPP&MAP update the table just like the bridge's action,
+this is totally different with the update process for mesh point
+paths, so I set up a separate hash table to make thing simple, but
+there is also another solution is maintain the MPP&MAP paths and mesh
+point paths in one hash table(the mesh_paths),  but this need modify
+lots of o11s code. so I'm thinking is it worth to do this? Thanks!
+
+BR
+Yanbo
