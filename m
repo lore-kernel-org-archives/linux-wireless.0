@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:43814 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754393AbYICDbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:31:07 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Cahill Ben <ben.m.cahill@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 09/39] iwlwifi: fix hidden ssid discovery in passive channels
-Date: Wed,  3 Sep 2008 11:26:29 +0800
-Message-Id: <1220412419-15404-10-git-send-email-yi.zhu@intel.com> (sfid-20080903_053114_736432_0AD248E3)
-In-Reply-To: <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
-References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:59456 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751550AbYIVJcE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 05:32:04 -0400
+Received: from eagle4.localnet (koln-4db444db.pool.einsundeins.de [77.180.68.219])
+	by whisper-net.dyndns.org (Postfix) with ESMTP id A8CD01A032
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 11:43:40 +0200 (CEST)
+From: Julian Pietron <julian@whisper-net.de>
+To: linux-wireless@vger.kernel.org
+Subject: Problems with zd1211rw and TL-WN322G (TP-Link)
+Date: Mon, 22 Sep 2008 11:31:54 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200809221131.55266.julian@whisper-net.de> (sfid-20080922_113209_182569_D92010EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Hallo,
 
-This patch gives the HW the possibility to send direct probes in passive
-channels (as long as traffic was detected in that channel) if such ssid
-was requested, so hidden ssid can be found now in those channels as well.
+I bought a TP-Link TL-WN322G with ZyDas-Chipset. If I try to use it with the 
+zd1211rw driver, the device is recognized, but an accesspoint scan via iwlist 
+wlan1 scan fails with "Network is down". Trying to set up the interface 
+manually using ifconfig wlan1 up fails with "SIOCSIFFLAGS: No such device".
 
-Signed-off-by: Cahill Ben <ben.m.cahill@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The complete dmesg-output from plugging the stick in until the above error 
+message reads as follows:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 9bb6adb..6c8ac3a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -421,7 +421,7 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
- 		else
- 			scan_ch->type = SCAN_CHANNEL_TYPE_ACTIVE;
- 
--		if ((scan_ch->type & SCAN_CHANNEL_TYPE_ACTIVE) && n_probes)
-+		if (n_probes)
- 			scan_ch->type |= IWL_SCAN_PROBE_MASK(n_probes);
- 
- 		scan_ch->active_dwell = cpu_to_le16(active_dwell);
--- 
-1.5.3.6
+usb 2-2: new high speed USB device using ehci_hcd and address 8
+usb 2-2: configuration #1 chosen from 1 choice
+usb 2-2: reset high speed USB device using ehci_hcd and address 8
+phy1: Selected rate control algorithm 'pid'
+zd1211rw 2-2:1.0: phy1
+firmware: requesting zd1211/zd1211b_ub
+firmware: requesting zd1211/zd1211b_uphr
+zd1211rw 2-2:1.0: RF MAXIM_NEW_RF 0x8 is not supported
 
+After that, the red led of the stick is off and ifconfig wlan1 up or other 
+commands involving the device don't work anymore (they hang until the stick is 
+plugged off).
+Used kernel is 2.6.26, but I encountered the same errors with a 2.6.22 and 
+2.6.24 kernel.
+
+I hope someone can give me a hint how to get this device to work properly.
+
+Thanks in advance,
+J. Pietron
