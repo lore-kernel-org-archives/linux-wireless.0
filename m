@@ -1,81 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51606 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754593AbYIRTVw (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:49358 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbYIVIG3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 15:21:52 -0400
-Subject: Re: temorarily out of range -> no TCP?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Anders Eriksson <aeriksson@fastmail.fm>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080918191633.C8BAB93CCA7@tippex.mynet.homeunix.org>
-References: <20080918141955.0119E93CCA7@tippex.mynet.homeunix.org>
-	 (sfid-20080918_162007_153222_33378A12) <1221762748.20772.7.camel@johannes.berg>
-	 <20080918191633.C8BAB93CCA7@tippex.mynet.homeunix.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-B+QvlQUtUyh03VGa80F0"
-Date: Thu, 18 Sep 2008 21:21:16 +0200
-Message-Id: <1221765676.20772.31.camel@johannes.berg> (sfid-20080918_212154_496325_210F4B8A)
-Mime-Version: 1.0
+	Mon, 22 Sep 2008 04:06:29 -0400
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Christian Lamparter" <chunkeey@web.de>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: stlc45xx: mac80211 driver for N800 and N810
+References: <877i98iw4h.fsf@nokia.com>
+	<43e72e890809182257r65da8757g1de0ce4f132bf019@mail.gmail.com>
+	<1221814778.10419.23.camel@johannes.berg>
+	<200809191658.46690.chunkeey@web.de>
+	<43e72e890809191055o4085fab1k8a85fe9266ae8aab@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 22 Sep 2008 11:06:05 +0300
+In-Reply-To: <43e72e890809191055o4085fab1k8a85fe9266ae8aab@mail.gmail.com> (ext Luis R. Rodriguez's message of "Fri\, 19 Sep 2008 10\:55\:18 -0700")
+Message-ID: <87wsh438r6.fsf@nokia.com> (sfid-20080922_100634_471538_88F90E58)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis R. Rodriguez <mcgrof@gmail.com> writes:
 
---=-B+QvlQUtUyh03VGa80F0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>>> > Cool! I thought n810 basically used a p54 type chipset over SPI?
+>>>
+>>> Yes, but the firmware (lower MAC) is sufficiently different that it
+>>> would be painful to support in p54, afaict.
+>>>
+>> not that much... only the frequency calibration data is a bit different,
+>> while most other data structures are more or less the same. Really!
+>
+> Well to be fair we had similar question with ath5k and we went with
+> ath9k because that's how we best could support the hardware as quickly
+> as possible for users. Eventually we will converge though as it just
+> makes sense in areas that we can share. So if this driver is targeted
+> upstream to get users supported I can see how using a new driver
+> supported by a team can make sense. But eventually convergence should
+> be considered.
 
-On Thu, 2008-09-18 at 21:16 +0200, Anders Eriksson wrote:
-> johannes@sipsolutions.net said:
-> > Oh and that works just fine for me, I do it all the time. ssh can take =
-a long
-> > time to recover though, for some reason, so I tend to kill it (I do
-> > everything in screen anyway).=20
->=20
-> Hmmm, alright, I'll try to sit one out and see what happens.=20
->=20
-> How do I best trigger an out of range condition? Power cycle the AP?
+I don't have the p54 hardware (for regression testing) or the time to
+add stlc45xx support to p54, and most probably there might be even
+some legal implications which might prevent me of doing the work. So
+somebody else would have to do the converge between p54 and stlc45xx.
 
-Not really. That would kill the AP's NAT table too which is probably a
-bad idea. Though it might work. Take off the antenna ;)
+> Is this driver targeted for inclusion upstream?
 
-> PS I assume the IP stack signals the tcp queue that there is an operation=
-al=20
-> and suitable link out of the machine when the driver is happy again, righ=
-t?
+Yes, that's my goal but it's not quite ready yet. Now that the driver
+is published I will be doing cleanup, starting from Johannes'
+comments. I also understand that there might problems with the
+upstream inclusion, biggest one being the proprietary user space
+calibration tool.
 
-I'd guess so.
+I'm very interested in mac80211 and would like to see it suitable for
+embedded devices like N800/N810. The just announced stlc45xx driver
+would be a perfect tool for that kind of development and having the
+driver upstream would make development a lot easier. 
 
-> Howcome I needs to rmmod/modprobe it?
+Features that I am interested in, just from the top of my head, are
+proper roaming support, power save mode and beacon filtering. In my
+opinion the biggest areas needing work are everything related to
+mobility or the power consumption.
 
-No idea. I just tried rmmod/modprobe with an open ssh connection without
-problems. Even wpa_supplicant picked up the new wlan0 device
-automatically.
+> If the driver is targeted upstream and a company is sponsoring its
+> development we would like a license for the firmware. I mentioned this
+> on another thread but it must be one which meets distribution
+> requirements. You can see the WHENCE file on linux-firmware git tree
+> for examples.
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
+>
+> Otherwise how can I use this driver, test it or enhance it?
 
-Oh if you get iw you can remove the AP STA... That would do it :)
+Currently sltc45xx is usable only on N800/N810 and the rootfs in those
+devices contains the firmware. But, like I already said in
+stlc45xx-devel, I'm working on this. Just don't expect a quick
+resolution, working with lawyers is slow.
 
-johannes
-
---=-B+QvlQUtUyh03VGa80F0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0qopAAoJEKVg1VMiehFYPNIQAI9v/4Ab3qUQrKoeluvunudC
-VO1opXYHRo+QHPicWff+yVq8wMvmmntuJDBqeNndtEE5ugOpSnZ3wQYoqpvm6RgG
-q4x+vt8L3Psnwmr0oyRKm6ppt6xhEy/6aP808v8oAnHn7IEg4khDixsOp3hbUN4H
-yMOKaJRko1SP05olhCJoTMFQr2DoKytiRibRrPIWyVl92gxcZvl5VA37clotYTPg
-+8QAOGGdy7ijUh7O9BixfysGwQOVu62A26qssd29qGuT2g62R4UtSI8zRQphwoE6
-lhxPQTkAJKd7+Q/u6uXYHeM/s8FonMOxA6q2hBrJ8OT4UJ8ZvwNjM3A9hEhSnisw
-wSJaXF3CjadwSrF53arP66suqol/V00DEd7Mxv5s0bDBXycDEiYy34wqAnUX1R6l
-WwrBIqY0/z1ui/UJ6MlbW5OGDWx8xqSmXTHVShufrc7eeSUqKa7WZHcBkOY9iNey
-FmADwiITKiqoNC3szfgOt1UQAA5phsplxgZem2LMtH0b5pXbjWWyHJdwE5TDgENk
-I7CpIiXRnJVt+EDugP1B00TETqSD1rrPtA3l6dWMRcxtzINdB8ccsz9/nwbYjaTE
-quq8ivs0sK7ZhAjzZ6hlAJXtXZ9eaIgSOhry9jp74o9gplxrEPEXcyVzhHYAK6Hu
-756Oj+cr7shGMusbAix8
-=3IiZ
------END PGP SIGNATURE-----
-
---=-B+QvlQUtUyh03VGa80F0--
-
+-- 
+Kalle Valo
