@@ -1,52 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.2ka.mipt.ru ([194.85.80.65]:38758 "EHLO 2ka.mipt.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750996AbYIUS36 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 14:29:58 -0400
-Date: Sun, 21 Sep 2008 22:28:38 +0400
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921182835.GA11473@2ka.mipt.ru> (sfid-20080921_203008_322375_30B98471)
-References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080921110422.1d010b96@infradead.org>
+Received: from ns3.uci.cu ([200.55.140.180]:39667 "HELO mx3.uci.cu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751411AbYIVDrt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2008 23:47:49 -0400
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+	boundary="=-wan/5n/PPmKOq5HIOzTn";
+	protocol="application/x-pkcs7-signature";
+	micalg=sha1
+Subject: about the state of the driver zd1211rw
+Date: Sun, 21 Sep 2008 23:41:02 -0400
+Message-ID: <1222054862.2281.7.camel@localhost> (sfid-20080922_054814_019335_8C87C47A)
+From: "Anielkis Herrera Gonzalez" <aherrerag@uci.cu>
+To: <linux-wireless@vger.kernel.org>
+Reply-To: "Anielkis Herrera Gonzalez" <aherrerag@uci.cu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 21, 2008 at 11:04:22AM -0700, Arjan van de Ven (arjan@infradead.org) wrote:
-> so now you go from an occasional burp to having nothing at all.
-> How about you run with this patch on your own machine only?
 
-And how else user can get attention to the problem which is not fixed by
-the vendor? We close our eyes and there is no problem, since we do not
-see it. I just brought a lamp: no user can see that essentially driver
-is broken so he can run it on his own risk.
+--=-wan/5n/PPmKOq5HIOzTn
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> or.. since you say a reload of the driver fixes it.. why don't you make
-> a patch for the driver that does basically the actions of a reload
-> automatically when the driver detects the issue?
-> (and stick a WARN_ON in for good measure so that kerneloops.org can
-> start tracking these burps)
+greetings
+anyone knows about the state of the development of the zd1211rw driver?
+how can I contribute to it? .. the problem is that it only have some
+basic supports.. not WEP, ad-hoc..
 
-It stops after several seconds (or packets?). Sometimes (but rarely)
-it works several minutes, sometimes it fires above dmesg line and
-continues to work, sometimes it fires it for a while and then stops
-writing it, although driver does not send or receive anything (at
-least ifconfig counters do not change).
 
-Actually, I do not think it is a driver problem, since what it does is
-pretty much straightforward, but if you will tell me how else can we fix
-this issue, I will print it and glue near the window so this gotcha
-could be used with other problems. Or you can (as everyone else who do)
-just said that this is damn wrong and forget about problem for the next
-several years.
+--=20
 
--- 
-	Evgeniy Polyakov
+________________________________________________________
+           Ing. Anielkis Herrera Gonz=C3=A1lez
+               Desarrollador de Nova
+                 Linux User #377809
+
+        Universidad de las Ciencias Inform=C3=A1ticas
+                        Cuba
+________________________________________________________
+
+--=-wan/5n/PPmKOq5HIOzTn
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGITCCAtow
+ggJDoAMCAQICEEUU0ThRXsn9q9y+1vbp65IwDQYJKoZIhvcNAQEFBQAwYjELMAkGA1UEBhMCWkEx
+JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
+ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA4MDYyMjA1MjkyNloXDTA5MDYyMjA1Mjky
+NlowQjEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEfMB0GCSqGSIb3DQEJARYQYWhl
+cnJlcmFnQHVjaS5jdTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALn5nAGAQRo0FZUP
+TOM2uiU/RickePO9bidVvloDSW+vblyFi8anhhx7GH6CH8SqfomgSek3sR/wz0iicZynaKwy+Ykr
+PwMdgqTwCZHxb7QA2QR8mVIm5CICMAwJmAtBbFEFdv0BSa4hhhHsR4BCSHdP3wq3cuNBZaibgj+y
+0v45ODyK0lnHuoiJ1lNCNrgbSY5FEbEvznsVz6C5ZiGuvHwgFNdmISjQ+lYasIhxYAMkiuJk+bCL
+ysDgZPLaZWcCpi7XjnlBlMVFMH8Fqttf0owp37V5iBKAZ+FgKLlFZLQ93RskO9aU7rvcpHLhSp65
+0EYZxkGgGDPzhy+6Aa2+3GUCAwEAAaMtMCswGwYDVR0RBBQwEoEQYWhlcnJlcmFnQHVjaS5jdTAM
+BgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBBQUAA4GBAF72H32+PJFL7Fx3Z/GjZTziuQW7YvCe68ez
+WwJZbuEY1DkJjMb+DFuWek6vgBTX1TUiOOa4E6Jy1cp/jaIasWuLzKgV+bKMuW51k510vOpnXp6l
+ga0XkipI9rRGpkEHiCb1Bq0I6kDWVsAIsPWn1ODxNPncjzBS6MR1GIPt73a3MIIDPzCCAqigAwIB
+AgIBDTANBgkqhkiG9w0BAQUFADCB0TELMAkGA1UEBhMCWkExFTATBgNVBAgTDFdlc3Rlcm4gQ2Fw
+ZTESMBAGA1UEBxMJQ2FwZSBUb3duMRowGAYDVQQKExFUaGF3dGUgQ29uc3VsdGluZzEoMCYGA1UE
+CxMfQ2VydGlmaWNhdGlvbiBTZXJ2aWNlcyBEaXZpc2lvbjEkMCIGA1UEAxMbVGhhd3RlIFBlcnNv
+bmFsIEZyZWVtYWlsIENBMSswKQYJKoZIhvcNAQkBFhxwZXJzb25hbC1mcmVlbWFpbEB0aGF3dGUu
+Y29tMB4XDTAzMDcxNzAwMDAwMFoXDTEzMDcxNjIzNTk1OVowYjELMAkGA1UEBhMCWkExJTAjBgNV
+BAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25h
+bCBGcmVlbWFpbCBJc3N1aW5nIENBMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDEpjxVc1X7
+TrnKmVoeaMB1BHCd3+n/ox7svc31W/Iadr1/DDph8r9RzgHU5VAKMNcCY1osiRVwjt3J8CuFWqo/
+cVbLrzwLB+fxH5E2JCoTzyvV84J3PQO+K/67GD4Hv0CAAmTXp6a7n2XRxSpUhQ9IBH+nttE8YQRA
+HmQZcmC3+wIDAQABo4GUMIGRMBIGA1UdEwEB/wQIMAYBAf8CAQAwQwYDVR0fBDwwOjA4oDagNIYy
+aHR0cDovL2NybC50aGF3dGUuY29tL1RoYXd0ZVBlcnNvbmFsRnJlZW1haWxDQS5jcmwwCwYDVR0P
+BAQDAgEGMCkGA1UdEQQiMCCkHjAcMRowGAYDVQQDExFQcml2YXRlTGFiZWwyLTEzODANBgkqhkiG
+9w0BAQUFAAOBgQBIjNFQg+oLLswNo2asZw9/r6y+whehQ5aUnX9MIbj4Nh+qLZ82L8D0HFAgk3A8
+/a3hYWLD2ToZfoSxmRsAxRoLgnSeJVCUYsfbJ3FXJY3dqZw5jowgT2Vfldr394fWxghOrvbqNOUQ
+Gls1TXfjViF4gtwhGTXeJLHTHUb/XV9lTzGCAfwwggH4AgEBMHYwYjELMAkGA1UEBhMCWkExJTAj
+BgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJz
+b25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhBFFNE4UV7J/avcvtb26euSMAkGBSsOAwIaBQCgXTAY
+BgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODA5MjIwMzQxMDJaMCMG
+CSqGSIb3DQEJBDEWBBTFJh2zImlhbWfsC/b3Sgh9BnqesTANBgkqhkiG9w0BAQEFAASCAQCgML+d
+Z7ulC4Y5L94P551wosLO6xxzwnmJaA3+Locu6JVm3QbuHAWPj2ntnrK8UX3R56vnBj5ETJaO5beh
+A24y8Jf1oWYXAZAgCL4BYq2qjux7Cl7My5ZWSjpHU72oDiD/vck7FLvvXSvbGX3gUvhOhAOUdjJ3
+77q1XCOafjRUnWeGi7mqB1ZIsMQd2N0eoCUgZhCC1M+Bhf1OfhYjZUhETeUsufm95d24L+vq1BuK
+Ap5llNnLTSfU8tiUto0f9IHCrZCy8Ftmez6VRAqiBeE4bBaph5tqgsv/h3Snbe8GDS4TQwAipfDK
+vtBV96XWBigKEe9eoWgIuqGYnv8tIXFqAAAAAAAA
+
+
+--=-wan/5n/PPmKOq5HIOzTn--
