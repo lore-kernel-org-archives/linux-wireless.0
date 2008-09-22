@@ -1,73 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:64713 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752374AbYIVQBt (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:20092 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752489AbYIVXaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 12:01:49 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so238248ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 09:01:48 -0700 (PDT)
-Message-ID: <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com> (sfid-20080922_180154_713315_9C5815C9)
-Date: Mon, 22 Sep 2008 09:01:48 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Steven Noonan" <steven@uplinklabs.net>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Senthilkumar Balasubramanian"
-	<Senthilkumar.Balasubramanian@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Ingo Molnar" <mingo@elte.hu>
-In-Reply-To: <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
+	Mon, 22 Sep 2008 19:30:12 -0400
+Message-ID: <48D82A43.7040604@oracle.com> (sfid-20080923_013017_503715_741E7BAB)
+Date: Mon, 22 Sep 2008 16:29:07 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
-	 <43e72e890809201403w2c4511fdv2fe26bbcf49ccdd7@mail.gmail.com>
-	 <f488382f0809201422rdabeff4g435bf3d4a7e9fa3@mail.gmail.com>
-	 <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com>
-	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
-	 <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
-	 <20080922065453.GD19580@tesla>
-	 <f488382f0809220026u9afa355g1ff2cc7a3fe88333@mail.gmail.com>
-	 <20080922080632.GA20446@tesla>
-	 <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
+To: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+CC: linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
+Subject: [PATCH -mm] rt2x00: fix Kconfig dependencies
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2008 at 8:11 AM, Steven Noonan <steven@uplinklabs.net> wrote:
-> On Mon, Sep 22, 2008 at 1:06 AM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> Please test the following patch.
->>
->> diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
->> index c262ef2..9a51739 100644
->> --- a/drivers/net/wireless/ath9k/core.c
->> +++ b/drivers/net/wireless/ath9k/core.c
->> @@ -681,10 +681,12 @@ int ath_open(struct ath_softc *sc, struct ath9k_channel *initial_chan)
->>         * Enable MIB interrupts when there are hardware phy counters.
->>         * Note we only do this (at the moment) for station mode.
->>         */
->> +#if 0
->>        if (ath9k_hw_phycounters(ah) &&
->>            ((sc->sc_ah->ah_opmode == ATH9K_M_STA) ||
->>             (sc->sc_ah->ah_opmode == ATH9K_M_IBSS)))
->>                sc->sc_imask |= ATH9K_INT_MIB;
->> +#endif
->>        /*
->>         * Some hardware processes the TIM IE and fires an
->>         * interrupt when the TIM bit is set.  For hardware
->>
->
-> It didn't apply to -rc7, but I managed to apply it manually
-> (apparently you made this for wireless-testing?) and added the #if 0.
-> After 7 hours uptime with the driver, no apparent interrupt storm.
->
-> I'll do more thorough testing later, but I have a 3 hour drive today,
-> and some packing to do, so it'll need to wait a bit.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Yeah I did it for wireless-testing. Good to hear this so far has
-solved the issue. I'll port it to 27 and post it once I get your
-blessings that this fixed it by a Tested-by.
+If RT2X00=y but RFKILL=m, these build errors happen:
 
-  Luis
+(.text+0x7c7d6): undefined reference to `rfkill_free'
+rt2x00rfkill.c:(.text+0x7c830): undefined reference to `rfkill_force_state'
+(.text+0x7c88d): undefined reference to `rfkill_unregister'
+(.text+0x7c8cd): undefined reference to `rfkill_register'
+(.text+0x7ca1a): undefined reference to `rfkill_allocate'
+
+so restrict RT2X00's RFKILL config level to that of the main RFKILL option.
+This is done by making the former a tristate instead of a bool
+config option.
+
+
+If RT2X00=y but LEDS_CLASS=m, these build errors happen:
+
+(.text+0x11859f): undefined reference to `led_classdev_resume'
+(.text+0x1185b3): undefined reference to `led_classdev_resume'
+(.text+0x1185c7): undefined reference to `led_classdev_resume'
+(.text+0x1185e4): undefined reference to `led_classdev_suspend'
+(.text+0x1185f8): undefined reference to `led_classdev_suspend'
+(.text+0x11860c): undefined reference to `led_classdev_suspend'
+rt2x00leds.c:(.text+0x118620): undefined reference to `led_classdev_unregister'
+rt2x00leds.c:(.text+0x118695): undefined reference to `led_classdev_register'
+
+so restrict RT2X00's LEDS config level to that of the main LEDS_CLASS option.
+This is done by making the former a tristate instead of a bool
+config option.
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/net/wireless/rt2x00/Kconfig |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- mmotm-2008-0922-0136.orig/drivers/net/wireless/rt2x00/Kconfig
++++ mmotm-2008-0922-0136/drivers/net/wireless/rt2x00/Kconfig
+@@ -38,13 +38,13 @@ config RT2X00_LIB_CRYPTO
+ 	depends on RT2X00_LIB
+ 
+ config RT2X00_LIB_RFKILL
+-	boolean
++	tristate
+ 	depends on RT2X00_LIB
+ 	depends on RFKILL
+ 	default y
+ 
+ config RT2X00_LIB_LEDS
+-	boolean
++	tristate
+ 	depends on RT2X00_LIB
+ 	depends on NEW_LEDS
+ 	depends on LEDS_CLASS
+
