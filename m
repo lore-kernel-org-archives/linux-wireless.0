@@ -1,38 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:1777 "EHLO sorrow.cyrius.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751586AbYIJJiX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 05:38:23 -0400
-Date: Wed, 10 Sep 2008 12:36:38 +0300
-From: Martin Michlmayr <tbm@cyrius.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] ath5k: bad udelay call, build failure on ARM
-Message-ID: <20080910093638.GA16874@deprecation.cyrius.com> (sfid-20080910_113828_142754_3BE626B9)
-References: <20080825115715.GA13506@deprecation.cyrius.com> <20080825190811.GC17297@tuxdriver.com> <40f31dec0808251236qad2118dv2b781b147d366415@mail.gmail.com>
+Received: from wf-out-1314.google.com ([209.85.200.174]:11151 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225AbYIVGGj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 02:06:39 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1453136wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Sep 2008 23:06:39 -0700 (PDT)
+Message-ID: <b25312890809212306uf568c1asbaffc106a2610bf1@mail.gmail.com> (sfid-20080922_080643_824493_5410DE41)
+Date: Mon, 22 Sep 2008 09:06:39 +0300
+From: "Rami Rosen" <roszenrami@gmail.com>
+To: "Anielkis Herrera Gonzalez" <aherrerag@uci.cu>
+Subject: Re: about the state of the driver zd1211rw
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1222054862.2281.7.camel@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0808251236qad2118dv2b781b147d366415@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1222054862.2281.7.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Nick Kossifidis <mickflemm@gmail.com> [2008-08-25 22:36]:
-> > There are "udelay(2300)" calls in phy.c and hw.c.  How important is
-> > that exact number?  Could those be replaced by mdelay(3) instead?
-> >
-> > Of course, looking in include/linux/delay.h, mdelay(3) may still
-> > translate to __bad_udelay on arm.  It would be nice if the ARM guys
-> > and delay.h could at least agree on the maximum value allowed to be
-> > passed to udelay...
-> >
-> > John
-> 
-> Sorry for that i just haven't tested 5210 code much (these are older
-> chips that need more delay). I'll do some tests asap and tweak this
-> value to be in range.
+Hello,
 
-Did you have a chance to do these tests yet?
--- 
-Martin Michlmayr
-http://www.cyrius.com/
+=46irst, there is the zd1211-devs mailing list;
+I believe you can send patches there (and also to the linux-wireless
+mailing list).
+You can subscribe via:
+https://lists.sourceforge.net/lists/listinfo/zd1211-devs
+you can view the archives here:
+http://www.nabble.com/zd1211-devs-f3221.html
+
+BTW, there was some work with Ad-Hoc in
+zd1211rw recently , by Daniel Drake (Though  I myself did not
+made any tests with Ad-Hoc mode with zd1211)
+See, for example,
+http://marc.info/?l=3Dlinux-wireless&m=3D121514338914960&w=3D2
+
+Regards,
+Rami Rosen
+
+
+
+On Mon, Sep 22, 2008 at 6:41 AM, Anielkis Herrera Gonzalez
+<aherrerag@uci.cu> wrote:
+> greetings
+> anyone knows about the state of the development of the zd1211rw drive=
+r?
+> how can I contribute to it? .. the problem is that it only have some
+> basic supports.. not WEP, ad-hoc..
+>
+>
+> --
+>
+> ________________________________________________________
+>           Ing. Anielkis Herrera Gonz=E1lez
+>               Desarrollador de Nova
+>                 Linux User #377809
+>
+>        Universidad de las Ciencias Inform=E1ticas
+>                        Cuba
+> ________________________________________________________
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
