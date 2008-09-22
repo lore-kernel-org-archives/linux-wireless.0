@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.2ka.mipt.ru ([194.85.80.65]:57347 "EHLO 2ka.mipt.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753536AbYIUVCc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 17:02:32 -0400
-Date: Mon, 22 Sep 2008 00:57:06 +0400
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921205706.GA24545@2ka.mipt.ru> (sfid-20080921_230242_249076_4036040F)
-References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org> <20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org> <20080921190050.GA20484@2ka.mipt.ru> <1222024444.3023.53.camel@johannes.berg> <20080921193809.GA8735@2ka.mipt.ru> <20080921124332.67ddc13a@infradead.org> <20080921202057.GB25052@2ka.mipt.ru> <20080921132753.5689b564@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080921132753.5689b564@infradead.org>
+Received: from el-out-1112.google.com ([209.85.162.179]:52941 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753316AbYIVSm4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 14:42:56 -0400
+Received: by el-out-1112.google.com with SMTP id z25so388648ele.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 11:42:55 -0700 (PDT)
+Message-ID: <43e72e890809221142i44c8e81apce14c6856a1e87d9@mail.gmail.com> (sfid-20080922_204309_298702_799BCCD1)
+Date: Mon, 22 Sep 2008 11:42:55 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Philippe Waroquiers" <philippe.waroquiers@skynet.be>
+Subject: Re: prism54 stopped working after upgrade from kernel 2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CB9B2237C21D46F3B852E45F75E91C52@soleil>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <CB9B2237C21D46F3B852E45F75E91C52@soleil>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 21, 2008 at 01:27:53PM -0700, Arjan van de Ven (arjan@infradead.org) wrote:
-> > Well, I actually wanted to have a bug there because of it, but now I
-> > think that annoying repeated warning is enough to bring attention to
-> > the problem by putting bug information into some magic special place
-> > called kerneloops collection.
-> 
-> are you more interested in bringing attention than finding something
-> that makes the driver work ? I sort of am getting that impression and
-> I'd be disappointed if that is the case.
- 
-I do think that it can not be fixed without serious intervention of the
-Intel (hardware) folks, since bug exists more than 4 years in two
-firmwares and lots of very different driver versions and was reproduced
-even on 2.4 kernel.
+On Mon, Sep 22, 2008 at 11:38 AM, Philippe Waroquiers
+<philippe.waroquiers@skynet.be> wrote:
+> With the new kernel 2.6.26.3-14.fc8, I see that the prism54 card looks in a
+> correct working mode
+> (e.g. /sbin/iwlist wlan0 scan shows good scan results).
+> But after that, wpa_supplicant cannot associate (gets a timeout)
+> (while it works ok with 2.6.25.14-69.fc8)
+> I have put below the output of wpa_supplicant for the bad case
+> and for the good case.
+>
+> What can I do to further see what is going wrong ?
 
-I will experiment with reloading issues as Alan suggested and to
-add/remove more surgery into initialization process to be allowed to
-'workaround' the issue, since it looks noone else will.
+Are you using prism54 or p54 in each kernel?
 
-But that's definitely not a fix and in my personal workaround's 10
-degrees shit'o'meter this lies around 12.
- 
-> > Consider for inclusing for the upcoming kernel to get wider
-> > notifications. Yes, it is not a bugfix, I know.
-> 
-> still more complex than needed; a WARN_ON_ONCE() will be enough.
+lsmod | egrep "p54|prism54"
 
-That allows to dump whatever number of warnings you want. The more we
-have, the louder will be customers scream.
-
--- 
-	Evgeniy Polyakov
+  Luis
