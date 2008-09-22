@@ -1,96 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43302 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbYIXPe1 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:43867 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286AbYIVW4K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2008 11:34:27 -0400
-Subject: Re: [RFC v2] basic background scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <hschaa@suse.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200809241719.28983.hschaa@suse.de>
-References: <200809241636.38762.hschaa@suse.de>
-	 <1222267578.4257.33.camel@johannes.berg>
-	 <200809241719.28983.hschaa@suse.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VPbaQCff7gP+52pL+Rla"
-Date: Wed, 24 Sep 2008 17:33:41 +0200
-Message-Id: <1222270421.4257.37.camel@johannes.berg> (sfid-20080924_173430_938402_2F621289)
-Mime-Version: 1.0
+	Mon, 22 Sep 2008 18:56:10 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1515840fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 15:56:09 -0700 (PDT)
+Message-ID: <1ba2fa240809221556j19800873ldf396cfc1980b92a@mail.gmail.com> (sfid-20080923_005614_999960_E6749284)
+Date: Tue, 23 Sep 2008 01:56:08 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Progress on aggregation
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1222121467.3023.89.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080922174103.GF6048@tesla>
+	 <43e72e890809221233l4dc446e9hdf71fc94270020dc@mail.gmail.com>
+	 <1222121467.3023.89.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Sep 23, 2008 at 1:11 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-09-22 at 12:33 -0700, Luis R. Rodriguez wrote:
+>> On Mon, Sep 22, 2008 at 10:41 AM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
+>> > Just a quick note on the progress of aggregation. It works but we still
+>> > need to hanld the rtnl_lock() in a sane way. Johannes we proposing we
+>> > use a workqueue for this.
+>> >
+>> > * iwl4965 has been tested to work
+>> > * ath9k *does* xmit aggregate frames but throughput is low
+>> >
+>> > Since ath9k still needs some work we are looking into it.
+>> > Tomas, have you had a chance to consider the workqueue usage
+>> > for the rtnl_lock()? I figure to leave that to you as we
+>> > are still looking into the throughput issues with aggreation with
+>> > ath9k.
+>>
+>> Also, we currently handle aggregation buffering internally in our
+>> driver so the whole amdpu_queue stuff is not required for us as we
+>> don't have internal aggregation schedulers in hardware. For now we'll
+>> use it though as we just want to get it working and for 2.6.27 we have
+>> not alternative. For us, what will the ampdu_queues represent then? We
+>> don't exactly have a limit on this except for the standard limitations
+>> of 16 TIDs per station so what do you recommend to set this to?
+>
+> You've only enabled STA mode (and maybe IBSS but there it rarely
+> matters) so anything like 8-16 would probably be fine.
+>
+TIDs 8-16 are reserved for HCCA and nobody implements this. In
+addition you probably won't aggregate voice TIDs as aggregation impose
+great delay, so 5 is only reasonable numbers for aggregation.
+Aggregation for IBSS is not in the spec, it's rather cumbersome to support.
 
---=-VPbaQCff7gP+52pL+Rla
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Anyhow in theory you need #supported sta * 8/16 queues, where in STA
+mode it's 1 * 16 = 16 in AP mode it can goes to hundreds queues. In
+practice you cannot push so much traffic on one channel.  I don't have
+any statistics in hand what is maximal effective number of concurrent
+aggregations on the air but I guess is up to 10.
 
-On Wed, 2008-09-24 at 17:19 +0200, Helmut Schaa wrote:
-> Am Mittwoch, 24. September 2008 16:46:18 schrieb Johannes Berg:
-> > On Wed, 2008-09-24 at 16:36 +0200, Helmut Schaa wrote:
-> > > Could somebody please have a look at the TODO comments (I have no ide=
-a
-> > > how to wait until all null-func frames are ACKed)? Thanks.
-> >
-> > It's not really possible.
->=20
-> :(
+I've did some first implementation with work item (start ba session)
+but it start to look more massive change....I will send the rfc
 
-What I meant to say is that it'll give problems with drivers that don't
-do status reporting properly, and what are you going to do when one of
-them fails anyway? retry it? how long? assume the connection was lost if
-it isn't acked? I see little point in it to start with.
-
-> > > +				netif_tx_wake_all_queues(sdata->dev);
-> >
-> > This is worsening a problem we already have -- you can enable queues
-> > that the driver asked to be disabled. Until we fix that, I don't think
-> > we should tempt our luck even more.
->=20
-> I see! That's really problematic.
-> Do you have already an idea on how to fix it?
-
-Not really; introduce bits somewhere to keep track of who wants to
-enable/disable queues I guess.
-
-> > And why is sw_scanning false if bg_scanning is true anyway?=20
->=20
-> During a background scan the sw_scanning flag is set when a scan phase is
-> active and unset when an operation phase is active. Therefore I did not n=
-eed
-> to adapt all checks for sw_scanning.
-
-Oh, hmm, ok, that might make the enum problematic. Or do something like
-
-SCAN_OFF,
-SCAN_BG,
-SCAN_SW,
-SCAN_HW
-
-then you can check for scan >=3D SCAN_SW
-
-johannes
-
---=-VPbaQCff7gP+52pL+Rla
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI2l3RAAoJEKVg1VMiehFYX8sP/3pBYj3MW5OZr6tuSI75CaxX
-/4BmXFndxMsZ6EKGu/chuADx8daDugbBEPh/cFttYZTwb2LCzIZQyHJy90P/msQr
-b9T/GiMoDbiOVWka9mPXlEYA/rVfVniYOeyAxWfkwYrTHB2hnfHTMG4WxZqj6igt
-5oOjfCgnq53fPL/2h5qIZD0hQgoNwjT4EGPk8Dpw4fC9ikvPJjvmQ8TrmfWdF9Ov
-bnoaViOK6uwB2wfg6083mbR9DYWyKnbP2BVX4FAOgxicavOFQrOnrHdqdlfWkW7A
-AoAALJPkN6RV3Oni9om7zfDj69v9BeHkTR+kp/bvA91yi2QVQuXc0/cuhsdF2/x4
-0Aa94m7gz5d5+OGLgevYybD2SJAv+cRhzEK1CUySTWe4TsirZhRnhGr2Ww5Olgeq
-9GIslaVeH2P84x9tPyu1ijUYoWvjnYBO1OT0OJksqZFwmChuKfR9AG40Hqhoe6sC
-IbBmIbYusWotSEUxSBRZcC3bp+jtaPqStFG/OwIYgIByq7T2XoqLUHU8FOvFQFzw
-MmGgtF0HICdIuOG21fongLfI0iGP5mCN0tD/PB50YE26XQPk65LsGEHCfcjyNZBq
-xUKB4diYr1l4XYGs8RaaL+Ezrw0d30wvDRiTnk7itnlkbxPXZnYRGqXbzyaQvvCc
-GYo8JH1ISYmRPZbPeFlV
-=D2Yy
------END PGP SIGNATURE-----
-
---=-VPbaQCff7gP+52pL+Rla--
-
+Tomas
