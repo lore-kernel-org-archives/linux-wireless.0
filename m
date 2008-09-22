@@ -1,71 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:47519 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752566AbYIFSeE (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:56574 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751661AbYIVLdy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 14:34:04 -0400
-Date: Sat, 06 Sep 2008 13:34:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Tim Gardner <tim.gardner@canonical.com>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
-Message-ID: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net> (sfid-20080906_203409_143100_22F09980)
+	Mon, 22 Sep 2008 07:33:54 -0400
+To: "Chr" <chunkeey@web.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: stlc45xx: mac80211 driver for N800 and N810
+References: <877i98iw4h.fsf@nokia.com>
+	<43e72e890809191055o4085fab1k8a85fe9266ae8aab@mail.gmail.com>
+	<87wsh438r6.fsf@nokia.com> <200809221322.41239.chunkeey@web.de>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 22 Sep 2008 14:33:07 +0300
+In-Reply-To: <200809221322.41239.chunkeey@web.de> (ext Chr's message of "Mon\, 22 Sep 2008 13\:22\:41 +0200")
+Message-ID: <8763oo1klo.fsf@nokia.com> (sfid-20080922_133356_950345_8BB51163)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A coding error present since b43legacy was incorporated into the
-kernel has prevented the driver from using the rate-setting mechanism
-of mac80211. The driver has been forced to remain at a 1 Mb/s rate.
+Chr <chunkeey@web.de> writes:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>		[2.6.26], [2.6.25]
----
+> On Monday 22 September 2008 10:06:05 Kalle Valo wrote:
+>> Luis R. Rodriguez <mcgrof@gmail.com> writes:
+>> I don't have the p54 hardware (for regression testing) or the time to
+>> add stlc45xx support to p54, and most probably there might be even
+>> some legal implications which might prevent me of doing the work. So
+>> somebody else would have to do the converge between p54 and stlc45xx.
+>
+> Hmm, don't worry... you won't break p54 hardware with these chances,
 
-John,
+Heh, you don't know how good I'm breaking things ;)
 
-Although this is not strictly a regression, it is a bug. I hope
-it can be sent to 2.6.27.
+> we did this before and I still could connect to my APs. Even better,
+> Johannes wrote most of the code for "p54spi.c" already. I guess, we
+> can reuse and fix his code, rather than reinventing the wheel once
+> again. I'll take a look what can be done when I'm back next week.
 
-Thanks,
+Thanks.
 
-Larry
----
+> OT: Do you know if there's some way to get a card with a stlc45xx
+> for or in a normal PC?
 
-Index: wireless-testing/drivers/net/wireless/b43legacy/xmit.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/xmit.c
-+++ wireless-testing/drivers/net/wireless/b43legacy/xmit.c
-@@ -629,7 +629,7 @@ void b43legacy_handle_hwtxstatus(struct
- 	status.pm_indicated = !!(tmp & 0x80);
- 	status.intermediate = !!(tmp & 0x40);
- 	status.for_ampdu = !!(tmp & 0x20);
--	status.acked = !!(tmp & 0x02);
-+	status.acked = tmp & 0x01;
- 
- 	b43legacy_handle_txstatus(dev, &status);
- }
-Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-testing/drivers/net/wireless/b43legacy/main.c
-@@ -744,7 +744,7 @@ static void handle_irq_transmit_status(s
- 
- 	while (1) {
- 		v0 = b43legacy_read32(dev, B43legacy_MMIO_XMITSTAT_0);
--		if (!(v0 & 0x00000001))
-+		if (!v0)
- 			break;
- 		v1 = b43legacy_read32(dev, B43legacy_MMIO_XMITSTAT_1);
- 
-@@ -758,7 +758,7 @@ static void handle_irq_transmit_status(s
- 		stat.pm_indicated = !!(tmp & 0x0080);
- 		stat.intermediate = !!(tmp & 0x0040);
- 		stat.for_ampdu = !!(tmp & 0x0020);
--		stat.acked = !!(tmp & 0x0002);
-+		stat.acked = tmp & 0x0001;
- 
- 		b43legacy_handle_txstatus(dev, &stat);
- 	}
+No idea. If you find a way, please tell me. stlc45xx supports both SPI
+and SDIO buses, but N800/N810 use only SPI. So you would need some
+kind of SPI bridge and solder the chip somehow with all the antennas
+etc. Not an easy task.
+
+-- 
+Kalle Valo
