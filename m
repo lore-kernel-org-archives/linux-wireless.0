@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50242 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163AbYIJWLC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 18:11:02 -0400
-Message-Id: <20080910220425.307168000@sipsolutions.net> (sfid-20080911_001107_086475_A0F614F4)
-References: <20080910220145.707263000@sipsolutions.net>
-Date: Thu, 11 Sep 2008 00:02:00 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 15/18] mac80211: warn on some invalid vlan operations
+Received: from mail.gmx.net ([213.165.64.20]:39354 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753251AbYIVVt4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 17:49:56 -0400
+Subject: Re: what is the states of rt2800 driver?
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "Xu, Martin" <martin.xu@intel.com>, linux-wireless@vger.kernel.org,
+	"Selbak, Rolla N" <rolla.n.selbak@intel.com>
+In-Reply-To: <200809222318.44222.IvDoorn@gmail.com>
+References: <200808272222.53719.IvDoorn@gmail.com>
+	 <200809221937.35900.IvDoorn@gmail.com> <1222117314.4670.10.camel@localhost>
+	 <200809222318.44222.IvDoorn@gmail.com>
+Content-Type: text/plain
+Date: Mon, 22 Sep 2008 23:49:53 +0200
+Message-Id: <1222120193.4587.1.camel@localhost> (sfid-20080922_234959_893801_D2603C3C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These should never happen, but better warn about them than
-crashing a driver, the fact that they never happen is rather
-subtle throughout mac80211.
+On Mon, 2008-09-22 at 23:18 +0200, Ivo van Doorn wrote:
+> On Monday 22 September 2008, Mattias Nissler wrote:
+> > On Mon, 2008-09-22 at 19:37 +0200, Ivo van Doorn wrote:
+> > > On Monday 22 September 2008, Xu, Martin wrote:
+> > > > Hi:
+> > > > I am the engineer from intel, and we are working on Moblin project(
+> > > > www.moblin.org). Now we work on eeepc901 platform. The rt2860 wireless
+> > > > device is used by the platform. We hope the device driver can be
+> > > > supported in the kernel mainline.
+> > > > Could you please tell me the states of the device driver? Do you have
+> > > > schedule on it? 
+> > > 
+> > > Nothing has changed since my last announcement to the linux-wireless list
+> > > regarding the rt2800 drivers.
+> > > That means that the drivers are not ready, and I have abandonded all schedules
+> > > which could indicate when the first test version of the driver can be released.
+> > > 
+> > > Mattias Nissler has joined the rt2800 development party, so I really hope
+> > > he has some fresh ideas an how to get the driver development forward again.
+> > 
+> > Indeed, I started poking around today. Ivo, do you have version of the
+> > legacy rt2870 usb driver that compiles and works on recent development
+> > kernels?
+> 
+> I only managed to compile it on 2.6.25 (but haven't tried hard to get it working
+> for 2.6.26 and higher), is that recent enough?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/main.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+Hm, I'm trying to get it to run current rt2x00.git/experimental, so I
+can directly compare I/O that's going to the device without rebooting.
+I'm having some trouble with the threads used in the Ralink driver, but
+I think I'll have that sorted out shortly.
 
---- everything.orig/net/mac80211/main.c	2008-09-10 23:58:08.000000000 +0200
-+++ everything/net/mac80211/main.c	2008-09-10 23:58:09.000000000 +0200
-@@ -156,6 +156,9 @@ int ieee80211_if_config(struct ieee80211
- 	if (WARN_ON(!netif_running(sdata->dev)))
- 		return 0;
- 
-+	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
-+		return -EINVAL;
-+
- 	if (!local->ops->config_interface)
- 		return 0;
- 
-@@ -321,6 +324,9 @@ void ieee80211_bss_info_change_notify(st
- {
- 	struct ieee80211_local *local = sdata->local;
- 
-+	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
-+		return;
-+
- 	if (!changed)
- 		return;
- 
-
--- 
+Mattias
 
