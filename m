@@ -1,83 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.2ka.mipt.ru ([194.85.80.65]:45168 "EHLO 2ka.mipt.ru"
+Received: from mail.atheros.com ([12.36.123.2]:39767 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751462AbYIUToZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 15:44:25 -0400
-Date: Sun, 21 Sep 2008 23:38:09 +0400
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arjan van de Ven <arjan@infradead.org>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921193809.GA8735@2ka.mipt.ru> (sfid-20080921_214429_388901_3670E8E8)
-References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org> <20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org> <20080921190050.GA20484@2ka.mipt.ru> <1222024444.3023.53.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1222024444.3023.53.camel@johannes.berg>
+	id S1751225AbYIVGy4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2008 02:54:56 -0400
+Date: Sun, 21 Sep 2008 23:54:53 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Steven Noonan <steven@uplinklabs.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Ingo Molnar <mingo@elte.hu>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
+	(rc5, rc6, probably others)
+Message-ID: <20080922065453.GD19580@tesla> (sfid-20080922_085501_231996_815879C3)
+References: <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com> <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com> <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com> <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com> <1221944338.3023.8.camel@johannes.berg> <43e72e890809201403w2c4511fdv2fe26bbcf49ccdd7@mail.gmail.com> <f488382f0809201422rdabeff4g435bf3d4a7e9fa3@mail.gmail.com> <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com> <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com> <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
-
-On Sun, Sep 21, 2008 at 09:14:04PM +0200, Johannes Berg (johannes@sipsolutions.net) wrote:
-> > Do you want me to implement ipw2100 driver as a big work structure
-> > which will run ipw2100_init()/wait/ipw2100_exit() in a loop?
-> > And that will be the fix suggested by Intel? That would explain a lot.
+On Sat, Sep 20, 2008 at 06:48:05PM -0700, Steven Noonan wrote:
 > 
-> I think what Arjan is saying is that it would be better to put pressure
-> on the responsible folks (I don't think Arjan is anywhere near them at
+> OK, here's the time index at which it b0rked:
+> 
+> 18:28:42          sum   1155.00
+> 18:28:43          sum   1339.00
+> 18:28:44          sum  18355.00
+> 18:28:45          sum  17845.45
+> 
+> And the entire log of the minute 18:28 is here:
+> http://www.uplinklabs.net/~tycho/linux/18.28.00-59.log.gz
+> 
+> It looks pretty crazy.
 
-Both maintainers were added to the copy list.
+Thanks, I'll take a look when I get a chance (remember aggretion
+is in the queue too) unless someone beats me to it. Asking in advance
+-- if you can also provide a log of minutes 43, 44 and 45 that would
+be great, but this may just be enough.
 
-> all) if you'd put in a WARN_ON() for this error and that would make the
-> top entry on kerneloops.org all the time... And additionally put in a
-> workaround for yourself for now.
-
-As I pointed, I can rewrite the whole driver's initialization process,
-so that it looked like init/wait/exit loop, which can be processed at
-the module load and when fatal interrupt fires. Do this a fix? This is
-not even a remotely workaround. We can just add
-rmmod/modprobe/ifdown/ifup to the crontab job. Another users reported in
-bugzilla that they needed to reboot a machine to make card working
-again. I'm not sure that user tried to do a rmmod/modprobe though.
-
-> And can we keep the flames off this list please? That comment from Wei
-> Weng was absolutely uncalled for, and inciting a flamewar (as you have
-> already blogged) was not really productive either.
-
-If we will keep silence, no one will notice that problem exists.
-
-I do hope this will result in a progress. Arjan, do you aggree to add
-this patch to the current tree?
-
-diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
-index 19a401c..9a7b64c 100644
---- a/drivers/net/wireless/ipw2100.c
-+++ b/drivers/net/wireless/ipw2100.c
-@@ -206,6 +206,8 @@ MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
- 
- static u32 ipw2100_debug_level = IPW_DL_NONE;
- 
-+static int ipw2100_max_fatal_ints = 10;
-+
- #ifdef CONFIG_IPW2100_DEBUG
- #define IPW_DEBUG(level, message...) \
- do { \
-@@ -3174,6 +3176,10 @@ static void ipw2100_irq_tasklet(struct ipw2100_priv *priv)
- 	if (inta & IPW2100_INTA_FATAL_ERROR) {
- 		printk(KERN_WARNING DRV_NAME
- 		       ": Fatal interrupt. Scheduling firmware restart.\n");
-+		WARN_ON(1);
-+
-+		BUG_ON(ipw2100_max_fatal_ints-- <= 0);
-+
- 		priv->inta_other++;
- 		write_register(dev, IPW_REG_INTA, IPW2100_INTA_FATAL_ERROR);
- 
-
-
--- 
-	Evgeniy Polyakov
+  Luis
