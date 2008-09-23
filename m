@@ -1,57 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:49771 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751493AbYIHSfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 14:35:05 -0400
-Date: Mon, 8 Sep 2008 11:32:03 -0700
-To: Pavel Roskin <proski@gnu.org>
-Cc: Dan Williams <dcbw@redhat.com>, kilroyd@googlemail.com,
-	linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-Message-ID: <20080908183203.GA7090@bougret.hpl.hp.com> (sfid-20080908_203511_526099_7AE2EA03)
-Reply-To: jt@hpl.hp.com
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com> <1217672073-7094-2-git-send-email-kilroyd@gmail.com> <1217825304.10989.20.camel@dv> <1217864060.3139.10.camel@localhost.localdomain> <20080805162238.GA6294@bougret.hpl.hp.com> <20080902230621.GA28885@bougret.hpl.hp.com> <1220878110.2369.3.camel@dv>
+Received: from rgminet01.oracle.com ([148.87.113.118]:32376 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468AbYIWQ1z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2008 12:27:55 -0400
+Message-ID: <48D9188A.2090003@oracle.com> (sfid-20080923_182759_437133_5BB6A130)
+Date: Tue, 23 Sep 2008 09:25:46 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1220878110.2369.3.camel@dv>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
+Subject: Re: [PATCH -mm] rt2x00: fix Kconfig dependencies
+References: <48D82A43.7040604@oracle.com> <200809230907.46130.IvDoorn@gmail.com>
+In-Reply-To: <200809230907.46130.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 08, 2008 at 08:48:30AM -0400, Pavel Roskin wrote:
-> On Tue, 2008-09-02 at 16:06 -0700, Jean Tourrilhes wrote:
+Ivo van Doorn wrote:
+> On Tuesday 23 September 2008, Randy Dunlap wrote:
+>> From: Randy Dunlap <randy.dunlap@oracle.com>
+>>
+>> If RT2X00=y but RFKILL=m, these build errors happen:
+>>
+>> (.text+0x7c7d6): undefined reference to `rfkill_free'
+>> rt2x00rfkill.c:(.text+0x7c830): undefined reference to `rfkill_force_state'
+>> (.text+0x7c88d): undefined reference to `rfkill_unregister'
+>> (.text+0x7c8cd): undefined reference to `rfkill_register'
+>> (.text+0x7ca1a): undefined reference to `rfkill_allocate'
+>>
+>> so restrict RT2X00's RFKILL config level to that of the main RFKILL option.
+>> This is done by making the former a tristate instead of a bool
+>> config option.
+>>
+>>
+>> If RT2X00=y but LEDS_CLASS=m, these build errors happen:
+>>
+>> (.text+0x11859f): undefined reference to `led_classdev_resume'
+>> (.text+0x1185b3): undefined reference to `led_classdev_resume'
+>> (.text+0x1185c7): undefined reference to `led_classdev_resume'
+>> (.text+0x1185e4): undefined reference to `led_classdev_suspend'
+>> (.text+0x1185f8): undefined reference to `led_classdev_suspend'
+>> (.text+0x11860c): undefined reference to `led_classdev_suspend'
+>> rt2x00leds.c:(.text+0x118620): undefined reference to `led_classdev_unregister'
+>> rt2x00leds.c:(.text+0x118695): undefined reference to `led_classdev_register'
+>>
+>> so restrict RT2X00's LEDS config level to that of the main LEDS_CLASS option.
+>> This is done by making the former a tristate instead of a bool
+>> config option.
 > 
-> > 	By the way, the breakage of iwlist scan in Wireless Tools 30
-> > on 64 bits should be fixed in 30.pre7.
+> Is that really going to work correctly?
+> rfkill and leds support should be compiled into rt2x00lib.ko, which means that
+> should become a module instead of the rfkill/leds support part only.
+
+I wondered about that lib.ko.  Any working build fix is OK with me.
+What do you suggest?
+
+Currently kconfig is converting an =m to =y because of tristate -> boolean.
+This is not good.  It breaks things, as demonstrated here.
+The Kconfig cannot stay like this AFAIK.
+
+> Ivo
 > 
-> No, it's still not fixed on x86_64.  scanflags in print_scanning_info()
-> in iwlist.c is 2, but srq->flags is 0 in orinoco_ioctl_setscan() in
-> orinoco.c.
-> 
-> On i386,  srq->flags is 2 as expected and the scan results are correctly
-> influenced by the ESSID.
-> 
-> -- 
-> Regards,
-> Pavel Roskin
-
-	Try the attached patch.
-
-	Jean
-
----------------------------------------------------
-
-diff -u -p linux/drivers/net/wireless/orinoco.p1.c linux/drivers/net/wireless/orinoco.c
---- linux/drivers/net/wireless/orinoco.p1.c	2008-09-08 11:28:01.000000000 -0700
-+++ linux/drivers/net/wireless/orinoco.c	2008-09-08 11:29:59.000000000 -0700
-@@ -3953,7 +3953,7 @@ static int orinoco_ioctl_getrid(struct n
- /* Trigger a scan (look for other cells in the vicinity */
- static int orinoco_ioctl_setscan(struct net_device *dev,
- 				 struct iw_request_info *info,
--				 struct iw_param *srq,
-+				 struct iw_point *srq,
- 				 char *extra)
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
+>> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+>> ---
+>>  drivers/net/wireless/rt2x00/Kconfig |    4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> --- mmotm-2008-0922-0136.orig/drivers/net/wireless/rt2x00/Kconfig
+>> +++ mmotm-2008-0922-0136/drivers/net/wireless/rt2x00/Kconfig
+>> @@ -38,13 +38,13 @@ config RT2X00_LIB_CRYPTO
+>>  	depends on RT2X00_LIB
+>>  
+>>  config RT2X00_LIB_RFKILL
+>> -	boolean
+>> +	tristate
+>>  	depends on RT2X00_LIB
+>>  	depends on RFKILL
+>>  	default y
+>>  
+>>  config RT2X00_LIB_LEDS
+>> -	boolean
+>> +	tristate
+>>  	depends on RT2X00_LIB
+>>  	depends on NEW_LEDS
+>>  	depends on LEDS_CLASS
+>>
+>> --
