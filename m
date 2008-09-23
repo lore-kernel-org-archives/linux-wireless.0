@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:56574 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751661AbYIVLdy (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:58977 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752449AbYIWTWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 07:33:54 -0400
-To: "Chr" <chunkeey@web.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tue, 23 Sep 2008 15:22:52 -0400
+Received: by gxk9 with SMTP id 9so4797575gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 12:22:51 -0700 (PDT)
+Message-ID: <43e72e890809231222r21396433j88074d5514ef56f0@mail.gmail.com> (sfid-20080923_212257_525629_4765572A)
+Date: Tue, 23 Sep 2008 12:22:51 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Steven Noonan" <steven@uplinklabs.net>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Senthilkumar Balasubramanian"
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
 	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: stlc45xx: mac80211 driver for N800 and N810
-References: <877i98iw4h.fsf@nokia.com>
-	<43e72e890809191055o4085fab1k8a85fe9266ae8aab@mail.gmail.com>
-	<87wsh438r6.fsf@nokia.com> <200809221322.41239.chunkeey@web.de>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 22 Sep 2008 14:33:07 +0300
-In-Reply-To: <200809221322.41239.chunkeey@web.de> (ext Chr's message of "Mon\, 22 Sep 2008 13\:22\:41 +0200")
-Message-ID: <8763oo1klo.fsf@nokia.com> (sfid-20080922_133356_950345_8BB51163)
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <f488382f0809230022v582df76esa8df8c747ab600df@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+References: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+	 <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com>
+	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
+	 <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
+	 <20080922065453.GD19580@tesla>
+	 <f488382f0809220026u9afa355g1ff2cc7a3fe88333@mail.gmail.com>
+	 <20080922080632.GA20446@tesla>
+	 <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
+	 <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com>
+	 <f488382f0809230022v582df76esa8df8c747ab600df@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr <chunkeey@web.de> writes:
+2008/9/23 Steven Noonan <steven@uplinklabs.net>:
 
-> On Monday 22 September 2008 10:06:05 Kalle Valo wrote:
->> Luis R. Rodriguez <mcgrof@gmail.com> writes:
->> I don't have the p54 hardware (for regression testing) or the time to
->> add stlc45xx support to p54, and most probably there might be even
->> some legal implications which might prevent me of doing the work. So
->> somebody else would have to do the converge between p54 and stlc45xx.
+> Okay. I'm in Seattle now.
 >
-> Hmm, don't worry... you won't break p54 hardware with these chances,
+> Yes, it solved the issue, but surely an #if 0 isn't a proper solution.
 
-Heh, you don't know how good I'm breaking things ;)
+For 2.6.27 it will be unless people are willing to accept a patch to
+enable ANI support for 2.6.27.
 
-> we did this before and I still could connect to my APs. Even better,
-> Johannes wrote most of the code for "p54spi.c" already. I guess, we
-> can reuse and fix his code, rather than reinventing the wheel once
-> again. I'll take a look what can be done when I'm back next week.
+> What's the actual bug here? I'm afraid the meaning of what's going on
+> here isn't exactly intuitive.
 
-Thanks.
+Check linux-wireless for my patch on MIB event comments. But I'll
+summarize here for you. We get MIB interrupts to update statistics on
+a number of PHY related elements. We then use this information to
+process ANI -- some automatic noise immunity work. If you don't
+process the information for ANI it seems you get the hardware treating
+this as untreated and hence you get an interrupt storm. So since
+2.6.27 doesn't have ANI implemented the MIB interrupts are not useful
+except to collect internal statistics.
 
-> OT: Do you know if there's some way to get a card with a stlc45xx
-> for or in a normal PC?
+Since you are so eager to test this with a "proper" solution I will
+send you a patch to test ANI for 2.6.27. We'll leave it up to the
+maintainers and distributions to decide whether or not to pick this
+up. But for that let's leave that for another thread.
 
-No idea. If you find a way, please tell me. stlc45xx supports both SPI
-and SDIO buses, but N800/N810 use only SPI. So you would need some
-kind of SPI bridge and solder the chip somehow with all the antennas
-etc. Not an easy task.
-
--- 
-Kalle Valo
+  Luis
