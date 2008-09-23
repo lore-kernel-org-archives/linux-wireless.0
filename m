@@ -1,51 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:49150 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753115AbYI3V5m (ORCPT
+Received: from bluegiga.fi ([194.100.31.45]:47616 "EHLO darkblue.bluegiga.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751080AbYIWGKA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 17:57:42 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so181520fgg.17
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Sep 2008 14:57:35 -0700 (PDT)
-Message-ID: <1ba2fa240809301457n427b0fe7o28ec9e43bcfcca7c@mail.gmail.com> (sfid-20080930_235746_797977_97226CB4)
-Date: Wed, 1 Oct 2008 00:57:35 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: pull request: wireless-next-2.6 2008-09-30
-Cc: "Johannes Berg" <johannes@sipsolutions.net>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20080930200640.GG3765@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080930183938.GE3765@tuxdriver.com>
-	 <1ba2fa240809301258o34b77ce2p737c229be7c0a2e9@mail.gmail.com>
-	 <20080930200640.GG3765@tuxdriver.com>
+	Tue, 23 Sep 2008 02:10:00 -0400
+Subject: Re: ACK matching [was: TX status reporting with help of an
+	ack	queue]
+From: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <j@w1.fi>, rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
+	kune@deine-taler.de
+In-Reply-To: <48D3E662.9050902@w1.fi>
+References: <1221494693.14102.22.camel@virkkmi-linux>
+	 <1221505251.4511.77.camel@localhost>
+	 <1221541089.14102.44.camel@virkkmi-linux>
+	 <200809162018.42576.IvDoorn@gmail.com> <1221770220.4563.3.camel@localhost>
+		 <1221776990.4563.19.camel@localhost>
+	 <1221815294.19539.15.camel@virkkmi-linux>
+	 <1221817584.4491.29.camel@localhost>
+	 (sfid-20080919_114701_416600_478C4255)  <1221818057.10419.58.camel@johannes.berg>
+	 <1221819579.4491.34.camel@localhost>
+	 (sfid-20080919_122011_765612_F53F8EFC)  <1221820265.10419.78.camel@johannes.berg>
+	 <1221832302.4514.6.camel@localhost>
+	 <1221834033.22224.22.camel@virkkmi-linux>  <48D3E662.9050902@w1.fi>
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 23 Sep 2008 09:09:57 +0300
+Message-Id: <1222150197.22224.62.camel@virkkmi-linux> (sfid-20080923_081007_752656_B95B3592)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 30, 2008 at 11:06 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Tue, Sep 30, 2008 at 10:58:28PM +0300, Tomas Winkler wrote:
->> On Tue, Sep 30, 2008 at 9:39 PM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->> > Dave,
->> >
->> > Here is the latest round of wireless bits intended for 2.6.28.  Among
->> > them is the first round of new stuff learned from the release of the
->> > Atheros HAL sources...
->> >
->> > Let me know if there are problems!
->> >
->> > Thanks,
->> >
->> > John
->>
->> What about this one
->> http://marc.info/?l=linux-wireless&m=122254550901882&w=2
->> It removes compilation warnings.
->
-> Just didn't get to it yet, sorry.
+On Fri, 2008-09-19 at 20:50 +0300, Jouni Malinen wrote:
+> Mikko Virkkil=C3=A4 wrote:
+> > On Fri, 2008-09-19 at 15:51 +0200, Mattias Nissler wrote:
+> >> On Fri, 2008-09-19 at 12:31 +0200, Johannes Berg wrote:
+> >>> But you can do workarounds all you want in hostapd, I don't care.
+>=20
+> But I do care.. ;-)  As such, I would change that to "you can do
+> workarounds in your copy of hostapd". And yes, this would likely be t=
+he
+> best location for the workaround.
+>=20
+> >>> However, I do think that if the hardware just isn't up to the job=
+ you
+> >>> should probably buy new hardware, after all, it's dirt cheap. :)
+>=20
+> I have never seen wlan design that does not report frame ACK status
+> properly for transmitted unicast frames. Is it absolutely clear that
+> that is indeed the case here or could we should be missing some
+> documentation explaining how this should be done?
+>=20
+> > I'd really love for some workaround that would allow AP mode to wor=
+k.=20
+>=20
+> The workaround would be to make hostapd generate bogus TX callback
+> internally with claim for a successfully received ACK when sending
+> (re)association response. I'm not very keen on including such
+> functionality and certainly do not consider dropping the correct
+> behavior because of a broken hw design.
+>=20
+> If someone can come up with a clean patch that allows this to be
+> configured in hostapd.conf without affecting the default behavior, I
+> could consider applying the changes. However, please keep in mind tha=
+t
+> I'm interested in using TX status reporting to improve reliability of
+> connection setup, so its use is more likely to increase in the future=
+=2E
+>=20
+> > It would be great if it could be deemed that the protocol doesn't r=
+eally
+> > require CTS protection/status information, and can be made reliable=
+ and
+> > standards compliant without support for it from the driver.
+> > Unfortunately I don't have high hopes for that, but I wonder what's=
+ Mr.
+> > Malinen's opinion?
+>=20
+> IEEE 802.11 association state in the AP is changed when receiving an =
+ACK
+> from the STA for a (re)association response frame with success status
+> (see IEEE Std 802.11-2007, 11.3.2.2). In order to be able to implemen=
+t
+> this correctly, AP mode operation require the TX status callback to
+> provide information for the ACK status of (re)association response
+> frames.
+>=20
+> I would also like to see this status used to speed up recovery from=20
+> dropped EAPOL frames during IEEE 802.1X EAP authentication, 4-way
+> handshake and group handshake. In certain environments, this could
+> improve stability of connection establishment greatly.
+>=20
+> - Jouni
 
-It's not a real problem I just think we should at least strive for
-clean compilation when merging upstream.
+Well, sounds like there are good reasons to keep investigating the
+possibility of fixing this a bit more properly in the driver.=20
 
-Tomas
+If we turn off the AUTO_TX_SEQ and/or TXD_W1_HW_SEQUENCE (what'as the
+difference?) and assigning sequence numbers manually, could we then
+match the ack-frame's sequence number to the ones we have sent?
+
+- Mikko
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
