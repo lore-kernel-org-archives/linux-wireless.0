@@ -1,132 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:45868 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752270AbYIHGOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 02:14:15 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Kca0q-0004sx-5e
-	for linux-wireless@vger.kernel.org; Mon, 08 Sep 2008 06:14:12 +0000
-Received: from 77.21.170.83 ([77.21.170.83])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 06:14:12 +0000
-Received: from feldmann_markus by 77.21.170.83 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 06:14:12 +0000
-To: linux-wireless@vger.kernel.org
-From: feldmaus <feldmann_markus@gmx.de>
-Subject: Do not get BCM4303 to work
-Date: Mon, 08 Sep 2008 08:15:51 +0200
-Message-ID: <ga2fra$9q$1@ger.gmane.org> (sfid-20080908_081419_189737_2796EF81)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42589 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751954AbYIWSWI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2008 14:22:08 -0400
+Date: Tue, 23 Sep 2008 14:21:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Helmut Schaa <hschaa@suse.de>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: Re: [RFC] mac80211: notify the user space about low signal quality
+Message-ID: <20080923182114.GC26219@tuxdriver.com> (sfid-20080923_202214_071619_24B2035D)
+References: <200809151416.07552.hschaa@suse.de> <200809151634.06448.hschaa@suse.de> <1221492529.10177.76.camel@localhost.localdomain> <200809151845.35841.hschaa@suse.de> <43e72e890809151821h5d40e750q10c78f4d20d27c79@mail.gmail.com> <87r67kzf7c.fsf@nokia.com> <1221552727.8916.19.camel@johannes.berg> <873ak0zcz9.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <873ak0zcz9.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+On Tue, Sep 16, 2008 at 11:55:38AM +0300, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > On Tue, 2008-09-16 at 11:07 +0300, Kalle Valo wrote:
+> >
+> >> I definitely want to see this background scan support in Wireless
+> >> Extensions as well, otherwise it might prevent the real use of the
+> >> feature.
+> >
+> > However, the more feature we keep stuffing into WEXT the less incentive
+> > is there to actually do something about cfg80211. I'm with Luis here,
+> > the fact that there are no tools anywhere is because those tools aren't
+> > really very useful yet, not because it's not possible to get the tools
+> > in.
+> 
+> I understand yours and Luis' points. But I still think that we should
+> push cfg80211 acceptance first with the argument of more reliable
+> method of configure 80211 devices, and only later start adding
+> cfg80211-only features.
 
-i do not get my Wlan Card with BCM4303 Chip to work.
+cfg80211-only features may be a great reason for people to move to
+the new tools.  Considering how fragile WEXT has proven to be, I am
+not at all in favor of continuing to extend it.
 
-My System is Debian Testing 32-bit with Kernel 2.6.25-2 from Debian,
-therefore i am using the Driver b43legacy.
-
-I tried to connect this Wlan Card with my Wireless Printer.
-It is a Ad-Hoc Connection with,
-SSID=3Dkleopatra
-Channel=3D10
-Authentification=3Dnon
-Encryption=3D128-bit Wep
-
-Here it comes the Outout from <lspci>,
-02:02.0 Network controller: Broadcom Corporation BCM4303 802.11b
-Wireless LAN Controller (rev 02)
-	Subsystem: Hewlett-Packard Company Device 12f3
-	Flags: bus master, fast devsel, latency 64, IRQ 17
-	Memory at e0104000 (32-bit, non-prefetchable) [size=3D8K]
-	Kernel driver in use: b43-pci-bridge
-	Kernel modules: ssb
-
-
-I tried some Howtos, but it didn't work.
-
-<ifconfig> show's the following,
-eth0      Link encap:Ethernet  Hardware Adresse 00:0f:b0:0e:57:a1
-           inet Adresse:77.21.170.83  Bcast:255.255.255.255
-Maske:255.255.252.0
-           UP BROADCAST RUNNING MULTICAST  MTU:576  Metrik:1
-           RX packets:35420 errors:0 dropped:0 overruns:0 frame:0
-           TX packets:1946 errors:0 dropped:0 overruns:0 carrier:0
-           Kollisionen:0 Sendewarteschlangenl=E4nge:1000
-           RX bytes:3756084 (3.5 MiB)  TX bytes:245214 (239.4 KiB)
-           Interrupt:18 Basisadresse:0x7000
-
-lo        Link encap:Lokale Schleife
-           inet Adresse:127.0.0.1  Maske:255.0.0.0
-           inet6-Adresse: ::1/128 G=FCltigkeitsbereich:Maschine
-           UP LOOPBACK RUNNING  MTU:16436  Metrik:1
-           RX packets:10 errors:0 dropped:0 overruns:0 frame:0
-           TX packets:10 errors:0 dropped:0 overruns:0 carrier:0
-           Kollisionen:0 Sendewarteschlangenl=E4nge:0
-           RX bytes:660 (660.0 B)  TX bytes:660 (660.0 B)
-
-wlan0     Link encap:Ethernet  Hardware Adresse 00:90:4b:97:34:73
-           UP BROADCAST MULTICAST  MTU:1500  Metrik:1
-           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-           Kollisionen:0 Sendewarteschlangenl=E4nge:1000
-           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-
-wmaster0  Link encap:UNSPEC  Hardware Adresse
-00-90-4B-97-34-73-6C-6F-00-00-00-00-00-00-00-00
-           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metrik:1
-           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-           Kollisionen:0 Sendewarteschlangenl=E4nge:1000
-           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-
-
-<iwconfig> shows this,
-lo        no wireless extensions.
-
-eth0      no wireless extensions.
-
-wmaster0  no wireless extensions.
-
-wlan0     IEEE 802.11b  ESSID:""
-           Mode:Managed  Frequency:2.412 GHz  Access Point:
-Not-Associated
-           Tx-Power=3D27 dBm
-           Retry min limit:7   RTS thr:off   Fragment thr=3D2352 B
-           Encryption key:off
-           Link Quality:0  Signal level:0  Noise level:0
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-I am not sure whether this Card is active, because <dmesg> show me,
-[  409.752921] b43legacy-phy0: Radio hardware status changed to DISABLE=
-D
-
-Another funny Thing is, that i can execute <iwlist wla0 scanning> and=20
-get a Result,
-wlan0     Scan completed :
-           Cell 01 - Address: 02:00:7C:81:E1:73
-                     ESSID:"kleopatra"
-                     Mode:Ad-Hoc
-                     Channel:10
-                     Frequency:2.457 GHz (Channel 10)
-                     Quality=3D55/100  Signal level=3D-55 dBm  Noise=20
-level=3D-43 dBm
-                     Encryption key:on
-                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s
-                     Extra:tsf=3D0000000075bb2b8d
-
-The Adress seems to change sometimes ??? I don't know why.
-
-Regards Markus
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
