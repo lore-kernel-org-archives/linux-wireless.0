@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56730 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754631AbYIRRZh (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:65044 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754174AbYIWCTh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 13:25:37 -0400
-Subject: Re: [PATCH] iw: add kernel version checks for pending upstream
-	kernel features
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1221752489.9262.81.camel@johannes.berg>
-References: <>  <1221748533-11000-1-git-send-email-linville@tuxdriver.com>
-	 <1221752489.9262.81.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 18 Sep 2008 19:26:23 +0200
-Message-Id: <1221758783.6782.29.camel@californication> (sfid-20080918_192541_292360_4501B7EB)
-Mime-Version: 1.0
+	Mon, 22 Sep 2008 22:19:37 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1564420fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 19:19:35 -0700 (PDT)
+Message-ID: <1ba2fa240809221919i251a6f3ft3381ae46302912fb@mail.gmail.com> (sfid-20080923_041942_505155_8526AB99)
+Date: Tue, 23 Sep 2008 05:19:35 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 1/1] iwlwifi 2.6.27: send all the calibration results instead of the last one only
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	emmanuel.grumbach@intel.com
+In-Reply-To: <20080922.184125.147225416.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1222128868-16763-1-git-send-email-tomas.winkler@intel.com>
+	 <20080922.184125.147225416.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Tue, Sep 23, 2008 at 4:41 AM, David Miller <davem@davemloft.net> wrote:
+> From: Tomas Winkler <tomas.winkler@intel.com>
+> Date: Tue, 23 Sep 2008 03:14:28 +0300
+>
+>> Note this patch effects only 5000 HW (nor 3946 or 4965) so doesn't
+>> resolve or create any regression. Anyhow it was thoroughly tested.
+>
+> You haven't learned the first time.
+>
+> This kind of stuff is not appropriate outside of the merge window, I'm
+> not pulling this change into my tree if John tries to send it to me.
 
-> > +/* This funcionality first appears "officially" in 2.6.28... */
-> > +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
-> 
-> This bites all developers of the tool. I'd use #ifdef
-> NL80211_ATTR_SUPPORTED_IFTYPES like Jouni did for a bunch of things but
-> I forgot to add
-> #define NL80211_ATTR_SUPPORTED_IFTYPES NL80211_ATTR_SUPPORTED_IFTYPES
-> to nl80211.h
-> 
-> On the other hand, I'm with Pavel in that it sucks if you have a tool
-> which your distro compiled against 2.6.27 and then suddenly you want to
-> upgrade your kernel to 2.6.28 and the features don't work...
+I really really really really don't understand what is wrong with this.
+This is new hardware portion of the driver in 2.6.27 which can be even
+compiled out with IWL5000.  This was not part of 2.6.26. Sorry for
+asking again how this is differing from ath9k patches just accepted.
+Please answer this even if you have to be rude your way.
 
-if the numbers you are planning to use are stable, then please use the
-above approach to just add the missing defines to it. Like adding a
-compat.h file with
+This is serious bug as radio is not configured properly affect greatly
+radio performance up to disconnection.
+We've limited the number of lines to minimum just to address THE
+specific problem and tested it properly.
+This bug was introduced in the merging window and discovered after it
+was closed there is nothing I can do about that unfortunate timing.
 
-#ifndef NL80211_ATTR_SUPPORTED_IFTYPES
-#define NL80211_ATTR_SUPPORTED_IFTYPES boo
-#endif
+Even if you don't accept this patch here it is, it fixes the problem
+in 2.6.27 this is the bottom line, maybe someone find it useful.
 
-That would make a distro complied binary work with an updates kernel and
-we don't end up with the issue the iwconfig current has when it has been
-compiled for an older kernel.
-
-However make sure to keep you numbers stable. Otherwise you break kernel
-and/or userspace assumptions.
-
-Regards
-
-Marcel
-
-
+Best regards
+Tomas
