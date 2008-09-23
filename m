@@ -1,76 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:38122 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753154AbYITAB6 (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.187]:5041 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053AbYIWHzi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 20:01:58 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so220250eyi.37
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 17:01:56 -0700 (PDT)
-Message-ID: <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com> (sfid-20080920_020202_716359_D230B170)
-Date: Fri, 19 Sep 2008 17:01:56 -0700
+	Tue, 23 Sep 2008 03:55:38 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so657526nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 00:55:36 -0700 (PDT)
+Message-ID: <f488382f0809230055m498d411fn59a5fbb1c6b2e970@mail.gmail.com> (sfid-20080923_095543_223369_6D4AC3B7)
+Date: Tue, 23 Sep 2008 00:55:35 -0700
 From: "Steven Noonan" <steven@uplinklabs.net>
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	"Senthilkumar Balasubramanian"
 	<Senthilkumar.Balasubramanian@atheros.com>,
-	"Ingo Molnar" <mingo@elte.hu>,
 	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <20080919235305.GD11665@tesla>
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <f488382f0809230022v582df76esa8df8c747ab600df@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
-	 <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com>
-	 <20080919030125.GG7408@tesla>
-	 <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com>
-	 <20080919142801.GA5816@senthil-lnx.users.atheros.com>
-	 <alpine.LNX.2.00.0809190934001.22989@alcarin.uplinklabs.net>
-	 <20080919175824.GA5626@senthil-lnx.users.atheros.com>
-	 <20080919182322.GB7027@tesla>
-	 <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
-	 <20080919235305.GD11665@tesla>
+Content-Type: text/plain; charset=KOI8-R
+References: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+	 <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com>
+	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
+	 <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
+	 <20080922065453.GD19580@tesla>
+	 <f488382f0809220026u9afa355g1ff2cc7a3fe88333@mail.gmail.com>
+	 <20080922080632.GA20446@tesla>
+	 <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
+	 <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com>
+	 <f488382f0809230022v582df76esa8df8c747ab600df@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 4:53 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Fri, Sep 19, 2008 at 04:31:20PM -0700, Steven Noonan wrote:
->>
->> I'm seeing the same latency issue I reported originally with the latest
->> -tip kernel and WITHOUT irqpoll.
->
-> Damn it.
->
->> Apparently there's something else to this...
->
-> Steven,
->
-> Can you reproduce this? If so can you tell us how? If you can reproduce
-> can you try to test this with wireless-testing as well? That is still
-> based on 2.6.26-rc6 but its just has all the new wireless development
-> stuff queued up for 2.6.28 so far. Everything else is the same.
-
-It's a weird problem, because I'm able to reproduce it by running a
-kernel with ath9k loaded for a few hours. In this particular case, I
-only ran this kernel for about 3.5 hours , but the delay when VT
-switching was getting noticeable. Unload/reload of ath9k and the
-latency disappeared again. It's definitely ath9k's doing, but I don't
-know how. I'm finding the delay is most noticeable after 7 hours
-uptime with ath9k loaded.
-
-I'll pull wireless-testing and run that kernel for another 8 hours.
-What's the URL for the repo? Surely you don't mean the
-wireless-testing on git.kernel.org that hasn't been touched for almost
-a week?
-
-I kind of wish there was a better debugging facility in ath9k. With
-ATH_DBG_INTERRUPTS, I see several hundred messages per second, which
-fills log files up like crazy (I switched to ftrace_printk as Ingo
-suggested, which has alleviated this somewhat). Is there a way to make
-it less verbose (perhaps so that it prints data at a rate of no more
-than 2 or 3 messages per second)? Or maybe the rate at which it prints
-this stuff is indicative something's wrong?
-
-- Steven
+MjAwOC85LzIzIFN0ZXZlbiBOb29uYW4gPHN0ZXZlbkB1cGxpbmtsYWJzLm5ldD46Cj4gT24gTW9u
+LCBTZXAgMjIsIDIwMDggYXQgOTowMSBBTSwgTHVpcyBSLiBSb2RyaWd1ZXoKPiA8bHJvZHJpZ3Vl
+ekBhdGhlcm9zLmNvbT4gd3JvdGU6Cj4+IE9uIE1vbiwgU2VwIDIyLCAyMDA4IGF0IDg6MTEgQU0s
+IFN0ZXZlbiBOb29uYW4gPHN0ZXZlbkB1cGxpbmtsYWJzLm5ldD4gd3JvdGU6Cj4+PiBPbiBNb24s
+IFNlcCAyMiwgMjAwOCBhdCAxOjA2IEFNLCBMdWlzIFIuIFJvZHJpZ3Vlego+Pj4gPGxyb2RyaWd1
+ZXpAYXRoZXJvcy5jb20+IHdyb3RlOgo+Pj4+IFBsZWFzZSB0ZXN0IHRoZSBmb2xsb3dpbmcgcGF0
+Y2guCj4+Pj4KPj4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoOWsvY29y
+ZS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoOWsvY29yZS5jCj4+Pj4gaW5kZXggYzI2MmVm
+Mi4uOWE1MTczOSAxMDA2NDQKPj4+PiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg5ay9j
+b3JlLmMKPj4+PiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg5ay9jb3JlLmMKPj4+PiBA
+QCAtNjgxLDEwICs2ODEsMTIgQEAgaW50IGF0aF9vcGVuKHN0cnVjdCBhdGhfc29mdGMgKnNjLCBz
+dHJ1Y3QgYXRoOWtfY2hhbm5lbCAqaW5pdGlhbF9jaGFuKQo+Pj4+ICAgICAgICAgKiBFbmFibGUg
+TUlCIGludGVycnVwdHMgd2hlbiB0aGVyZSBhcmUgaGFyZHdhcmUgcGh5IGNvdW50ZXJzLgo+Pj4+
+ICAgICAgICAgKiBOb3RlIHdlIG9ubHkgZG8gdGhpcyAoYXQgdGhlIG1vbWVudCkgZm9yIHN0YXRp
+b24gbW9kZS4KPj4+PiAgICAgICAgICovCj4+Pj4gKyNpZiAwCj4+Pj4gICAgICAgIGlmIChhdGg5
+a19od19waHljb3VudGVycyhhaCkgJiYKPj4+PiAgICAgICAgICAgICgoc2MtPnNjX2FoLT5haF9v
+cG1vZGUgPT0gQVRIOUtfTV9TVEEpIHx8Cj4+Pj4gICAgICAgICAgICAgKHNjLT5zY19haC0+YWhf
+b3Btb2RlID09IEFUSDlLX01fSUJTUykpKQo+Pj4+ICAgICAgICAgICAgICAgIHNjLT5zY19pbWFz
+ayB8PSBBVEg5S19JTlRfTUlCOwo+Pj4+ICsjZW5kaWYKPj4+PiAgICAgICAgLyoKPj4+PiAgICAg
+ICAgICogU29tZSBoYXJkd2FyZSBwcm9jZXNzZXMgdGhlIFRJTSBJRSBhbmQgZmlyZXMgYW4KPj4+
+PiAgICAgICAgICogaW50ZXJydXB0IHdoZW4gdGhlIFRJTSBiaXQgaXMgc2V0LiAgRm9yIGhhcmR3
+YXJlCj4+Pj4KPj4+Cj4+PiBJdCBkaWRuJ3QgYXBwbHkgdG8gLXJjNywgYnV0IEkgbWFuYWdlZCB0
+byBhcHBseSBpdCBtYW51YWxseQo+Pj4gKGFwcGFyZW50bHkgeW91IG1hZGUgdGhpcyBmb3Igd2ly
+ZWxlc3MtdGVzdGluZz8pIGFuZCBhZGRlZCB0aGUgI2lmIDAuCj4+PiBBZnRlciA3IGhvdXJzIHVw
+dGltZSB3aXRoIHRoZSBkcml2ZXIsIG5vIGFwcGFyZW50IGludGVycnVwdCBzdG9ybS4KPj4+Cj4+
+PiBJJ2xsIGRvIG1vcmUgdGhvcm91Z2ggdGVzdGluZyBsYXRlciwgYnV0IEkgaGF2ZSBhIDMgaG91
+ciBkcml2ZSB0b2RheSwKPj4+IGFuZCBzb21lIHBhY2tpbmcgdG8gZG8sIHNvIGl0J2xsIG5lZWQg
+dG8gd2FpdCBhIGJpdC4KPj4KPj4gWWVhaCBJIGRpZCBpdCBmb3Igd2lyZWxlc3MtdGVzdGluZy4g
+R29vZCB0byBoZWFyIHRoaXMgc28gZmFyIGhhcwo+PiBzb2x2ZWQgdGhlIGlzc3VlLiBJJ2xsIHBv
+cnQgaXQgdG8gMjcgYW5kIHBvc3QgaXQgb25jZSBJIGdldCB5b3VyCj4+IGJsZXNzaW5ncyB0aGF0
+IHRoaXMgZml4ZWQgaXQgYnkgYSBUZXN0ZWQtYnkuCj4+Cj4KPiBPa2F5LiBJJ20gaW4gU2VhdHRs
+ZSBub3cuCj4KPiBZZXMsIGl0IHNvbHZlZCB0aGUgaXNzdWUsIGJ1dCBzdXJlbHkgYW4gI2lmIDAg
+aXNuJ3QgYSBwcm9wZXIgc29sdXRpb24uCj4gV2hhdCdzIHRoZSBhY3R1YWwgYnVnIGhlcmU/IEkn
+bSBhZnJhaWQgdGhlIG1lYW5pbmcgb2Ygd2hhdCdzIGdvaW5nIG9uCj4gaGVyZSBpc24ndCBleGFj
+dGx5IGludHVpdGl2ZS4KPgo+IEFsc28sIEknbSBkb2luZyBhbiA4IGhvdXIgcnVuIHdpdGggdGhp
+cyBwYXRjaCB0b25pZ2h0LiBNYXliZSBtb3JlLAo+IGRlcGVuZHMgb24gd2hlbiBJIHdha2UgdXAu
+IDspCj4KPiBJIHRoaW5rIGlmIHRoaXMgcmVzb2x2ZXMgdGhlIGlzc3VlIG9uIHR3byBzZXBhcmF0
+ZSCXOCBob3VyIHJ1bnMsIGl0Cj4gc2hvdWxkIGJlIGNvbnNpZGVyZWQgdGhlIHNvbHV0aW9uIHRv
+IHRoZSBpc3N1ZSwgdW5sZXNzIGl0IHJlc3VyZmFjZXMuCj4KCkkgYW0gb25seSAyNSBtaW51dGVz
+IGludG8gdGhlIHJ1biwgYnV0IEkgZmVlbCB0aGlzIGlzIHdvcnRoIHJlcG9ydGluZwpiZWZvcmUg
+SSBmb3JnZXQuIE5vIElSUSBzdG9ybSB0aHVzIGZhciwgYnV0IHRoZSBjb25uZWN0aW9uIGtlZXBz
+CmRyb3BwaW5nLiBPciByYXRoZXIsIGl0IGRvZXNuJ3QgZGlzYXNzb2NpYXRlLCBidXQgd2hpbGUg
+SSB3YXMKdHJhbnNmZXJyaW5nIGEgbGFyZ2UgZmlsZSwgaXQgaGFkIHBvaW50cyBvZiB0aW1lIHdo
+ZXJlIGl0IHN1ZGRlbmx5Cmxvc3QgYW5kIHJlYWNxdWlyZWQgdGhlIGNvbm5lY3Rpb24gKHNpZ25h
+bCBzdHJlbmd0aCBmbHVjdHVhdGVzIHdpbGRseQpiZXR3ZWVuIDcwLTkwJSBhbmQgdGhlbiAwJSBm
+b3IgYSBzZWNvbmQsIGFuZCB0aGVuIGJhY2sgdG8KZmx1Y3R1YXRpbmcpLiBQZXJoYXBzIHRoaXMg
+aXMgcmVsYXRlZCB0byB0aGUgbGFjayBvZiBhZ2dyZWdhdGlvbj8KCi0gU3RldmVuCg==
