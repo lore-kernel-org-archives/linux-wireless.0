@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:56796 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752106AbYIRO21 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 10:28:27 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so239355fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 07:28:25 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [RFC V2] b43: A patch for control of the radio LED using rfkill
-Date: Thu, 18 Sep 2008 16:28:22 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48d260b7.SG5SGntEQ00lxFKi%Larry.Finger@lwfinger.net> <20080918142405.GG1583@khazad-dum.debian.net>
-In-Reply-To: <20080918142405.GG1583@khazad-dum.debian.net>
+Received: from smtp2.vol.cz ([195.250.128.75]:50693 "EHLO smtp2.vol.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751900AbYIWFwW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2008 01:52:22 -0400
+Received: from webmail1.vol.cz (webmail1.vol.cz [195.250.155.226])
+	by smtp2.vol.cz (Postfix) with ESMTP id A037A288BB
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 07:30:41 +0200 (CEST)
+Received: from webmail1.vol.cz (localhost.vol.cz [127.0.0.1])
+	by webmail1.vol.cz (8.13.8/8.13.8) with ESMTP id m8N5UfKq096249
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 07:30:41 +0200 (CEST)
+	(envelope-from msladek@volny.cz)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809181628.22544.IvDoorn@gmail.com> (sfid-20080918_162830_050021_3467202E)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: =?iso-8859-2?Q?Re:_Problem_compiling_compat-wireless?=
+From: msladek@volny.cz
+To: linux-wireless@vger.kernel.org
+Date: Tue, 23 Sep 2008 07:30:41 +0200 (CEST)
+Message-ID: <f629eb4e2300e0bbbf8416a53c269257@www1.mail.volny.cz> (sfid-20080923_075239_732817_C5B8A3FA)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
-> On Thu, 18 Sep 2008, Larry Finger wrote:
-> > The changes below, along with Henriques patch "[PATCH] rfkill: update
-> > LEDs for all state changes", and the reversion of commit bc19d6e make
-> > the wireless LED toggle correctly.
-> > 
-> > This version passes UNBLOCKED to rfkill when the hardware switch enables the radio.
-> 
-> As I said in an email I just sent (unfortunately, after you already sent
-> this patch), whatever goes to rfkill_force_state must be the CURRENT state
-> of the hardware.
-> 
-> So, depending on what happens to b43 hardware when the hardware switch
-> enables it (i.e. does it enable for real, ignoring the software rfkill input
-> lines?), this patch might or might not be correct.
+SGVsbG8hDQoNCkkgaGF2ZSBleGFjdGx5IHRoZSBzYW1lIHByb2JsZW0gYXMg
+ZGVzY3JpYmVkIGJlbGxvdy4gSSB0cmllZCB0byBjb21waWxlDQpsYXRlc3Qg
+c25hcHNob3Qgb2YgY29tcGF0LXdpcmVsZXNzIGFnYWluc3QgYm90aCAyLjYu
+MjctcmM2IGFuZCAyLjYuMjctcmM3DQprZXJuZWxzIGFuZCBJIGFsd2F5cyBn
+b3QgdGhlIGVycm9yOg0KDQrigJhFVEhfUF9QQUXigJkgdW5kZWNsYXJlZA0K
+DQpEbyB5b3UgaGF2ZSBhbnkgc3VnZ2VzdGlvbnM/IEFueSBoZWxwIHdpbGwg
+YmUgYXBwcmVjaWF0ZWQuDQoNCk1pY2hhbA0KDQoNCkZyb206IEFtaXQgU29v
+ZCA8YXMyMl8yMDAwQC4uLj4NClN1YmplY3Q6IFByb2JsZW0gY29tcGlsaW5n
+IGNvbXBhdC13aXJlbGVzcw0KTmV3c2dyb3VwczogZ21hbmUubGludXgua2Vy
+bmVsLndpcmVsZXNzLmdlbmVyYWwNCkRhdGU6IDIwMDgtMDktMTkgMDU6MDk6
+NTQgR01UICg0IGRheXMgYW5kIDE1IG1pbnV0ZXMgYWdvKQ0KDQpIaSwNCg0K
+UmVjZW50bHkgZG93bmxvYWRlZCB0aGUgY29tcGF0LXdpcmVsZXNzICYgd2Fz
+IHRyeWluZyB0byBjb21waWxlIGl0IG9uDQpsaW51eC0yLjI3LXJjNiBrZXJu
+ZWwuIER1cmluZyB0aGUNCmNvbXBpbGF0aW9uIEknbSBnZXR0aW5nIGZyb2xs
+b3dpbmcgZXJyb3I6DQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCi91c3Ivc3JjL2NvbXBh
+dC13aXJlbGVzcy0yMDA4LTA5LTE5L25ldC9tYWM4MDIxMS9yeC5jOiBJbiBm
+dW5jdGlvbiDigJhpZWVlODAyMTFfZnJhbWVfYWxsb3dlZOKAmToNCi91c3Iv
+c3JjL2NvbXBhdC13aXJlbGVzcy0yMDA4LTA5LTE5L25ldC9tYWM4MDIxMS9y
+eC5jOjExOTY6IGVycm9yOiDigJhFVEhfUF9QQUXigJkNCnVuZGVjbGFyZWQN
+CihmaXJzdCB1c2UgaW4gdGhpcyBmdW5jdGlvbikNCi91c3Ivc3JjL2NvbXBh
+dC13aXJlbGVzcy0yMDA4LTA5LTE5L25ldC9tYWM4MDIxMS9yeC5jOjExOTY6
+IGVycm9yOiAoRWFjaA0KdW5kZWNsYXJlZCBpZGVudGlmaWVyDQppcyByZXBv
+cnRlZCBvbmx5IG9uY2UNCi91c3Ivc3JjL2NvbXBhdC13aXJlbGVzcy0yMDA4
+LTA5LTE5L25ldC9tYWM4MDIxMS9yeC5jOjExOTY6IGVycm9yOiBmb3INCmVh
+Y2ggZnVuY3Rpb24gaXQgYXBwZWFycyBpbi4pDQptYWtlWzNdOiAqKiogWy91
+c3Ivc3JjL2NvbXBhdC13aXJlbGVzcy0yMDA4LTA5LTE5L25ldC9tYWM4MDIx
+MS9yeC5vXQ0KRXJyb3IgMQ0KbWFrZVsyXTogKioqIFsvdXNyL3NyYy9jb21w
+YXQtd2lyZWxlc3MtMjAwOC0wOS0xOS9uZXQvbWFjODAyMTFdIEVycm9yDQoy
+DQptYWtlWzFdOiAqKiogW19tb2R1bGVfL3Vzci9zcmMvY29tcGF0LXdpcmVs
+ZXNzLTIwMDgtMDktMTldIEVycm9yIDINCm1ha2VbMV06IExlYXZpbmcgZGly
+ZWN0b3J5IGAvc3RvcmFnZS91c3Ivc3JjL2xpbnV4LTIuNi1vcmlnJw0KbWFr
+ZTogKioqIFttb2R1bGVzXSBFcnJvciAyDQo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PQ0KDQpraW5kbHkgYXNzaXN0Lg0KDQpyZWdhcmRzLA0KDQotYW1pdC0N
+Cg0K
 
-As far as I can see the v2 patch is correct, it sends the BLOCK event when the
-rfkill key was pressed to block the radio and the UNBLOCK event when the rfkill
-key was pressed to unblock the radio.
-
-The change compared to v1 was needed to prevent BLOCK events to be send
-when user has manually disabled the radio for the interface through another
-interface then rfkill (and thus wasn't a rfkill event).
-
-Ivo
