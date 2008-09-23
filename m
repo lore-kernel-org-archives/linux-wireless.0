@@ -1,44 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40428 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753366AbYIYLmH (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:62818 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752912AbYIWVFK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 07:42:07 -0400
-Date: Thu, 25 Sep 2008 07:41:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: pull request: wireless-2.6 2008-09-24
-Message-ID: <20080925114133.GA5044@tuxdriver.com> (sfid-20080925_134212_618549_FDAECEF8)
-References: <20080924231720.GD3639@tuxdriver.com> <1222321622.2510.455.camel@debian.sh.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1222321622.2510.455.camel@debian.sh.intel.com>
+	Tue, 23 Sep 2008 17:05:10 -0400
+Date: Tue, 23 Sep 2008 14:03:09 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
+Subject: Re: [PATCH -mm] rt2x00: fix Kconfig dependencies
+Message-Id: <20080923140309.ecf8d030.randy.dunlap@oracle.com> (sfid-20080923_230522_783483_AA71B7DB)
+In-Reply-To: <200809231951.00872.IvDoorn@gmail.com>
+References: <48D82A43.7040604@oracle.com>
+	<200809230907.46130.IvDoorn@gmail.com>
+	<48D9188A.2090003@oracle.com>
+	<200809231951.00872.IvDoorn@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 25, 2008 at 01:47:02PM +0800, Zhu Yi wrote:
-> On Wed, 2008-09-24 at 17:17 -0600, John W. Linville wrote:
-> > Dave,
-> > 
-> > One more for 2.6.27 -- a fix for a possible interrupt storm.  There is
-> > even a link in the commit log to a youtube video of the storm in
-> > progress. :-)
-> > 
-> > Let me know if there are problems!
-> 
-> Can you also add this one? It doesn't panic the kernel when a frame from
-> firmware is invalid.
-> 
-> http://marc.info/?l=linux-wireless&m=122219037706528&w=2
+On Tue, 23 Sep 2008 19:51:00 +0200 Ivo van Doorn wrote:
 
-Is there an open bug report for that anywhere?  Is this something
-that real users (no offense to Johannes) are likely to hit?
+> On Tuesday 23 September 2008, Randy Dunlap wrote:
+> > Ivo van Doorn wrote:
+> > > On Tuesday 23 September 2008, Randy Dunlap wrote:
+> > >> From: Randy Dunlap <randy.dunlap@oracle.com>
+> > >>
+> > >> If RT2X00=y but RFKILL=m, these build errors happen:
+> > >>
+> > >> (.text+0x7c7d6): undefined reference to `rfkill_free'
+> > >> rt2x00rfkill.c:(.text+0x7c830): undefined reference to `rfkill_force_state'
+> > >> (.text+0x7c88d): undefined reference to `rfkill_unregister'
+> > >> (.text+0x7c8cd): undefined reference to `rfkill_register'
+> > >> (.text+0x7ca1a): undefined reference to `rfkill_allocate'
+> > >>
+> > >> so restrict RT2X00's RFKILL config level to that of the main RFKILL option.
+> > >> This is done by making the former a tristate instead of a bool
+> > >> config option.
+> > >>
+> > >>
+> > >> If RT2X00=y but LEDS_CLASS=m, these build errors happen:
+> > >>
+> > >> (.text+0x11859f): undefined reference to `led_classdev_resume'
+> > >> (.text+0x1185b3): undefined reference to `led_classdev_resume'
+> > >> (.text+0x1185c7): undefined reference to `led_classdev_resume'
+> > >> (.text+0x1185e4): undefined reference to `led_classdev_suspend'
+> > >> (.text+0x1185f8): undefined reference to `led_classdev_suspend'
+> > >> (.text+0x11860c): undefined reference to `led_classdev_suspend'
+> > >> rt2x00leds.c:(.text+0x118620): undefined reference to `led_classdev_unregister'
+> > >> rt2x00leds.c:(.text+0x118695): undefined reference to `led_classdev_register'
+> > >>
+> > >> so restrict RT2X00's LEDS config level to that of the main LEDS_CLASS option.
+> > >> This is done by making the former a tristate instead of a bool
+> > >> config option.
+> > > 
+> > > Is that really going to work correctly?
+> > > rfkill and leds support should be compiled into rt2x00lib.ko, which means that
+> > > should become a module instead of the rfkill/leds support part only.
+> > 
+> > I wondered about that lib.ko.  Any working build fix is OK with me.
+> > What do you suggest?
+> 
+> Actually I was hoping that you answer to my question was going to be "yes it will be working correctly" ;)
+> 
+> Would this work?
+> 
+> config RT2X00_LIB_RFKILL
+> 	tristate
+>   	depends on RFKILL
+>   	default y
+>   
+> config RT2X00_LIB_LEDS
+> 	tristate
+>   	depends on NEW_LEDS
+>   	depends on LEDS_CLASS
+> 	default y
+> 
+> config RT2X00_LIB
+> 	tristate
+> 	depends on RT2X00_LIB_RFKILL if (RT2X00_LIB_RFKILL != n)
+> 	depends on RT2X00_LIB_LEDS if (RT2X00_LIB_LEDS != n)
+> 
+> It's ugly, and I can't test this right now, but perhaps you have an idea if this could do the trick?
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+I tried it:
+
+drivers/net/wireless/rt2x00/Kconfig:22: invalid option
+drivers/net/wireless/rt2x00/Kconfig:23: invalid option
+
+"depends ... if ..." is invalid.  Would be nice to have that.
+Maybe there is some other way to express that...
+
+
+> > Currently kconfig is converting an =m to =y because of tristate -> boolean.
+> > This is not good.  It breaks things, as demonstrated here.
+> > The Kconfig cannot stay like this AFAIK.
+> 
+> Agreed.
+
+
+---
+~Randy
