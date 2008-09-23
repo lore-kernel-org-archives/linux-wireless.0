@@ -1,208 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:60961 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752609AbYIEDbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2008 23:31:16 -0400
-Message-ID: <48C0A76F.8090706@cn.fujitsu.com> (sfid-20080905_053119_619784_57834051)
-Date: Fri, 05 Sep 2008 11:28:47 +0800
-From: Wang Chen <wangchen@cn.fujitsu.com>
+Received: from mail.atheros.com ([12.36.123.2]:12985 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752368AbYIWUCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2008 16:02:00 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 13:02:00 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org, \"Steven Noonan\""
+	<steven@uplinklabs.net>
+Subject: [PATCH] ath9k: disable MIB interrupts to fix interrupt storm
+Date: Tue, 23 Sep 2008 13:01:54 -0700
+Message-ID: <1222200114-8690-1-git-send-email-lrodriguez@atheros.com> (sfid-20080923_220207_775150_CF939C9A)
 MIME-Version: 1.0
-To: "David S. Miller" <davem@davemloft.net>
-CC: Jeff Garzik <jgarzik@pobox.com>, NETDEV <netdev@vger.kernel.org>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 15/18] netdevice libertas: Fix directly reference of netdev->priv
-References: <48C0A219.2030004@cn.fujitsu.com>
-In-Reply-To: <48C0A219.2030004@cn.fujitsu.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have some reasons to kill netdev->priv:
-1. netdev->priv is equal to netdev_priv().
-2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
-   netdev_priv() is more flexible than netdev->priv.
-But we cann't kill netdev->priv, because so many drivers reference to it
-directly.
+For AR5416 enabling the MIB interrupts has proven to cause an
+interrupt storm after 7 hours of run. We will make use of the
+MIB interrupt once we have ANI supported added so for now
+to cure this we disable the interrupt.
 
-OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
-and I want to kill netdev->priv later, I decided to convert all the direct
-reference of netdev->priv first.
+The interrupt storm can be seen as follows after 7 hours of run
+as reported by  Steven Noonan <steven@uplinklabs.net>:
 
-Different to readonly reference of netdev->priv, in this driver, netdev->priv
-was changed. I use netdev->ml_priv to replace netdev->priv.
+18:28:38          sum   1106.00
+18:28:39          sum   1037.62
+18:28:40          sum   1069.00
+18:28:41          sum   1167.00
+18:28:42          sum   1155.00
+18:28:43          sum   1339.00
+18:28:44          sum  18355.00
+18:28:45          sum  17845.45
+18:28:46          sum  15285.00
+18:28:47          sum  17511.00
+18:28:48          sum  17568.69
+18:28:49          sum  17704.04
+18:28:50          sum  18566.67
+18:28:51          sum  18913.13
 
-Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
+at 18:28:44 the MIB interrupt kicked off and caused huge
+latency which can be seen even on a video he submitted:
+
+http://www.youtube.com/watch?v=4GeCx1gZMpA
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/libertas/main.c |   36 +++++++++++++++++-----------------
- 1 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index bd32ac0..71c4bd8 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -223,7 +223,7 @@ u8 lbs_data_rate_to_fw_index(u32 rate)
- static ssize_t lbs_anycast_get(struct device *dev,
- 		struct device_attribute *attr, char * buf)
- {
--	struct lbs_private *priv = to_net_dev(dev)->priv;
-+	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
- 	struct cmd_ds_mesh_access mesh_access;
- 	int ret;
- 
-@@ -242,7 +242,7 @@ static ssize_t lbs_anycast_get(struct device *dev,
- static ssize_t lbs_anycast_set(struct device *dev,
- 		struct device_attribute *attr, const char * buf, size_t count)
- {
--	struct lbs_private *priv = to_net_dev(dev)->priv;
-+	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
- 	struct cmd_ds_mesh_access mesh_access;
- 	uint32_t datum;
- 	int ret;
-@@ -270,7 +270,7 @@ static void lbs_remove_mesh(struct lbs_private *priv);
- static ssize_t lbs_rtap_get(struct device *dev,
- 		struct device_attribute *attr, char * buf)
- {
--	struct lbs_private *priv = to_net_dev(dev)->priv;
-+	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
- 	return snprintf(buf, 5, "0x%X\n", priv->monitormode);
- }
- 
-@@ -281,7 +281,7 @@ static ssize_t lbs_rtap_set(struct device *dev,
- 		struct device_attribute *attr, const char * buf, size_t count)
- {
- 	int monitor_mode;
--	struct lbs_private *priv = to_net_dev(dev)->priv;
-+	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
- 
- 	sscanf(buf, "%x", &monitor_mode);
- 	if (monitor_mode) {
-@@ -330,7 +330,7 @@ static DEVICE_ATTR(lbs_rtap, 0644, lbs_rtap_get, lbs_rtap_set );
- static ssize_t lbs_mesh_get(struct device *dev,
- 		struct device_attribute *attr, char * buf)
- {
--	struct lbs_private *priv = to_net_dev(dev)->priv;
-+	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
- 	return snprintf(buf, 5, "0x%X\n", !!priv->mesh_dev);
- }
- 
-@@ -340,7 +340,7 @@ static ssize_t lbs_mesh_get(struct device *dev,
- static ssize_t lbs_mesh_set(struct device *dev,
- 		struct device_attribute *attr, const char * buf, size_t count)
- {
--	struct lbs_private *priv = to_net_dev(dev)->priv;
-+	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
- 	int enable;
- 	int ret, action = CMD_ACT_MESH_CONFIG_STOP;
- 
-@@ -391,7 +391,7 @@ static struct attribute_group lbs_mesh_attr_group = {
-  */
- static int lbs_dev_open(struct net_device *dev)
- {
--	struct lbs_private *priv = (struct lbs_private *) dev->priv ;
-+	struct lbs_private *priv = netdev_priv(dev) ;
- 	int ret = 0;
- 
- 	lbs_deb_enter(LBS_DEB_NET);
-@@ -433,7 +433,7 @@ static int lbs_dev_open(struct net_device *dev)
-  */
- static int lbs_mesh_stop(struct net_device *dev)
- {
--	struct lbs_private *priv = (struct lbs_private *) (dev->priv);
-+	struct lbs_private *priv = dev->ml_priv;
- 
- 	lbs_deb_enter(LBS_DEB_MESH);
- 	spin_lock_irq(&priv->driver_lock);
-@@ -460,7 +460,7 @@ static int lbs_mesh_stop(struct net_device *dev)
-  */
- static int lbs_eth_stop(struct net_device *dev)
- {
--	struct lbs_private *priv = (struct lbs_private *) dev->priv;
-+	struct lbs_private *priv = netdev_priv(dev);
- 
- 	lbs_deb_enter(LBS_DEB_NET);
- 
-@@ -477,7 +477,7 @@ static int lbs_eth_stop(struct net_device *dev)
- 
- static void lbs_tx_timeout(struct net_device *dev)
- {
--	struct lbs_private *priv = (struct lbs_private *) dev->priv;
-+	struct lbs_private *priv = netdev_priv(dev);
- 
- 	lbs_deb_enter(LBS_DEB_TX);
- 
-@@ -529,7 +529,7 @@ EXPORT_SYMBOL_GPL(lbs_host_to_card_done);
-  */
- static struct net_device_stats *lbs_get_stats(struct net_device *dev)
- {
--	struct lbs_private *priv = (struct lbs_private *) dev->priv;
-+	struct lbs_private *priv = netdev_priv(dev);
- 
- 	lbs_deb_enter(LBS_DEB_NET);
- 	return &priv->stats;
-@@ -538,7 +538,7 @@ static struct net_device_stats *lbs_get_stats(struct net_device *dev)
- static int lbs_set_mac_address(struct net_device *dev, void *addr)
- {
- 	int ret = 0;
--	struct lbs_private *priv = (struct lbs_private *) dev->priv;
-+	struct lbs_private *priv = netdev_priv(dev);
- 	struct sockaddr *phwaddr = addr;
- 	struct cmd_ds_802_11_mac_address cmd;
- 
-@@ -672,7 +672,7 @@ static void lbs_set_mcast_worker(struct work_struct *work)
- 
- static void lbs_set_multicast_list(struct net_device *dev)
- {
--	struct lbs_private *priv = dev->priv;
-+	struct lbs_private *priv = netdev_priv(dev);
- 
- 	schedule_work(&priv->mcast_work);
- }
-@@ -688,7 +688,7 @@ static void lbs_set_multicast_list(struct net_device *dev)
- static int lbs_thread(void *data)
- {
- 	struct net_device *dev = data;
--	struct lbs_private *priv = dev->priv;
-+	struct lbs_private *priv = netdev_priv(dev);
- 	wait_queue_t wait;
- 
- 	lbs_deb_enter(LBS_DEB_THREAD);
-@@ -1116,7 +1116,7 @@ struct lbs_private *lbs_add_card(void *card, struct device *dmdev)
- 		lbs_pr_err("init ethX device failed\n");
- 		goto done;
- 	}
--	priv = dev->priv;
-+	priv = netdev_priv(dev);
- 
- 	if (lbs_init_adapter(priv)) {
- 		lbs_pr_err("failed to initialize adapter structure.\n");
-@@ -1351,7 +1351,7 @@ static int lbs_add_mesh(struct lbs_private *priv)
- 		ret = -ENOMEM;
- 		goto done;
- 	}
--	mesh_dev->priv = priv;
-+	mesh_dev->ml_priv = priv;
- 	priv->mesh_dev = mesh_dev;
- 
- 	mesh_dev->open = lbs_dev_open;
-@@ -1564,7 +1564,7 @@ static int lbs_rtap_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 
- static struct net_device_stats *lbs_rtap_get_stats(struct net_device *dev)
- {
--	struct lbs_private *priv = dev->priv;
-+	struct lbs_private *priv = dev->ml_priv;
- 	lbs_deb_enter(LBS_DEB_NET);
- 	return &priv->stats;
- }
-@@ -1605,7 +1605,7 @@ static int lbs_add_rtap(struct lbs_private *priv)
- 	rtap_dev->stop = lbs_rtap_stop;
- 	rtap_dev->get_stats = lbs_rtap_get_stats;
- 	rtap_dev->hard_start_xmit = lbs_rtap_hard_start_xmit;
--	rtap_dev->priv = priv;
-+	rtap_dev->ml_priv = priv;
- 	SET_NETDEV_DEV(rtap_dev, priv->dev->dev.parent);
- 
- 	ret = register_netdev(rtap_dev);
+This patch is intended for 2.6.27 only, we hope to just
+enable ANI for 2.6.28.
+
+ drivers/net/wireless/ath9k/core.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index f6c4528..8a4d4e2 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -801,9 +801,11 @@ int ath_open(struct ath_softc *sc, struct ath9k_channel *initial_chan)
+ 	 * Enable MIB interrupts when there are hardware phy counters.
+ 	 * Note we only do this (at the moment) for station mode.
+ 	 */
++#if 0
+ 	if (ath9k_hw_phycounters(ah) &&
+ 	    ((sc->sc_opmode == ATH9K_M_STA) || (sc->sc_opmode == ATH9K_M_IBSS)))
+ 		sc->sc_imask |= ATH9K_INT_MIB;
++#endif
+ 	/*
+ 	 * Some hardware processes the TIM IE and fires an
+ 	 * interrupt when the TIM bit is set.  For hardware
 -- 
-1.5.3.4
-
+1.5.6.rc2.15.g457bb.dirty
 
