@@ -1,62 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:11773 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752594AbYIZGu7 (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:5852 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752699AbYIWHEg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 02:50:59 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so141937ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 23:50:57 -0700 (PDT)
-Message-ID: <43e72e890809252350n13a04099ne205480201cae26c@mail.gmail.com> (sfid-20080926_085106_191159_03843B1A)
-Date: Thu, 25 Sep 2008 23:50:57 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
-Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240809252342x4b85b7e3u8341bb96a03b95a7@mail.gmail.com>
+	Tue, 23 Sep 2008 03:04:36 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so652943nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 00:04:34 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: OOPS bug KERNEL LINUX- Version 2.6.26
+Date: Tue, 23 Sep 2008 09:04:31 +0200
+Cc: David Miller <davem@davemloft.net>, andrea_monta@inwind.it,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, stable@kernel.org
+References: <K7M9ZI$69A44BBF23D86D612A80B0EA98EEEE6B@libero.it> <200809230032.37255.IvDoorn@gmail.com> <20080922234649.GA26219@tuxdriver.com>
+In-Reply-To: <20080922234649.GA26219@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net>
-	 <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com>
-	 <48DC51AF.6000900@lwfinger.net>
-	 <1ba2fa240809252342x4b85b7e3u8341bb96a03b95a7@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809230904.31382.IvDoorn@gmail.com> (sfid-20080923_090442_540041_CA335B6E)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 25, 2008 at 11:42 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Fri, Sep 26, 2008 at 6:06 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> Tomas Winkler wrote:
->>> wild guess try to revert:
->>> 'mac80211: make master iface not wireless'
->>
->> You win the prize. Bisection shows that
->> 84b0ba8ed0423a3c56a28e701b735daae3e15766 is first bad commit
->>
->> commit 84b0ba8ed0423a3c56a28e701b735daae3e15766
->> Author: Johannes Berg <johannes@sipsolutions.net>
->> Date:   Tue Sep 16 14:18:59 2008 +0200
->>
->>    mac80211: make master iface not wireless
->>
->>
->> The actual crash is in the following routine from include/net/wireless.h:
->>
->> /**
->>  * wiphy_priv - return priv from wiphy
->>  */
->> static inline void *wiphy_priv(struct wiphy *wiphy)
->> {
->>        BUG_ON(!wiphy);
->>        return &wiphy->priv;
->> }
->>
->> I'm still looking to see where it goes wrong.
->
-> What do you mean?  The root cause is written in the commit log.
-> Tomas
+On Tuesday 23 September 2008, John W. Linville wrote:
+> On Tue, Sep 23, 2008 at 12:32:36AM +0200, Ivo van Doorn wrote:
+> > On Tuesday 23 September 2008, John W. Linville wrote:
+> > > On Tue, Sep 23, 2008 at 12:25:03AM +0200, Ivo van Doorn wrote:
+> > > > Hi,
+> > > > 
+> > > > > > 1. Problem with usb-wireless-key 
+> > > > > > 2. I can't find my device typing ifconfig -a or iwconfig I don't find any wireless attached device. But I have my usb wireless connected. A belkin usb wireless key.Before, with the kernel 2.6.25 all worked well
+> > > > > > 3. nothing
+> > > > > > 4. Linux version 2.6.26 (root@clementino) (gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)) #1 PREEMPT Mon Sep 22 15:57:45 CEST 2008
+> > > > > > 5.
+> > > > 
+> > > > You missed the message from rt2x00 2 lines above this trace, which undoubtly have said something like:
+> > > > 	"Invalid RT chipset detected."
+> > > > which is triggered when rt73usb is loaded for a device it does not support
+> > > > 
+> > > > The current workaround for this issue is blacklisting rt73usb and making sure the driver
+> > > > which is required for your driver is loaded instead.
+> > > > 
+> > > > I'll look into the reason why this actually triggers a NULL pointer, since that is obviously a nasty bug.
+> > > 
+> > > -stable needs a patch similar to the one here:
+> > > 
+> > > 	http://people.redhat.com/linville/kernels/rhel5/patches/jwltest-rt2x00lib-probe-fail.patch
+> > 
+> > Ah yes, that would be a good one.
+> > I kind of assumed it was already merged, and hadn't actually verified that yet. ;)
+> 
+> Well the code in 2.6.27 is different, this patch is no longer necessary
+> (and doesn't apply).
 
-The question is who calls wiphy_priv(mdev) or wiphy_priv(NULL) and where.
+Yeah, but it was send to stable@kernel.org as merge request for 2.6.26 stable only. :)
 
-  Luis
+Ivo
