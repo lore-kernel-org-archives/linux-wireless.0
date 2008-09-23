@@ -1,60 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52796 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751257AbYIPGxr (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:59376 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbYIWQVA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 02:53:47 -0400
-Subject: Re: [PATCH 1/2] iwlwifi: don't delay scan in IBSS mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1221544864-9494-1-git-send-email-yi.zhu@intel.com> (sfid-20080916_080534_864320_B18780DE)
-References: <1221544864-9494-1-git-send-email-yi.zhu@intel.com>
-	 (sfid-20080916_080534_864320_B18780DE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Gt/xMmOfvzEXMyal7QMr"
-Date: Tue, 16 Sep 2008 08:53:03 +0200
-Message-Id: <1221547983.8916.2.camel@johannes.berg> (sfid-20080916_085351_703820_7D18B785)
-Mime-Version: 1.0
+	Tue, 23 Sep 2008 12:21:00 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so736557nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 09:20:56 -0700 (PDT)
+Message-ID: <f488382f0809230920m7c42c557m85fda9381fea707e@mail.gmail.com> (sfid-20080923_182106_920280_DAF33F1C)
+Date: Tue, 23 Sep 2008 09:20:55 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Senthilkumar Balasubramanian"
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <f488382f0809230055m498d411fn59a5fbb1c6b2e970@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=KOI8-R
+References: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
+	 <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
+	 <20080922065453.GD19580@tesla>
+	 <f488382f0809220026u9afa355g1ff2cc7a3fe88333@mail.gmail.com>
+	 <20080922080632.GA20446@tesla>
+	 <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
+	 <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com>
+	 <f488382f0809230022v582df76esa8df8c747ab600df@mail.gmail.com>
+	 <f488382f0809230055m498d411fn59a5fbb1c6b2e970@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-Gt/xMmOfvzEXMyal7QMr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2008-09-16 at 14:01 +0800, Zhu Yi wrote:
-> From: Tomas Winkler <tomas.winkler@intel.com>
->=20
-> Scan need to be delayed only after association to allow EAPOL
-> exchange. We don't need the delay for IBSS mode.
-
-FWIW, I'd love to see that delay thing moved into mac80211.
-
-johannes
-
---=-Gt/xMmOfvzEXMyal7QMr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIz1fLAAoJEKVg1VMiehFYeEMP/1BvBCX/JBHyz8TLfeY/EuZ4
-srs2r30o2geP7QtkvPgUJPyZjrDjeuclBA5GfGe3mdkH2bt9UdV4aQAD26O3gF8d
-ihPMb7Z748CdNLeDknKoMSpk/+sTWUwzCIKvsElCTb34DDvlSKptsYB8p96F8u5V
-FqEqRT8yFMfNrwNtqRavYHiibbDh8lnW8tC05xCFFOSmozNWgxnKtlU23j3FAUQy
-GC206HTGILqzbdQW9AY4PEONoCUte88cttpnwE/NsdNvrC37yyG79oNED0rqe5uA
-OV7GwDSareyG3yRdItmjVkznvQlMwlV0eZrzC5u6Enizahrwh21jESU5wZteHYGT
-ZiZFTGTS9vcg3zEo9oRYY2X5B0QBsPyVtfC11DvKTp5AKct63OjCMgodspeum+b3
-WsTh3AQMFezgh3Mc0SQquo7zfIvT4AGTiTmjP6FGIB9n82pJ1CLH06JGZcso+RzC
-L14oQBz1Eob5NM89QNJ/mFZKDHUkEGGItiNvNoXiCCe8lMud+uT3vDjb8AcuRl8O
-MqcMjZwxQpDb3VwcjJ7/4fdFQUjfAx9bG0oJJNPKHPQh//SaibKcFw5E6hPW7SBu
-tzh1ryUkbokGHSbZmHSj1WVsiZSEoQhWOg6FK8RW6bFTZgP6+7nVzY97kwlsuOz8
-lhNJOla5a20ZYzkxkssb
-=uY01
------END PGP SIGNATURE-----
-
---=-Gt/xMmOfvzEXMyal7QMr--
-
+MjAwOC85LzIzIFN0ZXZlbiBOb29uYW4gPHN0ZXZlbkB1cGxpbmtsYWJzLm5ldD46Cj4gMjAwOC85
+LzIzIFN0ZXZlbiBOb29uYW4gPHN0ZXZlbkB1cGxpbmtsYWJzLm5ldD46Cj4+IE9uIE1vbiwgU2Vw
+IDIyLCAyMDA4IGF0IDk6MDEgQU0sIEx1aXMgUi4gUm9kcmlndWV6Cj4+IDxscm9kcmlndWV6QGF0
+aGVyb3MuY29tPiB3cm90ZToKPj4+IE9uIE1vbiwgU2VwIDIyLCAyMDA4IGF0IDg6MTEgQU0sIFN0
+ZXZlbiBOb29uYW4gPHN0ZXZlbkB1cGxpbmtsYWJzLm5ldD4gd3JvdGU6Cj4+Pj4gT24gTW9uLCBT
+ZXAgMjIsIDIwMDggYXQgMTowNiBBTSwgTHVpcyBSLiBSb2RyaWd1ZXoKPj4+PiA8bHJvZHJpZ3Vl
+ekBhdGhlcm9zLmNvbT4gd3JvdGU6Cj4+Pj4+IFBsZWFzZSB0ZXN0IHRoZSBmb2xsb3dpbmcgcGF0
+Y2guCj4+Pj4+Cj4+Pj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg5ay9j
+b3JlLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg5ay9jb3JlLmMKPj4+Pj4gaW5kZXggYzI2
+MmVmMi4uOWE1MTczOSAxMDA2NDQKPj4+Pj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRo
+OWsvY29yZS5jCj4+Pj4+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDlrL2NvcmUuYwo+
+Pj4+PiBAQCAtNjgxLDEwICs2ODEsMTIgQEAgaW50IGF0aF9vcGVuKHN0cnVjdCBhdGhfc29mdGMg
+KnNjLCBzdHJ1Y3QgYXRoOWtfY2hhbm5lbCAqaW5pdGlhbF9jaGFuKQo+Pj4+PiAgICAgICAgICog
+RW5hYmxlIE1JQiBpbnRlcnJ1cHRzIHdoZW4gdGhlcmUgYXJlIGhhcmR3YXJlIHBoeSBjb3VudGVy
+cy4KPj4+Pj4gICAgICAgICAqIE5vdGUgd2Ugb25seSBkbyB0aGlzIChhdCB0aGUgbW9tZW50KSBm
+b3Igc3RhdGlvbiBtb2RlLgo+Pj4+PiAgICAgICAgICovCj4+Pj4+ICsjaWYgMAo+Pj4+PiAgICAg
+ICAgaWYgKGF0aDlrX2h3X3BoeWNvdW50ZXJzKGFoKSAmJgo+Pj4+PiAgICAgICAgICAgICgoc2Mt
+PnNjX2FoLT5haF9vcG1vZGUgPT0gQVRIOUtfTV9TVEEpIHx8Cj4+Pj4+ICAgICAgICAgICAgIChz
+Yy0+c2NfYWgtPmFoX29wbW9kZSA9PSBBVEg5S19NX0lCU1MpKSkKPj4+Pj4gICAgICAgICAgICAg
+ICAgc2MtPnNjX2ltYXNrIHw9IEFUSDlLX0lOVF9NSUI7Cj4+Pj4+ICsjZW5kaWYKPj4+Pj4gICAg
+ICAgIC8qCj4+Pj4+ICAgICAgICAgKiBTb21lIGhhcmR3YXJlIHByb2Nlc3NlcyB0aGUgVElNIElF
+IGFuZCBmaXJlcyBhbgo+Pj4+PiAgICAgICAgICogaW50ZXJydXB0IHdoZW4gdGhlIFRJTSBiaXQg
+aXMgc2V0LiAgRm9yIGhhcmR3YXJlCj4+Pj4+Cj4+Pj4KPj4+PiBJdCBkaWRuJ3QgYXBwbHkgdG8g
+LXJjNywgYnV0IEkgbWFuYWdlZCB0byBhcHBseSBpdCBtYW51YWxseQo+Pj4+IChhcHBhcmVudGx5
+IHlvdSBtYWRlIHRoaXMgZm9yIHdpcmVsZXNzLXRlc3Rpbmc/KSBhbmQgYWRkZWQgdGhlICNpZiAw
+Lgo+Pj4+IEFmdGVyIDcgaG91cnMgdXB0aW1lIHdpdGggdGhlIGRyaXZlciwgbm8gYXBwYXJlbnQg
+aW50ZXJydXB0IHN0b3JtLgo+Pj4+Cj4+Pj4gSSdsbCBkbyBtb3JlIHRob3JvdWdoIHRlc3Rpbmcg
+bGF0ZXIsIGJ1dCBJIGhhdmUgYSAzIGhvdXIgZHJpdmUgdG9kYXksCj4+Pj4gYW5kIHNvbWUgcGFj
+a2luZyB0byBkbywgc28gaXQnbGwgbmVlZCB0byB3YWl0IGEgYml0Lgo+Pj4KPj4+IFllYWggSSBk
+aWQgaXQgZm9yIHdpcmVsZXNzLXRlc3RpbmcuIEdvb2QgdG8gaGVhciB0aGlzIHNvIGZhciBoYXMK
+Pj4+IHNvbHZlZCB0aGUgaXNzdWUuIEknbGwgcG9ydCBpdCB0byAyNyBhbmQgcG9zdCBpdCBvbmNl
+IEkgZ2V0IHlvdXIKPj4+IGJsZXNzaW5ncyB0aGF0IHRoaXMgZml4ZWQgaXQgYnkgYSBUZXN0ZWQt
+YnkuCj4+Pgo+Pgo+PiBPa2F5LiBJJ20gaW4gU2VhdHRsZSBub3cuCj4+Cj4+IFllcywgaXQgc29s
+dmVkIHRoZSBpc3N1ZSwgYnV0IHN1cmVseSBhbiAjaWYgMCBpc24ndCBhIHByb3BlciBzb2x1dGlv
+bi4KPj4gV2hhdCdzIHRoZSBhY3R1YWwgYnVnIGhlcmU/IEknbSBhZnJhaWQgdGhlIG1lYW5pbmcg
+b2Ygd2hhdCdzIGdvaW5nIG9uCj4+IGhlcmUgaXNuJ3QgZXhhY3RseSBpbnR1aXRpdmUuCj4+Cj4+
+IEFsc28sIEknbSBkb2luZyBhbiA4IGhvdXIgcnVuIHdpdGggdGhpcyBwYXRjaCB0b25pZ2h0LiBN
+YXliZSBtb3JlLAo+PiBkZXBlbmRzIG9uIHdoZW4gSSB3YWtlIHVwLiA7KQo+Pgo+PiBJIHRoaW5r
+IGlmIHRoaXMgcmVzb2x2ZXMgdGhlIGlzc3VlIG9uIHR3byBzZXBhcmF0ZSCXOCBob3VyIHJ1bnMs
+IGl0Cj4+IHNob3VsZCBiZSBjb25zaWRlcmVkIHRoZSBzb2x1dGlvbiB0byB0aGUgaXNzdWUsIHVu
+bGVzcyBpdCByZXN1cmZhY2VzLgo+Pgo+Cj4gSSBhbSBvbmx5IDI1IG1pbnV0ZXMgaW50byB0aGUg
+cnVuLCBidXQgSSBmZWVsIHRoaXMgaXMgd29ydGggcmVwb3J0aW5nCj4gYmVmb3JlIEkgZm9yZ2V0
+LiBObyBJUlEgc3Rvcm0gdGh1cyBmYXIsIGJ1dCB0aGUgY29ubmVjdGlvbiBrZWVwcwo+IGRyb3Bw
+aW5nLiBPciByYXRoZXIsIGl0IGRvZXNuJ3QgZGlzYXNzb2NpYXRlLCBidXQgd2hpbGUgSSB3YXMK
+PiB0cmFuc2ZlcnJpbmcgYSBsYXJnZSBmaWxlLCBpdCBoYWQgcG9pbnRzIG9mIHRpbWUgd2hlcmUg
+aXQgc3VkZGVubHkKPiBsb3N0IGFuZCByZWFjcXVpcmVkIHRoZSBjb25uZWN0aW9uIChzaWduYWwg
+c3RyZW5ndGggZmx1Y3R1YXRlcyB3aWxkbHkKPiBiZXR3ZWVuIDcwLTkwJSBhbmQgdGhlbiAwJSBm
+b3IgYSBzZWNvbmQsIGFuZCB0aGVuIGJhY2sgdG8KPiBmbHVjdHVhdGluZykuIFBlcmhhcHMgdGhp
+cyBpcyByZWxhdGVkIHRvIHRoZSBsYWNrIG9mIGFnZ3JlZ2F0aW9uPwo+CgpUaGlzIDggaG91ciB0
+ZXN0IHBhc3Nlcy4KCi0gU3RldmVuCg==
