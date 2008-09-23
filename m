@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:39819 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751359AbYIXQIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2008 12:08:07 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC v2] basic background scan
-Date: Wed, 24 Sep 2008 18:07:58 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200809241636.38762.hschaa@suse.de> <200809241755.15950.hschaa@suse.de> <1222271941.4257.40.camel@johannes.berg>
-In-Reply-To: <1222271941.4257.40.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809241807.58687.hschaa@suse.de> (sfid-20080924_180811_422037_BEB7F34D)
+Received: from xc.sipsolutions.net ([83.246.72.84]:41511 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823AbYIWQyg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2008 12:54:36 -0400
+Subject: libertas tf warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uTaSFZyzBIXAIBghSa1S"
+Date: Tue, 23 Sep 2008 18:53:38 +0200
+Message-Id: <1222188819.18015.28.camel@johannes.berg> (sfid-20080923_185439_721818_6C521666)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 24. September 2008 17:59:01 schrieb Johannes Berg:
-> On Wed, 2008-09-24 at 17:55 +0200, Helmut Schaa wrote:
-> 
-> > > What I meant to say is that it'll give problems with drivers that don't
-> > > do status reporting properly, and what are you going to do when one of
-> > > them fails anyway? retry it? how long? assume the connection was lost if
-> > > it isn't acked? I see little point in it to start with.
-> > 
-> > The main reason why I'd like to know when the frame was acked is that it might 
-> > happen (and it did happen in my tests already) that the frame notifying the 
-> > AP about entering power save state wasn't send before switching to another 
-> > channel. Hence the AP won't buffer any frames for us.
-> 
-> We should make these frames able to "skip the queue" so to speak, that
-> would be smarter either way.
 
-Agreed. That would at least enhance the probability that the frame is sent
-out fast enough.
+--=-uTaSFZyzBIXAIBghSa1S
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> > > > > > +				netif_tx_wake_all_queues(sdata->dev);
-> > > > >
-> > > > > This is worsening a problem we already have -- you can enable queues
-> > > > > that the driver asked to be disabled. Until we fix that, I don't think
-> > > > > we should tempt our luck even more.
-> > > >
-> > > > I see! That's really problematic.
-> > > > Do you have already an idea on how to fix it?
-> > >
-> > > Not really; introduce bits somewhere to keep track of who wants to
-> > > enable/disable queues I guess.
-> > 
-> > A first trivial solution would be to just store which queues are active
-> > when the scan is started and restarting only these queues after the scan
-> > completed.
-> 
-> Actually, well, you have to deal with drivers like adm8211 that
-> stop/start the queues for each packet...
+on 64-bit:
 
-Oops. I did not know about drivers behaving like that
-=> have to find a better way to deal with starting/stopping queues.
+drivers/net/wireless/libertas_tf/if_usb.c: In function =E2=80=98__if_usb_su=
+bmit_rx_urb=E2=80=99:
+drivers/net/wireless/libertas_tf/if_usb.c:334: warning: cast to pointer fro=
+m integer of different size
 
-Thanks,
-Helmut
+
+johannes
+
+--=-uTaSFZyzBIXAIBghSa1S
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI2R8PAAoJEKVg1VMiehFYTgIQAIWTO7+oC9rDE+41XavT9LQE
+1cOjC7nFh6mR0X7t6GioSAR3qQ1tzOYe8K30CjnRpXpOzRI7zsnqRqTTQsN4ZLnj
+5Swj8VF3+XMbXsBTUTSdNfs9oiE6hDFjWDHHtreW0zx03+vzT826JVaEY7TNujlp
+Jy2+uhYPHLUfQ57MbZWs6yrDU3kisrCutSw6n9G3qNHna3nzlAD9u0CilB9h+NBe
+ajraaz9U8ZyvV/BPiHLYBZt7RbBlCmgqGk5nKQ8KKEvoinZqQMXMfSRNJb/u3wBg
+AvzfeZJA+67XE78XCtfZDaPhLOVQxBVu5qlyDWQBwNTS2j4EpTv+PEtQ68i2yWXq
+6uDteAOcxUTpyVwIbm08b6j/W+STrystxlL8Xv2DkBt+tsE28/iSxZvw6dLXraPP
+1LOrzAgawKZ+hyNAbYoZhGy8AI7RCgKZxUefnvGh8xyymrG9dQKO97byl98FiTAW
+n+2pkJHE74TQ2Htt/FQgDLL2wrP8wWJsfZu0raPHeLZBTo41QTJmim82lSNCIqow
+54bzOEYOTVkJztIAlMLAiq/x/bY+CIX5VbXDa6ogT1H8lLZrOuxx0BDyK5uYqKgF
+2irO3AP7yp9z0K6e1eEriACzj5ZT73GeJP087402A6YWNX3CorvOceauhQ7CWMm1
+8QlShfIeWMOzoso9VTdB
+=DmaJ
+-----END PGP SIGNATURE-----
+
+--=-uTaSFZyzBIXAIBghSa1S--
+
