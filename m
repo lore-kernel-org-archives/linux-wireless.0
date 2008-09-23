@@ -1,71 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:20092 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752489AbYIVXaM (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.179]:6293 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752683AbYIWHWt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 19:30:12 -0400
-Message-ID: <48D82A43.7040604@oracle.com> (sfid-20080923_013017_503715_741E7BAB)
-Date: Mon, 22 Sep 2008 16:29:07 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Tue, 23 Sep 2008 03:22:49 -0400
+Received: by ik-out-1112.google.com with SMTP id c30so1099850ika.5
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 00:22:47 -0700 (PDT)
+Message-ID: <f488382f0809230022v582df76esa8df8c747ab600df@mail.gmail.com> (sfid-20080923_092254_319875_9AC549C4)
+Date: Tue, 23 Sep 2008 00:22:47 -0700
+From: "Steven Noonan" <steven@uplinklabs.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Senthilkumar Balasubramanian"
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Ingo Molnar" <mingo@elte.hu>
+In-Reply-To: <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-CC: linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
-Subject: [PATCH -mm] rt2x00: fix Kconfig dependencies
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=KOI8-R
+References: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
+	 <f488382f0809201422rdabeff4g435bf3d4a7e9fa3@mail.gmail.com>
+	 <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com>
+	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
+	 <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
+	 <20080922065453.GD19580@tesla>
+	 <f488382f0809220026u9afa355g1ff2cc7a3fe88333@mail.gmail.com>
+	 <20080922080632.GA20446@tesla>
+	 <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
+	 <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
-
-If RT2X00=y but RFKILL=m, these build errors happen:
-
-(.text+0x7c7d6): undefined reference to `rfkill_free'
-rt2x00rfkill.c:(.text+0x7c830): undefined reference to `rfkill_force_state'
-(.text+0x7c88d): undefined reference to `rfkill_unregister'
-(.text+0x7c8cd): undefined reference to `rfkill_register'
-(.text+0x7ca1a): undefined reference to `rfkill_allocate'
-
-so restrict RT2X00's RFKILL config level to that of the main RFKILL option.
-This is done by making the former a tristate instead of a bool
-config option.
-
-
-If RT2X00=y but LEDS_CLASS=m, these build errors happen:
-
-(.text+0x11859f): undefined reference to `led_classdev_resume'
-(.text+0x1185b3): undefined reference to `led_classdev_resume'
-(.text+0x1185c7): undefined reference to `led_classdev_resume'
-(.text+0x1185e4): undefined reference to `led_classdev_suspend'
-(.text+0x1185f8): undefined reference to `led_classdev_suspend'
-(.text+0x11860c): undefined reference to `led_classdev_suspend'
-rt2x00leds.c:(.text+0x118620): undefined reference to `led_classdev_unregister'
-rt2x00leds.c:(.text+0x118695): undefined reference to `led_classdev_register'
-
-so restrict RT2X00's LEDS config level to that of the main LEDS_CLASS option.
-This is done by making the former a tristate instead of a bool
-config option.
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/net/wireless/rt2x00/Kconfig |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- mmotm-2008-0922-0136.orig/drivers/net/wireless/rt2x00/Kconfig
-+++ mmotm-2008-0922-0136/drivers/net/wireless/rt2x00/Kconfig
-@@ -38,13 +38,13 @@ config RT2X00_LIB_CRYPTO
- 	depends on RT2X00_LIB
- 
- config RT2X00_LIB_RFKILL
--	boolean
-+	tristate
- 	depends on RT2X00_LIB
- 	depends on RFKILL
- 	default y
- 
- config RT2X00_LIB_LEDS
--	boolean
-+	tristate
- 	depends on RT2X00_LIB
- 	depends on NEW_LEDS
- 	depends on LEDS_CLASS
-
+T24gTW9uLCBTZXAgMjIsIDIwMDggYXQgOTowMSBBTSwgTHVpcyBSLiBSb2RyaWd1ZXoKPGxyb2Ry
+aWd1ZXpAYXRoZXJvcy5jb20+IHdyb3RlOgo+IE9uIE1vbiwgU2VwIDIyLCAyMDA4IGF0IDg6MTEg
+QU0sIFN0ZXZlbiBOb29uYW4gPHN0ZXZlbkB1cGxpbmtsYWJzLm5ldD4gd3JvdGU6Cj4+IE9uIE1v
+biwgU2VwIDIyLCAyMDA4IGF0IDE6MDYgQU0sIEx1aXMgUi4gUm9kcmlndWV6Cj4+IDxscm9kcmln
+dWV6QGF0aGVyb3MuY29tPiB3cm90ZToKPj4+IFBsZWFzZSB0ZXN0IHRoZSBmb2xsb3dpbmcgcGF0
+Y2guCj4+Pgo+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDlrL2NvcmUu
+YyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDlrL2NvcmUuYwo+Pj4gaW5kZXggYzI2MmVmMi4u
+OWE1MTczOSAxMDA2NDQKPj4+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDlrL2NvcmUu
+Ywo+Pj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoOWsvY29yZS5jCj4+PiBAQCAtNjgx
+LDEwICs2ODEsMTIgQEAgaW50IGF0aF9vcGVuKHN0cnVjdCBhdGhfc29mdGMgKnNjLCBzdHJ1Y3Qg
+YXRoOWtfY2hhbm5lbCAqaW5pdGlhbF9jaGFuKQo+Pj4gICAgICAgICAqIEVuYWJsZSBNSUIgaW50
+ZXJydXB0cyB3aGVuIHRoZXJlIGFyZSBoYXJkd2FyZSBwaHkgY291bnRlcnMuCj4+PiAgICAgICAg
+ICogTm90ZSB3ZSBvbmx5IGRvIHRoaXMgKGF0IHRoZSBtb21lbnQpIGZvciBzdGF0aW9uIG1vZGUu
+Cj4+PiAgICAgICAgICovCj4+PiArI2lmIDAKPj4+ICAgICAgICBpZiAoYXRoOWtfaHdfcGh5Y291
+bnRlcnMoYWgpICYmCj4+PiAgICAgICAgICAgICgoc2MtPnNjX2FoLT5haF9vcG1vZGUgPT0gQVRI
+OUtfTV9TVEEpIHx8Cj4+PiAgICAgICAgICAgICAoc2MtPnNjX2FoLT5haF9vcG1vZGUgPT0gQVRI
+OUtfTV9JQlNTKSkpCj4+PiAgICAgICAgICAgICAgICBzYy0+c2NfaW1hc2sgfD0gQVRIOUtfSU5U
+X01JQjsKPj4+ICsjZW5kaWYKPj4+ICAgICAgICAvKgo+Pj4gICAgICAgICAqIFNvbWUgaGFyZHdh
+cmUgcHJvY2Vzc2VzIHRoZSBUSU0gSUUgYW5kIGZpcmVzIGFuCj4+PiAgICAgICAgICogaW50ZXJy
+dXB0IHdoZW4gdGhlIFRJTSBiaXQgaXMgc2V0LiAgRm9yIGhhcmR3YXJlCj4+Pgo+Pgo+PiBJdCBk
+aWRuJ3QgYXBwbHkgdG8gLXJjNywgYnV0IEkgbWFuYWdlZCB0byBhcHBseSBpdCBtYW51YWxseQo+
+PiAoYXBwYXJlbnRseSB5b3UgbWFkZSB0aGlzIGZvciB3aXJlbGVzcy10ZXN0aW5nPykgYW5kIGFk
+ZGVkIHRoZSAjaWYgMC4KPj4gQWZ0ZXIgNyBob3VycyB1cHRpbWUgd2l0aCB0aGUgZHJpdmVyLCBu
+byBhcHBhcmVudCBpbnRlcnJ1cHQgc3Rvcm0uCj4+Cj4+IEknbGwgZG8gbW9yZSB0aG9yb3VnaCB0
+ZXN0aW5nIGxhdGVyLCBidXQgSSBoYXZlIGEgMyBob3VyIGRyaXZlIHRvZGF5LAo+PiBhbmQgc29t
+ZSBwYWNraW5nIHRvIGRvLCBzbyBpdCdsbCBuZWVkIHRvIHdhaXQgYSBiaXQuCj4KPiBZZWFoIEkg
+ZGlkIGl0IGZvciB3aXJlbGVzcy10ZXN0aW5nLiBHb29kIHRvIGhlYXIgdGhpcyBzbyBmYXIgaGFz
+Cj4gc29sdmVkIHRoZSBpc3N1ZS4gSSdsbCBwb3J0IGl0IHRvIDI3IGFuZCBwb3N0IGl0IG9uY2Ug
+SSBnZXQgeW91cgo+IGJsZXNzaW5ncyB0aGF0IHRoaXMgZml4ZWQgaXQgYnkgYSBUZXN0ZWQtYnku
+Cj4KCk9rYXkuIEknbSBpbiBTZWF0dGxlIG5vdy4KClllcywgaXQgc29sdmVkIHRoZSBpc3N1ZSwg
+YnV0IHN1cmVseSBhbiAjaWYgMCBpc24ndCBhIHByb3BlciBzb2x1dGlvbi4KV2hhdCdzIHRoZSBh
+Y3R1YWwgYnVnIGhlcmU/IEknbSBhZnJhaWQgdGhlIG1lYW5pbmcgb2Ygd2hhdCdzIGdvaW5nIG9u
+CmhlcmUgaXNuJ3QgZXhhY3RseSBpbnR1aXRpdmUuCgpBbHNvLCBJJ20gZG9pbmcgYW4gOCBob3Vy
+IHJ1biB3aXRoIHRoaXMgcGF0Y2ggdG9uaWdodC4gTWF5YmUgbW9yZSwKZGVwZW5kcyBvbiB3aGVu
+IEkgd2FrZSB1cC4gOykKCkkgdGhpbmsgaWYgdGhpcyByZXNvbHZlcyB0aGUgaXNzdWUgb24gdHdv
+IHNlcGFyYXRlIJc4IGhvdXIgcnVucywgaXQKc2hvdWxkIGJlIGNvbnNpZGVyZWQgdGhlIHNvbHV0
+aW9uIHRvIHRoZSBpc3N1ZSwgdW5sZXNzIGl0IHJlc3VyZmFjZXMuCgotIFN0ZXZlbgo=
