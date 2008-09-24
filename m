@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:62628 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753992AbYIVRhl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 13:37:41 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so546573nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 10:37:39 -0700 (PDT)
-To: "Xu, Martin" <martin.xu@intel.com>
-Subject: Re: what is the states of rt2800 driver?
-Date: Mon, 22 Sep 2008 19:37:35 +0200
-Cc: linux-wireless@vger.kernel.org,
-	"Selbak, Rolla N" <rolla.n.selbak@intel.com>
-References: <200808272222.53719.IvDoorn@gmail.com> <97006967741E44428360DF36A929F3EE01D3F978@pdsmsx415.ccr.corp.intel.com>
-In-Reply-To: <97006967741E44428360DF36A929F3EE01D3F978@pdsmsx415.ccr.corp.intel.com>
+Received: from mx1.suse.de ([195.135.220.2]:38740 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751234AbYIXPzU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2008 11:55:20 -0400
+From: Helmut Schaa <hschaa@suse.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC v2] basic background scan
+Date: Wed, 24 Sep 2008 17:55:15 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200809241636.38762.hschaa@suse.de> <200809241719.28983.hschaa@suse.de> <1222270421.4257.37.camel@johannes.berg>
+In-Reply-To: <1222270421.4257.37.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809221937.35900.IvDoorn@gmail.com> (sfid-20080922_193808_987510_76AFB6AE)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="utf-8"
+Message-Id: <200809241755.15950.hschaa@suse.de> (sfid-20080924_175523_975943_1786D2B5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 September 2008, Xu, Martin wrote:
-> Hi:
-> I am the engineer from intel, and we are working on Moblin project(
-> www.moblin.org). Now we work on eeepc901 platform. The rt2860 wireless
-> device is used by the platform. We hope the device driver can be
-> supported in the kernel mainline.
-> Could you please tell me the states of the device driver? Do you have
-> schedule on it? 
+Am Mittwoch, 24. September 2008 17:33:41 schrieb Johannes Berg:
+> On Wed, 2008-09-24 at 17:19 +0200, Helmut Schaa wrote:
+> > Am Mittwoch, 24. September 2008 16:46:18 schrieb Johannes Berg:
+> > > On Wed, 2008-09-24 at 16:36 +0200, Helmut Schaa wrote:
+> > > > Could somebody please have a look at the TODO comments (I have no
+> > > > idea how to wait until all null-func frames are ACKed)? Thanks.
+> > >
+> > > It's not really possible.
+> > >
+> > :(
+>
+> What I meant to say is that it'll give problems with drivers that don't
+> do status reporting properly, and what are you going to do when one of
+> them fails anyway? retry it? how long? assume the connection was lost if
+> it isn't acked? I see little point in it to start with.
 
-Nothing has changed since my last announcement to the linux-wireless list
-regarding the rt2800 drivers.
-That means that the drivers are not ready, and I have abandonded all schedules
-which could indicate when the first test version of the driver can be released.
+The main reason why I'd like to know when the frame was acked is that it might 
+happen (and it did happen in my tests already) that the frame notifying the 
+AP about entering power save state wasn't send before switching to another 
+channel. Hence the AP won't buffer any frames for us.
 
-Mattias Nissler has joined the rt2800 development party, so I really hope
-he has some fresh ideas an how to get the driver development forward again.
+> > > > +				netif_tx_wake_all_queues(sdata->dev);
+> > >
+> > > This is worsening a problem we already have -- you can enable queues
+> > > that the driver asked to be disabled. Until we fix that, I don't think
+> > > we should tempt our luck even more.
+> >
+> > I see! That's really problematic.
+> > Do you have already an idea on how to fix it?
+>
+> Not really; introduce bits somewhere to keep track of who wants to
+> enable/disable queues I guess.
 
-Ivo
+A first trivial solution would be to just store which queues are active
+when the scan is started and restarting only these queues after the scan
+completed.
 
+> > > And why is sw_scanning false if bg_scanning is true anyway?
+> >
+> > During a background scan the sw_scanning flag is set when a scan phase is
+> > active and unset when an operation phase is active. Therefore I did not
+> > need to adapt all checks for sw_scanning.
+>
+> Oh, hmm, ok, that might make the enum problematic. Or do something like
+>
+> SCAN_OFF,
+> SCAN_BG,
+> SCAN_SW,
+> SCAN_HW
+>
+> then you can check for scan >= SCAN_SW
+
+Maybe. Thinking about it.
+
+Helmut
