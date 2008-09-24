@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40533 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbYIKPqo (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40142 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637AbYIXXSH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 11:46:44 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1221145383.6309.12.camel@californication>
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 (sfid-20080911_100535_000722_EE099914)  <1221129382.6986.0.camel@johannes.berg>
-	 <1221145383.6309.12.camel@californication>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Y1j2hFSpajCbmgXZXBaV"
-Date: Thu, 11 Sep 2008 17:46:08 +0200
-Message-Id: <1221147968.6986.28.camel@johannes.berg> (sfid-20080911_174652_696074_90FBCE66)
-Mime-Version: 1.0
+	Wed, 24 Sep 2008 19:18:07 -0400
+Date: Wed, 24 Sep 2008 19:17:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2008-09-24
+Message-ID: <20080924231720.GD3639@tuxdriver.com> (sfid-20080925_011813_536096_2F909570)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
---=-Y1j2hFSpajCbmgXZXBaV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+One more for 2.6.27 -- a fix for a possible interrupt storm.  There is
+even a link in the commit log to a youtube video of the storm in
+progress. :-)
 
-On Thu, 2008-09-11 at 17:03 +0200, Marcel Holtmann wrote:
+Let me know if there are problems!
 
-> > That looks like the use-after-free BUG_ON I've been getting with a 5k
-> > card, do you have sl*b debugging enabled?
->=20
-> I have CONFIG_SLUB_DEBUG=3Dy in this kernel. Including all sorts of kerne=
-l
-> debugging features enabled. Anything else I would need to give better
-> feedback?
+John
 
-No, I have no idea, but maybe Tomas doesn't have them enabled? The
-message right before the BUG_ON says something about 0x6b... I have no
-idea what's causing this, just saying that it's most likely the same
-thing and I was able to capture the full message.
+---
 
-johannes
+Individual patch is available here:
 
---=-Y1j2hFSpajCbmgXZXBaV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+---
 
-iQIcBAABAgAGBQJIyT08AAoJEKVg1VMiehFYRFQP/1GbylitDjxLqzCEW6pWaz6s
-zm9tF+i6BJaUHOZYy+qxa3wdjPhEz7W7qltCQ4nrfApvyvbOEaJCa+ZRv6Z2Ngju
-hZivErZVgfNXooNMTltTAgxpqiZh2zEa5XenyQp1QZS3IZNnhHY8qbcxpo+1Jy2z
-uIARkORKIloREGmrSHcQDETGpzOn8cnORbJg9PJt4g5YCbHlSVH+OB39oe9031fJ
-KFbvMSJ3pSTlNcYm40E9vcEI9RaLMqpZ7yA8p+TyGddBoqGUbnNEn3Fi0Ts+G4hI
-WRpIrmVvoVQ8Ueij5S9/ybODOLFVtXy0S/KgR5QDuwubOH73P07+dLZ/ih66rO/0
-dbnvXjJC/kvdvPFW9AwwOjFgMIKuOxPKgBkg/T88tKaa3YvOO+q/E6kAXwGfI/E1
-ox993KFVoHsFkHeuq6dMKQEjyPL2yTxrwLN09vEZSm/xoakiBy1ryYM9O3K21hA/
-BbUwetPPtIkV82jcG1XO2o3NSzBMG6lOvW10Xw3fl8xdVv6biYAaywLtpntyTX45
-JsMlKma6FgaiqeAx19GKVp9HAyr+7hozGmbmHUpdEACuJ+06rbjqAnbsaUzEER5v
-epPDAXsybbY1ZbR7Bw9wdVXF3GlTf/tUfyACrZD0JsG7KGppPJ/F6ivraxxARN/i
-sXivxsItac+65rwGAWTC
-=dmJk
------END PGP SIGNATURE-----
+The following changes since commit 4c07ab0fe4b4eaa0fc31f640ca65da7c173f5043:
+  David S. Miller (1):
+        Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
 
---=-Y1j2hFSpajCbmgXZXBaV--
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Luis R. Rodriguez (1):
+      ath9k: disable MIB interrupts to fix interrupt storm
+
+ drivers/net/wireless/ath9k/core.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index c049593..87e37bc 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -795,6 +795,12 @@ int ath_open(struct ath_softc *sc, struct ath9k_channel *initial_chan)
+ 	if (ah->ah_caps.hw_caps & ATH9K_HW_CAP_HT)
+ 		sc->sc_imask |= ATH9K_INT_CST;
+ 
++	/* Note: We disable MIB interrupts for now as we don't yet
++	 * handle processing ANI, otherwise you will get an interrupt
++	 * storm after about 7 hours of usage making the system unusable
++	 * with huge latency. Once we do have ANI processing included
++	 * we can re-enable this interrupt. */
++#if 0
+ 	/*
+ 	 * Enable MIB interrupts when there are hardware phy counters.
+ 	 * Note we only do this (at the moment) for station mode.
+@@ -802,6 +808,7 @@ int ath_open(struct ath_softc *sc, struct ath9k_channel *initial_chan)
+ 	if (ath9k_hw_phycounters(ah) &&
+ 	    ((sc->sc_opmode == ATH9K_M_STA) || (sc->sc_opmode == ATH9K_M_IBSS)))
+ 		sc->sc_imask |= ATH9K_INT_MIB;
++#endif
+ 	/*
+ 	 * Some hardware processes the TIM IE and fires an
+ 	 * interrupt when the TIM bit is set.  For hardware
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
