@@ -1,99 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:54413 "EHLO bifrost.lang.hm"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752887AbYIDAKw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 20:10:52 -0400
-Date: Wed, 3 Sep 2008 17:10:54 -0700 (PDT)
-From: david@lang.hm
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-cc: David Miller <davem@davemloft.net>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"tomasw@gmail.com" <tomasw@gmail.com>,
-	"yi.zhu@intel.com" <yi.zhu@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [GIT]: Networking
-In-Reply-To: <20080904000103.GF5967@tesla>
-Message-ID: <alpine.DEB.1.10.0809031703550.30743@asgard.lang.hm> (sfid-20080904_021100_988455_CE1C6BF7)
-References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031615450.3515@nehalem.linux-foundation.org> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net>
- <20080904000103.GF5967@tesla>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:50123 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751652AbYIXUPb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2008 16:15:31 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com> (sfid-20080911_100535_000722_EE099914)
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 (sfid-20080911_100535_000722_EE099914)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nLkJNH1YfX5z544T/w48"
+Date: Wed, 24 Sep 2008 22:14:47 +0200
+Message-Id: <1222287287.4257.49.camel@johannes.berg> (sfid-20080924_221535_429438_C9A4086A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 3 Sep 2008, Luis R. Rodriguez wrote:
 
-> On Wed, Sep 03, 2008 at 04:26:03PM -0700, David Miller wrote:
->> From: Linus Torvalds <torvalds@linux-foundation.org>
->> Date: Wed, 3 Sep 2008 16:24:16 -0700 (PDT)
->>
->>> On Wed, 3 Sep 2008, Linus Torvalds wrote:
->>>>
->>>> What's so hard to understand about this?
->>>
->>> Here's a simple rule of thumb:
->>>  - if it's not on the regression list
->>>  - if it's not a reported security hole
->>>  - if it's not on the reported oopses list
->>> then why are people sending it to me?
->>>
->>> IOW, if it's just another random improvement, and you send it to me
->>> outside of the merge window, then what is the point of the merge window?
->>
->> This is exactly what I've been trying to tell the Intel wireless folks
->> but they refuse to listen.
->
-> What I think really happens here IMHO is communication needs to be
-> enhanced. I only recently noticed that "regression only" policy for
-> 2.6.27 for example. I think some of us were rather surprised by it too.
+--=-nLkJNH1YfX5z544T/w48
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-the policy has been the same for quite a while, it's not new for 2.6.27
+On Thu, 2008-09-11 at 10:04 +0200, Marcel Holtmann wrote:
 
->> I just won't take their stuff until they get their act in gear.
->>
->> No problem.
->
-> On the other side of the spectrum, and to try to understand this better,
-> since ath9k is new we obviously cannot get regressions, this means
-> unless we find a security hole in our driver or if we can generate an
-> oops with 2.6.27 we cannot send patches for ath9k for 2.6.27?
->
-> It seems to make sense to me for purposes of stabalizing the kernel for
-> sure, however, on the other hand it does also make 2.6.27 miss out on a
-> few possible small fixes which may appear here and there.
->
-> What will happen then is distributions will end up using their own
-> patches on top of the kernel, or users using something like
-> compat-wireless to get more bleeding edge stuff. This is exactly what we
-> want to avoid.
+> So the best I got was the attached screenshot of an oops. It is =20
+> clearly the iwlwifi driver crashing here and killing the machine, but =20
+> I have no idea why.
 
-no, if it's that bad it can go into the -stable kernel patches. but the 
-next release kernel will be out in just a couple of months, so it only 
-matters for that short window.
+Incidentally, if this really is the same bug I have, you might want to
+remove the iwlagn module completely, even loading it once is a bad
+thing, it has started to corrupt things here entirely by making DMA go
+to random locations.
 
-> To avoid it I do think another exception needs to be made for patches:
->
-> * Small fixes which make something that was not working, which was
->  supposed to work work
+johannes
 
-but you can't prove that this patch doesn't break something else (if only 
-by altering the timing just enough to expose a race condition somewhere)
+--=-nLkJNH1YfX5z544T/w48
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> If these type of patches cannot be submitted we will have a stable
-> kernel for sure but yet buggy leaving people to opt for alternatives
-> for small fixes or driver updates.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-but if you are changing the continuously, why should people test anything? 
-you're going to change it in unpredictable ways before the release anyway.
+iQIcBAABAgAGBQJI2p+zAAoJEKVg1VMiehFYgqEP/2L6+IUqm8DQpryAsEJJ/Zs8
+olzi8kXHBI4d4LUTFc4EMmyPE5a3+GLPYbna9vzP2phFtlNlygHyng8ZCtVmswGg
+nNVCKaGvPnvZpOWv4bZNEljmo6GBz9nXKNmCs0Vt6nBGkqDEMUmJjJqbGTb/Ucvs
+3gvKekbroV/rp+O2II/p0JeFaz7os3JWrAh+b4T/9D1DC9ZzI+XdSTufBxVA1QgV
+gh6dWsSfeBZ/1RfMmsjPOIxJ0dl0FYNhjniUYoKytdfnb/ukMBIYEqxlZqtMaPLV
+Jlx8GTguomUInQVyPa7tb/ZPh9J+NHVn8PI+BODSxSXeHa7gmJk9I3RD2L2EdLtG
+gX0qGk/5gHcF3ZDdOFdkvscJrffKX3BdEYx8QRnTRfr0ULh2qOqy/DyZg8ij4KIL
+/MK9e1G/AB83n8wAgxqonzPnoBp2GcjXPMWrgJkAhp6wWfe6aIBavnvmagSw7drn
+ba387DoIMz53DfN3fZYO+Dta51r/Jxc69hXYzmdeLuoUHQnxgGWXIB5qSMjMiKrM
+aB+5fM5kY7M2crtPNjpuXffcu/ln+0j/ILmH/D9Sw8uNzgAjqYTvzRRBG0NfCyWb
+mNVZCFF0wIG53D0h6iKeJjFlvIEpsp98+Bw+yXnzOl8NvILOXJkKqbtgk57mXVbN
+3H47Ryvp70/OI7krcKnL
+=bgFj
+-----END PGP SIGNATURE-----
 
+--=-nLkJNH1YfX5z544T/w48--
 
-it may be valid to tinker with a new driver that didn't exist before, but 
-this far into the release cycle even that's highly questionable, and if 
-you are asking for something to be included becouse of that you need to 
-spell it when submiting the patch (and possibly in the changelog)
-
-David Lang
