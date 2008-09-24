@@ -1,122 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44088 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008AbYIHJhL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 05:37:11 -0400
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240809080232n42d6caefs6c3a1f5afef46cb4@mail.gmail.com> (sfid-20080908_113216_032675_8751A8F4)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 <1220863139.31304.33.camel@johannes.berg>
-	 <1ba2fa240809080146o93200eetcf8e142f6ef4a2b1@mail.gmail.com>
-	 <1220864314.31304.38.camel@johannes.berg>
-	 <1ba2fa240809080206u42908ef6yc6641435d747155a@mail.gmail.com>
-	 <1220865843.31304.48.camel@johannes.berg>
-	 <1ba2fa240809080232n42d6caefs6c3a1f5afef46cb4@mail.gmail.com>
-	 (sfid-20080908_113216_032675_8751A8F4)
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 11:37:03 +0200
-Message-Id: <1220866623.31304.53.camel@johannes.berg> (sfid-20080908_113715_870373_9B03E042)
-Mime-Version: 1.0
+Received: from cantor.suse.de ([195.135.220.2]:39819 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751359AbYIXQIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2008 12:08:07 -0400
+From: Helmut Schaa <hschaa@suse.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC v2] basic background scan
+Date: Wed, 24 Sep 2008 18:07:58 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200809241636.38762.hschaa@suse.de> <200809241755.15950.hschaa@suse.de> <1222271941.4257.40.camel@johannes.berg>
+In-Reply-To: <1222271941.4257.40.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200809241807.58687.hschaa@suse.de> (sfid-20080924_180811_422037_BEB7F34D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-08 at 12:32 +0300, Tomas Winkler wrote:
+Am Mittwoch, 24. September 2008 17:59:01 schrieb Johannes Berg:
+> On Wed, 2008-09-24 at 17:55 +0200, Helmut Schaa wrote:
+> 
+> > > What I meant to say is that it'll give problems with drivers that don't
+> > > do status reporting properly, and what are you going to do when one of
+> > > them fails anyway? retry it? how long? assume the connection was lost if
+> > > it isn't acked? I see little point in it to start with.
+> > 
+> > The main reason why I'd like to know when the frame was acked is that it might 
+> > happen (and it did happen in my tests already) that the frame notifying the 
+> > AP about entering power save state wasn't send before switching to another 
+> > channel. Hence the AP won't buffer any frames for us.
+> 
+> We should make these frames able to "skip the queue" so to speak, that
+> would be smarter either way.
 
-> I want to test your stopping queue stuff in my environment  but I get
-> to the lab only very late today.
+Agreed. That would at least enhance the probability that the frame is sent
+out fast enough.
 
-Ok, sure, works for me. I decided to do the stopping in a separate patch
-as I have verified that it was already "wrong" before your changes,
-patch inlined below (it's more a cosmetic thing, but still wrong).
+> > > > > > +				netif_tx_wake_all_queues(sdata->dev);
+> > > > >
+> > > > > This is worsening a problem we already have -- you can enable queues
+> > > > > that the driver asked to be disabled. Until we fix that, I don't think
+> > > > > we should tempt our luck even more.
+> > > >
+> > > > I see! That's really problematic.
+> > > > Do you have already an idea on how to fix it?
+> > >
+> > > Not really; introduce bits somewhere to keep track of who wants to
+> > > enable/disable queues I guess.
+> > 
+> > A first trivial solution would be to just store which queues are active
+> > when the scan is started and restarting only these queues after the scan
+> > completed.
+> 
+> Actually, well, you have to deal with drivers like adm8211 that
+> stop/start the queues for each packet...
 
-Subject: mac80211: stop queues before carrier off
+Oops. I did not know about drivers behaving like that
+=> have to find a better way to deal with starting/stopping queues.
 
-During testing of the disassociation fixes, Tomas noticed that it
-was possible to run into a situation where you'd suddenly get a
-few "wlan0: dropped frame to <AP> (unauthorized port)" messages
-and I found this to be due to the AP's sta_info having been
-removed but netif_carrier_off not having removed/stopped traffic
-yet. To avoid that, stop the queue for the interface (and avoid
-bringing them up when another vif scans when they weren't up.)
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |   26 +++++++++++++++++---------
- 1 file changed, 17 insertions(+), 9 deletions(-)
-
---- everything.orig/net/mac80211/mlme.c	2008-09-08 11:27:39.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-09-08 11:30:41.000000000 +0200
-@@ -574,6 +574,7 @@ static void ieee80211_set_associated(str
- 	sdata->bss_conf.assoc = 1;
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
-+	netif_tx_start_all_queues(sdata->dev);
- 	netif_carrier_on(sdata->dev);
- 
- 	ieee80211_sta_send_apinfo(sdata, ifsta);
-@@ -995,6 +996,7 @@ static void ieee80211_set_disassoc(struc
- 	ifsta->assoc_scan_tries = 0;
- 	ifsta->assoc_tries = 0;
- 
-+	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
- 
- 	ieee80211_sta_tear_down_BA_sessions(sdata, sta->addr);
-@@ -3413,6 +3415,7 @@ static void ieee80211_sta_reset_auth(str
- 	ifsta->direct_probe_tries = 0;
- 	ifsta->auth_tries = 0;
- 	ifsta->assoc_tries = 0;
-+	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
- }
- 
-@@ -3889,13 +3892,15 @@ void ieee80211_scan_completed(struct iee
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		/* Tell AP we're back */
--		if (sdata->vif.type == IEEE80211_IF_TYPE_STA &&
--		    sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
--			ieee80211_send_nullfunc(local, sdata, 0);
-+		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
-+			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
-+				ieee80211_send_nullfunc(local, sdata, 0);
-+				netif_tx_wake_all_queues(sdata->dev);
-+			}
-+		} else
-+			netif_tx_wake_all_queues(sdata->dev);
- 
- 		ieee80211_restart_sta_timer(sdata);
--
--		netif_wake_queue(sdata->dev);
- 	}
- 	rcu_read_unlock();
- 
-@@ -4053,10 +4058,13 @@ static int ieee80211_sta_start_scan(stru
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--		netif_stop_queue(sdata->dev);
--		if (sdata->vif.type == IEEE80211_IF_TYPE_STA &&
--		    (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED))
--			ieee80211_send_nullfunc(local, sdata, 1);
-+		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
-+			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
-+				netif_tx_stop_all_queues(sdata->dev);
-+				ieee80211_send_nullfunc(local, sdata, 1);
-+			}
-+		} else
-+			netif_tx_stop_all_queues(sdata->dev);
- 	}
- 	rcu_read_unlock();
- 
-
-
+Thanks,
+Helmut
