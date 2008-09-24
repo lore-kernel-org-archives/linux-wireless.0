@@ -1,118 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50202 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:55957 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000AbYIJWJ4 (ORCPT
+	with ESMTP id S1751359AbYIXIp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 18:09:56 -0400
-Message-Id: <20080910220417.428823000@sipsolutions.net> (sfid-20080911_000959_300434_27F66ADF)
-References: <20080910220145.707263000@sipsolutions.net>
-Date: Thu, 11 Sep 2008 00:01:53 +0200
+	Wed, 24 Sep 2008 04:45:29 -0400
+Subject: Re: [PATCH] iwl3945: added channel sysfs entry
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 08/18] mac80211: move ieee80211_set_freq to utils
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+In-Reply-To: <1222235866-19805-1-git-send-email-yi.zhu@intel.com> (sfid-20080924_080231_170139_3D180880)
+References: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
+	 (sfid-20080924_080231_170139_3D180880)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-o+oG4lPvFe5zfMGDNxeK"
+Date: Wed, 24 Sep 2008 10:44:42 +0200
+Message-Id: <1222245882.18015.62.camel@johannes.berg> (sfid-20080924_104533_060949_8B92736A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It really doesn't belong into the wireless extensions code.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/util.c        |   28 ++++++++++++++++++++++++++++
- net/mac80211/wext.c        |   28 ----------------------------
- 3 files changed, 29 insertions(+), 29 deletions(-)
+--=-o+oG4lPvFe5zfMGDNxeK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/net/mac80211/ieee80211_i.h	2008-09-10 23:57:59.000000000 +0200
-+++ everything/net/mac80211/ieee80211_i.h	2008-09-10 23:58:00.000000000 +0200
-@@ -893,7 +893,6 @@ void ieee80211_bss_info_change_notify(st
- 
- /* wireless extensions */
- extern const struct iw_handler_def ieee80211_iw_handler_def;
--int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
- 
- /* STA/IBSS code */
- void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata);
-@@ -1008,6 +1007,7 @@ void ieee80211_tx_skb(struct ieee80211_s
- 		      int encrypt);
- void ieee802_11_parse_elems(u8 *start, size_t len,
- 			    struct ieee802_11_elems *elems);
-+int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
- 
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
---- everything.orig/net/mac80211/util.c	2008-09-10 23:50:26.000000000 +0200
-+++ everything/net/mac80211/util.c	2008-09-10 23:58:00.000000000 +0200
-@@ -612,3 +612,31 @@ void ieee80211_tx_skb(struct ieee80211_s
- 
- 	dev_queue_xmit(skb);
- }
-+
-+int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freqMHz)
-+{
-+	int ret = -EINVAL;
-+	struct ieee80211_channel *chan;
-+	struct ieee80211_local *local = sdata->local;
-+
-+	chan = ieee80211_get_channel(local->hw.wiphy, freqMHz);
-+
-+	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
-+		if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS &&
-+		    chan->flags & IEEE80211_CHAN_NO_IBSS) {
-+			printk(KERN_DEBUG "%s: IBSS not allowed on frequency "
-+				"%d MHz\n", sdata->dev->name, chan->center_freq);
-+			return ret;
-+		}
-+		local->oper_channel = chan;
-+
-+		if (local->sta_sw_scanning || local->sta_hw_scanning)
-+			ret = 0;
-+		else
-+			ret = ieee80211_hw_config(local);
-+
-+		rate_control_clear(local);
-+	}
-+
-+	return ret;
-+}
---- everything.orig/net/mac80211/wext.c	2008-09-10 23:50:27.000000000 +0200
-+++ everything/net/mac80211/wext.c	2008-09-10 23:58:00.000000000 +0200
-@@ -330,34 +330,6 @@ static int ieee80211_ioctl_giwmode(struc
- 	return 0;
- }
- 
--int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freqMHz)
--{
--	int ret = -EINVAL;
--	struct ieee80211_channel *chan;
--	struct ieee80211_local *local = sdata->local;
--
--	chan = ieee80211_get_channel(local->hw.wiphy, freqMHz);
--
--	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
--		if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS &&
--		    chan->flags & IEEE80211_CHAN_NO_IBSS) {
--			printk(KERN_DEBUG "%s: IBSS not allowed on frequency "
--				"%d MHz\n", sdata->dev->name, chan->center_freq);
--			return ret;
--		}
--		local->oper_channel = chan;
--
--		if (local->sta_sw_scanning || local->sta_hw_scanning)
--			ret = 0;
--		else
--			ret = ieee80211_hw_config(local);
--
--		rate_control_clear(local);
--	}
--
--	return ret;
--}
--
- static int ieee80211_ioctl_siwfreq(struct net_device *dev,
- 				   struct iw_request_info *info,
- 				   struct iw_freq *freq, char *extra)
+On Wed, 2008-09-24 at 13:57 +0800, Zhu Yi wrote:
+> From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+>=20
+> The patch adds channels sysfs entry for iwl3945. Make it consistent
+> with iwlagn.
 
--- 
+I advocate just make it consistent by removing it entirely.
+
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -7666,8 +7666,60 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRUSR,=
+ show_power_level,
+>  static ssize_t show_channels(struct device *d,
+>  			     struct device_attribute *attr, char *buf)
+>  {
+> -	/* all this shit doesn't belong into sysfs anyway */
+
+johannes
+
+--=-o+oG4lPvFe5zfMGDNxeK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI2f33AAoJEKVg1VMiehFYDZ8P+QHVk0uBrpmSCwowsjvNV0fR
+GmCVIpb3qqqLoAhFy4y9RYE3QkzWk4Se1zreD/B1Np4IPhiI8S0QwKtROwk3lBUi
+YA69YJKOwei9kzqD+40phEwKjTdt/40Z0JxWvwUFepgZa0MlVD9fsMq6mh/pkzuC
+XV72mt23MbH9RLqcWOQ6afnglRChm3PYcSzkkMRBfe+mHxYBgLqrbYFwlzniTmbj
+da8qjklvkH8kKWBYvq7iFgkwOAobHU8bZTODJy1Yihzz9e6XGXuMjLKTy6gfuznw
+DWuEr06wE6Ki9as1bN1nP9FT39FVRHIWvTYTb/KTjEij38/WxI7eXsB4C/M0DKkL
+5EdsKCj+SBmdZsi9qt/Q3TqbkOw/O7aotQHTjSwROkB4xXGwjc/O/n0ZmZiqBpuq
+F1i6M7bbKe/4VH/G6SXB7GuTvzpGfnOh7Nrvj165in8mRxLGt3P9Tuir5FUXM6Zv
+9Mq9nZ6r7YV4e1muqrCeIBVprVUdWeSpxPTdtZHZbPyPmTHP7kD+OKPIhFIeCOy4
+F7l4snychJv7JKQjzDI8XT2vLJJQa0Vm4z3CFu2CCWk5GuaDvBnZ+JpzIVPRGq4A
+hYldL18XnuT1tV1ztLJNv20mVPSAx+XBwExdvjmbzfBH9/e0zAd45GJeXDwBq4lo
+pl48dPhKv7yCLMUdH/bS
+=9Ovk
+-----END PGP SIGNATURE-----
+
+--=-o+oG4lPvFe5zfMGDNxeK--
 
