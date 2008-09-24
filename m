@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54563 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751669AbYI3UHS (ORCPT
+Received: from winston.telenet-ops.be ([195.130.137.75]:49959 "EHLO
+	winston.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751754AbYIXXAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 16:07:18 -0400
-Date: Tue, 30 Sep 2008 16:06:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-09-30
-Message-ID: <20080930200640.GG3765@tuxdriver.com> (sfid-20080930_220723_746284_95C66FA0)
-References: <20080930183938.GE3765@tuxdriver.com> <1ba2fa240809301258o34b77ce2p737c229be7c0a2e9@mail.gmail.com>
+	Wed, 24 Sep 2008 19:00:20 -0400
+Message-ID: <48DAC681.9010305@telenet.be> (sfid-20080925_010026_499308_ACB8D668)
+Date: Thu, 25 Sep 2008 01:00:17 +0200
+From: Ian Schram <ischram@telenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240809301258o34b77ce2p737c229be7c0a2e9@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Marcel Holtmann <holtmann@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>	 (sfid-20080911_100535_000722_EE099914) <1222287287.4257.49.camel@johannes.berg>
+In-Reply-To: <1222287287.4257.49.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 30, 2008 at 10:58:28PM +0300, Tomas Winkler wrote:
-> On Tue, Sep 30, 2008 at 9:39 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > Dave,
-> >
-> > Here is the latest round of wireless bits intended for 2.6.28.  Among
-> > them is the first round of new stuff learned from the release of the
-> > Atheros HAL sources...
-> >
-> > Let me know if there are problems!
-> >
-> > Thanks,
-> >
-> > John
+
+
+Johannes Berg wrote:
+> On Thu, 2008-09-11 at 10:04 +0200, Marcel Holtmann wrote:
 > 
-> What about this one
-> http://marc.info/?l=linux-wireless&m=122254550901882&w=2
-> It removes compilation warnings.
+>> So the best I got was the attached screenshot of an oops. It is  
+>> clearly the iwlwifi driver crashing here and killing the machine, but  
+>> I have no idea why.
+> 
+> Incidentally, if this really is the same bug I have, you might want to
+> remove the iwlagn module completely, even loading it once is a bad
+> thing, it has started to corrupt things here entirely by making DMA go
+> to random locations.
 
-Just didn't get to it yet, sorry.
+with the release of -rc7 i was starting to wonder what had happened to this bug,
+i'm not affected by it(other hardware) but from what i gather it's a serious problem?
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+i have always wondered what people affected by this find if they revert the
+"memory allocation optimization" patch
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=da99c4b6c25964b90c79f19beccda208df1a865a
+
+apologies if this is a too random stab in the dark, just sounds like we might want to fix this
+before .27. And since there seems to be no git bisects that pinpoint the problem ..
+i figured i might as well send this.
+
+ian
+
+> 
+> johannes
