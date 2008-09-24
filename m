@@ -1,47 +1,263 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:44772 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752749AbYIHPLE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 11:11:04 -0400
-Date: Mon, 8 Sep 2008 12:10:57 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] Ath9k: Add RF kill support.
-Message-ID: <20080908151057.GB22081@khazad-dum.debian.net> (sfid-20080908_171109_964447_9A3D9855)
-References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com> <1220721347.6714.114.camel@californication> <20080908045926.GA28149@vasanth-lnx.users.atheros.com>
+Received: from mx1.suse.de ([195.135.220.2]:58238 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751151AbYIXOg5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2008 10:36:57 -0400
+From: Helmut Schaa <hschaa@suse.de>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v2] basic background scan
+Date: Wed, 24 Sep 2008 16:36:38 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080908045926.GA28149@vasanth-lnx.users.atheros.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200809241636.38762.hschaa@suse.de> (sfid-20080924_163702_526314_BA1E6C4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 08 Sep 2008, Vasanthakumar Thiagarajan wrote:
-> On Sat, Sep 06, 2008 at 10:45:47PM +0530, Marcel Holtmann wrote:
-> > > CONFIG_ATH9K_RFKILL needs to be set
-> > > to enable this support.
-> > 
-> > why do we have to introduce yet another config option for this? What is
-> > the advantage of disabling RFKILL support? I really don't see it and all
-> > these extra config options are rather confusing than useful.
-> Normally home users may not hit a situation where they have to
-> disable the radio, so they can compile out the rf kill support
-> and essentially disable the periodic run of the work queue 
-> (rfkill_poll ,runs for every 2 secs).If this does not make 
-> any sense, I will remove this config option.
+The patch basically enhances the scanning state machine by two further
+states (SCAN_SET_OPER_CHANNEL & SCAN_OPERATION). In state SCAN_SET_OPER_CHANNEL
+the driver is advised to switch back to the operating channel while
+SCAN_OPERATION tells the access point about being back from power saving and
+restarts the tx queue. Just before SCAN_SET_CHANNEL sets the next channel to
+scan it notifies the access point about going to power save state and stops
+the tx queue.
 
-What doesn't make sense at all is to have it manually selectable.  Just
-define it to the same value of CONFIG_RFKILL, or use CONFIG_RFKILL directly
-outright.
+It does not add any periodic scan behavior, it only reduces the impact of a
+scan onto the traffic (multiple short interruptions instead of one long)
+which results in a smoother user experience.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Signed-off-by: Helmut Schaa <hschaa@suse.de>
+---
+
+Could somebody please have a look at the TODO comments (I have no idea how
+to wait until all null-func frames are ACKed)? Thanks.
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3912fba..21c623d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -646,11 +647,11 @@ struct ieee80211_local {
+ 
+ 
+ 	/* Scanning and BSS list */
+-	bool sw_scanning, hw_scanning;
++	bool sw_scanning, hw_scanning, bg_scanning;
+ 	int scan_channel_idx;
+ 	enum ieee80211_band scan_band;
+ 
+-	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
++	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE, SCAN_SET_OPER_CHANNEL, SCAN_OPERATION } scan_state;
+ 	unsigned long last_scan_completed;
+ 	struct delayed_work scan_work;
+ 	struct ieee80211_sub_if_data *scan_sdata;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 92d898b..49b5c29 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -414,7 +414,7 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
+ 		return RX_QUEUED;
+ 	}
+ 
+-	if (unlikely(rx->flags & IEEE80211_RX_IN_SCAN)) {
++	if (unlikely((rx->flags & IEEE80211_RX_IN_SCAN) && !local->bg_scanning)) {
+ 		/* scanning finished during invoking of handlers */
+ 		I802_DEBUG_INC(local->rx_handlers_drop_passive_scan);
+ 		return RX_DROP_UNUSABLE;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 8e6685e..9120e6b 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -29,6 +29,7 @@
+ #define IEEE80211_PROBE_DELAY (HZ / 33)
+ #define IEEE80211_CHANNEL_TIME (HZ / 33)
+ #define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 5)
++#define IEEE80211_BG_SCAN_INTERRUPT (HZ / 4)
+ 
+ void ieee80211_rx_bss_list_init(struct ieee80211_local *local)
+ {
+@@ -455,6 +456,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	local->sw_scanning = false;
++	local->bg_scanning = false;
+ 	if (ieee80211_hw_config(local))
+ 		printk(KERN_DEBUG "%s: failed to restore operational "
+ 		       "channel after scan\n", wiphy_name(local->hw.wiphy));
+@@ -510,6 +512,36 @@ void ieee80211_scan_work(struct work_struct *work)
+ 
+ 	switch (local->scan_state) {
+ 	case SCAN_SET_CHANNEL:
++		if (local->bg_scanning) {
++			/*
++			 * background scan is in progress, notify all associated 
++			 * access points about us leaving the channel and
++			 * update the filter flags
++			 */
++			local->sw_scanning = 1;
++
++			rcu_read_lock();
++			list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++				if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++				    (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)) {
++					ieee80211_send_nullfunc(local, sdata, 1);
++					/* TODO: wait until all nullfunc frames are ACKed */
++					msleep(1);
++					netif_tx_stop_all_queues(sdata->dev);
++				}
++			}
++			rcu_read_unlock();
++
++			netif_tx_lock_bh(local->mdev);
++			local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
++			local->ops->configure_filter(local_to_hw(local),
++						     FIF_BCN_PRBRESP_PROMISC,
++						     &local->filter_flags,
++						     local->mdev->mc_count,
++						     local->mdev->mc_list);
++			netif_tx_unlock_bh(local->mdev);
++		}
++
+ 		/*
+ 		 * Get current scan band. scan_band may be IEEE80211_NUM_BANDS
+ 		 * after we successfully scanned the last channel of the last
+@@ -574,7 +606,10 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		break;
+ 	case SCAN_SEND_PROBE:
+ 		next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+-		local->scan_state = SCAN_SET_CHANNEL;
++		if (!local->bg_scanning)
++			local->scan_state = SCAN_SET_CHANNEL;
++		else
++			local->scan_state = SCAN_SET_OPER_CHANNEL;
+ 
+ 		if (local->scan_channel->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+ 			break;
+@@ -582,6 +617,49 @@ void ieee80211_scan_work(struct work_struct *work)
+ 					 local->scan_ssid_len);
+ 		next_delay = IEEE80211_CHANNEL_TIME;
+ 		break;
++	case SCAN_SET_OPER_CHANNEL:
++		local->scan_state = SCAN_OPERATION;
++		/* interrupt the current scan */
++		local->sw_scanning = 0;
++
++		/* switch back to the operating channel */
++		if (ieee80211_hw_config(local))
++			printk(KERN_DEBUG "%s: failed to restore operational "
++			       "channel after scan\n", sdata->dev->name);
++
++		/* reconfigure filter flags*/
++		netif_tx_lock_bh(local->mdev);
++		local->filter_flags &= ~FIF_BCN_PRBRESP_PROMISC;
++		local->ops->configure_filter(local_to_hw(local),
++					     FIF_BCN_PRBRESP_PROMISC,
++					     &local->filter_flags,
++					     local->mdev->mc_count,
++					     local->mdev->mc_list);
++
++		netif_tx_unlock_bh(local->mdev);
++
++		/* wait for the channel switch */
++		next_delay = usecs_to_jiffies(local->hw.channel_change_time);
++		break;
++
++	case SCAN_OPERATION:	
++		rcu_read_lock();
++		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++			/* Tell AP we're back */
++			if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++			    sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
++				ieee80211_send_nullfunc(local, sdata, 0);
++				/* TODO: wait until all nullfunc frames are ACKed */
++				msleep(1);
++				netif_tx_wake_all_queues(sdata->dev);
++			}
++		}
++		rcu_read_unlock();
++
++		next_delay = IEEE80211_BG_SCAN_INTERRUPT;
++		local->scan_state = SCAN_SET_CHANNEL;
++
++		break;
+ 	}
+ 
+ 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+@@ -615,7 +693,7 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
+ 	  * ResultCode: SUCCESS, INVALID_PARAMETERS
+ 	 */
+ 
+-	if (local->sw_scanning || local->hw_scanning) {
++	if (local->sw_scanning || local->hw_scanning || local->bg_scanning) {
+ 		if (local->scan_sdata == scan_sdata)
+ 			return 0;
+ 		return -EBUSY;
+@@ -636,18 +714,28 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
+ 
+ 	local->sw_scanning = true;
+ 
++	/*
++	 * if at least one station interface is associated start a background scan
++	 * instead of a common software scan
++	 */
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
+-				netif_tx_stop_all_queues(sdata->dev);
+-				ieee80211_send_nullfunc(local, sdata, 1);
++				/*
++				 * no need to stop station interaces here, that will be done in
++				 * the scan handler
++				 */
++				local->bg_scanning = true;
+ 			}
+ 		} else
+ 			netif_tx_stop_all_queues(sdata->dev);
+ 	}
+ 	rcu_read_unlock();
+ 
++	if (!local->bg_scanning)
++		local->sw_scanning = true;
++
+ 	if (ssid) {
+ 		local->scan_ssid_len = ssid_len;
+ 		memcpy(local->scan_ssid, ssid, ssid_len);
+@@ -658,14 +746,16 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
+ 	local->scan_band = IEEE80211_BAND_2GHZ;
+ 	local->scan_sdata = scan_sdata;
+ 
+-	netif_addr_lock_bh(local->mdev);
+-	local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
+-	local->ops->configure_filter(local_to_hw(local),
+-				     FIF_BCN_PRBRESP_PROMISC,
+-				     &local->filter_flags,
+-				     local->mdev->mc_count,
+-				     local->mdev->mc_list);
+-	netif_addr_unlock_bh(local->mdev);
++	if (!local->bg_scanning) {
++		netif_addr_lock_bh(local->mdev);
++		local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
++		local->ops->configure_filter(local_to_hw(local),
++					     FIF_BCN_PRBRESP_PROMISC,
++					     &local->filter_flags,
++					     local->mdev->mc_count,
++					     local->mdev->mc_list);
++		netif_addr_unlock_bh(local->mdev);
++	}
+ 
+ 	/* TODO: start scan as soon as all nullfunc frames are ACKed */
+ 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 7e0d53a..fd7783a 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -566,7 +566,7 @@ static int ieee80211_ioctl_giwscan(struct net_device *dev,
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+-	if (local->sw_scanning || local->hw_scanning)
++	if (local->sw_scanning || local->hw_scanning || local->bg_scanning)
+ 		return -EAGAIN;
+ 
+ 	res = ieee80211_scan_results(local, info, extra, data->length);
