@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:44529 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752108AbYIJNKM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 09:10:12 -0400
-Subject: Re: [PATCH] mac80211: add pre- and post-scan hooks
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1221033061.12266.10.camel@johannes.berg>
-References: <1214149401.8585.2.camel@localhost.localdomain>
-	 (sfid-20080622_174624_286344_54D543FD)  <1221033061.12266.10.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 10 Sep 2008 09:09:27 -0400
-Message-Id: <1221052167.4648.9.camel@localhost.localdomain> (sfid-20080910_151017_369906_7A8E63AC)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37676 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752869AbYIXTRI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2008 15:17:08 -0400
+Date: Wed, 24 Sep 2008 15:16:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: johannes@sipsolutions.net, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 1/1] iwlwifi 2.6.27: send all the calibration results
+	instead of the last one only
+Message-ID: <20080924191634.GB3639@tuxdriver.com> (sfid-20080924_211716_166552_9C0630F5)
+References: <1222128868-16763-1-git-send-email-tomas.winkler@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1222128868-16763-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-09-10 at 09:51 +0200, Johannes Berg wrote:
-> On Sun, 2008-06-22 at 11:43 -0400, Dan Williams wrote:
-> > mrv8k has commands that get called before and after the scan has been
-> > done to save and restore hardware state.  Add optional callbacks to
-> > mac80211 to enable low-level drivers to know when the stack is about to
-> > start scanning, and when it's done.
+On Tue, Sep 23, 2008 at 03:14:28AM +0300, Tomas Winkler wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 > 
-> Was just talking to Sujith about something on IRC and realised that
-> maybe this is required to turn off IBSS beaconing when leaving the
-> channel for a scan?
+> This patch solves a bug in calibration. We get three results from the
+> initial microcode, but we freed all the results upon each reception leading
+> to zero two of them, only the last one survived. This fix is user visible in
+> HT rates.
+> 
+> This patch simplifed version for 2.6.27 and will create conflict with 
+> 86316f2fe474b019cc445211980f5394977b34d5 iwlwifi: generic init calibrations framework
 
-Most cards to the beaconing in hardware/firmware with a given template,
-right?  If so this sounds quite plausible.  Does beaconing not get
-paused now?
+The code is different in wireless-next-2.6.  Does this problem exist there?
 
-Dan
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
