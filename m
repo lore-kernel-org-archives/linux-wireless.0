@@ -1,82 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34948 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755038AbYIRRwp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 13:52:45 -0400
-Subject: Re: [PATCH] rfkill: clarify usage of rfkill_force_state() and
-	rfkill->get_state()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <200809181932.58272.IvDoorn@gmail.com> (sfid-20080918_193303_254045_21E4A027)
-References: <20080918145236.GJ1583@khazad-dum.debian.net>
-	 <20080918164339.GM1583@khazad-dum.debian.net>
-	 <1221756339.9262.86.camel@johannes.berg>
-	 <200809181932.58272.IvDoorn@gmail.com>
-	 (sfid-20080918_193303_254045_21E4A027)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OpAjM+CDNfu63+h2Rlou"
-Date: Thu, 18 Sep 2008 19:52:08 +0200
-Message-Id: <1221760328.9262.94.camel@johannes.berg> (sfid-20080918_195248_691619_01EAE42F)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:29095 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750789AbYIXGC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2008 02:02:27 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] iwl3945: added channel sysfs entry
+Date: Wed, 24 Sep 2008 13:57:45 +0800
+Message-Id: <1222235866-19805-1-git-send-email-yi.zhu@intel.com> (sfid-20080924_080231_170139_3D180880)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
---=-OpAjM+CDNfu63+h2Rlou
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The patch adds channels sysfs entry for iwl3945. Make it consistent
+with iwlagn.
 
-On Thu, 2008-09-18 at 19:32 +0200, Ivo van Doorn wrote:
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   56 ++++++++++++++++++++++++++-
+ 1 files changed, 54 insertions(+), 2 deletions(-)
 
-> Ideal situation would indeed be that mac80211 registers a rfkill structur=
-e
-> and listens to rfkill events. This would help drivers by only needing to
-> register a rfkill structure for state-change events without any need for
-> listeners.
-
-Yup.
-
-> I was considering such a patch some time ago, but needed to figure out
-> how to work with the state-override capabilities (HW_BLOCK and SOFT_BLOCK=
-)
-> and didn't work on it any further since.
-
-So make the struct part of the hw structure? Then drivers can just use
-that to force hard events. Or actually, no, don't do this, make a new
-mac80211 call:
-
-	ieee80211_inform_hardblocked(BLOCK/OPEN)
-
-which makes sure we can also try to not associate in this case in the
-future...
-
-johannes
-
---=-OpAjM+CDNfu63+h2Rlou
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0pVFAAoJEKVg1VMiehFYrhYQALLn51lBD5EmMQ5vrFWBmWNE
-ewpcsuux0bdGbmxQlTX+37WhgXMLU2XccP9gnXksiJpIb7YK4+7AV4JU8/U90fku
-XRd+G+xrBswzm0yM4bQfCvbeIJgmSMfRn71hCyKT+x9BPxf+zUBcXthmvV2d0B45
-CKBzcIjrJ1KVu0av82xLXRPi9MyPtRJPSN4fwO/ZJsUIbSqhTkip5pCSM7mlY5Iw
-huCLC/Kx03trWXlGSmdLsDEYlFm58ge0G7zMcPD5reX+zfU0yqiMYwfjqypl2w0g
-Pc1SyoaZ7lC+NZT4kTT7mCUc/ZnIMh1VxgfdvpuHmI7i03BVrpvKY+FSqjScF1Kn
-Xjtmtqg9aral+FZQOe+rN2u4x2WkTN4rlKKNR1NmaxzhWx0v3vMNdDj2KmyeRDwy
-zJibmqYyetSzlbOQxPwZ7NDumyBo6aq+BJhYWdTiDWsWVp1rhrZA/I7zsWiTgRpI
-HVZ2/sa5RELY632+fUekoVGtKxtGbbj+VfIfpJ+/sQSOBZVTsvYsFbAKE7mGCkNq
-RhWYEfw5GGNo81MjZ9t9EAFihfw5p0INAMkvW7kfbU1jbjDWCOxgQs7F0DIetPcH
-842hQnCRkedjrwTWja9z3KQTtZTLLGqFXBqCzDc2waTcjtkQd3hfDlHwYUGfV3mI
-HMduKwLD9tNG+/Y0eoo1
-=LKX0
------END PGP SIGNATURE-----
-
---=-OpAjM+CDNfu63+h2Rlou--
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 62b26be..cf41edf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -7666,8 +7666,60 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRUSR, show_power_level,
+ static ssize_t show_channels(struct device *d,
+ 			     struct device_attribute *attr, char *buf)
+ {
+-	/* all this shit doesn't belong into sysfs anyway */
+-	return 0;
++	struct iwl3945_priv *priv = dev_get_drvdata(d);
++	struct ieee80211_channel *channels = NULL;
++	const struct ieee80211_supported_band *supp_band = NULL;
++	int len = 0, i;
++	int count = 0;
++
++	if (!test_bit(STATUS_GEO_CONFIGURED, &priv->status))
++		return -EAGAIN;
++
++	supp_band = iwl3945_get_band(priv, IEEE80211_BAND_2GHZ);
++	channels = supp_band->channels;
++	count = supp_band->n_channels;
++
++	len += sprintf(&buf[len],
++			"Displaying %d channels in 2.4GHz band "
++			"(802.11bg):\n", count);
++
++	for (i = 0; i < count; i++)
++		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
++				ieee80211_frequency_to_channel(
++				channels[i].center_freq),
++				channels[i].max_power,
++				channels[i].flags & IEEE80211_CHAN_RADAR ?
++				" (IEEE 802.11h required)" : "",
++				(!(channels[i].flags & IEEE80211_CHAN_NO_IBSS)
++				|| (channels[i].flags &
++				IEEE80211_CHAN_RADAR)) ? "" :
++				", IBSS",
++				channels[i].flags &
++				IEEE80211_CHAN_PASSIVE_SCAN ?
++				"passive only" : "active/passive");
++
++	supp_band = iwl3945_get_band(priv, IEEE80211_BAND_5GHZ);
++	channels = supp_band->channels;
++	count = supp_band->n_channels;
++
++	len += sprintf(&buf[len], "Displaying %d channels in 5.2GHz band "
++			"(802.11a):\n", count);
++
++	for (i = 0; i < count; i++)
++		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
++				ieee80211_frequency_to_channel(
++				channels[i].center_freq),
++				channels[i].max_power,
++				channels[i].flags & IEEE80211_CHAN_RADAR ?
++				" (IEEE 802.11h required)" : "",
++				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
++				|| (channels[i].flags &
++				IEEE80211_CHAN_RADAR)) ? "" :
++				", IBSS",
++				channels[i].flags &
++				IEEE80211_CHAN_PASSIVE_SCAN ?
++				"passive only" : "active/passive");
++	return len;
+ }
+ 
+ static DEVICE_ATTR(channels, S_IRUSR, show_channels, NULL);
+-- 
+1.5.3.6
 
