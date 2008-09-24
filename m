@@ -1,64 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:40260 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757245AbYIRUcm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 16:32:42 -0400
-Date: Thu, 18 Sep 2008 17:32:35 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC V2] b43: A patch for control of the radio LED using rfkill
-Message-ID: <20080918203235.GW1583@khazad-dum.debian.net> (sfid-20080918_223248_949100_EFC57CD8)
-References: <48d260b7.SG5SGntEQ00lxFKi%Larry.Finger@lwfinger.net> <20080918162440.GL1583@khazad-dum.debian.net> <48D2867D.6010501@lwfinger.net> <200809181920.10416.mb@bu3sch.de> <20080918202158.GT1583@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080918202158.GT1583@khazad-dum.debian.net>
+Received: from mga02.intel.com ([134.134.136.20]:29095 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750838AbYIXGC2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2008 02:02:28 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] iwlwifi: don't fail if scan is issued too early
+Date: Wed, 24 Sep 2008 13:57:46 +0800
+Message-Id: <1222235866-19805-2-git-send-email-yi.zhu@intel.com> (sfid-20080924_080233_513536_F77131DD)
+In-Reply-To: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
+References: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Sep 2008, Henrique de Moraes Holschuh wrote:
-> On Thu, 18 Sep 2008, Michael Buesch wrote:
-> > On Thursday 18 September 2008 18:49:01 Larry Finger wrote:
-> > > Henrique de Moraes Holschuh wrote:
-> > > > The problem is in the "should".
-> > > > 
-> > > > Maybe something else than b43 (like firmware) changed the radio software
-> > > > rfkill bit, and it does not match what mac80211 and userland requested
-> > > > anymore.
-> > > > 
-> > > > What you need to pass to rfkill_force_state() is what the radio is currently
-> > > > doing.  So, the state you need to send to rfkill_force_state has to be based
-> > > > on the real state of the hardware's "soft switch bit".
-> > > 
-> > > The hardware does not have such a bit. Once it is initialized and
-> > > mac80211 sends it a packet, it will try to send it. That is true even
-> > > if the hardware switch is off. It just will not succeed.
-> > 
-> > Right, b43 does have two "bits". One read-only bit that tells the hardware
-> > block state. This state can only be changed by physically pressing rfkill
-> > button. The other "bit" is a read/write "bit" to turn off the radio in software.
-> > If _either_ one bit is blocking the radio, it will be physically blocked.
-> 
-> A software-emulated rfkill line is still a SW rfkill line, and the rfkill
-> core needs to know about it [but you don't want to have set txpower off
-> state mixed in whatever you send back to the rfkill core].
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-I forgot to add that you don't always need to do a rfkill_force_state() just
-because a SW rfkill line changed.
+This patch returns success and empty scan on scans requests that were
+rejected because issued too early. The cached bss list from previous
+scanning will be returned by mac80211.
 
-If that change can only come through the rfkill core (i.e. through the
-toggle_radio() hook), the rfkill core already knows about it.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   15 +++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    8 +-------
+ 2 files changed, 12 insertions(+), 11 deletions(-)
 
-You *still* take the sw rfkill line into account when you do
-rfkill_force_state().  It just might not be reason enough to actually call
-rfkill_force_state().
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c31adf6..e6d742f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3190,9 +3190,9 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ static int iwl_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t ssid_len)
+ {
+-	int ret;
+ 	unsigned long flags;
+ 	struct iwl_priv *priv = hw->priv;
++	int ret;
+ 
+ 	IWL_DEBUG_MAC80211("enter\n");
+ 
+@@ -3211,20 +3211,27 @@ static int iwl_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t ssid_len)
+ 		goto out_unlock;
+ 	}
+ 
+-	/* we don't schedule scan within next_scan_jiffies period */
++	/* We don't schedule scan within next_scan_jiffies period.
++	 * Avoid scanning during possible EAPOL exchange, return
++	 * success immediately.
++	 */
+ 	if (priv->next_scan_jiffies &&
+ 	    time_after(priv->next_scan_jiffies, jiffies)) {
+ 		IWL_DEBUG_SCAN("scan rejected: within next scan period\n");
+-		ret = -EAGAIN;
++		queue_work(priv->workqueue, &priv->scan_completed);
++		ret = 0;
+ 		goto out_unlock;
+ 	}
++
+ 	/* if we just finished scan ask for delay */
+ 	if (iwl_is_associated(priv) && priv->last_scan_jiffies &&
+ 	    time_after(priv->last_scan_jiffies + IWL_DELAY_NEXT_SCAN, jiffies)) {
+ 		IWL_DEBUG_SCAN("scan rejected: within previous scan period\n");
+-		ret = -EAGAIN;
++		queue_work(priv->workqueue, &priv->scan_completed);
++		ret = 0;
+ 		goto out_unlock;
+ 	}
++
+ 	if (ssid_len) {
+ 		priv->one_direct_scan = 1;
+ 		priv->direct_ssid_len =  min_t(u8, ssid_len, IW_ESSID_MAX_SIZE);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 09c264b..bf855c3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -463,11 +463,6 @@ void iwl_init_scan_params(struct iwl_priv *priv)
+ 
+ int iwl_scan_initiate(struct iwl_priv *priv)
+ {
+-	if (priv->iw_mode == NL80211_IFTYPE_AP) {
+-		IWL_ERROR("APs don't scan.\n");
+-		return 0;
+-	}
+-
+ 	if (!iwl_is_ready_rf(priv)) {
+ 		IWL_DEBUG_SCAN("Aborting scan due to not ready.\n");
+ 		return -EIO;
+@@ -479,8 +474,7 @@ int iwl_scan_initiate(struct iwl_priv *priv)
+ 	}
+ 
+ 	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+-		IWL_DEBUG_SCAN("Scan request while abort pending.  "
+-			       "Queuing.\n");
++		IWL_DEBUG_SCAN("Scan request while abort pending\n");
+ 		return -EAGAIN;
+ 	}
+ 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.5.3.6
+
