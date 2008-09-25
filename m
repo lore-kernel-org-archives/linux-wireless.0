@@ -1,79 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:38866 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbYITVYD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51220 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751496AbYIYEuJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 17:24:03 -0400
-Received: by gxk9 with SMTP id 9so1866025gxk.13
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 14:24:00 -0700 (PDT)
-Message-ID: <43e72e890809201424k370756d1mffc9efa7a1d7fe34@mail.gmail.com> (sfid-20080920_232408_593618_1588DE6A)
-Date: Sat, 20 Sep 2008 14:24:00 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Steven Noonan" <steven@uplinklabs.net>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Senthilkumar Balasubramanian"
-	<Senthilkumar.Balasubramanian@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Ingo Molnar" <mingo@elte.hu>
-In-Reply-To: <f488382f0809201418j66a813a0m4c0a5843f0dfc87a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
-	 <20080919182322.GB7027@tesla>
-	 <alpine.LNX.2.00.0809191630090.14961@alcarin.uplinklabs.net>
-	 <20080919235305.GD11665@tesla>
-	 <f488382f0809191701u2dbf8d22n6015c9f1f23c73be@mail.gmail.com>
-	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
-	 <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
-	 <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
-	 <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com>
-	 <f488382f0809201418j66a813a0m4c0a5843f0dfc87a@mail.gmail.com>
+	Thu, 25 Sep 2008 00:50:09 -0400
+Subject: Re: [PATCH] wireless: consolidate on a single escape_essid
+	implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1222317983.10563.20.camel@johannes.berg> (sfid-20080925_064714_797821_C549800C)
+References: <>  <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
+	 (sfid-20080925_010455_582253_D66BE03B)  <1222317983.10563.20.camel@johannes.berg>
+	 (sfid-20080925_064714_797821_C549800C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sXLl36xhQnr4nb4TWDcp"
+Date: Thu, 25 Sep 2008 06:49:17 +0200
+Message-Id: <1222318157.10563.22.camel@johannes.berg> (sfid-20080925_065014_111217_733CD989)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 20, 2008 at 2:18 PM, Steven Noonan <steven@uplinklabs.net> wrote:
-> On Sat, Sep 20, 2008 at 1:57 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> So here's what we need to do -- try to zero on in what causes this IRQ
->> storm.
->
-> How is the best way to approach this? I assume ATH_DBG_INTERRUPT and
-> pray like hell my /var partition doesn't fill up first? Maybe I'll
-> just symlink /var/log/messages to a file on a substantially larger
-> pattition...
 
-Yeah see the other e-mail I sent.
+--=-sXLl36xhQnr4nb4TWDcp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->> Most likely its some strange event that triggers it, perhaps
->> some sort of noise which makes the device try to adapt and hits a path
->> we are not handling correctly yet. Can you provide the initial log of
->> when ath9k gets loaded? This tells us what card it is, like AR5416 or
->> AR9280, etc.
->
-> [10238.347956] ath9k: 0.1
-> [10238.348028] vendor=8086 device=27d2
-> [10238.348033] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> [10238.348050] ath9k 0000:03:00.0: setting latency timer to 64
-> [10238.480781] phy1: Selected rate control algorithm 'ath9k_rate_control'
-> [10238.483320] phy1: Atheros 5416: mem=0xffffc20000060000, irq=17
->
-> It claims to be a 5416, but I was under the impression that it was the
-> 5418 that came with the MacBook Pro.
+On Thu, 2008-09-25 at 06:46 +0200, Johannes Berg wrote:
 
-lspci output is outdated, we have submitted some new updates to it.
-The output of the driver should be the one you can rely on for chipset
-information for now. The problem is besides the PCI device ID there is
-also EEPROM information which further identifies the chipset like
-devices can be dual band (2 GHz and 5 GHz capable) and some other
-single band -- using the same PCI device:vendor ID. So for now we've
-tried to update the PCI id stuff (not sure when it'll be merged) to
-tell your "family chipset" and in parens the MAC or known model. It
-can still use some cleanup but yeah, hope this helps understand this a
-little better. You can see more info on this here:
+> > +	essid_len =3D min(essid_len, (u8) IW_ESSID_MAX_SIZE);
+> > +	while (essid_len--) {
+> > +		if (*s =3D=3D '\0') {
+> > +			*d++ =3D '\\';
+> > +			*d++ =3D '0';
+> > +			s++;
+> > +		} else {
+> > +			*d++ =3D *s++;
+> > +		}
+> > +	}
+> > +	*d =3D '\0';
+> > +	return escaped;
+> > +}
+> > +EXPORT_SYMBOL(escape_essid);
 
-http://wireless.kernel.org/en/users/Drivers/ath9k#supportedchips
+Also, it seems like this should escape any non-printable characters, not
+just NUL?
 
-  Luis
+johannes
+
+--=-sXLl36xhQnr4nb4TWDcp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI2xhJAAoJEKVg1VMiehFYrSIP/1O7SjKApTldVXKbfwnXHaOj
+DC8jsHWs7p3pPOHyuvITcIh+/TeSsGp7h5Q0kYl2OGMM6MHatUzEkn5Bken7gFuO
+wuepZsjPKzqfqFvppuVEFX/ux/eNjFXwm4YnzmMsd25cHoOk0/nuT9VHX0I5cwKO
+ODcYta3SGu5CwyHKc6HFm2CYVPvdteCAkROS/q76HzQuCvsPWUaavpRlHRcr50Nv
+QS5u1CWynDCoKvW30IiPfoFdU2YCUKkv8EZBUB++v3tzh+e6/i+KgubGs80vCQn7
+7WFthGNdaBLPJWk1/dSxxo592bobRMGbfqf0vj8xs59Zrp3ee7WYwJHapqus+3p6
+rU1AlRyiqb57DAt1HOn47cHYwJc/CA33RBq+qRwVEopNuUYlAbq8W1M8cYTxDezI
+7Ff35Rd2YEvv2yasIF5MkghErS4hvGLnmpa0KyGkmeIXSwse0CB4FnbuL+8gCYLE
+LWCqPRHy6ivkEdiHdtYt9hVQsLwzhXr2mRcYhlnHqE07hcIQBLo6C8Iob98wE9Ki
+Q4WgGUbxct1IC/ElWnH2pd/aS7WX23Xp+VtUxM3VL8fq72WMWMyDq4mbjTKL9EHe
+wGTTQGOJXVBp2lkGeGHzlSLdLSFwCd14UEkbY0oVl0OVGbHTyaPDzTZ/pWHHaRyt
+eC1bLjSnpFvRPF9kRkCO
+=Qy7k
+-----END PGP SIGNATURE-----
+
+--=-sXLl36xhQnr4nb4TWDcp--
+
