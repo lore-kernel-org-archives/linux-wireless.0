@@ -1,76 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54266 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752854AbYIFWm0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32945 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753185AbYIYTag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 18:42:26 -0400
-Subject: Re: [RFC PATCH 1/3] mac80211: restructure disassoc/deauth flows
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240809061532s4f8e08c1xe59f99768ce440c0@mail.gmail.com> (sfid-20080907_003248_257597_C680198E)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
-	 <1220739930.21016.6.camel@johannes.berg>
-	 <1ba2fa240809061532s4f8e08c1xe59f99768ce440c0@mail.gmail.com>
-	 (sfid-20080907_003248_257597_C680198E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uvLKHoF+7c5MzWvBIaBr"
-Date: Sun, 07 Sep 2008 00:42:19 +0200
-Message-Id: <1220740939.21016.19.camel@johannes.berg> (sfid-20080907_004228_352066_B86A0A77)
-Mime-Version: 1.0
+	Thu, 25 Sep 2008 15:30:36 -0400
+Date: Thu, 25 Sep 2008 15:29:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2008-09-24
+Message-ID: <20080925192943.GC3277@tuxdriver.com> (sfid-20080925_213041_713485_33B8E127)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+(Again, I know it is 2008-09-25, but I let this one cook overnight...)
 
---=-uvLKHoF+7c5MzWvBIaBr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Dave,
 
-On Sun, 2008-09-07 at 01:32 +0300, Tomas Winkler wrote:
-> On Sun, Sep 7, 2008 at 1:25 AM, Johannes Berg <johannes@sipsolutions.net>=
- wrote:
-> >
-> >>
-> >> +static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdat=
-a,
-> >> +                                  struct ieee80211_if_sta *ifsta, int=
- deauth,
-> >> +                                  int self_disconnected, u16 reason)
-> >
-> > I think you should use bool for those two (deauth, self)
->=20
-> I'm thinking rather using some enum values just for readability
-> foo(DEAUTH, ORIGIN_SELF) vs foo(tree,true)
-> foo(DISASSOC, ORIGIN_PEER)  vs foo(false, false)
+Another batch intended for 2.6.28...mostly a hodgepodge, including
+another bunch of bits from Johannes...
 
-That works too, sure, though seems a little overkill, the function is
-called what, three times? Anyway, whatever you prefer, I just don't like
-bare "int" as a bool.
+Let me know if there are problems!
 
-johannes
+Thanks,
 
---=-uvLKHoF+7c5MzWvBIaBr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+John
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+---
 
-iQIcBAABAgAGBQJIwwdHAAoJEKVg1VMiehFYGmgQAJX9favRRXAbM3klJNHDfxRp
-EPc6NGNrgDW7hrlLPBa5hl1OXjtmb4OD+G04DDAhqRsrTEi6vQ9gwpp31K4sKQ7t
-+sZgP6+7KWeYF3tgnVR5cvpeAgKRiGsC+u7/NDElxwaspikVz0sAJCDJqKI7rJ/p
-EAvLiPde3dKRMEe7acl3FgkJwlJIDYGCkOv5m5A+pgCIyWVd2/GPfZR20HbcqIiW
-NUoEJfBoYr9csEuz2ItBp9pi6gHiwfCBRmKzA1VgZ+FZrJG4KxgautQXFXLYn60w
-Mli+2/p2038i0JNHv3vpGpHV4q7P4RkIrA6I9KKT6AsY+kZtOhfWP7nnO/IQVSqd
-WicsyweJWRyfyvLL7KVsUp6Qg6RVKbDiKmhZUBk8jieTTMR+sAhSFsPha0pSK2MP
-F0m+5O/yLFGGVImK/nOM+vD0qcONR008x1w4dj34w/m5wAbKj6pXa8YKoDxRncvs
-yB8AyNAgXZAQpgfvk/JrwExYz3rrCW+jItIJ5arPctwHiKV3Eb9LhYZSktScfUZ6
-f4lRVLWk5FkzYeLQF3O8pQ2EubTHwTSj8c3hSNE3Nkd10qJwb8hPaawt/1VKYRRG
-GtqkiEvTBbYtskgma8QiIQFGw4aUs8+nzs9CshIjGTnpSNFMw8gD0vI5q/+X9OQy
-5CdiA3K9e/4wESA4AnSL
-=KpBq
------END PGP SIGNATURE-----
+Individual patches are available here:
 
---=-uvLKHoF+7c5MzWvBIaBr--
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
 
+---
+
+The following changes since commit d87798450a7635ab1bcc80271a13ce4a53b016a9:
+  David S. Miller (1):
+        aoe: Fix OOPS after SKB queue changes.
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+
+Alan Cox (1):
+      pcmcia: Fix up legacy driver IRQs
+
+David Kilroy (1):
+      wireless: Read scan flags correctly on x86-64
+
+Denis ChengRq (1):
+      wireless: a global static to local static improvement
+
+Emmanuel Grumbach (2):
+      iwlwifi: remove HT flags from RXON when not in HT anymore
+      mac80211: fix led behavior in IBSS
+
+Ivo van Doorn (1):
+      rt2x00: Fix HW crypto key handling
+
+Javier Cardona (1):
+      libertas: Reduce the WPA key installation time (fixups)
+
+Johannes Berg (14):
+      cfg80211: fix static regdomains
+      cfg80211: clean up regulatory mess
+      cfg80211: fix regulatory code const
+      cfg80211: clean up static regdomain mess
+      cfg80211: fix code ordering in header file
+      mac80211: make master iface not wireless
+      cfg80211: show interface type
+      cfg80211: allow set_interface without type
+      mac80211: allow interface settings changes only when down
+      cfg80211: reject invalid configuration items
+      mac80211: fix mesh action frame handling
+      mac80211: clean up rate control API
+      mac80211: probe with correct SSID
+      iwlagn: downgrade BUG_ON in interrupt
+
+Larry Finger (1):
+      b43: Issue warning when RFKILL_INPUT is not enabled
+
+Luis R. Rodriguez (1):
+      ath9k: Add a few comments about mibevents
+
+Nick Kossifidis (1):
+      ath5k: Fix bad udelay calls on AR5210 code
+
+Sujith (3):
+      ath9k: Whitespace cleanup
+      ath9k: Fix nexttbtt calculation
+      ath9k: Fix TSF Adjust usage
+
+Tomas Winkler (3):
+      iwlwifi: don't delay scan in IBSS mode
+      iwlwifi: make PS use named constants
+      iwlwifi: don't fail if scan is issued too early
+
+YanBo (1):
+      mac80211: mesh portal functionality support
+
+ drivers/net/wireless/airo.c                 |    2 +-
+ drivers/net/wireless/airo_cs.c              |    2 +-
+ drivers/net/wireless/ath5k/phy.c            |    2 +-
+ drivers/net/wireless/ath5k/reg.h            |    2 -
+ drivers/net/wireless/ath5k/reset.c          |   20 ++-
+ drivers/net/wireless/ath9k/beacon.c         |  145 ++++++-------
+ drivers/net/wireless/ath9k/core.c           |    3 +-
+ drivers/net/wireless/ath9k/core.h           |    1 +
+ drivers/net/wireless/ath9k/hw.c             |   18 ++-
+ drivers/net/wireless/ath9k/rc.c             |   98 ++++-----
+ drivers/net/wireless/atmel.c                |    2 +-
+ drivers/net/wireless/atmel_cs.c             |    2 +-
+ drivers/net/wireless/b43/rfkill.c           |    5 +
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |  182 ++++------------
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.h  |    9 -
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    4 +
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |  146 +++++--------
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   24 ++-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   27 ++-
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |    7 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   11 +-
+ drivers/net/wireless/libertas/dev.h         |    1 +
+ drivers/net/wireless/libertas/wext.c        |   26 ++-
+ drivers/net/wireless/netwave_cs.c           |    2 +-
+ drivers/net/wireless/orinoco.c              |    2 +-
+ drivers/net/wireless/orinoco_cs.c           |    2 +-
+ drivers/net/wireless/ray_cs.c               |    2 +-
+ drivers/net/wireless/rndis_wlan.c           |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c     |    3 +-
+ drivers/net/wireless/rt2x00/rt61pci.c       |    4 +-
+ drivers/net/wireless/rt2x00/rt73usb.c       |    4 +-
+ drivers/net/wireless/spectrum_cs.c          |    2 +-
+ drivers/net/wireless/wavelan_cs.c           |    2 +-
+ drivers/net/wireless/wl3501_cs.c            |    2 +-
+ include/linux/ieee80211.h                   |    5 +
+ include/net/cfg80211.h                      |    6 +-
+ include/net/mac80211.h                      |   68 ++++++
+ include/net/wireless.h                      |   20 +-
+ net/mac80211/cfg.c                          |   64 +-----
+ net/mac80211/debugfs_sta.c                  |    3 +-
+ net/mac80211/ieee80211_i.h                  |    6 +
+ net/mac80211/iface.c                        |    1 +
+ net/mac80211/main.c                         |   23 ++-
+ net/mac80211/mesh.c                         |    2 +-
+ net/mac80211/mesh.h                         |    4 +
+ net/mac80211/mesh_pathtbl.c                 |  127 +++++++++++-
+ net/mac80211/mlme.c                         |   10 +-
+ net/mac80211/rate.c                         |   71 +++++--
+ net/mac80211/rate.h                         |  102 +++-------
+ net/mac80211/rc80211_pid.h                  |    2 -
+ net/mac80211/rc80211_pid_algo.c             |  158 +++++---------
+ net/mac80211/rx.c                           |   59 ++++--
+ net/mac80211/sta_info.c                     |   17 +-
+ net/mac80211/sta_info.h                     |    2 +-
+ net/mac80211/tx.c                           |   75 +++++--
+ net/wireless/core.c                         |  162 +-------------
+ net/wireless/nl80211.c                      |   45 +++--
+ net/wireless/reg.c                          |  311 ++++++++++++++++++---------
+ net/wireless/reg.h                          |   39 +---
+ 60 files changed, 1077 insertions(+), 1080 deletions(-)
+
+Omnibus patch is available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-09-24.patch.bz2
+
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
