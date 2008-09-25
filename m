@@ -1,55 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:33887 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755370AbYIRUmg (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43046
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753448AbYIYU0b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 16:42:36 -0400
-Subject: Re: [PATCH] iw: add kernel version checks for pending upstream
-	kernel features
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1221758934.9262.89.camel@johannes.berg>
-References: <>  <1221748533-11000-1-git-send-email-linville@tuxdriver.com>
-	 <1221752489.9262.81.camel@johannes.berg>
-	 <1221758783.6782.29.camel@californication>
-	 <1221758934.9262.89.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 18 Sep 2008 22:43:23 +0200
-Message-Id: <1221770603.6782.35.camel@californication> (sfid-20080918_224238_992239_0CB08673)
+	Thu, 25 Sep 2008 16:26:31 -0400
+Date: Thu, 25 Sep 2008 13:26:20 -0700 (PDT)
+Message-Id: <20080925.132620.225525083.davem@davemloft.net> (sfid-20080925_222635_987601_8D0FF118)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-09-24
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080925192943.GC3277@tuxdriver.com>
+References: <20080925192943.GC3277@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 25 Sep 2008 15:29:44 -0400
 
-> > if the numbers you are planning to use are stable, then please use the
-> > above approach to just add the missing defines to it. Like adding a
-> > compat.h file with
-> > 
-> > #ifndef NL80211_ATTR_SUPPORTED_IFTYPES
-> > #define NL80211_ATTR_SUPPORTED_IFTYPES boo
-> > #endif
+> Another batch intended for 2.6.28...mostly a hodgepodge, including
+> another bunch of bits from Johannes...
 > 
-> Well, at that point I can also just copy nl80211.h from wireless-testing
-> whenever I think the numbers will remain stable, no? And that doesn't
-> work as-is anyway since nl80211.h uses an enum to define the numbers,
-> not #defines.
+> Let me know if there are problems!
 
-it is possible to work around with just define the enum entries also as
-defines. Netlink does this a lot. It is not pretty, but possible.
-
-> I guess it's the lesser of all the evils. I'm not too fond of copying in
-> the header file, it creates more work and doesn't make all that much
-> sense, but all the other proposals take even more work, and as long as
-> we don't change the numbers after putting things into wireless-testing
-> we should be fine.
-
-Simple speaking, yes :)
-
-Regards
-
-Marcel
-
-
+Pulled and pushed back out to kernel.org, thanks John.
