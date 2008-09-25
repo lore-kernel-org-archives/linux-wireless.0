@@ -1,123 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50681 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57594 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754543AbYIRTOy (ORCPT
+	with ESMTP id S1751132AbYIYE3n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 15:14:54 -0400
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
+	Thu, 25 Sep 2008 00:29:43 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <20080918184709.GN1583@khazad-dum.debian.net> (sfid-20080918_204723_031094_B6AF070E)
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net>
-	 <200809181716.24355.IvDoorn@gmail.com>
-	 <20080918160803.GK1583@khazad-dum.debian.net>
-	 <200809181851.59182.IvDoorn@gmail.com>
-	 <20080918184709.GN1583@khazad-dum.debian.net>
-	 (sfid-20080918_204723_031094_B6AF070E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-g3EoeA8huqUO/B6T0zub"
-Date: Thu, 18 Sep 2008 21:14:15 +0200
-Message-Id: <1221765255.20772.26.camel@johannes.berg> (sfid-20080918_211458_237516_E2394796)
+To: Ian Schram <ischram@telenet.be>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48DAC681.9010305@telenet.be>
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 (sfid-20080911_100535_000722_EE099914) <1222287287.4257.49.camel@johannes.berg>
+	 <48DAC681.9010305@telenet.be>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FHdQTOAFlZ9d6ddXmk99"
+Date: Thu, 25 Sep 2008 06:28:51 +0200
+Message-Id: <1222316931.10563.7.camel@johannes.berg> (sfid-20080925_062947_844100_429512F5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-g3EoeA8huqUO/B6T0zub
+--=-FHdQTOAFlZ9d6ddXmk99
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2008-09-18 at 15:47 -0300, Henrique de Moraes Holschuh wrote:
+On Thu, 2008-09-25 at 01:00 +0200, Ian Schram wrote:
 
-> Passing rfkill state around using the input layer is broken, and caused r=
-eal
-> issues.  That is what cannot be done, that is what was fixed in the new A=
-PI.
-> But that does not preclude, e.g., b43, from also exporting input events..=
-.
-> *as long as* it is done correctly.
+> > Incidentally, if this really is the same bug I have, you might want to
+> > remove the iwlagn module completely, even loading it once is a bad
+> > thing, it has started to corrupt things here entirely by making DMA go
+> > to random locations.
+>=20
+> with the release of -rc7 i was starting to wonder what had happened to th=
+is bug,
+> i'm not affected by it(other hardware) but from what i gather it's a seri=
+ous problem?
+>=20
+> i have always wondered what people affected by this find if they revert t=
+he
+> "memory allocation optimization" patch
+>=20
+> http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dco=
+mmit;h=3Dda99c4b6c25964b90c79f19beccda208df1a865a
+>=20
+> apologies if this is a too random stab in the dark, just sounds like we m=
+ight want to fix this
+> before .27. And since there seems to be no git bisects that pinpoint the =
+problem ..
+> i figured i might as well send this.
 
-[...]
-
-I don't get it.
-
-We only have a few things to control:
-
- * radio state for each device
-
-and a few mechanisms:
- 1) mac80211-internal (TPC, ..., iwconfig txpower off)
- 2) per-hardware input button (soft)
- 3) per-hardware rfkill button (hard)
- 4) platform input buttons (soft)
- 5) platform rfkill buttons (hard)
-
-b43, for example, 1, 2 and 3 (where connected, this is unknown to the
-driver) and may live on a platform that also has 4, 5 is very unlikely.
-
-The way I see it, we should have about this architecture:
-
-input layer        userspace      mac80211     driver     rfkill
-  2 ----------------->|
-                     (a)----------------------------------->|
-  4 ----------------->|                                     |
-                                      (b)<------------------|
-                                       |
-                                       +-------->(c)
-
-                                      (e)<-------(d)
-                                       |
-                                       +------------------->|
-                                                            |
-                    (f)<------------------------------------|
-
-
-(a) synthesize rfkill state for each driver out of the various input
-    events you can get, depending on whether the platform button is
-    bluetooth, wlan, all, ...
-(b) take rfkill state and transform it into conf.radio_enabled along
-    with the internal conf.radio_enabled state that mac80211 may decide
-    on based on iwconfig txpower off. assume that users know what
-    they're doing if they iwconfig txpower off, I think it's pretty
-    pointless to have in light of rfkill and for all I care we can
-    remove it
-(c) take conf.radio_enabled and enable/disable radio
-(d) notify mac80211 about _HARD_ rfkill state
-(e) take that into account for internal state machine and report to
-    rfkill subsystem
-(f) display to user
-
-Driver only has to follow conf.radio_enabled and inform mac80211 of the
-hard state.
-
-Where's the flaw?
+I haven't really pondered bisecting since it happens for me with iwl5000
+hardware which wasn't supported before... Because this bug was affecting
+my machine quite a bit I've now removed the wireless card from it for
+the time being. I still think it should be easy to reproduce by using a
+machine with a good amount of memory (I have 6.5G) and enabling
+CONFIG_SLUB_DEBUG, which seems to have at least some part in it.
 
 johannes
 
---=-g3EoeA8huqUO/B6T0zub
+--=-FHdQTOAFlZ9d6ddXmk99
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI0qiEAAoJEKVg1VMiehFY5kEP/1boSqLK1+85qHWOc2EgzhAQ
-zAi4tcZKSBKxt4dOoN1CgV68xKtKgEYA9tTNh6gM+ex4aXFKpKGdB0ur0qUPNpD2
-ALtwTbAth83o/sMKV/qN8yDCnzGCF90+FzBfxMsQpU0UHfnT7jX8UNlEpmfMuMKm
-VpZwGPMtJuaVfbU/f2uqG/oDwcFwf0Bf3D//v8mRN+TEHDWRgHouBVjXYlgWVMfL
-pedqIDgI4GTnSvd256UnGRfMl/HloVLv99H3V2u+wPM1nHQSjfEDjAh6sm0uG/WO
-dQ/3I4dGT+DrHLgMvc3S6scxOIb2fGI9rPQt3gknORDfhqeZNctr5RCS3Vrdoxpl
-5IjSs9Ne9Vc3wZOO7iVqLgcOLj1tfRmbvYKkpLM+TugnCOLnz9dx5vaNJl8+WC6W
-HYeQ9z8tlyMaA0ct2FgasaOjy1k44lIjQglnMp6P61DT3k7QeP/vtNp0HU/WbDcO
-4HUvbkAAYk+Fpzww3K1ORmZEW0/ffthHVWuqYtbCG3ZjjWNjdkaUS8OcOutf/8AY
-/akxRC1fTp20sZhZGGuMeaAvuaXc2WMr3FVzzLt1YvNM1zMZuhPqTzlwOle0ZJUi
-d1ciBWGp5+tqji5g3+W5L5GNm8Bep3hmgd43aOCM1xdhTabzQI8t3pMiqY0v2euJ
-vIImNrzKQSotdIviN2dm
-=Oc0j
+iQIcBAABAgAGBQJI2xN/AAoJEKVg1VMiehFYZhoQALUFNodZJ2L5/UKAA4CMJ0PO
+zzLWYCDC6mbH5i8OZt0NetcNn4qIwYZ7TG5GhbbxQY0onsSjS6rgmE8C2OzAD/Tc
+7N2GeHKlOpidbPnDeYBXn8LxktDo5wjGswbW8Aatmt3ZmnCZlCPgHDvjpEPMoGwd
+eKxr9w9WKtIvcg2yqwsG2gpOERfO8QbNShHdLjmbn3tXVD7IFqOlnzB59lKF+OnB
+3gIkciKwU2GCEfsxI86gCIPhwwkTR5ja0VYQeJk0YSIPpJva38Bb3cNFHTwOFCjJ
+NtWhcfm1RKjpS0rs6MNxISkHjBZ5QTxIXhF1Xzfsu0ns6bwoAn9cvFaos4lnRDcx
+pu1Vsd8iXlq+D+ztxbIFesC8iayj2KfKElrva9DAkDPn4XTEKQ/4rvLAY3TrEXlW
+TF6r0ulYm/WT9XjiFyVmVRm7seCBOwOh8fcn+vBM12Jcv+cSbDdBQv80vzeFFqTk
+5JOOGUKpAqzQyWWQhJYyWT6fX+5yUzqG5AruW+ozsmRwTL1xXbFgapOO2Q/32xp+
+MsQ9cg3ZW/edtl0uK3z/leD+bpQPHKsjpDln8aA6POiGW3rhnTlz4UZeYMy5Jih8
+sBImN5+jGEgsjc1OLNC53yMiM4ubgszsFkjxDjFHTYboeUINRYCBq6hgPXv/bKd+
+KdvPUHYmuQ36c5WDqUUU
+=E7u+
 -----END PGP SIGNATURE-----
 
---=-g3EoeA8huqUO/B6T0zub--
+--=-FHdQTOAFlZ9d6ddXmk99--
 
