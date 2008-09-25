@@ -1,93 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50281 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756042AbYIJWMK (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:53318 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106AbYIYWFr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 18:12:10 -0400
-Message-Id: <20080910220409.405099000@sipsolutions.net> (sfid-20080911_001220_595106_8A3B3439)
-References: <20080910220145.707263000@sipsolutions.net>
-Date: Thu, 11 Sep 2008 00:01:47 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 02/18] mac80211: move STA timer restart
-Mime-Version: 1.0
+	Thu, 25 Sep 2008 18:05:47 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so436887fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 15:05:45 -0700 (PDT)
+Message-ID: <1ba2fa240809251505p342d8a6do51cf870624e0c8dd@mail.gmail.com> (sfid-20080926_000551_846070_AD8B43A0)
+Date: Fri, 26 Sep 2008 01:05:45 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [PATCH RFC] mac80211: notify mac80211 about rfkill events
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, hmh@hmh.eng.br, linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <200809252310.21320.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1222357719-26294-1-git-send-email-tomas.winkler@intel.com>
+	 <200809252310.21320.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This I shouldn't have moved to the scan implementation, move
-it back to the MLME where it belongs, to the notification.
+On Fri, Sep 26, 2008 at 12:10 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> Hi,
+>
+>> Currently mac80211 is not notified about rfill state of low level driver
+>> and doesn't now when it's disconnected and when to restart connection
+>> There also there is conflict or no synchronization between 'wext txpower
+>> disable' and rfkill events coming from rfkill subsystem
+>>
+>> This patch is just a sketch of possible solution, it probably even doesn't
+>> compile
+>
+> I am not sure if registring a notifier would be the best solution,
+> persionally I was thinking of implementing the rfkill structure into ieee80211_local
+> and make it listen to events directly.
+>
+> Through a small callback function drivers can easily report their rfkill events
+> to mac80211 which in turn will call rfkill_force_state().
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |   13 +++++++++++++
- net/mac80211/scan.c |   14 --------------
- 2 files changed, 13 insertions(+), 14 deletions(-)
+> On the other hand, perhaps notifications might work better, depends on what
+> the drivers like better.
 
---- everything.orig/net/mac80211/mlme.c	2008-09-10 23:57:50.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-09-10 23:57:52.000000000 +0200
-@@ -2625,6 +2625,13 @@ void ieee80211_sta_work(struct work_stru
- 	}
- }
- 
-+static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
-+	    ieee80211_vif_is_mesh(&sdata->vif))
-+		ieee80211_sta_timer((unsigned long)sdata);
-+}
-+
- void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
-@@ -2637,4 +2644,10 @@ void ieee80211_mlme_notify_scan_complete
- 		    !ieee80211_sta_active_ibss(sdata)))
- 			ieee80211_sta_find_ibss(sdata, ifsta);
- 	}
-+
-+	/* Restart STA timers */
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list)
-+		ieee80211_restart_sta_timer(sdata);
-+	rcu_read_unlock();
- }
---- everything.orig/net/mac80211/scan.c	2008-09-10 23:50:30.000000000 +0200
-+++ everything/net/mac80211/scan.c	2008-09-10 23:57:52.000000000 +0200
-@@ -424,13 +424,6 @@ static void ieee80211_send_nullfunc(stru
- 	ieee80211_tx_skb(sdata, skb, 0);
- }
- 
--static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
--{
--	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
--	    ieee80211_vif_is_mesh(&sdata->vif))
--		ieee80211_sta_timer((unsigned long)sdata);
--}
--
- void ieee80211_scan_completed(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-@@ -446,11 +439,6 @@ void ieee80211_scan_completed(struct iee
- 		if (ieee80211_hw_config(local))
- 			printk(KERN_DEBUG "%s: failed to restore operational "
- 			       "channel after scan\n", wiphy_name(local->hw.wiphy));
--		/* Restart STA timer for HW scan case */
--		rcu_read_lock();
--		list_for_each_entry_rcu(sdata, &local->interfaces, list)
--			ieee80211_restart_sta_timer(sdata);
--		rcu_read_unlock();
- 
- 		goto done;
- 	}
-@@ -483,8 +471,6 @@ void ieee80211_scan_completed(struct iee
- 			}
- 		} else
- 			netif_tx_wake_all_queues(sdata->dev);
--
--		ieee80211_restart_sta_timer(sdata);
- 	}
- 	rcu_read_unlock();
- 
+That's definitely other option we wanted to suggest that mac80211
+would register itself to rfkill subsystem and will provide to driver
+appropriate callbacks.  The question is how  drivers vary in the rfkil
+implementation and whether it wouldn't be more complex, in that case
+the notification is quite clean solution.
 
--- 
+> As mentioned in a discussion on the list a few days ago, SOFT_BLOCKED
+> is not for 'iwconfig txpower off' commands or any other commands coming
+> from userspace. Those are not HW triggered rfkill events.
 
+> That means that the only change needed in ieee80211_ioctl_siwtxpower() is
+> only allowing the enabling of the radio when RFKILL is not set to BLOCKED.
+
+That's just complicates everything and moving the policy  decisions to
+the driver after all even
+form txpower off you implement it as soft rfkill.
+
+I would suggest just remove the support for txpower off in mac80211
+now when appropriate or sync it with soft block after all it coming
+from user space as a software event.
+
+Tomas
