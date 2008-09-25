@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51954 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753699AbYIOPSh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 11:18:37 -0400
-Subject: Re: [RFC] mac80211: notify the user space about low signal quality
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, Helmut Schaa <hschaa@suse.de>
-In-Reply-To: <200809151710.43827.hs4233@mail.mn-solutions.de>
-References: <200809151416.07552.hschaa@suse.de>
-	 <200809151435.28933.hschaa@suse.de>
-	 <1221487652.10177.23.camel@localhost.localdomain>
-	 <200809151710.43827.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 15 Sep 2008 11:19:12 -0400
-Message-Id: <1221491952.10177.65.camel@localhost.localdomain> (sfid-20080915_171839_684795_B48E9A45)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.186]:30775 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752077AbYIYVBH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Sep 2008 17:01:07 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so258028nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 14:01:04 -0700 (PDT)
+Message-ID: <48DBFBF9.10809@gmail.com> (sfid-20080925_230111_886517_8DF10592)
+Date: Thu, 25 Sep 2008 22:00:41 +0100
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless: consolidate on a single escape_essid implementation
+References: <> <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-15 at 17:10 +0200, Holger Schurig wrote:
-> > So why does this need a new event?  Can't wpa_supplicant
-> > monitor the signal quality (or level/noise if the driver
-> > doesn't provide "quality") and do what it needs to do without
-> > any changes to the kernel at all?
-> 
-> It could, but to do this, wpa_supplicant (or whatever) would have 
-> to periodically get awake, send the query command to mac80211 
-> and get the result.
-> 
-> With an event, it just sits sleeping until some interesting event 
-> arrives. Nicer programming idiom, AFAIK.
+John W. Linville wrote:
+> This is also an excuse to create the long rumored lib80211 module...
 
-Except that everything that listens to WEXT events gets woken up every
-time an event comes in anyway.  So any card doing background scanning
-will wake up the supplicant too; I honestly think that every few seconds
-is OK here.  BTW, make sure you rate-limit the background scanning
-events from mac80211 in your patches to every few seconds (I picked 4
-for ipw2200) otherwise it floods events and wakes up everything all the
-time.
+> +++ b/net/wireless/lib80211.c
+> @@ -0,0 +1,58 @@
+> +/*
+> + * lib80211 -- common bits for IEEE802.11 drivers
+> + *
+> + * Copyright(c) 2008 John W. Linville <linville@tuxdriver.com>
+> + *
+> + */
+> +
+> +#include <linux/module.h>
+> +#include <linux/wireless.h>
 
-My main problem is that adding a beacon threshold to mac80211 isn't a
-great idea because it's not a standard value and it's not something
-really applicable to mac80211; it's policy which is different for
-different programs, and the way you've implemented it here it's global
-for the interface.
+Alternatively #include <linux/ieee80211.h>, and avoid the WE header/constants? Or would you expect WE helpers in this file as well?
 
-Dan
+> +const char *escape_essid(const char *essid, u8 essid_len)
+> +{
+> +	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+                           [IEEE80211_SSID_MAX_LEN * 2 + 1]
+
+> +	const char *s = essid;
+> +	char *d = escaped;
+> +
+> +	if (is_empty_essid(essid, essid_len)) {
+> +		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
+> +		return escaped;
+> +	}
+> +
+> +	essid_len = min(essid_len, (u8) IW_ESSID_MAX_SIZE);
+                                        IEEE80211_SSID_MAX_LEN
+
+Also, are we worried about drivers interrupting each other and getting the others SSID? In which case maybe something like print_mac:
+
+/* in lib80211.h */
+#define DECLARE_SSID_BUF(x) char x[IEEE80211_SSID_MAX_LEN * 2 + 1]
+
+const char *print_ssid(char *escaped, const char *ssid, u8 ssid_len);
 
 
+
+Regards,
+
+Dave.
