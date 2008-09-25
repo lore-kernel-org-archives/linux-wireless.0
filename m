@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56751 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477AbYIFW0o (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:47583 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753352AbYIYLup (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 18:26:44 -0400
-Subject: Re: [RFC PATCH 2/3] mac80211: disassociate when moving to new BSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1220739259-16918-3-git-send-email-tomas.winkler@intel.com>
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
-	 <1220739259-16918-3-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Lhlu3wNcIT9852Fajzka"
-Date: Sun, 07 Sep 2008 00:26:39 +0200
-Message-Id: <1220739999.21016.8.camel@johannes.berg> (sfid-20080907_002647_342175_44690DF4)
-Mime-Version: 1.0
+	Thu, 25 Sep 2008 07:50:45 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so276653fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 04:50:42 -0700 (PDT)
+Message-ID: <1ba2fa240809250450x319d21bbr4e0fb072e47c60db@mail.gmail.com> (sfid-20080925_135049_340812_07299804)
+Date: Thu, 25 Sep 2008 14:50:42 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] iwl3945: added channel sysfs entry
+Cc: "Zhu Yi" <yi.zhu@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
+In-Reply-To: <1222341663.10563.67.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
+	 <1222245882.18015.62.camel@johannes.berg>
+	 <1222328058.2510.470.camel@debian.sh.intel.com>
+	 <1222334592.10563.59.camel@johannes.berg>
+	 <1ba2fa240809250404i7e2404e7o3531ea1a889afb35@mail.gmail.com>
+	 <1222341663.10563.67.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>
+> Didn't see it on iwl3945, but I only looked for the function that the
+> sysfs code calls and didn't find any other callsite, might well be a
+> different way.
 
---=-Lhlu3wNcIT9852Fajzka
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Might be case for 3945 I'm less involved in that one.
 
-On Sun, 2008-09-07 at 01:14 +0300, Tomas Winkler wrote:
-> This patch cleans current association when leaving to new BSS. this is
-> needed as old configuration and data were still stored in station table
-> and in low level driver, causing problems (e.g. 11n mlme) in new BSS
->=20
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  net/mac80211/mlme.c |    9 +++++++--
->  1 files changed, 7 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index ba255e2..aa5367e 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -3414,9 +3414,14 @@ void ieee80211_sta_req_auth(struct ieee80211_sub_i=
-f_data *sdata,
->  		return;
-> =20
->  	if ((ifsta->flags & (IEEE80211_STA_BSSID_SET |
-> -				IEEE80211_STA_AUTO_BSSID_SEL)) &&
-> +			     IEEE80211_STA_AUTO_BSSID_SEL)) &&
->  	    (ifsta->flags & (IEEE80211_STA_SSID_SET |
-> -				IEEE80211_STA_AUTO_SSID_SEL))) {
-> +			     IEEE80211_STA_AUTO_SSID_SEL))) {
-> +
-> +		if (ifsta->state =3D=3D IEEE80211_STA_MLME_ASSOCIATED)
-> +			ieee80211_set_disassoc(sdata, ifsta, 1, 1,
-> +					       WLAN_REASON_DEAUTH_LEAVING);
-> +
->  		set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
->  		queue_work(local->hw.workqueue, &ifsta->work);
->  	}
 
-Looks sane to me
+>
+>> except log level
+>> which I want always visible and has proven to be most useful.
+>
+> Yeah, indeed, though it seems to be notably lacking printing out the
+> physical addresses and the ringbuffer entries. But that's just the thing
+> I was looking for yesterday when debugging the corruption issue.
 
-johannes
+I should have patches for that somewhere got lost somewhere in
+selective merging, will bring them forward.
 
---=-Lhlu3wNcIT9852Fajzka
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+>> > generic option to disable hardware crypto in _mac80211_ rather than each
+>> > driver because this is actually genuinely useful if you want to monitor
+>> > frames at the same time.
+>
+>> This is good point also disabling and enabling hw scan I would like to
+>> remove from module params.
+>
+> That would be doable via mac80211 too, though that is a much more debug
+> option than disabling hardware crypto, I see disabling hw crypto as much
+> more useful than disabling hw scan.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIwwOcAAoJEKVg1VMiehFYTu4P/inUIYfZTzbWu7qDnfgDd/4D
-XbDxDB8guVnjbBhEfHhO64BpdCDGhwSERPfyc1bM/iWoCL5CdsWcvyk8Zog+ZEVG
-9Y+QU52KVsxnZmk6EzBHjm4VCnGfWMLB0BwO+SjON/yvpSBKAR3bJxxbw7Ng/B/s
-D1lbsOxOQJ2u5Q8i0Kmvr94KH9Z8/yIgCsFk/Dgf8yzCrGpFAR7QjqUS62kpGZiz
-Q8W29qyzhRkxgEL/dhHtCjfd8Vz9dS3TwS0H73UagmVhSBS7KiPoqcuviQf1BnER
-4GQaCSXHXSrgRJHrkMYjG8qAG2c6D96wslOYIrL0cR1orV8DEnX69mD+Y07/mBvw
-XPLg9wSlj3qnSxgU12OkNGBQIHHWlhyOquyAV/BMUsaLdh6RSpB5ufGWAUA7ADKs
-3y92E5dXAvLXk6uWJkc+pynHd/kEdOv55dEscGOexeMRtxzXzhGMsyVbebnOZ+qn
-QA4qvFAZTO6ef3D1/1sBRHp4LwKSGjrtZrcQCdGrarmhBPwFeCVlqLB5LPkap3ke
-fnK1/R3Hz0nwlvqa1liwkJKKTTrOW3Zee1CIKBwXiaPdJuqpp7Yk5ivRqop2jhAU
-XpnQDpVKW6Gtch2OGwfl4zpF7Qoj7TAFmnCQMN+8VBWqDcosZHjdYBXUoC1Rv4wl
-DgYZ+MwjTbvX43nalCSm
-=G0gF
------END PGP SIGNATURE-----
-
---=-Lhlu3wNcIT9852Fajzka--
-
+I would probably remove the option of disabling hw scan at all, think
+it's stable enough.
+Tomas
