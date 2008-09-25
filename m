@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:47220 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752721AbYIVPbj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 11:31:39 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1400628fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 08:31:37 -0700 (PDT)
-Message-ID: <1ba2fa240809220831q46cea34cq13d73d7a98f876b5@mail.gmail.com> (sfid-20080922_173143_383202_D86D0CB6)
-Date: Mon, 22 Sep 2008 18:31:37 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: fix led behavior in IBSS
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1222096710.3023.85.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1222092610-25374-1-git-send-email-tomas.winkler@intel.com>
-	 <1222095543.3023.83.camel@johannes.berg>
-	 <1ba2fa240809220812v2d91bb18k4b78072fffd85e2c@mail.gmail.com>
-	 <1222096710.3023.85.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:37253 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752658AbYIYQtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Sep 2008 12:49:10 -0400
+Subject: Re: [PATCH] wireless: consolidate on a single escape_essid
+	implementation
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1222318157.10563.22.camel@johannes.berg>
+References: <>  <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
+	 (sfid-20080925_010455_582253_D66BE03B)  <1222317983.10563.20.camel@johannes.berg>
+	 (sfid-20080925_064714_797821_C549800C)  <1222318157.10563.22.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 25 Sep 2008 12:47:59 -0400
+Message-Id: <1222361279.14444.6.camel@localhost.localdomain> (sfid-20080925_184916_946462_496EB8A9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2008 at 6:18 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-09-22 at 18:12 +0300, Tomas Winkler wrote:
->> On Mon, Sep 22, 2008 at 5:59 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Mon, 2008-09-22 at 17:10 +0300, Tomas Winkler wrote:
->> >> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> >>
->> >> This patch fixes the led behavior in IBSS. After we joined an IBSS cell we
->> >> need to inform the led that we got associated. Although there is no 802.11
->> >> association in IBSS mode, the semantic of "There is a link" is relevant.
->> >> This allows the led to blink in IBSS mode (at least this solves a bug for
->> >> iwlwifi).
->> >
->> > Doesn't it also have to be turned off again at some point? Or is that
->> > done? Other than that looks fine to me.
->>
->> I've asked my self the same question  the answer is not clear. We
->> switch the led off on close/ifdown by radio led trigger.
->> Note in IBSS is always connected, carrier is always on if I'm not mistaken.
->
-> I think you can configure it off though, by setting the "essid" (oh how
-> I hate that) to "off" or something?
+On Thu, 2008-09-25 at 06:49 +0200, Johannes Berg wrote:
+> On Thu, 2008-09-25 at 06:46 +0200, Johannes Berg wrote:
+> 
+> > > +	essid_len = min(essid_len, (u8) IW_ESSID_MAX_SIZE);
+> > > +	while (essid_len--) {
+> > > +		if (*s == '\0') {
+> > > +			*d++ = '\\';
+> > > +			*d++ = '0';
+> > > +			s++;
+> > > +		} else {
+> > > +			*d++ = *s++;
+> > > +		}
+> > > +	}
+> > > +	*d = '\0';
+> > > +	return escaped;
+> > > +}
+> > > +EXPORT_SYMBOL(escape_essid);
+> 
+> Also, it seems like this should escape any non-printable characters, not
+> just NUL?
 
-Let see if we hit real world scenario, this patch fixes bug opened for
-long time.
+Yes, it should escape any _non-ASCII_ characters.
 
- Not sure, and we can always fix it
-> when we see the problem, I don't really care much about the LEDs, I
-> don't have any.
+Dan
 
-Can send you few, just pick a color :)
-Tomas
+
