@@ -1,118 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50764 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:36399 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751836AbYILNXa (ORCPT
+	with ESMTP id S1752986AbYIYM22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 09:23:30 -0400
-Subject: [PATCH] mac80211: remove debug frame dumping
+	Thu, 25 Sep 2008 08:28:28 -0400
+Subject: Re: pull request: wireless-2.6 2008-09-24
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 12 Sep 2008 15:22:53 +0200
-Message-Id: <1221225773.11204.47.camel@johannes.berg> (sfid-20080912_152334_008849_955E2615)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <20080925114133.GA5044@tuxdriver.com> (sfid-20080925_134212_618549_FDAECEF8)
+References: <20080924231720.GD3639@tuxdriver.com>
+	 <1222321622.2510.455.camel@debian.sh.intel.com>
+	 <20080925114133.GA5044@tuxdriver.com>
+	 (sfid-20080925_134212_618549_FDAECEF8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7h1p5FZDt26W575v1jGm"
+Date: Thu, 25 Sep 2008 14:27:45 +0200
+Message-Id: <1222345665.10563.75.camel@johannes.berg> (sfid-20080925_142838_109849_2D232AA8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You can just pull up a monitor interface to get much more
-detailed information, or, when debugging a driver, insert
-dump code into the driver (which usually you will have to
-do anyway to dump the driver-specific information). Hence
-this option is useless.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/Kconfig |   13 -------------
- net/mac80211/tx.c    |   42 ------------------------------------------
- 2 files changed, 55 deletions(-)
+--=-7h1p5FZDt26W575v1jGm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/net/mac80211/Kconfig	2008-09-12 15:20:09.000000000 +0200
-+++ everything/net/mac80211/Kconfig	2008-09-12 15:20:15.000000000 +0200
-@@ -179,19 +179,6 @@ config MAC80211_VERBOSE_MPL_DEBUG
- 
- 	  Do not select this option.
- 
--config MAC80211_LOWTX_FRAME_DUMP
--	bool "Debug frame dumping"
--	depends on MAC80211_DEBUG_MENU
--	---help---
--	  Selecting this option will cause the stack to
--	  print a message for each frame that is handed
--	  to the lowlevel driver for transmission. This
--	  message includes all MAC addresses and the
--	  frame control field.
--
--	  If unsure, say N and insert the debugging code
--	  you require into the driver you are debugging.
--
- config MAC80211_DEBUG_COUNTERS
- 	bool "Extra statistics for TX/RX debugging"
- 	depends on MAC80211_DEBUG_MENU
---- everything.orig/net/mac80211/tx.c	2008-09-12 15:20:18.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-09-12 15:20:37.000000000 +0200
-@@ -38,43 +38,6 @@
- 
- /* misc utils */
- 
--#ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
--static void ieee80211_dump_frame(const char *ifname, const char *title,
--				 const struct sk_buff *skb)
--{
--	const struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	unsigned int hdrlen;
--	DECLARE_MAC_BUF(mac);
--
--	printk(KERN_DEBUG "%s: %s (len=%d)", ifname, title, skb->len);
--	if (skb->len < 4) {
--		printk("\n");
--		return;
--	}
--
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
--	if (hdrlen > skb->len)
--		hdrlen = skb->len;
--	if (hdrlen >= 4)
--		printk(" FC=0x%04x DUR=0x%04x",
--		    le16_to_cpu(hdr->frame_control), le16_to_cpu(hdr->duration_id));
--	if (hdrlen >= 10)
--		printk(" A1=%s", print_mac(mac, hdr->addr1));
--	if (hdrlen >= 16)
--		printk(" A2=%s", print_mac(mac, hdr->addr2));
--	if (hdrlen >= 24)
--		printk(" A3=%s", print_mac(mac, hdr->addr3));
--	if (hdrlen >= 30)
--		printk(" A4=%s", print_mac(mac, hdr->addr4));
--	printk("\n");
--}
--#else /* CONFIG_MAC80211_LOWTX_FRAME_DUMP */
--static inline void ieee80211_dump_frame(const char *ifname, const char *title,
--					struct sk_buff *skb)
--{
--}
--#endif /* CONFIG_MAC80211_LOWTX_FRAME_DUMP */
--
- static __le16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
- 				 int next_frag_len)
- {
-@@ -1069,8 +1032,6 @@ static int __ieee80211_tx(struct ieee802
- 			return IEEE80211_TX_AGAIN;
- 		info =  IEEE80211_SKB_CB(skb);
- 
--		ieee80211_dump_frame(wiphy_name(local->hw.wiphy),
--				     "TX to low-level driver", skb);
- 		ret = local->ops->tx(local_to_hw(local), skb);
- 		if (ret)
- 			return IEEE80211_TX_AGAIN;
-@@ -1100,9 +1061,6 @@ static int __ieee80211_tx(struct ieee802
- 						~IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 			}
- 
--			ieee80211_dump_frame(wiphy_name(local->hw.wiphy),
--					     "TX to low-level driver",
--					     tx->extra_frag[i]);
- 			ret = local->ops->tx(local_to_hw(local),
- 					    tx->extra_frag[i]);
- 			if (ret)
+On Thu, 2008-09-25 at 07:41 -0400, John W. Linville wrote:
 
+> > http://marc.info/?l=3Dlinux-wireless&m=3D122219037706528&w=3D2
+>=20
+> Is there an open bug report for that anywhere?  Is this something
+> that real users (no offense to Johannes) are likely to hit?
+
+Actually, I now think that we don't want the patch. It appears that when
+this situation happens, the hardware has scribbled over memory elsewhere
+(most likely because of wrong DMA programming) and in that case I
+suppose we'd rather fail than corrupt disk buffers et. al.
+
+johannes
+
+--=-7h1p5FZDt26W575v1jGm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI24O9AAoJEKVg1VMiehFYm28P/16DzAPudMZvGFyLzmSXGWk7
+TCihtPBvGHC/2st4jLP2CycXy35zkJ+zyuoWuAdriWGS9YSlY3oOkKh/dTXmNMe1
+f2RNIpWjd+5uPld3fasVWdlorABwtGs4aZPqyeM/XswxfY3GraA+oR8ztELgt1Rr
+se4Uet9Zx3ljfj+n0pXZgZN0jbQHz344z4czJWc7B7mC/ArvTxma9Y/vAfq2Ve0w
+B+cEYsFQzGwYTKB800bS5yiAWYf9CZlOMlI4OhrUAmzNZzDMaM/w7+dh3xGzBGnw
+tP5bOWENr6gff+hc8CzX/nele1pGLHtfdvIfcDWYhrMfwfdARpmGpqdzO2J4FDo8
+JQEiJr6JyOEiPxNQUEQvCYzmwO3OsIIVzoftXNerPn/B6UcmxDrcaVGjSXdd+hvn
+6bVob2+BWNEIKEVBcCVfdgsUZXRMPi+dW0G1x5eVgbPtk5+HkSG1OyDk+5WaZbYc
+6SvvDhk2A8W617903lDicr8WQc3aJhrYFB572coVkAMRtAADYQQIbVmXQmMBFgWX
+Vk/KxFw3R0webXfJ6WEEbWiCNuzSexX/JMpmas68QArQ9jKYc+4D4Zaw5ao0L6aH
+W7agBxka4dLokvXWy/Y1tP2g3Oj/H2irOe7vhwVUDOjPLVTxHtCeo4oi8lANgjiz
+/6KV+NJNEUOLB9dhRuxm
+=OxFX
+-----END PGP SIGNATURE-----
+
+--=-7h1p5FZDt26W575v1jGm--
 
