@@ -1,64 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:59042 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753194AbYIGMJH (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:44576 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750938AbYIYRpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2008 08:09:07 -0400
-Date: Sun, 7 Sep 2008 09:09:01 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] Ath9k: Add RF kill support.
-Message-ID: <20080907120901.GB15895@khazad-dum.debian.net> (sfid-20080907_140915_038548_824AC6DE)
-References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com>
+	Thu, 25 Sep 2008 13:45:03 -0400
+Received: by gxk9 with SMTP id 9so7360161gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 10:45:01 -0700 (PDT)
+Message-ID: <eb3ff54b0809251045m47949af5u6a1615f0d42d37a2@mail.gmail.com> (sfid-20080925_194509_651445_FA2C07D2)
+Date: Thu, 25 Sep 2008 20:45:01 +0300
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH] mac80211: remove wme_tx_queue and wme_rx_queue from net/mac80211/sta_info.h
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080906123842.GA27504@vasanth-lnx.users.atheros.com>
+Content-Type: multipart/mixed;
+	boundary="----=_Part_85930_26144388.1222364701455"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 06 Sep 2008, Vasanthakumar Thiagarajan wrote:
-> +/* Init s/w rfkill */
-> +static void ath_init_sw_rfkill(struct ath_softc *sc)
-> +{
-> +	sc->rf_kill.rfkill = rfkill_allocate(wiphy_dev(sc->hw->wiphy),
-> +					     RFKILL_TYPE_WLAN);
-> +	if (!sc->rf_kill.rfkill) {
-> +		DPRINTF(sc, ATH_DBG_FATAL, "Failed to allocate rfkill\n");
-> +		return;
-> +	}
-> +
-> +	snprintf(sc->rf_kill.rfkill_name, sizeof(sc->rf_kill.rfkill_name),
-> +		"ath9k-%s:rfkill", wiphy_name(sc->hw->wiphy));
-> +	sc->rf_kill.rfkill->name = sc->rf_kill.rfkill_name;
-> +	sc->rf_kill.rfkill->data = sc;
-> +	sc->rf_kill.rfkill->toggle_radio = ath_sw_toggle_radio;
-> +	sc->rf_kill.rfkill->state = RFKILL_STATE_UNBLOCKED;
-> +	sc->rf_kill.rfkill->user_claim_unsupported = 1;
-> +
-> +	sc->sc_flags |= SC_OP_RFKILL_ALLOCATED;
-> +}
+------=_Part_85930_26144388.1222364701455
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-IMO, if a driver has added rfkill support, and it is enabled, that driver
-must refuse to load if it cannot register with the rfkill subsystem (that
-only happens due to bugs or OOM conditions, anyway).
+Hi,
+  This patch removes wme_tx_queue and wme_rx_queue from net/mac80211/sta_info.h
+  as they are not used. (These variable names in fact a double declaration; one
+  is a pointer to dentry struct (for DEBUGFS) and the second is an
+array of ints
+ (for Extra statistics for TX/RX debugging - when setting
+ CONFIG_MAC80211_DEBUG_COUNTERS); both are not used.
 
-Once you support rfkill in a piece of hardware and that support starts being
-used, the configurations using your driver might start to depend on rfkill
-being operational to be safe to operate in may user cases.
+	
+Regards,
+Rami Rosen
+	
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-So, please consider shutting down the radio and aborting the driver load if
-you cannot properly register rfkill support in ath9k.
+------=_Part_85930_26144388.1222364701455
+Content-Type: text/plain; name=patch.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fljo8jbk0
+Content-Disposition: attachment; filename=patch.txt
 
-Also, remember that you may get issued an immediate call to toggle_radio
-trying to disable (since you default to enabled at power up -- can't you do
-the inverse when rfkill support is compiled in? it is much safer) the radio
-before rfkill_register() returns.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9zdGFfaW5mby5oIGIvbmV0L21hYzgwMjExL3N0YV9p
+bmZvLmgKaW5kZXggMTA5ZGI3OC4uODFjMzM2OCAxMDA2NDQKLS0tIGEvbmV0L21hYzgwMjExL3N0
+YV9pbmZvLmgKKysrIGIvbmV0L21hYzgwMjExL3N0YV9pbmZvLmgKQEAgLTE5MSw3ICsxOTEsNiBA
+QCBzdHJ1Y3Qgc3RhX2FtcGR1X21sbWUgewogICogQGxhc3RfcXVhbDogcXVhbCBvZiBsYXN0IHJl
+Y2VpdmVkIGZyYW1lIGZyb20gdGhpcyBTVEEKICAqIEBsYXN0X25vaXNlOiBub2lzZSBvZiBsYXN0
+IHJlY2VpdmVkIGZyYW1lIGZyb20gdGhpcyBTVEEKICAqIEBsYXN0X3NlcV9jdHJsOiBsYXN0IHJl
+Y2VpdmVkIHNlcS9mcmFnIG51bWJlciBmcm9tIHRoaXMgU1RBIChwZXIgUlggcXVldWUpCi0gKiBA
+d21lX3J4X3F1ZXVlOiBUQkQKICAqIEB0eF9maWx0ZXJlZF9jb3VudDogVEJECiAgKiBAdHhfcmV0
+cnlfZmFpbGVkOiBUQkQKICAqIEB0eF9yZXRyeV9jb3VudDogVEJECkBAIC0yMDQsNyArMjAzLDYg
+QEAgc3RydWN0IHN0YV9hbXBkdV9tbG1lIHsKICAqIEB0eF9mcmFnbWVudHM6IG51bWJlciBvZiB0
+cmFuc21pdHRlZCBNUERVcwogICogQHR4cmF0ZV9pZHg6IFRCRAogICogQGxhc3RfdHhyYXRlX2lk
+eDogVEJECi0gKiBAd21lX3R4X3F1ZXVlOiBUQkQKICAqIEBhbXBkdV9tbG1lOiBUQkQKICAqIEB0
+aW1lcl90b190aWQ6IGlkZW50aXR5IG1hcHBpbmcgdG8gSUQgdGltZXJzCiAgKiBAdGlkX3RvX3R4
+X3E6IG1hcCB0aWQgdG8gdHggcXVldWUKQEAgLTI2NSw5ICsyNjMsNiBAQCBzdHJ1Y3Qgc3RhX2lu
+Zm8gewogCWludCBsYXN0X3F1YWw7CiAJaW50IGxhc3Rfbm9pc2U7CiAJX19sZTE2IGxhc3Rfc2Vx
+X2N0cmxbTlVNX1JYX0RBVEFfUVVFVUVTXTsKLSNpZmRlZiBDT05GSUdfTUFDODAyMTFfREVCVUdf
+Q09VTlRFUlMKLQl1bnNpZ25lZCBpbnQgd21lX3J4X3F1ZXVlW05VTV9SWF9EQVRBX1FVRVVFU107
+Ci0jZW5kaWYKIAogCS8qIFVwZGF0ZWQgZnJvbSBUWCBzdGF0dXMgcGF0aCBvbmx5LCBubyBsb2Nr
+aW5nIHJlcXVpcmVtZW50cyAqLwogCXVuc2lnbmVkIGxvbmcgdHhfZmlsdGVyZWRfY291bnQ7CkBA
+IC0yODYsOSArMjgxLDYgQEAgc3RydWN0IHN0YV9pbmZvIHsKIAlpbnQgdHhyYXRlX2lkeDsKIAlp
+bnQgbGFzdF90eHJhdGVfaWR4OwogCXUxNiB0aWRfc2VxW0lFRUU4MDIxMV9RT1NfQ1RMX1RJRF9N
+QVNLICsgMV07Ci0jaWZkZWYgQ09ORklHX01BQzgwMjExX0RFQlVHX0NPVU5URVJTCi0JdW5zaWdu
+ZWQgaW50IHdtZV90eF9xdWV1ZVtOVU1fUlhfREFUQV9RVUVVRVNdOwotI2VuZGlmCiAKIAkvKgog
+CSAqIEFnZ3JlZ2F0aW9uIGluZm9ybWF0aW9uLCBsb2NrZWQgd2l0aCBsb2NrLgpAQCAtMzE5LDEw
+ICszMTEsNiBAQCBzdHJ1Y3Qgc3RhX2luZm8gewogCQlzdHJ1Y3QgZGVudHJ5ICpudW1fcHNfYnVm
+X2ZyYW1lczsKIAkJc3RydWN0IGRlbnRyeSAqaW5hY3RpdmVfbXM7CiAJCXN0cnVjdCBkZW50cnkg
+Kmxhc3Rfc2VxX2N0cmw7Ci0jaWZkZWYgQ09ORklHX01BQzgwMjExX0RFQlVHX0NPVU5URVJTCi0J
+CXN0cnVjdCBkZW50cnkgKndtZV9yeF9xdWV1ZTsKLQkJc3RydWN0IGRlbnRyeSAqd21lX3R4X3F1
+ZXVlOwotI2VuZGlmCiAJCXN0cnVjdCBkZW50cnkgKmFnZ19zdGF0dXM7CiAJfSBkZWJ1Z2ZzOwog
+I2VuZGlmCg==
+------=_Part_85930_26144388.1222364701455--
