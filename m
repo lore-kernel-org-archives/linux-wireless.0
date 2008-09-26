@@ -1,30 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47885
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753221AbYIVWrP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 18:47:15 -0400
-Date: Mon, 22 Sep 2008 15:47:02 -0700 (PDT)
-Message-Id: <20080922.154702.251968919.davem@davemloft.net> (sfid-20080923_004719_659406_4B5045BF)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-09-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080922220619.GD3660@tuxdriver.com>
-References: <20080922220619.GD3660@tuxdriver.com>
+Received: from mga02.intel.com ([134.134.136.20]:65268 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752542AbYIZDyq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Sep 2008 23:54:46 -0400
+Subject: Re: [PATCH] iwl3945: added channel sysfs entry
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
+In-Reply-To: <1222334592.10563.59.camel@johannes.berg>
+References: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
+	 (sfid-20080924_080231_170139_3D180880) <1222245882.18015.62.camel@johannes.berg>
+	 <1222328058.2510.470.camel@debian.sh.intel.com>
+	 <1222334592.10563.59.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 26 Sep 2008 11:54:02 +0800
+Message-Id: <1222401242.2510.519.camel@debian.sh.intel.com> (sfid-20080926_055459_970890_6D0B66C8)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 22 Sep 2008 18:06:19 -0400
+On Thu, 2008-09-25 at 03:23 -0600, Johannes Berg wrote:
+> Not that I understand why you need that since iw shows all channels
+> you
+> are registering (albeit with possibly a few more flags like
+> "disabled"),
+> but yeah, if anything all this stuff should be in debugfs.
 
-> Here are a few more for 2.6.27.  The ath9k patches fix an oops and a
-> kernel.org bugzilla (11570).  The zd1211rw patch is just a PCI ID --
-> hopefully that is not still outside the lines even at this stage.
-> 
-> Please let me know if there are problems!
+The real user for the function is the automated test cases of our
+validation team running nightly. Greppig dmesg is not reliable and iw is
+not mature enough (at least not included in major distros). We will move
+it to debugfs for now. After iw is as common as iwconfig, we will
+eventually remove this.
 
-Looks good, pulled, thanks a lot John.
+> There's also
+> this little fact that this channel list shouldn't ever get used, you
+> should be (and afaik are since I fixed it) using what the regdomain is
+> enforcing, and you're already printing the channel list when enough
+> debugging flags are set on driver load.
+
+This is used for debugging especially during the time regdomain is under
+development. I've received quite a few bug reports that is due to
+CONFIG_WIRELESS_OLD_REGULATORY is not enabled. I need at least a way to
+tell the users this is due to your misconfig your regdomain or your
+hardware is not capable to work on that channel.
+
+Thanks,
+-yi
+
