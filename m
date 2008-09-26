@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60885 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755270AbYIQLIF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 07:08:05 -0400
-Subject: Re: iw packaging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "\"Adam" =?ISO-8859-1?Q?C=E9cile?= "(Le_Vert)\""
-	<gandalf@le-vert.net>
-Cc: Jochen Friedrich <jochen@scram.de>, linux-wireless@vger.kernel.org,
-	499246-quiet@bugs.debian.org
-In-Reply-To: <48D0E463.70008@le-vert.net>
-References: <1221596962.9262.12.camel@johannes.berg>
-	 <48D0DEF0.2060407@scram.de> <1221648205.9262.48.camel@johannes.berg>
-	 <48D0E463.70008@le-vert.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nWa5Nh1xy/AlzEMkCLlC"
-Date: Wed, 17 Sep 2008 13:07:18 +0200
-Message-Id: <1221649638.9262.50.camel@johannes.berg> (sfid-20080917_130814_835082_60E0A149)
+Received: from mga11.intel.com ([192.55.52.93]:12207 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751719AbYIZF2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 01:28:48 -0400
+Subject: Re: [PATCH] iwl3945: added channel sysfs entry
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <43e72e890809252113h624a8d91jd859935ae5afed10@mail.gmail.com>
+References: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
+	 <1222245882.18015.62.camel@johannes.berg>
+	 <1222328058.2510.470.camel@debian.sh.intel.com>
+	 <1222334592.10563.59.camel@johannes.berg>
+	 <1222401242.2510.519.camel@debian.sh.intel.com>
+	 <43e72e890809252113h624a8d91jd859935ae5afed10@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 26 Sep 2008 13:28:04 +0800
+Message-Id: <1222406884.2510.534.camel@debian.sh.intel.com> (sfid-20080926_072852_683588_EA7F9E41)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2008-09-25 at 21:13 -0700, Luis R. Rodriguez wrote:
+> CONFIG_WIRELESS_OLD_REGULATORY is a temporary solution, the right
+> solution for you is to build the regulatory domain with the provided
+> API as discussed at OLS. Additionally distributions can start picking
+> up iw and crda. I can also see NetworkManager asking the kernel to set
+> the regulatory domain just as with iw, based on the user's defined
+> country somewhere.
 
---=-nWa5Nh1xy/AlzEMkCLlC
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+You brought it up. And I also want to discuss it. We do want to support
+it. But the 3945/4965/5000 hardwares doesn't have the alpha2 information
+in their EEPROMs (btw, 2100/2200 does support that). Instead, they have
+a band/channel table including freq, tx power, etc in the EEPROM. So a
+simple regulatory_hint() API doesn't work. We need a way to export the
+channel details to CRDA.
 
-On Wed, 2008-09-17 at 13:05 +0200, "Adam C=C3=A9cile (Le_Vert)" wrote:
-> Hello Johannes,
->=20
-> I'm aware of this issue. It has been done to have a fully working=20
-> aircrack-ng for lenny release.
-> I'll package iw seperatly once lenny has been released.
-
-Cool, thanks. Note that I think that one of the small command syntax
-changes I made might be breaking aircrack-ng, not sure how to handle
-that. They should've just used nl80211 directly if you ask me.
-
-johannes
-
---=-nWa5Nh1xy/AlzEMkCLlC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0OTiAAoJEKVg1VMiehFY3vYP/2sSgKTzoogLCp0rOJFtNk3d
-8Xm/1eUK4rYwY3yghDhPX9bUWMSv4ZESA+fsXTdO7pB9HK7SNtNDgXDshtOAj4pC
-yZEsdlMTTSYPbn0U0R8SeDQkAaj/+bDUln5DRaHmLbQM/cvEDnfoyPsNuugOuZ/A
-N9gITHXeX1Bogg9EwYkrK4OQCsNcpq9py9XCw1DF2Z2BdV9wZ0+WLRvDhFWXVAht
-MbrpPyGQ/+xzCxVphCb6d6szlro88VLyJ8BYww4DA7Gnhr/tJyWpNTZSgR2ClZW+
-/F4FoXTFzzYPBq94fBAg9rs4ZIr2TFI3fAPe5BdPdWF9dkkJF+Kjk1MoceNWb1k+
-ir/Pzw+hrpkDCVyvgIWe5LRlbG6g9gmz+6l5nD8uFUTCSUUY1JDaH78RwFUQX0wq
-0gEn7xJ8JJRURffTIciaZ6oOPFrdbqYGbfdNmSd9vxfzXl2tCYuupE7QMM22FG2+
-TdDeiyIYxynrooVU3H+ybBXGI/tYLKOgaUk4+Ji0Eh/BHSxzX5vYjhKgqGGZYBP6
-yfw7KUqdcCwGp3dsYa3NV6WaRKM9L6LJ1MVfBA+NBLQyKlFw4CEzlr6udqmplh4x
-HCfDAOWwVucXL0zu340SMGi+Y995hG4yvh5Aa8+yd9cJRkaXH9udV0ZhL5MmhlkX
-hYWWW3VcKU9kneMjFGhq
-=XQHu
------END PGP SIGNATURE-----
-
---=-nWa5Nh1xy/AlzEMkCLlC--
+Thanks,
+-yi
 
