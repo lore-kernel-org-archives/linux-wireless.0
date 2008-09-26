@@ -1,173 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44410 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753342AbYIVWGt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40921 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752624AbYIZTaW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 18:06:49 -0400
-Date: Mon, 22 Sep 2008 18:06:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2008-09-22
-Message-ID: <20080922220619.GD3660@tuxdriver.com> (sfid-20080923_000654_336850_58053BF3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 26 Sep 2008 15:30:22 -0400
+Subject: Re: wireless-testing modpost failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Davide Pesavento <davidepesa@gmail.com>,
+	linux-wireless@vger.kernel.org, YanBo <dreamfly281@gmail.com>
+In-Reply-To: <20080926190007.GD3483@tuxdriver.com>
+References: <2da21fe50809261104m3b7d99e3g8b56416b8182ca45@mail.gmail.com>
+	 <20080926190007.GD3483@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cuBd8jiwTPxNlK17Ec4J"
+Date: Fri, 26 Sep 2008 21:30:16 +0200
+Message-Id: <1222457416.3798.25.camel@johannes.berg> (sfid-20080926_213025_707792_18A6FFB3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
 
-Here are a few more for 2.6.27.  The ath9k patches fix an oops and a
-kernel.org bugzilla (11570).  The zd1211rw patch is just a PCI ID --
-hopefully that is not still outside the lines even at this stage.
+--=-cuBd8jiwTPxNlK17Ec4J
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Please let me know if there are problems!
+On Fri, 2008-09-26 at 15:00 -0400, John W. Linville wrote:
 
-Thanks,
+> >   Building modules, stage 2.
+> >   MODPOST 216 modules
+> > ERROR: "mpp_path_lookup" [net/mac80211/mac80211.ko] undefined!
+> > ERROR: "mpp_path_add" [net/mac80211/mac80211.ko] undefined!
 
-John
+Davide, can you tell me what file/line it fails in?
 
-P.S.  This will create a merge conflict in -next.  I have done a sample
-resolve of the merge here:
+> I'm not sure what the best long-term solution is.  Should we define
+> empty versions of those functions when that config option is unset?
+> Or just make the whole block subject to that config option?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git merge-test
+The weird thing is that the block in tx.c is already ifdef'ed out and
+the block in rx.c should be optimised out entirely.
 
----
+johannes
 
-Individual patches are available here:
+--=-cuBd8jiwTPxNlK17Ec4J
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
----
+iQIcBAABAgAGBQJI3ThDAAoJEKVg1VMiehFY3zEP/1DA1hRbG4+AfWdlrdp0THrn
+6hyzSE46CmPmE4K/41asXYAmGk/47DM4V0kdqR+8gS4Lu5noHqVu/rNRL/zjpcb0
+1hmnnKWouK7Mek/jkDUwj7n216Et6C4qzj52sLU1pSTlbkuFVvP2PVChUBlA+pzq
+Qv13mvTBBC4wPG9cuVc4pefARcyUjURXYMvlD3r3UKzS4xxqBpiekhACa6OD3AOM
+m9Emm1ekQfhb9/6VGMkySvwHQlA94n20D6UtD6m/Esh/OE39o9gBWvQTZ/Qyjtdy
+EwxasBYC0HWMnaQfH7KRvRRg8H7HdyGc9H2w/p7lj3lUSvXhMjUpzPTgbh0Cd5e2
+ZXBlGHQX8FETBHEvJWxKRbq/1ftoL1KmRdYwVh1qZlsxOtmoJfPCeDP+NHgGd7yX
+E/cqZKXaGJgw8XNzsDyrH2SL0SIT/lbuDamQoTHrCtJdPScY65ggZbK/hNp11fWg
+OoG4SWdHtPpCvR9GrIJ0WGyeMIyI5kpEDoYqZD15cYYzQL7fWgE7Vy80Lx/k+sP6
+wQuj1rTGuyJ1ndrzGkW2+INpf22y4rVmbscq3KTbXzKIofI9Vh8z65CamJKYieVn
+nMEmFcVZBNQFhHzcDav/j3tcWmuJxN2ZU3IbSjY9C35wHxUSQKDDzWWwOAbemTib
+/YdIGGJ/w3f0xsHxN6CK
+=1++v
+-----END PGP SIGNATURE-----
 
-The following changes since commit ad55dcaff0e34269f86975ce2ea0da22e9eb74a1:
-  Alexander Duyck (1):
-        netdev: simple_tx_hash shouldn't hash inside fragments
+--=-cuBd8jiwTPxNlK17Ec4J--
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Senthil Balasubramanian (2):
-      ath9k: connectivity is lost after Group rekeying is done
-      ath9k: Fix IRQ nobody cared issue with ath9k
-
-born.into.silence@gmail.com (1):
-      wireless: zd1211rw: add device ID fix wifi dongle "trust nw-3100"
-
- drivers/net/wireless/ath9k/core.c      |    4 ++--
- drivers/net/wireless/ath9k/core.h      |    1 -
- drivers/net/wireless/ath9k/main.c      |   12 ++++++++----
- drivers/net/wireless/ath9k/xmit.c      |    6 +++---
- drivers/net/wireless/zd1211rw/zd_usb.c |    1 +
- 5 files changed, 14 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
-index f6c4528..c049593 100644
---- a/drivers/net/wireless/ath9k/core.c
-+++ b/drivers/net/wireless/ath9k/core.c
-@@ -294,8 +294,6 @@ static int ath_stop(struct ath_softc *sc)
- 	 * hardware is gone (invalid).
- 	 */
- 
--	if (!sc->sc_invalid)
--		ath9k_hw_set_interrupts(ah, 0);
- 	ath_draintxq(sc, false);
- 	if (!sc->sc_invalid) {
- 		ath_stoprecv(sc);
-@@ -1336,6 +1334,8 @@ void ath_deinit(struct ath_softc *sc)
- 
- 	DPRINTF(sc, ATH_DBG_CONFIG, "%s\n", __func__);
- 
-+	tasklet_kill(&sc->intr_tq);
-+	tasklet_kill(&sc->bcon_tasklet);
- 	ath_stop(sc);
- 	if (!sc->sc_invalid)
- 		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 4ee695b..2f84093 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -974,7 +974,6 @@ struct ath_softc {
- 	u32 sc_keymax;		/* size of key cache */
- 	DECLARE_BITMAP(sc_keymap, ATH_KEYMAX);	/* key use bit map */
- 	u8 sc_splitmic;		/* split TKIP MIC keys */
--	int sc_keytype;
- 
- 	/* RX */
- 	struct list_head sc_rxbuf;
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 99badf1..acebdf1 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -206,8 +206,6 @@ static int ath_key_config(struct ath_softc *sc,
- 	if (!ret)
- 		return -EIO;
- 
--	if (mac)
--		sc->sc_keytype = hk.kv_type;
- 	return 0;
- }
- 
-@@ -778,7 +776,6 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 	case DISABLE_KEY:
- 		ath_key_delete(sc, key);
- 		clear_bit(key->keyidx, sc->sc_keymap);
--		sc->sc_keytype = ATH9K_CIPHER_CLR;
- 		break;
- 	default:
- 		ret = -EINVAL;
-@@ -1414,10 +1411,17 @@ static void ath_pci_remove(struct pci_dev *pdev)
- {
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath_softc *sc = hw->priv;
-+	enum ath9k_int status;
- 
--	if (pdev->irq)
-+	if (pdev->irq) {
-+		ath9k_hw_set_interrupts(sc->sc_ah, 0);
-+		/* clear the ISR */
-+		ath9k_hw_getisr(sc->sc_ah, &status);
-+		sc->sc_invalid = 1;
- 		free_irq(pdev->irq, sc);
-+	}
- 	ath_detach(sc);
-+
- 	pci_iounmap(pdev, sc->mem);
- 	pci_release_region(pdev, 0);
- 	pci_disable_device(pdev);
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 550129f..8b332e1 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -315,11 +315,11 @@ static int ath_tx_prepare(struct ath_softc *sc,
- 		txctl->keyix = tx_info->control.hw_key->hw_key_idx;
- 		txctl->frmlen += tx_info->control.icv_len;
- 
--		if (sc->sc_keytype == ATH9K_CIPHER_WEP)
-+		if (tx_info->control.hw_key->alg == ALG_WEP)
- 			txctl->keytype = ATH9K_KEY_TYPE_WEP;
--		else if (sc->sc_keytype == ATH9K_CIPHER_TKIP)
-+		else if (tx_info->control.hw_key->alg == ALG_TKIP)
- 			txctl->keytype = ATH9K_KEY_TYPE_TKIP;
--		else if (sc->sc_keytype == ATH9K_CIPHER_AES_CCM)
-+		else if (tx_info->control.hw_key->alg == ALG_CCMP)
- 			txctl->keytype = ATH9K_KEY_TYPE_AES;
- 	}
- 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index da8b743..a60ae86 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -58,6 +58,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x0586, 0x3407), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x129b, 0x1666), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x157e, 0x300a), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x0105, 0x145f), .driver_info = DEVICE_ZD1211 },
- 	/* ZD1211B */
- 	{ USB_DEVICE(0x0ace, 0x1215), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x157e, 0x300d), .driver_info = DEVICE_ZD1211B },
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
