@@ -1,162 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56807 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752090AbYIOHZc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 03:25:32 -0400
-Subject: Re: [PATCH] libertas: Reduce the WPA key installation time.
-From: Dan Williams <dcbw@redhat.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <1221461196.27102.77.camel@localhost.localdomain>
-References: <48c9b342.081b600a.61cf.fffffdb5@mx.google.com>
-	 <1221461196.27102.77.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 15 Sep 2008 03:26:11 -0400
-Message-Id: <1221463571.27102.94.camel@localhost.localdomain> (sfid-20080915_092536_039864_C5F80B2D)
+Received: from styx.suse.cz ([82.119.242.94]:35596 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752259AbYIZOUj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 10:20:39 -0400
+Date: Fri, 26 Sep 2008 16:20:36 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [compat-old PATCH 2/2] Allow compilation on 2.6.22
+Message-ID: <20080926162036.1a181ae1@griffin.suse.cz> (sfid-20080926_162050_479797_817A248F)
+In-Reply-To: <20080926161923.54cb0f66@griffin.suse.cz>
+References: <20080926161923.54cb0f66@griffin.suse.cz>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-15 at 02:46 -0400, Dan Williams wrote:
-> On Thu, 2008-09-11 at 15:32 -0700, Javier Cardona wrote:
-> > WPA requires that the PTK is installed immediately after the 4-way handshake
-> > in order to properly decrypt the subsequent incoming EAPOL-GTK frame.  If the
-> > PTK is not enabled by the time the EAPOL-GTK frame arrives, the frame is
-> > dropped and the supplicant does not receive the group key.
-> > 
-> > This will happen with fast Access Points that send the EAPOL-GTK frame before
-> > the suplicant has successfully installed and enabled the PTK.  To mitigate
-> > this situation, this patch simplifies and accelerates the SIOCSIWENCODEEXT
-> > execution.
-> 
-> Good catch though this would break ordering of iwconfig commands like:
-> 
-> iwconfig eth0 essid foobar key 235232363632 mode managed channel 11
-> 
-> which would punt the mode + channel arguments to another association
-> request, thus causing the first one to either fail (because the mode
-> wouldn't be switched yet) or to get the wrong AP on the wrong channel
-> (because the channel lock request wouldn't come until after it had tried
-> to associate on channels 1 - 10, and if it found a matching AP not on
-> channel 11 it would use that first).
-> 
-> The problem is of course that the patch unconditionally sets the key
-> immediately, but that was also the solution to the OLPC bug.
-> Unfortunately this is something we can't really handle well with WEXT,
-> but we can try to work around it by testing the following:
-> 
-> 1) in infrastructure mode AND one or both of (2) or (3)
-> 2) WPA is on 
-> 3) key management (via SIWAUTH) is one of
-> 	a) IW_AUTH_KEY_MGMT_802_1X
-> 	b) IW_AUTH_KEY_MGMT_PSK
-> 
-> and if this is true, set keys immediately, otherwise punt to the
-> association handler.
-> 
-> Does something like the following (based off your patch) still fix the
-> bug?
-> 
-> Dan
-> 
-> diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-> index fd59e18..6d2bf5c 100644
-> --- a/drivers/net/wireless/libertas/dev.h
-> +++ b/drivers/net/wireless/libertas/dev.h
-> @@ -58,6 +58,7 @@ struct lbs_802_11_security {
->  	u8 WPA2enabled;
->  	u8 wep_enabled;
->  	u8 auth_mode;
-> +	u32 key_mgmt;
->  };
->  
->  /** Current Basic Service Set State Structure */
-> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-> index 426f1fe..43ba998 100644
-> --- a/drivers/net/wireless/libertas/wext.c
-> +++ b/drivers/net/wireless/libertas/wext.c
-> @@ -30,6 +30,14 @@ static inline void lbs_postpone_association_work(struct lbs_private *priv)
->  	queue_delayed_work(priv->work_thread, &priv->assoc_work, HZ / 2);
->  }
->  
-> +static inline void lbs_do_association_work(struct lbs_private *priv)
-> +{
-> +	if (priv->surpriseremoved)
-> +		return;
-> +	cancel_delayed_work(&priv->assoc_work);
-> +	queue_delayed_work(priv->work_thread, &priv->assoc_work, 0);
-> +}
-> +
->  static inline void lbs_cancel_association_work(struct lbs_private *priv)
->  {
->  	cancel_delayed_work(&priv->assoc_work);
-> @@ -1578,12 +1586,27 @@ static int lbs_set_encodeext(struct net_device *dev,
->  			set_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags);
->  		}
->  
-> +		/* Only disable wep if necessary: can't waste time here. */
-> +		if (priv->mac_control & CMD_ACT_MAC_WEP_ENABLE)
-> +			disable_wep(assoc_req);
->  		disable_wep (assoc_req);
+This allows compilation of compat-wireless-old on 2.6.22 kernel. I suspect
+some drivers don't work despite they compile, though.
 
-It's late; this second disable_wep() slipped through.  Remove it of
-course :)
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
->  	}
->  
->  out:
->  	if (ret == 0) {
-> -		lbs_postpone_association_work(priv);
-> +		/* 802.1x and WPA rekeying must happen as quickly as possible,
-> +		 * especially during the 4-way handshake; thus if in
-> +		 * infrastructure mode, and either (a) 802.1x is enabled or
-> +		 * (b) WPA is being used, set the key right away.
-> +		 */
-> +		if (assoc_req->mode == IW_MODE_INFRA &&
-> +		    ((assoc_req->secinfo.key_mgmt & IW_AUTH_KEY_MGMT_802_1X) ||
-> +		     (assoc_req->secinfo.key_mgmt & IW_AUTH_KEY_MGMT_PSK) ||
-> +		      assoc_req->secinfo.WPAenabled ||
-> +		      assoc_req->secinfo.WPA2enabled)) {
-> +			lbs_do_association_work(priv);
-> +		} else
-> +			lbs_postpone_association_work(priv);
->  	} else {
->  		lbs_cancel_association_work(priv);
->  	}
-> @@ -1691,13 +1714,17 @@ static int lbs_set_auth(struct net_device *dev,
->  	case IW_AUTH_TKIP_COUNTERMEASURES:
->  	case IW_AUTH_CIPHER_PAIRWISE:
->  	case IW_AUTH_CIPHER_GROUP:
-> -	case IW_AUTH_KEY_MGMT:
->  	case IW_AUTH_DROP_UNENCRYPTED:
->  		/*
->  		 * libertas does not use these parameters
->  		 */
->  		break;
->  
-> +	case IW_AUTH_KEY_MGMT:
-> +		assoc_req->secinfo.key_mgmt = dwrq->value;
-> +		updated = 1;
-> +		break;
-> +
->  	case IW_AUTH_WPA_VERSION:
->  		if (dwrq->value & IW_AUTH_WPA_VERSION_DISABLED) {
->  			assoc_req->secinfo.WPAenabled = 0;
-> @@ -1777,6 +1804,10 @@ static int lbs_get_auth(struct net_device *dev,
->  	lbs_deb_enter(LBS_DEB_WEXT);
->  
->  	switch (dwrq->flags & IW_AUTH_INDEX) {
-> +	case IW_AUTH_KEY_MGMT:
-> +		dwrq->value = priv->secinfo.key_mgmt;
-> +		break;
-> +
->  	case IW_AUTH_WPA_VERSION:
->  		dwrq->value = 0;
->  		if (priv->secinfo.WPAenabled)
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+ config.mk                              |    4 +++-
+ drivers/net/wireless/libertas/if_usb.c |    2 ++
+ include/net/compat.h                   |   17 +++++++++++++++++
+ net/mac80211/wme.c                     |    2 +-
+ 4 files changed, 23 insertions(+), 2 deletions(-)
 
+--- cw.orig/config.mk
++++ cw/config.mk
+@@ -27,7 +27,6 @@ CONFIG_MAC80211=m
+ ifeq ($(shell test -e $(KLIB_BUILD)/Makefile && echo yes),yes)
+ KERNEL_SUBLEVEL = $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
+ ifeq ($(shell test $(KERNEL_SUBLEVEL) -lt 23 && echo yes),yes)
+-$(error "ERROR: There is a bug with compat-wireless on 2.6.22. Remove me if you want to fix me")
+ CONFIG_MAC80211_QOS=y
+ else
+ 
+@@ -154,7 +153,10 @@ CONFIG_P54_PCI=m
+ CONFIG_SSB_PCIHOST=y
+ CONFIG_SSB_DRIVER_PCICORE=y
+ CONFIG_SSB_B43_PCI_BRIDGE=y
++ifeq ($(shell test $(KERNEL_SUBLEVEL) -gt 22 && echo yes),yes)
++# b44 is not ported to 2.6.22
+ CONFIG_B44=m
++endif
+ 
+ CONFIG_RTL8180=m
+ CONFIG_ADM8211=m
+--- cw.orig/drivers/net/wireless/libertas/if_usb.c
++++ cw/drivers/net/wireless/libertas/if_usb.c
+@@ -947,7 +947,9 @@ static struct usb_driver if_usb_driver =
+ 	.id_table = if_usb_table,
+ 	.suspend = if_usb_suspend,
+ 	.resume = if_usb_resume,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+ 	.reset_resume = if_usb_resume,
++#endif
+ };
+ 
+ static int __init if_usb_init_module(void)
+--- cw.orig/include/net/compat.h
++++ cw/include/net/compat.h
+@@ -33,6 +33,7 @@
+ 
+ #include <net/arp.h>
+ #include <net/neighbour.h>
++#include <net/pkt_sched.h>
+ 
+ #include <linux/compat_autoconf.h>
+ 
+@@ -173,6 +174,22 @@ static inline int netif_is_multiqueue(co
+ 	return (!!(NETIF_F_MULTI_QUEUE & dev->features));
+ }
+ 
++/* 2.6.23 fixed a bug in tcf_destroy_chain and the parameter changed */
++static inline void tcf_destroy_chain_compat(struct tcf_proto **fl)
++{
++	struct tcf_proto *tp;
++
++	while ((tp = *fl) != NULL) {
++		*fl = tp->next;
++		tp->ops->destroy(tp);
++		module_put(tp->ops->owner);
++		kfree(tp);
++	}
++}
++
++#else
++
++#define tcf_destroy_chain_compat tcf_destroy_chain
+ 
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)) */
+ 
+--- cw.orig/net/mac80211/wme.c
++++ cw/net/mac80211/wme.c
+@@ -310,7 +310,7 @@ static void wme_qdiscop_destroy(struct Q
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	int queue;
+ 
+-	tcf_destroy_chain(&q->filter_list);
++	tcf_destroy_chain_compat(&q->filter_list);
+ 
+ 	for (queue = 0; queue < QD_NUM(hw); queue++) {
+ 		skb_queue_purge(&q->requeued[queue]);
+
+
+-- 
+Jiri Benc
+SUSE Labs
