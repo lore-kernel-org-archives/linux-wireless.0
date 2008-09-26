@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43487 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:53495 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938AbYIHObx (ORCPT
+	with ESMTP id S1751999AbYIZPNO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 10:31:53 -0400
-Subject: [PATCH 5/3] mac80211: fix typo in action frame handling
+	Fri, 26 Sep 2008 11:13:14 -0400
+Subject: Re: bad DMAR interaction with iwlagn and SATA
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080908090507.641740000@sipsolutions.net> (sfid-20080908_110822_044365_11756028)
-References: <20080908090507.641740000@sipsolutions.net>
-	 (sfid-20080908_110822_044365_11756028)
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 16:31:48 +0200
-Message-Id: <1220884308.31304.62.camel@johannes.berg> (sfid-20080908_163156_447836_6887EBA2)
+To: Muli Ben-Yehuda <muli@il.ibm.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Andres Freund <andres@anarazel.de>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <20080926144708.GD9118@il.ibm.com>
+References: <200809251511.20132.andres@anarazel.de>
+	 <48DC44D4.8000103@garzik.org> <200809260419.07713.andres@anarazel.de>
+	 <48DC4BC0.7090203@garzik.org>  <20080926144708.GD9118@il.ibm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HyPdWJDP5lvgMzLqdLta"
+Date: Fri, 26 Sep 2008 17:12:35 +0200
+Message-Id: <1222441955.3798.13.camel@johannes.berg> (sfid-20080926_171319_148246_0E05A9F0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This says chan_switch.action_code but really means
-measurement.action_code, of course the actual offset in
-the frame is the same, it's just harder to understand
-this way.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--=-HyPdWJDP5lvgMzLqdLta
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/net/mac80211/mlme.c	2008-09-08 16:29:54.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-09-08 16:29:56.000000000 +0200
-@@ -2997,7 +2997,7 @@ static void ieee80211_rx_mgmt_action(str
- 	case WLAN_CATEGORY_SPECTRUM_MGMT:
- 		if (local->hw.conf.channel->band != IEEE80211_BAND_5GHZ)
- 			break;
--		switch (mgmt->u.action.u.chan_switch.action_code) {
-+		switch (mgmt->u.action.u.measurement.action_code) {
- 		case WLAN_ACTION_SPCT_MSR_REQ:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.measurement)))
+On Fri, 2008-09-26 at 17:47 +0300, Muli Ben-Yehuda wrote:
 
+> The way to debug this is to figure out why device 00:1f.2 is trying to
+> read from DMA address fffbf000 and does not have permission to do
+> so. This could be indicative of a driver bug where it is programming
+> the device to read from some buffer that has not been allocated
+> through the DMA API and thus does not have a valid IOMMU mapping, or a
+> hardware quirk where the device tries to read from memory without host
+> involvement. The former is much more likely.
+
+The same is probably true for the iwlagn case which was
+
+> [ 4184.617392] DMAR:[DMA Read] Request device [03:00.0] fault addr fa9460=
+00=20
+> [ 4184.617393] DMAR:[fault reason 06] PTE Read access is not set
+> [ 4184.644081] iwlagn: Microcode HW error detected.  Restarting.
+
+and indeed matches experience from myself and Marcel that DMA bugs seem
+to lurk.
+
+johannes
+
+--=-HyPdWJDP5lvgMzLqdLta
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI3PveAAoJEKVg1VMiehFYliUQAMZWXb06JFNOqEhMXbHF9a2O
+QX3ZFwyz6IiEC/deb6U0uh/Zz5shxecXDOwcUfoq8EDvYZup4DQGE56dreyVxKJM
+wlI27g9d6FAzqNjxmpyK0wuiAdLlmwwRbuYg9fklM06dF2shVesEjKFCDxBo8oxk
+9PxVhkiCafq3+v1Qyew75ihRgA1in2fGHFW1fwgMX6wa4+1xPoPY+twRkdGvwwNe
+S0J+/6WsaKRIiVRgqftvUZLlkTbXuFEphfGNvjTfwI2Cq/FuwUBJ+6JbI/yCBNN7
+9f+8PEG9a2UxYqWu/9dHz9i/JNfKkmy8eRKrYn+2wg6bE8jsmiWAZvjvMYbs4XPc
+RTJtgjJs+/vskVGOqiqbDVaEDPtcu3zvf6+g3BuPp7o75jg/j2BIdhQblIuS0ACF
+LWCrbsoS2diToj4uiiHWw5/9iJkRbc1fNSlVT/SnTRa8jMUF9M/A2gCwZAnNUM9R
+2jdj2dUbdUXJMVArqvNjpPHnkndTD1vDmhqbt0Uc8kGmjDVMdJwFatwGxViEruBy
+iRNVqAbcrygVWrdeLT85mUZaeMc/J6qL7UWuRoXHxIgpl4+4xbaIv9esXcHFaLJl
+wLF9y6QD2VZDHG3bLoQ11WAZktdSSPgrVrD1od/eKwR4C6QlUhRRHMa63QDt2o3f
+PnCs1xYVQow/laFhpIV7
+=O7VO
+-----END PGP SIGNATURE-----
+
+--=-HyPdWJDP5lvgMzLqdLta--
 
