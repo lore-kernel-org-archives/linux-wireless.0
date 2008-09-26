@@ -1,69 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35599 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752326AbYIDJfl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2008 05:35:41 -0400
-Message-ID: <48BFABE0.6050505@garzik.org> (sfid-20080904_113547_630468_4A4BA54C)
-Date: Thu, 04 Sep 2008 05:35:28 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Ayaz Abdulla <aabdulla@nvidia.com>
-CC: David Miller <davem@davemloft.net>, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	tomasw@gmail.com, yi.zhu@intel.com, linville@tuxdriver.com
-Subject: Re: [GIT]: Networking
-References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net> <200809041025.15277.rjw@sisk.pl>
-In-Reply-To: <200809041025.15277.rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:42755 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754304AbYIZOwK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 10:52:10 -0400
+Subject: Re: [PATCH] wireless: consolidate on a single escape_essid
+	implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <1222427323.10563.109.camel@johannes.berg> (sfid-20080926_130854_961383_6611B713)
+References: <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
+	 <20080924232453.GG9187@tesla> <20080924233234.GE3639@tuxdriver.com>
+	 <200809250834.07781.hs4233@mail.mn-solutions.de>
+	 (sfid-20080925_083440_223989_866F07A7)  <1222332205.10563.26.camel@johannes.berg>
+	 <1222361863.14444.18.camel@localhost.localdomain>
+	 <1222427323.10563.109.camel@johannes.berg>
+	 (sfid-20080926_130854_961383_6611B713)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SxzyvfwsZkb4j8y7Wwch"
+Date: Fri, 26 Sep 2008 16:51:53 +0200
+Message-Id: <1222440713.3798.0.camel@johannes.berg> (sfid-20080926_165216_874164_1B70A2AC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> On Thursday, 4 of September 2008, David Miller wrote:
->> From: Linus Torvalds <torvalds@linux-foundation.org>
->> Date: Wed, 3 Sep 2008 16:24:16 -0700 (PDT)
->>
->>> On Wed, 3 Sep 2008, Linus Torvalds wrote:
->>>> What's so hard to understand about this?
->>> Here's a simple rule of thumb:
->>>  - if it's not on the regression list
->>>  - if it's not a reported security hole
->>>  - if it's not on the reported oopses list
->>> then why are people sending it to me?
->>>
->>> IOW, if it's just another random improvement, and you send it to me 
->>> outside of the merge window, then what is the point of the merge window? 
->> This is exactly what I've been trying to tell the Intel wireless folks
->> but they refuse to listen.
->>
->> I just won't take their stuff until they get their act in gear.
->>
->> No problem.
-> 
-> BTW, there are two regression fixes for forcedeth:
-> 
-> http://marc.info/?l=linux-kernel&m=121894389018584&w=4
-> http://marc.info/?l=linux-kernel&m=121917167232014&w=4
-> 
-> that fix the regressions tracked as:
-> 
-> http://bugzilla.kernel.org/show_bug.cgi?id=11358
-> http://bugzilla.kernel.org/show_bug.cgi?id=11361
-> 
-> respectively and both are more than 2 weeks old now.
-> 
-> Is there any chance to push them upstream or is there anything wrong with them?
 
-Your patch is fine.  Since DaveM and I are gone this weekend, feel free 
-to add "acked-by: jgarzik@redhat" and forward upstream to Linus and Andrew.
+--=-SxzyvfwsZkb4j8y7Wwch
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I thought there was some discussion about Yinghai Lu's MAC addr patch, 
-though.  I'll look into it Monday, but maybe Ayaz (maintainer @ nv) 
-could ack it sooner than that?
+On Fri, 2008-09-26 at 13:08 +0200, Johannes Berg wrote:
 
-	Jeff
+> > 2) common GIWSCAN processing function that takes a list of common BSS
+> > structures that the driver stores internally.  The common BSS structure
+> > would have a "void *driver_data" pointer in which the driver could keep
+> > driver-specific data items, but the driver would be responsible for
+> > setting all available information in the common BSS structure when the
+> > firmware provides scan results.  lib80211 provides common allocation,
+> > deallocation, bss entry aging, ref/unref, and free-list fetching.
+>=20
+> I had something like this option 2 in mind when I wrote my patch, can
+> you take a look at it? The only thing missing now is
+> quality/signal/noise handling. Here's the most recent version:
+>=20
+> http://johannes.sipsolutions.net/patches/kernel/all/2008-09-26-11%3a08/02=
+0-cfg80211-scan.patch
 
+That version no longer applies; some rejects you can ignore safely
+though for purposes of this thread, but here's a new version anyway:
 
+http://johannes.sipsolutions.net/patches/kernel/all/2008-09-26-13%3a11/008-=
+cfg80211-scan.patch
+
+johannes
+
+--=-SxzyvfwsZkb4j8y7Wwch
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI3PcDAAoJEKVg1VMiehFY3ZAQALrmA37EhfObW3nPUYICW3MV
+orZtpKipPc39UStxwgecOEKrKXBav+vvcBYBJ+lwWnor1OFuPL+qNkmrg7HEMk77
+mBrpZc9GqbMR40OdreI//CpR+Dr1h00A5rTuXHc0Bn6IUPura2VnjYsarTt1UYEc
+nNGZRmSLv2hItEOWdDRFRVquI7TBRbHa1raVAjrckTkxmt/gPIfemL7gXyjbwm9W
+UVyeLjdByTmhfPP7+wlMtbfNiFeIBb9aRKQBRJ9fOb28It5/CDFCvmH7Jq4yXwM8
+uoDwIzIBZCACaB2l+pinbEvCMNTEFUpXNwRiNeJxh+TH8HL0OmI7W9B5JdP6aSvz
+DM1ClRqzU758ChAj/2TF3hZWAk7Jspsgz5pRkpGMXrukHktjnTx3CVf9MsVzKOas
+DfsrRdMxjnb8m3IU3cnxTQ3IHow27pCjk/EBV/cbzt1lteer7vpHKCu6xt8a2VeS
++7SFj0lTbnngzR7bDl2cek193pbiY1QSlgFaN2Obg194tQeX0E1DAN069A+6K4US
+y+LLr9GApNT4o8GmwhwTflcegm6Lr0UGv3Fy8jsMhVpRuNZDxUxwD5CYyxqEk+2r
+03qdPHHW/RcgkSl3DL/WtX6n4ok41SJaSLmACU4e64UrGfEuN9iaez8AstngeTYh
+uOj9wBeRTaWjPOgYHjsQ
+=axI9
+-----END PGP SIGNATURE-----
+
+--=-SxzyvfwsZkb4j8y7Wwch--
 
