@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47984 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752772AbYICPAa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 11:00:30 -0400
-Date: Wed, 3 Sep 2008 10:50:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: at76_usb.[ch] gone fishing from wireless-testing ?
-Message-ID: <20080903145007.GL3050@tuxdriver.com> (sfid-20080903_170039_895884_A8FDCCAE)
-References: <43e72e890809021953o29c6ba53wcdf7630d4ff10b30@mail.gmail.com> <87vdxedje8.fsf@nokia.com> <43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com> <20080903125352.GI3050@tuxdriver.com> <87zlmpuwmc.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87zlmpuwmc.fsf@nokia.com>
+Received: from main.gmane.org ([80.91.229.2]:35747 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752449AbYIZQaa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 12:30:30 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1KjGD6-00052x-Et
+	for linux-wireless@vger.kernel.org; Fri, 26 Sep 2008 16:30:28 +0000
+Received: from 77.21.175.82 ([77.21.175.82])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 16:30:28 +0000
+Received: from feldmann_markus by 77.21.175.82 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 16:30:28 +0000
+To: linux-wireless@vger.kernel.org
+From: feldmaus <feldmann_markus@gmx.de>
+Subject: Re: Do not get BCM4303 to work
+Date: Fri, 26 Sep 2008 18:32:40 +0200
+Message-ID: <gbj2mr$fp6$1@ger.gmane.org> (sfid-20080926_183033_247956_E9A0F6A9)
+References: <ga2fra$9q$1@ger.gmane.org> <48C5777B.9070106@lwfinger.net> <gaesbd$nv8$1@ger.gmane.org> <48CB0993.6020601@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <48CB0993.6020601@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 03, 2008 at 05:34:03PM +0300, Kalle Valo wrote:
-> John W. Linville <linville@tuxdriver.com> writes:
+Larry Finger schrieb:
+> feldmaus wrote:
+>> Larry Finger schrieb:
+>>> Your card can receive, but not transmit due to a problem with the 
+>>> rfkill switch handling in b43legacy. I'm working on this problem with 
+>>> a Ubuntu user, and will post patches as soon as the problem is fixed.
+>>>
+>>> Larry
+>> Thanks for your Support.
+>>
+>> I installed the Kernel 2.6.26-1 as Maximilian said.
+>> I hope i can try to get my Card to work.
+>> If you need some Messages then let me know.
 > 
-> > Anyone want to talk me out of pulling-in the at76 parts?
-> 
-> Sorry, I don't quite understand what pulling-in means here.
+> The Ubuntu user and I have discovered that his computer needs the hp-dmi 
+> module that is part of the mainline kernel since 2.6.27-rc6. This module 
+> handles the rfkill button that does not produce a scancode. I think you 
+> will need to get that one for you to be able to turn the radio on.
+So the hp-dmi Module is only available in 2.6.27 ?
 
-I just mean making sure it is (and continues to be) in
-wireless-testing's master branch.
+Regards feldmaus
 
-> But personally I don't mind, choose which one is best in your opinion.
-> If you drop it, I can always resubmit it when it's properly working.
-
-Leaving it in has encouraged people to keep it up-to-date (or at least
-compiling) across mac80211 driver API changes.  Whether or not this
-has been worthwhile is, of course, debatable.
-
-John
-
-P.S.  For the record, I _would_ like to see a working at76 driver
-make it upstream at some point.
--- 
-John W. Linville
-linville@tuxdriver.com
