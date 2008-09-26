@@ -1,262 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56114 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([143.182.124.37]:50693 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752789AbYIZOuq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 10:50:46 -0400
-Subject: Re: [PATCH] libertas: Improvements on automatic tx power control
-	via SIOCSIWTXPOW.
-From: Dan Williams <dcbw@redhat.com>
-To: Anna Neal <anna@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <48dc2080.14be600a.433d.fffffde3@mx.google.com>
-References: <48dc2080.14be600a.433d.fffffde3@mx.google.com>
-Content-Type: text/plain
-Date: Fri, 26 Sep 2008 10:49:37 -0400
-Message-Id: <1222440577.19895.21.camel@localhost.localdomain> (sfid-20080926_165052_769682_A13A1AB3)
-Mime-Version: 1.0
+	id S1752986AbYIZHOV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 03:14:21 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 3/3] iwlwifi: use correct DMA_MASK
+Date: Fri, 26 Sep 2008 15:09:34 +0800
+Message-Id: <1222412974-18221-3-git-send-email-yi.zhu@intel.com> (sfid-20080926_091424_681249_F94BDF3E)
+In-Reply-To: <1222412974-18221-2-git-send-email-yi.zhu@intel.com>
+References: <1222412974-18221-1-git-send-email-yi.zhu@intel.com>
+ <1222412974-18221-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-09-25 at 16:19 -0700, Anna Neal wrote:
-> iwconfig txpower can now be used to set tx power to fixed or auto. If set to
-> auto the default firmware settings are used.
-> 
-> The command CMD_802_11_PA_CFG is only sent to older firmware, as Dan Williams
-> noted the command was no longer supported in firmware V9+.
-> 
-> Signed-off-by: Anna Neal <anna@cozybit.com>
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-Thanks!
+Use correct DMA_MASK: 4964 and 5000 support 36 bit addresses for
+pci express memory access.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-> ---
->  drivers/net/wireless/libertas/cmd.c     |   64 +++++++++++++++++++++++++++++++
->  drivers/net/wireless/libertas/cmd.h     |    6 +++
->  drivers/net/wireless/libertas/defs.h    |    9 ++++
->  drivers/net/wireless/libertas/host.h    |    1 +
->  drivers/net/wireless/libertas/hostcmd.h |   24 +++++++++--
->  drivers/net/wireless/libertas/wext.c    |   32 ++++++++++++++-
->  6 files changed, 129 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> index 7e818b0..a912fb6 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -1927,6 +1927,70 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv)
->  }
->  
-> 
-> +/**
-> + * @brief Configures the transmission power control functionality.
-> + *
-> + * @param priv		A pointer to struct lbs_private structure
-> + * @param enable	Transmission power control enable
-> + * @param p0		Power level when link quality is good (dBm).
-> + * @param p1		Power level when link quality is fair (dBm).
-> + * @param p2		Power level when link quality is poor (dBm).
-> + * @param usesnr	Use Signal to Noise Ratio in TPC
-> + *
-> + * @return 0 on success
-> + */
-> +int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
-> +		int8_t p2, int usesnr)
-> +{
-> +	struct cmd_ds_802_11_tpc_cfg cmd;
-> +	int ret;
-> +
-> +	memset(&cmd, 0, sizeof(cmd));
-> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-> +	cmd.action = cpu_to_le16(CMD_ACT_SET);
-> +	cmd.enable = !!enable;
-> +	cmd.usesnr = !!usesnr;
-> +	cmd.P0 = p0;
-> +	cmd.P1 = p1;
-> +	cmd.P2 = p2;
-> +
-> +	ret = lbs_cmd_with_response(priv, CMD_802_11_TPC_CFG, &cmd);
-> +
-> +	return ret;
-> +}
-> +
-> +/**
-> + * @brief Configures the power adaptation settings.
-> + *
-> + * @param priv		A pointer to struct lbs_private structure
-> + * @param enable	Power adaptation enable
-> + * @param p0		Power level for 1, 2, 5.5 and 11 Mbps (dBm).
-> + * @param p1		Power level for 6, 9, 12, 18, 22, 24 and 36 Mbps (dBm).
-> + * @param p2		Power level for 48 and 54 Mbps (dBm).
-> + *
-> + * @return 0 on Success
-> + */
-> +
-> +int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
-> +		int8_t p1, int8_t p2)
-> +{
-> +	struct cmd_ds_802_11_pa_cfg cmd;
-> +	int ret;
-> +
-> +	memset(&cmd, 0, sizeof(cmd));
-> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-> +	cmd.action = cpu_to_le16(CMD_ACT_SET);
-> +	cmd.enable = !!enable;
-> +	cmd.P0 = p0;
-> +	cmd.P1 = p1;
-> +	cmd.P2 = p2;
-> +
-> +	ret = lbs_cmd_with_response(priv, CMD_802_11_PA_CFG , &cmd);
-> +
-> +	return ret;
-> +}
-> +
-> +
->  static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
->  	uint16_t command, struct cmd_header *in_cmd, int in_cmd_size,
->  	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-> index 9a35e15..d002160 100644
-> --- a/drivers/net/wireless/libertas/cmd.h
-> +++ b/drivers/net/wireless/libertas/cmd.h
-> @@ -26,6 +26,12 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
->  	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
->  	      unsigned long callback_arg);
->  
-> +int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
-> +		int8_t p1, int8_t p2);
-> +
-> +int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
-> +		int8_t p2, int usesnr);
-> +
->  int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
->  		     struct cmd_header *resp);
->  
-> diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
-> index c20fcf1..58d11a3 100644
-> --- a/drivers/net/wireless/libertas/defs.h
-> +++ b/drivers/net/wireless/libertas/defs.h
-> @@ -189,6 +189,15 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
->  #define MRVDRV_CMD_UPLD_RDY		0x0008
->  #define MRVDRV_CARDEVENT		0x0010
->  
-> +
-> +/* Automatic TX control default levels */
-> +#define POW_ADAPT_DEFAULT_P0 13
-> +#define POW_ADAPT_DEFAULT_P1 15
-> +#define POW_ADAPT_DEFAULT_P2 18
-> +#define TPC_DEFAULT_P0 5
-> +#define TPC_DEFAULT_P1 10
-> +#define TPC_DEFAULT_P2 13
-> +
->  /** TxPD status */
->  
->  /*	Station firmware use TxPD status field to report final Tx transmit
-> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-> index d1d0666..5004d76 100644
-> --- a/drivers/net/wireless/libertas/host.h
-> +++ b/drivers/net/wireless/libertas/host.h
-> @@ -72,6 +72,7 @@
->  #define CMD_802_11_INACTIVITY_TIMEOUT		0x0067
->  #define CMD_802_11_SLEEP_PERIOD			0x0068
->  #define CMD_802_11_TPC_CFG			0x0072
-> +#define CMD_802_11_PA_CFG			0x0073
->  #define CMD_802_11_FW_WAKE_METHOD		0x0074
->  #define CMD_802_11_SUBSCRIBE_EVENT		0x0075
->  #define CMD_802_11_RATE_ADAPT_RATESET		0x0076
-> diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-> index b4ae2c2..d9f9a12 100644
-> --- a/drivers/net/wireless/libertas/hostcmd.h
-> +++ b/drivers/net/wireless/libertas/hostcmd.h
-> @@ -605,14 +605,28 @@ struct cmd_ds_802_11_eeprom_access {
->  } __attribute__ ((packed));
->  
->  struct cmd_ds_802_11_tpc_cfg {
-> +	struct cmd_header hdr;
-> +
->  	__le16 action;
-> -	u8 enable;
-> -	s8 P0;
-> -	s8 P1;
-> -	s8 P2;
-> -	u8 usesnr;
-> +	uint8_t enable;
-> +	int8_t P0;
-> +	int8_t P1;
-> +	int8_t P2;
-> +	uint8_t usesnr;
->  } __attribute__ ((packed));
->  
-> +
-> +struct cmd_ds_802_11_pa_cfg {
-> +	struct cmd_header hdr;
-> +
-> +	__le16 action;
-> +	uint8_t enable;
-> +	int8_t P0;
-> +	int8_t P1;
-> +	int8_t P2;
-> +} __attribute__ ((packed));
-> +
-> +
->  struct cmd_ds_802_11_led_ctrl {
->  	__le16 action;
->  	__le16 numled;
-> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-> index 641e1c6..caf6108 100644
-> --- a/drivers/net/wireless/libertas/wext.c
-> +++ b/drivers/net/wireless/libertas/wext.c
-> @@ -1856,7 +1856,22 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
->  	}
->  
->  	if (vwrq->fixed == 0) {
-> -		/* Auto power control */
-> +		/* User requests automatic tx power control, however there are
-> +		 * many auto tx settings.  For now use firmware defaults
-> +		 * (enable power adaptation and disable TPC) until we come up
-> +		 * with a good way to expose these to the user. */
-> +		if (priv->fwrelease < 0x09000000) {
-> +			ret = lbs_set_power_adapt_cfg(priv, 1,
-> +					POW_ADAPT_DEFAULT_P0,
-> +					POW_ADAPT_DEFAULT_P1,
-> +					POW_ADAPT_DEFAULT_P2);
-> +			if (ret)
-> +				goto out;
-> +		}
-> +		ret = lbs_set_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
-> +				TPC_DEFAULT_P2, 1);
-> +		if (ret)
-> +			goto out;
->  		dbm = priv->txpower_max;
->  	} else {
->  		/* Userspace check in iwrange if it should use dBm or mW,
-> @@ -1866,7 +1881,8 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
->  			goto out;
->  		}
->  
-> -		/* Validate requested power level against firmware allowed levels */
-> +		/* Validate requested power level against firmware allowed
-> +		 * levels */
->  		if (priv->txpower_min && (dbm < priv->txpower_min)) {
->  			ret = -EINVAL;
->  			goto out;
-> @@ -1876,6 +1892,18 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
->  			ret = -EINVAL;
->  			goto out;
->  		}
-> +		if (priv->fwrelease < 0x09000000) {
-> +			ret = lbs_set_power_adapt_cfg(priv, 0,
-> +					POW_ADAPT_DEFAULT_P0,
-> +					POW_ADAPT_DEFAULT_P1,
-> +					POW_ADAPT_DEFAULT_P2);
-> +			if (ret)
-> +				goto out;
-> +		}
-> +		ret = lbs_set_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
-> +				TPC_DEFAULT_P2, 1);
-> +		if (ret)
-> +			goto out;
->  	}
->  
->  	/* If the radio was off, turn it on */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index a589f7e..204abab 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4243,13 +4243,13 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 
+ 	pci_set_master(pdev);
+ 
+-	err = pci_set_dma_mask(pdev, DMA_64BIT_MASK);
++	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(36));
+ 	if (!err)
+-		err = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
++		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(36));
+ 	if (err) {
+-		err = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
++		err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+ 		if (!err)
+-			err = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
++			err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
+ 		/* both attempts failed: */
+ 		if (err) {
+ 			printk(KERN_WARNING "%s: No suitable DMA available.\n",
+-- 
+1.5.3.6
 
