@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:20679 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104AbYIOJ6I (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:5769 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752179AbYIZWCo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 05:58:08 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1115798tic.23
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 02:58:06 -0700 (PDT)
-Message-ID: <e001a6370809150258t10873497jcf04e68005db566b@mail.gmail.com> (sfid-20080915_115812_893688_3B5FE931)
-Date: Mon, 15 Sep 2008 15:28:06 +0530
-From: "Anadi Mishra" <reachanadi@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Problem with Libertas USB8388 WLAN card firmware
+	Fri, 26 Sep 2008 18:02:44 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1333497wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 15:02:43 -0700 (PDT)
+Message-ID: <40f31dec0809261502o284597fwa105cb2651c74bc0@mail.gmail.com> (sfid-20080927_000248_598707_3A1C3CF2)
+Date: Sat, 27 Sep 2008 01:02:43 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: Release of Atheros 802.11abg HAL under the ISC
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20080926215701.GC5972@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+References: <20080926215701.GC5972@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
-        I am using Libertas USB8388 WLAN card with Ubuntu 8.04 but am
-not able to get it working.
+2008/9/27 Luis R. Rodriguez <lrodriguez@atheros.com>:
+> As part of our commitment to help support all of our Atheros devices
+> under Linux we'd like to announce the release of our Atheros HAL for
+> our 802.11abg chipsets under the ISC license.
+>
+> You can find it here:
+>
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/legacy-hal.tar.bz2
+>
+> This can be used as a source of documentation to help ath5k move
+> forward to support our 802.11abg chipsets as best as possible in
+> the Linux kernel. We look forward to keep working strongly with the
+> community on advancing support of all our Atheros chipsets under Linux.
+>
+>  Luis
 
-        The error(dmesg) says "unable to load firmware" even if the
-usb8388.bin file is there in the /lib/firmware.
+Thanks a lot for this !!!
 
-        dmesg also says "probe of 3-1:1.1 failed with error -12"
+Can't wait to get my hands dirty ;-)
 
-Any help would be gr8.
+I 'll start merging stuff on ath5k asap !!!
 
---
-Thanks and Regards,
-Anadi Mishra,
-Mumbai,
-9987388960.
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
