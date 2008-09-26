@@ -1,90 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34635 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219AbYIHIX1 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:35615 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754011AbYIZGmt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 04:23:27 -0400
-Subject: Re: [RFC PATCH 1/3] mac80211: restructure disassoc/deauth flows
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5bWyEghntD5nbIBGPeX3"
-Date: Mon, 08 Sep 2008 10:23:20 +0200
-Message-Id: <1220862200.31304.24.camel@johannes.berg> (sfid-20080908_102331_162426_D5323730)
-Mime-Version: 1.0
+	Fri, 26 Sep 2008 02:42:49 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so548579fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 23:42:46 -0700 (PDT)
+Message-ID: <1ba2fa240809252342x4b85b7e3u8341bb96a03b95a7@mail.gmail.com> (sfid-20080926_084255_427594_3222C0DC)
+Date: Fri, 26 Sep 2008 09:42:46 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48DC51AF.6000900@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net>
+	 <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com>
+	 <48DC51AF.6000900@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Sep 26, 2008 at 6:06 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Tomas Winkler wrote:
+>> wild guess try to revert:
+>> 'mac80211: make master iface not wireless'
+>
+> You win the prize. Bisection shows that
+> 84b0ba8ed0423a3c56a28e701b735daae3e15766 is first bad commit
+>
+> commit 84b0ba8ed0423a3c56a28e701b735daae3e15766
+> Author: Johannes Berg <johannes@sipsolutions.net>
+> Date:   Tue Sep 16 14:18:59 2008 +0200
+>
+>    mac80211: make master iface not wireless
+>
+>
+> The actual crash is in the following routine from include/net/wireless.h:
+>
+> /**
+>  * wiphy_priv - return priv from wiphy
+>  */
+> static inline void *wiphy_priv(struct wiphy *wiphy)
+> {
+>        BUG_ON(!wiphy);
+>        return &wiphy->priv;
+> }
+>
+> I'm still looking to see where it goes wrong.
 
---=-5bWyEghntD5nbIBGPeX3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, 2008-09-07 at 01:14 +0300, Tomas Winkler wrote:
-
-> @@ -1104,16 +1133,12 @@ static void ieee80211_associated(struct ieee80211=
-_sub_if_data *sdata,
-> =20
->  	rcu_read_unlock();
-> =20
-> -	if (disassoc && sta)
-> -		sta_info_destroy(sta);
-> -
-> -	if (disassoc) {
-> -		ifsta->state =3D IEEE80211_STA_MLME_DISABLED;
-> -		ieee80211_set_associated(sdata, ifsta, 0);
-> -	} else {
-> +	if (disassoc)
-> +		ieee80211_set_disassoc(sdata, ifsta, 1, 1,
-> +					WLAN_REASON_PREV_AUTH_NOT_VALID);
-> +	else
->  		mod_timer(&ifsta->timer, jiffies +
->  				      IEEE80211_MONITORING_INTERVAL);
-> -	}
->  }
-> =20
->=20
-
-This hunk has another bug, or rather, we need to add this hunk:
-
-@@ -1084,7 +1114,6 @@ static void ieee80211_associated(struct=20
-                                       "range\n",
-                                       sdata->dev->name, print_mac(mac, ifs=
-ta->bssid));
-                                disassoc =3D 1;
--                               sta_info_unlink(&sta);
-                        } else
-                                ieee80211_send_probe_req(sdata, ifsta->bssi=
-d,
-                                                         local->scan_ssid,
-
-johannes
-
---=-5bWyEghntD5nbIBGPeX3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIxODxAAoJEKVg1VMiehFYurUQAJcNadBNCT5Gu093ZActnavu
-EEz6a1tKulLkijGm0vW8bbX5vB7JHbrt8RW9iZpYCfVYQWp0Ym2hGacdwQ/eHs2/
-rzl+ShrzE2+aw1oFQtU1+ID8snXbZPxvxxVIsFM63agPh6doUMEqBKuQjwngFeL9
-8+pcJbWAWQr52UAzUiocuFqfUj8wD+iCr9W9TQj99YXD8HN5JRjNq4lIHvmuWHju
-g2Cs80XVJdxNHk02Uov9/++jXcZCNjLEbXLsMBHBxX2op3eGMzBGs5dHSRBkLHTz
-efSjhh9uR/DG58OT31UPfcn/hpOeVdGmPfYSscUllnLn4iqmZKPSp3+kcUinanXH
-IsSuzw3kO9YxvHiOPqwXGZoo62Q9RVkfWxUSoWDaXMdMw5Ft4w8qW87gDjKX7ln2
-ue2gSgdXt0ZRpSS7vDDhPjxezgUzQHrPRvzNpiMhQFLHRHCihlJCvg3Qc+Q5aJgx
-19BzmBjD/jZVFWBP85rK3DXz8PH2JGgL09GFHNPBRwD62TGIg0LYuMgxBxya5CFk
-gghdn3i/QXABioACdIzxjA+AOCBoDiPD1pE0VApmZcxGqBTXU5tU2jKoEYRLrRDB
-ZU5uTbp8jhPuoUTV8hKPQ6STwrsKPU57VU3QinXh1vbzW/OJUZPJZYYt90gDs/A4
-cbCCj0eB3OSVg2EcpjA4
-=yEyY
------END PGP SIGNATURE-----
-
---=-5bWyEghntD5nbIBGPeX3--
-
+What do you mean?  The root cause is written in the commit log.
+Tomas
