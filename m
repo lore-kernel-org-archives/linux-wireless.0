@@ -1,126 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:36625 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757087AbYIDIXa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2008 04:23:30 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RFC] 802.11d Country IE parsing/support
-Date: Thu, 4 Sep 2008 10:23:10 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <20080904014939.GG5967@tesla>
-In-Reply-To: <20080904014939.GG5967@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809041023.11169.hschaa@suse.de> (sfid-20080904_102337_096772_5B170B5F)
+Received: from xc.sipsolutions.net ([83.246.72.84]:53165 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752768AbYIZTXd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 15:23:33 -0400
+Subject: Re: hostapd - mac80211 - rt2x00 - rt73usb  AP mode bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Iwo Mergler <iwo@call-direct.com.au>,
+	linux-wireless@vger.kernel.org, hostap@lists.shmoo.com,
+	Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20080926165007.GP4791@jm.kir.nu> (sfid-20080926_185113_941662_B54B793E)
+References: <48C9CD51.1060107@call-direct.com.au>
+	 <20080926165007.GP4791@jm.kir.nu> (sfid-20080926_185113_941662_B54B793E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QdOous1hgjXmIY+/Vrhv"
+Date: Fri, 26 Sep 2008 21:23:17 +0200
+Message-Id: <1222456997.3798.22.camel@johannes.berg> (sfid-20080926_212336_900050_2308343A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag, 4. September 2008 schrieb Luis R. Rodriguez:
-> static int reg_rules_intersect(
-> 	struct ieee80211_reg_rule *rule1,
-> 	struct ieee80211_reg_rule *rule2,
-> 	struct ieee80211_reg_rule **intersected_rule)
-> {
-> 	struct ieee80211_freq_range *freq_range1, *freq_range2, *freq_range;
-> 	struct ieee80211_power_rule *power_rule1, *power_rule2, *power_rule;
-> 	u32 freq_diff;
-> 
-> 	freq_range1 = &rule1->freq_range;
-> 	freq_range2 = &rule2->freq_range;
-> 	freq_range = &(*intersected_rule)->freq_range;
-> 
-> 	power_rule1 = &rule1->power_rule;
-> 	power_rule2 = &rule2->power_rule;
-> 	power_rule = &(*intersected_rule)->power_rule;
-> 
-> 	freq_range->start_freq = max(freq_range1->start_freq,
-> 		freq_range2->start_freq);
-> 	freq_range->end_freq = min(freq_range1->end_freq,
-> 		freq_range2->end_freq);
-> 	freq_range->max_bandwidth = min(freq_range1->max_bandwidth,
-> 		freq_range2->max_bandwidth);
-> 
-> 	freq_diff = freq_range->end_freq - freq_range->start_freq;
-> 	if (freq_range->max_bandwidth > freq_diff)
-> 		freq_range->max_bandwidth = freq_diff;
-> 
-> 	power_rule->max_eirp = min(power_rule1->max_eirp,
-> 		power_rule2->max_eirp);
-> 	power_rule->max_eirp = min(power_rule1->max_eirp,
-> 		power_rule2->max_eirp);
 
-max_eirp should be max_antenna_gain in the second block, right?
+--=-QdOous1hgjXmIY+/Vrhv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> 	(*intersected_rule)->flags = (rule1->flags | rule2->flags);
+[remove rt2400-devel, it always annoys me]
 
-Wouldn't (rule1->flags & rule2->flags) be more feasible?
+On Fri, 2008-09-26 at 19:50 +0300, Jouni Malinen wrote:
 
-> 	if (!reg_is_valid_rule(*intersected_rule))
-> 		return -EINVAL;
-> 
-> 	return 0;
-> }
-> 
-> static int regdom_intersect(
-> 	struct ieee80211_regdomain *rd1,
-> 	struct ieee80211_regdomain *rd2,
-> 	struct ieee80211_regdomain **rd)
-> {
-> 	int r, size_of_regd;
-> 	unsigned int x, y;
-> 	unsigned int num_rules = 0, rule_idx = 0;
-> 	struct ieee80211_reg_rule *rule1, *rule2, *intersected_rule;
-> 
-> 	*rd = NULL;
-> 
-> 	if (!rd1 || !rd2)
-> 		return -EINVAL;
-> 
-> 	/* First we get a count of the rules we'll need, then we actually
-> 	 * build them. This is to so we can kzalloc() and kfree() a
-> 	 * regdomain once */
-> 
-> 	for (x = 0; x < rd1->n_reg_rules; x++) {
-> 		rule1 = &rd1->reg_rules[x];
-> 		for (y = 0; y < rd2->n_reg_rules; y++) {
-> 			rule2 = &rd2->reg_rules[y];
-> 			if (!reg_rules_intersect(rule1, rule2,
-> 					&intersected_rule))
+> I believe the current version is not calling driver add_interface for
+> monitor events by design.
 
-Hmm, &intersected_rule is uninitialized here and reg_rules_intersect does not
-allocate anything.
+Right.
 
-> 				num_rules++;
-> 		}
-> 	}
-> 
-> 	if (!num_rules)
-> 		return -ENODATA;
-> 
-> 	size_of_regd = sizeof(struct ieee80211_regdomain) +
-> 		(num_rules * sizeof(struct ieee80211_reg_rule));
-> 
-> 	*rd = kzalloc(size_of_regd, GFP_KERNEL);
-> 	if (!*rd)
-> 		return -ENOMEM;
-> 
-> 	for (x = 0; x < rd1->n_reg_rules; x++) {
-> 		rule1 = &rd1->reg_rules[x];
-> 		for (y = 0; y < rd2->n_reg_rules; y++) {
-> 			rule2 = &rd2->reg_rules[y];
-> 			r = reg_rules_intersect(rule1, rule2,
-> 				&intersected_rule);
+> Whether this leaves some confusing information
+> for tx() handler is an open question, though, or well, at least I did
+> not go through the current code now to verify what exactly is happening
+> there.
 
-Same here.
+No, it does, there's a bug in that despite never telling the driver
+about monitor interfaces, we still pass it the monitor interface vif
+pointer in TX.
 
-> 			if (r)
-> 				continue;
-> 			memcpy(&(*rd)->reg_rules[rule_idx],
-> 				intersected_rule,
-> 				sizeof(intersected_rule));
+> There has been some discussion on the use of monitor interfaces for
+> injecting frames in the context of how management frame protection (IEEE
+> 802.11w) should work with hostapd. The current design is not ideal and
+> mac80211 should really be converting the netdev from mon.wlan# to wlan#;
+> it just does not have enough information to do this if there may be more
+> than one virtual netdev for the radio..
 
-sizeof(*intersected_rule)?
+Right. What I've done in
 
-Helmut
+commit 166a7cfdff64211f90b9ea60ec7dc302cf39b20f
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Fri Sep 12 22:52:47 2008 +0200
+
+    mac80211: fix virtual interfaces vs. injection
+
+is that it takes the TA to match up, that is incomplete when you have
+WDS or something configured but should be better than the current
+behaviour.
+
+>  One option that has been
+> discussed is to add a radiotap parameter to indicate the interface for
+> the injected frame. This way mac80211 should be able to map it to the
+> correct interface and the driver would not get into this sort of
+> situation where it gets a frame from an unexpected interface.
+
+That's what I'm aiming for.
+
+> As far as the crash itself is concerned, this may be an issue in the
+> driver. Please note that net/mac80211.h explicitly notes that vif can be
+> NULL for injected frames (i.e., frame from monitor interface).
+
+Note that this is new behaviour after the patch above, in the patch
+above I fixed rt2x00 to not crash when this happens. Hence, the affected
+system is most likely before the crash above.
+
+>  rt2x00
+> seems to be doing some kind of mapping from vif to rt2x00_intf with
+> vif_to_intf() in rt2x00queue_create_tx_descriptor(). That function
+> handles the NULL case by not allocating a sequence number which itself
+> seems incorrect;
+
+That was intentionally done in my patch, people have been asking for
+being able to inject sequence numbers, and when the TA is known then
+mac80211 will not pass NULL.
+
+> I'll leave the following details in for whoever is reading
+> linux-wireless and may have missed the original message..
+
+Thanks.
+
+Based on the information, I believe that this is fixed by the patch
+above.
+
+johannes
+
+--=-QdOous1hgjXmIY+/Vrhv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI3TahAAoJEKVg1VMiehFYwQoP/RUnX18wWSor7jop43fDZLgG
+B3QMU6Mjro1LgaArBJX0v4F2QH3EEQUIx4AnG0DZudbKoHXAI0rZ+hYLXzp4ysTM
+sqkePt2hM7I1BS4IyLaeZ4DU9qNpSss8P4vpJtqX9f6Xl1bmXSLz8Z4cr4Hkdxz/
+/qsTU8jt2CCPlK1Vki9aOh5axXdOsZgyJ0ksAe82os9zF0EnhmYXNvtpdBKReRmB
+NVLHbNmw+962uzyiXM7SuEAeVN4VuREs+9voUgax4PMZ/SFQbAeTb4hmKFwlKw9t
+kEz5EB+q2Cl1Fw+7kGOtq+RTqNZRLG8Gipo++Glkfdls1ZbY8AdT+SF7QxvzHs6z
+2bn6QELZH8iL1n6wIbw1VBPLtBElfG6zzSGON9d4BeEXIIvr4bXuXRqkl00wmOs8
+odKu5BeYgAqz7Y+rcv2AVaQLztJDT0moY4rcJEP/7v60q3Mh5/GkGdS+ZhW6yxTZ
+xGutmoSNu84xJ+D5ldCHnQYqqwE9B87f/v9fRriGdlf2+qVrsSnIFwG3369oZmfg
+QxcyeHXhzEyYY2xch4SV6kzz8WQm969QPG09P/7vrAqgUrg88raK5ElI22qJDV+z
+wg0yAIOQ51iOXeendOz3EBJl2jc9+4+fwakVAzV3uICquNQ30z23jrylyHPc84Xl
+gTSrXbtRsAMs1PACmQuE
+=m2lM
+-----END PGP SIGNATURE-----
+
+--=-QdOous1hgjXmIY+/Vrhv--
+
