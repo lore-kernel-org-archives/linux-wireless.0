@@ -1,44 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s19.bay0.hotmail.com ([65.54.246.219]:29323 "EHLO
-	bay0-omc3-s19.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750791AbYIHARi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2008 20:17:38 -0400
-Message-ID: <BAY118-W465E743CF36E2CD439D2CEDB550@phx.gbl> (sfid-20080908_021742_662171_6E276B97)
-From: Greg White <pcguy11@live.com>
-To: =?iso-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: rt2x00 and packet injection
-Date: Sun, 7 Sep 2008 19:17:37 -0500
-Content-Type: text/plain; charset=US-ASCII
+Received: from rv-out-0506.google.com ([209.85.198.230]:24632 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751999AbYIZQpT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 12:45:19 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1110926rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 09:45:18 -0700 (PDT)
+Message-ID: <ef111e7b0809260945p16abde01ud17e19ac2d03fdb5@mail.gmail.com> (sfid-20080926_184536_391731_7C3D15E5)
+Date: Fri, 26 Sep 2008 12:45:18 -0400
+From: "OB Lutz" <ob.lutz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Rate control in adhoc mode under ath5k
 MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
->> On Sat, Sep 6, 2008 at 9:37 PM, Greg wrote:
->> I tried aircrack-ng and 2.6.27-rc3 and the two don't want to work 
->>together.  Yes I dowloaded and compiled iw and libnl.  I have to use the 
->>driver from http://homepages.tu-darmstadt.de/~p_larbig/wlan/ to get 
->>aircrack-ng to work right.  Any suggestions?
->>
->> Thanks,
->
-> There is another requirement to use aircrack-ng/aireplay-ng (or any
-> other osdep-based injector) with a mac80211-based driver: you must use
-> the latest version (1.0-rc1 or newer) of aircrack-ng. Also, the
-> monitor interface (mon0) must be created with airmon-ng - some drivers
-> will refuse to inject on wlan0, even if it's set to monitor mode. In
-> addition, the interfaces must always be on the same channel (as there
-> is only 1 radio), so it's important that both interfaces remain on the
-> desired channel.
->
-> BTW which sub-driver are you trying to use? rt73usb?
-
-I am using aircrack-ng 1.0 rc1 rev 1085 with an Edimax USB wireless card.  Yes rt73usb is what I am trying to use.
-
-Thanks,
-
-_________________________________________________________________
-See how Windows connects the people, information, and fun that are part of your life.
-http://clk.atdmt.com/MRT/go/msnnkwxp1020093175mrt/direct/01/
+I'm trying to get the PID rate control to work in adhoc mode. The hw
+address given to both rate_control_pid_tx_status and
+rate_control_pid_get_rate are both FF:FF:FF:FF:FF:FF, and so the
+sta_info_get calls constantly fail. I've been able to trace the sk_buf
+back to ath5k_tx_processq in drivers/net/wireless/ath5k/base.c but
+can't find anywhere that the address data is/isn't being set. Is this
+normal behavior for adhoc mode? Adhoc mode is essentially
+non-functional under auto rate selection. Forcing bitrates works.
