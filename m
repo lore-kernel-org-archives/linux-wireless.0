@@ -1,65 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.acecape.com ([66.114.74.12]:47902 "EHLO mail1.acecape.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751052AbYIUTAR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 15:00:17 -0400
-Message-ID: <48D697F5.9050802@acedsl.com> (sfid-20080921_210023_746202_3F125557)
-Date: Sun, 21 Sep 2008 14:52:37 -0400
-From: Wei Weng <wweng@acedsl.com>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:46609 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752918AbYIZXkf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 19:40:35 -0400
+Message-ID: <48DD72F2.3030402@lwfinger.net> (sfid-20080927_014039_118901_47C11BE9)
+Date: Fri, 26 Sep 2008 18:40:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Arjan van de Ven <arjan@infradead.org>
-CC: Evgeniy Polyakov <johnpol@2ka.mipt.ru>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
- restart.
-References: <20080921172316.GA6306@2ka.mipt.ru>	<20080921110422.1d010b96@infradead.org>	<20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org>
-In-Reply-To: <20080921113513.16677c4e@infradead.org>
-Content-Type: text/plain; charset=US-ASCII
+To: feldmaus <feldmann_markus@gmx.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Do not get BCM4303 to work
+References: <ga2fra$9q$1@ger.gmane.org> <48C5777B.9070106@lwfinger.net> <gbjipv$cgd$1@ger.gmane.org>
+In-Reply-To: <gbjipv$cgd$1@ger.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arjan van de Ven wrote:
-> On Sun, 21 Sep 2008 22:28:38 +0400
-> Evgeniy Polyakov <johnpol@2ka.mipt.ru> wrote:
+feldmaus wrote:
+> i thought it would be helpful to post my Messages. :-)
+> If not ignore this Message.:-)
 > 
->> On Sun, Sep 21, 2008 at 11:04:22AM -0700, Arjan van de Ven
->> (arjan@infradead.org) wrote:
->>> so now you go from an occasional burp to having nothing at all.
->>> How about you run with this patch on your own machine only?
->> And how else user can get attention to the problem which is not fixed
->> by the vendor? 
-> 
-> ... or the community
-> 
->> We close our eyes and there is no problem, since we do
->> not see it. I just brought a lamp: no user can see that essentially
->> driver is broken so he can run it on his own risk.
->>
->>> or.. since you say a reload of the driver fixes it.. why don't you
->>> make a patch for the driver that does basically the actions of a
->>> reload automatically when the driver detects the issue?
->>> (and stick a WARN_ON in for good measure so that kerneloops.org can
->>> start tracking these burps)
->> It stops after several seconds (or packets?). Sometimes (but rarely)
->> it works several minutes, sometimes it fires above dmesg line and
->> continues to work, sometimes it fires it for a while and then stops
->> writing it, although driver does not send or receive anything (at
->> least ifconfig counters do not change).
-> 
-> again.. so how about you detect this condition and do, in the driver
-> code, the equivalent of rmmod/insmod to the hardware. I'm sure people
-> who have the hardware would appreciate that type of patch a lot more
-> than the one you sent out.
-> 
+> I am using the NetworkManager Applet to show and connect to Wlan Networks.
+> My wireless Button shines blue when my Linux System starts.
+> However after i login onto myGnome Desktop and after some time the
+> NetworkManager Applet shows me my Wireless Network.
 
-I guess it is your way of "middle finger" to all the IPW2100 customers who try
-to use it on a Linux machine.
+You should check the posting at
+http://www.ussg.iu.edu/hypermail/linux/kernel/0809.3/1423.html.
+Perhaps you can activate your radio by software, even if the button
+does not work.
 
-
-Thanks
-Wei
-
-
+Larry
