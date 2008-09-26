@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.birdnet.se ([213.88.146.6]:33004 "HELO foo.birdnet.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751850AbYI2VXD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 17:23:03 -0400
-Message-ID: <20080929211620.6344.qmail@stuge.se> (sfid-20080929_232306_578319_D3D71081)
-Date: Mon, 29 Sep 2008 23:16:20 +0200
-From: Peter Stuge <peter@stuge.se>
-To: wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
-Subject: Re: [RFC/T] b43: to few loop tries in do_dummy_tx
-References: <48E11F1E.50705@lwfinger.net> <200809292038.37939.mb@bu3sch.de>
+Received: from mga11.intel.com ([192.55.52.93]:17790 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751656AbYIZFOl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 01:14:41 -0400
+Subject: Re: [PATCH] iwl3945: added channel sysfs entry
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <43e72e890809252113h624a8d91jd859935ae5afed10@mail.gmail.com>
+References: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
+	 <1222245882.18015.62.camel@johannes.berg>
+	 <1222328058.2510.470.camel@debian.sh.intel.com>
+	 <1222334592.10563.59.camel@johannes.berg>
+	 <1222401242.2510.519.camel@debian.sh.intel.com>
+	 <43e72e890809252113h624a8d91jd859935ae5afed10@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 26 Sep 2008 13:13:56 +0800
+Message-Id: <1222406036.2510.521.camel@debian.sh.intel.com> (sfid-20080926_071450_433831_F2D65705)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809292038.37939.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> Actually, I do know since the very first days of bcm43xx that the
-> loop counts are not big enough in some of these loops.
+On Thu, 2008-09-25 at 21:13 -0700, Luis R. Rodriguez wrote:
+> 
+> CONFIG_WIRELESS_OLD_REGULATORY is a temporary solution, the right
+> solution for you is to build the regulatory domain with the provided
+> API as discussed at OLS. Additionally distributions can start picking
+> up iw and crda. I can also see NetworkManager asking the kernel to set
+> the regulatory domain just as with iw, based on the user's defined
+> country somewhere.
 
-Would it make sense to double check the conditions after the loop?
+This is a known bug. Please read
+http://marc.info/?l=linux-wireless&m=122237262931451&w=2 and revert the
+corresponding patch.
 
+Thanks,
+-yi
 
-> But I didn't change it, as it was said the current counts match the
-> specs.
-
-Which specs?
-
-
-//Peter
