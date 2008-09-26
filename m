@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:41123 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752697AbYION6m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 09:58:42 -0400
-Subject: Re: More thoughts about roaming ...
-From: Dan Williams <dcbw@redhat.com>
-To: Helmut Schaa <hschaa@suse.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200809151416.07552.hschaa@suse.de>
-References: <200809151416.07552.hschaa@suse.de>
-Content-Type: text/plain
-Date: Mon, 15 Sep 2008 09:59:20 -0400
-Message-Id: <1221487160.10177.14.camel@localhost.localdomain> (sfid-20080915_155847_116921_9A9B4FFA)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.235]:45842 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752227AbYIZUZN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 16:25:13 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1198768rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 13:25:10 -0700 (PDT)
+Message-ID: <2da21fe50809261325o62dea98dyf40b06e373f29f53@mail.gmail.com> (sfid-20080926_222518_815757_A63F1AF6)
+Date: Fri, 26 Sep 2008 22:25:09 +0200
+From: "Davide Pesavento" <davidepesa@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: wireless-testing modpost failure
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, YanBo <dreamfly281@gmail.com>
+In-Reply-To: <1222457416.3798.25.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <2da21fe50809261104m3b7d99e3g8b56416b8182ca45@mail.gmail.com>
+	 <20080926190007.GD3483@tuxdriver.com>
+	 <1222457416.3798.25.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-15 at 14:16 +0200, Helmut Schaa wrote:
-> Hi,
-> 
-> As a result of the thread "Pondering: how to improve mac80211 roaming ..."
-> I thought a bit more about that topic. Here is a quick suggestion for a first
-> version:
-> 
-> * Enhance mac80211 software scan to interrupt the current scan and switch
->   back to the operating channel every once in a while (only if at least one STA
->   interface is associated) => background scan.
-> 
-> * Enhance mac80211 to check the signal quality frequently (or any other
->   indicator like beacon misses) and decide when the signal quality is too low.
->   Indicate that to the user space.
-> 
-> * wpa_supplicant (or any other user space application) gets notified about
->   the low signal quality and triggers a scan in order to find a better AP.
->   wpa_supplicant already chooses the AP with the best signal strength.
+2008/9/26 Johannes Berg <johannes@sipsolutions.net>:
+> On Fri, 2008-09-26 at 15:00 -0400, John W. Linville wrote:
+>
+>> >   Building modules, stage 2.
+>> >   MODPOST 216 modules
+>> > ERROR: "mpp_path_lookup" [net/mac80211/mac80211.ko] undefined!
+>> > ERROR: "mpp_path_add" [net/mac80211/mac80211.ko] undefined!
+>
+> Davide, can you tell me what file/line it fails in?
+>
 
-I'm pretty sure it doesn't.  The code in wpa_supplicant_select_bss()
-doesn't have any logic to detect signal strength, nor does any driver
-report signal strength to the supplicant.  Drivers set the level (well,
-only wext/nl80211, ndis, iphone/osx, and bsd) but I'm pretty sure
-nothing in the supplicant uses it.
+How can I tell you that?
 
-Maybe now is the time to switch that on.  That needs to be coupled with
-some additions to cfg80211 to turn firmware/driver roaming on and off,
-along with a capability bit somewhere to indicate that the
-driver/firmware support turning roaming on/off.
+>> I'm not sure what the best long-term solution is.  Should we define
+>> empty versions of those functions when that config option is unset?
+>> Or just make the whole block subject to that config option?
+>
+> The weird thing is that the block in tx.c is already ifdef'ed out and
+> the block in rx.c should be optimised out entirely.
+>
+> johannes
+>
 
-Dan
-
-
-> The reason behind not triggering the scan directly from mac80211 is that the
-> supplicant (or any other user space application) might know more about the
-> current environment and could for example trigger a scan restricted to specific
-> channels (in the future) which should speed up the scan. Hence let the user
-> space decide what to do with a low signal.
-> 
-> However the detection of when the signal quality is low should still be done in
-> mac80211 or the driver as some cards seem to have the needed functionality
-> implemented in firmware (e.g. missed beacon interrupt).
-> 
-> I'll send some proof-of-concept patches in a few minutes which implement
-> background scanning in software and the user space indication. I've tested them
-> a bit already and they work quite well with an iwl4965.
-> 
-> Helmut
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Thanks,
+Davide
