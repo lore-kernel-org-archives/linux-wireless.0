@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:31179 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752371AbYI1RS6 (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:45211 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378AbYIZGve (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2008 13:18:58 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1792536wfd.4
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2008 10:18:57 -0700 (PDT)
-Message-ID: <40f31dec0809281018l6a2fdacwf03ddf0f2876c1a2@mail.gmail.com> (sfid-20080928_191903_714447_1649ED75)
-Date: Sun, 28 Sep 2008 20:18:57 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Peter Chant" <pete@petezilla.co.uk>
-Subject: Re: SMC wireless card, unknown Atheros/Accton chipset?
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200809281734.01027.pete@petezilla.co.uk>
+	Fri, 26 Sep 2008 02:51:34 -0400
+Received: by gxk9 with SMTP id 9so7993552gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 23:51:33 -0700 (PDT)
+Message-ID: <43e72e890809252351u48ce9f89q6ec9947044317d6@mail.gmail.com> (sfid-20080926_085137_084871_949EA856)
+Date: Thu, 25 Sep 2008 23:51:33 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890809252350n13a04099ne205480201cae26c@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <200809281734.01027.pete@petezilla.co.uk>
+References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net>
+	 <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com>
+	 <48DC51AF.6000900@lwfinger.net>
+	 <1ba2fa240809252342x4b85b7e3u8341bb96a03b95a7@mail.gmail.com>
+	 <43e72e890809252350n13a04099ne205480201cae26c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/9/28 Peter Chant <pete@petezilla.co.uk>:
-> Chaps,
+On Thu, Sep 25, 2008 at 11:50 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Sep 25, 2008 at 11:42 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+>> On Fri, Sep 26, 2008 at 6:06 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>> Tomas Winkler wrote:
+>>>> wild guess try to revert:
+>>>> 'mac80211: make master iface not wireless'
+>>>
+>>> You win the prize. Bisection shows that
+>>> 84b0ba8ed0423a3c56a28e701b735daae3e15766 is first bad commit
+>>>
+>>> commit 84b0ba8ed0423a3c56a28e701b735daae3e15766
+>>> Author: Johannes Berg <johannes@sipsolutions.net>
+>>> Date:   Tue Sep 16 14:18:59 2008 +0200
+>>>
+>>>    mac80211: make master iface not wireless
+>>>
+>>>
+>>> The actual crash is in the following routine from include/net/wireless.h:
+>>>
+>>> /**
+>>>  * wiphy_priv - return priv from wiphy
+>>>  */
+>>> static inline void *wiphy_priv(struct wiphy *wiphy)
+>>> {
+>>>        BUG_ON(!wiphy);
+>>>        return &wiphy->priv;
+>>> }
+>>>
+>>> I'm still looking to see where it goes wrong.
+>>
+>> What do you mean?  The root cause is written in the commit log.
+>> Tomas
 >
-> hope this is the right place.  I have a SMCWPCI-G2 EU wireless card (PCI) that
-> does not seem to be recognised by the ath5k driver.  It is a 802.11g card but
-> I tried the ath9k driver for luck, that did not work nor did the madwifi
-> drivers.
->
-> Output from lspci -v:
->
-> 00:0b.0 Ethernet controller: Atheros Communications Inc. Unknown device 001d
-> (rev 01)
->        Subsystem: Accton Technology Corporation Unknown device b203
->        Flags: bus master, medium devsel, latency 32, IRQ 5
->        Memory at e2010000 (32-bit, non-prefetchable) [size=64K]
->        Capabilities: [44] Power Management version 2
->
->
-> Thoughts?
->
-> Pete
->
+> The question is who calls wiphy_priv(mdev) or wiphy_priv(NULL) and where.
 
+Actually just the later.
 
-It's a 2417, i've already posted a patch that adds support for this
-but didn't make it on wireless-testing yet.
-
-I'll post some new patches ASAP ;-)
-
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+  Luis
