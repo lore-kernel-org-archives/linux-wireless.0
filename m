@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:27488 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689AbYIKOUR (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56267 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466AbYIZTAj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 10:20:17 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so217163wri.5
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2008 07:20:15 -0700 (PDT)
-Message-ID: <40f31dec0809110720x38902672pc60426a7178de5e3@mail.gmail.com> (sfid-20080911_162022_041775_07D7D979)
-Date: Thu, 11 Sep 2008 17:20:15 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Martin Michlmayr" <tbm@cyrius.com>
-Subject: Re: [ath5k-devel] ath5k: bad udelay call, build failure on ARM
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080910093638.GA16874@deprecation.cyrius.com>
+	Fri, 26 Sep 2008 15:00:39 -0400
+Date: Fri, 26 Sep 2008 15:00:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Davide Pesavento <davidepesa@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	YanBo <dreamfly281@gmail.com>
+Subject: Re: wireless-testing modpost failure
+Message-ID: <20080926190007.GD3483@tuxdriver.com> (sfid-20080926_210043_825340_4B499BE5)
+References: <2da21fe50809261104m3b7d99e3g8b56416b8182ca45@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080825115715.GA13506@deprecation.cyrius.com>
-	 <20080825190811.GC17297@tuxdriver.com>
-	 <40f31dec0808251236qad2118dv2b781b147d366415@mail.gmail.com>
-	 <20080910093638.GA16874@deprecation.cyrius.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2da21fe50809261104m3b7d99e3g8b56416b8182ca45@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/9/10 Martin Michlmayr <tbm@cyrius.com>:
-> * Nick Kossifidis <mickflemm@gmail.com> [2008-08-25 22:36]:
->> > There are "udelay(2300)" calls in phy.c and hw.c.  How important is
->> > that exact number?  Could those be replaced by mdelay(3) instead?
->> >
->> > Of course, looking in include/linux/delay.h, mdelay(3) may still
->> > translate to __bad_udelay on arm.  It would be nice if the ARM guys
->> > and delay.h could at least agree on the maximum value allowed to be
->> > passed to udelay...
->> >
->> > John
->>
->> Sorry for that i just haven't tested 5210 code much (these are older
->> chips that need more delay). I'll do some tests asap and tweak this
->> value to be in range.
->
-> Did you have a chance to do these tests yet?
+On Fri, Sep 26, 2008 at 08:04:18PM +0200, Davide Pesavento wrote:
+> Hi!
+> 
+> I just pulled from wireless-testing git tree and I'm now hitting this
+> build error:
+> 
+>   Building modules, stage 2.
+>   MODPOST 216 modules
+> ERROR: "mpp_path_lookup" [net/mac80211/mac80211.ko] undefined!
+> ERROR: "mpp_path_add" [net/mac80211/mac80211.ko] undefined!
+> make[1]: *** [__modpost] Error 1
+> make: *** [modules] Error 2
+> 
+> My kernel config:
+> 
+> $ grep CONFIG_MAC80211 .config
+> CONFIG_MAC80211=m
+> CONFIG_MAC80211_RC_PID=y
+> CONFIG_MAC80211_RC_DEFAULT_PID=y
+> CONFIG_MAC80211_RC_DEFAULT="pid"
+> # CONFIG_MAC80211_MESH is not set
 
-Next week i hope, sorry for the delay ;-(
+Turn this on to make it build again.
 
+I'm not sure what the best long-term solution is.  Should we define
+empty versions of those functions when that config option is unset?
+Or just make the whole block subject to that config option?
 
-
+John
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
