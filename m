@@ -1,108 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:47747 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752610AbYIQPS2 (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:17358 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752742AbYIZIM1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 11:18:28 -0400
-Date: Wed, 17 Sep 2008 12:18:22 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: Regression in 2.6.27-rcX caused by commit
-	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-Message-ID: <20080917151822.GB5186@khazad-dum.debian.net> (sfid-20080917_171833_107455_4B4A4871)
-References: <48CFC03A.8020708@lwfinger.net> <48D0183E.9010301@lwfinger.net> <20080916210920.GC16470@srcf.ucam.org> <200809171619.33377.mb@bu3sch.de>
+	Fri, 26 Sep 2008 04:12:27 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so144188yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 01:12:26 -0700 (PDT)
+Message-ID: <43e72e890809260112p3a368505n3c8cc7a3b35b6573@mail.gmail.com> (sfid-20080926_101230_633134_90E272AF)
+Date: Fri, 26 Sep 2008 01:12:25 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240809260111i217ff844q73036685e6d74aee@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809171619.33377.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
+References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net>
+	 <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com>
+	 <48DC51AF.6000900@lwfinger.net>
+	 <43e72e890809260006kfc833fdsccbe3f22b3ad4c56@mail.gmail.com>
+	 <43e72e890809260043n1b31dea9yaad2e7a2d80ed819@mail.gmail.com>
+	 <1ba2fa240809260111i217ff844q73036685e6d74aee@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Sep 2008, Michael Buesch wrote:
-> On Tuesday 16 September 2008 23:09:20 Matthew Garrett wrote:
-> > Oh, hey, I suck. This one might stand a better chance of not falling 
-> > over.
-> > 
-> > diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-> > index fec5645..991e318 100644
-> > --- a/drivers/net/wireless/b43/rfkill.c
-> > +++ b/drivers/net/wireless/b43/rfkill.c
-> > @@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev *dev)
-> >  	struct b43_rfkill *rfk = &(dev->wl->rfkill);
-> >  
-> >  	if (!dev->radio_hw_enable) {
-> > -		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
-> > +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
-> >  		return;
-> >  	}
-> >  
-> >  	if (!dev->phy.radio_on)
-> > -		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
-> > +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
-> >  	else
-> > -		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
-> > -
-> > +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
-> >  }
-> 
-> I still thing that it is really wrong to check and change the software
-> rfkill state from within the _hardware_ rfkill state handler.
-> So let's say this handler sets the state to SOFT_BLOCKED. Who is going
-> to set it back to unblocked, if the user unblocks the radio?
+On Fri, Sep 26, 2008 at 1:11 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Fri, Sep 26, 2008 at 10:43 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Fri, Sep 26, 2008 at 12:06 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>> On Thu, Sep 25, 2008 at 8:06 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>>> Tomas Winkler wrote:
+>>>>> wild guess try to revert:
+>>>>> 'mac80211: make master iface not wireless'
+>>>>
+>>>> You win the prize. Bisection shows that
+>>>> 84b0ba8ed0423a3c56a28e701b735daae3e15766 is first bad commit
+>>>>
+>>>> commit 84b0ba8ed0423a3c56a28e701b735daae3e15766
+>>>> Author: Johannes Berg <johannes@sipsolutions.net>
+>>>> Date:   Tue Sep 16 14:18:59 2008 +0200
+>>>>
+>>>>    mac80211: make master iface not wireless
+>>>>
+>>>>
+>>>> The actual crash is in the following routine from include/net/wireless.h:
+>>>>
+>>>> /**
+>>>>  * wiphy_priv - return priv from wiphy
+>>>>  */
+>>>> static inline void *wiphy_priv(struct wiphy *wiphy)
+>>>> {
+>>>>        BUG_ON(!wiphy);
+>>>>        return &wiphy->priv;
+>>>> }
+>>>>
+>>>> I'm still looking to see where it goes wrong.
+>>>
+>>> Actually wouldn't you get a stack trace here?
+>>
+>> Yeah not sure I tested against !wiphy on its callers and didn't find a
+>> case where it hit. I don't think this is it.
+>
+> u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+> {
+>        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+>        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+> --- this is the line
 
-I would suggest reading the updated docs, but I know you'd rather just stay
-away from rfkill.
+Yeah I just landed there too.
 
-For reference:
-
-Basically, your wireless device driver has to monitor any hardware rfkill
-lines and call rfkill_force_state() accordingly (you don't even need to
-track if the state changed, rfkill core will do that).
-
-The call to rfkill_force_state() should set state to HARD_BLOCKED (any of
-the hardware rfkill lines are active), SOFT_BLOCKED (no hardware rfkill
-lines are active, but one of the software rfkill lines are active), or
-UNBLOCKED (no rfkill lines of any type are active).
-
-Whether this is to be done through interrupts or pooling is something that
-depends on your driver and the hardware.
-
-User and userspace interaction is taken care of by the rfkill core.  You do
-nothing of the sort in the wireless device driver.
-
-There are *very few* exceptions for the above as far as wireless device
-drivers go.  They are explained in the docs, and I know of no wireless
-device driver that would require any them.
-
-> We can turn the radio on/off from the mac80211 config callback. Possibly
-> we must tell rfkill about it (I'm not sure. I don't understand the API).
-> I think this is pretty hard to get right, actually. HW-block and SW-block
-> are two completely independent states in b43. You can HW-block and SW-block
-> the device at the same time. So one must make sure that at any time the rfkill
-> is in a sane state if _either_ HW-block or SW-block changes. Currently I think
-> we only change rfkill state if HW-block state changes. Which is wrong.
-
-Again, for reference:
-
-You need to synthesize a single state (unblock/soft-block/hard-block) for a
-transmitter from every rfkill line that affects that transmitter.  This
-happens because the interface is a SINGLE ONE rfkill class per independent
-wireless interface ("transmitter").
-
-> In the end, I do not care about this crap anymore.
-
-That's quite understandable...  b43 is one of the drivers (if not THE
-driver) that suffered most from rfkill bugs, as it was an early adopter and
-the old rfkill API was just plain broken for the kind of stuff b43 needed it
-for.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+  Luis
