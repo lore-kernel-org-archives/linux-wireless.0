@@ -1,33 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39786 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750730AbYIQEql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 00:46:41 -0400
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:62720 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752367AbYIZR1r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 13:27:47 -0400
+Message-ID: <48DD1B92.5000700@lwfinger.net> (sfid-20080926_192752_127194_62374595)
+Date: Fri, 26 Sep 2008 12:27:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18640.35637.877669.967377@gargle.gargle.HOWL> (sfid-20080917_064646_018037_C0409299)
-Date: Wed, 17 Sep 2008 10:14:37 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 0/3] Beacon handling fixes
+To: feldmaus <feldmann_markus@gmx.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Do not get BCM4303 to work
+References: <ga2fra$9q$1@ger.gmane.org> <48C5777B.9070106@lwfinger.net> <gaesbd$nv8$1@ger.gmane.org> <48CB0993.6020601@lwfinger.net> <gbj2mr$fp6$1@ger.gmane.org>
+In-Reply-To: <gbj2mr$fp6$1@ger.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+feldmaus wrote:
+> So the hp-dmi Module is only available in 2.6.27 ?
 
-A couple of fixes for beacon handling in IBSS mode.
-
-Sujith
-
-Sujith (3):
-  ath9k: Whitespace cleanup
-  ath9k: Fix nexttbtt calculation
-  ath9k: Fix TSF Adjust usage
-
- drivers/net/wireless/ath9k/beacon.c |  145 ++++++++++++++++-------------------
- drivers/net/wireless/ath9k/core.c   |    3 +-
- drivers/net/wireless/ath9k/core.h   |    1 +
- 3 files changed, 69 insertions(+), 80 deletions(-)
-
+Yes.
