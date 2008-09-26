@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:38224 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755271AbYIRXKx (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:11773 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594AbYIZGu7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 19:10:53 -0400
-Received: by gxk9 with SMTP id 9so109508gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 16:10:52 -0700 (PDT)
-Message-ID: <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> (sfid-20080919_011057_085624_6416966D)
-Date: Thu, 18 Sep 2008 16:10:52 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Steven Noonan" <steven@uplinklabs.net>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: "Ingo Molnar" <mingo@elte.hu>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+	Fri, 26 Sep 2008 02:50:59 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so141937ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 23:50:57 -0700 (PDT)
+Message-ID: <43e72e890809252350n13a04099ne205480201cae26c@mail.gmail.com> (sfid-20080926_085106_191159_03843B1A)
+Date: Thu, 25 Sep 2008 23:50:57 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240809252342x4b85b7e3u8341bb96a03b95a7@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
-	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
-	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
-	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
-	 <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
-	 <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com>
-	 <20080918220102.GE7408@tesla>
-	 <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com>
-	 <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
+References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net>
+	 <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com>
+	 <48DC51AF.6000900@lwfinger.net>
+	 <1ba2fa240809252342x4b85b7e3u8341bb96a03b95a7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2008 at 4:04 PM, Steven Noonan
-> I always get "1 megabit/sec". It actually measures (at best) to be a
-> throughput of 8mbits/sec, though the average (due to strange random
-> packet loss) is about 4mbits/sec. --
+On Thu, Sep 25, 2008 at 11:42 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Fri, Sep 26, 2008 at 6:06 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> Tomas Winkler wrote:
+>>> wild guess try to revert:
+>>> 'mac80211: make master iface not wireless'
+>>
+>> You win the prize. Bisection shows that
+>> 84b0ba8ed0423a3c56a28e701b735daae3e15766 is first bad commit
+>>
+>> commit 84b0ba8ed0423a3c56a28e701b735daae3e15766
+>> Author: Johannes Berg <johannes@sipsolutions.net>
+>> Date:   Tue Sep 16 14:18:59 2008 +0200
+>>
+>>    mac80211: make master iface not wireless
+>>
+>>
+>> The actual crash is in the following routine from include/net/wireless.h:
+>>
+>> /**
+>>  * wiphy_priv - return priv from wiphy
+>>  */
+>> static inline void *wiphy_priv(struct wiphy *wiphy)
+>> {
+>>        BUG_ON(!wiphy);
+>>        return &wiphy->priv;
+>> }
+>>
+>> I'm still looking to see where it goes wrong.
+>
+> What do you mean?  The root cause is written in the commit log.
+> Tomas
 
-Yeah, iwconfig reports a wrong rate, should be easy to fix but I
-haven't yet looked at it. If you can fix it it'd be appreciated.
-
-> And that was with aggregation
-> re-enabled via your patch.
-
-That patch just fixes aggregation for mac80211 after the TX MQ
-changes, its seems ath9k aggregation is broken. Looking into that now.
-
-> Without, it never exceeds 1mbit/sec
-> (actual, not just as indicated by iwconfig.
-
-Right.
+The question is who calls wiphy_priv(mdev) or wiphy_priv(NULL) and where.
 
   Luis
