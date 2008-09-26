@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36794 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731AbYIIUku (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53842 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752958AbYIZThx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 16:40:50 -0400
-Date: Tue, 9 Sep 2008 15:22:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Andrew Bird <ajb@spheresystems.co.uk>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Cezary Jackiewicz <cezary.jackiewicz@gmail.com>,
-	Philip Langdale <philipl@overt.org>
-Subject: Re: [PATCH 5/5] rfkill: remove transmitter blocking on suspend
-Message-ID: <20080909192241.GB3552@tuxdriver.com> (sfid-20080909_224055_285021_792F5899)
-References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> <1219762681-26911-6-git-send-email-hmh@hmh.eng.br> <20080903190559.GO3050@tuxdriver.com> <20080903212020.GA14620@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080903212020.GA14620@khazad-dum.debian.net>
+	Fri, 26 Sep 2008 15:37:53 -0400
+Subject: Re: stlc45xx: mac80211 driver for N800 and N810
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <87abe3mdu4.fsf@nokia.com>
+References: <877i98iw4h.fsf@nokia.com>
+	 <1221819119.10419.75.camel@johannes.berg>  <87abe3mdu4.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cZQ5ZLmCm6XgLLycm7hI"
+Date: Fri, 26 Sep 2008 21:37:48 +0200
+Message-Id: <1222457868.3798.31.camel@johannes.berg> (sfid-20080926_213756_578196_B5E5AACD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 03, 2008 at 06:20:21PM -0300, Henrique de Moraes Holschuh wrote:
-> On Wed, 03 Sep 2008, John W. Linville wrote:
-> > > The following drivers need to check if they need to explicitly block
-> > > their transmitters in their own suspend handlers (maintainers Cc'd):
-> > > 	arch/arm/mach-pxa/tosa-bt.c
-> > > 	drivers/net/usb/hso.c
-> > > 	drivers/net/wireless/rt2x00/* (USB might need it?)
-> > > 	drivers/net/wireless/b43/ (SSB over USB might need it?)
-> > > 	drivers/misc/hp-wmi.c
-> > > 	eeepc-laptop w/rfkill support (not in mainline yet)
-> > > 	Compal laptop w/rfkill support (not in mainline yet)
-> > > 	toshiba-acpi w/rfkill support (not in mainline yet)
-> > 
-> > Are we now satisfied that the in-kernel drivers above are all prepared
-> > for this patch?
-> 
-> I didn't receive a single response stating that a driver would need special
-> care, but then, I didn't receive many responses at all...
 
-OK, I will plan on merging this shortly (let's say on Friday 12
-September 2008) unless I hear serious objections.
+--=-cZQ5ZLmCm6XgLLycm7hI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
+On Sat, 2008-09-20 at 11:16 +0300, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>=20
+> > On Fri, 2008-09-19 at 07:43 +0300, Kalle Valo wrote:
+> >> Hello all,
+> >>=20
+> >> Nokia yesterday published stlc45xx, which is a mac80211 driver for
+> >> N800 and N810. Webpage here:
+> >>=20
+> >> http://stlc45xx.garage.maemo.org/
+> >
+> > quick look at the code
+>=20
+> Thanks a lot! I didn't send any code for review yet because, as you
+> noticed, the code is in early stages still.
+
+Right, just figured I was looking anyway...
+
+Anyway, something else occurred to me, you should be handling the
+sequence number TX flag from mac80211 because otherwise the firmware
+will probably overwrite the per-TID sequence numbers. According to the
+API documentation, there is a "disable firmware sequence number" flag
+which then perfectly corresponds to !IEEE80211_TXF_ASSIGN_SEQ.
+
+johannes
+
+--=-cZQ5ZLmCm6XgLLycm7hI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI3ToJAAoJEKVg1VMiehFYcZIP/jnJCOossLoqCJTDyu3BQrxa
+DL5C3mmOS9Lblm+ut2VQAV5W00tiNWTdDaPuNNmOAoQK37ySkfFcUulVq3C0bo6Y
+L7WEuJ7oW8KGgkt8YX8eHsaNYinMAoNSCrxZxRodshaleN/LoZhSunAW+dlzQjig
+YD0Ig6IhiFSM8awCYjsfU0JkNi2Q2ThRkbrnjA6XC2MuGeI04EvktQ8GeLc6IbZK
+2bssAFZWDkDcjNApZTYVoPizHiyjwgA9K5UHA2VbmWlhTNWOJm5svMh7YzJ+Tmlr
+I5ahW/95i9oNGBysDLUHWKlrxpdscdPeLUnndebHauQ6uePKBrfApfC6t0L1ERWK
+yfU8Vmkj1fiTFf8cpTdgUA5KAOhYlzIipcToOYRS3Sw1W9n1c5e7J6SS/rnBFq+G
+PzWmMYebmeIxtsF5rhY8sMzybIoYyJ3kiyjdCWYxQKrur+1aQo6njPBmuXp7FvPI
+uQ+96Hip342Q1M3zqJpZgoGpPAzNm04j1NpBXQBmlvCHjN2sWmGfESheq+/oOwrR
+hzOQk6QNcE2MLVltp3Ri1pL5m1ysBH3XDKSy+Aa0DZZyzgrewSi/RMvbJi+XsSDZ
+Z9JozjqUShX9ArQcMg2pDhPJEDW3gDANNMviUd3cBJDLwV7tjgpHNdu5PDflVq5u
+vrmzFbJE2BavnWTQJFuI
+=Ziw5
+-----END PGP SIGNATURE-----
+
+--=-cZQ5ZLmCm6XgLLycm7hI--
+
