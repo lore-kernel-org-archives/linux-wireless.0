@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48982 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753261AbYIVVoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 17:44:30 -0400
-Subject: Re: prism54 stopped working after upgrade from kernel
-	2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
-From: Dan Williams <dcbw@redhat.com>
-To: Chr <chunkeey@web.de>
-Cc: Philippe Waroquiers <philippe.waroquiers@skynet.be>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200809222332.00500.chunkeey@web.de>
-References: <CB9B2237C21D46F3B852E45F75E91C52@soleil>
-	 <200809222205.28754.chunkeey@web.de>
-	 <1221944909.11865.9.camel@localhost.localdomain>
-	 <200809222332.00500.chunkeey@web.de>
-Content-Type: text/plain
-Date: Sat, 20 Sep 2008 17:44:29 -0400
-Message-Id: <1221947069.11865.11.camel@localhost.localdomain> (sfid-20080922_234435_173388_4B58C0A8)
-Mime-Version: 1.0
+Received: from ro.mikronika.com.pl ([213.17.224.85]:22076 "EHLO
+	cluster1.mikronika.com.pl" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751672AbYIZN2m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2008 09:28:42 -0400
+Received: from [192.168.3.203] (szkudlarekk-lap.mikronika.com.pl [192.168.3.203])
+	(authenticated bits=0)
+	by cluster1.mikronika.com.pl (8.13.4/8.13.4) with ESMTP id m8QDSe7a024761
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 15:28:41 +0200
+Message-ID: <48DCE386.1050800@mikronika.com.pl> (sfid-20080926_152846_108856_F6BF3ABF)
+Date: Fri, 26 Sep 2008 15:28:38 +0200
+From: Karol Szkudlarek <karol@mikronika.com.pl>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: compilation error of compat-wireless-2008-09-26 with ETH_P_PAE
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-22 at 23:32 +0200, Chr wrote:
-> On Saturday 20 September 2008 23:08:29 Dan Williams wrote:
-> > On Mon, 2008-09-22 at 22:05 +0200, Chr wrote:
-> > > On Monday 22 September 2008 20:38:04 Philippe Waroquiers wrote:
-> > > > With the new kernel 2.6.26.3-14.fc8, I see that the prism54 card looks
-> > > > in a correct working mode (e.g. /sbin/iwlist wlan0 scan shows good scan
-> > > > results).
-> > > > But after that, wpa_supplicant cannot associate (gets a timeout)
-> > > > (while it works ok with 2.6.25.14-69.fc8)
-> > > > I have put below the output of wpa_supplicant for the bad case
-> > > > and for the good case.
-> > > >
-> > > > What can I do to further see what is going wrong ?
-> > >
-> > > Well, you can blame the fedora people if you want.
-> > >
-> > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit
-> > >;h=aaa1553512b9105699113ea7e2ea726f3d9d4de2
-> >
-> > Is that commit not in stable 2.6.26 yet or something?
-> Hmm, no? AFAIK The mac80211 multiqueue changes went in somewhere in the 
-> 2.6.27-rc cycle. so 2.6.26.stable doesn't need any extra patches, right?
+Hello!
+I have the following compilation error of the latest compat-wireless=20
+drivers.
+I am using Ubuntu Hardy Heron with 2.6.27-4 linux kernel.
 
-Ah yeah right; I guess I don't understand the link you posted then.  I'd
-thought it was something like "you need this patch which Fedora doesn't
-have in their kernel".
+karol@szkudlarekk-lap:~/tmp/downloads/compat-wireless-2008-09-26$ make
+make -C /lib/modules/2.6.27-4-generic/build=20
+M=3D/home/karol/tmp/downloads/compat-wireless-2008-09-26 modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.27-4-generic'
+CC [M]=20
+/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.o
+/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.c:=
+=20
+In function 'ieee80211_frame_allowed':
+/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.c:=
+1198:=20
+error: 'ETH_P_PAE' undeclared (first use in this function)
+/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.c:=
+1198:=20
+error: (Each undeclared identifier is reported only once
+/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.c:=
+1198:=20
+error: for each function it appears in.)
+make[3]: ***=20
+[/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211/rx.o=
+]=20
+Error 1
+make[2]: ***=20
+[/home/karol/tmp/downloads/compat-wireless-2008-09-26/net/mac80211] Err=
+or 2
+make[1]: ***=20
+[_module_/home/karol/tmp/downloads/compat-wireless-2008-09-26] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.27-4-generic'
 
-Dan
 
+--=20
+Karol Szkudlarek
+Mikronika
+ul. Wykopy 2/4
+60-001 POZNA=C3=91
+tel. +48 61 6655600
+fax +48 61 6655602
+e-mail karol@mikronika.com.pl
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
