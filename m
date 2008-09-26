@@ -1,92 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:31354 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbYIWSZi (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50684 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751461AbYIZKwK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 14:25:38 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2288040rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 11:25:37 -0700 (PDT)
-Message-ID: <45e8e6c40809231125u4ef40f5brcd1694ee19e8b73@mail.gmail.com> (sfid-20080923_202540_804614_DA4B2E60)
-Date: Tue, 23 Sep 2008 11:25:37 -0700
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "David Shwatrz" <dshwatrz@gmail.com>
-Subject: Re: A question about setting Master mode and ieee80211_ioctl_siwmode() handler
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <31436f4a0809220625s240a786cl7602dcb35f7039a5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <31436f4a0809220625s240a786cl7602dcb35f7039a5@mail.gmail.com>
+	Fri, 26 Sep 2008 06:52:10 -0400
+Subject: Re: [PATCH] mac80211: Fix oops on wme.c where mdev is assumed to
+	be a wiphy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1222419687-7106-1-git-send-email-lrodriguez@atheros.com>
+References: <1222419687-7106-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1sfCVF8nRVuozi7hGBQf"
+Date: Fri, 26 Sep 2008 12:51:59 +0200
+Message-Id: <1222426319.10563.91.camel@johannes.berg> (sfid-20080926_125214_316470_E94EDE4E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Master mode is deliberately disabled at this time.  You can enable it
-by applying:
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/004-allow-ap-vlan-modes.patch
 
-On Mon, Sep 22, 2008 at 6:25 AM, David Shwatrz <dshwatrz@gmail.com> wrote:
-> Hello,
-> I have a short question:
->  I wonder how can a command like :
-> "iwconfig wlan0 mode Master"
-> should succeed ;
-> I did tried it on some wireless NIC, which probably does not support
-> master mode, and got:
-> "Error for wireless request "Set Mode" (8B06) :
->    SET failed on device wlan0 ; Invalid argument."
->
->
-> The reason is this:
-> I look at the kernel code which implements receiving the set mode IOCTL.
->
-> The method is ieee80211_ioctl_siwmode(), in net/mac80211/wext.c.
->
-> (I am looking at the last git wireless tree; it appears here below).
->
-> As far as I can see, we don't handle the "Master" mode in the case
-> sentence , so when we try to set the mode to Master,
-> by :
-> "iwconfig wlan0 mode Master"
-> we will always get to the default and exit with
->                "return -EINVAL"
->
-> Am I wrong here ? can somebody please explain?
->
-> static int ieee80211_ioctl_siwmode(struct net_device *dev,
->                                   struct iw_request_info *info,
->                                   __u32 *mode, char *extra)
-> {
->        struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->        int type;
->
->        if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN)
->                return -EOPNOTSUPP;
->
->        switch (*mode) {
->        case IW_MODE_INFRA:
->                type = IEEE80211_IF_TYPE_STA;
->                break;
->        case IW_MODE_ADHOC:
->                type = IEEE80211_IF_TYPE_IBSS;
->                break;
->        case IW_MODE_REPEAT:
->                type = IEEE80211_IF_TYPE_WDS;
->                break;
->        case IW_MODE_MONITOR:
->                type = IEEE80211_IF_TYPE_MNTR;
->                break;
->        default:
->                return -EINVAL;
->        }
->
->        return ieee80211_if_change_type(sdata, type);
-> }
->
->
-> Any ideas?
-> Regards,
-> DS
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+--=-1sfCVF8nRVuozi7hGBQf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2008-09-26 at 02:01 -0700, Luis R. Rodriguez wrote:
+> After Johannes' patch which set mdev as non wiphy
+> there were some remaining bits of code which required
+> changing the assumption that mdev was a wiphy. We
+> change two callers to get to struct ieee80211_local
+> the non-wiphy and actual mdev way.
+>=20
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+I _really_ wonder why I haven't run into this. Odd. Thanks for fixing.
+
+> ---
+>=20
+> Tested with ath5k on v2.6.27-rc7-1972-gfb8961a.
+>=20
+>  net/mac80211/wme.c |   19 +++++++++++++++++--
+>  1 files changed, 17 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+> index 6748ded..7d114bd 100644
+> --- a/net/mac80211/wme.c
+> +++ b/net/mac80211/wme.c
+> @@ -75,8 +75,16 @@ static int wme_downgrade_ac(struct sk_buff *skb)
+>  /* Indicate which queue to use.  */
+>  static u16 classify80211(struct sk_buff *skb, struct net_device *dev)
+>  {
+> -	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+> +	struct ieee80211_local *local;
+>  	struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *) skb->data;
+> +	struct ieee80211_master_priv *mpriv;
+> +
+> +	/* this is not for wiphys, just for mdev */
+> +	BUG_ON (dev->ieee80211_ptr);
+> +
+> +	mpriv =3D netdev_priv(dev);
+> +	local =3D mpriv->local;
+> +
+> =20
+>  	if (!ieee80211_is_data(hdr->frame_control)) {
+>  		/* management frames go on AC_VO queue, but are sent
+> @@ -114,12 +122,19 @@ static u16 classify80211(struct sk_buff *skb, struc=
+t net_device *dev)
+>  u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+>  {
+>  	struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *) skb->data;
+> -	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+> +	struct ieee80211_local *local;
+>  	struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
+> +	struct ieee80211_master_priv *mpriv;
+>  	struct sta_info *sta;
+>  	u16 queue;
+>  	u8 tid;
+> =20
+> +	/* this is not for wiphys, just for mdev */
+> +	BUG_ON (dev->ieee80211_ptr);
+> +
+> +	mpriv =3D netdev_priv(dev);
+> +	local =3D mpriv->local;
+> +
+>  	queue =3D classify80211(skb, dev);
+>  	if (unlikely(queue >=3D local->hw.queues))
+>  		queue =3D local->hw.queues - 1;
+
+--=-1sfCVF8nRVuozi7hGBQf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI3L7LAAoJEKVg1VMiehFYAQIP/A69R1/2nF669acln9HhPj/g
+TVY3QxYEB9QvatR7H/oNwuXpcFQh6rLoJQPMIbV1fLnzybGMS7qixftjv2+dEHMK
+EpkuQv44me1Z+EfPbI5s6h/4Wx0hhJFt63wl8LMMSfdbjfrO5NYrXblwATYUlsZQ
+Wcsc5yE+NH+03rGAycu0p8FPKgM26Jt/1w+JuxUq32ooP70r1IVDN6284qU/1PJ7
+OibwxrR8vaIXenUP80gFRPDZPtOxLei5ZvT4o2qHd1rcwl6q6AMgAphB+8IDwo83
+tYgIiSCsVnfydzEhPCE0X/B8PKudetrC2F7OyD2bM08fLZPpSAZhhRVUOOsAgAYo
+oyKZiJhop//9VLfsyt4o7EvAESHS8SwAjXhV2I8Onm8ftKWQrp9GJfb3uX1rJ/L3
+Z5eqNPu+y+y6xBOtSE44LN4GqSC+HKZHBdE80mcUjxdC/KLZWrniZulFptRF4YV6
+Xz2lxthNkUYCIR/NdYgv/qt99WTn2SClGyDmKn2HT1rXl47QL/boHLMWocJeFEub
+49qBl1nUxLETmj6mi1iL8qkdG8CZQKNtLpblWehnIh1wFhIsvJWFYQg2CxAWJsbD
+JmQz0Gne8PC1jFlq38EbJ0C3JkvxTXSr8SrNiSs/+opB0GNAEn6DjUkGQofSgam0
+BLuZxIxCn3ALVV7mro+B
+=wInW
+-----END PGP SIGNATURE-----
+
+--=-1sfCVF8nRVuozi7hGBQf--
+
