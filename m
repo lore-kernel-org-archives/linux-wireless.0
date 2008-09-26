@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:24311 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754452AbYIOWGq (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:63267 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752270AbYIZILz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 18:06:46 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2352334rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 15:06:44 -0700 (PDT)
-Message-ID: <2da21fe50809151506p57c9193g6a9e97d682e0064a@mail.gmail.com> (sfid-20080916_000648_621309_B334D940)
-Date: Tue, 16 Sep 2008 00:06:44 +0200
-From: "Davide Pesavento" <davidepesa@gmail.com>
-To: ath9k-devel@lists.ath9k.org
-Subject: Re: frustrating ath9k issues
-Cc: linux-wireless@vger.kernel.org, jmalinen@atheros.com,
-	lrodriguez@atheros.com, "Steven Noonan" <steven@uplinklabs.net>
-In-Reply-To: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com>
+	Fri, 26 Sep 2008 04:11:55 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so569549fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 01:11:53 -0700 (PDT)
+Message-ID: <1ba2fa240809260111i217ff844q73036685e6d74aee@mail.gmail.com> (sfid-20080926_101201_039059_657F7B4B)
+Date: Fri, 26 Sep 2008 11:11:53 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890809260043n1b31dea9yaad2e7a2d80ed819@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net>
+	 <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com>
+	 <48DC51AF.6000900@lwfinger.net>
+	 <43e72e890809260006kfc833fdsccbe3f22b3ad4c56@mail.gmail.com>
+	 <43e72e890809260043n1b31dea9yaad2e7a2d80ed819@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/9/15 Steven Noonan <steven@uplinklabs.net>:
+On Fri, Sep 26, 2008 at 10:43 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Sep 26, 2008 at 12:06 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Thu, Sep 25, 2008 at 8:06 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>> Tomas Winkler wrote:
+>>>> wild guess try to revert:
+>>>> 'mac80211: make master iface not wireless'
+>>>
+>>> You win the prize. Bisection shows that
+>>> 84b0ba8ed0423a3c56a28e701b735daae3e15766 is first bad commit
+>>>
+>>> commit 84b0ba8ed0423a3c56a28e701b735daae3e15766
+>>> Author: Johannes Berg <johannes@sipsolutions.net>
+>>> Date:   Tue Sep 16 14:18:59 2008 +0200
+>>>
+>>>    mac80211: make master iface not wireless
+>>>
+>>>
+>>> The actual crash is in the following routine from include/net/wireless.h:
+>>>
+>>> /**
+>>>  * wiphy_priv - return priv from wiphy
+>>>  */
+>>> static inline void *wiphy_priv(struct wiphy *wiphy)
+>>> {
+>>>        BUG_ON(!wiphy);
+>>>        return &wiphy->priv;
+>>> }
+>>>
+>>> I'm still looking to see where it goes wrong.
+>>
+>> Actually wouldn't you get a stack trace here?
 >
-> More recently, I had another incident where it disassociated and
-> refused to reassociate. I got about 100 of these in my dmesg (fixed by
-> unloading and reloading ath9k):
->
-> [...]
-> [ 1279.031033] ath_set_channel: unable to reset channel 149 (5745Mhz)
-> flags 0x30142 hal status 4294967277
-> [ 1279.031203] ath9k_config: Unable to set channel
-> [ 1279.323427] ath_set_channel: unable to reset channel 153 (5765Mhz)
-> flags 0x50142 hal status 4294967277
-> [ 1279.323577] ath9k_config: Unable to set channel
-> [ 1279.624562] ath_set_channel: unable to reset channel 157 (5785Mhz)
-> flags 0x30142 hal status 4294967277
-> [ 1279.624687] ath9k_config: Unable to set channel
-> [ 1279.916441] ath_set_channel: unable to reset channel 161 (5805Mhz)
-> flags 0x50142 hal status 4294967277
-> [ 1279.916586] ath9k_config: Unable to set channel
-> [ 1280.207274] ath_set_channel: unable to reset channel 165 (5825Mhz)
-> flags 0x10142 hal status 4294967277
-> [ 1280.207387] ath9k_config: Unable to set channel
-> [...]
->
+> Yeah not sure I tested against !wiphy on its callers and didn't find a
+> case where it hit. I don't think this is it.
 
-I am experiencing this same issue from time to time, too. rmmod ath9k
-&& modprobe ath9k fixes it. My card is AR5418 on a MacBook Pro.
+u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+{
+        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+--- this is the line
 
-Regards,
-Davide Pesavento
+Tomas
