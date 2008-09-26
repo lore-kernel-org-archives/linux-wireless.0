@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65268 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752542AbYIZDyq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 23:54:46 -0400
-Subject: Re: [PATCH] iwl3945: added channel sysfs entry
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
-In-Reply-To: <1222334592.10563.59.camel@johannes.berg>
-References: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
-	 (sfid-20080924_080231_170139_3D180880) <1222245882.18015.62.camel@johannes.berg>
-	 <1222328058.2510.470.camel@debian.sh.intel.com>
-	 <1222334592.10563.59.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 26 Sep 2008 11:54:02 +0800
-Message-Id: <1222401242.2510.519.camel@debian.sh.intel.com> (sfid-20080926_055459_970890_6D0B66C8)
-Mime-Version: 1.0
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:63386 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752542AbYIZDGU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Sep 2008 23:06:20 -0400
+Message-ID: <48DC51AF.6000900@lwfinger.net> (sfid-20080926_050629_896731_195630F8)
+Date: Thu, 25 Sep 2008 22:06:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Tomas Winkler <tomasw@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
+References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net> <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com>
+In-Reply-To: <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-09-25 at 03:23 -0600, Johannes Berg wrote:
-> Not that I understand why you need that since iw shows all channels
-> you
-> are registering (albeit with possibly a few more flags like
-> "disabled"),
-> but yeah, if anything all this stuff should be in debugfs.
+Tomas Winkler wrote:
+> wild guess try to revert:
+> 'mac80211: make master iface not wireless'
 
-The real user for the function is the automated test cases of our
-validation team running nightly. Greppig dmesg is not reliable and iw is
-not mature enough (at least not included in major distros). We will move
-it to debugfs for now. After iw is as common as iwconfig, we will
-eventually remove this.
+You win the prize. Bisection shows that
+84b0ba8ed0423a3c56a28e701b735daae3e15766 is first bad commit
 
-> There's also
-> this little fact that this channel list shouldn't ever get used, you
-> should be (and afaik are since I fixed it) using what the regdomain is
-> enforcing, and you're already printing the channel list when enough
-> debugging flags are set on driver load.
+commit 84b0ba8ed0423a3c56a28e701b735daae3e15766
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Tue Sep 16 14:18:59 2008 +0200
 
-This is used for debugging especially during the time regdomain is under
-development. I've received quite a few bug reports that is due to
-CONFIG_WIRELESS_OLD_REGULATORY is not enabled. I need at least a way to
-tell the users this is due to your misconfig your regdomain or your
-hardware is not capable to work on that channel.
+    mac80211: make master iface not wireless
 
-Thanks,
--yi
+
+The actual crash is in the following routine from include/net/wireless.h:
+
+/**
+ * wiphy_priv - return priv from wiphy
+ */
+static inline void *wiphy_priv(struct wiphy *wiphy)
+{
+        BUG_ON(!wiphy);
+        return &wiphy->priv;
+}
+
+I'm still looking to see where it goes wrong.
+
+Larry
 
