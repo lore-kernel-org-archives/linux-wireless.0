@@ -1,83 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55710 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756063AbYISDmb (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:3797 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752576AbYIZSSr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 23:42:31 -0400
-Subject: Re: technology preview: scan with cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Dan Williams <dcbw@redhat.com>
-In-Reply-To: <1221794329.10419.9.camel@johannes.berg> (sfid-20080919_052010_602864_D520EF40)
-References: <1221794329.10419.9.camel@johannes.berg>
-	 (sfid-20080919_052010_602864_D520EF40)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gHMMh4QsXT31el99NnqY"
-Date: Fri, 19 Sep 2008 05:41:55 +0200
-Message-Id: <1221795715.10419.15.camel@johannes.berg> (sfid-20080919_054235_013037_F5932A85)
-Mime-Version: 1.0
+	Fri, 26 Sep 2008 14:18:47 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so409484nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 11:18:45 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH RFC] mac80211: notify mac80211 about rfkill events
+Date: Fri, 26 Sep 2008 20:18:40 +0200
+Cc: Tomas Winkler <tomasw@gmail.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, hmh@hmh.eng.br, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+References: <1222357719-26294-1-git-send-email-tomas.winkler@intel.com> <1ba2fa240809251505p342d8a6do51cf870624e0c8dd@mail.gmail.com> <1222426905.10563.100.camel@johannes.berg>
+In-Reply-To: <1222426905.10563.100.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200809262018.40777.IvDoorn@gmail.com> (sfid-20080926_201902_204707_09792CC0)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 26 September 2008, Johannes Berg wrote:
+> On Fri, 2008-09-26 at 01:05 +0300, Tomas Winkler wrote:
+> 
+> > > I am not sure if registring a notifier would be the best solution,
+> > > persionally I was thinking of implementing the rfkill structure into ieee80211_local
+> > > and make it listen to events directly.
+> 
+> I think I like this better.
+> 
+> > That's definitely other option we wanted to suggest that mac80211
+> > would register itself to rfkill subsystem and will provide to driver
+> > appropriate callbacks.  The question is how  drivers vary in the rfkil
+> > implementation and whether it wouldn't be more complex, in that case
+> > the notification is quite clean solution.
+> 
+> How complex does it have to be?
 
---=-gHMMh4QsXT31el99NnqY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Not really, probably it only needs to be a wrapper around rfkill_force_state
+where we can use the RFKILL_ defines to indicate the BLOCKED status.
 
-On Fri, 2008-09-19 at 05:18 +0200, Johannes Berg wrote:
-> This is totally incomplete:
->=20
-> cfg80211 needs to
->  * actually hash on the BSSID instead of putting things into a list
->  * provide BSS list functions so mac80211 need not keep track
->  * allow a "private" area in each scan result with hw-provided size
->  * handle mesh properly
->  * provide a way for the hw to limit the number of SSIDs in a scan
+> > > That means that the only change needed in ieee80211_ioctl_siwtxpower() is
+> > > only allowing the enabling of the radio when RFKILL is not set to BLOCKED.
+> > 
+> > That's just complicates everything and moving the policy  decisions to
+> > the driver after all even
+> > form txpower off you implement it as soft rfkill.
 
- * provide a function to just pass in the whole beacon/probe response
-   frame and pick it apart itself
- * handle aging
- * provide a wext "set scan" hook that creates a request and passes it
-   off to ->scan(), provide wext "get scan" hook
- * parse the supported rates into a bitmap like mac80211 does now, based
-   on the bitrate information the wiphy provides
+Why does it complicate things? It means that mac80211 doesn't use
+rfkill_force_state() when the user triggers a radio state change using
+iw/iwconfig/ifconfig or whatever userspace tool.
 
-> in mac80211, we need to
->  * pass the scan request to the hardware offload
->  * handle multiple SSIDs in a scan
->  * use BSS list stuff cfg80211 needs to provide
->  * handle active/passive properly
+mac80211 doesn't generate rfkill events because it isn't tied to any device
+keys/buttons/sliders. That is what the drivers do. And they should only listen
+to that key/button/slider.
 
- * use all those helpers I mentioned above
+> > I would suggest just remove the support for txpower off in mac80211
+> > now when appropriate or sync it with soft block after all it coming
+> > from user space as a software event.
+> 
+> I think what we should do is in mac80211 simply synthesize the
+> "radio_enabled" state that the config callback has from both rfkill and
+> txpower off. Anything wrong with that?
 
-Also, we need to think about
- * how fullmac stuff can integrate, can it provide this IE-based
-   information, and if not, is it feasible to just synthesize it?
- * whether this should really be per wiphy as it is now, or somehow more
-   per netdev, or not related to a netdev at all...
+Come to think of it, there is a bug in the previous patch since it doesn't handle
+the case when the interface is brought up during a BLOCKED state.
 
-johannes
+So all that has to be done is:
+	* rfkill BLOCK event received in mac80211
+	* set flag to indicate the BLOCKED state
+	* disable radio
+	* prevent radio being enabled through ifup
+	* prevent radio being enabled through iwconfig txpower on
 
---=-gHMMh4QsXT31el99NnqY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+	* rfkill UNBLOCK event received from mac80211
+	* clear flag to indicate UNBLOCKED state
+	* restore radio to the by iwconfig/ifup configured state
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0x9/AAoJEKVg1VMiehFY83wP/1RwT6WW4r994qS44PnF+XbR
-yVG0l+qJEP8dIo6W7fPk7L6/zen4fcWbZzspzzavAMzDrbtELIXAX0fk64T8dP2E
-/oAubwajOX0k3+ZbVRcwLnogM18J4z+Db6y8Wo31lZIwQVu/NQZE9v4wNkYKoQnE
-5K/I8Y8+i9MkbbWSEM58qme9wUmKYFFVyP4JGw2hJVbG7/cCW7ky+g9WDkw3HwXL
-7ZLpGgO9NMcqxX4+8Y8nIEj1ymTds11Shj5fSACyXkacPUwcRHaVEsb18bM0Fxhf
-zTTRYpVLEg2r+XTz756SwxMHABohG0iYOImdShH0mpQ77trOsNsWjESmbnRR+qDw
-DDuXDPQXLxul1gnagfftQN8Tc2oXS+N6/GRLV+qeWQu/GtaW/K8tW1d79OhBHRnJ
-flF+eJQqGMq+MWUwYBBzrZsTpVBHEGpeKMJLwfzP6IFOJV4Ro27Yr0Ymnrx0X3en
-SypJ/wNmOSP0X1SQnDutWbtDyBYxlPgwmMYwxcHTi4shbfT1etOWzgj1bZQijhM7
-8MLBMcVvUhHlgZQ5rGKRnZPdYADkAXCQi3138W1u7OYrKVKkUoWqFNaxzpEpR7Bq
-O9pK4fNPXFkkfj1Vwn2vFfM8Q1cB8ya78LUkd1ipIP9ov0rtlKFKve6J3rTietR9
-zh30DOYRiS3RKNcASCkg
-=b66M
------END PGP SIGNATURE-----
-
---=-gHMMh4QsXT31el99NnqY--
-
+Ivo
