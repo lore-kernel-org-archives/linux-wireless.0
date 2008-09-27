@@ -1,104 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.226]:32882 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754312AbYIOWFZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35077 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbYI0JUf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 18:05:25 -0400
-Received: by qb-out-0506.google.com with SMTP id f11so3796232qba.17
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 15:05:22 -0700 (PDT)
-Message-ID: <f488382f0809151505g54c0e59qfcf3bbdbf9428ba1@mail.gmail.com> (sfid-20080916_000529_467240_3136D1B0)
-Date: Mon, 15 Sep 2008 15:05:21 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: ath9k-devel@lists.ath9k.org,
-	wireless <linux-wireless@vger.kernel.org>, jmalinen@atheros.com,
-	lrodriguez@atheros.com
-Subject: Re: frustrating ath9k issues
-In-Reply-To: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com>
+	Sat, 27 Sep 2008 05:20:35 -0400
+Subject: Re: wireless-testing modpost failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Davide Pesavento <davidepesa@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, YanBo <dreamfly281@gmail.com>
+In-Reply-To: <1222504695.3798.38.camel@johannes.berg> (sfid-20080927_103825_094353_5CEDFB62)
+References: <2da21fe50809261104m3b7d99e3g8b56416b8182ca45@mail.gmail.com>
+	 <20080926190007.GD3483@tuxdriver.com>
+	 <1222457416.3798.25.camel@johannes.berg>
+	 <2da21fe50809261325o62dea98dyf40b06e373f29f53@mail.gmail.com>
+	 (sfid-20080926_222513_164399_16E42BBE)  <1222504695.3798.38.camel@johannes.berg>
+	 (sfid-20080927_103825_094353_5CEDFB62)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LYRxf+JmqDozIZ/CgjNV"
+Date: Sat, 27 Sep 2008 11:20:25 +0200
+Message-Id: <1222507225.3798.45.camel@johannes.berg> (sfid-20080927_112048_579902_916A1495)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 15, 2008 at 2:50 PM, Steven Noonan <steven@uplinklabs.net> wrote:
-> More recently, I had another incident where it disassociated and
-> refused to reassociate. I got about 100 of these in my dmesg (fixed by
-> unloading and reloading ath9k):
->
-> [...]
-> [ 1279.031033] ath_set_channel: unable to reset channel 149 (5745Mhz)
-> flags 0x30142 hal status 4294967277
-> [ 1279.031203] ath9k_config: Unable to set channel
-> [ 1279.323427] ath_set_channel: unable to reset channel 153 (5765Mhz)
-> flags 0x50142 hal status 4294967277
-> [ 1279.323577] ath9k_config: Unable to set channel
-> [ 1279.624562] ath_set_channel: unable to reset channel 157 (5785Mhz)
-> flags 0x30142 hal status 4294967277
-> [ 1279.624687] ath9k_config: Unable to set channel
-> [ 1279.916441] ath_set_channel: unable to reset channel 161 (5805Mhz)
-> flags 0x50142 hal status 4294967277
-> [ 1279.916586] ath9k_config: Unable to set channel
-> [ 1280.207274] ath_set_channel: unable to reset channel 165 (5825Mhz)
-> flags 0x10142 hal status 4294967277
-> [ 1280.207387] ath9k_config: Unable to set channel
-> [...]
->
-> And finally, I'm most certainly not getting 802.11n connection speeds
-> with this driver. The connection speed seems to be about equivalent to
-> 802.11g (54mb/s), but I can't tell for certain with the messed up
-> bitrate reporting from iwconfig.
->
 
-Another incident of the same thing. I let it go a bit longer and it had this:
-[...]
-[22558.757888] ath_set_channel: unable to reset channel 56 (5280Mhz)
-flags 0x10142 hal status 4294967277
-[22558.757917] ath9k_config: Unable to set channel
-[22559.048662] ath_set_channel: unable to reset channel 60 (5300Mhz)
-flags 0x10142 hal status 4294967277
-[22559.048692] ath9k_config: Unable to set channel
-[22559.339607] ath_set_channel: unable to reset channel 64 (5320Mhz)
-flags 0x10142 hal status 4294967277
-[22559.339734] ath9k_config: Unable to set channel
-[22559.632215] ath_set_channel: unable to reset channel 149 (5745Mhz)
-flags 0x30142 hal status 4294967277
-[22559.632261] ath9k_config: Unable to set channel
-[22559.922479] ath_set_channel: unable to reset channel 153 (5765Mhz)
-flags 0x50142 hal status 4294967277
-[22559.922511] ath9k_config: Unable to set channel
-[22560.212400] ath_set_channel: unable to reset channel 157 (5785Mhz)
-flags 0x30142 hal status 4294967277
-[22560.212418] ath9k_config: Unable to set channel
-[22560.503130] ath_set_channel: unable to reset channel 161 (5805Mhz)
-flags 0x50142 hal status 4294967277
-[22560.503149] ath9k_config: Unable to set channel
-[22560.795592] ath_set_channel: unable to reset channel 165 (5825Mhz)
-flags 0x10142 hal status 4294967277
-[22560.795632] ath9k_config: Unable to set channel
-[22561.086033] ath_set_channel: unable to reset channel 6 (2437Mhz)
-flags 0x700e2 hal status 4294967277
-[22561.086053] ath9k_config: Unable to set channel
-[22561.704924] ath_open: unable to reset hardware; hal status
-4294967277 (freq 2437 flags 0x700e2)
-[22561.704970] ath9k_start: Unable to complete ath_open
-[22561.875781] ath_open: unable to reset hardware; hal status
-4294967277 (freq 2437 flags 0x700e2)
-[22561.875932] ath9k_start: Unable to complete ath_open
-[22562.149045] ath_open: unable to reset hardware; hal status
-4294967277 (freq 2437 flags 0x700e2)
-[22562.149058] ath9k_start: Unable to complete ath_open
-[22562.292357] ath_open: unable to reset hardware; hal status
-4294967277 (freq 2437 flags 0x700e2)
-[22562.292386] ath9k_start: Unable to complete ath_open
-[22574.671761] ath_open: unable to reset hardware; hal status
-4294967277 (freq 2437 flags 0x700e2)
-[22574.671856] ath9k_start: Unable to complete ath_open
-[22579.628460] ath_open: unable to reset hardware; hal status
-4294967277 (freq 2437 flags 0x700e2)
-[22579.629153] ath9k_start: Unable to complete ath_open
-[22583.631045] ath_open: unable to reset hardware; hal status
-4294967277 (freq 2437 flags 0x700e2)
-[22583.631076] ath9k_start: Unable to complete ath_open
-[22587.615757] ath_open: unable to reset hardware; hal status
-4294967277 (freq 2437 flags 0x700e2)
-[22587.615789] ath9k_start: Unable to complete ath_open
+--=-LYRxf+JmqDozIZ/CgjNV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Sat, 2008-09-27 at 10:38 +0200, Johannes Berg wrote:
+
+> > >> >   Building modules, stage 2.
+> > >> >   MODPOST 216 modules
+> > >> > ERROR: "mpp_path_lookup" [net/mac80211/mac80211.ko] undefined!
+> > >> > ERROR: "mpp_path_add" [net/mac80211/mac80211.ko] undefined!
+> > >
+> > > Davide, can you tell me what file/line it fails in?
+> > >
+> >=20
+> > How can I tell you that?
+>=20
+> Good question. I was thinking the linker would complain at some earlier
+> point too, but I'll just try to reproduce it myself.
+
+Ok... I can't reproduce it. Can you turn off CONFIG_MAC80211_NOINLINE
+and see if that helps?
+
+johannes
+
+--=-LYRxf+JmqDozIZ/CgjNV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI3frUAAoJEKVg1VMiehFY8x4QAJ3lfAOChPi3fNlMhIbTb3B1
+MuE+bYOzoBtKNSHNPDfct9wvlOYECkFnteqBTlVfsnQ5mEJd7iXaaIYXm/gALBc0
+xYXL8tK5RKJSCescrpoGNx11u/r/ktDK64yzG3r1nOitCDs3FmVWsZILIayiBPzV
+mPjYayCb4EmCK2WZqVLxBi8GLEEmDhtitizIu/lQ7Jqph3Pto5W3YzhtvFWkoPJV
+t+wGq7AR6dYQGQYMkoMM8/aEjSQH24wmpwOxY4iMFO/T30RbD1om6Tbol2q3ZI8Q
+0N/3YDAHS5E1+GmgJxYcER7jO7nVXH5ulMgZFaJcT7hAFqcuEg8+NFGxfwSpXTXf
+zKUxXQWxJsVDOqhUimLpy373nxSXxw9ZGTcW4WDafes9LbjYu+YeHj3kUzcmGCOe
+r9TmjrnF80nHpk8/iPWe3fuOVd3TY056iF69TKbLQaPXVODm1Xqfp1u6jHLvbYvn
+3XmQCyIIllU7DS+BaVis3crVwlfcdGejpaHEzH9k5Y09HQUtuF7z52cZzzHtduBN
+mTyhVS5no3JbCp7arFaVM4StKj76Nszzkr41JKbvUgszhsbTs+gkmVSSTMKRRAkB
+8qYlLo0vz1ld6lPEKk3CtNYkH5hN5dIiaVVgujsFrOJfgTfxKFm8t/oD9NeoIb3m
+Y7iY9wIZWcOsHQyyeLBG
+=DQf5
+-----END PGP SIGNATURE-----
+
+--=-LYRxf+JmqDozIZ/CgjNV--
+
