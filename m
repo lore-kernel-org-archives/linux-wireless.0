@@ -1,72 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:46936 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731AbYIIIqZ (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:50888 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752341AbYI0MtJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 04:46:25 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so1075396yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2008 01:46:23 -0700 (PDT)
-Message-ID: <1ba2fa240809090146p612083aclf3a2a924a81e75e9@mail.gmail.com> (sfid-20080909_104629_131131_AA2FF544)
-Date: Tue, 9 Sep 2008 11:46:23 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: HT action frame code
-Cc: "Jouni Malinen" <j@w1.fi>,
-	"Ron Rindjunsky" <rindjon@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1220948427.31304.107.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1220883730.31304.60.camel@johannes.berg> <48C5868B.8060103@w1.fi>
-	 <1220942004.31304.101.camel@johannes.berg>
-	 <1ba2fa240809090114u67086f2duc5cc9addd384e30d@mail.gmail.com>
-	 <1220948427.31304.107.camel@johannes.berg>
+	Sat, 27 Sep 2008 08:49:09 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 1/1] Ath5k: add AP mode
+Date: Sat, 27 Sep 2008 14:48:48 +0200
+Message-Id: <1222519728-14989-1-git-send-email-jirislaby@gmail.com> (sfid-20080927_144915_174792_0725070C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 9, 2008 at 11:20 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-09-09 at 11:14 +0300, Tomas Winkler wrote:
->
->> >> The current design assumes that hostapd takes care of all management
->> >> frames, so eyes, these would need to go to hostapd for processing and
->> >> then setup back to mac80211 through some new command..
->> >
->> > Well we can always pick out those action frames in the kernel if we want
->> > to, that's not the problem, is it?
->>
->> We've indeed has kept inside just BA session action frames.
->
-> Hmm? I don't think I understand what you're trying to say.
+Add support for AP mode. This involves:
+- enablement in ath5k_beacon_config -- initialize beacon timer
+- add AP to the supported modes in ath5k_add_interface
+- handle beacon change even for AP in ath5k_config_interface
+- remove useless test for IBSS in ath5k_beacon_update
 
-Meaning that other management frames are forward to user space while
-BA action frames
-are treated inside mac80211.
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+---
+ drivers/net/wireless/ath5k/base.c |   42 +++++++++++++++----------------------
+ 1 files changed, 17 insertions(+), 25 deletions(-)
 
->
->> > Should the design be changed? It seems that this is more related to the
->> > rate scale algorithm and the "can we support aggregation for this STA"
->> > question, both of which we currently have information about in the
->> > kernel and not hostapd.
->>
->> The decision might come both from RS and hostapd. RS just have more
->> info whether there will be gain from aggregation. When throughput is
->> not high enough it's just an overhead. Though some APs open session
->> immediately uppon association without and RS decision.
->> Our design is that BA can be triggered not only for RS.
->
-> Well yeah, but I'm not sure we really want to add API to cfg80211 for
-> this. It's not exactly hard to, but right now I don't see how hostapd
-> would influence the decision.
->
-> Also, I'm not talking about the AP triggering the aggregation session,
-> this is entirely done with the rate scaling right now, but about an
-> associated STA wanting to start an aggregation session. Aren't
-> aggregation sessions always triggered by whoever wants to send? So if a
-> STA notices it has lots of upload going on it could want to trigger a BA
-> session, which is something we don't currently support afaict.
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index e09ed2c..d5d8e2d 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -231,8 +231,7 @@ static int ath5k_get_tx_stats(struct ieee80211_hw *hw,
+ 		struct ieee80211_tx_queue_stats *stats);
+ static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
+ static void ath5k_reset_tsf(struct ieee80211_hw *hw);
+-static int ath5k_beacon_update(struct ieee80211_hw *hw,
+-		struct sk_buff *skb);
++static int ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb);
+ 
+ static struct ieee80211_ops ath5k_hw_ops = {
+ 	.tx 		= ath5k_tx,
+@@ -2104,8 +2103,6 @@ ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf)
+  *
+  * In IBSS mode we use a self-linked tx descriptor if possible. We enable SWBA
+  * interrupts to detect TSF updates only.
+- *
+- * AP mode is missing.
+  */
+ static void
+ ath5k_beacon_config(struct ath5k_softc *sc)
+@@ -2118,7 +2115,8 @@ ath5k_beacon_config(struct ath5k_softc *sc)
+ 
+ 	if (sc->opmode == NL80211_IFTYPE_STATION) {
+ 		sc->imask |= AR5K_INT_BMISS;
+-	} else if (sc->opmode == NL80211_IFTYPE_ADHOC) {
++	} else if (sc->opmode == NL80211_IFTYPE_ADHOC ||
++			sc->opmode == NL80211_IFTYPE_AP) {
+ 		/*
+ 		 * In IBSS mode we use a self-linked tx descriptor and let the
+ 		 * hardware send the beacons automatically. We have to load it
+@@ -2130,13 +2128,15 @@ ath5k_beacon_config(struct ath5k_softc *sc)
+ 
+ 		sc->imask |= AR5K_INT_SWBA;
+ 
+-		if (ath5k_hw_hasveol(ah)) {
+-			spin_lock(&sc->block);
+-			ath5k_beacon_send(sc);
+-			spin_unlock(&sc->block);
+-		}
++		if (sc->opmode == IEEE80211_IF_TYPE_IBSS) {
++			if (ath5k_hw_hasveol(ah)) {
++				spin_lock(&sc->block);
++				ath5k_beacon_send(sc);
++				spin_unlock(&sc->block);
++			}
++		} else
++			ath5k_beacon_update_timers(sc, -1);
+ 	}
+-	/* TODO else AP */
+ 
+ 	ath5k_hw_set_imr(ah, sc->imask);
+ }
+@@ -2688,6 +2688,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
+ 	sc->vif = conf->vif;
+ 
+ 	switch (conf->type) {
++	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_MONITOR:
+@@ -2751,7 +2752,7 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		ret = -EIO;
+ 		goto unlock;
+ 	}
+-	if (conf->bssid) {
++	if (conf->changed & IEEE80211_IFCC_BSSID && conf->bssid) {
+ 		/* Cache for later use during resets */
+ 		memcpy(ah->ah_bssid, conf->bssid, ETH_ALEN);
+ 		/* XXX: assoc id is set to 0 for now, mac80211 doesn't have
+@@ -2759,18 +2760,16 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		ath5k_hw_set_associd(ah, ah->ah_bssid, 0);
+ 		mmiowb();
+ 	}
+-
+ 	if (conf->changed & IEEE80211_IFCC_BEACON &&
+-	    vif->type == NL80211_IFTYPE_ADHOC) {
++			(vif->type == NL80211_IFTYPE_ADHOC ||
++			 vif->type == NL80211_IFTYPE_AP)) {
+ 		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
+ 		if (!beacon) {
+ 			ret = -ENOMEM;
+ 			goto unlock;
+ 		}
+-		/* call old handler for now */
+-		ath5k_beacon_update(hw, beacon);
++		ath5k_beacon_update(sc, beacon);
+ 	}
+-
+ 	mutex_unlock(&sc->lock);
+ 
+ 	return ath5k_reset_wake(sc);
+@@ -3002,19 +3001,13 @@ ath5k_reset_tsf(struct ieee80211_hw *hw)
+ }
+ 
+ static int
+-ath5k_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
++ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb)
+ {
+-	struct ath5k_softc *sc = hw->priv;
+ 	unsigned long flags;
+ 	int ret;
+ 
+ 	ath5k_debug_dump_skb(sc, skb, "BC  ", 1);
+ 
+-	if (sc->opmode != NL80211_IFTYPE_ADHOC) {
+-		ret = -EIO;
+-		goto end;
+-	}
+-
+ 	spin_lock_irqsave(&sc->block, flags);
+ 	ath5k_txbuf_free(sc, sc->bbuf);
+ 	sc->bbuf->skb = skb;
+@@ -3027,7 +3020,6 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		mmiowb();
+ 	}
+ 
+-end:
+ 	return ret;
+ }
+ 
+-- 
+1.6.0.1
 
-In iwl-agn-rs.c There is not difference if the peer is STA or AP. So
-we support this already.
-Thanks
-Tomas
