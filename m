@@ -1,40 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb.errno.com ([69.12.149.25]:1962 "EHLO ebb.errno.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752332AbYIZXN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 19:13:27 -0400
-Message-ID: <48DD6A65.1060209@errno.com> (sfid-20080927_011332_648367_EEE456B8)
-Date: Fri, 26 Sep 2008 16:04:05 -0700
-From: Sam Leffler <sam@errno.com>
+Received: from fg-out-1718.google.com ([72.14.220.154]:62236 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752458AbYI0U5H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Sep 2008 16:57:07 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1000836fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2008 13:57:05 -0700 (PDT)
+Message-ID: <7d553cf40809271357r54c2b717lae637a4393c286c6@mail.gmail.com> (sfid-20080927_225713_667305_8F4CB1C8)
+Date: Sat, 27 Sep 2008 16:57:05 -0400
+From: Paul <paul14075@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Working packet injection patch for ipw2200 - enables aireplay-ng and others to work
+In-Reply-To: <7d553cf40809271343m57b8d64er99c979fdc8c35e61@mail.gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Maxim Levitsky <maximlevitsky@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@venema.h4ckr.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Release of Atheros 802.11abg HAL under the ISC
-References: <20080926215701.GC5972@tesla> <48DD687E.5060703@gmail.com> <20080926230149.GE5972@tesla>
-In-Reply-To: <20080926230149.GE5972@tesla>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <7d553cf40809271343m57b8d64er99c979fdc8c35e61@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Fri, Sep 26, 2008 at 03:55:58PM -0700, Maxim Levitsky wrote:
->   
->> If I understand this correctly, madwifi is no longer a non-free driver?
->>     
+Here is the patch, in text form:
+
+--- drivers/net/wireless/ipw2200.c      2008-09-09 19:27:49.000000000
+-0400
++++ drivers/net/wireless/ipw2200-new.c  2008-09-27 15:48:03.000000000
+-0400
+@@ -179,7 +179,7 @@ static int ipw_queue_reset(struct ipw_pr
+
+ static int ipw_queue_tx_hcmd(struct ipw_priv *priv, int hcmd, void
+*buf,
+                             int len, int sync);
+-
++static int ipw_tx_skb(struct ipw_priv *priv, struct ieee80211_txb
+*txb, int pri);
+ static void ipw_tx_queue_free(struct ipw_priv *);
+
+ static struct ipw_rx_queue *ipw_rx_queue_alloc(struct ipw_priv *);
+@@ -1862,6 +1862,62 @@ static ssize_t store_net_stats(struct de
+ static DEVICE_ATTR(net_stats, S_IWUSR | S_IRUGO,
+                   show_net_stats, store_net_stats);
+
++/* SYSFS INJECT */
++static ssize_t store_inject(struct device *d,
++        struct device_attribute *attr,
++        const char *buf, size_t count)
++{
++        struct ipw_priv *priv = (struct ipw_priv *)d->driver_data;
++        struct ieee80211_device *ieee = priv->ieee;
++        struct ieee80211_txb * txb;
++        struct sk_buff *skb_frag;
++        unsigned char * newbuf;
++        unsigned long flags;
++
++        // should test (ieee->is_queue_full)
++
++        // Fw only accepts data, so avoid accidental fw errors.
++        if ( (buf[0]&0x0c) != '\x08') {
++              //printk("ipw2200: inject: discarding non-data frame
+(type=%02X)\n",(int)(unsigned char)buf[0]);
++              return count;
++        }
++
++        if (count>1500) {
++              count=1500;
++              printk("ipw2200: inject: cutting down frame to 1500
+bytes\n");
++        }
++
++        spin_lock_irqsave(&priv->lock, flags);
++
++        // Create a txb with one skb
++        txb = kmalloc(sizeof(struct ieee80211_txb) + sizeof(u8 *),
+GFP_ATOMIC);
++        if (!txb)
++              goto nosepuede;
++        txb->nr_frags=1;
++        txb->frag_size = ieee->tx_headroom;
++        txb->fragments[0]=__dev_alloc_skb(count + ieee->tx_headroom,
+GFP_ATOMIC);
++        if (!txb->fragments[0]) {
++              kfree(txb);
++              goto nosepuede;
++        }
++        skb_reserve(txb->fragments[0], ieee->tx_headroom);
++        txb->encrypted=0;
++        txb->payload_size=count;
++        skb_frag = txb->fragments[0];
++        newbuf=skb_put(skb_frag, count);
++
++        // copy data into txb->skb and send it
++        memcpy(newbuf, buf, count);
++
++        ipw_tx_skb(priv, txb, 0);
++
++nosepuede:
++        spin_unlock_irqrestore(&priv->lock, flags);
++        return count;
++}
++
++static DEVICE_ATTR(inject, S_IWUSR, NULL, store_inject);
++
+ static ssize_t show_channels(struct device *d,
+                             struct device_attribute *attr,
+                             char *buf)
+@@ -10512,6 +10568,10 @@ static int ipw_net_set_mac_address(struc
+        mutex_lock(&priv->mutex);
+        priv->config |= CFG_CUSTOM_MAC;
+        memcpy(priv->mac_addr, addr->sa_data, ETH_ALEN);
++
++        if (rtap_iface)
++               memcpy(priv->prom_net_dev->dev_addr, addr->sa_data,
+ETH_ALEN);
++
+        printk(KERN_INFO "%s: Setting MAC to %s\n",
+               priv->net_dev->name, print_mac(mac, priv->mac_addr));
+        queue_work(priv->workqueue, &priv->adapter_restart);
+@@ -11478,6 +11538,7 @@ static struct attribute *ipw_sysfs_entri
+ #ifdef CONFIG_IPW2200_PROMISCUOUS
+        &dev_attr_rtap_iface.attr,
+        &dev_attr_rtap_filter.attr,
++       &dev_attr_inject.attr,
+ #endif
+        NULL
+ };
+--- drivers/net/wireless/ipw2200.h      2008-09-09 19:27:49.000000000 -0400
++++ drivers/net/wireless/ipw2200-new.h  2008-09-27 15:32:23.000000000 -0400
+@@ -2007,4 +2007,13 @@ struct ipw_cmd_log {
+
+ #define IPW_MAX_CONFIG_RETRIES 10
+
++/*
++ * Hhack to get code compiling on new kernels, the define below
++ * seem to be removed from the linux headers.
++ */
++#ifndef MAC_ARG
++#define MAC_ARG(x)
+((u8*)(x))[0],((u8*)(x))[1],((u8*)(x))[2],((u8*)(x))[3],((u8*)(x))[4],((u8*)(x))[5]
++#endif
++
++
+ #endif                         /* __ipw2200_h__ */
+
+
+On Sat, Sep 27, 2008 at 4:43 PM, Paul <paul14075@gmail.com> wrote:
+> I made this patch using bits and pieces from various other "ipw2200
+> injection patches".  I can not take credit for the content, as I
+> basically just changed the line numbers in the .diff files.  However I
+> applied this patch to the version of ipw2200 included in kernel
+> 2.6.27-rc6  (i believe it's ipw2200-1.2.2) and it worked like a charm.
 >
-> MadWifi is based on a proprietary HAL which is slightly different
-> than this one, so no, its still non-free. The "free" drivers where
-> I think focus should be put in is ath5k and ath9k as they are now both
-> merged as part of the Linux kernel.
->   
-
-The hal is not proprietary; Atheros just won't allow me to release it.  
-And there are significant differences between the two code bases.
-
-    Sam
-
-
+> Previously I was unable to inject wifi packets using aireplay-ng due
+> to this error:
+>
+> "ARP linktype is set to 1 (Ethernet) - expected ARPHRD_IEEE80211 or
+> ARPHRD_IEEE80211_PRISM instead.  Make sure RFMON is enabled: run
+> 'ifconfig wifi0 up; iwconfig wifi0 mode Monitor channel <#>' Sysfs
+> injection support was not found either."
+>
+> However, after switching to Monitor mode, even though aireplay would
+> ACT AS IF it was working, it wasn't.
+>
+> After applying this patch, everything worked great.
+>
+> I don't see why this patch isnt already included in ipw2200.
+>
+> Thanks,
+> - Paul
+>
