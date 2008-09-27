@@ -1,43 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail29.messagelabs.com ([216.82.249.147]:24559 "EHLO
-	mail29.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752714AbYIRUzS convert rfc822-to-8bit (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.190]:34187 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752270AbYI0Upz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 16:55:18 -0400
-From: "Gordon, Charles" <Charles.Gordon@digi.com>
-To: Tomas Winkler <tomasw@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 18 Sep 2008 15:53:40 -0500
-Subject: RE: What is the state of 802.11h support?
-Message-ID: <8DCC153EAFE67A4B990A840E829F704B718873D822@mtk-sms-exch01.digi.com> (sfid-20080918_225523_128621_76CDE8FB)
-References: <8DCC153EAFE67A4B990A840E829F704B718874D96D@mtk-sms-exch01.digi.com>,<1ba2fa240809181323n2fba2c93j7e884a437efbfe58@mail.gmail.com>
-In-Reply-To: <1ba2fa240809181323n2fba2c93j7e884a437efbfe58@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 27 Sep 2008 16:45:55 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1415416fkq.5
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2008 13:45:53 -0700 (PDT)
+Message-ID: <7d553cf40809271345n3a945091u6c341e65c51811d5@mail.gmail.com> (sfid-20080927_224600_143322_52A4BF5F)
+Date: Sat, 27 Sep 2008 16:45:53 -0400
+From: Paul <paul14075@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] Working packet injection patch for ipw2200 - enables aireplay-ng and others to work
 MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_37429_5949446.1222548353789"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm looking for the stuff which is required to implement a client device.  That is a device which does not implement radar detection.
+------=_Part_37429_5949446.1222548353789
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Is there a schedule for when this stuff will be integrated into the kernel?
+I made this patch using bits and pieces from various other "ipw2200
+injection patches".  I can not take credit for the content, as I
+basically just changed the line numbers in the .diff files.  However I
+applied this patch to the version of ipw2200 included in kernel
+2.6.27-rc6  (i believe it's ipw2200-1.2.2) and it worked like a charm.
 
-Charles
+Previously I was unable to inject wifi packets using aireplay-ng due
+to this error:
 
-________________________________________
-From: Tomas Winkler [tomasw@gmail.com]
-Sent: Thursday, September 18, 2008 4:23 PM
-To: Gordon, Charles
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: What is the state of 802.11h support?
+"ARP linktype is set to 1 (Ethernet) - expected ARPHRD_IEEE80211 or
+ARPHRD_IEEE80211_PRISM instead.  Make sure RFMON is enabled: run
+'ifconfig wifi0 up; iwconfig wifi0 mode Monitor channel <#>' Sysfs
+injection support was not found either."
 
-On Thu, Sep 18, 2008 at 5:31 PM, Gordon, Charles
-<Charles.Gordon@digi.com> wrote:
-> Can someone tell me how much of 802.11h is supported by Linux?  What is the plan for completing it enough so that it implements a client which complies with the specification?
->
-> What needs to be implemented in the wireless NIC driver to support 802.11h?  My company is working on a wireless NIC driver for Linux.
->
-What part of 11h are you looking for. We have pending implementation
-for everything that is under must requirement for BSS mode. Radar
-detection is not implemented.
+However, after switching to Monitor mode, even though aireplay would
+ACT AS IF it was working, it wasn't.
 
-Tomas
+After applying this patch, everything worked great.
+
+I don't see why this patch isnt already included in ipw2200.
+
+Thanks,
+- Paul
+
+------=_Part_37429_5949446.1222548353789
+Content-Type: application/octet-stream;
+ name=ipw2200-1.2.2-inject-patch.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_flmppmfa0
+Content-Disposition: attachment; filename=ipw2200-1.2.2-inject-patch.patch
+
+LS0tIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2lwdzIyMDAuYwkyMDA4LTA5LTA5IDE5OjI3OjQ5LjAw
+MDAwMDAwMCAtMDQwMAorKysgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXB3MjIwMC1uZXcuYwkyMDA4
+LTA5LTI3IDE1OjQ4OjAzLjAwMDAwMDAwMCAtMDQwMApAQCAtMTc5LDcgKzE3OSw3IEBAIHN0YXRp
+YyBpbnQgaXB3X3F1ZXVlX3Jlc2V0KHN0cnVjdCBpcHdfcHIKIAogc3RhdGljIGludCBpcHdfcXVl
+dWVfdHhfaGNtZChzdHJ1Y3QgaXB3X3ByaXYgKnByaXYsIGludCBoY21kLCB2b2lkICpidWYsCiAJ
+CQkgICAgIGludCBsZW4sIGludCBzeW5jKTsKLQorc3RhdGljIGludCBpcHdfdHhfc2tiKHN0cnVj
+dCBpcHdfcHJpdiAqcHJpdiwgc3RydWN0IGllZWU4MDIxMV90eGIgKnR4YiwgaW50IHByaSk7CiBz
+dGF0aWMgdm9pZCBpcHdfdHhfcXVldWVfZnJlZShzdHJ1Y3QgaXB3X3ByaXYgKik7CiAKIHN0YXRp
+YyBzdHJ1Y3QgaXB3X3J4X3F1ZXVlICppcHdfcnhfcXVldWVfYWxsb2Moc3RydWN0IGlwd19wcml2
+ICopOwpAQCAtMTg2Miw2ICsxODYyLDYyIEBAIHN0YXRpYyBzc2l6ZV90IHN0b3JlX25ldF9zdGF0
+cyhzdHJ1Y3QgZGUKIHN0YXRpYyBERVZJQ0VfQVRUUihuZXRfc3RhdHMsIFNfSVdVU1IgfCBTX0lS
+VUdPLAogCQkgICBzaG93X25ldF9zdGF0cywgc3RvcmVfbmV0X3N0YXRzKTsKIAorLyogU1lTRlMg
+SU5KRUNUICovCitzdGF0aWMgc3NpemVfdCBzdG9yZV9pbmplY3Qoc3RydWN0IGRldmljZSAqZCwK
+KyAgICAgICAgc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIsCisgICAgICAgIGNvbnN0IGNo
+YXIgKmJ1Ziwgc2l6ZV90IGNvdW50KQoreworICAgICAgICBzdHJ1Y3QgaXB3X3ByaXYgKnByaXYg
+PSAoc3RydWN0IGlwd19wcml2ICopZC0+ZHJpdmVyX2RhdGE7CisgICAgICAgIHN0cnVjdCBpZWVl
+ODAyMTFfZGV2aWNlICppZWVlID0gcHJpdi0+aWVlZTsKKyAgICAgICAgc3RydWN0IGllZWU4MDIx
+MV90eGIgKiB0eGI7CisgICAgICAgIHN0cnVjdCBza19idWZmICpza2JfZnJhZzsKKyAgICAgICAg
+dW5zaWduZWQgY2hhciAqIG5ld2J1ZjsKKyAgICAgICAgdW5zaWduZWQgbG9uZyBmbGFnczsKKwor
+ICAgICAgICAvLyBzaG91bGQgdGVzdCAoaWVlZS0+aXNfcXVldWVfZnVsbCkKKworICAgICAgICAv
+LyBGdyBvbmx5IGFjY2VwdHMgZGF0YSwgc28gYXZvaWQgYWNjaWRlbnRhbCBmdyBlcnJvcnMuCisg
+ICAgICAgIGlmICggKGJ1ZlswXSYweDBjKSAhPSAnXHgwOCcpIHsKKyAgICAgICAgICAgICAgLy9w
+cmludGsoImlwdzIyMDA6IGluamVjdDogZGlzY2FyZGluZyBub24tZGF0YSBmcmFtZSAodHlwZT0l
+MDJYKVxuIiwoaW50KSh1bnNpZ25lZCBjaGFyKWJ1ZlswXSk7CisgICAgICAgICAgICAgIHJldHVy
+biBjb3VudDsKKyAgICAgICAgfQorCisgICAgICAgIGlmIChjb3VudD4xNTAwKSB7CisgICAgICAg
+ICAgICAgIGNvdW50PTE1MDA7CisgICAgICAgICAgICAgIHByaW50aygiaXB3MjIwMDogaW5qZWN0
+OiBjdXR0aW5nIGRvd24gZnJhbWUgdG8gMTUwMCBieXRlc1xuIik7CisgICAgICAgIH0KKworICAg
+ICAgICBzcGluX2xvY2tfaXJxc2F2ZSgmcHJpdi0+bG9jaywgZmxhZ3MpOworCisgICAgICAgIC8v
+IENyZWF0ZSBhIHR4YiB3aXRoIG9uZSBza2IKKyAgICAgICAgdHhiID0ga21hbGxvYyhzaXplb2Yo
+c3RydWN0IGllZWU4MDIxMV90eGIpICsgc2l6ZW9mKHU4ICopLCBHRlBfQVRPTUlDKTsKKyAgICAg
+ICAgaWYgKCF0eGIpCisgICAgICAgICAgICAgIGdvdG8gbm9zZXB1ZWRlOworICAgICAgICB0eGIt
+Pm5yX2ZyYWdzPTE7CisgICAgICAgIHR4Yi0+ZnJhZ19zaXplID0gaWVlZS0+dHhfaGVhZHJvb207
+CisgICAgICAgIHR4Yi0+ZnJhZ21lbnRzWzBdPV9fZGV2X2FsbG9jX3NrYihjb3VudCArIGllZWUt
+PnR4X2hlYWRyb29tLCBHRlBfQVRPTUlDKTsKKyAgICAgICAgaWYgKCF0eGItPmZyYWdtZW50c1sw
+XSkgeworICAgICAgICAgICAgICBrZnJlZSh0eGIpOworICAgICAgICAgICAgICBnb3RvIG5vc2Vw
+dWVkZTsKKyAgICAgICAgfQorICAgICAgICBza2JfcmVzZXJ2ZSh0eGItPmZyYWdtZW50c1swXSwg
+aWVlZS0+dHhfaGVhZHJvb20pOworICAgICAgICB0eGItPmVuY3J5cHRlZD0wOworICAgICAgICB0
+eGItPnBheWxvYWRfc2l6ZT1jb3VudDsKKyAgICAgICAgc2tiX2ZyYWcgPSB0eGItPmZyYWdtZW50
+c1swXTsKKyAgICAgICAgbmV3YnVmPXNrYl9wdXQoc2tiX2ZyYWcsIGNvdW50KTsKKworICAgICAg
+ICAvLyBjb3B5IGRhdGEgaW50byB0eGItPnNrYiBhbmQgc2VuZCBpdAorICAgICAgICBtZW1jcHko
+bmV3YnVmLCBidWYsIGNvdW50KTsKKworICAgICAgICBpcHdfdHhfc2tiKHByaXYsIHR4YiwgMCk7
+CisKK25vc2VwdWVkZToKKyAgICAgICAgc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcHJpdi0+bG9j
+aywgZmxhZ3MpOworICAgICAgICByZXR1cm4gY291bnQ7Cit9CisKK3N0YXRpYyBERVZJQ0VfQVRU
+UihpbmplY3QsIFNfSVdVU1IsIE5VTEwsIHN0b3JlX2luamVjdCk7CisKIHN0YXRpYyBzc2l6ZV90
+IHNob3dfY2hhbm5lbHMoc3RydWN0IGRldmljZSAqZCwKIAkJCSAgICAgc3RydWN0IGRldmljZV9h
+dHRyaWJ1dGUgKmF0dHIsCiAJCQkgICAgIGNoYXIgKmJ1ZikKQEAgLTEwNTEyLDYgKzEwNTY4LDEw
+IEBAIHN0YXRpYyBpbnQgaXB3X25ldF9zZXRfbWFjX2FkZHJlc3Moc3RydWMKIAltdXRleF9sb2Nr
+KCZwcml2LT5tdXRleCk7CiAJcHJpdi0+Y29uZmlnIHw9IENGR19DVVNUT01fTUFDOwogCW1lbWNw
+eShwcml2LT5tYWNfYWRkciwgYWRkci0+c2FfZGF0YSwgRVRIX0FMRU4pOworCisgICAgICAgIGlm
+IChydGFwX2lmYWNlKQorICAgICAgICAgICAgICAgbWVtY3B5KHByaXYtPnByb21fbmV0X2Rldi0+
+ZGV2X2FkZHIsIGFkZHItPnNhX2RhdGEsIEVUSF9BTEVOKTsKKwogCXByaW50ayhLRVJOX0lORk8g
+IiVzOiBTZXR0aW5nIE1BQyB0byAlc1xuIiwKIAkgICAgICAgcHJpdi0+bmV0X2Rldi0+bmFtZSwg
+cHJpbnRfbWFjKG1hYywgcHJpdi0+bWFjX2FkZHIpKTsKIAlxdWV1ZV93b3JrKHByaXYtPndvcmtx
+dWV1ZSwgJnByaXYtPmFkYXB0ZXJfcmVzdGFydCk7CkBAIC0xMTQ3OCw2ICsxMTUzOCw3IEBAIHN0
+YXRpYyBzdHJ1Y3QgYXR0cmlidXRlICppcHdfc3lzZnNfZW50cmkKICNpZmRlZiBDT05GSUdfSVBX
+MjIwMF9QUk9NSVNDVU9VUwogCSZkZXZfYXR0cl9ydGFwX2lmYWNlLmF0dHIsCiAJJmRldl9hdHRy
+X3J0YXBfZmlsdGVyLmF0dHIsCisJJmRldl9hdHRyX2luamVjdC5hdHRyLAogI2VuZGlmCiAJTlVM
+TAogfTsKLS0tIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2lwdzIyMDAuaAkyMDA4LTA5LTA5IDE5OjI3
+OjQ5LjAwMDAwMDAwMCAtMDQwMAorKysgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXB3MjIwMC1uZXcu
+aAkyMDA4LTA5LTI3IDE1OjMyOjIzLjAwMDAwMDAwMCAtMDQwMApAQCAtMjAwNyw0ICsyMDA3LDEz
+IEBAIHN0cnVjdCBpcHdfY21kX2xvZyB7CiAKICNkZWZpbmUgSVBXX01BWF9DT05GSUdfUkVUUklF
+UyAxMAogCisvKgorICogSGhhY2sgdG8gZ2V0IGNvZGUgY29tcGlsaW5nIG9uIG5ldyBrZXJuZWxz
+LCB0aGUgZGVmaW5lIGJlbG93CisgKiBzZWVtIHRvIGJlIHJlbW92ZWQgZnJvbSB0aGUgbGludXgg
+aGVhZGVycy4KKyAqLworI2lmbmRlZiBNQUNfQVJHCisjZGVmaW5lIE1BQ19BUkcoeCkgKCh1OCop
+KHgpKVswXSwoKHU4KikoeCkpWzFdLCgodTgqKSh4KSlbMl0sKCh1OCopKHgpKVszXSwoKHU4Kiko
+eCkpWzRdLCgodTgqKSh4KSlbNV0KKyNlbmRpZgorCisKICNlbmRpZgkJCQkvKiBfX2lwdzIyMDBf
+aF9fICovCg==
+------=_Part_37429_5949446.1222548353789--
