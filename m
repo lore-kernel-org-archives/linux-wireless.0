@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45621 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927AbYIZTQg (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:25746 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751AbYI0P31 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 15:16:36 -0400
-Subject: Re: [PATCH] mac80211: fixups for "make master iface not wireless"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <45e8e6c40809261040k2aa053bap178bbfc55d66d31f@mail.gmail.com> (sfid-20080926_194029_125476_4B54BF2A)
-References: <1222419687-7106-1-git-send-email-lrodriguez@atheros.com>
-	 <1222428894.10563.115.camel@johannes.berg>
-	 <45e8e6c40809261037x40f6642bq1340bb0ee1e8f13b@mail.gmail.com>
-	 <45e8e6c40809261040k2aa053bap178bbfc55d66d31f@mail.gmail.com>
-	 (sfid-20080926_194029_125476_4B54BF2A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CQfF+hvCah+Gsfx5dvHq"
-Date: Fri, 26 Sep 2008 21:16:31 +0200
-Message-Id: <1222456591.3798.15.camel@johannes.berg> (sfid-20080926_211640_350487_7DB74EEC)
-Mime-Version: 1.0
+	Sat, 27 Sep 2008 11:29:27 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so940478fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2008 08:29:25 -0700 (PDT)
+Date: Sat, 27 Sep 2008 17:29:12 +0200
+From: Davide Pesavento <davidepesa@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH] Fix modpost failure when rx handlers are not inlined.
+Message-ID: <20080927152912.GA18970@PesaBook.pesa.homelinux.org> (sfid-20080927_172936_791779_114DA9E4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When CONFIG_MAC80211_MESH=n and CONFIG_MAC80211_NOINLINE=y,
+gcc doesn't optimize out a call to ieee80211_rx_h_mesh_fwding,
+even if the previous comparison is always false in this case.
+This leads to the following errors during modpost:
 
---=-CQfF+hvCah+Gsfx5dvHq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ERROR: "mpp_path_lookup" [net/mac80211/mac80211.ko] undefined!
+ERROR: "mpp_path_add" [net/mac80211/mac80211.ko] undefined!
 
-On Fri, 2008-09-26 at 10:40 -0700, Andrey Yurovsky wrote:
-> Ah, I see now that I can add interface on the non-master intefaces
-> (ex: wlan0), so that's probably the intention.  Thanks,
+Fix by removing the possibility of uninlining
+ieee80211_rx_h_mesh_fwding rx handler.
 
-Indeed, you can add them as "siblings" (to other interfaces) or to the
-parent "phy" device with iw:
+Signed-off-by: Davide Pesavento <davidepesa@gmail.com>
 
-	dev <devname> interface add <name> type <type> [mesh_id <meshid>]
-	phy <phyname> interface add <name> type <type> [mesh_id <meshid>]
-
-johannes
-
---=-CQfF+hvCah+Gsfx5dvHq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI3TUMAAoJEKVg1VMiehFYZmYQAJqO8n8bs0If96JALCxjUw7Y
-KA9FxzZlgIrthr0Ko1i3+DxvTJpZlCOmxGQYZSSYTLITcNQrKlORaboGgYZnu+Fs
-2h2Jys/zT1FqW8TYRI/8DtTXuxONbBpmmQKtdrSQdszYPSOGS3z2oqKNzL+4xJjc
-Fgcnzhs8hkhfQfvVylIopf3eHRED39PUXTNJjlJOpZ49TAlfSsFp4/2fqjhjThoE
-ichpYFMqU9RexMD8UPQAvlZQI0hfx8ZoY47qdCMB0cnhtsZR4KGb3QsazCVLJlyU
-fGMGpKkRIdn3lg3x79//hHn9LNB/ewf8GvON0inetAOjoqZzOz2tGGTlIIt4Loms
-XUa8njlhjsw+6n2IwDDkXZmJSOcqRHgViKCbPfF3Hh3VF+uEaxfW62xRTggl8qdP
-YAmlL42qOof6vL1qY8bzh0YwRPlJr8bdXy0Nd1ZncSGhoqMVdWAGftzMhkjNbaIK
-iHWXhPomfbjbboDWO1nzmjJrZdGg4r7HLmgfto63UT2K0xs0vcosUFYXmVcqRRtI
-hsjFdb73ZGZ12Bjwphf5EwIZrBPuISE3zcNlu7vRHR5POIq33PpebFE7ASUbUrXO
-JfMZFKNk8Kw/+GWcxwnCJOonzvntO8/oXjjZKHRJHeCDlQmNj4vGq1y6/16xJNQj
-/JDqbsdTcUpIrmtMSsUB
-=42+R
------END PGP SIGNATURE-----
-
---=-CQfF+hvCah+Gsfx5dvHq--
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c489865..77e7b01 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1379,7 +1379,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 	return RX_QUEUED;
+ }
+ 
+-static ieee80211_rx_result debug_noinline
++static ieee80211_rx_result
+ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr;
+-- 
+1.6.0.2
 
