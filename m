@@ -1,79 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:51573 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069AbYIVNZg (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36327 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbYI0Ohy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 09:25:36 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so219472yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 06:25:35 -0700 (PDT)
-Message-ID: <31436f4a0809220625s240a786cl7602dcb35f7039a5@mail.gmail.com> (sfid-20080922_152540_976377_245B9C56)
-Date: Mon, 22 Sep 2008 16:25:34 +0300
-From: "David Shwatrz" <dshwatrz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: A question about setting Master mode and ieee80211_ioctl_siwmode() handler
+	Sat, 27 Sep 2008 10:37:54 -0400
+Date: Sat, 27 Sep 2008 10:38:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org
+Subject: Re: Release of Atheros 802.11abg HAL under the ISC
+Message-ID: <20080927143852.GB3392@tuxdriver.com> (sfid-20080927_163812_332030_0B84519D)
+References: <20080926215701.GC5972@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080926215701.GC5972@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-I have a short question:
-  I wonder how can a command like :
-"iwconfig wlan0 mode Master"
-should succeed ;
-I did tried it on some wireless NIC, which probably does not support
-master mode, and got:
-"Error for wireless request "Set Mode" (8B06) :
-    SET failed on device wlan0 ; Invalid argument."
+On Fri, Sep 26, 2008 at 02:57:01PM -0700, Luis R. Rodriguez wrote:
+> As part of our commitment to help support all of our Atheros devices
+> under Linux we'd like to announce the release of our Atheros HAL for
+> our 802.11abg chipsets under the ISC license.
+> 
+> You can find it here:
+> 
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/legacy-hal.tar.bz2
+> 
+> This can be used as a source of documentation to help ath5k move
+> forward to support our 802.11abg chipsets as best as possible in
+> the Linux kernel. We look forward to keep working strongly with the
+> community on advancing support of all our Atheros chipsets under Linux.
 
+Awesome...simply, awesome!
 
-The reason is this:
-I look at the kernel code which implements receiving the set mode IOCTL.
+I hereby nominate Atheros for this year's "Most Improved Open Source
+Corporate Citizen" award! :-)
 
-The method is ieee80211_ioctl_siwmode(), in net/mac80211/wext.c.
+Great job, Luis!
 
-(I am looking at the last git wireless tree; it appears here below).
-
-As far as I can see, we don't handle the "Master" mode in the case
-sentence , so when we try to set the mode to Master,
-by :
-"iwconfig wlan0 mode Master"
-we will always get to the default and exit with
-		"return -EINVAL"
-
-Am I wrong here ? can somebody please explain?
-
-static int ieee80211_ioctl_siwmode(struct net_device *dev,
-				   struct iw_request_info *info,
-				   __u32 *mode, char *extra)
-{
-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-	int type;
-
-	if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN)
-		return -EOPNOTSUPP;
-
-	switch (*mode) {
-	case IW_MODE_INFRA:
-		type = IEEE80211_IF_TYPE_STA;
-		break;
-	case IW_MODE_ADHOC:
-		type = IEEE80211_IF_TYPE_IBSS;
-		break;
-	case IW_MODE_REPEAT:
-		type = IEEE80211_IF_TYPE_WDS;
-		break;
-	case IW_MODE_MONITOR:
-		type = IEEE80211_IF_TYPE_MNTR;
-		break;
-	default:
-		return -EINVAL;
-	}
-
-	return ieee80211_if_change_type(sdata, type);
-}
-
-
-Any ideas?
-Regards,
-DS
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
