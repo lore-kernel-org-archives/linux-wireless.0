@@ -1,88 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48949 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683AbYIGNtG (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:50197 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415AbYI0Me7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2008 09:49:06 -0400
-Subject: Re: [PATCH 2/2 V2] mac80211: add direct probe before association
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <1ba2fa240809061721k2082d038j63c272f5b29a66c6@mail.gmail.com> (sfid-20080907_022142_614088_FF8C10FE)
-References: <1218240139-5009-1-git-send-email-tomas.winkler@intel.com>
-	 <1220744663.21016.28.camel@johannes.berg>
-	 <1ba2fa240809061721k2082d038j63c272f5b29a66c6@mail.gmail.com>
-	 (sfid-20080907_022142_614088_FF8C10FE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8UilL9GR3V/bgzmwwOyP"
-Date: Sun, 07 Sep 2008 15:49:00 +0200
-Message-Id: <1220795340.31304.10.camel@johannes.berg> (sfid-20080907_154918_366016_44B598D0)
-Mime-Version: 1.0
+	Sat, 27 Sep 2008 08:34:59 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1456429rvb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2008 05:34:58 -0700 (PDT)
+Message-ID: <2da21fe50809270534w71609ffdjd1177384547ee1b@mail.gmail.com> (sfid-20080927_143504_542001_1F2BCEF8)
+Date: Sat, 27 Sep 2008 14:34:58 +0200
+From: "Davide Pesavento" <davidepesa@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: wireless-testing modpost failure
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, YanBo <dreamfly281@gmail.com>
+In-Reply-To: <1222516090.3798.62.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <2da21fe50809261104m3b7d99e3g8b56416b8182ca45@mail.gmail.com>
+	 <20080926190007.GD3483@tuxdriver.com>
+	 <1222457416.3798.25.camel@johannes.berg>
+	 <2da21fe50809261325o62dea98dyf40b06e373f29f53@mail.gmail.com>
+	 <1222504695.3798.38.camel@johannes.berg>
+	 <1222507225.3798.45.camel@johannes.berg>
+	 <2da21fe50809270354i4d28335vfe166c166d33dc7@mail.gmail.com>
+	 <1222516090.3798.62.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/9/27 Johannes Berg <johannes@sipsolutions.net>:
+> On Sat, 2008-09-27 at 12:54 +0200, Davide Pesavento wrote:
+>
+>> > Ok... I can't reproduce it. Can you turn off CONFIG_MAC80211_NOINLINE
+>> > and see if that helps?
+>> >
+>>
+>> Yes, it works without CONFIG_MAC80211_NOINLINE.
+>>
+>> I guess that it fails because gcc doesn't optimize out
+>> CALL_RXH(ieee80211_rx_h_mesh_fwding) in
+>> ieee80211_invoke_rx_handlers(), even if the comparison is always
+>> false... (btw, there's an extra semicolon at the end of that line).
+>
+> Ok, strange. I suggest we simply remove the debug_noinline from
+> ieee80211_rx_h_mesh_fwding then, want to do a patch?
 
---=-8UilL9GR3V/bgzmwwOyP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Why not putting an #ifdef CONFIG_MAC80211_MESH at the beginning of
+ieee80211_rx_h_mesh_fwding instead?
 
-On Sun, 2008-09-07 at 03:21 +0300, Tomas Winkler wrote:
-> On Sun, Sep 7, 2008 at 2:44 AM, Johannes Berg <johannes@sipsolutions.net>=
- wrote:
-> > Hi,
-> >
-> > I was just pondering rewriting parts of the state machine (and you've
-> > already seen the other cleanups I did today) and found this:
-> >
-> >> +     /* Direct probe is sent to broadcast address as some APs
-> >> +      * will not answer to direct packet in unassociated state.
-> >> +      */
-> >> +     ieee80211_send_probe_req(dev, NULL,
-> >> +                              ifsta->ssid, ifsta->ssid_len);
-> >
-> >> +     /* direct probe may be part of the association flow */
-> >> +     if (test_and_clear_bit(IEEE80211_STA_REQ_DIRECT_PROBE,
-> >> +                                                     &ifsta->request)=
-) {
-> >> +             printk(KERN_DEBUG "%s direct probe responded\n", dev->na=
-me);
-> >> +             ieee80211_authenticate(dev, ifsta);
-> >
-> > Doesn't the latter code have to check that the sender is the correct
-> > one? First we broadcast the probe request, and then we may be getting
-> > one from a different AP but still clear our direct probe association
-> > flow step, no?
->=20
-> Yep, this is not covered. Don't remember why it wasn't straight
-> forward to implement...will look at it again after sunrise.
-
-Actually, don't bother, I'm fixing it, was just trying to see if I was
-missing anything and it was correct already.
-
-johannes
-
---=-8UilL9GR3V/bgzmwwOyP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIw9vIAAoJEKVg1VMiehFYd28QAJRF9FhLjlqX2WqXh7Fj/xMj
-QLPprOWv7akU3tUC0vFswH2wL0GXe1DzYhA1qsolLcmeP9dU3LN8SwtsOQ/C1xIe
-62r3hFHVIOXAy8NuseAkFKUF8YfcvrTuYI3pdOkKPw15RPWfka7H+wnCt8INl5A9
-oHFuXoEI5iD0/+qMYKcpHoatzDnm+PstP5fbBAZed/23LuqnprkF0zrLCNFUx1kq
-JkkdjtcjVO4kN0QtBDIzfSDHoLEMPkEXMYdSnyFWAftZSlVFaQyYNuZyNCu2MqxR
-gcHjERA+WT4DCBetIjW6cHB8aGtg6jMxz03zfSFJwneW0VRVAHkvY2fo8NRRdUG4
-h82kWla2kX3aiLu3MQdAsZcjre4M7lu5qCn5+7Yg8aRklHpGJlhI4Kjy6fSrtMSR
-rq/HXDQu/LpvLDtDN5JEpKu5ZqgrIGyYAZh7Fl6Ub/HXST5LK3EdFtMjhbVaAzgh
-/pht9ynK+X+5Xx3ECKFQYl8407CWLyUcsx+BO4cx6w2++UFSJtVHsfIDZ3Eewiao
-blY2yoO5xrkGodugLuEG2hdP72+k2sO9/9OkxYVPphEsta6auLMc6FzSs7SPIovT
-J52RSI5H7tOS60+On/TlWrs7ntEkzrjmWhJk1HX3NBj5IHJ/5lk436+eURabBMso
-s2gaFqTLwCqthvqK28xS
-=+xIC
------END PGP SIGNATURE-----
-
---=-8UilL9GR3V/bgzmwwOyP--
-
+Thanks,
+Davide
