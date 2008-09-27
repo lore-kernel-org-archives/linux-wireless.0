@@ -1,75 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50452 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48967 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbYI2TGA (ORCPT
+	with ESMTP id S1751945AbYI0IiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 15:06:00 -0400
-Subject: Re: wireless vs. network namespaces (part II)
+	Sat, 27 Sep 2008 04:38:21 -0400
+Subject: Re: wireless-testing modpost failure
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <20080929190345.GD6203@tesla>
-References: <1222509685.3798.59.camel@johannes.berg>
-	 <m1r675aw0l.fsf@frodo.ebiederm.org>
-	 <1222587651.3798.72.camel@johannes.berg>  <20080929190345.GD6203@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PXCvc99EZlNgN6KcBu2J"
-Date: Mon, 29 Sep 2008 21:05:53 +0200
-Message-Id: <1222715153.7064.42.camel@johannes.berg> (sfid-20080929_210606_255700_F39BD7CD)
+To: Davide Pesavento <davidepesa@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, YanBo <dreamfly281@gmail.com>
+In-Reply-To: <2da21fe50809261325o62dea98dyf40b06e373f29f53@mail.gmail.com> (sfid-20080926_222513_164399_16E42BBE)
+References: <2da21fe50809261104m3b7d99e3g8b56416b8182ca45@mail.gmail.com>
+	 <20080926190007.GD3483@tuxdriver.com>
+	 <1222457416.3798.25.camel@johannes.berg>
+	 <2da21fe50809261325o62dea98dyf40b06e373f29f53@mail.gmail.com>
+	 (sfid-20080926_222513_164399_16E42BBE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CVim7+vuXa+6q3JwhWYo"
+Date: Sat, 27 Sep 2008 10:38:15 +0200
+Message-Id: <1222504695.3798.38.camel@johannes.berg> (sfid-20080927_103825_094353_5CEDFB62)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-PXCvc99EZlNgN6KcBu2J
+--=-CVim7+vuXa+6q3JwhWYo
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-09-29 at 12:03 -0700, Luis R. Rodriguez wrote:
-
-> > Right, except that wireless really is different in that for one you
-> > can't really usefully have multiple virtual interfaces unless you're
-> > making an AP
+On Fri, 2008-09-26 at 22:25 +0200, Davide Pesavento wrote:
+> 2008/9/26 Johannes Berg <johannes@sipsolutions.net>:
+> > On Fri, 2008-09-26 at 15:00 -0400, John W. Linville wrote:
+> >
+> >> >   Building modules, stage 2.
+> >> >   MODPOST 216 modules
+> >> > ERROR: "mpp_path_lookup" [net/mac80211/mac80211.ko] undefined!
+> >> > ERROR: "mpp_path_add" [net/mac80211/mac80211.ko] undefined!
+> >
+> > Davide, can you tell me what file/line it fails in?
+> >
 >=20
-> Well it may be possible later in STA too, but that is just me looking at
-> a crystal ball.
+> How can I tell you that?
 
-Well, it _is_ possible, but not standards compliant ;) Stefano is, I
-think, the only person who has ever tested my firmware patch.
-
-> > (and I think it's unlikely you'd want that in an AP, and
-> > even if I'm not willing to support it,=20
->=20
-> You mean AP VLANs? I thought you added that code already. I don't
-> follow.
-
-Well, I don't see a point in allowing them in different network
-namespaces.
+Good question. I was thinking the linker would complain at some earlier
+point too, but I'll just try to reproduce it myself.
 
 johannes
 
---=-PXCvc99EZlNgN6KcBu2J
+--=-CVim7+vuXa+6q3JwhWYo
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI4ScOAAoJEKVg1VMiehFYgdQP/3Rw0zgi4f5JqlOTJ3CSOmWG
-3tqK5F87mvgVJXYKKMSxSH1QNv/AdDOKk9CFkY2n5AQl/JoRzYQZHnLEhJMQBMob
-gtidn1kWb6faWPC2nVXP/nCRAOTNFDpTyybvlEd+cR6qAjmdcbwnMTULyv8maocU
-ByhkdRNa37++FypsM91oFb2PxYmNmyGZ9AWEh+RZ3c2Cnes87l4LPS45q56YIU3R
-saMWdGBKwNhuoeE5ke+MEJhc2/E0Skcm1lulnG/6fXD7mTQuCt987nmcr6/CMhQq
-MCMA9g6Mc//wAaDSwgzykvG8t9QPoOzbDn/1PfTHkmMrTQdpefA0S3qt9bHONLnE
-CFktkqjXFYEKvcvZkYIM6rS5GEcvM/Py5SRAcmtxp7YiaLl9aahtFJ8i5mb/IYza
-KBASnKqqFC4dWx2gspC+VCzottQPlgUcqiAW0s+0QGe1yl1tBmZNBZXr3hbJiqCM
-edcnQHP7bUmlRZc69qI/5SKYiqCMn+cJ5+fSB7eIsHaODeD4pIdqa0xdyi21iv2o
-UGQYmUgzchn/AKocJgwSxZX4iNZ4OHJOsp/EDyUY+prLCtsnF8I+CGNIkBiRnN4x
-NzNmCdpBXFxmetd+ZmA8HRne0Y2/UJAgLTqbCv88/JQCUDdl7oyvvML79pDe0Ss7
-r/M4joEwhVX7d1iO+4+O
-=KcbB
+iQIcBAABAgAGBQJI3fDzAAoJEKVg1VMiehFYW0UP/1bGzJSiRCguxykhwo9EpuAg
+XAX1q4/+w34IS8yh9FKpkWKrXEREPHtuoEbQx2Q7FCBpopvQLB5b0YCJsh1mRYYz
+VXXuIphV9hda1TkN4gfrb1Zd8NYQERqqZi2PoIN5SEHEDW2ky+6b4kWk8tvdokI8
+HtPe5oO/LZU9T8bMXOz1MHwVQw3tf7kWAD85EHTeQIWw6IHWkKvGelCv6iOhloFT
+JQvwIx6/2hEkgjk6SAkazkyb4Roq05hXrFrb8C4XynbXQKMDYgCPAnCZtfRNcObg
+55Xs0IQ2RyImFTk1fdh66MMRcos4/TrMi5gEFXs0GMaIeBdSwpJzqRfg+zvgq91J
+KMFLCG+AMbZj2JJ/P7xkGGCREEj5GdbUiU208wwmEkigi+25OV1yAfzDcuWesKRY
+rJzgthyz2dxjboyj3oUgkj2HyFdKA3/WhaUySI62QSJhfFABqDkwIjMhtUSkbO5z
+L4u0N6ms9YWMZks2F5fLUPBuOy2wQctm7kAA4vPbAk1GMM+Qek43wrCyZDs501V+
+v16q11ZFgvAvIpMY+KZlAEyU+Y9cRPm5VU6TNkTwt+8fY4gEQsvdgfsjXwHhAiQb
+hSPcavr2Gmop5NZ6O+uxjwMyWdJkdoAzA9ZnSN8NtbEMj4jekZlnehMCNpZB61r3
+/rhSbN0JjVn2/M3IO1bi
+=RJlH
 -----END PGP SIGNATURE-----
 
---=-PXCvc99EZlNgN6KcBu2J--
+--=-CVim7+vuXa+6q3JwhWYo--
 
