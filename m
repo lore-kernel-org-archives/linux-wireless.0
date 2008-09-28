@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:45593 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751383AbYIBASj (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.186]:7009 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132AbYI1Qj5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2008 20:18:39 -0400
-Date: Mon, 1 Sep 2008 17:18:17 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: linux-wireless@vger.kernel.org
-Cc: bugme-daemon@bugzilla.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, m.s.tsirkin@gmail.com
-Subject: Re: [Bugme-new] [Bug 11476] New: failure to associate after resume
- from suspend to ram
-Message-Id: <20080901171817.48743179.akpm@linux-foundation.org> (sfid-20080902_021855_251687_0E5D67DA)
-In-Reply-To: <bug-11476-10286@http.bugzilla.kernel.org/>
-References: <bug-11476-10286@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sun, 28 Sep 2008 12:39:57 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1654244fkq.5
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2008 09:39:55 -0700 (PDT)
+Message-ID: <1ba2fa240809280939x31829a25wa46948d1f351c7a0@mail.gmail.com> (sfid-20080928_184002_791612_9095C58D)
+Date: Sun, 28 Sep 2008 19:39:55 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS mode
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1222619168.7064.3.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
+	 <1222618769.7064.0.camel@johannes.berg>
+	 <1ba2fa240809280924n1505e049w7800e3ef28449e8e@mail.gmail.com>
+	 <1222619168.7064.3.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Sep 28, 2008 at 7:26 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2008-09-28 at 19:24 +0300, Tomas Winkler wrote:
+>
+>> >> This patch makes mac80211 able to send action frames when toggling
+>> >> (SM PS) Spacial Multiplexing Power Save mode.
+>
+>> > Why is the driver managing the PS mode to start with?
+>>
+>> What PS mode, SM PS mode or traditional PS mode? Please be more
+>> verbose so I don't have to guess what you mean.
+>
+> This was mostly concerned about SM PS mode so that's what I'm asking.
 
-(switched to email.  Please respond via emailed reply-to-all, not via the
-bugzilla web interface).
+Hmm, I hoped that two examples I gave explains that. Now I see I
+missed one sentence
+in the first example, the movement between PS mode and CAM mode can be
+actually controlled
+by mac80211 it just need to convey to AP MS PS mode supported by HW.
+Bottom line this is dependent on
+HW capabilities.
 
-On Mon,  1 Sep 2008 13:33:47 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+Second example, only low level driver is running calibrations and
+knows if it has all rx chains available. The possibility is
+that not all platforms connect all antennas or physical environment
+between AP and STA cause some of the antennas not affective
+we may propagate rx chain status to mac80211 but if this is not
+opening too much guts. Sometimes it's just hard to keep a clean cut.
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=11476
-> 
->            Summary: failure to associate after resume from suspend to ram
->            Product: Networking
->            Version: 2.5
->      KernelVersion: 2.6.25-rc5
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Wireless
->         AssignedTo: networking_wireless@kernel-bugs.osdl.org
->         ReportedBy: m.s.tsirkin@gmail.com
-> 
-> 
-> Latest working kernel version: 2.6.25-rc4
-> Earliest failing kernel version: 2.6.25-rc5
+I have two more patches for these to example of course...
 
-A very recent regression.
+>I don't actually know what that is anyway though, hence the question.
 
-> Distribution: ubuntu gutsy
-> Hardware Environment: T60p
-> Software Environment: self-built kernel, .config attached
-> Problem Description:
-> 
-> Starting with 2.6.27-rc5, my T60p sometimes fails to associate
-> with an access point after suspend to ram/resume.
-> 
-> This does not seem to happen on 2.6.27-rc4.
-> 
-> Steps to reproduce:
-> suspend and resume several times.
-> At some point the card fails to associate with
-> the AP.
+Actually this is one of more understandable part of the spec.
 
-Which device driver is that machine using?
+ We
+> keep adding API in mac80211 and nobody really knows when to call it.
+> Maybe you should (maybe team up with Atheros for it) write a "HT
+> hardware with mac80211" chapter in the documentation?
+
+Yes we should.
+Tomas
