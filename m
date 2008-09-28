@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:22294 "EHLO mga09.intel.com"
+Received: from venema.h4ckr.net ([217.24.1.135]:60394 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754073AbYICDWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:22:51 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Cahill Ben <ben.m.cahill@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/9] iwlwifi: fix hidden ssid discovery in passive channels
-Date: Wed,  3 Sep 2008 11:18:43 +0800
-Message-Id: <1220411930-15216-3-git-send-email-yi.zhu@intel.com> (sfid-20080903_052307_314843_3FB6E267)
-In-Reply-To: <1220411930-15216-2-git-send-email-yi.zhu@intel.com>
-References: <1220411930-15216-1-git-send-email-yi.zhu@intel.com>
- <1220411930-15216-2-git-send-email-yi.zhu@intel.com>
+	id S1752792AbYI1WYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Sep 2008 18:24:44 -0400
+Date: Mon, 29 Sep 2008 01:24:44 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	me@bobcopeland.com, nbd@openwrt.org
+Subject: [PATCH 4/5] ath5k: Fix SREV reporting after SREV updates
+Message-ID: <20080928222444.GD21335@makis> (sfid-20080929_002448_080290_AED61395)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+ * Fix srev reporting during attach
 
-This enables sending of direct probes on passive channels, as long as
-traffic was detected on that channel. This enables connectivity to
-hidden/non broadcasting SSIDs APs on passive channels. Note 5000 HW
-declares all 5.2 spectrum as passive.
+ Changes-Licensed-under: ISC
+ Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Signed-off-by: Cahill Ben <ben.m.cahill@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath5k/base.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 9bb6adb..6c8ac3a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -421,7 +421,7 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
- 		else
- 			scan_ch->type = SCAN_CHANNEL_TYPE_ACTIVE;
- 
--		if ((scan_ch->type & SCAN_CHANNEL_TYPE_ACTIVE) && n_probes)
-+		if (n_probes)
- 			scan_ch->type |= IWL_SCAN_PROBE_MASK(n_probes);
- 
- 		scan_ch->active_dwell = cpu_to_le16(active_dwell);
--- 
-1.5.3.6
-
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index c8bb9bf..905076a 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -396,7 +396,11 @@ ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
+ 	for (i = 0; i < ARRAY_SIZE(srev_names); i++) {
+ 		if (srev_names[i].sr_type != type)
+ 			continue;
+-		if ((val & 0xff) < srev_names[i + 1].sr_val) {
++
++		if ((val & 0xf0) == srev_names[i].sr_val)
++			name = srev_names[i].sr_name;
++
++		if ((val & 0xff) == srev_names[i].sr_val) {
+ 			name = srev_names[i].sr_name;
+ 			break;
+ 		}
