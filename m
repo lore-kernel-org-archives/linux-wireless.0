@@ -1,87 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:50899 "EHLO hostap.isc.org"
+Received: from venema.h4ckr.net ([217.24.1.135]:48885 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751869AbYISRsF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 13:48:05 -0400
-Message-ID: <48D3E662.9050902@w1.fi> (sfid-20080919_194810_871368_0E093EB6)
-Date: Fri, 19 Sep 2008 20:50:26 +0300
-From: Jouni Malinen <j@w1.fi>
+	id S1752526AbYI1WXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Sep 2008 18:23:19 -0400
+Date: Mon, 29 Sep 2008 01:23:07 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	me@bobcopeland.com, nbd@openwrt.org
+Subject: [PATCH 3/5] ath5k: Use QUIET mechanism on tx dma stop
+Message-ID: <20080928222307.GC21335@makis> (sfid-20080929_002322_340874_15264E87)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Mikko_Virkkil=E4?= <mikko.virkkila@bluegiga.com>
-CC: Mattias Nissler <mattias.nissler@gmx.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
-	kune@deine-taler.de, j@w1.fi
-Subject: Re: ACK matching [was: TX status reporting with help of an ack	queue]
-References: <1221494693.14102.22.camel@virkkmi-linux>	 <1221505251.4511.77.camel@localhost>	 <1221541089.14102.44.camel@virkkmi-linux>	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>	 <1221776990.4563.19.camel@localhost>	 <1221815294.19539.15.camel@virkkmi-linux>	 <1221817584.4491.29.camel@localhost>	 (sfid-20080919_114701_416600_478C4255)  <1221818057.10419.58.camel@johannes.berg>	 <1221819579.4491.34.camel@localhost>	 (sfid-20080919_122011_765612_F53F8EFC)  <1221820265.10419.78.camel@johannes.berg>	 <1221832302.4514.6.camel@localhost> <1221834033.22224.22.camel@virkkmi-linux>
-In-Reply-To: <1221834033.22224.22.camel@virkkmi-linux>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mikko Virkkil=E4 wrote:
-> On Fri, 2008-09-19 at 15:51 +0200, Mattias Nissler wrote:
->> On Fri, 2008-09-19 at 12:31 +0200, Johannes Berg wrote:
->>> But you can do workarounds all you want in hostapd, I don't care.
+ * Use QUIET mechanism to drain tx buffer on PCU for newer chips
+ * Make sure that INTPEND is really 1 and not 0xffffffff while checking for pending interrupts
 
-But I do care.. ;-)  As such, I would change that to "you can do
-workarounds in your copy of hostapd". And yes, this would likely be the
-best location for the workaround.
+ Changes-Licensed-under: ISC
+ Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
 
->>> However, I do think that if the hardware just isn't up to the job y=
-ou
->>> should probably buy new hardware, after all, it's dirt cheap. :)
+---
+ drivers/net/wireless/ath5k/dma.c |   49 ++++++++++++++++++++++++++++++++++----
+ drivers/net/wireless/ath5k/reg.h |    4 +-
+ 2 files changed, 46 insertions(+), 7 deletions(-)
 
-I have never seen wlan design that does not report frame ACK status
-properly for transmitted unicast frames. Is it absolutely clear that
-that is indeed the case here or could we should be missing some
-documentation explaining how this should be done?
-
-> I'd really love for some workaround that would allow AP mode to work.=
-=20
-
-The workaround would be to make hostapd generate bogus TX callback
-internally with claim for a successfully received ACK when sending
-(re)association response. I'm not very keen on including such
-functionality and certainly do not consider dropping the correct
-behavior because of a broken hw design.
-
-If someone can come up with a clean patch that allows this to be
-configured in hostapd.conf without affecting the default behavior, I
-could consider applying the changes. However, please keep in mind that
-I'm interested in using TX status reporting to improve reliability of
-connection setup, so its use is more likely to increase in the future.
-
-> It would be great if it could be deemed that the protocol doesn't rea=
-lly
-> require CTS protection/status information, and can be made reliable a=
-nd
-> standards compliant without support for it from the driver.
-> Unfortunately I don't have high hopes for that, but I wonder what's M=
-r.
-> Malinen's opinion?
-
-IEEE 802.11 association state in the AP is changed when receiving an AC=
-K
-from the STA for a (re)association response frame with success status
-(see IEEE Std 802.11-2007, 11.3.2.2). In order to be able to implement
-this correctly, AP mode operation require the TX status callback to
-provide information for the ACK status of (re)association response
-frames.
-
-I would also like to see this status used to speed up recovery from=20
-dropped EAPOL frames during IEEE 802.1X EAP authentication, 4-way
-handshake and group handshake. In certain environments, this could
-improve stability of connection establishment greatly.
-
-- Jouni
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath5k/dma.c b/drivers/net/wireless/ath5k/dma.c
+index a28090b..7adceb2 100644
+--- a/drivers/net/wireless/ath5k/dma.c
++++ b/drivers/net/wireless/ath5k/dma.c
+@@ -68,7 +68,7 @@ int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
+ 	/*
+ 	 * It may take some time to disable the DMA receive unit
+ 	 */
+-	for (i = 2000; i > 0 &&
++	for (i = 1000; i > 0 &&
+ 			(ath5k_hw_reg_read(ah, AR5K_CR) & AR5K_CR_RXE) != 0;
+ 			i--)
+ 		udelay(10);
+@@ -182,11 +182,10 @@ int ath5k_hw_start_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+  * have any pending frames. Returns -EBUSY if we still have pending frames,
+  * -EINVAL if queue number is out of range.
+  *
+- * TODO: Test queue drain code
+  */
+ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+ {
+-	unsigned int i = 100;
++	unsigned int i = 40;
+ 	u32 tx_queue, pending;
+ 
+ 	ATH5K_TRACE(ah->ah_sc);
+@@ -233,13 +232,53 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+ 			udelay(100);
+ 		} while (--i && pending);
+ 
++		/* For 2413+ order PCU to drop packets using
++		 * QUIET mechanism */
++		if (ah->ah_mac_version >= (AR5K_SREV_AR2414 >> 4) &&
++		pending){
++			/* Set periodicity and duration */
++			ath5k_hw_reg_write(ah,
++				AR5K_REG_SM(100, AR5K_QUIET_CTL2_QT_PER)|
++				AR5K_REG_SM(10, AR5K_QUIET_CTL2_QT_DUR),
++				AR5K_QUIET_CTL2);
++
++			/* Enable quiet period for current TSF */
++			ath5k_hw_reg_write(ah,
++				AR5K_QUIET_CTL1_QT_EN |
++				AR5K_REG_SM(ath5k_hw_reg_read(ah,
++						AR5K_TSF_L32_5211) >> 10,
++						AR5K_QUIET_CTL1_NEXT_QT_TSF),
++				AR5K_QUIET_CTL1);
++
++			/* Force channel idle high */
++			AR5K_REG_ENABLE_BITS(ah, AR5K_DIAG_SW_5211,
++					AR5K_DIAG_SW_CHANEL_IDLE_HIGH);
++
++			/* Wait a while and disable mechanism */
++			udelay(200);
++			AR5K_REG_DISABLE_BITS(ah, AR5K_QUIET_CTL1,
++						AR5K_QUIET_CTL1_QT_EN);
++
++			/* Re-check for pending frames */
++			i = 40;
++			do {
++				pending = ath5k_hw_reg_read(ah,
++					AR5K_QUEUE_STATUS(queue)) &
++					AR5K_QCU_STS_FRMPENDCNT;
++				udelay(100);
++			} while (--i && pending);
++
++			AR5K_REG_DISABLE_BITS(ah, AR5K_DIAG_SW_5211,
++					AR5K_DIAG_SW_CHANEL_IDLE_HIGH);
++		}
++
+ 		/* Clear register */
+ 		ath5k_hw_reg_write(ah, 0, AR5K_QCU_TXD);
+ 		if (pending)
+ 			return -EBUSY;
+ 	}
+ 
+-	/* TODO: Check for success else return error */
++	/* TODO: Check for success on 5210 else return error */
+ 	return 0;
+ }
+ 
+@@ -415,7 +454,7 @@ done:
+ bool ath5k_hw_is_intr_pending(struct ath5k_hw *ah)
+ {
+ 	ATH5K_TRACE(ah->ah_sc);
+-	return ath5k_hw_reg_read(ah, AR5K_INTPEND);
++	return ath5k_hw_reg_read(ah, AR5K_INTPEND) == 1 ? 1 : 0;
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
+index 2c0fb8a..13456be 100644
+--- a/drivers/net/wireless/ath5k/reg.h
++++ b/drivers/net/wireless/ath5k/reg.h
+@@ -1424,7 +1424,7 @@
+ #define AR5K_DIAG_SW_OBSPT_S		18
+ #define AR5K_DIAG_SW_RX_CLEAR_HIGH	0x0010000	/* Force RX Clear high */
+ #define AR5K_DIAG_SW_IGNORE_CARR_SENSE	0x0020000	/* Ignore virtual carrier sense */
+-#define AR5K_DIAG_SW_CHANEL_IDLE_HIGH	0x0040000	/* Force channel idle high (?) */
++#define AR5K_DIAG_SW_CHANEL_IDLE_HIGH	0x0040000	/* Force channel idle high */
+ #define AR5K_DIAG_SW_PHEAR_ME		0x0080000	/* ??? */
+ 
+ /*
+@@ -1660,7 +1660,7 @@
+  */
+ #define AR5K_QUIET_CTL1			0x80fc			/* Register Address */
+ #define AR5K_QUIET_CTL1_NEXT_QT_TSF	0x0000ffff	/* Next quiet period TSF (TU) */
+-#define	AR5K_QUIET_CTL1_NEXT_QT_TSF_0
++#define	AR5K_QUIET_CTL1_NEXT_QT_TSF_S	0
+ #define AR5K_QUIET_CTL1_QT_EN		0x00010000	/* Enable quiet period */
+ #define	AR5K_QUIET_CTL1_ACK_CTS_EN	0x00020000	/* Send ACK/CTS during quiet period */
+ 
