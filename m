@@ -1,68 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55573 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:39859 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894AbYIHHpG (ORCPT
+	with ESMTP id S1751120AbYI1HrP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 03:45:06 -0400
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
+	Sun, 28 Sep 2008 03:47:15 -0400
+Subject: Re: scheduling while atomic: iwl3945 in mmotm 2008-09-23-11-27
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com> (sfid-20080908_011410_000288_CE56DC5D)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220794765.31304.8.camel@johannes.berg>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 (sfid-20080908_011410_000288_CE56DC5D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9qaFW8ayiIjSgkz9EQ05"
-Date: Mon, 08 Sep 2008 09:44:57 +0200
-Message-Id: <1220859897.31304.16.camel@johannes.berg> (sfid-20080908_094511_348750_5E83C6EC)
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <48DE8EC9.80306@gmail.com> (sfid-20080927_215201_348716_1480E298)
+References: <48DE8EC9.80306@gmail.com>
+	 (sfid-20080927_215201_348716_1480E298)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/wYwXLRSEG7P7fErVV/Q"
+Date: Sun, 28 Sep 2008 09:47:09 +0200
+Message-Id: <1222588029.3798.77.camel@johannes.berg> (sfid-20080928_094723_068131_55A4B203)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9qaFW8ayiIjSgkz9EQ05
+--=-/wYwXLRSEG7P7fErVV/Q
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-09-08 at 02:14 +0300, Tomas Winkler wrote:
+On Sat, 2008-09-27 at 21:51 +0200, Jiri Slaby wrote:
 
-> In general it works but I didn't test all the corner cases yet. Not
-> sure this is related but.
-> why I'm hitting unathorized prot messag for subif_start_xmit.
-> Shouldn't carrier_off(stada->dev) stop the queue?  I haven't seen this
-> before.
+> BUG: scheduling while atomic: iwl3945/0/1154/0x00000002
 
-In client mode? Then something is really gone wrong, APs always have the
-WLAN_STA_AUTHORIZED bit set once we get an assoc response.
+>  [<ffffffff80257315>] synchronize_rcu+0x35/0x40
+
+>  [<ffffffff80551d17>] sta_info_destroy+0x47/0x110
+>  [<ffffffff80559156>] ieee80211_set_disassoc+0x146/0x250
+>  [<ffffffff805593d5>] ieee80211_sta_req_auth+0x85/0x90
+>  [<ffffffff8055b156>] ieee80211_notify_mac+0x56/0xa0
+>  [<ffffffffa0054663>] iwl3945_bg_alive_start+0x2f3/0x360 [iwl3945]
+
+> I don't know who is responsible here. Maybe ieee80211_notify_mac? Citing:
+> "It is illegal to block while in an RCU read-side critical section." from
+> rcu_read_lock comments, but synchronize_rcu() in __ieee80211_key_todo()
+> sleeps and few mutexes are locked and might_sleep() invoked on the path t=
+oo.
+
+Yup, for sure.
+
+This is a combination of various things, when ieee80211_notify_mac was
+added ieee80211_sta_req_auth didn't destroy the sta info, later they
+fixed a different bug that started doing that and we all missed that it
+was called from here...
+
+We can fix this by using RTNL locking instead, not sure though that'll
+work because I don't know how iwl3945 calls this, I'll let Tomas deal
+with it.
 
 johannes
 
---=-9qaFW8ayiIjSgkz9EQ05
+--=-/wYwXLRSEG7P7fErVV/Q
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIxNf1AAoJEKVg1VMiehFYHg4QAKvh4Ixod1IKAj8sNTqNi5WQ
-QGc1BLqz7aVtjdkxb2P6p27YmBnUbVuUS/ogmQOFQJy00TrkgEGpe/wwpgjGwiuF
-asOSIPdIEu8GVbfX2YcyTdsqcdq2aMdL5MwmKsTKsf+tVMxQZIbCVefxXcYXElpu
-jefQFsdlWQZ3nGf9cQJkdvmMvD/6/Q/P+XkWLEU7D3dbNeXT8C9CX1XzNTYCqE7I
-HIpa36aM3Uz7Tk9jkDejfUMAqBkZcp6Psdjln3xV69HtaiVlr0FyvmmwsP/Q+2MO
-4weKEBFoKXy82UtINydCCa/vhQEwBK9PMMM1Sh3Dvs4JTd8LcQFqLnKCRHPfr/dU
-NUsUYZeBx45j2BQYp45zC0IOuMnIAUQquCScwR3N1Sl8ubrAkgwSj1GaoxMYvjp2
-WnbaOrBYOFyoeGuCTyUpHrKasC20mH2oT3LX60EmBC4hm/NtLxFnnVhWbxSD8kji
-YIg9HuItlV8dC0exJ69iDaFpNTQTcAT/BX4RlZrpGmljM/nRigMedGeAtU/1vKlf
-tj5Q0DZpBRZXMM2Y+EabuyMrhFE+5xJqHLUx6GBon2Z+DOd5d61iR6zpo2OrxTxe
-oshpD0whuM6lRH4mkzP/kHoQlkVis45eMDMvpBS56ytcAjqyg6wp5VAIppvNAMS6
-V7y+wut9D0WvGQx9nl0L
-=TDqO
+iQIcBAABAgAGBQJI3zZ6AAoJEKVg1VMiehFYqFAP/iWwzM9oHXi5IocwKyCXH6A2
+RqBaUiS5BjNMRBF1R70+x+j46AQqkbK9S+kA+sWUO84jCct+skJ83ucjke4T9bea
+Q63+DHbLSlPijhJlsrNULx1Gbsg59WQgLwmSyK7UvTSdUe4+VbFDcmvzx1rFKBzD
+W5n69V/e4ln5mw/A8u8wYGdTUpikWO2uliBs8oeBDvZFr2ucU9OwH+fztmfV+aXa
+G9CjUE7Aie4HVcKHmXRjB2zCqiVg0RdfLBYH7OTwSkj5OM+3vMmdiVIw4Ww2O2pL
+ROGpBTmDexF0kya2sLU5J6oWVn5SQPC/Zkyg0tABtDOYi+QJqqVOE7E+4ZEJOZWU
+mY4SCoyIZfdShRK5zSNRPPgQhCbI2NAyb/eIJ/IxiDDY/4tMUDgIhKKSsOARxqoP
+TXgXrf2YDxETlYxbB8HktVeJFboRxWwuCuLO5wvbEPVsyzB6PKmE6nk1xGVxBmxQ
+F9Vn8oAyBk3pL4JOdYcnJVSKXcDALSRm0zibG9UyyeweNDBTks7JoxFEh8v+SyMW
+0+TADSeKXWXgmGvMnKBf/5Pc5ToV8nTvP87IF3S6xE0Lxth/HMI0zTLAzJyHN8Ud
+yzwXBQ7Rv/GBFJyA82SxqvwTVC1qlPtOui7Rmkp9/ZXBJoYbuQPKfI/EscJ2esK6
+QGIq72AOZevCqjOFsWMf
+=NsAy
 -----END PGP SIGNATURE-----
 
---=-9qaFW8ayiIjSgkz9EQ05--
+--=-/wYwXLRSEG7P7fErVV/Q--
 
