@@ -1,78 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35038 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851AbYIPUTe (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:42768 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752595AbYI1UHi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 16:19:34 -0400
-Subject: Re: [PATCH] Use the kernel source tree for includes, not the
-	kernel build tree
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
+	Sun, 28 Sep 2008 16:07:38 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1208835fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2008 13:07:36 -0700 (PDT)
+Date: Sun, 28 Sep 2008 22:07:27 +0200
+From: Davide Pesavento <davidepesa@gmail.com>
+To: mcgrof@gmail.com
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080916200828.13928.55864.stgit@dv.roinet.com>
-References: <20080916200828.13928.55864.stgit@dv.roinet.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yEQxK1vjM0EdKRG/4wdZ"
-Date: Tue, 16 Sep 2008 22:18:42 +0200
-Message-Id: <1221596322.9262.7.camel@johannes.berg> (sfid-20080916_221950_680627_6149FB0E)
-Mime-Version: 1.0
+Subject: [CRDA PATCH 2/4] Delay netlink initialization and cache allocation.
+Message-ID: <20080928200727.GA5813@PesaBook.pesa.homelinux.org> (sfid-20080928_220741_120063_B7112811)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+By calling nl80211_init() a bit later, we can simplify error handling
+and avoid a lot of goto's in error paths.
 
---=-yEQxK1vjM0EdKRG/4wdZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+While at it, fix a couple of minor leaks in openssl-related code.
 
-On Tue, 2008-09-16 at 16:08 -0400, Pavel Roskin wrote:
-> If the build is done outside the source tree, nl80211.h won't be in the
-> build tree.  We only need only definitions from the sources, not the
-> kernel configuration.
+Signed-off-by: Davide Pesavento <davidepesa@gmail.com>
+---
+ crda.c |   52 +++++++++++++++++++++-------------------------------
+ 1 files changed, 21 insertions(+), 31 deletions(-)
 
-good catch
-
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> ---
->  Makefile  |    2 +-
->  defconfig |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/Makefile b/Makefile
-> index 74cb1e1..9e79381 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -6,7 +6,7 @@ INSTALL ?=3D install
->  PREFIX ?=3D /usr
->  CC ?=3D "gcc"
->  CFLAGS +=3D -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict=
--aliasing -fno-common -Werror-implicit-function-declaration
-> -CFLAGS +=3D -I/lib/modules/`uname -r`/build/include
-> +CFLAGS +=3D -I/lib/modules/`uname -r`/source/include
-
-I'll remove that line entirely though.
-
-johannes
-
---=-yEQxK1vjM0EdKRG/4wdZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0BSeAAoJEKVg1VMiehFYk8EP/idvUel1fqUvoqfv36nEPuAs
-WpJwJ5bwBF6v34uFXEARFt0sWCHwD7manxWxYnO2YUpM5mMSFg9jPZPWs8BPXUYf
-JGACxWzqegpbXgwXy18Fk+o2XjJ4FEZQ1gu22gel3XXf5nz2cQkdMskdBCRbdARL
-sqC5qLluQU4Rhh1sHdynVX73tQREV8fEuaWms3HaJHpiyx0wGiZuXqY1gshyWh4D
-KyFGo6NB4zV9YGOt7FEnSrrn9yV0eav0afSzpocBTzZrOL2hsnGHj4sVQBUqvIIX
-BKHgm1U7z8hMbZWEgsyIrv4RshyNBaobsBN3f+TWiOpAGeBN+Ov8dvK5yWk0ycqk
-ocNa8wBSAJaVJbTA5lh4b/qvFCYAUf5MwV+v1pc6rp26vNFZsToWSw+FWYO2Fdz5
-ehlcFBBwg51CYS0spa5JZNic6nkVgb7P6dgc9awYA4vj6b/9kYmRnM98uuceXb20
-7iNjsoGHo7GyTQM7espRkJuYBLKLYwFJkh531jAWptr+5lG+h9cgImTPxwexJGdb
-a54JuFvBYdyvjreNx1NMfQgZJT4ztpKaiwhN8BVlS0YHJhf4IWbZqc2idKVO1iln
-ucrqGdIFjqffUvfFnk1eUp31ZdK3zt0I+FEe0rmN1WFkW8WHrmocnk+za3lE+xh4
-VvLxRXKnwC/4GDOZ2Ruq
-=HvQm
------END PGP SIGNATURE-----
-
---=-yEQxK1vjM0EdKRG/4wdZ--
+diff --git a/crda.c b/crda.c
+index 4c7681c..e4cbe96 100644
+--- a/crda.c
++++ b/crda.c
+@@ -219,21 +219,15 @@ int main(int argc, char **argv)
+ 
+ 	memcpy(alpha2, env_country, 2);
+ 
+-	r = nl80211_init(&nlstate);
+-	if (r)
+-		return -EIO;
+-
+ 	fd = open(regdb, O_RDONLY);
+ 	if (fd < 0) {
+ 		perror("failed to open db file");
+-		r = -ENOENT;
+-		goto out;
++		return -ENOENT;
+ 	}
+ 
+ 	if (fstat(fd, &stat)) {
+ 		perror("failed to fstat db file");
+-		r = -EIO;
+-		goto out;
++		return -EIO;
+ 	}
+ 
+ 	dblen = stat.st_size;
+@@ -241,22 +235,19 @@ int main(int argc, char **argv)
+ 	db = mmap(NULL, dblen, PROT_READ, MAP_PRIVATE, fd, 0);
+ 	if (db == MAP_FAILED) {
+ 		perror("failed to mmap db file");
+-		r = -EIO;
+-		goto out;
++		return -EIO;
+ 	}
+ 
+ 	header = get_file_ptr(db, dblen, sizeof(*header), 0);
+ 
+ 	if (ntohl(header->magic) != REGDB_MAGIC) {
+ 		fprintf(stderr, "Invalid database magic\n");
+-		r = -EINVAL;
+-		goto out;
++		return -EINVAL;
+ 	}
+ 
+ 	if (ntohl(header->version) != REGDB_VERSION) {
+ 		fprintf(stderr, "Invalid database version\n");
+-		r = -EINVAL;
+-		goto out;
++		return -EINVAL;
+ 	}
+ 
+ 	siglen = ntohl(header->signature_length);
+@@ -265,8 +256,7 @@ int main(int argc, char **argv)
+ 
+ 	if (dblen <= sizeof(*header)) {
+ 		fprintf(stderr, "Invalid signature length %d\n", siglen);
+-		r = -EINVAL;
+-		goto out;
++		return -EINVAL;
+ 	}
+ 
+ 	/* verify signature */
+@@ -274,14 +264,13 @@ int main(int argc, char **argv)
+ 	rsa = RSA_new();
+ 	if (!rsa) {
+ 		fprintf(stderr, "Failed to create RSA key\n");
+-		r = -EINVAL;
+-		goto out;
++		return -EINVAL;
+ 	}
+ 
+ 	if (SHA1(db, dblen, hash) != hash) {
+ 		fprintf(stderr, "Failed to calculate SHA sum\n");
+-		r = -EINVAL;
+-		goto out;
++		RSA_free(rsa);
++		return -EINVAL;
+ 	}
+ 
+ 	for (i = 0; i < sizeof(keys)/sizeof(keys[0]); i++) {
+@@ -297,18 +286,16 @@ int main(int argc, char **argv)
+ 			break;
+ 	}
+ 
+-	if (!ok) {
+-		fprintf(stderr, "Database signature wrong\n");
+-		r = -EINVAL;
+-		goto out;
+-	}
+-
+ 	rsa->e = NULL;
+ 	rsa->n = NULL;
+ 	RSA_free(rsa);
+ 
+-	BN_print_fp(stdout, &keys[0].n);
++	if (!ok) {
++		fprintf(stderr, "Database signature wrong\n");
++		return -EINVAL;
++	}
+ 
++	BN_print_fp(stdout, &keys[0].n);
+ #endif
+ 
+ #ifdef USE_GCRYPT
+@@ -356,7 +343,6 @@ int main(int argc, char **argv)
+ 		fprintf(stderr, "Database signature wrong\n");
+ 		return 2;
+ 	}
+-
+ #endif
+ 
+ 	num_countries = ntohl(header->reg_country_num);
+@@ -377,16 +363,20 @@ int main(int argc, char **argv)
+ 		return -1;
+ 	}
+ 
++	r = nl80211_init(&nlstate);
++	if (r)
++		return -EIO;
++
+ 	msg = nlmsg_alloc();
+ 	if (!msg) {
+-		fprintf(stderr, "failed to allocate netlink msg\n");
+-		return -1;
++		fprintf(stderr, "Failed to allocate netlink message.\n");
++		r = -1;
++		goto out;
+ 	}
+ 
+ 	genlmsg_put(msg, 0, 0, genl_family_get_id(nlstate.nl80211), 0,
+ 		0, NL80211_CMD_SET_REG, 0);
+ 
+-
+ 	rcoll = get_file_ptr(db, dblen, sizeof(*rcoll), country->reg_collection_ptr);
+ 	num_rules = ntohl(rcoll->reg_rule_num);
+ 	/* re-get pointer with sanity checking for num_rules */
+-- 
+1.6.0.2
 
