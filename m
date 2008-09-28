@@ -1,87 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:45547 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752800AbYIRNQt (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3051 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbYI1QKI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 09:16:49 -0400
-Date: Thu, 18 Sep 2008 10:16:43 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression in 2.6.27-rcX caused by commit
-	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-Message-ID: <20080918131643.GC1583@khazad-dum.debian.net> (sfid-20080918_151652_672199_8B2A1F45)
-References: <48CFC03A.8020708@lwfinger.net> <200809171619.33377.mb@bu3sch.de> <20080917151822.GB5186@khazad-dum.debian.net> <200809171759.32645.mb@bu3sch.de> <1ba2fa240809171351h293012daj4e1735f52e08b48b@mail.gmail.com>
+	Sun, 28 Sep 2008 12:10:08 -0400
+Date: Sun, 28 Sep 2008 12:09:43 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: ath5k-devel@lists.ath5k.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath5k: write beacon control register twice when resetting tsf
+Message-ID: <20080928160943.GA30901@hash.localnet> (sfid-20080928_181019_117330_6EA85D54)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240809171351h293012daj4e1735f52e08b48b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Sep 2008, Tomas Winkler wrote:
-> In practice the rfkill in WiFi comes to 2 common cases
-> HW|SW
-> 
-> Most of the world SW and HW are independent states and radio is
-> enabled only in 0|0
->         0|1
->       /       \
-> 0|0 -          - 1|1
->       \       /
->         1|0
+According to the newly-released Atheros HAL code, asserting the
+TSF reset bit will toggle a hardware internal state, resulting in a
+spurious reset on the next chip reset.  Whenever we force a TSF bit,
+write the bit twice to clear the internal signal.
 
-Indeed.  And it is like that, because that's how WiFi hardware with hardware
-rfkill input lines work in the bare metal.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
 
-> Dell Only - Unblocking HW rfkill enabled radio.
->             0|1
->         /          \
-> 0|0 -- <-HW- - 1|1
->         \         /
-> 	    1|0
+This was the only major difference I found between code we're currently
+using in pcu.c and its equivalents in the HAL.  See comment in 
+ar5212ResetTsf.  This is only compile-tested.
 
-This is likely Dell's crap of a firmware getting in the way.
+(There are other differences but they are in the key setup code or
+beacon setup code that we are not using right now.)  
 
-Still, does the Dell firmware interferes just when the HW rfkill input line
-changes state (i.e. on edges), or all the time?
+ drivers/net/wireless/ath5k/pcu.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
 
-> This is why all vendors (including iwlwifi) that targets notebook and
-> friends markets need to implement independent SW HW rfkill switches
-> and we need 2 bits (4 states- 3 states are not  enought I've wrote
-> that couple of times....
-
-You need two bits inside the drivers, yes.
-
-However, the core interface (rfkill) does not.  It has a different point of
-view, one that is driven by the needs of the interface and userspace
-applications, and not by hardware implementation.
-
-The rfkill core has three states:
-
-	0 - Radio blocked, but could be unblocked by software request
-	1 - Radio unblocked, can always be blocked by software request
-	2 - Radio blocked and locked, software request cannot unblock it
-
-These states are defined by the valid [for rfkill] combinations of two
-SEMANTHIC parameters: "the current state can be changed by the
-rfkill->toggle_radio() callback" and "transmitter is currently emmiting
-energy".
-
-There is no fourth state, because a radio locked into unblocked mode is
-completely unacceptable for rfkill: it is against all safety regulations for
-the kind of wireless transmitter rfkill is concerned with.
-
-The reason why the underlying wireless driver can or cannot change the
-transmitter state through rfkill->toggle_radio() is NOT important to the
-rfkill core.  And if it were, IMHO we would be better off by exporting that
-as a separate attribute, and not messing with the rfkill states.
+diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
+index c77cee2..c8f9170 100644
+--- a/drivers/net/wireless/ath5k/pcu.c
++++ b/drivers/net/wireless/ath5k/pcu.c
+@@ -633,8 +633,20 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah)
+  */
+ void ath5k_hw_reset_tsf(struct ath5k_hw *ah)
+ {
++	u32 val;
++
+ 	ATH5K_TRACE(ah->ah_sc);
+-	AR5K_REG_ENABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_RESET_TSF);
++
++	val = ath5k_hw_reg_read(ah, AR5K_BEACON) | AR5K_BEACON_RESET_TSF;
++
++	/* 
++ 	 * Each write to the RESET_TSF bit toggles a hardware internal
++ 	 * signal to reset TSF, but if left high it will cause a TSF reset
++ 	 * on the next chip reset as well.  Thus we always write the value
++ 	 * twice to clear the signal.
++ 	 */
++	ath5k_hw_reg_write(ah, val, AR5K_BEACON);
++	ath5k_hw_reg_write(ah, val, AR5K_BEACON);
+ }
+ 
+ /*
+-- 
+1.5.4.2.182.gb3092
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Bob Copeland %% www.bobcopeland.com
+
