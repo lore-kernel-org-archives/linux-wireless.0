@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43195 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752594AbYIZFpK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 01:45:10 -0400
-Subject: Re: [PATCH] iwl3945: added channel sysfs entry
-From: Zhu Yi <yi.zhu@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <43e72e890809252239g2a6207f9r581b970388d9df14@mail.gmail.com>
-References: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
-	 <1222245882.18015.62.camel@johannes.berg>
-	 <1222328058.2510.470.camel@debian.sh.intel.com>
-	 <1222334592.10563.59.camel@johannes.berg>
-	 <1222401242.2510.519.camel@debian.sh.intel.com>
-	 <43e72e890809252113h624a8d91jd859935ae5afed10@mail.gmail.com>
-	 <1222406884.2510.534.camel@debian.sh.intel.com>
-	 <43e72e890809252239g2a6207f9r581b970388d9df14@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 26 Sep 2008 13:44:26 +0800
-Message-Id: <1222407866.2510.542.camel@debian.sh.intel.com> (sfid-20080926_074521_147608_ECE8273B)
-Mime-Version: 1.0
+Received: from foomagic.org ([209.40.206.234]:53091 "EHLO lager.foomagic.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750751AbYI1Nlj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Sep 2008 09:41:39 -0400
+Message-ID: <48DF8412.2010304@foomagic.org> (sfid-20080928_154153_883384_CBF8DC63)
+Date: Sun, 28 Sep 2008 21:18:10 +0800
+From: Glenn Saberton <gsaberton@foomagic.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org
+Subject: Re: Release of Atheros 802.11abg HAL under the ISC
+References: <20080926215701.GC5972@tesla>
+In-Reply-To: <20080926215701.GC5972@tesla>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-09-25 at 23:39 -0600, Luis R. Rodriguez wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Luis R. Rodriguez wrote:
+> As part of our commitment to help support all of our Atheros devices
+> under Linux we'd like to announce the release of our Atheros HAL for
+> our 802.11abg chipsets under the ISC license.
 > 
-> Yes, this detail of information was conveyed to me at OLS by Guy. This
-> is why we decided to add support for letting the driver not pass an
-> alpha2 but to just build the regulatory domain structure itself and
-> pass it. I even provided an example of how to do this in the
-> Documentation/networking/regulatory.txt and tested it myself.
+> You can find it here:
 > 
-> Essentially this was added with your drivers in mind :)
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/legacy-hal.tar.bz2
+> 
+> This can be used as a source of documentation to help ath5k move
+> forward to support our 802.11abg chipsets as best as possible in
+> the Linux kernel. We look forward to keep working strongly with the
+> community on advancing support of all our Atheros chipsets under Linux.
+> 
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Great!
 
-Thanks. We will work on this.
+Why is #ath9k invite only?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
--yi
-
+iEYEARECAAYFAkjfhBIACgkQV8GyuTwyskMEcwCgjo/w5lhWYmuNUCapg9qdd2Ag
+QzUAoKNJQaYh4G6b3pyBL6VU1uxr6k6T
+=nAeZ
+-----END PGP SIGNATURE-----
