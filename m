@@ -1,86 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36213 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751463AbYIQLS6 (ORCPT
+Received: from out01.mta.xmission.com ([166.70.13.231]:37040 "EHLO
+	out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073AbYI1Bph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 07:18:58 -0400
-Subject: Re: iw packaging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "\"Adam" =?ISO-8859-1?Q?C=E9cile?= "(Le_Vert)\""
-	<gandalf@le-vert.net>
-Cc: Jochen Friedrich <jochen@scram.de>, linux-wireless@vger.kernel.org,
-	Thomas d'Otreppe <tdotreppe@aircrack-ng.org>
-In-Reply-To: <48D0E5CE.8050401@le-vert.net>
-References: <1221596962.9262.12.camel@johannes.berg>
-	 <48D0DEF0.2060407@scram.de> <1221648205.9262.48.camel@johannes.berg>
-	 <48D0E463.70008@le-vert.net> <1221649638.9262.50.camel@johannes.berg>
-	 <48D0E5CE.8050401@le-vert.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nQoJl5VatQUhUYEVt83V"
-Date: Wed, 17 Sep 2008 13:18:06 +0200
-Message-Id: <1221650286.9262.57.camel@johannes.berg> (sfid-20080917_131902_131893_ED5266A7)
-Mime-Version: 1.0
+	Sat, 27 Sep 2008 21:45:37 -0400
+From: ebiederm@xmission.com (Eric W. Biederman)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>
+References: <1222509685.3798.59.camel@johannes.berg>
+Date: Sat, 27 Sep 2008 18:39:54 -0700
+In-Reply-To: <1222509685.3798.59.camel@johannes.berg> (Johannes Berg's message
+	of "Sat, 27 Sep 2008 12:01:25 +0200")
+Message-ID: <m1r675aw0l.fsf@frodo.ebiederm.org> (sfid-20080928_034549_058298_D455D37E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Subject: Re: wireless vs. network namespaces (part II)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg <johannes@sipsolutions.net> writes:
 
---=-nQoJl5VatQUhUYEVt83V
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+> Eric,
+>
+> You wrote, over a year ago:
+>
+>> 2) Advanced routing.  Where someone is doing some weird thing like 
+>>    testing sending packets and receiving them on the same machine.
+>
+> and I was just thinking of doing exactly that :)
 
-On Wed, 2008-09-17 at 13:11 +0200, "Adam C=C3=A9cile (Le_Vert)" wrote:
+Sounds like a fun way to test the wireless stack.
+Have both a client and an access point on the same box talking
+to each other ;)
 
-> Why not having a talk with aircrack-ng main developper ?
-> I'm sure he would be happy to work with you and avoid having a patched=20
-> version of iw.
+> When looking into it, though, I noticed that you can generate some
+> breakage with wireless and network namespaces: you can move a wireless
+> netdev to a different namespace and then things will break down because
+> we internally use init_net to find it.
 
-Because I have no idea who to contact and figured that they'd notice
-quickly enough? :)
+> What I'd like to do in wireless is not allow moving netdevs between
+> namespaces, but rather move entire hardware devices between namespaces,
+> I see little value and great pain in trying to support virtual
+> interfaces from a single physical device showing up in different
+> namespaces, but I do see value in binding a physical device (wiphy) to a
+> namespace.
 
+At the moment I don't understand the distinction very well.  Why do we
+have both a wireless master device and a wireless device that we
+actually use?
 
-Thomas, since people seem to be relying on iw more and more (I had been
-hoping somebody else would take it and transform it into something
-usable) I have gone ahead and cleaned up the code, made a few
-modifications to it and released it as version 0.9 (and a few 0.9.x
-fixes, my bad).
+In the wired ethernet world there is a lot of value in moving just
+a vlan interface or just one mac address with mac vlan into a network
+namespace.  Allowing full speed access to the hardware that can do
+just about anything while functionally restricting what user space
+can do with the hardware.
 
-There are two changes that might interest you:
- * removing interfaces now works like this:
-     iw dev monitor0 del
-   I didn't feel inclined to keep the old syntax because it's rather
-   ugly but if this is a big problem for you I can add a hidden command
-   so you can continue doing "iw dev monitor0 interface del".
- * if you've been using
-     iw dev wmaster0 interface add monitor0 type monitor
-   this will stop working in future kernel releases, the master
-   interface really is no good for actually configuring wireless and we
-   want to get rid of it completely in the medium term. I suspect you
-   have been using
-     iw dev wlan0 interface add monitor0 type monitor
-   which will continue to work.
+> As far as I understand, to disallow moving them, I should set the
+> NETIF_F_NETNS_LOCAL flag on all devices, although that is sort of a
+> misnomer then because I'd be using it to indicate 'cannot switch
+> namespace'. 
 
-johannes
+In this case yes.   It is designed for devices like the loo back
+device and other virtual devices that we use for creating virtual
+devices.  Although the recent support for creating new network
+devices with netlink removes much of the need for the second use case.
 
---=-nQoJl5VatQUhUYEVt83V
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+It was also designed to handle the case if we do find a network
+device that just can't handle being moved between network namespaces.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+> To really support this though, it seems we need to
+>  * put the wiphy list into struct net (this is currently a simple
+>    list_head, no fancy hashing)
 
-iQIcBAABAgAGBQJI0OdqAAoJEKVg1VMiehFYpsgQAKOwxE1IhnfkCh0prIaDD0WC
-VivXYq2jU6pOINe30ccYnAxyZmbaxKYVvD05LMq+Q9IuNzLVdNsL0HUccEsPdkQe
-V1rQALzTPkaLE6OLFi1pC8S1lthIKrWkNJbygaBk3eqT3thXVPr7q5W90SZLSTnS
-WxhoXFbc1jeYz6m2WVywej3OpN6kBaMcsz19KOQJHZQVS771Fme95TN7ED1JwzZb
-hb7Pt+OOKf93vrc7dKbbl91PEctxOtPrag8PveLYUztA+eqi3207bbq5649UI+fv
-wiR/Ab8vChbzB7MluDHcyJsDaoYkeKXQu+gZc74UISJ3TI5AnvP8gdI4P2mv8SxS
-+x8uIIn6/rp6DyMJUaTtKBiX9qQD94n7V/PCWLLUImXkiOhEefHqE2v3E9P7pboP
-V52LDBzf9ub9Igl3wq/tqzPminQGCCqtZVIcd+yYDPrMUyaR3swEweK7nZI6sivx
-H/CJAjnotXUMBb5wtBJ5tEi3ztIvtPpcLaxs1AH9Uca0D+5bJAS/4W60vB632tmW
-pZGbbPcGGSVr3yVBGmTKZLrJr5M1ZyLFCO/B9xKD5vyW2zvBOHoTynYl25sGGhK6
-XXt9qlvAyggGjWVV54OKG8Z80dbBRGlmy0NTNvdxQol5MaaHygMXHSXHaC0espgS
-VhXtmyCzSU65OPikaVkH
-=a6jb
------END PGP SIGNATURE-----
+Reasonable.
 
---=-nQoJl5VatQUhUYEVt83V--
+>  * give each struct wiphy a backpointer to the struct net, like netdev
+>    in the netdev struct
+
+Reasonable
+
+>  * ensure that all netdevs created for this wiphy will have the right
+>    netns.
+>
+> The latter part I'm unsure on, alloc_netdev_mq seems to always use
+> init_net so I can't put them into the right namespace to start with, but
+> because they're all "in there together" I can't allow switching
+> namespaces either.. Ideas?
+
+alloc_netdev_mq doesn't register the device, so it is a matter of simply
+changing the network device pointer after allocation and before registration.
+
+We do this by default when we dynamically create network devices using
+netlink.  see rtnl_create_link for an example.
+
+Eric
 
