@@ -1,63 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45572 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:49678 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750800AbYISJAT (ORCPT
+	with ESMTP id S1752080AbYI1Q0M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 05:00:19 -0400
-Subject: Re: stlc45xx: mac80211 driver for N800 and N810
+	Sun, 28 Sep 2008 12:26:12 -0400
+Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS
+	mode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Kalle Valo <kalle.valo@nokia.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890809182257r65da8757g1de0ce4f132bf019@mail.gmail.com> (sfid-20080919_075910_170016_8805CBD1)
-References: <877i98iw4h.fsf@nokia.com>
-	 <43e72e890809182257r65da8757g1de0ce4f132bf019@mail.gmail.com>
-	 (sfid-20080919_075910_170016_8805CBD1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SG0CZ2HwWX6cXXd+Hc92"
-Date: Fri, 19 Sep 2008 10:59:38 +0200
-Message-Id: <1221814778.10419.23.camel@johannes.berg> (sfid-20080919_110022_667358_A8B6FBCC)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1ba2fa240809280924n1505e049w7800e3ef28449e8e@mail.gmail.com> (sfid-20080928_182426_075205_738DB644)
+References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
+	 <1222618769.7064.0.camel@johannes.berg>
+	 <1ba2fa240809280924n1505e049w7800e3ef28449e8e@mail.gmail.com>
+	 (sfid-20080928_182426_075205_738DB644)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-x0fM/al2e2ygUINKRWEQ"
+Date: Sun, 28 Sep 2008 18:26:08 +0200
+Message-Id: <1222619168.7064.3.camel@johannes.berg> (sfid-20080928_182614_922570_C55CAD75)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-SG0CZ2HwWX6cXXd+Hc92
+--=-x0fM/al2e2ygUINKRWEQ
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2008-09-18 at 22:57 -0700, Luis R. Rodriguez wrote:
+On Sun, 2008-09-28 at 19:24 +0300, Tomas Winkler wrote:
 
-> > After the driver has received some serious cleanup I would like to try
-> > to to get it into wireless-testing tree. But I'll send another email
-> > later on.
+> >> This patch makes mac80211 able to send action frames when toggling
+> >> (SM PS) Spacial Multiplexing Power Save mode.
+
+> > Why is the driver managing the PS mode to start with?
 >=20
-> Cool! I thought n810 basically used a p54 type chipset over SPI?
+> What PS mode, SM PS mode or traditional PS mode? Please be more
+> verbose so I don't have to guess what you mean.
 
-Yes, but the firmware (lower MAC) is sufficiently different that it
-would be painful to support in p54, afaict.
+This was mostly concerned about SM PS mode so that's what I'm asking. I
+don't actually know what that is anyway though, hence the question. We
+keep adding API in mac80211 and nobody really knows when to call it.
+Maybe you should (maybe team up with Atheros for it) write a "HT
+hardware with mac80211" chapter in the documentation?
 
 johannes
 
---=-SG0CZ2HwWX6cXXd+Hc92
+--=-x0fM/al2e2ygUINKRWEQ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI02n2AAoJEKVg1VMiehFYWIEP/jsOsU/Acrtja7zOeH3HIvaF
-prZZ9AKu/M7vbJug9nudYWhqlGmXAo2ePMIOiziJmGlAEvLnRQ6bcv/Gg4ytsLRo
-+T8VTgOKXJACY9R1Rn3gqYg4dUUdBQeDlBCsb7dtU0QovClwr3s9j/zM0T2XDjrf
-hg0MUON+f5hQAwDkNMGLLqx/CQ5kIuwgia6gPpAwf1D/3w4q5sysQuZSFCFNpFv4
-ZbHy9nFQxTA0wwbA0cCblT2Y88UrwGgPVReuPHFeZa9iBSKGTfvY63V4SEvjRe+u
-X49UrSTPwxWq+PlW18jqcj3kjnoIWBiHT2bABceazYknA4b1X7FU06NYaDGF1rPt
-n/gNE16gD1VlNqdyzb6jZFSZ8wQtjkmgtpxrvm17Dg/T//QsQvDfZk/W7JNJu5e9
-M62DsA2DSyLlo6xC+larNTuJNLSz61btYId2Aa6vWYHY+6ULqcquG2aTI5bTfQvd
-8+gpoeBmclg5nFHYiDUEKW9SHHTMVbtRjJ/WjXU6BsWP5rQtM5SqUjz3L0ac9fZb
-zVq4n3Xiw5UqGBgUtoJZi7hFqAoZFd4bcZ284xANsY5vvy6o9P6etK1t1W6OOP2q
-pZR4Hdm0NG8/8XX5AfZ46nrNxMFAEyONoiORPivrv08QX55YlPEJ7METUZ+7HOo/
-P2iRBA5yZP15kBsvE9JE
-=r7uA
+iQIcBAABAgAGBQJI37AcAAoJEKVg1VMiehFYk0wQAKoOGbUjJXhZr6iTaZjo6BJp
+9PwVFXyH5FRyGDt5jThNVRWZKvqdi6Q6avVXrrv3xORxLWbyeXs0luPYV7niKFFv
+tX0oxaPMbuRA16woJbTBAjlDou6YT346i+FOR8MiGZXRP5dgsQQE5p8od1eGI9ry
+lFXR73UrAbT3gDPHGQgT2XgEVeq9a4nBsTilDI0h2bqZTp+Xtgvng6Yf6F/qoIER
+35KJa5Gya2DATggfQhDyovWBnCJIjSQxB9Ll1RHvbSxXpeZVJgJhDThdancoBdqZ
+OBUCVAdMBfJE4XPIwcdmZiyiJiMjehjjCfXQNyJhHls2FZJX6xgLPNB0SM2HAwt4
+1Aiw+nrS0bvDYJx2WfcJ6VB8OWBfADCP8eTqh2hPHXUwaF5LRX4c2bzA7RNCj4bX
+h4KnH71Aj+HdkyJinD6jyBerI1ZRSPiQK/cJwps7ei5KLmLPf8RWVO22jVi5Uj2P
+OUj7Ci9kIpjJ/NK+dSUjUYFWP5xl+S5pVZUF/sC9lVNZXmu3p9VP21ZLICFEeaVS
+0tvZPDWWoE9Syh7KNaIN68Cb9yig4iDL4oNRMSHYSDuLNoi0uAh8gxGKFLoAYfHD
+YA4gIoVG/EWN41rAFk6V4tRvc6Me5SFwFn0U5svOsqLHHkVfC/A44MBCPRcm/wFO
+LFVcqf1W9QAID7BeNvbY
+=YIrS
 -----END PGP SIGNATURE-----
 
---=-SG0CZ2HwWX6cXXd+Hc92--
+--=-x0fM/al2e2ygUINKRWEQ--
 
