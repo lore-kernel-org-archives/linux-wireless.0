@@ -1,201 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:34714 "EHLO ds10.mine.nu"
+Received: from mga14.intel.com ([143.182.124.37]:54531 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752097AbYI3LWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 07:22:48 -0400
-Message-ID: <48E20BFC.6040904@openwrt.org> (sfid-20080930_132252_268931_3D151A6C)
-Date: Tue, 30 Sep 2008 13:22:36 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/3] mac80211: free up 2 bytes in skb->cb
-References: <48E20B7C.2040405@openwrt.org>
-In-Reply-To: <48E20B7C.2040405@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1752395AbYI1DQI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Sep 2008 23:16:08 -0400
+Subject: Re: [PATCH] Working packet injection patch for ipw2200 - enables
+	aireplay-ng and others to work
+From: Zhu Yi <yi.zhu@intel.com>
+To: Paul <paul14075@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <7d553cf40809271345n3a945091u6c341e65c51811d5@mail.gmail.com>
+References: <7d553cf40809271345n3a945091u6c341e65c51811d5@mail.gmail.com>
+Content-Type: text/plain
+Date: Sun, 28 Sep 2008 11:15:10 +0800
+Message-Id: <1222571710.2510.587.camel@debian.sh.intel.com> (sfid-20080928_051613_791909_7A7E0488)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Free up 2 bytes in skb->cb to be used for multi-rate retry.
-Move iv_len and icv_len initialization into key alloc.
+On Sat, 2008-09-27 at 14:45 -0600, Paul wrote:
+> I made this patch using bits and pieces from various other "ipw2200
+> injection patches".  I can not take credit for the content, as I
+> basically just changed the line numbers in the .diff files.  However I
+> applied this patch to the version of ipw2200 included in kernel
+> 2.6.27-rc6  (i believe it's ipw2200-1.2.2) and it worked like a charm.
+> 
+> Previously I was unable to inject wifi packets using aireplay-ng due
+> to this error:
+> 
+> "ARP linktype is set to 1 (Ethernet) - expected ARPHRD_IEEE80211 or
+> ARPHRD_IEEE80211_PRISM instead.  Make sure RFMON is enabled: run
+> 'ifconfig wifi0 up; iwconfig wifi0 mode Monitor channel <#>' Sysfs
+> injection support was not found either."
+> 
+> However, after switching to Monitor mode, even though aireplay would
+> ACT AS IF it was working, it wasn't.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Isn't the rtap_iface does the same thing? Did you try it?
 
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -337,8 +337,6 @@
- 			unsigned long jiffies;
- 			s8 rts_cts_rate_idx, alt_retry_rate_idx;
- 			u8 retry_limit;
--			u8 icv_len;
--			u8 iv_len;
- 		} control;
- 		struct {
- 			u64 ampdu_ack_map;
-@@ -635,6 +633,8 @@
-  */
- struct ieee80211_key_conf {
- 	enum ieee80211_key_alg alg;
-+	u8 icv_len;
-+	u8 iv_len;
- 	u8 hw_key_idx;
- 	u8 flags;
- 	s8 keyidx;
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -252,7 +252,7 @@
- 		}
- 
- 		/* Hardware appends ICV. */
--		plcp_fragment_len += info->control.icv_len;
-+		plcp_fragment_len += info->control.hw_key->icv_len;
- 
- 		key_idx = b43_kidx_to_fw(dev, key_idx);
- 		mac_ctl |= (key_idx << B43_TXH_MAC_KEYIDX_SHIFT) &
-@@ -260,7 +260,7 @@
- 		mac_ctl |= (key->algorithm << B43_TXH_MAC_KEYALG_SHIFT) &
- 			   B43_TXH_MAC_KEYALG;
- 		wlhdr_len = ieee80211_hdrlen(fctl);
--		iv_len = min((size_t) info->control.iv_len,
-+		iv_len = min((size_t) info->control.hw_key->iv_len,
- 			     ARRAY_SIZE(txhdr->iv));
- 		memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
- 	}
---- a/drivers/net/wireless/b43legacy/xmit.c
-+++ b/drivers/net/wireless/b43legacy/xmit.c
-@@ -243,7 +243,7 @@
- 
- 		if (key->enabled) {
- 			/* Hardware appends ICV. */
--			plcp_fragment_len += info->control.icv_len;
-+			plcp_fragment_len += info->control.hw_key->icv_len;
- 
- 			key_idx = b43legacy_kidx_to_fw(dev, key_idx);
- 			mac_ctl |= (key_idx << B43legacy_TX4_MAC_KEYIDX_SHIFT) &
-@@ -252,7 +252,7 @@
- 				   B43legacy_TX4_MAC_KEYALG_SHIFT) &
- 				   B43legacy_TX4_MAC_KEYALG;
- 			wlhdr_len = ieee80211_hdrlen(wlhdr->frame_control);
--			iv_len = min((size_t)info->control.iv_len,
-+			iv_len = min((size_t)info->control.hw_key->iv_len,
- 				     ARRAY_SIZE(txhdr->iv));
- 			memcpy(txhdr->iv, ((u8 *)wlhdr) + wlhdr_len, iv_len);
- 		} else {
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -313,9 +313,6 @@
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
--	info->control.iv_len = WEP_IV_LEN;
--	info->control.icv_len = WEP_ICV_LEN;
--
- 	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
- 		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
- 			return -1;
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -152,9 +152,6 @@
- 	int len, tail;
- 	u8 *pos;
- 
--	info->control.icv_len = TKIP_ICV_LEN;
--	info->control.iv_len = TKIP_IV_LEN;
--
- 	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
- 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
- 		/* hwaccel - with no need for preallocated room for IV/ICV */
-@@ -374,9 +371,6 @@
- 	u8 *pos, *pn;
- 	int i;
- 
--	info->control.icv_len = CCMP_MIC_LEN;
--	info->control.iv_len = CCMP_HDR_LEN;
--
- 	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
- 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
- 		/* hwaccel - with no need for preallocated room for CCMP "
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1164,7 +1164,7 @@
- 
- 	if (info->control.hw_key) {
- 		keyidx = info->control.hw_key->hw_key_idx;
--		pktlen += info->control.icv_len;
-+		pktlen += info->control.hw_key->icv_len;
- 	}
- 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
- 		ieee80211_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -237,7 +237,7 @@
- 
- 	if (tx_info->control.hw_key) {
- 		txctl->keyix = tx_info->control.hw_key->hw_key_idx;
--		txctl->frmlen += tx_info->control.icv_len;
-+		txctl->frmlen += tx_info->control.hw_key->icv_len;
- 
- 		if (tx_info->control.hw_key->alg == ALG_WEP)
- 			txctl->keytype = ATH9K_KEY_TYPE_WEP;
---- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-@@ -56,10 +56,10 @@
- 	 * note that these lengths should only be added when
- 	 * mac80211 does not generate it.
- 	 */
--	overhead += tx_info->control.icv_len;
-+	overhead += key->icv_len;
- 
- 	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_IV))
--		overhead += tx_info->control.iv_len;
-+		overhead += key->iv_len;
- 
- 	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)) {
- 		if (key->alg == ALG_TKIP)
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -374,7 +374,7 @@
- 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
- 	struct txentry_desc txdesc;
- 	struct skb_frame_desc *skbdesc;
--	unsigned int iv_len = IEEE80211_SKB_CB(skb)->control.iv_len;
-+	unsigned int iv_len;
- 
- 	if (unlikely(rt2x00queue_full(queue)))
- 		return -EINVAL;
-@@ -410,8 +410,11 @@
- 	 * the frame so we can provide it to the driver seperately.
- 	 */
- 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc.flags) &&
--	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags))
-+	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags) &&
-+		(IEEE80211_SKB_CB(skb)->control.hw_key != NULL)) {
-+		iv_len = IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
- 		rt2x00crypto_tx_remove_iv(skb, iv_len);
-+	}
- 
- 	/*
- 	 * It could be possible that the queue was corrupted and this
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -281,6 +281,20 @@
- 	key->conf.alg = alg;
- 	key->conf.keyidx = idx;
- 	key->conf.keylen = key_len;
-+	switch (alg) {
-+	case ALG_WEP:
-+		key->conf.iv_len = WEP_IV_LEN;
-+		key->conf.icv_len = WEP_ICV_LEN;
-+		break;
-+	case ALG_TKIP:
-+		key->conf.iv_len = TKIP_IV_LEN;
-+		key->conf.icv_len = TKIP_ICV_LEN;
-+		break;
-+	case ALG_CCMP:
-+		key->conf.iv_len = CCMP_HDR_LEN;
-+		key->conf.icv_len = CCMP_MIC_LEN;
-+		break;
-+	}
- 	memcpy(key->conf.key, key_data, key_len);
- 	INIT_LIST_HEAD(&key->list);
- 	INIT_LIST_HEAD(&key->todo);
+Thanks,
+-yi
+
