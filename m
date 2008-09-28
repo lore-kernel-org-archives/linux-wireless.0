@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44998 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753909AbYILSqh (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:54739 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897AbYI1G4M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 14:46:37 -0400
-Message-ID: <48CAB90C.5090302@lwfinger.net> (sfid-20080912_204640_877147_4BFF495C)
-Date: Fri, 12 Sep 2008 13:46:36 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: The new regulatory code kills my wireless
-References: <48CAA8D6.1030605@lwfinger.net> <20080912174036.GC6134@tesla>
-In-Reply-To: <20080912174036.GC6134@tesla>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 28 Sep 2008 02:56:12 -0400
+Subject: Re: Getting country alpha2 on network manager and using it for crda
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1222440218.19895.19.camel@localhost.localdomain>
+References: <43e72e890809260024ob134358me80ae1c169e4da8e@mail.gmail.com>
+	 <1222440218.19895.19.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Sun, 28 Sep 2008 08:56:15 +0200
+Message-Id: <1222584975.9600.2.camel@californication> (sfid-20080928_090018_082771_4346C104)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Fri, Sep 12, 2008 at 10:37:26AM -0700, Larry Finger wrote:
->> After pulling the latest git from wireless-testing, my wireless
->> failed. I bisected this to be commit
->> 544ec9a11fdef5142a76a8eb4b186a80a272c035, "cfg80211: Add new wireless
->> regulatory infrastructure".
---snip--
+Hi Dan,
+
+> > So since this may not happen for a while I figure I can give a shot.
+> > But I'm curious where we should get our country alpha2 from? Does LSB
+> > define a country has to be somewhere? Maybe the locale? Timezone?
+> > Anyway, in the end the user should be able to change the country too.
+> > 
+> > I'm thinking to start by just letting the user pick a country for now.
+> > We can figure out where the hell it gets the country by default later
+> > but if you have ideas that'd be great. It seems reasonable to ask for
+> > this upon installation time (?)
 > 
-> Please apply johill's patch, "[PATCH] cfg80211: fix regdomain macro"
+> My suggestion: use the current timezone as a fallback unless the user
+> has specified the locale somewhere.  That can obviously be done in NM or
+> lower, ideally we delegate this sort of thing to the supplicant and just
+> pass the alpha2 when NM adds the interface to the supplicant.  The
+> addInterface() call args are just a dict, so it would be trivial to add
+> another item in that dict for country code.  Since the country code is
+> global to the machine it's probably something we should just store in
+> the system settings service, and it's also something that probably
+> requires privileges to change.
 
-That patch fixed the problem. For someone following this thread, the 
-patch is by Johannes Berg.
+I would prefer if wpa_supplicant gets a global method for setting the
+alpha2 value. It should be dynamic and for me wpa_supplicant is the
+right place to handle this value.
 
-I can understand when some oddball hardware causes a corner-case 
-problem - I just had one with an ancient laptop - but somehow, I 
-expect that most people will use the old regulatory option, at least 
-for a while. Shouldn't the most rudimentary testing have caught this 
-problem?
+The question on how we set this value is a little bit more trickier.
+What we do need is a Location Manager that can use multiple source to
+get our current location (WiFi, GSM/UMTS, GPS etc.).
 
-Larry
+Regards
+
+Marcel
+
+
