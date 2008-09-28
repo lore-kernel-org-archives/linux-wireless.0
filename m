@@ -1,75 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53495 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751999AbYIZPNO (ORCPT
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:56498 "EHLO
+	XServe-2.services.indranet.co.nz" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752153AbYI1Utv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 11:13:14 -0400
-Subject: Re: bad DMAR interaction with iwlagn and SATA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Muli Ben-Yehuda <muli@il.ibm.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Andres Freund <andres@anarazel.de>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <20080926144708.GD9118@il.ibm.com>
-References: <200809251511.20132.andres@anarazel.de>
-	 <48DC44D4.8000103@garzik.org> <200809260419.07713.andres@anarazel.de>
-	 <48DC4BC0.7090203@garzik.org>  <20080926144708.GD9118@il.ibm.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HyPdWJDP5lvgMzLqdLta"
-Date: Fri, 26 Sep 2008 17:12:35 +0200
-Message-Id: <1222441955.3798.13.camel@johannes.berg> (sfid-20080926_171319_148246_0E05A9F0)
-Mime-Version: 1.0
+	Sun, 28 Sep 2008 16:49:51 -0400
+Date: Mon, 29 Sep 2008 09:45:20 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org
+Subject: Re: [ath5k-devel] Release of Atheros 802.11abg HAL under the ISC
+In-Reply-To: <20080926215701.GC5972@tesla>
+Message-ID: <alpine.DEB.1.00.0809290934160.15291@kauri.acheron.indranet.co.nz> (sfid-20080928_224955_536729_9AB2E0FE)
+References: <20080926215701.GC5972@tesla>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis,
+On Fri, 26 Sep 2008, Luis R. Rodriguez wrote:
 
---=-HyPdWJDP5lvgMzLqdLta
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> As part of our commitment to help support all of our Atheros devices
+> under Linux we'd like to announce the release of our Atheros HAL for
+> our 802.11abg chipsets under the ISC license.
+>
+> You can find it here:
+>
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/legacy-hal.tar.bz2
+>
+> This can be used as a source of documentation to help ath5k move
+> forward to support our 802.11abg chipsets as best as possible in
+> the Linux kernel. We look forward to keep working strongly with the
+> community on advancing support of all our Atheros chipsets under Linux.
+>
+>  Luis
 
-On Fri, 2008-09-26 at 17:47 +0300, Muli Ben-Yehuda wrote:
+A huge vote of thanks and congratulations are due to Atheros for 
+taking the step of releasing the HAL. There will be many in the open 
+source community celebrating this move.
 
-> The way to debug this is to figure out why device 00:1f.2 is trying to
-> read from DMA address fffbf000 and does not have permission to do
-> so. This could be indicative of a driver bug where it is programming
-> the device to read from some buffer that has not been allocated
-> through the DMA API and thus does not have a valid IOMMU mapping, or a
-> hardware quirk where the device tries to read from memory without host
-> involvement. The former is much more likely.
+Much Kudos is due to Atheros for taking this step.
 
-The same is probably true for the iwlagn case which was
+The ath5k community is going to benefit hugely from being able to optimise 
+the driver based on a more accurate knowledge of the workings of the HAL.
 
-> [ 4184.617392] DMAR:[DMA Read] Request device [03:00.0] fault addr fa9460=
-00=20
-> [ 4184.617393] DMAR:[fault reason 06] PTE Read access is not set
-> [ 4184.644081] iwlagn: Microcode HW error detected.  Restarting.
+Patches like
+https://lists.ath5k.org/pipermail/ath5k-devel/2008-September/001311.html
+will improve the reliability, and are only possible because of the release
+of the HAL.
 
-and indeed matches experience from myself and Marcel that DMA bugs seem
-to lurk.
+Thanks are due to Luis also, for taking his part in getting the HAL 
+released.
 
-johannes
+Perhaps we can all now work together on getting a stable driver for 
+Atheros cards under Linux. - Ath5k or Ath9k (don't care which).
 
---=-HyPdWJDP5lvgMzLqdLta
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI3PveAAoJEKVg1VMiehFYliUQAMZWXb06JFNOqEhMXbHF9a2O
-QX3ZFwyz6IiEC/deb6U0uh/Zz5shxecXDOwcUfoq8EDvYZup4DQGE56dreyVxKJM
-wlI27g9d6FAzqNjxmpyK0wuiAdLlmwwRbuYg9fklM06dF2shVesEjKFCDxBo8oxk
-9PxVhkiCafq3+v1Qyew75ihRgA1in2fGHFW1fwgMX6wa4+1xPoPY+twRkdGvwwNe
-S0J+/6WsaKRIiVRgqftvUZLlkTbXuFEphfGNvjTfwI2Cq/FuwUBJ+6JbI/yCBNN7
-9f+8PEG9a2UxYqWu/9dHz9i/JNfKkmy8eRKrYn+2wg6bE8jsmiWAZvjvMYbs4XPc
-RTJtgjJs+/vskVGOqiqbDVaEDPtcu3zvf6+g3BuPp7o75jg/j2BIdhQblIuS0ACF
-LWCrbsoS2diToj4uiiHWw5/9iJkRbc1fNSlVT/SnTRa8jMUF9M/A2gCwZAnNUM9R
-2jdj2dUbdUXJMVArqvNjpPHnkndTD1vDmhqbt0Uc8kGmjDVMdJwFatwGxViEruBy
-iRNVqAbcrygVWrdeLT85mUZaeMc/J6qL7UWuRoXHxIgpl4+4xbaIv9esXcHFaLJl
-wLF9y6QD2VZDHG3bLoQ11WAZktdSSPgrVrD1od/eKwR4C6QlUhRRHMa63QDt2o3f
-PnCs1xYVQow/laFhpIV7
-=O7VO
------END PGP SIGNATURE-----
-
---=-HyPdWJDP5lvgMzLqdLta--
-
+Derek.
+-- 
+Derek Smithies Ph.D.
+IndraNet Technologies Ltd.
+Email: derek@indranet.co.nz
+ph +64 3 365 6485
+Web: http://www.indranet-technologies.com/
