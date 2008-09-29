@@ -1,73 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:23141 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302AbYILV2y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 17:28:54 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so544591nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2008 14:28:52 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH] orinoco: Fix compile warnings
-Date: Fri, 12 Sep 2008 22:28:18 +0100
-Message-Id: <1221254898-10820-1-git-send-email-kilroyd@googlemail.com> (sfid-20080912_232858_791895_93F87245)
+Received: from venema.h4ckr.net ([217.24.1.135]:55826 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750909AbYI2EXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 00:23:00 -0400
+Message-ID: <1086.92.50.127.85.1222660252.squirrel@webmail.madwifi.org> (sfid-20080929_062305_874638_54FF24B1)
+In-Reply-To: <48DF8412.2010304@foomagic.org>
+References: <20080926215701.GC5972@tesla> <48DF8412.2010304@foomagic.org>
+Date: Mon, 29 Sep 2008 05:50:52 +0200 (CEST)
+Subject: Re: Release of Atheros 802.11abg HAL under the ISC
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
+To: "Glenn Saberton" <gsaberton@foomagic.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use min_t to avoid warnings when the typesafe version is used.
+Hi.
 
-Explicitly cast u64s to unsigned long long when being passed to printk.
+Glenn Saberton wrote:
+> Why is #ath9k invite only?
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
-This should fix the following warnings reported by David Miller (though I couldn't reproduce them).
+It's not particularly on-topic here, so just a short note: #ath9k should
+not be invite-only (but I will check again). It forwards to #madwifi,
+which is used for discussion about MadWifi, ath5k and ath9k.
 
-drivers/net/wireless/orinoco.c: In function 'orinoco_ioctl_get_encodeext':
-drivers/net/wireless/orinoco.c:4780: warning: comparison of distinct pointer types lacks a cast
-drivers/net/wireless/orinoco.c: In function 'orinoco_translate_ext_scan':
-drivers/net/wireless/orinoco.c:5691: warning: format '%016llx' expects type 'long long unsigned int', but argument 4 has type 'long unsigned int'
-
----
- drivers/net/wireless/orinoco.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index ec0451c..9a2fcc0 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -4777,14 +4777,14 @@ static int orinoco_ioctl_get_encodeext(struct net_device *dev,
- 		encoding->flags |= IW_ENCODE_DISABLED;
- 		break;
- 	case IW_ENCODE_ALG_WEP:
--		ext->key_len = min(le16_to_cpu(priv->keys[idx].len),
--				   (u16) max_key_len);
-+		ext->key_len = min_t(u16, le16_to_cpu(priv->keys[idx].len),
-+				     max_key_len);
- 		memcpy(ext->key, priv->keys[idx].data, ext->key_len);
- 		encoding->flags |= IW_ENCODE_ENABLED;
- 		break;
- 	case IW_ENCODE_ALG_TKIP:
--		ext->key_len = min((u16) sizeof(struct orinoco_tkip_key),
--				   (u16) max_key_len);
-+		ext->key_len = min_t(u16, sizeof(struct orinoco_tkip_key),
-+				     max_key_len);
- 		memcpy(ext->key, &priv->tkip_key[idx], ext->key_len);
- 		encoding->flags |= IW_ENCODE_ENABLED;
- 		break;
-@@ -5686,9 +5686,9 @@ static inline char *orinoco_translate_ext_scan(struct net_device *dev,
- 
- 	/* Timestamp */
- 	iwe.cmd = IWEVCUSTOM;
--	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
--				     "tsf=%016llx",
--				     le64_to_cpu(bss->timestamp));
-+	iwe.u.data.length =
-+		snprintf(custom, MAX_CUSTOM_LEN, "tsf=%016llx",
-+			 (unsigned long long) le64_to_cpu(bss->timestamp));
- 	if (iwe.u.data.length)
- 		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
- 						  &iwe, custom);
--- 
-1.5.6.4
-
+Bye, Mike
