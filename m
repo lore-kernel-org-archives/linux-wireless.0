@@ -1,70 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.2ka.mipt.ru ([194.85.80.65]:43009 "EHLO 2ka.mipt.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751823AbYIUTCg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 15:02:36 -0400
-Date: Sun, 21 Sep 2008 23:00:50 +0400
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921190050.GA20484@2ka.mipt.ru> (sfid-20080921_210242_482049_43D40C50)
-References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org> <20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080921113513.16677c4e@infradead.org>
+Received: from nf-out-0910.google.com ([64.233.182.187]:48273 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767AbYI2ORV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 10:17:21 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so657758nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 07:17:19 -0700 (PDT)
+Message-ID: <48E0E36B.9060807@gmail.com> (sfid-20080929_161727_809195_E6BA3667)
+Date: Mon, 29 Sep 2008 16:17:15 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Marc Pignat <marc.pignat@hevs.ch>
+CC: mickflemm@gmail.com, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: Re: [RFC, PATCH] ath5k: compilation fix for ARM
+References: <200809291607.33690.marc.pignat@hevs.ch>
+In-Reply-To: <200809291607.33690.marc.pignat@hevs.ch>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 21, 2008 at 11:35:13AM -0700, Arjan van de Ven (arjan@infradead.org) wrote:
-> > And how else user can get attention to the problem which is not fixed
-> > by the vendor? 
+On 09/29/2008 04:07 PM, Marc Pignat wrote:
+> ARM linux port does not handle udleay > 2000.
 > 
-> ... or the community
-
-Which does not have access to the firmware... Which IMO is failing and
-not the driver itself.
-
-> > It stops after several seconds (or packets?). Sometimes (but rarely)
-> > it works several minutes, sometimes it fires above dmesg line and
-> > continues to work, sometimes it fires it for a while and then stops
-> > writing it, although driver does not send or receive anything (at
-> > least ifconfig counters do not change).
+> Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
+> ---
 > 
-> again.. so how about you detect this condition and do, in the driver
-> code, the equivalent of rmmod/insmod to the hardware. I'm sure people
-> who have the hardware would appreciate that type of patch a lot more
-> than the one you sent out.
- 
-Reset task does efectively ipw2100_up(), so the difference is power
-cycles over the PCI bus and enable/disable/request commands. Like this
-stuff:
-	/* We disable the RETRY_TIMEOUT register (0x41) to keep
-	 * PCI Tx retries from interfering with C3 CPU state */
-	pci_read_config_dword(pci_dev, 0x40, &val);
-	if ((val & 0x0000ff00) != 0)
-		pci_write_config_dword(pci_dev, 0x40, val & 0xffff00ff);
+> Best regards
+> 
+> Marc
+> 
+> patch against 2.6.27-rc7
 
-I do remember I had a tibet monk course of decoding ipw2100 PCI
-config address space, just need to find my kimono.
-
-Do you want me to implement ipw2100 driver as a big work structure
-which will run ipw2100_init()/wait/ipw2100_exit() in a loop?
-And that will be the fix suggested by Intel? That would explain a lot.
-
-P.S. And some people tell that asking for bug bisection is a hard
-pressure on user. Vendor has to ask him to fix bug himself instead,
-and that will be a solution!
-
-Getting the fact, that rmmod/insmod does not always fix the problem (but
-most of the time for a short period of time), I again want to point,
-that it looks like a firmware problem related to some inner timings. You
-ask me to fix the driver and do not even listen to what I said
-previously and do not get that into account and analyze.
-
--- 
-	Evgeniy Polyakov
+Thanks, but Nick already fixed that:
+http://kerneltrap.org/mailarchive/linux-ath5k-devel/2008/9/17/3317654
