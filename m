@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41622 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754297AbYICDbB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:31:01 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 04/39] iwlwifi: remove obsolete 4965 forward declarations
-Date: Wed,  3 Sep 2008 11:26:24 +0800
-Message-Id: <1220412419-15404-5-git-send-email-yi.zhu@intel.com> (sfid-20080903_053106_123623_395EFFCC)
-In-Reply-To: <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
-References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:50452 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819AbYI2TGA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 15:06:00 -0400
+Subject: Re: wireless vs. network namespaces (part II)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <20080929190345.GD6203@tesla>
+References: <1222509685.3798.59.camel@johannes.berg>
+	 <m1r675aw0l.fsf@frodo.ebiederm.org>
+	 <1222587651.3798.72.camel@johannes.berg>  <20080929190345.GD6203@tesla>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PXCvc99EZlNgN6KcBu2J"
+Date: Mon, 29 Sep 2008 21:05:53 +0200
+Message-Id: <1222715153.7064.42.camel@johannes.berg> (sfid-20080929_210606_255700_F39BD7CD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-This patch removes unused forward declarations functions.
+--=-PXCvc99EZlNgN6KcBu2J
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+On Mon, 2008-09-29 at 12:03 -0700, Luis R. Rodriguez wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index f46e9cd..0711b35 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -637,12 +637,6 @@ static inline u8 get_cmd_index(struct iwl_queue *q, u32 index, int is_huge)
- 
- struct iwl_priv;
- 
--/*
-- * Forward declare iwl-4965.c functions for iwl-base.c
-- */
--extern void iwl4965_rf_kill_ct_config(struct iwl_priv *priv);
--int iwl4965_check_empty_hw_queue(struct iwl_priv *priv, int sta_id,
--					u8 tid, int txq_id);
- 
- /* Structures, enum, and defines specific to the 4965 */
- 
--- 
-1.5.3.6
+> > Right, except that wireless really is different in that for one you
+> > can't really usefully have multiple virtual interfaces unless you're
+> > making an AP
+>=20
+> Well it may be possible later in STA too, but that is just me looking at
+> a crystal ball.
+
+Well, it _is_ possible, but not standards compliant ;) Stefano is, I
+think, the only person who has ever tested my firmware patch.
+
+> > (and I think it's unlikely you'd want that in an AP, and
+> > even if I'm not willing to support it,=20
+>=20
+> You mean AP VLANs? I thought you added that code already. I don't
+> follow.
+
+Well, I don't see a point in allowing them in different network
+namespaces.
+
+johannes
+
+--=-PXCvc99EZlNgN6KcBu2J
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI4ScOAAoJEKVg1VMiehFYgdQP/3Rw0zgi4f5JqlOTJ3CSOmWG
+3tqK5F87mvgVJXYKKMSxSH1QNv/AdDOKk9CFkY2n5AQl/JoRzYQZHnLEhJMQBMob
+gtidn1kWb6faWPC2nVXP/nCRAOTNFDpTyybvlEd+cR6qAjmdcbwnMTULyv8maocU
+ByhkdRNa37++FypsM91oFb2PxYmNmyGZ9AWEh+RZ3c2Cnes87l4LPS45q56YIU3R
+saMWdGBKwNhuoeE5ke+MEJhc2/E0Skcm1lulnG/6fXD7mTQuCt987nmcr6/CMhQq
+MCMA9g6Mc//wAaDSwgzykvG8t9QPoOzbDn/1PfTHkmMrTQdpefA0S3qt9bHONLnE
+CFktkqjXFYEKvcvZkYIM6rS5GEcvM/Py5SRAcmtxp7YiaLl9aahtFJ8i5mb/IYza
+KBASnKqqFC4dWx2gspC+VCzottQPlgUcqiAW0s+0QGe1yl1tBmZNBZXr3hbJiqCM
+edcnQHP7bUmlRZc69qI/5SKYiqCMn+cJ5+fSB7eIsHaODeD4pIdqa0xdyi21iv2o
+UGQYmUgzchn/AKocJgwSxZX4iNZ4OHJOsp/EDyUY+prLCtsnF8I+CGNIkBiRnN4x
+NzNmCdpBXFxmetd+ZmA8HRne0Y2/UJAgLTqbCv88/JQCUDdl7oyvvML79pDe0Ss7
+r/M4joEwhVX7d1iO+4+O
+=KcbB
+-----END PGP SIGNATURE-----
+
+--=-PXCvc99EZlNgN6KcBu2J--
 
