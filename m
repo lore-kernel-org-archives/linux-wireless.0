@@ -1,38 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40303 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751462AbYIUT60 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50233 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642AbYI2ITh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 15:58:26 -0400
-Date: Sun, 21 Sep 2008 20:57:44 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-Cc: Arjan van de Ven <arjan@infradead.org>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
- restart.
-Message-ID: <20080921205744.2d78f1fa@lxorguk.ukuu.org.uk> (sfid-20080921_215832_811271_1860C94D)
-In-Reply-To: <20080921190050.GA20484@2ka.mipt.ru>
-References: <20080921172316.GA6306@2ka.mipt.ru>
-	<20080921110422.1d010b96@infradead.org>
-	<20080921182835.GA11473@2ka.mipt.ru>
-	<20080921113513.16677c4e@infradead.org>
-	<20080921190050.GA20484@2ka.mipt.ru>
+	Mon, 29 Sep 2008 04:19:37 -0400
+Subject: Re: wireless vs. network namespaces (part II)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <m1y71b8q1d.fsf@frodo.ebiederm.org>
+References: <1222509685.3798.59.camel@johannes.berg>
+	 <m1r675aw0l.fsf@frodo.ebiederm.org>
+	 <1222587651.3798.72.camel@johannes.berg>
+	 <m1y71b8q1d.fsf@frodo.ebiederm.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PUl5E4QTTd2YBIeCOK38"
+Date: Mon, 29 Sep 2008 10:19:21 +0200
+Message-Id: <1222676361.7064.11.camel@johannes.berg> (sfid-20080929_101943_514828_18E9DFCB)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Getting the fact, that rmmod/insmod does not always fix the problem (but
-> most of the time for a short period of time), I again want to point,
-> that it looks like a firmware problem related to some inner timings. You
-> ask me to fix the driver and do not even listen to what I said
-> previously and do not get that into account and analyze.
 
-Try putting it into D3 counting to 10 and powering it back up. Thats
-about as close as you can get to pulling the plug when it hangs.
+--=-PUl5E4QTTd2YBIeCOK38
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Alan
+On Sun, 2008-09-28 at 22:44 -0700, Eric W. Biederman wrote:
+
+> So you are looking at using NETIF_F_NETNS_LOCAL to indicate that you can'=
+t move
+> one of the devices?
+
+Yes.
+
+> There is an UNREGISTER_NETDEV event and a REGISTER_NETDEV event sent when=
+ a device
+> is moved between namespaces.  See:  dev_change_net_namespace.
+
+Yeah, I know.
+
+> I think you would want to look onto those and move one network device whe=
+n you
+> move the other, without using NETIF_F_NETNS_LOCAL.
+>=20
+> Deletion and creation we have definitely done with paired veth devices.  =
+I haven't
+> looked at the migration case, but I with a little bit of guarding against=
+ recursion
+> it looks like it probably can be handled. =20
+>=20
+> Say trigger when your parnter device calls REGISTER_NETDEV in a different=
+ network
+> namespace?
+
+Well, the's no inherent limit on the number of sibling devices, but
+various conditions that the core code cannot fulfil because mac80211
+also creates this master netdev (though it doesn't actually matter much
+which ns it is in I guess). Right now I feel this is just too much to
+ask. If anything, then I might want to allow moving a whole radio
+("struct wiphy") at some point.
+
+johannes
+
+--=-PUl5E4QTTd2YBIeCOK38
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI4I9+AAoJEKVg1VMiehFYciYQAI1LWFWfMJK9OKodWMlJ2IHS
+LV9L4Bbvzuajd7TCn4gwzRjG0t0edxt5A6Lk15KJ1JYvbL1jpTVt0S3IcFBrdN6S
+XFMawql0dtiC/YmTYFxEn5hKhSFxsePqCEqyzwLlJhtMGj3xSkU9FjhZBFGV0/0A
+ctLwOr7WvU1nCmiGqaZNYMBKJeLq8QCp0gDIRSYFAYJjM17AKOVfhYP5TZeWKSyZ
+B3a2Qq0b2H7kaiXm1P6Zfg18VFXunJL4/3nnH5D1svfPEA0RLA0tbOb0eYfW3jc1
+5Bf1saBT62lScotvWdHW8wzNyE3N3mWitZOIQ4gsItKspbyYwhfTY5bHxY3Dv20/
+uujOH7Iv5nsrq/YqG7Lsu07iIqBDWYFbUqoED4kmBLo+l3kIA3opsGw9FsbTnLP7
+Y3/UC4oibdsMZnjw9Og9NBEh9v0yHgTqi/kDbtMo2rw0MjMFu+Z5bvbTfwWXZ/DH
+ifa0VY8XgjPbcGsp8uDFFfG47ZFbl2CJXK3OYhzneNqCPrIAjVmZ52nRTjEvI2T8
+6O1lwH3Yoj84E9uuh9SeKn8eQvTmu0jxk8w9IfUMccC4RVjo0YGC2wArEnyfeFx4
+KwTWF7U4/69Zqh/HfZSG5+O0Px4EEdsCEf5VrKOMzjXN8+IW6RjOQ6e1PVWaO5s0
+DhcsQV+cNa4FQM39ltdx
+=bupr
+-----END PGP SIGNATURE-----
+
+--=-PUl5E4QTTd2YBIeCOK38--
+
