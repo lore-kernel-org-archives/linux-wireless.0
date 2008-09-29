@@ -1,65 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44041 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755967AbYILU0E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 16:26:04 -0400
-Subject: Re: [PATCH] mac80211 : Fix mode change hard_start_xmit function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com
-In-Reply-To: <1221241327-15720-1-git-send-email-abhijeet.kolekar@intel.com> (sfid-20080912_194212_937819_A2160941)
-References: <>
-	 <1221241327-15720-1-git-send-email-abhijeet.kolekar@intel.com>
-	 (sfid-20080912_194212_937819_A2160941)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ccyCLvu5LADoM/oCg+d7"
-Date: Fri, 12 Sep 2008 22:25:58 +0200
-Message-Id: <1221251158.5576.14.camel@johannes.berg> (sfid-20080912_222609_625283_0AF6BAD8)
-Mime-Version: 1.0
+Received: from mail.anarazel.de ([217.115.131.40]:47413 "EHLO smtp.anarazel.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751954AbYI2IfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 04:35:04 -0400
+From: Andres Freund <andres@anarazel.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: bad DMAR interaction with iwlagn and SATA
+Date: Mon, 29 Sep 2008 10:26:15 +0200
+Cc: linux-kernel@vger.kernel.org,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+References: <200809251511.20132.andres@anarazel.de> <1222441833.3798.10.camel@johannes.berg>
+In-Reply-To: <1222441833.3798.10.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1671546.fHiBhP5sPO";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200809291026.16394.andres@anarazel.de> (sfid-20080929_103509_921270_8FE20C17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-ccyCLvu5LADoM/oCg+d7
-Content-Type: text/plain
+--nextPart1671546.fHiBhP5sPO
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Fri, 2008-09-12 at 10:42 -0700, Abhijeet Kolekar wrote:
-> When monitor mode is changed to BSS or IBSS, data trasnfer can not happen
-> because proper transmit function is not assigend for BSS ,IBSS mode.
-> This patch fixes this problem assigning the ieee80211_subif_start_xmit
-> to device's hard_start_xmit function.
->=20
-> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> Acked-by: Zhu Yi <yi.zhu@intel.com>
+Hi,
 
-Thanks for the fix. Unfortunately, you missed WDS and VLAN. Please just
-do the assignment once before the switch so that only monitor gets
-changed.
+On Friday 26 September 2008, you wrote in "Re: bad DMAR interaction with=20
+iwlagn and SATA":
+> > [ 4184.617392] DMAR:[DMA Read] Request device [03:00.0] fault addr
+> > fa946000 [ 4184.617393] DMAR:[fault reason 06] PTE Read access is not s=
+et
+> > [ 4184.644081] iwlagn: Microcode HW error detected.  Restarting. [
+> > 4186.646000] psmouse.c: TouchPad at isa0060/serio1/input0 lost
+> > synchronization, throwing 1 bytes away. [ 4186.683034] Registered led
+> > device: iwl-phy0:radio
+> > [ 4186.683478] Registered led device: iwl-phy0:assoc
+> > [ 4186.683793] Registered led device: iwl-phy0:RX
+> > [ 4186.684094] Registered led device: iwl-phy0:TX
+> > [ 4186.689749] wlan0: authenticate with AP 00:1d:7e:42:fe:42
+> > [ 4186.691691] wlan0: authenticated
+> > [ 4186.691705] wlan0: associate with AP 00:1d:7e:42:fe:42
+> > [ 4186.696380] wlan0: RX ReassocResp from 00:1d:7e:42:fe:42 (capab=3D0x=
+411
+> > status=3D0 aid=3D2) [ 4186.696392] wlan0: associated
 
-johannes
+> > Most of the time when this happened, the machine wasnt reacting for 1-3
+> > seconds and had audio buffer underruns, but I also had a hard lockup
+> > which I couldnt diagnose so far.
+> I suspect the hard lockup was due to a BUG_ON in the iwlagn driver, if
+> you can reproduce this either try applying the patch here [1] or going
+> to a VC to see if it crashes there. It's a BUG_ON in iwl-tx.c.
+Could not reproduce so far - it is rather hard working on the machine with=
+=20
+DMAR enabled because I get 1-5s lockups all the time like described above...
 
---=-ccyCLvu5LADoM/oCg+d7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Andres
+
+
+--nextPart1671546.fHiBhP5sPO
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJIytBSAAoJEKVg1VMiehFY5H0QALuf9D1T/JajIAEpKerssHoV
-fGBEqq/WavQiBgZZ5EJoseqpgRYhyv9je3T6EUOH1vEkVYdqP/AR0pyq6kNrNaEI
-It6T0ukxPJCodDDfi/ei8kTV/k9/mxPKVWpsNNdR0sHTUVBxYPIiCcejVdN6T8by
-PMarjshJqbyPTH81Suy51Kg95JPkZQytcbCClMisJ3mjRvaW/D07Y1ZwEWvdgTaM
-OPmTj/khwwMlaNJsWEhBr6zqAWFTW/K6hnlzpx8Vj30eXQQIjx8vrloMvLIiGvCA
-zCOF4oFFwdciah0iEZbM/XtNuCpUQS5+DfzyNC9Jd85d/wKHKNzIHaEVfe51N8vs
-H83YoWn+zxefP5RioMnymWNcG3lYcP1rci7wXnw7gsW7pcfXg8kbQAI4rIj4P37Y
-Hx0ATtwWHYSy2IxWdJoyH7tqK8ZyFL4t7BRkAwW2WY7krHpWpeFuNnXmstE5KPoc
-qRlC6HxInY/BpluR+/hbWCzFmv7tJvqCak4mn8UkZCQKr1OB7DL56OBw9yIHjn2J
-yOlXlr9Tuj3awtml1joMbtc9jzqsdvUN3M3/FutcutXreLcfPE18NSkcHKSMlJwW
-IGcU0N5EI99T4+4ZTu2Zd1UjN8+HlcTeeQF1Ajauf/WO3s1nFejXQnXfnJibAhDP
-LtSPZjeL0sTcSAw3v5s0
-=eUbE
+iEYEABECAAYFAkjgkSgACgkQporPraT14ii4cACfQBehnutTOVuJiZ2XqKgldTrH
+fwMAnitB5D7h0bnzHmoqlCAFY2iU3ixp
+=Xg1+
 -----END PGP SIGNATURE-----
 
---=-ccyCLvu5LADoM/oCg+d7--
-
+--nextPart1671546.fHiBhP5sPO--
