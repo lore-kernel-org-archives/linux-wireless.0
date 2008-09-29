@@ -1,94 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47418 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664AbYIBVPa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43893 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbYI2MFx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 17:15:30 -0400
-Date: Tue, 2 Sep 2008 17:01:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 08/11] iwlwifi: call apm stop on exit
-Message-ID: <20080902210101.GE3050@tuxdriver.com> (sfid-20080902_231537_781547_B3B8EE13)
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com> <1219915510-3647-2-git-send-email-yi.zhu@intel.com> <1219915510-3647-3-git-send-email-yi.zhu@intel.com> <1219915510-3647-4-git-send-email-yi.zhu@intel.com> <1219915510-3647-5-git-send-email-yi.zhu@intel.com> <1219915510-3647-6-git-send-email-yi.zhu@intel.com> <1219915510-3647-7-git-send-email-yi.zhu@intel.com> <1219915510-3647-8-git-send-email-yi.zhu@intel.com> <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
+	Mon, 29 Sep 2008 08:05:53 -0400
+Subject: Re: NL80211_CMD_GET_WIPHY reply doesn't fit into nl message buffer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Graf <tgraf@suug.ch>
+In-Reply-To: <48E0C384.3000903@gmail.com> (sfid-20080929_140111_676994_F2B0D8C5)
+References: <48E0A65A.2060102@gmail.com>
+	 <1222682480.7064.16.camel@johannes.berg> <20080929102021.GE10429@jm.kir.nu>
+	 <1222683923.7064.18.camel@johannes.berg> <48E0C185.6070705@gmail.com>
+	 (sfid-20080929_135242_032949_BF501638) <1222689340.7064.26.camel@johannes.berg>
+	 <48E0C384.3000903@gmail.com> (sfid-20080929_140111_676994_F2B0D8C5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-T8ccUh7z8cL2R9M9teXP"
+Date: Mon, 29 Sep 2008 14:05:47 +0200
+Message-Id: <1222689947.7064.28.camel@johannes.berg> (sfid-20080929_140557_896161_E9AEEC44)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2008 at 05:25:07PM +0800, Zhu Yi wrote:
-> From: Gregory Greenman <gregory.greenman@intel.com>
-> 
-> This patch calls apm stop on exit and suspend and sets STATUS_EXIT_PENDING
-> accordingly. Without this patch hardware consumes power even after driver
-> is removed or suspended.
-> 
-> Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
-The two hunks of this patch seem like two different fixes, and the
-changelog only matches the first hunk.  When you resubmit this series
-(which I presume you will be doing with better changelogs after
-Marcel's commentary), please split this into two patches.
+--=-T8ccUh7z8cL2R9M9teXP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Mon, 2008-09-29 at 14:01 +0200, Jiri Slaby wrote:
 
-John
+> Anyway it is wrong. NLMSG_GOODSIZE * x for x > 1 doesn't give skb aligned=
+ to a
+> page boundary. bufsize should start with PAGE_SIZE or 8192 and be multipl=
+ied
+> then and the parameter used for nlmsg_new SKB_WITH_OVERHEAD(bufsize).
 
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn.c |   16 +++++++++++-----
->  1 files changed, 11 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index 4986137..b1cefb5 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -2189,7 +2189,10 @@ static void __iwl4965_down(struct iwl_priv *priv)
->  	udelay(5);
->  
->  	/* FIXME: apm_ops.suspend(priv) */
-> -	priv->cfg->ops->lib->apm_ops.reset(priv);
-> +	if (exit_pending || test_bit(STATUS_IN_SUSPEND, &priv->status))
-> +		priv->cfg->ops->lib->apm_ops.stop(priv);
-> +	else
-> +		priv->cfg->ops->lib->apm_ops.reset(priv);
->  	priv->cfg->ops->lib->free_shared_mem(priv);
->  
->   exit:
-> @@ -4371,15 +4374,18 @@ static void __devexit iwl4965_pci_remove(struct pci_dev *pdev)
->  	iwl_dbgfs_unregister(priv);
->  	sysfs_remove_group(&pdev->dev.kobj, &iwl4965_attribute_group);
->  
-> +	/* ieee80211_unregister_hw call wil cause iwl4965_mac_stop to
-> +	 * to be called and iwl4965_down since we are removing the device
-> +	 * we need to set STATUS_EXIT_PENDING bit.
-> +	 */
-> +	set_bit(STATUS_EXIT_PENDING, &priv->status);
->  	if (priv->mac80211_registered) {
->  		ieee80211_unregister_hw(priv->hw);
->  		priv->mac80211_registered = 0;
-> +	} else {
-> +		iwl4965_down(priv);
->  	}
->  
-> -	set_bit(STATUS_EXIT_PENDING, &priv->status);
-> -
-> -	iwl4965_down(priv);
-> -
->  	/* make sure we flush any pending irq or
->  	 * tasklet for the driver
->  	 */
-> -- 
-> 1.5.3.6
-> 
-> 
+Hm ok.
 
--- 
-John W. Linville
-linville@tuxdriver.com
+> But it's ugly as hell, I agree -- and quite a temporary solution until so=
+mebody
+> decides to add channels, another channel info or whatever.
+
+I'd much prefer just splitting it up over multiple messages, shouldn't
+be too hard but will possibly require changes in the userspace parsers.
+
+johannes
+
+--=-T8ccUh7z8cL2R9M9teXP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI4MSXAAoJEKVg1VMiehFYX/gP/2ZkxQCE9l2pPwWaWSxKKpDO
++6/ej1bd5bRV5lpHQcCFoXm6x6Hz2nDuxn8M51+ofDoDivWPVehGS34+za8a5n1L
+yiMYBSoLitXtFXGGyTzJGJJ90oV3rP+H3pNoaSFzx55m4Jlsw3TZIbHVLzA+kcsZ
+WA2FO4tIBHFDTC3wlIcBMNNw9n12q/D90AIFRc7q6CRZHwVTq2qGqst5WicEdUL0
+m0FljGBhY8/6UYTu5C7+WLg1FdBckwEdxXO1QegNmrYnGjL8Eo++vLnXDRw1CyB6
++HkMKx8oYt2LlU/ry/ftWMpMVKZGl5SCV/6MLiUlbenET18erYDEK1IHrZpnT72h
+DUIZElK4WNx6ivmFoNpUdHuzJKnjbZ5BIMcY+p1u1VUB3ChADodwxgs8KUBmj4By
+wolzAvZaXen9OUnu5AjC5Ub70oOEFPD/lO9/Qj9gBFlfU110hDpXFNY4nZhNPsSe
+4LL/7hkYbF9Qk+0RqmNWgOH/+NKCjrvz6drbFIcK2pvvq7XaN/mgTtmXdv5sSwBO
+hkSxEfAQzMwOUk78nwugNkxSR2mQB+lzxeTgYGR5JZWp+YQhB5IlVJYRs7V0P3vL
+IQlNuWAt5n7Srdd76f2axWy5EFH7eTr8/9NccLlvaagrFewushlIbItO5qiUXMaz
+cH/+45L57KQGtK9Eb905
+=elsc
+-----END PGP SIGNATURE-----
+
+--=-T8ccUh7z8cL2R9M9teXP--
+
