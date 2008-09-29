@@ -1,69 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41254 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751671AbYIPVHK (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:51338 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939AbYI2Xx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 17:07:10 -0400
-Message-ID: <48D01FFB.1010302@lwfinger.net> (sfid-20080916_230715_212033_3031776E)
-Date: Tue, 16 Sep 2008 16:07:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Carlos Corbacho <carlos@strangeworlds.co.uk>
-CC: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Regression in 2.6.27-rcX caused by commit      bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de>    <48CFE820.7010305@lwfinger.net>    <20080916195134.GB14879@srcf.ucam.org> <39295.87.81.255.5.1221597846.squirrel@phoenix.slamd64.com>
-In-Reply-To: <39295.87.81.255.5.1221597846.squirrel@phoenix.slamd64.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 29 Sep 2008 19:53:58 -0400
+Subject: Re: Getting country alpha2 on network manager and using it for crda
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni.Malinen@atheros.com
+In-Reply-To: <43e72e890809291354u563b6c68i3a137cc129e65f86@mail.gmail.com>
+References: <43e72e890809260024ob134358me80ae1c169e4da8e@mail.gmail.com>
+	 <1222440218.19895.19.camel@localhost.localdomain>
+	 <1222584975.9600.2.camel@californication> <20080929183350.GC6203@tesla>
+	 <1222720776.27930.35.camel@localhost.localdomain>
+	 <43e72e890809291354u563b6c68i3a137cc129e65f86@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 30 Sep 2008 01:53:57 +0200
+Message-Id: <1222732437.1825.31.camel@violet.holtmann.net> (sfid-20080930_015402_940461_130F9108)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Carlos Corbacho wrote:
->> diff --git a/drivers/net/wireless/b43/rfkill.c
->> b/drivers/net/wireless/b43/rfkill.c
->> index fec5645..e8b2acb 100644
->> --- a/drivers/net/wireless/b43/rfkill.c
->> +++ b/drivers/net/wireless/b43/rfkill.c
->> @@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev
->> *dev)
->>  	struct b43_rfkill *rfk = &(dev->wl->rfkill);
->>
->>  	if (!dev->radio_hw_enable) {
->> -		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
->> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
->>  		return;
->>  	}
->>
->>  	if (!dev->phy.radio_on)
->> -		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
->> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
->>  	else
->> -		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
->> -
->> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
->>  }
+Hi Luis,
+
+> > I hesitate to try and specify an LSB-standard file anywhere for this,
+> > not sure we need that.  NM might want to store this value
+> > per-connection, or might want to store the value system-wide, or
+> > whatever.  I don't really see the value in standardizing the location of
+> > alpha2 config.
 > 
-> Just this should be enough to fix the regression for 2.6.27 (and should be
-> trivial to port to b43legacy) in the immediate term (I was planning to
-> send something similar).
-> 
-> The rest of the patch is out-of-scope for 2.6.27, but is definitely along
-> he right lines, IMHO (and it would be good if we can get a working version
-> of it in to 2.6.28). I may try and look at it later, as I do have my b43
-> hardware handy.
+> The only reason why I was thinking of having a standard place for it
+> is that there may be more than one device which can help update the
+> country based on data it has (GPS, user, etc) and the fact that if we
+> are going to set this somewhere perhaps some other things can make use
+> of this as well?
 
-This one doesn't crash, but it doesn't turn the light off.
+don't go that way. It will cause to many problems. We can add an option
+to the wpa_supplicant file if you really wanna store it (for the command
+line guys). Leave the rest to NetworkManager.
 
-I'm done testing for now!
+Regards
 
-John,
-
-Revert the patch until the rfkill guys get their house in order.
-
-Larry
+Marcel
 
 
