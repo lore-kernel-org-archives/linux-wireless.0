@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:44996 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751945AbYI0KyK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2008 06:54:10 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1431922rvb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2008 03:54:10 -0700 (PDT)
-Message-ID: <2da21fe50809270354i4d28335vfe166c166d33dc7@mail.gmail.com> (sfid-20080927_125417_122649_21F05B82)
-Date: Sat, 27 Sep 2008 12:54:09 +0200
-From: "Davide Pesavento" <davidepesa@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless-testing modpost failure
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, YanBo <dreamfly281@gmail.com>
-In-Reply-To: <1222507225.3798.45.camel@johannes.berg>
+Received: from mail.atheros.com ([12.36.123.2]:64437 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751337AbYI2TD4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 15:03:56 -0400
+Date: Mon, 29 Sep 2008 12:03:45 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>
+Subject: Re: wireless vs. network namespaces (part II)
+Message-ID: <20080929190345.GD6203@tesla> (sfid-20080929_210402_706033_E31DC7AF)
+References: <1222509685.3798.59.camel@johannes.berg> <m1r675aw0l.fsf@frodo.ebiederm.org> <1222587651.3798.72.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2da21fe50809261104m3b7d99e3g8b56416b8182ca45@mail.gmail.com>
-	 <20080926190007.GD3483@tuxdriver.com>
-	 <1222457416.3798.25.camel@johannes.berg>
-	 <2da21fe50809261325o62dea98dyf40b06e373f29f53@mail.gmail.com>
-	 <1222504695.3798.38.camel@johannes.berg>
-	 <1222507225.3798.45.camel@johannes.berg>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1222587651.3798.72.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/9/27 Johannes Berg <johannes@sipsolutions.net>:
-> On Sat, 2008-09-27 at 10:38 +0200, Johannes Berg wrote:
->
->> > >> >   Building modules, stage 2.
->> > >> >   MODPOST 216 modules
->> > >> > ERROR: "mpp_path_lookup" [net/mac80211/mac80211.ko] undefined!
->> > >> > ERROR: "mpp_path_add" [net/mac80211/mac80211.ko] undefined!
->> > >
->> > > Davide, can you tell me what file/line it fails in?
->> > >
->> >
->> > How can I tell you that?
->>
->> Good question. I was thinking the linker would complain at some earlier
->> point too, but I'll just try to reproduce it myself.
->
-> Ok... I can't reproduce it. Can you turn off CONFIG_MAC80211_NOINLINE
-> and see if that helps?
->
+On Sun, Sep 28, 2008 at 12:40:51AM -0700, Johannes Berg wrote:
+> On Sat, 2008-09-27 at 18:39 -0700, Eric W. Biederman wrote:
+> > In the wired ethernet world there is a lot of value in moving just
+> > a vlan interface or just one mac address with mac vlan into a network
+> > namespace.  Allowing full speed access to the hardware that can do
+> > just about anything while functionally restricting what user space
+> > can do with the hardware.
+> 
+> Right, except that wireless really is different in that for one you
+> can't really usefully have multiple virtual interfaces unless you're
+> making an AP
 
-Yes, it works without CONFIG_MAC80211_NOINLINE.
+Well it may be possible later in STA too, but that is just me looking at
+a crystal ball.
 
-I guess that it fails because gcc doesn't optimize out
-CALL_RXH(ieee80211_rx_h_mesh_fwding) in
-ieee80211_invoke_rx_handlers(), even if the comparison is always
-false... (btw, there's an extra semicolon at the end of that line).
+> (and I think it's unlikely you'd want that in an AP, and
+> even if I'm not willing to support it, 
 
-Regards,
-Davide
+You mean AP VLANs? I thought you added that code already. I don't
+follow.
+
+  Luis
