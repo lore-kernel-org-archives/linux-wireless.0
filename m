@@ -1,72 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50433 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751847AbYI2Lw3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 07:52:29 -0400
-Subject: Re: NL80211_CMD_GET_WIPHY reply doesn't fit into nl message buffer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-In-Reply-To: <48E0BE3B.7030204@gmail.com> (sfid-20080929_133839_921679_18457E97)
-References: <48E0A65A.2060102@gmail.com>
-	 <1222682480.7064.16.camel@johannes.berg> <20080929102021.GE10429@jm.kir.nu>
-	 <1222683923.7064.18.camel@johannes.berg> <48E0BE3B.7030204@gmail.com>
-	 (sfid-20080929_133839_921679_18457E97)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IXjjxpQxW1kIeAafYCTI"
-Date: Mon, 29 Sep 2008 13:52:22 +0200
-Message-Id: <1222689142.7064.24.camel@johannes.berg> (sfid-20080929_135233_382487_DFD72D14)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:37812 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751602AbYI2Tvi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 15:51:38 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] b43: Increase loop tries in do_dummy_tx
+Date: Mon, 29 Sep 2008 21:51:12 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <48e12a41.fSr2FmkheZiPQYjZ%Larry.Finger@lwfinger.net>
+In-Reply-To: <48e12a41.fSr2FmkheZiPQYjZ%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809292151.12279.mb@bu3sch.de> (sfid-20080929_215143_558150_9CAAA2CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 29 September 2008 21:19:29 Larry Finger wrote:
+> One of the spin-on-condition loops in routine do_dummy_tx always exits before
+> the condition is satisfied. The hardware might be left in an inconsistent
+> state that might be the cause of the PHY transmission errors seen by some
+> users.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
---=-IXjjxpQxW1kIeAafYCTI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-On Mon, 2008-09-29 at 13:38 +0200, Jiri Slaby wrote:
-> On 09/29/2008 12:25 PM, Johannes Berg wrote:
-> > Jiri, can you tell me what happens with iw? iw phy phy0 info or
-> > something.
->=20
-> [iw from v0.9.5-1-ged69ad9]
-> # ./iw phy phy0 info
-> command failed: No buffer space available (-105)
->=20
-> as expected :). It depends only on how nl80211_send_wiphy() is written (t=
-he msg
-> doesn't fit into NLMSG_GOODSIZE).
+> ---
+> 
+> John,
+> 
+> This is 2.6.28 material.
+> 
+> Larry
+> ---
+> 
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> index 7205a93..af60122 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -814,7 +814,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
+>  			break;
+>  		udelay(10);
+>  	}
+> -	for (i = 0x00; i < 0x0A; i++) {
+> +	for (i = 0x00; i < 0x19; i++) {
+>  		value = b43_read16(dev, 0x0690);
+>  		if (!(value & 0x0100))
+>  			break;
 
-Yes, I just wanted to confirm that the code there fails. I'm hunting a
-strange bug in the hostapd code now, but other than that my patch (plus
-a bunch of fixes) appears to work and reduce code size.
-
-johannes
-
---=-IXjjxpQxW1kIeAafYCTI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI4MFzAAoJEKVg1VMiehFYF5wP/0QzxqZyvDI5QoJ2lgi8w2e/
-fjemlUbrrONHXot/DDg0B5YEoe1o0Gnsrnft5RyyHXGBMtBYL0NJwUCwyTtqapDw
-Seo+wkOho+9JZD4cc98+qNQdgp0qfjADNQiKB6/gZCII0YyCz+jCNuEYdDjJT/+v
-LJ5BhUTArCYCuZCRlmIu9wMAxxNEnr5S6x6Zulzh0uexrBnkYDNdMBADHM6maFxC
-IJiXyWLCUJAMxl4h/Ak4GsKk+nos0v3zHCaI9WMTo2LQkcvZx3TSyMxhXfRmJZ0Z
-ovrW2JjpV8jEbiD9TAdTM7nq02K8luJ1nnedOnvofjrsul4mwzC60PQ0OZy6NFj/
-3M9io1+5gKM9sYVhR9E9i9aM0dKD70dU7Ch+aPV5jxgAdQfn6gC23UrjFLAwqbrD
-jrOEDWSfiU+QneHVhgZ52xyX8EKJ0B2i7fuQYpyu7gIBPZ5PYv7L/TxPTsUSVvsP
-3IZJbRspcpxGEd60CNpHlDiWXDGdhZzVoudAcyijpxV5NHVjo+kib15qFW9ZTvSR
-ouoczgOKO3fWUXiTznAxnHNCwNSHDwUQ6ntmw+932BGlvFbRCK0UZegMB4ZZffwY
-Fps1AGkA6FwGQDa9/XB+/8iKgNOKyhFZpFWzwMdsV0YQ3Jd/ERpFu0QiPx0n+Hlc
-SAbY9eg0Hj920jBW1gGK
-=Akll
------END PGP SIGNATURE-----
-
---=-IXjjxpQxW1kIeAafYCTI--
-
+-- 
+Greetings Michael.
