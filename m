@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42447 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753491AbYISTS3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 15:18:29 -0400
-Subject: Re: technology preview: scan with cfg80211 (v2)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <43e72e890809191048t3a4bf9b5r1f64ea355489acfc@mail.gmail.com> (sfid-20080919_194924_274942_758AA526)
-References: <1221794329.10419.9.camel@johannes.berg>
-	 <1221830207.12059.10.camel@johannes.berg>
-	 <1221833838.12059.17.camel@johannes.berg>
-	 <43e72e890809191048t3a4bf9b5r1f64ea355489acfc@mail.gmail.com>
-	 (sfid-20080919_194924_274942_758AA526)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fEzG2DKtCqPa4akJQd1I"
-Date: Fri, 19 Sep 2008 21:18:22 +0200
-Message-Id: <1221851902.12059.22.camel@johannes.berg> (sfid-20080919_211832_972052_349D8870)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:56625 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752605AbYI2R3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 13:29:43 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 10:29:43 -0700
+Date: Mon, 29 Sep 2008 10:29:30 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Steven Noonan <steven@uplinklabs.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"yi.zhu@intel.com" <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC V3] mac80211: re-enable aggregation on 2.6.27
+Message-ID: <20080929172930.GB6203@tesla> (sfid-20080929_192949_095753_D0323CCF)
+References: <1222371297-24498-1-git-send-email-tomas.winkler@intel.com> <f488382f0809251243x472ff579n8ada22e8f7110aae@mail.gmail.com> <20080926015100.GR6204@tesla> <f488382f0809251945u3eb1f0bdgfe8587e8c103b009@mail.gmail.com> <f488382f0809271949j3c39a1aag8a57b1cb03a5c001@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <f488382f0809271949j3c39a1aag8a57b1cb03a5c001@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 27, 2008 at 07:49:06PM -0700, Steven Noonan wrote:
+> On Thu, Sep 25, 2008 at 7:45 PM, Steven Noonan <steven@uplinklabs.net> wrote:
+> > On Thu, Sep 25, 2008 at 6:51 PM, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+> >>
+> >> Please test and let us know, try HT40 on 11a. We're keen on resolving
+> >> this just as with the MIB interrupt issue you say ;)
+> >
+> > Will do. It will have to wait until Monday though, because I stupidly
+> > left my AirPort Extreme router's AC adapter at home (3 hours away).
+> 
+> I just realized I happened to have a Linksys WRT300N router with me
+> (completely forgot I even owned one). Anyway, I'm running with HT40,
+> and it seems to work fine. Throughput is certainly lower than on Mac
+> OS X (I get about 8 megabytes per second sustained transfer rate on OS
+> X), as I'm only getting about 2 megabytes per second with ath9k on
+> Linux.  The aggregation patch does make a difference, but not by a
+> whole lot.
 
---=-fEzG2DKtCqPa4akJQd1I
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+We will work on resolving throughput issues, check out wireless-testing
+with the patches too (they haven't yet been merged), see if you see
+improvements there.
 
-On Fri, 2008-09-19 at 10:48 -0700, Luis R. Rodriguez wrote:
-> Another TODO maybe, sort scan results by signal strength received.
+For now we want to just fix 2.6.27 to have aggregation available.
 
-For now, I'm shooting to make it at least 95% regression-free :)
-
-johannes
-
---=-fEzG2DKtCqPa4akJQd1I
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0/r6AAoJEKVg1VMiehFYVsoQAJHoPNcFvg1TRNwaG5Ai5QYW
-BBgs5CkV7+rMnepWkFrPtbX+JYr10TTXGVAq84rao7Qrem3rb7hmcvrN9mYeb7rL
-WmjD3A8Z+MLkRsF91yxNwrJpE2tPIFduagz+nWUhAXrs5gtwnj0vWvRLU9zxjemM
-GRxL0iy5WLj8M+3T7DSIMDK7uggy5VX6cZYRMk9xRpX61ceAFbIeMe6Sp7e+APMN
-pum58LXPjs83k9FTsEBZLQ7f/VKtOyvWQNbOK4HvyB9ykn8I9pBoel31R4uEAb4z
-myKgVWfhfy8PvVO1e9WNZZBolZaxqJBmDklkuYo+UILalsy1V7tOatqlkgTcl4sF
-eRmP1TURUavmle5oSvhs/EtAdd25PQL0mWEtIpMBzhOyRSwUKdzF9qNWtepPpY4b
-/6TIYBNyn7u5NeUQmiRsEwUOkYneue3zIoNPN2fZkTAaUwCQSKNEicI0wiXFdLCu
-uPqGtPpDwXRBWQdSIRZVZpInhTcX8tNkoJVzMLju/lERzscq79SSgYz5ajPtlZXr
-luPtIdu4JRzQSSv23kO78BdNsvTO/ASLDyKBG1l3digLf/20gKjSVCuAw6ZHaPBX
-NQCYVaVlkBOWYgA53gphvZ21iO43ckxAMzHw1Foz3p75KFI+3TDIVMAcx2T3IeFT
-Wnl60PTMk9R9vZSgYsMj
-=tCWq
------END PGP SIGNATURE-----
-
---=-fEzG2DKtCqPa4akJQd1I--
-
+  Luis
