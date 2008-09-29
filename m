@@ -1,43 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5772 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752512AbYIKJCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 05:02:55 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Zhu Yi <yi.zhu@intel.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-Content-Type: text/plain
-Date: Thu, 11 Sep 2008 17:02:59 +0800
-Message-Id: <1221123779.2513.88.camel@debian.sh.intel.com> (sfid-20080911_110259_705263_9B4920F4)
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.159]:34433 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731AbYI2Id3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 04:33:29 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1354817fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 01:33:27 -0700 (PDT)
+Message-ID: <1ba2fa240809290133n79a4e116x6bc205a7b2c81f09@mail.gmail.com> (sfid-20080929_103333_187163_94BFA7A0)
+Date: Mon, 29 Sep 2008 11:33:26 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS mode
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <43e72e890809290114w5010c397od3d17101db263109@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
+	 <43e72e890809290114w5010c397od3d17101db263109@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel!
+On Mon, Sep 29, 2008 at 11:14 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Sun, Sep 28, 2008 at 9:14 AM, Tomas Winkler <tomas.winkler@intel.com> wrote:
+>> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>>
+>> This patch makes mac80211 able to send action frames when toggling
+>> (SM PS) Spacial Multiplexing Power Save mode.
+>
+> I have no clue what this is as I haven't yet peeked at this section of
+> the draft. If we can provide a brief explanation as to what this is
+> would be useful to other developers without access to the 11n draft.
+> Even it its just enhancing the comment in the code.
 
-On Thu, 2008-09-11 at 10:04 +0200, Marcel Holtmann wrote:
-> However I tried to reproduce it without Bluetooth enabled, it didn't  
-> show or I didn't wait long enough. Once I started bluetoothd it showed  
-> within a few minutes.
-> 
-> So the best I got was the attached screenshot of an oops. It is  
-> clearly the iwlwifi driver crashing here and killing the machine, but  
-> I have no idea why.
+On the way
 
->From the screenshot line:
+>> Example:
+>> 1.
+>> Low lever driver may close some of RX chains in power save mode
+>> and needs to announce to AP that a RTS frame is need in order to wake all
+>> RX chains, on other hand SM PS can be disabled on CAM mode
+>
+> What's CAM mode?
 
-iwl_tx_cmd_complete+0x43/0x245
+Continuously Aware Mode (No power save)
 
-It should be triggered by the BUG_ON() in the function. Are you able to
-confirm it with netconsole or maybe even a frame buffer enabled console
-(it just shows more lines)? If this is the culprit, Tomas has been
-already working on it. But your BT coexist finding should help us
-reproducing the bug.
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703
+>> or if HW is able
+>> to wake all chains without RTS frame.
+>
+> Should we add a HW capability bit for mac80211 drivers to indicate this?
 
-Thanks,
--yi
+The patch is in internal  review and testing, will be published soon.
 
+>
+>> 2.
+>> iwlwifi can call this function when it detects that only
+>> one antenna can effectively receive
+>
+> When would this happen? Would this happen when any 11n mac80211
+> capable driver is going to PS mode and it doesn't have the capability
+> of detecting when it needs to to turn on its antennas?
+>
+>> then MS PS
+>
+> Did you mean SM PS mode?
+
+Typo, will resend the fix.
+
+>> mode is set to STATIC
+>
+> Can we elaborate a bit on what this vs Dynamic is in the comments if possible?
+
+We cannot copy the whole spec into code :) On the way.
+
+>
+>> +static void ieee80211_send_sm_ps(struct ieee80211_sub_if_data *sdata, u8 mode)
+>> +{
+>> +       struct ieee80211_local *local = sdata->local;
+>> +       struct ieee80211_mgmt *mgmt;
+>> +       struct sk_buff *skb;
+>> +       DECLARE_MAC_BUF(mac);
+>> +
+>> +       struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+>> +       struct net_device *dev = sdata->dev;
+>> +
+>> +       /* Implemented for STA only */
+>> +       if (sdata->vif.type != NL80211_IFTYPE_STATION)
+>> +               return;
+>
+> <-- snip -->
+>
+>> +       if (ifsta->flags & IEEE80211_STA_ASSOCIATED)
+>> +               ieee80211_tx_skb(sdata, skb, 0);
+>
+> You can move this ending branch above to return early so we don't go
+> through the entire routine for no good reason. So something like:
+>
+>       if (sdata->vif.type != NL80211_IFTYPE_STATION ||
+>                      ifsta->flags & IEEE80211_STA_ASSOCIATED)
+>               return;
+>
+>  Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
