@@ -1,49 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:48919 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752390AbYIKPCe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 11:02:34 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1221129382.6986.0.camel@johannes.berg>
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 (sfid-20080911_100535_000722_EE099914)  <1221129382.6986.0.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 11 Sep 2008 17:03:03 +0200
-Message-Id: <1221145383.6309.12.camel@californication> (sfid-20080911_170238_255645_53CA6C1F)
-Mime-Version: 1.0
+Received: from mail.hevs.ch ([153.109.23.10]:57648 "EHLO mail.hevs.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751258AbYI2OTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 10:19:24 -0400
+From: Marc Pignat <marc.pignat@hevs.ch>
+To: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [RFC, PATCH] ath5k: compilation fix for ARM
+Date: Mon, 29 Sep 2008 16:19:17 +0200
+Cc: mickflemm@gmail.com, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+References: <200809291607.33690.marc.pignat@hevs.ch> <48E0E36B.9060807@gmail.com>
+In-Reply-To: <48E0E36B.9060807@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200809291619.17828.marc.pignat@hevs.ch> (sfid-20080929_161927_490626_D13E9905)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-> > so since a few 2.6.27 kernels I haven an issue when using my 4965  
-> > wireless card. So the machine in question is an X61 and when enabling  
-> > WiFi and Bluetooth at the same time it will freeze hard after a few  
-> > minutes. It seems activating Bluetooth has something to do with it,  
-> > but I have been using the machine for Bluetooth qualification testing  
-> > (with WiFi disabled) and everything works fine.
-> > 
-> > However I tried to reproduce it without Bluetooth enabled, it didn't  
-> > show or I didn't wait long enough. Once I started bluetoothd it showed  
-> > within a few minutes.
-> > 
-> > So the best I got was the attached screenshot of an oops. It is  
-> > clearly the iwlwifi driver crashing here and killing the machine, but  
-> > I have no idea why.
+On Monday 29 September 2008, Jiri Slaby wrote:
+> On 09/29/2008 04:07 PM, Marc Pignat wrote:
+> Thanks, but Nick already fixed that:
+> http://kerneltrap.org/mailarchive/linux-ath5k-devel/2008/9/17/3317654
 > 
-> That looks like the use-after-free BUG_ON I've been getting with a 5k
-> card, do you have sl*b debugging enabled?
 
-I have CONFIG_SLUB_DEBUG=y in this kernel. Including all sorts of kernel
-debugging features enabled. Anything else I would need to give better
-feedback?
-
-Regards
-
-Marcel
-
+fine ;)
 
