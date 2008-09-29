@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:25746 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752751AbYI0P31 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2008 11:29:27 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so940478fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2008 08:29:25 -0700 (PDT)
-Date: Sat, 27 Sep 2008 17:29:12 +0200
-From: Davide Pesavento <davidepesa@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH] Fix modpost failure when rx handlers are not inlined.
-Message-ID: <20080927152912.GA18970@PesaBook.pesa.homelinux.org> (sfid-20080927_172936_791779_114DA9E4)
+Received: from mail.anarazel.de ([217.115.131.40]:47414 "EHLO smtp.anarazel.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752116AbYI2IfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 04:35:04 -0400
+From: Andres Freund <andres@anarazel.de>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: bad DMAR interaction with iwlagn and SATA
+Date: Mon, 29 Sep 2008 10:27:49 +0200
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Muli Ben-Yehuda" <muli@il.ibm.com>,
+	"Jeff Garzik" <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200809251511.20132.andres@anarazel.de> <1222441955.3798.13.camel@johannes.berg> <1ba2fa240809261630y7a8e5f20g75ab47ff98a1e614@mail.gmail.com>
+In-Reply-To: <1ba2fa240809261630y7a8e5f20g75ab47ff98a1e614@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart1577835.l5VFPfxJ2h";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200809291027.50453.andres@anarazel.de> (sfid-20080929_103509_209488_62F5C33A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_MAC80211_MESH=n and CONFIG_MAC80211_NOINLINE=y,
-gcc doesn't optimize out a call to ieee80211_rx_h_mesh_fwding,
-even if the previous comparison is always false in this case.
-This leads to the following errors during modpost:
+--nextPart1577835.l5VFPfxJ2h
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-ERROR: "mpp_path_lookup" [net/mac80211/mac80211.ko] undefined!
-ERROR: "mpp_path_add" [net/mac80211/mac80211.ko] undefined!
+Hi,
 
-Fix by removing the possibility of uninlining
-ieee80211_rx_h_mesh_fwding rx handler.
+On Saturday 27 September 2008, Tomas Winkler wrote in "Re: bad DMAR=20
+interaction with iwlagn and SATA":
+> Meanwhile it all reported bugs in this case points to 64 bit
+> installations, I'll give it more testing
+Would it help to test on 32bit? I have some dissk with 32bit system install=
+ed=20
+lying around somewhere...
 
-Signed-off-by: Davide Pesavento <davidepesa@gmail.com>
+Any other patches to try?
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c489865..77e7b01 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1379,7 +1379,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
- 	return RX_QUEUED;
- }
- 
--static ieee80211_rx_result debug_noinline
-+static ieee80211_rx_result
- ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr;
--- 
-1.6.0.2
+Andres
 
+--nextPart1577835.l5VFPfxJ2h
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkjgkYYACgkQporPraT14ih2MwCfSIgBIgsrNfWIhpQh/bzMNsX9
+u68An1P8oc0Ar347iHUA49Vmg0IhSLGS
+=hT7l
+-----END PGP SIGNATURE-----
+
+--nextPart1577835.l5VFPfxJ2h--
