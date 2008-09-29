@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39437 "EHLO mail.atheros.com"
+Received: from venema.h4ckr.net ([217.24.1.135]:40781 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757547AbYILRkq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 13:40:46 -0400
-Date: Fri, 12 Sep 2008 10:40:36 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: John Linville <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: The new regulatory code kills my wireless
-Message-ID: <20080912174036.GC6134@tesla> (sfid-20080912_194054_032727_AE1F44A2)
-References: <48CAA8D6.1030605@lwfinger.net>
+	id S1751345AbYI2I6t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2008 04:58:49 -0400
+Message-ID: <1504.194.45.26.221.1222678723.squirrel@webmail.madwifi.org> (sfid-20080929_105852_636702_81450B72)
+In-Reply-To: <200809282216.46416.pete@petezilla.co.uk>
+References: <200809281734.01027.pete@petezilla.co.uk>
+    <40f31dec0809281018l6a2fdacwf03ddf0f2876c1a2@mail.gmail.com>
+    <200809282216.46416.pete@petezilla.co.uk>
+Date: Mon, 29 Sep 2008 10:58:43 +0200 (CEST)
+Subject: Re: SMC wireless card, unknown Atheros/Accton chipset?
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
+To: "Peter Chant" <pete@petezilla.co.uk>
+Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <48CAA8D6.1030605@lwfinger.net>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 12, 2008 at 10:37:26AM -0700, Larry Finger wrote:
-> After pulling the latest git from wireless-testing, my wireless
-> failed. I bisected this to be commit
-> 544ec9a11fdef5142a76a8eb4b186a80a272c035, "cfg80211: Add new wireless
-> regulatory infrastructure". I have not yet implemented CRDA, thus I
-> selected the CONFIG_WIRELESS_OLD_REGULATORY option.
-> 
-> The symptoms are that my devices (b43 and p54usb) receive no scan
-> information.
-> 
-> The pertinent dmesg output follows:
-> 
-> cfg80211: Using old static regulatory domain:
-> cfg80211: Regulatory domain: US
->          (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->          (239200 KHz - 248200 KHz @ 4000 KHz), (600 mBi, 2700 mBm)
->          (516000 KHz - 520000 KHz @ 4000 KHz), (600 mBi, 2300 mBm)
->          (518000 KHz - 522000 KHz @ 4000 KHz), (600 mBi, 2300 mBm)
->          (520000 KHz - 524000 KHz @ 4000 KHz), (600 mBi, 2300 mBm)
->          (522000 KHz - 534000 KHz @ 4000 KHz), (600 mBi, 2300 mBm)
->          (572500 KHz - 584500 KHz @ 4000 KHz), (600 mBi, 3000 mBm)
-> cfg80211: Calling CRDA for country: US
+Hi.
 
-Please apply johill's patch, "[PATCH] cfg80211: fix regdomain macro"
+Peter Chant wrote:
+> I'm a bit of a wireless newbie.  Do you mind me asking whether it is
+> likely to support being an access point?  I noticed that in general
+> cards don't work as access points, is it a chipset limitation or is
+> it just a whole load of work for something that is not much in demand?
 
-  Luis
+It's currently a limitation of mac80211. Changing that is work in progress
+for mac80211, and there is an experimental patch available for ath5k that
+enable the driver part of AP support. The patch was posted here just a few
+days ago [1].
+
+Bye, Mike
+
+[1] http://thread.gmane.org/gmane.linux.drivers.ath5k.devel/1240
+
