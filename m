@@ -1,226 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.slamd64.com ([217.10.145.2]:38714 "EHLO
-	phoenix.slamd64.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753167AbYILWE2 (ORCPT
+Received: from out02.mta.xmission.com ([166.70.13.232]:59673 "EHLO
+	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323AbYI2Fpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 18:04:28 -0400
-From: Carlos Corbacho <carlos@strangeworlds.co.uk>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: [RFC] acer-wmi: Add rfkill support for wireless and bluetooth (v5)
-Date: Fri, 12 Sep 2008 23:04:19 +0100
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>
-References: <200808301206.56279.carlos@strangeworlds.co.uk> <200809122044.27418.carlos@strangeworlds.co.uk> <20080912164039.ZZRA012@mailhub.coreip.homeip.net>
-In-Reply-To: <20080912164039.ZZRA012@mailhub.coreip.homeip.net>
+	Mon, 29 Sep 2008 01:45:40 -0400
+From: ebiederm@xmission.com (Eric W. Biederman)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>
+References: <1222509685.3798.59.camel@johannes.berg>
+	<m1r675aw0l.fsf@frodo.ebiederm.org>
+	<1222587651.3798.72.camel@johannes.berg>
+Date: Sun, 28 Sep 2008 22:44:14 -0700
+In-Reply-To: <1222587651.3798.72.camel@johannes.berg> (Johannes Berg's message
+	of "Sun, 28 Sep 2008 09:40:51 +0200")
+Message-ID: <m1y71b8q1d.fsf@frodo.ebiederm.org> (sfid-20080929_074546_441441_94791274)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809122304.21000.carlos@strangeworlds.co.uk> (sfid-20080913_000433_928815_B68B375A)
+Content-Type: text/plain; charset=us-ascii
+Subject: Re: wireless vs. network namespaces (part II)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch implements rfkill support for the wireless and bluetooth devices
-commonly found on Acer laptops.
 
-For now, we will always poll these devices once a second to guarantee we can
-catch state changes. On newer Acer laptops, it may be possible to rely on WMI
-events to do this instead, and experimental support for this will be added in
-a later patch.
+>> >  * ensure that all netdevs created for this wiphy will have the right
+>> >    netns.
+>> >
+>> > The latter part I'm unsure on, alloc_netdev_mq seems to always use
+>> > init_net so I can't put them into the right namespace to start with, but
+>> > because they're all "in there together" I can't allow switching
+>> > namespaces either.. Ideas?
+>> 
+>> alloc_netdev_mq doesn't register the device, so it is a matter of simply
+>> changing the network device pointer after allocation and before registration.
+>> 
+>> We do this by default when we dynamically create network devices using
+>> netlink.  see rtnl_create_link for an example.
+>
+> Ok. So I guess I'd want to write a wrapper for registering the netdev
+> that puts it into the right namespace for the wireless hardware and sets
+> the NETIF_F_NETNS_LOCAL flag.
 
-3G has been deliberately left off for now, as we still have no way to detect
-it, (nor, AFAIK, has any Linux user tried the code) and on laptops that don't
-support 3G, trying to poll for the status will leave the logs full of ACPI
-tracebacks.
+> I'll have to experiment a bit I guess.
 
-The old sysfs interface for wireless and 3G will be removed in a later patch.
+So you are looking at using NETIF_F_NETNS_LOCAL to indicate that you can't move
+one of the devices?
 
-Signed-off-by: Carlos Corbacho <carlos@strangeworlds.co.uk>
----
+There is an UNREGISTER_NETDEV event and a REGISTER_NETDEV event sent when a device
+is moved between namespaces.  See:  dev_change_net_namespace.
 
- drivers/misc/Kconfig    |    1 
- drivers/misc/acer-wmi.c |  130 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 130 insertions(+), 1 deletions(-)
+I think you would want to look onto those and move one network device when you
+move the other, without using NETIF_F_NETNS_LOCAL.
 
+Deletion and creation we have definitely done with paired veth devices.  I haven't
+looked at the migration case, but I with a little bit of guarding against recursion
+it looks like it probably can be handled.  
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index a726f3b..6abb959 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -145,6 +145,7 @@ config ACER_WMI
- 	depends on NEW_LEDS
- 	depends on BACKLIGHT_CLASS_DEVICE
- 	depends on SERIO_I8042
-+	depends on RFKILL
- 	select ACPI_WMI
- 	---help---
- 	  This is a driver for newer Acer (and Wistron) laptops. It adds
-diff --git a/drivers/misc/acer-wmi.c b/drivers/misc/acer-wmi.c
-index b2d9878..11263f0 100644
---- a/drivers/misc/acer-wmi.c
-+++ b/drivers/misc/acer-wmi.c
-@@ -33,6 +33,8 @@
- #include <linux/platform_device.h>
- #include <linux/acpi.h>
- #include <linux/i8042.h>
-+#include <linux/rfkill.h>
-+#include <linux/workqueue.h>
- #include <linux/debugfs.h>
- 
- #include <acpi/acpi_drivers.h>
-@@ -157,6 +159,9 @@ struct acer_debug {
- 	u32 wmid_devices;
- };
- 
-+static struct rfkill *wireless_rfkill;
-+static struct rfkill *bluetooth_rfkill;
-+
- /* Each low-level interface must define at least some of the following */
- struct wmi_interface {
- 	/* The WMI device type */
-@@ -930,6 +935,125 @@ static void acer_backlight_exit(void)
- }
- 
- /*
-+ * Rfkill devices
-+ */
-+static struct workqueue_struct *rfkill_workqueue;
-+
-+static void acer_rfkill_update(struct work_struct *ignored);
-+static DECLARE_DELAYED_WORK(acer_rfkill_work, acer_rfkill_update);
-+static void acer_rfkill_update(struct work_struct *ignored)
-+{
-+	u32 state;
-+	acpi_status status;
-+
-+	status = get_u32(&state, ACER_CAP_WIRELESS);
-+	if (ACPI_SUCCESS(status))
-+		rfkill_force_state(wireless_rfkill, state ?
-+			RFKILL_STATE_UNBLOCKED : RFKILL_STATE_SOFT_BLOCKED);
-+
-+	if (has_cap(ACER_CAP_BLUETOOTH)) {
-+		status = get_u32(&state, ACER_CAP_BLUETOOTH);
-+		if (ACPI_SUCCESS(status))
-+			rfkill_force_state(bluetooth_rfkill, state ?
-+				RFKILL_STATE_UNBLOCKED :
-+				RFKILL_STATE_SOFT_BLOCKED);
-+	}
-+
-+	queue_delayed_work(rfkill_workqueue, &acer_rfkill_work,
-+		round_jiffies_relative(HZ));
-+}
-+
-+static int acer_rfkill_set(void *data, enum rfkill_state state)
-+{
-+	acpi_status status;
-+	u32 *cap = data;
-+	status = set_u32((u32) (state == RFKILL_STATE_UNBLOCKED), *cap);
-+	if (ACPI_FAILURE(status))
-+		return -ENODEV;
-+	return 0;
-+}
-+
-+static struct rfkill * acer_rfkill_register(struct device *dev,
-+enum rfkill_type type, char *name, u32 cap)
-+{
-+	int err;
-+	u32 state;
-+	u32 *data;
-+	struct rfkill *rfkill_dev;
-+
-+	rfkill_dev = rfkill_allocate(dev, type);
-+	if (!rfkill_dev)
-+		return ERR_PTR(-ENOMEM);
-+	rfkill_dev->name = name;
-+	get_u32(&state, cap);
-+	rfkill_dev->state = state ? RFKILL_STATE_UNBLOCKED :
-+		RFKILL_STATE_SOFT_BLOCKED;
-+	data = kzalloc(sizeof(u32), GFP_KERNEL);
-+	if (!data) {
-+		rfkill_free(rfkill_dev);
-+		return ERR_PTR(-ENOMEM);
-+	}
-+	*data = cap;
-+	rfkill_dev->data = data;
-+	rfkill_dev->toggle_radio = acer_rfkill_set;
-+	rfkill_dev->user_claim_unsupported = 1;
-+
-+	err = rfkill_register(rfkill_dev);
-+	if (err) {
-+		kfree(rfkill_dev->data);
-+		rfkill_free(rfkill_dev);
-+		return ERR_PTR(err);
-+	}
-+	return rfkill_dev;
-+}
-+
-+static int acer_rfkill_init(struct device *dev)
-+{
-+	wireless_rfkill = acer_rfkill_register(dev, RFKILL_TYPE_WLAN,
-+		"acer-wireless", ACER_CAP_WIRELESS);
-+	if (IS_ERR(wireless_rfkill))
-+		return PTR_ERR(wireless_rfkill);
-+
-+	if (has_cap(ACER_CAP_BLUETOOTH)) {
-+		bluetooth_rfkill = acer_rfkill_register(dev,
-+			RFKILL_TYPE_BLUETOOTH, "acer-bluetooth",
-+			ACER_CAP_BLUETOOTH);
-+		if (IS_ERR(bluetooth_rfkill)) {
-+			kfree(wireless_rfkill->data);
-+			rfkill_unregister(wireless_rfkill);
-+			return PTR_ERR(bluetooth_rfkill);
-+		}
-+	}
-+
-+	rfkill_workqueue = create_singlethread_workqueue("rfkill_workqueue");
-+	if (!rfkill_workqueue) {
-+		if (has_cap(ACER_CAP_BLUETOOTH)) {
-+			kfree(bluetooth_rfkill->data);
-+			rfkill_unregister(bluetooth_rfkill);
-+		}
-+		kfree(wireless_rfkill->data);
-+		rfkill_unregister(wireless_rfkill);
-+		return -ENOMEM;
-+	}
-+	queue_delayed_work(rfkill_workqueue, &acer_rfkill_work, HZ);
-+
-+	return 0;
-+}
-+
-+static void acer_rfkill_exit(void)
-+{
-+	cancel_delayed_work_sync(&acer_rfkill_work);
-+	destroy_workqueue(rfkill_workqueue);
-+	kfree(wireless_rfkill->data);
-+	rfkill_unregister(wireless_rfkill);
-+	if (has_cap(ACER_CAP_BLUETOOTH)) {
-+		kfree(wireless_rfkill->data);
-+		rfkill_unregister(bluetooth_rfkill);
-+	}
-+	return;
-+}
-+
-+/*
-  * Read/ write bool sysfs macro
-  */
- #define show_set_bool(value, cap) \
-@@ -1023,7 +1147,9 @@ static int __devinit acer_platform_probe(struct platform_device *device)
- 			goto error_brightness;
- 	}
- 
--	return 0;
-+	err = acer_rfkill_init(&device->dev);
-+
-+	return err;
- 
- error_brightness:
- 	acer_led_exit();
-@@ -1037,6 +1163,8 @@ static int acer_platform_remove(struct platform_device *device)
- 		acer_led_exit();
- 	if (has_cap(ACER_CAP_BRIGHTNESS))
- 		acer_backlight_exit();
-+
-+	acer_rfkill_exit();
- 	return 0;
- }
- 
+Say trigger when your parnter device calls REGISTER_NETDEV in a different network
+namespace?
+
+Eric
+
