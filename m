@@ -1,98 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:60248 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753605AbYIHPbz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56829 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311AbYI2VVb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 11:31:55 -0400
-Received: by ug-out-1314.google.com with SMTP id s2so315232uge.37
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 08:31:53 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Revert "rt2x00: Fix the beacon length bug"
-Date: Mon, 8 Sep 2008 17:31:49 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net,
-	Iwo Mergler <iwo@call-direct.com.au>
+	Mon, 29 Sep 2008 17:21:31 -0400
+Date: Mon, 29 Sep 2008 17:20:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Anna Neal <anna@cozybit.com>, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: Improvements on automatic tx power control
+	via SIOCSIWTXPOW.
+Message-ID: <20080929212045.GH3295@tuxdriver.com> (sfid-20080929_232135_640603_E63CED89)
+References: <48dc2080.14be600a.433d.fffffde3@mx.google.com> <20080926162643.GB3483@tuxdriver.com> <1222721977.27930.45.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809081731.49941.IvDoorn@gmail.com> (sfid-20080908_173159_595013_4ACDC631)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1222721977.27930.45.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts:
-	b93ce437eba7e0232683326f30d9d1167a872fad
-	rt2x00: Fix the beacon length bug
+On Mon, Sep 29, 2008 at 04:59:37PM -0400, Dan Williams wrote:
+> On Fri, 2008-09-26 at 12:26 -0400, John W. Linville wrote:
+> > On Thu, Sep 25, 2008 at 04:19:31PM -0700, Anna Neal wrote:
+> > > iwconfig txpower can now be used to set tx power to fixed or auto. If set to
+> > > auto the default firmware settings are used.
+> > > 
+> > > The command CMD_802_11_PA_CFG is only sent to older firmware, as Dan Williams
+> > > noted the command was no longer supported in firmware V9+.
+> > > 
+> > > Signed-off-by: Anna Neal <anna@cozybit.com>
+> > > Signed-off-by: Javier Cardona <javier@cozybit.com>
+> > 
+> > I had already committed an earlier version.  I believe I have
+> > incorporated all the changes in "libertas: Improvements on automatic tx
+> > power control via SIOCSIWTXPOW (fixups)" -- please feel free to verify.
+> 
+> A few missing bits, sorry for the confusion.  Merge fixups against
+> current wireless-testing below.
+> 
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-The workaround is no longer required since it has been
-correctly fixed in rt2x00usb now.
+Thanks Dan!  I'll fold this into the patch before sending it upstream.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |   12 ------------
- drivers/net/wireless/rt2x00/rt73usb.c   |   12 ------------
- 2 files changed, 0 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 0e008b6..1cfda45 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1133,7 +1133,6 @@ static void rt2500usb_write_beacon(struct queue_entry *entry)
- 	int pipe = usb_sndbulkpipe(usb_dev, 1);
- 	int length;
- 	u16 reg;
--	u32 word, len;
- 
- 	/*
- 	 * Add the descriptor in front of the skb.
-@@ -1143,17 +1142,6 @@ static void rt2500usb_write_beacon(struct queue_entry *entry)
- 	skbdesc->desc = entry->skb->data;
- 
- 	/*
--	 * Adjust the beacon databyte count. The current number is
--	 * calculated before this function gets called, but falsely
--	 * assumes that the descriptor was already present in the SKB.
--	 */
--	rt2x00_desc_read(skbdesc->desc, 0, &word);
--	len  = rt2x00_get_field32(word, TXD_W0_DATABYTE_COUNT);
--	len += skbdesc->desc_len;
--	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, len);
--	rt2x00_desc_write(skbdesc->desc, 0, word);
--
--	/*
- 	 * Disable beaconing while we are reloading the beacon data,
- 	 * otherwise we might be sending out invalid data.
- 	 */
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index e698ae0..d9ef34c 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1572,7 +1572,6 @@ static void rt73usb_write_beacon(struct queue_entry *entry)
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	unsigned int beacon_base;
- 	u32 reg;
--	u32 word, len;
- 
- 	/*
- 	 * Add the descriptor in front of the skb.
-@@ -1582,17 +1581,6 @@ static void rt73usb_write_beacon(struct queue_entry *entry)
- 	skbdesc->desc = entry->skb->data;
- 
- 	/*
--	 * Adjust the beacon databyte count. The current number is
--	 * calculated before this function gets called, but falsely
--	 * assumes that the descriptor was already present in the SKB.
--	 */
--	rt2x00_desc_read(skbdesc->desc, 0, &word);
--	len  = rt2x00_get_field32(word, TXD_W0_DATABYTE_COUNT);
--	len += skbdesc->desc_len;
--	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, len);
--	rt2x00_desc_write(skbdesc->desc, 0, word);
--
--	/*
- 	 * Disable beaconing while we are reloading the beacon data,
- 	 * otherwise we might be sending out invalid data.
- 	 */
+John
 -- 
-1.5.6.1
-
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
