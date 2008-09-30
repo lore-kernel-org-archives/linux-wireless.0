@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:40902 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752621AbYIVPMM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 11:12:12 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1395823fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 08:12:06 -0700 (PDT)
-Message-ID: <1ba2fa240809220812v2d91bb18k4b78072fffd85e2c@mail.gmail.com> (sfid-20080922_171216_202633_ABD670CA)
-Date: Mon, 22 Sep 2008 18:12:05 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: fix led behavior in IBSS
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1222095543.3023.83.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1222092610-25374-1-git-send-email-tomas.winkler@intel.com>
-	 <1222095543.3023.83.camel@johannes.berg>
+Received: from foo.birdnet.se ([213.88.146.6]:50239 "HELO foo.birdnet.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752794AbYI3ON5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 10:13:57 -0400
+Message-ID: <20080930141353.16996.qmail@stuge.se> (sfid-20080930_161400_462934_A9F3739F)
+Date: Tue, 30 Sep 2008 16:13:53 +0200
+From: Peter Stuge <peter@stuge.se>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/T] b43: to few loop tries in do_dummy_tx
+References: <48E11F1E.50705@lwfinger.net> <48E14879.4050300@lwfinger.net> <20080930055034.16412.qmail@stuge.se> <200809301528.26304.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200809301528.26304.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2008 at 5:59 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-09-22 at 17:10 +0300, Tomas Winkler wrote:
->> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->>
->> This patch fixes the led behavior in IBSS. After we joined an IBSS cell we
->> need to inform the led that we got associated. Although there is no 802.11
->> association in IBSS mode, the semantic of "There is a link" is relevant.
->> This allows the led to blink in IBSS mode (at least this solves a bug for
->> iwlwifi).
->
-> Doesn't it also have to be turned off again at some point? Or is that
-> done? Other than that looks fine to me.
+Michael Buesch wrote:
+> > Nice work, but as it's a spec of another driver implementation rather
+> > than hardware (or even the firmware API) I don't think it should be
+> > so authoritative. If other values are clearly better why not use
+> > them?
+> 
+> What crap are you smoking?
 
-I've asked my self the same question  the answer is not clear. We
-switch the led off on close/ifdown by radio led trigger.
-Note in IBSS is always connected, carrier is always on if I'm not mistaken.
-Tomas
+Maybe we just miscommunicated, or maybe I misunderstood something
+about the reverse engineering process. I am very new to this project.
 
->
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
->> ---
->>  net/mac80211/mlme.c |    2 ++
->>  1 files changed, 2 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 2e55208..2bae226 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -1483,6 +1483,8 @@ static int ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
->>       ifsta->state = IEEE80211_STA_MLME_IBSS_JOINED;
->>       mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
->>
->> +     ieee80211_led_assoc(local, true);
->> +
->>       memset(&wrqu, 0, sizeof(wrqu));
->>       memcpy(wrqu.ap_addr.sa_data, bss->bssid, ETH_ALEN);
->>       wireless_send_event(sdata->dev, SIOCGIWAP, &wrqu, NULL);
->
+
+> The b43 and b43-legacy driver are _based_ on these specifications.
+> There are no other specs available.
+
+I know. Allow me to clarify my train of thought:
+
+* Specs are created by reverse engineering of a binary blob.
+
+* After development of b43*, many can happily use the drivers. \o/
+
+* As it turns out, b43* can be made even more reliable by doing
+  things slightly different than what the specs say. Case in point
+  looping a little longer.
+
+At this point, if there are only/mostly benefits, I don't see why
+deviating from the specs is bad - after all they "only" document
+another driver, right?
+
+
+//Peter
