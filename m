@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:51115 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148AbYJVHz3 (ORCPT
+Received: from mo-p05-ob.rzone.de ([81.169.146.180]:18963 "EHLO
+	mo-p05-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753498AbYI3WjE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 03:55:29 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: reinette chatre <reinette.chatre@linux.intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224660449.28639.22.camel@johannes.berg>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1224628088.10863.100.camel@rc-desk>
-	 <1224660449.28639.22.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 22 Oct 2008 09:56:25 +0200
-Message-Id: <1224662185.9386.131.camel@californication> (sfid-20081022_095541_874298_41127E9F)
-Mime-Version: 1.0
+	Tue, 30 Sep 2008 18:39:04 -0400
+Date: Wed, 1 Oct 2008 00:27:23 +0200
+From: Alex Riesen <raa.lkml@gmail.com>
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andreamrl@tiscali.it>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: NETGEAR WG111v2 (USB RTL8187): freezes whole system when setup
+Message-ID: <20080930222723.GA28369@steel.home> (sfid-20081001_003921_655613_F3DA8CFD)
+Reply-To: Alex Riesen <raa.lkml@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+I have an USB wireless card: Netgear WG111v2. It is reported in
+syslog as:
 
-> > I do not believe our request is unreasonable. If a user runs a new
-> > kernel the log will print a message that the firmware is incorrect ...
-> > all the user needs to do is go to
-> > http://intellinuxwireless.org/?n=Downloads and download the latest
-> > firmware.
-> 
-> And that exactly _is_ a problem, the user may be relying on wireless
-> connectivity. And they won't know up-front they need new firmware. Since
-> firmware is loaded from userspace, you're breaking userspace/kernel ABI,
-> it's pretty simple really.
+    usb 4-2: Product: NETGEAR WG111v2
+    usb 4-2: Manufacturer: NETGEAR WG111v2
+    usb 4-2: SerialNumber: 000FB5D51ECA
+    phy1: Selected rate control algorithm 'pid'
+    phy1: hwaddr 00:0f:b5:d5:1e:ca, RTL8187vB (default) V1 + rtl8225
+    usbcore: registered new interface driver rtl8187
 
-I talked to David Woodhouse and we plan to add a big warning to
-modules_install when MODULE_FIRMWARE is not present on the filesystem.
+On ifconfig up, the card always locks up two very different systems: a
+relatively modern P4 desktop and P-MMX laptop with UHCI (ancient Compaq
+Armada 1592DT) which has an OHCI.
 
-> I really don't know why we let you get away with this and bitch
-> endlessly when b43 does such a change, to the point where we finally
-> cave in and support both versions. Why should a community-supported
-> driver be held to higher standards?
+The connection is not stable and sometimes the card just stops
+talking to anything outside: the connection is not dropped, but
+nothing works (no ping replies). Up/down interface does not help.
 
-If in any way possible, we should support both versions of the firmware.
+Aside from that there were no ill effects noticed.
 
-Regards
+I tried 2.6.27-rc7 and -rc8 with no difference.
 
-Marcel
+Reported to bugzilla as
 
+    http://bugzilla.kernel.org/show_bug.cgi?id=11678
 
