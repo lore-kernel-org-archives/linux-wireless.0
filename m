@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:51881 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753252AbYIROY6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 10:24:58 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so3389386fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 07:24:56 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Date: Thu, 18 Sep 2008 16:24:52 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181519.12366.IvDoorn@gmail.com> <20080918141006.GE1583@khazad-dum.debian.net>
-In-Reply-To: <20080918141006.GE1583@khazad-dum.debian.net>
+Received: from hostap.isc.org ([149.20.54.63]:59695 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751813AbYI3NtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 09:49:09 -0400
+Date: Tue, 30 Sep 2008 16:48:06 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Graf <tgraf@suug.ch>
+Subject: Re: NL80211_CMD_GET_WIPHY reply doesn't fit into nl message buffer
+Message-ID: <20080930134806.GK4853@jm.kir.nu> (sfid-20080930_154913_276404_51709655)
+References: <48E0A65A.2060102@gmail.com> <1222682480.7064.16.camel@johannes.berg> <20080929102021.GE10429@jm.kir.nu> <1222683923.7064.18.camel@johannes.berg> <20080929163147.GC4853@jm.kir.nu> <1222706734.7064.40.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809181624.53050.IvDoorn@gmail.com> (sfid-20080918_162501_151309_C895A64C)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1222706734.7064.40.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
-> On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> > If it is something coming from mac80211, then you do not want
-> > to send a SOFT_BLOCKED event since that will cause all other radios
-> > to be switched off simply because the b43 interface has not been
-> > enabled.
-> 
-> Drivers ARE supposed to be able to set their radio state to their heart's
-> content, without messing with any other devices.  There are no constraints
-> to calls to rfkill_force_state(), other than the current issue that it must
-> not be done from an atomic context.
+On Mon, Sep 29, 2008 at 06:45:34PM +0200, Johannes Berg wrote:
 
-My main point was that when the radio is not enabled because the user
-did something like "iwconfig wlan0 txpower off" then this is not an rfkill
-SOFT_BLOCKED event. Since that command has nothing to do with the
-entire rfkill layer.
+> Probably depends on something about alignment or whatever, not sure. Or
+> you have different hardware and the driver reports different things for
+> different hw? Anyway, it shouldn't wait forever, and my patch fixes
+> that.
 
-When you consider such commands as rfkill events you get wrong behavior
-because it would trigger a SOFT_BLOCK in rfkill which will be send to all
-registered drivers who can disable their radio off as well. And that is
-definately not what you want...
+I was unable to reproduce it and as far as I can tell, I have identical
+hardware from the view point of which channels are supported. Anyway,
+the cleanup/fix is reasonable regardless.
 
-Ivo
+> I see you applied that, it should be ported to the wpa_supplicant driver
+> too, I think.
 
+Yes, done.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
