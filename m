@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:44373 "EHLO
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:37495 "EHLO
 	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbYIPUqK (ORCPT
+	with ESMTP id S1751974AbYI3AFm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 16:46:10 -0400
-Received: by gxk9 with SMTP id 9so28448519gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2008 13:46:09 -0700 (PDT)
-Message-ID: <69e28c910809161346h5c05e235j900463c95551f6f@mail.gmail.com> (sfid-20080916_224614_454160_27AF8FA3)
-Date: Tue, 16 Sep 2008 22:46:08 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iw packaging
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1221596962.9262.12.camel@johannes.berg>
+	Mon, 29 Sep 2008 20:05:42 -0400
+Received: by gxk9 with SMTP id 9so11265326gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 17:05:40 -0700 (PDT)
+Message-ID: <43e72e890809291705k74093658y4843a1a7afc91f69@mail.gmail.com> (sfid-20080930_020546_236504_E5BFF27C)
+Date: Mon, 29 Sep 2008 17:05:40 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Marcel Holtmann" <holtmann@linux.intel.com>
+Subject: Re: Getting country alpha2 on network manager and using it for crda
+Cc: "Dan Williams" <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni.Malinen@atheros.com
+In-Reply-To: <1222732437.1825.31.camel@violet.holtmann.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1221596962.9262.12.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890809260024ob134358me80ae1c169e4da8e@mail.gmail.com>
+	 <1222440218.19895.19.camel@localhost.localdomain>
+	 <1222584975.9600.2.camel@californication>
+	 <20080929183350.GC6203@tesla>
+	 <1222720776.27930.35.camel@localhost.localdomain>
+	 <43e72e890809291354u563b6c68i3a137cc129e65f86@mail.gmail.com>
+	 <1222732437.1825.31.camel@violet.holtmann.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 16, 2008 at 10:29 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi,
+On Mon, Sep 29, 2008 at 4:53 PM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+> Hi Luis,
 >
-> I've just tagged iw version 0.9 (and 0.9.1 after a small build fix)
-> because I think the tool is now actually usable in a limited way, unlike
-> before where it would never properly report errors etc.
+>> > I hesitate to try and specify an LSB-standard file anywhere for this,
+>> > not sure we need that.  NM might want to store this value
+>> > per-connection, or might want to store the value system-wide, or
+>> > whatever.  I don't really see the value in standardizing the location of
+>> > alpha2 config.
+>>
+>> The only reason why I was thinking of having a standard place for it
+>> is that there may be more than one device which can help update the
+>> country based on data it has (GPS, user, etc) and the fact that if we
+>> are going to set this somewhere perhaps some other things can make use
+>> of this as well?
 >
-> Anyone want to pick it up for the various distros?
->
-> johannes
->
+> don't go that way. It will cause to many problems. We can add an option
+> to the wpa_supplicant file if you really wanna store it (for the command
+> line guys).
 
-In fact, we have picked it up long ago for BackTrack 4. I will mail
-Mati Aharoni (irc:muts) to update to this release tag (currently, a
-customized version is included).
+Stuffing it into wpa_supplicant.conf is fine. You're the one who
+suggested a location manager :)
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> Leave the rest to NetworkManager.
+
+Alright.
+
+  Luis
