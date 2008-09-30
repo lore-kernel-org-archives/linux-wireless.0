@@ -1,81 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41899 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126AbYJTIHr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 04:07:47 -0400
-Subject: Re: [PATCH v3] mac80211/drivers: rewrite the rate control API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <1224489844.24677.225.camel@debian.sh.intel.com>
-References: <1223996147.10113.33.camel@johannes.berg>
-	 (sfid-20081014_165703_092655_BE6BA58D) <1224052607.3027.20.camel@johannes.berg>
-	 <1224484940.24677.169.camel@debian.sh.intel.com>
-	 <1224485319.18024.9.camel@johannes.berg>
-	 <1224486368.24677.184.camel@debian.sh.intel.com>
-	 <1224486587.18024.25.camel@johannes.berg>
-	 <1224489844.24677.225.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YztsR1U4FQ/gMRwuw8y7"
-Date: Mon, 20 Oct 2008 10:07:40 +0200
-Message-Id: <1224490060.18024.28.camel@johannes.berg> (sfid-20081020_100757_757770_1AE22354)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:51518 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752444AbYI3WZh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 18:25:37 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Sep 2008 15:25:37 -0700
+Date: Tue, 30 Sep 2008 08:25:24 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v4] mac80211: re-enable aggregation on 2.6.27
+Message-ID: <20080930152524.GA8131@tesla> (sfid-20081001_002557_983526_D4837926)
+References: <1222790548-7391-1-git-send-email-lrodriguez@atheros.com> <1ba2fa240809301318p16bedbdr31fdaea97c3cf3be@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1ba2fa240809301318p16bedbdr31fdaea97c3cf3be@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A quick test indicates it works but the removal is still an issue. We also
+have to make lockdep happy -- one more complaint (even with your v3
+patch). I have another patch I'm going to test now which tries to
+address removal correctly. It doesn't seem we ever del_timer()'d the
+addba_resp_timer in a addition to other cleanups.
 
---=-YztsR1U4FQ/gMRwuw8y7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'll condense the relevant sections of your reply.
 
-On Mon, 2008-10-20 at 16:04 +0800, Zhu Yi wrote:
-> On Mon, 2008-10-20 at 01:09 -0600, Johannes Berg wrote:
-> > Yes, I know that much, but can you tell us how exactly?
->=20
-> I don't know the details either. Will follow up on this.
+On Tue, Sep 30, 2008 at 01:18:46PM -0700, Tomas Winkler wrote:
+> On Tue, Sep 30, 2008 at 7:02 PM, Luis R. Rodriguez
 
-Thanks.
+Note declrations:
 
-> > It would be good to actually report as accurate as possible (up to
-> > MAX_RATES) the retries the firmware will have done. We're going to
-> > export that information to userland in radiotap too.
->=20
-> Sounds like a good idea. The actual number of retried rates should
-> depend on hardware/firmware. But '5' doesn't look like the possible MAX.
+> > +void initiate_aggr_and_timer(struct sta_info *sta, u16 tid, u16 start_seq_num);
+> > +int __ieee80211_start_tx_ba_session(struct ieee80211_local *local,
+> > +                   struct sta_info *sta, u16 tid, u16 *start_seq_num);
 
-Yeah, we don't have more space than for five entries. The question is
-whether the firmware will really go lower for each try, that would seem
-harmful for throughput in most cases. And if it doesn't ever use more
-than five different rates we can obviously add the count... If it does
-use more than five rates then we'll just have to live with imperfect
-reporting I guess.
 
-johannes
+Note parts of the routine that use start_seq_num:
 
---=-YztsR1U4FQ/gMRwuw8y7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> > +void initiate_aggr_and_timer(struct sta_info *sta, u16 tid,
+> > +       u16 start_seq_num)
+> > +{
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+<-- foo -->
 
-iQIcBAABAgAGBQJI/DxJAAoJEKVg1VMiehFYqdcP/ivKJ1ntztEbX+0q5J4B7VE5
-DIlcc5Df01jqPkqIevPOMrm7BDRtx3ir4oUlTXCl9VthxigqFq9lnl5vBWXjN5xI
-X2K/PSg2PreRlGeldPLDrg0vLfFwSVzApnhrWWLMYx/NZdFZu4bQzkrH8FBh9Dxd
-vHPfIP7HHClMgjIvGq/s8RIvWh+eQ3L+XFpjMAPiCoUbz0FTDnDqjU0FEEx5VCMy
-pRXU/pljqacepSZqtWdJKpfmWMHX0KlAvH+lYvjicNcyAZY3XPkZXwp6VwXhXD+Y
-5a/hgOIsOh0t2a2KwKsLds4r8aGq8xDbeU7npACYC5S4lJbb9Y1KGTbg4FGwAQFP
-+d7GaomHpO3vBnwKkJQd7U62oPjZ+PJoI+9eyixD0ggICM34/KyjhrgT7TAzVRSr
-mzBkov5LbcCfhz4OBl1TTImua3YXph6I63rrnK8owFVOeVEnycg1SpOzvh4TbSAf
-+58SAgN4UhERmuKOr3MX5xktbhW4CUYiIBna51Bp1ILrnhD5cjgSmM4cFNrfYgC9
-KgkjSGyPxQR+zguAhSLUiffEfzDCx/np71Pkjfu9PghW6coQW5iSi+xxhPQOBjE5
-IWjazL0FXMhFbiLjWmCET6Smonr7NmK4J5AngTA355YXLkXIQ3ziSm+DMOVyKMXy
-qsnQtPibUpW61HKtZVNP
-=TWcf
------END PGP SIGNATURE-----
+> > +       sta->ampdu_mlme.tid_tx[tid]->ssn = start_seq_num;
 
---=-YztsR1U4FQ/gMRwuw8y7--
+<-- bar -->
 
+> > +}
+
+Note the pointer on u16 *start_seq_num:
+
+> > +int __ieee80211_start_tx_ba_session(struct ieee80211_local *local,
+> > +          struct sta_info *sta, u16 tid, u16 *start_seq_num)
+> >  {
+
+<-- foo -->
+> >        if (local->ops->ampdu_action)
+> > -               ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
+> > -                                               ra, tid, &start_seq_num);
+> > +               ret = local->ops->ampdu_action(local_to_hw(local),
+> > +                                               IEEE80211_AMPDU_TX_START,
+> > +                                               sta->addr, tid, start_seq_num);
+> Doesn't look good, we need to get the sequence number from the driver
+> Tomas
+
+We use u16 *start_seq_num, so yes, we are retrieving it from the driver
+here.
+
+> > +static void __ieee80211_run_ba_session(struct ieee80211_local *local)
+> > +{
+> > +       struct sta_info *sta, *sta_tmp;
+> > +       u8 *state;
+> > +       u16 start_seq_num = 0;
+> > +       int tid, r = -EINVAL;
+> > +
+> > +       ASSERT_RTNL();
+> > +
+> > +       spin_lock_bh(&local->sta_ba_lock);
+> > +       list_for_each_entry_safe(sta, sta_tmp,
+> > +                       &local->sta_ba_session_list, ba_list) {
+> > +               list_del(&sta->ba_list);
+> > +               spin_lock_bh(&sta->lock);
+> > +               for (tid = 0; tid < STA_TID_NUM; tid++) {
+> > +                       state = &sta->ampdu_mlme.tid_state_tx[tid];
+> > +                       r = -EINVAL;
+> > +                       if (*state & HT_AGG_START_PEND_REQ) {
+> > +                               *state &= ~HT_AGG_START_PEND_REQ;
+> > +                               r = __ieee80211_start_tx_ba_session(local,
+> > +                                       sta, tid, &start_seq_num);
+> > +                       }
+> > +                       if (!r)
+> > +                               initiate_aggr_and_timer(sta, tid, start_seq_num);
+> This is rather a strange name for a function,
+
+Yeah, got a better idea? I had originally called it foo_aggr(), I think
+this is a little better.
+
+> > +               }
+> > +               spin_unlock_bh(&sta->lock);
+> Don't think you can hold this lock across the whole loop
+
+I was wondering about that too, but don't see why not, your v3 patch
+changed the order in which this locking was done. I'm moving it back to
+how it was so the local->ops->ampdu_action now runder the same lock too.
+
+I don't think it was locking before under the code which is now
+under initiate_aggr_and_timer() though.
+
+  Luis
