@@ -1,72 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.176]:60812 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887AbYIZENa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 00:13:30 -0400
-Received: by el-out-1112.google.com with SMTP id z25so179276ele.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 21:13:27 -0700 (PDT)
-Message-ID: <43e72e890809252113h624a8d91jd859935ae5afed10@mail.gmail.com> (sfid-20080926_061334_216778_3ED1A00E)
-Date: Thu, 25 Sep 2008 21:13:27 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: [PATCH] iwl3945: added channel sysfs entry
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"Dan Williams" <dcbw@redhat.com>
-In-Reply-To: <1222401242.2510.519.camel@debian.sh.intel.com>
+Received: from nbd.name ([88.198.39.176]:34717 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752460AbYI3LY0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 07:24:26 -0400
+Message-ID: <48E20C5B.4000900@openwrt.org> (sfid-20080930_132429_735969_4A95D9C0)
+Date: Tue, 30 Sep 2008 13:24:11 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1222235866-19805-1-git-send-email-yi.zhu@intel.com>
-	 <1222245882.18015.62.camel@johannes.berg>
-	 <1222328058.2510.470.camel@debian.sh.intel.com>
-	 <1222334592.10563.59.camel@johannes.berg>
-	 <1222401242.2510.519.camel@debian.sh.intel.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 2/3] mac80211: add multi-rate retry support
+References: <48E20B7C.2040405@openwrt.org> <48E20BFC.6040904@openwrt.org>
+In-Reply-To: <48E20BFC.6040904@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 25, 2008 at 8:54 PM, Zhu Yi <yi.zhu@intel.com> wrote:
-> On Thu, 2008-09-25 at 03:23 -0600, Johannes Berg wrote:
->> Not that I understand why you need that since iw shows all channels
->> you
->> are registering (albeit with possibly a few more flags like
->> "disabled"),
->> but yeah, if anything all this stuff should be in debugfs.
->
-> The real user for the function is the automated test cases of our
-> validation team running nightly. Greppig dmesg is not reliable and iw is
-> not mature enough (at least not included in major distros). We will move
-> it to debugfs for now. After iw is as common as iwconfig, we will
-> eventually remove this.
+This patch adjusts the rate control API to allow multi-rate retry
+if supported by the driver. The ieee80211_hw struct specifies how
+many alternate rate selections the driver supports.
 
-What a distribution carries has no implications as to what you can
-install on your own environment. We have both iw and crda installed in
-our test environment, but that's also because we like to focus on
-wireless-testing.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-If you do development based on 2 previous releases essentially you
-will get complaints on the type of patches you post based on this old
-stuff.
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -292,6 +292,20 @@
+ #define IEEE80211_TX_INFO_DRIVER_DATA_PTRS \
+ 	(IEEE80211_TX_INFO_DRIVER_DATA_SIZE / sizeof(void *))
+ 
++/* maximum number of alternate rate retry stages */
++#define IEEE80211_TX_MAX_ALTRATE	3
++
++/**
++ * struct ieee80211_tx_altrate - alternate rate selection/status
++ *
++ * @rate_idx: rate index to attempt to send with
++ * @limit: number of retries before fallback
++ */
++struct ieee80211_tx_altrate {
++	s8 rate_idx;
++	u8 limit;
++};
++
+ /**
+  * struct ieee80211_tx_info - skb transmit information
+  *
+@@ -335,12 +349,14 @@
+ 			struct ieee80211_key_conf *hw_key;
+ 			struct ieee80211_sta *sta;
+ 			unsigned long jiffies;
+-			s8 rts_cts_rate_idx, alt_retry_rate_idx;
++			s8 rts_cts_rate_idx;
+ 			u8 retry_limit;
++			struct ieee80211_tx_altrate retries[IEEE80211_TX_MAX_ALTRATE];
+ 		} control;
+ 		struct {
+ 			u64 ampdu_ack_map;
+ 			int ack_signal;
++			struct ieee80211_tx_altrate retries[IEEE80211_TX_MAX_ALTRATE + 1];
+ 			u8 retry_count;
+ 			bool excessive_retries;
+ 			u8 ampdu_ack_len;
+@@ -828,6 +844,9 @@
+  *	within &struct ieee80211_vif.
+  * @sta_data_size: size (in bytes) of the drv_priv data area
+  *	within &struct ieee80211_sta.
++ *
++ * @max_altrates: maximum number of alternate rate retry stages
++ * @max_altrate_tries: maximum number of tries for each stage
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -844,6 +863,8 @@
+ 	u16 ampdu_queues;
+ 	u16 max_listen_interval;
+ 	s8 max_signal;
++	u8 max_altrates;
++	u8 max_altrate_tries;
+ };
+ 
+ struct ieee80211_hw *wiphy_to_hw(struct wiphy *wiphy);
+@@ -900,11 +921,11 @@
+ 
+ static inline struct ieee80211_rate *
+ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
+-			     const struct ieee80211_tx_info *c)
++			     const struct ieee80211_tx_info *c, int idx)
+ {
+-	if (c->control.alt_retry_rate_idx < 0)
++	if (c->control.retries[idx].rate_idx < 0)
+ 		return NULL;
+-	return &hw->wiphy->bands[c->band]->bitrates[c->control.alt_retry_rate_idx];
++	return &hw->wiphy->bands[c->band]->bitrates[c->control.retries[idx].rate_idx];
+ }
+ 
+ /**
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -208,7 +208,7 @@
+ 	txrate = ieee80211_get_tx_rate(dev->wl->hw, info);
+ 	rate = txrate ? txrate->hw_value : B43_CCK_RATE_1MB;
+ 	rate_ofdm = b43_is_ofdm_rate(rate);
+-	fbrate = ieee80211_get_alt_retry_rate(dev->wl->hw, info) ? : txrate;
++	fbrate = ieee80211_get_alt_retry_rate(dev->wl->hw, info, 0) ? : txrate;
+ 	rate_fb = fbrate->hw_value;
+ 	rate_fb_ofdm = b43_is_ofdm_rate(rate_fb);
+ 
+--- a/drivers/net/wireless/b43legacy/xmit.c
++++ b/drivers/net/wireless/b43legacy/xmit.c
+@@ -210,7 +210,7 @@
+ 
+ 	rate = tx_rate->hw_value;
+ 	rate_ofdm = b43legacy_is_ofdm_rate(rate);
+-	rate_fb = ieee80211_get_alt_retry_rate(dev->wl->hw, info) ? : tx_rate;
++	rate_fb = ieee80211_get_alt_retry_rate(dev->wl->hw, info, 0) ? : tx_rate;
+ 	rate_fb_ofdm = b43legacy_is_ofdm_rate(rate_fb->hw_value);
+ 
+ 	txhdr->mac_frame_ctl = wlhdr->frame_control;
+--- a/drivers/net/wireless/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl8180_dev.c
+@@ -292,8 +292,8 @@
+ 	entry->plcp_len = cpu_to_le16(plcp_len);
+ 	entry->tx_buf = cpu_to_le32(mapping);
+ 	entry->frame_len = cpu_to_le32(skb->len);
+-	entry->flags2 = info->control.alt_retry_rate_idx >= 0 ?
+-		ieee80211_get_alt_retry_rate(dev, info)->bitrate << 4 : 0;
++	entry->flags2 = info->control.retries[0].rate_idx >= 0 ?
++		ieee80211_get_alt_retry_rate(dev, info, 0)->bitrate << 4 : 0;
+ 	entry->retry_limit = info->control.retry_limit;
+ 	entry->flags = cpu_to_le32(tx_flags);
+ 	__skb_queue_tail(&ring->queue, skb);
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -454,15 +454,16 @@
+ 		if (unlikely(rsel.probe_idx >= 0)) {
+ 			info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+ 			tx->flags |= IEEE80211_TX_PROBE_LAST_FRAG;
+-			info->control.alt_retry_rate_idx = tx->rate_idx;
++			info->control.retries[0].rate_idx = tx->rate_idx;
++			info->control.retries[0].limit = tx->local->hw.max_altrate_tries;
+ 			tx->rate_idx = rsel.probe_idx;
+-		} else
+-			info->control.alt_retry_rate_idx = -1;
++		} else if (info->control.retries[0].limit == 0)
++			info->control.retries[0].rate_idx = -1;
+ 
+ 		if (unlikely(tx->rate_idx < 0))
+ 			return TX_DROP;
+ 	} else
+-		info->control.alt_retry_rate_idx = -1;
++		info->control.retries[0].rate_idx = -1;
+ 
+ 	if (tx->sdata->bss_conf.use_cts_prot &&
+ 	    (tx->flags & IEEE80211_TX_FRAGMENTED) && (rsel.nonerp_idx >= 0)) {
+@@ -521,7 +522,7 @@
+ 		 * frames.
+ 		 * TODO: The last fragment could still use multiple retry
+ 		 * rates. */
+-		info->control.alt_retry_rate_idx = -1;
++		info->control.retries[0].rate_idx = -1;
+ 	}
+ 
+ 	/* Use CTS protection for unicast frames sent using extended rates if
+@@ -551,7 +552,7 @@
+ 		int idx;
+ 
+ 		/* Do not use multiple retry rates when using RTS/CTS */
+-		info->control.alt_retry_rate_idx = -1;
++		info->control.retries[0].rate_idx = -1;
+ 
+ 		/* Use min(data rate, max base rate) as CTS/RTS rate */
+ 		rate = &sband->bitrates[tx->rate_idx];
 
->> There's also
->> this little fact that this channel list shouldn't ever get used, you
->> should be (and afaik are since I fixed it) using what the regdomain is
->> enforcing, and you're already printing the channel list when enough
->> debugging flags are set on driver load.
->
-> This is used for debugging especially during the time regdomain is under
-> development. I've received quite a few bug reports that is due to
-> CONFIG_WIRELESS_OLD_REGULATORY is not enabled. I need at least a way to
-> tell the users this is due to your misconfig your regdomain or your
-> hardware is not capable to work on that channel.
-
-CONFIG_WIRELESS_OLD_REGULATORY is a temporary solution, the right
-solution for you is to build the regulatory domain with the provided
-API as discussed at OLS. Additionally distributions can start picking
-up iw and crda. I can also see NetworkManager asking the kernel to set
-the regulatory domain just as with iw, based on the user's defined
-country somewhere.
-
-  Luis
