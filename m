@@ -1,61 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:38552 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752460AbYIQOIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 10:08:30 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V2] b43: Issue warning when RFKILL_INPUT is not enabled
-Date: Wed, 17 Sep 2008 16:07:55 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48d00f81./8rb7yGSb9PmJx+R%Larry.Finger@lwfinger.net>
-In-Reply-To: <48d00f81./8rb7yGSb9PmJx+R%Larry.Finger@lwfinger.net>
+Received: from nf-out-0910.google.com ([64.233.182.189]:39191 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994AbYI3QeI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 12:34:08 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so51528nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Sep 2008 09:34:04 -0700 (PDT)
+Message-ID: <6bc534830809300934w13e88af0me7e19bd287f17af7@mail.gmail.com> (sfid-20080930_183413_039736_A48C4E79)
+Date: Tue, 30 Sep 2008 20:34:04 +0400
+From: "Artem Antonov" <artem.v.antonov@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC/T] b43: to few loop tries in do_dummy_tx
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"Broadcom Linux" <bcm43xx-dev@lists.berlios.de>
+In-Reply-To: <48E11F1E.50705@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809171607.55403.mb@bu3sch.de> (sfid-20080917_160841_289661_99A9C74A)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48E11F1E.50705@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 16 September 2008 21:56:49 Larry Finger wrote:
-> If the system is misconfigured with CONFIG_RFKILL set but CONFIG_RFKILL_INPUT
-> not set, the built-in radio LEDs will not work. In the current code, no warning
-> is issued.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> John,
-> 
-> This is material for the next merge.
+I've tested it with my bcm4318(asus wl-500gP). But there are still PHY
+transmission errors. So there should be some more reasons of these
+errors :)
 
+Best regards/
 
-ACK
-
-> Larry
-> 
-> 
-> Index: wireless-testing/drivers/net/wireless/b43/rfkill.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/rfkill.c
-> +++ wireless-testing/drivers/net/wireless/b43/rfkill.c
-> @@ -188,6 +188,11 @@ void b43_rfkill_init(struct b43_wldev *d
->  			"The built-in radio LED will not work.\n");
->  #endif /* CONFIG_RFKILL_INPUT */
->  
-> +#if !defined(CONFIG_RFKILL_INPUT) && !defined(CONFIG_RFKILL_INPUT_MODULE)
-> +	b43warn(wl, "The rfkill-input subsystem is not available. "
-> +		"The built-in radio LED will not work.\n");
-> +#endif
-> +
->  	err = input_register_polled_device(rfk->poll_dev);
->  	if (err)
->  		goto err_unreg_rfk;
-> 
-> 
-
-
-
--- 
-Greetings Michael.
+2008/9/29, Larry Finger <Larry.Finger@lwfinger.net>:
+> Michael,
+>
+..........
