@@ -1,77 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:46493 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753705AbYISSFg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 14:05:36 -0400
-Received: by gxk9 with SMTP id 9so1051569gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 11:05:35 -0700 (PDT)
-Message-ID: <43e72e890809191105p26841666l50a4a139a7177590@mail.gmail.com> (sfid-20080919_200551_727232_69BB6929)
-Date: Fri, 19 Sep 2008 11:05:35 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: Can't connect to AP with hidden essid with 2.6.27-rc6
-Cc: Celejar <celejar@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <48D3CFBC.6070504@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:49585 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753909AbYI3OWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 10:22:50 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Subject: Re: [RFC/T] b43: to few loop tries in do_dummy_tx
+Date: Tue, 30 Sep 2008 16:22:25 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Peter Stuge <peter@stuge.se>
+References: <48E11F1E.50705@lwfinger.net> <200809301528.26304.mb@bu3sch.de> <200809301611.19035.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200809301611.19035.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080916220904.75283811.celejar@gmail.com>
-	 <48D06B9E.70307@lwfinger.net>
-	 <20080918004509.23a4bdc9.celejar@gmail.com>
-	 <48D1E42C.70904@lwfinger.net>
-	 <20080918015202.8c5f6381.celejar@gmail.com>
-	 <48D24911.80101@lwfinger.net>
-	 <20080918160957.94ea063d.celejar@gmail.com>
-	 <48D2D728.6070105@lwfinger.net>
-	 <20080919001050.d9ed273a.celejar@gmail.com>
-	 <48D3CFBC.6070504@lwfinger.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809301622.26024.mb@bu3sch.de> (sfid-20080930_162314_621098_B0CF9650)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 9:13 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On Tuesday 30 September 2008 16:11:18 Holger Schurig wrote:
+> > The b43 and b43-legacy driver are _based_ on these
+> > specifications. There are no other specs available.
+> 
+> Can it be the case that the binary windows driver the spec 
 
-> I do not think a bisection is necessary. Your successful test of the
-> old regulatory code suggests to me that there is some kind of problem
-> with the CRDA database.
+They didn't use a windows driver.
 
-BTW the "old regulatory code" is actually not "old regulatory code"
-but instead static regulatory definitions slapped in the kernel just
-as they were before but under the new regulatory infrastructure guise.
+> producer analyzed used a different PCI settings?  And that 
+> therefore the delays/access-patterns in the binary driver work 
+> as expected *in their environment*, but that Linux might have 
+> programmed the PCI bus/controller differently and that therefore 
+> the identical approach fails (sometimes) ???
 
-> Luis - to fill you in, he can connect to an AP with a hidden essid
-> using the old regulatory code, but not using CRDA. There seems to be
-> some critical difference between them.
+Unlikely.
 
-Thanks for bringing this up Larry.
-
-If by old regulatory code you mean with CONFIG_WIRELESS_OLD_REGULATORY
-then I would narrow the search down to testing as follows:
-
---- Without crda:
-
-mv /sbin/crda /sbin/crda-foo
-sudo rmmod your_driver mac80211 cfg80211
-sudo modprobe your_driver
-
-# Check channels using iw
-
---- With crda:
-mv /sbin/crda-foo /sbin/crda
-sudo rmmod your_driver mac80211 cfg80211
-sudo modprobe your_driver
-
-# check channels using iw
----
-
-By default when CONFIG_WIRELESS_OLD_REGULATORY is set the built-in
-"US" static regulatory domain is used. If crda is present though a new
-regulatory domain will be updated onto the kernel, so we'll get the
-new regulatory domain built by crda from the original db.txt. Without
-crda present the static regulatory domain shall be used.
-
-What frequency is the AP on?
-
-  Luis
+-- 
+Greetings Michael.
