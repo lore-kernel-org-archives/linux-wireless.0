@@ -1,41 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56175 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086AbYICH7K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 03:59:10 -0400
-Subject: Re: [PATCH 00/11] iwlwifi driver fixes for 2.6.27
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080902210542.GF3050@tuxdriver.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <20080902210542.GF3050@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 03 Sep 2008 09:59:18 +0200
-Message-Id: <1220428758.6714.10.camel@californication> (sfid-20080903_095915_318634_DA5DF49B)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:49224 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751767AbYI3OVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 10:21:54 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Peter Stuge <peter@stuge.se>
+Subject: Re: [RFC/T] b43: to few loop tries in do_dummy_tx
+Date: Tue, 30 Sep 2008 16:21:30 +0200
+Cc: bcm43xx-dev@lists.berlios.de,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48E11F1E.50705@lwfinger.net> <200809301528.26304.mb@bu3sch.de> <20080930141353.16996.qmail@stuge.se>
+In-Reply-To: <20080930141353.16996.qmail@stuge.se>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809301621.30913.mb@bu3sch.de> (sfid-20080930_162157_832288_202D9B3E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tuesday 30 September 2008 16:13:53 Peter Stuge wrote:
+> At this point, if there are only/mostly benefits, I don't see why
+> deviating from the specs is bad - after all they "only" document
+> another driver, right?
 
-> Thanks to Marcel for going through this stack of patches and
-> reinforcing the point about offering better changelogs and about
-> giving more careful consideration to differentiating fixes from
-> features/cleanups/etc.
-> 
-> FWIW, I think that "regressions only" is a bit too strict for a hard
-> rule.  Also, I think that many of these patches are still mergeable
-> for 2.6.27 if we are given more thorough explanations of the actual
-> problems they are meant to address and the actual solutions they
-> apply to those problems.
+The past taught us that deviations from the specs are almost certainly
+hidden bugs somewhere else. We had that dozens of times.
+In this case, however, I think it's not the case.
 
-after Tomas explanation and the discussion, I agree with the inclusion
-into 2.6.27. The newly submitted series was better.
-
-Regards
-
-Marcel
-
-
+-- 
+Greetings Michael.
