@@ -1,74 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.179]:6293 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683AbYIWHWt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 03:22:49 -0400
-Received: by ik-out-1112.google.com with SMTP id c30so1099850ika.5
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 00:22:47 -0700 (PDT)
-Message-ID: <f488382f0809230022v582df76esa8df8c747ab600df@mail.gmail.com> (sfid-20080923_092254_319875_9AC549C4)
-Date: Tue, 23 Sep 2008 00:22:47 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Senthilkumar Balasubramanian"
-	<Senthilkumar.Balasubramanian@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Ingo Molnar" <mingo@elte.hu>
-In-Reply-To: <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
-References: <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
-	 <f488382f0809201422rdabeff4g435bf3d4a7e9fa3@mail.gmail.com>
-	 <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com>
-	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
-	 <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com>
-	 <20080922065453.GD19580@tesla>
-	 <f488382f0809220026u9afa355g1ff2cc7a3fe88333@mail.gmail.com>
-	 <20080922080632.GA20446@tesla>
-	 <f488382f0809220811y46e9daf3r5db5a7c76df87800@mail.gmail.com>
-	 <43e72e890809220901y162636fu63ed133f0a0c235@mail.gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:9233 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752938AbYI3UHb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 16:07:31 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/2 V2] mac80211: send action frame when toggling SM PS mode
+Date: Tue, 30 Sep 2008 23:07:24 +0300
+Message-Id: <1222805245-31166-1-git-send-email-tomas.winkler@intel.com> (sfid-20080930_220735_828942_44BB6C98)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBTZXAgMjIsIDIwMDggYXQgOTowMSBBTSwgTHVpcyBSLiBSb2RyaWd1ZXoKPGxyb2Ry
-aWd1ZXpAYXRoZXJvcy5jb20+IHdyb3RlOgo+IE9uIE1vbiwgU2VwIDIyLCAyMDA4IGF0IDg6MTEg
-QU0sIFN0ZXZlbiBOb29uYW4gPHN0ZXZlbkB1cGxpbmtsYWJzLm5ldD4gd3JvdGU6Cj4+IE9uIE1v
-biwgU2VwIDIyLCAyMDA4IGF0IDE6MDYgQU0sIEx1aXMgUi4gUm9kcmlndWV6Cj4+IDxscm9kcmln
-dWV6QGF0aGVyb3MuY29tPiB3cm90ZToKPj4+IFBsZWFzZSB0ZXN0IHRoZSBmb2xsb3dpbmcgcGF0
-Y2guCj4+Pgo+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDlrL2NvcmUu
-YyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDlrL2NvcmUuYwo+Pj4gaW5kZXggYzI2MmVmMi4u
-OWE1MTczOSAxMDA2NDQKPj4+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDlrL2NvcmUu
-Ywo+Pj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoOWsvY29yZS5jCj4+PiBAQCAtNjgx
-LDEwICs2ODEsMTIgQEAgaW50IGF0aF9vcGVuKHN0cnVjdCBhdGhfc29mdGMgKnNjLCBzdHJ1Y3Qg
-YXRoOWtfY2hhbm5lbCAqaW5pdGlhbF9jaGFuKQo+Pj4gICAgICAgICAqIEVuYWJsZSBNSUIgaW50
-ZXJydXB0cyB3aGVuIHRoZXJlIGFyZSBoYXJkd2FyZSBwaHkgY291bnRlcnMuCj4+PiAgICAgICAg
-ICogTm90ZSB3ZSBvbmx5IGRvIHRoaXMgKGF0IHRoZSBtb21lbnQpIGZvciBzdGF0aW9uIG1vZGUu
-Cj4+PiAgICAgICAgICovCj4+PiArI2lmIDAKPj4+ICAgICAgICBpZiAoYXRoOWtfaHdfcGh5Y291
-bnRlcnMoYWgpICYmCj4+PiAgICAgICAgICAgICgoc2MtPnNjX2FoLT5haF9vcG1vZGUgPT0gQVRI
-OUtfTV9TVEEpIHx8Cj4+PiAgICAgICAgICAgICAoc2MtPnNjX2FoLT5haF9vcG1vZGUgPT0gQVRI
-OUtfTV9JQlNTKSkpCj4+PiAgICAgICAgICAgICAgICBzYy0+c2NfaW1hc2sgfD0gQVRIOUtfSU5U
-X01JQjsKPj4+ICsjZW5kaWYKPj4+ICAgICAgICAvKgo+Pj4gICAgICAgICAqIFNvbWUgaGFyZHdh
-cmUgcHJvY2Vzc2VzIHRoZSBUSU0gSUUgYW5kIGZpcmVzIGFuCj4+PiAgICAgICAgICogaW50ZXJy
-dXB0IHdoZW4gdGhlIFRJTSBiaXQgaXMgc2V0LiAgRm9yIGhhcmR3YXJlCj4+Pgo+Pgo+PiBJdCBk
-aWRuJ3QgYXBwbHkgdG8gLXJjNywgYnV0IEkgbWFuYWdlZCB0byBhcHBseSBpdCBtYW51YWxseQo+
-PiAoYXBwYXJlbnRseSB5b3UgbWFkZSB0aGlzIGZvciB3aXJlbGVzcy10ZXN0aW5nPykgYW5kIGFk
-ZGVkIHRoZSAjaWYgMC4KPj4gQWZ0ZXIgNyBob3VycyB1cHRpbWUgd2l0aCB0aGUgZHJpdmVyLCBu
-byBhcHBhcmVudCBpbnRlcnJ1cHQgc3Rvcm0uCj4+Cj4+IEknbGwgZG8gbW9yZSB0aG9yb3VnaCB0
-ZXN0aW5nIGxhdGVyLCBidXQgSSBoYXZlIGEgMyBob3VyIGRyaXZlIHRvZGF5LAo+PiBhbmQgc29t
-ZSBwYWNraW5nIHRvIGRvLCBzbyBpdCdsbCBuZWVkIHRvIHdhaXQgYSBiaXQuCj4KPiBZZWFoIEkg
-ZGlkIGl0IGZvciB3aXJlbGVzcy10ZXN0aW5nLiBHb29kIHRvIGhlYXIgdGhpcyBzbyBmYXIgaGFz
-Cj4gc29sdmVkIHRoZSBpc3N1ZS4gSSdsbCBwb3J0IGl0IHRvIDI3IGFuZCBwb3N0IGl0IG9uY2Ug
-SSBnZXQgeW91cgo+IGJsZXNzaW5ncyB0aGF0IHRoaXMgZml4ZWQgaXQgYnkgYSBUZXN0ZWQtYnku
-Cj4KCk9rYXkuIEknbSBpbiBTZWF0dGxlIG5vdy4KClllcywgaXQgc29sdmVkIHRoZSBpc3N1ZSwg
-YnV0IHN1cmVseSBhbiAjaWYgMCBpc24ndCBhIHByb3BlciBzb2x1dGlvbi4KV2hhdCdzIHRoZSBh
-Y3R1YWwgYnVnIGhlcmU/IEknbSBhZnJhaWQgdGhlIG1lYW5pbmcgb2Ygd2hhdCdzIGdvaW5nIG9u
-CmhlcmUgaXNuJ3QgZXhhY3RseSBpbnR1aXRpdmUuCgpBbHNvLCBJJ20gZG9pbmcgYW4gOCBob3Vy
-IHJ1biB3aXRoIHRoaXMgcGF0Y2ggdG9uaWdodC4gTWF5YmUgbW9yZSwKZGVwZW5kcyBvbiB3aGVu
-IEkgd2FrZSB1cC4gOykKCkkgdGhpbmsgaWYgdGhpcyByZXNvbHZlcyB0aGUgaXNzdWUgb24gdHdv
-IHNlcGFyYXRlIJc4IGhvdXIgcnVucywgaXQKc2hvdWxkIGJlIGNvbnNpZGVyZWQgdGhlIHNvbHV0
-aW9uIHRvIHRoZSBpc3N1ZSwgdW5sZXNzIGl0IHJlc3VyZmFjZXMuCgotIFN0ZXZlbgo=
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+
+This patch makes mac80211 able to send action frames when toggling
+(SM PS) Spacial Multiplexing Power Save mode.
+
+Examples:
+1.
+A driver in order to lower power consumption may choose to close some of RX chains
+in PS mode and needs to announce to AP that a RTS frame is need in order to wake all
+RX chains (SM_PS_DYNAMIC), on other hand SM PS can be disabled in CAM mode or if HW is able
+to wake all chains without RTS frame and thus reducing traffic overhead.
+
+2.
+iwlwifi can call this function when it detects that only
+one antenna can effectively receive then SM PS mode is set to STATIC and
+AP is asked not to send MIMO rates packets at all.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/linux/ieee80211.h |   14 +++++++-
+ include/net/mac80211.h    |   10 ++++++
+ net/mac80211/ht.c         |   79 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 102 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 14126bc..d0bd612 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -623,6 +623,10 @@ struct ieee80211_mgmt {
+ 				} __attribute__((packed)) addba_resp;
+ 				struct{
+ 					u8 action_code;
++					u8 ps_ctrl;
++				} __attribute__((packed)) sm_ps;
++				struct{
++					u8 action_code;
+ 					__le16 params;
+ 					__le16 reason_code;
+ 				} __attribute__((packed)) delba;
+@@ -759,12 +763,14 @@ struct ieee80211_ht_addt_info {
+ #define IEEE80211_MIN_AMPDU_BUF 0x8
+ #define IEEE80211_MAX_AMPDU_BUF 0x40
+ 
+-
+ /* Spatial Multiplexing Power Save Modes */
+ #define WLAN_HT_CAP_SM_PS_STATIC	0
+ #define WLAN_HT_CAP_SM_PS_DYNAMIC	1
+ #define WLAN_HT_CAP_SM_PS_INVALID	2
+ #define WLAN_HT_CAP_SM_PS_DISABLED	3
++/* Spatial Multiplexing control bits */
++#define IEEE80211_SM_PS_ENABLE  0x1
++#define IEEE80211_SM_PS_DYNAMIC 0x2
+ 
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+@@ -964,6 +970,7 @@ enum ieee80211_category {
+ 	WLAN_CATEGORY_QOS = 1,
+ 	WLAN_CATEGORY_DLS = 2,
+ 	WLAN_CATEGORY_BACK = 3,
++	WLAN_CATEGORY_HT = 7,
+ 	WLAN_CATEGORY_WMM = 17,
+ };
+ 
+@@ -976,6 +983,11 @@ enum ieee80211_spectrum_mgmt_actioncode {
+ 	WLAN_ACTION_SPCT_CHL_SWITCH = 4,
+ };
+ 
++/* HT action code */
++enum ieee80211_ht_actioncode {
++	WLAN_ACTION_SM_PS = 1,
++};
++
+ /* BACK action code */
+ enum ieee80211_back_actioncode {
+ 	WLAN_ACTION_ADDBA_REQ = 0,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f5f5b1f..f15e495 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1868,4 +1868,14 @@ rate_lowest_index(struct ieee80211_supported_band *sband,
+ int ieee80211_rate_control_register(struct rate_control_ops *ops);
+ void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
+ 
++/**
++ * ieee80211_send_sm_ps_update - send SM Power Save Action frame
++ * @hw: pointer as obtained from ieee80211_alloc_hw().
++ * @new_mode: new SM Power Save mode WLAN_HT_CAP_SM_PS_*
++ *
++ * This function must be called by low level driver to inform AP about change
++ * in SM Power Save state.
++ */
++void ieee80211_sm_ps_update(struct ieee80211_hw *hw, u8 new_mode);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index dc7d9a3..e468137 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -990,3 +990,82 @@ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
+ 					     WLAN_BACK_RECIPIENT);
+ 	}
+ }
++
++static void ieee80211_send_sm_ps(struct ieee80211_sub_if_data *sdata, u8 mode)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_mgmt *mgmt;
++	struct sk_buff *skb;
++	DECLARE_MAC_BUF(mac);
++
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++	struct net_device *dev = sdata->dev;
++
++	/* Implemented for STA only */
++	if (sdata->vif.type != NL80211_IFTYPE_STATION)
++		return;
++
++	skb = dev_alloc_skb(sizeof(*mgmt) +
++		local->hw.extra_tx_headroom);
++
++	if (!skb) {
++		printk(KERN_ERR "%s: failed to allocate buffer "
++			"for SM_PS frame\n", dev->name);
++		return;
++	}
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
++	memset(mgmt, 0, 24);
++	memcpy(mgmt->da, ifsta->bssid, ETH_ALEN);
++	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
++	memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
++
++	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					IEEE80211_STYPE_ACTION);
++
++	skb_put(skb, 1 + sizeof(mgmt->u.action.u.sm_ps));
++
++	mgmt->u.action.category = WLAN_CATEGORY_HT;
++	mgmt->u.action.u.sm_ps.action_code = WLAN_ACTION_SM_PS;
++
++	switch (mode) {
++
++	case  WLAN_HT_CAP_SM_PS_DISABLED:
++		mgmt->u.action.u.sm_ps.ps_ctrl &=
++			~(IEEE80211_SM_PS_ENABLE |
++			  IEEE80211_SM_PS_DYNAMIC);
++		break;
++	case  WLAN_HT_CAP_SM_PS_DYNAMIC:
++		mgmt->u.action.u.sm_ps.ps_ctrl |=
++			IEEE80211_SM_PS_ENABLE |
++			IEEE80211_SM_PS_DYNAMIC;
++		break;
++	case  WLAN_HT_CAP_SM_PS_STATIC:
++		mgmt->u.action.u.sm_ps.ps_ctrl |=
++			IEEE80211_SM_PS_ENABLE;
++		mgmt->u.action.u.sm_ps.ps_ctrl &=
++			~IEEE80211_SM_PS_DYNAMIC;
++		break;
++	default:
++		printk(KERN_DEBUG "%s: invalid power save mode\n",
++				dev->name);
++		WARN_ON(1);
++	}
++
++	if (ifsta->flags & IEEE80211_STA_ASSOCIATED)
++		ieee80211_tx_skb(sdata, skb, 0);
++}
++
++void ieee80211_sm_ps_update(struct ieee80211_hw *hw, u8 new_mode)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		ieee80211_send_sm_ps(sdata, new_mode);
++	}
++	rcu_read_unlock();
++}
++EXPORT_SYMBOL(ieee80211_sm_ps_update);
++
+-- 
+1.5.4.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
