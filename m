@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43556 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbYIPJKN (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:17963 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752208AbYI3LIH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 05:10:13 -0400
-Message-ID: <b2d017be9e6908538faef3d96845500c.squirrel@secure.sipsolutions.net>
-In-Reply-To: <877i9czdjd.fsf@nokia.com>
-References: <200809151416.07552.hschaa@suse.de>
-    <200809151429.46638.hschaa@suse.de>
-    <1221494383.3700.52.camel@johannes.berg>
-    <200809151835.03786.hschaa@suse.de> <877i9czdjd.fsf@nokia.com>
-Date: Tue, 16 Sep 2008 11:10:10 +0200 (CEST)
-Subject: Re: [RFC] Implement basic background scanning
-From: "Johannes Berg" <johannes@sipsolutions.net>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Cc: "Helmut Schaa" <hschaa@suse.de>, linux-wireless@vger.kernel.org
+	Tue, 30 Sep 2008 07:08:07 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Problem with Libertas USB8388 WLAN card firmware
+Date: Tue, 30 Sep 2008 13:07:59 +0200
+Cc: "Anadi Mishra" <reachanadi@gmail.com>
+References: <e001a6370809150258t10873497jcf04e68005db566b@mail.gmail.com> <200809301018.31678.hs4233@mail.mn-solutions.de> <e001a6370809300234j7f84a9f0j50213e9912dd5c08@mail.gmail.com>
+In-Reply-To: <e001a6370809300234j7f84a9f0j50213e9912dd5c08@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809301307.59344.hs4233@mail.mn-solutions.de> (sfid-20080930_130812_815609_E7E65084)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> Helmut Schaa <hschaa@suse.de> writes:
->
->>> This doesn't play well at all with hardware assisted scan as far as I
->>> can tell.
->>
->> Correct. The patch only adapts software scan code. The hardware
->> assisted scan is not touched at all but should also not be affected
->> in an odd way.
->
-> I would guess that some firmwares support similar scanning in
-> hardware. In the future we might add support for background scanning
-> in hardware with a flag in hw_scan(), or something like that.
+> regarding rest of the things u pointed out, its all greek to
+> me (I am noob). But could u plz tell me from where can i get
+> the firmware details of the card
+> USB8388??
 
-I don't want to see this implemented without taking into account hw scan
-offload from the start.
+I don't think that you have a firmware problem.
 
-johannes
+Probably some compiler / alignment issue.
+
+Result codes from the firmware are 16 bit, but 0x160000 doesn't 
+fit into an 16 bits. So you need to search why your 
+compiler/hardware creates 0x160000 out of two transferred bytes. 
+But *ANY* firmware for the 8388 chips returns the result as 16 
+bits, that is two bytes. If you get bogus / hosed result, you 
+have a problem there. And using a different firmware won't help 
+you there. There is an underlying problem that you need to solve 
+first.
+
+
+BTW: you can get the firmware specification via this driver 
+portal: http://wireless.kernel.org/en/users/Drivers/libertas
