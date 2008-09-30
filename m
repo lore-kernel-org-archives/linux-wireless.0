@@ -1,70 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bluegiga.fi ([194.100.31.45]:61963 "EHLO darkblue.bluegiga.com"
+Received: from nbd.name ([88.198.39.176]:48782 "EHLO ds10.mine.nu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750908AbYISJIS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 05:08:18 -0400
-Subject: Re: ACK matching [was: TX status reporting with help of an ack
-	queue]
-From: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
-	kune@deine-taler.de
-In-Reply-To: <1221776990.4563.19.camel@localhost>
-References: <1221494693.14102.22.camel@virkkmi-linux>
-	 <1221505251.4511.77.camel@localhost>
-	 <1221541089.14102.44.camel@virkkmi-linux>
-	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
-	 <1221776990.4563.19.camel@localhost>
-Content-Type: text/plain
-Date: Fri, 19 Sep 2008 12:08:14 +0300
-Message-Id: <1221815294.19539.15.camel@virkkmi-linux> (sfid-20080919_110822_128934_95B1985A)
-Mime-Version: 1.0
+	id S1752193AbYI3Jsk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 05:48:40 -0400
+Received: from 16.121.113.82.net.de.o2.com ([82.113.121.16] helo=pi.local)
+	by ds10.mine.nu with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <nbd@openwrt.org>)
+	id 1KkbqO-0003Eq-0t
+	for linux-wireless@vger.kernel.org; Tue, 30 Sep 2008 11:48:38 +0200
+Message-ID: <48E1F5E9.3030605@openwrt.org> (sfid-20080930_114842_976999_1E87EB19)
+Date: Tue, 30 Sep 2008 11:48:25 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath5k: implement multi-rate retry and fix tx status processing
+References: <48E1F554.5030700@openwrt.org>
+In-Reply-To: <48E1F554.5030700@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-09-18 at 22:29 +0000, Mattias Nissler wrote:
-> [I've added the zd1211rw maintainers to the CC, I hope they can shed
-> some light on the question whether the ack queue mechanism that driver
-> has is actually correct]
-> 
-> I've had a closer look at the idea of deciding whether a frame has
-> been
-> transmitted succesfully by monitoring incoming ACK frames and I've hit
-> a
-> fundamental problem: How do you correlate incoming ACK frames to the
-> frames that were actually transmitted? The ACK frame only carries the
-> address of the station that transmitted the frame being acked, no
-> further information. Now this means if you have the hardware TX two
-> frames and receive one ACK frame in the RX path, you cannot know which
-> TX frame the ACK belongs to, because they will be identical, right?
-> 
-> The hardware, however, knows, because the ACKs are required to be
-> transmitted directly after the corresponding frame is received, but we
-> don't know in the driver about this timing information, at least not for
-> rt2x00.
-> 
-> I wonder whether the ack queue idea Mikko found in the zd1211rw driver
-> is actually working correctly for that driver? I've only had a short
-> look, but found that incoming ACKs are only matched against transmitted
-> frames by means of the address carried within the ACK. So I'd think in
-> the situation I outlined above, the zd1211rw driver will also be unable
-> to match the ACK to the correct frame. Any comments on this?
-> 
-> Mattiass
-> 
+Clean up the tx status reporting, fix retry counters (short retries are
+virtual collisions, not actual retries). Implement multi-rate retry support.
+This also fixes strong throughput fluctuations observed with rc80211_pid
 
-AFAIK your analysis is correct and I think this is somewhat of a known
-problem with the implementation in zd1211rw driver. I haven't come
-across a way of getting around the problem. I read some suggestions
-about stopping all transmission to a certain address until we get a
-status update for the previous packet sent to that address, but iirc
-this was deemed impractical. On the other hand the current
-implementation in zd1211rw (and hopefully soon in rt2x00) doesn't really
-break anything that works without it and on rt2x00 it gets AP-mode in a
-somewhat more usable state. 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-- Mikko
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -583,6 +583,11 @@
+ 		}
+ 	}
+ 
++	/* set up multi-rate retry capabilities */
++	if (sc->ah->ah_version == AR5K_AR5212) {
++		hw->max_altrates = 3;
++		hw->max_altrate_tries = 15;
++	}
+ 
+ 	/* ready to process interrupts */
+ 	__clear_bit(ATH_STAT_INVALID, sc->status);
+@@ -1149,7 +1154,9 @@
+ 	struct sk_buff *skb = bf->skb;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	unsigned int pktlen, flags, keyidx = AR5K_TXKEYIX_INVALID;
+-	int ret;
++	struct ieee80211_rate *rate;
++	unsigned int mrr_rate[3], mrr_tries[3];
++	int i, ret;
+ 
+ 	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
+ 
+@@ -1174,6 +1181,21 @@
+ 	if (ret)
+ 		goto err_unmap;
+ 
++	for (i = 0; i < 3; i++) {
++		rate = ieee80211_get_alt_retry_rate(sc->hw, info, i);
++		if (rate) {
++			mrr_rate[i] = rate->hw_value;
++			mrr_tries[i] = info->control.retries[i].limit;
++		} else {
++			mrr_rate[i] = 0;
++			mrr_tries[i] = 0;
++		}
++	}
++	ah->ah_setup_mrr_tx_desc(ah, ds,
++		mrr_rate[0], mrr_tries[0],
++		mrr_rate[1], mrr_tries[1],
++		mrr_rate[2], mrr_tries[2]);
++
+ 	ds->ds_link = 0;
+ 	ds->ds_data = bf->skbaddr;
+ 
+@@ -1790,7 +1812,7 @@
+ 	struct ath5k_desc *ds;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_tx_info *info;
+-	int ret;
++	int i, ret;
+ 
+ 	spin_lock(&txq->lock);
+ 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
+@@ -1812,7 +1834,23 @@
+ 		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
+ 				PCI_DMA_TODEVICE);
+ 
+-		info->status.retry_count = ts.ts_shortretry + ts.ts_longretry / 6;
++		info->tx_rate_idx = ath5k_hw_to_driver_rix(sc,
++				ts.ts_rate[ts.ts_final_idx]);
++		info->status.retry_count = ts.ts_longretry;
++
++		for (i = 0; i < 4; i++) {
++			struct ieee80211_tx_altrate *r =
++				&info->status.retries[i];
++
++			if (ts.ts_rate[i]) {
++				r->rate_idx = ath5k_hw_to_driver_rix(sc, ts.ts_rate[i]);
++				r->limit = ts.ts_retry[i];
++			} else {
++				r->rate_idx = -1;
++				r->limit = 0;
++			}
++		}
++
+ 		if (unlikely(ts.ts_status)) {
+ 			sc->ll_stats.dot11ACKFailureCount++;
+ 			if (ts.ts_status & AR5K_TXERR_XRETRY)
+--- a/drivers/net/wireless/ath5k/desc.c
++++ b/drivers/net/wireless/ath5k/desc.c
+@@ -318,6 +318,15 @@
+ 	return 0;
+ }
+ 
++/* no mrr support for cards older than 5212 */
++static int
++ath5k_hw_setup_no_mrr(struct ath5k_hw *ah, struct ath5k_desc *desc,
++	unsigned int tx_rate1, u_int tx_tries1, u_int tx_rate2,
++	u_int tx_tries2, unsigned int tx_rate3, u_int tx_tries3)
++{
++	return 0;
++}
++
+ /*
+  * Proccess the tx status descriptor on 5210/5211
+  */
+@@ -352,8 +361,10 @@
+ 		AR5K_DESC_TX_STATUS1_ACK_SIG_STRENGTH);
+ 	ts->ts_antenna = 1;
+ 	ts->ts_status = 0;
+-	ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_0,
++	ts->ts_rate[0] = AR5K_REG_MS(tx_ctl->tx_control_0,
+ 		AR5K_2W_TX_DESC_CTL0_XMIT_RATE);
++	ts->ts_retry[0] = ts->ts_longretry;
++	ts->ts_final_idx = 0;
+ 
+ 	if (!(tx_status->tx_status_0 & AR5K_DESC_TX_STATUS0_FRAME_XMIT_OK)) {
+ 		if (tx_status->tx_status_0 &
+@@ -405,29 +416,43 @@
+ 		AR5K_DESC_TX_STATUS1_XMIT_ANTENNA) ? 2 : 1;
+ 	ts->ts_status = 0;
+ 
+-	switch (AR5K_REG_MS(tx_status->tx_status_1,
+-			AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX)) {
+-	case 0:
+-		ts->ts_rate = tx_ctl->tx_control_3 &
+-			AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
+-		break;
++	ts->ts_final_idx = AR5K_REG_MS(tx_status->tx_status_1,
++			AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX);
++
++	/* The longretry counter has the number of un-acked retries
++	 * for the final rate. To get the total number of retries
++	 * we have to add the retry counters for the other rates
++	 * as well
++	 */
++	ts->ts_retry[ts->ts_final_idx] = ts->ts_longretry;
++	switch (ts->ts_final_idx) {
++	case 3:
++		ts->ts_rate[3] = AR5K_REG_MS(tx_ctl->tx_control_3,
++			AR5K_4W_TX_DESC_CTL3_XMIT_RATE3);
++
++		ts->ts_retry[2] = AR5K_REG_MS(tx_ctl->tx_control_2,
++			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES2);
++		ts->ts_longretry += ts->ts_retry[2];
++		/* fall through */
++	case 2:
++		ts->ts_rate[2] = AR5K_REG_MS(tx_ctl->tx_control_3,
++			AR5K_4W_TX_DESC_CTL3_XMIT_RATE2);
++
++		ts->ts_retry[1] = AR5K_REG_MS(tx_ctl->tx_control_2,
++			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
++		ts->ts_longretry += ts->ts_retry[1];
++		/* fall through */
+ 	case 1:
+-		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
++		ts->ts_rate[1] = AR5K_REG_MS(tx_ctl->tx_control_3,
+ 			AR5K_4W_TX_DESC_CTL3_XMIT_RATE1);
+-		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
++
++		ts->ts_retry[0] = AR5K_REG_MS(tx_ctl->tx_control_2,
+ 			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
+-		break;
+-	case 2:
+-		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
+-			AR5K_4W_TX_DESC_CTL3_XMIT_RATE2);
+-		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
+-			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES2);
+-		break;
+-	case 3:
+-		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
+-			AR5K_4W_TX_DESC_CTL3_XMIT_RATE3);
+-		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
+-			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES3);
++		ts->ts_longretry += ts->ts_retry[0];
++		/* fall through */
++	case 0:
++		ts->ts_rate[0] = tx_ctl->tx_control_3 &
++			AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
+ 		break;
+ 	}
+ 
+@@ -653,7 +678,7 @@
+ 	} else {
+ 		ah->ah_setup_rx_desc = ath5k_hw_setup_rx_desc;
+ 		ah->ah_setup_tx_desc = ath5k_hw_setup_2word_tx_desc;
+-		ah->ah_setup_mrr_tx_desc = ath5k_hw_setup_mrr_tx_desc;
++		ah->ah_setup_mrr_tx_desc = ath5k_hw_setup_no_mrr;
+ 		ah->ah_proc_tx_desc = ath5k_hw_proc_2word_tx_status;
+ 	}
+ 
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -418,7 +418,9 @@
+ 	u16	ts_seqnum;
+ 	u16	ts_tstamp;
+ 	u8	ts_status;
+-	u8	ts_rate;
++	u8	ts_rate[4];
++	u8	ts_retry[4];
++	u8	ts_final_idx;
+ 	s8	ts_rssi;
+ 	u8	ts_shortretry;
+ 	u8	ts_longretry;
+
