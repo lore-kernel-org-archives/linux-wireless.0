@@ -1,42 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40899 "EHLO mx1.redhat.com"
+Received: from nbd.name ([88.198.39.176]:34714 "EHLO ds10.mine.nu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751785AbYIHViq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 17:38:46 -0400
-Subject: Re: [PATCH] libertas: clear current command on card removal
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, cjb@laptop.org, stable@kernel.org
-In-Reply-To: <20080908210110.GD24557@tuxdriver.com>
-References: <1220906080.1618.20.camel@localhost.localdomain>
-	 <20080908210110.GD24557@tuxdriver.com>
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 17:39:17 -0400
-Message-Id: <1220909957.9427.7.camel@localhost.localdomain> (sfid-20080908_233849_160399_C4F055F3)
-Mime-Version: 1.0
+	id S1752097AbYI3LWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 07:22:48 -0400
+Message-ID: <48E20BFC.6040904@openwrt.org> (sfid-20080930_132252_268931_3D151A6C)
+Date: Tue, 30 Sep 2008 13:22:36 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 1/3] mac80211: free up 2 bytes in skb->cb
+References: <48E20B7C.2040405@openwrt.org>
+In-Reply-To: <48E20B7C.2040405@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-08 at 17:01 -0400, John W. Linville wrote:
-> On Mon, Sep 08, 2008 at 04:34:40PM -0400, Dan Williams wrote:
-> > If certain commands were in-flight when the card was pulled or the
-> > driver rmmod-ed, cleanup would block on the work queue stopping, but the
-> > work queue was in turn blocked on the current command being canceled,
-> > which didn't happen.  Fix that.
-> > 
-> > Signed-off-by: Dan Williams <dcbw@redhat.com>
-> > ---
-> > John, this is 2.6.27 material if there's still time.
-> 
-> I have to remind you of the new "regressions only" policy.  Is this a
-> problem that we introduced in old code during the 2.6.27 merge window?
+Free up 2 bytes in skb->cb to be used for multi-rate retry.
+Move iv_len and icv_len initialization into key alloc.
 
-True :)  It is not a regression from 2.6.26, but a fairly serious bug
-that has existed for some time.  Thus, treat it as you like to avoid
-getting flamed by Linus & Dave.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-I'll post to stable after 2.6.27 comes out then.
-
-Dan
-
-
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -337,8 +337,6 @@
+ 			unsigned long jiffies;
+ 			s8 rts_cts_rate_idx, alt_retry_rate_idx;
+ 			u8 retry_limit;
+-			u8 icv_len;
+-			u8 iv_len;
+ 		} control;
+ 		struct {
+ 			u64 ampdu_ack_map;
+@@ -635,6 +633,8 @@
+  */
+ struct ieee80211_key_conf {
+ 	enum ieee80211_key_alg alg;
++	u8 icv_len;
++	u8 iv_len;
+ 	u8 hw_key_idx;
+ 	u8 flags;
+ 	s8 keyidx;
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -252,7 +252,7 @@
+ 		}
+ 
+ 		/* Hardware appends ICV. */
+-		plcp_fragment_len += info->control.icv_len;
++		plcp_fragment_len += info->control.hw_key->icv_len;
+ 
+ 		key_idx = b43_kidx_to_fw(dev, key_idx);
+ 		mac_ctl |= (key_idx << B43_TXH_MAC_KEYIDX_SHIFT) &
+@@ -260,7 +260,7 @@
+ 		mac_ctl |= (key->algorithm << B43_TXH_MAC_KEYALG_SHIFT) &
+ 			   B43_TXH_MAC_KEYALG;
+ 		wlhdr_len = ieee80211_hdrlen(fctl);
+-		iv_len = min((size_t) info->control.iv_len,
++		iv_len = min((size_t) info->control.hw_key->iv_len,
+ 			     ARRAY_SIZE(txhdr->iv));
+ 		memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
+ 	}
+--- a/drivers/net/wireless/b43legacy/xmit.c
++++ b/drivers/net/wireless/b43legacy/xmit.c
+@@ -243,7 +243,7 @@
+ 
+ 		if (key->enabled) {
+ 			/* Hardware appends ICV. */
+-			plcp_fragment_len += info->control.icv_len;
++			plcp_fragment_len += info->control.hw_key->icv_len;
+ 
+ 			key_idx = b43legacy_kidx_to_fw(dev, key_idx);
+ 			mac_ctl |= (key_idx << B43legacy_TX4_MAC_KEYIDX_SHIFT) &
+@@ -252,7 +252,7 @@
+ 				   B43legacy_TX4_MAC_KEYALG_SHIFT) &
+ 				   B43legacy_TX4_MAC_KEYALG;
+ 			wlhdr_len = ieee80211_hdrlen(wlhdr->frame_control);
+-			iv_len = min((size_t)info->control.iv_len,
++			iv_len = min((size_t)info->control.hw_key->iv_len,
+ 				     ARRAY_SIZE(txhdr->iv));
+ 			memcpy(txhdr->iv, ((u8 *)wlhdr) + wlhdr_len, iv_len);
+ 		} else {
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -313,9 +313,6 @@
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+-	info->control.iv_len = WEP_IV_LEN;
+-	info->control.icv_len = WEP_ICV_LEN;
+-
+ 	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
+ 		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
+ 			return -1;
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -152,9 +152,6 @@
+ 	int len, tail;
+ 	u8 *pos;
+ 
+-	info->control.icv_len = TKIP_ICV_LEN;
+-	info->control.iv_len = TKIP_IV_LEN;
+-
+ 	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
+ 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
+ 		/* hwaccel - with no need for preallocated room for IV/ICV */
+@@ -374,9 +371,6 @@
+ 	u8 *pos, *pn;
+ 	int i;
+ 
+-	info->control.icv_len = CCMP_MIC_LEN;
+-	info->control.iv_len = CCMP_HDR_LEN;
+-
+ 	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
+ 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
+ 		/* hwaccel - with no need for preallocated room for CCMP "
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1164,7 +1164,7 @@
+ 
+ 	if (info->control.hw_key) {
+ 		keyidx = info->control.hw_key->hw_key_idx;
+-		pktlen += info->control.icv_len;
++		pktlen += info->control.hw_key->icv_len;
+ 	}
+ 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
+ 		ieee80211_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -237,7 +237,7 @@
+ 
+ 	if (tx_info->control.hw_key) {
+ 		txctl->keyix = tx_info->control.hw_key->hw_key_idx;
+-		txctl->frmlen += tx_info->control.icv_len;
++		txctl->frmlen += tx_info->control.hw_key->icv_len;
+ 
+ 		if (tx_info->control.hw_key->alg == ALG_WEP)
+ 			txctl->keytype = ATH9K_KEY_TYPE_WEP;
+--- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
++++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
+@@ -56,10 +56,10 @@
+ 	 * note that these lengths should only be added when
+ 	 * mac80211 does not generate it.
+ 	 */
+-	overhead += tx_info->control.icv_len;
++	overhead += key->icv_len;
+ 
+ 	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_IV))
+-		overhead += tx_info->control.iv_len;
++		overhead += key->iv_len;
+ 
+ 	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)) {
+ 		if (key->alg == ALG_TKIP)
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -374,7 +374,7 @@
+ 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
+ 	struct txentry_desc txdesc;
+ 	struct skb_frame_desc *skbdesc;
+-	unsigned int iv_len = IEEE80211_SKB_CB(skb)->control.iv_len;
++	unsigned int iv_len;
+ 
+ 	if (unlikely(rt2x00queue_full(queue)))
+ 		return -EINVAL;
+@@ -410,8 +410,11 @@
+ 	 * the frame so we can provide it to the driver seperately.
+ 	 */
+ 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc.flags) &&
+-	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags))
++	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags) &&
++		(IEEE80211_SKB_CB(skb)->control.hw_key != NULL)) {
++		iv_len = IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
+ 		rt2x00crypto_tx_remove_iv(skb, iv_len);
++	}
+ 
+ 	/*
+ 	 * It could be possible that the queue was corrupted and this
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -281,6 +281,20 @@
+ 	key->conf.alg = alg;
+ 	key->conf.keyidx = idx;
+ 	key->conf.keylen = key_len;
++	switch (alg) {
++	case ALG_WEP:
++		key->conf.iv_len = WEP_IV_LEN;
++		key->conf.icv_len = WEP_ICV_LEN;
++		break;
++	case ALG_TKIP:
++		key->conf.iv_len = TKIP_IV_LEN;
++		key->conf.icv_len = TKIP_ICV_LEN;
++		break;
++	case ALG_CCMP:
++		key->conf.iv_len = CCMP_HDR_LEN;
++		key->conf.icv_len = CCMP_MIC_LEN;
++		break;
++	}
+ 	memcpy(key->conf.key, key_data, key_len);
+ 	INIT_LIST_HEAD(&key->list);
+ 	INIT_LIST_HEAD(&key->todo);
