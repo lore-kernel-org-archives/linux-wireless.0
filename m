@@ -1,84 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35227 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48773 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbYISI4k (ORCPT
+	with ESMTP id S1751188AbYI3HRz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 04:56:40 -0400
-Subject: Re: technology preview: scan with cfg80211
+	Tue, 30 Sep 2008 03:17:55 -0400
+Subject: Re: [PATCH RFC] mac80211: change rate control API to allow
+	multi-rate retry
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <1ba2fa240809190103i69c66978he4762fd350ab2e5d@mail.gmail.com> (sfid-20080919_100303_802308_72777315)
-References: <1221794329.10419.9.camel@johannes.berg>
-	 <1221795715.10419.15.camel@johannes.berg>
-	 <1ba2fa240809190103i69c66978he4762fd350ab2e5d@mail.gmail.com>
-	 (sfid-20080919_100303_802308_72777315)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r10flTTu5Fb++hvIy6A9"
-Date: Fri, 19 Sep 2008 10:56:05 +0200
-Message-Id: <1221814565.10419.19.camel@johannes.berg> (sfid-20080919_105644_674511_EC36B4A7)
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48E17E75.50201@openwrt.org> (sfid-20080930_033823_737779_1604EF6A)
+References: <48E17E75.50201@openwrt.org>
+	 (sfid-20080930_033823_737779_1604EF6A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-05s+UH77RwQjzMurgt2+"
+Date: Tue, 30 Sep 2008 09:17:49 +0200
+Message-Id: <1222759069.7064.52.camel@johannes.berg> (sfid-20080930_091800_226945_A4538ABF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-r10flTTu5Fb++hvIy6A9
+--=-05s+UH77RwQjzMurgt2+
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2008-09-19 at 11:03 +0300, Tomas Winkler wrote:
-> On Fri, Sep 19, 2008 at 6:41 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Fri, 2008-09-19 at 05:18 +0200, Johannes Berg wrote:
-> >> This is totally incomplete:
-> >>
-> >> cfg80211 needs to
-> >>  * actually hash on the BSSID instead of putting things into a list
-> >>  * provide BSS list functions so mac80211 need not keep track
-> >>  * allow a "private" area in each scan result with hw-provided size
-> >>  * handle mesh properly
-> >>  * provide a way for the hw to limit the number of SSIDs in a scan
+On Tue, 2008-09-30 at 03:18 +0200, Felix Fietkau wrote:
+> =20
+> +/* maximum number of alternate rate retry stages */
+> +#define IEEE80211_TX_MAX_ALTRATE	3
+> +
+> +/**
+> + * struct ieee80211_tx_altrate - alternate rate selection/status
+> + *
+> + * @rate_idx: rate index to attempt to send with
+> + * @limit: number of retries before fallback
+> + */
+> +struct ieee80211_tx_altrate {
+> +	s8 rate_idx;
+> +	u8 limit;
+> +};
+> +
+>  /**
+>   * struct ieee80211_tx_info - skb transmit information
+>   *
+> @@ -335,14 +349,16 @@
+>  			struct ieee80211_key_conf *hw_key;
+>  			struct ieee80211_sta *sta;
+>  			unsigned long jiffies;
+> -			s8 rts_cts_rate_idx, alt_retry_rate_idx;
+> +			s8 rts_cts_rate_idx;
+>  			u8 retry_limit;
+>  			u8 icv_len;
+>  			u8 iv_len;
+> +			struct ieee80211_tx_altrate retries[IEEE80211_TX_MAX_ALTRATE];
 
-> Don't understand this requirement?
-
-Limiting the number of SSIDs? Well I don't want to have userspace
-request an active scan for like 100 SSIDs, which currently _is_ possible
-(mac80211 will reject anything but 1 right now though). Hence, I want to
-have a "max probes" or something like that in the wiphy structure that
-we can use (a) tell userspace how many we support and (b) limit the
-number appropriately.
-
->   * provide a way to limit the number of channels in a scan (for
-> faster roaming candidate search)
-
-Hey, unfair! ;) I did leave a lot of TODOs but this wasn't one of them.
-You can provide a channel list and it'll scan only those (except hw scan
-right now but that'll be fixed once we pass the scan request struct
-through)
+If I'm counting correctly, that struct is now 2 bytes too large, you can
+cut out retry_limit I'd think by updating drivers to use
+retries[0].limit though. And iv/icv length can both be removed and added
+into the key_conf I think.
 
 johannes
 
---=-r10flTTu5Fb++hvIy6A9
+--=-05s+UH77RwQjzMurgt2+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI02kgAAoJEKVg1VMiehFYHzUP/2k0EkfA6bkgxm9HEu+U58Xh
-ZDtaF8u6NIbhN6Bb3sUcFFYm0flADurOvudvJNr+wZxWhf/dd+v3VoXugHAigQCR
-/dhTsKg4oBGw0QrmkqRKk6MaOOsHAAk8nJpWGH128zU6Nqkv0kY5Cif8E8DLGwsU
-GLnvD6T4nodHgum4ydA3uj0YBL6gayGdWslx8DcVGz3fAGX20tRtAcfmx9W3SZaG
-LGcWnb6KWlH689Z4sv2rAoXpjdc1CZLwyHmfgy9z5iOGfhjQPKReTyAaelCSD35m
-42+5Z9gmuwo3Axfnwq3SWh1dlH8qpLXFuhqKfFBYnlw1PVviY9vkaVb0eEA8mMfT
-h6YQeKeCuP6pUQaUp9Ggn/sK5u+F96vUI+lr23Dv3mKGtFBmyE1xODOJpWiOgozw
-WPjJ9ApGWbdBU8YqHG1AAv7mw+ddOSEFBER2On/4CQPd5XcH2tMLSltZ2gG19K21
-VzRlH4q9ztBjVXaQdID66B7Nxo6mvfiaJ2Gxh+ahAlRhKpEf9+Z3UUk42w0dRW2O
-aam/Qumtni0ZpxwbEEna/Zi8x5ng8hD9rayMhC4Yt0p/DiO+u5PioxgmB3ivZLUB
-DdymLPsMO9/6u2ZxI+DF6dxo/TX4Eq+eqWVFZZl+FzxEGEGzWJP1ZF1bISjhUW/A
-AHlZkXheMNhDZpX1L4aj
-=WMv3
+iQIcBAABAgAGBQJI4dKZAAoJEKVg1VMiehFYMiMP/1kL8MBJDXsT4v7rzvA5nviE
+f8jqw+raIbFu7AqhxHMqoIjWUw6GasFWYNM6XvyI/CXU3gI/o628cOs6ozRHldad
+aAgtONdhVDTBejjTa6jg5Nhz36+BLt7SsYlaqgspPqlRnmrsV8+1xoDUIGSJZcVv
+aFxgE4qB2Xs4wIUTE5s8skdRXwXz0mh+HaxyWWG/KJckl8Za3MLN+JRr5ljFZvse
+zqd5yBhpOG1TpVc3OC/aRhGSF5+uVo2Yuor8GQuTqgsVE5yTcbfap97E9Ls4dI/5
++aQbxu94Fa2K3pYwtpNBJggsQrJtPENFKhrbBNIJuZSA7zpCdYK6r28TKQFeFjVQ
+LwDp6FFJ9ZMqtVJvpEFezVi2t0SnC3ijxuNbC1qdwfVpDaFK0HkGFEaBMHAGyNad
+TbrKh4JJUZvwyI6x2rFCwwtzY2oRLQuxddghTttKKwFuBa/DEQGWTfcffMO5teY7
+7yqq73rNZAMq2kzzBv0S/B4BvyTGoFGUGH5L4VPT6VpSyP3NEpFMdT8oYH7K1z8i
+HUuefNyE3WEmJ9T7a+uXxjP+VZBJVLghKw2jwgwqf3YqEvqJvFBgG7jrsDtEVaUn
+66PUG3xrs6J2oR7DxwsQ//BSAjhdPz3SWLLQOW2uOR7+3/ZEPHS7l1UiXUATFRKS
+nxTMJdi2GiJ78Rm1g5AO
+=nG61
 -----END PGP SIGNATURE-----
 
---=-r10flTTu5Fb++hvIy6A9--
+--=-05s+UH77RwQjzMurgt2+--
 
