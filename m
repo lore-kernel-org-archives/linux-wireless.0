@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:4508 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754072AbYJKAtq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 20:49:46 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so634127fkq.5
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 17:49:42 -0700 (PDT)
-Message-ID: <1ba2fa240810101749k5d053451kdaef3194a954b442@mail.gmail.com> (sfid-20081011_024948_685824_FAA168FC)
-Date: Sat, 11 Oct 2008 02:49:42 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: move bss_conf into vif
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223685820.29811.23.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223682711.29811.7.camel@johannes.berg>
-	 <1ba2fa240810101732y610b4cc8g1b914b2c8eb726e5@mail.gmail.com>
-	 <1223685820.29811.23.camel@johannes.berg>
+Received: from main.gmane.org ([80.91.229.2]:56530 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753416AbYJAS54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Oct 2008 14:57:56 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Kl6tW-0000mC-JU
+	for linux-wireless@vger.kernel.org; Wed, 01 Oct 2008 18:57:54 +0000
+Received: from adsl-dyn239.78-99-97.t-com.sk ([78.99.97.239])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 18:57:54 +0000
+Received: from trigves by adsl-dyn239.78-99-97.t-com.sk with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 18:57:54 +0000
+To: linux-wireless@vger.kernel.org
+From: Trigve <trigves@yahoo.com>
+Subject: Re: intel wifi 5100 (iwlagn) authentication timed out
+Date: Wed, 1 Oct 2008 18:57:45 +0000 (UTC)
+Message-ID: <loom.20081001T185317-474@post.gmane.org> (sfid-20081001_205800_111817_E63875F3)
+References: <loom.20081001T181402-749@post.gmane.org> <43e72e890810011142r62f8cbf2mfdb6bc2a0a2a7bbc@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 11, 2008 at 2:43 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2008-10-11 at 02:32 +0200, Tomas Winkler wrote:
->> On Sat, Oct 11, 2008 at 1:51 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > Move bss_conf into the vif struct so that drivers can
->> > access it during ->tx without having to store it in
->> > the private data or similar. No driver updates because
->> > this is only for when they want to start using it.
->>
->> What protection should driver take to be sure it won't be changed underneath ?
->> With prive copy you know this is changed only in bss_info changed is called.
->
-> Yeah, that's true, I guess you can only access those fields there that
-> you can access atomically. That's actually most of the fields though.
->
-> Also, we don't actually take care about locking this structure at all
-> even in mac80211, something we might need to think about.
+Luis R. Rodriguez <mcgrof@...> writes:
+> What kernel? Also, please see:
+> 
+> http://wireless.kernel.org/en/users/Reporting_bugs
+> 
+>   Luis
+Hi,
+Sorry was in hurry and forgot to add.
 
-When working on SM PS I have the  same dilemma I have with
-ieee80211_conf do you think I need to take a private copy of it?
-Thanks
-Tomas
+I'm using OpenSuse 11.0 "uname -a":
+Linux dodes-nb 2.6.25.5-1.1-default #1 SMP 2008-06-07 01:55:22 +0200 x86_64
+x86_64 x86_64 GNU/Linux
 
- >
-> johannes
->
+I'm using compat-wireless-old.tar.bz2 from date 1. oct 2008.
+
+thanks
+
+Trigve
+
