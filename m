@@ -1,65 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59214 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882AbYJRMVE (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51653
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753461AbYJAJOh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2008 08:21:04 -0400
-Subject: [PATCH] mac80211: inform userspace of probe/auth/assoc timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 16 Oct 2008 21:44:44 +0200
-Message-Id: <1224186284.11127.3.camel@johannes.berg> (sfid-20081018_142109_774406_FC2C5C9A)
+	Wed, 1 Oct 2008 05:14:37 -0400
+Date: Wed, 01 Oct 2008 02:14:25 -0700 (PDT)
+Message-Id: <20081001.021425.40686099.davem@davemloft.net> (sfid-20081001_111443_341061_F48BC364)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-09-30
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080930183938.GE3765@tuxdriver.com>
+References: <20080930183938.GE3765@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I noticed that when for some reason [1] the probe or auth times
-out, wpa_supplicant doesn't realise this and only tries the next
-AP when it runs into its own timeout, which is ten seconds, and
-that's quite long. Fix this by making mac80211 notify userspace
-that it didn't associate.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 30 Sep 2008 14:39:38 -0400
 
-[1] my wrt350n in mixed B/G/HT mode often runs into this, maybe
-it's because one of the antennas is broken off and for whatever
-reason it decides to use that antenna to transmit the response
-frames (auth, probe); I do see beacons fine so it's not totally
-broken. Works fine in pure-G mode.
+> Dave,
+> 
+> Here is the latest round of wireless bits intended for 2.6.28.  Among
+> them is the first round of new stuff learned from the release of the
+> Atheros HAL sources...
+> 
+> Let me know if there are problems!
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Might be worth backporting to stable?
-
- net/mac80211/mlme.c |    3 +++
- 1 file changed, 3 insertions(+)
-
---- everything.orig/net/mac80211/mlme.c	2008-10-16 20:30:06.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-10-16 21:40:58.000000000 +0200
-@@ -763,6 +763,7 @@ static void ieee80211_direct_probe(struc
- 		printk(KERN_DEBUG "%s: direct probe to AP %s timed out\n",
- 		       sdata->dev->name, print_mac(mac, ifsta->bssid));
- 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
-+		ieee80211_sta_send_apinfo(sdata, ifsta);
- 		return;
- 	}
- 
-@@ -795,6 +796,7 @@ static void ieee80211_authenticate(struc
- 		       " timed out\n",
- 		       sdata->dev->name, print_mac(mac, ifsta->bssid));
- 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
-+		ieee80211_sta_send_apinfo(sdata, ifsta);
- 		return;
- 	}
- 
-@@ -917,6 +919,7 @@ static void ieee80211_associate(struct i
- 		       " timed out\n",
- 		       sdata->dev->name, print_mac(mac, ifsta->bssid));
- 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
-+		ieee80211_sta_send_apinfo(sdata, ifsta);
- 		return;
- 	}
- 
-
-
+Pulled and pushed back out to net-next-2.6, thanks!
