@@ -1,35 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:51325 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753392AbYJJXwo (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50411 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752812AbYJACXx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 19:52:44 -0400
-Received: by gxk9 with SMTP id 9so1521862gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 16:52:43 -0700 (PDT)
-Message-ID: <43e72e890810101652i6712f989r99f36b206ce01059@mail.gmail.com> (sfid-20081011_015247_343136_F21B230B)
-Date: Fri, 10 Oct 2008 16:52:43 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/2] ath9k: remove nasty FAIL macro from ath9k_hw_reset()
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890810101359n529f932fw8cd47822b27b4685@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1223641374-11872-1-git-send-email-lrodriguez@atheros.com>
-	 <1223667649.3748.38.camel@johannes.berg>
-	 <43e72e890810101359n529f932fw8cd47822b27b4685@mail.gmail.com>
+	Tue, 30 Sep 2008 22:23:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/5] wireless: escape_ssid should handle non-printables
+Date: Tue, 30 Sep 2008 22:15:50 -0400
+Message-Id: <1222827352-1978-4-git-send-email-linville@tuxdriver.com> (sfid-20081001_042408_544933_5AB5550C)
+In-Reply-To: <1222827352-1978-3-git-send-email-linville@tuxdriver.com>
+References: <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
+ <1222827352-1978-1-git-send-email-linville@tuxdriver.com>
+ <1222827352-1978-2-git-send-email-linville@tuxdriver.com>
+ <1222827352-1978-3-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 10, 2008 at 1:59 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
+Also use common backslash sequences like \t, \n, \r, and \\ as well as \0.
 
-> bad:
->        if (status)
->                *status = ecode;
->        return false;
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/wireless/lib80211.c |   25 +++++++++++++++++++------
+ 1 files changed, 19 insertions(+), 6 deletions(-)
 
-Oh and for the record this is still requires more cleanup BTW, but
-we'll get to it.. we keep at it.
+diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
+index 872cc8d..b8e34d3 100644
+--- a/net/wireless/lib80211.c
++++ b/net/wireless/lib80211.c
+@@ -6,6 +6,7 @@
+  */
+ 
+ #include <linux/module.h>
++#include <linux/ctype.h>
+ #include <linux/ieee80211.h>
+ 
+ #include <net/lib80211.h>
+@@ -20,19 +21,31 @@ MODULE_LICENSE("GPL");
+ 
+ const char *escape_ssid(const char *ssid, u8 ssid_len)
+ {
+-	static char escaped[IEEE80211_MAX_SSID_LEN * 2 + 1];
++	static char escaped[IEEE80211_MAX_SSID_LEN * 4 + 1];
+ 	const char *s = ssid;
+ 	char *d = escaped;
+ 
+ 	ssid_len = min_t(u8, ssid_len, IEEE80211_MAX_SSID_LEN);
+ 	while (ssid_len--) {
+-		if (*s == '\0') {
+-			*d++ = '\\';
+-			*d++ = '0';
+-			s++;
+-		} else {
++		if (isprint(*s)) {
+ 			*d++ = *s++;
++			continue;
+ 		}
++
++		*d++ = '\\';
++		if (*s == '\0')
++			*d++ = '0';
++		else if (*s == '\n')
++			*d++ = 'n';
++		else if (*s == '\r')
++			*d++ = 'r';
++		else if (*s == '\t')
++			*d++ = 't';
++		else if (*s == '\\')
++			*d++ = '\\';
++		else
++			d += snprintf(d, 3, "%03o", *s);
++		s++;
+ 	}
+ 	*d = '\0';
+ 	return escaped;
+-- 
+1.5.4.3
 
-  Luis
