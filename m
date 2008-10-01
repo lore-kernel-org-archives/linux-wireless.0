@@ -1,53 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:30672 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751668AbYJ1XcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 19:32:17 -0400
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225235731.1369.8.camel@johannes.berg>
-References: <20081018231046.GA10977@isilmar.linta.de>
-	 <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
-	 <20081019075916.GA12904@isilmar.linta.de>
-	 <1225145468.1115.139.camel@rc-desk>
-	 <20081027230326.GA23250@isilmar.linta.de>
-	 <1225154823.1115.149.camel@rc-desk>
-	 <20081028194323.GA14303@isilmar.linta.de>
-	 <1225225434.1115.217.camel@rc-desk>
-	 (sfid-20081028_212343_098446_12401F4B)  <1225235731.1369.8.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 28 Oct 2008 16:32:40 -0700
-Message-Id: <1225236760.1115.245.camel@rc-desk> (sfid-20081029_003221_575435_E5D6DC35)
+Received: from xc.sipsolutions.net ([83.246.72.84]:38405 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411AbYJASUh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Oct 2008 14:20:37 -0400
+Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS
+	mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1ba2fa240810010340t14dce3a0p46b834f39d66f6b2@mail.gmail.com> (sfid-20081001_124009_131930_02BDD0FA)
+References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
+	 <1222618769.7064.0.camel@johannes.berg>
+	 <1ba2fa240809280924n1505e049w7800e3ef28449e8e@mail.gmail.com>
+	 <1222619168.7064.3.camel@johannes.berg>
+	 <1ba2fa240809280939x31829a25wa46948d1f351c7a0@mail.gmail.com>
+	 <1222622474.7064.6.camel@johannes.berg>
+	 <1ba2fa240810010340t14dce3a0p46b834f39d66f6b2@mail.gmail.com>
+	 (sfid-20081001_124009_131930_02BDD0FA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2+ZKBOBS8s49fwynUFVO"
+Date: Wed, 01 Oct 2008 20:20:28 +0200
+Message-Id: <1222885228.7064.68.camel@johannes.berg> (sfid-20081001_202041_159340_EEFCDF57)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-28 at 16:15 -0700, Johannes Berg wrote:
-> On Tue, 2008-10-28 at 13:23 -0700, reinette chatre wrote:
-> 
-> > (adding linux-wireless so I am keeping the log below)
-> > 
-> > This helps a lot - thanks!
-> > 
-> > Could you please recompile wireless with CONFIG_WIRELESS_OLD_REGULATORY?
-> 
-> Btw, any idea why this helps? Shouldn't the driver just work, albeit
-> with a restricted channel set? Are we messing something up like no
-> usable channels at all? (I fixed a bug like that IIRC)
-> 
 
-Without the regulatory information the number of 5G channels to scan is
-zero.
+--=-2+ZKBOBS8s49fwynUFVO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> [ 1094.582562] iwl3945: U iwl3945_bg_request_scan Kicking off one
-indirect scan.
-> [ 1094.582574] iwl3945: U iwl3945_get_channels_for_scan total channels
-to scan 0
+On Wed, 2008-10-01 at 13:40 +0300, Tomas Winkler wrote:
 
-Reinette
+> >>  We
+> >> > keep adding API in mac80211 and nobody really knows when to call it.
+> >> > Maybe you should (maybe team up with Atheros for it) write a "HT
+> >> > hardware with mac80211" chapter in the documentation?
+> >>
+> >> Yes we should.
+>=20
+> Fresh from Intel
+> http://www.cambridge.org/catalogue/catalogue.asp?isbn=3D9780521885843
 
+That documents how mac80211 does things? :)
 
+johannes
+
+--=-2+ZKBOBS8s49fwynUFVO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI479oAAoJEKVg1VMiehFYr2gP/100kFN2NFyWAQNY53kxpITR
++byc9cMkEWqfuddysMnWubQqu8OjOxQxPl1JQuZImmLw9sL3k8/MwW9i6xLHx0Xo
+aQcbykINVWyCh173g1DzlwgSGZj9dZ504FWIyJa7Yru6HsraTgMjxnA3GbIDirQP
+X51FYCWGW1M30Qrt7GVUDlH35rAJi4FhQWdZVoVYgXcPstMnFm0p+K1+IcNaEYjA
+si0sGLxjB3+LwJS3C6uajlSMA07RsFG3Dg9eYBzdwwE5cdZ7wyug8yc6Pny5d18d
+tyz+85X9isQCw4bedeq8sX+TM5hLi8vt/dPj0ZmtCrxS9KTAnjg4myMvHu5F+nic
+mxeqIHECKHLlrPuaIwLJtF6W7FjJhYYrcv8RznC13E9lBNGmTsnBGsPl6KHNeg06
+WQ3oMVN8YmewAJmf9Cfh9dZGuakSOqItHwgKeo/prafi37QaA5kHkgLA5je5CLRs
+q5iL+BqD4x/X6jsnvKT0hYkM5ARgf0HFZ11lotiGSYJ8U5B2k4oehBVagaZ164ea
+qFiG5zS8NWVk7VAX1gUmHq6D/q5M5RNcMztjVrc0nIfrtqDqUysCExBrUAkmENLf
+nu8FFERdYbpPGcbNHYwFWtkrKtMQdOLPWxzdzaXksI41StYtL6DBiulUdfkcFT6A
+OSF0MWBsRxV9wTGlS5ai
+=Px9o
+-----END PGP SIGNATURE-----
+
+--=-2+ZKBOBS8s49fwynUFVO--
 
