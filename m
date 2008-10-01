@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:59706 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750848AbYJ3AGy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 20:06:54 -0400
-From: Elias Oltmanns <eo@nebensachen.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	"Bob Copeland" <me@bobcopeland.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-References: <87wsfvt76q.fsf@denkblock.local>
-	<40f31dec0810261533g3143bd9bue0f3eff88c6936e9@mail.gmail.com>
-	<87r663t1ds.fsf@denkblock.local>
-	<40f31dec0810271331n7f374562x77da8ae55b9032db@mail.gmail.com>
-	<873aifsfc9.fsf@denkblock.local>
-	<40f31dec0810290749u2c065d17g5788eb22cf508142@mail.gmail.com>
-	<87wsfrqw2t.fsf@denkblock.local>
-	<b6c5339f0810290828g2c600d5cm9f78df9d427f5c1f@mail.gmail.com>
-	<40f31dec0810291051j605a281dg641d873bd0e3bbc1@mail.gmail.com>
-	<87mygn2dd7.fsf@denkblock.local> <20081029233426.GF3485@tuxdriver.com>
-Date: Thu, 30 Oct 2008 01:04:30 +0100
-In-Reply-To: <20081029233426.GF3485@tuxdriver.com> (John W. Linville's message
-	of "Wed, 29 Oct 2008 19:34:26 -0400")
-Message-ID: <874p2v2bjl.fsf@denkblock.local> (sfid-20081030_010658_938867_2A28BCFD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50417 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753211AbYJACZx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2008 22:25:53 -0400
+Received: from sapphire.tuxdriver.com ([70.61.120.61] helo=linville-t43.local)
+	by smtp.tuxdriver.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1KkrPU-0007rJ-Af
+	for linux-wireless@vger.kernel.org; Tue, 30 Sep 2008 22:25:52 -0400
+Received: from linville-t43.local (linville-t43.local [127.0.0.1])
+	by linville-t43.local (8.14.2/8.14.2) with ESMTP id m912Frbm002198
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Sep 2008 22:21:13 -0400
+Received: (from linville@localhost)
+	by linville-t43.local (8.14.2/8.14.2/Submit) id m912Fq6n002197
+	for linux-wireless@vger.kernel.org; Tue, 30 Sep 2008 22:15:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5] wireless: single escape_essid implementation and related cleanups
+Date: Tue, 30 Sep 2008 22:15:47 -0400
+Message-Id: <1222827352-1978-1-git-send-email-linville@tuxdriver.com> (sfid-20081001_042555_515889_ED71740D)
+In-Reply-To: <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
+References: <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ Resending due to a totally screwed header. Time to go to bed now. ]
+This is a repost of my escape_essid consolidation.  Also included are
+some suggested changes from the original post and a few cleanups.  There
+is still plenty to be done -- of course, this isn't really high priority
+work either...
 
-"John W. Linville" <linville-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org> wrote:
-> Well, I already merged v3...what is new here?
+[PATCH 1/5] wireless: consolidate on a single escape_essid implementation
+[PATCH 2/5] wireless: remove NETWORK_EMPTY_ESSID flag
+[PATCH 3/5] wireless: escape_ssid should handle non-printables
+[PATCH 4/5] wireless: use individual buffers for printing ssid values
+[PATCH 5/5] wireless: avoid some net/ieee80211.h vs. linux/ieee80211.h conflicts
 
-Yes, that's alright. The only difference is that I've replaced all the
-ugly hex-numbers by the appropriate constants in ath5k/reg.h that have
-been introduced in 2.6.28-rc1. So, it's really just a matter of style.
+Comments welcome!
 
-Regards,
-
-Elias
+John
+--
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
