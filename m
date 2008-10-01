@@ -1,102 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:49969 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603AbYJaVgg (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.229]:25573 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753969AbYJAWPN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 17:36:36 -0400
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Message-Id: <C202FD8E-EB1E-417D-8086-7ADFBC72A1D3@holtmann.org> (sfid-20081031_223640_263821_32D6E947)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1ba2fa240810311409i5203bcccu2b944dcc505deb30@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: Still 4965 issues with wireless-testing
-Date: Fri, 31 Oct 2008 22:36:31 +0100
-References: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com> <DAD31980-B029-46D4-A687-9B0426899853@holtmann.org> <1ba2fa240810310652t351b0b77k819a7e03659503eb@mail.gmail.com> <BF4BAA7D-FEBC-40F7-AE07-D6BBD31A2A0B@holtmann.org> <1ba2fa240810311409i5203bcccu2b944dcc505deb30@mail.gmail.com>
+	Wed, 1 Oct 2008 18:15:13 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so817000rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 15:15:13 -0700 (PDT)
+Message-ID: <b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com> (sfid-20081002_001519_960775_AABE65BB)
+Date: Wed, 1 Oct 2008 18:15:12 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Elias Oltmanns" <eo@nebensachen.de>
+Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <87ej30m376.fsf@denkblock.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200808101401.03339.toralf.foerster@gmx.de>
+	 <b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
+	 <200810012055.58085.toralf.foerster@gmx.de>
+	 <87ej30m376.fsf@denkblock.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
-
->>>>> so besides the point that the Ubuntu 8.10 kernel has a broken  
->>>>> driver for
->>>>> the Intel 4965 cards which will crash my X61 after less than one  
->>>>> minute
->>>>> uptime when it connects to my access point, I have my dmesg full  
->>>>> with
->>>>> warnings from the latest wireless-testing kernel.
->>>>>
->>>>> I know that we have discussed this before and Johannes' patch at  
->>>>> least
->>>>> turns it into warnings instead of killing my system completely,  
->>>>> but I am
->>>>> still surprised why this hasn't been fixed.
->>>>
->>>> so this becomes more and more annoying. I get this WARN_ON now  
->>>> multiple
->>>> times pre minute. Only the first few minutes after loading the  
->>>> firmware
->>>> everything is okay and then it keeps filling my dmesg. And on top  
->>>> of
->>>> that, I
->>>> now see these:
->>>>
->>>> __ratelimit: 1189 callbacks suppressed
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> __ratelimit: 57695 callbacks suppressed
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>> __ratelimit: 3345 callbacks suppressed
->>>> iwlagn: Can not allocate SKB buffers
->>>> iwlagn: Can not allocate SKB buffers
->>>>
->>>> What is going on here? This is a normal setup and nothing fancy.  
->>>> Access
->>>> point is N-Capable from D-Link btw.
->>>
->>>
->>> I have D-Link too I don't see this. What kernel version is this? Is
->>> this your ubuntu version or wireless-testing?
->>> Any more data you can provide (.config. slabinfo)
+On Wed, Oct 1, 2008 at 5:10 PM, Elias Oltmanns <eo@nebensachen.de> wrot=
+e:
+> Toralf F=F6rster <toralf.foerster@gmx.de> wrote:
+>> Hello,
 >>
->> this is from wireless-testing. The Ubuntu 2.6.27 kernel is totally  
->> broken.
->> It will crash the kernel since we are missing the patch to turn  
->> this into a
->> warning :)
+>> the issue (initially reported in August 2008) still remains in the c=
+urrent
+>> kernel at my ThinkPad T41, a screen shot is attached. The steps to r=
+eproduce
+>> are :
 >>
->> Attached is my config. The slabinfo will follow once the SKB errors  
->> come up
->> again. It normally takes a few hours before they show. Just resumed  
->> that
->> machine.
+>> 1. modprobe it
+>> 2. suspend the system to ram
+>> 3. wake it up
+>> 4. rmmod the driver
 >
-> I've downloaded whole moblin last night over 2.6.27.4, it's a bit slow
-> because the missing calibrations but it didn't crashed.
->
-> I will test your config, your machine is T61  am I right?
+> Yes, I have run into this problem too. The patch below (applies to
+> 2.6.27-rc8) fixes the problem, but since I'm not a wireless hacker,
+> developers might prefer a different approach. Please let me know if I
+> should change anything. Perhaps I should split this into two separate
+> patches?
 
-I have a X61 and running the 64-bit version of kernel and userspace.
+Thanks for the patch.  I do think a different approach is probably
+warranted, though. ath5k_init() is supposed to be able to be called fro=
+m
+resume.  Do you have a better idea of why calib_tim isn't cleaned up
+properly by ath5k_stop_hw?
 
-Regards
+I'm not near my laptop to test -- does the issue ever happen if you do
+NOT suspend?
 
-Marcel
-
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
