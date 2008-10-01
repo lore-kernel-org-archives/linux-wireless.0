@@ -1,72 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33227 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752599AbYJKAnn (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:41284 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752539AbYJANCx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 20:43:43 -0400
-Subject: Re: [PATCH] mac80211: move bss_conf into vif
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240810101732y610b4cc8g1b914b2c8eb726e5@mail.gmail.com> (sfid-20081011_023226_199069_C0202D5B)
-References: <1223682711.29811.7.camel@johannes.berg>
-	 <1ba2fa240810101732y610b4cc8g1b914b2c8eb726e5@mail.gmail.com>
-	 (sfid-20081011_023226_199069_C0202D5B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Cd51HZb8Uca7i+nnGEf+"
-Date: Sat, 11 Oct 2008 02:43:40 +0200
-Message-Id: <1223685820.29811.23.camel@johannes.berg> (sfid-20081011_024348_141321_591C4102)
-Mime-Version: 1.0
+	Wed, 1 Oct 2008 09:02:53 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [RFC, PATCH v2] libertas: unify request_firmware failure
+Date: Wed, 1 Oct 2008 15:02:32 +0200
+Cc: Marc Pignat <marc.pignat@hevs.ch>, Dan Williams <dcbw@redhat.com>,
+	libertas-dev@lists.infradead.org
+References: <200809301625.40554.marc.pignat@hevs.ch> <1222792480.27374.25.camel@localhost.localdomain> <200810011043.34229.marc.pignat@hevs.ch>
+In-Reply-To: <200810011043.34229.marc.pignat@hevs.ch>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810011502.32427.hs4233@mail.mn-solutions.de> (sfid-20081001_150257_515835_F04D1065)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> -		lbs_pr_err("can't load helper firmware\n");
+> +		lbs_pr_err("request_firmware() failed with %d\n", ret);
+> +		lbs_pr_err("helper firmware libertas_cs_helper.fw not found\n"); ret = -ENODEV;
 
---=-Cd51HZb8Uca7i+nnGEf+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+While I don't have a problem with the idea per
+se, I don't like it outputting two error lines now.
 
-On Sat, 2008-10-11 at 02:32 +0200, Tomas Winkler wrote:
-> On Sat, Oct 11, 2008 at 1:51 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > Move bss_conf into the vif struct so that drivers can
-> > access it during ->tx without having to store it in
-> > the private data or similar. No driver updates because
-> > this is only for when they want to start using it.
->=20
-> What protection should driver take to be sure it won't be changed underne=
-ath ?
-> With prive copy you know this is changed only in bss_info changed is call=
-ed.
+So for if_cs.c, I like the original code better.
 
-Yeah, that's true, I guess you can only access those fields there that
-you can access atomically. That's actually most of the fields though.
-
-Also, we don't actually take care about locking this structure at all
-even in mac80211, something we might need to think about.=20
-
-johannes
-
---=-Cd51HZb8Uca7i+nnGEf+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI7/a5AAoJEKVg1VMiehFY9rIP/jdbqwmgZD34iF+LRPvDPi89
-AdrrWpLUaPDNVEvMmbMk+7si5AueO0FlyCIFz4FW6X7GL7rRbkDqM0gBCCVnezEY
-EE2fUlhl2dttGvMJUjzDKPB4nFiipnVNUdehjYilYWrX61QEvYdFztjRgixTUNkO
-EoPSxoMXiFsNG8XB3K8HvW2GV/zSwQ7O684KXxmtXqNmN/z264f2MIDT4Z3BOfPT
-ArXOM/BYqsulBz5qjmAN8c/cyzQlrUsDlEb0pp2dsjztRV/A5RB3bJwgbZu2re5N
-AkOhTRG6snoMwzzg0zUkFm1VsatIYN9gbQC+VJXcfXkex2U5jjYUh5cA7mxR76cj
-SOUBRztCGKuNhbYyl+VSOAJ6fvK5KA4oBaF2pco08GmrBbfhnSQWmxD0bgiB42Ze
-2EMjOCsF2fTAqNAOcuYNV/EwS1Uv0Fbv64o0njmfbgdmZAHPUFb/amOvTQWj7nSj
-EWG+TywQUnxmaw8WZspE1leZN69ZXgHis/Pw9Yny1VzT8/ai7KmVYyEZc7MsJS3w
-C+7y3EjRVdpFF1yuG4cOlGd8ydcGlJ55nwh+nJQpoXknF7VnAtrichPTRzzD6hVH
-BKzIJtUX7SYVwrMs+jD9bLCrsfZHIBfIDNIH76A3OiqJkJXFLFowYw4ru+tA++N/
-RiYPO1xN0fAxeyw4Jxf6
-=Mr9F
------END PGP SIGNATURE-----
-
---=-Cd51HZb8Uca7i+nnGEf+--
-
+I don't care to emit the error number, won't be usable to most
+people anyway. And I don't care about outputting the filename,
+because udev will already show you the filename if it doesn't
+find what was requested.
