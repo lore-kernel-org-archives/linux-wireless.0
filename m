@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46469 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752099AbYJVH51 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:47509 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752343AbYJAKkK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 03:57:27 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: reinette chatre <reinette.chatre@linux.intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224662185.9386.131.camel@californication>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1224628088.10863.100.camel@rc-desk>
-	 <1224660449.28639.22.camel@johannes.berg>
-	 <1224662185.9386.131.camel@californication>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JwZ9RyBfps+dH1T0nHvP"
-Date: Wed, 22 Oct 2008 09:57:17 +0200
-Message-Id: <1224662237.28639.31.camel@johannes.berg> (sfid-20081022_095730_876573_BBDCAA1E)
-Mime-Version: 1.0
+	Wed, 1 Oct 2008 06:40:10 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so355756fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 03:40:08 -0700 (PDT)
+Message-ID: <1ba2fa240810010340t14dce3a0p46b834f39d66f6b2@mail.gmail.com> (sfid-20081001_124018_081384_5C7FD9B3)
+Date: Wed, 1 Oct 2008 13:40:08 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS mode
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1222622474.7064.6.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
+	 <1222618769.7064.0.camel@johannes.berg>
+	 <1ba2fa240809280924n1505e049w7800e3ef28449e8e@mail.gmail.com>
+	 <1222619168.7064.3.camel@johannes.berg>
+	 <1ba2fa240809280939x31829a25wa46948d1f351c7a0@mail.gmail.com>
+	 <1222622474.7064.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Sep 28, 2008 at 8:21 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2008-09-28 at 19:39 +0300, Tomas Winkler wrote:
+>
+>> Second example, only low level driver is running calibrations and
+>> knows if it has all rx chains available. The possibility is
+>> that not all platforms connect all antennas or physical environment
+>> between AP and STA cause some of the antennas not affective
+>> we may propagate rx chain status to mac80211 but if this is not
+>> opening too much guts. Sometimes it's just hard to keep a clean cut.
+>
+> That's what I wasn't really aware of. Generally I'd advocate giving
+> mac80211 lower-level details though and let it figure out the rest, that
+> makes it easier for the driver save copy/pasting code.
+>
+>> I have two more patches for these to example of course...
+>>
+>> >I don't actually know what that is anyway though, hence the question.
+>>
+>> Actually this is one of more understandable part of the spec.
+>
+> TBH, I've never actually tried to read it, I pick something once a while
+> but haven't ever really tried to get a complete overview.
+>
+>>  We
+>> > keep adding API in mac80211 and nobody really knows when to call it.
+>> > Maybe you should (maybe team up with Atheros for it) write a "HT
+>> > hardware with mac80211" chapter in the documentation?
+>>
+>> Yes we should.
 
---=-JwZ9RyBfps+dH1T0nHvP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Fresh from Intel
+http://www.cambridge.org/catalogue/catalogue.asp?isbn=9780521885843
 
-On Wed, 2008-10-22 at 09:56 +0200, Marcel Holtmann wrote:
-
-> > I really don't know why we let you get away with this and bitch
-> > endlessly when b43 does such a change, to the point where we finally
-> > cave in and support both versions. Why should a community-supported
-> > driver be held to higher standards?
->=20
-> If in any way possible, we should support both versions of the firmware.
-
-It doesn't look to me that the wireless folks will succumb to any
-pressure unless John reverts the patches. But they haven't even managed
-to identify the patches that caused the breakage...
-
-johannes
-
---=-JwZ9RyBfps+dH1T0nHvP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/tzaAAoJEKVg1VMiehFYCwMQAKVQK79Lu4gfK7IKTzDWcOiT
-D0Cfx3DIgWGnMRkLHin/Lyi79x0Lu8VtRfsxbQGTv+w4+KQ1uZ0N8AlKXHy6B6/p
-OhhcKYoD35vDiZlNVhVoF5tOpm8wn7ZBaaLuh5ubgdVcrIHeQOawwdfDZcCyitDq
-Yb6FC7DZIbLP/eyoVNDn+6bZJmyRM92nCZQSJV6afmKu3jmiWxqYs8/uETkZr6rQ
-WWNA/njgit3v89QZmFf/1AJSuQIpixAbwgh+ewfITUdzJ9AzNpF/4C7B33mGI03B
-GZLK5RIebyshk1L34fi6NtorGyd5R3rLiHD+hFrVH+uubO1ciydOjhXRebsp6n50
-2ayk+PpJ1jipuEpZX/8LudgZfSUP+27CCrqyNrPMJvpIqwl2F7wA3WeQMQvct/au
-peHPvpw0GQQIr4fcKtmCf3QSGjgNiWROi++yM861RS9OOSl8WEUGw5cBiHZ9GSAy
-QLn3ESDVDcAbM+lXvt2HtJb6jzjlCrFgxPD4E8KRsXI85HlOPfZeQHDrhK4839/X
-0FiT+D156zIrv/JyXEAydvVM1AXMBNADfO6zxWnSucyvuUzZ11LhIq/69+HGCRYg
-E0tAUy9SnL4Qel++abutOoqehHj4VuNsYBY49p0qhYWym+ECIzPMwY1pEBubqW0o
-U/o2WEk2sbuM+SK0EP+S
-=X2e9
------END PGP SIGNATURE-----
-
---=-JwZ9RyBfps+dH1T0nHvP--
-
+Enjoy.
+Tomas
