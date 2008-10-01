@@ -1,104 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.hevs.ch ([153.109.23.10]:54879 "EHLO mail.hevs.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752602AbYJAInm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 04:43:42 -0400
-From: Marc Pignat <marc.pignat@hevs.ch>
-To: Dan Williams <dcbw@redhat.com>
-Subject: [RFC, PATCH v2] libertas: unify request_firmware failure
-Date: Wed, 1 Oct 2008 10:43:33 +0200
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <200809301625.40554.marc.pignat@hevs.ch> <1222792480.27374.25.camel@localhost.localdomain>
-In-Reply-To: <1222792480.27374.25.camel@localhost.localdomain>
+Received: from ti-out-0910.google.com ([209.85.142.190]:16174 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629AbYJAJQa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Oct 2008 05:16:30 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so179996tic.23
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 02:16:28 -0700 (PDT)
+Message-ID: <e001a6370810010216w3d1d15bdu124ab1f8b4b19e5c@mail.gmail.com> (sfid-20081001_111634_528466_A80365B3)
+Date: Wed, 1 Oct 2008 14:46:28 +0530
+From: "Anadi Mishra" <reachanadi@gmail.com>
+To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
+Subject: Re: Problem with Libertas USB8388 WLAN card firmware
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200809301307.59344.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810011043.34229.marc.pignat@hevs.ch> (sfid-20081001_104348_373289_2199E021)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <e001a6370809150258t10873497jcf04e68005db566b@mail.gmail.com>
+	 <200809301018.31678.hs4233@mail.mn-solutions.de>
+	 <e001a6370809300234j7f84a9f0j50213e9912dd5c08@mail.gmail.com>
+	 <200809301307.59344.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use almost the same string for all interfaces (USB, compact flash and SDIO)
-when request_firmware fails.
+On Tue, Sep 30, 2008 at 4:37 PM, Holger Schurig
+<hs4233@mail.mn-solutions.de> wrote:
+>> regarding rest of the things u pointed out, its all greek to
+>> me (I am noob). But could u plz tell me from where can i get
+>> the firmware details of the card
+>> USB8388??
+>
+> I don't think that you have a firmware problem.
+>
+> Probably some compiler / alignment issue.
+>
+> Result codes from the firmware are 16 bit, but 0x160000 doesn't
+> fit into an 16 bits. So you need to search why your
+> compiler/hardware creates 0x160000 out of two transferred bytes.
 
-Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
----
+  Sorry for the trouble but can u give some hint how to go about it?
 
-Hi all!
+Thanks a lot.
 
-This patch is an attemp to clarify the message "firmware not found, please fix
-your userspace (== this is not a libertas bug)".
-
-changes from v1:
-	* replaced %#x with %d because "ret" is supposed to be a negative
-	  integer (suggested by Dan Williams).
-
-Best regards
-
-Marc
-
+> But *ANY* firmware for the 8388 chips returns the result as 16
+> bits, that is two bytes. If you get bogus / hosed result, you
+> have a problem there. And using a different firmware won't help
+> you there. There is an underlying problem that you need to solve
+> first.
+>
+>
+> BTW: you can get the firmware specification via this driver
+> portal: http://wireless.kernel.org/en/users/Drivers/libertas
+>
 
 
 
-patch agaisnt 2.6.27-rc7:
-
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-index 8941919..5f8e68b 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -553,7 +553,8 @@ static int if_cs_prog_helper(struct if_cs_card *card)
- 	ret = request_firmware(&fw, "libertas_cs_helper.fw",
- 		&handle_to_dev(card->p_dev));
- 	if (ret) {
--		lbs_pr_err("can't load helper firmware\n");
-+		lbs_pr_err("request_firmware() failed with %d\n", ret);
-+		lbs_pr_err("helper firmware libertas_cs_helper.fw not found\n");
- 		ret = -ENODEV;
- 		goto done;
- 	}
-@@ -626,7 +627,8 @@ static int if_cs_prog_real(struct if_cs_card *card)
- 	ret = request_firmware(&fw, "libertas_cs.fw",
- 		&handle_to_dev(card->p_dev));
- 	if (ret) {
--		lbs_pr_err("can't load firmware\n");
-+		lbs_pr_err("request_firmware() failed with %d\n", ret);
-+		lbs_pr_err("firmware libertas_cs.fw not found\n");
- 		ret = -ENODEV;
- 		goto done;
- 	}
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index b54e2ea..319e211 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -396,7 +396,8 @@ static int if_sdio_prog_helper(struct if_sdio_card *card)
- 
- 	ret = request_firmware(&fw, card->helper, &card->func->dev);
- 	if (ret) {
--		lbs_pr_err("can't load helper firmware\n");
-+		lbs_pr_err("request_firmware() failed with %d\n", ret);
-+		lbs_pr_err("helper firmware %s not found\n", card->helper);
- 		goto out;
- 	}
- 
-@@ -512,7 +513,8 @@ static int if_sdio_prog_real(struct if_sdio_card *card)
- 
- 	ret = request_firmware(&fw, card->firmware, &card->func->dev);
- 	if (ret) {
--		lbs_pr_err("can't load firmware\n");
-+		lbs_pr_err("request_firmware() failed with %d\n", ret);
-+		lbs_pr_err("firmware %s not found\n", card->firmware);
- 		goto out;
- 	}
- 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 632c291..285be43 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -819,7 +819,7 @@ static int if_usb_prog_firmware(struct if_usb_card *cardp)
- 
- 	if ((ret = request_firmware(&cardp->fw, lbs_fw_name,
- 				    &cardp->udev->dev)) < 0) {
--		lbs_pr_err("request_firmware() failed with %#x\n", ret);
-+		lbs_pr_err("request_firmware() failed with %d\n", ret);
- 		lbs_pr_err("firmware %s not found\n", lbs_fw_name);
- 		goto done;
- 	}
+-- 
+Thanks and Regards,
+Anadi Mishra,
+Mumbai,
+9987388960.
