@@ -1,70 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:12406 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752670AbYJPA5W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 20:57:22 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2907834fkq.5
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 17:57:20 -0700 (PDT)
-Message-ID: <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com> (sfid-20081016_025730_080228_647AB0AF)
-Date: Thu, 16 Oct 2008 02:57:20 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: New Regulatory Domain Api.
-Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Marcel Holtmann" <holtmann@linux.intel.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081015174447.GF15902@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1224086374.735.4.camel@johannes.berg>
-	 <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
-	 <1224092868.28173.21.camel@californication>
-	 <20081015112517.GF6509@tesla>
-	 <1224098748.28173.32.camel@californication>
-	 <20081015131622.GH6509@tesla>
-	 <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com>
-	 <20081015170830.GA15902@tesla>
-	 <1ba2fa240810151735t100ceda5s7fe7b495f735c507@mail.gmail.com>
-	 <20081015174447.GF15902@tesla>
+Received: from main.gmane.org ([80.91.229.2]:34784 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753064AbYJAVfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Oct 2008 17:35:05 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1Kl9La-0007cx-8M
+	for linux-wireless@vger.kernel.org; Wed, 01 Oct 2008 21:35:02 +0000
+Received: from pd9e87db2.dip.t-dialin.net ([217.232.125.178])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 21:35:02 +0000
+Received: from eo by pd9e87db2.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 21:35:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: Oops with current kernel and ath5k
+Date: Wed, 01 Oct 2008 23:10:37 +0200
+Message-ID: <87ej30m376.fsf@denkblock.local> (sfid-20081001_233512_736508_E3A89AFD)
+References: <200808101401.03339.toralf.foerster@gmx.de>
+	<b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
+	<200810012055.58085.toralf.foerster@gmx.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Cc: ath5k-devel@lists.ath5k.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 15, 2008 at 7:44 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Wed, Oct 15, 2008 at 05:35:44PM -0700, Tomas Winkler wrote:
->> On Wed, Oct 15, 2008 at 7:08 PM, Luis R. Rodriguez
->> > The issue was your single band cards do not store 5 GHz band regulatory
->> > information. Is this MOW1 or MOW2?
->>
->> Don't understand the question, the 5GHz channels are disabled that's
->> all you can read from there.
+Toralf F=F6rster <toralf.foerster@gmx.de> wrote:
+> Hello,
 >
-> Oh OK so its not just MOW1 and MOW2 but you also *do* take into account
-> the card's capabilities.
+> the issue (initially reported in August 2008) still remains in the cu=
+rrent=20
+> kernel at my ThinkPad T41, a screen shot is attached. The steps to re=
+produce=20
+> are :
 >
->> > It certainly helps more understand your situation. I had no idea
->> > of MOW1 and MOW2. Can this be documented as part of the
->> > regulatory_hint() code changes which will be added?
->>
->> I've just checked current docs and from 5000 on inclusively there are
->> only 3 SKU's MOW, ABG (no N) and BG. All others were depreciated.
->
-> Interesting.. Are these SKUs also used on other platforms as well, say
-> for Windows?
+> 1. modprobe it
+> 2. suspend the system to ram
+> 3. wake it up
+> 4. rmmod the driver
 
-Definitely It's not defined specially  for Linux market. And you may
-sense that this is also station mode specific. In AP mode probably the
-story would be different.
+Yes, I have run into this problem too. The patch below (applies to
+2.6.27-rc8) fixes the problem, but since I'm not a wireless hacker,
+developers might prefer a different approach. Please let me know if I
+should change anything. Perhaps I should split this into two separate
+patches?
 
-> Anyway since you only have 3 this should be very simple to resolve...
-> Just add the 5 GHz frequency ranges you always support. Obviously the BG
-> card will not be able to make use of them :)
+Regards,
 
-It's ugly but possible w/a but we still have 3945 and 4965 where it is
-not so simple.
-Tomas
+Elias
+
+---
+=46rom: Elias Oltmanns <eo@nebensachen.de>
+Subject: ath5k: Do not start the hw unconditionally on resume from s2ra=
+m
+
+Currently, ath5k_pci_resume() calls ath5k_init() unconditionally.
+Therefore, the following sequence of events leads to a kernel panic:
+# modprobe ath5k
+suspend to ram
+resume
+# modprobe -r ath5k
+The calibration timer is not stopped even though the structs go away
+underneath.
+
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+---
+
+ drivers/net/wireless/ath5k/base.c |    8 +++++---
+ include/net/mac80211.h            |   11 +++++++++++
+ net/mac80211/main.c               |    6 ++++++
+ 3 files changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/a=
+th5k/base.c
+index 0676c6d..df602ee 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -621,9 +621,11 @@ ath5k_pci_resume(struct pci_dev *pdev)
+ 		goto err_no_irq;
+ 	}
+=20
+-	err =3D ath5k_init(sc);
+-	if (err)
+-		goto err_irq;
++	if (ieee80211_opened(hw)) {
++		err =3D ath5k_init(sc);
++		if (err)
++			goto err_irq;
++	}
+ 	ath5k_led_enable(sc);
+=20
+ 	/*
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ff137fd..d15a6ba 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1671,6 +1671,17 @@ void ieee80211_iterate_active_interfaces_atomic(=
+struct ieee80211_hw *hw,
+ 						void *data);
+=20
+ /**
++ * ieee80211_opened - Determine whether device has been opened.
++ * @hw: pointer as obtained from ieee80211_alloc_hw().
++ * @return: how many times interface has been opened
++ *
++ * Allows low level drivers to find out whether the ieee80211 layer
++ * considers the device opened. In fact, the number of opened virtual
++ * interfaces associated with the hw is returned.
++ */
++int ieee80211_opened(struct ieee80211_hw *hw);
++
++/**
+  * ieee80211_start_tx_ba_session - Start a tx Block Ack session.
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+  * @ra: receiver address of the BA session recipient
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index aa5a191..4f77496 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -557,6 +557,12 @@ static int ieee80211_stop(struct net_device *dev)
+ 	return 0;
+ }
+=20
++int ieee80211_opened(struct ieee80211_hw *hw)
++{
++	return hw_to_local(hw)->open_count;
++}
++EXPORT_SYMBOL(ieee80211_opened);
++
+ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16=
+ tid)
+ {
+ 	struct ieee80211_local *local =3D hw_to_local(hw);
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
