@@ -1,106 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:41303 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444AbYJMTGL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 15:06:11 -0400
-Received: by gxk9 with SMTP id 9so4097060gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 12:06:09 -0700 (PDT)
-Message-ID: <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com> (sfid-20081013_210617_796037_F573875D)
-Date: Mon, 13 Oct 2008 12:06:09 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	yang.y.yi@gmail.com,
-	"Vikram Kandukuri" <Vikram.Kandukuri@atheros.com>,
-	"Jothikumar Mothilal" <Jothikumar.Mothilal@atheros.com>
-Subject: Re: [Bug 11749] Ath5k driver has too many interrupts per second at idle
-Cc: ath5k-devel@lists.ath5k.org
-In-Reply-To: <20081013150525.884BC108058@picon.linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_102046_3600724.1223924769607"
-References: <bug-11749-13098@http.bugzilla.kernel.org/>
-	 <20081013150525.884BC108058@picon.linux-foundation.org>
+Received: from mx2.redhat.com ([66.187.237.31]:36351 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754314AbYJBV3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 17:29:24 -0400
+Subject: Re: Agere Hermes source-code: copyright situation
+From: Dan Williams <dcbw@redhat.com>
+To: Greg KH <greg@kroah.com>
+Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
+	Dave <kilroyd@googlemail.com>, TJ <linux@tjworld.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Casual J. Programmer" <casualprogrammer@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	Alexander Shirshikov <alexander.shirshikov@gmail.com>
+In-Reply-To: <20081002203731.GA25314@kroah.com>
+References: <200809290949.35749.arvidjaar@mail.ru>
+	 <20081001200039.GA29874@kroah.com> <48E400FA.2090305@gmail.com>
+	 <200810020637.27321.arvidjaar@mail.ru> <20081002200023.GC20902@kroah.com>
+	 <1222979517.12505.33.camel@72-58-93-37.area3.spcsdns.net>
+	 <20081002203731.GA25314@kroah.com>
+Content-Type: text/plain
+Date: Thu, 02 Oct 2008 17:28:34 -0400
+Message-Id: <1222982914.12505.37.camel@72-58-93-37.area3.spcsdns.net> (sfid-20081002_232928_356668_DF1EFDE7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_102046_3600724.1223924769607
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Thu, 2008-10-02 at 13:37 -0700, Greg KH wrote:
+> On Thu, Oct 02, 2008 at 04:31:57PM -0400, Dan Williams wrote:
+> > On Thu, 2008-10-02 at 13:00 -0700, Greg KH wrote:
+> > > On Thu, Oct 02, 2008 at 06:37:18AM +0400, Andrey Borzenkov wrote:
+> > > > TJ you can answer me using arvidjaar (at) newmail dot ru. Hopefully
+> > > > one of them works. Re WPA2 - there is no information how to setup
+> > > > CCMP/AES (even if firmware supports it); so no WPA2.
+> > > > 
+> > > > On Thursday 02 October 2008, Dave wrote:
+> > > > > Greg KH wrote:
+> > > > > > On Wed, Oct 01, 2008 at 05:40:29PM +0100, TJ wrote:
+> > > > > >> On Wed, 2008-10-01 at 14:13 +0400, Andrey Borzenkov wrote:
+> > > > > >>>On Wednesday 01 October 2008, Greg KH wrote:
+> > > > > >>>> On Mon, Sep 29, 2008 at 09:49:34AM +0400, Andrey Borzenkov wrote:
+> > > > > >>>>> I have here driver that can be built for two different types of
+> > > > > >>>>> hardware from basically the same sources (this is port of old Agere
+> > > > > >>>>> drivers for Hermes-I/Hermes-II chipsets).
+> > > > > >>>> 
+> > > > > >>>> Cool, do you have a link to the code, I'd be glad to add it to
+> > > > > >>>> drivers/staging/ if it's not in a fully-mergable state yet to get wider
+> > > > > >>>> users for it.
+> > > > > >>>
+> > > > > >>> You can look at it here: http://arvidjaar.newmail.ru/wlags49.tar.bz
+> > > > > >>>
+> > > > > >>> I doubt that it is suitable for inclusion at current state if ever.
+> > > > > >>> This is taken directly from Agere 2.4 sources; the only parts that were
+> > > > > >>> touched are kernel glue and wireless extensions interface.
+> > > > > >>>
+> > > > > >>> And it is not GPL'ed, of course. I attach E-Mail I received a while
+> > > > > >>> back with answere from Agere legal department.
+> > > > > >>
+> > > > > >> I'm attaching the original email I sent to Agere and their response for
+> > > > > >> the record, hoping it helps clarify the legal position.
+> > > > > > 
+> > > > > > Very nice, thanks for forwarding this on.
+> > > > > > 
+> > > > > > As the license is BSD, that means we can place it in the kernel tree.
+> > > > > > Do you all mind if I add it to the drivers/staging/ directory so you can
+> > > > > > work on cleaning it up within the main kernel tree infrastructure?
+> > > > >
+> > > > 
+> > > > I do not mind but it is likely makes no sense for H-I now; and
+> > > > I do not own H-II myself so cannot work on it. If we are focusing on
+> > > > H-2/2.5, it would make more sense to make similar modifications to
+> > > > 7.22 driver set from Agere to avoid overlap with Orinoco.
+> > > 
+> > > Ok, let me know what you think is the best thing to do, and I'll be glad
+> > > to help you out with it.
+> > 
+> > I tend to think that only for USB hardware do we need a new driver, and
+> > that driver can share some things with both hostap and orinoco.  If at
+> > all possible, lets integrate missing hardware support into _existing_
+> > drivers instead of importing drivers of questionable quality.  I've seen
+> > wlags49 before and it's not great.  Right now we don't have any viable
+> > Orinoco USB driver, and while linux-wlan-ng was proposed, there's no way
+> > we're taking a third 802.11 "stack" or the bits in those drivers that
+> > overlap with existing drivers' hardware support.
+> 
+> I just added the wlan-ng usb driver (and stack) to the drivers/staging/
+> tree a few hours ago :)
+> 
+> So yes, we do need to do this kind of migration, at the moment I am
+> trying to track down all out-of-tree drivers that distros and users are
+> relying on to get them into staging/ and then we can work on cleaning
+> them up and moving them to the proper place in the kernel tree.
+> 
+> Sound good?
+> 
+> So, for this driver, should I do the same thing, as I don't think these
+> devices are covered by any other driver at the moment, right?
 
-On Mon, Oct 13, 2008 at 8:05 AM,  <bugme-daemon@bugzilla.kernel.org> wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=11749
+Prism II USB devices are only covered by linux-wlan-ng, yes.
 
----
-Bug description from kernel.org bugzilla
+Dan
 
-Latest working kernel version: None
-Earliest failing kernel version: Unknow
-Distribution: all
-Hardware Environment: Atheros wireless chipset
-Software Environment: Fedora
-Problem Description: ath5k driver has many inperrupts per second although the
-system is idle.
 
-I used AspierOne to test it, interrupts are so many that CPU's C3 residence
-time is only 20 milliseconds or less, there isn't any valid traffic on my
-wireless network except beacon frame.
-
-I tested X61 in the same wireless environment, number of interrupt is only 1
-per second, X61 has the latest Intel wireless chipset and 2.6.27 kernel was
-running.
-
-So i think ath5k and ath9k should can do as Intel wireless driver does,
-otherwise, CPU can't stay at C3 with longer time because of wireless
-interrupts.
-
-Steps to reproduce:
-1. Enable wireless on platform with Atheros wireless chipset.
-2. watch cat /proc/interrupts
-
----
-
-Folks, ANI is not handled yet in ath5k (and won't be on 2.6.26). What
-I recommend is to try disabling MIB interrupts on the stable kernels
-where you won't make use of MIB statistics, which you need for ANI.
-Once you have ANI please enable the MIB interrupt.
-
-yang.y.yi, please try this patch (also attached for your convenience)
-and let us know if you see a difference.
-
-  Luis
-
-diff --git a/drivers/net/wireless/ath5k/base.c
-b/drivers/net/wireless/ath5k/base.c
-index 0676c6d..c18ead9 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -2246,8 +2246,7 @@ ath5k_init(struct ath5k_softc *sc)
-         * Enable interrupts.
-         */
-        sc->imask = AR5K_INT_RX | AR5K_INT_TX | AR5K_INT_RXEOL |
--               AR5K_INT_RXORN | AR5K_INT_FATAL | AR5K_INT_GLOBAL |
--               AR5K_INT_MIB;
-+               AR5K_INT_RXORN | AR5K_INT_FATAL | AR5K_INT_GLOBAL;
-
-        ath5k_hw_set_intr(sc->ah, sc->imask);
-        /* Set ack to be sent at low bit-rates */
-
-------=_Part_102046_3600724.1223924769607
-Content-Type: text/x-patch; name=ath5k-disable-mib.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fm926nkg0
-Content-Disposition: attachment; filename=ath5k-disable-mib.patch
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuYyBiL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuYwppbmRleCAwNjc2YzZkLi5jMThlYWQ5IDEwMDY0NAot
-LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1ay9iYXNlLmMKKysrIGIvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYXRoNWsvYmFzZS5jCkBAIC0yMjQ2LDggKzIyNDYsNyBAQCBhdGg1a19pbml0KHN0
-cnVjdCBhdGg1a19zb2Z0YyAqc2MpCiAJICogRW5hYmxlIGludGVycnVwdHMuCiAJICovCiAJc2Mt
-PmltYXNrID0gQVI1S19JTlRfUlggfCBBUjVLX0lOVF9UWCB8IEFSNUtfSU5UX1JYRU9MIHwKLQkJ
-QVI1S19JTlRfUlhPUk4gfCBBUjVLX0lOVF9GQVRBTCB8IEFSNUtfSU5UX0dMT0JBTCB8Ci0JCUFS
-NUtfSU5UX01JQjsKKwkJQVI1S19JTlRfUlhPUk4gfCBBUjVLX0lOVF9GQVRBTCB8IEFSNUtfSU5U
-X0dMT0JBTDsKIAogCWF0aDVrX2h3X3NldF9pbnRyKHNjLT5haCwgc2MtPmltYXNrKTsKIAkvKiBT
-ZXQgYWNrIHRvIGJlIHNlbnQgYXQgbG93IGJpdC1yYXRlcyAqLwo=
-------=_Part_102046_3600724.1223924769607--
