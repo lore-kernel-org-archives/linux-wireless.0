@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43405 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbYJVXln (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 19:41:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: correct warnings in minstrel rate control algorithm
-Date: Wed, 22 Oct 2008 19:41:34 -0400
-Message-Id: <1224718894-25861-1-git-send-email-linville@tuxdriver.com> (sfid-20081023_014146_340361_0F53A941)
+Received: from mail.atheros.com ([12.36.123.2]:55893 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753167AbYJBXVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 19:21:08 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 16:21:08 -0700
+Date: Thu, 2 Oct 2008 09:20:54 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Greg KH <greg@kroah.com>
+CC: "proski@gnu.org" <proski@gnu.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: at76_usb driver status
+Message-ID: <20081002162054.GI5960@tesla> (sfid-20081003_012114_342344_F2FC7E50)
+References: <20081002210742.GA27221@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20081002210742.GA27221@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/rc80211_minstrel_debugfs.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On Thu, Oct 02, 2008 at 02:07:42PM -0700, Greg KH wrote:
+> Hi,
+> 
+> In my quest to suck drivers into drivers/staging/ I noticed that the
+> at76_usb driver is being shipped by both Fedora and Ubuntu in their
+> kernels.
+> 
+> So I was wondering what the status of this driver is, and if I
+> could/should add it to drivers/staging/?  If it's about to go into
+> 2.6.28 then I'll hold off, but it would be nice to know what the status
+> is.
+> 
+> Also, it looks like it is being developed in a git tree, where is that
+> tree?
+> 
+> And, did you merge the USB DFU code into the driver itself?  Having that
+> kind of functionality in the USB core is fine with me if you want me to
+> add that portion there, no reason it needs to be burried in individual
+> drivers.
 
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index 0b024cd..98f4807 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -94,8 +94,8 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 				prob / 10, prob % 10,
- 				mr->last_success,
- 				mr->last_attempts,
--				mr->succ_hist,
--				mr->att_hist);
-+				(unsigned long long)mr->succ_hist,
-+				(unsigned long long)mr->att_hist);
- 	}
- 	p += sprintf(p, "\nTotal packet count::    ideal %d      "
- 			"lookaround %d\n\n",
-@@ -106,7 +106,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 	return 0;
- }
- 
--static int
-+static ssize_t
- minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *o)
- {
- 	struct minstrel_stats_info *ms;
--- 
-1.5.5.1
+Also, it may help to keep this status here, once we find out what it is:
 
+http://wireless.kernel.org/en/users/Drivers/at76_usb
+
+  Luis
