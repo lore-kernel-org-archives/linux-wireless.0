@@ -1,58 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:40842 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752788AbYJGWwq (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753712AbYJBSF3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 18:52:46 -0400
-Date: Tue, 7 Oct 2008 17:52:45 -0500
-From: Robin Holt <holt@sgi.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Robin Holt <holt@sgi.com>, linux-wireless@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-Subject: Re: Infinite loop in sta_info_debugfs_add_work().
-Message-ID: <20081007225245.GN8534@sgi.com> (sfid-20081008_005250_512572_9CA8F916)
-References: <20081004103144.GI8534@sgi.com> <1223165956.24551.76.camel@johannes.berg> <20081005023143.GJ8534@sgi.com> <1223195921.24551.79.camel@johannes.berg> <20081006064509.GK8534@sgi.com> <1223283470.24551.86.camel@johannes.berg> <20081006133045.GM8534@sgi.com> <1223330976.3778.47.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223330976.3778.47.camel@johannes.berg>
+	Thu, 2 Oct 2008 14:05:29 -0400
+Subject: Re: [PATCH] [RESEND] mac80211: remove redundant check in
+	ieee80211_master_start_xmit (net/mac80211/tx.c)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <roszenrami@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <b25312890810020648i5e224f3cp1178790fd68d7f3b@mail.gmail.com> (sfid-20081002_154826_252562_28230F2C)
+References: <eb3ff54b0810020556s407728b9n772e7ae178761eee@mail.gmail.com>
+	 <1222954031.24551.51.camel@johannes.berg>
+	 <b25312890810020648i5e224f3cp1178790fd68d7f3b@mail.gmail.com>
+	 (sfid-20081002_154826_252562_28230F2C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4U6WergtCmov3LiPXLSN"
+Date: Thu, 02 Oct 2008 20:05:24 +0200
+Message-Id: <1222970724.24551.57.camel@johannes.berg> (sfid-20081002_200533_286092_6388F29F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 07, 2008 at 12:09:36AM +0200, Johannes Berg wrote:
-> On Mon, 2008-10-06 at 08:30 -0500, Robin Holt wrote:
-> 
-> > I didn't really need to do much for the printk's in
-> > ieee80211_sta_debugfs_add().  My printk's in sta_info_debugfs_add_work()
-> > already told me that sta->local->debugfs.stations is NULL.  
-> 
-> Well yes, but I wanted to know why ieee80211_sta_debugfs_add() doesn't
-> set debugfs.stations to non-NULL.
-> 
-> > Again, this
-> > is iwl3945 only after a suspend of a few minutes followed by a resume.
-> > It happens about 1/3 of the time.
-> 
-> Ok, I have a new suspicion: there seems to be a race condition between
-> destroying a station (sta_info_destroy) which removes it from debugfs,
-> and creating a new one with the same MAC address which will ask the
-> workqueue to add it to debugfs. It clearly is actually possible to run
-> sta_info_insert(sta2) and consequently sta_info_debugfs_add_work before
-> sta_info_destroy(sta1), but when they both have the same MAC address
-> then ieee80211_sta_debugfs_add has to fail.
-> 
-> I don't see much we can do against this, the patch I posted is
-> definitely needed just in case debugfs gets a new failure mode any time
-> in the future so I'll post it for inclusion, and the race condition I
-> described just means that the sta2 won't be in debugfs at all...
 
-That race seems more plausible.
+--=-4U6WergtCmov3LiPXLSN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On a seperate note, I got a panic with your earlier patch applied at:
-IP: [<f8c669df>] :mac80211:netdev_notify+0x5f/0x90
+On Thu, 2008-10-02 at 16:48 +0300, Rami Rosen wrote:
+> Hi,
+>=20
+>  - This patch (against the linux-wireless-next git tree) removes a
+> redundant check in ieee80211_master_start_xmit (net/mac80211/tx.c)
+> and adjust indentation in this method accordingly.
+>=20
+>  In this method, there is no need to call again the
+> ieee80211_is_data() method; this is checked immediately before, in the
+> "if" command (we will not enter this block unless ieee80211_is_data()
+> is true, so that the "and" (&&) condition in that "if" command will be
+> fullfilled ).
 
-Not sure if that is just exposed by the hangs being out of the way.  I
-hand wrote that part.  Nothing else got captured in the logs :(
+Looks good to me, but I think you should look a bit more into how to
+format a proper patch and try to send it inline rather than as an
+attachment. Have you seen http://linux.yyz.us/patch-format.html? The
+main point I guess is that we don't want to have the "Hi," and
+"Regards, ..." stuff in the kernel changelog.
 
-Thanks,
-Robin
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+johannes
+
+--=-4U6WergtCmov3LiPXLSN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI5Q1hAAoJEKVg1VMiehFY1BMP/jD4hHkzOHJ/L6xzgsHapVMv
+DoB826DWXX2g10jJLQGMyUDsyfD3QYBhvamwMAt+3XwKt3hBrIxe+duJ4x/pb6U1
+Wt9YNE8CqB76p6QJKREaMjymTOQo38a2XW7x0HTLtK+XPqB9K3AW9EbdoFwyBYSI
+U2lQpa3XoLgjb8EVk8J7AjdyfSpUzWIzqiwLtdIUQan83iuT0YY0KkLSikrQq1+3
+1aLA496kUO4RzrAqa/cTXMCWHI9nvXorCWKUEF4fmbZZ71ZHmFtiJIxy7+EgvtTh
+U59ufx7jDssa+1RiDqxznxwkBng33ZAoEHQKbnmw+5RX8Rw00BTCbCd/mRo/+6fm
+6OrfPWmqvaA8E6C03bV8iHpClBNVNtCmCiuHZndxVz4G/1frCwhPorcgtdmAXfxv
+CgjiemzhBtt1IbCHJci4jR9Ye9tDEECNzfWWaB6sipjmvTNOyIiapyNxUebTPbEY
++nC46w/Qop7B6A4nl4XtkWtYqsEgsJ2T9E5uYYDfP+dP7Ka2DyanaeGKJVzfFfob
+RJ8vzq3B50aLbRwr0LA53R8OJ2Y1Lfsj7RGCayr/lNlsqldBz8jl174xTYYa7BVE
+eHj94okAu6X3WGBi2L0UyQdQnShARabnmolpiSvpO42xSycEpspWi36eFOgU22Mo
+JNllJ0Djwp2PtohtwuEo
+=1dlb
+-----END PGP SIGNATURE-----
+
+--=-4U6WergtCmov3LiPXLSN--
+
