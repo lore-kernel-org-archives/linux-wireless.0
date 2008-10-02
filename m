@@ -1,78 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:7598 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751906AbYJWUSr (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:1372 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754020AbYJBPCm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 16:18:47 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so175015ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 13:18:45 -0700 (PDT)
-Message-ID: <43e72e890810231318t2ef200e4wed96b48efefa62bb@mail.gmail.com> (sfid-20081023_221851_979205_757ED539)
-Date: Thu, 23 Oct 2008 13:18:44 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <1ba2fa240810231131l9c9597au2acf166a13a8c03b@mail.gmail.com>
+	Thu, 2 Oct 2008 11:02:42 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Elias Oltmanns" <eo@nebensachen.de>, jirislaby@gmail.com,
+	mickflemm@gmail.com, johannes@sipsolutions.net,
+	toralf.foerster@gmx.de
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
+Date: Thu, 2 Oct 2008 11:02:02 -0400
+Message-Id: <20081002144600.M31352@bobcopeland.com> (sfid-20081002_170246_650116_07F8A6C3)
+In-Reply-To: <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
+References: <200808101401.03339.toralf.foerster@gmx.de> <b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com> <200810012055.58085.toralf.foerster@gmx.de> <87ej30m376.fsf@denkblock.local> <b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com> <87ljx8ndw1.fsf@denkblock.local> <b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com> <87od23mo08.fsf@denkblock.local> <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	 <1224495531.18024.55.camel@johannes.berg>
-	 <18684.24323.743610.871307@gargle.gargle.HOWL>
-	 <1224505349.27899.17.camel@johannes.berg>
-	 <18684.51206.771543.514682@localhost.localdomain>
-	 <1224669612.28639.49.camel@johannes.berg>
-	 <18688.17545.136327.991699@gargle.gargle.HOWL>
-	 <1224773124.6002.32.camel@johannes.berg>
-	 <43e72e890810231023q5650184r8ce50cb51b63e706@mail.gmail.com>
-	 <1ba2fa240810231131l9c9597au2acf166a13a8c03b@mail.gmail.com>
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 23, 2008 at 11:31 AM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Thu, Oct 23, 2008 at 7:23 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+On Thu, 2 Oct 2008 08:52:58 -0400, Bob Copeland wrote
+> > Not sure I agree there. Why should calibration take place regularly even
+> > though the interface appears to be shut down from user-space's point of
+> > view? It simply doesn't make sense  to start the interface if nobody
+> > intends to use it.
+> 
+> Hmm, yeah, you're right.  So, I guess we can just do your patch except
+> with another status bit that says it's active instead of changing
+> mac80211 (b43 does something along those lines).
 
->> I checked internally to verify where you would decide when to AMPDU
->> and to try to get different reviews and opinions, and it seems that
->> the path we take right now is correct as there is not much overhead so
->> we always use AMPDU with whoever supports it with data frames. If
->> you're a STA you do it all the time with the AP for data frames.
->>
->> I noticed iwlagn had some more logic within the RC but I gave up
->> trying to follow the logic. I suspect they do the same though, Tomas?
+Something like this?  It's kind of ugly, but the state bit needs
+to be in the _init/_stop critical section to avoid the race there.
+This makes it match other drivers' suspend methods, but is only a 
+stop-gap until we have mac80211 suspend callbacks.
 
-Thanks for the feedback!
+Jiri, Nick, any comments?  
 
-> I got different output from our system engineering. APMDU has overhead
+Based on a patch by Elias Oltmanns.  We call ath5k_init in resume even
+if we didn't previously open the device.  Besides starting up the
+device unnecessarily, this also causes an OOPS on rmmod because
+mac80211 will not invoke ath5k_stop and softirqs are left running after
+the module has been unloaded.  Add a new state bit, ATH5K_STAT_STARTED,
+to indicate that we have been started up.
 
-Is that because of the interactions required in firmware for scheduling BTW?
+---
+ drivers/net/wireless/ath5k/base.c |   21 ++++++++++++++++++---
+ drivers/net/wireless/ath5k/base.h |    3 ++-
+ 2 files changed, 20 insertions(+), 4 deletions(-)
 
-> and if there is not requirement
-> for high throughput we don't initiate one.
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index e09ed2c..a40b75f 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -626,11 +626,17 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath5k_softc *sc = hw->priv;
++	int is_started;
+ 
+ 	ath5k_led_off(sc);
+ 
++	is_started = test_bit(ATH_STAT_STARTED, sc->status);
+ 	ath5k_stop_hw(sc);
+ 
++	/* restore started flag for resume */
++	if (is_started)
++		set_bit(ATH_STAT_STARTED, sc->status);
++
+ 	free_irq(pdev->irq, sc);
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+@@ -666,9 +672,12 @@ ath5k_pci_resume(struct pci_dev *pdev)
+ 		goto err_no_irq;
+ 	}
+ 
+-	err = ath5k_init(sc);
+-	if (err)
+-		goto err_irq;
++	if (test_bit(ATH_STAT_STARTED, sc->status)) {
++		err = ath5k_init(sc);
++		if (err)
++			goto err_irq;
++	}
++
+ 	ath5k_led_enable(sc);
+ 
+ 	/*
+@@ -2153,6 +2162,8 @@ ath5k_init(struct ath5k_softc *sc)
+ 
+ 	mutex_lock(&sc->lock);
+ 
++	__clear_bit(ATH_STAT_STARTED, sc->status);
++
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "mode %d\n", sc->opmode);
+ 
+ 	/*
+@@ -2177,6 +2188,8 @@ ath5k_init(struct ath5k_softc *sc)
+ 	if (ret)
+ 		goto done;
+ 
++	__set_bit(ATH_STAT_STARTED, sc->status);
++
+ 	/* Set ack to be sent at low bit-rates */
+ 	ath5k_hw_set_ack_bitrate_high(sc->ah, false);
+ 
+@@ -2269,6 +2282,8 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 	}
+ 	ath5k_txbuf_free(sc, sc->bbuf);
+ 	mmiowb();
++
++	__clear_bit(ATH_STAT_STARTED, sc->status);
+ 	mutex_unlock(&sc->lock);
+ 
+ 	del_timer_sync(&sc->calib_tim);
+diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
+index 9d0b728..06d1054 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -128,11 +128,12 @@ struct ath5k_softc {
+ 	size_t			desc_len;	/* size of TX/RX descriptors */
+ 	u16			cachelsz;	/* cache line size */
+ 
+-	DECLARE_BITMAP(status, 4);
++	DECLARE_BITMAP(status, 5);
+ #define ATH_STAT_INVALID	0		/* disable hardware accesses */
+ #define ATH_STAT_MRRETRY	1		/* multi-rate retry support */
+ #define ATH_STAT_PROMISC	2
+ #define ATH_STAT_LEDSOFT	3		/* enable LED gpio status */
++#define ATH_STAT_STARTED	4		/* opened & irqs enabled */
+ 
+ 	unsigned int		filter_flags;	/* HW flags, AR5K_RX_FILTER_* */
+ 	unsigned int		curmode;	/* current phy mode */
+-- 
+1.5.4.2.182.gb3092
 
-This makes sense to me regardless.
 
-> What is for sure we shounld
-> not have aggregation enabled for VO AC.
 
-Any particular reason? I'll review this too, but my guess would be the
-buffering required before TXing. I'll see how we perform with aggr on
-VO AC.
-
-> I've payed attention that there are different APs do that differently
-> some opens BA session on BE AC immediately upon association some do it
-> on high throughput I haven't seen in the second case it will be opened
-> on simple ping.
-> Anyhow if we would implement the triggering on throughput  simply
-> setting starting and stopping thresholds to small values will have
-> same effect as your solution and setting it to 0 and maximum will
-> respectively will have effect on  opening BA session upon association.
-
-Seems reasonable. If this is set then as a hw configurable option in
-mac80211 then we can even allow RC control this, should this ever be
-needed (we don't).
-
-  Luis
