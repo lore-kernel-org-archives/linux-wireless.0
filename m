@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:14620 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752106AbYJFPVI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58426 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756036AbYJBN2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 11:21:08 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so427269yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 08:21:07 -0700 (PDT)
-Message-ID: <eb3ff54b0810060821l75658922s6ed43ea763c448b8@mail.gmail.com> (sfid-20081006_172113_125952_C2436DCD)
-Date: Mon, 6 Oct 2008 17:21:07 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH 2/2] iwlwifi: fix compliation warning in iwl-scan.c when CONFIG_IWLWIFI_DEBUG is not set.
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	yi.zhu@intel.com
-In-Reply-To: <1ba2fa240810060742y7d0d4d24w984fe55be178e6d1@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <eb3ff54b0810060659n7d93a9fcla1301fa68a8a23a5@mail.gmail.com>
-	 <1ba2fa240810060742y7d0d4d24w984fe55be178e6d1@mail.gmail.com>
+	Thu, 2 Oct 2008 09:28:03 -0400
+Subject: Re: [PATCH] mac80211: remove redundant check in
+	ieee80211_master_start_xmit (net/mac80211/tx.c)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <eb3ff54b0810020556s407728b9n772e7ae178761eee@mail.gmail.com> (sfid-20081002_145638_432332_195D186E)
+References: <eb3ff54b0810020556s407728b9n772e7ae178761eee@mail.gmail.com>
+	 (sfid-20081002_145638_432332_195D186E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MjqYTNT2225RnBEx3pjn"
+Date: Thu, 02 Oct 2008 15:27:11 +0200
+Message-Id: <1222954031.24551.51.camel@johannes.berg> (sfid-20081002_152825_816869_BE4C7CF0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-Yes, now I found you are right;
-see:
-http://marc.info/?l=linux-wireless&m=122282784617899&w=2
 
+--=-MjqYTNT2225RnBEx3pjn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-Rami Rosen
+On Thu, 2008-10-02 at 15:56 +0300, Rami Rosen wrote:
+> Hi,
+>=20
+>  - This patch (against the linux-wireless-next git tree) removes a
+> redundant check in ieee80211_master_start_xmit (net/mac80211/tx.c).
+>=20
+>   In this method, there is no need to call again the
+> ieee80211_is_data() method; this is checked immediately before, in the
+> "if" command (we will not enter this block unless ieee80211_is_data()
+> is true, so that the "and" (&&) condition in that "if" command will be
+> fullfilled ).
 
-On Mon, Oct 6, 2008 at 4:42 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Mon, Oct 6, 2008 at 3:59 PM, Rami Rosen <ramirose@gmail.com> wrote:
->> When CONFIG_IWLWIFI_DEBUG is not set and CONFIG_IWLWIFI is set,
->> we get this compilation warning:
->> wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-scan.c:92: warning:
->> 'iwl_escape_essid' defined but not used
->>
->> This patch (against wireless-next-2.6 tree) fixes it.
->>
-> I believe there is queued patch that removes this code completely
-> Tomas
->
+You should un-indent the code accordingly.
+
+johannes
+
+--=-MjqYTNT2225RnBEx3pjn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI5MwsAAoJEKVg1VMiehFY848P/3gaq6Veg+BxF6mYbvMsdPKp
+jfalP0zi1FkEZqDCEU4ZdRAtpGvmPA++Sy8nf+CZmzkVJiAd8f26J37Tcw6wgNbF
+PGvJevpRP+6lmheYjQoMlIUXFtrlxlANQ4RVEiP1sN2TM0vYImZ9WEvJJJSk0kKk
+XYDbZ2OennxErDiEBYPPc68xisVxRT1RZojYX4SVhao7atv/rpcYumbPNaAz7ztK
+T/WjgraV4cYbwwJ5HnQ38E7ux53ndmGQEK8fXaaoorHkXGDM/Y+1a8gYBwA2f0kw
+mS8kHpSR7V1s+qRJVQcxHqDusGDnoaWkpnrif+Y4dHe0E0nzdQmVIuo5MHyxAr1P
+iSsEFyXaATOQMsMROH49AcWiWMnDwSDXPcx1K3J+FxqTqGFkVN1bXxcMsKUL2bk6
++Hd45xEs+0MFHREuPeP1qPPtbSDsQUCsZwnl2KzedVAlfEQl9cDnZY9A33qq4iim
+qlQdEZ1iqONawQfzrYAmHmoKnvE8n+AkXQn1Y0DPkKbTVDgXdE3Fx6X10LeDg2Pa
+VxePZRz8HQDG6T3lSK8MRcTkRI6h0XTDoyzPoruLxaPP60UblYgLa1zgix7CU1kv
+R2qMmsVHgWCNOLkeCGgjkCLjNiuSIWu17r8pCh66vx0Vd713uPm5nY0F6PabKsLg
+xVKxuBMVPjzr/6QAaZVJ
+=XJxz
+-----END PGP SIGNATURE-----
+
+--=-MjqYTNT2225RnBEx3pjn--
+
