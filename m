@@ -1,53 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:28442 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890AbYJWXhu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 19:37:50 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so212665yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 16:37:49 -0700 (PDT)
-Message-ID: <43e72e890810231637v51591edak5345faccd81d594b@mail.gmail.com> (sfid-20081024_013755_060059_6E843F08)
-Date: Thu, 23 Oct 2008 16:37:48 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Kernel <linux-kernel@vger.kernel.org>,
-	otus-devel@lists.madwifi-project.org
-Subject: Re: Release of Atheros 802.11n USB Linux driver
-In-Reply-To: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:47129 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753511AbYJBTMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 15:12:54 -0400
+Subject: Re: w35und wifi driver for linux-staging
+From: Dan Williams <dcbw@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Pavel Machek <pavel@suse.cz>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, kaszak@gmail.com,
+	lcostantino@gmail.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20081001125248.GA29661@infradead.org>
+References: <20081001123656.GA30942@elf.ucw.cz>
+	 <20081001125248.GA29661@infradead.org>
+Content-Type: text/plain
+Date: Thu, 02 Oct 2008 15:12:04 -0400
+Message-Id: <1222974724.12505.7.camel@72-58-93-37.area3.spcsdns.net> (sfid-20081002_211257_781181_1A1F4DED)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2008 at 7:04 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> We would like to see our Atheros 802.11n USB Linux driver upstream
-> however we need help with this so we are releasing our Atheros 11n USB
-> Otus Linux driver under the ISC to the community. The goal is to work
-> with the community to help move this forward upstream. We are hoping
-> for community help and leadership on this (*cough*).
->
-> In the meantime users should be able to use this driver and patches
-> are welcomed to add newer wireless extension support so users on newer
-> kernels can get their devices working. The focus should be upstream
-> though :)
+On Wed, 2008-10-01 at 08:52 -0400, Christoph Hellwig wrote:
+> On Wed, Oct 01, 2008 at 02:36:56PM +0200, Pavel Machek wrote:
+> > +source "drivers/net/wireless/winbond/Kconfig"
+> 
+> winbond is a little too generic, please use the same name as the driver
+> name for the directory.
+> 
+> > @@ -0,0 +1,6 @@
+> > +config W35UND
+> > +	tristate "Winbond driver"
+> > +	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL && !4KSTACKS
+> > +	---help---
+> > +	  This is highly experimental driver for winbond wifi card on some Kohjinsha notebooks
+> > +	  Check http://code.google.com/p/winbondport/ for new version
+> 
+> Again, please give the option a useful name, and a useful description
+> including mentioning the actual chip name in there.
+> 
+> Also the !4KSTACKS dependency looks rather odd.
 
-So for those of you who want to know which devices to buy
+Whatever in the driver uses lots of stack space needs to be fixed, plain
+an simple...  no excuse for that.
 
-Dlink
-    * DWA-160A1
+Dan
 
-Netgear
-    * WNDA3100
-    * WN111v2
+> > diff --git a/drivers/net/wireless/winbond/Makefile b/drivers/net/wireless/winbond/Makefile
+> > new file mode 100644
+> > index 0000000..4682dd1
+> > --- /dev/null
+> > +++ b/drivers/net/wireless/winbond/Makefile
+> > @@ -0,0 +1,17 @@
+> > +	BASE_DIR=./winbondport
+> > +	DRIVER_DIR=./winbondport/linux
+> > +
+> > +obj-m := w35und.o
+> > +
+> > +w35und-objs := $(DRIVER_DIR)/wbusb.o $(DRIVER_DIR)/wb35reg.o $(DRIVER_DIR)/wb35rx.o $(DRIVER_DIR)/wb35tx.o \
+> > +	$(BASE_DIR)/mds.o \
+> > +	$(BASE_DIR)/mlmetxrx.o \
+> > +	$(BASE_DIR)/mto.o $(BASE_DIR)/phy_calibration.o $(BASE_DIR)/reg.o \
+> > +	$(BASE_DIR)/rxisr.o \
+> > +	$(BASE_DIR)/sme_api.o $(BASE_DIR)/wbhal.o $(BASE_DIR)/wblinux.o  \
+> > +
+> > +
+> > +obj-$(CONFIG_W35UND) += w35und.o
+> 
+> This is not a proper Makefile, and having these files in subdirectories
+> is not really a good idea either.  So move all files into one directory
+> and write a proper Makefile for it:
+> 
+> w35und-y	+= wbusb.o wb35reg.o wb35rx.o wb35tx.o mds.o mlmetxrx.o \
+> 		   mto.o phy_calibration.o reg.o rxisr.o sme_api.o wbhal.o \
+> 		   wblinux.o
+> 
+> obj-$(CONFIG_W35UND)	+= w35und.o
+> 
+> > diff --git a/drivers/net/wireless/winbond/winbondport/Makefile b/drivers/net/wireless/winbond/winbondport/Makefile
+> > new file mode 100644
+> > index 0000000..b03564c
+> > --- /dev/null
+> > +++ b/drivers/net/wireless/winbond/winbondport/Makefile
+> > @@ -0,0 +1,5 @@
+> > +#
+> > +# Makefile for the Winbond wireless networking driver
+> > +#
+> > +	
+> > +include $(TOPDIR)/Rules.make
+> 
+> This looks like some 2.4 leftover.
+> 
+> > diff --git a/drivers/net/wireless/winbond/winbondport/SVN_CHANGELOG b/drivers/net/wireless/winbond/winbondport/SVN_CHANGELOG
+> > new file mode 100644
+> 
+> should not be in the git tree.
+> 
+> > +++ b/drivers/net/wireless/winbond/winbondport/VersionNote.txt
+> 
+> neither.
+> 
+> 
+> No comments on the code now, I don't think I want to look at it..
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-TP-Link
-    * TL-WN821N
-
-We now have on the wiki for the driver too, to help followup progress
-on development for this driver.
-
-http://wireless.kernel.org/en/users/Drivers/otus
-
-  Luis
