@@ -1,102 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43118 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752842AbYJFVZu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44093 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752945AbYJBJWG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 17:25:50 -0400
-Date: Mon, 6 Oct 2008 17:25:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH 5/7] iwlwifi: take a valid antenna upon rate scale init
-Message-ID: <20081006212511.GL3448@tuxdriver.com> (sfid-20081006_232555_011530_16788930)
-References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com> <1223280333-4383-2-git-send-email-yi.zhu@intel.com> <1223280333-4383-3-git-send-email-yi.zhu@intel.com> <1223280333-4383-4-git-send-email-yi.zhu@intel.com> <1223280333-4383-5-git-send-email-yi.zhu@intel.com> <1223280333-4383-6-git-send-email-yi.zhu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223280333-4383-6-git-send-email-yi.zhu@intel.com>
+	Thu, 2 Oct 2008 05:22:06 -0400
+Subject: Re: Oops with current kernel and ath5k
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <87ej30m376.fsf@denkblock.local> (sfid-20081001_233512_736508_E3A89AFD)
+References: <200808101401.03339.toralf.foerster@gmx.de>
+	 <b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
+	 <200810012055.58085.toralf.foerster@gmx.de>
+	 <87ej30m376.fsf@denkblock.local> (sfid-20081001_233512_736508_E3A89AFD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j3TpfPikgVbN+MDQrD6m"
+Date: Thu, 02 Oct 2008 10:17:16 +0200
+Message-Id: <1222935437.24551.11.camel@johannes.berg> (sfid-20081002_112210_888544_6A0C4884)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 06, 2008 at 04:05:31PM +0800, Zhu Yi wrote:
-> From: Tomas Winkler <tomas.winkler@intel.com>
-> 
-> This patch selects a valid antenna upon RS init. This solves a SYSASSERT
-> complaining that the driver is setting a non valid antenna in the LQ CMD.
 
-I suppose this is an accurate description, but I think you can do
-better. :-)
+--=-j3TpfPikgVbN+MDQrD6m
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-> index c1300fb..56a3f0c 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-> @@ -811,10 +811,14 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
->  
->  	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
->  	case CSR_HW_REV_TYPE_5100:
-> +		priv->hw_params.tx_chains_num = 1;
-> +		priv->hw_params.rx_chains_num = 2;
-> +		priv->hw_params.valid_tx_ant = ANT_B;
-> +		priv->hw_params.valid_rx_ant = ANT_AB;
-> +		break;
->  	case CSR_HW_REV_TYPE_5150:
->  		priv->hw_params.tx_chains_num = 1;
->  		priv->hw_params.rx_chains_num = 2;
-> -		/* FIXME: move to ANT_A, ANT_B, ANT_C enum */
->  		priv->hw_params.valid_tx_ant = ANT_A;
->  		priv->hw_params.valid_rx_ant = ANT_AB;
->  		break;
+On Wed, 2008-10-01 at 23:10 +0200, Elias Oltmanns wrote:
 
-Do you realize that both clauses are the same (i.e. there is no
-functional change)?  How is this useful?
-
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-> index d148d73..bac91f1 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-> @@ -284,6 +284,16 @@ static inline u8 num_of_ant(u8 mask)
->  		!!((mask) & ANT_C);
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -557,6 +557,12 @@ static int ieee80211_stop(struct net_device *dev)
+>  	return 0;
 >  }
->  
-> +static inline u8 first_antenna(u8 mask)
+> =20
+> +int ieee80211_opened(struct ieee80211_hw *hw)
 > +{
-> +	if (mask & ANT_A)
-> +		return ANT_A;
-> +	if (mask & ANT_B)
-> +		return ANT_B;
-> +	return ANT_C;
+> +	return hw_to_local(hw)->open_count;
 > +}
-> +
-> +
->  static inline u8 iwl4965_get_prev_ieee_rate(u8 rate_index)
->  {
->  	u8 rate = iwl_rates[rate_index].prev_ieee;
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> index 61797f3..f9efc0c 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> @@ -852,7 +852,7 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, int is_ap)
->  	struct iwl_link_quality_cmd link_cmd = {
->  		.reserved1 = 0,
->  	};
-> -	u16 rate_flags;
-> +	u32 rate_flags;
->  
->  	/* Set up the rate scaling to start at selected rate, fall back
->  	 * all the way down to 1M in IEEE order, and then spin on 1M */
-> @@ -869,14 +869,16 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, int is_ap)
->  			rate_flags |= RATE_MCS_CCK_MSK;
->  
->  		/* Use Tx antenna B only */
-> -		rate_flags |= RATE_MCS_ANT_B_MSK; /*FIXME:RS*/
-> +		rate_flags |= first_antenna(priv->hw_params.valid_tx_ant) <<
-> +				RATE_MCS_ANT_POS;
+> +EXPORT_SYMBOL(ieee80211_opened);
 
-You need to change the comment...
+No way. The driver has all the info it needs. Fix it.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+johannes
+
+--=-j3TpfPikgVbN+MDQrD6m
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI5IOJAAoJEKVg1VMiehFYXWEP/jOWWM27rrnZacSjmujhaWty
+PglJf6aZat9etIyJaJeNgOr3KO5uqEkI5+X7rL81O4VWiJNiV+zt1YCkiiPkXu1e
+wAmL9rkt3OCQYA1ftWhNbXQ6s+a8PrC3nyY0/izWMqksb0IKw6kgGKMi3M8BC6f+
+gci+dUMCk+w73GcizfN9SelRFC4g/SfnQ8JQLWZN9H6CGSgAgNZh15rYgiq0M9ag
+j/ozBQP90mVS5Mmvt4Tttl4oeJO3SNSX8s5edSeflqSyu1VU9qD16zHZbfpL5PrA
+A3Xui6vOyh9KRLK/fwRO7GdY+KZtE72Dq5Ei9w7fKvdaFozuAdYxrlgymasQme/P
+OLm2x38+cICZfL5e8HTbmgrghgLZeF31uMcP1O1Dimh14pWmkA1rdPTHU7rt0i9R
+FAUkAVd9lAzDtU06RtbC4f+6M0aLbnQ47pDkn61FMr29KiLY4w8EEEMkw80ohyxW
+HsNicGTpKBl9fGSt5UtpGanQp6GdMBVfMuu+APJdpDS16EMw2PmzTVa6Amb6E/dU
+7+Aqk1SqFmK6iAYt6wek34dJSbhH5KugWOk5kwcmzXrygXbZy5Xx0qd7Di+tDVX+
+BALhtnERHvKxGvMF5MXDhpRdnb/TTXSSVo20igFL/d7j/5r5xjOtttV/k+FFYKeO
+4w5AADOIzhoKzFkSJ5Ft
+=9mwx
+-----END PGP SIGNATURE-----
+
+--=-j3TpfPikgVbN+MDQrD6m--
+
