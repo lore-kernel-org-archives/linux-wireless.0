@@ -1,66 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33604 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752557AbYJ3UsL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 16:48:11 -0400
-Subject: Re: Guidelines regarding separate directory
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Dave <kilroyd@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-In-Reply-To: <1225399481.7931.5.camel@dv>
-References: <4909EA78.3060700@lwfinger.net>
-	 (sfid-20081030_181107_189082_5740895D) <1225387309.3690.73.camel@johannes.berg>
-	 <490A17F3.5050802@gmail.com>  <1225399481.7931.5.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-U7p4e/YBBr3ASTyO3gqp"
-Date: Thu, 30 Oct 2008 21:48:02 +0100
-Message-Id: <1225399682.3690.82.camel@johannes.berg> (sfid-20081030_214816_013280_BBA0B6B3)
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:51010 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754212AbYJBUlk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 16:41:40 -0400
+Date: Thu, 2 Oct 2008 13:37:31 -0700
+From: Greg KH <greg@kroah.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
+	Dave <kilroyd@googlemail.com>, TJ <linux@tjworld.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Casual J. Programmer" <casualprogrammer@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	Alexander Shirshikov <alexander.shirshikov@gmail.com>
+Subject: Re: Agere Hermes source-code: copyright situation
+Message-ID: <20081002203731.GA25314@kroah.com> (sfid-20081002_224145_105151_A9B9B7AA)
+References: <200809290949.35749.arvidjaar@mail.ru> <20081001200039.GA29874@kroah.com> <48E400FA.2090305@gmail.com> <200810020637.27321.arvidjaar@mail.ru> <20081002200023.GC20902@kroah.com> <1222979517.12505.33.camel@72-58-93-37.area3.spcsdns.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1222979517.12505.33.camel@72-58-93-37.area3.spcsdns.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 02, 2008 at 04:31:57PM -0400, Dan Williams wrote:
+> On Thu, 2008-10-02 at 13:00 -0700, Greg KH wrote:
+> > On Thu, Oct 02, 2008 at 06:37:18AM +0400, Andrey Borzenkov wrote:
+> > > TJ you can answer me using arvidjaar (at) newmail dot ru. Hopefully
+> > > one of them works. Re WPA2 - there is no information how to setup
+> > > CCMP/AES (even if firmware supports it); so no WPA2.
+> > > 
+> > > On Thursday 02 October 2008, Dave wrote:
+> > > > Greg KH wrote:
+> > > > > On Wed, Oct 01, 2008 at 05:40:29PM +0100, TJ wrote:
+> > > > >> On Wed, 2008-10-01 at 14:13 +0400, Andrey Borzenkov wrote:
+> > > > >>>On Wednesday 01 October 2008, Greg KH wrote:
+> > > > >>>> On Mon, Sep 29, 2008 at 09:49:34AM +0400, Andrey Borzenkov wrote:
+> > > > >>>>> I have here driver that can be built for two different types of
+> > > > >>>>> hardware from basically the same sources (this is port of old Agere
+> > > > >>>>> drivers for Hermes-I/Hermes-II chipsets).
+> > > > >>>> 
+> > > > >>>> Cool, do you have a link to the code, I'd be glad to add it to
+> > > > >>>> drivers/staging/ if it's not in a fully-mergable state yet to get wider
+> > > > >>>> users for it.
+> > > > >>>
+> > > > >>> You can look at it here: http://arvidjaar.newmail.ru/wlags49.tar.bz
+> > > > >>>
+> > > > >>> I doubt that it is suitable for inclusion at current state if ever.
+> > > > >>> This is taken directly from Agere 2.4 sources; the only parts that were
+> > > > >>> touched are kernel glue and wireless extensions interface.
+> > > > >>>
+> > > > >>> And it is not GPL'ed, of course. I attach E-Mail I received a while
+> > > > >>> back with answere from Agere legal department.
+> > > > >>
+> > > > >> I'm attaching the original email I sent to Agere and their response for
+> > > > >> the record, hoping it helps clarify the legal position.
+> > > > > 
+> > > > > Very nice, thanks for forwarding this on.
+> > > > > 
+> > > > > As the license is BSD, that means we can place it in the kernel tree.
+> > > > > Do you all mind if I add it to the drivers/staging/ directory so you can
+> > > > > work on cleaning it up within the main kernel tree infrastructure?
+> > > >
+> > > 
+> > > I do not mind but it is likely makes no sense for H-I now; and
+> > > I do not own H-II myself so cannot work on it. If we are focusing on
+> > > H-2/2.5, it would make more sense to make similar modifications to
+> > > 7.22 driver set from Agere to avoid overlap with Orinoco.
+> > 
+> > Ok, let me know what you think is the best thing to do, and I'll be glad
+> > to help you out with it.
+> 
+> I tend to think that only for USB hardware do we need a new driver, and
+> that driver can share some things with both hostap and orinoco.  If at
+> all possible, lets integrate missing hardware support into _existing_
+> drivers instead of importing drivers of questionable quality.  I've seen
+> wlags49 before and it's not great.  Right now we don't have any viable
+> Orinoco USB driver, and while linux-wlan-ng was proposed, there's no way
+> we're taking a third 802.11 "stack" or the bits in those drivers that
+> overlap with existing drivers' hardware support.
 
---=-U7p4e/YBBr3ASTyO3gqp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I just added the wlan-ng usb driver (and stack) to the drivers/staging/
+tree a few hours ago :)
 
+So yes, we do need to do this kind of migration, at the moment I am
+trying to track down all out-of-tree drivers that distros and users are
+relying on to get them into staging/ and then we can work on cleaning
+them up and moving them to the proper place in the kernel tree.
 
-> > orinoco_pci.c
->=20
-> orinoco_pci.c is a good candidate for removal.  It only supports the
-> hardware that is already supported by hostap_pci.
+Sound good?
 
-Wait wait. I think everybody would rather see hostap go than orinoco
-since hostap is a huge complex thing and quite buggy.
+So, for this driver, should I do the same thing, as I don't think these
+devices are covered by any other driver at the moment, right?
 
-johannes
+thanks,
 
---=-U7p4e/YBBr3ASTyO3gqp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJCh1+AAoJEKVg1VMiehFYsUsP/1/B3R9u6foUF3kZ0ITaA9XJ
-rEnw8/YhXBBWjMmWoqW7iRkBziQ1L+RTgWBXS6nq9XwPpA2e8LoFxyozMneEpfGP
-QQKDTA7GswipvuYsi2hGe0ftXkOxahZtuQjdN0gK1Ds77wLj+hD2kshX8Ffi6ChV
-PjDWLV7kKAMBtMKbF43C4N11W7C9Sm5FIrHvLKVdHqWZkWa1MzaX5gSsBS+KwY74
-TY4WLx0bsinCO2sJS7/AXuJoAAXWEp6fPFd2Hx2WF0zNKD9zl/TzX5HxkYjF4Vs4
-wn91P5Hn9cO45Bo26R82tLVvWFQa6lMCVhPqLYFNXXkx+f40kNx+6tr1lQKHHYZd
-/Ono2/Ok/mgj2p/j/Gmpx60xnIZmiY97DcXIixc1/8VPNQz0/QBgQYXSqo9R0u21
-DpAfilp0FqHnsc/YKYyZmiOK5ZViXEkSeIesOS5FH6/lP5+GGWENGDYZMSt4JMv1
-8rgNinRc2O+/Qhz62soFLav33Y2bglgQZDgiL9V2ou29xLe6UIVIhmnIf72y8GZC
-PLQ7m3denQrk5ScK2U+U49LPAK3lBIDYQ2V6zJTb3ioF2Lzij5x9uzfIq5qZ5XsY
-FNkk9lxA/JtvQEVfy77iehXCdh9p3V3ajpj4W4D7/osU6tlCCliM1Pj1ePK3mwEc
-PEppvicISaI6f0mpXqRx
-=Hmc4
------END PGP SIGNATURE-----
-
---=-U7p4e/YBBr3ASTyO3gqp--
-
+greg k-h
