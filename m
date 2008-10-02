@@ -1,61 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:48083 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752051AbYJ0JFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 05:05:05 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1KuO22-0003ou-Ol
-	for linux-wireless@vger.kernel.org; Mon, 27 Oct 2008 09:05:03 +0000
-Received: from 221.221.233.227 ([221.221.233.227])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 09:05:02 +0000
-Received: from eeuix by 221.221.233.227 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 09:05:02 +0000
-To: linux-wireless@vger.kernel.org
-From: JUN <eeuix@yahoo.com>
-Subject: Re: Release of Atheros 802.11abg HAL under the ISC
-Date: Fri, 24 Oct 2008 02:26:22 +0000 (UTC)
-Message-ID: <loom.20081024T022046-734@post.gmane.org> (sfid-20081027_100513_733611_AD92CBED)
-References: <20080926215701.GC5972@tesla>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from ey-out-2122.google.com ([74.125.78.24]:7443 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754334AbYJBVZP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 17:25:15 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so441998eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 14:25:14 -0700 (PDT)
+Message-ID: <48E53C1F.4040909@gmail.com> (sfid-20081002_232521_659419_8E9AE13A)
+Date: Thu, 02 Oct 2008 22:24:47 +0100
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: avoid "Wireless Event too big" message for
+ assoc response
+References: <1222890302-32486-1-git-send-email-linville@linville-t61.local>
+In-Reply-To: <1222890302-32486-1-git-send-email-linville@linville-t61.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <lrodriguez@...> writes:
+John W. Linville wrote:
+> An attempt was made by Jouni Malinen to correct this issue by
+> converting to use IWEVASSOCREQIE and IWEVASSOCRESPIE messages instead
+> ("mac80211: Use IWEVASSOCREQIE instead of IWEVCUSTOM").  Unfortunately,
+> that caused a problem due to 32-/64-bit interactions on some systems and
+> was reverted after the 'userland ABI' rule was invoked.
 
-> 
-> As part of our commitment to help support all of our Atheros devices
-> under Linux we'd like to announce the release of our Atheros HAL for
-> our 802.11abg chipsets under the ISC license.
-> 
-> You can find it here:
-> 
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/legacy-hal.tar.bz2
-> 
-> This can be used as a source of documentation to help ath5k move
-> forward to support our 802.11abg chipsets as best as possible in
-> the Linux kernel. We look forward to keep working strongly with the
-> community on advancing support of all our Atheros chipsets under Linux.
-> 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+I was unaware of this, and used IWEVASSOCREQIE and IWEVASSOCRESPIE in the
+orinoco wpa updates since the events were available in linux/wireless.h.
 
-Thanks for your great job
-
-would you tell me which version of the madwifi you tested
-with the HAL source, and work? I've tried with madwifi-0.9.3.1 and simply
-replaced the xscale-be-elf.hal.o.uu with the new one. 
-madwifi-0.9.3.1 use HAL 0.9.18 by default, and the HAL from 
-your source is 0.9.17.1.
+Should I post a patch to use IWEVCUSTOM instead?
 
 
+Thanks,
 
-
+Dave.
