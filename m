@@ -1,91 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42028 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752224AbYJUVap (ORCPT
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:44623 "EHLO
+	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753577AbYJBPAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 17:30:45 -0400
-Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <48FDFCCA.8040604@lwfinger.net> (sfid-20081021_232731_453910_0675C4D6)
-References: <48FDFCCA.8040604@lwfinger.net>
-	 (sfid-20081021_232731_453910_0675C4D6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FvwKm92DqCiD2epAvsvz"
-Date: Tue, 21 Oct 2008 23:30:36 +0200
-Message-Id: <1224624636.28639.15.camel@johannes.berg> (sfid-20081021_233049_785776_DA1D4D97)
-Mime-Version: 1.0
+	Thu, 2 Oct 2008 11:00:20 -0400
+Date: Thu, 2 Oct 2008 11:57:56 +0200
+From: Pavel Machek <pavel@suse.cz>
+To: gregkh@suse.de
+Cc: greg@kroah.com, linux-wireless@vger.kernel.org
+Subject: Re: patch staging-add-w35und-wifi-driver.patch added to gregkh-2.6
+	tree
+Message-ID: <20081002095756.GA1767@elf.ucw.cz> (sfid-20081002_170024_709028_98595996)
+References: <20081001123656.GA30942@elf.ucw.cz> <12228899693880@kroah.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <12228899693880@kroah.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed 2008-10-01 12:39:29, gregkh@suse.de wrote:
+> 
+> This is a note to let you know that I've just added the patch titled
+> 
+>     Subject: staging: add w35und wifi driver
+> 
+> to my gregkh-2.6 tree.  Its filename is
+> 
+>     staging-add-w35und-wifi-driver.patch
+> 
+> This tree can be found at 
+>
+http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/
 
---=-FvwKm92DqCiD2epAvsvz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks!
+									Pavel
 
-On Tue, 2008-10-21 at 09:01 -0700, Larry Finger wrote:
-> On my x86_64 system, the mainline 2.6.27-git kernel (v2.6.27-6030-g6da0b3=
-8)
-> shows the following anomaly with the 'iwlist scan' command:
->=20
->           Cell 03 - Address: 00:14:BF:85:49:FA
->                     ESSID:"lwfdjf"
->                     Mode:Master
->                     Channel:1
->                     Frequency:2.412 GHz (Channel 1)
->                     Quality=3D66/100  Signal level:-62 dBm  Noise level=
-=3D-68 dBm
->                     Encryption key:on
->                     IE: Unknown: 00066C7766646A66
->                     IE: Unknown: 010882848B962430486C
->                     IE: Unknown: 030101
->                     IE: Unknown: 2A0104
->                     IE: Unknown: 2F0104
->                     IE: Unknown: 32040C121860
->                     IE: Unknown: DD09001018020014000000
->                     IE: WPA Version 1
->                         Group Cipher : TKIP
->                         Pairwise Ciphers (1) : TKIP
->                         Authentication Suites (1) : PSK
->                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
->                               24 Mb/s; 36 Mb/s; 54 Mb/s; 6 Mb/s; 9 Mb/s
->                               12 Mb/s; 48 Mb/s
->                     Extra:tsf=3D0000014488aeb18b
->                     Extra: Last beacon: 448ms ago
->=20
-> This problem was bisected to commit 43ac2ca3840f64f699a239535c590fa7ebaaa=
-c27,
-> entitled "mac80211: Handle scan result IEs in one block". The same bug is
-> present in the wireless-testing tree.
-
-I'm probably too tired, what exactly is the problem?
-
-johannes
-
---=-FvwKm92DqCiD2epAvsvz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/kn4AAoJEKVg1VMiehFYxcgP/0nlanrDO3PaajNsAjCEQu/6
-ZkGa6k/bp3FqBOpmMYJ8V04CMcS76qAo29NfDRs2S29jXAbjmvRmnkcqKiw4Fh02
-PA9brm+fKjk4a1O2vowIb2kfUEs24E4zXdNryIdPVE+scS7SDKQ3mSGXdu/lExk6
-C//3W0jMZhdQbG7Ru11T73YsDMO1AIpe0kc8I6xNPl00OK36v2xifVnx2ROqmxre
-7hs2o+0DrO85+DtCEugOUWLtYoyeSYpoPxQjGKXer/+pK0PRPXXcK5H3lLF1W0LZ
-/Km6TnZqN/fJGc9znHdYtOJxHEoejhbfkwYqhoTbJUAQ7wUs3E6Zr4dHJXhVGJHk
-N5AcJxQR2xBojAdLlrrv/BW8BN24vaXs7HhLlKIhZUmPL5UFzNQXYB/rqAg0Q+lr
-5JP5bGvZVGTeUHtnkOarN+isFd6IANjRhs2pJgSOsVk8XdgoY14lIFbbIsfwkGE3
-7kCns475AwIAICbjrwKEXaFHndon6HMYHz/+yqU9ArlSC/tGlZB8LsZvTNJIXL9i
-0wsWFY+M5d3owhVKNWpI8QxnEiHNl8+tiD/cj9VGtBy+NRKeZJA6wf9QuaeSZrBD
-lEFHu6GhBRYvV8Zf/ynvEAAKDpdWSQklrmd8nP/L/6syHplFzvFsydrtZBYOI53z
-0/cuy948F8IhJi03Kvbn
-=1T3d
------END PGP SIGNATURE-----
-
---=-FvwKm92DqCiD2epAvsvz--
-
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
