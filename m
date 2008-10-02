@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:16179 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754379AbYJ3OjG (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:26787 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753154AbYJBMw7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 10:39:06 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so232244ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 07:39:04 -0700 (PDT)
-Message-ID: <1ba2fa240810300739m69ec943didc1d76b82da7f1e5@mail.gmail.com> (sfid-20081030_153912_910164_5EC3FD76)
-Date: Thu, 30 Oct 2008 16:39:03 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH for 2.6.28] mac80211: fix basic rates
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225376692.3690.46.camel@johannes.berg>
+	Thu, 2 Oct 2008 08:52:59 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1127128rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 05:52:58 -0700 (PDT)
+Message-ID: <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com> (sfid-20081002_145304_681834_A1D34082)
+Date: Thu, 2 Oct 2008 08:52:58 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Elias Oltmanns" <eo@nebensachen.de>
+Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <87od23mo08.fsf@denkblock.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1225300446.5439.27.camel@johannes.berg>
-	 <1ba2fa240810300623o51dbd0a6p7a7bc89795dc5d35@mail.gmail.com>
-	 <1225376692.3690.46.camel@johannes.berg>
+References: <200808101401.03339.toralf.foerster@gmx.de>
+	 <b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
+	 <200810012055.58085.toralf.foerster@gmx.de>
+	 <87ej30m376.fsf@denkblock.local>
+	 <b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
+	 <87ljx8ndw1.fsf@denkblock.local>
+	 <b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com>
+	 <87od23mo08.fsf@denkblock.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 30, 2008 at 4:24 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2008-10-30 at 15:23 +0200, Tomas Winkler wrote:
->> On Wed, Oct 29, 2008 at 7:14 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > This fixes the basic rate bitmap calculation in mac80211.
->> >
->> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->> > Cc: stable@kernel.org [2.6.25, 2.6.26, 2.6.27]
->> > ---
->> > Is this appropriate for stable? It's a trivial and obvious fix, and can
->> > throw off the duration calculation, but it's likely nobody will ever
->> > really notice...
->>
->> You would should fail association if one of the basic rates is not
->> supported  by the station
+On Thu, Oct 2, 2008 at 3:53 AM, Elias Oltmanns <eo@nebensachen.de> wrote:
+>> Ah, yes, good analysis... and ath5k_init is scheduling the timer.  I
+>> doubt ieee80211_opened would fly; probably the better thing to do is
+>> ensure that the cleanup gets called regardless of whether ath5k_stop
+>> gets called (it shouldn't matter since the irqs all get created in
+>> _attach).
 >
-> No, this has nothing to do with association, it's just setting the
-> internal variable about which rates are basic in the BSS.
+> Not sure I agree there. Why should calibration take place regularly even
+> though the interface appears to be shut down from user-space's point of
+> view? It simply doesn't make sense  to start the interface if nobody
+> intends to use it.
 
-I understand that but What your patch is doing it is preventing
-of setting basic rates for ratest that are not sported by the driver,
-but according
-the spec it is not permissible that driver will not support one of the
-basic rates.
+Hmm, yeah, you're right.  So, I guess we can just do your patch except
+with another status bit that says it's active instead of changing
+mac80211 (b43 does something along those lines).
 
-Tomas
+-- 
+Bob Copeland %% www.bobcopeland.com
