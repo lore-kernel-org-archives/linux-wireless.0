@@ -1,168 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:52423 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751735AbYJRXPp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44209 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429AbYJBJZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2008 19:15:45 -0400
-Message-ID: <48FA6E1E.5070303@lwfinger.net> (sfid-20081019_011602_114128_BA3F9683)
-Date: Sat, 18 Oct 2008 16:15:42 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Warning from mac80211 with p54usb
-References: <48F7D0D2.6090604@lwfinger.net> <200810170226.28774.chunkeey@web.de>
-In-Reply-To: <200810170226.28774.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 2 Oct 2008 05:25:00 -0400
+Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <87od23mo08.fsf@denkblock.local> (sfid-20081002_095349_565298_98E6BA33)
+References: <200808101401.03339.toralf.foerster@gmx.de>
+	 <b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
+	 <200810012055.58085.toralf.foerster@gmx.de>
+	 <87ej30m376.fsf@denkblock.local>
+	 <b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
+	 <87ljx8ndw1.fsf@denkblock.local>
+	 <b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com>
+	 <87od23mo08.fsf@denkblock.local> (sfid-20081002_095349_565298_98E6BA33)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JXaU5QsWuSTNej9GAyBc"
+Date: Thu, 02 Oct 2008 11:24:28 +0200
+Message-Id: <1222939468.24551.36.camel@johannes.berg> (sfid-20081002_112502_575097_91796C69)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> I've attached a debug function that could help to take a look inside the memory
-> management. what does it look like when put p54_dump_txqueue into 
-> p54_start/p54_stop or p54_add_interface and replug your device?
 
-Thanks. I placed a call to the dump routine into p54_add_interface() and in
-p54_hw_config(). The resulting output is shown below.
+--=-JXaU5QsWuSTNej9GAyBc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> or... something totally different. p54_rx_frame_sent could be culprit,
-> maybe we should check if the printk
->  	goto out;
->  }
-> + printk(KERN_ERR "p54: leaked frame %p\n", entry);
->  spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+On Thu, 2008-10-02 at 09:53 +0200, Elias Oltmanns wrote:
 
-This printk never gets triggered.
+> So, if higher layers won't provide any information about what interface
+> is considered opened, then ath5k has to track this sort of state
+> information itself if it intends to resume to the exact same state of
+> affairs as observed at the time of going into suspend.
 
-At initial startup, printed from p54_add_interface:
+Well, if somebody would just fix suspend/resume as I've outlined
+multiple times and is on the todo list...
 
-kernel: phy26: Tx queue entries: 5
-kernel:        entry: ffff8800986c7f00 (range: [20200-202c0]=(c0) free:0)
-kernel:        entry: ffff8800986c7500 (range: [202c0-20380]=(c0) free:0)
-kernel:        entry: ffff8800986c7000 (range: [20380-20420]=(a0) free:0)
-kernel:        entry: ffff8800986c7c00 (range: [20420-204c0]=(a0) free:0)
-kernel:        entry: ffff8800986c7800 (range: [204c0-2053c]=(7c) free:0)
-kernel:        last entry: (range: [2053c-24214] free: 15576)
-kernel:        total_free:15576 bytes, biggest free hole:15576 bytes
+johannes
 
-When the driver works normally, by the time p54_config is called, we have:
+--=-JXaU5QsWuSTNej9GAyBc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-kernel: phy26: Tx queue entries: 3
-kernel:        entry: ffff8800986c7700 (range: [20200-202c0]=(c0) free:0)
-kernel:        entry: ffff8800986c7500 (range: [202c0-20380]=(c0) free:0)
-kernel:        entry: ffff8800986c7900 (range: [20380-20470]=(f0) free:0)
-kernel:        last entry: (range: [20470-24214] free: 15780)
-kernel:        total_free:15780 bytes, biggest free hole:15780 bytes
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-As I see it, the second one persists but the other 4 have been freed, and two
-new ones added. When the device works correctly, the same pattern persists and
-the second entry is constant but the total number stays at 3 or 4.
+iQIcBAABAgAGBQJI5JNIAAoJEKVg1VMiehFYA6sQAIb8k6Mk+ijX8BvzBftK8XA4
+e0ImgK3Wzx18E7ZahTubAj30qDEkHY77CT8etGa6nS/gbQCExdFwU85QvrNfDrBl
+46hVUPj23emHSsS2m2fBnK9X81zzsotMSnKIp5kcAieCdK7SJrvffDt+u1ORi8DH
++gMLnTP/L0uW7gMo3VL2qIkXl3JPl2aJy439sT49FessTflYOGMRLpXPCf3UMbvK
+mlEecaZTqDBQds815G09XaGYTk+8WUQIJxQJw9c6HCaTpjO1C6vc3uSPnY3OTKZ5
+gJIk/kgMdku+vReF+79MD+BpJVZHVLXr1AIpXu7ITRc6Y6KfASdK8Yvoy1k9khrt
+1tTHfOZRpt+oyb2waBJRRryUbGnL8KYFus1H5KS2L9lINQM098yA1T0C7cbT9T5t
+TVBCiBbO5lkWLGf7s9jvAZbrELTsKyghIxC2wYGFz2dN3wu3bEGyD0Fzl4OrK0GT
+wi2IOdDBO1or8jgOLUu72ZhQ370UYCK4G+9OlvsAWWln4yjMZPY2KS3BUzDS2tHr
+v+yoN7snAEZwQKuRLDN7zEhAh6b90TgHSrrrfW3Fmo3IQypmWdp2fBD/M/KR/7RR
+nTeHK7C4gU+Z0YmMxlwkEPASxr7w7MarjWkFg2u1cKEjlRyP+dWT0Q3nxiUkXKR+
+IQtQU1ORKHVcBfGvY0nH
+=6Z9l
+-----END PGP SIGNATURE-----
 
-When failure occurs, We get the following calls:
-
-kernel: phy31: Tx queue entries: 5
-kernel:        entry: ffff8800b8de6500 (range: [20200-202c0]=(c0) free:0)
-kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
-kernel:        entry: ffff8800a80c5800 (range: [20380-20420]=(a0) free:0)
-kernel:        entry: ffff88009872d000 (range: [20420-204c0]=(a0) free:0)
-kernel:        entry: ffff88009872d100 (range: [204c0-2053c]=(7c) free:0)
-kernel:        last entry: (range: [2053c-24214] free: 15576)
-kernel:        total_free:15576 bytes, biggest free hole:15576 bytes
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: p54: In p54_config
-kernel: phy31: Tx queue entries: 3
-kernel:        entry: ffff88009872d500 (range: [20200-202c0]=(c0) free:0)
-kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
-kernel:        entry: ffff88009872d400 (range: [20380-20470]=(f0) free:0)
-kernel:        last entry: (range: [20470-24214] free: 15780)
-kernel:        total_free:15780 bytes, biggest free hole:15780 bytes
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: p54: In p54_config
-kernel: phy31: Tx queue entries: 3
-kernel:        entry: ffff88009871fc00 (range: [20200-202c0]=(c0) free:0)
-kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
-kernel:        entry: ffff88009871f100 (range: [20380-20470]=(f0) free:0)
-kernel:        last entry: (range: [20470-24214] free: 15780)
-kernel:        total_free:15780 bytes, biggest free hole:15780 bytes
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_reuse_skb_cb
-kernel: p54: In p54_config
-kernel: phy31: Tx queue entries: 4
-kernel:        entry: ffff88009871f800 (range: [20200-202c0]=(c0) free:0)
-kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
-kernel:        entry: ffff88009871f700 (range: [20380-20548]=(1c8) free:0)
-kernel:        entry: ffff88009871ff00 (range: [20548-20638]=(f0) free:0)
-kernel:        last entry: (range: [20638-24214] free: 15324)
-kernel:        total_free:15324 bytes, biggest free hole:15324 bytes
-kernel: In p54u_tx_cb
-kernel: In p54u_tx_free_skb_cb
-kernel: Entered p54_free_skb
-kernel: p54: In p54_config
-kernel: phy31: Tx queue entries: 6
-kernel:        entry: ffff88009871f800 (range: [20200-202c0]=(c0) free:0)
-kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
-kernel:        entry: ffff88009871f700 (range: [20380-20548]=(1c8) free:0)
-kernel:        entry: ffff88009871f200 (range: [20548-20710]=(1c8) free:0)
-kernel:        entry: ffff88009871fd00 (range: [20710-20800]=(f0) free:0)
-kernel:        entry: ffff88009871f500 (range: [20800-208c0]=(c0) free:0)
-kernel:        last entry: (range: [208c0-24214] free: 14676)
-kernel:        total_free:14676 bytes, biggest free hole:14676 bytes
-kernel: p54: In p54_config
-kernel: phy31: Tx queue entries: 9
-kernel:        entry: ffff88009871f800 (range: [20200-202c0]=(c0) free:0)
-kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
-kernel:        entry: ffff88009871f700 (range: [20380-20548]=(1c8) free:0)
-kernel:        entry: ffff88009871f200 (range: [20548-20710]=(1c8) free:0)
-kernel:        entry: ffff88009871fd00 (range: [20710-20800]=(f0) free:0)
-kernel:        entry: ffff88009871f500 (range: [20800-208c0]=(c0) free:0)
-kernel:        entry: ffff88009871f300 (range: [208c0-20a88]=(1c8) free:0)
-kernel:        entry: ffff88009871f900 (range: [20a88-20b78]=(f0) free:0)
-kernel:        entry: ffff88009871f000 (range: [20b78-20c38]=(c0) free:0)
-kernel:        last entry: (range: [20c38-24214] free: 13788)
-kernel:        total_free:13788 bytes, biggest free hole:13788 bytes
-
-Note that none of the p54u callback routines are entered. From here, each
-successive call to p54_config() adds 3 new queue entries, non of which are ever
-removed. Eventually, the number of entries gets to 59 and the free space is less
-that the requested length causing the failure.
-
-I'm still trying to analyze the output from usbmon and to correlate it with the
-data in /var/log/messages, but callbacks stop occurring at a certain point,
-which is consistent with what is seen above. Unless you have other ideas, I'm
-content to attribute this problem to the old firmware. If I see similar troubles
-with newer firmware, I'll be back.
-
-Larry
+--=-JXaU5QsWuSTNej9GAyBc--
 
