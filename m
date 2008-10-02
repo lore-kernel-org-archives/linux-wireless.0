@@ -1,69 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38709 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752850AbYJKNqY (ORCPT
+Received: from cpsmtpo-eml04.kpnxchange.com ([213.75.38.153]:28420 "EHLO
+	cpsmtpo-eml04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753874AbYJBUUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 09:46:24 -0400
-Subject: Re: [PATCH] mac80211: make retry limits part of hw config
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <200810111540.06457.IvDoorn@gmail.com> (sfid-20081011_154014_330805_612C4CDD)
-References: <1223682835.29811.10.camel@johannes.berg>
-	 <200810111540.06457.IvDoorn@gmail.com>
-	 (sfid-20081011_154014_330805_612C4CDD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zHs/FF7FOBJ5bjoSJVtS"
-Date: Sat, 11 Oct 2008 15:46:18 +0200
-Message-Id: <1223732778.29811.41.camel@johannes.berg> (sfid-20081011_154628_267808_F047C598)
-Mime-Version: 1.0
+	Thu, 2 Oct 2008 16:20:31 -0400
+Message-ID: <48E52D07.8050900@kpnplanet.nl> (sfid-20081002_222035_260539_19D08D89)
+Date: Thu, 02 Oct 2008 22:20:23 +0200
+From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+MIME-Version: 1.0
+To: mcgrof@gmail.com
+CC: linux-wireless@vger.kernel.org
+Subject: Regulatory Framework & rt2x00.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Luis,
 
---=-zHs/FF7FOBJ5bjoSJVtS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm working on making rt2x00 use the regulatory framework to report its 
+EEPROM region settings to mac80211, and I have stumbled upon an issue 
+that I don't really know how to solve with the current regulatory 
+framework code.
 
-On Sat, 2008-10-11 at 15:40 +0200, Ivo van Doorn wrote:
-> On Saturday 11 October 2008, Johannes Berg wrote:
-> > Instead of having a separate callback, use the HW config callback
-> > with a new flag to change retry limits.
-> >=20
-> > Not the cleanest of all patches in the driver area, but it should
-> > not change anything wrt. how they work.
->=20
-> For rt2x00 it looks good, the entire config handling in rt2x00 will
-> be changed anyway because of your patch=20
-> 	mac80211: introduce hw config change flags
-> Because that one really makes things easier. :)
+The problem I'm facing is that many of the Ralink devices have 2 region 
+settings in their EEPROM, one for 802.11a networks, and one for 
+802.11[bgn] networks. So far I have only seen devices where these two 
+settings contain the same region indication, but I don't know whether 
+this is the case for all devices.
 
-Yeah I figured you'd say that :)
+At this point in time I use the regulatory_hint function at driver 
+start-up time to communicate the region setting that matches the 
+configured band, but that would (probably) not hold up when the user 
+reconfigures the mode.
 
-johannes
+So, at this point in time I have the following questions:
+1. How would I be able to communicate both these settings to the 
+regulatory framework?
+2. Should I re-use regulator_hint whenever the configured band changes?
+3. Would a driver supplied region override a user configured setting 
+(via iw/crda)?
 
---=-zHs/FF7FOBJ5bjoSJVtS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I would appreciate your help in solving this issue.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI8K4mAAoJEKVg1VMiehFYelUP/RbxUCFFnjOSVJZTbq6OCQjg
-pFPhXqJRpXBKt91lvh7bkhfu1ql7SbOLYb7zk+P1IXEIO48hdTnoJF29Bu7LpfzJ
-+e93Wk3my322aiEaiQO7ttW1s2KzsbFHrAFO21LjWclZ3WX3iYak0LNwq0WjbFgO
-lSIUhXrp6LgNSxAFhAtb6V9/lDOq9Lf7RFt44eOOn4IdPmjg5Z/a+rue8rC2nG5K
-/ZCybDwI3R6QAbF13BIGKsoyDiL/Q1NK2RJfRG/zU3tUGF6DYgMn9MsLForddZQS
-uklaeuKcluKmdnQaIc7akRclBeB9GflIGeS+49e9HqGLqrS/+L8DC1sEzIMrk/DL
-BdLBDD7YOK+SzCChkJNbuPZ4KFt7eA6OWkdLAcid6D51peiyWjBVgjDaO1wsIwOX
-FILWj0+j+m/YSibc7dS+YXCTJG/u/iNGHE6nAxdgrPHNXxw+QzUTPTuezR5nMbdG
-YCeqz0Sx7KBVnMI1G7XGcPbzrzRpW/In1+zq69ydJYISA//Iy9MK0UiqaqRyMfiu
-EGYmtB+7KJV7//Fun0t7w6R6vmoPeTPNO+10vGc7qrDdBnrur9YV5O/rXqsHiQto
-HWPCDP0Tel8/Int1HB3pNixi39ezT8fytli5a8m2rZcTNJMCFhFVpqSGUUKa0wkr
-OtTtIVsIL8+ov++YDgoC
-=HrKT
------END PGP SIGNATURE-----
-
---=-zHs/FF7FOBJ5bjoSJVtS--
-
+---
+Gertjan van Wingerde
+rt2x00 project developer
+http://rt2x00.serialmonkey.com/
