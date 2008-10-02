@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:35215 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752149AbYJVRFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 13:05:48 -0400
-Date: Wed, 22 Oct 2008 20:04:44 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
-Message-ID: <20081022170444.GH16005@jm.kir.nu> (sfid-20081022_190553_248049_6328EF1C)
-References: <48FDFCCA.8040604@lwfinger.net> <20081022072840.GD16005@jm.kir.nu> <48FF5933.3080501@lwfinger.net>
+Received: from wf-out-1314.google.com ([209.85.200.174]:22671 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753273AbYJBM4f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 08:56:35 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1085186wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 05:56:35 -0700 (PDT)
+Message-ID: <eb3ff54b0810020556s407728b9n772e7ae178761eee@mail.gmail.com> (sfid-20081002_145639_335658_915BA29A)
+Date: Thu, 2 Oct 2008 15:56:35 +0300
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH] mac80211: remove redundant check in ieee80211_master_start_xmit (net/mac80211/tx.c)
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48FF5933.3080501@lwfinger.net>
+Content-Type: multipart/mixed;
+	boundary="----=_Part_2163_13850062.1222952195086"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 09:47:47AM -0700, Larry Finger wrote:
+------=_Part_2163_13850062.1222952195086
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> When a utility starts spitting messages that it doesn't understand what the
-> kernel is providing _AND_ the commit message does not mention that this will
-> happen, can someone be blamed for thinking it is a bug?
+Hi,
 
-But the utility here understands that it receives additional IEs; it
-just does not know the name or format for them. I do not understand why
-the commit message should have commented on any particular user space
-tool and their behavior as long as nothing is broken (and as far as I'm
-aware, nothing was broken by that change).
+ - This patch (against the linux-wireless-next git tree) removes a
+redundant check in ieee80211_master_start_xmit (net/mac80211/tx.c).
 
-> Clearly this is not a regression. Are there plans to update the wireless utilities?
+  In this method, there is no need to call again the
+ieee80211_is_data() method; this is checked immediately before, in the
+"if" command (we will not enter this block unless ieee80211_is_data()
+is true, so that the "and" (&&) condition in that "if" command will be
+fullfilled ).
 
-Update them (or well, iwlist) to do what? Sure, it could have a list of
-some additional known SSIDs, but that does not sound very useful. If the
-"IE: Unknown" part is really making this somehow horrible for users, I
-would just hide those lines by default (but there should be an option to
-enable them). Anyway, I do not have any plans on providing a patch to
-change iwlist behavior because I think the current behavior is
-desirable.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+
+Regards,
+Rami Rosen
+
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
+
+------=_Part_2163_13850062.1222952195086
+Content-Type: text/plain; name=patch.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_flte2hdn0
+Content-Disposition: attachment; filename=patch.txt
+
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS90eC5jIGIvbmV0L21hYzgwMjExL3R4LmMKaW5kZXgg
+MGNjMmUyMy4uYTI5MjYwYyAxMDA2NDQKLS0tIGEvbmV0L21hYzgwMjExL3R4LmMKKysrIGIvbmV0
+L21hYzgwMjExL3R4LmMKQEAgLTEyOTYsNyArMTI5Niw2IEBAIGludCBpZWVlODAyMTFfbWFzdGVy
+X3N0YXJ0X3htaXQoc3RydWN0IHNrX2J1ZmYgKnNrYiwKIAogCWlmIChpZWVlODAyMTFfdmlmX2lz
+X21lc2goJm9zZGF0YS0+dmlmKSAmJgogCSAgICBpZWVlODAyMTFfaXNfZGF0YShoZHItPmZyYW1l
+X2NvbnRyb2wpKSB7Ci0JCWlmIChpZWVlODAyMTFfaXNfZGF0YShoZHItPmZyYW1lX2NvbnRyb2wp
+KSB7CiAJCQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2FkZHIoaGRyLT5hZGRyMykpCiAJCQkJbWVt
+Y3B5KGhkci0+YWRkcjEsIGhkci0+YWRkcjMsIEVUSF9BTEVOKTsKIAkJCWVsc2UKQEAgLTEzMDUs
+NyArMTMwNCw2IEBAIGludCBpZWVlODAyMTFfbWFzdGVyX3N0YXJ0X3htaXQoc3RydWN0IHNrX2J1
+ZmYgKnNrYiwKIAkJCWlmIChtZW1jbXAob2Rldi0+ZGV2X2FkZHIsIGhkci0+YWRkcjQsIEVUSF9B
+TEVOKSAhPSAwKQogCQkJCUlFRUU4MDIxMV9JRlNUQV9NRVNIX0NUUl9JTkMoJm9zZGF0YS0+dS5t
+ZXNoLAogCQkJCQkJCSAgICAgZndkZWRfZnJhbWVzKTsKLQkJfQogCX0gZWxzZSBpZiAodW5saWtl
+bHkob3NkYXRhLT52aWYudHlwZSA9PSBOTDgwMjExX0lGVFlQRV9NT05JVE9SKSkgewogCQlzdHJ1
+Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YTsKIAkJc3RydWN0IGllZWU4MDIxMV9sb2Nh
+bCAqbG9jYWwgPSBvc2RhdGEtPmxvY2FsOwo=
+------=_Part_2163_13850062.1222952195086--
