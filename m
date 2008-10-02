@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39306 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874AbYJVHg0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 03:36:26 -0400
-Subject: Re: [PATCH ] mac80211: check return value of dev_alloc_skb() in
-	ieee80211_sta_join_ibss().
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com> (sfid-20081022_090050_408102_95470F71)
-References: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com>
-	 (sfid-20081022_090050_408102_95470F71)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rR7LcOeEHV1Zu4QDv1XV"
-Date: Wed, 22 Oct 2008 09:36:18 +0200
-Message-Id: <1224660978.28639.27.camel@johannes.berg> (sfid-20081022_093631_747042_90D10FD1)
-Mime-Version: 1.0
+Received: from nebensachen.de ([195.34.83.29]:50428 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753802AbYJBQcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 12:32:21 -0400
+From: Elias Oltmanns <eo@nebensachen.de>
+To: "Bob Copeland" <me@bobcopeland.com>
+Cc: jirislaby@gmail.com, mickflemm@gmail.com,
+	johannes@sipsolutions.net, toralf.foerster@gmx.de,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
+In-Reply-To: <20081002144600.M31352@bobcopeland.com> (Bob Copeland's message
+	of "Thu, 2 Oct 2008 11:02:02 -0400")
+References: <200808101401.03339.toralf.foerster@gmx.de>
+	<b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
+	<200810012055.58085.toralf.foerster@gmx.de>
+	<87ej30m376.fsf@denkblock.local>
+	<b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
+	<87ljx8ndw1.fsf@denkblock.local>
+	<b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com>
+	<87od23mo08.fsf@denkblock.local>
+	<b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
+	<20081002144600.M31352@bobcopeland.com>
+Date: Thu, 02 Oct 2008 18:31:55 +0200
+Message-ID: <87bpy32c1w.fsf@denkblock.local> (sfid-20081002_183226_225680_7E94C27C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+"Bob Copeland" <me@bobcopeland.com> wrote:
+> On Thu, 2 Oct 2008 08:52:58 -0400, Bob Copeland wrote
+>> > Not sure I agree there. Why should calibration take place regularly even
+>
+>> > though the interface appears to be shut down from user-space's point of
+>> > view? It simply doesn't make sense  to start the interface if nobody
+>> > intends to use it.
+>> 
+>> Hmm, yeah, you're right.  So, I guess we can just do your patch except
+>> with another status bit that says it's active instead of changing
+>> mac80211 (b43 does something along those lines).
+>
+> Something like this?  It's kind of ugly, but the state bit needs
+> to be in the _init/_stop critical section to avoid the race there.
+> This makes it match other drivers' suspend methods, but is only a 
+> stop-gap until we have mac80211 suspend callbacks.
+>
+> Jiri, Nick, any comments?  
+>
+> Based on a patch by Elias Oltmanns.  We call ath5k_init in resume even
+> if we didn't previously open the device.  Besides starting up the
+> device unnecessarily, this also causes an OOPS on rmmod because
+> mac80211 will not invoke ath5k_stop and softirqs are left running after
+> the module has been unloaded.  Add a new state bit, ATH5K_STAT_STARTED,
+> to indicate that we have been started up.
 
---=-rR7LcOeEHV1Zu4QDv1XV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sorry, but I don't think this is safe. Checking and restoring the
+started flag has to be protected too, otherwise there can be races
+against ->stop().
 
-On Wed, 2008-10-22 at 09:00 +0200, Rami Rosen wrote:
-> This patch adds a check on the return value of dev_alloc_skb() in
-> ieee80211_sta_join_ibss()
-> in net/mac80211/mlme.c.
+Regards,
 
-What's wrong with the current code?
-
-
-> +               return -1;
-
-don't return -1, return meaningful error values.
-
-johannes
-
---=-rR7LcOeEHV1Zu4QDv1XV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/tfuAAoJEKVg1VMiehFYiTkP/3s4oo/bUtoqhCqLOreLQYhc
-wdSBwsXDfH4inRtFTuO7LXPkEkdM+v/SE0X7BiouUgpU7Yci+F5BU1JXneIjF7Z5
-1tTJPFnX/dCLo81ogYKIkIBPrzME/SU4auYaQo5OXP3prz4yHrXe/MNcPDw2faGU
-vXxDvhpr2zEB6ouEHTQ0EQxUl1fTS2g6w1lgMRI1hLZJvCkiG1Qke/mJT291FoRS
-5c2kVUQHNrsoa0ATpgUX1kjOAwqbPNMpsN8KtZDswvIn1Y4v3s2E9Hzxiuk6NWBc
-P+8qrLwSuPRI7TOX6VUdXAGnc43roZLJYPdaQIAJ7IanWdowjJ+5PnRKzufXO/3y
-pY35k9lNndXtVtnHVHiQl2/W5IvRB+OE5XsozxumDOuyt6MQd/7+yb3RfeLh0Fw7
-G3f1uFSVUhJzethzUuTwgA5rGpShhmoY6GGZgo3bSDvkwy5O2w1ysi9Ug8YsLxyC
-JyFueWPeuYQhmmxk1UC9IsAGDnXkhNyMZwCLw+ih22FFQs8OI+BJ5OJWQAaUmT+f
-Xj7H4YNLbCyG8G3BT0uP7OJPd1wf/Mwgm6aoRM432PRQsoYd+CGLTnoC7Is6EgTY
-Uy+IQ4Kl6/nekTHP2Qp0t8dfjQ7h50wGOrO1FdOguHU45EDLt1q77QKAUA/7MO1D
-XBldPsqBSK0Ymo2ynrHf
-=cHLL
------END PGP SIGNATURE-----
-
---=-rR7LcOeEHV1Zu4QDv1XV--
-
+Elias
