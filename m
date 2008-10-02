@@ -1,47 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:34685 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751957AbYJYLiU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 07:38:20 -0400
-Date: Sat, 25 Oct 2008 13:38:19 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-Message-ID: <20081025113819.GA12489@Chamillionaire.breakpoint.cc> (sfid-20081025_133825_633728_3903F821)
-References: <4902DEBB.3050205@hotmail.com> <200810251325.07916.mb@bu3sch.de> <20081025112813.GC12252@Chamillionaire.breakpoint.cc> <200810251331.24311.mb@bu3sch.de>
+Received: from fallback.mail.ru ([194.67.57.14]:17279 "EHLO mx4.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750699AbYJBEDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 00:03:41 -0400
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: Dave <kilroyd@googlemail.com>
+Subject: Re: Agere Hermes source-code: copyright situation
+Date: Thu, 2 Oct 2008 06:37:18 +0400
+Cc: Greg KH <greg@kroah.com>, TJ <linux@tjworld.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Casual J. Programmer" <casualprogrammer@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	Alexander Shirshikov <alexander.shirshikov@gmail.com>
+References: <200809290949.35749.arvidjaar@mail.ru> <20081001200039.GA29874@kroah.com> <48E400FA.2090305@gmail.com>
+In-Reply-To: <48E400FA.2090305@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <200810251331.24311.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart1698025.PZ9SIvic6A";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200810020637.27321.arvidjaar@mail.ru> (sfid-20081002_060353_717445_221A1995)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Michael Buesch | 2008-10-25 13:31:24 [+0200]:
+--nextPart1698025.PZ9SIvic6A
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
->On Saturday 25 October 2008 13:28:13 Sebastian Andrzej Siewior wrote:
->> @@ -662,7 +663,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 *buffer, unsigned int length)
->>  			&& !mac->pass_ctrl)
->>  		return 0;
->>  
->> -	fc = *(__le16 *)buffer;
->> +	fc = get_unaligned_le16(buffer);
+TJ you can answer me using arvidjaar (at) newmail dot ru. Hopefully
+one of them works. Re WPA2 - there is no information how to setup
+CCMP/AES (even if firmware supports it); so no WPA2.
+
+On Thursday 02 October 2008, Dave wrote:
+> Greg KH wrote:
+> > On Wed, Oct 01, 2008 at 05:40:29PM +0100, TJ wrote:
+> >> On Wed, 2008-10-01 at 14:13 +0400, Andrey Borzenkov wrote:
+> >>>On Wednesday 01 October 2008, Greg KH wrote:
+> >>>> On Mon, Sep 29, 2008 at 09:49:34AM +0400, Andrey Borzenkov wrote:
+> >>>>> I have here driver that can be built for two different types of
+> >>>>> hardware from basically the same sources (this is port of old Agere
+> >>>>> drivers for Hermes-I/Hermes-II chipsets).
+> >>>>=20
+> >>>> Cool, do you have a link to the code, I'd be glad to add it to
+> >>>> drivers/staging/ if it's not in a fully-mergable state yet to get wi=
+der
+> >>>> users for it.
+> >>>
+> >>> You can look at it here: http://arvidjaar.newmail.ru/wlags49.tar.bz
+> >>>
+> >>> I doubt that it is suitable for inclusion at current state if ever.
+> >>> This is taken directly from Agere 2.4 sources; the only parts that we=
+re
+> >>> touched are kernel glue and wireless extensions interface.
+> >>>
+> >>> And it is not GPL'ed, of course. I attach E-Mail I received a while
+> >>> back with answere from Agere legal department.
+> >>
+> >> I'm attaching the original email I sent to Agere and their response for
+> >> the record, hoping it helps clarify the legal position.
+> >=20
+> > Very nice, thanks for forwarding this on.
+> >=20
+> > As the license is BSD, that means we can place it in the kernel tree.
+> > Do you all mind if I add it to the drivers/staging/ directory so you can
+> > work on cleaning it up within the main kernel tree infrastructure?
 >
->This still does semantically change the code.
->fc is supposed to be LE and is used as LE in the following code.
-So you say we need a get_unaligned() here. Okay. 
-A few lines before that, in filter_ack() we dereferance the same
-position. filter_ack() is used once and probably inlined so I guess
-that's the address where the unaligned access occurs.
 
->>  	need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
->>  
->>  	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
+I do not mind but it is likely makes no sense for H-I now; and
+I do not own H-II myself so cannot work on it. If we are focusing on
+H-2/2.5, it would make more sense to make similar modifications to
+7.22 driver set from Agere to avoid overlap with Orinoco.
+=20
+> (cc'ing linux-wireless)
+>
+> FYI, Hermes I hardware is already covered by the orinoco driver. WPA and =
+firmware download functionality (which is supported by the Agere driver, bu=
+t not orinoco in 2.6.27) is already in the wireless queue for 2.6.28.
+>=20
 
+Yes, I discovered this yesterday as well. Thank you!
 
+How are you going to distribute firmware? You will need 9.x firmware from
+original Agere driver; do I understand it correctly that it will come
+with orinoco in binary form?
 
->-- 
->Greetings Michael.
+> This leaves Hermes-II (and USB?) hardware which orinoco does not support,=
+ but could if someone had access to a card for development.
+>=20
 
-Sebastian
+As I initially wrote driver for internal consumption my mods supports
+PCMCIA only.
+
+Unfortunately I do not own Hermes-II device myself. I was asked recently
+by Alexander who is owing such device and modification of Agere sources was
+pretty trivial. I Cc to him; Aexander are you interested in aiding of
+H-II driver development for mainstream?
+
+--nextPart1698025.PZ9SIvic6A
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkjkM+EACgkQR6LMutpd94wE/QCguH9MsaXikBy7BhVS8ALHFxic
+IDEAn3hFFUwPTSy0IfuX+fe3nCvJKYZ3
+=lswN
+-----END PGP SIGNATURE-----
+
+--nextPart1698025.PZ9SIvic6A--
