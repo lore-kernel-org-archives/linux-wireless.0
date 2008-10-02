@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:37657 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752371AbYJWXFm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 19:05:42 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so373113fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 16:05:40 -0700 (PDT)
-Date: Fri, 24 Oct 2008 01:05:35 +0200
-From: Davide Pesavento <davidepesa@gmail.com>
-To: mcgrof@gmail.com
+Received: from kroah.org ([198.145.64.141]:53233 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753874AbYJBVKr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 17:10:47 -0400
+Date: Thu, 2 Oct 2008 14:07:42 -0700
+From: Greg KH <greg@kroah.com>
+To: proski@gnu.org, linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Subject: [CRDA PATCH 2/6] Ignore more binary files.
-Message-ID: <20081023230535.GA8837@PesaBook.pesa.homelinux.org> (sfid-20081024_010545_162538_C38F50BB)
+Subject: at76_usb driver status
+Message-ID: <20081002210742.GA27221@kroah.com> (sfid-20081002_231051_496464_2C911511)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Davide Pesavento <davidepesa@gmail.com>
----
- .gitignore |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Hi,
 
-diff --git a/.gitignore b/.gitignore
-index 317d9fd..cc39545 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -1,7 +1,9 @@
- *~
- regulatory.sqlite
- regulatory.bin
-+crda
- dump
-+*.o
- *.pyc
- keys-*.c
- key.priv.pem
--- 
-1.6.0.2
+In my quest to suck drivers into drivers/staging/ I noticed that the
+at76_usb driver is being shipped by both Fedora and Ubuntu in their
+kernels.
 
+So I was wondering what the status of this driver is, and if I
+could/should add it to drivers/staging/?  If it's about to go into
+2.6.28 then I'll hold off, but it would be nice to know what the status
+is.
+
+Also, it looks like it is being developed in a git tree, where is that
+tree?
+
+And, did you merge the USB DFU code into the driver itself?  Having that
+kind of functionality in the USB core is fine with me if you want me to
+add that portion there, no reason it needs to be burried in individual
+drivers.
+
+thanks,
+
+greg k-h
