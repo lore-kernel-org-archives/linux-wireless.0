@@ -1,32 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.tglx.de ([62.245.132.106]:39141 "EHLO www.tglx.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751438AbYJKJzw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 05:55:52 -0400
-Date: Sat, 11 Oct 2008 11:55:41 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Christoph Hellwig <hch@infradead.org>
-cc: Elias Oltmanns <eo@nebensachen.de>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath5k: kernel timing screwed - due to unserialised register
- access?
-In-Reply-To: <20081010213207.GA7852@infradead.org>
-Message-ID: <alpine.LFD.2.00.0810111155250.3356@apollo> (sfid-20081011_115602_519887_EA777A86)
-References: <alpine.LFD.2.00.0810072042140.3166@apollo> <87hc7ot804.fsf@denkblock.local> <87myhfnwne.fsf@denkblock.local> <alpine.LFD.2.00.0810082203360.3237@apollo> <alpine.LFD.2.00.0810091313380.3237@apollo> <87k5cgg87j.fsf@denkblock.local>
- <alpine.LFD.2.00.0810101127560.3271@apollo> <87abdck6sn.fsf@denkblock.local> <alpine.LFD.2.00.0810101432540.3271@apollo> <87y70wli6n.fsf@denkblock.local> <20081010213207.GA7852@infradead.org>
+Received: from kroah.org ([198.145.64.141]:60561 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754276AbYJBUDz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2008 16:03:55 -0400
+Date: Thu, 2 Oct 2008 13:00:23 -0700
+From: Greg KH <greg@kroah.com>
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: Dave <kilroyd@googlemail.com>, TJ <linux@tjworld.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Casual J. Programmer" <casualprogrammer@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	Alexander Shirshikov <alexander.shirshikov@gmail.com>
+Subject: Re: Agere Hermes source-code: copyright situation
+Message-ID: <20081002200023.GC20902@kroah.com> (sfid-20081002_220400_340734_5B3137A7)
+References: <200809290949.35749.arvidjaar@mail.ru> <20081001200039.GA29874@kroah.com> <48E400FA.2090305@gmail.com> <200810020637.27321.arvidjaar@mail.ru>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200810020637.27321.arvidjaar@mail.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 10 Oct 2008, Christoph Hellwig wrote:
-
-> On Fri, Oct 10, 2008 at 02:59:28PM +0200, Elias Oltmanns wrote:
-> > That was my first thought when I discovered this. However, from what I
-> > read on the web, I somehow got the impression that [um]delay() was
-> > alright as opposed to msleep(). What exactly is the difference then?
+On Thu, Oct 02, 2008 at 06:37:18AM +0400, Andrey Borzenkov wrote:
+> TJ you can answer me using arvidjaar (at) newmail dot ru. Hopefully
+> one of them works. Re WPA2 - there is no information how to setup
+> CCMP/AES (even if firmware supports it); so no WPA2.
 > 
-> Yes, only msleep() sleeps, mdelay spins.
+> On Thursday 02 October 2008, Dave wrote:
+> > Greg KH wrote:
+> > > On Wed, Oct 01, 2008 at 05:40:29PM +0100, TJ wrote:
+> > >> On Wed, 2008-10-01 at 14:13 +0400, Andrey Borzenkov wrote:
+> > >>>On Wednesday 01 October 2008, Greg KH wrote:
+> > >>>> On Mon, Sep 29, 2008 at 09:49:34AM +0400, Andrey Borzenkov wrote:
+> > >>>>> I have here driver that can be built for two different types of
+> > >>>>> hardware from basically the same sources (this is port of old Agere
+> > >>>>> drivers for Hermes-I/Hermes-II chipsets).
+> > >>>> 
+> > >>>> Cool, do you have a link to the code, I'd be glad to add it to
+> > >>>> drivers/staging/ if it's not in a fully-mergable state yet to get wider
+> > >>>> users for it.
+> > >>>
+> > >>> You can look at it here: http://arvidjaar.newmail.ru/wlags49.tar.bz
+> > >>>
+> > >>> I doubt that it is suitable for inclusion at current state if ever.
+> > >>> This is taken directly from Agere 2.4 sources; the only parts that were
+> > >>> touched are kernel glue and wireless extensions interface.
+> > >>>
+> > >>> And it is not GPL'ed, of course. I attach E-Mail I received a while
+> > >>> back with answere from Agere legal department.
+> > >>
+> > >> I'm attaching the original email I sent to Agere and their response for
+> > >> the record, hoping it helps clarify the legal position.
+> > > 
+> > > Very nice, thanks for forwarding this on.
+> > > 
+> > > As the license is BSD, that means we can place it in the kernel tree.
+> > > Do you all mind if I add it to the drivers/staging/ directory so you can
+> > > work on cleaning it up within the main kernel tree infrastructure?
+> >
+> 
+> I do not mind but it is likely makes no sense for H-I now; and
+> I do not own H-II myself so cannot work on it. If we are focusing on
+> H-2/2.5, it would make more sense to make similar modifications to
+> 7.22 driver set from Agere to avoid overlap with Orinoco.
 
-Opps, right. 
+Ok, let me know what you think is the best thing to do, and I'll be glad
+to help you out with it.
+
+thanks,
+
+greg k-h
