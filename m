@@ -1,73 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529AbYJVSrw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36612 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941AbYJCPgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 14:47:52 -0400
-Subject: Re: [PATCH] wireless: fix regdom passing semantics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081022113751.GD6190@tesla>
-References: <1224579720.5521.2.camel@johannes.berg>
-	 <20081022113751.GD6190@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rJK5/UmzFutTIacstOmN"
-Date: Wed, 22 Oct 2008 20:47:43 +0200
-Message-Id: <1224701263.30459.45.camel@johannes.berg> (sfid-20081022_204756_936331_248EAD4B)
-Mime-Version: 1.0
+	Fri, 3 Oct 2008 11:36:04 -0400
+Date: Fri, 3 Oct 2008 11:35:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Steven Noonan <steven@uplinklabs.net>,
+	linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org
+Subject: Re: ath9k: panic on tip/master
+Message-ID: <20081003153523.GC3368@tuxdriver.com> (sfid-20081003_173610_175287_1E87F125)
+References: <f488382f0810030256x2859fbf6j3f657621c567287f@mail.gmail.com> <20081003100211.GA29841@elte.hu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081003100211.GA29841@elte.hu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Oct 03, 2008 at 12:02:11PM +0200, Ingo Molnar wrote:
+> 
+> * Steven Noonan <steven@uplinklabs.net> wrote:
+> 
+> > Hey folks,
+> > 
+> > Just got a panic on tip. According to the stack trace, ath9k is what 
+> > decided to bomb.
+> > 
+> > http://www.uplinklabs.net/~tycho/linux/ath9k_panic_tip_10.3.2008.jpg
+> > 
+> > Note: Although it says 'sudo modprobe radeon' on the bash prompt above 
+> > the panic, I never got to hit 'enter' on that command before the panic 
+> > occurred.
+> 
+> it appears to me that ath9k's eth_rx_input() takes a spinlock that is 
+> not initialized (or already destroyed by the allocator).
+ 
+Seems reasonable...
 
---=-rJK5/UmzFutTIacstOmN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> this would be consistent with an IRQ storm hitting some race in the 
+> ath9k driver init sequence. For example if request_irq() is done before 
+> all structures that the IRQ handler relies on are properly initialized.
+> 
+> i.e. this has the signature of a genuine ath9k bug.
 
-On Wed, 2008-10-22 at 04:37 -0700, Luis R. Rodriguez wrote:
-> On Tue, Oct 21, 2008 at 02:02:00AM -0700, Johannes Berg wrote:
-> > the current documentation doesn't
-> > note that you need to free it on errors anyway.
->=20
-> Yes it does.
->=20
-> >  /* Use this call to set the current regulatory domain. Conflicts with
-> >   * multiple drivers can be ironed out later. Caller must've already
-> > - * kmalloc'd the rd structure. If this calls fails you should kfree()
->                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> See?
->=20
-> > - * the passed rd. Caller must hold cfg80211_drv_mutex */
-> > + * kmalloc'd the rd structure. Caller must hold cfg80211_drv_mutex */
->=20
-> But this is fine too, so long as we keep the docs in sync.
+Agreed, although I don't see anything specifically relating to
+request_irq or the like.
 
-Yeah, evidently I screwed up the commit message. Sorry. I think I'd
-thought it didn't and then only later noticed. I'll resend.
+I think the spin_lock call may actually be in ath_ampdu_input (called
+from ath_rx_input), which perhaps is getting called simultaneous
+with ath_rx_node_init still running?  With no locks in between them,
+it seems like this could be the culprit?
 
-johannes
+Sorry to not be more immediately helpful, but I'm going to have to
+run in a few minutes.  Perhaps this insight is helpful for someone
+more familiar with the internals of this driver?
 
---=-rJK5/UmzFutTIacstOmN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/3VLAAoJEKVg1VMiehFYUK4QALwPMlE6J5NoQgioVia7v2Qh
-9mCLguy9MNZpEZJf662rcBrWY5IRVxfpY2PLAN9fzptASVFgUNXlh6wgUMwdfksz
-IcGkuhTPDEWg2Usrg8iF1aOWhR0g393S5d5xqIob1rQex4eJpJzLNQB0D8HZHvhv
-phUrtVsRodkI1cSsQvYJIxc1nfTw9/54NzhW5FAnjHd8eS8WvH4ff+4FhMgoJEYv
-a4C7ump3IPcb46BbtDuwTWrAjWnqqfURnCGQoRfwdE7xiYJWsug/ItGiOneaSvC0
-VvBHIMm2OVsFSk0OFdyB6Dk3/n1yNwSXfwhFFZst6+YA33U0qcf3Ax5VWd+f8eHv
-a8grJbdjqynxMBGxYfOemAzYhZ3z1GMGGczrJa/PHD3T7kNA9B3NOJF7wszydJdK
-CKGbgAeabh9Vmw23xijs50qi3GtG8GF8m802l9rOGV9fAhYKw2d7Wg+Xb+Q3bnud
-H7sxbXEfA48VXCJbmZ8x/9AZzzx7zyAvGFhPgHIKQJn8wPurryRgnueIe9LXOh8t
-npNETDIek6funX6EpptYELo+lcTMS83df4RVtgEBa19MO5FXSHMeikYsy9pVWOjN
-k2NMSQY4H1vwnBSw5hwyKoYc4ArWa8TjJv8dexWeq+VTDjzmS27jlUxCzQc3Mtec
-BxoJqRM4/uGyE0qJJBbd
-=fmBn
------END PGP SIGNATURE-----
-
---=-rJK5/UmzFutTIacstOmN--
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
