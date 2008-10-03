@@ -1,28 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41454 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751659AbYJFILt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 04:11:49 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 0/7] iwlwifi driver 10/06 updates
-Date: Mon,  6 Oct 2008 16:05:26 +0800
-Message-Id: <1223280333-4383-1-git-send-email-yi.zhu@intel.com> (sfid-20081006_101154_826731_132824E8)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50928 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752933AbYJCSKK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Oct 2008 14:10:10 -0400
+Date: Fri, 3 Oct 2008 14:09:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Steven Noonan <steven@uplinklabs.net>,
+	linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org
+Subject: Re: ath9k: panic on tip/master
+Message-ID: <20081003180930.GD3368@tuxdriver.com> (sfid-20081003_201021_277615_42784B0D)
+References: <f488382f0810030256x2859fbf6j3f657621c567287f@mail.gmail.com> <20081003100211.GA29841@elte.hu> <20081003153523.GC3368@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081003153523.GC3368@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Fri, Oct 03, 2008 at 11:35:23AM -0400, John W. Linville wrote:
+> On Fri, Oct 03, 2008 at 12:02:11PM +0200, Ingo Molnar wrote:
+> > 
+> > * Steven Noonan <steven@uplinklabs.net> wrote:
+> > 
+> > > Hey folks,
+> > > 
+> > > Just got a panic on tip. According to the stack trace, ath9k is what 
+> > > decided to bomb.
+> > > 
+> > > http://www.uplinklabs.net/~tycho/linux/ath9k_panic_tip_10.3.2008.jpg
+> > > 
+> > > Note: Although it says 'sudo modprobe radeon' on the bash prompt above 
+> > > the panic, I never got to hit 'enter' on that command before the panic 
+> > > occurred.
+> > 
+> > it appears to me that ath9k's eth_rx_input() takes a spinlock that is 
+> > not initialized (or already destroyed by the allocator).
+>  
+> Seems reasonable...
+> 
+> > this would be consistent with an IRQ storm hitting some race in the 
+> > ath9k driver init sequence. For example if request_irq() is done before 
+> > all structures that the IRQ handler relies on are properly initialized.
+> > 
+> > i.e. this has the signature of a genuine ath9k bug.
+> 
+> Agreed, although I don't see anything specifically relating to
+> request_irq or the like.
+> 
+> I think the spin_lock call may actually be in ath_ampdu_input (called
+> from ath_rx_input), which perhaps is getting called simultaneous
+> with ath_rx_node_init still running?  With no locks in between them,
+> it seems like this could be the culprit?
+> 
+> Sorry to not be more immediately helpful, but I'm going to have to
+> run in a few minutes.  Perhaps this insight is helpful for someone
+> more familiar with the internals of this driver?
 
-Here are some updates for iwlwifi. Please apply.
+This is probably a dead-end...I don't think the ath_node_find
+in ath__rx_indicate will be able to find the ath_node used
+in ath_ampdu_input unless ath_rx_node_init had already complete.
+Back to square one...
 
-Thanks,
--yi
-
-[PATCH 1/7] iwlwifi: make initial calibration set configurable
-[PATCH 2/7] iwlwifi: fix ct kill configuration for 5350
-[PATCH 3/7] iwlwifi: scan correct setting of valid rx_chains
-[PATCH 4/7] iwlwifi: scan fix comment
-[PATCH 5/7] iwlwifi: take a valid antenna upon rate scale init
-[PATCH 6/7] iwlwifi: remove STATUS_CONF_PENDING in scanning
-[PATCH 7/7] iwlwifi: refactor rxon time command
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
