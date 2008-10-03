@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flock1.newmail.ru ([82.204.219.207]:58531 "HELO
-	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753563AbYJIQOp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 12:14:45 -0400
-From: Andrey Borzenkov <arvidjaar@newmail.ru>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading firmware with PCMCIA adapter
-Date: Thu, 9 Oct 2008 20:13:54 +0400
-Cc: Matthew Wilcox <matthew@wil.cx>,
-	orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-pcmcia@lists.infradead.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <200810091722.56812.arvidjaar@newmail.ru> <200810091959.54987.arvidjaar@newmail.ru> <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com>
-In-Reply-To: <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com>
+Received: from bu3sch.de ([62.75.166.246]:53116 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753282AbYJCWf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Oct 2008 18:35:59 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [PATCH 3/8] b43: remove b43_radio_{read|write}16 from lo.c
+Date: Sat, 4 Oct 2008 00:35:35 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1223066926.6512.28.camel@brick> <1223069584.6512.42.camel@brick> <200810032356.38798.mb@bu3sch.de>
+In-Reply-To: <200810032356.38798.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1768242.paeJi4inQf";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200810092013.55476.arvidjaar@newmail.ru> (sfid-20081009_181452_363721_7AD7A8E8)
+Message-Id: <200810040035.35990.mb@bu3sch.de> (sfid-20081004_003602_970812_B300267C)
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1768242.paeJi4inQf
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Friday 03 October 2008 23:56:38 Michael Buesch wrote:
+> On Friday 03 October 2008 23:33:04 Harvey Harrison wrote:
+> > OK, but you should still look at patch 1 for the unaligned access
+> > helpers.
+> 
+> Yeah it's broken (it removes bounds checks at the end)
+> and unaligned is not needed.
+> 
+> > The rest I'll kick to the bitbucket...although I think you should look
+> > at the portion of patch 5 that touches the function b43_radio_init2060
+> > as it points out the _one_ place where a register is masking the value
+> > of some other register...which is absolutely impossible to see unless
+> > you do a series of patches like this.
+> > 
+> > It may be that it is intentional, and it has been this way as far back
+> > in the git history as I can find, but at least now it can be seen.
+> > 
+> > -       b43_radio_write16(dev, 0x0005,
+> > -                         (b43_radio_read16(dev, 0x0081) & ~0x0008) | 0x0008);
+> 
+> That's a bug in the dead code. We have more such bugs in the A-PHY code,
+> but nobody cares.
+> If you want to fix it, please read the specs and find out what should be
+> here instead. Then send a patch that fixes this single line of code.
+> 
 
-On Thursday 09 October 2008, Dan Williams wrote:
->=20
-> On Thu, 2008-10-09 at 19:59 +0400, Andrey Borzenkov wrote:
-> > On Thursday 09 October 2008, Matthew Wilcox wrote:
-> > >=20
-> > > On Thu, Oct 09, 2008 at 05:22:55PM +0400, Andrey Borzenkov wrote:
-> > > > After loading orinoco and "inserting" adapter I get either BUG with
-> > > > endless loop (attached) or kernel panic on NULL pointer dereference
-> > > > (was not able capture). Adapter works fine with wlags49 driver.
-> > >=20
-> > > It looks like you've fallen off the bottom of the kernel stack.  Do y=
-ou
-> > > have 4k stacks enabled in your config?
-> > >=20
-> >=20
-> > You are right. Using 8K stacks load and runs fine. Hmm ... not nice
-> > from it :p
->=20
-> =3D=3D driver bug; the driver should not require large stacks and this
-> should get fixed.
->=20
-I'll check for obvious places, still ...
+ah and you can also send a patch that removes all radio_read16/write16, if
+you like to.
+This can be proven correct by comparing the .ko sha1sum checksum before
+and after applying it.
 
-/* Download either STA or AP firmware into the card. */
-static int
-orinoco_dl_firmware(struct orinoco_private *priv,
-                    const struct fw_info *fw,
-                    int ap)
-{
-        /* Plug Data Area (PDA) */
-        __le16 pda[512] =3D { 0 };
+But no replacing of expressions by maskset and stuff. These can't be proven
+correct (easily) and are simply not worth the danger of typo-regressions.
 
-allocating 1K on stack is not nice; but what has eaten 3K more?
-
-Is there any instrumentation to analyze stack usage?
-
---nextPart1768242.paeJi4inQf
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkjuLcMACgkQR6LMutpd94wEzgCfdnCSg50PpgyoouccgUv17QpD
-55YAoKyuMWgzTLLjbGXPcyw/XsfoSjlg
-=IMWe
------END PGP SIGNATURE-----
-
---nextPart1768242.paeJi4inQf--
+-- 
+Greetings Michael.
