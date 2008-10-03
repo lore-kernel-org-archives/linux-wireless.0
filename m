@@ -1,111 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59527 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752765AbYJGR1R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 13:27:17 -0400
-Subject: Re: [PATCH 2/4] mac80211: add multi-rate retry support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <48EB98A6.4050406@openwrt.org>
-References: <48E8E48E.5090300@openwrt.org> <48E8E528.7060501@openwrt.org>
-	 <48E8E588.30001@openwrt.org> <1223329786.3778.38.camel@johannes.berg>
-	 <48EB98A6.4050406@openwrt.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YEpu/4mWzq6nY6hxHQCS"
-Date: Tue, 07 Oct 2008 19:27:16 +0200
-Message-Id: <1223400436.7328.54.camel@johannes.berg> (sfid-20081007_192720_880325_D56F69A0)
-Mime-Version: 1.0
+Received: from nebensachen.de ([195.34.83.29]:40347 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750874AbYJCOme (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Oct 2008 10:42:34 -0400
+From: Elias Oltmanns <eo@nebensachen.de>
+To: "Bob Copeland" <me@bobcopeland.com>
+Cc: jirislaby@gmail.com, toralf.foerster@gmx.de,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
+References: <200808101401.03339.toralf.foerster@gmx.de>
+	<200810012055.58085.toralf.foerster@gmx.de>
+	<87ej30m376.fsf@denkblock.local>
+	<b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
+	<87ljx8ndw1.fsf@denkblock.local>
+	<b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com>
+	<87od23mo08.fsf@denkblock.local>
+	<b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
+	<20081002144600.M31352@bobcopeland.com>
+	<87bpy32c1w.fsf@denkblock.local>
+	<b6c5339f0810021137g3d93c5c8t5fa8fb3784294a86@mail.gmail.com>
+	<20081003134648.M45120@bobcopeland.com>
+Date: Fri, 03 Oct 2008 16:42:17 +0200
+In-Reply-To: <20081003134648.M45120@bobcopeland.com> (Bob Copeland's message
+	of "Fri, 3 Oct 2008 10:13:33 -0400")
+Message-ID: <87fxnd2112.fsf@denkblock.local> (sfid-20081003_164238_731501_2005205C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+"Bob Copeland" <me@bobcopeland.com> wrote:
+> On Thu, 2 Oct 2008 14:37:17 -0400, Bob Copeland wrote
+>> On Thu, Oct 2, 2008 at 12:31 PM, Elias Oltmanns <eo@nebensachen.de> wrote:
+>
+>> > Sorry, but I don't think this is safe. Checking and restoring the
+>> > started flag has to be protected too, otherwise there can be races
+>> > against ->stop().
+>> 
+>> Yes, it's a bit of a mess.  Even if it were serialized, a ->stop()
+>> happening between suspend's call to hw_stop and actually powering down
+>> the device would clear the flag.  Ho hum.
+>
+> Okay, as usual I'm wrong here; it will clear the flag but we don't care
+> since then we just wouldn't power up on resume.
+>
+> Since no one else chimed in, here's take two with more chewing gum and 
+> baling wire to fix the suspend/stop race.
+>
+> ---
+>  drivers/net/wireless/ath5k/base.c |   24 +++++++++++++++++-------
+>  drivers/net/wireless/ath5k/base.h |    3 ++-
+>  2 files changed, 19 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index e09ed2c..7e8fa2e 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+[...]
+> @@ -666,9 +666,12 @@ ath5k_pci_resume(struct pci_dev *pdev)
+>  		goto err_no_irq;
+>  	}
+>  
+> -	err = ath5k_init(sc);
+> -	if (err)
+> -		goto err_irq;
+> +	if (test_bit(ATH_STAT_STARTED, sc->status)) {
+> +		err = ath5k_init(sc);
 
---=-YEpu/4mWzq6nY6hxHQCS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I still feel uneasy about this. Granted, I haven't thought this through
+too carefully, but I'd rather not rely on the fact that ath5k_stop_hw()
+will not get called between the check for ATH_STAT_STARTED and the call
+to ath5k_init if I can help it. Perhaps you can add an argument `reinit'
+to ath5k_init() and do something like this under the mutex:
 
-On Tue, 2008-10-07 at 19:13 +0200, Felix Fietkau wrote:
-> Johannes Berg wrote:
-> > On Sun, 2008-10-05 at 18:04 +0200, Felix Fietkau wrote:
-> >> This patch adjusts the rate control API to allow multi-rate retry
-> >> if supported by the driver. The ieee80211_hw struct specifies how
-> >> many alternate rate selections the driver supports.
-> >=20
-> > Don't those drivers that announce supporting max_altrates =3D 1 have to
-> > update the status for alternative rates too? Also, should
-> > max_altrate_tries =3D=3D 0 indicate that that is fixed?
-> IMHO yes.
+	if (reinit && !test_bit(ATH_STAT_STARTED, sc->status)) {
+		mutex_unlock(...);
+		return;
+	}
 
-Should we document that?
+Regards,
 
-> > But b43 with the
-> > default firmware actually _is_ capable of changing the number of retrie=
-s
-> > (default to 3/3 or 3/4 I think), just not per frame. Should we have tha=
-t
-> > in the API too?
-
-> Minstrel won't use it, because the value that it selects is dependent
-> on the rate that is to be used there. Maybe it'd make sense for other=20
-> stuff, though.
-
-No idea.
-
-> When using MRR and the get_rate function determines that it's time to do
-> some sampling, and the sampling rate it selected is lower than the calcul=
-ated
-> max throughput rate, it wouldn't make sense to put the sampling rate in t=
-he
-> first stage of the MRR chain, because that would lower the effective
-> throughput unnecessarily.
->=20
-> Instead it throws the sampling rate in the second stage of the MRR chain
-> and increases a separate counter to prevent it from doing large bursts of
-> sampling attempts.
->=20
-> However if the hw never gets to the second MRR stage, because the first o=
-ne
-> worked just fine, it should not mark this as a successful sampling, becau=
-se
-> the sample rate was not actually attempted.
-
-Heh, ok, I didn't really care about those details.
-
-> The IEEE80211_TX_CTL_RATE_CTRL_PROBE flag is used to tell the tx_status
-> function that there is a sampling rate in the second MRR stage, so that
-> it can update the sampling counter accordingly, in case the sampling rate
-> actually got used.
-
-So if I read that correctly you're saying it's not part of the driver
-API but just something to be preserved from tx to tx-status. Can you
-document that in the header file too please?
-
-johannes
-
---=-YEpu/4mWzq6nY6hxHQCS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI65vwAAoJEKVg1VMiehFY7pYP/ibBnyHuyKp9y6HDfH9R/dYF
-6KokfJ/6l7MXKYHmfqJh3l5EFHCaCJAneWR7k9BGc33MbLvz+P2AR3Te6fB9QSo0
-mC2JkH5VRGLAcv7K3IWjJUmFvf1AHR7DnEnjaM/6bQtBvfCYDLvXhI7IOM5ATkI3
-7pn4ECJrQuehWdByv0XozQF5JKatowL6inxmFyLwXUzeeJqSC7luMvd1TOrSi4K9
-KiSxqOlEnEtaXHEiLx2HrgdGs6ekUbSpN2PHXhEv10Ivia1Aci4sXfVlxH2sbxGc
-osG+ugReqjW4INSnK5R1wl9SWL64YNxADM8h4i9F+CusBR1ggx/JZxymxEuUNGBU
-hDCmGiU0tRaqbuwbVhHjOy/JUInlUS8sZh8OB79PwFIFoLYzoM50k4erpF8dlBRQ
-BKeDDXOXiFozf5hyApv6S6k6hppXhLnTPvUG28DP+Zy7uuqrHCWikRNSUT2WHBXL
-B7jri5wLWMDG0HTCY3wZCmZhqSktUEVP2i4ip6AJq6oXR+tRExZPPXyhsNFDYbGV
-qdjExeU59fdgJBCK+ZHHCp2VZxZzulb+etxNcfePwQgI3Xond96ZxVGePMCaOCZ/
-/kZcyCaQxUP3fW5n+BRCqEBkM3erNZyjuI1hNysEonJF5UvBJkM65dMzf4XsKrmO
-HVWkS7qLLFqVrAH8Nh9I
-=zTON
------END PGP SIGNATURE-----
-
---=-YEpu/4mWzq6nY6hxHQCS--
-
+Elias
