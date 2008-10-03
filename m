@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:38418 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbYJYOJr convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:38572 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751977AbYJCT66 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 10:09:47 -0400
+	Fri, 3 Oct 2008 15:58:58 -0400
 From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] p54: fix build warnings
-Date: Sat, 25 Oct 2008 16:14:14 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>, mcgrof <mcgrof@gmail.com>
-References: <1224923050.27353.1.camel@johannes.berg>
-In-Reply-To: <1224923050.27353.1.camel@johannes.berg>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC][PATCH] p54: fix memory management
+Date: Fri, 3 Oct 2008 22:02:53 +0200
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@nokia.com>
+References: <200810020359.40610.chunkeey@web.de> <48E586B4.5010808@lwfinger.net>
+In-Reply-To: <48E586B4.5010808@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200810251614.14514.chunkeey@web.de> (sfid-20081025_160951_210624_99B8521F)
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810032202.53952.chunkeey@web.de> (sfid-20081003_215901_962401_B98C4D09)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 25 October 2008 10:24:10 Johannes Berg wrote:
-> just FYI in case you haven't seen them. the p54 one looks like a genu=
-ine
-> problem.
+On Friday 03 October 2008 04:43:00 Larry Finger wrote:
+> Christian Lamparter wrote:
+> Oct  2 17:22:52 larrylap kernel: BUG: unable to handle kernel NULL
+> pointer dereference at 0000000000000000
+[...]
+
+> [...] Tainted: GM
+
+> Note, the "tainted" flag is false. No closed-source drivers have been
+> loaded.
 >
-> drivers/net/wireless/p54/p54common.c: In function =E2=80=98p54_parse_=
-eeprom=E2=80=99:
-> drivers/net/wireless/p54/p54common.c:325: warning: =E2=80=98synth=E2=80=
-=99 may be used uninitialized in this function
 
-There you go. Yes, it is a genuine problem, if the device's eeprom is s=
-crewed really up.
+more about the flags can be found in Documentation/oops-tracing.txt:
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireles=
-s/p54/p54common.c
-index 360f35b..02a306d 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -322,7 +322,7 @@ static int p54_parse_eeprom(struct ieee80211_hw *de=
-v, void *eeprom, int len)
- 	void *tmp;
- 	int err;
- 	u8 *end =3D (u8 *)eeprom + len;
--	u16 synth;
-+	u16 synth =3D 0;
- 	DECLARE_MAC_BUF(mac);
-=20
- 	wrap =3D (struct eeprom_pda_wrap *) eeprom;
-@@ -425,7 +425,8 @@ static int p54_parse_eeprom(struct ieee80211_hw *de=
-v, void *eeprom, int len)
- 		entry =3D (void *)entry + (entry_len + 1)*2;
- 	}
-=20
--	if (!priv->iq_autocal || !priv->output_limit || !priv->curve_data) {
-+	if (!synth || !priv->iq_autocal || !priv->output_limit ||
-+	    !priv->curve_data) {
- 		printk(KERN_ERR "p54: not all required entries found in eeprom!\n");
- 		err =3D -EINVAL;
- 		goto err;
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  1: 'G' if all modules loaded have a GPL or compatible license, 'P' if
+     any proprietary module has been loaded.  Modules without a
+     MODULE_LICENSE or with a MODULE_LICENSE that is not recognised by
+     insmod as GPL compatible are assumed to be proprietary.
+[...]
+  5: 'M' if any processor has reported a Machine Check Exception,
+     ' ' if no Machine Check Exceptions have occurred.
+
+so:
+- the "G" flag is perfectly OK! (P would be the "closed-source" drivers)
+
+- however, the "M"(CE) flag is worryingly. The question is, if p54 causes it, or not? 
+  As far as I know, when a MCE gets logged a short message should pop up
+  in the kernel's log and next you'll need extra tools like mcelog to see what's
+  going wrong.
+
+Regards,
+	Chr
