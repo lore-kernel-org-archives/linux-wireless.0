@@ -1,151 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:50654 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752955AbYJIWrX (ORCPT
+Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:57473 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753159AbYJCD3j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 18:47:23 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so127217nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2008 15:47:21 -0700 (PDT)
-Message-ID: <48EE89ED.3050309@gmail.com> (sfid-20081010_004727_315327_787AFC54)
-Date: Thu, 09 Oct 2008 23:47:09 +0100
+	Thu, 2 Oct 2008 23:29:39 -0400
+Date: Thu, 2 Oct 2008 22:29:38 -0500
+From: Robin Holt <holt@sgi.com>
+To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Cc: Robin Holt <holt@sgi.com>
+Subject: Re: System pauses with iwl3945 AP associate. RFKill unpauses.
+Message-ID: <20081003032938.GX28581@sgi.com> (sfid-20081003_052944_074194_0C3936D1)
+References: <20081001115830.GD8534@sgi.com> <BAY133-W6C33FBF8B67482CE4D8F8B2420@phx.gbl> <20081002233422.GF8534@sgi.com> <20081003014750.GT28581@sgi.com> <20081003022554.GU28581@sgi.com>
 MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@newmail.ru>
-CC: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading
- firmware with PCMCIA adapter
-References: <200810091722.56812.arvidjaar@newmail.ru> <200810091959.54987.arvidjaar@newmail.ru> <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com> <200810092321.55033.arvidjaar@newmail.ru>
-In-Reply-To: <200810092321.55033.arvidjaar@newmail.ru>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081003022554.GU28581@sgi.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
-> The attached patch fixes 4K stack for me. I have not tested spectrum case.
+On Thu, Oct 02, 2008 at 09:25:54PM -0500, Robin Holt wrote:
+> OK.  I think I have convinced myself this is an issue with
+> sta_info_debugfs_add_work().  I am going to turn off
+> CONFIG_MAC80211_DEBUGFS and see if that makes things better.
 
-Thanks for identifying the problem. The Agere case looks good - a few suggestions for the Symbol case though:
-
-> diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-> --- a/drivers/net/wireless/orinoco.c
-> +++ b/drivers/net/wireless/orinoco.c
-> @@ -549,12 +556,16 @@ symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
->  		int secondary)
->  {
->  	hermes_t *hw = &priv->hw;
-> -	int ret;
-> +	int ret = 0;
->  	const unsigned char *ptr;
->  	const unsigned char *first_block;
->  
->  	/* Plug Data Area (PDA) */
-> -	__le16 pda[256];
-> +	__le16 *pda;
-
-Please initialise pda to NULL here...
-
-> +	pda = kzalloc(fw->pda_size, GFP_KERNEL);
-> +	if (!pda)
-> +		return -ENOMEM;
-
-And move the allocation to
-
->  	/* Binary block begins after the 0x1A marker */
->  	ptr = image;
-> @@ -563,22 +574,22 @@ symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
->  
->  	/* Read the PDA from EEPROM */
->  	if (secondary) {
-
- ... here.
-
-> -		ret = hermes_read_pda(hw, pda, fw->pda_addr, sizeof(pda), 1);
-> +		ret = hermes_read_pda(hw, pda, fw->pda_addr, fw->pda_size, 1);
->  		if (ret)
-> -			return ret;
-> +			goto free;
->  	}
->  
->  	/* Stop the firmware, so that it can be safely rewritten */
->  	if (priv->stop_fw) {
->  		ret = priv->stop_fw(priv, 1);
->  		if (ret)
-> -			return ret;
-> +			goto free;
->  	}
->  
->  	/* Program the adapter with new firmware */
->  	ret = hermes_program(hw, first_block, end);
->  	if (ret)
-> -		return ret;
-> +		goto free;
->  
->  	/* Write the PDA to the adapter */
->  	if (secondary) {
-> @@ -586,28 +597,31 @@ symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
->  		ptr = first_block + len;
->  		ret = hermes_apply_pda(hw, ptr, pda);
->  		if (ret)
-> -			return ret;
-> +			goto free;
-
-Then kfree(pda) here. We're done with it now.
-
->  	}
->  
->  	/* Run the firmware */
->  	if (priv->stop_fw) {
->  		ret = priv->stop_fw(priv, 0);
->  		if (ret)
-> -			return ret;
-> +			goto free;
-
-So this isn't needed.
-
->  	}
->  
->  	/* Reset hermes chip and make sure it responds */
->  	ret = hermes_init(hw);
->  
->  	/* hermes_reset() should return 0 with the secondary firmware */
-> -	if (secondary && ret != 0)
-> -		return -ENODEV;
-> +	if (secondary && ret != 0) {
-> +		ret = -ENODEV;
-> +		goto free;
-> +	}
-
-nor this.
-
->  
->  	/* And this should work with any firmware */
->  	if (!hermes_present(hw))
-> -		return -ENODEV;
-> +		ret = -ENODEV;
->  
-> -	return 0;
-
-or these.
-
-> +free:
- 
-But you absolutely have to kfree(pda) here. I would prefer the label be something like 'abort' (what we are doing), rather than 'free' - but there's merit in keeping with what you have called in in orinoco_dl_firmware which already has an 'abort' label.
-
-> +	return ret;
->  }
- 
-The net effect of the above suggestion is that we won't allocate memory when programming the primary firmware (which is just before we do the secondary).
-
-Dan Williams wrote:
-> maybe you should not use priv->pda_size but
-> #define SYMBOL_PDA_SIZE 256 and use that for the hermes_read_pda()
-> length just to ensure the patched code is functionally the same as
-> before the patch.
-
-Using fw->pda_size should be fine. The value comes from a const static, set to 0x100 for Symbol.
+Appear to be on the right track here.  With CONFIG_MAC80211_DEBUGFS=y, I
+could only suspend/resume approx 4 times without iwl3945 hanging.  I had
+worked around that by modprobe -r iwl3945 and waiting a while before
+suspending.  Now with CONFIG_MAC80211_DEBUGFS=n, I have done 6 suspends
+with the machine suspended for 5 minutes before resuming and it has not
+hung.  That has not occurred before.  I will continue to test this for
+the next few days.
 
 
-Regards,
+Thanks,
+Robin
 
-Dave.
+> 
+> Thanks,
+> Robin
+> 
+> On Thu, Oct 02, 2008 at 08:47:50PM -0500, Robin Holt wrote:
+> > On Thu, Oct 02, 2008 at 06:34:22PM -0500, Robin Holt wrote:
+> > > I do have KDB installed as well and one other thing I noticed is we are
+> > > adding work to a workqueue at the time of the hang.  Not sure if this
+> > > is accurate and I forgot that I only have a VGA console so there is
+> > > no record of the KDB output.
+> > 
+> > OK.  In KDB.  Here goes...
+> > 
+> > events/0 process is on cpu0 with the following stack.
+> > 
+> > _spin_unlock_irqrestore+0x10
+> > [mac80211]sta_info_debugfs_add_work+0x82
+> > run_workqueue+0xd4
+> > worker_thread+0x88
+> > kthread+0x42
+> > 
+> > 
+> > I few times later, I got:
+> > _cond_resched+0x10
+> > [mac80211]sta_info_destroy+0x10
+> > [mac80211]sta_info_debugfs_add_work+0xee
+> > run_workqueue+0xd4
+> > worker_thread+0x88
+> > kthread+0x42
+> > 
+> > I am transposing these from screen to this email so I reserve the right
+> > to be slightly off, but these appear to be the call traces.
+> > 
+> > It looks to me like this add_work loop is truly an infinite loop and
+> > preventing interrupts from being processed on cpu0.
+> > 
+> > Thanks,
+> > Robin
