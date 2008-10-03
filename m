@@ -1,80 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23379 "EHLO mga09.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:62021 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754493AbYJ3RzQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 13:55:16 -0400
-Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
-From: reinette chatre <reinette.chatre@intel.com>
-To: Mirco Tischler <mt-ml@gmx.de>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	Arjan van de Ven <arjan@infradead.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20081030182433.0a4eb471@mtlp.12.dimension>
-References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
-	 <1225157618.2917.215.camel@debian.sh.intel.com>
-	 <20081027213217.53558319@infradead.org>
-	 <1225171414.2917.229.camel@debian.sh.intel.com>
-	 <20081028172418.3c8e91f1@mtlp.12.dimension>
-	 <1225261084.2917.254.camel@debian.sh.intel.com>
-	 <20081030182433.0a4eb471@mtlp.12.dimension>
-Content-Type: text/plain
-Date: Thu, 30 Oct 2008 10:55:38 -0700
-Message-Id: <1225389338.1115.338.camel@rc-desk> (sfid-20081030_185523_116881_E76D4650)
-Mime-Version: 1.0
+	id S1752389AbYJCWpq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Oct 2008 18:45:46 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 03 Oct 2008 15:45:46 -0700
+Date: Fri, 3 Oct 2008 08:45:33 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Regulatory Framework & rt2x00.
+Message-ID: <20081003154533.GK5964@tesla> (sfid-20081004_004556_630954_0215CDC1)
+References: <48E52D07.8050900@kpnplanet.nl> <20081002193357.GP5960@tesla> <48E67E78.8040807@kpnplanet.nl> <20081003143239.GI5964@tesla> <48E69A8F.1060001@kpnplanet.nl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <48E69A8F.1060001@kpnplanet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-10-30 at 10:24 -0700, Mirco Tischler wrote:
-> On Wed, 29 Oct 2008 14:18:04 +0800, Zhu Yi wrote:
-> > Can you try attached patch?
-> > 
-> > Thanks,
-> > -yi
-> I did. Didn't solve the problems but here's the output:
+On Fri, Oct 03, 2008 at 03:19:59PM -0700, Gertjan van Wingerde wrote:
+> Luis R. Rodriguez wrote:
+> >
+> > This should only be possible if the devices were designed to world roam.
+> > Remember that world roaming is part of the IEEE-802.11 specs, and by
+> > default devices should be assumed to not be capable of it.
+> >
+> > For example iwl3945 or iwlagn driveres are not capable of world roaming
+> > because as of right now these devices are not designed to allow the
+> > driver to *add* new channels.
+> >
+> > Also keep in mind vendors tend to want to respect the EEPROM
+> > map of the regulatory domain. This is to deal with two issues:
+> >
+> > 1. Rogue APs sending sending a strange channels for an alpha2 through
+> >     a Country IE
+> >
+> > 2. Vendor's customers tend to like to stick sometimes to frequency
+> >     ranges which may be old in terms of regulatory rules because
+> >     although the device is capable of other frequencies the customer
+> >     may not have tested the device or certified it under the other
+> >     channels even adding a new channel may be seen as a feature.
+> >
+> > So it really depends. The answer to these questions *are* really
+> > vendor dependant and I what I would *highly* recommend is to take
+> > a conservative approach unless you have the vendor's blessing
+> > to do things differently, even if the vendor is not being
+> > cooeperative. Keep in mind though that doing this requires
+> > developer effort though so I can see why we won't have all drivers
+> > using regulatory_hint() and a reg_notifier() for example. But
+> > developers are forthcoming to write this then great -- if you
+> > don't get vendor support to enhance this then its really up us
+> > to decide what is best.
+> >
+> 
+> Hmm, interesting. I would have assumed that in this era whether people
+> are traveling round the world that vendors would create some more robust
+> HW that is capable of coping with that. For instance, for my real-life
+> job I do travel round the world a lot, and I'm using the built-in (as
+> well as the Ralink PC-card I have) basically everywhere.
 
-That helped us to obtain more information. Could you please try commit
-9685e33a2c919c1e95cb7072988fc1e0f0bad3d9 ?
+Well due to the "regulatory boogeyman", as Sam likes to call it,
+companies which do not have solid regulatory infrastructure tend to
+like to simply not world roam or simply not deal with this in FOSS.
 
-Reproduced here for convenience:
+Fortunately now we have a pretty beefy regulatory infrastructure though
+so this can change now. Keep in mind that you *shouldn't* run into
+problems unless you hit channels on band edges which are usually the
+ones that may get removed, like channels 12 and 13 on the 2 GHZ band,
+for example.
 
-commit 9685e33a2c919c1e95cb7072988fc1e0f0bad3d9
-Author: Mohamed Abbas <mohamed.abbas@intel.com>
-Date:   Thu Oct 23 23:48:54 2008 -0700
+> >> I'm not entirely sure yet. The basic question I have is that if I have a
+> >> device with has in EEPROM a region setting of US for the 5GHz band and
+> >> EU for the 2GHz band, what do I pass to the regulatory_hint function?
+> >>
+> >
+> > Think about this for a second -- does this make any sense? I don't see
+> > how. Perhaps this is why its not recommended you rely on it. In the end,
+> > you won't know unless you ask the vendor.
+> >
+> 
+> Yep, that's exactly the issue I had with this. It doesn't make sense to
+> me to have multiple (potentially) different region codes programmed in
+> EEPROM. 
 
-    iwlwifi: clear scanning bits upon failure
-    
-    In iwl_bg_request_scan function, if we could not send a
-    scan command it will go to done.
-    In done it does the right thing to call mac80211 with
-    scan complete, but the problem is STATUS_SCAN_HW is still
-    set causing any future scan to fail. Fix by clearing the scanning status
-    bits if scan fails.
-    
-    Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-    Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Right, well I mean, it could make sense if although its "US" for 2 GHz
+and "EU" for 5 GHz that this is not really an EEPROM country code but
+more rather an EEPROM code for the collection of channels on each band.
+In regulatory world these are called SKUs [1]. So If you start thinking
+of it in terms of SKUs you then then to find what the SKU means and
+simply just use that to only register those channels. This would be a
+very conservative approach but it limits your devices to not be
+able to world roam later. If instead you use a reg_notifier() to
+review the regulatory changes and if the initiator is the user
+(REGDOM_SET_BY_USER) you can then override any changes by crda as your
+driver may claim to know better. That was the whole point of
+reg_notifier() -- in case you want to say you know better in case of a
+user override. This can then let you world roam later if the initiator
+is REGDOM_SET_BY_COUNTRY_IE and you want to be more flexible there.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 3379b41..b0abf89 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -834,6 +834,13 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 	return;
- 
-  done:
-+	/* Cannot perform scan. Make sure we clear scanning
-+	* bits from status so next scan request can be performed.
-+	* If we don't clear scanning status bit here all next scan
-+	* will fail
-+	*/
-+	clear_bit(STATUS_SCAN_HW, &priv->status);
-+	clear_bit(STATUS_SCANNING, &priv->status);
- 	/* inform mac80211 scan aborted */
- 	queue_work(priv->workqueue, &priv->scan_completed);
- 	mutex_unlock(&priv->mutex);
+As you can see this requires quite a bit of work and knowledge of the
+device's regulatory information and the original intentions behind the
+design of the device. This is why its difficult to simply assume
+you can build it on your own without vendor involvement and why I was
+recommending a more conservative approach.
 
+> Note that the example I gave is a real-life example. The EEPROM
+> of my rt73usb device contain exactly these EEPROM settings for the
+> region information :-(
 
+Heh yeah, if you think in terms of SKUs it makes a little more sense, I
+hope.
 
+[1] http://en.wikipedia.org/wiki/Stock-keeping_unit
