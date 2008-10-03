@@ -1,57 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44241 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822AbYJaSxc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 14:53:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlagn: avoid sleep in softirq context
-Date: Fri, 31 Oct 2008 13:58:24 -0400
-Message-Id: <1225475904-25184-1-git-send-email-linville@tuxdriver.com> (sfid-20081031_195336_378707_3338F8C3)
-In-Reply-To: <1225399265.1115.356.camel@rc-desk>
-References: <1225399265.1115.356.camel@rc-desk>
+Received: from mail.atheros.com ([12.36.123.2]:48217 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752061AbYJCStd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Oct 2008 14:49:33 -0400
+Date: Fri, 3 Oct 2008 04:49:21 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Ingo Molnar <mingo@elte.hu>, Steven Noonan <steven@uplinklabs.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k: panic on tip/master
+Message-ID: <20081003114921.GG5964@tesla> (sfid-20081003_204949_307725_73B39C39)
+References: <f488382f0810030256x2859fbf6j3f657621c567287f@mail.gmail.com> <20081003100211.GA29841@elte.hu> <20081003153523.GC3368@tuxdriver.com> <20081003180930.GD3368@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20081003180930.GD3368@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-__ieee80211_tasklet_handler -> __ieee80211_rx ->
-	__ieee80211_rx_handle_packet -> ieee80211_invoke_rx_handlers ->
-	ieee80211_rx_h_decrypt -> ieee80211_crypto_tkip_decrypt ->
-	ieee80211_tkip_decrypt_data -> iwl4965_mac_update_tkip_key ->
-	iwl_scan_cancel_timeout -> msleep
+On Fri, Oct 03, 2008 at 11:09:31AM -0700, John W. Linville wrote:
+> On Fri, Oct 03, 2008 at 11:35:23AM -0400, John W. Linville wrote:
+> > On Fri, Oct 03, 2008 at 12:02:11PM +0200, Ingo Molnar wrote:
+> > >
+> > > * Steven Noonan <steven@uplinklabs.net> wrote:
+> > >
+> > > > Hey folks,
+> > > >
+> > > > Just got a panic on tip. According to the stack trace, ath9k is what
+> > > > decided to bomb.
+> > > >
+> > > > http://www.uplinklabs.net/~tycho/linux/ath9k_panic_tip_10.3.2008.jpg
+> > > >
+> > > > Note: Although it says 'sudo modprobe radeon' on the bash prompt above
+> > > > the panic, I never got to hit 'enter' on that command before the panic
+> > > > occurred.
+> > >
+> > > it appears to me that ath9k's eth_rx_input() takes a spinlock that is
+> > > not initialized (or already destroyed by the allocator).
+> >
+> > Seems reasonable...
+> >
+> > > this would be consistent with an IRQ storm hitting some race in the
+> > > ath9k driver init sequence. For example if request_irq() is done before
+> > > all structures that the IRQ handler relies on are properly initialized.
+> > >
+> > > i.e. this has the signature of a genuine ath9k bug.
+> >
+> > Agreed, although I don't see anything specifically relating to
+> > request_irq or the like.
+> >
+> > I think the spin_lock call may actually be in ath_ampdu_input (called
+> > from ath_rx_input), which perhaps is getting called simultaneous
+> > with ath_rx_node_init still running?  With no locks in between them,
+> > it seems like this could be the culprit?
+> >
+> > Sorry to not be more immediately helpful, but I'm going to have to
+> > run in a few minutes.  Perhaps this insight is helpful for someone
+> > more familiar with the internals of this driver?
+> 
+> This is probably a dead-end...I don't think the ath_node_find
+> in ath__rx_indicate will be able to find the ath_node used
+> in ath_ampdu_input unless ath_rx_node_init had already complete.
+> Back to square one...
 
-Ooops!
+Well Steven, please give this a shot, we think this is the culprit.
 
-Avoid the sleep by changing iwl_scan_cancel_timeout with
-iwl_scan_cancel and simply returning on failure if the scan persists.
-This will cause hardware decryption to fail and we'll handle a few more
-frames with software decryption.
+[PATCH] ath9k: fix oops on trying to hold the wrong spinlock
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+We were trying to hold the wrong spinlock due to a typo
+on IEEE80211_BAR_CTL_TID_S's definition. We use this to
+compute the tid number and then hold this this tid number's
+spinlock during ath_bar_rx().
+
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath9k/core.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 89450e3..5cca7bf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3247,7 +3247,12 @@ static void iwl4965_mac_update_tkip_key(struct ieee80211_hw *hw,
- 		return;
- 	}
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 2f84093..88f4cc3 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -316,7 +316,7 @@ void ath_descdma_cleanup(struct ath_softc *sc,
+ #define ATH_RX_TIMEOUT           40      /* 40 milliseconds */
+ #define WME_NUM_TID              16
+ #define IEEE80211_BAR_CTL_TID_M  0xF000  /* tid mask */
+-#define IEEE80211_BAR_CTL_TID_S  2       /* tid shift */
++#define IEEE80211_BAR_CTL_TID_S  12      /* tid shift */
  
--	iwl_scan_cancel_timeout(priv, 100);
-+	if (iwl_scan_cancel(priv)) {
-+		/* cancel scan failed, just live w/ bad key and rely
-+		   briefly on SW decrpyption */
-+		IWL_DEBUG_MAC80211("leave - failed to cancel scan\n");
-+		return;
-+	}
- 
- 	key_flags |= (STA_KEY_FLG_TKIP | STA_KEY_FLG_MAP_KEY_MSK);
- 	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
+ enum ATH_RX_TYPE {
+ 	ATH_RX_NON_CONSUMED = 0,
 -- 
-1.5.4.3
+1.5.6.3
 
