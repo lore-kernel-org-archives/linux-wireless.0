@@ -1,62 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39483 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942AbYJ0SBs (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:14260 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753079AbYJCSUi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 14:01:48 -0400
-Date: Mon, 27 Oct 2008 14:00:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Carlos R. Mafra" <crmafra2@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	tomas.winkler@intel.com, kernel@nn7.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Message-ID: <20081027180049.GF20389@tuxdriver.com> (sfid-20081027_190154_398204_708813B8)
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271839.39236.rjw@sisk.pl> <20081027175719.GA5759@localhost.aei.mpg.de>
+	Fri, 3 Oct 2008 14:20:38 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so573966eyi.37
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Oct 2008 11:20:36 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Fix rfkill structure initialization to prevent rfkill WARN_ON.
+Date: Fri, 3 Oct 2008 20:20:32 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@kpnplanet.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081027175719.GA5759@localhost.aei.mpg.de>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810032020.33035.IvDoorn@gmail.com> (sfid-20081003_202041_680876_9FD76EEC)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 27, 2008 at 06:57:19PM +0100, Carlos R. Mafra wrote:
-> On Mon 27.Oct'08 at 18:39:38 +0100, Rafael J. Wysocki wrote:
-> > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
-> > > Hi,
-> > > 
-> > > So I managed to bisect my suspend to RAM regression in 2.6.27-rc2
-> > > to commit 3b7ee69d0caefbdb85a606a98bff841b8c63b97e ("mac80211: disassociate 
-> > > when moving to new BSS") by Tomas Winkler (Cc:-ed).
-> > > 
-> > > Unfortunately it doesn't revert cleanly so I can't double check it.
-> > 
-> > Why are you saying it doesn't revert cleanly?  For me it does revert without
-> > rejects from 2.6.28-rc2.
-> 
-> I get this
-> 
-> [mafra@localhost:linux-2.6]$ git checkout v2.6.28-rc2 -b s2ram
-> Switched to a new branch "s2ram"
-> [mafra@localhost:linux-2.6]$ git revert 3b7ee69d
-> warning: too many files, skipping inexact rename detection
-> Auto-merged net/mac80211/mlme.c
-> CONFLICT (content): Merge conflict in net/mac80211/mlme.c
-> Automatic revert failed.  After resolving the conflicts,
-> mark the corrected paths with 'git add <paths>' or 'git rm <paths>' and commit the result.
-> 
-> I don't know what is happening here :-(
+From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
 
-That conflict is easy to resolve.  Just delete everything between
-"<<<<" and ">>>>" (including those lines).
+The state field of the rfkill structure was incorrectly initialized to -1, which results in rfkill
+issueing a WARN_ON. Fix this by initializing the state field to the proper value as indicated by
+the driver.
 
-Hth!
+Signed-off-by: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00rfkill.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-John
-
-P.S.  I don't see any obvious reason why that should affect X on
-resume -- maybe the iwlwifi guys have some ideas.
-
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+index 55eff58..c3f53a9 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
++++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+@@ -145,10 +145,15 @@ void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2x00dev->rfkill->name = rt2x00dev->ops->name;
+ 	rt2x00dev->rfkill->data = rt2x00dev;
+-	rt2x00dev->rfkill->state = -1;
+ 	rt2x00dev->rfkill->toggle_radio = rt2x00rfkill_toggle_radio;
+-	if (test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags))
++	if (test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags)) {
+ 		rt2x00dev->rfkill->get_state = rt2x00rfkill_get_state;
++		rt2x00dev->rfkill->state =
++			rt2x00dev->ops->lib->rfkill_poll(rt2x00dev) ?
++			    RFKILL_STATE_SOFT_BLOCKED : RFKILL_STATE_UNBLOCKED;
++	} else {
++		rt2x00dev->rfkill->state = RFKILL_STATE_UNBLOCKED;
++	}
+ 
+ 	INIT_DELAYED_WORK(&rt2x00dev->rfkill_work, rt2x00rfkill_poll);
+ 
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+1.5.6.1
+
