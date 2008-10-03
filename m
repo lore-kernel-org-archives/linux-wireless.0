@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:55060 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751261AbYJLBoW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 21:44:22 -0400
-Date: Sat, 11 Oct 2008 22:44:15 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
-Subject: Re: [PATCH 3/5] rfkill: add master_switch_mode and EPO lock to
-	rfkill and rfkill-input
-Message-ID: <20081012014415.GA15867@khazad-dum.debian.net> (sfid-20081012_034429_889761_603D1CDE)
-References: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br> <20081009212049.GA16430@khazad-dum.debian.net> <20081010004933.GA23514@khazad-dum.debian.net> <200810111553.49466.IvDoorn@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:54183 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754372AbYJCVSH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Oct 2008 17:18:07 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [PATCH 3/8] b43: remove b43_radio_{read|write}16 from lo.c
+Date: Fri, 3 Oct 2008 23:17:19 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1223066926.6512.28.camel@brick>
+In-Reply-To: <1223066926.6512.28.camel@brick>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810111553.49466.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810032317.19971.mb@bu3sch.de> (sfid-20081003_231813_036798_597A9DB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 11 Oct 2008, Ivo van Doorn wrote:
-> Although I think RFKILL_NEED_SWSET could be removed entirely if it isn't
-> used anyway, we might do that later.
+On Friday 03 October 2008 22:48:46 Harvey Harrison wrote:
+> Mostly by using the mask/set helpers. Some temporary variables have
+> also been eliminated.
 
-As I said, that code is NOT obvious.  It is NOT too difficult to come up
-with either, but I think it is safer if it is kept around for a while, or
-just kept enabled but unused if you dislike the #ifdefs so much...
+I already told you two times that I do not like these patches.
+I also explained in great detail why this is the case.
+
+Please drop these patches!
+If you send them one more time, I will immediately add your email address to
+my exim blacklist.
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Greetings Michael.
