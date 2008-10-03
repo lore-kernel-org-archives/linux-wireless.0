@@ -1,98 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41543 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753588AbYJ3Ko7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52115 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752292AbYJCPKn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 06:44:59 -0400
-Subject: Re: [PATCH 3/4] mac80211_hwsim: Debug info for TX queue parameters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081029175254.540859084@localhost>
-References: <20081029174934.817700763@localhost>
-	 <20081029175254.540859084@localhost>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-10r+Kd714G3Ha9cGcCm4"
-Date: Thu, 30 Oct 2008 11:44:55 +0100
-Message-Id: <1225363495.3690.21.camel@johannes.berg> (sfid-20081030_114506_724716_A205EFC0)
-Mime-Version: 1.0
+	Fri, 3 Oct 2008 11:10:43 -0400
+Received: from sapphire.tuxdriver.com ([70.61.120.61] helo=localhost)
+	by smtp.tuxdriver.com with esmtpsa (TLSv1:AES128-SHA:128)
+	(Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1KlmIk-0002Ah-6T
+	for linux-wireless@vger.kernel.org; Fri, 03 Oct 2008 11:10:42 -0400
+Date: Fri, 3 Oct 2008 11:10:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: [mingo@elte.hu: Re: ath9k: panic on tip/master]
+Message-ID: <20081003151006.GB3368@tuxdriver.com> (sfid-20081003_171048_739115_6AB15022)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+----- Forwarded message from Ingo Molnar <mingo@elte.hu> -----
 
---=-10r+Kd714G3Ha9cGcCm4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2008-10-29 at 19:49 +0200, Jouni Malinen wrote:
-> plain text document attachment (hwsim_tx_conf.patch)
-> Provide detailed information on TX queue parameter changes to make it
-> easier to debug mac80211 functionality.
->=20
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> Index: wireless-testing/drivers/net/wireless/mac80211_hwsim.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2008-10-2=
-9 13:27:50.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2008-10-29 13:=
-36:20.000000000 +0200
-> @@ -468,6 +468,17 @@
->  	return 0;
->  }
-> =20
-> +static int mac80211_hwsim_conf_tx(
-> +	struct ieee80211_hw *hw, u16 queue,
-> +	const struct ieee80211_tx_queue_params *params)
-> +{
-> +	printk(KERN_DEBUG "%s:%s (queue=3D%d txop=3D%d cw_min=3D%d cw_max=3D%d =
-"
-> +	       "aifs=3D%d)\n",
-> +	       wiphy_name(hw->wiphy), __func__, queue,
-> +	       params->txop, params->cw_min, params->cw_max, params->aifs);
-> +	return 0;
-> +}
-> +
->  static const struct ieee80211_ops mac80211_hwsim_ops =3D
->  {
->  	.tx =3D mac80211_hwsim_tx,
-> @@ -481,6 +492,7 @@
->  	.bss_info_changed =3D mac80211_hwsim_bss_info_changed,
->  	.sta_notify =3D mac80211_hwsim_sta_notify,
->  	.set_tim =3D mac80211_hwsim_set_tim,
-> +	.conf_tx =3D mac80211_hwsim_conf_tx,
->  };
-> =20
->=20
->=20
+> Delivery-date: Fri, 03 Oct 2008 06:03:27 -0400
+> Date: Fri, 3 Oct 2008 12:02:11 +0200
+> From: Ingo Molnar <mingo@elte.hu>
+> To: Steven Noonan <steven@uplinklabs.net>
+> Cc: linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+> 	lrodriguez@atheros.com
+> Subject: Re: ath9k: panic on tip/master
+> In-Reply-To: <f488382f0810030256x2859fbf6j3f657621c567287f@mail.gmail.com>
+> List-ID: <linux-kernel.vger.kernel.org>
+> X-Mailing-List: linux-kernel@vger.kernel.org
+> 
+> * Steven Noonan <steven@uplinklabs.net> wrote:
+> 
+> > Hey folks,
+> > 
+> > Just got a panic on tip. According to the stack trace, ath9k is what 
+> > decided to bomb.
+> > 
+> > http://www.uplinklabs.net/~tycho/linux/ath9k_panic_tip_10.3.2008.jpg
+> > 
+> > Note: Although it says 'sudo modprobe radeon' on the bash prompt above 
+> > the panic, I never got to hit 'enter' on that command before the panic 
+> > occurred.
+> 
+> it appears to me that ath9k's eth_rx_input() takes a spinlock that is 
+> not initialized (or already destroyed by the allocator).
+> 
+> this would be consistent with an IRQ storm hitting some race in the 
+> ath9k driver init sequence. For example if request_irq() is done before 
+> all structures that the IRQ handler relies on are properly initialized.
+> 
+> i.e. this has the signature of a genuine ath9k bug.
+> 
+> 	Ingo
 > --
->=20
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
---=-10r+Kd714G3Ha9cGcCm4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+----- End forwarded message -----
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJCZAiAAoJEKVg1VMiehFY5GsQAMGOeoaGPB6ByLUVkT3hUW3X
-WebHSqCwH+NtDptOjHpcgwGlqSmcllEGPfOAl9xWiT5gP8vwlM+Ik4nqRAEmx1JI
-L+YNKtrehPTRN//EZ1Dy1UcUvm6ruEqf5O7lzOgD5T8NlTPM5KZGVVJ6IS3Dg/lb
-yF+6SHtmftEk98Iu4vXoI36tWCBOIq1xLcn2oUYaIO/ySAqGGyKA+M+FE7FTlyiw
-Erlvfq3g17BL2vdQYc9zJDK9tUQN5asCIQ4UnV4I4Xf+042wmQgWThuVWZQ/zbS5
-EApLj32+SrxsvuX3X+TXrD0I3lFx3O1gvMUKC2ZS3gQwVM9Lbsi2x83C59gzXNUb
-1xsZNBt0x0EQdIvcm45z9ZQyfugSfHI+USTIlXtstKZ7fhHneNzGIIHbY6DvBDTx
-3E9308fYfKXqgkSScdhs7xhMhezVeXHzu/zbr4xb4L3/0hbqxBUGUP1lYbCdlL1F
-O9pUhh3iOHZsQu9Fgpp5uS3qfmVLDnEPLUnWGqdonV//BSGpaeoi2hRy49XbJhFe
-jWK5Jr7OhS33OHT60Sx3Wy+QOgckgD2R1OltlJDh9g9MePdIbWRIpuldwWNoSxcS
-GSPKGH4Ce0eqUNqsUycQ88AFHyJrSWaevK63MF1oEhlUgxO/h22h8ap9cpTALKg1
-wGlAvGfKWtW+Dj7HtoU8
-=f8CV
------END PGP SIGNATURE-----
-
---=-10r+Kd714G3Ha9cGcCm4--
-
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
