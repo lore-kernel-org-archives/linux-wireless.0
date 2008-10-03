@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:51915 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751335AbYJ3EM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 00:12:27 -0400
-Subject: Re: [PATCH] libertas: fix buffer overrun
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225277012.5439.0.camel@johannes.berg>
-References: <1225277012.5439.0.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 30 Oct 2008 00:10:53 -0400
-Message-Id: <1225339853.32092.18.camel@localhost.localdomain> (sfid-20081030_051229_767555_CF5D648B)
-Mime-Version: 1.0
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:59360 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752541AbYJCUPz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Oct 2008 16:15:55 -0400
+Date: Fri, 3 Oct 2008 16:58:05 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: [PATCH] rfkill: update LEDs for all state changes
+Message-ID: <20081003195805.GC32618@khazad-dum.debian.net> (sfid-20081003_221558_536914_16DBC9E8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-29 at 11:43 +0100, Johannes Berg wrote:
-> If somebody sends an invalid beacon/probe response, that can trash the
-> whole BSS descriptor. The descriptor is, luckily, large enough so that
-> it cannot scribble past the end of it; it's well above 400 bytes long.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Cc: stable@kernel.org [2.6.24-2.6.27, bug present in some form since driver was added (2.6.22)]
+The LED state was not being updated by rfkill_force_state(), which
+will cause regressions in wireless drivers that had old-style rfkill
+support and are updated to use rfkill_force_state().
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+The LED state was not being updated when a change was detected through
+the rfkill->get_state() hook, either.
 
-> ---
-> Not really tested for lack of hw.
-> 
-> John, this is part of the other patch I sent, but this one's
-> for 2.6.28.
-> 
-> The function there needs to be reviewed more, it seems to access
-> potentially invalid memory when an AP sends other, too short,
-> information elements.
-> 
-> --- a/drivers/net/wireless/libertas/scan.c
-> +++ b/drivers/net/wireless/libertas/scan.c
-> @@ -598,8 +598,8 @@ static int lbs_process_bss(struct bss_descriptor *bss,
->  
->  		switch (elem->id) {
->  		case MFIE_TYPE_SSID:
-> -			bss->ssid_len = elem->len;
-> -			memcpy(bss->ssid, elem->data, elem->len);
-> +			bss->ssid_len = min_t(int, 32, elem->len);
-> +			memcpy(bss->ssid, elem->data, bss->ssid_len);
->  			lbs_deb_scan("got SSID IE: '%s', len %u\n",
->  			             escape_essid(bss->ssid, bss->ssid_len),
->  			             bss->ssid_len);
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Move the LED trigger update calls into notify_rfkill_state_change(),
+where it should have been in the first place.  This takes care of both
+issues above.
+
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: stable@kernel.org
+---
+
+This change is needed on 2.6.27 and 2.6.28.  It is likely too late to
+get it in 2.6.27 before it is released, but it should be queued for
+2.6.27.y after it gets into 2.6.28.
+
+ net/rfkill/rfkill.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index ea0dc04..f949a48 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -125,6 +125,7 @@ static void rfkill_led_trigger_activate(struct led_classdev *led)
+ 
+ static void notify_rfkill_state_change(struct rfkill *rfkill)
+ {
++	rfkill_led_trigger(rfkill, rfkill->state);
+ 	blocking_notifier_call_chain(&rfkill_notifier_list,
+ 			RFKILL_STATE_CHANGED,
+ 			rfkill);
+@@ -217,10 +218,8 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ 			rfkill->state = state;
+ 	}
+ 
+-	if (force || rfkill->state != oldstate) {
+-		rfkill_led_trigger(rfkill, rfkill->state);
++	if (force || rfkill->state != oldstate)
+ 		notify_rfkill_state_change(rfkill);
+-	}
+ 
+ 	return retval;
+ }
+-- 
+1.5.6.5
 
