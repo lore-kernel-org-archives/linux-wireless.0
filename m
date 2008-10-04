@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:51200 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753022AbYJ2A1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 20:27:16 -0400
-Date: Wed, 29 Oct 2008 01:27:13 +0100
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-Message-ID: <20081029002713.GA16554@isilmar.linta.de> (sfid-20081029_012720_842983_43136BF9)
-References: <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com> <20081019075916.GA12904@isilmar.linta.de> <1225145468.1115.139.camel@rc-desk> <20081027230326.GA23250@isilmar.linta.de> <1225154823.1115.149.camel@rc-desk> <20081028194323.GA14303@isilmar.linta.de> <1225225434.1115.217.camel@rc-desk> <1225235731.1369.8.camel@johannes.berg> <1225236760.1115.245.camel@rc-desk> <20081028233841.GA12554@isilmar.linta.de>
+Received: from bu3sch.de ([62.75.166.246]:37666 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752501AbYJDIsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Oct 2008 04:48:21 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 2/8] b43: remove remaining b43_radio_{read|write}16 from main.c
+Date: Sat, 4 Oct 2008 10:47:57 +0200
+Cc: Harvey Harrison <harvey.harrison@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1223066926.6512.27.camel@brick> <48E6C8A1.1060404@lwfinger.net>
+In-Reply-To: <48E6C8A1.1060404@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081028233841.GA12554@isilmar.linta.de>
+Message-Id: <200810041047.58066.mb@bu3sch.de> (sfid-20081004_104834_461206_D9B48AAC)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Wed, Oct 29, 2008 at 12:38:41AM +0100, Dominik Brodowski wrote:
-> On Tue, Oct 28, 2008 at 04:32:40PM -0700, reinette chatre wrote:
-> > On Tue, 2008-10-28 at 16:15 -0700, Johannes Berg wrote:
-> > > On Tue, 2008-10-28 at 13:23 -0700, reinette chatre wrote:
-> > > 
-> > > > (adding linux-wireless so I am keeping the log below)
-> > > > 
-> > > > This helps a lot - thanks!
-> > > > 
-> > > > Could you please recompile wireless with CONFIG_WIRELESS_OLD_REGULATORY?
-> > > 
-> > > Btw, any idea why this helps? Shouldn't the driver just work, albeit
-> > > with a restricted channel set? Are we messing something up like no
-> > > usable channels at all? (I fixed a bug like that IIRC)
-> > > 
+On Saturday 04 October 2008 03:36:33 Larry Finger wrote:
+> Harvey Harrison wrote:
+> > The 16 is not necessary anymore and is defnined to read/write.
 > > 
-> > Without the regulatory information the number of 5G channels to scan is
-> > zero.
+> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> > ---
+> >  drivers/net/wireless/b43/main.c |    4 ++--
+> >  1 files changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> > index 6df9b65..cc1f4a9 100644
+> > --- a/drivers/net/wireless/b43/main.c
+> > +++ b/drivers/net/wireless/b43/main.c
+> > @@ -789,7 +789,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
+> >  	b43_write16(dev, 0x0502, 0x0030);
+> >  
+> >  	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
+> > -		b43_radio_write16(dev, 0x0051, 0x0017);
+> > +		b43_radio_write(dev, 0x0051, 0x0017);
+> >  	for (i = 0x00; i < max_loop; i++) {
+> >  		value = b43_read16(dev, 0x050E);
+> >  		if (value & 0x0080)
+> > @@ -809,7 +809,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
+> >  		udelay(10);
+> >  	}
+> >  	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
+> > -		b43_radio_write16(dev, 0x0051, 0x0037);
+> > +		b43_radio_write(dev, 0x0051, 0x0037);
+> >  
+> >  	write_unlock(&wl->tx_lock);
+> >  	spin_unlock_irq(&wl->irq_lock);
 > 
-> But what about the 2.4G channels? This is the one I'd like to use here, and
-> this is the one which is used with the correct firmware...
-> 
-> wlan0	  IEEE 802.11abg  ESSID:"<not reported on this list>"
-> 	  Mode:Managed  Frequency:2.417 GHz
-> 	  Bit Rate=54 Mb/s   Tx-Power=15 dBm   
->           Retry min limit:7   RTS thr:off   Fragment thr=2352 B   
->           Power Management:off
->           Link Quality=96/100  Signal level:-31 dBm  Noise level=-127 dBm
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-> 
-> 	
-> Will test with CONFIG_WIRELESS_OLD_REGULATORY soon.
+> NACK. The two extra characters are absolutely harmless, but they do
+> contain useful information. In addition, who knows if a future
+> Broadcom device starts using 32-bit read/writes.
 
-With CONFIG_WIRELESS_OLD_REGULATORY=y, both the old and the new firmware
-works. Without, only the old firmware works.
+Ok, there are valid reasons for it, there are valid reasons against it...
 
-I'd think that at least the error message could be clarified a bit
-(is it really a "Microcode SW error"?)... also, it might be a corner case
-whether the new firmware would better be called -2 because of this
-incompatibility?
+Can we just agree now that we're not going to apply _any_ cleanups to the
+PHY code, please? (So I revoke my mail from Sat Oct  4 00:35:35 2008)
 
-Best,
-	Dominik
+Actual bugfixes are welcome, of course.
+
+-- 
+Greetings Michael.
