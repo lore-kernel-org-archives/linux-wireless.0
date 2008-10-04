@@ -1,106 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52110 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755993AbYJVKDy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 06:03:54 -0400
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Sujith <m.sujith@gmail.com>, Sujith <Sujith.Manoharan@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-In-Reply-To: <1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com> (sfid-20081020_234638_705151_437FF968)
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	 <1224491480.18024.32.camel@johannes.berg>
-	 <18684.18492.94865.480736@gargle.gargle.HOWL>
-	 <1224493957.18024.47.camel@johannes.berg>
-	 <18684.20459.335157.171344@gargle.gargle.HOWL>
-	 <1224495531.18024.55.camel@johannes.berg>
-	 <18684.24323.743610.871307@gargle.gargle.HOWL>
-	 <1224505349.27899.17.camel@johannes.berg>
-	 <18684.51206.771543.514682@localhost.localdomain>
-	 <1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com>
-	 (sfid-20081020_234638_705151_437FF968)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/jYCKgHXDOeF/fcqDcjv"
-Date: Wed, 22 Oct 2008 12:03:47 +0200
-Message-Id: <1224669827.28639.54.camel@johannes.berg> (sfid-20081022_120415_628343_35F6DAAA)
-Mime-Version: 1.0
+Received: from relay2.sgi.com ([192.48.171.30]:40713 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752274AbYJDKbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Oct 2008 06:31:46 -0400
+Date: Sat, 4 Oct 2008 05:31:44 -0500
+From: Robin Holt <holt@sgi.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+Subject: Infinite loop in sta_info_debugfs_add_work().
+Message-ID: <20081004103144.GI8534@sgi.com> (sfid-20081004_123204_594601_04AC5127)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I have been ignoring a hang/pause on my machine running an iwl3945
+adapter following a suspend/resume cycle.   I finally decided to start
+hunting it down.  This started with an Ubuntu kernel update to the Ubuntu
+8.04 dist.  I don't recall seeing the hangs when I was running 7.10.
+It continued when I was testing the community 2.6.27-rc1-8 kernels.
+KDB helped me track it to one cpu's event thread infinitely looping.
 
---=-/jYCKgHXDOeF/fcqDcjv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+events/0 process is on cpu0 with the following stack.
 
-On Mon, 2008-10-20 at 23:46 +0200, Tomas Winkler wrote:
+_spin_unlock_irqrestore+0x10
+[mac80211]sta_info_debugfs_add_work+0x82
+run_workqueue+0xd4
+worker_thread+0x88
+kthread+0x42
 
-> > Immediate Block-Ack is mandatory for 11n, delayed BA is optional.
-> > ath9k currently maintains the BA window state internally too.
-> > Another candidate that can be moved to mac80211, IMO.
-> >
->=20
-> TX or RX side?
 
-Both? What exactly does your firmware do, say of the list that Sujith
-posted?
+I few times later, I got:
+_cond_resched+0x10
+[mac80211]sta_info_destroy+0x10
+[mac80211]sta_info_debugfs_add_work+0xee
+run_workqueue+0xd4
+worker_thread+0x88
+kthread+0x42
 
-> >> What I could also imagine is that mac80211 simply does pretty much
-> >> everything and hands a number of skbs to the driver at once with some
-> >> additional information about how to aggregate them, what sort of spaci=
-ng
-> >> to use, etc. It should be able to calculate all the required stuff sin=
-ce
-> >> it knows from the rate control algorithm what's happening there.
->=20
-> What you need is to compute how many frames can be transmitted within
-> TXOP i think we can provide the calculation
-> depending on the current state. Just with the retransmission down
-> scaling need to be taken into account.
+I then added some debug printk's to sta_info_debugfs_add_work().
 
-We really need TXOP handling in mac80211 anyway, no? Right now we won't
-handle frames that are too long for the TXOP, for example.
+if (debug_80211) printk (KERN_WARNING "%d: Got sta = 0x%p, stations = 0x%p\n", __LINE__, sta, sta->local->debugfs.stations); //656
+                ieee80211_sta_debugfs_add(sta);
+if (debug_80211) printk (KERN_WARNING "%d: Got sta = 0x%p, debugfs.dir = 0x%p\n", __LINE__, sta, sta->debugfs.dir); //658
+                rate_control_add_sta_debugfs(sta);
 
->  That
-> >> might leave Intel out a bit, but I'm starting to think that we want to
-> >> special-case them a bit anyway.
->=20
-> Let's see first mvel and bcom implementation :)
+                sta = __sta_info_unpin(sta);
+if (debug_80211) printk (KERN_WARNING "%d: Got sta = 0x%p\n", __LINE__, sta); //662
+                sta_info_destroy(sta);
 
-Like I said, from what I can tell bcom is really similar, and I'd like
-to not have to re-implement all this first. mac80211 used to have a more
-push-model, which we've deviated from with the HT stuff you did, but for
-most hardware the push-model is still appropriate, so imho we should try
-to go to one even with HT and then see. We've since reworked rate
-control to be able to cope with HT too, so mac80211 can have much more
-information about what's going on and should be able to make many of the
-necessary decisions.
 
-johannes
+This resulted in dmesg output of:
+656: Got sta = 0xef747270, stations = 0x0
+658: Got sta = 0xef747270, debugfs.dir = 0x0
+662: Got sta = 0x0
+656: Got sta = 0xef747270, stations = 0x0
+658: Got sta = 0xef747270, debugfs.dir = 0x0
+662: Got sta = 0x0
+656: Got sta = 0xef747270, stations = 0x0
+658: Got sta = 0xef747270, debugfs.dir = 0x0
+662: Got sta = 0x0
+656: Got sta = 0xef747270, stations = 0x0
+658: Got sta = 0xef747270, debugfs.dir = 0x0
+662: Got sta = 0x0
 
---=-/jYCKgHXDOeF/fcqDcjv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I made up the 0xef747270 as the battery died before I had it written
+down.  The idea is correct even if the address is not.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+I have no idea what this code is trying to accomplish.  I assume it is
+not corrrectly handling the case where sta->local->debugfs.stations is
+NULL.
 
-iQIcBAABAgAGBQJI/vqAAAoJEKVg1VMiehFYZx8P/jkeTa4FbZ4ht1cWbHUSn/j9
-sd1ggG4QYXzySWLz9QS8o83kDcN0Ajf3XeM1cevIgHc9UrN+twl0RsDyXdvsmgHK
-HY8pTK+qEftbMkVgCvC/A4svjcihwv6gjIUV6RBaOSli3t03dEhyhRD69RE6icPx
-dI1FehMJaGwlUzx/tya9qutYLFijpQbfaB8D3ap4ZB9Rvof471d4Cy5wMpIuYWwp
-WC1XlEPdbc65CvfCcVRDQ2h+ISzZRqQI+uMhnzB24YLx9IAJuWj+j6WjxseSfJ1L
-8UN286QA8Zn99jJh6wcoq7auKBjHVWAsXTIjJIoUzKVNqNxFM8pvittFxjlwS4dY
-G/nr+QKEJxyaYtuvj94XzgE7M+7xJJapS+Xnc0OzMp1zVH8/3Wd1lp0t1Swu3CQt
-Nm5pSWL5M2XN+Tv0xhHSkbMUqDUHmUIypJ12hKaWK+jw8Bc8LJr2RBohD4kjXXPL
-fFJ4wpYxIqr+TcNW16MNkC/HitEvM8rNj8a+NsFJLNdR8VAI1in4ALwntEdNivi6
-KO5bMpLaIgR5X12vBXsA7VsAfLz+0mnu/g6t0M5Cqesxy6lRmKT2Vb6QE3cjWjyH
-OEYStfRjNTB6H9JVe1BjT8s9sPxwGzRBnrPBMahgPaSVaEGo4WCeSOx2KQhnpJj9
-o0Mn8eaOBa5NBPkiHiAC
-=Lgn/
------END PGP SIGNATURE-----
-
---=-/jYCKgHXDOeF/fcqDcjv--
-
+Any help would be appreciated,
+Robin Holt
