@@ -1,69 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:16612 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752577AbYJZWdm (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:19719 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751647AbYJDNHK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2008 18:33:42 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1831606rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2008 15:33:40 -0700 (PDT)
-Message-ID: <40f31dec0810261533g3143bd9bue0f3eff88c6936e9@mail.gmail.com> (sfid-20081026_233404_693402_D8308473)
-Date: Mon, 27 Oct 2008 00:33:40 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Elias Oltmanns" <eo@nebensachen.de>
-Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <87wsfvt76q.fsf@denkblock.local>
+	Sat, 4 Oct 2008 09:07:10 -0400
+Received: by qw-out-2122.google.com with SMTP id 3so451015qwe.37
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Oct 2008 06:07:08 -0700 (PDT)
+Message-ID: <69e28c910810040607x392a5ddfra8d257b0ff3b9c6e@mail.gmail.com> (sfid-20081004_150721_756107_24FBF6B6)
+Date: Sat, 4 Oct 2008 15:07:08 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>
+Subject: Re: Trendnet TEW-424UB now Realtek 8187B
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, keithl@keithl.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Daniel Drake" <dsd@gentoo.org>,
+	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
+In-Reply-To: <1223110250.24551.72.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <87prlr9mna.fsf@denkblock.local>
-	 <40f31dec0810251621l3d720a69mf21b5253e9135010@mail.gmail.com>
-	 <87abcrtfa8.fsf@denkblock.local>
-	 <40f31dec0810261132w2747d66em2a2a53ff9e1ecc04@mail.gmail.com>
-	 <87wsfvt76q.fsf@denkblock.local>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081004011510.GA10015@gate.kl-ic.com>
+	 <1223109126.24551.70.camel@johannes.berg>
+	 <43e72e890810040147j6f15966awbe555b6d37135960@mail.gmail.com>
+	 <1223110250.24551.72.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/10/26 Elias Oltmanns <eo@nebensachen.de>:
+On Sat, Oct 4, 2008 at 10:50 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2008-10-04 at 01:47 -0700, Luis R. Rodriguez wrote:
+>> On Sat, Oct 4, 2008 at 1:32 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Fri, 2008-10-03 at 18:15 -0700, Keith Lofstrom wrote:
+>> What Realtek driver? Just FYI rtl8187 does *not* claim the RTL8187B. See:
+>>
+>> http://wireless.kernel.org/en/users/Drivers/rtl8187
 >
->                /*
->                 * Write some more initial register settings
->                 */
-> -               if (ah->ah_version == AR5K_AR5212) {
-> +               if (ah->ah_version == AR5K_AR5212 &&
-> +                   ah->ah_radio > AR5K_RF5111) {
-
-even better: ah->ah_phy_revision > AR5K_SREV_PHY_5212
-
->                        ath5k_hw_reg_write(ah, 0x0002a002, 0x982c);
+> Oh, I thought there was a version now that did.
 >
->                        if (channel->hw_value == CHANNEL_G)
-> @@ -858,6 +859,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
->
->                        data = ath5k_hw_reg_read(ah, 0xa228);
->                        data &= 0xfffe03ff;
-> +                       data |= 0x00000800;
->                        ath5k_hw_reg_write(ah, data, 0xa228);
->                        data = 0;
+> johannes
 >
 
-Can you please use the macros from ath5k.h to set these parameters ?
-(i got the above from decompiling binary HAL that's why i have fixed
-masks -no magic values- but now that we know what's going on we must
-make the code human-readable)
-And also please change 0xa228 with it's name from reg.h :
-
-2557 #define AR5K_PHY_DAG_CCK_CTL                    0xa228
-2558 #define AR5K_PHY_DAG_CCK_CTL_EN_RSSI_THR        0x00000200
-2559 #define AR5K_PHY_DAG_CCK_CTL_RSSI_THR           0x0001fc00
-2560 #define AR5K_PHY_DAG_CCK_CTL_RSSI_THR_S         10
-
-Normaly i'll update reset.c this week so you can always wait for a
-more generic fix ;-)
+Hin-Tak Leung added support for RTL8187B a while ago, although it's
+still a bit buggy. Likely someone forgot to update the rtl8187 page on
+the wiki. CCing Hin-Tak and Herton.
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
