@@ -1,69 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:60606 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048AbYJ1Eb4 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:58387 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750830AbYJDPQa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 00:31:56 -0400
-Date: Mon, 27 Oct 2008 21:32:17 -0700
-From: Arjan van de Ven <arjan@infradead.org>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Mirco Tischler <mt-ml@gmx.de>, lkml <linux-kernel@vger.kernel.org>,
+	Sat, 4 Oct 2008 11:16:30 -0400
+Message-ID: <48E788BC.7030806@lwfinger.net> (sfid-20081004_171641_615662_0238186A)
+Date: Sat, 04 Oct 2008 08:16:12 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
-Message-ID: <20081027213217.53558319@infradead.org> (sfid-20081028_053200_882453_56945E00)
-In-Reply-To: <1225157618.2917.215.camel@debian.sh.intel.com>
-References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
-	<1225157618.2917.215.camel@debian.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Daniel Drake <dsd@gentoo.org>
+Subject: Re: Trendnet TEW-424UB now Realtek 8187B
+References: <20081004011510.GA10015@gate.kl-ic.com>	 <1223109126.24551.70.camel@johannes.berg>	 <43e72e890810040147j6f15966awbe555b6d37135960@mail.gmail.com>	 (sfid-20081004_104814_044310_A217A3F8) <1223110250.24551.72.camel@johannes.berg>
+In-Reply-To: <1223110250.24551.72.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 28 Oct 2008 09:33:37 +0800
-Zhu Yi <yi.zhu@intel.com> wrote:
-
-> On Mon, 2008-10-27 at 18:02 -0700, Mirco Tischler wrote:
-> > Hi
-> > 
-> > I have problems connecting to wlan with my iwl4965 chip and
-> > 2.6.28-rc2 (didn't test -rc1). Networkmanager just times out every
-> > time. Only after playing around with rmmod/modprobe and killswitch
-> > I am sometimes able to connect. But I cannot reproduce this
-> > reliably yet.
-> > 
-> > This is what I get in dmesg (from modprobe iwlagn to connection
-> > failure):
-> > 
-> > [ 1881.884690] iwlagn: Intel(R) Wireless WiFi Link AGN driver for
-> > Linux,1.3.27kds
-> > [ 1881.884692] iwlagn: Copyright(c) 2003-2008 Intel Corporation
-> > [ 1881.884809] iwlagn 0000:06:00.0: PCI INT A -> GSI 18 (level,
-> > low) -> IRQ 18 [ 1881.884836] iwlagn 0000:06:00.0: setting latency
-> > timer to 64 [ 1881.884952] iwlagn: Detected Intel Wireless WiFi
-> > Link 4965AGN REV=0x4 [ 1881.935149] iwlagn: Tunable channels: 13
-> > 802.11bg, 19 802.11a channels [ 1881.936327] phy4: Selected rate
-> > control algorithm 'iwl-agn-rs' [ 1885.965591] iwlagn 0000:06:00.0:
-> > PCI INT A -> GSI 18 (level, low) -> IRQ 18 [ 1885.965874] iwlagn
-> > 0000:06:00.0: irq 41 for MSI/MSI-X [ 1885.965974] iwlagn
-> > 0000:06:00.0: firmware: requesting iwlwifi-4965-2.ucode
-> > [ 1886.181600] Registered led device: iwl-phy4:radio [ 1886.181618]
-> > Registered led device: iwl-phy4:assoc [ 1886.181635] Registered led
-> > device: iwl-phy4:RX [ 1886.181654] Registered led device:
-> > iwl-phy4:TX [ 1886.213631] ADDRCONF(NETDEV_UP): wlan0: link is not
-> > ready [ 1887.572768] iwlagn: TX Power requested while scanning!
+Johannes Berg wrote:
+> On Sat, 2008-10-04 at 01:47 -0700, Luis R. Rodriguez wrote:
+>> What Realtek driver? Just FYI rtl8187 does *not* claim the RTL8187B. See:
+>>
+>> http://wireless.kernel.org/en/users/Drivers/rtl8187
 > 
-> Looks good so far. But I failed to see what are you trying to connect?
-> Can you try "iwconfig wlan0 channnel <> essid <>"?
-> 
+> Oh, I thought there was a version now that did.
 
-I had this same issue
+There is. Both Linus's tree and wireless-testing support the 8187B. In
+fact, I'm using one right now.
 
-turning on CONFIG_WIRELESS_OLD_REGULATORY fixed it for me....
+As for the contention that it is buggy - I don't find it any worse
+than b43, and quite a bit better than p54usb, the two other wireless
+drivers that I use. Reports of failures that are posted in the Redhat
+Bugzilla cannot be duplicated by me.
 
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+Larry
+
