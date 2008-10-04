@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta01.emeryville.ca.mail.comcast.net ([76.96.30.16]:55251 "EHLO
-	QMTA01.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751100AbYJ3AKJ (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:44496 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751740AbYJDTzT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 20:10:09 -0400
-To: linux-wireless@vger.kernel.org
-Subject: B43 randomly and silently dropping connections...
-From: Jerry McBride <mcbrides9@comcast.net>
-Date: Wed, 29 Oct 2008 20:10:06 -0400
+	Sat, 4 Oct 2008 15:55:19 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: Trendnet TEW-424UB now Realtek 8187B
+Date: Sat, 4 Oct 2008 16:55:13 -0300
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, keithl@keithl.com,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Daniel Drake" <dsd@gentoo.org>
+References: <20081004011510.GA10015@gate.kl-ic.com> <1223110250.24551.72.camel@johannes.berg> <69e28c910810040607x392a5ddfra8d257b0ff3b9c6e@mail.gmail.com>
+In-Reply-To: <69e28c910810040607x392a5ddfra8d257b0ff3b9c6e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200810292010.06442.mcbrides9@comcast.net> (sfid-20081030_011014_950238_C3D6F6DA)
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200810041655.13816.herton@mandriva.com.br> (sfid-20081004_215526_063338_B98EBBE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 04 October 2008 10:07:08 Stefanik G=E1bor wrote:
+> On Sat, Oct 4, 2008 at 10:50 AM, Johannes Berg
+>
+> <johannes@sipsolutions.net> wrote:
+> > On Sat, 2008-10-04 at 01:47 -0700, Luis R. Rodriguez wrote:
+> >> On Sat, Oct 4, 2008 at 1:32 AM, Johannes Berg <johannes@sipsolutio=
+ns.net>=20
+wrote:
+> >> > On Fri, 2008-10-03 at 18:15 -0700, Keith Lofstrom wrote:
+> >>
+> >> What Realtek driver? Just FYI rtl8187 does *not* claim the RTL8187=
+B.
+> >> See:
+> >>
+> >> http://wireless.kernel.org/en/users/Drivers/rtl8187
+> >
+> > Oh, I thought there was a version now that did.
+> >
+> > johannes
+>
+> Hin-Tak Leung added support for RTL8187B a while ago, although it's
+> still a bit buggy. Likely someone forgot to update the rtl8187 page o=
+n
+> the wiki. CCing Hin-Tak and Herton.
 
-The story is...
+I created an account there now and did a minimal update on the page, pl=
+ease=20
+take a look. There are some things we need to improve in the driver, we=
+=20
+received also an updated driver and a minimal datasheet but unfortunate=
+ly=20
+from my part I didn't had much success and time in playing/learning to=20
+improve its support.
 
-I've moved from 2.6.25.x using BCM43XX with a Broadcom 4306 (rev3) 802.11 
-chipset to 2.6.26.6 using the B43 and appropriate firmware. This on a COMPAQ 
-Presario R3000 P4 and  a gig of memory and ATI graphics.
-
-I followed the install (upgrade) directions at linuxwireless.org. Piece of 
-cake! However... I find that I've gone from "bulletproof" BCM43XX wifi 
-connections to "bullethole" connections with B43.  
-
-Under the old BCM43XX the handshake and connections were flawless and 
-unfaltering. Now with the new B43, handshakes with AP's are perfect, but the 
-connections randomly and silently fail. There are no debug messages, no 
-complaints what-so-ever in /var/log/messages... 
-
-To gt wireless back, I have to reinitialize the connection. I've gotten so 
-good at it, that I can recite by heart the appropriate commands...
-
-It's killling me! I've got to get this ironed out... it's not just my laptop, 
-it's happening quite regularly with people I know with similar chips and 
-laptops.
-
-Trying 2.6.27-rc's and now 2.6.27 and the situation is no better.
-
-So I ask... Who is the B43/B43LEGACY maintainer and would you be interested in 
-debugging this mess? I'll bend over backward to help you... Email me 
-direct... I'm very willing.
-
-SHORT STORY:
--- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
-
--- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
-but fragile connections that drop randomly and without complaint. B43LEGACY 
-does nothing.
-
-Any help would be appreciated. I'd really like to get this ironed out. I 
-highly desire to use current kernels.
-
-Feel free to email me direct.
-
--- 
-
-*****************************************************************************
-                                       
-                             From the desk of:
-                             Jerome D. McBride
-                                       
-   19:17:28 up 15 days, 23:35,  5 users,  load average: 0.33, 0.11, 0.03
- 
-*****************************************************************************
+--
+[]'s
+Herton
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
