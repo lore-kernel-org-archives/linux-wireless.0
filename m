@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19998 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751927AbYJTJO3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 05:14:29 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 02:14:29 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:47944 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753168AbYJDBgl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Oct 2008 21:36:41 -0400
+Message-ID: <48E6C8A1.1060404@lwfinger.net> (sfid-20081004_033646_338645_15703650)
+Date: Fri, 03 Oct 2008 19:36:33 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18684.19295.102997.125484@gargle.gargle.HOWL> (sfid-20081020_111456_999985_5C326883)
-Date: Mon, 20 Oct 2008 14:41:59 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"tomasw@gmail.com" <tomasw@gmail.com>
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-In-Reply-To: <1224493469.18024.38.camel@johannes.berg>
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	<1224491480.18024.32.camel@johannes.berg>
-	<43e72e890810200135o1581c904i456a35298f8a56a9@mail.gmail.com>
-	<1224492335.18024.34.camel@johannes.berg>
-	<18684.17816.702853.44986@gargle.gargle.HOWL>
-	<43e72e890810200155wbe01660xe3f53de80dc7357d@mail.gmail.com>
-	<1224493038.18024.36.camel@johannes.berg>
-	<43e72e890810200201l49eea95h2f67615b536311aa@mail.gmail.com>
-	<1224493469.18024.38.camel@johannes.berg>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/8] b43: remove remaining b43_radio_{read|write}16 from
+ main.c
+References: <1223066926.6512.27.camel@brick>
+In-Reply-To: <1223066926.6512.27.camel@brick>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
- > On Mon, 2008-10-20 at 02:01 -0700, Luis R. Rodriguez wrote:
- > 
- > > > Well the fact that it's in tx_h_sequence is a bit weird, but we should
- > > > be able to get around not using an extra bit in skb I think. Especially
- > > > for this since it's only really between the driver and mac80211, and
- > > > after a requeue the ampdu status might actually change.
- > > 
- > > Good point. I failed to see that. So in that case it should be as
- > > sujith had it before my suggestion and just handle it as he had it in
- > > the tx handlers. The problem though is that the RC algorithm should be
- > > the one to determine if an skb is part of an ampdu for aggregation or
- > > not IMHO. Actually this is the real question and hot topic.
- > > 
- > > When should we aggregate and should mac80211 decide that or be left to the RC.
- > 
- > No, the RC algorithm cannot decided that, the RC algorithm can merely
- > decide when to set up/tear down aggregation sessions. When a session is
- > up all packet belonging to that TID should go into it, surely?
+Harvey Harrison wrote:
+> The 16 is not necessary anymore and is defnined to read/write.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+>  drivers/net/wireless/b43/main.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> index 6df9b65..cc1f4a9 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -789,7 +789,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
+>  	b43_write16(dev, 0x0502, 0x0030);
+>  
+>  	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
+> -		b43_radio_write16(dev, 0x0051, 0x0017);
+> +		b43_radio_write(dev, 0x0051, 0x0017);
+>  	for (i = 0x00; i < max_loop; i++) {
+>  		value = b43_read16(dev, 0x050E);
+>  		if (value & 0x0080)
+> @@ -809,7 +809,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
+>  		udelay(10);
+>  	}
+>  	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
+> -		b43_radio_write16(dev, 0x0051, 0x0037);
+> +		b43_radio_write(dev, 0x0051, 0x0037);
+>  
+>  	write_unlock(&wl->tx_lock);
+>  	spin_unlock_irq(&wl->irq_lock);
 
-Right, ath9k currently tries to open an aggregation session for
-each station that it is associated with. RC doesn't determine anything now.
+NACK. The two extra characters are absolutely harmless, but they do
+contain useful information. In addition, who knows if a future
+Broadcom device starts using 32-bit read/writes.
 
-Sujith
+Larry
 
