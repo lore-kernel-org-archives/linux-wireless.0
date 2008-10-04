@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22490 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753859AbYJ3UeC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 16:34:02 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 13:34:02 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/5] cfg80211: make print_regdomain_info() static
-Date: Thu, 30 Oct 2008 13:33:54 -0700
-Message-ID: <1225398836-28633-4-git-send-email-lrodriguez@atheros.com> (sfid-20081030_213407_168215_B7CFE232)
-In-Reply-To: <1225398836-28633-3-git-send-email-lrodriguez@atheros.com>
-References: <1225398836-28633-1-git-send-email-lrodriguez@atheros.com>
- <1225398836-28633-2-git-send-email-lrodriguez@atheros.com>
- <1225398836-28633-3-git-send-email-lrodriguez@atheros.com>
+Received: from qw-out-2122.google.com ([74.125.92.24]:39074 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228AbYJDUaR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Oct 2008 16:30:17 -0400
+Received: by qw-out-2122.google.com with SMTP id 3so477393qwe.37
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Oct 2008 13:30:14 -0700 (PDT)
+Message-ID: <69e28c910810041330q1034bcc3rad339c7c2fd626@mail.gmail.com> (sfid-20081004_223021_794595_445438B5)
+Date: Sat, 4 Oct 2008 22:30:14 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: Ramesh <rramesh1@gmail.com>
+Subject: Re: Question on git pull
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <c9d168940810041320p1b09b1f6i51f898011b14b26d@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
+References: <c9d168940810041320p1b09b1f6i51f898011b14b26d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thix fixes this sparse warning:
+On Sat, Oct 4, 2008 at 10:20 PM, Ramesh <rramesh1@gmail.com> wrote:
+> Hello,
+>
+> I am newbie to linux-wireless, I recently got a copy of the source
+> from the wireless-testing branch by the following method:
+>
+> git-clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+> cd wireless-testing
+> git-pull
+>
+> I wanted to work on my own branch so I created a new branch as below:
+>
+> git-checkout -b mac80211-stats-change
+>
+> I have a few questions at this point :
+>
+> How do I keep this branch updated with checkins in the master branch?
+>
+> Thanks
+> Ramesh
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-net/wireless/reg.c:782:6: warning: symbol 'print_regdomain_info' was not
-declared. Should it be static?
+You need to periodically rebase the branch using git-rebase.
+Alternatively, you can do this sequence:
+-Revert all changes you made to the branch
+-Pull the latest upstream changes using git-pull
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+-Reapply your changes.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 92af64c..3f18a1d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -779,7 +779,7 @@ static void print_regdomain(const struct ieee80211_regdomain *rd)
- 	print_rd_rules(rd);
- }
- 
--void print_regdomain_info(const struct ieee80211_regdomain *rd)
-+static void print_regdomain_info(const struct ieee80211_regdomain *rd)
- {
- 	printk(KERN_INFO "cfg80211: Regulatory domain: %c%c\n",
- 		rd->alpha2[0], rd->alpha2[1]);
 -- 
-1.5.6.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
