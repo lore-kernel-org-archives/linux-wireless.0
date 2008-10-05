@@ -1,40 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:45599 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753793AbYJ3OM0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 10:12:26 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so621680rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 07:12:25 -0700 (PDT)
-Message-ID: <b6c5339f0810300712p40b79c3r9613989f5af41777@mail.gmail.com> (sfid-20081030_151232_418939_CD40BC73)
-Date: Thu, 30 Oct 2008 10:12:25 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [ath5k-devel] ath5k: badness at net/mac80211/rx.c:2200, status->rate_idx = 255
-Cc: ath5k-devel@lists.ath5k.org,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <b6c5339f0810291822g33c0ce4cvc21a2449d8ee5458@mail.gmail.com>
+Received: from nbd.name ([88.198.39.176]:47211 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755206AbYJEQEj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Oct 2008 12:04:39 -0400
+Message-ID: <48E8E588.30001@openwrt.org> (sfid-20081005_180509_795647_07BFFB4E)
+Date: Sun, 05 Oct 2008 18:04:24 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 2/4] mac80211: add multi-rate retry support
+References: <48E8E48E.5090300@openwrt.org> <48E8E528.7060501@openwrt.org>
+In-Reply-To: <48E8E528.7060501@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1224799927.22806.15.camel@dv>
-	 <20081023213333.4t4427vw5ws8ccck-cebfxv@webmail.spamcop.net>
-	 <b6c5339f0810241158t59b15861qc9eb05a3f3f032a2@mail.gmail.com>
-	 <b6c5339f0810241201r7f8ba34ej6f39a96e371849eb@mail.gmail.com>
-	 <1224882332.10804.0.camel@dv>
-	 <b6c5339f0810291822g33c0ce4cvc21a2449d8ee5458@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 9:22 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> So, any hints on how to reproduce this one?  Seems lots of people are
-> hitting it but I haven't seen it yet (though I was working on
-> 2.6.27-rc2 up until yesterday).
+This patch adjusts the rate control API to allow multi-rate retry
+if supported by the driver. The ieee80211_hw struct specifies how
+many alternate rate selections the driver supports.
 
-Nevermind, leaving it on overnight, I got the warning too.  I guess I'll
-sprinkle some printks about.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-If nothing else, the -1 and u8 stuff is ugly and should probably be fixed,
-but it will result in the same warning since rate_idx will be >> n_bitrates.
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -292,6 +292,20 @@
+ #define IEEE80211_TX_INFO_DRIVER_DATA_PTRS \
+ 	(IEEE80211_TX_INFO_DRIVER_DATA_SIZE / sizeof(void *))
+ 
++/* maximum number of alternate rate retry stages */
++#define IEEE80211_TX_MAX_ALTRATE	3
++
++/**
++ * struct ieee80211_tx_altrate - alternate rate selection/status
++ *
++ * @rate_idx: rate index to attempt to send with
++ * @limit: number of retries before fallback
++ */
++struct ieee80211_tx_altrate {
++	s8 rate_idx;
++	u8 limit;
++};
++
+ /**
+  * struct ieee80211_tx_info - skb transmit information
+  *
+@@ -335,12 +349,14 @@
+ 			struct ieee80211_key_conf *hw_key;
+ 			struct ieee80211_sta *sta;
+ 			unsigned long jiffies;
+-			s8 rts_cts_rate_idx, alt_retry_rate_idx;
++			s8 rts_cts_rate_idx;
+ 			u8 retry_limit;
++			struct ieee80211_tx_altrate retries[IEEE80211_TX_MAX_ALTRATE];
+ 		} control;
+ 		struct {
+ 			u64 ampdu_ack_map;
+ 			int ack_signal;
++			struct ieee80211_tx_altrate retries[IEEE80211_TX_MAX_ALTRATE + 1];
+ 			u8 retry_count;
+ 			bool excessive_retries;
+ 			u8 ampdu_ack_len;
+@@ -828,6 +844,9 @@
+  *	within &struct ieee80211_vif.
+  * @sta_data_size: size (in bytes) of the drv_priv data area
+  *	within &struct ieee80211_sta.
++ *
++ * @max_altrates: maximum number of alternate rate retry stages
++ * @max_altrate_tries: maximum number of tries for each stage
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -844,6 +863,8 @@
+ 	u16 ampdu_queues;
+ 	u16 max_listen_interval;
+ 	s8 max_signal;
++	u8 max_altrates;
++	u8 max_altrate_tries;
+ };
+ 
+ struct ieee80211_hw *wiphy_to_hw(struct wiphy *wiphy);
+@@ -900,11 +921,11 @@
+ 
+ static inline struct ieee80211_rate *
+ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
+-			     const struct ieee80211_tx_info *c)
++			     const struct ieee80211_tx_info *c, int idx)
+ {
+-	if (c->control.alt_retry_rate_idx < 0)
++	if (c->control.retries[idx].rate_idx < 0)
+ 		return NULL;
+-	return &hw->wiphy->bands[c->band]->bitrates[c->control.alt_retry_rate_idx];
++	return &hw->wiphy->bands[c->band]->bitrates[c->control.retries[idx].rate_idx];
+ }
+ 
+ /**
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -208,7 +208,7 @@
+ 	txrate = ieee80211_get_tx_rate(dev->wl->hw, info);
+ 	rate = txrate ? txrate->hw_value : B43_CCK_RATE_1MB;
+ 	rate_ofdm = b43_is_ofdm_rate(rate);
+-	fbrate = ieee80211_get_alt_retry_rate(dev->wl->hw, info) ? : txrate;
++	fbrate = ieee80211_get_alt_retry_rate(dev->wl->hw, info, 0) ? : txrate;
+ 	rate_fb = fbrate->hw_value;
+ 	rate_fb_ofdm = b43_is_ofdm_rate(rate_fb);
+ 
+--- a/drivers/net/wireless/b43legacy/xmit.c
++++ b/drivers/net/wireless/b43legacy/xmit.c
+@@ -210,7 +210,7 @@
+ 
+ 	rate = tx_rate->hw_value;
+ 	rate_ofdm = b43legacy_is_ofdm_rate(rate);
+-	rate_fb = ieee80211_get_alt_retry_rate(dev->wl->hw, info) ? : tx_rate;
++	rate_fb = ieee80211_get_alt_retry_rate(dev->wl->hw, info, 0) ? : tx_rate;
+ 	rate_fb_ofdm = b43legacy_is_ofdm_rate(rate_fb->hw_value);
+ 
+ 	txhdr->mac_frame_ctl = wlhdr->frame_control;
+--- a/drivers/net/wireless/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl8180_dev.c
+@@ -292,8 +292,8 @@
+ 	entry->plcp_len = cpu_to_le16(plcp_len);
+ 	entry->tx_buf = cpu_to_le32(mapping);
+ 	entry->frame_len = cpu_to_le32(skb->len);
+-	entry->flags2 = info->control.alt_retry_rate_idx >= 0 ?
+-		ieee80211_get_alt_retry_rate(dev, info)->bitrate << 4 : 0;
++	entry->flags2 = info->control.retries[0].rate_idx >= 0 ?
++		ieee80211_get_alt_retry_rate(dev, info, 0)->bitrate << 4 : 0;
+ 	entry->retry_limit = info->control.retry_limit;
+ 	entry->flags = cpu_to_le32(tx_flags);
+ 	__skb_queue_tail(&ring->queue, skb);
+@@ -855,6 +855,7 @@
+ 	priv = dev->priv;
+ 	priv->pdev = pdev;
+ 
++	dev->max_altrates = 1;
+ 	SET_IEEE80211_DEV(dev, &pdev->dev);
+ 	pci_set_drvdata(pdev, dev);
+ 
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -454,15 +454,16 @@
+ 		if (unlikely(rsel.probe_idx >= 0)) {
+ 			info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+ 			tx->flags |= IEEE80211_TX_PROBE_LAST_FRAG;
+-			info->control.alt_retry_rate_idx = tx->rate_idx;
++			info->control.retries[0].rate_idx = tx->rate_idx;
++			info->control.retries[0].limit = tx->local->hw.max_altrate_tries;
+ 			tx->rate_idx = rsel.probe_idx;
+-		} else
+-			info->control.alt_retry_rate_idx = -1;
++		} else if (info->control.retries[0].limit == 0)
++			info->control.retries[0].rate_idx = -1;
+ 
+ 		if (unlikely(tx->rate_idx < 0))
+ 			return TX_DROP;
+ 	} else
+-		info->control.alt_retry_rate_idx = -1;
++		info->control.retries[0].rate_idx = -1;
+ 
+ 	if (tx->sdata->bss_conf.use_cts_prot &&
+ 	    (tx->flags & IEEE80211_TX_FRAGMENTED) && (rsel.nonerp_idx >= 0)) {
+@@ -521,7 +522,7 @@
+ 		 * frames.
+ 		 * TODO: The last fragment could still use multiple retry
+ 		 * rates. */
+-		info->control.alt_retry_rate_idx = -1;
++		info->control.retries[0].rate_idx = -1;
+ 	}
+ 
+ 	/* Use CTS protection for unicast frames sent using extended rates if
+@@ -551,7 +552,7 @@
+ 		int idx;
+ 
+ 		/* Do not use multiple retry rates when using RTS/CTS */
+-		info->control.alt_retry_rate_idx = -1;
++		info->control.retries[0].rate_idx = -1;
+ 
+ 		/* Use min(data rate, max base rate) as CTS/RTS rate */
+ 		rate = &sband->bitrates[tx->rate_idx];
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4588,6 +4588,7 @@
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 
+ 	hw->queues = b43_modparam_qos ? 4 : 1;
++	hw->max_altrates = 1;
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+ 	if (is_valid_ether_addr(sprom->et1mac))
+ 		SET_IEEE80211_PERM_ADDR(hw, sprom->et1mac);
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -3710,6 +3710,7 @@
+ 		BIT(NL80211_IFTYPE_WDS) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 	hw->queues = 1; /* FIXME: hardware has more queues */
++	hw->max_altrates = 1;
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+ 	if (is_valid_ether_addr(sprom->et1mac))
+ 		SET_IEEE80211_PERM_ADDR(hw, sprom->et1mac);
 
--- 
-Bob Copeland %% www.bobcopeland.com
