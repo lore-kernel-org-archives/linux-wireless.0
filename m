@@ -1,97 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail13.tpgi.com.au ([203.12.160.181]:33246 "EHLO
-	mail13.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752251AbYJYPN0 (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:35703 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965AbYJEAfP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 11:13:26 -0400
-Message-ID: <49033782.5040701@hotmail.com> (sfid-20081025_171336_384024_14B1CEEF)
-Date: Sun, 26 Oct 2008 02:13:06 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
+	Sat, 4 Oct 2008 20:35:15 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC][PATCH 3/5] p54: refactor p54_rx_frame_sent
+Date: Sun, 5 Oct 2008 02:39:10 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-References: <4902DEBB.3050205@hotmail.com> <20081025112147.GA12252@Chamillionaire.breakpoint.cc> <200810251325.07916.mb@bu3sch.de> <20081025112813.GC12252@Chamillionaire.breakpoint.cc>
-In-Reply-To: <20081025112813.GC12252@Chamillionaire.breakpoint.cc>
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810050239.10220.chunkeey@web.de> (sfid-20081005_023521_632305_32DB188C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sebastian,
+the long names and the nesting in p54_rx_frame_sent really became a "line longer than 80 characters" problem.
 
-Sebastian Andrzej Siewior wrote:
-> * Michael Buesch | 2008-10-25 13:25:07 [+0200]:
-> 
->> On Saturday 25 October 2008 13:21:47 Sebastian Andrzej Siewior wrote:
->>> -	fc = *(__le16 *)buffer;
->>> +	fc = get_unaligned_le32(buffer);
->> I'd say this semantically changes the code.
-> argh,
-> sorry,
-> 
-> Subject: [PATCH] wireless/zd1211rw: use  get_unaligned_le16 helper (v2)
-> 
-> Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-
-After applying this patch, things seem better. I can associate to an 
-open access point, get an IP address and even ping.
-
-However on association, I am still seeing:
-
-
-[  179.249516] zd1211rw 4-3:1.0: zd_usb_rfwrite() value 0x01e6666 bits 24
-[  179.254524] wlan0: Initial auth_alg=0
-[  179.254549] wlan0: authenticate with AP XX:XX:XX:XX:XX:XX
-[  179.256215] Kernel unaligned access at TPC[10129b94] 
-zd_mac_rx+0x174/0x320 [zd1211rw]
-[  179.349135] Kernel unaligned access at TPC[10129b9c] 
-zd_mac_rx+0x17c/0x320 [zd1211rw]
-[  179.442852] Kernel unaligned access at TPC[10129ba0] 
-zd_mac_rx+0x180/0x320 [zd1211rw]
-[  179.536579] Kernel unaligned access at TPC[10129ba4] 
-zd_mac_rx+0x184/0x320 [zd1211rw]
-[  179.630306] Kernel unaligned access at TPC[10129ba8] 
-zd_mac_rx+0x188/0x320 [zd1211rw]
-[  179.727277] wlan0: RX authentication from XX:XX:XX:XX:XX:XX (alg=0 
-transaction=2 status=0)
-[  179.727302] wlan0: authenticated
-[  179.727318] wlan0: associate with AP XX:XX:XX:XX:XX:XX
-[  179.727440] wlan0: associate with AP XX:XX:XX:XX:XX:XX
-[  179.736350] wlan0: RX AssocResp from XX:XX:XX:XX:XX:XX (capab=0x421 
-status=0 aid=12)
-[  179.736380] wlan0: associated
-[  179.736421] wlan0: CTS protection enabled (BSSID=XX:XX:XX:XX:XX:XX)
-[  179.736440] wlan0: switched to short barker preamble 
-(BSSID=XX:XX:XX:XX:XX:XX)
-[  179.736521] zd1211rw 4-3:1.0: zd_op_bss_info_changed() changes: 7
-[  179.736666] wlan0: association frame received from XX:XX:XX:XX:XX:XX, 
-but not in associate state - ignored
-[  179.737404] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[  179.807280] zd1211rw 4-3:1.0: zd_chip_set_rts_cts_rate_locked() 
-preamble=1
-
-and when I start pinging the AP, this starts chiming in:
-
-[  240.139093] Kernel unaligned access at TPC[100f7f44] 
-sta_info_get+0x24/0x68 [mac80211]
-[  240.233255] Kernel unaligned access at TPC[100f7f48] 
-sta_info_get+0x28/0x68 [mac80211]
-[  240.328015] Kernel unaligned access at TPC[100f7f50] 
-sta_info_get+0x30/0x68 [mac80211]
-[  240.422771] Kernel unaligned access at TPC[100f7f44] 
-sta_info_get+0x24/0x68 [mac80211]
-[  240.517554] Kernel unaligned access at TPC[100f7f48] 
-sta_info_get+0x28/0x68 [mac80211]
-
-I also cannot get a full scan with:
-
-iwlist wlan0 scanning
-
-I get about 4 APs (I know there's more) then a bus error. This may be 
-related to a similar problem that I was assisted with in my first round 
-of posts last year, with regards to the wireless-tools. Perhaps the 
-patches still haven't made it downstream?
-
-Thanking you for help,
-Shaddy
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-10-05 01:46:18.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.c	2008-10-05 01:46:31.000000000 +0200
+@@ -557,54 +557,56 @@ static void p54_rx_frame_sent(struct iee
+ 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+ 	while (entry != (struct sk_buff *)&priv->tx_queue) {
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
+-		range = (void *)info->driver_data;
+-		if (range->start_addr == addr) {
+-			struct p54_control_hdr *entry_hdr;
+-			struct p54_tx_control_allocdata *entry_data;
+-			int pad = 0;
+-
+-			if (entry->next != (struct sk_buff *)&priv->tx_queue) {
+-				struct ieee80211_tx_info *ni;
+-				struct memrecord *mr;
+-
+-				ni = IEEE80211_SKB_CB(entry->next);
+-				mr = (struct memrecord *)ni->driver_data;
+-				freed = mr->start_addr - last_addr;
+-			} else
+-				freed = priv->rx_end - last_addr;
++		struct p54_control_hdr *entry_hdr;
++		struct p54_tx_control_allocdata *entry_data;
++		int pad = 0;
+ 
++		range = (void *)info->driver_data;
++		if (range->start_addr != addr) {
+ 			last_addr = range->end_addr;
+-			__skb_unlink(entry, &priv->tx_queue);
+-			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
++			entry = entry->next;
++			continue;
++		}
+ 
+-			memset(&info->status, 0, sizeof(info->status));
+-			entry_hdr = (struct p54_control_hdr *) entry->data;
+-			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
+-			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
+-				pad = entry_data->align[0];
+-
+-			priv->tx_stats[entry_data->hw_queue].len--;
+-			if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-				if (!(payload->status & 0x01))
+-					info->flags |= IEEE80211_TX_STAT_ACK;
+-				else
+-					info->status.excessive_retries = 1;
+-			}
+-			info->status.retry_count = payload->retries - 1;
+-			info->status.ack_signal = p54_rssi_to_dbm(dev,
+-					le16_to_cpu(payload->ack_rssi));
+-			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
+-			ieee80211_tx_status_irqsafe(dev, entry);
+-			goto out;
++		if (entry->next != (struct sk_buff *)&priv->tx_queue) {
++			struct ieee80211_tx_info *ni;
++			struct memrecord *mr;
++
++			ni = IEEE80211_SKB_CB(entry->next);
++			mr = (struct memrecord *)ni->driver_data;
++			freed = mr->start_addr - last_addr;
+ 		} else
+-			last_addr = range->end_addr;
+-		entry = entry->next;
++			freed = priv->rx_end - last_addr;
++
++		last_addr = range->end_addr;
++		__skb_unlink(entry, &priv->tx_queue);
++		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
++
++		memset(&info->status, 0, sizeof(info->status));
++		entry_hdr = (struct p54_control_hdr *) entry->data;
++		entry_data = (struct p54_tx_control_allocdata *)entry_hdr->data;
++		if (entry_hdr->magic1 & cpu_to_le16(0x4000))
++			pad = entry_data->align[0];
++
++		priv->tx_stats[entry_data->hw_queue].len--;
++		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
++			if (!(payload->status & 0x01))
++				info->flags |= IEEE80211_TX_STAT_ACK;
++			else
++				info->status.excessive_retries = 1;
++		}
++		info->status.retry_count = payload->retries - 1;
++		info->status.ack_signal = p54_rssi_to_dbm(dev,
++				le16_to_cpu(payload->ack_rssi));
++		skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
++		ieee80211_tx_status_irqsafe(dev, entry);
++		goto out;
+ 	}
+ 	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+ out:
+-	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
+-	    sizeof(struct p54_control_hdr))
++	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + priv->headroom +
++	    priv->tailroom + sizeof(struct p54_control_hdr))
+ 		p54_wake_free_queues(dev);
+ }
+ 
 
