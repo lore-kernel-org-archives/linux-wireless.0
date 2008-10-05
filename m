@@ -1,56 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:49749 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838AbYJRQRj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2008 12:17:39 -0400
-Message-ID: <48FA0C27.8010301@scherping.de> (sfid-20081018_181743_786288_D6BDB802)
-Date: Sat, 18 Oct 2008 18:17:43 +0200
-From: Richard Scherping <richard@scherping.de>
+Received: from nbd.name ([88.198.39.176]:49137 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756295AbYJEQGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Oct 2008 12:06:35 -0400
+Message-ID: <48E8E5DC.3070806@openwrt.org> (sfid-20081005_180649_835153_84F2C699)
+Date: Sun, 05 Oct 2008 18:05:48 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Frederik Himpe <fhimpe@telenet.be>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: iwlagn: associating with AP causes kernel hiccup
-References: <gd5gs4$abi$1@ger.gmane.org> <1224104363.19219.30.camel@rc-desk>	 <gd9v3f$3ft$1@ger.gmane.org> <gd9vpo$5ql$1@ger.gmane.org>	 <48F8AEF1.5030603@scherping.de> <1ba2fa240810171302h7dcc92acr18c060425c4a93d@mail.gmail.com>
-In-Reply-To: <1ba2fa240810171302h7dcc92acr18c060425c4a93d@mail.gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 3/4] ath5k: implement multi-rate retry support, fix tx status
+ reporting
+References: <48E8E48E.5090300@openwrt.org> <48E8E528.7060501@openwrt.org> <48E8E588.30001@openwrt.org>
+In-Reply-To: <48E8E588.30001@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler schrieb:
-> On Fri, Oct 17, 2008 at 5:27 PM, Richard Scherping <richard@scherping.de> wrote:
->>>>>> When I associate with an AP, Linux 2.6.27 seems to "hang" for a few
->>>>>> seconds. During that time, all sound stops playing and keyboard and
->>>>>> mouse input is impossible.
->>>> I'm using Mandriva 2009.0 x86_64 with wpa_supplicant and Mandriva's
->>>> wireless network configuration tool (drakroam).
->>>>
->>>> Actually I just found out that running # ifconfig wlan0 down
->>>> is enough to trigger the sound and mouse hanging for a few seconds.
->>> And shortly after I wrote that, while associating while getting an IP
->>> with dhclient when associating with a WPA encrypted AP, I got this
->>> backtrace in my logs:
->>> [...]
->> I have a similar problem here. No crash up to now, but the very same "hang" for a few seconds on "ifconfig wlan0 down". Interestingly this does only happen after a normal boot - once I did a suspend and resume (S3), there is no hang anymore.
->>
->> Hardware: Thinkpad T61p with Intel 4965 agn
->> Software: Debian Lenny x86_64 with vanilla 2.6.27 kernel
->>
-> Driver in 2.6.27 is not stable, please try to reproduce this in
-> current wireless-testing.git.
+Clean up the tx status reporting, fix retry counters (short retries are
+virtual collisions, not actual retries). Implement multi-rate retry
+support.
+This also fixes strong throughput fluctuations with rc80211_pid
 
-I do not have the time to compile and test wireless-testing ATM, sorry.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-In fact I am annoyed by the fact that iwlagn is "known to be unstable" in a stable kernel release and that this even seems to be a totally normal thing...
-
-Once compat-wireless is working again on my system I will try that and check whether the hang still occurs. Current compat-wireless does not for me - compilation says
-
-make[1]: Entering directory `/usr/src/linux-2.6.27'
-/home/richard/Desktop/compat-wireless-2008-10-17/config.mk:44: "WARNING: You are running a kernel >= 2.6.23, you should enable in it CONFIG_NETDEVICES_MULTIQUEUE for 802.11[ne] support"
-
-and I did not find CONFIG_NETDEVICES_MULTIQUEUE using menuconfig. Loading the modules fails with tons of unknown symbols and disagreed versions (already at cfg80211 and mac80211 modules).
-
-Perhaps I should go back to Debian stock 2.6.26 kernel - but there Ad-Hoc is broken on iwl4965, although it was working without problems earlier in 2.6.24.
-
-Richard
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -530,6 +530,12 @@
+ 		goto err_irq;
+ 	}
+ 
++	/* set up multi-rate retry capabilities */
++	if (sc->ah->ah_version == AR5K_AR5212) {
++		hw->max_altrates = 3;
++		hw->max_altrate_tries = 11;
++	}
++
+ 	/* Finish private driver data initialization */
+ 	ret = ath5k_attach(pdev, hw);
+ 	if (ret)
+@@ -1149,7 +1155,9 @@
+ 	struct sk_buff *skb = bf->skb;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	unsigned int pktlen, flags, keyidx = AR5K_TXKEYIX_INVALID;
+-	int ret;
++	struct ieee80211_rate *rate;
++	unsigned int mrr_rate[3], mrr_tries[3];
++	int i, ret;
+ 
+ 	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
+ 
+@@ -1174,6 +1182,22 @@
+ 	if (ret)
+ 		goto err_unmap;
+ 
++	memset(mrr_rate, 0, sizeof(mrr_rate));
++	memset(mrr_tries, 0, sizeof(mrr_tries));
++	for (i = 0; i < 3; i++) {
++		rate = ieee80211_get_alt_retry_rate(sc->hw, info, i);
++		if (!rate)
++			break;
++
++		mrr_rate[i] = rate->hw_value;
++		mrr_tries[i] = info->control.retries[i].limit;
++	}
++
++	ah->ah_setup_mrr_tx_desc(ah, ds,
++		mrr_rate[0], mrr_tries[0],
++		mrr_rate[1], mrr_tries[1],
++		mrr_rate[2], mrr_tries[2]);
++
+ 	ds->ds_link = 0;
+ 	ds->ds_data = bf->skbaddr;
+ 
+@@ -1790,7 +1814,7 @@
+ 	struct ath5k_desc *ds;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_tx_info *info;
+-	int ret;
++	int i, ret;
+ 
+ 	spin_lock(&txq->lock);
+ 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
+@@ -1812,7 +1836,25 @@
+ 		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
+ 				PCI_DMA_TODEVICE);
+ 
+-		info->status.retry_count = ts.ts_shortretry + ts.ts_longretry / 6;
++		memset(&info->status, 0, sizeof(info->status));
++		info->tx_rate_idx = ath5k_hw_to_driver_rix(sc,
++				ts.ts_rate[ts.ts_final_idx]);
++		info->status.retry_count = ts.ts_longretry;
++
++		for (i = 0; i < 4; i++) {
++			struct ieee80211_tx_altrate *r =
++				&info->status.retries[i];
++
++			if (ts.ts_rate[i]) {
++				r->rate_idx = ath5k_hw_to_driver_rix(sc, ts.ts_rate[i]);
++				r->limit = ts.ts_retry[i];
++			} else {
++				r->rate_idx = -1;
++				r->limit = 0;
++			}
++		}
++
++		info->status.excessive_retries = 0;
+ 		if (unlikely(ts.ts_status)) {
+ 			sc->ll_stats.dot11ACKFailureCount++;
+ 			if (ts.ts_status & AR5K_TXERR_XRETRY)
+--- a/drivers/net/wireless/ath5k/desc.c
++++ b/drivers/net/wireless/ath5k/desc.c
+@@ -318,6 +318,15 @@
+ 	return 0;
+ }
+ 
++/* no mrr support for cards older than 5212 */
++static int
++ath5k_hw_setup_no_mrr(struct ath5k_hw *ah, struct ath5k_desc *desc,
++	unsigned int tx_rate1, u_int tx_tries1, u_int tx_rate2,
++	u_int tx_tries2, unsigned int tx_rate3, u_int tx_tries3)
++{
++	return 0;
++}
++
+ /*
+  * Proccess the tx status descriptor on 5210/5211
+  */
+@@ -352,8 +361,10 @@
+ 		AR5K_DESC_TX_STATUS1_ACK_SIG_STRENGTH);
+ 	ts->ts_antenna = 1;
+ 	ts->ts_status = 0;
+-	ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_0,
++	ts->ts_rate[0] = AR5K_REG_MS(tx_ctl->tx_control_0,
+ 		AR5K_2W_TX_DESC_CTL0_XMIT_RATE);
++	ts->ts_retry[0] = ts->ts_longretry;
++	ts->ts_final_idx = 0;
+ 
+ 	if (!(tx_status->tx_status_0 & AR5K_DESC_TX_STATUS0_FRAME_XMIT_OK)) {
+ 		if (tx_status->tx_status_0 &
+@@ -405,29 +416,43 @@
+ 		AR5K_DESC_TX_STATUS1_XMIT_ANTENNA) ? 2 : 1;
+ 	ts->ts_status = 0;
+ 
+-	switch (AR5K_REG_MS(tx_status->tx_status_1,
+-			AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX)) {
+-	case 0:
+-		ts->ts_rate = tx_ctl->tx_control_3 &
+-			AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
+-		break;
++	ts->ts_final_idx = AR5K_REG_MS(tx_status->tx_status_1,
++			AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX);
++
++	/* The longretry counter has the number of un-acked retries
++	 * for the final rate. To get the total number of retries
++	 * we have to add the retry counters for the other rates
++	 * as well
++	 */
++	ts->ts_retry[ts->ts_final_idx] = ts->ts_longretry;
++	switch (ts->ts_final_idx) {
++	case 3:
++		ts->ts_rate[3] = AR5K_REG_MS(tx_ctl->tx_control_3,
++			AR5K_4W_TX_DESC_CTL3_XMIT_RATE3);
++
++		ts->ts_retry[2] = AR5K_REG_MS(tx_ctl->tx_control_2,
++			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES2);
++		ts->ts_longretry += ts->ts_retry[2];
++		/* fall through */
++	case 2:
++		ts->ts_rate[2] = AR5K_REG_MS(tx_ctl->tx_control_3,
++			AR5K_4W_TX_DESC_CTL3_XMIT_RATE2);
++
++		ts->ts_retry[1] = AR5K_REG_MS(tx_ctl->tx_control_2,
++			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
++		ts->ts_longretry += ts->ts_retry[1];
++		/* fall through */
+ 	case 1:
+-		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
++		ts->ts_rate[1] = AR5K_REG_MS(tx_ctl->tx_control_3,
+ 			AR5K_4W_TX_DESC_CTL3_XMIT_RATE1);
+-		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
++
++		ts->ts_retry[0] = AR5K_REG_MS(tx_ctl->tx_control_2,
+ 			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
+-		break;
+-	case 2:
+-		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
+-			AR5K_4W_TX_DESC_CTL3_XMIT_RATE2);
+-		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
+-			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES2);
+-		break;
+-	case 3:
+-		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
+-			AR5K_4W_TX_DESC_CTL3_XMIT_RATE3);
+-		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
+-			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES3);
++		ts->ts_longretry += ts->ts_retry[0];
++		/* fall through */
++	case 0:
++		ts->ts_rate[0] = tx_ctl->tx_control_3 &
++			AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
+ 		break;
+ 	}
+ 
+@@ -653,7 +678,7 @@
+ 	} else {
+ 		ah->ah_setup_rx_desc = ath5k_hw_setup_rx_desc;
+ 		ah->ah_setup_tx_desc = ath5k_hw_setup_2word_tx_desc;
+-		ah->ah_setup_mrr_tx_desc = ath5k_hw_setup_mrr_tx_desc;
++		ah->ah_setup_mrr_tx_desc = ath5k_hw_setup_no_mrr;
+ 		ah->ah_proc_tx_desc = ath5k_hw_proc_2word_tx_status;
+ 	}
+ 
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -418,7 +418,9 @@
+ 	u16	ts_seqnum;
+ 	u16	ts_tstamp;
+ 	u8	ts_status;
+-	u8	ts_rate;
++	u8	ts_rate[4];
++	u8	ts_retry[4];
++	u8	ts_final_idx;
+ 	s8	ts_rssi;
+ 	u8	ts_shortretry;
+ 	u8	ts_longretry;
