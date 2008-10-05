@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51368 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752151AbYJ0TNw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 15:13:52 -0400
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Carlos R. Mafra" <crmafra2@gmail.com>
-Cc: Soeren Sonnenburg <kernel@nn7.de>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	tomas.winkler@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081027191118.GA4058@localhost.aei.mpg.de>
-References: <20081027162054.GA4015@localhost.aei.mpg.de>
-	 <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost>
-	 <1225132278.3796.32.camel@johannes.berg>
-	 <1225133082.3796.35.camel@johannes.berg>
-	 <20081027190011.GA3951@localhost.aei.mpg.de>
-	 <1225134195.3796.39.camel@johannes.berg>
-	 <20081027191118.GA4058@localhost.aei.mpg.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KMtfDeYdhhrHMcPb16hw"
-Date: Mon, 27 Oct 2008 20:13:43 +0100
-Message-Id: <1225134823.3796.45.camel@johannes.berg> (sfid-20081027_201358_869515_32AB7A7F)
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:38916 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755166AbYJEW7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Oct 2008 18:59:33 -0400
+Date: Sun, 5 Oct 2008 15:57:57 -0700
+From: Greg KH <greg@kroah.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Kalle Valo <kalle.valo@iki.fi>, proski@gnu.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: at76_usb driver status
+Message-ID: <20081005225757.GA22398@kroah.com> (sfid-20081006_005945_135660_EBAFA3E6)
+References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com> <20081005061603.GB28533@kroah.com> <1223188872.11272.87.camel@violet.holtmann.net> <20081005151429.GB20764@kroah.com> <1223223426.11272.101.camel@violet.holtmann.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1223223426.11272.101.camel@violet.holtmann.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Oct 05, 2008 at 06:17:06PM +0200, Marcel Holtmann wrote:
+> Hi Greg,
+> 
+> > > > > > In my quest to suck drivers into drivers/staging/ I noticed that the
+> > > > > > at76_usb driver is being shipped by both Fedora and Ubuntu in their
+> > > > > > kernels.
+> > > > > 
+> > > > > Yes, that's the original at76_usb driver which has it's own 802.11
+> > > > > stack. Pavel Rosking was the maintainer of that driver. Based on the
+> > > > > feedback in linux-wireless I then started porting the driver to use
+> > > > > mac80211. 
+> > > > > 
+> > > > > (Maybe I should have renamed the port to something else than at76_usb
+> > > > > because having two different drivers with the same name creates
+> > > > > confusion.)
+> > > > > 
+> > > > > > So I was wondering what the status of this driver is, and if I
+> > > > > > could/should add it to drivers/staging/?
+> > > > > 
+> > > > > The original at76_usb is working quite well, but it's unacceptable for
+> > > > > the mainline because we cannot have two 802.11 stacks in kernel.
+> > > > 
+> > > > I understand this, but for the issue of the drivers/staging/ tree, it's
+> > > > ok for us to have as many 802.11 stacks in the kernel as we can cram in
+> > > > there :)
+> > > 
+> > > did you start working for Ubuntu now ;)
+> > 
+> > Heh, no, I'm just, to quote Linux, now the "Maintainer of Crap".  See
+> > the lwn.net summary of the kernel summit for details :)
+> 
+> I was mainly referring to Kyle from OLS a year ago ;)
 
---=-KMtfDeYdhhrHMcPb16hw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Doh, I forgot about that joke!
 
-On Mon, 2008-10-27 at 20:11 +0100, Carlos R. Mafra wrote:
+sorry, was slow this morning...
 
-> > Do you get any kernel messages output? If you do, could you put message=
-s
-> > into each line of ieee80211_set_disassoc to see where it hangs?
->=20
-> No messages appear, just a black screen.
->=20
-> But I can use the SysRq keys, and when I umount the
-> screen shows the message that umount succeed. I also tried SysRq+t but
-> the messages appear to fast to read.
-
-Ok, but that means you _can_ get messages, it would help a lot if you
-could put a few printks into the set_disassoc function before/after each
-other function call, so we know where exactly it hangs. Pretty much all
-of them could possibly hang if there is some sort of locking error
-happening or anything relies on userspace to be running...
-
-johannes
-
---=-KMtfDeYdhhrHMcPb16hw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJBhLjAAoJEKVg1VMiehFYtUEQAI40VHy8uvSWuKcpeHm5q4Nf
-snMqWHg67wia13KqdKZPQbALU5d9Ck00n3j6r6ye2bH7yPXLVqQpnQYsVO+waBBR
-5PyRSCKb5AouHcBczpIcDFSt0g5Tyqks55p56kF1ZC5aozsVqshtVobP47liLFsD
-uC4+ZcDuYuUI4gmFsdlztw31NOWGGGtaymNOHnVNURwq1Ytf5l4GSgDDIzNHidMP
-qo4ls8dLVeHKrqP7A6nBYxFeLK2mmMk5u8Kql4XAkJq5qC+2CgaI4zBiwVDaaUOl
-6+EC//Y1xAiV+b/+DXJHAvuc3d9dZ8C947nEmBiSi7qq+NLpX5uUj/oWmQMgQe2B
-zUOe1HkBBg5m6xcusfBXgn2JemCp8wyKP3twMrnbmj/8raF8sa77IBHFziDpaXQP
-uBt4JF26a1iSu7ui0DWgJ+eIS2VUVo8XgVtyer0sWHfqTAuDbD1xw/qsRj4KCGjZ
-acwES60/sRYrJhi+SCud13n5ZXNiop9Zy5JsFMiQIF15Ew5GPDxZeYazRf3NWymT
-49/xEFpSwkLeZNWzYC3spmoSX0zSlLy4zOylyYKD5tck1r9qSELtYxFPqKznOzjd
-PkDtPzE4tRhMO9h2DF1GMZ37gNE5hwbEaG+qrhRuyyB4pJEzA57Wqj5/0huTKQ0T
-0e9eO5uh+JNgBIJXL0R3
-=R6Rm
------END PGP SIGNATURE-----
-
---=-KMtfDeYdhhrHMcPb16hw--
-
+greg k-h
