@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49468 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbYJJJPE (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:62268 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbYJEJCL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 05:15:04 -0400
-Subject: iwlwifi TX reply bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
+	Sun, 5 Oct 2008 05:02:11 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so357727ywe.1
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Oct 2008 02:02:09 -0700 (PDT)
+Message-ID: <43e72e890810050202x737a2230m351c8d11f32ff705@mail.gmail.com> (sfid-20081005_110220_559921_1D7623FE)
+Date: Sun, 5 Oct 2008 02:02:09 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tim Gardner" <tim.gardner@canonical.com>,
+	"Ben Collins" <bcollins@ubuntu.com>
+Subject: Re: Let Ubuntu Installing your initrd by default when compiling a kernel
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BZFpAl1HfqyCYxaj7kVO"
-Date: Fri, 10 Oct 2008 11:11:37 +0200
-Message-Id: <1223629897.3930.69.camel@johannes.berg> (sfid-20081010_111518_226940_A17F2916)
-Mime-Version: 1.0
+In-Reply-To: <43e72e890810041958t59985657iccde75c2c0a0b1aa@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890810041958t59985657iccde75c2c0a0b1aa@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Oct 4, 2008 at 7:58 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> Upon a 'make install' on a kernel source directory I think
+> distributions should automagically build your initrd for you. I use
+> Ubuntu mainly on x86 and for those boxen I installed debianutils,
+> which provides /sbin/installkernel. This is the path and filename to
+> the "distribution" script which the kernel Makefiles will run when you
+> type try to build the install target.
+>
+> Fedora for example builds your all this shiny stuff for you too. I've
+> modified Debian's installkernel script to do this for Ubuntu. It'd be
+> nice to see Ubuntu ship with this script and with the below patch
+> applied. Mind you, Debian ships this script in debianutils. I haven't
+> run debian in a while so not sure if debian uses the same format as
+> you do for their initrd. If so then this can go upstream.
+>
+> Just a small itch I had to scratch as I just apt-get dist-upgraded and
+> Ubuntu replaced my installkernel with the new one and it wasn't there.
 
---=-BZFpAl1HfqyCYxaj7kVO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+BTW the fact that this went to linux-wireless was a complete goof :)
+Don't know WTF happened. I blame e1000e for anything strange happening
+lately.
 
-	sta_id =3D iwl_get_ra_sta_id(priv, hdr);
-        if (txq->sched_retry && unlikely(sta_id =3D=3D IWL_INVALID_STATION)=
-) {
-                IWL_ERROR("Station not known\n");
-                return;
-        }
-
-        if (txq->sched_retry) {
-[...]
-        } else {
-[...]
-                if (index !=3D -1) {
-                    int freed =3D iwl_tx_queue_reclaim(priv, txq_id, index)=
-;
-                    if (tid !=3D MAX_TID_COUNT)
-                        priv->stations[sta_id].tid[tid].tfds_in_queue -=3D =
-freed;
-[...]
-
-
-priv->stations has 32 entries, IWL_INVALID_STATION is 255.
-
-Oops.
-
-johannes
-
---=-BZFpAl1HfqyCYxaj7kVO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI7xxFAAoJEKVg1VMiehFYujEP/iyUnbaNB0du9E4mwCsk+ouN
-/YocH0LOEbtYD9wjsIHnuuCOI0aHSdsgVjvyg+xz22oW0p0tZg/+UoEh48Y2xLug
-it+rOT+UJuHJPBm72NRl4d81YLenCtd8q00/BL/OpsToFi1usDzjrcqslHsS+Xnm
-TSCrbSFfCzGtQyoXhQkAh8Rx+JYRYwkidwStln2p9kDrJpg+XWAP5LX2YUDIwTtj
-lS488krIFYvOQKh1l/wpfQZ549PX/0uU+5eRhAsRTFPrI/UI6VU7fsDbfb7MzUAl
-EqdTMDMrBph14acBogOFgTRDn2CUdxD/yID+5jCrHpAKNiamGG2S46bCa2HSfS4g
-+rc6W4FK93Ot9ZCGxwSTUwJ3g1p4knUpvmlffrU9MZ0D2B6kree56KDGD652N19d
-rfbDiUVVdhPAU4a15D+mBl8r8Cm6r+6gqzeCWOdX6/okDDRC+wWEOH7q8/1S6AhM
-CeHEeXF/zx4hDrXdNHDd6no5QTt/tIlxiTfmZlQ8AAi18VjqMG+GgtMBGSAxzo68
-jNpW5eRq2A9gyvB3YKaHO0sPOSxrc3JZBH2igoEAgmfsuGuV+hdaGtlp9VSkcMe5
-93syuCr1bRN6kuAxeu1wSCNMqEFveqybuBeCDoqce5NzWi/pJ/mYmrgFx2CKPlGa
-VgzRVwqdRL9wnIs9HZ4l
-=ZjCG
------END PGP SIGNATURE-----
-
---=-BZFpAl1HfqyCYxaj7kVO--
-
+  Luis
