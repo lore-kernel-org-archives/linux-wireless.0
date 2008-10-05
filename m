@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:27858 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753545AbYJ2OlY (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:52978 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbYJEC6p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 10:41:24 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so8113yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 07:41:23 -0700 (PDT)
-Message-ID: <40f31dec0810290741t6378eebelbdacf4e5c8d63bff@mail.gmail.com> (sfid-20081029_154130_637219_8EBED96B)
-Date: Wed, 29 Oct 2008 16:41:22 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Update PCU code
-Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <b6c5339f0810290705j36995186j382a8415886fb061@mail.gmail.com>
+	Sat, 4 Oct 2008 22:58:45 -0400
+Received: by gxk9 with SMTP id 9so3941270gxk.13
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Oct 2008 19:58:44 -0700 (PDT)
+Message-ID: <43e72e890810041958t59985657iccde75c2c0a0b1aa@mail.gmail.com> (sfid-20081005_045919_639639_DE68D101)
+Date: Sat, 4 Oct 2008 19:58:44 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tim Gardner" <tim.gardner@canonical.com>,
+	"Ben Collins" <bcollins@ubuntu.com>
+Subject: Let Ubuntu Installing your initrd by default when compiling a kernel
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <20081029021121.GA3079@makis>
-	 <20081029024603.GA22759@hash.localnet>
-	 <40f31dec0810290408h5ee08c8l1e14d576064f01a4@mail.gmail.com>
-	 <b6c5339f0810290705j36995186j382a8415886fb061@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/10/29 Bob Copeland <me@bobcopeland.com>:
-> On Wed, Oct 29, 2008 at 7:08 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
->> 2008/10/29 Bob Copeland <me@bobcopeland.com>:
->>> On Wed, Oct 29, 2008 at 04:11:22AM +0200, Nick Kossifidis wrote:
->>>>  * Properly clean MIC key from keytable when TKIP is used (Bob is
->>>>  working on set_key function etc so i leave it for now).
->>>
->>> Heh, I was just prepping patches to send out.  I had basically the
->>> same thing for _reset_key too so I'll just rebase mine on top of this.
->>>
->>
->> ACK, sorry for the bad coordination ;-(
->
-> No worries, it was easy enough to drop that hunk.  But I do think this:
->
->> +       /* Reset associated MIC entry if TKIP
->> +        * is enabled located at offset (entry + 64) */
->> +       if (type == AR5K_KEYTABLE_TYPE_TKIP) {
->> +               entry = entry + AR5K_KEYTABLE_MIC_OFFSET;
->> +               AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
->> +               for (i = 0; i < AR5K_KEYCACHE_SIZE / 2 ; i++)
->> +                       ath5k_hw_reg_write(ah, 0, AR5K_KEYTABLE_OFF(entry, i));
->> +       }
->> +
->
-> ...should move a couple of lines down or use a temporary for the micentry
-> slot; otherwise we are setting keytype to NULL in the mic entry and not
-> the original key slot.
->
+Upon a 'make install' on a kernel source directory I think
+distributions should automagically build your initrd for you. I use
+Ubuntu mainly on x86 and for those boxen I installed debianutils,
+which provides /sbin/installkernel. This is the path and filename to
+the "distribution" script which the kernel Makefiles will run when you
+type try to build the install target.
 
-Yup you are right, we should set both to NULL so a temp micentry var
-would do the trick.
+Fedora for example builds your all this shiny stuff for you too. I've
+modified Debian's installkernel script to do this for Ubuntu. It'd be
+nice to see Ubuntu ship with this script and with the below patch
+applied. Mind you, Debian ships this script in debianutils. I haven't
+run debian in a while so not sure if debian uses the same format as
+you do for their initrd. If so then this can go upstream.
 
-Should i resend this one or you 'll resend yours ?
+Just a small itch I had to scratch as I just apt-get dist-upgraded and
+Ubuntu replaced my installkernel with the new one and it wasn't there.
 
+--- /sbin/installkernel.old	2008-10-04 12:45:40.000000000 -0700
++++ /sbin/installkernel	2008-10-04 12:45:46.000000000 -0700
+@@ -66,6 +66,9 @@
+   updatever config "$config"
+ fi
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
++mkinitramfs -o $dir/initrd.img-$ver $ver
++update-grub
++
+ ## This is very far from existing practice in modern Debian installations
+ ########################################################################
+ # if [ "$(basename $img)" = "vmlinux" ] && [ "$(id -u)" = "0" ] ; then #
