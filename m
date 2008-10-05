@@ -1,77 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59629 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751872AbYJLJtK (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:38505 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753885AbYJEBCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Oct 2008 05:49:10 -0400
-Subject: Re: wireless: remove duplicated #include
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Huang Weiyi <weiyi.huang@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20081012171950.F6D8.WEIYI.HUANG@gmail.com> (sfid-20081012_112341_868535_821FCEBB)
-References: <20081012171950.F6D8.WEIYI.HUANG@gmail.com>
-	 (sfid-20081012_112341_868535_821FCEBB)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F8gk8/6p2cBOTwHWiQUz"
-Date: Sun, 12 Oct 2008 11:48:57 +0200
-Message-Id: <1223804937.10176.0.camel@johannes.berg> (sfid-20081012_114915_922896_9900D45D)
-Mime-Version: 1.0
+	Sat, 4 Oct 2008 21:02:36 -0400
+Received: by gxk9 with SMTP id 9so3903320gxk.13
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Oct 2008 18:02:35 -0700 (PDT)
+Message-ID: <43e72e890810041802w5091a941ma781b8b40f8b5672@mail.gmail.com> (sfid-20081005_030243_069731_1AC3B516)
+Date: Sat, 4 Oct 2008 18:02:34 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [PATCH 4/5] ath5k: Fix SREV reporting after SREV updates
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, nbd@openwrt.org
+In-Reply-To: <20081005003710.GA3222@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080928222444.GD21335@makis>
+	 <20081005003710.GA3222@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Oct 4, 2008 at 5:37 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Mon, Sep 29, 2008 at 01:24:44AM +0300, Nick Kossifidis wrote:
+>>  * Fix srev reporting during attach
+>>
+>>  Changes-Licensed-under: ISC
+>>  Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+> This now identifies my card as 5414, whereas ath5k used to call it 5424
+> (mac srev 0xa3, phy 0x61).
+>
+> But, madwifi has:
+>  #define AR5K_SREV_VER_AR5424     0xa3 /* PCI-E */
+>
+> It still works so not a major problem, but who's right?
 
---=-F8gk8/6p2cBOTwHWiQUz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Since legacy-hal.tar.bz2 comes directly from our latest codebase I
+expect that to have the latest correct information. If there are
+doubts that is another thing and we can look into it.
 
-On Sun, 2008-10-12 at 17:23 +0800, Huang Weiyi wrote:
-> Removed duplicated include <linux/list.h> in=20
-> net/wireless/core.c.
->=20
-> Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
->=20
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index 5cadbeb..24fdd4c 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -13,7 +13,6 @@
->  #include <linux/debugfs.h>
->  #include <linux/notifier.h>
->  #include <linux/device.h>
-> -#include <linux/list.h>
->  #include <net/genetlink.h>
->  #include <net/cfg80211.h>
->  #include <net/wireless.h>
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---=-F8gk8/6p2cBOTwHWiQUz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI8cgCAAoJEKVg1VMiehFYA30P/1vR5aJqAYpuAxJo/N7BRez4
-yqDZ6cBrkMJUqhf/+luoVgzAUzjItHCbOZ06AR/JKrej0OE/tAVW0hNFLQpSbhAe
-MdNlNNIccpJGutn04Dp9977Bz7L8ohMjQy9RXKD4yzxTQ/JeD17zgpXoYa9vasqJ
-vi6cQbqS29N2hOO+VYzjNG9RJkEF6NqJVZnYy0S8hLJp/xRHtTxoIetylMOTexHT
-LprHHk7uNpKpVB+/z6mmvSP38ZmLPhlbCx25YAoXgruTZ6tyEK7Raq8itRVWSKrs
-ZtEpHC4V+PTKsEjFMFR7ht+MIlq9FhgmJ4prjKAAC2WunbkA0zyFIDdHpw2uFKeh
-aSzrt8F1Pj7438NcuiuzJobZt56slTpLCVUXrHOAL4meaS1c75iqiDu6qkyo2YwJ
-euIl2Wslpvk0e65OEhqUlffJNfxJuJRTr8AauiDoz+5yJX1SuwBifrKEeoBYcjc8
-WlGqBFoFQVK1KwT8UnEDigg2Jd4Dr7u+oZECPKUKNAslL5BTaFep0d+n0ZJL4Kc6
-kWS2xAxLGu1oS0zoXTFjs0NWD6hl2ngNqOWOmm7ZncGICQqAmv3Tb24yvi3SiNJP
-go6AkgjSjVKzTBDB18Qec7LtLKhHva71HqaO5RLTI5jeacRfUGVcEE3BrWv239qE
-CV/7a5dBh2uGLbuo4M9U
-=ucWI
------END PGP SIGNATURE-----
-
---=-F8gk8/6p2cBOTwHWiQUz--
-
+  Luis
