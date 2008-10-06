@@ -1,69 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59302 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43914 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753776AbYJKWgX (ORCPT
+	with ESMTP id S1753251AbYJFQzO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 18:36:23 -0400
-Subject: Re: [PATCH] nl80211: export HT capabilities
+	Mon, 6 Oct 2008 12:55:14 -0400
+Subject: Re: [PATCH v2] iwlwifi: fix DMA code and bugs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890810111529l1cb14bd2g32e7382b054b0b1b@mail.gmail.com> (sfid-20081012_002955_469603_981115D3)
-References: <1223547613.22490.41.camel@johannes.berg>
-	 <20081009085747.GB11530@tesla> <1223630622.17594.0.camel@johannes.berg>
-	 <20081010213610.GB20509@tuxdriver.com>
-	 <1223675046.29811.0.camel@johannes.berg>
-	 <43e72e890810111529l1cb14bd2g32e7382b054b0b1b@mail.gmail.com>
-	 (sfid-20081012_002955_469603_981115D3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Aingz1fgNNbbHS4vCvgW"
-Date: Sun, 12 Oct 2008 00:36:06 +0200
-Message-Id: <1223764566.3581.0.camel@johannes.berg> (sfid-20081012_003629_520496_FDAB6CED)
+In-Reply-To: <1223311876.15196.38.camel@johannes.berg> (sfid-20081006_185150_705636_45A51E0F)
+References: <1223308831.15196.28.camel@johannes.berg>
+	 <1223309405.15196.32.camel@johannes.berg>
+	 <1ba2fa240810060949w5404944dud9f7b6b373542981@mail.gmail.com>
+	 (sfid-20081006_184903_690814_3BC35C90)  <1223311876.15196.38.camel@johannes.berg>
+	 (sfid-20081006_185150_705636_45A51E0F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sg0rtxquUHmnqxEhMJsY"
+Date: Mon, 06 Oct 2008 18:54:44 +0200
+Message-Id: <1223312084.15196.41.camel@johannes.berg> (sfid-20081006_185519_179479_50D0DD62)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Aingz1fgNNbbHS4vCvgW
+--=-sg0rtxquUHmnqxEhMJsY
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-10-11 at 18:29 -0400, Luis R. Rodriguez wrote:
+On Mon, 2008-10-06 at 18:51 +0200, Johannes Berg wrote:
 
-> So you're going to #ifdef on the iw nl80211.h?
+> > >  * therefore, all the is_odd junk goes away
+> > >  * fix a bug in iwl_hcmd_queue_reclaim where it would reclaim all the
+> > >   fragments of a descriptor rather than all descriptors (this may be
+> > >   the cause of the dma unmapping problem I reported)
+> > >  * some more cleanups
+> >=20
+> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > > --
+> >=20
+> >=20
+> > > Tested on 5000 hw, please apply.
+> >=20
+> > Great job,  however do not apply this before I review it I had strong
+> > feeling this will not
+> > work with aggregation flows.
+>=20
+> I cannot imagine why you think that, care to explain?
 
-No. iw actually has a copy of the header file now.
+Of course, I would very much appreciate you review the actual bug fix in
+iwl_hcmd_queue_reclaim, which consist of the addition of the line
 
-> Can't we use something better and more obvious like defining an
-> nl80211 version (as kernel version won't do us any good for bleeding
-> edge wireless-testing users) or something like that?
-
-Eh, no. Version numbers suck. Always test for features. Besides, this is
-about compiling, not running.
++               bd =3D &txq->bd[index];
 
 johannes
 
---=-Aingz1fgNNbbHS4vCvgW
+--=-sg0rtxquUHmnqxEhMJsY
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI8SpTAAoJEKVg1VMiehFYVPQP+wYwDaskQBEzWruKSr6b2aXA
-MABF7PRu9tU0e4Qb12Np6m1DcORlIf1OCv5ZWRhqMmys0olrd4HuUZ7KJ6JcKilw
-mQnRXj1YLEOjSKge4FvBSWX+hfASxfJI2xcPIavmdj/2XypmVJKewMi1nDPfs8I1
-0N7FUAjXmuuq5wGdwdWU7ylfKsa0DDcx4cEwLTbRZLU70lTHs6jYps1NNdjvMFad
-Q2zeWnhnrQWf8+hx9sTZKLjJ9Jai9U8FZ2Bif1xUhB7JXHLKgJEdUPOReQc+TRAG
-UBLPqDr65YjbRCoS3KkU52BtFxo/k44AdAwosWL32o6BANJBr3uQwuQG65nYif4j
-SNWRuz+fbbYAsaIkf1hLeTgLnCcXsfynENJPJbREmPr9sH1K+WdX+OHSGY4BzdmS
-bEV3T92FLJXYYF9zNMpWcJiunIODTASPHWDfOsqaGOoqk2fwynzTuzIKRr/XBMkt
-4HDYTyiaNu2778m0yEVEew7pRvRcJT7EqWWoMA93e4AkgJHGqX8B4EazhucAbi5e
-tRm9NTB5RpQxT+tRAYzu5PDvgSJNYBZSa9i3kw1Zik2V6rVgfoO1XzqeYndd3+o2
-qCyAivtlVsDiekJ1nVtmM8TQB43+PmqORsQjAp8O60VGPI61dh8O/N5muJjvKEH2
-MImrF/TldkqJbDzDdjYh
-=e9kd
+iQIcBAABAgAGBQJI6kLQAAoJEKVg1VMiehFYdt4P/RTMM0xJWJ0qsyFLokwNlXoN
+kwdcdhW7CMPWAwTeyhzzbG7nkzc9JhJDXT7WK2bjsWueKudD6mSTYISoG81Kj/Ks
+q3DYVpQ1kNGsxhbBv3Ig5flVFL2CwWF+QbTbifbhqVt5huC0lsWuw6O6YtzIqu3m
+yzM+gam6Q7fLOVImgZJaR4s1FSRTI5ghX2+MJz02U9V/gy4E5iqjSlffQkftBFuJ
+jML51TeOoibOCU8iZs2AgDewRC4HkSh3MZUeOvhJD3Dz+mnDb+rLSzIpkZOOkPCX
+SY9jVaLn3aiQbTKEiGFOrsBWvAwzsLVLXNLQSogUkqKzxlTIrPmpm5nNqAOoh4Qt
+awEyOeoMpxEtQ7I7BNmzaPCYnELfQYzpaWs1k5OcZcvshGfLpSyOWcUvN4DHC7VG
+reBmMKVkbCBEf4iVbRzqi9h4ichJ8NXDjo/xJENjmWNhWg2EcqgzYS7FA6yyBaiF
+QhC+MgEwITj1iKPQCUDORu7yBCQtKtiquAAvgN8++2O+7H+NrF0gi2/X3FDAFjfQ
+lZBHSuOxhU3JrHsK3TWyHbP5QORZ4L6mYb1Z4FMunqO910csPhfr3i2z0SjhQXgw
+orfFgKYmjw3KwkckRYBB01+UDmCG5Xdd0r7Uv655IWDFQQYyoAtPBJvqntflRaQ+
+hUjSNQKPcEuRai/sJ+Iz
+=acF6
 -----END PGP SIGNATURE-----
 
---=-Aingz1fgNNbbHS4vCvgW--
+--=-sg0rtxquUHmnqxEhMJsY--
 
