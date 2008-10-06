@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32774 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082AbYJNEIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 00:08:21 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 21:08:21 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
-	<mickflemm@gmail.com>, <jirislaby@gmail.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] ath9k: correct signal quality report
-Date: Mon, 13 Oct 2008 14:08:09 -0700
-Message-ID: <1223932090-9274-3-git-send-email-lrodriguez@atheros.com> (sfid-20081014_060825_690346_754F5542)
-In-Reply-To: <1223932090-9274-2-git-send-email-lrodriguez@atheros.com>
-References: <1223932090-9274-1-git-send-email-lrodriguez@atheros.com>
- <1223932090-9274-2-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:42852 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753144AbYJFQsZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 12:48:25 -0400
+Subject: Re: [PATCH v2] iwlwifi: fix DMA code and bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <1223311359.11272.212.camel@violet.holtmann.net>
+References: <1223308831.15196.28.camel@johannes.berg>
+	 (sfid-20081006_180110_939098_1A64839A)  <1223309405.15196.32.camel@johannes.berg>
+	 <1223311359.11272.212.camel@violet.holtmann.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bAHkuy9F5p2NRKFkViIn"
+Date: Mon, 06 Oct 2008 18:47:54 +0200
+Message-Id: <1223311674.15196.34.camel@johannes.berg> (sfid-20081006_184828_650590_B23D7805)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adjusts ath9k's signal quality reporting taking into
-consideration received beacons at an RSSI of 45 should indicate
-you can use of MCS 15 rate (144 Mbps) reliably on dual stream card.
-Keep in mind mac80211 does not yet have aggregation fixed but this
-should still provide more accurate results.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+--=-bAHkuy9F5p2NRKFkViIn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 16c90c1..6bcee4a 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -279,8 +279,15 @@ static void ath9k_rx_prepare(struct ath_softc *sc,
- 	rx_status->rate_idx = ath_rate2idx(sc, (status->rateKbps / 100));
- 	rx_status->antenna = status->antenna;
- 
--	/* XXX Fix me, 64 cannot be the max rssi value, rigure it out */
--	rx_status->qual = status->rssi * 100 / 64;
-+	/* at 45 you will be able to use MCS 15 reliably. A more elaborate
-+	 * scheme can be used here but it requires tables of SNR/throughput for
-+	 * each possible mode used. */
-+	rx_status->qual = status->rssi * 100 / 45;
-+
-+	/* rssi can be more than 45 though, anything above that
-+	 * should be considered at 100% */
-+	if (rx_status->qual > 100)
-+		rx_status->qual = 100;
- 
- 	if (status->flags & ATH_RX_MIC_ERROR)
- 		rx_status->flag |= RX_FLAG_MMIC_ERROR;
--- 
-1.5.6.rc2.15.g457bb.dirty
+On Mon, 2008-10-06 at 18:42 +0200, Marcel Holtmann wrote:
+> Hi John,
+>=20
+> > This patch cleans up the DMA code to be understandable and not
+> > completely wrong. In particular:
+> >  * there is no need to have a weird iwl_tfd_frame_data struct that is
+> >    used 10 times, just use an address struct 20 times
+> >  * therefore, all the is_odd junk goes away
+> >  * fix a bug in iwl_hcmd_queue_reclaim where it would reclaim all the
+> >    fragments of a descriptor rather than all descriptors (this may be
+> >    the cause of the dma unmapping problem I reported)
+> >  * some more cleanups
+> >=20
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > ---
+> > Tested on 5000 hw, please apply.
+> >=20
+> > v2: fixes small issue with getting rid of iwl_get_dma_hi_address.
+>=20
+> if this fixes the crashes with my 4965 card in my X61, then this is a
+> candidate for 2.6.27-rc8. I will built a new kernel for my X61 as soon
+> as possible.
+
+I doubt it will, but who knows. Let me know. Right now I'm trying to
+massage  the code into something readable.
+
+johannes
+
+--=-bAHkuy9F5p2NRKFkViIn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI6kE2AAoJEKVg1VMiehFYsOYP/1utQxmf0CqaK9r/qeqwp3/h
+vTYNGl+nqJtSkbG1+e9E77GBtu07CESWp4C8YGxNUl3Pn6UJCZiuyMoU7FQL6WPh
+hrALfhx0ixKQmzQLreGckbqeB2Pa55n7H8qD1vMBYZX8Gu/fmJruFtz8+IjMwqEf
+psx91vVfE5OdUhladyXsUpllfjbanHOV8Y83kFy7VvhJDb6IcnBm/NCwUDa4oHZ3
+UETFHVQZi9W3a8XY7urafoZY+LLPYebZioHS4xXczMSMW/vv91dlTaSNBH5s/U7I
+NLuNSc0585+oSLP6ENHTBw7AHypFQt4giVBX71yDp8SmA25KXHDAo/+nDtIg+HCQ
+6DFXUOq8fvfS0WY6P0l0Xsfzft/1YlMHJKKhruBshU0kuOX3yjSSWPMDZqeOw5Fh
+hN4tMqWbgAe9nlNrXbqPKCiRW88TIgGFBqA2LA7TJHXHVk17vgRCBcZ1rK6liJHj
+O2WJYR3ExWvC3wqP9/boZVnvQpZMZEUFjM0tfMn1mhX9ruZvx5SBMm8FMTGHr+cR
+K7pUfn18g9tEoQi7JMtQd5szXEDEFD3Fwihd4BhJdr+aQ3/upVD9UNJHdOdeMJ2l
+kOys3hviXUFdRSKnwkXmAPM83YvicJMQqEaTw9LJE4fymCokia0y6qE0jfkApTxt
+h1YpezY6yLQRW8KISbr0
+=LUkj
+-----END PGP SIGNATURE-----
+
+--=-bAHkuy9F5p2NRKFkViIn--
 
