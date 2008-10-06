@@ -1,71 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41733 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753262AbYJ2Ly4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 07:54:56 -0400
-Subject: Re: [PATCH] wireless: clean up sysfs code using %pM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20081028.220733.88410572.davem@davemloft.net>
-References: <1225198854.3598.6.camel@johannes.berg>
-	 <20081028.220733.88410572.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ImuYZEynuPKA6IvnbjYp"
-Date: Wed, 29 Oct 2008 12:54:51 +0100
-Message-Id: <1225281291.5439.4.camel@johannes.berg> (sfid-20081029_125501_428486_16909017)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:2848 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751679AbYJFIMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 04:12:03 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 6/7] iwlwifi: remove STATUS_CONF_PENDING in scanning
+Date: Mon,  6 Oct 2008 16:05:32 +0800
+Message-Id: <1223280333-4383-7-git-send-email-yi.zhu@intel.com> (sfid-20081006_101208_941754_3EA7C316)
+In-Reply-To: <1223280333-4383-6-git-send-email-yi.zhu@intel.com>
+References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com>
+ <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
+ <1223280333-4383-3-git-send-email-yi.zhu@intel.com>
+ <1223280333-4383-4-git-send-email-yi.zhu@intel.com>
+ <1223280333-4383-5-git-send-email-yi.zhu@intel.com>
+ <1223280333-4383-6-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-ImuYZEynuPKA6IvnbjYp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch removes STATUS_CONF_PENDING usage that called from
+iwl4965_mac_config internally after scan completed.
 
-On Tue, 2008-10-28 at 22:07 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Tue, 28 Oct 2008 14:00:54 +0100
->=20
-> > Remove converting the MAC address to a string by a direct byte
-> > conversion and use %pM instead, since the code is now boilerplate
-> > use a macro to define the show functions, and also use the shorter
-> > __ATTR_RO macro to define the attributes.
-> >=20
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
-> > John, just FYI, it needs to go through net-next-2.6 since it depends on
-> > %pM. Won't cause conflicts either :)
->=20
-> I'll let John get this one.
+It's called anyway from the mac80211 ieee80211_scan_completed():
 
-Hmm. That means it won't get into 2.6.29 because John doesn't branch
-from your next tree but rather from Linus's tree, and thus we can't use
-%pM yet. I can resend then, doesn't matter much.
+	if (local->hw_scanning) {
+		local->hw_scanning = false;
+		if (ieee80211_hw_config(local))
+		...
+	}
 
-johannes
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   28 ----------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   23 +++++++++++++++++++++--
+ 3 files changed, 22 insertions(+), 32 deletions(-)
 
---=-ImuYZEynuPKA6IvnbjYp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJCE8HAAoJEKVg1VMiehFYCBUP/2p5AfshUhb/jMVo+0uIGVbg
-yZXiaqhM/PwowaMuHnkSg3N/wD9/xQdn/1h1fY6yhS2AA6paaxnV6ybNE4mZy+cB
-fw3FGnWUJPeo/JOPorFL263D/xiZMBN7MnSJ1/4tfqgfD2QC3trzlLAKFiKmGqbG
-+uHC6hQYAGuv6VsgUMOx8oMXX/zVEVOLBcrxczvgPB5AYrI1wwaCJyiZEWp2o/hz
-aPegF5xNF78aAmmclUaR4o3L25/eO0T2JYxHvdrk0ImU+8cjFzDKU5svC8QxGw0y
-r+CA5R1upIpbI91lomQHDRujs+PtpUa++SGF0cWmC8cGuAzHjnnUxv+qCpNjQUQE
-0exgAoG9N5WZpzdh9GoidXhhzcaVQflWNhE2Iac6OHUhcukootpdK9ZLRMPWoCG6
-LEhvxLDZOWnK5UofK4iUVA1eYOVgr6iqDwtHaH0haiWDw4q1soOhHabqV4Uh8l8L
-M54Sswy2nNxglHPXDeGpLXI4eM9/mRruk8SnqEfd9dz1rVXg7dsh+YM7dTJo11yC
-XX/ODxB30Ptl9FamFR9KWA7eih8faoF8npYgGBPvahFoQkD2kTeopO7DTtKPGYtV
-yTksL5JXZ/+hLBeOkwfUORGpLibS0H7eqQuI4pOyyUb5vQNSOH5f9hsDIJqsRyIq
-KPlkBozlspMlrGFOlxY4
-=IPiW
------END PGP SIGNATURE-----
-
---=-ImuYZEynuPKA6IvnbjYp--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 204abab..24a1aeb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2569,30 +2569,6 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
+ 
+ }
+ 
+-static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
+-
+-static void iwl_bg_scan_completed(struct work_struct *work)
+-{
+-	struct iwl_priv *priv =
+-	    container_of(work, struct iwl_priv, scan_completed);
+-
+-	IWL_DEBUG_SCAN("SCAN complete scan\n");
+-
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-		return;
+-
+-	if (test_bit(STATUS_CONF_PENDING, &priv->status))
+-		iwl4965_mac_config(priv->hw, ieee80211_get_hw_conf(priv->hw));
+-
+-	ieee80211_scan_completed(priv->hw);
+-
+-	/* Since setting the TXPOWER may have been deferred while
+-	 * performing the scan, fire one off */
+-	mutex_lock(&priv->mutex);
+-	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
+-	mutex_unlock(&priv->mutex);
+-}
+-
+ /*****************************************************************************
+  *
+  * mac80211 entry point functions
+@@ -2812,7 +2788,6 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
+ 	if (unlikely(!priv->cfg->mod_params->disable_hw_scan &&
+ 		     test_bit(STATUS_SCANNING, &priv->status))) {
+ 		IWL_DEBUG_MAC80211("leave - scanning\n");
+-		set_bit(STATUS_CONF_PENDING, &priv->status);
+ 		mutex_unlock(&priv->mutex);
+ 		return 0;
+ 	}
+@@ -2898,7 +2873,6 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 
+ out:
+-	clear_bit(STATUS_CONF_PENDING, &priv->status);
+ 	mutex_unlock(&priv->mutex);
+ 	return ret;
+ }
+@@ -4117,8 +4091,6 @@ static void iwl_setup_deferred_work(struct iwl_priv *priv)
+ 	INIT_DELAYED_WORK(&priv->init_alive_start, iwl_bg_init_alive_start);
+ 	INIT_DELAYED_WORK(&priv->alive_start, iwl_bg_alive_start);
+ 
+-	/* FIXME : remove when resolved PENDING */
+-	INIT_WORK(&priv->scan_completed, iwl_bg_scan_completed);
+ 	iwl_setup_scan_deferred_work(priv);
+ 	iwl_setup_power_deferred_work(priv);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 55a4b58..288b6a8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -333,8 +333,7 @@ void iwl_dump_nic_event_log(struct iwl_priv *priv);
+ #define STATUS_SCAN_HW		15
+ #define STATUS_POWER_PMI	16
+ #define STATUS_FW_ERROR		17
+-#define STATUS_CONF_PENDING	18
+-#define STATUS_MODE_PENDING	19
++#define STATUS_MODE_PENDING	18
+ 
+ 
+ static inline int iwl_is_ready(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 639904a..3b0bee3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -916,10 +916,29 @@ static void iwl_bg_abort_scan(struct work_struct *work)
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
++static void iwl_bg_scan_completed(struct work_struct *work)
++{
++	struct iwl_priv *priv =
++	    container_of(work, struct iwl_priv, scan_completed);
++
++	IWL_DEBUG_SCAN("SCAN complete scan\n");
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return;
++
++	ieee80211_scan_completed(priv->hw);
++
++	/* Since setting the TXPOWER may have been deferred while
++	 * performing the scan, fire one off */
++	mutex_lock(&priv->mutex);
++	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
++	mutex_unlock(&priv->mutex);
++}
++
++
+ void iwl_setup_scan_deferred_work(struct iwl_priv *priv)
+ {
+-	/*  FIXME: move here when resolved PENDING
+-	 *  INIT_WORK(&priv->scan_completed, iwl_bg_scan_completed); */
++	INIT_WORK(&priv->scan_completed, iwl_bg_scan_completed);
+ 	INIT_WORK(&priv->request_scan, iwl_bg_request_scan);
+ 	INIT_WORK(&priv->abort_scan, iwl_bg_abort_scan);
+ 	INIT_DELAYED_WORK(&priv->scan_check, iwl_bg_scan_check);
+-- 
+1.5.3.6
 
