@@ -1,85 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60456 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753497AbYJTMrn (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:46167 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434AbYJFMgN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 08:47:43 -0400
-Subject: Re: iwl3945 broken in current git
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dieter Ries <clip2@gmx.de>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <48FC7C67.3000101@gmx.de> (sfid-20081020_144142_792182_D8FF0F1C)
-References: <48FC6C05.6020901@gmx.de>
-	 <20081020121710.GA3607@isilmar.linta.de>
-	 (sfid-20081020_141718_690091_E56EF8AB) <1224506010.27899.23.camel@johannes.berg>
-	 <48FC7B1A.10307@gmx.de>
-	 (sfid-20081020_143609_718157_68144039) <1224506366.27899.25.camel@johannes.berg>
-	 <48FC7C67.3000101@gmx.de> (sfid-20081020_144142_792182_D8FF0F1C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nMD5bUTSq9XH0g6YRDLc"
-Date: Mon, 20 Oct 2008 14:47:38 +0200
-Message-Id: <1224506858.27899.27.camel@johannes.berg> (sfid-20081020_144808_564037_1566ABB2)
+	Mon, 6 Oct 2008 08:36:13 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1223296221.15196.6.camel@johannes.berg>
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 <1221123779.2513.88.camel@debian.sh.intel.com>
+	 <1221184060.11498.3.camel@californication>
+	 <1221185432.6695.0.camel@californication>
+	 (sfid-20080912_041007_653566_F8146EC3)  <1223296221.15196.6.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 06 Oct 2008 14:36:32 +0200
+Message-Id: <1223296592.11272.163.camel@violet.holtmann.net> (sfid-20081006_143617_999647_249E9C15)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
---=-nMD5bUTSq9XH0g6YRDLc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > I take this back. It took a couple of hours, but it crashed again.
+> 
+> Do you have 64k pages enabled? My issue goes away entirely when I
+> disable 64k pages.
 
-On Mon, 2008-10-20 at 14:41 +0200, Dieter Ries wrote:
-> Johannes Berg schrieb:
-> > On Mon, 2008-10-20 at 14:35 +0200, Dieter Ries wrote:
-> >> Johannes Berg schrieb:
-> >>> On Mon, 2008-10-20 at 14:17 +0200, Dominik Brodowski wrote:
-> >>>
-> >>>>> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> >>>>> iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq
-> >>>>> 0x4416 ser 0x0000004B
-> >>>>> iwl3945: Can't stop Rx DMA.
-> >>>> It needs a more recent uCode -- the driver really should scream out =
-loudly
-> >>>> that the old firmware no longer suffices.
-> >>> You could try reverting ef224ca2ce55e81acc6c3a74c3e8c00a00941c70, tha=
-t's
-> >>> the only commit I can find that seems to be vaguely related to the
-> >>> problem as Tomas described it. Not that it might not be hidden in som=
-e
-> >>> other commit...
-> >> The new firmware did it. It works now, but it should really scream out
-> >> loud ...
-> >=20
-> > Do you still have the old one? Would you try anyway?
->=20
-> OK I will. give me a minute ...
+so the initial issue was a BUG_ON when the ucode reports back an
+unsupported event. That should have been fixed by now since we just
+can't crash the whole kernel, because some piece of firmware acts bogus
+now and then. However there seems to be some other issues with me
+running a 64-bit OS and connecting to an N-capable access point.
 
-Wait. That commit can't be causing it, you're talking about 3945, sorry.
+Regards
 
-johannes
+Marcel
 
---=-nMD5bUTSq9XH0g6YRDLc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/H3mAAoJEKVg1VMiehFYl4IP/3BH7JQ+xEyXj8gXhgh3rM8s
-ImPObdvw2kDWVjPzoOSsXdEkHp0JUjlZGPoPf0NxhCjQNMcWipXh7E+VwiXT3IHO
-bJNZQ0881Dfkcvfptcep6uiQGq/jkf7nyu0xCgZ1ozXb/ybHQRACDo8LFE8FxqhN
-M0GJYNtlbvnmnrF4eZgyBI5/nWRMzhB8tCA0dIRUZGISPdkzizcD5LxcrxDnOs8f
-iW1DGUAuYjF35bG+avvAUXU565CZeIni1fcw5NmvVIbh0b2gwzygCUwF3sn8HBfk
-qGL2v3Irgu4mR763MkE8dFlShu4qc5BwE8EaO4wkhorQDhvSBdhWBkui8pfQ/O4d
-2WpJpTC9800qWUV+ssJA+6ZnAvnw5YWXLoDh+cDpk/xv4zP10aUwg667xiLXCI1U
-N8l0oYRHql2o9s9OFPFIRksWik4wdEXZsm45hdlsjNqZy0UhWXgKWNvQDJK8P9/M
-pv8nf1Me6yQMUgJmhby6cMZkPZAgwNrTg3EfehGVruWk1mQL08oi+lIsGnhoysi0
-Uku3h5t/KFGGyP8s62N7IJWSppAhH0OAvjBAt7zKA3LeCndRaH00LgaYAqjEYcBF
-tOpb1Sj7rCE/f9OskPSf+vc+dupWB9HUOgdBiFZx38xXGxyaD1FVXSaBbFzGQlWq
-gXh+VcEMiSAHmHIYu3un
-=HkaS
------END PGP SIGNATURE-----
-
---=-nMD5bUTSq9XH0g6YRDLc--
 
