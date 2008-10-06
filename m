@@ -1,129 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:44821 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752020AbYJ1Azz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 20:55:55 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 17:55:55 -0700
-Date: Mon, 27 Oct 2008 17:55:53 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Greg KH <greg@kroah.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Kernel <linux-kernel@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Joey Krane <linuxbsd2004@gmail.com>
-Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
-Message-ID: <20081028005553.GE6377@tesla> (sfid-20081028_015558_645113_F26B7951)
-References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> <20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com> <20081023111103.GB5979@tesla> <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com> <20081028002919.GB2992@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20081028002919.GB2992@kroah.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:42921 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752842AbYJFNFK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 09:05:10 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <1223298090.11272.167.camel@violet.holtmann.net>
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 <1221123779.2513.88.camel@debian.sh.intel.com>
+	 <1221184060.11498.3.camel@californication>
+	 <1221185432.6695.0.camel@californication>
+	 (sfid-20080912_041007_653566_F8146EC3)  <1223296221.15196.6.camel@johannes.berg>
+	 <1223296592.11272.163.camel@violet.holtmann.net>
+	 <1223296783.15196.13.camel@johannes.berg>
+	 <1223298090.11272.167.camel@violet.holtmann.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jY0v7xshbDkk6w/1MEaz"
+Date: Mon, 06 Oct 2008 15:04:38 +0200
+Message-Id: <1223298278.15196.16.camel@johannes.berg> (sfid-20081006_150515_048975_9E036112)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 27, 2008 at 05:29:19PM -0700, Greg KH wrote:
-> On Mon, Oct 27, 2008 at 04:35:11PM -0700, Luis R. Rodriguez wrote:
-> > On Thu, Oct 23, 2008 at 4:11 AM, Luis R. Rodriguez
-> > <lrodriguez@atheros.com> wrote:
-> > > On Wed, Oct 22, 2008 at 11:26:55PM -0700, Greg KH wrote:
-> > >> On Tue, Oct 21, 2008 at 11:50:45PM -0700, Greg KH wrote:
-> > >> > On Tue, Oct 21, 2008 at 07:04:17PM -0700, Luis R. Rodriguez wrote:
-> > >> > > We would like to see our Atheros 802.11n USB Linux driver upstream
-> > >> > > however we need help with this so we are releasing our Atheros 11n USB
-> > >> > > Otus Linux driver under the ISC to the community. The goal is to work
-> > >> > > with the community to help move this forward upstream. We are hoping
-> > >> > > for community help and leadership on this (*cough*).
-> > >> >
-> > >> > Yeah!
-> > >> >
-> > >> > I'll grab this and put it in drivers/staging/ so it gets some users and
-> > >> > more developers to help out with it.
-> > >>
-> > >> Ok, it seems to need some basic work to merely build properly on
-> > >> "modern" kernel versions.
-> > >
-> > > Yeah, it works up to 2.6.24.
-> >
-> > This is now fixed on the master branch, also the branch "for-upstream"
-> > does a lot of cleanup I thought you may like before stuffing it into
-> > staging like removing all KERNEL_VERSION checks, all wireless
-> > extensions checks, some compile warnings, removal of compat, dos2unix,
-> > use utf-8, etc. Unfortunately this still requires a specific version
-> > of wpa_supplicant but it seems it works. Not sure what bars you have
-> > for staging at this point.
-> 
-> Pretty much the only "bar" is "it compiles" :)
-> 
-> > Will you take this in, and expect patches for fixing it to use
-> > standard wext and also report standard wireless statistic (yeap, this
-> > is not there yet either).
-> 
-> Yes, I can do that.
 
-Excellent, if no one send patches I guess I will.
+--=-jY0v7xshbDkk6w/1MEaz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > Joey is one user which reported the driver working now with the
-> > compile fixes for newer kernels for 2.6.28-rc2 using the specific
-> > version of wpa_supplicant for it.
-> >
-> > Joey can you test the for-upstream branch on otus git?
-> 
-> If someone can tell me what device this is for, I can try to go buy it
-> so that I can verify changes I make don't drasticly break things.
+On Mon, 2008-10-06 at 15:01 +0200, Marcel Holtmann wrote:
 
-So we have a page for this now:
+> > I have a different interpretation of the original issue, since afaik th=
+e
+> > value it was doing a BUG_ON on is a value that is only passed in by the
+> > driver and copied by the ucode to the response, hence it shouldn't
+> > actually crash unless the driver is passing bogus stuff in or, as it
+> > seems to be the case here, the DMA programming is completely fucked and
+> > the ucode just goes to write to random memory locations.
+>=20
+> that patch wasn't enough, but neverless we shouldn't crash the whole
+> kernel based on this.
 
-http://wireless.kernel.org/en/users/Drivers/otus
+Well, I am undecided on yet; it appears that when the issue happens then
+the ucode may have written to arbitrary memory locations, if you don't
+have an iommu catching it then it may have corrupted anything in your
+kernel, so just crashing may be the only way to reasonably recover... I
+actually wrote the patch though to make it not crash, so I can hardly
+claim I didn't think it was a good idea to change that. But I think I've
+changed my mind based on further debugging of the issue.
 
-Init you can find a list of devices. Let me just paste what we have
-there now:
+> In addition they were working on some IOMMU stuff and that explains what
+> you are seeing. I never got that far at all. My machine just dies on me.
 
-Dlink
+Well, yes, without the patch my machine dies when loading iwlagn.
 
-    * DWA-160A1 
+> > > However there seems to be some other issues with me
+> > > running a 64-bit OS and connecting to an N-capable access point.
+> >=20
+> > Strange. My test AP isn't N capable though.
+>=20
+> We had some discussion about the fact the different firmware versions
+> might be causing this. Don't have my X61 handy at the moment.
 
-Netgear
+I don't even know which one I'm using, I think it's some firmware Tomas gav=
+e me.
 
-    * WNDA3100
-    * WN111v2 
+johannes
 
-TP-Link
+--=-jY0v7xshbDkk6w/1MEaz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-    * TL-WN821N 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-AVM
+iQIcBAABAgAGBQJI6gziAAoJEKVg1VMiehFYlo0QAMIpI0RzsJVMd0XPp6PGaOR1
+uzEKf+dwtl87arYrsKCZf042Rh7fk0/R6uOOG9OpUjTNYr/i6LN9Dg5qew5M9rwF
+JwiR9WFBtoicLbjc2qAXu2naoslFHsjFLcwFYxIyped+I80Kp3iYnt70IDbf6fEx
+ene0stEv5pFom4VTe8P+eaQVfkVnSp/Iudrtf7axDKOxVO7qhv0IgqXvuA99TreX
+xjaaAAJylp1HTeu0kFySsPIGRu6omVQEbklOl0X/4HmAUJleFDgHT14Z9ozvL1hB
+dz4NObm5d5S6ljZVGRQt8xscj+xInVC45j880sElEB1Zsfz+0rM9F0rcunF7v7ax
+8bejKhzfz4ZqHg4N2I6CYE4fEL7dsi6XSE+unu0C3bJwM71P9Ln+uLHiNz6u+lF7
+/DxEZJ/iHtCEe0jhu9/y+TeDYYzIM+JpBQiXHSDLFfHj9BH2acvyUax+KYEhs74R
+DiDeFOyVJUUWg9CNi0/IfA367yMed9eHhoXiiTvo5KDMG/IZC0q7GigNAkjE18Sv
+N0dyjrNXcsf1TGBJAoj7uy0kUq8MLQxtYP9dssRfC8lDo3s1Kz5pA8R4n0pNxQzN
+z/ddwd0sKshr/5HV+0h+6HX3uISYRZ3GI6PayV1X8rDeqtr0EGKnpJsr5TfOUwvg
+q+EjoTNvPHy+TlH+e/O1
+=IUXk
+-----END PGP SIGNATURE-----
 
-    * FRITZ!WLAN N USB Stick (USB ID 0x57c, 0x8401) 
+--=-jY0v7xshbDkk6w/1MEaz--
 
-> I'll go try to get this tree into a buildable state and put it into
-> staging tonight.
-
-Thanks! BTW if you add a kconfig option for it please point users with
-this info:
-
-This driver requires its own supplicant driver for
-wpa_supplicant 0.4.8. For your convenience you can find
-the tarball here:
-
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/otus/wpa_supplicant-0.4.8_otus.tar.bz2
-
-Before compiling wpa_supplicant, ensure your .config has atleast the
-following
-
-CONFIG_WIRELESS_EXTENSION=y
-CONFIG_EAP_WSC=y
-CONFIG_WSC_IE=y
-CONFIG_DRIVER_WEXT=y
-CONFIG_DRIVER_OTUS=y
-
-After a successful compile, you can use the device with wpa_supplicant
-as follows:
-
-wpa_supplicant -Dotus -i <atheros device from ifconfig> -c /path/to/wpa_supplicant.conf -d
-
-  Luis
