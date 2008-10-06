@@ -1,48 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpo-eml04.kpnxchange.com ([213.75.38.153]:28420 "EHLO
-	cpsmtpo-eml04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753874AbYJBUUb (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:46409 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755356AbYJFVjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 16:20:31 -0400
-Message-ID: <48E52D07.8050900@kpnplanet.nl> (sfid-20081002_222035_260539_19D08D89)
-Date: Thu, 02 Oct 2008 22:20:23 +0200
-From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+	Mon, 6 Oct 2008 17:39:51 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2083916fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 14:39:49 -0700 (PDT)
+Message-ID: <1ba2fa240810061439x219f5c0l2223c85042b39cee@mail.gmail.com> (sfid-20081006_234006_736866_E9E1E334)
+Date: Mon, 6 Oct 2008 23:39:49 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 5/7] iwlwifi: take a valid antenna upon rate scale init
+Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <20081006212511.GL3448@tuxdriver.com>
 MIME-Version: 1.0
-To: mcgrof@gmail.com
-CC: linux-wireless@vger.kernel.org
-Subject: Regulatory Framework & rt2x00.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com>
+	 <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
+	 <1223280333-4383-3-git-send-email-yi.zhu@intel.com>
+	 <1223280333-4383-4-git-send-email-yi.zhu@intel.com>
+	 <1223280333-4383-5-git-send-email-yi.zhu@intel.com>
+	 <1223280333-4383-6-git-send-email-yi.zhu@intel.com>
+	 <20081006212511.GL3448@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Mon, Oct 6, 2008 at 11:25 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Mon, Oct 06, 2008 at 04:05:31PM +0800, Zhu Yi wrote:
+>> From: Tomas Winkler <tomas.winkler@intel.com>
+>>
+>> This patch selects a valid antenna upon RS init. This solves a SYSASSERT
+>> complaining that the driver is setting a non valid antenna in the LQ CMD.
+>
+> I suppose this is an accurate description, but I think you can do
+> better. :-)
 
-I'm working on making rt2x00 use the regulatory framework to report its 
-EEPROM region settings to mac80211, and I have stumbled upon an issue 
-that I don't really know how to solve with the current regulatory 
-framework code.
+>
+>> diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+>> index c1300fb..56a3f0c 100644
+>> --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
+>> +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+>> @@ -811,10 +811,14 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+>>
+>>       switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+>>       case CSR_HW_REV_TYPE_5100:
+>> +             priv->hw_params.tx_chains_num = 1;
+>> +             priv->hw_params.rx_chains_num = 2;
+>> +             priv->hw_params.valid_tx_ant = ANT_B;
+>> +             priv->hw_params.valid_rx_ant = ANT_AB;
+>> +             break;
+>>       case CSR_HW_REV_TYPE_5150:
+>>               priv->hw_params.tx_chains_num = 1;
+>>               priv->hw_params.rx_chains_num = 2;
+>> -             /* FIXME: move to ANT_A, ANT_B, ANT_C enum */
+>>               priv->hw_params.valid_tx_ant = ANT_A;
+>>               priv->hw_params.valid_rx_ant = ANT_AB;
+>>               break;
+>
+> Do you realize that both clauses are the same (i.e. there is no
+> functional change)?  How is this useful?
 
-The problem I'm facing is that many of the Ralink devices have 2 region 
-settings in their EEPROM, one for 802.11a networks, and one for 
-802.11[bgn] networks. So far I have only seen devices where these two 
-settings contain the same region indication, but I don't know whether 
-this is the case for all devices.
+The change is tx_ant
 
-At this point in time I use the regulatory_hint function at driver 
-start-up time to communicate the region setting that matches the 
-configured band, but that would (probably) not hold up when the user 
-reconfigures the mode.
+>
+>> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+>> index d148d73..bac91f1 100644
+>> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+>> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+>> @@ -284,6 +284,16 @@ static inline u8 num_of_ant(u8 mask)
+>>               !!((mask) & ANT_C);
+>>  }
+>>
+>> +static inline u8 first_antenna(u8 mask)
+>> +{
+>> +     if (mask & ANT_A)
+>> +             return ANT_A;
+>> +     if (mask & ANT_B)
+>> +             return ANT_B;
+>> +     return ANT_C;
+>> +}
+>> +
+>> +
+>>  static inline u8 iwl4965_get_prev_ieee_rate(u8 rate_index)
+>>  {
+>>       u8 rate = iwl_rates[rate_index].prev_ieee;
+>> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+>> index 61797f3..f9efc0c 100644
+>> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
+>> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+>> @@ -852,7 +852,7 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, int is_ap)
+>>       struct iwl_link_quality_cmd link_cmd = {
+>>               .reserved1 = 0,
+>>       };
+>> -     u16 rate_flags;
+>> +     u32 rate_flags;
+>>
+>>       /* Set up the rate scaling to start at selected rate, fall back
+>>        * all the way down to 1M in IEEE order, and then spin on 1M */
+>> @@ -869,14 +869,16 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, int is_ap)
+>>                       rate_flags |= RATE_MCS_CCK_MSK;
+>>
+>>               /* Use Tx antenna B only */
+>> -             rate_flags |= RATE_MCS_ANT_B_MSK; /*FIXME:RS*/
+>> +             rate_flags |= first_antenna(priv->hw_params.valid_tx_ant) <<
+>> +                             RATE_MCS_ANT_POS;
+>
+> You need to change the comment...
 
-So, at this point in time I have the following questions:
-1. How would I be able to communicate both these settings to the 
-regulatory framework?
-2. Should I re-use regulator_hint whenever the configured band changes?
-3. Would a driver supplied region override a user configured setting 
-(via iw/crda)?
-
-I would appreciate your help in solving this issue.
-
----
-Gertjan van Wingerde
-rt2x00 project developer
-http://rt2x00.serialmonkey.com/
+Right
+> John
+> --
+> John W. Linville                Linux should be at the core
+> linville@tuxdriver.com                  of your literate lifestyle.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
