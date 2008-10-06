@@ -1,119 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:60955 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750782AbYJ0VDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 17:03:09 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Carlos R. Mafra" <crmafra2@gmail.com>
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Date: Mon, 27 Oct 2008 22:07:42 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Soeren Sonnenburg <kernel@nn7.de>,
-	linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37304 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753531AbYJFVkA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 17:40:00 -0400
+Date: Mon, 6 Oct 2008 17:39:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>, Greg KH <greg@kroah.com>,
+	Kalle Valo <kalle.valo@iki.fi>, proski@gnu.org,
 	linux-wireless@vger.kernel.org
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810272151.01244.rjw@sisk.pl> <20081027205204.GA4566@localhost.aei.mpg.de>
-In-Reply-To: <20081027205204.GA4566@localhost.aei.mpg.de>
+Subject: Re: at76_usb driver status
+Message-ID: <20081006213909.GN3448@tuxdriver.com> (sfid-20081006_234007_480745_1957549B)
+References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com> <20081005061603.GB28533@kroah.com> <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com> <20081006183520.GA17647@kroah.com> <1223323940.31717.3.camel@dhcp-100-3-195.bos.redhat.com> <20081006203118.GG3448@tuxdriver.com> <1223325748.3778.30.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200810272207.43498.rjw@sisk.pl> (sfid-20081027_220315_259526_8529A259)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1223325748.3778.30.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, 27 of October 2008, Carlos R. Mafra wrote:
-> On Mon 27.Oct'08 at 21:51:00 +0100, Rafael J. Wysocki wrote:
-> > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
-> > > On Mon 27.Oct'08 at 20:13:43 +0100, Johannes Berg wrote:
-> > > > On Mon, 2008-10-27 at 20:11 +0100, Carlos R. Mafra wrote:
-> > > > 
-> > > > > > Do you get any kernel messages output? If you do, could you put messages
-> > > > > > into each line of ieee80211_set_disassoc to see where it hangs?
-> > > > > 
-> > > > > No messages appear, just a black screen.
-> > > > > 
-> > > > > But I can use the SysRq keys, and when I umount the
-> > > > > screen shows the message that umount succeed. I also tried SysRq+t but
-> > > > > the messages appear to fast to read.
-> > > > 
-> > > > Ok, but that means you _can_ get messages, it would help a lot if you
-> > > > could put a few printks into the set_disassoc function before/after each
-> > > > other function call, so we know where exactly it hangs. Pretty much all
-> > > > of them could possibly hang if there is some sort of locking error
-> > > > happening or anything relies on userspace to be running...
-> > > 
-> > > Ok, I humbly tried to do that with the patch at the end of the email,
-> > > but I did not appear to hang in this function tough.
-> > > 
-> > > Somehow I could get some messages printed when it was a black screen
-> > > before (I think it has to do with the debug level I set with SysRq...)
-> > > and I could see all the printks I've put there. 
-> > > 
-> > > The good thing is that I could get the complete syslog of the boot until 
-> > > the it failed after suspending to RAM (in 2.6.28-rc2 with my debug patch
-> > > below applied). The last messages before the laptop become unresponsive
-> > > (except for the SysRq) were these ones:
-> > > 
-> > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:radio
-> > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:assoc
-> > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:RX
-> > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:TX
-> > > Oct 27 21:03:06 localhost kernel: before rcu_read_lock
-> > > Oct 27 21:03:06 localhost kernel: before netif_tx_stop_all_queues
-> > > Oct 27 21:03:06 localhost kernel: before netif_carrier_off
-> > > Oct 27 21:03:06 localhost kernel: before ieee80211_sta
-> > > Oct 27 21:03:06 localhost kernel: inside sef_disconnected 1
-> > > Oct 27 21:03:06 localhost kernel: before ieee8021_led_assoc
-> > > Oct 27 21:03:06 localhost kernel: before ieee8021_sta_send_apinfo
-> > > Oct 27 21:03:06 localhost kernel: before sta_info_unlink
-> > > Oct 27 21:03:06 localhost kernel: before rcu_read_unlock
-> > > Oct 27 21:03:06 localhost kernel: before sta_info_destroy
-> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Starting disk
-> > > Oct 27 21:03:06 localhost kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: configured for UDMA/100
-> > > Oct 27 21:03:06 localhost kernel: ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x9 t4
-> > > Oct 27 21:03:06 localhost kernel: ata1: irq_stat 0x00000040, connection status changed
-> > > Oct 27 21:03:06 localhost kernel: ata1: hard resetting link
-> > > Oct 27 21:03:06 localhost kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> > > Oct 27 21:03:06 localhost kernel: ata1.00: configured for UDMA/100
-> > > Oct 27 21:03:06 localhost kernel: ata1: EH complete
-> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
-> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
-> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
-> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
-> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> > > Oct 27 21:03:06 localhost kernel: Restarting tasks ... done.
-> > > Oct 27 21:03:07 localhost ifplugd(wlan0)[3182]: Link beat lost.
-> > > Oct 27 21:03:13 localhost ifplugd(wlan0)[3182]: Executing '/etc/ifplugd/ifplugd.action wlan0 down'.
-> > > Oct 27 21:06:20 localhost kernel: SysRq : Changing Loglevel
-> > > Oct 27 21:06:20 localhost kernel: Loglevel set to 4
-> > > Oct 27 21:06:22 localhost kernel: SysRq : Changing Loglevel
-> > > Oct 27 21:06:22 localhost kernel: Loglevel set to 6
-> > > Oct 27 21:06:32 localhost kernel: ffff80251670>] ? autoremove_wake_function+0x0/0x40
-> > > Oct 27 21:06:32 localhost kernel:  [<ffffffff8024e200>] ? worker_thread+0x0/0x110
-> > > Oct 27 21:06:32 localhost kernel:  [<ffffffff8025119d>] kthread+0x4d/0x80
-> > > Oct 27 21:06:32 localhost kernel:  [<ffffffff8020d1b9>] child_rip+0xa/0x11
-> > > 
-> > > and I have the complete trace also. I can try to put it somewhere in the web if it helps
-> > > (I already tried it, but I am new at the institute here and I could not set up my
-> > > webpage yet :-(
+On Mon, Oct 06, 2008 at 10:42:28PM +0200, Johannes Berg wrote:
+> On Mon, 2008-10-06 at 16:31 -0400, John W. Linville wrote:
+> > On Mon, Oct 06, 2008 at 04:12:20PM -0400, Dan Williams wrote:
+> > > On Mon, 2008-10-06 at 11:35 -0700, Greg KH wrote:
 > > 
-> > Please attach it to http://bugzilla.kernel.org/show_bug.cgi?id=11845 .
+> > > > I'll gladly drop it from drivers/staging when the "real" version hits
+> > > > mainline, until then, it should stay in staging, as that is the whole
+> > > > point of it.
+> > > 
+> > > It does nobody any good if (a) the drivers are _never_ going to go
+> > > upstream, and (b) if the drivers aren't going to get any attention in
+> > > their current form because of (a).
+> > > 
+> > > I don't care if the driver allows peoples hardware to work; I want a
+> > > driver that makes peoples hardware work _well_.  Out of tree drivers
+> > > that are never going upstream will not work well.
+> > 
+> > I think/thought the main point of -staging was to give drivers
+> > visibility in hopes of people working to fix them.
 > 
-> Done.
+> Shouldn't then the mac80211-based at76_usb be in -staging instead? That
+> one might not work completely, but at least it's fixable without a
+> rewrite.
 
-Hmm, this looks like a result of playing with the magic SysRq.  Did you try to
-press SysRq-something when the box became unresponsive?
+Yes, probably so.  That is what I had planned to send to Greg, but I
+was thinking that the version currently in wireless-testing probably
+won't compile against -staging (which is based on 2.6.27).
 
-Rafael
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
