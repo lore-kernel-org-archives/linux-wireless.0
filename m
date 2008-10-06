@@ -1,58 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:52038 "EHLO mout.perfora.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751423AbYJRNdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2008 09:33:36 -0400
-Subject: Re: 10-17-2008 Build issues - Intel 3945abg - Ubuntu Intrepid
-From: Myk Robinson <myk.robinson@kingdomcomputer.info>
-Reply-To: myk.robinson@kingdomcomputer.info
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224279527.11187.58.camel@rc-desk>
-References: <1224248117.28593.3.camel@mobileOne>
-	 <1224258314.11187.1.camel@rc-desk>  <1224271086.6775.8.camel@mobileOne>
-	 <1224279527.11187.58.camel@rc-desk>
-Content-Type: text/plain
-Date: Sat, 18 Oct 2008 08:33:29 -0500
-Message-Id: <1224336809.6934.1.camel@mobileOne> (sfid-20081018_153341_733710_6FC30EAE)
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:42915 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751559AbYJFSpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 14:45:33 -0400
+Date: Mon, 6 Oct 2008 11:35:20 -0700
+From: Greg KH <greg@kroah.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, proski@gnu.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: at76_usb driver status
+Message-ID: <20081006183520.GA17647@kroah.com> (sfid-20081006_204537_249054_C5455445)
+References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com> <20081005061603.GB28533@kroah.com> <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-10-17 at 14:38 -0700, reinette chatre wrote:
-> On Fri, 2008-10-17 at 14:18 -0500, Myk Robinson wrote:
-> > Sure will
+On Mon, Oct 06, 2008 at 11:23:13AM -0400, Dan Williams wrote:
+> On Sat, 2008-10-04 at 23:16 -0700, Greg KH wrote:
+> > On Sun, Oct 05, 2008 at 08:56:20AM +0300, Kalle Valo wrote:
+> > > Greg KH <greg@kroah.com> writes:
+> > > > In my quest to suck drivers into drivers/staging/ I noticed that the
+> > > > at76_usb driver is being shipped by both Fedora and Ubuntu in their
+> > > > kernels.
+> > > 
+> > > Yes, that's the original at76_usb driver which has it's own 802.11
+> > > stack. Pavel Rosking was the maintainer of that driver. Based on the
+> > > feedback in linux-wireless I then started porting the driver to use
+> > > mac80211. 
+> > > 
+> > > (Maybe I should have renamed the port to something else than at76_usb
+> > > because having two different drivers with the same name creates
+> > > confusion.)
+> > > 
+> > > > So I was wondering what the status of this driver is, and if I
+> > > > could/should add it to drivers/staging/?
+> > > 
+> > > The original at76_usb is working quite well, but it's unacceptable for
+> > > the mainline because we cannot have two 802.11 stacks in kernel.
 > > 
-> > Just curious, what can you tell me about the dmesg I posted? I don't
-> > understand much of it, that is just what I have learned to run right
-> > after stuff happens :)
+> > I understand this, but for the issue of the drivers/staging/ tree, it's
+> > ok for us to have as many 802.11 stacks in the kernel as we can cram in
+> > there :)
 > 
-> The log shows that the driver is loaded/unloaded a couple of times -
-> probably by wpa_supplicant. The details surrounding the error will
-> become clear when we get more debugging.
-> 
-> 
-> > As for the module, can you tell me how to autoload it with those
-> > parameters? Or should i jsut upon booting rmmod the module then reload
-> > it with your suggested parameters?
-> 
-> You could ask modprobe to load the module with parameters. perhaps
-> in /etc/modprobe.d/options. You could also use the rmmod/modprobe after
-> system reboot as you suggested. 
-> 
-> Reinette
+> Well, you have to ask yourself then, what's the point of putting that
+> driver with it's own 802.11 stack into staging when it's never going to
+> go into the mainline kernel until it uses mac80211?
 
-Here is some more output from dmesg with the module parameters loaded.
-SOrry if there is some output that you don't need in there too.
+Because at least 2 distros currently ship their kernels with it (Fedora
+and Ubuntu), and people have that hardware today and want to use it with
+Linux.
 
-http://pastebin.com/m47cf17c9
+> Doesn't that direct effort away from porting the driver to mac80211,
+> giving legitimacy to code that will never, ever get upstream until
+> it's substantially rewritten anyway?  Ideally we put Kalle's 802.11
+> port in staging and then people can actually move things forward.
+> 
+> Same thing for linux-wlan-ng really; if people just keep fixing bugs and
+> keep improving p80211 without porting it to the standard kernel wireless
+> bits, what's the point of having it in staging?
 
--- 
---
-Myk Robinson
-Computer Support Specialist
-Kingdom Computer Solutions
-http://www.kingdomcomputer.info
-myk.robinson@kingdomcomputer.info
-(731) 616.5030
+Users using their hardware with Linux today.
 
+I'll gladly drop it from drivers/staging when the "real" version hits
+mainline, until then, it should stay in staging, as that is the whole
+point of it.
+
+thanks,
+
+greg k-h
