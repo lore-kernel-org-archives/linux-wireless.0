@@ -1,76 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55278 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752399AbYJaQyb (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:14620 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752106AbYJFPVI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 12:54:31 -0400
-Message-ID: <490B3846.8030705@lwfinger.net> (sfid-20081031_175434_019764_48F91421)
-Date: Fri, 31 Oct 2008 09:54:30 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 6 Oct 2008 11:21:08 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so427269yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 08:21:07 -0700 (PDT)
+Message-ID: <eb3ff54b0810060821l75658922s6ed43ea763c448b8@mail.gmail.com> (sfid-20081006_172113_125952_C2436DCD)
+Date: Mon, 6 Oct 2008 17:21:07 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH 2/2] iwlwifi: fix compliation warning in iwl-scan.c when CONFIG_IWLWIFI_DEBUG is not set.
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	yi.zhu@intel.com
+In-Reply-To: <1ba2fa240810060742y7d0d4d24w984fe55be178e6d1@mail.gmail.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: htl10@users.sourceforge.net,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/6] rtl8187: Remove primitive write delays
-References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>
-In-Reply-To: <49088F7D.8020102@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <eb3ff54b0810060659n7d93a9fcla1301fa68a8a23a5@mail.gmail.com>
+	 <1ba2fa240810060742y7d0d4d24w984fe55be178e6d1@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each of the primary write routines, rtl8187_write_phy(),
-rtl8225_write_bitbang(), and rtl8225_write_8051() all conclude with an
-msleep() command. Testing shows that these are not needed.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Tested-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
----
-
-John,
-
-This is 2.6.29 material.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -152,8 +152,6 @@ void rtl8187_write_phy(struct ieee80211_
- 	rtl818x_iowrite8(priv, &priv->map->PHY[2], (data >> 16) & 0xFF);
- 	rtl818x_iowrite8(priv, &priv->map->PHY[1], (data >> 8) & 0xFF);
- 	rtl818x_iowrite8(priv, &priv->map->PHY[0], data & 0xFF);
--
--	msleep(1);
- }
-
- static void rtl8187_tx_cb(struct urb *urb)
-Index: wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_rtl8225.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
-@@ -64,7 +64,6 @@ static void rtl8225_write_bitbang(struct
-
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
--	msleep(2);
- }
-
- static void rtl8225_write_8051(struct ieee80211_hw *dev, u8 addr, __le16 data)
-@@ -98,7 +97,6 @@ static void rtl8225_write_8051(struct ie
-
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
--	msleep(2);
- }
-
- static void rtl8225_write(struct ieee80211_hw *dev, u8 addr, u16 data)
+Hello,
+Yes, now I found you are right;
+see:
+http://marc.info/?l=linux-wireless&m=122282784617899&w=2
 
 
+Regards,
+Rami Rosen
 
-
-
+On Mon, Oct 6, 2008 at 4:42 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Mon, Oct 6, 2008 at 3:59 PM, Rami Rosen <ramirose@gmail.com> wrote:
+>> When CONFIG_IWLWIFI_DEBUG is not set and CONFIG_IWLWIFI is set,
+>> we get this compilation warning:
+>> wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-scan.c:92: warning:
+>> 'iwl_escape_essid' defined but not used
+>>
+>> This patch (against wireless-next-2.6 tree) fixes it.
+>>
+> I believe there is queued patch that removes this code completely
+> Tomas
+>
