@@ -1,163 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.wellnetcz.com ([212.24.148.102]:60211 "EHLO
-	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096AbYJLUys (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.225]:57174 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754925AbYJFQwe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Oct 2008 16:54:48 -0400
-From: Jiri Slaby <jirislaby@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [PATCH 1/1] Ath5k: add AP mode
-Date: Sun, 12 Oct 2008 22:54:10 +0200
-Message-Id: <1223844850-26551-1-git-send-email-jirislaby@gmail.com> (sfid-20081012_225509_353909_DD298F95)
+	Mon, 6 Oct 2008 12:52:34 -0400
+Received: by wx-out-0506.google.com with SMTP id h27so614289wxd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 09:52:32 -0700 (PDT)
+Message-ID: <43e72e890810060952p6a9a7ae5i30bdda28f1a9fab8@mail.gmail.com> (sfid-20081006_185259_116669_13C1321C)
+Date: Mon, 6 Oct 2008 09:52:32 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+Cc: "Marcel Holtmann" <holtmann@linux.intel.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Tomas Winkler" <tomasw@gmail.com>
+In-Reply-To: <1223296783.15196.13.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 <1221123779.2513.88.camel@debian.sh.intel.com>
+	 <1221184060.11498.3.camel@californication>
+	 <1221185432.6695.0.camel@californication>
+	 <1223296221.15196.6.camel@johannes.berg>
+	 <1223296592.11272.163.camel@violet.holtmann.net>
+	 <1223296783.15196.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for AP mode. This involves:
-- enablement in ath5k_beacon_config -- initialize beacon timer
-- add AP to the supported modes in ath5k_add_interface
-- handle beacon change even for AP in ath5k_config_interface
-- remove useless test for IBSS in ath5k_beacon_update
+On Mon, Oct 6, 2008 at 5:39 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2008-10-06 at 14:36 +0200, Marcel Holtmann wrote:
+>> Hi Johannes,
+>>
+>> > > I take this back. It took a couple of hours, but it crashed again.
+>> >
+>> > Do you have 64k pages enabled? My issue goes away entirely when I
+>> > disable 64k pages.
+>>
+>> so the initial issue was a BUG_ON when the ucode reports back an
+>> unsupported event. That should have been fixed by now since we just
+>> can't crash the whole kernel, because some piece of firmware acts bogus
+>> now and then.
+>
+> I have a different interpretation of the original issue, since afaik the
+> value it was doing a BUG_ON on is a value that is only passed in by the
+> driver and copied by the ucode to the response, hence it shouldn't
+> actually crash unless the driver is passing bogus stuff in or, as it
+> seems to be the case here, the DMA programming is completely fucked and
+> the ucode just goes to write to random memory locations.
 
-Note that it doesn't enable the AP mode for the driver. It must
-be enabled by NL80211_IFTYPE_AP bit added to interface_modes.
+Seems like a good enough argument to call for it to be opened up.
 
-v2:
-Fixed opmode constant (IEEE80211_ to NL80211_)
-
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Luis R. Rodriguez <mcgrof@gmail.com>
----
- drivers/net/wireless/ath5k/base.c |   42 +++++++++++++++----------------------
- 1 files changed, 17 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 9b95c40..72b5e47 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -238,8 +238,7 @@ static int ath5k_get_tx_stats(struct ieee80211_hw *hw,
- 		struct ieee80211_tx_queue_stats *stats);
- static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
- static void ath5k_reset_tsf(struct ieee80211_hw *hw);
--static int ath5k_beacon_update(struct ieee80211_hw *hw,
--		struct sk_buff *skb);
-+static int ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb);
- 
- static struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
-@@ -2157,8 +2156,6 @@ ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf)
-  *
-  * In IBSS mode we use a self-linked tx descriptor if possible. We enable SWBA
-  * interrupts to detect TSF updates only.
-- *
-- * AP mode is missing.
-  */
- static void
- ath5k_beacon_config(struct ath5k_softc *sc)
-@@ -2171,7 +2168,8 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- 
- 	if (sc->opmode == NL80211_IFTYPE_STATION) {
- 		sc->imask |= AR5K_INT_BMISS;
--	} else if (sc->opmode == NL80211_IFTYPE_ADHOC) {
-+	} else if (sc->opmode == NL80211_IFTYPE_ADHOC ||
-+			sc->opmode == NL80211_IFTYPE_AP) {
- 		/*
- 		 * In IBSS mode we use a self-linked tx descriptor and let the
- 		 * hardware send the beacons automatically. We have to load it
-@@ -2183,13 +2181,15 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- 
- 		sc->imask |= AR5K_INT_SWBA;
- 
--		if (ath5k_hw_hasveol(ah)) {
--			spin_lock(&sc->block);
--			ath5k_beacon_send(sc);
--			spin_unlock(&sc->block);
--		}
-+		if (sc->opmode == NL80211_IFTYPE_ADHOC) {
-+			if (ath5k_hw_hasveol(ah)) {
-+				spin_lock(&sc->block);
-+				ath5k_beacon_send(sc);
-+				spin_unlock(&sc->block);
-+			}
-+		} else
-+			ath5k_beacon_update_timers(sc, -1);
- 	}
--	/* TODO else AP */
- 
- 	ath5k_hw_set_imr(ah, sc->imask);
- }
-@@ -2741,6 +2741,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- 	sc->vif = conf->vif;
- 
- 	switch (conf->type) {
-+	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_MONITOR:
-@@ -2804,7 +2805,7 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		ret = -EIO;
- 		goto unlock;
- 	}
--	if (conf->bssid) {
-+	if (conf->changed & IEEE80211_IFCC_BSSID && conf->bssid) {
- 		/* Cache for later use during resets */
- 		memcpy(ah->ah_bssid, conf->bssid, ETH_ALEN);
- 		/* XXX: assoc id is set to 0 for now, mac80211 doesn't have
-@@ -2812,18 +2813,16 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		ath5k_hw_set_associd(ah, ah->ah_bssid, 0);
- 		mmiowb();
- 	}
--
- 	if (conf->changed & IEEE80211_IFCC_BEACON &&
--	    vif->type == NL80211_IFTYPE_ADHOC) {
-+			(vif->type == NL80211_IFTYPE_ADHOC ||
-+			 vif->type == NL80211_IFTYPE_AP)) {
- 		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
- 		if (!beacon) {
- 			ret = -ENOMEM;
- 			goto unlock;
- 		}
--		/* call old handler for now */
--		ath5k_beacon_update(hw, beacon);
-+		ath5k_beacon_update(sc, beacon);
- 	}
--
- 	mutex_unlock(&sc->lock);
- 
- 	return ath5k_reset_wake(sc);
-@@ -3055,19 +3054,13 @@ ath5k_reset_tsf(struct ieee80211_hw *hw)
- }
- 
- static int
--ath5k_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
-+ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb)
- {
--	struct ath5k_softc *sc = hw->priv;
- 	unsigned long flags;
- 	int ret;
- 
- 	ath5k_debug_dump_skb(sc, skb, "BC  ", 1);
- 
--	if (sc->opmode != NL80211_IFTYPE_ADHOC) {
--		ret = -EIO;
--		goto end;
--	}
--
- 	spin_lock_irqsave(&sc->block, flags);
- 	ath5k_txbuf_free(sc, sc->bbuf);
- 	sc->bbuf->skb = skb;
-@@ -3080,7 +3073,6 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		mmiowb();
- 	}
- 
--end:
- 	return ret;
- }
- 
--- 
-1.6.0.2
-
+  Luis
