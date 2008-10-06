@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59420 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753963AbYJKWj6 (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:39136 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752565AbYJFUYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 18:39:58 -0400
-Subject: [PATCH] p54/rtl8187: fix up the seqno patch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Chr <chunkeey@web.de>,
+	Mon, 6 Oct 2008 16:24:08 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1131135nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 13:24:07 -0700 (PDT)
+Message-ID: <f6ca9fed0810061324v1cbfc538k98f5b49426b61f08@mail.gmail.com> (sfid-20081006_222414_293087_5414D939)
+Date: Mon, 6 Oct 2008 22:24:07 +0200
+From: drago01 <drago01@gmail.com>
+To: "Marcel Holtmann" <holtmann@linux.intel.com>
+Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+Cc: "Tomas Winkler" <tomasw@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John Linville" <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sun, 12 Oct 2008 00:39:55 +0200
-Message-Id: <1223764795.3581.2.camel@johannes.berg> (sfid-20081012_004000_437684_CE51D023)
-Mime-Version: 1.0
+In-Reply-To: <1223320354.11272.224.camel@violet.holtmann.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223311803.15196.36.camel@johannes.berg>
+	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
+	 <1223320354.11272.224.camel@violet.holtmann.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry about that, for some reason I didn't notice that I'd
-left some unused variables in there.
+On Mon, Oct 6, 2008 at 9:12 PM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+> Hi Tomas,
+>
+>> > This makes the code surrounding the last few things using
+>> > IWL_SET_BITS16 actually readable and removes the macros
+>> > so nobody will ever consider using them again.
+>> >
+>> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>>
+>> I don't want these macros eithers but I NACK any patches with cursing
+>> in the commit logs.
+>
+> did I miss an internal joke here? I fail to see the cursing ;)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/p54/p54common.c |    1 -
- drivers/net/wireless/rtl8187_dev.c   |    1 -
- 2 files changed, 2 deletions(-)
-
---- everything.orig/drivers/net/wireless/p54/p54common.c	2008-10-12 00:32:06.000000000 +0200
-+++ everything/drivers/net/wireless/p54/p54common.c	2008-10-12 00:32:07.000000000 +0200
-@@ -810,7 +810,6 @@ static int p54_tx(struct ieee80211_hw *d
- 	struct ieee80211_tx_queue_stats *current_queue;
- 	struct p54_common *priv = dev->priv;
- 	struct p54_control_hdr *hdr;
--	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
- 	struct p54_tx_control_allocdata *txhdr;
- 	size_t padding, len;
- 	u8 rate;
---- everything.orig/drivers/net/wireless/rtl8187_dev.c	2008-10-12 00:32:06.000000000 +0200
-+++ everything/drivers/net/wireless/rtl8187_dev.c	2008-10-12 00:32:07.000000000 +0200
-@@ -172,7 +172,6 @@ static int rtl8187_tx(struct ieee80211_h
- {
- 	struct rtl8187_priv *priv = dev->priv;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
- 	unsigned int ep;
- 	void *buf;
- 	struct urb *urb;
-
-
+he is talking about the "crap" in the subject ;)
