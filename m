@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:59018 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757203AbYJVTfL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 15:35:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 12:35:11 -0700
-Date: Wed, 22 Oct 2008 05:35:05 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from senator.holtmann.net ([87.106.208.187]:50363 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753685AbYJFNBN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 09:01:13 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Marcel Holtmann <holtmann@linux.intel.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless: update regulatory sample code
-Message-ID: <20081022123505.GI6190@tesla> (sfid-20081022_213516_232409_76FDBB17)
-References: <1224701752.30459.53.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1224701752.30459.53.camel@johannes.berg>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <1223296783.15196.13.camel@johannes.berg>
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 <1221123779.2513.88.camel@debian.sh.intel.com>
+	 <1221184060.11498.3.camel@californication>
+	 <1221185432.6695.0.camel@californication>
+	 (sfid-20080912_041007_653566_F8146EC3)  <1223296221.15196.6.camel@johannes.berg>
+	 <1223296592.11272.163.camel@violet.holtmann.net>
+	 <1223296783.15196.13.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 06 Oct 2008 15:01:30 +0200
+Message-Id: <1223298090.11272.167.camel@violet.holtmann.net> (sfid-20081006_150119_794981_847911AA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 11:55:52AM -0700, Johannes Berg wrote:
-> Update the same code for the recent changes. I did this as a
-> separate patch to avoid removing a lot of sample code only
-> to add it back again in the next patch.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  Documentation/networking/regulatory.txt |   19 ++++++++-----------
->  1 file changed, 8 insertions(+), 11 deletions(-)
-> 
-> --- everything.orig/Documentation/networking/regulatory.txt     2008-10-22 20:51:50.000000000 +0200
-> +++ everything/Documentation/networking/regulatory.txt  2008-10-22 20:54:12.000000000 +0200
-> @@ -131,7 +131,7 @@ are expected to do this during initializ
-> 
->         r = zd_reg2alpha2(mac->regdomain, alpha2);
->         if (!r)
-> -               regulatory_hint(hw->wiphy, alpha2, NULL);
-> +               regulatory_hint(alpha2);
-> 
->  Example code - drivers providing a built in regulatory domain:
+Hi Johannes,
 
-Should we mention how currently this should be avoided unless
-your regulatory definition is also intersected with hw capabilities
-and that the same channels are the ones that are registered to cfg80211?
+> > > > I take this back. It took a couple of hours, but it crashed again.
+> > > 
+> > > Do you have 64k pages enabled? My issue goes away entirely when I
+> > > disable 64k pages.
+> > 
+> > so the initial issue was a BUG_ON when the ucode reports back an
+> > unsupported event. That should have been fixed by now since we just
+> > can't crash the whole kernel, because some piece of firmware acts bogus
+> > now and then. 
+> 
+> I have a different interpretation of the original issue, since afaik the
+> value it was doing a BUG_ON on is a value that is only passed in by the
+> driver and copied by the ucode to the response, hence it shouldn't
+> actually crash unless the driver is passing bogus stuff in or, as it
+> seems to be the case here, the DMA programming is completely fucked and
+> the ucode just goes to write to random memory locations.
 
-  Luis
+that patch wasn't enough, but neverless we shouldn't crash the whole
+kernel based on this.
+
+In addition they were working on some IOMMU stuff and that explains what
+you are seeing. I never got that far at all. My machine just dies on me.
+
+> > However there seems to be some other issues with me
+> > running a 64-bit OS and connecting to an N-capable access point.
+> 
+> Strange. My test AP isn't N capable though.
+
+We had some discussion about the fact the different firmware versions
+might be causing this. Don't have my X61 handy at the moment.
+
+Regards
+
+Marcel
+
+
