@@ -1,79 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49867 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874AbYJUQlA (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.235]:5705 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753989AbYJFOMm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 12:41:00 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224607196.9386.91.camel@californication>
-References: <20081015112517.GF6509@tesla>
-	 <1224484685.18024.5.camel@johannes.berg>
-	 <43e72e890810192346q5e0eadbcm26febe45392a2172@mail.gmail.com>
-	 <1224485431.18024.12.camel@johannes.berg>
-	 <43e72e890810192359g2bc75316v49377ddc9eded934@mail.gmail.com>
-	 <1224487340.24677.192.camel@debian.sh.intel.com>
-	 <1224520999.9386.72.camel@californication>
-	 <1224552899.24677.245.camel@debian.sh.intel.com>
-	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
-	 <1224554323.24677.248.camel@debian.sh.intel.com>
-	 <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com>
-	 (sfid-20081021_043804_334625_50CEDAE0)  <1224572722.27899.87.camel@johannes.berg>
-	 <1224607196.9386.91.camel@californication>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9GWbxnyeh3eIQHUoH2+l"
-Date: Tue, 21 Oct 2008 18:40:44 +0200
-Message-Id: <1224607244.5521.22.camel@johannes.berg> (sfid-20081021_184104_159318_DCDE1BAE)
-Mime-Version: 1.0
+	Mon, 6 Oct 2008 10:12:42 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2975063rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 07:12:39 -0700 (PDT)
+Message-ID: <b6c5339f0810060712r24b0dfd8s6236e65304749572@mail.gmail.com> (sfid-20081006_161255_444381_9D467440)
+Date: Mon, 6 Oct 2008 10:12:38 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Elias Oltmanns" <eo@nebensachen.de>
+Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
+Cc: toralf.foerster@gmx.de, johannes@sipsolutions.net,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com
+In-Reply-To: <877i8nky65.fsf@denkblock.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200808101401.03339.toralf.foerster@gmx.de>
+	 <87od23mo08.fsf@denkblock.local>
+	 <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
+	 <20081002144600.M31352@bobcopeland.com>
+	 <87bpy32c1w.fsf@denkblock.local>
+	 <b6c5339f0810021137g3d93c5c8t5fa8fb3784294a86@mail.gmail.com>
+	 <20081003134648.M45120@bobcopeland.com>
+	 <87fxnd2112.fsf@denkblock.local>
+	 <20081003193739.M19356@bobcopeland.com>
+	 <877i8nky65.fsf@denkblock.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Oct 5, 2008 at 8:45 AM, Elias Oltmanns <eo@nebensachen.de> wrote:
+> "Bob Copeland" <me@bobcopeland.com> wrote:
+> Well, I'm just not too sure about that. Please note that I'm not
+> concerned about user space interfering too early in the resume process,
+> which is indeed prevented by the freezer. It's rather that user space
+> may initiate iface shutdown immediately before tasks are frozen and due
+> to heavy load or other unfortunate circumstances the kernel doesn't get
+> round to serve the request before suspend. When the system rsumes, the
+> kernel completes the iface shutdown procedure by calling ath5k_init().
 
---=-9GWbxnyeh3eIQHUoH2+l
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>From my reading of the code - kernel/power/process.c and kernel/power/main.c,
+all the processes on the run queue (except PF_NOFREEZE tasks) should be
+stopped before suspend_devices_and_enter is called, so even in your scenario,
+it shouldn't be rescheduled until thaw_processes() in suspend_finish() is
+called, at which point ->resume() has already happened.
 
-On Tue, 2008-10-21 at 18:39 +0200, Marcel Holtmann wrote:
+Nonetheless, I admit not being expert in this area, nor do I know if relying
+on the freezer is acceptable, so someone more clueful, please chime in.
 
-> I was more thinking about
->=20
-> 	regulatory_band_hint(band, structure)
->=20
-> and then you have to call it twice if you have 2.4 GHz and 5 GHz support
-> with your hardware. But your solution also works.
+Anyway, I don't really have any strong feelings either way, so I can post
+an update that adds the reinit flag, then Jiri or Nick can take their pick :)
+I probably won't get around to it until tonight, so if you want to go ahead
+and prepare a patch, feel free.  I think the boolean arguments to _init and
+_hw_stop should be symmetric though, so it's probably worth inverting the
+sense of the boolean passed to _hw_stop in my previous patch.
 
-It's more efficient with flags. I've posted patches.
-
-johannes
-
---=-9GWbxnyeh3eIQHUoH2+l
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/gYIAAoJEKVg1VMiehFY2tQQAIYELVd8NEj9SocR7bAAXY3N
-ZHkQKng6WuiXCiTrwr54IhQP6G9/yLkTloQnMCl5lWPreY2Pde0B0tfCQvoF8dhA
-eOW3KQWHITABmR/H7vBC9n4blEYqz/YNVrAWx+lBSsZwk7bmWtFfDwE6ERjpGwXD
-cFo7mLhlg/Q7n8ERKuz1Nh0xBAH36FSDqgXp0AmDIgZJhfye3l5/rwOppnVaNYML
-/YUX+cIBQhG7HzeZIX1MK+Wa7Y/YdJsV8DrOUYE1Lqwogsyhlj4+wDfWqiFNPYF0
-PlxGmIdsjCt57vVp+5/XvGvjIeVRbD7GCYQ7RHpwDNh+n9wpU9WTe9EHtlHx6e5J
-RUpBxoyabXxQ90xOrBYo4m+gUXpo/gQYkSlTWiZflr8YZQL2W0TFPQ9OoIIOsxR8
-PjBYSzaCe8VkwLxvQkuM2A9meHfJ22DxYWApShRNK7mkw9MfpOtbtu7tpa7rSY1Y
-hXyasnRyGEZARWfzQ8fLf+lqu7Htr/YGdAqNN8g1nqmHGdACZISdFlnyEAwhC1Fx
-aYNBUdAinuKEXz69r8OMe6Xz/qC9yHIQR+OUafnBeAN6edJF0j9Hgg+D6ScoZI7J
-z9FgLp64I27s+XvoYSFcdnumz8D6PjgWNZscAkphmDQk84wIZXEfwliLYn7On7i1
-qtUTDOaUazJNlC0AED66
-=DYSR
------END PGP SIGNATURE-----
-
---=-9GWbxnyeh3eIQHUoH2+l--
-
+-- 
+Bob Copeland %% www.bobcopeland.com
