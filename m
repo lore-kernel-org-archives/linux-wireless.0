@@ -1,84 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:40347 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750874AbYJCOme (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 10:42:34 -0400
-From: Elias Oltmanns <eo@nebensachen.de>
-To: "Bob Copeland" <me@bobcopeland.com>
-Cc: jirislaby@gmail.com, toralf.foerster@gmx.de,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-References: <200808101401.03339.toralf.foerster@gmx.de>
-	<200810012055.58085.toralf.foerster@gmx.de>
-	<87ej30m376.fsf@denkblock.local>
-	<b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
-	<87ljx8ndw1.fsf@denkblock.local>
-	<b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com>
-	<87od23mo08.fsf@denkblock.local>
-	<b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
-	<20081002144600.M31352@bobcopeland.com>
-	<87bpy32c1w.fsf@denkblock.local>
-	<b6c5339f0810021137g3d93c5c8t5fa8fb3784294a86@mail.gmail.com>
-	<20081003134648.M45120@bobcopeland.com>
-Date: Fri, 03 Oct 2008 16:42:17 +0200
-In-Reply-To: <20081003134648.M45120@bobcopeland.com> (Bob Copeland's message
-	of "Fri, 3 Oct 2008 10:13:33 -0400")
-Message-ID: <87fxnd2112.fsf@denkblock.local> (sfid-20081003_164238_731501_2005205C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from xc.sipsolutions.net ([83.246.72.84]:45960 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753056AbYJFNIG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 09:08:06 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <1223296359.15196.8.camel@johannes.berg> (sfid-20081006_143329_031518_3AA03EA8)
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 <1221123779.2513.88.camel@debian.sh.intel.com>
+	 <1221184060.11498.3.camel@californication>
+	 <1221185432.6695.0.camel@californication>
+	 (sfid-20080912_041007_653566_F8146EC3)  <1223296221.15196.6.camel@johannes.berg>
+	 (sfid-20081006_143057_986057_BC4A63C0)  <1223296359.15196.8.camel@johannes.berg>
+	 (sfid-20081006_143329_031518_3AA03EA8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-utES3URrO9auzgQf+tPQ"
+Date: Mon, 06 Oct 2008 15:07:35 +0200
+Message-Id: <1223298455.15196.18.camel@johannes.berg> (sfid-20081006_150810_157765_23C3C8AA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Bob Copeland" <me@bobcopeland.com> wrote:
-> On Thu, 2 Oct 2008 14:37:17 -0400, Bob Copeland wrote
->> On Thu, Oct 2, 2008 at 12:31 PM, Elias Oltmanns <eo@nebensachen.de> wrote:
->
->> > Sorry, but I don't think this is safe. Checking and restoring the
->> > started flag has to be protected too, otherwise there can be races
->> > against ->stop().
->> 
->> Yes, it's a bit of a mess.  Even if it were serialized, a ->stop()
->> happening between suspend's call to hw_stop and actually powering down
->> the device would clear the flag.  Ho hum.
->
-> Okay, as usual I'm wrong here; it will clear the flag but we don't care
-> since then we just wouldn't power up on resume.
->
-> Since no one else chimed in, here's take two with more chewing gum and 
-> baling wire to fix the suspend/stop race.
->
-> ---
->  drivers/net/wireless/ath5k/base.c |   24 +++++++++++++++++-------
->  drivers/net/wireless/ath5k/base.h |    3 ++-
->  2 files changed, 19 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index e09ed2c..7e8fa2e 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-[...]
-> @@ -666,9 +666,12 @@ ath5k_pci_resume(struct pci_dev *pdev)
->  		goto err_no_irq;
->  	}
->  
-> -	err = ath5k_init(sc);
-> -	if (err)
-> -		goto err_irq;
-> +	if (test_bit(ATH_STAT_STARTED, sc->status)) {
-> +		err = ath5k_init(sc);
 
-I still feel uneasy about this. Granted, I haven't thought this through
-too carefully, but I'd rather not rely on the fact that ath5k_stop_hw()
-will not get called between the check for ATH_STAT_STARTED and the call
-to ath5k_init if I can help it. Perhaps you can add an argument `reinit'
-to ath5k_init() and do something like this under the mutex:
+--=-utES3URrO9auzgQf+tPQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-	if (reinit && !test_bit(ATH_STAT_STARTED, sc->status)) {
-		mutex_unlock(...);
-		return;
-	}
+On Mon, 2008-10-06 at 14:32 +0200, Johannes Berg wrote:
+> On Mon, 2008-10-06 at 14:30 +0200, Johannes Berg wrote:
+> > On Fri, 2008-09-12 at 04:10 +0200, Marcel Holtmann wrote:
+> >=20
+> > > I take this back. It took a couple of hours, but it crashed again.
+> >=20
+> > Do you have 64k pages enabled? My issue goes away entirely when I
+> > disable 64k pages.
+>=20
+> Well, clearly not entirely. But it's holding up much better now.
+>=20
+> [  325.379292] iommu_free: invalid entry
 
-Regards,
+I added two printks to make it easier to look at:
 
-Elias
+[  736.879335] iommu_free: invalid entry
+[  736.890905] 	free_entry=3D 0xd6ec0
+[  736.902494] 	npages    =3D 0x1
+[  736.913864] 	entry     =3D 0xd6ec0
+[  736.925100] 	dma_addr  =3D 0xd6ec0100
+[  736.936116] 	Table     =3D 0xc00000000083f348
+[  736.947078] 	bus#      =3D 0x0
+[  736.957934] 	size      =3D 0x80000
+[  736.968775] 	startOff  =3D 0x0
+[  736.979574] 	index     =3D 0x0
+
+johannes
+
+--=-utES3URrO9auzgQf+tPQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI6g2TAAoJEKVg1VMiehFYtyIP/iKq6BXGuOYUtZMXPo27pEQy
+y/w0hqDoZzR0g4uPDtLMrcCvgcGYu1MZcDJZRUVjo1l5IGKgGhSSCJ7qaDfBGoqO
+KQYlpxVDahSDb2o8YipPm3S8VysRZqXl9yCtnUZNA+FzvsPTavJ+XmADcEzvlszS
+1sswW6m5qjtStuPLGrsQ5hJyrSL8UCEIznMJyhYKyebfMpj04HEiMKI17IKOCXn3
+NSUetANjDsVWhjtBW9PLs+NRCvy2LnGXP4c15TPDajWKZmzSvFe6kQcJ772rPdTC
+2NKN1zM2za8LYD3e8DeT+YckwQLASnH4pDpgKOX/s8fFiQGON4xBSa89ESE3TiJ/
+NkSarQCQJUXLxGI2nANEqB9jHxEGiFTlf0orLt3kvv1m/rCNCF2Z0y9t7kdLKU0W
+C0zFgfYmgt8bKzXwmHg5Rw0t3k2fmoRMOaazApM4BSpJ5PZp9k12lGybVvS86fkZ
+7UdjfxHBXMACFSh4X+Vdn7uQih0VO57w4mWAKatN9dLH2I38d7mKp9sSxTpJd+Kd
+7lN0YlkrUisTwutSPjcly17iPizbGKWSfmhQqrGcUOpZ6ZqLLqQDiYU7MN9Muj6O
+N/pm9e7Jq8D1h6F1IuOcWX69T5bGxedw1FxE6ZEQ3O6CJRxPVKGXmGPIETJ6uFhd
+dgr6PgcGdf+0cpbdRomn
+=FcLj
+-----END PGP SIGNATURE-----
+
+--=-utES3URrO9auzgQf+tPQ--
+
