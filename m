@@ -1,49 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:6927 "EHLO c60.cesmail.net"
+Received: from mx2.redhat.com ([66.187.237.31]:56646 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752285AbYJFF2R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 01:28:17 -0400
+	id S1751636AbYJFPYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 11:24:09 -0400
 Subject: Re: at76_usb driver status
-From: Pavel Roskin <proski@gnu.org>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Greg KH <greg@kroah.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <87d4ifsgg5.fsf@litku.valot.fi>
+From: Dan Williams <dcbw@redhat.com>
+To: Greg KH <greg@kroah.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, proski@gnu.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20081005061603.GB28533@kroah.com>
 References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com>
-	 <20081005061603.GB28533@kroah.com>  <87d4ifsgg5.fsf@litku.valot.fi>
+	 <20081005061603.GB28533@kroah.com>
 Content-Type: text/plain
-Date: Mon, 06 Oct 2008 01:28:14 -0400
-Message-Id: <1223270894.18180.7.camel@dv> (sfid-20081006_072822_780624_AD48DDD5)
+Date: Mon, 06 Oct 2008 11:23:13 -0400
+Message-Id: <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com> (sfid-20081006_172413_596480_AA50494C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-10-05 at 09:29 +0300, Kalle Valo wrote:
-
-> > So for now, if no one really screams, I'll put Pavel's driver into the
-> > drivers/staging/ tree so that users can use their devices.  When your
-> > driver is merged, we can merely delete this driver instead.
-> >
-> > Sound good?
+On Sat, 2008-10-04 at 23:16 -0700, Greg KH wrote:
+> On Sun, Oct 05, 2008 at 08:56:20AM +0300, Kalle Valo wrote:
+> > Greg KH <greg@kroah.com> writes:
+> > > In my quest to suck drivers into drivers/staging/ I noticed that the
+> > > at76_usb driver is being shipped by both Fedora and Ubuntu in their
+> > > kernels.
+> > 
+> > Yes, that's the original at76_usb driver which has it's own 802.11
+> > stack. Pavel Rosking was the maintainer of that driver. Based on the
+> > feedback in linux-wireless I then started porting the driver to use
+> > mac80211. 
+> > 
+> > (Maybe I should have renamed the port to something else than at76_usb
+> > because having two different drivers with the same name creates
+> > confusion.)
+> > 
+> > > So I was wondering what the status of this driver is, and if I
+> > > could/should add it to drivers/staging/?
+> > 
+> > The original at76_usb is working quite well, but it's unacceptable for
+> > the mainline because we cannot have two 802.11 stacks in kernel.
 > 
-> That sounds very good. User's benefit from this and that's what
-> counts.
+> I understand this, but for the issue of the drivers/staging/ tree, it's
+> ok for us to have as many 802.11 stacks in the kernel as we can cram in
+> there :)
+
+Well, you have to ask yourself then, what's the point of putting that
+driver with it's own 802.11 stack into staging when it's never going to
+go into the mainline kernel until it uses mac80211?  Doesn't that direct
+effort away from porting the driver to mac80211, giving legitimacy to
+code that will never, ever get upstream until it's substantially
+rewritten anyway?  Ideally we put Kalle's 802.11 port in staging and
+then people can actually move things forward.
+
+Same thing for linux-wlan-ng really; if people just keep fixing bugs and
+keep improving p80211 without porting it to the standard kernel wireless
+bits, what's the point of having it in staging?
+
+Dan
+
+> See my previous posts on lkml for details on the staging tree if you
+> have questions about it.
 > 
-> BTW, Pavel doesn't have time for at76 anymore. So if you have any
-> problems with Pavel's driver in the stating tree, I can help you.
+> So for now, if no one really screams, I'll put Pavel's driver into the
+> drivers/staging/ tree so that users can use their devices.  When your
+> driver is merged, we can merely delete this driver instead.
+> 
+> Sound good?
+> 
+> > > And, did you merge the USB DFU code into the driver itself?
+> > 
+> > Yes, someone implemented it in driver.
+> > 
+> > > Having that kind of functionality in the USB core is fine with me if
+> > > you want me to add that portion there, no reason it needs to be
+> > > burried in individual drivers.
+> > 
+> > USB DFU is a standard? So it seems:
+> > 
+> > http://wiki.openmoko.org/wiki/USB_DFU
+> > 
+> > Heh, I didn't know this. I though it was some Atmel proprietary
+> > interface :)
+> 
+> Oh yeah, I wrote portions of that spec, oh so long ago :)
+> 
+> > I might be interested in getting DFU into USB core, because I would
+> > like to learn more about USB. But first I need to get at76_usb stable.
+> 
+> Fair enough, patches are always welcome.
+> 
+> thanks,
+> 
+> greg k-h
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I'm not going to scream, and I'm not sure my opinion really matters, but
-I don't think it's a good idea to have two different drivers under the
-same name in different kernel trees.
-
-My preference is that we give a better exposure to the mac80211 based
-driver, so that potential contributors don't spend time on dead end
-code.
-
-Finally, I would prefer that my name is not used with either driver.
-The original driver was written by other people.  I just cleaned it up
-and fixed some bugs.
-
--- 
-Regards,
-Pavel Roskin
