@@ -1,34 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:4893 "EHLO
+Received: from yw-out-2324.google.com ([74.125.46.29]:63544 "EHLO
 	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbYJTXKm (ORCPT
+	with ESMTP id S1752389AbYJFPLm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 19:10:42 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so357093ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 16:10:41 -0700 (PDT)
-Message-ID: <43e72e890810201610r51145727l4e1dfb9d705d777d@mail.gmail.com> (sfid-20081021_011046_821921_5198D155)
-Date: Mon, 20 Oct 2008 16:10:40 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Evgeni Golov" <sargentd@die-welt.net>
-Subject: Re: [PATCH] crda: Fix the keys-gcrypt.c target and remove key.priv.pem on clean
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081020160138.C73681FD14@chi.die-welt.net>
+	Mon, 6 Oct 2008 11:11:42 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so426512ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 08:11:41 -0700 (PDT)
+Message-ID: <eb3ff54b0810060811p4798e4c0va59c5375d004f53d@mail.gmail.com> (sfid-20081006_171149_766512_15D136C5)
+Date: Mon, 6 Oct 2008 17:11:40 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH 1/2] iwlwifi: fix compliation warning in iwl-agn-rs.c when CONFIG_IWLWIFI_DEBUG is not set.
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	yi.zhu@intel.com
+In-Reply-To: <1ba2fa240810060741o35c8071ere77460305b88545c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081020160138.C73681FD14@chi.die-welt.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <eb3ff54b0810060658p2241a6d0k9c6f504d976e0f@mail.gmail.com>
+	 <1ba2fa240810060741o35c8071ere77460305b88545c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 9:01 AM, Evgeni Golov <sargentd@die-welt.net> wrote:
-> Hi,
+Hello,
+
+> I prefer marking it.
+> struct iwl_priv *priv = priv_r __maybe_unused;
+
+First of all , in order to compile, this should be:
+struct iwl_priv *priv __maybe_unused = priv_r;
+instead of:
+struct iwl_priv *priv = priv_r __maybe_unused;
+
+ Second, this is also a possible solution; looking at the function
+immediately above in the same file  (rs_clear() in iwl-agn-rs.c)
+we can see the same usage of #ifdef CONFIG_IWLWIFI_DEBUG
+and not __maybe_unused.
+I wonder: does the  "__maybe_unused" solution better than the #ifdef
+solution  in any aspect?
+
+Regards,
+Rami Rosen
+
+On Mon, Oct 6, 2008 at 4:41 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Mon, Oct 6, 2008 at 3:58 PM, Rami Rosen <ramirose@gmail.com> wrote:
+>> When CONFIG_IWLWIFI_DEBUG is not set and CONFIG_IWLWIFI is set,
+>> we get this compilation warning:
+>> /wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c: In
+>> function 'rs_free_sta':
+>> /wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:2425:
+>> warning: unused variable 'priv'
+>>
+>> This patch (against wireless-next-2.6 tree) fixes it.
+>>
 >
-> while trying to build CRDA I noticed, that key.priv.pem isn't
-> removed on clean. After patching this, CRDA stopped building with
-> *** No rule to make target `*.pem', needed by `keys-gcrypt.c'. Stop.
-> The keys-gcrypt.c target needed the same wildcard *.pem handling as the
-> keys-ssl.c target.
-> Patch against current crda git HEAD is attached.
-
-Thanks applied, please send other patches inline if possible.
-
-  Luis
+> I prefer marking it.
+> struct iwl_priv *priv = priv_r __maybe_unused;
+>
