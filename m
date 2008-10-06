@@ -1,105 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:48231 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754645AbYJ3RYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 13:24:44 -0400
-Date: Thu, 30 Oct 2008 18:24:33 +0100
-From: Mirco Tischler <mt-ml@gmx.de>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
-Message-ID: <20081030182433.0a4eb471@mtlp.12.dimension> (sfid-20081030_182450_643779_B084674A)
-In-Reply-To: <1225261084.2917.254.camel@debian.sh.intel.com>
-References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
-	<1225157618.2917.215.camel@debian.sh.intel.com>
-	<20081027213217.53558319@infradead.org>
-	<1225171414.2917.229.camel@debian.sh.intel.com>
-	<20081028172418.3c8e91f1@mtlp.12.dimension>
-	<1225261084.2917.254.camel@debian.sh.intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:58513 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411AbYJFTsw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 15:48:52 -0400
+Subject: p54 build failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Chr <chunkeey@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8fasM6eduyhzmFPdWSou"
+Date: Mon, 06 Oct 2008 21:48:21 +0200
+Message-Id: <1223322501.3778.20.camel@johannes.berg> (sfid-20081006_214855_267715_8A60821A)
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/FNi2SVqLL+xXLz2t0hTvAG0";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/FNi2SVqLL+xXLz2t0hTvAG0
-Content-Type: text/plain; charset=US-ASCII
+
+--=-8fasM6eduyhzmFPdWSou
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 29 Oct 2008 14:18:04 +0800, Zhu Yi wrote:
-> Can you try attached patch?
->=20
-> Thanks,
-> -yi
-I did. Didn't solve the problems but here's the output:
-[  880.195147] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux,1.3=
-.27kds=20
-[  880.195150] iwlagn: Copyright(c) 2003-2008 Intel Corporation
-[  880.195300] iwlagn 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ=
- 18
-[  880.195327] iwlagn 0000:06:00.0: setting latency timer to 64
-[  880.195444] iwlagn: Detected Intel Wireless WiFi Link 4965AGN REV=3D0x4
-[  880.245264] iwlagn: Tunable channels: 13 802.11bg, 19 802.11a channels
-[  880.247969] phy3: Selected rate control algorithm 'iwl-agn-rs'
-[  884.274477] iwlagn 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ=
- 18
-[  884.275247] iwlagn 0000:06:00.0: irq 41 for MSI/MSI-X
-[  884.275361] iwlagn 0000:06:00.0: firmware: requesting iwlwifi-4965-2.uco=
-de
-[  884.489886] Registered led device: iwl-phy3:radio
-[  884.489933] Registered led device: iwl-phy3:assoc
-[  884.489973] Registered led device: iwl-phy3:RX
-[  884.490012] Registered led device: iwl-phy3:TX
-[  884.526082] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  884.784601] iwlagn: TX Power requested while scanning!
-[  884.784611] Pid: 9839, comm: iwlagn/1 Not tainted 2.6.28-rc2-oldreg-debu=
-g #27
-[  884.784617] Call Trace:
-[  884.784632]  [<ffffffff8101a374>] ? native_smp_send_reschedule+0x4d/0x4f
-[  884.784658]  [<ffffffffa01c1082>] iwl4965_send_tx_power+0x5a/0xf2f [iwla=
-gn]
-[  884.784668]  [<ffffffff813c065c>] ? _spin_unlock_irqrestore+0x31/0x3c
-[  884.784677]  [<ffffffff8103341f>] ? try_to_wake_up+0x222/0x234
-[  884.784685]  [<ffffffff8103343e>] ? default_wake_function+0xd/0xf
-[  884.784693]  [<ffffffff8104ace2>] ? autoremove_wake_function+0x11/0x38
-[  884.784703]  [<ffffffff8102aee1>] ? __wake_up_common+0x46/0x76
-[  884.784710]  [<ffffffff813c065c>] ? _spin_unlock_irqrestore+0x31/0x3c
-[  884.784717]  [<ffffffff8102c04f>] ? __wake_up+0x43/0x4f
-[  884.784725]  [<ffffffff81047dff>] ? queue_work+0x59/0x68
-[  884.784735]  [<ffffffff81395eab>] ?ieee80211_mlme_notify_scan_completed+=
-0xc7/0xd9=20
-[  884.784743]  [<ffffffff81393708>] ? ieee80211_scan_completed+0x2e8/0x32c
-[  884.784770]  [<ffffffffa00d5425>] ? iwl_rx_queue_restock+0xc6/0x143 [iwl=
-core]
-[  884.784790]  [<ffffffffa00cf290>] iwl_set_tx_power+0x6b/0x71 [iwlcore]
-[  884.784812]  [<ffffffffa00de3f6>] iwl_bg_scan_completed+0xbc/0xcd [iwlco=
-re]
-[  884.784834]  [<ffffffffa00de33a>] ? iwl_bg_scan_completed+0x0/0xcd [iwlc=
-ore]
-[  884.784842]  [<ffffffff81047298>] run_workqueue+0x95/0x138
-[  884.784849]  [<ffffffff81047430>] worker_thread+0xf5/0x109=20
-[  884.784856]  [<ffffffff8104acd1>] ? autoremove_wake_function+0x0/0x38
-[  884.784864]  [<ffffffff8104733b>] ? worker_thread+0x0/0x109
-[  884.784871]  [<ffffffff8104a956>] kthread+0x49/0x76=20
-[  884.784879]  [<ffffffff8100d129>] child_rip+0xa/0x11=20
-[  884.784886]  [<ffffffff8104a90d>] ? kthread+0x0/0x76=20
-[  884.784892]  [<ffffffff8100d11f>] ? child_rip+0x0/0x11
+p54_parse_eeprom must not be static, or it fails to build on powerpc:
 
---Sig_/FNi2SVqLL+xXLz2t0hTvAG0
+drivers/net/wireless/p54/p54common.c:482: error:
+__ksymtab_p54_parse_eeprom causes a section type conflict
+
+
+johannes
+
+--=-8fasM6eduyhzmFPdWSou
 Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iEYEARECAAYFAkkJ7dgACgkQz+diZ7c2xfjNaQCfb6wFB9Fqf+edf0RAJduuuPP4
-8Z0AnRp8TH3oKdZlIJSiSpme/gN+noI8
-=EDpY
+iQIcBAABAgAGBQJI6muCAAoJEKVg1VMiehFY77YP/3QRSxwSrLwyRquotN/fm7gC
+JZmtLg3fmu2Vc/Fy1B6Yd69TCTJ36fJk3v+UgVvpC4xyj7PzEFH1JToXjCLwPXDc
+FyHddwaT9fQVG2Pq59yA6CKfghETu4g4jn6b23zYdZQ2fpcJXc2kpPZuPjeh3xvJ
+wgjun5gEvIYgj4Rb9dr+SkgF8PdDY8erlnBg6aPG+FKWbI/UGgspaa0AiQfogEtJ
+O3F6t0SfvEfbfPd4IZ7e5NC0OUNI1hSpQMIcNaBykRUjJsvqMahd60k/SUvDoC4T
+VdyLzWemTc7FctkKvtBxuCzgpcvIIr9o5W+kAQK9n0DwRTmUFRLOgua9WG8nTBAK
+MPrjMqI2iE8yPEpqoFu54OHqs3qPVoji//416R5MsJg3mQpYI6H3odr07yK08upa
+AiiKyY+4UeWnlNCk3+fuokj217jQoRnWby7BWAtmbNTKDV5ClTJwDc9j2BKt8JHE
+pM8Pi2Ci5lBawBk3wAj8U9307Yuc4FJRsUbZqV4yAfrBo9tysj+yjksSx7jWX+iA
+s/DNLiG63SQrkiOO/fWJjK2VCu8ZuVeGCKFa9PBP69GscWDv/o0OKwl2vucXi1HL
+axqYe5toPOjHbxT5ClCp8oAEL7ZQ+LaLJ/sTNFTru+s00xfmCco720JV6ppw4CY4
+EY5rzvpMA4fz5eBbS+9X
+=OCA4
 -----END PGP SIGNATURE-----
 
---Sig_/FNi2SVqLL+xXLz2t0hTvAG0--
+--=-8fasM6eduyhzmFPdWSou--
+
