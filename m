@@ -1,78 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:14774 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:54088 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750769AbYJTJdy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 05:33:54 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 02:33:54 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18684.20459.335157.171344@gargle.gargle.HOWL> (sfid-20081020_113410_151531_B726DAA0)
-Date: Mon, 20 Oct 2008 15:01:23 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"tomasw@gmail.com" <tomasw@gmail.com>
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-In-Reply-To: <1224493957.18024.47.camel@johannes.berg>
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	<1224491480.18024.32.camel@johannes.berg>
-	<18684.18492.94865.480736@gargle.gargle.HOWL>
-	<1224493957.18024.47.camel@johannes.berg>
+	id S1753531AbYJFUNQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 16:13:16 -0400
+Subject: Re: at76_usb driver status
+From: Dan Williams <dcbw@redhat.com>
+To: Greg KH <greg@kroah.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, proski@gnu.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20081006183520.GA17647@kroah.com>
+References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com>
+	 <20081005061603.GB28533@kroah.com>
+	 <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
+	 <20081006183520.GA17647@kroah.com>
+Content-Type: text/plain
+Date: Mon, 06 Oct 2008 16:12:20 -0400
+Message-Id: <1223323940.31717.3.camel@dhcp-100-3-195.bos.redhat.com> (sfid-20081006_221320_392191_1110A772)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Can you change your quote string from " > " to "> "? Just asking, if you
-> can't/don't want to that's fine, it just always confuses me for a
-> second. I really should try to figure out if I can convince my mailer to
-> highlight " > " indented text as quote too.
-
-Sure, adding (setq vm-included-text-prefix "> ") in my .emacs did the trick. :)
-
-> > Well, currently ath9k maintains a buffer list for each tid.
-> > When mac80211 sends down a frame, if the recipient has an aggr. session going,
-> > it is appended to the tid's buffer list. Non-HT frames are sent out immediately.
+On Mon, 2008-10-06 at 11:35 -0700, Greg KH wrote:
+> On Mon, Oct 06, 2008 at 11:23:13AM -0400, Dan Williams wrote:
+> > On Sat, 2008-10-04 at 23:16 -0700, Greg KH wrote:
+> > > On Sun, Oct 05, 2008 at 08:56:20AM +0300, Kalle Valo wrote:
+> > > > Greg KH <greg@kroah.com> writes:
+> > > > > In my quest to suck drivers into drivers/staging/ I noticed that the
+> > > > > at76_usb driver is being shipped by both Fedora and Ubuntu in their
+> > > > > kernels.
+> > > > 
+> > > > Yes, that's the original at76_usb driver which has it's own 802.11
+> > > > stack. Pavel Rosking was the maintainer of that driver. Based on the
+> > > > feedback in linux-wireless I then started porting the driver to use
+> > > > mac80211. 
+> > > > 
+> > > > (Maybe I should have renamed the port to something else than at76_usb
+> > > > because having two different drivers with the same name creates
+> > > > confusion.)
+> > > > 
+> > > > > So I was wondering what the status of this driver is, and if I
+> > > > > could/should add it to drivers/staging/?
+> > > > 
+> > > > The original at76_usb is working quite well, but it's unacceptable for
+> > > > the mainline because we cannot have two 802.11 stacks in kernel.
+> > > 
+> > > I understand this, but for the issue of the drivers/staging/ tree, it's
+> > > ok for us to have as many 802.11 stacks in the kernel as we can cram in
+> > > there :)
+> > 
+> > Well, you have to ask yourself then, what's the point of putting that
+> > driver with it's own 802.11 stack into staging when it's never going to
+> > go into the mainline kernel until it uses mac80211?
 > 
-> Incidentally, why the distinction between HT and non-HT frames?
-
-HT frames for aggregation enabled STAs are processed in the TX completion path, so
-they are buffered.
-
-> > On TX completion, we run through all the ACs, STAs and TIDs and send out pending
-> > frames as aggregates.
+> Because at least 2 distros currently ship their kernels with it (Fedora
+> and Ubuntu), and people have that hardware today and want to use it with
+> Linux.
 > 
-> So basically you can always have one frame or one aggregation
-> "pack" (for lack of a better word) queued to the hw?
+> > Doesn't that direct effort away from porting the driver to mac80211,
+> > giving legitimacy to code that will never, ever get upstream until
+> > it's substantially rewritten anyway?  Ideally we put Kalle's 802.11
+> > port in staging and then people can actually move things forward.
+> > 
+> > Same thing for linux-wlan-ng really; if people just keep fixing bugs and
+> > keep improving p80211 without porting it to the standard kernel wireless
+> > bits, what's the point of having it in staging?
 > 
+> Users using their hardware with Linux today.
+> 
+> I'll gladly drop it from drivers/staging when the "real" version hits
+> mainline, until then, it should stay in staging, as that is the whole
+> point of it.
 
-I am not sure, I should check.
+It does nobody any good if (a) the drivers are _never_ going to go
+upstream, and (b) if the drivers aren't going to get any attention in
+their current form because of (a).
 
-> > mac80211 can probably help by maintaining the TX state for each TID, maintain the
-> > buffer list, etc.  and provide appropriate mechanisms for drivers to obtain pending
-> > frames as and when needed.
-> 
-> Sure could. Intel's hw would probably like a way to say "stop this TID"
-> and "wake this TID" which is what they tried to do using real queues.
-> mac80211 could queue up the frames in per-station state and provide a
-> functions like
-> 
-> ieee80211_stop_aggr_stream(struct ieee80211_sta *sta, u8 tid);
-> ieee80211_wake_aggr_stream(struct ieee80211_sta *sta, u8 tid);
-> 
-> or something like that. Then those frames would flow into the right
-> queue. We might need a multi-layer start/stop management but we already
-> do, we've just managed to get away without it without tx stalls. Or they
-> just haven't been reported yet.
-> 
+I don't care if the driver allows peoples hardware to work; I want a
+driver that makes peoples hardware work _well_.  Out of tree drivers
+that are never going upstream will not work well.
 
-Makes sense, ath9k currently has a similar set of functions ( pausing/resuming TIDs).
-How would the pending frames for each TID be managed ?
-Will the driver be able to pull them as and when needed or would mac80211
-push them down on checking if the TID is awake ?
+Dan
 
-Sujith
