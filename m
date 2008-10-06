@@ -1,84 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:58988 "EHLO mx2.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:2848 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754003AbYJBUcw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 16:32:52 -0400
-Subject: Re: Agere Hermes source-code: copyright situation
-From: Dan Williams <dcbw@redhat.com>
-To: Greg KH <greg@kroah.com>
-Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
-	Dave <kilroyd@googlemail.com>, TJ <linux@tjworld.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Casual J. Programmer" <casualprogrammer@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	Alexander Shirshikov <alexander.shirshikov@gmail.com>
-In-Reply-To: <20081002200023.GC20902@kroah.com>
-References: <200809290949.35749.arvidjaar@mail.ru>
-	 <20081001200039.GA29874@kroah.com> <48E400FA.2090305@gmail.com>
-	 <200810020637.27321.arvidjaar@mail.ru>  <20081002200023.GC20902@kroah.com>
-Content-Type: text/plain
-Date: Thu, 02 Oct 2008 16:31:57 -0400
-Message-Id: <1222979517.12505.33.camel@72-58-93-37.area3.spcsdns.net> (sfid-20081002_223257_379869_3F18B909)
-Mime-Version: 1.0
+	id S1751659AbYJFILv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 04:11:51 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 2/7] iwlwifi: fix ct kill configuration for 5350
+Date: Mon,  6 Oct 2008 16:05:28 +0800
+Message-Id: <1223280333-4383-3-git-send-email-yi.zhu@intel.com> (sfid-20081006_101202_786718_D51FAAE5)
+In-Reply-To: <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
+References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com>
+ <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-10-02 at 13:00 -0700, Greg KH wrote:
-> On Thu, Oct 02, 2008 at 06:37:18AM +0400, Andrey Borzenkov wrote:
-> > TJ you can answer me using arvidjaar (at) newmail dot ru. Hopefully
-> > one of them works. Re WPA2 - there is no information how to setup
-> > CCMP/AES (even if firmware supports it); so no WPA2.
-> > 
-> > On Thursday 02 October 2008, Dave wrote:
-> > > Greg KH wrote:
-> > > > On Wed, Oct 01, 2008 at 05:40:29PM +0100, TJ wrote:
-> > > >> On Wed, 2008-10-01 at 14:13 +0400, Andrey Borzenkov wrote:
-> > > >>>On Wednesday 01 October 2008, Greg KH wrote:
-> > > >>>> On Mon, Sep 29, 2008 at 09:49:34AM +0400, Andrey Borzenkov wrote:
-> > > >>>>> I have here driver that can be built for two different types of
-> > > >>>>> hardware from basically the same sources (this is port of old Agere
-> > > >>>>> drivers for Hermes-I/Hermes-II chipsets).
-> > > >>>> 
-> > > >>>> Cool, do you have a link to the code, I'd be glad to add it to
-> > > >>>> drivers/staging/ if it's not in a fully-mergable state yet to get wider
-> > > >>>> users for it.
-> > > >>>
-> > > >>> You can look at it here: http://arvidjaar.newmail.ru/wlags49.tar.bz
-> > > >>>
-> > > >>> I doubt that it is suitable for inclusion at current state if ever.
-> > > >>> This is taken directly from Agere 2.4 sources; the only parts that were
-> > > >>> touched are kernel glue and wireless extensions interface.
-> > > >>>
-> > > >>> And it is not GPL'ed, of course. I attach E-Mail I received a while
-> > > >>> back with answere from Agere legal department.
-> > > >>
-> > > >> I'm attaching the original email I sent to Agere and their response for
-> > > >> the record, hoping it helps clarify the legal position.
-> > > > 
-> > > > Very nice, thanks for forwarding this on.
-> > > > 
-> > > > As the license is BSD, that means we can place it in the kernel tree.
-> > > > Do you all mind if I add it to the drivers/staging/ directory so you can
-> > > > work on cleaning it up within the main kernel tree infrastructure?
-> > >
-> > 
-> > I do not mind but it is likely makes no sense for H-I now; and
-> > I do not own H-II myself so cannot work on it. If we are focusing on
-> > H-2/2.5, it would make more sense to make similar modifications to
-> > 7.22 driver set from Agere to avoid overlap with Orinoco.
-> 
-> Ok, let me know what you think is the best thing to do, and I'll be glad
-> to help you out with it.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-I tend to think that only for USB hardware do we need a new driver, and
-that driver can share some things with both hostap and orinoco.  If at
-all possible, lets integrate missing hardware support into _existing_
-drivers instead of importing drivers of questionable quality.  I've seen
-wlags49 before and it's not great.  Right now we don't have any viable
-Orinoco USB driver, and while linux-wlan-ng was proposed, there's no way
-we're taking a third 802.11 "stack" or the bits in those drivers that
-overlap with existing drivers' hardware support.
+This patch fixes ct kill configuration for 5350.
 
-Dan
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index ba92667..c1300fb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -830,12 +830,12 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+ 	case CSR_HW_REV_TYPE_5100:
+ 	case CSR_HW_REV_TYPE_5300:
+-		/* 5X00 wants in Celsius */
++	case CSR_HW_REV_TYPE_5350:
++		/* 5X00 and 5350 wants in Celsius */
+ 		priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
+ 		break;
+ 	case CSR_HW_REV_TYPE_5150:
+-	case CSR_HW_REV_TYPE_5350:
+-		/* 5X50 wants in Kelvin */
++		/* 5150 wants in Kelvin */
+ 		priv->hw_params.ct_kill_threshold =
+ 				CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD);
+ 		break;
+-- 
+1.5.3.6
 
