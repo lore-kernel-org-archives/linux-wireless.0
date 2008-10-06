@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:14088 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752764AbYJ1MHy (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57908 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbYJFVm7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 08:07:54 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2572682wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 05:07:54 -0700 (PDT)
-Message-ID: <1ba2fa240810280507y36443ec0nb62e4e9896911473@mail.gmail.com> (sfid-20081028_130804_542588_4E6F4BFE)
-Date: Tue, 28 Oct 2008 14:07:53 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Jouni Malinen" <j@w1.fi>
-Subject: Re: [PATCH] mac80211: print reason code for deauth/dissoc frames
-Cc: "Zhu Yi" <yi.zhu@intel.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20081028120059.GM19710@jm.kir.nu>
+	Mon, 6 Oct 2008 17:42:59 -0400
+Date: Mon, 6 Oct 2008 17:42:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 5/7] iwlwifi: take a valid antenna upon rate scale init
+Message-ID: <20081006214220.GO3448@tuxdriver.com> (sfid-20081006_234303_614536_1061D04C)
+References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com> <1223280333-4383-2-git-send-email-yi.zhu@intel.com> <1223280333-4383-3-git-send-email-yi.zhu@intel.com> <1223280333-4383-4-git-send-email-yi.zhu@intel.com> <1223280333-4383-5-git-send-email-yi.zhu@intel.com> <1223280333-4383-6-git-send-email-yi.zhu@intel.com> <20081006212511.GL3448@tuxdriver.com> <1ba2fa240810061439x219f5c0l2223c85042b39cee@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1225180711-5204-1-git-send-email-yi.zhu@intel.com>
-	 <1ba2fa240810280431m21080a96i7655e67769cb1579@mail.gmail.com>
-	 <20081028120059.GM19710@jm.kir.nu>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240810061439x219f5c0l2223c85042b39cee@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2008 at 2:00 PM, Jouni Malinen <j@w1.fi> wrote:
-> On Tue, Oct 28, 2008 at 01:31:13PM +0200, Tomas Winkler wrote:
->
->> Do anyone has idea how to push it to the user space?
->> We already use ieee80211_sta_send_apinfo (SIOCGIWAP) for notification.
->> Can be reason code attached without breaking user space?  The
->> iwreq_data it self has enough space to add this and this can be queued
->> at the end.
->
-> Taken into account how broken WEXT events are already on 64/32-bit
-> systems, it would probably be better to add this as a new nl80211 event
-> which we will hopefully get in the near future. I'm looking for that to
-> fix the association info reporting, too (and issue that I fixed with
-> WEXT, but the fix was reverted due to userspace interop issues..).
+On Mon, Oct 06, 2008 at 11:39:49PM +0200, Tomas Winkler wrote:
+> On Mon, Oct 6, 2008 at 11:25 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
 
-Okay, thanks for the info. will look into nl direction.
-Tomas
+> >> diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+> >> index c1300fb..56a3f0c 100644
+> >> --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
+> >> +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+> >> @@ -811,10 +811,14 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+> >>
+> >>       switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+> >>       case CSR_HW_REV_TYPE_5100:
+> >> +             priv->hw_params.tx_chains_num = 1;
+> >> +             priv->hw_params.rx_chains_num = 2;
+> >> +             priv->hw_params.valid_tx_ant = ANT_B;
+> >> +             priv->hw_params.valid_rx_ant = ANT_AB;
+> >> +             break;
+> >>       case CSR_HW_REV_TYPE_5150:
+> >>               priv->hw_params.tx_chains_num = 1;
+> >>               priv->hw_params.rx_chains_num = 2;
+> >> -             /* FIXME: move to ANT_A, ANT_B, ANT_C enum */
+> >>               priv->hw_params.valid_tx_ant = ANT_A;
+> >>               priv->hw_params.valid_rx_ant = ANT_AB;
+> >>               break;
+> >
+> > Do you realize that both clauses are the same (i.e. there is no
+> > functional change)?  How is this useful?
+> 
+> The change is tx_ant
+
+Quite right.
+
+> > You need to change the comment...
+> 
+> Right
+
+Thanks.
+
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
