@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25150 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751140AbYJ2EuL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 00:50:11 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 21:50:11 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18695.60134.39883.499949@gargle.gargle.HOWL> (sfid-20081029_060857_882975_DA2DCECE)
-Date: Wed, 29 Oct 2008 10:17:34 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 11/16] ath9k: Remove unnecessary TSF reset
+Received: from senator.holtmann.net ([87.106.208.187]:59824 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbYJFSU7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 14:20:59 -0400
+Subject: Re: at76_usb driver status
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Dan Williams <dcbw@redhat.com>, Greg KH <greg@kroah.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"proski@gnu.org" <proski@gnu.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081006102302.GA6288@tesla>
+References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com>
+	 <20081005061603.GB28533@kroah.com>
+	 <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
+	 <20081006102302.GA6288@tesla>
+Content-Type: text/plain
+Date: Mon, 06 Oct 2008 20:21:17 +0200
+Message-Id: <1223317277.11272.222.camel@violet.holtmann.net> (sfid-20081006_202115_189231_C76E137E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TSF is already reset properly via mac80211's callback.
-Resetting it in config_interface() is not needed.
+Hi Luis,
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |   11 -----------
- 1 files changed, 0 insertions(+), 11 deletions(-)
+> > Well, you have to ask yourself then, what's the point of putting that
+> > driver with it's own 802.11 stack into staging when it's never going to
+> > go into the mainline kernel until it uses mac80211?
+> 
+> And provided that there is an alternative driver that uses mac80211. Die
+> out of tree drivers, die.
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index b349e91..d2b53b5 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1239,17 +1239,6 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
- 			/* Set aggregation protection mode parameters */
- 			sc->sc_config.ath_aggr_prot = 0;
- 
--			/*
--			 * Reset our TSF so that its value is lower than the
--			 * beacon that we are trying to catch.
--			 * Only then hw will update its TSF register with the
--			 * new beacon. Reset the TSF before setting the BSSID
--			 * to avoid allowing in any frames that would update
--			 * our TSF only to have us clear it
--			 * immediately thereafter.
--			 */
--			ath9k_hw_reset_tsf(sc->sc_ah);
--
- 			/* Disable BMISS interrupt when we're not associated */
- 			ath9k_hw_set_interrupts(sc->sc_ah,
- 					sc->sc_imask &
--- 
-1.6.0.3
+I can only second that. If it is a SoftMAC and not using mac80211 then
+it is not even worth it. We want the mac80211 ported driver to go
+upstream. Everything else is just waste of time.
+
+Regards
+
+Marcel
+
 
