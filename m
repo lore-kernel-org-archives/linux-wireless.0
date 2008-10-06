@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from basicbox7.server-home.net ([195.137.212.29]:46507 "EHLO
-	basicbox7.server-home.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690AbYJ1Hfp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59248 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752938AbYJFPL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 03:35:45 -0400
-Message-ID: <4906B944.4010105@leemhuis.info> (sfid-20081028_083550_035307_58424396)
-Date: Tue, 28 Oct 2008 08:03:32 +0100
-From: Thorsten Leemhuis <fedora@leemhuis.info>
-MIME-Version: 1.0
-To: Greg KH <greg@kroah.com>
-CC: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: rtl2860 driver in mainline?
-References: <20081028004915.GA3442@kroah.com>
-In-Reply-To: <20081028004915.GA3442@kroah.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 6 Oct 2008 11:11:28 -0400
+Subject: Re: [PATCH 0/4] multi-rate retry and the 'minstrel' rate control
+	for mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <48E8E48E.5090300@openwrt.org>
+References: <48E8E48E.5090300@openwrt.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bQ+4IPGfR1cLebSRSV7i"
+Date: Mon, 06 Oct 2008 17:10:54 +0200
+Message-Id: <1223305854.15196.26.camel@johannes.berg> (sfid-20081006_171146_098378_1D2C8A24)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28.10.2008 01:49, Greg KH wrote:
-> So, on my quest to suck up every out-of-tree driver and get it into the
-> main kernel tree (drivers/staging/ to start with), I've been pointed at
-> the rtl2860 driver.
 
-Does it really make sense to include a driver when a different one for 
-mainline inclusion is being actively developed? It might give some 
-developers the impression that it's worth spending time improving the 
-rtl2860/2870 drivers -- which might be wasted time in the end.
+--=-bQ+4IPGfR1cLebSRSV7i
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Does anyone know of a "cleaned up" version of this driver that is
-> newer/better than the one on ralink's web site?  I found the
-> 2008_0918_RT2860_Linux_STA_v1.8.0.0.tar.bz2 version there, and will
-> start with that if no one else has yet.
-> 
-> Any pointers are appreciated.
+On Sun, 2008-10-05 at 18:00 +0200, Felix Fietkau wrote:
+> Hi,
+>=20
+> Here are the new patches for multi-rate retry and the minstrel=20
+> rate control algorithm (ported from madwifi, mostly rewritten).
+> I've successfully tested minstrel on ath5k with and without MRR,
+> but it should be suitable for other drivers as well, as long as
+> they can set and report the number of tx retries properly.
+>=20
+> This series replaces my previous MRR patches.
 
-You can find a few patches (needed for 2.6.26 and 2.6.27 iirc; not sure 
-if they are enough to make it work on current mainline) for both rt2860 
-and rt2870 in CVS for RPM Fusion:
+Looks good to me, but I haven't looked at the algorithm in detail.
 
-http://cvs.rpmfusion.org/viewvc/rpms/rt2860-kmod/devel/?root=free
-http://cvs.rpmfusion.org/viewvc/rpms/rt2870-kmod/devel/?root=free
+johannes
 
-HTH
+--=-bQ+4IPGfR1cLebSRSV7i
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-CU
-knurd
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI6ip7AAoJEKVg1VMiehFYcXQQAI33rEW7TF9XNxk/eiafSWIp
+x/jY0dHUybWq2UE7eMJdDZ/DCtVB9W9iPJ8TfQ4YCwUOMNFctf4obuHY1oG3tIrD
+og/d+jBVQh06YNnsoDdDWUVGZ0KeyBdivl2wYgoQ8MdB63F2XmdCdAAZ62s+i/SE
+KU0zGOmVC05KP192pEXsRI9+QOCTnRIPNKj8HZJjHLHGaGE9tKpQ1Tc8wJtDJS67
+GMKaNUGCvWIATe++sqTqM0ruu9kDHMlXBjNYdmddPFNN8Jm7U3bPpTiWsj8lF9xh
+Oe2sHUUsDkLV2FP4pgIVPhnFnF9YWKFiSJMJQRk/xdt1BwUv/6hqmc6XG80DJ+VA
+uSxYEJvG9Q88judp7PDkCjjxTfuGOvIqKRt2Bn070zH8JxY/LgrdFA+rxV8ujB2U
+NInEUklhDiTZdaWhP0JGNHV0FHMT274sgba0z+aiFs4NK2+0haocoPNY+SvsE/ko
+aYl70h/GlKQLb4Tpqcacs/9GJKEQZ2C/n+hKIi2nGIe2hXEZflf5eIlTrI6xNOg4
+IERJt3gCXRlLSIf2RsGcnP9Vu5NQj6AsW7Or/+OixioFNal22JzHjuyxiRE2NVZN
+fIVvblSbgcY0CMCEiJcfvDIn0qG+MJfRLNmsaOWgBgpmftybzUqKFq5xkiJX8rQn
+l6JQkvWYyNzuf/SKeAlK
+=/qAX
+-----END PGP SIGNATURE-----
+
+--=-bQ+4IPGfR1cLebSRSV7i--
+
