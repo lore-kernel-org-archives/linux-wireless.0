@@ -1,42 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta01.emeryville.ca.mail.comcast.net ([76.96.30.16]:60220 "EHLO
-	QMTA01.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750879AbYJSFvg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50375 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752159AbYJFLkw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 01:51:36 -0400
-Message-ID: <48FACA7E.3070503@gentoo.org> (sfid-20081019_075218_479774_8C116146)
-Date: Sun, 19 Oct 2008 08:49:50 +0300
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: Mattias Nissler <mattias.nissler@gmx.de>
-CC: Ivo van Doorn <ivdoorn@gmail.com>,
-	=?ISO-8859-1?Q?Mikko_Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	kune@deine-taler.de
-Subject: Re: ACK matching [was: TX status reporting with help of an ack queue]
-References: <1221494693.14102.22.camel@virkkmi-linux>	 <1221505251.4511.77.camel@localhost>	 <1221541089.14102.44.camel@virkkmi-linux>	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost> <1221776990.4563.19.camel@localhost>
-In-Reply-To: <1221776990.4563.19.camel@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 6 Oct 2008 07:40:52 -0400
+Subject: Re: [PATCH] Working packet injection patch for ipw2200 - enables
+	aireplay-ng and others to work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Paul <paul14075@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1223285497.2510.732.camel@debian.sh.intel.com>
+References: <7d553cf40809271345n3a945091u6c341e65c51811d5@mail.gmail.com>
+	 <1222571710.2510.587.camel@debian.sh.intel.com>
+	 <7d553cf40809280059v454023eaxc8a570fb6d4efcf@mail.gmail.com>
+	 <7d553cf40809281228l13414507xc11e8e592493e43@mail.gmail.com>
+	 <1223284316.2510.721.camel@debian.sh.intel.com>
+	 (sfid-20081006_111343_274436_FA74EFEC)  <1223284624.24551.91.camel@johannes.berg>
+	 <1223285497.2510.732.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CkMj+nSx0Fyenv8w5Jcp"
+Date: Mon, 06 Oct 2008 13:40:14 +0200
+Message-Id: <1223293214.15196.0.camel@johannes.berg> (sfid-20081006_134056_801704_B5D48135)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mattias Nissler wrote:
-> I wonder whether the ack queue idea Mikko found in the zd1211rw driver
-> is actually working correctly for that driver? I've only had a short
-> look, but found that incoming ACKs are only matched against transmitted
-> frames by means of the address carried within the ACK. So I'd think in
-> the situation I outlined above, the zd1211rw driver will also be unable
-> to match the ACK to the correct frame. Any comments on this?
 
-It is known not-quite-correct and an area of the code that I personally 
-dislike. However, without it, rate control does not work at all, so it 
-is better than not having it. (my personal preference would be for a RC 
-algo which does not require input of successful TX frames, but I have 
-not stepped up to design or do the work...)
-The code that also keeps the USB TX queue to reasonable size also relies 
-on it, and in that case the inaccuracies are also not important.
+--=-CkMj+nSx0Fyenv8w5Jcp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Daniel
+On Mon, 2008-10-06 at 17:31 +0800, Zhu Yi wrote:
+> On Mon, 2008-10-06 at 03:17 -0600, Johannes Berg wrote:
+> >=20
+> > how about making use of cfg80211 to create the monitor interface to
+> > start with?
+>=20
+> Nice try. It is not a mac80211 based driver.=20
+
+I know.
+
+> I don't know how much
+> effort it takes. But it will be great if it works.=20
+
+Well it's surely possible, just register a wiphy and implement the
+callbacks you want like mac80211 does in net/mac80211/cfg.c.
+
+> Maybe we can also
+> replace ieee80211 with cfg80211 or lib80211 in the future? ;-)
+
+Not really, though internalising ieee80211 into the ipw drivers would be
+good.
+
+johannes
+
+--=-CkMj+nSx0Fyenv8w5Jcp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI6fkaAAoJEKVg1VMiehFY3Y4P/i1ltewrEwqa79l5uzpLw06S
+jZWF+je9kxTJh6E1V1r2FQ79VV8wXgIAAdRSWvSd0lFOPBXzvFLoZglatvD19d7a
+OnlJ4rp6z0DBXeQkAQc1mtg1WIUbYr0n38QCf6stIdvrIIjSDdBcKNGK7avu7vmz
+9paYtIm158WC1tzAy76bXXIiD3Meq+vOyTzhQdX2W7UMtXa8TK9ynbUiekI1DCNb
+l62/ny4u1yeBgSUaVN7we+kQRmZ9K/+SYYZLg1PanjvWM9HhBw2ChewNYOmBZ9XU
+YcGaJIlZvyOCVbN44iQVsqBkO5HRVVWJfPUbThIb0agSbL1Z46LVdP3T9r3fjjlV
+6H2kf48ulWM6zC355JdMMFBCA7kPce0bpP3AxnPGrPH7XyZ5BknN5pgLHngMPu+R
+QW+jhSZEmWXvDY3TnSduca6Lf/rzeAaPHneufCtgBRaJHElg/KhFgaGXekF3SXbr
+9W9Kt6gvQTmg9JiwAeoIJB4uu1ckH22ru+C8xSzOYHeoRIb9lUeCsj4hEe8RfbXv
+Ca/4RRNPNK8R1c98yAvScdJn9t0ukcfJd4WEajkxNb691v6gyPY7Q6AhwmRelCwY
+f7v4nzT6fqGbzz1O5Y0jcmUhzOHIAAhgfEPx+2YkHaLIdrustXZKO82p7+Hznifj
+wtSWtLhXocnbPRQF5J5p
+=SpUW
+-----END PGP SIGNATURE-----
+
+--=-CkMj+nSx0Fyenv8w5Jcp--
+
