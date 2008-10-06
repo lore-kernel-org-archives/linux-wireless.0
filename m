@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:36209 "EHLO ds10.mine.nu"
+Received: from mail.atheros.com ([12.36.123.2]:34907 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753382AbYJJAzd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 20:55:33 -0400
-Message-ID: <48EEA7F7.6020508@openwrt.org> (sfid-20081010_025535_783817_65BCAE42)
-Date: Fri, 10 Oct 2008 02:55:19 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752641AbYJFRXP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 13:23:15 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 10:23:15 -0700
+Date: Mon, 6 Oct 2008 03:23:02 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Dan Williams <dcbw@redhat.com>
+CC: Greg KH <greg@kroah.com>, Kalle Valo <kalle.valo@iki.fi>,
+	"proski@gnu.org" <proski@gnu.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: at76_usb driver status
+Message-ID: <20081006102302.GA6288@tesla> (sfid-20081006_192317_319477_DC3699AD)
+References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com> <20081005061603.GB28533@kroah.com> <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH 1/2] mac80211: detect hardware rate fallback for non-MRR hardware
-References: <48EEA7A4.2020303@openwrt.org>
-In-Reply-To: <48EEA7A4.2020303@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes tx status processing for drivers that do not support mrr.
-If the retry count is bigger than the maximum retry count configured in
-the hardware, do not count the rate attempt as successful, the hardware
-has probably switched to a lower rate.
+On Mon, Oct 06, 2008 at 08:23:13AM -0700, Dan Williams wrote:
+> Well, you have to ask yourself then, what's the point of putting that
+> driver with it's own 802.11 stack into staging when it's never going to
+> go into the mainline kernel until it uses mac80211?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+And provided that there is an alternative driver that uses mac80211. Die
+out of tree drivers, die.
 
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -171,6 +171,7 @@ minstrel_tx_status(void *priv, struct ie
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_altrate *ar = info->status.retries;
- 	struct minstrel_priv *mp = priv;
-+	struct ieee80211_local *local = hw_to_local(mp->hw);
- 	int i, ndx, tries;
- 	int success = 0;
- 
-@@ -180,6 +181,13 @@ minstrel_tx_status(void *priv, struct ie
- 	if (!mp->has_mrr || (ar[0].rate_idx < 0)) {
- 		ndx = rix_to_ndx(mi, info->tx_rate_idx);
- 		tries = info->status.retry_count + 1;
-+
-+		/* If the driver does not support the MRR API, but uses
-+		 * a fallback rate, use the long retry limit as indication
-+		 * that a rate switch has happened */
-+		if (!mp->has_mrr && (tries >= local->long_retry_limit))
-+			success = 0;
-+
- 		mi->r[ndx].success += success;
- 		mi->r[ndx].attempts += tries;
- 		return;
+  Luis
