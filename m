@@ -1,73 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53028 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752586AbYJVRGm (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:33282 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752248AbYJFTMS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 13:06:42 -0400
-Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jouni Malinen <j@w1.fi>, Jouni Malinen <jouni.malinen@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+	Mon, 6 Oct 2008 15:12:18 -0400
+Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	John Linville <linville@tuxdriver.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <48FF5933.3080501@lwfinger.net> (sfid-20081022_184755_577051_32659A3C)
-References: <48FDFCCA.8040604@lwfinger.net>
-	 <20081022072840.GD16005@jm.kir.nu>  <48FF5933.3080501@lwfinger.net>
-	 (sfid-20081022_184755_577051_32659A3C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1GFXvLdUWAt+Uo86/Kb7"
-Date: Wed, 22 Oct 2008 19:06:29 +0200
-Message-Id: <1224695189.30459.6.camel@johannes.berg> (sfid-20081022_190645_764834_17371811)
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
+References: <1223311803.15196.36.camel@johannes.berg>
+	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 06 Oct 2008 21:12:34 +0200
+Message-Id: <1223320354.11272.224.camel@violet.holtmann.net> (sfid-20081006_211226_969259_9507B5E9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Tomas,
 
---=-1GFXvLdUWAt+Uo86/Kb7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > This makes the code surrounding the last few things using
+> > IWL_SET_BITS16 actually readable and removes the macros
+> > so nobody will ever consider using them again.
+> >
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> I don't want these macros eithers but I NACK any patches with cursing
+> in the commit logs.
 
-On Wed, 2008-10-22 at 09:47 -0700, Larry Finger wrote:
+did I miss an internal joke here? I fail to see the cursing ;)
 
-> When a utility starts spitting messages that it doesn't understand what t=
-he
-> kernel is providing _AND_ the commit message does not mention that this w=
-ill
-> happen, can someone be blamed for thinking it is a bug?
+Regards
 
-Heh, no, not really. It was fairly obvious us, but I guess we were just
-routine-blinded.
+Marcel
 
-> Clearly this is not a regression. Are there plans to update the wireless =
-utilities?
-
-I suspect it could just be made to ignore them. Or skip a select few,
-but obviously it will never be able to parse all of them...
-
-johannes
-
---=-1GFXvLdUWAt+Uo86/Kb7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/12RAAoJEKVg1VMiehFYRQoP/0dTv6PJuwpCwwH8CEzDT6sM
-kc9m7SyYTK6x78KHzwXZT6npbntMTdkFtT/tXPkcGhqqHE6YboqRl0pkEDWg+FnE
-tg/ZmS7IYxmFE+pbqC8iZSHf1OKKycMK96sipj5baKaxEQH25hZdWmBItW0X/QwI
-J4JiP2QSnMb+VZK4qnn7zuIgYj2CVfRpax62rwjSVLHULWb3fe1IoxaQL9WgGIzI
-ozdlX+ce79mtaldfEabk1/i6bfJtnPbUeie1xJ1BNCTS8amAyzN83SHlam8dcuYz
-gZJ5VXLjaNFfMTcpkjBdlprs4p3zNuwQrbrFoS3feGftor7/5pYnJt4EWabmj8n1
-VN2XCBgIGaQMkULDsyIbP28WKctEginRDxx33o6yQGijcib/Q4PKr9kpnpa4cAeB
-A/BpUxT/6dLVyHhMv1ydxhBJ9RXgZ1J6W2vyyChoR6jFk7Ldc5ptKy/1uzOkS1uF
-go269JQfACIB+VJWKnmmfXOFKZrXNy4kVjHsAwDNNkHog2kWwi46h4hjvHXHixAU
-YEI9NFRa8v33j5phfSVdV7nq/X3tvbx9/jXC5GFuh9Xxrgtsdg+O4+CIR4O0D1UM
-lSdiFT7bh+B3G0zOIcljD2Wx461tFQ//NxhrA8VfGMAP6yCIHLxR4VVBwCPTf5h/
-abG2jVV/QLfIhuEBh0xM
-=FxQ0
------END PGP SIGNATURE-----
-
---=-1GFXvLdUWAt+Uo86/Kb7--
 
