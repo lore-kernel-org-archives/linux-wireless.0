@@ -1,72 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41989 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:36928 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752889AbYJVTk6 (ORCPT
+	with ESMTP id S1752178AbYJFSeb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 15:40:58 -0400
-Subject: Re: [PATCH v2] wireless: fix regdom passing semantics
+	Mon, 6 Oct 2008 14:34:31 -0400
+Subject: Re: [PATCH v2] iwlwifi: fix DMA code and bugs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081022123621.GJ6190@tesla>
-References: <1224579720.5521.2.camel@johannes.berg>
-	 <20081022113751.GD6190@tesla> <1224701263.30459.45.camel@johannes.berg>
-	 <1224701394.30459.48.camel@johannes.berg>  <20081022123621.GJ6190@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aBcGfY8zQR0B5jJUBQa3"
-Date: Wed, 22 Oct 2008 21:40:51 +0200
-Message-Id: <1224704451.30459.67.camel@johannes.berg> (sfid-20081022_214101_818158_4761BFB6)
+In-Reply-To: <1ba2fa240810061130w6b1a2282ga80156e7d756c74@mail.gmail.com> (sfid-20081006_203031_079989_141A8A38)
+References: <1223308831.15196.28.camel@johannes.berg>
+	 <1223309405.15196.32.camel@johannes.berg>
+	 <1ba2fa240810060949w5404944dud9f7b6b373542981@mail.gmail.com>
+	 <1223311876.15196.38.camel@johannes.berg>
+	 <1223312084.15196.41.camel@johannes.berg>
+	 <1ba2fa240810061130w6b1a2282ga80156e7d756c74@mail.gmail.com>
+	 (sfid-20081006_203031_079989_141A8A38)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XrzvetUo2Fl3feQFr85i"
+Date: Mon, 06 Oct 2008 20:34:00 +0200
+Message-Id: <1223318040.3778.18.camel@johannes.berg> (sfid-20081006_203434_220208_24F7AFDD)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-aBcGfY8zQR0B5jJUBQa3
+--=-XrzvetUo2Fl3feQFr85i
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-10-22 at 05:36 -0700, Luis R. Rodriguez wrote:
-> On Wed, Oct 22, 2008 at 11:49:54AM -0700, Johannes Berg wrote:
-> > The regdom struct is given to the core, so it might as well
-> > free it in error conditions
+On Mon, 2008-10-06 at 20:30 +0200, Tomas Winkler wrote:
+
+> > Of course, I would very much appreciate you review the actual bug fix i=
+n
+> > iwl_hcmd_queue_reclaim, which consist of the addition of the line
+> >
+> > +               bd =3D &txq->bd[index];
 >=20
-> > the current documentation for
-> > regulatory_hint doesn't note that you need to free it on errors
-> > anyway.
->=20
-> This last part is not accurate, typo again?
+> Okay I found the source of the evil, with your big pointer :)
+> The bug caused by this memory optimization juggling we've done and
+> very  bad cut and paste coding
+> We moved for command buffers from pcI_alloc consitent to kmalloc which
+> required pci mapping that that was coded wrongly. Now this kmalloc
+> stuff is not good as well since we have this 36 bit memory limitation
+> on 64 bit platforms.
+> This is the issue I'm trying to address recently I'm not sure what yet
+> what allocation schema would be best yet.
 
-Ahrg. No, thinko. I only saw
-
-- * @rd: a complete regulatory domain provided by the driver. If passed
-- *     the driver does not need to worry about freeing it.
-
-not the fine print.
+That can't be all though; it still crashes right away when I enable 64k
+pages on my box.
 
 johannes
 
---=-aBcGfY8zQR0B5jJUBQa3
+--=-XrzvetUo2Fl3feQFr85i
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI/4G/AAoJEKVg1VMiehFYW30P/3ggJdspCL7NpFQiWtNu+boz
-4E3jPqToVs71eMtRd13axbfRp+osdTc+DoyKjsysGW7/nxNInFPdp31mBQAygIjD
-Y6+aKG6Dv7t7w8c0O+GYo0TJpIqQCz6FJX2QXrovqd6ZsG3kAu6sMaV0Vh6hMfkG
-wvVajDi2wMv03WPO1N0G4hFK4qQHOyLXf0tGQTv9VtnwyYCvnzXsaDQMmrqQS+jU
-WyNn19mLObd+V6HngDuH4WTrfV4L14V+UDjVsr8lH8hAoYqth66LFHfht09ziTKX
-lBcTgVZRliRjjKPPrUMu0lSQZegwHLjNXW8xeS/qbnaAVnbWkclHRDLF6Sg34GEi
-pTe9W7BjNgrSDVuDJ+NHN6m9Jw6tfe0/lnrk5nVzFQcmPI/SJNmHWVm+g5RCzjH9
-uKv2HEQpgLINdkV/CmYHSP7s8wfSZs29Z4QB9MQKe7b3XK9aNI2pPSQgpLPQkbGR
-klvchJzDAM9fuG95jgt2A5S/70gFWoAySTnKjYFu3Lsa+aUxfWz2Qne9/3Xi/CBA
-vrlD7F9xniolLaNI01Qi/je30+U2FdpED0dn271M4RFllV3TY1va/i/2jWJ8bF4E
-btLAgo5VBXMO+w9TmYfZ3O6zIYlfaMJ5MArMdhONVr36XHjFKpjDwE6JSTctJccY
-1xxNml3O+7YpCrrkHoxC
-=ZWcu
+iQIcBAABAgAGBQJI6loUAAoJEKVg1VMiehFYuCcQAL17FsPeUGtOj3NF+SK7ojYM
+J+5X4mBxWktBHAiHqnGmO0EFefAHDmshdBgmQ9OSlZS6oTH9IM02oo5vjdYljwNU
+rXisxO3NzPe0hbQfulGR7r8SxTPYW/hC7rumdDOsLKxTvjls8v3CdkrY6mx7uvsi
+wWCdUqygVCMEDcfmnNqCuS1u9hESp+j+iRTNx3fDh62Uhzc6mmkg8LWobV/69fht
+r6xl5C1zTt+uOcX9GevOerlE/V29VjxCkumV4pYlrlY/XgQ5k68ulTYAFNmQd/Zt
+S8qujnoqhCXwwl4ehdNJ87ITkTx1Y0t/kjvzhP0MfydgAnEEVujgyOZ0iscNQQkj
+0Vu039x1MI5XV3NXCLWUFIENmSq9AiduE1lf1KychreEHG0DBSuIPxZNqxV8XG1P
+QkLJT0hyassdDaEbyVZQjZb0fUHKwFgAZPMbh6nwafP3HF8qD11pF6NqKTwzt81S
+lX/lxInfrSraTe/VlC4iF+oa6hli4cIIwAdOkB5FykwsFspWNa1DLHZF7APxKZy9
+La9WYnB+IAL8etW1hisp4BdyjpRSLaVCUYxwU8Ejg8BrPr50yWImeS18LABtk4Du
+iJ2HWupaiCapxoJC4srwbA1qZeSlcaG3CEgoYmfCW/p3Up+avCVnaGHm4Ssv8nMi
+0IST+Pqovj2ZJlYLmtfG
+=ER/R
 -----END PGP SIGNATURE-----
 
---=-aBcGfY8zQR0B5jJUBQa3--
+--=-XrzvetUo2Fl3feQFr85i--
 
