@@ -1,94 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:32847 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752093AbYJEGMz (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:45477 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752338AbYJFVhM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 02:12:55 -0400
-Subject: Re: at76_usb driver status
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Greg KH <greg@kroah.com>, proski@gnu.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <87y713y48r.fsf@nokia.com>
-References: <20081002210742.GA27221@kroah.com>  <87y713y48r.fsf@nokia.com>
-Content-Type: text/plain
-Date: Sun, 05 Oct 2008 08:13:09 +0200
-Message-Id: <1223187189.11272.74.camel@violet.holtmann.net> (sfid-20081005_081328_492005_4FCE5FA2)
-Mime-Version: 1.0
+	Mon, 6 Oct 2008 17:37:12 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2083040fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 14:37:09 -0700 (PDT)
+Message-ID: <1ba2fa240810061437g7dd42a55ldb9cfe852a07e269@mail.gmail.com> (sfid-20081006_233716_284827_AB056CA9)
+Date: Mon, 6 Oct 2008 23:37:09 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2] iwlwifi: fix DMA code and bugs
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081006192304.GF3448@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223308831.15196.28.camel@johannes.berg>
+	 <1223309405.15196.32.camel@johannes.berg>
+	 <1ba2fa240810060949w5404944dud9f7b6b373542981@mail.gmail.com>
+	 <1223311876.15196.38.camel@johannes.berg>
+	 <1223312084.15196.41.camel@johannes.berg>
+	 <1ba2fa240810061130w6b1a2282ga80156e7d756c74@mail.gmail.com>
+	 <20081006192304.GF3448@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
-
-> > In my quest to suck drivers into drivers/staging/ I noticed that the
-> > at76_usb driver is being shipped by both Fedora and Ubuntu in their
-> > kernels.
-> 
-> Yes, that's the original at76_usb driver which has it's own 802.11
-> stack. Pavel Rosking was the maintainer of that driver. Based on the
-> feedback in linux-wireless I then started porting the driver to use
-> mac80211. 
-> 
-> (Maybe I should have renamed the port to something else than at76_usb
-> because having two different drivers with the same name creates
-> confusion.)
-> 
-> > So I was wondering what the status of this driver is, and if I
-> > could/should add it to drivers/staging/?
-> 
-> The original at76_usb is working quite well, but it's unacceptable for
-> the mainline because we cannot have two 802.11 stacks in kernel.
-> 
-> I'm working to get the mac80211 port to mainline. But the port is
-> still unstable, biggest problem being that firmware seems to crash
-> when I associate to the same AP twice. I'm sure this is a bug in the
-> port, I just haven't found it yet.
-> 
-> > If it's about to go into 2.6.28 then I'll hold off, but it would be
-> > nice to know what the status is.
-> 
-> The mac80211 port is not ready for mainline yet, my aim is to get it
-> ready during this year.
-> 
-> > Also, it looks like it is being developed in a git tree, where is that
-> > tree?
-> 
-> The originial at76_usb git tree was here:
-> 
-> http://git.80211libre.org/at76_usb.git/
-> 
-> But it seems to be gone now. The current mac80211 port is in
-> linux-wireless (in one patch) and the original history is here:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-legacy.git at76
-> 
-> > And, did you merge the USB DFU code into the driver itself?
-> 
-> Yes, someone implemented it in driver.
-> 
-> > Having that kind of functionality in the USB core is fine with me if
-> > you want me to add that portion there, no reason it needs to be
-> > burried in individual drivers.
-> 
-> USB DFU is a standard? So it seems:
-> 
-> http://wiki.openmoko.org/wiki/USB_DFU
-> 
-> Heh, I didn't know this. I though it was some Atmel proprietary
-> interface :)
-> 
-> I might be interested in getting DFU into USB core, because I would
-> like to learn more about USB. But first I need to get at76_usb stable.
-
-please be careful with this. I have seen so many broken or vendor
-enhanced DFU stuff that it might be not a good idea to put it into the
-USB core since it would be full of quirks.
-
-I do have my own dfutool used for firmware flashing and the OpenMoko
-project got their own dfu-util. Both in userspace.
-
-Regards
-
-Marcel
-
-
+On Mon, Oct 6, 2008 at 9:23 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Mon, Oct 06, 2008 at 08:30:29PM +0200, Tomas Winkler wrote:
+>> On Mon, Oct 6, 2008 at 6:54 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Mon, 2008-10-06 at 18:51 +0200, Johannes Berg wrote:
+>> >
+>> >> > >  * therefore, all the is_odd junk goes away
+>> >> > >  * fix a bug in iwl_hcmd_queue_reclaim where it would reclaim all the
+>> >> > >   fragments of a descriptor rather than all descriptors (this may be
+>> >> > >   the cause of the dma unmapping problem I reported)
+>> >> > >  * some more cleanups
+>> >> >
+>> >> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> >> > > --
+>> >> >
+>> >> >
+>> >> > > Tested on 5000 hw, please apply.
+>> >> >
+>> >> > Great job,  however do not apply this before I review it I had strong
+>> >> > feeling this will not
+>> >> > work with aggregation flows.
+>> >>
+>> >> I cannot imagine why you think that, care to explain?
+>>
+>> Yep, no connection I thought at the first glance you've thatched more code.
+>> >
+>> > Of course, I would very much appreciate you review the actual bug fix in
+>> > iwl_hcmd_queue_reclaim, which consist of the addition of the line
+>> >
+>> > +               bd = &txq->bd[index];
+>>
+>> Okay I found the source of the evil, with your big pointer :)
+>> The bug caused by this memory optimization juggling we've done and
+>> very  bad cut and paste coding
+>> We moved for command buffers from pcI_alloc consitent to kmalloc which
+>> required pci mapping that that was coded wrongly. Now this kmalloc
+>> stuff is not good as well since we have this 36 bit memory limitation
+>> on 64 bit platforms.
+>> This is the issue I'm trying to address recently I'm not sure what yet
+>> what allocation schema would be best yet.
+>
+> What if we just revert that patch?
+>
+Won't help there is a real problem here
+Tomas
