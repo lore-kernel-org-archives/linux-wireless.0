@@ -1,226 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:58978 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331AbYJVMT6 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34656 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756028AbYJGQ5j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 08:19:58 -0400
-From: Chr <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54: fix misbehavings when firmware can't be found
-Date: Wed, 22 Oct 2008 14:19:56 +0200
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Sean Young <sean@mess.org>, bugme-daemon@bugzilla.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <bug-11782-10286@http.bugzilla.kernel.org/> <200810212156.24772.chunkeey@web.de> <20081022080557.GA38534@atlantis.8hz.com>
-In-Reply-To: <20081022080557.GA38534@atlantis.8hz.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200810221419.56326.chunkeey@web.de> (sfid-20081022_142002_940740_3D8C34A6)
+	Tue, 7 Oct 2008 12:57:39 -0400
+Subject: Re: [PATCH 2/4] mac80211: add multi-rate retry support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <48E8E588.30001@openwrt.org>
+References: <48E8E48E.5090300@openwrt.org> <48E8E528.7060501@openwrt.org>
+	 <48E8E588.30001@openwrt.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t7DL/+mP9dJzM5lMXr3a"
+Date: Mon, 06 Oct 2008 23:49:46 +0200
+Message-Id: <1223329786.3778.38.camel@johannes.berg> (sfid-20081007_185744_338674_4D48E319)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a double-free error in p54pci
-( http://bugzilla.kernel.org/show_bug.cgi?id=3D11782 )
 
-Trying to free already-free IRQ 10
-Pid: 108, comm: pccardd Not tainted 2.6.27-05577-g0cfd810-dirty #1
-Call Trace:
-=A0[<c01265dc>] free_irq+0xad/0xb9
-=A0[<c01050dd>] dma_generic_alloc_coherent+0x0/0xd7
-=A0[<c01ba8e6>] p54p_stop+0x4a/0x1fa
-=A0[<c01050dd>] dma_generic_alloc_coherent+0x0/0xd7
-=A0[<c02348c5>] p54p_probe+0x23e/0x302
+--=-t7DL/+mP9dJzM5lMXr3a
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Tested-by: Sean Young
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-[Ignore the first one, it was wordwrapped]
-John / Andrew,
+On Sun, 2008-10-05 at 18:04 +0200, Felix Fietkau wrote:
+> This patch adjusts the rate control API to allow multi-rate retry
+> if supported by the driver. The ieee80211_hw struct specifies how
+> many alternate rate selections the driver supports.
 
-There is another, older patch for a different regression,
-wasn't merged yet...
+Don't those drivers that announce supporting max_altrates =3D 1 have to
+update the status for alternative rates too? Also, should
+max_altrate_tries =3D=3D 0 indicate that that is fixed? But b43 with the
+default firmware actually _is_ capable of changing the number of retries
+(default to 3/3 or 3/4 I think), just not per frame. Should we have that
+in the API too?
 
-[PATCH] p54: enable 2.4/5GHz spectrum by eeprom bits.
-http://article.gmane.org/gmane.linux.kernel.wireless.general/22234
+Another thing, it seems you didn't update those drivers to report the
+rates and number of tries, at least for b43 that is actually possible.
 
-regards,=A0=A0=A0=A0=A0=A0=A0=A0
-=A0=A0=A0=A0=A0=A0=A0=A0Chr
----
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p=
-54/p54pci.c
-index 1c2a02a..88b3cad 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -346,68 +346,6 @@ static void p54p_tx(struct ieee80211_hw *dev, stru=
-ct p54_control_hdr *data,
- 		printk(KERN_INFO "%s: tx overflow.\n", wiphy_name(dev->wiphy));
- }
-=20
--static int p54p_open(struct ieee80211_hw *dev)
--{
--	struct p54p_priv *priv =3D dev->priv;
--	int err;
--
--	init_completion(&priv->boot_comp);
--	err =3D request_irq(priv->pdev->irq, &p54p_interrupt,
--			  IRQF_SHARED, "p54pci", dev);
--	if (err) {
--		printk(KERN_ERR "%s: failed to register IRQ handler\n",
--		       wiphy_name(dev->wiphy));
--		return err;
--	}
--
--	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
--	err =3D p54p_upload_firmware(dev);
--	if (err) {
--		free_irq(priv->pdev->irq, dev);
--		return err;
--	}
--	priv->rx_idx_data =3D priv->tx_idx_data =3D 0;
--	priv->rx_idx_mgmt =3D priv->tx_idx_mgmt =3D 0;
--
--	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
--		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
--
--	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
--		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
--
--	P54P_WRITE(ring_control_base, cpu_to_le32(priv->ring_control_dma));
--	P54P_READ(ring_control_base);
--	wmb();
--	udelay(10);
--
--	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_INIT));
--	P54P_READ(int_enable);
--	wmb();
--	udelay(10);
--
--	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
--	P54P_READ(dev_int);
--
--	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ))=
- {
--		printk(KERN_ERR "%s: Cannot boot firmware!\n",
--		       wiphy_name(dev->wiphy));
--		free_irq(priv->pdev->irq, dev);
--		return -ETIMEDOUT;
--	}
--
--	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_UPDATE));
--	P54P_READ(int_enable);
--	wmb();
--	udelay(10);
--
--	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
--	P54P_READ(dev_int);
--	wmb();
--	udelay(10);
--
--	return 0;
--}
--
- static void p54p_stop(struct ieee80211_hw *dev)
- {
- 	struct p54p_priv *priv =3D dev->priv;
-@@ -474,6 +412,68 @@ static void p54p_stop(struct ieee80211_hw *dev)
- 	memset(ring_control, 0, sizeof(*ring_control));
- }
-=20
-+static int p54p_open(struct ieee80211_hw *dev)
-+{
-+	struct p54p_priv *priv =3D dev->priv;
-+	int err;
-+
-+	init_completion(&priv->boot_comp);
-+	err =3D request_irq(priv->pdev->irq, &p54p_interrupt,
-+			  IRQF_SHARED, "p54pci", dev);
-+	if (err) {
-+		printk(KERN_ERR "%s: failed to register IRQ handler\n",
-+		       wiphy_name(dev->wiphy));
-+		return err;
-+	}
-+
-+	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
-+	err =3D p54p_upload_firmware(dev);
-+	if (err) {
-+		free_irq(priv->pdev->irq, dev);
-+		return err;
-+	}
-+	priv->rx_idx_data =3D priv->tx_idx_data =3D 0;
-+	priv->rx_idx_mgmt =3D priv->tx_idx_mgmt =3D 0;
-+
-+	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
-+		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
-+
-+	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
-+		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
-+
-+	P54P_WRITE(ring_control_base, cpu_to_le32(priv->ring_control_dma));
-+	P54P_READ(ring_control_base);
-+	wmb();
-+	udelay(10);
-+
-+	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_INIT));
-+	P54P_READ(int_enable);
-+	wmb();
-+	udelay(10);
-+
-+	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
-+	P54P_READ(dev_int);
-+
-+	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ))=
- {
-+		printk(KERN_ERR "%s: Cannot boot firmware!\n",
-+		       wiphy_name(dev->wiphy));
-+		p54p_stop(dev);
-+		return -ETIMEDOUT;
-+	}
-+
-+	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_UPDATE));
-+	P54P_READ(int_enable);
-+	wmb();
-+	udelay(10);
-+
-+	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
-+	P54P_READ(dev_int);
-+	wmb();
-+	udelay(10);
-+
-+	return 0;
-+}
-+
- static int __devinit p54p_probe(struct pci_dev *pdev,
- 				const struct pci_device_id *id)
- {
-@@ -556,11 +556,13 @@ static int __devinit p54p_probe(struct pci_dev *p=
-dev,
- 	spin_lock_init(&priv->lock);
- 	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
-=20
--	p54p_open(dev);
-+	err =3D p54p_open(dev);
-+	if (err)
-+		goto err_free_common;
- 	err =3D p54_read_eeprom(dev);
- 	p54p_stop(dev);
- 	if (err)
--		goto err_free_desc;
-+		goto err_free_common;
-=20
- 	err =3D ieee80211_register_hw(dev);
- 	if (err) {
-@@ -573,8 +575,6 @@ static int __devinit p54p_probe(struct pci_dev *pde=
-v,
-=20
-  err_free_common:
- 	p54_free_common(dev);
--
-- err_free_desc:
- 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
- 			    priv->ring_control, priv->ring_control_dma);
-=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also, can you explain the use of IEEE80211_TX_CTL_RATE_CTRL_PROBE?
+
+johannes
+
+--=-t7DL/+mP9dJzM5lMXr3a
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI6of3AAoJEKVg1VMiehFYwnsP+gJXvOFw/4qRYL4A3aUkOo+k
+7aUk5GDy99Rf0qvOpiMz9MMiPk1sdGe4PiNQiN83KKrV5lsyJ+RGL40nINm+L+Sm
+PkRRQX5eP5d9Ln2OHDhBGmnVNfbDb6BjBypNOTtadILJFnG7FN/549ZitOPwN8UA
+mNIRsV+K8QdPzPUDaAjVMQW8tlSV7gl9xPz62W9a6INr27t/8X4ThZs+5CD8A+tp
++RVN7xjuJbNtdRR3jfG//fBp321uoJHafSt07SNr+18EGb21zG+HqG2QsWQRvR9a
+0av6NhKc3VcUO40t4zTTh4ON4jJmtrwlGivHq1d1BGibGonjWaEY11K2M2zmy9mh
+9Os/wey1wh9XEcUueKRAPHFwvpJAdaPaYn62MJ3KN9xv1DA3lRfW+POipCFGbsf3
+MCAopmETwGUlnjcen+5kUa2sHWZkFB3avU/I66DHscRFRL1uQjzREUukR6MUG+4Y
+NaDCN/ytmHIRCfv0JT+hl/NtdNloX93E+g6ZDDfOZZf61RIgPL59bNEAsymJmi4u
+ar7idgnxufsWsvcDuD3yL9YahM+VrekahdkwjPJPOCAVkq2KOA8l8i5u2bYrrKh3
+k1m9IM/fAt1h1eJqU/JuOX+u7UEgZFH+eEip02kpFKeRVWNCIZ66SZPh6WtWF9C6
+JAjlZz5OT7X0yVfAk8EP
+=4hJ+
+-----END PGP SIGNATURE-----
+
+--=-t7DL/+mP9dJzM5lMXr3a--
+
