@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:59406 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753748AbYJIVPm (ORCPT
+Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:51372 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753135AbYJFNar (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 17:15:42 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 4/5] rfkill: honour EPO state when resuming a rfkill controller
-Date: Thu,  9 Oct 2008 18:15:32 -0300
-Message-Id: <1223586933-17753-5-git-send-email-hmh@hmh.eng.br> (sfid-20081009_231548_327375_EC985787)
-In-Reply-To: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br>
-References: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br>
+	Mon, 6 Oct 2008 09:30:47 -0400
+Date: Mon, 6 Oct 2008 08:30:45 -0500
+From: Robin Holt <holt@sgi.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Robin Holt <holt@sgi.com>, linux-wireless@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+Subject: Re: Infinite loop in sta_info_debugfs_add_work().
+Message-ID: <20081006133045.GM8534@sgi.com> (sfid-20081006_153055_191918_490CEC31)
+References: <20081004103144.GI8534@sgi.com> <1223165956.24551.76.camel@johannes.berg> <20081005023143.GJ8534@sgi.com> <1223195921.24551.79.camel@johannes.berg> <20081006064509.GK8534@sgi.com> <1223283470.24551.86.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1223283470.24551.86.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill_resume() would always restore the rfkill controller state to its
-pre-suspend state.
+On Mon, Oct 06, 2008 at 10:57:50AM +0200, Johannes Berg wrote:
+> Your config doesn't seem anything out of the ordinary, would you add a
+> few printks to ieee80211_sta_debugfs_add to see where it drops out?
+> Either way though, we should handle errors from debugfs_create_dir()
+> which this patch boils down to.
 
-Now that we know when we are under EPO, kick the rfkill controller to
-SOFT_BLOCKED state instead of to its pre-suspend state when it is resumed
-while EPO mode is active.
+I didn't really need to do much for the printk's in
+ieee80211_sta_debugfs_add().  My printk's in sta_info_debugfs_add_work()
+already told me that sta->local->debugfs.stations is NULL.  Again, this
+is iwl3945 only after a suspend of a few minutes followed by a resume.
+It happens about 1/3 of the time.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index e348eab..c9180c8 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -581,8 +581,17 @@ static int rfkill_resume(struct device *dev)
- 
- 		dev->power.power_state.event = PM_EVENT_ON;
- 
--		/* restore radio state AND notify everybody */
--		rfkill_toggle_radio(rfkill, rfkill->state, 1);
-+		/*
-+		 * If we are under EPO, kick transmitter offline,
-+		 * otherwise restore to pre-suspend state.
-+		 *
-+		 * Issue a notification in any case
-+		 */
-+		rfkill_toggle_radio(rfkill,
-+				rfkill_epo_lock_active ?
-+					RFKILL_STATE_SOFT_BLOCKED :
-+					rfkill->state,
-+				1);
- 
- 		mutex_unlock(&rfkill->mutex);
- 	}
--- 
-1.5.6.5
-
+Thanks,
+Robin
