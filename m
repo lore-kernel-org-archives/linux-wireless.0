@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:49946 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751594AbYJ1FX4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 01:23:56 -0400
-Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
-From: Zhu Yi <yi.zhu@intel.com>
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Mirco Tischler <mt-ml@gmx.de>, lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20081027213217.53558319@infradead.org>
-References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
-	 <1225157618.2917.215.camel@debian.sh.intel.com>
-	 <20081027213217.53558319@infradead.org>
-Content-Type: text/plain
-Date: Tue, 28 Oct 2008 13:23:34 +0800
-Message-Id: <1225171414.2917.229.camel@debian.sh.intel.com> (sfid-20081028_062401_663084_6252B00F)
-Mime-Version: 1.0
+Received: from yw-out-2324.google.com ([74.125.46.31]:12755 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753161AbYJFQtB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 12:49:01 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so438331ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 09:49:00 -0700 (PDT)
+Message-ID: <1ba2fa240810060949w5404944dud9f7b6b373542981@mail.gmail.com> (sfid-20081006_184905_893309_CF75BF38)
+Date: Mon, 6 Oct 2008 18:49:00 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] iwlwifi: fix DMA code and bugs
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1223309405.15196.32.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223308831.15196.28.camel@johannes.berg>
+	 <1223309405.15196.32.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-27 at 22:32 -0600, Arjan van de Ven wrote:
-> I had this same issue
-> 
-> turning on CONFIG_WIRELESS_OLD_REGULATORY fixed it for me....
+On Mon, Oct 6, 2008 at 6:10 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> This patch cleans up the DMA code to be understandable and not
+> completely wrong. In particular:
+>  * there is no need to have a weird iwl_tfd_frame_data struct that is
+>   used 10 times, just use an address struct 20 times
 
-Arjan,
+In the hardware this is defined as couples
 
-This is a different bug. He has the wireless worked sometimes.
+>  * therefore, all the is_odd junk goes away
+>  * fix a bug in iwl_hcmd_queue_reclaim where it would reclaim all the
+>   fragments of a descriptor rather than all descriptors (this may be
+>   the cause of the dma unmapping problem I reported)
+>  * some more cleanups
 
-I think your problem relates to 5GHz channel usage. We have already a
-patch queued to resolve the problem. We will have regulatory framework
-reworked to better solve the problem. But I guess it will be in .29 time
-frame.
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> --
 
-Thanks,
--yi
 
+> Tested on 5000 hw, please apply.
+
+Great job,  however do not apply this before I review it I had strong
+feeling this will not
+work with aggregation flows.
+Thanks
+Tomas
