@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42869 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334AbYJaKGG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51062 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606AbYJFVN1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 06:06:06 -0400
-Subject: Re: Guidelines regarding separate directory
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-In-Reply-To: <490A47A0.8060103@lwfinger.net> (sfid-20081031_004807_244853_9DD2736D)
-References: <4909EA78.3060700@lwfinger.net>
-	 <20081030172919.GA4330@tuxdriver.com>  <490A47A0.8060103@lwfinger.net>
-	 (sfid-20081031_004807_244853_9DD2736D)
-Content-Type: text/plain
-Date: Fri, 31 Oct 2008 11:06:00 +0100
-Message-Id: <1225447560.3535.8.camel@johannes.berg> (sfid-20081031_110612_187608_06A3C245)
-Mime-Version: 1.0
+	Mon, 6 Oct 2008 17:13:27 -0400
+Date: Mon, 6 Oct 2008 17:12:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH 1/7] iwlwifi: make initial calibration set configurable
+Message-ID: <20081006211248.GH3448@tuxdriver.com> (sfid-20081006_231331_894441_74568A4F)
+References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com> <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-10-30 at 16:47 -0700, Larry Finger wrote:
-> John W. Linville wrote:
-> > 
-> > Yes.  It should have been done long ago -- I had them all in
-> > drivers/net/wireless due to my own misinterpretation of the policy
-> > in the past.
+On Mon, Oct 06, 2008 at 04:05:27PM +0800, Zhu Yi wrote:
+> From: Tomas Winkler <tomas.winkler@intel.com>
 > 
-> I will do it, but not until some timing patches have been reviewed and
-> submitted. At least there is some time before the 2.6.29 merge window.
+> This patch adds ability to configure inital calibration set.
+> Some clean ups are also included in this patch.
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
-Btw, for the actual execution you may want to send a git patch rather
-than a normal patch, that would contain the renames rather than huge
-adds/removes. To do that, use "git format-patch -M", "git am" can take
-such a special patch, and it looks like this (example done on iw):
+Why do I want to do this?  What does this buy us?  How does this make
+things better?
 
-diff --git a/Makefile b/Makefile
-index 3fa0a83..74b2e16 100644
---- a/Makefile
-+++ b/Makefile
-@@ -11,7 +11,7 @@ CFLAGS += -O2 -g
- LDFLAGS += `pkg-config --libs libnl-1`
- NLVERSION = 1.0
- 
--OBJS = iw.o info.o phy.o interface.o station.o util.o mpath.o reg.o mesh.o genl
-.o
-+OBJS = iw.o info-test.o phy.o interface.o station.o util.o mpath.o reg.o mesh.o
- genl.o
- ALL = iw
- 
- ifeq ($(V),1)
-diff --git a/info.c b/info-test.c
-similarity index 100%
-rename from info.c
-rename to info-test.c
-
-
-johannes
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
