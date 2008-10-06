@@ -1,80 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34726 "EHLO mail.atheros.com"
+Received: from mga14.intel.com ([143.182.124.37]:49595 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753447AbYJ3BUD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 21:20:03 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 18:20:03 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/6] cfg80211: Add kdoc for struct regulatory_request
-Date: Wed, 29 Oct 2008 18:19:53 -0700
-Message-ID: <1225329594-21704-6-git-send-email-lrodriguez@atheros.com> (sfid-20081030_022012_052279_56A3CED1)
-In-Reply-To: <1225329594-21704-5-git-send-email-lrodriguez@atheros.com>
-References: <1225329594-21704-1-git-send-email-lrodriguez@atheros.com>
- <1225329594-21704-2-git-send-email-lrodriguez@atheros.com>
- <1225329594-21704-3-git-send-email-lrodriguez@atheros.com>
- <1225329594-21704-4-git-send-email-lrodriguez@atheros.com>
- <1225329594-21704-5-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1751803AbYJFJdU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 05:33:20 -0400
+Subject: Re: [PATCH] Working packet injection patch for ipw2200 - enables
+	aireplay-ng and others to work
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Paul <paul14075@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1223284624.24551.91.camel@johannes.berg>
+References: <7d553cf40809271345n3a945091u6c341e65c51811d5@mail.gmail.com>
+	 <1222571710.2510.587.camel@debian.sh.intel.com>
+	 <7d553cf40809280059v454023eaxc8a570fb6d4efcf@mail.gmail.com>
+	 <7d553cf40809281228l13414507xc11e8e592493e43@mail.gmail.com>
+	 <1223284316.2510.721.camel@debian.sh.intel.com>
+	 (sfid-20081006_111343_274436_FA74EFEC)  <1223284624.24551.91.camel@johannes.berg>
 Content-Type: text/plain
+Date: Mon, 06 Oct 2008 17:31:37 +0800
+Message-Id: <1223285497.2510.732.camel@debian.sh.intel.com> (sfid-20081006_113324_839314_49A09AD1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As regulatory_request gets bigger there will be more questions
-of what things means, so clarify documenation for it and
-keep track of the special alpha2 codes we use internally
-and on the userspace regulatory agents.
+On Mon, 2008-10-06 at 03:17 -0600, Johannes Berg wrote:
+> 
+> how about making use of cfg80211 to create the monitor interface to
+> start with?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   22 +++++++++++++++++++---
- 1 files changed, 19 insertions(+), 3 deletions(-)
+Nice try. It is not a mac80211 based driver. I don't know how much
+effort it takes. But it will be great if it works. Maybe we can also
+replace ieee80211 with cfg80211 or lib80211 in the future? ;-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index be6667a..dd1020b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -42,9 +42,24 @@
- #include "core.h"
- #include "reg.h"
- 
--/*
-- * wiphy is set if this request's initiator is
-- * REGDOM_SET_BY_COUNTRY_IE or _DRIVER
-+/**
-+ * struct regulatory_request - receipt of last regulatory request
-+ *
-+ * @wiphy: this is set if this request's initiator is
-+ * 	%REGDOM_SET_BY_COUNTRY_IE or %REGDOM_SET_BY_DRIVER. This
-+ * 	can be used by the wireless core to deal with conflicts
-+ * 	and potentially inform users of which devices specifically
-+ * 	cased the conflicts.
-+ * @initiator: indicates who sent this request, could be any of
-+ * 	of those set in reg_set_by, %REGDOM_SET_BY_*
-+ * @alpha2: the ISO / IEC 3166 alpha2 country code of the requested
-+ * 	regulatory domain. We have a few special codes:
-+ * 	00 - World regulatory domain
-+ * 	99 - built by driver but a specific alpha2 cannot be determined
-+ * 	98 - result of an intersection between two regulatory domains
-+ * @intersect: indicates whether the wireless core should intersect
-+ * 	the requested regulatory domain with the presently set regulatory
-+ * 	domain.
-  */
- struct regulatory_request {
- 	struct wiphy *wiphy;
-@@ -53,6 +68,7 @@ struct regulatory_request {
- 	bool intersect;
- };
- 
-+/* Receipt of information from last regulatory request */
- static struct regulatory_request *last_request;
- 
- /* To trigger userspace events */
--- 
-1.5.6.3
+Thanks,
+-yi
 
