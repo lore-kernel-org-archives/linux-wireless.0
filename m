@@ -1,33 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65429 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:41454 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752040AbYJNVSu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 17:18:50 -0400
-Subject: Re: [PATCH] iwl3945: fix station stuff in RC algorithm
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223682385.29811.5.camel@johannes.berg>
-References: <1223682385.29811.5.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 14 Oct 2008 14:15:15 -0700
-Message-Id: <1224018915.26903.18.camel@rc-desk> (sfid-20081014_231853_677053_54FDE3B7)
-Mime-Version: 1.0
+	id S1751679AbYJFILv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2008 04:11:51 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 3/7] iwlwifi: scan correct setting of valid rx_chains
+Date: Mon,  6 Oct 2008 16:05:29 +0800
+Message-Id: <1223280333-4383-4-git-send-email-yi.zhu@intel.com> (sfid-20081006_101202_662428_D0174451)
+In-Reply-To: <1223280333-4383-3-git-send-email-yi.zhu@intel.com>
+References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com>
+ <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
+ <1223280333-4383-3-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-10-11 at 01:46 +0200, Johannes Berg wrote:
-> Probably bugs I added.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-thank you very much
+This patch sets rx_chain bitmap correctly according hw configuration.
 
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Reinette
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index bf855c3..debdbd9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -703,7 +703,7 @@ static void iwl_bg_request_scan(struct work_struct *data)
+ 	u16 cmd_len;
+ 	enum ieee80211_band band;
+ 	u8 n_probes = 2;
+-	u8 rx_chain = 0x7; /* bitmap: ABC chains */
++	u8 rx_chain = priv->hw_params.valid_rx_ant;
+ 
+ 	conf = ieee80211_get_hw_conf(priv->hw);
+ 
+-- 
+1.5.3.6
+
