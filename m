@@ -1,139 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:63136 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343AbYJCUss (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43099 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754075AbYJFMdM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 16:48:48 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1801100wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Oct 2008 13:48:47 -0700 (PDT)
-Subject: [PATCH 1/8] b43: removed open-coded unaligned accesses, use common
- helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+	Mon, 6 Oct 2008 08:33:12 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <1223296221.15196.6.camel@johannes.berg> (sfid-20081006_143057_986057_BC4A63C0)
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 <1221123779.2513.88.camel@debian.sh.intel.com>
+	 <1221184060.11498.3.camel@californication>
+	 <1221185432.6695.0.camel@californication>
+	 (sfid-20080912_041007_653566_F8146EC3)  <1223296221.15196.6.camel@johannes.berg>
+	 (sfid-20081006_143057_986057_BC4A63C0)
 Content-Type: text/plain
-Date: Fri, 03 Oct 2008 13:48:45 -0700
-Message-Id: <1223066925.6512.26.camel@brick> (sfid-20081003_224853_495782_6442E505)
+Date: Mon, 06 Oct 2008 14:32:39 +0200
+Message-Id: <1223296359.15196.8.camel@johannes.berg> (sfid-20081006_143329_031518_3AA03EA8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allows removal of some temporary variables as well.
+On Mon, 2008-10-06 at 14:30 +0200, Johannes Berg wrote:
+> On Fri, 2008-09-12 at 04:10 +0200, Marcel Holtmann wrote:
+> 
+> > I take this back. It took a couple of hours, but it crashed again.
+> 
+> Do you have 64k pages enabled? My issue goes away entirely when I
+> disable 64k pages.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/b43/main.c |   54 ++++++++------------------------------
- 1 files changed, 12 insertions(+), 42 deletions(-)
+Well, clearly not entirely. But it's holding up much better now.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 3bf74e2..6df9b65 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -640,23 +640,14 @@ static
- void b43_macfilter_set(struct b43_wldev *dev, u16 offset, const u8 * mac)
- {
- 	static const u8 zero_addr[ETH_ALEN] = { 0 };
--	u16 data;
- 
- 	if (!mac)
- 		mac = zero_addr;
- 
--	offset |= 0x0020;
--	b43_write16(dev, B43_MMIO_MACFILTER_CONTROL, offset);
--
--	data = mac[0];
--	data |= mac[1] << 8;
--	b43_write16(dev, B43_MMIO_MACFILTER_DATA, data);
--	data = mac[2];
--	data |= mac[3] << 8;
--	b43_write16(dev, B43_MMIO_MACFILTER_DATA, data);
--	data = mac[4];
--	data |= mac[5] << 8;
--	b43_write16(dev, B43_MMIO_MACFILTER_DATA, data);
-+	b43_write16(dev, B43_MMIO_MACFILTER_CONTROL, offset | 0x0020);
-+	b43_write16(dev, B43_MMIO_MACFILTER_DATA, get_unaligned_le16(mac + 0));
-+	b43_write16(dev, B43_MMIO_MACFILTER_DATA, get_unaligned_le16(mac + 2));
-+	b43_write16(dev, B43_MMIO_MACFILTER_DATA, get_unaligned_le16(mac + 4));
- }
- 
- static void b43_write_mac_bssid_templates(struct b43_wldev *dev)
-@@ -665,7 +656,6 @@ static void b43_write_mac_bssid_templates(struct b43_wldev *dev)
- 	const u8 *bssid;
- 	u8 mac_bssid[ETH_ALEN * 2];
- 	int i;
--	u32 tmp;
- 
- 	bssid = dev->wl->bssid;
- 	mac = dev->wl->mac_addr;
-@@ -677,11 +667,8 @@ static void b43_write_mac_bssid_templates(struct b43_wldev *dev)
- 
- 	/* Write our MAC address and BSSID to template ram */
- 	for (i = 0; i < ARRAY_SIZE(mac_bssid); i += sizeof(u32)) {
--		tmp = (u32) (mac_bssid[i + 0]);
--		tmp |= (u32) (mac_bssid[i + 1]) << 8;
--		tmp |= (u32) (mac_bssid[i + 2]) << 16;
--		tmp |= (u32) (mac_bssid[i + 3]) << 24;
--		b43_ram_write(dev, 0x20 + i, tmp);
-+		b43_ram_write(dev, 0x20 + i,
-+			      get_unaligned_le32(mac_bssid + i));
- 	}
- }
- 
-@@ -868,12 +855,8 @@ static void keymac_write(struct b43_wldev *dev, u8 index, const u8 * addr)
- 	index -= per_sta_keys_start;
- 
- 	if (addr) {
--		addrtmp[0] = addr[0];
--		addrtmp[0] |= ((u32) (addr[1]) << 8);
--		addrtmp[0] |= ((u32) (addr[2]) << 16);
--		addrtmp[0] |= ((u32) (addr[3]) << 24);
--		addrtmp[1] = addr[4];
--		addrtmp[1] |= ((u32) (addr[5]) << 8);
-+		addrtmp[0] = get_unaligned_le32(addr);
-+		addrtmp[1] = get_unaligned_le16(addr + 4);
- 	}
- 
- 	if (dev->dev->id.revision >= 5) {
-@@ -1299,14 +1282,8 @@ static void b43_write_template_common(struct b43_wldev *dev,
- 	b43_ram_write(dev, ram_offset, tmp);
- 	ram_offset += sizeof(u32);
- 	for (i = 2; i < size; i += sizeof(u32)) {
--		tmp = (u32) (data[i + 0]);
--		if (i + 1 < size)
--			tmp |= (u32) (data[i + 1]) << 8;
--		if (i + 2 < size)
--			tmp |= (u32) (data[i + 2]) << 16;
--		if (i + 3 < size)
--			tmp |= (u32) (data[i + 3]) << 24;
--		b43_ram_write(dev, ram_offset + i - 2, tmp);
-+		b43_ram_write(dev, ram_offset + i - 2,
-+			      get_unaligned_le32(data + i));
- 	}
- 	b43_shm_write16(dev, B43_SHM_SHARED, shm_size_offset,
- 			size + sizeof(struct b43_plcp_hdr6));
-@@ -1695,19 +1672,12 @@ static void b43_update_templates(struct b43_wl *wl)
- 
- static void b43_set_ssid(struct b43_wldev *dev, const u8 * ssid, u8 ssid_len)
- {
--	u32 tmp;
- 	u16 i, len;
- 
- 	len = min((u16) ssid_len, (u16) 0x100);
- 	for (i = 0; i < len; i += sizeof(u32)) {
--		tmp = (u32) (ssid[i + 0]);
--		if (i + 1 < len)
--			tmp |= (u32) (ssid[i + 1]) << 8;
--		if (i + 2 < len)
--			tmp |= (u32) (ssid[i + 2]) << 16;
--		if (i + 3 < len)
--			tmp |= (u32) (ssid[i + 3]) << 24;
--		b43_shm_write32(dev, B43_SHM_SHARED, 0x380 + i, tmp);
-+		b43_shm_write32(dev, B43_SHM_SHARED, 0x380 + i,
-+				get_unaligned_le32(ssid + i));
- 	}
- 	b43_shm_write16(dev, B43_SHM_SHARED, 0x48, len);
- }
--- 
-1.6.0.2.471.g47a76
+[  325.379292] iommu_free: invalid entry
+[  325.379309] 	entry     = 0x848c0
+[  325.379315] 	dma_addr  = 0x848c0100
+[  325.379321] 	Table     = 0xc00000000083f348
+[  325.379328] 	bus#      = 0x0
+[  325.379333] 	size      = 0x80000
+[  325.379339] 	startOff  = 0x0
+[  325.379345] 	index     = 0x0
+[  325.379356] ------------[ cut here ]------------
+[  325.379364] Badness at arch/powerpc/kernel/iommu.c:258
+[  325.379372] NIP: c000000000021b58 LR: c000000000021b54 CTR: c0000000000473d0
+[  325.379382] REGS: c00000021612ef60 TRAP: 0700   Tainted: G        W  (2.6.27-rc6-wl-01382-g0bea1f7-dirty)
+[  325.379390] MSR: 9000000000029032 <EE,ME,IR,DR>  CR: 48ff4f84  XER: 000fffff
+[  325.379427] TASK = c0000002161049a0[0] 'swapper' THREAD: c00000021612c000 CPU: 1
+[  325.379439] GPR00: c000000000021b54 c00000021612f1e0 c00000000080bb60 0000000000000023 
+[  325.379463] GPR04: 0000000000000001 c00000000003e18c 0000000000000000 0000000000000002 
+[  325.379488] GPR08: 0000000000000000 c00000021612c000 0000000000000001 0000000000000001 
+[  325.379512] GPR12: 00000000000186a0 c00000000083c500 c000000000011fe4 c00000021612c080 
+[  325.379536] GPR16: 0000000000000000 c00000020cb85ca0 c00000021612c000 c00000020cb85cb8 
+[  325.379561] GPR20: 0000000000000001 c00000020cb91d80 0000000000000019 0000000000000008 
+[  325.379585] GPR24: c00000020cb91d80 c00000020cb93ff8 00000000848c0100 0000000000000001 
+[  325.379609] GPR28: 00000000000848c0 c00000000083f348 c00000000079ca00 00000000000848c0 
+[  325.379647] NIP [c000000000021b58] .__iommu_free+0xe4/0x150
+[  325.379656] LR [c000000000021b54] .__iommu_free+0xe0/0x150
+[  325.379663] Call Trace:
+[  325.379672] [c00000021612f1e0] [c000000000021b54] .__iommu_free+0xe0/0x150 (unreliable)
+[  325.379690] [c00000021612f280] [c000000000021c1c] .iommu_free+0x58/0xc0
+[  325.379705] [c00000021612f320] [c000000000021978] .dma_iommu_unmap_single+0x14/0x28
+[  325.379745] [c00000021612f390] [d00000000035cc3c] .iwl_tx_cmd_complete+0x364/0x410 [iwlcore]
+[  325.379779] [c00000021612f440] [d0000000003218c8] .iwl_rx_handle+0x32c/0x4a0 [iwlagn]
+[  325.379805] [c00000021612f540] [d0000000003223b8] .iwl4965_irq_tasklet+0x97c/0xccc [iwlagn]
+[  325.379820] [c00000021612f600] [c000000000055240] .tasklet_action+0x14c/0x244
+[  325.379833] [c00000021612f6b0] [c000000000056130] .__do_softirq+0xd8/0x1c4
+[  325.379848] [c00000021612f760] [c00000000000c2b8] .do_softirq+0x5c/0xb8
+[  325.379862] [c00000021612f7e0] [c000000000055b6c] .irq_exit+0x74/0xe0
+[  325.379876] [c00000021612f860] [c00000000000c41c] .do_IRQ+0x108/0x14c
+[  325.379889] [c00000021612f8f0] [c000000000004794] hardware_interrupt_entry+0x1c/0x20
+[  325.379909] --- Exception: 501 at .raw_local_irq_restore+0x3c/0x40
+[  325.379911]     LR = ._spin_unlock_irq+0x44/0x80
+[  325.379922] [c00000021612fbe0] [c0000000003ed864] ._spin_unlock_irq+0x38/0x80 (unreliable)
+[  325.379941] [c00000021612fc70] [c000000000045fcc] .finish_task_switch+0x70/0x14c
+[  325.379984] [c00000021612fd10] [c0000000003ea008] .schedule+0x94c/0xa28
+[  325.380000] [c00000021612fe30] [c000000000011fe4] .cpu_idle+0x1ec/0x200
+[  325.380014] [c00000021612fed0] [c0000000003f4b78] .start_secondary+0x36c/0x3a8
+[  325.380030] [c00000021612ff90] [c0000000000073c0] .start_secondary_prolog+0xc/0x10
+[  325.380045] Instruction dump:
+[  325.380057] e89d0008 e87e8050 483d2695 60000000 e89d0010 e87e8058 483d2685 60000000 
+[  325.380108] e87e8060 e89d0020 483d2675 60000000 <0fe00000> 48000040 e93e8068 7fe4fb78 
+[  370.135933] iommu_free: invalid entry
+[  370.136005] 	entry     = 0xcb640
+[  370.136011] 	dma_addr  = 0xcb640100
+[  370.136017] 	Table     = 0xc00000000083f348
+[  370.136023] 	bus#      = 0x0
+[  370.136029] 	size      = 0x80000
+[  370.136035] 	startOff  = 0x0
+[  370.136041] 	index     = 0x0
+[  370.136052] ------------[ cut here ]------------
+[  370.136060] Badness at arch/powerpc/kernel/iommu.c:258
+[  370.136068] NIP: c000000000021b58 LR: c000000000021b54 CTR: c0000000000473d0
+[  370.136078] REGS: c000000211276da0 TRAP: 0700   Tainted: G        W  (2.6.27-rc6-wl-01382-g0bea1f7-dirty)
+[  370.136086] MSR: 9000000000029032 <EE,ME,IR,DR>  CR: 28004884  XER: 000fffff
+[  370.136122] TASK = c0000002112424d0[3560] 'nmbd' THREAD: c000000211274000 CPU: 1
+[  370.136133] GPR00: c000000000021b54 c000000211277020 c00000000080bb60 0000000000000023 
+[  370.136157] GPR04: 0000000000000001 c00000000003e18c 0000000000000000 0000000000000002 
+[  370.136181] GPR08: 0000000000000000 c000000211274000 0000000000000001 0000000000000000 
+[  370.136205] GPR12: 00000000000186a0 c00000000083c500 000000000fc9e1c4 000000000000000e 
+[  370.136229] GPR16: 0000000000000000 c00000020cb85ca0 c000000211274000 c00000020cb85cb8 
+[  370.136252] GPR20: 0000000000000001 c00000020cb91d80 00000000000000ad 0000000000000008 
+[  370.136276] GPR24: c00000020cb91d80 c00000020cb93ff8 00000000cb640100 0000000000000001 
+[  370.136300] GPR28: 00000000000cb640 c00000000083f348 c00000000079ca00 00000000000cb640 
+[  370.136335] NIP [c000000000021b58] .__iommu_free+0xe4/0x150
+[  370.136345] LR [c000000000021b54] .__iommu_free+0xe0/0x150
+[  370.136352] Call Trace:
+[  370.136361] [c000000211277020] [c000000000021b54] .__iommu_free+0xe0/0x150 (unreliable)
+[  370.136378] [c0000002112770c0] [c000000000021c1c] .iommu_free+0x58/0xc0
+[  370.136392] [c000000211277160] [c000000000021978] .dma_iommu_unmap_single+0x14/0x28
+[  370.136432] [c0000002112771d0] [d00000000035cc3c] .iwl_tx_cmd_complete+0x364/0x410 [iwlcore]
+[  370.136465] [c000000211277280] [d0000000003218c8] .iwl_rx_handle+0x32c/0x4a0 [iwlagn]
+[  370.136491] [c000000211277380] [d0000000003223b8] .iwl4965_irq_tasklet+0x97c/0xccc [iwlagn]
+[  370.136506] [c000000211277440] [c000000000055240] .tasklet_action+0x14c/0x244
+[  370.136519] [c0000002112774f0] [c000000000056130] .__do_softirq+0xd8/0x1c4
+[  370.136533] [c0000002112775a0] [c00000000000c2b8] .do_softirq+0x5c/0xb8
+[  370.136546] [c000000211277620] [c000000000055b6c] .irq_exit+0x74/0xe0
+[  370.136560] [c0000002112776a0] [c00000000001e1d4] .timer_interrupt+0xe4/0x12c
+[  370.136573] [c000000211277740] [c000000000003614] decrementer_common+0x114/0x180
+[  370.136592] --- Exception: 901 at .kmem_cache_free+0x148/0x178
+[  370.136595]     LR = .kmem_cache_free+0x148/0x178
+[  370.136605] [c000000211277a30] [c0000000000ecae8] .kmem_cache_free+0x13c/0x178 (unreliable)
+[  370.136624] [c000000211277ae0] [c0000000000fb720] .putname+0x40/0x64
+[  370.136638] [c000000211277b60] [c0000000000fdddc] .user_path_at+0x70/0xb0
+[  370.136651] [c000000211277c90] [c0000000000f42b4] .vfs_stat_fd+0x2c/0x78
+[  370.136664] [c000000211277d30] [c0000000000f4474] .sys_stat64+0x24/0x54
+[  370.136677] [c000000211277e30] [c0000000000076d4] syscall_exit+0x0/0x40
+[  370.136688] Instruction dump:
+[  370.136725] e89d0008 e87e8050 483d2695 60000000 e89d0010 e87e8058 483d2685 60000000 
+[  370.136764] e87e8060 e89d0020 483d2675 60000000 <0fe00000> 48000040 e93e8068 7fe4fb78 
+[  429.724965] iommu_free: invalid entry
+[  429.725026] 	entry     = 0xc00c0
+[  429.725032] 	dma_addr  = 0xc00c0100
+[  429.725038] 	Table     = 0xc00000000083f348
+[  429.725045] 	bus#      = 0x0
+[  429.725051] 	size      = 0x80000
+[  429.725057] 	startOff  = 0x0
+[  429.725063] 	index     = 0x0
+[  429.725073] ------------[ cut here ]------------
+[  429.725081] Badness at arch/powerpc/kernel/iommu.c:258
+[  429.725089] NIP: c000000000021b58 LR: c000000000021b54 CTR: c0000000000473d0
+[  429.725100] REGS: c00000021612f1b0 TRAP: 0700   Tainted: G        W  (2.6.27-rc6-wl-01382-g0bea1f7-dirty)
+[  429.725108] MSR: 9000000000029032 <EE,ME,IR,DR>  CR: 48ff4f84  XER: 000fffff
+[  429.725145] TASK = c0000002161049a0[0] 'swapper' THREAD: c00000021612c000 CPU: 1
+[  429.725157] GPR00: c000000000021b54 c00000021612f430 c00000000080bb60 0000000000000023 
+[  429.725182] GPR04: 0000000000000001 c00000000003e18c 0000000000000000 0000000000000002 
+[  429.725206] GPR08: 0000000000000000 c00000021612c000 0000000000000001 0000000000000001 
+[  429.725231] GPR12: 00000000000186a0 c00000000083c500 00000000f8000000 0000000000000000 
+[  429.725255] GPR16: 0000000000000000 c00000020cb85ca0 c00000021612c000 c00000020cb85cb8 
+[  429.725280] GPR20: 0000000000000001 c00000020cb91d80 000000000000000d 0000000000000008 
+[  429.725304] GPR24: c00000020cb91d80 c00000020cb93ff8 00000000c00c0100 0000000000000001 
+[  429.725329] GPR28: 00000000000c00c0 c00000000083f348 c00000000079ca00 00000000000c00c0 
+[  429.725365] NIP [c000000000021b58] .__iommu_free+0xe4/0x150
+[  429.725375] LR [c000000000021b54] .__iommu_free+0xe0/0x150
+[  429.725382] Call Trace:
+[  429.725391] [c00000021612f430] [c000000000021b54] .__iommu_free+0xe0/0x150 (unreliable)
+[  429.725409] [c00000021612f4d0] [c000000000021c1c] .iommu_free+0x58/0xc0
+[  429.725424] [c00000021612f570] [c000000000021978] .dma_iommu_unmap_single+0x14/0x28
+[  429.725464] [c00000021612f5e0] [d00000000035cc3c] .iwl_tx_cmd_complete+0x364/0x410 [iwlcore]
+[  429.725497] [c00000021612f690] [d0000000003218c8] .iwl_rx_handle+0x32c/0x4a0 [iwlagn]
+[  429.725523] [c00000021612f790] [d0000000003223b8] .iwl4965_irq_tasklet+0x97c/0xccc [iwlagn]
+[  429.725539] [c00000021612f850] [c000000000055240] .tasklet_action+0x14c/0x244
+[  429.725552] [c00000021612f900] [c000000000056130] .__do_softirq+0xd8/0x1c4
+[  429.725567] [c00000021612f9b0] [c00000000000c2b8] .do_softirq+0x5c/0xb8
+[  429.725580] [c00000021612fa30] [c000000000055b6c] .irq_exit+0x74/0xe0
+[  429.725594] [c00000021612fab0] [c00000000000c41c] .do_IRQ+0x108/0x14c
+[  429.725608] [c00000021612fb40] [c000000000004794] hardware_interrupt_entry+0x1c/0x20
+[  429.725625] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  429.725627]     LR = .cpu_idle+0x118/0x200
+[  429.725638] [c00000021612fe30] [c000000000011ec8] .cpu_idle+0xd0/0x200 (unreliable)
+[  429.725658] [c00000021612fed0] [c0000000003f4b78] .start_secondary+0x36c/0x3a8
+[  429.725671] [c00000021612ff90] [c0000000000073c0] .start_secondary_prolog+0xc/0x10
+[  429.725682] Instruction dump:
+[  429.725693] e89d0008 e87e8050 483d2695 60000000 e89d0010 e87e8058 483d2685 60000000 
+[  429.725761] e87e8060 e89d0020 483d2675 60000000 <0fe00000> 48000040 e93e8068 7fe4fb78 
 
 
