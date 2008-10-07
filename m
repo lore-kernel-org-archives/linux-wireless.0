@@ -1,67 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39524 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751963AbYJVW6K (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44003 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752731AbYJGRIu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 18:58:10 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: reinette chatre <reinette.chatre@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Tue, 7 Oct 2008 13:08:50 -0400
+Subject: Re: bad DMAR interaction with iwlagn and SATA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kyle McMartin <kyle@infradead.org>
+Cc: Andres Freund <andres@anarazel.de>,
 	Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224707446.10863.155.camel@rc-desk>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1224628088.10863.100.camel@rc-desk>
-	 <1224660449.28639.22.camel@johannes.berg>
-	 <1224662185.9386.131.camel@californication>
-	 <1224707446.10863.155.camel@rc-desk>
-Content-Type: text/plain
-Date: Thu, 23 Oct 2008 00:59:07 +0200
-Message-Id: <1224716347.9386.151.camel@californication> (sfid-20081023_005814_938297_6E8A7A8C)
+	Muli Ben-Yehuda <muli@il.ibm.com>,
+	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081007170404.GB5171@bombadil.infradead.org>
+References: <200809251511.20132.andres@anarazel.de>
+	 <1ba2fa240809290140i5a47d534qa30f9088df834162@mail.gmail.com>
+	 <1223296015.15196.2.camel@johannes.berg>
+	 <200810061632.08375.andres@anarazel.de>
+	 <1223368636.3778.64.camel@johannes.berg>
+	 <20081007170404.GB5171@bombadil.infradead.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wsyw07jVLbAhv9X7WnUT"
+Date: Tue, 07 Oct 2008 19:08:43 +0200
+Message-Id: <1223399323.7328.51.camel@johannes.berg> (sfid-20081007_190854_380759_A78192FD)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Reinette,
 
-> > > I really don't know why we let you get away with this and bitch
-> > > endlessly when b43 does such a change, to the point where we finally
-> > > cave in and support both versions. Why should a community-supported
-> > > driver be held to higher standards?
-> > 
-> > If in any way possible, we should support both versions of the firmware.
-> 
-> I would like to hear some suggestions on how we can do this as I am not
-> familiar with the other drivers. The driver is closely tied to the
-> firmware ... and I am actually tempted to draw an analogy between the
-> interface between the driver and mac80211 here. From what I understand,
-> for the driver to support many versions of the firmware it dynamically
-> needs to detect which features are supported at runtime and act
-> accordingly. This is a hard problem. What am I missing?
+--=-wsyw07jVLbAhv9X7WnUT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-in some cases it might be possible with a set of quirks or special
-functions that can be switched at runtime. Check the whole bunch of USB
-drivers that have special handling depending on what hardware it finds.
-We could do the same. In some cases this effort might be too much, but
-if possible we should at least try.
+On Tue, 2008-10-07 at 13:04 -0400, Kyle McMartin wrote:
 
-It all depends on how much the ucode API changes and sometimes we really
-wanna cleanup the driver and remove the old code, but in that case we
-have to tell the users via modules_install that this kernel will break
-or we have to keep the old driver around. Breaking it from one kernel
-version to the next one without the user noticing only after reboot is
-just not good enough.
+> 2MB pages (and 4MB pages) are dependent on PSE/PAE, there's no configurab=
+le
+> page size on x86 like there is on other platforms.
+>=20
+> PSE gives you 4MB pages, PAE reduces your 4MB pages to 2MB pages (for
+> extra flag and address bits.)
+>=20
+> About the only useful places for these are large mappings like ioremap
+> and whatnot.
 
-Regards
+Thanks for the explanation. Can you explain too why iwlwifi crashes when
+I enable 64k pages? ;)
 
-Marcel
+johannes
 
+--=-wsyw07jVLbAhv9X7WnUT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI65eXAAoJEKVg1VMiehFYn5cP/2goTM4qQelVufRLQaMTXBXS
+ODMuyveZb6EsGx10bvqtVCQX6xnHzAnx297dWon/VpjbKi2VPg6DKIcLryC3Lju4
+lt/KqtsKFXUv5BP/Cp1CAZpYO22xsTizZeuToQWCpPLN88ysfAuBbnDgHIZHZh6y
+mhYdxUtHgARU88tZl6gSR58ReNW9KNopy6JP2t82EPJMsZiNhcvdEQo+ceY9eJCt
+GHIsqGSF9RrEKeUkpavUuZMbH9c6q+BqdM4PSElga/dUIlZaJV2xiU66XUXPCBlf
+4mQeRQ/vK/a+LmJDDHZ1gjZ7Nyc9SOcFkItIIEjkDRdThKQTSg47koUBRBx4tbWz
+NK3mRB3J6OAhM20J0HGLjiYFf2xb+vk6FrBbmbZzuRym3C6dxftZFIw90ueO6m4l
+ifxyZQRt7iByjcbaIVxmwFzPyi+iQRtxErVJU9W0fH8HpETihP2jNchHA3+vhlKD
+eMsR8zS2FK/iu76/tY8/Jsp5fVDbhDYIabSJ8ocpJF8zKA+IPeGdHcrdYzTnu4lc
+S1uWgBDMhxafMGSZS+FZJiz5U8bUUTKSY+aPUgxka06ThLn4R44RP4VNRaHKwEFx
+/esCw1F9kxYSt1jAdIFDJy/PicQ/Tq6R/DwUZUI3zSwanX8p/CufiBj6hEaofEEw
+8SO0x0mkrJbqIx7HY+er
+=DbQF
+-----END PGP SIGNATURE-----
+
+--=-wsyw07jVLbAhv9X7WnUT--
 
