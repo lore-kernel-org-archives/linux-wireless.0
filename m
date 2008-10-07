@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38472 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751528AbYJOSPn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 14:15:43 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/2] iwlwifi: don't update TFD free counter for invalid station
-Date: Wed, 15 Oct 2008 11:06:24 -0700
-Message-Id: <1224093984-20779-2-git-send-email-reinette.chatre@intel.com> (sfid-20081015_201548_796806_A0958CAE)
-In-Reply-To: <1224093984-20779-1-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1224093984-20779-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:42786 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764AbYJGSQC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2008 14:16:02 -0400
+Subject: wpa supplicant interface up delay
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <j@w1.fi>, Dan Williams <dcbw@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Eg2gCKTLNSp1CvrMoaMG"
+Date: Tue, 07 Oct 2008 20:16:01 +0200
+Message-Id: <1223403361.7328.71.camel@johannes.berg> (sfid-20081007_201608_134402_34146830)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch makes sure that station table is not accessed
-with invalid station id in 4965 TX response path
+--=-Eg2gCKTLNSp1CvrMoaMG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+                         * Wait some time to allow driver to initialize bef=
+ore
+                         * starting configuring the driver. This seems to b=
+e =20
+                         * needed at least some drivers that load firmware =
+etc.
+                         * when the interface is set up.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 7cf5e2c..b2d8647 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2236,7 +2236,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 				   tx_resp->failure_frame);
- 
- 		freed = iwl_tx_queue_reclaim(priv, txq_id, index);
--		if (qc)
-+		if (qc && likely(sta_id != IWL_INVALID_STATION))
- 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
- 
- 		if (priv->mac80211_registered &&
-@@ -2244,7 +2244,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 			ieee80211_wake_queue(priv->hw, txq_id);
- 	}
- 
--	if (qc)
-+	if (qc && likely(sta_id != IWL_INVALID_STATION))
- 		iwl_txq_check_empty(priv, sta_id, tid, txq_id);
- 
- 	if (iwl_check_bits(status, TX_ABORT_REQUIRED_MSK))
--- 
-1.5.4.3
+which drivers are those, and why can't we fix the drivers instead? This
+seems like a bug in the drivers that they return from their open
+callback prematurely.
+
+johannes
+
+--=-Eg2gCKTLNSp1CvrMoaMG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI66deAAoJEKVg1VMiehFYVJ0P/1YvvDS8SjNel/eF38tTvUk9
+1BBZURNY/EQ1d/uZ6d7WoSjU/ylto4vXCVOvTVGL2yDJrYTWzrLesa2Ce2EHHMMM
++GFyOmzAtptBR8Rz57HdZS0Xt6IhyoYOdJBJnBcIjkNtkLrj9FuxivBanRR7EpGX
+ZKp7/K1W36kMeTAZLD7ei417b2lvB6sWaGgZLf0TGeH0v5icAaq1NeoSY+HYgzap
+PCMn7J7CU1kuilOxOkhDyDJXPiGnOD5jJcSA1+MqfBNkxUo1gCCi88oJ605fBhgm
+/GdqV1yA6Lld5AvnJhdyTdl3XDa6QelW5865pRdcxTX93nRha4pujdWjF2h+xxoQ
+sJKl1ry54sRmHoSiomCiUwZvkRABE6fBivR4Od+QXHcy0hrpuvf4APYwYTiMUYha
+QoWRntWQLllCZNQT0xCfQyobHfKDxN4dUydWQ6nP3omS/vsW8iSduPfoStiJAEt6
+GU5liNPVsZZfJa58TBT9VUa9LVsOeVCdvlZHsDIC6J30PRUE4JuV+hwaog2gLjn1
+P+b3xRL3rdGgH5E43rzC5d5LVBIJR0fDFLGn2mwsmQjKU31k4XO42K9Op2/vsqKQ
+FXklORZP3aY0JcnFS320hCsKFSFc4Wx/tcVKUM8U+PC3WNFxJDN2ueqAnqjjHMSd
+VP8vn6iWEDoTWxup2W7E
+=YCoK
+-----END PGP SIGNATURE-----
+
+--=-Eg2gCKTLNSp1CvrMoaMG--
 
