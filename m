@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.245]:33505 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939AbYJXRF6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39694 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753148AbYJGTex (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 13:05:58 -0400
-Received: by hs-out-0708.google.com with SMTP id 4so372198hsl.5
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2008 10:05:57 -0700 (PDT)
-Message-ID: <445f43ac0810241005i1b7d23f5lfed64bab86df536d@mail.gmail.com> (sfid-20081024_190602_862644_CDEADE30)
-Date: Fri, 24 Oct 2008 10:05:56 -0700
-From: "Javier Cardona" <javier@cozybit.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211 rx filter in mesh mode, rt2x00 mesh point operation
-Cc: "Andrey Yurovsky" <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org, ivdoorn@gmail.com
-In-Reply-To: <1224838921.6002.98.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com>
-	 <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com>
-	 <1224838921.6002.98.camel@johannes.berg>
+	Tue, 7 Oct 2008 15:34:53 -0400
+Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com> (sfid-20081007_212834_461753_187EE1B3)
+References: <1223311803.15196.36.camel@johannes.berg>
+	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
+	 <200810070821.56462.hs4233@mail.mn-solutions.de>
+	 <20081007071529.GA5010@infradead.org> <20081007131615.GR3448@tuxdriver.com>
+	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
+	 <1223398724.7328.45.camel@johannes.berg>
+	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
+	 (sfid-20081007_212834_461753_187EE1B3)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-J5+c8dOZL+V05lrkSmRi"
+Date: Tue, 07 Oct 2008 21:34:44 +0200
+Message-Id: <1223408085.3618.2.camel@johannes.berg> (sfid-20081007_213457_543385_F66BFE62)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
 
-On Fri, Oct 24, 2008 at 2:02 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Javier,
->
-> On Thu, 2008-10-23 at 15:07 -0700, Javier Cardona wrote:
->> Mesh frames have 4 addresses and no BSSID, so BSSID filtering should
->> be disabled (i.e. FIF_OTHER_BSS should be set).
->
-> The BSSID is zeroed, right?
+--=-J5+c8dOZL+V05lrkSmRi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On data frames or multi-hop management frames there is no BSSID address.
-On single-hop management frames the BSSID field is not used and set to
-all zeros.
+On Tue, 2008-10-07 at 21:28 +0200, Tomas Winkler wrote:
 
-Cheers,
+> > And please keep the 10 pairs -> 20 addresses, it's a lot easier to
+> > understand :)
 
-Javier
+> I don't like on this solution two things one is that it 32 bit
+> variables sits on unaligned address
+
+That doesn't matter at all since it's packed, and the bitwise accesses
+you did previously are way less efficient.
+
+>  and second
+> it doesn't mach HW description which defines this as  descriptor couple
+
+Then tell the HW engineers to fix the HW docs. It makes no sense at all
+to say this is 10 pairs rather than 20 single ones if there's nothing
+that uses a pair, the whole thing entirely uses single entries in the
+numbering etc.
+
+johannes
+
+--=-J5+c8dOZL+V05lrkSmRi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI67nRAAoJEKVg1VMiehFYKPsP/1FBWMo6tHYv0SrZ+VUYHRdO
+bQFDySlY2db/utkUFMHTBEMPZdrQzxB65J9nuZoPmsVJnGWWbpISgv1lHLFwBQFH
+52IbPYNmYkq/ERMHFGE49RJjDInUn+KlEMRwCaR5WHQUUZ5Wg1cKHFQSHLQEC/AB
+zlf4CaIDa+91yaiu9NCHgXRxFP69O9Kq1Uj/pkAOo5zY/DxyrrXIsCDhkaxcF9W4
+ibJV+W5GF9laAHpvZumLa5NQxYNOcomwJYJecgU/pJXf1Spi2J7BjvJafXjatr/l
+qfqrd9t6EXOiNaH31GUrNY0nKmVDqp3YKSsI3EDNv+MTw8rc282bl1sZc2PCZKdp
+NFcTgA3FVtN8E57FE+rxiyWnA+0k6O5qTNTwwj9Cwnt12ieGCTofwQ/Zvj9sa44M
+LdnJM9CiDvrVK3nq/VjxGM6HZhAdM0r6If8+Bfhlp2n3XjpeQT0JFfP0irKYiQC4
+XIx9mRJRXc2vxDLYtNYY18Kz84kbNLhK/eWtwejj2+hX6vE4QBcuiQmoQ4HFPLiW
+mUv/eD5hJ1tNp7m4kMsBFBAexE+1UEWoEgM50hWp65zQyAjz394Hi9RVoCfVLGTt
+gPoQqQszKKIp7sV+qdEmVRlLgjtAF/lITrElpjeVYkfVADe8p6ZFK/827/ogQhrK
+6QI39wEFnImN4Tz3q/iu
+=FBmS
+-----END PGP SIGNATURE-----
+
+--=-J5+c8dOZL+V05lrkSmRi--
+
