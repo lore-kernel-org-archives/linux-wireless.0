@@ -1,67 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:53048 "EHLO mout.perfora.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751816AbYJSXuT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 19:50:19 -0400
-Subject: Re: 10-17-2008 Build issues - Intel 3945abg - Ubuntu Intrepid
-From: Myk Robinson <myk.robinson@kingdomcomputer.info>
-Reply-To: myk.robinson@kingdomcomputer.info
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1224258314.11187.1.camel@rc-desk>
-References: <1224248117.28593.3.camel@mobileOne>
-	 <1224258314.11187.1.camel@rc-desk>
-Content-Type: text/plain
-Date: Sun, 19 Oct 2008 18:45:07 -0500
-Message-Id: <1224459907.9743.1.camel@mobileOne> (sfid-20081020_015029_766006_E942D6C3)
+Received: from xc.sipsolutions.net ([83.246.72.84]:44978 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753423AbYJGSB5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2008 14:01:57 -0400
+Subject: Re: [PATCH 2/4] mac80211: add multi-rate retry support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <48EBA2BE.9070705@openwrt.org>
+References: <48E8E48E.5090300@openwrt.org> <48E8E528.7060501@openwrt.org>
+	 <48E8E588.30001@openwrt.org> <1223329786.3778.38.camel@johannes.berg>
+	 <48EB98A6.4050406@openwrt.org> <1223400436.7328.54.camel@johannes.berg>
+	 <48EBA2BE.9070705@openwrt.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j+hPL59sBe2uadHBl3WC"
+Date: Tue, 07 Oct 2008 20:01:56 +0200
+Message-Id: <1223402516.7328.65.camel@johannes.berg> (sfid-20081007_200206_850530_3146C671)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is a dmesg log using the 10-18-2008 build on a Gateway M-6881
-laptop with the intel 3945abg wifi.
 
+--=-j+hPL59sBe2uadHBl3WC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://pastebin.com/f2b96dfd3
+On Tue, 2008-10-07 at 19:56 +0200, Felix Fietkau wrote:
 
-I hope this helps get it sorted out. In the meantime, I will compile
-today's build and see what happens.
+> >> The IEEE80211_TX_CTL_RATE_CTRL_PROBE flag is used to tell the tx_statu=
+s
+> >> function that there is a sampling rate in the second MRR stage, so tha=
+t
+> >> it can update the sampling counter accordingly, in case the sampling r=
+ate
+> >> actually got used.
+> > So if I read that correctly you're saying it's not part of the driver
+> > API but just something to be preserved from tx to tx-status. Can you
+> > document that in the header file too please?
+> Will send a new patch updating the docs soon. Should that hint apply to
+> only this particular flag or the whole flags struct member?
 
-THanks,
+Well that's just for this flag, the TX_CTL_NO_ACK for example surely is
+something drivers need to check :)
 
--- 
---
-Myk Robinson
-Computer Support Specialist
-Kingdom Computer Solutions
-http://www.kingdomcomputer.info
-myk.robinson@kingdomcomputer.info
-(731) 616.5030
+Thanks,
+johannes
 
+--=-j+hPL59sBe2uadHBl3WC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-On Fri, 2008-10-17 at 08:45 -0700, reinette chatre wrote:
-> On Fri, 2008-10-17 at 07:55 -0500, Myk Robinson wrote:
-> > Hello-
-> > 
-> > Used your driver package in Ubuntu Hardy with no trouble at all. Testing
-> > the Intrepid beta now. Before today, using the compat-wireless driver
-> > for kernel 2.6.27, networkmanager showed all devices grayed out and
-> > iwlist scan would not work. Today's driver release has allowed me to
-> > connect, but still drops the connection with intel 2945abg. Also, it
-> > causes the touchpad to lose sync when the connection is dropped.
-> > 
-> > Here is a pastebin containing some dmesg info that might be helpful.
-> > 
-> > http://pastebin.com/f286ee42c
-> > 
-> 
-> The log shows some firmware errors. Could you please follow the steps on
-> http://intellinuxwireless.org/?n=fw_error_report to help us find the
-> cause of the problem?
-> 
-> Thanks
-> 
-> Reinette
-> 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJI66QPAAoJEKVg1VMiehFYTusQAI23DzSWfESN6Dn4QseAbQr6
+T60csnIDsIY0ihE61/PrDzonYMPB8cirFwXudp01O3/5+4BJGXuGJl62G3EcsMDF
+bu6/OC8ua5Z8393a+8kptqyMZgeuZvrMo54FzVlbVWmDZPPa/+DKUAeG9tbGQwBL
+LnmGOhMJDUWf2vrW8WZrY9+A+fThPYYgE6JMEhPjmbDcAoBTjsBn57pwV7xdVxc7
+0Qo9fmmRx0MSi5/pAgrNDaFkbRDc1HK4iImla+LGURiQIrJ1a+OZfZbHE8t5WwQB
+NIX7LAWdVCyxI2V/omPiXpDdS9U6HM80jwZYw8MLWqy1Twnno7qee+G0tL7xW1mL
+KPVAo+DcIzLnQGdTFgT/dXg+br0EyG2DBaNDp+9M1tpTNQ9kkPa2anSZadx8hQ8q
+jx3jq+hseG4d6kNeG0sd6os1SwxbbEUjD88KI3r4ShCy7RYSCBTJuVEgVp3h7tGJ
+bLHGcIhCsB9UXGrXe+K/luRq1e2EaIRyOoqA95tOt1uKSeOKn4Ta9F12ASUU8Ee7
+qwFWS39CUHAGPZn0pT/LC18o25HbWlaJHZ3XT2cMduk/DrnnQnONl/UoTwFr6mbY
+UVzhJpO+Y2IOlmZPoFTNEYK5SKYBKrRid2XOrQzaRrD+HfPd61cWtl97Dh9273Lh
+M2K0xgAhbCP/T1R6fOrR
+=0Fo2
+-----END PGP SIGNATURE-----
+
+--=-j+hPL59sBe2uadHBl3WC--
 
