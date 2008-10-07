@@ -1,35 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57740 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366AbYJFTDo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44220 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753398AbYJGRbS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 15:03:44 -0400
-Date: Mon, 6 Oct 2008 15:03:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>, linux-wireless@vger.kernel.org,
-	yi.zhu@intel.com
-Subject: Re: [PATCH 1/2] iwlwifi: fix compliation warning in iwl-agn-rs.c
-	when CONFIG_IWLWIFI_DEBUG is not set.
-Message-ID: <20081006190301.GE3448@tuxdriver.com> (sfid-20081006_210402_323679_4B65AD7A)
-References: <eb3ff54b0810060658p2241a6d0k9c6f504d976e0f@mail.gmail.com> <1ba2fa240810060741o35c8071ere77460305b88545c@mail.gmail.com> <eb3ff54b0810060811p4798e4c0va59c5375d004f53d@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <eb3ff54b0810060811p4798e4c0va59c5375d004f53d@mail.gmail.com>
+	Tue, 7 Oct 2008 13:31:18 -0400
+Subject: [PATCH] mac80211: fix HT information element parsing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Content-Type: text/plain
+Date: Tue, 07 Oct 2008 19:31:17 +0200
+Message-Id: <1223400677.7328.56.camel@johannes.berg> (sfid-20081007_193122_775937_E30C2F72)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 06, 2008 at 05:11:40PM +0200, Rami Rosen wrote:
+There's no checking that the HT IEs are of the right length
+which can be used by an attacker to cause an out-of-bounds
+access by sending a too short HT information/capability IE.
+Fix it by simply pretending those IEs didn't exist when too
+short.
 
->  Second, this is also a possible solution; looking at the function
-> immediately above in the same file  (rs_clear() in iwl-agn-rs.c)
-> we can see the same usage of #ifdef CONFIG_IWLWIFI_DEBUG
-> and not __maybe_unused.
-> I wonder: does the  "__maybe_unused" solution better than the #ifdef
-> solution  in any aspect?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_i.h |    6 ++----
+ net/mac80211/mlme.c        |    3 ---
+ net/mac80211/util.c        |    8 ++++----
+ 3 files changed, 6 insertions(+), 11 deletions(-)
 
-Yes.
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-10-07 16:52:04.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-10-07 16:53:04.000000000 +0200
+@@ -816,8 +816,8 @@ struct ieee802_11_elems {
+ 	u8 *ext_supp_rates;
+ 	u8 *wmm_info;
+ 	u8 *wmm_param;
+-	u8 *ht_cap_elem;
+-	u8 *ht_info_elem;
++	struct ieee80211_ht_cap *ht_cap_elem;
++	struct ieee80211_ht_addt_info *ht_info_elem;
+ 	u8 *mesh_config;
+ 	u8 *mesh_id;
+ 	u8 *peer_link;
+@@ -844,8 +844,6 @@ struct ieee802_11_elems {
+ 	u8 ext_supp_rates_len;
+ 	u8 wmm_info_len;
+ 	u8 wmm_param_len;
+-	u8 ht_cap_elem_len;
+-	u8 ht_info_elem_len;
+ 	u8 mesh_config_len;
+ 	u8 mesh_id_len;
+ 	u8 peer_link_len;
+--- everything.orig/net/mac80211/mlme.c	2008-10-07 16:52:45.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-10-07 16:54:01.000000000 +0200
+@@ -1347,10 +1347,8 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	    (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
+ 		struct ieee80211_ht_bss_info bss_info;
+ 		ieee80211_ht_cap_ie_to_ht_info(
+-				(struct ieee80211_ht_cap *)
+ 				elems.ht_cap_elem, &sta->sta.ht_info);
+ 		ieee80211_ht_addt_info_ie_to_ht_bss_info(
+-				(struct ieee80211_ht_addt_info *)
+ 				elems.ht_info_elem, &bss_info);
+ 		ieee80211_handle_ht(local, 1, &sta->sta.ht_info, &bss_info);
+ 	}
+@@ -1713,7 +1711,6 @@ static void ieee80211_rx_mgmt_beacon(str
+ 		struct ieee80211_ht_bss_info bss_info;
+ 
+ 		ieee80211_ht_addt_info_ie_to_ht_bss_info(
+-				(struct ieee80211_ht_addt_info *)
+ 				elems.ht_info_elem, &bss_info);
+ 		changed |= ieee80211_handle_ht(local, 1, &conf->ht_conf,
+ 					       &bss_info);
+--- everything.orig/net/mac80211/util.c	2008-10-07 16:51:56.000000000 +0200
++++ everything/net/mac80211/util.c	2008-10-07 16:54:57.000000000 +0200
+@@ -529,12 +529,12 @@ void ieee802_11_parse_elems(u8 *start, s
+ 			elems->ext_supp_rates_len = elen;
+ 			break;
+ 		case WLAN_EID_HT_CAPABILITY:
+-			elems->ht_cap_elem = pos;
+-			elems->ht_cap_elem_len = elen;
++			if (elen >= sizeof(struct ieee80211_ht_cap))
++				elems->ht_cap_elem = (void *)pos;
+ 			break;
+ 		case WLAN_EID_HT_EXTRA_INFO:
+-			elems->ht_info_elem = pos;
+-			elems->ht_info_elem_len = elen;
++			if (elen >= sizeof(struct ieee80211_ht_addt_info))
++				elems->ht_info_elem = (void *)pos;
+ 			break;
+ 		case WLAN_EID_MESH_ID:
+ 			elems->mesh_id = pos;
 
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+
