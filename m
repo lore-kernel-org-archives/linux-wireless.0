@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sr02-07.mta.terra.com.br ([200.154.152.36]:45903 "EHLO
-	sr02-07.mta.terra.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbYJaD3d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 23:29:33 -0400
-Message-ID: <490A7B94.8030107@terra.com.br> (sfid-20081031_042949_933107_1ECD4CE3)
-Date: Fri, 31 Oct 2008 01:29:24 -0200
-From: Piter PUNK <piterpk@terra.com.br>
+Received: from hostap.isc.org ([149.20.54.63]:38915 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751194AbYJGTpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2008 15:45:08 -0400
+Date: Tue, 7 Oct 2008 22:44:06 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: wpa supplicant interface up delay
+Message-ID: <20081007194406.GK4941@jm.kir.nu> (sfid-20081007_214513_010095_8AC4123F)
+References: <1223403361.7328.71.camel@johannes.berg>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: htl10@users.sourceforge.net,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC/RFT] rtl8187: Change TX power settings
-References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>	<490905E9.8040005@lwfinger.net> <4909E5F6.9040401@lwfinger.net>
-In-Reply-To: <4909E5F6.9040401@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1223403361.7328.71.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> The latest vendor driver (rtl8187B_linux_26.1036.0708.2008) has changed the
-> CCK and OFDM power setting code as compared with previous versions. This
-> patch implements those changes for the Linux driver.
+On Tue, Oct 07, 2008 at 08:16:01PM +0200, Johannes Berg wrote:
+>                          * Wait some time to allow driver to initialize before
+>                          * starting configuring the driver. This seems to be  
+>                          * needed at least some drivers that load firmware etc.
+>                          * when the interface is set up.
 > 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> Piter,
-> 
-> Does this help your devices?
-> 
-> Larry
+> which drivers are those, and why can't we fix the drivers instead? This
+> seems like a bug in the drivers that they return from their open
+> callback prematurely.
 
-Yes! I apply the patch against 2.6.27.4 and is all OK -:)
-Just now i upload some package files to slackware.com!
+I've observed issues with a driver that (at least at the time) was not
+fully open source. I didn't feel like fixing the driver at the time.
 
-Seems to me that all the magic is:
-
- > +			 rtl8225z2_tx_gain_cck_ofdm[cck_power] << 1);
-
-Correct? It only increases the TX power?
-
-Thanks!
-
-Piter PUNK
+Anyway, I'm perfectly fine with removing this from nl80211. As far as
+driver_wext.c is concerned, I would like to first verify what the
+original issue is and whether the driver could be fixed easily.
 
 -- 
-     |        E-Mail: piterpk@terra.com.br
-    .|.
-    /V\
-   // \\      UIN:116043354  Homepage:http://piterpunk.info02.com.br
-  /(   )\
-   ^`~'^         ----> Slackware Linux <----
-  #105432
+Jouni Malinen                                            PGP id EFC895FA
