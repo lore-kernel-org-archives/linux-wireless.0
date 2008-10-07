@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:5343 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510AbYJTIYx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44758 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671AbYJGRoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 04:24:53 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1840552wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 01:24:52 -0700 (PDT)
-Message-ID: <1ba2fa240810200124k2d30b49aqb8e08b70251d3896@mail.gmail.com> (sfid-20081020_102457_538788_BB366F8C)
-Date: Mon, 20 Oct 2008 10:24:52 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Power saving on mac80211
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Kalle Valo" <kalle.valo@nokia.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>
-In-Reply-To: <1224483339.6324.55.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
-	 <87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
-	 <1224412006.6324.45.camel@johannes.berg> <871vyc7st7.fsf@nokia.com>
-	 <1224434885.6324.49.camel@johannes.berg> <87myh0a1zd.fsf@nokia.com>
-	 <43e72e890810191846h46a6b35br4ad61803a25bdf23@mail.gmail.com>
-	 <1224483339.6324.55.camel@johannes.berg>
+	Tue, 7 Oct 2008 13:44:05 -0400
+Subject: Re: [PATCH ] mac80211: remove unused declaration of struct
+	sta_attribute.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <eb3ff54b0810070729s678796a6hb9df7875b99e7a03@mail.gmail.com> (sfid-20081007_162944_674568_62611783)
+References: <eb3ff54b0810070729s678796a6hb9df7875b99e7a03@mail.gmail.com>
+	 (sfid-20081007_162944_674568_62611783)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dOXuPcNy5BzVVbZIgV3C"
+Date: Tue, 07 Oct 2008 19:44:04 +0200
+Message-Id: <1223401444.7328.61.camel@johannes.berg> (sfid-20081007_194410_867895_AD22DC79)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 8:15 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2008-10-19 at 18:46 -0700, Luis R. Rodriguez wrote:
->
->> I wanted to note intel hardware seems to handle parsing beacons in
->> firmware when is PS mode already and I have no clue when it would
->> inform mac80211 of a beacon miss and if it does it. Tomas?
 
-firmware parses beacons for PS and other purposes. There is beacon notification
+--=-dOXuPcNy5BzVVbZIgV3C
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-struct iwl4965_missed_beacon_notif {
-	__le32 consequtive_missed_beacons;
-	__le32 total_missed_becons;
-	__le32 num_expected_beacons;
-	__le32 num_recvd_beacons;
-} __attribute__ ((packed));
+On Tue, 2008-10-07 at 16:29 +0200, Rami Rosen wrote:
+> This patch removes unused definition of struct sta_attribute
+> in net/mac80211/ieee80211_i.h. (for the wireless-next-2.6 tree).
+>=20
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-> It doesn't do anything at all with mac80211.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Nope, currently it's used just as statistics. The major purpose is not
-PS but link quality (triggering roaming), but it can be abused for
-other good purposes.
-Tomas
+
+--=-dOXuPcNy5BzVVbZIgV3C
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI65/gAAoJEKVg1VMiehFYOeEQAIOw4EbF6Yb8wH2l0yhfd5i6
+66nfkGNlIu/uCh7aIK/sx6uB7yrKXuBs+sJQAno8NhGovLS08KmOU5VfYK15NEXB
+T6pG7PIJeNc9Xqv/lI0KKgVpmxL+/iI92dVBNqhtt8UgGlLCV+DB80iJaZXi0aVm
+w/8FCSqJkw8Mn/nCooidg0oXFwgQv3Dxs8DduG6i/qv3yYOsyIhe2NKcjq+SXLsX
+WIvm7S/ala3kS3nzwuzSbV9SkfS4hDeuIFlarYL9Ub1yP2H3SFDe3KYkZq6cO/pf
+jWD8IssX4rFx8Ky3bCQir3aS5U6lwHqEBK7pFiExWHUieUWNPhlJHHSH+HnXFUlo
+TJFfZALsqk0Rr8ADjbJlq08d4Uiq1Uqq+omxyU/GK9H7l7h8UG/EYWFx0OYSURKY
+rt78DiNYayID/J+nYYUv25pstLiHYpA7/Q8LUG3/3XRxDjyjd6nKn7v39ebe3vlG
+Sgyv86dYqFI1fA3cjUGsg/0VCA22/Ra4qk23rvGwT3G0Cx1j6ztS+KAeLf4j1e0B
++4xxUo7pwHbS7agvwU0zA4Pjn5TIvF+dyzm4ziuXldmiaw5uL62/NLwlTgsYin3c
+qX5gZxx2PC1ADzFXK1mqWucfeMfl+utbOM90/La7JqfqvC0RBJ+5an+cmSjk7hFg
+IMF13xMfdIw9m0Jh8/yS
+=ew1P
+-----END PGP SIGNATURE-----
+
+--=-dOXuPcNy5BzVVbZIgV3C--
+
