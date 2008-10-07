@@ -1,63 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36612 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbYJCPgE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34701 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756679AbYJGQ6I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 11:36:04 -0400
-Date: Fri, 3 Oct 2008 11:35:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Steven Noonan <steven@uplinklabs.net>,
-	linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org
-Subject: Re: ath9k: panic on tip/master
-Message-ID: <20081003153523.GC3368@tuxdriver.com> (sfid-20081003_173610_175287_1E87F125)
-References: <f488382f0810030256x2859fbf6j3f657621c567287f@mail.gmail.com> <20081003100211.GA29841@elte.hu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081003100211.GA29841@elte.hu>
+	Tue, 7 Oct 2008 12:58:08 -0400
+Message-Id: <20081007100439.450608000@sipsolutions.net> (sfid-20081007_185817_878370_FED05C74)
+References: <20081007100428.868688000@sipsolutions.net>
+Date: Tue, 07 Oct 2008 12:04:31 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: [PATCH 3/8] mac80211: remove writable debugs mesh parameters
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 03, 2008 at 12:02:11PM +0200, Ingo Molnar wrote:
-> 
-> * Steven Noonan <steven@uplinklabs.net> wrote:
-> 
-> > Hey folks,
-> > 
-> > Just got a panic on tip. According to the stack trace, ath9k is what 
-> > decided to bomb.
-> > 
-> > http://www.uplinklabs.net/~tycho/linux/ath9k_panic_tip_10.3.2008.jpg
-> > 
-> > Note: Although it says 'sudo modprobe radeon' on the bash prompt above 
-> > the panic, I never got to hit 'enter' on that command before the panic 
-> > occurred.
-> 
-> it appears to me that ath9k's eth_rx_input() takes a spinlock that is 
-> not initialized (or already destroyed by the allocator).
+These parameters shouldn't be configurable via debugfs, if they
+need to be configurable nl80211 support has to be added, if not
+then they don't need to be writable here either.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Javier Cardona <javier@cozybit.com>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/debugfs_netdev.c |  112 +++++++++---------------------------------
+ 1 file changed, 24 insertions(+), 88 deletions(-)
+
+--- everything.orig/net/mac80211/debugfs_netdev.c	2008-10-07 11:26:52.000000000 +0200
++++ everything/net/mac80211/debugfs_netdev.c	2008-10-07 11:27:00.000000000 +0200
+@@ -41,29 +41,6 @@ static ssize_t ieee80211_if_read(
+ 	return ret;
+ }
  
-Seems reasonable...
+-#ifdef CONFIG_MAC80211_MESH
+-static ssize_t ieee80211_if_write(
+-	struct ieee80211_sub_if_data *sdata,
+-	char const __user *userbuf,
+-	size_t count, loff_t *ppos,
+-	int (*format)(struct ieee80211_sub_if_data *, char *))
+-{
+-	char buf[10];
+-	int buf_size;
+-
+-	memset(buf, 0x00, sizeof(buf));
+-	buf_size = min(count, (sizeof(buf)-1));
+-	if (copy_from_user(buf, userbuf, buf_size))
+-		return count;
+-	read_lock(&dev_base_lock);
+-	if (sdata->dev->reg_state == NETREG_REGISTERED)
+-		(*format)(sdata, buf);
+-	read_unlock(&dev_base_lock);
+-
+-	return count;
+-}
+-#endif
+-
+ #define IEEE80211_IF_FMT(name, field, format_string)			\
+ static ssize_t ieee80211_if_fmt_##name(					\
+ 	const struct ieee80211_sub_if_data *sdata, char *buf,		\
+@@ -71,19 +48,6 @@ static ssize_t ieee80211_if_fmt_##name(	
+ {									\
+ 	return scnprintf(buf, buflen, format_string, sdata->field);	\
+ }
+-#define IEEE80211_IF_WFMT(name, field, type)				\
+-static int ieee80211_if_wfmt_##name(					\
+-	struct ieee80211_sub_if_data *sdata, char *buf)			\
+-{									\
+-	unsigned long tmp;						\
+-	char *endp;							\
+-									\
+-	tmp = simple_strtoul(buf, &endp, 0);				\
+-	if ((endp == buf) || ((type)tmp != tmp))			\
+-		return -EINVAL;						\
+-	sdata->field = tmp;						\
+-	return 0;							\
+-}
+ #define IEEE80211_IF_FMT_DEC(name, field)				\
+ 		IEEE80211_IF_FMT(name, field, "%d\n")
+ #define IEEE80211_IF_FMT_HEX(name, field)				\
+@@ -126,34 +90,6 @@ static const struct file_operations name
+ 		IEEE80211_IF_FMT_##format(name, field)			\
+ 		__IEEE80211_IF_FILE(name)
+ 
+-#define __IEEE80211_IF_WFILE(name)					\
+-static ssize_t ieee80211_if_read_##name(struct file *file,		\
+-					char __user *userbuf,		\
+-					size_t count, loff_t *ppos)	\
+-{									\
+-	return ieee80211_if_read(file->private_data,			\
+-				 userbuf, count, ppos,			\
+-				 ieee80211_if_fmt_##name);		\
+-}									\
+-static ssize_t ieee80211_if_write_##name(struct file *file,		\
+-					const char __user *userbuf,	\
+-					size_t count, loff_t *ppos)	\
+-{									\
+-	return ieee80211_if_write(file->private_data,			\
+-				 userbuf, count, ppos,			\
+-				 ieee80211_if_wfmt_##name);		\
+-}									\
+-static const struct file_operations name##_ops = {			\
+-	.read = ieee80211_if_read_##name,				\
+-	.write = ieee80211_if_write_##name,				\
+-	.open = mac80211_open_file_generic,				\
+-}
+-
+-#define IEEE80211_IF_WFILE(name, field, format, type)			\
+-		IEEE80211_IF_FMT_##format(name, field)			\
+-		IEEE80211_IF_WFMT(name, field, type)			\
+-		__IEEE80211_IF_WFILE(name)
+-
+ /* common attributes */
+ IEEE80211_IF_FILE(drop_unencrypted, drop_unencrypted, DEC);
+ IEEE80211_IF_FILE(force_unicast_rateidx, force_unicast_rateidx, DEC);
+@@ -212,30 +148,30 @@ IEEE80211_IF_FILE(dropped_frames_no_rout
+ IEEE80211_IF_FILE(estab_plinks, u.mesh.mshstats.estab_plinks, ATOMIC);
+ 
+ /* Mesh parameters */
+-IEEE80211_IF_WFILE(dot11MeshMaxRetries,
+-		u.mesh.mshcfg.dot11MeshMaxRetries, DEC, u8);
+-IEEE80211_IF_WFILE(dot11MeshRetryTimeout,
+-		u.mesh.mshcfg.dot11MeshRetryTimeout, DEC, u16);
+-IEEE80211_IF_WFILE(dot11MeshConfirmTimeout,
+-		u.mesh.mshcfg.dot11MeshConfirmTimeout, DEC, u16);
+-IEEE80211_IF_WFILE(dot11MeshHoldingTimeout,
+-		u.mesh.mshcfg.dot11MeshHoldingTimeout, DEC, u16);
+-IEEE80211_IF_WFILE(dot11MeshTTL, u.mesh.mshcfg.dot11MeshTTL, DEC, u8);
+-IEEE80211_IF_WFILE(auto_open_plinks, u.mesh.mshcfg.auto_open_plinks, DEC, u8);
+-IEEE80211_IF_WFILE(dot11MeshMaxPeerLinks,
+-		u.mesh.mshcfg.dot11MeshMaxPeerLinks, DEC, u16);
+-IEEE80211_IF_WFILE(dot11MeshHWMPactivePathTimeout,
+-		u.mesh.mshcfg.dot11MeshHWMPactivePathTimeout, DEC, u32);
+-IEEE80211_IF_WFILE(dot11MeshHWMPpreqMinInterval,
+-		u.mesh.mshcfg.dot11MeshHWMPpreqMinInterval, DEC, u16);
+-IEEE80211_IF_WFILE(dot11MeshHWMPnetDiameterTraversalTime,
+-		u.mesh.mshcfg.dot11MeshHWMPnetDiameterTraversalTime, DEC, u16);
+-IEEE80211_IF_WFILE(dot11MeshHWMPmaxPREQretries,
+-		u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries, DEC, u8);
+-IEEE80211_IF_WFILE(path_refresh_time,
+-		u.mesh.mshcfg.path_refresh_time, DEC, u32);
+-IEEE80211_IF_WFILE(min_discovery_timeout,
+-		u.mesh.mshcfg.min_discovery_timeout, DEC, u16);
++IEEE80211_IF_FILE(dot11MeshMaxRetries,
++		u.mesh.mshcfg.dot11MeshMaxRetries, DEC);
++IEEE80211_IF_FILE(dot11MeshRetryTimeout,
++		u.mesh.mshcfg.dot11MeshRetryTimeout, DEC);
++IEEE80211_IF_FILE(dot11MeshConfirmTimeout,
++		u.mesh.mshcfg.dot11MeshConfirmTimeout, DEC);
++IEEE80211_IF_FILE(dot11MeshHoldingTimeout,
++		u.mesh.mshcfg.dot11MeshHoldingTimeout, DEC);
++IEEE80211_IF_FILE(dot11MeshTTL, u.mesh.mshcfg.dot11MeshTTL, DEC);
++IEEE80211_IF_FILE(auto_open_plinks, u.mesh.mshcfg.auto_open_plinks, DEC);
++IEEE80211_IF_FILE(dot11MeshMaxPeerLinks,
++		u.mesh.mshcfg.dot11MeshMaxPeerLinks, DEC);
++IEEE80211_IF_FILE(dot11MeshHWMPactivePathTimeout,
++		u.mesh.mshcfg.dot11MeshHWMPactivePathTimeout, DEC);
++IEEE80211_IF_FILE(dot11MeshHWMPpreqMinInterval,
++		u.mesh.mshcfg.dot11MeshHWMPpreqMinInterval, DEC);
++IEEE80211_IF_FILE(dot11MeshHWMPnetDiameterTraversalTime,
++		u.mesh.mshcfg.dot11MeshHWMPnetDiameterTraversalTime, DEC);
++IEEE80211_IF_FILE(dot11MeshHWMPmaxPREQretries,
++		u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries, DEC);
++IEEE80211_IF_FILE(path_refresh_time,
++		u.mesh.mshcfg.path_refresh_time, DEC);
++IEEE80211_IF_FILE(min_discovery_timeout,
++		u.mesh.mshcfg.min_discovery_timeout, DEC);
+ #endif
+ 
+ 
 
-> this would be consistent with an IRQ storm hitting some race in the 
-> ath9k driver init sequence. For example if request_irq() is done before 
-> all structures that the IRQ handler relies on are properly initialized.
-> 
-> i.e. this has the signature of a genuine ath9k bug.
-
-Agreed, although I don't see anything specifically relating to
-request_irq or the like.
-
-I think the spin_lock call may actually be in ath_ampdu_input (called
-from ath_rx_input), which perhaps is getting called simultaneous
-with ath_rx_node_init still running?  With no locks in between them,
-it seems like this could be the culprit?
-
-Sorry to not be more immediately helpful, but I'm going to have to
-run in a few minutes.  Perhaps this insight is helpful for someone
-more familiar with the internals of this driver?
-
-John
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+
