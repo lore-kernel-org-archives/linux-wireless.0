@@ -1,38 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:37429 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752667AbYJPXkD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34708 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756660AbYJGQ6L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 19:40:03 -0400
-Message-ID: <48F7D0D2.6090604@lwfinger.net> (sfid-20081017_014007_913218_B532EE70)
-Date: Thu, 16 Oct 2008 16:40:02 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>, Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Warning from mac80211 with p54usb
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Oct 2008 12:58:11 -0400
+Message-Id: <20081007100437.357527000@sipsolutions.net> (sfid-20081007_185819_337403_F32DFC99)
+References: <20081007100428.868688000@sipsolutions.net>
+Date: Tue, 07 Oct 2008 12:04:29 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Robin Holt <holt@sgi.com>
+Subject: [PATCH 1/8] mac80211: fix debugfs lockup
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian,
+When debugfs_create_dir fails, sta_info_debugfs_add_work will not
+terminate because it will find the same station again and again.
+This is possible whenever debugfs fails for whatever reason; one
+reason is a race condition in mac80211, unfortunately we cannot
+do much about it, so just document it, it just means some station
+may be missing from debugfs.
 
-Many thanks for the renaming of the firmware for p54usb. With this change, I can
-keep an old version of the firmware (2.5.8.0.arm) named isl3887usb_bare and a
-new one (2.13.1.0.arm.1) named isl3887usb in /lib/firmware and run the trees
-from Linus and wireless-testing without messing with the firmware.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Robin Holt <holt@sgi.com>
+---
+ net/mac80211/debugfs_sta.c |   11 +++++++++++
+ net/mac80211/sta_info.c    |    7 ++++++-
+ net/mac80211/sta_info.h    |    1 +
+ 3 files changed, 18 insertions(+), 1 deletion(-)
 
-I have discovered one anomaly that shows up with firmware 2.5.8.0.arm. If the
-USB device is unplugged and replugged, mac80211 will log the warning from
-net/mac80211/main.c:234 because p54_config() returns an error. The source of the
-error is p54_assign_address(), where target_skb is NULL. That happens because
-priv->rx_end - last_addr is 32 whereas the value of len is 160 - thus target_skb
-never gets set.
+--- everything.orig/net/mac80211/debugfs_sta.c	2008-10-07 11:26:52.000000000 +0200
++++ everything/net/mac80211/debugfs_sta.c	2008-10-07 11:26:58.000000000 +0200
+@@ -249,11 +249,22 @@ void ieee80211_sta_debugfs_add(struct st
+ 	DECLARE_MAC_BUF(mbuf);
+ 	u8 *mac;
+ 
++	sta->debugfs.add_has_run = true;
++
+ 	if (!stations_dir)
+ 		return;
+ 
+ 	mac = print_mac(mbuf, sta->sta.addr);
+ 
++	/*
++	 * This might fail due to a race condition:
++	 * When mac80211 unlinks a station, the debugfs entries
++	 * remain, but it is already possible to link a new
++	 * station with the same address which triggers adding
++	 * it to debugfs; therefore, if the old station isn't
++	 * destroyed quickly enough the old station's debugfs
++	 * dir might still be around.
++	 */
+ 	sta->debugfs.dir = debugfs_create_dir(mac, stations_dir);
+ 	if (!sta->debugfs.dir)
+ 		return;
+--- everything.orig/net/mac80211/sta_info.c	2008-10-07 11:26:52.000000000 +0200
++++ everything/net/mac80211/sta_info.c	2008-10-07 11:26:58.000000000 +0200
+@@ -635,7 +635,12 @@ static void sta_info_debugfs_add_work(st
+ 
+ 		spin_lock_irqsave(&local->sta_lock, flags);
+ 		list_for_each_entry(tmp, &local->sta_list, list) {
+-			if (!tmp->debugfs.dir) {
++			/*
++			 * debugfs.add_has_run will be set by
++			 * ieee80211_sta_debugfs_add regardless
++			 * of what else it does.
++			 */
++			if (!tmp->debugfs.add_has_run) {
+ 				sta = tmp;
+ 				__sta_info_pin(sta);
+ 				break;
+--- everything.orig/net/mac80211/sta_info.h	2008-10-07 11:26:52.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-10-07 11:26:58.000000000 +0200
+@@ -300,6 +300,7 @@ struct sta_info {
+ 		struct dentry *inactive_ms;
+ 		struct dentry *last_seq_ctrl;
+ 		struct dentry *agg_status;
++		bool add_has_run;
+ 	} debugfs;
+ #endif
+ 
 
-I have not seen this problem with firmware 2.13.1.arm.1, nor does it occur if
-the driver is removed before the USB device is replugged.
-
-If you have any suggestions regarding debugging, please let me know.
-
-Larry
+-- 
 
