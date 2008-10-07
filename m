@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:33540 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753401AbYJKOt5 (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.191]:61609 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752304AbYJGODe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 10:49:57 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so377708eyi.37
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Oct 2008 07:49:56 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: provide sequence numbers
-Date: Sat, 11 Oct 2008 16:49:51 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1223637719.17594.6.camel@johannes.berg>
-In-Reply-To: <1223637719.17594.6.camel@johannes.berg>
+	Tue, 7 Oct 2008 10:03:34 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2806286fkq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 07:03:33 -0700 (PDT)
+Message-ID: <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com> (sfid-20081007_160339_125262_38DB63FE)
+Date: Tue, 7 Oct 2008 16:03:32 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+Cc: "Christoph Hellwig" <hch@infradead.org>,
+	"Holger Schurig" <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <20081007131615.GR3448@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200810111649.51946.IvDoorn@gmail.com> (sfid-20081011_165002_966429_7810CE98)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223311803.15196.36.camel@johannes.berg>
+	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
+	 <200810070821.56462.hs4233@mail.mn-solutions.de>
+	 <20081007071529.GA5010@infradead.org>
+	 <20081007131615.GR3448@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 10 October 2008, Johannes Berg wrote:
-> I've come to think that not providing sequence numbers for
-> the normal STA mode case was a mistake, at least two drivers
-> now had to implement code they wouldn't otherwise need, and
-> I believe at76_usb and adm8211 might be broken.
-> 
-> This patch makes mac80211 assign a sequence number to all
-> those frames that need one except beacons. That means that
-> if a driver only implements modes that do not do beaconing
-> it need not worry about the sequence number.
+On Tue, Oct 7, 2008 at 3:16 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Tue, Oct 07, 2008 at 03:15:29AM -0400, Christoph Hellwig wrote:
+>> On Tue, Oct 07, 2008 at 08:21:56AM +0200, Holger Schurig wrote:
+>> > > I don't want these macros eithers but I NACK any patches with
+>> > > cursing in the commit logs.
+>> >
+>> > I fully agree. There's no need to speak about "crap" when
+>> > changing other people's code. In some cultures thats quite
+>> > insulting.
+>>
+>> Well, it is crap.  Looks at it objectively.  It's a perfectly fine
+>> description and most of us use it perfectly happily for our own code,
+>> too.
+>
+> I agree that this is at worst a little bit rude.  The patch should be
+> rejected or merged on its own basis, although I do reserve the right
+> to edit a changelog from time to time... :-)
 
-Very good news. :)
+Appreciated.
 
->  	if (!ieee80211_is_data_qos(hdr->frame_control)) {
-> +		/* driver should assign sequence number */
->  		info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
-> +		/* for pure STA mode without beacons, we can do it */
-> +		hdr->seq_ctrl = cpu_to_le16(tx->sdata->sequence_number);
-> +		tx->sdata->sequence_number += 0x10;
-> +		tx->sdata->sequence_number &= IEEE80211_SCTL_SEQ;
->  		return TX_CONTINUE;
->  	}
+> Now, can we discuss the patch rather than Johannes' intemperate
+> word choice?
 
-Shouldn't this be changed to only setting the IEEE80211_TX_CTL_ASSIGN_SEQ
-flag when the sequence counter was _not_ set (with beacons)?
+With Johannes permissions I will split the patch into chunks first so
+I can take smaller steps second
+it will better fit into patches I have in pipe.
 
-Ivo
+Thanks
+Tomas
