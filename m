@@ -1,98 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3398 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752273AbYJ3DYb (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34744 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764AbYJGQ6q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 23:24:31 -0400
-Date: Wed, 29 Oct 2008 23:24:26 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Update PCU code
-Message-ID: <20081030032426.GB26970@hash.localnet> (sfid-20081030_042435_588516_80861066)
-References: <20081029021121.GA3079@makis> <20081029024603.GA22759@hash.localnet> <40f31dec0810290408h5ee08c8l1e14d576064f01a4@mail.gmail.com> <b6c5339f0810290705j36995186j382a8415886fb061@mail.gmail.com> <40f31dec0810290741t6378eebelbdacf4e5c8d63bff@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0810290741t6378eebelbdacf4e5c8d63bff@mail.gmail.com>
+	Tue, 7 Oct 2008 12:58:46 -0400
+Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com> (sfid-20081007_160333_602786_FAD0D1AE)
+References: <1223311803.15196.36.camel@johannes.berg>
+	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
+	 <200810070821.56462.hs4233@mail.mn-solutions.de>
+	 <20081007071529.GA5010@infradead.org> <20081007131615.GR3448@tuxdriver.com>
+	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
+	 (sfid-20081007_160333_602786_FAD0D1AE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mPLxwSSzqQ9n6OlyGtPc"
+Date: Tue, 07 Oct 2008 18:58:44 +0200
+Message-Id: <1223398724.7328.45.camel@johannes.berg> (sfid-20081007_185850_915647_41B80E1B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 04:41:22PM +0200, Nick Kossifidis wrote:
-> 2008/10/29 Bob Copeland <me@bobcopeland.com>:
-> Yup you are right, we should set both to NULL so a temp micentry var
-> would do the trick.
-> 
-> Should i resend this one or you 'll resend yours ?
 
-Well I just decided to put this in a different patch.  Then I saw the
-5211 check.. we already read the type without such a check and the 
-other tkip stuff may well all blow up on such hardware.  So not sure
-what to do about that case.
+--=-mPLxwSSzqQ9n6OlyGtPc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Anyway feel free to just roll this up into your original patch, or to 
-write it differently given the above.
+On Tue, 2008-10-07 at 16:03 +0200, Tomas Winkler wrote:
 
-From: Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH] ath5k: fix keytable type buglet in ath5k_hw_reset_key
+> > Now, can we discuss the patch rather than Johannes' intemperate
+> > word choice?
+>=20
+> With Johannes permissions I will split the patch into chunks first so
+> I can take smaller steps second
+> it will better fit into patches I have in pipe.
 
-Be sure we clear out both the mic (if applicable) and
-the encryption key type.
+Fine with me, can you adopt the first one too that cleans up the DMA
+code? And please keep the 10 pairs -> 20 addresses, it's a lot easier to
+understand :)
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/pcu.c |   15 +++++++++++----
- 1 files changed, 11 insertions(+), 4 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
-index 9b46d64..d7f0c10 100644
---- a/drivers/net/wireless/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath5k/pcu.c
-@@ -960,6 +960,7 @@ int ath5k_hw_beaconq_finish(struct ath5k_hw *ah, unsigned long phys_addr)
- int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
- {
- 	unsigned int i, type;
-+	u16 micentry = entry + AR5K_KEYTABLE_MIC_OFFSET;
- 
- 	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
-@@ -972,10 +973,10 @@ int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
- 	/* Reset associated MIC entry if TKIP
- 	 * is enabled located at offset (entry + 64) */
- 	if (type == AR5K_KEYTABLE_TYPE_TKIP) {
--		entry = entry + AR5K_KEYTABLE_MIC_OFFSET;
--		AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
-+		AR5K_ASSERT_ENTRY(micentry, AR5K_KEYTABLE_SIZE);
- 		for (i = 0; i < AR5K_KEYCACHE_SIZE / 2 ; i++)
--			ath5k_hw_reg_write(ah, 0, AR5K_KEYTABLE_OFF(entry, i));
-+			ath5k_hw_reg_write(ah, 0,
-+				AR5K_KEYTABLE_OFF(micentry, i));
- 	}
- 
- 	/*
-@@ -987,10 +988,16 @@ int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
- 	 * Note2: Windows driver (ndiswrapper) sets this to
- 	 *        0x00000714 instead of 0x00000007
- 	 */
--	if (ah->ah_version > AR5K_AR5211)
-+	if (ah->ah_version > AR5K_AR5211) {
- 		ath5k_hw_reg_write(ah, AR5K_KEYTABLE_TYPE_NULL,
- 				AR5K_KEYTABLE_TYPE(entry));
- 
-+		if (type == AR5K_KEYTABLE_TYPE_TKIP) {
-+			ath5k_hw_reg_write(ah, AR5K_KEYTABLE_TYPE_NULL,
-+				AR5K_KEYTABLE_TYPE(micentry));
-+		}
-+	}
-+
- 	return 0;
- }
- 
--- 
-1.5.4.2.182.gb3092
+--=-mPLxwSSzqQ9n6OlyGtPc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJI65VBAAoJEKVg1VMiehFYCfoP/Au4ihnwj718qDy5w15JFYY5
+ktvDPMhiN4ALrW4EIer9ODktgndFrYVw+tQS4V+GBQBdh5Zh/7OTrpp4L1CIHTOP
+U431yTt96rF5G5uAbqsaQTMml1bHi91gGvO1tOq7OzBH8J3HhA38tkY/IdDIoMVy
+ZELdYBYYGoj+pftHy7ip/hKaarU3ht+MsBApoIOGJasbjJdDagd7qucH8PA1fxRh
++VYKNxKeoZJcaNeagEh5DhrBIMKKhP8VuAzQmJ9hte55Y7Gfu/bhcljMiZ6Hhm4B
+Bns+3uWaLBDtJmtqzjZhGkyqLhAiSh/ygsWDOEsxyDb8FHTkRqxrnCKJT+4DAhcC
+XP/XCHfLtwz9fMgTz8JiqgGS9CHrVKRwy3dpzOGN7MaeH1dv7H2OsuCcstJnXfo6
+GJvj3wWzwD1ZVfBZVAqLA3jdtjQbFEM5uUFtVIDKu67lSoJJIku9k0n/XjlEV+F6
+XuCdP6InruVJJW1ASXGq0TZ3yzZFE36gYckVggD8I7phewTi9rZ0IOVf74bJ54dj
+N7NsN8h2rGjnQAm/d8kniEjFoc/iRRQDZUGiV6ThHxNpeVBmwc/ykfHIIQJcSbS/
+H+JtWQnFfoSsv2utM+DNn7VshfIRwfXeXjxhgB5acwUd+yQtmZ8HU5YxxfymZOK9
++ChRhqOdAxlkkaAkyIAp
+=uilq
+-----END PGP SIGNATURE-----
 
--- 
-Bob Copeland %% www.bobcopeland.com
+--=-mPLxwSSzqQ9n6OlyGtPc--
 
