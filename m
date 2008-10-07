@@ -1,56 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22671 "EHLO mga01.intel.com"
+Received: from nebensachen.de ([195.34.83.29]:40442 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751735AbYJTFTU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 01:19:20 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Zhu Yi <yi.zhu@intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890810192040w567fa4f6j1bf40e80084a857e@mail.gmail.com>
-References: <20081015112517.GF6509@tesla>
-	 <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com>
-	 <20081015170830.GA15902@tesla>
-	 <1ba2fa240810151735t100ceda5s7fe7b495f735c507@mail.gmail.com>
-	 <20081015174447.GF15902@tesla>
-	 <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com>
-	 <20081015185636.GH15902@tesla>
-	 <1224126030.24677.78.camel@debian.sh.intel.com>
-	 <20081016113848.GB5899@tesla>
-	 <1224471102.24677.124.camel@debian.sh.intel.com>
-	 <43e72e890810192040w567fa4f6j1bf40e80084a857e@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 20 Oct 2008 13:18:53 +0800
-Message-Id: <1224479933.24677.148.camel@debian.sh.intel.com> (sfid-20081020_071925_054364_8AE216EF)
-Mime-Version: 1.0
+	id S1752348AbYJGP11 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2008 11:27:27 -0400
+From: Elias Oltmanns <eo@nebensachen.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: ath5k: kernel timing screwed - due to unserialised register  access?
+References: <87k5cm3ee2.fsf@denkblock.local>
+	<alpine.LFD.2.00.0810052354000.3398@apollo>
+	<87d4id3jmr.fsf@denkblock.local>
+	<alpine.LFD.2.00.0810061614490.3166@apollo>
+Date: Tue, 07 Oct 2008 17:27:09 +0200
+Message-ID: <87skr8h1de.fsf@denkblock.local> (sfid-20081007_172732_454178_F5F4F5B5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-10-19 at 20:40 -0700, Luis R. Rodriguez wrote:
-> On Sun, Oct 19, 2008 at 7:51 PM, Zhu Yi <yi.zhu@intel.com> wrote:
-> > On Thu, 2008-10-16 at 04:38 -0700, Luis R. Rodriguez wrote:
-> >> So.. you didn't look at the code to check where it may have failed...
-> >
-> > IIRC, below patch changes the previously allowing none 5GHz channels to
-> > allowing all 5GHZ channels. It does resolve our problem. But is it the
-> > correct behaviour? Or did I miss anything?
-> 
-> Well if you are using regulatory_hint() and only have rules defined in
-> the 2 GHz band then yes it won't ever touch 5 GHz channels... I don't
-> like this at all but its what I thought you were asking for.
+Thomas Gleixner <tglx@linutronix.de> wrote:
+> On Mon, 6 Oct 2008, Elias Oltmanns wrote:
+>> Make sure that event1 is the right device. chktimer usually reports
+>> several premature timer expiries in less than a minute.
+[...]
+> Your measuring method is wrong. You really want to measure the delta
+> of the timer events in the kernel via ktime_get(), not the delta of
+> something else in userspace.
 
-No, with this patch the 5GHz reg_rules on the second card are bypassed
-by regdomain. This is not correct. I do like to see the new regdomain
-handles all valid usage models correctly. But I fail to see how it can
-be with the current design (the first one wins, or do intersection). We
-should do intersection within each band, but do union between bands. 
+Alright, here is a stripped down version of the test case. This time,
+you only need to load the timer-test module and start up the ath5k
+interface. The glitch is triggered slightly less reliably, but I can
+still easily verify that the problem is present when running 2.6.27-rc9
+on my system.
 
-Thanks,
--yi
+Regards,
 
+Elias
+
+---
+ drivers/misc/Kconfig      |   11 ++++++++++
+ drivers/misc/Makefile     |    1 +
+ drivers/misc/timer-test.c |   50 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 62 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/misc/timer-test.c
+
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index a726f3b..7ebdcfc 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -475,4 +475,15 @@ config SGI_GRU_DEBUG
+ 	This option enables addition debugging code for the SGI GRU driver. If
+ 	you are unsure, say N.
+ 
++config TIMER_TEST
++	tristate "timer stress test"
++	default n
++	select INPUT
++	---help---
++	This is some code for stress testing the timer code. It is purely for
++	debugging purposes and should generally be disabled. If built as a
++	module, the module will be called timer-test.
++
++	If you are unsure, say N.
++
+ endif # MISC_DEVICES
+diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
+index c6c13f6..ffffd78 100644
+--- a/drivers/misc/Makefile
++++ b/drivers/misc/Makefile
+@@ -30,3 +30,4 @@ obj-$(CONFIG_KGDB_TESTS)	+= kgdbts.o
+ obj-$(CONFIG_SGI_XP)		+= sgi-xp/
+ obj-$(CONFIG_SGI_GRU)		+= sgi-gru/
+ obj-$(CONFIG_HP_ILO)		+= hpilo.o
++obj-$(CONFIG_TIMER_TEST)	+= timer-test.o
+diff --git a/drivers/misc/timer-test.c b/drivers/misc/timer-test.c
+new file mode 100644
+index 0000000..780f3dd
+--- /dev/null
++++ b/drivers/misc/timer-test.c
+@@ -0,0 +1,50 @@
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/timer.h>
++#include <linux/jiffies.h>
++
++#define TSTM_FREQ 50
++#define __TSTM_THRESH (NSEC_PER_SEC / TSTM_FREQ / 20)
++#if __TSTM_THRESH > 0
++# define TSTM_THRESH __TSTM_THRESH
++#else
++# define TSTM_THRESH 1
++#endif
++
++static struct timer_list tstm_timer;
++
++static void tstm_callback(unsigned long data)
++{
++	static struct timespec before;
++	struct timespec now, diff;
++
++	ktime_get_ts(&now);
++	diff = timespec_sub(now, before);
++	if (timespec_to_ns(&diff) < TSTM_THRESH)
++		printk(KERN_INFO "Timer expired prematurely.\n");
++	before = now;
++	mod_timer(&tstm_timer, jiffies + HZ/TSTM_FREQ);
++}
++
++static int __init tstm_init(void)
++{
++	init_timer(&tstm_timer);
++	tstm_timer.function = tstm_callback;
++	mod_timer(&tstm_timer, jiffies + HZ/TSTM_FREQ);
++
++	printk(KERN_INFO "timer-test: module successfully loaded.\n");
++	return 0;
++}
++
++static void __exit tstm_exit(void)
++{
++	del_timer_sync(&tstm_timer);
++	printk(KERN_INFO "tstm: module unloaded.\n");
++}
++
++module_init(tstm_init);
++module_exit(tstm_exit);
++
++MODULE_AUTHOR("Elias Oltmanns");
++MODULE_DESCRIPTION("Timer stress test module");
++MODULE_LICENSE("GPL v2");
