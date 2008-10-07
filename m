@@ -1,67 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47715 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752496AbYJaCFj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 22:05:39 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 19:05:39 -0700
-Date: Thu, 30 Oct 2008 19:05:37 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Steven Rostedt <rostedt@goodmis.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	reinette chatre <reinette.chatre@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [MEMO] ftrace suckage++
-Message-ID: <20081031020537.GJ21459@tesla> (sfid-20081031_030545_220556_35511E65)
-References: <43e72e890810301445r665a0139g752fb1c97069fe59@mail.gmail.com> <alpine.DEB.1.10.0810302149330.21031@gandalf.stny.rr.com>
+Received: from fk-out-0910.google.com ([209.85.128.188]:57052 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753515AbYJGUI6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2008 16:08:58 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2943736fkq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 13:08:55 -0700 (PDT)
+Message-ID: <1ba2fa240810071308o65d15c39r239f5d653d6aaa37@mail.gmail.com> (sfid-20081007_220900_608447_45C46303)
+Date: Tue, 7 Oct 2008 22:08:55 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Christoph Hellwig" <hch@infradead.org>,
+	"Holger Schurig" <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1223410003.3618.9.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <alpine.DEB.1.10.0810302149330.21031@gandalf.stny.rr.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223311803.15196.36.camel@johannes.berg>
+	 <200810070821.56462.hs4233@mail.mn-solutions.de>
+	 <20081007071529.GA5010@infradead.org>
+	 <20081007131615.GR3448@tuxdriver.com>
+	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
+	 <1223398724.7328.45.camel@johannes.berg>
+	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
+	 <1223408085.3618.2.camel@johannes.berg>
+	 <1ba2fa240810071301k185eebf6qbca6841af120e0ea@mail.gmail.com>
+	 <1223410003.3618.9.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 30, 2008 at 06:54:00PM -0700, Steven Rostedt wrote:
-> 
-> On Thu, 30 Oct 2008, Luis R. Rodriguez wrote:
-> 
-> > As johannes pointed out to me the culprit to the e1000e corruption was
-> > determined to be ftrace related [1]. Well it seems I hit an oops with
-> > ftrace using iwlagn after a simple load of the module using
-> > wireless-testing. I'm not sure if john's tree yet has ftrace fixes.
-> > Both Fedora 10 and Ubuntu 8.10 had dynamic ftrace enabled so users on
-> > these first kernels and using compat-wireless may run into this so
-> > just putting this out there. I'll can check for this flag in
-> > compat-wireless for now and bitch/exit if its enabled unless someone
-> > has a better idea.
-> >
-> > [1] http://lwn.net/Articles/303390/
-> >
-> > Oops, using wireless-testing and iwlagn with these options enabled:
-> >
-> > CONFIG_HAVE_FTRACE=y
-> > CONFIG_HAVE_DYNAMIC_FTRACE=y
-> > CONFIG_FTRACE=y
-> > CONFIG_DYNAMIC_FTRACE=y
-> >
-> 
-> Yes, ftrace in 2.6.27 is known to be broken. That's why 2.6.27.1 labeled
-> it as such. What is currently in Linus's 2.6.28 git tree is a completely
-> rewritten version of the dynamic ftracer, which addresses all of the
-> issues that caused breakage in the 2.6.27 release.
-> 
-> Do not use the 2.6.27 dynamic ftracer, it is known bad. 2.6.28 is fine. If
-> you find issues with what is currently in 2.6.28, please let me know.
-> There is currently some, "make allyesconfig" breakage that ftrace caused
-> on archs other than x86,ppc and sparc, but patches to fix them are
-> in queue to Linus.
-
-OK then in that case if *and only if* on 27 and if dynamic tracer is enabled
-I'll set compat stuff to simply bail out at compile time.
-
-Thanks,
-
-  Luis
+On Tue, Oct 7, 2008 at 10:06 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-10-07 at 22:01 +0200, Tomas Winkler wrote:
+>> On Tue, Oct 7, 2008 at 9:34 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Tue, 2008-10-07 at 21:28 +0200, Tomas Winkler wrote:
+>> >
+>> >> > And please keep the 10 pairs -> 20 addresses, it's a lot easier to
+>> >> > understand :)
+>> >
+>> >> I don't like on this solution two things one is that it 32 bit
+>> >> variables sits on unaligned address
+>> >
+>> > That doesn't matter at all since it's packed, and the bitwise accesses
+>> > you did previously are way less efficient.
+>>
+>> This is not packet this is shared memory.
+>
+> ??
+> The struct is _packed_, nothing to do with packets.
+I'm tired .. :)
