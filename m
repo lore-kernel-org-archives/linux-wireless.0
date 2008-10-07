@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:41520 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753711AbYJIVPk (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.187]:30602 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753383AbYJGR6A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 17:15:40 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: [GIT PATCH] rfkill updates
-Date: Thu,  9 Oct 2008 18:15:28 -0300
-Message-Id: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br> (sfid-20081009_231548_093040_42FA2B34)
+	Tue, 7 Oct 2008 13:58:00 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2890052fkq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 10:57:59 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211 and IEEE80211_CONF_SHORT_SLOT_TIME
+Date: Tue, 7 Oct 2008 19:57:54 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chr <chunkeey@web.de>, Pavel Roskin <proski@gnu.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+References: <1223370325.3778.69.camel@johannes.berg>
+In-Reply-To: <1223370325.3778.69.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810071957.55250.IvDoorn@gmail.com> (sfid-20081007_195804_925919_2DF83262)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-This patchset has the current stack of changes I am comfortable enough to
-propose for merging.
+> I just realised that for whatever reason mac80211 isn't setting the
+> IEEE80211_CONF_SHORT_SLOT_TIME flag. I'm not sure when or why that was
+> removed, but clearly it isn't used.
+> 
+> Can you please fix the drivers using it (b43, b43legacy, iwlwifi, p54,
+> rt2x00, rtl8180, rtl8187) to use the bss_conf's use_short_slot instead?
+> I'll fix mac80211 to set that appropriately.
 
-There is some other stuff in the burner, but since they are userspace-ABI
-related and I am not sure I am happy with it yet, I want to think a bit
-more before sending them to the list as an RFC patchset.
+Didn't you have such a patch for rt2x00 already?
+If not I'll see what I can do in a few days.
 
-I don't really care if this patch set make it to 2.6.28 merge window or
-not, they're mostly enhancements... still, I would appreciate comments
-(and if they are good enough already, ACKs and maybe even a merge into
-wireless-testing).
+Ivo
 
-Shortlog:
-Henrique de Moraes Holschuh (5):
-  rfkill: use killable locks instead of interruptible
-  rfkill: export global states to rfkill-input
-  rfkill: add master_switch_mode and EPO lock to rfkill and rfkill-input
-  rfkill: honour EPO state when resuming a rfkill controller
-  rfkill: rate-limit rfkill-input workqueue usage (v3)
 
-Thanks!
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
