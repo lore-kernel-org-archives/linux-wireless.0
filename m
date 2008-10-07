@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49883 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49882 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753488AbYJGTrk (ORCPT
+	with ESMTP id S1753479AbYJGTr0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 15:47:40 -0400
+	Tue, 7 Oct 2008 15:47:26 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
 Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [RFC PATCH] rtl8187: do not report ACKs if USB Tx status is non-zero
-Date: Tue,  7 Oct 2008 15:18:18 -0400
-Message-Id: <1223407098-23060-1-git-send-email-linville@tuxdriver.com> (sfid-20081007_214742_308770_3C062848)
+Subject: [PATCH] rtl8180: normalize quality measurment for 100-point scale
+Date: Tue,  7 Oct 2008 15:31:54 -0400
+Message-Id: <1223407914-23971-1-git-send-email-linville@tuxdriver.com> (sfid-20081007_214728_723690_57E54FC3)
 In-Reply-To: <>
 References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The vendor-supplied driver treats a USB Tx failure as an un-ACKed frame.
-I don't see why we shouldn't do the same thing -- hopefully this makes
-rate-scaling algorithms behave sanely with the rtl8187 driver.
-
-Thanks to Felix Fietkau <nbd@openwrt.org> for suggesting this as an
-option.
+Otherwise, we get values like "133/100" for quality output from
+iwconfig. :-(
 
 Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
-This is currently untested -- anyone with rtl8187 bored enough to try
-it? :-)
+This is currently untested, but it seems reasonable to me...any takers?  :-)
 
- drivers/net/wireless/rtl8187_dev.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rtl8180_dev.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-index ca5deb6..ae21191 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -164,7 +164,12 @@ static void rtl8187_tx_cb(struct urb *urb)
- 	skb_pull(skb, priv->is_rtl8187b ? sizeof(struct rtl8187b_tx_hdr) :
- 					  sizeof(struct rtl8187_tx_hdr));
- 	memset(&info->status, 0, sizeof(info->status));
--	info->flags |= IEEE80211_TX_STAT_ACK;
-+	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
-+		if (!urb->status)
-+			info->flags |= IEEE80211_TX_STAT_ACK;
-+		else /* assume ACK not received */
-+			info->status.excessive_retries = 1;
-+	}
- 	ieee80211_tx_status_irqsafe(hw, skb);
- }
+diff --git a/drivers/net/wireless/rtl8180_dev.c b/drivers/net/wireless/rtl8180_dev.c
+index b7172a1..e9edcaa 100644
+--- a/drivers/net/wireless/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl8180_dev.c
+@@ -132,7 +132,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
  
+ 			rx_status.antenna = (flags2 >> 15) & 1;
+ 			/* TODO: improve signal/rssi reporting */
+-			rx_status.qual = flags2 & 0xFF;
++			rx_status.qual = ((flags2 & 0xFF) * 100) / 256;
+ 			rx_status.signal = (flags2 >> 8) & 0x7F;
+ 			/* XXX: is this correct? */
+ 			rx_status.rate_idx = (flags >> 20) & 0xF;
 -- 
 1.5.4.3
 
