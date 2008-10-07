@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49365 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752187AbYJPPug (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:51783 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753740AbYJGUBr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 11:50:36 -0400
-Subject: Re: [PATCH] hostap: Fix sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jouni Malinen <j@w1.fi>, John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48F761C1.9000109@lwfinger.net> (sfid-20081016_174625_529721_9312B9FF)
-References: <48F761C1.9000109@lwfinger.net>
-	 (sfid-20081016_174625_529721_9312B9FF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-g82RcSVTXFwDnJ776p4S"
-Date: Thu, 16 Oct 2008 17:50:12 +0200
-Message-Id: <1224172212.735.79.camel@johannes.berg> (sfid-20081016_175039_618696_6F77806C)
-Mime-Version: 1.0
+	Tue, 7 Oct 2008 16:01:47 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2439928fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 13:01:45 -0700 (PDT)
+Message-ID: <1ba2fa240810071301k185eebf6qbca6841af120e0ea@mail.gmail.com> (sfid-20081007_220151_587413_BADD4D6B)
+Date: Tue, 7 Oct 2008 22:01:45 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Christoph Hellwig" <hch@infradead.org>,
+	"Holger Schurig" <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1223408085.3618.2.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223311803.15196.36.camel@johannes.berg>
+	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
+	 <200810070821.56462.hs4233@mail.mn-solutions.de>
+	 <20081007071529.GA5010@infradead.org>
+	 <20081007131615.GR3448@tuxdriver.com>
+	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
+	 <1223398724.7328.45.camel@johannes.berg>
+	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
+	 <1223408085.3618.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 7, 2008 at 9:34 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2008-10-07 at 21:28 +0200, Tomas Winkler wrote:
+>
+>> > And please keep the 10 pairs -> 20 addresses, it's a lot easier to
+>> > understand :)
+>
+>> I don't like on this solution two things one is that it 32 bit
+>> variables sits on unaligned address
+>
+> That doesn't matter at all since it's packed, and the bitwise accesses
+> you did previously are way less efficient.
 
---=-g82RcSVTXFwDnJ776p4S
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is not packet this is shared memory.
 
-On Thu, 2008-10-16 at 08:46 -0700, Larry Finger wrote:
-
-> -	set_bit(PRISM2_INFO_PENDING_LINKSTATUS, &local->pending_info);
-> +	set_bit(PRISM2_INFO_PENDING_LINKSTATUS, (ulong *)&local->pending_info);
-
-Shouldn't you just do this instead?
-
-
---- hostapd_wlan.h
-+++ hostapd_wlan.h
-@@ ... @@
--	long pending_info;
-+	unsigned long pending_info;
-
-?
-
-johannes
-
---=-g82RcSVTXFwDnJ776p4S
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI92KvAAoJEKVg1VMiehFYZB0QAL6nyFZGTGy17HISkFowDZpL
-CBBGPGdDoUuyRiN8gcCkCD31At4rx0DMqgKeKnJuk6FQLFoeVCDbvF4VRbEbD89z
-S6+nrRPwg627qfE1p7Eq+OUaXEN2GnFfTXv587R39MSiN3dQk+L6wc2LoEoP2NBt
-KCByczy2tw/CEHQR127sYJbpucS/vITR81lNC4kcfoH18olQDQbzl2CKWYwPxVdm
-WzuLnrWXGhMMfJV27AaIXP7g1ycFSVgb/u792ZaItHgi27y8bHGhao6rSkYORNZj
-RLxuMsOWPbgZEq985xd+irx+79DSK1Q/ww83vtGwYbcsWlFlaHTCMHnwI7TCLTTu
-v2TlaXgTfb89U+2kYziZopdEoHCxahjJvVfGulD4Qt+rlNeVYKpu3Nm5NW8pGBuN
-CXLCJQi/87NLE71C5LDPeBg4frNYsDNNpy62atPkyGfLRmwsco/o83Zw25L+cCYu
-zcQ8pbjBLyoJZuZeS2ejMqYebZlS69J8Wna1zSjfrHkuhNVPFVmD4A3lkCnFWIGK
-zSTjr9/dK3/Qp5Fjz0sQHfZhtMRa+3koSVmjiaiVeZ00BFmBFzy74Qx3gy9WEshX
-70+M0myK5NiU/Engv0a8Mq9Sq1vyXLsS0DDY2wFxjNaCMjlMfBS6HQW3C0HUdSoe
-YGLMgvm+gRyoMSTtr+/v
-=hqgJ
------END PGP SIGNATURE-----
-
---=-g82RcSVTXFwDnJ776p4S--
-
+Tomas
