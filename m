@@ -1,37 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35864 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913AbYJYNn2 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34694 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755263AbYJGQ6D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 09:43:28 -0400
-Date: Sat, 25 Oct 2008 09:42:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problem booting wireless-testing 2.6.28-rc1
-Message-ID: <20081025134240.GF19057@tuxdriver.com> (sfid-20081025_154335_647278_6A9A688A)
-References: <4902910E.1000604@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4902910E.1000604@lwfinger.net>
+	Tue, 7 Oct 2008 12:58:03 -0400
+Message-Id: <20081007100441.810026000@sipsolutions.net> (sfid-20081007_185811_694502_C198706D)
+References: <20081007100428.868688000@sipsolutions.net>
+Date: Tue, 07 Oct 2008 12:04:34 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 6/8] mac80211: clean up ieee80211_hw_config errors
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 24, 2008 at 08:22:54PM -0700, Larry Finger wrote:
-> If you download and boot 2.6.28-rc1 from wireless-testing, you may have a
-> problem in the boot process finding your hard drive. The fix has been found in
-> mainline and consists of the following patch:
-> 
-> commit e013e13bf605b9e6b702adffbe2853cfc60e7806
-> Author: Jens Axboe <jens.axboe@oracle.com>
-> Date:   Fri Oct 24 09:22:42 2008 +0200
-> 
->     libata: fix bug with non-ncq devices
+Warn when ieee80211_hw_config returns an error, it shouldn't
+happen; remove a number of printks that would happen in such
+a case and one printk that is user-triggerable.
 
-Thanks for the heads-up!  This is now part of wireless-testing's
-master branch.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c  |    3 +--
+ net/mac80211/main.c |    8 +++++++-
+ net/mac80211/scan.c |   16 +++-------------
+ net/mac80211/util.c |    5 +----
+ net/mac80211/wext.c |    6 +-----
+ 5 files changed, 13 insertions(+), 25 deletions(-)
 
-John
+--- everything.orig/net/mac80211/cfg.c	2008-10-07 11:27:02.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-10-07 11:27:02.000000000 +0200
+@@ -396,8 +396,7 @@ static int ieee80211_config_beacon(struc
+ 	 */
+ 	if (params->interval) {
+ 		sdata->local->hw.conf.beacon_int = params->interval;
+-		if (ieee80211_hw_config(sdata->local))
+-			return -EINVAL;
++		ieee80211_hw_config(sdata->local);
+ 		/*
+ 		 * We updated some parameter so if below bails out
+ 		 * it's not an error.
+--- everything.orig/net/mac80211/main.c	2008-10-07 11:27:00.000000000 +0200
++++ everything/net/mac80211/main.c	2008-10-07 11:27:02.000000000 +0200
+@@ -222,8 +222,14 @@ int ieee80211_hw_config(struct ieee80211
+ 	       wiphy_name(local->hw.wiphy), chan->center_freq);
+ #endif
+ 
+-	if (local->open_count)
++	if (local->open_count) {
+ 		ret = local->ops->config(local_to_hw(local), &local->hw.conf);
++		/*
++		 * HW reconfiguration should never fail, the driver has told
++		 * us what it can support so it should live up to that promise.
++		 */
++		WARN_ON(ret);
++	}
+ 
+ 	return ret;
+ }
+--- everything.orig/net/mac80211/scan.c	2008-10-07 11:26:50.000000000 +0200
++++ everything/net/mac80211/scan.c	2008-10-07 11:27:02.000000000 +0200
+@@ -447,18 +447,12 @@ void ieee80211_scan_completed(struct iee
+ 
+ 	if (local->hw_scanning) {
+ 		local->hw_scanning = false;
+-		if (ieee80211_hw_config(local))
+-			printk(KERN_DEBUG "%s: failed to restore operational "
+-			       "channel after scan\n", wiphy_name(local->hw.wiphy));
+-
++		ieee80211_hw_config(local);
+ 		goto done;
+ 	}
+ 
+ 	local->sw_scanning = false;
+-	if (ieee80211_hw_config(local))
+-		printk(KERN_DEBUG "%s: failed to restore operational "
+-		       "channel after scan\n", wiphy_name(local->hw.wiphy));
+-
++	ieee80211_hw_config(local);
+ 
+ 	netif_tx_lock_bh(local->mdev);
+ 	netif_addr_lock(local->mdev);
+@@ -545,12 +539,8 @@ void ieee80211_scan_work(struct work_str
+ 
+ 		if (!skip) {
+ 			local->scan_channel = chan;
+-			if (ieee80211_hw_config(local)) {
+-				printk(KERN_DEBUG "%s: failed to set freq to "
+-				       "%d MHz for scan\n", wiphy_name(local->hw.wiphy),
+-				       chan->center_freq);
++			if (ieee80211_hw_config(local))
+ 				skip = 1;
+-			}
+ 		}
+ 
+ 		/* advance state machine to next channel/band */
+--- everything.orig/net/mac80211/util.c	2008-10-07 11:26:50.000000000 +0200
++++ everything/net/mac80211/util.c	2008-10-07 11:27:02.000000000 +0200
+@@ -638,11 +638,8 @@ int ieee80211_set_freq(struct ieee80211_
+ 
+ 	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
+ 		if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
+-		    chan->flags & IEEE80211_CHAN_NO_IBSS) {
+-			printk(KERN_DEBUG "%s: IBSS not allowed on frequency "
+-				"%d MHz\n", sdata->dev->name, chan->center_freq);
++		    chan->flags & IEEE80211_CHAN_NO_IBSS)
+ 			return ret;
+-		}
+ 		local->oper_channel = chan;
+ 
+ 		if (local->sw_scanning || local->hw_scanning)
+--- everything.orig/net/mac80211/wext.c	2008-10-07 11:26:50.000000000 +0200
++++ everything/net/mac80211/wext.c	2008-10-07 11:27:02.000000000 +0200
+@@ -689,12 +689,8 @@ static int ieee80211_ioctl_siwtxpower(st
+ 		ieee80211_led_radio(local, local->hw.conf.radio_enabled);
+ 	}
+ 
+-	if (need_reconfig) {
++	if (need_reconfig)
+ 		ieee80211_hw_config(local);
+-		/* The return value of hw_config is not of big interest here,
+-		 * as it doesn't say that it failed because of _this_ config
+-		 * change or something else. Ignore it. */
+-	}
+ 
+ 	return 0;
+ }
+
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+
