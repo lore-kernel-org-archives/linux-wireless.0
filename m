@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:47653 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449AbYJPUDV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48049 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753272AbYJGMeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 16:03:21 -0400
-Date: Thu, 16 Oct 2008 13:02:37 -0700
-From: Arjan van de Ven <arjan@infradead.org>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, akpm@linux-foundation.org,
-	dan.j.williams@intel.com, tiwai@suse.de,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
-	ralf@linux-mips.org, mchehab@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org
-Subject: Re: powerpc allmodconfig
-Message-ID: <20081016130237.4984967c@infradead.org> (sfid-20081016_220338_521541_3255CF82)
-In-Reply-To: <20081016.124923.222595655.davem@davemloft.net>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
-	<20081015.220247.262683261.davem@davemloft.net>
-	<1224169039.735.57.camel@johannes.berg>
-	<20081016.124923.222595655.davem@davemloft.net>
-Mime-Version: 1.0
+	Tue, 7 Oct 2008 08:34:14 -0400
+Message-ID: <4ec10026d9f5ace4d4bbc76a2345cc81.squirrel@secure.sipsolutions.net>
+In-Reply-To: <200810062328.43943.chunkeey@web.de>
+References: <1223322501.3778.20.camel@johannes.berg>
+    <200810062245.32965.chunkeey@web.de>
+    <1223326065.3778.32.camel@johannes.berg>
+    <200810062328.43943.chunkeey@web.de>
+Date: Tue, 7 Oct 2008 14:34:10 +0200 (CEST)
+Subject: Re: [PATCH] p54: fix build failure
+From: "Johannes Berg" <johannes@sipsolutions.net>
+To: "Christian Lamparter" <chunkeey@web.de>
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 16 Oct 2008 12:49:23 -0700 (PDT)
-David Miller <davem@davemloft.net> wrote:
-> #endif
-> #define __WARN() warn_on_slowpath(__FILE__, __LINE__)
-> #define __WARN_printf(arg...) warn_slowpath(__FILE__, __LINE__, arg)
-> #else
-> #define __WARN_printf(arg...) __WARN()
+Christian Lamparter wrote:
+> if only kmail let me disable it! :-)
+> Is it off now? If not, I'm really sorry, for all html ****.
+> I'll fix it, but it'll take another while.
 
-the easiest way I suppose would be to do
+Seems to be ok now.
 
-#define __WARN_printf(arg..) do { printk(arg); __WARN(); } while (0)
+>> However,
+>>
+>> > +int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int
+>> > len);
+>>
+>> How about just killing the export instead? It isn't used anywhere else
+>> anyway?
+>
+> True.
+>
+> on the other hand: what about stlc45xx (p54spi)?
+> These ?SoC? chips don't have any eeprom attached to the I2C, but they
+> need calibration data and output power limits like the usb/pci parts as
+> well.
 
-any obvious problems with this ?
+Yeah, but it hardly matters now, we can always re-export it when needed.
 
-
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+johannes
