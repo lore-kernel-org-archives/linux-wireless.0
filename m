@@ -1,254 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37067 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751904AbYJUJBm (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.191]:54892 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951AbYJGUqt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 05:01:42 -0400
-Subject: [PATCH v2] wireless: get rid of pointless request list
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224577049.27899.103.camel@johannes.berg> (sfid-20081021_101741_281960_2F5ACD69)
-References: <1224577049.27899.103.camel@johannes.berg>
-	 (sfid-20081021_101741_281960_2F5ACD69)
-Content-Type: text/plain
-Date: Tue, 21 Oct 2008 11:01:33 +0200
-Message-Id: <1224579693.5521.0.camel@johannes.berg> (sfid-20081021_110147_351514_8CE8079F)
-Mime-Version: 1.0
+	Tue, 7 Oct 2008 16:46:49 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2956432fkq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 13:46:44 -0700 (PDT)
+Message-ID: <1ba2fa240810071346n506b8f1clffaebb7f1f72a10f@mail.gmail.com> (sfid-20081007_224654_487221_1AC749AE)
+Date: Tue, 7 Oct 2008 22:46:43 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Christoph Hellwig" <hch@infradead.org>,
+	"Holger Schurig" <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1223410226.3618.13.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223311803.15196.36.camel@johannes.berg>
+	 <20081007071529.GA5010@infradead.org>
+	 <20081007131615.GR3448@tuxdriver.com>
+	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
+	 <1223398724.7328.45.camel@johannes.berg>
+	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
+	 <1223408085.3618.2.camel@johannes.berg>
+	 <1223408342.3618.7.camel@johannes.berg>
+	 <1ba2fa240810071306sb282e06h9d29ea2c36f5c3d5@mail.gmail.com>
+	 <1223410226.3618.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We really only need to know the last request at each point in time.
+On Tue, Oct 7, 2008 at 10:10 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-10-07 at 22:06 +0200, Tomas Winkler wrote:
+>
+>> > bytes (with nibbles): | . | . | . | . | . | . || . | . | . | . | . | . |
+>> >                      | addr 1          |len1 || addr 2          |len2 |
+>> > your forced layout:   |               |                |               |
+>> > my layout:            |               |       ||               |       |
+>> >
+>> > Note how this actually matches the border between the border between the
+>> > two descriptors, the || border.
+>>
+>> Your layout put addr2 (which is 32 bit) sits on 16 bit boundary
+>
+> So? Yours makes it need two words, which is even less efficient to
+> access. And since the struct is packed, on those architectures that
+> don't do unaligned accesses efficiently won't need any put_unaligned
+> either.
+>
+> Also, keep in mind that address 2 is _never_ used at all anyway
+This is not correct we always use first 2 pointers. First for tx command
+second for the actual packet.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/reg.c |   90 ++++++++++++-----------------------------------------
- 1 file changed, 21 insertions(+), 69 deletions(-)
+because
+> we don't and cannot do fragmented frames due to the lack of IP
+> checksumming in hardware, as I and davem have tried to explain to you
+> multiple times already.
 
---- everything.orig/net/wireless/reg.c	2008-10-21 10:19:59.000000000 +0200
-+++ everything/net/wireless/reg.c	2008-10-21 10:38:59.000000000 +0200
-@@ -44,14 +44,13 @@
- 
- /* wiphy is set if this request's initiator is REGDOM_SET_BY_DRIVER */
- struct regulatory_request {
--	struct list_head list;
- 	struct wiphy *wiphy;
- 	int granted;
- 	enum reg_set_by initiator;
- 	char alpha2[2];
- };
- 
--static LIST_HEAD(regulatory_requests);
-+static struct regulatory_request *last_request;
- 
- /* To trigger userspace events */
- static struct platform_device *reg_pdev;
-@@ -201,7 +200,7 @@ static void reset_regdomains(void)
-  * core upon initialization */
- static void update_world_regdomain(const struct ieee80211_regdomain *rd)
- {
--	BUG_ON(list_empty(&regulatory_requests));
-+	BUG_ON(!last_request);
- 
- 	reset_regdomains();
- 
-@@ -302,15 +301,10 @@ static int call_crda(const char *alpha2)
- static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 	char *alpha2, struct ieee80211_regdomain *rd)
- {
--	struct regulatory_request *last_request = NULL;
--
- 	/* All initial requests are respected */
--	if (list_empty(&regulatory_requests))
-+	if (!last_request)
- 		return 0;
- 
--	last_request = list_first_entry(&regulatory_requests,
--		struct regulatory_request, list);
--
- 	switch (set_by) {
- 	case REGDOM_SET_BY_INIT:
- 		return -EINVAL;
-@@ -320,7 +314,7 @@ static int ignore_request(struct wiphy *
- 		 * anyway */
- 		return 0;
- 	case REGDOM_SET_BY_COUNTRY_IE:
--		if (last_request->initiator == set_by) {
-+		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
- 			if (last_request->wiphy != wiphy) {
- 				/* Two cards with two APs claiming different
- 				 * different Country IE alpha2s!
-@@ -350,7 +344,7 @@ static int ignore_request(struct wiphy *
- 		return 1;
- 	case REGDOM_SET_BY_DRIVER:
- 		BUG_ON(!wiphy);
--		if (last_request->initiator == set_by) {
-+		if (last_request->initiator == REGDOM_SET_BY_DRIVER) {
- 			/* Two separate drivers hinting different things,
- 			 * this is possible if you have two devices present
- 			 * on a system with different EEPROM regulatory
-@@ -376,8 +370,8 @@ static int ignore_request(struct wiphy *
- 			return 0;
- 		return 0;
- 	case REGDOM_SET_BY_USER:
--		if (last_request->initiator == set_by ||
--				last_request->initiator == REGDOM_SET_BY_CORE)
-+		if (last_request->initiator == REGDOM_SET_BY_USER ||
-+		    last_request->initiator == REGDOM_SET_BY_CORE)
- 			return 0;
- 		/* Drivers can use their wiphy's reg_notifier()
- 		 * to override any information */
-@@ -392,26 +386,13 @@ static int ignore_request(struct wiphy *
- 	}
- }
- 
--static bool __reg_is_valid_request(const char *alpha2,
--	struct regulatory_request **request)
--{
--	struct regulatory_request *req;
--	if (list_empty(&regulatory_requests))
--		return false;
--	list_for_each_entry(req, &regulatory_requests, list) {
--		if (alpha2_equal(req->alpha2, alpha2)) {
--			*request = req;
--			return true;
--		}
--	}
--	return false;
--}
--
- /* Used by nl80211 before kmalloc'ing our regulatory domain */
- bool reg_is_valid_request(const char *alpha2)
- {
--	struct regulatory_request *request = NULL;
--	return  __reg_is_valid_request(alpha2, &request);
-+	if (!last_request)
-+		return false;
-+
-+	return alpha2_equal(last_request->alpha2, alpha2);
- }
- 
- /* Sanity check on a regulatory rule */
-@@ -607,7 +588,8 @@ int __regulatory_hint(struct wiphy *wiph
- 		request->initiator = set_by;
- 		request->wiphy = wiphy;
- 
--		list_add_tail(&request->list, &regulatory_requests);
-+		kfree(last_request);
-+		last_request = request;
- 		if (rd)
- 			break;
- 		r = call_crda(alpha2);
-@@ -711,12 +693,10 @@ void print_regdomain_info(const struct i
- 
- static int __set_regdom(const struct ieee80211_regdomain *rd)
- {
--	struct regulatory_request *request = NULL;
--
- 	/* Some basic sanity checks first */
- 
- 	if (is_world_regdom(rd->alpha2)) {
--		if (WARN_ON(!__reg_is_valid_request(rd->alpha2, &request)))
-+		if (WARN_ON(!reg_is_valid_request(rd->alpha2)))
- 			return -EINVAL;
- 		update_world_regdomain(rd);
- 		return 0;
-@@ -726,7 +706,7 @@ static int __set_regdom(const struct iee
- 			!is_unknown_alpha2(rd->alpha2))
- 		return -EINVAL;
- 
--	if (list_empty(&regulatory_requests))
-+	if (!last_request)
- 		return -EINVAL;
- 
- 	/* allow overriding the static definitions if CRDA is present */
-@@ -739,13 +719,13 @@ static int __set_regdom(const struct iee
- 	 * to review or adjust their own settings based on their own
- 	 * internal EEPROM data */
- 
--	if (WARN_ON(!__reg_is_valid_request(rd->alpha2, &request)))
-+	if (WARN_ON(!reg_is_valid_request(rd->alpha2)))
- 		return -EINVAL;
- 
- 	reset_regdomains();
- 
- 	/* Country IE parsing coming soon */
--	switch (request->initiator) {
-+	switch (last_request->initiator) {
- 	case REGDOM_SET_BY_CORE:
- 	case REGDOM_SET_BY_DRIVER:
- 	case REGDOM_SET_BY_USER:
-@@ -764,7 +744,7 @@ static int __set_regdom(const struct iee
- 
- 	/* Tada! */
- 	cfg80211_regdomain = rd;
--	request->granted = 1;
-+	last_request->granted = 1;
- 
- 	return 0;
- }
-@@ -776,42 +756,18 @@ static int __set_regdom(const struct iee
-  * the passed rd. Caller must hold cfg80211_drv_mutex */
- int set_regdom(const struct ieee80211_regdomain *rd)
- {
--	struct regulatory_request *this_request = NULL, *prev_request = NULL;
- 	int r;
- 
--	if (!list_empty(&regulatory_requests))
--		prev_request = list_first_entry(&regulatory_requests,
--			struct regulatory_request, list);
--
- 	/* Note that this doesn't update the wiphys, this is done below */
- 	r = __set_regdom(rd);
- 	if (r)
- 		return r;
- 
--	BUG_ON((!__reg_is_valid_request(rd->alpha2, &this_request)));
--
--	/* The initial standard core update of the world regulatory domain, no
--	 * need to keep that request info around if it didn't fail. */
--	if (is_world_regdom(rd->alpha2) &&
--			this_request->initiator == REGDOM_SET_BY_CORE &&
--			this_request->granted) {
--		list_del(&this_request->list);
--		kfree(this_request);
--		this_request = NULL;
--	}
--
--	/* Remove old requests, we only leave behind the last one */
--	if (prev_request) {
--		list_del(&prev_request->list);
--		kfree(prev_request);
--		prev_request = NULL;
--	}
--
- 	/* This would make this whole thing pointless */
- 	BUG_ON(rd != cfg80211_regdomain);
- 
- 	/* update all wiphys now with the new established regulatory domain */
--	update_all_wiphy_regulatory(this_request->initiator);
-+	update_all_wiphy_regulatory(last_request->initiator);
- 
- 	print_regdomain(rd);
- 
-@@ -853,16 +809,12 @@ int regulatory_init(void)
- 
- void regulatory_exit(void)
- {
--	struct regulatory_request *req, *req_tmp;
--
- 	mutex_lock(&cfg80211_drv_mutex);
- 
- 	reset_regdomains();
- 
--	list_for_each_entry_safe(req, req_tmp, &regulatory_requests, list) {
--		list_del(&req->list);
--		kfree(req);
--	}
-+	kfree(last_request);
-+
- 	platform_device_unregister(reg_pdev);
- 
- 	mutex_unlock(&cfg80211_drv_mutex);
-
-
+This is bad side of current Linux implementation
+Tomas
