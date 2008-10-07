@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50247 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756460AbYJJJRs (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.190]:45027 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572AbYJGUGn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 05:17:48 -0400
-Subject: RE: HT capabilities IE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nils Bagge <nbagge@bandspeed.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <6EACAD9615B47B42A780C005414307E1014956CE@mars.bandspeed.com>
-References: <1223460098.3618.53.camel@johannes.berg>
-	 <6EACAD9615B47B42A780C005414307E1014956B2@mars.bandspeed.com>
-	 <1223546085.22490.29.camel@johannes.berg>
-	 <6EACAD9615B47B42A780C005414307E1014956CE@mars.bandspeed.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0PgSlI5OXh2Asc+Zr98J"
-Date: Fri, 10 Oct 2008 11:17:48 +0200
-Message-Id: <1223630268.3930.75.camel@johannes.berg> (sfid-20081010_111808_446784_00A73B77)
-Mime-Version: 1.0
+	Tue, 7 Oct 2008 16:06:43 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2942918fkq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 13:06:40 -0700 (PDT)
+Message-ID: <1ba2fa240810071306sb282e06h9d29ea2c36f5c3d5@mail.gmail.com> (sfid-20081007_220651_271855_A94C7A77)
+Date: Tue, 7 Oct 2008 22:06:40 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Christoph Hellwig" <hch@infradead.org>,
+	"Holger Schurig" <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1223408342.3618.7.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223311803.15196.36.camel@johannes.berg>
+	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
+	 <200810070821.56462.hs4233@mail.mn-solutions.de>
+	 <20081007071529.GA5010@infradead.org>
+	 <20081007131615.GR3448@tuxdriver.com>
+	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
+	 <1223398724.7328.45.camel@johannes.berg>
+	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
+	 <1223408085.3618.2.camel@johannes.berg>
+	 <1223408342.3618.7.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 7, 2008 at 9:39 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2008-10-07 at 21:34 +0200, Johannes Berg wrote:
+>
+>> Then tell the HW engineers to fix the HW docs. It makes no sense at all
+>> to say this is 10 pairs rather than 20 single ones if there's nothing
+>> that uses a pair, the whole thing entirely uses single entries in the
+>> numbering etc.
+>
+> If you need to visualise this, let me draw it:
+>
+> bytes (with nibbles): | . | . | . | . | . | . || . | . | . | . | . | . |
+>                      | addr 1          |len1 || addr 2          |len2 |
+> your forced layout:   |               |                |               |
+> my layout:            |               |       ||               |       |
+>
+> Note how this actually matches the border between the border between the
+> two descriptors, the || border.
 
---=-0PgSlI5OXh2Asc+Zr98J
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-10-09 at 10:41 -0500, Nils Bagge wrote:
-> > Right, but if you enter dynamic SM PS then it doesn't matter much
-> > anyway, does it? I mean, there's no protection requirement in that
-> > case, is there? Or am I reading it wrong? I _think_ I will handle the
-> > SM PS change in mac80211, but I'm not entirely sure right now.
-> >=20
-> > Johannes
->=20
->=20
-> Well, upon a more careful reading of 11.2.3, the second paragraph would
-> seem to indicate that some kind of protection/wake-up is required prior
-> to a multi-spatial stream transmission, if the receiver is in dynamic SM
-> power save mode.
-
-Indeed, I was reading that as "beginning of the frame" rather than
-"beginning of the frame sequence". Sorry.
-
-johannes
-
---=-0PgSlI5OXh2Asc+Zr98J
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI7x25AAoJEKVg1VMiehFYyFsP/j1oQx9AOxC6FmExmAL2PkgV
-B+Tiu5qn8FN1MQKyKF/U6xqmPn7q9uQeWsv8vjEdL4ljGWA9Sl56STLM9OUmx4so
-Acpbg1u78JoYLA25Ua4/U73UvZUdgKWuTXk96tr2y+0dK6BCqrQ+Mwy1p/Md1zV/
-pdqq/UWd80dqgKhR3aInawgFeYLcUd3yaPelxRTuxd6BVJ6jyS1WM54ieVR/s6bo
-7w+MwD7f3V/uUUXhAZ7GfSK/Kh2feZ72/kEvumCVJGO9wTLThtZ8H09gAw+WOOg8
-nyzVOlSRrcFuAlpcKluHBeo3tMwoiCJo57XiBl1HQj4E19pIVYfzQKMvZKuV8ir1
-Pxs0HN2r/4mZkmtu/AMtzMQxKnC7JHI+lXX7s9mMQUlhepMq5OB7Odd2FdH0WPfA
-H6VT7E9r5b1v4pWOanmx8+p1vHSgNB3hotIRfxau/CLOuKqLvxfEs0hPwbe20h2J
-qegGDLRvYHYz9r3G6pk4HRcAMLitbgt5iQGHSCAfK+3zDhl7mlGblT2a6KTQPct+
-8g1eIqJSCkW/kMA7/2lt5/I5Y7v3Jhm43N1SgHx9v81+w2puCYITKfNF/3s3bw5f
-eepNhTcdsd51I0dAWuxzw5BxLeKfj6+9sDenjsZzssG0ha9/DUcFS5Vtr2XE/q1j
-c/7UFQraAnHU16kiQUjg
-=TSrr
------END PGP SIGNATURE-----
-
---=-0PgSlI5OXh2Asc+Zr98J--
-
+Your layout put addr2 (which is 32 bit) sits on 16 bit boundary
+Tomas
