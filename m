@@ -1,126 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:44062 "EHLO vs166246.vserver.de"
+Received: from nbd.name ([88.198.39.176]:46740 "EHLO ds10.mine.nu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755673AbYJJNdQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 09:33:16 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: Fwd: [PATCH 2/2] b43: fix tx status reporting on rate fallback
-Date: Fri, 10 Oct 2008 15:32:25 +0200
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>
+	id S1755999AbYJGRN0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2008 13:13:26 -0400
+Message-ID: <48EB98A6.4050406@openwrt.org> (sfid-20081007_191343_614525_3708FB3A)
+Date: Tue, 07 Oct 2008 19:13:10 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Message-Id: <200810101532.25954.mb@bu3sch.de> (sfid-20081010_153320_606489_1DD5BAAB)
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 2/4] mac80211: add multi-rate retry support
+References: <48E8E48E.5090300@openwrt.org> <48E8E528.7060501@openwrt.org>	 <48E8E588.30001@openwrt.org> <1223329786.3778.38.camel@johannes.berg>
+In-Reply-To: <1223329786.3778.38.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+Johannes Berg wrote:
+> On Sun, 2008-10-05 at 18:04 +0200, Felix Fietkau wrote:
+>> This patch adjusts the rate control API to allow multi-rate retry
+>> if supported by the driver. The ieee80211_hw struct specifies how
+>> many alternate rate selections the driver supports.
+> 
+> Don't those drivers that announce supporting max_altrates = 1 have to
+> update the status for alternative rates too? Also, should
+> max_altrate_tries == 0 indicate that that is fixed?
+IMHO yes.
 
-If the hardware uses RTS/CTS reporting and the actual RTS/CTS
-handshake failed, it will switch to the fallback rate, even
-though the main rate was never actually attempted.
-Make sure that this does not screw up rate control statistics.
+> But b43 with the
+> default firmware actually _is_ capable of changing the number of retries
+> (default to 3/3 or 3/4 I think), just not per frame. Should we have that
+> in the API too?
+Minstrel won't use it, because the value that it selects is dependent
+on the rate that is to be used there. Maybe it'd make sense for other 
+stuff, though.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> Another thing, it seems you didn't update those drivers to report the
+> rates and number of tries, at least for b43 that is actually possible.
+> 
+> Also, can you explain the use of IEEE80211_TX_CTL_RATE_CTRL_PROBE?
+When using MRR and the get_rate function determines that it's time to do
+some sampling, and the sampling rate it selected is lower than the calculated
+max throughput rate, it wouldn't make sense to put the sampling rate in the
+first stage of the MRR chain, because that would lower the effective
+throughput unnecessarily.
 
----
+Instead it throws the sampling rate in the second stage of the MRR chain
+and increases a separate counter to prevent it from doing large bursts of
+sampling attempts.
 
-This is needed for legacy, too.
+However if the hw never gets to the second MRR stage, because the first one
+worked just fine, it should not mark this as a successful sampling, because
+the sample rate was not actually attempted.
 
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -778,6 +778,9 @@ struct b43_wldev {
- #ifdef CONFIG_B43_DEBUG
- 	struct b43_dfsentry *dfsentry;
- #endif
-+
-+	/* necessary for figuring out the correct tx status */
-+	int short_retry;
- };
- 
- static inline struct b43_wl *hw_to_b43_wl(struct ieee80211_hw *hw)
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1393,7 +1393,7 @@ void b43_dma_handle_txstatus(struct b43_
- 			 * Call back to inform the ieee80211 subsystem about
- 			 * the status of the transmission.
- 			 */
--			frame_succeed = b43_fill_txstatus_report(info, status);
-+			frame_succeed = b43_fill_txstatus_report(dev, info, status);
- #ifdef CONFIG_B43_DEBUG
- 			if (frame_succeed)
- 				ring->nr_succeed_tx_packets++;
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3892,6 +3892,7 @@ static void b43_set_retry_limits(struct 
- 			short_retry);
- 	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_LRLIMIT,
- 			long_retry);
-+	dev->short_retry = short_retry;
- }
- 
- static void b43_set_synth_pu_delay(struct b43_wldev *dev, bool idle)
---- a/drivers/net/wireless/b43/pio.c
-+++ b/drivers/net/wireless/b43/pio.c
-@@ -589,7 +589,7 @@ void b43_pio_handle_txstatus(struct b43_
- 	info = IEEE80211_SKB_CB(pack->skb);
- 	memset(&info->status, 0, sizeof(info->status));
- 
--	b43_fill_txstatus_report(info, status);
-+	b43_fill_txstatus_report(dev, info, status);
- 
- 	total_len = pack->skb->len + b43_txhdr_size(dev);
- 	total_len = roundup(total_len, 4);
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -687,7 +687,8 @@ void b43_handle_txstatus(struct b43_wlde
- /* Fill out the mac80211 TXstatus report based on the b43-specific
-  * txstatus report data. This returns a boolean whether the frame was
-  * successfully transmitted. */
--bool b43_fill_txstatus_report(struct ieee80211_tx_info *report,
-+bool b43_fill_txstatus_report(struct b43_wldev *dev,
-+			      struct ieee80211_tx_info *report,
- 			      const struct b43_txstatus *status)
- {
- 	bool frame_success = 1;
-@@ -706,8 +707,19 @@ bool b43_fill_txstatus_report(struct iee
- 	if (status->frame_count == 0) {
- 		/* The frame was not transmitted at all. */
- 		report->status.retry_count = 0;
--	} else
-+	} else if (status->rts_count > dev->short_retry) {
-+		/*
-+		 * If the short retries (RTS, not data frame) have exceeded
-+		 * the limit, the hw will not have tried the selected rate,
-+		 * but will have used the fallback rate instead.
-+		 * Don't let the rate control count attempts for the selected
-+		 * rate in this case, otherwise the statistics will be off.
-+		 */
-+		report->tx_rate_idx = 0;
-+		report->status.retry_count = 0;
-+	} else {
- 		report->status.retry_count = status->frame_count - 1;
-+	}
- 
- 	return frame_success;
- }
---- a/drivers/net/wireless/b43/xmit.h
-+++ b/drivers/net/wireless/b43/xmit.h
-@@ -294,7 +294,8 @@ void b43_rx(struct b43_wldev *dev, struc
- 
- void b43_handle_txstatus(struct b43_wldev *dev,
- 			 const struct b43_txstatus *status);
--bool b43_fill_txstatus_report(struct ieee80211_tx_info *report,
-+bool b43_fill_txstatus_report(struct b43_wldev *dev,
-+			      struct ieee80211_tx_info *report,
- 			      const struct b43_txstatus *status);
- 
- void b43_tx_suspend(struct b43_wldev *dev);
+The IEEE80211_TX_CTL_RATE_CTRL_PROBE flag is used to tell the tx_status
+function that there is a sampling rate in the second MRR stage, so that
+it can update the sampling counter accordingly, in case the sampling rate
+actually got used.
 
--- 
-Greetings Michael.
+If the sampling counter instead was to be updated unconditionally, then
+minstrel would frequently not use the second MRR stage as an opportunity
+to figure out which of the lower rates actually work and thus might leave
+most of them with a calculated probability of 0% until the max throughput
+rate gets reduced through a change in the link quality.
+
+That itself would cause the algorithm to use a much lower fallback rate than 
+it has to, thus taking more time to get proper stats in place once the 
+link becomes just a little bit weaker.
+
+- Felix
