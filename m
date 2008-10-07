@@ -1,43 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2084 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753210AbYJFOjM (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:53999 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752674AbYJGX5B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 10:39:12 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Elias Oltmanns <eo@nebensachen.de>, toralf.foerster@gmx.de,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-Date: Mon, 6 Oct 2008 10:36:39 -0400
-Message-Id: <20081006143055.M60271@bobcopeland.com> (sfid-20081006_163917_389277_9AAEF440)
-In-Reply-To: <1223302987.15196.24.camel@johannes.berg>
-References: <200808101401.03339.toralf.foerster@gmx.de> <87od23mo08.fsf@denkblock.local> <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com> <20081002144600.M31352@bobcopeland.com> <87bpy32c1w.fsf@denkblock.local> <b6c5339f0810021137g3d93c5c8t5fa8fb3784294a86@mail.gmail.com> <20081003134648.M45120@bobcopeland.com> <87fxnd2112.fsf@denkblock.local> <20081003193739.M19356@bobcopeland.com> <877i8nky65.fsf@denkblock.local> <b6c5339f0810060712r24b0dfd8s6236e65304749572@mail.gmail.com> (sfid-20081006_161241_841588_FA70583E) <1223302987.15196.24.camel@johannes.berg>
+	Tue, 7 Oct 2008 19:57:01 -0400
+Message-ID: <48EBF74A.9030805@lwfinger.net> (sfid-20081008_015707_432682_F61AE2A2)
+Date: Tue, 07 Oct 2008 16:56:58 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>, Chr <chunkeey@web.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] p54: Fix compilation problem on PPC
+References: <48EB7FF1.9060803@lwfinger.net> <1223398653.7328.43.camel@johannes.berg>
+In-Reply-To: <1223398653.7328.43.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 06 Oct 2008 16:23:07 +0200, Johannes Berg wrote
-> On Mon, 2008-10-06 at 10:12 -0400, Bob Copeland wrote:
-> 
-> > Nonetheless, I admit not being expert in this area, nor do I know if relying
-> > on the freezer is acceptable, so someone more clueful, please chime in.
-> 
-> It's not, it's supposed to be removed.
+Johannes Berg wrote:
+> No, I don't have a device, was just compiling, sorry. Is there any on
+> the market that isn't too expensive that I could get?
 
-Great, thanks for that info.
+This is the one I have:
 
-> However, I still think ath5k shouldn't be much concerned with all this
-> because mac80211 should just disable all interfaces etc. from it when
-> suspending.
+http://cgi.ebay.de/Dell-wireless-1450-USB-adapter-NEW-in-box_W0QQitemZ170268289125QQcmdZViewItem?hash=item170268289125&_trkparms=72%3A1282|39%3A1|66%3A2|65%3A12|240%3A1318&_trksid=p3286.c0.m14
 
-Agreed.  I guess if no one else gets to it by then, I can take a look at it in
-a couple of weeks after my GRE.
+The current bid is 7,40 Eur.
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
-
+Larry
