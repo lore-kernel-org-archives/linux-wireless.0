@@ -1,121 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54296 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751332AbYJ2FIS (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34715 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756767AbYJGQ6Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 01:08:18 -0400
-Date: Tue, 28 Oct 2008 22:07:41 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-ia64@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	linux-wireless@vger.kernel.org, Mark Fasheh <mfasheh@suse.com>,
-	Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: linux-next: Tree for October 28
-Message-Id: <20081028220741.f5d331ba.akpm@linux-foundation.org> (sfid-20081029_060823_839692_3F85A756)
-In-Reply-To: <20081028183055.fbcf5420.sfr@canb.auug.org.au>
-References: <20081028183055.fbcf5420.sfr@canb.auug.org.au>
+	Tue, 7 Oct 2008 12:58:16 -0400
+Message-Id: <20081007100442.742530000@sipsolutions.net> (sfid-20081007_185822_562272_C30C595D)
+References: <20081007100428.868688000@sipsolutions.net>
+Date: Tue, 07 Oct 2008 12:04:35 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 7/8] mac80211: remove max_antenna_gain config
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 28 Oct 2008 18:30:55 +1100 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+The antenna gain isn't exactly configurable, despite the belief of
+some unnamed individual who thinks that the EEPROM might influence
+it.
 
-> I have created today's linux-next tree at
-> git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
-> (patches at
-> http://www.kernel.org/pub/linux/kernel/people/sfr/linux-next/).
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |    2 --
+ net/mac80211/main.c    |    2 --
+ 2 files changed, 4 deletions(-)
 
-ia64 allmodconfig:
-
-arch/ia64/kernel/iosapic.c: In function `get_target_cpu':
-arch/ia64/kernel/iosapic.c:723: error: `nr_cpus_ids' undeclared (first use in this function)
-arch/ia64/kernel/iosapic.c:723: error: (Each undeclared identifier is reported only once
-arch/ia64/kernel/iosapic.c:723: error: for each function it appears in.)
-
-Fixed by:
-
-From: Andrew Morton <akpm@linux-foundation.org>
-
-- someone can't type (or test)
-
-- nr_cpu_ids is declared in cpumask.h.  Include it.
-
---- a/arch/ia64/kernel/iosapic.c~ia64-fix-arch-ia64-kernel-iosapicc-build
-+++ a/arch/ia64/kernel/iosapic.c
-@@ -85,6 +85,7 @@
- #include <linux/irq.h>
- #include <linux/kernel.h>
- #include <linux/list.h>
-+#include <linux/cpumask.h>
- #include <linux/pci.h>
- #include <linux/smp.h>
- #include <linux/string.h>
-@@ -720,7 +721,7 @@ get_target_cpu (unsigned int gsi, int ir
- 		for (numa_cpu = first_cpu(cpu_mask) ; i < cpu_index ; i++)
- 			numa_cpu = next_cpu(numa_cpu, cpu_mask);
+--- everything.orig/include/net/mac80211.h	2008-10-07 11:27:02.000000000 +0200
++++ everything/include/net/mac80211.h	2008-10-07 11:27:04.000000000 +0200
+@@ -456,7 +456,6 @@ enum ieee80211_conf_flags {
+  * @listen_interval: listen interval in units of beacon interval
+  * @flags: configuration flags defined above
+  * @power_level: requested transmit power (in dBm)
+- * @max_antenna_gain: maximum antenna gain (in dBi)
+  * @antenna_sel_tx: transmit antenna selection, 0: default/diversity,
+  *	1/2: antenna 0/1
+  * @antenna_sel_rx: receive antenna selection, like @antenna_sel_tx
+@@ -471,7 +470,6 @@ struct ieee80211_conf {
+ 	u16 listen_interval;
+ 	u32 flags;
+ 	int power_level;
+-	int max_antenna_gain;
+ 	u8 antenna_sel_tx;
+ 	u8 antenna_sel_rx;
  
--		if (numa_cpu < nr_cpus_ids)
-+		if (numa_cpu < nr_cpu_ids)
- 			return cpu_physical_id(numa_cpu);
- 	}
- skip_numa_setup:
-_
+--- everything.orig/net/mac80211/main.c	2008-10-07 11:27:02.000000000 +0200
++++ everything/net/mac80211/main.c	2008-10-07 11:27:04.000000000 +0200
+@@ -215,8 +215,6 @@ int ieee80211_hw_config(struct ieee80211
+ 		local->hw.conf.power_level = min(chan->max_power,
+ 					       local->hw.conf.power_level);
+ 
+-	local->hw.conf.max_antenna_gain = chan->max_antenna_gain;
+-
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 	printk(KERN_DEBUG "%s: HW CONFIG: freq=%d\n",
+ 	       wiphy_name(local->hw.wiphy), chan->center_freq);
 
-
-
-also rather a lot of these:
-
-
-In file included from drivers/misc/sgi-gru/gruhandles.h:25,
-                 from drivers/misc/sgi-gru/grutables.h:151,
-                 from drivers/misc/sgi-gru/grufile.c:41:
-drivers/misc/sgi-gru/gru_instructions.h: In function `gru_flush_cache':
-drivers/misc/sgi-gru/gru_instructions.h:292: warning: passing arg 1 of pointer to function makes integer from pointer without a cast
-In file included from drivers/misc/sgi-gru/gruhandles.h:25,
-                 from drivers/misc/sgi-gru/grutables.h:151,
-                 from drivers/misc/sgi-gru/grumain.c:22:
-drivers/misc/sgi-gru/gru_instructions.h: In function `gru_flush_cache':
-drivers/misc/sgi-gru/gru_instructions.h:292: warning: passing arg 1 of pointer to function makes integer from pointer without a cast
-
-
-
-and this:
-
-
-kernel/trace/trace.c: In function `tracing_generic_entry_update':
-kernel/trace/trace.c:681: error: implicit declaration of function `irqs_disabled_flags'
-kernel/trace/trace.c: In function `kretprobed':
-kernel/trace/trace.c:1112: error: `kretprobe_trampoline' undeclared (first use in this function)
-kernel/trace/trace.c:1112: error: (Each undeclared identifier is reported only once
-kernel/trace/trace.c:1112: error: for each function it appears in.)
-
-
-and wireless needs some Kconfig help.  Please don't just break other
-architecture's build like this.
-
-drivers/staging/wlan-ng/wlan_compat.h:136:3: #error "No CPU identified!"
-drivers/staging/wlan-ng/wlan_compat.h:695:6: warning: "WLAN_CPU_FAMILY" is not defined
-drivers/staging/wlan-ng/wlan_compat.h:699:6: warning: "WLAN_CPU_FAMILY" is not defined
-
-
-
-plus of course enough compile warnings to start a small war.   ocfs2 is prominent.
-
-fs/ocfs2/xattr.c: In function `ocfs2_xattr_index_block_find':
-fs/ocfs2/xattr.c:2338: warning: long long unsigned int format, u64 arg (arg 7)
-fs/ocfs2/xattr.c:2338: warning: long long unsigned int format, u64 arg (arg 7)
-fs/ocfs2/xattr.c:2338: warning: long long unsigned int format, u64 arg (arg 7)
-fs/ocfs2/xattr.c: In function `ocfs2_iterate_xattr_buckets':
-fs/ocfs2/xattr.c:2362: warning: long long unsigned int format, u64 arg (arg 7)
-fs/ocfs2/xattr.c:2362: warning: long long unsigned int format, u64 arg (arg 7)
-fs/ocfs2/xattr.c:2362: warning: long long unsigned int format, u64 arg (arg 7)
-fs/ocfs2/xattr.c:2381: warning: long long unsigned int format, u64 arg (arg 6)
-fs/ocfs2/xattr.c:2381: warning: long long unsigned int format, u64 arg (arg 6)
-fs/ocfs2/xattr.c:2381: warning: long long unsigned int format, u64 arg (arg 6)
-fs/ocfs2/xattr.c: In function `ocfs2_xattr_create_index_block':
-fs/ocfs2/xattr.c:2717: warning: long long unsigned int format, u64 arg (arg 6)
-fs/ocfs2/xattr.c:2717: warning: long long unsigned int format, u64 arg (arg 6)
+-- 
 
