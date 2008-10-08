@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flock1.newmail.ru ([82.204.219.207]:34237 "HELO
-	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759508AbYJJRPM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 13:15:12 -0400
-From: Andrey Borzenkov <arvidjaar@newmail.ru>
-To: Dave <kilroyd@googlemail.com>
-Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading firmware with PCMCIA adapter
-Date: Fri, 10 Oct 2008 21:14:54 +0400
-Cc: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <200810091722.56812.arvidjaar@newmail.ru> <200810101141.38929.arvidjaar@newmail.ru> <48EF8AF4.1040900@gmail.com>
-In-Reply-To: <48EF8AF4.1040900@gmail.com>
+Received: from relay2.sgi.com ([192.48.171.30]:42656 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753064AbYJHJ5z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2008 05:57:55 -0400
+Date: Wed, 8 Oct 2008 04:57:53 -0500
+From: Robin Holt <holt@sgi.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>, Robin Holt <holt@sgi.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: fix debugfs netdev rename
+Message-ID: <20081008095753.GO8534@sgi.com> (sfid-20081008_115759_205309_81F6CC9A)
+References: <1223453916.3618.34.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1481268.soIThUeM6u";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200810102114.55663.arvidjaar@newmail.ru> (sfid-20081010_191518_401355_BDDECF68)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1223453916.3618.34.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1481268.soIThUeM6u
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+That looks like it is probably it!
 
-On Friday 10 October 2008, Dave wrote:
->=20
-> You're right. pda_size is supposed to be the maximum size of the PDA (in =
-bytes) that we expect with the firmware. It should be set to 0x200.
->=20
+Thanks,
+Robin
 
-Do you want me to send a patch?
 
---nextPart1481268.soIThUeM6u
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkjvjY8ACgkQR6LMutpd94x5MwCgtxGdCw6fRAOPtyap9zjxoY8K
-sGIAn2dtmGcT5aiwT5nP//EDVqUgmrKg
-=xT+R
------END PGP SIGNATURE-----
-
---nextPart1481268.soIThUeM6u--
+On Wed, Oct 08, 2008 at 10:18:36AM +0200, Johannes Berg wrote:
+> If, for some reason, a netdev has no debugfs dir, we shouldn't
+> try to rename that dir.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Robin Holt <holt@sgi.com>
+> ---
+> Robin, ok, I was wrong, this might be causing it...
+> 
+>  net/mac80211/debugfs_netdev.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> --- everything.orig/net/mac80211/debugfs_netdev.c	2008-10-08 10:08:23.000000000 +0200
+> +++ everything/net/mac80211/debugfs_netdev.c	2008-10-08 10:08:37.000000000 +0200
+> @@ -481,8 +481,12 @@ static int netdev_notify(struct notifier
+>  
+>  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>  
+> -	sprintf(buf, "netdev:%s", dev->name);
+>  	dir = sdata->debugfsdir;
+> +
+> +	if (!dir)
+> +		return 0;
+> +
+> +	sprintf(buf, "netdev:%s", dev->name);
+>  	if (!debugfs_rename(dir->d_parent, dir, dir->d_parent, buf))
+>  		printk(KERN_ERR "mac80211: debugfs: failed to rename debugfs "
+>  		       "dir to %s\n", buf);
+> 
