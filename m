@@ -1,108 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65528 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754054AbYJCCeL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 22:34:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 19:34:11 -0700
-Date: Thu, 2 Oct 2008 12:33:57 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-CC: "mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Regulatory Framework & rt2x00.
-Message-ID: <20081002193357.GP5960@tesla> (sfid-20081003_043416_831943_53B1B792)
-References: <48E52D07.8050900@kpnplanet.nl>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57130 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753414AbYJHUEU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2008 16:04:20 -0400
+Date: Wed, 8 Oct 2008 16:03:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Rami Rosen <ramirose@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH ] mac80211: fix wrong link typo in mac80211_hwsim
+	documentation.
+Message-ID: <20081008200334.GE32472@tuxdriver.com> (sfid-20081008_220422_309909_E0BA1E3E)
+References: <eb3ff54b0810080243r416b8413uf2e12f51c309a8b7@mail.gmail.com> <1223459201.3618.49.camel@johannes.berg> <20081008161834.GL4941@jm.kir.nu> <20081008190109.GC32472@tuxdriver.com> <20081008193754.GM4941@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <48E52D07.8050900@kpnplanet.nl>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081008193754.GM4941@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 02, 2008 at 01:20:23PM -0700, Gertjan van Wingerde wrote:
-> Hi Luis,
+On Wed, Oct 08, 2008 at 10:37:54PM +0300, Jouni Malinen wrote:
+> On Wed, Oct 08, 2008 at 03:01:09PM -0400, John W. Linville wrote:
 > 
-> I'm working on making rt2x00 use the regulatory framework to report its
-> EEPROM region settings to mac80211, 
+> > Well I might be OK with that -- but are you (and Johannes) ready
+> > to deal with the various "ap mode doesn't work with my hostapd
+> > configuration" problems?
+> 
+> I think that that is a better and more productive problem to handle
+> assuming the issues are indeed because of something missing from
+> cfg80211 configuration. I'm supposed to make sure that everything needed
+> is there anyway and getting additional people testing various
+> combinations and reporting potential problems sounds useful.
 
-Excellent! Glad to see someone pick this work up for Ralink!
+I'm inclined to agree.  I'd like it if Johannes agreed too. :-)
 
-> and I have stumbled upon an issue
-> that I don't really know how to solve with the current regulatory
-> framework code.
->
-> The problem I'm facing is that many of the Ralink devices have 2 region
-> settings in their EEPROM, one for 802.11a networks, and one for
-> 802.11[bgn] networks. So far I have only seen devices where these two
-> settings contain the same region indication, but I don't know whether
-> this is the case for all devices.
-
-Actually as per the documenation I have the EEPROM *should not* be
-relied on for proper regulatory compliance on some Ralink devices.
-The windows registry is used so for these I'd recommend to rely on
-db.txt and help enhance it further. Not sure if the documentation
-for *all* devices says this though so we'll have to find out.
-
-I'll send you the documentation I have in private.
-
-Anyway Atheros devices also use a per band EEPROM value, I don't follow
-the issue (should you really want to follow the EEPROM, please check the
-documentation I will send you).
-
-> At this point in time I use the regulatory_hint function at driver
-> start-up time to communicate the region setting that matches the
-> configured band, but that would (probably) not hold up when the user
-> reconfigures the mode.
-
-It does if you really want it to by using the reg_notifier() callback
-you can register. We plan on eventually using this on ath9k for example
-to respect the EEPROM values to come up with the intersection of the
-regulatory domain the user set and what the EEPROM has. I had sent
-an intersection patch a while ago under RFC for 802.11d. The
-intersection routine is not yet merged.
-
-> So, at this point in time I have the following questions:
-> 1. How would I be able to communicate both these settings to the
-> regulatory framework?
-
-I think I answered them, please let me know if you need further
-information.
-
-> 2. Should I re-use regulator_hint whenever the configured band changes?
-
-Nope, never.
-
-> 3. Would a driver supplied region override a user configured setting
-> (via iw/crda)?
-
-Only if a callback is provided, reg_notifier() or if you register
-*always* only the channels in that regulatory domain. I wouldn't
-recommend this last strategy, but instead to use the first. The nice
-thing with the first approach is you get to eventually support
-world roaming then. You accomplish this by *not* allowing new regulatory
-changes if the initiator was REGDOM_SET_BY_USER but consider them
-to be applicable if your device has the
-dot11MultiDomainCapabilityEnabled flag enabled, which by the 802.11
-standard should be assumed to false *and* if the initiator was
-REGDOM_SET_BY_COUNTRY_IE, which indicates the new regulatory_hint()
-came from processing a 802.11d country IE; heck you can even check
-the alpha2 here and decide if you device is world-roaming capable
-in this country too. In fact to world roam since the IEEE-802.11
-Country IE is crap (it really lacks a lot of information to really
-be regulatory compliant IMO) we will need to do the intersection
-of the built regulatory domain from the recieved Country IE and
-what we have in our db.txt -- our db.txt has other information
-such as DFS flags (note if your stack supports DFS for all modes
-then DFS flags are useless as you are compliant to DFS always) and
-max channel bandwidth limitations. If you want to be even more
-conservative you can then take the intersection of this new intersected
-regulatory domain and what you define based on your intelligence on
-your EEPROM. What you end up is perhaps the most compliant regulatory
-solution for world roaming available :)
-
-> I would appreciate your help in solving this issue.
-
-I hope this helps,
-
-  Luis
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
