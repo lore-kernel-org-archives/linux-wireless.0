@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:53233 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753874AbYJBVKr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 17:10:47 -0400
-Date: Thu, 2 Oct 2008 14:07:42 -0700
-From: Greg KH <greg@kroah.com>
-To: proski@gnu.org, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: at76_usb driver status
-Message-ID: <20081002210742.GA27221@kroah.com> (sfid-20081002_231051_496464_2C911511)
+Received: from hostap.isc.org ([149.20.54.63]:40206 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751187AbYJHTi5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2008 15:38:57 -0400
+Date: Wed, 8 Oct 2008 22:37:54 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Rami Rosen <ramirose@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH ] mac80211: fix wrong link typo in mac80211_hwsim
+	documentation.
+Message-ID: <20081008193754.GM4941@jm.kir.nu> (sfid-20081008_213859_557165_1491A3D5)
+References: <eb3ff54b0810080243r416b8413uf2e12f51c309a8b7@mail.gmail.com> <1223459201.3618.49.camel@johannes.berg> <20081008161834.GL4941@jm.kir.nu> <20081008190109.GC32472@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081008190109.GC32472@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Oct 08, 2008 at 03:01:09PM -0400, John W. Linville wrote:
 
-In my quest to suck drivers into drivers/staging/ I noticed that the
-at76_usb driver is being shipped by both Fedora and Ubuntu in their
-kernels.
+> Well I might be OK with that -- but are you (and Johannes) ready
+> to deal with the various "ap mode doesn't work with my hostapd
+> configuration" problems?
 
-So I was wondering what the status of this driver is, and if I
-could/should add it to drivers/staging/?  If it's about to go into
-2.6.28 then I'll hold off, but it would be nice to know what the status
-is.
+I think that that is a better and more productive problem to handle
+assuming the issues are indeed because of something missing from
+cfg80211 configuration. I'm supposed to make sure that everything needed
+is there anyway and getting additional people testing various
+combinations and reporting potential problems sounds useful.
 
-Also, it looks like it is being developed in a git tree, where is that
-tree?
-
-And, did you merge the USB DFU code into the driver itself?  Having that
-kind of functionality in the USB core is fine with me if you want me to
-add that portion there, no reason it needs to be burried in individual
-drivers.
-
-thanks,
-
-greg k-h
+-- 
+Jouni Malinen                                            PGP id EFC895FA
