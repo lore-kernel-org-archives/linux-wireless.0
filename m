@@ -1,76 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:9539 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346AbYJ0Wk6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46321 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060AbYJHI7d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 18:40:58 -0400
-Message-ID: <1ba2fa240810271540t1d1ba5c9me60f86dec357f53e@mail.gmail.com> (sfid-20081027_234103_492893_990A57C6)
-Date: Tue, 28 Oct 2008 00:40:55 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Carlos R. Mafra" <crmafra2@gmail.com>
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Soeren Sonnenburg" <kernel@nn7.de>, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081027222852.GA3907@localhost.aei.mpg.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081027162054.GA4015@localhost.aei.mpg.de>
-	 <1225134823.3796.45.camel@johannes.berg>
-	 <20081027203925.GA4416@localhost.aei.mpg.de>
-	 <200810272151.01244.rjw@sisk.pl>
-	 <1ba2fa240810271407o15f1f150t2d2793f4e5ad6e5b@mail.gmail.com>
-	 <20081027222852.GA3907@localhost.aei.mpg.de>
+	Wed, 8 Oct 2008 04:59:33 -0400
+Subject: [PATCH 8/8 v3] mac80211: fix short slot handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1223456110.3618.43.camel@johannes.berg> (sfid-20081008_105516_812430_BBF50A39)
+References: <20081007100428.868688000@sipsolutions.net>
+	 <20081007100443.395429000@sipsolutions.net>
+	 (sfid-20081007_185842_408797_9F85B905)  <1223456110.3618.43.camel@johannes.berg>
+	 (sfid-20081008_105516_812430_BBF50A39)
+Content-Type: text/plain
+Date: Wed, 08 Oct 2008 10:59:33 +0200
+Message-Id: <1223456373.3618.46.camel@johannes.berg> (sfid-20081008_105937_124858_864EB64B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2008 at 12:28 AM, Carlos R. Mafra <crmafra2@gmail.com> wrote:
-> On Mon 27.Oct'08 at 23:07:00 +0200, Tomas Winkler wrote:
->>[...]
->>
->> Can someone try this one (it might be space broken I've just pasted
->> that in) It's on top of 1d63e726408dfdb3e10ed8f00c383b30ebb333d3
->> (latest linux-2.6.git)
->
->
-> Yes, this one also works for me (I applied it manually).
-Good, this was actually part of some older and bigger patch I wasn't
-aware it has this affect. It has some millage in iwl5000 branch.
-RFKIll went through some changes in the mainline so it wasn't merged yet.
+This patch makes mac80211 handle short slot requests from the AP
+properly. Also warn about uses of IEEE80211_CONF_SHORT_SLOT_TIME
+and optimise out the code since it cannot ever be hit anyway.
 
-commit a91ad840c23a70bc0eabe239e178e0d979a6d44e
-Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date:   Mon Jun 30 17:48:26 2008 +0300
-iwlwifi: bug fixes in RF-kill flows
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v3: fix comments
 
-Tomas
->
->
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c
->> b/drivers/net/wireless/iwlwifi/iwl-agn.c
->> index 24a1aeb..321dbc8 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
->> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
->> @@ -2090,7 +2090,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
->>                 iwl4965_error_recovery(priv);
->>
->>         iwl_power_update_mode(priv, 1);
->> -       ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
->>
->>         if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
->>                 iwl4965_set_mode(priv, priv->iw_mode);
->> @@ -2342,6 +2341,7 @@ static void iwl_bg_alive_start(struct work_struct *data)
->>         mutex_lock(&priv->mutex);
->>         iwl_alive_start(priv);
->>         mutex_unlock(&priv->mutex);
->> +       ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
->>  }
->>
->>  static void iwl4965_bg_rf_kill(struct work_struct *work)
->>
->>
->> Thanks
->> Tomas
->
+ include/net/mac80211.h |   28 ++++++++++--------
+ net/mac80211/main.c    |    9 +++--
+ net/mac80211/mlme.c    |   74 ++++++++++++++++++++++++++-----------------------
+ 3 files changed, 62 insertions(+), 49 deletions(-)
+
+--- everything.orig/net/mac80211/main.c	2008-10-07 20:06:43.000000000 +0200
++++ everything/net/mac80211/main.c	2008-10-08 10:56:29.000000000 +0200
+@@ -346,9 +346,12 @@ void ieee80211_bss_info_change_notify(st
+ 
+ u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata)
+ {
+-	sdata->bss_conf.use_cts_prot = 0;
+-	sdata->bss_conf.use_short_preamble = 0;
+-	return BSS_CHANGED_ERP_CTS_PROT | BSS_CHANGED_ERP_PREAMBLE;
++	sdata->bss_conf.use_cts_prot = false;
++	sdata->bss_conf.use_short_preamble = false;
++	sdata->bss_conf.use_short_slot = false;
++	return BSS_CHANGED_ERP_CTS_PROT |
++	       BSS_CHANGED_ERP_PREAMBLE |
++	       BSS_CHANGED_ERP_SLOT;
+ }
+ 
+ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+--- everything.orig/net/mac80211/mlme.c	2008-10-07 20:05:49.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-10-08 10:56:38.000000000 +0200
+@@ -568,9 +568,8 @@ static void ieee80211_sta_wmm_params(str
+ 	}
+ }
+ 
+-static u32 ieee80211_handle_protect_preamb(struct ieee80211_sub_if_data *sdata,
+-					   bool use_protection,
+-					   bool use_short_preamble)
++static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
++					   u16 capab, bool erp_valid, u8 erp)
+ {
+ 	struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+@@ -578,6 +577,19 @@ static u32 ieee80211_handle_protect_prea
+ 	DECLARE_MAC_BUF(mac);
+ #endif
+ 	u32 changed = 0;
++	bool use_protection;
++	bool use_short_preamble;
++	bool use_short_slot;
++
++	if (erp_valid) {
++		use_protection = (erp & WLAN_ERP_USE_PROTECTION) != 0;
++		use_short_preamble = (erp & WLAN_ERP_BARKER_PREAMBLE) == 0;
++	} else {
++		use_protection = false;
++		use_short_preamble = !!(capab & WLAN_CAPABILITY_SHORT_PREAMBLE);
++	}
++
++	use_short_slot = !!(capab & WLAN_CAPABILITY_SHORT_SLOT_TIME);
+ 
+ 	if (use_protection != bss_conf->use_cts_prot) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+@@ -607,30 +619,18 @@ static u32 ieee80211_handle_protect_prea
+ 		changed |= BSS_CHANGED_ERP_PREAMBLE;
+ 	}
+ 
+-	return changed;
+-}
+-
+-static u32 ieee80211_handle_erp_ie(struct ieee80211_sub_if_data *sdata,
+-				   u8 erp_value)
+-{
+-	bool use_protection = (erp_value & WLAN_ERP_USE_PROTECTION) != 0;
+-	bool use_short_preamble = (erp_value & WLAN_ERP_BARKER_PREAMBLE) == 0;
+-
+-	return ieee80211_handle_protect_preamb(sdata,
+-			use_protection, use_short_preamble);
+-}
+-
+-static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+-					   struct ieee80211_bss *bss)
+-{
+-	u32 changed = 0;
+-
+-	if (bss->has_erp_value)
+-		changed |= ieee80211_handle_erp_ie(sdata, bss->erp_value);
+-	else {
+-		u16 capab = bss->capability;
+-		changed |= ieee80211_handle_protect_preamb(sdata, false,
+-				(capab & WLAN_CAPABILITY_SHORT_PREAMBLE) != 0);
++	if (use_short_slot != bss_conf->use_short_slot) {
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++		if (net_ratelimit()) {
++			printk(KERN_DEBUG "%s: switched to %s slot"
++			       " (BSSID=%s)\n",
++			       sdata->dev->name,
++			       use_short_slot ? "short" : "long",
++			       print_mac(mac, ifsta->bssid));
++		}
++#endif
++		bss_conf->use_short_slot = use_short_slot;
++		changed |= BSS_CHANGED_ERP_SLOT;
+ 	}
+ 
+ 	return changed;
+@@ -723,7 +723,8 @@ static void ieee80211_set_associated(str
+ 		sdata->bss_conf.timestamp = bss->timestamp;
+ 		sdata->bss_conf.dtim_period = bss->dtim_period;
+ 
+-		changed |= ieee80211_handle_bss_capability(sdata, bss);
++		changed |= ieee80211_handle_bss_capability(sdata,
++			bss->capability, bss->has_erp_value, bss->erp_value);
+ 
+ 		ieee80211_rx_bss_put(local, bss);
+ 	}
+@@ -1675,6 +1676,8 @@ static void ieee80211_rx_mgmt_beacon(str
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_conf *conf = &local->hw.conf;
+ 	u32 changed = 0;
++	bool erp_valid;
++	u8 erp_value = 0;
+ 
+ 	/* Process beacon from the current BSS */
+ 	baselen = (u8 *) mgmt->u.beacon.variable - (u8 *) mgmt;
+@@ -1696,13 +1699,16 @@ static void ieee80211_rx_mgmt_beacon(str
+ 	ieee80211_sta_wmm_params(local, ifsta, elems.wmm_param,
+ 				 elems.wmm_param_len);
+ 
+-	if (elems.erp_info && elems.erp_info_len >= 1)
+-		changed |= ieee80211_handle_erp_ie(sdata, elems.erp_info[0]);
+-	else {
+-		u16 capab = le16_to_cpu(mgmt->u.beacon.capab_info);
+-		changed |= ieee80211_handle_protect_preamb(sdata, false,
+-				(capab & WLAN_CAPABILITY_SHORT_PREAMBLE) != 0);
++
++	if (elems.erp_info && elems.erp_info_len >= 1) {
++		erp_valid = true;
++		erp_value = elems.erp_info[0];
++	} else {
++		erp_valid = false;
+ 	}
++	changed |= ieee80211_handle_bss_capability(sdata,
++			le16_to_cpu(mgmt->u.beacon.capab_info),
++			erp_valid, erp_value);
+ 
+ 	if (elems.ht_cap_elem && elems.ht_info_elem &&
+ 	    elems.wmm_param && conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE) {
+--- everything.orig/include/net/mac80211.h	2008-10-07 20:06:43.000000000 +0200
++++ everything/include/net/mac80211.h	2008-10-08 10:57:06.000000000 +0200
+@@ -180,8 +180,12 @@ enum ieee80211_bss_change {
+  * @assoc: association status
+  * @aid: association ID number, valid only when @assoc is true
+  * @use_cts_prot: use CTS protection
+- * @use_short_preamble: use 802.11b short preamble
+- * @use_short_slot: use short slot time (only relevant for ERP)
++ * @use_short_preamble: use 802.11b short preamble;
++ *	if the hardware cannot handle this it must set the
++ *	IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE hardware flag
++ * @use_short_slot: use short slot time (only relevant for ERP);
++ *	if the hardware cannot handle this it must set the
++ *	IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE hardware flag
+  * @dtim_period: num of beacons before the next DTIM, for PSM
+  * @timestamp: beacon timestamp
+  * @beacon_int: beacon interval
+@@ -442,23 +446,23 @@ struct ieee80211_rx_status {
+  *
+  * Flags to define PHY configuration options
+  *
+- * @IEEE80211_CONF_SHORT_SLOT_TIME: use 802.11g short slot time
+  * @IEEE80211_CONF_RADIOTAP: add radiotap header at receive time (if supported)
+  * @IEEE80211_CONF_SUPPORT_HT_MODE: use 802.11n HT capabilities (if supported)
+  * @IEEE80211_CONF_PS: Enable 802.11 power save mode
+  */
+ enum ieee80211_conf_flags {
+-	/*
+-	 * TODO: IEEE80211_CONF_SHORT_SLOT_TIME will be removed once drivers
+-	 * have been converted to use bss_info_changed() for slot time
+-	 * configuration
+-	 */
+-	IEEE80211_CONF_SHORT_SLOT_TIME	= (1<<0),
+-	IEEE80211_CONF_RADIOTAP		= (1<<1),
+-	IEEE80211_CONF_SUPPORT_HT_MODE	= (1<<2),
+-	IEEE80211_CONF_PS		= (1<<3),
++	IEEE80211_CONF_RADIOTAP		= (1<<0),
++	IEEE80211_CONF_SUPPORT_HT_MODE	= (1<<1),
++	IEEE80211_CONF_PS		= (1<<2),
+ };
+ 
++/* XXX: remove all this once drivers stop trying to use it */
++static inline int __deprecated __IEEE80211_CONF_SHORT_SLOT_TIME(void)
++{
++	return 0;
++}
++#define IEEE80211_CONF_SHORT_SLOT_TIME (__IEEE80211_CONF_SHORT_SLOT_TIME())
++
+ /**
+  * struct ieee80211_conf - configuration of the device
+  *
+
+
