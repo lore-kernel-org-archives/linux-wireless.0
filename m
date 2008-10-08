@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.247]:53975 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753399AbYJECsT (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:10379 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754414AbYJHJS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Oct 2008 22:48:19 -0400
-Received: by hs-out-0708.google.com with SMTP id 4so751658hsl.5
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Oct 2008 19:48:16 -0700 (PDT)
-Message-ID: <43e72e890810041948u41e28940g5b1b821609ed270d@mail.gmail.com> (sfid-20081005_044839_140745_146BB5B2)
-Date: Sat, 4 Oct 2008 19:48:16 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Steven Noonan" <steven@uplinklabs.net>
-Subject: Re: [PATCH 2/3] ath9k: fix oops on trying to hold the wrong spinlock
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Vasanthakumar Thiagarajan" <vasanth@atheros.com>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	"Ingo Molnar" <mingo@elte.hu>
-In-Reply-To: <f488382f0810041940p20544fdo88908c7f305a69de@mail.gmail.com>
+	Wed, 8 Oct 2008 05:18:28 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3907534wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2008 02:18:27 -0700 (PDT)
+Message-ID: <eb3ff54b0810080218j4b335ccfy74b6df5e8c7cbba0@mail.gmail.com> (sfid-20081008_111843_786975_5527D25F)
+Date: Wed, 8 Oct 2008 11:18:27 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH ] mac80211: use HWSIM_STA_MAGIC in hwsim_check_sta_magic() and hwsim_set_sta_magic().
+Cc: linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1223073927-16266-1-git-send-email-lrodriguez@atheros.com>
-	 <1223073927-16266-2-git-send-email-lrodriguez@atheros.com>
-	 <1223073927-16266-3-git-send-email-lrodriguez@atheros.com>
-	 <43e72e890810041932n4034f3c6gbd5c64100338f61e@mail.gmail.com>
-	 <f488382f0810041940p20544fdo88908c7f305a69de@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="----=_Part_88508_14603620.1223457507860"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 4, 2008 at 7:40 PM, Steven Noonan <steven@uplinklabs.net> wrote:
-> On Sat, Oct 4, 2008 at 7:32 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Fri, Oct 3, 2008 at 3:45 PM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->>> We were trying to hold the wrong spinlock due to a typo
->>> on IEEE80211_BAR_CTL_TID_S's definition. We use this to
->>> compute the tid number and then hold this this tid number's
->>> spinlock.
->>>
->>> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
->>> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
->>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->>
->> Just a head up John -- Ingo has already sucked this into his tree with
->> a proper Reported-by. We still need it in wireless-testing though, not
->> sure how that will be handled.
->>
->>  Luis
->
-> Oh, I should add a tested-by for this.
->
-> Tested-by: Steven Noonan <steven@uplinklabs.net>
+------=_Part_88508_14603620.1223457507860
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Thanks a lot for testing this Steven, your reports and tests are
-greatly appreciated.
+This patch (wireless-next-2.6) fixes a typo in mac80211_hwsim.c:
+use HWSIM_STA_MAGIC in hwsim_check_sta_magic() and hwsim_set_sta_magic()
+instead of HWSIM_VIF_MAGIC.
 
-Let us know how ANI goes :)
 
-  Luis
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
+
+------=_Part_88508_14603620.1223457507860
+Content-Type: text/plain; name=patch.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fm1qypew0
+Content-Disposition: attachment; filename=patch.txt
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hYzgwMjExX2h3c2ltLmMgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9tYWM4MDIxMV9od3NpbS5jCmluZGV4IGM5ZTRhNDMuLmJkNmUyNjUg
+MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hYzgwMjExX2h3c2ltLmMKKysrIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFjODAyMTFfaHdzaW0uYwpAQCAtNjMsMTMgKzYzLDEzIEBA
+IHN0cnVjdCBod3NpbV9zdGFfcHJpdiB7CiBzdGF0aWMgaW5saW5lIHZvaWQgaHdzaW1fY2hlY2tf
+c3RhX21hZ2ljKHN0cnVjdCBpZWVlODAyMTFfc3RhICpzdGEpCiB7CiAJc3RydWN0IGh3c2ltX3N0
+YV9wcml2ICpzcCA9ICh2b2lkICopc3RhLT5kcnZfcHJpdjsKLQlXQVJOX09OKHNwLT5tYWdpYyAh
+PSBIV1NJTV9WSUZfTUFHSUMpOworCVdBUk5fT04oc3AtPm1hZ2ljICE9IEhXU0lNX1NUQV9NQUdJ
+Qyk7CiB9CiAKIHN0YXRpYyBpbmxpbmUgdm9pZCBod3NpbV9zZXRfc3RhX21hZ2ljKHN0cnVjdCBp
+ZWVlODAyMTFfc3RhICpzdGEpCiB7CiAJc3RydWN0IGh3c2ltX3N0YV9wcml2ICpzcCA9ICh2b2lk
+ICopc3RhLT5kcnZfcHJpdjsKLQlzcC0+bWFnaWMgPSBIV1NJTV9WSUZfTUFHSUM7CisJc3AtPm1h
+Z2ljID0gSFdTSU1fU1RBX01BR0lDOwogfQogCiBzdGF0aWMgaW5saW5lIHZvaWQgaHdzaW1fY2xl
+YXJfc3RhX21hZ2ljKHN0cnVjdCBpZWVlODAyMTFfc3RhICpzdGEpCg==
+------=_Part_88508_14603620.1223457507860--
