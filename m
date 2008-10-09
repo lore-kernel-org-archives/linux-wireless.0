@@ -1,473 +1,276 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:41412 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597AbYJUTKT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38433 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753076AbYJIKSF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 15:10:19 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so457825ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2008 12:10:17 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-From: Anna Neal <anna@cozybit.com>
-Date: Mon, 20 Oct 2008 16:49:58 -0700
-Subject: [RFC] libertas: iwpriv commands to configure fine grained wake-on-(w)lan
-Message-ID: <48fe2917.131e640a.7efb.7d0b@mx.google.com> (sfid-20081021_211029_945327_AF049485)
+	Thu, 9 Oct 2008 06:18:05 -0400
+Subject: [PATCH] mac80211: kill hw.conf.antenna_sel_{rx,tx}
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 09 Oct 2008 12:18:04 +0200
+Message-Id: <1223547484.22490.36.camel@johannes.berg> (sfid-20081009_121813_721843_DA415401)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-View README for new API.
+Never actually used.
 
-This patch implements the userspace interface for fine-grained configuration of
-wake-on-(w)lan.  We are aware that iwpriv's are discouraged, but this is a
-vendor-specific feature that's currently being used in the OLPC project.
-
-We are aware that all iwprivs were removed from this driver.  These used the old
-API for iwprivs.  We've implemented this iwpriv as a private handler which relies
-on wireless extensions to do bounds checking and copying to/from user memory.
-Specific suggestions on how to make this more palatable for upstream inclusion
-are welcome.  If iwprivs are completely unacceptable then this can serve as a
-public reference for interfacing with these features.
-
-Signed-off-by: Anna Neal <anna@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/libertas/README |   71 ++++++++
- drivers/net/wireless/libertas/wext.c |  323 ++++++++++++++++++++++++++++++++++
- 2 files changed, 394 insertions(+), 0 deletions(-)
+ drivers/net/wireless/b43/main.c            |   25 +++----------------------
+ drivers/net/wireless/b43legacy/main.c      |   18 ++----------------
+ drivers/net/wireless/p54/p54common.c       |    3 +--
+ drivers/net/wireless/rt2x00/rt2x00config.c |   20 ++++----------------
+ drivers/net/wireless/rt2x00/rt2x00dev.c    |    6 ++----
+ include/net/mac80211.h                     |    7 +------
+ net/mac80211/debugfs.c                     |    8 --------
+ net/mac80211/ieee80211_i.h                 |    2 --
+ net/mac80211/tx.c                          |    1 -
+ 9 files changed, 13 insertions(+), 77 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/README b/drivers/net/wireless/libertas/README
-index d860fc3..6eb30a3 100644
---- a/drivers/net/wireless/libertas/README
-+++ b/drivers/net/wireless/libertas/README
-@@ -28,6 +28,77 @@ DRIVER LOADING
+--- everything.orig/net/mac80211/debugfs.c	2008-10-08 22:35:20.000000000 +0200
++++ everything/net/mac80211/debugfs.c	2008-10-08 22:35:26.000000000 +0200
+@@ -47,10 +47,6 @@ static const struct file_operations name
  
- 		insmod usb8388.ko [fw_name=usb8388.bin]
+ DEBUGFS_READONLY_FILE(frequency, 20, "%d",
+ 		      local->hw.conf.channel->center_freq);
+-DEBUGFS_READONLY_FILE(antenna_sel_tx, 20, "%d",
+-		      local->hw.conf.antenna_sel_tx);
+-DEBUGFS_READONLY_FILE(antenna_sel_rx, 20, "%d",
+-		      local->hw.conf.antenna_sel_rx);
+ DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
+ 		      local->rts_threshold);
+ DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
+@@ -202,8 +198,6 @@ void debugfs_hw_add(struct ieee80211_loc
+ 	local->debugfs.keys = debugfs_create_dir("keys", phyd);
  
-+=====================
-+IWPRIV COMMAND
-+=====================
-+
-+Wake On Lan Commands:
-+
-+	The Wake On Lan (wol) commands are used to configure wol rules outside
-+	of the constraints of ethtool. the following commands are supported:
-+
-+
-+	iwpriv ethX set_wol_rule
-+	iwpriv ethX get_wol_rule
-+	iwpriv ethX reset_wol_rule
-+
-+
-+set_wol_rule
-+
-+	Usage:
-+
-+	    $iwpriv msh0 set_wol_rule "<b|m|u> 0x<signature>{.<mask>}@<offset>"
-+
-+
-+	1. The first digit is the traffic type:
-+		b - broadcast
-+		m - multicast
-+		u - unicast
-+
-+	2. The pattern signature used for comparison to the incoming frame.
-+	   This can be from 1-4 bytes and must be in the standard hex format
-+	   with a leading '0x'.
-+
-+	3. An optional '.' may be added to specify a mask you wish to use. By
-+	   default it will be 0xf for the length of your signature.
-+
-+	4. An offset after the '@' is mandatory this will specify the offset
-+	   into the payload of an 802.3 frame at which the signature will be
-+	   compared.
-+
-+	5. In addition, you may 'and' multiple rules separated by '&&' in the
-+	   same call.
-+
-+	Note:
-+		Every iwpriv, as shown above, will add new wol rules and 'or'
-+		them to any previous rules entered.
-+		At most 16 rules may be applied.
-+
-+	Examples:
-+
-+	1. Wake from an arp request received over the mesh at 192.168.0.1.
-+
-+		iwpriv msh0 set_wol_rule "b 0x0806@06 && 0xC0A80001@16"
-+
-+	2. Set to wake from any arp request or any multicast traffic from
-+	   192.168.0.1.
-+
-+		iwpriv eth0 set_wol_rule "b 0x0806@06"
-+		iwpriv eth0 set_wol_rule "m 0xC0A80001@16"
-+
-+	3. Set to wake from an arp or IPv4 broadcast (ethertypes 0x0806 and
-+	   0x0806)
-+
-+		iwpriv eth0 set_wol_rule "b 0x0800.fff9@06"
-+
-+get_wol_rule
-+
-+	This will return a list of all the wol rules set.
-+
-+reset_wol_rule
-+
-+        This will delete/reset any rules entered using this interface.
-+
- =========================
- ETHTOOL
- =========================
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 82c3e5a..90032a9 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -2135,6 +2135,301 @@ static int lbs_set_wap(struct net_device *dev, struct iw_request_info *info,
- 	return ret;
+ 	DEBUGFS_ADD(frequency);
+-	DEBUGFS_ADD(antenna_sel_tx);
+-	DEBUGFS_ADD(antenna_sel_rx);
+ 	DEBUGFS_ADD(rts_threshold);
+ 	DEBUGFS_ADD(fragmentation_threshold);
+ 	DEBUGFS_ADD(short_retry_limit);
+@@ -258,8 +252,6 @@ void debugfs_hw_add(struct ieee80211_loc
+ void debugfs_hw_del(struct ieee80211_local *local)
+ {
+ 	DEBUGFS_DEL(frequency);
+-	DEBUGFS_DEL(antenna_sel_tx);
+-	DEBUGFS_DEL(antenna_sel_rx);
+ 	DEBUGFS_DEL(rts_threshold);
+ 	DEBUGFS_DEL(fragmentation_threshold);
+ 	DEBUGFS_DEL(short_retry_limit);
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-10-08 22:35:01.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-10-08 22:35:10.000000000 +0200
+@@ -727,8 +727,6 @@ struct ieee80211_local {
+ 		struct dentry *rcdir;
+ 		struct dentry *rcname;
+ 		struct dentry *frequency;
+-		struct dentry *antenna_sel_tx;
+-		struct dentry *antenna_sel_rx;
+ 		struct dentry *rts_threshold;
+ 		struct dentry *fragmentation_threshold;
+ 		struct dentry *short_retry_limit;
+--- everything.orig/include/net/mac80211.h	2008-10-08 22:35:30.000000000 +0200
++++ everything/include/net/mac80211.h	2008-10-08 22:39:56.000000000 +0200
+@@ -324,7 +324,7 @@ struct ieee80211_tx_altrate {
+  * @flags: transmit info flags, defined above
+  * @band: TBD
+  * @tx_rate_idx: TBD
+- * @antenna_sel_tx: TBD
++ * @antenna_sel_tx: antenna to use, 0 for automatic diversity
+  * @control: union for control data
+  * @status: union for status data
+  * @driver_data: array of driver_data pointers
+@@ -474,9 +474,6 @@ static inline int __deprecated __IEEE802
+  * @listen_interval: listen interval in units of beacon interval
+  * @flags: configuration flags defined above
+  * @power_level: requested transmit power (in dBm)
+- * @antenna_sel_tx: transmit antenna selection, 0: default/diversity,
+- *	1/2: antenna 0/1
+- * @antenna_sel_rx: receive antenna selection, like @antenna_sel_tx
+  * @ht_cap: describes current self configuration of 802.11n HT capabilities
+  * @ht_bss_conf: describes current BSS configuration of 802.11n HT parameters
+  * @channel: the channel to tune to
+@@ -488,8 +485,6 @@ struct ieee80211_conf {
+ 	u16 listen_interval;
+ 	u32 flags;
+ 	int power_level;
+-	u8 antenna_sel_tx;
+-	u8 antenna_sel_rx;
+ 
+ 	struct ieee80211_channel *channel;
+ 
+--- everything.orig/net/mac80211/tx.c	2008-10-08 22:37:05.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-10-08 22:37:22.000000000 +0200
+@@ -1975,7 +1975,6 @@ struct sk_buff *ieee80211_beacon_get(str
+ 	    sband->bitrates[rsel.rate_idx].flags & IEEE80211_RATE_SHORT_PREAMBLE)
+ 		info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
+ 
+-	info->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
+ 	info->control.retry_limit = 1;
+ 
+ out:
+--- everything.orig/drivers/net/wireless/b43/main.c	2008-10-08 22:40:06.000000000 +0200
++++ everything/drivers/net/wireless/b43/main.c	2008-10-08 22:40:45.000000000 +0200
+@@ -1339,25 +1339,6 @@ u8 b43_ieee80211_antenna_sanitize(struct
+ 	return antenna_nr;
  }
  
-+/**
-+ * ascii_to_be32() - Convert an hex ascii string into a be32 integer.
-+ * @dst:        Pointer to destination big endiand 32 bit integer.
-+ * @pptr:       Input string. On exit points past the last converted character.
-+*
-+ * Returns the number of converted characters.
-+ **/
-+static int ascii_to_be32(__be32 *dst, unsigned char **pptr)
-+{
-+	uint32_t value;
-+	unsigned char *start;
-+	int char_count;
-+
-+	start = *pptr;
-+	if (**pptr == '0' && tolower(*(*pptr+1)) == 'x')
-+		start += 2;
-+	value = simple_strtoul((char *)*pptr, (char **) pptr, 16);
-+	*dst = cpu_to_be32(value);
-+
-+	char_count = (*pptr - start);
-+
-+	return (char_count > 8) ? -EINVAL : char_count;
-+}
-+
-+static int set_wol_rule_type(unsigned char *ptr, struct wol_config
-+		*wol_rule)
-+{
-+	if (tolower(*ptr) == 'b')
-+		wol_rule->pattern |= WOL_RULE_ADDR_TYPE_BCAST;
-+	else if (tolower(*ptr) == 'm')
-+		wol_rule->pattern |= WOL_RULE_ADDR_TYPE_MCAST;
-+	else if (tolower(*ptr) == 'u')
-+		wol_rule->pattern |= WOL_RULE_ADDR_TYPE_UCAST;
-+	else
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+static int config_set_wol_rule(unsigned char *ptr, struct wol_config *rules)
-+{
-+	unsigned short sig_offset;
-+	int sig_len, msk_len;
-+	int n, ret;
-+
-+	ptr = strstrip(ptr);
-+	if (*ptr == '\0')
-+		return -EINVAL;
-+
-+	ret = set_wol_rule_type(ptr, rules);
-+	if (ret)
-+		return ret;
-+
-+	lbs_deb_ioctl("Received WOL pattern %X\n", rules->pattern);
-+	ptr++;
-+
-+	for (n = 0; *ptr != '\0' || n < MAX_WOL_RULES; ptr++, n++) {
-+
-+		ptr = strstrip(ptr);
-+		if (*ptr == '\0')
-+			return -EINVAL;
-+
-+		rules->rule[n].rule_no = n;
-+		sig_len = ascii_to_be32(&rules->rule[n].signature, &ptr);
-+
-+		if (sig_len <= 0)
-+			return -EINVAL;
-+
-+		/* No signature mask, build a default one */
-+		if (*ptr == '@') {
-+			uint32_t defmask;
-+			defmask = (0xffffffff >> 4*(8-sig_len));
-+			rules->rule[n].sig_mask = cpu_to_be32(defmask);
-+			msk_len = sig_len;
-+		} else if (*ptr == '.') {
-+			ptr++;
-+			msk_len = ascii_to_be32(&rules->rule[n].sig_mask, &ptr);
-+			if (msk_len <= 0)
-+				return -EINVAL;
-+		} else
-+			return -EINVAL;
-+
-+		if (*ptr == '@')
-+			ptr++;
-+		else
-+			return -EINVAL;
-+
-+		/* assume a prefix of zeroes if mask is bigger than signature */
-+		if (sig_len < msk_len)
-+			sig_len = msk_len;
-+
-+		rules->rule[n].sig_length = cpu_to_le16((__u16)
-+				(sig_len + 1)/2);
-+		sig_offset = (uint16_t) simple_strtoul(ptr, (char **)&ptr, 16);
-+
-+		if (sig_offset > (IEEE80211_DATA_LEN - 4))
-+			return -EINVAL;
-+
-+		rules->rule[n].sig_offset = cpu_to_le16(sig_offset);
-+
-+		ptr = strstrip(ptr);
-+		if (*ptr == '\0') {
-+			rules->rule[n].rule_ops = WOL_RULE_OP_INVALID;
-+			n++;
-+			break;
-+		}
-+
-+		if ((*ptr == '&') && (*(ptr+1) == '&')) {
-+			rules->rule[n].rule_ops = WOL_RULE_OP_AND;
-+			ptr += 2;
-+		} else
-+			return -EINVAL;
-+
-+	}
-+	rules->no_rules_in_cmd = n;
-+	return 0;
-+}
-+
-+
-+static int lbs_wol_set_config_ioctl(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    union iwreq_data *u, char *data)
-+{
-+	int ret;
-+	struct wol_config wol_rule;
-+	struct wol_config *wol_ptr;
-+	struct lbs_private *priv = dev->priv;
-+
-+	wol_ptr = &wol_rule;
-+	memset(&wol_rule, 0, sizeof(struct wol_config));
-+
-+	lbs_deb_enter(LBS_DEB_IOCTL);
-+
-+	if (dev == priv->mesh_dev)
-+		wol_rule.pattern |= WOL_RULE_NET_TYPE_MESH;
-+	else
-+		wol_rule.pattern |= WOL_RULE_NET_TYPE_INFRA_OR_IBSS;
-+
-+	ret = config_set_wol_rule(data, wol_ptr);
-+	if (ret)
-+		goto error;
-+
-+	wol_rule.action = CMD_ACT_SET_WOL_RULE;
-+	lbs_deb_ioctl("Sending wol_set_rule for pattern %02x with %03d rules\n",
-+			wol_rule.pattern, wol_rule.no_rules_in_cmd);
-+	ret = lbs_host_sleep_cfg(priv, 0, &wol_rule);
-+	switch (wol_rule.result) {
-+	case WOL_RESULT_VALID_CMD:
-+		break;
-+	case WOL_RESULT_NOSPC_ERR:
-+		ret = -ENOSPC;
-+		break;
-+	case WOL_RESULT_EEXIST_ERR:
-+		ret = -EEXIST;
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
-+	}
-+error:
-+	lbs_deb_leave(LBS_DEB_IOCTL);
-+	return ret;
-+}
-+
-+static unsigned char *sprint_get_wol_result(unsigned char *ptr,
-+				struct wol_config *wol_rule, int ret)
-+{
-+	struct host_wol_rule *p_rule;
-+	int i;
-+	unsigned short sig_len;
-+
-+	if (wol_rule) {
-+		switch (wol_rule->pattern & 0x0F) {
-+		case WOL_RULE_ADDR_TYPE_BCAST:
-+			ptr += sprintf(ptr, "\nBroadcast Rules\n");
-+			break;
-+		case WOL_RULE_ADDR_TYPE_MCAST:
-+			ptr += sprintf(ptr, "\nMulticast Rules\n");
-+			break;
-+		case WOL_RULE_ADDR_TYPE_UCAST:
-+			ptr += sprintf(ptr, "\nUnicast Rules\n");
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
-+	if (wol_rule->result) {
-+		ptr += sprintf(ptr, " No rules found.\n");
-+		return ptr;
-+	}
-+
-+	ptr += sprintf(ptr, "Total %d Rules  found for",
-+			wol_rule->no_rules_in_cmd);
-+	switch (wol_rule->pattern & 0xF0) {
-+	case WOL_RULE_NET_TYPE_INFRA_OR_IBSS:
-+		ptr += sprintf(ptr, " Infra or Ibss\n");
-+		break;
-+	case WOL_RULE_NET_TYPE_MESH:
-+		ptr += sprintf(ptr, " Mesh\n");
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	ptr += sprintf(ptr, "Signature\tSig Mask\t");
-+	ptr += sprintf(ptr, "Offset\tRule Op\n");
-+	wol_rule->no_rules_in_cmd = min(wol_rule->no_rules_in_cmd,
-+			(uint8_t) MAX_WOL_RULES);
-+
-+	for (i = 0; i < wol_rule->no_rules_in_cmd; i++) {
-+		p_rule = &wol_rule->rule[i];
-+		sig_len = le16_to_cpu(p_rule->sig_length);
-+		ptr += sprintf(ptr, "0x%08x", be32_to_cpu(p_rule->signature));
-+		ptr += sprintf(ptr, "\t");
-+		ptr += sprintf(ptr, "0x%08x", be32_to_cpu(p_rule->sig_mask));
-+		ptr += sprintf(ptr, "\t0x%03x\t",
-+				le16_to_cpu(p_rule->sig_offset));
-+
-+		if (p_rule->rule_ops == 2)
-+			ptr += sprintf(ptr, "OR\n");
-+		else if (p_rule->rule_ops == 1)
-+			ptr += sprintf(ptr, "AND\n");
-+		else
-+			ptr += sprintf(ptr, "LAST\n");
-+	}
-+	return ptr;
-+}
-+
-+static int lbs_wol_get_config_ioctl(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    union iwreq_data *u, char *data)
-+{
-+	int ret;
-+	struct wol_config wol_rule;
-+	struct wol_config *wol_ptr;
-+	struct lbs_private *priv = dev->priv;
-+	char *ptr = data;
-+
-+	wol_ptr = &wol_rule;
-+	memset(&wol_rule, 0, sizeof(struct wol_config));
-+
-+	if (dev == priv->mesh_dev)
-+		wol_rule.pattern |= WOL_RULE_NET_TYPE_MESH;
-+	else
-+		wol_rule.pattern |= WOL_RULE_NET_TYPE_INFRA_OR_IBSS;
-+
-+	wol_rule.action = CMD_ACT_GET_WOL_RULE;
-+	wol_rule.pattern |= WOL_RULE_ADDR_TYPE_BCAST;
-+	lbs_deb_ioctl("Sending get_wol_rule, pattern %02x\n", wol_rule.pattern);
-+	ret = lbs_host_sleep_cfg(priv, 0, &wol_rule);
-+	ptr = sprint_get_wol_result(ptr, wol_ptr, ret);
-+	if (ret)
-+		goto done;
-+
-+	wol_rule.pattern &= ~WOL_RULE_ADDR_TYPE_BCAST;
-+	wol_rule.pattern |= WOL_RULE_ADDR_TYPE_MCAST;
-+	lbs_deb_ioctl("Sending get_wol_rule, pattern %02x\n", wol_rule.pattern);
-+	ret = lbs_host_sleep_cfg(priv, 0, &wol_rule);
-+	ptr = sprint_get_wol_result(ptr, wol_ptr, ret);
-+	if (ret)
-+		goto done;
-+
-+	wol_rule.pattern &= ~WOL_RULE_ADDR_TYPE_MCAST;
-+	wol_rule.pattern |= WOL_RULE_ADDR_TYPE_UCAST;
-+	lbs_deb_ioctl("Sending get_wol_rule, pattern %02x\n", wol_rule.pattern);
-+	ret = lbs_host_sleep_cfg(priv, 0, &wol_rule);
-+	ptr = sprint_get_wol_result(ptr, wol_ptr, ret);
-+
-+	u->data.length = strlen(data);
-+done:
-+	lbs_deb_leave(LBS_DEB_IOCTL);
-+	return ret;
-+}
-+
-+static int lbs_wol_reset_config_ioctl(struct net_device *dev,
-+				      struct iw_request_info *info,
-+				      struct iw_point *u, char *data)
-+{
-+	int ret;
-+	struct wol_config wol_rule;
-+	struct lbs_private *priv = dev->priv;
-+
-+	memset(&wol_rule, 0, sizeof(struct wol_config));
-+
-+	lbs_deb_enter(LBS_DEB_IOCTL);
-+	wol_rule.action = CMD_ACT_RESET_WOL_RULE;
-+	lbs_deb_ioctl("Sending wol_reset command\n");
-+	ret = lbs_host_sleep_cfg(priv, 0, &wol_rule);
-+	if (!ret && wol_rule.result)
-+		ret = -EIO;
-+
-+	lbs_deb_leave(LBS_DEB_IOCTL);
-+	return ret;
-+}
-+
- /*
-  * iwconfig settable callbacks
-  */
-@@ -2253,14 +2548,42 @@ static const iw_handler mesh_wlan_handler[] = {
- 	(iw_handler) lbs_get_encodeext,/* SIOCGIWENCODEEXT */
- 	(iw_handler) NULL,		/* SIOCSIWPMKSA */
- };
-+
-+#define LBS_SET_WOL_RULE 	SIOCIWFIRSTPRIV
-+#define LBS_GET_WOL_RULE 	(SIOCIWFIRSTPRIV+1)
-+#define LBS_RESET_WOL_RULE 	(SIOCIWFIRSTPRIV+2)
-+
-+static const iw_handler lbs_private_handler[] = {
-+	(iw_handler) lbs_wol_set_config_ioctl,   /* LBS_SET_WOL_RULE */
-+	(iw_handler) lbs_wol_get_config_ioctl,	 /* LBS_GET_WOL_RULE */
-+	(iw_handler) lbs_wol_reset_config_ioctl, /* LBS_RESET_WOL_RULE */
-+
-+};
-+
-+#define CHAR1024_PARAM		   (IW_PRIV_TYPE_CHAR | 1024)
-+static const struct iw_priv_args lbs_private_args[] = {
-+	/* { cmd, set_args, get_args, name } */
-+	{ LBS_SET_WOL_RULE, CHAR1024_PARAM, 0, "set_wol_rule"},
-+	{ LBS_GET_WOL_RULE, 0, CHAR1024_PARAM, "get_wol_rule"},
-+	{ LBS_RESET_WOL_RULE, 0, 0, "reset_wol_rule"},
-+};
-+
- struct iw_handler_def lbs_handler_def = {
- 	.num_standard	= ARRAY_SIZE(lbs_handler),
-+	.num_private	= ARRAY_SIZE(lbs_private_handler),
- 	.standard	= (iw_handler *) lbs_handler,
-+	.private	= (iw_handler *) lbs_private_handler,
- 	.get_wireless_stats = lbs_get_wireless_stats,
-+	.num_private_args = ARRAY_SIZE(lbs_private_args),
-+	.private_args	= lbs_private_args,
- };
+-static int b43_antenna_from_ieee80211(struct b43_wldev *dev, u8 antenna)
+-{
+-	antenna = b43_ieee80211_antenna_sanitize(dev, antenna);
+-	switch (antenna) {
+-	case 0:		/* default/diversity */
+-		return B43_ANTENNA_DEFAULT;
+-	case 1:		/* Antenna 0 */
+-		return B43_ANTENNA0;
+-	case 2:		/* Antenna 1 */
+-		return B43_ANTENNA1;
+-	case 3:		/* Antenna 2 */
+-		return B43_ANTENNA2;
+-	case 4:		/* Antenna 3 */
+-		return B43_ANTENNA3;
+-	default:
+-		return B43_ANTENNA_DEFAULT;
+-	}
+-}
+-
+ /* Convert a b43 antenna number value to the PHY TX control value. */
+ static u16 b43_antenna_to_phyctl(int antenna)
+ {
+@@ -1399,7 +1380,7 @@ static void b43_write_beacon_template(st
+ 				  len, ram_offset, shm_size_offset, rate);
  
- struct iw_handler_def mesh_handler_def = {
- 	.num_standard	= ARRAY_SIZE(mesh_wlan_handler),
-+	.num_private	= ARRAY_SIZE(lbs_private_handler),
- 	.standard	= (iw_handler *) mesh_wlan_handler,
-+	.private	= (iw_handler *) lbs_private_handler,
- 	.get_wireless_stats = lbs_get_wireless_stats,
-+	.num_private_args = ARRAY_SIZE(lbs_private_args),
-+	.private_args	= lbs_private_args,
- };
--- 
-1.5.4.3
-
+ 	/* Write the PHY TX control parameters. */
+-	antenna = b43_antenna_from_ieee80211(dev, info->antenna_sel_tx);
++	antenna = B43_ANTENNA_DEFAULT;
+ 	antenna = b43_antenna_to_phyctl(antenna);
+ 	ctl = b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_BEACPHYCTL);
+ 	/* We can't send beacons with short preamble. Would get PHY errors. */
+@@ -3399,9 +3380,9 @@ static int b43_op_config(struct ieee8021
+ 	}
+ 
+ 	/* Antennas for RX and management frame TX. */
+-	antenna = b43_antenna_from_ieee80211(dev, conf->antenna_sel_tx);
++	antenna = B43_ANTENNA_DEFAULT;
+ 	b43_mgmtframe_txantenna(dev, antenna);
+-	antenna = b43_antenna_from_ieee80211(dev, conf->antenna_sel_rx);
++	antenna = B43_ANTENNA_DEFAULT;
+ 	if (phy->ops->set_rx_antenna)
+ 		phy->ops->set_rx_antenna(dev, antenna);
+ 
+--- everything.orig/drivers/net/wireless/b43legacy/main.c	2008-10-08 22:41:36.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/main.c	2008-10-08 22:41:59.000000000 +0200
+@@ -2556,20 +2556,6 @@ init_failure:
+ 	return err;
+ }
+ 
+-static int b43legacy_antenna_from_ieee80211(u8 antenna)
+-{
+-	switch (antenna) {
+-	case 0: /* default/diversity */
+-		return B43legacy_ANTENNA_DEFAULT;
+-	case 1: /* Antenna 0 */
+-		return B43legacy_ANTENNA0;
+-	case 2: /* Antenna 1 */
+-		return B43legacy_ANTENNA1;
+-	default:
+-		return B43legacy_ANTENNA_DEFAULT;
+-	}
+-}
+-
+ static int b43legacy_op_dev_config(struct ieee80211_hw *hw,
+ 				   struct ieee80211_conf *conf)
+ {
+@@ -2583,8 +2569,8 @@ static int b43legacy_op_dev_config(struc
+ 	int err = 0;
+ 	u32 savedirqs;
+ 
+-	antenna_tx = b43legacy_antenna_from_ieee80211(conf->antenna_sel_tx);
+-	antenna_rx = b43legacy_antenna_from_ieee80211(conf->antenna_sel_rx);
++	antenna_tx = B43legacy_ANTENNA_DEFAULT;
++	antenna_rx = B43legacy_ANTENNA_DEFAULT;
+ 
+ 	mutex_lock(&wl->mutex);
+ 	dev = wl->current_dev;
+--- everything.orig/drivers/net/wireless/p54/p54common.c	2008-10-08 22:43:54.000000000 +0200
++++ everything/drivers/net/wireless/p54/p54common.c	2008-10-08 22:44:12.000000000 +0200
+@@ -1211,8 +1211,7 @@ static int p54_config(struct ieee80211_h
+ 	struct p54_common *priv = dev->priv;
+ 
+ 	mutex_lock(&priv->conf_mutex);
+-	priv->rx_antenna = (conf->antenna_sel_rx == 0) ?
+-		2 : conf->antenna_sel_tx - 1;
++	priv->rx_antenna = 2; /* automatic */
+ 	priv->output_power = conf->power_level << 2;
+ 	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
+ 	p54_set_vdcf(dev);
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00config.c	2008-10-08 22:44:57.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00config.c	2008-10-08 22:45:36.000000000 +0200
+@@ -199,23 +199,15 @@ void rt2x00lib_config(struct rt2x00_dev 
+ 	 * to work with untill the link tuner decides that an antenna
+ 	 * switch should be performed.
+ 	 */
+-	if (!conf->antenna_sel_rx &&
+-	    default_ant->rx != ANTENNA_SW_DIVERSITY &&
++	if (default_ant->rx != ANTENNA_SW_DIVERSITY &&
+ 	    default_ant->rx != active_ant->rx)
+ 		flags |= CONFIG_UPDATE_ANTENNA;
+-	else if (conf->antenna_sel_rx &&
+-		 conf->antenna_sel_rx != active_ant->rx)
+-		flags |= CONFIG_UPDATE_ANTENNA;
+ 	else if (active_ant->rx == ANTENNA_SW_DIVERSITY)
+ 		flags |= CONFIG_UPDATE_ANTENNA;
+ 
+-	if (!conf->antenna_sel_tx &&
+-	    default_ant->tx != ANTENNA_SW_DIVERSITY &&
++	if (default_ant->tx != ANTENNA_SW_DIVERSITY &&
+ 	    default_ant->tx != active_ant->tx)
+ 		flags |= CONFIG_UPDATE_ANTENNA;
+-	else if (conf->antenna_sel_tx &&
+-		 conf->antenna_sel_tx != active_ant->tx)
+-		flags |= CONFIG_UPDATE_ANTENNA;
+ 	else if (active_ant->tx == ANTENNA_SW_DIVERSITY)
+ 		flags |= CONFIG_UPDATE_ANTENNA;
+ 
+@@ -252,18 +244,14 @@ config:
+ 	}
+ 
+ 	if (flags & CONFIG_UPDATE_ANTENNA) {
+-		if (conf->antenna_sel_rx)
+-			libconf.ant.rx = conf->antenna_sel_rx;
+-		else if (default_ant->rx != ANTENNA_SW_DIVERSITY)
++		if (default_ant->rx != ANTENNA_SW_DIVERSITY)
+ 			libconf.ant.rx = default_ant->rx;
+ 		else if (active_ant->rx == ANTENNA_SW_DIVERSITY)
+ 			libconf.ant.rx = ANTENNA_B;
+ 		else
+ 			libconf.ant.rx = active_ant->rx;
+ 
+-		if (conf->antenna_sel_tx)
+-			libconf.ant.tx = conf->antenna_sel_tx;
+-		else if (default_ant->tx != ANTENNA_SW_DIVERSITY)
++		if (default_ant->tx != ANTENNA_SW_DIVERSITY)
+ 			libconf.ant.tx = default_ant->tx;
+ 		else if (active_ant->tx == ANTENNA_SW_DIVERSITY)
+ 			libconf.ant.tx = ANTENNA_B;
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00dev.c	2008-10-08 22:44:28.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00dev.c	2008-10-08 22:44:43.000000000 +0200
+@@ -249,11 +249,9 @@ static void rt2x00lib_evaluate_antenna(s
+ 	rt2x00dev->link.ant.flags &= ~ANTENNA_RX_DIVERSITY;
+ 	rt2x00dev->link.ant.flags &= ~ANTENNA_TX_DIVERSITY;
+ 
+-	if (rt2x00dev->hw->conf.antenna_sel_rx == 0 &&
+-	    rt2x00dev->default_ant.rx == ANTENNA_SW_DIVERSITY)
++	if (rt2x00dev->default_ant.rx == ANTENNA_SW_DIVERSITY)
+ 		rt2x00dev->link.ant.flags |= ANTENNA_RX_DIVERSITY;
+-	if (rt2x00dev->hw->conf.antenna_sel_tx == 0 &&
+-	    rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY)
++	if (rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY)
+ 		rt2x00dev->link.ant.flags |= ANTENNA_TX_DIVERSITY;
+ 
+ 	if (!(rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) &&
 
 
