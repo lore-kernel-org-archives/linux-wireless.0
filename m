@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.184]:49393 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998AbYJOIKF (ORCPT
+Received: from sr04-03.mta.terra.com.br ([200.154.152.52]:42604 "EHLO
+	sr04-03.mta.terra.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756191AbYJINJu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 04:10:05 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1441423tic.23
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 01:10:03 -0700 (PDT)
-Message-ID: <ea11fea30810150110s772b740fv38cc37645da53201@mail.gmail.com> (sfid-20081015_101012_936383_4BE67F0D)
-Date: Wed, 15 Oct 2008 13:40:03 +0530
-From: "Manish Katiyar" <mkatiyar@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [PATCH] libertas : Remove unused variable warning "old_channel" from drivers/net/wireless/libertas/cmd.c
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1224002213.1799.2.camel@localhost.localdomain>
+	Thu, 9 Oct 2008 09:09:50 -0400
+Message-ID: <48EE02B9.4060108@terra.com.br> (sfid-20081009_150955_234652_1BE712DF)
+Date: Thu, 09 Oct 2008 10:10:17 -0300
+From: Piter PUNK <piterpk@terra.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <ea11fea30810130352i3cea0579g9950289254c8e628@mail.gmail.com>
-	 <1224002213.1799.2.camel@localhost.localdomain>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RTL8187B transmit problems
+References: <48E979B7.4040000@terra.com.br> <20081008195740.GA2794@srcf.ucam.org>
+In-Reply-To: <20081008195740.GA2794@srcf.ucam.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 14, 2008 at 10:06 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Mon, 2008-10-13 at 16:22 +0530, Manish Katiyar wrote:
->> Below patch removes the following warning during compilation.
->>
->> drivers/net/wireless/libertas/cmd.c:826: warning: unused variable 'old_channel'
->>
->>
->> Signed-off-by : Manish Katiyar <mkatiyar@gmail.com>
->
-> Acked-by: Dan Williams <dcbw@redhat.com>
+Matthew Garrett wrote:
+> Try reducing the bit rate - iwconfig wlan0 11M fixed, for example.
+> 
 
-Hi Dan,
+Hi,
 
-A newbie question. Will you merge this patch or will I have to send it
-to Andrew again acked by you ?
+I try that. This time i got my problem #3:
 
-Thanks -
-Manish
+---from first mail---
+3) I associate, can transmit but only "small" transmissions. Ping,
+    HTTP GET, POP commands... when i try to upload a file, send a
+    mail, etc... the connection stuck.
+---------------------
 
+I associate:
 
->
->> ---
->>  drivers/net/wireless/libertas/cmd.c |    2 ++
->>  1 files changed, 2 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/libertas/cmd.c
->> b/drivers/net/wireless/libertas/cmd.c
->> index a912fb6..297696d 100644
->> --- a/drivers/net/wireless/libertas/cmd.c
->> +++ b/drivers/net/wireless/libertas/cmd.c
->> @@ -823,7 +823,9 @@ int lbs_update_channel(struct lbs_private *priv)
->>  int lbs_set_channel(struct lbs_private *priv, u8 channel)
->>  {
->>       struct cmd_ds_802_11_rf_channel cmd;
->> +#ifdef DEBUG
->>       u8 old_channel = priv->curbssparams.channel;
->> +#endif
->>       int ret = 0;
->>
->>       lbs_deb_enter(LBS_DEB_CMD);
->
->
+---
+wmaster0  no wireless extensions.
+
+wlan0     IEEE 802.11bg  ESSID:"MyLab"
+           Mode:Managed  Frequency:2.437 GHz  Access Point: 
+00:1D:0F:FB:B4:52
+           Bit Rate=11 Mb/s   Tx-Power=27 dBm
+           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+           Encryption key:XXXX-XXXX-XX   Security mode:open
+           Power Management:off
+           Link Quality=100/100  Signal level:-5 dBm
+           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+---
+
+I can ping
+
+---
+root@cameron:~# ping 192.168.0.1
+PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
+64 bytes from 192.168.0.1: icmp_seq=1 ttl=64 time=32.9 ms
+64 bytes from 192.168.0.1: icmp_seq=2 ttl=64 time=136 ms
+64 bytes from 192.168.0.1: icmp_seq=3 ttl=64 time=1.69 ms
+64 bytes from 192.168.0.1: icmp_seq=4 ttl=64 time=2.25 ms
+64 bytes from 192.168.0.1: icmp_seq=5 ttl=64 time=55.0 ms
+^C
+--- 192.168.0.1 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4016ms
+rtt min/avg/max/mdev = 1.692/45.795/136.994/49.817 ms
+---
+
+But i can't transmit anything bigger. Trying to send an mail
+or an 448K tarball through scp didn't work (but ssh session
+works). Using rt73 USB dongle works fine (i sent the tarball
+and i will send this mail).
+
+Hope this test can help.
+
+Thanks!
+
+Piter PUNK
+-- 
+     |        E-Mail: piterpk@terra.com.br        (personal)
+    .|.
+    /V\
+   // \\      UIN:116043354  Homepage:http://piterpunk.info02.com.br
+  /(   )\
+   ^`~'^
+  #105432
