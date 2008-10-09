@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60457 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790AbYJOT7o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 15:59:44 -0400
-Date: Wed, 15 Oct 2008 15:56:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dave <kilroyd@googlemail.com>
-Cc: arvidjaar@mail.ru, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-10-14
-Message-ID: <20081015195656.GC27688@tuxdriver.com> (sfid-20081015_215947_798660_34A2A42C)
-References: <20081015013204.GH3349@tuxdriver.com> <48F6419B.80104@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48F6419B.80104@gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:42002 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753842AbYJIUJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2008 16:09:42 -0400
+Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic
+	loading firmware with PCMCIA adapter
+From: Dan Williams <dcbw@redhat.com>
+To: Andrey Borzenkov <arvidjaar@newmail.ru>
+Cc: orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <200810092321.55033.arvidjaar@newmail.ru>
+References: <200810091722.56812.arvidjaar@newmail.ru>
+	 <200810091959.54987.arvidjaar@newmail.ru>
+	 <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com>
+	 <200810092321.55033.arvidjaar@newmail.ru>
+Content-Type: text/plain
+Date: Thu, 09 Oct 2008 15:40:33 -0400
+Message-Id: <1223581233.14959.16.camel@dhcp-100-3-195.bos.redhat.com> (sfid-20081009_220945_316152_5605E85D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 15, 2008 at 08:16:43PM +0100, Dave wrote:
-> John W. Linville wrote:
->> Here is a nice little batch of wireless fixes in time for 2.6.28-rc1.
->> There are also a few USB ID additions as well.  I think this is all
->> mostly obvious, and hopefully still acceptable at this stage.
->>
->> Please let me know if there are problems!
->
->> Andrey Borzenkov (1):
->>       orinoco: fix unsafe locking in orinoco_cs_resume
->
-> Hi John,
->
-> Just wanted to check whether you'd seen/intend to apply the orinoco patch Andrey posted in <http://marc.info/?l=linux-kernel&m=122365972026045&w=4>. It fixes a regression (vs 2.6.26) when using 4k stacks.
->
-> Or whether you'd prefer that patch resent with an updated subject?
+On Thu, 2008-10-09 at 23:21 +0400, Andrey Borzenkov wrote:
+> On Thursday 09 October 2008, Dan Williams wrote:
+> > 
+> > On Thu, 2008-10-09 at 19:59 +0400, Andrey Borzenkov wrote:
+> > > On Thursday 09 October 2008, Matthew Wilcox wrote:
+> > > > 
+> > > > On Thu, Oct 09, 2008 at 05:22:55PM +0400, Andrey Borzenkov wrote:
+> > > > > After loading orinoco and "inserting" adapter I get either BUG with
+> > > > > endless loop (attached) or kernel panic on NULL pointer dereference
+> > > > > (was not able capture). Adapter works fine with wlags49 driver.
+> > > > 
+> > > > It looks like you've fallen off the bottom of the kernel stack.  Do you
+> > > > have 4k stacks enabled in your config?
+> > > > 
+> > > 
+> > > You are right. Using 8K stacks load and runs fine. Hmm ... not nice
+> > > from it :p
+> > 
+> > == driver bug; the driver should not require large stacks and this
+> > should get fixed.
+> > 
+> 
+> The attached patch fixes 4K stack for me. I have not tested spectrum case.
 
-I have that thread in my patchbox -- thanks for reminding me why!
+Looks pretty good, although if nobody can test the Symbol case (all I
+have is Intersil firmware) maybe you should not use priv->pda_size but
+#define SYMBOL_PDA_SIZE 256 and use that for the hermes_read_pda()
+length just to ensure the patched code is functionally the same as
+before the patch.
 
-No need to resend..
+Dan
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+
