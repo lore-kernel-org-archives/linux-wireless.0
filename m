@@ -1,67 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52564 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752972AbYJ3WHn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 18:07:43 -0400
-Subject: Re: crash with rt61pci when resuming with card ejected
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200810302247.28609.IvDoorn@gmail.com> (sfid-20081030_224734_416436_2229EB9B)
-References: <1225361553.3690.3.camel@johannes.berg>
-	 <200810302247.28609.IvDoorn@gmail.com>
-	 (sfid-20081030_224734_416436_2229EB9B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pXMnojOcAAaN853sysGM"
-Date: Thu, 30 Oct 2008 23:07:41 +0100
-Message-Id: <1225404461.16440.6.camel@johannes.berg> (sfid-20081030_230748_279480_2A3F62B7)
-Mime-Version: 1.0
+Received: from www.tglx.de ([62.245.132.106]:51341 "EHLO www.tglx.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754736AbYJILP1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2008 07:15:27 -0400
+Date: Thu, 9 Oct 2008 13:15:20 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Elias Oltmanns <eo@nebensachen.de>
+cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: ath5k: kernel timing screwed - due to unserialised register
+ access?
+In-Reply-To: <alpine.LFD.2.00.0810082203360.3237@apollo>
+Message-ID: <alpine.LFD.2.00.0810091313380.3237@apollo> (sfid-20081009_131531_631145_13369201)
+References: <87k5cm3ee2.fsf@denkblock.local> <alpine.LFD.2.00.0810052354000.3398@apollo> <87d4id3jmr.fsf@denkblock.local> <alpine.LFD.2.00.0810061614490.3166@apollo> <87skr8h1de.fsf@denkblock.local> <alpine.LFD.2.00.0810071946460.3166@apollo>
+ <alpine.LFD.2.00.0810072042140.3166@apollo> <87hc7ot804.fsf@denkblock.local> <87myhfnwne.fsf@denkblock.local> <alpine.LFD.2.00.0810082203360.3237@apollo>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 8 Oct 2008, Thomas Gleixner wrote:
+> There is no significant deviation between jiffies and ktime in the
+> debug output, but I noticed that you run with HZ=100, right ? So the
+> timeout you run is 100/50 = 2. I would have a reasonable explanation
+> if it would be 1, but I need to think about it more when I'm awake.
 
---=-pXMnojOcAAaN853sysGM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I think I know what happens. Can you please apply the following debug
+patch and provide the output?
 
-On Thu, 2008-10-30 at 22:47 +0100, Ivo van Doorn wrote:
+Thanks,
 
-> Heh well these 2 functions are the most important ones in the trace anywa=
-y. ;)
-> The only reason I see that rt61pci_mcu_request might fail like this is if=
- writel()
-> crashes when a device is unplugged while a driver still has a reference t=
-o the
-> register base pointer which came from ioremap().
-> But I don't know if that would be a valid assumption. :S
+	tglx
 
-I don't think it should, at least not on pcmcia. I can reproduce and
-send you a better picture, but I don't know what it'll show in terms of
-"why it crashed".
-
-johannes
-
---=-pXMnojOcAAaN853sysGM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJCjAqAAoJEKVg1VMiehFYgTUP/RLeLoiJaZTJZqdzG7bK5O0M
-i8kwnrWEAZRVX4ctmCaUNpKQrUZ+oxniSVUeaglFyiJmkSuvWCh1cpZK2meOGzU9
-6JxNXht6RAy0M9r5Vr8RRavQ2aHmQUjRDuSgrg3g/OkcTFaTvztPjwrwhBSmP2x3
-41Nl2EUGV6knEEdwMnfA+nTIN+vk3DAzvskcahL+SS+XlLDybvVyc+D71xEY905s
-hDjaVvofL7bimgKcLV9nRw2u4jnWtij3F/tqiMd9wjuPL0bf1ac0Lkp+rJsQkrYe
-IiSgAH9V1LHHtuIyCg7/WLdrwCQ1ZkgFbCeu1nJUgk476yoLRISoe1LTW6pS6P1Y
-WSfNmoIX5/1sI6QVqlSsM9mvdYxwwJd6EsknA0+kDnbpEtHAWNXGncOywATtAGjo
-NtTk4Z0xxxuBl7kytGLYejUv4il8sB+X8pVz+OfS2WTrpD8X/fYZpH5Ib9/7+/7z
-X/SzBMkuuycEKgcxnVh/soYRV1QCsRF2j2qAV/mNGae3Dz13PsIsCaiM3jE9ztma
-M1zX3v6r3TJTDHOBCi/SfvrLvOpQahpTCKW7jpKJDGQe+FuEfNf3FK5rXg6DWWHQ
-V8YeyciihQ8AkP/sIhFkNcglJOkvgrjqJQngj0YVaRgC3S1zF1TPY/4UYXRHgE6d
-I0i5AxwvZnA4m8GBHY+u
-=1gJV
------END PGP SIGNATURE-----
-
---=-pXMnojOcAAaN853sysGM--
-
+diff --git a/include/linux/tick.h b/include/linux/tick.h
+index 8cf8cfe..422b5f4 100644
+--- a/include/linux/tick.h
++++ b/include/linux/tick.h
+@@ -64,6 +64,9 @@ struct tick_sched {
+ 	unsigned long			last_jiffies;
+ 	unsigned long			next_jiffies;
+ 	ktime_t				idle_expires;
++	ktime_t				last_events0;
++	ktime_t				last_events1;
++	ktime_t				last_events2;
+ };
+ 
+ extern void __init tick_init(void);
+diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
+index cb02324..ca7f38a 100644
+--- a/kernel/time/tick-sched.c
++++ b/kernel/time/tick-sched.c
+@@ -464,6 +464,10 @@ static void tick_nohz_handler(struct clock_event_device *dev)
+ 
+ 	dev->next_event.tv64 = KTIME_MAX;
+ 
++	ts->last_events0 = ts->last_events1;
++	ts->last_events1 = ts->last_events2;
++	ts->last_events2 = now;
++
+ 	/*
+ 	 * Check if the do_timer duty was dropped. We don't care about
+ 	 * concurrency: This happens only when the cpu in charge went
+@@ -565,6 +569,10 @@ static enum hrtimer_restart tick_sched_timer(struct hrtimer *timer)
+ 	ktime_t now = ktime_get();
+ 	int cpu = smp_processor_id();
+ 
++	ts->last_events0 = ts->last_events1;
++	ts->last_events1 = ts->last_events2;
++	ts->last_events2 = now;
++
+ #ifdef CONFIG_NO_HZ
+ 	/*
+ 	 * Check if the do_timer duty was dropped. We don't care about
+diff --git a/kernel/time/timer_list.c b/kernel/time/timer_list.c
+index a40e20f..a086926 100644
+--- a/kernel/time/timer_list.c
++++ b/kernel/time/timer_list.c
+@@ -172,6 +172,9 @@ static void print_cpu(struct seq_file *m, int cpu, u64 now)
+ 		P(last_jiffies);
+ 		P(next_jiffies);
+ 		P_ns(idle_expires);
++		P_ns(last_events0);
++		P_ns(last_events1);
++		P_ns(last_events2);
+ 		SEQ_printf(m, "jiffies: %Lu\n",
+ 			   (unsigned long long)jiffies);
+ 	}
