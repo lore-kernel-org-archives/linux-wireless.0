@@ -1,138 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40027 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753997AbYJXSen (ORCPT
+Received: from flock1.newmail.ru ([82.204.219.207]:49167 "HELO
+	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757903AbYJITWg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 14:34:43 -0400
-Message-Id: <20081024183323.354025000@sipsolutions.net> (sfid-20081024_203446_937137_58C58EDE)
-References: <20081024183219.735241000@sipsolutions.net>
-Date: Fri, 24 Oct 2008 20:32:22 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] wireless: clean up regulatory ignore_request function
-Mime-Version: 1.0
+	Thu, 9 Oct 2008 15:22:36 -0400
+From: Andrey Borzenkov <arvidjaar@newmail.ru>
+To: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading firmware with PCMCIA adapter
+Date: Thu, 9 Oct 2008 23:21:53 +0400
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <200810091722.56812.arvidjaar@newmail.ru> <200810091959.54987.arvidjaar@newmail.ru> <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com>
+In-Reply-To: <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1718895.v5WrQahxS3";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200810092321.55033.arvidjaar@newmail.ru> (sfid-20081009_212244_685607_5527F888)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function has a few WARNs that may eventually trigger
-when an AP sends rogue beacons, those must be removed. Some
-of the comments in the function are also inappropriate as
-this function is concerned with the global hint, not a per-
-wiphy thing (which a multidomain flag on a wiphy would imply).
+--nextPart1718895.v5WrQahxS3
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_Snl7IyNyxisZ9mm"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I'm convinced that we don't need to do anything to implement
-multi-domain capability as 802.11-2007 specifies it because
-it makes only two things mandatory:
- * starting of BSS/IBSS must have country information
-   (this can easily be done with a mac80211 patch)
- * a STA must adopt the country information (we already have
-   the framework for this)
+--Boundary-01=_Snl7IyNyxisZ9mm
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-But we don't have anything implemented anyway for now.
+On Thursday 09 October 2008, Dan Williams wrote:
+>=20
+> On Thu, 2008-10-09 at 19:59 +0400, Andrey Borzenkov wrote:
+> > On Thursday 09 October 2008, Matthew Wilcox wrote:
+> > >=20
+> > > On Thu, Oct 09, 2008 at 05:22:55PM +0400, Andrey Borzenkov wrote:
+> > > > After loading orinoco and "inserting" adapter I get either BUG with
+> > > > endless loop (attached) or kernel panic on NULL pointer dereference
+> > > > (was not able capture). Adapter works fine with wlags49 driver.
+> > >=20
+> > > It looks like you've fallen off the bottom of the kernel stack.  Do y=
+ou
+> > > have 4k stacks enabled in your config?
+> > >=20
+> >=20
+> > You are right. Using 8K stacks load and runs fine. Hmm ... not nice
+> > from it :p
+>=20
+> =3D=3D driver bug; the driver should not require large stacks and this
+> should get fixed.
+>=20
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/reg.c |   67 +++++++++++++++++++++--------------------------------
- 1 file changed, 27 insertions(+), 40 deletions(-)
+The attached patch fixes 4K stack for me. I have not tested spectrum case.
 
---- everything.orig/net/wireless/reg.c	2008-10-24 11:06:46.000000000 +0200
-+++ everything/net/wireless/reg.c	2008-10-24 11:09:16.000000000 +0200
-@@ -311,24 +311,25 @@ static int ignore_request(struct wiphy *
- 	case REGDOM_SET_BY_INIT:
- 		return -EINVAL;
- 	case REGDOM_SET_BY_CORE:
--		/* Always respect new wireless core hints, should only
--		 * come in for updating the world regulatory domain at init
--		 * anyway */
-+		/*
-+		 * Always respect new wireless core hints, should only happen
-+		 * when updating the world regulatory domain at init.
-+		 */
- 		return 0;
- 	case REGDOM_SET_BY_COUNTRY_IE:
-+		if (unlikely(!is_an_alpha2(alpha2)))
-+			return -EINVAL;
- 		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
- 			if (last_request->wiphy != wiphy) {
--				/* Two cards with two APs claiming different
--				 * different Country IE alpha2s!
--				 * You're special!! */
--				if (!alpha2_equal(last_request->alpha2,
--						cfg80211_regdomain->alpha2)) {
--					/* XXX: Deal with conflict, consider
--					 * building a new one out of the
--					 * intersection */
--					WARN_ON(1);
-+				/*
-+				 * Two cards with two APs claiming different
-+				 * different Country IE alpha2s. We could
-+				 * intersect them, but that seems unlikely
-+				 * to be correct. Reject second one for now.
-+				 */
-+				if (!alpha2_equal(alpha2,
-+						  cfg80211_regdomain->alpha2))
- 					return -EOPNOTSUPP;
--				}
- 				return -EALREADY;
- 			}
- 			/* Two consecutive Country IE hints on the same wiphy */
-@@ -336,42 +337,28 @@ static int ignore_request(struct wiphy *
- 				return 0;
- 			return -EALREADY;
- 		}
--		if (WARN_ON(!is_alpha2_set(alpha2) || !is_an_alpha2(alpha2)),
--				"Invalid Country IE regulatory hint passed "
--				"to the wireless core\n")
--			return -EINVAL;
--		/* We ignore Country IE hints for now, as we haven't yet
--		 * added the dot11MultiDomainCapabilityEnabled flag
--		 * for wiphys */
--		return 1;
-+		/*
-+		 * Ignore Country IE hints for now, need to think about
-+		 * what we need to do to support multi-domain operation.
-+		 */
-+		return -EOPNOTSUPP;
- 	case REGDOM_SET_BY_DRIVER:
--		BUG_ON(!wiphy);
- 		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
- 			return -EALREADY;
--		if (last_request->initiator == REGDOM_SET_BY_CORE)
--			return 0;
--		/* XXX: Handle intersection, and add the
--		 * dot11MultiDomainCapabilityEnabled flag to wiphy. For now
--		 * we assume the driver has this set to false, following the
--		 * 802.11d dot11MultiDomainCapabilityEnabled documentation */
--		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
--			return 0;
- 		return 0;
- 	case REGDOM_SET_BY_USER:
--		if (last_request->initiator == REGDOM_SET_BY_USER ||
--		    last_request->initiator == REGDOM_SET_BY_CORE)
--			return 0;
--		/* Drivers can use their wiphy's reg_notifier()
--		 * to override any information */
--		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
--			return 0;
--		/* XXX: Handle intersection */
-+		/*
-+		 * If the user wants to override the AP's hint, we may
-+		 * need to follow both and use the intersection. For now,
-+		 * reject any such attempt (but we don't support country
-+		 * IEs right now anyway.)
-+		 */
- 		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
- 			return -EOPNOTSUPP;
- 		return 0;
--	default:
--		return -EINVAL;
- 	}
+=2Dandrey
+
+--Boundary-01=_Snl7IyNyxisZ9mm
+Content-Type: text/x-diff;
+  charset="utf-8";
+  name="orinoco-reduce-stack-usage"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline;
+	filename="orinoco-reduce-stack-usage"
+
+Subject: [PATCH] orinoco: reduce stack usage in firmware download path
+=46rom: Andrey Borzenkov <arvidjaar@mail.ru>
+
+orinoco_dl_firmware and symbol_dl_mage allocate large local
+variables (1K); at least orinoco fails with panic or hung
+kernel if 4K stacks is enabled.
+
+Allocate large buffers dynamically at run time.
+
+Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
+
+=2D--
+
+ drivers/net/wireless/orinoco.c |   50 ++++++++++++++++++++++++++----------=
+=2D---
+ 1 files changed, 32 insertions(+), 18 deletions(-)
+
+
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index 9a2fcc0..2b87d0b 100644
+=2D-- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -458,7 +458,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 		    int ap)
+ {
+ 	/* Plug Data Area (PDA) */
+=2D	__le16 pda[512] =3D { 0 };
++	__le16 *pda;
+=20
+ 	hermes_t *hw =3D &priv->hw;
+ 	const struct firmware *fw_entry;
+@@ -467,7 +467,11 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	const unsigned char *end;
+ 	const char *firmware;
+ 	struct net_device *dev =3D priv->ndev;
+=2D	int err;
++	int err =3D 0;
 +
-+	return -EINVAL;
++	pda =3D kzalloc(fw->pda_size, GFP_KERNEL);
++	if (!pda)
++		return -ENOMEM;
+=20
+ 	if (ap)
+ 		firmware =3D fw->ap_fw;
+@@ -478,17 +482,17 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	       dev->name, firmware);
+=20
+ 	/* Read current plug data */
+=2D	err =3D hermes_read_pda(hw, pda, fw->pda_addr,
+=2D			      min_t(u16, fw->pda_size, sizeof(pda)), 0);
++	err =3D hermes_read_pda(hw, pda, fw->pda_addr, fw->pda_size, 0);
+ 	printk(KERN_DEBUG "%s: Read PDA returned %d\n", dev->name, err);
+ 	if (err)
+=2D		return err;
++		goto free;
+=20
+ 	err =3D request_firmware(&fw_entry, firmware, priv->dev);
+ 	if (err) {
+ 		printk(KERN_ERR "%s: Cannot find firmware %s\n",
+ 		       dev->name, firmware);
+=2D		return -ENOENT;
++		err =3D -ENOENT;
++		goto free;
+ 	}
+=20
+ 	hdr =3D (const struct orinoco_fw_header *) fw_entry->data;
+@@ -532,6 +536,9 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+=20
+ abort:
+ 	release_firmware(fw_entry);
++
++free:
++	kfree(pda);
+ 	return err;
  }
- 
- /* Used by nl80211 before kmalloc'ing our regulatory domain */
+=20
+@@ -549,12 +556,16 @@ symbol_dl_image(struct orinoco_private *priv, const s=
+truct fw_info *fw,
+ 		int secondary)
+ {
+ 	hermes_t *hw =3D &priv->hw;
+=2D	int ret;
++	int ret =3D 0;
+ 	const unsigned char *ptr;
+ 	const unsigned char *first_block;
+=20
+ 	/* Plug Data Area (PDA) */
+=2D	__le16 pda[256];
++	__le16 *pda;
++
++	pda =3D kzalloc(fw->pda_size, GFP_KERNEL);
++	if (!pda)
++		return -ENOMEM;
+=20
+ 	/* Binary block begins after the 0x1A marker */
+ 	ptr =3D image;
+@@ -563,22 +574,22 @@ symbol_dl_image(struct orinoco_private *priv, const s=
+truct fw_info *fw,
+=20
+ 	/* Read the PDA from EEPROM */
+ 	if (secondary) {
+=2D		ret =3D hermes_read_pda(hw, pda, fw->pda_addr, sizeof(pda), 1);
++		ret =3D hermes_read_pda(hw, pda, fw->pda_addr, fw->pda_size, 1);
+ 		if (ret)
+=2D			return ret;
++			goto free;
+ 	}
+=20
+ 	/* Stop the firmware, so that it can be safely rewritten */
+ 	if (priv->stop_fw) {
+ 		ret =3D priv->stop_fw(priv, 1);
+ 		if (ret)
+=2D			return ret;
++			goto free;
+ 	}
+=20
+ 	/* Program the adapter with new firmware */
+ 	ret =3D hermes_program(hw, first_block, end);
+ 	if (ret)
+=2D		return ret;
++		goto free;
+=20
+ 	/* Write the PDA to the adapter */
+ 	if (secondary) {
+@@ -586,28 +597,31 @@ symbol_dl_image(struct orinoco_private *priv, const s=
+truct fw_info *fw,
+ 		ptr =3D first_block + len;
+ 		ret =3D hermes_apply_pda(hw, ptr, pda);
+ 		if (ret)
+=2D			return ret;
++			goto free;
+ 	}
+=20
+ 	/* Run the firmware */
+ 	if (priv->stop_fw) {
+ 		ret =3D priv->stop_fw(priv, 0);
+ 		if (ret)
+=2D			return ret;
++			goto free;
+ 	}
+=20
+ 	/* Reset hermes chip and make sure it responds */
+ 	ret =3D hermes_init(hw);
+=20
+ 	/* hermes_reset() should return 0 with the secondary firmware */
+=2D	if (secondary && ret !=3D 0)
+=2D		return -ENODEV;
++	if (secondary && ret !=3D 0) {
++		ret =3D -ENODEV;
++		goto free;
++	}
+=20
+ 	/* And this should work with any firmware */
+ 	if (!hermes_present(hw))
+=2D		return -ENODEV;
++		ret =3D -ENODEV;
+=20
+=2D	return 0;
++free:
++	return ret;
+ }
+=20
+=20
 
--- 
+--Boundary-01=_Snl7IyNyxisZ9mm--
 
+--nextPart1718895.v5WrQahxS3
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkjuWdIACgkQR6LMutpd94yoJgCfReCtZb7zuU5ESXEM4O5x9ir2
+PfUAn2sI3SS4ih6Fiy71FUOEokBrodEP
+=ux6z
+-----END PGP SIGNATURE-----
+
+--nextPart1718895.v5WrQahxS3--
