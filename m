@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:33267 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758159AbYJJSje (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:59406 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753748AbYJIVPm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 14:39:34 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so546519muf.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 11:39:32 -0700 (PDT)
-Message-ID: <45e8e6c40810101139r3fd97443n7171e8a29862098@mail.gmail.com> (sfid-20081010_203937_155040_C4B1E3FA)
-Date: Fri, 10 Oct 2008 11:39:31 -0700
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 2/8] mac80211: remove aggregation status write support from debugfs
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890810101122o12440c60ic35b19b037bf95de@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081007100428.868688000@sipsolutions.net>
-	 <20081007100438.773792000@sipsolutions.net>
-	 <1ba2fa240810071424s23bdbbb7kbaadf3678cd61a26@mail.gmail.com>
-	 <1223452772.3618.20.camel@johannes.berg>
-	 <43e72e890810101122o12440c60ic35b19b037bf95de@mail.gmail.com>
+	Thu, 9 Oct 2008 17:15:42 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH 4/5] rfkill: honour EPO state when resuming a rfkill controller
+Date: Thu,  9 Oct 2008 18:15:32 -0300
+Message-Id: <1223586933-17753-5-git-send-email-hmh@hmh.eng.br> (sfid-20081009_231548_327375_EC985787)
+In-Reply-To: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br>
+References: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, this adds two nl80211 commands (NEW_BA and DEL_BA)
-https://cozybit1.dnsalias.org/~andrey/patches/001-add-ba-session-command-nl80211.patch
-and this adds corresponding "station addba" and "station delba"
-options for them to iw:
-https://cozybit1.dnsalias.org/~andrey/patches/002-iw-add-nl80211-ba-commands.patch
+rfkill_resume() would always restore the rfkill controller state to its
+pre-suspend state.
 
-With the current code, I am not sure if it's ever intended that user
-space has the ability to initiate and tear down BA sessions, so this
-may or may not be useful to others.  Right now I am using them to test
-BA initiation and teardown and I suspect that they may be useful to,
-for example, hostapd in the future.
+Now that we know when we are under EPO, kick the rfkill controller to
+SOFT_BLOCKED state instead of to its pre-suspend state when it is resumed
+while EPO mode is active.
 
-Please let me know what you think.  Thanks,
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ net/rfkill/rfkill.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-  -Andrey
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index e348eab..c9180c8 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -581,8 +581,17 @@ static int rfkill_resume(struct device *dev)
+ 
+ 		dev->power.power_state.event = PM_EVENT_ON;
+ 
+-		/* restore radio state AND notify everybody */
+-		rfkill_toggle_radio(rfkill, rfkill->state, 1);
++		/*
++		 * If we are under EPO, kick transmitter offline,
++		 * otherwise restore to pre-suspend state.
++		 *
++		 * Issue a notification in any case
++		 */
++		rfkill_toggle_radio(rfkill,
++				rfkill_epo_lock_active ?
++					RFKILL_STATE_SOFT_BLOCKED :
++					rfkill->state,
++				1);
+ 
+ 		mutex_unlock(&rfkill->mutex);
+ 	}
+-- 
+1.5.6.5
 
-On Fri, Oct 10, 2008 at 11:22 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Oct 8, 2008 at 12:59 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Tue, 2008-10-07 at 23:24 +0200, Tomas Winkler wrote:
->>> On Tue, Oct 7, 2008 at 12:04 PM, Johannes Berg
->>> <johannes@sipsolutions.net> wrote:
->>> > This code uses static variables and thus cannot be kept.
->>> NACK
->>> Need something to debug this stuff
->>
->> Tough luck. Go write proper support in nl80211 then.
->
-> Someone has some patch to use nl80211 for this BTW. *cough*
->
->  Luis
->
