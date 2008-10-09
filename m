@@ -1,65 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:38330 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532AbYJUSIn (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38504 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756323AbYJIKUN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 14:08:43 -0400
-Received: by gxk9 with SMTP id 9so6003195gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2008 11:08:42 -0700 (PDT)
-Message-ID: <40f31dec0810211108l6700d806o4804b43d9fe47bf7@mail.gmail.com> (sfid-20081021_200848_842322_8692A2EA)
-Date: Tue, 21 Oct 2008 21:08:41 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>,
-	"Gregory Nietsky" <gregory@dnstelecom.co.za>
-Subject: Re: [PATCH 1/1] Ath5k: add AP mode
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1223844850-26551-1-git-send-email-jirislaby@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1223844850-26551-1-git-send-email-jirislaby@gmail.com>
+	Thu, 9 Oct 2008 06:20:13 -0400
+Subject: [PATCH] nl80211: export HT capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 09 Oct 2008 12:20:13 +0200
+Message-Id: <1223547613.22490.41.camel@johannes.berg> (sfid-20081009_122017_857061_06014EB2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/10/12 Jiri Slaby <jirislaby@gmail.com>:
-> Add support for AP mode. This involves:
-> - enablement in ath5k_beacon_config -- initialize beacon timer
-> - add AP to the supported modes in ath5k_add_interface
-> - handle beacon change even for AP in ath5k_config_interface
-> - remove useless test for IBSS in ath5k_beacon_update
->
-> Note that it doesn't enable the AP mode for the driver. It must
-> be enabled by NL80211_IFTYPE_AP bit added to interface_modes.
->
-> v2:
-> Fixed opmode constant (IEEE80211_ to NL80211_)
->
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Nick Kossifidis <mickflemm@gmail.com>
-> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+This exports the local HT capabilities in nl80211.
 
-a) It won't work without the following as Gregory pointed out
-diff --git a/drivers/net/wireless/ath5k/base.c
-b/drivers/net/wireless/ath5k/base.c
-index e09ed2c..69aad6e 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -488,6 +488,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/nl80211.h |   12 ++++++++++++
+ net/wireless/nl80211.c  |   13 +++++++++++++
+ 2 files changed, 25 insertions(+)
 
-       hw->wiphy->interface_modes =
-               BIT(NL80211_IFTYPE_STATION) |
-+               BIT(NL80211_IFTYPE_AP) |
-               BIT(NL80211_IFTYPE_ADHOC) |
-               BIT(NL80211_IFTYPE_MESH_POINT);
+--- everything.orig/include/linux/nl80211.h	2008-10-09 01:31:09.000000000 +0200
++++ everything/include/linux/nl80211.h	2008-10-09 02:11:44.000000000 +0200
+@@ -452,17 +452,29 @@ enum nl80211_mpath_info {
+  *	an array of nested frequency attributes
+  * @NL80211_BAND_ATTR_RATES: supported bitrates in this band,
+  *	an array of nested bitrate attributes
++ * @NL80211_BAND_ATTR_HT_MCS_SET: 16-byte attribute containing the MCS set as
++ *	defined in 802.11n
++ * @NL80211_BAND_ATTR_HT_CAPA: HT capabilities, as in the HT information IE
++ * @NL80211_BAND_ATTR_HT_AMPDU_FACTOR: A-MPDU factor, as in 11n
++ * @NL80211_BAND_ATTR_HT_AMPDU_DENSITY: A-MPDU density, as in 11n
+  */
+ enum nl80211_band_attr {
+ 	__NL80211_BAND_ATTR_INVALID,
+ 	NL80211_BAND_ATTR_FREQS,
+ 	NL80211_BAND_ATTR_RATES,
+ 
++	NL80211_BAND_ATTR_HT_MCS_SET,
++	NL80211_BAND_ATTR_HT_CAPA,
++	NL80211_BAND_ATTR_HT_AMPDU_FACTOR,
++	NL80211_BAND_ATTR_HT_AMPDU_DENSITY,
++
+ 	/* keep last */
+ 	__NL80211_BAND_ATTR_AFTER_LAST,
+ 	NL80211_BAND_ATTR_MAX = __NL80211_BAND_ATTR_AFTER_LAST - 1
+ };
+ 
++#define NL80211_BAND_ATTR_HT_CAPA NL80211_BAND_ATTR_HT_CAPA
++
+ /**
+  * enum nl80211_frequency_attr - frequency attributes
+  * @NL80211_FREQUENCY_ATTR_FREQ: Frequency in MHz
+--- everything.orig/net/wireless/nl80211.c	2008-10-09 01:32:05.000000000 +0200
++++ everything/net/wireless/nl80211.c	2008-10-09 02:12:21.000000000 +0200
+@@ -157,6 +157,19 @@ static int nl80211_send_wiphy(struct sk_
+ 		if (!nl_band)
+ 			goto nla_put_failure;
+ 
++		/* add HT info */
++		if (dev->wiphy.bands[band]->ht_cap.ht_supported) {
++			NLA_PUT(msg, NL80211_BAND_ATTR_HT_MCS_SET,
++				sizeof(dev->wiphy.bands[band]->ht_cap.mcs),
++				&dev->wiphy.bands[band]->ht_cap.mcs);
++			NLA_PUT_U16(msg, NL80211_BAND_ATTR_HT_CAPA,
++				dev->wiphy.bands[band]->ht_cap.cap);
++			NLA_PUT_U8(msg, NL80211_BAND_ATTR_HT_AMPDU_FACTOR,
++				dev->wiphy.bands[band]->ht_cap.ampdu_factor);
++			NLA_PUT_U8(msg, NL80211_BAND_ATTR_HT_AMPDU_DENSITY,
++				dev->wiphy.bands[band]->ht_cap.ampdu_density);
++		}
++
+ 		/* add frequencies */
+ 		nl_freqs = nla_nest_start(msg, NL80211_BAND_ATTR_FREQS);
+ 		if (!nl_freqs)
 
-b) For some reason it only works with 5212/5213 cards, i tested it on
-a 5413 and an 2425 and it didn't work (hostapd seems to hang).
 
-
-
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
