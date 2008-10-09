@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:62671 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211AbYJTGeW (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3154 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182AbYJICPn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 02:34:22 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so261275yxm.1
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 23:34:21 -0700 (PDT)
-Message-ID: <43e72e890810192334v24c58998p36325723a6fa156a@mail.gmail.com> (sfid-20081020_083425_741424_E15C8981)
-Date: Sun, 19 Oct 2008 23:34:21 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: Power saving on mac80211
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Tomas Winkler" <tomas.winkler@intel.com>
-In-Reply-To: <87tzb7j0uy.fsf@nokia.com>
+	Wed, 8 Oct 2008 22:15:43 -0400
+Date: Wed, 8 Oct 2008 22:15:16 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: jirislaby@gmail.com, toralf.foerster@gmx.de,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com, johannes@sipsolutions.net
+Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
+Message-ID: <20081009021516.GA14690@hash.localnet> (sfid-20081009_041602_333796_35A6F298)
+References: <87bpy32c1w.fsf@denkblock.local> <b6c5339f0810021137g3d93c5c8t5fa8fb3784294a86@mail.gmail.com> <20081003134648.M45120@bobcopeland.com> <87fxnd2112.fsf@denkblock.local> <20081003193739.M19356@bobcopeland.com> <877i8nky65.fsf@denkblock.local> <20081007013529.GA9691@hash.localnet> <873aj8vg45.fsf@denkblock.local> <20081007130613.GB10693@hash.localnet> <87ljx0t9fd.fsf@denkblock.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
-	 <87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
-	 <1224412006.6324.45.camel@johannes.berg> <871vyc7st7.fsf@nokia.com>
-	 <1224434885.6324.49.camel@johannes.berg> <87myh0a1zd.fsf@nokia.com>
-	 <43e72e890810191846h46a6b35br4ad61803a25bdf23@mail.gmail.com>
-	 <87tzb7j0uy.fsf@nokia.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87ljx0t9fd.fsf@denkblock.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 19, 2008 at 10:23 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> Luis R. Rodriguez <mcgrof@gmail.com> writes:
->
->>>> Right. But we need to program the chip to tell the chip "hey please tell
->>>> me if you haven't seen a beacon in X seconds".
->>>
->>> Ah, you mean that timeout. Sorry, I forgot that one altogether. Yes,
->>> we definitely need that timeout.
->>
->> Is this to configure the firmware to report beacon misses so that in
->> those cases we can inform mac80211?
->
-> Yes.
->
->> And to let mac80211 be aware/be able to set this as a tunable
->> parameter?
->
-> Yes.
->
->> I wanted to note intel hardware seems to handle parsing beacons in
->> firmware when is PS mode already and I have no clue when it would
->> inform mac80211 of a beacon miss and if it does it. Tomas?
->
-> Oh, cool. I'm not familiar with iwlwifi so I would appreciate any
-> pointers to the sources so that I could take a look at the
-> implementation.
+[gmail keeps dropping CCs for some reason]
 
-Its all implemented in firmware.
+On Tue, Oct 07, 2008 at 10:52:22PM +0200, Elias Oltmanns wrote:
+> Bitops on sc->status have to be protected by the sc->lock as soon as
+> ieee80211_register_hw() has been called.
 
-  Luis
+Agreed...
+
+> +	mutex_lock(&sc->lock);
+> +	ath5k_init_leds(sc);
+
+I'd rather leave ath5k_init_leds in attach so it somewhat matches up 
+with detach, but yeah I suppose it could use locking due to a
+probe/start race.
+
+The LED flag is not really a status flag compared to the rest, it just
+says whether the hardware supports it or not.  Another approach would
+be to separate it from the others.
+
+> @@ -2881,12 +2883,14 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
+>  		AR5K_RX_FILTER_MCAST);
+>  
+>  	if (changed_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS)) {
+> +		mutex_lock(&sc->lock);
+
+Unfortunately, I don't believe configure_filter can sleep :(
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
