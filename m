@@ -1,63 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:8944 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758596AbYJJQtT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54144 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755313AbYJIKky (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 12:49:19 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so220405yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 09:49:18 -0700 (PDT)
-Message-ID: <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com> (sfid-20081010_184923_238362_AD8B60BA)
-Date: Fri, 10 Oct 2008 09:49:18 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: New Regulatory Domain Api.
-Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"lrodrigues@atheros.com" <lrodrigues@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223608949.2510.1061.camel@debian.sh.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
-	 <20081009154547.GB13349@tesla>
-	 <1223608949.2510.1061.camel@debian.sh.intel.com>
+	Thu, 9 Oct 2008 06:40:54 -0400
+Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Elias Oltmanns <eo@nebensachen.de>, toralf.foerster@gmx.de,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com
+In-Reply-To: <20081006143055.M60271@bobcopeland.com>
+References: <200808101401.03339.toralf.foerster@gmx.de>
+	 <87od23mo08.fsf@denkblock.local>
+	 <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
+	 <20081002144600.M31352@bobcopeland.com> <87bpy32c1w.fsf@denkblock.local>
+	 <b6c5339f0810021137g3d93c5c8t5fa8fb3784294a86@mail.gmail.com>
+	 <20081003134648.M45120@bobcopeland.com> <87fxnd2112.fsf@denkblock.local>
+	 <20081003193739.M19356@bobcopeland.com> <877i8nky65.fsf@denkblock.local>
+	 <b6c5339f0810060712r24b0dfd8s6236e65304749572@mail.gmail.com>
+	 (sfid-20081006_161241_841588_FA70583E) <1223302987.15196.24.camel@johannes.berg>
+	 <20081006143055.M60271@bobcopeland.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9CXbdzDQqGiMxZsVVuRK"
+Date: Thu, 09 Oct 2008 12:40:39 +0200
+Message-Id: <1223548839.22490.49.camel@johannes.berg> (sfid-20081009_124058_254312_22F4F1F0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 9, 2008 at 8:22 PM, Zhu Yi <yi.zhu@intel.com> wrote:
-> Does below scenario an expected behaviour?
->
-> 0. A system with iwl3945 BG card and iwl4965 AGN card.
-> 1. insmod iwl3945 -> regulatory_hint(, 99, rd) return 0;
-> 2. insmod iwl4965 -> regulatory_hint(, 99, rd2) return -EALREADY;
-> 3. iwl4965 has no A band support!
 
-Yeap. We're going with the regulatory domain the first card specified,
-which we believe would be the built in card. The reason we follow this
-logic right now is you cannot really be in two different places at the
-same time. The real correct behavior here, as the comment also
-indicates, is we should be doing an intersection between the two
-regulatory domains and I sent a RFC on a some initial code I had to
-support such intersection. Until that is not merged we just respect
-first regulatory request.
+--=-9CXbdzDQqGiMxZsVVuRK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Additionally since each device can still support more channels and
-since the driver itself may know better than what the wireless core
-provides you can override information using reg_notifier() (part of
-the wiphy) and you can be picky so that you can try to respect the
-user's request REGDOM_SET_BY_USER so that when they want to be *more*
-compliant you let them. For this reason I advise that if you add a
-reg_notifier() you only override the information if initiator is not
-REGDOM_SET_BY_USER but its up to you of course. This is essentially
-why this regulatory infrastructure allows users to be more compliant.
+On Mon, 2008-10-06 at 10:36 -0400, Bob Copeland wrote:
 
-Alternatively you can live with what you have and just let the user
-change the regulatory domain (iw reg set US) and this can enable more
-channels should your driver support these channels on the device
-(registered channels).
+> > However, I still think ath5k shouldn't be much concerned with all this
+> > because mac80211 should just disable all interfaces etc. from it when
+> > suspending.
+>=20
+> Agreed.  I guess if no one else gets to it by then, I can take a look at =
+it in
+> a couple of weeks after my GRE.
 
-So you have a few options here, just keep in mind here the goal is to
-allow the user to help the core be more compliant. By overriding a
-disable of a channel (if you re-enable it) you are not helping the
-user do this.
+Cool, see also
+http://wireless.kernel.org/en/developers/todo-list#suspend.2BAC8-resumemana=
+gement
 
-  Luis
+johannes
+
+--=-9CXbdzDQqGiMxZsVVuRK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI7d+kAAoJEKVg1VMiehFYhJ0QAKoOn8+surBFcTSkHhgcIUll
+nTvILmomsZt5TeSxtSF9Q7qVhASadBfNubuUe0XvBzFfi78k1h4R5A0KN9d+bTic
++D5MeDN08n7NCS0OlW7suwDS4+cqDR70eNM7BGFv7lgE//gXZ2u1Tdgp6JlTqUN6
+3EngwHDabVSFF69KR6PJSfGylGGu4zlzwRbbwW2GU4iDKz9tguOwik+sapphV3qO
+JUIrQWfmM3drUPax2Y6Rsxeg+wCdHCluiNKTgPJclDXhWOQtCFXVPe3qHRs8tmPT
+aXnWhp5KwgfCDpT9gnmqmhVmdz/EwEDBHqAjiH1joGpa4Mw7cwO0dRmoSaOkkC92
+s7JwnFirkHiU6zuqKafq/eNMpiS/ESSSl5GvYVOxcXtX3DpH4g57Amla90zW1kII
+2+wRikMaTDkWD4KCXTEDGiCThI+++ocTHdT1eNaMiiZcWQ/BNfuCU4Sx5g1ykDLz
+Hyov3tr8WGYxMlWver4v1LtBVdo0JvcKwZvtp++dGrJkUdcKWfRkzimNIiVUXz3F
+hJFTMyxbTOMLZCuRlfgcGR2tgVW61OEVdAUGM8LF/PFUABF9of161ZfQqN47auDn
+BUk8qkOYqPDBlQGma4rXaDG/d1eB9m8SlYFdgzg1+XsmyHqA8A4LEu1qLL1B8/Gd
+YD74PrsubO+TJe4t2aQ1
+=TylW
+-----END PGP SIGNATURE-----
+
+--=-9CXbdzDQqGiMxZsVVuRK--
+
