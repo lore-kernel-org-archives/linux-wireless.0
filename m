@@ -1,47 +1,648 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:47650 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755346AbYJMXe2 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38459 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756395AbYJIKSw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 19:34:28 -0400
-Message-ID: <48F3DB02.3060002@lwfinger.net> (sfid-20081014_013432_151579_B5872823)
-Date: Mon, 13 Oct 2008 16:34:26 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Florent Fourcot <florent.fourcot@enst-bretagne.fr>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] rtl8187: Add USB ID for Belkin F5D7050 with RTL8187B chip
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 9 Oct 2008 06:18:52 -0400
+Subject: [PATCH] mac80211: introduce hw config change flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 09 Oct 2008 12:18:51 +0200
+Message-Id: <1223547531.22490.38.camel@johannes.berg> (sfid-20081009_121900_816212_E779270B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Florent Fourcot <florent.fourcot@enst-bretagne.fr>
+This makes mac80211 notify the driver which configuration
+actually changed, e.g. channel etc.
 
-The Belkin F5D7050rev5000de (id 050d:705e) has the Realtek RTL8187B chip
-and works with the 2.6.27 driver.
+No driver changes, this is just plumbing, driver authors are
+expected to act on this if they want to.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Also remove the HW CONFIG debug printk, it's incorrect, often
+we configure something else.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+ drivers/net/wireless/adm8211.c              |    3 +-
+ drivers/net/wireless/at76_usb.c             |    3 +-
+ drivers/net/wireless/ath5k/base.c           |    7 ++----
+ drivers/net/wireless/ath9k/main.c           |    4 +--
+ drivers/net/wireless/b43/main.c             |    3 +-
+ drivers/net/wireless/b43legacy/main.c       |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    3 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 +++---
+ drivers/net/wireless/libertas_tf/main.c     |    4 ++-
+ drivers/net/wireless/mac80211_hwsim.c       |    4 +--
+ drivers/net/wireless/p54/p54common.c        |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00.h        |    2 -
+ drivers/net/wireless/rt2x00/rt2x00dev.c     |    2 -
+ drivers/net/wireless/rt2x00/rt2x00mac.c     |    3 +-
+ drivers/net/wireless/rtl8180_dev.c          |    3 +-
+ drivers/net/wireless/rtl8187_dev.c          |    3 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c      |    4 ++-
+ include/net/mac80211.h                      |   30 +++++++++++++++++++++++-----
+ net/mac80211/cfg.c                          |    3 +-
+ net/mac80211/ieee80211_i.h                  |    2 -
+ net/mac80211/iface.c                        |   25 +++++++++++++++++------
+ net/mac80211/main.c                         |   29 ++++++++++++++-------------
+ net/mac80211/scan.c                         |   12 ++++++++---
+ net/mac80211/util.c                         |    3 +-
+ net/mac80211/wext.c                         |   14 ++++++-------
+ 25 files changed, 118 insertions(+), 61 deletions(-)
 
-John,
+--- everything.orig/include/net/mac80211.h	2008-10-08 23:01:14.000000000 +0200
++++ everything/include/net/mac80211.h	2008-10-08 23:23:19.000000000 +0200
+@@ -464,12 +464,32 @@ static inline int __deprecated __IEEE802
+ #define IEEE80211_CONF_SHORT_SLOT_TIME (__IEEE80211_CONF_SHORT_SLOT_TIME())
+ 
+ /**
++ * enum ieee80211_conf_changed - denotes which configuration changed
++ *
++ * @IEEE80211_CONF_CHANGE_RADIO_ENABLED: the value of radio_enabled changed
++ * @IEEE80211_CONF_CHANGE_BEACON_INTERVAL: the beacon interval changed
++ * @IEEE80211_CONF_CHANGE_LISTEN_INTERVAL: the listen interval changed
++ * @IEEE80211_CONF_CHANGE_RADIOTAP: the radiotap flag changed
++ * @IEEE80211_CONF_CHANGE_PS: the PS flag changed
++ * @IEEE80211_CONF_CHANGE_POWER: the TX power changed
++ * @IEEE80211_CONF_CHANGE_CHANNEL: the channel changed
++ */
++enum ieee80211_conf_changed {
++	IEEE80211_CONF_CHANGE_RADIO_ENABLED	= BIT(0),
++	IEEE80211_CONF_CHANGE_BEACON_INTERVAL	= BIT(1),
++	IEEE80211_CONF_CHANGE_LISTEN_INTERVAL	= BIT(2),
++	IEEE80211_CONF_CHANGE_RADIOTAP		= BIT(3),
++	IEEE80211_CONF_CHANGE_PS		= BIT(4),
++	IEEE80211_CONF_CHANGE_POWER		= BIT(5),
++	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
++};
++
++/**
+  * struct ieee80211_conf - configuration of the device
+  *
+  * This struct indicates how the driver shall configure the hardware.
+  *
+  * @radio_enabled: when zero, driver is required to switch off the radio.
+- *	TODO make a flag
+  * @beacon_int: beacon interval (TODO make interface config)
+  * @listen_interval: listen interval in units of beacon interval
+  * @flags: configuration flags defined above
+@@ -479,13 +499,13 @@ static inline int __deprecated __IEEE802
+  * @channel: the channel to tune to
+  */
+ struct ieee80211_conf {
+-	int radio_enabled;
+-
+ 	int beacon_int;
+-	u16 listen_interval;
+ 	u32 flags;
+ 	int power_level;
+ 
++	u16 listen_interval;
++	bool radio_enabled;
++
+ 	struct ieee80211_channel *channel;
+ 
+ 	struct ieee80211_sta_ht_cap ht_cap;
+@@ -1213,7 +1233,7 @@ struct ieee80211_ops {
+ 			     struct ieee80211_if_init_conf *conf);
+ 	void (*remove_interface)(struct ieee80211_hw *hw,
+ 				 struct ieee80211_if_init_conf *conf);
+-	int (*config)(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
++	int (*config)(struct ieee80211_hw *hw, u32 changed);
+ 	int (*config_interface)(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif,
+ 				struct ieee80211_if_conf *conf);
+--- everything.orig/net/mac80211/cfg.c	2008-10-08 23:01:14.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-10-08 23:01:19.000000000 +0200
+@@ -396,7 +396,8 @@ static int ieee80211_config_beacon(struc
+ 	 */
+ 	if (params->interval) {
+ 		sdata->local->hw.conf.beacon_int = params->interval;
+-		ieee80211_hw_config(sdata->local);
++		ieee80211_hw_config(sdata->local,
++				    IEEE80211_CONF_CHANGE_BEACON_INTERVAL);
+ 		/*
+ 		 * We updated some parameter so if below bails out
+ 		 * it's not an error.
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-10-08 23:01:14.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-10-08 23:01:19.000000000 +0200
+@@ -880,7 +880,7 @@ static inline int ieee80211_bssid_match(
+ }
+ 
+ 
+-int ieee80211_hw_config(struct ieee80211_local *local);
++int ieee80211_hw_config(struct ieee80211_local *local, u32 changed);
+ int ieee80211_if_config(struct ieee80211_sub_if_data *sdata, u32 changed);
+ void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
+ void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
+--- everything.orig/net/mac80211/iface.c	2008-10-08 23:01:14.000000000 +0200
++++ everything/net/mac80211/iface.c	2008-10-08 23:17:36.000000000 +0200
+@@ -65,7 +65,7 @@ static int ieee80211_open(struct net_dev
+ 	struct ieee80211_if_init_conf conf;
+ 	u32 changed = 0;
+ 	int res;
+-	bool need_hw_reconfig = 0;
++	u32 hw_reconf_flags = 0;
+ 	u8 null_addr[ETH_ALEN] = {0};
+ 
+ 	/* fail early if user set an invalid address */
+@@ -152,7 +152,8 @@ static int ieee80211_open(struct net_dev
+ 			res = local->ops->start(local_to_hw(local));
+ 		if (res)
+ 			goto err_del_bss;
+-		need_hw_reconfig = 1;
++		/* we're brought up, everything changes */
++		hw_reconf_flags = ~0;
+ 		ieee80211_led_radio(local, local->hw.conf.radio_enabled);
+ 	}
+ 
+@@ -198,8 +199,10 @@ static int ieee80211_open(struct net_dev
+ 
+ 		/* must be before the call to ieee80211_configure_filter */
+ 		local->monitors++;
+-		if (local->monitors == 1)
++		if (local->monitors == 1) {
+ 			local->hw.conf.flags |= IEEE80211_CONF_RADIOTAP;
++			hw_reconf_flags |= IEEE80211_CONF_CHANGE_RADIOTAP;
++		}
+ 
+ 		if (sdata->u.mntr_flags & MONITOR_FLAG_FCSFAIL)
+ 			local->fif_fcsfail++;
+@@ -279,8 +282,8 @@ static int ieee80211_open(struct net_dev
+ 		atomic_inc(&local->iff_promiscs);
+ 
+ 	local->open_count++;
+-	if (need_hw_reconfig) {
+-		ieee80211_hw_config(local);
++	if (hw_reconf_flags) {
++		ieee80211_hw_config(local, hw_reconf_flags);
+ 		/*
+ 		 * set default queue parameters so drivers don't
+ 		 * need to initialise the hardware if the hardware
+@@ -322,6 +325,7 @@ static int ieee80211_stop(struct net_dev
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_init_conf conf;
+ 	struct sta_info *sta;
++	u32 hw_reconf_flags = 0;
+ 
+ 	/*
+ 	 * Stop TX on this interface first.
+@@ -405,8 +409,10 @@ static int ieee80211_stop(struct net_dev
+ 		}
+ 
+ 		local->monitors--;
+-		if (local->monitors == 0)
++		if (local->monitors == 0) {
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_RADIOTAP;
++			hw_reconf_flags |= IEEE80211_CONF_CHANGE_RADIOTAP;
++		}
+ 
+ 		if (sdata->u.mntr_flags & MONITOR_FLAG_FCSFAIL)
+ 			local->fif_fcsfail--;
+@@ -504,8 +510,15 @@ static int ieee80211_stop(struct net_dev
+ 
+ 		tasklet_disable(&local->tx_pending_tasklet);
+ 		tasklet_disable(&local->tasklet);
++
++		/* no reconfiguring after stop! */
++		hw_reconf_flags = 0;
+ 	}
+ 
++	/* do after stop to avoid reconfiguring when we stop anyway */
++	if (hw_reconf_flags)
++		ieee80211_hw_config(local, hw_reconf_flags);
++
+ 	return 0;
+ }
+ 
+--- everything.orig/net/mac80211/main.c	2008-10-08 23:01:14.000000000 +0200
++++ everything/net/mac80211/main.c	2008-10-08 23:21:56.000000000 +0200
+@@ -197,31 +197,34 @@ int ieee80211_if_config(struct ieee80211
+ 					    &sdata->vif, &conf);
+ }
+ 
+-int ieee80211_hw_config(struct ieee80211_local *local)
++int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ {
+ 	struct ieee80211_channel *chan;
+ 	int ret = 0;
++	int power;
+ 
+ 	if (local->sw_scanning)
+ 		chan = local->scan_channel;
+ 	else
+ 		chan = local->oper_channel;
+ 
+-	local->hw.conf.channel = chan;
++	if (chan != local->hw.conf.channel) {
++		local->hw.conf.channel = chan;
++		changed |= IEEE80211_CONF_CHANGE_CHANNEL;
++	}
++
+ 
+ 	if (!local->hw.conf.power_level)
+-		local->hw.conf.power_level = chan->max_power;
++		power = chan->max_power;
+ 	else
+-		local->hw.conf.power_level = min(chan->max_power,
+-					       local->hw.conf.power_level);
+-
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-	printk(KERN_DEBUG "%s: HW CONFIG: freq=%d\n",
+-	       wiphy_name(local->hw.wiphy), chan->center_freq);
+-#endif
++		power = min(chan->max_power, local->hw.conf.power_level);
++	if (local->hw.conf.power_level != power) {
++		changed |= IEEE80211_CONF_CHANGE_POWER;
++		local->hw.conf.power_level = power;
++	}
+ 
+-	if (local->open_count) {
+-		ret = local->ops->config(local_to_hw(local), &local->hw.conf);
++	if (changed && local->open_count) {
++		ret = local->ops->config(local_to_hw(local), changed);
+ 		/*
+ 		 * HW reconfiguration should never fail, the driver has told
+ 		 * us what it can support so it should live up to that promise.
+@@ -672,7 +675,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	local->fragmentation_threshold = IEEE80211_MAX_FRAG_THRESHOLD;
+ 	local->short_retry_limit = 7;
+ 	local->long_retry_limit = 4;
+-	local->hw.conf.radio_enabled = 1;
++	local->hw.conf.radio_enabled = true;
+ 
+ 	INIT_LIST_HEAD(&local->interfaces);
+ 
+--- everything.orig/net/mac80211/scan.c	2008-10-08 23:01:14.000000000 +0200
++++ everything/net/mac80211/scan.c	2008-10-08 23:13:40.000000000 +0200
+@@ -447,12 +447,17 @@ void ieee80211_scan_completed(struct iee
+ 
+ 	if (local->hw_scanning) {
+ 		local->hw_scanning = false;
+-		ieee80211_hw_config(local);
++		/*
++		 * Somebody might have requested channel change during scan
++		 * that we won't have acted upon, try now. ieee80211_hw_config
++		 * will set the flag based on actual changes.
++		 */
++		ieee80211_hw_config(local, 0);
+ 		goto done;
+ 	}
+ 
+ 	local->sw_scanning = false;
+-	ieee80211_hw_config(local);
++	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 
+ 	netif_tx_lock_bh(local->mdev);
+ 	netif_addr_lock(local->mdev);
+@@ -539,7 +544,8 @@ void ieee80211_scan_work(struct work_str
+ 
+ 		if (!skip) {
+ 			local->scan_channel = chan;
+-			if (ieee80211_hw_config(local))
++			if (ieee80211_hw_config(local,
++						IEEE80211_CONF_CHANGE_CHANNEL))
+ 				skip = 1;
+ 		}
+ 
+--- everything.orig/net/mac80211/util.c	2008-10-08 23:01:14.000000000 +0200
++++ everything/net/mac80211/util.c	2008-10-08 23:01:19.000000000 +0200
+@@ -645,7 +645,8 @@ int ieee80211_set_freq(struct ieee80211_
+ 		if (local->sw_scanning || local->hw_scanning)
+ 			ret = 0;
+ 		else
+-			ret = ieee80211_hw_config(local);
++			ret = ieee80211_hw_config(
++				local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 
+ 		rate_control_clear(local);
+ 	}
+--- everything.orig/net/mac80211/wext.c	2008-10-08 23:01:14.000000000 +0200
++++ everything/net/mac80211/wext.c	2008-10-08 23:01:19.000000000 +0200
+@@ -656,7 +656,7 @@ static int ieee80211_ioctl_siwtxpower(st
+ 				      union iwreq_data *data, char *extra)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	bool need_reconfig = 0;
++	u32 reconf_flags = 0;
+ 	int new_power_level;
+ 
+ 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
+@@ -680,17 +680,17 @@ static int ieee80211_ioctl_siwtxpower(st
+ 
+ 	if (local->hw.conf.power_level != new_power_level) {
+ 		local->hw.conf.power_level = new_power_level;
+-		need_reconfig = 1;
++		reconf_flags |= IEEE80211_CONF_CHANGE_POWER;
+ 	}
+ 
+ 	if (local->hw.conf.radio_enabled != !(data->txpower.disabled)) {
+ 		local->hw.conf.radio_enabled = !(data->txpower.disabled);
+-		need_reconfig = 1;
++		reconf_flags |= IEEE80211_CONF_CHANGE_RADIO_ENABLED;
+ 		ieee80211_led_radio(local, local->hw.conf.radio_enabled);
+ 	}
+ 
+-	if (need_reconfig)
+-		ieee80211_hw_config(local);
++	if (reconf_flags)
++		ieee80211_hw_config(local, reconf_flags);
+ 
+ 	return 0;
+ }
+@@ -976,7 +976,7 @@ static int ieee80211_ioctl_siwpower(stru
+ 
+ 	if (wrq->disabled) {
+ 		conf->flags &= ~IEEE80211_CONF_PS;
+-		return ieee80211_hw_config(local);
++		return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 	}
+ 
+ 	switch (wrq->flags & IW_POWER_MODE) {
+@@ -989,7 +989,7 @@ static int ieee80211_ioctl_siwpower(stru
+ 		return -EINVAL;
+ 	}
+ 
+-	return ieee80211_hw_config(local);
++	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ }
+ 
+ static int ieee80211_ioctl_giwpower(struct net_device *dev,
+--- everything.orig/drivers/net/wireless/adm8211.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/adm8211.c	2008-10-08 23:01:19.000000000 +0200
+@@ -1314,9 +1314,10 @@ static int adm8211_set_ssid(struct ieee8
+ 	return 0;
+ }
+ 
+-static int adm8211_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
++static int adm8211_config(struct ieee80211_hw *dev, u32 changed)
+ {
+ 	struct adm8211_priv *priv = dev->priv;
++	struct ieee80211_conf *conf = &dev->conf;
+ 	int channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
+ 
+ 	if (channel != priv->channel) {
+--- everything.orig/drivers/net/wireless/at76_usb.c	2008-10-08 23:01:14.000000000 +0200
++++ everything/drivers/net/wireless/at76_usb.c	2008-10-08 23:01:19.000000000 +0200
+@@ -2057,9 +2057,10 @@ exit:
+ 	return 0;
+ }
+ 
+-static int at76_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
++static int at76_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct at76_priv *priv = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
+ 
+ 	at76_dbg(DBG_MAC80211, "%s(): channel %d radio %d",
+ 		 __func__, conf->channel->hw_value, conf->radio_enabled);
+--- everything.orig/drivers/net/wireless/ath5k/base.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/ath5k/base.c	2008-10-08 23:01:19.000000000 +0200
+@@ -219,8 +219,7 @@ static int ath5k_add_interface(struct ie
+ 		struct ieee80211_if_init_conf *conf);
+ static void ath5k_remove_interface(struct ieee80211_hw *hw,
+ 		struct ieee80211_if_init_conf *conf);
+-static int ath5k_config(struct ieee80211_hw *hw,
+-		struct ieee80211_conf *conf);
++static int ath5k_config(struct ieee80211_hw *hw, u32 changed);
+ static int ath5k_config_interface(struct ieee80211_hw *hw,
+ 		struct ieee80211_vif *vif,
+ 		struct ieee80211_if_conf *conf);
+@@ -2780,10 +2779,10 @@ end:
+  * TODO: Phy disable/diversity etc
+  */
+ static int
+-ath5k_config(struct ieee80211_hw *hw,
+-			struct ieee80211_conf *conf)
++ath5k_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct ath5k_softc *sc = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
+ 
+ 	sc->bintval = conf->beacon_int;
+ 	sc->power_level = conf->power_level;
+--- everything.orig/drivers/net/wireless/ath9k/main.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/ath9k/main.c	2008-10-08 23:01:19.000000000 +0200
+@@ -1231,11 +1231,11 @@ static void ath9k_remove_interface(struc
+ 			__func__, error);
+ }
+ 
+-static int ath9k_config(struct ieee80211_hw *hw,
+-			struct ieee80211_conf *conf)
++static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ieee80211_channel *curchan = hw->conf.channel;
++	struct ieee80211_conf *conf = &hw->conf;
+ 	int pos;
+ 
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "%s: Set channel: %d MHz\n",
+--- everything.orig/drivers/net/wireless/b43/main.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/b43/main.c	2008-10-08 23:01:19.000000000 +0200
+@@ -3320,11 +3320,12 @@ init_failure:
+ 	return err;
+ }
+ 
+-static int b43_op_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
++static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct b43_wl *wl = hw_to_b43_wl(hw);
+ 	struct b43_wldev *dev;
+ 	struct b43_phy *phy;
++	struct ieee80211_conf *conf = &hw->conf;
+ 	unsigned long flags;
+ 	int antenna;
+ 	int err = 0;
+--- everything.orig/drivers/net/wireless/b43legacy/main.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/main.c	2008-10-08 23:01:19.000000000 +0200
+@@ -2557,11 +2557,12 @@ init_failure:
+ }
+ 
+ static int b43legacy_op_dev_config(struct ieee80211_hw *hw,
+-				   struct ieee80211_conf *conf)
++				   u32 changed)
+ {
+ 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
+ 	struct b43legacy_wldev *dev;
+ 	struct b43legacy_phy *phy;
++	struct ieee80211_conf *conf = &hw->conf;
+ 	unsigned long flags;
+ 	unsigned int new_phymode = 0xFFFF;
+ 	int antenna_tx;
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-08 23:01:19.000000000 +0200
+@@ -2760,10 +2760,11 @@ static int iwl4965_mac_add_interface(str
+  * be set inappropriately and the driver currently sets the hardware up to
+  * use it whenever needed.
+  */
+-static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
++static int iwl4965_mac_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 	const struct iwl_channel_info *ch_info;
++	struct ieee80211_conf *conf = &hw->conf;
+ 	unsigned long flags;
+ 	int ret = 0;
+ 	u16 channel;
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-08 23:01:19.000000000 +0200
+@@ -6427,7 +6427,7 @@ static void iwl3945_bg_abort_scan(struct
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+-static int iwl3945_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
++static int iwl3945_mac_config(struct ieee80211_hw *hw, u32 changed);
+ 
+ static void iwl3945_bg_scan_completed(struct work_struct *work)
+ {
+@@ -6440,7 +6440,7 @@ static void iwl3945_bg_scan_completed(st
+ 		return;
+ 
+ 	if (test_bit(STATUS_CONF_PENDING, &priv->status))
+-		iwl3945_mac_config(priv->hw, ieee80211_get_hw_conf(priv->hw));
++		iwl3945_mac_config(priv->hw, 0);
+ 
+ 	ieee80211_scan_completed(priv->hw);
+ 
+@@ -6629,10 +6629,11 @@ static int iwl3945_mac_add_interface(str
+  * be set inappropriately and the driver currently sets the hardware up to
+  * use it whenever needed.
+  */
+-static int iwl3945_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
++static int iwl3945_mac_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct iwl3945_priv *priv = hw->priv;
+ 	const struct iwl3945_channel_info *ch_info;
++	struct ieee80211_conf *conf = &hw->conf;
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
+--- everything.orig/drivers/net/wireless/libertas_tf/main.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/libertas_tf/main.c	2008-10-08 23:01:19.000000000 +0200
+@@ -354,9 +354,11 @@ static void lbtf_op_remove_interface(str
+ 	priv->vif = NULL;
+ }
+ 
+-static int lbtf_op_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
++static int lbtf_op_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct lbtf_private *priv = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
++
+ 	if (conf->channel->center_freq != priv->cur_freq) {
+ 		priv->cur_freq = conf->channel->center_freq;
+ 		lbtf_set_channel(priv, conf->channel->hw_value);
+--- everything.orig/drivers/net/wireless/mac80211_hwsim.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/mac80211_hwsim.c	2008-10-08 23:01:19.000000000 +0200
+@@ -361,10 +361,10 @@ static void mac80211_hwsim_beacon(unsign
+ }
+ 
+ 
+-static int mac80211_hwsim_config(struct ieee80211_hw *hw,
+-				 struct ieee80211_conf *conf)
++static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct mac80211_hwsim_data *data = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
+ 
+ 	printk(KERN_DEBUG "%s:%s (freq=%d radio_enabled=%d beacon_int=%d)\n",
+ 	       wiphy_name(hw->wiphy), __func__,
+--- everything.orig/drivers/net/wireless/p54/p54common.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/p54/p54common.c	2008-10-08 23:01:19.000000000 +0200
+@@ -1205,10 +1205,11 @@ static void p54_remove_interface(struct 
+ 	p54_set_filter(dev, 0, NULL);
+ }
+ 
+-static int p54_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
++static int p54_config(struct ieee80211_hw *dev, u32 changed)
+ {
+ 	int ret;
+ 	struct p54_common *priv = dev->priv;
++	struct ieee80211_conf *conf = &dev->conf;
+ 
+ 	mutex_lock(&priv->conf_mutex);
+ 	priv->rx_antenna = 2; /* automatic */
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00.h	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00.h	2008-10-08 23:01:19.000000000 +0200
+@@ -997,7 +997,7 @@ int rt2x00mac_add_interface(struct ieee8
+ 			    struct ieee80211_if_init_conf *conf);
+ void rt2x00mac_remove_interface(struct ieee80211_hw *hw,
+ 				struct ieee80211_if_init_conf *conf);
+-int rt2x00mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
++int rt2x00mac_config(struct ieee80211_hw *hw, u32 changed);
+ int rt2x00mac_config_interface(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif,
+ 			       struct ieee80211_if_conf *conf);
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-10-08 23:01:19.000000000 +0200
+@@ -335,9 +335,10 @@ void rt2x00mac_remove_interface(struct i
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_remove_interface);
+ 
+-int rt2x00mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
++int rt2x00mac_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
+ 	int radio_on;
+ 	int status;
+ 
+--- everything.orig/drivers/net/wireless/rtl8180_dev.c	2008-10-08 23:01:14.000000000 +0200
++++ everything/drivers/net/wireless/rtl8180_dev.c	2008-10-08 23:01:19.000000000 +0200
+@@ -692,9 +692,10 @@ static void rtl8180_remove_interface(str
+ 	priv->vif = NULL;
+ }
+ 
+-static int rtl8180_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
++static int rtl8180_config(struct ieee80211_hw *dev, u32 changed)
+ {
+ 	struct rtl8180_priv *priv = dev->priv;
++	struct ieee80211_conf *conf = &dev->conf;
+ 
+ 	priv->rf->set_chan(dev, conf);
+ 
+--- everything.orig/drivers/net/wireless/rtl8187_dev.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/rtl8187_dev.c	2008-10-08 23:01:19.000000000 +0200
+@@ -870,9 +870,10 @@ static void rtl8187_remove_interface(str
+ 	mutex_unlock(&priv->conf_mutex);
+ }
+ 
+-static int rtl8187_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
++static int rtl8187_config(struct ieee80211_hw *dev, u32 changed)
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
++	struct ieee80211_conf *conf = &dev->conf;
+ 	u32 reg;
+ 
+ 	mutex_lock(&priv->conf_mutex);
+--- everything.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/zd1211rw/zd_mac.c	2008-10-08 23:01:19.000000000 +0200
+@@ -743,9 +743,11 @@ static void zd_op_remove_interface(struc
+ 	zd_write_mac_addr(&mac->chip, NULL);
+ }
+ 
+-static int zd_op_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
++static int zd_op_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct zd_mac *mac = zd_hw_mac(hw);
++	struct ieee80211_conf *conf = &hw->conf;
++
+ 	return zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
+ }
+ 
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00dev.c	2008-10-08 23:01:15.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00dev.c	2008-10-08 23:01:19.000000000 +0200
+@@ -1245,7 +1245,7 @@ int rt2x00lib_resume(struct rt2x00_dev *
+ 	/*
+ 	 * Reconfigure device.
+ 	 */
+-	retval = rt2x00mac_config(rt2x00dev->hw, &rt2x00dev->hw->conf);
++	retval = rt2x00mac_config(rt2x00dev->hw, ~0);
+ 	if (retval)
+ 		goto exit;
+ 
 
-This is 2.6.28 material.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -33,6 +33,8 @@ MODULE_LICENSE("GPL");
- static struct usb_device_id rtl8187_table[] __devinitdata = {
- 	/* Asus */
- 	{USB_DEVICE(0x0b05, 0x171d), .driver_info = DEVICE_RTL8187},
-+	/* Belkin */
-+	{USB_DEVICE(0x050d, 0x705e), .driver_info = DEVICE_RTL8187B},
- 	/* Realtek */
- 	{USB_DEVICE(0x0bda, 0x8187), .driver_info = DEVICE_RTL8187},
- 	{USB_DEVICE(0x0bda, 0x8189), .driver_info = DEVICE_RTL8187B},
 
