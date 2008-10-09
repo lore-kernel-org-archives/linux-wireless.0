@@ -1,58 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:38472 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753947AbYJ2PHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 11:07:18 -0400
-From: Elias Oltmanns <eo@nebensachen.de>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-References: <87prlr9mna.fsf@denkblock.local>
-	<40f31dec0810251621l3d720a69mf21b5253e9135010@mail.gmail.com>
-	<87abcrtfa8.fsf@denkblock.local>
-	<40f31dec0810261132w2747d66em2a2a53ff9e1ecc04@mail.gmail.com>
-	<87wsfvt76q.fsf@denkblock.local>
-	<40f31dec0810261533g3143bd9bue0f3eff88c6936e9@mail.gmail.com>
-	<87r663t1ds.fsf@denkblock.local>
-	<40f31dec0810271331n7f374562x77da8ae55b9032db@mail.gmail.com>
-	<873aifsfc9.fsf@denkblock.local>
-	<40f31dec0810290749u2c065d17g5788eb22cf508142@mail.gmail.com>
-Date: Wed, 29 Oct 2008 16:07:06 +0100
-In-Reply-To: <40f31dec0810290749u2c065d17g5788eb22cf508142@mail.gmail.com>
-	(Nick Kossifidis's message of "Wed, 29 Oct 2008 16:49:29 +0200")
-Message-ID: <87wsfrqw2t.fsf@denkblock.local> (sfid-20081029_160723_723922_A8DF8854)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from xc.sipsolutions.net ([83.246.72.84]:39905 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872AbYJIJty (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2008 05:49:54 -0400
+Subject: Re: HT capabilities IE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240810080630n1a1f26f6pab575d2457ce4cbf@mail.gmail.com> (sfid-20081008_153021_291470_B065F886)
+References: <1223460098.3618.53.camel@johannes.berg>
+	 <1ba2fa240810080540m32134461t26096022d11c6dfa@mail.gmail.com>
+	 <1ba2fa240810080630n1a1f26f6pab575d2457ce4cbf@mail.gmail.com>
+	 (sfid-20081008_153021_291470_B065F886)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xTL2o6KvaF9Dnd3jIDiT"
+Date: Thu, 09 Oct 2008 11:49:54 +0200
+Message-Id: <1223545794.22490.23.camel@johannes.berg> (sfid-20081009_114959_451664_3E922DEB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Nick Kossifidis" <mickflemm@gmail.com> wrote:
-> 2008/10/29 Elias Oltmanns <eo@nebensachen.de>:
->>
->
->> Right, so here is another attempt. Unfortunately, in 2.6.27 no constants
->> have been defined for the phy revisions, nor the 0xa228 register and the
->> bit masks involved in resetting this register. Perhaps we should consult
->> the stable team on this matter because the minimal approach, as
->> presented below, certainly lacks even the smallest degree of readability
->> even though we actually know reasonably well what we are doing here. The
->> changelog, by the way, will be adapted to quote your changeset fixing
->> this in mainline once it has been committed. What do you think?
->>
->
-> Patch looks OK, thanks a lot ;-)
->
-> John can we get this get in stable until i update reset.c on wireless-testing ?
-> Would it be possible later to update mainline from wireless-testing ?
 
-Reading Documentation/stable_kernel_rules.txt, I very much doubt that
-this patch will go in unless we can at least point out something
-equivalent in mainline. So, we'll have to wait until your changes to
-reset.c have reached mainline, I'm afraid.
+--=-xTL2o6KvaF9Dnd3jIDiT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
+On Wed, 2008-10-08 at 15:30 +0200, Tomas Winkler wrote:
+> On Wed, Oct 8, 2008 at 2:40 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> > On Wed, Oct 8, 2008 at 12:01 PM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> >> Hi,
+> >>
+> >> quick question, I can't seem to read that from the draft, is the HT
+> >> capabilities IE supposed to be constant when, say, sent from an AP in
+> >> every beacon? Most fields look very constant, but e.g. the SM power sa=
+ve
+> >> mode might not be?
+> >
+> > SM has to be changed using action frame by the spec IIRC
+>=20
+> Sorry, wrong answer in, this is only the STA side.
+>=20
+> There is whole section about Legacy HT coexistence when connection
+> parameters changes. But  I didn't spent time on it much so I would
+> have to look into the spec myself
 
-Elias
+Alright, thanks. I think I have it covered differently now anyway. Will
+have to revisit that anyway.
+
+johannes
+
+--=-xTL2o6KvaF9Dnd3jIDiT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI7dO/AAoJEKVg1VMiehFYGcUP/29DZ5aCddD5ObOq79mKQGUZ
+YZ/GkI9OU2bn3Rhm7WU2Yy2Pijh03AoYPwwqKNtIbdTdh6p613PgUnipEco6dWpU
+85ZwzU7uJTVaaPntrqQ5aWLrqaDOKNAp+yxoAWjxP2c+b6hUvTiyELJI6qKYve5F
+jXLEfh32uvJ2W00b6um4VYDaUHtQqv+DDxOXuCJAImTIRG4FJVVW7i67GPGlD56x
+GOSM2/G0mffa1k0kjxSzbnjXN1DGA3m2hZ2+hngzLZF6TN/4Nl4OOQvjV47VkL9U
+k44k1QNm1l17HmrF7yKUTWWPZozpKEXMdXn9xRoVoVpclPc4Jp07pYdH9dLXmL1P
+lUetevFjJwfmYokh/8KEZkMDpE5WgOIhbtPufkiTicbiLjZOjtoE14KeepD5iPms
+tDK93KOg4l/d3BUSHoYQ/5VL8qUQ/cq1KAFSGLzMkIC36lyNnySS3fGz2Ku/IT5Z
+4CYYYuoFoNMNbPQ2WXTn1EL+r4VsaYT38BPfNRS35Xfa6vY2IKhT8YH841DFqR0S
+xEYXz0SheuPUPNjpDiRGV/gu6f9W34MbqsUjF80aYOWPqJLcHmv/Xg2QLGpAcp3o
+XX+PAc97jND3uUHC5gkIg9nIDD+pDcPmZhQN7+AvIRvwu1bwLROEljmDEdzCkwkm
+FfuoM3mITYuwOZnHzOK+
+=BAlp
+-----END PGP SIGNATURE-----
+
+--=-xTL2o6KvaF9Dnd3jIDiT--
+
