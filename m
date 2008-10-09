@@ -1,49 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:42275 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbYJBCEo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37395 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309AbYJIJyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 22:04:44 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so905818rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 19:04:43 -0700 (PDT)
-Message-ID: <b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com> (sfid-20081002_040447_401156_2CFC32E3)
-Date: Wed, 1 Oct 2008 22:04:43 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Elias Oltmanns" <eo@nebensachen.de>
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <87ljx8ndw1.fsf@denkblock.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200808101401.03339.toralf.foerster@gmx.de>
-	 <b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
-	 <200810012055.58085.toralf.foerster@gmx.de>
-	 <87ej30m376.fsf@denkblock.local>
-	 <b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
-	 <87ljx8ndw1.fsf@denkblock.local>
+	Thu, 9 Oct 2008 05:54:45 -0400
+Subject: RE: HT capabilities IE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nils Bagge <nbagge@bandspeed.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <6EACAD9615B47B42A780C005414307E1014956B2@mars.bandspeed.com>
+References: <1223460098.3618.53.camel@johannes.berg>
+	 <6EACAD9615B47B42A780C005414307E1014956B2@mars.bandspeed.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TdVN+iQMADPfHG+lyxL8"
+Date: Thu, 09 Oct 2008 11:54:45 +0200
+Message-Id: <1223546085.22490.29.camel@johannes.berg> (sfid-20081009_115447_545339_F836ABC4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 1, 2008 at 6:34 PM, Elias Oltmanns <eo@nebensachen.de> wrote:
-> "Bob Copeland" <me@bobcopeland.com> wrote:
->> On Wed, Oct 1, 2008 at 5:10 PM, Elias Oltmanns <eo@nebensachen.de> wrote:
-> Oh, but it is cleaned up by ath5k_stop_hw(). The issue is a different
-> one here:
->
-> ath5k_init() == ->start()
-> ath5k_stop_hw() == ->stop()
->
-> Since the mac80211 layer never opened a device, it won't close it
-> either. Thus, ath5k_stop_hw() does not get called on module unload. By
-> calling ath5k_init() on resume, the driver has effectively started the
-> device when it was not supposed to do so and this event is not being
-> tracked by the higher layers.
 
-Ah, yes, good analysis... and ath5k_init is scheduling the timer.  I
-doubt ieee80211_opened would fly; probably the better thing to do is
-ensure that the cleanup gets called regardless of whether ath5k_stop
-gets called (it shouldn't matter since the irqs all get created in
-_attach).
+--=-TdVN+iQMADPfHG+lyxL8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Bob Copeland %% www.bobcopeland.com
+On Wed, 2008-10-08 at 10:33 -0500, Nils Bagge wrote:
+> My humble opinion is yes, the HT capabilities field should be constant,
+> from the perspective of a typical AP.
+
+Yeah I totally agree.
+
+> Practically speaking, I doubt that an AP would want to toggle SM power
+> save at all, let alone on a per-beacon basis, as historically power
+> consumption is not as critical at the AP vs. at the client.
+
+True.
+
+> But, if you want to be 'green'... (I can see how this would benefit a
+> 'low power AP') The only problem I see is with the AP entering 'static
+> SM power save'. You might run into interoperability trouble with varying
+> behavior of client STA's, due to different interpretations of the
+> standard or assumptions. It wouldn't surprise me if some clients ignore
+> changes to the HT capabilities IE once associated, or if some ignore the
+> SM power save field in beacons entirely. Hence, they could transmit a
+> 2-stream MCS which would not be decodable with a single RX chain.
+>=20
+> Theoretically, the only SM power save mode I'd recommend for an AP is
+> dynamic SM power save.=20
+
+Right, but if you enter dynamic SM PS then it doesn't matter much
+anyway, does it? I mean, there's no protection requirement in that case,
+is there? Or am I reading it wrong? I _think_ I will handle the SM PS
+change in mac80211, but I'm not entirely sure right now.
+
+johannes
+
+--=-TdVN+iQMADPfHG+lyxL8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI7dTiAAoJEKVg1VMiehFYEFQQAJqlkBDvLIF/0FLTdAQKbXpq
+FZ7R2PJ0LMvc4tJ7Jix7zNY5RT8oQCD126uk85lGp6L3Y6ubCCRG46bk83i9pPH6
+N9MSWiftV6vfe3ZucZ29icpyZBUJwk5vyaluWQi6TgaS1fU/HftJaOtovbEHj3xe
+zdMZK+eCdmiK0ZLIvLFcJ5d2YGDmlQkBTHbWWRUjpcn7zOAKppBMYsSkbOXbXxVF
+NdMCg4XKmdda62xO8y5UhrCUHQtbEzyuTKAKvWzGizXWBivaPi77G/hSPX8j6XEC
+iMiUo46TMtj4fr5D18tgEENixA3+PD+vC+giVQkxHXwSXspA2o8AhuEQ247+vP6n
+08nBaotbrnEkpfnZWSWCeFiKpN/OZeT2JRfZM/wKv20FbAoQsyyXQ7F9pTL/hd6v
+qUoIv1YKH6WpmQtVLwstzRuYVXH2NmwLpqteLsUSbB9vXkH/Oh90Qk3SwrXEzr+z
+Fa41hEfdJclzpMkkYdYSmFSZSKEhpaLs0N1WSmTfTfsEULfidpnwjQBzinbD3Grc
+M5PjPCOR8tq4PGFoEkPRLmPJqlSFtLrXsRhMQhU+bCzb6oMmgqfXHqx+Vk2X945K
+MzTp1Ah6IloMczi9C2DUIJKX6bInNmq49BTiw7F7xaqWXt12CTb1B2EajYQUqJej
+kt56Cgr3Kj5hV9tKD6xd
+=l3KT
+-----END PGP SIGNATURE-----
+
+--=-TdVN+iQMADPfHG+lyxL8--
+
