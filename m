@@ -1,37 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32376 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751882AbYJNJ2R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 05:28:17 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Zhu Yi <yi.zhu@intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223976211.2570.177.camel@debian.sh.intel.com>
-References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
-	 <20081009154547.GB13349@tesla>
-	 <1223608949.2510.1061.camel@debian.sh.intel.com>
-	 <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com>
-	 <1223967581.2570.144.camel@debian.sh.intel.com>
-	 <43e72e890810140004k6bfa72edsf39acbafcf317fa6@mail.gmail.com>
-	 <1223969808.2570.153.camel@debian.sh.intel.com>
-	 <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
-	 <43e72e890810140213w291d729cl6c1bd1149109320d@mail.gmail.com>
-	 <1223976211.2570.177.camel@debian.sh.intel.com>
-Content-Type: text/plain
-Date: Tue, 14 Oct 2008 17:27:07 +0800
-Message-Id: <1223976427.2570.180.camel@debian.sh.intel.com> (sfid-20081014_112820_318183_742CE064)
-Mime-Version: 1.0
+Received: from flock1.newmail.ru ([82.204.219.207]:58531 "HELO
+	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753563AbYJIQOp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2008 12:14:45 -0400
+From: Andrey Borzenkov <arvidjaar@newmail.ru>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading firmware with PCMCIA adapter
+Date: Thu, 9 Oct 2008 20:13:54 +0400
+Cc: Matthew Wilcox <matthew@wil.cx>,
+	orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-pcmcia@lists.infradead.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <200810091722.56812.arvidjaar@newmail.ru> <200810091959.54987.arvidjaar@newmail.ru> <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com>
+In-Reply-To: <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1768242.paeJi4inQf";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200810092013.55476.arvidjaar@newmail.ru> (sfid-20081009_181452_363721_7AD7A8E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-14 at 17:23 +0800, Zhu Yi wrote:
-> Do you any better way to solve it?
+--nextPart1768242.paeJi4inQf
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-For example, consider the driver provided reg_rules are driver private
-(per driver). Don't make them global one.
+On Thursday 09 October 2008, Dan Williams wrote:
+>=20
+> On Thu, 2008-10-09 at 19:59 +0400, Andrey Borzenkov wrote:
+> > On Thursday 09 October 2008, Matthew Wilcox wrote:
+> > >=20
+> > > On Thu, Oct 09, 2008 at 05:22:55PM +0400, Andrey Borzenkov wrote:
+> > > > After loading orinoco and "inserting" adapter I get either BUG with
+> > > > endless loop (attached) or kernel panic on NULL pointer dereference
+> > > > (was not able capture). Adapter works fine with wlags49 driver.
+> > >=20
+> > > It looks like you've fallen off the bottom of the kernel stack.  Do y=
+ou
+> > > have 4k stacks enabled in your config?
+> > >=20
+> >=20
+> > You are right. Using 8K stacks load and runs fine. Hmm ... not nice
+> > from it :p
+>=20
+> =3D=3D driver bug; the driver should not require large stacks and this
+> should get fixed.
+>=20
+I'll check for obvious places, still ...
 
-Thanks,
--yi
+/* Download either STA or AP firmware into the card. */
+static int
+orinoco_dl_firmware(struct orinoco_private *priv,
+                    const struct fw_info *fw,
+                    int ap)
+{
+        /* Plug Data Area (PDA) */
+        __le16 pda[512] =3D { 0 };
 
+allocating 1K on stack is not nice; but what has eaten 3K more?
+
+Is there any instrumentation to analyze stack usage?
+
+--nextPart1768242.paeJi4inQf
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkjuLcMACgkQR6LMutpd94wEzgCfdnCSg50PpgyoouccgUv17QpD
+55YAoKyuMWgzTLLjbGXPcyw/XsfoSjlg
+=IMWe
+-----END PGP SIGNATURE-----
+
+--nextPart1768242.paeJi4inQf--
