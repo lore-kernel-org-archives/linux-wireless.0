@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:50432 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751631AbYJVSAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 14:00:21 -0400
-Date: Wed, 22 Oct 2008 10:37:21 -0700
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, Jouni Malinen <j@w1.fi>,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
-Message-ID: <20081022173721.GA5786@bougret.hpl.hp.com> (sfid-20081022_200031_996115_378166B0)
-Reply-To: jt@hpl.hp.com
-References: <48FDFCCA.8040604@lwfinger.net> <20081022072840.GD16005@jm.kir.nu> <48FF5933.3080501@lwfinger.net> <1224695189.30459.6.camel@johannes.berg>
+Received: from flock1.newmail.ru ([82.204.219.207]:41346 "HELO
+	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750904AbYJIQAa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2008 12:00:30 -0400
+From: Andrey Borzenkov <arvidjaar@newmail.ru>
+To: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading firmware with PCMCIA adapter
+Date: Thu, 9 Oct 2008 19:59:53 +0400
+Cc: orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-pcmcia@lists.infradead.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <200810091722.56812.arvidjaar@newmail.ru> <20081009133125.GW25780@parisc-linux.org>
+In-Reply-To: <20081009133125.GW25780@parisc-linux.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1224695189.30459.6.camel@johannes.berg>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: multipart/signed;
+  boundary="nextPart38241674.49egKP3mVG";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200810091959.54987.arvidjaar@newmail.ru> (sfid-20081009_180038_324192_90516EF6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 07:06:29PM +0200, Johannes Berg wrote:
-> On Wed, 2008-10-22 at 09:47 -0700, Larry Finger wrote:
-> 
-> > When a utility starts spitting messages that it doesn't understand what the
-> > kernel is providing _AND_ the commit message does not mention that this will
-> > happen, can someone be blamed for thinking it is a bug?
-> 
-> Heh, no, not really. It was fairly obvious us, but I guess we were just
-> routine-blinded.
-> 
-> > Clearly this is not a regression. Are there plans to update the wireless utilities?
-> 
-> I suspect it could just be made to ignore them. Or skip a select few,
-> but obviously it will never be able to parse all of them...
-> 
-> johannes
+--nextPart38241674.49egKP3mVG
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-	Hi,
+On Thursday 09 October 2008, Matthew Wilcox wrote:
+>=20
+> On Thu, Oct 09, 2008 at 05:22:55PM +0400, Andrey Borzenkov wrote:
+> > After loading orinoco and "inserting" adapter I get either BUG with
+> > endless loop (attached) or kernel panic on NULL pointer dereference
+> > (was not able capture). Adapter works fine with wlags49 driver.
+>=20
+> It looks like you've fallen off the bottom of the kernel stack.  Do you
+> have 4k stacks enabled in your config?
+>=20
 
-	If you want me to understand what it's about, you may want to
-give me a bit more context.
-	Alternatively, just send me a patch for Wireless Tools, and
-I'll put it in the next release. Wireless Tools is still maintained
-and I still do releases, even if I don't put much cycles into it.
-	Have a great day...
+You are right. Using 8K stacks load and runs fine. Hmm ... not nice
+from it :p
 
-	Jean
+--nextPart38241674.49egKP3mVG
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkjuKnoACgkQR6LMutpd94zyZwCgjue5AtOk7/Yk+zjWvjTk27ef
+z6wAn2OsgNDzMS2SfmRgpy6ASBzjEexZ
+=HPpY
+-----END PGP SIGNATURE-----
+
+--nextPart38241674.49egKP3mVG--
