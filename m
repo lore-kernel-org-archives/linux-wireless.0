@@ -1,132 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33804 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753384AbYJGRB2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46025 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752152AbYJIPIP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 13:01:28 -0400
-Subject: mac80211 driver API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Tomas Winkler <tomasw@gmail.com>, Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chr <chunkeey@web.de>, Ivo van Doorn <ivdoorn@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nOgtkW4z3uLLc3bCNxaN"
-Date: Tue, 07 Oct 2008 19:01:25 +0200
-Message-Id: <1223398885.7328.47.camel@johannes.berg> (sfid-20081007_190131_170941_F44BEC87)
-Mime-Version: 1.0
+	Thu, 9 Oct 2008 11:08:15 -0400
+Date: Thu, 9 Oct 2008 11:05:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, Rami Rosen <ramirose@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH ] mac80211: fix wrong link typo in mac80211_hwsim
+	documentation.
+Message-ID: <20081009150426.GA3765@tuxdriver.com> (sfid-20081009_170819_808125_46D7D9D0)
+References: <eb3ff54b0810080243r416b8413uf2e12f51c309a8b7@mail.gmail.com> <1223459201.3618.49.camel@johannes.berg> <20081008161834.GL4941@jm.kir.nu> <20081008190109.GC32472@tuxdriver.com> <20081008193754.GM4941@jm.kir.nu> <20081008200334.GE32472@tuxdriver.com> <1223545199.22490.5.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1223545199.22490.5.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 09, 2008 at 11:39:59AM +0200, Johannes Berg wrote:
+> On Wed, 2008-10-08 at 16:03 -0400, John W. Linville wrote:
+> > On Wed, Oct 08, 2008 at 10:37:54PM +0300, Jouni Malinen wrote:
+> > > On Wed, Oct 08, 2008 at 03:01:09PM -0400, John W. Linville wrote:
+> > > 
+> > > > Well I might be OK with that -- but are you (and Johannes) ready
+> > > > to deal with the various "ap mode doesn't work with my hostapd
+> > > > configuration" problems?
+> > > 
+> > > I think that that is a better and more productive problem to handle
+> > > assuming the issues are indeed because of something missing from
+> > > cfg80211 configuration. I'm supposed to make sure that everything needed
+> > > is there anyway and getting additional people testing various
+> > > combinations and reporting potential problems sounds useful.
+> > 
+> > I'm inclined to agree.  I'd like it if Johannes agreed too. :-)
+> 
+> I'd hate shipping it when there are still things to work out; how about
+> we put it into -testing but not into -next? I just looked at the list
+> and we still have
+>   * basic rate set
+>   * tx queue params
+> 
+> left to do.
 
---=-nOgtkW4z3uLLc3bCNxaN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I can probably live with that.
 
-Hi,
-
-Another thing I noticed when looking at the short slot stuff is that a
-number of drivers do not use the use_short_preamble flag but also do not
-set IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE; this seems like a bug
-affecting at least b43legacy, ath5k, at76_usb, rtl8180, rtl8187.
-
-You should review the mac80211 driver API for things you aren't using
-but should be using, this affects a number of drivers, for example
-adm8211, p54, stlc45xx, ath5k, ath9k, libertas_tf, rtl8180, rtl8187
-don't use radio_enabled; a number of drivers don't use power_level.
-
-There are also still drivers (ath5k, adm8211, rtl8180, iwlwifi,
-libertas_tf, zd1211rw, mac80211_hwsim, ...?) not using the
-IEEE80211_TX_CTL_ASSIGN_SEQ flag, I can fix those since I broke them,
-but help from the authors would be appreciated since I don't know the hw
-in all cases, I know that stlc45xx for example can use a corresponding
-firmware flag for it.
-
-
-Do we need a document that indicates which parts of the API must be
-implemented? Or should we mark such things in mac80211.h? Would
-something like this help? I've thrown this together quickly so it
-probably isn't complete yet...
-
-A driver must (alternatives in order of preference)
- * either honour the IEEE80211_TX_CTL_USE_RTS_CTS flag
-   or implement the set_rts_threshold call
- * either honour the IEEE80211_TX_CTL_USE_CTS_PROTECT flag
-   or honour bss_conf's use_cts_prot value
- * either honour IEEE80211_TX_CTL_SHORT_PREAMBLE
-   or honour bss_conf's use_short_preamble
-   or set the IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE hw flag
- * honour bss_conf's use_short_slot or set the
-   IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE hw flag
- * honour bss_conf's basic_rates bitmap to set up the control response
-   frame bitrate (cf. IEEE 802.11-2007 9.6 "Multirate support" paragraph 7)
- * honour IEEE80211_TX_CTL_NO_ACK unless the hardware does based on the
-   multicast bit
- * honour IEEE80211_TX_CTL_ASSIGN_SEQ (we could make this depend on
-   IBSS/AP/MESH modes)
- * honour IEEE80211_TX_CTL_REQ_TX_STATUS or always report TX status
- * honour the radio_enabled value of the hw config
- * not change it's operating mode based on IEEE80211_CONF_RADIOTAP
- * clear/set MAC address filters/control response frame generation based
-   on the interface add/remove callbacks
- * set up beacon access parameters based on the interface mode (ibss/ap)
- * use SET_IEEE80211_DEV and SET_IEEE80211_PERM_ADDR
- * set the wiphy interface modes
- * set one of the IEEE80211_HW_SIGNAL_* hw flags (?)
- * set channel_change_time
- * ...
-
-For QoS/WME, it must
- * support at least four queues
- * support configurable access parameters for those queues
- * ...
-
-For AP mode, it must
- * honour IEEE80211_TX_CTL_SEND_AFTER_DTIM
- * ...
-
-For MESH mode, it must
- * [anything special other than beaconing?]
- * ...
-
-For HT, it must
- * support QoS
- * [need help, Tomas/Ron?]
- * ...
-
-For spectrum management, it must
- * [unfinished]
- * ...
-
-johannes
-
---=-nOgtkW4z3uLLc3bCNxaN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI65XhAAoJEKVg1VMiehFYmhIP/1SNkcf/lnv+33vXfDxD4Sz9
-xjZKw2x5nqJN5tjYdWjRnBRfntERBrHEUXtC9JATe/u43ECapGaRDTcn1WAiPVmx
-APgr3lsONEkPLKb13aAh8OinnMVFLFZIa7im3vvLhJTZYaRz/aorZJeU65AjY44c
-DsBx/RVyUNa3ObJv2zoaDtcL6XLZT1ZLKEQOD+YpTVRyNk1HL03umJYOI8ceGX6Q
-uywAfIQLvRvx5hdz0mo6W53dIGh+LeBoDxXs1y6oZ5aDQP98xudOikvKCB7Cv1XX
-4LCGUoJLDLXXxJpcbl8fLtpfF99JbJhfIRmbSrllLS1UvPy3Xkh6YuCZG1r/uY5R
-LfwdDvfqQ1GYFD42Y+0oJrZlclXtBOJcKMTbxC0vYc4ILnO36anM+LbTsA14iIex
-YJGZysA9zcw5Ea3k9Nh8Rc9ym19Ur7y47BTVsqWVx3pjpqN1HzW4Z9Pqx+R2VW8I
-u+Ru4J6linT4mlNsP56JKFy9Bz8Ai/sgSVwziUNrgfRBfJaL4TOt5njLgXYFj9yt
-y3UbTdpLWpkuxCAHIVzIfUSFcfEtpu6/x9r4rMzZha8lIbes79sQJKKdA63cg2BY
-0tV82UEOWqi65P+G7duK5ZBn0kcsAb2VrILsl2joh2nM2210s/w/zOY/enonjZ4K
-xYJiCRgo4or94rZtsimG
-=Ry8K
------END PGP SIGNATURE-----
-
---=-nOgtkW4z3uLLc3bCNxaN--
-
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
