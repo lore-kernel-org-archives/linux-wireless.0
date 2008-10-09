@@ -1,71 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38872 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751424AbYJVUac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 16:30:32 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: reinette chatre <reinette.chatre@linux.intel.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224662185.9386.131.camel@californication>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1224628088.10863.100.camel@rc-desk>
-	 <1224660449.28639.22.camel@johannes.berg>
-	 <1224662185.9386.131.camel@californication>
-Content-Type: text/plain
-Date: Wed, 22 Oct 2008 13:30:46 -0700
-Message-Id: <1224707446.10863.155.camel@rc-desk> (sfid-20081022_223038_881156_B0181D74)
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.152]:26732 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880AbYJIQd3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2008 12:33:29 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so66775fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2008 09:33:27 -0700 (PDT)
+Message-ID: <1ba2fa240810090933x2e473416i2d5c9120128c8ead@mail.gmail.com> (sfid-20081009_183332_930059_B51C68E1)
+Date: Thu, 9 Oct 2008 18:33:27 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: HT capabilities IE
+Cc: "Nils Bagge" <nbagge@bandspeed.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1223546085.22490.29.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1223460098.3618.53.camel@johannes.berg>
+	 <6EACAD9615B47B42A780C005414307E1014956B2@mars.bandspeed.com>
+	 <1223546085.22490.29.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-22 at 00:56 -0700, Marcel Holtmann wrote:
-> Hi Johannes,
-> 
-> > > I do not believe our request is unreasonable. If a user runs a new
-> > > kernel the log will print a message that the firmware is incorrect ...
-> > > all the user needs to do is go to
-> > > http://intellinuxwireless.org/?n=Downloads and download the latest
-> > > firmware.
-> >
-> > And that exactly _is_ a problem, the user may be relying on wireless
-> > connectivity. And they won't know up-front they need new firmware. Since
-> > firmware is loaded from userspace, you're breaking userspace/kernel ABI,
-> > it's pretty simple really.
-> 
-> I talked to David Woodhouse and we plan to add a big warning to
-> modules_install when MODULE_FIRMWARE is not present on the filesystem.
+On Thu, Oct 9, 2008 at 11:54 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-10-08 at 10:33 -0500, Nils Bagge wrote:
+>> My humble opinion is yes, the HT capabilities field should be constant,
+>> from the perspective of a typical AP.
+>
+> Yeah I totally agree.
+>
+>> Practically speaking, I doubt that an AP would want to toggle SM power
+>> save at all, let alone on a per-beacon basis, as historically power
+>> consumption is not as critical at the AP vs. at the client.
+>
+> True.
+>
+>> But, if you want to be 'green'... (I can see how this would benefit a
+>> 'low power AP') The only problem I see is with the AP entering 'static
+>> SM power save'. You might run into interoperability trouble with varying
+>> behavior of client STA's, due to different interpretations of the
+>> standard or assumptions. It wouldn't surprise me if some clients ignore
+>> changes to the HT capabilities IE once associated, or if some ignore the
+>> SM power save field in beacons entirely. Hence, they could transmit a
+>> 2-stream MCS which would not be decodable with a single RX chain.
+>>
+>> Theoretically, the only SM power save mode I'd recommend for an AP is
+>> dynamic SM power save.
 
-Thank you very much. This appears to address the problem. That is, a
-user trying to run a new kernel with old userspace will now get a
-warning while internet access is still available. Thus enabling them to
-update firmware. Is this solution acceptable to everybody?
+I would say that recommended mode is SM disabled, Dynamic only in case
+u want to be green.
 
-> 
-> > I really don't know why we let you get away with this and bitch
-> > endlessly when b43 does such a change, to the point where we finally
-> > cave in and support both versions. Why should a community-supported
-> > driver be held to higher standards?
-> 
-> If in any way possible, we should support both versions of the firmware.
+> Right, but if you enter dynamic SM PS then it doesn't matter much
+> anyway, does it? I mean, there's no protection requirement in that case,
+> is there? Or am I reading it wrong? I _think_ I will handle the SM PS
+> change in mac80211, but I'm not entirely sure right now.
 
-I would like to hear some suggestions on how we can do this as I am not
-familiar with the other drivers. The driver is closely tied to the
-firmware ... and I am actually tempted to draw an analogy between the
-interface between the driver and mac80211 here. From what I understand,
-for the driver to support many versions of the firmware it dynamically
-needs to detect which features are supported at runtime and act
-accordingly. This is a hard problem. What am I missing?
+If AP announce dynamic it requires STA to precede SM packet with
+legacy one preferable RTS.
+See the iwlagn implementation
 
-Reinette
-
-
+Tomas
