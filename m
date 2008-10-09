@@ -1,64 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:52322 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753634AbYJ1SUV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 14:20:21 -0400
-Date: Tue, 28 Oct 2008 10:08:38 -0700
-From: Greg KH <greg@kroah.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Thorsten Leemhuis <fedora@leemhuis.info>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: rtl2860 driver in mainline?
-Message-ID: <20081028170838.GA4818@kroah.com> (sfid-20081028_192026_585252_C4BB7E3D)
-References: <20081028004915.GA3442@kroah.com> <4906B944.4010105@leemhuis.info> <1225180598.3796.66.camel@johannes.berg> <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com> <1225181562.3796.76.camel@johannes.berg>
+Received: from nf-out-0910.google.com ([64.233.182.189]:50654 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752955AbYJIWrX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2008 18:47:23 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so127217nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2008 15:47:21 -0700 (PDT)
+Message-ID: <48EE89ED.3050309@gmail.com> (sfid-20081010_004727_315327_787AFC54)
+Date: Thu, 09 Oct 2008 23:47:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1225181562.3796.76.camel@johannes.berg>
+To: Andrey Borzenkov <arvidjaar@newmail.ru>
+CC: orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading
+ firmware with PCMCIA adapter
+References: <200810091722.56812.arvidjaar@newmail.ru> <200810091959.54987.arvidjaar@newmail.ru> <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com> <200810092321.55033.arvidjaar@newmail.ru>
+In-Reply-To: <200810092321.55033.arvidjaar@newmail.ru>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2008 at 09:12:42AM +0100, Johannes Berg wrote:
-> On Tue, 2008-10-28 at 01:02 -0700, Luis R. Rodriguez wrote:
-> 
-> > > I don't think it makes sense either, at _best_ it'll do nothing but help
-> > > a few users [1], and if somebody actually starts working on the vendor
-> > > driver because it's in staging that's actively harmful to the real
-> > > driver by diverting resources away from it.
-> > >
-> > > johannes
-> > >
-> > > [1] I used to think the point wasn't to make users happy but to make it
-> > > easier to work on those drivers, but that objective seems long gone
-> > 
-> > Problem is distributions already ship crap anyway.
-> 
-> Well, yes, but that's fine, it doesn't mean people will work on the
-> crap, it means people will use the crap. As far as I understood, putting
-> it into staging was supposed to mean "here is some crap for people to
-> work on", which is a huge difference.
+Andrey Borzenkov wrote:
+> The attached patch fixes 4K stack for me. I have not tested spectrum case.
 
-"Work on", or "USE".
+Thanks for identifying the problem. The Agere case looks good - a few suggestions for the Symbol case though:
 
-The problem is, users have this hardware, and they want to run Linux on
-it.  Many distros already support this hardware with the "crap" driver,
-so we might as well add that to the kernel tree so they at least get the
-latest "crap" so that users have an easier time of it.
+> diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+> --- a/drivers/net/wireless/orinoco.c
+> +++ b/drivers/net/wireless/orinoco.c
+> @@ -549,12 +556,16 @@ symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
+>  		int secondary)
+>  {
+>  	hermes_t *hw = &priv->hw;
+> -	int ret;
+> +	int ret = 0;
+>  	const unsigned char *ptr;
+>  	const unsigned char *first_block;
+>  
+>  	/* Plug Data Area (PDA) */
+> -	__le16 pda[256];
+> +	__le16 *pda;
 
-Now, the fact that there is a competing driver being developed outside
-of the tree does make this a bit more complicated.  However, as it
-doesn't work yet, there's not much we can do about including it, right?
+Please initialise pda to NULL here...
 
-So adding the driver to the "crap" tree makes users happy in that they
-can use their hardware.  I'll support the "crap" to a point, and no one
-has to do any API changes to the drivers/staging/ tree either, I can
-easily handle that.
+> +	pda = kzalloc(fw->pda_size, GFP_KERNEL);
+> +	if (!pda)
+> +		return -ENOMEM;
 
-Then, when the "correct" driver is finished, I will drop the crap driver
-at the same time the "correct" one is added to the tree.
+And move the allocation to
 
-This way, everyone wins, right?
+>  	/* Binary block begins after the 0x1A marker */
+>  	ptr = image;
+> @@ -563,22 +574,22 @@ symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
+>  
+>  	/* Read the PDA from EEPROM */
+>  	if (secondary) {
 
-thanks,
+ ... here.
 
-greg k-h
+> -		ret = hermes_read_pda(hw, pda, fw->pda_addr, sizeof(pda), 1);
+> +		ret = hermes_read_pda(hw, pda, fw->pda_addr, fw->pda_size, 1);
+>  		if (ret)
+> -			return ret;
+> +			goto free;
+>  	}
+>  
+>  	/* Stop the firmware, so that it can be safely rewritten */
+>  	if (priv->stop_fw) {
+>  		ret = priv->stop_fw(priv, 1);
+>  		if (ret)
+> -			return ret;
+> +			goto free;
+>  	}
+>  
+>  	/* Program the adapter with new firmware */
+>  	ret = hermes_program(hw, first_block, end);
+>  	if (ret)
+> -		return ret;
+> +		goto free;
+>  
+>  	/* Write the PDA to the adapter */
+>  	if (secondary) {
+> @@ -586,28 +597,31 @@ symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
+>  		ptr = first_block + len;
+>  		ret = hermes_apply_pda(hw, ptr, pda);
+>  		if (ret)
+> -			return ret;
+> +			goto free;
+
+Then kfree(pda) here. We're done with it now.
+
+>  	}
+>  
+>  	/* Run the firmware */
+>  	if (priv->stop_fw) {
+>  		ret = priv->stop_fw(priv, 0);
+>  		if (ret)
+> -			return ret;
+> +			goto free;
+
+So this isn't needed.
+
+>  	}
+>  
+>  	/* Reset hermes chip and make sure it responds */
+>  	ret = hermes_init(hw);
+>  
+>  	/* hermes_reset() should return 0 with the secondary firmware */
+> -	if (secondary && ret != 0)
+> -		return -ENODEV;
+> +	if (secondary && ret != 0) {
+> +		ret = -ENODEV;
+> +		goto free;
+> +	}
+
+nor this.
+
+>  
+>  	/* And this should work with any firmware */
+>  	if (!hermes_present(hw))
+> -		return -ENODEV;
+> +		ret = -ENODEV;
+>  
+> -	return 0;
+
+or these.
+
+> +free:
+ 
+But you absolutely have to kfree(pda) here. I would prefer the label be something like 'abort' (what we are doing), rather than 'free' - but there's merit in keeping with what you have called in in orinoco_dl_firmware which already has an 'abort' label.
+
+> +	return ret;
+>  }
+ 
+The net effect of the above suggestion is that we won't allocate memory when programming the primary firmware (which is just before we do the secondary).
+
+Dan Williams wrote:
+> maybe you should not use priv->pda_size but
+> #define SYMBOL_PDA_SIZE 256 and use that for the hermes_read_pda()
+> length just to ensure the patched code is functionally the same as
+> before the patch.
+
+Using fw->pda_size should be fine. The value comes from a const static, set to 0x100 for Symbol.
+
+
+Regards,
+
+Dave.
