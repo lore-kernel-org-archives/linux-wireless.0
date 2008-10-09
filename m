@@ -1,89 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35923 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752913AbYJKNlr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 09:41:47 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: make retry limits part of hw config
-Date: Sat, 11 Oct 2008 15:41:14 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-References: <1223682835.29811.10.camel@johannes.berg>
-In-Reply-To: <1223682835.29811.10.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200810111541.14983.mb@bu3sch.de> (sfid-20081011_154150_246410_CB1A75D6)
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:41520 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753711AbYJIVPk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2008 17:15:40 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: [GIT PATCH] rfkill updates
+Date: Thu,  9 Oct 2008 18:15:28 -0300
+Message-Id: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br> (sfid-20081009_231548_093040_42FA2B34)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 11 October 2008 01:53:55 Johannes Berg wrote:
->  static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
->  {
->  	struct b43_wl *wl = hw_to_b43_wl(hw);
-> @@ -3333,6 +3349,20 @@ static int b43_op_config(struct ieee8021
->  
->  	mutex_lock(&wl->mutex);
->  
-> +	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
-> +		dev = wl->current_dev;
-> +		if (unlikely(!dev || (b43_status(dev) < B43_STAT_INITIALIZED))) {
-> +			err = -ENODEV;
-> +			goto out_unlock_mutex;
-> +		}
-> +		b43_set_retry_limits(dev, conf->short_frame_max_tx_count,
-> +					  conf->long_frame_max_tx_count);
-> +		changed &= ~IEEE80211_CONF_CHANGE_RETRY_LIMITS;
-> +	}
-> +
-> +	if (!changed)
-> +		goto out_unlock_mutex;
-> +
->  	/* Switch the band (if necessary). This might change the active core. */
->  	err = b43_switch_band(wl, conf->channel);
->  	if (err)
 
-This must be done _after_ bandswitch. (You also have a valid dev pointer there.
-Just do it after the checks done there).
+This patchset has the current stack of changes I am comfortable enough to
+propose for merging.
 
-> @@ -2570,10 +2584,27 @@ static int b43legacy_op_dev_config(struc
->  	int err = 0;
->  	u32 savedirqs;
->  
-> +	mutex_lock(&wl->mutex);
-> +	dev = wl->current_dev;
-> +
-> +	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
-> +		if (unlikely(!dev ||
-> +			     (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED))) {
-> +			err = -ENODEV;
-> +			goto out_unlock_mutex;
-> +		}
-> +		b43legacy_set_retry_limits(dev,
-> +					   conf->short_frame_max_tx_count,
-> +					   conf->long_frame_max_tx_count);
-> +		changed &= ~IEEE80211_CONF_CHANGE_RETRY_LIMITS;
-> +	}
-> +
-> +	if (!changed)
-> +		goto out_unlock_mutex;
-> +
->  	antenna_tx = B43legacy_ANTENNA_DEFAULT;
->  	antenna_rx = B43legacy_ANTENNA_DEFAULT;
->  
-> -	mutex_lock(&wl->mutex);
->  	dev = wl->current_dev;
+There is some other stuff in the burner, but since they are userspace-ABI
+related and I am not sure I am happy with it yet, I want to think a bit
+more before sending them to the list as an RFC patchset.
 
-This also is a bit fishy.
+I don't really care if this patch set make it to 2.6.28 merge window or
+not, they're mostly enhancements... still, I would appreciate comments
+(and if they are good enough already, ACKs and maybe even a merge into
+wireless-testing).
 
->  	phy = &dev->phy;
->  
-> @@ -2989,20 +3020,6 @@ static void b43legacy_imcfglo_timeouts_w
->  #endif /* CONFIG_SSB_DRIVER_PCICORE */
->  }
->  
+Shortlog:
+Henrique de Moraes Holschuh (5):
+  rfkill: use killable locks instead of interruptible
+  rfkill: export global states to rfkill-input
+  rfkill: add master_switch_mode and EPO lock to rfkill and rfkill-input
+  rfkill: honour EPO state when resuming a rfkill controller
+  rfkill: rate-limit rfkill-input workqueue usage (v3)
+
+Thanks!
 
 -- 
-Greetings Michael.
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
