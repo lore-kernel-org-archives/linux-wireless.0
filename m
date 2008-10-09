@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58636 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:44872 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753569AbYJXXLL (ORCPT
+	with ESMTP id S1754319AbYJIJeS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 19:11:11 -0400
-Subject: Re: iw: hanging when doing station or mpath dump
+	Thu, 9 Oct 2008 05:34:18 -0400
+Subject: iwlwifi: bug in iwl_tx_skb
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <45e8e6c40810241432q4d25d352g5f7f50961ecc0194@mail.gmail.com> (sfid-20081024_233240_009679_617653EC)
-References: <45e8e6c40810241432q4d25d352g5f7f50961ecc0194@mail.gmail.com>
-	 (sfid-20081024_233240_009679_617653EC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JXkT59dulMVGqgfg6wVw"
-Date: Sat, 25 Oct 2008 01:11:03 +0200
-Message-Id: <1224889863.3919.21.camel@johannes.berg> (sfid-20081025_011128_734059_E3472FB3)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AAPk7lHeevX85lCF43YD"
+Date: Thu, 09 Oct 2008 11:04:41 +0200
+Message-Id: <1223543081.22490.2.camel@johannes.berg> (sfid-20081009_113422_501476_FD951153)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-JXkT59dulMVGqgfg6wVw
+--=-AAPk7lHeevX85lCF43YD
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2008-10-24 at 14:32 -0700, Andrey Yurovsky wrote:
-
-> ...which never returns.  This seems to be a somewhat recent regression
-> but we haven't had a chance to look more closely into it so I'm
-> mentioning it here in case someone has an idea of what could have gone
-> wrong.  Thanks,
-
-I _just_ fixed this a few hours ago.
+When iwl_txq_update_write_ptr fails, you have a huge problem: the skb is
+linked on the queue, the write_ptr has been incremented, but you pretend
+you can just free it.
 
 johannes
 
---=-JXkT59dulMVGqgfg6wVw
+--=-AAPk7lHeevX85lCF43YD
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJAlYEAAoJEKVg1VMiehFYbuIQAL5kfK7Az3kLkuq6qUH9wxLf
-pmk4IHfVyPpzWxH8YMRXzXvsQtLDj12Izh0zjsWqzXXOeh2QfQF4SKuGn42Ycl76
-20Ww7NhqQfaFpNJmD1ieYiwkbXtfI++/lksBZ89POqsidMmZJ9CYQ/bIMITgKtwK
-0HdyJDjrCpWZmgoSdZ4bt2ve8Szg0E7YaF0jCCzWG0zMEu0xN9gnJXRFz1zRWaiL
-M8yofwzI/oiXGaGQ4nDAXABsbfuEzSp7GlvbwriGJSCjV5Ep+7kmY7iR4pcoEXUz
-mKAVb7N2UnD6oxzbrYAWUt4CqTKPGz6DmNq0RXXTQ/5xls3Ry3kWpt9r6ynKkhmT
-Wq8KiCJZ4tWmR0y/JRw+w4v7dkuvZeAitxFl0+8aqY5fKZZgPgsCi5aj8l+IU1tJ
-7EU6F9Gw3Ddv09ipQq3nmygGz9AR9qBLT/7TQ4lIE03zHNBWafroMg2T+kEzD8gO
-zKhKEOURH2unlE4gf0ujFqpZ91tARIIqm4p7xgkOZTCsjJ9wc3u2B9/btr7Vgh53
-uth4lbSvXapCyWvjPxV+21iv8uvk/8Nde5UhpNbiJUbXIE2j13k31yxGVUsOvR0+
-pkRoH1YTz7MEfoMN8ovHw45AV/MaVnIRHPW6pzR5EwvBwZIIouZtmAxLMiSDLwR8
-u89rqpPmudyn0yDCCdgU
-=QV0G
+iQIcBAABAgAGBQJI7ckjAAoJEKVg1VMiehFYRQYP/0A4URYlWwXGXvPGl/poXTOw
+s3xsk3GbRDTHrlFUZygw1AEoG98lppFxJbgX6FSwF9TeZKInIt9YIa9NSddoPP6h
+PhfktondjlFP7SHRl+DaBiEzb39m2u6virPedopoI+GEgNlbeeW+YCVuiqlDlj1j
+PuzAEKCOt39ezmAbl1KmridCQkKLRT87PKKuPEEJkXltMml5tpr6+rnLCnqF6zXr
+OgSdkGt9R5AvESUZ3dOtUjukpFQyzzeUtCG3td8mT1aBk0W8Bz3xeT41CRnGbap9
+gayVot9/VQFWsHuBR8TuqcMZxk8eQGazy7klsdb42sqDGwm+97ZykaTV6Eq1vcTx
+Zz79fwuL3Vynd1JwecYgURU1Gj0HPpY3F0NYdglX7+MXZOZckyu2xiRKvvjzWrh/
+6mjridwIIVb8TYYsAQ2i2lcJXNMO0ouPz9N2ndA6uArEyEPnFcJ/1R5YCIM1kryq
+UaArhOs9gjr2OK2VyT9hs+hphrHDX9IHYUnl8uwEGN4190cQyQM4L2upD2MSerb1
+XlPmP2s+qBltGKog3ii4R7j3eQ7l1BOniL3Egm9RX6XR7zA6/BKshdFhT0qaBgak
+S7ys7cpzt4DT4lK7gQjHQuKWXxqANOLM6R/UltBXh4rzHV14ymttRcmk8GgMRyiu
+rbsV6PjRzSMAkCXydseH
+=WGat
 -----END PGP SIGNATURE-----
 
---=-JXkT59dulMVGqgfg6wVw--
+--=-AAPk7lHeevX85lCF43YD--
 
