@@ -1,98 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:51448 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:62948 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751046AbYJNPoR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 11:44:17 -0400
-Subject: Re: [PATCH] ipw2200: Change driver default policies
-From: Dan Williams <dcbw@redhat.com>
-To: Tim Gardner <timg@tpi.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081014145708.CAF215A1D8@sepang.rtg.net>
-References: <20081014145708.CAF215A1D8@sepang.rtg.net>
+	id S1760308AbYJJTXH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2008 15:23:07 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 12:23:07 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath9k: remove nasty FAIL macro from ath9k_hw_reset()
+Date: Fri, 10 Oct 2008 05:22:53 -0700
+Message-ID: <1223641374-11872-1-git-send-email-lrodriguez@atheros.com> (sfid-20081010_212312_563798_A4C0EE32)
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Tue, 14 Oct 2008 11:43:12 -0400
-Message-Id: <1223998992.3936.28.camel@localhost.localdomain> (sfid-20081014_174424_378190_B06634FB)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-14 at 08:57 -0600, Tim Gardner wrote:
-> From 41804698de6f2ce121c1452943b9ad2b8a54988b Mon Sep 17 00:00:00 2001
-> From: Tim Gardner <tim.gardner@canonical.com>
-> Date: Tue, 14 Oct 2008 08:16:09 -0600
-> Subject: [PATCH] ipw2200: change default policies for auto-associate, auto-create, and auto-roaming
-> 
-> We now have applications available to set policy. This patch changes the driver defaults to:
-> 
-> 1) associate=0 - do not automatically associate to an SSID.
+This is fucking horribe crap code so nuke it. There I cursed too in a commit log.
 
-This one is fine.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |   33 +++++++++++++++++++++------------
+ 1 files changed, 21 insertions(+), 12 deletions(-)
 
-> 2) auto_create=0 - do not automatically create an ad-hoc network
-
-This will break adhoc network creation, thus NAK.  I think we should
-just remove the module parameter and default to 1 anyway.  This is the
-way adhoc _should_ work in the first place, if the adhoc network you're
-attempting to join does not yet exist, the driver should create that
-network.  This is the way it works for all other drivers as well.
-
-Disabling this effectively means you can only join existing adhoc
-networks, not start your own.
-
-> 3) roaming=0 - do not automatically roam to another AP with the same SSID.
-
-Not really sure why this should be changed?  Were there reported issues
-with this behavior?
-
-Dan
-
-> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-> ---
->  Documentation/networking/README.ipw2200 |    6 +++---
->  drivers/net/wireless/ipw2200.c          |    6 +++---
->  2 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/Documentation/networking/README.ipw2200 b/Documentation/networking/README.ipw2200
-> index 4f2a40f..8f3e40d 100644
-> --- a/Documentation/networking/README.ipw2200
-> +++ b/Documentation/networking/README.ipw2200
-> @@ -147,14 +147,14 @@ Where the supported parameter are:
->  	driver.  If disabled, the driver will not attempt to scan 
->  	for and associate to a network until it has been configured with 
->  	one or more properties for the target network, for example configuring 
-> -	the network SSID.  Default is 1 (auto-associate)
-> +	the network SSID.  Default is 0 (do not auto-associate)
->  	
-> -	Example: % modprobe ipw2200 associate=0
-> +	Example: % modprobe ipw2200 associate=1
->  
->    auto_create
->  	Set to 0 to disable the auto creation of an Ad-Hoc network 
->  	matching the channel and network name parameters provided.  
-> -	Default is 1.
-> +	Default is 0.
->  
->    channel
->  	channel number for association.  The normal method for setting
-> diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-> index dcce354..31f396b 100644
-> --- a/drivers/net/wireless/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2200.c
-> @@ -87,13 +87,13 @@ static int channel = 0;
->  static int mode = 0;
->  
->  static u32 ipw_debug_level;
-> -static int associate = 1;
-> -static int auto_create = 1;
-> +static int associate;
-> +static int auto_create;
->  static int led = 0;
->  static int disable = 0;
->  static int bt_coexist = 0;
->  static int hwcrypto = 0;
-> -static int roaming = 1;
-> +static int roaming;
->  static const char ipw_modes[] = {
->  	'a', 'b', 'g', '?'
->  };
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 62e44a0..372ae61 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -5867,7 +5867,6 @@ bool ath9k_hw_reset(struct ath_hal *ah,
+ 		    bool bChannelChange,
+ 		    int *status)
+ {
+-#define FAIL(_code)     do { ecode = _code; goto bad; } while (0)
+ 	u32 saveLedState;
+ 	struct ath_hal_5416 *ahp = AH5416(ah);
+ 	struct ath9k_channel *curchan = ah->ah_curchan;
+@@ -5889,7 +5888,8 @@ bool ath9k_hw_reset(struct ath_hal *ah,
+ 		DPRINTF(ah->ah_sc, ATH_DBG_CHANNEL,
+ 			 "%s: invalid channel %u/0x%x; no mapping\n",
+ 			 __func__, chan->channel, chan->channelFlags);
+-		FAIL(-EINVAL);
++		ecode = -EINVAL;
++		goto bad;
+ 	}
+ 
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+@@ -5930,7 +5930,8 @@ bool ath9k_hw_reset(struct ath_hal *ah,
+ 	if (!ath9k_hw_chip_reset(ah, chan)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_RESET, "%s: chip reset failed\n",
+ 			 __func__);
+-		FAIL(-EIO);
++		ecode = -EINVAL;
++		goto bad;
+ 	}
+ 
+ 	if (AR_SREV_9280(ah)) {
+@@ -5947,8 +5948,10 @@ bool ath9k_hw_reset(struct ath_hal *ah,
+ 	}
+ 
+ 	ecode = ath9k_hw_process_ini(ah, chan, macmode);
+-	if (ecode != 0)
++	if (ecode != 0) {
++		ecode = -EINVAL;
+ 		goto bad;
++	}
+ 
+ 	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
+ 		ath9k_hw_set_delta_slope(ah, chan);
+@@ -5961,7 +5964,8 @@ bool ath9k_hw_reset(struct ath_hal *ah,
+ 	if (!ath9k_hw_eeprom_set_board_values(ah, chan)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_EEPROM,
+ 			 "%s: error setting board options\n", __func__);
+-		FAIL(-EIO);
++		ecode = -EIO;
++		goto bad;
+ 	}
+ 
+ 	ath9k_hw_decrease_chain_power(ah, chan);
+@@ -5989,11 +5993,15 @@ bool ath9k_hw_reset(struct ath_hal *ah,
+ 	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
+ 
+ 	if (AR_SREV_9280_10_OR_LATER(ah)) {
+-		if (!(ath9k_hw_ar9280_set_channel(ah, chan)))
+-			FAIL(-EIO);
++		if (!(ath9k_hw_ar9280_set_channel(ah, chan))) {
++			ecode = -EIO;
++			goto bad;
++		}
+ 	} else {
+-		if (!(ath9k_hw_set_channel(ah, chan)))
+-			FAIL(-EIO);
++		if (!(ath9k_hw_set_channel(ah, chan))) {
++			ecode = -EIO;
++			goto bad;
++		}
+ 	}
+ 
+ 	for (i = 0; i < AR_NUM_DCU; i++)
+@@ -6027,8 +6035,10 @@ bool ath9k_hw_reset(struct ath_hal *ah,
+ 
+ 	ath9k_hw_init_bb(ah, chan);
+ 
+-	if (!ath9k_hw_init_cal(ah, chan))
+-		FAIL(-ENODEV);
++	if (!ath9k_hw_init_cal(ah, chan)){
++		ecode = -EIO;;
++		goto bad;
++	}
+ 
+ 	rx_chainmask = ahp->ah_rxchainmask;
+ 	if ((rx_chainmask == 0x5) || (rx_chainmask == 0x3)) {
+@@ -6064,7 +6074,6 @@ bad:
+ 	if (status)
+ 		*status = ecode;
+ 	return false;
+-#undef FAIL
+ }
+ 
+ bool ath9k_hw_phy_disable(struct ath_hal *ah)
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
