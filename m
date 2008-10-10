@@ -1,67 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:64361 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759294AbYJJRv2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 13:51:28 -0400
-Received: by gxk9 with SMTP id 9so1055047gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 10:51:27 -0700 (PDT)
-Message-ID: <43e72e890810101051w7ef39193h3a4473a0c8a4965e@mail.gmail.com> (sfid-20081010_195135_090349_FBFFADB2)
-Date: Fri, 10 Oct 2008 10:51:27 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Vendor support stickers for devices supported under Linux wireless
-Cc: drago01 <drago01@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890807311019x1c4baa43t622c776999bec152@mail.gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35397 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752818AbYJJQ2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2008 12:28:09 -0400
+Message-ID: <48EF8295.1040602@hauke-m.de> (sfid-20081010_182813_198556_A622C791)
+Date: Fri, 10 Oct 2008 18:28:05 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
-	 <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
-	 <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com>
-	 <1217498887.10489.138.camel@johannes.berg>
-	 <43e72e890807311005l3fd7823ej68497586ec9ff6bc@mail.gmail.com>
-	 <1217524322.10489.148.camel@johannes.berg>
-	 <43e72e890807311019x1c4baa43t622c776999bec152@mail.gmail.com>
+To: stephen mcgregor <tech@stephen-mcgregor.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: newbie question. cant get fw-cutter to extract the firmware.
+References: <loom.20081010T155930-255@post.gmane.org>
+In-Reply-To: <loom.20081010T155930-255@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 31, 2008 at 10:19 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, Jul 31, 2008 at 10:12 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Thu, 2008-07-31 at 10:05 -0700, Luis R. Rodriguez wrote:
->>
->>> > I would also add to the contract a requirement to offer Linux support
->>> > for, say, the next five years.
->>>
->>> Not sure if we should call it a contract unless its understood its an
->>> informal contract with the community.
->>
->> There has to be some form of contract. The logo is copyrighted,
->> obviously, so there has to be a contract for you to be allowed to print
->> it on a box.
->
-> Heh, Whatever makes the copyright holders happy :) I suspect the
-> copyright holder are after the community's best interests anyway.
->
->>> Also I don't think we should be
->>> specific about a time frame for support -- its difficult enough to get
->>> the driver upstream, not that its not possible I just think it we
->>> should strive to at least get vendors to properly support Linux by
->>> submitting their drivers for upstream into Linus' tree. Support tends
->>> to come naturally after that :)
->>
->> Because sometimes there are users who care. I think though that the
->> vendor should participate in future development by testing and fixing
->> their driver, for at least a period of time. Five years may be too much,
->> given the current chip livetime maybe one or two would make sense,
->> kernel releases are only roughly every three months.
->>
->> Mind you, I wasn't talking about user support, but rather development
->> support, kinda like a SUPPORTED tag in the MAINTAINERS file.
->
-> This seems reasonable.
+You must just do what is decried at
+http://linuxwireless.org/en/users/Drivers/b43
+Use version 4.150.10.5, version 4.150.10.5.2 is *not* supported!
 
-If we can formalize on this it would be great.
+export FIRMWARE_INSTALL_DIR="/lib/firmware"
+wget http://mirror2.openwrt.org/sources/broadcom-wl-4.150.10.5.tar.bz2
+tar xjf broadcom-wl-4.150.10.5.tar.bz2
+cd broadcom-wl-4.150.10.5/driver
+sudo ../../b43-fwcutter-011/b43-fwcutter -w "$FIRMWARE_INSTALL_DIR"
+wl_apsta_mimo.o
 
-  Luis
+--
+Hauke
