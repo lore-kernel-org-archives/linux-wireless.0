@@ -1,100 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41479 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754076AbYJVRYh (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:8944 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758596AbYJJQtT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 13:24:37 -0400
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Sujith <m.sujith@gmail.com>, Sujith <Sujith.Manoharan@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-In-Reply-To: <1ba2fa240810220441o5b86e29co183deb7dc273fb0a@mail.gmail.com> (sfid-20081022_134116_057747_7F7CB0C2)
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	 <1224491480.18024.32.camel@johannes.berg>
-	 <18684.18492.94865.480736@gargle.gargle.HOWL>
-	 <1224493957.18024.47.camel@johannes.berg>
-	 <18684.20459.335157.171344@gargle.gargle.HOWL>
-	 <1224495531.18024.55.camel@johannes.berg>
-	 <18684.24323.743610.871307@gargle.gargle.HOWL>
-	 <1224505349.27899.17.camel@johannes.berg>
-	 <18684.51206.771543.514682@localhost.localdomain>
-	 <1224669612.28639.49.camel@johannes.berg>
-	 <1ba2fa240810220441o5b86e29co183deb7dc273fb0a@mail.gmail.com>
-	 (sfid-20081022_134116_057747_7F7CB0C2)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WJqIHvVbDcJlLYL7CB9x"
-Date: Wed, 22 Oct 2008 19:24:29 +0200
-Message-Id: <1224696269.30459.15.camel@johannes.berg> (sfid-20081022_192442_972164_ED07E70A)
-Mime-Version: 1.0
+	Fri, 10 Oct 2008 12:49:19 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so220405yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 09:49:18 -0700 (PDT)
+Message-ID: <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com> (sfid-20081010_184923_238362_AD8B60BA)
+Date: Fri, 10 Oct 2008 09:49:18 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: New Regulatory Domain Api.
+Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"lrodrigues@atheros.com" <lrodrigues@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1223608949.2510.1061.camel@debian.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
+	 <20081009154547.GB13349@tesla>
+	 <1223608949.2510.1061.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 9, 2008 at 8:22 PM, Zhu Yi <yi.zhu@intel.com> wrote:
+> Does below scenario an expected behaviour?
+>
+> 0. A system with iwl3945 BG card and iwl4965 AGN card.
+> 1. insmod iwl3945 -> regulatory_hint(, 99, rd) return 0;
+> 2. insmod iwl4965 -> regulatory_hint(, 99, rd2) return -EALREADY;
+> 3. iwl4965 has no A band support!
 
---=-WJqIHvVbDcJlLYL7CB9x
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeap. We're going with the regulatory domain the first card specified,
+which we believe would be the built in card. The reason we follow this
+logic right now is you cannot really be in two different places at the
+same time. The real correct behavior here, as the comment also
+indicates, is we should be doing an intersection between the two
+regulatory domains and I sent a RFC on a some initial code I had to
+support such intersection. Until that is not merged we just respect
+first regulatory request.
 
-On Wed, 2008-10-22 at 13:41 +0200, Tomas Winkler wrote:
+Additionally since each device can still support more channels and
+since the driver itself may know better than what the wireless core
+provides you can override information using reg_notifier() (part of
+the wiphy) and you can be picky so that you can try to respect the
+user's request REGDOM_SET_BY_USER so that when they want to be *more*
+compliant you let them. For this reason I advise that if you add a
+reg_notifier() you only override the information if initiator is not
+REGDOM_SET_BY_USER but its up to you of course. This is essentially
+why this regulatory infrastructure allows users to be more compliant.
 
-> >> * mac80211 sends down a frame
-> >>    * Initiate an aggregation session for the <RA,TID> if one isn't alr=
-eady in progress.
-> >
-> > It seems that should be a rate control decision? Possibly taking into
-> > account more than just always doing aggregation sessions. Then again, I
-> > suppose aggregation sessions are cheap. What about latency here?
->=20
-> Aggregation has it's overhead, both computing resources and on the
-> air. Obvious that it has negative affect on latency so if the 'minimum
-> HW queue depth'  is not satisfied the  packets
-> are delayed till the queue is full enough.
+Alternatively you can live with what you have and just let the user
+change the regulatory domain (iw reg set US) and this can enable more
+channels should your driver support these channels on the device
+(registered channels).
 
-That would be "do I have enough frames to aggregate them"?
+So you have a few options here, just keep in mind here the goal is to
+allow the user to help the core be more compliant. By overriding a
+disable of a channel (if you re-enable it) you are not helping the
+user do this.
 
-> In iwl-agn-rs scale we keep track of  current tpt to take decision
-> about starting aggregation. The throughput watch  can be viewed as
-> different entity it was just convenient and conceptually fit  to
-> incorporate into rate scale.
-
-Sure, that kinda makes sense. The RC algorithm is conceptually
-responsible for making sure things go as fast as possible :)
-
-> > Obviously. But why isn't this done in parallel? I mean, why not send ou=
-t
-> > the frame and do addba and don't aggregate until addba was successful,
-> > that would mean no latency for those frames... addba could even time ou=
-t
-> > which would add a lot of latency, no?
->=20
-> The negotiation is done on starting sequence number.
-
-Ah, good point.
-
-johannes
-
---=-WJqIHvVbDcJlLYL7CB9x
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/2HJAAoJEKVg1VMiehFYrVEQALJVVVknYSYVA4lZ3L+wWOJA
-aX+DCpiTXxKazuGXXr841/e6XdfTHVTeR69omsBR/zRua4WXUs/4Vs7KKhegEGpU
-g+GHS1dkpz7sQ7MVi8n7wFnWNbzpmuTKrMZj12Aov2bY+0I9LtFovQeB0LsM1tZq
-2ME01Q8dJvfo+a60yRiE4onr5UEzH44d6Ujs9EXkRsijPhVoV6vUEd9cSfVACSxb
-gH03sa+7bmY3g1A3an+D1eoL2bUQsfGXy1L6rhqjdpxRpI+jJK4E52D7juz2vYt4
-NJZ8doimyOzjc+DdL3ZLE9PeF6+8eLKZfVso66Ztrd63+FsEHoUeR5B5DMzK4uEy
-4AyFxPNBqdp9qSvnyvntCXBjJbRcg4RJjC3PDSD6WSVnhz2ILq4adsQuWFAv3PGW
-/0zZli1g0rvzZW3cUHtx9DNqF6dqIiIfUVRFsTIRbuhTpQI/jh9wgJ/saKNg3pHi
-OU4Ou1Cac7+zSgQm2EYUVVQxCy+8S2rz7Onfsuum8D2BIiWsj170w/0JFv4VTgOw
-7eUEyagIjDNAK4sow4SijHnFtrDYTjDez5dMjq3QiafSlav3mpG38hQV7Iwx5QB8
-3BoCwJvu809HC8+kXC6cqKv0hmYnBnRDAjylXoKUZpjN1y6+xq31BaXr/y2PXdpy
-y+NWGriYZpIhl0rmtZkH
-=tk/j
------END PGP SIGNATURE-----
-
---=-WJqIHvVbDcJlLYL7CB9x--
-
+  Luis
