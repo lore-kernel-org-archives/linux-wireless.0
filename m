@@ -1,94 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fb06-01.mta.terra.com.br ([200.154.152.80]:54427 "EHLO
-	fb06-01.mta.terra.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754009AbYJFDBk (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41106 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762042AbYJJVoT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 23:01:40 -0400
-Received: from sr02-07.mta.terra.com.br (sr02-07.mta.terra.com.br [200.154.152.36])
-	by mirnam.hst.terra.com.br (Postfix) with ESMTP id B764070004591
-	for <linux-wireless@vger.kernel.org>; Mon,  6 Oct 2008 02:39:05 +0000 (UTC)
-Received: from dargo.hst.terra.com.br (dargo.hst.terra.com.br [200.176.10.10])
-	by bundure.hst.terra.com.br (Postfix) with ESMTP id C1D18140001EA
-	for <linux-wireless@vger.kernel.org>; Mon,  6 Oct 2008 02:36:01 +0000 (UTC)
-Received: from [192.168.0.7] (bd2180d5.virtua.com.br [189.33.128.213])
-	(authenticated user piterpk)
-	by dargo.hst.terra.com.br (Postfix) with ESMTP id A94FF25B407E
-	for <linux-wireless@vger.kernel.org>; Mon,  6 Oct 2008 02:36:01 +0000 (UTC)
-Message-ID: <48E979B7.4040000@terra.com.br> (sfid-20081006_050154_995267_B1B2E77E)
-Date: Sun, 05 Oct 2008 23:36:39 -0300
-From: Piter PUNK <piterpk@terra.com.br>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: RTL8187B transmit problems
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 10 Oct 2008 17:44:19 -0400
+Subject: Re: [PATCH] nl80211: export HT capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081010213610.GB20509@tuxdriver.com>
+References: <1223547613.22490.41.camel@johannes.berg>
+	 <20081009085747.GB11530@tesla> <1223630622.17594.0.camel@johannes.berg>
+	 <20081010213610.GB20509@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TsvB04GytQXDZv2lmDiD"
+Date: Fri, 10 Oct 2008 23:44:06 +0200
+Message-Id: <1223675046.29811.0.camel@johannes.berg> (sfid-20081010_234424_083844_D5DA5AB8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Hi,
+--=-TsvB04GytQXDZv2lmDiD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I have two rtl8187b cards. One built in my notebook and one external
-USB wireless dongle from Encore. Both works with the rtl8187 driver
-(thanks Herton! thanks Hin-Tak!) but i still have some problems.
+On Fri, 2008-10-10 at 17:36 -0400, John W. Linville wrote:
+> On Fri, Oct 10, 2008 at 11:23:42AM +0200, Johannes Berg wrote:
+> > On Thu, 2008-10-09 at 01:57 -0700, Luis R. Rodriguez wrote:
+> > > On Thu, Oct 09, 2008 at 03:20:13AM -0700, Johannes Berg wrote:
+> > > > +#define NL80211_BAND_ATTR_HT_CAPA NL80211_BAND_ATTR_HT_CAPA
+> > >=20
+> > > Typo
+> >=20
+> > Hmm? Am I too dense?
+>=20
+> Well, it looks a little useless to define something as itself...
 
-I'm using 2.6.27-rc7 kernel and three problems are very common, but
-intermittent:
+Yeah but you can use that to check "has the nl80211.h I'm compiling
+against defined the HT stuff yet?"
 
-1) I found my network when scan (iwlist wlan0 scan) but i can't
-    associate in the found network.
+johannes
 
-2) I associate in my network but i can't transmit anything.
+--=-TsvB04GytQXDZv2lmDiD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-3) I associate, can transmit but only "small" transmissions. Ping,
-    HTTP GET, POP commands... when i try to upload a file, send a
-    mail, etc... the connection stuck.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-The three problems happens in both rtl8187b cards. I try with two
-different access points to make sure the problem isn't AP related and
-now i am using an rt73usb without problems.
+iQIcBAABAgAGBQJI78yhAAoJEKVg1VMiehFYLhwP/A9YzblpLW2d1qMoni061vZh
+Hz+FR1AnoBn++OOM2tXMoJivOdS59OlXi6pEsqRWT6AdyapCkorFrITFmhqdPRP1
+FomLx4JBRwO4J2hCOmOQwXsyWUfW7TDMZgyiet5Al2mWCmw6gP0ESAy33KvYIXm3
+kM03HG3RkoiREMb/tjfOIBUDBj6vYRP/uz/iXjOTAFGBOUBB34Ib10eriUMh1UTM
+h5bqMuLbqmLhmrl4ETkCvPN2t7DeK81hhQ3CGXyjfBh9HT3+8YeydBgCtKaOfnGT
+r1hdC9Ao35KMoe/FD8RUoxxfFJ/+X+colcHfauNetUVM/S0cwAxUPI3K5ANe7Ex3
+KGnvrFI79AEXyZiR2Mvn8mf1Ecke47Y2jTsj/jwYk2MA1GXbkfEb/3ZB4TQ7ZGpZ
+ieLp1QTX3NJioxcK8KJhJJ96en6mNTamu36bE5hwhLD8rMrU+U5j36n4dSmLfWRI
+gXtWdFLnoRzKP/P8dC10AxTDzamXNZ95GTpgzMnF4tecVqAYA7L/06LqDzdL8keU
+PE7giJkQNgMlCLBuVVYQ+nqOLWWYgbqRTziAb2eOGWi/s4ohak1ZI992kHrwkfkU
+oaTJ0BtiCwn13kIJlYcBIkYqVeJicPgnOm08NZUfA96AY7Em8+QIzj3zMm+m1PHZ
+zg/kc+MktRRzBQIRXSee
+=jQYm
+-----END PGP SIGNATURE-----
 
-Without encryption, the problem 2 isn't noticeable. I don't do
-a lot of tests without encryption enabled, but i can do if you want.
-That's one small example of problem 2:
+--=-TsvB04GytQXDZv2lmDiD--
 
----
-wmaster0  no wireless extensions.
-
-wlan0     IEEE 802.11bg  ESSID:"MyLab"
-           Mode:Managed  Frequency:2.437 GHz  Access Point: 
-00:1D:0F:FB:B4:52
-           Bit Rate=54 Mb/s   Tx-Power=27 dBm
-           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-           Encryption key:XXXX-XXXX-XX   Security mode:open
-           Power Management:off
-           Link Quality=98/100  Signal level:-22 dBm
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-root@cameron:~# ping 192.168.0.1
-PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
- From 192.168.0.7 icmp_seq=41 Destination Host Unreachable
- From 192.168.0.7 icmp_seq=44 Destination Host Unreachable
- From 192.168.0.7 icmp_seq=47 Destination Host Unreachable
-^C
---- 192.168.0.1 ping statistics ---
-47 packets transmitted, 0 received, +3 errors, 100% packet loss, time 
-46041ms
----
-
-If you have any specific tests or patches to apply I'll be
-very happy to try and test them. If you need more information
-to "see" the problem, only need to ask what information you
-need.
-
-Thanks!
-
-Piter PUNK
--- 
-     |        E-Mail: piterpk@terra.com.br        (personal)
-    .|.
-    /V\
-   // \\      UIN:116043354  Homepage:http://piterpunk.info02.com.br
-  /(   )\
-   ^`~'^
-  #105432
