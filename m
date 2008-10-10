@@ -1,53 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43127 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbYJaTqE (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:37599 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753352AbYJJAjQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 15:46:04 -0400
-Date: Fri, 31 Oct 2008 15:35:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Anna Neal <anna@cozybit.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org, Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC] libertas: iwpriv commands to configure fine grained
-	wake-on-(w)lan
-Message-ID: <20081031193504.GF4310@tuxdriver.com> (sfid-20081031_204611_205737_1CB8278A)
-References: <48fe2917.131e640a.7efb.7d0b@mx.google.com> <1224620028.15561.10.camel@localhost.localdomain>
+	Thu, 9 Oct 2008 20:39:16 -0400
+Message-ID: <48EEA432.7000605@lwfinger.net> (sfid-20081010_023918_860720_113EF957)
+Date: Thu, 09 Oct 2008 17:39:14 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1224620028.15561.10.camel@localhost.localdomain>
+To: Christian Lamparter <chunkeey@web.de>
+CC: Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
+References: <48EE20FB.4060700@lwfinger.net> <200810091858.17451.chunkeey@web.de>
+In-Reply-To: <200810091858.17451.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2008 at 04:13:47PM -0400, Dan Williams wrote:
-> On Mon, 2008-10-20 at 16:49 -0700, Anna Neal wrote:
-> > View README for new API.
-> > 
-> > This patch implements the userspace interface for fine-grained configuration of
-> > wake-on-(w)lan.  We are aware that iwpriv's are discouraged, but this is a
-> > vendor-specific feature that's currently being used in the OLPC project.
-> > 
-> > We are aware that all iwprivs were removed from this driver.  These used the old
-> > API for iwprivs.  We've implemented this iwpriv as a private handler which relies
-> > on wireless extensions to do bounds checking and copying to/from user memory.
-> > Specific suggestions on how to make this more palatable for upstream inclusion
-> > are welcome.  If iwprivs are completely unacceptable then this can serve as a
-> > public reference for interfacing with these features.
+Christian Lamparter wrote:
+> On Thursday 09 October 2008 17:19:23 Larry Finger wrote:
+>> Index: wireless-testing/drivers/net/wireless/p54/p54common.h
+>> ===================================================================
+>> --- wireless-testing.orig/drivers/net/wireless/p54/p54common.h
+>> +++ wireless-testing/drivers/net/wireless/p54/p54common.h
+>> @@ -18,7 +18,10 @@
+>>  struct bootrec {
+>>  	__le32 code;
+>>  	__le32 len;
+>> -	u32 data[10];
+>> +	union {
+>> +		u32 data[10];
+>> +		u8 data_char[40];
+>> +	} __attribute__((packed));
+>>  	__le16 rx_mtu;
+>>  } __attribute__((packed));
+>>
+> ? how did rx_mtu end up there? it should be a part of bootrec_desc
+> (which is a few lines down in p54common.h)
+> struct bootrec_desc {
+>         __le16 modes;
+>         __le16 flags;
+>         __le32 rx_start;
+>         __le32 rx_end;
+>         u8 headroom;
+>         u8 tailroom;
+>         u8 unimportant[6];
+>         u8 rates[16];
+> +	__le16 rx_mtu;
+> } __attribute__((packed));
 > 
-> IMHO we should be adding the functionality where's it's needed, which is
-> that ethtool, which doesn't have a verbose enough syntax for it's WOL
-> support.  If ethtool's existing WOL got fixed up to support these
-> use-cases, then we wouldn't need iwpriv commands, we wouldn't have
-> duplicate functionality running around, and everyone gets a pony.  Lets
-> kick off that discussion...
-> 
-> Jeff: could something like this syntax be added to ethtool, or maybe
-> discreet commands instead of one?  Thoughts?
+> This structure is equivalent to struct s_lm_descr from "lmac_longbow.h", which
+> can be found on wireless.kernel.org's resource page.
 
-Did anything come out of this discussion?  I'd prefer not to add new
-iwpriv stuff...
+As the original code got the data from bootrec, I kept it the same. On
+reflection, the statement above could be
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+priv->rx_mtu = le16_to_cpu(desc->rx_mtu);
+
+I think which structure it is in is purely a matter of taste, but I will make
+that change, test it, and submit a new patch. The big-endian fix above will also
+need to be changed. I considered converting to a single struct using unions, but
+that would get pretty messy.
+
+Larry
+
+
+
