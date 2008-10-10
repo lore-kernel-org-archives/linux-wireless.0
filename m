@@ -1,123 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:41101 "EHLO
-	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbYJUTps (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49475 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413AbYJJJPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 15:45:48 -0400
-Date: Tue, 21 Oct 2008 21:40:31 +0200
-From: Pavel Machek <pavel@suse.cz>
-To: jbenc@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
-	i.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: iwl3945: if I leave my machine running overnight, wifi will
-	not work in the morning
-Message-ID: <20081021194031.GB17255@elf.ucw.cz> (sfid-20081021_214553_119607_E7AE54F8)
-References: <20081019214035.GA30485@elf.ucw.cz> <20081019220655.GA1827@elf.ucw.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081019220655.GA1827@elf.ucw.cz>
+	Fri, 10 Oct 2008 05:15:12 -0400
+Subject: Re: [PATCH/RFT] iwlagn: remove pointless TX frame check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240810091308r167b9147p46f74421329a55c1@mail.gmail.com> (sfid-20081009_220831_876301_EA9D5BD1)
+References: <1223547733.22490.43.camel@johannes.berg>
+	 <1ba2fa240810091308r167b9147p46f74421329a55c1@mail.gmail.com>
+	 (sfid-20081009_220831_876301_EA9D5BD1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0GyIulBkEdtLzIpIVHM0"
+Date: Fri, 10 Oct 2008 11:14:49 +0200
+Message-Id: <1223630089.3930.71.camel@johannes.berg> (sfid-20081010_111517_870111_CBA3F26D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 2008-10-20 00:06:55, Pavel Machek wrote:
-> On Sun 2008-10-19 23:40:35, Pavel Machek wrote:
-> > Hi!
-> > 
-> > Kernel 2.6.27-rc8; happened few times already.
-> 
-> ...
-> > After reboot, network will work (I believe ;-).
-> 
-> Hmm, it did not this time.
 
-Happened again...
+--=-0GyIulBkEdtLzIpIVHM0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-root@amd:/mnt# ifconfig wlan0 down
-root@amd:/mnt# iwlist wlan0 scan
-Warning: Driver for device wlan0 has been compiled with version 22
-of Wireless Extension, while this program supports up to version 17.
-Some things may be broken...
+On Thu, 2008-10-09 at 22:08 +0200, Tomas Winkler wrote:
+> On Thu, Oct 9, 2008 at 12:22 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > mac80211 will not send data frames on a STA mode interface
+> > that is not associated because the queue for it is stopped,
+> > and all remaining data frames that might be sent, e.g. by
+> > packet injection, are accepted here anyway, so remove this
+> > pointless check. Also hold the spinlock for less time.
+> >
+> > This will with great probability improve performance in the
+> > driver more than the proper descriptor layout can possibly
+> > cost.
+> >
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > ---
+> > Haven't tested this so far, so RFT, but I'm fairly certain it's correct=
+.
+>=20
+>=20
+> NACK, the completion of association of mac80211 and iwlagn isn't fully
+> synchronized so there is still
+> a race.
 
-wlan0     Interface doesn't support scanning : Network is down
+Can we fix that?
 
-root@amd:/mnt# ifconfig wlan0 10.0.0.6 up
-root@amd:/mnt# iwlist wlan0 scan
-Warning: Driver for device wlan0 has been compiled with version 22
-of Wireless Extension, while this program supports up to version 17.
-Some things may be broken...
+johannes
 
-wlan0     Scan completed :
-          Cell 01 - Address: 00:11:2F:0E:95:A0
-                    ESSID:"pavel"
-                    Mode:Master
-                    Channel:1
-                    Frequency:2.412 GHz (Channel 1)
-                    Quality=95/100  Signal level:-34 dBm  Noise
-level=-68 dBm
-                    Encryption key:off
-                    Bit Rate:1 Mb/s
-                    Bit Rate:2 Mb/s
-                    Bit Rate:5.5 Mb/s
-                    Bit Rate:11 Mb/s
-                    Bit Rate:6 Mb/s
-                    Bit Rate:9 Mb/s
-                    Bit Rate:12 Mb/s
-                    Bit Rate:18 Mb/s
-                    Bit Rate:24 Mb/s
-                    Bit Rate:36 Mb/s
-                    Bit Rate:48 Mb/s
-                    Bit Rate:54 Mb/s
-                    Extra:tsf=000000262894417f
-                    Extra: Last beacon: 76ms ago
+--=-0GyIulBkEdtLzIpIVHM0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-root@amd:/mnt# iwconfig wlan0 essid pavel
-root@amd:/mnt# ping hobit
-PING hobit.ucw.cz (10.0.0.2): 56 data bytes
-^C
---- hobit.ucw.cz ping statistics ---
-4 packets transmitted, 0 packets received, 100% packet loss
-root@amd:/mnt# 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJI7x0FAAoJEKVg1VMiehFYvU8P/R6o5q4yfYtHMo/E3MhwW52A
+2UDAnWhA5SbTxUUIHxHsajnxtg/pUmKjzXXljR4x3LtBZOqEFOxsAK0ZIZNlJu7J
+50hWOvEI5gP51GzvQ3b1JttQqflPfOGgTLVtxcQehL5H5AKpk6se8TPYgD4yEcqx
+yYGm9GHAkRWyv0l6nPxk7u2HDzxqpCvdiyfqZsfFl2snLOsq1WrwRtvgxBy1KQc1
+NUVJLhVpQJKjXxNC9Uk3ZNFNq+/HscWgcc0Z/20QJvawb3Wm0w9X/d/mfSV6g4Bf
+sQnl/DwYOucmHDr/FJ/IEjCD0Vgsc7tEulsGJDEawEtlf+oiZhpOMJH+dLU7LWFi
+wQZ/i+taomBrUaDQD/CK+Us6gobUFd/vFsCEcMpZirJvYQ7icCWYcGOX8rFmU/qc
+Uopj8cKlPzaS6w9opRzoSb6uYktgguXAPtkOR+VM1Rg5Cw2f95bubLkKkPS7Bhqa
+NkirYAVgOkxVg7HcY6XgM7B7q/quOIxDx0elS4aCWMbyX9Ue0V0vVnURBF977iV4
+crWpfiYzppBQDQAZSBSoAKqCo1Tny1RhoRTmYir2/qjwa4D/U7vDliVSV3d+UfOG
+1/XuXCribzACXwSowZY1ZpUSi2mAglIzJbrt6uTQVGr+zVM66xdklMNROYWIWhlj
+5fjzD+HWfL7GdGyxylLF
+=qiJE
+-----END PGP SIGNATURE-----
 
-This time I tried rebooting the AP, but it did not help. dmesg says:
+--=-0GyIulBkEdtLzIpIVHM0--
 
-wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
-range
-wlan0: deauthenticated
-iwl3945 0000:03:00.0: PCI INT A disabled
-iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-iwl3945 0000:03:00.0: restoring config space at offset 0x1 (was
-0x100102, writing 0x100106)
-Registered led device: iwl-phy0:radio
-Registered led device: iwl-phy0:assoc
-Registered led device: iwl-phy0:RX
-Registered led device: iwl-phy0:TX
-wlan0: authenticate with AP 00:11:2f:0e:95:a0
-wlan0: authenticate with AP 00:11:2f:0e:95:a0
-wlan0: authenticated
-wlan0: associate with AP 00:11:2f:0e:95:a0
-wlan0: RX AssocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
-aid=1)
-wlan0: associated
-wlan0: authenticate with AP 00:11:2f:0e:95:a0
-wlan0: authenticated
-wlan0: associate with AP 00:11:2f:0e:95:a0
-wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
-aid=1)
-wlan0: associated
-wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
-range
-wlan0: authenticate with AP 00:11:2f:0e:95:a0
-wlan0: authenticated
-wlan0: associate with AP 00:11:2f:0e:95:a0
-wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
-aid=1)
-wlan0: associated
-root@amd:/mnt# 
-
-
-									Pavel
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
