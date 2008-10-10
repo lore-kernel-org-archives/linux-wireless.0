@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:57812 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbYJTIzq (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:50183 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759233AbYJJR51 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 04:55:46 -0400
-Received: by gxk9 with SMTP id 9so3328799gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 01:55:45 -0700 (PDT)
-Message-ID: <43e72e890810200155wbe01660xe3f53de80dc7357d@mail.gmail.com> (sfid-20081020_105549_875820_82243382)
-Date: Mon, 20 Oct 2008 01:55:45 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"tomasw@gmail.com" <tomasw@gmail.com>
-In-Reply-To: <18684.17816.702853.44986@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	 <1224491480.18024.32.camel@johannes.berg>
-	 <43e72e890810200135o1581c904i456a35298f8a56a9@mail.gmail.com>
-	 <1224492335.18024.34.camel@johannes.berg>
-	 <18684.17816.702853.44986@gargle.gargle.HOWL>
+	Fri, 10 Oct 2008 13:57:27 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>
+Subject: [PATCH 1/1] Ath9k: fix uninitialized value in ath9k_hw_reset
+Date: Fri, 10 Oct 2008 19:56:43 +0200
+Message-Id: <1223661403-21803-1-git-send-email-jirislaby@gmail.com> (sfid-20081010_195753_205622_513260DD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 1:47 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> Johannes Berg wrote:
->  > On Mon, 2008-10-20 at 01:35 -0700, Luis R. Rodriguez wrote:
->  >
->  > > >> + *   @is_part_ampdu: set to indicate that the wireless core should should
->  > > >> + *           treat this frame as part of an AMPDU
->  > > >
->  > > > I thought we said we could keep the flag instead of moving to the skb
->  > > > here?
->  > >
->  > > That was just because the changes required to add this was too much
->  > > for 2.6.27 but since we don't care about this fix in 2.6.27 we can do
->  > > whatever is needed to fix this properly.
->  >
->  > Right, but adding random stuff into skb isn't really "properly" imho.
->  > And we don't really need this afaict.
->  >
->
-> Sorry, just saw that Tomas had fixed it by setting the flag in ieee80211_tx_h_sequence().
-> Will fix that.
+status ath9k_hw_reset() parameter should be set in every case, since
+it is used in callers to find out an error code.
 
-No that was a hack too, this was to minimize code changes for 2.6.27 as well.
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
+Cc: Jouni Malinen <jmalinen@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 62e44a0..fb6727b 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -5893,7 +5893,7 @@ bool ath9k_hw_reset(struct ath_hal *ah,
+ 	}
+ 
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+-		return false;
++		FAIL(-EIO);
+ 
+ 	if (curchan)
+ 		ath9k_hw_getnf(ah, curchan);
+-- 
+1.6.0.2
+
