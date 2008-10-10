@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:26787 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbYJRXau (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55651 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762361AbYJJTkx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2008 19:30:50 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1246476wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Oct 2008 16:30:50 -0700 (PDT)
-Message-ID: <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com> (sfid-20081019_013054_664588_D8F12A2E)
-Date: Sun, 19 Oct 2008 01:30:50 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Dominik Brodowski" <linux@dominikbrodowski.net>,
-	"reinette chatre" <reinette.chatre@intel.com>
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20081018231046.GA10977@isilmar.linta.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081018231046.GA10977@isilmar.linta.de>
+	Fri, 10 Oct 2008 15:40:53 -0400
+Subject: Re: [PATCH 1/2] ath9k: remove nasty FAIL macro from
+	ath9k_hw_reset()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1223641374-11872-1-git-send-email-lrodriguez@atheros.com> (sfid-20081010_212312_563798_A4C0EE32)
+References: <1223641374-11872-1-git-send-email-lrodriguez@atheros.com>
+	 (sfid-20081010_212312_563798_A4C0EE32)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jKxVN7kGEzM3VF+ih2JL"
+Date: Fri, 10 Oct 2008 21:40:49 +0200
+Message-Id: <1223667649.3748.38.camel@johannes.berg> (sfid-20081010_214057_357213_075C5DDF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 19, 2008 at 1:10 AM, Dominik Brodowski
-<linux@dominikbrodowski.net> wrote:
-> Hi,
->
-> with current Linus' tree, I cannot connet my notebook to the AP any more.
->
-> 02:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG Network Connection (rev 02)
->        Subsystem: Intel Corporation PRO/Wireless 3945ABG Network Connection
->        Flags: bus master, fast devsel, latency 0, IRQ 380
->        Memory at f0300000 (32-bit, non-prefetchable) [size=4K]
->
-> [   20.645198] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26ks
-> [   20.645337] iwl3945: Copyright(c) 2003-2008 Intel Corporation
-> [   20.645767] iwl3945 0000:02:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-> [   20.645913] iwl3945 0000:02:00.0: setting latency timer to 64
-> [   20.645996] iwl3945: Detected Intel Wireless WiFi Link 3945ABG
-> [   20.708706] iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-> [   20.712625] phy0: Selected rate control algorithm 'iwl-3945-rs'
-> [   20.733199] iwl3945 0000:02:00.0: PCI INT A disabled
-> ...
-> [   34.824476] iwl3945 0000:02:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-> [   34.824637] iwl3945 0000:02:00.0: restoring config space at offset 0x1 (was 0x100102, writing 0x100106)
-> [   34.825269] iwl3945 0000:02:00.0: firmware: requesting iwlwifi-3945-1.ucode
-> [   37.340901] iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> [   37.340944] iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4413 ser 0x0000004B
-> [   37.342349] iwl3945: Can't stop Rx DMA.
->
-> The iwlwifi-3945-1.ucode is the one shipped with Ubuntu's 2.6.24-21-generic
-> kernel sources (md5sum: 26d10014b09439dc5a8573c2a6f85b0a ). And, as
-> mentioned in the subject, 2.6.27 or 2.6.26 work perfectly fine.
 
-I think you need new uCode, the API has changed to support stealth APs
-.... I believe there was
-some misscommunication...
-Tomas
+--=-jKxVN7kGEzM3VF+ih2JL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2008-10-10 at 05:22 -0700, Luis R. Rodriguez wrote:
+
+>  	ecode =3D ath9k_hw_process_ini(ah, chan, macmode);
+> -	if (ecode !=3D 0)
+> +	if (ecode !=3D 0) {
+> +		ecode =3D -EINVAL;
+>  		goto bad;
+
+didn't this actually want to pass up ecode?
+
+johannes
+
+--=-jKxVN7kGEzM3VF+ih2JL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI76++AAoJEKVg1VMiehFYBdEP/02J2XYdMvKBWCgdXyudFXfX
+x+6eJg+1ch74x2c6Zkg5u3uMnzvQ24XDGQes0epi+ARTa0iiEQNin4KOJ1S1QhQJ
+m5xsL6Ok052NpjWzyeJVjU9aWfsHbovFvioXQ6Qaz+jagG2+2fWHNhAsNLkyqbsW
+B7OCgX+8LEOpc2NTHOcGWWSH1G+ted4oFOGbg97ouf5Ua87EKdUr8+et1hVEpd4M
+NSf/RGuWPHY2F8EecOqYHd4JzvM2w9+jz+8oYSLCrtul3wgCkEAXHqXID0wdDnWh
+sJUcOGod93Lj4TviMdEXjcliMJ1LGcxGcNuUbpfcDej+x3+nKXgoWRFv3zcll/rz
+GDO4wWJ4NrtKK30EjDUcO/Y09afpgy13USr+ILWv+RKB4Qd2gNFaBJmq0YF4iIOf
+Zio0qcvp84fdqcxsJMe6dEHY9r3ZkJMP4zyHnfinc/mDYHccb1Fy83KRYtIPyRah
+LDws9Z0Pve3UMwHEuNgtMmFA0A3uzYgg2+GdUh2NFfWdYMYczNIStCZPekKzS4sE
+fHz7IyZc84Yv6SQganVkwP+LGOC7Uj1hiBtinJA7JcDgAw/gcFK4dLhCYg/Q7SDV
+hfMZ1p12XNKCXLAWmYa6/+A0V3iFj9FVSW6IOyd95xF5/y/0+Rm7/Bygc4F4C+VW
+9uhSu2mFEeZI0n4zOzGj
+=ZSMS
+-----END PGP SIGNATURE-----
+
+--=-jKxVN7kGEzM3VF+ih2JL--
+
