@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46579
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751438AbYJPHhH (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:3087 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758815AbYJJVZN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 03:37:07 -0400
-Date: Thu, 16 Oct 2008 00:36:44 -0700 (PDT)
-Message-Id: <20081016.003644.74134312.davem@davemloft.net> (sfid-20081016_093715_287394_BCA31D0B)
-To: geert@linux-m68k.org
-Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
-	ralf@linux-mips.org, mchehab@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org
-Subject: Re: powerpc allmodconfig
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <Pine.LNX.4.64.0810160930300.25933@anakin>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
-	<20081015.220247.262683261.davem@davemloft.net>
-	<Pine.LNX.4.64.0810160930300.25933@anakin>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 10 Oct 2008 17:25:13 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so770643rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 14:25:12 -0700 (PDT)
+Message-ID: <78a2adce0810101425m3a96cfa5pe07cb534e6869d86@mail.gmail.com> (sfid-20081010_232523_133127_E72E70F4)
+Date: Fri, 10 Oct 2008 23:25:12 +0200
+From: "Thomas d'Otreppe" <tdotreppe@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iw packaging
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1221694929.7412.24.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1221596962.9262.12.camel@johannes.berg>
+	 <1221668590.6782.10.camel@californication>
+	 <1221669826.3217.1.camel@localhost>
+	 <1221674779.7412.0.camel@localhost>
+	 <1221694596.6782.15.camel@californication>
+	 <1221694929.7412.24.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Thu, 16 Oct 2008 09:31:29 +0200 (CEST)
+Hi Johannes,
 
-> On Wed, 15 Oct 2008, David Miller wrote:
-> > > kernel/resource.c: In function '__reserve_region_with_split':
-> > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'resource_size_t'
-> > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 4 has type 'resource_size_t'
-> > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'resource_size_t'
-> > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 7 has type 'resource_size_t'
-> > 
-> > Known issue, Ben wants to add a new variant of %pX in order to print resources so that
-> > resource_size_t vs. unsigned long stuff doesn't matter like this any more.
-> 
-> Will still give a warning, as resource_size_t is not a pointer.
+I talked to Stefanik G=E1bor some time ago and we came to the conclusio=
+n
+that we can now get rid of our version of iw and use yours. Excuse me
+for the late answer, I have been quite busy these days (and still
+busy). I don't have a specific date for removal but it will be done
+for aircrack-ng 1.0 (final).
 
-The idea is to pass in a pointer to the resource struct,
-and the %pX variant specified says what part to print.
+Regards,
+
+Thomas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
