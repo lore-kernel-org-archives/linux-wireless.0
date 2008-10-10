@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:62189 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831AbYJ2XpU (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:48387 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760289AbYJJTAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 19:45:20 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so254634wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 16:45:19 -0700 (PDT)
-Message-ID: <1ba2fa240810291645n3c90161brb70c76b12d514f52@mail.gmail.com> (sfid-20081030_004526_417943_9299E40F)
-Date: Thu, 30 Oct 2008 01:45:19 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "reinette chatre" <reinette.chatre@intel.com>
-Subject: Re: Still 4965 issues with wireless-testing
-Cc: "Marcel Holtmann" <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225321298.1115.309.camel@rc-desk>
+	Fri, 10 Oct 2008 15:00:18 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so237240yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 12:00:17 -0700 (PDT)
+Message-ID: <43e72e890810101200g3f50b204t20ea782878217369@mail.gmail.com> (sfid-20081010_210026_379003_32320103)
+Date: Fri, 10 Oct 2008 12:00:17 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 1/1] Ath9k: fix uninitialized value in ath9k_hw_reset
+Cc: jirislaby@gmail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jmalinen@atheros.com
+In-Reply-To: <20081010.115318.85254002.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com>
-	 <1225321298.1115.309.camel@rc-desk>
+Content-Type: text/plain; charset=UTF-8
+References: <1223661403-21803-1-git-send-email-jirislaby@gmail.com>
+	 <20081010.115318.85254002.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 30, 2008 at 1:01 AM, reinette chatre
-<reinette.chatre@intel.com> wrote:
-> On Wed, 2008-10-29 at 14:33 -0700, Marcel Holtmann wrote:
->> Hi guys,
->>
->> so besides the point that the Ubuntu 8.10 kernel has a broken driver
->> for the Intel 4965 cards which will crash my X61 after less than one
->> minute uptime when it connects to my access point, I have my dmesg
->> full with warnings from the latest wireless-testing kernel.
->>
->> I know that we have discussed this before and Johannes' patch at least
->> turns it into warnings instead of killing my system completely, but I
->> am still surprised why this hasn't been fixed.
->>
->> Attached is one of the dmesg snippets. They occur multiple times per
->> minute.
+On Fri, Oct 10, 2008 at 11:53 AM, David Miller <davem@davemloft.net> wrote:
+> From: Jiri Slaby <jirislaby@gmail.com>
+> Date: Fri, 10 Oct 2008 19:56:43 +0200
 >
-> Could you please compare your testing with that done in
-> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703 ?
+>> status ath9k_hw_reset() parameter should be set in every case, since
+>> it is used in callers to find out an error code.
+>>
+>> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+>> Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> Cc: Jouni Malinen <jmalinen@atheros.com>
+>> ---
+>>  drivers/net/wireless/ath9k/hw.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+>> index 62e44a0..fb6727b 100644
+>> --- a/drivers/net/wireless/ath9k/hw.c
+>> +++ b/drivers/net/wireless/ath9k/hw.c
+>> @@ -5893,7 +5893,7 @@ bool ath9k_hw_reset(struct ath_hal *ah,
+>>       }
+>>
+>>       if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+>> -             return false;
+>> +             FAIL(-EIO);
+>>
+>
+> This fix may be correct, but this is the first time I've noticed
+> these error status updating macros and they are super ugly.
+>
+> I really think they should be removed.  Someone casually scanning
+> this code won't be able to discern the side effects and that makes
+> auditing harder and more error prone.
 
-Strange I haven't seen this one for while
-txq_id = 31 (0x1f)
-Which is due to
- SEQ_TO_QUEUE(s)     (((s) >> 8) & 0x1f)
-We should dump the whole RXB there to see what is there and open full RX log
-which is bit 24 in the log level
-Thanks
-Tomas
+Agreed, patches welcomed.
+
+  Luis
