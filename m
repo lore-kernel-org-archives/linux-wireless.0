@@ -1,80 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41751 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:58780 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755089AbYJMRcc (ORCPT
+	with ESMTP id S1751791AbYJJJXq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 13:32:32 -0400
-Subject: [PATCH] ath9k/mac80211: disallow fragmentation in ath9k, report to
-	userspace
+	Fri, 10 Oct 2008 05:23:46 -0400
+Subject: Re: [PATCH] nl80211: export HT capabilities
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain
-Date: Mon, 13 Oct 2008 13:35:05 +0200
-Message-Id: <1223897706.24954.6.camel@johannes.berg> (sfid-20081013_193237_120204_98D894FC)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081009085747.GB11530@tesla>
+References: <1223547613.22490.41.camel@johannes.berg>
+	 <20081009085747.GB11530@tesla>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Us9l/KRu4GGM/nx8xMCl"
+Date: Fri, 10 Oct 2008 11:23:42 +0200
+Message-Id: <1223630622.17594.0.camel@johannes.berg> (sfid-20081010_112349_504253_A0D7BA19)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As I've reported, ath9k currently fails utterly when fragmentation
-is enabled. This makes ath9k "support" hardware fragmentation by
-not supporting fragmentation at all to avoid the double-free issue.
-The patch also changes mac80211 to report errors from the driver
-operation to userspace.
 
-That hack in ath9k should be removed once the rate control algorithm
-it has is fixed, and we can at that time consider removing the hw
-fragmentation support entirely since it's not used by any driver.
+--=-Us9l/KRu4GGM/nx8xMCl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: stable@kernel.org
----
-This is most likely the only appropriate bandaid for -stable since RC
-rework will probably build on our RC rate API changes. For 2.6.28, the
-RC rework will also not go in, but some RC rework has gone in, so it
-seems that unfortunately you'll have to fix ath9k twice, once for .28
-and once for .29, unless you want to stick to this patch in .28 as well.
+On Thu, 2008-10-09 at 01:57 -0700, Luis R. Rodriguez wrote:
+> On Thu, Oct 09, 2008 at 03:20:13AM -0700, Johannes Berg wrote:
+> > +#define NL80211_BAND_ATTR_HT_CAPA NL80211_BAND_ATTR_HT_CAPA
+>=20
+> Typo
 
- drivers/net/wireless/ath9k/main.c |    8 +++++++-
- net/mac80211/wext.c               |    2 +-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+Hmm? Am I too dense?
 
---- everything.orig/drivers/net/wireless/ath9k/main.c	2008-10-13 13:25:59.000000000 +0200
-+++ everything/drivers/net/wireless/ath9k/main.c	2008-10-13 13:28:08.000000000 +0200
-@@ -1633,6 +1633,11 @@ static int ath9k_ampdu_action(struct iee
- 	return ret;
- }
- 
-+static int ath9k_no_fragmentation(struct ieee80211_hw *hw, u32 value)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
- static struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -1656,7 +1661,8 @@ static struct ieee80211_ops ath9k_ops = 
- 	.get_tsf 	    = ath9k_get_tsf,
- 	.reset_tsf 	    = ath9k_reset_tsf,
- 	.tx_last_beacon     = NULL,
--	.ampdu_action       = ath9k_ampdu_action
-+	.ampdu_action       = ath9k_ampdu_action,
-+	.set_frag_threshold = ath9k_no_fragmentation,
- };
- 
- static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
---- everything.orig/net/mac80211/wext.c	2008-10-13 13:28:17.000000000 +0200
-+++ everything/net/mac80211/wext.c	2008-10-13 13:28:25.000000000 +0200
-@@ -771,7 +771,7 @@ static int ieee80211_ioctl_siwfrag(struc
- 	 * configure it here */
- 
- 	if (local->ops->set_frag_threshold)
--		local->ops->set_frag_threshold(
-+		return local->ops->set_frag_threshold(
- 			local_to_hw(local),
- 			local->fragmentation_threshold);
- 
+johannes
 
+--=-Us9l/KRu4GGM/nx8xMCl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI7x8bAAoJEKVg1VMiehFY18EP/RqlBsgcX5MDTPPb6BznXF8w
+kNapJtqQZ7DSuL7Ay3h35xieco8QPdEZ86xx8zu6vcZwJSQgyPJEvZ7INQYGwZMf
+XqmDNNTHykA6WVvmkYql2TO9CJ7tMeJR3IqrJGM5Jbu0CZIIukB5kY/VvmvNZSfp
+VWj/VcsPP1V5ps54LY/9gicM+K2VV9wWkUAKzx/nUtGapTxaeLvFzJUCkzs7y3bW
+kMDAAKatrXBtxteO72Wm14tyeHPlZPBEkBomnQf+TspebL2Z8hgRt70ghpjjbGMr
+Qs/8Jcg19uBZk9Rg+EQTbsGtpg3XnpEGcJoDmsnEVsmCsY3/tnoOiISUl/QTacW6
+lsXasWo4momcFbXBqgutsLv28UUWbeBawidykmQOGvKqNJ9n47sLR4jGEq+SW7pO
+QtffdqzHzGGJE/+5ObdFP02/hkSWPYTmICLZkUOiUUYYB4HQYUa8g7zAkJEsoVR1
+NCNKV8Mo96caqHNaoVaiq5lUNU5IDHL3CkU0u55bayxJI/fdQwLwsoxW/HTXlm59
+4AjBdrscb/Ovfkq9gUrjb/GUDAvMsYIArX/tX5fL+EyL3OtuXadCcyuzHzEHjq7q
+2VgW/sgKxk7+9dvm4e8ExRwCeWSivFMk0zW5VW9EamrT7awRZyU3XOf2lR1gVvF4
+ueY1ChuAeyfSwO1U3CsB
+=RluS
+-----END PGP SIGNATURE-----
+
+--=-Us9l/KRu4GGM/nx8xMCl--
 
