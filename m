@@ -1,116 +1,320 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34068 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38731 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbYJUHmn (ORCPT
+	with ESMTP id S1753464AbYJJXvx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 03:42:43 -0400
-Subject: [PATCH] wireless: don't publish __regulatory_hint
+	Fri, 10 Oct 2008 19:51:53 -0400
+Subject: [PATCH] mac80211: move bss_conf into vif
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Tue, 21 Oct 2008 09:42:38 +0200
-Message-Id: <1224574958.27899.96.camel@johannes.berg> (sfid-20081021_094246_965480_598913E9)
+Date: Sat, 11 Oct 2008 01:51:51 +0200
+Message-Id: <1223682711.29811.7.camel@johannes.berg> (sfid-20081011_015157_445211_A8F2FD1F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function requires an internal lock to be held, so it cannot
-be published to other modules in the kernel.
+Move bss_conf into the vif struct so that drivers can
+access it during ->tx without having to store it in
+the private data or similar. No driver updates because
+this is only for when they want to start using it.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- include/net/wireless.h |   37 +++++++++----------------------------
- net/wireless/reg.h     |   28 ++++++++++++++++++++++++++++
- 2 files changed, 37 insertions(+), 28 deletions(-)
+ include/net/mac80211.h        |    3 +++
+ net/mac80211/cfg.c            |    6 +++---
+ net/mac80211/debugfs_netdev.c |    2 +-
+ net/mac80211/ieee80211_i.h    |    3 ---
+ net/mac80211/iface.c          |    2 +-
+ net/mac80211/main.c           |    8 ++++----
+ net/mac80211/mlme.c           |   30 +++++++++++++++---------------
+ net/mac80211/tx.c             |   16 ++++++++--------
+ net/mac80211/util.c           |    6 +++---
+ 9 files changed, 38 insertions(+), 38 deletions(-)
 
---- everything.orig/include/net/wireless.h	2008-10-21 09:25:18.000000000 +0200
-+++ everything/include/net/wireless.h	2008-10-21 09:40:14.000000000 +0200
-@@ -344,33 +344,6 @@ ieee80211_get_channel(struct wiphy *wiph
+--- everything.orig/include/net/mac80211.h	2008-10-11 01:46:05.000000000 +0200
++++ everything/include/net/mac80211.h	2008-10-11 01:46:29.000000000 +0200
+@@ -519,11 +519,14 @@ struct ieee80211_conf {
+  * use during the life of a virtual interface.
+  *
+  * @type: type of this virtual interface
++ * @bss_conf: BSS configuration for this interface, either our own
++ *	or the BSS we're associated to
+  * @drv_priv: data area for driver use, will always be aligned to
+  *	sizeof(void *).
+  */
+ struct ieee80211_vif {
+ 	enum nl80211_iftype type;
++	struct ieee80211_bss_conf bss_conf;
+ 	/* must be last */
+ 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
+ };
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-10-11 01:46:05.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-10-11 01:46:29.000000000 +0200
+@@ -440,9 +440,6 @@ struct ieee80211_sub_if_data {
+ 
+ 	u16 sequence_number;
+ 
+-	/* BSS configuration for this interface. */
+-	struct ieee80211_bss_conf bss_conf;
+-
+ 	/*
+ 	 * AP this belongs to: self in AP mode and
+ 	 * corresponding AP in VLAN mode, NULL for
+--- everything.orig/net/mac80211/main.c	2008-10-11 01:46:05.000000000 +0200
++++ everything/net/mac80211/main.c	2008-10-11 01:46:29.000000000 +0200
+@@ -249,15 +249,15 @@ void ieee80211_bss_info_change_notify(st
+ 	if (local->ops->bss_info_changed)
+ 		local->ops->bss_info_changed(local_to_hw(local),
+ 					     &sdata->vif,
+-					     &sdata->bss_conf,
++					     &sdata->vif.bss_conf,
+ 					     changed);
  }
  
- /**
-- * __regulatory_hint - hint to the wireless core a regulatory domain
-- * @wiphy: if a driver is providing the hint this is the driver's very
-- * 	own &struct wiphy
-- * @alpha2: the ISO/IEC 3166 alpha2 being claimed the regulatory domain
-- * 	should be in. If @rd is set this should be NULL
-- * @rd: a complete regulatory domain, if passed the caller need not worry
-- * 	about freeing it
-- *
-- * The Wireless subsystem can use this function to hint to the wireless core
-- * what it believes should be the current regulatory domain by
-- * giving it an ISO/IEC 3166 alpha2 country code it knows its regulatory
-- * domain should be in or by providing a completely build regulatory domain.
-- *
-- * Returns -EALREADY if *a regulatory domain* has already been set. Note that
-- * this could be by another driver. It is safe for drivers to continue if
-- * -EALREADY is returned, if drivers are not capable of world roaming they
-- * should not register more channels than they support. Right now we only
-- * support listening to the first driver hint. If the driver is capable
-- * of world roaming but wants to respect its own EEPROM mappings for
-- * specific regulatory domains it should register the @reg_notifier callback
-- * on the &struct wiphy. Returns 0 if the hint went through fine or through an
-- * intersection operation. Otherwise a standard error code is returned.
-- *
-- */
--extern int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
--		const char *alpha2, struct ieee80211_regdomain *rd);
--/**
-  * regulatory_hint - driver hint to the wireless core a regulatory domain
-  * @wiphy: the driver's very own &struct wiphy
-  * @alpha2: the ISO/IEC 3166 alpha2 the driver claims its regulatory domain
-@@ -391,7 +364,15 @@ extern int __regulatory_hint(struct wiph
-  * the wireless core it is unknown. If you pass a built regulatory domain
-  * and we return non zero you are in charge of kfree()'ing the structure.
-  *
-- * See __regulatory_hint() documentation for possible return values.
-+ * Returns -EALREADY if *a regulatory domain* has already been set. Note that
-+ * this could be by another driver. It is safe for drivers to continue if
-+ * -EALREADY is returned, if drivers are not capable of world roaming they
-+ * should not register more channels than they support. Right now we only
-+ * support listening to the first driver hint. If the driver is capable
-+ * of world roaming but wants to respect its own EEPROM mappings for
-+ * specific regulatory domains it should register the @reg_notifier callback
-+ * on the &struct wiphy. Returns 0 if the hint went through fine or through an
-+ * intersection operation. Otherwise a standard error code is returned.
-  */
- extern int regulatory_hint(struct wiphy *wiphy,
- 		const char *alpha2, struct ieee80211_regdomain *rd);
---- everything.orig/net/wireless/reg.h	2008-10-21 09:40:19.000000000 +0200
-+++ everything/net/wireless/reg.h	2008-10-21 09:40:30.000000000 +0200
-@@ -10,4 +10,32 @@ void regulatory_exit(void);
+ u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata)
+ {
+-	sdata->bss_conf.use_cts_prot = false;
+-	sdata->bss_conf.use_short_preamble = false;
+-	sdata->bss_conf.use_short_slot = false;
++	sdata->vif.bss_conf.use_cts_prot = false;
++	sdata->vif.bss_conf.use_short_preamble = false;
++	sdata->vif.bss_conf.use_short_slot = false;
+ 	return BSS_CHANGED_ERP_CTS_PROT |
+ 	       BSS_CHANGED_ERP_PREAMBLE |
+ 	       BSS_CHANGED_ERP_SLOT;
+--- everything.orig/net/mac80211/iface.c	2008-10-11 01:46:05.000000000 +0200
++++ everything/net/mac80211/iface.c	2008-10-11 01:46:29.000000000 +0200
+@@ -695,7 +695,7 @@ int ieee80211_if_change_type(struct ieee
+ 	ieee80211_setup_sdata(sdata, type);
  
- int set_regdom(const struct ieee80211_regdomain *rd);
+ 	/* reset some values that shouldn't be kept across type changes */
+-	sdata->bss_conf.basic_rates =
++	sdata->vif.bss_conf.basic_rates =
+ 		ieee80211_mandatory_rates(sdata->local,
+ 			sdata->local->hw.conf.channel->band);
+ 	sdata->drop_unencrypted = 0;
+--- everything.orig/net/mac80211/mlme.c	2008-10-11 01:46:05.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-10-11 01:46:29.000000000 +0200
+@@ -572,7 +572,7 @@ static void ieee80211_sta_wmm_params(str
+ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+ 					   u16 capab, bool erp_valid, u8 erp)
+ {
+-	struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
++	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 	DECLARE_MAC_BUF(mac);
+@@ -720,9 +720,9 @@ static void ieee80211_set_associated(str
+ 				   ifsta->ssid, ifsta->ssid_len);
+ 	if (bss) {
+ 		/* set timing information */
+-		sdata->bss_conf.beacon_int = bss->beacon_int;
+-		sdata->bss_conf.timestamp = bss->timestamp;
+-		sdata->bss_conf.dtim_period = bss->dtim_period;
++		sdata->vif.bss_conf.beacon_int = bss->beacon_int;
++		sdata->vif.bss_conf.timestamp = bss->timestamp;
++		sdata->vif.bss_conf.dtim_period = bss->dtim_period;
  
-+/**
-+ * __regulatory_hint - hint to the wireless core a regulatory domain
-+ * @wiphy: if a driver is providing the hint this is the driver's very
-+ * 	own &struct wiphy
-+ * @alpha2: the ISO/IEC 3166 alpha2 being claimed the regulatory domain
-+ * 	should be in. If @rd is set this should be NULL
-+ * @rd: a complete regulatory domain, if passed the caller need not worry
-+ * 	about freeing it
-+ *
-+ * The Wireless subsystem can use this function to hint to the wireless core
-+ * what it believes should be the current regulatory domain by
-+ * giving it an ISO/IEC 3166 alpha2 country code it knows its regulatory
-+ * domain should be in or by providing a completely build regulatory domain.
-+ *
-+ * Returns -EALREADY if *a regulatory domain* has already been set. Note that
-+ * this could be by another driver. It is safe for drivers to continue if
-+ * -EALREADY is returned, if drivers are not capable of world roaming they
-+ * should not register more channels than they support. Right now we only
-+ * support listening to the first driver hint. If the driver is capable
-+ * of world roaming but wants to respect its own EEPROM mappings for
-+ * specific regulatory domains it should register the @reg_notifier callback
-+ * on the &struct wiphy. Returns 0 if the hint went through fine or through an
-+ * intersection operation. Otherwise a standard error code is returned.
-+ *
-+ */
-+extern int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
-+		const char *alpha2, struct ieee80211_regdomain *rd);
-+
- #endif  /* __NET_WIRELESS_REG_H */
+ 		changed |= ieee80211_handle_bss_capability(sdata,
+ 			bss->capability, bss->has_erp_value, bss->erp_value);
+@@ -732,9 +732,9 @@ static void ieee80211_set_associated(str
+ 
+ 	if (conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE) {
+ 		changed |= BSS_CHANGED_HT;
+-		sdata->bss_conf.assoc_ht = 1;
+-		sdata->bss_conf.ht_cap = &conf->ht_cap;
+-		sdata->bss_conf.ht_bss_conf = &conf->ht_bss_conf;
++		sdata->vif.bss_conf.assoc_ht = 1;
++		sdata->vif.bss_conf.ht_cap = &conf->ht_cap;
++		sdata->vif.bss_conf.ht_bss_conf = &conf->ht_bss_conf;
+ 	}
+ 
+ 	ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
+@@ -744,7 +744,7 @@ static void ieee80211_set_associated(str
+ 	ifsta->last_probe = jiffies;
+ 	ieee80211_led_assoc(local, 1);
+ 
+-	sdata->bss_conf.assoc = 1;
++	sdata->vif.bss_conf.assoc = 1;
+ 	/*
+ 	 * For now just always ask the driver to update the basic rateset
+ 	 * when we have associated, we aren't checking whether it actually
+@@ -853,15 +853,15 @@ static void ieee80211_set_disassoc(struc
+ 	ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
+ 	changed |= ieee80211_reset_erp_info(sdata);
+ 
+-	if (sdata->bss_conf.assoc_ht)
++	if (sdata->vif.bss_conf.assoc_ht)
+ 		changed |= BSS_CHANGED_HT;
+ 
+-	sdata->bss_conf.assoc_ht = 0;
+-	sdata->bss_conf.ht_cap = NULL;
+-	sdata->bss_conf.ht_bss_conf = NULL;
++	sdata->vif.bss_conf.assoc_ht = 0;
++	sdata->vif.bss_conf.ht_cap = NULL;
++	sdata->vif.bss_conf.ht_bss_conf = NULL;
+ 
+ 	ieee80211_led_assoc(local, 0);
+-	sdata->bss_conf.assoc = 0;
++	sdata->vif.bss_conf.assoc = 0;
+ 
+ 	ieee80211_sta_send_apinfo(sdata, ifsta);
+ 
+@@ -1194,7 +1194,7 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	u64 rates, basic_rates;
+ 	u16 capab_info, status_code, aid;
+ 	struct ieee802_11_elems elems;
+-	struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
++	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
+ 	u8 *pos;
+ 	int i, j;
+ 	DECLARE_MAC_BUF(mac);
+@@ -1337,7 +1337,7 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	}
+ 
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+-	sdata->bss_conf.basic_rates = basic_rates;
++	sdata->vif.bss_conf.basic_rates = basic_rates;
+ 
+ 	/* cf. IEEE 802.11 9.2.12 */
+ 	if (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ &&
+--- everything.orig/net/mac80211/cfg.c	2008-10-11 01:46:05.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-10-11 01:46:29.000000000 +0200
+@@ -966,16 +966,16 @@ static int ieee80211_change_bss(struct w
+ 		return -EINVAL;
+ 
+ 	if (params->use_cts_prot >= 0) {
+-		sdata->bss_conf.use_cts_prot = params->use_cts_prot;
++		sdata->vif.bss_conf.use_cts_prot = params->use_cts_prot;
+ 		changed |= BSS_CHANGED_ERP_CTS_PROT;
+ 	}
+ 	if (params->use_short_preamble >= 0) {
+-		sdata->bss_conf.use_short_preamble =
++		sdata->vif.bss_conf.use_short_preamble =
+ 			params->use_short_preamble;
+ 		changed |= BSS_CHANGED_ERP_PREAMBLE;
+ 	}
+ 	if (params->use_short_slot_time >= 0) {
+-		sdata->bss_conf.use_short_slot =
++		sdata->vif.bss_conf.use_short_slot =
+ 			params->use_short_slot_time;
+ 		changed |= BSS_CHANGED_ERP_SLOT;
+ 	}
+--- everything.orig/net/mac80211/debugfs_netdev.c	2008-10-11 01:46:05.000000000 +0200
++++ everything/net/mac80211/debugfs_netdev.c	2008-10-11 01:46:29.000000000 +0200
+@@ -120,7 +120,7 @@ static ssize_t ieee80211_if_fmt_flags(
+ 		 sdata->u.sta.flags & IEEE80211_STA_AUTHENTICATED ? "AUTH\n" : "",
+ 		 sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED ? "ASSOC\n" : "",
+ 		 sdata->u.sta.flags & IEEE80211_STA_PROBEREQ_POLL ? "PROBEREQ POLL\n" : "",
+-		 sdata->bss_conf.use_cts_prot ? "CTS prot\n" : "");
++		 sdata->vif.bss_conf.use_cts_prot ? "CTS prot\n" : "");
+ }
+ __IEEE80211_IF_FILE(flags);
+ 
+--- everything.orig/net/mac80211/tx.c	2008-10-11 01:46:05.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-10-11 01:46:29.000000000 +0200
+@@ -116,7 +116,7 @@ static __le16 ieee80211_duration(struct 
+ 		if (r->bitrate > txrate->bitrate)
+ 			break;
+ 
+-		if (tx->sdata->bss_conf.basic_rates & BIT(i))
++		if (tx->sdata->vif.bss_conf.basic_rates & BIT(i))
+ 			rate = r->bitrate;
+ 
+ 		switch (sband->band) {
+@@ -150,7 +150,7 @@ static __le16 ieee80211_duration(struct 
+ 	 * to closest integer */
+ 
+ 	dur = ieee80211_frame_duration(local, 10, rate, erp,
+-				tx->sdata->bss_conf.use_short_preamble);
++				tx->sdata->vif.bss_conf.use_short_preamble);
+ 
+ 	if (next_frag_len) {
+ 		/* Frame is fragmented: duration increases with time needed to
+@@ -159,7 +159,7 @@ static __le16 ieee80211_duration(struct 
+ 		/* next fragment */
+ 		dur += ieee80211_frame_duration(local, next_frag_len,
+ 				txrate->bitrate, erp,
+-				tx->sdata->bss_conf.use_short_preamble);
++				tx->sdata->vif.bss_conf.use_short_preamble);
+ 	}
+ 
+ 	return cpu_to_le16(dur);
+@@ -465,7 +465,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ 	} else
+ 		info->control.retries[0].rate_idx = -1;
+ 
+-	if (tx->sdata->bss_conf.use_cts_prot &&
++	if (tx->sdata->vif.bss_conf.use_cts_prot &&
+ 	    (tx->flags & IEEE80211_TX_FRAGMENTED) && (rsel.nonerp_idx >= 0)) {
+ 		tx->last_frag_rate_idx = tx->rate_idx;
+ 		if (rsel.probe_idx >= 0)
+@@ -531,7 +531,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
+ 	if ((tx->sdata->flags & IEEE80211_SDATA_OPERATING_GMODE) &&
+ 	    (sband->bitrates[tx->rate_idx].flags & IEEE80211_RATE_ERP_G) &&
+ 	    (tx->flags & IEEE80211_TX_UNICAST) &&
+-	    tx->sdata->bss_conf.use_cts_prot &&
++	    tx->sdata->vif.bss_conf.use_cts_prot &&
+ 	    !(info->flags & IEEE80211_TX_CTL_USE_RTS_CTS))
+ 		info->flags |= IEEE80211_TX_CTL_USE_CTS_PROTECT;
+ 
+@@ -540,7 +540,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
+ 	 * available on the network at the current point in time. */
+ 	if (ieee80211_is_data(hdr->frame_control) &&
+ 	    (sband->bitrates[tx->rate_idx].flags & IEEE80211_RATE_SHORT_PREAMBLE) &&
+-	    tx->sdata->bss_conf.use_short_preamble &&
++	    tx->sdata->vif.bss_conf.use_short_preamble &&
+ 	    (!tx->sta || test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))) {
+ 		info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
+ 	}
+@@ -560,7 +560,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
+ 		for (idx = 0; idx < sband->n_bitrates; idx++) {
+ 			if (sband->bitrates[idx].bitrate > rate->bitrate)
+ 				continue;
+-			if (tx->sdata->bss_conf.basic_rates & BIT(idx) &&
++			if (tx->sdata->vif.bss_conf.basic_rates & BIT(idx) &&
+ 			    (baserate < 0 ||
+ 			     (sband->bitrates[baserate].bitrate
+ 			      < sband->bitrates[idx].bitrate)))
+@@ -1981,7 +1981,7 @@ struct sk_buff *ieee80211_beacon_get(str
+ 	info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 	info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
+-	if (sdata->bss_conf.use_short_preamble &&
++	if (sdata->vif.bss_conf.use_short_preamble &&
+ 	    sband->bitrates[rsel.rate_idx].flags & IEEE80211_RATE_SHORT_PREAMBLE)
+ 		info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
+ 
+--- everything.orig/net/mac80211/util.c	2008-10-11 01:46:05.000000000 +0200
++++ everything/net/mac80211/util.c	2008-10-11 01:46:29.000000000 +0200
+@@ -239,7 +239,7 @@ __le16 ieee80211_generic_frame_duration(
+ 	erp = 0;
+ 	if (vif) {
+ 		sdata = vif_to_sdata(vif);
+-		short_preamble = sdata->bss_conf.use_short_preamble;
++		short_preamble = sdata->vif.bss_conf.use_short_preamble;
+ 		if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
+ 			erp = rate->flags & IEEE80211_RATE_ERP_G;
+ 	}
+@@ -272,7 +272,7 @@ __le16 ieee80211_rts_duration(struct iee
+ 	erp = 0;
+ 	if (vif) {
+ 		sdata = vif_to_sdata(vif);
+-		short_preamble = sdata->bss_conf.use_short_preamble;
++		short_preamble = sdata->vif.bss_conf.use_short_preamble;
+ 		if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
+ 			erp = rate->flags & IEEE80211_RATE_ERP_G;
+ 	}
+@@ -312,7 +312,7 @@ __le16 ieee80211_ctstoself_duration(stru
+ 	erp = 0;
+ 	if (vif) {
+ 		sdata = vif_to_sdata(vif);
+-		short_preamble = sdata->bss_conf.use_short_preamble;
++		short_preamble = sdata->vif.bss_conf.use_short_preamble;
+ 		if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
+ 			erp = rate->flags & IEEE80211_RATE_ERP_G;
+ 	}
 
 
