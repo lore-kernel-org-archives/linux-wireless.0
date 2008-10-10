@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41893 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbYJUXas (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 19:30:48 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	reinette chatre <reinette.chatre@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890810211627v686d327bv3fc3bd766e1c5b85@mail.gmail.com>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1ba2fa240810211523x2327351fxf8c1c54207d7706b@mail.gmail.com>
-	 <1224630116.9386.108.camel@californication>
-	 <43e72e890810211609t4ed76b3cq76d400d4a7c025e2@mail.gmail.com>
-	 <1224630716.9386.117.camel@californication>
-	 <43e72e890810211627v686d327bv3fc3bd766e1c5b85@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 22 Oct 2008 01:31:42 +0200
-Message-Id: <1224631902.9386.121.camel@californication> (sfid-20081022_013052_124800_47445660)
-Mime-Version: 1.0
+Received: from www.tglx.de ([62.245.132.106]:51891 "EHLO www.tglx.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755506AbYJJMfP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2008 08:35:15 -0400
+Date: Fri, 10 Oct 2008 14:34:57 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Elias Oltmanns <eo@nebensachen.de>
+cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: ath5k: kernel timing screwed - due to unserialised register
+ access?
+In-Reply-To: <87abdck6sn.fsf@denkblock.local>
+Message-ID: <alpine.LFD.2.00.0810101432540.3271@apollo> (sfid-20081010_143525_641395_D52C242B)
+References: <87k5cm3ee2.fsf@denkblock.local> <alpine.LFD.2.00.0810052354000.3398@apollo> <87d4id3jmr.fsf@denkblock.local> <alpine.LFD.2.00.0810061614490.3166@apollo> <87skr8h1de.fsf@denkblock.local> <alpine.LFD.2.00.0810071946460.3166@apollo>
+ <alpine.LFD.2.00.0810072042140.3166@apollo> <87hc7ot804.fsf@denkblock.local> <87myhfnwne.fsf@denkblock.local> <alpine.LFD.2.00.0810082203360.3237@apollo> <alpine.LFD.2.00.0810091313380.3237@apollo> <87k5cgg87j.fsf@denkblock.local> <alpine.LFD.2.00.0810101127560.3271@apollo>
+ <87abdck6sn.fsf@denkblock.local>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
-
-> >> > as long as the firmware is a file on the filesystem, it is the old
-> >> > userspace. It is simpler to update a firmware file (in this case
-> >> > installing a new one) then installing additional software, but that
-> >> > doesn't change anything.
-> >> >
-> >> > Our current problem is that our firmware is still not part of the
-> >> > firmware tree David Woodhouse is maintaining. Then we could link it
-> >> > together with the kernel tree. And yes, that is license issue, but it is
-> >> > one that can be solved.
-> >>
-> >> What license issue BTW?
-> >
-> > about putting our ucode into the linux-firmware.git tree?
+On Fri, 10 Oct 2008, Elias Oltmanns wrote:
+> That printk() has not been hit, I'm afraid. The output of
+> sysrq_timer_list_show() looks much the same but there is no message
+> about softirqs. Just for the record, I've switched to 2.6.27 because I'm
+> debugging something else at the same time, but it doesn't make any
+> difference.
 > 
-> Yeah, what's wrong with the license used right now?
+> Now, here is another question: There are various snippets like the
+> following in the ath5k driver:
+> 
+> 	/* Wait until the noise floor is calibrated and read the value */
+> 	for (i = 20; i > 0; i--) {
+> 		mdelay(1);
 
-this is not my authority, but as far as I understand it, it is fine, but
-someone inside Intel actually has to give green lights for it. And that
-is neither David or me.
+Uurgh. That's broken. mdelay sleeps so this should not be called in
+softirq context.
 
-Regards
+> 		noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
+> 		noise_floor = AR5K_PHY_NF_RVAL(noise_floor);
+> 		if (noise_floor & AR5K_PHY_NF_ACTIVE) {
+> 			noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
+> 
+> 			if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
+> 				break;
+> 		}
+> 	}
+> 
+> This particular one is in
+> drivers/net/wireless/ath5k/phy.c:ath5k_hw_noise_floor_calibration()
+> which is called from ath5k_calibrate(), the callback executed every ten
+> seconds in softirq context. Could this have anything to do with our
 
-Marcel
+That makes sense. The timer expires early events are multiples of 10s
+apart.
 
+Thanks,
 
+	tglx
