@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44758 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbYJGRoF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 13:44:05 -0400
-Subject: Re: [PATCH ] mac80211: remove unused declaration of struct
-	sta_attribute.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <eb3ff54b0810070729s678796a6hb9df7875b99e7a03@mail.gmail.com> (sfid-20081007_162944_674568_62611783)
-References: <eb3ff54b0810070729s678796a6hb9df7875b99e7a03@mail.gmail.com>
-	 (sfid-20081007_162944_674568_62611783)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dOXuPcNy5BzVVbZIgV3C"
-Date: Tue, 07 Oct 2008 19:44:04 +0200
-Message-Id: <1223401444.7328.61.camel@johannes.berg> (sfid-20081007_194410_867895_AD22DC79)
+Received: from main.gmane.org ([80.91.229.2]:45791 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759557AbYJJQUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2008 12:20:09 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1KoKih-0005Ad-3d
+	for linux-wireless@vger.kernel.org; Fri, 10 Oct 2008 16:20:03 +0000
+Received: from 117.47.113.109 ([117.47.113.109])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 16:20:03 +0000
+Received: from tech by 117.47.113.109 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 16:20:03 +0000
+To: linux-wireless@vger.kernel.org
+From: stephen mcgregor <tech@stephen-mcgregor.com>
+Subject: newbie question. cant get fw-cutter to extract the firmware.
+Date: Fri, 10 Oct 2008 16:10:06 +0000 (UTC)
+Message-ID: <loom.20081010T155930-255@post.gmane.org> (sfid-20081010_182027_074934_337844AD)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi everyone
 
---=-dOXuPcNy5BzVVbZIgV3C
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I was getting dmesg messages re: you must upgrade to version 4 to get this to 
+work. So I found the latest version of the (broadcom-wl-4.150.10.5.2.tar) 
+tarball, dated september 2008, and tried to extract the firmware from that.
 
-On Tue, 2008-10-07 at 16:29 +0200, Rami Rosen wrote:
-> This patch removes unused definition of struct sta_attribute
-> in net/mac80211/ieee80211_i.h. (for the wireless-next-2.6 tree).
->=20
-> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+my problem is that fw-cutter, as per the following messages, can't extract the 
+required code.  It seems that version 11 is the latest version of fw-cutter, 
+so no ability to change there. 
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+What should I do as a next step ? 
+
+note that I could extract the firmware from the previous version of the 
+tarball, but that I recieved 'upgrde to revision 4' dmesg messages.
+
+I haven't included lspci or uname info, as I think my problem is simpler 
+(stupider) than that. It seems to me that my question is about tarball and fw-
+cutter compatability.  
+
+thanks for any help
+
+regards
+
+Stephen
 
 
---=-dOXuPcNy5BzVVbZIgV3C
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+=====================================================================
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--normal operation  --
 
-iQIcBAABAgAGBQJI65/gAAoJEKVg1VMiehFYOeEQAIOw4EbF6Yb8wH2l0yhfd5i6
-66nfkGNlIu/uCh7aIK/sx6uB7yrKXuBs+sJQAno8NhGovLS08KmOU5VfYK15NEXB
-T6pG7PIJeNc9Xqv/lI0KKgVpmxL+/iI92dVBNqhtt8UgGlLCV+DB80iJaZXi0aVm
-w/8FCSqJkw8Mn/nCooidg0oXFwgQv3Dxs8DduG6i/qv3yYOsyIhe2NKcjq+SXLsX
-WIvm7S/ala3kS3nzwuzSbV9SkfS4hDeuIFlarYL9Ub1yP2H3SFDe3KYkZq6cO/pf
-jWD8IssX4rFx8Ky3bCQir3aS5U6lwHqEBK7pFiExWHUieUWNPhlJHHSH+HnXFUlo
-TJFfZALsqk0Rr8ADjbJlq08d4Uiq1Uqq+omxyU/GK9H7l7h8UG/EYWFx0OYSURKY
-rt78DiNYayID/J+nYYUv25pstLiHYpA7/Q8LUG3/3XRxDjyjd6nKn7v39ebe3vlG
-Sgyv86dYqFI1fA3cjUGsg/0VCA22/Ra4qk23rvGwT3G0Cx1j6ztS+KAeLf4j1e0B
-+4xxUo7pwHbS7agvwU0zA4Pjn5TIvF+dyzm4ziuXldmiaw5uL62/NLwlTgsYin3c
-qX5gZxx2PC1ADzFXK1mqWucfeMfl+utbOM90/La7JqfqvC0RBJ+5an+cmSjk7hFg
-IMF13xMfdIw9m0Jh8/yS
-=ew1P
------END PGP SIGNATURE-----
+prompt > ../../../b43-fwcutter-011/b43-fwcutter -w "$FIRMWARE_INSTALL_DIR" 
+wl_apsta_mimo.o
+Sorry, the input file is either wrong or not supported by b43-fwcutter.
+This file has an unknown MD5sum b6d32979ad3fdd8ce5c3ec806ebec757.
 
---=-dOXuPcNy5BzVVbZIgV3C--
+-- with the unsupported option --
+
+prompt > ../../../b43-fwcutter-011/b43-fwcutter -w "$FIRMWARE_INSTALL_DIR"  --
+unsupported  wl_apsta_mimo.o
+Sorry, the input file is either wrong or not supported by b43-fwcutter.
+This file has an unknown MD5sum b6d32979ad3fdd8ce5c3ec806ebec757.
+
+
+prompt > ../../../b43-fwcutter-011/b43-fwcutter -w "$FIRMWARE_INSTALL_DIR"  --
+unsupported  wl_apsta.o
+Sorry, the input file is either wrong or not supported by b43-fwcutter.
+This file has an unknown MD5sum 9852dda7680b95245e45f0769a26c00c.
+
+
+--fw-cutter version --
+
+/home/bench/systemMaintenance/wireless/b43/sept08/broadcom-wl-
+4.150.10.5.2/driver > ../../../b43-fwcutter-011/b43-fwcutter -v
+b43-fwcutter version 011
+
+===========================================================================
 
