@@ -1,47 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:42447 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbYJUXJO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 19:09:14 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so485877yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2008 16:09:13 -0700 (PDT)
-Message-ID: <43e72e890810211609t4ed76b3cq76d400d4a7c025e2@mail.gmail.com> (sfid-20081022_010918_484504_A62A4CB1)
-Date: Tue, 21 Oct 2008 16:09:13 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Marcel Holtmann" <holtmann@linux.intel.com>
-Subject: Re: New iwlwifi 3945 uCode available
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"reinette chatre" <reinette.chatre@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1224630116.9386.108.camel@californication>
+Received: from nbd.name ([88.198.39.176]:48402 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753423AbYJJA5D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2008 20:57:03 -0400
+Message-ID: <48EEA84F.4060809@openwrt.org> (sfid-20081010_025706_629245_3E95976D)
+Date: Fri, 10 Oct 2008 02:56:47 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1ba2fa240810211523x2327351fxf8c1c54207d7706b@mail.gmail.com>
-	 <1224630116.9386.108.camel@californication>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH 2/2] b43: fix tx status reporting on rate fallback
+References: <48EEA7A4.2020303@openwrt.org> <48EEA7F7.6020508@openwrt.org>
+In-Reply-To: <48EEA7F7.6020508@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2008 at 4:01 PM, Marcel Holtmann
-<holtmann@linux.intel.com> wrote:
+If the hardware uses RTS/CTS reporting and the actual RTS/CTS
+handshake failed, it will switch to the fallback rate, even
+though the main rate was never actually attempted.
+Make sure that this does not screw up rate control statistics.
 
-> as long as the firmware is a file on the filesystem, it is the old
-> userspace. It is simpler to update a firmware file (in this case
-> installing a new one) then installing additional software, but that
-> doesn't change anything.
->
-> Our current problem is that our firmware is still not part of the
-> firmware tree David Woodhouse is maintaining. Then we could link it
-> together with the kernel tree. And yes, that is license issue, but it is
-> one that can be solved.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-What license issue BTW?
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -778,6 +778,9 @@ struct b43_wldev {
+ #ifdef CONFIG_B43_DEBUG
+ 	struct b43_dfsentry *dfsentry;
+ #endif
++
++	/* necessary for figuring out the correct tx status */
++	int short_retry;
+ };
+ 
+ static inline struct b43_wl *hw_to_b43_wl(struct ieee80211_hw *hw)
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -1393,7 +1393,7 @@ void b43_dma_handle_txstatus(struct b43_
+ 			 * Call back to inform the ieee80211 subsystem about
+ 			 * the status of the transmission.
+ 			 */
+-			frame_succeed = b43_fill_txstatus_report(info, status);
++			frame_succeed = b43_fill_txstatus_report(dev, info, status);
+ #ifdef CONFIG_B43_DEBUG
+ 			if (frame_succeed)
+ 				ring->nr_succeed_tx_packets++;
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -3892,6 +3892,7 @@ static void b43_set_retry_limits(struct 
+ 			short_retry);
+ 	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_LRLIMIT,
+ 			long_retry);
++	dev->short_retry = short_retry;
+ }
+ 
+ static void b43_set_synth_pu_delay(struct b43_wldev *dev, bool idle)
+--- a/drivers/net/wireless/b43/pio.c
++++ b/drivers/net/wireless/b43/pio.c
+@@ -589,7 +589,7 @@ void b43_pio_handle_txstatus(struct b43_
+ 	info = IEEE80211_SKB_CB(pack->skb);
+ 	memset(&info->status, 0, sizeof(info->status));
+ 
+-	b43_fill_txstatus_report(info, status);
++	b43_fill_txstatus_report(dev, info, status);
+ 
+ 	total_len = pack->skb->len + b43_txhdr_size(dev);
+ 	total_len = roundup(total_len, 4);
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -687,7 +687,8 @@ void b43_handle_txstatus(struct b43_wlde
+ /* Fill out the mac80211 TXstatus report based on the b43-specific
+  * txstatus report data. This returns a boolean whether the frame was
+  * successfully transmitted. */
+-bool b43_fill_txstatus_report(struct ieee80211_tx_info *report,
++bool b43_fill_txstatus_report(struct b43_wldev *dev,
++			      struct ieee80211_tx_info *report,
+ 			      const struct b43_txstatus *status)
+ {
+ 	bool frame_success = 1;
+@@ -706,8 +707,19 @@ bool b43_fill_txstatus_report(struct iee
+ 	if (status->frame_count == 0) {
+ 		/* The frame was not transmitted at all. */
+ 		report->status.retry_count = 0;
+-	} else
++	} else if (status->rts_count > dev->short_retry) {
++		/*
++		 * If the short retries (RTS, not data frame) have exceeded
++		 * the limit, the hw will not have tried the selected rate,
++		 * but will have used the fallback rate instead.
++		 * Don't let the rate control count attempts for the selected
++		 * rate in this case, otherwise the statistics will be off.
++		 */
++		report->tx_rate_idx = 0;
++		report->status.retry_count = 0;
++	} else {
+ 		report->status.retry_count = status->frame_count - 1;
++	}
+ 
+ 	return frame_success;
+ }
+--- a/drivers/net/wireless/b43/xmit.h
++++ b/drivers/net/wireless/b43/xmit.h
+@@ -294,7 +294,8 @@ void b43_rx(struct b43_wldev *dev, struc
+ 
+ void b43_handle_txstatus(struct b43_wldev *dev,
+ 			 const struct b43_txstatus *status);
+-bool b43_fill_txstatus_report(struct ieee80211_tx_info *report,
++bool b43_fill_txstatus_report(struct b43_wldev *dev,
++			      struct ieee80211_tx_info *report,
+ 			      const struct b43_txstatus *status);
+ 
+ void b43_tx_suspend(struct b43_wldev *dev);
