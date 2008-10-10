@@ -1,32 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:54183 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754372AbYJCVSH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 17:18:07 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 3/8] b43: remove b43_radio_{read|write}16 from lo.c
-Date: Fri, 3 Oct 2008 23:17:19 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1223066926.6512.28.camel@brick>
-In-Reply-To: <1223066926.6512.28.camel@brick>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200810032317.19971.mb@bu3sch.de> (sfid-20081003_231813_036798_597A9DB5)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56369
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1761147AbYJJT01 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2008 15:26:27 -0400
+Date: Fri, 10 Oct 2008 12:26:03 -0700 (PDT)
+Message-Id: <20081010.122603.136030041.davem@davemloft.net> (sfid-20081010_212638_411569_DA8D9EC3)
+To: lrodriguez@atheros.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath9k: remove nasty FAIL macro from
+ ath9k_hw_reset()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1223641374-11872-1-git-send-email-lrodriguez@atheros.com>
+References: <1223641374-11872-1-git-send-email-lrodriguez@atheros.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 03 October 2008 22:48:46 Harvey Harrison wrote:
-> Mostly by using the mask/set helpers. Some temporary variables have
-> also been eliminated.
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 10 Oct 2008 05:22:53 -0700
 
-I already told you two times that I do not like these patches.
-I also explained in great detail why this is the case.
+> This is fucking horribe crap code so nuke it. There I cursed too in a commit log.
+> 
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Please drop these patches!
-If you send them one more time, I will immediately add your email address to
-my exim blacklist.
+And I fucking applied your patch too, thanks a fucking lot!
 
--- 
-Greetings Michael.
+:-)))
