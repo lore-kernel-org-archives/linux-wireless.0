@@ -1,76 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.232]:40194 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928AbYJTVsC (ORCPT
+Received: from flock1.newmail.ru ([82.204.219.207]:42254 "HELO
+	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752640AbYJJHmN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 17:48:02 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2069470rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 14:48:02 -0700 (PDT)
-Message-ID: <2da21fe50810201448y6f05770at1d611d5a9ddc7e5b@mail.gmail.com> (sfid-20081020_234816_893608_392C6D98)
-Date: Mon, 20 Oct 2008 23:48:02 +0200
-From: "Davide Pesavento" <davidepesa@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: crda packaging
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20081020140438.GD9035@tesla>
+	Fri, 10 Oct 2008 03:42:13 -0400
+From: Andrey Borzenkov <arvidjaar@newmail.ru>
+To: Dave <kilroyd@googlemail.com>
+Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading firmware with PCMCIA adapter
+Date: Fri, 10 Oct 2008 11:41:37 +0400
+Cc: orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <200810091722.56812.arvidjaar@newmail.ru> <200810092321.55033.arvidjaar@newmail.ru> <48EE89ED.3050309@gmail.com>
+In-Reply-To: <48EE89ED.3050309@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com>
-	 <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com>
-	 <2da21fe50810201336r29ed4e83g18d57e6d01b97349@mail.gmail.com>
-	 <20081020140438.GD9035@tesla>
+Content-Type: multipart/signed;
+  boundary="nextPart1858793.2UlJZDQuiS";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200810101141.38929.arvidjaar@newmail.ru> (sfid-20081010_094226_410193_E77EAA85)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/10/20 Luis R. Rodriguez <lrodriguez@atheros.com>:
-> On Mon, Oct 20, 2008 at 01:36:27PM -0700, Davide Pesavento wrote:
->> 2008/10/20 Luis R. Rodriguez <mcgrof@gmail.com>:
->> > We just need to get this git tree created. What crda will need though
->> > is to wget the RSA public key so it can be built with support for new
->> > arbitrary updates to the binary db. Give us a few days, we'll get this
->> > setup.
->> >
->>
->> I'm not sure I can follow you here. This is what I understood so far:
->>
->> (1) Someone (e.g. John Linville) creates a RSA key pair and puts the
->> public key in a public place (e.g. linuxwireless.org website).
->
-> Sure, although I'd use "wireless.kernel.org" from here on as we have no
-> control over linuxwireless.org and the domain owner didn't want to give us
-> ownership of it so we cannot be sure it'll always be updated.
->
+--nextPart1858793.2UlJZDQuiS
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_ycw7Io7cC/CHOhG"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Ok.
+--Boundary-01=_ycw7Io7cC/CHOhG
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
->> (2) John "compiles" db.txt into its binary form (regulatory.bin),
->> signs it with his private key and makes it publicly available
->> somewhere (e.g. again linuxwireless.org).
->
-> ACK
->
->> (3) Packagers create a package for the crda daemon alone, and a
->> package containing regulatory.bin and the public part of the key pair
->> used to sign it.
->
-> The public key will need to be wget'd to build crda binary as the public
-> key is built in as part of the binary.
->
+On Friday 10 October 2008, Dave wrote:
+> Thanks for identifying the problem. The Agere case looks good - a few sug=
+gestions for the Symbol case though:
 
-Ah, right. This is the point I forgot, thanks for your explanation.
-This is not a problem for Gentoo ebuilds; I guess it isn't for other
-distros as well.
+Updated patch attached
 
->> (4) When the regulatory database is updated, John releases a new
->> version by "compiling" and signing it again.
->
-> ACK
->
->  Luis
->
+> =20
+> But you absolutely have to kfree(pda) here.
 
-Regards,
-Davide
+Yes, I forgot; sorry.
+
+> Dan Williams wrote:
+> > maybe you should not use priv->pda_size but
+> > #define SYMBOL_PDA_SIZE 256 and use that for the hermes_read_pda()
+> > length just to ensure the patched code is functionally the same as
+> > before the patch.
+>=20
+> Using fw->pda_size should be fine. The value comes from a const static, s=
+et to 0x100 for Symbol.
+>=20
+
+Actually it allocated 512 byte before. Should it probably be set to 0x200?
+
+--Boundary-01=_ycw7Io7cC/CHOhG
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="orinoco-reduce-stack-usage"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline;
+	filename="orinoco-reduce-stack-usage"
+
+Subject: [PATCH] orinoco: reduce stack usage in firmware download path
+=46rom: Andrey Borzenkov <arvidjaar@mail.ru>
+
+orinoco_dl_firmware and symbol_dl_mage allocate large local
+variables (1K); at least orinoco fails with panic or hung
+kernel if 4K stacks is enabled.
+
+Allocate large buffers dynamically at run time.
+
+Tested-By: Andrey Borzenkov <arvidjaar@mail.ru> for Agere case
+Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
+
+=2D--
+
+ drivers/net/wireless/orinoco.c |   40 ++++++++++++++++++++++++++++--------=
+=2D---
+ 1 files changed, 28 insertions(+), 12 deletions(-)
+
+
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index 9a2fcc0..e225fec 100644
+=2D-- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -458,7 +458,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 		    int ap)
+ {
+ 	/* Plug Data Area (PDA) */
+=2D	__le16 pda[512] =3D { 0 };
++	__le16 *pda;
+=20
+ 	hermes_t *hw =3D &priv->hw;
+ 	const struct firmware *fw_entry;
+@@ -467,7 +467,11 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	const unsigned char *end;
+ 	const char *firmware;
+ 	struct net_device *dev =3D priv->ndev;
+=2D	int err;
++	int err =3D 0;
++
++	pda =3D kzalloc(fw->pda_size, GFP_KERNEL);
++	if (!pda)
++		return -ENOMEM;
+=20
+ 	if (ap)
+ 		firmware =3D fw->ap_fw;
+@@ -478,17 +482,17 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	       dev->name, firmware);
+=20
+ 	/* Read current plug data */
+=2D	err =3D hermes_read_pda(hw, pda, fw->pda_addr,
+=2D			      min_t(u16, fw->pda_size, sizeof(pda)), 0);
++	err =3D hermes_read_pda(hw, pda, fw->pda_addr, fw->pda_size, 0);
+ 	printk(KERN_DEBUG "%s: Read PDA returned %d\n", dev->name, err);
+ 	if (err)
+=2D		return err;
++		goto free;
+=20
+ 	err =3D request_firmware(&fw_entry, firmware, priv->dev);
+ 	if (err) {
+ 		printk(KERN_ERR "%s: Cannot find firmware %s\n",
+ 		       dev->name, firmware);
+=2D		return -ENOENT;
++		err =3D -ENOENT;
++		goto free;
+ 	}
+=20
+ 	hdr =3D (const struct orinoco_fw_header *) fw_entry->data;
+@@ -532,6 +536,9 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+=20
+ abort:
+ 	release_firmware(fw_entry);
++
++free:
++	kfree(pda);
+ 	return err;
+ }
+=20
+@@ -549,12 +556,12 @@ symbol_dl_image(struct orinoco_private *priv, const s=
+truct fw_info *fw,
+ 		int secondary)
+ {
+ 	hermes_t *hw =3D &priv->hw;
+=2D	int ret;
++	int ret =3D 0;
+ 	const unsigned char *ptr;
+ 	const unsigned char *first_block;
+=20
+ 	/* Plug Data Area (PDA) */
+=2D	__le16 pda[256];
++	__le16 *pda =3D NULL;
+=20
+ 	/* Binary block begins after the 0x1A marker */
+ 	ptr =3D image;
+@@ -563,28 +570,33 @@ symbol_dl_image(struct orinoco_private *priv, const s=
+truct fw_info *fw,
+=20
+ 	/* Read the PDA from EEPROM */
+ 	if (secondary) {
+=2D		ret =3D hermes_read_pda(hw, pda, fw->pda_addr, sizeof(pda), 1);
++		pda =3D kzalloc(fw->pda_size, GFP_KERNEL);
++		if (!pda)
++			return -ENOMEM;
++
++		ret =3D hermes_read_pda(hw, pda, fw->pda_addr, fw->pda_size, 1);
+ 		if (ret)
+=2D			return ret;
++			goto free;
+ 	}
+=20
+ 	/* Stop the firmware, so that it can be safely rewritten */
+ 	if (priv->stop_fw) {
+ 		ret =3D priv->stop_fw(priv, 1);
+ 		if (ret)
+=2D			return ret;
++			goto free;
+ 	}
+=20
+ 	/* Program the adapter with new firmware */
+ 	ret =3D hermes_program(hw, first_block, end);
+ 	if (ret)
+=2D		return ret;
++		goto free;
+=20
+ 	/* Write the PDA to the adapter */
+ 	if (secondary) {
+ 		size_t len =3D hermes_blocks_length(first_block);
+ 		ptr =3D first_block + len;
+ 		ret =3D hermes_apply_pda(hw, ptr, pda);
++		kfree(pda);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -608,6 +620,10 @@ symbol_dl_image(struct orinoco_private *priv, const st=
+ruct fw_info *fw,
+ 		return -ENODEV;
+=20
+ 	return 0;
++
++free:
++	kfree(pda);
++	return ret;
+ }
+=20
+=20
+
+--Boundary-01=_ycw7Io7cC/CHOhG--
+
+--nextPart1858793.2UlJZDQuiS
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkjvBzIACgkQR6LMutpd94zw9ACguVeROiv9a39E3HrE0N88DkPP
+/osAn0O/9FXZ9fxS/9Z1JuBaUA58h3ZL
+=nTQc
+-----END PGP SIGNATURE-----
+
+--nextPart1858793.2UlJZDQuiS--
