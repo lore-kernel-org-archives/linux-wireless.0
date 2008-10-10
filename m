@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:27619 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753292AbYJECkG (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54646 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756585AbYJJPwz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Oct 2008 22:40:06 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so694197eyi.37
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Oct 2008 19:40:05 -0700 (PDT)
-Message-ID: <f488382f0810041940p20544fdo88908c7f305a69de@mail.gmail.com> (sfid-20081005_044012_280898_5AF1EAC4)
-Date: Sat, 4 Oct 2008 19:40:05 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH 2/3] ath9k: fix oops on trying to hold the wrong spinlock
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Vasanthakumar Thiagarajan" <vasanth@atheros.com>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	"Ingo Molnar" <mingo@elte.hu>
-In-Reply-To: <43e72e890810041932n4034f3c6gbd5c64100338f61e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223073927-16266-1-git-send-email-lrodriguez@atheros.com>
-	 <1223073927-16266-2-git-send-email-lrodriguez@atheros.com>
-	 <1223073927-16266-3-git-send-email-lrodriguez@atheros.com>
-	 <43e72e890810041932n4034f3c6gbd5c64100338f61e@mail.gmail.com>
+	Fri, 10 Oct 2008 11:52:55 -0400
+Subject: [PATCH v2.6.27] mac80211: fix two issues in debugfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: stable <stable@kernel.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 10 Oct 2008 17:52:49 +0200
+Message-Id: <1223653970.3748.23.camel@johannes.berg> (sfid-20081010_175259_315265_8BF6A0C4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 4, 2008 at 7:32 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Fri, Oct 3, 2008 at 3:45 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> We were trying to hold the wrong spinlock due to a typo
->> on IEEE80211_BAR_CTL_TID_S's definition. We use this to
->> compute the tid number and then hold this this tid number's
->> spinlock.
->>
->> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
->> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->
-> Just a head up John -- Ingo has already sucked this into his tree with
-> a proper Reported-by. We still need it in wireless-testing though, not
-> sure how that will be handled.
->
->  Luis
+This fixes RHBZ 466264, whenever the master interface is
+renamed this code would BUG_ON. Also fixes a separately
+reported bug with the debugfs dir being NULL.
 
-Oh, I should add a tested-by for this.
+This patch is not applicable to the next kernel version
+because both these issues have been fixed, the first one
+by not having the master interface have a ieee80211_ptr
+at all, and the second one by also leaving the function
+early.
 
-Tested-by: Steven Noonan <steven@uplinklabs.net>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>
+---
+ net/mac80211/debugfs_netdev.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+--- net-tx-2.6.orig/net/mac80211/debugfs_netdev.c	2008-10-10 17:46:50.000000000 +0200
++++ net-tx-2.6/net/mac80211/debugfs_netdev.c	2008-10-10 17:48:41.000000000 +0200
+@@ -537,6 +537,7 @@ static int netdev_notify(struct notifier
+ {
+ 	struct net_device *dev = ndev;
+ 	struct dentry *dir;
++	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	char buf[10+IFNAMSIZ];
+ 
+@@ -549,10 +550,19 @@ static int netdev_notify(struct notifier
+ 	if (dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
+ 		return 0;
+ 
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	/*
++	 * Do not use IEEE80211_DEV_TO_SUB_IF because that
++	 * BUG_ONs for the master netdev which we need to
++	 * handle here.
++	 */
++	sdata = netdev_priv(dev);
+ 
+-	sprintf(buf, "netdev:%s", dev->name);
+ 	dir = sdata->debugfsdir;
++
++	if (!dir)
++		return 0;
++
++	sprintf(buf, "netdev:%s", dev->name);
+ 	if (!debugfs_rename(dir->d_parent, dir, dir->d_parent, buf))
+ 		printk(KERN_ERR "mac80211: debugfs: failed to rename debugfs "
+ 		       "dir to %s\n", buf);
+
+
