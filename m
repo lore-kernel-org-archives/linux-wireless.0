@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47765 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752665AbYJ2JSk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 05:18:40 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 02:18:40 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from flock1.newmail.ru ([82.204.219.207]:34237 "HELO
+	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759508AbYJJRPM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2008 13:15:12 -0400
+From: Andrey Borzenkov <arvidjaar@newmail.ru>
+To: Dave <kilroyd@googlemail.com>
+Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading firmware with PCMCIA adapter
+Date: Fri, 10 Oct 2008 21:14:54 +0400
+Cc: orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <200810091722.56812.arvidjaar@newmail.ru> <200810101141.38929.arvidjaar@newmail.ru> <48EF8AF4.1040900@gmail.com>
+In-Reply-To: <48EF8AF4.1040900@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18696.10706.405455.724835@gargle.gargle.HOWL> (sfid-20081029_101846_822971_4E44FF14)
-Date: Wed, 29 Oct 2008 14:46:02 +0530
-To: Tomas Winkler <tomasw@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 16/16] mac80211: Add a new event in
- ieee80211_ampdu_mlme_action
-In-Reply-To: <1ba2fa240810290211s16f5506cgf7c828b5c3d8aea9@mail.gmail.com>
-References: <18695.60248.383916.563413@gargle.gargle.HOWL>
-	<1ba2fa240810290211s16f5506cgf7c828b5c3d8aea9@mail.gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart1481268.soIThUeM6u";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200810102114.55663.arvidjaar@newmail.ru> (sfid-20081010_191518_401355_BDDECF68)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
-> On Wed, Oct 29, 2008 at 6:49 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> > Send a notification to the driver on succesful
-> > reception of an ADDBA response, add IEEE80211_AMPDU_TX_RESUME
-> > for this purpose.
-> 
-> What what is wrong with IEEE80211_AMPDU_TX_START ? I don' t understand
-> why this is needed?
+--nextPart1481268.soIThUeM6u
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On receiving an IEEE80211_AMPDU_TX_START notification, packets destined to
-that TID are stored in a buffer, and to send them out as aggregates, ath9k
-needs to know whether the ADDBA exchange has completed or not.
+On Friday 10 October 2008, Dave wrote:
+>=20
+> You're right. pda_size is supposed to be the maximum size of the PDA (in =
+bytes) that we expect with the firmware. It should be set to 0x200.
+>=20
 
-If the ADDBA request has been declined, IEEE80211_AMPDU_TX_STOP is sent to
-the driver, but no notification is sent if the ADDBA request has been accepted.
+Do you want me to send a patch?
 
-Sujith
+--nextPart1481268.soIThUeM6u
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkjvjY8ACgkQR6LMutpd94x5MwCgtxGdCw6fRAOPtyap9zjxoY8K
+sGIAn2dtmGcT5aiwT5nP//EDVqUgmrKg
+=xT+R
+-----END PGP SIGNATURE-----
+
+--nextPart1481268.soIThUeM6u--
