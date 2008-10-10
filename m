@@ -1,44 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ox1.aei.mpg.de ([194.94.224.6]:53662 "EHLO ox1.aei.mpg.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751781AbYJ0SPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 14:15:19 -0400
-Date: Mon, 27 Oct 2008 18:57:19 +0100
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
-	kernel@nn7.de, linux-wireless@vger.kernel.org
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Message-ID: <20081027175719.GA5759@localhost.aei.mpg.de> (sfid-20081027_191524_432669_5456A6EB)
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271839.39236.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810271839.39236.rjw@sisk.pl>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38607
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758490AbYJJTaB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2008 15:30:01 -0400
+Date: Fri, 10 Oct 2008 12:29:37 -0700 (PDT)
+Message-Id: <20081010.122937.225061929.davem@davemloft.net> (sfid-20081010_213010_523136_C069D7E0)
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+Subject: preparing net-next-2.6 for merge...
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 27.Oct'08 at 18:39:38 +0100, Rafael J. Wysocki wrote:
-> On Monday, 27 of October 2008, Carlos R. Mafra wrote:
-> > Hi,
-> > 
-> > So I managed to bisect my suspend to RAM regression in 2.6.27-rc2
-> > to commit 3b7ee69d0caefbdb85a606a98bff841b8c63b97e ("mac80211: disassociate 
-> > when moving to new BSS") by Tomas Winkler (Cc:-ed).
-> > 
-> > Unfortunately it doesn't revert cleanly so I can't double check it.
-> 
-> Why are you saying it doesn't revert cleanly?  For me it does revert without
-> rejects from 2.6.28-rc2.
 
-I get this
+I'm doing some quick merge, build, and boot tests on the tree as it
+stands right now then I'll send a pull request to Linus.
 
-[mafra@localhost:linux-2.6]$ git checkout v2.6.28-rc2 -b s2ram
-Switched to a new branch "s2ram"
-[mafra@localhost:linux-2.6]$ git revert 3b7ee69d
-warning: too many files, skipping inexact rename detection
-Auto-merged net/mac80211/mlme.c
-CONFLICT (content): Merge conflict in net/mac80211/mlme.c
-Automatic revert failed.  After resolving the conflicts,
-mark the corrected paths with 'git add <paths>' or 'git rm <paths>' and commit the result.
+I'm sure there are some things people still wanted to get into the
+tree, but let's try to follow the rules this time.  Only bug fixes
+and corrections at this point forward.
 
-I don't know what is happening here :-(
+Look at it this way, I have tons of stuff I wasn't able to finish up
+in time either, so both the rule and the pain and being applied fairly
+:-)
+
+Anyways, just FYI...
