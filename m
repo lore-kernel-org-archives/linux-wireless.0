@@ -1,125 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56110 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752576AbYJ1ShK (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:64361 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759294AbYJJRv2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 14:37:10 -0400
-Subject: [PATCH] iwlwifi: remove unused essid variable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 28 Oct 2008 18:25:43 +0100
-Message-Id: <1225214743.3598.28.camel@johannes.berg> (sfid-20081028_193714_253960_4A04E10C)
-Mime-Version: 1.0
+	Fri, 10 Oct 2008 13:51:28 -0400
+Received: by gxk9 with SMTP id 9so1055047gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 10:51:27 -0700 (PDT)
+Message-ID: <43e72e890810101051w7ef39193h3a4473a0c8a4965e@mail.gmail.com> (sfid-20081010_195135_090349_FBFFADB2)
+Date: Fri, 10 Oct 2008 10:51:27 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Vendor support stickers for devices supported under Linux wireless
+Cc: drago01 <drago01@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890807311019x1c4baa43t622c776999bec152@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
+	 <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
+	 <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com>
+	 <1217498887.10489.138.camel@johannes.berg>
+	 <43e72e890807311005l3fd7823ej68497586ec9ff6bc@mail.gmail.com>
+	 <1217524322.10489.148.camel@johannes.berg>
+	 <43e72e890807311019x1c4baa43t622c776999bec152@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now the essid stuff is unused, so remove it.
+On Thu, Jul 31, 2008 at 10:19 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Jul 31, 2008 at 10:12 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Thu, 2008-07-31 at 10:05 -0700, Luis R. Rodriguez wrote:
+>>
+>>> > I would also add to the contract a requirement to offer Linux support
+>>> > for, say, the next five years.
+>>>
+>>> Not sure if we should call it a contract unless its understood its an
+>>> informal contract with the community.
+>>
+>> There has to be some form of contract. The logo is copyrighted,
+>> obviously, so there has to be a contract for you to be allowed to print
+>> it on a box.
+>
+> Heh, Whatever makes the copyright holders happy :) I suspect the
+> copyright holder are after the community's best interests anyway.
+>
+>>> Also I don't think we should be
+>>> specific about a time frame for support -- its difficult enough to get
+>>> the driver upstream, not that its not possible I just think it we
+>>> should strive to at least get vendors to properly support Linux by
+>>> submitting their drivers for upstream into Linus' tree. Support tends
+>>> to come naturally after that :)
+>>
+>> Because sometimes there are users who care. I think though that the
+>> vendor should participate in future development by testing and fixing
+>> their driver, for at least a period of time. Five years may be too much,
+>> given the current chip livetime maybe one or two would make sense,
+>> kernel releases are only roughly every three months.
+>>
+>> Mind you, I wasn't talking about user support, but rather development
+>> support, kinda like a SUPPORTED tag in the MAINTAINERS file.
+>
+> This seems reasonable.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Sorry, will create more print_mac conflicts with the DECLARE_MAC_BUF
-thing there...
+If we can formalize on this it would be great.
 
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 --
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   12 ------------
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 --
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   12 ------------
- 4 files changed, 28 deletions(-)
-
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945.h	2008-10-28 18:21:27.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-3945.h	2008-10-28 18:21:32.000000000 +0100
-@@ -828,8 +828,6 @@ struct iwl3945_priv {
- 	unsigned long last_statistics_time;
- 
- 	/* context information */
--	u8 essid[IW_ESSID_MAX_SIZE];
--	u8 essid_len;
- 	u16 rates_mask;
- 
- 	u32 power_mode;
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-dev.h	2008-10-28 18:21:27.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-dev.h	2008-10-28 18:21:35.000000000 +0100
-@@ -926,8 +926,6 @@ struct iwl_priv {
- 	unsigned long last_statistics_time;
- 
- 	/* context information */
--	u8 essid[IW_ESSID_MAX_SIZE];
--	u8 essid_len;
- 	u16 rates_mask;
- 
- 	u32 power_mode;
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-28 18:22:31.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-28 18:22:53.000000000 +0100
-@@ -2945,7 +2945,6 @@ static int iwl4965_mac_config_interface(
- {
- 	struct iwl_priv *priv = hw->priv;
- 	DECLARE_MAC_BUF(mac);
--	unsigned long flags;
- 	int rc;
- 
- 	if (conf == NULL)
-@@ -3040,15 +3039,6 @@ static int iwl4965_mac_config_interface(
- 	}
- 
-  done:
--	spin_lock_irqsave(&priv->lock, flags);
--	if (!conf->ssid_len)
--		memset(priv->essid, 0, IW_ESSID_MAX_SIZE);
--	else
--		memcpy(priv->essid, conf->ssid, conf->ssid_len);
--
--	priv->essid_len = conf->ssid_len;
--	spin_unlock_irqrestore(&priv->lock, flags);
--
- 	IWL_DEBUG_MAC80211("leave\n");
- 	mutex_unlock(&priv->mutex);
- 
-@@ -3091,8 +3081,6 @@ static void iwl4965_mac_remove_interface
- 	if (priv->vif == conf->vif) {
- 		priv->vif = NULL;
- 		memset(priv->bssid, 0, ETH_ALEN);
--		memset(priv->essid, 0, IW_ESSID_MAX_SIZE);
--		priv->essid_len = 0;
- 	}
- 	mutex_unlock(&priv->mutex);
- 
---- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-28 18:21:44.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-28 18:22:24.000000000 +0100
-@@ -6721,7 +6721,6 @@ static int iwl3945_mac_config_interface(
- {
- 	struct iwl3945_priv *priv = hw->priv;
- 	DECLARE_MAC_BUF(mac);
--	unsigned long flags;
- 	int rc;
- 
- 	if (conf == NULL)
-@@ -6819,15 +6818,6 @@ static int iwl3945_mac_config_interface(
- 	}
- 
-  done:
--	spin_lock_irqsave(&priv->lock, flags);
--	if (!conf->ssid_len)
--		memset(priv->essid, 0, IW_ESSID_MAX_SIZE);
--	else
--		memcpy(priv->essid, conf->ssid, conf->ssid_len);
--
--	priv->essid_len = conf->ssid_len;
--	spin_unlock_irqrestore(&priv->lock, flags);
--
- 	IWL_DEBUG_MAC80211("leave\n");
- 	mutex_unlock(&priv->mutex);
- 
-@@ -6870,8 +6860,6 @@ static void iwl3945_mac_remove_interface
- 	if (priv->vif == conf->vif) {
- 		priv->vif = NULL;
- 		memset(priv->bssid, 0, ETH_ALEN);
--		memset(priv->essid, 0, IW_ESSID_MAX_SIZE);
--		priv->essid_len = 0;
- 	}
- 	mutex_unlock(&priv->mutex);
- 
-
-
+  Luis
