@@ -1,85 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31617 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751231AbYJPGIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 02:08:06 -0400
-Subject: Re: powerpc allmodconfig
-From: Dan Williams <dan.j.williams@intel.com>
-To: David Miller <davem@davemloft.net>
-Cc: akpm@linux-foundation.org, tiwai@suse.de,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
-	ralf@linux-mips.org, mchehab@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, brice@myri.com, jesse.brandeburg@intel.com
-In-Reply-To: <20081015.220247.262683261.davem@davemloft.net>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
-	 <20081015.220247.262683261.davem@davemloft.net>
-Content-Type: text/plain
-Date: Wed, 15 Oct 2008 23:08:12 -0700
-Message-Id: <1224137292.26782.5.camel@dwillia2-linux.ch.intel.com> (sfid-20081016_080818_041121_BFBFE7FF)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56374
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1761285AbYJJT05 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2008 15:26:57 -0400
+Date: Fri, 10 Oct 2008 12:26:33 -0700 (PDT)
+Message-Id: <20081010.122633.261467939.davem@davemloft.net> (sfid-20081010_212702_690036_E773F3BB)
+To: lrodriguez@atheros.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath9k: Fix return code when ath9k_hw_setpower()
+ fails on reset
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1223641374-11872-2-git-send-email-lrodriguez@atheros.com>
+References: <1223641374-11872-1-git-send-email-lrodriguez@atheros.com>
+	<1223641374-11872-2-git-send-email-lrodriguez@atheros.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 10 Oct 2008 05:22:54 -0700
 
-On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
-> > drivers/dma/ioat_dca.c: In function 'dca_enabled_in_bios':
-> > drivers/dma/ioat_dca.c:81: error: implicit declaration of function 'cpuid_eax'
-> > drivers/dma/ioat_dca.c: In function 'system_has_dca_enabled':
-> > drivers/dma/ioat_dca.c:91: error: implicit declaration of function 'boot_cpu_has'
-> > drivers/dma/ioat_dca.c:91: error: 'X86_FEATURE_DCA' undeclared (first use in this function)
-> > drivers/dma/ioat_dca.c:91: error: (Each undeclared identifier is reported only once
-> > drivers/dma/ioat_dca.c:91: error: for each function it appears in.)
-> > drivers/dma/ioat_dca.c: In function 'ioat_dca_get_tag':
-> > drivers/dma/ioat_dca.c:190: error: implicit declaration of function 'cpu_physical_id'
+> We were not reporting a status code back ath9k_hw_setpower() failed
+> during reset so lets correct this.
 > 
-> Known issue.  I tried to ping Jeff Garzik about doing a driver bug fix run in
-> order to fix this, but he hasn't shown any signs of life.
-> 
-> So I'll do it myself later tonight. :-/
-> 
-The following seems to fix this up...
+> Reported-by: Jiri Slaby <jirislaby@gmail.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
----snip--->
-ixgbe, myri10ge: INTEL_IOATDMA can only be selected when X86=y
-
-From: Dan Williams <dan.j.williams@intel.com>
-
-The INTEL_IOATDMA symbol depends on x86. 'select' ignores this
-dependency.
-
-Cc: Brice Goglin <brice@myri.com>
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
- drivers/net/Kconfig |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-
-diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
-index 1d8af33..84983f8 100644
---- a/drivers/net/Kconfig
-+++ b/drivers/net/Kconfig
-@@ -2410,7 +2410,7 @@ config IXGBE
- 	tristate "Intel(R) 10GbE PCI Express adapters support"
- 	depends on PCI && INET
- 	select INET_LRO
--	select INTEL_IOATDMA
-+	select INTEL_IOATDMA if X86
- 	---help---
- 	  This driver supports Intel(R) 10GbE PCI Express family of
- 	  adapters.  For more information on how to identify your adapter, go
-@@ -2462,7 +2462,7 @@ config MYRI10GE
- 	select FW_LOADER
- 	select CRC32
- 	select INET_LRO
--	select INTEL_IOATDMA
-+	select INTEL_IOATDMA if X86
- 	---help---
- 	  This driver supports Myricom Myri-10G Dual Protocol interface in
- 	  Ethernet mode. If the eeprom on your board is not recent enough,
-
-
+Also applied, thanks Luis.
