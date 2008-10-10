@@ -1,84 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:37652 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753712AbYJXNHI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 09:07:08 -0400
-Date: Fri, 24 Oct 2008 14:45:21 +0200
-From: Florian Mickler <florian@mickler.org>
-To: Thomas Winkler <tomasw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: New iwlwifi 3945 uCode available
-Message-ID: <20081024144521.3943a0a3@schatten> (sfid-20081024_150728_513834_4E7C6916)
-In-Reply-To: <1ba2fa240810220528w6b2e4e60k7d2390328d9b5c49@mail.gmail.com>
-References: <1224613633.10863.43.camel@rc-desk>
-	<1224624324.28639.9.camel@johannes.berg>
-	<1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	<1224624899.28639.17.camel@johannes.berg>
-	<20081021213814.GM17268@tuxdriver.com>
-	<1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	<1224627187.9386.103.camel@californication>
-	<1224628088.10863.100.camel@rc-desk>
-	<20081022100758.GA27595@infradead.org>
-	<1ba2fa240810220528w6b2e4e60k7d2390328d9b5c49@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33191 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759059AbYJJSmr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2008 14:42:47 -0400
+Subject: Re: [PATCH 2/8] mac80211: remove aggregation status write support
+	from debugfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <45e8e6c40810101139r3fd97443n7171e8a29862098@mail.gmail.com> (sfid-20081010_203933_091584_D02D1536)
+References: <20081007100428.868688000@sipsolutions.net>
+	 <20081007100438.773792000@sipsolutions.net>
+	 <1ba2fa240810071424s23bdbbb7kbaadf3678cd61a26@mail.gmail.com>
+	 <1223452772.3618.20.camel@johannes.berg>
+	 <43e72e890810101122o12440c60ic35b19b037bf95de@mail.gmail.com>
+	 <45e8e6c40810101139r3fd97443n7171e8a29862098@mail.gmail.com>
+	 (sfid-20081010_203933_091584_D02D1536)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HBvS8vnK7kmNMtOBN1Rt"
+Date: Fri, 10 Oct 2008 20:42:43 +0200
+Message-Id: <1223664163.3748.36.camel@johannes.berg> (sfid-20081010_204333_095415_08841904)
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/zUdqeuCq64KgZCoyhNDkqB.";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/zUdqeuCq64KgZCoyhNDkqB.
-Content-Type: text/plain; charset=US-ASCII
+
+--=-HBvS8vnK7kmNMtOBN1Rt
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi!
-I'm a 3945 user and am quite happy with everything. Thx for your good
-work! But:
+On Fri, 2008-10-10 at 11:39 -0700, Andrey Yurovsky wrote:
 
-On Wed, 22 Oct 2008 14:28:14 +0200
-"Tomas Winkler" <tomasw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-
+> With the current code, I am not sure if it's ever intended that user
+> space has the ability to initiate and tear down BA sessions, so this
+> may or may not be useful to others.  Right now I am using them to test
+> BA initiation and teardown and I suspect that they may be useful to,
+> for example, hostapd in the future.
 >=20
-> The objective of the objections is not that we want to immensely hurt
-> users but rather the trade off between maintain even uglier code and
-> users running buggy firmware versus logging into older kernel and
-> downloading new firmware in 5 minutes looks to me not proportional.
-> Distro users that pull updates won't even notice. I might be wrong
-> though.
+> Please let me know what you think.  Thanks,
 
-more so like 10 minutes, if you are quick to grasp what happened.=20
-if  1000 encounter this problem, that's 10000 minutes wasted, thats
-7*24 hours. That's some annoying big waste of time!
-keep in mind that that breakage _will_ waste the time of other people
-and that those people are your fellow cutting-edge-kernel testers and
-developers!=20
+Without looking at the code, is this really useful for much except
+debugging? Shouldn't the rate control algorithm be in a much better
+position to make that decision?
 
-but then again, if the new firmware is really superior in many cases,
-that might be worth it? i mean, if people forget that they are annoyed
-because the device now performs super ueber cool... or smth like that..
-it might pay off (from a user perspective)...=20
+johannes
 
-so my hope: you avoid breakage and keep people happy! That
-is also good for your karma (whatever that is)=20
-
-Sincerely,
-Florian
-
-
-p.s.: if i think more about it: all my non-linux colleagues refer to
-such breakages as "the linux-expirience"... my linux friends would refer
-to such stuff as "the gentoo-expirience" ... but in my book stuff
-like this just sucks...
-
---Sig_/zUdqeuCq64KgZCoyhNDkqB.
+--=-HBvS8vnK7kmNMtOBN1Rt
 Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iEYEARECAAYFAkkBw2YACgkQPjqCkyL3Kv09vACghrBvaBOSFE7350jakejXqupR
-eN0AoJs50tJv4hGcUfTwO7CQ0LIcnSSG
-=u5ak
+iQIcBAABAgAGBQJI76IgAAoJEKVg1VMiehFYNuMP/jP1cp4Vhy/lGUm4m2y4sA4r
+X5Mf5s22aPqQL9bTSF5IUzX4+HSsUj5uTwURfiO+qoq2AAtg5BNb+2uE4MvawK6W
+DaRZIgIFp3SqLEU+TKHg9ApLzZTEavQiUK3HqLGudY4gtIn2dyInsg9ZCFvkvucF
+dT3dXZRYd0gZYPMmug9EbKPAw9RXKV2VmPCtYOtm8kcV1Ytcw1lqke6JbT93A9FC
+StgLbQazBHjlOuRDXr7yFQZ9zefqC5C1SDsjMypvfwchJ2oIaA6/VzTJF0I/acDB
+CfhJb6T/CoMoffWMm/q+cKke4vcwhNukb7fff1xrE2vTR9TE9jpsTMZXiJ2PixX1
+5zXWK+h3ZwVr1lktI0vLECMG1QZZDC3jJ/6wFVIssSsPzCIon6SX6oDwn9/2dlHX
+asEpBUfIERlx797j/K0vIljD+kZkMbYPaAEQdg2U3MSW0pMGKdACytN9MlxwNvSX
+LJcB5/AoT/t8MFgaeZL5IFuMREQYTu02SKHN035Rk0tNoeetbWS85yUtqIBEB5zN
+GScRs+C4g1tYxv+HsjDyYSXo7hRq/hrWn0/wTfWNklEJxqViANQW2K1q3ff+hgc3
+lrJsCUvgXEzWB6SbrDIPYmrZ9Q13+en4LAQoZQZqVOsw1Rx3WJakQo54LzO3h9rZ
+JTT56jZiTpDi0UK/S3/w
+=IUow
 -----END PGP SIGNATURE-----
 
---Sig_/zUdqeuCq64KgZCoyhNDkqB.--
+--=-HBvS8vnK7kmNMtOBN1Rt--
+
