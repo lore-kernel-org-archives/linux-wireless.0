@@ -1,41 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:37965 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758712AbYJJSWO (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43760 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752531AbYJKNQW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 14:22:14 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so232951yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 11:22:13 -0700 (PDT)
-Message-ID: <43e72e890810101122o12440c60ic35b19b037bf95de@mail.gmail.com> (sfid-20081010_202217_306951_CDA3B7AE)
-Date: Fri, 10 Oct 2008 11:22:13 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/8] mac80211: remove aggregation status write support from debugfs
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Andrey Yurovsky" <andrey@cozybit.com>
-In-Reply-To: <1223452772.3618.20.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081007100428.868688000@sipsolutions.net>
-	 <20081007100438.773792000@sipsolutions.net>
-	 <1ba2fa240810071424s23bdbbb7kbaadf3678cd61a26@mail.gmail.com>
-	 <1223452772.3618.20.camel@johannes.berg>
+	Sat, 11 Oct 2008 09:16:22 -0400
+Subject: Re: [RFT] mac80211/drivers: rewrite the rate control API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <1223682964.29811.13.camel@johannes.berg> (sfid-20081011_015617_239108_FC7ED5DA)
+References: <1223682964.29811.13.camel@johannes.berg>
+	 (sfid-20081011_015617_239108_FC7ED5DA)
+Content-Type: text/plain
+Date: Sat, 11 Oct 2008 15:16:14 +0200
+Message-Id: <1223730974.29811.39.camel@johannes.berg> (sfid-20081011_151628_164456_09760CFA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 8, 2008 at 12:59 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-10-07 at 23:24 +0200, Tomas Winkler wrote:
->> On Tue, Oct 7, 2008 at 12:04 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > This code uses static variables and thus cannot be kept.
->> NACK
->> Need something to debug this stuff
->
-> Tough luck. Go write proper support in nl80211 then.
+On Sat, 2008-10-11 at 01:56 +0200, Johannes Berg wrote:
+> So after the previous changes we were still unhappy with how
+> convoluted the API is and decided to make things simpler for
+> everybody. This completely changes the rate control API, now
+> taking into account 802.11n with MCS rates and more control,
+> most drivers don't support that though.
 
-Someone has some patch to use nl80211 for this BTW. *cough*
+This was missing the RTS/CTS rate setting, which this patch adds, I'll
+fold that in later, comments?
 
-  Luis
+--- everything.orig/net/mac80211/tx.c	2008-10-11 15:01:51.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-10-11 15:14:53.000000000 +0200
+@@ -507,6 +507,33 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ 		return TX_CONTINUE;
+ 	}
+ 
++	/*
++	 * set up the RTS/CTS rate as the fastest basic rate
++	 * that is not faster than the data rate
++	 *
++	 * XXX: Should this check all retry rates?
++	 */
++	if (!(info->control.rates[0].flags & IEEE80211_TX_RC_MCS)) {
++		s8 baserate = 0;
++
++		rate = &sband->bitrates[info->control.rates[0].idx];
++
++		for (i = 0; i < sband->n_bitrates; i++) {
++			/* must be a basic rate */
++			if (!(tx->sdata->vif.bss_conf.basic_rates & BIT(i)))
++				continue;
++			/* must not be faster than the data rate */
++			if (sband->bitrates[i].bitrate > rate->bitrate)
++				continue;
++			/* maximum */
++			if (sband->bitrates[baserate].bitrate <
++			     sband->bitrates[i].bitrate)
++				baserate = i;
++		}
++
++		info->control.rts_cts_rate_idx = baserate;
++	}
++
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+ 		/*
+ 		 * make sure there's no valid rate following
+@@ -532,11 +559,9 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ 		}
+ 
+ 		/* set up RTS protection if desired */
+-		if (rts) {
++		if (rts)
+ 			info->control.rates[i].flags |=
+ 				IEEE80211_TX_RC_USE_RTS_CTS;
+-			rts = true;
+-		}
+ 
+ 		/* RC is busted */
+ 		if (WARN_ON(info->control.rates[i].idx >=
+
+
