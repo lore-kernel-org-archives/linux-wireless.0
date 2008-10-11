@@ -1,61 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41973
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753799AbYJPTtr (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:53688 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754900AbYJKSSw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 15:49:47 -0400
-Date: Thu, 16 Oct 2008 12:49:23 -0700 (PDT)
-Message-Id: <20081016.124923.222595655.davem@davemloft.net> (sfid-20081016_214953_771301_2F2A064C)
-To: johannes@sipsolutions.net
-Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
-	ralf@linux-mips.org, mchehab@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, arjan@infradead.org
-Subject: Re: powerpc allmodconfig
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1224169039.735.57.camel@johannes.berg>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
-	<20081015.220247.262683261.davem@davemloft.net>
-	<1224169039.735.57.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 11 Oct 2008 14:18:52 -0400
+Message-ID: <48F0EE06.4020803@lwfinger.net> (sfid-20081011_201856_360337_97899DAB)
+Date: Sat, 11 Oct 2008 11:18:46 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, bugme-daemon@bugzilla.kernel.org,
+	zOOmER.gm@gmail.com
+Subject: Re: [Bugme-new] [Bug 11728] New: 2.6.27 RTL8187b wireless driver
+ missing card support 0bda:8198
+References: <bug-11728-10286@http.bugzilla.kernel.org/> <20081010103108.7a7a3fbf.akpm@linux-foundation.org> <20081010181841.GA20509@tuxdriver.com>
+In-Reply-To: <20081010181841.GA20509@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 16 Oct 2008 16:57:19 +0200
-
-> On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
-> > 
-> > 
-> > > net/sched/sch_generic.c: In function 'dev_watchdog':
-> > > net/sched/sch_generic.c:224: warning: unused variable 'drivername'
-> > 
-> > Sucky, if WARN_ONCE() evaluates to nothing the sprintf() string buffer
-> > on the stack looks unused.
+John W. Linville wrote:
+> On Fri, Oct 10, 2008 at 10:31:08AM -0700, Andrew Morton wrote:
+>> (switched to email.  Please respond via emailed reply-to-all, not via the
+>> bugzilla web interface).
+>>
+>> On Fri, 10 Oct 2008 08:29:17 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+>>
+>>> http://bugzilla.kernel.org/show_bug.cgi?id=11728
+>>>
+>>>            Summary: 2.6.27 RTL8187b wireless driver missing card support
+>>>                     0bda:8198
+>>>            Product: Drivers
+>>>            Version: 2.5
+>>>      KernelVersion: 2.6.27
+>>>           Platform: All
+>>>         OS/Version: Linux
+>>>               Tree: Mainline
+>>>             Status: NEW
+>>>           Severity: normal
+>>>           Priority: P1
+>>>          Component: Network
+>>>         AssignedTo: jgarzik@pobox.com
+>>>         ReportedBy: zOOmER.gm@gmail.com
+>>>
+>>>
+>>> Hardware Environment: Toshiba Satellite L300-110 laptop (with built-in USB
+>>> wireless card RTL8187b, DEVICE ID 0bda:8198)
+>>>
+>>> Problem Description:
+>>> 2.6.27 Kernel cannot detect wireless card.
+>>>
+>>> Problem goes out, if in rtl8187_dev.c file i add a line with this card DEVID:
+>>> {USB_DEVICE(0x0bda, 0x8198), .driver_info = DEVICE_RTL8187B},
+>>> After this done and recompiling module, card works fine(tested it for hours
+>>> with WEP and without authentication)
+>>>
+>  
+> From: John W. Linville <linville@tuxdriver.com>
+> Subject: [PATCH] rtl8187: add device ID 0bda:8198
 > 
-> I've complained about this to Arjan before, we actually lose all
-> messages passed to WARN() or WARN_ONCE() on platforms that use bug traps
-> for warnings too.
+> Reported by zOOmER.gm@gmail.com to work here:
+> 
+> 	http://bugzilla.kernel.org/show_bug.cgi?id=11728
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+ACK
 
-Ok I see how that works, yes, it should be fixed.
+Larry
 
-If the platform defines a __WARN (which powerpc does) the
-whole format string and printf args go unevaluated, it's
-because of the following sequence in asm-generic/bug.h:
-
-#ifndef __WARN
-#ifndef __ASSEMBLY__
-extern void warn_on_slowpath(const char *file, const int line);
-extern void warn_slowpath(const char *file, const int line,
-		const char *fmt, ...) __attribute__((format(printf, 3, 4)));
-#define WANT_WARN_ON_SLOWPATH
-#endif
-#define __WARN() warn_on_slowpath(__FILE__, __LINE__)
-#define __WARN_printf(arg...) warn_slowpath(__FILE__, __LINE__, arg)
-#else
-#define __WARN_printf(arg...) __WARN()
-#endif
