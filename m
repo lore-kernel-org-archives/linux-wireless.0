@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:4759 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980AbYJGH6x (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:25747 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761588AbYJKRmt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 03:58:53 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2674698fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 00:58:51 -0700 (PDT)
-Message-ID: <1ba2fa240810070058w5490ef17p6ff6f099e5907aab@mail.gmail.com> (sfid-20081007_095856_300331_EFCEBA59)
-Date: Tue, 7 Oct 2008 09:58:50 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Rami Rosen" <ramirose@gmail.com>
-Subject: Re: [PATCH ] [RESEND] iwlwifi: fix compilation warning when CONFIG_IWLWIFI_DEBUG is not set.
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	yi.zhu@intel.com
-In-Reply-To: <eb3ff54b0810070050m3256bffao6d566baa41560ae7@mail.gmail.com>
+	Sat, 11 Oct 2008 13:42:49 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so472902nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Oct 2008 10:42:47 -0700 (PDT)
+Message-ID: <48F0E58F.6000900@gmail.com> (sfid-20081011_194254_726656_903EE267)
+Date: Sat, 11 Oct 2008 18:42:39 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <eb3ff54b0810070050m3256bffao6d566baa41560ae7@mail.gmail.com>
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+CC: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] orinoco: reload firmware on resume
+References: <200810111816.26370.arvidjaar@mail.ru>
+In-Reply-To: <200810111816.26370.arvidjaar@mail.ru>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 7, 2008 at 9:50 AM, Rami Rosen <ramirose@gmail.com> wrote:
-> When CONFIG_IWLWIFI_DEBUG is not set and CONFIG_IWLWIFI is set,
-> we get this compilation warning:
-> /wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c: In
-> function 'rs_free_sta':
-> /wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:2425:
-> warning: unused variable 'priv'
->
-> This patch fixes it by adding __maybe_unused attribute.
->
-> Signed-off-by: Rami Rosen <ramirose@gmail.com>
->
-ACK
+Andrey Borzenkov wrote:
+> On resume card state is likely lost so we have to reload firmware
+> again.
+> 
+> Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
+> 
+> ---
+> 
+> This is non-functional without second patch. Currently you simply
+> have no way to load request firmware from user space in ->resume.
+
+Does it work when you compile the firmware into the kernel image
+with CONFIG_FIRMWARE_KERNEL, CONFIG_EXTRA_FIRMWARE and
+CONFIG_EXTRA_FIRMWARE_DIR?
+ 
+> --- a/drivers/net/wireless/orinoco.c
+> +++ b/drivers/net/wireless/orinoco.c
+> @@ -2298,9 +2298,14 @@ int orinoco_reinit_firmware(struct net_device *dev)
+>  {
+>  	struct orinoco_private *priv = netdev_priv(dev);
+>  	struct hermes *hw = &priv->hw;
+> -	int err;
+> +	int err = 0;
+
+The explicit initialisation is unneccesary.
+
+>  	err = hermes_init(hw);
+> +	if (priv->do_fw_download && !err) {
+
+Otherwise this looks right.
+
+
+Regards,
+
+Dave.
