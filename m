@@ -1,78 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:62659 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754306AbYJIRie (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38779 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753037AbYJKNsa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 13:38:34 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so81724fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2008 10:38:17 -0700 (PDT)
-Message-ID: <45e8e6c40810091038i697c9615pb7121882a54d5873@mail.gmail.com> (sfid-20081009_193839_391791_445AD78D)
-Date: Thu, 9 Oct 2008 10:38:17 -0700
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] allow AP interfaces to handle BACK action frames
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1223546217.22490.31.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48ed3fd6.1e068e0a.7847.4d37@mx.google.com>
-	 <1223546217.22490.31.camel@johannes.berg>
+	Sat, 11 Oct 2008 09:48:30 -0400
+Subject: Re: [PATCH] mac80211: make retry limits part of hw config
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <200810111541.14983.mb@bu3sch.de>
+References: <1223682835.29811.10.camel@johannes.berg>
+	 <200810111541.14983.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5pW4YSUMKkw26svbYEUw"
+Date: Sat, 11 Oct 2008 15:48:27 +0200
+Message-Id: <1223732907.29811.43.camel@johannes.berg> (sfid-20081011_154833_327756_6694610E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As I understand it, despite the "h" in ieee80211_rx_h_action, it
-filters both BACK (802.11e and required for 802.11n) and spectrum
-management (802.11h) action frames.  I suppose that the entire check
-isn't really necessary.  I don't know much about the
-WLAN_ACTION_SPCT_MSR_REQ frame but as far as the BACK frames, there
-shouldn't be any harm with passing them to the driver for any of the
-interface types.  Should I resubmit this as removing the check
-entirely?  Should there perhaps be separate functions for the 11e and
-11h action frames?
 
-Additionally, with the check the way it currently is, an AP interface
-(for example) will respond to an ADDBA frame with something strange
-(action code 0x83 for starters, and the rest of the action frame
-doesn't make sense), at least with iwlagn.  It seems that if the check
-fails and we don't pass the frame to the driver, something weird still
-happens (otherwise, for iwlagn at least, the right thing happens).  I
-haven't had a chance to see if other drivers / interfaces do that.
+--=-5pW4YSUMKkw26svbYEUw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Sat, 2008-10-11 at 15:41 +0200, Michael Buesch wrote:
+> On Saturday 11 October 2008 01:53:55 Johannes Berg wrote:
+> >  static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
+> >  {
+> >  	struct b43_wl *wl =3D hw_to_b43_wl(hw);
+> > @@ -3333,6 +3349,20 @@ static int b43_op_config(struct ieee8021
+> > =20
+> >  	mutex_lock(&wl->mutex);
+> > =20
+> > +	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
+> > +		dev =3D wl->current_dev;
+> > +		if (unlikely(!dev || (b43_status(dev) < B43_STAT_INITIALIZED))) {
+> > +			err =3D -ENODEV;
+> > +			goto out_unlock_mutex;
+> > +		}
+> > +		b43_set_retry_limits(dev, conf->short_frame_max_tx_count,
+> > +					  conf->long_frame_max_tx_count);
+> > +		changed &=3D ~IEEE80211_CONF_CHANGE_RETRY_LIMITS;
+> > +	}
+> > +
+> > +	if (!changed)
+> > +		goto out_unlock_mutex;
+> > +
+> >  	/* Switch the band (if necessary). This might change the active core.=
+ */
+> >  	err =3D b43_switch_band(wl, conf->channel);
+> >  	if (err)
+>=20
+> This must be done _after_ bandswitch. (You also have a valid dev pointer =
+there.
+> Just do it after the checks done there).
 
-On Thu, Oct 9, 2008 at 2:56 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2008-10-08 at 16:18 -0700, Andrey Yurovsky wrote:
->> Add AP mode to the allowed interface check in ieee80211_rx_h_action.  This
->> function handles BACK action frames such as ADDBA and AP interfaces need to
->> receive those.
->>
->> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
->
-> Fine with me, but I think you need to allow VLAN too? Also, how about
-> simply removing this check? Can anything bad happen when we try this in
-> an IBSS or on WDS or on MESH?
->
-> johannes
->
->> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
->> index 080b0ce..fe406f5 100644
->> --- a/net/mac80211/rx.c
->> +++ b/net/mac80211/rx.c
->> @@ -1553,7 +1553,8 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
->>        *        of these frames in other modes as well!
->>        */
->>       if (sdata->vif.type != NL80211_IFTYPE_STATION &&
->> -         sdata->vif.type != NL80211_IFTYPE_ADHOC)
->> +         sdata->vif.type != NL80211_IFTYPE_ADHOC &&
->> +         sdata->vif.type != NL80211_IFTYPE_AP)
->>               return RX_CONTINUE;
->>
->>       switch (mgmt->u.action.category) {
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
+Possibly, but the original code didn't do that either and I didn't want
+to think much :)
+
+
+> > +	mutex_lock(&wl->mutex);
+> > +	dev =3D wl->current_dev;
+> > +
+> > +	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
+> > +		if (unlikely(!dev ||
+> > +			     (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED))) {
+> > +			err =3D -ENODEV;
+> > +			goto out_unlock_mutex;
+> > +		}
+> > +		b43legacy_set_retry_limits(dev,
+> > +					   conf->short_frame_max_tx_count,
+> > +					   conf->long_frame_max_tx_count);
+> > +		changed &=3D ~IEEE80211_CONF_CHANGE_RETRY_LIMITS;
+> > +	}
+> > +
+> > +	if (!changed)
+> > +		goto out_unlock_mutex;
+> > +
+> >  	antenna_tx =3D B43legacy_ANTENNA_DEFAULT;
+> >  	antenna_rx =3D B43legacy_ANTENNA_DEFAULT;
+> > =20
+> > -	mutex_lock(&wl->mutex);
+> >  	dev =3D wl->current_dev;
+>=20
+> This also is a bit fishy.
+
+Which part? the double assignment of "wl"?
+
+johannes
+
+--=-5pW4YSUMKkw26svbYEUw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI8K6nAAoJEKVg1VMiehFY7jYP/3qwD9m+OkS4enPgEveifS6n
+vAwA5dHTLixgWQb0ESrmGrMru+o8P9LboU5e10jqjBB4tswEAlP8+oOZrKmHk25E
+sPQBKUld1uwCppsqv1GMPnQHuals5U2+XbUygQIFPBOAMReLsJoO9ykCR10G3+1A
+Xr6A5bKY97RC8+RK9lU+fISb7MLUE5CuovBQVcXzoTvOX/04vq/dX9eWCmTBsR+O
+rylPlI4wVvjfr8X87VWI3xrCRsKWfaGp4+XndFfQ9gwmQY2INYLprQBmvkN80gYC
+R41AZaTV2Ap3SV4G3v3Jp1tcw7zpNO2dBjzSafHkheAf68OgQX2o7hlhc0o7suSY
+FLPg718kbDT9mclAWOuBg/dMMuQRss2noGAGFUx6j8Gym4sEovLdYZsHULeUz7+V
+oUR2uxSalZkoso+u/l8+TPZQlo+x/xYIRLW1e8QzJ+wiOhq43ZlJ1AEAzkMGYb7Z
+ee3zZ248fJuKb0XLW0hyszY9KDq4NUhnJqqJU4omcJwv2LX6C3iOWFblEVGw4Omc
+6hsAxUklFk6N2A9uXKS4U6hQIIWj6Hg9Xg7MNsLVtetp+KmgPL6ETPuHwma1NvH5
+xJRJwa+nXf81ruqjwsZgx/eaA3EVD2pnfwVw+q9o64R3J+QbKg6pAYrB4AOLv2rK
+n1Ts1EpSUG+yUv/OkR/Q
+=YD4T
+-----END PGP SIGNATURE-----
+
+--=-5pW4YSUMKkw26svbYEUw--
+
