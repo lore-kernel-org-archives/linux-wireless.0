@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:58572 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751124AbYJQSV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2008 14:21:59 -0400
-Subject: [PATCH] libertas: fix CF firmware loading
-From: Dan Williams <dcbw@redhat.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Fri, 17 Oct 2008 14:15:49 -0400
-Message-Id: <1224267349.4010.2.camel@dhcp-100-3-195.bos.redhat.com> (sfid-20081017_202204_998534_659AB233)
-Mime-Version: 1.0
+Received: from ug-out-1314.google.com ([66.249.92.170]:42230 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932643AbYJKR7h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Oct 2008 13:59:37 -0400
+Received: by ug-out-1314.google.com with SMTP id k3so183716ugf.37
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Oct 2008 10:59:35 -0700 (PDT)
+Message-ID: <48F0E983.8010708@gmail.com> (sfid-20081011_195943_640693_CD6ED0C9)
+Date: Sat, 11 Oct 2008 18:59:31 +0100
+MIME-Version: 1.0
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+CC: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] orinoco: cache downloadable firmware image in memory
+ for use during resume
+References: <200810111816.26370.arvidjaar@mail.ru> <200810111821.34045.arvidjaar@mail.ru>
+In-Reply-To: <200810111821.34045.arvidjaar@mail.ru>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ryan Mallon <ryan@bluewatersys.com>
+Andrey Borzenkov wrote:
+> orinoco: cache downloadable firmware image in memory for use during resume
+> 
+> If card is using downloadable firmware (like Agere 9.x), firmware has
+> to be reloaded during resume. It is not possible to use request_firmware
+> for that, because tasks are still frozen, so request_firmware will
+> just timeout and fail. So cache firmware image in memory for later
+> reuse in ->resume method.
+> 
+> Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
+> 
+> ---
+> 
+> Unfortunately this is the only way to do it given current infrastructure.
+> I think that extra memory cost (~60kb) does not warrant anything more
+> sophisticated - even if this is possible. Also users not using dowloadable
+> firmware won't be penalized at all.
 
-Change the return value of if_cs_poll_while_fw_download to zero on 
-success, so that the firmware loading functions also correctly 
-return zero on success.
+Spectrum_cs has had firmware download for a while. It achieves the firmware reload on resume by doing schedule_work(&priv->reset_work).
 
-Signed-off-by: Ryan Mallon <ryan@bluewatersys.com>
-Acked-by: Dan Williams <dcbw@redhat.com>
+Would the same work for orinoco_cs?
 
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-index 842a08d..8f8934a 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -151,7 +151,7 @@ static int if_cs_poll_while_fw_download(struct if_cs_card *card, uint addr, u8 r
-        for (i = 0; i < 100000; i++) {
-                u8 val = if_cs_read8(card, addr);
-                if (val == reg)
--                       return i;
-+                       return 0;
-                udelay(5);
-        }
-        return -ETIME;
+If not, is there a way to avoid the caching when you've got the firmware built into the kernel image?
 
 
 
+Regards,
+
+Dave.
