@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:39242 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751898AbYJTMRN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 08:17:13 -0400
-Date: Mon, 20 Oct 2008 14:17:10 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: Dieter Ries <clip2@gmx.de>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: iwl3945 broken in current git
-Message-ID: <20081020121710.GA3607@isilmar.linta.de> (sfid-20081020_141718_690091_E56EF8AB)
-References: <48FC6C05.6020901@gmx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48FC6C05.6020901@gmx.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:59420 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963AbYJKWj6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Oct 2008 18:39:58 -0400
+Subject: [PATCH] p54/rtl8187: fix up the seqno patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Chr <chunkeey@web.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sun, 12 Oct 2008 00:39:55 +0200
+Message-Id: <1223764795.3581.2.camel@johannes.berg> (sfid-20081012_004000_437684_CE51D023)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 01:31:17PM +0200, Dieter Ries wrote:
-> Hi,
-> 
-> with latest git I cannot use my intel 3945 wifi. It shows up in
-> ifconfig, but it just does not work.
-> 
-> dmesg output is:
-> 
-> iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for
-> Linux, 1.2.26ks
-> iwl3945: Copyright(c) 2003-2008 Intel Corporation
-> iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> iwl3945 0000:03:00.0: setting latency timer to 64
-> iwl3945: Detected Intel Wireless WiFi Link 3945ABG
-> iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-> phy1: Selected rate control algorithm 'iwl-3945-rs'
-> iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> iwl3945 0000:03:00.0: firmware: requesting iwlwifi-3945-1.ucode
-> Registered led device: iwl-phy1:radio
-> Registered led device: iwl-phy1:assoc
-> Registered led device: iwl-phy1:RX
-> Registered led device: iwl-phy1:TX
-> ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq
-> 0x4416 ser 0x0000004B
-> iwl3945: Can't stop Rx DMA.
+Sorry about that, for some reason I didn't notice that I'd
+left some unused variables in there.
 
-It needs a more recent uCode -- the driver really should scream out loudly
-that the old firmware no longer suffices.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/p54/p54common.c |    1 -
+ drivers/net/wireless/rtl8187_dev.c   |    1 -
+ 2 files changed, 2 deletions(-)
 
-Best,
-	Dominik
+--- everything.orig/drivers/net/wireless/p54/p54common.c	2008-10-12 00:32:06.000000000 +0200
++++ everything/drivers/net/wireless/p54/p54common.c	2008-10-12 00:32:07.000000000 +0200
+@@ -810,7 +810,6 @@ static int p54_tx(struct ieee80211_hw *d
+ 	struct ieee80211_tx_queue_stats *current_queue;
+ 	struct p54_common *priv = dev->priv;
+ 	struct p54_control_hdr *hdr;
+-	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct p54_tx_control_allocdata *txhdr;
+ 	size_t padding, len;
+ 	u8 rate;
+--- everything.orig/drivers/net/wireless/rtl8187_dev.c	2008-10-12 00:32:06.000000000 +0200
++++ everything/drivers/net/wireless/rtl8187_dev.c	2008-10-12 00:32:07.000000000 +0200
+@@ -172,7 +172,6 @@ static int rtl8187_tx(struct ieee80211_h
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
+ 	unsigned int ep;
+ 	void *buf;
+ 	struct urb *urb;
+
+
