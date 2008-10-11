@@ -1,121 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:46409 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755356AbYJFVjv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37529 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752455AbYJKAEy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 17:39:51 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2083916fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 14:39:49 -0700 (PDT)
-Message-ID: <1ba2fa240810061439x219f5c0l2223c85042b39cee@mail.gmail.com> (sfid-20081006_234006_736866_E9E1E334)
-Date: Mon, 6 Oct 2008 23:39:49 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 5/7] iwlwifi: take a valid antenna upon rate scale init
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <20081006212511.GL3448@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com>
-	 <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
-	 <1223280333-4383-3-git-send-email-yi.zhu@intel.com>
-	 <1223280333-4383-4-git-send-email-yi.zhu@intel.com>
-	 <1223280333-4383-5-git-send-email-yi.zhu@intel.com>
-	 <1223280333-4383-6-git-send-email-yi.zhu@intel.com>
-	 <20081006212511.GL3448@tuxdriver.com>
+	Fri, 10 Oct 2008 20:04:54 -0400
+Subject: Re: [PATCH 1/2] ath9k: remove nasty FAIL macro from
+	ath9k_hw_reset()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890810101359n529f932fw8cd47822b27b4685@mail.gmail.com> (sfid-20081010_230026_072161_8E9C4FD5)
+References: <1223641374-11872-1-git-send-email-lrodriguez@atheros.com>
+	 <1223667649.3748.38.camel@johannes.berg>
+	 <43e72e890810101359n529f932fw8cd47822b27b4685@mail.gmail.com>
+	 (sfid-20081010_230026_072161_8E9C4FD5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-R1HLu18qtTqlNuJkizQG"
+Date: Sat, 11 Oct 2008 02:04:51 +0200
+Message-Id: <1223683491.29811.15.camel@johannes.berg> (sfid-20081011_020513_711922_D3A74B13)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 6, 2008 at 11:25 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Mon, Oct 06, 2008 at 04:05:31PM +0800, Zhu Yi wrote:
->> From: Tomas Winkler <tomas.winkler@intel.com>
->>
->> This patch selects a valid antenna upon RS init. This solves a SYSASSERT
->> complaining that the driver is setting a non valid antenna in the LQ CMD.
->
-> I suppose this is an accurate description, but I think you can do
-> better. :-)
 
->
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
->> index c1300fb..56a3f0c 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
->> +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
->> @@ -811,10 +811,14 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
->>
->>       switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
->>       case CSR_HW_REV_TYPE_5100:
->> +             priv->hw_params.tx_chains_num = 1;
->> +             priv->hw_params.rx_chains_num = 2;
->> +             priv->hw_params.valid_tx_ant = ANT_B;
->> +             priv->hw_params.valid_rx_ant = ANT_AB;
->> +             break;
->>       case CSR_HW_REV_TYPE_5150:
->>               priv->hw_params.tx_chains_num = 1;
->>               priv->hw_params.rx_chains_num = 2;
->> -             /* FIXME: move to ANT_A, ANT_B, ANT_C enum */
->>               priv->hw_params.valid_tx_ant = ANT_A;
->>               priv->hw_params.valid_rx_ant = ANT_AB;
->>               break;
->
-> Do you realize that both clauses are the same (i.e. there is no
-> functional change)?  How is this useful?
+--=-R1HLu18qtTqlNuJkizQG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The change is tx_ant
+On Fri, 2008-10-10 at 13:59 -0700, Luis R. Rodriguez wrote:
+> On Fri, Oct 10, 2008 at 12:40 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Fri, 2008-10-10 at 05:22 -0700, Luis R. Rodriguez wrote:
+> >
+> >>       ecode =3D ath9k_hw_process_ini(ah, chan, macmode);
+> >> -     if (ecode !=3D 0)
+> >> +     if (ecode !=3D 0) {
+> >> +             ecode =3D -EINVAL;
+> >>               goto bad;
+> >
+> > didn't this actually want to pass up ecode?
+>=20
+> Fuck yeah,
+>=20
+> bad:
+>         if (status)
+>                 *status =3D ecode;
+>         return false;
 
->
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
->> index d148d73..bac91f1 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
->> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
->> @@ -284,6 +284,16 @@ static inline u8 num_of_ant(u8 mask)
->>               !!((mask) & ANT_C);
->>  }
->>
->> +static inline u8 first_antenna(u8 mask)
->> +{
->> +     if (mask & ANT_A)
->> +             return ANT_A;
->> +     if (mask & ANT_B)
->> +             return ANT_B;
->> +     return ANT_C;
->> +}
->> +
->> +
->>  static inline u8 iwl4965_get_prev_ieee_rate(u8 rate_index)
->>  {
->>       u8 rate = iwl_rates[rate_index].prev_ieee;
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
->> index 61797f3..f9efc0c 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
->> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
->> @@ -852,7 +852,7 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, int is_ap)
->>       struct iwl_link_quality_cmd link_cmd = {
->>               .reserved1 = 0,
->>       };
->> -     u16 rate_flags;
->> +     u32 rate_flags;
->>
->>       /* Set up the rate scaling to start at selected rate, fall back
->>        * all the way down to 1M in IEEE order, and then spin on 1M */
->> @@ -869,14 +869,16 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, int is_ap)
->>                       rate_flags |= RATE_MCS_CCK_MSK;
->>
->>               /* Use Tx antenna B only */
->> -             rate_flags |= RATE_MCS_ANT_B_MSK; /*FIXME:RS*/
->> +             rate_flags |= first_antenna(priv->hw_params.valid_tx_ant) <<
->> +                             RATE_MCS_ANT_POS;
->
-> You need to change the comment...
+What I meant was that it's overwriting the return value from process_ini
+now, was that intentional?
 
-Right
-> John
-> --
-> John W. Linville                Linux should be at the core
-> linville@tuxdriver.com                  of your literate lifestyle.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+johannes
+
+--=-R1HLu18qtTqlNuJkizQG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI7+2fAAoJEKVg1VMiehFYNI8P/jKql7y9sAWeF6Ndhmw3S7vb
+XOHXc/iM0rsOZGjiCDCQNhIrFIXzCbQGMBBE2vjYqzMJRJQEmvqn/GEnV9dvSe+h
+Apc8tMoej0OyD5WzfVVM+pHMXq7Cc1bqReVAE1c743/Q4IHWgwAEjpRW46qdEbR1
+NX5Kw3dkkIIVmjbvHLUSp7GoOuM/bdcKEBZKuhWtv53RfiiI1omADkmq16WIWSun
+yCBXAfYOoBH4ZTGjvNzvC+gwQV6Tji/b7BoqnG4oLgHJIGyHsz/pUm3S06411PL3
++kM5Rq1753JOy6E76qfZFC81VG88JCQpKFUjz08HeBAEgIAz5M8aLIhOBDsrUD5B
+vtYFQcvalrsCa5NZ4XusJ6iFnpcDjKqfOhC6gWBYgO2wjhKe2ZaMgIx3a9FC616y
+t2j+XMUmu5m/5b3v7KwaIDH5hAdGaa/1Gr22sHfo6AxtQQdmoWCK93BD/ruSQ7ru
+PvfNvzHHQfXzZ2xW6oqKCkV/tDIWABD3FmiyZ8SNiiPFwrdTaujN8gH6zaqGR21t
+yBP5ry5pzxexJxET9elT7Mcu2S4FZ98oFuyxjUI9Jv90qUZG1HEH3hf4FIgSkqML
+psPyvcuy4QWS5BlIQKCP0VSdfZkpbm35CQDcheg1Jb8Mixv7xwgAWbaKpWzCXF52
+U/jrkPMeEWRRU+qcPwry
+=MnbS
+-----END PGP SIGNATURE-----
+
+--=-R1HLu18qtTqlNuJkizQG--
+
