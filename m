@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:3656 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257AbYJHMk0 (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.231]:29353 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751599AbYJKWbn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2008 08:40:26 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2694599fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2008 05:40:24 -0700 (PDT)
-Message-ID: <1ba2fa240810080540m32134461t26096022d11c6dfa@mail.gmail.com> (sfid-20081008_144030_146591_7C83918E)
-Date: Wed, 8 Oct 2008 14:40:24 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
+	Sat, 11 Oct 2008 18:31:43 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so695998wri.5
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Oct 2008 15:31:42 -0700 (PDT)
+Message-ID: <43e72e890810111531t72af210fuc0074f691c1cb809@mail.gmail.com> (sfid-20081012_003151_589388_5DF112E5)
+Date: Sat, 11 Oct 2008 18:31:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: HT capabilities IE
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223460098.3618.53.camel@johannes.berg>
+Subject: Re: [PATCH 1/2] ath9k: remove nasty FAIL macro from ath9k_hw_reset()
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1223683491.29811.15.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223460098.3618.53.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <1223641374-11872-1-git-send-email-lrodriguez@atheros.com>
+	 <1223667649.3748.38.camel@johannes.berg>
+	 <43e72e890810101359n529f932fw8cd47822b27b4685@mail.gmail.com>
+	 <1223683491.29811.15.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 8, 2008 at 12:01 PM, Johannes Berg
+On Fri, Oct 10, 2008 at 8:04 PM, Johannes Berg
 <johannes@sipsolutions.net> wrote:
-> Hi,
+> On Fri, 2008-10-10 at 13:59 -0700, Luis R. Rodriguez wrote:
+>> On Fri, Oct 10, 2008 at 12:40 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Fri, 2008-10-10 at 05:22 -0700, Luis R. Rodriguez wrote:
+>> >
+>> >>       ecode = ath9k_hw_process_ini(ah, chan, macmode);
+>> >> -     if (ecode != 0)
+>> >> +     if (ecode != 0) {
+>> >> +             ecode = -EINVAL;
+>> >>               goto bad;
+>> >
+>> > didn't this actually want to pass up ecode?
+>>
+>> Fuck yeah,
+>>
+>> bad:
+>>         if (status)
+>>                 *status = ecode;
+>>         return false;
 >
-> quick question, I can't seem to read that from the draft, is the HT
-> capabilities IE supposed to be constant when, say, sent from an AP in
-> every beacon? Most fields look very constant, but e.g. the SM power save
-> mode might not be?
+> What I meant was that it's overwriting the return value from process_ini
+> now, was that intentional?
 
-SM has to be changed using action frame by the spec IIRC
+Ah no, if its already applied I'll send a follow up, thanks for reviewing.
 
-Tomas
+  Luis
