@@ -1,67 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.189]:53196 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbYJTG76 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:8786 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753555AbYJKNx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 02:59:58 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so570305rnd.17
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 23:59:56 -0700 (PDT)
-Message-ID: <43e72e890810192359g2bc75316v49377ddc9eded934@mail.gmail.com> (sfid-20081020_090003_674645_C8ECAA09)
-Date: Sun, 19 Oct 2008 23:59:56 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: New Regulatory Domain Api.
-Cc: "Zhu Yi" <yi.zhu@intel.com>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"Marcel Holtmann" <holtmann@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224485431.18024.12.camel@johannes.berg>
+	Sat, 11 Oct 2008 09:53:56 -0400
+Received: by ug-out-1314.google.com with SMTP id k3so143251ugf.37
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Oct 2008 06:53:54 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 2/5] rfkill: export global states to rfkill-input
+Date: Sat, 11 Oct 2008 15:53:47 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br> <1223586933-17753-3-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1223586933-17753-3-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081015112517.GF6509@tesla>
-	 <1224126030.24677.78.camel@debian.sh.intel.com>
-	 <20081016113848.GB5899@tesla>
-	 <1224471102.24677.124.camel@debian.sh.intel.com>
-	 <43e72e890810192040w567fa4f6j1bf40e80084a857e@mail.gmail.com>
-	 <1224479933.24677.148.camel@debian.sh.intel.com>
-	 <43e72e890810192333r7b3f6a0m56d499d0aed9240e@mail.gmail.com>
-	 <1224484685.18024.5.camel@johannes.berg>
-	 <43e72e890810192346q5e0eadbcm26febe45392a2172@mail.gmail.com>
-	 <1224485431.18024.12.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810111553.47721.IvDoorn@gmail.com> (sfid-20081011_155415_019354_2736DBC7)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 19, 2008 at 11:50 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2008-10-19 at 23:46 -0700, Luis R. Rodriguez wrote:
->
->> Sure but an issue here is that if we do deal with band-specific
->> regulatory domain definitions we change the regulatory behavior from
->> being "disallow everything first" to "allow everything first, disable
->> everything in the band for which we encounter a rule in except what
->> the rule allows".
->>
->> Since the regulatory definitions in db.txt are in KHz we are allowing
->> it to grow as more technology pops up with support for more bands. I
->> think the first approach was better. The current suggestion of only
->> applying rules if a band reg definition is present is only to deal
->> with a rare case. I think its better we try to handle that instead and
->> keep our existing behaviour.
->
-> Ack on both points, which is why I said "If we're going to [...]". I
-> don't think I've seen a convincing use case for this other than test
-> environments, in which you can very well just use crda.
+On Thursday 09 October 2008, Henrique de Moraes Holschuh wrote:
+> Export the the global switch states to rfkill-input.  This is needed to
+> properly implement KEY_* handling without disregarding the initial state.
+> 
+> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
 
-Ah, ok :)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Yi, BTW a simple way to get a distribution to add support initially
-for crda is to have as part of an init script to call
+> ---
+>  net/rfkill/rfkill-input.h |    1 +
+>  net/rfkill/rfkill.c       |   14 ++++++++++++++
+>  2 files changed, 15 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/rfkill/rfkill-input.h b/net/rfkill/rfkill-input.h
+> index bbfa646..d1e03e8 100644
+> --- a/net/rfkill/rfkill-input.h
+> +++ b/net/rfkill/rfkill-input.h
+> @@ -14,5 +14,6 @@
+>  void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state);
+>  void rfkill_epo(void);
+>  void rfkill_restore_states(void);
+> +enum rfkill_state rfkill_get_global_state(const enum rfkill_type type);
+>  
+>  #endif /* __RFKILL_INPUT_H */
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index 08be968..fdf87d2 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -324,6 +324,19 @@ void rfkill_restore_states(void)
+>  EXPORT_SYMBOL_GPL(rfkill_restore_states);
+>  
+>  /**
+> + * rfkill_get_global_state - returns global state for a type
+> + * @type: the type to get the global state of
+> + *
+> + * Returns the current global state for a given wireless
+> + * device type.
+> + */
+> +enum rfkill_state rfkill_get_global_state(const enum rfkill_type type)
+> +{
+> +	return rfkill_global_states[type].current_state;
+> +}
+> +EXPORT_SYMBOL_GPL(rfkill_get_global_state);
+> +
+> +/**
+>   * rfkill_force_state - Force the internal rfkill radio state
+>   * @rfkill: pointer to the rfkill class to modify.
+>   * @state: the current radio state the class should be forced to.
+> @@ -834,6 +847,7 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
+>  
+>  	if (!test_and_set_bit(type, rfkill_states_lockdflt)) {
+>  		rfkill_global_states[type].default_state = state;
+> +		rfkill_global_states[type].current_state = state;
+>  		error = 0;
+>  	} else
+>  		error = -EPERM;
 
-iw reg set $COUNTRY
 
-where $COUNTRY is determined though whatever distribution heuristics.
-
-  Luis
