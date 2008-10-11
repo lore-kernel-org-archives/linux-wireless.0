@@ -1,31 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:35397 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752818AbYJJQ2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 12:28:09 -0400
-Message-ID: <48EF8295.1040602@hauke-m.de> (sfid-20081010_182813_198556_A622C791)
-Date: Fri, 10 Oct 2008 18:28:05 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from ey-out-2122.google.com ([74.125.78.25]:33540 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753401AbYJKOt5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Oct 2008 10:49:57 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so377708eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Oct 2008 07:49:56 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: provide sequence numbers
+Date: Sat, 11 Oct 2008 16:49:51 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1223637719.17594.6.camel@johannes.berg>
+In-Reply-To: <1223637719.17594.6.camel@johannes.berg>
 MIME-Version: 1.0
-To: stephen mcgregor <tech@stephen-mcgregor.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: newbie question. cant get fw-cutter to extract the firmware.
-References: <loom.20081010T155930-255@post.gmane.org>
-In-Reply-To: <loom.20081010T155930-255@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810111649.51946.IvDoorn@gmail.com> (sfid-20081011_165002_966429_7810CE98)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You must just do what is decried at
-http://linuxwireless.org/en/users/Drivers/b43
-Use version 4.150.10.5, version 4.150.10.5.2 is *not* supported!
+On Friday 10 October 2008, Johannes Berg wrote:
+> I've come to think that not providing sequence numbers for
+> the normal STA mode case was a mistake, at least two drivers
+> now had to implement code they wouldn't otherwise need, and
+> I believe at76_usb and adm8211 might be broken.
+> 
+> This patch makes mac80211 assign a sequence number to all
+> those frames that need one except beacons. That means that
+> if a driver only implements modes that do not do beaconing
+> it need not worry about the sequence number.
 
-export FIRMWARE_INSTALL_DIR="/lib/firmware"
-wget http://mirror2.openwrt.org/sources/broadcom-wl-4.150.10.5.tar.bz2
-tar xjf broadcom-wl-4.150.10.5.tar.bz2
-cd broadcom-wl-4.150.10.5/driver
-sudo ../../b43-fwcutter-011/b43-fwcutter -w "$FIRMWARE_INSTALL_DIR"
-wl_apsta_mimo.o
+Very good news. :)
 
---
-Hauke
+>  	if (!ieee80211_is_data_qos(hdr->frame_control)) {
+> +		/* driver should assign sequence number */
+>  		info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
+> +		/* for pure STA mode without beacons, we can do it */
+> +		hdr->seq_ctrl = cpu_to_le16(tx->sdata->sequence_number);
+> +		tx->sdata->sequence_number += 0x10;
+> +		tx->sdata->sequence_number &= IEEE80211_SCTL_SEQ;
+>  		return TX_CONTINUE;
+>  	}
+
+Shouldn't this be changed to only setting the IEEE80211_TX_CTL_ASSIGN_SEQ
+flag when the sequence counter was _not_ set (with beacons)?
+
+Ivo
