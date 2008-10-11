@@ -1,73 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60721 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38709 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633AbYJYMFV (ORCPT
+	with ESMTP id S1752850AbYJKNqY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 08:05:21 -0400
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
+	Sat, 11 Oct 2008 09:46:24 -0400
+Subject: Re: [PATCH] mac80211: make retry limits part of hw config
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>
-In-Reply-To: <20081025112526.GB12252@Chamillionaire.breakpoint.cc>
-References: <4902DEBB.3050205@hotmail.com>
-	 <1224926241.6695.1.camel@johannes.berg>
-	 <20081025112526.GB12252@Chamillionaire.breakpoint.cc>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qzQvUKSN5KElAX+iBKsu"
-Date: Sat, 25 Oct 2008 14:05:11 +0200
-Message-Id: <1224936311.3410.0.camel@johannes.berg> (sfid-20081025_140536_918939_71951227)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <200810111540.06457.IvDoorn@gmail.com> (sfid-20081011_154014_330805_612C4CDD)
+References: <1223682835.29811.10.camel@johannes.berg>
+	 <200810111540.06457.IvDoorn@gmail.com>
+	 (sfid-20081011_154014_330805_612C4CDD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zHs/FF7FOBJ5bjoSJVtS"
+Date: Sat, 11 Oct 2008 15:46:18 +0200
+Message-Id: <1223732778.29811.41.camel@johannes.berg> (sfid-20081011_154628_267808_F047C598)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-qzQvUKSN5KElAX+iBKsu
+--=-zHs/FF7FOBJ5bjoSJVtS
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-10-25 at 13:25 +0200, Sebastian Andrzej Siewior wrote:
-> * Johannes Berg | 2008-10-25 11:17:21 [+0200]:
+On Sat, 2008-10-11 at 15:40 +0200, Ivo van Doorn wrote:
+> On Saturday 11 October 2008, Johannes Berg wrote:
+> > Instead of having a separate callback, use the HW config callback
+> > with a new flag to change retry limits.
+> >=20
+> > Not the cleanest of all patches in the driver area, but it should
+> > not change anything wrt. how they work.
 >=20
-> >> [  277.190494] Kernel unaligned access at TPC[10129b68] zd_mac_rx+0x14=
-4/0x32c [zd1211rw]
-> >
-> >my best bet is this:
-> >
-> >        fc =3D *(__le16 *)buffer;
-> >
-> >could you try something with get_unaligned? Though if this is it,
-> >then ... We really need disassembly of the exact spot.
-> A few lines before that:
-> |         buffer +=3D ZD_PLCP_HEADER_SIZE;
->=20
-> and ZD_PLCP_HEADER_SIZE is 5 so we end up unaligned, don't we?
+> For rt2x00 it looks good, the entire config handling in rt2x00 will
+> be changed anyway because of your patch=20
+> 	mac80211: introduce hw config change flags
+> Because that one really makes things easier. :)
 
-Depends where the buffer was before, and thought has gone into this
-alignment stuff here so it shouldn't. Might well be a new bug though.
+Yeah I figured you'd say that :)
 
 johannes
 
---=-qzQvUKSN5KElAX+iBKsu
+--=-zHs/FF7FOBJ5bjoSJVtS
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJAwt0AAoJEKVg1VMiehFYBt4QAJ3BKbB3yjY8Y4bNwMikXuNh
-Sc7AGD6DJL2Z/c/7wKdGEf/OvwsgUD0mqigRcrPcmq5Te7n/xzvgh5CkzRnSX1tZ
-rlWdFh/sNM+gpPpZPI14T3G01O16fM32zQZdElqxLpqIHoQdTqBL/M2DoNX8kS5E
-PhumppZCQS4GwkAQetljm1RBjpGME3JuiJzNw+yYV4+stx5FLGQbUg9q8kPa/1Rr
-qC+np9NrB2kPaYX/oW43NAYjl96LmgvYXQ+dIAIqPcl1lMmpnhKGTrB0Uang8Q4u
-k1fm7yotCfibToq8F++Vi37d50yx/692yqb38hRdl8Frq/5U3ObUDEan/H/bFtEk
-rRfgmMOMyEJBhKc2DN8zpOEzqrmvmmTIqXwC3Pq9kqq5cWrW8vj3ghhGRBo18xTL
-b/OpZHZTzRJxrPKWJXHCZ9Cnzu+AuITQz2A4O0tRFIMqnEJv7z9Smm4gV+3FPUH3
-nb8vZBbr7KaipDo7Azyxe/Szhc51dY+iTxsnXZ/MpDOwDU3K5YkZ55NhoOi4BIl6
-fJjyaTBUFuX1gMmXKdQaMFHygM5LGyRs3T0aJ8DkJETeDeI4rmRyjS0Raq9kvk5J
-1+Jvdw2ioAbuloucbxAD2IpkYjd60iNh/aYXhS/iOjWn1DTMe3J9nrs2o00qPVlL
-1k59a63XVX3biabKFvuk
-=A93W
+iQIcBAABAgAGBQJI8K4mAAoJEKVg1VMiehFYelUP/RbxUCFFnjOSVJZTbq6OCQjg
+pFPhXqJRpXBKt91lvh7bkhfu1ql7SbOLYb7zk+P1IXEIO48hdTnoJF29Bu7LpfzJ
++e93Wk3my322aiEaiQO7ttW1s2KzsbFHrAFO21LjWclZ3WX3iYak0LNwq0WjbFgO
+lSIUhXrp6LgNSxAFhAtb6V9/lDOq9Lf7RFt44eOOn4IdPmjg5Z/a+rue8rC2nG5K
+/ZCybDwI3R6QAbF13BIGKsoyDiL/Q1NK2RJfRG/zU3tUGF6DYgMn9MsLForddZQS
+uklaeuKcluKmdnQaIc7akRclBeB9GflIGeS+49e9HqGLqrS/+L8DC1sEzIMrk/DL
+BdLBDD7YOK+SzCChkJNbuPZ4KFt7eA6OWkdLAcid6D51peiyWjBVgjDaO1wsIwOX
+FILWj0+j+m/YSibc7dS+YXCTJG/u/iNGHE6nAxdgrPHNXxw+QzUTPTuezR5nMbdG
+YCeqz0Sx7KBVnMI1G7XGcPbzrzRpW/In1+zq69ydJYISA//Iy9MK0UiqaqRyMfiu
+EGYmtB+7KJV7//Fun0t7w6R6vmoPeTPNO+10vGc7qrDdBnrur9YV5O/rXqsHiQto
+HWPCDP0Tel8/Int1HB3pNixi39ezT8fytli5a8m2rZcTNJMCFhFVpqSGUUKa0wkr
+OtTtIVsIL8+ov++YDgoC
+=HrKT
 -----END PGP SIGNATURE-----
 
---=-qzQvUKSN5KElAX+iBKsu--
+--=-zHs/FF7FOBJ5bjoSJVtS--
 
