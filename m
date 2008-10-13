@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:57619 "EHLO hostap.isc.org"
+Received: from mail.atheros.com ([12.36.123.2]:32775 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753942AbYJKAtV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 20:49:21 -0400
-Date: Sat, 11 Oct 2008 03:48:28 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix scan RX processing oops
-Message-ID: <20081011004828.GB15802@jm.kir.nu> (sfid-20081011_024924_605990_BE25AF16)
-References: <20081011002955.GA15802@jm.kir.nu> <1223685486.29811.17.camel@johannes.berg>
+	id S1751193AbYJNEIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 00:08:22 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 21:08:22 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
+	<mickflemm@gmail.com>, <jirislaby@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] ath5k: correct ath5k signal quality
+Date: Mon, 13 Oct 2008 14:08:10 -0700
+Message-ID: <1223932090-9274-4-git-send-email-lrodriguez@atheros.com> (sfid-20081014_060826_100883_250D8CEA)
+In-Reply-To: <1223932090-9274-3-git-send-email-lrodriguez@atheros.com>
+References: <1223932090-9274-1-git-send-email-lrodriguez@atheros.com>
+ <1223932090-9274-2-git-send-email-lrodriguez@atheros.com>
+ <1223932090-9274-3-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223685486.29811.17.camel@johannes.berg>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 11, 2008 at 02:38:06AM +0200, Johannes Berg wrote:
-> > -	ieee80211_rx_bss_put(sdata->local, bss);
-> > +	if (bss)
-> > +		ieee80211_rx_bss_put(sdata->local, bss);
-> 
-> I keep falling into that trap, maybe the put function should just handle
-> NULL instead...
+This adjusts ath5k's signal quality reporting taking into
+consideration received beacons at an RSSI of 35 should indicate
+you can use of 54 Mbps on a single stream card (all ath5k cards)
+reliably.
 
-I though about that for half a second or so ;-) and ended up doing this
-instead after checking that other ieee80211_rx_bss_put() calls were only
-passing in non-NULL values. Anyway, I would be fine with _put() being
-able to handle NULL, too.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath5k/base.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-
-PS.
-
-I don't know what exactly was triggering this oops (or well, what was
-triggering ieee80211_bss_info_update() to return NULL to be more exact),
-but it was happening very consistently in our office (but not anywhere
-else I've been this week). It was kind of funny to see that oops at the
-very moment when I was convincing people in a meeting that we can change
-mac80211 and should do so if it is the best location for something and
-makes it easier to implement something in a driver.. ;-)
-
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 1a24a22..c7f46e9 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1798,7 +1798,17 @@ accept:
+ 
+ 		rxs.noise = sc->ah->ah_noise_floor;
+ 		rxs.signal = rxs.noise + rs.rs_rssi;
+-		rxs.qual = rs.rs_rssi * 100 / 64;
++
++		/* An rssi of 35 indicates you should be able use
++		 * 54 Mbps reliably. A more elaborate scheme can be used
++		 * here but it requires a map of SNR/throughput for each
++		 * possible mode used */
++		rxs.qual = rs.rs_rssi * 100 / 35;
++
++		/* rssi can be more than 35 though, anything above that
++		 * should be considered at 100% */
++		if (rxs.qual > 100)
++			rxs.qual = 100;
+ 
+ 		rxs.antenna = rs.rs_antenna;
+ 		rxs.rate_idx = ath5k_hw_to_driver_rix(sc, rs.rs_rate);
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.6.rc2.15.g457bb.dirty
+
