@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:20878 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751669AbYJYJyc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 05:54:32 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1252519fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2008 02:54:30 -0700 (PDT)
-Message-ID: <2da21fe50810250254w67d0d485v79ffdb40ed2a3b4b@mail.gmail.com> (sfid-20081025_115440_263361_04EB6881)
-Date: Sat, 25 Oct 2008 11:54:30 +0200
-From: "Davide Pesavento" <davidepesa@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: crda packaging
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20081020154315.GL9035@tesla>
+Received: from mail.atheros.com ([12.36.123.2]:32771 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750989AbYJNEIS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 00:08:18 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 21:08:18 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
+	<mickflemm@gmail.com>, <jirislaby@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/3] ath5k/ath9k: correct signal quality
+Date: Mon, 13 Oct 2008 14:08:07 -0700
+Message-ID: <1223932090-9274-1-git-send-email-lrodriguez@atheros.com> (sfid-20081014_060823_555120_0826C9B1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com>
-	 <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com>
-	 <2da21fe50810201336r29ed4e83g18d57e6d01b97349@mail.gmail.com>
-	 <20081020140438.GD9035@tesla>
-	 <2da21fe50810201448y6f05770at1d611d5a9ddc7e5b@mail.gmail.com>
-	 <43e72e890810201515k79ad4e3cj90643ad853e3acfe@mail.gmail.com>
-	 <2da21fe50810201539k74dedcfbwf4d63827e10e6c40@mail.gmail.com>
-	 <20081020154315.GL9035@tesla>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only a couple of issues now remain in crda:
+Now that we officially are supporting ath5k I can do this
+at work hours.
 
-(1) crda needs <linux/nl80211.h>, thus a kernel source tree is
-required to build it.
-Solution: ship nl80211.h like iw does.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ MAINTAINERS |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-(2) `make verify` fails to validate the db signature if openssl is
-selected instead of gcrypt.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8dae455..3503cac 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -731,7 +731,7 @@ M:	jirislaby@gmail.com
+ P:	Nick Kossifidis
+ M:	mickflemm@gmail.com
+ P:	Luis R. Rodriguez
+-M:	mcgrof@gmail.com
++M:	lrodriguez@atheros.com
+ L:	linux-wireless@vger.kernel.org
+ L:	ath5k-devel@lists.ath5k.org
+ S:	Maintained
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
-Regards,
-Davide
