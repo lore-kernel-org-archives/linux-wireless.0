@@ -1,65 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:44163 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486AbYJUGGl (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41751 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755089AbYJMRcc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 02:06:41 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
-References: <20081015112517.GF6509@tesla>
-	 <1224485431.18024.12.camel@johannes.berg>
-	 <43e72e890810192359g2bc75316v49377ddc9eded934@mail.gmail.com>
-	 <1224487340.24677.192.camel@debian.sh.intel.com>
-	 <1224520999.9386.72.camel@californication>
-	 <1224552899.24677.245.camel@debian.sh.intel.com>
-	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
-	 <1224554323.24677.248.camel@debian.sh.intel.com>
-	 <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com>
-	 <1224561748.24677.274.camel@debian.sh.intel.com>
-	 <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
+	Mon, 13 Oct 2008 13:32:32 -0400
+Subject: [PATCH] ath9k/mac80211: disallow fragmentation in ath9k, report to
+	userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
 Content-Type: text/plain
-Date: Tue, 21 Oct 2008 08:07:32 +0200
-Message-Id: <1224569252.9386.77.camel@californication> (sfid-20081021_080644_077602_40478DFA)
+Date: Mon, 13 Oct 2008 13:35:05 +0200
+Message-Id: <1223897706.24954.6.camel@johannes.berg> (sfid-20081013_193237_120204_98D894FC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+As I've reported, ath9k currently fails utterly when fragmentation
+is enabled. This makes ath9k "support" hardware fragmentation by
+not supporting fragmentation at all to avoid the double-free issue.
+The patch also changes mac80211 to report errors from the driver
+operation to userspace.
 
-> >> The proper solution is to either add 5 GHz regulatory rules to your
-> >> regulatory_hint() and/or rely on crda to enable the 5 GHz channels
-> >> required for the country the user is in. It is true that you need
-> >> manual intervention and the way I am trying to resolve that is not by
-> >> changing the design of the current regulatory infrastructure, instead
-> >> I want to add country selection support to say wpa_supplicant or
-> >> Network Manager. That, IMO, is how to address the problem correctly. I
-> >> also suggested a temporary solution which a distribution can use which
-> >> requires absolutely no manual user intervention, that of determining
-> >> the country through whatever means the distribution deems more fit and
-> >> calling iw reg set on $COUNTRY.
-> >
-> > See Marcel's comment on supporting new kernels with old applications.
-> 
-> Old userspace still works, we can however require new userspace for
-> new features. A compliant regulatory infrastructure is a feature.
+That hack in ath9k should be removed once the rate control algorithm
+it has is fixed, and we can at that time consider removing the hw
+fragmentation support entirely since it's not used by any driver.
 
-how does an old userspace with a new kernel works? If we essentially
-disable hardware by not having the userspace in place, then that is not
-a solution. We have to be able to install a new or development kernel on
-an old distro without having to install crda/iw or updating udev or
-whatever.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: stable@kernel.org
+---
+This is most likely the only appropriate bandaid for -stable since RC
+rework will probably build on our RC rate API changes. For 2.6.28, the
+RC rework will also not go in, but some RC rework has gone in, so it
+seems that unfortunately you'll have to fix ath9k twice, once for .28
+and once for .29, unless you want to stick to this patch in .28 as well.
 
-Regards
+ drivers/net/wireless/ath9k/main.c |    8 +++++++-
+ net/mac80211/wext.c               |    2 +-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-Marcel
+--- everything.orig/drivers/net/wireless/ath9k/main.c	2008-10-13 13:25:59.000000000 +0200
++++ everything/drivers/net/wireless/ath9k/main.c	2008-10-13 13:28:08.000000000 +0200
+@@ -1633,6 +1633,11 @@ static int ath9k_ampdu_action(struct iee
+ 	return ret;
+ }
+ 
++static int ath9k_no_fragmentation(struct ieee80211_hw *hw, u32 value)
++{
++	return -EOPNOTSUPP;
++}
++
+ static struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -1656,7 +1661,8 @@ static struct ieee80211_ops ath9k_ops = 
+ 	.get_tsf 	    = ath9k_get_tsf,
+ 	.reset_tsf 	    = ath9k_reset_tsf,
+ 	.tx_last_beacon     = NULL,
+-	.ampdu_action       = ath9k_ampdu_action
++	.ampdu_action       = ath9k_ampdu_action,
++	.set_frag_threshold = ath9k_no_fragmentation,
+ };
+ 
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+--- everything.orig/net/mac80211/wext.c	2008-10-13 13:28:17.000000000 +0200
++++ everything/net/mac80211/wext.c	2008-10-13 13:28:25.000000000 +0200
+@@ -771,7 +771,7 @@ static int ieee80211_ioctl_siwfrag(struc
+ 	 * configure it here */
+ 
+ 	if (local->ops->set_frag_threshold)
+-		local->ops->set_frag_threshold(
++		return local->ops->set_frag_threshold(
+ 			local_to_hw(local),
+ 			local->fragmentation_threshold);
+ 
 
 
