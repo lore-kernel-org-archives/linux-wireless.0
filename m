@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48209 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbYJVHpW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 03:45:22 -0400
-Subject: Re: [PATCH ] mac80211: check return value of dev_alloc_skb() in
-	ieee80211_sta_join_ibss().
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <eb3ff54b0810220042y43ea248qba1064a3eedf85b1@mail.gmail.com> (sfid-20081022_094238_975856_C75CB966)
-References: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com>
-	 <1224660978.28639.27.camel@johannes.berg>
-	 <eb3ff54b0810220042y43ea248qba1064a3eedf85b1@mail.gmail.com>
-	 (sfid-20081022_094238_975856_C75CB966)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y3xadfF61JJLkRTkoHR4"
-Date: Wed, 22 Oct 2008 09:45:17 +0200
-Message-Id: <1224661517.28639.29.camel@johannes.berg> (sfid-20081022_094526_576148_43F2978D)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:32774 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751082AbYJNEIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 00:08:21 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 21:08:21 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
+	<mickflemm@gmail.com>, <jirislaby@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] ath9k: correct signal quality report
+Date: Mon, 13 Oct 2008 14:08:09 -0700
+Message-ID: <1223932090-9274-3-git-send-email-lrodriguez@atheros.com> (sfid-20081014_060825_690346_754F5542)
+In-Reply-To: <1223932090-9274-2-git-send-email-lrodriguez@atheros.com>
+References: <1223932090-9274-1-git-send-email-lrodriguez@atheros.com>
+ <1223932090-9274-2-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This adjusts ath9k's signal quality reporting taking into
+consideration received beacons at an RSSI of 45 should indicate
+you can use of MCS 15 rate (144 Mbps) reliably on dual stream card.
+Keep in mind mac80211 does not yet have aggregation fixed but this
+should still provide more accurate results.
 
---=-y3xadfF61JJLkRTkoHR4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-On Wed, 2008-10-22 at 09:42 +0200, Rami Rosen wrote:
-> Hello,
->=20
-> Do we want to continue as usual if dev_alloc_skb() in theis method fails?
-
-well if anything then we shouldn't do half the stuff and then abort, so
-the allocation/check should be moved to the beginning of the function...
-
-johannes
-
---=-y3xadfF61JJLkRTkoHR4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/toHAAoJEKVg1VMiehFYeIoP/RsfdSbwFS5f3Tox44hM1JcN
-+wgU5fAb2q32Acy+ptFwv6twkqion7CvxV9F4wbawVbuptuK1vxbjYLrdzX17ybF
-m+k1G82sc85IipdWRVs9IgdLSY/35UcvIaG+OYAtZn4Gq5qdlYdy65IODukO/3OH
-WdJVRDnAA9xXZTr7vqdCPmrcSCqscLoRLkPNTnWfT6oO9YupON11L2xW6K+1gyI2
-9Ggl+97R94KDoFjnNB8XEHXS3RztAC0TFA3nTILHo1oRUKITOJDEsKp9uD5D7QcS
-Ejadz0fAUrgB9pae0Swm/oMGB+oUQKbtDFZjdcqThCCUlk9odr9J82Obxnnti2yZ
-zmBR2miNIU1jWCcir+ZrmL8kfVZGm3BFP5Chyc82cc/exIpRq8JYCc+xOIgPluih
-6TNVJ4K0xyjZbkFtSZ960W38eynY2FrktQNbLtmfnTUv4Jq18w1NOxCb9OniXPNI
-c5tWdAqBCtGqcKqeRVhiRgeQXCaYHZiVJLvQuwR2o1JkEaBt2IqNyDoRsAmgjGhQ
-jh9TtfH6dGwbU+iimisCEcVFgyv8wYHPEWGz2j4Z+OI/H7XGQ5sw8kp4NG77NtGN
-XOHwIMoEFlj6DhxLcyLr+XpkVp2hzoXLmTdL7fbH0U3cNqvsF+C9i6tPEz98i3sX
-+RYUwdtipHo03t/S1vQs
-=i1Qc
------END PGP SIGNATURE-----
-
---=-y3xadfF61JJLkRTkoHR4--
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 16c90c1..6bcee4a 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -279,8 +279,15 @@ static void ath9k_rx_prepare(struct ath_softc *sc,
+ 	rx_status->rate_idx = ath_rate2idx(sc, (status->rateKbps / 100));
+ 	rx_status->antenna = status->antenna;
+ 
+-	/* XXX Fix me, 64 cannot be the max rssi value, rigure it out */
+-	rx_status->qual = status->rssi * 100 / 64;
++	/* at 45 you will be able to use MCS 15 reliably. A more elaborate
++	 * scheme can be used here but it requires tables of SNR/throughput for
++	 * each possible mode used. */
++	rx_status->qual = status->rssi * 100 / 45;
++
++	/* rssi can be more than 45 though, anything above that
++	 * should be considered at 100% */
++	if (rx_status->qual > 100)
++		rx_status->qual = 100;
+ 
+ 	if (status->flags & ATH_RX_MIC_ERROR)
+ 		rx_status->flag |= RX_FLAG_MMIC_ERROR;
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
