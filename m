@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:21826 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbYJUWX6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 18:23:58 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2706023wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2008 15:23:57 -0700 (PDT)
-Message-ID: <1ba2fa240810211523x2327351fxf8c1c54207d7706b@mail.gmail.com> (sfid-20081022_002404_023071_A19F8DCB)
-Date: Wed, 22 Oct 2008 00:23:57 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcel Holtmann" <holtmann@linux.intel.com>
-Subject: Re: New iwlwifi 3945 uCode available
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"reinette chatre" <reinette.chatre@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1224627187.9386.103.camel@californication>
+Received: from hostap.isc.org ([149.20.54.63]:47588 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759072AbYJMSMt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Oct 2008 14:12:49 -0400
+Date: Mon, 13 Oct 2008 21:11:56 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>, Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [RFC] mac80211: fix short preamble determination
+Message-ID: <20081013181156.GC30095@jm.kir.nu> (sfid-20081013_201326_756279_D5F77C40)
+References: <1223713593.29811.38.camel@johannes.berg> <20081013155938.GA30095@jm.kir.nu> <1223919110.10113.1.camel@johannes.berg> <20081013175457.GB30095@jm.kir.nu> <1223921012.10113.5.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1223921012.10113.5.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 12:13 AM, Marcel Holtmann
-<holtmann@linux.intel.com> wrote:
-> Hi Tomas,
->
->> >> > > On Tue, 2008-10-21 at 11:27 -0700, reinette chatre wrote:
->> >> > >> Two new versions of 3945 uCode is now available for download from
->> >> > >> http://intellinuxwireless.org/?n=Downloads. Two versions are available
->> >> > >> as we have updated the API version of the uCode and included pending
->> >> > >> fixes in both API versions.
->> >> > >>
->> >> > >> Version 15.28.1.8 supports API v1 and can be used with most current 3945
->> >> > >> drivers. Version 15.28.2.8 (API v2) is required when you start using the
->> >> > >> latest 3945 driver from wireless-testing at the time it includes the
->> >> > >> patch "iwl3945 : Fix a-band association for passive channels".
->> >> > >
->> >> > > Can you make the driver work with the old ucode? We even do that for
->> >> > > drivers where we don't control the ucode like b43...
->> >> >
->> >> > What for?
->> >>
->> >> Well, so that installing a new kernel doesn't suddenly break your
->> >> network connection and ability to download the firmware, for instance.
->> >> If you want more arguments you can go read all the "b43 sucks" threads
->> >> about it.
->> >
->> > Johnannes has a point, that is a lot nicer to users...
->>
->> Maybe, but it will complicate the code beyond good taste to just
->> satisfy the single moment when kernel is upgraded. I don't mean in
->> general I mean in this particular case when API changes.
->> Anyhow a good distro shell deal with this in packaging dependencies
->> and normal person will keep old kernel around when compiling new one.
->> Both ucodes can be present on the file system at the same time  so I
->> hope the risk is low.
->
-> it is the same argument as for everything else. We should be able to run
-> a new kernel with old userspace.
+On Mon, Oct 13, 2008 at 08:03:32PM +0200, Johannes Berg wrote:
+> > Well, if you have many such devices, yes, but one might try to live
+> > without such protection if there are some with very limited transmit
+> > needs.
+> 
+> Would you then announce short preamble as the AP? That'd mean all other
+> stations would use short preamble and the poor non-short-preamble STA
+> would be left completely in the dark wrt. its NAV.
 
-Yet this is not user space, if there won't be a little :) license
-issue this will integral part of the driver.
-Tomas
+Yes, indeed. In other words, this would be something that could work
+mostly in cases where there is a STA with very limited needs (e.g., send
+measurement results once an hour, etc.). I'm not aware of any such
+deployment, though.
+
+> Ohh. Just a few days ago I sent an email with a request for
+> interpretation (there really just is a typo in 802.11-2007 but...) That
+> got forwarded around a lot, but I guess at least TGmb will see it :)
+
+Yeah.. I'm sure it will show up in TGmb in Dallas meeting (mid-Nov). It
+might even get fixed eventually the 802.11-2010 (or 2011, or 2012, or
+who knows when.. ;-).
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
