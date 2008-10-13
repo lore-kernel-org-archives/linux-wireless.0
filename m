@@ -1,125 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:44162 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844AbYJOTZL (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:55362 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324AbYJMVhp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 15:25:11 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081015112517.GF6509@tesla>
-References: <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
-	 <20081014203510.GD3349@tuxdriver.com>
-	 <1224018957.3027.9.camel@johannes.berg>
-	 <20081014211912.GF3349@tuxdriver.com>
-	 <1224019662.3027.13.camel@johannes.berg>
-	 <1224085609.4764.18.camel@californication>
-	 <1224086374.735.4.camel@johannes.berg>
-	 <1224091577.28173.9.camel@californication>
-	 <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
-	 <1224092868.28173.21.camel@californication>  <20081015112517.GF6509@tesla>
-Content-Type: text/plain
-Date: Wed, 15 Oct 2008 21:25:48 +0200
-Message-Id: <1224098748.28173.32.camel@californication> (sfid-20081015_212517_320180_4F8F9FD9)
-Mime-Version: 1.0
+	Mon, 13 Oct 2008 17:37:45 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54usb: Device ID updates
+Date: Mon, 13 Oct 2008 23:41:53 +0200
+Cc: John W Linville <linville@tuxdriver.com>, jafg666@gmail.com
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810132341.53306.chunkeey@web.de> (sfid-20081013_233749_395433_A09EE6F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+This patch updates p54usb's device list.
+It adds the ID for SMC 2862W-G v2 and marks the
+"Spinnaker Proto board" as a first generation device.
 
-> > > > I can see it useful when companies actually start building products with
-> > > > two or more cards in the system and have different cards for different
-> > > > tasks in it. So if you stick one card for one band and another one for
-> > > > the other band in there, then it would make sense to do a per-band
-> > > > regulatory hinting.
-> > >
-> > > Sure, but custom solutions can require custom regulatory dbs and
-> > > people can do any crazy thing they want here, just as when they need
-> > > custom regulatory domains not allowed by the FCC in the USA for
-> > > example. Remember that by default the design is trying to cover the
-> > > usual scenario of users with 1 wireless card or 2 with one built in.
-> > > We decided on our discussions to respect the built-in card first. For
-> > > more cards we can take the intersection if we want to keep being more
-> > > restrictive. Its what makes sense if you think about it.
-> > 
-> > I must admit that I never thought about the implications of multiple
-> > bands with multiple hardware. I am not against keeping it simple and
-> > forcing to have userspace in place to change it. However we do wanna
-> > have support for old laptops that are currently working fine with no
-> > extra userspace, but newer kernels where they just add the second card
-> > to access an A-network. Also remember that internal cards can't really
-> > be disabled most of the times.
-> 
-> So you mean you worry about cases where people are using kernels >=
-> 2.6.28 without crda and iw? If so then they can use for 2.6.28 the
-> OLD_REGULATORY but the idea is for sure to push crda and iw for
-> distributions definitley as of 2.6.29 for when OLD_REGULATORY is
-> scheduled for removal.
-> 
-> The problem here is not this though the problem here is the case
-> where people are using 2.6.28 without no iw or crda *and* have more
-> than two cards :)
-
-it might sound like an unlikely case and it will most likely only be the
-A-band usage anyway, but it is a valid case. People with old laptops do
-use newer wireless cards in PCMCIA or USB form factor to get better WiFi
-performance and/or stability. In some cases you can just replace your
-internal card, but with the switch from MiniPCI to half-MiniPCI this is
-not as likely anymore. So the use of a second external card becomes more
-likely.
-
-> > > > Not sure if this really ever ends up in a product. However I can see the
-> > > > case where you have a laptop with a BG-card and then attach an A-card to
-> > > > it do access an A-network and then it doesn't work. It would be nice to
-> > > > just have this working. Currently this would not work.
-> > >
-> > > Yes it does, it just doesn't work for your hardware as Intel put into
-> > > regulatory hardware capability and these are two *very* different
-> > > things. That is the problem.
-> > >
-> > > My suggestion is to add a default minimal 5 GHz regulatory domain
-> > > definition to your driver on single band cards to deal with this. When
-> > > a dual band card is present then all of the full card's capabilities
-> > > will be used.
-> > 
-> > That would be one option, but it sounds really strange to me that a
-> > BG-card has to "think" about A-bands.
-> 
-> Don't think about it that way -- instead think of it this way: Intel
-> EEPROM is used for capability stuff but its now also being used for
-> regulatory and that is what is limitting you. So you *can* think about
-> 5 GHz band for a single 2.4 GHz band card, its just that your regulatory
-> stuff right now is focused more on capabilities and not real regulatory.
-> 
-> > Let not try to put this down into the drivers if we can solve this
-> > nicely with a per-band regulatory hints inside the core.
-> 
-> Good point. This is reasonable as well, perhaps if the regulatory hint
-> has no 5 Ghz band channels it should not imply policy on it at all?
-> Should be simple enough to fix too I think instead of having two
-> regulatory_hint() calls per band.
-
-I think that is the point Johannes was making. If the driver doesn't
-register itself in the 5 GHz band with its capabilities, then its
-regulatory hint should not affect this band.
-
-And then when a card for the 5 GHz band comes into play, its regulatory
-hint can be applied, while for the 2.4 GHz it looses since it is the
-second card in the system.
-
-I am still for the first card wins concept when no CRDA is present or
-the userspace just doesn't know about setting the regulatory domain.
-However we should have it separated for each band to not lock some
-people out who have no clue on why they now loose the 5 GHz band.
-
-Regards
-
-Marcel
-
-
+Reported-by: <jafg666@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 1912f5e..75d749b 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -39,6 +39,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	{USB_DEVICE(0x0846, 0x4200)},	/* Netgear WG121 */
+ 	{USB_DEVICE(0x0846, 0x4210)},	/* Netgear WG121 the second ? */
+ 	{USB_DEVICE(0x0846, 0x4220)},	/* Netgear WG111 */
++	{USB_DEVICE(0x09aa, 0x1000)},	/* Spinnaker Proto board */
+ 	{USB_DEVICE(0x0cde, 0x0006)},	/* Medion 40900, Roper Europe */
+ 	{USB_DEVICE(0x124a, 0x4023)},	/* Shuttle PN15, Airvast WM168g, IOGear GWU513 */
+ 	{USB_DEVICE(0x1915, 0x2234)},	/* Linksys WUSB54G OEM */
+@@ -63,8 +64,8 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	{USB_DEVICE(0x0cde, 0x0006)},   /* Medion MD40900 */
+ 	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
+ 	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
+-	{USB_DEVICE(0x09aa, 0x1000)},	/* Spinnaker Proto board */
+ 	{USB_DEVICE(0x124a, 0x4025)},	/* IOGear GWU513 (GW3887IK chip) */
++	{USB_DEVICE(0x1260, 0xee22)},	/* SMC 2862W-G version 2 */
+ 	{USB_DEVICE(0x13b1, 0x000a)},	/* Linksys WUSB54G ver 2 */
+ 	{USB_DEVICE(0x13B1, 0x000C)},	/* Linksys WUSB54AG */
+ 	{USB_DEVICE(0x1435, 0x0427)},	/* Inventel UR054G */
