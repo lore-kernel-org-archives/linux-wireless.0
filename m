@@ -1,65 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46966 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754308AbYJVHYB (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:36827 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755226AbYJMVHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 03:24:01 -0400
-Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <48FE913D.9060205@lwfinger.net>
-References: <48FDFCCA.8040604@lwfinger.net>
-	 (sfid-20081021_232731_453910_0675C4D6) <1224624636.28639.15.camel@johannes.berg>
-	 <48FE913D.9060205@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2f1BokdPra95i8Oc4Pom"
-Date: Wed, 22 Oct 2008 09:23:51 +0200
-Message-Id: <1224660231.28639.19.camel@johannes.berg> (sfid-20081022_092419_197034_38872C87)
-Mime-Version: 1.0
+	Mon, 13 Oct 2008 17:07:44 -0400
+Received: by gxk9 with SMTP id 9so4290862gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 14:07:43 -0700 (PDT)
+Message-ID: <43e72e890810131407s26af165dw3b43ba88311bb7da@mail.gmail.com> (sfid-20081013_230750_094826_21BA0685)
+Date: Mon, 13 Oct 2008 14:07:42 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Alexander Petukhov" <al_petukhov@mail.ru>
+Subject: Re: [ath9k-devel] D-Link DWA-547, connection periodicly losts
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081013234957.839f3488.al_petukhov@mail.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20081013234957.839f3488.al_petukhov@mail.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Oct 13, 2008 at 12:49 PM, Alexander Petukhov
+<al_petukhov@mail.ru> wrote:
+> hmm.. have found a bug with similar simptoms - http://bugzilla.kernel.org/show_bug.cgi?id=11570
+> but it is fixed and patch is already applied in 2.6.27 release as i see, but i have this bug on 2.6.27. Do i have to reopen it?
 
---=-2f1BokdPra95i8Oc4Pom
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Perhaps you can elaborate a little more. Also please be sure to check
 
-On Tue, 2008-10-21 at 19:34 -0700, Larry Finger wrote:
+http://wireless.kernel.org/en/users/Reporting_bugs
 
-> >>                     IE: Unknown: 00066C7766646A66
-
-> The unknown IE's don't show up before this commit.
-
-Oh, ok, but that's just more information shown to userspace, that was
-intentional, just iwlist doesn't understand how to parse them, for
-example the one I quoted above is the SSID.
-
-johannes
-
---=-2f1BokdPra95i8Oc4Pom
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/tUEAAoJEKVg1VMiehFY3MgP/0qdeTxS6r+F29mySqt+hMaS
-WZAzdS3KVb+u7rUezyz5zyX8sE5LBGuPzMpKVetGuXGUHaca/vJd3wJBYLXEi5ya
-cGaanCK7u75MUsj/kl1JEmBALwsBavgqxPnNztW6eP8x153Utfdb2HpO34gNAdRD
-/IlOxcM8eZbkgs8nCFJS0gthWEjSnQg3jSLLDFsI/69zQY5RYdYawN23WtuzBeQ7
-Dx43FIwUpKg+vgubGYQF6ELOAqL6ZL9i1Q+8qdySU9pUs4UzFHSc+UCCVmconD3p
-58FL4FPnLErptAZWE+2Y1ZTPzsxZUaJ9EGMHGEPiiyMF5PbWaYUMxf9yaoU35gvB
-TWObHU0URHvkkgr9jD3Q3OqRjQ306Ws0VR1eP/dr7j1YhF1plLOgyszvYe7G9ri+
-SBZbjvemrDp6lG3ogIdNNG/5HbrLiK9mBNJzbUgxr6RncnRWX7Su7CeqpEz4aLmq
-NN5EUpmRkbAdYQHOoUamcmGOgqfawhyiauAaRj08f0I+NL8WK9fk8o7WjjmSHUbN
-FkcEshZuKe5zO1MWlMoXOi0KQaHG820zTQZPRdq/iRnb5cJWFYwHgMMoypXQ+rhl
-kvMwEWFInXHmp2l1OFqMMsLlJteVwjPCNvltk6iznwWbPb8dC24bshUHxW2Wv9Bm
-dEG5XO2+Hwc2XYrgoizn
-=PCLY
------END PGP SIGNATURE-----
-
---=-2f1BokdPra95i8Oc4Pom--
-
+  Luis
