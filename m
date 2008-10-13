@@ -1,85 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27309 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753607AbYJ2VF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:05:26 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/7] iwlwifi: trivial removal of some 4965 remaining from iwl-agn-rs.h
-Date: Wed, 29 Oct 2008 14:05:44 -0700
-Message-Id: <1225314349-11139-3-git-send-email-reinette.chatre@intel.com> (sfid-20081029_220535_209851_35DF515C)
-In-Reply-To: <1225314349-11139-2-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1225314349-11139-1-git-send-email-reinette.chatre@intel.com>
- <1225314349-11139-2-git-send-email-reinette.chatre@intel.com>
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:36251 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824AbYJMTO6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Oct 2008 15:14:58 -0400
+Received: by gxk9 with SMTP id 9so4112843gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 12:14:57 -0700 (PDT)
+Message-ID: <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com> (sfid-20081013_211505_832057_44548983)
+Date: Mon, 13 Oct 2008 22:14:56 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts per second at idle
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	yang.y.yi@gmail.com,
+	"Vikram Kandukuri" <Vikram.Kandukuri@atheros.com>,
+	"Jothikumar Mothilal" <Jothikumar.Mothilal@atheros.com>,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <bug-11749-13098@http.bugzilla.kernel.org/>
+	 <20081013150525.884BC108058@picon.linux-foundation.org>
+	 <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+2008/10/13 Luis R. Rodriguez <mcgrof@gmail.com>:
+> On Mon, Oct 13, 2008 at 8:05 AM,  <bugme-daemon@bugzilla.kernel.org> wrote:
+>> http://bugzilla.kernel.org/show_bug.cgi?id=11749
+>
+> ---
+> Bug description from kernel.org bugzilla
+>
+> Latest working kernel version: None
+> Earliest failing kernel version: Unknow
+> Distribution: all
+> Hardware Environment: Atheros wireless chipset
+> Software Environment: Fedora
+> Problem Description: ath5k driver has many inperrupts per second although the
+> system is idle.
+>
+> I used AspierOne to test it, interrupts are so many that CPU's C3 residence
+> time is only 20 milliseconds or less, there isn't any valid traffic on my
+> wireless network except beacon frame.
+>
+> I tested X61 in the same wireless environment, number of interrupt is only 1
+> per second, X61 has the latest Intel wireless chipset and 2.6.27 kernel was
+> running.
+>
+> So i think ath5k and ath9k should can do as Intel wireless driver does,
+> otherwise, CPU can't stay at C3 with longer time because of wireless
+> interrupts.
+>
+> Steps to reproduce:
+> 1. Enable wireless on platform with Atheros wireless chipset.
+> 2. watch cat /proc/interrupts
+>
+> ---
+>
+> Folks, ANI is not handled yet in ath5k (and won't be on 2.6.26). What
+> I recommend is to try disabling MIB interrupts on the stable kernels
+> where you won't make use of MIB statistics, which you need for ANI.
+> Once you have ANI please enable the MIB interrupt.
+>
+> yang.y.yi, please try this patch (also attached for your convenience)
+> and let us know if you see a difference.
+>
+>  Luis
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c
+> b/drivers/net/wireless/ath5k/base.c
+> index 0676c6d..c18ead9 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -2246,8 +2246,7 @@ ath5k_init(struct ath5k_softc *sc)
+>         * Enable interrupts.
+>         */
+>        sc->imask = AR5K_INT_RX | AR5K_INT_TX | AR5K_INT_RXEOL |
+> -               AR5K_INT_RXORN | AR5K_INT_FATAL | AR5K_INT_GLOBAL |
+> -               AR5K_INT_MIB;
+> +               AR5K_INT_RXORN | AR5K_INT_FATAL | AR5K_INT_GLOBAL;
+>
+>        ath5k_hw_set_intr(sc->ah, sc->imask);
+>        /* Set ack to be sent at low bit-rates */
+>
 
-This patch removes 4965 prefix from comments and one function
-in iwl-agn-rs.h
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h |    8 ++++----
- drivers/net/wireless/iwlwifi/iwl-sta.c    |    2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-index ccfafcf..adcbf53 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-@@ -294,7 +294,7 @@ static inline u8 first_antenna(u8 mask)
- }
- 
- 
--static inline u8 iwl4965_get_prev_ieee_rate(u8 rate_index)
-+static inline u8 iwl_get_prev_ieee_rate(u8 rate_index)
- {
- 	u8 rate = iwl_rates[rate_index].prev_ieee;
- 
-@@ -304,11 +304,11 @@ static inline u8 iwl4965_get_prev_ieee_rate(u8 rate_index)
- }
- 
- /**
-- * iwl4965_rate_control_register - Register the rate control algorithm callbacks
-+ * iwl_rate_control_register - Register the rate control algorithm callbacks
-  *
-  * Since the rate control algorithm is hardware specific, there is no need
-  * or reason to place it as a stand alone module.  The driver can call
-- * iwl4965_rate_control_register in order to register the rate control callbacks
-+ * iwl_rate_control_register in order to register the rate control callbacks
-  * with the mac80211 subsystem.  This should be performed prior to calling
-  * ieee80211_register_hw
-  *
-@@ -316,7 +316,7 @@ static inline u8 iwl4965_get_prev_ieee_rate(u8 rate_index)
- extern int iwlagn_rate_control_register(void);
- 
- /**
-- * iwl4965_rate_control_unregister - Unregister the rate control callbacks
-+ * iwl_rate_control_unregister - Unregister the rate control callbacks
-  *
-  * This should be called after calling ieee80211_unregister_hw, but before
-  * the driver is unloaded.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 88928ef..bc7d5c4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -877,7 +877,7 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, int is_ap)
- 
- 		link_cmd.rs_table[i].rate_n_flags =
- 			iwl_hw_set_rate_n_flags(iwl_rates[r].plcp, rate_flags);
--		r = iwl4965_get_prev_ieee_rate(r);
-+		r = iwl_get_prev_ieee_rate(r);
- 	}
- 
- 	link_cmd.general_params.single_stream_ant_msk =
 -- 
-1.5.4.3
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
