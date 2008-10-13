@@ -1,183 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:34248 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755161AbYJIVPo (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.225]:24951 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755308AbYJMWAx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 17:15:44 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Dmitry Torokhov <dtor@mail.ru>
-Subject: [PATCH 5/5] rfkill: rate-limit rfkill-input workqueue usage (v3)
-Date: Thu,  9 Oct 2008 18:15:33 -0300
-Message-Id: <1223586933-17753-6-git-send-email-hmh@hmh.eng.br> (sfid-20081009_231550_137098_F08AE116)
-In-Reply-To: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br>
-References: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br>
+	Mon, 13 Oct 2008 18:00:53 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so1175192wri.5
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 15:00:52 -0700 (PDT)
+Message-ID: <43e72e890810131500u289f6e4fwf380966ae8f40b7b@mail.gmail.com> (sfid-20081014_000058_109394_4B226ABE)
+Date: Mon, 13 Oct 2008 15:00:52 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Cameron Hutchison" <lists@xdna.net>
+Subject: Re: [ath9k-devel] Failed to init on TP-Link TL-WN861N
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <667b.48f192b0.3a106@getafix.xdna.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <667b.48f192b0.3a106@getafix.xdna.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Limit the number of "expensive" rfkill workqueue operations per second, in
-order to not hog system resources too much when faced with a rogue source
-of rfkill input events.
+On Sat, Oct 11, 2008 at 11:01 PM, Cameron Hutchison <lists@xdna.net> wrote:
+> I've just loaded linux kernel 2.6.27 onto a box that I have that
+> contains a TP-Link TLWN861N atheros minipci card. It identifes as a
+> AR5416:
+>
+> 00:09.0 Network controller: Atheros Communications Inc. AR5416 802.11abgn Wireless PCI Adapter (rev 01)
+>        Subsystem: Atheros Communications Inc. Device 2079
+>        Flags: 66MHz, medium devsel, IRQ 17
+>        Memory at fcfe0000 (32-bit, non-prefetchable) [size=64K]
+>        Capabilities: [40] #80 [0000]
+>        Kernel modules: ath9k
+>
+> When I try to load the ath9k module (with all debugging messages
+> enabled) I get the following kernel messages:
+>
+> ath9k: 0.1
+> ath9k 0000:00:09.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> ath_init: devid 0x23
+> ath9k_hw_setpower: AWAKE -> AWAKE (set chip )
+> ath9k_hw_do_attach: serialize_regmode is 0
+> ath9k_hw_do_attach: This Mac Chip Rev 0x0d.2 is
+> ath9k_hw_chip_test: address test failed addr: 0x00008000 - wr:0x00ff00ff != rd:0x00ff00ef
 
-The old rfkill-input code (before it was refactored) had such a limit in
-place.  It used to drop new events that were past the rate limit.  This
-behaviour was not implemented as an anti-DoS measure, but rather as an
-attempt to work around deficiencies in input device drivers which would
-issue multiple KEY_FOO events too soon for a given key FOO (i.e. ones that
-do not implement mechanical debouncing properly).
+This is during ath9k_hw_chip_test(), which is a simple loop to test
+write/read on 2 registers to see if the written values can be read as
+the same values. The two registers are:
 
-However, we can't really expect such issues to be worked around by every
-input handler out there, and also by every userspace client of input
-devices.  It is the input device driver's responsability to do debouncing
-instead of spamming the input layer with bogus events.
+AR_STA_ID0 which is 0x8000
+AR_PHY_BASE + (8 << 2) which is 0x9800 + (8<<2) --> 0x9820
 
-The new limiter code is focused only on anti-DoS behaviour, and tries to
-not lose events (instead, it coalesces them when possible).
+AR_STA_ID0 is used to store part of the MAC address and 0x9820 is just
+one of the PHY registers. So we test writing and reading a 256 times
+to each register some arbitrary value. We also try writing and reading
+some 4 specific patterns just to be sure.
 
-The transmitters are updated once every 200ms, maximum.  Care is taken not
-to delay a request to _enter_ rfkill transmitter Emergency Power Off (EPO)
-mode.
+> ath9k_hw_post_attach: hardware self-test failed
 
-If mistriggered (e.g. by a jiffies counter wrap), the code delays processing
-*once* by 200ms.
+This means when it tried to write to a register it then tried reading
+the value on the register but didn't get what it was expecting. In
+your case we tried writing to register offset 0x8000 the value
+0x00ff00ff but read 0x00ff00ef, this test will only continue if the
+value read was 0x00ff00ef so for some reason a bit was lost and the
+hardware was unable to write the 5th bit on that register.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
----
- net/rfkill/rfkill-input.c |   49 +++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 41 insertions(+), 8 deletions(-)
+If we continue this could lead to issues. It seems you may have a
+faulty wireless card, specifically bit #5 on register 0x8000. Maybe
+the card is loose? Have you seen it working before?
 
-diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-index 4ea4e68..6ddf3ce 100644
---- a/net/rfkill/rfkill-input.c
-+++ b/net/rfkill/rfkill-input.c
-@@ -30,6 +30,9 @@ enum rfkill_input_master_mode {
- 	RFKILL_INPUT_MASTER_MAX,	/* marker */
- };
- 
-+/* Delay (in ms) between consecutive switch ops */
-+#define RFKILL_OPS_DELAY 200
-+
- static enum rfkill_input_master_mode rfkill_master_switch_mode =
- 					RFKILL_INPUT_MASTER_UNBLOCKALL;
- module_param_named(master_switch_mode, rfkill_master_switch_mode, uint, 0);
-@@ -50,7 +53,7 @@ enum rfkill_global_sched_op {
-  */
- 
- struct rfkill_task {
--	struct work_struct work;
-+	struct delayed_work dwork;
- 
- 	/* ensures that task is serialized */
- 	struct mutex mutex;
-@@ -74,6 +77,9 @@ struct rfkill_task {
- 
- 	bool global_op_pending;
- 	enum rfkill_global_sched_op op;
-+
-+	/* last time it was scheduled */
-+	unsigned long last_scheduled;
- };
- 
- static void __rfkill_handle_global_op(enum rfkill_global_sched_op op)
-@@ -137,8 +143,8 @@ static void __rfkill_handle_normal_op(const enum rfkill_type type,
- 
- static void rfkill_task_handler(struct work_struct *work)
- {
--	struct rfkill_task *task =
--			container_of(work, struct rfkill_task, work);
-+	struct rfkill_task *task = container_of(work,
-+					struct rfkill_task, dwork.work);
- 	bool doit = true;
- 
- 	mutex_lock(&task->mutex);
-@@ -193,12 +199,27 @@ static void rfkill_task_handler(struct work_struct *work)
- }
- 
- static struct rfkill_task rfkill_task = {
--	.work = __WORK_INITIALIZER(rfkill_task.work,
-+	.dwork = __DELAYED_WORK_INITIALIZER(rfkill_task.dwork,
- 				rfkill_task_handler),
- 	.mutex = __MUTEX_INITIALIZER(rfkill_task.mutex),
- 	.lock = __SPIN_LOCK_UNLOCKED(rfkill_task.lock),
- };
- 
-+static unsigned long rfkill_ratelimit(const unsigned long last)
-+{
-+	const unsigned long delay = msecs_to_jiffies(RFKILL_OPS_DELAY);
-+	return (time_after(jiffies, last + delay)) ? 0 : delay;
-+}
-+
-+static void rfkill_schedule_ratelimited(void)
-+{
-+	if (!delayed_work_pending(&rfkill_task.dwork)) {
-+		schedule_delayed_work(&rfkill_task.dwork,
-+				rfkill_ratelimit(rfkill_task.last_scheduled));
-+		rfkill_task.last_scheduled = jiffies;
-+	}
-+}
-+
- static void rfkill_schedule_global_op(enum rfkill_global_sched_op op)
- {
- 	unsigned long flags;
-@@ -206,7 +227,13 @@ static void rfkill_schedule_global_op(enum rfkill_global_sched_op op)
- 	spin_lock_irqsave(&rfkill_task.lock, flags);
- 	rfkill_task.op = op;
- 	rfkill_task.global_op_pending = true;
--	schedule_work(&rfkill_task.work);
-+	if (op == RFKILL_GLOBAL_OP_EPO && !rfkill_is_epo_lock_active()) {
-+		/* bypass the limiter for EPO */
-+		cancel_delayed_work(&rfkill_task.dwork);
-+		schedule_delayed_work(&rfkill_task.dwork, 0);
-+		rfkill_task.last_scheduled = jiffies;
-+	} else
-+		rfkill_schedule_ratelimited();
- 	spin_unlock_irqrestore(&rfkill_task.lock, flags);
- }
- 
-@@ -230,7 +257,7 @@ static void rfkill_schedule_set(enum rfkill_type type,
- 			set_bit(type,  rfkill_task.sw_newstate);
- 		else
- 			clear_bit(type, rfkill_task.sw_newstate);
--		schedule_work(&rfkill_task.work);
-+		rfkill_schedule_ratelimited();
- 	}
- 	spin_unlock_irqrestore(&rfkill_task.lock, flags);
- }
-@@ -247,7 +274,7 @@ static void rfkill_schedule_toggle(enum rfkill_type type)
- 	if (!rfkill_task.global_op_pending) {
- 		set_bit(type, rfkill_task.sw_pending);
- 		change_bit(type, rfkill_task.sw_togglestate);
--		schedule_work(&rfkill_task.work);
-+		rfkill_schedule_ratelimited();
- 	}
- 	spin_unlock_irqrestore(&rfkill_task.lock, flags);
- }
-@@ -411,13 +438,19 @@ static int __init rfkill_handler_init(void)
- 	if (rfkill_master_switch_mode >= RFKILL_INPUT_MASTER_MAX)
- 		return -EINVAL;
- 
-+	/*
-+	 * The penalty to not doing this is a possible RFKILL_OPS_DELAY delay
-+	 * at the first use.  Acceptable, but if we can avoid it, why not?
-+	 */
-+	rfkill_task.last_scheduled =
-+			jiffies - msecs_to_jiffies(RFKILL_OPS_DELAY) - 1;
- 	return input_register_handler(&rfkill_handler);
- }
- 
- static void __exit rfkill_handler_exit(void)
- {
- 	input_unregister_handler(&rfkill_handler);
--	flush_scheduled_work();
-+	cancel_delayed_work_sync(&rfkill_task.dwork);
- 	rfkill_remove_epo_lock();
- }
- 
--- 
-1.5.6.5
-
+  Luis
