@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:55832 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842AbYJaS7Q (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57623 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbYJMQj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 14:59:16 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so521681eyi.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2008 11:59:08 -0700 (PDT)
-Message-ID: <42bbb5c30810311159v50785ac7jfc8ef8eb3e32ea9b@mail.gmail.com> (sfid-20081031_195918_673524_FBA58430)
-Date: Fri, 31 Oct 2008 16:59:08 -0200
-From: "Marcos Barbosa" <marcosestevesbarbosa@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ipw3945-devel] PROBLEM: Led for wifi blinking all the time
-Cc: "=?ISO-8859-2?Q?Ond=F8ej_Ku=E8era?=" <ondrej.kucera@centrum.cz>,
-	jikos@suse.cz, yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20081031145434.GB4310@tuxdriver.com>
+	Mon, 13 Oct 2008 12:39:27 -0400
+Date: Mon, 13 Oct 2008 12:36:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] wireless: build failure if !CONFIG_MAC80211_MESH
+Message-ID: <20081013163642.GA32550@tuxdriver.com> (sfid-20081013_183931_797369_D9715A4D)
+References: <20081013081238.2755bd25@extreme> <20081013084503.66cca9f9@extreme>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-References: <490A5D39.1090605@centrum.cz> <20081031145434.GB4310@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081013084503.66cca9f9@extreme>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VHJhZmZpYyBleGlzdHMgYWxsIHRoZSB0aW1lLCBiZWNhdXNlIHRoZSBjb21tYW5kcyB0byBjb250
-cm9sCmNvbm5lY3Rpb24uIFRvIGNhbmNlbCBhbGwgdHJhZmZpYywgZG93biB0aGUgd2lyZWxlc3Mg
-aW50ZXJmYWNlLgoKMjAwOC8xMC8zMSBKb2huIFcuIExpbnZpbGxlIDxsaW52aWxsZUB0dXhkcml2
-ZXIuY29tPjoKPiBPbiBGcmksIE9jdCAzMSwgMjAwOCBhdCAwMjoxOTo1M0FNICswMTAwLCBPbmT4
-ZWogS3XoZXJhIHdyb3RlOgo+PiBIZWxsbywKPj4KPj4gdGhpcyBpcyBteSBmaXJzdCBrZXJuZWwg
-YnVnIHJlcG9ydCBldmVyIHNvIEknbSBub3QgMTAwJSBzdXJlIGFib3V0IHRoZQo+PiBwcm90b2Nv
-bCBidXQgSSdsbCB0cnkgbXkgYmVzdC4uLgo+Pgo+PiBBZnRlciB1cGdyYWRpbmcgdG8gMi42LjI3
-IHRoZSB3aWZpIGxlZCBzdGFydHMgYmxpbmtpbmcgcmlnaHQgYWZ0ZXIKPj4gY29ubmVjdGluZyB0
-byB0aGUgbmV0d29yayBhbmQgdGhlbiBjb250aW51ZXMgYmxpbmtpbmcgZXZlbiB3aGVuIHRoZXJl
-J3MKPj4gbm8gbmV0d29yayB0cmFmZmljIGF0IGFsbC4gVGhpcyB3YXNuJ3QgaGFwcGVuaW5nIGJl
-Zm9yZSwgdGhlIGxlZCB1c2VkIHRvCj4+IGJlIGp1c3QgIm9uIiB3aGVuIEkgd2FzIGNvbm5lY3Rl
-ZCBidXQgbm90IGdlbmVyYXRpbmcgYW55IHRyYWZmaWMuCj4+Cj4+IFVwIHRvIGtlcm5lbCAyLjYu
-MjYuNSAodGhlIGxhc3QgMi42LjI2Lioga2VybmVsIGluIG15IGRpc3RyaWJ1dGlvbiAtCj4+IEFy
-Y2hMaW51eCkgdGhlIGJlaGF2aW9yIHdhcyBjb3JyZWN0LCB0aGUgcHJvYmxlbSBmaXJzdCBvY2N1
-cnJlZCB3aXRoCj4+IDIuNi4yNyBhbmQgaXMgcHJlc2VudCB1cCB0byAyLjYuMjcuNCAodGhlIGxh
-c3Qgb2YgMi42LjI3LiogSSd2ZSB0cmllZCkuCj4+IFRoZSBkcml2ZXIgdXNlZCBpcyBpd2wzOTQ1
-LCB0aGUgY29ycmVzcG9uZGluZyBsaW5lIGZyb20gbHNwY2k6Cj4+IDAzOjAwLjAgTmV0d29yayBj
-b250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlvbiBQUk8vV2lyZWxlc3MgMzk0NUFCRwo+PiBOZXR3
-b3JrIENvbm5lY3Rpb24gKHJldiAwMikKPj4KPj4gSWYgYW55IG90aGVyIGluZm9ybWF0aW9uIGlz
-IHJlbGV2YW50LCBwbGVhc2UgdGVsbCBtZSBhbmQgSSdsbCB0cnkgdG8KPj4gcHJvdmlkZSBpdCwg
-dG9vLgo+Cj4gSSdtIHByZXR0eSBzdXJlIHRoaXMgaXMgaG93IHRoZSBpd2x3aWZpIHRlYW0gd2Fu
-dHMgdGhlIExFRHMgdG8gd29yay4uLgo+Cj4gSm9obgo+IC0tCj4gSm9obiBXLiBMaW52aWxsZSAg
-ICAgICAgICAgICAgICBMaW51eCBzaG91bGQgYmUgYXQgdGhlIGNvcmUKPiBsaW52aWxsZUB0dXhk
-cml2ZXIuY29tICAgICAgICAgICAgICAgICAgb2YgeW91ciBsaXRlcmF0ZSBsaWZlc3R5bGUuCj4K
-PiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tCj4gVGhpcyBTRi5OZXQgZW1haWwgaXMgc3BvbnNvcmVkIGJ5IHRo
-ZSBNb2JsaW4gWW91ciBNb3ZlIERldmVsb3BlcidzIGNoYWxsZW5nZQo+IEJ1aWxkIHRoZSBjb29s
-ZXN0IExpbnV4IGJhc2VkIGFwcGxpY2F0aW9ucyB3aXRoIE1vYmxpbiBTREsgJiB3aW4gZ3JlYXQg
-cHJpemVzCj4gR3JhbmQgcHJpemUgaXMgYSB0cmlwIGZvciB0d28gdG8gYW4gT3BlbiBTb3VyY2Ug
-ZXZlbnQgYW55d2hlcmUgaW4gdGhlIHdvcmxkCj4gaHR0cDovL21vYmxpbi1jb250ZXN0Lm9yZy9y
-ZWRpcmVjdC5waHA/YmFubmVyX2lkPTEwMCZ1cmw9Lwo+IF9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCj4gSXB3Mzk0NS1kZXZlbCBtYWlsaW5nIGxpc3QKPiBJ
-cHczOTQ1LWRldmVsQGxpc3RzLnNvdXJjZWZvcmdlLm5ldAo+IGh0dHBzOi8vbGlzdHMuc291cmNl
-Zm9yZ2UubmV0L2xpc3RzL2xpc3RpbmZvL2lwdzM5NDUtZGV2ZWwKPgoKCgotLSAKTWFyY29zIEhl
-bnJpcXVlIEVzdGV2ZXMgQmFyYm9zYQptYXJjb3Nlc3RldmVzYmFyYm9zYUBnbWFpbC5jb20K
+I think Dave already merged a patch from Ingo to resolve this issue?
+
+On Mon, Oct 13, 2008 at 08:45:03AM -0700, Stephen Hemminger wrote:
+> If mac80211 is configured, but MAC80211_MESH is not, then the build fails
+> because mesh_path_lookup and mesh_path_add are not defined. 
+> Compile tested only, fixes the build, but no idea if breaks something else.
+> 
+> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+> 
+> ---
+> Also needed to stub out mpp_path_lookup
+> 
+> --- a/net/mac80211/mesh.h	2008-10-13 07:57:46.000000000 -0700
+> +++ b/net/mac80211/mesh.h	2008-10-13 08:42:31.000000000 -0700
+> @@ -225,11 +225,20 @@ void ieee80211_stop_mesh(struct ieee8021
+>  int mesh_nexthop_lookup(struct sk_buff *skb,
+>  		struct ieee80211_sub_if_data *sdata);
+>  void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata);
+> +#ifdef CONFIG_MAC80211_MESH
+>  struct mesh_path *mesh_path_lookup(u8 *dst,
+>  		struct ieee80211_sub_if_data *sdata);
+>  struct mesh_path *mpp_path_lookup(u8 *dst,
+>  				  struct ieee80211_sub_if_data *sdata);
+> +#else
+> +#define mesh_path_lookup(dst,sdata) (NULL)
+> +#define mpp_path_lookup(dst,sdata) (NULL)
+> +#endif
+> +#ifdef CONFIG_MAC80211_MESH
+>  int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata);
+> +#else
+> +#define mpp_path_add(dst, mpp, sdata) (-ENOTSUPP)
+> +#endif
+>  struct mesh_path *mesh_path_lookup_by_idx(int idx,
+>  		struct ieee80211_sub_if_data *sdata);
+>  void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop);
+> 
+
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
