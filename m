@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:22974 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750721AbYJUG7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 02:59:25 -0400
-Subject: Re: [PATCH v3] mac80211/drivers: rewrite the rate control API
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <1224571399.27899.67.camel@johannes.berg>
-References: <1223996147.10113.33.camel@johannes.berg>
-	 (sfid-20081014_165703_092655_BE6BA58D) <1224052607.3027.20.camel@johannes.berg>
-	 <1224484940.24677.169.camel@debian.sh.intel.com>
-	 <1224485319.18024.9.camel@johannes.berg>
-	 <1224486368.24677.184.camel@debian.sh.intel.com>
-	 <1224486587.18024.25.camel@johannes.berg>
-	 <1224562072.24677.277.camel@debian.sh.intel.com>
-	 <1224570194.24677.301.camel@debian.sh.intel.com>
-	 <1224571399.27899.67.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 21 Oct 2008 14:58:56 +0800
-Message-Id: <1224572336.24677.319.camel@debian.sh.intel.com> (sfid-20081021_085955_193021_97F97566)
-Mime-Version: 1.0
+Received: from fmmailgate03.web.de ([217.72.192.234]:56000 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932076AbYJMX13 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Oct 2008 19:27:29 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
+Date: Tue, 14 Oct 2008 01:31:38 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48EE20FB.4060700@lwfinger.net> <1223938526.27118.6.camel@dv> <1223939151.27769.3.camel@dv>
+In-Reply-To: <1223939151.27769.3.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810140131.38439.chunkeey@web.de> (sfid-20081014_012753_079827_90B0C9F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-20 at 23:43 -0700, Johannes Berg wrote:
-> I'll clean up the three things you pointed out in this patch, I don't
-> think we can achieve perfect reporting of what your hardware does at
-> this time.
+On Tuesday 14 October 2008 01:05:51 Pavel Roskin wrote:
+> On Mon, 2008-10-13 at 18:55 -0400, Pavel Roskin wrote:
+> > On Tue, 2008-10-14 at 00:55 +0200, Christian Lamparter wrote:
+> > > > I don't get that on i386.  But the values don't seem to be corrupted
+> > > by
+> > > > byte-swapping.
+> > > >
+> > > Hmm, this should be impossible since:
+> > > "p54: report appropriate rate and band values for 802.11a"
+> > > 5f840304b5f7dff0028407fa9b284aecb85a94aa
+> > 
+> > I see.  It's recent code, so maybe it wasn't broken yet when I was
+> > testing it on i386.
+> > 
+> > This code in drivers/net/wireless/p54/p54common.c sets rate_idx:
+> > 
+> >   rx_status.rate_idx = (dev->conf.channel->band == IEEE80211_BAND_2GHZ ?
+> >   hdr->rate : (hdr->rate - 4)) & 0xf;
+> > 
+> > printk() shows:
+> > 
+> > dev->conf.channel->band = 1, hdr->rate = 0, rx_status.rate_idx = 12
+> 
+> And if I set rx_status.rate_idx to 0, I still get that badness for the
+> same reason (status->rate_idx = 12, sband->n_bitrates = 8).  Also, there
+> is another badness reported sometimes:
+> 
+hmm, strange...
+so dev->conf.channel->band = 1 (=> IEEE80211_BAND_2GHZ)
+Ok, but why are there only 8 rates? It should be twelve for 2.4GHz Band!
+(What Card/MAC & RF-Chip have you got? Indigo/Duette/Firsbee or XBow?)
 
-Fine with me. Better than nothing. ;-)
-
-Thanks,
--yi
-
+Regards,
+	Chr
