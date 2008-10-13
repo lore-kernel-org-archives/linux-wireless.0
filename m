@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:40365 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753384AbYJ3PmX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 11:42:23 -0400
-Date: Thu, 30 Oct 2008 17:41:23 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+Received: from ti-out-0910.google.com ([209.85.142.190]:56487 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753194AbYJMKwn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Oct 2008 06:52:43 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so873040tic.23
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 03:52:42 -0700 (PDT)
+Message-ID: <ea11fea30810130352i3cea0579g9950289254c8e628@mail.gmail.com> (sfid-20081013_125248_786613_71FE658E)
+Date: Mon, 13 Oct 2008 16:22:42 +0530
+From: "Manish Katiyar" <mkatiyar@gmail.com>
+To: dcbw@redhat.com, libertas-dev@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 5/5] mac80211_hwsim: Make sure beacon_timer gets
-	deleted
-Message-ID: <20081030154123.GB3923@jm.kir.nu> (sfid-20081030_164228_528130_E8127B13)
-References: <20081030145920.233178987@localhost> <20081030150254.961883544@localhost> <1225379320.3690.58.camel@johannes.berg>
+Subject: [PATCH] libertas : Remove unused variable warning "old_channel" from drivers/net/wireless/libertas/cmd.c
+Cc: mkatiyar@gmail.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1225379320.3690.58.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 30, 2008 at 04:08:40PM +0100, Johannes Berg wrote:
-> On Thu, 2008-10-30 at 16:59 +0200, Jouni Malinen wrote:
-> > Index: wireless-testing/drivers/net/wireless/mac80211_hwsim.c
-> > @@ -290,6 +290,7 @@
-> >  {
-> >  	struct mac80211_hwsim_data *data = hw->priv;
-> >  	data->started = 0;
-> > +	del_timer(&data->beacon_timer);
-> 
-> should that be del_timer_sync, just in case? Not sure how that works
-> with the rearming thing, I never really understood rearming timers.
+Below patch removes the following warning during compilation.
 
-No idea.. I have to admit I don't care that much in this particular
-case (hwsim is a test driver), but if someone can explain how this is
-supposed to be done properly, I would be happy to fix this ;-).
+drivers/net/wireless/libertas/cmd.c:826: warning: unused variable 'old_channel'
 
-That started=0 will prevent future timer handlers from using add_timer,
-but a currently running handler may miss that and as such,
-del_timer_sync() might not be enough. I would assume calling
-del_timer_sync() here twice would take care of that corner case, but
-that looks somewhat funny.
 
-John, can you at least apply the first four patches from this series? I
-would be fine with getting the fifth one in as-is, too, since it does at
-least make it quite a bit less likely to hit the kernel panic. We can
-then update this if someone can tell what the recommended way of killing
-this type of timer is.
+Signed-off-by : Manish Katiyar <mkatiyar@gmail.com>
+---
+ drivers/net/wireless/libertas/cmd.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/libertas/cmd.c
+b/drivers/net/wireless/libertas/cmd.c
+index a912fb6..297696d 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -823,7 +823,9 @@ int lbs_update_channel(struct lbs_private *priv)
+ int lbs_set_channel(struct lbs_private *priv, u8 channel)
+ {
+ 	struct cmd_ds_802_11_rf_channel cmd;
++#ifdef DEBUG
+ 	u8 old_channel = priv->curbssparams.channel;
++#endif
+ 	int ret = 0;
+
+ 	lbs_deb_enter(LBS_DEB_CMD);
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.4.3
+
+
+Thanks -
+Manish
