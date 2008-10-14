@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.89]:23960 "EHLO
-	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751195AbYJUV7f (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:60376 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756416AbYJNALi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 17:59:35 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: reinette chatre <reinette.chatre@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224624899.28639.17.camel@johannes.berg>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 (sfid-20081021_233334_570632_4AF554DC)  <1224624899.28639.17.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 21 Oct 2008 14:59:52 -0700
-Message-Id: <1224626392.10863.92.camel@rc-desk> (sfid-20081021_235938_272310_19C58561)
-Mime-Version: 1.0
+	Mon, 13 Oct 2008 20:11:38 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
+Date: Tue, 14 Oct 2008 02:15:47 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48EE20FB.4060700@lwfinger.net> <1223941001.28019.3.camel@dv> <1223942439.28019.9.camel@dv>
+In-Reply-To: <1223942439.28019.9.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810140215.47242.chunkeey@web.de> (sfid-20081014_021143_158338_E1D30362)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-21 at 14:34 -0700, Johannes Berg wrote:
-> On Tue, 2008-10-21 at 23:33 +0200, Tomas Winkler wrote:
-> > On Tue, Oct 21, 2008 at 11:25 PM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> > > On Tue, 2008-10-21 at 11:27 -0700, reinette chatre wrote:
-> > >> Two new versions of 3945 uCode is now available for download from
-> > >> http://intellinuxwireless.org/?n=Downloads. Two versions are available
-> > >> as we have updated the API version of the uCode and included pending
-> > >> fixes in both API versions.
-> > >>
-> > >> Version 15.28.1.8 supports API v1 and can be used with most current 3945
-> > >> drivers. Version 15.28.2.8 (API v2) is required when you start using the
-> > >> latest 3945 driver from wireless-testing at the time it includes the
-> > >> patch "iwl3945 : Fix a-band association for passive channels".
-> > >
-> > > Can you make the driver work with the old ucode? We even do that for
-> > > drivers where we don't control the ucode like b43...
-> > 
-> > What for?
+On Tuesday 14 October 2008 02:00:39 Pavel Roskin wrote:
+> On Mon, 2008-10-13 at 19:36 -0400, Pavel Roskin wrote:
 > 
-> Well, so that installing a new kernel doesn't suddenly break your
-> network connection and ability to download the firmware, for instance.
-> If you want more arguments you can go read all the "b43 sucks" threads
-> about it.
+> > p54_config() calls p54_set_freq(), which can fail with -EINVAL.  I'm
+> > looking why it can happen.
+> 
+> The calibration table only has frequencies in the 2.4GHz band, but the
+> scan goes through the 5GHz band as well.  That's how it fails:
+> 
+> freq = 5825
+> i = 0, priv->iq_autocal[i].freq = 2412
+> i = 1, priv->iq_autocal[i].freq = 2417
+> i = 2, priv->iq_autocal[i].freq = 2422
+> i = 3, priv->iq_autocal[i].freq = 2427
+> i = 4, priv->iq_autocal[i].freq = 2432
+> i = 5, priv->iq_autocal[i].freq = 2437
+> i = 6, priv->iq_autocal[i].freq = 2442
+> i = 7, priv->iq_autocal[i].freq = 2447
+> i = 8, priv->iq_autocal[i].freq = 2452
+> i = 9, priv->iq_autocal[i].freq = 2457
+> i = 10, priv->iq_autocal[i].freq = 2462
+> i = 11, priv->iq_autocal[i].freq = 2467
+> i = 12, priv->iq_autocal[i].freq = 2472
+> i = 13, priv->iq_autocal[i].freq = 2484
+> phy9: frequency change failed
+> ret = -22
+> 
+> Either we should be using a different table for the 5GHz band, or the
+> driver should not announce 5GHz channels if the calibration table lacks
+> them.
+I ask again:
+What Card/MAC & RF-Chip do you have? Indigo/Duette/Firsbee or XBow?
 
-Using the new driver (with patch
-http://marc.info/?l=linux-wireless&m=122401294318415&w=2 ) on current
-(v1 API) uCode will cause a firmware error. The log message should be
-clear that a newer ucode is required.
+see switch instruction in p54common.c line 430 in p54_parse_eeprom
 
-Reinette
-
-
+Regards,
+	Chr
