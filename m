@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.225]:57174 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754925AbYJFQwe (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.187]:10469 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752119AbYJNQA6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 12:52:34 -0400
-Received: by wx-out-0506.google.com with SMTP id h27so614289wxd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 09:52:32 -0700 (PDT)
-Message-ID: <43e72e890810060952p6a9a7ae5i30bdda28f1a9fab8@mail.gmail.com> (sfid-20081006_185259_116669_13C1321C)
-Date: Mon, 6 Oct 2008 09:52:32 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-Cc: "Marcel Holtmann" <holtmann@linux.intel.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Tomas Winkler" <tomasw@gmail.com>
-In-Reply-To: <1223296783.15196.13.camel@johannes.berg>
+	Tue, 14 Oct 2008 12:00:58 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so1261264tic.23
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2008 09:00:56 -0700 (PDT)
+Message-ID: <ea11fea30810140900n572c326r938fa88fdb5843d8@mail.gmail.com> (sfid-20081014_180110_274426_7112AA9F)
+Date: Tue, 14 Oct 2008 21:30:56 +0530
+From: "Manish Katiyar" <mkatiyar@gmail.com>
+To: dcbw@redhat.com, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas : Remove unused variable warning "old_channel" from drivers/net/wireless/libertas/cmd.c
+Cc: mkatiyar@gmail.com
+In-Reply-To: <ea11fea30810130352i3cea0579g9950289254c8e628@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 <1221123779.2513.88.camel@debian.sh.intel.com>
-	 <1221184060.11498.3.camel@californication>
-	 <1221185432.6695.0.camel@californication>
-	 <1223296221.15196.6.camel@johannes.berg>
-	 <1223296592.11272.163.camel@violet.holtmann.net>
-	 <1223296783.15196.13.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <ea11fea30810130352i3cea0579g9950289254c8e628@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 6, 2008 at 5:39 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2008-10-06 at 14:36 +0200, Marcel Holtmann wrote:
->> Hi Johannes,
->>
->> > > I take this back. It took a couple of hours, but it crashed again.
->> >
->> > Do you have 64k pages enabled? My issue goes away entirely when I
->> > disable 64k pages.
->>
->> so the initial issue was a BUG_ON when the ucode reports back an
->> unsupported event. That should have been fixed by now since we just
->> can't crash the whole kernel, because some piece of firmware acts bogus
->> now and then.
+On Mon, Oct 13, 2008 at 4:22 PM, Manish Katiyar <mkatiyar@gmail.com> wrote:
+> Below patch removes the following warning during compilation.
 >
-> I have a different interpretation of the original issue, since afaik the
-> value it was doing a BUG_ON on is a value that is only passed in by the
-> driver and copied by the ucode to the response, hence it shouldn't
-> actually crash unless the driver is passing bogus stuff in or, as it
-> seems to be the case here, the DMA programming is completely fucked and
-> the ucode just goes to write to random memory locations.
+> drivers/net/wireless/libertas/cmd.c:826: warning: unused variable 'old_channel'
 
-Seems like a good enough argument to call for it to be opened up.
+Any ack/nack on this ??
 
-  Luis
+Thanks -
+Manish
+
+>
+>
+> Signed-off-by : Manish Katiyar <mkatiyar@gmail.com>
+> ---
+>  drivers/net/wireless/libertas/cmd.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/libertas/cmd.c
+> b/drivers/net/wireless/libertas/cmd.c
+> index a912fb6..297696d 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -823,7 +823,9 @@ int lbs_update_channel(struct lbs_private *priv)
+>  int lbs_set_channel(struct lbs_private *priv, u8 channel)
+>  {
+>        struct cmd_ds_802_11_rf_channel cmd;
+> +#ifdef DEBUG
+>        u8 old_channel = priv->curbssparams.channel;
+> +#endif
+>        int ret = 0;
+>
+>        lbs_deb_enter(LBS_DEB_CMD);
+> --
+> 1.5.4.3
+>
+>
+> Thanks -
+> Manish
+>
