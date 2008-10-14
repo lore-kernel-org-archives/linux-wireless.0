@@ -1,64 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:61268 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751338AbYJ0XZL (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:48961 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752310AbYJNRL7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 19:25:11 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so579453ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 16:25:09 -0700 (PDT)
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"Carlos R. Mafra" <crmafra2@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Soeren Sonnenburg <kernel@nn7.de>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
+	Tue, 14 Oct 2008 13:11:59 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so529669yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2008 10:11:58 -0700 (PDT)
+Message-ID: <40f31dec0810141011y265275a8nc083764889d699f1@mail.gmail.com> (sfid-20081014_191203_836485_AB7A5BBB)
+Date: Tue, 14 Oct 2008 20:11:57 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Elias Oltmanns" <eo@nebensachen.de>
+Subject: Re: [PATCH] ath5k: Does not connect reliably on 2.6.27
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240810271612g72bb2b08p6ebab9f6f02f5b98@mail.gmail.com>
-References: <20081027162054.GA4015@localhost.aei.mpg.de>
-	 <20081027222852.GA3907@localhost.aei.mpg.de>
-	 <1ba2fa240810271540t1d1ba5c9me60f86dec357f53e@mail.gmail.com>
-	 <200810272350.29429.rjw@sisk.pl>
-	 <1ba2fa240810271612g72bb2b08p6ebab9f6f02f5b98@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 27 Oct 2008 16:23:11 -0700
-Message-Id: <1225149791.6339.8.camel@brick> (sfid-20081028_002516_830594_CCE56DFC)
-Mime-Version: 1.0
+In-Reply-To: <87iqrvgm7b.fsf@denkblock.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <87iqrvgm7b.fsf@denkblock.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-28 at 01:12 +0200, Tomas Winkler wrote:
-> h
-> 
-> On Tue, Oct 28, 2008 at 12:50 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Monday, 27 of October 2008, Tomas Winkler wrote:
-> >> On Tue, Oct 28, 2008 at 12:28 AM, Carlos R. Mafra <crmafra2@gmail.com> wrote:
-> >> > On Mon 27.Oct'08 at 23:07:00 +0200, Tomas Winkler wrote:
-> >> >>[...]
-> >> >>
-> >> >> Can someone try this one (it might be space broken I've just pasted
-> >> >> that in) It's on top of 1d63e726408dfdb3e10ed8f00c383b30ebb333d3
-> >> >> (latest linux-2.6.git)
-> >> >
-> >> >
-> >> > Yes, this one also works for me (I applied it manually).
-> >> Good, this was actually part of some older and bigger patch I wasn't
-> >> aware it has this affect. It has some millage in iwl5000 branch.
-> >> RFKIll went through some changes in the mainline so it wasn't merged yet.
-> >
-> > Are you going to push this patch upstream now?  It's quite important to get
-> > this resume regression fixed ASAP.
-> 
-> Definitely I would post it to wireless and stable.  I would like to
-> hear from Harvey, though if this is somehow related to b43 as well. I
-> will it give some more testing tomorrow morning I don't have any HW
-> right now and need to suspend to bed :)
+2008/10/14 Elias Oltmanns <eo@nebensachen.de>:
+> Hi all,
+>
+> after a cold boot into 2.6.27, ath5k doesn't work on my machine. The
+> sequence
+>
+> # ifconfig ath0 up
+> # iwlist ath0 ap
+>
+> results in a message informing me that no list of APs is available for
+> that device. I have identified the following commit as the guilty one:
+>
+> commit 2203d6be7ed17af81a1dc35a0af9806086743b02
+> Author: Nick Kossifidis <mick@madwifi.org>
+> Date:   Sun Jul 20 06:36:52 2008 +0300
+>
+>    ath5k: Misc hw_reset updates
+>
+>     * Update hw_reset to calculate some of the values we were using as
+>       static
+>     * Increase activation to rx delay
+>
+>    Changes-licensed-under: ISC
+>    Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> The minimal patch to fix the issue for me is attached. However, I am
+> wondering whether the preceding writes to register 0xa228 should be
+> dropped or at least adjusted somehow. Perhaps those of you who know the
+> recently released HAL from Atheros can throw some light on the matter.
+>
+> Regards,
+>
+> Elias
+> ---
+> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> index dc51b84..b1cec2a 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -862,7 +862,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>                        data = 0;
+>
+>                        /* Just write 0x9b5 ? */
+> -                       /* ath5k_hw_reg_write(ah, 0x000009b5, 0xa228); */
+> +                       ath5k_hw_reg_write(ah, 0x000009b5, 0xa228);
+>                        ath5k_hw_reg_write(ah, 0x0000000f, AR5K_SEQ_MASK);
+>                        ath5k_hw_reg_write(ah, 0x00000000, 0xa254);
+>                        ath5k_hw_reg_write(ah, 0x0000000e, AR5K_PHY_SCAL);
+>
 
-Go ahead and send it, I retried with linus HEAD and suspend/resume is fine here,
-not sure why it was failing, although it does seem to take longer to resume that
-2.6.27, but that's purely subjective, no numbers to back that up.
+I think i've fixed that (it's a buggy mask some lines above) on an
+earlier patch (the one that introduced AR2425 support) but i'll look
+into it again ;-)
 
-Harvey
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
