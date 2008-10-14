@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46381 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751085AbYJWHkF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57642 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342AbYJNUh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 03:40:05 -0400
-Subject: [PATCH] wireless: remove write-only 'granted' variable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 23 Oct 2008 09:40:01 +0200
-Message-Id: <1224747601.5865.29.camel@johannes.berg> (sfid-20081023_094013_748429_8CB5C27C)
-Mime-Version: 1.0
+	Tue, 14 Oct 2008 16:37:57 -0400
+Date: Tue, 14 Oct 2008 16:35:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: New Regulatory Domain Api.
+Message-ID: <20081014203510.GD3349@tuxdriver.com> (sfid-20081014_223802_063949_1D8CE891)
+References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com> <20081009154547.GB13349@tesla> <1223608949.2510.1061.camel@debian.sh.intel.com> <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com> <1223967581.2570.144.camel@debian.sh.intel.com> <43e72e890810140004k6bfa72edsf39acbafcf317fa6@mail.gmail.com> <1223969808.2570.153.camel@debian.sh.intel.com> <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 14, 2008 at 02:04:50AM -0700, Luis R. Rodriguez wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/reg.c |    2 --
- 1 file changed, 2 deletions(-)
+> The question which I thought was being asked was if you have two cards
+> present, one a dual band card 2.4 GHz and 5 GHz and another a single
+> band 2.4 GHz card what happens in terms of regulatory rules. What I'm
+> suggesting should happen is the intersection of their regulatory rules
+> should be applied and in this case only the 2.4 GHz channels that work
+> on both cards should be used. What currently happens is the regulatory
+> rules of the first card detected takes effect.
 
---- everything.orig/net/wireless/reg.c	2008-10-23 09:38:51.000000000 +0200
-+++ everything/net/wireless/reg.c	2008-10-23 09:38:52.000000000 +0200
-@@ -45,7 +45,6 @@
- /* wiphy is set if this request's initiator is REGDOM_SET_BY_DRIVER */
- struct regulatory_request {
- 	struct wiphy *wiphy;
--	int granted;
- 	enum reg_set_by initiator;
- 	char alpha2[2];
- };
-@@ -744,7 +743,6 @@ static int __set_regdom(const struct iee
- 
- 	/* Tada! */
- 	cfg80211_regdomain = rd;
--	last_request->granted = 1;
- 
- 	return 0;
- }
+That doesn't sound like quite the correct behavior.  If a channel is
+excluded for regulatory reasons, then I suspect that should govern
+everyone.  But if one card just doesn't support a band, I don't see
+why any other cards should be limited by that.
 
+Did I miss something?
 
+John
+
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
