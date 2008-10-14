@@ -1,73 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42258 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:60300 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753097AbYJORh1 (ORCPT
+	with ESMTP id S1750899AbYJNR5X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 13:37:27 -0400
-Subject: Re: New Regulatory Domain Api.
+	Tue, 14 Oct 2008 13:57:23 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Kpo93-0001oE-Cb
+	for linux-wireless@vger.kernel.org; Tue, 14 Oct 2008 19:57:21 +0200
+Subject: [RFC] make ieee80211 invisible
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224091740.28173.13.camel@californication>
-References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
-	 <20081009154547.GB13349@tesla>
-	 <1223608949.2510.1061.camel@debian.sh.intel.com>
-	 (sfid-20081010_052512_883760_F373F92C)  <1223975972.10113.20.camel@johannes.berg>
-	 <1224034856.24677.9.camel@debian.sh.intel.com>
-	 <1224085845.4764.23.camel@californication>
-	 <1224086490.735.8.camel@johannes.berg>
-	 <1224091740.28173.13.camel@californication>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-El1beGQyp2Jw55J2bqF3"
-Date: Wed, 15 Oct 2008 19:36:45 +0200
-Message-Id: <1224092205.735.12.camel@johannes.berg> (sfid-20081015_193741_322160_0561E0DA)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 14 Oct 2008 19:49:22 +0200
+Message-Id: <1224006562.10113.47.camel@johannes.berg> (sfid-20081014_195730_335063_053D77F1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-El1beGQyp2Jw55J2bqF3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-10-15 at 19:29 +0200, Marcel Holtmann wrote:
+This makes CONFIG_IEEE80211 invisible. The drivers that require it
+(ipw2100, ipw2200, hostap) select it, and everybody else really
+shouldn't even think about using it. Also, since there really is
+no point in compiling anything without crypto support these days,
+remove the crypto options and just enable them, leaving only the
+debugging option which only shows up when a driver is select that
+requires it. This makes it hard to enable, but most people wouldn't
+want to anyway.
 
-> I think it is fine to do so. Since plugging in an USB wireless card is
-> expected to work and if we limit it, lets give the user at least some
-> way to figure out why it is limited.
->=20
-> Especially when your internal one is a BG-card and you external one is
-> an A-card only (or combo). And you put it in to just access an
-> A-network.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/ieee80211/Kconfig |   56 ++++++++++++++------------------------------------
+ 1 file changed, 16 insertions(+), 40 deletions(-)
 
-Good point. I've never really considered that since we only added this
-feature after understanding you at OLS :)
+--- everything.orig/net/ieee80211/Kconfig	2008-10-14 19:42:44.000000000 +0200
++++ everything/net/ieee80211/Kconfig	2008-10-14 19:45:13.000000000 +0200
+@@ -1,12 +1,23 @@
+ config IEEE80211
+-	tristate "Generic IEEE 802.11 Networking Stack (DEPRECATED)"
++	tristate
++	select WIRELESS_EXT
++	select CRYPTO
++	select CRYPTO_ARC4
++	select CRYPTO_ECB
++	select CRYPTO_AES
++	select CRYPTO_MICHAEL_MIC
++	select CRYPTO_ECB
++	select CRC32
++	select IEEE80211_CRYPT_WEP
++	select IEEE80211_CRYPT_TKIP
++	select IEEE80211_CRYPT_CCMP
+ 	---help---
+ 	This option enables the hardware independent IEEE 802.11
+ 	networking stack.  This component is deprecated in favor of the
+ 	mac80211 component.
+ 
+ config IEEE80211_DEBUG
+-	bool "Enable full debugging output"
++	bool "Full debugging output for the old IEEE80211 stack"
+ 	depends on IEEE80211
+ 	---help---
+ 	  This option will enable debug tracing output for the
+@@ -29,45 +40,10 @@ config IEEE80211_DEBUG
+ 	  subsystem, you most likely want to say N here.
+ 
+ config IEEE80211_CRYPT_WEP
+-	tristate "IEEE 802.11 WEP encryption (802.1x)"
+-	depends on IEEE80211
+-	select CRYPTO
+-	select CRYPTO_ARC4
+-	select CRYPTO_ECB
+-	select CRC32
+-	---help---
+-	Include software based cipher suites in support of IEEE
+-	802.11's WEP.  This is needed for WEP as well as 802.1x.
+-
+-	This can be compiled as a module and it will be called
+-	"ieee80211_crypt_wep".
++	tristate
+ 
+ config IEEE80211_CRYPT_CCMP
+-	tristate "IEEE 802.11i CCMP support"
+-	depends on IEEE80211
+-	select CRYPTO
+-	select CRYPTO_AES
+-	---help---
+-	Include software based cipher suites in support of IEEE 802.11i
+-	(aka TGi, WPA, WPA2, WPA-PSK, etc.) for use with CCMP enabled
+-	networks.
+-
+-	This can be compiled as a module and it will be called
+-	"ieee80211_crypt_ccmp".
++	tristate
+ 
+ config IEEE80211_CRYPT_TKIP
+-	tristate "IEEE 802.11i TKIP encryption"
+-	depends on IEEE80211
+-	select WIRELESS_EXT
+-	select CRYPTO
+-	select CRYPTO_MICHAEL_MIC
+-	select CRYPTO_ECB
+-	select CRC32
+-	---help---
+-	Include software based cipher suites in support of IEEE 802.11i
+-	(aka TGi, WPA, WPA2, WPA-PSK, etc.) for use with TKIP enabled
+-	networks.
+-
+-	This can be compiled as a module and it will be called
+-	"ieee80211_crypt_tkip".
+-
++	tristate
 
-johannes
-
---=-El1beGQyp2Jw55J2bqF3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI9iopAAoJEKVg1VMiehFYO0IP/03te+vwpYVHETtrD+/judHI
-ed9JsykIBFRt8fDYjAp3iS5rZyM3H+7Hn8VrV1Oq5lpA+dvT62WwBseS3W59fH9h
-YyZZMYTfUiFTLBk+l9DaurbOJZ3vhYnnUKWDARj2zvZAtqlrk+vMXBYNQ8vnJEoh
-EVxGRNc28t5tKQLuwVitbgZRHQDOd6dEhJL1CuSosIZPXmi0a4NPqGk27jlCMAPE
-HZwmSRcHIS5x/QOMx0soaHrIjGU6yM5cr9jq+wD2ZClkxcuZGrzM18E9coQr7D69
-eXLIdrDIDD9iKYKTbFINAySKHZoOPc6uRgZ7k01VqGprckhexXVpbI9BRjrZcMxO
-FNIaa7UytrWfg+DADSDU3THIIr8Hm5kt2EuQ+4R/eHR+mqqsfW7BPUZhA66qVLCM
-rqTDW5KKr78hEQFIqp0pNd7E83fFmQjbplmvqvVBEbdvb7EYYWQvS1wGS4B+ppqE
-FrMF3KDitM/fRmqvmFAJq0a7yjQTObNtvos5P9SDxbO35wAnNLthOPXfKKscOEAK
-FgwyD19LURGlrJCNKy9pGxnczs1CXzQbbh0+zxjRgrLgbzOUl2/xEcD7SItVZ7gv
-++m2SORv2nU+q4C7S96/wfMwMFCOpnJN6r0ExklfbqbZbZ32TL+cH44xoBNKldIC
-fJatSdThUuLDs0X9HNCz
-=1c05
------END PGP SIGNATURE-----
-
---=-El1beGQyp2Jw55J2bqF3--
 
