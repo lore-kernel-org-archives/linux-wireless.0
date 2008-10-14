@@ -1,78 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:63376 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472AbYJCUsw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 16:48:52 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1801151wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Oct 2008 13:48:51 -0700 (PDT)
-Subject: [PATCH 4/8] b43: use the b43_phy masking/setting helpers where
- possible from lo.c
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 03 Oct 2008 13:48:47 -0700
-Message-Id: <1223066927.6512.29.camel@brick> (sfid-20081003_224857_587865_B615C2BC)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:4799 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751790AbYJNTfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 15:35:20 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 7/9] iwl3945 : Fix a-band association for passive channels
+Date: Tue, 14 Oct 2008 12:32:47 -0700
+Message-Id: <1224012769-8920-8-git-send-email-reinette.chatre@intel.com> (sfid-20081014_213529_086644_B03F15A6)
+In-Reply-To: <1224012769-8920-7-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1224012769-8920-1-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-4-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-5-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-6-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-7-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+
+This patch fixes the a-band association for passive channels.
+This fix will only work with uCode version 15.28.1.8 and above.
+uCode API version is incremented to 2.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/b43/lo.c |   31 ++++++++-----------------------
- 1 files changed, 8 insertions(+), 23 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   22 +++++++++++++++-------
+ 2 files changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/lo.c b/drivers/net/wireless/b43/lo.c
-index a6c185b..b41f2de 100644
---- a/drivers/net/wireless/b43/lo.c
-+++ b/drivers/net/wireless/b43/lo.c
-@@ -393,18 +393,10 @@ static void lo_measure_setup(struct b43_wldev *dev,
- 		sav->phy_cck_14 = b43_phy_read(dev, B43_PHY_CCK(0x14));
- 		sav->phy_hpwr_tssictl = b43_phy_read(dev, B43_PHY_HPWR_TSSICTL);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index bdd3247..c124e9f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -54,7 +54,7 @@ extern struct pci_device_id iwl3945_hw_card_ids[];
+  *   *only* when uCode interface or architecture changes so that it
+  *   is not compatible with earlier drivers.
+  * This number will also appear in << 8 position of 1st dword of uCode file */
+-#define IWL3945_UCODE_API "-1"
++#define IWL3945_UCODE_API "-2"
  
--		b43_phy_write(dev, B43_PHY_HPWR_TSSICTL,
--			      b43_phy_read(dev, B43_PHY_HPWR_TSSICTL)
--			      | 0x100);
--		b43_phy_write(dev, B43_PHY_EXTG(0x01),
--			      b43_phy_read(dev, B43_PHY_EXTG(0x01))
--			      | 0x40);
--		b43_phy_write(dev, B43_PHY_DACCTL,
--			      b43_phy_read(dev, B43_PHY_DACCTL)
--			      | 0x40);
--		b43_phy_write(dev, B43_PHY_CCK(0x14),
--			      b43_phy_read(dev, B43_PHY_CCK(0x14))
--			      | 0x200);
-+		b43_phy_set(dev, B43_PHY_HPWR_TSSICTL, 0x100);
-+		b43_phy_set(dev, B43_PHY_EXTG(0x01), 0x40);
-+		b43_phy_set(dev, B43_PHY_DACCTL, 0x40);
-+		b43_phy_set(dev, B43_PHY_CCK(0x14), 0x200);
- 	}
- 	if (phy->type == B43_PHYTYPE_B &&
- 	    phy->radio_ver == 0x2050 && phy->radio_rev < 6) {
-@@ -421,17 +413,10 @@ static void lo_measure_setup(struct b43_wldev *dev,
- 		sav->phy_cck_3E = b43_phy_read(dev, B43_PHY_CCK(0x3E));
- 		sav->phy_crs0 = b43_phy_read(dev, B43_PHY_CRS0);
+ /* Default noise level to report when noise measurement is not available.
+  *   This may be because we're:
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index ce12609..4bd92c3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4876,18 +4876,26 @@ static int iwl3945_get_channels_for_scan(struct iwl3945_priv *priv,
+ 			continue;
+ 		}
  
--		b43_phy_write(dev, B43_PHY_CLASSCTL,
--			      b43_phy_read(dev, B43_PHY_CLASSCTL)
--			      & 0xFFFC);
--		b43_phy_write(dev, B43_PHY_CRS0, b43_phy_read(dev, B43_PHY_CRS0)
--			      & 0x7FFF);
--		b43_phy_write(dev, B43_PHY_ANALOGOVER,
--			      b43_phy_read(dev, B43_PHY_ANALOGOVER)
--			      | 0x0003);
--		b43_phy_write(dev, B43_PHY_ANALOGOVERVAL,
--			      b43_phy_read(dev, B43_PHY_ANALOGOVERVAL)
--			      & 0xFFFC);
-+		b43_phy_mask(dev, B43_PHY_CLASSCTL, 0xFFFC);
-+		b43_phy_mask(dev, B43_PHY_CRS0, 0x7FFF);
-+		b43_phy_set(dev, B43_PHY_ANALOGOVER, 0x0003);
-+		b43_phy_mask(dev, B43_PHY_ANALOGOVERVAL, 0xFFFC);
- 		if (phy->type == B43_PHYTYPE_G) {
- 			if ((phy->rev >= 7) &&
- 			    (sprom->boardflags_lo & B43_BFL_EXTLNA)) {
++		/* If passive , set up for auto-switch
++		 *  and use long active_dwell time.
++		 */
+ 		if (!is_active || is_channel_passive(ch_info) ||
+-		    (channels[i].flags & IEEE80211_CHAN_PASSIVE_SCAN))
++		    (channels[i].flags & IEEE80211_CHAN_PASSIVE_SCAN)) {
+ 			scan_ch->type = 0;	/* passive */
+-		else
++			scan_ch->active_dwell = cpu_to_le16(passive_dwell - 1);
++		} else {
+ 			scan_ch->type = 1;	/* active */
++			scan_ch->active_dwell = cpu_to_le16(active_dwell);
++		}
++		scan_ch->passive_dwell = cpu_to_le16(passive_dwell);
+ 
+-		if ((scan_ch->type & 1) && n_probes)
++		/* Set direct probe bits. These may be used both for active
++		 * scan channels (probes gets sent right away),
++		 * or for passive channels (probes get se sent only after
++		 * hearing clear Rx packet).*/
++		if (n_probes)
+ 			scan_ch->type |= IWL_SCAN_PROBE_MASK(n_probes);
+ 
+-		scan_ch->active_dwell = cpu_to_le16(active_dwell);
+-		scan_ch->passive_dwell = cpu_to_le16(passive_dwell);
+-
+ 		/* Set txpower levels to defaults */
+ 		scan_ch->tpc.dsp_atten = 110;
+ 		/* scan_pwr_info->tpc.dsp_atten; */
+@@ -6100,7 +6108,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+ 	int rc = 0;
+ 	struct iwl3945_scan_cmd *scan;
+ 	struct ieee80211_conf *conf = NULL;
+-	u8 n_probes = 2;
++	u8 n_probes = 0;
+ 	enum ieee80211_band band;
+ 
+ 	conf = ieee80211_get_hw_conf(priv->hw);
 -- 
-1.6.0.2.471.g47a76
-
+1.5.4.3
 
