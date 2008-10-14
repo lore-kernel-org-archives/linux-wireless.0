@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:63544 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752389AbYJFPLm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55756 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752479AbYJNVxn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 11:11:42 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so426512ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 08:11:41 -0700 (PDT)
-Message-ID: <eb3ff54b0810060811p4798e4c0va59c5375d004f53d@mail.gmail.com> (sfid-20081006_171149_766512_15D136C5)
-Date: Mon, 6 Oct 2008 17:11:40 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH 1/2] iwlwifi: fix compliation warning in iwl-agn-rs.c when CONFIG_IWLWIFI_DEBUG is not set.
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	yi.zhu@intel.com
-In-Reply-To: <1ba2fa240810060741o35c8071ere77460305b88545c@mail.gmail.com>
+	Tue, 14 Oct 2008 17:53:43 -0400
+Date: Tue, 14 Oct 2008 17:50:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: New Regulatory Domain Api.
+Message-ID: <20081014215050.GG3349@tuxdriver.com> (sfid-20081014_235348_909442_2F9A2967)
+References: <1223608949.2510.1061.camel@debian.sh.intel.com> <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com> <1223967581.2570.144.camel@debian.sh.intel.com> <43e72e890810140004k6bfa72edsf39acbafcf317fa6@mail.gmail.com> <1223969808.2570.153.camel@debian.sh.intel.com> <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com> <20081014203510.GD3349@tuxdriver.com> <1224018957.3027.9.camel@johannes.berg> <20081014211912.GF3349@tuxdriver.com> <1224019662.3027.13.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <eb3ff54b0810060658p2241a6d0k9c6f504d976e0f@mail.gmail.com>
-	 <1ba2fa240810060741o35c8071ere77460305b88545c@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1224019662.3027.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, Oct 14, 2008 at 11:27:42PM +0200, Johannes Berg wrote:
+> On Tue, 2008-10-14 at 17:19 -0400, John W. Linville wrote:
 
-> I prefer marking it.
-> struct iwl_priv *priv = priv_r __maybe_unused;
+> > Should there be an "I make no representation of authority" flag in
+> > the regulatory maps?
+> 
+> The only reasonable solution I can come up with is have it make separate
+> hints for 2.4 and 5 GHz and then a single-band card won't say anything
+> about 5 GHz so the dual-band gets to set that part. But OTOH I don't see
+> a reasonable use-case for this whole thing so far---we really only added
+> this after discussions with Marcel at OLS so embedded systems can
+> function w/o crda, but who would build an embedded system with two
+> different cards like that?
 
-First of all , in order to compile, this should be:
-struct iwl_priv *priv __maybe_unused = priv_r;
-instead of:
-struct iwl_priv *priv = priv_r __maybe_unused;
+And couldn't such a person also do the equivalent of the OLD_REGULATORY
+stuff that we have now?
 
- Second, this is also a possible solution; looking at the function
-immediately above in the same file  (rs_clear() in iwl-agn-rs.c)
-we can see the same usage of #ifdef CONFIG_IWLWIFI_DEBUG
-and not __maybe_unused.
-I wonder: does the  "__maybe_unused" solution better than the #ifdef
-solution  in any aspect?
-
-Regards,
-Rami Rosen
-
-On Mon, Oct 6, 2008 at 4:41 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Mon, Oct 6, 2008 at 3:58 PM, Rami Rosen <ramirose@gmail.com> wrote:
->> When CONFIG_IWLWIFI_DEBUG is not set and CONFIG_IWLWIFI is set,
->> we get this compilation warning:
->> /wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c: In
->> function 'rs_free_sta':
->> /wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:2425:
->> warning: unused variable 'priv'
->>
->> This patch (against wireless-next-2.6 tree) fixes it.
->>
->
-> I prefer marking it.
-> struct iwl_priv *priv = priv_r __maybe_unused;
->
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
