@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42861 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbYJGSST (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:23346 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754774AbYJNIYM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 14:18:19 -0400
-Subject: Re: wpa supplicant interface up delay
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>, Dan Williams <dcbw@redhat.com>
-In-Reply-To: <1223403361.7328.71.camel@johannes.berg> (sfid-20081007_201608_134402_34146830)
-References: <1223403361.7328.71.camel@johannes.berg>
-	 (sfid-20081007_201608_134402_34146830)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nmH6A/qu1xojA0v6lQnm"
-Date: Tue, 07 Oct 2008 20:18:18 +0200
-Message-Id: <1223403498.7328.73.camel@johannes.berg> (sfid-20081007_201821_469015_0DD8273B)
-Mime-Version: 1.0
+	Tue, 14 Oct 2008 04:24:12 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1985386wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2008 01:24:11 -0700 (PDT)
+Message-ID: <40f31dec0810140124o3e513811gafcbecaf63115c08@mail.gmail.com> (sfid-20081014_102419_279745_90E96C71)
+Date: Tue, 14 Oct 2008 11:24:11 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH 3/3] ath5k: correct ath5k signal quality
+Cc: linville@tuxdriver.com, jirislaby@gmail.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1223932090-9274-4-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1223932090-9274-1-git-send-email-lrodriguez@atheros.com>
+	 <1223932090-9274-2-git-send-email-lrodriguez@atheros.com>
+	 <1223932090-9274-3-git-send-email-lrodriguez@atheros.com>
+	 <1223932090-9274-4-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/10/14 Luis R. Rodriguez <lrodriguez@atheros.com>:
+> This adjusts ath5k's signal quality reporting taking into
+> consideration received beacons at an RSSI of 35 should indicate
+> you can use of 54 Mbps on a single stream card (all ath5k cards)
+> reliably.
+>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/ath5k/base.c |   12 +++++++++++-
+>  1 files changed, 11 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 1a24a22..c7f46e9 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -1798,7 +1798,17 @@ accept:
+>
+>                rxs.noise = sc->ah->ah_noise_floor;
+>                rxs.signal = rxs.noise + rs.rs_rssi;
+> -               rxs.qual = rs.rs_rssi * 100 / 64;
+> +
+> +               /* An rssi of 35 indicates you should be able use
+> +                * 54 Mbps reliably. A more elaborate scheme can be used
+> +                * here but it requires a map of SNR/throughput for each
+> +                * possible mode used */
+> +               rxs.qual = rs.rs_rssi * 100 / 35;
+> +
+> +               /* rssi can be more than 35 though, anything above that
+> +                * should be considered at 100% */
+> +               if (rxs.qual > 100)
+> +                       rxs.qual = 100;
+>
+>                rxs.antenna = rs.rs_antenna;
+>                rxs.rate_idx = ath5k_hw_to_driver_rix(sc, rs.rs_rate);
 
---=-nmH6A/qu1xojA0v6lQnm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-On Tue, 2008-10-07 at 20:16 +0200, Johannes Berg wrote:
-> * Wait some time to allow driver to initialize before
->                          * starting configuring the driver. This seems to=
- be =20
->                          * needed at least some drivers that load firmwar=
-e etc.
->                          * when the interface is set up.
->=20
-> which drivers are those, and why can't we fix the drivers instead? This
-> seems like a bug in the drivers that they return from their open
-> callback prematurely.
 
-In any case, this delay should certainly be removed from the nl80211
-driver; when porting drivers to the new APIs we can make sure this is
-done correctly.
 
-johannes
-
---=-nmH6A/qu1xojA0v6lQnm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI66fnAAoJEKVg1VMiehFYFt0P/1Y4Bz5/w4KUc6a8dwKu4A1u
-0RkrWlJliU+Ps0LZT+Q1EyVKhWjrhQHn0RfqmBfVgDiJr86a48H0U4c/jVeESwvl
-88y4RB+2gzWAWKLuMRz1CvR/8lJuwGKXBQS3dC0fkhQLzzKn4zKZhYEz649x+CXM
-u7hxAejjPx3M3Z264j78XX+9cvSb+yocq75IxEA7IkvUA3ZSCBBHICKon6fdTQ2m
-pTO4GOelVt01HbKZyO+axn5CIL5aFfIVAXcyciZ1pLIFYlAj5U1SrOMB03xQXl2u
-vYGPrBGGirIrG+IlpQYVVJ6BzQjbsS3rT44a0iNjnZYV2MTh0U5pAKaqgZn16Bga
-1uyysPpqOpUQa2je9TJZeTbvuh2UCYjECBuuJHpIXxHLL5IvtqvdpX6QcPLjnVmH
-CZg2dOtX+6hfbh3qZkf4isAGiQ5D+LKoW8zqJ1l+ocGWgCfBWCxYlss/+zMfDmNN
-b4C3+/69HFj7RYtF6i1AkaFx+Nzc66lvD6J2wRGCPZiiXFAK67dyTfoXAH06QeZr
-sbTJV3wbxHtOz3QM2Mbb/ZAhfsSSJy3lz+8C7HyXVqVs/JB+39X+2vlR06oBvLBI
-A8MpKWXJbFhcWqI5fliHpC+XUNXkD10o6g1NSyYK48KbvsDyvOg5plcn05MC/osf
-j66Yisl5oWSum63CdZzl
-=4F58
------END PGP SIGNATURE-----
-
---=-nmH6A/qu1xojA0v6lQnm--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
