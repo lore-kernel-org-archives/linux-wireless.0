@@ -1,134 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ox1.aei.mpg.de ([194.94.224.6]:40378 "EHLO ox1.aei.mpg.de"
+Received: from nebensachen.de ([195.34.83.29]:55936 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752138AbYJ0WEy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 18:04:54 -0400
-Date: Mon, 27 Oct 2008 23:05:20 +0100
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Soeren Sonnenburg <kernel@nn7.de>,
-	linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Message-ID: <20081027220520.GA4310@localhost.aei.mpg.de> (sfid-20081027_230507_379851_CDF38AE3)
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810272151.01244.rjw@sisk.pl> <20081027205204.GA4566@localhost.aei.mpg.de> <200810272207.43498.rjw@sisk.pl>
+	id S1751080AbYJNWHH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 18:07:07 -0400
+From: Elias Oltmanns <eo@nebensachen.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: ath5k: kernel timing screwed - due to unserialised register  access?
+References: <87k5cm3ee2.fsf@denkblock.local>
+	<alpine.LFD.2.00.0810052354000.3398@apollo>
+	<87d4id3jmr.fsf@denkblock.local>
+	<alpine.LFD.2.00.0810061614490.3166@apollo>
+	<87skr8h1de.fsf@denkblock.local>
+	<alpine.LFD.2.00.0810071946460.3166@apollo>
+	<alpine.LFD.2.00.0810072042140.3166@apollo>
+	<87hc7ot804.fsf@denkblock.local> <87myhfnwne.fsf@denkblock.local>
+	<alpine.LFD.2.00.0810082203360.3237@apollo>
+	<alpine.LFD.2.00.0810091313380.3237@apollo>
+	<87k5cgg87j.fsf@denkblock.local>
+	<alpine.LFD.2.00.0810101127560.3271@apollo>
+	<87abdck6sn.fsf@denkblock.local>
+	<alpine.LFD.2.00.0810101432540.3271@apollo>
+	<alpine.LFD.2.00.0810111149420.3356@apollo>
+	<87k5ceeuxy.fsf@denkblock.local>
+	<alpine.LFD.2.00.0810142054580.6848@apollo>
+Date: Wed, 15 Oct 2008 00:01:03 +0200
+Message-ID: <87skqyj0ps.fsf@denkblock.local> (sfid-20081015_000715_215830_38F88DA0)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810272207.43498.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 27.Oct'08 at 22:07:42 +0100, Rafael J. Wysocki wrote:
-> On Monday, 27 of October 2008, Carlos R. Mafra wrote:
-> > On Mon 27.Oct'08 at 21:51:00 +0100, Rafael J. Wysocki wrote:
-> > > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
-> > > > On Mon 27.Oct'08 at 20:13:43 +0100, Johannes Berg wrote:
-> > > > > On Mon, 2008-10-27 at 20:11 +0100, Carlos R. Mafra wrote:
-> > > > > 
-> > > > > > > Do you get any kernel messages output? If you do, could you put messages
-> > > > > > > into each line of ieee80211_set_disassoc to see where it hangs?
-> > > > > > 
-> > > > > > No messages appear, just a black screen.
-> > > > > > 
-> > > > > > But I can use the SysRq keys, and when I umount the
-> > > > > > screen shows the message that umount succeed. I also tried SysRq+t but
-> > > > > > the messages appear to fast to read.
-> > > > > 
-> > > > > Ok, but that means you _can_ get messages, it would help a lot if you
-> > > > > could put a few printks into the set_disassoc function before/after each
-> > > > > other function call, so we know where exactly it hangs. Pretty much all
-> > > > > of them could possibly hang if there is some sort of locking error
-> > > > > happening or anything relies on userspace to be running...
-> > > > 
-> > > > Ok, I humbly tried to do that with the patch at the end of the email,
-> > > > but I did not appear to hang in this function tough.
-> > > > 
-> > > > Somehow I could get some messages printed when it was a black screen
-> > > > before (I think it has to do with the debug level I set with SysRq...)
-> > > > and I could see all the printks I've put there. 
-> > > > 
-> > > > The good thing is that I could get the complete syslog of the boot until 
-> > > > the it failed after suspending to RAM (in 2.6.28-rc2 with my debug patch
-> > > > below applied). The last messages before the laptop become unresponsive
-> > > > (except for the SysRq) were these ones:
-> > > > 
-> > > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:radio
-> > > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:assoc
-> > > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:RX
-> > > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:TX
-> > > > Oct 27 21:03:06 localhost kernel: before rcu_read_lock
-> > > > Oct 27 21:03:06 localhost kernel: before netif_tx_stop_all_queues
-> > > > Oct 27 21:03:06 localhost kernel: before netif_carrier_off
-> > > > Oct 27 21:03:06 localhost kernel: before ieee80211_sta
-> > > > Oct 27 21:03:06 localhost kernel: inside sef_disconnected 1
-> > > > Oct 27 21:03:06 localhost kernel: before ieee8021_led_assoc
-> > > > Oct 27 21:03:06 localhost kernel: before ieee8021_sta_send_apinfo
-> > > > Oct 27 21:03:06 localhost kernel: before sta_info_unlink
-> > > > Oct 27 21:03:06 localhost kernel: before rcu_read_unlock
-> > > > Oct 27 21:03:06 localhost kernel: before sta_info_destroy
-> > > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Starting disk
-> > > > Oct 27 21:03:06 localhost kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: configured for UDMA/100
-> > > > Oct 27 21:03:06 localhost kernel: ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x9 t4
-> > > > Oct 27 21:03:06 localhost kernel: ata1: irq_stat 0x00000040, connection status changed
-> > > > Oct 27 21:03:06 localhost kernel: ata1: hard resetting link
-> > > > Oct 27 21:03:06 localhost kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> > > > Oct 27 21:03:06 localhost kernel: ata1.00: configured for UDMA/100
-> > > > Oct 27 21:03:06 localhost kernel: ata1: EH complete
-> > > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
-> > > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
-> > > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> > > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> > > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
-> > > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
-> > > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> > > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> > > > Oct 27 21:03:06 localhost kernel: Restarting tasks ... done.
-> > > > Oct 27 21:03:07 localhost ifplugd(wlan0)[3182]: Link beat lost.
-> > > > Oct 27 21:03:13 localhost ifplugd(wlan0)[3182]: Executing '/etc/ifplugd/ifplugd.action wlan0 down'.
-> > > > Oct 27 21:06:20 localhost kernel: SysRq : Changing Loglevel
-> > > > Oct 27 21:06:20 localhost kernel: Loglevel set to 4
-> > > > Oct 27 21:06:22 localhost kernel: SysRq : Changing Loglevel
-> > > > Oct 27 21:06:22 localhost kernel: Loglevel set to 6
-> > > > Oct 27 21:06:32 localhost kernel: ffff80251670>] ? autoremove_wake_function+0x0/0x40
-> > > > Oct 27 21:06:32 localhost kernel:  [<ffffffff8024e200>] ? worker_thread+0x0/0x110
-> > > > Oct 27 21:06:32 localhost kernel:  [<ffffffff8025119d>] kthread+0x4d/0x80
-> > > > Oct 27 21:06:32 localhost kernel:  [<ffffffff8020d1b9>] child_rip+0xa/0x11
-> > > > 
-> > > > and I have the complete trace also. I can try to put it somewhere in the web if it helps
-> > > > (I already tried it, but I am new at the institute here and I could not set up my
-> > > > webpage yet :-(
-> > > 
-> > > Please attach it to http://bugzilla.kernel.org/show_bug.cgi?id=11845 .
-> > 
-> > Done.
-> 
-> Hmm, this looks like a result of playing with the magic SysRq.  Did you try to
-> press SysRq-something when the box became unresponsive?
+Thomas Gleixner <tglx@linutronix.de> wrote:
+> On Sat, 11 Oct 2008, Elias Oltmanns wrote:
+>> > Compile the acpi_processor module in to the kernel
+>
+>> > (CONFIG_ACPI_PROCESSOR=y) and add processor.max_cstate=1 to the kernel
+>> > command line. If I analysed the problem correctly this will make the
+>> > jiffies problem go away. I'm working on a fix.
+>> 
+>> Spot on, it does go away regardless whether NO_HZ or HIGH_RES are
+>> enabled or disabled. Looking forward to testing your fix ;-).
+>
+> Here you go.
 
-Yes, that long trace is the result of SysRq+t but I never managed to
-understand its result :-(
+Bad luck, I'm afraid. Your patch seems to fix the issue for NO_HZ=n +
+HIGH_RES=y. As soon as NO_HZ=y, however, the problem reappears. See the
+output below. (Still testing on 2.6.27, mind. Should I test something
+more up-to-date?)
 
-This last hang was somewhat different because I could read the messages
-up to the point where the laptop was unresponsive (see the time in the
-log, I waited 3 minutes until I decided to hit SysRq+t). I am not
-sure why this happened, tough. 
+Regards,
 
-All the other hangs were with a complete black screen. _But_ if I used
-some SysRq combination during the time the screen was black
-I could see the result in the screen. I know this because when the resume
-failed I always used to sync+umount+reboot using the SysRq, and those messages
-from the SysRq I could read ("Emergency Sync", "Emergency umount" or something
-like that).
+Elias
 
-Ok, now I see I have another patch to test from Tomas...will try that.
+--8<---------------dmesg---------------start------------->8---
+Oct 14 22:44:25 denkblock kernel: [  150.063028] b:    150.062655731 n:    150.063022258 e: 4294952302 j: 4294952302
+Oct 14 22:44:25 denkblock kernel: [  150.063035] Timer List Version: v0.3
+Oct 14 22:44:25 denkblock kernel: [  150.063038] HRTIMER_MAX_CLOCK_BASES: 2
+Oct 14 22:44:25 denkblock kernel: [  150.063041] now at 150063035109 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063043] 
+Oct 14 22:44:25 denkblock kernel: [  150.063045] cpu: 0
+Oct 14 22:44:25 denkblock kernel: [  150.063047]  clock 0:
+Oct 14 22:44:25 denkblock kernel: [  150.063048]   .index:      0
+Oct 14 22:44:25 denkblock kernel: [  150.063051]   .resolution: 10000000 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063053]   .get_time:   ktime_get_real
+Oct 14 22:44:25 denkblock kernel: [  150.063062] active timers:
+Oct 14 22:44:25 denkblock kernel: [  150.063064]  clock 1:
+Oct 14 22:44:25 denkblock kernel: [  150.063066]   .index:      1
+Oct 14 22:44:25 denkblock kernel: [  150.063068]   .resolution: 10000000 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063070]   .get_time:   ktime_get
+Oct 14 22:44:25 denkblock kernel: [  150.063074] active timers:
+Oct 14 22:44:25 denkblock kernel: [  150.063076]  #0: <c02e2f14>, hrtimer_wakeup, S:01, do_nanosleep, tail/2440
+Oct 14 22:44:25 denkblock kernel: [  150.063098]  # expires at 150440037040 nsecs [in 377001931 nsecs]
+Oct 14 22:44:25 denkblock kernel: [  150.063102]  #1: <c02e2f14>, it_real_fn, S:01, do_setitimer, syslogd/2343
+Oct 14 22:44:25 denkblock kernel: [  150.063115]  # expires at 173530381509 nsecs [in 23467346400 nsecs]
+Oct 14 22:44:25 denkblock kernel: [  150.063119]   .nohz_mode      : 1
+Oct 14 22:44:25 denkblock kernel: [  150.063121]   .idle_tick      : 150030000000 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063124]   .tick_stopped   : 0
+Oct 14 22:44:25 denkblock kernel: [  150.063126]   .idle_jiffies   : 4294952299
+Oct 14 22:44:25 denkblock kernel: [  150.063129]   .idle_calls     : 21431
+Oct 14 22:44:25 denkblock kernel: [  150.063132]   .idle_sleeps    : 16504
+Oct 14 22:44:25 denkblock kernel: [  150.063134]   .idle_entrytime : 150063016112 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063137]   .idle_waketime  : 150040009551 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063140]   .idle_exittime  : 150062664671 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063143]   .idle_sleeptime : 138813566362 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063146]   .last_jiffies   : 4294952302
+Oct 14 22:44:25 denkblock kernel: [  150.063148]   .next_jiffies   : 4294952302
+Oct 14 22:44:25 denkblock kernel: [  150.063151]   .idle_expires   : 150040000000 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063154]   .last_events0   : 150010011037 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063157]   .last_events1   : 150020010914 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063159]   .last_events2   : 150040012344 nsecs
+Oct 14 22:44:25 denkblock kernel: [  150.063162] jiffies: 4294952302
+Oct 14 22:44:25 denkblock kernel: [  150.063164] 
+Oct 14 22:44:25 denkblock kernel: [  150.063165] 
+Oct 14 22:44:25 denkblock kernel: [  150.063167] Tick Device: mode:     1
+Oct 14 22:44:25 denkblock kernel: [  150.063169] Clock Event Device: pit
+Oct 14 22:44:26 denkblock kernel: [  150.063172]  max_delta_ns:   27461866
+Oct 14 22:44:26 denkblock kernel: [  150.063175]  min_delta_ns:   12571
+Oct 14 22:44:26 denkblock kernel: [  150.063177]  mult:           5124677
+Oct 14 22:44:26 denkblock kernel: [  150.063179]  shift:          32
+Oct 14 22:44:26 denkblock kernel: [  150.063181]  mode:           3
+Oct 14 22:44:26 denkblock kernel: [  150.063184]  next_event:     9223372036854775807 nsecs
+Oct 14 22:44:26 denkblock kernel: [  150.063187]  set_next_event: pit_next_event
+Oct 14 22:44:26 denkblock kernel: [  150.063193]  set_mode:       init_pit_timer
+Oct 14 22:44:26 denkblock kernel: [  150.063197]  event_handler:  tick_handle_oneshot_broadcast
+Oct 14 22:44:26 denkblock kernel: [  150.063203] tick_broadcast_mask: 00000001
+Oct 14 22:44:26 denkblock kernel: [  150.063205] tick_broadcast_oneshot_mask: 00000000
+Oct 14 22:44:26 denkblock kernel: [  150.063208] 
+Oct 14 22:44:26 denkblock kernel: [  150.063209] 
+Oct 14 22:44:26 denkblock kernel: [  150.063211] Tick Device: mode:     1
+Oct 14 22:44:26 denkblock kernel: [  150.063213] Clock Event Device: lapic
+Oct 14 22:44:26 denkblock kernel: [  150.063216]  max_delta_ns:   1346509690
+Oct 14 22:44:26 denkblock kernel: [  150.063218]  min_delta_ns:   2407
+Oct 14 22:44:26 denkblock kernel: [  150.063221]  mult:           26757173
+Oct 14 22:44:26 denkblock kernel: [  150.063223]  shift:          32
+Oct 14 22:44:26 denkblock kernel: [  150.063225]  mode:           3
+Oct 14 22:44:26 denkblock kernel: [  150.063227]  next_event:     150070000000 nsecs
+Oct 14 22:44:26 denkblock kernel: [  150.063230]  set_next_event: lapic_next_event
+Oct 14 22:44:26 denkblock kernel: [  150.063234]  set_mode:       lapic_timer_setup
+Oct 14 22:44:26 denkblock kernel: [  150.063237]  event_handler:  tick_nohz_handler
+Oct 14 22:44:26 denkblock kernel: [  150.063241] 
+--8<---------------dmesg---------------end--------------->8---
