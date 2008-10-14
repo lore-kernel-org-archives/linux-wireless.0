@@ -1,72 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53169 "EHLO mail.atheros.com"
+Received: from mga09.intel.com ([134.134.136.24]:37179 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752344AbYJCUOg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 16:14:36 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 03 Oct 2008 13:14:36 -0700
-Date: Fri, 3 Oct 2008 06:14:23 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-CC: Ivo van Doorn <ivdoorn@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Regulatory Framework & rt2x00.
-Message-ID: <20081003131423.GH5964@tesla> (sfid-20081003_221445_726821_58C04312)
-References: <48E52D07.8050900@kpnplanet.nl> <1223021104.24551.61.camel@johannes.berg> <200810032018.24910.IvDoorn@gmail.com> <48E67A3C.8090501@kpnplanet.nl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <48E67A3C.8090501@kpnplanet.nl>
+	id S1751519AbYJNTel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 15:34:41 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/3] iwlwifi: expand error lookup and align output
+Date: Tue, 14 Oct 2008 12:32:42 -0700
+Message-Id: <1224012769-8920-3-git-send-email-reinette.chatre@intel.com> (sfid-20081014_213445_459212_42E3F2CE)
+In-Reply-To: <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1224012769-8920-1-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 03, 2008 at 01:02:04PM -0700, Gertjan van Wingerde wrote:
-> Ivo van Doorn wrote:
-> > Hi,
-> >
-> >
-> >>> The problem I'm facing is that many of the Ralink devices have 2 region
-> >>> settings in their EEPROM, one for 802.11a networks, and one for
-> >>> 802.11[bgn] networks. So far I have only seen devices where these two
-> >>> settings contain the same region indication, but I don't know whether
-> >>> this is the case for all devices.
-> >>>
-> >>> At this point in time I use the regulatory_hint function at driver
-> >>> start-up time to communicate the region setting that matches the
-> >>> configured band, but that would (probably) not hold up when the user
-> >>> reconfigures the mode.
-> >>>
-> >> I think you basically have two choices depending on whether you have a
-> >> country code in the eeprom or not.
-> >>
-> >> If you have a country code, I suggest you just use either one.
-> >>
-> >> As far as I know, though, you don't have country codes. So if there's a
-> >> valid code in the EEPROM you probably should use the regdomain struct
-> >> hint rather than the alpha2 hint and build a regdomain that contains
-> >> both 2.4 and 5 GHz channels based on the two region values you have.
-> >>
-> >
-> > For rt61pci and rt73usb you should do as Johannes suggested by using the
-> > regdomain struct. For rt2500pci and rt2500usb it sounds much easier to
-> > take the country code from the EEPROM since those devices only contain
-> > a single regdom value.
-> 
-> Hmm, but building the regdomain struct would mean detailed region
-> knowledge inside the driver. This is something I was trying to prevent,
-> as all that knowledge has been moved to user-space with crda.
-> 
-> Luis, any other suggestions?
+From: Jay Sternberg <jay.e.sternberg@intel.com>
 
-Proper regulatory implementation does require vendor involvement. I'd take it
-up with Ralink to figure this out. In the meantime I'd suggest to just
-let the user pick the alpha2 or to simply regulatory_hint() to a country
-in which the devices are mostly sold on.
+change desc_lookup from hard coded switch to a simple lookup table and expand
+list to include all errors.  Also corrected output using this string so info
+is aligned and easier to read when debugging issues.
 
-Remember -- RT61 EEPROM docs indicate you shouldn't rely on the EEPROM so its
-pointless. I suspect its the same with the other devices but since
-we do not have docs we cannot be sure.
+Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   57 +++++++++++++++++++++---------
+ 1 files changed, 40 insertions(+), 17 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 4c312c5..f0055b1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1169,24 +1169,47 @@ int iwl_verify_ucode(struct iwl_priv *priv)
+ }
+ EXPORT_SYMBOL(iwl_verify_ucode);
+ 
++
++static const char *desc_lookup_text[] = {
++	"OK",
++	"FAIL",
++	"BAD_PARAM",
++	"BAD_CHECKSUM",
++	"NMI_INTERRUPT_WDG",
++	"SYSASSERT",
++	"FATAL_ERROR",
++	"BAD_COMMAND",
++	"HW_ERROR_TUNE_LOCK",
++	"HW_ERROR_TEMPERATURE",
++	"ILLEGAL_CHAN_FREQ",
++	"VCC_NOT_STABLE",
++	"FH_ERROR",
++	"NMI_INTERRUPT_HOST",
++	"NMI_INTERRUPT_ACTION_PT",
++	"NMI_INTERRUPT_UNKNOWN",
++	"UCODE_VERSION_MISMATCH",
++	"HW_ERROR_ABS_LOCK",
++	"HW_ERROR_CAL_LOCK_FAIL",
++	"NMI_INTERRUPT_INST_ACTION_PT",
++	"NMI_INTERRUPT_DATA_ACTION_PT",
++	"NMI_TRM_HW_ER",
++	"NMI_INTERRUPT_TRM",
++	"NMI_INTERRUPT_BREAK_POINT"
++	"DEBUG_0",
++	"DEBUG_1",
++	"DEBUG_2",
++	"DEBUG_3",
++	"UNKNOWN"
++};
++
+ static const char *desc_lookup(int i)
+ {
+-	switch (i) {
+-	case 1:
+-		return "FAIL";
+-	case 2:
+-		return "BAD_PARAM";
+-	case 3:
+-		return "BAD_CHECKSUM";
+-	case 4:
+-		return "NMI_INTERRUPT";
+-	case 5:
+-		return "SYSASSERT";
+-	case 6:
+-		return "FATAL_ERROR";
+-	}
++	int max = ARRAY_SIZE(desc_lookup_text) - 1;
++
++	if (i < 0 || i > max)
++		i = max;
+ 
+-	return "UNKNOWN";
++	return desc_lookup_text[i];
+ }
+ 
+ #define ERROR_START_OFFSET  (1 * sizeof(u32))
+@@ -1232,9 +1255,9 @@ void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 	line = iwl_read_targ_mem(priv, base + 9 * sizeof(u32));
+ 	time = iwl_read_targ_mem(priv, base + 11 * sizeof(u32));
+ 
+-	IWL_ERROR("Desc        Time       "
++	IWL_ERROR("Desc                               Time       "
+ 		"data1      data2      line\n");
+-	IWL_ERROR("%-13s (#%d) %010u 0x%08X 0x%08X %u\n",
++	IWL_ERROR("%-28s (#%02d) %010u 0x%08X 0x%08X %u\n",
+ 		desc_lookup(desc), desc, time, data1, data2, line);
+ 	IWL_ERROR("blink1  blink2  ilink1  ilink2\n");
+ 	IWL_ERROR("0x%05X 0x%05X 0x%05X 0x%05X\n", blink1, blink2,
+-- 
+1.5.4.3
+
