@@ -1,166 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:32904 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758614AbYJPXL0 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42431 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324AbYJNO54 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 19:11:26 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] p54: put broadcast frames into the right queues
-Date: Fri, 17 Oct 2008 01:15:38 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810170115.38317.chunkeey@web.de> (sfid-20081017_011130_675602_1B548E66)
+	Tue, 14 Oct 2008 10:57:56 -0400
+Subject: [PATCH] p54: implement MRR
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Chr <chunkeey@web.de>, Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain
+Date: Tue, 14 Oct 2008 16:56:51 +0200
+Message-Id: <1223996211.10113.36.camel@johannes.berg> (sfid-20081014_165832_471108_D817CC92)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-stlc45xx's specs finally brought some light what all the 4 extra queues for.
-multicast & managment frames go now into their own queue.
+This implements multi-rate retry in p54. With lots of help
+and testing from Christian and the limiting idea from nbd.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christian Lamparter <chunkeey@web.de>
 ---
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-10-17 00:32:12.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-10-17 00:32:53.000000000 +0200
-@@ -902,6 +902,62 @@ free:
- }
- EXPORT_SYMBOL_GPL(p54_read_eeprom);
+ drivers/net/wireless/p54/p54common.c |  130 +++++++++++++++++++++++++++++------
+ 1 file changed, 108 insertions(+), 22 deletions(-)
+
+--- everything.orig/drivers/net/wireless/p54/p54common.c	2008-10-14 16:52:43.000000000 +0200
++++ everything/drivers/net/wireless/p54/p54common.c	2008-10-14 16:53:37.000000000 +0200
+@@ -1,9 +1,9 @@
+-
+ /*
+  * Common code for mac80211 Prism54 drivers
+  *
+  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
+  * Copyright (c) 2007, Christian Lamparter <chunkeey@web.de>
++ * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
+  *
+  * Based on the islsm (softmac prism54) driver, which is:
+  * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
+@@ -552,6 +552,7 @@ static void p54_rx_frame_sent(struct iee
+ 	u32 freed = 0;
+ 	u32 last_addr = priv->rx_start;
+ 	unsigned long flags;
++	int count, idx;
  
-+#ifndef WLAN_FC_GET_TYPE
-+#define WLAN_FC_GET_TYPE(fc) (fc & IEEE80211_FCTL_FTYPE)
-+#define WLAN_FC_GET_STYPE(fc) (fc & IEEE80211_FCTL_STYPE)
-+#endif
+ 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+ 	while (entry != (struct sk_buff *)&priv->tx_queue) {
+@@ -576,18 +577,39 @@ static void p54_rx_frame_sent(struct iee
+ 			__skb_unlink(entry, &priv->tx_queue);
+ 			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+-			ieee80211_tx_info_clear_status(info);
++			/*
++			 * Clear manually, ieee80211_tx_info_clear_status would
++			 * clear the counts too and we need them.
++			 */
++			memset(&info->status.ampdu_ack_len, 0,
++			       sizeof(struct ieee80211_tx_info) -
++			       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
++			BUILD_BUG_ON(offsetof(struct ieee80211_tx_info,
++			                      status.ampdu_ack_len) != 23);
 +
-+static int p54_tx_fill(struct ieee80211_hw *dev, struct sk_buff *skb,
-+		struct ieee80211_tx_info *info, u8 *queue, size_t *extra_len,
-+		u16 *flags, u16 *aid)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct p54_common *priv = dev->priv;
-+	u16 fc = le16_to_cpu(hdr->frame_control);
-+	int ret = 0;
+ 			entry_hdr = (struct p54_control_hdr *) entry->data;
+ 			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
+ 			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
+ 				pad = entry_data->align[0];
+ 
+-			priv->tx_stats[entry_data->hw_queue].len--;
+-			if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-				if (!(payload->status & 0x01))
+-					info->flags |= IEEE80211_TX_STAT_ACK;
++			/* walk through the rates array and adjust the counts */
++			count = payload->retries;
++			for (idx = 0; idx < 4; idx++) {
++				if (count >= info->status.rates[idx].count) {
++					count -= info->status.rates[idx].count;
++				} else if (count > 0) {
++					info->status.rates[idx].count = count;
++					count = 0;
++				} else {
++					info->status.rates[idx].idx = -1;
++					info->status.rates[idx].count = 0;
++				}
+ 			}
+-			info->status.rates[0].count = payload->retries;
 +
-+	if (unlikely(WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT)) {
-+		switch (WLAN_FC_GET_STYPE(fc)) {
-+		case IEEE80211_STYPE_BEACON:
-+			*aid = 0;
-+			*queue = 0;
-+			*extra_len = IEEE80211_MAX_TIM_LEN;
-+			*flags = P54_HDR_FLAG_DATA_OUT_TIMESTAMP;
-+			return 0;
-+		case IEEE80211_STYPE_PROBE_RESP:
-+			*aid = 0;
-+			*queue = 2;
-+			*flags = P54_HDR_FLAG_DATA_OUT_TIMESTAMP |
-+				 P54_HDR_FLAG_DATA_OUT_NOCANCEL;
-+			return 0;
-+		default:
-+			*queue = 2;
-+			ret = 0;
-+		}
-+	} else {
-+		*queue += 4;
-+		ret = 1;
-+	}
-+
-+	switch (priv->mode) {
-+	case NL80211_IFTYPE_STATION:
-+		*aid = 1;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		if (is_multicast_ether_addr(hdr->addr1)) {
-+			*aid = 0;
-+			*queue = 3;
-+			return 0;
-+		}
-+	case NL80211_IFTYPE_ADHOC:
-+		if (info->control.sta)
-+			*aid = info->control.sta->aid;
-+		else
-+			*flags = P54_HDR_FLAG_DATA_OUT_NOCANCEL;
-+	}
-+	return ret;
-+}
-+
- static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -909,22 +965,26 @@ static int p54_tx(struct ieee80211_hw *d
- 	struct p54_common *priv = dev->priv;
- 	struct p54_hdr *hdr;
- 	struct p54_tx_data *txhdr;
--	size_t padding, len;
-+	size_t padding, len, tim_len;
- 	int i, j, ridx;
--	u16 hdr_flags = 0;
--	u8 rate;
-+	u16 hdr_flags = 0, aid = 0;
-+	u8 rate, queue;
++			priv->tx_stats[entry_data->hw_queue].len--;
++			if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
++			    !(payload->status & 0x01))
++				info->flags |= IEEE80211_TX_STAT_ACK;
+ 			info->status.ack_signal = p54_rssi_to_dbm(dev,
+ 					le16_to_cpu(payload->ack_rssi));
+ 			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
+@@ -810,9 +832,12 @@ static int p54_tx(struct ieee80211_hw *d
+ 	struct p54_control_hdr *hdr;
+ 	struct p54_tx_control_allocdata *txhdr;
+ 	size_t padding, len;
++	int i, j, ridx;
+ 	u8 rate;
  	u8 cts_rate = 0x20;
  	u8 rc_flags;
- 	u8 calculated_tries[4];
- 	u8 nrates = 0, nremaining = 8;
++	u8 calculated_tries[4];
++	u8 nrates = 0, nremaining = 8;
  
--	current_queue = &priv->tx_stats[skb_get_queue_mapping(skb) + 4];
--	if (unlikely(current_queue->len > current_queue->limit))
--		return NETDEV_TX_BUSY;
--	current_queue->len++;
--	current_queue->count++;
--	if (current_queue->len == current_queue->limit)
--		ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
-+	queue = skb_get_queue_mapping(skb);
-+
-+	if (p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid)) {
-+		current_queue = &priv->tx_stats[queue];
-+		if (unlikely(current_queue->len > current_queue->limit))
-+			return NETDEV_TX_BUSY;
-+		current_queue->len++;
-+		current_queue->count++;
-+		if (current_queue->len == current_queue->limit)
-+			ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
-+	}
- 
- 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
- 	len = skb->len;
-@@ -935,7 +995,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	if (padding)
- 		hdr_flags |= P54_HDR_FLAG_DATA_ALIGN;
+ 	current_queue = &priv->tx_stats[skb_get_queue_mapping(skb) + 4];
+ 	if (unlikely(current_queue->len > current_queue->limit))
+@@ -835,23 +860,74 @@ static int p54_tx(struct ieee80211_hw *d
+ 		hdr->magic1 = cpu_to_le16(0x0010);
  	hdr->len = cpu_to_le16(len);
--	hdr->type = (info->flags & IEEE80211_TX_CTL_NO_ACK) ? 0 : cpu_to_le16(1);
-+	hdr->type = cpu_to_le16(aid);
- 	hdr->rts_tries = info->control.rates[0].count;
+ 	hdr->type = (info->flags & IEEE80211_TX_CTL_NO_ACK) ? 0 : cpu_to_le16(1);
+-	hdr->retry1 = hdr->retry2 = info->control.rates[0].count;
++	hdr->retry1 = info->control.rates[0].count;
++
++	/*
++	 * we register the rates in perfect order, and
++	 * RTS/CTS won't happen on 5 GHz
++	 */
++	cts_rate = info->control.rts_cts_rate_idx;
++
++	memset(&txhdr->rateset, 0, sizeof(txhdr->rateset));
++
++	/* see how many rates got used */
++	for (i = 0; i < 4; i++) {
++		if (info->control.rates[i].idx < 0)
++			break;
++		nrates++;
++	}
++
++	/* limit tries to 8/nrates per rate */
++	for (i = 0; i < nrates; i++) {
++		/*
++		 * The magic expression here is equivalent to 8/nrates for
++		 * all values that matter, but avoids division and jumps.
++		 * Note that nrates can only take the values 1 through 4.
++		 */
++		calculated_tries[i] = min_t(int, ((15 >> nrates) | 1) + 1,
++						 info->control.rates[i].count);
++		nremaining -= calculated_tries[i];
++	}
++
++	/* if there are tries left, distribute from back to front */
++	for (i = nrates - 1; nremaining > 0 && i >= 0; i--) {
++		int tmp = info->control.rates[i].count - calculated_tries[i];
++
++		if (tmp <= 0)
++			continue;
++		/* RC requested more tries at this rate */
  
- 	/*
-@@ -1013,7 +1073,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	txhdr->rts_rate_idx = 0;
+-	/* TODO: add support for alternate retry TX rates */
+-	rate = ieee80211_get_tx_rate(dev, info)->hw_value;
+-	rc_flags = info->control.rates[0].flags;
+-	if (rc_flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE) {
+-		rate |= 0x10;
+-		cts_rate |= 0x10;
+-	}
+-	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+-		rate |= 0x40;
+-		cts_rate |= ieee80211_get_rts_cts_rate(dev, info)->hw_value;
+-	} else if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+-		rate |= 0x20;
+-		cts_rate |= ieee80211_get_rts_cts_rate(dev, info)->hw_value;
++		tmp = min_t(int, tmp, nremaining);
++		calculated_tries[i] += tmp;
++		nremaining -= tmp;
++	}
++
++	ridx = 0;
++	for (i = 0; i < nrates && ridx < 8; i++) {
++		/* we register the rates in perfect order */
++		rate = info->control.rates[i].idx;
++		if (info->band == IEEE80211_BAND_5GHZ)
++			rate += 4;
++
++		/* store the count we actually calculated for TX status */
++		info->control.rates[i].count = calculated_tries[i];
++
++		rc_flags = info->control.rates[i].flags;
++		if (rc_flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE) {
++			rate |= 0x10;
++			cts_rate |= 0x10;
++		}
++		if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS)
++			rate |= 0x40;
++		else if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
++			rate |= 0x20;
++		for (j = 0; j < calculated_tries[i] && ridx < 8; j++) {
++			txhdr->rateset[ridx] = rate;
++			ridx++;
++		}
+ 	}
+-	memset(txhdr->rateset, rate, 8);
++	hdr->retry2 = ridx;
++
  	txhdr->key_type = 0;
  	txhdr->key_len = 0;
--	txhdr->hw_queue = skb_get_queue_mapping(skb) + 4;
-+	txhdr->hw_queue = queue;
- 	txhdr->backlog = 32;
- 	memset(txhdr->durations, 0, sizeof(txhdr->durations));
- 	txhdr->tx_antenna = (info->antenna_sel_tx == 0) ?
-@@ -1024,7 +1084,7 @@ static int p54_tx(struct ieee80211_hw *d
- 		txhdr->align[0] = padding;
+ 	txhdr->hw_queue = skb_get_queue_mapping(skb) + 4;
+@@ -1401,6 +1477,16 @@ struct ieee80211_hw *p54_init_common(siz
+ 	priv->tx_stats[4].limit = 5;
+ 	dev->queues = 1;
+ 	priv->noise = -94;
++	/*
++	 * We support at most 8 tries no matter which rate they're at,
++	 * we cannot support max_rates * max_rate_tries as we set it
++	 * here, but setting it correctly to 4/2 or so would limit us
++	 * artificially if the RC algorithm wants just two rates, so
++	 * let's say 4/7, we'll redistribute it at TX time, see the
++	 * comments there.
++	 */
++	dev->max_rates = 4;
++	dev->max_rate_tries = 7;
+ 	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
+ 				 sizeof(struct p54_tx_control_allocdata);
  
- 	/* modifies skb->cb and with it info, so must be last! */
--	if (unlikely(p54_assign_address(dev, skb, hdr, skb->len))) {
-+	if (unlikely(p54_assign_address(dev, skb, hdr, skb->len + tim_len))) {
- 		skb_pull(skb, sizeof(*hdr) + sizeof(*txhdr) + padding);
- 		if (current_queue) {
- 			current_queue->len--;
-@@ -1341,7 +1401,7 @@ static int p54_config(struct ieee80211_h
- 	mutex_lock(&priv->conf_mutex);
- 	priv->rx_antenna = 2; /* automatic */
- 	priv->output_power = conf->power_level << 2;
--	ret = p54_set_freq(dev, conf->channel->center_freq);
-+	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
- 	if (!ret)
- 		ret = p54_set_edcf(dev);
- 	mutex_unlock(&priv->conf_mutex);
+
 
