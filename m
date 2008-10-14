@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57130 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753414AbYJHUEU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2008 16:04:20 -0400
-Date: Wed, 8 Oct 2008 16:03:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Rami Rosen <ramirose@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH ] mac80211: fix wrong link typo in mac80211_hwsim
-	documentation.
-Message-ID: <20081008200334.GE32472@tuxdriver.com> (sfid-20081008_220422_309909_E0BA1E3E)
-References: <eb3ff54b0810080243r416b8413uf2e12f51c309a8b7@mail.gmail.com> <1223459201.3618.49.camel@johannes.berg> <20081008161834.GL4941@jm.kir.nu> <20081008190109.GC32472@tuxdriver.com> <20081008193754.GM4941@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081008193754.GM4941@jm.kir.nu>
+Received: from mga02.intel.com ([134.134.136.20]:4799 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751783AbYJNTfZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 15:35:25 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/9] iwlwifi driver updates
+Date: Tue, 14 Oct 2008 12:32:40 -0700
+Message-Id: <1224012769-8920-1-git-send-email-reinette.chatre@intel.com> (sfid-20081014_213530_843027_47540AB9)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2008 at 10:37:54PM +0300, Jouni Malinen wrote:
-> On Wed, Oct 08, 2008 at 03:01:09PM -0400, John W. Linville wrote:
-> 
-> > Well I might be OK with that -- but are you (and Johannes) ready
-> > to deal with the various "ap mode doesn't work with my hostapd
-> > configuration" problems?
-> 
-> I think that that is a better and more productive problem to handle
-> assuming the issues are indeed because of something missing from
-> cfg80211 configuration. I'm supposed to make sure that everything needed
-> is there anyway and getting additional people testing various
-> combinations and reporting potential problems sounds useful.
+This series contain updates for iwlwifi drivers. 
+Patch 8 is a rework of Johannes's patch titled 
+"iwlwifi: fix DMA code and bugs". We do not have the hardware to ensure the
+problem is fixed and would thus appreciate feedback.
 
-I'm inclined to agree.  I'd like it if Johannes agreed too. :-)
+[PATCH 1/3] iwlwifi: define firmware file name once
+[PATCH 2/3] iwlwifi: expand error lookup and align output
+[PATCH 3/3] iwlwifi: remove host commands structures from iwl_cmd
+[PATCH 4/9] iwlwifi: add iwl_cmd_queue_free for readability
+[PATCH 5/9] iwlwifi: unify tx antenna toggling
+[PATCH 6/9] iwlwifi: refactor TX response flow
+[PATCH 7/9] iwl3945 : Fix a-band association for passive channels
+[PATCH 8/9] iwlwifi: fix TX cmd dma unmapping
+[PATCH 9/9] iwlwifi: tx command must run on same tfd as packet
 
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+
+Thank you
+
+Reinette
+
