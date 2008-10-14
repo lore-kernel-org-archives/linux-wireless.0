@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:44145 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750982AbYJUGXj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 02:23:39 -0400
-Subject: Re: [PATCH v3] mac80211/drivers: rewrite the rate control API
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <1224562072.24677.277.camel@debian.sh.intel.com>
-References: <1223996147.10113.33.camel@johannes.berg>
-	 (sfid-20081014_165703_092655_BE6BA58D) <1224052607.3027.20.camel@johannes.berg>
-	 <1224484940.24677.169.camel@debian.sh.intel.com>
-	 <1224485319.18024.9.camel@johannes.berg>
-	 <1224486368.24677.184.camel@debian.sh.intel.com>
-	 <1224486587.18024.25.camel@johannes.berg>
-	 <1224562072.24677.277.camel@debian.sh.intel.com>
-Content-Type: text/plain
-Date: Tue, 21 Oct 2008 14:23:14 +0800
-Message-Id: <1224570194.24677.301.camel@debian.sh.intel.com> (sfid-20081021_082343_555359_47533D28)
-Mime-Version: 1.0
+Received: from 121.140.233.220.exetel.com.au ([220.233.140.121]:4017 "EHLO
+	getafix.xdna.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754443AbYJNIpd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 04:45:33 -0400
+From: Cameron Hutchison <lists@xdna.net>
+To: mcgrof@gmail.com
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Failed to init on TP-Link TL-WN861N
+References: <667b.48f192b0.3a106@getafix.xdna.net> <43e72e890810131500u289f6e4fwf380966ae8f40b7b@mail.gmail.com>
+Message-Id: <20081014081232.97106406B@getafix.xdna.net> (sfid-20081014_104538_586192_45AFF777)
+Date: Tue, 14 Oct 2008 19:12:32 +1100 (EST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-20 at 22:07 -0600, Zhu Yi wrote:
-> The max retry rates number for iwl4965 is 16. See iwl-commands.h for
-> more details:
-> 
-> a) Use the initial rate for only one entry.
-> b) For each following entry, reduce the rate to next lower available
->    rate, until reaching the lowest available rate.
-> c) When reducing rate, also switch antenna selection.
-> d) Once lowest available rate is reached, repeat this rate until
->    rate table is filled (16 entries), switching antenna each entry.
+Luis R. Rodriguez wrote:
 
-Now I even wonder if abstract the common MRR info is possible. Yes, the
-algorithm itself is hardware independent. But the one we use best
-utilizes the hardware capability and it communicates with the hardware
-frequently. I don't know about other hardware. But I highly doubt the
-interface is so easy to be defined within IEEE80211_SKB_CB.
+>On Sat, Oct 11, 2008 at 11:01 PM, Cameron Hutchison <lists@xdna.net> wrote:
+>> [...]
+>> ath9k_hw_chip_test: address test failed addr: 0x00008000 - wr:0x00ff00ff != rd:0x00ff00ef
 
-Thanks,
--yi
+>This is during ath9k_hw_chip_test(), which is a simple loop to test
+>write/read on 2 registers to see if the written values can be read as
+>the same values. The two registers are:
+
+>AR_STA_ID0 which is 0x8000
+>AR_PHY_BASE + (8 << 2) which is 0x9800 + (8<<2) --> 0x9820
+
+>AR_STA_ID0 is used to store part of the MAC address and 0x9820 is just
+>one of the PHY registers. So we test writing and reading a 256 times
+>to each register some arbitrary value. We also try writing and reading
+>some 4 specific patterns just to be sure.
+
+Which part of the MAC address would be at AR_STA_ID0? I'm stretching
+here, since the nibbles would be out of order, but could this card be
+forcing the multicast bit of the MAC address off?
+
+>If we continue this could lead to issues. It seems you may have a
+>faulty wireless card, specifically bit #5 on register 0x8000. Maybe
+>the card is loose? Have you seen it working before?
+
+I haven't used the card before - recently purchased for this linux box.
+I've tried reseating the card but no luck.
+
+I modified ath9k_hw_chip_test to continue testing on failure and I get
+the same problem on the second test:
+ath9k_hw_chip_test: address test failed addr: 0x00008000 - wr:0x00ff00ff != rd:0x00ff00ef
+ath9k_hw_chip_test: address test failed addr: 0x00009820 - wr:0x00ff00ff != rd:0x00ff00ef
+
+It does not always fail on these two addresses though - sometimes only
+on one (either one) and occasionally none. But then it goes on to fail
+the EEPROM checksum:
+
+ath9k_hw_fill_eeprom: Reading from EEPROM, not flash
+ath9k_hw_check_eeprom: Read Magic = 0xA55A
+need_swap = False.
+Bad EEPROM checksum 0xff0f or revision 0x000e
+Detaching Ani
+
+I guess the MAC multicast is not happening. I'll see if I can rustle up
+a windows laptop to try this out in and see if it works there.
 
