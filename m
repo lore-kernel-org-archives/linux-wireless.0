@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.228]:28461 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756213AbYJPXMG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 19:12:06 -0400
-Received: by wx-out-0506.google.com with SMTP id h27so107768wxd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Oct 2008 16:12:02 -0700 (PDT)
-Message-ID: <43e72e890810161612p69dc838sc6f25f33f5de8631@mail.gmail.com> (sfid-20081017_011213_308436_0D607CC9)
-Date: Thu, 16 Oct 2008 16:12:02 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Greg KH" <greg@kroah.com>
-Subject: Re: [stable] [PATCH] ath9k: fix oops on trying to hold the wrong spinlock
-Cc: stable@kernel.org, steven@uplinklabs.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20081016215407.GA17091@kroah.com>
+Received: from bu3sch.de ([62.75.166.246]:57751 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754407AbYJNVJ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 17:09:26 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] make ieee80211 invisible
+Date: Tue, 14 Oct 2008 23:09:00 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1224006562.10113.47.camel@johannes.berg>
+In-Reply-To: <1224006562.10113.47.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081016111255.GA5899@tesla> <20081016215407.GA17091@kroah.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810142309.00479.mb@bu3sch.de> (sfid-20081014_230934_127892_4B5E43EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 16, 2008 at 2:54 PM, Greg KH <greg@kroah.com> wrote:
-> On Thu, Oct 16, 2008 at 04:12:55AM -0700, Luis R. Rodriguez wrote:
->> This fixes on oops when you get try to send a BA to an 11n AP.
->> The oops occurred because we were trying to aquire an incorrect
->> spinlock.
->>
->> We were trying to hold the wrong spinlock due to a typo
->> on IEEE80211_BAR_CTL_TID_S's definition. We use this to
->> compute the tid number and then hold this this tid number's
->> spinlock.
->>
->> Tested-by: Steven Noonan <steven@uplinklabs.net>
->> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
->> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> ---
->>
->> I don't see this queue'd yet for 2.6.27.2
->
-> Is it in Linus's tree?  If so, do you have a git commit id?
+On Tuesday 14 October 2008 19:49:22 Johannes Berg wrote:
+> 
+> This makes CONFIG_IEEE80211 invisible. The drivers that require it
+> (ipw2100, ipw2200, hostap) select it, and everybody else really
+> shouldn't even think about using it. Also, since there really is
+> no point in compiling anything without crypto support these days,
+> remove the crypto options and just enable them, leaving only the
+> debugging option which only shows up when a driver is select that
+> requires it. This makes it hard to enable, but most people wouldn't
+> want to anyway.
 
-Got it.
+I think in the long term we should also rename it to ipw-ieee80211
+and move it into another directory like drivers/net/wireless/ipw-ieee80211.
+This way it's a lot less confusing for new developers joining the wireless developers.
 
-a477e4e6d48d3ac7c7a75bad40585cb391e5c237
+(Probably also rename the symbols. I'm not sure if it's worth it, however)
 
-If you can add the Reported-by tag it'd be great, I missed it on Linus' tree.
-
-Thanks,
-
-  Luis
+-- 
+Greetings Michael.
