@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:64370 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752649AbYJ1Hsz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39935 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757601AbYJNJUL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 03:48:55 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2566658rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 00:48:54 -0700 (PDT)
-Message-ID: <efe7343f0810280048j57158020n67176d7a56f0bbea@mail.gmail.com> (sfid-20081028_084900_260068_40D60D86)
-Date: Tue, 28 Oct 2008 07:48:54 +0000
-From: "Luis Correia" <luis.f.correia@gmail.com>
-To: "Thorsten Leemhuis" <fedora@leemhuis.info>
-Subject: Re: rtl2860 driver in mainline?
-Cc: "Greg KH" <greg@kroah.com>, rt2400-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4906B944.4010105@leemhuis.info>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081028004915.GA3442@kroah.com> <4906B944.4010105@leemhuis.info>
+	Tue, 14 Oct 2008 05:20:11 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"lrodrigues@atheros.com" <lrodrigues@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1223608949.2510.1061.camel@debian.sh.intel.com> (sfid-20081010_052512_883760_F373F92C)
+References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
+	 <20081009154547.GB13349@tesla>
+	 <1223608949.2510.1061.camel@debian.sh.intel.com>
+	 (sfid-20081010_052512_883760_F373F92C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YjjNSfAjkXK6kYRb6WgK"
+Date: Tue, 14 Oct 2008 11:19:32 +0200
+Message-Id: <1223975972.10113.20.camel@johannes.berg> (sfid-20081014_112018_365305_DCCE7DBE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
 
-On Tue, Oct 28, 2008 at 07:03, Thorsten Leemhuis <fedora@leemhuis.info> wrote:
-> On 28.10.2008 01:49, Greg KH wrote:
->>
->> So, on my quest to suck up every out-of-tree driver and get it into the
->> main kernel tree (drivers/staging/ to start with), I've been pointed at
->> the rtl2860 driver.
->
-> Does it really make sense to include a driver when a different one for
-> mainline inclusion is being actively developed? It might give some
-> developers the impression that it's worth spending time improving the
-> rtl2860/2870 drivers -- which might be wasted time in the end.
+--=-YjjNSfAjkXK6kYRb6WgK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Is it just me or you are suggesting we use the Ralink supplied driver,
-with its own wireless stack, rather then work with the rt2x00 team?
+On Fri, 2008-10-10 at 11:22 +0800, Zhu Yi wrote:
 
-Do we really want that again (several wireless stacks)?
+> Does below scenario an expected behaviour?
+>=20
+> 0. A system with iwl3945 BG card and iwl4965 AGN card.
+> 1. insmod iwl3945 -> regulatory_hint(, 99, rd) return 0;
+> 2. insmod iwl4965 -> regulatory_hint(, 99, rd2) return -EALREADY;
+> 3. iwl4965 has no A band support!
 
->> Does anyone know of a "cleaned up" version of this driver that is
->> newer/better than the one on ralink's web site?  I found the
->> 2008_0918_RT2860_Linux_STA_v1.8.0.0.tar.bz2 version there, and will
->> start with that if no one else has yet.
->>
->> Any pointers are appreciated.
->
-> You can find a few patches (needed for 2.6.26 and 2.6.27 iirc; not sure if
-> they are enough to make it work on current mainline) for both rt2860 and
-> rt2870 in CVS for RPM Fusion:
->
-> http://cvs.rpmfusion.org/viewvc/rpms/rt2860-kmod/devel/?root=free
-> http://cvs.rpmfusion.org/viewvc/rpms/rt2870-kmod/devel/?root=free
+Yeah, I think this is expected, and the solution is to install crda and
+iw and set the regulatory domain manually to whatever country you're in
+rather than your cards SKU.
 
-This seems to be only a set of 'mixed-up-lets-just-use-ralink-code' patchset.
+johannes
 
->
-> HTH
->
-> CU
-> knurd
+--=-YjjNSfAjkXK6kYRb6WgK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-p.s. I apologize in advance if I misunderstood the meaning of the
-original reply.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Luis Correia
-rt2x00 project admin
+iQIcBAABAgAGBQJI9GQgAAoJEKVg1VMiehFYKe0QAKk6xJXHzmzefctaJofK4h9A
+ZHT44GNhxKTtfthye/hoWosfM8U3NZ36acLDyPKRPvOQljHmQEioJgXxmcoMdll5
+DKZWAM6QR8sVj/bFrok9pvUHQaJQNHnoDy1Coq9QX1PNJXLJuKXhpT5wGtaLY2Rl
+zoewS6lIRk/WZNRmWpEUjrxeZXMnO94xO+YX3rJAFKzrDOHiDUqlbOTT0LD37n1r
+X226k05HxR3BkT/pKHgrssqN2dWyHYvqCZEkvzqRPaO175VtngG26tplpKCHQReJ
+VegpMtvFB8AkQ6e9FBFF7RilSROHZTuUKGAZdcPggFKy+MOrcknAGod3awDtbmGH
+BEo1bsv27n/2kM5f8iQPxEnDcJ0LPUi/pulQ5bS0A+7Ommx5avzOafaKznlbyOOP
+w29RlLA5FgDF8/IaOoZsSlN36szIwZWsYDBPIB1LWHa0h/jGXqPCSfogIoNWntRS
+/HItmi2tfAfxqz3HCmnOpOu8ymB4+eoG++eAdppZ0I6sZ8ahej5y6BG+KhFeuTo3
+K0x9MUD/t38nw5vArmfNbzcb3XLmHKwP6xjLhzlBpsi00k2MFGNUpMVArjJkDjG3
+Az63dMPISMJztbEBCOolMovXwROvJZuzMlNjxVQpZD3mwvpMZYyab/lN1YEgivNU
+ZV8re2K4iiE2Tu3akQ/c
+=r24h
+-----END PGP SIGNATURE-----
+
+--=-YjjNSfAjkXK6kYRb6WgK--
+
