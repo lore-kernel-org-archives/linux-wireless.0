@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:44496 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740AbYJDTzT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Oct 2008 15:55:19 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: Trendnet TEW-424UB now Realtek 8187B
-Date: Sat, 4 Oct 2008 16:55:13 -0300
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Hin-Tak Leung" <hintak.leung@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, keithl@keithl.com,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"Daniel Drake" <dsd@gentoo.org>
-References: <20081004011510.GA10015@gate.kl-ic.com> <1223110250.24551.72.camel@johannes.berg> <69e28c910810040607x392a5ddfra8d257b0ff3b9c6e@mail.gmail.com>
-In-Reply-To: <69e28c910810040607x392a5ddfra8d257b0ff3b9c6e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200810041655.13816.herton@mandriva.com.br> (sfid-20081004_215526_063338_B98EBBE5)
+Received: from mga01.intel.com ([192.55.52.88]:42793 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751466AbYJNPot (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 11:44:49 -0400
+Subject: Re: [PATCH v2] iwlwifi: fix DMA code and bugs
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <1223997668.10113.40.camel@johannes.berg>
+References: <1223308831.15196.28.camel@johannes.berg>
+	 (sfid-20081006_180110_939098_1A64839A)  <1223309405.15196.32.camel@johannes.berg>
+	 (sfid-20081006_181043_313891_E9288151)  <1223997668.10113.40.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 14 Oct 2008 08:42:14 -0700
+Message-Id: <1223998934.26421.1.camel@rc-desk> (sfid-20081014_174452_145448_A252372E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 04 October 2008 10:07:08 Stefanik G=E1bor wrote:
-> On Sat, Oct 4, 2008 at 10:50 AM, Johannes Berg
->
-> <johannes@sipsolutions.net> wrote:
-> > On Sat, 2008-10-04 at 01:47 -0700, Luis R. Rodriguez wrote:
-> >> On Sat, Oct 4, 2008 at 1:32 AM, Johannes Berg <johannes@sipsolutio=
-ns.net>=20
-wrote:
-> >> > On Fri, 2008-10-03 at 18:15 -0700, Keith Lofstrom wrote:
-> >>
-> >> What Realtek driver? Just FYI rtl8187 does *not* claim the RTL8187=
-B.
-> >> See:
-> >>
-> >> http://wireless.kernel.org/en/users/Drivers/rtl8187
-> >
-> > Oh, I thought there was a version now that did.
-> >
-> > johannes
->
-> Hin-Tak Leung added support for RTL8187B a while ago, although it's
-> still a bit buggy. Likely someone forgot to update the rtl8187 page o=
-n
-> the wiki. CCing Hin-Tak and Herton.
+On Tue, 2008-10-14 at 17:21 +0200, Johannes Berg wrote:
+> On Mon, 2008-10-06 at 18:10 +0200, Johannes Berg wrote:
+> > This patch cleans up the DMA code to be understandable and not
+> > completely wrong. In particular:
+> >  * there is no need to have a weird iwl_tfd_frame_data struct that is
+> >    used 10 times, just use an address struct 20 times
+> >  * therefore, all the is_odd junk goes away
+> >  * fix a bug in iwl_hcmd_queue_reclaim where it would reclaim all the
+> >    fragments of a descriptor rather than all descriptors (this may be
+> >    the cause of the dma unmapping problem I reported)
+> >  * some more cleanups
+> > 
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > ---
+> > Tested on 5000 hw, please apply.
+> > 
+> > v2: fixes small issue with getting rid of iwl_get_dma_hi_address.
+> 
+> John, can you apply this? I keep getting invalid frees, or double-frees
+> without this patch.
 
-I created an account there now and did a minimal update on the page, pl=
-ease=20
-take a look. There are some things we need to improve in the driver, we=
-=20
-received also an updated driver and a minimal datasheet but unfortunate=
-ly=20
-from my part I didn't had much success and time in playing/learning to=20
-improve its support.
+Tomas reworked this patch. I will send the new patch upstream soon.
 
---
-[]'s
-Herton
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reinette
