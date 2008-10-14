@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40551 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbYJTGiQ (ORCPT
+Received: from c60.cesmail.net ([216.154.195.49]:35222 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754586AbYJNBUm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 02:38:16 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890810192333r7b3f6a0m56d499d0aed9240e@mail.gmail.com> (sfid-20081020_083338_695077_49476712)
-References: <20081015112517.GF6509@tesla>
-	 <1ba2fa240810151735t100ceda5s7fe7b495f735c507@mail.gmail.com>
-	 <20081015174447.GF15902@tesla>
-	 <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com>
-	 <20081015185636.GH15902@tesla>
-	 <1224126030.24677.78.camel@debian.sh.intel.com>
-	 <20081016113848.GB5899@tesla>
-	 <1224471102.24677.124.camel@debian.sh.intel.com>
-	 <43e72e890810192040w567fa4f6j1bf40e80084a857e@mail.gmail.com>
-	 <1224479933.24677.148.camel@debian.sh.intel.com>
-	 <43e72e890810192333r7b3f6a0m56d499d0aed9240e@mail.gmail.com>
-	 (sfid-20081020_083338_695077_49476712)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hnQyK3zOHMZ3m6wpye0G"
-Date: Mon, 20 Oct 2008 08:38:05 +0200
-Message-Id: <1224484685.18024.5.camel@johannes.berg> (sfid-20081020_083819_912798_C2C6E171)
-Mime-Version: 1.0
+	Mon, 13 Oct 2008 21:20:42 -0400
+Message-ID: <20081013212039.dy5fki5pck4g0cg4-cebfxv@webmail.spamcop.net> (sfid-20081014_032102_961937_80AF673F)
+Date: Mon, 13 Oct 2008 21:20:39 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
+References: <48EE20FB.4060700@lwfinger.net> <1223941001.28019.3.camel@dv>
+	<1223942439.28019.9.camel@dv> <200810140215.47242.chunkeey@web.de>
+In-Reply-To: <200810140215.47242.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting Christian Lamparter <chunkeey@web.de>:
 
---=-hnQyK3zOHMZ3m6wpye0G
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I ask again:
+> What Card/MAC & RF-Chip do you have? Indigo/Duette/Firsbee or XBow?
 
-On Sun, 2008-10-19 at 23:33 -0700, Luis R. Rodriguez wrote:
+Sorry if I missed your question.
 
-> Well the code specifically disregards secondary regulatory_hint()'s
-> right now and we reviewed why -- we discussed it at OLS and agreed to
-> go with the first one as that will usually be the built in one. That's
-> why. The restrictive thing to do next to handle more cards better is
-> to keep doing intersections.
+This is a MiniPCI card that has a label with "XG-600" printed on it.   
+The driver shows following in the kernel log:
 
-If we're going to disregard 5 GHz for the first hint if there's no
-information on it, then we should take the first hint containing 5 GHz
-information seriously imho.
+firmware: requesting isl3886
+p54: LM86 firmware
+p54: FW rev 2.7.0.0 - Softmac protocol 4.1
+p54: unknown eeprom code : 0x1
+p54: unknown eeprom code : 0x3
+p54: unknown eeprom code : 0x1007
+p54: unknown eeprom code : 0x1008
+p54: unknown eeprom code : 0x1100
+p54: unknown eeprom code : 0x1905
+phy10: hwaddr 00:60:b3:c9:04:f2, MAC:isl3890 RF:Indigo?
+phy10: Selected rate control algorithm 'pid'
+udev: renamed network interface wlan1 to wlan2
+firmware: requesting isl3886
 
-johannes
+I understand the driver detects it as Indigo.
 
---=-hnQyK3zOHMZ3m6wpye0G
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+# lspci -v -s 01:04.0
+01:04.0 Network controller: Intersil Corporation ISL3890 [Prism  
+GT/Prism Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
+         Subsystem: Z-Com, Inc. XG-600 and clones Wireless Adapter
+         Flags: bus master, medium devsel, latency 16, IRQ 25
+         Memory at 80882000 (32-bit, non-prefetchable) [size=8K]
+         Capabilities: [dc] Power Management version 1
+         Kernel driver in use: p54pci
+         Kernel modules: prism54, p54pci
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/CdKAAoJEKVg1VMiehFYb10QAK/Mda0emjAgHh4yyZFWE4xo
-lc1FXJY5Egvs1viFb/es+D3WU2gnucXSLgQW4ZEDAAyoALtJLKCiR7GCPFVIixvH
-ilXi8s6uFskQOybv5FZq/70PpMKn1kK7Klxgj9fHPodX/SrRkXbUkU5gb5H9kZJA
-Yw8Lx5f00Ea891yaLecl1zsKc6+mbPbT3VSYTxH/SxOKVfCwfx6D8T/YNpFhXpD4
-cV8nW24NVaFE2GWw9Y7WG8Ln3YOnYmbTKnRcXiFN1oopxwqg1/jkNzAUaRJG+D4Q
-ecKRq+2k72jBDmwdTQyfW974TxkJHDmf0GEzHsjRJ0jVVxq25cCMFULvsuk1S1c0
-+UVb4XsD2B9+A5mliDmHxpu2A8jSVN1bwFFw+7eX8kO4tVIVtNd8QNwU0pc4Ia06
-xEK1OfIBqBBzlWWY+A3Gp5MDaWnfYkTK20wmeMdYe0/E+59d6UhV0Xpf741uG2bv
-J8TBo0FqvyB4VQKulWC8Gf9ofylJAorZcTOKFc9AnUiYhPUOVAY7dSaybnER81ZA
-3hetQK5pzRBJBWAtCiJBJgznu9qBLLwBVrAa2/8z+UQ68ZRk1Xdk6/ARhVFYMM7R
-QxDP6Yh5ypNmVm/ent7LRzyLVWCcOVvi/Ttv/BJRO0FbLyUseX18AdSr3ACH+/L6
-Uy5lxEbQyLOw2Ney2VZu
-=nYMc
------END PGP SIGNATURE-----
-
---=-hnQyK3zOHMZ3m6wpye0G--
-
+-- 
+Regards,
+Pavel Roskin
