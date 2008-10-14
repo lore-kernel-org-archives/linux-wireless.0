@@ -1,71 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44118 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:60350 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751283AbYJZIJi (ORCPT
+	with ESMTP id S1750956AbYJNR67 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2008 04:09:38 -0400
-Subject: Re: [RFC] mac80211 rx filter in mesh mode, rt2x00 mesh point
-	operation
+	Tue, 14 Oct 2008 13:58:59 -0400
+Subject: Re: [PATCH] mac80211: fixme for kernel-doc
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <445f43ac0810251820p71e6e330tba6ba9475ca8aa48@mail.gmail.com> (sfid-20081026_022028_483495_EFC3953E)
-References: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com>
-	 <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com>
-	 <200810251228.17562.IvDoorn@gmail.com>
-	 <445f43ac0810251820p71e6e330tba6ba9475ca8aa48@mail.gmail.com>
-	 (sfid-20081026_022028_483495_EFC3953E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WrUbrOambF3WhFaJYSm9"
-Date: Sun, 26 Oct 2008 09:09:31 +0100
-Message-Id: <1225008571.3478.14.camel@johannes.berg> (sfid-20081026_091009_145273_39DCD692)
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <20081013091501.33146a4d.randy.dunlap@oracle.com>
+References: <20081013091501.33146a4d.randy.dunlap@oracle.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cec1nG9Dr/rscdGcoNep"
+Date: Tue, 14 Oct 2008 19:58:23 +0200
+Message-Id: <1224007103.3027.0.camel@johannes.berg> (sfid-20081014_195902_623441_B0A4E527)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-WrUbrOambF3WhFaJYSm9
+--=-cec1nG9Dr/rscdGcoNep
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-10-25 at 18:20 -0700, Javier Cardona wrote:
-> Ivo,
+On Mon, 2008-10-13 at 09:15 -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 >=20
-> On Sat, Oct 25, 2008 at 3:28 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > For rt2x00 this would turn into:
-> >        FIF_ALLMULTI | FIF_OTHER_BSS | FIF_PROMISC_IN_BSS
+> Fix kernel-doc warnings in mac80211.h.
+> Fields need real explanations added to them.
 >=20
-> With the above configuration, will the rt2x00 device acknowledge 1)
-> unicast frames addressed to itself? 2) unicast frames addressed to
-> others? 3) none of the above?
+> Warning(lin2627-g3-kdocfixes//include/net/mac80211.h:659): No description=
+ found for parameter 'icv_len'
+> Warning(lin2627-g3-kdocfixes//include/net/mac80211.h:659): No description=
+ found for parameter 'iv_len'
 
-It should always only be (1), mac80211 might set OTHER_BSS if it (well,
-the user) wants to see traffic on the same channel from other BSSes.
+Thanks Randy, nbd was going to add those.
 
 johannes
 
---=-WrUbrOambF3WhFaJYSm9
+--=-cec1nG9Dr/rscdGcoNep
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJBCW3AAoJEKVg1VMiehFYMK8QAIJG2h6bT5+ptSRY2QFiuXzr
-V05OuLIDIB01EPBxxzK80i3CYt92wcQIVeNRiRWDMFohES81ZS2yLQWw6bF3WgDG
-o1nf7WmIbgzEpfP3mhUtz9EhpAw0cyAIIzigw1fyFQbm3atdVCybTN78HcScFsqB
-hHoNY9omhLkPFhSZaarnoz/g6A/UYQYsmKPC20pdZNRtN3dzR0UAFtZG99txmIUc
-Neh5LUBoJFjqNupJD2Xl21i3NiccUf/ceIri6NbgWDDhaJG+FBT8bdrxp4y+L908
-qDOZw1dlRF74DMMR7WJVdP6zrXewkhqbmJhJLSoYNDNZ+NanCeUplTL8iU99ZtjQ
-WB0DB57/aQgaKtdOSXcUaimK3LMhv1hXO5EGec5ME0mOB8fsEcbJzf0tDoPuIH47
-BeBHf3r2TfQjqdN78evkMblBwM0KmTnRmUJ+I4fb8u0kut9mR2vQKMyhMpQle0NV
-9uTDc1upQPr9Or6PyG3wJwGx1xkiB5lr7DBbrx4ps6D/lrrBbrY2+2yEOWF3GZA2
-fzIgufEN8AgTWu4VZdoAhUllO5ciNuySVDbp0BRMKaCHL7wf2qHaHEMDpTgINSaV
-kZQptWgRRs666GST/MZeC8bbk3UjMG+Fi0BYI44Zjmu3sQijVEnrD12AUVFV5xEJ
-5idvDxd89mv5ZfjNmaZ4
-=+TVy
+iQIcBAABAgAGBQJI9N27AAoJEKVg1VMiehFYB7cP/2+8awJGwM4tSRwefgveJEI5
+bbOVcahml+sf8YBsvPtc0Sj+TpgT6ADX4m5TWTqRyHmvRVQvTVkOmpW9s6S3i7ae
+zT2F80lGgaRV2HZMtzK7r7n9W7PocrkpLtsyruZrEk+ayfVo34n54lYYpOeA78F6
+7pzwPtrBdXozPwIAv1We4W+HOWguYUrjW6bIX6QNC8zmBZZliHwaYqtSHT5V+685
+cyHAHq6bWAP+/VrT9kBsgWVkeuuD/rXs0jeCxjMtrzjRUG+BGDmMLN6UQmcvaSeT
+mE+K0BxuNfTKdgAX3qSKkRZdJCzXIo142idrLbpbOhi2XCvLRtbedPidv2qgzQka
+BAibRHgZFZm5uj5SXud0aW0BzOEVexm6b5cbIUoyhUE15DPACiicpHBj/MgQdQQu
+FysPH1Dv+r8VS8IPiNyh9NlrcPunUxUfvejBua3ownnZlZoaUozVkKUMeKnc+mjY
+i1zXanalKuDbw6ZaMZ3d6fy7nHX+N3GvSsHbEhVu5IgX5auMWtuYfHokj300YrJi
+zOqbx224WjxsRd8YSKcRxO9+WXaifkE18r/lQllONhh11hxYuiMD2blHguUlyqU9
+WMiyyUh+JJOY02kRUEsEScRiOLT1RQJqSz889zScnm5Z4kKToGeksUlKPOMLLFWg
+dwHQc8y+Yyj2/4LInP9L
+=qCiR
 -----END PGP SIGNATURE-----
 
---=-WrUbrOambF3WhFaJYSm9--
+--=-cec1nG9Dr/rscdGcoNep--
 
