@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtagate7.uk.ibm.com ([195.212.29.140]:46228 "EHLO
-	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517AbYJ1GdA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 02:33:00 -0400
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Date: Tue, 28 Oct 2008 07:32:12 +0100
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"Carlos R. Mafra" <crmafra2@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Soeren Sonnenburg" <kernel@nn7.de>, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810272151.01244.rjw@sisk.pl> <1ba2fa240810271407o15f1f150t2d2793f4e5ad6e5b@mail.gmail.com>
-In-Reply-To: <1ba2fa240810271407o15f1f150t2d2793f4e5ad6e5b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200810280732.12930.borntraeger@de.ibm.com> (sfid-20081028_073307_506504_647073D0)
+Received: from mga11.intel.com ([192.55.52.93]:39002 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753182AbYJNHBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 03:01:10 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com>
+References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
+	 <20081009154547.GB13349@tesla>
+	 <1223608949.2510.1061.camel@debian.sh.intel.com>
+	 <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 14 Oct 2008 14:59:41 +0800
+Message-Id: <1223967581.2570.144.camel@debian.sh.intel.com> (sfid-20081014_090115_734311_CE93576A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 27. Oktober 2008 schrieb Tomas Winkler:
-> Can someone try this one (it might be space broken I've just pasted
-> that in) It's on top of 1d63e726408dfdb3e10ed8f00c383b30ebb333d3
-> (latest linux-2.6.git)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index 24a1aeb..321dbc8 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -2090,7 +2090,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
->                 iwl4965_error_recovery(priv);
-> 
->         iwl_power_update_mode(priv, 1);
-> -       ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
-> 
->         if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
->                 iwl4965_set_mode(priv, priv->iw_mode);
-> @@ -2342,6 +2341,7 @@ static void iwl_bg_alive_start(struct work_struct 
-*data)
->         mutex_lock(&priv->mutex);
->         iwl_alive_start(priv);
->         mutex_unlock(&priv->mutex);
-> +       ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
->  }
-> 
->  static void iwl4965_bg_rf_kill(struct work_struct *work)
+On Fri, 2008-10-10 at 09:49 -0700, Luis R. Rodriguez wrote:
+> The real correct behavior here, as the comment also
+> indicates, is we should be doing an intersection between the two
+> regulatory domains and I sent a RFC on a some initial code I had to
+> support such intersection. Until that is not merged we just respect
+> first regulatory request.
 
-This one works on my T61p.
+Why should the intersection be the correct behavior? In my previous
+example, the intersection of a BG card and an ABG card is the BG bands.
+Why shouldn't the ABG card have the A band support?
+
+Thanks,
+-yi
+
