@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.tglx.de ([62.245.132.106]:36264 "EHLO www.tglx.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753423AbYJGSC2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 14:02:28 -0400
-Date: Tue, 7 Oct 2008 20:02:13 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Elias Oltmanns <eo@nebensachen.de>
-cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: ath5k: kernel timing screwed - due to unserialised register
- access?
-In-Reply-To: <87skr8h1de.fsf@denkblock.local>
-Message-ID: <alpine.LFD.2.00.0810071946460.3166@apollo> (sfid-20081007_200230_653221_9801757E)
-References: <87k5cm3ee2.fsf@denkblock.local> <alpine.LFD.2.00.0810052354000.3398@apollo> <87d4id3jmr.fsf@denkblock.local> <alpine.LFD.2.00.0810061614490.3166@apollo> <87skr8h1de.fsf@denkblock.local>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54648 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522AbYJNU7G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 16:59:06 -0400
+Date: Tue, 14 Oct 2008 16:56:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ieee80211: make it depend on drivers that use it
+Message-ID: <20081014205621.GE3349@tuxdriver.com> (sfid-20081014_225916_775484_BE3910C8)
+References: <1224004808-20992-1-git-send-email-linville@tuxdriver.com> <1224008257.3027.2.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1224008257.3027.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 7 Oct 2008, Elias Oltmanns wrote:
-> Thomas Gleixner <tglx@linutronix.de> wrote:
-> > On Mon, 6 Oct 2008, Elias Oltmanns wrote:
-> >> Make sure that event1 is the right device. chktimer usually reports
-> >> several premature timer expiries in less than a minute.
-> [...]
-> > Your measuring method is wrong. You really want to measure the delta
-> > of the timer events in the kernel via ktime_get(), not the delta of
-> > something else in userspace.
+On Tue, Oct 14, 2008 at 08:17:37PM +0200, Johannes Berg wrote:
+> On Tue, 2008-10-14 at 13:20 -0400, John W. Linville wrote:
+> > Make IEEE80211 depend on IPW2100, IPW2200, or HOSTAP, which all select
+> > it.  This removes the need for users to select it manually.
+> > 
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> >  net/ieee80211/Kconfig |    1 +
+> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/net/ieee80211/Kconfig b/net/ieee80211/Kconfig
+> > index 94ed7d3..44831db 100644
+> > --- a/net/ieee80211/Kconfig
+> > +++ b/net/ieee80211/Kconfig
+> > @@ -1,5 +1,6 @@
+> >  config IEEE80211
+> >  	tristate "Generic IEEE 802.11 Networking Stack (DEPRECATED)"
+> > +	depends on (IPW2100 || IPW2200 || HOSTAP)
+> >  	---help---
+> >  	This option enables the hardware independent IEEE 802.11
+> >  	networking stack.  This component is deprecated in favor of the
 > 
-> Alright, here is a stripped down version of the test case. This time,
-> you only need to load the timer-test module and start up the ath5k
-> interface. The glitch is triggered slightly less reliably, but I can
+> Users will still have to select the crypto options manually I think.
 
--ENOATH5KHARDWARE
+Yes, your patch is better. :-)
 
-> still easily verify that the problem is present when running 2.6.27-rc9
-> on my system.
-
-Hmm. Can you please add some real info to the printk :)
-
-> +	if (timespec_to_ns(&diff) < TSTM_THRESH)
-> +		printk(KERN_INFO "Timer expired prematurely.\n");
-
-e.g.:
-
-  		printk(KERN_INFO "b: %6ld.%09ld n: %6ld.09ld e: %lu j: %lu\n",
-			before.tv_sec, before.tv_nsec, now.tv_sec, now.tv_nsec,
-			tstm_timer.expires, jiffies);
-
-Does this happen w/o the ath5k driver as well ?
-
-Thanks,
-
-	tglx
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
