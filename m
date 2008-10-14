@@ -1,84 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:47391 "EHLO ciao.gmane.org"
+Received: from c60.cesmail.net ([216.154.195.49]:40264 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752716AbYJTRBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 13:01:53 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Kry8Z-0000pr-Pj
-	for linux-wireless@vger.kernel.org; Mon, 20 Oct 2008 17:01:48 +0000
-Received: from gimpelevich.san-francisco.ca.us ([66.218.54.163])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 17:01:47 +0000
-Received: from daniel by gimpelevich.san-francisco.ca.us with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 17:01:47 +0000
-To: linux-wireless@vger.kernel.org
-From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Subject: Re: Marvell TopDog Driver Work
-Date: Mon, 20 Oct 2008 17:01:37 +0000 (UTC)
-Message-ID: <gdidhg$hdq$3@ger.gmane.org> (sfid-20081020_190157_230217_22146B64)
-References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
-	<1218830917.14841.20.camel@localhost.localdomain>
+	id S1759880AbYJNAAm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Oct 2008 20:00:42 -0400
+Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1223941001.28019.3.camel@dv>
+References: <48EE20FB.4060700@lwfinger.net>
+	 <1223936680.10113.7.camel@johannes.berg> <1223937392.27118.2.camel@dv>
+	 <200810140055.34065.chunkeey@web.de>  <1223938526.27118.6.camel@dv>
+	 <1223939151.27769.3.camel@dv>  <1223939271.10113.10.camel@johannes.berg>
+	 <1223941001.28019.3.camel@dv>
+Content-Type: text/plain
+Date: Mon, 13 Oct 2008 20:00:39 -0400
+Message-Id: <1223942439.28019.9.camel@dv> (sfid-20081014_020109_556603_EBF590B3)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 15 Aug 2008 16:08:37 -0400, Dan Williams wrote:
+On Mon, 2008-10-13 at 19:36 -0400, Pavel Roskin wrote:
 
-> On Fri, 2008-08-15 at 12:58 -0700, Luis R. Rodriguez wrote:
->> On Fri, Aug 15, 2008 at 12:40:27PM -0700, Pat Erley wrote:
->> > Has anyone stepped up to help in the port of this to mac80211?  I
->> > just picked up a wrvs4400n router that uses it and have been worki=
-ng
->> > on getting 2.6.XX to work with it.
->>=20
->> Not that I have heard of. Don't know.
->=20
-> There's code out there for the TopDog parts (Linville's marvell.git o=
-n
-> kernel.org), and I even have one or two of them lying around.  The
-> firmware interface isn't that different from the 8335 (mrv8k) and thu=
-s
-> the two product lines can probably share the same driver.
->=20
-> Lennert and Nick (from Marvell) are supposed to be working on a mac80=
-211
-> driver for the 88w8687 part, which is probably just about the same
-> firmware interface as TopDog (aside from the N-specific bits, and
-> different TX & RX descriptors I'm sure).  I'd prefer to either start
-> fixing up mrv8k and then merge into whatever Lennert comes up with, o=
-r
-> see what they come up with and use that as a base for adding support =
-for
-> older TopDog and 8310/8335 hardware.
->=20
-> mrv8k was always a bit rocky and never reliably got scan results on t=
-he
-> 8335 cardbus hardware I had, even though the descriptor setup and the
-> mac80211 bits looked right.  There's some pre/post scan commands that=
- we
-> need to hook into mac80211 which I posted patches for first, but
-> Johannes requested we not commit those until we really knew whether
-> pre/post scan were required.
->=20
-> Dan
+> p54_config() calls p54_set_freq(), which can fail with -EINVAL.  I'm
+> looking why it can happen.
 
-Duh...
-http://git.kernel.org/?p=3Dlinux/kernel/git/mcgrof/mrvl_cb82.git;a=3Dsu=
-mmary
+The calibration table only has frequencies in the 2.4GHz band, but the
+scan goes through the 5GHz band as well.  That's how it fails:
 
-Also, I have a router with an 8361 chip and Linux Inside=E2=84=A2 for w=
-hich I=20
-have made a GPL Source Request. I was told that the sources will be=20
-available two weeks from now. I don't expect the wi-fi driver to be in=20
-source form in that release, but you never know in advance what they'll=
-=20
-stuff in there.
+freq = 5825
+i = 0, priv->iq_autocal[i].freq = 2412
+i = 1, priv->iq_autocal[i].freq = 2417
+i = 2, priv->iq_autocal[i].freq = 2422
+i = 3, priv->iq_autocal[i].freq = 2427
+i = 4, priv->iq_autocal[i].freq = 2432
+i = 5, priv->iq_autocal[i].freq = 2437
+i = 6, priv->iq_autocal[i].freq = 2442
+i = 7, priv->iq_autocal[i].freq = 2447
+i = 8, priv->iq_autocal[i].freq = 2452
+i = 9, priv->iq_autocal[i].freq = 2457
+i = 10, priv->iq_autocal[i].freq = 2462
+i = 11, priv->iq_autocal[i].freq = 2467
+i = 12, priv->iq_autocal[i].freq = 2472
+i = 13, priv->iq_autocal[i].freq = 2484
+phy9: frequency change failed
+ret = -22
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Either we should be using a different table for the 5GHz band, or the
+driver should not announce 5GHz channels if the calibration table lacks
+them.
+
+-- 
+Regards,
+Pavel Roskin
