@@ -1,55 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:52397 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbYJaSDT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 14:03:19 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 0/6] rtl8187: Reduce delays to reduce startup time
-Date: Fri, 31 Oct 2008 16:03:28 -0200
-Cc: John Linville <linville@tuxdriver.com>,
-	htl10@users.sourceforge.net, Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net> <490B3798.40206@lwfinger.net>
-In-Reply-To: <490B3798.40206@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810311603.29317.herton@mandriva.com.br> (sfid-20081031_190324_619410_1D0A05A6)
+Received: from mga09.intel.com ([134.134.136.24]:37179 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751307AbYJNTek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 15:34:40 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 3/3] iwlwifi: remove host commands structures from iwl_cmd
+Date: Tue, 14 Oct 2008 12:32:43 -0700
+Message-Id: <1224012769-8920-4-git-send-email-reinette.chatre@intel.com> (sfid-20081014_213445_018531_742D6C5B)
+In-Reply-To: <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1224012769-8920-1-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 31 October 2008 14:51:36 Larry Finger wrote:
-> The current version of the rtl8187 driver contains a large number of msleep()
-> commands that cause initialization to take a long time. This series of patches
-> include revisions that were found by looking at the latest version of the
-> vendor's driver (rtl8187B_linux_26.1036.0708.2008), and others that were found
-> to be OK with testing.
-> 
-> To keep each of the patches relatively small, these changes are split into 6
-> parts. The changes in them are as follows:
-> 
-> 1. Remove all delays of greater than 1 sec.
-> 2. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_ofdm().
-> 3. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_cck().
-> 4. Remove the msleep(1) that immediately follow calls to rtl8225_write().
-> 5. Remove the nsleep() calls from rtl8187_write_phy(), rtl8225_write_bitbang(),
-> and rtl8225_write_8051().
-> 6. Remove the msleep(10) that preceeds a channel change.
-> 
-> Before these changes, routine rtl8187b_init_hw() took 15.82 sec to execute. It
-> now takes 3.76 sec.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-I tested here the 6 patches, and didn't found problems with them (testing with
-two 8187 models, one an old 8187L and other an 8187B).
+This patch removes host commands structures from iwl_cmd
+to make more HW oblivious
+tx cmd was left it needs special treatment.
 
-Tested-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Reviewed-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    9 +--------
+ drivers/net/wireless/iwlwifi/iwl-sta.c |    8 ++++++--
+ 2 files changed, 7 insertions(+), 10 deletions(-)
 
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 34306b6..d86d8a2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -268,23 +268,16 @@ struct iwl_cmd {
+ 	struct iwl_cmd_meta meta;	/* driver data */
+ 	struct iwl_cmd_header hdr;	/* uCode API */
+ 	union {
+-		struct iwl_addsta_cmd addsta;
+-		struct iwl_led_cmd led;
+ 		u32 flags;
+ 		u8 val8;
+ 		u16 val16;
+ 		u32 val32;
+-		struct iwl4965_bt_cmd bt;
+-		struct iwl_powertable_cmd powertable;
+-		struct iwl_qosparam_cmd qosparam;
+ 		struct iwl_tx_cmd tx;
+-		struct iwl4965_rxon_assoc_cmd rxon_assoc;
+-		struct iwl_rem_sta_cmd rm_sta;
+-		u8 *indirect;
+ 		u8 payload[IWL_CMD_MAX_PAYLOAD];
+ 	} __attribute__ ((packed)) cmd;
+ } __attribute__ ((packed));
+ 
++
+ struct iwl_host_cmd {
+ 	u8 id;
+ 	u16 len;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 5fc4150..7b326f0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -104,7 +104,9 @@ static int iwl_add_sta_callback(struct iwl_priv *priv,
+ 				   struct iwl_cmd *cmd, struct sk_buff *skb)
+ {
+ 	struct iwl_rx_packet *res = NULL;
+-	u8 sta_id = cmd->cmd.addsta.sta.sta_id;
++	struct iwl_addsta_cmd *addsta =
++		(struct iwl_addsta_cmd *)cmd->cmd.payload;
++	u8 sta_id = addsta->sta.sta_id;
+ 
+ 	if (!skb) {
+ 		IWL_ERROR("Error: Response NULL in REPLY_ADD_STA.\n");
+@@ -326,7 +328,9 @@ static int iwl_remove_sta_callback(struct iwl_priv *priv,
+ 				   struct iwl_cmd *cmd, struct sk_buff *skb)
+ {
+ 	struct iwl_rx_packet *res = NULL;
+-	const char *addr = cmd->cmd.rm_sta.addr;
++	struct iwl_rem_sta_cmd *rm_sta =
++		 (struct iwl_rem_sta_cmd *)cmd->cmd.payload;
++	const char *addr = rm_sta->addr;
+ 
+ 	if (!skb) {
+ 		IWL_ERROR("Error: Response NULL in REPLY_REMOVE_STA.\n");
+-- 
+1.5.4.3
 
---
-[]'s
-Herton
