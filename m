@@ -1,47 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52911 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187AbYJHTCT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2008 15:02:19 -0400
-Date: Wed, 8 Oct 2008 15:01:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Rami Rosen <ramirose@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH ] mac80211: fix wrong link typo in mac80211_hwsim
-	documentation.
-Message-ID: <20081008190109.GC32472@tuxdriver.com> (sfid-20081008_210223_550857_74AA47A9)
-References: <eb3ff54b0810080243r416b8413uf2e12f51c309a8b7@mail.gmail.com> <1223459201.3618.49.camel@johannes.berg> <20081008161834.GL4941@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081008161834.GL4941@jm.kir.nu>
+Received: from mga02.intel.com ([134.134.136.20]:4763 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751626AbYJNTfZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 15:35:25 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 9/9] iwlwifi: tx command must run on same tfd as packet
+Date: Tue, 14 Oct 2008 12:32:49 -0700
+Message-Id: <1224012769-8920-10-git-send-email-reinette.chatre@intel.com> (sfid-20081014_213531_636907_5E73DED1)
+In-Reply-To: <1224012769-8920-9-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1224012769-8920-1-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-4-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-5-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-6-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-7-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-8-git-send-email-reinette.chatre@intel.com>
+ <1224012769-8920-9-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2008 at 07:18:34PM +0300, Jouni Malinen wrote:
-> On Wed, Oct 08, 2008 at 11:46:41AM +0200, Johannes Berg wrote:
-> > On Wed, 2008-10-08 at 11:43 +0200, Rami Rosen wrote:
-> > >  Please note that the current Linux kernel does not enable AP mode, so
-> > > a
-> > >  simple patch is needed to enable AP mode selection:
-> > > -http://johannes.sipsolutions.net/patches/kernel/all/LATEST/006-allow-ap-vlan-modes.patch
-> > > -
-> > > +http://johannes.sipsolutions.net/patches/kernel/all/LATEST/004-allow-ap-vlan-modes.patch
-> > 
-> > No good, the numbering changes all the time.
-> 
-> Well.. I see two possible fixes here: we'll finally apply that patch or
-> point to http://w1.fi/wireless-testing/enable-ap-mode.patch which does
-> not change its URL all the time.. I'm starting to lean more towards the
-> prior option, though, since I'm getting tired of pointing people to this
-> patch whenever they complain that hostapd does not work with mac80211.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Well I might be OK with that -- but are you (and Johannes) ready
-to deal with the various "ap mode doesn't work with my hostapd
-configuration" problems?
+This patch makes clear that tx command is attached to the same tfd as
+the tx packet
 
-John
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 2fadb8f..f7dc509 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -817,7 +817,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	dma_addr_t phys_addr;
+ 	dma_addr_t txcmd_phys;
+ 	dma_addr_t scratch_phys;
+-	u16 len, idx, len_org;
++	u16 len, len_org;
+ 	u16 seq_number = 0;
+ 	__le16 fc;
+ 	u8 hdr_len, unicast;
+@@ -906,14 +906,13 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	/* Set up first empty TFD within this queue's circular TFD buffer */
+ 	tfd = &txq->tfds[q->write_ptr];
+ 	memset(tfd, 0, sizeof(*tfd));
+-	idx = get_cmd_index(q, q->write_ptr, 0);
+ 
+ 	/* Set up driver data for this TFD */
+ 	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct iwl_tx_info));
+ 	txq->txb[q->write_ptr].skb[0] = skb;
+ 
+ 	/* Set up first empty entry in queue's array of Tx/cmd buffers */
+-	out_cmd = txq->cmd[idx];
++	out_cmd = txq->cmd[q->write_ptr];
+ 	tx_cmd = &out_cmd->cmd.tx;
+ 	memset(&out_cmd->hdr, 0, sizeof(out_cmd->hdr));
+ 	memset(tx_cmd, 0, sizeof(struct iwl_tx_cmd));
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+1.5.4.3
+
