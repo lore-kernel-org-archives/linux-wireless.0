@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atlantis.8hz.com ([212.129.237.78]:50327 "EHLO atlantis.8hz.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750939AbYJVIaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 04:30:03 -0400
-Date: Wed, 22 Oct 2008 08:05:57 +0000
-From: Sean Young <sean@mess.org>
-To: Chr <chunkeey@web.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, bugme-daemon@bugzilla.kernel.org
-Subject: Re: [RFT/RFC][PATCH] p54: fix misbehavings when firmware can't be found
-Message-ID: <20081022080557.GA38534@atlantis.8hz.com> (sfid-20081022_103008_481629_96F47D2C)
-References: <bug-11782-10286@http.bugzilla.kernel.org/> <20081021112313.0885a745.akpm@linux-foundation.org> <200810212156.24772.chunkeey@web.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810212156.24772.chunkeey@web.de>
+Received: from mta4.srv.hcvlny.cv.net ([167.206.4.199]:37406 "EHLO
+	mta4.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878AbYJNOWh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 10:22:37 -0400
+Received: from [192.168.1.10] (ool-44c60ac6.dyn.optonline.net [68.198.10.198])
+ by mta4.srv.hcvlny.cv.net
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTP id <0K8Q005IOFXMC060@mta4.srv.hcvlny.cv.net> for
+ linux-wireless@vger.kernel.org; Tue, 14 Oct 2008 10:22:35 -0400 (EDT)
+Date: Tue, 14 Oct 2008 10:22:33 -0400
+From: Jerry Quinn <jlquinn@optonline.net>
+Subject: ath5k: No connection with 5424 and latest compat-old
+To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Message-id: <48F4AB29.5030303@optonline.net> (sfid-20081014_162244_235356_6B47E886)
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2008 at 09:56:24PM +0200, Chr wrote:
-> On Tuesday 21 October 2008 20:23:13 Andrew Morton wrote:
-> > (switched to email.  Please respond via emailed reply-to-all, not via the
-> > bugzilla web interface).
-> >
-> > On Sat, 18 Oct 2008 09:13:00 -0700 (PDT)
-> >
-> > bugme-daemon@bugzilla.kernel.org wrote:
-> > > http://bugzilla.kernel.org/show_bug.cgi?id=11782
-> > >
-> > >            Summary: p54 misbehaves when firmware can't be found
-> > >            Product: Drivers
-> > >            Version: 2.5
-> > >      KernelVersion: 2.6.27-git8
-> > >           Platform: All
-> > >         OS/Version: Linux
-> > >               Tree: Mainline
-> > >             Status: NEW
-> > >           Severity: low
-> > >           Priority: P1
-> > >          Component: network-wireless
-> > >         AssignedTo: drivers_network-wireless@kernel-bugs.osdl.org
-> > >         ReportedBy: sean@mess.org
-> > >
-> > >
-> > > Latest working kernel version: 2.6.26
-> >
-> well, you can increase 26 to 27. The patch that caused this regression 
-> went into in 2.6.27-gitX so no stable kernel is affected only this pre-rc1...
-> 
-> anyway, I don't have any p54p hardware right now (for the next two weeks
-> to be more precise), so sean you have to test it and report back, otherwise
-> this will properly stay RFT...
-> 
-> I made two versions of the patch, both do the same,
-> so it more a matter of which one you would like to have.
-> 
-> I prefer the first and bigger one, since it hopefully won't break the other 
-> patches I send some time ago for wireless-testing...
+I've installed the latest compat-wireless-2.6-old on Debian 2.6.26-1 
+i686 v2.6.26-7.  I downloaded it last night Oct 13, 2008.
 
-Both patches work. I tested both patches with the firmware not in place 
-(no stack trace) and in place (works as expected).
+naga:~/compat-wireless-2.6-old# cat compat-release
+v4.5-56-gcd7615b
 
-Thanks
-Sean
+I can build, install, and modprobe the ath5k module, giving:
+
+Oct  14 23:31:09 naga kernel: [17974.660295] ACPI: PCI Interrupt 
+0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+Oct  14 23:31:09 naga kernel: [17974.660368] ath5k_pci 0000:03:00.0: 
+registered as 'phy0'
+Oct  14 23:31:09 naga kernel: [17974.789588] phy0: Selected rate control 
+algorithm 'pid'
+Oct  14 23:31:09 naga kernel: [17974.790580] Registered led device: 
+ath5k-phy0::rx
+Oct  14 23:31:09 naga kernel: [17974.790602] Registered led device: 
+ath5k-phy0::tx
+Oct  14 23:31:09 naga kernel: [17974.790605] ath5k phy0: Atheros AR5424 
+chip found (MAC: 0xa3, PHY: 0x61)
+Oct  14 23:31:09 naga kernel: [17974.814333] udev: renamed network 
+interface wlan0 to ath0
+
+When I try to ifup the interface, connecting through DHCP, I get no 
+connection, and in the kernel log, I just get:
+
+Oct  5 20:32:17 naga kernel: [18042.759550] ADDRCONF(NETDEV_UP): ath0: 
+link is not ready
+
+iwlist ath0 scan works, however.
+
+Thanks,
+Jerry Quinn
+
+
