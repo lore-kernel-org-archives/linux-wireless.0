@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:39977 "EHLO
-	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805AbYJSWMc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54814 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401AbYJNVWI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 18:12:32 -0400
-Date: Mon, 20 Oct 2008 00:06:55 +0200
-From: Pavel Machek <pavel@suse.cz>
-To: jbenc@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
-	i.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: iwl3945: if I leave my machine running overnight, wifi will
-	not work in the morning
-Message-ID: <20081019220655.GA1827@elf.ucw.cz> (sfid-20081020_001237_923663_556DB57E)
-References: <20081019214035.GA30485@elf.ucw.cz>
+	Tue, 14 Oct 2008 17:22:08 -0400
+Date: Tue, 14 Oct 2008 17:19:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: New Regulatory Domain Api.
+Message-ID: <20081014211912.GF3349@tuxdriver.com> (sfid-20081014_232245_065685_30E4188B)
+References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com> <20081009154547.GB13349@tesla> <1223608949.2510.1061.camel@debian.sh.intel.com> <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com> <1223967581.2570.144.camel@debian.sh.intel.com> <43e72e890810140004k6bfa72edsf39acbafcf317fa6@mail.gmail.com> <1223969808.2570.153.camel@debian.sh.intel.com> <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com> <20081014203510.GD3349@tuxdriver.com> <1224018957.3027.9.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081019214035.GA30485@elf.ucw.cz>
+In-Reply-To: <1224018957.3027.9.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 2008-10-19 23:40:35, Pavel Machek wrote:
-> Hi!
+On Tue, Oct 14, 2008 at 11:15:57PM +0200, Johannes Berg wrote:
+> On Tue, 2008-10-14 at 16:35 -0400, John W. Linville wrote:
 > 
-> Kernel 2.6.27-rc8; happened few times already.
+> > That doesn't sound like quite the correct behavior.  If a channel is
+> > excluded for regulatory reasons, then I suspect that should govern
+> > everyone.  But if one card just doesn't support a band, I don't see
+> > why any other cards should be limited by that.
+> > 
+> > Did I miss something?
+> 
+> Well, the thing is that the iwlwifi drivers pretend to know the
+> regulatory domain; thus when a single-band card registers the regulatory
+> domain, it gets set to just a domain with the single band.
 
-...
-> After reboot, network will work (I believe ;-).
+Ah, now I see what this is about...thanks!
 
-Hmm, it did not this time.
-
-iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver
-for Linux, 1.2.26kds
-iwl3945: Copyright(c) 2003-2008 Intel Corporation
-iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-iwl3945 0000:03:00.0: setting latency timer to 64
-iwl3945: Detected Intel Wireless WiFi Link 3945ABG
-iwl3945: Tunable channels: 11 802.11bg, 13 802.11a channels
-phy0: Selected rate control algorithm 'iwl-3945-rs'
-iwl3945 0000:03:00.0: PCI INT A disabled
-Linux video capture interface: v2.00
-Uniform Multi-Platform E-IDE driver
-...
-Oct 20 00:06:25 amd kernel: wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
-Oct 20 00:06:25 amd kernel: wlan0: associated
-Oct 20 00:06:26 amd kernel: wlan0: disassociated
-Oct 20 00:06:27 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
-Oct 20 00:06:27 amd kernel: wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
-Oct 20 00:06:27 amd kernel: wlan0: associated
-Oct 20 00:06:27 amd kernel: wlan0: disassociated
-Oct 20 00:06:28 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
-Oct 20 00:06:28 amd kernel: wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
-Oct 20 00:06:28 amd kernel: wlan0: associated
-Oct 20 00:06:29 amd kernel: wlan0: disassociated
-
-On to reboot the access point...
-									Pavel
+Should there be an "I make no representation of authority" flag in
+the regulatory maps?
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
