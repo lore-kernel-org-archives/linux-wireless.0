@@ -1,43 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:55706 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753475AbYJATAv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 15:00:51 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so121914yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 12:00:49 -0700 (PDT)
-Message-ID: <43e72e890810011200q101850a8v586a03c54a2c1f8b@mail.gmail.com> (sfid-20081001_210054_088211_C4394AE0)
-Date: Wed, 1 Oct 2008 12:00:49 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Trigve <trigves@yahoo.com>
-Subject: Re: intel wifi 5100 (iwlagn) authentication timed out
+Received: from mx2.redhat.com ([66.187.237.31]:55292 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751565AbYJNQgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 12:36:43 -0400
+Subject: Re: [PATCH] ipw2200: Change driver default policies
+From: Dan Williams <dcbw@redhat.com>
+To: timg@tpi.com
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20081001T185317-474@post.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <loom.20081001T181402-749@post.gmane.org>
-	 <43e72e890810011142r62f8cbf2mfdb6bc2a0a2a7bbc@mail.gmail.com>
-	 <loom.20081001T185317-474@post.gmane.org>
+In-Reply-To: <48F4C7E8.4020201@tpi.com>
+References: <20081014145708.CAF215A1D8@sepang.rtg.net>
+	 <1223998992.3936.28.camel@localhost.localdomain> <48F4C7E8.4020201@tpi.com>
+Content-Type: text/plain
+Date: Tue, 14 Oct 2008 12:35:37 -0400
+Message-Id: <1224002137.1799.0.camel@localhost.localdomain> (sfid-20081014_183646_251731_FB463E23)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 1, 2008 at 11:57 AM, Trigve <trigves@yahoo.com> wrote:
-> Luis R. Rodriguez <mcgrof@...> writes:
->> What kernel? Also, please see:
->>
->> http://wireless.kernel.org/en/users/Reporting_bugs
->>
->>   Luis
-> Hi,
-> Sorry was in hurry and forgot to add.
->
-> I'm using OpenSuse 11.0 "uname -a":
-> Linux dodes-nb 2.6.25.5-1.1-default #1 SMP 2008-06-07 01:55:22 +0200 x86_64
-> x86_64 x86_64 GNU/Linux
->
-> I'm using compat-wireless-old.tar.bz2 from date 1. oct 2008.
+On Tue, 2008-10-14 at 10:25 -0600, Tim Gardner wrote:
+> Dan Williams wrote:
+> > On Tue, 2008-10-14 at 08:57 -0600, Tim Gardner wrote:
+> >> From 41804698de6f2ce121c1452943b9ad2b8a54988b Mon Sep 17 00:00:00 2001
+> >> From: Tim Gardner <tim.gardner@canonical.com>
+> >> Date: Tue, 14 Oct 2008 08:16:09 -0600
+> >> Subject: [PATCH] ipw2200: change default policies for auto-associate, auto-create, and auto-roaming
+> >>
+> >> We now have applications available to set policy. This patch changes the driver defaults to:
+> >>
+> >> 1) associate=0 - do not automatically associate to an SSID.
+> > 
+> > This one is fine.
+> > 
+> >> 2) auto_create=0 - do not automatically create an ad-hoc network
+> > 
+> > This will break adhoc network creation, thus NAK.  I think we should
+> > just remove the module parameter and default to 1 anyway.  This is the
+> > way adhoc _should_ work in the first place, if the adhoc network you're
+> > attempting to join does not yet exist, the driver should create that
+> > network.  This is the way it works for all other drivers as well.
+> > 
+> > Disabling this effectively means you can only join existing adhoc
+> > networks, not start your own.
+> > 
+> 
+> Agreed - I missed the part where its qualified by IW_MODE_ADHOC.
+> 
+> >> 3) roaming=0 - do not automatically roam to another AP with the same SSID.
+> > 
+> > Not really sure why this should be changed?  Were there reported issues
+> > with this behavior?
+> > 
+> 
+> Its been my expereince that wireless drivers rarely make the correct
+> decision about when or where to roam. It also seems like a policy
+> decision that ought to be made elsewhere.
+> 
+> Frankly, I'm not that concerned about the roaming option. The default
+> for 'associate' was the one I _really_ wanted changed. I'll submit a v2
+> patch with just that change.
 
-Please try to upgrade the kernel, compat-wireless-old hasn't had a lot
-of love lately on 2.6.25.
+Sure.  That's something I've wanted to turn off for quite a while, it's
+sort of a security problem.  Nothing should be auto-associating until
+told to do so to a specific SSID or SSID/BSSID combination.
 
-  Luis
+Dan
+
