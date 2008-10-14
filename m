@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:52630 "EHLO hostap.isc.org"
+Received: from mail.tpi.com ([198.107.51.143]:1987 "EHLO mail.tpi.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755240AbYJ3Pvs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 11:51:48 -0400
-Date: Thu, 30 Oct 2008 17:50:46 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211_hwsim: Add support for client PS mode testing
-Message-ID: <20081030155046.GC3923@jm.kir.nu> (sfid-20081030_165209_511884_BB818D09)
-References: <20081030150455.GA3923@jm.kir.nu> <1225379715.3690.66.camel@johannes.berg>
+	id S1750794AbYJNQZM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 12:25:12 -0400
+Message-ID: <48F4C7E8.4020201@tpi.com> (sfid-20081014_182519_109984_4FB94716)
+Date: Tue, 14 Oct 2008 10:25:12 -0600
+From: Tim Gardner <timg@tpi.com>
+Reply-To: timg@tpi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1225379715.3690.66.camel@johannes.berg>
+To: Dan Williams <dcbw@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ipw2200: Change driver default policies
+References: <20081014145708.CAF215A1D8@sepang.rtg.net> <1223998992.3936.28.camel@localhost.localdomain>
+In-Reply-To: <1223998992.3936.28.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 30, 2008 at 04:15:15PM +0100, Johannes Berg wrote:
-> On Thu, 2008-10-30 at 17:04 +0200, Jouni Malinen wrote:
-> > This introduces a debugfs file (mac80211_hwsim/phy#/ps) that can be
-> > used
+Dan Williams wrote:
+> On Tue, 2008-10-14 at 08:57 -0600, Tim Gardner wrote:
+>> From 41804698de6f2ce121c1452943b9ad2b8a54988b Mon Sep 17 00:00:00 2001
+>> From: Tim Gardner <tim.gardner@canonical.com>
+>> Date: Tue, 14 Oct 2008 08:16:09 -0600
+>> Subject: [PATCH] ipw2200: change default policies for auto-associate, auto-create, and auto-roaming
+>>
+>> We now have applications available to set policy. This patch changes the driver defaults to:
+>>
+>> 1) associate=0 - do not automatically associate to an SSID.
 > 
-> Why not use the cfg80211-provided debugfs dir /ieee80211/phy#/ and maybe
-> put it below hwsim/ in there because mac80211 has things in there too?
-> That way you save all the code setting up the directory etc.
-
-Good point.. I did actually find out about that some time ago, but did
-not remember anymore. I'll move the files there.
-
-> > Mode 2 (automatic PS-Poll) does not yet parse Beacon frames, but
-> > eventually, it should take a look at TIM IE and send PS-Poll if a
-> > traffic bit is set for our AID.
+> This one is fine.
 > 
-> Out of curiosity, is there any hw that implements this? b43 surely would
-> need such code too, and then it could be in mac80211? I can see setting
-> the PM bit be a decision of the driver, but if more than one driver ends
-> up needing ps-poll, maybe mac80211 should be handling it?
+>> 2) auto_create=0 - do not automatically create an ad-hoc network
+> 
+> This will break adhoc network creation, thus NAK.  I think we should
+> just remove the module parameter and default to 1 anyway.  This is the
+> way adhoc _should_ work in the first place, if the adhoc network you're
+> attempting to join does not yet exist, the driver should create that
+> network.  This is the way it works for all other drivers as well.
+> 
+> Disabling this effectively means you can only join existing adhoc
+> networks, not start your own.
+> 
 
-Yes, or well, firmware more likely. Anyway, AP will have to support it
-and the main purpose of this hwsim code is indeed to allow AP PS
-buffering code to be tested. Anyway, should there be other drivers that
-would like to do the same, this could of course be eventually moved to
-mac80211. I'm just not sure whether I would expect this (Beacon parsing)
-to happen in driver. Rather, I would expect the hardware to provide
-helper here (i.e., process Beacon frames without indicating them to
-host, generate an interrupt on Beacon frame that has TIM IE with our bit
-set). Sending the PS-Poll could potentially be done in mac80211. I would
-need to take a closer look at how this is done in modern wlan designs..
-Then again, many vendors choose not to use PS-Poll at all even.
+Agreed - I missed the part where its qualified by IW_MODE_ADHOC.
 
-As far as setting FC PwrMgt bit is concerned, that could possible be in
-mac80211. Though, there is some timing consideration and likely
-potential race conditions that would need to be understood based on the
-exact hardware design.
+>> 3) roaming=0 - do not automatically roam to another AP with the same SSID.
+> 
+> Not really sure why this should be changed?  Were there reported issues
+> with this behavior?
+> 
 
+Its been my expereince that wireless drivers rarely make the correct
+decision about when or where to roam. It also seems like a policy
+decision that ought to be made elsewhere.
+
+Frankly, I'm not that concerned about the roaming option. The default
+for 'associate' was the one I _really_ wanted changed. I'll submit a v2
+patch with just that change.
+
+rtg
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Tim Gardner timg@tpi.com www.tpi.com
+OR 503-601-0234 x102 MT 406-443-5357
