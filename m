@@ -1,230 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:49137 "EHLO ds10.mine.nu"
+Received: from mx2.redhat.com ([66.187.237.31]:43712 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756295AbYJEQGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 12:06:35 -0400
-Message-ID: <48E8E5DC.3070806@openwrt.org> (sfid-20081005_180649_835153_84F2C699)
-Date: Sun, 05 Oct 2008 18:05:48 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [PATCH 3/4] ath5k: implement multi-rate retry support, fix tx status
- reporting
-References: <48E8E48E.5090300@openwrt.org> <48E8E528.7060501@openwrt.org> <48E8E588.30001@openwrt.org>
-In-Reply-To: <48E8E588.30001@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1751235AbYJNQsR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 12:48:17 -0400
+Subject: Re: [PATCH] ipw2200: Change driver default policies
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: timg@tpi.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1224002103.10113.42.camel@johannes.berg>
+References: <20081014145708.CAF215A1D8@sepang.rtg.net>
+	 <1223998992.3936.28.camel@localhost.localdomain> <48F4C7E8.4020201@tpi.com>
+	 (sfid-20081014_182519_109984_4FB94716)  <1224002103.10113.42.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 14 Oct 2008 12:47:07 -0400
+Message-Id: <1224002827.1799.8.camel@localhost.localdomain> (sfid-20081014_184819_503654_35314675)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clean up the tx status reporting, fix retry counters (short retries are
-virtual collisions, not actual retries). Implement multi-rate retry
-support.
-This also fixes strong throughput fluctuations with rc80211_pid
+On Tue, 2008-10-14 at 18:35 +0200, Johannes Berg wrote:
+> On Tue, 2008-10-14 at 10:25 -0600, Tim Gardner wrote:
+> 
+> > >> 3) roaming=0 - do not automatically roam to another AP with the same SSID.
+> > > 
+> > > Not really sure why this should be changed?  Were there reported issues
+> > > with this behavior?
+> > > 
+> > 
+> > Its been my expereince that wireless drivers rarely make the correct
+> > decision about when or where to roam. It also seems like a policy
+> > decision that ought to be made elsewhere.
+> > 
+> > Frankly, I'm not that concerned about the roaming option. The default
+> > for 'associate' was the one I _really_ wanted changed. I'll submit a v2
+> > patch with just that change.
+> 
+> Would that also turn off the spectrum-polluting continuous scanning
+> these cards do? :)
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+No, that would be a separate patch to disable the background scanning
+behavior or at least tone it down to once every few seconds or
+something.
 
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -530,6 +530,12 @@
- 		goto err_irq;
- 	}
- 
-+	/* set up multi-rate retry capabilities */
-+	if (sc->ah->ah_version == AR5K_AR5212) {
-+		hw->max_altrates = 3;
-+		hw->max_altrate_tries = 11;
-+	}
-+
- 	/* Finish private driver data initialization */
- 	ret = ath5k_attach(pdev, hw);
- 	if (ret)
-@@ -1149,7 +1155,9 @@
- 	struct sk_buff *skb = bf->skb;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	unsigned int pktlen, flags, keyidx = AR5K_TXKEYIX_INVALID;
--	int ret;
-+	struct ieee80211_rate *rate;
-+	unsigned int mrr_rate[3], mrr_tries[3];
-+	int i, ret;
- 
- 	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
- 
-@@ -1174,6 +1182,22 @@
- 	if (ret)
- 		goto err_unmap;
- 
-+	memset(mrr_rate, 0, sizeof(mrr_rate));
-+	memset(mrr_tries, 0, sizeof(mrr_tries));
-+	for (i = 0; i < 3; i++) {
-+		rate = ieee80211_get_alt_retry_rate(sc->hw, info, i);
-+		if (!rate)
-+			break;
-+
-+		mrr_rate[i] = rate->hw_value;
-+		mrr_tries[i] = info->control.retries[i].limit;
-+	}
-+
-+	ah->ah_setup_mrr_tx_desc(ah, ds,
-+		mrr_rate[0], mrr_tries[0],
-+		mrr_rate[1], mrr_tries[1],
-+		mrr_rate[2], mrr_tries[2]);
-+
- 	ds->ds_link = 0;
- 	ds->ds_data = bf->skbaddr;
- 
-@@ -1790,7 +1814,7 @@
- 	struct ath5k_desc *ds;
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info;
--	int ret;
-+	int i, ret;
- 
- 	spin_lock(&txq->lock);
- 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
-@@ -1812,7 +1836,25 @@
- 		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
- 				PCI_DMA_TODEVICE);
- 
--		info->status.retry_count = ts.ts_shortretry + ts.ts_longretry / 6;
-+		memset(&info->status, 0, sizeof(info->status));
-+		info->tx_rate_idx = ath5k_hw_to_driver_rix(sc,
-+				ts.ts_rate[ts.ts_final_idx]);
-+		info->status.retry_count = ts.ts_longretry;
-+
-+		for (i = 0; i < 4; i++) {
-+			struct ieee80211_tx_altrate *r =
-+				&info->status.retries[i];
-+
-+			if (ts.ts_rate[i]) {
-+				r->rate_idx = ath5k_hw_to_driver_rix(sc, ts.ts_rate[i]);
-+				r->limit = ts.ts_retry[i];
-+			} else {
-+				r->rate_idx = -1;
-+				r->limit = 0;
-+			}
-+		}
-+
-+		info->status.excessive_retries = 0;
- 		if (unlikely(ts.ts_status)) {
- 			sc->ll_stats.dot11ACKFailureCount++;
- 			if (ts.ts_status & AR5K_TXERR_XRETRY)
---- a/drivers/net/wireless/ath5k/desc.c
-+++ b/drivers/net/wireless/ath5k/desc.c
-@@ -318,6 +318,15 @@
- 	return 0;
- }
- 
-+/* no mrr support for cards older than 5212 */
-+static int
-+ath5k_hw_setup_no_mrr(struct ath5k_hw *ah, struct ath5k_desc *desc,
-+	unsigned int tx_rate1, u_int tx_tries1, u_int tx_rate2,
-+	u_int tx_tries2, unsigned int tx_rate3, u_int tx_tries3)
-+{
-+	return 0;
-+}
-+
- /*
-  * Proccess the tx status descriptor on 5210/5211
-  */
-@@ -352,8 +361,10 @@
- 		AR5K_DESC_TX_STATUS1_ACK_SIG_STRENGTH);
- 	ts->ts_antenna = 1;
- 	ts->ts_status = 0;
--	ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_0,
-+	ts->ts_rate[0] = AR5K_REG_MS(tx_ctl->tx_control_0,
- 		AR5K_2W_TX_DESC_CTL0_XMIT_RATE);
-+	ts->ts_retry[0] = ts->ts_longretry;
-+	ts->ts_final_idx = 0;
- 
- 	if (!(tx_status->tx_status_0 & AR5K_DESC_TX_STATUS0_FRAME_XMIT_OK)) {
- 		if (tx_status->tx_status_0 &
-@@ -405,29 +416,43 @@
- 		AR5K_DESC_TX_STATUS1_XMIT_ANTENNA) ? 2 : 1;
- 	ts->ts_status = 0;
- 
--	switch (AR5K_REG_MS(tx_status->tx_status_1,
--			AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX)) {
--	case 0:
--		ts->ts_rate = tx_ctl->tx_control_3 &
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
--		break;
-+	ts->ts_final_idx = AR5K_REG_MS(tx_status->tx_status_1,
-+			AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX);
-+
-+	/* The longretry counter has the number of un-acked retries
-+	 * for the final rate. To get the total number of retries
-+	 * we have to add the retry counters for the other rates
-+	 * as well
-+	 */
-+	ts->ts_retry[ts->ts_final_idx] = ts->ts_longretry;
-+	switch (ts->ts_final_idx) {
-+	case 3:
-+		ts->ts_rate[3] = AR5K_REG_MS(tx_ctl->tx_control_3,
-+			AR5K_4W_TX_DESC_CTL3_XMIT_RATE3);
-+
-+		ts->ts_retry[2] = AR5K_REG_MS(tx_ctl->tx_control_2,
-+			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES2);
-+		ts->ts_longretry += ts->ts_retry[2];
-+		/* fall through */
-+	case 2:
-+		ts->ts_rate[2] = AR5K_REG_MS(tx_ctl->tx_control_3,
-+			AR5K_4W_TX_DESC_CTL3_XMIT_RATE2);
-+
-+		ts->ts_retry[1] = AR5K_REG_MS(tx_ctl->tx_control_2,
-+			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
-+		ts->ts_longretry += ts->ts_retry[1];
-+		/* fall through */
- 	case 1:
--		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
-+		ts->ts_rate[1] = AR5K_REG_MS(tx_ctl->tx_control_3,
- 			AR5K_4W_TX_DESC_CTL3_XMIT_RATE1);
--		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
-+
-+		ts->ts_retry[0] = AR5K_REG_MS(tx_ctl->tx_control_2,
- 			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
--		break;
--	case 2:
--		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE2);
--		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
--			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES2);
--		break;
--	case 3:
--		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE3);
--		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
--			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES3);
-+		ts->ts_longretry += ts->ts_retry[0];
-+		/* fall through */
-+	case 0:
-+		ts->ts_rate[0] = tx_ctl->tx_control_3 &
-+			AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
- 		break;
- 	}
- 
-@@ -653,7 +678,7 @@
- 	} else {
- 		ah->ah_setup_rx_desc = ath5k_hw_setup_rx_desc;
- 		ah->ah_setup_tx_desc = ath5k_hw_setup_2word_tx_desc;
--		ah->ah_setup_mrr_tx_desc = ath5k_hw_setup_mrr_tx_desc;
-+		ah->ah_setup_mrr_tx_desc = ath5k_hw_setup_no_mrr;
- 		ah->ah_proc_tx_desc = ath5k_hw_proc_2word_tx_status;
- 	}
- 
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -418,7 +418,9 @@
- 	u16	ts_seqnum;
- 	u16	ts_tstamp;
- 	u8	ts_status;
--	u8	ts_rate;
-+	u8	ts_rate[4];
-+	u8	ts_retry[4];
-+	u8	ts_final_idx;
- 	s8	ts_rssi;
- 	u8	ts_shortretry;
- 	u8	ts_longretry;
+Dan
+
+
