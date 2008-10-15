@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:58289 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449AbYJ3Llz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60457 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790AbYJOT7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 07:41:55 -0400
-Date: Thu, 30 Oct 2008 13:41:36 +0200 (EET)
-From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
-To: linville@tuxdriver.com, lrodriguez@atheros.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 08/10] ath9k: add block braces to match indentation
-In-Reply-To: <Pine.LNX.4.64.0810301307160.7072@wrl-59.cs.helsinki.fi>
-Message-ID: <Pine.LNX.4.64.0810301339550.7072@wrl-59.cs.helsinki.fi> (sfid-20081030_124200_919823_8E5E3369)
-References: <Pine.LNX.4.64.0810301307160.7072@wrl-59.cs.helsinki.fi>
+	Wed, 15 Oct 2008 15:59:44 -0400
+Date: Wed, 15 Oct 2008 15:56:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dave <kilroyd@googlemail.com>
+Cc: arvidjaar@mail.ru, linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-10-14
+Message-ID: <20081015195656.GC27688@tuxdriver.com> (sfid-20081015_215947_798660_34A2A42C)
+References: <20081015013204.GH3349@tuxdriver.com> <48F6419B.80104@gmail.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-696208474-777629774-1225366896=:7072"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48F6419B.80104@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Wed, Oct 15, 2008 at 08:16:43PM +0100, Dave wrote:
+> John W. Linville wrote:
+>> Here is a nice little batch of wireless fixes in time for 2.6.28-rc1.
+>> There are also a few USB ID additions as well.  I think this is all
+>> mostly obvious, and hopefully still acceptable at this stage.
+>>
+>> Please let me know if there are problems!
+>
+>> Andrey Borzenkov (1):
+>>       orinoco: fix unsafe locking in orinoco_cs_resume
+>
+> Hi John,
+>
+> Just wanted to check whether you'd seen/intend to apply the orinoco patch Andrey posted in <http://marc.info/?l=linux-kernel&m=122365972026045&w=4>. It fixes a regression (vs 2.6.26) when using 4k stacks.
+>
+> Or whether you'd prefer that patch resent with an updated subject?
 
----696208474-777629774-1225366896=:7072
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
+I have that thread in my patchbox -- thanks for reminding me why!
 
+No need to resend..
 
-This isn't a behavior problem as is, and fixing indentation
-inconsistency either way would be fine (reindent or braces).
-
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@helsinki.fi>
----
- drivers/net/wireless/ath9k/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index f05f584..0f67b1b 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -467,9 +467,10 @@ void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK ||
- 		tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
- 		/* free driver's private data area of tx_info */
--		if (tx_info->driver_data[0] != NULL)
-+		if (tx_info->driver_data[0] != NULL) {
- 			kfree(tx_info->driver_data[0]);
- 			tx_info->driver_data[0] = NULL;
-+		}
- 	}
- 
- 	if (tx_status->flags & ATH_TX_BAR) {
+John
 -- 
-1.5.2.2
-
----696208474-777629774-1225366896=:7072--
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
