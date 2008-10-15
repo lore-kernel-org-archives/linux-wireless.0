@@ -1,82 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56677 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755891AbYJWGwr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 02:52:47 -0400
-Subject: Re: [PATCH] mac80211: Change WARN_ON to WARN_ON_ONCE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni.Malinen@Atheros.com, Luis.Rodriguez@Atheros.com
-In-Reply-To: <18688.7474.39470.106619@gargle.gargle.HOWL>
-References: <18688.7474.39470.106619@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GXzBBSrB1+RR/G2yUt8k"
-Date: Thu, 23 Oct 2008 08:52:42 +0200
-Message-Id: <1224744762.5865.19.camel@johannes.berg> (sfid-20081023_085312_899271_25A5C87A)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:46925 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751736AbYJOSZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 14:25:25 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 11:25:25 -0700
+Date: Wed, 15 Oct 2008 04:25:17 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: New Regulatory Domain Api.
+Message-ID: <20081015112517.GF6509@tesla> (sfid-20081015_202530_041275_7F8BADB6)
+References: <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com> <20081014203510.GD3349@tuxdriver.com> <1224018957.3027.9.camel@johannes.berg> <20081014211912.GF3349@tuxdriver.com> <1224019662.3027.13.camel@johannes.berg> <1224085609.4764.18.camel@californication> <1224086374.735.4.camel@johannes.berg> <1224091577.28173.9.camel@californication> <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com> <1224092868.28173.21.camel@californication>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1224092868.28173.21.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 15, 2008 at 10:47:48AM -0700, Marcel Holtmann wrote:
+> Hi Luis,
+> 
+> > > I can see it useful when companies actually start building products with
+> > > two or more cards in the system and have different cards for different
+> > > tasks in it. So if you stick one card for one band and another one for
+> > > the other band in there, then it would make sense to do a per-band
+> > > regulatory hinting.
+> >
+> > Sure, but custom solutions can require custom regulatory dbs and
+> > people can do any crazy thing they want here, just as when they need
+> > custom regulatory domains not allowed by the FCC in the USA for
+> > example. Remember that by default the design is trying to cover the
+> > usual scenario of users with 1 wireless card or 2 with one built in.
+> > We decided on our discussions to respect the built-in card first. For
+> > more cards we can take the intersection if we want to keep being more
+> > restrictive. Its what makes sense if you think about it.
+> 
+> I must admit that I never thought about the implications of multiple
+> bands with multiple hardware. I am not against keeping it simple and
+> forcing to have userspace in place to change it. However we do wanna
+> have support for old laptops that are currently working fine with no
+> extra userspace, but newer kernels where they just add the second card
+> to access an A-network. Also remember that internal cards can't really
+> be disabled most of the times.
 
---=-GXzBBSrB1+RR/G2yUt8k
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+So you mean you worry about cases where people are using kernels >=
+2.6.28 without crda and iw? If so then they can use for 2.6.28 the
+OLD_REGULATORY but the idea is for sure to push crda and iw for
+distributions definitley as of 2.6.29 for when OLD_REGULATORY is
+scheduled for removal.
 
-On Thu, 2008-10-23 at 12:14 +0530, Sujith wrote:
-> A warning would be printed for every packet that
-> is transmitted if the rate control information isn't
-> setup. Change this to WARN_ON_ONCE.
+The problem here is not this though the problem here is the case
+where people are using 2.6.28 without no iw or crda *and* have more
+than two cards :)
 
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> > > Not sure if this really ever ends up in a product. However I can see the
+> > > case where you have a laptop with a BG-card and then attach an A-card to
+> > > it do access an A-network and then it doesn't work. It would be nice to
+> > > just have this working. Currently this would not work.
+> >
+> > Yes it does, it just doesn't work for your hardware as Intel put into
+> > regulatory hardware capability and these are two *very* different
+> > things. That is the problem.
+> >
+> > My suggestion is to add a default minimal 5 GHz regulatory domain
+> > definition to your driver on single band cards to deal with this. When
+> > a dual band card is present then all of the full card's capabilities
+> > will be used.
+> 
+> That would be one option, but it sounds really strange to me that a
+> BG-card has to "think" about A-bands.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Don't think about it that way -- instead think of it this way: Intel
+EEPROM is used for capability stuff but its now also being used for
+regulatory and that is what is limitting you. So you *can* think about
+5 GHz band for a single 2.4 GHz band card, its just that your regulatory
+stuff right now is focused more on capabilities and not real regulatory.
 
-but please do set up the rate control information to fix the
-fragmentation issue etc. :)
+> Let not try to put this down into the drivers if we can solve this
+> nicely with a per-band regulatory hints inside the core.
 
-> ---
->  net/mac80211/tx.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 8b56048..3678325 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -565,8 +565,8 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx=
-)
->  				IEEE80211_TX_RC_USE_RTS_CTS;
-> =20
->  		/* RC is busted */
-> -		if (WARN_ON(info->control.rates[i].idx >=3D
-> -			    sband->n_bitrates)) {
-> +		if (WARN_ON_ONCE(info->control.rates[i].idx >=3D
-> +				 sband->n_bitrates)) {
->  			info->control.rates[i].idx =3D -1;
->  			continue;
->  		}
+Good point. This is reasonable as well, perhaps if the regulatory hint
+has no 5 Ghz band channels it should not imply policy on it at all?
+Should be simple enough to fix too I think instead of having two
+regulatory_hint() calls per band.
 
---=-GXzBBSrB1+RR/G2yUt8k
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> > > Also the case when we unplug the first card, does the regulatory hint
+> > > gets reset and the next card could bring in a new one? I can see use
+> > > cases where you don't wanna use the built-in card, because it is just
+> > > too limited.
+> >
+> > For now nl80211 supports changing regulatory domains.
+> 
+> Please keep in mind the case where we do have a new kernel with old
+> userspace or an userspace without CRDA.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Sure, what do you think of the above?
 
-iQIcBAABAgAGBQJJAB83AAoJEKVg1VMiehFYPT0QAKomlEZ0ndDP/+NYhTs8L1+x
-pWKNsr1r744VDwbtmT4uRIUFz+Oh5nBriYuH2LlhZW909FfFwVWDQxz7qU+QBiMA
-AvfSONAGuovqQlWIiAwKb9TGpiMG6BZdytVCDz72Gp1PHB/AnZzeR2lf9ybUbt0a
-UL7eqcFtJEJPFanDScd87YgKguj6zjgLmoqLpkJZ5tbSmx1H4WWkBceyQYaKXdKA
-K13yjzMErH/nD1tzf5MWsJ8r6GxrGknjlPnV5v6od/U3SpxUeZBX+lLfjyZzI5Pg
-19uqNnpTnoymWjYxAN1dEMySVJy+J80wOyURqKAVrAocDdZJ+cP0eexPHW/7CYvE
-TOAnjDlOp2snSMU/upChBvmwIMaDNawaVkJdjIxXz0Rj9ZeHMCn+T+hoOwKMh71o
-EyjVnc/f1t39QNCEK0uuF1S+D/6vrcXhhecVJvjddGTlEbr67LVUyvzB+BXSCb8Z
-T3yjtLO8mAJfA+NZcAsbEs8FBZhKY9sci1m4sYWtcfe8AJE85QFyoEqpPcdcijGW
-Gxr0w79zU6eCetdmrTbyq5worxhwhrQVamz+kr67mG+tzKKi9gh9ZTWrrvsj3oqw
-aFYCPdbevYWzbTMm0WBpMbdmJzMKMzqCAJeu/lgO/MsOjr/lJUakBMWnCOhbmanY
-4Ip63HVra1FERx2M1VJU
-=0Rvh
------END PGP SIGNATURE-----
-
---=-GXzBBSrB1+RR/G2yUt8k--
-
+  Luis
