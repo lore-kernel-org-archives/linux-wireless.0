@@ -1,64 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52497 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:37224 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753623AbYJHH7c (ORCPT
+	with ESMTP id S1751608AbYJOIsg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2008 03:59:32 -0400
-Subject: Re: [PATCH 2/8] mac80211: remove aggregation status write support
-	from debugfs
+	Wed, 15 Oct 2008 04:48:36 -0400
+Subject: Re: [PATCH] libertas : Remove unused variable warning
+	"old_channel" from drivers/net/wireless/libertas/cmd.c
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240810071424s23bdbbb7kbaadf3678cd61a26@mail.gmail.com> (sfid-20081007_232443_514679_922A10B6)
-References: <20081007100428.868688000@sipsolutions.net>
-	 <20081007100438.773792000@sipsolutions.net>
-	 <1ba2fa240810071424s23bdbbb7kbaadf3678cd61a26@mail.gmail.com>
-	 (sfid-20081007_232443_514679_922A10B6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eGf06B1E6/4T4UCpdqaT"
-Date: Wed, 08 Oct 2008 09:59:32 +0200
-Message-Id: <1223452772.3618.20.camel@johannes.berg> (sfid-20081008_095934_628096_E3628EFF)
+To: Manish Katiyar <mkatiyar@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <ea11fea30810150110s772b740fv38cc37645da53201@mail.gmail.com> (sfid-20081015_101012_936383_4BE67F0D)
+References: <ea11fea30810130352i3cea0579g9950289254c8e628@mail.gmail.com>
+	 <1224002213.1799.2.camel@localhost.localdomain>
+	 <ea11fea30810150110s772b740fv38cc37645da53201@mail.gmail.com>
+	 (sfid-20081015_101012_936383_4BE67F0D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9uPOirnTJ/eimMfRupMG"
+Date: Wed, 15 Oct 2008 10:47:55 +0200
+Message-Id: <1224060475.27537.0.camel@johannes.berg> (sfid-20081015_104840_139186_AE6D019D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-eGf06B1E6/4T4UCpdqaT
+--=-9uPOirnTJ/eimMfRupMG
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-10-07 at 23:24 +0200, Tomas Winkler wrote:
-> On Tue, Oct 7, 2008 at 12:04 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > This code uses static variables and thus cannot be kept.
-> NACK
-> Need something to debug this stuff
+[dropping libertas list, subscribers only]
 
-Tough luck. Go write proper support in nl80211 then.
+On Wed, 2008-10-15 at 13:40 +0530, Manish Katiyar wrote:
+> On Tue, Oct 14, 2008 at 10:06 PM, Dan Williams <dcbw@redhat.com> wrote:
+> > On Mon, 2008-10-13 at 16:22 +0530, Manish Katiyar wrote:
+> >> Below patch removes the following warning during compilation.
+> >>
+> >> drivers/net/wireless/libertas/cmd.c:826: warning: unused variable 'old=
+_channel'
+> >>
+> >>
+> >> Signed-off-by : Manish Katiyar <mkatiyar@gmail.com>
+> >
+> > Acked-by: Dan Williams <dcbw@redhat.com>
+>=20
+> Hi Dan,
+>=20
+> A newbie question. Will you merge this patch or will I have to send it
+> to Andrew again acked by you ?
+
+John has already applied it, Andrew isn't typically involved with
+wireless.
 
 johannes
 
---=-eGf06B1E6/4T4UCpdqaT
+--=-9uPOirnTJ/eimMfRupMG
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI7GhgAAoJEKVg1VMiehFYi8AQALdIQN9Ssf8CBmkavoPCVcJn
-+LQVbPH5HAzldyij4AsiPd/WSECjQxXSD9tDbhC95qbqsyA428YISbyTVz0b3ZLF
-JbpNHgX1FrJYY4UuoUMm05cT95BiNmQ6FkhWQMLm01hJqvptNFt+yJz++QzUqPdO
-AdMCGUXk2dHKeuxaIpig8gLPV+tKz/Y8659UbjBedyBqJNoI/iMBtAri6q4Mtq43
-uQdFXKthzCoB1puXrb0Woej4oAMbueIKNUT+fwOn/nG91N7HoF1Xx+mK2MbkyHOa
-JmHr5olJjl5+AezgQ8lL4nLPqZqT/Dgbo/yuACcTGs5MssN65BYNUGXuXnXhRDOJ
-kHvKMf6JmU/mCzUhuKl9kX9UKT1PGQA90YBXvhTcCctHlxxnHczE3bBsyvWha7zi
-RPG9mGXISl5/RBrYp9ELQJ5mTjG7vPqYVAvyHXPu5SL7W8Ts/My+HftOE4FTol2Z
-5JUtiGL7kUC43jMGIT3gznbM51H1TxD0ZiIwramPJNF4vslRRo4jdc6vaOZ0sTKB
-c272OZQN/VLzW+nNKz6aIuBPJZq2PlolvRUNtlb9s2WQJgL+bCZlOe2ygvpgjooD
-L0mITsNDAj4bj7Z/j3uPRv3gyBKyGx6C5dib3vSK91l+Dr1dEydGOkfLmCNjgagO
-w4KEWUrKHP0qxP1nVR8I
-=HqVO
+iQIcBAABAgAGBQJI9a40AAoJEKVg1VMiehFYY+8QAIQSMFK/sp+q9JOXp4LNZjaW
+UGjF/tx6xZ/37Qh+IR5O+/kSO68SFvMlgtMhftQVdAhX1dNjjR4bABYEsyO+yy0q
+299u10TmwytORepkPovd6C+qcIOCZ6485yYx+vA9uRKpxGnfWrmt7eAUjvn7RIka
+LCjtdx8H2CvZrWlKtgxZXpKYm1Q8NAydBMntvhgrSDeEyAumiSTYqNelOW6mkMKn
+axTz004lROXNNrRmE31z7YyIk6yhvuMnUedGPWHczEg+v56fQuI2lclb+imqx/KE
+VFDzERcQxn0LzGgkOB/Xaz1uIRiXKIYEanPevIqOcyHZlnUxe/9URFYUhT+Q+4ux
+er7JOt6Q1Pka8z0lXEVCWKKLWRzag7bmtn9fG2e8euKD2Qw6ZhSfn9mtVfLP389L
+w62uWjkV2L6k5T8nH3QPU696c3mZ/oykLgegu4OBGNhxLiyde+P9INj2KVS1YuBH
+nTF82pNs+vrm9nku64W+mpzGkjAsWTmTn0UFv2LxnQ0H0RDJrrBdaZYHISPrYGpU
+zPkEKMZzAgV7rAjWeESWeHSlTqJDG5UENq4tq41TrIfS9Uh0bZKSPZgW3LC4R+61
+SSIopTl51NmA1rLbMTdVWbEJge/YdDJBUEl97sNEi+CuUvDmh9B/xwIM+jwTCoqe
+KUEK+uVAf0F6trNDvEAz
+=71l/
 -----END PGP SIGNATURE-----
 
---=-eGf06B1E6/4T4UCpdqaT--
+--=-9uPOirnTJ/eimMfRupMG--
 
