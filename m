@@ -1,72 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57879 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752965AbYJ3RVz (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:44162 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844AbYJOTZL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 13:21:55 -0400
-Subject: Re: Guidelines regarding separate directory
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-In-Reply-To: <4909EA78.3060700@lwfinger.net> (sfid-20081030_181107_189082_5740895D)
-References: <4909EA78.3060700@lwfinger.net>
-	 (sfid-20081030_181107_189082_5740895D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xA/R1Eeg2hyLbPFemooY"
-Date: Thu, 30 Oct 2008 18:21:49 +0100
-Message-Id: <1225387309.3690.73.camel@johannes.berg> (sfid-20081030_182158_381151_A0F42367)
+	Wed, 15 Oct 2008 15:25:11 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081015112517.GF6509@tesla>
+References: <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
+	 <20081014203510.GD3349@tuxdriver.com>
+	 <1224018957.3027.9.camel@johannes.berg>
+	 <20081014211912.GF3349@tuxdriver.com>
+	 <1224019662.3027.13.camel@johannes.berg>
+	 <1224085609.4764.18.camel@californication>
+	 <1224086374.735.4.camel@johannes.berg>
+	 <1224091577.28173.9.camel@californication>
+	 <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
+	 <1224092868.28173.21.camel@californication>  <20081015112517.GF6509@tesla>
+Content-Type: text/plain
+Date: Wed, 15 Oct 2008 21:25:48 +0200
+Message-Id: <1224098748.28173.32.camel@californication> (sfid-20081015_212517_320180_4F8F9FD9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Luis,
 
---=-xA/R1Eeg2hyLbPFemooY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > > > I can see it useful when companies actually start building products with
+> > > > two or more cards in the system and have different cards for different
+> > > > tasks in it. So if you stick one card for one band and another one for
+> > > > the other band in there, then it would make sense to do a per-band
+> > > > regulatory hinting.
+> > >
+> > > Sure, but custom solutions can require custom regulatory dbs and
+> > > people can do any crazy thing they want here, just as when they need
+> > > custom regulatory domains not allowed by the FCC in the USA for
+> > > example. Remember that by default the design is trying to cover the
+> > > usual scenario of users with 1 wireless card or 2 with one built in.
+> > > We decided on our discussions to respect the built-in card first. For
+> > > more cards we can take the intersection if we want to keep being more
+> > > restrictive. Its what makes sense if you think about it.
+> > 
+> > I must admit that I never thought about the implications of multiple
+> > bands with multiple hardware. I am not against keeping it simple and
+> > forcing to have userspace in place to change it. However we do wanna
+> > have support for old laptops that are currently working fine with no
+> > extra userspace, but newer kernels where they just add the second card
+> > to access an A-network. Also remember that internal cards can't really
+> > be disabled most of the times.
+> 
+> So you mean you worry about cases where people are using kernels >=
+> 2.6.28 without crda and iw? If so then they can use for 2.6.28 the
+> OLD_REGULATORY but the idea is for sure to push crda and iw for
+> distributions definitley as of 2.6.29 for when OLD_REGULATORY is
+> scheduled for removal.
+> 
+> The problem here is not this though the problem here is the case
+> where people are using 2.6.28 without no iw or crda *and* have more
+> than two cards :)
 
-On Thu, 2008-10-30 at 10:10 -0700, Larry Finger wrote:
-> I am planning on adding code to control the LEDs on the RTL8187 devices b=
-ased on
-> the latest vendor driver. From the expected size of the code, I think tha=
-t
-> separate files will be best.
->=20
-> What number of files in a driver make it advisable to create a separate
-> directory? Between the rtl8180 and rtl8187 drivers, there are now 15 file=
-s and I
-> will be adding at least 2 more. Is this the time to create a rtl818x dire=
-ctory
-> under drivers/net/wireless?
+it might sound like an unlikely case and it will most likely only be the
+A-band usage anyway, but it is a valid case. People with old laptops do
+use newer wireless cards in PCMCIA or USB form factor to get better WiFi
+performance and/or stability. In some cases you can just replace your
+internal card, but with the switch from MiniPCI to half-MiniPCI this is
+not as likely anymore. So the use of a second external card becomes more
+likely.
 
-I for one think that should have been done already, makes finding
-drivers easier imho. But I don't think there are strict guidelines in
-any way.
+> > > > Not sure if this really ever ends up in a product. However I can see the
+> > > > case where you have a laptop with a BG-card and then attach an A-card to
+> > > > it do access an A-network and then it doesn't work. It would be nice to
+> > > > just have this working. Currently this would not work.
+> > >
+> > > Yes it does, it just doesn't work for your hardware as Intel put into
+> > > regulatory hardware capability and these are two *very* different
+> > > things. That is the problem.
+> > >
+> > > My suggestion is to add a default minimal 5 GHz regulatory domain
+> > > definition to your driver on single band cards to deal with this. When
+> > > a dual band card is present then all of the full card's capabilities
+> > > will be used.
+> > 
+> > That would be one option, but it sounds really strange to me that a
+> > BG-card has to "think" about A-bands.
+> 
+> Don't think about it that way -- instead think of it this way: Intel
+> EEPROM is used for capability stuff but its now also being used for
+> regulatory and that is what is limitting you. So you *can* think about
+> 5 GHz band for a single 2.4 GHz band card, its just that your regulatory
+> stuff right now is focused more on capabilities and not real regulatory.
+> 
+> > Let not try to put this down into the drivers if we can solve this
+> > nicely with a per-band regulatory hints inside the core.
+> 
+> Good point. This is reasonable as well, perhaps if the regulatory hint
+> has no 5 Ghz band channels it should not imply policy on it at all?
+> Should be simple enough to fix too I think instead of having two
+> regulatory_hint() calls per band.
 
-johannes
+I think that is the point Johannes was making. If the driver doesn't
+register itself in the 5 GHz band with its capabilities, then its
+regulatory hint should not affect this band.
 
---=-xA/R1Eeg2hyLbPFemooY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+And then when a card for the 5 GHz band comes into play, its regulatory
+hint can be applied, while for the 2.4 GHz it looses since it is the
+second card in the system.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+I am still for the first card wins concept when no CRDA is present or
+the userspace just doesn't know about setting the regulatory domain.
+However we should have it separated for each band to not lock some
+people out who have no clue on why they now loose the 5 GHz band.
 
-iQIcBAABAgAGBQJJCe0pAAoJEKVg1VMiehFYdX0P/2Frorr/4d6yD0CeMWEcmxyk
-4aRv6c7Fx5c2HnA2x+h258pn89aunOxIZMkc/5w5O9M5BFud/QRkOyGFNFe2KfRv
-sR7PnR8yALgF6oTugCZh52rwN9j8NwjI1pLrmWYLfQL5H/z8b0E9zHafgZ8tTKhx
-On9DdC2qbSTQnen8bd+wV64bIZNoRc86kqmXdg3TJ5TutjjvOvdYgyDmfOecWcmG
-S/Lo6d7TNtNEh7dRbi4efIbdxUWATqyyUDQIAiVj/HE7ZpHRVq+pv/d4W4JJ9R8G
-Y9FWufFxdZAlXjuYquJtwIkqdNmqiGN1mv5/CMx0tAVCowxDBRmxkekUHckFqVhQ
-MRCTk+sNKWt1cTq5ePu5rQhK3w3WblpKl/iWyn8abLfM/1AIM5SgBcMiy/3/vZ9X
-vTAKqtCh1peoz5tCi+gU27/B+uiRrEtnbJiS7p+3Gmgt62YBuGdWE8cOfHdZx0M8
-v+7ljsyS4UaZ3SBP7N+WqXOkdWvHqHtNRT7wOCN+MOx16D72qey11MdNKRgWYrhK
-g7H6f0U5tq4CU+wp8NpxoQuQRerTfOvmAIqExOhnEtHdypt0HXFg10jxjuuzP+EX
-TzeDG3mtdS0ufeotlZ1EQZNq6FjiNjpYZMsK7iHpQZM1U8CVqvhuSI+yS05s8+Rx
-Ee8cAGpmW6bmI3BACoZB
-=30wC
------END PGP SIGNATURE-----
+Regards
 
---=-xA/R1Eeg2hyLbPFemooY--
+Marcel
+
 
