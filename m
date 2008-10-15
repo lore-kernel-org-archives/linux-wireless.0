@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:46706 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752770AbYJPSNE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 14:13:04 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Oct 2008 11:13:04 -0700
-Date: Thu, 16 Oct 2008 04:12:55 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <stable@kernel.org>
-CC: <steven@uplinklabs.net>, <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: fix oops on trying to hold the wrong spinlock
-Message-ID: <20081016111255.GA5899@tesla> (sfid-20081016_201308_862714_B81982BF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:44449 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269AbYJOVsP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 17:48:15 -0400
+Subject: iwlwifi workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LPkHimxe6sPgIycu7m+y"
+Date: Wed, 15 Oct 2008 23:47:39 +0200
+Message-Id: <1224107259.735.35.camel@johannes.berg> (sfid-20081015_234818_832647_027C42CD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes on oops when you get try to send a BA to an 11n AP.
-The oops occurred because we were trying to aquire an incorrect
-spinlock.
 
-We were trying to hold the wrong spinlock due to a typo
-on IEEE80211_BAR_CTL_TID_S's definition. We use this to
-compute the tid number and then hold this this tid number's
-spinlock.
+--=-LPkHimxe6sPgIycu7m+y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Tested-by: Steven Noonan <steven@uplinklabs.net>
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
+Does it really have to be multi-threaded?
 
-I don't see this queue'd yet for 2.6.27.2
+static void iwl_setup_deferred_work(struct iwl_priv *priv)
+{
+        priv->workqueue =3D create_workqueue(DRV_NAME);
 
- drivers/net/wireless/ath9k/core.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 80814c9..5b4f1c4 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -309,7 +309,7 @@ void ath_descdma_cleanup(struct ath_softc *sc,
- #define ATH_RX_TIMEOUT           40      /* 40 milliseconds */
- #define WME_NUM_TID              16
- #define IEEE80211_BAR_CTL_TID_M  0xF000  /* tid mask */
--#define IEEE80211_BAR_CTL_TID_S  2       /* tid shift */
-+#define IEEE80211_BAR_CTL_TID_S  12      /* tid shift */
- 
- enum ATH_RX_TYPE {
- 	ATH_RX_NON_CONSUMED = 0,
--- 
-1.5.6.rc2.15.g457bb.dirty
+this creates one thread for each CPU, bound to that CPU, which seems
+overkill. mac80211 even provides a single-threaded workqueue.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-LPkHimxe6sPgIycu7m+y
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI9mT3AAoJEKVg1VMiehFYE5UP/A11KWxTAmr8TBT1W4hsl54t
++VfhGVPqWQISL5Lvn9NFp9BAknU2wPEn080EVoA2vaAbNUv4elMSdppmiC/chkZ7
+uC9HnziEAvTzAfW4TOOVUjTWcaV6eNfcQelE1YZn1EYbCXd/tNmfmjND9DueWx10
+jbXgCnplbrOHfL9beikdsso1XOu8VDkPMbsRvA6FrFuMbS4mDohiy9tHc+Gbu6EG
+ZDIQ/hOCIXYiy/0IadKCXLZdP6GJnHSeixwg/FmEXK6+gbH5bs4d/vdSIUZupaZw
+5S1imfGxTa4ZB7KtHyt7bz3/J2jwoykDb1kyjwx5aTMCMnkIprlwc/DZys7C3Hxw
+WKMZXknw1G2nYsuPJpTI0spN95+XRC6KNedamSZJnVtrilJhNDAi9+mH2cKq/TYH
+aLGJMNj4MvyRIxaQE9gvWLO8KesMUEnbfZRwbWWY4tpUtfwxMG/2jF/7IxjZIPvK
+WdHOaUaVbG3oa+33ki6YEHyzkEg5p0guGt6bFu9xHUXfYmQTzfJIF6Gb2OCqWsbu
+7KpQMU6mqxdQo8Z9urjUhzd+TlBkAOpMbX7mPLkBVp22hpolL11ULUkZSxTtkZYg
+yOBBsVTRpT8UC24kdPpFxV0yDAeNuQCWQdu47PGfhe7yJXt6f1/bTDa5N54NHcj1
+3jgQmaGrHHxZd2FKdsH3
+=T8d3
+-----END PGP SIGNATURE-----
+
+--=-LPkHimxe6sPgIycu7m+y--
+
