@@ -1,67 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.185]:58346 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751338AbYJUAoX (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:38912 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753340AbYJORrL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 20:44:23 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so779231rnd.17
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 17:44:21 -0700 (PDT)
-Message-ID: <314b98fa0810201744r4c5d1e9blade8353a0b480f63@mail.gmail.com> (sfid-20081021_024428_698428_D0FCECC1)
-Date: Mon, 20 Oct 2008 17:44:21 -0700
-From: "Colin McCabe" <colin@cozybit.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] Add nl80211 commands to get and set o11s mesh networking parameters
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1224527130.27899.60.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48fcc3c2.38652c0a.297d.533e@mx.google.com>
-	 <1224527130.27899.60.camel@johannes.berg>
+	Wed, 15 Oct 2008 13:47:11 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
+References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
+	 <1223969808.2570.153.camel@debian.sh.intel.com>
+	 <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
+	 <20081014203510.GD3349@tuxdriver.com>
+	 <1224018957.3027.9.camel@johannes.berg>
+	 <20081014211912.GF3349@tuxdriver.com>
+	 <1224019662.3027.13.camel@johannes.berg>
+	 <1224085609.4764.18.camel@californication>
+	 <1224086374.735.4.camel@johannes.berg>
+	 <1224091577.28173.9.camel@californication>
+	 <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 15 Oct 2008 19:47:48 +0200
+Message-Id: <1224092868.28173.21.camel@californication> (sfid-20081015_194717_265789_AD8376E4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 11:25 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-10-20 at 10:40 -0700, colin@cozybit.com wrote:
->> The two new commands are NL80211_CMD_GET_MESH_PARAMS and
->> NL80211_CMD_SET_MESH_PARAMS. There is a new attribute enum,
->> NL80211_ATTR_MESH_PARAMS, which enumerates the various mesh configuration
->> parameters.
->>
->> Moved struct mesh_config from mac80211/ieee80211_i.h to net/cfg80211.h.
->> nl80211_get_mesh_params and nl80211_set_mesh_params unpack the netlink messages
->> and ask the driver to get or set the configuration.  This is done via two new
->> function stubs, get_mesh_params and set_mesh_params, in struct cfg80211_ops.
->
->> +     /* Set the mask */
->> +     mask = 0;
->> +     for (i = 0; i < NL80211_MESHCONF_ATTR_MAX; ++i)
->> +             if (tb[i+1])
->> +                     mask |= (1 << i);
->
-> Can you move that into the macro so it's set whenever you parse any of
-> the values? I think you probably missed that in my earlier mail? Or was
-> there a reason not to?
+Hi Luis,
 
-Sure.
-I wasn't sure how strong your preference was, earlier.
+> > I can see it useful when companies actually start building products with
+> > two or more cards in the system and have different cards for different
+> > tasks in it. So if you stick one card for one band and another one for
+> > the other band in there, then it would make sense to do a per-band
+> > regulatory hinting.
+> 
+> Sure, but custom solutions can require custom regulatory dbs and
+> people can do any crazy thing they want here, just as when they need
+> custom regulatory domains not allowed by the FCC in the USA for
+> example. Remember that by default the design is trying to cover the
+> usual scenario of users with 1 wireless card or 2 with one built in.
+> We decided on our discussions to respect the built-in card first. For
+> more cards we can take the intersection if we want to keep being more
+> restrictive. Its what makes sense if you think about it.
 
->> +     /* Fill in the params struct */
->> +     FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshRetryTimeout,
->> +                     NL80211_MESHCONF_RETRY_TIMEOUT, nla_get_u16);
->
->
->> +             .cmd = NL80211_CMD_GET_MESH_PARAMS,
->> +             .doit = nl80211_get_mesh_params,
->> +             .policy = nl80211_policy,
->> +             .flags = GENL_ADMIN_PERM,
->
-> Does this really need admin permission for getting the values?
+I must admit that I never thought about the implications of multiple
+bands with multiple hardware. I am not against keeping it simple and
+forcing to have userspace in place to change it. However we do wanna
+have support for old laptops that are currently working fine with no
+extra userspace, but newer kernels where they just add the second card
+to access an A-network. Also remember that internal cards can't really
+be disabled most of the times.
 
-Hmm, I guess not.
+> > Not sure if this really ever ends up in a product. However I can see the
+> > case where you have a laptop with a BG-card and then attach an A-card to
+> > it do access an A-network and then it doesn't work. It would be nice to
+> > just have this working. Currently this would not work.
+> 
+> Yes it does, it just doesn't work for your hardware as Intel put into
+> regulatory hardware capability and these are two *very* different
+> things. That is the problem.
+> 
+> My suggestion is to add a default minimal 5 GHz regulatory domain
+> definition to your driver on single band cards to deal with this. When
+> a dual band card is present then all of the full card's capabilities
+> will be used.
 
-Colin
+That would be one option, but it sounds really strange to me that a
+BG-card has to "think" about A-bands.
 
->
-> johannes
->
+Let not try to put this down into the drivers if we can solve this
+nicely with a per-band regulatory hints inside the core.
+
+> > Also the case when we unplug the first card, does the regulatory hint
+> > gets reset and the next card could bring in a new one? I can see use
+> > cases where you don't wanna use the built-in card, because it is just
+> > too limited.
+> 
+> For now nl80211 supports changing regulatory domains.
+
+Please keep in mind the case where we do have a new kernel with old
+userspace or an userspace without CRDA.
+
+Regards
+
+Marce
+
+
