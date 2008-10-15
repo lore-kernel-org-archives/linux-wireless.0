@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:35684 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754357AbYJHQTh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2008 12:19:37 -0400
-Date: Wed, 8 Oct 2008 19:18:34 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Rami Rosen <ramirose@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH ] mac80211: fix wrong link typo in mac80211_hwsim
-	documentation.
-Message-ID: <20081008161834.GL4941@jm.kir.nu> (sfid-20081008_181942_089178_735F0DDD)
-References: <eb3ff54b0810080243r416b8413uf2e12f51c309a8b7@mail.gmail.com> <1223459201.3618.49.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223459201.3618.49.camel@johannes.berg>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38386
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751024AbYJOGy7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 02:54:59 -0400
+Date: Tue, 14 Oct 2008 23:54:35 -0700 (PDT)
+Message-Id: <20081014.235435.215118354.davem@davemloft.net> (sfid-20081015_085506_329292_77955F55)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-10-14
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20081015013204.GH3349@tuxdriver.com>
+References: <20081015013204.GH3349@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2008 at 11:46:41AM +0200, Johannes Berg wrote:
-> On Wed, 2008-10-08 at 11:43 +0200, Rami Rosen wrote:
-> >  Please note that the current Linux kernel does not enable AP mode, so
-> > a
-> >  simple patch is needed to enable AP mode selection:
-> > -http://johannes.sipsolutions.net/patches/kernel/all/LATEST/006-allow-ap-vlan-modes.patch
-> > -
-> > +http://johannes.sipsolutions.net/patches/kernel/all/LATEST/004-allow-ap-vlan-modes.patch
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 14 Oct 2008 21:32:05 -0400
+
+> Here is a nice little batch of wireless fixes in time for 2.6.28-rc1.
+> There are also a few USB ID additions as well.  I think this is all
+> mostly obvious, and hopefully still acceptable at this stage.
 > 
-> No good, the numbering changes all the time.
+> Please let me know if there are problems!
 
-Well.. I see two possible fixes here: we'll finally apply that patch or
-point to http://w1.fi/wireless-testing/enable-ap-mode.patch which does
-not change its URL all the time.. I'm starting to lean more towards the
-prior option, though, since I'm getting tired of pointing people to this
-patch whenever they complain that hostapd does not work with mac80211.
+Looks good, pulled in, thanks John.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+I'll push back out to net-2.6 after my build checks
+complete.
