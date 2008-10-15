@@ -1,97 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:45658 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754201AbYJOVmc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 17:42:32 -0400
-Subject: patch mac80211-fix-two-issues-in-debugfs.patch added to 2.6.27-stable tree
-To: johannes@sipsolutions.net, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	stable@kernel.org
-Cc: <stable@kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@suse.de>
-Date: Wed, 15 Oct 2008 14:38:36 -0700
-In-Reply-To: <1223653970.3748.23.camel@johannes.berg>
-Message-Id: <20081015214214.7E70314544DD@imap.suse.de> (sfid-20081015_234244_428201_EADDD30B)
+Received: from fmmailgate01.web.de ([217.72.192.221]:44050 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954AbYJOBZ6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 21:25:58 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54: enable 2.4/5GHz spectrum by eeprom bits.
+Date: Wed, 15 Oct 2008 03:30:06 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	John W Linville <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810150330.07228.chunkeey@web.de> (sfid-20081015_032604_434100_ABAFC00D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch fixes a crash/badness in wireless-next / wireless-testing:
+Badness at /home/proski/src/linux-2.6/net/mac80211/rx.c:2200
+NIP: c02bc850 LR: c02ab268 CTR: 00000000
+REGS: ef01fcc0 TRAP: 0700   Tainted: G        W  (2.6.27-wl)
+MSR: 00029032 <EE,ME,IR,DR>  CR: 22004084  XER: 20000000
+TASK = c1a58800[1778] 'p54pci' THREAD: ef01e000
+[...]
+NIP [c02bc850] __ieee80211_rx+0x17c/0x638
+LR [c02ab268] ieee80211_tasklet_handler+0x104/0x120
+Call Trace:
+[ef01fd70] [c1a0c020] 0xc1a0c020 (unreliable)
+[ef01fdb0] [c02ab268] ieee80211_tasklet_handler+0x104/0x120
+[...]
 
-This is a note to let you know that we have just queued up the patch titled
+the problem was that some older cards are mis-identified and didn't support
+5GHz rates, while they have the right MAC & Synth chip.
 
-    Subject: mac80211: fix two issues in debugfs
+This patch changes the way how p54 decides if it should enable 11a channels
+or not.
 
-to the 2.6.27-stable tree.  Its filename is
-
-    mac80211-fix-two-issues-in-debugfs.patch
-
-A git repo of this tree can be found at 
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-
->From johannes@sipsolutions.net  Wed Oct 15 14:25:41 2008
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 10 Oct 2008 17:52:49 +0200
-Subject: mac80211: fix two issues in debugfs
-To: stable <stable@kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>, John Linville <linville@tuxdriver.com>
-Message-ID: <1223653970.3748.23.camel@johannes.berg>
-
-From: Johannes Berg <johannes@sipsolutions.net>
-
-Not in trees above 2.6.27 as it is fixed differently in .28.
-
-This fixes RHBZ 466264, whenever the master interface is
-renamed this code would BUG_ON. Also fixes a separately
-reported bug with the debugfs dir being NULL.
-
-This patch is not applicable to the next kernel version
-because both these issues have been fixed, the first one
-by not having the master interface have a ieee80211_ptr
-at all, and the second one by also leaving the function
-early.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
+Reported-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- net/mac80211/debugfs_netdev.c |   14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
-
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -537,6 +537,7 @@ static int netdev_notify(struct notifier
- {
- 	struct net_device *dev = ndev;
- 	struct dentry *dir;
-+	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
- 	char buf[10+IFNAMSIZ];
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index 0180466..48f91f3 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -306,8 +306,8 @@ static int p54_convert_rev1(struct ieee80211_hw *dev,
+ 	return 0;
+ }
  
-@@ -549,10 +550,19 @@ static int netdev_notify(struct notifier
- 	if (dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
- 		return 0;
+-static const char *p54_rf_chips[] = { "NULL", "Indigo?", "Duette",
+-                              "Frisbee", "Xbow", "Longbow" };
++static const char *p54_rf_chips[] = { "NULL", "Duette3", "Duette2",
++                              "Frisbee", "Xbow", "Longbow", "NULL", "NULL" };
+ static int p54_init_xbow_synth(struct ieee80211_hw *dev);
  
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	/*
-+	 * Do not use IEEE80211_DEV_TO_SUB_IF because that
-+	 * BUG_ONs for the master netdev which we need to
-+	 * handle here.
-+	 */
-+	sdata = netdev_priv(dev);
+ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+@@ -319,6 +319,7 @@ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+ 	void *tmp;
+ 	int err;
+ 	u8 *end = (u8 *)eeprom + len;
++	u16 synth;
+ 	DECLARE_MAC_BUF(mac);
  
--	sprintf(buf, "netdev:%s", dev->name);
- 	dir = sdata->debugfsdir;
-+
-+	if (!dir)
-+		return 0;
-+
-+	sprintf(buf, "netdev:%s", dev->name);
- 	if (!debugfs_rename(dir->d_parent, dir, dir->d_parent, buf))
- 		printk(KERN_ERR "mac80211: debugfs: failed to rename debugfs "
- 		       "dir to %s\n", buf);
-
-
-Patches currently in stable-queue which might be from johannes@sipsolutions.net are
-
-queue-2.6.27/mac80211-fix-two-issues-in-debugfs.patch
+ 	wrap = (struct eeprom_pda_wrap *) eeprom;
+@@ -400,8 +401,8 @@ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+ 			tmp = entry->data;
+ 			while ((u8 *)tmp < entry->data + data_len) {
+ 				struct bootrec_exp_if *exp_if = tmp;
+-				if (le16_to_cpu(exp_if->if_id) == 0xF)
+-					priv->rxhw = le16_to_cpu(exp_if->variant) & 0x07;
++				if (le16_to_cpu(exp_if->if_id) == 0xf)
++					synth = le16_to_cpu(exp_if->variant);
+ 				tmp += sizeof(struct bootrec_exp_if);
+ 			}
+ 			break;
+@@ -427,22 +428,13 @@ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+ 		goto err;
+ 	}
+ 
+-	switch (priv->rxhw) {
+-	case 4: /* XBow */
++	priv->rxhw = synth & 0x07;
++	if (priv->rxhw == 4)
+ 		p54_init_xbow_synth(dev);
+-	case 1: /* Indigo? */
+-	case 2: /* Duette */
+-		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
+-	case 3: /* Frisbee */
+-	case 5: /* Longbow */
++	if (!(synth & 0x40))
+ 		dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
+-		break;
+-	default:
+-		printk(KERN_ERR "%s: unsupported RF-Chip\n",
+-			wiphy_name(dev->wiphy));
+-		err = -EINVAL;
+-		goto err;
+-	}
++	if (!(synth & 0x80))
++		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
+ 
+ 	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
+ 		u8 perm_addr[ETH_ALEN];
