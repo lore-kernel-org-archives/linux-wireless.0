@@ -1,57 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33143 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941AbYJ3ASn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 20:18:43 -0400
-Date: Wed, 29 Oct 2008 20:17:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jerry McBride <mcbrides9@comcast.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: B43 randomly and silently dropping connections...
-Message-ID: <20081030001739.GG3485@tuxdriver.com> (sfid-20081030_011847_787113_536B3BB3)
-References: <200810292010.06442.mcbrides9@comcast.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810292010.06442.mcbrides9@comcast.net>
+Received: from ns1.suse.de ([195.135.220.2]:45658 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754201AbYJOVmc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 17:42:32 -0400
+Subject: patch mac80211-fix-two-issues-in-debugfs.patch added to 2.6.27-stable tree
+To: johannes@sipsolutions.net, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	stable@kernel.org
+Cc: <stable@kernel.org>, <stable-commits@vger.kernel.org>
+From: <gregkh@suse.de>
+Date: Wed, 15 Oct 2008 14:38:36 -0700
+In-Reply-To: <1223653970.3748.23.camel@johannes.berg>
+Message-Id: <20081015214214.7E70314544DD@imap.suse.de> (sfid-20081015_234244_428201_EADDD30B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 08:10:06PM -0400, Jerry McBride wrote:
 
-> SHORT STORY:
-> -- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
-> 
-> -- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
-> but fragile connections that drop randomly and without complaint. B43LEGACY 
-> does nothing.
-> 
-> Any help would be appreciated. I'd really like to get this ironed out. I 
-> highly desire to use current kernels.
+This is a note to let you know that we have just queued up the patch titled
 
-Are you running a distro kernel?  Or one you have built yourself?
+    Subject: mac80211: fix two issues in debugfs
 
-If the latter, have you opened a bug at bugzilla.kernel.org?
-Otherwise, have you opened a bug with your distro's bug tracking
-system?
+to the 2.6.27-stable tree.  Its filename is
 
-Do you have wireshark captures taken with another device in monitor
-mode that show these connection drops?
+    mac80211-fix-two-issues-in-debugfs.patch
 
-Are you using NetworkManager or wpa_supplicant?  Or just configuring
-your connection with iwconfig?  If the latter, consider the former.
-If you are using NM, does the connection get re-established
-automatically?  Or is NM unable to reestablish the connection?
-Use wpa_supplicant directly if NM just doesn't work for you.
+A git repo of this tree can be found at 
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
-It seems clear that posting the same message to the mailing lists
-again and again is not resolving the issue for you.  Please perform
-the actions requested above (including opening a bug at the appropriate
-place) and collect some useable data for us.
 
-Thanks,
+>From johannes@sipsolutions.net  Wed Oct 15 14:25:41 2008
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 10 Oct 2008 17:52:49 +0200
+Subject: mac80211: fix two issues in debugfs
+To: stable <stable@kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>, John Linville <linville@tuxdriver.com>
+Message-ID: <1223653970.3748.23.camel@johannes.berg>
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+From: Johannes Berg <johannes@sipsolutions.net>
+
+Not in trees above 2.6.27 as it is fixed differently in .28.
+
+This fixes RHBZ 466264, whenever the master interface is
+renamed this code would BUG_ON. Also fixes a separately
+reported bug with the debugfs dir being NULL.
+
+This patch is not applicable to the next kernel version
+because both these issues have been fixed, the first one
+by not having the master interface have a ieee80211_ptr
+at all, and the second one by also leaving the function
+early.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ net/mac80211/debugfs_netdev.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -537,6 +537,7 @@ static int netdev_notify(struct notifier
+ {
+ 	struct net_device *dev = ndev;
+ 	struct dentry *dir;
++	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	char buf[10+IFNAMSIZ];
+ 
+@@ -549,10 +550,19 @@ static int netdev_notify(struct notifier
+ 	if (dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
+ 		return 0;
+ 
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	/*
++	 * Do not use IEEE80211_DEV_TO_SUB_IF because that
++	 * BUG_ONs for the master netdev which we need to
++	 * handle here.
++	 */
++	sdata = netdev_priv(dev);
+ 
+-	sprintf(buf, "netdev:%s", dev->name);
+ 	dir = sdata->debugfsdir;
++
++	if (!dir)
++		return 0;
++
++	sprintf(buf, "netdev:%s", dev->name);
+ 	if (!debugfs_rename(dir->d_parent, dir, dir->d_parent, buf))
+ 		printk(KERN_ERR "mac80211: debugfs: failed to rename debugfs "
+ 		       "dir to %s\n", buf);
+
+
+Patches currently in stable-queue which might be from johannes@sipsolutions.net are
+
+queue-2.6.27/mac80211-fix-two-issues-in-debugfs.patch
