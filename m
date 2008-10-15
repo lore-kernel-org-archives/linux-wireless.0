@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ox1.aei.mpg.de ([194.94.224.6]:41633 "EHLO ox1.aei.mpg.de"
+Received: from mga09.intel.com ([134.134.136.24]:5815 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753083AbYJ0W2U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 18:28:20 -0400
-Date: Mon, 27 Oct 2008 23:28:52 +0100
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Soeren Sonnenburg <kernel@nn7.de>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Message-ID: <20081027222852.GA3907@localhost.aei.mpg.de> (sfid-20081027_232834_707843_AE7E7275)
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <1225134823.3796.45.camel@johannes.berg> <20081027203925.GA4416@localhost.aei.mpg.de> <200810272151.01244.rjw@sisk.pl> <1ba2fa240810271407o15f1f150t2d2793f4e5ad6e5b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240810271407o15f1f150t2d2793f4e5ad6e5b@mail.gmail.com>
+	id S1751951AbYJOCB0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 22:01:26 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224018957.3027.9.camel@johannes.berg>
+References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
+	 <20081009154547.GB13349@tesla>
+	 <1223608949.2510.1061.camel@debian.sh.intel.com>
+	 <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com>
+	 <1223967581.2570.144.camel@debian.sh.intel.com>
+	 <43e72e890810140004k6bfa72edsf39acbafcf317fa6@mail.gmail.com>
+	 <1223969808.2570.153.camel@debian.sh.intel.com>
+	 <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
+	 <20081014203510.GD3349@tuxdriver.com>
+	 (sfid-20081014_223802_063949_1D8CE891)  <1224018957.3027.9.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 15 Oct 2008 10:00:04 +0800
+Message-Id: <1224036004.24677.11.camel@debian.sh.intel.com> (sfid-20081015_040130_805977_84016293)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 27.Oct'08 at 23:07:00 +0200, Tomas Winkler wrote:
->[...]
-> 
-> Can someone try this one (it might be space broken I've just pasted
-> that in) It's on top of 1d63e726408dfdb3e10ed8f00c383b30ebb333d3
-> (latest linux-2.6.git)
+On Tue, 2008-10-14 at 14:15 -0700, Johannes Berg wrote:
+> Well, the thing is that the iwlwifi drivers pretend to know the
+> regulatory domain
 
+Well, the device *pretends* to know the regulatory domain for global.
+But it does know the one for itself.
 
-Yes, this one also works for me (I applied it manually).
+Thanks,
+-yi
 
-
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index 24a1aeb..321dbc8 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -2090,7 +2090,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
->                 iwl4965_error_recovery(priv);
-> 
->         iwl_power_update_mode(priv, 1);
-> -       ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
-> 
->         if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
->                 iwl4965_set_mode(priv, priv->iw_mode);
-> @@ -2342,6 +2341,7 @@ static void iwl_bg_alive_start(struct work_struct *data)
->         mutex_lock(&priv->mutex);
->         iwl_alive_start(priv);
->         mutex_unlock(&priv->mutex);
-> +       ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
->  }
-> 
->  static void iwl4965_bg_rf_kill(struct work_struct *work)
-> 
-> 
-> Thanks
-> Tomas
