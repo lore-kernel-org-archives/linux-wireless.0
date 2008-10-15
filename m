@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55745 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503AbYJFVRg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 17:17:36 -0400
-Date: Mon, 6 Oct 2008 17:16:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 4/7] iwlwifi: scan fix comment
-Message-ID: <20081006211658.GK3448@tuxdriver.com> (sfid-20081006_231739_104485_50451891)
-References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com> <1223280333-4383-2-git-send-email-yi.zhu@intel.com> <1223280333-4383-3-git-send-email-yi.zhu@intel.com> <1223280333-4383-4-git-send-email-yi.zhu@intel.com> <1223280333-4383-5-git-send-email-yi.zhu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223280333-4383-5-git-send-email-yi.zhu@intel.com>
+Received: from mga02.intel.com ([134.134.136.20]:5631 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753087AbYJORpB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 13:45:01 -0400
+Subject: Re: [RFC] make ieee80211 invisible
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224006562.10113.47.camel@johannes.berg>
+References: <1224006562.10113.47.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 15 Oct 2008 10:37:48 -0700
+Message-Id: <1224092268.19219.7.camel@rc-desk> (sfid-20081015_194520_570991_CC621143)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 06, 2008 at 04:05:30PM +0800, Zhu Yi wrote:
-> From: Tomas Winkler <tomas.winkler@intel.com>
+On Tue, 2008-10-14 at 19:49 +0200, Johannes Berg wrote:
 > 
-> This patch moves comment to proper line, it has moved during
-> code shuffling.
+> This makes CONFIG_IEEE80211 invisible. The drivers that require it
+> (ipw2100, ipw2200, hostap) select it, and everybody else really
+> shouldn't even think about using it. Also, since there really is
+> no point in compiling anything without crypto support these days,
+> remove the crypto options and just enable them, leaving only the
+> debugging option which only shows up when a driver is select that
+> requires it. This makes it hard to enable, but most people wouldn't
+> want to anyway.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
 
-This description is OK.
+Very good idea. Not sure if you need an ack from us for this, but you
+have mine in case you do.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+
+Thank you
+
+Reinette
