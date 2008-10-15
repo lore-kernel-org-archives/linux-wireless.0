@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:41430 "EHLO
-	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752469AbYJ1UMK (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:40468 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800AbYJOR2W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 16:12:10 -0400
-Date: Tue, 28 Oct 2008 21:13:42 +0100
-From: Pavel Machek <pavel@suse.cz>
-To: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
-	lcostantino@gmail.com, linux-wireless@vger.kernel.org,
-	penberg@cs.helsinki.fi
-Subject: w35und driver now in mainline/staging
-Message-ID: <20081028201342.GA17362@elf.ucw.cz> (sfid-20081028_211215_915987_62742943)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 15 Oct 2008 13:28:22 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224086490.735.8.camel@johannes.berg>
+References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
+	 <20081009154547.GB13349@tesla>
+	 <1223608949.2510.1061.camel@debian.sh.intel.com>
+	 (sfid-20081010_052512_883760_F373F92C)  <1223975972.10113.20.camel@johannes.berg>
+	 <1224034856.24677.9.camel@debian.sh.intel.com>
+	 <1224085845.4764.23.camel@californication>
+	 <1224086490.735.8.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 15 Oct 2008 19:29:00 +0200
+Message-Id: <1224091740.28173.13.camel@californication> (sfid-20081015_192826_211698_34D1529A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hi Johannes,
 
-Just... the w35und driver is now in mainline, and works (well enough
-to ssh over that; but I guess channel is hardcoded).
+> > > Let's use the solution at this time. Just a notion that the regdomain in
+> > > kernel doesn't sort out very well in some circumstance without user
+> > > intervention.
+> > 
+> > that is what Johannes and I agreed on. We do have to make this work when
+> > no userspace is present or is limited due to the design of the embedded
+> > system in question. In that case the first regulatory hint wins.
+> 
+> Yeah, we have to let one of them win, unless we want to add the
+> complexity with per-band hints as discussed in the other part of the
+> thread.
+> 
+> > Johannes, we could just add a kernel warning if we have mismatched
+> > regulatory hints and userspace was not involved until now. So at least
+> > it shows up in dmesg and can be debugged easily if needed.
+> 
+> We can probably do that, yeah, though we'd have to get the conditions
+> right to avoid showing that whenever you plug in a USB device to a
+> laptop that already has wireless built-in.
 
-Big thanks go to Pekka J Enberg for great cleanups.
+I think it is fine to do so. Since plugging in an USB wireless card is
+expected to work and if we limit it, lets give the user at least some
+way to figure out why it is limited.
 
-Testers are needed; its easy, just grab latest 2.6.28-rc2, enable
-staging, enable w35und... and more testing would be helpful.
+Especially when your internal one is a BG-card and you external one is
+an A-card only (or combo). And you put it in to just access an
+A-network.
 
-BTW does anyone know the  name of the chip used in w35und? Or the
-names of the finished cards? Something should go to the Kconfig help...
+Regards
 
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Marcel
+
+
