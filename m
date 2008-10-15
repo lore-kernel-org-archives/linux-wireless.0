@@ -1,50 +1,3291 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:53038 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbYJ3D7r (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42453 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751532AbYJOGhk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 23:59:47 -0400
-Date: Wed, 29 Oct 2008 21:00:05 -0700
-From: Arjan van de Ven <arjan@infradead.org>
-To: "Bob Copeland" <me@bobcopeland.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mcgrof@gmail.com, mickflemm@gmail.com
-Subject: Re: pull request: wireless-2.6 2008-10-29
-Message-ID: <20081029210005.48e4765f@infradead.org> (sfid-20081030_045953_095814_AB54C894)
-In-Reply-To: <b6c5339f0810291819ld7d6043k56b11128bc6252cb@mail.gmail.com>
-References: <20081029231855.GD3485@tuxdriver.com>
-	<20081029162324.28f5864d@infradead.org>
-	<20081029233350.GE3485@tuxdriver.com>
-	<b6c5339f0810291819ld7d6043k56b11128bc6252cb@mail.gmail.com>
+	Wed, 15 Oct 2008 02:37:40 -0400
+Subject: [PATCH v3] mac80211/drivers: rewrite the rate control API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+In-Reply-To: <1223996147.10113.33.camel@johannes.berg> (sfid-20081014_165703_092655_BE6BA58D)
+References: <1223996147.10113.33.camel@johannes.berg>
+	 (sfid-20081014_165703_092655_BE6BA58D)
+Content-Type: text/plain
+Date: Wed, 15 Oct 2008 08:36:47 +0200
+Message-Id: <1224052607.3027.20.camel@johannes.berg> (sfid-20081015_083750_081988_BA12D2D9)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 29 Oct 2008 21:19:01 -0400
-"Bob Copeland" <me@bobcopeland.com> wrote:
+So after the previous changes we were still unhappy with how
+convoluted the API is and decided to make things simpler for
+everybody. This completely changes the rate control API, now
+taking into account 802.11n with MCS rates and more control,
+most drivers don't support that though.
 
-> On Wed, Oct 29, 2008 at 7:33 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Wed, Oct 29, 2008 at 04:23:24PM -0700, Arjan van de Ven wrote:
-> >> On Wed, 29 Oct 2008 19:18:55 -0400
-> >> "John W. Linville" <linville@tuxdriver.com> wrote:
-> >> it seems to have added a few WARN_ON()s which now end up at the
-> >> top of the list .. are these known or should I spend some time
-> >> writing reports for netdev ?
-> 
-> Pavel Roskin posted one such WARN_ON to ath5k-devel a few days ago.
-> Seems related to setup of the rate tables, but I haven't reproduced it
-> here yet.  I'll see if he has more info...
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: * roll in the RTS/CTS rate and short preamble fixes
+    * fix the struct layout to make it compile on 64-bit and increase
+      MAX_TX_RATES to 5 because the space gets padded out anyway;
+    * fix rt2x00 (it uses driver_data)
+    * make a number of other drivers that don't need as
+      much driver_data use rate_driver_data to keep the rate
+      information intact
+    * document ieee80211_tx_info_clear_status -- especially
+      that it's not safe when you used driver_data
 
-if there's things that would help you diagnose such issue let me know
-(always trying to make kerneloops.org more useful for developers ;-)
+v3: rediff rt2x00 parts over the bugfix from Felix, no other changes
 
-> 
+ drivers/net/wireless/adm8211.c              |   21 -
+ drivers/net/wireless/ath5k/base.c           |   34 +-
+ drivers/net/wireless/ath9k/main.c           |   18 -
+ drivers/net/wireless/ath9k/rc.c             |   40 +-
+ drivers/net/wireless/ath9k/xmit.c           |   28 +-
+ drivers/net/wireless/b43/dma.c              |    4 
+ drivers/net/wireless/b43/main.c             |    2 
+ drivers/net/wireless/b43/pio.c              |    3 
+ drivers/net/wireless/b43/xmit.c             |   60 +++-
+ drivers/net/wireless/b43/xmit.h             |    5 
+ drivers/net/wireless/b43legacy/dma.c        |   46 ++-
+ drivers/net/wireless/b43legacy/main.c       |    2 
+ drivers/net/wireless/b43legacy/pio.c        |   31 ++
+ drivers/net/wireless/b43legacy/xmit.c       |   26 +
+ drivers/net/wireless/b43legacy/xmit.h       |    2 
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |   57 +---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   62 ++++
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    8 
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    8 
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |   37 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   19 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 
+ drivers/net/wireless/libertas_tf/main.c     |    4 
+ drivers/net/wireless/mac80211_hwsim.c       |   12 
+ drivers/net/wireless/p54/p54common.c        |   26 -
+ drivers/net/wireless/rt2x00/rt2x00dev.c     |   14 -
+ drivers/net/wireless/rt2x00/rt2x00mac.c     |   14 -
+ drivers/net/wireless/rt2x00/rt2x00queue.c   |   22 +
+ drivers/net/wireless/rt2x00/rt2x00queue.h   |    9 
+ drivers/net/wireless/rtl8180_dev.c          |   28 +-
+ drivers/net/wireless/rtl8187_dev.c          |   18 -
+ drivers/net/wireless/zd1211rw/zd_mac.c      |   32 +-
+ drivers/net/wireless/zd1211rw/zd_usb.c      |    2 
+ include/net/mac80211.h                      |  252 +++++++++++-------
+ net/mac80211/ieee80211_i.h                  |    8 
+ net/mac80211/main.c                         |   54 +++
+ net/mac80211/mesh_hwmp.c                    |    6 
+ net/mac80211/rate.c                         |   50 +--
+ net/mac80211/rate.h                         |    5 
+ net/mac80211/rc80211_minstrel.c             |   72 ++---
+ net/mac80211/rc80211_pid.h                  |    1 
+ net/mac80211/rc80211_pid_algo.c             |   27 +
+ net/mac80211/rc80211_pid_debugfs.c          |    5 
+ net/mac80211/sta_info.h                     |    4 
+ net/mac80211/tx.c                           |  382 +++++++++++++---------------
+ net/mac80211/wext.c                         |    4 
+ 47 files changed, 886 insertions(+), 685 deletions(-)
+
+--- everything.orig/include/net/mac80211.h	2008-10-15 08:34:16.000000000 +0200
++++ everything/include/net/mac80211.h	2008-10-15 08:34:19.000000000 +0200
+@@ -222,29 +222,24 @@ struct ieee80211_bss_conf {
+  * These flags are used with the @flags member of &ieee80211_tx_info.
+  *
+  * @IEEE80211_TX_CTL_REQ_TX_STATUS: request TX status callback for this frame.
+- * @IEEE80211_TX_CTL_USE_RTS_CTS: use RTS-CTS before sending frame
+- * @IEEE80211_TX_CTL_USE_CTS_PROTECT: use CTS protection for the frame (e.g.,
+- *	for combined 802.11g / 802.11b networks)
++ * @IEEE80211_TX_CTL_ASSIGN_SEQ: The driver has to assign a sequence
++ *	number to this frame, taking care of not overwriting the fragment
++ *	number and increasing the sequence number only when the
++ *	IEEE80211_TX_CTL_FIRST_FRAGMENT flag is set. mac80211 will properly
++ *	assign sequence numbers to QoS-data frames but cannot do so correctly
++ *	for non-QoS-data and management frames because beacons need them from
++ *	that counter as well and mac80211 cannot guarantee proper sequencing.
++ *	If this flag is set, the driver should instruct the hardware to
++ *	assign a sequence number to the frame or assign one itself. Cf. IEEE
++ *	802.11-2007 7.1.3.4.1 paragraph 3. This flag will always be set for
++ *	beacons and always be clear for frames without a sequence number field.
+  * @IEEE80211_TX_CTL_NO_ACK: tell the low level not to wait for an ack
+- * @IEEE80211_TX_CTL_RATE_CTRL_PROBE: TBD
+  * @IEEE80211_TX_CTL_CLEAR_PS_FILT: clear powersave filter for destination
+  *	station
+- * @IEEE80211_TX_CTL_REQUEUE: TBD
+  * @IEEE80211_TX_CTL_FIRST_FRAGMENT: this is a first fragment of the frame
+- * @IEEE80211_TX_CTL_SHORT_PREAMBLE: TBD
+- * @IEEE80211_TX_CTL_LONG_RETRY_LIMIT: this frame should be send using the
+- *	through set_retry_limit configured long retry value
+  * @IEEE80211_TX_CTL_SEND_AFTER_DTIM: send this frame after DTIM beacon
+  * @IEEE80211_TX_CTL_AMPDU: this frame should be sent as part of an A-MPDU
+- * @IEEE80211_TX_CTL_OFDM_HT: this frame can be sent in HT OFDM rates. number
+- *	of streams when this flag is on can be extracted from antenna_sel_tx,
+- *	so if 1 antenna is marked use SISO, 2 antennas marked use MIMO, n
+- *	antennas marked use MIMO_n.
+- * @IEEE80211_TX_CTL_GREEN_FIELD: use green field protection for this frame
+- * @IEEE80211_TX_CTL_40_MHZ_WIDTH: send this frame using 40 Mhz channel width
+- * @IEEE80211_TX_CTL_DUP_DATA: duplicate data frame on both 20 Mhz channels
+- * @IEEE80211_TX_CTL_SHORT_GI: send this frame using short guard interval
+- * @IEEE80211_TX_CTL_INJECTED: TBD
++ * @IEEE80211_TX_CTL_INJECTED: Frame was injected, internal to mac80211.
+  * @IEEE80211_TX_STAT_TX_FILTERED: The frame was not transmitted
+  *	because the destination STA was in powersave mode.
+  * @IEEE80211_TX_STAT_ACK: Frame was acknowledged
+@@ -252,62 +247,70 @@ struct ieee80211_bss_conf {
+  * 	is for the whole aggregation.
+  * @IEEE80211_TX_STAT_AMPDU_NO_BACK: no block ack was returned,
+  * 	so consider using block ack request (BAR).
+- * @IEEE80211_TX_CTL_ASSIGN_SEQ: The driver has to assign a sequence
+- *	number to this frame, taking care of not overwriting the fragment
+- *	number and increasing the sequence number only when the
+- *	IEEE80211_TX_CTL_FIRST_FRAGMENT flags is set. mac80211 will properly
+- *	assign sequence numbers to QoS-data frames but cannot do so correctly
+- *	for non-QoS-data and management frames because beacons need them from
+- *	that counter as well and mac80211 cannot guarantee proper sequencing.
+- *	If this flag is set, the driver should instruct the hardware to
+- *	assign a sequence number to the frame or assign one itself. Cf. IEEE
+- *	802.11-2007 7.1.3.4.1 paragraph 3. This flag will always be set for
+- *	beacons always be clear for frames without a sequence number field.
++ * @IEEE80211_TX_CTL_RATE_CTRL_PROBE: internal to mac80211, can be
++ *	set by rate control algorithms to indicate probe rate, will
++ *	be cleared for fragmented frames (except on the last fragment)
++ * @IEEE80211_TX_CTL_REQUEUE: REMOVE THIS
+  */
+ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+-	IEEE80211_TX_CTL_USE_RTS_CTS		= BIT(2),
+-	IEEE80211_TX_CTL_USE_CTS_PROTECT	= BIT(3),
+-	IEEE80211_TX_CTL_NO_ACK			= BIT(4),
+-	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(5),
+-	IEEE80211_TX_CTL_CLEAR_PS_FILT		= BIT(6),
+-	IEEE80211_TX_CTL_REQUEUE		= BIT(7),
+-	IEEE80211_TX_CTL_FIRST_FRAGMENT		= BIT(8),
+-	IEEE80211_TX_CTL_SHORT_PREAMBLE		= BIT(9),
+-	IEEE80211_TX_CTL_LONG_RETRY_LIMIT	= BIT(10),
+-	IEEE80211_TX_CTL_SEND_AFTER_DTIM	= BIT(12),
+-	IEEE80211_TX_CTL_AMPDU			= BIT(13),
+-	IEEE80211_TX_CTL_OFDM_HT		= BIT(14),
+-	IEEE80211_TX_CTL_GREEN_FIELD		= BIT(15),
+-	IEEE80211_TX_CTL_40_MHZ_WIDTH		= BIT(16),
+-	IEEE80211_TX_CTL_DUP_DATA		= BIT(17),
+-	IEEE80211_TX_CTL_SHORT_GI		= BIT(18),
+-	IEEE80211_TX_CTL_INJECTED		= BIT(19),
+-	IEEE80211_TX_STAT_TX_FILTERED		= BIT(20),
+-	IEEE80211_TX_STAT_ACK			= BIT(21),
+-	IEEE80211_TX_STAT_AMPDU			= BIT(22),
+-	IEEE80211_TX_STAT_AMPDU_NO_BACK		= BIT(23),
+-	IEEE80211_TX_CTL_ASSIGN_SEQ		= BIT(24),
++	IEEE80211_TX_CTL_ASSIGN_SEQ		= BIT(1),
++	IEEE80211_TX_CTL_NO_ACK			= BIT(2),
++	IEEE80211_TX_CTL_CLEAR_PS_FILT		= BIT(3),
++	IEEE80211_TX_CTL_FIRST_FRAGMENT		= BIT(4),
++	IEEE80211_TX_CTL_SEND_AFTER_DTIM	= BIT(5),
++	IEEE80211_TX_CTL_AMPDU			= BIT(6),
++	IEEE80211_TX_CTL_INJECTED		= BIT(7),
++	IEEE80211_TX_STAT_TX_FILTERED		= BIT(8),
++	IEEE80211_TX_STAT_ACK			= BIT(9),
++	IEEE80211_TX_STAT_AMPDU			= BIT(10),
++	IEEE80211_TX_STAT_AMPDU_NO_BACK		= BIT(11),
++	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(12),
++
++	/* XXX: remove this */
++	IEEE80211_TX_CTL_REQUEUE		= BIT(13),
++};
++
++enum mac80211_rate_control_flags {
++	IEEE80211_TX_RC_USE_RTS_CTS		= BIT(0),
++	IEEE80211_TX_RC_USE_CTS_PROTECT		= BIT(1),
++	IEEE80211_TX_RC_USE_SHORT_PREAMBLE	= BIT(2),
++
++	/* rate index is an MCS rate number instead of an index */
++	IEEE80211_TX_RC_MCS			= BIT(3),
++	IEEE80211_TX_RC_GREEN_FIELD		= BIT(4),
++	IEEE80211_TX_RC_40_MHZ_WIDTH		= BIT(5),
++	IEEE80211_TX_RC_DUP_DATA		= BIT(6),
++	IEEE80211_TX_RC_SHORT_GI		= BIT(7),
+ };
+ 
+ 
+-#define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
+-	(sizeof(((struct sk_buff *)0)->cb) - 8)
+-#define IEEE80211_TX_INFO_DRIVER_DATA_PTRS \
+-	(IEEE80211_TX_INFO_DRIVER_DATA_SIZE / sizeof(void *))
++/* there are 40 bytes if you don't need the rateset to be kept */
++#define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
++
++/* if you do need the rateset, then you have less space */
++#define IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE 24
+ 
+-/* maximum number of alternate rate retry stages */
+-#define IEEE80211_TX_MAX_ALTRATE	3
++/* maximum number of rate stages */
++#define IEEE80211_TX_MAX_RATES	5
+ 
+ /**
+- * struct ieee80211_tx_altrate - alternate rate selection/status
++ * struct ieee80211_tx_rate - rate selection/status
+  *
+- * @rate_idx: rate index to attempt to send with
++ * @idx: rate index to attempt to send with
++ * @flags: rate control flags (&enum mac80211_rate_control_flags)
+  * @limit: number of retries before fallback
++ *
++ * A value of -1 for @idx indicates an invalid rate and, if used
++ * in an array of retry rates, that no more rates should be tried.
++ *
++ * When used for transmit status reporting, the driver should
++ * always report the rate along with the flags it used.
+  */
+-struct ieee80211_tx_altrate {
+-	s8 rate_idx;
+-	u8 limit;
++struct ieee80211_tx_rate {
++	s8 idx;
++	u8 count;
++	u8 flags;
+ };
+ 
+ /**
+@@ -322,15 +325,12 @@ struct ieee80211_tx_altrate {
+  * it may be NULL.
+  *
+  * @flags: transmit info flags, defined above
+- * @band: TBD
+- * @tx_rate_idx: TBD
++ * @band: the band to transmit on (use for checking for races)
+  * @antenna_sel_tx: antenna to use, 0 for automatic diversity
+  * @control: union for control data
+  * @status: union for status data
+  * @driver_data: array of driver_data pointers
+  * @retry_count: number of retries
+- * @excessive_retries: set to 1 if the frame was retried many times
+- *	but not acknowledged
+  * @ampdu_ack_len: number of aggregated frames.
+  * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
+  * @ampdu_ack_map: block ack bit map for the aggregation.
+@@ -341,31 +341,43 @@ struct ieee80211_tx_info {
+ 	/* common information */
+ 	u32 flags;
+ 	u8 band;
+-	s8 tx_rate_idx;
++
+ 	u8 antenna_sel_tx;
+ 
+-	/* 1 byte hole */
++	/* 2 byte hole */
+ 
+ 	union {
+ 		struct {
++			union {
++				/* rate control */
++				struct {
++					struct ieee80211_tx_rate rates[
++						IEEE80211_TX_MAX_RATES];
++					s8 rts_cts_rate_idx;
++				};
++				/* only needed before rate control */
++				unsigned long jiffies;
++			};
+ 			/* NB: vif can be NULL for injected frames */
+ 			struct ieee80211_vif *vif;
+ 			struct ieee80211_key_conf *hw_key;
+ 			struct ieee80211_sta *sta;
+-			unsigned long jiffies;
+-			s8 rts_cts_rate_idx;
+-			u8 retry_limit;
+-			struct ieee80211_tx_altrate retries[IEEE80211_TX_MAX_ALTRATE];
+ 		} control;
+ 		struct {
++			struct ieee80211_tx_rate rates[IEEE80211_TX_MAX_RATES];
++			u8 ampdu_ack_len;
+ 			u64 ampdu_ack_map;
+ 			int ack_signal;
+-			struct ieee80211_tx_altrate retries[IEEE80211_TX_MAX_ALTRATE + 1];
+-			u8 retry_count;
+-			bool excessive_retries;
+-			u8 ampdu_ack_len;
++			/* 8 bytes free */
+ 		} status;
+-		void *driver_data[IEEE80211_TX_INFO_DRIVER_DATA_PTRS];
++		struct {
++			struct ieee80211_tx_rate driver_rates[
++				IEEE80211_TX_MAX_RATES];
++			void *rate_driver_data[
++				IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE / sizeof(void *)];
++		};
++		void *driver_data[
++			IEEE80211_TX_INFO_DRIVER_DATA_SIZE / sizeof(void *)];
+ 	};
+ };
+ 
+@@ -374,6 +386,41 @@ static inline struct ieee80211_tx_info *
+ 	return (struct ieee80211_tx_info *)skb->cb;
+ }
+ 
++/**
++ * ieee80211_tx_info_clear_status - clear TX status
++ *
++ * @info: The &struct ieee80211_tx_info to be cleared.
++ *
++ * When the driver passes an skb back to mac80211, it must report
++ * a number of things in TX status. This function clears everything
++ * in the TX status but the rate control information (it does clear
++ * the count since you need to fill that in anyway).
++ *
++ * NOTE: You can only use this function if you do NOT use
++ *	 info->driver_data! Use info->rate_driver_data
++ *	 instead if you need only the less space that allows.
++ */
++static inline void
++ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
++{
++	int i;
++
++	BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) !=
++		     offsetof(struct ieee80211_tx_info, control.rates));
++	BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) !=
++		     offsetof(struct ieee80211_tx_info, driver_rates));
++	BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) != 8);
++	/* clear the rate counts */
++	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
++		info->status.rates[i].count = 0;
++
++	BUILD_BUG_ON(
++	    offsetof(struct ieee80211_tx_info, status.ampdu_ack_len) != 23);
++	memset(&info->status.ampdu_ack_len, 0,
++	       sizeof(struct ieee80211_tx_info) -
++	       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
++}
++
+ 
+ /**
+  * enum mac80211_rx_flags - receive flags
+@@ -876,8 +923,8 @@ enum ieee80211_hw_flags {
+  * @sta_data_size: size (in bytes) of the drv_priv data area
+  *	within &struct ieee80211_sta.
+  *
+- * @max_altrates: maximum number of alternate rate retry stages
+- * @max_altrate_tries: maximum number of tries for each stage
++ * @max_rates: maximum number of alternate rate retry stages
++ * @max_rate_tries: maximum number of tries for each stage
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -894,8 +941,8 @@ struct ieee80211_hw {
+ 	u16 ampdu_queues;
+ 	u16 max_listen_interval;
+ 	s8 max_signal;
+-	u8 max_altrates;
+-	u8 max_altrate_tries;
++	u8 max_rates;
++	u8 max_rate_tries;
+ };
+ 
+ /**
+@@ -934,9 +981,9 @@ static inline struct ieee80211_rate *
+ ieee80211_get_tx_rate(const struct ieee80211_hw *hw,
+ 		      const struct ieee80211_tx_info *c)
+ {
+-	if (WARN_ON(c->tx_rate_idx < 0))
++	if (WARN_ON(c->control.rates[0].idx < 0))
+ 		return NULL;
+-	return &hw->wiphy->bands[c->band]->bitrates[c->tx_rate_idx];
++	return &hw->wiphy->bands[c->band]->bitrates[c->control.rates[0].idx];
+ }
+ 
+ static inline struct ieee80211_rate *
+@@ -952,9 +999,9 @@ static inline struct ieee80211_rate *
+ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
+ 			     const struct ieee80211_tx_info *c, int idx)
+ {
+-	if (c->control.retries[idx].rate_idx < 0)
++	if (c->control.rates[idx + 1].idx < 0)
+ 		return NULL;
+-	return &hw->wiphy->bands[c->band]->bitrates[c->control.retries[idx].rate_idx];
++	return &hw->wiphy->bands[c->band]->bitrates[c->control.rates[idx + 1].idx];
+ }
+ 
+ /**
+@@ -1848,17 +1895,30 @@ struct ieee80211_sta *ieee80211_find_sta
+ 
+ 
+ /* Rate control API */
++
+ /**
+- * struct rate_selection - rate information for/from rate control algorithms
++ * struct ieee80211_tx_rate_control - rate control information for/from RC algo
+  *
+- * @rate_idx: selected transmission rate index
+- * @nonerp_idx: Non-ERP rate to use instead if ERP cannot be used
+- * @probe_idx: rate for probing (or -1)
+- * @max_rate_idx: maximum rate index that can be used, this is
+- *	input to the algorithm and will be enforced
+- */
+-struct rate_selection {
+-	s8 rate_idx, nonerp_idx, probe_idx, max_rate_idx;
++ * @hw: The hardware the algorithm is invoked for.
++ * @sband: The band this frame is being transmitted on.
++ * @bss_conf: the current BSS configuration
++ * @reported_rate: The rate control algorithm can fill this in to indicate
++ *	which rate should be reported to userspace as the current rate and
++ *	used for rate calculations in the mesh network.
++ * @rts: whether RTS will be used for this frame because it is longer than the
++ *	RTS threshold
++ * @short_preamble: whether mac80211 will request short-preamble transmission
++ *	if the selected rate supports it
++ * @max_rate_idx: user-requested maximum rate (not MCS for now)
++ */
++struct ieee80211_tx_rate_control {
++	struct ieee80211_hw *hw;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_bss_conf *bss_conf;
++	struct sk_buff *skb;
++	struct ieee80211_tx_rate reported_rate;
++	bool rts, short_preamble;
++	u8 max_rate_idx;
+ };
+ 
+ struct rate_control_ops {
+@@ -1877,10 +1937,8 @@ struct rate_control_ops {
+ 	void (*tx_status)(void *priv, struct ieee80211_supported_band *sband,
+ 			  struct ieee80211_sta *sta, void *priv_sta,
+ 			  struct sk_buff *skb);
+-	void (*get_rate)(void *priv, struct ieee80211_supported_band *sband,
+-			 struct ieee80211_sta *sta, void *priv_sta,
+-			 struct sk_buff *skb,
+-			 struct rate_selection *sel);
++	void (*get_rate)(void *priv, struct ieee80211_sta *sta, void *priv_sta,
++			 struct ieee80211_tx_rate_control *txrc);
+ 
+ 	void (*add_sta_debugfs)(void *priv, void *priv_sta,
+ 				struct dentry *dir);
+--- everything.orig/net/mac80211/main.c	2008-10-15 08:34:18.000000000 +0200
++++ everything/net/mac80211/main.c	2008-10-15 08:34:19.000000000 +0200
+@@ -41,6 +41,8 @@
+  */
+ struct ieee80211_tx_status_rtap_hdr {
+ 	struct ieee80211_radiotap_header hdr;
++	u8 rate;
++	u8 padding_for_rate;
+ 	__le16 tx_flags;
+ 	u8 data_retries;
+ } __attribute__ ((packed));
+@@ -465,13 +467,28 @@ void ieee80211_tx_status(struct ieee8021
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct net_device *prev_dev = NULL;
+ 	struct sta_info *sta;
++	int retry_count = -1, i;
++
++	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++		/* the HW cannot have attempted that rate */
++		if (i >= hw->max_rates) {
++			info->status.rates[i].idx = -1;
++			info->status.rates[i].count = 0;
++		}
++
++		retry_count += info->status.rates[i].count;
++	}
++	if (retry_count < 0)
++		retry_count = 0;
+ 
+ 	rcu_read_lock();
+ 
++	sband = local->hw.wiphy->bands[info->band];
++
+ 	sta = sta_info_get(local, hdr->addr1);
+ 
+ 	if (sta) {
+-		if (info->status.excessive_retries &&
++		if (!(info->flags & IEEE80211_TX_STAT_ACK) &&
+ 		    test_sta_flags(sta, WLAN_STA_PS)) {
+ 			/*
+ 			 * The STA is in power save mode, so assume
+@@ -502,12 +519,11 @@ void ieee80211_tx_status(struct ieee8021
+ 			rcu_read_unlock();
+ 			return;
+ 		} else {
+-			if (info->status.excessive_retries)
++			if (!(info->flags & IEEE80211_TX_STAT_ACK))
+ 				sta->tx_retry_failed++;
+-			sta->tx_retry_count += info->status.retry_count;
++			sta->tx_retry_count += retry_count;
+ 		}
+ 
+-		sband = local->hw.wiphy->bands[info->band];
+ 		rate_control_tx_status(local, sband, sta, skb);
+ 	}
+ 
+@@ -528,9 +544,9 @@ void ieee80211_tx_status(struct ieee8021
+ 			local->dot11TransmittedFrameCount++;
+ 			if (is_multicast_ether_addr(hdr->addr1))
+ 				local->dot11MulticastTransmittedFrameCount++;
+-			if (info->status.retry_count > 0)
++			if (retry_count > 0)
+ 				local->dot11RetryCount++;
+-			if (info->status.retry_count > 1)
++			if (retry_count > 1)
+ 				local->dot11MultipleRetryCount++;
+ 		}
+ 
+@@ -574,19 +590,30 @@ void ieee80211_tx_status(struct ieee8021
+ 	rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
+ 	rthdr->hdr.it_present =
+ 		cpu_to_le32((1 << IEEE80211_RADIOTAP_TX_FLAGS) |
+-			    (1 << IEEE80211_RADIOTAP_DATA_RETRIES));
++			    (1 << IEEE80211_RADIOTAP_DATA_RETRIES) |
++			    (1 << IEEE80211_RADIOTAP_RATE));
+ 
+ 	if (!(info->flags & IEEE80211_TX_STAT_ACK) &&
+ 	    !is_multicast_ether_addr(hdr->addr1))
+ 		rthdr->tx_flags |= cpu_to_le16(IEEE80211_RADIOTAP_F_TX_FAIL);
+ 
+-	if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) &&
+-	    (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT))
++	/*
++	 * XXX: Once radiotap gets the bitmap reset thing the vendor
++	 *	extensions proposal contains, we can actually report
++	 *	the whole set of tries we did.
++	 */
++	if ((info->status.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
++	    (info->status.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT))
+ 		rthdr->tx_flags |= cpu_to_le16(IEEE80211_RADIOTAP_F_TX_CTS);
+-	else if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS)
++	else if (info->status.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
+ 		rthdr->tx_flags |= cpu_to_le16(IEEE80211_RADIOTAP_F_TX_RTS);
++	if (info->status.rates[0].idx >= 0 &&
++	    !(info->status.rates[0].flags & IEEE80211_TX_RC_MCS))
++		rthdr->rate = sband->bitrates[
++				info->status.rates[0].idx].bitrate / 5;
+ 
+-	rthdr->data_retries = info->status.retry_count;
++	/* for now report the total retry_count */
++	rthdr->data_retries = retry_count;
+ 
+ 	/* XXX: is this sufficient for BPF? */
+ 	skb_set_mac_header(skb, 0);
+@@ -671,8 +698,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	BUG_ON(!ops->configure_filter);
+ 	local->ops = ops;
+ 
+-	local->hw.queues = 1; /* default */
+-
++	/* set up some defaults */
++	local->hw.queues = 1;
++	local->hw.max_rates = 1;
+ 	local->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
+ 	local->fragmentation_threshold = IEEE80211_MAX_FRAG_THRESHOLD;
+ 	local->hw.conf.long_frame_max_tx_count = 4;
+--- everything.orig/net/mac80211/tx.c	2008-10-15 08:34:16.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-10-15 08:34:19.000000000 +0200
+@@ -46,13 +46,20 @@ static __le16 ieee80211_duration(struct 
+ 	struct ieee80211_local *local = tx->local;
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_hdr *hdr;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
++
++	/* assume HW handles this */
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_MCS)
++		return 0;
++
++	/* uh huh? */
++	if (WARN_ON_ONCE(info->control.rates[0].idx < 0))
++		return 0;
+ 
+ 	sband = local->hw.wiphy->bands[tx->channel->band];
+-	txrate = &sband->bitrates[tx->rate_idx];
++	txrate = &sband->bitrates[info->control.rates[0].idx];
+ 
+-	erp = 0;
+-	if (tx->sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
+-		erp = txrate->flags & IEEE80211_RATE_ERP_G;
++	erp = txrate->flags & IEEE80211_RATE_ERP_G;
+ 
+ 	/*
+ 	 * data and mgmt (except PS Poll):
+@@ -439,140 +446,154 @@ ieee80211_tx_h_select_key(struct ieee802
+ static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ {
+-	struct rate_selection rsel;
+-	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
++	struct ieee80211_hdr *hdr = (void *)tx->skb->data;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_rate *rate;
++	int i, len;
++	bool inval = false, rts = false, short_preamble = false;
++	struct ieee80211_tx_rate_control txrc;
+ 
+-	sband = tx->local->hw.wiphy->bands[tx->channel->band];
++	memset(&txrc, 0, sizeof(txrc));
+ 
+-	if (likely(tx->rate_idx < 0)) {
+-		rate_control_get_rate(tx->sdata, sband, tx->sta,
+-				      tx->skb, &rsel);
+-		if (tx->sta)
+-			tx->sta->last_txrate_idx = rsel.rate_idx;
+-		tx->rate_idx = rsel.rate_idx;
+-		if (unlikely(rsel.probe_idx >= 0)) {
+-			info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+-			tx->flags |= IEEE80211_TX_PROBE_LAST_FRAG;
+-			info->control.retries[0].rate_idx = tx->rate_idx;
+-			info->control.retries[0].limit = tx->local->hw.max_altrate_tries;
+-			tx->rate_idx = rsel.probe_idx;
+-		} else if (info->control.retries[0].limit == 0)
+-			info->control.retries[0].rate_idx = -1;
++	sband = tx->local->hw.wiphy->bands[tx->channel->band];
+ 
+-		if (unlikely(tx->rate_idx < 0))
+-			return TX_DROP;
+-	} else
+-		info->control.retries[0].rate_idx = -1;
++	len = min_t(int, tx->skb->len + FCS_LEN,
++			 tx->local->fragmentation_threshold);
+ 
+-	if (tx->sdata->vif.bss_conf.use_cts_prot &&
+-	    (tx->flags & IEEE80211_TX_FRAGMENTED) && (rsel.nonerp_idx >= 0)) {
+-		tx->last_frag_rate_idx = tx->rate_idx;
+-		if (rsel.probe_idx >= 0)
+-			tx->flags &= ~IEEE80211_TX_PROBE_LAST_FRAG;
+-		else
+-			tx->flags |= IEEE80211_TX_PROBE_LAST_FRAG;
+-		tx->rate_idx = rsel.nonerp_idx;
+-		info->tx_rate_idx = rsel.nonerp_idx;
+-		info->flags &= ~IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+-	} else {
+-		tx->last_frag_rate_idx = tx->rate_idx;
+-		info->tx_rate_idx = tx->rate_idx;
++	/* set up the tx rate control struct we give the RC algo */
++	txrc.hw = local_to_hw(tx->local);
++	txrc.sband = sband;
++	txrc.bss_conf = &tx->sdata->vif.bss_conf;
++	txrc.skb = tx->skb;
++	txrc.reported_rate.idx = -1;
++	txrc.max_rate_idx = tx->sdata->max_ratectrl_rateidx;
++
++	/* set up RTS protection if desired */
++	if (tx->local->rts_threshold < IEEE80211_MAX_RTS_THRESHOLD &&
++	    len > tx->local->rts_threshold) {
++		txrc.rts = rts = true;
+ 	}
+-	info->tx_rate_idx = tx->rate_idx;
+ 
+-	return TX_CONTINUE;
+-}
++	/*
++	 * Use short preamble if the BSS can handle it, but not for
++	 * management frames unless we know the receiver can handle
++	 * that -- the management frame might be to a station that
++	 * just wants a probe response.
++	 */
++	if (tx->sdata->vif.bss_conf.use_short_preamble &&
++	    (ieee80211_is_data(hdr->frame_control) ||
++	     (tx->sta && test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
++		txrc.short_preamble = short_preamble = true;
+ 
+-static ieee80211_tx_result debug_noinline
+-ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
+-{
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+-	struct ieee80211_supported_band *sband;
+ 
+-	sband = tx->local->hw.wiphy->bands[tx->channel->band];
++	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
++
++	if (unlikely(info->control.rates[0].idx < 0))
++		return TX_DROP;
++
++	if (txrc.reported_rate.idx < 0)
++		txrc.reported_rate = info->control.rates[0];
+ 
+ 	if (tx->sta)
+-		info->control.sta = &tx->sta->sta;
++		tx->sta->last_tx_rate = txrc.reported_rate;
+ 
+-	if (!info->control.retry_limit) {
+-		if (!is_multicast_ether_addr(hdr->addr1)) {
+-			int len = min_t(int, tx->skb->len + FCS_LEN,
+-					tx->local->fragmentation_threshold);
+-			if (len > tx->local->rts_threshold
+-			    && tx->local->rts_threshold <
+-						IEEE80211_MAX_RTS_THRESHOLD) {
+-				info->flags |= IEEE80211_TX_CTL_USE_RTS_CTS;
+-				info->flags |=
+-					IEEE80211_TX_CTL_LONG_RETRY_LIMIT;
+-				info->control.retry_limit =
+-					tx->local->hw.conf.long_frame_max_tx_count - 1;
+-			} else {
+-				info->control.retry_limit =
+-					tx->local->hw.conf.short_frame_max_tx_count - 1;
+-			}
+-		} else {
+-			info->control.retry_limit = 1;
+-		}
+-	}
++	if (unlikely(!info->control.rates[0].count))
++		info->control.rates[0].count = 1;
+ 
+-	if (tx->flags & IEEE80211_TX_FRAGMENTED) {
+-		/* Do not use multiple retry rates when sending fragmented
+-		 * frames.
+-		 * TODO: The last fragment could still use multiple retry
+-		 * rates. */
+-		info->control.retries[0].rate_idx = -1;
+-	}
+-
+-	/* Use CTS protection for unicast frames sent using extended rates if
+-	 * there are associated non-ERP stations and RTS/CTS is not configured
+-	 * for the frame. */
+-	if ((tx->sdata->flags & IEEE80211_SDATA_OPERATING_GMODE) &&
+-	    (sband->bitrates[tx->rate_idx].flags & IEEE80211_RATE_ERP_G) &&
+-	    (tx->flags & IEEE80211_TX_UNICAST) &&
+-	    tx->sdata->vif.bss_conf.use_cts_prot &&
+-	    !(info->flags & IEEE80211_TX_CTL_USE_RTS_CTS))
+-		info->flags |= IEEE80211_TX_CTL_USE_CTS_PROTECT;
+-
+-	/* Transmit data frames using short preambles if the driver supports
+-	 * short preambles at the selected rate and short preambles are
+-	 * available on the network at the current point in time. */
+-	if (ieee80211_is_data(hdr->frame_control) &&
+-	    (sband->bitrates[tx->rate_idx].flags & IEEE80211_RATE_SHORT_PREAMBLE) &&
+-	    tx->sdata->vif.bss_conf.use_short_preamble &&
+-	    (!tx->sta || test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))) {
+-		info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
+-	}
+-
+-	if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
+-	    (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)) {
+-		struct ieee80211_rate *rate;
+-		s8 baserate = -1;
+-		int idx;
++	if (is_multicast_ether_addr(hdr->addr1)) {
++		/*
++		 * XXX: verify the rate is in the basic rateset
++		 */
++		return TX_CONTINUE;
++	}
+ 
+-		/* Do not use multiple retry rates when using RTS/CTS */
+-		info->control.retries[0].rate_idx = -1;
++	/*
++	 * set up the RTS/CTS rate as the fastest basic rate
++	 * that is not faster than the data rate
++	 *
++	 * XXX: Should this check all retry rates?
++	 */
++	if (!(info->control.rates[0].flags & IEEE80211_TX_RC_MCS)) {
++		s8 baserate = 0;
+ 
+-		/* Use min(data rate, max base rate) as CTS/RTS rate */
+-		rate = &sband->bitrates[tx->rate_idx];
++		rate = &sband->bitrates[info->control.rates[0].idx];
+ 
+-		for (idx = 0; idx < sband->n_bitrates; idx++) {
+-			if (sband->bitrates[idx].bitrate > rate->bitrate)
++		for (i = 0; i < sband->n_bitrates; i++) {
++			/* must be a basic rate */
++			if (!(tx->sdata->vif.bss_conf.basic_rates & BIT(i)))
+ 				continue;
+-			if (tx->sdata->vif.bss_conf.basic_rates & BIT(idx) &&
+-			    (baserate < 0 ||
+-			     (sband->bitrates[baserate].bitrate
+-			      < sband->bitrates[idx].bitrate)))
+-				baserate = idx;
++			/* must not be faster than the data rate */
++			if (sband->bitrates[i].bitrate > rate->bitrate)
++				continue;
++			/* maximum */
++			if (sband->bitrates[baserate].bitrate <
++			     sband->bitrates[i].bitrate)
++				baserate = i;
+ 		}
+ 
+-		if (baserate >= 0)
+-			info->control.rts_cts_rate_idx = baserate;
+-		else
+-			info->control.rts_cts_rate_idx = 0;
++		info->control.rts_cts_rate_idx = baserate;
+ 	}
+ 
++	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++		/*
++		 * make sure there's no valid rate following
++		 * an invalid one, just in case drivers don't
++		 * take the API seriously to stop at -1.
++		 */
++		if (inval) {
++			info->control.rates[i].idx = -1;
++			continue;
++		}
++		if (info->control.rates[i].idx < 0) {
++			inval = true;
++			continue;
++		}
++
++		/*
++		 * For now assume MCS is already set up correctly, this
++		 * needs to be fixed.
++		 */
++		if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS) {
++			WARN_ON(info->control.rates[i].idx > 76);
++			continue;
++		}
++
++		/* set up RTS protection if desired */
++		if (rts)
++			info->control.rates[i].flags |=
++				IEEE80211_TX_RC_USE_RTS_CTS;
++
++		/* RC is busted */
++		if (WARN_ON(info->control.rates[i].idx >=
++			    sband->n_bitrates)) {
++			info->control.rates[i].idx = -1;
++			continue;
++		}
++
++		rate = &sband->bitrates[info->control.rates[i].idx];
++
++		/* set up short preamble */
++		if (short_preamble &&
++		    rate->flags & IEEE80211_RATE_SHORT_PREAMBLE)
++			info->control.rates[i].flags |=
++				IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
++
++		/* set up G protection */
++		if (!rts && tx->sdata->vif.bss_conf.use_cts_prot &&
++		    rate->flags & IEEE80211_RATE_ERP_G)
++			info->control.rates[i].flags |=
++				IEEE80211_TX_RC_USE_CTS_PROTECT;
++	}
++
++	return TX_CONTINUE;
++}
++
++static ieee80211_tx_result debug_noinline
++ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
++
+ 	if (tx->sta)
+ 		info->control.sta = &tx->sta->sta;
+ 
+@@ -680,6 +701,7 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 	left = payload_len - per_fragm;
+ 	for (i = 0; i < num_fragm - 1; i++) {
+ 		struct ieee80211_hdr *fhdr;
++		struct ieee80211_tx_info *info;
+ 		size_t copylen;
+ 
+ 		if (left <= 0)
+@@ -694,20 +716,45 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 				      IEEE80211_ENCRYPT_TAILROOM);
+ 		if (!frag)
+ 			goto fail;
++
+ 		/* Make sure that all fragments use the same priority so
+ 		 * that they end up using the same TX queue */
+ 		frag->priority = first->priority;
++
+ 		skb_reserve(frag, tx->local->tx_headroom +
+ 				  IEEE80211_ENCRYPT_HEADROOM);
++
++		/* copy TX information */
++		info = IEEE80211_SKB_CB(frag);
++		memcpy(info, first->cb, sizeof(frag->cb));
++
++		/* copy/fill in 802.11 header */
+ 		fhdr = (struct ieee80211_hdr *) skb_put(frag, hdrlen);
+ 		memcpy(fhdr, first->data, hdrlen);
+-		if (i == num_fragm - 2)
+-			fhdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_MOREFRAGS);
+ 		fhdr->seq_ctrl = cpu_to_le16(seq | ((i + 1) & IEEE80211_SCTL_FRAG));
++
++		if (i == num_fragm - 2) {
++			/* clear MOREFRAGS bit for the last fragment */
++			fhdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_MOREFRAGS);
++		} else {
++			/*
++			 * No multi-rate retries for fragmented frames, that
++			 * would completely throw off the NAV at other STAs.
++			 */
++			info->control.rates[1].idx = -1;
++			info->control.rates[2].idx = -1;
++			info->control.rates[3].idx = -1;
++			info->control.rates[4].idx = -1;
++			BUILD_BUG_ON(IEEE80211_TX_MAX_RATES != 5);
++			info->flags &= ~IEEE80211_TX_CTL_RATE_CTRL_PROBE;
++		}
++
++		/* copy data */
+ 		copylen = left > per_fragm ? per_fragm : left;
+ 		memcpy(skb_put(frag, copylen), pos, copylen);
+-		memcpy(frag->cb, first->cb, sizeof(frag->cb));
++
+ 		skb_copy_queue_mapping(frag, first);
++
+ 		frag->do_not_encrypt = first->do_not_encrypt;
+ 
+ 		pos += copylen;
+@@ -767,12 +814,10 @@ ieee80211_tx_h_calculate_duration(struct
+ 					      tx->extra_frag[0]->len);
+ 
+ 	for (i = 0; i < tx->num_extra_frag; i++) {
+-		if (i + 1 < tx->num_extra_frag) {
++		if (i + 1 < tx->num_extra_frag)
+ 			next_len = tx->extra_frag[i + 1]->len;
+-		} else {
++		else
+ 			next_len = 0;
+-			tx->rate_idx = tx->last_frag_rate_idx;
+-		}
+ 
+ 		hdr = (struct ieee80211_hdr *)tx->extra_frag[i]->data;
+ 		hdr->duration_id = ieee80211_duration(tx, 0, next_len);
+@@ -825,7 +870,6 @@ __ieee80211_parse_tx_radiotap(struct iee
+ 		(struct ieee80211_radiotap_header *) skb->data;
+ 	struct ieee80211_supported_band *sband;
+ 	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len);
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+ 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
+ 
+@@ -839,8 +883,6 @@ __ieee80211_parse_tx_radiotap(struct iee
+ 	 */
+ 
+ 	while (!ret) {
+-		int i, target_rate;
+-
+ 		ret = ieee80211_radiotap_iterator_next(&iterator);
+ 
+ 		if (ret)
+@@ -854,38 +896,6 @@ __ieee80211_parse_tx_radiotap(struct iee
+ 		 * get_unaligned((type *)iterator.this_arg) to dereference
+ 		 * iterator.this_arg for type "type" safely on all arches.
+ 		*/
+-		case IEEE80211_RADIOTAP_RATE:
+-			/*
+-			 * radiotap rate u8 is in 500kbps units eg, 0x02=1Mbps
+-			 * ieee80211 rate int is in 100kbps units eg, 0x0a=1Mbps
+-			 */
+-			target_rate = (*iterator.this_arg) * 5;
+-			for (i = 0; i < sband->n_bitrates; i++) {
+-				struct ieee80211_rate *r;
+-
+-				r = &sband->bitrates[i];
+-
+-				if (r->bitrate == target_rate) {
+-					tx->rate_idx = i;
+-					break;
+-				}
+-			}
+-			break;
+-
+-		case IEEE80211_RADIOTAP_ANTENNA:
+-			/*
+-			 * radiotap uses 0 for 1st ant, mac80211 is 1 for
+-			 * 1st ant
+-			 */
+-			info->antenna_sel_tx = (*iterator.this_arg) + 1;
+-			break;
+-
+-#if 0
+-		case IEEE80211_RADIOTAP_DBM_TX_POWER:
+-			control->power_level = *iterator.this_arg;
+-			break;
+-#endif
+-
+ 		case IEEE80211_RADIOTAP_FLAGS:
+ 			if (*iterator.this_arg & IEEE80211_RADIOTAP_F_FCS) {
+ 				/*
+@@ -951,8 +961,6 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 	tx->local = local;
+ 	tx->sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	tx->channel = local->hw.conf.channel;
+-	tx->rate_idx = -1;
+-	tx->last_frag_rate_idx = -1;
+ 	/*
+ 	 * Set this flag (used below to indicate "automatic fragmentation"),
+ 	 * it will be cleared/left by radiotap as desired.
+@@ -1053,23 +1061,11 @@ static int __ieee80211_tx(struct ieee802
+ 			if (!tx->extra_frag[i])
+ 				continue;
+ 			info = IEEE80211_SKB_CB(tx->extra_frag[i]);
+-			info->flags &= ~(IEEE80211_TX_CTL_USE_RTS_CTS |
+-					 IEEE80211_TX_CTL_USE_CTS_PROTECT |
+-					 IEEE80211_TX_CTL_CLEAR_PS_FILT |
++			info->flags &= ~(IEEE80211_TX_CTL_CLEAR_PS_FILT |
+ 					 IEEE80211_TX_CTL_FIRST_FRAGMENT);
+ 			if (netif_subqueue_stopped(local->mdev,
+ 						   tx->extra_frag[i]))
+ 				return IEEE80211_TX_FRAG_AGAIN;
+-			if (i == tx->num_extra_frag) {
+-				info->tx_rate_idx = tx->last_frag_rate_idx;
+-
+-				if (tx->flags & IEEE80211_TX_PROBE_LAST_FRAG)
+-					info->flags |=
+-						IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+-				else
+-					info->flags &=
+-						~IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+-			}
+ 
+ 			ret = local->ops->tx(local_to_hw(local),
+ 					    tx->extra_frag[i]);
+@@ -1206,9 +1202,6 @@ retry:
+ 		store->skb = skb;
+ 		store->extra_frag = tx.extra_frag;
+ 		store->num_extra_frag = tx.num_extra_frag;
+-		store->last_frag_rate_idx = tx.last_frag_rate_idx;
+-		store->last_frag_rate_ctrl_probe =
+-			!!(tx.flags & IEEE80211_TX_PROBE_LAST_FRAG);
+ 	}
+  out:
+ 	rcu_read_unlock();
+@@ -1767,10 +1760,7 @@ void ieee80211_tx_pending(unsigned long 
+ 		store = &local->pending_packet[i];
+ 		tx.extra_frag = store->extra_frag;
+ 		tx.num_extra_frag = store->num_extra_frag;
+-		tx.last_frag_rate_idx = store->last_frag_rate_idx;
+ 		tx.flags = 0;
+-		if (store->last_frag_rate_ctrl_probe)
+-			tx.flags |= IEEE80211_TX_PROBE_LAST_FRAG;
+ 		ret = __ieee80211_tx(local, store->skb, &tx);
+ 		if (ret) {
+ 			if (ret == IEEE80211_TX_FRAG_AGAIN)
+@@ -1858,7 +1848,6 @@ struct sk_buff *ieee80211_beacon_get(str
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+ 	struct ieee80211_if_ap *ap = NULL;
+ 	struct ieee80211_if_sta *ifsta = NULL;
+-	struct rate_selection rsel;
+ 	struct beacon_data *beacon;
+ 	struct ieee80211_supported_band *sband;
+ 	enum ieee80211_band band = local->hw.conf.channel->band;
+@@ -1962,32 +1951,23 @@ struct sk_buff *ieee80211_beacon_get(str
+ 	skb->do_not_encrypt = 1;
+ 
+ 	info->band = band;
+-	rate_control_get_rate(sdata, sband, NULL, skb, &rsel);
+-
+-	if (unlikely(rsel.rate_idx < 0)) {
+-		if (net_ratelimit()) {
+-			printk(KERN_DEBUG "%s: ieee80211_beacon_get: "
+-			       "no rate found\n",
+-			       wiphy_name(local->hw.wiphy));
+-		}
+-		dev_kfree_skb_any(skb);
+-		skb = NULL;
+-		goto out;
+-	}
++	/*
++	 * XXX: For now, always use the lowest rate
++	 */
++	info->control.rates[0].idx = 0;
++	info->control.rates[0].count = 1;
++	info->control.rates[1].idx = -1;
++	info->control.rates[2].idx = -1;
++	info->control.rates[3].idx = -1;
++	info->control.rates[4].idx = -1;
++	BUILD_BUG_ON(IEEE80211_TX_MAX_RATES != 5);
+ 
+ 	info->control.vif = vif;
+-	info->tx_rate_idx = rsel.rate_idx;
+ 
+ 	info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 	info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
+-	if (sdata->vif.bss_conf.use_short_preamble &&
+-	    sband->bitrates[rsel.rate_idx].flags & IEEE80211_RATE_SHORT_PREAMBLE)
+-		info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
+-
+-	info->control.retry_limit = 1;
+-
+-out:
++ out:
+ 	rcu_read_unlock();
+ 	return skb;
+ }
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-10-15 08:34:16.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-10-15 08:34:19.000000000 +0200
+@@ -142,7 +142,6 @@ typedef unsigned __bitwise__ ieee80211_t
+ #define IEEE80211_TX_FRAGMENTED		BIT(0)
+ #define IEEE80211_TX_UNICAST		BIT(1)
+ #define IEEE80211_TX_PS_BUFFERED	BIT(2)
+-#define IEEE80211_TX_PROBE_LAST_FRAG	BIT(3)
+ 
+ struct ieee80211_tx_data {
+ 	struct sk_buff *skb;
+@@ -153,11 +152,6 @@ struct ieee80211_tx_data {
+ 	struct ieee80211_key *key;
+ 
+ 	struct ieee80211_channel *channel;
+-	s8 rate_idx;
+-	/* use this rate (if set) for last fragment; rate can
+-	 * be set to lower rate for the first fragments, e.g.,
+-	 * when using CTS protection with IEEE 802.11g. */
+-	s8 last_frag_rate_idx;
+ 
+ 	/* Extra fragments (in addition to the first fragment
+ 	 * in skb) */
+@@ -203,9 +197,7 @@ struct ieee80211_rx_data {
+ struct ieee80211_tx_stored_packet {
+ 	struct sk_buff *skb;
+ 	struct sk_buff **extra_frag;
+-	s8 last_frag_rate_idx;
+ 	int num_extra_frag;
+-	bool last_frag_rate_ctrl_probe;
+ };
+ 
+ struct beacon_data {
+--- everything.orig/net/mac80211/rate.c	2008-10-15 08:33:46.000000000 +0200
++++ everything/net/mac80211/rate.c	2008-10-15 08:34:19.000000000 +0200
+@@ -199,48 +199,44 @@ static void rate_control_release(struct 
+ }
+ 
+ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+-			   struct ieee80211_supported_band *sband,
+-			   struct sta_info *sta, struct sk_buff *skb,
+-			   struct rate_selection *sel)
++			   struct sta_info *sta,
++			   struct ieee80211_tx_rate_control *txrc)
+ {
+ 	struct rate_control_ref *ref = sdata->local->rate_ctrl;
+ 	void *priv_sta = NULL;
+ 	struct ieee80211_sta *ista = NULL;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
+ 	int i;
+ 
+-	sel->rate_idx = -1;
+-	sel->nonerp_idx = -1;
+-	sel->probe_idx = -1;
+-	sel->max_rate_idx = sdata->max_ratectrl_rateidx;
+-
+ 	if (sta) {
+ 		ista = &sta->sta;
+ 		priv_sta = sta->rate_ctrl_priv;
+ 	}
+ 
++	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++		info->control.rates[i].idx = -1;
++		info->control.rates[i].flags = 0;
++		info->control.rates[i].count = 1;
++	}
++
+ 	if (sta && sdata->force_unicast_rateidx > -1)
+-		sel->rate_idx = sdata->force_unicast_rateidx;
++		info->control.rates[0].idx = sdata->force_unicast_rateidx;
+ 	else
+-		ref->ops->get_rate(ref->priv, sband, ista, priv_sta, skb, sel);
++		ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
+ 
+-	if (sdata->max_ratectrl_rateidx > -1 &&
+-	    sel->rate_idx > sdata->max_ratectrl_rateidx)
+-		sel->rate_idx = sdata->max_ratectrl_rateidx;
+-
+-	BUG_ON(sel->rate_idx < 0);
+-
+-	/* Select a non-ERP backup rate. */
+-	if (sel->nonerp_idx < 0) {
+-		for (i = 0; i < sband->n_bitrates; i++) {
+-			struct ieee80211_rate *rate = &sband->bitrates[i];
+-			if (sband->bitrates[sel->rate_idx].bitrate < rate->bitrate)
+-				break;
+-
+-			if (rate_supported(ista, sband->band, i) &&
+-			    !(rate->flags & IEEE80211_RATE_ERP_G))
+-				sel->nonerp_idx = i;
+-		}
++	/*
++	 * try to enforce the maximum rate the user wanted
++	 */
++	if (sdata->max_ratectrl_rateidx > -1)
++		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++			if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS)
++				continue;
++			info->control.rates[i].idx =
++				min_t(s8, info->control.rates[i].idx,
++				      sdata->max_ratectrl_rateidx);
+ 	}
++
++	BUG_ON(info->control.rates[0].idx < 0);
+ }
+ 
+ struct rate_control_ref *rate_control_get(struct rate_control_ref *ref)
+--- everything.orig/net/mac80211/rate.h	2008-10-15 08:33:46.000000000 +0200
++++ everything/net/mac80211/rate.h	2008-10-15 08:34:19.000000000 +0200
+@@ -31,9 +31,8 @@ struct rate_control_ref {
+ struct rate_control_ref *rate_control_alloc(const char *name,
+ 					    struct ieee80211_local *local);
+ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+-			   struct ieee80211_supported_band *sband,
+-			   struct sta_info *sta, struct sk_buff *skb,
+-			   struct rate_selection *sel);
++			   struct sta_info *sta,
++			   struct ieee80211_tx_rate_control *txrc);
+ struct rate_control_ref *rate_control_get(struct rate_control_ref *ref);
+ void rate_control_put(struct rate_control_ref *ref);
+ 
+--- everything.orig/net/mac80211/sta_info.h	2008-10-15 08:33:45.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-10-15 08:34:19.000000000 +0200
+@@ -196,7 +196,7 @@ struct sta_ampdu_mlme {
+  * @tx_packets: number of RX/TX MSDUs
+  * @tx_bytes: TBD
+  * @tx_fragments: number of transmitted MPDUs
+- * @last_txrate_idx: Index of the last used transmit rate
++ * @last_txrate: description of the last used transmit rate
+  * @tid_seq: TBD
+  * @ampdu_mlme: TBD
+  * @timer_to_tid: identity mapping to ID timers
+@@ -267,7 +267,7 @@ struct sta_info {
+ 	unsigned long tx_packets;
+ 	unsigned long tx_bytes;
+ 	unsigned long tx_fragments;
+-	unsigned int last_txrate_idx;
++	struct ieee80211_tx_rate last_tx_rate;
+ 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
+ 
+ 	/*
+--- everything.orig/net/mac80211/wext.c	2008-10-15 08:34:16.000000000 +0200
++++ everything/net/mac80211/wext.c	2008-10-15 08:34:19.000000000 +0200
+@@ -636,8 +636,8 @@ static int ieee80211_ioctl_giwrate(struc
+ 
+ 	sta = sta_info_get(local, sdata->u.sta.bssid);
+ 
+-	if (sta && sta->last_txrate_idx < sband->n_bitrates)
+-		rate->value = sband->bitrates[sta->last_txrate_idx].bitrate;
++	if (sta && !(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS))
++		rate->value = sband->bitrates[sta->last_tx_rate.idx].bitrate;
+ 	else
+ 		rate->value = 0;
+ 
+--- everything.orig/net/mac80211/mesh_hwmp.c	2008-10-15 08:33:45.000000000 +0200
++++ everything/net/mac80211/mesh_hwmp.c	2008-10-15 08:34:19.000000000 +0200
+@@ -218,12 +218,16 @@ static u32 airtime_link_metric_get(struc
+ 
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
++
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
++		return MAX_METRIC;
++
+ 	err = (sta->fail_avg << ARITH_SHIFT) / 100;
+ 
+ 	/* bitrate is in units of 100 Kbps, while we need rate in units of
+ 	 * 1Mbps. This will be corrected on tx_time computation.
+ 	 */
+-	rate = sband->bitrates[sta->last_txrate_idx].bitrate;
++	rate = sband->bitrates[sta->last_tx_rate.idx].bitrate;
+ 	tx_time = (device_constant + 10 * test_frame_len / rate);
+ 	estimated_retx = ((1 << (2 * ARITH_SHIFT)) / (s_unit - err));
+ 	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT) ;
+--- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-10-15 08:33:46.000000000 +0200
++++ everything/net/mac80211/rc80211_pid_algo.c	2008-10-15 08:34:19.000000000 +0200
+@@ -241,7 +241,7 @@ static void rate_control_pid_tx_status(v
+ 
+ 	/* Ignore all frames that were sent with a different rate than the rate
+ 	 * we currently advise mac80211 to use. */
+-	if (info->tx_rate_idx != spinfo->txrate_idx)
++	if (info->status.rates[0].idx != spinfo->txrate_idx)
+ 		return;
+ 
+ 	spinfo->tx_num_xmit++;
+@@ -253,10 +253,10 @@ static void rate_control_pid_tx_status(v
+ 	/* We count frames that totally failed to be transmitted as two bad
+ 	 * frames, those that made it out but had some retries as one good and
+ 	 * one bad frame. */
+-	if (info->status.excessive_retries) {
++	if (!(info->flags & IEEE80211_TX_STAT_ACK)) {
+ 		spinfo->tx_num_failed += 2;
+ 		spinfo->tx_num_xmit++;
+-	} else if (info->status.retry_count) {
++	} else if (info->status.rates[0].count) {
+ 		spinfo->tx_num_failed++;
+ 		spinfo->tx_num_xmit++;
+ 	}
+@@ -270,23 +270,32 @@ static void rate_control_pid_tx_status(v
+ }
+ 
+ static void
+-rate_control_pid_get_rate(void *priv, struct ieee80211_supported_band *sband,
+-			  struct ieee80211_sta *sta, void *priv_sta,
+-			  struct sk_buff *skb,
+-			  struct rate_selection *sel)
++rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
++			  void *priv_sta,
++			  struct ieee80211_tx_rate_control *txrc)
+ {
++	struct sk_buff *skb = txrc->skb;
++	struct ieee80211_supported_band *sband = txrc->sband;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct rc_pid_sta_info *spinfo = priv_sta;
+ 	int rateidx;
+ 	u16 fc;
+ 
++	if (txrc->rts)
++		info->control.rates[0].count =
++			txrc->hw->conf.long_frame_max_tx_count;
++	else
++		info->control.rates[0].count =
++			txrc->hw->conf.short_frame_max_tx_count;
++
+ 	/* Send management frames and broadcast/multicast data using lowest
+ 	 * rate. */
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 	if (!sta || !spinfo ||
+ 	    (fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+ 	    is_multicast_ether_addr(hdr->addr1)) {
+-		sel->rate_idx = rate_lowest_index(sband, sta);
++		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+ 		return;
+ 	}
+ 
+@@ -295,7 +304,7 @@ rate_control_pid_get_rate(void *priv, st
+ 	if (rateidx >= sband->n_bitrates)
+ 		rateidx = sband->n_bitrates - 1;
+ 
+-	sel->rate_idx = rateidx;
++	info->control.rates[0].idx = rateidx;
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	rate_control_pid_event_tx_rate(&spinfo->events,
+--- everything.orig/net/mac80211/rc80211_minstrel.c	2008-10-15 08:33:46.000000000 +0200
++++ everything/net/mac80211/rc80211_minstrel.c	2008-10-15 08:34:19.000000000 +0200
+@@ -169,30 +169,20 @@ minstrel_tx_status(void *priv, struct ie
+ {
+ 	struct minstrel_sta_info *mi = priv_sta;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_tx_altrate *ar = info->status.retries;
+-	struct minstrel_priv *mp = priv;
+-	int i, ndx, tries;
+-	int success = 0;
++	struct ieee80211_tx_rate *ar = info->status.rates;
++	int i, ndx;
++	int success;
+ 
+-	if (!info->status.excessive_retries)
+-		success = 1;
++	success = !!(info->flags & IEEE80211_TX_STAT_ACK);
+ 
+-	if (!mp->has_mrr || (ar[0].rate_idx < 0)) {
+-		ndx = rix_to_ndx(mi, info->tx_rate_idx);
+-		tries = info->status.retry_count + 1;
+-		mi->r[ndx].success += success;
+-		mi->r[ndx].attempts += tries;
+-		return;
+-	}
+-
+-	for (i = 0; i < 4; i++) {
+-		if (ar[i].rate_idx < 0)
++	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++		if (ar[i].idx < 0)
+ 			break;
+ 
+-		ndx = rix_to_ndx(mi, ar[i].rate_idx);
+-		mi->r[ndx].attempts += ar[i].limit + 1;
++		ndx = rix_to_ndx(mi, ar[i].idx);
++		mi->r[ndx].attempts += ar[i].count;
+ 
+-		if ((i != 3) && (ar[i + 1].rate_idx < 0))
++		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0))
+ 			mi->r[ndx].success += success;
+ 	}
+ 
+@@ -210,9 +200,9 @@ minstrel_get_retry_count(struct minstrel
+ {
+ 	unsigned int retry = mr->adjusted_retry_count;
+ 
+-	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS)
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
+ 		retry = max(2U, min(mr->retry_count_rtscts, retry));
+-	else if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
++	else if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
+ 		retry = max(2U, min(mr->retry_count_cts, retry));
+ 	return retry;
+ }
+@@ -234,14 +224,15 @@ minstrel_get_next_sample(struct minstrel
+ }
+ 
+ void
+-minstrel_get_rate(void *priv, struct ieee80211_supported_band *sband,
+-                  struct ieee80211_sta *sta, void *priv_sta,
+-                  struct sk_buff *skb, struct rate_selection *sel)
++minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
++		  void *priv_sta, struct ieee80211_tx_rate_control *txrc)
+ {
++	struct sk_buff *skb = txrc->skb;
++	struct ieee80211_supported_band *sband = txrc->sband;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct minstrel_sta_info *mi = priv_sta;
+ 	struct minstrel_priv *mp = priv;
+-	struct ieee80211_tx_altrate *ar = info->control.retries;
++	struct ieee80211_tx_rate *ar = info->control.rates;
+ 	unsigned int ndx, sample_ndx = 0;
+ 	bool mrr;
+ 	bool sample_slower = false;
+@@ -251,16 +242,12 @@ minstrel_get_rate(void *priv, struct iee
+ 	int sample_rate;
+ 
+ 	if (!sta || !mi || use_low_rate(skb)) {
+-		sel->rate_idx = rate_lowest_index(sband, sta);
++		ar[0].idx = rate_lowest_index(sband, sta);
++		ar[0].count = mp->max_retry;
+ 		return;
+ 	}
+ 
+-	mrr = mp->has_mrr;
+-
+-	/* mac80211 does not allow mrr for RTS/CTS */
+-	if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
+-	    (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT))
+-		mrr = false;
++	mrr = mp->has_mrr && !txrc->rts && !txrc->bss_conf->use_cts_prot;
+ 
+ 	if (time_after(jiffies, mi->stats_update + (mp->update_interval *
+ 			HZ) / 1000))
+@@ -315,13 +302,12 @@ minstrel_get_rate(void *priv, struct iee
+ 			mi->sample_deferred++;
+ 		}
+ 	}
+-	sel->rate_idx = mi->r[ndx].rix;
+-	info->control.retry_limit = minstrel_get_retry_count(&mi->r[ndx], info);
++	ar[0].idx = mi->r[ndx].rix;
++	ar[0].count = minstrel_get_retry_count(&mi->r[ndx], info);
+ 
+ 	if (!mrr) {
+-		ar[0].rate_idx = mi->lowest_rix;
+-		ar[0].limit = mp->max_retry;
+-		ar[1].rate_idx = -1;
++		ar[1].idx = mi->lowest_rix;
++		ar[1].count = mp->max_retry;
+ 		return;
+ 	}
+ 
+@@ -336,9 +322,9 @@ minstrel_get_rate(void *priv, struct iee
+ 	}
+ 	mrr_ndx[1] = mi->max_prob_rate;
+ 	mrr_ndx[2] = 0;
+-	for (i = 0; i < 3; i++) {
+-		ar[i].rate_idx = mi->r[mrr_ndx[i]].rix;
+-		ar[i].limit = mi->r[mrr_ndx[i]].adjusted_retry_count;
++	for (i = 1; i < 4; i++) {
++		ar[i].idx = mi->r[mrr_ndx[i - 1]].rix;
++		ar[i].count = mi->r[mrr_ndx[i - 1]].adjusted_retry_count;
+ 	}
+ }
+ 
+@@ -532,13 +518,13 @@ minstrel_alloc(struct ieee80211_hw *hw, 
+ 	/* maximum time that the hw is allowed to stay in one MRR segment */
+ 	mp->segment_size = 6000;
+ 
+-	if (hw->max_altrate_tries > 0)
+-		mp->max_retry = hw->max_altrate_tries;
++	if (hw->max_rate_tries > 0)
++		mp->max_retry = hw->max_rate_tries;
+ 	else
+ 		/* safe default, does not necessarily have to match hw properties */
+ 		mp->max_retry = 7;
+ 
+-	if (hw->max_altrates >= 3)
++	if (hw->max_rates >= 4)
+ 		mp->has_mrr = true;
+ 
+ 	mp->hw = hw;
+--- everything.orig/net/mac80211/rc80211_pid_debugfs.c	2008-10-15 08:33:46.000000000 +0200
++++ everything/net/mac80211/rc80211_pid_debugfs.c	2008-10-15 08:34:19.000000000 +0200
+@@ -43,6 +43,7 @@ void rate_control_pid_event_tx_status(st
+ {
+ 	union rc_pid_event_data evd;
+ 
++	evd.flags = stat->flags;
+ 	memcpy(&evd.tx_status, stat, sizeof(struct ieee80211_tx_info));
+ 	rate_control_pid_event(buf, RC_PID_EVENT_TYPE_TX_STATUS, &evd);
+ }
+@@ -167,8 +168,8 @@ static ssize_t rate_control_pid_events_r
+ 	switch (ev->type) {
+ 	case RC_PID_EVENT_TYPE_TX_STATUS:
+ 		p += snprintf(pb + p, length - p, "tx_status %u %u",
+-			      ev->data.tx_status.status.excessive_retries,
+-			      ev->data.tx_status.status.retry_count);
++			      !(ev->data.flags & IEEE80211_TX_STAT_ACK),
++			      ev->data.tx_status.status.rates[0].idx);
+ 		break;
+ 	case RC_PID_EVENT_TYPE_RATE_CHANGE:
+ 		p += snprintf(pb + p, length - p, "rate_change %d %d",
+--- everything.orig/net/mac80211/rc80211_pid.h	2008-10-15 08:33:46.000000000 +0200
++++ everything/net/mac80211/rc80211_pid.h	2008-10-15 08:34:19.000000000 +0200
+@@ -61,6 +61,7 @@ enum rc_pid_event_type {
+ union rc_pid_event_data {
+ 	/* RC_PID_EVENT_TX_STATUS */
+ 	struct {
++		u32 flags;
+ 		struct ieee80211_tx_info tx_status;
+ 	};
+ 	/* RC_PID_EVENT_TYPE_RATE_CHANGE */
+--- everything.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/zd1211rw/zd_mac.c	2008-10-15 08:34:19.000000000 +0200
+@@ -296,15 +296,14 @@ static void zd_op_stop(struct ieee80211_
+  * If no status information has been requested, the skb is freed.
+  */
+ static void tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
+-		      u32 flags, int ackssi, bool success)
++		      int ackssi, bool success)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+-	memset(&info->status, 0, sizeof(info->status));
++	ieee80211_tx_info_clear_status(info);
+ 
+-	if (!success)
+-		info->status.excessive_retries = 1;
+-	info->flags |= flags;
++	if (success)
++		info->flags |= IEEE80211_TX_STAT_ACK;
+ 	info->status.ack_signal = ackssi;
+ 	ieee80211_tx_status_irqsafe(hw, skb);
+ }
+@@ -326,7 +325,7 @@ void zd_mac_tx_failed(struct ieee80211_h
+ 	if (skb == NULL)
+ 		return;
+ 
+-	tx_status(hw, skb, 0, 0, 0);
++	tx_status(hw, skb, 0, 0);
+ }
+ 
+ /**
+@@ -342,12 +341,12 @@ void zd_mac_tx_failed(struct ieee80211_h
+ void zd_mac_tx_to_dev(struct sk_buff *skb, int error)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hw *hw = info->driver_data[0];
++	struct ieee80211_hw *hw = info->rate_driver_data[0];
+ 
+ 	skb_pull(skb, sizeof(struct zd_ctrlset));
+ 	if (unlikely(error ||
+ 	    (info->flags & IEEE80211_TX_CTL_NO_ACK))) {
+-		tx_status(hw, skb, 0, 0, !error);
++		tx_status(hw, skb, 0, !error);
+ 	} else {
+ 		struct sk_buff_head *q =
+ 			&zd_hw_mac(hw)->ack_wait_queue;
+@@ -406,7 +405,8 @@ static int zd_calc_tx_length_us(u8 *serv
+ }
+ 
+ static void cs_set_control(struct zd_mac *mac, struct zd_ctrlset *cs,
+-	                   struct ieee80211_hdr *header, u32 flags)
++	                   struct ieee80211_hdr *header,
++	                   struct ieee80211_tx_info *info)
+ {
+ 	/*
+ 	 * CONTROL TODO:
+@@ -417,7 +417,7 @@ static void cs_set_control(struct zd_mac
+ 	cs->control = 0;
+ 
+ 	/* First fragment */
+-	if (flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+ 		cs->control |= ZD_CS_NEED_RANDOM_BACKOFF;
+ 
+ 	/* Multicast */
+@@ -428,10 +428,10 @@ static void cs_set_control(struct zd_mac
+ 	if (ieee80211_is_pspoll(header->frame_control))
+ 		cs->control |= ZD_CS_PS_POLL_FRAME;
+ 
+-	if (flags & IEEE80211_TX_CTL_USE_RTS_CTS)
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
+ 		cs->control |= ZD_CS_RTS;
+ 
+-	if (flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
+ 		cs->control |= ZD_CS_SELF_CTS;
+ 
+ 	/* FIXME: Management frame? */
+@@ -517,12 +517,12 @@ static int fill_ctrlset(struct zd_mac *m
+ 	txrate = ieee80211_get_tx_rate(mac->hw, info);
+ 
+ 	cs->modulation = txrate->hw_value;
+-	if (info->flags & IEEE80211_TX_CTL_SHORT_PREAMBLE)
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+ 		cs->modulation = txrate->hw_value_short;
+ 
+ 	cs->tx_length = cpu_to_le16(frag_len);
+ 
+-	cs_set_control(mac, cs, hdr, info->flags);
++	cs_set_control(mac, cs, hdr, info);
+ 
+ 	packet_length = frag_len + sizeof(struct zd_ctrlset) + 10;
+ 	ZD_ASSERT(packet_length <= 0xffff);
+@@ -577,7 +577,7 @@ static int zd_op_tx(struct ieee80211_hw 
+ 	if (r)
+ 		return r;
+ 
+-	info->driver_data[0] = hw;
++	info->rate_driver_data[0] = hw;
+ 
+ 	r = zd_usb_tx(&mac->chip.usb, skb);
+ 	if (r)
+@@ -618,7 +618,7 @@ static int filter_ack(struct ieee80211_h
+ 		if (likely(!compare_ether_addr(tx_hdr->addr2, rx_hdr->addr1)))
+ 		{
+ 			__skb_unlink(skb, q);
+-			tx_status(hw, skb, IEEE80211_TX_STAT_ACK, stats->signal, 1);
++			tx_status(hw, skb, stats->signal, 1);
+ 			goto out;
+ 		}
+ 	}
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00dev.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00dev.c	2008-10-15 08:34:19.000000000 +0200
+@@ -498,7 +498,9 @@ void rt2x00lib_txdone(struct queue_entry
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
++	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	enum data_queue_qid qid = skb_get_queue_mapping(entry->skb);
++	u8 rate_idx, rate_flags;
+ 
+ 	/*
+ 	 * Unmap the skb.
+@@ -528,14 +530,18 @@ void rt2x00lib_txdone(struct queue_entry
+ 	rt2x00dev->link.qual.tx_failed +=
+ 	    test_bit(TXDONE_FAILURE, &txdesc->flags);
+ 
++	rate_idx = skbdesc->tx_rate_idx;
++	rate_flags = skbdesc->tx_rate_flags;
++
+ 	/*
+ 	 * Initialize TX status
+ 	 */
+ 	memset(&tx_info->status, 0, sizeof(tx_info->status));
+ 	tx_info->status.ack_signal = 0;
+-	tx_info->status.excessive_retries =
+-	    test_bit(TXDONE_EXCESSIVE_RETRY, &txdesc->flags);
+-	tx_info->status.retry_count = txdesc->retry;
++	tx_info->status.rates[0].idx = rate_idx;
++	tx_info->status.rates[0].flags = rate_flags;
++	tx_info->status.rates[0].count = txdesc->retry + 1;
++	tx_info->status.rates[1].idx = -1; /* terminate */
+ 
+ 	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+ 		if (test_bit(TXDONE_SUCCESS, &txdesc->flags))
+@@ -544,7 +550,7 @@ void rt2x00lib_txdone(struct queue_entry
+ 			rt2x00dev->low_level_stats.dot11ACKFailureCount++;
+ 	}
+ 
+-	if (tx_info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) {
++	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		if (test_bit(TXDONE_SUCCESS, &txdesc->flags))
+ 			rt2x00dev->low_level_stats.dot11RTSSuccessCount++;
+ 		else if (test_bit(TXDONE_FAILURE, &txdesc->flags))
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-10-15 08:34:16.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-10-15 08:34:19.000000000 +0200
+@@ -39,7 +39,7 @@ static int rt2x00mac_tx_rts_cts(struct r
+ 	unsigned int data_length;
+ 	int retval = 0;
+ 
+-	if (tx_info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
++	if (tx_info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
+ 		data_length = sizeof(struct ieee80211_cts);
+ 	else
+ 		data_length = sizeof(struct ieee80211_rts);
+@@ -64,11 +64,11 @@ static int rt2x00mac_tx_rts_cts(struct r
+ 	 */
+ 	memcpy(skb->cb, frag_skb->cb, sizeof(skb->cb));
+ 	rts_info = IEEE80211_SKB_CB(skb);
+-	rts_info->flags &= ~IEEE80211_TX_CTL_USE_RTS_CTS;
+-	rts_info->flags &= ~IEEE80211_TX_CTL_USE_CTS_PROTECT;
++	rts_info->control.rates[0].flags &= ~IEEE80211_TX_RC_USE_RTS_CTS;
++	rts_info->control.rates[0].flags &= ~IEEE80211_TX_RC_USE_CTS_PROTECT;
+ 	rts_info->flags &= ~IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 
+-	if (tx_info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
++	if (tx_info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
+ 		rts_info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	else
+ 		rts_info->flags &= ~IEEE80211_TX_CTL_NO_ACK;
+@@ -84,7 +84,7 @@ static int rt2x00mac_tx_rts_cts(struct r
+ 		data_length += rt2x00crypto_tx_overhead(tx_info);
+ #endif /* CONFIG_RT2X00_LIB_CRYPTO */
+ 
+-	if (tx_info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
++	if (tx_info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
+ 		ieee80211_ctstoself_get(rt2x00dev->hw, tx_info->control.vif,
+ 					frag_skb->data, data_length, tx_info,
+ 					(struct ieee80211_cts *)(skb->data));
+@@ -146,8 +146,8 @@ int rt2x00mac_tx(struct ieee80211_hw *hw
+ 	 * inside the hardware.
+ 	 */
+ 	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
+-	if ((tx_info->flags & (IEEE80211_TX_CTL_USE_RTS_CTS |
+-			       IEEE80211_TX_CTL_USE_CTS_PROTECT)) &&
++	if ((tx_info->control.rates[0].flags & (IEEE80211_TX_RC_USE_RTS_CTS |
++						IEEE80211_TX_RC_USE_CTS_PROTECT)) &&
+ 	    !rt2x00dev->ops->hw->set_rts_threshold) {
+ 		if (rt2x00queue_available(queue) <= 1)
+ 			goto exit_fail;
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00queue.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00queue.c	2008-10-15 08:34:19.000000000 +0200
+@@ -230,8 +230,15 @@ static void rt2x00queue_create_tx_descri
+ 	/*
+ 	 * Determine retry information.
+ 	 */
+-	txdesc->retry_limit = tx_info->control.retry_limit;
+-	if (tx_info->flags & IEEE80211_TX_CTL_LONG_RETRY_LIMIT)
++	txdesc->retry_limit = tx_info->control.rates[0].count - 1;
++	/*
++	 * XXX: If at this point we knew whether the HW is going to use
++	 *	the RETRY_MODE bit or the retry_limit (currently all
++	 *	use the RETRY_MODE bit) we could do something like b43
++	 *	does, set the RETRY_MODE bit when the RC algorithm is
++	 *	requesting more than the long retry limit.
++	 */
++	if (tx_info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
+ 		__set_bit(ENTRY_TXD_RETRY_MODE, &txdesc->flags);
+ 
+ 	/*
+@@ -371,10 +378,12 @@ static void rt2x00queue_write_tx_descrip
+ 
+ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ {
++	struct ieee80211_tx_info *tx_info;
+ 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
+ 	struct txentry_desc txdesc;
+ 	struct skb_frame_desc *skbdesc;
+ 	unsigned int iv_len = 0;
++	u8 rate_idx, rate_flags;
+ 
+ 	if (unlikely(rt2x00queue_full(queue)))
+ 		return -EINVAL;
+@@ -399,13 +408,18 @@ int rt2x00queue_write_tx_frame(struct da
+ 		iv_len = IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
+ 
+ 	/*
+-	 * All information is retreived from the skb->cb array,
++	 * All information is retrieved from the skb->cb array,
+ 	 * now we should claim ownership of the driver part of that
+-	 * array.
++	 * array, preserving the bitrate index and flags.
+ 	 */
++	tx_info = IEEE80211_SKB_CB(skb);
++	rate_idx = tx_info->control.rates[0].idx;
++	rate_flags = tx_info->control.rates[0].flags;
+ 	skbdesc = get_skb_frame_desc(entry->skb);
+ 	memset(skbdesc, 0, sizeof(*skbdesc));
+ 	skbdesc->entry = entry;
++	skbdesc->tx_rate_idx = rate_idx;
++	skbdesc->tx_rate_flags = rate_flags;
+ 
+ 	/*
+ 	 * When hardware encryption is supported, and this frame
+--- everything.orig/drivers/net/wireless/adm8211.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/adm8211.c	2008-10-15 08:34:19.000000000 +0200
+@@ -341,15 +341,14 @@ static void adm8211_interrupt_tci(struct
+ 		pci_unmap_single(priv->pdev, info->mapping,
+ 				 info->skb->len, PCI_DMA_TODEVICE);
+ 
+-		memset(&txi->status, 0, sizeof(txi->status));
++		ieee80211_tx_info_clear_status(txi);
++
+ 		skb_pull(skb, sizeof(struct adm8211_tx_hdr));
+ 		memcpy(skb_push(skb, info->hdrlen), skb->cb, info->hdrlen);
+-		if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-			if (status & TDES0_STATUS_ES)
+-				txi->status.excessive_retries = 1;
+-			else
+-				txi->flags |= IEEE80211_TX_STAT_ACK;
+-		}
++		if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) &&
++		    !(status & TDES0_STATUS_ES))
++			txi->flags |= IEEE80211_TX_STAT_ACK;
++
+ 		ieee80211_tx_status_irqsafe(dev, skb);
+ 
+ 		info->skb = NULL;
+@@ -1691,8 +1690,10 @@ static int adm8211_tx(struct ieee80211_h
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(dev, info);
++	u8 rc_flags;
+ 
+-	short_preamble = !!(txrate->flags & IEEE80211_TX_CTL_SHORT_PREAMBLE);
++	rc_flags = info->control.rates[0].flags;
++	short_preamble = !!(rc_flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE);
+ 	plcp_signal = txrate->bitrate;
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -1724,10 +1725,10 @@ static int adm8211_tx(struct ieee80211_h
+ 	if (short_preamble)
+ 		txhdr->header_control |= cpu_to_le16(ADM8211_TXHDRCTL_SHORT_PREAMBLE);
+ 
+-	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS)
++	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS)
+ 		txhdr->header_control |= cpu_to_le16(ADM8211_TXHDRCTL_ENABLE_RTS);
+ 
+-	txhdr->retry_limit = info->control.retry_limit;
++	txhdr->retry_limit = info->control.rates[0].count;
+ 
+ 	adm8211_tx_raw(dev, skb, plcp_signal, hdrlen);
+ 
+--- everything.orig/drivers/net/wireless/ath5k/base.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/ath5k/base.c	2008-10-15 08:34:19.000000000 +0200
+@@ -542,8 +542,8 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 
+ 	/* set up multi-rate retry capabilities */
+ 	if (sc->ah->ah_version == AR5K_AR5212) {
+-		hw->max_altrates = 3;
+-		hw->max_altrate_tries = 11;
++		hw->max_rates = 4;
++		hw->max_rate_tries = 11;
+ 	}
+ 
+ 	/* Finish private driver data initialization */
+@@ -1201,7 +1201,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc
+ 		ieee80211_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
+ 		(sc->power_level * 2),
+ 		ieee80211_get_tx_rate(sc->hw, info)->hw_value,
+-		info->control.retry_limit, keyidx, 0, flags, 0, 0);
++		info->control.rates[0].count, keyidx, 0, flags, 0, 0);
+ 	if (ret)
+ 		goto err_unmap;
+ 
+@@ -1213,7 +1213,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc
+ 			break;
+ 
+ 		mrr_rate[i] = rate->hw_value;
+-		mrr_tries[i] = info->control.retries[i].limit;
++		mrr_tries[i] = info->control.rates[i + 1].count;
+ 	}
+ 
+ 	ah->ah_setup_mrr_tx_desc(ah, ds,
+@@ -1859,30 +1859,26 @@ ath5k_tx_processq(struct ath5k_softc *sc
+ 		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
+ 				PCI_DMA_TODEVICE);
+ 
+-		memset(&info->status, 0, sizeof(info->status));
+-		info->tx_rate_idx = ath5k_hw_to_driver_rix(sc,
+-				ts.ts_rate[ts.ts_final_idx]);
+-		info->status.retry_count = ts.ts_longretry;
+-
++		ieee80211_tx_info_clear_status(info);
+ 		for (i = 0; i < 4; i++) {
+-			struct ieee80211_tx_altrate *r =
+-				&info->status.retries[i];
++			struct ieee80211_tx_rate *r =
++				&info->status.rates[i];
+ 
+ 			if (ts.ts_rate[i]) {
+-				r->rate_idx = ath5k_hw_to_driver_rix(sc, ts.ts_rate[i]);
+-				r->limit = ts.ts_retry[i];
++				r->idx = ath5k_hw_to_driver_rix(sc, ts.ts_rate[i]);
++				r->count = ts.ts_retry[i];
+ 			} else {
+-				r->rate_idx = -1;
+-				r->limit = 0;
++				r->idx = -1;
++				r->count = 0;
+ 			}
+ 		}
+ 
+-		info->status.excessive_retries = 0;
++		/* count the successful attempt as well */
++		info->status.rates[ts.ts_final_idx].count++;
++
+ 		if (unlikely(ts.ts_status)) {
+ 			sc->ll_stats.dot11ACKFailureCount++;
+-			if (ts.ts_status & AR5K_TXERR_XRETRY)
+-				info->status.excessive_retries = 1;
+-			else if (ts.ts_status & AR5K_TXERR_FILT)
++			if (ts.ts_status & AR5K_TXERR_FILT)
+ 				info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+ 		} else {
+ 			info->flags |= IEEE80211_TX_STAT_ACK;
+--- everything.orig/drivers/net/wireless/ath9k/main.c	2008-10-15 08:34:16.000000000 +0200
++++ everything/drivers/net/wireless/ath9k/main.c	2008-10-15 08:34:19.000000000 +0200
+@@ -461,12 +461,13 @@ void ath_tx_complete(struct ath_softc *s
+ 	DPRINTF(sc, ATH_DBG_XMIT,
+ 		"%s: TX complete: skb: %p\n", __func__, skb);
+ 
++	ieee80211_tx_info_clear_status(tx_info);
+ 	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK ||
+ 		tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
+-		/* free driver's private data area of tx_info */
+-		if (tx_info->driver_data[0] != NULL)
+-			kfree(tx_info->driver_data[0]);
+-			tx_info->driver_data[0] = NULL;
++		/* free driver's private data area of tx_info, XXX: HACK! */
++		if (tx_info->control.vif != NULL)
++			kfree(tx_info->control.vif);
++			tx_info->control.vif = NULL;
+ 	}
+ 
+ 	if (tx_status->flags & ATH_TX_BAR) {
+@@ -474,17 +475,12 @@ void ath_tx_complete(struct ath_softc *s
+ 		tx_status->flags &= ~ATH_TX_BAR;
+ 	}
+ 
+-	if (tx_status->flags & (ATH_TX_ERROR | ATH_TX_XRETRY)) {
+-		if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-			/* Frame was not ACKed, but an ACK was expected */
+-			tx_info->status.excessive_retries = 1;
+-		}
+-	} else {
++	if (!(tx_status->flags & (ATH_TX_ERROR | ATH_TX_XRETRY))) {
+ 		/* Frame was ACKed */
+ 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
+ 	}
+ 
+-	tx_info->status.retry_count = tx_status->retries;
++	tx_info->status.rates[0].count = tx_status->retries + 1;
+ 
+ 	ieee80211_tx_status(hw, skb);
+ 	if (an)
+--- everything.orig/drivers/net/wireless/ath9k/rc.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/ath9k/rc.c	2008-10-15 08:34:19.000000000 +0200
+@@ -1864,24 +1864,21 @@ static void ath_tx_status(void *priv, st
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	fc = hdr->frame_control;
+-	tx_info_priv = (struct ath_tx_info_priv *)tx_info->driver_data[0];
++	/* XXX: UGLY HACK!! */
++	tx_info_priv = (struct ath_tx_info_priv *)tx_info->control.vif;
+ 
+ 	spin_lock_bh(&sc->node_lock);
+ 	an = ath_node_find(sc, hdr->addr1);
+ 	spin_unlock_bh(&sc->node_lock);
+ 
+-	if (!an || !priv_sta || !ieee80211_is_data(fc)) {
+-		if (tx_info->driver_data[0] != NULL) {
+-			kfree(tx_info->driver_data[0]);
+-			tx_info->driver_data[0] = NULL;
+-		}
++	if (tx_info_priv == NULL)
+ 		return;
+-	}
+-	if (tx_info->driver_data[0] != NULL) {
++
++	if (an && priv_sta && ieee80211_is_data(fc))
+ 		ath_rate_tx_complete(sc, an, priv_sta, tx_info_priv);
+-		kfree(tx_info->driver_data[0]);
+-		tx_info->driver_data[0] = NULL;
+-	}
++
++	kfree(tx_info_priv);
++	tx_info->control.vif = NULL;
+ }
+ 
+ static void ath_tx_aggr_resp(struct ath_softc *sc,
+@@ -1927,10 +1924,11 @@ static void ath_tx_aggr_resp(struct ath_
+ 	}
+ }
+ 
+-static void ath_get_rate(void *priv, struct ieee80211_supported_band *sband,
+-			 struct ieee80211_sta *sta, void *priv_sta,
+-			 struct sk_buff *skb, struct rate_selection *sel)
++static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
++			 struct ieee80211_tx_rate_control *txrc)
+ {
++	struct ieee80211_supported_band *sband = txrc->sband;
++	struct sk_buff *skb = txrc->skb;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ath_softc *sc = priv;
+ 	struct ieee80211_hw *hw = sc->hw;
+@@ -1946,17 +1944,17 @@ static void ath_get_rate(void *priv, str
+ 
+ 	DPRINTF(sc, ATH_DBG_RATE, "%s\n", __func__);
+ 
+-	/* allocate driver private area of tx_info */
+-	tx_info->driver_data[0] = kzalloc(sizeof(*tx_info_priv), GFP_ATOMIC);
+-	ASSERT(tx_info->driver_data[0] != NULL);
+-	tx_info_priv = (struct ath_tx_info_priv *)tx_info->driver_data[0];
++	/* allocate driver private area of tx_info, XXX: UGLY HACK! */
++	tx_info->control.vif = kzalloc(sizeof(*tx_info_priv), GFP_ATOMIC);
++	tx_info_priv = (struct ath_tx_info_priv *)tx_info->control.vif;
++	ASSERT(tx_info_priv != NULL);
+ 
+ 	lowest_idx = rate_lowest_index(sband, sta);
+ 	tx_info_priv->min_rate = (sband->bitrates[lowest_idx].bitrate * 2) / 10;
+ 	/* lowest rate for management and multicast/broadcast frames */
+ 	if (!ieee80211_is_data(fc) ||
+ 	    is_multicast_ether_addr(hdr->addr1) || !sta) {
+-		sel->rate_idx = lowest_idx;
++		tx_info->control.rates[0].idx = lowest_idx;
+ 		return;
+ 	}
+ 
+@@ -1967,8 +1965,10 @@ static void ath_get_rate(void *priv, str
+ 			  tx_info_priv->rcs,
+ 			  &is_probe,
+ 			  false);
++#if 0
+ 	if (is_probe)
+ 		sel->probe_idx = ath_rc_priv->tx_ratectrl.probe_rate;
++#endif
+ 
+ 	/* Ratecontrol sometimes returns invalid rate index */
+ 	if (tx_info_priv->rcs[0].rix != 0xff)
+@@ -1976,7 +1976,7 @@ static void ath_get_rate(void *priv, str
+ 	else
+ 		tx_info_priv->rcs[0].rix = ath_rc_priv->prev_data_rix;
+ 
+-	sel->rate_idx = tx_info_priv->rcs[0].rix;
++	tx_info->control.rates[0].idx = tx_info_priv->rcs[0].rix;
+ 
+ 	/* Check if aggregation has to be enabled for this tid */
+ 
+--- everything.orig/drivers/net/wireless/ath9k/xmit.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/ath9k/xmit.c	2008-10-15 08:34:19.000000000 +0200
+@@ -168,7 +168,9 @@ static void fill_min_rates(struct sk_buf
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	fc = hdr->frame_control;
+-	tx_info_priv = (struct ath_tx_info_priv *)tx_info->driver_data[0];
++
++	/* XXX: HACK! */
++	tx_info_priv = (struct ath_tx_info_priv *)tx_info->control.vif;
+ 
+ 	if (ieee80211_is_mgmt(fc) || ieee80211_is_ctl(fc)) {
+ 		txctl->use_minrate = 1;
+@@ -288,13 +290,16 @@ static int ath_tx_prepare(struct ath_sof
+ 
+ 	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK)
+ 		txctl->flags |= ATH9K_TXDESC_NOACK;
+-	if (tx_info->flags & IEEE80211_TX_CTL_USE_RTS_CTS)
++
++	if (tx_info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
+ 		txctl->flags |= ATH9K_TXDESC_RTSENA;
+ 
+ 	/*
+ 	 * Setup for rate calculations.
+ 	 */
+-	tx_info_priv = (struct ath_tx_info_priv *)tx_info->driver_data[0];
++
++	/* XXX: HACK! */
++	tx_info_priv = (struct ath_tx_info_priv *)tx_info->control.vif;
+ 	rcs = tx_info_priv->rcs;
+ 
+ 	if (ieee80211_is_data(fc) && !txctl->use_minrate) {
+@@ -854,7 +859,9 @@ static int ath_tx_send_normal(struct ath
+ 
+ 	skb = (struct sk_buff *)bf->bf_mpdu;
+ 	tx_info = IEEE80211_SKB_CB(skb);
+-	tx_info_priv = (struct ath_tx_info_priv *)tx_info->driver_data[0];
++
++	/* XXX: HACK! */
++	tx_info_priv = (struct ath_tx_info_priv *)tx_info->control.vif;
+ 	memcpy(bf->bf_rcs, tx_info_priv->rcs, 4 * sizeof(tx_info_priv->rcs[0]));
+ 
+ 	/* update starting sequence number for subsequent ADDBA request */
+@@ -1248,8 +1255,9 @@ static int ath_tx_processq(struct ath_so
+ 		}
+ 		skb = bf->bf_mpdu;
+ 		tx_info = IEEE80211_SKB_CB(skb);
+-		tx_info_priv = (struct ath_tx_info_priv *)
+-			tx_info->driver_data[0];
++
++		/* XXX: HACK! */
++		tx_info_priv = (struct ath_tx_info_priv *) tx_info->control.vif;
+ 		if (ds->ds_txstat.ts_status & ATH9K_TXERR_FILT)
+ 			tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+ 		if ((ds->ds_txstat.ts_status & ATH9K_TXERR_FILT) == 0 &&
+@@ -1430,7 +1438,8 @@ static int ath_tx_send_ampdu(struct ath_
+ 
+ 	skb = (struct sk_buff *)bf->bf_mpdu;
+ 	tx_info = IEEE80211_SKB_CB(skb);
+-	tx_info_priv = (struct ath_tx_info_priv *)tx_info->driver_data[0];
++	/* XXX: HACK! */
++	tx_info_priv = (struct ath_tx_info_priv *)tx_info->control.vif;
+ 	memcpy(bf->bf_rcs, tx_info_priv->rcs, 4 * sizeof(tx_info_priv->rcs[0]));
+ 
+ 	/* Add sub-frame to BAW */
+@@ -1464,7 +1473,7 @@ static u32 ath_lookup_rate(struct ath_so
+ 	skb = (struct sk_buff *)bf->bf_mpdu;
+ 	tx_info = IEEE80211_SKB_CB(skb);
+ 	tx_info_priv = (struct ath_tx_info_priv *)
+-		tx_info->driver_data[0];
++		tx_info->control.vif; /* XXX: HACK! */
+ 	memcpy(bf->bf_rcs,
+ 		tx_info_priv->rcs, 4 * sizeof(tx_info_priv->rcs[0]));
+ 
+@@ -1924,7 +1933,8 @@ static int ath_tx_start_dma(struct ath_s
+ 
+ 	bf->bf_flags = txctl->flags;
+ 	bf->bf_keytype = txctl->keytype;
+-	tx_info_priv = (struct ath_tx_info_priv *)tx_info->driver_data[0];
++	/* XXX: HACK! */
++	tx_info_priv = (struct ath_tx_info_priv *)tx_info->control.vif;
+ 	rcs = tx_info_priv->rcs;
+ 	bf->bf_rcs[0] = rcs[0];
+ 	bf->bf_rcs[1] = rcs[1];
+--- everything.orig/drivers/net/wireless/b43/dma.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/b43/dma.c	2008-10-15 08:34:19.000000000 +0200
+@@ -1387,13 +1387,11 @@ void b43_dma_handle_txstatus(struct b43_
+ 
+ 			info = IEEE80211_SKB_CB(meta->skb);
+ 
+-			memset(&info->status, 0, sizeof(info->status));
+-
+ 			/*
+ 			 * Call back to inform the ieee80211 subsystem about
+ 			 * the status of the transmission.
+ 			 */
+-			frame_succeed = b43_fill_txstatus_report(info, status);
++			frame_succeed = b43_fill_txstatus_report(dev, info, status);
+ #ifdef CONFIG_B43_DEBUG
+ 			if (frame_succeed)
+ 				ring->nr_succeed_tx_packets++;
+--- everything.orig/drivers/net/wireless/b43/main.c	2008-10-15 08:34:16.000000000 +0200
++++ everything/drivers/net/wireless/b43/main.c	2008-10-15 08:34:19.000000000 +0200
+@@ -4556,7 +4556,7 @@ static int b43_wireless_init(struct ssb_
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 
+ 	hw->queues = b43_modparam_qos ? 4 : 1;
+-	hw->max_altrates = 1;
++	hw->max_rates = 2;
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+ 	if (is_valid_ether_addr(sprom->et1mac))
+ 		SET_IEEE80211_PERM_ADDR(hw, sprom->et1mac);
+--- everything.orig/drivers/net/wireless/b43/pio.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/b43/pio.c	2008-10-15 08:34:19.000000000 +0200
+@@ -587,9 +587,8 @@ void b43_pio_handle_txstatus(struct b43_
+ 	spin_lock(&q->lock); /* IRQs are already disabled. */
+ 
+ 	info = IEEE80211_SKB_CB(pack->skb);
+-	memset(&info->status, 0, sizeof(info->status));
+ 
+-	b43_fill_txstatus_report(info, status);
++	b43_fill_txstatus_report(dev, info, status);
+ 
+ 	total_len = pack->skb->len + b43_txhdr_size(dev);
+ 	total_len = roundup(total_len, 4);
+--- everything.orig/drivers/net/wireless/b43/xmit.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/b43/xmit.c	2008-10-15 08:34:19.000000000 +0200
+@@ -185,7 +185,7 @@ int b43_generate_txhdr(struct b43_wldev 
+ 		       u8 *_txhdr,
+ 		       const unsigned char *fragment_data,
+ 		       unsigned int fragment_len,
+-		       const struct ieee80211_tx_info *info,
++		       struct ieee80211_tx_info *info,
+ 		       u16 cookie)
+ {
+ 	struct b43_txhdr *txhdr = (struct b43_txhdr *)_txhdr;
+@@ -202,6 +202,7 @@ int b43_generate_txhdr(struct b43_wldev 
+ 	u16 phy_ctl = 0;
+ 	u8 extra_ft = 0;
+ 	struct ieee80211_rate *txrate;
++	struct ieee80211_tx_rate *rates;
+ 
+ 	memset(txhdr, 0, sizeof(*txhdr));
+ 
+@@ -291,7 +292,7 @@ int b43_generate_txhdr(struct b43_wldev 
+ 		phy_ctl |= B43_TXH_PHY_ENC_OFDM;
+ 	else
+ 		phy_ctl |= B43_TXH_PHY_ENC_CCK;
+-	if (info->flags & IEEE80211_TX_CTL_SHORT_PREAMBLE)
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+ 		phy_ctl |= B43_TXH_PHY_SHORTPRMBL;
+ 
+ 	switch (b43_ieee80211_antenna_sanitize(dev, info->antenna_sel_tx)) {
+@@ -314,6 +315,7 @@ int b43_generate_txhdr(struct b43_wldev 
+ 		B43_WARN_ON(1);
+ 	}
+ 
++	rates = info->control.rates;
+ 	/* MAC control */
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+ 		mac_ctl |= B43_TXH_MAC_ACK;
+@@ -324,12 +326,22 @@ int b43_generate_txhdr(struct b43_wldev 
+ 		mac_ctl |= B43_TXH_MAC_STMSDU;
+ 	if (phy->type == B43_PHYTYPE_A)
+ 		mac_ctl |= B43_TXH_MAC_5GHZ;
+-	if (info->flags & IEEE80211_TX_CTL_LONG_RETRY_LIMIT)
++
++	/* Overwrite rates[0].count to make the retry calculation
++	 * in the tx status easier. need the actual retry limit to
++	 * detect whether the fallback rate was used.
++	 */
++	if ((rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
++	    (rates[0].count <= dev->wl->hw->conf.long_frame_max_tx_count)) {
++		rates[0].count = dev->wl->hw->conf.long_frame_max_tx_count;
+ 		mac_ctl |= B43_TXH_MAC_LONGFRAME;
++	} else {
++		rates[0].count = dev->wl->hw->conf.short_frame_max_tx_count;
++	}
+ 
+ 	/* Generate the RTS or CTS-to-self frame */
+-	if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
+-	    (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)) {
++	if ((rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
++	    (rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)) {
+ 		unsigned int len;
+ 		struct ieee80211_hdr *hdr;
+ 		int rts_rate, rts_rate_fb;
+@@ -344,7 +356,7 @@ int b43_generate_txhdr(struct b43_wldev 
+ 		rts_rate_fb = b43_calc_fallback_rate(rts_rate);
+ 		rts_rate_fb_ofdm = b43_is_ofdm_rate(rts_rate_fb);
+ 
+-		if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT) {
++		if (rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+ 			struct ieee80211_cts *cts;
+ 
+ 			if (b43_is_old_txhdr_format(dev)) {
+@@ -687,10 +699,18 @@ void b43_handle_txstatus(struct b43_wlde
+ /* Fill out the mac80211 TXstatus report based on the b43-specific
+  * txstatus report data. This returns a boolean whether the frame was
+  * successfully transmitted. */
+-bool b43_fill_txstatus_report(struct ieee80211_tx_info *report,
++bool b43_fill_txstatus_report(struct b43_wldev *dev,
++			      struct ieee80211_tx_info *report,
+ 			      const struct b43_txstatus *status)
+ {
+ 	bool frame_success = 1;
++	int retry_limit;
++
++	/* preserve the confiured retry limit before clearing the status
++	 * The xmit function has overwritten the rc's value with the actual
++	 * retry limit done by the hardware */
++	retry_limit = report->status.rates[0].count;
++	ieee80211_tx_info_clear_status(report);
+ 
+ 	if (status->acked) {
+ 		/* The frame was ACKed. */
+@@ -700,14 +720,32 @@ bool b43_fill_txstatus_report(struct iee
+ 		if (!(report->flags & IEEE80211_TX_CTL_NO_ACK)) {
+ 			/* ...but we expected an ACK. */
+ 			frame_success = 0;
+-			report->status.excessive_retries = 1;
+ 		}
+ 	}
+ 	if (status->frame_count == 0) {
+ 		/* The frame was not transmitted at all. */
+-		report->status.retry_count = 0;
+-	} else
+-		report->status.retry_count = status->frame_count - 1;
++		report->status.rates[0].count = 0;
++	} else if (status->rts_count > dev->wl->hw->conf.short_frame_max_tx_count) {
++		/*
++		 * If the short retries (RTS, not data frame) have exceeded
++		 * the limit, the hw will not have tried the selected rate,
++		 * but will have used the fallback rate instead.
++		 * Don't let the rate control count attempts for the selected
++		 * rate in this case, otherwise the statistics will be off.
++		 */
++		report->status.rates[0].count = 0;
++		report->status.rates[1].count = status->frame_count;
++	} else {
++		if (status->frame_count > retry_limit) {
++			report->status.rates[0].count = retry_limit;
++			report->status.rates[1].count = status->frame_count -
++					retry_limit;
++
++		} else {
++			report->status.rates[0].count = status->frame_count;
++			report->status.rates[1].idx = -1;
++		}
++	}
+ 
+ 	return frame_success;
+ }
+--- everything.orig/drivers/net/wireless/b43/xmit.h	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/b43/xmit.h	2008-10-15 08:34:19.000000000 +0200
+@@ -178,7 +178,7 @@ int b43_generate_txhdr(struct b43_wldev 
+ 		       u8 * txhdr,
+ 		       const unsigned char *fragment_data,
+ 		       unsigned int fragment_len,
+-		       const struct ieee80211_tx_info *txctl, u16 cookie);
++		       struct ieee80211_tx_info *txctl, u16 cookie);
+ 
+ /* Transmit Status */
+ struct b43_txstatus {
+@@ -294,7 +294,8 @@ void b43_rx(struct b43_wldev *dev, struc
+ 
+ void b43_handle_txstatus(struct b43_wldev *dev,
+ 			 const struct b43_txstatus *status);
+-bool b43_fill_txstatus_report(struct ieee80211_tx_info *report,
++bool b43_fill_txstatus_report(struct b43_wldev *dev,
++			      struct ieee80211_tx_info *report,
+ 			      const struct b43_txstatus *status);
+ 
+ void b43_tx_suspend(struct b43_wldev *dev);
+--- everything.orig/drivers/net/wireless/b43legacy/dma.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/dma.c	2008-10-15 08:34:19.000000000 +0200
+@@ -1411,6 +1411,7 @@ void b43legacy_dma_handle_txstatus(struc
+ 	struct b43legacy_dmaring *ring;
+ 	struct b43legacy_dmadesc_generic *desc;
+ 	struct b43legacy_dmadesc_meta *meta;
++	int retry_limit;
+ 	int slot;
+ 
+ 	ring = parse_cookie(dev, status->cookie, &slot);
+@@ -1437,25 +1438,42 @@ void b43legacy_dma_handle_txstatus(struc
+ 			struct ieee80211_tx_info *info;
+ 			BUG_ON(!meta->skb);
+ 			info = IEEE80211_SKB_CB(meta->skb);
+-			/* Call back to inform the ieee80211 subsystem about the
+-			 * status of the transmission.
+-			 * Some fields of txstat are already filled in dma_tx().
+-			 */
+ 
+-			memset(&info->status, 0, sizeof(info->status));
++			/* preserve the confiured retry limit before clearing the status
++			 * The xmit function has overwritten the rc's value with the actual
++			 * retry limit done by the hardware */
++			retry_limit = info->status.rates[0].count;
++			ieee80211_tx_info_clear_status(info);
+ 
+-			if (status->acked) {
++			if (status->acked)
+ 				info->flags |= IEEE80211_TX_STAT_ACK;
++
++			if (status->rts_count > dev->wl->hw->conf.short_frame_max_tx_count) {
++				/*
++				 * If the short retries (RTS, not data frame) have exceeded
++				 * the limit, the hw will not have tried the selected rate,
++				 * but will have used the fallback rate instead.
++				 * Don't let the rate control count attempts for the selected
++				 * rate in this case, otherwise the statistics will be off.
++				 */
++				info->status.rates[0].count = 0;
++				info->status.rates[1].count = status->frame_count;
+ 			} else {
+-				if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+-					 info->status.excessive_retries = 1;
++				if (status->frame_count > retry_limit) {
++					info->status.rates[0].count = retry_limit;
++					info->status.rates[1].count = status->frame_count -
++							retry_limit;
++
++				} else {
++					info->status.rates[0].count = status->frame_count;
++					info->status.rates[1].idx = -1;
++				}
+ 			}
+-			if (status->frame_count == 0) {
+-				/* The frame was not transmitted at all. */
+-				info->status.retry_count = 0;
+-			} else
+-				info->status.retry_count = status->frame_count
+-							   - 1;
++
++			/* Call back to inform the ieee80211 subsystem about the
++			 * status of the transmission.
++			 * Some fields of txstat are already filled in dma_tx().
++			 */
+ 			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb);
+ 			/* skb is freed by ieee80211_tx_status_irqsafe() */
+ 			meta->skb = NULL;
+--- everything.orig/drivers/net/wireless/b43legacy/main.c	2008-10-15 08:34:16.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/main.c	2008-10-15 08:34:19.000000000 +0200
+@@ -3682,7 +3682,7 @@ static int b43legacy_wireless_init(struc
+ 		BIT(NL80211_IFTYPE_WDS) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 	hw->queues = 1; /* FIXME: hardware has more queues */
+-	hw->max_altrates = 1;
++	hw->max_rates = 2;
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+ 	if (is_valid_ether_addr(sprom->et1mac))
+ 		SET_IEEE80211_PERM_ADDR(hw, sprom->et1mac);
+--- everything.orig/drivers/net/wireless/b43legacy/pio.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/pio.c	2008-10-15 08:34:19.000000000 +0200
+@@ -491,6 +491,7 @@ void b43legacy_pio_handle_txstatus(struc
+ 	struct b43legacy_pioqueue *queue;
+ 	struct b43legacy_pio_txpacket *packet;
+ 	struct ieee80211_tx_info *info;
++	int retry_limit;
+ 
+ 	queue = parse_cookie(dev, status->cookie, &packet);
+ 	B43legacy_WARN_ON(!queue);
+@@ -503,11 +504,37 @@ void b43legacy_pio_handle_txstatus(struc
+ 				sizeof(struct b43legacy_txhdr_fw3));
+ 
+ 	info = IEEE80211_SKB_CB(packet->skb);
+-	memset(&info->status, 0, sizeof(info->status));
++
++	/* preserve the confiured retry limit before clearing the status
++	 * The xmit function has overwritten the rc's value with the actual
++	 * retry limit done by the hardware */
++	retry_limit = info->status.rates[0].count;
++	ieee80211_tx_info_clear_status(info);
+ 
+ 	if (status->acked)
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+-	info->status.retry_count = status->frame_count - 1;
++
++	if (status->rts_count > dev->wl->hw->conf.short_frame_max_tx_count) {
++		/*
++		 * If the short retries (RTS, not data frame) have exceeded
++		 * the limit, the hw will not have tried the selected rate,
++		 * but will have used the fallback rate instead.
++		 * Don't let the rate control count attempts for the selected
++		 * rate in this case, otherwise the statistics will be off.
++		 */
++		info->status.rates[0].count = 0;
++		info->status.rates[1].count = status->frame_count;
++	} else {
++		if (status->frame_count > retry_limit) {
++			info->status.rates[0].count = retry_limit;
++			info->status.rates[1].count = status->frame_count -
++					retry_limit;
++
++		} else {
++			info->status.rates[0].count = status->frame_count;
++			info->status.rates[1].idx = -1;
++		}
++	}
+ 	ieee80211_tx_status_irqsafe(dev->wl->hw, packet->skb);
+ 	packet->skb = NULL;
+ 
+--- everything.orig/drivers/net/wireless/b43legacy/xmit.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/xmit.c	2008-10-15 08:34:19.000000000 +0200
+@@ -188,7 +188,7 @@ static int generate_txhdr_fw3(struct b43
+ 			       struct b43legacy_txhdr_fw3 *txhdr,
+ 			       const unsigned char *fragment_data,
+ 			       unsigned int fragment_len,
+-			       const struct ieee80211_tx_info *info,
++			       struct ieee80211_tx_info *info,
+ 			       u16 cookie)
+ {
+ 	const struct ieee80211_hdr *wlhdr;
+@@ -201,6 +201,7 @@ static int generate_txhdr_fw3(struct b43
+ 	u32 mac_ctl = 0;
+ 	u16 phy_ctl = 0;
+ 	struct ieee80211_rate *tx_rate;
++	struct ieee80211_tx_rate *rates;
+ 
+ 	wlhdr = (const struct ieee80211_hdr *)fragment_data;
+ 
+@@ -274,7 +275,7 @@ static int generate_txhdr_fw3(struct b43
+ 	/* PHY TX Control word */
+ 	if (rate_ofdm)
+ 		phy_ctl |= B43legacy_TX4_PHY_OFDM;
+-	if (dev->short_preamble)
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+ 		phy_ctl |= B43legacy_TX4_PHY_SHORTPRMBL;
+ 	switch (info->antenna_sel_tx) {
+ 	case 0:
+@@ -291,6 +292,7 @@ static int generate_txhdr_fw3(struct b43
+ 	}
+ 
+ 	/* MAC control */
++	rates = info->control.rates;
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+ 		mac_ctl |= B43legacy_TX4_MAC_ACK;
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
+@@ -299,12 +301,22 @@ static int generate_txhdr_fw3(struct b43
+ 		mac_ctl |= B43legacy_TX4_MAC_STMSDU;
+ 	if (rate_fb_ofdm)
+ 		mac_ctl |= B43legacy_TX4_MAC_FALLBACKOFDM;
+-	if (info->flags & IEEE80211_TX_CTL_LONG_RETRY_LIMIT)
++
++	/* Overwrite rates[0].count to make the retry calculation
++	 * in the tx status easier. need the actual retry limit to
++	 * detect whether the fallback rate was used.
++	 */
++	if ((rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
++	    (rates[0].count <= dev->wl->hw->conf.long_frame_max_tx_count)) {
++		rates[0].count = dev->wl->hw->conf.long_frame_max_tx_count;
+ 		mac_ctl |= B43legacy_TX4_MAC_LONGFRAME;
++	} else {
++		rates[0].count = dev->wl->hw->conf.short_frame_max_tx_count;
++	}
+ 
+ 	/* Generate the RTS or CTS-to-self frame */
+-	if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
+-	    (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)) {
++	if ((rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
++	    (rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)) {
+ 		unsigned int len;
+ 		struct ieee80211_hdr *hdr;
+ 		int rts_rate;
+@@ -319,7 +331,7 @@ static int generate_txhdr_fw3(struct b43
+ 		if (rts_rate_fb_ofdm)
+ 			mac_ctl |= B43legacy_TX4_MAC_CTSFALLBACKOFDM;
+ 
+-		if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT) {
++		if (rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+ 			ieee80211_ctstoself_get(dev->wl->hw,
+ 						info->control.vif,
+ 						fragment_data,
+@@ -362,7 +374,7 @@ int b43legacy_generate_txhdr(struct b43l
+ 			      u8 *txhdr,
+ 			      const unsigned char *fragment_data,
+ 			      unsigned int fragment_len,
+-			      const struct ieee80211_tx_info *info,
++			      struct ieee80211_tx_info *info,
+ 			      u16 cookie)
+ {
+ 	return generate_txhdr_fw3(dev, (struct b43legacy_txhdr_fw3 *)txhdr,
+--- everything.orig/drivers/net/wireless/b43legacy/xmit.h	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/xmit.h	2008-10-15 08:34:19.000000000 +0200
+@@ -80,7 +80,7 @@ int b43legacy_generate_txhdr(struct b43l
+ 			      u8 *txhdr,
+ 			      const unsigned char *fragment_data,
+ 			      unsigned int fragment_len,
+-			      const struct ieee80211_tx_info *info,
++			      struct ieee80211_tx_info *info,
+ 			      u16 cookie);
+ 
+ 
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-10-15 08:34:15.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-10-15 08:34:19.000000000 +0200
+@@ -422,34 +422,6 @@ static void rs_free_sta(void *priv, stru
+ }
+ 
+ 
+-/*
+- * get ieee prev rate from rate scale table.
+- * for A and B mode we need to overright prev
+- * value
+- */
+-static int rs_adjust_next_rate(struct iwl3945_priv *priv, int rate)
+-{
+-	int next_rate = iwl3945_get_prev_ieee_rate(rate);
+-
+-	switch (priv->band) {
+-	case IEEE80211_BAND_5GHZ:
+-		if (rate == IWL_RATE_12M_INDEX)
+-			next_rate = IWL_RATE_9M_INDEX;
+-		else if (rate == IWL_RATE_6M_INDEX)
+-			next_rate = IWL_RATE_6M_INDEX;
+-		break;
+-/* XXX cannot be invoked in current mac80211 so not a regression
+-	case MODE_IEEE80211B:
+-		if (rate == IWL_RATE_11M_INDEX_TABLE)
+-			next_rate = IWL_RATE_5M_INDEX_TABLE;
+-		break;
+- */
+-	default:
+-		break;
+-	}
+-
+-	return next_rate;
+-}
+ /**
+  * rs_tx_status - Update rate control values based on Tx results
+  *
+@@ -460,17 +432,21 @@ static void rs_tx_status(void *priv_rate
+ 			 struct ieee80211_sta *sta, void *priv_sta,
+ 			 struct sk_buff *skb)
+ {
+-	u8 retries, current_count;
++	u8 retries = 0, current_count;
+ 	int scale_rate_index, first_index, last_index;
+ 	unsigned long flags;
+ 	struct iwl3945_priv *priv = (struct iwl3945_priv *)priv_rate;
+ 	struct iwl3945_rs_sta *rs_sta = priv_sta;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	int i;
+ 
+ 	IWL_DEBUG_RATE("enter\n");
+ 
+-	retries = info->status.retry_count;
+-	first_index = sband->bitrates[info->tx_rate_idx].hw_value;
++	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
++		retries += info->status.rates[i].count;
++	retries--;
++
++	first_index = sband->bitrates[info->status.rates[0].idx].hw_value;
+ 	if ((first_index < 0) || (first_index >= IWL_RATE_COUNT)) {
+ 		IWL_DEBUG_RATE("leave: Rate out of bounds: %d\n", first_index);
+ 		return;
+@@ -502,7 +478,7 @@ static void rs_tx_status(void *priv_rate
+ 			last_index = scale_rate_index;
+ 		} else {
+ 			current_count = priv->retry_rate;
+-			last_index = rs_adjust_next_rate(priv,
++			last_index = iwl3945_rs_next_rate(priv,
+ 							 scale_rate_index);
+ 		}
+ 
+@@ -518,7 +494,7 @@ static void rs_tx_status(void *priv_rate
+ 
+ 		if (retries)
+ 			scale_rate_index =
+-			    rs_adjust_next_rate(priv, scale_rate_index);
++			    iwl3945_rs_next_rate(priv, scale_rate_index);
+ 	}
+ 
+ 
+@@ -630,10 +606,11 @@ static u16 iwl3945_get_adjacent_rate(str
+  * rate table and must reference the driver allocated rate table
+  *
+  */
+-static void rs_get_rate(void *priv_r, struct ieee80211_supported_band *sband,
+-			struct ieee80211_sta *sta, void *priv_sta,
+-			struct sk_buff *skb, struct rate_selection *sel)
++static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
++			void *priv_sta,	struct ieee80211_tx_rate_control *txrc)
+ {
++	struct ieee80211_supported_band *sband = txrc->sband;
++	struct sk_buff *skb = txrc->skb;
+ 	u8 low = IWL_RATE_INVALID;
+ 	u8 high = IWL_RATE_INVALID;
+ 	u16 high_low;
+@@ -649,6 +626,7 @@ static void rs_get_rate(void *priv_r, st
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	u16 fc, rate_mask;
+ 	struct iwl3945_priv *priv = (struct iwl3945_priv *)priv_r;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	IWL_DEBUG_RATE("enter\n");
+@@ -660,7 +638,7 @@ static void rs_get_rate(void *priv_r, st
+ 	    is_multicast_ether_addr(hdr->addr1) ||
+ 	    !sta || !priv_sta) {
+ 		IWL_DEBUG_RATE("leave: No STA priv data to update!\n");
+-		sel->rate_idx = rate_lowest_index(sband, sta);
++		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+ 		return;
+ 	}
+ 
+@@ -793,9 +771,10 @@ static void rs_get_rate(void *priv_r, st
+ 
+ 	rs_sta->last_txrate_idx = index;
+ 	if (sband->band == IEEE80211_BAND_5GHZ)
+-		sel->rate_idx = rs_sta->last_txrate_idx - IWL_FIRST_OFDM_RATE;
++		info->control.rates[0].idx = rs_sta->last_txrate_idx -
++				IWL_FIRST_OFDM_RATE;
+ 	else
+-		sel->rate_idx = rs_sta->last_txrate_idx;
++		info->control.rates[0].idx = rs_sta->last_txrate_idx;
+ 
+ 	IWL_DEBUG_RATE("leave: %d\n", index);
+ }
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-3945.c	2008-10-15 08:34:19.000000000 +0200
+@@ -261,6 +261,35 @@ static inline const char *iwl3945_get_tx
+ }
+ #endif
+ 
++/*
++ * get ieee prev rate from rate scale table.
++ * for A and B mode we need to overright prev
++ * value
++ */
++int iwl3945_rs_next_rate(struct iwl3945_priv *priv, int rate)
++{
++	int next_rate = iwl3945_get_prev_ieee_rate(rate);
++
++	switch (priv->band) {
++	case IEEE80211_BAND_5GHZ:
++		if (rate == IWL_RATE_12M_INDEX)
++			next_rate = IWL_RATE_9M_INDEX;
++		else if (rate == IWL_RATE_6M_INDEX)
++			next_rate = IWL_RATE_6M_INDEX;
++		break;
++/* XXX cannot be invoked in current mac80211 so not a regression
++	case MODE_IEEE80211B:
++		if (rate == IWL_RATE_11M_INDEX_TABLE)
++			next_rate = IWL_RATE_5M_INDEX_TABLE;
++		break;
++ */
++	default:
++		break;
++	}
++
++	return next_rate;
++}
++
+ 
+ /**
+  * iwl3945_tx_queue_reclaim - Reclaim Tx queue entries already Tx'd
+@@ -308,6 +337,7 @@ static void iwl3945_rx_reply_tx(struct i
+ 	struct iwl3945_tx_resp *tx_resp = (void *)&pkt->u.raw[0];
+ 	u32  status = le32_to_cpu(tx_resp->status);
+ 	int rate_idx;
++	int fail, i;
+ 
+ 	if ((index >= txq->q.n_bd) || (iwl3945_x2_queue_used(&txq->q, index) == 0)) {
+ 		IWL_ERROR("Read index for DMA queue txq_id (%d) index %d "
+@@ -318,9 +348,33 @@ static void iwl3945_rx_reply_tx(struct i
+ 	}
+ 
+ 	info = IEEE80211_SKB_CB(txq->txb[txq->q.read_ptr].skb[0]);
+-	memset(&info->status, 0, sizeof(info->status));
++	ieee80211_tx_info_clear_status(info);
++
++	/* Fill the MRR chain with some info about on-chip retransmissions */
++	rate_idx = iwl3945_hwrate_to_plcp_idx(tx_resp->rate);
++	if (info->band == IEEE80211_BAND_5GHZ)
++		rate_idx -= IWL_FIRST_OFDM_RATE;
++
++	info->status.rates[0].count = tx_resp->failure_frame + 1;
++	fail = tx_resp->failure_frame;
++	for(i = 0; i < 4; i++) {
++		int next = iwl3945_rs_next_rate(priv, rate_idx);
++
++		info->status.rates[i].idx = rate_idx;
++
++		if ((rate_idx == next) || (i == 3)) {
++			info->status.rates[i].count = fail;
++			break;
++		}
++
++		info->status.rates[i].count = priv->retry_rate;
++		fail -= priv->retry_rate;
++		rate_idx = next;
++		if (fail <= 0)
++			break;
++	}
++	info->status.rates[i].count++; /* add final attempt */
+ 
+-	info->status.retry_count = tx_resp->failure_frame;
+ 	/* tx_status->rts_retry_count = tx_resp->failure_rts; */
+ 	info->flags |= ((status & TX_STATUS_MSK) == TX_STATUS_SUCCESS) ?
+ 				IEEE80211_TX_STAT_ACK : 0;
+@@ -329,10 +383,6 @@ static void iwl3945_rx_reply_tx(struct i
+ 			txq_id, iwl3945_get_tx_fail_reason(status), status,
+ 			tx_resp->rate, tx_resp->failure_frame);
+ 
+-	rate_idx = iwl3945_hwrate_to_plcp_idx(tx_resp->rate);
+-	if (info->band == IEEE80211_BAND_5GHZ)
+-		rate_idx -= IWL_FIRST_OFDM_RATE;
+-	info->tx_rate_idx = rate_idx;
+ 	IWL_DEBUG_TX_REPLY("Tx queue reclaim %d\n", index);
+ 	iwl3945_tx_queue_reclaim(priv, txq_id, index);
+ 
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945.h	2008-10-15 08:33:46.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-3945.h	2008-10-15 08:34:19.000000000 +0200
+@@ -954,6 +954,8 @@ static inline int is_channel_ibss(const 
+ extern const struct iwl3945_channel_info *iwl3945_get_channel_info(
+ 	const struct iwl3945_priv *priv, enum ieee80211_band band, u16 channel);
+ 
++extern int iwl3945_rs_next_rate(struct iwl3945_priv *priv, int rate);
++
+ /* Requires full declaration of iwl3945_priv before including */
+ #include "iwl-3945-io.h"
+ 
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2008-10-15 08:33:46.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-core.c	2008-10-15 08:34:19.000000000 +0200
+@@ -88,26 +88,27 @@ EXPORT_SYMBOL(iwl_rates);
+  * translate ucode response to mac80211 tx status control values
+  */
+ void iwl_hwrate_to_tx_control(struct iwl_priv *priv, u32 rate_n_flags,
+-				  struct ieee80211_tx_info *control)
++				  struct ieee80211_tx_info *info)
+ {
+ 	int rate_index;
++	struct ieee80211_tx_rate *r = &info->control.rates[0];
+ 
+-	control->antenna_sel_tx =
++	info->antenna_sel_tx =
+ 		((rate_n_flags & RATE_MCS_ANT_ABC_MSK) >> RATE_MCS_ANT_POS);
+ 	if (rate_n_flags & RATE_MCS_HT_MSK)
+-		control->flags |= IEEE80211_TX_CTL_OFDM_HT;
++		r->flags |= IEEE80211_TX_RC_MCS;
+ 	if (rate_n_flags & RATE_MCS_GF_MSK)
+-		control->flags |= IEEE80211_TX_CTL_GREEN_FIELD;
++		r->flags |= IEEE80211_TX_RC_GREEN_FIELD;
+ 	if (rate_n_flags & RATE_MCS_FAT_MSK)
+-		control->flags |= IEEE80211_TX_CTL_40_MHZ_WIDTH;
++		r->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
+ 	if (rate_n_flags & RATE_MCS_DUP_MSK)
+-		control->flags |= IEEE80211_TX_CTL_DUP_DATA;
++		r->flags |= IEEE80211_TX_RC_DUP_DATA;
+ 	if (rate_n_flags & RATE_MCS_SGI_MSK)
+-		control->flags |= IEEE80211_TX_CTL_SHORT_GI;
++		r->flags |= IEEE80211_TX_RC_SHORT_GI;
+ 	rate_index = iwl_hwrate_to_plcp_idx(rate_n_flags);
+-	if (control->band == IEEE80211_BAND_5GHZ)
++	if (info->band == IEEE80211_BAND_5GHZ)
+ 		rate_index -= IWL_FIRST_OFDM_RATE;
+-	control->tx_rate_idx = rate_index;
++	r->idx = rate_index;
+ }
+ EXPORT_SYMBOL(iwl_hwrate_to_tx_control);
+ 
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-15 08:33:46.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-15 08:34:19.000000000 +0200
+@@ -2397,6 +2397,7 @@ static void iwl3945_build_tx_cmd_basic(s
+ {
+ 	__le16 fc = hdr->frame_control;
+ 	__le32 tx_flags = cmd->cmd.tx.tx_flags;
++	u8 rc_flags = info->control.rates[0].flags;
+ 
+ 	cmd->cmd.tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+@@ -2423,10 +2424,10 @@ static void iwl3945_build_tx_cmd_basic(s
+ 		tx_flags |= TX_CMD_FLG_SEQ_CTL_MSK;
+ 	}
+ 
+-	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) {
++	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		tx_flags |= TX_CMD_FLG_RTS_MSK;
+ 		tx_flags &= ~TX_CMD_FLG_CTS_MSK;
+-	} else if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT) {
++	} else if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+ 		tx_flags &= ~TX_CMD_FLG_RTS_MSK;
+ 		tx_flags |= TX_CMD_FLG_CTS_MSK;
+ 	}
+--- everything.orig/drivers/net/wireless/mac80211_hwsim.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/mac80211_hwsim.c	2008-10-15 08:34:19.000000000 +0200
+@@ -209,7 +209,7 @@ static bool mac80211_hwsim_tx_frame(stru
+ 	/* TODO: set mactime */
+ 	rx_status.freq = data->channel->center_freq;
+ 	rx_status.band = data->channel->band;
+-	rx_status.rate_idx = info->tx_rate_idx;
++	rx_status.rate_idx = info->control.rates[0].idx;
+ 	/* TODO: simulate signal strength (and optional packet drop) */
+ 
+ 	/* Copy skb to all enabled radios that are on the current frequency */
+@@ -269,13 +269,9 @@ static int mac80211_hwsim_tx(struct ieee
+ 	if (txi->control.sta)
+ 		hwsim_check_sta_magic(txi->control.sta);
+ 
+-	memset(&txi->status, 0, sizeof(txi->status));
+-	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-		if (ack)
+-			txi->flags |= IEEE80211_TX_STAT_ACK;
+-		else
+-			txi->status.excessive_retries = 1;
+-	}
++	ieee80211_tx_info_clear_status(txi);
++	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
++		txi->flags |= IEEE80211_TX_STAT_ACK;
+ 	ieee80211_tx_status_irqsafe(hw, skb);
+ 	return NETDEV_TX_OK;
+ }
+--- everything.orig/drivers/net/wireless/rtl8180_dev.c	2008-10-15 08:33:46.000000000 +0200
++++ everything/drivers/net/wireless/rtl8180_dev.c	2008-10-15 08:34:19.000000000 +0200
+@@ -182,15 +182,13 @@ static void rtl8180_handle_tx(struct iee
+ 				 skb->len, PCI_DMA_TODEVICE);
+ 
+ 		info = IEEE80211_SKB_CB(skb);
+-		memset(&info->status, 0, sizeof(info->status));
++		ieee80211_tx_info_clear_status(info);
+ 
+-		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-			if (flags & RTL818X_TX_DESC_FLAG_TX_OK)
+-				info->flags |= IEEE80211_TX_STAT_ACK;
+-			else
+-				info->status.excessive_retries = 1;
+-		}
+-		info->status.retry_count = flags & 0xFF;
++		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
++		    (flags & RTL818X_TX_DESC_FLAG_TX_OK))
++			info->flags |= IEEE80211_TX_STAT_ACK;
++
++		info->status.rates[0].count = (flags & 0xFF) + 1;
+ 
+ 		ieee80211_tx_status_irqsafe(dev, skb);
+ 		if (ring->entries - skb_queue_len(&ring->queue) == 2)
+@@ -243,6 +241,7 @@ static int rtl8180_tx(struct ieee80211_h
+ 	unsigned int idx, prio;
+ 	dma_addr_t mapping;
+ 	u32 tx_flags;
++	u8 rc_flags;
+ 	u16 plcp_len = 0;
+ 	__le16 rts_duration = 0;
+ 
+@@ -261,15 +260,16 @@ static int rtl8180_tx(struct ieee80211_h
+ 		tx_flags |= RTL818X_TX_DESC_FLAG_DMA |
+ 			    RTL818X_TX_DESC_FLAG_NO_ENC;
+ 
+-	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) {
++	rc_flags = info->control.rates[0].flags;
++	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		tx_flags |= RTL818X_TX_DESC_FLAG_RTS;
+ 		tx_flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
+-	} else if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT) {
++	} else if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+ 		tx_flags |= RTL818X_TX_DESC_FLAG_CTS;
+ 		tx_flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
+ 	}
+ 
+-	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS)
++	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS)
+ 		rts_duration = ieee80211_rts_duration(dev, priv->vif, skb->len,
+ 						      info);
+ 
+@@ -292,9 +292,9 @@ static int rtl8180_tx(struct ieee80211_h
+ 	entry->plcp_len = cpu_to_le16(plcp_len);
+ 	entry->tx_buf = cpu_to_le32(mapping);
+ 	entry->frame_len = cpu_to_le32(skb->len);
+-	entry->flags2 = info->control.retries[0].rate_idx >= 0 ?
++	entry->flags2 = info->control.rates[1].idx >= 0 ?
+ 		ieee80211_get_alt_retry_rate(dev, info, 0)->bitrate << 4 : 0;
+-	entry->retry_limit = info->control.retry_limit;
++	entry->retry_limit = info->control.rates[0].count;
+ 	entry->flags = cpu_to_le32(tx_flags);
+ 	__skb_queue_tail(&ring->queue, skb);
+ 	if (ring->entries - skb_queue_len(&ring->queue) < 2)
+@@ -856,7 +856,7 @@ static int __devinit rtl8180_probe(struc
+ 	priv = dev->priv;
+ 	priv->pdev = pdev;
+ 
+-	dev->max_altrates = 1;
++	dev->max_rates = 2;
+ 	SET_IEEE80211_DEV(dev, &pdev->dev);
+ 	pci_set_drvdata(pdev, dev);
+ 
+--- everything.orig/drivers/net/wireless/rtl8187_dev.c	2008-10-15 08:34:18.000000000 +0200
++++ everything/drivers/net/wireless/rtl8187_dev.c	2008-10-15 08:34:19.000000000 +0200
+@@ -160,13 +160,13 @@ static void rtl8187_tx_cb(struct urb *ur
+ {
+ 	struct sk_buff *skb = (struct sk_buff *)urb->context;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hw *hw = info->driver_data[0];
++	struct ieee80211_hw *hw = info->rate_driver_data[0];
+ 	struct rtl8187_priv *priv = hw->priv;
+ 
+-	usb_free_urb(info->driver_data[1]);
++	usb_free_urb(info->rate_driver_data[1]);
+ 	skb_pull(skb, priv->is_rtl8187b ? sizeof(struct rtl8187b_tx_hdr) :
+ 					  sizeof(struct rtl8187_tx_hdr));
+-	memset(&info->status, 0, sizeof(info->status));
++	ieee80211_tx_info_clear_status(info);
+ 	info->flags |= IEEE80211_TX_STAT_ACK;
+ 	ieee80211_tx_status_irqsafe(hw, skb);
+ }
+@@ -194,12 +194,12 @@ static int rtl8187_tx(struct ieee80211_h
+ 	flags |= ieee80211_get_tx_rate(dev, info)->hw_value << 24;
+ 	if (ieee80211_has_morefrags(((struct ieee80211_hdr *)skb->data)->frame_control))
+ 		flags |= RTL818X_TX_DESC_FLAG_MOREFRAG;
+-	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) {
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		flags |= RTL818X_TX_DESC_FLAG_RTS;
+ 		flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
+ 		rts_dur = ieee80211_rts_duration(dev, priv->vif,
+ 						 skb->len, info);
+-	} else if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT) {
++	} else if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+ 		flags |= RTL818X_TX_DESC_FLAG_CTS;
+ 		flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
+ 	}
+@@ -210,7 +210,7 @@ static int rtl8187_tx(struct ieee80211_h
+ 		hdr->flags = cpu_to_le32(flags);
+ 		hdr->len = 0;
+ 		hdr->rts_duration = rts_dur;
+-		hdr->retry = cpu_to_le32(info->control.retry_limit << 8);
++		hdr->retry = cpu_to_le32((info->control.rates[0].count - 1) << 8);
+ 		buf = hdr;
+ 
+ 		ep = 2;
+@@ -228,7 +228,7 @@ static int rtl8187_tx(struct ieee80211_h
+ 		memset(hdr, 0, sizeof(*hdr));
+ 		hdr->flags = cpu_to_le32(flags);
+ 		hdr->rts_duration = rts_dur;
+-		hdr->retry = cpu_to_le32(info->control.retry_limit << 8);
++		hdr->retry = cpu_to_le32((info->control.rates[0].count - 1) << 8);
+ 		hdr->tx_duration =
+ 			ieee80211_generic_frame_duration(dev, priv->vif,
+ 							 skb->len, txrate);
+@@ -240,8 +240,8 @@ static int rtl8187_tx(struct ieee80211_h
+ 			ep = epmap[skb_get_queue_mapping(skb)];
+ 	}
+ 
+-	info->driver_data[0] = dev;
+-	info->driver_data[1] = urb;
++	info->rate_driver_data[0] = dev;
++	info->rate_driver_data[1] = urb;
+ 
+ 	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, ep),
+ 			  buf, skb->len, rtl8187_tx_cb, skb);
+--- everything.orig/drivers/net/wireless/p54/p54common.c	2008-10-15 08:34:18.000000000 +0200
++++ everything/drivers/net/wireless/p54/p54common.c	2008-10-15 08:34:19.000000000 +0200
+@@ -556,7 +556,7 @@ static void p54_rx_frame_sent(struct iee
+ 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+ 	while (entry != (struct sk_buff *)&priv->tx_queue) {
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
+-		range = (void *)info->driver_data;
++		range = (void *)info->rate_driver_data;
+ 		if (range->start_addr == addr) {
+ 			struct p54_control_hdr *entry_hdr;
+ 			struct p54_tx_control_allocdata *entry_data;
+@@ -567,7 +567,7 @@ static void p54_rx_frame_sent(struct iee
+ 				struct memrecord *mr;
+ 
+ 				ni = IEEE80211_SKB_CB(entry->next);
+-				mr = (struct memrecord *)ni->driver_data;
++				mr = (struct memrecord *)ni->rate_driver_data;
+ 				freed = mr->start_addr - last_addr;
+ 			} else
+ 				freed = priv->rx_end - last_addr;
+@@ -576,7 +576,7 @@ static void p54_rx_frame_sent(struct iee
+ 			__skb_unlink(entry, &priv->tx_queue);
+ 			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+-			memset(&info->status, 0, sizeof(info->status));
++			ieee80211_tx_info_clear_status(info);
+ 			entry_hdr = (struct p54_control_hdr *) entry->data;
+ 			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
+ 			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
+@@ -586,10 +586,8 @@ static void p54_rx_frame_sent(struct iee
+ 			if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+ 				if (!(payload->status & 0x01))
+ 					info->flags |= IEEE80211_TX_STAT_ACK;
+-				else
+-					info->status.excessive_retries = 1;
+ 			}
+-			info->status.retry_count = payload->retries - 1;
++			info->status.rates[0].count = payload->retries;
+ 			info->status.ack_signal = p54_rssi_to_dbm(dev,
+ 					le16_to_cpu(payload->ack_rssi));
+ 			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
+@@ -707,7 +705,7 @@ static void p54_assign_address(struct ie
+ 	while (left--) {
+ 		u32 hole_size;
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
+-		struct memrecord *range = (void *)info->driver_data;
++		struct memrecord *range = (void *)info->rate_driver_data;
+ 		hole_size = range->start_addr - last_addr;
+ 		if (!target_skb && hole_size >= len) {
+ 			target_skb = entry->prev;
+@@ -723,7 +721,7 @@ static void p54_assign_address(struct ie
+ 		largest_hole = max(largest_hole, priv->rx_end - last_addr - len);
+ 		if (!skb_queue_empty(&priv->tx_queue)) {
+ 			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(target_skb);
+-			struct memrecord *range = (void *)info->driver_data;
++			struct memrecord *range = (void *)info->rate_driver_data;
+ 			target_addr = range->end_addr;
+ 		}
+ 	} else
+@@ -731,7 +729,7 @@ static void p54_assign_address(struct ie
+ 
+ 	if (skb) {
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-		struct memrecord *range = (void *)info->driver_data;
++		struct memrecord *range = (void *)info->rate_driver_data;
+ 		range->start_addr = target_addr;
+ 		range->end_addr = target_addr + len;
+ 		__skb_queue_after(&priv->tx_queue, target_skb, skb);
+@@ -814,6 +812,7 @@ static int p54_tx(struct ieee80211_hw *d
+ 	size_t padding, len;
+ 	u8 rate;
+ 	u8 cts_rate = 0x20;
++	u8 rc_flags;
+ 
+ 	current_queue = &priv->tx_stats[skb_get_queue_mapping(skb) + 4];
+ 	if (unlikely(current_queue->len > current_queue->limit))
+@@ -836,18 +835,19 @@ static int p54_tx(struct ieee80211_hw *d
+ 		hdr->magic1 = cpu_to_le16(0x0010);
+ 	hdr->len = cpu_to_le16(len);
+ 	hdr->type = (info->flags & IEEE80211_TX_CTL_NO_ACK) ? 0 : cpu_to_le16(1);
+-	hdr->retry1 = hdr->retry2 = info->control.retry_limit;
++	hdr->retry1 = hdr->retry2 = info->control.rates[0].count;
+ 
+ 	/* TODO: add support for alternate retry TX rates */
+ 	rate = ieee80211_get_tx_rate(dev, info)->hw_value;
+-	if (info->flags & IEEE80211_TX_CTL_SHORT_PREAMBLE) {
++	rc_flags = info->control.rates[0].flags;
++	if (rc_flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE) {
+ 		rate |= 0x10;
+ 		cts_rate |= 0x10;
+ 	}
+-	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) {
++	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		rate |= 0x40;
+ 		cts_rate |= ieee80211_get_rts_cts_rate(dev, info)->hw_value;
+-	} else if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT) {
++	} else if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+ 		rate |= 0x20;
+ 		cts_rate |= ieee80211_get_rts_cts_rate(dev, info)->hw_value;
+ 	}
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-4965.c	2008-10-15 08:34:19.000000000 +0200
+@@ -619,10 +619,10 @@ static void iwl4965_gain_computation(str
+ static void iwl4965_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
+ 			__le32 *tx_flags)
+ {
+-	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) {
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		*tx_flags |= TX_CMD_FLG_RTS_MSK;
+ 		*tx_flags &= ~TX_CMD_FLG_CTS_MSK;
+-	} else if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT) {
++	} else if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+ 		*tx_flags &= ~TX_CMD_FLG_RTS_MSK;
+ 		*tx_flags |= TX_CMD_FLG_CTS_MSK;
+ 	}
+@@ -2070,7 +2070,7 @@ static int iwl4965_tx_status_reply_tx(st
+ 				   agg->frame_count, agg->start_idx, idx);
+ 
+ 		info = IEEE80211_SKB_CB(priv->txq[txq_id].txb[idx].skb[0]);
+-		info->status.retry_count = tx_resp->failure_frame;
++		info->status.rates[0].count = tx_resp->failure_frame + 1;
+ 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+ 		info->flags |= iwl_is_tx_success(status)?
+ 			IEEE80211_TX_STAT_ACK : 0;
+@@ -2227,7 +2227,7 @@ static void iwl4965_rx_reply_tx(struct i
+ 			iwl_txq_check_empty(priv, sta_id, tid, txq_id);
+ 		}
+ 	} else {
+-		info->status.retry_count = tx_resp->failure_frame;
++		info->status.rates[0].count = tx_resp->failure_frame + 1;
+ 		info->flags |=
+ 			iwl_is_tx_success(status) ? IEEE80211_TX_STAT_ACK : 0;
+ 		iwl_hwrate_to_tx_control(priv,
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-5000.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-5000.c	2008-10-15 08:34:19.000000000 +0200
+@@ -390,8 +390,8 @@ static void iwl5000_chain_noise_reset(st
+ static void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
+ 			__le32 *tx_flags)
+ {
+-	if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
+-	    (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT))
++	if ((info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
++	    (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT))
+ 		*tx_flags |= TX_CMD_FLG_RTS_CTS_MSK;
+ 	else
+ 		*tx_flags &= ~TX_CMD_FLG_RTS_CTS_MSK;
+@@ -1154,7 +1154,7 @@ static int iwl5000_tx_status_reply_tx(st
+ 				   agg->frame_count, agg->start_idx, idx);
+ 
+ 		info = IEEE80211_SKB_CB(priv->txq[txq_id].txb[idx].skb[0]);
+-		info->status.retry_count = tx_resp->failure_frame;
++		info->status.rates[0].count = tx_resp->failure_frame + 1;
+ 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+ 		info->flags |= iwl_is_tx_success(status)?
+ 			IEEE80211_TX_STAT_ACK : 0;
+@@ -1307,7 +1307,7 @@ static void iwl5000_rx_reply_tx(struct i
+ 			iwl_txq_check_empty(priv, sta_id, tid, txq_id);
+ 		}
+ 	} else {
+-		info->status.retry_count = tx_resp->failure_frame;
++		info->status.rates[0].count = tx_resp->failure_frame + 1;
+ 		info->flags =
+ 			iwl_is_tx_success(status) ? IEEE80211_TX_STAT_ACK : 0;
+ 		iwl_hwrate_to_tx_control(priv,
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2008-10-15 08:34:19.000000000 +0200
+@@ -800,7 +800,7 @@ static void rs_tx_status(void *priv_r, s
+ 	    !(info->flags & IEEE80211_TX_STAT_AMPDU))
+ 		return;
+ 
+-	retries = info->status.retry_count;
++	retries = info->status.rates[0].count - 1;
+ 
+ 	if (retries > 15)
+ 		retries = 15;
+@@ -832,20 +832,15 @@ static void rs_tx_status(void *priv_r, s
+ 	if (priv->band == IEEE80211_BAND_5GHZ)
+ 		rs_index -= IWL_FIRST_OFDM_RATE;
+ 
+-	if ((info->tx_rate_idx < 0) ||
+-	    (tbl_type.is_SGI ^
+-		!!(info->flags & IEEE80211_TX_CTL_SHORT_GI)) ||
+-	    (tbl_type.is_fat ^
+-		!!(info->flags & IEEE80211_TX_CTL_40_MHZ_WIDTH)) ||
+-	    (tbl_type.is_dup ^
+-		!!(info->flags & IEEE80211_TX_CTL_DUP_DATA)) ||
+-	    (tbl_type.ant_type ^ info->antenna_sel_tx) ||
+-	    (!!(tx_rate & RATE_MCS_HT_MSK) ^
+-		!!(info->flags & IEEE80211_TX_CTL_OFDM_HT)) ||
+-	    (!!(tx_rate & RATE_MCS_GF_MSK) ^
+-		!!(info->flags & IEEE80211_TX_CTL_GREEN_FIELD)) ||
++	if ((info->status.rates[0].idx < 0) ||
++	    (tbl_type.is_SGI != !!(info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)) ||
++	    (tbl_type.is_fat != !!(info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)) ||
++	    (tbl_type.is_dup != !!(info->status.rates[0].flags & IEEE80211_TX_RC_DUP_DATA)) ||
++	    (tbl_type.ant_type != info->antenna_sel_tx) ||
++	    (!!(tx_rate & RATE_MCS_HT_MSK) != !!(info->status.rates[0].flags & IEEE80211_TX_RC_MCS)) ||
++	    (!!(tx_rate & RATE_MCS_GF_MSK) != !!(info->status.rates[0].flags & IEEE80211_TX_RC_GREEN_FIELD)) ||
+ 	    (hw->wiphy->bands[priv->band]->bitrates[rs_index].bitrate !=
+-	     hw->wiphy->bands[info->band]->bitrates[info->tx_rate_idx].bitrate)) {
++	     hw->wiphy->bands[info->band]->bitrates[info->status.rates[0].idx].bitrate)) {
+ 		IWL_DEBUG_RATE("initial rate does not match 0x%x\n", tx_rate);
+ 		goto out;
+ 	}
+@@ -2103,15 +2098,17 @@ static void rs_initialize_lq(struct iwl_
+ 	return;
+ }
+ 
+-static void rs_get_rate(void *priv_r, struct ieee80211_supported_band *sband,
+-			struct ieee80211_sta *sta, void *priv_sta,
+-			struct sk_buff *skb, struct rate_selection *sel)
++static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
++			struct ieee80211_tx_rate_control *txrc)
+ {
+ 
+ 	int i;
++	struct sk_buff *skb = txrc->skb;
++	struct ieee80211_supported_band *sband = txrc->sband;
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+ 	struct ieee80211_conf *conf = &priv->hw->conf;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	__le16 fc;
+ 	struct iwl_lq_sta *lq_sta;
+ 
+@@ -2122,7 +2119,7 @@ static void rs_get_rate(void *priv_r, st
+ 	fc = hdr->frame_control;
+ 	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
+ 	    !sta || !priv_sta) {
+-		sel->rate_idx = rate_lowest_index(sband, sta);
++		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+ 		return;
+ 	}
+ 
+@@ -2149,13 +2146,13 @@ static void rs_get_rate(void *priv_r, st
+ 	}
+ 
+ 	if ((i < 0) || (i > IWL_RATE_COUNT)) {
+-		sel->rate_idx = rate_lowest_index(sband, sta);
++		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+ 		return;
+ 	}
+ 
+ 	if (sband->band == IEEE80211_BAND_5GHZ)
+ 		i -= IWL_FIRST_OFDM_RATE;
+-	sel->rate_idx = i;
++	info->control.rates[0].idx = i;
+ }
+ 
+ static void *rs_alloc_sta(void *priv_rate, struct ieee80211_sta *sta,
+--- everything.orig/drivers/net/wireless/libertas_tf/main.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/libertas_tf/main.c	2008-10-15 08:34:19.000000000 +0200
+@@ -592,14 +592,14 @@ EXPORT_SYMBOL_GPL(lbtf_remove_card);
+ void lbtf_send_tx_feedback(struct lbtf_private *priv, u8 retrycnt, u8 fail)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(priv->tx_skb);
+-	memset(&info->status, 0, sizeof(info->status));
++
++	ieee80211_tx_info_clear_status(info);
+ 	/*
+ 	 * Commented out, otherwise we never go beyond 1Mbit/s using mac80211
+ 	 * default pid rc algorithm.
+ 	 *
+ 	 * info->status.retry_count = MRVL_DEFAULT_RETRIES - retrycnt;
+ 	 */
+-	info->status.excessive_retries = fail ? 1 : 0;
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) && !fail)
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+ 	skb_pull(priv->tx_skb, sizeof(struct txpd));
+--- everything.orig/drivers/net/wireless/zd1211rw/zd_usb.c	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/zd1211rw/zd_usb.c	2008-10-15 08:34:19.000000000 +0200
+@@ -907,7 +907,7 @@ free_urb:
+ 	 * it might be freed by zd_mac_tx_to_dev or mac80211)
+ 	 */
+ 	info = IEEE80211_SKB_CB(skb);
+-	usb = &zd_hw_mac(info->driver_data[0])->chip.usb;
++	usb = &zd_hw_mac(info->rate_driver_data[0])->chip.usb;
+ 	zd_mac_tx_to_dev(skb, urb->status);
+ 	free_tx_urb(usb, urb);
+ 	tx_dec_submitted_urbs(usb);
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00queue.h	2008-10-15 08:33:47.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00queue.h	2008-10-15 08:34:19.000000000 +0200
+@@ -104,6 +104,8 @@ enum skb_frame_desc_flags {
+  *
+  * @flags: Frame flags, see &enum skb_frame_desc_flags.
+  * @desc_len: Length of the frame descriptor.
++ * @tx_rate_idx: the index of the TX rate, used for TX status reporting
++ * @tx_rate_flags: the TX rate flags, used for TX status reporting
+  * @desc: Pointer to descriptor part of the frame.
+  *	Note that this pointer could point to something outside
+  *	of the scope of the skb->data pointer.
+@@ -113,9 +115,12 @@ enum skb_frame_desc_flags {
+  * @entry: The entry to which this sk buffer belongs.
+  */
+ struct skb_frame_desc {
+-	unsigned int flags;
++	u8 flags;
++
++	u8 desc_len;
++	u8 tx_rate_idx;
++	u8 tx_rate_flags;
+ 
+-	unsigned int desc_len;
+ 	void *desc;
+ 
+ 	__le32 iv;
 
 
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
