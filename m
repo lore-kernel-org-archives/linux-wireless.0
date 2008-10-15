@@ -1,113 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fallback.mail.ru ([194.67.57.14]:17279 "EHLO mx4.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750699AbYJBEDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 00:03:41 -0400
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: Dave <kilroyd@googlemail.com>
-Subject: Re: Agere Hermes source-code: copyright situation
-Date: Thu, 2 Oct 2008 06:37:18 +0400
-Cc: Greg KH <greg@kroah.com>, TJ <linux@tjworld.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Casual J. Programmer" <casualprogrammer@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	Alexander Shirshikov <alexander.shirshikov@gmail.com>
-References: <200809290949.35749.arvidjaar@mail.ru> <20081001200039.GA29874@kroah.com> <48E400FA.2090305@gmail.com>
-In-Reply-To: <48E400FA.2090305@gmail.com>
+Received: from fmmailgate01.web.de ([217.72.192.221]:37616 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbYJOCBl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2008 22:01:41 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/6] p54: p54: refactor p54_rx_frame_sent
+Date: Wed, 15 Oct 2008 04:05:51 +0200
+Cc: Pavel Roskin <proski@gnu.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1698025.PZ9SIvic6A";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200810020637.27321.arvidjaar@mail.ru> (sfid-20081002_060353_717445_221A1995)
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810150405.51476.chunkeey@web.de> (sfid-20081015_040143_761622_6117FC8B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1698025.PZ9SIvic6A
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+the long names and the nesting in p54_rx_frame_sent really
+became a "line longer than 80 characters" problem.
 
-TJ you can answer me using arvidjaar (at) newmail dot ru. Hopefully
-one of them works. Re WPA2 - there is no information how to setup
-CCMP/AES (even if firmware supports it); so no WPA2.
-
-On Thursday 02 October 2008, Dave wrote:
-> Greg KH wrote:
-> > On Wed, Oct 01, 2008 at 05:40:29PM +0100, TJ wrote:
-> >> On Wed, 2008-10-01 at 14:13 +0400, Andrey Borzenkov wrote:
-> >>>On Wednesday 01 October 2008, Greg KH wrote:
-> >>>> On Mon, Sep 29, 2008 at 09:49:34AM +0400, Andrey Borzenkov wrote:
-> >>>>> I have here driver that can be built for two different types of
-> >>>>> hardware from basically the same sources (this is port of old Agere
-> >>>>> drivers for Hermes-I/Hermes-II chipsets).
-> >>>>=20
-> >>>> Cool, do you have a link to the code, I'd be glad to add it to
-> >>>> drivers/staging/ if it's not in a fully-mergable state yet to get wi=
-der
-> >>>> users for it.
-> >>>
-> >>> You can look at it here: http://arvidjaar.newmail.ru/wlags49.tar.bz
-> >>>
-> >>> I doubt that it is suitable for inclusion at current state if ever.
-> >>> This is taken directly from Agere 2.4 sources; the only parts that we=
-re
-> >>> touched are kernel glue and wireless extensions interface.
-> >>>
-> >>> And it is not GPL'ed, of course. I attach E-Mail I received a while
-> >>> back with answere from Agere legal department.
-> >>
-> >> I'm attaching the original email I sent to Agere and their response for
-> >> the record, hoping it helps clarify the legal position.
-> >=20
-> > Very nice, thanks for forwarding this on.
-> >=20
-> > As the license is BSD, that means we can place it in the kernel tree.
-> > Do you all mind if I add it to the drivers/staging/ directory so you can
-> > work on cleaning it up within the main kernel tree infrastructure?
->
-
-I do not mind but it is likely makes no sense for H-I now; and
-I do not own H-II myself so cannot work on it. If we are focusing on
-H-2/2.5, it would make more sense to make similar modifications to
-7.22 driver set from Agere to avoid overlap with Orinoco.
-=20
-> (cc'ing linux-wireless)
->
-> FYI, Hermes I hardware is already covered by the orinoco driver. WPA and =
-firmware download functionality (which is supported by the Agere driver, bu=
-t not orinoco in 2.6.27) is already in the wireless queue for 2.6.28.
->=20
-
-Yes, I discovered this yesterday as well. Thank you!
-
-How are you going to distribute firmware? You will need 9.x firmware from
-original Agere driver; do I understand it correctly that it will come
-with orinoco in binary form?
-
-> This leaves Hermes-II (and USB?) hardware which orinoco does not support,=
- but could if someone had access to a card for development.
->=20
-
-As I initially wrote driver for internal consumption my mods supports
-PCMCIA only.
-
-Unfortunately I do not own Hermes-II device myself. I was asked recently
-by Alexander who is owing such device and modification of Agere sources was
-pretty trivial. I Cc to him; Aexander are you interested in aiding of
-H-II driver development for mainstream?
-
---nextPart1698025.PZ9SIvic6A
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkjkM+EACgkQR6LMutpd94wE/QCguH9MsaXikBy7BhVS8ALHFxic
-IDEAn3hFFUwPTSy0IfuX+fe3nCvJKYZ3
-=lswN
------END PGP SIGNATURE-----
-
---nextPart1698025.PZ9SIvic6A--
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-10-14 22:22:12.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.c	2008-10-14 22:23:19.000000000 +0200
+@@ -549,73 +549,77 @@ static void p54_rx_frame_sent(struct iee
+ 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+ 	while (entry != (struct sk_buff *)&priv->tx_queue) {
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
+-		range = (void *)info->rate_driver_data;
+-		if (range->start_addr == addr) {
+-			struct p54_control_hdr *entry_hdr;
+-			struct p54_tx_control_allocdata *entry_data;
+-			int pad = 0;
+-
+-			if (entry->next != (struct sk_buff *)&priv->tx_queue) {
+-				struct ieee80211_tx_info *ni;
+-				struct memrecord *mr;
+-
+-				ni = IEEE80211_SKB_CB(entry->next);
+-				mr = (struct memrecord *)ni->rate_driver_data;
+-				freed = mr->start_addr - last_addr;
+-			} else
+-				freed = priv->rx_end - last_addr;
++		struct p54_control_hdr *entry_hdr;
++		struct p54_tx_control_allocdata *entry_data;
++		int pad = 0;
+ 
++		range = (void *)info->rate_driver_data;
++		if (range->start_addr != addr) {
+ 			last_addr = range->end_addr;
+-			__skb_unlink(entry, &priv->tx_queue);
+-			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
++			entry = entry->next;
++			continue;
++		}
++
++		if (entry->next != (struct sk_buff *)&priv->tx_queue) {
++			struct ieee80211_tx_info *ni;
++			struct memrecord *mr;
++
++			ni = IEEE80211_SKB_CB(entry->next);
++			mr = (struct memrecord *)ni->rate_driver_data;
++			freed = mr->start_addr - last_addr;
++		} else
++			freed = priv->rx_end - last_addr;
++
++		last_addr = range->end_addr;
++		__skb_unlink(entry, &priv->tx_queue);
++		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+-			/*
+-			 * Clear manually, ieee80211_tx_info_clear_status would
+-			 * clear the counts too and we need them.
+-			 */
+-			memset(&info->status.ampdu_ack_len, 0,
+-			       sizeof(struct ieee80211_tx_info) -
+-			       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
+-			BUILD_BUG_ON(offsetof(struct ieee80211_tx_info,
+-			                      status.ampdu_ack_len) != 23);
+-
+-			entry_hdr = (struct p54_control_hdr *) entry->data;
+-			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
+-			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
+-				pad = entry_data->align[0];
+-
+-			/* walk through the rates array and adjust the counts */
+-			count = payload->retries;
+-			for (idx = 0; idx < 4; idx++) {
+-				if (count >= info->status.rates[idx].count) {
+-					count -= info->status.rates[idx].count;
+-				} else if (count > 0) {
+-					info->status.rates[idx].count = count;
+-					count = 0;
+-				} else {
+-					info->status.rates[idx].idx = -1;
+-					info->status.rates[idx].count = 0;
+-				}
++		/*
++		 * Clear manually, ieee80211_tx_info_clear_status would
++		 * clear the counts too and we need them.
++		 */
++		memset(&info->status.ampdu_ack_len, 0,
++		       sizeof(struct ieee80211_tx_info) -
++		       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
++		BUILD_BUG_ON(offsetof(struct ieee80211_tx_info,
++				      status.ampdu_ack_len) != 23);
++
++		entry_hdr = (struct p54_control_hdr *) entry->data;
++		entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
++		if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
++			pad = entry_data->align[0];
++
++		/* walk through the rates array and adjust the counts */
++		count = payload->retries;
++		for (idx = 0; idx < 4; idx++) {
++			if (count >= info->status.rates[idx].count) {
++				count -= info->status.rates[idx].count;
++			} else if (count > 0) {
++				info->status.rates[idx].count = count;
++				count = 0;
++			} else {
++				info->status.rates[idx].idx = -1;
++				info->status.rates[idx].count = 0;
+ 			}
++		}
+ 
+-			priv->tx_stats[entry_data->hw_queue].len--;
+-			if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+-			    !(payload->status & 0x01))
+-				info->flags |= IEEE80211_TX_STAT_ACK;
+-			info->status.ack_signal = p54_rssi_to_dbm(dev,
+-					le16_to_cpu(payload->ack_rssi));
+-			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
+-			ieee80211_tx_status_irqsafe(dev, entry);
+-			goto out;
+-		} else
+-			last_addr = range->end_addr;
+-		entry = entry->next;
++		priv->tx_stats[entry_data->hw_queue].len--;
++		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
++		     (!payload->status))
++			info->flags |= IEEE80211_TX_STAT_ACK;
++		if (payload->status & 0x02)
++			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
++		info->status.ack_signal = p54_rssi_to_dbm(dev,
++				le16_to_cpu(payload->ack_rssi));
++		skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
++		ieee80211_tx_status_irqsafe(dev, entry);
++		goto out;
+ 	}
+ 	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+ out:
+-	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
+-	    sizeof(struct p54_control_hdr))
++	if (freed >= priv->headroom + sizeof(struct p54_control_hdr) + 48 +
++		     IEEE80211_MAX_RTS_THRESHOLD + priv->tailroom)
+ 		p54_wake_free_queues(dev);
+ }
+ 
