@@ -1,83 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:56931 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244AbYJ1Uxx (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51875 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753037AbYJONXn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 16:53:53 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2810696wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 13:53:52 -0700 (PDT)
-Message-ID: <1ba2fa240810281353u4b038cf2gb46cb830b278a278@mail.gmail.com> (sfid-20081028_215358_915936_000253F8)
-Date: Tue, 28 Oct 2008 22:53:52 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] iwlwifi: remove implicit direct scan
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225214465.3598.27.camel@johannes.berg>
+	Wed, 15 Oct 2008 09:23:43 -0400
+Date: Wed, 15 Oct 2008 09:20:54 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Manish Katiyar <mkatiyar@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas : Remove unused variable warning
+	"old_channel" from drivers/net/wireless/libertas/cmd.c
+Message-ID: <20081015132053.GA27688@tuxdriver.com> (sfid-20081015_152348_778661_8F7E6957)
+References: <ea11fea30810130352i3cea0579g9950289254c8e628@mail.gmail.com> <1224002213.1799.2.camel@localhost.localdomain> <ea11fea30810150110s772b740fv38cc37645da53201@mail.gmail.com> <1224060475.27537.0.camel@johannes.berg> <ea11fea30810150201i6f5649dyd6da42c4f7cdcb01@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1225214465.3598.27.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ea11fea30810150201i6f5649dyd6da42c4f7cdcb01@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2008 at 7:21 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> When an undirected scan is requested and iwlwifi is not associated but
-> the user has set an SSID (and maybe was associated with that network at
-> some point) then iwlwifi will assume the user wanted to scan for this
-> SSID which seems wrong. Remove this code.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> Am I missing something? This seems very strange! What specifies that
-> when an SSID is set on an interface the user wants to scan for that one?
-> The interface might just have been associated previously to that SSID,
-> now disassociated and network manager is asking for a scan to get
-> information about networks to let the user select a new one.
+On Wed, Oct 15, 2008 at 02:31:37PM +0530, Manish Katiyar wrote:
+> On Wed, Oct 15, 2008 at 2:17 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > [dropping libertas list, subscribers only]
+> >
+> > On Wed, 2008-10-15 at 13:40 +0530, Manish Katiyar wrote:
+> >> On Tue, Oct 14, 2008 at 10:06 PM, Dan Williams <dcbw@redhat.com> wrote:
+> >> > On Mon, 2008-10-13 at 16:22 +0530, Manish Katiyar wrote:
+> >> >> Below patch removes the following warning during compilation.
+> >> >>
+> >> >> drivers/net/wireless/libertas/cmd.c:826: warning: unused variable 'old_channel'
+> >> >>
+> >> >>
+> >> >> Signed-off-by : Manish Katiyar <mkatiyar@gmail.com>
+> >> >
+> >> > Acked-by: Dan Williams <dcbw@redhat.com>
+> >>
+> >> Hi Dan,
+> >>
+> >> A newbie question. Will you merge this patch or will I have to send it
+> >> to Andrew again acked by you ?
+> >
+> > John has already applied it, Andrew isn't typically involved with
+> > wireless.
+> 
+> Thanks a lot John.
 
-NACK, this is a heuristic that helps connection to configured SSID. It
-doesn't mean that other ssid won't be scanned.
-This code might be revised again when multiple SSID scan will be implemented
-Tomas
+No, thank you! :-)
 
-
->  drivers/net/wireless/iwlwifi/iwl-scan.c     |    7 -------
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    8 --------
->  2 files changed, 15 deletions(-)
->
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-scan.c     2008-10-28 18:12:02.000000000 +0100
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-scan.c  2008-10-28 18:12:06.000000000 +0100
-> @@ -743,13 +743,6 @@ static void iwl_bg_request_scan(struct w
->                memcpy(scan->direct_scan[0].ssid,
->                       priv->direct_ssid, priv->direct_ssid_len);
->                n_probes++;
-> -       } else if (!iwl_is_associated(priv) && priv->essid_len) {
-> -               IWL_DEBUG_SCAN("Start direct scan for '%s' (not associated)\n",
-> -                               print_ssid(ssid, priv->essid, priv->essid_len));
-> -               scan->direct_scan[0].id = WLAN_EID_SSID;
-> -               scan->direct_scan[0].len = priv->essid_len;
-> -               memcpy(scan->direct_scan[0].ssid, priv->essid, priv->essid_len);
-> -               n_probes++;
->        } else {
->                IWL_DEBUG_SCAN("Start indirect scan.\n");
->        }
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c 2008-10-28 18:12:20.000000000 +0100
-> +++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c      2008-10-28 18:12:27.000000000 +0100
-> @@ -6158,14 +6158,6 @@ static void iwl3945_bg_request_scan(stru
->                memcpy(scan->direct_scan[0].ssid,
->                       priv->direct_ssid, priv->direct_ssid_len);
->                n_probes++;
-> -       } else if (!iwl3945_is_associated(priv) && priv->essid_len) {
-> -               IWL_DEBUG_SCAN
-> -                 ("Kicking off one direct scan for '%s' when not associated\n",
-> -                  print_ssid(ssid, priv->essid, priv->essid_len));
-> -               scan->direct_scan[0].id = WLAN_EID_SSID;
-> -               scan->direct_scan[0].len = priv->essid_len;
-> -               memcpy(scan->direct_scan[0].ssid, priv->essid, priv->essid_len);
-> -               n_probes++;
->        } else
->                IWL_DEBUG_SCAN("Kicking off one indirect scan.\n");
->
->
->
->
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
