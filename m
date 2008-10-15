@@ -1,107 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:48362 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240AbYJUXeJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 19:34:09 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so487947yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2008 16:34:08 -0700 (PDT)
-Message-ID: <1ba2fa240810211634k74979933mf9364d405ae6e33a@mail.gmail.com> (sfid-20081022_013414_928457_7605EF54)
-Date: Wed, 22 Oct 2008 01:34:07 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcel Holtmann" <holtmann@linux.intel.com>
-Subject: Re: New iwlwifi 3945 uCode available
-Cc: "reinette chatre" <reinette.chatre@linux.intel.com>,
+Received: from mail.atheros.com ([12.36.123.2]:21162 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753408AbYJPB4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 21:56:44 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 18:56:43 -0700
+Date: Wed, 15 Oct 2008 11:56:36 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
+	Zhu Yi <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224630394.9386.114.camel@californication>
+Subject: Re: New Regulatory Domain Api.
+Message-ID: <20081015185636.GH15902@tesla> (sfid-20081016_035648_652055_885998FC)
+References: <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com> <1224092868.28173.21.camel@californication> <20081015112517.GF6509@tesla> <1224098748.28173.32.camel@californication> <20081015131622.GH6509@tesla> <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com> <20081015170830.GA15902@tesla> <1ba2fa240810151735t100ceda5s7fe7b495f735c507@mail.gmail.com> <20081015174447.GF15902@tesla> <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1224628088.10863.100.camel@rc-desk>
-	 <1224630394.9386.114.camel@californication>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 1:06 AM, Marcel Holtmann
-<holtmann@linux.intel.com> wrote:
-> Hi Reinette,
->
->> > > >> > >> Two new versions of 3945 uCode is now available for download from
->> > > >> > >> http://intellinuxwireless.org/?n=Downloads. Two versions are available
->> > > >> > >> as we have updated the API version of the uCode and included pending
->> > > >> > >> fixes in both API versions.
->> > > >> > >>
->> > > >> > >> Version 15.28.1.8 supports API v1 and can be used with most current 3945
->> > > >> > >> drivers. Version 15.28.2.8 (API v2) is required when you start using the
->> > > >> > >> latest 3945 driver from wireless-testing at the time it includes the
->> > > >> > >> patch "iwl3945 : Fix a-band association for passive channels".
->> > > >> > >
->> > > >> > > Can you make the driver work with the old ucode? We even do that for
->> > > >> > > drivers where we don't control the ucode like b43...
->> > > >> >
->> > > >> > What for?
->> > > >>
->> > > >> Well, so that installing a new kernel doesn't suddenly break your
->> > > >> network connection and ability to download the firmware, for instance.
->> > > >> If you want more arguments you can go read all the "b43 sucks" threads
->> > > >> about it.
->> > > >
->> > > > Johnannes has a point, that is a lot nicer to users...
->> > >
->> > > Maybe, but it will complicate the code beyond good taste to just
->> > > satisfy the single moment when kernel is upgraded. I don't mean in
->> > > general I mean in this particular case when API changes.
->> > > Anyhow a good distro shell deal with this in packaging dependencies
->> > > and normal person will keep old kernel around when compiling new one.
->> > > Both ucodes can be present on the file system at the same time  so I
->> > > hope the risk is low.
->> >
->> > it is the same argument as for everything else. We should be able to run
->> > a new kernel with old userspace.
->>
->> I do not believe our request is unreasonable. If a user runs a new
->> kernel the log will print a message that the firmware is incorrect ...
->> all the user needs to do is go to
->> http://intellinuxwireless.org/?n=Downloads and download the latest
->> firmware. This does not require any subtle changes that may affect other
->> aspects of the system ... just the firmware file that is only used by
->> the driver.
->>
->> We are focused on upstream development. If there is a need to support
->> older ucode then we face a similar challenge as was solved through the
->> compat-wireless project for the driver self.
->
-> I haven't checked this particular case, but in some cases it is simple
-> to keep backward compatible code around that would let us support the
-> old firmware for a few releases. In other cases the driver and firmware
-> interface might have evolved too much to do so. In these cases we might
-> wanna keep the old drivers around so users can have a choice.
+On Wed, Oct 15, 2008 at 05:57:20PM -0700, Tomas Winkler wrote:
+> On Wed, Oct 15, 2008 at 7:44 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > Anyway since you only have 3 this should be very simple to resolve...
+> > Just add the 5 GHz frequency ranges you always support. Obviously the BG
+> > card will not be able to make use of them :)
+> 
+> It's ugly but possible w/a but we still have 3945 and 4965 where it is
+> not so simple.
 
-If it wasn't so awkward in this case I wouldn't mind to support old firmware.
-Second when we touch  firmware especially for old HW it means that it
-solves a bug so why ones would use old driver for something else then
-to download the new firmware.
+Ah. I see. Ok then please try this patch. What do you guys think?
 
-> We do have something like drivers/staging/ now. It might make sense to
-> have introduce drivers/deprecated/ for old drivers that we just keep
-> around for a few releases to ease a transition. Just thinking out loud.
-
-Sounds like good idea... need some configuration tricks tough unlike
-staging here we have 2 drivers for the same hw
-
-> And I have been bitten by ucode API changes in the past. It is just not
-> clear when actually compiling the new kernel. We could also have compile
-> time checks that check the new firmware file is actually present at the
-> compile time of the new kernel. The driver should have a MODULE_FIRMWARE
-> tag and we could process it and match it to /lib/firmware.
-
-It has MODULE_FIRMWARE already
-Tomas
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 626dbb6..703382a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -469,6 +469,31 @@ static u32 freq_max_bandwidth(const struct ieee80211_freq_range *freq_range,
+ 	return 0;
+ }
+ 
++/**
++ * freq_in_rule_band - tells us if a frequency rule is in freqs band
++ * @freq_range: frequency rule we want to query
++ * @freq_khz: frequency we are inquiring about
++ *
++ * This lets us know if a specific frequency rule is or is not relevant to
++ * a specific frequency's band. Bands are device specific and artificial
++ * definitions (the "2.4 GHz band" and the "5 GHz band"), however it is
++ * safe for now to assume that a frequency rule should not be part of a
++ * frequency's band if the start freq or end freq are off by more than 2 GHz.
++ * This resolution can be lowered and should be considered as we add
++ * regulatory rule support for other "bands".
++ **/
++static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
++	u32 freq_khz)
++{
++#define ONE_GHZ_IN_HZ	1000000000
++	if (abs(freq_khz - freq_range->start_freq_khz) <= (2 * ONE_GHZ_IN_HZ))
++		return true;
++	if (abs(freq_khz - freq_range->end_freq_khz) <= (2 * ONE_GHZ_IN_HZ))
++		return true;
++	return false;
++#undef ONE_GHZ_IN_HZ
++}
++
+ /* XXX: add support for the rest of enum nl80211_reg_rule_flags, we may
+  * want to just have the channel structure use these */
+ static u32 map_regdom_flags(u32 rd_flags)
+@@ -492,11 +517,17 @@ static u32 map_regdom_flags(u32 rd_flags)
+  * @reg_rule: the regulatory rule which we have for this frequency
+  *
+  * Use this function to get the regulatory rule for a specific frequency.
++ * It returns 0 if it was able to find a valid regulatory rule which does
++ * apply to the given center_freq otherwise it returns non-zero. It will
++ * also -ERANGE if we determine the given center_freq does not even have
++ * a regulatory rule for a frequency range in the center_freq's band. See
++ * freq_in_rule_band() for our current definition of a band.
+  */
+ static int freq_reg_info(u32 center_freq, u32 *bandwidth,
+ 			 const struct ieee80211_reg_rule **reg_rule)
+ {
+ 	int i;
++	bool band_rule_found = false;
+ 	u32 max_bandwidth = 0;
+ 
+ 	if (!cfg80211_regdomain)
+@@ -510,6 +541,9 @@ static int freq_reg_info(u32 center_freq, u32 *bandwidth,
+ 		rr = &cfg80211_regdomain->reg_rules[i];
+ 		fr = &rr->freq_range;
+ 		pr = &rr->power_rule;
++
++		band_rule_found = freq_in_rule_band(fr, center_freq);
++
+ 		max_bandwidth = freq_max_bandwidth(fr, center_freq);
+ 		if (max_bandwidth && *bandwidth <= max_bandwidth) {
+ 			*reg_rule = rr;
+@@ -518,6 +552,9 @@ static int freq_reg_info(u32 center_freq, u32 *bandwidth,
+ 		}
+ 	}
+ 
++	if (!band_rule_found)
++		return -ERANGE;
++
+ 	return !max_bandwidth;
+ }
+ 
+@@ -533,8 +570,15 @@ static void handle_channel(struct ieee80211_channel *chan)
+ 		&max_bandwidth, &reg_rule);
+ 
+ 	if (r) {
+-		flags |= IEEE80211_CHAN_DISABLED;
+-		chan->flags = flags;
++		/* This means a regulatory rule was found with a frequency
++		 * range in center_freq's band. In this case we know the
++		 * regulatory rule has at least *one* regulatory rule for
++		 * the band so we must respect its band definitions. Otherwise
++		 * we assume it may not even know anything about our band */
++		if (r != -ERANGE) {
++			flags |= IEEE80211_CHAN_DISABLED;
++			chan->flags = flags;
++		}
+ 		return;
+ 	}
+ 
