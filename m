@@ -1,55 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f18.google.com ([209.85.217.18]:40547 "EHLO
-	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329AbYJ1QMM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53054 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055AbYJORqG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 12:12:12 -0400
-Message-ID: <1ba2fa240810280912pea7284ejd6de5d04efbb974f@mail.gmail.com> (sfid-20081028_171218_874314_62F8D4BA)
-Date: Tue, 28 Oct 2008 18:12:09 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Cc: "Carlos R. Mafra" <crmafra2@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Soeren Sonnenburg" <kernel@nn7.de>, linux-kernel@vger.kernel.org,
+	Wed, 15 Oct 2008 13:46:06 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200810281630.28389.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081027162054.GA4015@localhost.aei.mpg.de>
-	 <200810272350.29429.rjw@sisk.pl>
-	 <1ba2fa240810271612g72bb2b08p6ebab9f6f02f5b98@mail.gmail.com>
-	 <200810281630.28389.rjw@sisk.pl>
+	Zhu Yi <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com> (sfid-20081015_193938_934932_4EB690B0)
+References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
+	 <1223969808.2570.153.camel@debian.sh.intel.com>
+	 <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
+	 <20081014203510.GD3349@tuxdriver.com>
+	 <1224018957.3027.9.camel@johannes.berg>
+	 <20081014211912.GF3349@tuxdriver.com>
+	 <1224019662.3027.13.camel@johannes.berg>
+	 <1224085609.4764.18.camel@californication>
+	 <1224086374.735.4.camel@johannes.berg>
+	 <1224091577.28173.9.camel@californication>
+	 <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
+	 (sfid-20081015_193938_934932_4EB690B0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oC9k9gb3sKcfYD6HCAvi"
+Date: Wed, 15 Oct 2008 19:45:23 +0200
+Message-Id: <1224092724.735.21.camel@johannes.berg> (sfid-20081015_194614_582523_4CDD919C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2008 at 5:30 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Tuesday, 28 of October 2008, Tomas Winkler wrote:
->> h
->>
->> On Tue, Oct 28, 2008 at 12:50 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > On Monday, 27 of October 2008, Tomas Winkler wrote:
->> >> On Tue, Oct 28, 2008 at 12:28 AM, Carlos R. Mafra <crmafra2@gmail.com> wrote:
->> >> > On Mon 27.Oct'08 at 23:07:00 +0200, Tomas Winkler wrote:
->> >> >>[...]
->> >> >>
->> >> >> Can someone try this one (it might be space broken I've just pasted
->> >> >> that in) It's on top of 1d63e726408dfdb3e10ed8f00c383b30ebb333d3
->> >> >> (latest linux-2.6.git)
->> >> >
->> >> >
->> >> > Yes, this one also works for me (I applied it manually).
->> >> Good, this was actually part of some older and bigger patch I wasn't
->> >> aware it has this affect. It has some millage in iwl5000 branch.
->> >> RFKIll went through some changes in the mainline so it wasn't merged yet.
->> >
->> > Are you going to push this patch upstream now?  It's quite important to get
->> > this resume regression fixed ASAP.
->>
->> Definitely I would post it to wireless and stable.
->
-> Please send a CC to me too.
-Hmm. It looks like I've misspelled your email when I've sent the patch.
-Will send it again
-Tomas
+
+--=-oC9k9gb3sKcfYD6HCAvi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2008-10-15 at 10:39 -0700, Luis R. Rodriguez wrote:
+
+> We decided on our discussions to respect the built-in card first. For
+> more cards we can take the intersection if we want to keep being more
+> restrictive. Its what makes sense if you think about it.
+
+I'm not really too sure the intersection makes most sense, we mostly
+used the first hint because it's likely to be from the built-in card,
+ergo announcing a region for which the whole product was certified. If
+you add a card, we basically don't trust it currently.
+
+> My suggestion is to add a default minimal 5 GHz regulatory domain
+> definition to your driver on single band cards to deal with this. When
+> a dual band card is present then all of the full card's capabilities
+> will be used.
+
+Unfortunately, there's no such thing as a default minimal 5 GHz
+regulatory domain. This might work with systems built purely out of
+Intel cards, but to be honest, I wouldn't want to see this because it
+would mean that if you add a dual-band prism54 USB then it'll start
+sending on those 5 GHz channels regardless of where you are and what
+you're allowed to do.
+
+johannes
+
+--=-oC9k9gb3sKcfYD6HCAvi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI9iwtAAoJEKVg1VMiehFYuNEQAIWNREasnzmAlGQu1Gh0FvOY
+i4RqtLojFtDkJ578G6Z3jrzdx4LyDkdmcXbBoTBWJSPVwqzRIPrE7ggu0NBtjdse
+ld4L4MmIxdZqZhoHxtAlSChiShsN9UEdH9NFNbmcv3qED1aNkJqAooLgrgF64B8u
+yRQ6oXzqpNglPBPPwBssfUVOM5RYYmGI76hFARyz5aRyd4hDHyztL46mmPRiwMhG
+IWLDoKEWOQy25NzT2LMCvvZ74F3gjxxcGMdLbsE01etbk6PhpLoxoNgHrilZATEA
+7HlfAlw62lcVLzxDubPk+9vwsUhzk0lvBaB65yF4qODwuIniUALwLc45wpdCmApX
+RSKBtrb97aqCiRSbjvUuDGFteUSIM1QruD1FonOnivftXvzXV7+1a3wu2T7DjAbK
+iSO783Q3bVKXSZJZFwM11in/6ilXOBvoGRv5TNMJ3LzXgt9n4HRJahu+SGFJ83n+
+WQPHwNgW5ymfca7aAMM0ym0PObIa4Jymiz72ejUsxU+iIFipvOzAD6An+kNhve8r
+U85av4Z+REFTQ4oCTCsbsF+IiNUY6wYA7muUDDFcKeVVO+eUPCOj706M5ihThNHu
+5M0ZNn6r3YBwofk4QUvMpmSgBB7GznAPgb02nuFHX/0paVbZ8dg+MUl2HSsp9bSP
+JTEVX7caiaY6ebU3WblY
+=Ibh7
+-----END PGP SIGNATURE-----
+
+--=-oC9k9gb3sKcfYD6HCAvi--
+
