@@ -1,85 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56649 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096AbYJ0So5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 14:44:57 -0400
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Soeren Sonnenburg <kernel@nn7.de>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"Carlos R. Mafra" <crmafra2@gmail.com>,
-	linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
+Received: from mail.atheros.com ([12.36.123.2]:54612 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752840AbYJOUQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 16:16:29 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 13:16:29 -0700
+Date: Wed, 15 Oct 2008 06:16:22 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1225132278.3796.32.camel@johannes.berg> (sfid-20081027_193136_021274_A4C6EBE7)
-References: <20081027162054.GA4015@localhost.aei.mpg.de>
-	 <200810271832.40717.rjw@sisk.pl>  <1225130844.4466.0.camel@localhost>
-	 <1225132278.3796.32.camel@johannes.berg>
-	 (sfid-20081027_193136_021274_A4C6EBE7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Q3YMf2nMgym+0ZgF+yhm"
-Date: Mon, 27 Oct 2008 19:44:42 +0100
-Message-Id: <1225133082.3796.35.camel@johannes.berg> (sfid-20081027_194504_734676_03B55CE5)
-Mime-Version: 1.0
+	Zhu Yi <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: New Regulatory Domain Api.
+Message-ID: <20081015131622.GH6509@tesla> (sfid-20081015_221634_140008_93FF1964)
+References: <1224018957.3027.9.camel@johannes.berg> <20081014211912.GF3349@tuxdriver.com> <1224019662.3027.13.camel@johannes.berg> <1224085609.4764.18.camel@californication> <1224086374.735.4.camel@johannes.berg> <1224091577.28173.9.camel@californication> <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com> <1224092868.28173.21.camel@californication> <20081015112517.GF6509@tesla> <1224098748.28173.32.camel@californication>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1224098748.28173.32.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 15, 2008 at 12:25:48PM -0700, Marcel Holtmann wrote:
+> > The problem here is not this though the problem here is the case
+> > where people are using 2.6.28 without no iw or crda *and* have more
+> > than two cards :)
+> 
+> it might sound like an unlikely case and it will most likely only be the
+> A-band usage anyway, but it is a valid case. People with old laptops do
+> use newer wireless cards in PCMCIA or USB form factor to get better WiFi
+> performance and/or stability. In some cases you can just replace your
+> internal card, but with the switch from MiniPCI to half-MiniPCI this is
+> not as likely anymore. So the use of a second external card becomes more
+> likely.
 
---=-Q3YMf2nMgym+0ZgF+yhm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Right, and the proposed solution I had was to use an intersection
+between two regulatory domains. This solution just doesn't currently
+work well with Intel cards due to the capability <-> regulatory one to
+one mapping.
 
-On Mon, 2008-10-27 at 19:31 +0100, Johannes Berg wrote:
-> On Mon, 2008-10-27 at 19:07 +0100, Soeren Sonnenburg wrote:
->=20
-> > > Johannes, can you pls have a look?
->=20
-> I did, and I have no idea. Makes no sense at all.
+> I am still for the first card wins concept when no CRDA is present or
+> the userspace just doesn't know about setting the regulatory domain.
+> However we should have it separated for each band to not lock some
+> people out who have no clue on why they now loose the 5 GHz band.
 
-The only thing I can remotely think of is that iwlwifi doesn't like
-being called back from within the call that it did to mac80211, which
-obviously happens here. But I have no idea, the code as it stands is
-correct, just the interaction with iwlwifi's resume seems to be broken.
+Sure.
 
-Try this patch instead:
-
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-27 19:44=
-:12.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-27 19:44:15.0=
-00000000 +0100
-@@ -2084,7 +2084,6 @@ static void iwl_alive_start(struct iwl_p
- 		iwl4965_error_recovery(priv);
-=20
- 	iwl_power_update_mode(priv, 1);
--	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
-=20
- 	if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
- 		iwl4965_set_mode(priv, priv->iw_mode);
-
-
-johannes
-
---=-Q3YMf2nMgym+0ZgF+yhm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJBgwTAAoJEKVg1VMiehFY2b4QAL/H1+ky6uzZZ7mCSrVt19U8
-JomwyBUfGemGrWpUddupLGuwbwU39qMKQUopi+PWCkY7u2mH/ML15Sg6efHM+ytQ
-X6FEvbTOyDo68JeqJBQZJgnjFiefdUs0vVfso28Fr/CITVhtl/O1ix3tet5ZQDpe
-GLzOt0t++oAC+LFqX8q6b7UB8/pIpO1uYEzR8XigUnLpNI42WPze4jWSfFWB+6/c
-qKcilG5dAHmzzwv3J7Qp+5+MoqbDuGQCsa4HbpR07OF69ZGYrFhZ1DN7Ps3VkM54
-LOYrSRP/0w+9hKA7XyMXI7hDQT3BPPGYCae5sIN5lQ9zWSutv8ZHfyEcOCvKJCyu
-tHF3wrT3ArtMqPi/nVdO394HZvKjJJrMDmaN1gttyGY/IHvdGU2s26uCvtPsBygb
-AKREhODpWF0Yv9NuY5N4LdMJvA8zbfxuXf78Ae1epKCTw7up+ViHlD5erhl6kP5f
-h6WZGAWhIqcXi8k0plkvJ3SOl+bxK00gQWsPUIHY6btowK8tWRGcy/iSeSkNz3ZD
-J2zaU/Wk4AX92zgEFH8N83Rl6KE1xHCwUFc9YnYjS7CGJOcYGv9fXYJMA3Vq4CmZ
-i5uVjQDMqsH4u8ntWuPGwDbpAc1uChG3EPHNSdpJhlIA/dtuqibMjC8EwB4sBuXy
-G/5o68rFs0bWmDC1xMut
-=O046
------END PGP SIGNATURE-----
-
---=-Q3YMf2nMgym+0ZgF+yhm--
-
+  Luis
