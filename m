@@ -1,89 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ox1.aei.mpg.de ([194.94.224.6]:54806 "EHLO ox1.aei.mpg.de"
+Received: from main.gmane.org ([80.91.229.2]:54419 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751727AbYJ0SgM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 14:36:12 -0400
-Date: Mon, 27 Oct 2008 19:36:48 +0100
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
-	kernel@nn7.de, linux-wireless@vger.kernel.org
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Message-ID: <20081027183648.GA4165@localhost.aei.mpg.de> (sfid-20081027_193617_168334_DF68AEAE)
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271839.39236.rjw@sisk.pl> <20081027175719.GA5759@localhost.aei.mpg.de> <200810271916.38079.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810271916.38079.rjw@sisk.pl>
+	id S1752506AbYJOTjB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 15:39:01 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1KqCCt-0007m2-1L
+	for linux-wireless@vger.kernel.org; Wed, 15 Oct 2008 19:38:55 +0000
+Received: from 78-21-61-244.access.telenet.be ([78.21.61.244])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 19:38:55 +0000
+Received: from fhimpe by 78-21-61-244.access.telenet.be with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 19:38:55 +0000
+To: linux-wireless@vger.kernel.org
+From: Frederik Himpe <fhimpe@telenet.be>
+Subject: iwlagn: associating with AP causes kernel hiccup
+Date: Wed, 15 Oct 2008 19:38:44 +0000 (UTC)
+Message-ID: <gd5gs4$abi$1@ger.gmane.org> (sfid-20081015_213906_931589_B5860EBB)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Cc: linux-kernel@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 27.Oct'08 at 19:16:37 +0100, Rafael J. Wysocki wrote:
-> On Monday, 27 of October 2008, Carlos R. Mafra wrote:
-> > On Mon 27.Oct'08 at 18:39:38 +0100, Rafael J. Wysocki wrote:
-> > > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
-> > > > Hi,
-> > > > 
-> > > > So I managed to bisect my suspend to RAM regression in 2.6.27-rc2
-> > > > to commit 3b7ee69d0caefbdb85a606a98bff841b8c63b97e ("mac80211: disassociate 
-> > > > when moving to new BSS") by Tomas Winkler (Cc:-ed).
-> > > > 
-> > > > Unfortunately it doesn't revert cleanly so I can't double check it.
-> > > 
-> > > Why are you saying it doesn't revert cleanly?  For me it does revert without
-> > > rejects from 2.6.28-rc2.
-> > 
-> > I get this
-> > 
-> > [mafra@localhost:linux-2.6]$ git checkout v2.6.28-rc2 -b s2ram
-> > Switched to a new branch "s2ram"
-> > [mafra@localhost:linux-2.6]$ git revert 3b7ee69d
-> > warning: too many files, skipping inexact rename detection
-> > Auto-merged net/mac80211/mlme.c
-> > CONFLICT (content): Merge conflict in net/mac80211/mlme.c
-> > Automatic revert failed.  After resolving the conflicts,
-> > mark the corrected paths with 'git add <paths>' or 'git rm <paths>' and commit the result.
-> > 
-> > I don't know what is happening here :-(
-> 
-> If you have quilt installed, you can do:
-> 
-> $ git show 3b7ee69d > suspicious.patch
-> $ quilt import -R suspicious.patch
-> $ quilt push
-> 
-> (that should work without rejects) and build the kernel.
+When I associate with an AP, Linux 2.6.27 seems to "hang" for a few 
+seconds. During that time, all sound stops playing and keyboard and mouse 
+input is impossible. In the log I see this:
 
-I wanted to do it with git, but gave up after some time :-(
+wlan0: authenticate with AP 00:15:f2:0a:ab:43
+wlan0: authenticate with AP 00:15:f2:0a:ab:43
+wlan0: authenticate with AP 00:15:f2:0a:ab:43
+wlan0: authenticated
+wlan0: associate with AP 00:15:f2:0a:ab:43
+wlan0: RX AssocResp from 00:15:f2:0a:ab:43 (capab=0x431 status=0 aid=2)
+wlan0: associated
+ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+iwlagn 0000:0c:00.0: PCI INT A disabled
+iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwlagn 0000:0c:00.0: restoring config space at offset 0x1 (was 0x100102, 
+writing 0x100106)
+Registered led device: iwl-phy0:radio
+Registered led device: iwl-phy0:assoc
+Registered led device: iwl-phy0:RX
+Registered led device: iwl-phy0:TX
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+iwlagn 0000:0c:00.0: PCI INT A disabled
+iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwlagn 0000:0c:00.0: restoring config space at offset 0x1 (was 0x100102, 
+writing 0x100106)
+Registered led device: iwl-phy0:radio
+Registered led device: iwl-phy0:assoc
+Registered led device: iwl-phy0:RX
+Registered led device: iwl-phy0:TX
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+CPU0 attaching NULL sched-domain.
+CPU1 attaching NULL sched-domain.
+CPU0 attaching sched-domain:
+ domain 0: span 0-1 level MC
+  groups: 0 1
+  domain 1: span 0-1 level NODE
+   groups: 0-1
+CPU1 attaching sched-domain:
+ domain 0: span 0-1 level MC
+  groups: 1 0
+  domain 1: span 0-1 level NODE
+   groups: 0-1
+wlan0: deauthenticating by local choice (reason=3)
+psmouse.c: DualPoint TouchPad at isa0060/serio1/input0 lost 
+synchronization, throwing 1 bytes away.
+iwlagn 0000:0c:00.0: PCI INT A disabled
+iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwlagn 0000:0c:00.0: restoring config space at offset 0x1 (was 0x100102, 
+writing 0x100106)
+Registered led device: iwl-phy0:radio
+Registered led device: iwl-phy0:assoc
+Registered led device: iwl-phy0:RX
+Registered led device: iwl-phy0:TX
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+psmouse.c: resync failed, issuing reconnect request
+input: PS/2 Generic Mouse as /class/input/input13
+wlan0: authenticate with AP 00:15:f2:0a:ab:43
+wlan0: authenticated
+wlan0: associate with AP 00:15:f2:0a:ab:43
+wlan0: RX AssocResp from 00:15:f2:0a:ab:43 (capab=0x431 status=0 aid=2)
+wlan0: associated
 
-So I finally read the commit in 
-question 3b7ee69d0caefbdb85a606a98bff841b8c63b97e and applied
-the patch below, which reverts it up to the whitespace fixes.
+This is a Dell Latitude E6400.
 
-And reverting it really made my brand new 2.6.28-rc2-something
-work again, regarding suspend to RAM.
-
-So consider it confirmed that this commit is guilty here.
-
----
- net/mac80211/mlme.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 87665d7..1751ebb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2396,10 +2396,6 @@ void ieee80211_sta_req_auth(struct ieee80211_sub_if_data *sdata,
- 	    (ifsta->flags & (IEEE80211_STA_SSID_SET |
- 			     IEEE80211_STA_AUTO_SSID_SEL))) {
- 
--		if (ifsta->state == IEEE80211_STA_MLME_ASSOCIATED)
--			ieee80211_set_disassoc(sdata, ifsta, true, true,
--					       WLAN_REASON_DEAUTH_LEAVING);
--
- 		set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
- 		queue_work(local->hw.workqueue, &ifsta->work);
- 	}
--- 
-1.6.0.rc2
+$ lspci -nn
+00:00.0 Host bridge [0600]: Intel Corporation Mobile 4 Series Chipset 
+Memory Controller Hub [8086:2a40] (rev 07)
+00:02.0 VGA compatible controller [0300]: Intel Corporation Mobile 4 
+Series Chipset Integrated Graphics Controller [8086:2a42] (rev 07)
+00:02.1 Display controller [0380]: Intel Corporation Mobile 4 Series 
+Chipset Integrated Graphics Controller [8086:2a43] (rev 07)
+00:19.0 Ethernet controller [0200]: Intel Corporation 82567LM Gigabit 
+Network Connection [8086:10f5] (rev 03)
+00:1a.0 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB 
+UHCI Controller #4 [8086:2937] (rev 03)
+00:1a.1 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB 
+UHCI Controller #5 [8086:2938] (rev 03)
+00:1a.2 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB 
+UHCI Controller #6 [8086:2939] (rev 03)
+00:1a.7 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) 
+USB2 EHCI Controller #2 [8086:293c] (rev 03)
+00:1b.0 Audio device [0403]: Intel Corporation 82801I (ICH9 Family) HD 
+Audio Controller [8086:293e] (rev 03)
+00:1c.0 PCI bridge [0604]: Intel Corporation 82801I (ICH9 Family) PCI 
+Express Port 1 [8086:2940] (rev 03)
+00:1c.1 PCI bridge [0604]: Intel Corporation 82801I (ICH9 Family) PCI 
+Express Port 2 [8086:2942] (rev 03)
+00:1c.2 PCI bridge [0604]: Intel Corporation 82801I (ICH9 Family) PCI 
+Express Port 3 [8086:2944] (rev 03)
+00:1d.0 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB 
+UHCI Controller #1 [8086:2934] (rev 03)
+00:1d.1 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB 
+UHCI Controller #2 [8086:2935] (rev 03)
+00:1d.2 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB 
+UHCI Controller #3 [8086:2936] (rev 03)
+00:1d.7 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) 
+USB2 EHCI Controller #1 [8086:293a] (rev 03)
+00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge 
+[8086:2448] (rev 93)
+00:1f.0 ISA bridge [0601]: Intel Corporation ICH9M-E LPC Interface 
+Controller [8086:2917] (rev 03)
+00:1f.2 SATA controller [0106]: Intel Corporation ICH9M/M-E SATA AHCI 
+Controller [8086:2929] (rev 03)
+00:1f.3 SMBus [0c05]: Intel Corporation 82801I (ICH9 Family) SMBus 
+Controller [8086:2930] (rev 03)
+03:01.0 CardBus bridge [0607]: Ricoh Co Ltd RL5c476 II [1180:0476] (rev 
+ba)
+03:01.1 FireWire (IEEE 1394) [0c00]: Ricoh Co Ltd R5C832 IEEE 1394 
+Controller [1180:0832] (rev 04)
+03:01.2 SD Host controller [0805]: Ricoh Co Ltd R5C822 SD/SDIO/MMC/MS/
+MSPro Host Adapter [1180:0822] (rev 21)
+03:01.3 System peripheral [0880]: Ricoh Co Ltd R5C843 MMC Host Controller 
+[1180:0843] (rev ff)
+0c:00.0 Network controller [0280]: Intel Corporation Device [8086:4235]
 
 
