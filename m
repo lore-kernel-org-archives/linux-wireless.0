@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:4571 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391AbYJQT1O (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.184]:49393 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbYJOIKF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2008 15:27:14 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so408010nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 12:27:08 -0700 (PDT)
-To: John Daiker <daikerjohn@gmail.com>
-Subject: Re: [PATCH] rt2x00: reduce checkpatch.pl errors
-Date: Fri, 17 Oct 2008 21:27:03 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <48F8E481.7000308@gmail.com>
-In-Reply-To: <48F8E481.7000308@gmail.com>
+	Wed, 15 Oct 2008 04:10:05 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so1441423tic.23
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 01:10:03 -0700 (PDT)
+Message-ID: <ea11fea30810150110s772b740fv38cc37645da53201@mail.gmail.com> (sfid-20081015_101012_936383_4BE67F0D)
+Date: Wed, 15 Oct 2008 13:40:03 +0530
+From: "Manish Katiyar" <mkatiyar@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH] libertas : Remove unused variable warning "old_channel" from drivers/net/wireless/libertas/cmd.c
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1224002213.1799.2.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200810172127.04168.IvDoorn@gmail.com> (sfid-20081017_212718_131375_ECF45B1C)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <ea11fea30810130352i3cea0579g9950289254c8e628@mail.gmail.com>
+	 <1224002213.1799.2.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 17 October 2008, John Daiker wrote:
-> A few changes to reduce checkpatch.pl errors in the rt2x00 driver.  For 
-> the most part, I only fixed cosmetic things, and left the actual 'code 
-> flow' untouched (hopefully)!
-> 
-> Diff is against wireless-testing HEAD.
+On Tue, Oct 14, 2008 at 10:06 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Mon, 2008-10-13 at 16:22 +0530, Manish Katiyar wrote:
+>> Below patch removes the following warning during compilation.
+>>
+>> drivers/net/wireless/libertas/cmd.c:826: warning: unused variable 'old_channel'
+>>
+>>
+>> Signed-off-by : Manish Katiyar <mkatiyar@gmail.com>
+>
+> Acked-by: Dan Williams <dcbw@redhat.com>
 
-Looks good. Thanks.
+Hi Dan,
 
-John could you merge this into wireless-testing? :)
+A newbie question. Will you merge this patch or will I have to send it
+to Andrew again acked by you ?
 
-> Signed-off-by: John Daiker <daikerjohn@gmail.com>
+Thanks -
+Manish
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+>
+>> ---
+>>  drivers/net/wireless/libertas/cmd.c |    2 ++
+>>  1 files changed, 2 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/libertas/cmd.c
+>> b/drivers/net/wireless/libertas/cmd.c
+>> index a912fb6..297696d 100644
+>> --- a/drivers/net/wireless/libertas/cmd.c
+>> +++ b/drivers/net/wireless/libertas/cmd.c
+>> @@ -823,7 +823,9 @@ int lbs_update_channel(struct lbs_private *priv)
+>>  int lbs_set_channel(struct lbs_private *priv, u8 channel)
+>>  {
+>>       struct cmd_ds_802_11_rf_channel cmd;
+>> +#ifdef DEBUG
+>>       u8 old_channel = priv->curbssparams.channel;
+>> +#endif
+>>       int ret = 0;
+>>
+>>       lbs_deb_enter(LBS_DEB_CMD);
+>
+>
