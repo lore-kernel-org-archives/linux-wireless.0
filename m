@@ -1,84 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:58460 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbYJ0Iel (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 04:34:41 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1946971wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 01:34:40 -0700 (PDT)
-Message-ID: <a8e1da0810270134i26753dd1v6e9a5d122136bbbf@mail.gmail.com> (sfid-20081027_093446_804650_170B50F3)
-Date: Mon, 27 Oct 2008 16:34:40 +0800
-From: "Dave Young" <hidave.darkstar@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [BUG] hang with ath5k
-Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org,
-	"kernel list" <linux-kernel@vger.kernel.org>
-In-Reply-To: <200810250040.24324.rjw@sisk.pl>
+Received: from mga09.intel.com ([134.134.136.24]:17903 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752437AbYJOVY4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 17:24:56 -0400
+To: wimax@linuxwimax.org, linux-wireless@vger.kernel.org
+Subject: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050 v1.3
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+Date: Wed, 15 Oct 2008 14:22:13 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <a8e1da0810140142g633486br12c2799b2fa1670e@mail.gmail.com>
-	 <48F6133D.1070508@gmail.com>
-	 <a8e1da0810152334x6c596f88i1fd74548dc166f3a@mail.gmail.com>
-	 <200810250040.24324.rjw@sisk.pl>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810151422.13343.inaky@linux.intel.com> (sfid-20081015_232501_591501_CE880D8A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 25, 2008 at 6:40 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday, 16 of October 2008, Dave Young wrote:
->> On Wed, Oct 15, 2008 at 11:58 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
->> > On 10/14/2008 10:42 AM, Dave Young wrote:
->> >> 1) run wpa_supplicant
->> >> 2) ctrl + C
->> >> 3) goto 1)
->> >
->> > It doesn't happen here. How many iterations in average you need to reproduce this?
->> >
->>
->> About 15 times for me,
->> BTW, wpa_gui running while testing
->
-> Is this a regression from 2.6.26?
->
-> Rafael
->
 
-Test with 2.6.28-rc2,  run
-wpa_supplicant -i wlan0 -c /etc/wpa_supplicant.conf,
-kernel warning triggered:
+Intel would like to announce the 1.3 release of the Linux WiMAX common
+stack and drivers for its WiMAX devices (eg: Intel(r) WiMAX/WiFi Link 5x50).
 
-[ 1648.091084] ------------[ cut here ]------------
-[ 1648.091090] WARNING: at net/mac80211/rx.c:2201
-__ieee80211_rx+0x1d0/0x5f0 [mac80211]()
-[ 1648.091094] Modules linked in: rfcomm l2cap bluetooth container
-fuse ath5k mac80211 led_class psmouse serio_raw sg cfg80211 e100 mii
-intel_agp agpgart thermal button processor thermal_sys evdev
-[ 1648.091127] Pid: 0, comm: swapper Not tainted 2.6.28-rc1-smp #15
-[ 1648.091130] Call Trace:
-[ 1648.091140]  [<c01318a9>] warn_on_slowpath+0x59/0x80
-[ 1648.091148]  [<c01a15a6>] ? check_bytes_and_report+0x26/0xd0
-[ 1648.091155]  [<c03f2b06>] ? __kfree_skb+0x36/0x90
-[ 1648.091160]  [<c0157bff>] ? validate_chain+0xbf/0xea0
-[ 1648.091165]  [<c03f2b06>] ? __kfree_skb+0x36/0x90
-[ 1648.091170]  [<c0158c8a>] ? __lock_acquire+0x2aa/0x9a0
-[ 1648.091187]  [<e01b7640>] __ieee80211_rx+0x1d0/0x5f0 [mac80211]
-[ 1648.091199]  [<e017a001>] ? ath5k_hw_get_tsf64+0x51/0x90 [ath5k]
-[ 1648.091205]  [<c0476e0e>] ? _spin_lock+0x5e/0x70
-[ 1648.091215]  [<e01815f8>] ath5k_tasklet_rx+0x2f8/0x6b0 [ath5k]
-[ 1648.091221]  [<c0158c8a>] ? __lock_acquire+0x2aa/0x9a0
-[ 1648.091227]  [<c0137173>] tasklet_action+0x53/0xd0
-[ 1648.091232]  [<c01368e7>] __do_softirq+0xa7/0x170
-[ 1648.091237]  [<c0136a15>] do_softirq+0x65/0x70
-[ 1648.091242]  [<c0136eb7>] irq_exit+0x77/0x90
-[ 1648.091247]  [<c0106756>] do_IRQ+0x96/0xc0
-[ 1648.091252]  [<c0104a0c>] common_interrupt+0x28/0x30
-[ 1648.091258]  [<c015007b>] ? timer_list_show+0x14b/0xd70
-[ 1648.091263]  [<c010b0a2>] ? default_idle+0x42/0x60
-[ 1648.091267]  [<c010279e>] cpu_idle+0x6e/0xc0
-[ 1648.091272]  [<c04646f3>] rest_init+0x53/0x60
-[ 1648.091276] ---[ end trace c0bb2248162783d9 ]---
-[ 3856.835188] ------------[ cut here ]------------
+You can find the code and additional information at http://linuxwimax.org.
+
+This is a maintenance release; the high level changes from release 
+1.2.5 to 1.3 are:
+
+* WiMAX network service:
+
+ - Source tree re-structured: Removed redundant subfolders, renamed
+   others and reorganize structure for clarity
+	  
+ - Executable names and configuration folder locations: daemon is now
+   called wimaxd (from wimax_appsrvd); paths also move from
+   wimax_appsrv to wimaxd (eg: /etc/wimax, /usr/share/wimax, etc).
+
+ - WiMAX Network Service now builds and installs using automake. 
+	
+ - Miscellaneous bug fixes (see below for details).
+
+
+* WiMAX kernel stack and drivers:
+
+ - Miscellaneous bugs and race conditions fixes
+ 
+   - fix the "netlink: X bytes leftover after parsing attributes."
+     (requires user space protocol change)
+
+ - Power management: USB autosuspend and base-station idle mode
+   implemented. 
+
+   - Reimplement the USB TX and RX paths so they happen in a thread;
+     simplifies the implementation and allows for autosuspend to be
+     active even when the device has been opened.
+
+ - Support for SDIO interfaces enabled. Minor changes in the generic
+   driver infrastructure to better fit differentr bus-glue code.
+
+ - Use the new, IANA-approved ARPHRD_PUREIP hardware type. Requires
+   changes in the DHCP client (patches available in the package and at
+   the http://linuxwimax.org site).
+
+
+
+Details:
+
+Changes from release 1.2.5 to 1.3.3 are:
+
+* WiMAX Network Service:*
+
+1. Source tree re-structured
+   - Number of redundant subfolders (Source/Header/Include) have been removed.
+   - Some of the folder have been renamed. 
+	Handlers/PipeaHandler -> messaging
+	Common/Services -> Services
+	AppSrv -> wimaxd
+	AppSrv/L5Dispatcher -> dispatcher
+	Subfolders under IPCs/Sockets have been consolidated
+	L4Common/L4Bufman -> consolidated into device_dep
+	WimaxUtility -> wimaxcu 
+   - Some folders and files have been moved to better align with modules
+   they belong to.
+	OSAL --> Services/osal
+	Following files under Common/ have been moved to messaging
+	  - EventLogger.c|h
+	  - IndicatorsSubscribers.c|h
+	  - Messenger.c|h
+	  - WrappersCommon.c|h
+	  - WrappersUtils.c|h
+	  - TraceAgent.* have been moved from AppSrv/Agents/Trace
+	  
+2. Executable names and configuration folder locations
+   - The WiMAX Network Service daemon is now named as wimaxd (from wimax_appsrv)
+   - Various configuration and library folders used by the wimaxd daemon have 
+   been changed
+	/etc/wimax_appsrv --> /etc/wimax
+	/usr/local/lib/wimax_appsrv --> /usr/local/lib/wimax
+	/var/log/wimax_appsrv --> /var/log/wimax
+
+3. Automake build system
+   - WiMAX Network Service now builds and installs using automake. 
+		
+4. List of bugs/issues fixed:
+	
+   1. Scan list not getting cleared on changing the scan mode from 
+      semi-manual to manual.
+   2. State continues being reported as connected after a connection 
+      has dropped.
+   3. Enabling HW/SW RF kill does not clear scan list.
+   4. wimaxd crashes upon enabling HW RF kill after device is moved 
+      to OOZ from a connected state.
+   5. Scan list not getting cleared when no network is available.
+   6. Mis-leading CINR,RSSI figure when signal quality changes and/or 
+      device is moved to OOZ.
+   7. Doing a wide scan de-stablizes the firmware and wimaxd daemon.
+   8. Connect/link status and statistics not reported correctly when 
+      device is in idle state.
+   9. Changed cmd-line option to "update" for doing upgrades
+   10. User consent is always sought prior to downloading or installing
+       an update.
+   11. Miscellanous segmentation faults.
+   12. Un-intuitive error message when executed by un-privileged user.
+   13. Improved cmd-line argument parsing.
+   14. Better error reporting when HW RF is turned off during either 
+       connection or scan process.
+
 
 -- 
-Regards
-dave
+Inaky
+
