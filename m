@@ -1,184 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41519 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116AbYJ3KoT (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.187]:1210 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269AbYJOXbW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 06:44:19 -0400
-Subject: Re: [PATCH 2/4] nl80211: Add basic rate configuration for AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081029175238.066813010@localhost>
-References: <20081029174934.817700763@localhost>
-	 <20081029175238.066813010@localhost>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QIU2d6caUIuJIizcLX0Q"
-Date: Thu, 30 Oct 2008 11:44:14 +0100
-Message-Id: <1225363454.3690.19.camel@johannes.berg> (sfid-20081030_114424_304657_F8C83A80)
-Mime-Version: 1.0
+	Wed, 15 Oct 2008 19:31:22 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2883105fkq.5
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 16:31:20 -0700 (PDT)
+Message-ID: <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com> (sfid-20081016_013133_479263_B8382951)
+Date: Thu, 16 Oct 2008 01:31:20 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: New Regulatory Domain Api.
+Cc: "Marcel Holtmann" <holtmann@linux.intel.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081015131622.GH6509@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224018957.3027.9.camel@johannes.berg>
+	 <1224019662.3027.13.camel@johannes.berg>
+	 <1224085609.4764.18.camel@californication>
+	 <1224086374.735.4.camel@johannes.berg>
+	 <1224091577.28173.9.camel@californication>
+	 <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
+	 <1224092868.28173.21.camel@californication>
+	 <20081015112517.GF6509@tesla>
+	 <1224098748.28173.32.camel@californication>
+	 <20081015131622.GH6509@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 15, 2008 at 3:16 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Oct 15, 2008 at 12:25:48PM -0700, Marcel Holtmann wrote:
+>> > The problem here is not this though the problem here is the case
+>> > where people are using 2.6.28 without no iw or crda *and* have more
+>> > than two cards :)
+>>
+>> it might sound like an unlikely case and it will most likely only be the
+>> A-band usage anyway, but it is a valid case. People with old laptops do
+>> use newer wireless cards in PCMCIA or USB form factor to get better WiFi
+>> performance and/or stability. In some cases you can just replace your
+>> internal card, but with the switch from MiniPCI to half-MiniPCI this is
+>> not as likely anymore. So the use of a second external card becomes more
+>> likely.
+>
+> Right, and the proposed solution I had was to use an intersection
+> between two regulatory domains. This solution just doesn't currently
+> work well with Intel cards due to the capability <-> regulatory one to
+> one mapping.
 
---=-QIU2d6caUIuJIizcLX0Q
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This  might be viewed this way but this is not concept behind it.
+First Intel HW enforce regulatory domain written in the EEPROM, which
+makes it in your sense capability even it's not.
+Second Intel uses special regulatory domains called MOW1 and MOW2
+(most of the world 1 and 2) + possible restriction to BG. These 3
+domains/capabilities should be restrictive enough comply with most of
+the world regulatory restrictions. There is no real hint for specific
+regulatory domain that can be applied form this, the concept is that
+you should be move relatively freely around the globe without changing
+anything.
+You really have to use some other source to specify regulatory domain
+it's cannot be retrieved from the MOW SKU's. The only exception in
+Intel cards are JP and KR SKU's which are real regulatory domains.
 
-On Wed, 2008-10-29 at 19:49 +0200, Jouni Malinen wrote:
-> plain text document attachment (basic_rate_config.patch)
-> Add a new attribute, NL80211_ATTR_BSS_BASIC_RATES, that can be used with
-> NL80211_CMD_SET_BSS for userspace (e.g., hostapd) to set which rates are
-> in the basic rate set.
-
-Looks good to me, thanks.
-
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> Index: wireless-testing/include/linux/nl80211.h
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/include/linux/nl80211.h
-> +++ wireless-testing/include/linux/nl80211.h
-> @@ -243,6 +243,9 @@ enum nl80211_commands {
->   *	(u8, 0 or 1)
->   * @NL80211_ATTR_BSS_SHORT_SLOT_TIME: whether short slot time enabled
->   *	(u8, 0 or 1)
-> + * @NL80211_ATTR_BSS_BASIC_RATES: basic rates, array of basic
-> + *	rates in format defined by IEEE 802.11 7.3.2.2 but without the length
-> + *	restriction (at most %NL80211_MAX_SUPP_RATES).
->   *
->   * @NL80211_ATTR_HT_CAPABILITY: HT Capability information element (from
->   *	association request when used with NL80211_CMD_NEW_STATION)
-> @@ -307,6 +310,8 @@ enum nl80211_attrs {
-> =20
->  	NL80211_ATTR_MESH_PARAMS,
-> =20
-> +	NL80211_ATTR_BSS_BASIC_RATES,
-> +
->  	/* add attributes here, update the policy in nl80211.c */
-> =20
->  	__NL80211_ATTR_AFTER_LAST,
-> @@ -318,6 +323,7 @@ enum nl80211_attrs {
->   * here
->   */
->  #define NL80211_ATTR_HT_CAPABILITY NL80211_ATTR_HT_CAPABILITY
-> +#define NL80211_ATTR_BSS_BASIC_RATES NL80211_ATTR_BSS_BASIC_RATES
-> =20
->  #define NL80211_MAX_SUPP_RATES			32
->  #define NL80211_MAX_SUPP_REG_RULES		32
-> Index: wireless-testing/include/net/cfg80211.h
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/include/net/cfg80211.h
-> +++ wireless-testing/include/net/cfg80211.h
-> @@ -280,11 +280,16 @@ struct mpath_info {
->   *	(0 =3D no, 1 =3D yes, -1 =3D do not change)
->   * @use_short_slot_time: Whether the use of short slot time is allowed
->   *	(0 =3D no, 1 =3D yes, -1 =3D do not change)
-> + * @basic_rates: basic rates in IEEE 802.11 format
-> + *	(or NULL for no change)
-> + * @basic_rates_len: number of basic rates
->   */
->  struct bss_parameters {
->  	int use_cts_prot;
->  	int use_short_preamble;
->  	int use_short_slot_time;
-> +	u8 *basic_rates;
-> +	u8 basic_rates_len;
->  };
-> =20
->  /**
-> Index: wireless-testing/net/mac80211/cfg.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/net/mac80211/cfg.c
-> +++ wireless-testing/net/mac80211/cfg.c
-> @@ -1046,6 +1046,24 @@ static int ieee80211_change_bss(struct w
->  		changed |=3D BSS_CHANGED_ERP_SLOT;
->  	}
-> =20
-> +	if (params->basic_rates) {
-> +		int i, j;
-> +		u32 rates =3D 0;
-> +		struct ieee80211_local *local =3D wiphy_priv(wiphy);
-> +		struct ieee80211_supported_band *sband =3D
-> +			wiphy->bands[local->oper_channel->band];
-> +
-> +		for (i =3D 0; i < params->basic_rates_len; i++) {
-> +			int rate =3D (params->basic_rates[i] & 0x7f) * 5;
-> +			for (j =3D 0; j < sband->n_bitrates; j++) {
-> +				if (sband->bitrates[j].bitrate =3D=3D rate)
-> +					rates |=3D BIT(j);
-> +			}
-> +		}
-> +		sdata->vif.bss_conf.basic_rates =3D rates;
-> +		changed |=3D BSS_CHANGED_BASIC_RATES;
-> +	}
-> +
->  	ieee80211_bss_info_change_notify(sdata, changed);
-> =20
->  	return 0;
-> Index: wireless-testing/net/wireless/nl80211.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/net/wireless/nl80211.c
-> +++ wireless-testing/net/wireless/nl80211.c
-> @@ -95,6 +95,8 @@ static struct nla_policy nl80211_policy[
->  	[NL80211_ATTR_BSS_CTS_PROT] =3D { .type =3D NLA_U8 },
->  	[NL80211_ATTR_BSS_SHORT_PREAMBLE] =3D { .type =3D NLA_U8 },
->  	[NL80211_ATTR_BSS_SHORT_SLOT_TIME] =3D { .type =3D NLA_U8 },
-> +	[NL80211_ATTR_BSS_BASIC_RATES] =3D { .type =3D NLA_BINARY,
-> +					   .len =3D NL80211_MAX_SUPP_RATES },
-> =20
->  	[NL80211_ATTR_MESH_PARAMS] =3D { .type =3D NLA_NESTED },
-> =20
-> @@ -1613,6 +1615,12 @@ static int nl80211_set_bss(struct sk_buf
->  	if (info->attrs[NL80211_ATTR_BSS_SHORT_SLOT_TIME])
->  		params.use_short_slot_time =3D
->  		    nla_get_u8(info->attrs[NL80211_ATTR_BSS_SHORT_SLOT_TIME]);
-> +	if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
-> +		params.basic_rates =3D
-> +			nla_data(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
-> +		params.basic_rates_len =3D
-> +			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
-> +	}
-> =20
->  	err =3D get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
->  	if (err)
->=20
-> --
->=20
-> --=20
-> Jouni Malinen                                            PGP id EFC895FA
->=20
-
---=-QIU2d6caUIuJIizcLX0Q
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJCY/7AAoJEKVg1VMiehFYx3IQAJqKDUtoyFxC11pO2dSrtKOH
-Me++BIVSor1/k9ckEom6JDdqddyjxIOZzxM50knES1KUmtwS3m4Qc705WNoLTPMH
-eBVXfABAgHaoZ21L4OVg85BdGcgIIBjS//gK9lXXviDRG02NiU7NHTqY0Xr7/3xJ
-ClfnQ5QDAHIxneqwZlqJf4LNAdkmQ2N8A8qL85qstq+SkByfUA4RAr1qNYfL0z+t
-allCxDwnp8TtByHHksjJPv7XBfeDQqiyDcgdUvwpGB1NFefnTlS2qpGKoZnCyT91
-MuRBo21HhVDThBTK4l+qABCj/yVUn+S8fJff1kxnrBplCNdc960F0LiqZyGjR1Rm
-i0RdTSUqjL5/KIVU20/hk06217hotB9DANbFIsK3jvI9Gl3tz8NKP+mHBZ9294o8
-+166gcMctE/HMwA67TcWtkyMx0yZvo1q+xM6dHZLzM0qzijocZyGKqGPFAqN+Pyt
-XKgmv8VprzFqfS1VcdS4TWw1bJ+2q6oEYgR3Zp/8W8atXweOXYSOOpPo0FWrhJK6
-GutQMN1eIQb05Mgq2qFNO5+/Q57WqxP6QJmLaFRCT5umnk0MKZdhgrjrWBDzoxbm
-T344zI8HNgJ4cm/HsISqx9p/0UwPNOXLXS7QMolI0jy1kKvmLxo2mptHbGp1eSu9
-hQ1ZsddNMmMUmStYKySj
-=Rtqd
------END PGP SIGNATURE-----
-
---=-QIU2d6caUIuJIizcLX0Q--
-
+Just my two cents, probably didn't help to solve the problem,
+Tomas
