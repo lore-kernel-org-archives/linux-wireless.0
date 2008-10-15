@@ -1,51 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:30972 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751256AbYJ0O1Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 10:27:25 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2158157rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 07:27:24 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+Received: from www.tglx.de ([62.245.132.106]:50784 "EHLO www.tglx.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755485AbYJOTxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2008 15:53:15 -0400
+Date: Wed, 15 Oct 2008 21:53:06 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Elias Oltmanns <eo@nebensachen.de>
+cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: ath5k: kernel timing screwed - due to unserialised register
+ access?
+In-Reply-To: <87tzbdzump.fsf@denkblock.local>
+Message-ID: <alpine.LFD.2.00.0810152139530.6848@apollo> (sfid-20081015_215329_951967_08FF1C9E)
+References: <87k5cm3ee2.fsf@denkblock.local> <alpine.LFD.2.00.0810052354000.3398@apollo> <87d4id3jmr.fsf@denkblock.local> <alpine.LFD.2.00.0810061614490.3166@apollo> <87skr8h1de.fsf@denkblock.local> <alpine.LFD.2.00.0810071946460.3166@apollo>
+ <alpine.LFD.2.00.0810072042140.3166@apollo> <87hc7ot804.fsf@denkblock.local> <87myhfnwne.fsf@denkblock.local> <alpine.LFD.2.00.0810082203360.3237@apollo> <alpine.LFD.2.00.0810091313380.3237@apollo> <87k5cgg87j.fsf@denkblock.local> <alpine.LFD.2.00.0810101127560.3271@apollo>
+ <87abdck6sn.fsf@denkblock.local> <alpine.LFD.2.00.0810101432540.3271@apollo> <alpine.LFD.2.00.0810111149420.3356@apollo> <87k5ceeuxy.fsf@denkblock.local> <alpine.LFD.2.00.0810142054580.6848@apollo> <87skqyj0ps.fsf@denkblock.local> <alpine.LFD.2.00.0810150752380.6848@apollo>
+ <87tzbdzump.fsf@denkblock.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18693.53054.116942.355275@localhost.localdomain> (sfid-20081027_152731_505123_42BF3958)
-Date: Mon, 27 Oct 2008 19:55:02 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-In-Reply-To: <1224773201.6002.35.camel@johannes.berg>
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	<18684.18492.94865.480736@gargle.gargle.HOWL>
-	<1224493957.18024.47.camel@johannes.berg>
-	<18684.20459.335157.171344@gargle.gargle.HOWL>
-	<1224495531.18024.55.camel@johannes.berg>
-	<18684.24323.743610.871307@gargle.gargle.HOWL>
-	<1224505349.27899.17.camel@johannes.berg>
-	<18684.51206.771543.514682@localhost.localdomain>
-	<1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com>
-	<1224669827.28639.54.camel@johannes.berg>
-	<1ba2fa240810220459m1dcffd24k58cf6b72c688913c@mail.gmail.com>
-	<1224696170.30459.12.camel@johannes.berg>
-	<18688.15460.336059.400706@gargle.gargle.HOWL>
-	<1224773201.6002.35.camel@johannes.berg>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> We have this "ampdu_ack_map" parameter in the TX status which could be
-> set by the driver. But that assumes we only want a single TX status for
-> all A-MPDU frames, do we really? Or do we want to split them up and
-> handle it all in mac80211?
+On Wed, 15 Oct 2008, Elias Oltmanns wrote:
+> Thomas Gleixner <tglx@linutronix.de> wrote:
+> > On Wed, 15 Oct 2008, Elias Oltmanns wrote:
+> >> Thomas Gleixner <tglx@linutronix.de> wrote:
+> >
+> >> > On Sat, 11 Oct 2008, Elias Oltmanns wrote:
+> >> >> > Compile the acpi_processor module in to the kernel
+> >> >
+> >> >> > (CONFIG_ACPI_PROCESSOR=y) and add processor.max_cstate=1 to the kernel
+> >> >> > command line. If I analysed the problem correctly this will make the
+> >> >> > jiffies problem go away. I'm working on a fix.
+> >> >> 
+> >> >> Spot on, it does go away regardless whether NO_HZ or HIGH_RES are
+> >> >> enabled or disabled. Looking forward to testing your fix ;-).
+> >> >
+> >> > Here you go.
+> >> 
+> >> Bad luck, I'm afraid. Your patch seems to fix the issue for NO_HZ=n +
+> >> HIGH_RES=y. As soon as NO_HZ=y, however, the problem reappears. See the
+> >
+> > Hmm. You should have seen the same problem w/o that patch in the
+> > "CONFIG_ACPI_PROCESSOR=y / processor.max_cstate=1" test with NOHZ=y.
+> 
+> Right you are, I've just retested that case. The reason why I didn't hit
+> this the last time is that it seems to be triggered far less often than
+> without the processor.max_cstate=1 option.
+> 
+> >
+> > Anyway, I can see what the NOHZ problem is. Updated patch below.
+> 
+> Nice, it seems to have done the trick. I'll keep an eye on my logs to
+> make sure it doesn't pop up again.
 
-I wasn't aware of this parameter at all. Looks useful.
+Thanks. I queue it for .28 and tag it for stable as well.
+ 
+> >
+> >> output below. (Still testing on 2.6.27, mind. Should I test something
+> >> more up-to-date?)
+> >
+> > .27 is fine. 
+> >
+> > Did you make any progress finding out why the ath5k softirq runs for
+> > >20ms ?  We need to fix this madness as well :)
+> 
+> Well, it wasn't obvious to me so far, whether the logs really indicated
+> that 20 msecs had been spent in te callback or whether all this was due
+> to the bug in the timing code. With your patch applied, I have
+> eventually made further investigations into the matter. The problem is
+> the following snippet from
+> drivers/net/wireless/ath5k/phy.c:ath5k_hw_noise_floor_calibration():
+> 
+> 	/*
+> 	 * Enable noise floor calibration
+> 	 */
+> 	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
+> 				AR5K_PHY_AGCCTL_NF);
+> 
+> 	ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
+> 			AR5K_PHY_AGCCTL_NF, 0, false);
+> 
+> The first call sets a bit in the AR5K_PHY_AGCCTL register and the second
+> waits for that bit to be cleared by the hardware again. Apparently, it
+> takes roughly 20 ms to clear that bit.
 
-Atheros HW reports the Block Ack bitmap of the entire aggregate.
-So passing that up to mac80211, and letting mac80211 handle retransmissions would work.
-I am not sure about Intel.
+That happens in softirq context ? So to verify this it's easy to just
+measure the time with ktime_get() across the both calls.
 
-Sujith
+> In order to execute ath5k_hw_noise_floor_calibration() in process
+> context, I'd suggest introducing a single threaded workqueue for the
+> ath5k driver and scheduling calibration from the calib_timer callback.
+> Additionally, it would be necessary to schedule resets in a similar
+> manner instead of using the ath5k_tasklet_reset() tasklet. This requires
+> some serialisation but in my opinion there are various serialisation
+> issues in ath5k as it is that need fixing. Unfortunately, none of the
+> concerns I have raised wrt the ath5k driver seem to have resulted in a
+> commit that I'm aware of even though patches have been supplied. Perhaps
+> it's the merge window that consumes people's resources. Maybe I'll post
+> a patch addressing this particular issue in the next few days.
 
+Sounds like a candidate for threaded interrupt handler :)
+
+Anyway, measuring the time of the softirq and pointing it out when it
+takes more than a couple of cycles is the right thing to do.
+
+Thanks,
+
+	tglx
