@@ -1,249 +1,330 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:7737 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751352AbYJXGsl (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:41587 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756317AbYJPXKf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 02:48:41 -0400
-From: Reinette Chatre <reinette.chatre@linux.intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/10] iwlwifi: parametrize eeprom versions
-Date: Thu, 23 Oct 2008 23:48:51 -0700
-Message-Id: <1224830938-1577-4-git-send-email-reinette.chatre@linux.intel.com> (sfid-20081024_084854_268424_4AF28E97)
-In-Reply-To: <1224830938-1577-3-git-send-email-reinette.chatre@linux.intel.com>
-References: <>
- <1224830938-1577-1-git-send-email-reinette.chatre@linux.intel.com>
- <1224830938-1577-2-git-send-email-reinette.chatre@linux.intel.com>
- <1224830938-1577-3-git-send-email-reinette.chatre@linux.intel.com>
+	Thu, 16 Oct 2008 19:10:35 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] p54: more definitions form lmac_longbow.h and pda.h
+Date: Fri, 17 Oct 2008 01:14:45 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810170114.45742.chunkeey@web.de> (sfid-20081017_011040_346138_395D1E42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
-
-This patch uses new parameters eeprom_ver and eeprom_calib_ver
-to support additional HW.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+This patch ports more useful features to p54
+ - PDR definitions for the synth chips & regulatory domain
+ - IEEE80211_TX_CTL_ASSIGN_SEQ
+ - add some lost mutex_lock & mutex_unlock
+ 
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c   |   26 +++++---------------------
- drivers/net/wireless/iwlwifi/iwl-5000.c   |   29 +++++++++++++----------------
- drivers/net/wireless/iwlwifi/iwl-core.h   |    2 ++
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |   18 +++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    5 ++++-
- 5 files changed, 41 insertions(+), 39 deletions(-)
+John,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 741b425..f53cd2b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -318,27 +318,9 @@ static int is_fat_channel(__le32 rxon_flags)
- /*
-  * EEPROM handlers
-  */
--
--static int iwl4965_eeprom_check_version(struct iwl_priv *priv)
-+static u16 iwl4965_eeprom_calib_version(struct iwl_priv *priv)
+don't forget Larry's fix when you merge it into wireless-testing.
+Thanks!
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-10-16 23:06:55.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.c	2008-10-17 00:32:12.000000000 +0200
+@@ -221,10 +221,10 @@ int p54_parse_firmware(struct ieee80211_
+ 
+ 	if (priv->fw_var >= 0x300) {
+ 		/* Firmware supports QoS, use it! */
+-		priv->tx_stats[4].limit = 3;
+-		priv->tx_stats[5].limit = 4;
+-		priv->tx_stats[6].limit = 3;
+-		priv->tx_stats[7].limit = 1;
++		priv->tx_stats[4].limit = 3;		/* AC_VO */
++		priv->tx_stats[5].limit = 4;		/* AC_VI */
++		priv->tx_stats[6].limit = 3;		/* AC_BE */
++		priv->tx_stats[7].limit = 2;		/* AC_BK */
+ 		dev->queues = 4;
+ 	}
+ 
+@@ -436,12 +436,12 @@ static int p54_parse_eeprom(struct ieee8
+ 		goto err;
+ 	}
+ 
+-	priv->rxhw = synth & 0x07;
++	priv->rxhw = synth & PDR_SYNTH_FRONTEND_MASK;
+ 	if (priv->rxhw == 4)
+ 		p54_init_xbow_synth(dev);
+-	if (!(synth & 0x40))
++	if (!(synth & PDR_SYNTH_24_GHZ_DISABLED))
+ 		dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
+-	if (!(synth & 0x80))
++	if (!(synth & PDR_SYNTH_5_GHZ_DISABLED))
+ 		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
+ 
+ 	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
+@@ -739,9 +739,9 @@ static int p54_rx_control(struct ieee802
+ /* returns zero if skb can be reused */
+ int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb)
  {
--	u16 eeprom_ver;
--	u16 calib_ver;
--
--	eeprom_ver = iwl_eeprom_query16(priv, EEPROM_VERSION);
--
--	calib_ver = iwl_eeprom_query16(priv, EEPROM_4965_CALIB_VERSION_OFFSET);
--
--	if (eeprom_ver < EEPROM_4965_EEPROM_VERSION ||
--	    calib_ver < EEPROM_4965_TX_POWER_VERSION)
--		goto err;
--
--	return 0;
--err:
--	IWL_ERROR("Unsuported EEPROM VER=0x%x < 0x%x CALIB=0x%x < 0x%x\n",
--		  eeprom_ver, EEPROM_4965_EEPROM_VERSION,
--		  calib_ver, EEPROM_4965_TX_POWER_VERSION);
--	return -EINVAL;
--
-+	return iwl_eeprom_query16(priv, EEPROM_4965_CALIB_VERSION_OFFSET);
- }
+-	u8 type = le16_to_cpu(*((__le16 *)skb->data)) >> 8;
++	u16 type = le16_to_cpu(*((__le16 *)skb->data));
  
- /*
-@@ -2355,7 +2337,7 @@ static struct iwl_lib_ops iwl4965_lib = {
- 		.verify_signature  = iwlcore_eeprom_verify_signature,
- 		.acquire_semaphore = iwlcore_eeprom_acquire_semaphore,
- 		.release_semaphore = iwlcore_eeprom_release_semaphore,
--		.check_version = iwl4965_eeprom_check_version,
-+		.calib_version = iwl4965_eeprom_calib_version,
- 		.query_addr = iwlcore_eeprom_query_addr,
- 	},
- 	.send_tx_power	= iwl4965_send_tx_power,
-@@ -2374,6 +2356,8 @@ struct iwl_cfg iwl4965_agn_cfg = {
- 	.fw_name = "iwlwifi-4965" IWL4965_UCODE_API ".ucode",
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.eeprom_size = IWL4965_EEPROM_IMG_SIZE,
-+	.eeprom_ver = EEPROM_4965_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_4965_TX_POWER_VERSION,
- 	.ops = &iwl4965_ops,
- 	.mod_params = &iwl4965_mod_params,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index a368854..cdf328b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -293,30 +293,17 @@ static u32 eeprom_indirect_address(const struct iwl_priv *priv, u32 address)
- 	return (address & ADDRESS_MSK) + (offset << 1);
- }
- 
--static int iwl5000_eeprom_check_version(struct iwl_priv *priv)
-+static u16 iwl5000_eeprom_calib_version(struct iwl_priv *priv)
+-	if (type == 0x80)
++	if (type & P54_HDR_FLAG_CONTROL)
+ 		return p54_rx_control(dev, skb);
+ 	else
+ 		return p54_rx_data(dev, skb);
+@@ -905,12 +905,13 @@ EXPORT_SYMBOL_GPL(p54_read_eeprom);
+ static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
  {
--	u16 eeprom_ver;
- 	struct iwl_eeprom_calib_hdr {
- 		u8 version;
- 		u8 pa_type;
- 		u16 voltage;
- 	} *hdr;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_tx_queue_stats *current_queue;
++	struct ieee80211_tx_queue_stats *current_queue = NULL;
+ 	struct p54_common *priv = dev->priv;
+ 	struct p54_hdr *hdr;
+ 	struct p54_tx_data *txhdr;
+ 	size_t padding, len;
+ 	int i, j, ridx;
++	u16 hdr_flags = 0;
+ 	u8 rate;
+ 	u8 cts_rate = 0x20;
+ 	u8 rc_flags;
+@@ -932,9 +933,7 @@ static int p54_tx(struct ieee80211_hw *d
+ 	hdr = (struct p54_hdr *) skb_push(skb, sizeof(*hdr));
  
--	eeprom_ver = iwl_eeprom_query16(priv, EEPROM_VERSION);
--
- 	hdr = (struct iwl_eeprom_calib_hdr *)iwl_eeprom_query_addr(priv,
- 							EEPROM_5000_CALIB_ALL);
--
--	if (eeprom_ver < EEPROM_5000_EEPROM_VERSION ||
--	    hdr->version < EEPROM_5000_TX_POWER_VERSION)
--		goto err;
--
--	return 0;
--err:
--	IWL_ERROR("Unsuported EEPROM VER=0x%x < 0x%x CALIB=0x%x < 0x%x\n",
--		  eeprom_ver, EEPROM_5000_EEPROM_VERSION,
--		  hdr->version, EEPROM_5000_TX_POWER_VERSION);
--	return -EINVAL;
-+	return hdr->version;
- 
+ 	if (padding)
+-		hdr->flags = cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN);
+-	else
+-		hdr->flags = cpu_to_le16(0);
++		hdr_flags |= P54_HDR_FLAG_DATA_ALIGN;
+ 	hdr->len = cpu_to_le16(len);
+ 	hdr->type = (info->flags & IEEE80211_TX_CTL_NO_ACK) ? 0 : cpu_to_le16(1);
+ 	hdr->rts_tries = info->control.rates[0].count;
+@@ -1003,6 +1002,12 @@ static int p54_tx(struct ieee80211_hw *d
+ 			ridx++;
+ 		}
+ 	}
++
++	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
++		hdr_flags |= P54_HDR_FLAG_DATA_OUT_SEQNR;
++
++	/* TODO: enable bursting */
++	hdr->flags = cpu_to_le16(hdr_flags);
+ 	hdr->tries = ridx;
+ 	txhdr->crypt_offset = 0;
+ 	txhdr->rts_rate_idx = 0;
+@@ -1021,6 +1026,10 @@ static int p54_tx(struct ieee80211_hw *d
+ 	/* modifies skb->cb and with it info, so must be last! */
+ 	if (unlikely(p54_assign_address(dev, skb, hdr, skb->len))) {
+ 		skb_pull(skb, sizeof(*hdr) + sizeof(*txhdr) + padding);
++		if (current_queue) {
++			current_queue->len--;
++			current_queue->count--;
++		}
+ 		return NETDEV_TX_BUSY;
+ 	}
+ 	priv->tx(dev, skb, 0);
+@@ -1074,13 +1083,14 @@ static int p54_setup_mac(struct ieee8021
+ 	return 0;
  }
  
-@@ -1510,7 +1497,7 @@ static struct iwl_lib_ops iwl5000_lib = {
- 		.verify_signature  = iwlcore_eeprom_verify_signature,
- 		.acquire_semaphore = iwlcore_eeprom_acquire_semaphore,
- 		.release_semaphore = iwlcore_eeprom_release_semaphore,
--		.check_version	= iwl5000_eeprom_check_version,
-+		.calib_version	= iwl5000_eeprom_calib_version,
- 		.query_addr = iwl5000_eeprom_query_addr,
- 	},
- };
-@@ -1537,6 +1524,8 @@ struct iwl_cfg iwl5300_agn_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl5000_ops,
- 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
-+	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- };
- 
-@@ -1546,6 +1535,8 @@ struct iwl_cfg iwl5100_bg_cfg = {
- 	.sku = IWL_SKU_G,
- 	.ops = &iwl5000_ops,
- 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
-+	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- };
- 
-@@ -1555,6 +1546,8 @@ struct iwl_cfg iwl5100_abg_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G,
- 	.ops = &iwl5000_ops,
- 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
-+	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- };
- 
-@@ -1564,6 +1557,8 @@ struct iwl_cfg iwl5100_agn_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl5000_ops,
- 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
-+	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- };
- 
-@@ -1573,6 +1568,8 @@ struct iwl_cfg iwl5350_agn_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl5000_ops,
- 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
-+	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index a2d8afe..fb95c6a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -173,6 +173,8 @@ struct iwl_cfg {
- 	const char *fw_name;
- 	unsigned int sku;
- 	int eeprom_size;
-+	u16  eeprom_ver;
-+	u16  eeprom_calib_ver;
- 	const struct iwl_ops *ops;
- 	const struct iwl_mod_params *mod_params;
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 3715575..5160b4b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -279,7 +279,23 @@ EXPORT_SYMBOL(iwl_eeprom_free);
- 
- int iwl_eeprom_check_version(struct iwl_priv *priv)
+-static int p54_set_freq(struct ieee80211_hw *dev, __le16 freq)
++static int p54_set_freq(struct ieee80211_hw *dev, u16 frequency)
  {
--	return priv->cfg->ops->lib->eeprom_ops.check_version(priv);
-+	u16 eeprom_ver;
-+	u16 calib_ver;
-+
-+	eeprom_ver = iwl_eeprom_query16(priv, EEPROM_VERSION);
-+	calib_ver = priv->cfg->ops->lib->eeprom_ops.calib_version(priv);
-+
-+	if (eeprom_ver < priv->cfg->eeprom_ver ||
-+	    calib_ver < priv->cfg->eeprom_calib_ver)
-+		goto err;
-+
-+	return 0;
-+err:
-+	IWL_ERROR("Unsuported EEPROM VER=0x%x < 0x%x CALIB=0x%x < 0x%x\n",
-+		  eeprom_ver, priv->cfg->eeprom_ver,
-+		  calib_ver,  priv->cfg->eeprom_calib_ver);
-+	return -EINVAL;
-+
+ 	struct p54_common *priv = dev->priv;
+ 	struct sk_buff *skb;
+ 	struct p54_scan *chan;
+ 	unsigned int i;
+ 	void *entry;
++	__le16 freq = cpu_to_le16(frequency);
+ 
+ 	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*chan) +
+ 			    sizeof(struct p54_hdr), P54_CONTROL_TYPE_SCAN,
+@@ -1237,6 +1247,7 @@ static int p54_start(struct ieee80211_hw
+ 	struct p54_common *priv = dev->priv;
+ 	int err;
+ 
++	mutex_lock(&priv->conf_mutex);
+ 	err = priv->open(dev);
+ 	if (!err)
+ 		priv->mode = NL80211_IFTYPE_MONITOR;
+@@ -1248,6 +1259,7 @@ static int p54_start(struct ieee80211_hw
+ 	if (!err)
+ 		err = p54_init_stats(dev);
+ 
++	mutex_unlock(&priv->conf_mutex);
+ 	return err;
  }
- EXPORT_SYMBOL(iwl_eeprom_check_version);
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index d3a2a5b..997f23c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -174,6 +174,9 @@ struct iwl_eeprom_channel {
- #define EEPROM_5000_REG_BAND_52_FAT_CHANNELS  ((0x92)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 22  bytes */
+@@ -1256,6 +1268,7 @@ static void p54_stop(struct ieee80211_hw
+ 	struct p54_common *priv = dev->priv;
+ 	struct sk_buff *skb;
  
-+/* 5050 Specific */
-+#define EEPROM_5050_TX_POWER_VERSION    (4)
-+#define EEPROM_5050_EEPROM_VERSION	(0x21E)
++	mutex_lock(&priv->conf_mutex);
+ 	del_timer(&priv->stats_timer);
+ 	p54_free_skb(dev, priv->cached_stats);
+ 	priv->cached_stats = NULL;
+@@ -1265,6 +1278,7 @@ static void p54_stop(struct ieee80211_hw
+ 	priv->stop(dev);
+ 	priv->tsf_high32 = priv->tsf_low32 = 0;
+ 	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
++	mutex_unlock(&priv->conf_mutex);
+ }
  
- /* 2.4 GHz */
- extern const u8 iwl_eeprom_band_1[14];
-@@ -371,7 +374,7 @@ struct iwl_eeprom_ops {
- 	int (*verify_signature) (struct iwl_priv *priv);
- 	int (*acquire_semaphore) (struct iwl_priv *priv);
- 	void (*release_semaphore) (struct iwl_priv *priv);
--	int (*check_version) (struct iwl_priv *priv);
-+	u16 (*calib_version) (struct iwl_priv *priv);
- 	const u8* (*query_addr) (const struct iwl_priv *priv, size_t offset);
- };
+ static int p54_add_interface(struct ieee80211_hw *dev,
+@@ -1272,14 +1286,18 @@ static int p54_add_interface(struct ieee
+ {
+ 	struct p54_common *priv = dev->priv;
  
--- 
-1.5.4.3
-
+-	if (priv->mode != NL80211_IFTYPE_MONITOR)
++	mutex_lock(&priv->conf_mutex);
++	if (priv->mode != NL80211_IFTYPE_MONITOR) {
++		mutex_unlock(&priv->conf_mutex);
+ 		return -EOPNOTSUPP;
++	}
+ 
+ 	switch (conf->type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		priv->mode = conf->type;
+ 		break;
+ 	default:
++		mutex_unlock(&priv->conf_mutex);
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+@@ -1298,6 +1316,7 @@ static int p54_add_interface(struct ieee
+ 
+ 	p54_set_leds(dev, 1, 0, 0);
+ 
++	mutex_unlock(&priv->conf_mutex);
+ 	return 0;
+ }
+ 
+@@ -1305,9 +1324,12 @@ static void p54_remove_interface(struct 
+ 				 struct ieee80211_if_init_conf *conf)
+ {
+ 	struct p54_common *priv = dev->priv;
++
++	mutex_lock(&priv->conf_mutex);
++	p54_setup_mac(dev, P54_FILTER_TYPE_NONE, NULL);
+ 	priv->mode = NL80211_IFTYPE_MONITOR;
+ 	memset(priv->mac_addr, 0, ETH_ALEN);
+-	p54_setup_mac(dev, P54_FILTER_TYPE_NONE, NULL);
++	mutex_unlock(&priv->conf_mutex);
+ }
+ 
+ static int p54_config(struct ieee80211_hw *dev, u32 changed)
+@@ -1319,7 +1341,7 @@ static int p54_config(struct ieee80211_h
+ 	mutex_lock(&priv->conf_mutex);
+ 	priv->rx_antenna = 2; /* automatic */
+ 	priv->output_power = conf->power_level << 2;
+-	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
++	ret = p54_set_freq(dev, conf->channel->center_freq);
+ 	if (!ret)
+ 		ret = p54_set_edcf(dev);
+ 	mutex_unlock(&priv->conf_mutex);
+@@ -1372,14 +1394,18 @@ static int p54_conf_tx(struct ieee80211_
+ 		       const struct ieee80211_tx_queue_params *params)
+ {
+ 	struct p54_common *priv = dev->priv;
++	int ret;
+ 
++	mutex_lock(&priv->conf_mutex);
+ 	if ((params) && !(queue > 4)) {
+ 		P54_SET_QUEUE(priv->qos_params[queue], params->aifs,
+ 			params->cw_min, params->cw_max, params->txop);
+ 	} else
+-		return -EINVAL;
+-
+-	return p54_set_edcf(dev);
++		ret = -EINVAL;
++	if (!ret)
++		ret = p54_set_edcf(dev);
++	mutex_unlock(&priv->conf_mutex);
++	return ret;
+ }
+ 
+ static int p54_init_xbow_synth(struct ieee80211_hw *dev)
+@@ -1488,19 +1514,14 @@ struct ieee80211_hw *p54_init_common(siz
+ 		     IEEE80211_HW_SIGNAL_DBM |
+ 		     IEEE80211_HW_NOISE_DBM;
+ 
+-	/*
+-	 * XXX: when this driver gets support for any mode that
+-	 *	requires beacons (AP, MESH, IBSS) then it must
+-	 *	implement IEEE80211_TX_CTL_ASSIGN_SEQ.
+-	 */
+ 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+ 	dev->channel_change_time = 1000;	/* TODO: find actual value */
+-	priv->tx_stats[0].limit = 1;
+-	priv->tx_stats[1].limit = 1;
+-	priv->tx_stats[2].limit = 1;
+-	priv->tx_stats[3].limit = 1;
+-	priv->tx_stats[4].limit = 5;
++	priv->tx_stats[0].limit = 1;		/* Beacon queue */
++	priv->tx_stats[1].limit = 1;		/* Probe queue for HW scan */
++	priv->tx_stats[2].limit = 3;		/* queue for MLMEs */
++	priv->tx_stats[3].limit = 3;		/* Broadcast / MC queue */
++	priv->tx_stats[4].limit = 5;		/* Data */
+ 	dev->queues = 1;
+ 	priv->noise = -94;
+ 	/*
+diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
+--- a/drivers/net/wireless/p54/p54common.h	2008-10-15 19:24:42.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.h	2008-10-16 23:37:49.000000000 +0200
+@@ -25,6 +25,22 @@ struct bootrec {
+ 	u32 data[10];
+ } __attribute__((packed));
+ 
++#define PDR_SYNTH_FRONTEND_MASK		0x0007
++#define PDR_SYNTH_IQ_CAL_MASK		0x0018
++#define PDR_SYNTH_IQ_CAL_PA_DETECTOR	0x0000
++#define PDR_SYNTH_IQ_CAL_DISABLED	0x0008
++#define PDR_SYNTH_IQ_CAL_ZIF		0x0010
++#define PDR_SYNTH_FAA_SWITCH_MASK	0x0020
++#define PDR_SYNTH_FAA_SWITCH_ENABLED	0x0001
++#define PDR_SYNTH_24_GHZ_MASK		0x0040
++#define PDR_SYNTH_24_GHZ_DISABLED	0x0040
++#define PDR_SYNTH_5_GHZ_MASK		0x0080
++#define PDR_SYNTH_5_GHZ_DISABLED	0x0080
++#define PDR_SYNTH_RX_DIV_MASK		0x0100
++#define PDR_SYNTH_RX_DIV_SUPPORTED	0x0100
++#define PDR_SYNTH_TX_DIV_MASK		0x0200
++#define PDR_SYNTH_TX_DIV_SUPPORTED	0x0200
++
+ struct bootrec_exp_if {
+ 	__le16 role;
+ 	__le16 if_id;
+@@ -210,6 +226,19 @@ struct pda_pa_curve_data {
+ #define PDR_BASEBAND_REGISTERS			0x8000
+ #define PDR_PER_CHANNEL_BASEBAND_REGISTERS	0x8001
+ 
++/* PDR definitions for default country & country list */
++#define PDR_COUNTRY_CERT_CODE		0x80
++#define PDR_COUNTRY_CERT_CODE_REAL	0x00
++#define PDR_COUNTRY_CERT_CODE_PSEUDO	0x80
++#define PDR_COUNTRY_CERT_BAND		0x40
++#define PDR_COUNTRY_CERT_BAND_2GHZ	0x00
++#define PDR_COUNTRY_CERT_BAND_5GHZ	0x40
++#define PDR_COUNTRY_CERT_IODOOR		0x30
++#define PDR_COUNTRY_CERT_IODOOR_BOTH	0x00
++#define PDR_COUNTRY_CERT_IODOOR_INDOOR	0x20
++#define PDR_COUNTRY_CERT_IODOOR_OUTDOOR	0x30
++#define PDR_COUNTRY_CERT_INDEX		0x0F
++
+ /* stored in skb->cb */
+ struct memrecord {
+ 	u32 start_addr;
+@@ -507,7 +536,7 @@ struct p54_sta_unlock {
+ } __attribute__ ((packed));
+ 
+ #define P54_TIM_CLEAR BIT(15)
+-struct p54_tx_control_tim {
++struct p54_tim {
+ 	u8 count;
+ 	u8 padding[3];
+ 	__le16 entry[8];
