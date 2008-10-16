@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54969 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754350AbYJVSj4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 14:39:56 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 11:39:56 -0700
-Date: Wed, 22 Oct 2008 04:39:50 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless: remove struct regdom hinting
-Message-ID: <20081022113950.GE6190@tesla> (sfid-20081022_204009_835871_27674866)
-References: <1224585042.5521.7.camel@johannes.berg>
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:49565 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752029AbYJPXni (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2008 19:43:38 -0400
+Message-ID: <48F7D1A8.4090608@lwfinger.net> (sfid-20081017_014341_486942_035D9D21)
+Date: Thu, 16 Oct 2008 16:43:36 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1224585042.5521.7.camel@johannes.berg>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jouni Malinen <j@w1.fi>, John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] hostap: Fix sparse warnings
+References: <48F761C1.9000109@lwfinger.net>	 (sfid-20081016_174625_529721_9312B9FF) <1224172212.735.79.camel@johannes.berg>
+In-Reply-To: <1224172212.735.79.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2008 at 03:30:42AM -0700, Johannes Berg wrote:
-> --- everything.orig/net/wireless/reg.h  2008-10-21 11:16:54.000000000 +0200
-> +++ everything/net/wireless/reg.h       2008-10-21 11:43:18.000000000 +0200
-> @@ -11,30 +11,21 @@ int set_regdom(const struct ieee80211_re
+Johannes Berg wrote:
+> On Thu, 2008-10-16 at 08:46 -0700, Larry Finger wrote:
 > 
->  /**
->   * __regulatory_hint - hint to the wireless core a regulatory domain
-> - * @wiphy: if a driver is providing the hint this is the driver's very
-> - *     own &struct wiphy
-> + * @wiphy: if the hint comes from country information from an AP, this
-> + *     is required to be set to the wiphy that received the information
->   * @alpha2: the ISO/IEC 3166 alpha2 being claimed the regulatory domain
-> - *     should be in. If @rd is set this should be NULL
-> - * @rd: a complete regulatory domain, if passed the caller need not worry
-> - *     about freeing it
-> + *     should be in. If @rd is set this should be NULL
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>> -	set_bit(PRISM2_INFO_PENDING_LINKSTATUS, &local->pending_info);
+>> +	set_bit(PRISM2_INFO_PENDING_LINKSTATUS, (ulong *)&local->pending_info);
+> 
+> Shouldn't you just do this instead?
+> 
+> 
+> --- hostapd_wlan.h
+> +++ hostapd_wlan.h
+> @@ ... @@
+> -	long pending_info;
+> +	unsigned long pending_info;
 
-That can be removed from kdoc as @rd is gone now. Also can you
-please update Documentation/networking/regulatory.txt to reflect the
-new changes for mortals?
+Yes. V2 of the patch coming.
 
-  Luis
+Thanks,
+
+Larry
+
