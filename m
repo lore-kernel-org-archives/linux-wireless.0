@@ -1,37 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:40001 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754059AbYJ2TaR (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:35589 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754635AbYJPL02 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 15:30:17 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so160084fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 12:30:15 -0700 (PDT)
-Message-ID: <45e8e6c40810291230r57357411yd62c857185fbae42@mail.gmail.com> (sfid-20081029_203022_920188_8B073DD3)
-Date: Wed, 29 Oct 2008 12:30:15 -0700
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH] ath9k: kill ath9k_opmode
-Cc: linux-wireless@vger.kernel.org,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	Jouni.Malinen@atheros.com
-In-Reply-To: <20081029192658.GD6103@tesla>
+	Thu, 16 Oct 2008 07:26:28 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54: change firmware names for usb devices
+Date: Thu, 16 Oct 2008 13:30:38 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4907cc01.19f8720a.500d.6636@mx.google.com>
-	 <20081029192658.GD6103@tesla>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810161330.38726.chunkeey@web.de> (sfid-20081016_132633_416430_E7188A47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, I'll do that soon and send version 2.
+Johannes thought it would have been a good idea to change the firmware names.
+Note: we still have fallbacks in case our users don't want to "break their running system".
 
-On Wed, Oct 29, 2008 at 12:26 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Tue, Oct 28, 2008 at 07:35:45PM -0700, Andrey Yurovsky wrote:
->> This patch kills ath9k's ath9k_opmode enum by replacing it with nl80211_iftype.
->> Compile-tested only.
->
-> Thanks, would it be possible for you to rebase on top of sujith's
-> patches?
->
->  Luis
->
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-10-15 02:59:26.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.c	2008-10-16 13:18:15.000000000 +0200
+@@ -214,6 +214,11 @@ int p54_parse_firmware(struct ieee80211_
+ 		printk(KERN_INFO "p54: FW rev %s - Softmac protocol %x.%x\n",
+ 			fw_version, priv->fw_var >> 8, priv->fw_var & 0xff);
+ 
++	if (priv->fw_var < 0x500)
++		printk(KERN_INFO "p54: you are using an obsolete firmware. "
++		       "visit http://wireless.kernel.org/en/users/Drivers/p54 "
++		       "and grab one for \"kernel >= 2.6.28\"!\n");
++
+ 	if (priv->fw_var >= 0x300) {
+ 		/* Firmware supports QoS, use it! */
+ 		priv->tx_stats[4].limit = 3;
+diff -Nurp a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+--- a/drivers/net/wireless/p54/p54pci.c	2008-10-14 22:06:54.000000000 +0200
++++ b/drivers/net/wireless/p54/p54pci.c	2008-10-15 19:28:08.000000000 +0200
+@@ -28,6 +28,7 @@ MODULE_AUTHOR("Michael Wu <flamingice@so
+ MODULE_DESCRIPTION("Prism54 PCI wireless driver");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS("prism54pci");
++MODULE_FIRMWARE("isl3886");
+ 
+ static struct pci_device_id p54p_table[] __devinitdata = {
+ 	/* Intersil PRISM Duette/Prism GT Wireless LAN adapter */
+diff -Nurp a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+--- a/drivers/net/wireless/p54/p54usb.c	2008-10-14 22:07:39.000000000 +0200
++++ b/drivers/net/wireless/p54/p54usb.c	2008-10-16 12:58:35.000000000 +0200
+@@ -28,6 +28,11 @@ MODULE_AUTHOR("Michael Wu <flamingice@so
+ MODULE_DESCRIPTION("Prism54 USB wireless driver");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS("prism54usb");
++MODULE_FIRMWARE("isl3886usb");
++MODULE_FIRMWARE("isl3887usb");
++/* outdated firmware names */
++MODULE_FIRMWARE("isl3890usb");
++MODULE_FIRMWARE("isl3887usb_bare");
+ 
+ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	/* Version 1 devices (pci chip + net2280) */
+@@ -415,10 +420,13 @@ static int p54u_upload_firmware_3887(str
+ 		goto err_reset;
+ 	}
+ 
+-	err = request_firmware(&fw_entry, "isl3887usb_bare", &priv->udev->dev);
++	err = request_firmware(&fw_entry, "isl3887usb", &priv->udev->dev);
+ 	if (err) {
+-		printk(KERN_ERR "p54usb: cannot find firmware (isl3887usb_bare)!\n");
+-		goto err_req_fw_failed;
++		printk(KERN_ERR "p54usb: cannot find firmware (isl3887usb)\n");
++		err = request_firmware(&fw_entry, "isl3887usb_bare",
++			&priv->udev->dev);
++		if (err)
++			goto err_req_fw_failed;
+ 	}
+ 
+ 	err = p54_parse_firmware(dev, fw_entry);
+@@ -553,11 +561,15 @@ static int p54u_upload_firmware_net2280(
+ 		return -ENOMEM;
+ 	}
+ 
+-	err = request_firmware(&fw_entry, "isl3890usb", &priv->udev->dev);
++	err = request_firmware(&fw_entry, "isl3886usb", &priv->udev->dev);
+ 	if (err) {
+-		printk(KERN_ERR "p54usb: cannot find firmware (isl3890usb)!\n");
+-		kfree(buf);
+-		return err;
++		printk(KERN_ERR "p54usb: cannot find firmware (isl3886usb)\n");
++		err = request_firmware(&fw_entry, "isl3890usb",
++			&priv->udev->dev);
++		if (err) {
++			kfree(buf);
++			return err;
++			}
+ 	}
+ 
+ 	err = p54_parse_firmware(dev, fw_entry);
