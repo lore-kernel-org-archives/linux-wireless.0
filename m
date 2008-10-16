@@ -1,31 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:42251 "EHLO vs166246.vserver.de"
+Received: from mail.atheros.com ([12.36.123.2]:46706 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752221AbYJVQLb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 12:11:31 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: B43 STILL randomly and silently dropping connections...
-Date: Wed, 22 Oct 2008 18:11:03 +0200
-Cc: Jerry McBride <mcbrides9@comcast.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200810220648.55313.mcbrides9@comcast.net> <20081022125143.GB15808@tuxdriver.com>
-In-Reply-To: <20081022125143.GB15808@tuxdriver.com>
+	id S1752770AbYJPSNE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2008 14:13:04 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Oct 2008 11:13:04 -0700
+Date: Thu, 16 Oct 2008 04:12:55 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <stable@kernel.org>
+CC: <steven@uplinklabs.net>, <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: fix oops on trying to hold the wrong spinlock
+Message-ID: <20081016111255.GA5899@tesla> (sfid-20081016_201308_862714_B81982BF)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200810221811.03546.mb@bu3sch.de> (sfid-20081022_181136_213960_B6988BE3)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 22 October 2008 14:51:43 John W. Linville wrote:
-> I've seen this message a couple of times -- I'm a bit surprised that
-> you haven't been getting a response.  I am Cc'ing Michael and the
-> bcm43xx mailing list just in case they haven't noticed this message.
+This fixes on oops when you get try to send a BA to an 11n AP.
+The oops occurred because we were trying to aquire an incorrect
+spinlock.
 
-I know about this issue.
-But what am I supposed to do?
-Somebody who can reproduce it, fix it please and provide a patch.
+We were trying to hold the wrong spinlock due to a typo
+on IEEE80211_BAR_CTL_TID_S's definition. We use this to
+compute the tid number and then hold this this tid number's
+spinlock.
 
+Tested-by: Steven Noonan <steven@uplinklabs.net>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+
+I don't see this queue'd yet for 2.6.27.2
+
+ drivers/net/wireless/ath9k/core.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 80814c9..5b4f1c4 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -309,7 +309,7 @@ void ath_descdma_cleanup(struct ath_softc *sc,
+ #define ATH_RX_TIMEOUT           40      /* 40 milliseconds */
+ #define WME_NUM_TID              16
+ #define IEEE80211_BAR_CTL_TID_M  0xF000  /* tid mask */
+-#define IEEE80211_BAR_CTL_TID_S  2       /* tid shift */
++#define IEEE80211_BAR_CTL_TID_S  12      /* tid shift */
+ 
+ enum ATH_RX_TYPE {
+ 	ATH_RX_NON_CONSUMED = 0,
 -- 
-Greetings Michael.
+1.5.6.rc2.15.g457bb.dirty
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
