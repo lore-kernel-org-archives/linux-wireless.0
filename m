@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:47213 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757464AbYJXSSu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 14:18:50 -0400
-Subject: Re: [PATCH] wireless: add regulatory_struct_hint
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>, John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1224841176.6002.124.camel@johannes.berg>
-References: <1224585110.5521.8.camel@johannes.berg>
-	 <1224816184.2917.162.camel@debian.sh.intel.com>
-	 <1224841176.6002.124.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 24 Oct 2008 20:18:48 +0200
-Message-Id: <1224872328.7536.67.camel@californication> (sfid-20081024_201857_607775_ACE96704)
-Mime-Version: 1.0
+Received: from mailbox2.myri.com ([64.172.73.26]:1795 "EHLO myri.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751654AbYJPG6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2008 02:58:17 -0400
+Message-ID: <48F6E54C.5010207@myri.com> (sfid-20081016_085822_733597_9E17957D)
+Date: Thu, 16 Oct 2008 08:55:08 +0200
+From: Brice Goglin <brice@myri.com>
+MIME-Version: 1.0
+To: Dan Williams <dan.j.williams@intel.com>
+CC: David Miller <davem@davemloft.net>, akpm@linux-foundation.org,
+	tiwai@suse.de, linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, bzolnier@gmail.com,
+	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
+	ralf@linux-mips.org, mchehab@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, jesse.brandeburg@intel.com
+Subject: Re: powerpc allmodconfig
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>	 <20081015.220247.262683261.davem@davemloft.net> <1224137292.26782.5.camel@dwillia2-linux.ch.intel.com>
+In-Reply-To: <1224137292.26782.5.camel@dwillia2-linux.ch.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Dan Williams wrote:
+> On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
+>   
+>>> drivers/dma/ioat_dca.c: In function 'dca_enabled_in_bios':
+>>> drivers/dma/ioat_dca.c:81: error: implicit declaration of function 'cpuid_eax'
+>>> drivers/dma/ioat_dca.c: In function 'system_has_dca_enabled':
+>>> drivers/dma/ioat_dca.c:91: error: implicit declaration of function 'boot_cpu_has'
+>>> drivers/dma/ioat_dca.c:91: error: 'X86_FEATURE_DCA' undeclared (first use in this function)
+>>> drivers/dma/ioat_dca.c:91: error: (Each undeclared identifier is reported only once
+>>> drivers/dma/ioat_dca.c:91: error: for each function it appears in.)
+>>> drivers/dma/ioat_dca.c: In function 'ioat_dca_get_tag':
+>>> drivers/dma/ioat_dca.c:190: error: implicit declaration of function 'cpu_physical_id'
+>>>       
+>> Known issue.  I tried to ping Jeff Garzik about doing a driver bug fix run in
+>> order to fix this, but he hasn't shown any signs of life.
+>>
+>> So I'll do it myself later tonight. :-/
+>>
+>>     
+> The following seems to fix this up...
+>
+> ---snip--->
+> ixgbe, myri10ge: INTEL_IOATDMA can only be selected when X86=y
+>   
 
-> However, there is another major problem with this, if I use a USB device
-> that has no regulatory information on a laptop that has this virtual
-> regdomain configured because of a built-in Intel device, my USB device
-> will wrongly enable all channels.
-> 
-> But inspired by your patch, here's a different idea:
-> 
->  * remove the struct regdomain hint thing
->  * introduce a "hardware has regulatory check" flag, which means that
->     - hardware will enforce regulatory compliance to whatever it thinks
->       the regulatory domain is
->     - the driver will, of course, still also enforce the information in
->       wiphy->bands as it does now
->  * if a wiphy has the "hw regulatory" flag set and the
->    cfg80211_regdomain is the world regdomain (whether hard-coded or
->    gotten from CRDA), then (and only then!) don't apply the
->    cfg80211_regdomain to it
+There's already a completely different fix queued in netdev patchworks
+(for myri10ge only right now, to be duplicated for Intel drivers). The
+idea is to stop having almost-unrelated drivers select each other
+directly, let people select which drivers they really want, and have
+Kconfig handle modules/builtin-stuff correctly. See
+http://patchwork.ozlabs.org/patch/4506/
 
-we really only care about the case where we have no userspace capable of
-setting the regulatory domain. So in only that case it makes sense to
-fallback to the hardware regulatory support. So I would not make this
-depend on world domain since that might not work good enough in the 5
-GHz case. Can the mac80211 just track if userspace has set a regulatory
-domain and then enforce it. Otherwise leave it to the hardware that
-supports it or enforce the world domain to hardware that has no
-regulatory support in hardware.
-
-Can we also have a command that clears/resets the regulatory domain
-setting so we get back to the initial state without rebooting. Would be
-also good to have for testing.
-
-> This would have the following consequences:
->  + much less code since all the hint stuff goes away
->  + still works for users who move around with a hw-regulatory based
->    laptop if they set the regdomain to something other than world
->    manually
->  - secondary hardware cannot benefit of the, now no longer given, hint
->    which regdomain the laptop is in and will be restricted to world
->  - some degree of confusion possible when one device can use channel 13
->    (say iwl-agn hardware configured for Europe) and another cannot (say
->    a USB device without regulatory information, leading to the world
->    regdomain being the used one)
-
-This discussion started with having two adapters and disabling 5 GHz for
-the second if the first one is BG only. This solution would make this
-work when the second card sets the hardware regulatory flag. So it looks
-good to me.
-
-I don't see a big problem with restricting channels. Disabling a whole
-band is an issue. However we could add printk's to tell the user when we
-apply different regulatory domains to different devices, because one has
-the hardware flag set.
-
-Other than that, I think this idea makes a lot of sense. Having a much
-more simpler logic is a good thing.
-
-Regards
-
-Marcel
-
+Brice
 
