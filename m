@@ -1,101 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58026 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752927AbYJFNVx (ORCPT
+Received: from qmta03.emeryville.ca.mail.comcast.net ([76.96.30.32]:58153 "EHLO
+	QMTA03.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759102AbYJPX7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 09:21:53 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1223298455.15196.18.camel@johannes.berg> (sfid-20081006_150810_157765_23C3C8AA)
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 <1221123779.2513.88.camel@debian.sh.intel.com>
-	 <1221184060.11498.3.camel@californication>
-	 <1221185432.6695.0.camel@californication>
-	 (sfid-20080912_041007_653566_F8146EC3)  <1223296221.15196.6.camel@johannes.berg>
-	 (sfid-20081006_143057_986057_BC4A63C0)  <1223296359.15196.8.camel@johannes.berg>
-	 (sfid-20081006_143329_031518_3AA03EA8)  <1223298455.15196.18.camel@johannes.berg>
-	 (sfid-20081006_150810_157765_23C3C8AA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FpBWEH6SdlxAgkeZVl8k"
-Date: Mon, 06 Oct 2008 15:21:21 +0200
-Message-Id: <1223299281.15196.21.camel@johannes.berg> (sfid-20081006_152157_724356_6DB90F0F)
-Mime-Version: 1.0
+	Thu, 16 Oct 2008 19:59:45 -0400
+To: linux-wireless@vger.kernel.org
+Subject: B43 randomly and silently dropping connections...
+From: Jerry McBride <mcbrides9@comcast.net>
+Date: Thu, 16 Oct 2008 19:59:43 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810161959.43084.mcbrides9@comcast.net> (sfid-20081017_020010_830207_D3D8CD6A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-FpBWEH6SdlxAgkeZVl8k
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The story is...
 
-On Mon, 2008-10-06 at 15:07 +0200, Johannes Berg wrote:
-> On Mon, 2008-10-06 at 14:32 +0200, Johannes Berg wrote:
-> > On Mon, 2008-10-06 at 14:30 +0200, Johannes Berg wrote:
-> > > On Fri, 2008-09-12 at 04:10 +0200, Marcel Holtmann wrote:
-> > >=20
-> > > > I take this back. It took a couple of hours, but it crashed again.
-> > >=20
-> > > Do you have 64k pages enabled? My issue goes away entirely when I
-> > > disable 64k pages.
-> >=20
-> > Well, clearly not entirely. But it's holding up much better now.
-> >=20
-> > [  325.379292] iommu_free: invalid entry
->=20
-> I added two printks to make it easier to look at:
+I've moved from 2.6.25.x using BCM43XX with a Broadcom 4306 (rev3) 802.11 
+chipset to 2.6.26.6 using the B43 and appropriate firmware. This on a COMPAQ 
+Presario R3000 P4 and  a gig of memory and ATI graphics.
 
-adding printk to iommu_map_single, we see that the address was never
-even mapped!
+I followed the install (upgrade) directions at linuxwireless.org. Piece of 
+cake! However... I find that I've gone from "bulletproof" BCM43XX wifi 
+connections to "bullethole" connections with B43.  
 
-[...]
-[  297.544692] iommu_map_single =3D 10ef2000
-[  297.544711] iommu_map_single =3D 10ef4000
-[  297.646975] iommu_map_single =3D 10ef6920
-[  297.748983] iommu_map_single =3D 10ef7b68
-[  297.953110] iommu_map_single =3D 10ef8db0
-[  297.953229] iommu_free: invalid entry
-[  297.953245] 	free_entry=3D 0x991c0
-[  297.953256] 	npages    =3D 0x1
-[  297.953268] 	entry     =3D 0x991c0
-[  297.953279] 	dma_addr  =3D 0x991c0100
-[  297.953290] 	Table     =3D 0xc00000000083f348
-[  297.953302] 	bus#      =3D 0x0
-[  297.953313] 	size      =3D 0x80000
-[  297.953324] 	startOff  =3D 0x0
-[  297.953333] 	index     =3D 0x0
-[  297.953349] ------------[ cut here ]------------
-[  297.953361] Badness at arch/powerpc/kernel/iommu.c:260
+Under the old BCM43XX the handshake and connections were flawless and 
+unfaltering. Now with the new B43, handshakes with AP's are perfect, but the 
+connections randomly and silently fail. There are no debug messages, no 
+complaints what-so-ever in /var/log/messages... 
 
-clearly, that can't be right since iommu_map_single has been returning
-increasing numbers up to this point, and a dma_addr of 0x991c0100 wasn't
-among them.
+To gt wireless back, I have to reinitialize the connection. I've gotten so 
+good at it, that I can recite by heart the appropriate commands...
 
-johannes
+It's killling me! I've got to get this ironed out... it's not just my laptop, 
+it's happening quite regularly with people I know with similar chips and 
+laptops.
 
---=-FpBWEH6SdlxAgkeZVl8k
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Trying 2.6.27-rc's and now 2.6.27 and the situation is no better.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+So I ask... Who is the B43/B43LEGACY maintainer and would you be interested in 
+debugging this mess? I'll bend over backward to help you... Email me 
+direct... I'm very willing.
 
-iQIcBAABAgAGBQJI6hDNAAoJEKVg1VMiehFY2T8QAJatYPgtf/okyVW6CK28fLyH
-mkdO38qoyU+8XpI5Q8GTSdadL1Y/Zz2kdPPbKy9dlXvjT/M+znmhLO/tgiP4IlIK
-WuLi9j0b4k3IR4NoAz29yc/uq+owDfcNowOa3aNtjQ+8AE/sgCDlSpyMlEz4np4u
-TTCji2Wi76vy9b9YrmSy55Z45QS0bj9DQnr71ITfAOtzEE00gTJqLZxBZnHLJ0yl
-4q4srWfr5S390nJiofj85kbkGNUegNL+jcBBEGRrQim6um+wuq8wd1CSYILqrBb5
-SJ/ximX6tlhjYaa4JyR7AgOlhGQpTbaKW1yAAyEm+RZYOheC4SsegZCtSmoyC8mA
-9zywttRymJQNQfOjYA67UmaOUfb4oKlwoaBIASTJFmEcoaCLmANj8alOgEU4NlGr
-YcVVWf1tot7x/U2L9bCRUabp0ulBwDSoPeSgkq2jHLdK+M/YzM7eu48SMIKQEx99
-2j2IjxHP+3aSiDOAuCII3Ew6UPVa9CmkqPDqebIkxP/N3uZuGfD3q1Vq4x/QUq/S
-i7+6Fp/VX+ZU1c9gHktLMSLK2j7zWdFefW/aHuZngELOc97WQIYTGgYrbnbl5gS2
-VKQ9IWwdJ/9YsYotOn3+IWYij/mf/ae/wiCqo38c2oX8V6uF4A+4aiYo5pZXvu7r
-Q8ZJipBbM8yrdveQynuA
-=O2WR
------END PGP SIGNATURE-----
+SHORT STORY:
+-- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
 
---=-FpBWEH6SdlxAgkeZVl8k--
+-- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
+but fragile connections that drop randomly and without complaint. B43LEGACY 
+does nothing.
 
+Any help would be appreciated. I'd really like to get this ironed out. I 
+highly desire to use current kernels.
+
+Feel free to email me direct.
+
+-- 
+
+*****************************************************************************
+                                       
+                             From the desk of:
+                             Jerome D. McBride
+                                       
+   19:17:28 up 15 days, 23:35,  5 users,  load average: 0.33, 0.11, 0.03
+ 
+*****************************************************************************
