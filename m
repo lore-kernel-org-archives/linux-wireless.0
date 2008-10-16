@@ -1,49 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56144 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753996AbYJHIXr (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:41293 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751507AbYJPPqK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2008 04:23:47 -0400
-Subject: [PATCH] cfg80211: fix debugfs error handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 08 Oct 2008 10:23:48 +0200
-Message-Id: <1223454228.3618.36.camel@johannes.berg> (sfid-20081008_102353_116365_591C6294)
-Mime-Version: 1.0
+	Thu, 16 Oct 2008 11:46:10 -0400
+Message-ID: <48F761C1.9000109@lwfinger.net> (sfid-20081016_174625_529721_9312B9FF)
+Date: Thu, 16 Oct 2008 08:46:09 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jouni Malinen <j@w1.fi>, John Linville <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] hostap: Fix sparse warnings
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If something goes wrong creating the debugfs dir or when
-debugfs is not compiled in, the current code might lead to
-trouble; make it more robust.
+A compilation with the command "make C=2 CF="-D__CHECK_ENDIAN__" \
+                                drivers/net/wireless/hostap/"
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+ yields the following warnings:
+
+  CHECK   drivers/net/wireless/hostap/hostap_info.c
+drivers/net/wireless/hostap/hostap_info.c:156:43: warning: incorrect type in
+argument 2 (different signedness)
+drivers/net/wireless/hostap/hostap_info.c:156:43:    expected unsigned long
+volatile *addr
+drivers/net/wireless/hostap/hostap_info.c:156:43:    got long *<noident>
+drivers/net/wireless/hostap/hostap_info.c:294:44: warning: incorrect type in
+argument 2 (different signedness)
+drivers/net/wireless/hostap/hostap_info.c:294:44:    expected unsigned long
+volatile *addr
+drivers/net/wireless/hostap/hostap_info.c:294:44:    got long *<noident>
+drivers/net/wireless/hostap/hostap_info.c:487:12: warning: incorrect type in
+argument 2 (different signedness)
+drivers/net/wireless/hostap/hostap_info.c:487:12:    expected unsigned long
+volatile *addr
+drivers/net/wireless/hostap/hostap_info.c:487:12:    got long *<noident>
+drivers/net/wireless/hostap/hostap_info.c:491:12: warning: incorrect type in
+argument 2 (different signedness)
+drivers/net/wireless/hostap/hostap_info.c:491:12:    expected unsigned long
+volatile *addr
+drivers/net/wireless/hostap/hostap_info.c:491:12:    got long *<noident>
+
+The warnings are fixed with the following compile-tested changes:
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- net/wireless/core.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
 
---- everything.orig/net/wireless/core.c	2008-10-08 10:13:49.000000000 +0200
-+++ everything/net/wireless/core.c	2008-10-08 10:19:10.000000000 +0200
-@@ -185,7 +185,8 @@ int cfg80211_dev_rename(struct cfg80211_
- 	if (result)
- 		goto out_unlock;
- 
--	if (!debugfs_rename(rdev->wiphy.debugfsdir->d_parent,
-+	if (rdev->wiphy.debugfsdir &&
-+	    !debugfs_rename(rdev->wiphy.debugfsdir->d_parent,
- 			    rdev->wiphy.debugfsdir,
- 			    rdev->wiphy.debugfsdir->d_parent,
- 			    newname))
-@@ -318,6 +319,8 @@ int wiphy_register(struct wiphy *wiphy)
- 	drv->wiphy.debugfsdir =
- 		debugfs_create_dir(wiphy_name(&drv->wiphy),
- 				   ieee80211_debugfs_dir);
-+	if (IS_ERR(drv->wiphy.debugfsdir))
-+		drv->wiphy.debugfsdir = NULL;
- 
- 	res = 0;
- out_unlock:
+
+Index: wireless-testing/drivers/net/wireless/hostap/hostap_info.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/hostap/hostap_info.c
++++ wireless-testing/drivers/net/wireless/hostap/hostap_info.c
+@@ -153,7 +153,7 @@ static void prism2_info_linkstatus(local
+ 	}
+
+ 	/* Get current BSSID later in scheduled task */
+-	set_bit(PRISM2_INFO_PENDING_LINKSTATUS, &local->pending_info);
++	set_bit(PRISM2_INFO_PENDING_LINKSTATUS, (ulong *)&local->pending_info);
+ 	local->prev_link_status = val;
+ 	schedule_work(&local->info_queue);
+ }
+@@ -291,7 +291,7 @@ static void prism2_info_scanresults(loca
+ 	hostap_report_scan_complete(local);
+
+ 	/* Perform rest of ScanResults handling later in scheduled task */
+-	set_bit(PRISM2_INFO_PENDING_SCANRESULTS, &local->pending_info);
++	set_bit(PRISM2_INFO_PENDING_SCANRESULTS, (ulong *)&local->pending_info);
+ 	schedule_work(&local->info_queue);
+ }
+
+@@ -484,11 +484,11 @@ static void handle_info_queue(struct wor
+ 	local_info_t *local = container_of(work, local_info_t, info_queue);
+
+ 	if (test_and_clear_bit(PRISM2_INFO_PENDING_LINKSTATUS,
+-			       &local->pending_info))
++			       (ulong *)&local->pending_info))
+ 		handle_info_queue_linkstatus(local);
+
+ 	if (test_and_clear_bit(PRISM2_INFO_PENDING_SCANRESULTS,
+-			       &local->pending_info))
++			       (ulong *)&local->pending_info))
+ 		handle_info_queue_scanresults(local);
+ }
+ #endif /* PRISM2_NO_STATION_MODES */
+
 
 
