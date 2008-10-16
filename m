@@ -1,76 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:55777 "EHLO smtp5.pp.htv.fi"
+Received: from mga03.intel.com ([143.182.124.21]:31617 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754920AbYJPIWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 04:22:07 -0400
-Date: Thu, 16 Oct 2008 11:21:57 +0300
-From: Adrian Bunk <bunk@kernel.org>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	marek.vasut@gmail.com, David Woodhouse <dwmw2@infradead.org>,
-	Mark Fasheh <mark.fasheh@oracle.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Mauro Carvalho Chehab <mchehab@infradead.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org
+	id S1751231AbYJPGIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2008 02:08:06 -0400
 Subject: Re: powerpc allmodconfig
-Message-ID: <20081016082157.GC23630@cs181140183.pp.htv.fi> (sfid-20081016_102233_324376_1BF49572)
-References: <20081015213337.a99a9595.akpm@linux-foundation.org> <s5h1vyhrsja.wl%tiwai@suse.de> <20081016073836.GB23630@cs181140183.pp.htv.fi> <s5hiqrtq8fc.wl%tiwai@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <s5hiqrtq8fc.wl%tiwai@suse.de>
+From: Dan Williams <dan.j.williams@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: akpm@linux-foundation.org, tiwai@suse.de,
+	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, bzolnier@gmail.com,
+	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
+	ralf@linux-mips.org, mchehab@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, brice@myri.com, jesse.brandeburg@intel.com
+In-Reply-To: <20081015.220247.262683261.davem@davemloft.net>
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>
+	 <20081015.220247.262683261.davem@davemloft.net>
+Content-Type: text/plain
+Date: Wed, 15 Oct 2008 23:08:12 -0700
+Message-Id: <1224137292.26782.5.camel@dwillia2-linux.ch.intel.com> (sfid-20081016_080818_041121_BFBFE7FF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 16, 2008 at 09:57:11AM +0200, Takashi Iwai wrote:
-> At Thu, 16 Oct 2008 10:38:36 +0300,
-> Adrian Bunk wrote:
-> > 
-> > On Thu, Oct 16, 2008 at 07:57:29AM +0200, Takashi Iwai wrote:
-> > > At Wed, 15 Oct 2008 21:33:37 -0700,
-> > > Andrew Morton wrote:
-> > > > 
-> > > > sound/soc/soc-dapm.c:1029: warning: 'snd_soc_dapm_connect_input' is deprecated (declared at sound/soc/soc-dapm.c:1026)
-> > > > sound/soc/soc-dapm.c:1029: warning: 'snd_soc_dapm_connect_input' is deprecated (declared at sound/soc/soc-dapm.c:1026)
-> > > 
-> > > These are definitions of deprecated interfaces.
-> > > We can remove it in 2.6.29.  If we don't want to be conservative, it
-> > > can be removed in 2.6.28, too.
-> > >...
-> > 
-> > Since it's an in-kernel API there's no reason to keep it once there are 
-> > no users left.
+
+On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
+> > drivers/dma/ioat_dca.c: In function 'dca_enabled_in_bios':
+> > drivers/dma/ioat_dca.c:81: error: implicit declaration of function 'cpuid_eax'
+> > drivers/dma/ioat_dca.c: In function 'system_has_dca_enabled':
+> > drivers/dma/ioat_dca.c:91: error: implicit declaration of function 'boot_cpu_has'
+> > drivers/dma/ioat_dca.c:91: error: 'X86_FEATURE_DCA' undeclared (first use in this function)
+> > drivers/dma/ioat_dca.c:91: error: (Each undeclared identifier is reported only once
+> > drivers/dma/ioat_dca.c:91: error: for each function it appears in.)
+> > drivers/dma/ioat_dca.c: In function 'ioat_dca_get_tag':
+> > drivers/dma/ioat_dca.c:190: error: implicit declaration of function 'cpu_physical_id'
 > 
-> Right.  But, IMO, now is no suitable time.
-> A thing like API removal should have been tested in linux-next, and we
-> had plenty of time indeed for 2.6.28.
->...
-
-A grep through the tree and one test compile that covers 
-sound/soc/soc-dapm.c should be enough testing.
-
-And having it then in -next once should be enough to discover if someone 
-wrongly added a new user.
-
-I have removed many functions in the kernel, and there isn't much that 
-can go wrong - even adding a PCI ID to a driver has a bigger risk of 
-introducing a regression.
-
-> thanks,
+> Known issue.  I tried to ping Jeff Garzik about doing a driver bug fix run in
+> order to fix this, but he hasn't shown any signs of life.
 > 
-> Takashi
+> So I'll do it myself later tonight. :-/
+> 
+The following seems to fix this up...
 
-cu
-Adrian
+---snip--->
+ixgbe, myri10ge: INTEL_IOATDMA can only be selected when X86=y
 
--- 
+From: Dan Williams <dan.j.williams@intel.com>
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+The INTEL_IOATDMA symbol depends on x86. 'select' ignores this
+dependency.
+
+Cc: Brice Goglin <brice@myri.com>
+Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+
+ drivers/net/Kconfig |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+
+diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+index 1d8af33..84983f8 100644
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -2410,7 +2410,7 @@ config IXGBE
+ 	tristate "Intel(R) 10GbE PCI Express adapters support"
+ 	depends on PCI && INET
+ 	select INET_LRO
+-	select INTEL_IOATDMA
++	select INTEL_IOATDMA if X86
+ 	---help---
+ 	  This driver supports Intel(R) 10GbE PCI Express family of
+ 	  adapters.  For more information on how to identify your adapter, go
+@@ -2462,7 +2462,7 @@ config MYRI10GE
+ 	select FW_LOADER
+ 	select CRC32
+ 	select INET_LRO
+-	select INTEL_IOATDMA
++	select INTEL_IOATDMA if X86
+ 	---help---
+ 	  This driver supports Myricom Myri-10G Dual Protocol interface in
+ 	  Ethernet mode. If the eeprom on your board is not recent enough,
+
 
