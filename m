@@ -1,88 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:42854 "EHLO ciao.gmane.org"
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:55777 "EHLO smtp5.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751740AbYJBHxo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 03:53:44 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KlJ0I-0003f1-U5
-	for linux-wireless@vger.kernel.org; Thu, 02 Oct 2008 07:53:42 +0000
-Received: from pd9e85fd9.dip.t-dialin.net ([217.232.95.217])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 07:53:42 +0000
-Received: from eo by pd9e85fd9.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 07:53:42 +0000
-To: linux-wireless@vger.kernel.org
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-Date: Thu, 02 Oct 2008 09:53:27 +0200
-Message-ID: <87od23mo08.fsf@denkblock.local> (sfid-20081002_095349_565298_98E6BA33)
-References: <200808101401.03339.toralf.foerster@gmx.de>
-	<b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
-	<200810012055.58085.toralf.foerster@gmx.de>
-	<87ej30m376.fsf@denkblock.local>
-	<b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
-	<87ljx8ndw1.fsf@denkblock.local>
-	<b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Cc: ath5k-devel@lists.ath5k.org
+	id S1754920AbYJPIWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2008 04:22:07 -0400
+Date: Thu, 16 Oct 2008 11:21:57 +0300
+From: Adrian Bunk <bunk@kernel.org>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	marek.vasut@gmail.com, David Woodhouse <dwmw2@infradead.org>,
+	Mark Fasheh <mark.fasheh@oracle.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Mauro Carvalho Chehab <mchehab@infradead.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@ozlabs.org
+Subject: Re: powerpc allmodconfig
+Message-ID: <20081016082157.GC23630@cs181140183.pp.htv.fi> (sfid-20081016_102233_324376_1BF49572)
+References: <20081015213337.a99a9595.akpm@linux-foundation.org> <s5h1vyhrsja.wl%tiwai@suse.de> <20081016073836.GB23630@cs181140183.pp.htv.fi> <s5hiqrtq8fc.wl%tiwai@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <s5hiqrtq8fc.wl%tiwai@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Bob Copeland" <me@bobcopeland.com> wrote:
-> On Wed, Oct 1, 2008 at 6:34 PM, Elias Oltmanns <eo@nebensachen.de> wrote:
->> "Bob Copeland" <me@bobcopeland.com> wrote:
->
->>> On Wed, Oct 1, 2008 at 5:10 PM, Elias Oltmanns <eo@nebensachen.de> wrote:
->> Oh, but it is cleaned up by ath5k_stop_hw(). The issue is a different
->> one here:
->>
->> ath5k_init() == ->start()
->> ath5k_stop_hw() == ->stop()
->>
->> Since the mac80211 layer never opened a device, it won't close it
->> either. Thus, ath5k_stop_hw() does not get called on module unload. By
->> calling ath5k_init() on resume, the driver has effectively started the
->> device when it was not supposed to do so and this event is not being
->> tracked by the higher layers.
->
-> Ah, yes, good analysis... and ath5k_init is scheduling the timer.  I
-> doubt ieee80211_opened would fly; probably the better thing to do is
-> ensure that the cleanup gets called regardless of whether ath5k_stop
-> gets called (it shouldn't matter since the irqs all get created in
-> _attach).
+On Thu, Oct 16, 2008 at 09:57:11AM +0200, Takashi Iwai wrote:
+> At Thu, 16 Oct 2008 10:38:36 +0300,
+> Adrian Bunk wrote:
+> > 
+> > On Thu, Oct 16, 2008 at 07:57:29AM +0200, Takashi Iwai wrote:
+> > > At Wed, 15 Oct 2008 21:33:37 -0700,
+> > > Andrew Morton wrote:
+> > > > 
+> > > > sound/soc/soc-dapm.c:1029: warning: 'snd_soc_dapm_connect_input' is deprecated (declared at sound/soc/soc-dapm.c:1026)
+> > > > sound/soc/soc-dapm.c:1029: warning: 'snd_soc_dapm_connect_input' is deprecated (declared at sound/soc/soc-dapm.c:1026)
+> > > 
+> > > These are definitions of deprecated interfaces.
+> > > We can remove it in 2.6.29.  If we don't want to be conservative, it
+> > > can be removed in 2.6.28, too.
+> > >...
+> > 
+> > Since it's an in-kernel API there's no reason to keep it once there are 
+> > no users left.
+> 
+> Right.  But, IMO, now is no suitable time.
+> A thing like API removal should have been tested in linux-next, and we
+> had plenty of time indeed for 2.6.28.
+>...
 
-Not sure I agree there. Why should calibration take place regularly even
-though the interface appears to be shut down from user-space's point of
-view? It simply doesn't make sense  to start the interface if nobody
-intends to use it. Not that I know anything about it, but I imagine that
-periodic recalibration might even be a waste of power, something most
-laptop users will care about.
+A grep through the tree and one test compile that covers 
+sound/soc/soc-dapm.c should be enough testing.
 
-So, if higher layers won't provide any information about what interface
-is considered opened, then ath5k has to track this sort of state
-information itself if it intends to resume to the exact same state of
-affairs as observed at the time of going into suspend. For all I know,
-other drivers will have similar issues and track the open state which is
-why I suggested ieee80211_opened, but you will know much more about
-these things than I do. Just as an aside, at least on my system the
-following doesn't work anyway:
+And having it then in -next once should be enough to discover if someone 
+wrongly added a new user.
 
-1. # modprobe ath5k
-2. # ifup ath5k
-3. # ping <ap>
-4. s2ram
-5. resume
-6. # ping <ap>
+I have removed many functions in the kernel, and there isn't much that 
+can go wrong - even adding a PCI ID to a driver has a bigger risk of 
+introducing a regression.
 
-The last ping fails with network/host unreachable -- this is with a WPA
-configuration and I haven't tested anything else. So, at least I always
-have to make sure that I shut down all interfaces before suspending
-anyway.
+> thanks,
+> 
+> Takashi
 
-Regards,
+cu
+Adrian
 
-Elias
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
