@@ -1,34 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:55827 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbYJRBpQ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46283
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751606AbYJPG7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2008 21:45:16 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so844171rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 18:45:13 -0700 (PDT)
-Message-ID: <b6c5339f0810171845pa59b131gf93298ae6f368859@mail.gmail.com> (sfid-20081018_034525_625950_1BDB9359)
-Date: Fri, 17 Oct 2008 21:45:13 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Power saving on mac80211
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>
-In-Reply-To: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
+	Thu, 16 Oct 2008 02:59:11 -0400
+Date: Wed, 15 Oct 2008 23:58:44 -0700 (PDT)
+Message-Id: <20081015.235844.206136521.davem@davemloft.net> (sfid-20081016_085923_318428_9432F624)
+To: brice@myri.com
+Cc: dan.j.williams@intel.com, akpm@linux-foundation.org, tiwai@suse.de,
+	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, bzolnier@gmail.com,
+	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
+	ralf@linux-mips.org, mchehab@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, jesse.brandeburg@intel.com
+Subject: Re: powerpc allmodconfig
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <48F6E54C.5010207@myri.com>
+References: <20081015.220247.262683261.davem@davemloft.net>
+	<1224137292.26782.5.camel@dwillia2-linux.ch.intel.com>
+	<48F6E54C.5010207@myri.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 17, 2008 at 9:10 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> So I wanted to review power saving requirements for mac80211 and see
-> who else out there is focusing on this now or *really soon* so we can
-> divide and conquer on this. If you are interested please let us know
-> so we can coordinate.
+From: Brice Goglin <brice@myri.com>
+Date: Thu, 16 Oct 2008 08:55:08 +0200
 
-Nice timing, I was planning to take a look at mac80211 suspend/resume
-this weekend after a crash course (pardon the pun) in ath5k lifetime
-issues.  So count me in for that bit...
+> Dan Williams wrote:
+> > On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
+> >   
+> >>> drivers/dma/ioat_dca.c: In function 'dca_enabled_in_bios':
+> >>> drivers/dma/ioat_dca.c:81: error: implicit declaration of function 'cpuid_eax'
+> >>> drivers/dma/ioat_dca.c: In function 'system_has_dca_enabled':
+> >>> drivers/dma/ioat_dca.c:91: error: implicit declaration of function 'boot_cpu_has'
+> >>> drivers/dma/ioat_dca.c:91: error: 'X86_FEATURE_DCA' undeclared (first use in this function)
+> >>> drivers/dma/ioat_dca.c:91: error: (Each undeclared identifier is reported only once
+> >>> drivers/dma/ioat_dca.c:91: error: for each function it appears in.)
+> >>> drivers/dma/ioat_dca.c: In function 'ioat_dca_get_tag':
+> >>> drivers/dma/ioat_dca.c:190: error: implicit declaration of function 'cpu_physical_id'
+> >>>       
+> >> Known issue.  I tried to ping Jeff Garzik about doing a driver bug fix run in
+> >> order to fix this, but he hasn't shown any signs of life.
+> >>
+> >> So I'll do it myself later tonight. :-/
+> >>
+> >>     
+> > The following seems to fix this up...
+> >
+> > ---snip--->
+> > ixgbe, myri10ge: INTEL_IOATDMA can only be selected when X86=y
+> >   
+> 
+> There's already a completely different fix queued in netdev patchworks
+> (for myri10ge only right now, to be duplicated for Intel drivers). The
+> idea is to stop having almost-unrelated drivers select each other
+> directly, let people select which drivers they really want, and have
+> Kconfig handle modules/builtin-stuff correctly. See
+> http://patchwork.ozlabs.org/patch/4506/
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Right, my plan was to duplicate this for the other drivers.
