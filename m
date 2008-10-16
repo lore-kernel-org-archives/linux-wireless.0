@@ -1,40 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5631 "EHLO mga02.intel.com"
+Received: from mx1.suse.de ([195.135.220.2]:36033 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753087AbYJORpB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 13:45:01 -0400
-Subject: Re: [RFC] make ieee80211 invisible
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224006562.10113.47.camel@johannes.berg>
-References: <1224006562.10113.47.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 15 Oct 2008 10:37:48 -0700
-Message-Id: <1224092268.19219.7.camel@rc-desk> (sfid-20081015_194520_570991_CC621143)
-Mime-Version: 1.0
+	id S1754911AbYJPSA1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2008 14:00:27 -0400
+Date: Thu, 16 Oct 2008 10:56:25 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
+	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
+	Jake Edge <jake@lwn.net>, Eugene Teo <eteo@redhat.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [patch 03/14] mac80211: fix two issues in debugfs
+Message-ID: <20081016175625.GD12850@suse.de> (sfid-20081016_200036_656072_3E8CF4E4)
+References: <20081016174814.734527827@mini.kroah.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081016175525.GA12850@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-14 at 19:49 +0200, Johannes Berg wrote:
-> 
-> This makes CONFIG_IEEE80211 invisible. The drivers that require it
-> (ipw2100, ipw2200, hostap) select it, and everybody else really
-> shouldn't even think about using it. Also, since there really is
-> no point in compiling anything without crypto support these days,
-> remove the crypto options and just enable them, leaving only the
-> debugging option which only shows up when a driver is select that
-> requires it. This makes it hard to enable, but most people wouldn't
-> want to anyway.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
+2.6.27-stable review patch.  If anyone has any objections, please let us
+know.
 
-Very good idea. Not sure if you need an ack from us for this, but you
-have mine in case you do.
+------------------
+From: Johannes Berg <johannes@sipsolutions.net>
 
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+Not in trees above 2.6.27 as it is fixed differently in .28.
 
-Thank you
+This fixes RHBZ 466264, whenever the master interface is
+renamed this code would BUG_ON. Also fixes a separately
+reported bug with the debugfs dir being NULL.
 
-Reinette
+This patch is not applicable to the next kernel version
+because both these issues have been fixed, the first one
+by not having the master interface have a ieee80211_ptr
+at all, and the second one by also leaving the function
+early.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ net/mac80211/debugfs_netdev.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -537,6 +537,7 @@ static int netdev_notify(struct notifier
+ {
+ 	struct net_device *dev = ndev;
+ 	struct dentry *dir;
++	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	char buf[10+IFNAMSIZ];
+ 
+@@ -549,10 +550,19 @@ static int netdev_notify(struct notifier
+ 	if (dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
+ 		return 0;
+ 
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	/*
++	 * Do not use IEEE80211_DEV_TO_SUB_IF because that
++	 * BUG_ONs for the master netdev which we need to
++	 * handle here.
++	 */
++	sdata = netdev_priv(dev);
+ 
+-	sprintf(buf, "netdev:%s", dev->name);
+ 	dir = sdata->debugfsdir;
++
++	if (!dir)
++		return 0;
++
++	sprintf(buf, "netdev:%s", dev->name);
+ 	if (!debugfs_rename(dir->d_parent, dir, dir->d_parent, buf))
+ 		printk(KERN_ERR "mac80211: debugfs: failed to rename debugfs "
+ 		       "dir to %s\n", buf);
+
+-- 
