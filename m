@@ -1,42 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:49369 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754401AbYJ2V5S (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41973
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753799AbYJPTtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:57:18 -0400
-Date: Wed, 29 Oct 2008 21:51:42 +0000
-From: Russell King <rmk+pcmcia@arm.linux.org.uk>
-To: Dave <kilroyd@googlemail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-pcmcia@lists.infradead.org,
-	orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrey Borzenkov <arvidjaar@mail.ru>
-Subject: Re: [Orinoco-devel] 2.6.28-rc2: new PCMCIA device instance after resume - orinoco can't download firmware
-Message-ID: <20081029215142.GA29780@flint.arm.linux.org.uk> (sfid-20081029_225723_291826_B05FB593)
-References: <200810282219.51492.arvidjaar@mail.ru> <200810291819.20848.arvidjaar@mail.ru> <4908B03C.400@gmail.com> <200810292143.06027.rjw@sisk.pl> <4908CD44.8070503@gmail.com>
+	Thu, 16 Oct 2008 15:49:47 -0400
+Date: Thu, 16 Oct 2008 12:49:23 -0700 (PDT)
+Message-Id: <20081016.124923.222595655.davem@davemloft.net> (sfid-20081016_214953_771301_2F2A064C)
+To: johannes@sipsolutions.net
+Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de,
+	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, bzolnier@gmail.com,
+	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
+	ralf@linux-mips.org, mchehab@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, arjan@infradead.org
+Subject: Re: powerpc allmodconfig
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1224169039.735.57.camel@johannes.berg>
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>
+	<20081015.220247.262683261.davem@davemloft.net>
+	<1224169039.735.57.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4908CD44.8070503@gmail.com>
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 08:53:24PM +0000, Dave wrote:
-> Looking at the pcmcia code it looks like ds_event is getting a
-> CS_EVENT_CARD_INSERTION event. Should we be processing that event ?
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 16 Oct 2008 16:57:19 +0200
 
-You can get that on resume if PCMCIA thinks the card has changed -
-and it determines that by comparing its cache of the CIS with what
-is in the card on resume.  If the cache doesn't match the CIS, it
-assumes the card has changed, and does a remove-insert cycle instead
-of resume.
+> On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
+> > 
+> > 
+> > > net/sched/sch_generic.c: In function 'dev_watchdog':
+> > > net/sched/sch_generic.c:224: warning: unused variable 'drivername'
+> > 
+> > Sucky, if WARN_ONCE() evaluates to nothing the sprintf() string buffer
+> > on the stack looks unused.
+> 
+> I've complained about this to Arjan before, we actually lose all
+> messages passed to WARN() or WARN_ONCE() on platforms that use bug traps
+> for warnings too.
 
-So the question to ask is: why is the card's CIS changing on resume?
+Ok I see how that works, yes, it should be fixed.
 
-Try putting some debug in verify_cis_cache() in drivers/pcmcia/cistpl.c.
+If the platform defines a __WARN (which powerpc does) the
+whole format string and printf args go unevaluated, it's
+because of the following sequence in asm-generic/bug.h:
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+#ifndef __WARN
+#ifndef __ASSEMBLY__
+extern void warn_on_slowpath(const char *file, const int line);
+extern void warn_slowpath(const char *file, const int line,
+		const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+#define WANT_WARN_ON_SLOWPATH
+#endif
+#define __WARN() warn_on_slowpath(__FILE__, __LINE__)
+#define __WARN_printf(arg...) warn_slowpath(__FILE__, __LINE__, arg)
+#else
+#define __WARN_printf(arg...) __WARN()
+#endif
