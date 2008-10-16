@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:41392 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753979AbYJKAaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 20:30:55 -0400
-Date: Sat, 11 Oct 2008 03:29:55 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix scan RX processing oops
-Message-ID: <20081011002955.GA15802@jm.kir.nu> (sfid-20081011_023059_186304_86C6664B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46579
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751438AbYJPHhH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2008 03:37:07 -0400
+Date: Thu, 16 Oct 2008 00:36:44 -0700 (PDT)
+Message-Id: <20081016.003644.74134312.davem@davemloft.net> (sfid-20081016_093715_287394_BCA31D0B)
+To: geert@linux-m68k.org
+Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de,
+	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, bzolnier@gmail.com,
+	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
+	ralf@linux-mips.org, mchehab@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@ozlabs.org
+Subject: Re: powerpc allmodconfig
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <Pine.LNX.4.64.0810160930300.25933@anakin>
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>
+	<20081015.220247.262683261.davem@davemloft.net>
+	<Pine.LNX.4.64.0810160930300.25933@anakin>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_bss_info_update() can return NULL. Verify that this is not the
-case before calling ieee802111_rx_bss_put() which would trigger an oops
-in interrupt context in atomic_dec_and_lock().
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Thu, 16 Oct 2008 09:31:29 +0200 (CEST)
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> On Wed, 15 Oct 2008, David Miller wrote:
+> > > kernel/resource.c: In function '__reserve_region_with_split':
+> > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'resource_size_t'
+> > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 4 has type 'resource_size_t'
+> > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'resource_size_t'
+> > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 7 has type 'resource_size_t'
+> > 
+> > Known issue, Ben wants to add a new variant of %pX in order to print resources so that
+> > resource_size_t vs. unsigned long stuff doesn't matter like this any more.
+> 
+> Will still give a warning, as resource_size_t is not a pointer.
 
-
-Index: wireless-testing/net/mac80211/scan.c
-===================================================================
---- wireless-testing.orig/net/mac80211/scan.c
-+++ wireless-testing/net/mac80211/scan.c
-@@ -388,7 +388,8 @@ ieee80211_scan_rx(struct ieee80211_sub_i
- 	bss = ieee80211_bss_info_update(sdata->local, rx_status,
- 					mgmt, skb->len, &elems,
- 					freq, beacon);
--	ieee80211_rx_bss_put(sdata->local, bss);
-+	if (bss)
-+		ieee80211_rx_bss_put(sdata->local, bss);
- 
- 	dev_kfree_skb(skb);
- 	return RX_QUEUED;
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+The idea is to pass in a pointer to the resource struct,
+and the %pX variant specified says what part to print.
