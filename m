@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:47945 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753401AbYJECcU (ORCPT
+Received: from yorgi.telenet-ops.be ([195.130.133.69]:34250 "EHLO
+	yorgi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459AbYJPH7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Oct 2008 22:32:20 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so984852wri.5
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Oct 2008 19:32:19 -0700 (PDT)
-Message-ID: <43e72e890810041932n4034f3c6gbd5c64100338f61e@mail.gmail.com> (sfid-20081005_043223_638198_94BDCDBC)
-Date: Sat, 4 Oct 2008 19:32:19 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/3] ath9k: fix oops on trying to hold the wrong spinlock
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org,
-	"Vasanthakumar Thiagarajan" <vasanth@atheros.com>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	"Ingo Molnar" <mingo@elte.hu>
-In-Reply-To: <1223073927-16266-3-git-send-email-lrodriguez@atheros.com>
+	Thu, 16 Oct 2008 03:59:14 -0400
+Date: Thu, 16 Oct 2008 09:58:36 +0200 (CEST)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: David Miller <davem@davemloft.net>
+cc: akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de,
+	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, bzolnier@gmail.com,
+	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
+	ralf@linux-mips.org, mchehab@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@ozlabs.org
+Subject: Re: powerpc allmodconfig
+In-Reply-To: <20081016.003644.74134312.davem@davemloft.net>
+Message-ID: <Pine.LNX.4.64.0810160958000.25933@anakin> (sfid-20081016_095921_035557_877528FE)
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>
+ <20081015.220247.262683261.davem@davemloft.net> <Pine.LNX.4.64.0810160930300.25933@anakin>
+ <20081016.003644.74134312.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1223073927-16266-1-git-send-email-lrodriguez@atheros.com>
-	 <1223073927-16266-2-git-send-email-lrodriguez@atheros.com>
-	 <1223073927-16266-3-git-send-email-lrodriguez@atheros.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 3, 2008 at 3:45 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> We were trying to hold the wrong spinlock due to a typo
-> on IEEE80211_BAR_CTL_TID_S's definition. We use this to
-> compute the tid number and then hold this this tid number's
-> spinlock.
->
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+On Thu, 16 Oct 2008, David Miller wrote:
+> From: Geert Uytterhoeven <geert@linux-m68k.org>
+> Date: Thu, 16 Oct 2008 09:31:29 +0200 (CEST)
+> 
+> > On Wed, 15 Oct 2008, David Miller wrote:
+> > > > kernel/resource.c: In function '__reserve_region_with_split':
+> > > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'resource_size_t'
+> > > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 4 has type 'resource_size_t'
+> > > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'resource_size_t'
+> > > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 7 has type 'resource_size_t'
+> > > 
+> > > Known issue, Ben wants to add a new variant of %pX in order to print resources so that
+> > > resource_size_t vs. unsigned long stuff doesn't matter like this any more.
+> > 
+> > Will still give a warning, as resource_size_t is not a pointer.
+> 
+> The idea is to pass in a pointer to the resource struct,
+> and the %pX variant specified says what part to print.
 
-Just a head up John -- Ingo has already sucked this into his tree with
-a proper Reported-by. We still need it in wireless-testing though, not
-sure how that will be handled.
+Neat! So we can also have a separate variant to print the resource
+range.
 
-  Luis
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
