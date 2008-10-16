@@ -1,88 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:34013 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089AbYJYK2W convert rfc822-to-8bit (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.184]:12406 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670AbYJPA5W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 06:28:22 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so483529eyi.37
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2008 03:28:21 -0700 (PDT)
-To: "Javier Cardona" <javier@cozybit.com>
-Subject: Re: [RFC] mac80211 rx filter in mesh mode, rt2x00 mesh point operation
-Date: Sat, 25 Oct 2008 12:28:17 +0200
-Cc: "Andrey Yurovsky" <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-References: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com> <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com>
-In-Reply-To: <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com>
+	Wed, 15 Oct 2008 20:57:22 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2907834fkq.5
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 17:57:20 -0700 (PDT)
+Message-ID: <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com> (sfid-20081016_025730_080228_647AB0AF)
+Date: Thu, 16 Oct 2008 02:57:20 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: New Regulatory Domain Api.
+Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Marcel Holtmann" <holtmann@linux.intel.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081015174447.GF15902@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200810251228.17562.IvDoorn@gmail.com> (sfid-20081025_122847_525438_6F6D55D9)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224086374.735.4.camel@johannes.berg>
+	 <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
+	 <1224092868.28173.21.camel@californication>
+	 <20081015112517.GF6509@tesla>
+	 <1224098748.28173.32.camel@californication>
+	 <20081015131622.GH6509@tesla>
+	 <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com>
+	 <20081015170830.GA15902@tesla>
+	 <1ba2fa240810151735t100ceda5s7fe7b495f735c507@mail.gmail.com>
+	 <20081015174447.GF15902@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 24 October 2008, Javier Cardona wrote:
-> Andrey,
->=20
-> On Thu, Oct 23, 2008 at 2:49 PM, Andrey Yurovsky <andrey@cozybit.com>=
- wrote:
-> > I've come across a problem with the RX filter setting while testing=
- mesh point
-> > operation in the rt2x00 driver (my hardware is rt73usb).  We transm=
-it and
-> > receive mesh beacons but mesh peer link action frames are dropped. =
- A patch
-> > for enabling mesh point mode is included here, this works except th=
-at:
-> >
-> > The RX filter, as set by mac80211 in mesh mode is 0x02, that is FIF=
-_ALLMULTI is
-> > set.  This is sufficient for other drivers but not for rt2x00.  I n=
-oticed that
-> > running tcpdump on the MP interface sets the filter to 0x43, this a=
-dds
-> > FIF_OTHER_BSS and FIF_PROMISC_IN_BSS, and rt2x00 is then able to ma=
-ke peer
-> > links and mesh point mode works correctly.
-> >
-> > Actually for rt2x00, setting either FIF_OTHER_BSS or FIF_PROMISC_IN=
-_BSS is the
-> > key here because they are both treated as FIF_PROMISC_IN_BSS, which=
- causes the
-> > driver to enable TXRX_CSR0_DROP_TO_DS.
->=20
-> Mesh frames have 4 addresses and no BSSID, so BSSID filtering should
-> be disabled (i.e. FIF_OTHER_BSS should be set).
-> The ALL_MULTI flag is also needed for mesh mode because an
-> intermediate node has to forward multicast traffic for addresses that
-> it may not be listening to.
->=20
-> But promiscuous mode is not necessary:  mesh points don't need to
-> receive unicast frames not addressed=B9 to them.  Furthermore, enabli=
-ng
-> promiscuous mode normally disables acknowledgments, which are needed
-> for proper mesh operation.
->=20
-> So my recommendation would be to configure the RX filter in mesh mode
-> to be ( FIF_ALLMULTI | FIF_OTHER_BSS )
+On Wed, Oct 15, 2008 at 7:44 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Oct 15, 2008 at 05:35:44PM -0700, Tomas Winkler wrote:
+>> On Wed, Oct 15, 2008 at 7:08 PM, Luis R. Rodriguez
+>> > The issue was your single band cards do not store 5 GHz band regulatory
+>> > information. Is this MOW1 or MOW2?
+>>
+>> Don't understand the question, the 5GHz channels are disabled that's
+>> all you can read from there.
+>
+> Oh OK so its not just MOW1 and MOW2 but you also *do* take into account
+> the card's capabilities.
+>
+>> > It certainly helps more understand your situation. I had no idea
+>> > of MOW1 and MOW2. Can this be documented as part of the
+>> > regulatory_hint() code changes which will be added?
+>>
+>> I've just checked current docs and from 5000 on inclusively there are
+>> only 3 SKU's MOW, ABG (no N) and BG. All others were depreciated.
+>
+> Interesting.. Are these SKUs also used on other platforms as well, say
+> for Windows?
 
-=46or rt2x00 this would turn into:
-	FIF_ALLMULTI | FIF_OTHER_BSS | FIF_PROMISC_IN_BSS
+Definitely It's not defined specially  for Linux market. And you may
+sense that this is also station mode specific. In AP mode probably the
+story would be different.
 
-because it cannot filter on other BSS, but this conversion is within rt=
-2x00
-based on capabilities by the driver. So as long as mac80211 provides th=
-e flags
-it wants (FIF_ALLMULTI | FIF_OTHER_BSS), rt2x00 will convert it to the =
-flags that
-make sure those frames will at least get through (FIF_ALLMULTI | FIF_OT=
-HER_BSS | FIF_PROMISC_IN_BSS),
-including some additional noise from frames mac80211 didn't request spe=
-cifically,
-but those can be filtered out in mac80211.
+> Anyway since you only have 3 this should be very simple to resolve...
+> Just add the 5 GHz frequency ranges you always support. Obviously the BG
+> card will not be able to make use of them :)
 
-Ivo
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It's ugly but possible w/a but we still have 3945 and 4965 where it is
+not so simple.
+Tomas
