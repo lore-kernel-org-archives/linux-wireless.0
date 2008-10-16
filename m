@@ -1,337 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:40585 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806AbYJRVNq (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:51636 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986AbYJQAf4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2008 17:13:46 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3 v3] p54: more definitions form lmac_longbow.h and pda.h
-Date: Sat, 18 Oct 2008 23:18:01 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <200810170114.45742.chunkeey@web.de>
-In-Reply-To: <200810170114.45742.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810182318.01334.chunkeey@web.de> (sfid-20081018_231351_034822_9409D68D)
+	Thu, 16 Oct 2008 20:35:56 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so260343rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Oct 2008 17:35:53 -0700 (PDT)
+Subject: Re: [PATCH 7/6] p54: integrate parts of lmac_longbow.h and other
+ parts of stlc45xx
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>
+In-Reply-To: <200810162320.13106.chunkeey@web.de>
+References: <200810150408.44363.chunkeey@web.de>
+	 <48F761CA.5040102@lwfinger.net>  <200810162320.13106.chunkeey@web.de>
+Content-Type: text/plain
+Date: Thu, 16 Oct 2008 15:30:21 -0700
+Message-Id: <1224196221.6287.18.camel@brick> (sfid-20081017_023600_662213_4F6866E6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch ports more useful features to p54
-  - PDR definitions for the synth chips & regulatory domain.
-  - honour IEEE80211_TX_CTL_ASSIGN_SEQ flag, if it's set.
-  - adds some lost mutex_lock & mutex_unlock.
-  - replace two more "magic values" that sneaked past.
+On Thu, 2008-10-16 at 23:20 +0200, Christian Lamparter wrote:
+> On Thursday 16 October 2008 17:46:18 Larry Finger wrote:
+> > The following change of ack_rssi from __le16 to u8 generates the sparse warning
+> > "drivers/net/wireless/p54/p54common.c:660:5: warning: cast to restricted __le16":
+> > 
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-10-16 23:06:55.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-10-18 21:25:46.000000000 +0200
-@@ -221,10 +221,10 @@ int p54_parse_firmware(struct ieee80211_
- 
- 	if (priv->fw_var >= 0x300) {
- 		/* Firmware supports QoS, use it! */
--		priv->tx_stats[4].limit = 3;
--		priv->tx_stats[5].limit = 4;
--		priv->tx_stats[6].limit = 3;
--		priv->tx_stats[7].limit = 1;
-+		priv->tx_stats[4].limit = 3;		/* AC_VO */
-+		priv->tx_stats[5].limit = 4;		/* AC_VI */
-+		priv->tx_stats[6].limit = 3;		/* AC_BE */
-+		priv->tx_stats[7].limit = 2;		/* AC_BK */
- 		dev->queues = 4;
- 	}
- 
-@@ -436,12 +436,12 @@ static int p54_parse_eeprom(struct ieee8
- 		goto err;
- 	}
- 
--	priv->rxhw = synth & 0x07;
-+	priv->rxhw = synth & PDR_SYNTH_FRONTEND_MASK;
- 	if (priv->rxhw == 4)
- 		p54_init_xbow_synth(dev);
--	if (!(synth & 0x40))
-+	if (!(synth & PDR_SYNTH_24_GHZ_DISABLED))
- 		dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
--	if (!(synth & 0x80))
-+	if (!(synth & PDR_SYNTH_5_GHZ_DISABLED))
- 		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
- 
- 	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
-@@ -659,7 +659,7 @@ static void p54_rx_frame_sent(struct iee
- 		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
- 		     (!payload->status))
- 			info->flags |= IEEE80211_TX_STAT_ACK;
--		if (payload->status & 0x02)
-+		if (payload->status & P54_TX_PSM_CANCELLED)
- 			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
- 		info->status.ack_signal = p54_rssi_to_dbm(dev,
- 				(int)payload->ack_rssi);
-@@ -739,9 +739,9 @@ static int p54_rx_control(struct ieee802
- /* returns zero if skb can be reused */
- int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
--	u8 type = le16_to_cpu(*((__le16 *)skb->data)) >> 8;
-+	u16 type = le16_to_cpu(*((__le16 *)skb->data));
- 
--	if (type == 0x80)
-+	if (type & P54_HDR_FLAG_CONTROL)
- 		return p54_rx_control(dev, skb);
- 	else
- 		return p54_rx_data(dev, skb);
-@@ -905,12 +905,13 @@ EXPORT_SYMBOL_GPL(p54_read_eeprom);
- static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_tx_queue_stats *current_queue;
-+	struct ieee80211_tx_queue_stats *current_queue = NULL;
- 	struct p54_common *priv = dev->priv;
- 	struct p54_hdr *hdr;
- 	struct p54_tx_data *txhdr;
- 	size_t padding, len;
- 	int i, j, ridx;
-+	u16 hdr_flags = 0;
- 	u8 rate;
- 	u8 cts_rate = 0x20;
- 	u8 rc_flags;
-@@ -932,9 +933,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	hdr = (struct p54_hdr *) skb_push(skb, sizeof(*hdr));
- 
- 	if (padding)
--		hdr->flags = cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN);
--	else
--		hdr->flags = cpu_to_le16(0);
-+		hdr_flags |= P54_HDR_FLAG_DATA_ALIGN;
- 	hdr->len = cpu_to_le16(len);
- 	hdr->type = (info->flags & IEEE80211_TX_CTL_NO_ACK) ? 0 : cpu_to_le16(1);
- 	hdr->rts_tries = info->control.rates[0].count;
-@@ -1003,6 +1002,12 @@ static int p54_tx(struct ieee80211_hw *d
- 			ridx++;
- 		}
- 	}
-+
-+	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
-+		hdr_flags |= P54_HDR_FLAG_DATA_OUT_SEQNR;
-+
-+	/* TODO: enable bursting */
-+	hdr->flags = cpu_to_le16(hdr_flags);
- 	hdr->tries = ridx;
- 	txhdr->crypt_offset = 0;
- 	txhdr->rts_rate_idx = 0;
-@@ -1021,6 +1026,10 @@ static int p54_tx(struct ieee80211_hw *d
- 	/* modifies skb->cb and with it info, so must be last! */
- 	if (unlikely(p54_assign_address(dev, skb, hdr, skb->len))) {
- 		skb_pull(skb, sizeof(*hdr) + sizeof(*txhdr) + padding);
-+		if (current_queue) {
-+			current_queue->len--;
-+			current_queue->count--;
-+		}
- 		return NETDEV_TX_BUSY;
- 	}
- 	priv->tx(dev, skb, 0);
-@@ -1074,13 +1083,14 @@ static int p54_setup_mac(struct ieee8021
- 	return 0;
- }
- 
--static int p54_set_freq(struct ieee80211_hw *dev, __le16 freq)
-+static int p54_set_freq(struct ieee80211_hw *dev, u16 frequency)
- {
- 	struct p54_common *priv = dev->priv;
- 	struct sk_buff *skb;
- 	struct p54_scan *chan;
- 	unsigned int i;
- 	void *entry;
-+	__le16 freq = cpu_to_le16(frequency);
- 
- 	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*chan) +
- 			    sizeof(struct p54_hdr), P54_CONTROL_TYPE_SCAN,
-@@ -1237,6 +1247,7 @@ static int p54_start(struct ieee80211_hw
- 	struct p54_common *priv = dev->priv;
- 	int err;
- 
-+	mutex_lock(&priv->conf_mutex);
- 	err = priv->open(dev);
- 	if (!err)
- 		priv->mode = NL80211_IFTYPE_MONITOR;
-@@ -1248,6 +1259,7 @@ static int p54_start(struct ieee80211_hw
- 	if (!err)
- 		err = p54_init_stats(dev);
- 
-+	mutex_unlock(&priv->conf_mutex);
- 	return err;
- }
- 
-@@ -1256,6 +1268,7 @@ static void p54_stop(struct ieee80211_hw
- 	struct p54_common *priv = dev->priv;
- 	struct sk_buff *skb;
- 
-+	mutex_lock(&priv->conf_mutex);
- 	del_timer(&priv->stats_timer);
- 	p54_free_skb(dev, priv->cached_stats);
- 	priv->cached_stats = NULL;
-@@ -1265,6 +1278,7 @@ static void p54_stop(struct ieee80211_hw
- 	priv->stop(dev);
- 	priv->tsf_high32 = priv->tsf_low32 = 0;
- 	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
-+	mutex_unlock(&priv->conf_mutex);
- }
- 
- static int p54_add_interface(struct ieee80211_hw *dev,
-@@ -1272,14 +1286,18 @@ static int p54_add_interface(struct ieee
- {
- 	struct p54_common *priv = dev->priv;
- 
--	if (priv->mode != NL80211_IFTYPE_MONITOR)
-+	mutex_lock(&priv->conf_mutex);
-+	if (priv->mode != NL80211_IFTYPE_MONITOR) {
-+		mutex_unlock(&priv->conf_mutex);
- 		return -EOPNOTSUPP;
-+	}
- 
- 	switch (conf->type) {
- 	case NL80211_IFTYPE_STATION:
- 		priv->mode = conf->type;
- 		break;
- 	default:
-+		mutex_unlock(&priv->conf_mutex);
- 		return -EOPNOTSUPP;
- 	}
- 
-@@ -1298,6 +1316,7 @@ static int p54_add_interface(struct ieee
- 
- 	p54_set_leds(dev, 1, 0, 0);
- 
-+	mutex_unlock(&priv->conf_mutex);
- 	return 0;
- }
- 
-@@ -1305,9 +1324,12 @@ static void p54_remove_interface(struct 
- 				 struct ieee80211_if_init_conf *conf)
- {
- 	struct p54_common *priv = dev->priv;
-+
-+	mutex_lock(&priv->conf_mutex);
-+	p54_setup_mac(dev, P54_FILTER_TYPE_NONE, NULL);
- 	priv->mode = NL80211_IFTYPE_MONITOR;
- 	memset(priv->mac_addr, 0, ETH_ALEN);
--	p54_setup_mac(dev, P54_FILTER_TYPE_NONE, NULL);
-+	mutex_unlock(&priv->conf_mutex);
- }
- 
- static int p54_config(struct ieee80211_hw *dev, u32 changed)
-@@ -1319,7 +1341,7 @@ static int p54_config(struct ieee80211_h
- 	mutex_lock(&priv->conf_mutex);
- 	priv->rx_antenna = 2; /* automatic */
- 	priv->output_power = conf->power_level << 2;
--	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
-+	ret = p54_set_freq(dev, conf->channel->center_freq);
- 	if (!ret)
- 		ret = p54_set_edcf(dev);
- 	mutex_unlock(&priv->conf_mutex);
-@@ -1372,14 +1394,18 @@ static int p54_conf_tx(struct ieee80211_
- 		       const struct ieee80211_tx_queue_params *params)
- {
- 	struct p54_common *priv = dev->priv;
-+	int ret;
- 
-+	mutex_lock(&priv->conf_mutex);
- 	if ((params) && !(queue > 4)) {
- 		P54_SET_QUEUE(priv->qos_params[queue], params->aifs,
- 			params->cw_min, params->cw_max, params->txop);
- 	} else
--		return -EINVAL;
--
--	return p54_set_edcf(dev);
-+		ret = -EINVAL;
-+	if (!ret)
-+		ret = p54_set_edcf(dev);
-+	mutex_unlock(&priv->conf_mutex);
-+	return ret;
- }
- 
- static int p54_init_xbow_synth(struct ieee80211_hw *dev)
-@@ -1488,19 +1514,14 @@ struct ieee80211_hw *p54_init_common(siz
- 		     IEEE80211_HW_SIGNAL_DBM |
- 		     IEEE80211_HW_NOISE_DBM;
- 
--	/*
--	 * XXX: when this driver gets support for any mode that
--	 *	requires beacons (AP, MESH, IBSS) then it must
--	 *	implement IEEE80211_TX_CTL_ASSIGN_SEQ.
--	 */
- 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 
- 	dev->channel_change_time = 1000;	/* TODO: find actual value */
--	priv->tx_stats[0].limit = 1;
--	priv->tx_stats[1].limit = 1;
--	priv->tx_stats[2].limit = 1;
--	priv->tx_stats[3].limit = 1;
--	priv->tx_stats[4].limit = 5;
-+	priv->tx_stats[0].limit = 1;		/* Beacon queue */
-+	priv->tx_stats[1].limit = 1;		/* Probe queue for HW scan */
-+	priv->tx_stats[2].limit = 3;		/* queue for MLMEs */
-+	priv->tx_stats[3].limit = 3;		/* Broadcast / MC queue */
-+	priv->tx_stats[4].limit = 5;		/* Data */
- 	dev->queues = 1;
- 	priv->noise = -94;
- 	/*
-diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
---- a/drivers/net/wireless/p54/p54common.h	2008-10-15 19:24:42.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.h	2008-10-18 21:25:09.000000000 +0200
-@@ -25,6 +25,22 @@ struct bootrec {
- 	u32 data[10];
- } __attribute__((packed));
- 
-+#define PDR_SYNTH_FRONTEND_MASK		0x0007
-+#define PDR_SYNTH_IQ_CAL_MASK		0x0018
-+#define PDR_SYNTH_IQ_CAL_PA_DETECTOR	0x0000
-+#define PDR_SYNTH_IQ_CAL_DISABLED	0x0008
-+#define PDR_SYNTH_IQ_CAL_ZIF		0x0010
-+#define PDR_SYNTH_FAA_SWITCH_MASK	0x0020
-+#define PDR_SYNTH_FAA_SWITCH_ENABLED	0x0001
-+#define PDR_SYNTH_24_GHZ_MASK		0x0040
-+#define PDR_SYNTH_24_GHZ_DISABLED	0x0040
-+#define PDR_SYNTH_5_GHZ_MASK		0x0080
-+#define PDR_SYNTH_5_GHZ_DISABLED	0x0080
-+#define PDR_SYNTH_RX_DIV_MASK		0x0100
-+#define PDR_SYNTH_RX_DIV_SUPPORTED	0x0100
-+#define PDR_SYNTH_TX_DIV_MASK		0x0200
-+#define PDR_SYNTH_TX_DIV_SUPPORTED	0x0200
-+
- struct bootrec_exp_if {
- 	__le16 role;
- 	__le16 if_id;
-@@ -210,6 +226,19 @@ struct pda_pa_curve_data {
- #define PDR_BASEBAND_REGISTERS			0x8000
- #define PDR_PER_CHANNEL_BASEBAND_REGISTERS	0x8001
- 
-+/* PDR definitions for default country & country list */
-+#define PDR_COUNTRY_CERT_CODE		0x80
-+#define PDR_COUNTRY_CERT_CODE_REAL	0x00
-+#define PDR_COUNTRY_CERT_CODE_PSEUDO	0x80
-+#define PDR_COUNTRY_CERT_BAND		0x40
-+#define PDR_COUNTRY_CERT_BAND_2GHZ	0x00
-+#define PDR_COUNTRY_CERT_BAND_5GHZ	0x40
-+#define PDR_COUNTRY_CERT_IODOOR		0x30
-+#define PDR_COUNTRY_CERT_IODOOR_BOTH	0x00
-+#define PDR_COUNTRY_CERT_IODOOR_INDOOR	0x20
-+#define PDR_COUNTRY_CERT_IODOOR_OUTDOOR	0x30
-+#define PDR_COUNTRY_CERT_INDEX		0x0F
-+
- /* stored in skb->cb */
- struct memrecord {
- 	u32 start_addr;
-@@ -507,7 +536,7 @@ struct p54_sta_unlock {
- } __attribute__ ((packed));
- 
- #define P54_TIM_CLEAR BIT(15)
--struct p54_tx_control_tim {
-+struct p54_tim {
- 	u8 count;
- 	u8 padding[3];
- 	__le16 entry[8];
+> @@ -739,9 +777,9 @@ static int p54_rx_control(struct ieee802
+>  /* returns zero if skb can be reused */
+>  int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb)
+>  {
+> -	u8 type = le16_to_cpu(*((__le16 *)skb->data)) >> 8;
+> +	u16 type = le16_to_cpu(*((__le16 *)skb->data));
+
+	u16 type = le16_to_cpup((__le16 *)skb->data);
+
+> +
+> +#ifndef WLAN_FC_GET_TYPE
+> +#define WLAN_FC_GET_TYPE(fc) (fc & IEEE80211_FCTL_FTYPE)
+> +#define WLAN_FC_GET_STYPE(fc) (fc & IEEE80211_FCTL_STYPE)
+> +#endif
+> +
+
+Suggest you look into some of the helpers in ieee80211.h
+
+> +
+> +static int p54_tx_fill(struct ieee80211_hw *dev, struct sk_buff *skb,
+> +		struct ieee80211_tx_info* info, u8 *queue, size_t *extra_len,
+> +		u16 *flags, u16 *aid)
+> +{
+> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> +	struct p54_common *priv = dev->priv;
+> +	u16 fc = le16_to_cpu(hdr->frame_control);
+
+	__le16 fc = hdr->frame_control;
+
+> +	int ret = 0;
+> +
+> +	if (unlikely(WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT)) {
+
+	ieee80211_is_mgmt(fc);
+
+> +		switch (WLAN_FC_GET_STYPE(fc)) {
+
+Not sure what the prevailing wisdom is here, switch to if /else if using
+the helpers ieee80211_is_beacon(fc), ieee80211_is_probe_resp to do
+compile-time byteswaps.
+
+or
+		switch (fc & cpu_to_le16(IEEE80211_FCTL_STYPE)
+		case cpu_to_le16(IEEE80211_STYPE_BEACON):
+
+etc.
+
+> +		case IEEE80211_STYPE_BEACON:
+> +			*aid = 0;
+> +			*queue = 0;
+> +			*extra_len = IEEE80211_MAX_TIM_LEN;
+> +			*flags = P54_HDR_FLAG_DATA_OUT_TIMESTAMP;
+> +			return 0;
+> +		case IEEE80211_STYPE_PROBE_RESP:
+> +			*aid = 0;
+> +			*queue = 2;
+> +			*flags = P54_HDR_FLAG_DATA_OUT_TIMESTAMP |
+> +				 P54_HDR_FLAG_DATA_OUT_NOCANCEL;
+> +			return 0;
+> +		default:
+> +			*queue = 2;
+> +			ret = 0;
+
+		return?
+
+Cheers,
+
+Harvey
+
