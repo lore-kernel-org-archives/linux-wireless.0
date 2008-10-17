@@ -1,96 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:55848 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752197AbYJQLKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2008 07:10:16 -0400
-Date: Fri, 17 Oct 2008 13:09:45 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: David Miller <davem@davemloft.net>
-Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
-	ralf@linux-mips.org, mchehab@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org
-Subject: Re: powerpc allmodconfig
-Message-ID: <20081017110945.GA32364@elte.hu> (sfid-20081017_131029_408190_909B11E9)
-References: <20081015213337.a99a9595.akpm@linux-foundation.org> <20081015.220247.262683261.davem@davemloft.net>
+Received: from rv-out-0506.google.com ([209.85.198.239]:35730 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228AbYJQVgn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Oct 2008 17:36:43 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so764978rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 14:36:38 -0700 (PDT)
+Message-ID: <48F90564.3040301@gmail.com> (sfid-20081017_233647_396102_E293CE5C)
+Date: Fri, 17 Oct 2008 14:36:36 -0700
+From: John Daiker <daikerjohn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20081015.220247.262683261.davem@davemloft.net>
+To: Michael Buesch <mb@bu3sch.de>
+CC: stefano.brivio@polimi.it, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: reduce checkpatch.pl errors
+References: <48F8E479.30304@gmail.com> <200810172302.38127.mb@bu3sch.de>
+In-Reply-To: <200810172302.38127.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael,
 
-* David Miller <davem@davemloft.net> wrote:
+Thanks for the feedback.  Bob Copeland had mentioned on a different 
+patch that I compare the binaries before and after a patch.  I will be 
+sure to do this on the patch rework.  Further comments inline.
 
-> > net/dccp/options.c: In function 'dccp_parse_options':=20
-> > net/dccp/options.c:67: warning: 'value' may be used uninitialized i=
-n=20
-> > this function
->=20
-> Known issue, not trivial to fix, gcc is just being incredibly silly=20
-> here as it can't see all of the control flow.
+Michael Buesch wrote:
+> On Friday 17 October 2008 21:16:09 John Daiker wrote:
+>   
+>> A few changes to reduce checkpatch.pl errors in the b43 driver.  For the 
+>> most part, I only fixed cosmetic things, and left the actual 'code flow' 
+>> untouched (hopefully)!
+>>
+>> Diff is against wireless-testing HEAD.
+>>
+>> Signed-off-by: John Daiker <daikerjohn@gmail.com>
+>>
+>> ---
+>>
+>>
+>>
+>>     
+>
+> Looks good, except these:
+>
+>   
+>> -		if (1 /*FIXME: the last PSpoll frame was sent successfully */ )
+>> +		if (1) {
+>> +			/*FIXME: the last PSpoll frame was sent successfully */
+>>     
+>
+> Makes it a lot less obvious what the comment is talking about.
+> Please leave this untouched.
+>   
+How about this:
 
-i just ran into this - do you have any objection against the patch=20
-below?
+-		if (1 /*FIXME: the last PSpoll frame was sent successfully */ )
++		if (1) {  /*FIXME: the last PSpoll frame was sent successfully */
 
-Should we have a cleaner annotation perhaps instead of=20
-uninitialized_var()? Something like:
+or this?
 
- #define __used          __attribute__((used))
+-		if (1 /*FIXME: the last PSpoll frame was sent successfully */ )
++		if (1) /*FIXME: the last PSpoll frame was sent successfully */ {
 
-?
 
-	Ingo
+I'm just not a fan of putting the comment inside the if conditional.
+Your argument about losing the precise meaning of the comment is 
+understood, but I think there is a middleground here. I would hope that 
+any 'if (1)' line would immediately raise the 'look for a comment' flag 
+in someone's brain. :P
+>> -		if (!gphy->aci_enable && 1 /*TODO: not scanning? */ ) {
+>> -			if (0 /*TODO: bunch of conditions */ ) {
+>> +		if (!gphy->aci_enable && 1) {
+>> +			/* TODO: not scanning? */
+>> +			if (0) {
+>> +				/*TODO: bunch of conditions */
+>>     
+>
+> Same here.
+>
+> There are probably more of these. I didn't check the whole patch.
+>
+>   
+>> -	//TODO
+>> +	/* TODO */
+>>     
+>
+> Well, that's only generating noise in git and results in merge conflicts
+> and stuff. I do only use // style comments for temporary comments.
+> IMO this is OK.
+>   
+I'll strip these out of the next patch.  I agree this is a weird rule, 
+but checkpatch.pl did all the work.  I'll put more brainpower behind the 
+next patch, haha.
+>   
+>> -char * b43_rfkill_led_name(struct b43_wldev *dev)
+>> +char *b43_rfkill_led_name(struct b43_wldev *dev)
+>>     
+>
+> Well, in my opinion it looks bad to glue the * to the function name.
+> The pointer * is not related to the function name, but to the return value.
+>
+> (Note that for variable definitions this is different and I agree that
+> we should put the * in front of the variable name without spaces)
+>
+> Well, but I'm not going to create a flamewar for this.
+> If this is kernel coding style, feel free to change the code.
+>   
+I'm certainly not trying to start a flamewar, either, so thanks for 
+keeping the torches at bay! :)  AFAIK, this is accepted (and preferred?) 
+kernel style, so it will be included in the updated patch.  At least 
+until I see more vigorous pushback.
+>
+> One additional thing I'd like you to do.
+> Do a b43 compile before and after applying the patch.
+> Keep the b43.ko files for both runs and do an md5sum on them.
+> Add the results to the commit log. The sums _must_ match.
+> If they don't, please send the changes that change the actual
+> binary code in seperate patches.
+>   
+Will do this next time with updated patch, among other things.
 
----------->
-=46rom d917af0bd043eab40d57f79cba9cf7a7b265a205 Mon Sep 17 00:00:00 200=
-1
-=46rom: Ingo Molnar <mingo@elte.hu>
-Date: Fri, 17 Oct 2008 12:41:30 +0200
-Subject: [PATCH] fix warning in net/dccp/options.c
-MIME-Version: 1.0
-Content-Type: text/plain; charset=3Dutf-8
-Content-Transfer-Encoding: 8bit
-
-fix this warning:
-
-  net/dccp/options.c: In function =E2=80=98dccp_parse_options=E2=80=99:
-  net/dccp/options.c:67: warning: =E2=80=98value=E2=80=99 may be used u=
-ninitialized in this function
-
-This is a bogus GCC warning. The compiler does not recognize the relati=
-on
-between "value" and "mandatory" variables: the code flow can ever reach
-the "out_invalid_option:" label if 'mandatory' is set to 1, and when
-'mandatory' is non-zero, we'll always have 'value' initialized.
-
-Help out the compiler by annotating the variable.
-
-Signed-off-by: Ingo Molnar <mingo@elte.hu>
----
- net/dccp/options.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/dccp/options.c b/net/dccp/options.c
-index 0809b63..18dcfb9 100644
---- a/net/dccp/options.c
-+++ b/net/dccp/options.c
-@@ -64,7 +64,7 @@ int dccp_parse_options(struct sock *sk, struct dccp_r=
-equest_sock *dreq,
- 					(dh->dccph_doff * 4);
- 	struct dccp_options_received *opt_recv =3D &dp->dccps_options_receive=
-d;
- 	unsigned char opt, len;
--	unsigned char *value;
-+	unsigned char *uninitialized_var(value);
- 	u32 elapsed_time;
- 	__be32 opt_val;
- 	int rc;
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+JD
