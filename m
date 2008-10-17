@@ -1,77 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:33822 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbYJSLBV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 07:01:21 -0400
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: Re: Power saving on mac80211
-References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
-	<87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
-	<1224412006.6324.45.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Sun, 19 Oct 2008 14:00:52 +0300
-In-Reply-To: <1224412006.6324.45.camel@johannes.berg> (ext Johannes Berg's message of "Sun\, 19 Oct 2008 12\:26\:46 +0200")
-Message-ID: <871vyc7st7.fsf@nokia.com> (sfid-20081019_130126_463874_4E4FAC5A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from main.gmane.org ([80.91.229.2]:39026 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751899AbYJQMGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Oct 2008 08:06:19 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Kqo5u-0005Xt-QN
+	for linux-wireless@vger.kernel.org; Fri, 17 Oct 2008 12:06:14 +0000
+Received: from artipc9.vub.ac.be ([134.184.26.59])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 12:06:14 +0000
+Received: from fhimpe by artipc9.vub.ac.be with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 12:06:14 +0000
+To: linux-wireless@vger.kernel.org
+From: Frederik Himpe <fhimpe@telenet.be>
+Subject: Re: iwlagn: associating with AP causes kernel hiccup
+Date: Fri, 17 Oct 2008 12:06:08 +0000 (UTC)
+Message-ID: <gd9v3f$3ft$1@ger.gmane.org> (sfid-20081017_140623_309802_E3A72D17)
+References: <gd5gs4$abi$1@ger.gmane.org> <1224104363.19219.30.camel@rc-desk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Cc: linux-kernel@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Wed, 15 Oct 2008 13:59:23 -0700, reinette chatre wrote:
 
-> On Sun, 2008-10-19 at 10:24 +0300, Kalle Valo wrote:
->
->> Oh, I forgot about beacon filtering. stlc45xx firmware (but no support
->> in driver yet) supports beacon filtering in PSM mode, meaning that the
->> beacons are not delivered to the host (not even DTIM beacons). This
->> improves power consumption because the host CPU is not woken up all
->> the time.
+> On Wed, 2008-10-15 at 19:38 +0000, Frederik Himpe wrote:
+>> When I associate with an AP, Linux 2.6.27 seems to "hang" for a few
+>> seconds. During that time, all sound stops playing and keyboard and
+>> mouse input is impossible. In the log I see this:
 >> 
->> I'm sure that stlc4560 isn't the only chip supporting this feature
->> because it's quite essential in low power devices. I have been
->> planning to implement support to mac80211 in the near future. Though
->> don't know yet what is needed, I haven't investigated this at all.
->
-> I thought about it recently, it's fairly easy.
+>> wlan0: authenticate with AP 00:15:f2:0a:ab:43 wlan0: authenticate with
+>> AP 00:15:f2:0a:ab:43 wlan0: authenticate with AP 00:15:f2:0a:ab:43
+>> wlan0: authenticated
+>> wlan0: associate with AP 00:15:f2:0a:ab:43 wlan0: RX AssocResp from
+>> 00:15:f2:0a:ab:43 (capab=0x431 status=0 aid=2) wlan0: associated
+>> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready iwlagn 0000:0c:00.0:
+>> PCI INT A disabled iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 (level,
+>> low) -> IRQ 17 iwlagn 0000:0c:00.0: restoring config space at offset
+>> 0x1 (was 0x100102, writing 0x100106)
+> 
+> Are you running wpa_supplicant and/or network manager?
 
-Marvellous :)
+I'm using Mandriva 2009.0 x86_64 with wpa_supplicant and Mandriva's 
+wireless network configuration tool (drakroam).
 
-> As a preliminary step, I'd change mac80211 to not trigger the timer
-> continuously, but rather reset it ever time we get a beacon from the AP,
-> so that the timer only fires when we haven't seen a beacon for too long.
-> This helps with powersave already because then we only wake up for
-> beacons, not for the timer too.
+> Can you try testing without them?
 
-This makes sense, all extra timers are bad. I'll try come up with a
-patch next week.
+Actually I just found out that running
+# ifconfig wlan0 down
+is enough to trigger the sound and mouse hanging for a few seconds.
 
-> Then add a new flag to mac80211 hw description that says "driver will
-> watch beacons". This means that the code above that rearms the timer for
-> the future 'nothing from AP' check is skipped.
+This is what appears in the kernel logs when running that command:
 
-I will. I need to check that if the "firmware beacon watch" is enabled
-only when PSM is enabled. If it is, we might have to make the flag
-dynamic.
-
-> Also add a way for mac80211 to tell the driver after how many beacons
-> (or calculate the timeout in ms, it's convertible) it should tell
-> mac80211 about the situation. Finally, to make it possible to have the
-> driver tell mac80211, extend the MLME callback (ieee80211_notify_mac)
-
-The beacon filtering in stlc4560 works so that a beacon is passed to
-the host only when the TIM bit for the AID is set. There isn't any
-timeout for delivering beacons to the host, if the data path is idle
-for 24 hours, mac80211 will not receive any beacons for the 24 hours.
-I don't see why we need a timeout here.
-
-I believe that there's also a feature in stlc4560 that the driver can
-provide a checksum of the beacon and the firmware will send the beacon
-if checksum doesn't match. But I don't yet know how that works in
-practise.
+Oct 17 14:04:51 defected kernel: iwlagn 0000:0c:00.0: PCI INT A disabled
+Oct 17 14:04:52 defected kernel: iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 
+(level, low) -> IRQ 17
+Oct 17 14:04:52 defected kernel: iwlagn 0000:0c:00.0: restoring config 
+space at offset 0x1 (was 0x100102, writing 0x100106)
+Oct 17 14:04:52 defected kernel: Registered led device: iwl-phy0:radio
+Oct 17 14:04:52 defected kernel: Registered led device: iwl-phy0:assoc
+Oct 17 14:04:52 defected kernel: Registered led device: iwl-phy0:RX
+Oct 17 14:04:52 defected kernel: Registered led device: iwl-phy0:TX
+Oct 17 14:04:52 defected kernel: ADDRCONF(NETDEV_UP): wlan0: link is not 
+ready
 
 -- 
-Kalle Valo
+Frederik Himpe
+
+
