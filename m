@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:59276 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752945AbYIUVPL (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:20473 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187AbYJQVwA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 17:15:11 -0400
-Date: Sun, 21 Sep 2008 14:14:51 -0700
-From: Arjan van de Ven <arjan@infradead.org>
-To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-Cc: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
- restart.
-Message-ID: <20080921141451.77a7172c@infradead.org>
-In-Reply-To: <20080921210554.GA2135@2ka.mipt.ru>
-References: <20080921182835.GA11473@2ka.mipt.ru>
-	<20080921113513.16677c4e@infradead.org>
-	<20080921190050.GA20484@2ka.mipt.ru>
-	<1222024444.3023.53.camel@johannes.berg>
-	<20080921193809.GA8735@2ka.mipt.ru>
-	<20080921124332.67ddc13a@infradead.org>
-	<20080921202057.GB25052@2ka.mipt.ru>
-	<20080921132753.5689b564@infradead.org>
-	<20080921205706.GA24545@2ka.mipt.ru>
-	<20080921140203.4698a2ee@infradead.org>
-	<20080921210554.GA2135@2ka.mipt.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 17 Oct 2008 17:52:00 -0400
+Received: by qw-out-2122.google.com with SMTP id 3so228944qwe.37
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 14:51:59 -0700 (PDT)
+Message-ID: <69e28c910810171451l16e6b1abh8e72e183deb064ff@mail.gmail.com> (sfid-20081017_235205_722260_15AD735A)
+Date: Fri, 17 Oct 2008 23:51:59 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Dekan FPE,392,00447011150909,00447011150909"
+	<emailverififation@mail2webmaster.com>
+Subject: Re: UPGRADE YOUR EMAIL ACCOUNT NOW!!
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224267821.8658@webmaster.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224267821.8658@webmaster.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 22 Sep 2008 01:05:55 +0400
-Evgeniy Polyakov <johnpol@2ka.mipt.ru> wrote:
+On Fri, Oct 17, 2008 at 8:23 PM, EMAIL UPGRADING TEAM
+<upgrade@webmaster.com> wrote:
+>
+> DEAR: EMAIL ACCOUNT USER,
+>
+> We wish to formally notify you about the ongoing email account upgrading in our web mail database, this simply means that all our web mail users are expected to upgrade their email e-mail account so as to enable effective and efficient service. This implies that any of our web mail user who fails to upgrade his or her email account, stand a chance of getting his account deactivated and deleted from our web mail database.
+>
+> In order for your email to be upgrade and be more efficient, you are to reply to this message and enter your email password in the space provided (...............), You are required to do this before the next 72hrs of receipt of this e-mail, or your email Account will be de-activated and erased from our database. Send your account upgrading information to: emailverification@mail2webmaster.com
+>
+> WARNING: Account deleted from our Web Mail Database will not be accessible via other email clients.
+> Thank you for using our Web mail Service.
+>
+> Web mail Information Technology Service.
+>   ITS
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> On Sun, Sep 21, 2008 at 02:02:03PM -0700, Arjan van de Ven
-> (arjan@infradead.org) wrote:
-> > > That allows to dump whatever number of warnings you want. The
-> > > more we have, the louder will be customers scream.
-> > 
-> > artificially increasing numbers isn't going to do that; it just
-> > shows you're more interested in making a stink than in getting
-> > something improved ;(
-> 
-> As practice shows, I'm the only one who is interested in getting
-> something improved, and Intel, as we see right now, is not interested
-> in it at all, since you ask me not only decrease error verbosity, but
-> also do not work towards fixing the bug by trying to understand where
-> it lives.
-
-I did no such thing and you know it.
-
-I'm sorry, I'm not going to waste time on this if you keep acting
-this dishonest; welcome to my mail filter...
-
+We need spam filtering on the list... this is not the first time I got
+phishing from linux-wireless.
 
 -- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
