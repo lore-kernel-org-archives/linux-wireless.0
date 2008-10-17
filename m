@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:40733 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861AbYJFGKW (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.187]:4571 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391AbYJQT1O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 02:10:22 -0400
-To: Pavel Roskin <proski@gnu.org>
-Cc: Greg KH <greg@kroah.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: at76_usb driver status
-References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com>
-	<20081005061603.GB28533@kroah.com> <87d4ifsgg5.fsf@litku.valot.fi>
-	<1223270894.18180.7.camel@dv> <87vdw6mgdl.fsf@litku.valot.fi>
-	<1223271737.18180.15.camel@dv>
-From: Kalle Valo <Kalle.Valo@iki.fi>
-Date: Mon, 06 Oct 2008 09:10:14 +0300
-In-Reply-To: <1223271737.18180.15.camel@dv> (Pavel Roskin's message of "Mon\, 06 Oct 2008 01\:42\:17 -0400")
-Message-ID: <87r66umeyh.fsf@litku.valot.fi> (sfid-20081006_081032_923590_8A48C3AB)
+	Fri, 17 Oct 2008 15:27:14 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so408010nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 12:27:08 -0700 (PDT)
+To: John Daiker <daikerjohn@gmail.com>
+Subject: Re: [PATCH] rt2x00: reduce checkpatch.pl errors
+Date: Fri, 17 Oct 2008 21:27:03 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <48F8E481.7000308@gmail.com>
+In-Reply-To: <48F8E481.7000308@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810172127.04168.IvDoorn@gmail.com> (sfid-20081017_212718_131375_ECF45B1C)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin <proski@gnu.org> writes:
+On Friday 17 October 2008, John Daiker wrote:
+> A few changes to reduce checkpatch.pl errors in the rt2x00 driver.  For 
+> the most part, I only fixed cosmetic things, and left the actual 'code 
+> flow' untouched (hopefully)!
+> 
+> Diff is against wireless-testing HEAD.
 
->> I agree, it's very confusing. I'll change the name of the mac80211
->> port to something else, most probably to at76c50x-usb. Any comments?
->> Anyone?
->
-> I'd rather avoid the old driver completely.  But if we want to resurrect
-> it, its name was "at76c503a".
+Looks good. Thanks.
 
-The atmel driver says it supports that also that chipset:
+John could you merge this into wireless-testing? :)
 
-config ATMEL
-      tristate "Atmel at76c50x chipset  802.11b support"
+> Signed-off-by: John Daiker <daikerjohn@gmail.com>
 
-Hence I would like to have the usb suffix in the name, just to avoid
-the confusion.
-
--- 
-Kalle Valo
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
