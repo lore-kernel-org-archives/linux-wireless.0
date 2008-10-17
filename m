@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:48387 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760289AbYJJTAS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 15:00:18 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so237240yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 12:00:17 -0700 (PDT)
-Message-ID: <43e72e890810101200g3f50b204t20ea782878217369@mail.gmail.com> (sfid-20081010_210026_379003_32320103)
-Date: Fri, 10 Oct 2008 12:00:17 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "David Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 1/1] Ath9k: fix uninitialized value in ath9k_hw_reset
-Cc: jirislaby@gmail.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jmalinen@atheros.com
-In-Reply-To: <20081010.115318.85254002.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1223661403-21803-1-git-send-email-jirislaby@gmail.com>
-	 <20081010.115318.85254002.davem@davemloft.net>
+Received: from mga09.intel.com ([134.134.136.24]:47763 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757262AbYJQPpV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Oct 2008 11:45:21 -0400
+Subject: Re: 10-17-2008 Build issues - Intel 3945abg - Ubuntu Intrepid
+From: reinette chatre <reinette.chatre@intel.com>
+To: myk.robinson@kingdomcomputer.info
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1224248117.28593.3.camel@mobileOne>
+References: <1224248117.28593.3.camel@mobileOne>
+Content-Type: text/plain
+Date: Fri, 17 Oct 2008 08:45:14 -0700
+Message-Id: <1224258314.11187.1.camel@rc-desk> (sfid-20081017_174607_128537_CB864542)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 10, 2008 at 11:53 AM, David Miller <davem@davemloft.net> wrote:
-> From: Jiri Slaby <jirislaby@gmail.com>
-> Date: Fri, 10 Oct 2008 19:56:43 +0200
->
->> status ath9k_hw_reset() parameter should be set in every case, since
->> it is used in callers to find out an error code.
->>
->> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
->> Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
->> Cc: Jouni Malinen <jmalinen@atheros.com>
->> ---
->>  drivers/net/wireless/ath9k/hw.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
->> index 62e44a0..fb6727b 100644
->> --- a/drivers/net/wireless/ath9k/hw.c
->> +++ b/drivers/net/wireless/ath9k/hw.c
->> @@ -5893,7 +5893,7 @@ bool ath9k_hw_reset(struct ath_hal *ah,
->>       }
->>
->>       if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
->> -             return false;
->> +             FAIL(-EIO);
->>
->
-> This fix may be correct, but this is the first time I've noticed
-> these error status updating macros and they are super ugly.
->
-> I really think they should be removed.  Someone casually scanning
-> this code won't be able to discern the side effects and that makes
-> auditing harder and more error prone.
+On Fri, 2008-10-17 at 07:55 -0500, Myk Robinson wrote:
+> Hello-
+> 
+> Used your driver package in Ubuntu Hardy with no trouble at all. Testing
+> the Intrepid beta now. Before today, using the compat-wireless driver
+> for kernel 2.6.27, networkmanager showed all devices grayed out and
+> iwlist scan would not work. Today's driver release has allowed me to
+> connect, but still drops the connection with intel 2945abg. Also, it
+> causes the touchpad to lose sync when the connection is dropped.
+> 
+> Here is a pastebin containing some dmesg info that might be helpful.
+> 
+> http://pastebin.com/f286ee42c
+> 
 
-Agreed, patches welcomed.
+The log shows some firmware errors. Could you please follow the steps on
+http://intellinuxwireless.org/?n=fw_error_report to help us find the
+cause of the problem?
 
-  Luis
+Thanks
+
+Reinette
+
