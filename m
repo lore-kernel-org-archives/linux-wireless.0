@@ -1,31 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51653
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753461AbYJAJOh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 05:14:37 -0400
-Date: Wed, 01 Oct 2008 02:14:25 -0700 (PDT)
-Message-Id: <20081001.021425.40686099.davem@davemloft.net> (sfid-20081001_111443_341061_F48BC364)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-09-30
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080930183938.GE3765@tuxdriver.com>
-References: <20080930183938.GE3765@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from isilmar.linta.de ([213.133.102.198]:43982 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751954AbYJQUqZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Oct 2008 16:46:25 -0400
+Date: Fri, 17 Oct 2008 22:44:23 +0200
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: Andrey Borzenkov <arvidjaar@newmail.ru>
+Cc: Dave <kilroyd@googlemail.com>, orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic
+	loading firmware with PCMCIA adapter
+Message-ID: <20081017204423.GB25568@comet.dominikbrodowski.net> (sfid-20081017_224629_077029_75DD47A0)
+References: <200810091722.56812.arvidjaar@newmail.ru> <200810102114.55663.arvidjaar@newmail.ru> <48EF8E01.2060709@gmail.com> <200810102126.32246.arvidjaar@newmail.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200810102126.32246.arvidjaar@newmail.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 30 Sep 2008 14:39:38 -0400
+Hi,
 
-> Dave,
+On Fri, Oct 10, 2008 at 09:26:30PM +0400, Andrey Borzenkov wrote:
+> On Friday 10 October 2008, Dave wrote:
+> > 
+> > Andrey Borzenkov wrote:
+> > > On Friday 10 October 2008, Dave wrote:
+> > >> You're right. pda_size is supposed to be the maximum size of the PDA (in bytes) that we expect with the firmware. It should be set to 0x200.
+> > >>
+> > > 
+> > > Do you want me to send a patch?
+> > 
+> > Could you fix it as part of the patch you submitted?
+> > 
 > 
-> Here is the latest round of wireless bits intended for 2.6.28.  Among
-> them is the first round of new stuff learned from the release of the
-> Atheros HAL sources...
-> 
-> Let me know if there are problems!
+> Attached. As other entries use decimal I thought it is more logical
+> to use 512 as well.
 
-Pulled and pushed back out to net-next-2.6, thanks!
+> Subject: [PATCH] orinoco: reduce stack usage in firmware download path
+> From: Andrey Borzenkov < arvidjaar@mail.ru>
+> 
+> orinoco_dl_firmware and symbol_dl_mage allocate large local
+> variables (1K); at least orinoco fails with panic or hung
+> kernel if 4K stacks is enabled.
+> 
+> Allocate large buffers dynamically at run time.
+> 
+> Tested-By: Andrey Borzenkov <arvidjaar@mail.ru> for Agere case
+> 
+> Signed-off-by: Andrey Borzenkov < arvidjaar@mail.ru>
+Acked-by: Dominik Brodowski <linux@dominikbrodowski.net>
+
+I assmue this is to be merged via wireless and net, and not via pcmcia?
+
+Best,
+	Dominik
