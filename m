@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:39945 "EHLO mga14.intel.com"
+Received: from mx2.redhat.com ([66.187.237.31]:58572 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753572AbYJVUhf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 16:37:35 -0400
-Subject: Re: [PATCH 7/9] iwl3945 : Fix a-band association for passive
-	channels
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <20081022193353.GG15808@tuxdriver.com>
-References: <1224012769-8920-1-git-send-email-reinette.chatre@intel.com>
-	 <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
-	 <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
-	 <1224012769-8920-4-git-send-email-reinette.chatre@intel.com>
-	 <1224012769-8920-5-git-send-email-reinette.chatre@intel.com>
-	 <1224012769-8920-6-git-send-email-reinette.chatre@intel.com>
-	 <1224012769-8920-7-git-send-email-reinette.chatre@intel.com>
-	 <1224012769-8920-8-git-send-email-reinette.chatre@intel.com>
-	 <20081022193353.GG15808@tuxdriver.com>
+	id S1751124AbYJQSV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Oct 2008 14:21:59 -0400
+Subject: [PATCH] libertas: fix CF firmware loading
+From: Dan Williams <dcbw@redhat.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain
-Date: Wed, 22 Oct 2008 13:37:52 -0700
-Message-Id: <1224707872.10863.165.camel@rc-desk> (sfid-20081022_223738_338604_CF30397D)
+Date: Fri, 17 Oct 2008 14:15:49 -0400
+Message-Id: <1224267349.4010.2.camel@dhcp-100-3-195.bos.redhat.com> (sfid-20081017_202204_998534_659AB233)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-22 at 12:33 -0700, John W. Linville wrote:
-> On Tue, Oct 14, 2008 at 12:32:47PM -0700, Reinette Chatre wrote:
-> > From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> >
-> > This patch fixes the a-band association for passive channels.
-> > This fix will only work with uCode version 15.28.1.8 and above.
-> > uCode API version is incremented to 2.
-> >
-> > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> 
-> BTW, what is wrong with "the a-band association for passive channels"?
-> As you may know, we have been trying to get better changelog
-> information from the iwlwifi team for a while now...
+From: Ryan Mallon <ryan@bluewatersys.com>
 
-This patch fixes associating with hidden AP in A-band.
+Change the return value of if_cs_poll_while_fw_download to zero on 
+success, so that the firmware loading functions also correctly 
+return zero on success.
 
-Reinette
+Signed-off-by: Ryan Mallon <ryan@bluewatersys.com>
+Acked-by: Dan Williams <dcbw@redhat.com>
+
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index 842a08d..8f8934a 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -151,7 +151,7 @@ static int if_cs_poll_while_fw_download(struct if_cs_card *card, uint addr, u8 r
+        for (i = 0; i < 100000; i++) {
+                u8 val = if_cs_read8(card, addr);
+                if (val == reg)
+-                       return i;
++                       return 0;
+                udelay(5);
+        }
+        return -ETIME;
+
+
 
