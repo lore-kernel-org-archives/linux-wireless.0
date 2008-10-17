@@ -1,63 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43066 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472AbYJFUsO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 16:48:14 -0400
-Subject: Re: [PATCH] p54: fix build failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200810062245.32965.chunkeey@web.de>
-References: <1223322501.3778.20.camel@johannes.berg>
-	 <200810062245.32965.chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GztC0fMrC0tbDzKT3hhc"
-Date: Mon, 06 Oct 2008 22:47:45 +0200
-Message-Id: <1223326065.3778.32.camel@johannes.berg> (sfid-20081006_224818_947752_583E4B6C)
+Received: from mout.perfora.net ([74.208.4.197]:60905 "EHLO mout.perfora.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757062AbYJQTSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Oct 2008 15:18:17 -0400
+Subject: Re: 10-17-2008 Build issues - Intel 3945abg - Ubuntu Intrepid
+From: Myk Robinson <myk.robinson@kingdomcomputer.info>
+Reply-To: myk.robinson@kingdomcomputer.info
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1224256619.3007.0.camel@localhost.localdomain>
+References: <1224248117.28593.3.camel@mobileOne>
+	 <1224256619.3007.0.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 17 Oct 2008 14:12:58 -0500
+Message-Id: <1224270778.6775.4.camel@mobileOne> (sfid-20081017_211838_841297_6975B921)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi, thanks for the response.
 
---=-GztC0fMrC0tbDzKT3hhc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The NetworkManager applet in the task bar positively identified both my
+wireless devices. The Intel 3945abg and the secondary Belkin FD7050 USB
+wireless, but both were "grayed out", or unselectable. No wireless
+networks were shown. When this happened, running    sudo lshw -C network
+in the console showed the wireless devices as "disabled", which explains
+the grayed out part.. Just not sure why they were disabled and couldnt
+figure how to enable them. 
 
-still HTML and as such not really useful.
+ Also, when this occurred, trying to check by console with    sudo
+iwlist wlan0 scan   yielded no results whatsoever. No error, no positive
+results. The cursor just sat there blinking until I pressed Ctrl+C to
+stop the process from running any further.
 
-However,
+Immediately following this event, uninstalling the compat-wireless
+driver and reverting back to the "out of the box" driver provided with
+the distro allowed the connection to take place, but with regular
+dropped connections.
+
+Thanks,
+
+-- 
+--
+Myk Robinson
+Computer Support Specialist
+Kingdom Computer Solutions
+http://www.kingdomcomputer.info
+myk.robinson@kingdomcomputer.info
+(731) 616.5030
 
 
-> +int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int
-> len);
 
-How about just killing the export instead? It isn't used anywhere else
-anyway?
+On Fri, 2008-10-17 at 11:16 -0400, Dan Williams wrote:
+> On Fri, 2008-10-17 at 07:55 -0500, Myk Robinson wrote:
+> > Hello-
+> > 
+> > Used your driver package in Ubuntu Hardy with no trouble at all. Testing
+> > the Intrepid beta now. Before today, using the compat-wireless driver
+> > for kernel 2.6.27, networkmanager showed all devices grayed out and
+> 
+> Hmm, what do you mean by "grayed out"?  What exactly did the menu say?
+> 
+> Dan
+> 
+> > iwlist scan would not work. Today's driver release has allowed me to
+> > connect, but still drops the connection with intel 2945abg. Also, it
+> > causes the touchpad to lose sync when the connection is dropped.
+> > 
+> > Here is a pastebin containing some dmesg info that might be helpful.
+> > 
+> > http://pastebin.com/f286ee42c
+> > 
+> > Thanks,
+> > 
+> 
 
-johannes
-
---=-GztC0fMrC0tbDzKT3hhc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI6nltAAoJEKVg1VMiehFYjiwQAJL45AgcWL/ijP5gB0viEWFj
-Agrxh4F2OLSrtKSoAOHqkccVqmXkbTac0Eh761UK9B+6ouSqbmyJ4PGkIoetEreo
-d+Ijo4bPwlB90+Qr9cENnL/JLRta0dUOu/1y3w5hKncPkTj2rMGpkF2eiy4snoZs
-NH3K39XtmRZY7Wby9V+CbbEChZ2DOSxAKuaHMbgPMBximYjkdp/E/FgBWFKA8CJR
-KE2c12Vx7tWKeM52QSpfhlEueSvGco1TkmmSjIZCBjg9jTkdjph7hoL5pEY3rjdQ
-nDhLF7fTXxQEGR0Gp6JWTrqgFB6BbOBEGUNCZBi/xd3NKm9el3mXKIbeUnHHh2vC
-Z1DZXnKCGIjyGnaNUJarC/5W35VMCUgQEz7OgTc7VbLV4XPrfFpCiUMKucU+KnjQ
-l4fi0YAXyYzz8lJh11adLA+SXmnMVJizHUHB8tP0uMZCPbEuCcRxTwCeD+TFwMFe
-376RMmgnhvPjAybRbR+8Hzi/yVc2uG7mSHzmvjGGm1wlclcnpYtOQGEYWj1lNJ3u
-IkDvOSn5tM8TMRneKO3bdXNjuPGxSFETP4/pQQe6JCXq58zcSrw4f0oYdNVsqWUE
-LG96jFy3Et0rA1SbXtOZYJDjmNoBv/JnBwNaFcA8MBe0RLMeIHIG83C1kQLTIz9C
-p4GvUvsY0PBfMbpBjSUx
-=sVsL
------END PGP SIGNATURE-----
-
---=-GztC0fMrC0tbDzKT3hhc--
 
