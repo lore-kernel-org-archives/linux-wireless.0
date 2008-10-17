@@ -1,148 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39123 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbYJaKPr (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:45487 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752197AbYJQBM5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 06:15:47 -0400
-Subject: Re: [RFC] wireless: Add 802.11d support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1225428211-17353-1-git-send-email-lrodriguez@atheros.com> (sfid-20081031_054338_414241_747AA340)
-References: <1225428211-17353-1-git-send-email-lrodriguez@atheros.com>
-	 (sfid-20081031_054338_414241_747AA340)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VXOZIPhCE427KahnOi4s"
-Date: Fri, 31 Oct 2008 11:15:43 +0100
-Message-Id: <1225448143.3535.17.camel@johannes.berg> (sfid-20081031_111553_159356_AF924B40)
-Mime-Version: 1.0
+	Thu, 16 Oct 2008 21:12:57 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [PATCH 7/6] p54: integrate parts of lmac_longbow.h and other parts of stlc45xx
+Date: Fri, 17 Oct 2008 03:17:09 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>
+References: <200810150408.44363.chunkeey@web.de> <200810162320.13106.chunkeey@web.de> <1224196221.6287.18.camel@brick>
+In-Reply-To: <1224196221.6287.18.camel@brick>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810170317.09742.chunkeey@web.de> (sfid-20081017_031302_617935_95DF9EA7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 17 October 2008 00:30:21 Harvey Harrison wrote:
+> On Thu, 2008-10-16 at 23:20 +0200, Christian Lamparter wrote:
+> > On Thursday 16 October 2008 17:46:18 Larry Finger wrote:
+> > > The following change of ack_rssi from __le16 to u8 generates the sparse warning
+> > > "drivers/net/wireless/p54/p54common.c:660:5: warning: cast to restricted __le16":
+> > > 
+> 
+> > @@ -739,9 +777,9 @@ static int p54_rx_control(struct ieee802
+> >  /* returns zero if skb can be reused */
+> >  int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb)
+> >  {
+> > -	u8 type = le16_to_cpu(*((__le16 *)skb->data)) >> 8;
+> > +	u16 type = le16_to_cpu(*((__le16 *)skb->data));
+> 
+> 	u16 type = le16_to_cpup((__le16 *)skb->data);
+> 
+should be fixed in [PATCH 1/3] p54: more definitions form lmac_longbow.h and pda.h
+> > +
+> > +#ifndef WLAN_FC_GET_TYPE
+> > +#define WLAN_FC_GET_TYPE(fc) (fc & IEEE80211_FCTL_FTYPE)
+> > +#define WLAN_FC_GET_STYPE(fc) (fc & IEEE80211_FCTL_STYPE)
+> > +#endif
+> > +
+> 
+> Suggest you look into some of the helpers in ieee80211.h
+ohh well, I could have updated that code ;-)
+> 
+> > +
+> > +static int p54_tx_fill(struct ieee80211_hw *dev, struct sk_buff *skb,
+> > +		struct ieee80211_tx_info* info, u8 *queue, size_t *extra_len,
+> > +		u16 *flags, u16 *aid)
+> > +{
+> > +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> > +	struct p54_common *priv = dev->priv;
+> > +	u16 fc = le16_to_cpu(hdr->frame_control);
+> 
+> 	__le16 fc = hdr->frame_control;
+> 
+> > +	int ret = 0;
+> > +
+> > +	if (unlikely(WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT)) {
+> 
+> 	ieee80211_is_mgmt(fc);
+> 
+> > +		switch (WLAN_FC_GET_STYPE(fc)) {
+> 
+> Not sure what the prevailing wisdom is here, switch to if /else if using
+> the helpers ieee80211_is_beacon(fc), ieee80211_is_probe_resp to do
+> compile-time byteswaps.
+> 
+> or
+> 		switch (fc & cpu_to_le16(IEEE80211_FCTL_STYPE)
+> 		case cpu_to_le16(IEEE80211_STYPE_BEACON):
+> 
+> etc.
+k!
+> 
+> > +		case IEEE80211_STYPE_BEACON:
+> > +			*aid = 0;
+> > +			*queue = 0;
+> > +			*extra_len = IEEE80211_MAX_TIM_LEN;
+> > +			*flags = P54_HDR_FLAG_DATA_OUT_TIMESTAMP;
+> > +			return 0;
+> > +		case IEEE80211_STYPE_PROBE_RESP:
+> > +			*aid = 0;
+> > +			*queue = 2;
+> > +			*flags = P54_HDR_FLAG_DATA_OUT_TIMESTAMP |
+> > +				 P54_HDR_FLAG_DATA_OUT_NOCANCEL;
+> > +			return 0;
+> > +		default:
+> > +			*queue = 2;
+> > +			ret = 0;
+> 
+> 		return?
+return?
+p54 has 8 queues:
+ - 4 WME queues which neatly fit into mac80211's concept... (that's when we return 1)
+ - the other 4 don't. that's when we return 0. 
+   (otherwise, we won't stop the WME queue for no reason)
 
---=-VXOZIPhCE427KahnOi4s
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-10-30 at 21:43 -0700, Luis R. Rodriguez wrote:
-
-> +struct ieee80211_regdomain *ieee80211_country_ie_2_rd(
-> +				u8 *country_ie, u8 country_ie_len)
-> +{
-> +	struct ieee80211_regdomain *rd =3D NULL;
-> +	u32 flags =3D 0;
-> +	u32 num_rules =3D 0, size_of_regd =3D 0;
-> +	u8 *triplets_start =3D NULL;
-> +	u8 len_at_triplet =3D 0;
-> +	unsigned int i =3D 0;
-> +	/* Used too often */
-> +	int triplet_size =3D sizeof(struct ieee80211_country_ie_triplet);
-> +
-> +	rd->alpha2[0] =3D country_ie[0];
-> +	rd->alpha2[1] =3D country_ie[1];
-> +
-> +	/*
-> +	 * Third octet can be:
-> +	 *    'I' - Indoor
-> +	 *    'O' - Outdoor
-> +	 *
-> +	 *  anything else we assume is no restrictions
-> +	 */
-> +	if (country_ie[2] =3D=3D 'I')
-> +		flags =3D NL80211_RRF_NO_OUTDOOR;
-> +	else if (country_ie[2] =3D=3D 'O')
-> +		flags =3D NL80211_RRF_NO_INDOOR;
-> +
-> +	country_ie +=3D 3;
-> +	country_ie_len -=3D 3;
-
-This needs to verify that the country IE is valid to start with, i.e. >=3D
-3 bytes long.
-
-<snipped, will review algorithm and stuff later>
-
-> +#ifdef CONFIG_WIRELESS_OLD_REGULATORY
-> +		/* We can't expect to have anything to intersect with...
-> +		 * so use standard low values */
-> +		freq_range->max_bandwidth_khz =3D MHZ_TO_KHZ(40);
-> +		power_rule->max_antenna_gain =3D DBI_TO_MBI(6);
-> +		power_rule->max_eirp =3D DBM_TO_MBM(20);
-> +#else
-> +		/* Large arbitrary values, we intersect later */
-> +		/* Increment this if we ever support >=3D 40 MHz channels
-> +		 * in IEEE 802.11 */
-> +		freq_range->max_bandwidth_khz =3D MHZ_TO_KHZ(40);
-> +		power_rule->max_antenna_gain =3D DBI_TO_MBI(100);
-> +		power_rule->max_eirp =3D DBM_TO_MBM(100);
-> +#endif
-
-Why is this necessary? In case of OLD_REGULATORY we _do_ have values to
-intersect with, from the old hardcoded stuff. Please don't treat that so
-special, just treat old regulatory as though we had pre-loaded some
-regulatory information into the kernel.
-
-
-> +#ifdef CONFIG_WIRELESS_OLD_REGULATORY
-> +	/* If the userspace regulatory agent is installed when
-> +	 * OLD_REGULATORY is enabled then great, if not then oh well,
-> +	 * we'll use low ball values */
-> +	return 0;
-> +#endif
-
-Same here.
-
-> +	if (!r) {
-> +		printk(KERN_ERR "cfg80211: calling CRDA failed - "
-> +			"unable to get country regulatory information "
-> +			"for country IE\n");
-> +		return -EINVAL;
-> +	}
-
-This printk is misplaced, if it should be there at all it should be in
-cfg80211, mac80211 need not know anything about crda. Also, !r is
-incorrect, just remove the whole code block and do
-
-return regulatory_hint_ie(...);
-
-Also, the printk shouldn't be there at all because otherwise it'll
-happen all the time when a country IE is received w/o crda installed,
-flooding the logs.
-
-> +	if (elems.country_elem) {
-> +		r =3D ieee80211_sta_process_country_ie(ifsta, local,
-> +			elems.country_elem, elems.country_elem_len);
-
-Some code here or in the processing function should compare the country
-element and only process it if it changed to avoid calling crda 10 times
-per second....
-
-> +#ifdef CONFIG_MAC80211_VERBOSE_SPECT_MGMT_DEBUG
-> +		if (!r)
-
-!r is wrong again
-
-johannes
-
---=-VXOZIPhCE427KahnOi4s
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJCtrLAAoJEKVg1VMiehFYRjgP/jaVkz5torTVuZZtsrxAvsgc
-bA99Poqlea/lrFJME7p0XO3jPjBYRsQtUvvOGpICSr+arWEq2yLNP+2XYoEoDXY9
-T9tolyc635eGWVFprd1i3TNFjfpzgD4VhMeBWXPF2TRRC18ZyABSMUlxLhAuSVig
-2fkMRuPSvalwVHcGnNjLRTPse+7Cvb/WZfPaB1UBUpHXZhvH7LyREU0+rc5a3eRK
-bo0py+5yR1w4YKCftEMtcnWGA583ResgwKPGUf+E2xRk8F0S6K1G2D6g3hz8nOUo
-zCol1Cmn7Rl/cV52gbVkW1Bzj17/1UJcq2Agw8kj6Ct7nDkBx2dt8YD08S/UMa+9
-rFdMmxQFX2PM/zVLArBnII6gZnBqI5jJsXKUMaEVrHSTH0lop6GlLnN0wr9sMIy5
-kX2GR2zfBkYUy+DvtKpHx3d0lie7Fk4VGzdzNib7PlvQOeWyy4Q9VPNRn2b4HbiL
-fg8KM1AkrYaNkIA4OEe7mYd7Xt4Bwti23sBsZC82hdMvvsZNiY0GDQKy+RPqtClb
-5yz78s5piwLi/kcn6E2oVNbyfCHSRFyWqvwSpN6jSF+5tE3NkNIrX9zIq41rF2hn
-WKYllxEMqFqmI620wxUlXUSqu5i/F1t3rx6iBHEsKXdRt1g/8/Hj5r4SCka08hO9
-6lCmwHijz85j6D0sKDeF
-=Q3kL
------END PGP SIGNATURE-----
-
---=-VXOZIPhCE427KahnOi4s--
-
+Thanks,
+	Chr
