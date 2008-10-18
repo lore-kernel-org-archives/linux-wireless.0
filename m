@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:46011 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752834AbYJVHmi (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:54672 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884AbYJRVTK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 03:42:38 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2899076wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 00:42:37 -0700 (PDT)
-Message-ID: <eb3ff54b0810220042y43ea248qba1064a3eedf85b1@mail.gmail.com> (sfid-20081022_094253_296914_B536BE89)
-Date: Wed, 22 Oct 2008 09:42:37 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH ] mac80211: check return value of dev_alloc_skb() in ieee80211_sta_join_ibss().
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1224660978.28639.27.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com>
-	 <1224660978.28639.27.camel@johannes.berg>
+	Sat, 18 Oct 2008 17:19:10 -0400
+Date: Sat, 18 Oct 2008 14:19:18 -0700
+From: Arjan van de Ven <arjan@infradead.org>
+To: Pavel Machek <pavel@suse.cz>
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, kaszak@gmail.com,
+	lcostantino@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: w35und wifi driver for linux-staging
+Message-ID: <20081018141918.2c7377c6@infradead.org> (sfid-20081018_231913_985639_5FF639F4)
+In-Reply-To: <20081001123656.GA30942@elf.ucw.cz>
+References: <20081001123656.GA30942@elf.ucw.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, 1 Oct 2008 14:36:56 +0200
+Pavel Machek <pavel@suse.cz> wrote:
 
-Do we want to continue as usual if dev_alloc_skb() in theis method fails?
+> Hi!
+> 
+> This is driver for w35und usb wifi -- also in kohjinsha
+> subnotebook. It should work well enough to associate and ping, but it
+> obviously needs to be rewritten two more times...
+> 
+> OTOH worst horrors (like embedded wifi stack) should have been fixed
+> already...
 
-Regards,
-Rami
+> diff --git a/drivers/net/wireless/winbond/Kconfig
+> b/drivers/net/wireless/winbond/Kconfig new file mode 100644
+> index 0000000..94499d3
+> --- /dev/null
+> +++ b/drivers/net/wireless/winbond/Kconfig
+> @@ -0,0 +1,6 @@
+> +config W35UND
+> +	tristate "Winbond driver"
+> +	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
+> && !4KSTACKS
 
-On Wed, Oct 22, 2008 at 9:36 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-10-22 at 09:00 +0200, Rami Rosen wrote:
->> This patch adds a check on the return value of dev_alloc_skb() in
->> ieee80211_sta_join_ibss()
->> in net/mac80211/mlme.c.
->
-> What's wrong with the current code?
->
->
->> +               return -1;
->
-> don't return -1, return meaningful error values.
->
-> johannes
->
+why this !4KSTACKS? At minimum that should be in the "to fix" list ;)
+
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
