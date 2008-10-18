@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:43437 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753027AbYJPXdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 19:33:09 -0400
-Date: Thu, 16 Oct 2008 16:28:47 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: steven@uplinklabs.net, linux-wireless@vger.kernel.org,
-	stable@kernel.org, linville@tuxdriver.com
-Subject: Re: [stable] [PATCH] ath9k: fix oops on trying to hold the wrong
-	spinlock
-Message-ID: <20081016232847.GA29003@kroah.com> (sfid-20081017_013314_684222_1D5C52BB)
-References: <20081016111255.GA5899@tesla> <20081016215407.GA17091@kroah.com> <43e72e890810161612p69dc838sc6f25f33f5de8631@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890810161612p69dc838sc6f25f33f5de8631@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:34634 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750926AbYJRSW4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Oct 2008 14:22:56 -0400
+Subject: Re: [PATCH] Add nl80211 commands to get and set o11s mesh
+	networking parameters.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: colin@cozybit.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net
+In-Reply-To: <200810181900.48707.mb@bu3sch.de>
+References: <48f7dedf.16098e0a.7692.537e@mx.google.com>
+	 <1224341637.6324.29.camel@johannes.berg>  <200810181900.48707.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tHYtTaR67H2uIglNBwQL"
+Date: Sat, 18 Oct 2008 20:22:49 +0200
+Message-Id: <1224354169.6324.33.camel@johannes.berg> (sfid-20081018_202309_867633_B056A92D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 16, 2008 at 04:12:02PM -0700, Luis R. Rodriguez wrote:
-> On Thu, Oct 16, 2008 at 2:54 PM, Greg KH <greg@kroah.com> wrote:
-> > On Thu, Oct 16, 2008 at 04:12:55AM -0700, Luis R. Rodriguez wrote:
-> >> This fixes on oops when you get try to send a BA to an 11n AP.
-> >> The oops occurred because we were trying to aquire an incorrect
-> >> spinlock.
-> >>
-> >> We were trying to hold the wrong spinlock due to a typo
-> >> on IEEE80211_BAR_CTL_TID_S's definition. We use this to
-> >> compute the tid number and then hold this this tid number's
-> >> spinlock.
-> >>
-> >> Tested-by: Steven Noonan <steven@uplinklabs.net>
-> >> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> >> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> >> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> >> ---
-> >>
-> >> I don't see this queue'd yet for 2.6.27.2
-> >
-> > Is it in Linus's tree?  If so, do you have a git commit id?
-> 
-> Got it.
-> 
-> a477e4e6d48d3ac7c7a75bad40585cb391e5c237
-> 
-> If you can add the Reported-by tag it'd be great, I missed it on Linus' tree.
 
-You mean the "tested-by" flag?  I've added that, I don't see a
-reported-by flag above.
+--=-tHYtTaR67H2uIglNBwQL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-thanks,
+On Sat, 2008-10-18 at 19:00 +0200, Michael Buesch wrote:
+> On Saturday 18 October 2008 16:53:57 Johannes Berg wrote:
+> > > +	return (mask >> (attr-1)) & 0x1;
+> >=20
+> > I think
+> >=20
+> > 	return mask & (1<<(attr-1));
+> >=20
+> > would be easier to understand.
+>=20
+>=20
+> I'm not sure if that would be correct.
+> The returned type is bool, which is 8bit. mask is 32bit.
+> So if attr is > 8 you end up with truncation, AFAICS.
+>=20
+> So it should be
+>=20
+> 	return !!(mask & (1<<(attr-1)));
 
-greg k-h
+Indeed.
+
+> to explicitely convert the mask into a boolean with the LSB
+> indicating the state.
+>=20
+> But the original contruct isn't that bad, either, IMO :)
+
+True :) I just had to think about it for a moment, but that's ok :)
+
+johannes
+
+--=-tHYtTaR67H2uIglNBwQL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI+il2AAoJEKVg1VMiehFYpDoQAJ76v8OOIOzkC4v6lHodrXXt
+iK70G14VL5oMmH6VtUc5LrI6jLv8pK0mnL0bpEFQ8qRhARbMW3bFFCbrYE1L9Zae
+NQyvak1WD4Lk1DzkiaJqfnAfhF8v3JwxQmyvEYeV2QEnKG1wmTvRebNS/RdI1Mk6
+RI2970Nh7WRp/dzW8Kk8J3UFjRdFwaRYwBbR9ue19ppMA+shnABbOeX/bfsfLbcH
+s7tfrJzu+n/FLP2TwMCg1JCgFBYnWjOwNEQ/LmfKEDbRVEjgykXACBcA9ryjBEj4
+KY4lpy0wSiGqtvAvboNrbQ5NIf6GLd33/XJ94P/BlHRBrMt1unYDFsAQ3AuyfO9l
+eO8trmXKfztMHL/NIdjOHYZRy5ICT4vvs15I6gk8bF5z42eOpSyGCtJJfA6aFRaK
+Wper37EF5KknWdhYaSSqi2nk8ppqyupz5kel3h/YhMoW1svO8hyil+FIRnm/9Xeb
+T4tlWvaL9OldUzQE48vMngU5Fd56OGjPnWwiICofMpaL65C2xqskIeYZBtaFDC2O
+bCS+d5ac/o08fjqH/9ToTGFSkfhFSk6nwH+qNBtJU0N+cb7s63cAbNoQ44uX1xDT
+MPDwiBIu1Wjid8rloaycARXjL02tdl6O0o7JO2kFC7PXj9yS1qoDjmNesWto4ciI
+2MPnq7E/z7NDTgA8B/vp
+=t1+a
+-----END PGP SIGNATURE-----
+
+--=-tHYtTaR67H2uIglNBwQL--
+
