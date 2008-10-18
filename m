@@ -1,87 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57640 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813AbYJVMw3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 08:52:29 -0400
-Date: Wed, 22 Oct 2008 08:51:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jerry McBride <mcbrides9@comcast.net>
-Cc: linux-wireless@vger.kernel.org, mb@bu3sch.de,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: B43 STILL randomly and silently dropping connections...
-Message-ID: <20081022125143.GB15808@tuxdriver.com> (sfid-20081022_145234_392512_9CB2E27A)
-References: <200810220648.55313.mcbrides9@comcast.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810220648.55313.mcbrides9@comcast.net>
+Received: from mout.perfora.net ([74.208.4.194]:52038 "EHLO mout.perfora.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751423AbYJRNdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Oct 2008 09:33:36 -0400
+Subject: Re: 10-17-2008 Build issues - Intel 3945abg - Ubuntu Intrepid
+From: Myk Robinson <myk.robinson@kingdomcomputer.info>
+Reply-To: myk.robinson@kingdomcomputer.info
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224279527.11187.58.camel@rc-desk>
+References: <1224248117.28593.3.camel@mobileOne>
+	 <1224258314.11187.1.camel@rc-desk>  <1224271086.6775.8.camel@mobileOne>
+	 <1224279527.11187.58.camel@rc-desk>
+Content-Type: text/plain
+Date: Sat, 18 Oct 2008 08:33:29 -0500
+Message-Id: <1224336809.6934.1.camel@mobileOne> (sfid-20081018_153341_733710_6FC30EAE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've seen this message a couple of times -- I'm a bit surprised that
-you haven't been getting a response.  I am Cc'ing Michael and the
-bcm43xx mailing list just in case they haven't noticed this message.
+On Fri, 2008-10-17 at 14:38 -0700, reinette chatre wrote:
+> On Fri, 2008-10-17 at 14:18 -0500, Myk Robinson wrote:
+> > Sure will
+> > 
+> > Just curious, what can you tell me about the dmesg I posted? I don't
+> > understand much of it, that is just what I have learned to run right
+> > after stuff happens :)
+> 
+> The log shows that the driver is loaded/unloaded a couple of times -
+> probably by wpa_supplicant. The details surrounding the error will
+> become clear when we get more debugging.
+> 
+> 
+> > As for the module, can you tell me how to autoload it with those
+> > parameters? Or should i jsut upon booting rmmod the module then reload
+> > it with your suggested parameters?
+> 
+> You could ask modprobe to load the module with parameters. perhaps
+> in /etc/modprobe.d/options. You could also use the rmmod/modprobe after
+> system reboot as you suggested. 
+> 
+> Reinette
 
-John
+Here is some more output from dmesg with the module parameters loaded.
+SOrry if there is some output that you don't need in there too.
 
-On Wed, Oct 22, 2008 at 06:48:55AM -0400, Jerry McBride wrote:
-> 
-> The story is...
-> 
-> I've moved from 2.6.25.x using BCM43XX with a Broadcom 4306 (rev3) 802.11 
-> chipset to 2.6.26.6 using the B43 and appropriate firmware. This on a COMPAQ 
-> Presario R3000 P4 and  a gig of memory and ATI graphics.
-> 
-> I followed the install (upgrade) directions at linuxwireless.org. Piece of 
-> cake! However... I find that I've gone from "bulletproof" BCM43XX wifi 
-> connections to "bullethole" connections with B43.  
-> 
-> Under the old BCM43XX the handshake and connections were flawless and 
-> unfaltering. Now with the new B43, handshakes with AP's are perfect, but the 
-> connections randomly and silently fail. There are no debug messages, no 
-> complaints what-so-ever in /var/log/messages... 
-> 
-> To gt wireless back, I have to reinitialize the connection. I've gotten so 
-> good at it, that I can recite by heart the appropriate commands...
-> 
-> It's killling me! I've got to get this ironed out... it's not just my laptop, 
-> it's happening quite regularly with people I know with similar chips and 
-> laptops.
-> 
-> Trying 2.6.27-rc's and now 2.6.27 and the situation is no better.
-> 
-> So I ask... Who is the B43/B43LEGACY maintainer and would you be interested in 
-> debugging this mess? I'll bend over backward to help you... Email me 
-> direct... I'm very willing.
-> 
-> SHORT STORY:
-> -- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
-> 
-> -- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
-> but fragile connections that drop randomly and without complaint. B43LEGACY 
-> does nothing.
-> 
-> Any help would be appreciated. I'd really like to get this ironed out. I 
-> highly desire to use current kernels.
-> 
-> Feel free to email me direct.
-> 
-> -- 
-> 
-> *****************************************************************************
->                                        
->                              From the desk of:
->                              Jerome D. McBride
->                                        
->    19:17:28 up 15 days, 23:35,  5 users,  load average: 0.33, 0.11, 0.03
->  
-> *****************************************************************************
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+http://pastebin.com/m47cf17c9
 
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+--
+Myk Robinson
+Computer Support Specialist
+Kingdom Computer Solutions
+http://www.kingdomcomputer.info
+myk.robinson@kingdomcomputer.info
+(731) 616.5030
+
