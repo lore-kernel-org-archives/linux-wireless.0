@@ -1,75 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:58194 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752788AbYJIVPk (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:40585 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806AbYJRVNq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 17:15:40 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 2/5] rfkill: export global states to rfkill-input
-Date: Thu,  9 Oct 2008 18:15:30 -0300
-Message-Id: <1223586933-17753-3-git-send-email-hmh@hmh.eng.br> (sfid-20081009_231545_316561_F90363D4)
-In-Reply-To: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br>
-References: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br>
+	Sat, 18 Oct 2008 17:13:46 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3 v3] p54: more definitions form lmac_longbow.h and pda.h
+Date: Sat, 18 Oct 2008 23:18:01 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200810170114.45742.chunkeey@web.de>
+In-Reply-To: <200810170114.45742.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810182318.01334.chunkeey@web.de> (sfid-20081018_231351_034822_9409D68D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Export the the global switch states to rfkill-input.  This is needed to
-properly implement KEY_* handling without disregarding the initial state.
+This patch ports more useful features to p54
+  - PDR definitions for the synth chips & regulatory domain.
+  - honour IEEE80211_TX_CTL_ASSIGN_SEQ flag, if it's set.
+  - adds some lost mutex_lock & mutex_unlock.
+  - replace two more "magic values" that sneaked past.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- net/rfkill/rfkill-input.h |    1 +
- net/rfkill/rfkill.c       |   14 ++++++++++++++
- 2 files changed, 15 insertions(+), 0 deletions(-)
-
-diff --git a/net/rfkill/rfkill-input.h b/net/rfkill/rfkill-input.h
-index bbfa646..d1e03e8 100644
---- a/net/rfkill/rfkill-input.h
-+++ b/net/rfkill/rfkill-input.h
-@@ -14,5 +14,6 @@
- void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state);
- void rfkill_epo(void);
- void rfkill_restore_states(void);
-+enum rfkill_state rfkill_get_global_state(const enum rfkill_type type);
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-10-16 23:06:55.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.c	2008-10-18 21:25:46.000000000 +0200
+@@ -221,10 +221,10 @@ int p54_parse_firmware(struct ieee80211_
  
- #endif /* __RFKILL_INPUT_H */
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 08be968..fdf87d2 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -324,6 +324,19 @@ void rfkill_restore_states(void)
- EXPORT_SYMBOL_GPL(rfkill_restore_states);
+ 	if (priv->fw_var >= 0x300) {
+ 		/* Firmware supports QoS, use it! */
+-		priv->tx_stats[4].limit = 3;
+-		priv->tx_stats[5].limit = 4;
+-		priv->tx_stats[6].limit = 3;
+-		priv->tx_stats[7].limit = 1;
++		priv->tx_stats[4].limit = 3;		/* AC_VO */
++		priv->tx_stats[5].limit = 4;		/* AC_VI */
++		priv->tx_stats[6].limit = 3;		/* AC_BE */
++		priv->tx_stats[7].limit = 2;		/* AC_BK */
+ 		dev->queues = 4;
+ 	}
  
- /**
-+ * rfkill_get_global_state - returns global state for a type
-+ * @type: the type to get the global state of
-+ *
-+ * Returns the current global state for a given wireless
-+ * device type.
-+ */
-+enum rfkill_state rfkill_get_global_state(const enum rfkill_type type)
-+{
-+	return rfkill_global_states[type].current_state;
-+}
-+EXPORT_SYMBOL_GPL(rfkill_get_global_state);
+@@ -436,12 +436,12 @@ static int p54_parse_eeprom(struct ieee8
+ 		goto err;
+ 	}
+ 
+-	priv->rxhw = synth & 0x07;
++	priv->rxhw = synth & PDR_SYNTH_FRONTEND_MASK;
+ 	if (priv->rxhw == 4)
+ 		p54_init_xbow_synth(dev);
+-	if (!(synth & 0x40))
++	if (!(synth & PDR_SYNTH_24_GHZ_DISABLED))
+ 		dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
+-	if (!(synth & 0x80))
++	if (!(synth & PDR_SYNTH_5_GHZ_DISABLED))
+ 		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
+ 
+ 	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
+@@ -659,7 +659,7 @@ static void p54_rx_frame_sent(struct iee
+ 		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+ 		     (!payload->status))
+ 			info->flags |= IEEE80211_TX_STAT_ACK;
+-		if (payload->status & 0x02)
++		if (payload->status & P54_TX_PSM_CANCELLED)
+ 			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+ 		info->status.ack_signal = p54_rssi_to_dbm(dev,
+ 				(int)payload->ack_rssi);
+@@ -739,9 +739,9 @@ static int p54_rx_control(struct ieee802
+ /* returns zero if skb can be reused */
+ int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+-	u8 type = le16_to_cpu(*((__le16 *)skb->data)) >> 8;
++	u16 type = le16_to_cpu(*((__le16 *)skb->data));
+ 
+-	if (type == 0x80)
++	if (type & P54_HDR_FLAG_CONTROL)
+ 		return p54_rx_control(dev, skb);
+ 	else
+ 		return p54_rx_data(dev, skb);
+@@ -905,12 +905,13 @@ EXPORT_SYMBOL_GPL(p54_read_eeprom);
+ static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_tx_queue_stats *current_queue;
++	struct ieee80211_tx_queue_stats *current_queue = NULL;
+ 	struct p54_common *priv = dev->priv;
+ 	struct p54_hdr *hdr;
+ 	struct p54_tx_data *txhdr;
+ 	size_t padding, len;
+ 	int i, j, ridx;
++	u16 hdr_flags = 0;
+ 	u8 rate;
+ 	u8 cts_rate = 0x20;
+ 	u8 rc_flags;
+@@ -932,9 +933,7 @@ static int p54_tx(struct ieee80211_hw *d
+ 	hdr = (struct p54_hdr *) skb_push(skb, sizeof(*hdr));
+ 
+ 	if (padding)
+-		hdr->flags = cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN);
+-	else
+-		hdr->flags = cpu_to_le16(0);
++		hdr_flags |= P54_HDR_FLAG_DATA_ALIGN;
+ 	hdr->len = cpu_to_le16(len);
+ 	hdr->type = (info->flags & IEEE80211_TX_CTL_NO_ACK) ? 0 : cpu_to_le16(1);
+ 	hdr->rts_tries = info->control.rates[0].count;
+@@ -1003,6 +1002,12 @@ static int p54_tx(struct ieee80211_hw *d
+ 			ridx++;
+ 		}
+ 	}
 +
-+/**
-  * rfkill_force_state - Force the internal rfkill radio state
-  * @rfkill: pointer to the rfkill class to modify.
-  * @state: the current radio state the class should be forced to.
-@@ -834,6 +847,7 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
++	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
++		hdr_flags |= P54_HDR_FLAG_DATA_OUT_SEQNR;
++
++	/* TODO: enable bursting */
++	hdr->flags = cpu_to_le16(hdr_flags);
+ 	hdr->tries = ridx;
+ 	txhdr->crypt_offset = 0;
+ 	txhdr->rts_rate_idx = 0;
+@@ -1021,6 +1026,10 @@ static int p54_tx(struct ieee80211_hw *d
+ 	/* modifies skb->cb and with it info, so must be last! */
+ 	if (unlikely(p54_assign_address(dev, skb, hdr, skb->len))) {
+ 		skb_pull(skb, sizeof(*hdr) + sizeof(*txhdr) + padding);
++		if (current_queue) {
++			current_queue->len--;
++			current_queue->count--;
++		}
+ 		return NETDEV_TX_BUSY;
+ 	}
+ 	priv->tx(dev, skb, 0);
+@@ -1074,13 +1083,14 @@ static int p54_setup_mac(struct ieee8021
+ 	return 0;
+ }
  
- 	if (!test_and_set_bit(type, rfkill_states_lockdflt)) {
- 		rfkill_global_states[type].default_state = state;
-+		rfkill_global_states[type].current_state = state;
- 		error = 0;
+-static int p54_set_freq(struct ieee80211_hw *dev, __le16 freq)
++static int p54_set_freq(struct ieee80211_hw *dev, u16 frequency)
+ {
+ 	struct p54_common *priv = dev->priv;
+ 	struct sk_buff *skb;
+ 	struct p54_scan *chan;
+ 	unsigned int i;
+ 	void *entry;
++	__le16 freq = cpu_to_le16(frequency);
+ 
+ 	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*chan) +
+ 			    sizeof(struct p54_hdr), P54_CONTROL_TYPE_SCAN,
+@@ -1237,6 +1247,7 @@ static int p54_start(struct ieee80211_hw
+ 	struct p54_common *priv = dev->priv;
+ 	int err;
+ 
++	mutex_lock(&priv->conf_mutex);
+ 	err = priv->open(dev);
+ 	if (!err)
+ 		priv->mode = NL80211_IFTYPE_MONITOR;
+@@ -1248,6 +1259,7 @@ static int p54_start(struct ieee80211_hw
+ 	if (!err)
+ 		err = p54_init_stats(dev);
+ 
++	mutex_unlock(&priv->conf_mutex);
+ 	return err;
+ }
+ 
+@@ -1256,6 +1268,7 @@ static void p54_stop(struct ieee80211_hw
+ 	struct p54_common *priv = dev->priv;
+ 	struct sk_buff *skb;
+ 
++	mutex_lock(&priv->conf_mutex);
+ 	del_timer(&priv->stats_timer);
+ 	p54_free_skb(dev, priv->cached_stats);
+ 	priv->cached_stats = NULL;
+@@ -1265,6 +1278,7 @@ static void p54_stop(struct ieee80211_hw
+ 	priv->stop(dev);
+ 	priv->tsf_high32 = priv->tsf_low32 = 0;
+ 	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
++	mutex_unlock(&priv->conf_mutex);
+ }
+ 
+ static int p54_add_interface(struct ieee80211_hw *dev,
+@@ -1272,14 +1286,18 @@ static int p54_add_interface(struct ieee
+ {
+ 	struct p54_common *priv = dev->priv;
+ 
+-	if (priv->mode != NL80211_IFTYPE_MONITOR)
++	mutex_lock(&priv->conf_mutex);
++	if (priv->mode != NL80211_IFTYPE_MONITOR) {
++		mutex_unlock(&priv->conf_mutex);
+ 		return -EOPNOTSUPP;
++	}
+ 
+ 	switch (conf->type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		priv->mode = conf->type;
+ 		break;
+ 	default:
++		mutex_unlock(&priv->conf_mutex);
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+@@ -1298,6 +1316,7 @@ static int p54_add_interface(struct ieee
+ 
+ 	p54_set_leds(dev, 1, 0, 0);
+ 
++	mutex_unlock(&priv->conf_mutex);
+ 	return 0;
+ }
+ 
+@@ -1305,9 +1324,12 @@ static void p54_remove_interface(struct 
+ 				 struct ieee80211_if_init_conf *conf)
+ {
+ 	struct p54_common *priv = dev->priv;
++
++	mutex_lock(&priv->conf_mutex);
++	p54_setup_mac(dev, P54_FILTER_TYPE_NONE, NULL);
+ 	priv->mode = NL80211_IFTYPE_MONITOR;
+ 	memset(priv->mac_addr, 0, ETH_ALEN);
+-	p54_setup_mac(dev, P54_FILTER_TYPE_NONE, NULL);
++	mutex_unlock(&priv->conf_mutex);
+ }
+ 
+ static int p54_config(struct ieee80211_hw *dev, u32 changed)
+@@ -1319,7 +1341,7 @@ static int p54_config(struct ieee80211_h
+ 	mutex_lock(&priv->conf_mutex);
+ 	priv->rx_antenna = 2; /* automatic */
+ 	priv->output_power = conf->power_level << 2;
+-	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
++	ret = p54_set_freq(dev, conf->channel->center_freq);
+ 	if (!ret)
+ 		ret = p54_set_edcf(dev);
+ 	mutex_unlock(&priv->conf_mutex);
+@@ -1372,14 +1394,18 @@ static int p54_conf_tx(struct ieee80211_
+ 		       const struct ieee80211_tx_queue_params *params)
+ {
+ 	struct p54_common *priv = dev->priv;
++	int ret;
+ 
++	mutex_lock(&priv->conf_mutex);
+ 	if ((params) && !(queue > 4)) {
+ 		P54_SET_QUEUE(priv->qos_params[queue], params->aifs,
+ 			params->cw_min, params->cw_max, params->txop);
  	} else
- 		error = -EPERM;
--- 
-1.5.6.5
-
+-		return -EINVAL;
+-
+-	return p54_set_edcf(dev);
++		ret = -EINVAL;
++	if (!ret)
++		ret = p54_set_edcf(dev);
++	mutex_unlock(&priv->conf_mutex);
++	return ret;
+ }
+ 
+ static int p54_init_xbow_synth(struct ieee80211_hw *dev)
+@@ -1488,19 +1514,14 @@ struct ieee80211_hw *p54_init_common(siz
+ 		     IEEE80211_HW_SIGNAL_DBM |
+ 		     IEEE80211_HW_NOISE_DBM;
+ 
+-	/*
+-	 * XXX: when this driver gets support for any mode that
+-	 *	requires beacons (AP, MESH, IBSS) then it must
+-	 *	implement IEEE80211_TX_CTL_ASSIGN_SEQ.
+-	 */
+ 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+ 	dev->channel_change_time = 1000;	/* TODO: find actual value */
+-	priv->tx_stats[0].limit = 1;
+-	priv->tx_stats[1].limit = 1;
+-	priv->tx_stats[2].limit = 1;
+-	priv->tx_stats[3].limit = 1;
+-	priv->tx_stats[4].limit = 5;
++	priv->tx_stats[0].limit = 1;		/* Beacon queue */
++	priv->tx_stats[1].limit = 1;		/* Probe queue for HW scan */
++	priv->tx_stats[2].limit = 3;		/* queue for MLMEs */
++	priv->tx_stats[3].limit = 3;		/* Broadcast / MC queue */
++	priv->tx_stats[4].limit = 5;		/* Data */
+ 	dev->queues = 1;
+ 	priv->noise = -94;
+ 	/*
+diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
+--- a/drivers/net/wireless/p54/p54common.h	2008-10-15 19:24:42.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.h	2008-10-18 21:25:09.000000000 +0200
+@@ -25,6 +25,22 @@ struct bootrec {
+ 	u32 data[10];
+ } __attribute__((packed));
+ 
++#define PDR_SYNTH_FRONTEND_MASK		0x0007
++#define PDR_SYNTH_IQ_CAL_MASK		0x0018
++#define PDR_SYNTH_IQ_CAL_PA_DETECTOR	0x0000
++#define PDR_SYNTH_IQ_CAL_DISABLED	0x0008
++#define PDR_SYNTH_IQ_CAL_ZIF		0x0010
++#define PDR_SYNTH_FAA_SWITCH_MASK	0x0020
++#define PDR_SYNTH_FAA_SWITCH_ENABLED	0x0001
++#define PDR_SYNTH_24_GHZ_MASK		0x0040
++#define PDR_SYNTH_24_GHZ_DISABLED	0x0040
++#define PDR_SYNTH_5_GHZ_MASK		0x0080
++#define PDR_SYNTH_5_GHZ_DISABLED	0x0080
++#define PDR_SYNTH_RX_DIV_MASK		0x0100
++#define PDR_SYNTH_RX_DIV_SUPPORTED	0x0100
++#define PDR_SYNTH_TX_DIV_MASK		0x0200
++#define PDR_SYNTH_TX_DIV_SUPPORTED	0x0200
++
+ struct bootrec_exp_if {
+ 	__le16 role;
+ 	__le16 if_id;
+@@ -210,6 +226,19 @@ struct pda_pa_curve_data {
+ #define PDR_BASEBAND_REGISTERS			0x8000
+ #define PDR_PER_CHANNEL_BASEBAND_REGISTERS	0x8001
+ 
++/* PDR definitions for default country & country list */
++#define PDR_COUNTRY_CERT_CODE		0x80
++#define PDR_COUNTRY_CERT_CODE_REAL	0x00
++#define PDR_COUNTRY_CERT_CODE_PSEUDO	0x80
++#define PDR_COUNTRY_CERT_BAND		0x40
++#define PDR_COUNTRY_CERT_BAND_2GHZ	0x00
++#define PDR_COUNTRY_CERT_BAND_5GHZ	0x40
++#define PDR_COUNTRY_CERT_IODOOR		0x30
++#define PDR_COUNTRY_CERT_IODOOR_BOTH	0x00
++#define PDR_COUNTRY_CERT_IODOOR_INDOOR	0x20
++#define PDR_COUNTRY_CERT_IODOOR_OUTDOOR	0x30
++#define PDR_COUNTRY_CERT_INDEX		0x0F
++
+ /* stored in skb->cb */
+ struct memrecord {
+ 	u32 start_addr;
+@@ -507,7 +536,7 @@ struct p54_sta_unlock {
+ } __attribute__ ((packed));
+ 
+ #define P54_TIM_CLEAR BIT(15)
+-struct p54_tx_control_tim {
++struct p54_tim {
+ 	u8 count;
+ 	u8 padding[3];
+ 	__le16 entry[8];
