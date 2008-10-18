@@ -1,208 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25329 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750978AbYJ2Esu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 00:48:50 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 21:48:50 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:52423 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751735AbYJRXPp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Oct 2008 19:15:45 -0400
+Message-ID: <48FA6E1E.5070303@lwfinger.net> (sfid-20081019_011602_114128_BA3F9683)
+Date: Sat, 18 Oct 2008 16:15:42 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18695.60020.399784.543071@gargle.gargle.HOWL> (sfid-20081029_054853_023105_D388771D)
-Date: Wed, 29 Oct 2008 10:15:40 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 06/16] ath9k: Use bitfields to store tid's state in a single variable
+To: Christian Lamparter <chunkeey@web.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Warning from mac80211 with p54usb
+References: <48F7D0D2.6090604@lwfinger.net> <200810170226.28774.chunkeey@web.de>
+In-Reply-To: <200810170226.28774.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/core.h |    8 ++++--
- drivers/net/wireless/ath9k/rc.c   |    4 +-
- drivers/net/wireless/ath9k/xmit.c |   49 +++++++++++++++----------------------
- 3 files changed, 27 insertions(+), 34 deletions(-)
+Christian Lamparter wrote:
+> I've attached a debug function that could help to take a look inside the memory
+> management. what does it look like when put p54_dump_txqueue into 
+> p54_start/p54_stop or p54_add_interface and replug your device?
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 27ed084..d89dd03 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -447,6 +447,10 @@ struct ath_txq {
- 	struct list_head axq_acq;
- };
- 
-+#define AGGR_CLEANUP         BIT(1)
-+#define AGGR_ADDBA_COMPLETE  BIT(2)
-+#define AGGR_ADDBA_PROGRESS  BIT(3)
-+
- /* per TID aggregate tx state for a destination */
- struct ath_atx_tid {
- 	struct list_head list;		/* round-robin tid entry */
-@@ -462,9 +466,7 @@ struct ath_atx_tid {
- 	int baw_tail;			/* next unused tx buffer slot */
- 	int sched;
- 	int paused;
--	int cleanup_inprogress;
--	u32 addba_exchangecomplete:1;
--	int32_t addba_exchangeinprogress;
-+	u8 state;
- 	int addba_exchangeattempts;
- };
- 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index d55232a..f234a9b 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1909,8 +1909,8 @@ static void ath_tx_aggr_resp(struct ath_softc *sc,
- 	state = si->ampdu_mlme.tid_state_tx[tidno];
- 
- 	if (state & HT_ADDBA_RECEIVED_MSK) {
--		txtid->addba_exchangecomplete = 1;
--		txtid->addba_exchangeinprogress = 0;
-+		txtid->state |= AGGR_ADDBA_COMPLETE;
-+		txtid->state &= ~AGGR_ADDBA_PROGRESS;
- 		txtid->baw_size = buffersize;
- 
- 		DPRINTF(sc, ATH_DBG_AGGR,
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 8446ede..2d9fd10 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -125,13 +125,13 @@ static int ath_tx_findindex(const struct ath9k_rate_table *rt, int rate)
- 
- /* Check if it's okay to send out aggregates */
- 
--static int ath_aggr_query(struct ath_softc *sc,
--	struct ath_node *an, u8 tidno)
-+static int ath_aggr_query(struct ath_softc *sc, struct ath_node *an, u8 tidno)
- {
- 	struct ath_atx_tid *tid;
- 	tid = ATH_AN_2_TID(an, tidno);
- 
--	if (tid->addba_exchangecomplete || tid->addba_exchangeinprogress)
-+	if (tid->state & AGGR_ADDBA_COMPLETE ||
-+	    tid->state & AGGR_ADDBA_PROGRESS)
- 		return 1;
- 	else
- 		return 0;
-@@ -886,7 +886,7 @@ static void ath_tx_complete_aggr_rifs(struct ath_softc *sc,
- 			/* transmit completion */
- 		} else {
- 
--			if (!tid->cleanup_inprogress &&
-+			if (!(tid->state & AGGR_CLEANUP) &&
- 			    ds->ds_txstat.ts_flags != ATH9K_TX_SW_ABORTED) {
- 				if (bf->bf_retries < ATH_MAX_SW_RETRIES) {
- 					ath_tx_set_retry(sc, bf);
-@@ -1014,16 +1014,16 @@ static void ath_tx_complete_aggr_rifs(struct ath_softc *sc,
- 		bf = bf_next;
- 	}
- 
--	if (tid->cleanup_inprogress) {
-+	if (tid->state & AGGR_CLEANUP) {
- 		/* check to see if we're done with cleaning the h/w queue */
- 		spin_lock_bh(&txq->axq_lock);
- 
- 		if (tid->baw_head == tid->baw_tail) {
--			tid->addba_exchangecomplete = 0;
-+			tid->state &= ~AGGR_ADDBA_COMPLETE;
- 			tid->addba_exchangeattempts = 0;
- 			spin_unlock_bh(&txq->axq_lock);
- 
--			tid->cleanup_inprogress = false;
-+			tid->state &= ~AGGR_CLEANUP;
- 
- 			/* send buffered frames as singles */
- 			ath_tx_flush_tid(sc, tid);
-@@ -2336,17 +2336,8 @@ enum ATH_AGGR_CHECK ath_tx_aggr_check(struct ath_softc *sc,
- 	/* ADDBA exchange must be completed before sending aggregates */
- 	txtid = ATH_AN_2_TID(an, tidno);
- 
--	if (txtid->addba_exchangecomplete)
--		return AGGR_EXCHANGE_DONE;
--
--	if (txtid->cleanup_inprogress)
--		return AGGR_CLEANUP_PROGRESS;
--
--	if (txtid->addba_exchangeinprogress)
--		return AGGR_EXCHANGE_PROGRESS;
--
--	if (!txtid->addba_exchangecomplete) {
--		if (!txtid->addba_exchangeinprogress &&
-+	if (!(txtid->state & AGGR_ADDBA_COMPLETE)) {
-+		if (!(txtid->state & AGGR_ADDBA_PROGRESS) &&
- 		    (txtid->addba_exchangeattempts < ADDBA_EXCHANGE_ATTEMPTS)) {
- 			txtid->addba_exchangeattempts++;
- 			return AGGR_REQUIRED;
-@@ -2368,7 +2359,7 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 
- 	if (sc->sc_flags & SC_OP_TXAGGR) {
- 		txtid = ATH_AN_2_TID(an, tid);
--		txtid->addba_exchangeinprogress = 1;
-+		txtid->state |= AGGR_ADDBA_PROGRESS;
- 		ath_tx_pause_tid(sc, txtid);
- 	}
- 
-@@ -2402,10 +2393,10 @@ void ath_tx_aggr_teardown(struct ath_softc *sc, struct ath_node *an, u8 tid)
- 
- 	DPRINTF(sc, ATH_DBG_AGGR, "%s: teardown TX aggregation\n", __func__);
- 
--	if (txtid->cleanup_inprogress) /* cleanup is in progress */
-+	if (txtid->state & AGGR_CLEANUP) /* cleanup is in progress */
- 		return;
- 
--	if (!txtid->addba_exchangecomplete) {
-+	if (!(txtid->state & AGGR_ADDBA_COMPLETE)) {
- 		txtid->addba_exchangeattempts = 0;
- 		return;
- 	}
-@@ -2435,9 +2426,9 @@ void ath_tx_aggr_teardown(struct ath_softc *sc, struct ath_node *an, u8 tid)
- 
- 	if (txtid->baw_head != txtid->baw_tail) {
- 		spin_unlock_bh(&txq->axq_lock);
--		txtid->cleanup_inprogress = true;
-+		txtid->state |= AGGR_CLEANUP;
- 	} else {
--		txtid->addba_exchangecomplete = 0;
-+		txtid->state &= ~AGGR_ADDBA_COMPLETE;
- 		txtid->addba_exchangeattempts = 0;
- 		spin_unlock_bh(&txq->axq_lock);
- 		ath_tx_flush_tid(sc, txtid);
-@@ -2528,16 +2519,16 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
- 		tid->baw_head  = tid->baw_tail = 0;
- 		tid->sched     = false;
- 		tid->paused = false;
--		tid->cleanup_inprogress = false;
-+		tid->state &= ~AGGR_CLEANUP;
- 		INIT_LIST_HEAD(&tid->buf_q);
- 
- 		acno = TID_TO_WME_AC(tidno);
- 		tid->ac = &an->an_aggr.tx.ac[acno];
- 
- 		/* ADDBA state */
--		tid->addba_exchangecomplete     = 0;
--		tid->addba_exchangeinprogress   = 0;
--		tid->addba_exchangeattempts     = 0;
-+		tid->state &= ~AGGR_ADDBA_COMPLETE;
-+		tid->state &= ~AGGR_ADDBA_PROGRESS;
-+		tid->addba_exchangeattempts = 0;
- 	}
- 
- 	/*
-@@ -2597,9 +2588,9 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
- 					list_del(&tid->list);
- 					tid->sched = false;
- 					ath_tid_drain(sc, txq, tid);
--					tid->addba_exchangecomplete = 0;
-+					tid->state &= ~AGGR_ADDBA_COMPLETE;
- 					tid->addba_exchangeattempts = 0;
--					tid->cleanup_inprogress = false;
-+					tid->state &= ~AGGR_CLEANUP;
- 				}
- 			}
- 
--- 
-1.6.0.3
+Thanks. I placed a call to the dump routine into p54_add_interface() and in
+p54_hw_config(). The resulting output is shown below.
+
+> or... something totally different. p54_rx_frame_sent could be culprit,
+> maybe we should check if the printk
+>  	goto out;
+>  }
+> + printk(KERN_ERR "p54: leaked frame %p\n", entry);
+>  spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+
+This printk never gets triggered.
+
+At initial startup, printed from p54_add_interface:
+
+kernel: phy26: Tx queue entries: 5
+kernel:        entry: ffff8800986c7f00 (range: [20200-202c0]=(c0) free:0)
+kernel:        entry: ffff8800986c7500 (range: [202c0-20380]=(c0) free:0)
+kernel:        entry: ffff8800986c7000 (range: [20380-20420]=(a0) free:0)
+kernel:        entry: ffff8800986c7c00 (range: [20420-204c0]=(a0) free:0)
+kernel:        entry: ffff8800986c7800 (range: [204c0-2053c]=(7c) free:0)
+kernel:        last entry: (range: [2053c-24214] free: 15576)
+kernel:        total_free:15576 bytes, biggest free hole:15576 bytes
+
+When the driver works normally, by the time p54_config is called, we have:
+
+kernel: phy26: Tx queue entries: 3
+kernel:        entry: ffff8800986c7700 (range: [20200-202c0]=(c0) free:0)
+kernel:        entry: ffff8800986c7500 (range: [202c0-20380]=(c0) free:0)
+kernel:        entry: ffff8800986c7900 (range: [20380-20470]=(f0) free:0)
+kernel:        last entry: (range: [20470-24214] free: 15780)
+kernel:        total_free:15780 bytes, biggest free hole:15780 bytes
+
+As I see it, the second one persists but the other 4 have been freed, and two
+new ones added. When the device works correctly, the same pattern persists and
+the second entry is constant but the total number stays at 3 or 4.
+
+When failure occurs, We get the following calls:
+
+kernel: phy31: Tx queue entries: 5
+kernel:        entry: ffff8800b8de6500 (range: [20200-202c0]=(c0) free:0)
+kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
+kernel:        entry: ffff8800a80c5800 (range: [20380-20420]=(a0) free:0)
+kernel:        entry: ffff88009872d000 (range: [20420-204c0]=(a0) free:0)
+kernel:        entry: ffff88009872d100 (range: [204c0-2053c]=(7c) free:0)
+kernel:        last entry: (range: [2053c-24214] free: 15576)
+kernel:        total_free:15576 bytes, biggest free hole:15576 bytes
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: p54: In p54_config
+kernel: phy31: Tx queue entries: 3
+kernel:        entry: ffff88009872d500 (range: [20200-202c0]=(c0) free:0)
+kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
+kernel:        entry: ffff88009872d400 (range: [20380-20470]=(f0) free:0)
+kernel:        last entry: (range: [20470-24214] free: 15780)
+kernel:        total_free:15780 bytes, biggest free hole:15780 bytes
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: p54: In p54_config
+kernel: phy31: Tx queue entries: 3
+kernel:        entry: ffff88009871fc00 (range: [20200-202c0]=(c0) free:0)
+kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
+kernel:        entry: ffff88009871f100 (range: [20380-20470]=(f0) free:0)
+kernel:        last entry: (range: [20470-24214] free: 15780)
+kernel:        total_free:15780 bytes, biggest free hole:15780 bytes
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_reuse_skb_cb
+kernel: p54: In p54_config
+kernel: phy31: Tx queue entries: 4
+kernel:        entry: ffff88009871f800 (range: [20200-202c0]=(c0) free:0)
+kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
+kernel:        entry: ffff88009871f700 (range: [20380-20548]=(1c8) free:0)
+kernel:        entry: ffff88009871ff00 (range: [20548-20638]=(f0) free:0)
+kernel:        last entry: (range: [20638-24214] free: 15324)
+kernel:        total_free:15324 bytes, biggest free hole:15324 bytes
+kernel: In p54u_tx_cb
+kernel: In p54u_tx_free_skb_cb
+kernel: Entered p54_free_skb
+kernel: p54: In p54_config
+kernel: phy31: Tx queue entries: 6
+kernel:        entry: ffff88009871f800 (range: [20200-202c0]=(c0) free:0)
+kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
+kernel:        entry: ffff88009871f700 (range: [20380-20548]=(1c8) free:0)
+kernel:        entry: ffff88009871f200 (range: [20548-20710]=(1c8) free:0)
+kernel:        entry: ffff88009871fd00 (range: [20710-20800]=(f0) free:0)
+kernel:        entry: ffff88009871f500 (range: [20800-208c0]=(c0) free:0)
+kernel:        last entry: (range: [208c0-24214] free: 14676)
+kernel:        total_free:14676 bytes, biggest free hole:14676 bytes
+kernel: p54: In p54_config
+kernel: phy31: Tx queue entries: 9
+kernel:        entry: ffff88009871f800 (range: [20200-202c0]=(c0) free:0)
+kernel:        entry: ffff8800b8de6600 (range: [202c0-20380]=(c0) free:0)
+kernel:        entry: ffff88009871f700 (range: [20380-20548]=(1c8) free:0)
+kernel:        entry: ffff88009871f200 (range: [20548-20710]=(1c8) free:0)
+kernel:        entry: ffff88009871fd00 (range: [20710-20800]=(f0) free:0)
+kernel:        entry: ffff88009871f500 (range: [20800-208c0]=(c0) free:0)
+kernel:        entry: ffff88009871f300 (range: [208c0-20a88]=(1c8) free:0)
+kernel:        entry: ffff88009871f900 (range: [20a88-20b78]=(f0) free:0)
+kernel:        entry: ffff88009871f000 (range: [20b78-20c38]=(c0) free:0)
+kernel:        last entry: (range: [20c38-24214] free: 13788)
+kernel:        total_free:13788 bytes, biggest free hole:13788 bytes
+
+Note that none of the p54u callback routines are entered. From here, each
+successive call to p54_config() adds 3 new queue entries, non of which are ever
+removed. Eventually, the number of entries gets to 59 and the free space is less
+that the requested length causing the failure.
+
+I'm still trying to analyze the output from usbmon and to correlate it with the
+data in /var/log/messages, but callbacks stop occurring at a certain point,
+which is consistent with what is seen above. Unless you have other ideas, I'm
+content to attribute this problem to the old firmware. If I see similar troubles
+with newer firmware, I'll be back.
+
+Larry
 
