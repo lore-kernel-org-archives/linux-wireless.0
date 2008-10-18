@@ -1,72 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:45477 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338AbYJFVhM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59245 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899AbYJRMVt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 17:37:12 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2083040fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 14:37:09 -0700 (PDT)
-Message-ID: <1ba2fa240810061437g7dd42a55ldb9cfe852a07e269@mail.gmail.com> (sfid-20081006_233716_284827_AB056CA9)
-Date: Mon, 6 Oct 2008 23:37:09 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2] iwlwifi: fix DMA code and bugs
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081006192304.GF3448@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223308831.15196.28.camel@johannes.berg>
-	 <1223309405.15196.32.camel@johannes.berg>
-	 <1ba2fa240810060949w5404944dud9f7b6b373542981@mail.gmail.com>
-	 <1223311876.15196.38.camel@johannes.berg>
-	 <1223312084.15196.41.camel@johannes.berg>
-	 <1ba2fa240810061130w6b1a2282ga80156e7d756c74@mail.gmail.com>
-	 <20081006192304.GF3448@tuxdriver.com>
+	Sat, 18 Oct 2008 08:21:49 -0400
+Subject: Re: powerpc allmodconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: David Miller <davem@davemloft.net>, akpm@linux-foundation.org,
+	dan.j.williams@intel.com, tiwai@suse.de,
+	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, bzolnier@gmail.com,
+	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
+	ralf@linux-mips.org, mchehab@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@ozlabs.org
+In-Reply-To: <20081016130237.4984967c@infradead.org>
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>
+	 <20081015.220247.262683261.davem@davemloft.net>
+	 <1224169039.735.57.camel@johannes.berg>
+	 <20081016.124923.222595655.davem@davemloft.net>
+	 <20081016130237.4984967c@infradead.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qXvhJ3JmCNBpXIwnMVne"
+Date: Sat, 18 Oct 2008 14:20:02 +0200
+Message-Id: <1224332402.6324.0.camel@johannes.berg> (sfid-20081018_142202_560008_F8EB558E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 6, 2008 at 9:23 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Mon, Oct 06, 2008 at 08:30:29PM +0200, Tomas Winkler wrote:
->> On Mon, Oct 6, 2008 at 6:54 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Mon, 2008-10-06 at 18:51 +0200, Johannes Berg wrote:
->> >
->> >> > >  * therefore, all the is_odd junk goes away
->> >> > >  * fix a bug in iwl_hcmd_queue_reclaim where it would reclaim all the
->> >> > >   fragments of a descriptor rather than all descriptors (this may be
->> >> > >   the cause of the dma unmapping problem I reported)
->> >> > >  * some more cleanups
->> >> >
->> >> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->> >> > > --
->> >> >
->> >> >
->> >> > > Tested on 5000 hw, please apply.
->> >> >
->> >> > Great job,  however do not apply this before I review it I had strong
->> >> > feeling this will not
->> >> > work with aggregation flows.
->> >>
->> >> I cannot imagine why you think that, care to explain?
->>
->> Yep, no connection I thought at the first glance you've thatched more code.
->> >
->> > Of course, I would very much appreciate you review the actual bug fix in
->> > iwl_hcmd_queue_reclaim, which consist of the addition of the line
->> >
->> > +               bd = &txq->bd[index];
->>
->> Okay I found the source of the evil, with your big pointer :)
->> The bug caused by this memory optimization juggling we've done and
->> very  bad cut and paste coding
->> We moved for command buffers from pcI_alloc consitent to kmalloc which
->> required pci mapping that that was coded wrongly. Now this kmalloc
->> stuff is not good as well since we have this 36 bit memory limitation
->> on 64 bit platforms.
->> This is the issue I'm trying to address recently I'm not sure what yet
->> what allocation schema would be best yet.
->
-> What if we just revert that patch?
->
-Won't help there is a real problem here
-Tomas
+
+--=-qXvhJ3JmCNBpXIwnMVne
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2008-10-16 at 13:02 -0700, Arjan van de Ven wrote:
+> On Thu, 16 Oct 2008 12:49:23 -0700 (PDT)
+> David Miller <davem@davemloft.net> wrote:
+> > #endif
+> > #define __WARN() warn_on_slowpath(__FILE__, __LINE__)
+> > #define __WARN_printf(arg...) warn_slowpath(__FILE__, __LINE__, arg)
+> > #else
+> > #define __WARN_printf(arg...) __WARN()
+>=20
+> the easiest way I suppose would be to do
+>=20
+> #define __WARN_printf(arg..) do { printk(arg); __WARN(); } while (0)
+>=20
+> any obvious problems with this ?
+
+No, not really. You won't get it on kerneloops, but I guess that's not
+an easily tractable problem.
+
+johannes
+
+--=-qXvhJ3JmCNBpXIwnMVne
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI+dRuAAoJEKVg1VMiehFYmDYP/0kTJWdpsf24PrUnYtMIXVLv
+C46H78KmP/qVYLbDiE0uK4fCq6T5agsZga7fSK5kBA8NiNIL1wXc4X7KjibaDWkr
+lEmpAchTZZZgcgO4oW7AAuxoPtFJwJ0GVe8IOU93N+ItbPuCahA+XgbSC670VOIT
+G5655z9ApbE1Zk2ovPVezBgOhsQgCNEX+V57ALRLqNrW5/w3yFsaAcJSjWdNQQ6z
+YqKBNB96Ds8Y9aJNoFSoG9Y09FU3tuCvN0RyQTURxpwHKZ6f/PWBzdlGUZRYMUh0
+dHSrUvow0SzAFhWyZmhmAeRtCwC2F0T95wxun9LOht4o37hrKE3xN9ScIbSOFIYq
+m8KD5ZAd39nFuCEj41GBi4B0CRy0IhTqGeCIRqyVFYtKSFR4M+eJ9fskrPyWYJXI
+zofkGWlIqKBIGM9v8vMBWX5dalocIFBZFyYiPj/NYMsMRsRfJ33i0UVYk6VGijIs
+8b5gyl5ASmS/yjJAB5DwOQEW7UZs2RrTFSKI0A9BlQOp73Qplwdie7zas7QK/wHM
+vtosJ2/aTo3SdLumy+B9KphBwJBk09FxhNiU76aJnLtXsWnQ0/9kxQKlfW9dctTi
+bKCqB8k2XhGkZ13SEJvpKs9WGSfLXchv2kAOs/O7P+OWEMaz/4FpbZPhV+CGn5Ty
+Ff7sKOr58jw93iMShX+S
+=OjGy
+-----END PGP SIGNATURE-----
+
+--=-qXvhJ3JmCNBpXIwnMVne--
+
