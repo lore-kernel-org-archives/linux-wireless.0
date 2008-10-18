@@ -1,167 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:6268 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962AbYJaNfa (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:26787 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359AbYJRXau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 09:35:30 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so437369eyi.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2008 06:35:27 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: arvidjaar@mail.ru, David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH] orinoco: Move sources to a subdirectory
-Date: Fri, 31 Oct 2008 13:35:21 +0000
-Message-Id: <1225460121-16033-1-git-send-email-kilroyd@googlemail.com> (sfid-20081031_143558_885406_5F8FE2E0)
+	Sat, 18 Oct 2008 19:30:50 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1246476wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Oct 2008 16:30:50 -0700 (PDT)
+Message-ID: <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com> (sfid-20081019_013054_664588_D8F12A2E)
+Date: Sun, 19 Oct 2008 01:30:50 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Dominik Brodowski" <linux@dominikbrodowski.net>,
+	"reinette chatre" <reinette.chatre@intel.com>
+Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
+Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <20081018231046.GA10977@isilmar.linta.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081018231046.GA10977@isilmar.linta.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Keeping all the orinoco drivers in a common directory will make
-maintenance easier.
+On Sun, Oct 19, 2008 at 1:10 AM, Dominik Brodowski
+<linux@dominikbrodowski.net> wrote:
+> Hi,
+>
+> with current Linus' tree, I cannot connet my notebook to the AP any more.
+>
+> 02:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG Network Connection (rev 02)
+>        Subsystem: Intel Corporation PRO/Wireless 3945ABG Network Connection
+>        Flags: bus master, fast devsel, latency 0, IRQ 380
+>        Memory at f0300000 (32-bit, non-prefetchable) [size=4K]
+>
+> [   20.645198] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26ks
+> [   20.645337] iwl3945: Copyright(c) 2003-2008 Intel Corporation
+> [   20.645767] iwl3945 0000:02:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+> [   20.645913] iwl3945 0000:02:00.0: setting latency timer to 64
+> [   20.645996] iwl3945: Detected Intel Wireless WiFi Link 3945ABG
+> [   20.708706] iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+> [   20.712625] phy0: Selected rate control algorithm 'iwl-3945-rs'
+> [   20.733199] iwl3945 0000:02:00.0: PCI INT A disabled
+> ...
+> [   34.824476] iwl3945 0000:02:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+> [   34.824637] iwl3945 0000:02:00.0: restoring config space at offset 0x1 (was 0x100102, writing 0x100106)
+> [   34.825269] iwl3945 0000:02:00.0: firmware: requesting iwlwifi-3945-1.ucode
+> [   37.340901] iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> [   37.340944] iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4413 ser 0x0000004B
+> [   37.342349] iwl3945: Can't stop Rx DMA.
+>
+> The iwlwifi-3945-1.ucode is the one shipped with Ubuntu's 2.6.24-21-generic
+> kernel sources (md5sum: 26d10014b09439dc5a8573c2a6f85b0a ). And, as
+> mentioned in the subject, 2.6.27 or 2.6.26 work perfectly fine.
 
-Signed-off by: David Kilroy <kilroyd@googlemail.com>
----
-
-Intended for -testing/-next. Please apply after any pending patches that
-touch orinoco. I'll take care of rebasing the orinoco pm_notifier RFC as
-appropriate.
-
-Part of the rationale behind the move is to allow refactoring of
-orinoco.c without further polluting the wireless directory.
-
----
- drivers/net/wireless/Makefile                      |    9 +--------
- drivers/net/wireless/orinoco/Makefile              |   12 ++++++++++++
- drivers/net/wireless/{ => orinoco}/airport.c       |    0 
- drivers/net/wireless/{ => orinoco}/hermes.c        |    0 
- drivers/net/wireless/{ => orinoco}/hermes.h        |    0 
- drivers/net/wireless/{ => orinoco}/hermes_dld.c    |    0 
- drivers/net/wireless/{ => orinoco}/hermes_dld.h    |    0 
- drivers/net/wireless/{ => orinoco}/hermes_rid.h    |    0 
- drivers/net/wireless/{ => orinoco}/orinoco.c       |    0 
- drivers/net/wireless/{ => orinoco}/orinoco.h       |    0 
- drivers/net/wireless/{ => orinoco}/orinoco_cs.c    |    0 
- .../net/wireless/{ => orinoco}/orinoco_nortel.c    |    0 
- drivers/net/wireless/{ => orinoco}/orinoco_pci.c   |    0 
- drivers/net/wireless/{ => orinoco}/orinoco_pci.h   |    0 
- drivers/net/wireless/{ => orinoco}/orinoco_plx.c   |    0 
- drivers/net/wireless/{ => orinoco}/orinoco_tmd.c   |    0 
- drivers/net/wireless/{ => orinoco}/spectrum_cs.c   |    0 
- 17 files changed, 13 insertions(+), 8 deletions(-)
- create mode 100644 drivers/net/wireless/orinoco/Makefile
- rename drivers/net/wireless/{ => orinoco}/airport.c (100%)
- rename drivers/net/wireless/{ => orinoco}/hermes.c (100%)
- rename drivers/net/wireless/{ => orinoco}/hermes.h (100%)
- rename drivers/net/wireless/{ => orinoco}/hermes_dld.c (100%)
- rename drivers/net/wireless/{ => orinoco}/hermes_dld.h (100%)
- rename drivers/net/wireless/{ => orinoco}/hermes_rid.h (100%)
- rename drivers/net/wireless/{ => orinoco}/orinoco.c (100%)
- rename drivers/net/wireless/{ => orinoco}/orinoco.h (100%)
- rename drivers/net/wireless/{ => orinoco}/orinoco_cs.c (100%)
- rename drivers/net/wireless/{ => orinoco}/orinoco_nortel.c (100%)
- rename drivers/net/wireless/{ => orinoco}/orinoco_pci.c (100%)
- rename drivers/net/wireless/{ => orinoco}/orinoco_pci.h (100%)
- rename drivers/net/wireless/{ => orinoco}/orinoco_plx.c (100%)
- rename drivers/net/wireless/{ => orinoco}/orinoco_tmd.c (100%)
- rename drivers/net/wireless/{ => orinoco}/spectrum_cs.c (100%)
-
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 59d2d80..7882084 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -16,14 +16,7 @@ obj-$(CONFIG_WAVELAN)		+= wavelan.o
- obj-$(CONFIG_PCMCIA_NETWAVE)	+= netwave_cs.o
- obj-$(CONFIG_PCMCIA_WAVELAN)	+= wavelan_cs.o
- 
--obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o hermes_dld.o
--obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
--obj-$(CONFIG_APPLE_AIRPORT)	+= airport.o
--obj-$(CONFIG_PLX_HERMES)	+= orinoco_plx.o
--obj-$(CONFIG_PCI_HERMES)	+= orinoco_pci.o
--obj-$(CONFIG_TMD_HERMES)	+= orinoco_tmd.o
--obj-$(CONFIG_NORTEL_HERMES)	+= orinoco_nortel.o
--obj-$(CONFIG_PCMCIA_SPECTRUM)	+= spectrum_cs.o
-+obj-$(CONFIG_HERMES)		+= orinoco/
- 
- obj-$(CONFIG_AIRO)		+= airo.o
- obj-$(CONFIG_AIRO_CS)		+= airo_cs.o airo.o
-diff --git a/drivers/net/wireless/orinoco/Makefile b/drivers/net/wireless/orinoco/Makefile
-new file mode 100644
-index 0000000..791366e
---- /dev/null
-+++ b/drivers/net/wireless/orinoco/Makefile
-@@ -0,0 +1,12 @@
-+#
-+# Makefile for the orinoco wireless device drivers.
-+#
-+
-+obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o hermes_dld.o
-+obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
-+obj-$(CONFIG_APPLE_AIRPORT)	+= airport.o
-+obj-$(CONFIG_PLX_HERMES)	+= orinoco_plx.o
-+obj-$(CONFIG_PCI_HERMES)	+= orinoco_pci.o
-+obj-$(CONFIG_TMD_HERMES)	+= orinoco_tmd.o
-+obj-$(CONFIG_NORTEL_HERMES)	+= orinoco_nortel.o
-+obj-$(CONFIG_PCMCIA_SPECTRUM)	+= spectrum_cs.o
-diff --git a/drivers/net/wireless/airport.c b/drivers/net/wireless/orinoco/airport.c
-similarity index 100%
-rename from drivers/net/wireless/airport.c
-rename to drivers/net/wireless/orinoco/airport.c
-diff --git a/drivers/net/wireless/hermes.c b/drivers/net/wireless/orinoco/hermes.c
-similarity index 100%
-rename from drivers/net/wireless/hermes.c
-rename to drivers/net/wireless/orinoco/hermes.c
-diff --git a/drivers/net/wireless/hermes.h b/drivers/net/wireless/orinoco/hermes.h
-similarity index 100%
-rename from drivers/net/wireless/hermes.h
-rename to drivers/net/wireless/orinoco/hermes.h
-diff --git a/drivers/net/wireless/hermes_dld.c b/drivers/net/wireless/orinoco/hermes_dld.c
-similarity index 100%
-rename from drivers/net/wireless/hermes_dld.c
-rename to drivers/net/wireless/orinoco/hermes_dld.c
-diff --git a/drivers/net/wireless/hermes_dld.h b/drivers/net/wireless/orinoco/hermes_dld.h
-similarity index 100%
-rename from drivers/net/wireless/hermes_dld.h
-rename to drivers/net/wireless/orinoco/hermes_dld.h
-diff --git a/drivers/net/wireless/hermes_rid.h b/drivers/net/wireless/orinoco/hermes_rid.h
-similarity index 100%
-rename from drivers/net/wireless/hermes_rid.h
-rename to drivers/net/wireless/orinoco/hermes_rid.h
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco/orinoco.c
-similarity index 100%
-rename from drivers/net/wireless/orinoco.c
-rename to drivers/net/wireless/orinoco/orinoco.c
-diff --git a/drivers/net/wireless/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
-similarity index 100%
-rename from drivers/net/wireless/orinoco.h
-rename to drivers/net/wireless/orinoco/orinoco.h
-diff --git a/drivers/net/wireless/orinoco_cs.c b/drivers/net/wireless/orinoco/orinoco_cs.c
-similarity index 100%
-rename from drivers/net/wireless/orinoco_cs.c
-rename to drivers/net/wireless/orinoco/orinoco_cs.c
-diff --git a/drivers/net/wireless/orinoco_nortel.c b/drivers/net/wireless/orinoco/orinoco_nortel.c
-similarity index 100%
-rename from drivers/net/wireless/orinoco_nortel.c
-rename to drivers/net/wireless/orinoco/orinoco_nortel.c
-diff --git a/drivers/net/wireless/orinoco_pci.c b/drivers/net/wireless/orinoco/orinoco_pci.c
-similarity index 100%
-rename from drivers/net/wireless/orinoco_pci.c
-rename to drivers/net/wireless/orinoco/orinoco_pci.c
-diff --git a/drivers/net/wireless/orinoco_pci.h b/drivers/net/wireless/orinoco/orinoco_pci.h
-similarity index 100%
-rename from drivers/net/wireless/orinoco_pci.h
-rename to drivers/net/wireless/orinoco/orinoco_pci.h
-diff --git a/drivers/net/wireless/orinoco_plx.c b/drivers/net/wireless/orinoco/orinoco_plx.c
-similarity index 100%
-rename from drivers/net/wireless/orinoco_plx.c
-rename to drivers/net/wireless/orinoco/orinoco_plx.c
-diff --git a/drivers/net/wireless/orinoco_tmd.c b/drivers/net/wireless/orinoco/orinoco_tmd.c
-similarity index 100%
-rename from drivers/net/wireless/orinoco_tmd.c
-rename to drivers/net/wireless/orinoco/orinoco_tmd.c
-diff --git a/drivers/net/wireless/spectrum_cs.c b/drivers/net/wireless/orinoco/spectrum_cs.c
-similarity index 100%
-rename from drivers/net/wireless/spectrum_cs.c
-rename to drivers/net/wireless/orinoco/spectrum_cs.c
--- 
-1.5.6.4
-
+I think you need new uCode, the API has changed to support stealth APs
+.... I believe there was
+some misscommunication...
+Tomas
