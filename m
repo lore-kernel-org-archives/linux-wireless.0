@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29563 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751761AbYJ0WKr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 18:10:47 -0400
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-From: reinette chatre <reinette.chatre@intel.com>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081019075916.GA12904@isilmar.linta.de>
-References: <20081018231046.GA10977@isilmar.linta.de>
-	 <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
-	 <20081019075916.GA12904@isilmar.linta.de>
-Content-Type: text/plain
-Date: Mon, 27 Oct 2008 15:11:08 -0700
-Message-Id: <1225145468.1115.139.camel@rc-desk> (sfid-20081027_231051_169282_478D2F09)
-Mime-Version: 1.0
+Received: from qmta01.emeryville.ca.mail.comcast.net ([76.96.30.16]:60220 "EHLO
+	QMTA01.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750879AbYJSFvg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Oct 2008 01:51:36 -0400
+Message-ID: <48FACA7E.3070503@gentoo.org> (sfid-20081019_075218_479774_8C116146)
+Date: Sun, 19 Oct 2008 08:49:50 +0300
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: Mattias Nissler <mattias.nissler@gmx.de>
+CC: Ivo van Doorn <ivdoorn@gmail.com>,
+	=?ISO-8859-1?Q?Mikko_Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	kune@deine-taler.de
+Subject: Re: ACK matching [was: TX status reporting with help of an ack queue]
+References: <1221494693.14102.22.camel@virkkmi-linux>	 <1221505251.4511.77.camel@localhost>	 <1221541089.14102.44.camel@virkkmi-linux>	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost> <1221776990.4563.19.camel@localhost>
+In-Reply-To: <1221776990.4563.19.camel@localhost>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-10-19 at 00:59 -0700, Dominik Brodowski wrote:
-> On Sun, Oct 19, 2008 at 01:30:50AM +0200, Tomas Winkler wrote:
-> > On Sun, Oct 19, 2008 at 1:10 AM, Dominik Brodowski
-> > > [   37.340901] iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> > > [   37.340944] iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4413 ser 0x0000004B
-> > > [   37.342349] iwl3945: Can't stop Rx DMA.
-> > >
-> > > The iwlwifi-3945-1.ucode is the one shipped with Ubuntu's 2.6.24-21-generic
-> > > kernel sources (md5sum: 26d10014b09439dc5a8573c2a6f85b0a ). And, as
-> > > mentioned in the subject, 2.6.27 or 2.6.26 work perfectly fine.
-> >
-> > I think you need new uCode, the API has changed to support stealth APs
-> > .... I believe there was some misscommunication...
-> 
-> Thanks for the hint -- indeed, the newest uCode works both with 2.6.26 and
-> current git... so the uCode is backwards compatible, but the kernel code is
-> not. Should the uCode be named iwlwifi-3945-2.ucode therefore, to notify the
-> users that they need something newer? Or can the kernel code be made to work
-> with the old uCode again?
+Mattias Nissler wrote:
+> I wonder whether the ack queue idea Mikko found in the zd1211rw driver
+> is actually working correctly for that driver? I've only had a short
+> look, but found that incoming ACKs are only matched against transmitted
+> frames by means of the address carried within the ACK. So I'd think in
+> the situation I outlined above, the zd1211rw driver will also be unable
+> to match the ACK to the correct frame. Any comments on this?
 
-(let me try again... sorry for the spam)
+It is known not-quite-correct and an area of the code that I personally 
+dislike. However, without it, rate control does not work at all, so it 
+is better than not having it. (my personal preference would be for a RC 
+algo which does not require input of successful TX frames, but I have 
+not stepped up to design or do the work...)
+The code that also keeps the USB TX queue to reasonable size also relies 
+on it, and in that case the inaccuracies are also not important.
 
-Could you please try the following patch instead of updating your ucode?
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index d15a2c9..0f811dd 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6100,7 +6100,7 @@ static void iwl3945_bg_request_scan(struct
-work_struct *data)
- 	int rc = 0;
- 	struct iwl3945_scan_cmd *scan;
- 	struct ieee80211_conf *conf = NULL;
--	u8 n_probes = 2;
-+	u8 n_probes = 0;
- 	enum ieee80211_band band;
- 
- 	conf = ieee80211_get_hw_conf(priv->hw);
-
-
+Daniel
