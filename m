@@ -1,56 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:51071 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753855AbYJIPTZ (ORCPT
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:39980 "EHLO
+	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752038AbYJSWMm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 11:19:25 -0400
-Message-ID: <48EE20FB.4060700@lwfinger.net> (sfid-20081009_171929_411248_5ECD9BB1)
-Date: Thu, 09 Oct 2008 08:19:23 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 19 Oct 2008 18:12:42 -0400
+Date: Sun, 19 Oct 2008 23:40:37 +0200
+From: Pavel Machek <pavel@suse.cz>
+To: jbenc@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
+	i.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: iwl3945: if I leave my machine running overnight, wifi will not
+	work in the morning
+Message-ID: <20081019214035.GA30485@elf.ucw.cz> (sfid-20081020_001308_054364_7BA03488)
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>, Chr <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC/RFT] p54: Fix for big-endian architecture
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is meant for testing on big-endian hardware. Every indication
-is that the data in the bootrec structure is little endian. This patch fixes
-a usage of the u32 data array as a string of u8's.
+Hi!
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Kernel 2.6.27-rc8; happened few times already.
 
-Index: wireless-testing/drivers/net/wireless/p54/p54common.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54common.h
-+++ wireless-testing/drivers/net/wireless/p54/p54common.h
-@@ -18,7 +18,10 @@
- struct bootrec {
- 	__le32 code;
- 	__le32 len;
--	u32 data[10];
-+	union {
-+		u32 data[10];
-+		u8 data_char[40];
-+	} __attribute__((packed));
- 	__le16 rx_mtu;
- } __attribute__((packed));
+root@amd:~# ifconfig wlan0 down
+root@amd:~# SysRq : Changing Loglevel
+Loglevel set to 9
 
-Index: wireless-testing/drivers/net/wireless/p54/p54common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54common.c
-+++ wireless-testing/drivers/net/wireless/p54/p54common.c
-@@ -171,8 +171,8 @@ int p54_parse_firmware(struct ieee80211_
- 			break;
- 		case BR_CODE_COMPONENT_VERSION:
- 			/* 24 bytes should be enough for all firmwares */
--			if (strnlen((unsigned char*)bootrec->data, 24) < 24)
--				fw_version = (unsigned char*)bootrec->data;
-+			if (strnlen(bootrec->data_char, 24) < 24)
-+				fw_version = bootrec->data_char;
- 			break;
- 		case BR_CODE_DESCR: {
- 			struct bootrec_desc *desc =
+root@amd:~# ifconfig wlan0 up
+iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwl3945 0000:03:00.0: restoring config space at offset 0x1 (was
+0x100102, writing 0x100106)
+Registered led device: iwl-phy0:radio
+Registered led device: iwl-phy0:assoc
+Registered led device: iwl-phy0:RX
+Registered led device: iwl-phy0:TX
+wlan0: authenticate with AP 00:11:2f:0e:95:a0
+root@amd:~# wlan0: authenticate with AP 00:11:2f:0e:95:a0
+wlan0: authenticated
+wlan0: associate with AP 00:11:2f:0e:95:a0
+wlan0: RX AssocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
+aid=1)
+wlan0: associated
 
+root@amd:~# ping 10.0.0.2
+PING 10.0.0.2 (10.0.0.2): 56 data bytes
+wlan0: deauthenticated
+wlan0: authenticate with AP 00:11:2f:0e:95:a0
+wlan0: authenticated
+wlan0: associate with AP 00:11:2f:0e:95:a0
+wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
+aid=1)
+wlan0: associated
+
+^C  ##### ping will not reply.
+
+--- 10.0.0.2 ping statistics ---
+23 packets transmitted, 0 packets received, 100% packet loss
+root@amd:~#
+
+#### iwlist works:
+
+root@amd:~# iwlist wlan0 scan
+Warning: Driver for device wlan0 has been compiled with version 22
+of Wireless Extension, while this program supports up to version 17.
+Some things may be broken...
+
+wlan0     Scan completed :
+          Cell 01 - Address: 00:11:2F:0E:95:A0
+                    ESSID:"pavel"
+                    Mode:Master
+                    Channel:1
+                    Frequency:2.412 GHz (Channel 1)
+                    Quality=43/100  Signal level:-83 dBm  Noise
+level=-99 dBm
+                    Encryption key:off
+                    Bit Rate:1 Mb/s
+                    Bit Rate:2 Mb/s
+                    Bit Rate:5.5 Mb/s
+                    Bit Rate:11 Mb/s
+...
+
+root@amd:~# iwconfig wlan0 essid pavel
+root@amd:~# wlan0: authenticate with AP 00:11:2f:0e:95:a0
+wlan0: authenticated
+wlan0: associate with AP 00:11:2f:0e:95:a0
+wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
+aid=1)
+wlan0: associated
+
+root@amd:~# ping hobit
+PING hobit.ucw.cz (10.0.0.2): 56 data bytes
+^C
+--- hobit.ucw.cz ping statistics ---
+34 packets transmitted, 0 packets received, 100% packet loss
+root@amd:~#
+
+Is there documentation of
+/sys/module/iwl3945/drivers/pci:iwl3945/{un,}bind somewhere? I believe
+that's the next step, but could not figure it out.
+
+After reboot, network will work (I believe ;-).
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
