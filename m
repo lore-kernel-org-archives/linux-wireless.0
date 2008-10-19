@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43401 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753050AbYJVXkb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 19:40:31 -0400
-Date: Wed, 22 Oct 2008 19:39:38 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: reinette chatre <reinette.chatre@linux.intel.com>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: New iwlwifi 3945 uCode available
-Message-ID: <20081022233921.GO15808@tuxdriver.com> (sfid-20081023_014047_218267_670E33E5)
-References: <1224624899.28639.17.camel@johannes.berg> <20081021213814.GM17268@tuxdriver.com> <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com> <1224627187.9386.103.camel@californication> <1224628088.10863.100.camel@rc-desk> <1224660449.28639.22.camel@johannes.berg> <1224662185.9386.131.camel@californication> <1224707446.10863.155.camel@rc-desk> <1224716347.9386.151.camel@californication> <1224717261.10863.219.camel@rc-desk>
+Received: from isilmar.linta.de ([213.133.102.198]:37243 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750719AbYJSH7T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Oct 2008 03:59:19 -0400
+Date: Sun, 19 Oct 2008 09:59:16 +0200
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
+Message-ID: <20081019075916.GA12904@isilmar.linta.de> (sfid-20081019_095946_890304_F65EC16D)
+References: <20081018231046.GA10977@isilmar.linta.de> <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1224717261.10863.219.camel@rc-desk>
+In-Reply-To: <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 04:14:21PM -0700, reinette chatre wrote:
-> On Wed, 2008-10-22 at 15:59 -0700, Marcel Holtmann wrote:
+On Sun, Oct 19, 2008 at 01:30:50AM +0200, Tomas Winkler wrote:
+> On Sun, Oct 19, 2008 at 1:10 AM, Dominik Brodowski
+> > [   37.340901] iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> > [   37.340944] iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4413 ser 0x0000004B
+> > [   37.342349] iwl3945: Can't stop Rx DMA.
+> >
+> > The iwlwifi-3945-1.ucode is the one shipped with Ubuntu's 2.6.24-21-generic
+> > kernel sources (md5sum: 26d10014b09439dc5a8573c2a6f85b0a ). And, as
+> > mentioned in the subject, 2.6.27 or 2.6.26 work perfectly fine.
 > 
-> > in some cases it might be possible with a set of quirks or special
-> > functions that can be switched at runtime. Check the whole bunch of USB
-> > drivers that have special handling depending on what hardware it finds.
-> > We could do the same. In some cases this effort might be too much, but
-> > if possible we should at least try.
-> 
-> I don't think we can easily apply the hardware quirk solution here. This
-> is because hardware can be identified by id that does not change and the
-> hardware self does not really change (unless it has firmware that
-> changes ...). In this firmware case we do not have "an id" (we have one
-> file that is loaded by firmware loader so we cannot know what we get
-> just by "looking at it" unless we enforce a version number in the
-> filename as we currently do in our driver) and the firmware can change,
-> potentially frequently, with the consequence of many "quirks" that need
-> to be maintained.
+> I think you need new uCode, the API has changed to support stealth APs
+> .... I believe there was some misscommunication...
 
-You can try to load the new firmware, and if that fails you can try
-the older firmware.  Whichever one succeeds first can govern the API
-you use.  In fact, I had a patch like this for Fedora back when you
-first added an API version to your firmware.  Of course, at that point
-there was no need to rememebr what got loaded since there really was
-only one API...
+Thanks for the hint -- indeed, the newest uCode works both with 2.6.26 and
+current git... so the uCode is backwards compatible, but the kernel code is
+not. Should the uCode be named iwlwifi-3945-2.ucode therefore, to notify the
+users that they need something newer? Or can the kernel code be made to work
+with the old uCode again?
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Thanks,
+	Dominik
