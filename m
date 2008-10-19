@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44860 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbYJXMaB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 08:30:01 -0400
-Subject: Re: Best USB wireless interface with Linux?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Carlo Nyto <carlonyto@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <9d95d80e0810231803p6e753150w36fcd6d657613a27@mail.gmail.com> (sfid-20081024_030346_351358_680A232D)
-References: <9d95d80e0810231803p6e753150w36fcd6d657613a27@mail.gmail.com>
-	 (sfid-20081024_030346_351358_680A232D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0I9tlBFHzJJciZMhIo7u"
-Date: Fri, 24 Oct 2008 14:28:43 +0200
-Message-Id: <1224851323.611.2.camel@johannes.berg> (sfid-20081024_143006_800955_32754A1B)
+Received: from main.gmane.org ([80.91.229.2]:34592 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751257AbYJSNAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Oct 2008 09:00:04 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1KrXt4-0007U1-Qo
+	for linux-wireless@vger.kernel.org; Sun, 19 Oct 2008 13:00:02 +0000
+Received: from 81.214.144.189 ([81.214.144.189])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 13:00:02 +0000
+Received: from kormetin by 81.214.144.189 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 13:00:02 +0000
+To: linux-wireless@vger.kernel.org
+From: metin <kormetin@gmail.com>
+Subject: Re: B43 randomly and silently dropping connections...
+Date: Sun, 19 Oct 2008 15:53:27 +0300
+Message-ID: <gdfak8$cng$1@ger.gmane.org> (sfid-20081019_150018_716257_A403AF86)
+References: <200810161959.43084.mcbrides9@comcast.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <200810161959.43084.mcbrides9@comcast.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Yes I can confirm this problem.
+I have bcm4318 card and my connection frequently and unexpectidely is 
+dropping with b43 (I had no problem with bcm43xx module). It did not 
+differ at all which firmware I used.
+dmesg gives:
 
---=-0I9tlBFHzJJciZMhIo7u
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+b43-phy1: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+Registered led device: b43-phy1::tx
+Registered led device: b43-phy1::rx
+Registered led device: b43-phy1::radio
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: deauthenticating by local choice (reason=3)
+input: b43-phy1 as /devices/virtual/input/input10
+b43-phy1: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+Registered led device: b43-phy1::tx
+Registered led device: b43-phy1::rx
+Registered led device: b43-phy1::radio
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: authenticate with AP 00:73:05:10:a0:84
+wlan0: authenticated
+wlan0: associate with AP 00:73:05:10:a0:84
+wlan0: RX AssocResp from 00:73:05:10:a0:84 (capab=0x471 status=0 aid=2)
+wlan0: associated
+ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+wlan0: no IPv6 routers present
 
-On Thu, 2008-10-23 at 21:03 -0400, Carlo Nyto wrote:
+...
+wlan0: No ProbeResp from current AP 00:73:05:10:a0:84 - assume out of range
+wlan0: authenticate with AP 00:73:05:10:a0:84
+wlan0: authenticate with AP 00:73:05:10:a0:84
+wlan0: authenticate with AP 00:73:05:10:a0:84
+wlan0: authenticate with AP 00:73:05:10:a0:84
+wlan0: authentication with AP 00:73:05:10:a0:84 timed out
 
-> Requirements:
-> 1) USB.
-> 2) External antenna connector.
-> 3) Complete open-source drivers
-> 4) 802.11a/b/g support
-> 5) Must work as an access point
-
-There's no device that fulfils all these requirements at this time.
-_Maybe_ p54 if you can find one with antenna connectors, but I doubt it,
-and even then it doesn't support AP at this time.
-
-johannes
-
---=-0I9tlBFHzJJciZMhIo7u
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJAb94AAoJEKVg1VMiehFYcaIP/3jTtIRKkBMK/tFam83DD7c7
-zY8wEodurBZeC8mvpZrXJlKeCg6WunQOBxpQIqUeVhG7upgRpSRdoshue8+44Dkp
-wYt06Zwew1KjUYxrqgwdbZqu3H+MBpztMQF6Ba7Cy7Ik+pIP7jAT0zYx28MWiONm
-5AQDE5E6XfWLxiQyB6cwNzspEJbyRNIzL8Fqbmhev+FuWzNNx+2hHgjFw3LjOYvF
-MzkveMlv7M44POl4GBtQf+1gX/lbnU1oVwvsZGE2YB9UXZdi4QUt7fz38fsNzk3b
-FieGKvXmkk5brt3UNDcVYqj1y/Sh++PCI4ohjQZZuCHg2UR/TYuCu4GBofWiJ0GP
-EQtvug/wZXfcxVhgvGl9wM4qNZyGLBluu/E0j9OhlmEfpbHHXVe8k9kzLgeGafsI
-DHUd41AspGBIOxiUWTFIJQ11pBYlKyDmGSqLY9KT8Gu8Ipz90X9cMnNOx8VGdVwS
-aTNvs3nQdrI2PAkgaWynMDxJ6JtOf47TpeWFLgnLVquLSkni49nmTInhnGeev0eU
-E9S+kXZ6LQebCN+1DhcueePozmJzBJtL8kLOfgBr6nUsJBFeurD+eV/VmaQnokjp
-AK0vqF+iMB8zMiC+g0BRxmSoAv0xfKYsPv5mPQyT/irfqPXT/UN/FeEibVUeWcNb
-KZO1I7Kk/2ZKOw0YFxeY
-=GW69
------END PGP SIGNATURE-----
-
---=-0I9tlBFHzJJciZMhIo7u--
+Please help...
 
