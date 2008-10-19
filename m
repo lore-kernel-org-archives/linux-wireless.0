@@ -1,90 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:44336 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754932AbYJNCh5 (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:50408 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751891AbYJSWwF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 22:37:57 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: [RFC/RFT][PATCH] p54: enable 2.4/5GHz spectrum by eeprom bits.
-Date: Tue, 14 Oct 2008 04:42:06 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <48EE20FB.4060700@lwfinger.net> <20081013212039.dy5fki5pck4g0cg4-cebfxv@webmail.spamcop.net> <200810140410.27397.chunkeey@web.de>
-In-Reply-To: <200810140410.27397.chunkeey@web.de>
+	Sun, 19 Oct 2008 18:52:05 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so799306nfc.21
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 15:52:03 -0700 (PDT)
+Message-ID: <cb0375e10810191552l7541e034l6f1e095c0c268baa@mail.gmail.com> (sfid-20081020_005212_067054_21583F7A)
+Date: Sun, 19 Oct 2008 18:52:03 -0400
+From: "Andrew Lutomirski" <luto@myrealbox.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: iwlagn: associating with AP causes kernel hiccup
+Cc: richard@scherping.de, "Frederik Himpe" <fhimpe@telenet.be>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1ba2fa240810191512i4c6ce748kd13d1671cc2a2ff6@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810140442.06244.chunkeey@web.de> (sfid-20081014_043801_541295_0265E72B)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <gd5gs4$abi$1@ger.gmane.org> <1224104363.19219.30.camel@rc-desk>
+	 <gd9v3f$3ft$1@ger.gmane.org> <gd9vpo$5ql$1@ger.gmane.org>
+	 <48F8AEF1.5030603@scherping.de>
+	 <1ba2fa240810171302h7dcc92acr18c060425c4a93d@mail.gmail.com>
+	 <48FA0C27.8010301@scherping.de> <48FB4FBE.2060909@myrealbox.com>
+	 <1ba2fa240810191512i4c6ce748kd13d1671cc2a2ff6@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rather than setting the available bands by looking only at the phy-chip,
-we now use bits in the eeprom, which indicates the real capabilities.
+On Sun, Oct 19, 2008 at 6:12 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Sun, Oct 19, 2008 at 5:18 PM, Andy Lutomirski <luto@myrealbox.com> wrote:
+>> Richard Scherping wrote:
+>>>
+>>> Tomas Winkler schrieb:
+>
+>>
+>> Amen.
+> Stable doesn't mean all components are stable, citation  from Linus blog:
+> "It doesn't have to be perfect (and obviously no release ever is), but
+> it needs to be in reasonable shape"
+>
+> The fact is that some critical patches were rejected as not
+> regressions in rc cycle and probably need to be pushed to the stable
+> version now or distribution will merge them.
+> We gave more priority for testing 32 bit version so it is more stable
+> then 64 bit which got much less in house testing and we've missed many
+> issues there. The driver doesn't get full exposure till it's get to
+> the public in stable version therefore  no bugs are opened in the rc
+> cycle so also are not fixed in the stable version. and unfortunately
+> there is no much system testing at all for what get's into merging
+> window.
+> Second the whole mac80211 stack didn't address fully MQ rewrite so
+> it's a bit shaky as well and this will be fact also in 2.6.28.
 
-Reported-by: Pavel Roskin <proski@gnu.org>
-Signed-off-by: Christian Lamparter
----
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 0180466..48f91f3 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -306,8 +306,8 @@ static int p54_convert_rev1(struct ieee80211_hw *dev,
- 	return 0;
- }
- 
--static const char *p54_rf_chips[] = { "NULL", "Indigo?", "Duette",
--                              "Frisbee", "Xbow", "Longbow" };
-+static const char *p54_rf_chips[] = { "NULL", "Duette3", "Duette2",
-+                              "Frisbee", "Xbow", "Longbow", "NULL", "NULL" };
- static int p54_init_xbow_synth(struct ieee80211_hw *dev);
- 
- static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
-@@ -319,6 +319,7 @@ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 	void *tmp;
- 	int err;
- 	u8 *end = (u8 *)eeprom + len;
-+	u16 synth;
- 	DECLARE_MAC_BUF(mac);
- 
- 	wrap = (struct eeprom_pda_wrap *) eeprom;
-@@ -400,8 +401,8 @@ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 			tmp = entry->data;
- 			while ((u8 *)tmp < entry->data + data_len) {
- 				struct bootrec_exp_if *exp_if = tmp;
--				if (le16_to_cpu(exp_if->if_id) == 0xF)
--					priv->rxhw = le16_to_cpu(exp_if->variant) & 0x07;
-+				if (le16_to_cpu(exp_if->if_id) == 0xf)
-+					synth = le16_to_cpu(exp_if->variant);
- 				tmp += sizeof(struct bootrec_exp_if);
- 			}
- 			break;
-@@ -427,22 +428,13 @@ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 		goto err;
- 	}
- 
--	switch (priv->rxhw) {
--	case 4: /* XBow */
-+	priv->rxhw = synth & 0x07;
-+	if (priv->rxhw == 4)
- 		p54_init_xbow_synth(dev);
--	case 1: /* Indigo? */
--	case 2: /* Duette */
--		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
--	case 3: /* Frisbee */
--	case 5: /* Longbow */
-+	if (!(synth & 0x40))
- 		dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
--		break;
--	default:
--		printk(KERN_ERR "%s: unsupported RF-Chip\n",
--			wiphy_name(dev->wiphy));
--		err = -EINVAL;
--		goto err;
--	}
-+	if (!(synth & 0x80))
-+		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
- 
- 	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
- 		u8 perm_addr[ETH_ALEN];
+OK.
+
+>
+> This driver has been available and more-or-less working for ages.
+>> What kernel am I supposed to run if I just want a stable system? Haven't
+>> found one yet, other than distro kernels...
+>>
+>> In any case, I've seen these complete system hiccups with iwl4965 and iwlagn
+>> since at least 2.6.25 and through quite a few wireless-testing versions.  I
+>> bet that this, along with things like it, is the culprit:
+>
+> Haven't seen you've filled bug for it.
+
+Fair enough.  #1790.
+
+>
+> Locking need to be really revised but till now I didn't see show
+> stoppers issues so it didn't get priority
+>
+>> Would I be out of line for wishing the iwlwifi developers
+> Patches are always welcome
+
+I can write a patch to add a mutex and change it to:
+
+take mutex
+grab_nic
+spinlock
+
+but I bet that would break all kinds of things. :)
+
+--Andy
