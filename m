@@ -1,87 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:28194 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753752AbYJWVRD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39068 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518AbYJSStn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 17:17:03 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so521855wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 14:17:02 -0700 (PDT)
-Message-ID: <1ba2fa240810231417s55f6754cl54a38d9b79526cd8@mail.gmail.com> (sfid-20081023_231710_321485_CDB22615)
-Date: Thu, 23 Oct 2008 23:17:02 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <43e72e890810231318t2ef200e4wed96b48efefa62bb@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	 <18684.24323.743610.871307@gargle.gargle.HOWL>
-	 <1224505349.27899.17.camel@johannes.berg>
-	 <18684.51206.771543.514682@localhost.localdomain>
-	 <1224669612.28639.49.camel@johannes.berg>
-	 <18688.17545.136327.991699@gargle.gargle.HOWL>
-	 <1224773124.6002.32.camel@johannes.berg>
-	 <43e72e890810231023q5650184r8ce50cb51b63e706@mail.gmail.com>
-	 <1ba2fa240810231131l9c9597au2acf166a13a8c03b@mail.gmail.com>
-	 <43e72e890810231318t2ef200e4wed96b48efefa62bb@mail.gmail.com>
+	Sun, 19 Oct 2008 14:49:43 -0400
+Subject: Re: Power saving on mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <87myh0a1zd.fsf@nokia.com>
+References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
+	 <87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
+	 <1224412006.6324.45.camel@johannes.berg> <871vyc7st7.fsf@nokia.com>
+	 <1224434885.6324.49.camel@johannes.berg>  <87myh0a1zd.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CQEk5yV6r4Fc2U0nX5MI"
+Date: Sun, 19 Oct 2008 20:49:36 +0200
+Message-Id: <1224442176.6324.53.camel@johannes.berg> (sfid-20081019_204955_175896_B71C0F38)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 23, 2008 at 10:18 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, Oct 23, 2008 at 11:31 AM, Tomas Winkler <tomasw@gmail.com> wrote:
->> On Thu, Oct 23, 2008 at 7:23 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->
->>> I checked internally to verify where you would decide when to AMPDU
->>> and to try to get different reviews and opinions, and it seems that
->>> the path we take right now is correct as there is not much overhead so
->>> we always use AMPDU with whoever supports it with data frames. If
->>> you're a STA you do it all the time with the AP for data frames.
->>>
->>> I noticed iwlagn had some more logic within the RC but I gave up
->>> trying to follow the logic. I suspect they do the same though, Tomas?
->
-> Thanks for the feedback!
->
->> I got different output from our system engineering. APMDU has overhead
->
-> Is that because of the interactions required in firmware for scheduling BTW?
->
-No HW support make aggregation faster, the overhead is in the air. BA
-is bigger then ACK so if you don't have burst than you need to send BA
-for single frame it's slower then sending ACK.
 
->> and if there is not requirement
->> for high throughput we don't initiate one.
->
-> This makes sense to me regardless.
->
->> What is for sure we shounld
->> not have aggregation enabled for VO AC.
->
-> Any particular reason? I'll review this too, but my guess would be the
-> buffering required before TXing. I'll see how we perform with aggr on
+--=-CQEk5yV6r4Fc2U0nX5MI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-No the problem is on the receiver side you don't release packets to
-network stuck out of order so there is inherit delay in aggregation.
-Voice is sensitive to delay and jitter.
+On Sun, 2008-10-19 at 21:12 +0300, Kalle Valo wrote:
 
->> I've payed attention that there are different APs do that differently
->> some opens BA session on BE AC immediately upon association some do it
->> on high throughput I haven't seen in the second case it will be opened
->> on simple ping.
->> Anyhow if we would implement the triggering on throughput  simply
->> setting starting and stopping thresholds to small values will have
->> same effect as your solution and setting it to 0 and maximum will
->> respectively will have effect on  opening BA session upon association.
->
-> Seems reasonable. If this is set then as a hw configurable option in
-> mac80211 then we can even allow RC control this, should this ever be
-> needed (we don't).
->
->  Luis
->
+> > It seems to be a firmware feature, first beacon from the BSS the
+> > firmware computes the checksum, and if it changes it lets the beacon go
+> > through and re-computes the checksum, so you see all beacon changes.
+>=20
+> So the driver doesn't have to compute any checksums itself? That makes
+> things easy then.
+
+=46rom what I'm reading in the firmware docs, no.
+
+> > Maybe it excludes the TIM.
+>=20
+> It should. Otherwise beacon filtering in a crowded network with
+> clients in PSM would be next to useless. And I didn't see any major
+> increase in power consumption at Maemo Summit :)
+
+Indeed :)
+
+> > I think we want this for when the QoS parameters or something else
+> > changes.
+>=20
+> Yeah. Just out of curiosity, are there any other parameters which
+> mac80211 needs to follow? Short preamble? Short slot time? Anything
+> else?
+
+I think that's about it. Maybe something else in IBSS, if that works
+there at all.
+
+johannes
+
+--=-CQEk5yV6r4Fc2U0nX5MI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI+4E8AAoJEKVg1VMiehFYHtMP/iUCsiuCBzNpdhepBAtBRFAQ
+/mdNBsvbnskZ1rFUjWevXxh04Zv9NvXP/lpxBP3kegvgD9OjrzXczGL11g2VSfCq
+tFhD2/8hhTHBj3IwFY21uIZEP6B251xQg23aYqoWuyw765UMprxo+2yEQC3kdBjl
+QWNAYcaVtZyo23nlTSAVZAqPOTKo7UMmRBlaqUMaCA/S+tFmidSxXm/hP1iwfM4Z
+Xx9LIUj+eSW3cJHLyrJdMtP6Lh97TvPd3h0R7GR4UzzHEXtgWtdPSjyInEDPnBFj
+Tweu0tiw5VmYtsFwZPvuuQ1s6wPahGGb+4FgovcAY2RYk7GpnXLQQ5EML+FsjsrO
+ogCm97G9TvpnGh9/rFj2tovrAIwk/hNLEvEr6Gr8Z478pgjPmLAmC2GNVPkdLHdd
+RQz8TPLEit+J1K+dUGN4luKkpilKcgXCCPUbWzdp5v95mIWqhp+rmdsIdK0r+t64
+TZlPqXJM7svTTYJRW48WwfvNGWC+5CCUoRWpVD24Zd4VxLZQ/lKN/JWWCrAm1ItO
+dCUFZ1W1bl+RvttXn0ojVe6tyA8IvMeIzvwTwrB/RcXdgjay+vBTNjcFSDZexLcx
+HUIBA444g0cNJvDJKlvarOE8uVoVcBJqhZvhdUqM1vBCaNNfMviy4l+brX5mu/pV
+3msfRxIbkVmZDrb5dPaH
+=nsXh
+-----END PGP SIGNATURE-----
+
+--=-CQEk5yV6r4Fc2U0nX5MI--
+
