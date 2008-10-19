@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:40103 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752191AbYJUV10 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:48604 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751533AbYJSSM3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 17:27:26 -0400
-Message-ID: <48FDFCCA.8040604@lwfinger.net> (sfid-20081021_232731_453910_0675C4D6)
-Date: Tue, 21 Oct 2008 09:01:14 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 19 Oct 2008 14:12:29 -0400
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: Re: Power saving on mac80211
+References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
+	<87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
+	<1224412006.6324.45.camel@johannes.berg> <871vyc7st7.fsf@nokia.com>
+	<1224434885.6324.49.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sun, 19 Oct 2008 21:12:06 +0300
+In-Reply-To: <1224434885.6324.49.camel@johannes.berg> (ext Johannes Berg's message of "Sun\, 19 Oct 2008 18\:48\:05 +0200")
+Message-ID: <87myh0a1zd.fsf@nokia.com> (sfid-20081019_201240_775085_A6C8E1CB)
 MIME-Version: 1.0
-To: Jouni Malinen <jouni.malinen@atheros.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Regression in 2.6.27-git from commit 43ac2ca3840f64
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On my x86_64 system, the mainline 2.6.27-git kernel (v2.6.27-6030-g6da0b38)
-shows the following anomaly with the 'iwlist scan' command:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-          Cell 03 - Address: 00:14:BF:85:49:FA
-                    ESSID:"lwfdjf"
-                    Mode:Master
-                    Channel:1
-                    Frequency:2.412 GHz (Channel 1)
-                    Quality=66/100  Signal level:-62 dBm  Noise level=-68 dBm
-                    Encryption key:on
-                    IE: Unknown: 00066C7766646A66
-                    IE: Unknown: 010882848B962430486C
-                    IE: Unknown: 030101
-                    IE: Unknown: 2A0104
-                    IE: Unknown: 2F0104
-                    IE: Unknown: 32040C121860
-                    IE: Unknown: DD09001018020014000000
-                    IE: WPA Version 1
-                        Group Cipher : TKIP
-                        Pairwise Ciphers (1) : TKIP
-                        Authentication Suites (1) : PSK
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
-                              24 Mb/s; 36 Mb/s; 54 Mb/s; 6 Mb/s; 9 Mb/s
-                              12 Mb/s; 48 Mb/s
-                    Extra:tsf=0000014488aeb18b
-                    Extra: Last beacon: 448ms ago
+> On Sun, 2008-10-19 at 14:00 +0300, Kalle Valo wrote:
+>
+>> > Then add a new flag to mac80211 hw description that says "driver will
+>> > watch beacons". This means that the code above that rearms the timer for
+>> > the future 'nothing from AP' check is skipped.
+>> 
+>> I will. I need to check that if the "firmware beacon watch" is enabled
+>> only when PSM is enabled. If it is, we might have to make the flag
+>> dynamic.
+>
+> IIRC it's a separate flag.
 
-This problem was bisected to commit 43ac2ca3840f64f699a239535c590fa7ebaaac27,
-entitled "mac80211: Handle scan result IEs in one block". The same bug is
-present in the wireless-testing tree.
+Very good, that would be the best way.
 
-Larry
+>>  There isn't any
+>> timeout for delivering beacons to the host, if the data path is idle
+>> for 24 hours, mac80211 will not receive any beacons for the 24 hours.
+>> I don't see why we need a timeout here.
+>
+> Right. But we need to program the chip to tell the chip "hey please tell
+> me if you haven't seen a beacon in X seconds".
 
+Ah, you mean that timeout. Sorry, I forgot that one altogether. Yes,
+we definitely need that timeout.
+
+>> I believe that there's also a feature in stlc4560 that the driver can
+>> provide a checksum of the beacon and the firmware will send the beacon
+>> if checksum doesn't match. But I don't yet know how that works in
+>> practise.
+>
+> It seems to be a firmware feature, first beacon from the BSS the
+> firmware computes the checksum, and if it changes it lets the beacon go
+> through and re-computes the checksum, so you see all beacon changes.
+
+So the driver doesn't have to compute any checksums itself? That makes
+things easy then.
+
+> Maybe it excludes the TIM.
+
+It should. Otherwise beacon filtering in a crowded network with
+clients in PSM would be next to useless. And I didn't see any major
+increase in power consumption at Maemo Summit :)
+
+> I think we want this for when the QoS parameters or something else
+> changes.
+
+Yeah. Just out of curiosity, are there any other parameters which
+mac80211 needs to follow? Short preamble? Short slot time? Anything
+else?
+
+-- 
+Kalle Valo
