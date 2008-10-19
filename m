@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:56369 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750882AbYJPFXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 01:23:14 -0400
-Subject: Re: powerpc allmodconfig
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Reply-To: benh@kernel.crashing.org
-To: David Miller <davem@davemloft.net>
-Cc: akpm@linux-foundation.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, tiwai@suse.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ralf@linux-mips.org, mark.fasheh@oracle.com,
-	linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org,
-	dan.j.williams@intel.com, linux-ext4@vger.kernel.org,
-	dwmw2@infradead.org, mchehab@infradead.org
-In-Reply-To: <20081015.220247.262683261.davem@davemloft.net>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
-	 <20081015.220247.262683261.davem@davemloft.net>
-Content-Type: text/plain
-Date: Thu, 16 Oct 2008 16:21:47 +1100
-Message-Id: <1224134507.8157.551.camel@pasglop> (sfid-20081016_072327_174094_109C3917)
-Mime-Version: 1.0
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:39977 "EHLO
+	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805AbYJSWMc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Oct 2008 18:12:32 -0400
+Date: Mon, 20 Oct 2008 00:06:55 +0200
+From: Pavel Machek <pavel@suse.cz>
+To: jbenc@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
+	i.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: iwl3945: if I leave my machine running overnight, wifi will
+	not work in the morning
+Message-ID: <20081019220655.GA1827@elf.ucw.cz> (sfid-20081020_001237_923663_556DB57E)
+References: <20081019214035.GA30485@elf.ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081019214035.GA30485@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
-> From: Andrew Morton <akpm@linux-foundation.org>
-> Date: Wed, 15 Oct 2008 21:33:37 -0700
+On Sun 2008-10-19 23:40:35, Pavel Machek wrote:
+> Hi!
 > 
-> > kernel/resource.c: In function '__reserve_region_with_split':
-> > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'resource_size_t'
-> > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 4 has type 'resource_size_t'
-> > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'resource_size_t'
-> > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 7 has type 'resource_size_t'
-> 
-> Known issue, Ben wants to add a new variant of %pX in order to print resources so that
-> resource_size_t vs. unsigned long stuff doesn't matter like this any more.
+> Kernel 2.6.27-rc8; happened few times already.
 
-Actually, I was told Linus had one and I've been trying to dig it out...
+...
+> After reboot, network will work (I believe ;-).
 
-Oh well, I may as well dig my own old one.
+Hmm, it did not this time.
 
-Cheers,
-Ben.
+iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver
+for Linux, 1.2.26kds
+iwl3945: Copyright(c) 2003-2008 Intel Corporation
+iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwl3945 0000:03:00.0: setting latency timer to 64
+iwl3945: Detected Intel Wireless WiFi Link 3945ABG
+iwl3945: Tunable channels: 11 802.11bg, 13 802.11a channels
+phy0: Selected rate control algorithm 'iwl-3945-rs'
+iwl3945 0000:03:00.0: PCI INT A disabled
+Linux video capture interface: v2.00
+Uniform Multi-Platform E-IDE driver
+...
+Oct 20 00:06:25 amd kernel: wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
+Oct 20 00:06:25 amd kernel: wlan0: associated
+Oct 20 00:06:26 amd kernel: wlan0: disassociated
+Oct 20 00:06:27 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
+Oct 20 00:06:27 amd kernel: wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
+Oct 20 00:06:27 amd kernel: wlan0: associated
+Oct 20 00:06:27 amd kernel: wlan0: disassociated
+Oct 20 00:06:28 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
+Oct 20 00:06:28 amd kernel: wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
+Oct 20 00:06:28 amd kernel: wlan0: associated
+Oct 20 00:06:29 amd kernel: wlan0: disassociated
 
+On to reboot the access point...
+									Pavel
 
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
