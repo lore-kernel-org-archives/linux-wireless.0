@@ -1,71 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:25919 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752260AbYJTJBx (ORCPT
+Received: from 207-172-69-77.c3-0.smr-ubr3.sbo-smr.ma.static.cable.rcn.com ([207.172.69.77]:55615
+	"EHLO luto.stanford.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751367AbYJSP1v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 05:01:53 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so266052yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 02:01:52 -0700 (PDT)
-Message-ID: <43e72e890810200201l49eea95h2f67615b536311aa@mail.gmail.com> (sfid-20081020_110202_752511_D9A3A5BA)
-Date: Mon, 20 Oct 2008 02:01:52 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-Cc: Sujith <Sujith.Manoharan@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"tomasw@gmail.com" <tomasw@gmail.com>
-In-Reply-To: <1224493038.18024.36.camel@johannes.berg>
+	Sun, 19 Oct 2008 11:27:51 -0400
+Message-ID: <48FB4FBE.2060909@myrealbox.com> (sfid-20081019_172755_858572_65457C40)
+Date: Sun, 19 Oct 2008 11:18:22 -0400
+From: Andy Lutomirski <luto@myrealbox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	 <1224491480.18024.32.camel@johannes.berg>
-	 <43e72e890810200135o1581c904i456a35298f8a56a9@mail.gmail.com>
-	 <1224492335.18024.34.camel@johannes.berg>
-	 <18684.17816.702853.44986@gargle.gargle.HOWL>
-	 <43e72e890810200155wbe01660xe3f53de80dc7357d@mail.gmail.com>
-	 <1224493038.18024.36.camel@johannes.berg>
+To: richard@scherping.de
+CC: tomasw@gmail.com, Frederik Himpe <fhimpe@telenet.be>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: iwlagn: associating with AP causes kernel hiccup
+References: <gd5gs4$abi$1@ger.gmane.org> <1224104363.19219.30.camel@rc-desk>	 <gd9v3f$3ft$1@ger.gmane.org> <gd9vpo$5ql$1@ger.gmane.org>	 <48F8AEF1.5030603@scherping.de> <1ba2fa240810171302h7dcc92acr18c060425c4a93d@mail.gmail.com> <48FA0C27.8010301@scherping.de>
+In-Reply-To: <48FA0C27.8010301@scherping.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 1:57 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-10-20 at 01:55 -0700, Luis R. Rodriguez wrote:
->> On Mon, Oct 20, 2008 at 1:47 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
->> > Johannes Berg wrote:
->> >  > On Mon, 2008-10-20 at 01:35 -0700, Luis R. Rodriguez wrote:
->> >  >
->> >  > > >> + *   @is_part_ampdu: set to indicate that the wireless core should should
->> >  > > >> + *           treat this frame as part of an AMPDU
->> >  > > >
->> >  > > > I thought we said we could keep the flag instead of moving to the skb
->> >  > > > here?
->> >  > >
->> >  > > That was just because the changes required to add this was too much
->> >  > > for 2.6.27 but since we don't care about this fix in 2.6.27 we can do
->> >  > > whatever is needed to fix this properly.
->> >  >
->> >  > Right, but adding random stuff into skb isn't really "properly" imho.
->> >  > And we don't really need this afaict.
->> >  >
->> >
->> > Sorry, just saw that Tomas had fixed it by setting the flag in ieee80211_tx_h_sequence().
->> > Will fix that.
->>
->> No that was a hack too, this was to minimize code changes for 2.6.27 as well.
->
-> Well the fact that it's in tx_h_sequence is a bit weird, but we should
-> be able to get around not using an extra bit in skb I think. Especially
-> for this since it's only really between the driver and mac80211, and
-> after a requeue the ampdu status might actually change.
+Richard Scherping wrote:
+> Tomas Winkler schrieb:
+>> On Fri, Oct 17, 2008 at 5:27 PM, Richard Scherping <richard-YwAN3MSemFZ6lmGzAMPh1A@public.gmane.org> wrote:
+>>>>>>> When I associate with an AP, Linux 2.6.27 seems to "hang" for a few
+>>>>>>> seconds. During that time, all sound stops playing and keyboard and
+>>>>>>> mouse input is impossible.
+>>>>> I'm using Mandriva 2009.0 x86_64 with wpa_supplicant and Mandriva's
+>>>>> wireless network configuration tool (drakroam).
+>>>>>
+>>>>> Actually I just found out that running # ifconfig wlan0 down
+>>>>> is enough to trigger the sound and mouse hanging for a few seconds.
+>>>> And shortly after I wrote that, while associating while getting an IP
+>>>> with dhclient when associating with a WPA encrypted AP, I got this
+>>>> backtrace in my logs:
+>>>> [...]
+>>> I have a similar problem here. No crash up to now, but the very same "hang" for a few seconds on "ifconfig wlan0 down". Interestingly this does only happen after a normal boot - once I did a suspend and resume (S3), there is no hang anymore.
+>>>
+>>> Hardware: Thinkpad T61p with Intel 4965 agn
+>>> Software: Debian Lenny x86_64 with vanilla 2.6.27 kernel
+>>>
+>> Driver in 2.6.27 is not stable, please try to reproduce this in
+>> current wireless-testing.git.
+> 
+> I do not have the time to compile and test wireless-testing ATM, sorry.
+> 
+> In fact I am annoyed by the fact that iwlagn is "known to be unstable" in a stable kernel release and that this even seems to be a totally normal thing...
 
-Good point. I failed to see that. So in that case it should be as
-sujith had it before my suggestion and just handle it as he had it in
-the tx handlers. The problem though is that the RC algorithm should be
-the one to determine if an skb is part of an ampdu for aggregation or
-not IMHO. Actually this is the real question and hot topic.
+Amen.  This driver has been available and more-or-less working for ages. 
+    What kernel am I supposed to run if I just want a stable system? 
+Haven't found one yet, other than distro kernels...
 
-When should we aggregate and should mac80211 decide that or be left to the RC.
+In any case, I've seen these complete system hiccups with iwl4965 and 
+iwlagn since at least 2.6.25 and through quite a few wireless-testing 
+versions.  I bet that this, along with things like it, is the culprit:
 
-  Luis
+In many, many functions:
+  spin_lock_irqsave(&priv->lock, flags);
+  ...
+  ret = iwl_grab_nic_access(priv);
+
+In iwl-io.h (2.6.26.something):
+static inline int _iwl_grab_nic_access(struct iwl_priv *priv)
+{
+	...
+         ret = _iwl_poll_bit(priv, CSR_GP_CNTRL,
+                            CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
+                            (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
+                             CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 50);
+	...
+}
+
+static inline int _iwl_poll_bit(struct iwl_priv *priv, u32 addr,
+                                 u32 bits, u32 mask, int timeout)
+{
+         int i = 0;
+
+         do {
+                 if ((_iwl_read32(priv, addr) & mask) == (bits & mask))
+                         return i;
+                 mdelay(10);
+                 i += 10;
+         } while (i < timeout);
+
+         return -ETIMEDOUT;
+}
+
+Polling the hardware waiting for firmware to do something *with IRQs 
+disabled*?  I'd really rather the drivers on my system didn't do this.
+
+I'd attempt to fix this myself, but I have no clue what the locking 
+rules are supposed to be.
+
+Would I be out of line for wishing the iwlwifi developers would fix 
+longstanding issues (latency and maybe horkage after resume, although 
+the latter seems much improved lately) before adding fancy new things?
+
+--Andy
