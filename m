@@ -1,79 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39694 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148AbYJGTex (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:7622 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751789AbYJSVf4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 15:34:53 -0400
-Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com> (sfid-20081007_212834_461753_187EE1B3)
-References: <1223311803.15196.36.camel@johannes.berg>
-	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
-	 <200810070821.56462.hs4233@mail.mn-solutions.de>
-	 <20081007071529.GA5010@infradead.org> <20081007131615.GR3448@tuxdriver.com>
-	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
-	 <1223398724.7328.45.camel@johannes.berg>
-	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
-	 (sfid-20081007_212834_461753_187EE1B3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-J5+c8dOZL+V05lrkSmRi"
-Date: Tue, 07 Oct 2008 21:34:44 +0200
-Message-Id: <1223408085.3618.2.camel@johannes.berg> (sfid-20081007_213457_543385_F66BFE62)
-Mime-Version: 1.0
+	Sun, 19 Oct 2008 17:35:56 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1641724wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 14:35:54 -0700 (PDT)
+Message-ID: <1ba2fa240810191435o2f86a3c6ve6181fff8d195a96@mail.gmail.com> (sfid-20081019_233600_799964_F1EC4F17)
+Date: Sun, 19 Oct 2008 23:35:54 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: [PATCH] mac80211: inform userspace of probe/auth/assoc timeout
+Cc: linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <1224443903-9135-1-git-send-email-kalle.valo@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <873ait6s4e.fsf@nokia.com>
+	 <1224443903-9135-1-git-send-email-kalle.valo@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Oct 19, 2008 at 9:18 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+>
+> I noticed that when for some reason [1] the probe or auth times
+> out, wpa_supplicant doesn't realise this and only tries the next
+> AP when it runs into its own timeout, which is ten seconds, and
+> that's quite long. Fix this by making mac80211 notify userspace
+> that it didn't associate.
+>
+> [1] my wrt350n in mixed B/G/HT mode often runs into this, maybe
+> it's because one of the antennas is broken off and for whatever
+> reason it decides to use that antenna to transmit the response
+> frames (auth, probe); I do see beacons fine so it's not totally
+> broken. Works fine in pure-G mode.
+>
+> kvalo: backported to 2.6.27
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+> ---
+>
+> Here's a backport of Johannes' patch for 2.6.27
 
---=-J5+c8dOZL+V05lrkSmRi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+and one function of mine :)
+Ack
+Tomas
 
-On Tue, 2008-10-07 at 21:28 +0200, Tomas Winkler wrote:
+in case anyone
+> considers this for stable releases.
+and
 
-> > And please keep the 10 pairs -> 20 addresses, it's a lot easier to
-> > understand :)
-
-> I don't like on this solution two things one is that it 32 bit
-> variables sits on unaligned address
-
-That doesn't matter at all since it's packed, and the bitwise accesses
-you did previously are way less efficient.
-
->  and second
-> it doesn't mach HW description which defines this as  descriptor couple
-
-Then tell the HW engineers to fix the HW docs. It makes no sense at all
-to say this is 10 pairs rather than 20 single ones if there's nothing
-that uses a pair, the whole thing entirely uses single entries in the
-numbering etc.
-
-johannes
-
---=-J5+c8dOZL+V05lrkSmRi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI67nRAAoJEKVg1VMiehFYKPsP/1FBWMo6tHYv0SrZ+VUYHRdO
-bQFDySlY2db/utkUFMHTBEMPZdrQzxB65J9nuZoPmsVJnGWWbpISgv1lHLFwBQFH
-52IbPYNmYkq/ERMHFGE49RJjDInUn+KlEMRwCaR5WHQUUZ5Wg1cKHFQSHLQEC/AB
-zlf4CaIDa+91yaiu9NCHgXRxFP69O9Kq1Uj/pkAOo5zY/DxyrrXIsCDhkaxcF9W4
-ibJV+W5GF9laAHpvZumLa5NQxYNOcomwJYJecgU/pJXf1Spi2J7BjvJafXjatr/l
-qfqrd9t6EXOiNaH31GUrNY0nKmVDqp3YKSsI3EDNv+MTw8rc282bl1sZc2PCZKdp
-NFcTgA3FVtN8E57FE+rxiyWnA+0k6O5qTNTwwj9Cwnt12ieGCTofwQ/Zvj9sa44M
-LdnJM9CiDvrVK3nq/VjxGM6HZhAdM0r6If8+Bfhlp2n3XjpeQT0JFfP0irKYiQC4
-XIx9mRJRXc2vxDLYtNYY18Kz84kbNLhK/eWtwejj2+hX6vE4QBcuiQmoQ4HFPLiW
-mUv/eD5hJ1tNp7m4kMsBFBAexE+1UEWoEgM50hWp65zQyAjz394Hi9RVoCfVLGTt
-gPoQqQszKKIp7sV+qdEmVRlLgjtAF/lITrElpjeVYkfVADe8p6ZFK/827/ogQhrK
-6QI39wEFnImN4Tz3q/iu
-=FBmS
------END PGP SIGNATURE-----
-
---=-J5+c8dOZL+V05lrkSmRi--
-
+>  net/mac80211/mlme.c |   23 +++++++++++++++++------
+>  1 files changed, 17 insertions(+), 6 deletions(-)
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 902cac1..ca80acd 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -475,6 +475,17 @@ int ieee80211_ht_addt_info_ie_to_ht_bss_info(
+>        return 0;
+>  }
+>
+> +static void ieee80211_sta_send_apinfo(struct ieee80211_sub_if_data *sdata,
+> +                                     struct ieee80211_if_sta *ifsta)
+> +{
+> +       union iwreq_data wrqu;
+> +       memset(&wrqu, 0, sizeof(wrqu));
+> +       if (ifsta->flags & IEEE80211_STA_ASSOCIATED)
+> +               memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
+> +       wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+> +       wireless_send_event(sdata->dev, SIOCGIWAP, &wrqu, NULL);
+> +}
+> +
+>  static void ieee80211_sta_send_associnfo(struct net_device *dev,
+>                                         struct ieee80211_if_sta *ifsta)
+>  {
+> @@ -533,7 +544,6 @@ static void ieee80211_set_associated(struct net_device *dev,
+>        struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>        struct ieee80211_local *local = sdata->local;
+>        struct ieee80211_conf *conf = &local_to_hw(local)->conf;
+> -       union iwreq_data wrqu;
+>        u32 changed = BSS_CHANGED_ASSOC;
+>
+>        if (assoc) {
+> @@ -567,7 +577,6 @@ static void ieee80211_set_associated(struct net_device *dev,
+>
+>                ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
+>                memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
+> -               memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
+>                ieee80211_sta_send_associnfo(dev, ifsta);
+>        } else {
+>                netif_carrier_off(dev);
+> @@ -578,8 +587,6 @@ static void ieee80211_set_associated(struct net_device *dev,
+>                sdata->bss_conf.assoc_ht = 0;
+>                sdata->bss_conf.ht_conf = NULL;
+>                sdata->bss_conf.ht_bss_conf = NULL;
+> -
+> -               memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
+>        }
+>        ifsta->last_probe = jiffies;
+>        ieee80211_led_assoc(local, assoc);
+> @@ -590,8 +597,7 @@ static void ieee80211_set_associated(struct net_device *dev,
+>        if (assoc)
+>                netif_carrier_on(dev);
+>
+> -       wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+> -       wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
+> +       ieee80211_sta_send_apinfo(sdata, ifsta);
+>  }
+>
+>  static void ieee80211_set_disassoc(struct net_device *dev,
+> @@ -662,6 +668,7 @@ static void ieee80211_send_auth(struct net_device *dev,
+>  static void ieee80211_authenticate(struct net_device *dev,
+>                                   struct ieee80211_if_sta *ifsta)
+>  {
+> +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>        DECLARE_MAC_BUF(mac);
+>
+>        ifsta->auth_tries++;
+> @@ -670,6 +677,7 @@ static void ieee80211_authenticate(struct net_device *dev,
+>                       " timed out\n",
+>                       dev->name, print_mac(mac, ifsta->bssid));
+>                ifsta->state = IEEE80211_DISABLED;
+> +               ieee80211_sta_send_apinfo(sdata, ifsta);
+>                return;
+>        }
+>
+> @@ -1003,6 +1011,7 @@ static int ieee80211_privacy_mismatch(struct net_device *dev,
+>  static void ieee80211_associate(struct net_device *dev,
+>                                struct ieee80211_if_sta *ifsta)
+>  {
+> +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>        DECLARE_MAC_BUF(mac);
+>
+>        ifsta->assoc_tries++;
+> @@ -1011,6 +1020,7 @@ static void ieee80211_associate(struct net_device *dev,
+>                       " timed out\n",
+>                       dev->name, print_mac(mac, ifsta->bssid));
+>                ifsta->state = IEEE80211_DISABLED;
+> +               ieee80211_sta_send_apinfo(sdata, ifsta);
+>                return;
+>        }
+>
+> @@ -1021,6 +1031,7 @@ static void ieee80211_associate(struct net_device *dev,
+>                printk(KERN_DEBUG "%s: mismatch in privacy configuration and "
+>                       "mixed-cell disabled - abort association\n", dev->name);
+>                ifsta->state = IEEE80211_DISABLED;
+> +               ieee80211_sta_send_apinfo(sdata, ifsta);
+>                return;
+>        }
+>
+> --
+> 1.5.6.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
