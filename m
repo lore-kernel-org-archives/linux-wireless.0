@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48286 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976AbYJTGPq (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:57193 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751384AbYJSQvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 02:15:46 -0400
-Subject: Re: Power saving on mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Kalle Valo <kalle.valo@nokia.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <43e72e890810191846h46a6b35br4ad61803a25bdf23@mail.gmail.com> (sfid-20081020_034700_160658_5C77DFDA)
-References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
-	 <87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
-	 <1224412006.6324.45.camel@johannes.berg> <871vyc7st7.fsf@nokia.com>
-	 <1224434885.6324.49.camel@johannes.berg> <87myh0a1zd.fsf@nokia.com>
-	 <43e72e890810191846h46a6b35br4ad61803a25bdf23@mail.gmail.com>
-	 (sfid-20081020_034700_160658_5C77DFDA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zfBRGaH9zQD01sr+iN5K"
-Date: Mon, 20 Oct 2008 08:15:39 +0200
-Message-Id: <1224483339.6324.55.camel@johannes.berg> (sfid-20081020_081549_848593_EFBCA4E8)
-Mime-Version: 1.0
+	Sun, 19 Oct 2008 12:51:09 -0400
+Message-ID: <48FB6577.4010406@lwfinger.net> (sfid-20081019_185113_182606_9B851987)
+Date: Sun, 19 Oct 2008 09:51:03 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: metin <kormetin@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: B43 randomly and silently dropping connections...
+References: <200810161959.43084.mcbrides9@comcast.net> <gdfak8$cng$1@ger.gmane.org>
+In-Reply-To: <gdfak8$cng$1@ger.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+metin wrote:
+> Yes I can confirm this problem.
+> I have bcm4318 card and my connection frequently and unexpectidely is
+> dropping with b43 (I had no problem with bcm43xx module). It did not
+> differ at all which firmware I used.
+> dmesg gives:
+> 
+> b43-phy1: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+> Registered led device: b43-phy1::tx
+> Registered led device: b43-phy1::rx
+> Registered led device: b43-phy1::radio
+> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> wlan0: deauthenticating by local choice (reason=3)
+> input: b43-phy1 as /devices/virtual/input/input10
+> b43-phy1: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+> Registered led device: b43-phy1::tx
+> Registered led device: b43-phy1::rx
+> Registered led device: b43-phy1::radio
+> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> wlan0: authenticate with AP 00:73:05:10:a0:84
+> wlan0: authenticated
+> wlan0: associate with AP 00:73:05:10:a0:84
+> wlan0: RX AssocResp from 00:73:05:10:a0:84 (capab=0x471 status=0 aid=2)
+> wlan0: associated
+> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> wlan0: no IPv6 routers present
+> 
+> ...
+> wlan0: No ProbeResp from current AP 00:73:05:10:a0:84 - assume out of range
+> wlan0: authenticate with AP 00:73:05:10:a0:84
+> wlan0: authenticate with AP 00:73:05:10:a0:84
+> wlan0: authenticate with AP 00:73:05:10:a0:84
+> wlan0: authenticate with AP 00:73:05:10:a0:84
+> wlan0: authentication with AP 00:73:05:10:a0:84 timed out
+> 
+> Please help...
 
---=-zfBRGaH9zQD01sr+iN5K
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What kernel version? There have been a number of recent changes in mac80211 that
+make connections a lot more robust. If you are not running 2.6.27, I suggest
+getting it, or (even better) a copy of wireless-testing.
 
-On Sun, 2008-10-19 at 18:46 -0700, Luis R. Rodriguez wrote:
-
-> I wanted to note intel hardware seems to handle parsing beacons in
-> firmware when is PS mode already and I have no clue when it would
-> inform mac80211 of a beacon miss and if it does it. Tomas?
-
-It doesn't do anything at all with mac80211.
-
-johannes
-
---=-zfBRGaH9zQD01sr+iN5K
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/CIHAAoJEKVg1VMiehFYf8EP/2gV3MjIpcgVsvsFcMXcZMTc
-Aw6MrVnPqLrt7CyK9TOfo+1vBAV3dBmRMObtdAuvQlOsdoUcPoIbZ0b7DeMCJh1y
-fvcZtbtpL6YDrfh0tQcpFIpvL6HKhcAGOyww7SvfeD0FU6xMjvgbAPP3pBcT8sgv
-F1DBqSpdYM/kAfmxpi0vReemNFySlQe33KfFc0iAKMEZaYF7lSSHPrp/Ivo1cRU7
-tSF5/Mp0Dz+qVAdq1bPsK3H/eKtyM9K1lOa3/PzOSJUoLMr5lKu03t4wgQawsCBl
-f8ffM/ma4MYm3z+SWW2MsTjT6sR0iVxriR8lDQ+YFmyfLXYJcxevTLdNm5PpVIhY
-nQgAIs2p61LPwXBC9tGdschHBiEQp/SOyJFJ0O3y9n0N7Px6zjK/R2MHiJ4wn2jj
-n0r+bUvIXeTis92qoMmkz9t6W1B6PObs5OmqZ/pG80pCuuoLGYJdHVv4G4ZSywP3
-CGl1CFdGSXoypkWX5HlpJ0RcsfC6lESMsr6/2RTwY4Cn/v+mnRx3GAVfo1+BuVD4
-jU6PsjYRbddig5Ffjv8yLIV00SwNTN5/Pp04na6zAKYJNVQMonncrVF4op135KHB
-xFN4g1RWJ8nL9PRdc7B6aAYpRg6n2YhI0u4utd00TR2D46xdk8TFRUIzyPYxM6VK
-EZemdsFeMBjaZmALd+wH
-=w3sX
------END PGP SIGNATURE-----
-
---=-zfBRGaH9zQD01sr+iN5K--
-
+Larry
