@@ -1,58 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta2.srv.hcvlny.cv.net ([167.206.4.197]:55356 "EHLO
-	mta2.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323AbYJFAeI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57568 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751098AbYJSKTq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 20:34:08 -0400
-Received: from [192.168.1.139] (ool-44c60ac6.dyn.optonline.net [68.198.10.198])
- by mta2.srv.hcvlny.cv.net
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0K8A00DQ0K8TF1J0@mta2.srv.hcvlny.cv.net> for
- linux-wireless@vger.kernel.org; Sun, 05 Oct 2008 20:34:05 -0400 (EDT)
-Date: Sun, 05 Oct 2008 20:34:05 -0400
-From: "jlquinn (optonline)" <jlquinn@optonline.net>
-Subject: No connection with ath5k 5424
-To: linux-wireless@vger.kernel.org
-Message-id: <48E95CFD.8080308@optonline.net> (sfid-20081006_023414_038728_0BF0FC91)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 19 Oct 2008 06:19:46 -0400
+Subject: Re: Warning from mac80211 with p54usb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48FA6E1E.5070303@lwfinger.net>
+References: <48F7D0D2.6090604@lwfinger.net>
+	 <200810170226.28774.chunkeey@web.de>  <48FA6E1E.5070303@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2wFbnWUVBgXOEXir1UOG"
+Date: Sun, 19 Oct 2008 12:19:41 +0200
+Message-Id: <1224411581.6324.38.camel@johannes.berg> (sfid-20081019_121948_924496_A0CD606B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've installed the latest compat-wireless-2.6-old on Debian 2.6.26-1 
-i686 v2.6.26-6, i.e. the latest available, I believe.
 
-naga:~/compat-wireless-2.6-old# cat compat-release
-v4.5-56-gcd7615b
+--=-2wFbnWUVBgXOEXir1UOG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I can build, install, and modprobe the ath5k module, giving:
+On Sat, 2008-10-18 at 16:15 -0700, Larry Finger wrote:
 
+> Note that none of the p54u callback routines are entered. From here, each
+> successive call to p54_config() adds 3 new queue entries, non of which ar=
+e ever
+> removed. Eventually, the number of entries gets to 59 and the free space =
+is less
+> that the requested length causing the failure.
+>=20
+> I'm still trying to analyze the output from usbmon and to correlate it wi=
+th the
+> data in /var/log/messages, but callbacks stop occurring at a certain poin=
+t,
+> which is consistent with what is seen above. Unless you have other ideas,=
+ I'm
+> content to attribute this problem to the old firmware. If I see similar t=
+roubles
+> with newer firmware, I'll be back.
 
-Oct  5 20:31:09 naga kernel: [17974.660295] ACPI: PCI Interrupt 
-0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-Oct  5 20:31:09 naga kernel: [17974.660324] PCI: Setting latency timer 
-of device 0000:03:00.0 to 64
-Oct  5 20:31:09 naga kernel: [17974.660368] ath5k_pci 0000:03:00.0: 
-registered as 'phy0'
-Oct  5 20:31:09 naga kernel: [17974.789588] phy0: Selected rate control 
-algorithm 'pid'
-Oct  5 20:31:09 naga kernel: [17974.790580] Registered led device: 
-ath5k-phy0::rx
-Oct  5 20:31:09 naga kernel: [17974.790602] Registered led device: 
-ath5k-phy0::tx
-Oct  5 20:31:09 naga kernel: [17974.790605] ath5k phy0: Atheros AR5424 
-chip found (MAC: 0xa3, PHY: 0x61)
-Oct  5 20:31:09 naga kernel: [17974.814333] udev: renamed network 
-interface wlan0 to ath0
+Looks to me like that for some reason the firmware doesn't tell the
+driver when the config callback was completed, which will lead to the
+space invariably filling up over time. It probably should be possible to
+work around it (say by recycling the config once the firmware has
+transmitted the next frame, since by then it should be reconfigured) but
+I'm not sure it's worth it.
 
-When I try to ifup the interface, connecting through DHCP, I get no 
-connection, and in the kernel log, I just get:
+Btw, I tried getting my hands on a p54 device but it ended up being
+acx111... I'll try again.
 
-Oct  5 20:32:17 naga kernel: [18042.759550] ADDRCONF(NETDEV_UP): ath0: 
-link is not ready
+johannes
 
-iwlist ath0 scan works, however.
+--=-2wFbnWUVBgXOEXir1UOG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Thanks,
-Jerry Quinn
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI+wm5AAoJEKVg1VMiehFYpM0QAKA9nC2u7XfVYuiabi5lsKnO
+10KzXuwiTIcBZN9rJppAmzea71PxZV1rJthoXNkqV58NrhefG5X2cv3x995HbH/v
+GKg+KZ1JOWLYBgU9wDRtpxUn4k5Z5M+StJlByLc65kuDEkoE+3Dq5wir1+JeMloZ
+8HMVrGI53cgSHXxy7d3tPen2XOyuxwaJGbNEjV12I7BzRMOjVlIkRkAipR5wRXKb
+s13ycKV9KG/C40LLtKlq+YsTZfd2zQNirQw7NDb+5JaBATIOXrkZiRaScOkTo384
+4O+W6Dby1oUGfnfYocAEnY7TGGaZ9jocvZ8BzziykSdwhDFz3MTwFH5syAqbTd+7
+mE9Imv4DJsPIfYAbpDfG2HFyNzu2+RBb3jHVTNGieeXggjA2XZpkPSbFkPTT4rh2
+i7LiQrEusl58RPkLK8CGvZtJ920cqNNQPt6gXsCj27GRG0kNbWtjOBSPrWc3tbrX
+ZmnY/x8O4NNLnM6vjd2hvhrybthqsUkLOgd08TU3LPDx4LYpmgWFnXBM0D0jC9l2
+86An+GKYlLU0JkGpZmo7VMzjXU3TzhEBtX4AEGTu1kj0Wwu1pR/Urn3KCSG1I/sm
+ewfv2gOpIv2mC6vMvq1ULShFZ05yLyCJmX+q08PaLZcmUwdi3NaHE7Uh/Jj9PPlx
+bXqRNCQpFf/TsbKT8O20
+=F1+i
+-----END PGP SIGNATURE-----
+
+--=-2wFbnWUVBgXOEXir1UOG--
 
