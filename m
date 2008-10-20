@@ -1,100 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:49207 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753112AbYJTRh1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 13:37:27 -0400
-Subject: Re: Marvell TopDog Driver Work
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <gdidhg$hdq$3@ger.gmane.org>
-References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
-	 <1218830917.14841.20.camel@localhost.localdomain>
-	 <gdidhg$hdq$3@ger.gmane.org>
-Content-Type: text/plain; charset=utf-8
-Date: Mon, 20 Oct 2008 13:36:08 -0400
-Message-Id: <1224524168.29822.46.camel@dhcp-100-3-195.bos.redhat.com> (sfid-20081020_193731_138037_43173758)
+Received: from xc.sipsolutions.net ([83.246.72.84]:55246 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752476AbYJTKQE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 06:16:04 -0400
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"tomasw@gmail.com" <tomasw@gmail.com>
+In-Reply-To: <18684.22627.103501.578126@gargle.gargle.HOWL>
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224491480.18024.32.camel@johannes.berg>
+	 <18684.18492.94865.480736@gargle.gargle.HOWL>
+	 <43e72e890810200214g16f847caqa6cbf724b7b7b625@mail.gmail.com>
+	 <1224494669.18024.51.camel@johannes.berg>
+	 <18684.22627.103501.578126@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ufYpTJjXH8jR15oawBuB"
+Date: Mon, 20 Oct 2008 12:15:58 +0200
+Message-Id: <1224497758.27899.3.camel@johannes.berg> (sfid-20081020_121614_789837_B531E9A7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-20 at 17:01 +0000, Daniel Gimpelevich wrote:
-> On Fri, 15 Aug 2008 16:08:37 -0400, Dan Williams wrote:
+
+--=-ufYpTJjXH8jR15oawBuB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2008-10-20 at 15:37 +0530, Sujith wrote:
+> Johannes Berg wrote:
+> > On Mon, 2008-10-20 at 02:14 -0700, Luis R. Rodriguez wrote:
+> >=20
+> > > Indeed I agree with this. I think we can do this in three steps:
+> > >=20
+> > > 1. resolve aggregation for now for ath9k
+> >=20
+> > That's what Sujith's patch does, basically. It just leaves the Intel
+> > hooks in place.
+> >=20
+> > > 2. resolve aggregation for amdpu_queue case. My suggestion here is to
+> > > use skb_buf_head (after Jouni's suggestion for our driver in fact),
+> > > and do not make use of a qdisc at all for this
+> >=20
+> > I agree on both, but this is more of an implementation detail than an
+> > API description, which we really want to have first.
 >=20
-> > On Fri, 2008-08-15 at 12:58 -0700, Luis R. Rodriguez wrote:
-> >> On Fri, Aug 15, 2008 at 12:40:27PM -0700, Pat Erley wrote:
-> >> > Has anyone stepped up to help in the port of this to mac80211?  =
-I
-> >> > just picked up a wrvs4400n router that uses it and have been wor=
-king
-> >> > on getting 2.6.XX to work with it.
-> >>=20
-> >> Not that I have heard of. Don't know.
-> >=20
-> > There's code out there for the TopDog parts (Linville's marvell.git=
- on
-> > kernel.org), and I even have one or two of them lying around.  The
-> > firmware interface isn't that different from the 8335 (mrv8k) and t=
-hus
-> > the two product lines can probably share the same driver.
-> >=20
-> > Lennert and Nick (from Marvell) are supposed to be working on a mac=
-80211
-> > driver for the 88w8687 part, which is probably just about the same
-> > firmware interface as TopDog (aside from the N-specific bits, and
-> > different TX & RX descriptors I'm sure).  I'd prefer to either star=
-t
-> > fixing up mrv8k and then merge into whatever Lennert comes up with,=
- or
-> > see what they come up with and use that as a base for adding suppor=
-t for
-> > older TopDog and 8310/8335 hardware.
-> >=20
-> > mrv8k was always a bit rocky and never reliably got scan results on=
- the
-> > 8335 cardbus hardware I had, even though the descriptor setup and t=
-he
-> > mac80211 bits looked right.  There's some pre/post scan commands th=
-at we
-> > need to hook into mac80211 which I posted patches for first, but
-> > Johannes requested we not commit those until we really knew whether
-> > pre/post scan were required.
-> >=20
-> > Dan
 >=20
-> Duh...
-> http://git.kernel.org/?p=3Dlinux/kernel/git/mcgrof/mrvl_cb82.git;a=3D=
-summary
+> Would be nice if an interim fix is accepted temporarily,
+> until the architectural details of proper mac80211 aggregation
+> support for the 2 classes of HW are defined, and implemented.
 
-Right, that's been there for a long time but it isn't up-to-date with
-the latest mac80211 stuff, and I'm not sure Luis ever got it completely
-ported over.  It should basically be used only for reference.
+Yeah I think that if you clean up this patch a bit wrt. that flag and
+double-check it won't cause problems on hardware that cannot do
+aggregation at all I'd be ok with it. Like I said, a later patch can
+remove all the if (ampdu_queues) stuff
 
-What I'd like to see is an integrated driver for both the 833x and the
-836x softmac parts, since the firmware interfaces aren't actually that
-much different.  We can start with one family and add support for the
-other family later as long as we keep that fact in mind and code in a
-manner that will easily support the other chips.
+johannes
 
-> Also, I have a router with an 8361 chip and Linux Inside=E2=84=A2 for=
- which I=20
-> have made a GPL Source Request. I was told that the sources will be=20
-> available two weeks from now. I don't expect the wi-fi driver to be i=
-n=20
-> source form in that release, but you never know in advance what they'=
-ll=20
-> stuff in there.
+--=-ufYpTJjXH8jR15oawBuB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-It'll still be based off net80211 unless Nick/Lennert have made any
-progress.  Thus, it would still have to be ported to mac80211, and I'd
-rather see a clean rewrite in the kernel coding style, which is what
-mrv8k was supposed to be.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Dan
+iQIcBAABAgAGBQJI/FpaAAoJEKVg1VMiehFYKEQQAJURnqUYA/AQOyXQPDZoCaHp
+VZHXzrbNOlDVkNEqEOuzh73vWA1l5GpoXOhvjsmBvKjSjUo7XvnQaMXlMQfNUGSq
+fCPpReszlTKHVOAnZwXQ0RPyjgiMXJJJSU0p3BTLltbawmIMkdWlI7ASmiz1zCdT
+gv0kGpiTANANFDDqC4QC4PaBen1IK5FBR45pS9ZQtlbLI0/7almo/v3d9wGB2DOL
+WXNGVQHYC7p0iFjJSZV/2/+R9OACeUrPCJBjvSSbgSCj4oouUYz5MIfcyNVu6Zke
+JLmXScIJJ8OdnHrsw20qk25Ygp28PMVDoPwd1DNyyibp/NXRGVhal2McykJCPphx
+YcH0S3AMnWALFWQFBhwpJHMFvHUX9CaWHJ8QmMG+7Q9mtOoSaEXO2nv6+ZzRtKHQ
+NoX0Ac4Ff/t7/wQxObYNoxsIVHxWLfGd6wVMpgchIwx6Gt2Oh1DmroQ2ysJw7Wed
+lh4SO1m4YAngj/yxFbDwQ2k/nhXXiijJZv6JcKeKON63IWt6xyfpPmxu55kbQZmc
+SxJruoMTyRHA/dkVCq94Gk2x8eVe8j7tbiC3XRyJuTb6cNZW2ChgnAk/GKSCZX97
+DRBRNA8uqg7ppwPHmaAOXIQcas9iigQnr3EOIfAOx575jN3MVpSnMS8Rg6qjkcuK
+IjcjtVSgymlbmfy0skoL
+=+l7w
+-----END PGP SIGNATURE-----
 
+--=-ufYpTJjXH8jR15oawBuB--
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
