@@ -1,106 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:57638 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855AbYJTRgw (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:45294 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291AbYJTGqH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 13:36:52 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so317485ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 10:36:51 -0700 (PDT)
-Message-ID: <314b98fa0810201036l1c610e91icde8ee48b43e36dc@mail.gmail.com> (sfid-20081020_193657_256085_A7743B1E)
-Date: Mon, 20 Oct 2008 10:36:51 -0700
-From: "Colin McCabe" <colin@cozybit.com>
+	Mon, 20 Oct 2008 02:46:07 -0400
+Received: by gxk9 with SMTP id 9so3263860gxk.13
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 23:46:06 -0700 (PDT)
+Message-ID: <43e72e890810192346q5e0eadbcm26febe45392a2172@mail.gmail.com> (sfid-20081020_084612_465430_E7214D39)
+Date: Sun, 19 Oct 2008 23:46:06 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] Add nl80211 commands to get and set o11s mesh networking parameters.
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1224341637.6324.29.camel@johannes.berg>
+Subject: Re: New Regulatory Domain Api.
+Cc: "Zhu Yi" <yi.zhu@intel.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"Marcel Holtmann" <holtmann@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224484685.18024.5.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48f7dedf.16098e0a.7692.537e@mx.google.com>
-	 <1224341637.6324.29.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <20081015112517.GF6509@tesla>
+	 <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com>
+	 <20081015185636.GH15902@tesla>
+	 <1224126030.24677.78.camel@debian.sh.intel.com>
+	 <20081016113848.GB5899@tesla>
+	 <1224471102.24677.124.camel@debian.sh.intel.com>
+	 <43e72e890810192040w567fa4f6j1bf40e80084a857e@mail.gmail.com>
+	 <1224479933.24677.148.camel@debian.sh.intel.com>
+	 <43e72e890810192333r7b3f6a0m56d499d0aed9240e@mail.gmail.com>
+	 <1224484685.18024.5.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 18, 2008 at 7:53 AM, Johannes Berg
+On Sun, Oct 19, 2008 at 11:38 PM, Johannes Berg
 <johannes@sipsolutions.net> wrote:
-> On Thu, 2008-10-16 at 17:05 -0700, colin@cozybit.com wrote:
->> + * @NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL: The minimum interval of time (in
->> + * TUs) during which an MP can send only one action frame containing a PREQ
->> + * reference element
+> On Sun, 2008-10-19 at 23:33 -0700, Luis R. Rodriguez wrote:
 >
-> Why are some in TU and some in ms? Are there any restrictions between
-> these?
-
-All but two of these configuration parameters are specified in the
-draft 802.11s standard as MIB objects. I pretty much copied the
-descriptions directly from there.
-
-A time units is 1024 microseconds.  Since the different between a time
-unit and a millisecond is only 24 microseconds, all of the 80211s code
-that I've looked at simply treats these parameters as milliseconds.
-That is ok, because these parameters are timeouts and minimum
-intervals, rather than exact values.
-
-Still, I wanted to use the same language to describe the parameters
-that the standard does.
-
+>> Well the code specifically disregards secondary regulatory_hint()'s
+>> right now and we reviewed why -- we discussed it at OLS and agreed to
+>> go with the first one as that will usually be the built in one. That's
+>> why. The restrictive thing to do next to handle more cards better is
+>> to keep doing intersections.
 >
->> + * @NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME: The interval of time (in TUs)
->> + * that it takes for an HWMP information element to propagate across the mesh
->
-> How does userspace know this one?
+> If we're going to disregard 5 GHz for the first hint if there's no
+> information on it, then we should take the first hint containing 5 GHz
+> information seriously imho.
 
-The recommended value is 10 TUs. Increasing the value will increase
-the minimum timeout for PREQs.
+Sure but an issue here is that if we do deal with band-specific
+regulatory domain definitions we change the regulatory behavior from
+being "disallow everything first" to "allow everything first, disable
+everything in the band for which we encounter a rule in except what
+the rule allows".
 
-One way to tune this parameter would be to analyze incoming network
-traffic at a mesh point, measuring the maximum time it takes to
-receive a PREQ from a mesh point. Then you would set this parameter to
-half of that value.
-I haven't tried this in the lab, though.
+Since the regulatory definitions in db.txt are in KHz we are allowing
+it to grow as more technology pops up with support for more bands. I
+think the first approach was better. The current suggestion of only
+applying rules if a band reg definition is present is only to deal
+with a rare case. I think its better we try to handle that instead and
+keep our existing behaviour.
 
->
->> +static int ieee80211_get_mesh_params(struct wiphy *wiphy,
->> +                             struct net_device *dev,
->> +                             struct mesh_config *conf)
->> +{
->> +     struct ieee80211_sub_if_data *sdata;
->> +     sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->> +
->> +     if (sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
->> +             return -ENOTSUPP;
->> +     memcpy(conf, &(sdata->u.mesh.mshcfg), sizeof(struct mesh_config));
->> +     return 0;
->> +}
->> +
->> +static inline bool _chg_mesh_attr(enum nl80211_attrs attr, u32 mask)
->> +{
->> +     /* This makes sure that there aren't more than 32 mesh config
->> +      * parameters (otherwise our bitfield scheme would not work.) */
->> +     BUILD_BUG_ON(NL80211_MESHCONF_ATTR_MAX > 32);
->
-> That BUILD_BUG_ON should be somewhere in cfg80211/nl80211 (core code)
-> rather than mac80211 I think.
->
-> The attr parameter looks weird, are you sure it should be that enum and
-> not the mesh config one?
-
-Fixed.
-
-> For good measure, you could #undef the macro again at the end of the
-> function. Maybe even declare it within the function, but I don't care
-> much.
-
-Fixed.
-
->
-> But this is all fairly minor stuff, looks good to me, thanks for doing
-> this. Do you have a corresponding patch for iw?
-
-Yeah... I'll post it in just a bit.
-
-Regards,
-Colin McCabe
-
->
-> johannes
->
+  Luis
