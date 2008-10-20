@@ -1,93 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:42564 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778AbYJaRSN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 13:18:13 -0400
-Date: Fri, 31 Oct 2008 15:19:01 -0200
-From: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	willy@linux.intel.com, lrodriguez@atheros.com
-Subject: Re: ath5k gets lost with eeepc-laptop removal
-Message-ID: <20081031151901.2d68c32d@doriath.conectiva> (sfid-20081031_181819_590888_8FAC745D)
-In-Reply-To: <40f31dec0810310926p6edd0af5o24d7616eb54c6d0@mail.gmail.com>
-References: <20081031110502.18e33eba@doriath.conectiva>
-	<40f31dec0810310926p6edd0af5o24d7616eb54c6d0@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.atheros.com ([12.36.123.2]:29237 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751246AbYJTJBG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 05:01:06 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 02:01:06 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18684.18492.94865.480736@gargle.gargle.HOWL> (sfid-20081020_110111_208436_ECC87926)
+Date: Mon, 20 Oct 2008 14:28:36 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"tomasw@gmail.com" <tomasw@gmail.com>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+In-Reply-To: <1224491480.18024.32.camel@johannes.berg>
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	<1224491480.18024.32.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Fri, 31 Oct 2008 18:26:28 +0200
-"Nick Kossifidis" <mickflemm@gmail.com> escreveu:
+Johannes Berg wrote:
+ >  
+ > > --- a/include/linux/skbuff.h
+ > > +++ b/include/linux/skbuff.h
+ > > @@ -244,6 +244,11 @@ typedef unsigned char *sk_buff_data_t;
+ > >   *	@tc_verd: traffic control verdict
+ > >   *	@ndisc_nodetype: router type (from link layer)
+ > >   *	@do_not_encrypt: set to prevent encryption of this frame
+ > > + *	@requeue: set to indicate that the wireless core should attempt
+ > > + *		a software retry on this frame if we failed to
+ > > + *		receive an ACK for it
+ > 
+ > 
+ > 
+ > > + *	@is_part_ampdu: set to indicate that the wireless core should should
+ > > + *		treat this frame as part of an AMPDU
+ > 
+ > I thought we said we could keep the flag instead of moving to the skb
+ > here?
+ > 
+ > The next step, imho, is to remove all the "if (hw->num_ampdu_queues)"
+ > stuff and figure out what kind of services mac80211 should provide.
 
-| 2008/10/31 Luiz Fernando N. Capitulino <lcapitulino@mandriva.com.br>:
-| >
-| >  Hi guys,
-| >
-| >  If I do a 'rmmod eeepc-laptop', while connected to my AP, I get the
-| > following error messages from ath5k:
-| >
-| > """
-| > ath5k phy0: noise floor calibration timeout (2417MHz)
-| > ath5k phy0: failed to wakeup the MAC Chip
-| > ath5k phy0: can't reset hardware (-5)
-| > ath5k phy0: failed to wakeup the MAC Chip
-| > ath5k phy0: can't reset hardware (-5)
-| > wlan0: No ProbeResp from current AP 00:1d:0f:e9:c7:c0 - assume out of range
-| > ath5k phy0: failed to wakeup the MAC Chip
-| > ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
-| > wlan0: failed to set freq to 2412 MHz for scan
-| > ath5k phy0: failed to wakeup the MAC Chip
-| > ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
-| > wlan0: failed to set freq to 2417 MHz for scan
-| > ath5k phy0: failed to wakeup the MAC Chip
-| > ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
-| > wlan0: failed to set freq to 2422 MHz for scan
-| > ath5k phy0: failed to wakeup the MAC Chip
-| > ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
-| > wlan0: failed to set freq to 2427 MHz for scan
-| > ath5k phy0: failed to wakeup the MAC Chip
-| > ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
-| > wlan0: failed to set freq to 2432 MHz for scan
-| > wlan0: failed to set freq to 2437 MHz for scan
-| > wlan0: failed to set freq to 2442 MHz for scan
-| > wlan0: failed to set freq to 2447 MHz for scan
-| > wlan0: failed to set freq to 2452 MHz for scan
-| > wlan0: failed to set freq to 2457 MHz for scan
-| > wlan0: failed to set freq to 2462 MHz for scan
-| > wlan0: failed to set freq to 2467 MHz for scan
-| > wlan0: failed to set freq to 2472 MHz for scan
-| > wlan0: failed to set freq to 2484 MHz for scan
-| > wlan0: failed to restore operational channel after scan
-| > wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
-| > wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
-| > wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
-| > wlan0: authentication with AP 00:1d:0f:e9:c7:c0 timed out
-| > """
-| >
-| >  Then I lost my wireless connection.
-| >
-| >  I'm running latest Linus git tree (2.6.28-rc2) on a Eeepc 701.
-| >
-| >  The problem doesn't happen on 2.6.27.4, but as 2.6.28-rc1 doesn't
-| > boot on this machine, it would be a bit difficult to bisect it.
-| >
-| >  Thanks.
-| >
-| 
-| After this does ath_info work ?
+Well, currently ath9k maintains a buffer list for each tid.
+When mac80211 sends down a frame, if the recipient has an aggr. session going,
+it is appended to the tid's buffer list. Non-HT frames are sent out immediately.
+On TX completion, we run through all the ACs, STAs and TIDs and send out pending
+frames as aggregates.
 
- No, it doesn't. It says:
+IMO, this is heavy stuff for a driver.
+mac80211 can probably help by maintaining the TX state for each TID, maintain the
+buffer list, etc.  and provide appropriate mechanisms for drivers to obtain pending
+frames as and when needed.
 
-"""
-MAC revision 0xffff is not supported!
-"""
-
- And I have realized that I get a flood of 'failed to wakeup'
-and 'can't reset the hardware' error messages, just some seconds
-after the eeepc-laptop module removal.
-
--- 
-Luiz Fernando N. Capitulino
+Sujith
