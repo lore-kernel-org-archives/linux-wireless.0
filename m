@@ -1,103 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43420 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703AbYJaVyb (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.189]:53196 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751207AbYJTG76 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 17:54:31 -0400
-Subject: Re: [PATCH] mac80211: disable BSSID filtering for mesh interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <490b7d94.18038e0a.6666.ffff8d72@mx.google.com> (sfid-20081031_225017_677715_6F575E2C)
-References: <490b7d94.18038e0a.6666.ffff8d72@mx.google.com>
-	 (sfid-20081031_225017_677715_6F575E2C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ygGcKVmyrYPBQy9G4PQ5"
-Date: Fri, 31 Oct 2008 22:54:30 +0100
-Message-Id: <1225490070.3550.2.camel@johannes.berg> (sfid-20081031_225435_956380_9B679AD2)
-Mime-Version: 1.0
+	Mon, 20 Oct 2008 02:59:58 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so570305rnd.17
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 23:59:56 -0700 (PDT)
+Message-ID: <43e72e890810192359g2bc75316v49377ddc9eded934@mail.gmail.com> (sfid-20081020_090003_674645_C8ECAA09)
+Date: Sun, 19 Oct 2008 23:59:56 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: New Regulatory Domain Api.
+Cc: "Zhu Yi" <yi.zhu@intel.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"Marcel Holtmann" <holtmann@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224485431.18024.12.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20081015112517.GF6509@tesla>
+	 <1224126030.24677.78.camel@debian.sh.intel.com>
+	 <20081016113848.GB5899@tesla>
+	 <1224471102.24677.124.camel@debian.sh.intel.com>
+	 <43e72e890810192040w567fa4f6j1bf40e80084a857e@mail.gmail.com>
+	 <1224479933.24677.148.camel@debian.sh.intel.com>
+	 <43e72e890810192333r7b3f6a0m56d499d0aed9240e@mail.gmail.com>
+	 <1224484685.18024.5.camel@johannes.berg>
+	 <43e72e890810192346q5e0eadbcm26febe45392a2172@mail.gmail.com>
+	 <1224485431.18024.12.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Oct 19, 2008 at 11:50 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2008-10-19 at 23:46 -0700, Luis R. Rodriguez wrote:
+>
+>> Sure but an issue here is that if we do deal with band-specific
+>> regulatory domain definitions we change the regulatory behavior from
+>> being "disallow everything first" to "allow everything first, disable
+>> everything in the band for which we encounter a rule in except what
+>> the rule allows".
+>>
+>> Since the regulatory definitions in db.txt are in KHz we are allowing
+>> it to grow as more technology pops up with support for more bands. I
+>> think the first approach was better. The current suggestion of only
+>> applying rules if a band reg definition is present is only to deal
+>> with a rare case. I think its better we try to handle that instead and
+>> keep our existing behaviour.
+>
+> Ack on both points, which is why I said "If we're going to [...]". I
+> don't think I've seen a convincing use case for this other than test
+> environments, in which you can very well just use crda.
 
---=-ygGcKVmyrYPBQy9G4PQ5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ah, ok :)
 
-On Fri, 2008-10-31 at 14:50 -0700, Andrey Yurovsky wrote:
-> Mesh interfaces are currently opened with the FIF_ALLMULTI rx filter flag=
- set,
-> however there is no BSSID in mesh so BSSID filtering should be disabled b=
-y
-> setting the FIF_OTHER_BSS flag as well.  Also explicitly call=20
-> ieee80211_configure_filter for mesh.
->=20
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-> Signed-off-by: Javier Cardona <javier@cozbit.com>
+Yi, BTW a simple way to get a distribution to add support initially
+for crda is to have as part of an init script to call
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+iw reg set $COUNTRY
 
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index cde1452..6c3901a 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -229,8 +229,14 @@ static int ieee80211_open(struct net_device *dev)
->  		if (res)
->  			goto err_stop;
-> =20
-> -		if (ieee80211_vif_is_mesh(&sdata->vif))
-> +		if (ieee80211_vif_is_mesh(&sdata->vif)) {
-> +			local->fif_other_bss++;
-> +			netif_addr_lock_bh(local->mdev);
-> +			ieee80211_configure_filter(local);
-> +			netif_addr_unlock_bh(local->mdev);
-> +
->  			ieee80211_start_mesh(sdata);
-> +		}
->  		changed |=3D ieee80211_reset_erp_info(sdata);
->  		ieee80211_bss_info_change_notify(sdata, changed);
->  		ieee80211_enable_keys(sdata);
-> @@ -456,8 +462,15 @@ static int ieee80211_stop(struct net_device *dev)
->  		/* fall through */
->  	case NL80211_IFTYPE_MESH_POINT:
->  		if (ieee80211_vif_is_mesh(&sdata->vif)) {
-> -			/* allmulti is always set on mesh ifaces */
-> +			/* other_bss and allmulti are always set on mesh
-> +			 * ifaces */
-> +			local->fif_other_bss--;
->  			atomic_dec(&local->iff_allmultis);
-> +
-> +			netif_addr_lock_bh(local->mdev);
-> +			ieee80211_configure_filter(local);
-> +			netif_addr_unlock_bh(local->mdev);
-> +
->  			ieee80211_stop_mesh(sdata);
->  		}
->  		/* fall through */
->=20
->=20
->=20
+where $COUNTRY is determined though whatever distribution heuristics.
 
---=-ygGcKVmyrYPBQy9G4PQ5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJC36SAAoJEKVg1VMiehFYOpwP/2go0dD9q91Dx3fvo47sJMpF
-jB0hZyTobI70mPPAfwTNPkQm/iyFgWVIoFb5AfiAaq1HdRSnPpu6toEpFofk/0H/
-WTcRWm9avKJqWBvsJgFB507pTFKYg/WkoJYAXovd6LapjEwaO73PHmqh2mpBqUq9
-azVfTx63Ru8MJLRFnwrqsnh3FRuFbzqiS/ymSeojoGOuzIr1wASJO2AHPprlbhoc
-kNQSRfzRRb1kO813aWX1LfWAvIUCRXEtkbhOvgB61lZ4osPdLvoaPmXQ8QmYVrOU
-ztaffqqK6vGbaKMvNgcuy2MT/rKxYG/ohp5A5Md1CpjymRxg4qMk4rp9lf4OZRJq
-KzPpFK+3nniS2Oz3iXvb7dK+LBUB4nOZu1x0F+2JqUeBD8h+qHv7G1A2RYDt8kOe
-r2hAR/or9+J6lMk8J4JXVv/kFLesLrJ4vR+cjoAqfpXL2qeJvVNU7ppf/dSwdXFl
-O+8ufm2yIwIZzhvBUbPgeeAACkOPWadnv0SxhZ8AC6f1ZR8C4/TE3gudK3m98VXn
-3jkQlceCNoMNN5u8zh7ZL1M56RkOFrjQpOEKx42WU6liX6pXzVx/dw50SyLEdCnm
-It5KIss1VHsXd7TyM+lsQv5COoEtgs+sAemMdixO6e+ZEgeV44CoUepa+y8DAB6z
-spU0te4FAgGb16JhrYts
-=ir4k
------END PGP SIGNATURE-----
-
---=-ygGcKVmyrYPBQy9G4PQ5--
-
+  Luis
