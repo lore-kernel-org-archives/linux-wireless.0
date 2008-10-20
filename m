@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:14856 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869AbYJ3TkG (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43302 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518AbYJTMja (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 15:40:06 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so339191ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 12:40:04 -0700 (PDT)
-Message-ID: <43e72e890810301240p602b5e99gd2ba0984f078dea4@mail.gmail.com> (sfid-20081030_204014_772191_F61C5593)
-Date: Thu, 30 Oct 2008 12:40:03 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/6] cfg80211: a reg rule is invalid if freq diff is 0
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <be0976f315094fc29b6d0ee915f8026a.squirrel@secure.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1225329594-21704-1-git-send-email-lrodriguez@atheros.com>
-	 <1225329594-21704-2-git-send-email-lrodriguez@atheros.com>
-	 <be0976f315094fc29b6d0ee915f8026a.squirrel@secure.sipsolutions.net>
+	Mon, 20 Oct 2008 08:39:30 -0400
+Subject: Re: iwl3945 broken in current git
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dieter Ries <clip2@gmx.de>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <48FC7B1A.10307@gmx.de> (sfid-20081020_143609_718157_68144039)
+References: <48FC6C05.6020901@gmx.de>
+	 <20081020121710.GA3607@isilmar.linta.de>
+	 (sfid-20081020_141718_690091_E56EF8AB) <1224506010.27899.23.camel@johannes.berg>
+	 <48FC7B1A.10307@gmx.de> (sfid-20081020_143609_718157_68144039)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nj5obBVel5qcw7mIH0Nn"
+Date: Mon, 20 Oct 2008 14:39:26 +0200
+Message-Id: <1224506366.27899.25.camel@johannes.berg> (sfid-20081020_143947_849083_C73106DF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 30, 2008 at 2:22 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Luis R. Rodriguez wrote:
->> A regulatory rule is invalid when the frequency difference
->> between the end of the frequency range and the start is 0.
->>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> ---
->>  net/wireless/reg.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> index 9dff716..ff706f9 100644
->> --- a/net/wireless/reg.c
->> +++ b/net/wireless/reg.c
->> @@ -321,7 +321,7 @@ static bool is_valid_reg_rule(const struct
->> ieee80211_reg_rule *rule)
->>
->>       freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
->>
->> -     if (freq_range->max_bandwidth_khz > freq_diff)
->> +     if (freq_diff == 0 || freq_range->max_bandwidth_khz > freq_diff)
->
-> Might want to make that <= 0 just in case?
 
-Absolutely, thanks.
+--=-nj5obBVel5qcw7mIH0Nn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Mon, 2008-10-20 at 14:35 +0200, Dieter Ries wrote:
+> Johannes Berg schrieb:
+> > On Mon, 2008-10-20 at 14:17 +0200, Dominik Brodowski wrote:
+> >=20
+> >>> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> >>> iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq
+> >>> 0x4416 ser 0x0000004B
+> >>> iwl3945: Can't stop Rx DMA.
+> >> It needs a more recent uCode -- the driver really should scream out lo=
+udly
+> >> that the old firmware no longer suffices.
+> >=20
+> > You could try reverting ef224ca2ce55e81acc6c3a74c3e8c00a00941c70, that'=
+s
+> > the only commit I can find that seems to be vaguely related to the
+> > problem as Tomas described it. Not that it might not be hidden in some
+> > other commit...
+>=20
+> The new firmware did it. It works now, but it should really scream out
+> loud ...
+
+Do you still have the old one? Would you try anyway?
+
+johannes
+
+--=-nj5obBVel5qcw7mIH0Nn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/Hv3AAoJEKVg1VMiehFYL/oP/3YlM8QuhkbJhQWaHkx114py
+fxPmhteHU17A40vpgrZ3BQnqp1NM5Upf7Zx4ILDtkrz65vIOIWvyg3zGpL9QI4Ih
+M3SJxLGAv/1HrzLAtD7E/X4rkgNTXg3W9RD/OcMIfRWxSZgpfkV9RTWRIyy3RmEQ
+eJuzJDNcJY7NZTdU6IfKGovQJ509cUlQS0UaMzzQimqxWfn84Hmh0LQHLxnNUviW
+qCE3RbkSCNkZcKhtegzCaQa2N9JuOWN/R4mCIDLMj8+746HkRwNDXS5Rl68azcfN
+4dyRe4fTNUG80w5+g1y+zeAaZuNnYPk4GzATcUvAJta5wGvnuoMfZRo0w93SBcZv
+yC5xCYz9N7U1EmXqT149XdMN0cht0ZwxUNbx/9QvBhd4ZGj1BRl+cybYVPCYMKuc
+h2U5sUyNL2GPzrf7OcmhD7sZITCljMqYdjhjVSRKZ0O74tHjOe1z4FjINFhxl1Zu
+QDTdEB1qh94u2UwTSnBgc5rBFqY7YaQr/RtVpPKxIzJjFMCovK3lbAz6dOpJv3R2
+T0kUkABv7aRreL0pds3HHRbrhjTITBlIIA35BfZZK4MB3rM28Hbs7Dt+AjmJfHu6
+U4hR+OuzOW/PC5OaZsBRKYOZ0QBRmH/wb4Au4REwzW/UxmLITQ737O7FJcoE8JeU
+kgVcPRjq6q9WcS6Jmzkq
+=2Tha
+-----END PGP SIGNATURE-----
+
+--=-nj5obBVel5qcw7mIH0Nn--
+
