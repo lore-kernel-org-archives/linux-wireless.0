@@ -1,32 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta05.westchester.pa.mail.comcast.net ([76.96.62.48]:39509
-	"EHLO QMTA05.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750739AbYJSFx6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 01:53:58 -0400
-Message-ID: <48FACB0E.2040802@gentoo.org> (sfid-20081019_075412_515122_2B51D584)
-Date: Sun, 19 Oct 2008 08:52:14 +0300
-From: Daniel Drake <dsd@gentoo.org>
+Received: from bu3sch.de ([62.75.166.246]:55480 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751246AbYJTJ7h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 05:59:37 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+Subject: Re: Regression: USB Wi-Fi Device Removal Panic
+Date: Mon, 20 Oct 2008 11:59:12 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <gdhj21$hdq$1@ger.gmane.org>
+In-Reply-To: <gdhj21$hdq$1@ger.gmane.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: keithl@keithl.com, linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Trendnet TEW-424UB now Realtek 8187B
-References: <20081004011510.GA10015@gate.kl-ic.com> <1223109126.24551.70.camel@johannes.berg>
-In-Reply-To: <1223109126.24551.70.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810201159.12344.mb@bu3sch.de> (sfid-20081020_115946_313047_2C2BF177)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
->> The Trendnet TEW-424B is now version 3.1R, and contains a RealTek
->> 8187B ( lsusb 0bda:8189 ) rather than the Zydas ZD1211RW .
->> So it should leave the list.  
-> 
-> Ugly. Should we have both on there maybe with a version number? Daniel?
-> We can list the other one for rtl8187b too.
+On Monday 20 October 2008 11:29:37 Daniel Gimpelevich wrote:
+> Using the compat-wireless-old-2008-10-19.tar.bz2 tarball with Ubuntu 
+> Hardy's 2.6.24-21-generic kernel, anytime any USB wi-fi device is 
+> unplugged, regardless of anything else, the kernel panics. I have 
+> confirmed this to occur with a zd1211b device, an rt73 device, and an 
+> rtl8187b device. This is especially inconvenient in the rtl8187b case, 
+> because after some time, that driver inexplicably stops passing any 
+> traffic, seemingly triggered by HTTPS access in Firefox. The panic from 
+> removing the rtl8187b device is attached inline, and similar backtraces 
+> result from removing the rt73 or the zd1211b.
 
-The 424B is not listed as a ZD1211 device. Several versions of the 424UB 
-are listed with their specific version numbers (including the original 
-one that has no version).
+Any chance you can post a backtrace for zd1211?
+I reported a crash-on-pull issue earlier. Just want to check if this is
+a different one or the same.
 
-Daniel
+-- 
+Greetings Michael.
