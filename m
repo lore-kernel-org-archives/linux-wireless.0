@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:50732 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751120AbYJRXKt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2008 19:10:49 -0400
-Date: Sun, 19 Oct 2008 01:10:46 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: 2.6.28-rc regression: Can't stop Rx DMA
-Message-ID: <20081018231046.GA10977@isilmar.linta.de> (sfid-20081019_011055_153900_643DA88C)
+Received: from yx-out-2324.google.com ([74.125.44.29]:4218 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbYJTTqB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 15:46:01 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so335760yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 12:45:59 -0700 (PDT)
+Message-ID: <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com> (sfid-20081020_214608_548382_832135D1)
+Date: Mon, 20 Oct 2008 12:45:59 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Daniel Gimpelevich" <daniel@gimpelevich.san-francisco.ca.us>
+Subject: Re: Marvell TopDog Driver Work
+Cc: linux-wireless@vger.kernel.org,
+	"Lennert Buytenhek" <buytenh@wantstofly.org>
+In-Reply-To: <1224525810.6873.8.camel@the-omnibook>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
+	 <1218830917.14841.20.camel@localhost.localdomain>
+	 <gdidhg$hdq$3@ger.gmane.org>
+	 <1224524168.29822.46.camel@dhcp-100-3-195.bos.redhat.com>
+	 <1224525810.6873.8.camel@the-omnibook>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Oct 20, 2008 at 11:03 AM, Daniel Gimpelevich
+<daniel@gimpelevich.san-francisco.ca.us> wrote:
 
-with current Linus' tree, I cannot connet my notebook to the AP any more.
+> The "Duh..." was a response to the "Not that I have heard of. Don't
+> know." statement, which was pretty ironic.
 
-02:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG Network Connection (rev 02)
-	Subsystem: Intel Corporation PRO/Wireless 3945ABG Network Connection
-	Flags: bus master, fast devsel, latency 0, IRQ 380
-	Memory at f0300000 (32-bit, non-prefetchable) [size=4K]
+Well your question was "Has anyone stepped up to help in the port of
+this to mac80211" and I thought you already knew I had that tree.
 
-[   20.645198] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26ks
-[   20.645337] iwl3945: Copyright(c) 2003-2008 Intel Corporation
-[   20.645767] iwl3945 0000:02:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-[   20.645913] iwl3945 0000:02:00.0: setting latency timer to 64
-[   20.645996] iwl3945: Detected Intel Wireless WiFi Link 3945ABG
-[   20.708706] iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-[   20.712625] phy0: Selected rate control algorithm 'iwl-3945-rs'
-[   20.733199] iwl3945 0000:02:00.0: PCI INT A disabled
-...
-[   34.824476] iwl3945 0000:02:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-[   34.824637] iwl3945 0000:02:00.0: restoring config space at offset 0x1 (was 0x100102, writing 0x100106)
-[   34.825269] iwl3945 0000:02:00.0: firmware: requesting iwlwifi-3945-1.ucode
-[   37.340901] iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-[   37.340944] iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4413 ser 0x0000004B
-[   37.342349] iwl3945: Can't stop Rx DMA.
+> The rest was intended to be
+> context. Any net80211-based code for TopDog would still be a useful
+> reference for the 11n-specific bits that would need to be added to mrv8k
+> after it works correctly with CardBus 11g cards. What is the canonical
+> URL for the experimental source repository for those, BTW?
 
-The iwlwifi-3945-1.ucode is the one shipped with Ubuntu's 2.6.24-21-generic
-kernel sources (md5sum: 26d10014b09439dc5a8573c2a6f85b0a ). And, as
-mentioned in the subject, 2.6.27 or 2.6.26 work perfectly fine.
+As documented in my git tree, I took the code from John's tree, which
+I think is the canonical reference. John's tree includes the entire
+Linux kernel tree though, that's why I tried to start out separately
+with a driver that will just compile using the kernel headers.
 
-Oh, and the .config:
+> More thanks go out to Lennert for his work on the Marvell CPU cores,
+> too.
 
-CONFIG_IWLWIFI=y
-CONFIG_IWLCORE=y
-# CONFIG_IWLWIFI_LEDS is not set
-CONFIG_IWLWIFI_RFKILL=y
-# CONFIG_IWLWIFI_DEBUG is not set
-# CONFIG_IWLAGN is not set
-CONFIG_IWL3945=m
-CONFIG_IWL3945_RFKILL=y
-CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
-# CONFIG_IWL3945_LEDS is not set
-# CONFIG_IWL3945_DEBUG is not set
+ACK -- will mrv8k not support top dog?
 
-Any ideas? Patches to test? Thanks!
-
-Best,
-	Dominik
+  Luis
