@@ -1,78 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42681 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754587AbYJXJyf (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:48142 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841AbYJTI5D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 05:54:35 -0400
-Subject: Re: [RFC] mac80211 rx filter in mesh mode, rt2x00 mesh point
-	operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org, ivdoorn@gmail.com
-In-Reply-To: <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com> (sfid-20081024_000742_626566_B9F0B044)
-References: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com>
-	 <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com>
-	 (sfid-20081024_000742_626566_B9F0B044)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KAZCCXe7H0A6wMgHfZMx"
-Date: Fri, 24 Oct 2008 11:02:01 +0200
-Message-Id: <1224838921.6002.98.camel@johannes.berg> (sfid-20081024_115444_269414_2DD9A1C1)
-Mime-Version: 1.0
+	Mon, 20 Oct 2008 04:57:03 -0400
+Received: by gxk9 with SMTP id 9so3329552gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 01:57:02 -0700 (PDT)
+Message-ID: <43e72e890810200157j30e27aden1d8b76ce7fbb8177@mail.gmail.com> (sfid-20081020_105723_308389_10343F06)
+Date: Mon, 20 Oct 2008 01:57:02 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+Cc: Sujith <Sujith.Manoharan@atheros.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Luis.Rodriguez@atheros.com,
+	tomasw@gmail.com
+In-Reply-To: <1224492335.18024.34.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224491480.18024.32.camel@johannes.berg>
+	 <43e72e890810200135o1581c904i456a35298f8a56a9@mail.gmail.com>
+	 <1224492335.18024.34.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Oct 20, 2008 at 1:45 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-10-20 at 01:35 -0700, Luis R. Rodriguez wrote:
+>
+>> >> + *   @is_part_ampdu: set to indicate that the wireless core should should
+>> >> + *           treat this frame as part of an AMPDU
+>> >
+>> > I thought we said we could keep the flag instead of moving to the skb
+>> > here?
+>>
+>> That was just because the changes required to add this was too much
+>> for 2.6.27 but since we don't care about this fix in 2.6.27 we can do
+>> whatever is needed to fix this properly.
+>
+> Right, but adding random stuff into skb isn't really "properly" imho.
+> And we don't really need this afaict.
 
---=-KAZCCXe7H0A6wMgHfZMx
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Agreed -- which is why I was suggesting we should consider using
+skb->do_not_fragment instead. Although I didn't finish complete review
+to ensure that is the only reason we need this. That is a more generic
+flag. Thoughts?
 
-Javier,
-
-On Thu, 2008-10-23 at 15:07 -0700, Javier Cardona wrote:
-> Mesh frames have 4 addresses and no BSSID, so BSSID filtering should
-> be disabled (i.e. FIF_OTHER_BSS should be set).
-
-The BSSID is zeroed, right?
-
-> The ALL_MULTI flag is also needed for mesh mode because an
-> intermediate node has to forward multicast traffic for addresses that
-> it may not be listening to.
->=20
-> But promiscuous mode is not necessary:  mesh points don't need to
-> receive unicast frames not addressed=C2=B9 to them.  Furthermore, enablin=
-g
-> promiscuous mode normally disables acknowledgments, which are needed
-> for proper mesh operation.
->=20
-> So my recommendation would be to configure the RX filter in mesh mode
-> to be ( FIF_ALLMULTI | FIF_OTHER_BSS )
-
-I agree, mesh really has no concept of a BSS so it shouldn't try to
-filter on the BSSID.
-
-johannes
-
---=-KAZCCXe7H0A6wMgHfZMx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJAY8FAAoJEKVg1VMiehFYFcgQAIhKqtd73JeJhpKrAjGH4ysv
-T5HdpV7GkwoeoWrt9kAATv/WoLW4BlpAjRscPc1iEdCqJiIvP0yBbBLwl4F4+udw
-x3SHe5QC8MIZiT/T3WZn5Zm1evLrpEZ8+u/txkTbEHiQyf9h4Hg1PeV/lbovW2Ih
-FebQhPeaqHZaiIKTJ5v6bZq3um08wnhUA7rOxxuGXkuyRDXvLEDKjDElW0rHHHOl
-AgqONg9lvzjA1RR0TLgfq5RymqSAGI9lIR9BPvcTpcbsfsf6hsHuALf6kXJr8Vyl
-5BeIDupLL5QcyWR6aP2+gx08kSw7BqYsjyZwfBqqXIix6oqsiB2sjQy+NNXTxC9e
-4U9osLrpkXHRQsg1y7ipLM3Tij8kSzey0bq8OKHY9RZkKEKmB+OcFGJg39YCo3jg
-npIzhKw7Oj+JNQtAmJ6owpQwQLKBtviizMu+a7wgtE4ml8mez2530WNLAa1bnoZz
-E+guTHkI0H/skWdnaXVkm8cb6AmDzhjv0//JpTZ5Cx2fAH435nF+MOJ2m5U92PZN
-Vc3MKacFk5yoSQ5Ui0EJPl8whl4o/kpUD4aLMnwMss5igR4hqxolT+6iKg9p5bc9
-Tum5yzCrvIxHrgxielrWxzcZO6+XdWkGrpPuuPMYNyE96xMTYiQddILDk3Ztg8ZU
-AYGo+2IgxEubQV6+WXfL
-=inr1
------END PGP SIGNATURE-----
-
---=-KAZCCXe7H0A6wMgHfZMx--
-
+  Luis
