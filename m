@@ -1,71 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.tglx.de ([62.245.132.106]:39119 "EHLO www.tglx.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750933AbYJKJyO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 05:54:14 -0400
-Date: Sat, 11 Oct 2008 11:54:05 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Elias Oltmanns <eo@nebensachen.de>
-cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: ath5k: kernel timing screwed - due to unserialised register
- access?
-In-Reply-To: <alpine.LFD.2.00.0810101432540.3271@apollo>
-Message-ID: <alpine.LFD.2.00.0810111149420.3356@apollo> (sfid-20081011_115428_394241_09176478)
-References: <87k5cm3ee2.fsf@denkblock.local> <alpine.LFD.2.00.0810052354000.3398@apollo> <87d4id3jmr.fsf@denkblock.local> <alpine.LFD.2.00.0810061614490.3166@apollo> <87skr8h1de.fsf@denkblock.local> <alpine.LFD.2.00.0810071946460.3166@apollo>
- <alpine.LFD.2.00.0810072042140.3166@apollo> <87hc7ot804.fsf@denkblock.local> <87myhfnwne.fsf@denkblock.local> <alpine.LFD.2.00.0810082203360.3237@apollo> <alpine.LFD.2.00.0810091313380.3237@apollo> <87k5cgg87j.fsf@denkblock.local> <alpine.LFD.2.00.0810101127560.3271@apollo>
- <87abdck6sn.fsf@denkblock.local> <alpine.LFD.2.00.0810101432540.3271@apollo>
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:43359 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbYJTRmJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 13:42:09 -0400
+Received: by gxk9 with SMTP id 9so4095558gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 10:42:07 -0700 (PDT)
+Message-ID: <43e72e890810201042m4f021842v4398e842c7ba92b2@mail.gmail.com> (sfid-20081020_194214_256921_D40C0A29)
+Date: Mon, 20 Oct 2008 10:42:07 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Daniel Gimpelevich" <daniel@gimpelevich.san-francisco.ca.us>
+Subject: Re: Marvell TopDog Driver Work
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <gdidhg$hdq$3@ger.gmane.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
+	 <1218830917.14841.20.camel@localhost.localdomain>
+	 <gdidhg$hdq$3@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 10 Oct 2008, Thomas Gleixner wrote:
-> On Fri, 10 Oct 2008, Elias Oltmanns wrote:
-> > That printk() has not been hit, I'm afraid. The output of
-> > sysrq_timer_list_show() looks much the same but there is no message
-> > about softirqs. Just for the record, I've switched to 2.6.27 because I'm
-> > debugging something else at the same time, but it doesn't make any
-> > difference.
-> > 
-> > Now, here is another question: There are various snippets like the
-> > following in the ath5k driver:
-> > 
-> > 	/* Wait until the noise floor is calibrated and read the value */
-> > 	for (i = 20; i > 0; i--) {
-> > 		mdelay(1);
-> 
-> Uurgh. That's broken. mdelay sleeps so this should not be called in
-> softirq context.
-> 
-> > 		noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
-> > 		noise_floor = AR5K_PHY_NF_RVAL(noise_floor);
-> > 		if (noise_floor & AR5K_PHY_NF_ACTIVE) {
-> > 			noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
-> > 
-> > 			if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
-> > 				break;
-> > 		}
-> > 	}
-> > 
-> > This particular one is in
-> > drivers/net/wireless/ath5k/phy.c:ath5k_hw_noise_floor_calibration()
-> > which is called from ath5k_calibrate(), the callback executed every ten
-> > seconds in softirq context. Could this have anything to do with our
-> 
-> That makes sense. The timer expires early events are multiples of 10s
-> apart.
-
-Ok, I thought more about it and aside of the fact that the ath5k is
-doing something nasty, you unearthed a weakness in the broadcast code.
-
-Can you please try the following:
-
-Compile the acpi_processor module in to the kernel
-(CONFIG_ACPI_PROCESSOR=y) and add processor.max_cstate=1 to the kernel
-command line. If I analysed the problem correctly this will make the
-jiffies problem go away. I'm working on a fix.
-
-Thanks,
-	tglx
-
-
+T24gTW9uLCBPY3QgMjAsIDIwMDggYXQgMTA6MDEgQU0sIERhbmllbCBHaW1wZWxldmljaAo8ZGFu
+aWVsQGdpbXBlbGV2aWNoLnNhbi1mcmFuY2lzY28uY2EudXM+IHdyb3RlOgo+IE9uIEZyaSwgMTUg
+QXVnIDIwMDggMTY6MDg6MzcgLTA0MDAsIERhbiBXaWxsaWFtcyB3cm90ZToKPgo+PiBPbiBGcmks
+IDIwMDgtMDgtMTUgYXQgMTI6NTggLTA3MDAsIEx1aXMgUi4gUm9kcmlndWV6IHdyb3RlOgo+Pj4g
+T24gRnJpLCBBdWcgMTUsIDIwMDggYXQgMTI6NDA6MjdQTSAtMDcwMCwgUGF0IEVybGV5IHdyb3Rl
+Ogo+Pj4gPiBIYXMgYW55b25lIHN0ZXBwZWQgdXAgdG8gaGVscCBpbiB0aGUgcG9ydCBvZiB0aGlz
+IHRvIG1hYzgwMjExPyAgSQo+Pj4gPiBqdXN0IHBpY2tlZCB1cCBhIHdydnM0NDAwbiByb3V0ZXIg
+dGhhdCB1c2VzIGl0IGFuZCBoYXZlIGJlZW4gd29ya2luZwo+Pj4gPiBvbiBnZXR0aW5nIDIuNi5Y
+WCB0byB3b3JrIHdpdGggaXQuCj4+Pgo+Pj4gTm90IHRoYXQgSSBoYXZlIGhlYXJkIG9mLiBEb24n
+dCBrbm93Lgo+Pgo+PiBUaGVyZSdzIGNvZGUgb3V0IHRoZXJlIGZvciB0aGUgVG9wRG9nIHBhcnRz
+IChMaW52aWxsZSdzIG1hcnZlbGwuZ2l0IG9uCj4+IGtlcm5lbC5vcmcpLCBhbmQgSSBldmVuIGhh
+dmUgb25lIG9yIHR3byBvZiB0aGVtIGx5aW5nIGFyb3VuZC4gIFRoZQo+PiBmaXJtd2FyZSBpbnRl
+cmZhY2UgaXNuJ3QgdGhhdCBkaWZmZXJlbnQgZnJvbSB0aGUgODMzNSAobXJ2OGspIGFuZCB0aHVz
+Cj4+IHRoZSB0d28gcHJvZHVjdCBsaW5lcyBjYW4gcHJvYmFibHkgc2hhcmUgdGhlIHNhbWUgZHJp
+dmVyLgo+Pgo+PiBMZW5uZXJ0IGFuZCBOaWNrIChmcm9tIE1hcnZlbGwpIGFyZSBzdXBwb3NlZCB0
+byBiZSB3b3JraW5nIG9uIGEgbWFjODAyMTEKPj4gZHJpdmVyIGZvciB0aGUgODh3ODY4NyBwYXJ0
+LCB3aGljaCBpcyBwcm9iYWJseSBqdXN0IGFib3V0IHRoZSBzYW1lCj4+IGZpcm13YXJlIGludGVy
+ZmFjZSBhcyBUb3BEb2cgKGFzaWRlIGZyb20gdGhlIE4tc3BlY2lmaWMgYml0cywgYW5kCj4+IGRp
+ZmZlcmVudCBUWCAmIFJYIGRlc2NyaXB0b3JzIEknbSBzdXJlKS4gIEknZCBwcmVmZXIgdG8gZWl0
+aGVyIHN0YXJ0Cj4+IGZpeGluZyB1cCBtcnY4ayBhbmQgdGhlbiBtZXJnZSBpbnRvIHdoYXRldmVy
+IExlbm5lcnQgY29tZXMgdXAgd2l0aCwgb3IKPj4gc2VlIHdoYXQgdGhleSBjb21lIHVwIHdpdGgg
+YW5kIHVzZSB0aGF0IGFzIGEgYmFzZSBmb3IgYWRkaW5nIHN1cHBvcnQgZm9yCj4+IG9sZGVyIFRv
+cERvZyBhbmQgODMxMC84MzM1IGhhcmR3YXJlLgo+Pgo+PiBtcnY4ayB3YXMgYWx3YXlzIGEgYml0
+IHJvY2t5IGFuZCBuZXZlciByZWxpYWJseSBnb3Qgc2NhbiByZXN1bHRzIG9uIHRoZQo+PiA4MzM1
+IGNhcmRidXMgaGFyZHdhcmUgSSBoYWQsIGV2ZW4gdGhvdWdoIHRoZSBkZXNjcmlwdG9yIHNldHVw
+IGFuZCB0aGUKPj4gbWFjODAyMTEgYml0cyBsb29rZWQgcmlnaHQuICBUaGVyZSdzIHNvbWUgcHJl
+L3Bvc3Qgc2NhbiBjb21tYW5kcyB0aGF0IHdlCj4+IG5lZWQgdG8gaG9vayBpbnRvIG1hYzgwMjEx
+IHdoaWNoIEkgcG9zdGVkIHBhdGNoZXMgZm9yIGZpcnN0LCBidXQKPj4gSm9oYW5uZXMgcmVxdWVz
+dGVkIHdlIG5vdCBjb21taXQgdGhvc2UgdW50aWwgd2UgcmVhbGx5IGtuZXcgd2hldGhlcgo+PiBw
+cmUvcG9zdCBzY2FuIHdlcmUgcmVxdWlyZWQuCj4+Cj4+IERhbgo+Cj4gRHVoLi4uCj4gaHR0cDov
+L2dpdC5rZXJuZWwub3JnLz9wPWxpbnV4L2tlcm5lbC9naXQvbWNncm9mL21ydmxfY2I4Mi5naXQ7
+YT1zdW1tYXJ5Cj4KPiBBbHNvLCBJIGhhdmUgYSByb3V0ZXIgd2l0aCBhbiA4MzYxIGNoaXAgYW5k
+IExpbnV4IEluc2lkZeKEoiBmb3Igd2hpY2ggSQo+IGhhdmUgbWFkZSBhIEdQTCBTb3VyY2UgUmVx
+dWVzdC4gSSB3YXMgdG9sZCB0aGF0IHRoZSBzb3VyY2VzIHdpbGwgYmUKPiBhdmFpbGFibGUgdHdv
+IHdlZWtzIGZyb20gbm93LiBJIGRvbid0IGV4cGVjdCB0aGUgd2ktZmkgZHJpdmVyIHRvIGJlIGlu
+Cj4gc291cmNlIGZvcm0gaW4gdGhhdCByZWxlYXNlLCBidXQgeW91IG5ldmVyIGtub3cgaW4gYWR2
+YW5jZSB3aGF0IHRoZXknbGwKPiBzdHVmZiBpbiB0aGVyZS4KClllYWggSSBhYmFuZG9uZWQgdGhh
+dCBkdWUgdG8gbGFjayBvZiB0aW1lIGJ1dCBpdCBjYW4gY2VydGFpbmx5IGJlCnRha2VuIG92ZXIu
+IEkgd2FzIGhvcGluZyBzb21lb25lIHdpdGggZW5vdWdoIGludGVyZXN0IHdvdWxkIGRvIGl0LiBJ
+CmRpZG4ndCBnZXQgdG9vIGZhciB0aG91Z2guCgogIEx1aXMK
