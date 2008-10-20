@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58377 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075AbYJVIRm (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:38770 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751519AbYJTIf4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 04:17:42 -0400
-Subject: Re: [PATCH ] mac80211: check return value of dev_alloc_skb() in
-	ieee80211_sta_join_ibss().
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Rami Rosen <ramirose@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081022081149.GE16005@jm.kir.nu>
-References: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com>
-	 <1224660978.28639.27.camel@johannes.berg>
-	 <eb3ff54b0810220042y43ea248qba1064a3eedf85b1@mail.gmail.com>
-	 <20081022081149.GE16005@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j3pjoPeU7RGxYuNAhQsQ"
-Date: Wed, 22 Oct 2008 10:17:33 +0200
-Message-Id: <1224663453.28639.37.camel@johannes.berg> (sfid-20081022_101746_624392_9984D006)
-Mime-Version: 1.0
+	Mon, 20 Oct 2008 04:35:56 -0400
+Received: by gxk9 with SMTP id 9so3316468gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 01:35:54 -0700 (PDT)
+Message-ID: <43e72e890810200135o1581c904i456a35298f8a56a9@mail.gmail.com> (sfid-20081020_103611_126386_FC074E50)
+Date: Mon, 20 Oct 2008 01:35:54 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+Cc: Sujith <Sujith.Manoharan@atheros.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Luis.Rodriguez@atheros.com,
+	tomasw@gmail.com
+In-Reply-To: <1224491480.18024.32.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224491480.18024.32.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Oct 20, 2008 at 1:31 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> --- a/include/linux/skbuff.h
+>> +++ b/include/linux/skbuff.h
+>> @@ -244,6 +244,11 @@ typedef unsigned char *sk_buff_data_t;
+>>   *   @tc_verd: traffic control verdict
+>>   *   @ndisc_nodetype: router type (from link layer)
+>>   *   @do_not_encrypt: set to prevent encryption of this frame
+>> + *   @requeue: set to indicate that the wireless core should attempt
+>> + *           a software retry on this frame if we failed to
+>> + *           receive an ACK for it
+>
+>
+>
+>> + *   @is_part_ampdu: set to indicate that the wireless core should should
+>> + *           treat this frame as part of an AMPDU
+>
+> I thought we said we could keep the flag instead of moving to the skb
+> here?
 
---=-j3pjoPeU7RGxYuNAhQsQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That was just because the changes required to add this was too much
+for 2.6.27 but since we don't care about this fix in 2.6.27 we can do
+whatever is needed to fix this properly.
 
-On Wed, 2008-10-22 at 11:11 +0300, Jouni Malinen wrote:
-> On Wed, Oct 22, 2008 at 09:42:37AM +0200, Rami Rosen wrote:
->=20
-> > Do we want to continue as usual if dev_alloc_skb() in theis method fail=
-s?
->=20
-> I think we should continue and as such, I would rather not see the patch
-> that proposes to abort here go in. The allocated skb is not used at this
-> point anyway; it is only used as an optimization to prepare a ProbeRsp
-> frame for possible future use. This could be done at the time when
-> ProbeReq is received (and we sent the last Beacon), i.e., only when
-> needed. Or if the optimization of generating this only once is
-> considered desirable, that place could try to allocate a new skb if the
-> one here failed (or do it on first need and cache the result).
-
-Good point. We currently don't try again, but we could put this into a
-new function and call it from when we need it. Then again, we'll need it
-right away, the driver will probably call _get_beacon from
-ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON);
-
-johannes
-
---=-j3pjoPeU7RGxYuNAhQsQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/uGXAAoJEKVg1VMiehFYlywQALL1UI3zFEJatWMqzFH/vPw3
-PbHiHu+zysUWsisIP6BokG+0VcqDbraUiC9PXmoNI/32e0wJs+d5qwBCNEtq2Qqk
-3zlul0PA7vT7TzKbXyfCYcYv30zpLGFauVo+mj+a1xx+wGRPUc2E22KIPL25dtkA
-WTRXoJ75ZiWKy4se83z05GnNOOHwHrJdb2U02DwvlgWXFP/tyD64Bj9ivtYyI2IS
-rWdO2IJL3DP9NYyIzkF/CNsn6dHghs/n86XoL2w3QpMKS6UrJm+SHp4+8h4i89HL
-UJgBnlmcohaJJcMzOyI1ErKmRnCJYOGtefp1ILwL5fAXz9Htr/3uaglhK/V0+VzG
-iJYT2snS7Jhhexsag0AHd8xLQeS8Ps90a8AUk19YzZrNsX1lxbvQVFYaLNNVugvg
-L2g8ek7LyaOxs5Wx4Wor7en46thWb7/FpqzHa6rex0Xk3SkMA/XZ2TEAXv204mX6
-1+ZZ3nTiUxgdRoo6mtf1TGXqV2F4unE+jtLZWR4hKek5cgHJA3njE9sKz+vEz/Fj
-msdLMzonYDnXpE40cIKAYQTi6H7aUBWBTTmhL9q7iSahvH6Hg47EW+2pGvWFI/Ap
-SzcYqqLKS7jP5dmKGLT3S9G8oYAH+KU06oQYMUGq+FtzpxNokcI2fscfV2EpTsD9
-aCdbtX6dQny18dwT7dL1
-=MeZg
------END PGP SIGNATURE-----
-
---=-j3pjoPeU7RGxYuNAhQsQ--
-
+  Luis
