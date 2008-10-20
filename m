@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:20520 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbYJSGBh (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:57812 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbYJTIzq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 02:01:37 -0400
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: inform userspace of probe/auth/assoc timeout
-References: <1224186284.11127.3.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Sun, 19 Oct 2008 09:01:05 +0300
-In-Reply-To: <1224186284.11127.3.camel@johannes.berg> (ext Johannes Berg's message of "Thu\, 16 Oct 2008 21\:44\:44 +0200")
-Message-ID: <873ait6s4e.fsf@nokia.com> (sfid-20081019_080201_095183_F64F1E1E)
+	Mon, 20 Oct 2008 04:55:46 -0400
+Received: by gxk9 with SMTP id 9so3328799gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 01:55:45 -0700 (PDT)
+Message-ID: <43e72e890810200155wbe01660xe3f53de80dc7357d@mail.gmail.com> (sfid-20081020_105549_875820_82243382)
+Date: Mon, 20 Oct 2008 01:55:45 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"tomasw@gmail.com" <tomasw@gmail.com>
+In-Reply-To: <18684.17816.702853.44986@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224491480.18024.32.camel@johannes.berg>
+	 <43e72e890810200135o1581c904i456a35298f8a56a9@mail.gmail.com>
+	 <1224492335.18024.34.camel@johannes.berg>
+	 <18684.17816.702853.44986@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Mon, Oct 20, 2008 at 1:47 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Johannes Berg wrote:
+>  > On Mon, 2008-10-20 at 01:35 -0700, Luis R. Rodriguez wrote:
+>  >
+>  > > >> + *   @is_part_ampdu: set to indicate that the wireless core should should
+>  > > >> + *           treat this frame as part of an AMPDU
+>  > > >
+>  > > > I thought we said we could keep the flag instead of moving to the skb
+>  > > > here?
+>  > >
+>  > > That was just because the changes required to add this was too much
+>  > > for 2.6.27 but since we don't care about this fix in 2.6.27 we can do
+>  > > whatever is needed to fix this properly.
+>  >
+>  > Right, but adding random stuff into skb isn't really "properly" imho.
+>  > And we don't really need this afaict.
+>  >
+>
+> Sorry, just saw that Tomas had fixed it by setting the flag in ieee80211_tx_h_sequence().
+> Will fix that.
 
-> I noticed that when for some reason [1] the probe or auth times
-> out, wpa_supplicant doesn't realise this and only tries the next
-> AP when it runs into its own timeout, which is ten seconds, and
-> that's quite long. Fix this by making mac80211 notify userspace
-> that it didn't associate.
+No that was a hack too, this was to minimize code changes for 2.6.27 as well.
 
-Earlier this week I received an internal bug report about this.
-Excellent timing for providing a fix. Thank you, Johannes :)
-
-> Might be worth backporting to stable?
-
-I have to backport the patch anyway so I can provide the patch. But I
-don't think this being that important bug to be fixed in stable
-series. We have had this bug in mac80211 always, right?
-
--- 
-Kalle Valo
+  Luis
