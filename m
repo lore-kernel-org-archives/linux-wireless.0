@@ -1,29 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay010.isp.belgacom.be ([195.238.6.177]:13011 "EHLO
-	mailrelay010.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752579AbYJCThX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 15:37:23 -0400
-Message-ID: <3D41A7A4F163476982F00B4CE7F424E1@soleil> (sfid-20081003_213726_740922_39438B8B)
-From: "Philippe Waroquiers" <philippe.waroquiers@skynet.be>
-To: "Kyle McMartin" <kyle@redhat.com>
-Cc: "Chr" <chunkeey@web.de>, "Dan Williams" <dcbw@redhat.com>,
-	<linux-wireless@vger.kernel.org>, <kyle@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <CB9B2237C21D46F3B852E45F75E91C52@soleil> <200809222332.00500.chunkeey@web.de> <1221947069.11865.11.camel@localhost.localdomain> <200809222359.40354.chunkeey@web.de> <20080922221321.GF3660@tuxdriver.com> <20080923173030.GB2831@kibblesnbits.boston.devel.redhat.com>
-Subject: Re: prism54 stopped working after upgrade from kernel 2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
-Date: Fri, 3 Oct 2008 21:37:19 +0200
+Received: from mail.atheros.com ([12.36.123.2]:54701 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750911AbYJTKiS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 06:38:18 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 03:38:18 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18684.24323.743610.871307@gargle.gargle.HOWL> (sfid-20081020_123822_077081_BDBACDCB)
+Date: Mon, 20 Oct 2008 16:05:47 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"tomasw@gmail.com" <tomasw@gmail.com>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+In-Reply-To: <1224495531.18024.55.camel@johannes.berg>
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	<1224491480.18024.32.camel@johannes.berg>
+	<18684.18492.94865.480736@gargle.gargle.HOWL>
+	<1224493957.18024.47.camel@johannes.berg>
+	<18684.20459.335157.171344@gargle.gargle.HOWL>
+	<1224495531.18024.55.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Applied and building in F-9 now... I'll push them into F-8 as well
-> assuming the build succeeds.
-Note that it seems still broken after upgrading to 2.6.26.5-28.fc8
+Johannes Berg wrote:
+> > HT frames for aggregation enabled STAs are processed in the TX completion path, so
+> > they are buffered.
+> 
+> But couldn't non-HT frames be buffered similarly? Maybe I'm missing one
+> of the finer points of the 11n draft?
 
-Philippe
+Probably because 11n aggregation have more rigorous timing requirements
+between frames.
 
+> > Makes sense, ath9k currently has a similar set of functions ( pausing/resuming TIDs).
+> > How would the pending frames for each TID be managed ?
+> > Will the driver be able to pull them as and when needed or would mac80211
+> > push them down on checking if the TID is awake ?
+> 
+> I guess there's no clear answer here. How about "whichever you want"?
+> Though I think I prefer pushing them down as that makes the model easier
+> to understand. It probably also makes the Intel case easier to
+> implement.
+
+A way to pull down buffered frames for each TID (like ieee80211_get_buffered_bc() )
+would be really useful for ath9k.
+
+Sujith
