@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail5.dslextreme.com ([66.51.199.81]:34879 "HELO
-	mail5.dslextreme.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753236AbYJTUFH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 16:05:07 -0400
-Subject: Re: Marvell TopDog Driver Work
-From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com>
-References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
-	 <1218830917.14841.20.camel@localhost.localdomain>
-	 <gdidhg$hdq$3@ger.gmane.org>
-	 <1224524168.29822.46.camel@dhcp-100-3-195.bos.redhat.com>
-	 <1224525810.6873.8.camel@the-omnibook>
-	 <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 20 Oct 2008 13:05:05 -0700
-Message-Id: <1224533105.6873.22.camel@the-omnibook> (sfid-20081020_220513_472497_5A91103E)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:31851 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751136AbYJTKKB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 06:10:01 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 03:10:01 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18684.22627.103501.578126@gargle.gargle.HOWL> (sfid-20081020_121007_658867_C9AC1584)
+Date: Mon, 20 Oct 2008 15:37:31 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"tomasw@gmail.com" <tomasw@gmail.com>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+In-Reply-To: <1224494669.18024.51.camel@johannes.berg>
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	<1224491480.18024.32.camel@johannes.berg>
+	<18684.18492.94865.480736@gargle.gargle.HOWL>
+	<43e72e890810200214g16f847caqa6cbf724b7b7b625@mail.gmail.com>
+	<1224494669.18024.51.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-20 at 12:45 -0700, Luis R. Rodriguez wrote:
-> On Mon, Oct 20, 2008 at 11:03 AM, Daniel Gimpelevich
-> <daniel@gimpelevich.san-francisco.ca.us> wrote:
+Johannes Berg wrote:
+> On Mon, 2008-10-20 at 02:14 -0700, Luis R. Rodriguez wrote:
 > 
-> > The "Duh..." was a response to the "Not that I have heard of. Don't
-> > know." statement, which was pretty ironic.
+> > Indeed I agree with this. I think we can do this in three steps:
+> > 
+> > 1. resolve aggregation for now for ath9k
 > 
-> Well your question was "Has anyone stepped up to help in the port of
-> this to mac80211" and I thought you already knew I had that tree.
+> That's what Sujith's patch does, basically. It just leaves the Intel
+> hooks in place.
+> 
+> > 2. resolve aggregation for amdpu_queue case. My suggestion here is to
+> > use skb_buf_head (after Jouni's suggestion for our driver in fact),
+> > and do not make use of a qdisc at all for this
+> 
+> I agree on both, but this is more of an implementation detail than an
+> API description, which we really want to have first.
 
-I did not ask that, because I saw the tree, and that the initial import
-was from the marvell.git tree. The OP might not have realized that the
-code was TopDog-related even if he did see it. Since there is no working
-mac80211 code for TopDog, any existing hardware-specific code for it may
-prove to be a useful reference during the porting process. Anybody
-investigating the possibility of stepping up to help in the port needs
-to know what is already available and what is not.
 
-I don't think there is any question of *whether* TopDog support is
-possible in mrv8k, only when, and "right now" does not yet appear to be
-the answer. I really hope to be proven wrong on that, though.
+Would be nice if an interim fix is accepted temporarily,
+until the architectural details of proper mac80211 aggregation
+support for the 2 classes of HW are defined, and implemented.
 
+Sujith
