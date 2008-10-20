@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:42915 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751559AbYJFSpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 14:45:33 -0400
-Date: Mon, 6 Oct 2008 11:35:20 -0700
-From: Greg KH <greg@kroah.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, proski@gnu.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: at76_usb driver status
-Message-ID: <20081006183520.GA17647@kroah.com> (sfid-20081006_204537_249054_C5455445)
-References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com> <20081005061603.GB28533@kroah.com> <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
+Received: from yx-out-2324.google.com ([74.125.44.29]:62671 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211AbYJTGeW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 02:34:22 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so261275yxm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 23:34:21 -0700 (PDT)
+Message-ID: <43e72e890810192334v24c58998p36325723a6fa156a@mail.gmail.com> (sfid-20081020_083425_741424_E15C8981)
+Date: Sun, 19 Oct 2008 23:34:21 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: Power saving on mac80211
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Tomas Winkler" <tomas.winkler@intel.com>
+In-Reply-To: <87tzb7j0uy.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
+	 <87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
+	 <1224412006.6324.45.camel@johannes.berg> <871vyc7st7.fsf@nokia.com>
+	 <1224434885.6324.49.camel@johannes.berg> <87myh0a1zd.fsf@nokia.com>
+	 <43e72e890810191846h46a6b35br4ad61803a25bdf23@mail.gmail.com>
+	 <87tzb7j0uy.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 06, 2008 at 11:23:13AM -0400, Dan Williams wrote:
-> On Sat, 2008-10-04 at 23:16 -0700, Greg KH wrote:
-> > On Sun, Oct 05, 2008 at 08:56:20AM +0300, Kalle Valo wrote:
-> > > Greg KH <greg@kroah.com> writes:
-> > > > In my quest to suck drivers into drivers/staging/ I noticed that the
-> > > > at76_usb driver is being shipped by both Fedora and Ubuntu in their
-> > > > kernels.
-> > > 
-> > > Yes, that's the original at76_usb driver which has it's own 802.11
-> > > stack. Pavel Rosking was the maintainer of that driver. Based on the
-> > > feedback in linux-wireless I then started porting the driver to use
-> > > mac80211. 
-> > > 
-> > > (Maybe I should have renamed the port to something else than at76_usb
-> > > because having two different drivers with the same name creates
-> > > confusion.)
-> > > 
-> > > > So I was wondering what the status of this driver is, and if I
-> > > > could/should add it to drivers/staging/?
-> > > 
-> > > The original at76_usb is working quite well, but it's unacceptable for
-> > > the mainline because we cannot have two 802.11 stacks in kernel.
-> > 
-> > I understand this, but for the issue of the drivers/staging/ tree, it's
-> > ok for us to have as many 802.11 stacks in the kernel as we can cram in
-> > there :)
-> 
-> Well, you have to ask yourself then, what's the point of putting that
-> driver with it's own 802.11 stack into staging when it's never going to
-> go into the mainline kernel until it uses mac80211?
+On Sun, Oct 19, 2008 at 10:23 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> Luis R. Rodriguez <mcgrof@gmail.com> writes:
+>
+>>>> Right. But we need to program the chip to tell the chip "hey please tell
+>>>> me if you haven't seen a beacon in X seconds".
+>>>
+>>> Ah, you mean that timeout. Sorry, I forgot that one altogether. Yes,
+>>> we definitely need that timeout.
+>>
+>> Is this to configure the firmware to report beacon misses so that in
+>> those cases we can inform mac80211?
+>
+> Yes.
+>
+>> And to let mac80211 be aware/be able to set this as a tunable
+>> parameter?
+>
+> Yes.
+>
+>> I wanted to note intel hardware seems to handle parsing beacons in
+>> firmware when is PS mode already and I have no clue when it would
+>> inform mac80211 of a beacon miss and if it does it. Tomas?
+>
+> Oh, cool. I'm not familiar with iwlwifi so I would appreciate any
+> pointers to the sources so that I could take a look at the
+> implementation.
 
-Because at least 2 distros currently ship their kernels with it (Fedora
-and Ubuntu), and people have that hardware today and want to use it with
-Linux.
+Its all implemented in firmware.
 
-> Doesn't that direct effort away from porting the driver to mac80211,
-> giving legitimacy to code that will never, ever get upstream until
-> it's substantially rewritten anyway?  Ideally we put Kalle's 802.11
-> port in staging and then people can actually move things forward.
-> 
-> Same thing for linux-wlan-ng really; if people just keep fixing bugs and
-> keep improving p80211 without porting it to the standard kernel wireless
-> bits, what's the point of having it in staging?
-
-Users using their hardware with Linux today.
-
-I'll gladly drop it from drivers/staging when the "real" version hits
-mainline, until then, it should stay in staging, as that is the whole
-point of it.
-
-thanks,
-
-greg k-h
+  Luis
