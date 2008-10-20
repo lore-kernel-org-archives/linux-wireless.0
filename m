@@ -1,87 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:15095 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753500AbYJPAIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 20:08:38 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 17:08:38 -0700
-Date: Wed, 15 Oct 2008 10:08:30 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: New Regulatory Domain Api.
-Message-ID: <20081015170830.GA15902@tesla> (sfid-20081016_020843_391903_E68CF14E)
-References: <1224019662.3027.13.camel@johannes.berg> <1224085609.4764.18.camel@californication> <1224086374.735.4.camel@johannes.berg> <1224091577.28173.9.camel@californication> <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com> <1224092868.28173.21.camel@californication> <20081015112517.GF6509@tesla> <1224098748.28173.32.camel@californication> <20081015131622.GH6509@tesla> <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:41899 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126AbYJTIHr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 04:07:47 -0400
+Subject: Re: [PATCH v3] mac80211/drivers: rewrite the rate control API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <1224489844.24677.225.camel@debian.sh.intel.com>
+References: <1223996147.10113.33.camel@johannes.berg>
+	 (sfid-20081014_165703_092655_BE6BA58D) <1224052607.3027.20.camel@johannes.berg>
+	 <1224484940.24677.169.camel@debian.sh.intel.com>
+	 <1224485319.18024.9.camel@johannes.berg>
+	 <1224486368.24677.184.camel@debian.sh.intel.com>
+	 <1224486587.18024.25.camel@johannes.berg>
+	 <1224489844.24677.225.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YztsR1U4FQ/gMRwuw8y7"
+Date: Mon, 20 Oct 2008 10:07:40 +0200
+Message-Id: <1224490060.18024.28.camel@johannes.berg> (sfid-20081020_100757_757770_1AE22354)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 15, 2008 at 04:31:20PM -0700, Tomas Winkler wrote:
-> On Wed, Oct 15, 2008 at 3:16 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > On Wed, Oct 15, 2008 at 12:25:48PM -0700, Marcel Holtmann wrote:
-> >> > The problem here is not this though the problem here is the case
-> >> > where people are using 2.6.28 without no iw or crda *and* have more
-> >> > than two cards :)
-> >>
-> >> it might sound like an unlikely case and it will most likely only be the
-> >> A-band usage anyway, but it is a valid case. People with old laptops do
-> >> use newer wireless cards in PCMCIA or USB form factor to get better WiFi
-> >> performance and/or stability. In some cases you can just replace your
-> >> internal card, but with the switch from MiniPCI to half-MiniPCI this is
-> >> not as likely anymore. So the use of a second external card becomes more
-> >> likely.
-> >
-> > Right, and the proposed solution I had was to use an intersection
-> > between two regulatory domains. This solution just doesn't currently
-> > work well with Intel cards due to the capability <-> regulatory one to
-> > one mapping.
-> 
-> This  might be viewed this way but this is not concept behind it.
-> First Intel HW enforce regulatory domain written in the EEPROM, which
-> makes it in your sense capability even it's not.
 
-I see.
+--=-YztsR1U4FQ/gMRwuw8y7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Second Intel uses special regulatory domains called MOW1 and MOW2
-> (most of the world 1 and 2) + possible restriction to BG. These 3
-> domains/capabilities should be restrictive enough comply with most of
-> the world regulatory restrictions.
+On Mon, 2008-10-20 at 16:04 +0800, Zhu Yi wrote:
+> On Mon, 2008-10-20 at 01:09 -0600, Johannes Berg wrote:
+> > Yes, I know that much, but can you tell us how exactly?
+>=20
+> I don't know the details either. Will follow up on this.
 
-Well to meet your current SKUs requirements :)
+Thanks.
 
-> There is no real hint for specific
-> regulatory domain that can be applied form this, the concept is that
-> you should be move relatively freely around the globe without changing
-> anything.
+> > It would be good to actually report as accurate as possible (up to
+> > MAX_RATES) the retries the firmware will have done. We're going to
+> > export that information to userland in radiotap too.
+>=20
+> Sounds like a good idea. The actual number of retried rates should
+> depend on hardware/firmware. But '5' doesn't look like the possible MAX.
 
-The issue was your single band cards do not store 5 GHz band regulatory
-information. Is this MOW1 or MOW2?
+Yeah, we don't have more space than for five entries. The question is
+whether the firmware will really go lower for each try, that would seem
+harmful for throughput in most cases. And if it doesn't ever use more
+than five different rates we can obviously add the count... If it does
+use more than five rates then we'll just have to live with imperfect
+reporting I guess.
 
-> You really have to use some other source to specify regulatory domain
-> it's cannot be retrieved from the MOW SKU's.
+johannes
 
-Right, do you have any other source for location or that you can
-make this implication from your devices?
+--=-YztsR1U4FQ/gMRwuw8y7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> The only exception in
-> Intel cards are JP and KR SKU's which are real regulatory domains.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-What makes them "real" BTW?
+iQIcBAABAgAGBQJI/DxJAAoJEKVg1VMiehFYqdcP/ivKJ1ntztEbX+0q5J4B7VE5
+DIlcc5Df01jqPkqIevPOMrm7BDRtx3ir4oUlTXCl9VthxigqFq9lnl5vBWXjN5xI
+X2K/PSg2PreRlGeldPLDrg0vLfFwSVzApnhrWWLMYx/NZdFZu4bQzkrH8FBh9Dxd
+vHPfIP7HHClMgjIvGq/s8RIvWh+eQ3L+XFpjMAPiCoUbz0FTDnDqjU0FEEx5VCMy
+pRXU/pljqacepSZqtWdJKpfmWMHX0KlAvH+lYvjicNcyAZY3XPkZXwp6VwXhXD+Y
+5a/hgOIsOh0t2a2KwKsLds4r8aGq8xDbeU7npACYC5S4lJbb9Y1KGTbg4FGwAQFP
++d7GaomHpO3vBnwKkJQd7U62oPjZ+PJoI+9eyixD0ggICM34/KyjhrgT7TAzVRSr
+mzBkov5LbcCfhz4OBl1TTImua3YXph6I63rrnK8owFVOeVEnycg1SpOzvh4TbSAf
++58SAgN4UhERmuKOr3MX5xktbhW4CUYiIBna51Bp1ILrnhD5cjgSmM4cFNrfYgC9
+KgkjSGyPxQR+zguAhSLUiffEfzDCx/np71Pkjfu9PghW6coQW5iSi+xxhPQOBjE5
+IWjazL0FXMhFbiLjWmCET6Smonr7NmK4J5AngTA355YXLkXIQ3ziSm+DMOVyKMXy
+qsnQtPibUpW61HKtZVNP
+=TWcf
+-----END PGP SIGNATURE-----
 
-> Just my two cents, probably didn't help to solve the problem,
+--=-YztsR1U4FQ/gMRwuw8y7--
 
-It certainly helps more understand your situation. I had no idea
-of MOW1 and MOW2. Can this be documented as part of the
-regulatory_hint() code changes which will be added?
-
-  Luis
