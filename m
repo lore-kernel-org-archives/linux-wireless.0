@@ -1,72 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60061 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751480AbYJ0TRL (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:50865 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024AbYJTB2h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 15:17:11 -0400
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: "Carlos R. Mafra" <crmafra2@gmail.com>,
-	Soeren Sonnenburg <kernel@nn7.de>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	tomas.winkler@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081027191307.GI22217@kernel.dk>
-References: <20081027162054.GA4015@localhost.aei.mpg.de>
-	 <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost>
-	 <1225132278.3796.32.camel@johannes.berg>
-	 <1225133082.3796.35.camel@johannes.berg>
-	 <20081027190011.GA3951@localhost.aei.mpg.de>
-	 <20081027190631.GG22217@kernel.dk> <1225134571.3796.41.camel@johannes.berg>
-	 <20081027191307.GI22217@kernel.dk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C/fJRfY0ZfhKpyzAoRwj"
-Date: Mon, 27 Oct 2008 20:16:58 +0100
-Message-Id: <1225135018.3796.49.camel@johannes.berg> (sfid-20081027_201716_494859_5B09DCFB)
-Mime-Version: 1.0
+	Sun, 19 Oct 2008 21:28:37 -0400
+Received: by gxk9 with SMTP id 9so3128988gxk.13
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 18:28:36 -0700 (PDT)
+Message-ID: <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com> (sfid-20081020_032849_997692_63CBD98C)
+Date: Sun, 19 Oct 2008 18:28:36 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Davide Pesavento" <davidepesa@gmail.com>
+Subject: Re: crda packaging
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Oct 19, 2008 at 8:57 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
+> 2008/9/28 Luis R. Rodriguez <mcgrof@gmail.com>:
+>> On Sat, Sep 27, 2008 at 9:59 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
+>>> 2008/9/16 Johannes Berg <johannes@sipsolutions.net>:
+>>>> Anyone want to pick it up for the various distros?
+>>>
+>>> I've written an ebuild for Gentoo and attached it to bug #238879.
+>>> https://bugs.gentoo.org/show_bug.cgi?id=238879
+>>
+>> Would you be able to start packaging crda as well? It'll be very good
+>> to have this by 2.6.28 and if you guys have a compat-wireless, it will
+>> soon require it (by 2.6.29).
+>>
+>
+> I'll be glad to help ;)
 
---=-C/fJRfY0ZfhKpyzAoRwj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Excellent, thanks :)
 
-On Mon, 2008-10-27 at 20:13 +0100, Jens Axboe wrote:
+>> The regulatory.bin and the rsa public key will soon be posted on some
+>> place on John Linville's web space somewhere, so that'll change soon I
+>> hope.
+>>
+>
+> Do you think the regulatory database should be split from the package
+> that contains the crda daemon? If so, regulatory.bin should be
+> versioned as well...
 
-> If you want something else tested, just let me know. I don't care a
-> whole lot about how it gets fixed, as long as it does :-). I use STR
-> heavily, so it's quite a burden to have it broken.
+Yes, absolutely, the idea is to split db.txt into a separate git tree
+too actually so that should help with keeping track of changes
+separately and thinking of them separately.
 
-I don't really know. Like I said to Carlos, figuring out which of the
-functions called from set_disassoc hangs would be useful, but you'd
-probably want to coordinate with him so you don't both do it. Or if you
-both do, it'd confirm it twice ;)
+We just need to get this git tree created. What crda will need though
+is to wget the RSA public key so it can be built with support for new
+arbitrary updates to the binary db. Give us a few days, we'll get this
+setup.
 
-johannes
-
---=-C/fJRfY0ZfhKpyzAoRwj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJBhOmAAoJEKVg1VMiehFYRrIP/0Noz/ekFExzkBXk1pxnMS6Q
-tsUWD91pWxBPKJQIJNz9OHlVxrwGQQpAULDV0rT7pDYPdlq2Y5/SKLr3y2axGNC1
-00o9XlTqb5OITngYZObbgHp+DOqEJiiNWoFzmih87FgApk3H9hjM7sg99cKIxWEB
-X/xmmW0D6YqYZaSZUxnygb2KCciV6CZEipSMYaDWVgWRg5Z07jv0A4jHhCeQ+tDx
-GZDAJFap/S6c9qhbQBJ3dpPW3w9/vYzSzk2zNSrn+nifiQwq0V9ZRE/cZdQFKWHZ
-tYqedG78Nkw9I8gupnm4Kp3DbCOevcpMuf84/ebGt1xuhksPyF4OOq3oul1LSQLI
-iHwkz7V+rpmgn/qff10M/zKWl8uaSOKWKC0IIXHwb8W8WuZGAKoBqYqF6I8Smuhm
-c3WeDAxfZi9jqpSu+NXzH4zYF3CCWdQmaA8r6TDNuIWU6wvXETC2QueqUBz4MnRf
-4QcIaXMaHlgikg+G+O7zsl+nsVSf4pI+26sSaEiZWNAymRjKgg7pNgIc5dw0Ue7F
-Es/ZaqRAYzj6dPgzj1Eo+ItKXA4fWxGduBqptn4AbuVstDwSHXbYVgXbqlEQebF4
-L19Sr+uN173jNdjpKa38g/EP/yPSvKmop1ifE/dj+8Nw+fn/2vTPnEVZrbSHQJUj
-QKSuO1HvEbFsVXIpLEKx
-=x8bT
------END PGP SIGNATURE-----
-
---=-C/fJRfY0ZfhKpyzAoRwj--
-
+  Luis
