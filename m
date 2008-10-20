@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:25745 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248AbYJEGcg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 02:32:36 -0400
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Greg KH <greg@kroah.com>, "proski\@gnu.org" <proski@gnu.org>,
-	"linville\@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: at76_usb driver status
-References: <20081002210742.GA27221@kroah.com> <20081002162054.GI5960@tesla>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 05 Oct 2008 09:32:12 +0300
-In-Reply-To: <20081002162054.GI5960@tesla> (ext Luis R. Rodriguez's message of "Thu\, 2 Oct 2008 09\:20\:54 -0700")
-Message-ID: <87ej2vy2kz.fsf@nokia.com> (sfid-20081005_083239_937274_BC27F97C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from main.gmane.org ([80.91.229.2]:36878 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751190AbYJTOxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 10:53:25 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Krw8J-0003fH-4s
+	for linux-wireless@vger.kernel.org; Mon, 20 Oct 2008 14:53:23 +0000
+Received: from gimpelevich.san-francisco.ca.us ([66.218.54.163])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 14:53:23 +0000
+Received: from daniel by gimpelevich.san-francisco.ca.us with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 14:53:23 +0000
+To: linux-wireless@vger.kernel.org
+From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+Subject: Re: Regression: USB Wi-Fi Device Removal Panic
+Date: Mon, 20 Oct 2008 14:53:14 +0000 (UTC)
+Message-ID: <gdi60q$hdq$2@ger.gmane.org> (sfid-20081020_165330_482966_A35B435D)
+References: <gdhj21$hdq$1@ger.gmane.org> <200810201159.12344.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <lrodriguez@atheros.com> writes:
+On Mon, 20 Oct 2008 11:59:12 +0200, Michael Buesch wrote:
 
-> Also, it may help to keep this status here, once we find out what it is:
->
-> http://wireless.kernel.org/en/users/Drivers/at76_usb
+> On Monday 20 October 2008 11:29:37 Daniel Gimpelevich wrote:
+>> Using the compat-wireless-old-2008-10-19.tar.bz2 tarball with Ubuntu
+>> Hardy's 2.6.24-21-generic kernel, anytime any USB wi-fi device is
+>> unplugged, regardless of anything else, the kernel panics. I have
+>> confirmed this to occur with a zd1211b device, an rt73 device, and an
+>> rtl8187b device. This is especially inconvenient in the rtl8187b case,
+>> because after some time, that driver inexplicably stops passing any
+>> traffic, seemingly triggered by HTTPS access in Firefox. The panic from
+>> removing the rtl8187b device is attached inline, and similar backtraces
+>> result from removing the rt73 or the zd1211b.
+> 
+> Any chance you can post a backtrace for zd1211? I reported a
+> crash-on-pull issue earlier. Just want to check if this is a different
+> one or the same.
 
-I added a small status section to the wiki.
+That's exactly what I intended to do all along, since I knew that was the 
+most commonly used of the three drivers. I only noticed after I already 
+had the panic log and had already put the LapLink cable away that I had 
+used the rtl8187b dongle for the test instead of the zd1211b one. I'll 
+try to remember to redo the test the next time I need to reboot this 
+laptop for anything.
 
--- 
-Kalle Valo
