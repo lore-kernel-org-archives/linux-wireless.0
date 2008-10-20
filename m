@@ -1,94 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44367 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754796AbYJFRq3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 13:46:29 -0400
-Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223311803.15196.36.camel@johannes.berg> (sfid-20081006_185054_691408_9EB600FE)
-References: <1223311803.15196.36.camel@johannes.berg>
-	 (sfid-20081006_185054_691408_9EB600FE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZOvvNWazKFZ9ANg4dBeE"
-Date: Mon, 06 Oct 2008 19:45:49 +0200
-Message-Id: <1223315149.3778.10.camel@johannes.berg> (sfid-20081006_194633_389108_45665CED)
+Received: from main.gmane.org ([80.91.229.2]:47391 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752716AbYJTRBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 13:01:53 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Kry8Z-0000pr-Pj
+	for linux-wireless@vger.kernel.org; Mon, 20 Oct 2008 17:01:48 +0000
+Received: from gimpelevich.san-francisco.ca.us ([66.218.54.163])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 17:01:47 +0000
+Received: from daniel by gimpelevich.san-francisco.ca.us with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 17:01:47 +0000
+To: linux-wireless@vger.kernel.org
+From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+Subject: Re: Marvell TopDog Driver Work
+Date: Mon, 20 Oct 2008 17:01:37 +0000 (UTC)
+Message-ID: <gdidhg$hdq$3@ger.gmane.org> (sfid-20081020_190157_230217_22146B64)
+References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
+	<1218830917.14841.20.camel@localhost.localdomain>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 15 Aug 2008 16:08:37 -0400, Dan Williams wrote:
 
---=-ZOvvNWazKFZ9ANg4dBeE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Fri, 2008-08-15 at 12:58 -0700, Luis R. Rodriguez wrote:
+>> On Fri, Aug 15, 2008 at 12:40:27PM -0700, Pat Erley wrote:
+>> > Has anyone stepped up to help in the port of this to mac80211?  I
+>> > just picked up a wrvs4400n router that uses it and have been worki=
+ng
+>> > on getting 2.6.XX to work with it.
+>>=20
+>> Not that I have heard of. Don't know.
+>=20
+> There's code out there for the TopDog parts (Linville's marvell.git o=
+n
+> kernel.org), and I even have one or two of them lying around.  The
+> firmware interface isn't that different from the 8335 (mrv8k) and thu=
+s
+> the two product lines can probably share the same driver.
+>=20
+> Lennert and Nick (from Marvell) are supposed to be working on a mac80=
+211
+> driver for the 88w8687 part, which is probably just about the same
+> firmware interface as TopDog (aside from the N-specific bits, and
+> different TX & RX descriptors I'm sure).  I'd prefer to either start
+> fixing up mrv8k and then merge into whatever Lennert comes up with, o=
+r
+> see what they come up with and use that as a base for adding support =
+for
+> older TopDog and 8310/8335 hardware.
+>=20
+> mrv8k was always a bit rocky and never reliably got scan results on t=
+he
+> 8335 cardbus hardware I had, even though the descriptor setup and the
+> mac80211 bits looked right.  There's some pre/post scan commands that=
+ we
+> need to hook into mac80211 which I posted patches for first, but
+> Johannes requested we not commit those until we really knew whether
+> pre/post scan were required.
+>=20
+> Dan
 
+Duh...
+http://git.kernel.org/?p=3Dlinux/kernel/git/mcgrof/mrvl_cb82.git;a=3Dsu=
+mmary
 
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-5000-hw.h	2008=
--10-06 18:09:21.375233932 +0200
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-5000-hw.h	2008-10-0=
-6 18:32:50.180236365 +0200
-> @@ -84,46 +84,43 @@
->  #define IWL50_NUM_AMPDU_QUEUES		  10
->  #define IWL50_FIRST_AMPDU_QUEUE		  10
-> =20
-> -#define IWL_sta_id_POS 12
-> -#define IWL_sta_id_LEN 4
-> -#define IWL_sta_id_SYM val
-> -
->  /* Fixed (non-configurable) rx data from phy */
-> =20
->  /* Base physical address of iwl5000_shared is provided to SCD_DRAM_BASE_=
-ADDR
->   * and &iwl5000_shared.val0 is provided to FH_RSCSR_CHNL0_STTS_WPTR_REG =
-*/
->  struct iwl5000_sched_queue_byte_cnt_tbl {
-> -	struct iwl4965_queue_byte_cnt_entry tfd_offset[IWL50_QUEUE_SIZE +
-> -						       IWL50_MAX_WIN_SIZE];
-> +	/* highest 4 bits of each entry are sta ID */
-> +	__le16 _tfd_offset[IWL50_QUEUE_SIZE + IWL50_MAX_WIN_SIZE];
->  } __attribute__ ((packed));
-> =20
-> +static inline void
-> +iwl5000_queue_byte_cnt_set(struct iwl5000_sched_queue_byte_cnt_tbl *tbl,
-> +			   u32 idx, u16 cnt)
-> +{
-> +	BUG_ON(idx >=3D IWL50_QUEUE_SIZE + IWL50_MAX_WIN_SIZE);
+Also, I have a router with an 8361 chip and Linux Inside=E2=84=A2 for w=
+hich I=20
+have made a GPL Source Request. I was told that the sources will be=20
+available two weeks from now. I don't expect the wi-fi driver to be in=20
+source form in that release, but you never know in advance what they'll=
+=20
+stuff in there.
 
-I just hit that BUG_ON, which means that something is passing a bogus
-value in. If I'm right and this isn't a bug in my patch (I cannot see
-how it should be) then it means that will corrupt memory silently
-without my patch. FWIW, the index is 511, which is totally wrong, being
-called from iwl5000_txq_inval_byte_cnt_tbl.
-
-I'd much appreciate if somebody would review this patch. I think it's
-right and the added sanity check blows up because of other bugs, but
-obviously I cannot guarantee that I didn't make a stupid mistake.
-
-johannes
-
---=-ZOvvNWazKFZ9ANg4dBeE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI6k7JAAoJEKVg1VMiehFYGlwP/3G/kUPf4c0xc8/wKslVpZFz
-AjujA0RyPnuUPSpAJwfD4pvXvpC+Ot/isE75oYPo+e1EvhF+1RB3Vb4QQJK+fbAc
-5CopgxmvR7apQIHDbw1fJaf/rxDPNbLD7RPlUxVCdVjomgMnavEsLiEHHncxnPDx
-ekjvNXekwFOcMmMIeVuZzQJtAZUPM7+J/CvsRsFMMz7buXNDQHwGeELzb5dwfyd2
-ljpvleSduGg0CCwh/hYaUknh0M/0+/RjPUB5rDYyHPj5Avnh9sAzC3UMY0+zAOpN
-FD3lBtI7+B2NWsVaZOYpeAxIzg3x38jRsd3AcVwo9yBzu4O7UlmFCTwsQLaKBvaV
-xy+pi+AUByaalXIIQFDk5jDS+AqNzG4e3IPIOyL3t/Yi+4sRPecaFQRpU/gmlsWO
-bjbGkO1G4lxMNJ8fRvhtDrR6N5aop33gVgTVXWw0f/sLtV673xNgqn90X3hNlcFg
-2mnS+OyK16eFuoGcl8CTRJXslW20tkxwbIU6N9+A0GTxwjMYagPhKiMFwre60zDz
-yK38o2M2h2GZdUflOFHyjjFNQcw8DHskVzUwXplPB5VYoQxiIEf4CWfRK4DHaN3P
-O8d9PHwSyghsoN/Thn9gti1uv02iCW2dyxFpfo10Nadpn25xbuHEF8hXzyH+KlLA
-wohGLnv+w7b/bRChL7v0
-=X37h
------END PGP SIGNATURE-----
-
---=-ZOvvNWazKFZ9ANg4dBeE--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
