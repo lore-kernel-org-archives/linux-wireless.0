@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10808 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751136AbYJTItu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 04:49:50 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 01:49:50 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18684.17816.702853.44986@gargle.gargle.HOWL> (sfid-20081020_104954_022341_6148C640)
-Date: Mon, 20 Oct 2008 14:17:20 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"tomasw@gmail.com" <tomasw@gmail.com>
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-In-Reply-To: <1224492335.18024.34.camel@johannes.berg>
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	<1224491480.18024.32.camel@johannes.berg>
-	<43e72e890810200135o1581c904i456a35298f8a56a9@mail.gmail.com>
-	<1224492335.18024.34.camel@johannes.berg>
+Received: from xc.sipsolutions.net ([83.246.72.84]:47543 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751519AbYJTMwC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 08:52:02 -0400
+Subject: Re: iwl3945 broken in current git
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dieter Ries <clip2@gmx.de>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <48FC7DEC.9060200@gmx.de> (sfid-20081020_144811_359409_AFE17DE7)
+References: <48FC6C05.6020901@gmx.de>
+	 <20081020121710.GA3607@isilmar.linta.de>
+	 (sfid-20081020_141718_690091_E56EF8AB) <1224506010.27899.23.camel@johannes.berg>
+	 <48FC7B1A.10307@gmx.de>
+	 (sfid-20081020_143609_718157_68144039) <1224506366.27899.25.camel@johannes.berg>
+	 <48FC7DEC.9060200@gmx.de> (sfid-20081020_144811_359409_AFE17DE7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5NYKols06RYpaIinV0V1"
+Date: Mon, 20 Oct 2008 14:51:57 +0200
+Message-Id: <1224507117.27899.29.camel@johannes.berg> (sfid-20081020_145208_273516_ACA57385)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
- > On Mon, 2008-10-20 at 01:35 -0700, Luis R. Rodriguez wrote:
- > 
- > > >> + *   @is_part_ampdu: set to indicate that the wireless core should should
- > > >> + *           treat this frame as part of an AMPDU
- > > >
- > > > I thought we said we could keep the flag instead of moving to the skb
- > > > here?
- > > 
- > > That was just because the changes required to add this was too much
- > > for 2.6.27 but since we don't care about this fix in 2.6.27 we can do
- > > whatever is needed to fix this properly.
- > 
- > Right, but adding random stuff into skb isn't really "properly" imho.
- > And we don't really need this afaict.
- > 
 
-Sorry, just saw that Tomas had fixed it by setting the flag in ieee80211_tx_h_sequence().
-Will fix that.
+--=-5NYKols06RYpaIinV0V1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Sujith
+On Mon, 2008-10-20 at 14:47 +0200, Dieter Ries wrote:
+
+> ahem, I don't seem to have ef224ca2ce55e81acc6c3a74c3e8c00a00941c70, are
+> you sure that is the right hash?
+
+If anything, it's probably f93405206557077d6508682b624117ec68ea48f6, but
+the commit messages aren't very enlightening.
+
+johannes
+
+--=-5NYKols06RYpaIinV0V1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/H7qAAoJEKVg1VMiehFYEN4P/1NRCv0I0xVVjCgs9v7BnrYW
+IhBD07TsyHOP/5pODhEy90r/mx/OOzXad+Nz26fzUT5tILMudQ2s5ZNiktP4wQLM
+qCFk43IMrbMG0H4o/u43G17idQ2tdTODupxLodNx1kL/7peIZHg/J6WJrVYWy/Rh
+gqji0PtpRMV8V4VqkpLOgb6vSNccsY1zK3Bn98RD6LDbrSmuuZ1Nr+OQg8nfFya0
+6umXT7aJlcggj7k1fpuMX1G2GOq5JJyFmpM1o5PWQsGQbAYMUjrsw+IR3L100xR8
+EOOS8LAs6FlDnh+WvMX2qI+U0TjlzsNnW8wSmg57fwCeaGerew8+vvvhPuxVaCZf
+u8aRPS1jxEYy6Icr7iEEgpjpT+gon9pxtn9s/HhxlaEWzSLEJWVqHayipAv3Fv8Q
+cRODWa2prWMBB6mSYeu6mrUhMplztY2Ysy/NHdj+8NPnBUdB4QjyI785uZZ1H589
+vFNMcV5sIxhQabSWCseUfgEx7K6lLogdvnQps98jNDNZO/0Su+RlQyjGkuRXXJmK
+v3lW7Jif2xWtEVBFCxQ4OyugXa7Y/M5Ftqpi3G4FaYIfGQdJIaOjJvxncCe26l6S
+kFB9KjCpmtv4IhRnRTrFst39nu2RRWl1pQ7qdEqYqlZW6vBHC0eMSjcfKYmOiDXE
+21ihyenv3rtNQBcmPTLv
+=RnzY
+-----END PGP SIGNATURE-----
+
+--=-5NYKols06RYpaIinV0V1--
+
