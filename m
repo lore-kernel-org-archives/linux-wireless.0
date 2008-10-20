@@ -1,32 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:56446 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752606AbYJIVUy (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:33896 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715AbYJTQm2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 17:20:54 -0400
-Date: Thu, 9 Oct 2008 18:20:49 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Dmitry Torokhov <dtor@mail.ru>
-Subject: Re: [PATCH 3/5] rfkill: add master_switch_mode and EPO lock to
-	rfkill and rfkill-input
-Message-ID: <20081009212049.GA16430@khazad-dum.debian.net> (sfid-20081009_232057_400337_576E0FEB)
-References: <1223586933-17753-1-git-send-email-hmh@hmh.eng.br> <1223586933-17753-4-git-send-email-hmh@hmh.eng.br>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223586933-17753-4-git-send-email-hmh@hmh.eng.br>
+	Mon, 20 Oct 2008 12:42:28 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224487340.24677.192.camel@debian.sh.intel.com>
+References: <20081015112517.GF6509@tesla>
+	 <1224126030.24677.78.camel@debian.sh.intel.com>
+	 <20081016113848.GB5899@tesla>
+	 <1224471102.24677.124.camel@debian.sh.intel.com>
+	 <43e72e890810192040w567fa4f6j1bf40e80084a857e@mail.gmail.com>
+	 <1224479933.24677.148.camel@debian.sh.intel.com>
+	 <43e72e890810192333r7b3f6a0m56d499d0aed9240e@mail.gmail.com>
+	 <1224484685.18024.5.camel@johannes.berg>
+	 <43e72e890810192346q5e0eadbcm26febe45392a2172@mail.gmail.com>
+	 <1224485431.18024.12.camel@johannes.berg>
+	 <43e72e890810192359g2bc75316v49377ddc9eded934@mail.gmail.com>
+	 <1224487340.24677.192.camel@debian.sh.intel.com>
+Content-Type: text/plain
+Date: Mon, 20 Oct 2008 18:43:19 +0200
+Message-Id: <1224520999.9386.72.camel@californication> (sfid-20081020_184233_864448_25CE57D2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hmm... lots of typos in the commit log of this one, I wonder why I didn't
-notice it before sending.
+Hi Yi,
 
-Oh well, I will spell-check and resend later so that we don't get so many
-wordos in the commit log.
+> > > Ack on both points, which is why I said "If we're going to [...]". I
+> > > don't think I've seen a convincing use case for this other than test
+> > > environments, in which you can very well just use crda.
+> > 
+> > Ah, ok :)
+> 
+> OK, my point is here:
+> http://marc.info/?l=linux-wireless&m=122403515521098&w=2
+> 
+> Maybe Marcel has more to say when he wakes up...
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+I do wanna keep it as simple as possible, but on the other hand we
+should do a pretty decent job with picking a regulatory domain when no
+userspace is present (old or CRDA missing).
+
+So my current thinking is that the regulatory hint for a card is limited
+to the frequencies the card actually registers with mac80211. If the
+internal card is 2.4 GHz, then we limit the hint to this. So the 5 GHz
+band is still a virgin. If a 5 GHz card comes along and it is the first
+in its band, then we take its regulatory hint for that band, but for the
+2.4 GHz band it has to follow the first cards hint.
+
+As I mentioned before, first card wins is a perfect solution from my
+point of view, but we should not punish a second card in a different
+band if the first card is not touching this band at all. And I can see
+these user scenarios happening and in some cases they might be done on
+purpose to serve every band with a different piece of hardware.
+
+And for the cases where new bands might be used in the future. In that
+case we do have to do this right since userspace might be outdated. Lets
+face it, we should always support a new kernel with an old userspace.
+That is how the Linux kernel is suppose to work. That is probably the
+only reason why wireless extensions are still around ;)
+
+The idea of having a 2.4 GHz only card provide a hint for 5 GHz is just
+plain wrong. If the hardware is designed for 2.4 GHz it should not mess
+with other frequencies.
+
+So my solution would be first regulatory hint in each band wins.
+
+Also we should have printk that shows up in dmesg in cases where neither
+crda or iw modified the regulatory domain and we have clash with the
+hints provided by two or more cards.
+
+Regards
+
+Marcel
+
+
