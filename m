@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:49457 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752623AbYJFFjn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 01:39:43 -0400
-To: Pavel Roskin <proski@gnu.org>
-Cc: Greg KH <greg@kroah.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: at76_usb driver status
-References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com>
-	<20081005061603.GB28533@kroah.com> <87d4ifsgg5.fsf@litku.valot.fi>
-	<1223270894.18180.7.camel@dv>
-From: Kalle Valo <Kalle.Valo@iki.fi>
-Date: Mon, 06 Oct 2008 08:39:34 +0300
-In-Reply-To: <1223270894.18180.7.camel@dv> (Pavel Roskin's message of "Mon\, 06 Oct 2008 01\:28\:14 -0400")
-Message-ID: <87vdw6mgdl.fsf@litku.valot.fi> (sfid-20081006_073947_559319_97A007CC)
+Received: from mail.gmx.net ([213.165.64.20]:37056 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753491AbYJTMrm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 08:47:42 -0400
+Message-ID: <48FC7DEC.9060200@gmx.de> (sfid-20081020_144803_251705_97A98430)
+Date: Mon, 20 Oct 2008 14:47:40 +0200
+From: Dieter Ries <clip2@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomasw@gmail.com>
+Subject: Re: iwl3945 broken in current git
+References: <48FC6C05.6020901@gmx.de>	 <20081020121710.GA3607@isilmar.linta.de>	 (sfid-20081020_141718_690091_E56EF8AB) <1224506010.27899.23.camel@johannes.berg>	 <48FC7B1A.10307@gmx.de> (sfid-20081020_143609_718157_68144039) <1224506366.27899.25.camel@johannes.berg>
+In-Reply-To: <1224506366.27899.25.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin <proski@gnu.org> writes:
+Johannes Berg schrieb:
+> On Mon, 2008-10-20 at 14:35 +0200, Dieter Ries wrote:
+>> Johannes Berg schrieb:
+>>> On Mon, 2008-10-20 at 14:17 +0200, Dominik Brodowski wrote:
+>>>
+>>>>> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+>>>>> iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq
+>>>>> 0x4416 ser 0x0000004B
+>>>>> iwl3945: Can't stop Rx DMA.
+>>>> It needs a more recent uCode -- the driver really should scream out loudly
+>>>> that the old firmware no longer suffices.
+>>> You could try reverting ef224ca2ce55e81acc6c3a74c3e8c00a00941c70, that's
+>>> the only commit I can find that seems to be vaguely related to the
+>>> problem as Tomas described it. Not that it might not be hidden in some
+>>> other commit...
+>> The new firmware did it. It works now, but it should really scream out
+>> loud ...
+> 
+> Do you still have the old one? Would you try anyway?
 
-> I'm not going to scream, and I'm not sure my opinion really matters, but
-> I don't think it's a good idea to have two different drivers under the
-> same name in different kernel trees.
->
-> My preference is that we give a better exposure to the mac80211 based
-> driver, so that potential contributors don't spend time on dead end
-> code.
+ahem, I don't seem to have ef224ca2ce55e81acc6c3a74c3e8c00a00941c70, are
+you sure that is the right hash?
 
-I agree, it's very confusing. I'll change the name of the mac80211
-port to something else, most probably to at76c50x-usb. Any comments?
-Anyone?
+> 
+> johannes
 
-> Finally, I would prefer that my name is not used with either driver.
-> The original driver was written by other people.  I just cleaned it up
-> and fixed some bugs.
-
-Ok. After I rename the mac80211 port we don't have to use names of
-persons anymore.
-
--- 
-Kalle Valo
+cu
+Dieter
