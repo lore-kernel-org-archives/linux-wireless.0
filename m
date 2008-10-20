@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13406 "EHLO mail.atheros.com"
+Received: from mga03.intel.com ([143.182.124.21]:14727 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753370AbYJVVhK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 17:37:10 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 14:37:10 -0700
-Date: Wed, 22 Oct 2008 07:36:59 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] wireless: remove struct regdom hinting
-Message-ID: <20081022143659.GL6190@tesla> (sfid-20081022_233719_243117_EEE1C10C)
-References: <1224585042.5521.7.camel@johannes.berg> <20081022113950.GE6190@tesla> <1224701496.30459.50.camel@johannes.berg> <20081022122914.GH6190@tesla> <1224703869.30459.63.camel@johannes.berg> <20081022124139.GK6190@tesla> <1224704622.30459.71.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1224704622.30459.71.camel@johannes.berg>
+	id S1751346AbYJTXbj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 19:31:39 -0400
+Subject: Re: 10-17-2008 Build issues - Intel 3945abg - Ubuntu Intrepid
+From: reinette chatre <reinette.chatre@intel.com>
+To: "myk.robinson@kingdomcomputer.info"
+	<myk.robinson@kingdomcomputer.info>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224336809.6934.1.camel@mobileOne>
+References: <1224248117.28593.3.camel@mobileOne>
+	 <1224258314.11187.1.camel@rc-desk>  <1224271086.6775.8.camel@mobileOne>
+	 <1224279527.11187.58.camel@rc-desk>  <1224336809.6934.1.camel@mobileOne>
+Content-Type: text/plain
+Date: Mon, 20 Oct 2008 16:31:55 -0700
+Message-Id: <1224545515.8698.5.camel@rc-desk> (sfid-20081021_013143_119966_1AACCC1B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 12:43:42PM -0700, Johannes Berg wrote:
-> On Wed, 2008-10-22 at 05:41 -0700, Luis R. Rodriguez wrote:
+On Sat, 2008-10-18 at 06:33 -0700, Myk Robinson wrote:
+> On Fri, 2008-10-17 at 14:38 -0700, reinette chatre wrote:
+> > On Fri, 2008-10-17 at 14:18 -0500, Myk Robinson wrote:
+> > > Sure will
+> > >
+> > > Just curious, what can you tell me about the dmesg I posted? I don't
+> > > understand much of it, that is just what I have learned to run right
+> > > after stuff happens :)
+> >
+> > The log shows that the driver is loaded/unloaded a couple of times -
+> > probably by wpa_supplicant. The details surrounding the error will
+> > become clear when we get more debugging.
+> >
+> >
+> > > As for the module, can you tell me how to autoload it with those
+> > > parameters? Or should i jsut upon booting rmmod the module then reload
+> > > it with your suggested parameters?
+> >
+> > You could ask modprobe to load the module with parameters. perhaps
+> > in /etc/modprobe.d/options. You could also use the rmmod/modprobe after
+> > system reboot as you suggested.
+> >
+> > Reinette
 > 
-> > Well, the alpha2 hint from country IE we'd built it from the IE
-> > and then try call an rd hint routine, I take it now it would be the new
-> > struct one. 
+> Here is some more output from dmesg with the module parameters loaded.
+> SOrry if there is some output that you don't need in there too.
 > 
-> No, we'll have to add a new one for that
+> http://pastebin.com/m47cf17c9
 
-OK fair enough. Should make it easier to read too.
+Your driver is not compiled with debugging support.Could you please
+recompile the driver to support debugging (CONFIG_IWL3945_DEBUG) and
+rerun your test?
 
-  Luis
+Thank you
+
+Reinette
+
