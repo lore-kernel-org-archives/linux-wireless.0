@@ -1,71 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57633 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751170AbYJ2Eus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 00:50:48 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 21:50:48 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18695.60154.759782.919661@gargle.gargle.HOWL> (sfid-20081029_060857_997300_7521D438)
-Date: Wed, 29 Oct 2008 10:17:54 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 12/16] ath9k: Enable interrupts at the proper place
+Received: from xc.sipsolutions.net ([83.246.72.84]:36634 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbYJTMWf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 08:22:35 -0400
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"tomasw@gmail.com" <tomasw@gmail.com>
+In-Reply-To: <18684.24323.743610.871307@gargle.gargle.HOWL>
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224491480.18024.32.camel@johannes.berg>
+	 <18684.18492.94865.480736@gargle.gargle.HOWL>
+	 <1224493957.18024.47.camel@johannes.berg>
+	 <18684.20459.335157.171344@gargle.gargle.HOWL>
+	 <1224495531.18024.55.camel@johannes.berg>
+	 <18684.24323.743610.871307@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-foTao0lb0KlmU7j1+qTz"
+Date: Mon, 20 Oct 2008 14:22:29 +0200
+Message-Id: <1224505349.27899.17.camel@johannes.berg> (sfid-20081020_142239_310995_040D4043)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-config_interface() was the wrong place to enable interrupts
-when bringing up an interface, move it to ath_open().
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/core.c |    9 ++++-----
- drivers/net/wireless/ath9k/main.c |    6 ------
- 2 files changed, 4 insertions(+), 11 deletions(-)
+--=-foTao0lb0KlmU7j1+qTz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
-index 1826818..d138446 100644
---- a/drivers/net/wireless/ath9k/core.c
-+++ b/drivers/net/wireless/ath9k/core.c
-@@ -675,13 +675,12 @@ int ath_open(struct ath_softc *sc, struct ath9k_channel *initial_chan)
- 
- 	ath_setcurmode(sc, ath_chan2mode(initial_chan));
- 
--	/*
--	 *  Don't enable interrupts here as we've not yet built our
--	 *  vap and node data structures, which will be needed as soon
--	 *  as we start receiving.
--	 */
- 	sc->sc_flags &= ~SC_OP_INVALID;
- 
-+	/* Disable BMISS interrupt when we're not associated */
-+	sc->sc_imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
-+	ath9k_hw_set_interrupts(sc->sc_ah,sc->sc_imask);
-+
- 	ieee80211_wake_queues(sc->hw);
- done:
- 	return error;
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index d2b53b5..494d4a0 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1239,12 +1239,6 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
- 			/* Set aggregation protection mode parameters */
- 			sc->sc_config.ath_aggr_prot = 0;
- 
--			/* Disable BMISS interrupt when we're not associated */
--			ath9k_hw_set_interrupts(sc->sc_ah,
--					sc->sc_imask &
--					~(ATH9K_INT_SWBA | ATH9K_INT_BMISS));
--			sc->sc_imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
--
- 			DPRINTF(sc, ATH_DBG_CONFIG,
- 				"%s: RX filter 0x%x bssid %s aid 0x%x\n",
- 				__func__, rfilt,
--- 
-1.6.0.3
+On Mon, 2008-10-20 at 16:05 +0530, Sujith wrote:
+
+> > But couldn't non-HT frames be buffered similarly? Maybe I'm missing one
+> > of the finer points of the 11n draft?
+>=20
+> Probably because 11n aggregation have more rigorous timing requirements
+> between frames.
+
+What kind? I can only find the ampdu spacing/length exponent stuff.
+
+> > I guess there's no clear answer here. How about "whichever you want"?
+> > Though I think I prefer pushing them down as that makes the model easie=
+r
+> > to understand. It probably also makes the Intel case easier to
+> > implement.
+>=20
+> A way to pull down buffered frames for each TID (like ieee80211_get_buffe=
+red_bc() )
+> would be really useful for ath9k.
+
+I'm not sure, that seems like a useful thing initially, but leaves a lot
+of stuff for the driver. We should probably think about moving more
+things *up* into mac80211 rather than giving the driver more access to
+low-level details. This would also allow us possibly even send A-MPDU
+mcast when acting as an HT AP, something the driver cannot easily do.
+
+Can you explain the way it currently works in ath9k?
+
+Also, I'm trying to understand the relation between a block-ack
+agreement and A-MDPU, I understand that without a block-ack-agreement
+aggregation isn't very useful, but could we not, for example, implement
+(regular) delayed block-ack with much the same infrastructure?
+
+What I could also imagine is that mac80211 simply does pretty much
+everything and hands a number of skbs to the driver at once with some
+additional information about how to aggregate them, what sort of spacing
+to use, etc. It should be able to calculate all the required stuff since
+it knows from the rate control algorithm what's happening there. That
+might leave Intel out a bit, but I'm starting to think that we want to
+special-case them a bit anyway.
+
+johannes
+
+--=-foTao0lb0KlmU7j1+qTz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/HgBAAoJEKVg1VMiehFYMd4P/0p6rL1P1IcyXDhB4s9c6fbL
+uJDnRLtXc07sc/e3gM7rlfAibuwLEb6oodZXSHbGU8NlO+nI04BbuqXEXrOJNRQB
+ujWQcCvce4Nn4W5PWdPqIWFkNJKEyI6da2si/EBwWk725/a4qs4Yq3mZsy/MfuO/
+DFDysidx8cUpXB298PybGKA0EvCPoqCuGlG8QpuAe0sWHSNU/zPk3xSZ/FTUltaM
+qynQv9CLoBcezNJpbiBTYp0e5DPZAf5ZzYc3cPFgo7IxRlmq2ksIB4RO2AKoxX+f
+8otlN3NDAeWaqCVgZo8GKjard9xY+9Pu8h/7dVNGs2seFVYNHUdlmDr6kbLwmy0s
+o3zcIijsdxwDCT8FtdQ1xTQ7WKDFqi7JhMLlU5xpzMm/Xq6SsTcuZ1Bu/+qwKfIa
+BjEkUmySi32d1k6s1kmY2EZFiYT/14U5fihsmMWXwcr/EivqXQEh+zx03CIBTis0
+RBhtK80coZWpF0gWzqUznNE7qRpF2oLTWlkIU+n4ras1+ri+BBRMH5o+15BErH/7
+HCfFEjfir/SGHzQ5naLl7X8PqoKUo/nzIzDkD8nCuftd0vW9WMJYO/uZX3TuZawG
+1KDW01ocY/dz+jFxs5fpaS0dxqpicUhHuYpKr3zjgwCNke7jAr2hwZ45VCT73aqt
+Z8em4x9K8m8vjcPED7Sl
+=N604
+-----END PGP SIGNATURE-----
+
+--=-foTao0lb0KlmU7j1+qTz--
 
