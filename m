@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:21289 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753297AbYJ2LIJ (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:41643 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbYJTDkg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 07:08:09 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so3246051rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 04:08:09 -0700 (PDT)
-Message-ID: <40f31dec0810290408h5ee08c8l1e14d576064f01a4@mail.gmail.com> (sfid-20081029_120826_627686_C7015EFF)
-Date: Wed, 29 Oct 2008 13:08:08 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Update PCU code
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	nbd@openwrt.org
-In-Reply-To: <20081029024603.GA22759@hash.localnet>
+	Sun, 19 Oct 2008 23:40:36 -0400
+Received: by gxk9 with SMTP id 9so3191387gxk.13
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 20:40:35 -0700 (PDT)
+Message-ID: <43e72e890810192040w567fa4f6j1bf40e80084a857e@mail.gmail.com> (sfid-20081020_054040_755419_6C0118BF)
+Date: Sun, 19 Oct 2008 20:40:35 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: New Regulatory Domain Api.
+Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"Marcel Holtmann" <holtmann@linux.intel.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224471102.24677.124.camel@debian.sh.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <20081029021121.GA3079@makis>
-	 <20081029024603.GA22759@hash.localnet>
+References: <20081015112517.GF6509@tesla>
+	 <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com>
+	 <20081015170830.GA15902@tesla>
+	 <1ba2fa240810151735t100ceda5s7fe7b495f735c507@mail.gmail.com>
+	 <20081015174447.GF15902@tesla>
+	 <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com>
+	 <20081015185636.GH15902@tesla>
+	 <1224126030.24677.78.camel@debian.sh.intel.com>
+	 <20081016113848.GB5899@tesla>
+	 <1224471102.24677.124.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/10/29 Bob Copeland <me@bobcopeland.com>:
-> On Wed, Oct 29, 2008 at 04:11:22AM +0200, Nick Kossifidis wrote:
->>  * Properly clean MIC key from keytable when TKIP is used (Bob is
->>  working on set_key function etc so i leave it for now).
+On Sun, Oct 19, 2008 at 7:51 PM, Zhu Yi <yi.zhu@intel.com> wrote:
+> On Thu, 2008-10-16 at 04:38 -0700, Luis R. Rodriguez wrote:
+>> So.. you didn't look at the code to check where it may have failed...
 >
-> Heh, I was just prepping patches to send out.  I had basically the
-> same thing for _reset_key too so I'll just rebase mine on top of this.
->
+> IIRC, below patch changes the previously allowing none 5GHz channels to
+> allowing all 5GHZ channels. It does resolve our problem. But is it the
+> correct behaviour? Or did I miss anything?
 
-ACK, sorry for the bad coordination ;-(
+Well if you are using regulatory_hint() and only have rules defined in
+the 2 GHz band then yes it won't ever touch 5 GHz channels... I don't
+like this at all but its what I thought you were asking for.
 
-
-
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+  Luis
