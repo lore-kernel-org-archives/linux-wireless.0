@@ -1,82 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37776 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48286 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659AbYJFI5z (ORCPT
+	with ESMTP id S1750976AbYJTGPq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 04:57:55 -0400
-Subject: Re: Infinite loop in sta_info_debugfs_add_work().
+	Mon, 20 Oct 2008 02:15:46 -0400
+Subject: Re: Power saving on mac80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Robin Holt <holt@sgi.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <20081006064509.GK8534@sgi.com>
-References: <20081004103144.GI8534@sgi.com>
-	 <1223165956.24551.76.camel@johannes.berg> <20081005023143.GJ8534@sgi.com>
-	 <1223195921.24551.79.camel@johannes.berg>  <20081006064509.GK8534@sgi.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6phA9tf2LnY3of94Zmvy"
-Date: Mon, 06 Oct 2008 10:57:50 +0200
-Message-Id: <1223283470.24551.86.camel@johannes.berg> (sfid-20081006_105759_700492_57A471A5)
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Kalle Valo <kalle.valo@nokia.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <43e72e890810191846h46a6b35br4ad61803a25bdf23@mail.gmail.com> (sfid-20081020_034700_160658_5C77DFDA)
+References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
+	 <87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
+	 <1224412006.6324.45.camel@johannes.berg> <871vyc7st7.fsf@nokia.com>
+	 <1224434885.6324.49.camel@johannes.berg> <87myh0a1zd.fsf@nokia.com>
+	 <43e72e890810191846h46a6b35br4ad61803a25bdf23@mail.gmail.com>
+	 (sfid-20081020_034700_160658_5C77DFDA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zfBRGaH9zQD01sr+iN5K"
+Date: Mon, 20 Oct 2008 08:15:39 +0200
+Message-Id: <1224483339.6324.55.camel@johannes.berg> (sfid-20081020_081549_848593_EFBCA4E8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-6phA9tf2LnY3of94Zmvy
+--=-zfBRGaH9zQD01sr+iN5K
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-10-06 at 01:45 -0500, Robin Holt wrote:
-> On Sun, Oct 05, 2008 at 10:38:41AM +0200, Johannes Berg wrote:
-> > On Sat, 2008-10-04 at 21:31 -0500, Robin Holt wrote:
-> > >=20
-> > > Will try it.  To reproduce, suspend, wait 5 or so minutes, resume,
-> > > repeat until your keyboard leds stop flashing (usually within 3 or so
-> > > cycles).  I think this will kick us out of the loop.
->=20
-> It worked fine.  It makes sense why it works, but it feels like we are
-> working around another bug instead of fixing it.  I certainly do not
-> have any idea what I am talking about here, so feel free to tell me to
-> shut up ;)
+On Sun, 2008-10-19 at 18:46 -0700, Luis R. Rodriguez wrote:
 
-"shut up" ;)
-There are reasons that debugfs addition can fail, while most of them are
-error conditions that seems no reason to lock up here.
+> I wanted to note intel hardware seems to handle parsing beacons in
+> firmware when is PS mode already and I have no clue when it would
+> inform mac80211 of a beacon miss and if it does it. Tomas?
 
-> CONFIG_MAC80211_RC_PID=3Dy
-> CONFIG_MAC80211_RC_DEFAULT_PID=3Dy
-> CONFIG_MAC80211_RC_DEFAULT=3D"pid"
-> # CONFIG_MAC80211_MESH is not set
-> CONFIG_MAC80211_LEDS=3Dy
-> CONFIG_MAC80211_DEBUGFS=3Dy
-
-Your config doesn't seem anything out of the ordinary, would you add a
-few printks to ieee80211_sta_debugfs_add to see where it drops out?
-Either way though, we should handle errors from debugfs_create_dir()
-which this patch boils down to.
+It doesn't do anything at all with mac80211.
 
 johannes
 
---=-6phA9tf2LnY3of94Zmvy
+--=-zfBRGaH9zQD01sr+iN5K
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI6dMKAAoJEKVg1VMiehFYZ30QALFK2RnfoJhDrgU69Lq/VpkL
-zQLqjGxmmialKnDhRrsB2+Kc6UjdvueUwQ9FHHKUNmyM++VPJ8TfkgW7wVN52d3U
-n7Nmn5H+58DrW/Om1+Sg1DFrd4cnwDj6PdUSCj+byxpgYeK04WNQMlpuNa6NiCAl
-M8hSGlidrWeK0h9oFmq+ulB9eUEcMgG1j7Jy6Qrkumc50/cgEmQydtjCyzCJ7/MT
-s8FNRd5IvmJjhBmAfAc/k61WN5ysxxODsCVOEGHas/4XcHc0B1ax3XxsTDqZbS+o
-pGIHALSxMFA9xbGwdyMHdhxjg1muwG4ZPgUct1qjz55WFQ1+rfG3QBtkpzgTUGhh
-GlvCByUdrt8QREQ2iQwDE+Q4LL5nYQAEXeM/Ae+nH1Ue4c7sIbFiUMfwdPITjAj2
-1pCqwfR2AfzY76hoqilCJAuoecMDy98W849UFSIdO0WjQCvGhX6sD8FDB+LdqW1Z
-ySNZRSiuYX/4JiqZALRKALBBpUhzV91vaIB97zp0i5NqN6M2mIu53aTWe3vAOeP1
-wJbQN0n2q5l4q0v0SRw4FwR9UfMxsMXeEqY3+Vu1R00zPh6M58P4q/EL2TyXKRzH
-N/L6Rd6jIgi5hg+RiyBccxfmmeYI92XsAOgAYbdm6Tq9mcWGjk6MVZh4jx9Ocmyq
-ZvxRAtJ6riDspUA/PlKz
-=z+FT
+iQIcBAABAgAGBQJI/CIHAAoJEKVg1VMiehFYf8EP/2gV3MjIpcgVsvsFcMXcZMTc
+Aw6MrVnPqLrt7CyK9TOfo+1vBAV3dBmRMObtdAuvQlOsdoUcPoIbZ0b7DeMCJh1y
+fvcZtbtpL6YDrfh0tQcpFIpvL6HKhcAGOyww7SvfeD0FU6xMjvgbAPP3pBcT8sgv
+F1DBqSpdYM/kAfmxpi0vReemNFySlQe33KfFc0iAKMEZaYF7lSSHPrp/Ivo1cRU7
+tSF5/Mp0Dz+qVAdq1bPsK3H/eKtyM9K1lOa3/PzOSJUoLMr5lKu03t4wgQawsCBl
+f8ffM/ma4MYm3z+SWW2MsTjT6sR0iVxriR8lDQ+YFmyfLXYJcxevTLdNm5PpVIhY
+nQgAIs2p61LPwXBC9tGdschHBiEQp/SOyJFJ0O3y9n0N7Px6zjK/R2MHiJ4wn2jj
+n0r+bUvIXeTis92qoMmkz9t6W1B6PObs5OmqZ/pG80pCuuoLGYJdHVv4G4ZSywP3
+CGl1CFdGSXoypkWX5HlpJ0RcsfC6lESMsr6/2RTwY4Cn/v+mnRx3GAVfo1+BuVD4
+jU6PsjYRbddig5Ffjv8yLIV00SwNTN5/Pp04na6zAKYJNVQMonncrVF4op135KHB
+xFN4g1RWJ8nL9PRdc7B6aAYpRg6n2YhI0u4utd00TR2D46xdk8TFRUIzyPYxM6VK
+EZemdsFeMBjaZmALd+wH
+=w3sX
 -----END PGP SIGNATURE-----
 
---=-6phA9tf2LnY3of94Zmvy--
+--=-zfBRGaH9zQD01sr+iN5K--
 
