@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41454 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:60645 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751679AbYJFILv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 04:11:51 -0400
+	id S1750966AbYJTIEa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 04:04:30 -0400
+Subject: Re: [PATCH v3] mac80211/drivers: rewrite the rate control API
 From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 3/7] iwlwifi: scan correct setting of valid rx_chains
-Date: Mon,  6 Oct 2008 16:05:29 +0800
-Message-Id: <1223280333-4383-4-git-send-email-yi.zhu@intel.com> (sfid-20081006_101202_662428_D0174451)
-In-Reply-To: <1223280333-4383-3-git-send-email-yi.zhu@intel.com>
-References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com>
- <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
- <1223280333-4383-3-git-send-email-yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <1224486587.18024.25.camel@johannes.berg>
+References: <1223996147.10113.33.camel@johannes.berg>
+	 (sfid-20081014_165703_092655_BE6BA58D) <1224052607.3027.20.camel@johannes.berg>
+	 <1224484940.24677.169.camel@debian.sh.intel.com>
+	 <1224485319.18024.9.camel@johannes.berg>
+	 <1224486368.24677.184.camel@debian.sh.intel.com>
+	 <1224486587.18024.25.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 20 Oct 2008 16:04:04 +0800
+Message-Id: <1224489844.24677.225.camel@debian.sh.intel.com> (sfid-20081020_100447_024798_FDD59D4F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Mon, 2008-10-20 at 01:09 -0600, Johannes Berg wrote:
+> Yes, I know that much, but can you tell us how exactly?
 
-This patch sets rx_chain bitmap correctly according hw configuration.
+I don't know the details either. Will follow up on this.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> It would be good to actually report as accurate as possible (up to
+> MAX_RATES) the retries the firmware will have done. We're going to
+> export that information to userland in radiotap too.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index bf855c3..debdbd9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -703,7 +703,7 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 	u16 cmd_len;
- 	enum ieee80211_band band;
- 	u8 n_probes = 2;
--	u8 rx_chain = 0x7; /* bitmap: ABC chains */
-+	u8 rx_chain = priv->hw_params.valid_rx_ant;
- 
- 	conf = ieee80211_get_hw_conf(priv->hw);
- 
--- 
-1.5.3.6
+Sounds like a good idea. The actual number of retried rates should
+depend on hardware/firmware. But '5' doesn't look like the possible MAX.
+
+Thanks,
+-yi
 
