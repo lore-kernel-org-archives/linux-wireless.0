@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:57473 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753159AbYJCD3j (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:5343 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751510AbYJTIYx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 23:29:39 -0400
-Date: Thu, 2 Oct 2008 22:29:38 -0500
-From: Robin Holt <holt@sgi.com>
-To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Cc: Robin Holt <holt@sgi.com>
-Subject: Re: System pauses with iwl3945 AP associate. RFKill unpauses.
-Message-ID: <20081003032938.GX28581@sgi.com> (sfid-20081003_052944_074194_0C3936D1)
-References: <20081001115830.GD8534@sgi.com> <BAY133-W6C33FBF8B67482CE4D8F8B2420@phx.gbl> <20081002233422.GF8534@sgi.com> <20081003014750.GT28581@sgi.com> <20081003022554.GU28581@sgi.com>
+	Mon, 20 Oct 2008 04:24:53 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1840552wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 01:24:52 -0700 (PDT)
+Message-ID: <1ba2fa240810200124k2d30b49aqb8e08b70251d3896@mail.gmail.com> (sfid-20081020_102457_538788_BB366F8C)
+Date: Mon, 20 Oct 2008 10:24:52 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Power saving on mac80211
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Kalle Valo" <kalle.valo@nokia.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu Yi" <yi.zhu@intel.com>
+In-Reply-To: <1224483339.6324.55.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081003022554.GU28581@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
+	 <87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
+	 <1224412006.6324.45.camel@johannes.berg> <871vyc7st7.fsf@nokia.com>
+	 <1224434885.6324.49.camel@johannes.berg> <87myh0a1zd.fsf@nokia.com>
+	 <43e72e890810191846h46a6b35br4ad61803a25bdf23@mail.gmail.com>
+	 <1224483339.6324.55.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 02, 2008 at 09:25:54PM -0500, Robin Holt wrote:
-> OK.  I think I have convinced myself this is an issue with
-> sta_info_debugfs_add_work().  I am going to turn off
-> CONFIG_MAC80211_DEBUGFS and see if that makes things better.
+On Mon, Oct 20, 2008 at 8:15 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2008-10-19 at 18:46 -0700, Luis R. Rodriguez wrote:
+>
+>> I wanted to note intel hardware seems to handle parsing beacons in
+>> firmware when is PS mode already and I have no clue when it would
+>> inform mac80211 of a beacon miss and if it does it. Tomas?
 
-Appear to be on the right track here.  With CONFIG_MAC80211_DEBUGFS=y, I
-could only suspend/resume approx 4 times without iwl3945 hanging.  I had
-worked around that by modprobe -r iwl3945 and waiting a while before
-suspending.  Now with CONFIG_MAC80211_DEBUGFS=n, I have done 6 suspends
-with the machine suspended for 5 minutes before resuming and it has not
-hung.  That has not occurred before.  I will continue to test this for
-the next few days.
+firmware parses beacons for PS and other purposes. There is beacon notification
 
+struct iwl4965_missed_beacon_notif {
+	__le32 consequtive_missed_beacons;
+	__le32 total_missed_becons;
+	__le32 num_expected_beacons;
+	__le32 num_recvd_beacons;
+} __attribute__ ((packed));
 
-Thanks,
-Robin
+> It doesn't do anything at all with mac80211.
 
-> 
-> Thanks,
-> Robin
-> 
-> On Thu, Oct 02, 2008 at 08:47:50PM -0500, Robin Holt wrote:
-> > On Thu, Oct 02, 2008 at 06:34:22PM -0500, Robin Holt wrote:
-> > > I do have KDB installed as well and one other thing I noticed is we are
-> > > adding work to a workqueue at the time of the hang.  Not sure if this
-> > > is accurate and I forgot that I only have a VGA console so there is
-> > > no record of the KDB output.
-> > 
-> > OK.  In KDB.  Here goes...
-> > 
-> > events/0 process is on cpu0 with the following stack.
-> > 
-> > _spin_unlock_irqrestore+0x10
-> > [mac80211]sta_info_debugfs_add_work+0x82
-> > run_workqueue+0xd4
-> > worker_thread+0x88
-> > kthread+0x42
-> > 
-> > 
-> > I few times later, I got:
-> > _cond_resched+0x10
-> > [mac80211]sta_info_destroy+0x10
-> > [mac80211]sta_info_debugfs_add_work+0xee
-> > run_workqueue+0xd4
-> > worker_thread+0x88
-> > kthread+0x42
-> > 
-> > I am transposing these from screen to this email so I reserve the right
-> > to be slightly off, but these appear to be the call traces.
-> > 
-> > It looks to me like this add_work loop is truly an infinite loop and
-> > preventing interrupts from being processed on cpu0.
-> > 
-> > Thanks,
-> > Robin
+Nope, currently it's used just as statistics. The major purpose is not
+PS but link quality (triggering roaming), but it can be abused for
+other good purposes.
+Tomas
