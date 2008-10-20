@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:38463 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757905AbYJINb1 (ORCPT
+Received: from mail5.dslextreme.com ([66.51.199.81]:34879 "HELO
+	mail5.dslextreme.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753236AbYJTUFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 09:31:27 -0400
-Date: Thu, 9 Oct 2008 07:31:26 -0600
-From: Matthew Wilcox <matthew@wil.cx>
-To: Andrey Borzenkov <arvidjaar@newmail.ru>
-Cc: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-pcmcia@lists.infradead.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading firmware with PCMCIA adapter
-Message-ID: <20081009133125.GW25780@parisc-linux.org> (sfid-20081009_153131_534730_71DF3DDE)
-References: <200810091722.56812.arvidjaar@newmail.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810091722.56812.arvidjaar@newmail.ru>
+	Mon, 20 Oct 2008 16:05:07 -0400
+Subject: Re: Marvell TopDog Driver Work
+From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com>
+References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
+	 <1218830917.14841.20.camel@localhost.localdomain>
+	 <gdidhg$hdq$3@ger.gmane.org>
+	 <1224524168.29822.46.camel@dhcp-100-3-195.bos.redhat.com>
+	 <1224525810.6873.8.camel@the-omnibook>
+	 <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 20 Oct 2008 13:05:05 -0700
+Message-Id: <1224533105.6873.22.camel@the-omnibook> (sfid-20081020_220513_472497_5A91103E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 09, 2008 at 05:22:55PM +0400, Andrey Borzenkov wrote:
-> After loading orinoco and "inserting" adapter I get either BUG with
-> endless loop (attached) or kernel panic on NULL pointer dereference
-> (was not able capture). Adapter works fine with wlags49 driver.
+On Mon, 2008-10-20 at 12:45 -0700, Luis R. Rodriguez wrote:
+> On Mon, Oct 20, 2008 at 11:03 AM, Daniel Gimpelevich
+> <daniel@gimpelevich.san-francisco.ca.us> wrote:
+> 
+> > The "Duh..." was a response to the "Not that I have heard of. Don't
+> > know." statement, which was pretty ironic.
+> 
+> Well your question was "Has anyone stepped up to help in the port of
+> this to mac80211" and I thought you already knew I had that tree.
 
-It looks like you've fallen off the bottom of the kernel stack.  Do you
-have 4k stacks enabled in your config?
+I did not ask that, because I saw the tree, and that the initial import
+was from the marvell.git tree. The OP might not have realized that the
+code was TopDog-related even if he did see it. Since there is no working
+mac80211 code for TopDog, any existing hardware-specific code for it may
+prove to be a useful reference during the porting process. Anybody
+investigating the possibility of stepping up to help in the port needs
+to know what is already available and what is not.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+I don't think there is any question of *whether* TopDog support is
+possible in mrv8k, only when, and "right now" does not yet appear to be
+the answer. I really hope to be proven wrong on that, though.
+
