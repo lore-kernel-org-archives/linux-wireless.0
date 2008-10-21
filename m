@@ -1,71 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:60561 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754276AbYJBUDz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 16:03:55 -0400
-Date: Thu, 2 Oct 2008 13:00:23 -0700
-From: Greg KH <greg@kroah.com>
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: Dave <kilroyd@googlemail.com>, TJ <linux@tjworld.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Casual J. Programmer" <casualprogrammer@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	Alexander Shirshikov <alexander.shirshikov@gmail.com>
-Subject: Re: Agere Hermes source-code: copyright situation
-Message-ID: <20081002200023.GC20902@kroah.com> (sfid-20081002_220400_340734_5B3137A7)
-References: <200809290949.35749.arvidjaar@mail.ru> <20081001200039.GA29874@kroah.com> <48E400FA.2090305@gmail.com> <200810020637.27321.arvidjaar@mail.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810020637.27321.arvidjaar@mail.ru>
+Received: from senator.holtmann.net ([87.106.208.187]:57048 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179AbYJUXFj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2008 19:05:39 -0400
+Subject: Re: New iwlwifi 3945 uCode available
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: reinette chatre <reinette.chatre@linux.intel.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224628088.10863.100.camel@rc-desk>
+References: <1224613633.10863.43.camel@rc-desk>
+	 <1224624324.28639.9.camel@johannes.berg>
+	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
+	 <1224624899.28639.17.camel@johannes.berg>
+	 <20081021213814.GM17268@tuxdriver.com>
+	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
+	 <1224627187.9386.103.camel@californication>
+	 <1224628088.10863.100.camel@rc-desk>
+Content-Type: text/plain
+Date: Wed, 22 Oct 2008 01:06:34 +0200
+Message-Id: <1224630394.9386.114.camel@californication> (sfid-20081022_010542_976371_DD500A6C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 02, 2008 at 06:37:18AM +0400, Andrey Borzenkov wrote:
-> TJ you can answer me using arvidjaar (at) newmail dot ru. Hopefully
-> one of them works. Re WPA2 - there is no information how to setup
-> CCMP/AES (even if firmware supports it); so no WPA2.
+Hi Reinette,
+
+> > > >> > >> Two new versions of 3945 uCode is now available for download from
+> > > >> > >> http://intellinuxwireless.org/?n=Downloads. Two versions are available
+> > > >> > >> as we have updated the API version of the uCode and included pending
+> > > >> > >> fixes in both API versions.
+> > > >> > >>
+> > > >> > >> Version 15.28.1.8 supports API v1 and can be used with most current 3945
+> > > >> > >> drivers. Version 15.28.2.8 (API v2) is required when you start using the
+> > > >> > >> latest 3945 driver from wireless-testing at the time it includes the
+> > > >> > >> patch "iwl3945 : Fix a-band association for passive channels".
+> > > >> > >
+> > > >> > > Can you make the driver work with the old ucode? We even do that for
+> > > >> > > drivers where we don't control the ucode like b43...
+> > > >> >
+> > > >> > What for?
+> > > >>
+> > > >> Well, so that installing a new kernel doesn't suddenly break your
+> > > >> network connection and ability to download the firmware, for instance.
+> > > >> If you want more arguments you can go read all the "b43 sucks" threads
+> > > >> about it.
+> > > >
+> > > > Johnannes has a point, that is a lot nicer to users...
+> > >
+> > > Maybe, but it will complicate the code beyond good taste to just
+> > > satisfy the single moment when kernel is upgraded. I don't mean in
+> > > general I mean in this particular case when API changes.
+> > > Anyhow a good distro shell deal with this in packaging dependencies
+> > > and normal person will keep old kernel around when compiling new one.
+> > > Both ucodes can be present on the file system at the same time  so I
+> > > hope the risk is low.
+> > 
+> > it is the same argument as for everything else. We should be able to run
+> > a new kernel with old userspace.
 > 
-> On Thursday 02 October 2008, Dave wrote:
-> > Greg KH wrote:
-> > > On Wed, Oct 01, 2008 at 05:40:29PM +0100, TJ wrote:
-> > >> On Wed, 2008-10-01 at 14:13 +0400, Andrey Borzenkov wrote:
-> > >>>On Wednesday 01 October 2008, Greg KH wrote:
-> > >>>> On Mon, Sep 29, 2008 at 09:49:34AM +0400, Andrey Borzenkov wrote:
-> > >>>>> I have here driver that can be built for two different types of
-> > >>>>> hardware from basically the same sources (this is port of old Agere
-> > >>>>> drivers for Hermes-I/Hermes-II chipsets).
-> > >>>> 
-> > >>>> Cool, do you have a link to the code, I'd be glad to add it to
-> > >>>> drivers/staging/ if it's not in a fully-mergable state yet to get wider
-> > >>>> users for it.
-> > >>>
-> > >>> You can look at it here: http://arvidjaar.newmail.ru/wlags49.tar.bz
-> > >>>
-> > >>> I doubt that it is suitable for inclusion at current state if ever.
-> > >>> This is taken directly from Agere 2.4 sources; the only parts that were
-> > >>> touched are kernel glue and wireless extensions interface.
-> > >>>
-> > >>> And it is not GPL'ed, of course. I attach E-Mail I received a while
-> > >>> back with answere from Agere legal department.
-> > >>
-> > >> I'm attaching the original email I sent to Agere and their response for
-> > >> the record, hoping it helps clarify the legal position.
-> > > 
-> > > Very nice, thanks for forwarding this on.
-> > > 
-> > > As the license is BSD, that means we can place it in the kernel tree.
-> > > Do you all mind if I add it to the drivers/staging/ directory so you can
-> > > work on cleaning it up within the main kernel tree infrastructure?
-> >
+> I do not believe our request is unreasonable. If a user runs a new
+> kernel the log will print a message that the firmware is incorrect ...
+> all the user needs to do is go to
+> http://intellinuxwireless.org/?n=Downloads and download the latest
+> firmware. This does not require any subtle changes that may affect other
+> aspects of the system ... just the firmware file that is only used by
+> the driver.
 > 
-> I do not mind but it is likely makes no sense for H-I now; and
-> I do not own H-II myself so cannot work on it. If we are focusing on
-> H-2/2.5, it would make more sense to make similar modifications to
-> 7.22 driver set from Agere to avoid overlap with Orinoco.
+> We are focused on upstream development. If there is a need to support
+> older ucode then we face a similar challenge as was solved through the
+> compat-wireless project for the driver self.
 
-Ok, let me know what you think is the best thing to do, and I'll be glad
-to help you out with it.
+I haven't checked this particular case, but in some cases it is simple
+to keep backward compatible code around that would let us support the
+old firmware for a few releases. In other cases the driver and firmware
+interface might have evolved too much to do so. In these cases we might
+wanna keep the old drivers around so users can have a choice.
 
-thanks,
+We do have something like drivers/staging/ now. It might make sense to
+have introduce drivers/deprecated/ for old drivers that we just keep
+around for a few releases to ease a transition. Just thinking out loud.
 
-greg k-h
+And I have been bitten by ucode API changes in the past. It is just not
+clear when actually compiling the new kernel. We could also have compile
+time checks that check the new firmware file is actually present at the
+compile time of the new kernel. The driver should have a MODULE_FIRMWARE
+tag and we could process it and match it to /lib/firmware.
+
+Regards
+
+Marcel
+
+
