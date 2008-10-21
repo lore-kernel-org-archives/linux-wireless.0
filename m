@@ -1,93 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:36251 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824AbYJMTO6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 15:14:58 -0400
-Received: by gxk9 with SMTP id 9so4112843gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 12:14:57 -0700 (PDT)
-Message-ID: <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com> (sfid-20081013_211505_832057_44548983)
-Date: Mon, 13 Oct 2008 22:14:56 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts per second at idle
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	yang.y.yi@gmail.com,
-	"Vikram Kandukuri" <Vikram.Kandukuri@atheros.com>,
-	"Jothikumar Mothilal" <Jothikumar.Mothilal@atheros.com>,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <bug-11749-13098@http.bugzilla.kernel.org/>
-	 <20081013150525.884BC108058@picon.linux-foundation.org>
-	 <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:26345 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751314AbYJUGr0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2008 02:47:26 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890810202302j6cdf5be0m127846b502f395a0@mail.gmail.com>
+References: <20081015112517.GF6509@tesla>
+	 <1224487340.24677.192.camel@debian.sh.intel.com>
+	 <1224520999.9386.72.camel@californication>
+	 <1224552899.24677.245.camel@debian.sh.intel.com>
+	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
+	 <1224554323.24677.248.camel@debian.sh.intel.com>
+	 <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com>
+	 <1224561748.24677.274.camel@debian.sh.intel.com>
+	 <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
+	 <1224566923.24677.289.camel@debian.sh.intel.com>
+	 <43e72e890810202302j6cdf5be0m127846b502f395a0@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 21 Oct 2008 14:46:53 +0800
+Message-Id: <1224571613.24677.317.camel@debian.sh.intel.com> (sfid-20081021_084728_843263_23E89EA5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/10/13 Luis R. Rodriguez <mcgrof@gmail.com>:
-> On Mon, Oct 13, 2008 at 8:05 AM,  <bugme-daemon@bugzilla.kernel.org> wrote:
->> http://bugzilla.kernel.org/show_bug.cgi?id=11749
->
-> ---
-> Bug description from kernel.org bugzilla
->
-> Latest working kernel version: None
-> Earliest failing kernel version: Unknow
-> Distribution: all
-> Hardware Environment: Atheros wireless chipset
-> Software Environment: Fedora
-> Problem Description: ath5k driver has many inperrupts per second although the
-> system is idle.
->
-> I used AspierOne to test it, interrupts are so many that CPU's C3 residence
-> time is only 20 milliseconds or less, there isn't any valid traffic on my
-> wireless network except beacon frame.
->
-> I tested X61 in the same wireless environment, number of interrupt is only 1
-> per second, X61 has the latest Intel wireless chipset and 2.6.27 kernel was
-> running.
->
-> So i think ath5k and ath9k should can do as Intel wireless driver does,
-> otherwise, CPU can't stay at C3 with longer time because of wireless
-> interrupts.
->
-> Steps to reproduce:
-> 1. Enable wireless on platform with Atheros wireless chipset.
-> 2. watch cat /proc/interrupts
->
-> ---
->
-> Folks, ANI is not handled yet in ath5k (and won't be on 2.6.26). What
-> I recommend is to try disabling MIB interrupts on the stable kernels
-> where you won't make use of MIB statistics, which you need for ANI.
-> Once you have ANI please enable the MIB interrupt.
->
-> yang.y.yi, please try this patch (also attached for your convenience)
-> and let us know if you see a difference.
->
->  Luis
->
-> diff --git a/drivers/net/wireless/ath5k/base.c
-> b/drivers/net/wireless/ath5k/base.c
-> index 0676c6d..c18ead9 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -2246,8 +2246,7 @@ ath5k_init(struct ath5k_softc *sc)
->         * Enable interrupts.
->         */
->        sc->imask = AR5K_INT_RX | AR5K_INT_TX | AR5K_INT_RXEOL |
-> -               AR5K_INT_RXORN | AR5K_INT_FATAL | AR5K_INT_GLOBAL |
-> -               AR5K_INT_MIB;
-> +               AR5K_INT_RXORN | AR5K_INT_FATAL | AR5K_INT_GLOBAL;
->
->        ath5k_hw_set_intr(sc->ah, sc->imask);
->        /* Set ack to be sent at low bit-rates */
->
+On Mon, 2008-10-20 at 23:02 -0700, Luis R. Rodriguez wrote:
+> The issue at hand, which started this 60-message thread, involves a
+> built-in Intel single band 2 GHz card and an external dual band card.
+> The issue is the dual band card's regulatory_hint() is ignored as the
+> current infrastructure ignores secondary requests and the first one
+> did not define a set of rules for 5 GHz as part of its
+> regulatory_hint(). A resolution to this is to have crda called for the
+> country the user is in. 
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+A suboptimal solution. We all know that. The kernel has to rely on some
+help from iw to resolve a problem it has the ablility to resolve itself.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> The reason this solves the issue at and is
+> hardware which is designed to not allow channels out of its EEPROM
+> won't be enabled as these channels are not registered and channels
+> which *should* be disabled based on the user's location *are*
+> disabled. The 5 GHz channels on the dual band card which *should* be
+> allowed are allowed. Additionally we do allow drivers to be cocky
+> about regulatory and to claim they know better through reg_notifier().
+
+Driver's reg_notifier should only disable a channel which the regulatory
+framework marks as enabled. But not vice versa. Otherwise your below
+case fails.
+
+> If a hardware device has a built in channel 14 and a user in the US
+> buys this device and goes to the US he/she should disable this channel
+> to remain compliant. Under your current suggestion this is not dealt
+> with. That is what I mean by handling outdated rules.
+
+I don't see where it doesn't fit in my model. The driver hints
+EVERYTHING after loading. Then the user overwrote it to "US". After
+that, channel 14 is forbiddened by reg framework (although driver still
+claims it supports it). This is what I said EVERYTHING should always be
+overwritten by other regdomains.
+
+Thanks,
+-yi
+
