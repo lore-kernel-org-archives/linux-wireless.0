@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:47944 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753168AbYJDBgl (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.226]:60486 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751032AbYJUNlF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 21:36:41 -0400
-Message-ID: <48E6C8A1.1060404@lwfinger.net> (sfid-20081004_033646_338645_15703650)
-Date: Fri, 03 Oct 2008 19:36:33 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 21 Oct 2008 09:41:05 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2426961rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2008 06:41:04 -0700 (PDT)
+Message-ID: <b6c5339f0810210641m14117f47k491e854c4746a3d7@mail.gmail.com> (sfid-20081021_154111_882339_D79828B4)
+Date: Tue, 21 Oct 2008 09:41:04 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix a few typos in mac80211 kernel doc
+Cc: linux-wireless@vger.kernel.org,
+	"John Linville" <linville@tuxdriver.com>
+In-Reply-To: <1224571471.27899.69.camel@johannes.berg>
 MIME-Version: 1.0
-To: Harvey Harrison <harvey.harrison@gmail.com>
-CC: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/8] b43: remove remaining b43_radio_{read|write}16 from
- main.c
-References: <1223066926.6512.27.camel@brick>
-In-Reply-To: <1223066926.6512.27.camel@brick>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <20081021012027.GA25144@hash.localnet>
+	 <1224571471.27899.69.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Harvey Harrison wrote:
-> The 16 is not necessary anymore and is defnined to read/write.
-> 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> ---
->  drivers/net/wireless/b43/main.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index 6df9b65..cc1f4a9 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -789,7 +789,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
->  	b43_write16(dev, 0x0502, 0x0030);
->  
->  	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
-> -		b43_radio_write16(dev, 0x0051, 0x0017);
-> +		b43_radio_write(dev, 0x0051, 0x0017);
->  	for (i = 0x00; i < max_loop; i++) {
->  		value = b43_read16(dev, 0x050E);
->  		if (value & 0x0080)
-> @@ -809,7 +809,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
->  		udelay(10);
->  	}
->  	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
-> -		b43_radio_write16(dev, 0x0051, 0x0037);
-> +		b43_radio_write(dev, 0x0051, 0x0037);
->  
->  	write_unlock(&wl->tx_lock);
->  	spin_unlock_irq(&wl->irq_lock);
+On Tue, Oct 21, 2008 at 2:44 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Thanks Bob, John, can you take this patch?
+>
+> Out of curiosity, what would you want from the book?
 
-NACK. The two extra characters are absolutely harmless, but they do
-contain useful information. In addition, who knows if a future
-Broadcom device starts using 32-bit read/writes.
+It's kind of hard to say.  I was mostly reading it to get the big picture
+of mac80211's data structures, and for that purpose, what's already there
+mostly sufficed.  There are obviously lots of TBD sections which could
+use a fleshing out.
 
-Larry
+Right now, as the near-total noob that I am, I find reading the fine
+source is the best way to understand everything.  I think driver writers
+new to linux wireless could perhaps benefit from an overview of driver
+responsibilities, calling contexts, object lifetimes, etc.  A lot of this
+is already at the definition site of callbacks, but some stuff requires
+digging.  A howto format in the introductory sections might be useful.
 
+-- 
+Bob Copeland %% www.bobcopeland.com
