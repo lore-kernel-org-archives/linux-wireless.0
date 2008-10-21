@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:47790 "EHLO mx2.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:63940 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751795AbYJUNTc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 09:19:32 -0400
-Subject: Re: Marvell TopDog Driver Work
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1224533105.6873.22.camel@the-omnibook>
-References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
-	 <1218830917.14841.20.camel@localhost.localdomain>
-	 <gdidhg$hdq$3@ger.gmane.org>
-	 <1224524168.29822.46.camel@dhcp-100-3-195.bos.redhat.com>
-	 <1224525810.6873.8.camel@the-omnibook>
-	 <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com>
-	 <1224533105.6873.22.camel@the-omnibook>
+	id S1751243AbYJUF3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2008 01:29:21 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
+References: <20081015112517.GF6509@tesla>
+	 <1224485431.18024.12.camel@johannes.berg>
+	 <43e72e890810192359g2bc75316v49377ddc9eded934@mail.gmail.com>
+	 <1224487340.24677.192.camel@debian.sh.intel.com>
+	 <1224520999.9386.72.camel@californication>
+	 <1224552899.24677.245.camel@debian.sh.intel.com>
+	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
+	 <1224554323.24677.248.camel@debian.sh.intel.com>
+	 <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com>
+	 <1224561748.24677.274.camel@debian.sh.intel.com>
+	 <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
 Content-Type: text/plain
-Date: Tue, 21 Oct 2008 09:18:13 -0400
-Message-Id: <1224595093.24581.15.camel@localhost.localdomain> (sfid-20081021_151938_647942_453BE91A)
+Date: Tue, 21 Oct 2008 13:28:43 +0800
+Message-Id: <1224566923.24677.289.camel@debian.sh.intel.com> (sfid-20081021_072925_947826_BD53AD6B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-20 at 13:05 -0700, Daniel Gimpelevich wrote:
-> On Mon, 2008-10-20 at 12:45 -0700, Luis R. Rodriguez wrote:
-> > On Mon, Oct 20, 2008 at 11:03 AM, Daniel Gimpelevich
-> > <daniel@gimpelevich.san-francisco.ca.us> wrote:
-> > 
-> > > The "Duh..." was a response to the "Not that I have heard of. Don't
-> > > know." statement, which was pretty ironic.
-> > 
-> > Well your question was "Has anyone stepped up to help in the port of
-> > this to mac80211" and I thought you already knew I had that tree.
+On Mon, 2008-10-20 at 21:58 -0700, Luis R. Rodriguez wrote:
+> I do not agree. Consider old devices with built-in regulatory rules in
+> hardware which go out of date. The regulatory framework accounts for
+> such flaws and *helps* to remain compliant.
+
+That's another story. For these devices, you can do what you want in
+user space. But for other correct behavioured devices, bypass regulatory
+framework is necessary. Because you have to trust the driver anyway.
+
+> >To solve the problem,
 > 
-> I did not ask that, because I saw the tree, and that the initial import
-> was from the marvell.git tree. The OP might not have realized that the
-> code was TopDog-related even if he did see it. Since there is no working
-> mac80211 code for TopDog, any existing hardware-specific code for it may
-> prove to be a useful reference during the porting process. Anybody
-> investigating the possibility of stepping up to help in the port needs
-> to know what is already available and what is not.
+> What problem?
 
-Definitely, I've looked at marvell.git (topdog) and Luis's code, and
-earlier Marvell GPL code quite extensively.  The firmware interface is
-quite similar between the TopDog (802.11n) parts and the b/g parts, as
-are the TX and RX descriptors.  From my research, I didn't think it
-would be that hard to support both parts in the same driver.
+The problem a driver is not able to give a SKU as regulatory hint.
 
-My strategy would be this, assuming you have TopDog hardware.  If you do
-not, I can ship you a CardBus TopDog card:
+> > I'd
+> > suggest a special regdomain named EVERYTHING. In the case the driver
+> or
+> > firmware enforces reg_rules, the core wireless reg_rules are safe to
+> be
+> > bypassed.
+> 
+> You mean we add a flag to allow cfg80211 to ignore applying its
+> central regulatory definition to a wiphy? I disagree -- consider
+> outdated set of rules.
 
-1) Use marvell.git and Luis' attempt to get minimal b/g support working
-for the TopDog parts
+It has nothing to do with ourdated rules. If a reg_rule is "wrong" in a
+device, it will still be wrong after the regulatory_hint() call.
 
-2) Start adding in the support for 8335/8310 parts using mrv8k (and
-possibly BSD's malo(4)) as a guide
+The current regulatory framework 100% trust the alpha2 or regdomain the
+driver provided. Thus it should also trust a hint from driver "bypass
+your regulatory check, I'll handle it myself".
 
-3) Add the 802.11n bits of TopDog stuff
-
-The _most_ important thing is first to get a stable b/g driver, then add
-the candy later.  Since we have a full TopDog driver implementation,
-that might be the best thing to get working first.  mrv8k was never able
-to get very far for me when I was poking at it, I couldn't even get
-reliable scan results.
-
-> I don't think there is any question of *whether* TopDog support is
-> possible in mrv8k, only when, and "right now" does not yet appear to be
-> the answer. I really hope to be proven wrong on that, though.
-
-Oh, it's certainly possible in mrv8k.  But obviously you just want to
-get something up and running first, then add the tasty bits like N
-support later.
-
-Dan
-
+Thanks,
+-yi
 
