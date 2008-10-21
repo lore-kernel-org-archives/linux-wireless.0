@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:23867 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750721AbYJUEIZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 00:08:25 -0400
-Subject: Re: [PATCH v3] mac80211/drivers: rewrite the rate control API
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <1224486587.18024.25.camel@johannes.berg>
-References: <1223996147.10113.33.camel@johannes.berg>
-	 (sfid-20081014_165703_092655_BE6BA58D) <1224052607.3027.20.camel@johannes.berg>
-	 <1224484940.24677.169.camel@debian.sh.intel.com>
-	 <1224485319.18024.9.camel@johannes.berg>
-	 <1224486368.24677.184.camel@debian.sh.intel.com>
-	 <1224486587.18024.25.camel@johannes.berg>
+Received: from xc.sipsolutions.net ([83.246.72.84]:41734 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438AbYJUH5q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2008 03:57:46 -0400
+Subject: [PATCH] wireless: remove cfg80211_reg_mutex
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Tue, 21 Oct 2008 12:07:52 +0800
-Message-Id: <1224562072.24677.277.camel@debian.sh.intel.com> (sfid-20081021_060829_317747_7E3F9FB7)
+Date: Tue, 21 Oct 2008 09:57:41 +0200
+Message-Id: <1224575861.27899.99.camel@johannes.berg> (sfid-20081021_095750_093257_0DAC082E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-20 at 01:09 -0600, Johannes Berg wrote:
-> It would be good to actually report as accurate as possible (up to
-> MAX_RATES) the retries the firmware will have done. We're going to
-> export that information to userland in radiotap too.
+This mutex is wrong, we use cfg80211_drv_mutex (which should
+possibly be renamed to just cfg80211_mutex) everywhere except
+in one place, fix that and get rid of the extra mutex.
 
-The max retry rates number for iwl4965 is 16. See iwl-commands.h for
-more details:
+Also get rid of a spurious regulatory_requests list definition.
 
-a) Use the initial rate for only one entry.
-b) For each following entry, reduce the rate to next lower available
-   rate, until reaching the lowest available rate.
-c) When reducing rate, also switch antenna selection.
-d) Once lowest available rate is reached, repeat this rate until
-   rate table is filled (16 entries), switching antenna each entry.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/core.c |    6 ++----
+ net/wireless/reg.c  |    3 ---
+ net/wireless/reg.h  |    1 -
+ 3 files changed, 2 insertions(+), 8 deletions(-)
 
-Thanks,
--yi
+--- everything.orig/net/wireless/core.c	2008-10-21 09:54:48.000000000 +0200
++++ everything/net/wireless/core.c	2008-10-21 09:55:06.000000000 +0200
+@@ -302,12 +302,10 @@ int wiphy_register(struct wiphy *wiphy)
+ 	/* check and set up bitrates */
+ 	ieee80211_set_bitrate_flags(wiphy);
+ 
++	mutex_lock(&cfg80211_drv_mutex);
++
+ 	/* set up regulatory info */
+-	mutex_lock(&cfg80211_reg_mutex);
+ 	wiphy_update_regulatory(wiphy, REGDOM_SET_BY_CORE);
+-	mutex_unlock(&cfg80211_reg_mutex);
+-
+-	mutex_lock(&cfg80211_drv_mutex);
+ 
+ 	res = device_add(&drv->wiphy.dev);
+ 	if (res)
+--- everything.orig/net/wireless/reg.c	2008-10-21 09:52:13.000000000 +0200
++++ everything/net/wireless/reg.c	2008-10-21 09:54:54.000000000 +0200
+@@ -52,7 +52,6 @@ struct regulatory_request {
+ };
+ 
+ static LIST_HEAD(regulatory_requests);
+-DEFINE_MUTEX(cfg80211_reg_mutex);
+ 
+ /* To trigger userspace events */
+ static struct platform_device *reg_pdev;
+@@ -63,8 +62,6 @@ static u32 supported_bandwidths[] = {
+ 	MHZ_TO_KHZ(20),
+ };
+ 
+-static struct list_head regulatory_requests;
+-
+ /* Central wireless core regulatory domains, we only need two,
+  * the current one and a world regulatory domain in case we have no
+  * information to give us an alpha2 */
+--- everything.orig/net/wireless/reg.h	2008-10-21 09:54:48.000000000 +0200
++++ everything/net/wireless/reg.h	2008-10-21 09:54:51.000000000 +0200
+@@ -1,7 +1,6 @@
+ #ifndef __NET_WIRELESS_REG_H
+ #define __NET_WIRELESS_REG_H
+ 
+-extern struct mutex cfg80211_reg_mutex;
+ bool is_world_regdom(const char *alpha2);
+ bool reg_is_valid_request(const char *alpha2);
+ 
+
 
