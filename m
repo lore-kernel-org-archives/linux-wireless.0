@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:38916 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755166AbYJEW7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 18:59:33 -0400
-Date: Sun, 5 Oct 2008 15:57:57 -0700
-From: Greg KH <greg@kroah.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Kalle Valo <kalle.valo@iki.fi>, proski@gnu.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: at76_usb driver status
-Message-ID: <20081005225757.GA22398@kroah.com> (sfid-20081006_005945_135660_EBAFA3E6)
-References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com> <20081005061603.GB28533@kroah.com> <1223188872.11272.87.camel@violet.holtmann.net> <20081005151429.GB20764@kroah.com> <1223223426.11272.101.camel@violet.holtmann.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223223426.11272.101.camel@violet.holtmann.net>
+Received: from mga11.intel.com ([192.55.52.93]:56239 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751946AbYJUB7I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2008 21:59:08 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
+References: <20081015112517.GF6509@tesla>
+	 <1224479933.24677.148.camel@debian.sh.intel.com>
+	 <43e72e890810192333r7b3f6a0m56d499d0aed9240e@mail.gmail.com>
+	 <1224484685.18024.5.camel@johannes.berg>
+	 <43e72e890810192346q5e0eadbcm26febe45392a2172@mail.gmail.com>
+	 <1224485431.18024.12.camel@johannes.berg>
+	 <43e72e890810192359g2bc75316v49377ddc9eded934@mail.gmail.com>
+	 <1224487340.24677.192.camel@debian.sh.intel.com>
+	 <1224520999.9386.72.camel@californication>
+	 <1224552899.24677.245.camel@debian.sh.intel.com>
+	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 21 Oct 2008 09:58:43 +0800
+Message-Id: <1224554323.24677.248.camel@debian.sh.intel.com> (sfid-20081021_035913_229633_0964B090)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 05, 2008 at 06:17:06PM +0200, Marcel Holtmann wrote:
-> Hi Greg,
-> 
-> > > > > > In my quest to suck drivers into drivers/staging/ I noticed that the
-> > > > > > at76_usb driver is being shipped by both Fedora and Ubuntu in their
-> > > > > > kernels.
-> > > > > 
-> > > > > Yes, that's the original at76_usb driver which has it's own 802.11
-> > > > > stack. Pavel Rosking was the maintainer of that driver. Based on the
-> > > > > feedback in linux-wireless I then started porting the driver to use
-> > > > > mac80211. 
-> > > > > 
-> > > > > (Maybe I should have renamed the port to something else than at76_usb
-> > > > > because having two different drivers with the same name creates
-> > > > > confusion.)
-> > > > > 
-> > > > > > So I was wondering what the status of this driver is, and if I
-> > > > > > could/should add it to drivers/staging/?
-> > > > > 
-> > > > > The original at76_usb is working quite well, but it's unacceptable for
-> > > > > the mainline because we cannot have two 802.11 stacks in kernel.
-> > > > 
-> > > > I understand this, but for the issue of the drivers/staging/ tree, it's
-> > > > ok for us to have as many 802.11 stacks in the kernel as we can cram in
-> > > > there :)
-> > > 
-> > > did you start working for Ubuntu now ;)
-> > 
-> > Heh, no, I'm just, to quote Linux, now the "Maintainer of Crap".  See
-> > the lwn.net summary of the kernel summit for details :)
-> 
-> I was mainly referring to Kyle from OLS a year ago ;)
+On Mon, 2008-10-20 at 19:42 -0600, Luis R. Rodriguez wrote:
+> What are you talking about? I wrote a patch for you. I just do not
+> agree with the approach anymore, you are trying to resolve an issue by
+> not fixing the real source to the problem.
 
-Doh, I forgot about that joke!
+Your patch is incorrect. It solves one problem but brings more trouble.
+For me, the per-band regulatory hint is the correct approach. What is
+the real source to the problem you are talking about?
 
-sorry, was slow this morning...
+Thanks,
+-yi
 
-greg k-h
