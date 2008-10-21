@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49458 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:37940 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040AbYJJJO4 (ORCPT
+	with ESMTP id S1752571AbYJUKrB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 05:14:56 -0400
-Subject: minstrel compiler warnings
+	Tue, 21 Oct 2008 06:47:01 -0400
+Subject: Re: [RFC] make ieee80211 invisible
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wBjM2NSIW4E9BgCbKhZH"
-Date: Thu, 09 Oct 2008 16:17:18 +0200
-Message-Id: <1223561838.22490.79.camel@johannes.berg> (sfid-20081010_111500_871659_A51FD006)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: John Linville <linville@tuxdriver.com>
+In-Reply-To: <1224006562.10113.47.camel@johannes.berg> (sfid-20081014_195730_335063_053D77F1)
+References: <1224006562.10113.47.camel@johannes.berg>
+	 (sfid-20081014_195730_335063_053D77F1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CN7cNWaLe61QOYe9ZrEs"
+Date: Tue, 21 Oct 2008 12:46:55 +0200
+Message-Id: <1224586015.5521.14.camel@johannes.berg> (sfid-20081021_124706_139738_7B2C2239)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-wBjM2NSIW4E9BgCbKhZH
-Content-Type: text/plain; charset=UTF-8
+--=-CN7cNWaLe61QOYe9ZrEs
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-on 64-bit:
+On Tue, 2008-10-14 at 19:49 +0200, Johannes Berg wrote:
+>=20
+> This makes CONFIG_IEEE80211 invisible. The drivers that require it
+> (ipw2100, ipw2200, hostap) select it, and everybody else really
+> shouldn't even think about using it. Also, since there really is
+> no point in compiling anything without crypto support these days,
+> remove the crypto options and just enable them, leaving only the
+> debugging option which only shows up when a driver is select that
+> requires it. This makes it hard to enable, but most people wouldn't
+> want to anyway.
 
-net/mac80211/rc80211_minstrel_debugfs.c: In function =E2=80=98minstrel_stat=
-s_open=E2=80=99:
-net/mac80211/rc80211_minstrel_debugfs.c:98: warning: format =E2=80=98%8llu=
-=E2=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, but argume=
-nt 11 has type =E2=80=98u64=E2=80=99
-net/mac80211/rc80211_minstrel_debugfs.c:98: warning: format =E2=80=98%8llu=
-=E2=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, but argume=
-nt 12 has type =E2=80=98u64=E2=80=99
-net/mac80211/rc80211_minstrel_debugfs.c: At top level:
-net/mac80211/rc80211_minstrel_debugfs.c:145: warning: initialization from i=
-ncompatible pointer type
+Do I have to repost to upgrade from [RFC] to [PATCH]?
 
 johannes
 
---=-wBjM2NSIW4E9BgCbKhZH
+--=-CN7cNWaLe61QOYe9ZrEs
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI7hJqAAoJEKVg1VMiehFYih4P/idjFmoW6yvfPPq/7MhYWMOO
-DZjOIvhylJlOpP+vjx5rHJpHM4T4O6FEjoWPe4HgNV/XRIiBznbxfEAamEVZusOq
-Hh0yMWVkkvO/bASV3QfEJz3gIzAXOErKlzBCqiwGyn6EVjKDUUD9vdVTfCmCzmAb
-xbCETqKOT8IXd+vx0VA2h+Ax56idl9T76n/iEFK3luKLReeq5TUXKX/QQzA6mXXj
-q3jCixOjZPdgUAQNB6hDK4pgtJLZTrb8zSZ4h+Q86IhZYlTa+XaNAbbABjvQ8895
-3wC4koHF+iH+H8wbW8Qqr4qcoiraDu5656+K6Q2lCV7RVFca9BCQK7mWb5JAhtgh
-KKVrNiBF9c1E9zdHvipaeciPERUN2p4w5v84twqPSBUp/tNcFS1/xZ8Gr0jgPt+b
-5xkRFxrSOtoXptuOBhNwtiFPbKWq8c4Xobz/o1+6DW0ACIIoLjOSkmRER7mUYqVD
-PsIXz8qo5P0QstkWziZZqyQCqUwQsqSjwCyZvHKRjLtYJUTYaNVSCOp59dmQS+3C
-Ryo1NMfvRbRoQHBiCujItQeqO9EgN//lUcXS65F2SN9ufAQGKPMVM1l/ocrK+kIe
-RCJ8vlGybC2G+G8ocyr/FIxT2+mjpaVEZRl/PfZoKPoCGwBlKPM+dkA6bu9A/RkQ
-HI8J+zk3gLc9psiBZbwd
-=5ndJ
+iQIcBAABAgAGBQJI/bMcAAoJEKVg1VMiehFYnLoP/AuiCm4iooolHPS45C6mAH+4
+1b2Lkh0o6F7yJLQfudlbwYyGhWtoMAs4bQ+zT1eoErxvRhnQgtFfkHXmckDH8EqV
+bPqK1xn+XOQnJMz9BqRbLaRHreM06iXOuVaCd8QwmJPXnUWg86kH3YNI1WmeuS7Y
+RcKf2fU4etSwfEYONTqlZJn+HJd8hfh+QfceOkCMW36HoUlpih3HZMp77Lb4wt15
+Hqck99vuOYsClsK/Xdjn+ItNsGVNkkaNmtTOMOaBKzLX5JHhj9KBDYyCl43OPzwW
+BvRTwxFmJqVjaS2NqyL6s+r4CjJ61ng5iaElzpehp1PNiXXUEeCMvHeuZVhEYb4j
+5SJBUGfnjoChwPOHz141BUDZykpIpQ6v7zBzUV33PljAa5ykmOdmYhmVqWkLeWsY
+5WTGl7g5FFjYwLQjBsPrSnUKBhF9G2KYIxTgIWWv2ry3/QcVNY+ahxoK0pSpjFNd
+ttckV/pSRGAM7P3KlWa5VJ39RAE8Bnenr/EsVxJq6ofIoWjMYuv4iME2TMY/SiL+
+7Ua3ek5Ci+c0Ckc3fM7d9xqORMf8FBbGmSBPc12ZuMW6WSHx/X6Q+La1slZFSFX0
+7LF7qbsJQUrc7d8B6FuoVe1xBXt6cOm+6GeqZYiCNo2zEobr2KZC5cjrETXsy0qu
+4aB4rlSl7K/6BeQRWUlE
+=OJ2b
 -----END PGP SIGNATURE-----
 
---=-wBjM2NSIW4E9BgCbKhZH--
+--=-CN7cNWaLe61QOYe9ZrEs--
 
