@@ -1,175 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34701 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:33448 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756679AbYJGQ6I (ORCPT
+	with ESMTP id S1751167AbYJUGqn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 12:58:08 -0400
-Message-Id: <20081007100439.450608000@sipsolutions.net> (sfid-20081007_185817_878370_FED05C74)
-References: <20081007100428.868688000@sipsolutions.net>
-Date: Tue, 07 Oct 2008 12:04:31 +0200
+	Tue, 21 Oct 2008 02:46:43 -0400
+Subject: Re: [RFC] mac80211: Re-enable aggregation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Javier Cardona <javier@cozybit.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: [PATCH 3/8] mac80211: remove writable debugs mesh parameters
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Sujith <m.sujith@gmail.com>, Sujith <Sujith.Manoharan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+In-Reply-To: <1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com> (sfid-20081020_234638_705151_437FF968)
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224491480.18024.32.camel@johannes.berg>
+	 <18684.18492.94865.480736@gargle.gargle.HOWL>
+	 <1224493957.18024.47.camel@johannes.berg>
+	 <18684.20459.335157.171344@gargle.gargle.HOWL>
+	 <1224495531.18024.55.camel@johannes.berg>
+	 <18684.24323.743610.871307@gargle.gargle.HOWL>
+	 <1224505349.27899.17.camel@johannes.berg>
+	 <18684.51206.771543.514682@localhost.localdomain>
+	 <1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com>
+	 (sfid-20081020_234638_705151_437FF968)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kRHBuWDlJ17zqNVN2X9/"
+Date: Tue, 21 Oct 2008 08:46:35 +0200
+Message-Id: <1224571595.27899.71.camel@johannes.berg> (sfid-20081021_084645_454802_EBFBCB66)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These parameters shouldn't be configurable via debugfs, if they
-need to be configurable nl80211 support has to be added, if not
-then they don't need to be writable here either.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Javier Cardona <javier@cozybit.com>
-Cc: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/debugfs_netdev.c |  112 +++++++++---------------------------------
- 1 file changed, 24 insertions(+), 88 deletions(-)
+--=-kRHBuWDlJ17zqNVN2X9/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/net/mac80211/debugfs_netdev.c	2008-10-07 11:26:52.000000000 +0200
-+++ everything/net/mac80211/debugfs_netdev.c	2008-10-07 11:27:00.000000000 +0200
-@@ -41,29 +41,6 @@ static ssize_t ieee80211_if_read(
- 	return ret;
- }
- 
--#ifdef CONFIG_MAC80211_MESH
--static ssize_t ieee80211_if_write(
--	struct ieee80211_sub_if_data *sdata,
--	char const __user *userbuf,
--	size_t count, loff_t *ppos,
--	int (*format)(struct ieee80211_sub_if_data *, char *))
--{
--	char buf[10];
--	int buf_size;
--
--	memset(buf, 0x00, sizeof(buf));
--	buf_size = min(count, (sizeof(buf)-1));
--	if (copy_from_user(buf, userbuf, buf_size))
--		return count;
--	read_lock(&dev_base_lock);
--	if (sdata->dev->reg_state == NETREG_REGISTERED)
--		(*format)(sdata, buf);
--	read_unlock(&dev_base_lock);
--
--	return count;
--}
--#endif
--
- #define IEEE80211_IF_FMT(name, field, format_string)			\
- static ssize_t ieee80211_if_fmt_##name(					\
- 	const struct ieee80211_sub_if_data *sdata, char *buf,		\
-@@ -71,19 +48,6 @@ static ssize_t ieee80211_if_fmt_##name(	
- {									\
- 	return scnprintf(buf, buflen, format_string, sdata->field);	\
- }
--#define IEEE80211_IF_WFMT(name, field, type)				\
--static int ieee80211_if_wfmt_##name(					\
--	struct ieee80211_sub_if_data *sdata, char *buf)			\
--{									\
--	unsigned long tmp;						\
--	char *endp;							\
--									\
--	tmp = simple_strtoul(buf, &endp, 0);				\
--	if ((endp == buf) || ((type)tmp != tmp))			\
--		return -EINVAL;						\
--	sdata->field = tmp;						\
--	return 0;							\
--}
- #define IEEE80211_IF_FMT_DEC(name, field)				\
- 		IEEE80211_IF_FMT(name, field, "%d\n")
- #define IEEE80211_IF_FMT_HEX(name, field)				\
-@@ -126,34 +90,6 @@ static const struct file_operations name
- 		IEEE80211_IF_FMT_##format(name, field)			\
- 		__IEEE80211_IF_FILE(name)
- 
--#define __IEEE80211_IF_WFILE(name)					\
--static ssize_t ieee80211_if_read_##name(struct file *file,		\
--					char __user *userbuf,		\
--					size_t count, loff_t *ppos)	\
--{									\
--	return ieee80211_if_read(file->private_data,			\
--				 userbuf, count, ppos,			\
--				 ieee80211_if_fmt_##name);		\
--}									\
--static ssize_t ieee80211_if_write_##name(struct file *file,		\
--					const char __user *userbuf,	\
--					size_t count, loff_t *ppos)	\
--{									\
--	return ieee80211_if_write(file->private_data,			\
--				 userbuf, count, ppos,			\
--				 ieee80211_if_wfmt_##name);		\
--}									\
--static const struct file_operations name##_ops = {			\
--	.read = ieee80211_if_read_##name,				\
--	.write = ieee80211_if_write_##name,				\
--	.open = mac80211_open_file_generic,				\
--}
--
--#define IEEE80211_IF_WFILE(name, field, format, type)			\
--		IEEE80211_IF_FMT_##format(name, field)			\
--		IEEE80211_IF_WFMT(name, field, type)			\
--		__IEEE80211_IF_WFILE(name)
--
- /* common attributes */
- IEEE80211_IF_FILE(drop_unencrypted, drop_unencrypted, DEC);
- IEEE80211_IF_FILE(force_unicast_rateidx, force_unicast_rateidx, DEC);
-@@ -212,30 +148,30 @@ IEEE80211_IF_FILE(dropped_frames_no_rout
- IEEE80211_IF_FILE(estab_plinks, u.mesh.mshstats.estab_plinks, ATOMIC);
- 
- /* Mesh parameters */
--IEEE80211_IF_WFILE(dot11MeshMaxRetries,
--		u.mesh.mshcfg.dot11MeshMaxRetries, DEC, u8);
--IEEE80211_IF_WFILE(dot11MeshRetryTimeout,
--		u.mesh.mshcfg.dot11MeshRetryTimeout, DEC, u16);
--IEEE80211_IF_WFILE(dot11MeshConfirmTimeout,
--		u.mesh.mshcfg.dot11MeshConfirmTimeout, DEC, u16);
--IEEE80211_IF_WFILE(dot11MeshHoldingTimeout,
--		u.mesh.mshcfg.dot11MeshHoldingTimeout, DEC, u16);
--IEEE80211_IF_WFILE(dot11MeshTTL, u.mesh.mshcfg.dot11MeshTTL, DEC, u8);
--IEEE80211_IF_WFILE(auto_open_plinks, u.mesh.mshcfg.auto_open_plinks, DEC, u8);
--IEEE80211_IF_WFILE(dot11MeshMaxPeerLinks,
--		u.mesh.mshcfg.dot11MeshMaxPeerLinks, DEC, u16);
--IEEE80211_IF_WFILE(dot11MeshHWMPactivePathTimeout,
--		u.mesh.mshcfg.dot11MeshHWMPactivePathTimeout, DEC, u32);
--IEEE80211_IF_WFILE(dot11MeshHWMPpreqMinInterval,
--		u.mesh.mshcfg.dot11MeshHWMPpreqMinInterval, DEC, u16);
--IEEE80211_IF_WFILE(dot11MeshHWMPnetDiameterTraversalTime,
--		u.mesh.mshcfg.dot11MeshHWMPnetDiameterTraversalTime, DEC, u16);
--IEEE80211_IF_WFILE(dot11MeshHWMPmaxPREQretries,
--		u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries, DEC, u8);
--IEEE80211_IF_WFILE(path_refresh_time,
--		u.mesh.mshcfg.path_refresh_time, DEC, u32);
--IEEE80211_IF_WFILE(min_discovery_timeout,
--		u.mesh.mshcfg.min_discovery_timeout, DEC, u16);
-+IEEE80211_IF_FILE(dot11MeshMaxRetries,
-+		u.mesh.mshcfg.dot11MeshMaxRetries, DEC);
-+IEEE80211_IF_FILE(dot11MeshRetryTimeout,
-+		u.mesh.mshcfg.dot11MeshRetryTimeout, DEC);
-+IEEE80211_IF_FILE(dot11MeshConfirmTimeout,
-+		u.mesh.mshcfg.dot11MeshConfirmTimeout, DEC);
-+IEEE80211_IF_FILE(dot11MeshHoldingTimeout,
-+		u.mesh.mshcfg.dot11MeshHoldingTimeout, DEC);
-+IEEE80211_IF_FILE(dot11MeshTTL, u.mesh.mshcfg.dot11MeshTTL, DEC);
-+IEEE80211_IF_FILE(auto_open_plinks, u.mesh.mshcfg.auto_open_plinks, DEC);
-+IEEE80211_IF_FILE(dot11MeshMaxPeerLinks,
-+		u.mesh.mshcfg.dot11MeshMaxPeerLinks, DEC);
-+IEEE80211_IF_FILE(dot11MeshHWMPactivePathTimeout,
-+		u.mesh.mshcfg.dot11MeshHWMPactivePathTimeout, DEC);
-+IEEE80211_IF_FILE(dot11MeshHWMPpreqMinInterval,
-+		u.mesh.mshcfg.dot11MeshHWMPpreqMinInterval, DEC);
-+IEEE80211_IF_FILE(dot11MeshHWMPnetDiameterTraversalTime,
-+		u.mesh.mshcfg.dot11MeshHWMPnetDiameterTraversalTime, DEC);
-+IEEE80211_IF_FILE(dot11MeshHWMPmaxPREQretries,
-+		u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries, DEC);
-+IEEE80211_IF_FILE(path_refresh_time,
-+		u.mesh.mshcfg.path_refresh_time, DEC);
-+IEEE80211_IF_FILE(min_discovery_timeout,
-+		u.mesh.mshcfg.min_discovery_timeout, DEC);
- #endif
- 
- 
+On Mon, 2008-10-20 at 23:46 +0200, Tomas Winkler wrote:
 
--- 
+> [snip]
+
+will look at it later, doing first pass email right now...
+
+>  That
+> >> might leave Intel out a bit, but I'm starting to think that we want to
+> >> special-case them a bit anyway.
+>=20
+> Let's see first mvel and bcom implementation :)
+
+bcom is the same as Atheros pretty much.
+
+johannes
+
+--=-kRHBuWDlJ17zqNVN2X9/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/XrHAAoJEKVg1VMiehFYTdoQALvpEzX3WOCqRyStfT5iPNJ+
+WHVlGHgstDdy+J8omUiB/p2Kww/ax95PptAeEESh4y0suRnPZrCC1+pQ/2sQiijY
+UeeFT8vh34jtJN/TcdN+ku6sWqtgE5THKtyNgvaffm5eY/sBVpvJhB9JFkvlaojE
+dP4ei4eYP4Lu57tX+ycGKKny8LvLa2buyLd4v5Id1CCLhTo8hErd9DKktQk148ac
+++JPq6+2+7lG48WJ18bu4mC0QJ+YNawxzJvBVPAwETbg2NEcYc3bdEHSdqCfcJeH
++W3SJya9r5tMCP+x5YBxjoje9fSbs7aQhTkaCSgbEn4KcHu6opI1Vq0FNIi4PRnK
++E2WNonf1ZHMHulTXxQNVatFV0uZHnNtVyll/hTLH59V2ii9KeSpguczklQBEwLf
+b4GuLUZOubk3sTpznSLzQC0cfYvAwQPX7UWC4yVL3tn9uI1i9u0vgEYX+UZ64pA+
+C/vGDhlLzIqVD+bd2E8YVkgBBiW3u2HhazTYSlGZqntYuigaLK0abIHyo+Pr2MtM
+ClAEBllydTvrlzyiIzXqb4SFVNVxhLhMOFurzTzPZzWCXwmNGOVf9zwFFZhxciQw
+hVvsVEIgDVLCSqyuj74iotzHyMMfEjCiXVv+6JZgarwqieYkY9uVWsdohtM4YqW1
+DlC79nfHjLlqS773VfTX
+=icKP
+-----END PGP SIGNATURE-----
+
+--=-kRHBuWDlJ17zqNVN2X9/--
 
