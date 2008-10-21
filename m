@@ -1,89 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55426 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:52477 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755253AbYJVTuQ (ORCPT
+	with ESMTP id S1752303AbYJUV2A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 15:50:16 -0400
-Subject: [PATCH v3] wireless: make regdom passing semantics simpler
+	Tue, 21 Oct 2008 17:28:00 -0400
+Subject: Re: [PATCH 4/5] crda: Updated regulatory information for France
+	(FR)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081022123621.GJ6190@tesla>
-References: <1224579720.5521.2.camel@johannes.berg>
-	 <20081022113751.GD6190@tesla> <1224701263.30459.45.camel@johannes.berg>
-	 <1224701394.30459.48.camel@johannes.berg>  <20081022123621.GJ6190@tesla>
-Content-Type: text/plain
-Date: Wed, 22 Oct 2008 21:50:06 +0200
-Message-Id: <1224705006.30459.73.camel@johannes.berg> (sfid-20081022_215022_445189_5386CA20)
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <48FE399E.6050907@free.fr> (sfid-20081021_222053_979649_39DDEB3E)
+References: <cover.1223583376.git.benoit.papillault@free.fr>
+	 ,	<cover.1223583376.git.benoit.papillault@free.fr>
+	 <48FE399E.6050907@free.fr> (sfid-20081021_222053_979649_39DDEB3E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iqDCAnqcKYdJkzX4neG3"
+Date: Tue, 21 Oct 2008 23:27:54 +0200
+Message-Id: <1224624475.28639.13.camel@johannes.berg> (sfid-20081021_232806_019903_022AC77F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdom struct is given to the core, so it might as well
-free it in error conditions.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/nl80211.c |    5 +----
- net/wireless/reg.c     |    9 +++++----
- 2 files changed, 6 insertions(+), 8 deletions(-)
+--=-iqDCAnqcKYdJkzX4neG3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/net/wireless/nl80211.c	2008-10-21 10:36:13.000000000 +0200
-+++ everything/net/wireless/nl80211.c	2008-10-21 10:41:13.000000000 +0200
-@@ -1756,12 +1756,9 @@ static int nl80211_set_reg(struct sk_buf
- 	mutex_lock(&cfg80211_drv_mutex);
- 	r = set_regdom(rd);
- 	mutex_unlock(&cfg80211_drv_mutex);
--	if (r)
--		goto bad_reg;
--
- 	return r;
- 
--bad_reg:
-+ bad_reg:
- 	kfree(rd);
- 	return -EINVAL;
- }
---- everything.orig/net/wireless/reg.c	2008-10-21 10:38:59.000000000 +0200
-+++ everything/net/wireless/reg.c	2008-10-21 10:41:13.000000000 +0200
-@@ -606,7 +606,6 @@ int __regulatory_hint(struct wiphy *wiph
- 	return r;
- }
- 
--/* If rd is not NULL and if this call fails the caller must free it */
- int regulatory_hint(struct wiphy *wiphy, const char *alpha2,
- 	struct ieee80211_regdomain *rd)
- {
-@@ -691,6 +690,7 @@ void print_regdomain_info(const struct i
- 	print_rd_rules(rd);
- }
- 
-+/* Takes ownership of rd only if it doesn't fail */
- static int __set_regdom(const struct ieee80211_regdomain *rd)
- {
- 	/* Some basic sanity checks first */
-@@ -752,16 +752,17 @@ static int __set_regdom(const struct iee
- 
- /* Use this call to set the current regulatory domain. Conflicts with
-  * multiple drivers can be ironed out later. Caller must've already
-- * kmalloc'd the rd structure. If this calls fails you should kfree()
-- * the passed rd. Caller must hold cfg80211_drv_mutex */
-+ * kmalloc'd the rd structure. Caller must hold cfg80211_drv_mutex */
- int set_regdom(const struct ieee80211_regdomain *rd)
- {
- 	int r;
- 
- 	/* Note that this doesn't update the wiphys, this is done below */
- 	r = __set_regdom(rd);
--	if (r)
-+	if (r) {
-+		kfree(rd);
- 		return r;
-+	}
- 
- 	/* This would make this whole thing pointless */
- 	BUG_ON(rd != cfg80211_regdomain);
+On Tue, 2008-10-21 at 22:20 +0200, Benoit PAPILLAULT wrote:
 
+> +# Data from http://www.arcep.fr/index.php?id=3D9272#12931
+> +# Updated 2008-10-04
+> +# 1W =3D> 30dBm, 200mW =3D> 23dBm, 100mW =3D> 20dBm, 10mW =3D> 10dBm
+
+You can say "200mW" in the definitions and the tool will automatically
+convert it.
+
+> +# TPC is needed for 5250-5350 and 5470-5725, which flag to use?
+>  country FR:
+> -	(2402 - 2482 @ 40), (N/A, 20)
+> -	(5170 - 5250 @ 40), (N/A, 20)
+> -	(5250 - 5330 @ 40), (N/A, 20), DFS
+> -	(5490 - 5710 @ 40), (N/A, 27), DFS
+> +	(2400 - 2454 @ 40), (N/A, 20)
+
+i.e.
+
+(2400 - 2454 @ 40), (N/A, 100mW)
+
+I think I did this for the DE one.
+
+johannes
+
+--=-iqDCAnqcKYdJkzX4neG3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/klXAAoJEKVg1VMiehFYniIP/ji5MGGjy6Si8z3oHHA/SBu9
+vFNfOSiRMagv8zdaK5Aj3XsBlOU4DFr6EFaKm2fWK6JryHon0pz/YyVvtJWANkPG
+DHRwcKc7JpaERNPtHv1VRigEsANsKdId41SzKniIEP42exn0GxSmRSAkJj5BL6J1
+XIi5Xg17uhcnhAEZ5Vfwg2dA5k0atPZXA5q9GXCDahsO8CS0HamkW8uJADC4W24T
+zpFRPkaa9jmwk02yI877mR7lXsGWa5hCD9GJkZWHUmhEtVAmP+Gka9bm0jbJd3y0
+A6DpiBv1xXgMS/XSDdnvfxhKC+WGajnkC4UDqEiKg2LTjgxClKR2Tk1kx+orozUj
+3F8h9qE3GDLOjsp8EeEyAZrrNjtlsNYjs/c1gqMqU1bCxYhb/z1a/Cr/TxdxKQwY
+qn/4Q1AntCguB8Q0kI4aYY6cXfGpJHyxDRR14fbSE5ckVBmvuOl7n9IVEXRZwdOA
+q+kSsW+cKKxHWBPE/zThG9+ZB2iqAkgos2cU7pf2eEqJhOlJreYVVgBDYQ5eQpgO
+TFuVCZ2pCj1Whn0pE/7t9ro+8cQQYAWKNX+IFNpgneBbasanAnz8GQbWl4AfpMtj
+SvZqC1mrFelSPsDJXKB6h/6OK7GGyPuvKWzHJSedVX0uKjuTDe+hnH6oSIp2hOZH
+sYaQ5k7QNXloDAiC1erl
+=HBC/
+-----END PGP SIGNATURE-----
+
+--=-iqDCAnqcKYdJkzX4neG3--
 
