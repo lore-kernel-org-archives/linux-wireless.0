@@ -1,80 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34662 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38313 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756636AbYJGQ5o (ORCPT
+	with ESMTP id S1751755AbYJUGoh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 12:57:44 -0400
-Subject: Re: Infinite loop in sta_info_debugfs_add_work().
+	Tue, 21 Oct 2008 02:44:37 -0400
+Subject: Re: [PATCH] mac80211: fix a few typos in mac80211 kernel doc
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Robin Holt <holt@sgi.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <20081006133045.GM8534@sgi.com>
-References: <20081004103144.GI8534@sgi.com>
-	 <1223165956.24551.76.camel@johannes.berg> <20081005023143.GJ8534@sgi.com>
-	 <1223195921.24551.79.camel@johannes.berg> <20081006064509.GK8534@sgi.com>
-	 <1223283470.24551.86.camel@johannes.berg>  <20081006133045.GM8534@sgi.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9177DH7NkmFT7KnQD0v2"
-Date: Tue, 07 Oct 2008 00:09:36 +0200
-Message-Id: <1223330976.3778.47.camel@johannes.berg> (sfid-20081007_185808_110013_A3DA614F)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <20081021012027.GA25144@hash.localnet>
+References: <20081021012027.GA25144@hash.localnet>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DNdEUAYgoU26hTtZ9lpp"
+Date: Tue, 21 Oct 2008 08:44:31 +0200
+Message-Id: <1224571471.27899.69.camel@johannes.berg> (sfid-20081021_084440_243489_A5AD3EF7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9177DH7NkmFT7KnQD0v2
+--=-DNdEUAYgoU26hTtZ9lpp
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-10-06 at 08:30 -0500, Robin Holt wrote:
+On Mon, 2008-10-20 at 21:20 -0400, Bob Copeland wrote:
+> Correct a handful of errors found while reading the mac80211 book.
+>=20
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
 
-> I didn't really need to do much for the printk's in
-> ieee80211_sta_debugfs_add().  My printk's in sta_info_debugfs_add_work()
-> already told me that sta->local->debugfs.stations is NULL. =20
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Well yes, but I wanted to know why ieee80211_sta_debugfs_add() doesn't
-set debugfs.stations to non-NULL.
+Thanks Bob, John, can you take this patch?
 
-> Again, this
-> is iwl3945 only after a suspend of a few minutes followed by a resume.
-> It happens about 1/3 of the time.
+Out of curiosity, what would you want from the book?
 
-Ok, I have a new suspicion: there seems to be a race condition between
-destroying a station (sta_info_destroy) which removes it from debugfs,
-and creating a new one with the same MAC address which will ask the
-workqueue to add it to debugfs. It clearly is actually possible to run
-sta_info_insert(sta2) and consequently sta_info_debugfs_add_work before
-sta_info_destroy(sta1), but when they both have the same MAC address
-then ieee80211_sta_debugfs_add has to fail.
+> ---
+>=20
+> Hi Johannes, I just noticed these while reading the comments.
+>=20
+>  include/net/mac80211.h |   16 ++++++++--------
+>  1 files changed, 8 insertions(+), 8 deletions(-)
+>=20
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index f5f5b1f..e5bc62c 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -87,7 +87,7 @@ enum ieee80211_notification_types {
+>   * This structure describes most essential parameters needed
+>   * to describe 802.11n HT characteristics in a BSS.
+>   *
+> - * @primary_channel: channel number of primery channel
+> + * @primary_channel: channel number of primary channel
+>   * @bss_cap: 802.11n's general BSS capabilities (e.g. channel width)
+>   * @bss_op_mode: 802.11n's BSS operation modes (e.g. HT protection)
+>   */
+> @@ -115,7 +115,7 @@ enum ieee80211_max_queues {
+>   * The information provided in this structure is required for QoS
+>   * transmit queue configuration. Cf. IEEE 802.11 7.3.2.29.
+>   *
+> - * @aifs: arbitration interface space [0..255]
+> + * @aifs: arbitration interframe space [0..255]
+>   * @cw_min: minimum contention window [a value of the form
+>   *	2^n-1 in the range 1..32767]
+>   * @cw_max: maximum contention window [like @cw_min]
+> @@ -460,7 +460,7 @@ enum ieee80211_conf_flags {
+>   * @antenna_sel_tx: transmit antenna selection, 0: default/diversity,
+>   *	1/2: antenna 0/1
+>   * @antenna_sel_rx: receive antenna selection, like @antenna_sel_tx
+> - * @ht_conf: describes current self configuration of 802.11n HT capabili=
+es
+> + * @ht_conf: describes current self configuration of 802.11n HT capabili=
+ties
+>   * @ht_bss_conf: describes current BSS configuration of 802.11n HT param=
+eters
+>   * @channel: the channel to tune to
+>   */
+> @@ -860,7 +860,7 @@ static inline void SET_IEEE80211_DEV(struct ieee80211=
+_hw *hw, struct device *dev
+>  }
+> =20
+>  /**
+> - * SET_IEEE80211_PERM_ADDR - set the permanenet MAC address for 802.11 h=
+ardware
+> + * SET_IEEE80211_PERM_ADDR - set the permanent MAC address for 802.11 ha=
+rdware
+>   *
+>   * @hw: the &struct ieee80211_hw to set the MAC address for
+>   * @addr: the address to set
+> @@ -953,7 +953,7 @@ ieee80211_get_alt_retry_rate(const struct ieee80211_h=
+w *hw,
+>   * This happens everytime the iv16 wraps around (every 65536 packets). T=
+he
+>   * set_key() call will happen only once for each key (unless the AP did
+>   * rekeying), it will not include a valid phase 1 key. The valid phase 1=
+ key is
+> - * provided by udpate_tkip_key only. The trigger that makes mac80211 cal=
+l this
+> + * provided by update_tkip_key only. The trigger that makes mac80211 cal=
+l this
+>   * handler is software decryption with wrap around of iv16.
+>   */
+> =20
+> @@ -1087,7 +1087,7 @@ enum ieee80211_ampdu_mlme_action {
+>   *	Must be implemented.
+>   *
+>   * @add_interface: Called when a netdevice attached to the hardware is
+> - *	enabled. Because it is not called for monitor mode devices, @open
+> + *	enabled. Because it is not called for monitor mode devices, @start
+>   *	and @stop must be implemented.
+>   *	The driver should perform any initialization it needs before
+>   *	the device can be enabled. The initial configuration for the
+> @@ -1156,7 +1156,7 @@ enum ieee80211_ampdu_mlme_action {
+>   * @set_retry_limit: Configuration of retry limits (if device needs it)
+>   *
+>   * @sta_notify: Notifies low level driver about addition or removal
+> - *	of assocaited station or AP.
+> + *	of associated station or AP.
+>   *
+>   * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
+>   *	bursting) for a hardware TX queue.
+> @@ -1459,7 +1459,7 @@ void ieee80211_tx_status_irqsafe(struct ieee80211_h=
+w *hw,
+>   * the next beacon frame from the 802.11 code. The low-level is responsi=
+ble
+>   * for calling this function before beacon data is needed (e.g., based o=
+n
+>   * hardware interrupt). Returned skb is used only once and low-level dri=
+ver
+> - * is responsible of freeing it.
+> + * is responsible for freeing it.
+>   */
+>  struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
+>  				     struct ieee80211_vif *vif);
+> --=20
+> 1.5.4.2.182.gb3092
+>=20
 
-I don't see much we can do against this, the patch I posted is
-definitely needed just in case debugfs gets a new failure mode any time
-in the future so I'll post it for inclusion, and the race condition I
-described just means that the sta2 won't be in debugfs at all...
-
-johannes
-
---=-9177DH7NkmFT7KnQD0v2
+--=-DNdEUAYgoU26hTtZ9lpp
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI6oycAAoJEKVg1VMiehFY3eAP/3fvB9M935zg05gWPcnRy246
-NBINzNTypE6aUN8bXb/xRBnAamUshb9lGk815B+Pvupu5b4rLV3/hz8p1yPZ3TL/
-K/99WQUjKF/DkrdPk7THSEESeKbBbtxZvimmJ3cvwxZ/sJtmhs/Q6ItNIHSZPjWh
-RHp7iO4rWISbTeEqNLF0nWn/wR3/FkTUfPDKToo3myF1EtQZNU91aJ1RvlnzBR/G
-oft7XWhfPe/KycJJiw4ocS/fJpUJpB61Jl3Y6b45ra4kL+MkNswSKxcY3TldMCLk
-tdrvVff9iiawXlp1ZTraEc/FaceexQMscSh9iSoHYOsTPZ2/iPtHDz6JRmE5p2tI
-PQY7f/6sHLy2A6YPZhYDsCey3jBKVuTPuodOKg3Vv4m8T1S/ZqsPPdukFeTcDDfB
-5y0rM7kX29S0UKyeMllVLPxosvcLnXemtwFvGbw8CbbmLJmTiWCwux1tqSgTVA/c
-qey5FlcnU4iDfzKeNG7ingVOv8nT6eFcG/hMREgRolVQpbHyT36E/nUqVV5FSPjM
-1esFHwo1Gv9BAfD/xt6RVQ8mFDsa9gsuFZZ4X9MXjIGLtmzroAOvKPLR89tY2JBc
-5Z30M+n4JA60iSlkzFMlG953qHppMZXi5ch6t5YO+pSqrWvV/cRMIsMUp8K08WFn
-kv/Mv+3xzt6o0C6p/v2k
-=kpgW
+iQIcBAABAgAGBQJI/XpLAAoJEKVg1VMiehFYUDYP/1YabxBUYS7Yr6RxL2NgQn44
+3M3Jjafm52uPnBW5JyzRzgJcgL9YpklUSKed0GimBxTcQ9IRhJg1Xiwa5aj7HOz1
+PWsfulfwXcR6CGvIddGN5Tw2j+nNkIDCokxyz5OEHMqOlo4QWDUOiFSNrkOhupru
+wRcC7OS1WRNZ0ePLsq3h1ljdHk7vHvPKlYVKnwThMiiy7MmMngfv5sF56hGnuCyi
+0qdtwUlQMsNIgF6yUGnmwZCFJ+WADNVN5h8smPEe8hxqyYUOvMMjbCKaw+G+7dPU
+XXd76F8o/lat3/YmoqtufGIeNmmkXnIvjl02vvKHQay1sKut6CEhQOvFXEtlonu5
+LJsPNVz1zExLoU4WA3nTvgmKWJYqOsBotfJyxkG6ZdOyPyvprvipX/PxfB7YMvV8
+rh+wiyvBXIuE9MCD7kOKBHo/rehd3699eN8RJ2R9CEbXfQ+u6pDe4J01xenQsLNW
+fR4QnhLOwO3Eu77tG9m2M3/W+pm6Ke6S6PrNxQomMFr2EEXO2AZqRWFuFtno2Tv0
+uiLnGJwAI0XarT9qH3GlF51VRFMBV8DycMGicrJbtmaqDDzyJ76FHxreWPTsMdVU
+WOWCQQS6vS7AE8ILY+m6BaXEfEeSccVocqD2HF9aUICVYujVwiQeNAbtJ7xbqfBC
+dk2ILuUlZiIVaAfgOltm
+=cuBi
 -----END PGP SIGNATURE-----
 
---=-9177DH7NkmFT7KnQD0v2--
+--=-DNdEUAYgoU26hTtZ9lpp--
 
