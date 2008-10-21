@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:60486 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032AbYJUNlF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 09:41:05 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2426961rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2008 06:41:04 -0700 (PDT)
-Message-ID: <b6c5339f0810210641m14117f47k491e854c4746a3d7@mail.gmail.com> (sfid-20081021_154111_882339_D79828B4)
-Date: Tue, 21 Oct 2008 09:41:04 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix a few typos in mac80211 kernel doc
-Cc: linux-wireless@vger.kernel.org,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <1224571471.27899.69.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081021012027.GA25144@hash.localnet>
-	 <1224571471.27899.69.camel@johannes.berg>
+Received: from mga14.intel.com ([143.182.124.37]:23867 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750721AbYJUEIZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2008 00:08:25 -0400
+Subject: Re: [PATCH v3] mac80211/drivers: rewrite the rate control API
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <1224486587.18024.25.camel@johannes.berg>
+References: <1223996147.10113.33.camel@johannes.berg>
+	 (sfid-20081014_165703_092655_BE6BA58D) <1224052607.3027.20.camel@johannes.berg>
+	 <1224484940.24677.169.camel@debian.sh.intel.com>
+	 <1224485319.18024.9.camel@johannes.berg>
+	 <1224486368.24677.184.camel@debian.sh.intel.com>
+	 <1224486587.18024.25.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 21 Oct 2008 12:07:52 +0800
+Message-Id: <1224562072.24677.277.camel@debian.sh.intel.com> (sfid-20081021_060829_317747_7E3F9FB7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2008 at 2:44 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Thanks Bob, John, can you take this patch?
->
-> Out of curiosity, what would you want from the book?
+On Mon, 2008-10-20 at 01:09 -0600, Johannes Berg wrote:
+> It would be good to actually report as accurate as possible (up to
+> MAX_RATES) the retries the firmware will have done. We're going to
+> export that information to userland in radiotap too.
 
-It's kind of hard to say.  I was mostly reading it to get the big picture
-of mac80211's data structures, and for that purpose, what's already there
-mostly sufficed.  There are obviously lots of TBD sections which could
-use a fleshing out.
+The max retry rates number for iwl4965 is 16. See iwl-commands.h for
+more details:
 
-Right now, as the near-total noob that I am, I find reading the fine
-source is the best way to understand everything.  I think driver writers
-new to linux wireless could perhaps benefit from an overview of driver
-responsibilities, calling contexts, object lifetimes, etc.  A lot of this
-is already at the definition site of callbacks, but some stuff requires
-digging.  A howto format in the introductory sections might be useful.
+a) Use the initial rate for only one entry.
+b) For each following entry, reduce the rate to next lower available
+   rate, until reaching the lowest available rate.
+c) When reducing rate, also switch antenna selection.
+d) Once lowest available rate is reached, repeat this rate until
+   rate table is filled (16 entries), switching antenna each entry.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Thanks,
+-yi
+
