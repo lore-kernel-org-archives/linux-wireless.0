@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41122 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753195AbYJVXSl (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:46698 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195AbYJUXLB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 19:18:41 -0400
-Message-ID: <48FFB4CF.5090704@lwfinger.net> (sfid-20081023_011845_417271_B710BAD3)
-Date: Wed, 22 Oct 2008 16:18:39 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Fix warning in minstrel rate control
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 21 Oct 2008 19:11:01 -0400
+Subject: Re: New iwlwifi 3945 uCode available
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	reinette chatre <reinette.chatre@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890810211609t4ed76b3cq76d400d4a7c025e2@mail.gmail.com>
+References: <1224613633.10863.43.camel@rc-desk>
+	 <1224624324.28639.9.camel@johannes.berg>
+	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
+	 <1224624899.28639.17.camel@johannes.berg>
+	 <20081021213814.GM17268@tuxdriver.com>
+	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
+	 <1224627187.9386.103.camel@californication>
+	 <1ba2fa240810211523x2327351fxf8c1c54207d7706b@mail.gmail.com>
+	 <1224630116.9386.108.camel@californication>
+	 <43e72e890810211609t4ed76b3cq76d400d4a7c025e2@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 22 Oct 2008 01:11:56 +0200
+Message-Id: <1224630716.9386.117.camel@californication> (sfid-20081022_011107_115297_EF5F8617)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When compiling the minstrel rate-control code on x86_64 architecture, the
-following warning is issued:
+Hi Luis,
 
-  CC [M]  net/mac80211/rc80211_minstrel_debugfs.o
-net/mac80211/rc80211_minstrel_debugfs.c:145: warning: initialization from
-incompatible pointer type
+> > as long as the firmware is a file on the filesystem, it is the old
+> > userspace. It is simpler to update a firmware file (in this case
+> > installing a new one) then installing additional software, but that
+> > doesn't change anything.
+> >
+> > Our current problem is that our firmware is still not part of the
+> > firmware tree David Woodhouse is maintaining. Then we could link it
+> > together with the kernel tree. And yes, that is license issue, but it is
+> > one that can be solved.
+> 
+> What license issue BTW?
 
-The fix requires changing the type of minstrel_stats_read().
+about putting our ucode into the linux-firmware.git tree?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Regards
 
-John,
-
-This warning also prints in mainline - this belongs in 2.6.28.
-
-Larry
----
-
-Index: linux-2.6/net/mac80211/rc80211_minstrel_debugfs.c
-===================================================================
---- linux-2.6.orig/net/mac80211/rc80211_minstrel_debugfs.c
-+++ linux-2.6/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -106,7 +106,7 @@ minstrel_stats_open(struct inode *inode,
- 	return 0;
- }
-
--static int
-+static ssize_t
- minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *o)
- {
- 	struct minstrel_stats_info *ms;
-
+Marcel
 
 
