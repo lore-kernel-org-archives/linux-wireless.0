@@ -1,65 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:32197 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751941AbYJVXOE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 19:14:04 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: reinette chatre <reinette.chatre@linux.intel.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224716347.9386.151.camel@californication>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1224628088.10863.100.camel@rc-desk>
-	 <1224660449.28639.22.camel@johannes.berg>
-	 <1224662185.9386.131.camel@californication>
-	 <1224707446.10863.155.camel@rc-desk>
-	 <1224716347.9386.151.camel@californication>
+Received: from mx2.redhat.com ([66.187.237.31]:47790 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751795AbYJUNTc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2008 09:19:32 -0400
+Subject: Re: Marvell TopDog Driver Work
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1224533105.6873.22.camel@the-omnibook>
+References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
+	 <1218830917.14841.20.camel@localhost.localdomain>
+	 <gdidhg$hdq$3@ger.gmane.org>
+	 <1224524168.29822.46.camel@dhcp-100-3-195.bos.redhat.com>
+	 <1224525810.6873.8.camel@the-omnibook>
+	 <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com>
+	 <1224533105.6873.22.camel@the-omnibook>
 Content-Type: text/plain
-Date: Wed, 22 Oct 2008 16:14:21 -0700
-Message-Id: <1224717261.10863.219.camel@rc-desk> (sfid-20081023_011410_379329_A6413B7D)
+Date: Tue, 21 Oct 2008 09:18:13 -0400
+Message-Id: <1224595093.24581.15.camel@localhost.localdomain> (sfid-20081021_151938_647942_453BE91A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-22 at 15:59 -0700, Marcel Holtmann wrote:
+On Mon, 2008-10-20 at 13:05 -0700, Daniel Gimpelevich wrote:
+> On Mon, 2008-10-20 at 12:45 -0700, Luis R. Rodriguez wrote:
+> > On Mon, Oct 20, 2008 at 11:03 AM, Daniel Gimpelevich
+> > <daniel@gimpelevich.san-francisco.ca.us> wrote:
+> > 
+> > > The "Duh..." was a response to the "Not that I have heard of. Don't
+> > > know." statement, which was pretty ironic.
+> > 
+> > Well your question was "Has anyone stepped up to help in the port of
+> > this to mac80211" and I thought you already knew I had that tree.
+> 
+> I did not ask that, because I saw the tree, and that the initial import
+> was from the marvell.git tree. The OP might not have realized that the
+> code was TopDog-related even if he did see it. Since there is no working
+> mac80211 code for TopDog, any existing hardware-specific code for it may
+> prove to be a useful reference during the porting process. Anybody
+> investigating the possibility of stepping up to help in the port needs
+> to know what is already available and what is not.
 
-> in some cases it might be possible with a set of quirks or special
-> functions that can be switched at runtime. Check the whole bunch of USB
-> drivers that have special handling depending on what hardware it finds.
-> We could do the same. In some cases this effort might be too much, but
-> if possible we should at least try.
+Definitely, I've looked at marvell.git (topdog) and Luis's code, and
+earlier Marvell GPL code quite extensively.  The firmware interface is
+quite similar between the TopDog (802.11n) parts and the b/g parts, as
+are the TX and RX descriptors.  From my research, I didn't think it
+would be that hard to support both parts in the same driver.
 
-I don't think we can easily apply the hardware quirk solution here. This
-is because hardware can be identified by id that does not change and the
-hardware self does not really change (unless it has firmware that
-changes ...). In this firmware case we do not have "an id" (we have one
-file that is loaded by firmware loader so we cannot know what we get
-just by "looking at it" unless we enforce a version number in the
-filename as we currently do in our driver) and the firmware can change,
-potentially frequently, with the consequence of many "quirks" that need
-to be maintained.
+My strategy would be this, assuming you have TopDog hardware.  If you do
+not, I can ship you a CardBus TopDog card:
 
-> It all depends on how much the ucode API changes and sometimes we really
-> wanna cleanup the driver and remove the old code, but in that case we
-> have to tell the users via modules_install that this kernel will break
-> or we have to keep the old driver around. Breaking it from one kernel
-> version to the next one without the user noticing only after reboot is
-> just not good enough.
+1) Use marvell.git and Luis' attempt to get minimal b/g support working
+for the TopDog parts
 
-I agree with you and Johannes in this regard and look forward to the
-modules_install solution. I do hope this will be acceptable to
-everybody.
+2) Start adding in the support for 8335/8310 parts using mrv8k (and
+possibly BSD's malo(4)) as a guide
 
-Reinette
+3) Add the 802.11n bits of TopDog stuff
+
+The _most_ important thing is first to get a stable b/g driver, then add
+the candy later.  Since we have a full TopDog driver implementation,
+that might be the best thing to get working first.  mrv8k was never able
+to get very far for me when I was poking at it, I couldn't even get
+reliable scan results.
+
+> I don't think there is any question of *whether* TopDog support is
+> possible in mrv8k, only when, and "right now" does not yet appear to be
+> the answer. I really hope to be proven wrong on that, though.
+
+Oh, it's certainly possible in mrv8k.  But obviously you just want to
+get something up and running first, then add the tasty bits like N
+support later.
+
+Dan
 
 
