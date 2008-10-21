@@ -1,75 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37314 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753712AbYJBSF3 (ORCPT
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:54108 "EHLO
+	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642AbYJUTlz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 14:05:29 -0400
-Subject: Re: [PATCH] [RESEND] mac80211: remove redundant check in
-	ieee80211_master_start_xmit (net/mac80211/tx.c)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rami Rosen <roszenrami@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <b25312890810020648i5e224f3cp1178790fd68d7f3b@mail.gmail.com> (sfid-20081002_154826_252562_28230F2C)
-References: <eb3ff54b0810020556s407728b9n772e7ae178761eee@mail.gmail.com>
-	 <1222954031.24551.51.camel@johannes.berg>
-	 <b25312890810020648i5e224f3cp1178790fd68d7f3b@mail.gmail.com>
-	 (sfid-20081002_154826_252562_28230F2C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4U6WergtCmov3LiPXLSN"
-Date: Thu, 02 Oct 2008 20:05:24 +0200
-Message-Id: <1222970724.24551.57.camel@johannes.berg> (sfid-20081002_200533_286092_6388F29F)
-Mime-Version: 1.0
+	Tue, 21 Oct 2008 15:41:55 -0400
+Date: Tue, 21 Oct 2008 21:43:24 +0200
+From: Pavel Machek <pavel@suse.cz>
+To: jbenc@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
+	i.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: iwl3945: if I leave my machine running overnight, wifi will
+	not work in the morning
+Message-ID: <20081021194324.GA1811@elf.ucw.cz> (sfid-20081021_214200_333058_440CDC05)
+References: <20081019214035.GA30485@elf.ucw.cz> <20081019220655.GA1827@elf.ucw.cz> <20081021194031.GB17255@elf.ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081021194031.GB17255@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue 2008-10-21 21:40:31, Pavel Machek wrote:
+> On Mon 2008-10-20 00:06:55, Pavel Machek wrote:
+> > On Sun 2008-10-19 23:40:35, Pavel Machek wrote:
+> > > Hi!
+> > > 
+> > > Kernel 2.6.27-rc8; happened few times already.
+> > 
+> > ...
+> > > After reboot, network will work (I believe ;-).
+> > 
+> > Hmm, it did not this time.
+> 
+> Happened again...
+> 
+> root@amd:/mnt# ifconfig wlan0 down
+> root@amd:/mnt# iwlist wlan0 scan
+> Warning: Driver for device wlan0 has been compiled with version 22
+> of Wireless Extension, while this program supports up to version 17.
+> Some things may be broken...
+> 
+> wlan0     Interface doesn't support scanning : Network is down
+> 
+> root@amd:/mnt# ifconfig wlan0 10.0.0.6 up
+> root@amd:/mnt# iwlist wlan0 scan
+> Warning: Driver for device wlan0 has been compiled with version 22
+> of Wireless Extension, while this program supports up to version 17.
+> Some things may be broken...
+> 
+> wlan0     Scan completed :
+>           Cell 01 - Address: 00:11:2F:0E:95:A0
+>                     ESSID:"pavel"
+>                     Mode:Master
+>                     Channel:1
+>                     Frequency:2.412 GHz (Channel 1)
+>                     Quality=95/100  Signal level:-34 dBm  Noise
+> level=-68 dBm
+>                     Encryption key:off
+>                     Bit Rate:1 Mb/s
+>                     Bit Rate:2 Mb/s
+>                     Bit Rate:5.5 Mb/s
+>                     Bit Rate:11 Mb/s
+>                     Bit Rate:6 Mb/s
+>                     Bit Rate:9 Mb/s
+>                     Bit Rate:12 Mb/s
+>                     Bit Rate:18 Mb/s
+>                     Bit Rate:24 Mb/s
+>                     Bit Rate:36 Mb/s
+>                     Bit Rate:48 Mb/s
+>                     Bit Rate:54 Mb/s
+>                     Extra:tsf=000000262894417f
+>                     Extra: Last beacon: 76ms ago
+> 
+> root@amd:/mnt# iwconfig wlan0 essid pavel
+> root@amd:/mnt# ping hobit
+> PING hobit.ucw.cz (10.0.0.2): 56 data bytes
+> ^C
+> --- hobit.ucw.cz ping statistics ---
+> 4 packets transmitted, 0 packets received, 100% packet loss
+> root@amd:/mnt# 
+> 
+> 
+> This time I tried rebooting the AP, but it did not help. dmesg says:
+> 
+> wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
+> range
+> wlan0: deauthenticated
+> iwl3945 0000:03:00.0: PCI INT A disabled
+> iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> iwl3945 0000:03:00.0: restoring config space at offset 0x1 (was
+> 0x100102, writing 0x100106)
+> Registered led device: iwl-phy0:radio
+> Registered led device: iwl-phy0:assoc
+> Registered led device: iwl-phy0:RX
+> Registered led device: iwl-phy0:TX
+> wlan0: authenticate with AP 00:11:2f:0e:95:a0
+> wlan0: authenticate with AP 00:11:2f:0e:95:a0
+> wlan0: authenticated
+> wlan0: associate with AP 00:11:2f:0e:95:a0
+> wlan0: RX AssocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
+> aid=1)
+> wlan0: associated
+> wlan0: authenticate with AP 00:11:2f:0e:95:a0
+> wlan0: authenticated
+> wlan0: associate with AP 00:11:2f:0e:95:a0
+> wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
+> aid=1)
+> wlan0: associated
+> wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
+> range
+> wlan0: authenticate with AP 00:11:2f:0e:95:a0
+> wlan0: authenticated
+> wlan0: associate with AP 00:11:2f:0e:95:a0
+> wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
+> aid=1)
+> wlan0: associated
+> root@amd:/mnt# 
 
---=-4U6WergtCmov3LiPXLSN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+reboot, and network is back.
 
-On Thu, 2008-10-02 at 16:48 +0300, Rami Rosen wrote:
-> Hi,
->=20
->  - This patch (against the linux-wireless-next git tree) removes a
-> redundant check in ieee80211_master_start_xmit (net/mac80211/tx.c)
-> and adjust indentation in this method accordingly.
->=20
->  In this method, there is no need to call again the
-> ieee80211_is_data() method; this is checked immediately before, in the
-> "if" command (we will not enter this block unless ieee80211_is_data()
-> is true, so that the "and" (&&) condition in that "if" command will be
-> fullfilled ).
-
-Looks good to me, but I think you should look a bit more into how to
-format a proper patch and try to send it inline rather than as an
-attachment. Have you seen http://linux.yyz.us/patch-format.html? The
-main point I guess is that we don't want to have the "Hi," and
-"Regards, ..." stuff in the kernel changelog.
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-johannes
-
---=-4U6WergtCmov3LiPXLSN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI5Q1hAAoJEKVg1VMiehFY1BMP/jD4hHkzOHJ/L6xzgsHapVMv
-DoB826DWXX2g10jJLQGMyUDsyfD3QYBhvamwMAt+3XwKt3hBrIxe+duJ4x/pb6U1
-Wt9YNE8CqB76p6QJKREaMjymTOQo38a2XW7x0HTLtK+XPqB9K3AW9EbdoFwyBYSI
-U2lQpa3XoLgjb8EVk8J7AjdyfSpUzWIzqiwLtdIUQan83iuT0YY0KkLSikrQq1+3
-1aLA496kUO4RzrAqa/cTXMCWHI9nvXorCWKUEF4fmbZZ71ZHmFtiJIxy7+EgvtTh
-U59ufx7jDssa+1RiDqxznxwkBng33ZAoEHQKbnmw+5RX8Rw00BTCbCd/mRo/+6fm
-6OrfPWmqvaA8E6C03bV8iHpClBNVNtCmCiuHZndxVz4G/1frCwhPorcgtdmAXfxv
-CgjiemzhBtt1IbCHJci4jR9Ye9tDEECNzfWWaB6sipjmvTNOyIiapyNxUebTPbEY
-+nC46w/Qop7B6A4nl4XtkWtYqsEgsJ2T9E5uYYDfP+dP7Ka2DyanaeGKJVzfFfob
-RJ8vzq3B50aLbRwr0LA53R8OJ2Y1Lfsj7RGCayr/lNlsqldBz8jl174xTYYa7BVE
-eHj94okAu6X3WGBi2L0UyQdQnShARabnmolpiSvpO42xSycEpspWi36eFOgU22Mo
-JNllJ0Djwp2PtohtwuEo
-=1dlb
------END PGP SIGNATURE-----
-
---=-4U6WergtCmov3LiPXLSN--
-
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
