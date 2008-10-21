@@ -1,31 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54788 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753024AbYJ2NAx (ORCPT
+Received: from mga05.intel.com ([192.55.52.89]:23960 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751195AbYJUV7f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 09:00:53 -0400
-Date: Wed, 29 Oct 2008 08:59:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: mickflemm@gmail.com, jirislaby@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH] ath5k: correct misspelling in debug help
-Message-ID: <20081029125948.GF24103@tuxdriver.com> (sfid-20081029_140057_653179_8BEEAC43)
-References: <1225283457-24417-1-git-send-email-me@bobcopeland.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1225283457-24417-1-git-send-email-me@bobcopeland.com>
+	Tue, 21 Oct 2008 17:59:35 -0400
+Subject: Re: New iwlwifi 3945 uCode available
+From: reinette chatre <reinette.chatre@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224624899.28639.17.camel@johannes.berg>
+References: <1224613633.10863.43.camel@rc-desk>
+	 <1224624324.28639.9.camel@johannes.berg>
+	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
+	 (sfid-20081021_233334_570632_4AF554DC)  <1224624899.28639.17.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 21 Oct 2008 14:59:52 -0700
+Message-Id: <1224626392.10863.92.camel@rc-desk> (sfid-20081021_235938_272310_19C58561)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 08:30:53AM -0400, Bob Copeland wrote:
-> Change "mamagement" to "management"
+On Tue, 2008-10-21 at 14:34 -0700, Johannes Berg wrote:
+> On Tue, 2008-10-21 at 23:33 +0200, Tomas Winkler wrote:
+> > On Tue, Oct 21, 2008 at 11:25 PM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> > > On Tue, 2008-10-21 at 11:27 -0700, reinette chatre wrote:
+> > >> Two new versions of 3945 uCode is now available for download from
+> > >> http://intellinuxwireless.org/?n=Downloads. Two versions are available
+> > >> as we have updated the API version of the uCode and included pending
+> > >> fixes in both API versions.
+> > >>
+> > >> Version 15.28.1.8 supports API v1 and can be used with most current 3945
+> > >> drivers. Version 15.28.2.8 (API v2) is required when you start using the
+> > >> latest 3945 driver from wireless-testing at the time it includes the
+> > >> patch "iwl3945 : Fix a-band association for passive channels".
+> > >
+> > > Can you make the driver work with the old ucode? We even do that for
+> > > drivers where we don't control the ucode like b43...
+> > 
+> > What for?
 > 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> Well, so that installing a new kernel doesn't suddenly break your
+> network connection and ability to download the firmware, for instance.
+> If you want more arguments you can go read all the "b43 sucks" threads
+> about it.
 
-"mamagement" -- there must be a joke in there somewhere... :-)
+Using the new driver (with patch
+http://marc.info/?l=linux-wireless&m=122401294318415&w=2 ) on current
+(v1 API) uCode will cause a firmware error. The log message should be
+clear that a newer ucode is required.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Reinette
+
+
