@@ -1,43 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:39202 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754416AbYJHRD4 (ORCPT
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:41101 "EHLO
+	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500AbYJUTps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2008 13:03:56 -0400
-Message-ID: <48ECE7F7.7090401@lwfinger.net> (sfid-20081008_190401_040080_FD229125)
-Date: Wed, 08 Oct 2008 10:03:51 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 21 Oct 2008 15:45:48 -0400
+Date: Tue, 21 Oct 2008 21:40:31 +0200
+From: Pavel Machek <pavel@suse.cz>
+To: jbenc@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
+	i.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: iwl3945: if I leave my machine running overnight, wifi will
+	not work in the morning
+Message-ID: <20081021194031.GB17255@elf.ucw.cz> (sfid-20081021_214553_119607_E7AE54F8)
+References: <20081019214035.GA30485@elf.ucw.cz> <20081019220655.GA1827@elf.ucw.cz>
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>, Chr <chunkeey@web.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] p54: Fix compilation problem on PPC
-References: <48EB7FF1.9060803@lwfinger.net>	 <1223398653.7328.43.camel@johannes.berg> <1223424869.22522.6.camel@dv>
-In-Reply-To: <1223424869.22522.6.camel@dv>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081019220655.GA1827@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> I'm sorry for being late.  I have tested an Xterasys XG-600 (miniPCI) on
-> i386 and PowerPC.  The same device is working on i386, but not on
-> PowerPC.  There are kernel messages running on the console on PowerPC,
-> but I could not capture them yet.  The kernel is the current
-> wireless-testing.
+On Mon 2008-10-20 00:06:55, Pavel Machek wrote:
+> On Sun 2008-10-19 23:40:35, Pavel Machek wrote:
+> > Hi!
+> > 
+> > Kernel 2.6.27-rc8; happened few times already.
 > 
-> I suspect we should not be mixing little-endian and host-endian
-> structures.
+> ...
+> > After reboot, network will work (I believe ;-).
+> 
+> Hmm, it did not this time.
 
-Agreed. In data structure "bootrec", there is a data array that gets
-used once as be32, once as le16, and several times as though it were
-in native CPU order. That has always look funny to me, but as I can
-only test on x86_64 architecture, I cannot distinguish le32 from
-native CPU.
+Happened again...
 
-I will prepare a patch to explicitly use those data as le32 for you to
-test.
+root@amd:/mnt# ifconfig wlan0 down
+root@amd:/mnt# iwlist wlan0 scan
+Warning: Driver for device wlan0 has been compiled with version 22
+of Wireless Extension, while this program supports up to version 17.
+Some things may be broken...
 
-Thanks,
+wlan0     Interface doesn't support scanning : Network is down
 
-Larry
+root@amd:/mnt# ifconfig wlan0 10.0.0.6 up
+root@amd:/mnt# iwlist wlan0 scan
+Warning: Driver for device wlan0 has been compiled with version 22
+of Wireless Extension, while this program supports up to version 17.
+Some things may be broken...
+
+wlan0     Scan completed :
+          Cell 01 - Address: 00:11:2F:0E:95:A0
+                    ESSID:"pavel"
+                    Mode:Master
+                    Channel:1
+                    Frequency:2.412 GHz (Channel 1)
+                    Quality=95/100  Signal level:-34 dBm  Noise
+level=-68 dBm
+                    Encryption key:off
+                    Bit Rate:1 Mb/s
+                    Bit Rate:2 Mb/s
+                    Bit Rate:5.5 Mb/s
+                    Bit Rate:11 Mb/s
+                    Bit Rate:6 Mb/s
+                    Bit Rate:9 Mb/s
+                    Bit Rate:12 Mb/s
+                    Bit Rate:18 Mb/s
+                    Bit Rate:24 Mb/s
+                    Bit Rate:36 Mb/s
+                    Bit Rate:48 Mb/s
+                    Bit Rate:54 Mb/s
+                    Extra:tsf=000000262894417f
+                    Extra: Last beacon: 76ms ago
+
+root@amd:/mnt# iwconfig wlan0 essid pavel
+root@amd:/mnt# ping hobit
+PING hobit.ucw.cz (10.0.0.2): 56 data bytes
+^C
+--- hobit.ucw.cz ping statistics ---
+4 packets transmitted, 0 packets received, 100% packet loss
+root@amd:/mnt# 
+
+
+This time I tried rebooting the AP, but it did not help. dmesg says:
+
+wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
+range
+wlan0: deauthenticated
+iwl3945 0000:03:00.0: PCI INT A disabled
+iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwl3945 0000:03:00.0: restoring config space at offset 0x1 (was
+0x100102, writing 0x100106)
+Registered led device: iwl-phy0:radio
+Registered led device: iwl-phy0:assoc
+Registered led device: iwl-phy0:RX
+Registered led device: iwl-phy0:TX
+wlan0: authenticate with AP 00:11:2f:0e:95:a0
+wlan0: authenticate with AP 00:11:2f:0e:95:a0
+wlan0: authenticated
+wlan0: associate with AP 00:11:2f:0e:95:a0
+wlan0: RX AssocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
+aid=1)
+wlan0: associated
+wlan0: authenticate with AP 00:11:2f:0e:95:a0
+wlan0: authenticated
+wlan0: associate with AP 00:11:2f:0e:95:a0
+wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
+aid=1)
+wlan0: associated
+wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
+range
+wlan0: authenticate with AP 00:11:2f:0e:95:a0
+wlan0: authenticated
+wlan0: associate with AP 00:11:2f:0e:95:a0
+wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
+aid=1)
+wlan0: associated
+root@amd:/mnt# 
+
+
+									Pavel
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
