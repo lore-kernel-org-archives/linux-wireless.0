@@ -1,101 +1,534 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.228]:51636 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986AbYJQAf4 (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:53806 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751577AbYJUT4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 20:35:56 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so260343rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Oct 2008 17:35:53 -0700 (PDT)
-Subject: Re: [PATCH 7/6] p54: integrate parts of lmac_longbow.h and other
- parts of stlc45xx
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>
-In-Reply-To: <200810162320.13106.chunkeey@web.de>
-References: <200810150408.44363.chunkeey@web.de>
-	 <48F761CA.5040102@lwfinger.net>  <200810162320.13106.chunkeey@web.de>
-Content-Type: text/plain
-Date: Thu, 16 Oct 2008 15:30:21 -0700
-Message-Id: <1224196221.6287.18.camel@brick> (sfid-20081017_023600_662213_4F6866E6)
-Mime-Version: 1.0
+	Tue, 21 Oct 2008 15:56:31 -0400
+From: Chr <chunkeey@web.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: [RFT/RFC][PATCH] p54: fix misbehavings when firmware can't be found
+Date: Tue, 21 Oct 2008 21:56:24 +0200
+Cc: linux-wireless@vger.kernel.org, bugme-daemon@bugzilla.kernel.org,
+	sean@mess.org
+References: <bug-11782-10286@http.bugzilla.kernel.org/> <20081021112313.0885a745.akpm@linux-foundation.org>
+In-Reply-To: <20081021112313.0885a745.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_oPj/ItglzjrBt91"
+Message-Id: <200810212156.24772.chunkeey@web.de> (sfid-20081021_215636_633739_34E26FE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-10-16 at 23:20 +0200, Christian Lamparter wrote:
-> On Thursday 16 October 2008 17:46:18 Larry Finger wrote:
-> > The following change of ack_rssi from __le16 to u8 generates the sparse warning
-> > "drivers/net/wireless/p54/p54common.c:660:5: warning: cast to restricted __le16":
-> > 
+--Boundary-00=_oPj/ItglzjrBt91
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> @@ -739,9 +777,9 @@ static int p54_rx_control(struct ieee802
->  /* returns zero if skb can be reused */
->  int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb)
->  {
-> -	u8 type = le16_to_cpu(*((__le16 *)skb->data)) >> 8;
-> +	u16 type = le16_to_cpu(*((__le16 *)skb->data));
+On Tuesday 21 October 2008 20:23:13 Andrew Morton wrote:
+> (switched to email.  Please respond via emailed reply-to-all, not via the
+> bugzilla web interface).
+>
+> On Sat, 18 Oct 2008 09:13:00 -0700 (PDT)
+>
+> bugme-daemon@bugzilla.kernel.org wrote:
+> > http://bugzilla.kernel.org/show_bug.cgi?id=11782
+> >
+> >            Summary: p54 misbehaves when firmware can't be found
+> >            Product: Drivers
+> >            Version: 2.5
+> >      KernelVersion: 2.6.27-git8
+> >           Platform: All
+> >         OS/Version: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: low
+> >           Priority: P1
+> >          Component: network-wireless
+> >         AssignedTo: drivers_network-wireless@kernel-bugs.osdl.org
+> >         ReportedBy: sean@mess.org
+> >
+> >
+> > Latest working kernel version: 2.6.26
+>
+well, you can increase 26 to 27. The patch that caused this regression 
+went into in 2.6.27-gitX so no stable kernel is affected only this pre-rc1...
 
-	u16 type = le16_to_cpup((__le16 *)skb->data);
+anyway, I don't have any p54p hardware right now (for the next two weeks
+to be more precise), so sean you have to test it and report back, otherwise
+this will properly stay RFT...
 
-> +
-> +#ifndef WLAN_FC_GET_TYPE
-> +#define WLAN_FC_GET_TYPE(fc) (fc & IEEE80211_FCTL_FTYPE)
-> +#define WLAN_FC_GET_STYPE(fc) (fc & IEEE80211_FCTL_STYPE)
-> +#endif
-> +
+I made two versions of the patch, both do the same,
+so it more a matter of which one you would like to have.
 
-Suggest you look into some of the helpers in ieee80211.h
+I prefer the first and bigger one, since it hopefully won't break the other 
+patches I send some time ago for wireless-testing...
 
-> +
-> +static int p54_tx_fill(struct ieee80211_hw *dev, struct sk_buff *skb,
-> +		struct ieee80211_tx_info* info, u8 *queue, size_t *extra_len,
-> +		u16 *flags, u16 *aid)
-> +{
-> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> +	struct p54_common *priv = dev->priv;
-> +	u16 fc = le16_to_cpu(hdr->frame_control);
+Regards,
+	Chr
+---
+diff --git a/drivers/net/wireless/p54/p54pci.c 
+b/drivers/net/wireless/p54/p54pci.c
+index 1c2a02a..88b3cad 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -346,68 +346,6 @@ static void p54p_tx(struct ieee80211_hw *dev, struct 
+p54_control_hdr *data,
+ 		printk(KERN_INFO "%s: tx overflow.\n", wiphy_name(dev->wiphy));
+ }
+ 
+-static int p54p_open(struct ieee80211_hw *dev)
+-{
+-	struct p54p_priv *priv = dev->priv;
+-	int err;
+-
+-	init_completion(&priv->boot_comp);
+-	err = request_irq(priv->pdev->irq, &p54p_interrupt,
+-			  IRQF_SHARED, "p54pci", dev);
+-	if (err) {
+-		printk(KERN_ERR "%s: failed to register IRQ handler\n",
+-		       wiphy_name(dev->wiphy));
+-		return err;
+-	}
+-
+-	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
+-	err = p54p_upload_firmware(dev);
+-	if (err) {
+-		free_irq(priv->pdev->irq, dev);
+-		return err;
+-	}
+-	priv->rx_idx_data = priv->tx_idx_data = 0;
+-	priv->rx_idx_mgmt = priv->tx_idx_mgmt = 0;
+-
+-	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
+-		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
+-
+-	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
+-		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
+-
+-	P54P_WRITE(ring_control_base, cpu_to_le32(priv->ring_control_dma));
+-	P54P_READ(ring_control_base);
+-	wmb();
+-	udelay(10);
+-
+-	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_INIT));
+-	P54P_READ(int_enable);
+-	wmb();
+-	udelay(10);
+-
+-	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
+-	P54P_READ(dev_int);
+-
+-	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ)) {
+-		printk(KERN_ERR "%s: Cannot boot firmware!\n",
+-		       wiphy_name(dev->wiphy));
+-		free_irq(priv->pdev->irq, dev);
+-		return -ETIMEDOUT;
+-	}
+-
+-	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_UPDATE));
+-	P54P_READ(int_enable);
+-	wmb();
+-	udelay(10);
+-
+-	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
+-	P54P_READ(dev_int);
+-	wmb();
+-	udelay(10);
+-
+-	return 0;
+-}
+-
+ static void p54p_stop(struct ieee80211_hw *dev)
+ {
+ 	struct p54p_priv *priv = dev->priv;
+@@ -474,6 +412,68 @@ static void p54p_stop(struct ieee80211_hw *dev)
+ 	memset(ring_control, 0, sizeof(*ring_control));
+ }
+ 
++static int p54p_open(struct ieee80211_hw *dev)
++{
++	struct p54p_priv *priv = dev->priv;
++	int err;
++
++	init_completion(&priv->boot_comp);
++	err = request_irq(priv->pdev->irq, &p54p_interrupt,
++			  IRQF_SHARED, "p54pci", dev);
++	if (err) {
++		printk(KERN_ERR "%s: failed to register IRQ handler\n",
++		       wiphy_name(dev->wiphy));
++		return err;
++	}
++
++	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
++	err = p54p_upload_firmware(dev);
++	if (err) {
++		free_irq(priv->pdev->irq, dev);
++		return err;
++	}
++	priv->rx_idx_data = priv->tx_idx_data = 0;
++	priv->rx_idx_mgmt = priv->tx_idx_mgmt = 0;
++
++	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
++		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
++
++	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
++		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
++
++	P54P_WRITE(ring_control_base, cpu_to_le32(priv->ring_control_dma));
++	P54P_READ(ring_control_base);
++	wmb();
++	udelay(10);
++
++	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_INIT));
++	P54P_READ(int_enable);
++	wmb();
++	udelay(10);
++
++	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
++	P54P_READ(dev_int);
++
++	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ)) {
++		printk(KERN_ERR "%s: Cannot boot firmware!\n",
++		       wiphy_name(dev->wiphy));
++		p54p_stop(dev);
++		return -ETIMEDOUT;
++	}
++
++	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_UPDATE));
++	P54P_READ(int_enable);
++	wmb();
++	udelay(10);
++
++	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
++	P54P_READ(dev_int);
++	wmb();
++	udelay(10);
++
++	return 0;
++}
++
+ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 				const struct pci_device_id *id)
+ {
+@@ -556,11 +556,13 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	spin_lock_init(&priv->lock);
+ 	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
+ 
+-	p54p_open(dev);
++	err = p54p_open(dev);
++	if (err)
++		goto err_free_common;
+ 	err = p54_read_eeprom(dev);
+ 	p54p_stop(dev);
+ 	if (err)
+-		goto err_free_desc;
++		goto err_free_common;
+ 
+ 	err = ieee80211_register_hw(dev);
+ 	if (err) {
+@@ -573,8 +575,6 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 
+  err_free_common:
+ 	p54_free_common(dev);
+-
+- err_free_desc:
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+ 
+---
 
-	__le16 fc = hdr->frame_control;
 
-> +	int ret = 0;
-> +
-> +	if (unlikely(WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT)) {
 
-	ieee80211_is_mgmt(fc);
 
-> +		switch (WLAN_FC_GET_STYPE(fc)) {
 
-Not sure what the prevailing wisdom is here, switch to if /else if using
-the helpers ieee80211_is_beacon(fc), ieee80211_is_probe_resp to do
-compile-time byteswaps.
+this is the alternative patch
 
-or
-		switch (fc & cpu_to_le16(IEEE80211_FCTL_STYPE)
-		case cpu_to_le16(IEEE80211_STYPE_BEACON):
 
-etc.
 
-> +		case IEEE80211_STYPE_BEACON:
-> +			*aid = 0;
-> +			*queue = 0;
-> +			*extra_len = IEEE80211_MAX_TIM_LEN;
-> +			*flags = P54_HDR_FLAG_DATA_OUT_TIMESTAMP;
-> +			return 0;
-> +		case IEEE80211_STYPE_PROBE_RESP:
-> +			*aid = 0;
-> +			*queue = 2;
-> +			*flags = P54_HDR_FLAG_DATA_OUT_TIMESTAMP |
-> +				 P54_HDR_FLAG_DATA_OUT_NOCANCEL;
-> +			return 0;
-> +		default:
-> +			*queue = 2;
-> +			ret = 0;
 
-		return?
 
-Cheers,
+---
+diff --git a/drivers/net/wireless/p54/p54pci.c 
+b/drivers/net/wireless/p54/p54pci.c
+index 1c2a02a..3f91fbc 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -346,6 +346,8 @@ static void p54p_tx(struct ieee80211_hw *dev, struct 
+p54_control_hdr *data,
+ 		printk(KERN_INFO "%s: tx overflow.\n", wiphy_name(dev->wiphy));
+ }
+ 
++static void p54p_stop(struct ieee80211_hw *dev);
++
+ static int p54p_open(struct ieee80211_hw *dev)
+ {
+ 	struct p54p_priv *priv = dev->priv;
+@@ -391,7 +393,7 @@ static int p54p_open(struct ieee80211_hw *dev)
+ 	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ)) {
+ 		printk(KERN_ERR "%s: Cannot boot firmware!\n",
+ 		       wiphy_name(dev->wiphy));
+-		free_irq(priv->pdev->irq, dev);
++		p54p_stop(dev);
+ 		return -ETIMEDOUT;
+ 	}
+ 
+@@ -556,11 +558,13 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	spin_lock_init(&priv->lock);
+ 	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
+ 
+-	p54p_open(dev);
++	err = p54p_open(dev);
++	if (err)
++		goto err_free_common;
+ 	err = p54_read_eeprom(dev);
+ 	p54p_stop(dev);
+ 	if (err)
+-		goto err_free_desc;
++		goto err_free_common;
+ 
+ 	err = ieee80211_register_hw(dev);
+ 	if (err) {
+@@ -573,8 +577,6 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 
+  err_free_common:
+ 	p54_free_common(dev);
+-
+- err_free_desc:
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+ 
 
-Harvey
+--Boundary-00=_oPj/ItglzjrBt91
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="p54pci-fix-no-firmware-move.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54pci-fix-no-firmware-move.diff"
 
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index 1c2a02a..88b3cad 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -346,68 +346,6 @@ static void p54p_tx(struct ieee80211_hw *dev, struct p54_control_hdr *data,
+ 		printk(KERN_INFO "%s: tx overflow.\n", wiphy_name(dev->wiphy));
+ }
+ 
+-static int p54p_open(struct ieee80211_hw *dev)
+-{
+-	struct p54p_priv *priv = dev->priv;
+-	int err;
+-
+-	init_completion(&priv->boot_comp);
+-	err = request_irq(priv->pdev->irq, &p54p_interrupt,
+-			  IRQF_SHARED, "p54pci", dev);
+-	if (err) {
+-		printk(KERN_ERR "%s: failed to register IRQ handler\n",
+-		       wiphy_name(dev->wiphy));
+-		return err;
+-	}
+-
+-	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
+-	err = p54p_upload_firmware(dev);
+-	if (err) {
+-		free_irq(priv->pdev->irq, dev);
+-		return err;
+-	}
+-	priv->rx_idx_data = priv->tx_idx_data = 0;
+-	priv->rx_idx_mgmt = priv->tx_idx_mgmt = 0;
+-
+-	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
+-		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
+-
+-	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
+-		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
+-
+-	P54P_WRITE(ring_control_base, cpu_to_le32(priv->ring_control_dma));
+-	P54P_READ(ring_control_base);
+-	wmb();
+-	udelay(10);
+-
+-	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_INIT));
+-	P54P_READ(int_enable);
+-	wmb();
+-	udelay(10);
+-
+-	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
+-	P54P_READ(dev_int);
+-
+-	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ)) {
+-		printk(KERN_ERR "%s: Cannot boot firmware!\n",
+-		       wiphy_name(dev->wiphy));
+-		free_irq(priv->pdev->irq, dev);
+-		return -ETIMEDOUT;
+-	}
+-
+-	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_UPDATE));
+-	P54P_READ(int_enable);
+-	wmb();
+-	udelay(10);
+-
+-	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
+-	P54P_READ(dev_int);
+-	wmb();
+-	udelay(10);
+-
+-	return 0;
+-}
+-
+ static void p54p_stop(struct ieee80211_hw *dev)
+ {
+ 	struct p54p_priv *priv = dev->priv;
+@@ -474,6 +412,68 @@ static void p54p_stop(struct ieee80211_hw *dev)
+ 	memset(ring_control, 0, sizeof(*ring_control));
+ }
+ 
++static int p54p_open(struct ieee80211_hw *dev)
++{
++	struct p54p_priv *priv = dev->priv;
++	int err;
++
++	init_completion(&priv->boot_comp);
++	err = request_irq(priv->pdev->irq, &p54p_interrupt,
++			  IRQF_SHARED, "p54pci", dev);
++	if (err) {
++		printk(KERN_ERR "%s: failed to register IRQ handler\n",
++		       wiphy_name(dev->wiphy));
++		return err;
++	}
++
++	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
++	err = p54p_upload_firmware(dev);
++	if (err) {
++		free_irq(priv->pdev->irq, dev);
++		return err;
++	}
++	priv->rx_idx_data = priv->tx_idx_data = 0;
++	priv->rx_idx_mgmt = priv->tx_idx_mgmt = 0;
++
++	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
++		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
++
++	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
++		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
++
++	P54P_WRITE(ring_control_base, cpu_to_le32(priv->ring_control_dma));
++	P54P_READ(ring_control_base);
++	wmb();
++	udelay(10);
++
++	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_INIT));
++	P54P_READ(int_enable);
++	wmb();
++	udelay(10);
++
++	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
++	P54P_READ(dev_int);
++
++	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ)) {
++		printk(KERN_ERR "%s: Cannot boot firmware!\n",
++		       wiphy_name(dev->wiphy));
++		p54p_stop(dev);
++		return -ETIMEDOUT;
++	}
++
++	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_UPDATE));
++	P54P_READ(int_enable);
++	wmb();
++	udelay(10);
++
++	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
++	P54P_READ(dev_int);
++	wmb();
++	udelay(10);
++
++	return 0;
++}
++
+ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 				const struct pci_device_id *id)
+ {
+@@ -556,11 +556,13 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	spin_lock_init(&priv->lock);
+ 	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
+ 
+-	p54p_open(dev);
++	err = p54p_open(dev);
++	if (err)
++		goto err_free_common;
+ 	err = p54_read_eeprom(dev);
+ 	p54p_stop(dev);
+ 	if (err)
+-		goto err_free_desc;
++		goto err_free_common;
+ 
+ 	err = ieee80211_register_hw(dev);
+ 	if (err) {
+@@ -573,8 +575,6 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 
+  err_free_common:
+ 	p54_free_common(dev);
+-
+- err_free_desc:
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+ 
+
+--Boundary-00=_oPj/ItglzjrBt91
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="p54pci-fix-no-firmware.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54pci-fix-no-firmware.diff"
+
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index 1c2a02a..3f91fbc 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -346,6 +346,8 @@ static void p54p_tx(struct ieee80211_hw *dev, struct p54_control_hdr *data,
+ 		printk(KERN_INFO "%s: tx overflow.\n", wiphy_name(dev->wiphy));
+ }
+ 
++static void p54p_stop(struct ieee80211_hw *dev);
++
+ static int p54p_open(struct ieee80211_hw *dev)
+ {
+ 	struct p54p_priv *priv = dev->priv;
+@@ -391,7 +393,7 @@ static int p54p_open(struct ieee80211_hw *dev)
+ 	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ)) {
+ 		printk(KERN_ERR "%s: Cannot boot firmware!\n",
+ 		       wiphy_name(dev->wiphy));
+-		free_irq(priv->pdev->irq, dev);
++		p54p_stop(dev);
+ 		return -ETIMEDOUT;
+ 	}
+ 
+@@ -556,11 +558,13 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	spin_lock_init(&priv->lock);
+ 	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
+ 
+-	p54p_open(dev);
++	err = p54p_open(dev);
++	if (err)
++		goto err_free_common;
+ 	err = p54_read_eeprom(dev);
+ 	p54p_stop(dev);
+ 	if (err)
+-		goto err_free_desc;
++		goto err_free_common;
+ 
+ 	err = ieee80211_register_hw(dev);
+ 	if (err) {
+@@ -573,8 +577,6 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 
+  err_free_common:
+ 	p54_free_common(dev);
+-
+- err_free_desc:
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+ 
+
+--Boundary-00=_oPj/ItglzjrBt91--
