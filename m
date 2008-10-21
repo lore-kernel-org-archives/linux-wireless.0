@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52695
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750744AbYJ0WxG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 18:53:06 -0400
-Date: Mon, 27 Oct 2008 15:52:43 -0700 (PDT)
-Message-Id: <20081027.155243.206513005.davem@davemloft.net> (sfid-20081027_235314_028800_0384586E)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH/RFC] mac80211: convert to %pM away from print_mac
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1224892243.3919.32.camel@johannes.berg>
-References: <1224892243.3919.32.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from smtp1-g19.free.fr ([212.27.42.27]:55446 "EHLO smtp1-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751481AbYJUUUt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2008 16:20:49 -0400
+Message-ID: <48FE399E.6050907@free.fr> (sfid-20081021_222053_979649_39DDEB3E)
+Date: Tue, 21 Oct 2008 22:20:46 +0200
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 4/5] crda: Updated regulatory information for France (FR)
+References: <cover.1223583376.git.benoit.papillault@free.fr>,	<cover.1223583376.git.benoit.papillault@free.fr>
+In-Reply-To: <cover.1223583376.git.benoit.papillault@free.fr>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Sat, 25 Oct 2008 01:50:43 +0200
+This patch is for review. It might be tricky to use the INDOOR/OUTDOOR
+with those definitions, but it will be another issue.
 
-> Also remove a few stray DECLARE_MAC_BUF that were no longer
-> used at all.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> Not sure this will apply to your tree, I prepared it against John's tree
-> which might have more things. If you put the previous patch in, I
-> suppose John _could_ put it into his tree, but then he'd have to pull in
-> yours which he normally doesn't... No idea. I can also just postpone
-> this?
 
-I munged this to apply to my tree, the only conflicts were in
-mlme.c
+Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
+---
+ db.txt |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
-Sorry John, one of us had to deal with this :-)
+diff --git a/db.txt b/db.txt
+index 6a282b6..bfc91ef 100644
+--- a/db.txt
++++ b/db.txt
+@@ -199,12 +199,17 @@ country FI:
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
+-
++# Data from http://www.arcep.fr/index.php?id=9272#12931
++# Updated 2008-10-04
++# 1W => 30dBm, 200mW => 23dBm, 100mW => 20dBm, 10mW => 10dBm
++# TPC is needed for 5250-5350 and 5470-5725, which flag to use?
+ country FR:
+-	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(2400 - 2454 @ 40), (N/A, 20)
++	(2454 - 2483.5 @ 40), (N/A, 20), NO-OUTDOOR
++	(2454 - 2483.5 @ 40), (N/A, 10), NO-INDOOR
++	(5150 - 5250 @ 40), (N/A, 23), NO-OUTDOOR
++	(5250 - 5350 @ 40), (N/A, 23), NO-OUTDOOR, DFS, PASSIVE-SCAN
++	(5470 - 5725 @ 40), (N/A, 30), DFS, PASSIVE-SCAN
+
+ country GE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.5.6.5
+
+
