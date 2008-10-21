@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:44778 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753768AbYJ3AzH (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.184]:15828 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040AbYJUGaA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 20:55:07 -0400
-Message-ID: <490905E9.8040005@lwfinger.net> (sfid-20081030_015524_786628_B58C93AF)
-Date: Wed, 29 Oct 2008 17:55:05 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 21 Oct 2008 02:30:00 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so816272rnd.17
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 23:29:59 -0700 (PDT)
+Message-ID: <43e72e890810202329g732a97ccxf176bdf4e035ccda@mail.gmail.com> (sfid-20081021_083006_787325_099ED646)
+Date: Mon, 20 Oct 2008 23:29:59 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Marcel Holtmann" <holtmann@linux.intel.com>
+Subject: Re: New Regulatory Domain Api.
+Cc: "Zhu Yi" <yi.zhu@intel.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224569252.9386.77.camel@californication>
 MIME-Version: 1.0
-To: htl10@users.sourceforge.net
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC/RFT PATCH 5/6] rtl8187: Remove primitive write delays
-References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>
-In-Reply-To: <49088F7D.8020102@lwfinger.net>
 Content-Type: text/plain; charset=UTF-8
+References: <20081015112517.GF6509@tesla>
+	 <1224487340.24677.192.camel@debian.sh.intel.com>
+	 <1224520999.9386.72.camel@californication>
+	 <1224552899.24677.245.camel@debian.sh.intel.com>
+	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
+	 <1224554323.24677.248.camel@debian.sh.intel.com>
+	 <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com>
+	 <1224561748.24677.274.camel@debian.sh.intel.com>
+	 <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
+	 <1224569252.9386.77.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each of the primary write routines, rtl8187_write_phy(),
-rtl8225_write_bitbang(), and rtl8225_write_8051() all conclude with an
-msleep() command. Testing shows that these are not needed.
+On Mon, Oct 20, 2008 at 11:07 PM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+>>
+>> Old userspace still works, we can however require new userspace for
+>> new features. A compliant regulatory infrastructure is a feature.
+>
+> how does an old userspace with a new kernel works?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+It works by allowing by default only what is allowed in the world
+regulatory domain.
 
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -152,8 +152,6 @@ void rtl8187_write_phy(struct ieee80211_
- 	rtl818x_iowrite8(priv, &priv->map->PHY[2], (data >> 16) & 0xFF);
- 	rtl818x_iowrite8(priv, &priv->map->PHY[1], (data >> 8) & 0xFF);
- 	rtl818x_iowrite8(priv, &priv->map->PHY[0], data & 0xFF);
--
--	msleep(1);
- }
+> If we essentially
+> disable hardware by not having the userspace in place, then that is not
+> a solution.
 
- static void rtl8187_tx_cb(struct urb *urb)
-Index: wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_rtl8225.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
-@@ -64,7 +64,6 @@ static void rtl8225_write_bitbang(struct
+We are not disabling hardware, we are adding a common regulatory
+infrastructure to new cfg80211/mac80211 based drivers. We are not
+touching the old drivers.
 
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
--	msleep(2);
- }
+> We have to be able to install a new or development kernel on
+> an old distro without having to install crda/iw or updating udev or
+> whatever.
 
- static void rtl8225_write_8051(struct ieee80211_hw *dev, u8 addr, __le16 data)
-@@ -98,7 +97,6 @@ static void rtl8225_write_8051(struct ie
+And you can use new kernels on old distributions with old wireless
+drivers, however new mac80211 based drivers can reasonably require new
+userspace utilities, and in this case we have a new userspace
+requirement *only* when cfg80211/mac80211 based drivers do not provide
+their own regutory_hint() or in the particular case outlined in this
+thread. Additionally this new feature allows users who want to be more
+compliant to do so by s specifying a country.
 
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
--	msleep(2);
- }
+Udev was used based on your suggestion BTW, I was the one suggesting
+to not use it because of the possibility of no udevd  present.
 
- static void rtl8225_write(struct ieee80211_hw *dev, u8 addr, u16 data)
-
-
-
+  Luis
