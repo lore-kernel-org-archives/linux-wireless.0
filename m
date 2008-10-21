@@ -1,58 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44449 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbYJOVsP (ORCPT
+Received: from qmta03.westchester.pa.mail.comcast.net ([76.96.62.32]:51804
+	"EHLO QMTA03.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754676AbYJUBoL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 17:48:15 -0400
-Subject: iwlwifi workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LPkHimxe6sPgIycu7m+y"
-Date: Wed, 15 Oct 2008 23:47:39 +0200
-Message-Id: <1224107259.735.35.camel@johannes.berg> (sfid-20081015_234818_832647_027C42CD)
-Mime-Version: 1.0
+	Mon, 20 Oct 2008 21:44:11 -0400
+To: linux-wireless@vger.kernel.org
+Subject: B43 randomly and silently dropping connections...
+From: Jerry McBride <mcbrides9@comcast.net>
+Date: Mon, 20 Oct 2008 21:44:09 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810202144.09584.mcbrides9@comcast.net> (sfid-20081021_034429_307314_4055C508)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-LPkHimxe6sPgIycu7m+y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The story is...
 
-Does it really have to be multi-threaded?
+I've moved from 2.6.25.x using BCM43XX with a Broadcom 4306 (rev3) 802.11 
+chipset to 2.6.26.6 using the B43 and appropriate firmware. This on a COMPAQ 
+Presario R3000 P4 and  a gig of memory and ATI graphics.
 
-static void iwl_setup_deferred_work(struct iwl_priv *priv)
-{
-        priv->workqueue =3D create_workqueue(DRV_NAME);
+I followed the install (upgrade) directions at linuxwireless.org. Piece of 
+cake! However... I find that I've gone from "bulletproof" BCM43XX wifi 
+connections to "bullethole" connections with B43.  
 
+Under the old BCM43XX the handshake and connections were flawless and 
+unfaltering. Now with the new B43, handshakes with AP's are perfect, but the 
+connections randomly and silently fail. There are no debug messages, no 
+complaints what-so-ever in /var/log/messages... 
 
-this creates one thread for each CPU, bound to that CPU, which seems
-overkill. mac80211 even provides a single-threaded workqueue.
+To gt wireless back, I have to reinitialize the connection. I've gotten so 
+good at it, that I can recite by heart the appropriate commands...
 
-johannes
+It's killling me! I've got to get this ironed out... it's not just my laptop, 
+it's happening quite regularly with people I know with similar chips and 
+laptops.
 
---=-LPkHimxe6sPgIycu7m+y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Trying 2.6.27-rc's and now 2.6.27 and the situation is no better.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+So I ask... Who is the B43/B43LEGACY maintainer and would you be interested in 
+debugging this mess? I'll bend over backward to help you... Email me 
+direct... I'm very willing.
 
-iQIcBAABAgAGBQJI9mT3AAoJEKVg1VMiehFYE5UP/A11KWxTAmr8TBT1W4hsl54t
-+VfhGVPqWQISL5Lvn9NFp9BAknU2wPEn080EVoA2vaAbNUv4elMSdppmiC/chkZ7
-uC9HnziEAvTzAfW4TOOVUjTWcaV6eNfcQelE1YZn1EYbCXd/tNmfmjND9DueWx10
-jbXgCnplbrOHfL9beikdsso1XOu8VDkPMbsRvA6FrFuMbS4mDohiy9tHc+Gbu6EG
-ZDIQ/hOCIXYiy/0IadKCXLZdP6GJnHSeixwg/FmEXK6+gbH5bs4d/vdSIUZupaZw
-5S1imfGxTa4ZB7KtHyt7bz3/J2jwoykDb1kyjwx5aTMCMnkIprlwc/DZys7C3Hxw
-WKMZXknw1G2nYsuPJpTI0spN95+XRC6KNedamSZJnVtrilJhNDAi9+mH2cKq/TYH
-aLGJMNj4MvyRIxaQE9gvWLO8KesMUEnbfZRwbWWY4tpUtfwxMG/2jF/7IxjZIPvK
-WdHOaUaVbG3oa+33ki6YEHyzkEg5p0guGt6bFu9xHUXfYmQTzfJIF6Gb2OCqWsbu
-7KpQMU6mqxdQo8Z9urjUhzd+TlBkAOpMbX7mPLkBVp22hpolL11ULUkZSxTtkZYg
-yOBBsVTRpT8UC24kdPpFxV0yDAeNuQCWQdu47PGfhe7yJXt6f1/bTDa5N54NHcj1
-3jgQmaGrHHxZd2FKdsH3
-=T8d3
------END PGP SIGNATURE-----
+SHORT STORY:
+-- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
 
---=-LPkHimxe6sPgIycu7m+y--
+-- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
+but fragile connections that drop randomly and without complaint. B43LEGACY 
+does nothing.
 
+Any help would be appreciated. I'd really like to get this ironed out. I 
+highly desire to use current kernels.
+
+Feel free to email me direct.
+
+-- 
+
+*****************************************************************************
+                                       
+                             From the desk of:
+                             Jerome D. McBride
+                                       
+   19:17:28 up 15 days, 23:35,  5 users,  load average: 0.33, 0.11, 0.03
+ 
+*****************************************************************************
