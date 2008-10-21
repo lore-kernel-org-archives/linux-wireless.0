@@ -1,92 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38276 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:52394 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbYJUGnd (ORCPT
+	with ESMTP id S1751969AbYJUVZa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 02:43:33 -0400
-Subject: Re: [PATCH v3] mac80211/drivers: rewrite the rate control API
+	Tue, 21 Oct 2008 17:25:30 -0400
+Subject: Re: New iwlwifi 3945 uCode available
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <1224570194.24677.301.camel@debian.sh.intel.com>
-References: <1223996147.10113.33.camel@johannes.berg>
-	 (sfid-20081014_165703_092655_BE6BA58D) <1224052607.3027.20.camel@johannes.berg>
-	 <1224484940.24677.169.camel@debian.sh.intel.com>
-	 <1224485319.18024.9.camel@johannes.berg>
-	 <1224486368.24677.184.camel@debian.sh.intel.com>
-	 <1224486587.18024.25.camel@johannes.berg>
-	 <1224562072.24677.277.camel@debian.sh.intel.com>
-	 <1224570194.24677.301.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0HK3SWfaktI8LoqWmlld"
-Date: Tue, 21 Oct 2008 08:43:19 +0200
-Message-Id: <1224571399.27899.67.camel@johannes.berg> (sfid-20081021_084338_263182_68255A45)
+To: reinette chatre <reinette.chatre@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1224613633.10863.43.camel@rc-desk> (sfid-20081021_202700_149655_8ACA52AF)
+References: <1224613633.10863.43.camel@rc-desk>
+	 (sfid-20081021_202700_149655_8ACA52AF)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SLYLUjW9u+z5h6/RVxd0"
+Date: Tue, 21 Oct 2008 23:25:24 +0200
+Message-Id: <1224624324.28639.9.camel@johannes.berg> (sfid-20081021_232534_514112_088DDA54)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-0HK3SWfaktI8LoqWmlld
+--=-SLYLUjW9u+z5h6/RVxd0
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-10-21 at 14:23 +0800, Zhu Yi wrote:
-> On Mon, 2008-10-20 at 22:07 -0600, Zhu Yi wrote:
-> > The max retry rates number for iwl4965 is 16. See iwl-commands.h for
-> > more details:
-> >=20
-> > a) Use the initial rate for only one entry.
-> > b) For each following entry, reduce the rate to next lower available
-> >    rate, until reaching the lowest available rate.
-> > c) When reducing rate, also switch antenna selection.
-> > d) Once lowest available rate is reached, repeat this rate until
-> >    rate table is filled (16 entries), switching antenna each entry.
+On Tue, 2008-10-21 at 11:27 -0700, reinette chatre wrote:
+> Two new versions of 3945 uCode is now available for download from
+> http://intellinuxwireless.org/?n=3DDownloads. Two versions are available
+> as we have updated the API version of the uCode and included pending
+> fixes in both API versions.
+>=20
+> Version 15.28.1.8 supports API v1 and can be used with most current 3945
+> drivers. Version 15.28.2.8 (API v2) is required when you start using the
+> latest 3945 driver from wireless-testing at the time it includes the
+> patch "iwl3945 : Fix a-band association for passive channels".
 
-Thanks for the info.
-
-> Now I even wonder if abstract the common MRR info is possible. Yes, the
-> algorithm itself is hardware independent. But the one we use best
-> utilizes the hardware capability and it communicates with the hardware
-> frequently. I don't know about other hardware. But I highly doubt the
-> interface is so easy to be defined within IEEE80211_SKB_CB.
-
-Yeah, we definitely don't have enough space for 16 rates. If you want to
-properly report all that to userspace you'd probably have to add some
-radiotap information in the driver, but that's not currently possible...
-
-For other HW, all I know is Atheros (4 different rates with up to 16
-tries each iirc), Broadcom (2 different rates, but we can rewrite ucode)
-and p54 (8 different rates, but no firmware influence)
-
-I'll clean up the three things you pointed out in this patch, I don't
-think we can achieve perfect reporting of what your hardware does at
-this time.
+Can you make the driver work with the old ucode? We even do that for
+drivers where we don't control the ucode like b43...
 
 johannes
 
---=-0HK3SWfaktI8LoqWmlld
+--=-SLYLUjW9u+z5h6/RVxd0
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI/XoDAAoJEKVg1VMiehFYWY8P/0anpEEW7oYPzgpO9j3iZ32r
-9lKgTNutq61SHpq3G8Ns0Xy2Ck0hQNc2MAZN6BQgy6dNLDTPnrmwqT+5xsindqnZ
-OhPeDH2Y8gWSnMA8GGOcPfaiLub+a8fE4hdWwRODVD8RSpv7wY5Tmc2DrOUXZJtT
-qb/6XGOIGpI/gKF0NhAuZvhlkCk2qs1fWS4A65SuNkwmTutouvXr5Obn+v6ZuCLB
-QSMhbtqPxaw5VbOBuRKkjbfbyPWhfrBoRp4l1xsJAhO2VyIxl9YpsHTtrzK7+6QD
-ZYC0+jKKYwRdM/QW/lm5DozTsKlcsNpG2TkV7fyBOBBjRLc2TaTlro3MhCrMhwGg
-AHCumEn9hGVypZrEXhILMRM7thr0+uGD0TJMccnGJuNetwL0CQU1SajVZtlZn00s
-MJnc7bwRw0XXfhvF2YTMuxvapU5PikE2EJzo5pwUtEElkqcvlj0PY27F1kSfHO4I
-VEyEY4mmps2njw4H+3Hd0DNmGtpRmBeBaOLbu3j1MD8XKd0VCyaQBk5pedtmQc4/
-NJ/6w8aCUbmGlEsmyHMUkL+GT819NRaAoF6anf/Xk2ijxOagRQhJjhDFCyinmDx7
-DlEnMocNsiQs0/4dZFCkZ5Ap5T/Tf1dF6xF77ReYywjwhoWWYK+tj8x1+fJKzWcG
-KtzfnZjSgS7bF4SVQKZR
-=hRVP
+iQIcBAABAgAGBQJI/kjBAAoJEKVg1VMiehFY8agP/27n0UyiS4MM/TQSkrgzcJK8
+9hB3jeO9K5d+xxA+vftFt+3kf+hqOHz/W5hH85V8gVf+nP2l+RyHroKJ+YVDVYGd
+puhcleLQdTencSHjXNUxwdtHDomrRnr3+NZWI4cq343zurmS95WTS5+qXRQx20Na
+H8OA6OSY6e3B/ePuKjsmyGt7kqfQVi5U9ThoeEQk35I7JHVgXEHsk9+KyId++Ufg
+elyM6nsTurqsN0E04ktxEDLUCpb9w8td0TXka3H7gjfJHRzAALz8tBIVCWlXBj7T
+WEp7RxsfnRrTpSX3uMI+8Nd42mSCxIa6s42uLtEIYWs5jBDHZJNN6cdV8jcpDw/0
+4OFxg8Ah3t0/mHstI8E+QV88LZgL05Zeryul86tQ2IrQohhUxi6w0LnHbi2pu3x0
+Ugkqt8j6RzU4ySpqeh44mZG5dHvzocyiZc4JmvEN2I0thmTGnCLK5rRuQVay9ZTh
+hp/zytdrHDS0jXjoxQQX/TdBTqrQSRHBeSDZTM2Fz/NCFkCH9y8MXuNacn0Xo+kS
+jdWrijK2dI219omav+mHNENjo6nw7Uf+m2jhBQ/7GOCuKNs3Fmywf1GFJre0HQk9
+7OQDQWcKaJzOFlB6qFAM6vKsT8U2pdgvN/RD8AKbhSCkw/esFkuO2gjAF4XMlVoX
+dp05G+alGaz1I2PA9tnJ
+=2qWx
 -----END PGP SIGNATURE-----
 
---=-0HK3SWfaktI8LoqWmlld--
+--=-SLYLUjW9u+z5h6/RVxd0--
 
