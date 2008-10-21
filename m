@@ -1,384 +1,328 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:41158 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073AbYJRVOo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44257 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752169AbYJUKb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2008 17:14:44 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [PATCH 3/3 v3] p54: AP & Ad-hoc testing
-Date: Sat, 18 Oct 2008 23:19:00 +0200
-Cc: linux-wireless@vger.kernel.org,
-	"John W Linville" <linville@tuxdriver.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Pavel Roskin" <proski@gnu.org>
-References: <200810170117.07236.chunkeey@web.de> <43e72e890810161627vaa0d8ebq1ca2d2428e3fffa8@mail.gmail.com> <200810170355.07970.chunkeey@web.de>
-In-Reply-To: <200810170355.07970.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810182319.00467.chunkeey@web.de> (sfid-20081018_231447_824747_9CD1DE78)
+	Tue, 21 Oct 2008 06:31:57 -0400
+Subject: [PATCH] wireless: add regulatory_struct_hint
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain
+Date: Tue, 21 Oct 2008 12:31:50 +0200
+Message-Id: <1224585110.5521.8.camel@johannes.berg> (sfid-20081021_123200_564015_598B617C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch finally adds all necessary code to test Ad-hoc & AP mode with p54.
+This adds a new function, regulatory_struct_hint, which acts
+as a hint to the wireless core which regdomain a card thinks
+the system is operating in, but given in terms of the actual
+regdomain definition. Multiple hints are permitted when the
+specified bands do not overlap.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-10-18 22:52:36.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-10-18 22:53:58.000000000 +0200
-@@ -626,6 +626,12 @@ static void p54_rx_frame_sent(struct iee
- 		__skb_unlink(entry, &priv->tx_queue);
- 		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
- 
-+		if (unlikely(entry == priv->cached_beacon)) {
-+			kfree_skb(entry);
-+			priv->cached_beacon = NULL;
-+			goto out;
-+		}
+Entirely untested. Anyone want to give it a go in the dual-band scenario?
+
+ include/net/wireless.h |   14 +++
+ net/wireless/reg.c     |  225 ++++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 161 insertions(+), 78 deletions(-)
+
+--- everything.orig/include/net/wireless.h	2008-10-21 11:50:01.000000000 +0200
++++ everything/include/net/wireless.h	2008-10-21 11:50:16.000000000 +0200
+@@ -355,4 +355,18 @@ ieee80211_get_channel(struct wiphy *wiph
+  * for a regulatory domain structure for the respective country.
+  */
+ extern void regulatory_hint(const char *alpha2);
 +
- 		/*
- 		 * Clear manually, ieee80211_tx_info_clear_status would
- 		 * clear the counts too and we need them.
-@@ -711,6 +717,35 @@ static void p54_rx_stats(struct ieee8021
- 	mod_timer(&priv->stats_timer, jiffies + 5 * HZ);
++/**
++ * regulatory_struct_hint - hint wireless core about regdomain
++ *
++ * @rd: regdomain structure containing the frequency ranges that are
++ *	permitted for use.
++ * @bands: bitmask of bands this contains, use BIT(IEEE80211_BAND_...)
++ *
++ * This function informs the wireless core that the driver believes
++ * that the bands indicated are defined by the given structure in the
++ * regulatory domain the system is operating in.
++ */
++extern void regulatory_struct_hint(struct ieee80211_regdomain *rd,
++				   u32 bands);
+ #endif /* __NET_WIRELESS_H */
+--- everything.orig/net/wireless/reg.c	2008-10-21 11:50:14.000000000 +0200
++++ everything/net/wireless/reg.c	2008-10-21 12:26:08.000000000 +0200
+@@ -45,9 +45,9 @@
+ /* wiphy is set if this request's initiator is REGDOM_SET_BY_COUNTRY_IE */
+ struct regulatory_request {
+ 	struct wiphy *wiphy;
+-	int granted;
+ 	enum reg_set_by initiator;
+ 	char alpha2[2];
++	u32 bands;
+ };
+ 
+ static struct regulatory_request *last_request;
+@@ -296,82 +296,6 @@ static int call_crda(const char *alpha2)
+ 	return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, envp);
  }
  
-+static void p54_rx_trap(struct ieee80211_hw *dev, struct sk_buff *skb)
-+{
-+	struct p54_hdr *hdr = (struct p54_hdr *) skb->data;
-+	struct p54_trap *trap = (struct p54_trap *) hdr->data;
-+	u16 event = le16_to_cpu(trap->event);
-+	u16 freq = le16_to_cpu(trap->frequency);
-+
-+	switch (event) {
-+	case P54_TRAP_BEACON_TX:
-+		break;
-+	case P54_TRAP_RADAR:
-+		printk(KERN_INFO "%s: radar (freq:%d MHz)\n",
-+			wiphy_name(dev->wiphy), freq);
-+		break;
-+	case P54_TRAP_NO_BEACON:
-+		break;
-+	case P54_TRAP_SCAN:
-+		break;
-+	case P54_TRAP_TBTT:
-+		break;
-+	case P54_TRAP_TIMER:
-+		break;
-+	default:
-+		printk(KERN_INFO "%s: received event:%x freq:%d\n",
-+		       wiphy_name(dev->wiphy), event, freq);
-+		break;
-+	}
-+}
-+
- static int p54_rx_control(struct ieee80211_hw *dev, struct sk_buff *skb)
+-/* This has the logic which determines when a new request
+- * should be ignored. */
+-static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+-			  const char *alpha2)
+-{
+-	/* All initial requests are respected */
+-	if (!last_request)
+-		return 0;
+-
+-	switch (set_by) {
+-	case REGDOM_SET_BY_INIT:
+-		return -EINVAL;
+-	case REGDOM_SET_BY_CORE:
+-		/* Always respect new wireless core hints, should only
+-		 * come in for updating the world regulatory domain at init
+-		 * anyway */
+-		return 0;
+-	case REGDOM_SET_BY_COUNTRY_IE:
+-		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
+-			if (last_request->wiphy != wiphy) {
+-				/* Two cards with two APs claiming different
+-				 * different Country IE alpha2s!
+-				 * You're special!! */
+-				if (!alpha2_equal(last_request->alpha2,
+-						cfg80211_regdomain->alpha2)) {
+-					/* XXX: Deal with conflict, consider
+-					 * building a new one out of the
+-					 * intersection */
+-					WARN_ON(1);
+-					return -EOPNOTSUPP;
+-				}
+-				return -EALREADY;
+-			}
+-			/* Two consecutive Country IE hints on the same wiphy */
+-			if (!alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
+-				return 0;
+-			return -EALREADY;
+-		}
+-		if (WARN_ON(!is_alpha2_set(alpha2) || !is_an_alpha2(alpha2)),
+-				"Invalid Country IE regulatory hint passed "
+-				"to the wireless core\n")
+-			return -EINVAL;
+-		/* We ignore Country IE hints for now, as we haven't yet
+-		 * added the dot11MultiDomainCapabilityEnabled flag
+-		 * for wiphys */
+-		return 1;
+-	case REGDOM_SET_BY_DRIVER:
+-		BUG_ON(!wiphy);
+-		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
+-			return -EALREADY;
+-		if (last_request->initiator == REGDOM_SET_BY_CORE)
+-			return 0;
+-		/* XXX: Handle intersection, and add the
+-		 * dot11MultiDomainCapabilityEnabled flag to wiphy. For now
+-		 * we assume the driver has this set to false, following the
+-		 * 802.11d dot11MultiDomainCapabilityEnabled documentation */
+-		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
+-			return 0;
+-		return 0;
+-	case REGDOM_SET_BY_USER:
+-		if (last_request->initiator == REGDOM_SET_BY_USER ||
+-		    last_request->initiator == REGDOM_SET_BY_CORE)
+-			return 0;
+-		/* Drivers can use their wiphy's reg_notifier()
+-		 * to override any information */
+-		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
+-			return 0;
+-		/* XXX: Handle intersection */
+-		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
+-			return -EOPNOTSUPP;
+-		return 0;
+-	default:
+-		return -EINVAL;
+-	}
+-}
+-
+ /* Used by nl80211 before kmalloc'ing our regulatory domain */
+ bool reg_is_valid_request(const char *alpha2)
  {
- 	struct p54_hdr *hdr = (struct p54_hdr *) skb->data;
-@@ -719,6 +754,9 @@ static int p54_rx_control(struct ieee802
- 	case P54_CONTROL_TYPE_TXDONE:
- 		p54_rx_frame_sent(dev, skb);
- 		break;
-+	case P54_CONTROL_TYPE_TRAP:
-+		p54_rx_trap(dev, skb);
-+		break;
- 	case P54_CONTROL_TYPE_BBP:
- 		break;
- 	case P54_CONTROL_TYPE_STAT_READBACK:
-@@ -902,6 +940,64 @@ free:
+@@ -542,6 +466,83 @@ void wiphy_update_regulatory(struct wiph
+ 	}
  }
- EXPORT_SYMBOL_GPL(p54_read_eeprom);
  
-+static int p54_set_tim(struct ieee80211_hw *dev, struct ieee80211_sta *sta,
-+		bool set)
++/* This has the logic which determines when a new request
++ * should be ignored. */
++static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
++			  const char *alpha2)
 +{
-+	struct p54_common *priv = dev->priv;
-+	struct sk_buff *skb;
-+	struct p54_tim *tim;
++	/* All initial requests are respected */
++	if (!last_request)
++		return 0;
 +
-+	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET,
-+		      sizeof(struct p54_hdr) + sizeof(*tim),
-+		      P54_CONTROL_TYPE_TIM, GFP_KERNEL);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	tim = (struct p54_tim *) skb_put(skb, sizeof(*tim));
-+	tim->count = 1;
-+	tim->entry[0] = cpu_to_le16(set ? (sta->aid | 0x8000) : sta->aid);
-+	priv->tx(dev, skb, 1);
-+	return 0;
-+}
-+
-+static int p54_sta_unlock(struct ieee80211_hw *dev, u8 *addr)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct sk_buff *skb;
-+	struct p54_sta_unlock *sta;
-+
-+	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET,
-+		sizeof(struct p54_hdr) + sizeof(*sta),
-+		P54_CONTROL_TYPE_PSM_STA_UNLOCK, GFP_ATOMIC);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	sta = (struct p54_sta_unlock *)skb_put(skb, sizeof(*sta));
-+	memcpy(sta->addr, addr, ETH_ALEN);
-+	priv->tx(dev, skb, 1);
-+	return 0;
-+}
-+
-+static int p54_tx_cancel(struct ieee80211_hw *dev, struct sk_buff *entry)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct sk_buff *skb;
-+	struct p54_hdr *hdr;
-+	struct p54_txcancel *cancel;
-+
-+	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET,
-+		sizeof(struct p54_hdr) + sizeof(*cancel),
-+		P54_CONTROL_TYPE_TXCANCEL, GFP_ATOMIC);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	hdr = (void *)entry->data;
-+	cancel = (struct p54_txcancel *)skb_put(skb, sizeof(*cancel));
-+	cancel->req_id = hdr->req_id;
-+	priv->tx(dev, skb, 1);
-+	return 0;
-+}
-+
- static int p54_tx_fill(struct ieee80211_hw *dev, struct sk_buff *skb,
- 		struct ieee80211_tx_info *info, u8 *queue, size_t *extra_len,
- 		u16 *flags, u16 *aid)
-@@ -982,6 +1078,17 @@ static int p54_tx(struct ieee80211_hw *d
- 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
- 	len = skb->len;
- 
-+	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT) {
-+		if (info->control.sta)
-+			if (p54_sta_unlock(dev, info->control.sta->addr)) {
-+				if (current_queue) {
-+					current_queue->len--;
-+					current_queue->count--;
++	switch (set_by) {
++	case REGDOM_SET_BY_INIT:
++		return -EINVAL;
++	case REGDOM_SET_BY_CORE:
++		/* Always respect new wireless core hints, should only
++		 * come in for updating the world regulatory domain at init
++		 * anyway */
++		return 0;
++	case REGDOM_SET_BY_COUNTRY_IE:
++		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
++			if (last_request->wiphy != wiphy) {
++				/* Two cards with two APs claiming different
++				 * different Country IE alpha2s!
++				 * You're special!! */
++				if (!alpha2_equal(last_request->alpha2,
++						cfg80211_regdomain->alpha2)) {
++					/* XXX: Deal with conflict, consider
++					 * building a new one out of the
++					 * intersection */
++					WARN_ON(1);
++					return -EOPNOTSUPP;
 +				}
-+				return NETDEV_TX_BUSY;
++				return -EALREADY;
 +			}
-+	}
-+
- 	txhdr = (struct p54_tx_data *) skb_push(skb, sizeof(*txhdr) + padding);
- 	hdr = (struct p54_hdr *) skb_push(skb, sizeof(*hdr));
- 
-@@ -1295,6 +1402,88 @@ static int p54_init_stats(struct ieee802
- 	return 0;
- }
- 
-+static int p54_beacon_tim(struct sk_buff *skb)
-+{
-+	/*
-+	 * the good excuse for this mess is ... the firmware.
-+	 * The dummy TIM MUST be at the end of the beacon frame,
-+	 * because it'll be overwritten!
-+	 */
-+
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+	u8 *pos, *end;
-+
-+	if (skb->len <= sizeof(mgmt)) {
-+		printk(KERN_ERR "p54: beacon is too short!\n");
++			/* Two consecutive Country IE hints on the same wiphy */
++			if (!alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
++				return 0;
++			return -EALREADY;
++		}
++		if (WARN_ON(!is_alpha2_set(alpha2) || !is_an_alpha2(alpha2)),
++				"Invalid Country IE regulatory hint passed "
++				"to the wireless core\n")
++			return -EINVAL;
++		/* We ignore Country IE hints for now, as we haven't yet
++		 * added the dot11MultiDomainCapabilityEnabled flag
++		 * for wiphys */
++		return 1;
++	case REGDOM_SET_BY_DRIVER:
++		BUG_ON(!wiphy);
++		switch (last_request->initiator) {
++		case REGDOM_SET_BY_DRIVER:
++			return -EALREADY;
++		case REGDOM_SET_BY_INIT:
++		case REGDOM_SET_BY_CORE:
++		case REGDOM_SET_BY_USER:
++		case REGDOM_SET_BY_COUNTRY_IE:
++			return 0;
++		default:
++			break;
++		}
++		return 0;
++	case REGDOM_SET_BY_USER:
++		if (last_request->initiator == REGDOM_SET_BY_USER ||
++		    last_request->initiator == REGDOM_SET_BY_CORE)
++			return 0;
++		/* Drivers can use their wiphy's reg_notifier()
++		 * to override any information */
++		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
++			return 0;
++		/* XXX: Handle intersection */
++		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
++			return -EOPNOTSUPP;
++		return 0;
++	default:
 +		return -EINVAL;
 +	}
-+
-+	pos = (u8 *)mgmt->u.beacon.variable;
-+	end = skb->data + skb->len;
-+	while (pos < end) {
-+		if (pos + 2 + pos[1] > end) {
-+			printk(KERN_ERR "p54: parsing beacon failed\n");
-+			return -EINVAL;
-+		}
-+
-+		if (pos[0] == WLAN_EID_TIM) {
-+			u8 dtim_len = pos[1];
-+			u8 dtim_period = pos[3];
-+			u8 *next = pos + 2 + dtim_len;
-+
-+			if (dtim_len < 3) {
-+				printk(KERN_ERR "p54: invalid dtim len!\n");
-+				return -EINVAL;
-+			}
-+			memmove(pos, next, end - next);
-+
-+			if (dtim_len > 3)
-+				skb_trim(skb, skb->len - (dtim_len - 3));
-+
-+			pos = end - (dtim_len + 2);
-+
-+			/* add the dummy at the end */
-+			pos[0] = WLAN_EID_TIM;
-+			pos[1] = 3;
-+			pos[2] = 0;
-+			pos[3] = dtim_period;
-+			pos[4] = 0;
-+			return 0;
-+		}
-+		pos += 2 + pos[1];
-+	}
-+	return 0;
 +}
 +
-+static int p54_beacon_update(struct ieee80211_hw *dev,
-+			struct ieee80211_vif *vif)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct sk_buff *beacon;
-+	int ret;
-+
-+	if (priv->cached_beacon) {
-+		p54_tx_cancel(dev, priv->cached_beacon);
-+		/* wait for the last beacon the be freed */
-+		msleep(10);
-+	}
-+
-+	beacon = ieee80211_beacon_get(dev, vif);
-+	if (!beacon)
-+		return -ENOMEM;
-+	ret = p54_beacon_tim(beacon);
-+	if (ret)
-+		return ret;
-+	ret = p54_tx(dev, beacon);
-+	if (ret)
-+		return ret;
-+	priv->cached_beacon = beacon;
-+	priv->tsf_high32 = 0;
-+	priv->tsf_low32 = 0;
-+
-+	return 0;
-+}
-+
- static int p54_start(struct ieee80211_hw *dev)
- {
- 	struct p54_common *priv = dev->priv;
-@@ -1325,9 +1514,14 @@ static void p54_stop(struct ieee80211_hw
- 	del_timer(&priv->stats_timer);
- 	p54_free_skb(dev, priv->cached_stats);
- 	priv->cached_stats = NULL;
-+	if (priv->cached_beacon)
-+		p54_tx_cancel(dev, priv->cached_beacon);
-+
- 	while ((skb = skb_dequeue(&priv->tx_queue)))
- 		kfree_skb(skb);
+ /* Caller must hold &cfg80211_drv_mutex */
+ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		      const char *alpha2)
+@@ -567,6 +568,7 @@ int __regulatory_hint(struct wiphy *wiph
+ 		request->alpha2[1] = alpha2[1];
+ 		request->initiator = set_by;
+ 		request->wiphy = wiphy;
++		request->bands = ~0;
  
-+	kfree(priv->cached_beacon);
-+	priv->cached_beacon = NULL;
- 	priv->stop(dev);
- 	priv->tsf_high32 = priv->tsf_low32 = 0;
- 	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
-@@ -1347,6 +1541,8 @@ static int p54_add_interface(struct ieee
- 
- 	switch (conf->type) {
- 	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_AP:
- 		priv->mode = conf->type;
- 		break;
- 	default:
-@@ -1362,6 +1558,12 @@ static int p54_add_interface(struct ieee
- 	case NL80211_IFTYPE_STATION:
- 		p54_setup_mac(dev, P54_FILTER_TYPE_STATION, NULL);
- 		break;
-+	case NL80211_IFTYPE_AP:
-+		p54_setup_mac(dev, P54_FILTER_TYPE_AP, priv->mac_addr);
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		p54_setup_mac(dev, P54_FILTER_TYPE_IBSS, NULL);
-+		break;
- 	default:
- 		BUG();	/* impossible */
- 		break;
-@@ -1379,6 +1581,8 @@ static void p54_remove_interface(struct 
- 	struct p54_common *priv = dev->priv;
- 
- 	mutex_lock(&priv->conf_mutex);
-+	if (priv->cached_beacon)
-+		p54_tx_cancel(dev, priv->cached_beacon);
- 	p54_setup_mac(dev, P54_FILTER_TYPE_NONE, NULL);
- 	priv->mode = NL80211_IFTYPE_MONITOR;
- 	memset(priv->mac_addr, 0, ETH_ALEN);
-@@ -1406,13 +1610,41 @@ static int p54_config_interface(struct i
- 				struct ieee80211_if_conf *conf)
- {
- 	struct p54_common *priv = dev->priv;
-+	int ret = 0;
- 
- 	mutex_lock(&priv->conf_mutex);
--	p54_setup_mac(dev, P54_FILTER_TYPE_STATION, conf->bssid);
--	p54_set_leds(dev, 1, !is_multicast_ether_addr(conf->bssid), 0);
--	memcpy(priv->bssid, conf->bssid, ETH_ALEN);
-+	switch (priv->mode) {
-+	case NL80211_IFTYPE_STATION:
-+		ret = p54_setup_mac(dev, P54_FILTER_TYPE_STATION, conf->bssid);
-+		if (ret)
-+			goto out;
-+		ret = p54_set_leds(dev, 1,
-+				   !is_multicast_ether_addr(conf->bssid), 0);
-+		if (ret)
-+			goto out;
-+		memcpy(priv->bssid, conf->bssid, ETH_ALEN);
-+		break;
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_ADHOC:
-+		memcpy(priv->bssid, conf->bssid, ETH_ALEN);
-+		ret = p54_set_freq(dev, dev->conf.channel->center_freq);
-+		if (ret)
-+			goto out;
-+		ret = p54_setup_mac(dev, priv->mac_mode, priv->bssid);
-+		if (ret)
-+			goto out;
-+		if (conf->changed & IEEE80211_IFCC_BEACON) {
-+			ret = p54_beacon_update(dev, vif);
-+			if (ret)
-+				goto out;
-+			ret = p54_set_edcf(dev);
-+			if (ret)
-+				goto out;
-+		}
-+	}
-+out:
- 	mutex_unlock(&priv->conf_mutex);
--	return 0;
-+	return ret;
+ 		kfree(last_request);
+ 		last_request = request;
+@@ -594,6 +596,74 @@ void regulatory_hint(const char *alpha2)
  }
+ EXPORT_SYMBOL(regulatory_hint);
  
- static void p54_configure_filter(struct ieee80211_hw *dev,
-@@ -1541,6 +1773,7 @@ static const struct ieee80211_ops p54_op
- 	.stop			= p54_stop,
- 	.add_interface		= p54_add_interface,
- 	.remove_interface	= p54_remove_interface,
-+	.set_tim		= p54_set_tim,
- 	.config			= p54_config,
- 	.config_interface	= p54_config_interface,
- 	.bss_info_changed	= p54_bss_info_changed,
-@@ -1566,7 +1799,9 @@ struct ieee80211_hw *p54_init_common(siz
- 		     IEEE80211_HW_SIGNAL_DBM |
- 		     IEEE80211_HW_NOISE_DBM;
++void regulatory_struct_hint(struct ieee80211_regdomain *rd, u32 bands)
++{
++	const struct ieee80211_regdomain *orig = NULL;
++	struct ieee80211_regdomain *new = NULL;
++	int origrules;
++
++	BUG_ON(!rd);
++	BUG_ON(!bands);
++
++	mutex_lock(&cfg80211_drv_mutex);
++
++	/*
++	 * ignore hint if anything else set it or if the given
++	 * bands overlap already defined bands
++	 */
++	if (last_request) {
++		switch (last_request->initiator) {
++		case REGDOM_SET_BY_DRIVER:
++			if (last_request->bands & bands)
++				goto out;
++			break;
++		case REGDOM_SET_BY_CORE:
++			break;
++		default:
++			goto out;
++		}
++
++		/* modify the currently set regdom */
++		orig = cfg80211_regdomain;
++		origrules = orig->n_reg_rules;
++	} else {
++		last_request = kzalloc(sizeof(struct regulatory_request),
++				       GFP_KERNEL);
++		if (!last_request)
++			goto out;
++
++		last_request->alpha2[0] = '9';
++		last_request->alpha2[1] = '9';
++		last_request->initiator = REGDOM_SET_BY_DRIVER;
++
++		origrules = 0;
++	}
++
++	last_request->bands |= bands;
++
++	new = krealloc(orig,
++		       sizeof(struct ieee80211_regdomain) +
++		       sizeof(struct ieee80211_reg_rule) * origrules +
++		       sizeof(struct ieee80211_reg_rule) * rd->n_reg_rules,
++		       GFP_KERNEL);
++	if (!new)
++		goto out;
++
++	new->alpha2[0] = '9';
++	new->alpha2[1] = '9';
++	new->n_reg_rules = origrules + rd->n_reg_rules;
++	/* original rules still intact */
++	memcpy(&new->reg_rules[origrules],
++	       rd->reg_rules,
++	       sizeof(struct ieee80211_reg_rule) * rd->n_reg_rules);
++
++	set_regdom(new);
++	kfree(rd);
++
++ out:
++	mutex_unlock(&cfg80211_drv_mutex);
++}
++
  
--	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-+	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION |
-+					  NL80211_IFTYPE_ADHOC |
-+					  NL80211_IFTYPE_AP);
+ static void print_rd_rules(const struct ieee80211_regdomain *rd)
+ {
+@@ -710,7 +780,6 @@ static int __set_regdom(const struct iee
  
- 	dev->channel_change_time = 1000;	/* TODO: find actual value */
- 	priv->tx_stats[0].limit = 1;		/* Beacon queue */
-diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
---- a/drivers/net/wireless/p54/p54.h	2008-10-18 21:29:10.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54.h	2008-10-18 22:53:33.000000000 +0200
-@@ -108,6 +108,7 @@ struct p54_common {
- 	struct timer_list stats_timer;
- 	struct completion stats_comp;
- 	struct sk_buff *cached_stats;
-+	struct sk_buff *cached_beacon;
- 	int noise;
- 	void *eeprom;
- 	struct completion eeprom_comp;
+ 	/* Tada! */
+ 	cfg80211_regdomain = rd;
+-	last_request->granted = 1;
+ 
+ 	return 0;
+ }
+
+
