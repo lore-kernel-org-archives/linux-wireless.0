@@ -1,80 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37395 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752309AbYJIJyp (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:26435 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbYJUGCP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 05:54:45 -0400
-Subject: RE: HT capabilities IE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nils Bagge <nbagge@bandspeed.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <6EACAD9615B47B42A780C005414307E1014956B2@mars.bandspeed.com>
-References: <1223460098.3618.53.camel@johannes.berg>
-	 <6EACAD9615B47B42A780C005414307E1014956B2@mars.bandspeed.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TdVN+iQMADPfHG+lyxL8"
-Date: Thu, 09 Oct 2008 11:54:45 +0200
-Message-Id: <1223546085.22490.29.camel@johannes.berg> (sfid-20081009_115447_545339_F836ABC4)
-Mime-Version: 1.0
+	Tue, 21 Oct 2008 02:02:15 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so380899yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 23:02:13 -0700 (PDT)
+Message-ID: <43e72e890810202302j6cdf5be0m127846b502f395a0@mail.gmail.com> (sfid-20081021_080219_974158_1D276E3A)
+Date: Mon, 20 Oct 2008 23:02:13 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: New Regulatory Domain Api.
+Cc: "Marcel Holtmann" <holtmann@linux.intel.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224566923.24677.289.camel@debian.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20081015112517.GF6509@tesla>
+	 <1224487340.24677.192.camel@debian.sh.intel.com>
+	 <1224520999.9386.72.camel@californication>
+	 <1224552899.24677.245.camel@debian.sh.intel.com>
+	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
+	 <1224554323.24677.248.camel@debian.sh.intel.com>
+	 <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com>
+	 <1224561748.24677.274.camel@debian.sh.intel.com>
+	 <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
+	 <1224566923.24677.289.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Oct 20, 2008 at 10:28 PM, Zhu Yi <yi.zhu@intel.com> wrote:
+> On Mon, 2008-10-20 at 21:58 -0700, Luis R. Rodriguez wrote:
+>> I do not agree. Consider old devices with built-in regulatory rules in
+>> hardware which go out of date. The regulatory framework accounts for
+>> such flaws and *helps* to remain compliant.
+>
+> That's another story. For these devices, you can do what you want in
+> user space. But for other correct behavioured devices, bypass regulatory
+> framework is necessary. Because you have to trust the driver anyway.
 
---=-TdVN+iQMADPfHG+lyxL8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+We do trust the driver and we do let it say "I know better". More on this below.
 
-On Wed, 2008-10-08 at 10:33 -0500, Nils Bagge wrote:
-> My humble opinion is yes, the HT capabilities field should be constant,
-> from the perspective of a typical AP.
+>> >To solve the problem,
+>>
+>> What problem?
+>
+> The problem a driver is not able to give a SKU as regulatory hint.
 
-Yeah I totally agree.
+That is not the problem though as there is a solution to that.
 
-> Practically speaking, I doubt that an AP would want to toggle SM power
-> save at all, let alone on a per-beacon basis, as historically power
-> consumption is not as critical at the AP vs. at the client.
+The issue at hand, which started this 60-message thread, involves a
+built-in Intel single band 2 GHz card and an external dual band card.
+The issue is the dual band card's regulatory_hint() is ignored as the
+current infrastructure ignores secondary requests and the first one
+did not define a set of rules for 5 GHz as part of its
+regulatory_hint(). A resolution to this is to have crda called for the
+country the user is in. The reason this solves the issue at and is
+hardware which is designed to not allow channels out of its EEPROM
+won't be enabled as these channels are not registered and channels
+which *should* be disabled based on the user's location *are*
+disabled. The 5 GHz channels on the dual band card which *should* be
+allowed are allowed. Additionally we do allow drivers to be cocky
+about regulatory and to claim they know better through reg_notifier().
 
-True.
+>> > I'd
+>> > suggest a special regdomain named EVERYTHING. In the case the driver
+>> or
+>> > firmware enforces reg_rules, the core wireless reg_rules are safe to
+>> be
+>> > bypassed.
+>>
+>> You mean we add a flag to allow cfg80211 to ignore applying its
+>> central regulatory definition to a wiphy? I disagree -- consider
+>> outdated set of rules.
+>
+> It has nothing to do with ourdated rules. If a reg_rule is "wrong" in a
+> device, it will still be wrong after the regulatory_hint() call.
 
-> But, if you want to be 'green'... (I can see how this would benefit a
-> 'low power AP') The only problem I see is with the AP entering 'static
-> SM power save'. You might run into interoperability trouble with varying
-> behavior of client STA's, due to different interpretations of the
-> standard or assumptions. It wouldn't surprise me if some clients ignore
-> changes to the HT capabilities IE once associated, or if some ignore the
-> SM power save field in beacons entirely. Hence, they could transmit a
-> 2-stream MCS which would not be decodable with a single RX chain.
->=20
-> Theoretically, the only SM power save mode I'd recommend for an AP is
-> dynamic SM power save.=20
+If a hardware device has a built in channel 14 and a user in the US
+buys this device and goes to the US he/she should disable this channel
+to remain compliant. Under your current suggestion this is not dealt
+with. That is what I mean by handling outdated rules.
 
-Right, but if you enter dynamic SM PS then it doesn't matter much
-anyway, does it? I mean, there's no protection requirement in that case,
-is there? Or am I reading it wrong? I _think_ I will handle the SM PS
-change in mac80211, but I'm not entirely sure right now.
+> The current regulatory framework 100% trust the alpha2 or regdomain the
+> driver provided. Thus it should also trust a hint from driver "bypass
+> your regulatory check, I'll handle it myself".
 
-johannes
+Agreed 100%, and this is why we allowed a reg_notfier() callback so
+bossy drivers can review the information and say "Let me review this..
+I think I know better, so I'm in charge here".
 
---=-TdVN+iQMADPfHG+lyxL8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI7dTiAAoJEKVg1VMiehFYEFQQAJqlkBDvLIF/0FLTdAQKbXpq
-FZ7R2PJ0LMvc4tJ7Jix7zNY5RT8oQCD126uk85lGp6L3Y6ubCCRG46bk83i9pPH6
-N9MSWiftV6vfe3ZucZ29icpyZBUJwk5vyaluWQi6TgaS1fU/HftJaOtovbEHj3xe
-zdMZK+eCdmiK0ZLIvLFcJ5d2YGDmlQkBTHbWWRUjpcn7zOAKppBMYsSkbOXbXxVF
-NdMCg4XKmdda62xO8y5UhrCUHQtbEzyuTKAKvWzGizXWBivaPi77G/hSPX8j6XEC
-iMiUo46TMtj4fr5D18tgEENixA3+PD+vC+giVQkxHXwSXspA2o8AhuEQ247+vP6n
-08nBaotbrnEkpfnZWSWCeFiKpN/OZeT2JRfZM/wKv20FbAoQsyyXQ7F9pTL/hd6v
-qUoIv1YKH6WpmQtVLwstzRuYVXH2NmwLpqteLsUSbB9vXkH/Oh90Qk3SwrXEzr+z
-Fa41hEfdJclzpMkkYdYSmFSZSKEhpaLs0N1WSmTfTfsEULfidpnwjQBzinbD3Grc
-M5PjPCOR8tq4PGFoEkPRLmPJqlSFtLrXsRhMQhU+bCzb6oMmgqfXHqx+Vk2X945K
-MzTp1Ah6IloMczi9C2DUIJKX6bInNmq49BTiw7F7xaqWXt12CTb1B2EajYQUqJej
-kt56Cgr3Kj5hV9tKD6xd
-=l3KT
------END PGP SIGNATURE-----
-
---=-TdVN+iQMADPfHG+lyxL8--
-
+  Luis
