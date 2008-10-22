@@ -1,45 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28223 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752607AbYJ1TZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 15:25:25 -0400
-Subject: Re: iwl4965 crash in iwl-tx.c
-From: reinette chatre <reinette.chatre@intel.com>
-To: Bernard Moret <bernard.moret@epfl.ch>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Noah Meyerhans <frodo@morgul.net>
-In-Reply-To: <38961a360810281132n660baefbk8c8b3eb8cf144edb@mail.gmail.com>
-References: <20081024180514.GA14438@morgul.net>
-	 <20081024185419.GA19057@tuxdriver.com>	 <20081024191700.GD14438@morgul.net>
-	 <1225215583.1115.195.camel@rc-desk>
-	 <38961a360810281132n660baefbk8c8b3eb8cf144edb@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39415 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755895AbYJVJlp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 05:41:45 -0400
+Subject: [PATCH] mac80211: insert AP sta entry after filling it
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>
 Content-Type: text/plain
-Date: Tue, 28 Oct 2008 12:25:49 -0700
-Message-Id: <1225221949.1115.208.camel@rc-desk> (sfid-20081028_202528_317327_48395A8B)
+Date: Wed, 22 Oct 2008 11:41:38 +0200
+Message-Id: <1224668498.28639.42.camel@johannes.berg> (sfid-20081022_114216_074779_01E34919)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(including linux-wireless)
+We never clearly defined the semantics of the sta_notify callback
+and it was originally posted for iwlwifi which still doesn't use
+it at all. With the recent HT rework ath9k started relying on it,
+but I made a mistake there in that I made ath9k assume the HT
+information has already been filled in at sta_notify time. This
+isn't a hard thing to do, so do it.
 
-On Tue, 2008-10-28 at 11:32 -0700, Bernard Moret wrote:
-> Hello!
-> I can confirm that the bug no longer exists (or has become very
-> hard to trigger!) in 2.6.28-rc2.
-> I had it under 2.6.27.4 on my Dell XPS 1530, as one of two
-> problems (the other was frequently dropped connections);
-> leaving the laptop idle, but connected, for more than 30mins
-> was sure to trigger it.  I've now been up under 2.6.28-rc2 for
-> 36hrs running, w/o any dropped connection and without any
-> crash -- connected to a DLink 802.11n access point with no
-> WEP/WPA.
-> Bernard Moret
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+John, this fixes a regression from "mac80211: rewrite HT handling".
 
-Thanks!
+ net/mac80211/mlme.c |   31 ++++++++++++++++++-------------
+ 1 file changed, 18 insertions(+), 13 deletions(-)
 
-Do other users have similar experience? Noah?
-
-Reinette
+--- everything.orig/net/mac80211/mlme.c	2008-10-22 11:02:03.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-10-22 11:06:46.000000000 +0200
+@@ -1195,7 +1195,7 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	u32 changed = 0;
+ 	int i, j;
+ 	DECLARE_MAC_BUF(mac);
+-	bool have_higher_than_11mbit = false;
++	bool have_higher_than_11mbit = false, newsta = false;
+ 
+ 	/* AssocResp and ReassocResp have identical structure, so process both
+ 	 * of them in this function. */
+@@ -1258,7 +1258,8 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	sta = sta_info_get(local, ifsta->bssid);
+ 	if (!sta) {
+ 		struct ieee80211_bss *bss;
+-		int err;
++
++		newsta = true;
+ 
+ 		sta = sta_info_alloc(sdata, ifsta->bssid, GFP_ATOMIC);
+ 		if (!sta) {
+@@ -1277,13 +1278,6 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 			ieee80211_rx_bss_put(local, bss);
+ 		}
+ 
+-		err = sta_info_insert(sta);
+-		if (err) {
+-			printk(KERN_DEBUG "%s: failed to insert STA entry for"
+-			       " the AP (error %d)\n", sdata->dev->name, err);
+-			rcu_read_unlock();
+-			return;
+-		}
+ 		/* update new sta with its last rx activity */
+ 		sta->last_rx = jiffies;
+ 	}
+@@ -1353,13 +1347,24 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 
+ 	rate_control_rate_init(sta);
+ 
+-	if (elems.wmm_param) {
++	if (elems.wmm_param)
+ 		set_sta_flags(sta, WLAN_STA_WME);
+-		rcu_read_unlock();
++
++	if (newsta) {
++		int err = sta_info_insert(sta);
++		if (err) {
++			printk(KERN_DEBUG "%s: failed to insert STA entry for"
++			       " the AP (error %d)\n", sdata->dev->name, err);
++			rcu_read_unlock();
++			return;
++		}
++	}
++
++	rcu_read_unlock();
++
++	if (elems.wmm_param)
+ 		ieee80211_sta_wmm_params(local, ifsta, elems.wmm_param,
+ 					 elems.wmm_param_len);
+-	} else
+-		rcu_read_unlock();
+ 
+ 	/* set AID and assoc capability,
+ 	 * ieee80211_set_associated() will tell the driver */
 
 
