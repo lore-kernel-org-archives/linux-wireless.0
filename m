@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:42002 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753842AbYJIUJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 16:09:42 -0400
-Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic
-	loading firmware with PCMCIA adapter
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Borzenkov <arvidjaar@newmail.ru>
-Cc: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-In-Reply-To: <200810092321.55033.arvidjaar@newmail.ru>
-References: <200810091722.56812.arvidjaar@newmail.ru>
-	 <200810091959.54987.arvidjaar@newmail.ru>
-	 <1223568410.18104.42.camel@dhcp-100-3-195.bos.redhat.com>
-	 <200810092321.55033.arvidjaar@newmail.ru>
-Content-Type: text/plain
-Date: Thu, 09 Oct 2008 15:40:33 -0400
-Message-Id: <1223581233.14959.16.camel@dhcp-100-3-195.bos.redhat.com> (sfid-20081009_220945_316152_5605E85D)
-Mime-Version: 1.0
+Received: from yx-out-2324.google.com ([74.125.44.30]:32977 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752873AbYJVM2Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 08:28:16 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so533534yxm.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 05:28:15 -0700 (PDT)
+Message-ID: <1ba2fa240810220528w6b2e4e60k7d2390328d9b5c49@mail.gmail.com> (sfid-20081022_142821_216455_BD18E072)
+Date: Wed, 22 Oct 2008 14:28:14 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Christoph Hellwig" <hch@infradead.org>
+Subject: Re: New iwlwifi 3945 uCode available
+Cc: "reinette chatre" <reinette.chatre@linux.intel.com>,
+	"Marcel Holtmann" <holtmann@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081022100758.GA27595@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224613633.10863.43.camel@rc-desk>
+	 <1224624324.28639.9.camel@johannes.berg>
+	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
+	 <1224624899.28639.17.camel@johannes.berg>
+	 <20081021213814.GM17268@tuxdriver.com>
+	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
+	 <1224627187.9386.103.camel@californication>
+	 <1224628088.10863.100.camel@rc-desk>
+	 <20081022100758.GA27595@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-10-09 at 23:21 +0400, Andrey Borzenkov wrote:
-> On Thursday 09 October 2008, Dan Williams wrote:
-> > 
-> > On Thu, 2008-10-09 at 19:59 +0400, Andrey Borzenkov wrote:
-> > > On Thursday 09 October 2008, Matthew Wilcox wrote:
-> > > > 
-> > > > On Thu, Oct 09, 2008 at 05:22:55PM +0400, Andrey Borzenkov wrote:
-> > > > > After loading orinoco and "inserting" adapter I get either BUG with
-> > > > > endless loop (attached) or kernel panic on NULL pointer dereference
-> > > > > (was not able capture). Adapter works fine with wlags49 driver.
-> > > > 
-> > > > It looks like you've fallen off the bottom of the kernel stack.  Do you
-> > > > have 4k stacks enabled in your config?
-> > > > 
-> > > 
-> > > You are right. Using 8K stacks load and runs fine. Hmm ... not nice
-> > > from it :p
-> > 
-> > == driver bug; the driver should not require large stacks and this
-> > should get fixed.
-> > 
-> 
-> The attached patch fixes 4K stack for me. I have not tested spectrum case.
+On Wed, Oct 22, 2008 at 12:07 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Oct 21, 2008 at 03:28:08PM -0700, reinette chatre wrote:
+>> I do not believe our request is unreasonable. If a user runs a new
+>> kernel the log will print a message that the firmware is incorrect ...
+>> all the user needs to do is go to
+>> http://intellinuxwireless.org/?n=Downloads and download the latest
+>> firmware. This does not require any subtle changes that may affect other
+>> aspects of the system ... just the firmware file that is only used by
+>> the driver.
+>
+> with the wireless that doesn't work.  Nice.  Sorry guys, but requiring
+> a new firmware version for a new driver release is completely
+> unreasonable.  You can drop support for older firmware ABIs after a few
+> years,but not immediately.
 
-Looks pretty good, although if nobody can test the Symbol case (all I
-have is Intersil firmware) maybe you should not use priv->pda_size but
-#define SYMBOL_PDA_SIZE 256 and use that for the hermes_read_pda()
-length just to ensure the patched code is functionally the same as
-before the patch.
+Years.. this HW will be obsolete in year or two, hopefully recycled.
+I personally don't want people using this buggy firmware for years.
 
-Dan
+This is development branch after all, it's not even scheduled for 2.6.28.
 
+Ucode API for 4965 was changed to -2 without much pain, So there is a
+precedence this work quite well. This time there were some hiccups in
+handling this since the API version wasn't updated it as should be.
+really our fault. But I don't think this situation is so dramatic as
+you describe it.
 
+The objective of the objections is not that we want to immensely hurt
+users but rather the trade off between maintain even uglier code and
+users running buggy firmware versus logging into older kernel and
+downloading new firmware in 5 minutes looks to me not proportional.
+Distro users that pull updates won't even notice. I might be wrong
+though.
+
+Tomas
