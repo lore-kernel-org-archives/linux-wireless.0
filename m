@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:55911 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750999AbYJNWG5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 18:06:57 -0400
-From: Elias Oltmanns <eo@nebensachen.de>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Does not connect reliably on 2.6.27
-References: <87iqrvgm7b.fsf@denkblock.local>
-	<40f31dec0810141011y265275a8nc083764889d699f1@mail.gmail.com>
-Date: Wed, 15 Oct 2008 00:01:28 +0200
-Message-ID: <87iqruj0p3.fsf@denkblock.local> (sfid-20081015_000700_755580_57D3B626)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49411 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109AbYJVTem (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 15:34:42 -0400
+Date: Wed, 22 Oct 2008 15:33:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [PATCH 7/9] iwl3945 : Fix a-band association for passive
+	channels
+Message-ID: <20081022193353.GG15808@tuxdriver.com> (sfid-20081022_213446_545533_832ACFDF)
+References: <1224012769-8920-1-git-send-email-reinette.chatre@intel.com> <1224012769-8920-2-git-send-email-reinette.chatre@intel.com> <1224012769-8920-3-git-send-email-reinette.chatre@intel.com> <1224012769-8920-4-git-send-email-reinette.chatre@intel.com> <1224012769-8920-5-git-send-email-reinette.chatre@intel.com> <1224012769-8920-6-git-send-email-reinette.chatre@intel.com> <1224012769-8920-7-git-send-email-reinette.chatre@intel.com> <1224012769-8920-8-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1224012769-8920-8-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Nick Kossifidis" <mickflemm@gmail.com> wrote:
-> 2008/10/14 Elias Oltmanns <eo@nebensachen.de>:
->> Hi all,
->
->>
->> after a cold boot into 2.6.27, ath5k doesn't work on my machine. The
->> sequence
->>
->> # ifconfig ath0 up
->> # iwlist ath0 ap
->>
->> results in a message informing me that no list of APs is available for
->> that device.
-[...]
->> The minimal patch to fix the issue for me is attached. However, I am
->> wondering whether the preceding writes to register 0xa228 should be
->> dropped or at least adjusted somehow. Perhaps those of you who know the
->> recently released HAL from Atheros can throw some light on the matter.
->>
->> Regards,
->>
->> Elias
->> ---
->> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
->> index dc51b84..b1cec2a 100644
->> --- a/drivers/net/wireless/ath5k/hw.c
->> +++ b/drivers/net/wireless/ath5k/hw.c
->> @@ -862,7 +862,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
->>                        data = 0;
->>
->>                        /* Just write 0x9b5 ? */
->> -                       /* ath5k_hw_reg_write(ah, 0x000009b5, 0xa228); */
->> +                       ath5k_hw_reg_write(ah, 0x000009b5, 0xa228);
->>                        ath5k_hw_reg_write(ah, 0x0000000f, AR5K_SEQ_MASK);
->>                        ath5k_hw_reg_write(ah, 0x00000000, 0xa254);
->>                        ath5k_hw_reg_write(ah, 0x0000000e, AR5K_PHY_SCAL);
->>
->
-> I think i've fixed that (it's a buggy mask some lines above) on an
-> earlier patch (the one that introduced AR2425 support) but i'll look
-> into it again ;-)
+On Tue, Oct 14, 2008 at 12:32:47PM -0700, Reinette Chatre wrote:
+> From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> 
+> This patch fixes the a-band association for passive channels.
+> This fix will only work with uCode version 15.28.1.8 and above.
+> uCode API version is incremented to 2.
+> 
+> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
-Can you drop me a link or a commit + tree so I can test it?
+BTW, what is wrong with "the a-band association for passive channels"?
+As you may know, we have been trying to get better changelog
+information from the iwlwifi team for a while now...
 
-Regards,
-
-Elias
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
