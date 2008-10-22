@@ -1,33 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:42021 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388AbYJNSCL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 14:02:11 -0400
-Message-ID: <48F4DE61.6040503@oracle.com> (sfid-20081014_200215_197994_B25B0C9C)
-Date: Tue, 14 Oct 2008 11:01:05 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:58108 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751238AbYJVJIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 05:08:46 -0400
+Message-ID: <48FEED4D.3000208@cn.fujitsu.com> (sfid-20081022_110850_215493_253FC649)
+Date: Wed, 22 Oct 2008 17:07:25 +0800
+From: Zhaolei <zhaolei@cn.fujitsu.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH] mac80211: fixme for kernel-doc
-References: <20081013091501.33146a4d.randy.dunlap@oracle.com> <1224007103.3027.0.camel@johannes.berg>
-In-Reply-To: <1224007103.3027.0.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-kernel@vger.kernel.org
+CC: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: [PATCH] Fix debugfs_create_*'s error checking method for wireless/rt2x00/
+Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2008-10-13 at 09:15 -0700, Randy Dunlap wrote:
->> From: Randy Dunlap <randy.dunlap@oracle.com>
->>
->> Fix kernel-doc warnings in mac80211.h.
->> Fields need real explanations added to them.
->>
->> Warning(lin2627-g3-kdocfixes//include/net/mac80211.h:659): No description found for parameter 'icv_len'
->> Warning(lin2627-g3-kdocfixes//include/net/mac80211.h:659): No description found for parameter 'iv_len'
-> 
-> Thanks Randy, nbd was going to add those.
+Hi,
 
-He still can.  :)
+debugfs_create_*() returns NULL if an error occurs, returns -ENODEV
+when debugfs is not enabled in the kernel.
+
+Signed-off-by: Zhao Lei <zhaolei@cn.fujitsu.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   21 ++++++++++++---------
+ 1 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 5cf4c85..b380cd3 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -587,29 +587,29 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ 	intf->driver_folder =
+ 	    debugfs_create_dir(intf->rt2x00dev->ops->name,
+ 			       rt2x00dev->hw->wiphy->debugfsdir);
+-	if (IS_ERR(intf->driver_folder))
++	if (IS_ERR(intf->driver_folder) || !intf->driver_folder)
+ 		goto exit;
+ 
+ 	intf->driver_entry =
+ 	    rt2x00debug_create_file_driver("driver", intf, &intf->driver_blob);
+-	if (IS_ERR(intf->driver_entry))
++	if (IS_ERR(intf->driver_entry) || !intf->driver_entry)
+ 		goto exit;
+ 
+ 	intf->chipset_entry =
+ 	    rt2x00debug_create_file_chipset("chipset",
+ 					    intf, &intf->chipset_blob);
+-	if (IS_ERR(intf->chipset_entry))
++	if (IS_ERR(intf->chipset_entry) || !intf->chipset_entry)
+ 		goto exit;
+ 
+ 	intf->dev_flags = debugfs_create_file("dev_flags", S_IRUSR,
+ 					      intf->driver_folder, intf,
+ 					      &rt2x00debug_fop_dev_flags);
+-	if (IS_ERR(intf->dev_flags))
++	if (IS_ERR(intf->dev_flags) || !intf->dev_flags)
+ 		goto exit;
+ 
+ 	intf->register_folder =
+ 	    debugfs_create_dir("register", intf->driver_folder);
+-	if (IS_ERR(intf->register_folder))
++	if (IS_ERR(intf->register_folder) || !intf->register_folder)
+ 		goto exit;
+ 
+ #define RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(__intf, __name)	\
+@@ -619,7 +619,8 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ 			       S_IRUSR | S_IWUSR,		\
+ 			       (__intf)->register_folder,	\
+ 			       &(__intf)->offset_##__name);	\
+-	if (IS_ERR((__intf)->__name##_off_entry))		\
++	if (IS_ERR((__intf)->__name##_off_entry)		\
++			|| !(__intf)->__name##_off_entry)	\
+ 		goto exit;					\
+ 								\
+ 	(__intf)->__name##_val_entry =				\
+@@ -627,7 +628,8 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ 				S_IRUSR | S_IWUSR,		\
+ 				(__intf)->register_folder,	\
+ 				(__intf), &rt2x00debug_fop_##__name);\
+-	if (IS_ERR((__intf)->__name##_val_entry))		\
++	if (IS_ERR((__intf)->__name##_val_entry)		\
++			|| !(__intf)->__name##_val_entry)	\
+ 		goto exit;					\
+ })
+ 
+@@ -640,13 +642,14 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ 
+ 	intf->queue_folder =
+ 	    debugfs_create_dir("queue", intf->driver_folder);
+-	if (IS_ERR(intf->queue_folder))
++	if (IS_ERR(intf->queue_folder) || !intf->queue_folder)
+ 		goto exit;
+ 
+ 	intf->queue_frame_dump_entry =
+ 	    debugfs_create_file("dump", S_IRUSR, intf->queue_folder,
+ 				intf, &rt2x00debug_fop_queue_dump);
+-	if (IS_ERR(intf->queue_frame_dump_entry))
++	if (IS_ERR(intf->queue_frame_dump_entry)
++		|| !intf->queue_frame_dump_entry)
+ 		goto exit;
+ 
+ 	skb_queue_head_init(&intf->frame_dump_skbqueue);
+-- 1.5.5.3 
+
+
+
