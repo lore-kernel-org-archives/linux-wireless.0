@@ -1,224 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58368 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:41512 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683AbYJPOzb (ORCPT
+	with ESMTP id S1752108AbYJVSuA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 10:55:31 -0400
-Subject: [PATCH] mac80211: remove rate_control_clear
+	Wed, 22 Oct 2008 14:50:00 -0400
+Subject: [PATCH v2] wireless: fix regdom passing semantics
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Julia Lawall <julia@diku.dk>,
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224701263.30459.45.camel@johannes.berg> (sfid-20081022_204756_936331_248EAD4B)
+References: <1224579720.5521.2.camel@johannes.berg>
+	 <20081022113751.GD6190@tesla>  <1224701263.30459.45.camel@johannes.berg>
+	 (sfid-20081022_204756_936331_248EAD4B)
 Content-Type: text/plain
-Date: Thu, 16 Oct 2008 11:21:49 +0200
-Message-Id: <1224148909.735.54.camel@johannes.berg> (sfid-20081016_165536_926860_99A51E64)
+Date: Wed, 22 Oct 2008 20:49:54 +0200
+Message-Id: <1224701394.30459.48.camel@johannes.berg> (sfid-20081022_205006_103676_AC2037B3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Clearing" the rate control algorithm is pointless, none of
-the algorithms actually uses this operation and it's not even
-invoked properly for all channel switching. Also, there's no
-need to since rate control algorithms work per station.
+The regdom struct is given to the core, so it might as well
+free it in error conditions, the current documentation for
+regulatory_hint doesn't note that you need to free it on errors
+anyway.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-Partially done with this spatch:
+ net/wireless/nl80211.c |    5 +----
+ net/wireless/reg.c     |    9 +++++----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-@ rule1 @
-identifier X, Y;
-@@
- struct rate_control_ops X = {
--.clear = Y,
-};
-
-@@
-identifier rule1.Y;
-identifier Z;
-@@
-- void Y(void *Z) { ... }
-
-but that didn't remove the spurious whitespace (expected) nor
-the #ifdef and comments within the function (unexpected to me),
-it looked like this:
-
--static void rs_clear(void *priv_rate)
--{
- #ifdef CONFIG_IWLWIFI_DEBUG
--       struct iwl_priv *priv = (struct iwl_priv *) priv_rate;
+--- everything.orig/net/wireless/nl80211.c	2008-10-21 10:36:13.000000000 +0200
++++ everything/net/wireless/nl80211.c	2008-10-21 10:41:13.000000000 +0200
+@@ -1756,12 +1756,9 @@ static int nl80211_set_reg(struct sk_buf
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 	r = set_regdom(rd);
+ 	mutex_unlock(&cfg80211_drv_mutex);
+-	if (r)
+-		goto bad_reg;
+-
+ 	return r;
  
--       IWL_DEBUG_RATE("enter\n");
- 
-        /* TODO - add rate scale state reset */
- 
--       IWL_DEBUG_RATE("leave\n");
- #endif /* CONFIG_IWLWIFI_DEBUG */
--}
-+
-
- drivers/net/wireless/ath9k/rc.c            |    6 ------
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 -------
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   14 --------------
- include/net/mac80211.h                     |    1 -
- net/mac80211/rate.h                        |    6 ------
- net/mac80211/rc80211_minstrel.c            |    6 ------
- net/mac80211/rc80211_pid_algo.c            |    5 -----
- net/mac80211/util.c                        |    2 --
- 8 files changed, 47 deletions(-)
-
---- everything.orig/drivers/net/wireless/ath9k/rc.c	2008-10-15 08:34:23.000000000 +0200
-+++ everything/drivers/net/wireless/ath9k/rc.c	2008-10-16 11:12:42.000000000 +0200
-@@ -2039,11 +2039,6 @@ static void ath_rate_init(void *priv, st
- 	ath_rc_node_update(sc->hw, priv_sta);
+-bad_reg:
++ bad_reg:
+ 	kfree(rd);
+ 	return -EINVAL;
+ }
+--- everything.orig/net/wireless/reg.c	2008-10-21 10:38:59.000000000 +0200
++++ everything/net/wireless/reg.c	2008-10-21 10:41:13.000000000 +0200
+@@ -606,7 +606,6 @@ int __regulatory_hint(struct wiphy *wiph
+ 	return r;
  }
  
--static void ath_rate_clear(void *priv)
--{
--	return;
--}
--
- static void *ath_rate_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
+-/* If rd is not NULL and if this call fails the caller must free it */
+ int regulatory_hint(struct wiphy *wiphy, const char *alpha2,
+ 	struct ieee80211_regdomain *rd)
  {
- 	struct ath_softc *sc = hw->priv;
-@@ -2093,7 +2088,6 @@ static struct rate_control_ops ath_rate_
- 	.tx_status = ath_tx_status,
- 	.get_rate = ath_get_rate,
- 	.rate_init = ath_rate_init,
--	.clear = ath_rate_clear,
- 	.alloc = ath_rate_alloc,
- 	.free = ath_rate_free,
- 	.alloc_sta = ath_rate_alloc_sta,
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-10-15 08:34:19.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-10-16 11:13:12.000000000 +0200
-@@ -355,12 +355,6 @@ static void rs_free(void *priv)
- 	return;
+@@ -691,6 +690,7 @@ void print_regdomain_info(const struct i
+ 	print_rd_rules(rd);
  }
  
--static void rs_clear(void *priv)
--{
--	return;
--}
--
--
- static void *rs_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
++/* Takes ownership of rd only if it doesn't fail */
+ static int __set_regdom(const struct ieee80211_regdomain *rd)
  {
- 	struct iwl3945_rs_sta *rs_sta;
-@@ -785,7 +779,6 @@ static struct rate_control_ops rs_ops = 
- 	.tx_status = rs_tx_status,
- 	.get_rate = rs_get_rate,
- 	.rate_init = rs_rate_init,
--	.clear = rs_clear,
- 	.alloc = rs_alloc,
- 	.free = rs_free,
- 	.alloc_sta = rs_alloc_sta,
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2008-10-15 08:34:23.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2008-10-16 11:11:58.000000000 +0200
-@@ -2399,19 +2399,6 @@ static void rs_free(void *priv_rate)
- 	return;
- }
+ 	/* Some basic sanity checks first */
+@@ -752,16 +752,17 @@ static int __set_regdom(const struct iee
  
--static void rs_clear(void *priv_rate)
--{
--#ifdef CONFIG_IWLWIFI_DEBUG
--	struct iwl_priv *priv = (struct iwl_priv *) priv_rate;
--
--	IWL_DEBUG_RATE("enter\n");
--
--	/* TODO - add rate scale state reset */
--
--	IWL_DEBUG_RATE("leave\n");
--#endif /* CONFIG_IWLWIFI_DEBUG */
--}
--
- static void rs_free_sta(void *priv_r, struct ieee80211_sta *sta,
- 			void *priv_sta)
+ /* Use this call to set the current regulatory domain. Conflicts with
+  * multiple drivers can be ironed out later. Caller must've already
+- * kmalloc'd the rd structure. If this calls fails you should kfree()
+- * the passed rd. Caller must hold cfg80211_drv_mutex */
++ * kmalloc'd the rd structure. Caller must hold cfg80211_drv_mutex */
+ int set_regdom(const struct ieee80211_regdomain *rd)
  {
-@@ -2599,7 +2586,6 @@ static struct rate_control_ops rs_ops = 
- 	.tx_status = rs_tx_status,
- 	.get_rate = rs_get_rate,
- 	.rate_init = rs_rate_init,
--	.clear = rs_clear,
- 	.alloc = rs_alloc,
- 	.free = rs_free,
- 	.alloc_sta = rs_alloc_sta,
---- everything.orig/net/mac80211/rc80211_minstrel.c	2008-10-15 08:34:19.000000000 +0200
-+++ everything/net/mac80211/rc80211_minstrel.c	2008-10-16 11:13:29.000000000 +0200
-@@ -486,11 +486,6 @@ minstrel_free_sta(void *priv, struct iee
- 	kfree(mi);
- }
+ 	int r;
  
--static void
--minstrel_clear(void *priv)
--{
--}
--
- static void *
- minstrel_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
- {
-@@ -544,7 +539,6 @@ static struct rate_control_ops mac80211_
- 	.tx_status = minstrel_tx_status,
- 	.get_rate = minstrel_get_rate,
- 	.rate_init = minstrel_rate_init,
--	.clear = minstrel_clear,
- 	.alloc = minstrel_alloc,
- 	.free = minstrel_free,
- 	.alloc_sta = minstrel_alloc_sta,
---- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-10-15 08:34:19.000000000 +0200
-+++ everything/net/mac80211/rc80211_pid_algo.c	2008-10-16 11:13:39.000000000 +0200
-@@ -446,10 +446,6 @@ static void rate_control_pid_free(void *
- 	kfree(pinfo);
- }
+ 	/* Note that this doesn't update the wiphys, this is done below */
+ 	r = __set_regdom(rd);
+-	if (r)
++	if (r) {
++		kfree(rd);
+ 		return r;
++	}
  
--static void rate_control_pid_clear(void *priv)
--{
--}
--
- static void *rate_control_pid_alloc_sta(void *priv, struct ieee80211_sta *sta,
- 					gfp_t gfp)
- {
-@@ -480,7 +476,6 @@ static struct rate_control_ops mac80211_
- 	.tx_status = rate_control_pid_tx_status,
- 	.get_rate = rate_control_pid_get_rate,
- 	.rate_init = rate_control_pid_rate_init,
--	.clear = rate_control_pid_clear,
- 	.alloc = rate_control_pid_alloc,
- 	.free = rate_control_pid_free,
- 	.alloc_sta = rate_control_pid_alloc_sta,
---- everything.orig/include/net/mac80211.h	2008-10-16 11:11:19.000000000 +0200
-+++ everything/include/net/mac80211.h	2008-10-16 11:11:26.000000000 +0200
-@@ -1919,7 +1919,6 @@ struct rate_control_ops {
- 	struct module *module;
- 	const char *name;
- 	void *(*alloc)(struct ieee80211_hw *hw, struct dentry *debugfsdir);
--	void (*clear)(void *priv);
- 	void (*free)(void *priv);
- 
- 	void *(*alloc_sta)(void *priv, struct ieee80211_sta *sta, gfp_t gfp);
---- everything.orig/net/mac80211/rate.h	2008-10-16 11:11:12.000000000 +0200
-+++ everything/net/mac80211/rate.h	2008-10-16 11:11:16.000000000 +0200
-@@ -63,12 +63,6 @@ static inline void rate_control_rate_ini
- }
- 
- 
--static inline void rate_control_clear(struct ieee80211_local *local)
--{
--	struct rate_control_ref *ref = local->rate_ctrl;
--	ref->ops->clear(ref->priv);
--}
--
- static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
- 					   struct ieee80211_sta *sta,
- 					   gfp_t gfp)
---- everything.orig/net/mac80211/util.c	2008-10-16 11:11:42.000000000 +0200
-+++ everything/net/mac80211/util.c	2008-10-16 11:11:45.000000000 +0200
-@@ -647,8 +647,6 @@ int ieee80211_set_freq(struct ieee80211_
- 		else
- 			ret = ieee80211_hw_config(
- 				local, IEEE80211_CONF_CHANGE_CHANNEL);
--
--		rate_control_clear(local);
- 	}
- 
- 	return ret;
+ 	/* This would make this whole thing pointless */
+ 	BUG_ON(rd != cfg80211_regdomain);
 
 
