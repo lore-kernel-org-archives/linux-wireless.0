@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39719 "EHLO vs166246.vserver.de"
+Received: from mga09.intel.com ([134.134.136.24]:6451 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755006AbYJCV5B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 17:57:01 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 3/8] b43: remove b43_radio_{read|write}16 from lo.c
-Date: Fri, 3 Oct 2008 23:56:38 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1223066926.6512.28.camel@brick> <200810032317.19971.mb@bu3sch.de> <1223069584.6512.42.camel@brick>
-In-Reply-To: <1223069584.6512.42.camel@brick>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200810032356.38798.mb@bu3sch.de> (sfid-20081003_235713_091900_73B3A508)
+	id S1755953AbYJVUei (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 16:34:38 -0400
+Subject: Re: [PATCH 6/9] iwlwifi: refactor TX response flow
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+In-Reply-To: <20081022195149.GH15808@tuxdriver.com>
+References: <1224012769-8920-1-git-send-email-reinette.chatre@intel.com>
+	 <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
+	 <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
+	 <1224012769-8920-4-git-send-email-reinette.chatre@intel.com>
+	 <1224012769-8920-5-git-send-email-reinette.chatre@intel.com>
+	 <1224012769-8920-6-git-send-email-reinette.chatre@intel.com>
+	 <1224012769-8920-7-git-send-email-reinette.chatre@intel.com>
+	 <20081022195149.GH15808@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 22 Oct 2008 13:34:55 -0700
+Message-Id: <1224707695.10863.162.camel@rc-desk> (sfid-20081022_223442_410038_3CA84ED1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 03 October 2008 23:33:04 Harvey Harrison wrote:
-> OK, but you should still look at patch 1 for the unaligned access
-> helpers.
-
-Yeah it's broken (it removes bounds checks at the end)
-and unaligned is not needed.
-
-> The rest I'll kick to the bitbucket...although I think you should look
-> at the portion of patch 5 that touches the function b43_radio_init2060
-> as it points out the _one_ place where a register is masking the value
-> of some other register...which is absolutely impossible to see unless
-> you do a series of patches like this.
+On Wed, 2008-10-22 at 12:51 -0700, John W. Linville wrote:
+> On Tue, Oct 14, 2008 at 12:32:46PM -0700, Reinette Chatre wrote:
+> > From: Tomas Winkler <tomas.winkler@intel.com>
+> >
+> > This patch utilize 5000 new TX response command
+> > which contains all necessary information and avoids
+> > back referencing to the original TX frame.
+> > It also change handling of software queue tracking
+> > 4965 flow is aligned with changes as much as possible.
+> >
+> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> > Reviewed-by: Zhu Yi <yi.zhu@intel.com>
+> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 > 
-> It may be that it is intentional, and it has been this way as far back
-> in the git history as I can find, but at least now it can be seen.
-> 
-> -       b43_radio_write16(dev, 0x0005,
-> -                         (b43_radio_read16(dev, 0x0081) & ~0x0008) | 0x0008);
+> What is this based upon?  It doesn't seem to apply to wireless-testing.
 
-That's a bug in the dead code. We have more such bugs in the A-PHY code,
-but nobody cares.
-If you want to fix it, please read the specs and find out what should be
-here instead. Then send a patch that fixes this single line of code.
+It is supposed to be based on wireless-testing. It sounds as though you
+are updating wireless-testing at the moment. I can resend this patch
+when you are done.
 
--- 
-Greetings Michael.
+Reinette
+
