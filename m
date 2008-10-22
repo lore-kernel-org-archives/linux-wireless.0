@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24335 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751173AbYJXRPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 13:15:24 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2008 10:15:24 -0700
-Date: Fri, 24 Oct 2008 03:15:18 -0700
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:46291 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752020AbYJVCES (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2008 22:04:18 -0400
+Received: by gxk9 with SMTP id 9so6669339gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2008 19:04:17 -0700 (PDT)
+Message-ID: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> (sfid-20081022_040424_748738_2DAD08F8)
+Date: Tue, 21 Oct 2008 19:04:17 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Zhu Yi <yi.zhu@intel.com>, John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] wireless: add regulatory_struct_hint
-Message-ID: <20081024101518.GB5951@tesla> (sfid-20081024_191527_764124_6328FEC1)
-References: <1224585110.5521.8.camel@johannes.berg> <1224816184.2917.162.camel@debian.sh.intel.com> <1224841176.6002.124.camel@johannes.berg>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>
+Subject: Release of Atheros 802.11n USB Linux driver
+Cc: "Johannes Berg" <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1224841176.6002.124.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 24, 2008 at 02:39:36AM -0700, Johannes Berg wrote:
-> On Fri, 2008-10-24 at 10:43 +0800, Zhu Yi wrote:
-> >         
-> >         The patch extends the current regulatory framework to support regulatory
-> >         enforcement by device hardware (firmware). If the regulatory check is
-> >         performed by hardware, the driver uses a special flag to indicate the
-> >         regulatory framework, so that the regulatory framework will bypass all
-> >         the regulatory checks for this device and delegate it to the hardware.
-> 
-> The way I'm reading this, it's incorrect because it doesn't allow the
-> user to override the hardware's idea of the regulatory domain. I think
-> it's just a wrong description though.
-> 
-> However, there is another major problem with this, if I use a USB device
-> that has no regulatory information on a laptop that has this virtual
-> regdomain configured because of a built-in Intel device, my USB device
-> will wrongly enable all channels.
-> 
-> But inspired by your patch, here's a different idea:
-> 
->  * remove the struct regdomain hint thing
->  * introduce a "hardware has regulatory check" flag, which means that
->     - hardware will enforce regulatory compliance to whatever it thinks
->       the regulatory domain is
->     - the driver will, of course, still also enforce the information in
->       wiphy->bands as it does now
->  * if a wiphy has the "hw regulatory" flag set and the
->    cfg80211_regdomain is the world regdomain (whether hard-coded or
->    gotten from CRDA)
+We would like to see our Atheros 802.11n USB Linux driver upstream
+however we need help with this so we are releasing our Atheros 11n USB
+Otus Linux driver under the ISC to the community. The goal is to work
+with the community to help move this forward upstream. We are hoping
+for community help and leadership on this (*cough*).
 
-And if initiator == CORE
+In the meantime users should be able to use this driver and patches
+are welcomed to add newer wireless extension support so users on newer
+kernels can get their devices working. The focus should be upstream
+though :)
 
-> , then (and only then!) don't apply the
->    cfg80211_regdomain to it
+Anyway, some more details.
 
-I like this approach.
+Supported hardware:
 
-> This would have the following consequences:
->  + much less code since all the hint stuff goes away
->  + still works for users who move around with a hw-regulatory based
->    laptop if they set the regdomain to something other than world
->    manually
->  - secondary hardware cannot benefit of the, now no longer given, hint
->    which regdomain the laptop is in and will be restricted to world
->  - some degree of confusion possible when one device can use channel 13
->    (say iwl-agn hardware configured for Europe) and another cannot (say
->    a USB device without regulatory information, leading to the world
->    regdomain being the used one)
+Atheros 802.11n hardware: UB81, UB82, UB83
 
-This will not be a problem if distributions end up asking to
-set regdomain for a country for the user, which I think they should.
+Requirements:
 
-like_this_approach++
+Kernel 2.4 - 2.6.24
 
-  Luis
+Get the driver:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/otus.git
+
+Features supported:
+
+  * IEEE standard compliance
+  * IEEE 802.11a/b/g
+  * IEEE 802.11h, 802.11d
+  * IEEE 80211i
+  * IEEE Draft 2.0 802.11n
+  * Ad Hoc
+        join (2.4GHz, 5GHz if SKU allows), create (2.4GHz , 5GHz if SKU allows)
+        Adhoc security:  WEP
+  * Security
+    Authentication: WPA/WPA2 (Personal / Enterprise),
+        802.1x Encryption: none, AES, TKIP, WEP40, WEP104
+
+wpa_supplicant otus driver:
+
+This driver requires its own supplicant driver for wpa_supplicant
+0.4.8. For your convenience you can find the tarball here:
+
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/otus/wpa_supplicant-0.4.8_otus.tar.bz2
