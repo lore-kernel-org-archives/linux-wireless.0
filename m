@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:42805 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbYJOPuI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40366 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751290AbYJVVUy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 11:50:08 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
+	Wed, 22 Oct 2008 17:20:54 -0400
+Date: Wed, 22 Oct 2008 17:20:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@web.de>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224034856.24677.9.camel@debian.sh.intel.com>
-References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
-	 <20081009154547.GB13349@tesla>
-	 <1223608949.2510.1061.camel@debian.sh.intel.com>
-	 (sfid-20081010_052512_883760_F373F92C)  <1223975972.10113.20.camel@johannes.berg>
-	 <1224034856.24677.9.camel@debian.sh.intel.com>
-Content-Type: text/plain
-Date: Wed, 15 Oct 2008 17:50:45 +0200
-Message-Id: <1224085845.4764.23.camel@californication> (sfid-20081015_175014_345172_45590549)
-Mime-Version: 1.0
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>
+Subject: Re: [PATCH 2/3 v3] p54: put broadcast frames into the right queues
+Message-ID: <20081022212008.GL15808@tuxdriver.com> (sfid-20081022_232057_156348_0B375A33)
+References: <200810170115.38317.chunkeey@web.de> <200810170354.25392.chunkeey@web.de> <1224332511.6324.3.camel@johannes.berg> <200810182318.44880.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200810182318.44880.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
-
-> > > Does below scenario an expected behaviour?
-> > > 
-> > > 0. A system with iwl3945 BG card and iwl4965 AGN card.
-> > > 1. insmod iwl3945 -> regulatory_hint(, 99, rd) return 0;
-> > > 2. insmod iwl4965 -> regulatory_hint(, 99, rd2) return -EALREADY;
-> > > 3. iwl4965 has no A band support!
-> > 
-> > Yeah, I think this is expected, and the solution is to install crda and
-> > iw and set the regulatory domain manually to whatever country you're in
-> > rather than your cards SKU.
+On Sat, Oct 18, 2008 at 11:18:44PM +0200, Christian Lamparter wrote:
+> stlc45xx's specs finally brought some light what all the 4 extra queues for.
+> now CAB data and managment frames have their own queue.
 > 
-> Let's use the solution at this time. Just a notion that the regdomain in
-> kernel doesn't sort out very well in some circumstance without user
-> intervention.
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
 
-that is what Johannes and I agreed on. We do have to make this work when
-no userspace is present or is limited due to the design of the embedded
-system in question. In that case the first regulatory hint wins.
+Doesn't apply...
 
-Johannes, we could just add a kernel warning if we have mismatched
-regulatory hints and userspace was not involved until now. So at least
-it shows up in dmesg and can be debugged easily if needed.
-
-Regards
-
-Marcel
-
-
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
