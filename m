@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58426 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756036AbYJBN2D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 09:28:03 -0400
-Subject: Re: [PATCH] mac80211: remove redundant check in
-	ieee80211_master_start_xmit (net/mac80211/tx.c)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <eb3ff54b0810020556s407728b9n772e7ae178761eee@mail.gmail.com> (sfid-20081002_145638_432332_195D186E)
-References: <eb3ff54b0810020556s407728b9n772e7ae178761eee@mail.gmail.com>
-	 (sfid-20081002_145638_432332_195D186E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MjqYTNT2225RnBEx3pjn"
-Date: Thu, 02 Oct 2008 15:27:11 +0200
-Message-Id: <1222954031.24551.51.camel@johannes.berg> (sfid-20081002_152825_816869_BE4C7CF0)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:42476 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753761AbYJWD2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 23:28:53 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 20:28:53 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] ath9k: enable RX interrupt mitigation
+Date: Wed, 22 Oct 2008 13:28:44 -0700
+Message-ID: <1224707325-13101-2-git-send-email-lrodriguez@atheros.com> (sfid-20081023_052913_448705_6F04C15C)
+In-Reply-To: <1224707325-13101-1-git-send-email-lrodriguez@atheros.com>
+References: <1224707325-13101-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This enables hardware interrupt mitigation on RX.
+It should alleviate system interrupt load intelligently.
 
---=-MjqYTNT2225RnBEx3pjn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Thu, 2008-10-02 at 15:56 +0300, Rami Rosen wrote:
-> Hi,
->=20
->  - This patch (against the linux-wireless-next git tree) removes a
-> redundant check in ieee80211_master_start_xmit (net/mac80211/tx.c).
->=20
->   In this method, there is no need to call again the
-> ieee80211_is_data() method; this is checked immediately before, in the
-> "if" command (we will not enter this block unless ieee80211_is_data()
-> is true, so that the "and" (&&) condition in that "if" command will be
-> fullfilled ).
-
-You should un-indent the code accordingly.
-
-johannes
-
---=-MjqYTNT2225RnBEx3pjn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI5MwsAAoJEKVg1VMiehFY848P/3gaq6Veg+BxF6mYbvMsdPKp
-jfalP0zi1FkEZqDCEU4ZdRAtpGvmPA++Sy8nf+CZmzkVJiAd8f26J37Tcw6wgNbF
-PGvJevpRP+6lmheYjQoMlIUXFtrlxlANQ4RVEiP1sN2TM0vYImZ9WEvJJJSk0kKk
-XYDbZ2OennxErDiEBYPPc68xisVxRT1RZojYX4SVhao7atv/rpcYumbPNaAz7ztK
-T/WjgraV4cYbwwJ5HnQ38E7ux53ndmGQEK8fXaaoorHkXGDM/Y+1a8gYBwA2f0kw
-mS8kHpSR7V1s+qRJVQcxHqDusGDnoaWkpnrif+Y4dHe0E0nzdQmVIuo5MHyxAr1P
-iSsEFyXaATOQMsMROH49AcWiWMnDwSDXPcx1K3J+FxqTqGFkVN1bXxcMsKUL2bk6
-+Hd45xEs+0MFHREuPeP1qPPtbSDsQUCsZwnl2KzedVAlfEQl9cDnZY9A33qq4iim
-qlQdEZ1iqONawQfzrYAmHmoKnvE8n+AkXQn1Y0DPkKbTVDgXdE3Fx6X10LeDg2Pa
-VxePZRz8HQDG6T3lSK8MRcTkRI6h0XTDoyzPoruLxaPP60UblYgLa1zgix7CU1kv
-R2qMmsVHgWCNOLkeCGgjkCLjNiuSIWu17r8pCh66vx0Vd713uPm5nY0F6PabKsLg
-xVKxuBMVPjzr/6QAaZVJ
-=XJxz
------END PGP SIGNATURE-----
-
---=-MjqYTNT2225RnBEx3pjn--
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 62e44a0..934b800 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -345,7 +345,7 @@ static void ath9k_hw_set_defaults(struct ath_hal *ah)
+ 		ah->ah_config.spurchans[i][1] = AR_NO_SPUR;
+ 	}
+ 
+-	ah->ah_config.intr_mitigation = 0;
++	ah->ah_config.intr_mitigation = 1;
+ }
+ 
+ static void ath9k_hw_override_ini(struct ath_hal *ah,
+-- 
+1.5.6.3
 
