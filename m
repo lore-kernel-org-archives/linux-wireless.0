@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:39359 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751735AbYJaQyu (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:46011 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752834AbYJVHmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 12:54:50 -0400
-Message-ID: <490B3859.10801@lwfinger.net> (sfid-20081031_175501_924710_D2D86A71)
-Date: Fri, 31 Oct 2008 09:54:49 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 22 Oct 2008 03:42:38 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2899076wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 00:42:37 -0700 (PDT)
+Message-ID: <eb3ff54b0810220042y43ea248qba1064a3eedf85b1@mail.gmail.com> (sfid-20081022_094253_296914_B536BE89)
+Date: Wed, 22 Oct 2008 09:42:37 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH ] mac80211: check return value of dev_alloc_skb() in ieee80211_sta_join_ibss().
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1224660978.28639.27.camel@johannes.berg>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: htl10@users.sourceforge.net,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/6] rtl8187: Reduce channel switch delay
-References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>
-In-Reply-To: <49088F7D.8020102@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com>
+	 <1224660978.28639.27.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The latest vendor driver (rtl8187B_linux_26.1036.0708.2008) has a 10 msec
-delay after the call to set a new channel, but not before.
+Hello,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Tested-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
----
+Do we want to continue as usual if dev_alloc_skb() in theis method fails?
 
-John,
+Regards,
+Rami
 
-This is 2.6.29 material.
-
-Larry
----
-
-
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -870,7 +870,6 @@ static int rtl8187_config(struct ieee802
- 	 */
- 	rtl818x_iowrite32(priv, &priv->map->TX_CONF,
- 			  reg | RTL818X_TX_CONF_LOOPBACK_MAC);
--	msleep(10);
- 	priv->rf->set_chan(dev, conf);
- 	msleep(10);
- 	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
-
-
-
-
-
+On Wed, Oct 22, 2008 at 9:36 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-10-22 at 09:00 +0200, Rami Rosen wrote:
+>> This patch adds a check on the return value of dev_alloc_skb() in
+>> ieee80211_sta_join_ibss()
+>> in net/mac80211/mlme.c.
+>
+> What's wrong with the current code?
+>
+>
+>> +               return -1;
+>
+> don't return -1, return meaningful error values.
+>
+> johannes
+>
