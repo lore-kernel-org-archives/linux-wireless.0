@@ -1,82 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:20482 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752273AbYJVLlO (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53028 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752586AbYJVRGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 07:41:14 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2984994wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 04:41:13 -0700 (PDT)
-Message-ID: <1ba2fa240810220441o5b86e29co183deb7dc273fb0a@mail.gmail.com> (sfid-20081022_134119_353106_784D1CE9)
-Date: Wed, 22 Oct 2008 13:41:13 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-Cc: Sujith <m.sujith@gmail.com>, Sujith <Sujith.Manoharan@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <1224669612.28639.49.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	 <1224491480.18024.32.camel@johannes.berg>
-	 <18684.18492.94865.480736@gargle.gargle.HOWL>
-	 <1224493957.18024.47.camel@johannes.berg>
-	 <18684.20459.335157.171344@gargle.gargle.HOWL>
-	 <1224495531.18024.55.camel@johannes.berg>
-	 <18684.24323.743610.871307@gargle.gargle.HOWL>
-	 <1224505349.27899.17.camel@johannes.berg>
-	 <18684.51206.771543.514682@localhost.localdomain>
-	 <1224669612.28639.49.camel@johannes.berg>
+	Wed, 22 Oct 2008 13:06:42 -0400
+Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jouni Malinen <j@w1.fi>, Jouni Malinen <jouni.malinen@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <48FF5933.3080501@lwfinger.net> (sfid-20081022_184755_577051_32659A3C)
+References: <48FDFCCA.8040604@lwfinger.net>
+	 <20081022072840.GD16005@jm.kir.nu>  <48FF5933.3080501@lwfinger.net>
+	 (sfid-20081022_184755_577051_32659A3C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1GFXvLdUWAt+Uo86/Kb7"
+Date: Wed, 22 Oct 2008 19:06:29 +0200
+Message-Id: <1224695189.30459.6.camel@johannes.berg> (sfid-20081022_190645_764834_17371811)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 12:00 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-10-20 at 23:33 +0530, Sujith wrote:
->
->> > Can you explain the way it currently works in ath9k?
->> >
->>
->> Alright, it goes something like this:
->
-> Thanks.
->
->> * mac80211 sends down a frame
->>    * Initiate an aggregation session for the <RA,TID> if one isn't already in progress.
->
-> It seems that should be a rate control decision? Possibly taking into
-> account more than just always doing aggregation sessions. Then again, I
-> suppose aggregation sessions are cheap. What about latency here?
 
-Aggregation has it's overhead, both computing resources and on the
-air. Obvious that it has negative affect on latency so if the 'minimum
-HW queue depth'  is not satisfied the  packets
-are delayed till the queue is full enough.
-In iwl-agn-rs scale we keep track of  current tpt to take decision
-about starting aggregation. The throughput watch  can be viewed as
-different entity it was just convenient and conceptually fit  to
-incorporate into rate scale.
+--=-1GFXvLdUWAt+Uo86/Kb7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2008-10-22 at 09:47 -0700, Larry Finger wrote:
 
->
->>    * Pause the TID, i.e, add further frames to the TID's queue.
->>       * If ADDBA exchange is successful, resume TID.
->>          * Form aggregates from the TID's buffer list, send them out.
->>            ( Take care to maintain minimum HW queue depth for aggregation )
->
-> "maintain minimum HW queue depth"? In what way? You mean put in enough
-> frames?
->
->>       * If ADDBA exchange fails, flush TID.
->>          * Send TID's pending frames as normal frames (non-ampdu)
->
-> Obviously. But why isn't this done in parallel? I mean, why not send out
-> the frame and do addba and don't aggregate until addba was successful,
-> that would mean no latency for those frames... addba could even time out
-> which would add a lot of latency, no?
+> When a utility starts spitting messages that it doesn't understand what t=
+he
+> kernel is providing _AND_ the commit message does not mention that this w=
+ill
+> happen, can someone be blamed for thinking it is a bug?
 
-The negotiation is done on starting sequence number.
+Heh, no, not really. It was fairly obvious us, but I guess we were just
+routine-blinded.
 
+> Clearly this is not a regression. Are there plans to update the wireless =
+utilities?
 
-Tomas
+I suspect it could just be made to ignore them. Or skip a select few,
+but obviously it will never be able to parse all of them...
+
+johannes
+
+--=-1GFXvLdUWAt+Uo86/Kb7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/12RAAoJEKVg1VMiehFYRQoP/0dTv6PJuwpCwwH8CEzDT6sM
+kc9m7SyYTK6x78KHzwXZT6npbntMTdkFtT/tXPkcGhqqHE6YboqRl0pkEDWg+FnE
+tg/ZmS7IYxmFE+pbqC8iZSHf1OKKycMK96sipj5baKaxEQH25hZdWmBItW0X/QwI
+J4JiP2QSnMb+VZK4qnn7zuIgYj2CVfRpax62rwjSVLHULWb3fe1IoxaQL9WgGIzI
+ozdlX+ce79mtaldfEabk1/i6bfJtnPbUeie1xJ1BNCTS8amAyzN83SHlam8dcuYz
+gZJ5VXLjaNFfMTcpkjBdlprs4p3zNuwQrbrFoS3feGftor7/5pYnJt4EWabmj8n1
+VN2XCBgIGaQMkULDsyIbP28WKctEginRDxx33o6yQGijcib/Q4PKr9kpnpa4cAeB
+A/BpUxT/6dLVyHhMv1ydxhBJ9RXgZ1J6W2vyyChoR6jFk7Ldc5ptKy/1uzOkS1uF
+go269JQfACIB+VJWKnmmfXOFKZrXNy4kVjHsAwDNNkHog2kWwi46h4hjvHXHixAU
+YEI9NFRa8v33j5phfSVdV7nq/X3tvbx9/jXC5GFuh9Xxrgtsdg+O4+CIR4O0D1UM
+lSdiFT7bh+B3G0zOIcljD2Wx461tFQ//NxhrA8VfGMAP6yCIHLxR4VVBwCPTf5h/
+abG2jVV/QLfIhuEBh0xM
+=FxQ0
+-----END PGP SIGNATURE-----
+
+--=-1GFXvLdUWAt+Uo86/Kb7--
+
