@@ -1,80 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45217 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752852AbYJFMhB (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:55843 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754796AbYJVSYM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 08:37:01 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1223296359.15196.8.camel@johannes.berg> (sfid-20081006_143329_031518_3AA03EA8)
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 <1221123779.2513.88.camel@debian.sh.intel.com>
-	 <1221184060.11498.3.camel@californication>
-	 <1221185432.6695.0.camel@californication>
-	 (sfid-20080912_041007_653566_F8146EC3)  <1223296221.15196.6.camel@johannes.berg>
-	 (sfid-20081006_143057_986057_BC4A63C0)  <1223296359.15196.8.camel@johannes.berg>
-	 (sfid-20081006_143329_031518_3AA03EA8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Wb0yGArfRonz/43Ol7Qg"
-Date: Mon, 06 Oct 2008 14:36:29 +0200
-Message-Id: <1223296589.15196.10.camel@johannes.berg> (sfid-20081006_143706_741422_4A3FA860)
+	Wed, 22 Oct 2008 14:24:12 -0400
+Subject: Re: New iwlwifi 3945 uCode available
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	reinette chatre <reinette.chatre@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240810220528w6b2e4e60k7d2390328d9b5c49@mail.gmail.com>
+References: <1224613633.10863.43.camel@rc-desk>
+	 <1224624324.28639.9.camel@johannes.berg>
+	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
+	 <1224624899.28639.17.camel@johannes.berg>
+	 <20081021213814.GM17268@tuxdriver.com>
+	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
+	 <1224627187.9386.103.camel@californication>
+	 <1224628088.10863.100.camel@rc-desk> <20081022100758.GA27595@infradead.org>
+	 <1ba2fa240810220528w6b2e4e60k7d2390328d9b5c49@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 22 Oct 2008 20:25:08 +0200
+Message-Id: <1224699908.9386.145.camel@californication> (sfid-20081022_202418_825285_E8E05414)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Tomas,
 
---=-Wb0yGArfRonz/43Ol7Qg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> >> I do not believe our request is unreasonable. If a user runs a new
+> >> kernel the log will print a message that the firmware is incorrect ...
+> >> all the user needs to do is go to
+> >> http://intellinuxwireless.org/?n=Downloads and download the latest
+> >> firmware. This does not require any subtle changes that may affect other
+> >> aspects of the system ... just the firmware file that is only used by
+> >> the driver.
+> >
+> > with the wireless that doesn't work.  Nice.  Sorry guys, but requiring
+> > a new firmware version for a new driver release is completely
+> > unreasonable.  You can drop support for older firmware ABIs after a few
+> > years,but not immediately.
+> 
+> Years.. this HW will be obsolete in year or two, hopefully recycled.
+> I personally don't want people using this buggy firmware for years.
 
-On Mon, 2008-10-06 at 14:32 +0200, Johannes Berg wrote:
-> On Mon, 2008-10-06 at 14:30 +0200, Johannes Berg wrote:
-> > On Fri, 2008-09-12 at 04:10 +0200, Marcel Holtmann wrote:
-> >=20
-> > > I take this back. It took a couple of hours, but it crashed again.
-> >=20
-> > Do you have 64k pages enabled? My issue goes away entirely when I
-> > disable 64k pages.
->=20
-> Well, clearly not entirely. But it's holding up much better now.
->=20
-> [  325.379292] iommu_free: invalid entry
-> [  325.379309] 	entry     =3D 0x848c0
-> [  325.379315] 	dma_addr  =3D 0x848c0100
-> [  325.379321] 	Table     =3D 0xc00000000083f348
-> [  325.379328] 	bus#      =3D 0x0
-> [  325.379333] 	size      =3D 0x80000
-> [  325.379339] 	startOff  =3D 0x0
-> [  325.379345] 	index     =3D 0x0
+seems I have to put clearly my community hat on now.
 
-and that keeps happening while I use wireless.
+This is not true at all. I am still using a ipw2100 in one of my
+machine. So the 3945 and 4965 will be in use for a long time. The
+community measurement of obsolete and companies measurement are totally
+different. Also don't forget these countries where laptops and
+electronics are still expensive. The old Intel wireless cards will still
+be used for a long time there.
 
-johannes
+> This is development branch after all, it's not even scheduled for 2.6.28.
+> 
+> Ucode API for 4965 was changed to -2 without much pain, So there is a
+> precedence this work quite well. This time there were some hiccups in
+> handling this since the API version wasn't updated it as should be.
+> really our fault. But I don't think this situation is so dramatic as
+> you describe it.
 
---=-Wb0yGArfRonz/43Ol7Qg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Actually that is your impression. I was falling over the 4965 ucode API
+change twice and it took me longer than 5 minutes to even debug and
+understand what went wrong here. Since there is no real warning anywhere
+and the wireless device does show up. And I do know how to handle these
+things.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+> The objective of the objections is not that we want to immensely hurt
+> users but rather the trade off between maintain even uglier code and
+> users running buggy firmware versus logging into older kernel and
+> downloading new firmware in 5 minutes looks to me not proportional.
+> Distro users that pull updates won't even notice. I might be wrong
+> though.
 
-iQIcBAABAgAGBQJI6gZKAAoJEKVg1VMiehFYSj8P+gKPvRqNAHUGI0uV46ycO16c
-IpAM4iJ8Bq+8tzL76dEeGYWBgrHUqasHNt+6I7cgqLxMLvLY405MYnGARblxW0uX
-wyfxG0glLN+kFGIpIKRQARSz5+IKX6DgjWvwquhCH5ZOOe9OdkY4iyChwVsQ7tA4
-VS4wU3jsSD9UgsMERT3K3X7f2fQ/ppwXhB08WWCSnTevzNhNvqAvEJnPc7HiKQmx
-gkf3ONsfKcclCdECvH2jimm7/P6bLX3RbghSwRjQASR5Tno/JVCiFIXlcWYUV0FK
-43EeK7sy6b98kPlWhW04cOO36Oxok3S9VrweHIN7S5F3kbUP7mkCKM++paPuKZcV
-s/y9aQP0M6MwmwDdyuuzxljVRFcMoyglsYR0asjMn5Y3AeUYeI+aaftOxyKafMV9
-GlbvsZWyo7UjcMp8O9G9X61XBJMAA/Vd2DEOmTi+a69tusgt7O2lMxtbEgWKdaZ9
-iWss9tfGn/JGL0PQpmwrYPJa0D8VqoshNO9c8N70vXw0lFXvRKk/UGBOjRocyvlf
-KXkYxfz/sRR7jnWKivy1+BrqGhwV7Gj091JqaTCc7Xt+sohDH3gUYRtA/Bm73PWd
-9JryrFleanylANuCZYrXVnHIk5Hvd5EhZ7UMQdKdkzEiF5VkzG0w4Li36YEmTkNn
-1Ly2kfBkGNg5B2dINeyx
-=rgzU
------END PGP SIGNATURE-----
+There will be cases where it is too much of a burden and too complicated
+to keep support for both APIs, but in all other cases we should try to
+have the driver work with it. I am fully behind Johannes and Christoph
+here since that is what the community expects.
 
---=-Wb0yGArfRonz/43Ol7Qg--
+So if we ran into a case where we need to abandon the support for the
+old API, then we first should make sure that the modules_install will
+warn loudly about the missing firmware. And with MODULE_FIRMWARE and the
+firmware work from David, we do have everything in place to actually do
+this. So lets do it.
+
+An additional option would be to create drivers/deprecated/ and put a
+copy of the old driver there and have some Kconfig magic to allow
+selecting only one of the drivers.
+
+Regards
+
+Marcel
+
 
