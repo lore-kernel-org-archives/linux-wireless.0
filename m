@@ -1,114 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:48800 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752153AbYJVH6k (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42240 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758986AbYJVSz7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 03:58:40 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2904920wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 00:58:39 -0700 (PDT)
-Message-ID: <eb3ff54b0810220058h281e2008h7bba7f756c795ae3@mail.gmail.com> (sfid-20081022_095844_498526_CF04C702)
-Date: Wed, 22 Oct 2008 09:58:39 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH ] mac80211: [RESEND] check return value of dev_alloc_skb() in ieee80211_sta_join_ibss().
-Cc: "Johannes Berg" <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_23821_29395313.1224662319878"
+	Wed, 22 Oct 2008 14:55:59 -0400
+Subject: [PATCH] wireless: update regulatory sample code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 22 Oct 2008 20:55:52 +0200
+Message-Id: <1224701752.30459.53.camel@johannes.berg> (sfid-20081022_205621_814527_E767F34E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_23821_29395313.1224662319878
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Update the same code for the recent changes. I did this as a
+separate patch to avoid removing a lot of sample code only
+to add it back again in the next patch.
 
-This patch add a check on the return value of dev_alloc_skb() in
-ieee80211_sta_join_ibss()
-in net/mac80211/mlme.c.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ Documentation/networking/regulatory.txt |   19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-The patch is to wireless-next-2.6.
+--- everything.orig/Documentation/networking/regulatory.txt	2008-10-22 20:51:50.000000000 +0200
++++ everything/Documentation/networking/regulatory.txt	2008-10-22 20:54:12.000000000 +0200
+@@ -131,7 +131,7 @@ are expected to do this during initializ
+ 
+ 	r = zd_reg2alpha2(mac->regdomain, alpha2);
+ 	if (!r)
+-		regulatory_hint(hw->wiphy, alpha2, NULL);
++		regulatory_hint(alpha2);
+ 
+ Example code - drivers providing a built in regulatory domain:
+ --------------------------------------------------------------
+@@ -178,17 +178,14 @@ Then in some part of your code after you
+ 
+ 	rd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!rd)
+-	return -ENOMEM;
++		return -ENOMEM;
+ 
+ 	memcpy(rd, &mydriver_jp_regdom, sizeof(struct ieee80211_regdomain));
+ 
+-	for (i=0; i < num_rules; i++) {
+-		memcpy(&rd->reg_rules[i], &mydriver_jp_regdom.reg_rules[i],
+-			sizeof(struct ieee80211_reg_rule));
+-	}
+-	r = regulatory_hint(hw->wiphy, NULL, rd);
+-	if (r) {
+-		kfree(rd);
+-		return r;
+-	}
++	for (i=0; i < num_rules; i++)
++		memcpy(&rd->reg_rules[i],
++		       &mydriver_jp_regdom.reg_rules[i],
++		       sizeof(struct ieee80211_reg_rule));
+ 
++	regulatory_struct_hint(rd, BIT(IEEE80211_BAND_2GHZ) |
++				   BIT(IEEE80211_BAND_5GHZ));
 
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
-
-------=_Part_23821_29395313.1224662319878
-Content-Type: text/plain; name=patch.txt
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fmlo9gnp0
-Content-Disposition: attachment; filename=patch.txt
-
-ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9tbG1lLmMgYi9uZXQvbWFjODAyMTEvbWxtZS5jCmlu
-ZGV4IDQ5Zjg2ZmEuLmM2MTEzNGMgMTAwNjQ0Ci0tLSBhL25ldC9tYWM4MDIxMS9tbG1lLmMKKysr
-IGIvbmV0L21hYzgwMjExL21sbWUuYwpAQCAtMTM4OCw2ICsxMzg4LDEzIEBAIHN0YXRpYyBpbnQg
-aWVlZTgwMjExX3N0YV9qb2luX2lic3Moc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2Rh
-dGEsCiAJc3RydWN0IGllZWU4MDIxMV9zdXBwb3J0ZWRfYmFuZCAqc2JhbmQ7CiAJdW5pb24gaXdy
-ZXFfZGF0YSB3cnF1OwogCisJc2tiID0gZGV2X2FsbG9jX3NrYihsb2NhbC0+aHcuZXh0cmFfdHhf
-aGVhZHJvb20gKyA0MDApOworCWlmICghc2tiKSB7CisJCXByaW50ayhLRVJOX0RFQlVHICIlczog
-ZmFpbGVkIHRvIGFsbG9jYXRlIGJ1ZmZlciBmb3IgcHJvYmUgIgorCQkgICAgICAgInJlc3BvbnNl
-XG4iLCBzZGF0YS0+ZGV2LT5uYW1lKTsKKwkJcmV0dXJuIC1FTk9NRU07CisJfQorCiAJc2JhbmQg
-PSBsb2NhbC0+aHcud2lwaHktPmJhbmRzW2xvY2FsLT5ody5jb25mLmNoYW5uZWwtPmJhbmRdOwog
-CiAJLyogUmVtb3ZlIHBvc3NpYmxlIFNUQSBlbnRyaWVzIGZyb20gb3RoZXIgSUJTUyBuZXR3b3Jr
-cy4gKi8KQEAgLTE0MTMsNjMgKzE0MjAsNjIgQEAgc3RhdGljIGludCBpZWVlODAyMTFfc3RhX2pv
-aW5faWJzcyhzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwKIAkJcmV0dXJuIHJl
-czsKIAogCS8qIEJ1aWxkIElCU1MgcHJvYmUgcmVzcG9uc2UgKi8KLQlza2IgPSBkZXZfYWxsb2Nf
-c2tiKGxvY2FsLT5ody5leHRyYV90eF9oZWFkcm9vbSArIDQwMCk7Ci0JaWYgKHNrYikgewotCQlz
-a2JfcmVzZXJ2ZShza2IsIGxvY2FsLT5ody5leHRyYV90eF9oZWFkcm9vbSk7CiAKLQkJbWdtdCA9
-IChzdHJ1Y3QgaWVlZTgwMjExX21nbXQgKikKLQkJCXNrYl9wdXQoc2tiLCAyNCArIHNpemVvZiht
-Z210LT51LmJlYWNvbikpOwotCQltZW1zZXQobWdtdCwgMCwgMjQgKyBzaXplb2YobWdtdC0+dS5i
-ZWFjb24pKTsKLQkJbWdtdC0+ZnJhbWVfY29udHJvbCA9IGNwdV90b19sZTE2KElFRUU4MDIxMV9G
-VFlQRV9NR01UIHwKLQkJCQkJCSAgSUVFRTgwMjExX1NUWVBFX1BST0JFX1JFU1ApOwotCQltZW1z
-ZXQobWdtdC0+ZGEsIDB4ZmYsIEVUSF9BTEVOKTsKLQkJbWVtY3B5KG1nbXQtPnNhLCBzZGF0YS0+
-ZGV2LT5kZXZfYWRkciwgRVRIX0FMRU4pOwotCQltZW1jcHkobWdtdC0+YnNzaWQsIGlmc3RhLT5i
-c3NpZCwgRVRIX0FMRU4pOwotCQltZ210LT51LmJlYWNvbi5iZWFjb25faW50ID0KLQkJCWNwdV90
-b19sZTE2KGxvY2FsLT5ody5jb25mLmJlYWNvbl9pbnQpOwotCQltZ210LT51LmJlYWNvbi50aW1l
-c3RhbXAgPSBjcHVfdG9fbGU2NChic3MtPnRpbWVzdGFtcCk7Ci0JCW1nbXQtPnUuYmVhY29uLmNh
-cGFiX2luZm8gPSBjcHVfdG9fbGUxNihic3MtPmNhcGFiaWxpdHkpOwotCi0JCXBvcyA9IHNrYl9w
-dXQoc2tiLCAyICsgaWZzdGEtPnNzaWRfbGVuKTsKLQkJKnBvcysrID0gV0xBTl9FSURfU1NJRDsK
-LQkJKnBvcysrID0gaWZzdGEtPnNzaWRfbGVuOwotCQltZW1jcHkocG9zLCBpZnN0YS0+c3NpZCwg
-aWZzdGEtPnNzaWRfbGVuKTsKLQotCQlyYXRlcyA9IGJzcy0+c3VwcF9yYXRlc19sZW47Ci0JCWlm
-IChyYXRlcyA+IDgpCi0JCQlyYXRlcyA9IDg7Ci0JCXBvcyA9IHNrYl9wdXQoc2tiLCAyICsgcmF0
-ZXMpOwotCQkqcG9zKysgPSBXTEFOX0VJRF9TVVBQX1JBVEVTOwotCQkqcG9zKysgPSByYXRlczsK
-LQkJbWVtY3B5KHBvcywgYnNzLT5zdXBwX3JhdGVzLCByYXRlcyk7CisJc2tiX3Jlc2VydmUoc2ti
-LCBsb2NhbC0+aHcuZXh0cmFfdHhfaGVhZHJvb20pOwogCi0JCWlmIChic3MtPmJhbmQgPT0gSUVF
-RTgwMjExX0JBTkRfMkdIWikgewotCQkJcG9zID0gc2tiX3B1dChza2IsIDIgKyAxKTsKLQkJCSpw
-b3MrKyA9IFdMQU5fRUlEX0RTX1BBUkFNUzsKLQkJCSpwb3MrKyA9IDE7Ci0JCQkqcG9zKysgPSBp
-ZWVlODAyMTFfZnJlcXVlbmN5X3RvX2NoYW5uZWwoYnNzLT5mcmVxKTsKLQkJfQorCW1nbXQgPSAo
-c3RydWN0IGllZWU4MDIxMV9tZ210ICopCisJCXNrYl9wdXQoc2tiLCAyNCArIHNpemVvZihtZ210
-LT51LmJlYWNvbikpOworCW1lbXNldChtZ210LCAwLCAyNCArIHNpemVvZihtZ210LT51LmJlYWNv
-bikpOworCW1nbXQtPmZyYW1lX2NvbnRyb2wgPSBjcHVfdG9fbGUxNihJRUVFODAyMTFfRlRZUEVf
-TUdNVCB8CisJCQkJCQlJRUVFODAyMTFfU1RZUEVfUFJPQkVfUkVTUCk7CisJbWVtc2V0KG1nbXQt
-PmRhLCAweGZmLCBFVEhfQUxFTik7CisJbWVtY3B5KG1nbXQtPnNhLCBzZGF0YS0+ZGV2LT5kZXZf
-YWRkciwgRVRIX0FMRU4pOworCW1lbWNweShtZ210LT5ic3NpZCwgaWZzdGEtPmJzc2lkLCBFVEhf
-QUxFTik7CisJbWdtdC0+dS5iZWFjb24uYmVhY29uX2ludCA9CisJCWNwdV90b19sZTE2KGxvY2Fs
-LT5ody5jb25mLmJlYWNvbl9pbnQpOworCW1nbXQtPnUuYmVhY29uLnRpbWVzdGFtcCA9IGNwdV90
-b19sZTY0KGJzcy0+dGltZXN0YW1wKTsKKwltZ210LT51LmJlYWNvbi5jYXBhYl9pbmZvID0gY3B1
-X3RvX2xlMTYoYnNzLT5jYXBhYmlsaXR5KTsKIAotCQlwb3MgPSBza2JfcHV0KHNrYiwgMiArIDIp
-OwotCQkqcG9zKysgPSBXTEFOX0VJRF9JQlNTX1BBUkFNUzsKLQkJKnBvcysrID0gMjsKLQkJLyog
-RklYOiBzZXQgQVRJTSB3aW5kb3cgYmFzZWQgb24gc2NhbiByZXN1bHRzICovCi0JCSpwb3MrKyA9
-IDA7Ci0JCSpwb3MrKyA9IDA7CisJcG9zID0gc2tiX3B1dChza2IsIDIgKyBpZnN0YS0+c3NpZF9s
-ZW4pOworCSpwb3MrKyA9IFdMQU5fRUlEX1NTSUQ7CisJKnBvcysrID0gaWZzdGEtPnNzaWRfbGVu
-OworCW1lbWNweShwb3MsIGlmc3RhLT5zc2lkLCBpZnN0YS0+c3NpZF9sZW4pOwogCi0JCWlmIChi
-c3MtPnN1cHBfcmF0ZXNfbGVuID4gOCkgewotCQkJcmF0ZXMgPSBic3MtPnN1cHBfcmF0ZXNfbGVu
-IC0gODsKLQkJCXBvcyA9IHNrYl9wdXQoc2tiLCAyICsgcmF0ZXMpOwotCQkJKnBvcysrID0gV0xB
-Tl9FSURfRVhUX1NVUFBfUkFURVM7Ci0JCQkqcG9zKysgPSByYXRlczsKLQkJCW1lbWNweShwb3Ms
-ICZic3MtPnN1cHBfcmF0ZXNbOF0sIHJhdGVzKTsKLQkJfQorCXJhdGVzID0gYnNzLT5zdXBwX3Jh
-dGVzX2xlbjsKKwlpZiAocmF0ZXMgPiA4KQorCQlyYXRlcyA9IDg7CisJcG9zID0gc2tiX3B1dChz
-a2IsIDIgKyByYXRlcyk7CisJKnBvcysrID0gV0xBTl9FSURfU1VQUF9SQVRFUzsKKwkqcG9zKysg
-PSByYXRlczsKKwltZW1jcHkocG9zLCBic3MtPnN1cHBfcmF0ZXMsIHJhdGVzKTsKIAotCQlpZnN0
-YS0+cHJvYmVfcmVzcCA9IHNrYjsKKwlpZiAoYnNzLT5iYW5kID09IElFRUU4MDIxMV9CQU5EXzJH
-SFopIHsKKwkJcG9zID0gc2tiX3B1dChza2IsIDIgKyAxKTsKKwkJKnBvcysrID0gV0xBTl9FSURf
-RFNfUEFSQU1TOworCQkqcG9zKysgPSAxOworCQkqcG9zKysgPSBpZWVlODAyMTFfZnJlcXVlbmN5
-X3RvX2NoYW5uZWwoYnNzLT5mcmVxKTsKKwl9CisKKwlwb3MgPSBza2JfcHV0KHNrYiwgMiArIDIp
-OworCSpwb3MrKyA9IFdMQU5fRUlEX0lCU1NfUEFSQU1TOworCSpwb3MrKyA9IDI7CisJLyogRklY
-OiBzZXQgQVRJTSB3aW5kb3cgYmFzZWQgb24gc2NhbiByZXN1bHRzICovCisJKnBvcysrID0gMDsK
-KwkqcG9zKysgPSAwOwogCi0JCWllZWU4MDIxMV9pZl9jb25maWcoc2RhdGEsIElFRUU4MDIxMV9J
-RkNDX0JFQUNPTik7CisJaWYgKGJzcy0+c3VwcF9yYXRlc19sZW4gPiA4KSB7CisJCXJhdGVzID0g
-YnNzLT5zdXBwX3JhdGVzX2xlbiAtIDg7CisJCXBvcyA9IHNrYl9wdXQoc2tiLCAyICsgcmF0ZXMp
-OworCQkqcG9zKysgPSBXTEFOX0VJRF9FWFRfU1VQUF9SQVRFUzsKKwkJKnBvcysrID0gcmF0ZXM7
-CisJCW1lbWNweShwb3MsICZic3MtPnN1cHBfcmF0ZXNbOF0sIHJhdGVzKTsKIAl9CiAKKwlpZnN0
-YS0+cHJvYmVfcmVzcCA9IHNrYjsKKworCWllZWU4MDIxMV9pZl9jb25maWcoc2RhdGEsIElFRUU4
-MDIxMV9JRkNDX0JFQUNPTik7CisgCisKIAlyYXRlcyA9IDA7CiAJc2JhbmQgPSBsb2NhbC0+aHcu
-d2lwaHktPmJhbmRzW2xvY2FsLT5ody5jb25mLmNoYW5uZWwtPmJhbmRdOwogCWZvciAoaSA9IDA7
-IGkgPCBic3MtPnN1cHBfcmF0ZXNfbGVuOyBpKyspIHsK
-------=_Part_23821_29395313.1224662319878--
