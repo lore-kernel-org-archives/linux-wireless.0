@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40722 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:53197 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754121AbYJBTty (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 15:49:54 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 12:49:54 -0700
-Date: Thu, 2 Oct 2008 05:49:41 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v4] mac80211: re-enable aggregation on 2.6.27
-Message-ID: <20081002124941.GB5960@tesla> (sfid-20081002_214958_099665_8EE608C0)
-References: <1222790548-7391-1-git-send-email-lrodriguez@atheros.com> <1ba2fa240809301318p16bedbdr31fdaea97c3cf3be@mail.gmail.com> <20080930152524.GA8131@tesla> <1ba2fa240809301707i22cab6b7hb1b22fc88ebda7f0@mail.gmail.com> <43e72e890810011216y17c3f4a6v28c74215c023ecb2@mail.gmail.com> <1ba2fa240810020427m307404b6x434830e2a3e5bf1b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1ba2fa240810020427m307404b6x434830e2a3e5bf1b@mail.gmail.com>
+	id S1752553AbYJVOaI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 10:30:08 -0400
+Subject: Re: Marvell TopDog Driver Work
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1224631576.6873.40.camel@the-omnibook>
+References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
+	 <1218830917.14841.20.camel@localhost.localdomain>
+	 <gdidhg$hdq$3@ger.gmane.org>
+	 <1224524168.29822.46.camel@dhcp-100-3-195.bos.redhat.com>
+	 <1224525810.6873.8.camel@the-omnibook>
+	 <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com>
+	 <1224533105.6873.22.camel@the-omnibook>
+	 <1224595093.24581.15.camel@localhost.localdomain>
+	 <1224631003.6873.39.camel@the-omnibook>
+	 <1224631576.6873.40.camel@the-omnibook>
+Content-Type: text/plain
+Date: Wed, 22 Oct 2008 10:28:49 -0400
+Message-Id: <1224685729.3987.1.camel@dhcp-100-3-195.bos.redhat.com> (sfid-20081022_163013_787303_D041A18C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 02, 2008 at 04:27:36AM -0700, Tomas Winkler wrote:
-> On Wed, Oct 1, 2008 at 10:16 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > On Tue, Sep 30, 2008 at 5:07 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> >> On Tue, Sep 30, 2008 at 6:25 PM, Luis R. Rodriguez
-> >> <lrodriguez@atheros.com> wrote:
-> >>> A quick test indicates it works but the removal is still an issue.
-> >>
-> >> I didn't implement it yet I just wanted a feedback if I'm in correct
-> >> direction with the starting part.
-> >
-> > Seems reasonable so far, my concern so far was just the introduction
-> > of a new spinlock for the ba_session list, but I can't see yet a
-> > better way.
-> >
-> > At this point I've given up hope of this getting merged but I do think
-> > distributions using 2.6.27 will want this anyway so we might as well
-> > finish the job and maintain it ourselves should it not get merged.
-> > What do you think?
-> >
-> >> yes ieee80211_init_agg()
-> >
-> > Thanks, I'm using this now.
-> >
-> >>> I don't think it was locking before under the code which is now
-> >>> under initiate_aggr_and_timer() though.
-> >>
-> >> Correct you cannot lock this part it leads to soft lock.
-> >
-> > Oh ok v3 had this order.
-> >
-> >  Luis
-> >
-> I'm proposing to drop this implementation at all and focus on correct
-> solution , this is just too messy.
-> Maybe develop it over 2.6.27 so it will be maybe merge to stable
-> release as well.
+On Tue, 2008-10-21 at 16:26 -0700, Daniel Gimpelevich wrote:
+> On Tue, 2008-10-21 at 16:16 -0700, Daniel Gimpelevich wrote:
+> > 1) Use the in-tree libertas library to get b/g going for 8335/8310
+> > parts, using mrv8k/malo as a guide.
+> 
+> Never mind; I just noticed that the code is FullMAC. Ick.
 
-Well a clean solution would you to either move aggregation
-queues to your drivers completely or make it optional (not sure if this
-is worth it, what other hardware requires this???), which is a huge
-change, which would not go into 2.6.27 for sure and I feel perhaps
-distributions would be more reluctant to carry around.
+It's not all that icky, actually :)  But yes, the current libertas
+driver is for the fullmac parts, while 8310, 8335, 8361, and 8362 are
+softmac parts.
 
-Either way we still need an aggregation fix 2.6.27.
+Dan
 
-  Luis
+
