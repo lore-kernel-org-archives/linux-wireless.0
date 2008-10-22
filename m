@@ -1,205 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:47207 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754348AbYJEQDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 12:03:06 -0400
-Message-ID: <48E8E528.7060501@openwrt.org> (sfid-20081005_180320_387724_633EDA92)
-Date: Sun, 05 Oct 2008 18:02:48 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [PATCH 1/4] mac80211: free up 2 bytes in skb->cb
-References: <48E8E48E.5090300@openwrt.org>
-In-Reply-To: <48E8E48E.5090300@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:58377 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075AbYJVIRm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 04:17:42 -0400
+Subject: Re: [PATCH ] mac80211: check return value of dev_alloc_skb() in
+	ieee80211_sta_join_ibss().
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Rami Rosen <ramirose@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081022081149.GE16005@jm.kir.nu>
+References: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com>
+	 <1224660978.28639.27.camel@johannes.berg>
+	 <eb3ff54b0810220042y43ea248qba1064a3eedf85b1@mail.gmail.com>
+	 <20081022081149.GE16005@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j3pjoPeU7RGxYuNAhQsQ"
+Date: Wed, 22 Oct 2008 10:17:33 +0200
+Message-Id: <1224663453.28639.37.camel@johannes.berg> (sfid-20081022_101746_624392_9984D006)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Free up 2 bytes in skb->cb to be used for multi-rate retry later.
-Move iv_len and icv_len initialization into key alloc.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+--=-j3pjoPeU7RGxYuNAhQsQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -337,8 +337,6 @@
- 			unsigned long jiffies;
- 			s8 rts_cts_rate_idx, alt_retry_rate_idx;
- 			u8 retry_limit;
--			u8 icv_len;
--			u8 iv_len;
- 		} control;
- 		struct {
- 			u64 ampdu_ack_map;
-@@ -635,6 +633,8 @@
-  */
- struct ieee80211_key_conf {
- 	enum ieee80211_key_alg alg;
-+	u8 icv_len;
-+	u8 iv_len;
- 	u8 hw_key_idx;
- 	u8 flags;
- 	s8 keyidx;
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -252,7 +252,7 @@
- 		}
- 
- 		/* Hardware appends ICV. */
--		plcp_fragment_len += info->control.icv_len;
-+		plcp_fragment_len += info->control.hw_key->icv_len;
- 
- 		key_idx = b43_kidx_to_fw(dev, key_idx);
- 		mac_ctl |= (key_idx << B43_TXH_MAC_KEYIDX_SHIFT) &
-@@ -260,7 +260,7 @@
- 		mac_ctl |= (key->algorithm << B43_TXH_MAC_KEYALG_SHIFT) &
- 			   B43_TXH_MAC_KEYALG;
- 		wlhdr_len = ieee80211_hdrlen(fctl);
--		iv_len = min((size_t) info->control.iv_len,
-+		iv_len = min((size_t) info->control.hw_key->iv_len,
- 			     ARRAY_SIZE(txhdr->iv));
- 		memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
- 	}
---- a/drivers/net/wireless/b43legacy/xmit.c
-+++ b/drivers/net/wireless/b43legacy/xmit.c
-@@ -243,7 +243,7 @@
- 
- 		if (key->enabled) {
- 			/* Hardware appends ICV. */
--			plcp_fragment_len += info->control.icv_len;
-+			plcp_fragment_len += info->control.hw_key->icv_len;
- 
- 			key_idx = b43legacy_kidx_to_fw(dev, key_idx);
- 			mac_ctl |= (key_idx << B43legacy_TX4_MAC_KEYIDX_SHIFT) &
-@@ -252,7 +252,7 @@
- 				   B43legacy_TX4_MAC_KEYALG_SHIFT) &
- 				   B43legacy_TX4_MAC_KEYALG;
- 			wlhdr_len = ieee80211_hdrlen(wlhdr->frame_control);
--			iv_len = min((size_t)info->control.iv_len,
-+			iv_len = min((size_t)info->control.hw_key->iv_len,
- 				     ARRAY_SIZE(txhdr->iv));
- 			memcpy(txhdr->iv, ((u8 *)wlhdr) + wlhdr_len, iv_len);
- 		} else {
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -313,9 +313,6 @@
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
--	info->control.iv_len = WEP_IV_LEN;
--	info->control.icv_len = WEP_ICV_LEN;
--
- 	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
- 		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
- 			return -1;
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -152,9 +152,6 @@
- 	int len, tail;
- 	u8 *pos;
- 
--	info->control.icv_len = TKIP_ICV_LEN;
--	info->control.iv_len = TKIP_IV_LEN;
--
- 	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
- 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
- 		/* hwaccel - with no need for preallocated room for IV/ICV */
-@@ -374,9 +371,6 @@
- 	u8 *pos, *pn;
- 	int i;
- 
--	info->control.icv_len = CCMP_MIC_LEN;
--	info->control.iv_len = CCMP_HDR_LEN;
--
- 	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
- 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
- 		/* hwaccel - with no need for preallocated room for CCMP "
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1164,7 +1164,7 @@
- 
- 	if (info->control.hw_key) {
- 		keyidx = info->control.hw_key->hw_key_idx;
--		pktlen += info->control.icv_len;
-+		pktlen += info->control.hw_key->icv_len;
- 	}
- 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
- 		ieee80211_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -237,7 +237,7 @@
- 
- 	if (tx_info->control.hw_key) {
- 		txctl->keyix = tx_info->control.hw_key->hw_key_idx;
--		txctl->frmlen += tx_info->control.icv_len;
-+		txctl->frmlen += tx_info->control.hw_key->icv_len;
- 
- 		if (tx_info->control.hw_key->alg == ALG_WEP)
- 			txctl->keytype = ATH9K_KEY_TYPE_WEP;
---- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-@@ -56,10 +56,10 @@
- 	 * note that these lengths should only be added when
- 	 * mac80211 does not generate it.
- 	 */
--	overhead += tx_info->control.icv_len;
-+	overhead += key->icv_len;
- 
- 	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_IV))
--		overhead += tx_info->control.iv_len;
-+		overhead += key->iv_len;
- 
- 	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)) {
- 		if (key->alg == ALG_TKIP)
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -374,7 +374,7 @@
- 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
- 	struct txentry_desc txdesc;
- 	struct skb_frame_desc *skbdesc;
--	unsigned int iv_len = IEEE80211_SKB_CB(skb)->control.iv_len;
-+	unsigned int iv_len;
- 
- 	if (unlikely(rt2x00queue_full(queue)))
- 		return -EINVAL;
-@@ -410,8 +410,11 @@
- 	 * the frame so we can provide it to the driver seperately.
- 	 */
- 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc.flags) &&
--	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags))
-+	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags) &&
-+		(IEEE80211_SKB_CB(skb)->control.hw_key != NULL)) {
-+		iv_len = IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
- 		rt2x00crypto_tx_remove_iv(skb, iv_len);
-+	}
- 
- 	/*
- 	 * It could be possible that the queue was corrupted and this
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -281,6 +281,20 @@
- 	key->conf.alg = alg;
- 	key->conf.keyidx = idx;
- 	key->conf.keylen = key_len;
-+	switch (alg) {
-+	case ALG_WEP:
-+		key->conf.iv_len = WEP_IV_LEN;
-+		key->conf.icv_len = WEP_ICV_LEN;
-+		break;
-+	case ALG_TKIP:
-+		key->conf.iv_len = TKIP_IV_LEN;
-+		key->conf.icv_len = TKIP_ICV_LEN;
-+		break;
-+	case ALG_CCMP:
-+		key->conf.iv_len = CCMP_HDR_LEN;
-+		key->conf.icv_len = CCMP_MIC_LEN;
-+		break;
-+	}
- 	memcpy(key->conf.key, key_data, key_len);
- 	INIT_LIST_HEAD(&key->list);
- 	INIT_LIST_HEAD(&key->todo);
+On Wed, 2008-10-22 at 11:11 +0300, Jouni Malinen wrote:
+> On Wed, Oct 22, 2008 at 09:42:37AM +0200, Rami Rosen wrote:
+>=20
+> > Do we want to continue as usual if dev_alloc_skb() in theis method fail=
+s?
+>=20
+> I think we should continue and as such, I would rather not see the patch
+> that proposes to abort here go in. The allocated skb is not used at this
+> point anyway; it is only used as an optimization to prepare a ProbeRsp
+> frame for possible future use. This could be done at the time when
+> ProbeReq is received (and we sent the last Beacon), i.e., only when
+> needed. Or if the optimization of generating this only once is
+> considered desirable, that place could try to allocate a new skb if the
+> one here failed (or do it on first need and cache the result).
+
+Good point. We currently don't try again, but we could put this into a
+new function and call it from when we need it. Then again, we'll need it
+right away, the driver will probably call _get_beacon from
+ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON);
+
+johannes
+
+--=-j3pjoPeU7RGxYuNAhQsQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/uGXAAoJEKVg1VMiehFYlywQALL1UI3zFEJatWMqzFH/vPw3
+PbHiHu+zysUWsisIP6BokG+0VcqDbraUiC9PXmoNI/32e0wJs+d5qwBCNEtq2Qqk
+3zlul0PA7vT7TzKbXyfCYcYv30zpLGFauVo+mj+a1xx+wGRPUc2E22KIPL25dtkA
+WTRXoJ75ZiWKy4se83z05GnNOOHwHrJdb2U02DwvlgWXFP/tyD64Bj9ivtYyI2IS
+rWdO2IJL3DP9NYyIzkF/CNsn6dHghs/n86XoL2w3QpMKS6UrJm+SHp4+8h4i89HL
+UJgBnlmcohaJJcMzOyI1ErKmRnCJYOGtefp1ILwL5fAXz9Htr/3uaglhK/V0+VzG
+iJYT2snS7Jhhexsag0AHd8xLQeS8Ps90a8AUk19YzZrNsX1lxbvQVFYaLNNVugvg
+L2g8ek7LyaOxs5Wx4Wor7en46thWb7/FpqzHa6rex0Xk3SkMA/XZ2TEAXv204mX6
+1+ZZ3nTiUxgdRoo6mtf1TGXqV2F4unE+jtLZWR4hKek5cgHJA3njE9sKz+vEz/Fj
+msdLMzonYDnXpE40cIKAYQTi6H7aUBWBTTmhL9q7iSahvH6Hg47EW+2pGvWFI/Ap
+SzcYqqLKS7jP5dmKGLT3S9G8oYAH+KU06oQYMUGq+FtzpxNokcI2fscfV2EpTsD9
+aCdbtX6dQny18dwT7dL1
+=MeZg
+-----END PGP SIGNATURE-----
+
+--=-j3pjoPeU7RGxYuNAhQsQ--
 
