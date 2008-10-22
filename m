@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:42916 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755322AbYJPV55 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 17:57:57 -0400
-Date: Thu, 16 Oct 2008 14:54:07 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: stable@kernel.org, steven@uplinklabs.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [stable] [PATCH] ath9k: fix oops on trying to hold the wrong
-	spinlock
-Message-ID: <20081016215407.GA17091@kroah.com> (sfid-20081016_235802_406818_3DE024F4)
-References: <20081016111255.GA5899@tesla>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37146 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751215AbYJVTwe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 15:52:34 -0400
+Date: Wed, 22 Oct 2008 15:51:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH 6/9] iwlwifi: refactor TX response flow
+Message-ID: <20081022195149.GH15808@tuxdriver.com> (sfid-20081022_215239_047910_EEF0880C)
+References: <1224012769-8920-1-git-send-email-reinette.chatre@intel.com> <1224012769-8920-2-git-send-email-reinette.chatre@intel.com> <1224012769-8920-3-git-send-email-reinette.chatre@intel.com> <1224012769-8920-4-git-send-email-reinette.chatre@intel.com> <1224012769-8920-5-git-send-email-reinette.chatre@intel.com> <1224012769-8920-6-git-send-email-reinette.chatre@intel.com> <1224012769-8920-7-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081016111255.GA5899@tesla>
+In-Reply-To: <1224012769-8920-7-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 16, 2008 at 04:12:55AM -0700, Luis R. Rodriguez wrote:
-> This fixes on oops when you get try to send a BA to an 11n AP.
-> The oops occurred because we were trying to aquire an incorrect
-> spinlock.
+On Tue, Oct 14, 2008 at 12:32:46PM -0700, Reinette Chatre wrote:
+> From: Tomas Winkler <tomas.winkler@intel.com>
 > 
-> We were trying to hold the wrong spinlock due to a typo
-> on IEEE80211_BAR_CTL_TID_S's definition. We use this to
-> compute the tid number and then hold this this tid number's
-> spinlock.
+> This patch utilize 5000 new TX response command
+> which contains all necessary information and avoids
+> back referencing to the original TX frame.
+> It also change handling of software queue tracking
+> 4965 flow is aligned with changes as much as possible.
 > 
-> Tested-by: Steven Noonan <steven@uplinklabs.net>
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> 
-> I don't see this queue'd yet for 2.6.27.2
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Reviewed-by: Zhu Yi <yi.zhu@intel.com>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 
-Is it in Linus's tree?  If so, do you have a git commit id?
+What is this based upon?  It doesn't seem to apply to wireless-testing.
 
-thanks,
-
-greg k-h
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
