@@ -1,87 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:27472 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752228AbYJ1FzB (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58265 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754568AbYJVS1Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 01:55:01 -0400
-Message-ID: <2411f6b20810272254u4c13efb7w1cf8fb68145fcb14@mail.gmail.com> (sfid-20081028_065508_574973_17DB9158)
-Date: Tue, 28 Oct 2008 11:24:59 +0530
-From: "Joey Krane" <linuxbsd2004@gmail.com>
-To: "Greg KH" <greg@kroah.com>
-Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Kernel <linux-kernel@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <20081028002919.GB2992@kroah.com>
+	Wed, 22 Oct 2008 14:27:25 -0400
+Date: Wed, 22 Oct 2008 14:26:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dave <kilroyd@googlemail.com>
+Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
+	orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] orinoco: reload firmware on resume
+Message-ID: <20081022182636.GE15808@tuxdriver.com> (sfid-20081022_202730_533812_71889F2E)
+References: <200810111816.26370.arvidjaar@mail.ru> <48F0E58F.6000900@gmail.com> <200810121636.34373.arvidjaar@mail.ru> <48F6450E.7040809@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>
-	 <20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com>
-	 <20081023111103.GB5979@tesla>
-	 <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com>
-	 <20081028002919.GB2992@kroah.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48F6450E.7040809@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2008 at 5:59 AM, Greg KH <greg@kroah.com> wrote:
-> On Mon, Oct 27, 2008 at 04:35:11PM -0700, Luis R. Rodriguez wrote:
->> On Thu, Oct 23, 2008 at 4:11 AM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->> > On Wed, Oct 22, 2008 at 11:26:55PM -0700, Greg KH wrote:
->> >> On Tue, Oct 21, 2008 at 11:50:45PM -0700, Greg KH wrote:
->> >> > On Tue, Oct 21, 2008 at 07:04:17PM -0700, Luis R. Rodriguez wrote:
->> >> > > We would like to see our Atheros 802.11n USB Linux driver upstream
->> >> > > however we need help with this so we are releasing our Atheros 11n USB
->> >> > > Otus Linux driver under the ISC to the community. The goal is to work
->> >> > > with the community to help move this forward upstream. We are hoping
->> >> > > for community help and leadership on this (*cough*).
->> >> >
->> >> > Yeah!
->> >> >
->> >> > I'll grab this and put it in drivers/staging/ so it gets some users and
->> >> > more developers to help out with it.
->> >>
->> >> Ok, it seems to need some basic work to merely build properly on
->> >> "modern" kernel versions.
->> >
->> > Yeah, it works up to 2.6.24.
+On Wed, Oct 15, 2008 at 08:31:26PM +0100, Dave wrote:
+> Andrey Borzenkov wrote:
+>> On Saturday 11 October 2008, Dave wrote:
+>>>> -	int err;
+>>>> +	int err = 0;
 >>
->> This is now fixed on the master branch, also the branch "for-upstream"
->> does a lot of cleanup I thought you may like before stuffing it into
->> staging like removing all KERNEL_VERSION checks, all wireless
->> extensions checks, some compile warnings, removal of compat, dos2unix,
->> use utf-8, etc. Unfortunately this still requires a specific version
->> of wpa_supplicant but it seems it works. Not sure what bars you have
->> for staging at this point.
+>> Fixed version attached.
 >
-> Pretty much the only "bar" is "it compiles" :)
->
->> Will you take this in, and expect patches for fixing it to use
->> standard wext and also report standard wireless statistic (yeap, this
->> is not there yet either).
->
-> Yes, I can do that.
->
->> Joey is one user which reported the driver working now with the
->> compile fixes for newer kernels for 2.6.28-rc2 using the specific
->> version of wpa_supplicant for it.
->>
->> Joey can you test the for-upstream branch on otus git?
->
-> If someone can tell me what device this is for, I can try to go buy it
-> so that I can verify changes I make don't drasticly break things.
->
+> Acked-by: David Kilroy <kilroyd@googlemail.com>
 
-I've tested the TL-WN821N (it's the cheapest N USB I think) with a
-generic 802.11g router (WPA enabled) on 2.6.24.7, 2.6.27.4 and
-2.6.28-rc2.
+Please repost this series with the finalized patches, rebased on the
+current wireless-testing.  Also, please include the patches inline,
+as your MIME encoding is confusing my tools.
 
-http://www.newegg.com/Product/Product.aspx?Item=N82E16833704032
-
-I'll test the for-upstream branch soon.
-
-Joey
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
