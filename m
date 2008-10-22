@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:4218 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321AbYJTTqB (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41122 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753195AbYJVXSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 15:46:01 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so335760yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 12:45:59 -0700 (PDT)
-Message-ID: <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com> (sfid-20081020_214608_548382_832135D1)
-Date: Mon, 20 Oct 2008 12:45:59 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Daniel Gimpelevich" <daniel@gimpelevich.san-francisco.ca.us>
-Subject: Re: Marvell TopDog Driver Work
-Cc: linux-wireless@vger.kernel.org,
-	"Lennert Buytenhek" <buytenh@wantstofly.org>
-In-Reply-To: <1224525810.6873.8.camel@the-omnibook>
+	Wed, 22 Oct 2008 19:18:41 -0400
+Message-ID: <48FFB4CF.5090704@lwfinger.net> (sfid-20081023_011845_417271_B710BAD3)
+Date: Wed, 22 Oct 2008 16:18:39 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>
-	 <1218830917.14841.20.camel@localhost.localdomain>
-	 <gdidhg$hdq$3@ger.gmane.org>
-	 <1224524168.29822.46.camel@dhcp-100-3-195.bos.redhat.com>
-	 <1224525810.6873.8.camel@the-omnibook>
+To: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Fix warning in minstrel rate control
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 11:03 AM, Daniel Gimpelevich
-<daniel@gimpelevich.san-francisco.ca.us> wrote:
+When compiling the minstrel rate-control code on x86_64 architecture, the
+following warning is issued:
 
-> The "Duh..." was a response to the "Not that I have heard of. Don't
-> know." statement, which was pretty ironic.
+  CC [M]  net/mac80211/rc80211_minstrel_debugfs.o
+net/mac80211/rc80211_minstrel_debugfs.c:145: warning: initialization from
+incompatible pointer type
 
-Well your question was "Has anyone stepped up to help in the port of
-this to mac80211" and I thought you already knew I had that tree.
+The fix requires changing the type of minstrel_stats_read().
 
-> The rest was intended to be
-> context. Any net80211-based code for TopDog would still be a useful
-> reference for the 11n-specific bits that would need to be added to mrv8k
-> after it works correctly with CardBus 11g cards. What is the canonical
-> URL for the experimental source repository for those, BTW?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-As documented in my git tree, I took the code from John's tree, which
-I think is the canonical reference. John's tree includes the entire
-Linux kernel tree though, that's why I tried to start out separately
-with a driver that will just compile using the kernel headers.
+John,
 
-> More thanks go out to Lennert for his work on the Marvell CPU cores,
-> too.
+This warning also prints in mainline - this belongs in 2.6.28.
 
-ACK -- will mrv8k not support top dog?
+Larry
+---
 
-  Luis
+Index: linux-2.6/net/mac80211/rc80211_minstrel_debugfs.c
+===================================================================
+--- linux-2.6.orig/net/mac80211/rc80211_minstrel_debugfs.c
++++ linux-2.6/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -106,7 +106,7 @@ minstrel_stats_open(struct inode *inode,
+ 	return 0;
+ }
+
+-static int
++static ssize_t
+ minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *o)
+ {
+ 	struct minstrel_stats_info *ms;
+
+
+
