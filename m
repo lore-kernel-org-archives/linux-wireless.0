@@ -1,79 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:37760 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:42477 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752366AbYJ2KOr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 06:14:47 -0400
-Subject: Re: rtl2860 driver in mainline?
-From: Dan Williams <dcbw@redhat.com>
-To: Greg KH <greg@kroah.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Thorsten Leemhuis <fedora@leemhuis.info>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20081028224535.GA27948@kroah.com>
-References: <20081028004915.GA3442@kroah.com>
-	 <4906B944.4010105@leemhuis.info> <1225180598.3796.66.camel@johannes.berg>
-	 <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com>
-	 <1225181562.3796.76.camel@johannes.berg> <20081028170838.GA4818@kroah.com>
-	 <1225218952.3598.39.camel@johannes.berg> <20081028224535.GA27948@kroah.com>
+	id S1754002AbYJWD2y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 23:28:54 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 20:28:54 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] ath9k: Allow user to change tx power when asked
+Date: Wed, 22 Oct 2008 13:28:45 -0700
+Message-ID: <1224707325-13101-3-git-send-email-lrodriguez@atheros.com> (sfid-20081023_052913_211688_155DC9EE)
+In-Reply-To: <1224707325-13101-2-git-send-email-lrodriguez@atheros.com>
+References: <1224707325-13101-1-git-send-email-lrodriguez@atheros.com>
+ <1224707325-13101-2-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Wed, 29 Oct 2008 06:13:04 -0400
-Message-Id: <1225275184.28968.13.camel@localhost.localdomain> (sfid-20081029_111452_401821_CA38EFE4)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-28 at 15:45 -0700, Greg KH wrote:
-> On Tue, Oct 28, 2008 at 07:35:52PM +0100, Johannes Berg wrote:
-> > On Tue, 2008-10-28 at 10:08 -0700, Greg KH wrote:
-> > 
-> > > "Work on", or "USE".
-> > > 
-> > > The problem is, users have this hardware, and they want to run Linux on
-> > > it.  Many distros already support this hardware with the "crap" driver,
-> > > so we might as well add that to the kernel tree so they at least get the
-> > > latest "crap" so that users have an easier time of it.
-> > > 
-> > > Now, the fact that there is a competing driver being developed outside
-> > > of the tree does make this a bit more complicated.  However, as it
-> > > doesn't work yet, there's not much we can do about including it, right?
-> > > 
-> > > So adding the driver to the "crap" tree makes users happy in that they
-> > > can use their hardware.  I'll support the "crap" to a point, and no one
-> > > has to do any API changes to the drivers/staging/ tree either, I can
-> > > easily handle that.
-> > > 
-> > > Then, when the "correct" driver is finished, I will drop the crap driver
-> > > at the same time the "correct" one is added to the tree.
-> > > 
-> > > This way, everyone wins, right?
-> > 
-> > Only if the point is "use" rather than "work on". As far as I understood
-> > about staging, the point was more "work on" which would direct effort to
-> > the wrong driver.
-> 
-> I'm not going to turn away patches that people send me to get the stable
-> drivers cleaned up and in better shape.
-> 
-> I've now added the rtl2860 driver to the staging tree with a big note
-> that any comments should be made to me only, and that the wireless
-> developers would really have people work on their driver instead to get
-> it into a mergable state.
+We were also changing tx power even when we were not asked to,
+this enforces the change only when we are asked nicely. When
+not asked we simply try to use the max power, we don't tx power
+at all for rate control.
 
-Who's going to support this driver now that you're essentially
-green-lighting distros to ship it?  I seriously disagree with this
-decision to add rtl2860.  Adding drivers like at76_usb is fine because
-those are the drivers that people should be working on.  But adding crap
-code just because it gets people's hardware working, but that has NO
-FUTURE in the wireless tree, is misguided at best.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |    3 ++-
+ drivers/net/wireless/ath9k/xmit.c |    8 +++++++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-If we just wanted to get everyone's hardware "working" [1], why aren't
-we shipping ndiswrapper?  At least add a "TAINT_STAGING" flag so that
-when people _run_ the crappy code and report errors the wireless
-developers are aware of it right off the bat.
-
-Dan
-
-[1] but obviously not very well or else we'd be putting effort where it
-was needed!
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 5b49552..02e00bd 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1251,7 +1251,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		sc->sc_ah->ah_channels[pos].chanmode =
+ 			ath_get_extchanmode(sc, curchan);
+ 
+-	sc->sc_config.txpowlimit = 2 * conf->power_level;
++	if (changed & IEEE80211_CONF_CHANGE_POWER)
++		sc->sc_config.txpowlimit = 2 * conf->power_level;
+ 
+ 	/* set h/w channel */
+ 	if (ath_set_channel(sc, &sc->sc_ah->ah_channels[pos]) < 0)
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 781c6cc..7fbcb20 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -230,7 +230,13 @@ static int ath_tx_prepare(struct ath_softc *sc,
+ 
+ 	txctl->if_id = 0;
+ 	txctl->frmlen = skb->len + FCS_LEN - (hdrlen & 3);
+-	txctl->txpower = MAX_RATE_POWER; /* FIXME */
++
++	/* Always try at highest power possible unless the the device
++	 * was configured by the user to use another power. */
++	if (likely(sc->sc_config.txpowlimit == ATH_TXPOWER_MAX))
++		txctl->txpower = ATH_TXPOWER_MAX;
++	else
++		txctl->txpower = sc->sc_config.txpowlimit;
+ 
+ 	/* Fill Key related fields */
+ 
+-- 
+1.5.6.3
 
