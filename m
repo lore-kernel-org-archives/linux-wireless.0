@@ -1,122 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56441 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbYJVBCx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41423 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbYJVRXA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 21:02:53 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: Marcel Holtmann <holtmann@linux.intel.com>
+	Wed, 22 Oct 2008 13:23:00 -0400
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Tomas Winkler <tomasw@gmail.com>
-Cc: reinette chatre <reinette.chatre@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240810211634k74979933mf9364d405ae6e33a@mail.gmail.com>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1224628088.10863.100.camel@rc-desk>
-	 <1224630394.9386.114.camel@californication>
-	 <1ba2fa240810211634k74979933mf9364d405ae6e33a@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 22 Oct 2008 03:03:48 +0200
-Message-Id: <1224637428.9386.127.camel@californication> (sfid-20081022_030330_026644_39C1AF66)
+Cc: Sujith <m.sujith@gmail.com>, Sujith <Sujith.Manoharan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+In-Reply-To: <1ba2fa240810220459m1dcffd24k58cf6b72c688913c@mail.gmail.com> (sfid-20081022_135935_328975_B533AAA0)
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <18684.18492.94865.480736@gargle.gargle.HOWL>
+	 <1224493957.18024.47.camel@johannes.berg>
+	 <18684.20459.335157.171344@gargle.gargle.HOWL>
+	 <1224495531.18024.55.camel@johannes.berg>
+	 <18684.24323.743610.871307@gargle.gargle.HOWL>
+	 <1224505349.27899.17.camel@johannes.berg>
+	 <18684.51206.771543.514682@localhost.localdomain>
+	 <1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com>
+	 <1224669827.28639.54.camel@johannes.berg>
+	 <1ba2fa240810220459m1dcffd24k58cf6b72c688913c@mail.gmail.com>
+	 (sfid-20081022_135935_328975_B533AAA0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-L9OPx86pMiCReUa5YP69"
+Date: Wed, 22 Oct 2008 19:22:50 +0200
+Message-Id: <1224696170.30459.12.camel@johannes.berg> (sfid-20081022_192306_524654_0B06F41E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
 
-> >> > > >> > >> Two new versions of 3945 uCode is now available for download from
-> >> > > >> > >> http://intellinuxwireless.org/?n=Downloads. Two versions are available
-> >> > > >> > >> as we have updated the API version of the uCode and included pending
-> >> > > >> > >> fixes in both API versions.
-> >> > > >> > >>
-> >> > > >> > >> Version 15.28.1.8 supports API v1 and can be used with most current 3945
-> >> > > >> > >> drivers. Version 15.28.2.8 (API v2) is required when you start using the
-> >> > > >> > >> latest 3945 driver from wireless-testing at the time it includes the
-> >> > > >> > >> patch "iwl3945 : Fix a-band association for passive channels".
-> >> > > >> > >
-> >> > > >> > > Can you make the driver work with the old ucode? We even do that for
-> >> > > >> > > drivers where we don't control the ucode like b43...
-> >> > > >> >
-> >> > > >> > What for?
-> >> > > >>
-> >> > > >> Well, so that installing a new kernel doesn't suddenly break your
-> >> > > >> network connection and ability to download the firmware, for instance.
-> >> > > >> If you want more arguments you can go read all the "b43 sucks" threads
-> >> > > >> about it.
-> >> > > >
-> >> > > > Johnannes has a point, that is a lot nicer to users...
-> >> > >
-> >> > > Maybe, but it will complicate the code beyond good taste to just
-> >> > > satisfy the single moment when kernel is upgraded. I don't mean in
-> >> > > general I mean in this particular case when API changes.
-> >> > > Anyhow a good distro shell deal with this in packaging dependencies
-> >> > > and normal person will keep old kernel around when compiling new one.
-> >> > > Both ucodes can be present on the file system at the same time  so I
-> >> > > hope the risk is low.
-> >> >
-> >> > it is the same argument as for everything else. We should be able to run
-> >> > a new kernel with old userspace.
-> >>
-> >> I do not believe our request is unreasonable. If a user runs a new
-> >> kernel the log will print a message that the firmware is incorrect ...
-> >> all the user needs to do is go to
-> >> http://intellinuxwireless.org/?n=Downloads and download the latest
-> >> firmware. This does not require any subtle changes that may affect other
-> >> aspects of the system ... just the firmware file that is only used by
-> >> the driver.
-> >>
-> >> We are focused on upstream development. If there is a need to support
-> >> older ucode then we face a similar challenge as was solved through the
-> >> compat-wireless project for the driver self.
-> >
-> > I haven't checked this particular case, but in some cases it is simple
-> > to keep backward compatible code around that would let us support the
-> > old firmware for a few releases. In other cases the driver and firmware
-> > interface might have evolved too much to do so. In these cases we might
-> > wanna keep the old drivers around so users can have a choice.
-> 
-> If it wasn't so awkward in this case I wouldn't mind to support old firmware.
-> Second when we touch  firmware especially for old HW it means that it
-> solves a bug so why ones would use old driver for something else then
-> to download the new firmware.
+--=-L9OPx86pMiCReUa5YP69
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-if possible, we should try to support old ucode APIs with the latest
-drivers. In some situations that might be not possible, but we should at
-least try.
+On Wed, 2008-10-22 at 13:59 +0200, Tomas Winkler wrote:
 
-> > We do have something like drivers/staging/ now. It might make sense to
-> > have introduce drivers/deprecated/ for old drivers that we just keep
-> > around for a few releases to ease a transition. Just thinking out loud.
-> 
-> Sounds like good idea... need some configuration tricks tough unlike
-> staging here we have 2 drivers for the same hw
+> It answers BA i n RX path and interpret BA in TX Scheduling
+> retransmission of not acked frames is done in HW (not firmware) no
+> need to requeue them. In corner case when retries are exhausted  BA
+> request is issued from mac80211 to advance RX side window.
 
-That is just some Kconfig magic :)
+Ok, but if we do both of that in mac80211, it wouldn't really matter
+since we never see the relevant frames, right? Or we can add a flag to
+ignore them.
 
-> > And I have been bitten by ucode API changes in the past. It is just not
-> > clear when actually compiling the new kernel. We could also have compile
-> > time checks that check the new firmware file is actually present at the
-> > compile time of the new kernel. The driver should have a MODULE_FIRMWARE
-> > tag and we could process it and match it to /lib/firmware.
-> 
-> It has MODULE_FIRMWARE already
+> > Like I said, from what I can tell bcom is really similar, and I'd like
+> > to not have to re-implement all this first. mac80211 used to have a mor=
+e
+> > push-model, which we've deviated from with the HT stuff you did, but fo=
+r
+> > most hardware the push-model is still appropriate, so imho we should tr=
+y
+> > to go to one even with HT and then see.
+>=20
+> Works for me. What I stumble upon is retransmission from within TX
+> response  path
+> how this go together with context of regular TX path. Even in iwlwifi
+> we need to be able to kick/start the internal aggregation queue?
 
-I know, but we need to actually make better use of this information in a
-generic post compile step to check that the firmware is actually in
-place and warn if it is not. Then you can go ahead and download it
-before actually booting a kernel with a now broken wireless card. This
-is not even Intel or wireless specific. We should do this for all kinds
-of drivers.
+Yeah, this is something we definitely need to work out. We haven't even
+managed to decide yet how aggregated packets are given to the driver :)
+I think for atheros and bcom a model where mac80211 decides pretty much
+everything and hands the driver a list of skbs to aggregate would work
+best, but then I think that wouldn't work with your hw at all.
 
-Regards
+> > We've since reworked rate
+> > control to be able to cope with HT too, so mac80211 can have much more
+> > information about what's going on and should be able to make many of th=
+e
+> > necessary decisions.
+>=20
+> What to remind that iwl-agn-rs update rates scale out of band meaning
+> TX packet doesn't bear the rate scale information. The reasoning
+> behind is that appropriate rate is picked up when packet is ready to
+> go on the air and not when it's somewhere deep in the queue.
+> Otherwise it's regular multiretry algorithm.
 
-Marcel
+Well, yeah, but the best thing we can do if we don't do it in firmware
+is actually determining it at the point we stick the packet into the
+queue. I wouldn't mind moving all iwl-agn rate scaling into the driver
+and telling mac80211 that it doesn't need rate scaling, but I'm not
+quite sure how this affects aggregation?
 
+johannes
+
+--=-L9OPx86pMiCReUa5YP69
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/2FlAAoJEKVg1VMiehFYXIcP/jscw6EfFau/JHMn72Q13WMp
+3b4Vi7ynZN9h5iWcI37it4i0gstFYjH3L4cct8ljJuaO27DXUDtNkvoohnBmVWS5
+I4E3dTPzVtytePUWhK4uKtag9AAmtpPZe/HHmC1c+VROFkqBDNDOhYJCRv75tSPB
+BESpevtu8voESrhOY3BW8EFvZsBxPJYPsYnEMm0aLA/fnfZ3Tmp4vDbO7aANPy5+
+9MzLtC81T9/KQCe8J6KRaeKM4b4zpt3Lz2/i3k7E8k+CdT8UXD+ouPUc9h5y3YoH
+0sNaaUxoLkGXNHvSvnTr1Q8+2cT7W4nGO++mZPXUOjhAnCczB2hddYikd03UTTvA
+WFZLATIaYNpm+oy4ReUsK4LFLVy7v+JAE7ACVVgFOCbJXACrSMgzvYC3kIw9tQGN
+udJ8pSqTkXPRQuV+KTTrbxsbfLY2ag8o0jsT17Qqmvt6eXyz7k/oj7r7c+/M6KVD
+Saxjog0lTbQFFwWCdfSja2mZ5z4duUWc5GL8QMyHMAbHAr+QeiQfjYXFiHTzo8/x
+78JQjAjss7eUj8ZUbzKdRI1pvfLZ6mallLDyrssa6Pces3xINSe5Xs5i8ILgXU60
+/++zPwEvonpon996Cwe69tjgY7yssSi6xNyety1mvLbO8kEVHJ7QUA9vBa0TO/79
+ruiviEmzDWrDknWdymoC
+=Rl/Q
+-----END PGP SIGNATURE-----
+
+--=-L9OPx86pMiCReUa5YP69--
 
