@@ -1,68 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta02.westchester.pa.mail.comcast.net ([76.96.62.24]:43095
-	"EHLO QMTA02.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751789AbYJSVZN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41570 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139AbYJVSvo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 17:25:13 -0400
-To: linux-wireless@vger.kernel.org
-Subject: B43 randomly and silently dropping connections...
-From: Jerry McBride <mcbrides9@comcast.net>
-Date: Sun, 19 Oct 2008 17:25:09 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200810191725.10003.mcbrides9@comcast.net> (sfid-20081019_232520_773059_E2A7FEFA)
+	Wed, 22 Oct 2008 14:51:44 -0400
+Subject: [PATCH v2] wireless: remove struct regdom hinting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081022113950.GE6190@tesla>
+References: <1224585042.5521.7.camel@johannes.berg>
+	 <20081022113950.GE6190@tesla>
+Content-Type: text/plain
+Date: Wed, 22 Oct 2008 20:51:36 +0200
+Message-Id: <1224701496.30459.50.camel@johannes.berg> (sfid-20081022_205201_803184_C9A0253A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The code needs to be split out and cleaned up, so as a
+first step remove the capability, to add it back in a
+subsequent patch as a separate function. Also remove the
+publically facing return value of the function and the
+wiphy argument.
 
-The story is...
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |    2 -
+ include/net/wireless.h                 |   22 +-----------
+ net/wireless/nl80211.c                 |    2 -
+ net/wireless/reg.c                     |   60 +++++++--------------------------
+ net/wireless/reg.h                     |   23 +++---------
+ 5 files changed, 24 insertions(+), 85 deletions(-)
 
-I've moved from 2.6.25.x using BCM43XX with a Broadcom 4306 (rev3) 802.11 
-chipset to 2.6.26.6 using the B43 and appropriate firmware. This on a COMPAQ 
-Presario R3000 P4 and  a gig of memory and ATI graphics.
-
-I followed the install (upgrade) directions at linuxwireless.org. Piece of 
-cake! However... I find that I've gone from "bulletproof" BCM43XX wifi 
-connections to "bullethole" connections with B43.  
-
-Under the old BCM43XX the handshake and connections were flawless and 
-unfaltering. Now with the new B43, handshakes with AP's are perfect, but the 
-connections randomly and silently fail. There are no debug messages, no 
-complaints what-so-ever in /var/log/messages... 
-
-To gt wireless back, I have to reinitialize the connection. I've gotten so 
-good at it, that I can recite by heart the appropriate commands...
-
-It's killling me! I've got to get this ironed out... it's not just my laptop, 
-it's happening quite regularly with people I know with similar chips and 
-laptops.
-
-Trying 2.6.27-rc's and now 2.6.27 and the situation is no better.
-
-So I ask... Who is the B43/B43LEGACY maintainer and would you be interested in 
-debugging this mess? I'll bend over backward to help you... Email me 
-direct... I'm very willing.
-
-SHORT STORY:
--- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
-
--- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
-but fragile connections that drop randomly and without complaint. B43LEGACY 
-does nothing.
-
-Any help would be appreciated. I'd really like to get this ironed out. I 
-highly desire to use current kernels.
-
-Feel free to email me direct.
-
--- 
-
-*****************************************************************************
-                                       
-                             From the desk of:
-                             Jerome D. McBride
-                                       
-   19:17:28 up 15 days, 23:35,  5 users,  load average: 0.33, 0.11, 0.03
+--- everything.orig/include/net/wireless.h	2008-10-22 10:28:19.000000000 +0200
++++ everything/include/net/wireless.h	2008-10-22 20:50:18.000000000 +0200
+@@ -342,35 +342,17 @@ ieee80211_get_channel(struct wiphy *wiph
  
-*****************************************************************************
+ /**
+  * regulatory_hint - driver hint to the wireless core a regulatory domain
+- * @wiphy: the driver's very own &struct wiphy
+  * @alpha2: the ISO/IEC 3166 alpha2 the driver claims its regulatory domain
+  * 	should be in. If @rd is set this should be NULL. Note that if you
+  * 	set this to NULL you should still set rd->alpha2 to some accepted
+  * 	alpha2.
+- * @rd: a complete regulatory domain provided by the driver. If passed
+- * 	the driver does not need to worry about freeing it.
+  *
+  * Wireless drivers can use this function to hint to the wireless core
+  * what it believes should be the current regulatory domain by
+  * giving it an ISO/IEC 3166 alpha2 country code it knows its regulatory
+  * domain should be in or by providing a completely build regulatory domain.
+  * If the driver provides an ISO/IEC 3166 alpha2 userspace will be queried
+- * for a regulatory domain structure for the respective country. If
+- * a regulatory domain is build and passed you should set the alpha2
+- * if possible, otherwise set it to the special value of "99" which tells
+- * the wireless core it is unknown. If you pass a built regulatory domain
+- * and we return non zero you are in charge of kfree()'ing the structure.
+- *
+- * Returns -EALREADY if *a regulatory domain* has already been set. Note that
+- * this could be by another driver. It is safe for drivers to continue if
+- * -EALREADY is returned, if drivers are not capable of world roaming they
+- * should not register more channels than they support. Right now we only
+- * support listening to the first driver hint. If the driver is capable
+- * of world roaming but wants to respect its own EEPROM mappings for
+- * specific regulatory domains it should register the @reg_notifier callback
+- * on the &struct wiphy. Returns 0 if the hint went through fine or through an
+- * intersection operation. Otherwise a standard error code is returned.
++ * for a regulatory domain structure for the respective country.
+  */
+-extern int regulatory_hint(struct wiphy *wiphy,
+-		const char *alpha2, struct ieee80211_regdomain *rd);
++extern void regulatory_hint(const char *alpha2);
+ #endif /* __NET_WIRELESS_H */
+--- everything.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2008-10-22 10:27:51.000000000 +0200
++++ everything/drivers/net/wireless/zd1211rw/zd_mac.c	2008-10-22 10:28:24.000000000 +0200
+@@ -171,7 +171,7 @@ int zd_mac_init_hw(struct ieee80211_hw *
+ 
+ 	r = zd_reg2alpha2(mac->regdomain, alpha2);
+ 	if (!r)
+-		regulatory_hint(hw->wiphy, alpha2, NULL);
++		regulatory_hint(alpha2);
+ 
+ 	r = 0;
+ disable_int:
+--- everything.orig/net/wireless/nl80211.c	2008-10-22 10:28:22.000000000 +0200
++++ everything/net/wireless/nl80211.c	2008-10-22 20:50:16.000000000 +0200
+@@ -1693,7 +1693,7 @@ static int nl80211_req_set_reg(struct sk
+ 		return -EINVAL;
+ #endif
+ 	mutex_lock(&cfg80211_drv_mutex);
+-	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, NULL);
++	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data);
+ 	mutex_unlock(&cfg80211_drv_mutex);
+ 	return r;
+ }
+--- everything.orig/net/wireless/reg.c	2008-10-22 10:28:23.000000000 +0200
++++ everything/net/wireless/reg.c	2008-10-22 20:50:18.000000000 +0200
+@@ -42,7 +42,7 @@
+ #include "core.h"
+ #include "reg.h"
+ 
+-/* wiphy is set if this request's initiator is REGDOM_SET_BY_DRIVER */
++/* wiphy is set if this request's initiator is REGDOM_SET_BY_COUNTRY_IE */
+ struct regulatory_request {
+ 	struct wiphy *wiphy;
+ 	int granted;
+@@ -299,7 +299,7 @@ static int call_crda(const char *alpha2)
+ /* This has the logic which determines when a new request
+  * should be ignored. */
+ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+-	char *alpha2, struct ieee80211_regdomain *rd)
++			  const char *alpha2)
+ {
+ 	/* All initial requests are respected */
+ 	if (!last_request)
+@@ -344,22 +344,8 @@ static int ignore_request(struct wiphy *
+ 		return 1;
+ 	case REGDOM_SET_BY_DRIVER:
+ 		BUG_ON(!wiphy);
+-		if (last_request->initiator == REGDOM_SET_BY_DRIVER) {
+-			/* Two separate drivers hinting different things,
+-			 * this is possible if you have two devices present
+-			 * on a system with different EEPROM regulatory
+-			 * readings. XXX: Do intersection, we support only
+-			 * the first regulatory hint for now */
+-			if (last_request->wiphy != wiphy)
+-				return -EALREADY;
+-			if (rd)
+-				return -EALREADY;
+-			/* Driver should not be trying to hint different
+-			 * regulatory domains! */
+-			BUG_ON(!alpha2_equal(alpha2,
+-					cfg80211_regdomain->alpha2));
++		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
+ 			return -EALREADY;
+-		}
+ 		if (last_request->initiator == REGDOM_SET_BY_CORE)
+ 			return 0;
+ 		/* XXX: Handle intersection, and add the
+@@ -558,40 +544,32 @@ void wiphy_update_regulatory(struct wiph
+ 
+ /* Caller must hold &cfg80211_drv_mutex */
+ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+-		      const char *alpha2, struct ieee80211_regdomain *rd)
++		      const char *alpha2)
+ {
+ 	struct regulatory_request *request;
+-	char *rd_alpha2;
+ 	int r = 0;
+ 
+-	r = ignore_request(wiphy, set_by, (char *) alpha2, rd);
++	r = ignore_request(wiphy, set_by, alpha2);
+ 	if (r)
+ 		return r;
+ 
+-	if (rd)
+-		rd_alpha2 = rd->alpha2;
+-	else
+-		rd_alpha2 = (char *) alpha2;
+-
+ 	switch (set_by) {
+ 	case REGDOM_SET_BY_CORE:
+ 	case REGDOM_SET_BY_COUNTRY_IE:
+ 	case REGDOM_SET_BY_DRIVER:
+ 	case REGDOM_SET_BY_USER:
+ 		request = kzalloc(sizeof(struct regulatory_request),
+-			GFP_KERNEL);
++				  GFP_KERNEL);
+ 		if (!request)
+ 			return -ENOMEM;
+ 
+-		request->alpha2[0] = rd_alpha2[0];
+-		request->alpha2[1] = rd_alpha2[1];
++		request->alpha2[0] = alpha2[0];
++		request->alpha2[1] = alpha2[1];
+ 		request->initiator = set_by;
+ 		request->wiphy = wiphy;
+ 
+ 		kfree(last_request);
+ 		last_request = request;
+-		if (rd)
+-			break;
+ 		r = call_crda(alpha2);
+ #ifndef CONFIG_WIRELESS_OLD_REGULATORY
+ 		if (r)
+@@ -606,25 +584,13 @@ int __regulatory_hint(struct wiphy *wiph
+ 	return r;
+ }
+ 
+-int regulatory_hint(struct wiphy *wiphy, const char *alpha2,
+-	struct ieee80211_regdomain *rd)
++void regulatory_hint(const char *alpha2)
+ {
+-	int r;
+-	BUG_ON(!rd && !alpha2);
++	BUG_ON(!alpha2);
+ 
+ 	mutex_lock(&cfg80211_drv_mutex);
+-
+-	r = __regulatory_hint(wiphy, REGDOM_SET_BY_DRIVER, alpha2, rd);
+-	if (r || !rd)
+-		goto unlock_and_exit;
+-
+-	/* If the driver passed a regulatory domain we skipped asking
+-	 * userspace for one so we can now go ahead and set it */
+-	r = set_regdom(rd);
+-
+-unlock_and_exit:
++	__regulatory_hint(NULL, REGDOM_SET_BY_DRIVER, alpha2);
+ 	mutex_unlock(&cfg80211_drv_mutex);
+-	return r;
+ }
+ EXPORT_SYMBOL(regulatory_hint);
+ 
+@@ -794,11 +760,11 @@ int regulatory_init(void)
+ 	 * that is not a valid ISO / IEC 3166 alpha2 */
+ 	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
+ 		err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE,
+-					ieee80211_regdom, NULL);
++					ieee80211_regdom);
+ #else
+ 	cfg80211_regdomain = cfg80211_world_regdom;
+ 
+-	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", NULL);
++	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00");
+ 	if (err)
+ 		printk(KERN_ERR "cfg80211: calling CRDA failed - "
+ 		       "unable to update world regulatory domain, "
+--- everything.orig/net/wireless/reg.h	2008-10-22 10:28:20.000000000 +0200
++++ everything/net/wireless/reg.h	2008-10-22 20:50:34.000000000 +0200
+@@ -11,30 +11,21 @@ int set_regdom(const struct ieee80211_re
+ 
+ /**
+  * __regulatory_hint - hint to the wireless core a regulatory domain
+- * @wiphy: if a driver is providing the hint this is the driver's very
+- * 	own &struct wiphy
++ * @wiphy: if the hint comes from country information from an AP, this
++ *	is required to be set to the wiphy that received the information
+  * @alpha2: the ISO/IEC 3166 alpha2 being claimed the regulatory domain
+- * 	should be in. If @rd is set this should be NULL
+- * @rd: a complete regulatory domain, if passed the caller need not worry
+- * 	about freeing it
++ *	should be in.
+  *
+  * The Wireless subsystem can use this function to hint to the wireless core
+  * what it believes should be the current regulatory domain by
+  * giving it an ISO/IEC 3166 alpha2 country code it knows its regulatory
+- * domain should be in or by providing a completely build regulatory domain.
++ * domain should be in.
+  *
+- * Returns -EALREADY if *a regulatory domain* has already been set. Note that
+- * this could be by another driver. It is safe for drivers to continue if
+- * -EALREADY is returned, if drivers are not capable of world roaming they
+- * should not register more channels than they support. Right now we only
+- * support listening to the first driver hint. If the driver is capable
+- * of world roaming but wants to respect its own EEPROM mappings for
+- * specific regulatory domains it should register the @reg_notifier callback
+- * on the &struct wiphy. Returns 0 if the hint went through fine or through an
+- * intersection operation. Otherwise a standard error code is returned.
++ * Returns zero if all went fine, %-EALREADY if a regulatory domain had
++ * already been set or other standard error codes.
+  *
+  */
+ extern int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+-		const char *alpha2, struct ieee80211_regdomain *rd);
++			     const char *alpha2);
+ 
+ #endif  /* __NET_WIRELESS_REG_H */
+
+
