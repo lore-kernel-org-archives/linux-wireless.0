@@ -1,59 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:61459 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750732AbYJ3U5i (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52110 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755993AbYJVKDy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 16:57:38 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so320122eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 13:56:45 -0700 (PDT)
-Message-ID: <490A1E16.8020902@gmail.com> (sfid-20081030_215742_585280_3629B20F)
-Date: Thu, 30 Oct 2008 20:50:30 +0000
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: Guidelines regarding separate directory
-References: <4909EA78.3060700@lwfinger.net>	 (sfid-20081030_181107_189082_5740895D) <1225387309.3690.73.camel@johannes.berg>	 <490A17F3.5050802@gmail.com> <1225399481.7931.5.camel@dv>
-In-Reply-To: <1225399481.7931.5.camel@dv>
-Content-Type: text/plain; charset=ISO-8859-1
-From: Dave <kilroyd@googlemail.com>
+	Wed, 22 Oct 2008 06:03:54 -0400
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Sujith <m.sujith@gmail.com>, Sujith <Sujith.Manoharan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+In-Reply-To: <1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com> (sfid-20081020_234638_705151_437FF968)
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224491480.18024.32.camel@johannes.berg>
+	 <18684.18492.94865.480736@gargle.gargle.HOWL>
+	 <1224493957.18024.47.camel@johannes.berg>
+	 <18684.20459.335157.171344@gargle.gargle.HOWL>
+	 <1224495531.18024.55.camel@johannes.berg>
+	 <18684.24323.743610.871307@gargle.gargle.HOWL>
+	 <1224505349.27899.17.camel@johannes.berg>
+	 <18684.51206.771543.514682@localhost.localdomain>
+	 <1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com>
+	 (sfid-20081020_234638_705151_437FF968)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/jYCKgHXDOeF/fcqDcjv"
+Date: Wed, 22 Oct 2008 12:03:47 +0200
+Message-Id: <1224669827.28639.54.camel@johannes.berg> (sfid-20081022_120415_628343_35F6DAAA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> On Thu, 2008-10-30 at 20:24 +0000, Dave wrote:
->> On a similar note, would anyone object to collecting the orinoco files
->> in a subdirectory?
-> 
-> Fine with me.
-> 
->> I'm looking at doing some refactoring of orinoco.c
->> which I think can be split into at least 3 files.
-> 
-> Maybe it's too late at this point, but it would be nice to support
-> Orinoco USB eventually.  It uses modified orinoco.c.  Please keep it in
-> mind when splitting.  It may be possible to reuse some of the new parts
-> in the USB driver.
 
-That's partly why I'm refactorring. Other things I'm thinking of:
+--=-/jYCKgHXDOeF/fcqDcjv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-cfg80211 (i.e. disentangling the wext handlers from hermes calls)
-hermes II
-radiotap
+On Mon, 2008-10-20 at 23:46 +0200, Tomas Winkler wrote:
 
-Just don't hold your breath.
+> > Immediate Block-Ack is mandatory for 11n, delayed BA is optional.
+> > ath9k currently maintains the BA window state internally too.
+> > Another candidate that can be moved to mac80211, IMO.
+> >
+>=20
+> TX or RX side?
 
->> PS the existing files that would move:
->> orinoco_pci.c
-> 
-> orinoco_pci.c is a good candidate for removal.  It only supports the
-> hardware that is already supported by hostap_pci.
+Both? What exactly does your firmware do, say of the list that Sujith
+posted?
 
-ACK. I'll include that as part of the same series.
+> >> What I could also imagine is that mac80211 simply does pretty much
+> >> everything and hands a number of skbs to the driver at once with some
+> >> additional information about how to aggregate them, what sort of spaci=
+ng
+> >> to use, etc. It should be able to calculate all the required stuff sin=
+ce
+> >> it knows from the rate control algorithm what's happening there.
+>=20
+> What you need is to compute how many frames can be transmitted within
+> TXOP i think we can provide the calculation
+> depending on the current state. Just with the retransmission down
+> scaling need to be taken into account.
 
+We really need TXOP handling in mac80211 anyway, no? Right now we won't
+handle frames that are too long for the TXOP, for example.
 
-Dave.
+>  That
+> >> might leave Intel out a bit, but I'm starting to think that we want to
+> >> special-case them a bit anyway.
+>=20
+> Let's see first mvel and bcom implementation :)
+
+Like I said, from what I can tell bcom is really similar, and I'd like
+to not have to re-implement all this first. mac80211 used to have a more
+push-model, which we've deviated from with the HT stuff you did, but for
+most hardware the push-model is still appropriate, so imho we should try
+to go to one even with HT and then see. We've since reworked rate
+control to be able to cope with HT too, so mac80211 can have much more
+information about what's going on and should be able to make many of the
+necessary decisions.
+
+johannes
+
+--=-/jYCKgHXDOeF/fcqDcjv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/vqAAAoJEKVg1VMiehFYZx8P/jkeTa4FbZ4ht1cWbHUSn/j9
+sd1ggG4QYXzySWLz9QS8o83kDcN0Ajf3XeM1cevIgHc9UrN+twl0RsDyXdvsmgHK
+HY8pTK+qEftbMkVgCvC/A4svjcihwv6gjIUV6RBaOSli3t03dEhyhRD69RE6icPx
+dI1FehMJaGwlUzx/tya9qutYLFijpQbfaB8D3ap4ZB9Rvof471d4Cy5wMpIuYWwp
+WC1XlEPdbc65CvfCcVRDQ2h+ISzZRqQI+uMhnzB24YLx9IAJuWj+j6WjxseSfJ1L
+8UN286QA8Zn99jJh6wcoq7auKBjHVWAsXTIjJIoUzKVNqNxFM8pvittFxjlwS4dY
+G/nr+QKEJxyaYtuvj94XzgE7M+7xJJapS+Xnc0OzMp1zVH8/3Wd1lp0t1Swu3CQt
+Nm5pSWL5M2XN+Tv0xhHSkbMUqDUHmUIypJ12hKaWK+jw8Bc8LJr2RBohD4kjXXPL
+fFJ4wpYxIqr+TcNW16MNkC/HitEvM8rNj8a+NsFJLNdR8VAI1in4ALwntEdNivi6
+KO5bMpLaIgR5X12vBXsA7VsAfLz+0mnu/g6t0M5Cqesxy6lRmKT2Vb6QE3cjWjyH
+OEYStfRjNTB6H9JVe1BjT8s9sPxwGzRBnrPBMahgPaSVaEGo4WCeSOx2KQhnpJj9
+o0Mn8eaOBa5NBPkiHiAC
+=Lgn/
+-----END PGP SIGNATURE-----
+
+--=-/jYCKgHXDOeF/fcqDcjv--
+
