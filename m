@@ -1,584 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4785 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:58205 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751879AbYJNTfV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 15:35:21 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 6/9] iwlwifi: refactor TX response flow
-Date: Tue, 14 Oct 2008 12:32:46 -0700
-Message-Id: <1224012769-8920-7-git-send-email-reinette.chatre@intel.com> (sfid-20081014_213530_021253_CD59C1DF)
-In-Reply-To: <1224012769-8920-6-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1224012769-8920-1-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-4-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-5-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-6-git-send-email-reinette.chatre@intel.com>
+	id S1754145AbYJVTVx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 15:21:53 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 12:21:53 -0700
+Date: Wed, 22 Oct 2008 05:21:48 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>
+Subject: Re: [PATCH] wireless: add regulatory_struct_hint
+Message-ID: <20081022122148.GF6190@tesla> (sfid-20081022_212158_800191_AF3588C9)
+References: <1224585110.5521.8.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1224585110.5521.8.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Tue, Oct 21, 2008 at 03:31:50AM -0700, Johannes Berg wrote:
+> This adds a new function, regulatory_struct_hint, which acts
+> as a hint to the wireless core which regdomain a card thinks
+> the system is operating in, but given in terms of the actual
+> regdomain definition. Multiple hints are permitted when the
+> specified bands do not overlap.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> Entirely untested. Anyone want to give it a go in the dual-band scenario?
+> 
+>  include/net/wireless.h |   14 +++
+>  net/wireless/reg.c     |  225 ++++++++++++++++++++++++++++++++-----------------
+>  2 files changed, 161 insertions(+), 78 deletions(-)
+> 
+> --- everything.orig/include/net/wireless.h      2008-10-21 11:50:01.000000000 +0200
+> +++ everything/include/net/wireless.h   2008-10-21 11:50:16.000000000 +0200
+> @@ -355,4 +355,18 @@ ieee80211_get_channel(struct wiphy *wiph
+>   * for a regulatory domain structure for the respective country.
+>   */
+>  extern void regulatory_hint(const char *alpha2);
+> +
+> +/**
+> + * regulatory_struct_hint - hint wireless core about regdomain
+> + *
+> + * @rd: regdomain structure containing the frequency ranges that are
+> + *     permitted for use.
+> + * @bands: bitmask of bands this contains, use BIT(IEEE80211_BAND_...)
 
-This patch utilize 5000 new TX response command
-which contains all necessary information and avoids
-back referencing to the original TX frame.
-It also change handling of software queue tracking
-4965 flow is aligned with changes as much as possible.
+Since this is only for wiphys this seems reasonable. I just keep in the
+back of my mind leaving open the possibility for other wireless
+subsystems to be able to make use of the currently set regulatory domain
+and its regulatory rules, but this is in keeping with that as our
+current requests are not changing the regulatory definitions, and just
+as we have a wiphy for last_request we can add later struct
+foo_new_wireless_type there too. I am curious if band definitions
+should be shared between Bluetooth and 802.11 though. I don't think
+BT devices have any notion of regulatory though nor are they capable of
+exporting it though. Marcel is this correct? Inaky -- how about uwb, or
+WiMax?
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Reviewed-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   63 +++++++++------------
- drivers/net/wireless/iwlwifi/iwl-5000.c     |   81 +++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-commands.h |   50 ++++++++++++----
- drivers/net/wireless/iwlwifi/iwl-debug.h    |    2 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    9 +--
- drivers/net/wireless/iwlwifi/iwl-tx.c       |   41 +++++++-------
- 6 files changed, 126 insertions(+), 120 deletions(-)
+For our purposes though this is OK though, just wanted to make that
+note, so we keep in mind this *can* potentially be used by other
+wireless foo.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 9838de5..7cf5e2c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -822,7 +822,6 @@ static int iwl4965_hw_set_hw_params(struct iwl_priv *priv)
- 	}
- 
- 	priv->hw_params.max_txq_num = priv->cfg->mod_params->num_of_queues;
--	priv->hw_params.first_ampdu_q = IWL49_FIRST_AMPDU_QUEUE;
- 	priv->hw_params.max_stations = IWL4965_STATION_COUNT;
- 	priv->hw_params.bcast_sta_id = IWL4965_BROADCAST_ID;
- 	priv->hw_params.max_data_size = IWL49_RTC_DATA_SIZE;
-@@ -2059,7 +2058,7 @@ static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
- 	agg->rate_n_flags = rate_n_flags;
- 	agg->bitmap = 0;
- 
--	/* # frames attempted by Tx command */
-+	/* num frames attempted by Tx command */
- 	if (agg->frame_count == 1) {
- 		/* Only one frame was attempted; no block-ack will arrive */
- 		status = le16_to_cpu(frame_status[0].status);
-@@ -2158,12 +2157,13 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 	int txq_id = SEQ_TO_QUEUE(sequence);
- 	int index = SEQ_TO_INDEX(sequence);
- 	struct iwl_tx_queue *txq = &priv->txq[txq_id];
-+	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *info;
- 	struct iwl4965_tx_resp *tx_resp = (void *)&pkt->u.raw[0];
- 	u32  status = le32_to_cpu(tx_resp->u.status);
--	int tid = MAX_TID_COUNT, sta_id = IWL_INVALID_STATION;
--	__le16 fc;
--	struct ieee80211_hdr *hdr;
-+	int tid = MAX_TID_COUNT;
-+	int sta_id;
-+	int freed;
- 	u8 *qc = NULL;
- 
- 	if ((index >= txq->q.n_bd) || (iwl_queue_used(&txq->q, index) == 0)) {
-@@ -2178,8 +2178,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 	memset(&info->status, 0, sizeof(info->status));
- 
- 	hdr = iwl_tx_queue_get_hdr(priv, txq_id, index);
--	fc = hdr->frame_control;
--	if (ieee80211_is_data_qos(fc)) {
-+	if (ieee80211_is_data_qos(hdr->frame_control)) {
- 		qc = ieee80211_get_qos_ctl(hdr);
- 		tid = qc[0] & 0xf;
- 	}
-@@ -2194,8 +2193,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 		const u32 scd_ssn = iwl4965_get_scd_ssn(tx_resp);
- 		struct iwl_ht_agg *agg = NULL;
- 
--		if (!qc)
--			return;
-+		WARN_ON(!qc);
- 
- 		agg = &priv->stations[sta_id].tid[tid].agg;
- 
-@@ -2206,54 +2204,49 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 			info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
- 
- 		if (txq->q.read_ptr != (scd_ssn & 0xff)) {
--			int freed, ampdu_q;
- 			index = iwl_queue_dec_wrap(scd_ssn & 0xff, txq->q.n_bd);
- 			IWL_DEBUG_TX_REPLY("Retry scheduler reclaim scd_ssn "
- 					   "%d index %d\n", scd_ssn , index);
- 			freed = iwl_tx_queue_reclaim(priv, txq_id, index);
- 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
- 
--			if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
--			    txq_id >= 0 && priv->mac80211_registered &&
--			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA) {
--				/* calculate mac80211 ampdu sw queue to wake */
--				ampdu_q = txq_id - IWL49_FIRST_AMPDU_QUEUE +
--					  priv->hw->queues;
-+			if (priv->mac80211_registered &&
-+			    (iwl_queue_space(&txq->q) > txq->q.low_mark) &&
-+			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)) {
- 				if (agg->state == IWL_AGG_OFF)
- 					ieee80211_wake_queue(priv->hw, txq_id);
- 				else
--					ieee80211_wake_queue(priv->hw, ampdu_q);
-+					ieee80211_wake_queue(priv->hw,
-+							     txq->swq_id);
- 			}
--			iwl_txq_check_empty(priv, sta_id, tid, txq_id);
- 		}
- 	} else {
- 		info->status.retry_count = tx_resp->failure_frame;
--		info->flags |=
--			iwl_is_tx_success(status) ? IEEE80211_TX_STAT_ACK : 0;
-+		info->flags |= iwl_is_tx_success(status) ?
-+					IEEE80211_TX_STAT_ACK : 0;
- 		iwl_hwrate_to_tx_control(priv,
- 					le32_to_cpu(tx_resp->rate_n_flags),
- 					info);
- 
--		IWL_DEBUG_TX("Tx queue %d Status %s (0x%08x) rate_n_flags "
--			     "0x%x retries %d\n", txq_id,
--				iwl_get_tx_fail_reason(status),
--				status, le32_to_cpu(tx_resp->rate_n_flags),
--				tx_resp->failure_frame);
--
--		IWL_DEBUG_TX_REPLY("Tx queue reclaim %d\n", index);
-+		IWL_DEBUG_TX_REPLY("TXQ %d status %s (0x%08x) "
-+				   "rate_n_flags 0x%x retries %d\n",
-+				   txq_id,
-+				   iwl_get_tx_fail_reason(status), status,
-+				   le32_to_cpu(tx_resp->rate_n_flags),
-+				   tx_resp->failure_frame);
- 
--		if (index != -1) {
--		    int freed = iwl_tx_queue_reclaim(priv, txq_id, index);
--		    if (tid != MAX_TID_COUNT)
-+		freed = iwl_tx_queue_reclaim(priv, txq_id, index);
-+		if (qc)
- 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
--		    if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
--			(txq_id >= 0) && priv->mac80211_registered)
-+
-+		if (priv->mac80211_registered &&
-+		    (iwl_queue_space(&txq->q) > txq->q.low_mark))
- 			ieee80211_wake_queue(priv->hw, txq_id);
--		    if (tid != MAX_TID_COUNT)
--			iwl_txq_check_empty(priv, sta_id, tid, txq_id);
--		}
- 	}
- 
-+	if (qc)
-+		iwl_txq_check_empty(priv, sta_id, tid, txq_id);
-+
- 	if (iwl_check_bits(status, TX_ABORT_REQUIRED_MSK))
- 		IWL_ERROR("TODO:  Implement Tx ABORT REQUIRED!!!\n");
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 35e1f6a..0290c03 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -683,7 +683,7 @@ static void iwl5000_tx_queue_set_status(struct iwl_priv *priv,
- 					int tx_fifo_id, int scd_retry)
- {
- 	int txq_id = txq->q.id;
--	int active = test_bit(txq_id, &priv->txq_ctx_active_msk)?1:0;
-+	int active = test_bit(txq_id, &priv->txq_ctx_active_msk) ? 1 : 0;
- 
- 	iwl_write_prph(priv, IWL50_SCD_QUEUE_STATUS_BITS(txq_id),
- 			(active << IWL50_SCD_QUEUE_STTS_REG_POS_ACTIVE) |
-@@ -801,7 +801,6 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 	}
- 
- 	priv->hw_params.max_txq_num = priv->cfg->mod_params->num_of_queues;
--	priv->hw_params.first_ampdu_q = IWL50_FIRST_AMPDU_QUEUE;
- 	priv->hw_params.max_stations = IWL5000_STATION_COUNT;
- 	priv->hw_params.bcast_sta_id = IWL5000_BROADCAST_ID;
- 	priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
-@@ -1159,7 +1158,7 @@ static int iwl5000_tx_status_reply_tx(struct iwl_priv *priv,
- 		info->status.retry_count = tx_resp->failure_frame;
- 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
- 		info->flags |= iwl_is_tx_success(status)?
--			IEEE80211_TX_STAT_ACK : 0;
-+					IEEE80211_TX_STAT_ACK : 0;
- 		iwl_hwrate_to_tx_control(priv, rate_n_flags, info);
- 
- 		/* FIXME: code repetition end */
-@@ -1245,9 +1244,9 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
- 	struct ieee80211_tx_info *info;
- 	struct iwl5000_tx_resp *tx_resp = (void *)&pkt->u.raw[0];
- 	u32  status = le16_to_cpu(tx_resp->status.status);
--	int tid = MAX_TID_COUNT, sta_id = IWL_INVALID_STATION;
--	struct ieee80211_hdr *hdr;
--	u8 *qc = NULL;
-+	int tid;
-+	int sta_id;
-+	int freed;
- 
- 	if ((index >= txq->q.n_bd) || (iwl_queue_used(&txq->q, index) == 0)) {
- 		IWL_ERROR("Read index for DMA queue txq_id (%d) index %d "
-@@ -1260,25 +1259,13 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
- 	info = IEEE80211_SKB_CB(txq->txb[txq->q.read_ptr].skb[0]);
- 	memset(&info->status, 0, sizeof(info->status));
- 
--	hdr = iwl_tx_queue_get_hdr(priv, txq_id, index);
--	if (ieee80211_is_data_qos(hdr->frame_control)) {
--		qc = ieee80211_get_qos_ctl(hdr);
--		tid = qc[0] & 0xf;
--	}
--
--	sta_id = iwl_get_ra_sta_id(priv, hdr);
--	if (txq->sched_retry && unlikely(sta_id == IWL_INVALID_STATION)) {
--		IWL_ERROR("Station not known\n");
--		return;
--	}
-+	tid = (tx_resp->ra_tid & IWL50_TX_RES_TID_MSK) >> IWL50_TX_RES_TID_POS;
-+	sta_id = (tx_resp->ra_tid & IWL50_TX_RES_RA_MSK) >> IWL50_TX_RES_RA_POS;
- 
- 	if (txq->sched_retry) {
- 		const u32 scd_ssn = iwl5000_get_scd_ssn(tx_resp);
- 		struct iwl_ht_agg *agg = NULL;
- 
--		if (!qc)
--			return;
--
- 		agg = &priv->stations[sta_id].tid[tid].agg;
- 
- 		iwl5000_tx_status_reply_tx(priv, agg, tx_resp, txq_id, index);
-@@ -1288,53 +1275,53 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
- 			info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
- 
- 		if (txq->q.read_ptr != (scd_ssn & 0xff)) {
--			int freed, ampdu_q;
- 			index = iwl_queue_dec_wrap(scd_ssn & 0xff, txq->q.n_bd);
--			IWL_DEBUG_TX_REPLY("Retry scheduler reclaim scd_ssn "
--					   "%d index %d\n", scd_ssn , index);
-+			IWL_DEBUG_TX_REPLY("Retry scheduler reclaim "
-+					"scd_ssn=%d idx=%d txq=%d swq=%d\n",
-+					scd_ssn , index, txq_id, txq->swq_id);
-+
- 			freed = iwl_tx_queue_reclaim(priv, txq_id, index);
- 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
- 
--			if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
--			    txq_id >= 0 && priv->mac80211_registered &&
--			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA) {
--				/* calculate mac80211 ampdu sw queue to wake */
--				ampdu_q = txq_id - IWL50_FIRST_AMPDU_QUEUE +
--					  priv->hw->queues;
-+			if (priv->mac80211_registered &&
-+			    (iwl_queue_space(&txq->q) > txq->q.low_mark) &&
-+			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)) {
- 				if (agg->state == IWL_AGG_OFF)
- 					ieee80211_wake_queue(priv->hw, txq_id);
- 				else
--					ieee80211_wake_queue(priv->hw, ampdu_q);
-+					ieee80211_wake_queue(priv->hw,
-+							     txq->swq_id);
- 			}
--			iwl_txq_check_empty(priv, sta_id, tid, txq_id);
- 		}
- 	} else {
-+		BUG_ON(txq_id != txq->swq_id);
-+
- 		info->status.retry_count = tx_resp->failure_frame;
--		info->flags =
--			iwl_is_tx_success(status) ? IEEE80211_TX_STAT_ACK : 0;
-+		info->flags |= iwl_is_tx_success(status) ?
-+					IEEE80211_TX_STAT_ACK : 0;
- 		iwl_hwrate_to_tx_control(priv,
- 					le32_to_cpu(tx_resp->rate_n_flags),
- 					info);
- 
--		IWL_DEBUG_TX("Tx queue %d Status %s (0x%08x) rate_n_flags "
--			     "0x%x retries %d\n", txq_id,
--				iwl_get_tx_fail_reason(status),
--				status, le32_to_cpu(tx_resp->rate_n_flags),
--				tx_resp->failure_frame);
-+		IWL_DEBUG_TX_REPLY("TXQ %d status %s (0x%08x) rate_n_flags "
-+				   "0x%x retries %d\n",
-+				   txq_id,
-+				   iwl_get_tx_fail_reason(status), status,
-+				   le32_to_cpu(tx_resp->rate_n_flags),
-+				   tx_resp->failure_frame);
- 
--		IWL_DEBUG_TX_REPLY("Tx queue reclaim %d\n", index);
--		if (index != -1) {
--		    int freed = iwl_tx_queue_reclaim(priv, txq_id, index);
--		    if (tid != MAX_TID_COUNT)
-+		freed = iwl_tx_queue_reclaim(priv, txq_id, index);
-+		if (ieee80211_is_data_qos(tx_resp->frame_ctrl))
- 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
--		    if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
--			(txq_id >= 0) && priv->mac80211_registered)
-+
-+		if (priv->mac80211_registered &&
-+		    (iwl_queue_space(&txq->q) > txq->q.low_mark))
- 			ieee80211_wake_queue(priv->hw, txq_id);
--		    if (tid != MAX_TID_COUNT)
--			iwl_txq_check_empty(priv, sta_id, tid, txq_id);
--		}
- 	}
- 
-+	if (ieee80211_is_data_qos(tx_resp->frame_ctrl))
-+		iwl_txq_check_empty(priv, sta_id, tid, txq_id);
-+
- 	if (iwl_check_bits(status, TX_ABORT_REQUIRED_MSK))
- 		IWL_ERROR("TODO:  Implement Tx ABORT REQUIRED!!!\n");
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 67680a7..8f8734f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -1413,21 +1413,21 @@ enum {
- };
- 
- enum {
--	TX_STATUS_MSK = 0x000000ff,	/* bits 0:7 */
-+	TX_STATUS_MSK = 0x000000ff,		/* bits 0:7 */
- 	TX_STATUS_DELAY_MSK = 0x00000040,
- 	TX_STATUS_ABORT_MSK = 0x00000080,
- 	TX_PACKET_MODE_MSK = 0x0000ff00,	/* bits 8:15 */
- 	TX_FIFO_NUMBER_MSK = 0x00070000,	/* bits 16:18 */
--	TX_RESERVED = 0x00780000,	/* bits 19:22 */
-+	TX_RESERVED = 0x00780000,		/* bits 19:22 */
- 	TX_POWER_PA_DETECT_MSK = 0x7f800000,	/* bits 23:30 */
- 	TX_ABORT_REQUIRED_MSK = 0x80000000,	/* bits 31:31 */
- };
- 
--static inline int iwl_is_tx_success(u32 status)
-+static inline bool iwl_is_tx_success(u32 status)
- {
- 	status &= TX_STATUS_MSK;
--	return (status == TX_STATUS_SUCCESS)
--	    || (status == TX_STATUS_DIRECT_DONE);
-+	return (status == TX_STATUS_SUCCESS) ||
-+	       (status == TX_STATUS_DIRECT_DONE);
- }
- 
- 
-@@ -1452,10 +1452,9 @@ enum {
- 	AGG_TX_STATE_DELAY_TX_MSK = 0x400
- };
- 
--#define AGG_TX_STATE_LAST_SENT_MSK \
--(AGG_TX_STATE_LAST_SENT_TTL_MSK | \
-- AGG_TX_STATE_LAST_SENT_TRY_CNT_MSK | \
-- AGG_TX_STATE_LAST_SENT_BT_KILL_MSK)
-+#define AGG_TX_STATE_LAST_SENT_MSK  (AGG_TX_STATE_LAST_SENT_TTL_MSK | \
-+				     AGG_TX_STATE_LAST_SENT_TRY_CNT_MSK | \
-+				     AGG_TX_STATE_LAST_SENT_BT_KILL_MSK)
- 
- /* # tx attempts for first frame in aggregation */
- #define AGG_TX_STATE_TRY_CNT_POS 12
-@@ -1528,6 +1527,28 @@ struct iwl4965_tx_resp {
- 	} u;
- } __attribute__ ((packed));
- 
-+/*
-+ * definitions for initial rate index field
-+ * bits [3:0] inital rate index
-+ * bits [6:4] rate table color, used for the initial rate
-+ * bit-7 invalid rate indication
-+ *   i.e. rate was not chosen from rate table
-+ *   or rate table color was changed during frame retries
-+ * refer tlc rate info
-+ */
-+
-+#define IWL50_TX_RES_INIT_RATE_INDEX_POS	0
-+#define IWL50_TX_RES_INIT_RATE_INDEX_MSK	0x0f
-+#define IWL50_TX_RES_RATE_TABLE_COLOR_POS	4
-+#define IWL50_TX_RES_RATE_TABLE_COLOR_MSK	0x70
-+#define IWL50_TX_RES_INV_RATE_INDEX_MSK	0x80
-+
-+/* refer to ra_tid */
-+#define IWL50_TX_RES_TID_POS	0
-+#define IWL50_TX_RES_TID_MSK	0x0f
-+#define IWL50_TX_RES_RA_POS	4
-+#define IWL50_TX_RES_RA_MSK	0xf0
-+
- struct iwl5000_tx_resp {
- 	u8 frame_count;		/* 1 no aggregation, >1 aggregation */
- 	u8 bt_kill_count;	/* # blocked by bluetooth (unused for agg) */
-@@ -1542,14 +1563,17 @@ struct iwl5000_tx_resp {
- 	 * For agg:  RTS + CTS + aggregation tx time + block-ack time. */
- 	__le16 wireless_media_time;	/* uSecs */
- 
--	__le16 reserved;
--	__le32 pa_power1;	/* RF power amplifier measurement (not used) */
--	__le32 pa_power2;
-+	u8 pa_status;		/* RF power amplifier measurement (not used) */
-+	u8 pa_integ_res_a[3];
-+	u8 pa_integ_res_b[3];
-+	u8 pa_integ_res_C[3];
- 
- 	__le32 tfd_info;
- 	__le16 seq_ctl;
- 	__le16 byte_cnt;
--	__le32 tlc_info;
-+	u8 tlc_info;
-+	u8 ra_tid;		/* tid (0:3), sta_id (4:7) */
-+	__le16 frame_ctrl;
- 	/*
- 	 * For non-agg:  frame status TX_STATUS_*
- 	 * For agg:  status of 1st frame, AGG_TX_STATE_*; other frame status
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index e548d67..2b48a4c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -183,6 +183,8 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
- #define IWL_DEBUG_STATS(f, a...) IWL_DEBUG(IWL_DL_STATS, f, ## a)
- #define IWL_DEBUG_STATS_LIMIT(f, a...) IWL_DEBUG_LIMIT(IWL_DL_STATS, f, ## a)
- #define IWL_DEBUG_TX_REPLY(f, a...) IWL_DEBUG(IWL_DL_TX_REPLY, f, ## a)
-+#define IWL_DEBUG_TX_REPLY_LIMIT(f, a...) \
-+	IWL_DEBUG_LIMIT(IWL_DL_TX_REPLY, f, ## a)
- #define IWL_DEBUG_QOS(f, a...)   IWL_DEBUG(IWL_DL_QOS, f, ## a)
- #define IWL_DEBUG_RADIO(f, a...)  IWL_DEBUG(IWL_DL_RADIO, f, ## a)
- #define IWL_DEBUG_POWER(f, a...)  IWL_DEBUG(IWL_DL_POWER, f, ## a)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index bdca174..8f1e37a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -137,9 +137,10 @@ struct iwl_tx_queue {
- 	struct iwl_tfd_frame *bd;
- 	struct iwl_cmd *cmd[TFD_TX_CMD_SLOTS];
- 	struct iwl_tx_info *txb;
--	int need_update;
--	int sched_retry;
--	int active;
-+	u8 need_update;
-+	u8 sched_retry;
-+	u8 active;
-+	u8 swq_id;
- };
- 
- #define IWL_NUM_SCAN_RATES         (2)
-@@ -521,7 +522,6 @@ struct iwl_sensitivity_ranges {
-  * @ct_kill_threshold: temperature threshold
-  * @calib_init_cfg: setup initial claibrations for the hw
-  * @struct iwl_sensitivity_ranges: range of sensitivity values
-- * @first_ampdu_q: first HW queue available for ampdu
-  */
- struct iwl_hw_params {
- 	u16 max_txq_num;
-@@ -543,7 +543,6 @@ struct iwl_hw_params {
- 	u32 ct_kill_threshold; /* value in hw-dependent units */
- 	u32 calib_init_cfg;
- 	const struct iwl_sensitivity_ranges *sens;
--	u8 first_ampdu_q;
- };
- 
- #define HT_SHORT_GI_20MHZ	(1 << 0)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 9ee2897..61e8e12 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -877,9 +877,9 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 		priv->stations[sta_id].tid[tid].tfds_in_queue++;
- 	}
- 
--	/* Descriptor for chosen Tx queue */
- 	txq = &priv->txq[txq_id];
- 	q = &txq->q;
-+	txq->swq_id = swq_id;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-@@ -1004,7 +1004,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 			iwl_txq_update_write_ptr(priv, txq);
- 			spin_unlock_irqrestore(&priv->lock, flags);
- 		} else {
--			ieee80211_stop_queue(priv->hw, swq_id);
-+			ieee80211_stop_queue(priv->hw, txq->swq_id);
- 		}
- 	}
- 
-@@ -1383,8 +1383,8 @@ int iwl_txq_check_empty(struct iwl_priv *priv, int sta_id, u8 tid, int txq_id)
- 	case IWL_EMPTYING_HW_QUEUE_DELBA:
- 		/* We are reclaiming the last packet of the */
- 		/* aggregated HW queue */
--		if (txq_id  == tid_data->agg.txq_id &&
--		    q->read_ptr == q->write_ptr) {
-+		if ((txq_id  == tid_data->agg.txq_id) &&
-+		    (q->read_ptr == q->write_ptr)) {
- 			u16 ssn = SEQ_TO_SN(tid_data->seq_number);
- 			int tx_fifo = default_tid_to_tx_fifo[tid];
- 			IWL_DEBUG_HT("HW queue empty: continue DELBA flow\n");
-@@ -1435,7 +1435,7 @@ static int iwl_tx_status_reply_compressed_ba(struct iwl_priv *priv,
- 	IWL_DEBUG_TX_REPLY("BA %d %d\n", agg->start_idx, ba_resp->seq_ctl);
- 
- 	/* Calculate shift to align block-ack bits with our Tx window bits */
--	sh = agg->start_idx - SEQ_TO_INDEX(seq_ctl>>4);
-+	sh = agg->start_idx - SEQ_TO_INDEX(seq_ctl >> 4);
- 	if (sh < 0) /* tbw something is wrong with indices */
- 		sh += 0x100;
- 
-@@ -1485,9 +1485,11 @@ void iwl_rx_reply_compressed_ba(struct iwl_priv *priv,
- {
- 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
- 	struct iwl_compressed_ba_resp *ba_resp = &pkt->u.compressed_ba;
--	int index;
- 	struct iwl_tx_queue *txq = NULL;
- 	struct iwl_ht_agg *agg;
-+	int index;
-+	int sta_id;
-+	int tid;
- 	DECLARE_MAC_BUF(mac);
- 
- 	/* "flow" corresponds to Tx queue */
-@@ -1503,17 +1505,19 @@ void iwl_rx_reply_compressed_ba(struct iwl_priv *priv,
- 	}
- 
- 	txq = &priv->txq[scd_flow];
--	agg = &priv->stations[ba_resp->sta_id].tid[ba_resp->tid].agg;
-+	sta_id = ba_resp->sta_id;
-+	tid = ba_resp->tid;
-+	agg = &priv->stations[sta_id].tid[tid].agg;
- 
- 	/* Find index just before block-ack window */
- 	index = iwl_queue_dec_wrap(ba_resp_scd_ssn & 0xff, txq->q.n_bd);
- 
- 	/* TODO: Need to get this copy more safely - now good for debug */
- 
--	IWL_DEBUG_TX_REPLY("REPLY_COMPRESSED_BA [%d]Received from %s, "
-+	IWL_DEBUG_TX_REPLY("REPLY_COMPRESSED_BA [%d] Received from %s, "
- 			   "sta_id = %d\n",
- 			   agg->wait_for_ba,
--			   print_mac(mac, (u8 *) &ba_resp->sta_addr_lo32),
-+			   print_mac(mac, (u8 *)&ba_resp->sta_addr_lo32),
- 			   ba_resp->sta_id);
- 	IWL_DEBUG_TX_REPLY("TID = %d, SeqCtl = %d, bitmap = 0x%llx, scd_flow = "
- 			   "%d, scd_ssn = %d\n",
-@@ -1534,18 +1538,15 @@ void iwl_rx_reply_compressed_ba(struct iwl_priv *priv,
- 	 * transmitted ... if not, it's too late anyway). */
- 	if (txq->q.read_ptr != (ba_resp_scd_ssn & 0xff)) {
- 		/* calculate mac80211 ampdu sw queue to wake */
--		int ampdu_q =
--		   scd_flow - priv->hw_params.first_ampdu_q + priv->hw->queues;
- 		int freed = iwl_tx_queue_reclaim(priv, scd_flow, index);
--		priv->stations[ba_resp->sta_id].
--			tid[ba_resp->tid].tfds_in_queue -= freed;
--		if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
--			priv->mac80211_registered &&
--			agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)
--			ieee80211_wake_queue(priv->hw, ampdu_q);
--
--		iwl_txq_check_empty(priv, ba_resp->sta_id,
--				    ba_resp->tid, scd_flow);
-+		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
-+
-+		if ((iwl_queue_space(&txq->q) > txq->q.low_mark) &&
-+		    priv->mac80211_registered &&
-+		    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA))
-+			ieee80211_wake_queue(priv->hw, txq->swq_id);
-+
-+		iwl_txq_check_empty(priv, sta_id, tid, scd_flow);
- 	}
- }
- EXPORT_SYMBOL(iwl_rx_reply_compressed_ba);
--- 
-1.5.4.3
+> + *
+> + * This function informs the wireless core that the driver believes
+> + * that the bands indicated are defined by the given structure in the
+> + * regulatory domain the system is operating in.
+> + */
+> +extern void regulatory_struct_hint(struct ieee80211_regdomain *rd,
+> +                                  u32 bands);
+>  #endif /* __NET_WIRELESS_H */
+> --- everything.orig/net/wireless/reg.c  2008-10-21 11:50:14.000000000 +0200
+> +++ everything/net/wireless/reg.c       2008-10-21 12:26:08.000000000 +0200
+> @@ -45,9 +45,9 @@
+>  /* wiphy is set if this request's initiator is REGDOM_SET_BY_COUNTRY_IE */
+>  struct regulatory_request {
+>         struct wiphy *wiphy;
+> -       int granted;
+>         enum reg_set_by initiator;
+>         char alpha2[2];
+> +       u32 bands;
+>  };
+> 
+>  static struct regulatory_request *last_request;
+> @@ -296,82 +296,6 @@ static int call_crda(const char *alpha2)
+>         return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, envp);
+>  }
+> 
+> -/* This has the logic which determines when a new request
+> - * should be ignored. */
+> -static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+> -                         const char *alpha2)
+> -{
 
+<-- snip -->
+
+> -}
+> -
+>  /* Used by nl80211 before kmalloc'ing our regulatory domain */
+>  bool reg_is_valid_request(const char *alpha2)
+>  {
+
+<-- snip -->
+
+>         }
+>  }
+> 
+> +/* This has the logic which determines when a new request
+> + * should be ignored. */
+> +static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+> +                         const char *alpha2)
+> +{
+> +}
+
+I take it reg_is_valid_request() was just shifted, no changes were made to it
+here?
+
+> +
+>  /* Caller must hold &cfg80211_drv_mutex */
+>  int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+>                       const char *alpha2)
+> @@ -567,6 +568,7 @@ int __regulatory_hint(struct wiphy *wiph
+>                 request->alpha2[1] = alpha2[1];
+>                 request->initiator = set_by;
+>                 request->wiphy = wiphy;
+> +               request->bands = ~0;
+> 
+>                 kfree(last_request);
+>                 last_request = request;
+> @@ -594,6 +596,74 @@ void regulatory_hint(const char *alpha2)
+>  }
+>  EXPORT_SYMBOL(regulatory_hint);
+> 
+> +void regulatory_struct_hint(struct ieee80211_regdomain *rd, u32 bands)
+
+I see you changed the return value to void for both routines the driver
+or a subsystem can use, can you elaborate on the kdoc why this is the
+case?
+
+> +{
+> +       const struct ieee80211_regdomain *orig = NULL;
+> +       struct ieee80211_regdomain *new = NULL;
+> +       int origrules;
+> +
+> +       BUG_ON(!rd);
+> +       BUG_ON(!bands);
+> +
+> +       mutex_lock(&cfg80211_drv_mutex);
+> +
+> +       /*
+> +        * ignore hint if anything else set it or if the given
+> +        * bands overlap already defined bands
+
+Is the assumption all along here that this is for hardware which registers
+only the channels its hardware is legally capable of? If so can the
+documentation clarify that?
+
+Otherwise it would seem to me if USER already set it we should get the
+intersection. For example when a user plugs in a USB wireless
+card it would not have gotten the chance to have regulatory_hint'd
+first so the user may have already set it and if the driver
+didn't have a reg_notifier() and simply registered all the channels
+upon mac80211 register then the channels the user set will be
+allowed. Also what about when the COUNTRY_IE had set it (remember the
+result of such country IE request may be in an intersection with the
+first driver too, but its ok, we always can trust the result of the
+structure of the last set regdomain)? Again, disregard this comment
+if the answer to the above paragraph is yes.
+
+> +        */
+> +       if (last_request) {
+> +               switch (last_request->initiator) {
+> +               case REGDOM_SET_BY_DRIVER:
+> +                       if (last_request->bands & bands)
+> +                               goto out;
+> +                       break;
+> +               case REGDOM_SET_BY_CORE:
+> +                       break;
+> +               default:
+> +                       goto out;
+> +               }
+> +
+> +               /* modify the currently set regdom */
+> +               orig = cfg80211_regdomain;
+> +               origrules = orig->n_reg_rules;
+> +       } else {
+> +               last_request = kzalloc(sizeof(struct regulatory_request),
+> +                                      GFP_KERNEL);
+> +               if (!last_request)
+> +                       goto out;
+> +
+> +               last_request->alpha2[0] = '9';
+> +               last_request->alpha2[1] = '9';
+> +               last_request->initiator = REGDOM_SET_BY_DRIVER;
+> +
+> +               origrules = 0;
+> +       }
+> +
+> +       last_request->bands |= bands;
+> +
+> +       new = krealloc(orig,
+> +                      sizeof(struct ieee80211_regdomain) +
+> +                      sizeof(struct ieee80211_reg_rule) * origrules +
+> +                      sizeof(struct ieee80211_reg_rule) * rd->n_reg_rules,
+> +                      GFP_KERNEL);
+
+Very nice :)
+
+> +       if (!new)
+> +               goto out;
+> +
+> +       new->alpha2[0] = '9';
+> +       new->alpha2[1] = '9';
+
+What about cases where the alpha2 can be determined? I know we have no
+such hardware yet and doubt we will though. Or are we just going to
+point those to use the alpha2 call instead?
+
+> +       new->n_reg_rules = origrules + rd->n_reg_rules;
+> +       /* original rules still intact */
+> +       memcpy(&new->reg_rules[origrules],
+> +              rd->reg_rules,
+> +              sizeof(struct ieee80211_reg_rule) * rd->n_reg_rules);
+
+So did this work ? :) Zhu Yi, did you get to test?
+
+> +
+> +       set_regdom(new);
+> +       kfree(rd);
+
+Very nice indeed.
+
+> +
+> + out:
+> +       mutex_unlock(&cfg80211_drv_mutex);
+> +}
+> +
+> 
+>  static void print_rd_rules(const struct ieee80211_regdomain *rd)
+>  {
+> @@ -710,7 +780,6 @@ static int __set_regdom(const struct iee
+> 
+>         /* Tada! */
+>         cfg80211_regdomain = rd;
+> -       last_request->granted = 1;
+
+What's wrong with this?
+
+  Luis
