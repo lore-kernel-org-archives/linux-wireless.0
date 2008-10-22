@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:40917 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024AbYJTBqa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46966 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754308AbYJVHYB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 21:46:30 -0400
-Received: by gxk9 with SMTP id 9so3138342gxk.13
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 18:46:28 -0700 (PDT)
-Message-ID: <43e72e890810191846h46a6b35br4ad61803a25bdf23@mail.gmail.com> (sfid-20081020_034651_344136_5CD2C714)
-Date: Sun, 19 Oct 2008 18:46:28 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: Power saving on mac80211
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Tomas Winkler" <tomas.winkler@intel.com>
-In-Reply-To: <87myh0a1zd.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890810171810t1c65642g998db601cfe2a390@mail.gmail.com>
-	 <87bpxh6t1n.fsf@nokia.com> <87y70l59p4.fsf@nokia.com>
-	 <1224412006.6324.45.camel@johannes.berg> <871vyc7st7.fsf@nokia.com>
-	 <1224434885.6324.49.camel@johannes.berg> <87myh0a1zd.fsf@nokia.com>
+	Wed, 22 Oct 2008 03:24:01 -0400
+Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <48FE913D.9060205@lwfinger.net>
+References: <48FDFCCA.8040604@lwfinger.net>
+	 (sfid-20081021_232731_453910_0675C4D6) <1224624636.28639.15.camel@johannes.berg>
+	 <48FE913D.9060205@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2f1BokdPra95i8Oc4Pom"
+Date: Wed, 22 Oct 2008 09:23:51 +0200
+Message-Id: <1224660231.28639.19.camel@johannes.berg> (sfid-20081022_092419_197034_38872C87)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 19, 2008 at 11:12 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->> On Sun, 2008-10-19 at 14:00 +0300, Kalle Valo wrote:
->>
->>> > Then add a new flag to mac80211 hw description that says "driver will
->>> > watch beacons". This means that the code above that rearms the timer for
->>> > the future 'nothing from AP' check is skipped.
->>>
->>> I will. I need to check that if the "firmware beacon watch" is enabled
->>> only when PSM is enabled. If it is, we might have to make the flag
->>> dynamic.
->>
->> IIRC it's a separate flag.
->
-> Very good, that would be the best way.
->
->>>  There isn't any
->>> timeout for delivering beacons to the host, if the data path is idle
->>> for 24 hours, mac80211 will not receive any beacons for the 24 hours.
->>> I don't see why we need a timeout here.
->>
->> Right. But we need to program the chip to tell the chip "hey please tell
->> me if you haven't seen a beacon in X seconds".
->
-> Ah, you mean that timeout. Sorry, I forgot that one altogether. Yes,
-> we definitely need that timeout.
 
-Is this to configure the firmware to report beacon misses so that in
-those cases we can inform mac80211? And to let mac80211 be aware/be
-able to set this as a tunable parameter?
+--=-2f1BokdPra95i8Oc4Pom
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I wanted to note intel hardware seems to handle parsing beacons in
-firmware when is PS mode already and I have no clue when it would
-inform mac80211 of a beacon miss and if it does it. Tomas?
+On Tue, 2008-10-21 at 19:34 -0700, Larry Finger wrote:
 
- Luis
+> >>                     IE: Unknown: 00066C7766646A66
+
+> The unknown IE's don't show up before this commit.
+
+Oh, ok, but that's just more information shown to userspace, that was
+intentional, just iwlist doesn't understand how to parse them, for
+example the one I quoted above is the SSID.
+
+johannes
+
+--=-2f1BokdPra95i8Oc4Pom
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/tUEAAoJEKVg1VMiehFY3MgP/0qdeTxS6r+F29mySqt+hMaS
+WZAzdS3KVb+u7rUezyz5zyX8sE5LBGuPzMpKVetGuXGUHaca/vJd3wJBYLXEi5ya
+cGaanCK7u75MUsj/kl1JEmBALwsBavgqxPnNztW6eP8x153Utfdb2HpO34gNAdRD
+/IlOxcM8eZbkgs8nCFJS0gthWEjSnQg3jSLLDFsI/69zQY5RYdYawN23WtuzBeQ7
+Dx43FIwUpKg+vgubGYQF6ELOAqL6ZL9i1Q+8qdySU9pUs4UzFHSc+UCCVmconD3p
+58FL4FPnLErptAZWE+2Y1ZTPzsxZUaJ9EGMHGEPiiyMF5PbWaYUMxf9yaoU35gvB
+TWObHU0URHvkkgr9jD3Q3OqRjQ306Ws0VR1eP/dr7j1YhF1plLOgyszvYe7G9ri+
+SBZbjvemrDp6lG3ogIdNNG/5HbrLiK9mBNJzbUgxr6RncnRWX7Su7CeqpEz4aLmq
+NN5EUpmRkbAdYQHOoUamcmGOgqfawhyiauAaRj08f0I+NL8WK9fk8o7WjjmSHUbN
+FkcEshZuKe5zO1MWlMoXOi0KQaHG820zTQZPRdq/iRnb5cJWFYwHgMMoypXQ+rhl
+kvMwEWFInXHmp2l1OFqMMsLlJteVwjPCNvltk6iznwWbPb8dC24bshUHxW2Wv9Bm
+dEG5XO2+Hwc2XYrgoizn
+=PCLY
+-----END PGP SIGNATURE-----
+
+--=-2f1BokdPra95i8Oc4Pom--
+
