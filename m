@@ -1,68 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta03.emeryville.ca.mail.comcast.net ([76.96.30.32]:58153 "EHLO
-	QMTA03.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759102AbYJPX7p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 19:59:45 -0400
-To: linux-wireless@vger.kernel.org
-Subject: B43 randomly and silently dropping connections...
-From: Jerry McBride <mcbrides9@comcast.net>
-Date: Thu, 16 Oct 2008 19:59:43 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200810161959.43084.mcbrides9@comcast.net> (sfid-20081017_020010_830207_D3D8CD6A)
+Received: from atlantis.8hz.com ([212.129.237.78]:50327 "EHLO atlantis.8hz.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750939AbYJVIaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 04:30:03 -0400
+Date: Wed, 22 Oct 2008 08:05:57 +0000
+From: Sean Young <sean@mess.org>
+To: Chr <chunkeey@web.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, bugme-daemon@bugzilla.kernel.org
+Subject: Re: [RFT/RFC][PATCH] p54: fix misbehavings when firmware can't be found
+Message-ID: <20081022080557.GA38534@atlantis.8hz.com> (sfid-20081022_103008_481629_96F47D2C)
+References: <bug-11782-10286@http.bugzilla.kernel.org/> <20081021112313.0885a745.akpm@linux-foundation.org> <200810212156.24772.chunkeey@web.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200810212156.24772.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 21, 2008 at 09:56:24PM +0200, Chr wrote:
+> On Tuesday 21 October 2008 20:23:13 Andrew Morton wrote:
+> > (switched to email.  Please respond via emailed reply-to-all, not via the
+> > bugzilla web interface).
+> >
+> > On Sat, 18 Oct 2008 09:13:00 -0700 (PDT)
+> >
+> > bugme-daemon@bugzilla.kernel.org wrote:
+> > > http://bugzilla.kernel.org/show_bug.cgi?id=11782
+> > >
+> > >            Summary: p54 misbehaves when firmware can't be found
+> > >            Product: Drivers
+> > >            Version: 2.5
+> > >      KernelVersion: 2.6.27-git8
+> > >           Platform: All
+> > >         OS/Version: Linux
+> > >               Tree: Mainline
+> > >             Status: NEW
+> > >           Severity: low
+> > >           Priority: P1
+> > >          Component: network-wireless
+> > >         AssignedTo: drivers_network-wireless@kernel-bugs.osdl.org
+> > >         ReportedBy: sean@mess.org
+> > >
+> > >
+> > > Latest working kernel version: 2.6.26
+> >
+> well, you can increase 26 to 27. The patch that caused this regression 
+> went into in 2.6.27-gitX so no stable kernel is affected only this pre-rc1...
+> 
+> anyway, I don't have any p54p hardware right now (for the next two weeks
+> to be more precise), so sean you have to test it and report back, otherwise
+> this will properly stay RFT...
+> 
+> I made two versions of the patch, both do the same,
+> so it more a matter of which one you would like to have.
+> 
+> I prefer the first and bigger one, since it hopefully won't break the other 
+> patches I send some time ago for wireless-testing...
 
-The story is...
+Both patches work. I tested both patches with the firmware not in place 
+(no stack trace) and in place (works as expected).
 
-I've moved from 2.6.25.x using BCM43XX with a Broadcom 4306 (rev3) 802.11 
-chipset to 2.6.26.6 using the B43 and appropriate firmware. This on a COMPAQ 
-Presario R3000 P4 and  a gig of memory and ATI graphics.
-
-I followed the install (upgrade) directions at linuxwireless.org. Piece of 
-cake! However... I find that I've gone from "bulletproof" BCM43XX wifi 
-connections to "bullethole" connections with B43.  
-
-Under the old BCM43XX the handshake and connections were flawless and 
-unfaltering. Now with the new B43, handshakes with AP's are perfect, but the 
-connections randomly and silently fail. There are no debug messages, no 
-complaints what-so-ever in /var/log/messages... 
-
-To gt wireless back, I have to reinitialize the connection. I've gotten so 
-good at it, that I can recite by heart the appropriate commands...
-
-It's killling me! I've got to get this ironed out... it's not just my laptop, 
-it's happening quite regularly with people I know with similar chips and 
-laptops.
-
-Trying 2.6.27-rc's and now 2.6.27 and the situation is no better.
-
-So I ask... Who is the B43/B43LEGACY maintainer and would you be interested in 
-debugging this mess? I'll bend over backward to help you... Email me 
-direct... I'm very willing.
-
-SHORT STORY:
--- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
-
--- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
-but fragile connections that drop randomly and without complaint. B43LEGACY 
-does nothing.
-
-Any help would be appreciated. I'd really like to get this ironed out. I 
-highly desire to use current kernels.
-
-Feel free to email me direct.
-
--- 
-
-*****************************************************************************
-                                       
-                             From the desk of:
-                             Jerome D. McBride
-                                       
-   19:17:28 up 15 days, 23:35,  5 users,  load average: 0.33, 0.11, 0.03
- 
-*****************************************************************************
+Thanks
+Sean
