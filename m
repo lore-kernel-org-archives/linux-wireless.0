@@ -1,52 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:58251 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753965AbYJASUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 14:20:05 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1Kl6Is-0007ae-Mv
-	for linux-wireless@vger.kernel.org; Wed, 01 Oct 2008 18:20:02 +0000
-Received: from adsl-dyn239.78-99-97.t-com.sk ([78.99.97.239])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 18:20:02 +0000
-Received: from trigves by adsl-dyn239.78-99-97.t-com.sk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 18:20:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Trigve <trigves@yahoo.com>
-Subject: intel wifi 5100 (iwlagn) authentication timed out
-Date: Wed, 1 Oct 2008 18:18:38 +0000 (UTC)
-Message-ID: <loom.20081001T181402-749@post.gmane.org> (sfid-20081001_202011_490991_7F4D4C3B)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57640 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750813AbYJVMw3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 08:52:29 -0400
+Date: Wed, 22 Oct 2008 08:51:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jerry McBride <mcbrides9@comcast.net>
+Cc: linux-wireless@vger.kernel.org, mb@bu3sch.de,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: B43 STILL randomly and silently dropping connections...
+Message-ID: <20081022125143.GB15808@tuxdriver.com> (sfid-20081022_145234_392512_9CB2E27A)
+References: <200810220648.55313.mcbrides9@comcast.net>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200810220648.55313.mcbrides9@comcast.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I have problem connecting to my router with iwlagn driver installed. I'm using
-WPA-PSK but also with no encryption set I wasn't able to connect. When trying to
-connect this message comes out repeatedly: "wlan0: authentication with AP
-00:4f:6a:00:5e:ef timed out"
+I've seen this message a couple of times -- I'm a bit surprised that
+you haven't been getting a response.  I am Cc'ing Michael and the
+bcm43xx mailing list just in case they haven't noticed this message.
 
-Here is the part of output:
-ACPI: PCI interrupt for device 0000:02:00.0 disabled
-ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-PM: Writing back config space on device 0000:02:00.0 at offset 1 (was 100002,
-writing 100006)
-Registered led device: iwl-phy0:radio
-Registered led device: iwl-phy0:assoc
-Registered led device: iwl-phy0:RX
-Registered led device: iwl-phy0:TX
-wlan0: authenticate with AP 00:4f:6a:00:5e:ef
-wlan0: authenticate with AP 00:4f:6a:00:5e:ef
-wlan0: authenticate with AP 00:4f:6a:00:5e:ef
-wlan0: authentication with AP 00:4f:6a:00:5e:ef timed out
+John
 
+On Wed, Oct 22, 2008 at 06:48:55AM -0400, Jerry McBride wrote:
+> 
+> The story is...
+> 
+> I've moved from 2.6.25.x using BCM43XX with a Broadcom 4306 (rev3) 802.11 
+> chipset to 2.6.26.6 using the B43 and appropriate firmware. This on a COMPAQ 
+> Presario R3000 P4 and  a gig of memory and ATI graphics.
+> 
+> I followed the install (upgrade) directions at linuxwireless.org. Piece of 
+> cake! However... I find that I've gone from "bulletproof" BCM43XX wifi 
+> connections to "bullethole" connections with B43.  
+> 
+> Under the old BCM43XX the handshake and connections were flawless and 
+> unfaltering. Now with the new B43, handshakes with AP's are perfect, but the 
+> connections randomly and silently fail. There are no debug messages, no 
+> complaints what-so-ever in /var/log/messages... 
+> 
+> To gt wireless back, I have to reinitialize the connection. I've gotten so 
+> good at it, that I can recite by heart the appropriate commands...
+> 
+> It's killling me! I've got to get this ironed out... it's not just my laptop, 
+> it's happening quite regularly with people I know with similar chips and 
+> laptops.
+> 
+> Trying 2.6.27-rc's and now 2.6.27 and the situation is no better.
+> 
+> So I ask... Who is the B43/B43LEGACY maintainer and would you be interested in 
+> debugging this mess? I'll bend over backward to help you... Email me 
+> direct... I'm very willing.
+> 
+> SHORT STORY:
+> -- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
+> 
+> -- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
+> but fragile connections that drop randomly and without complaint. B43LEGACY 
+> does nothing.
+> 
+> Any help would be appreciated. I'd really like to get this ironed out. I 
+> highly desire to use current kernels.
+> 
+> Feel free to email me direct.
+> 
+> -- 
+> 
+> *****************************************************************************
+>                                        
+>                              From the desk of:
+>                              Jerome D. McBride
+>                                        
+>    19:17:28 up 15 days, 23:35,  5 users,  load average: 0.33, 0.11, 0.03
+>  
+> *****************************************************************************
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Anybody could help, please?
-
-thanks
-
-Trigve 
-
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
