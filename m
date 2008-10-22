@@ -1,78 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43954 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644AbYJFUSP (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:20482 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752273AbYJVLlO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 16:18:15 -0400
-Subject: Re: p54 build failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200810062219.42475.chunkeey@web.de>
-References: <1223322501.3778.20.camel@johannes.berg>
-	 <200810062219.42475.chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gSKfFNPXqeZeuH6Hh4rP"
-Date: Mon, 06 Oct 2008 22:17:45 +0200
-Message-Id: <1223324265.3778.24.camel@johannes.berg> (sfid-20081006_221819_662649_7B6EC24C)
-Mime-Version: 1.0
+	Wed, 22 Oct 2008 07:41:14 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2984994wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 04:41:13 -0700 (PDT)
+Message-ID: <1ba2fa240810220441o5b86e29co183deb7dc273fb0a@mail.gmail.com> (sfid-20081022_134119_353106_784D1CE9)
+Date: Wed, 22 Oct 2008 13:41:13 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+Cc: Sujith <m.sujith@gmail.com>, Sujith <Sujith.Manoharan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <1224669612.28639.49.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224491480.18024.32.camel@johannes.berg>
+	 <18684.18492.94865.480736@gargle.gargle.HOWL>
+	 <1224493957.18024.47.camel@johannes.berg>
+	 <18684.20459.335157.171344@gargle.gargle.HOWL>
+	 <1224495531.18024.55.camel@johannes.berg>
+	 <18684.24323.743610.871307@gargle.gargle.HOWL>
+	 <1224505349.27899.17.camel@johannes.berg>
+	 <18684.51206.771543.514682@localhost.localdomain>
+	 <1224669612.28639.49.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 22, 2008 at 12:00 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-10-20 at 23:33 +0530, Sujith wrote:
+>
+>> > Can you explain the way it currently works in ath9k?
+>> >
+>>
+>> Alright, it goes something like this:
+>
+> Thanks.
+>
+>> * mac80211 sends down a frame
+>>    * Initiate an aggregation session for the <RA,TID> if one isn't already in progress.
+>
+> It seems that should be a rate control decision? Possibly taking into
+> account more than just always doing aggregation sessions. Then again, I
+> suppose aggregation sessions are cheap. What about latency here?
 
---=-gSKfFNPXqeZeuH6Hh4rP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Aggregation has it's overhead, both computing resources and on the
+air. Obvious that it has negative affect on latency so if the 'minimum
+HW queue depth'  is not satisfied the  packets
+are delayed till the queue is full enough.
+In iwl-agn-rs scale we keep track of  current tpt to take decision
+about starting aggregation. The throughput watch  can be viewed as
+different entity it was just convenient and conceptually fit  to
+incorporate into rate scale.
 
-can you turn off html?
 
-On Mon, 2008-10-06 at 22:19 +0200, Christian Lamparter wrote:
-> On Monday 06 October 2008 21:48:21 Johannes Berg wrote:
->=20
-> > p54_parse_eeprom must not be static, or it fails to build on
-> powerpc:
->=20
-> >
->=20
-> > drivers/net/wireless/p54/p54common.c:482: error:
->=20
-> > __ksymtab_p54_parse_eeprom causes a section type conflict
->=20
-> >
->=20
-> Kind of funny, remember the sparse warning?!
->=20
-> .../p54common.c:313:5: warning: symbol 'p54_parse_eeprom' was not
-> declared.
-> Shou
+>
+>>    * Pause the TID, i.e, add further frames to the TID's queue.
+>>       * If ADDBA exchange is successful, resume TID.
+>>          * Form aggregates from the TID's buffer list, send them out.
+>>            ( Take care to maintain minimum HW queue depth for aggregation )
+>
+> "maintain minimum HW queue depth"? In what way? You mean put in enough
+> frames?
+>
+>>       * If ADDBA exchange fails, flush TID.
+>>          * Send TID's pending frames as normal frames (non-ampdu)
+>
+> Obviously. But why isn't this done in parallel? I mean, why not send out
+> the frame and do addba and don't aggregate until addba was successful,
+> that would mean no latency for those frames... addba could even time out
+> which would add a lot of latency, no?
 
-Well, if it's exported then clearly it must be declared in some header
-file; therefore the file needs to include that header file. Mindlessly
-fixing sparse warnings has never brought anything forward.
+The negotiation is done on starting sequence number.
 
-johannes
 
---=-gSKfFNPXqeZeuH6Hh4rP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI6nJlAAoJEKVg1VMiehFYg5sQAMYox3LAcNP71cNCQ/qE97/+
-VjFvU88l+3eO8RPH0Gf9NfvfhE+ZtHXga1D9Ckqj2cVoro6yEvf7/RZxzYubwggJ
-8X1dHCa6JUOnp5QYGIiaFCld7d8UztTwui4JMgrlZhmEyoYBUvBQcP9ExCqz7YXo
-rxr9CZwZacMoX0yOXzht2mD5nWIqcnLi/6vWYDfqsCpHaSgD00g3u0X9muVNlA2S
-xQggxTvo0XGdIO+J6ZSDz7QUZOVjOSh4FK2cxnm9YUog39jzXbMRoYaFWtF6g9ry
-PH56PzUX/Adz0mbc/vApl91L4MItylokHaeYd1i4qLI8Nflap7fWX2LT/Yz6dXiq
-sTrWgvRmR9f2CaZ6QlU3JCoLBHQJ8pP+bD4AeaDQNIC01CQ8VkqhgpmP3hd4grXj
-y4rcAR66ClmtRY77IEGNz/V5IMtMzwFiCuf4EmXq1ZWfC+zCYW/K3SqmQCBFr9hz
-ZCIykwq2hXL+T6bD/3/fbZkx0XuBFvEHUMYKCsJyfCzRRfisZS/DNvtmvKoyEnZw
-u/dNPeiNuaEtTfLJ/KU3zf20Zsb709O/c/FRGrnQMyfgk+hEbxOmXsrm/FKWhPvL
-cBx+jYefRVq75KiMqY5u/uEaiirofd44/A4kpx/X8yU6mjADjyWRUhVhjWdq2eM0
-1vu2oQPx9Z5uxhwnON6m
-=FZpt
------END PGP SIGNATURE-----
-
---=-gSKfFNPXqeZeuH6Hh4rP--
-
+Tomas
