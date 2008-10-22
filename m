@@ -1,106 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:58108 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751238AbYJVJIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 05:08:46 -0400
-Message-ID: <48FEED4D.3000208@cn.fujitsu.com> (sfid-20081022_110850_215493_253FC649)
-Date: Wed, 22 Oct 2008 17:07:25 +0800
-From: Zhaolei <zhaolei@cn.fujitsu.com>
+Received: from fmmailgate03.web.de ([217.72.192.234]:54944 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631AbYJVWQd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 18:16:33 -0400
+From: Chr <chunkeey@web.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/3 v3] p54: more definitions form lmac_longbow.h and pda.h
+Date: Thu, 23 Oct 2008 00:16:25 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200810170114.45742.chunkeey@web.de> <200810182318.01334.chunkeey@web.de> <20081022211856.GK15808@tuxdriver.com>
+In-Reply-To: <20081022211856.GK15808@tuxdriver.com>
 MIME-Version: 1.0
-To: linux-kernel@vger.kernel.org
-CC: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: [PATCH] Fix debugfs_create_*'s error checking method for wireless/rt2x00/
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810230016.25176.chunkeey@web.de> (sfid-20081023_001639_056416_C11F1A50)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wednesday 22 October 2008 23:18:56 John W. Linville wrote:
+> On Sat, Oct 18, 2008 at 11:18:01PM +0200, Christian Lamparter wrote:
+> > This patch ports more useful features to p54
+> >   - PDR definitions for the synth chips & regulatory domain.
+> >   - honour IEEE80211_TX_CTL_ASSIGN_SEQ flag, if it's set.
+> >   - adds some lost mutex_lock & mutex_unlock.
+> >   - replace two more "magic values" that sneaked past.
+> > 
+> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> 
+> This doesn't seem to apply -- am I missing a patch?
+> 
+> John
 
-debugfs_create_*() returns NULL if an error occurs, returns -ENODEV
-when debugfs is not enabled in the kernel.
+Hmm, there's:
+[PATCH] p54: enable 2.4/5GHz spectrum by eeprom bits.
+[PATCH v2] p54: introduce new names for device firmwares
+[PATCH] p54: implement MRR
 
-Signed-off-by: Zhao Lei <zhaolei@cn.fujitsu.com>
----
- drivers/net/wireless/rt2x00/rt2x00debug.c |   21 ++++++++++++---------
- 1 files changed, 12 insertions(+), 9 deletions(-)
+if that doesn't help, I'll rebase the patches on the current wirless-testing.git
+sometime on saturday(if this is ok!) as the patches could be conflicting with
+the patches for the regression fixing.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index 5cf4c85..b380cd3 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -587,29 +587,29 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
- 	intf->driver_folder =
- 	    debugfs_create_dir(intf->rt2x00dev->ops->name,
- 			       rt2x00dev->hw->wiphy->debugfsdir);
--	if (IS_ERR(intf->driver_folder))
-+	if (IS_ERR(intf->driver_folder) || !intf->driver_folder)
- 		goto exit;
- 
- 	intf->driver_entry =
- 	    rt2x00debug_create_file_driver("driver", intf, &intf->driver_blob);
--	if (IS_ERR(intf->driver_entry))
-+	if (IS_ERR(intf->driver_entry) || !intf->driver_entry)
- 		goto exit;
- 
- 	intf->chipset_entry =
- 	    rt2x00debug_create_file_chipset("chipset",
- 					    intf, &intf->chipset_blob);
--	if (IS_ERR(intf->chipset_entry))
-+	if (IS_ERR(intf->chipset_entry) || !intf->chipset_entry)
- 		goto exit;
- 
- 	intf->dev_flags = debugfs_create_file("dev_flags", S_IRUSR,
- 					      intf->driver_folder, intf,
- 					      &rt2x00debug_fop_dev_flags);
--	if (IS_ERR(intf->dev_flags))
-+	if (IS_ERR(intf->dev_flags) || !intf->dev_flags)
- 		goto exit;
- 
- 	intf->register_folder =
- 	    debugfs_create_dir("register", intf->driver_folder);
--	if (IS_ERR(intf->register_folder))
-+	if (IS_ERR(intf->register_folder) || !intf->register_folder)
- 		goto exit;
- 
- #define RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(__intf, __name)	\
-@@ -619,7 +619,8 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
- 			       S_IRUSR | S_IWUSR,		\
- 			       (__intf)->register_folder,	\
- 			       &(__intf)->offset_##__name);	\
--	if (IS_ERR((__intf)->__name##_off_entry))		\
-+	if (IS_ERR((__intf)->__name##_off_entry)		\
-+			|| !(__intf)->__name##_off_entry)	\
- 		goto exit;					\
- 								\
- 	(__intf)->__name##_val_entry =				\
-@@ -627,7 +628,8 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
- 				S_IRUSR | S_IWUSR,		\
- 				(__intf)->register_folder,	\
- 				(__intf), &rt2x00debug_fop_##__name);\
--	if (IS_ERR((__intf)->__name##_val_entry))		\
-+	if (IS_ERR((__intf)->__name##_val_entry)		\
-+			|| !(__intf)->__name##_val_entry)	\
- 		goto exit;					\
- })
- 
-@@ -640,13 +642,14 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
- 
- 	intf->queue_folder =
- 	    debugfs_create_dir("queue", intf->driver_folder);
--	if (IS_ERR(intf->queue_folder))
-+	if (IS_ERR(intf->queue_folder) || !intf->queue_folder)
- 		goto exit;
- 
- 	intf->queue_frame_dump_entry =
- 	    debugfs_create_file("dump", S_IRUSR, intf->queue_folder,
- 				intf, &rt2x00debug_fop_queue_dump);
--	if (IS_ERR(intf->queue_frame_dump_entry))
-+	if (IS_ERR(intf->queue_frame_dump_entry)
-+		|| !intf->queue_frame_dump_entry)
- 		goto exit;
- 
- 	skb_queue_head_init(&intf->frame_dump_skbqueue);
--- 1.5.5.3 
-
-
-
+Regards,
+	Chr
