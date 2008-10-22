@@ -1,71 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:47879 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752250AbYJ1F7H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 01:59:07 -0400
-Date: Mon, 27 Oct 2008 22:56:09 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Kernel <linux-kernel@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Joey Krane <linuxbsd2004@gmail.com>
-Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
-Message-ID: <20081028055609.GA6468@kroah.com> (sfid-20081028_065912_891052_94CF7208)
-References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> <20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com> <20081023111103.GB5979@tesla> <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com> <20081028002919.GB2992@kroah.com> <20081028005553.GE6377@tesla>
+Received: from hostap.isc.org ([149.20.54.63]:33337 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751148AbYJVH3j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 03:29:39 -0400
+Date: Wed, 22 Oct 2008 10:28:40 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
+Message-ID: <20081022072840.GD16005@jm.kir.nu> (sfid-20081022_092942_414988_17DAD047)
+References: <48FDFCCA.8040604@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081028005553.GE6377@tesla>
+In-Reply-To: <48FDFCCA.8040604@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 27, 2008 at 05:55:53PM -0700, Luis R. Rodriguez wrote:
-> 
-> Excellent, if no one send patches I guess I will.
+On Tue, Oct 21, 2008 at 09:01:14AM -0700, Larry Finger wrote:
 
-Ok, I've now added it to the staging tree and will forward it on to
-Linus.  After it gets there you can probably drop the git tree.
+> On my x86_64 system, the mainline 2.6.27-git kernel (v2.6.27-6030-g6da0b38)
+> shows the following anomaly with the 'iwlist scan' command:
+> 
+>           Cell 03 - Address: 00:14:BF:85:49:FA
+>                     ESSID:"lwfdjf"
+>                     Mode:Master
+>                     Channel:1
+>                     Frequency:2.412 GHz (Channel 1)
+>                     Quality=66/100  Signal level:-62 dBm  Noise level=-68 dBm
+>                     Encryption key:on
+>                     IE: Unknown: 00066C7766646A66
 
-> So we have a page for this now:
-> 
-> http://wireless.kernel.org/en/users/Drivers/otus
+...
 
-You might want to link to this off of the "main" drivers page as well.
+> This problem was bisected to commit 43ac2ca3840f64f699a239535c590fa7ebaaac27,
+> entitled "mac80211: Handle scan result IEs in one block". The same bug is
+> present in the wireless-testing tree.
 
-> Init you can find a list of devices. Let me just paste what we have
-> there now:
-> 
-> Dlink
-> 
->     * DWA-160A1 
-> 
-> Netgear
-> 
->     * WNDA3100
->     * WN111v2 
-> 
-> TP-Link
-> 
->     * TL-WN821N 
-> 
-> AVM
-> 
->     * FRITZ!WLAN N USB Stick (USB ID 0x57c, 0x8401) 
+Problem? Bug? This is by design. What does not work for you?
 
-Cool, I'll go poke around the store and see if I can find one of these.
-
-> > I'll go try to get this tree into a buildable state and put it into
-> > staging tonight.
-> 
-> Thanks! BTW if you add a kconfig option for it please point users with
-> this info:
-
-Oops, forgot this, I'll go add it.
-
-thanks,
-
-greg k-h
+-- 
+Jouni Malinen                                            PGP id EFC895FA
