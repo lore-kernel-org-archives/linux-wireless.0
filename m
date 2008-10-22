@@ -1,102 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:50368 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277AbYJUQjF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 12:39:05 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Marcel Holtmann <holtmann@linux.intel.com>
+Received: from hostap.isc.org ([149.20.54.63]:36787 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755225AbYJVS5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 14:57:08 -0400
+Date: Wed, 22 Oct 2008 21:55:58 +0300
+From: Jouni Malinen <j@w1.fi>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224572722.27899.87.camel@johannes.berg>
-References: <20081015112517.GF6509@tesla>
-	 <1224484685.18024.5.camel@johannes.berg>
-	 <43e72e890810192346q5e0eadbcm26febe45392a2172@mail.gmail.com>
-	 <1224485431.18024.12.camel@johannes.berg>
-	 <43e72e890810192359g2bc75316v49377ddc9eded934@mail.gmail.com>
-	 <1224487340.24677.192.camel@debian.sh.intel.com>
-	 <1224520999.9386.72.camel@californication>
-	 <1224552899.24677.245.camel@debian.sh.intel.com>
-	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
-	 <1224554323.24677.248.camel@debian.sh.intel.com>
-	 <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com>
-	 (sfid-20081021_043804_334625_50CEDAE0)  <1224572722.27899.87.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 21 Oct 2008 18:39:56 +0200
-Message-Id: <1224607196.9386.91.camel@californication> (sfid-20081021_183911_132098_FCD82486)
-Mime-Version: 1.0
+Cc: Rami Rosen <ramirose@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH ] mac80211: check return value of dev_alloc_skb() in
+	ieee80211_sta_join_ibss().
+Message-ID: <20081022185558.GJ16005@jm.kir.nu> (sfid-20081022_205719_363538_8D14A79C)
+References: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com> <1224660978.28639.27.camel@johannes.berg> <eb3ff54b0810220042y43ea248qba1064a3eedf85b1@mail.gmail.com> <20081022081149.GE16005@jm.kir.nu> <1224663453.28639.37.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1224663453.28639.37.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Wed, Oct 22, 2008 at 10:17:33AM +0200, Johannes Berg wrote:
 
-> >  There are many
-> > design flaws with this; an obvious problem to this is what is a band?
-> > In my patch I took the liberty to define that a frequency is part of a
-> > band if a rule was present within 2 GHz of itself. This works but it
-> > is trying to make a definition out of something that doesn't exist --
-> > its trying to solve the wrong problem. Since regulatory database is in
-> > KHz it is designed to allow us to grow regardless of band notions or
-> > associations. In the regulatory database we allow for 2 GHz, 5 GHz,
-> > etc KH  definitions for any country and this was designed to account
-> > for misinformation on drivers to help the user be more compliant. By
-> > changing the design to what you are suggesting you'd have to add a
-> > dummy rule for every frequency "band" if you really want to disable
-> > all other bands.
-> 
-> Yes, this is a problem, but then again it's fairly well-defined which is
-> 2.4 and which is 5 GHz band, and it probably doesn't matter much at this
-> point. cfg80211 _has_ a notion of bands.
-> 
-> If we really wanted to have band-specific hints to let a driver say
-> "nay, sorry, I know nothing about 5 GHz" then we can I think do this,
-> subject to a few constraints:
->  * first hint that contains a band wins this band
->  * without any other information, a band that we know nothing about is
->    disabled (just like the default state would be when we know nothing
->    at all)
-> 
-> This ought to be possible, maybe by simply moving from
-> 
-> regulatory_hint(alpha2, structure)
-> 
-> to
-> regulatory_hint(alpha2)
-> 
-> regulatory_struct_hint(structure, bandflags)
-> 
-> where bandflags can be BIT(IEEE80211_BAND_2GHZ) or
-> BIT(IEEE80211_BAND_5GHZ). It would be fairly easy to keep track of that
-> information and build a common struct. No need to even bother looking at
-> the frequencies, when you have a 2GHZ hint and get a 5GHZ one you simply
-> add all the rules from the new hint. Yes, that could be abused to add
-> more 2GHz rules, but we can "police" that code. And it can only be
-> abused once because when the bit is already set we ignore the hint
-> anyway.
+> Good point. We currently don't try again, but we could put this into a
+> new function and call it from when we need it. Then again, we'll need it
+> right away, the driver will probably call _get_beacon from
+> ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON);
 
-I was more thinking about
+Yes.. I forgot about that and only looked at probe_resp references
+inside mlme.c. With that in mind, it probably is cleaner to make
+ieee80211_sta_join_ibss() fail if it cannot allocate an skb for
+ProbeResp. If we are going to be doing some cleanup here, I would
+suggest moving the proberesp building into a helper function and just do
+skb = ieee80211_sta_build_probe_resp(...); if (!skb) return -ENOMEM; in
+ieee80211_sta_join_ibss().
 
-	regulatory_band_hint(band, structure)
-
-and then you have to call it twice if you have 2.4 GHz and 5 GHz support
-with your hardware. But your solution also works.
-
-> > The proper solution is to either add 5 GHz regulatory rules to your
-> > regulatory_hint() 
-> 
-> I strongly disagree with that. It's not correct in any way.
-
-Yeah. A driver for 2.4 GHz hardware should not even think about any
-other channels :)
-
-Regards
-
-Marcel
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
