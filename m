@@ -1,81 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20926 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751588AbYJ2GS0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 02:18:26 -0400
-Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
-From: Zhu Yi <yi.zhu@intel.com>
-To: Mirco Tischler <mt-ml@gmx.de>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20081028172418.3c8e91f1@mtlp.12.dimension>
-References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
-	 <1225157618.2917.215.camel@debian.sh.intel.com>
-	 <20081027213217.53558319@infradead.org>
-	 <1225171414.2917.229.camel@debian.sh.intel.com>
-	 <20081028172418.3c8e91f1@mtlp.12.dimension>
-Content-Type: multipart/mixed; boundary="=-blndQUlLRpFDXlDE6HV9"
-Date: Wed, 29 Oct 2008 14:18:04 +0800
-Message-Id: <1225261084.2917.254.camel@debian.sh.intel.com> (sfid-20081029_071832_134070_3130A9E1)
-Mime-Version: 1.0
+Received: from wf-out-1314.google.com ([209.85.200.172]:48800 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752153AbYJVH6k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 03:58:40 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2904920wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 00:58:39 -0700 (PDT)
+Message-ID: <eb3ff54b0810220058h281e2008h7bba7f756c795ae3@mail.gmail.com> (sfid-20081022_095844_498526_CF04C702)
+Date: Wed, 22 Oct 2008 09:58:39 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH ] mac80211: [RESEND] check return value of dev_alloc_skb() in ieee80211_sta_join_ibss().
+Cc: "Johannes Berg" <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_23821_29395313.1224662319878"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-blndQUlLRpFDXlDE6HV9
-Content-Type: text/plain
+------=_Part_23821_29395313.1224662319878
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-On Wed, 2008-10-29 at 00:24 +0800, Mirco Tischler wrote:
-> 
-> I tested it quickly and not very thoroughly on the wpa-eap encrypted
-> network at
-> university and it showed the same behaviour: no connection without
-> CONFIG_WIRELESS_OLD_REGULATORY and no problems with it enabled.
+This patch add a check on the return value of dev_alloc_skb() in
+ieee80211_sta_join_ibss()
+in net/mac80211/mlme.c.
 
-Interesting. The only difference between without and with
-CONFIG_WIRELESS_OLD_REGULATORY is the txpower is lower and you can only
-do passive scan. Can you try attached patch?
+The patch is to wireless-next-2.6.
 
-Thanks,
--yi
 
---=-blndQUlLRpFDXlDE6HV9
-Content-Disposition: attachment; filename=iwlwifi-oldreg-debug.patch
-Content-Type: text/x-patch; name=iwlwifi-oldreg-debug.patch; charset=GB2312
-Content-Transfer-Encoding: 7bit
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 0953a9c..8123156 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1523,6 +1523,7 @@ static int iwl4965_send_tx_power(struct iwl_priv *priv)
- 		 * the stack trace to find out who is calling this during
- 		 * a scan. */
- 		IWL_WARNING("TX Power requested while scanning!\n");
-+		dump_stack();
- 		return -EAGAIN;
- 	}
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5dab72d..7ffa736 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -71,9 +71,7 @@ static const struct ieee80211_regdomain world_regdom = {
- 	.n_reg_rules = 1,
- 	.alpha2 =  "00",
- 	.reg_rules = {
--		REG_RULE(2412-10, 2462+10, 40, 6, 20,
--			NL80211_RRF_PASSIVE_SCAN |
--			NL80211_RRF_NO_IBSS),
-+		REG_RULE(2412-10, 2462+10, 40, 6, 27, 0),
- 	}
- };
- 
+------=_Part_23821_29395313.1224662319878
+Content-Type: text/plain; name=patch.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fmlo9gnp0
+Content-Disposition: attachment; filename=patch.txt
 
---=-blndQUlLRpFDXlDE6HV9--
-
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9tbG1lLmMgYi9uZXQvbWFjODAyMTEvbWxtZS5jCmlu
+ZGV4IDQ5Zjg2ZmEuLmM2MTEzNGMgMTAwNjQ0Ci0tLSBhL25ldC9tYWM4MDIxMS9tbG1lLmMKKysr
+IGIvbmV0L21hYzgwMjExL21sbWUuYwpAQCAtMTM4OCw2ICsxMzg4LDEzIEBAIHN0YXRpYyBpbnQg
+aWVlZTgwMjExX3N0YV9qb2luX2lic3Moc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2Rh
+dGEsCiAJc3RydWN0IGllZWU4MDIxMV9zdXBwb3J0ZWRfYmFuZCAqc2JhbmQ7CiAJdW5pb24gaXdy
+ZXFfZGF0YSB3cnF1OwogCisJc2tiID0gZGV2X2FsbG9jX3NrYihsb2NhbC0+aHcuZXh0cmFfdHhf
+aGVhZHJvb20gKyA0MDApOworCWlmICghc2tiKSB7CisJCXByaW50ayhLRVJOX0RFQlVHICIlczog
+ZmFpbGVkIHRvIGFsbG9jYXRlIGJ1ZmZlciBmb3IgcHJvYmUgIgorCQkgICAgICAgInJlc3BvbnNl
+XG4iLCBzZGF0YS0+ZGV2LT5uYW1lKTsKKwkJcmV0dXJuIC1FTk9NRU07CisJfQorCiAJc2JhbmQg
+PSBsb2NhbC0+aHcud2lwaHktPmJhbmRzW2xvY2FsLT5ody5jb25mLmNoYW5uZWwtPmJhbmRdOwog
+CiAJLyogUmVtb3ZlIHBvc3NpYmxlIFNUQSBlbnRyaWVzIGZyb20gb3RoZXIgSUJTUyBuZXR3b3Jr
+cy4gKi8KQEAgLTE0MTMsNjMgKzE0MjAsNjIgQEAgc3RhdGljIGludCBpZWVlODAyMTFfc3RhX2pv
+aW5faWJzcyhzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwKIAkJcmV0dXJuIHJl
+czsKIAogCS8qIEJ1aWxkIElCU1MgcHJvYmUgcmVzcG9uc2UgKi8KLQlza2IgPSBkZXZfYWxsb2Nf
+c2tiKGxvY2FsLT5ody5leHRyYV90eF9oZWFkcm9vbSArIDQwMCk7Ci0JaWYgKHNrYikgewotCQlz
+a2JfcmVzZXJ2ZShza2IsIGxvY2FsLT5ody5leHRyYV90eF9oZWFkcm9vbSk7CiAKLQkJbWdtdCA9
+IChzdHJ1Y3QgaWVlZTgwMjExX21nbXQgKikKLQkJCXNrYl9wdXQoc2tiLCAyNCArIHNpemVvZiht
+Z210LT51LmJlYWNvbikpOwotCQltZW1zZXQobWdtdCwgMCwgMjQgKyBzaXplb2YobWdtdC0+dS5i
+ZWFjb24pKTsKLQkJbWdtdC0+ZnJhbWVfY29udHJvbCA9IGNwdV90b19sZTE2KElFRUU4MDIxMV9G
+VFlQRV9NR01UIHwKLQkJCQkJCSAgSUVFRTgwMjExX1NUWVBFX1BST0JFX1JFU1ApOwotCQltZW1z
+ZXQobWdtdC0+ZGEsIDB4ZmYsIEVUSF9BTEVOKTsKLQkJbWVtY3B5KG1nbXQtPnNhLCBzZGF0YS0+
+ZGV2LT5kZXZfYWRkciwgRVRIX0FMRU4pOwotCQltZW1jcHkobWdtdC0+YnNzaWQsIGlmc3RhLT5i
+c3NpZCwgRVRIX0FMRU4pOwotCQltZ210LT51LmJlYWNvbi5iZWFjb25faW50ID0KLQkJCWNwdV90
+b19sZTE2KGxvY2FsLT5ody5jb25mLmJlYWNvbl9pbnQpOwotCQltZ210LT51LmJlYWNvbi50aW1l
+c3RhbXAgPSBjcHVfdG9fbGU2NChic3MtPnRpbWVzdGFtcCk7Ci0JCW1nbXQtPnUuYmVhY29uLmNh
+cGFiX2luZm8gPSBjcHVfdG9fbGUxNihic3MtPmNhcGFiaWxpdHkpOwotCi0JCXBvcyA9IHNrYl9w
+dXQoc2tiLCAyICsgaWZzdGEtPnNzaWRfbGVuKTsKLQkJKnBvcysrID0gV0xBTl9FSURfU1NJRDsK
+LQkJKnBvcysrID0gaWZzdGEtPnNzaWRfbGVuOwotCQltZW1jcHkocG9zLCBpZnN0YS0+c3NpZCwg
+aWZzdGEtPnNzaWRfbGVuKTsKLQotCQlyYXRlcyA9IGJzcy0+c3VwcF9yYXRlc19sZW47Ci0JCWlm
+IChyYXRlcyA+IDgpCi0JCQlyYXRlcyA9IDg7Ci0JCXBvcyA9IHNrYl9wdXQoc2tiLCAyICsgcmF0
+ZXMpOwotCQkqcG9zKysgPSBXTEFOX0VJRF9TVVBQX1JBVEVTOwotCQkqcG9zKysgPSByYXRlczsK
+LQkJbWVtY3B5KHBvcywgYnNzLT5zdXBwX3JhdGVzLCByYXRlcyk7CisJc2tiX3Jlc2VydmUoc2ti
+LCBsb2NhbC0+aHcuZXh0cmFfdHhfaGVhZHJvb20pOwogCi0JCWlmIChic3MtPmJhbmQgPT0gSUVF
+RTgwMjExX0JBTkRfMkdIWikgewotCQkJcG9zID0gc2tiX3B1dChza2IsIDIgKyAxKTsKLQkJCSpw
+b3MrKyA9IFdMQU5fRUlEX0RTX1BBUkFNUzsKLQkJCSpwb3MrKyA9IDE7Ci0JCQkqcG9zKysgPSBp
+ZWVlODAyMTFfZnJlcXVlbmN5X3RvX2NoYW5uZWwoYnNzLT5mcmVxKTsKLQkJfQorCW1nbXQgPSAo
+c3RydWN0IGllZWU4MDIxMV9tZ210ICopCisJCXNrYl9wdXQoc2tiLCAyNCArIHNpemVvZihtZ210
+LT51LmJlYWNvbikpOworCW1lbXNldChtZ210LCAwLCAyNCArIHNpemVvZihtZ210LT51LmJlYWNv
+bikpOworCW1nbXQtPmZyYW1lX2NvbnRyb2wgPSBjcHVfdG9fbGUxNihJRUVFODAyMTFfRlRZUEVf
+TUdNVCB8CisJCQkJCQlJRUVFODAyMTFfU1RZUEVfUFJPQkVfUkVTUCk7CisJbWVtc2V0KG1nbXQt
+PmRhLCAweGZmLCBFVEhfQUxFTik7CisJbWVtY3B5KG1nbXQtPnNhLCBzZGF0YS0+ZGV2LT5kZXZf
+YWRkciwgRVRIX0FMRU4pOworCW1lbWNweShtZ210LT5ic3NpZCwgaWZzdGEtPmJzc2lkLCBFVEhf
+QUxFTik7CisJbWdtdC0+dS5iZWFjb24uYmVhY29uX2ludCA9CisJCWNwdV90b19sZTE2KGxvY2Fs
+LT5ody5jb25mLmJlYWNvbl9pbnQpOworCW1nbXQtPnUuYmVhY29uLnRpbWVzdGFtcCA9IGNwdV90
+b19sZTY0KGJzcy0+dGltZXN0YW1wKTsKKwltZ210LT51LmJlYWNvbi5jYXBhYl9pbmZvID0gY3B1
+X3RvX2xlMTYoYnNzLT5jYXBhYmlsaXR5KTsKIAotCQlwb3MgPSBza2JfcHV0KHNrYiwgMiArIDIp
+OwotCQkqcG9zKysgPSBXTEFOX0VJRF9JQlNTX1BBUkFNUzsKLQkJKnBvcysrID0gMjsKLQkJLyog
+RklYOiBzZXQgQVRJTSB3aW5kb3cgYmFzZWQgb24gc2NhbiByZXN1bHRzICovCi0JCSpwb3MrKyA9
+IDA7Ci0JCSpwb3MrKyA9IDA7CisJcG9zID0gc2tiX3B1dChza2IsIDIgKyBpZnN0YS0+c3NpZF9s
+ZW4pOworCSpwb3MrKyA9IFdMQU5fRUlEX1NTSUQ7CisJKnBvcysrID0gaWZzdGEtPnNzaWRfbGVu
+OworCW1lbWNweShwb3MsIGlmc3RhLT5zc2lkLCBpZnN0YS0+c3NpZF9sZW4pOwogCi0JCWlmIChi
+c3MtPnN1cHBfcmF0ZXNfbGVuID4gOCkgewotCQkJcmF0ZXMgPSBic3MtPnN1cHBfcmF0ZXNfbGVu
+IC0gODsKLQkJCXBvcyA9IHNrYl9wdXQoc2tiLCAyICsgcmF0ZXMpOwotCQkJKnBvcysrID0gV0xB
+Tl9FSURfRVhUX1NVUFBfUkFURVM7Ci0JCQkqcG9zKysgPSByYXRlczsKLQkJCW1lbWNweShwb3Ms
+ICZic3MtPnN1cHBfcmF0ZXNbOF0sIHJhdGVzKTsKLQkJfQorCXJhdGVzID0gYnNzLT5zdXBwX3Jh
+dGVzX2xlbjsKKwlpZiAocmF0ZXMgPiA4KQorCQlyYXRlcyA9IDg7CisJcG9zID0gc2tiX3B1dChz
+a2IsIDIgKyByYXRlcyk7CisJKnBvcysrID0gV0xBTl9FSURfU1VQUF9SQVRFUzsKKwkqcG9zKysg
+PSByYXRlczsKKwltZW1jcHkocG9zLCBic3MtPnN1cHBfcmF0ZXMsIHJhdGVzKTsKIAotCQlpZnN0
+YS0+cHJvYmVfcmVzcCA9IHNrYjsKKwlpZiAoYnNzLT5iYW5kID09IElFRUU4MDIxMV9CQU5EXzJH
+SFopIHsKKwkJcG9zID0gc2tiX3B1dChza2IsIDIgKyAxKTsKKwkJKnBvcysrID0gV0xBTl9FSURf
+RFNfUEFSQU1TOworCQkqcG9zKysgPSAxOworCQkqcG9zKysgPSBpZWVlODAyMTFfZnJlcXVlbmN5
+X3RvX2NoYW5uZWwoYnNzLT5mcmVxKTsKKwl9CisKKwlwb3MgPSBza2JfcHV0KHNrYiwgMiArIDIp
+OworCSpwb3MrKyA9IFdMQU5fRUlEX0lCU1NfUEFSQU1TOworCSpwb3MrKyA9IDI7CisJLyogRklY
+OiBzZXQgQVRJTSB3aW5kb3cgYmFzZWQgb24gc2NhbiByZXN1bHRzICovCisJKnBvcysrID0gMDsK
+KwkqcG9zKysgPSAwOwogCi0JCWllZWU4MDIxMV9pZl9jb25maWcoc2RhdGEsIElFRUU4MDIxMV9J
+RkNDX0JFQUNPTik7CisJaWYgKGJzcy0+c3VwcF9yYXRlc19sZW4gPiA4KSB7CisJCXJhdGVzID0g
+YnNzLT5zdXBwX3JhdGVzX2xlbiAtIDg7CisJCXBvcyA9IHNrYl9wdXQoc2tiLCAyICsgcmF0ZXMp
+OworCQkqcG9zKysgPSBXTEFOX0VJRF9FWFRfU1VQUF9SQVRFUzsKKwkJKnBvcysrID0gcmF0ZXM7
+CisJCW1lbWNweShwb3MsICZic3MtPnN1cHBfcmF0ZXNbOF0sIHJhdGVzKTsKIAl9CiAKKwlpZnN0
+YS0+cHJvYmVfcmVzcCA9IHNrYjsKKworCWllZWU4MDIxMV9pZl9jb25maWcoc2RhdGEsIElFRUU4
+MDIxMV9JRkNDX0JFQUNPTik7CisgCisKIAlyYXRlcyA9IDA7CiAJc2JhbmQgPSBsb2NhbC0+aHcu
+d2lwaHktPmJhbmRzW2xvY2FsLT5ody5jb25mLmNoYW5uZWwtPmJhbmRdOwogCWZvciAoaSA9IDA7
+IGkgPCBic3MtPnN1cHBfcmF0ZXNfbGVuOyBpKyspIHsK
+------=_Part_23821_29395313.1224662319878--
