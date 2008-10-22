@@ -1,92 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37179 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751307AbYJNTek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 15:34:40 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 3/3] iwlwifi: remove host commands structures from iwl_cmd
-Date: Tue, 14 Oct 2008 12:32:43 -0700
-Message-Id: <1224012769-8920-4-git-send-email-reinette.chatre@intel.com> (sfid-20081014_213445_018531_742D6C5B)
-In-Reply-To: <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1224012769-8920-1-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39306 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874AbYJVHg0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 03:36:26 -0400
+Subject: Re: [PATCH ] mac80211: check return value of dev_alloc_skb() in
+	ieee80211_sta_join_ibss().
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com> (sfid-20081022_090050_408102_95470F71)
+References: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com>
+	 (sfid-20081022_090050_408102_95470F71)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rR7LcOeEHV1Zu4QDv1XV"
+Date: Wed, 22 Oct 2008 09:36:18 +0200
+Message-Id: <1224660978.28639.27.camel@johannes.berg> (sfid-20081022_093631_747042_90D10FD1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch removes host commands structures from iwl_cmd
-to make more HW oblivious
-tx cmd was left it needs special treatment.
+--=-rR7LcOeEHV1Zu4QDv1XV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Reviewed-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    9 +--------
- drivers/net/wireless/iwlwifi/iwl-sta.c |    8 ++++++--
- 2 files changed, 7 insertions(+), 10 deletions(-)
+On Wed, 2008-10-22 at 09:00 +0200, Rami Rosen wrote:
+> This patch adds a check on the return value of dev_alloc_skb() in
+> ieee80211_sta_join_ibss()
+> in net/mac80211/mlme.c.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 34306b6..d86d8a2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -268,23 +268,16 @@ struct iwl_cmd {
- 	struct iwl_cmd_meta meta;	/* driver data */
- 	struct iwl_cmd_header hdr;	/* uCode API */
- 	union {
--		struct iwl_addsta_cmd addsta;
--		struct iwl_led_cmd led;
- 		u32 flags;
- 		u8 val8;
- 		u16 val16;
- 		u32 val32;
--		struct iwl4965_bt_cmd bt;
--		struct iwl_powertable_cmd powertable;
--		struct iwl_qosparam_cmd qosparam;
- 		struct iwl_tx_cmd tx;
--		struct iwl4965_rxon_assoc_cmd rxon_assoc;
--		struct iwl_rem_sta_cmd rm_sta;
--		u8 *indirect;
- 		u8 payload[IWL_CMD_MAX_PAYLOAD];
- 	} __attribute__ ((packed)) cmd;
- } __attribute__ ((packed));
- 
-+
- struct iwl_host_cmd {
- 	u8 id;
- 	u16 len;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 5fc4150..7b326f0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -104,7 +104,9 @@ static int iwl_add_sta_callback(struct iwl_priv *priv,
- 				   struct iwl_cmd *cmd, struct sk_buff *skb)
- {
- 	struct iwl_rx_packet *res = NULL;
--	u8 sta_id = cmd->cmd.addsta.sta.sta_id;
-+	struct iwl_addsta_cmd *addsta =
-+		(struct iwl_addsta_cmd *)cmd->cmd.payload;
-+	u8 sta_id = addsta->sta.sta_id;
- 
- 	if (!skb) {
- 		IWL_ERROR("Error: Response NULL in REPLY_ADD_STA.\n");
-@@ -326,7 +328,9 @@ static int iwl_remove_sta_callback(struct iwl_priv *priv,
- 				   struct iwl_cmd *cmd, struct sk_buff *skb)
- {
- 	struct iwl_rx_packet *res = NULL;
--	const char *addr = cmd->cmd.rm_sta.addr;
-+	struct iwl_rem_sta_cmd *rm_sta =
-+		 (struct iwl_rem_sta_cmd *)cmd->cmd.payload;
-+	const char *addr = rm_sta->addr;
- 
- 	if (!skb) {
- 		IWL_ERROR("Error: Response NULL in REPLY_REMOVE_STA.\n");
--- 
-1.5.4.3
+What's wrong with the current code?
+
+
+> +               return -1;
+
+don't return -1, return meaningful error values.
+
+johannes
+
+--=-rR7LcOeEHV1Zu4QDv1XV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/tfuAAoJEKVg1VMiehFYiTkP/3s4oo/bUtoqhCqLOreLQYhc
+wdSBwsXDfH4inRtFTuO7LXPkEkdM+v/SE0X7BiouUgpU7Yci+F5BU1JXneIjF7Z5
+1tTJPFnX/dCLo81ogYKIkIBPrzME/SU4auYaQo5OXP3prz4yHrXe/MNcPDw2faGU
+vXxDvhpr2zEB6ouEHTQ0EQxUl1fTS2g6w1lgMRI1hLZJvCkiG1Qke/mJT291FoRS
+5c2kVUQHNrsoa0ATpgUX1kjOAwqbPNMpsN8KtZDswvIn1Y4v3s2E9Hzxiuk6NWBc
+P+8qrLwSuPRI7TOX6VUdXAGnc43roZLJYPdaQIAJ7IanWdowjJ+5PnRKzufXO/3y
+pY35k9lNndXtVtnHVHiQl2/W5IvRB+OE5XsozxumDOuyt6MQd/7+yb3RfeLh0Fw7
+G3f1uFSVUhJzethzUuTwgA5rGpShhmoY6GGZgo3bSDvkwy5O2w1ysi9Ug8YsLxyC
+JyFueWPeuYQhmmxk1UC9IsAGDnXkhNyMZwCLw+ih22FFQs8OI+BJ5OJWQAaUmT+f
+Xj7H4YNLbCyG8G3BT0uP7OJPd1wf/Mwgm6aoRM432PRQsoYd+CGLTnoC7Is6EgTY
+Uy+IQ4Kl6/nekTHP2Qp0t8dfjQ7h50wGOrO1FdOguHU45EDLt1q77QKAUA/7MO1D
+XBldPsqBSK0Ymo2ynrHf
+=cHLL
+-----END PGP SIGNATURE-----
+
+--=-rR7LcOeEHV1Zu4QDv1XV--
 
