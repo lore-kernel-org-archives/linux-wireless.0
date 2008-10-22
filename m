@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:54647 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754493AbYJ2P2p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 11:28:45 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so46481rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 08:28:44 -0700 (PDT)
-Message-ID: <b6c5339f0810290828g2c600d5cm9f78df9d427f5c1f@mail.gmail.com> (sfid-20081029_162919_828389_4D01BC8C)
-Date: Wed, 29 Oct 2008 11:28:44 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Elias Oltmanns" <eo@nebensachen.de>
-Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <87wsfrqw2t.fsf@denkblock.local>
+Received: from madara.hpl.hp.com ([192.6.19.124]:50449 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757872AbYJVSAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 14:00:44 -0400
+Date: Wed, 22 Oct 2008 11:00:12 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, Jouni Malinen <j@w1.fi>,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
+Message-ID: <20081022180012.GA6089@bougret.hpl.hp.com> (sfid-20081022_200100_557931_E7A9B990)
+Reply-To: jt@hpl.hp.com
+References: <48FDFCCA.8040604@lwfinger.net> <20081022072840.GD16005@jm.kir.nu> <48FF5933.3080501@lwfinger.net> <1224695189.30459.6.camel@johannes.berg> <20081022173721.GA5786@bougret.hpl.hp.com> <1224697587.30459.37.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <87prlr9mna.fsf@denkblock.local> <87abcrtfa8.fsf@denkblock.local>
-	 <40f31dec0810261132w2747d66em2a2a53ff9e1ecc04@mail.gmail.com>
-	 <87wsfvt76q.fsf@denkblock.local>
-	 <40f31dec0810261533g3143bd9bue0f3eff88c6936e9@mail.gmail.com>
-	 <87r663t1ds.fsf@denkblock.local>
-	 <40f31dec0810271331n7f374562x77da8ae55b9032db@mail.gmail.com>
-	 <873aifsfc9.fsf@denkblock.local>
-	 <40f31dec0810290749u2c065d17g5788eb22cf508142@mail.gmail.com>
-	 <87wsfrqw2t.fsf@denkblock.local>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1224697587.30459.37.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 11:07 AM, Elias Oltmanns <eo@nebensachen.de> wrote:
->>
->> Patch looks OK, thanks a lot ;-)
->>
->> John can we get this get in stable until i update reset.c on wireless-testing ?
->> Would it be possible later to update mainline from wireless-testing ?
->
-> Reading Documentation/stable_kernel_rules.txt, I very much doubt that
-> this patch will go in unless we can at least point out something
-> equivalent in mainline. So, we'll have to wait until your changes to
-> reset.c have reached mainline, I'm afraid.
+On Wed, Oct 22, 2008 at 07:46:27PM +0200, Johannes Berg wrote:
+> On Wed, 2008-10-22 at 10:37 -0700, Jean Tourrilhes wrote:
+> 
+> > 	If you want me to understand what it's about, you may want to
+> > give me a bit more context.
+> 
+> Sorry. Basically, Larry is saying that due to a kernel change, iwlist
+> will print out things like
+>                     IE: Unknown: 0017465249545A21426F7820466F6E20574C414E2037313133
+>                     IE: Unknown: 010482848B96
+>                     IE: Unknown: 030106
+>                     IE: Unknown: 2A0106
+>                     IE: IEEE 802.11i/WPA2 Version 1
+>                         Group Cipher : TKIP
+>                         Pairwise Ciphers (1) : CCMP
+>                         Authentication Suites (1) : PSK
+>                     IE: Unknown: 32080C1218243048606C
+>                     IE: WPA Version 1
+>                         Group Cipher : TKIP
+>                         Pairwise Ciphers (1) : TKIP
+>                         Authentication Suites (1) : PSK
+>                     IE: Unknown: DD0A0800280101000200FF0F
+>                     IE: Unknown: DD180050F2020101800003A4000027A4000042435E0062322F00
+> 
+> 
+> where all the IE: Unknown lines are unexpected.
 
-Or, we could just send your patch to both stable and for 2.6.28.  Then Nick
-can fix up the difference or revert it in his rework.  The rework is 2.6.29
-material, right?
+	Unexpected, but not broken. That's good.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> > 	Alternatively, just send me a patch for Wireless Tools, and
+> > I'll put it in the next release. Wireless Tools is still maintained
+> > and I still do releases, even if I don't put much cycles into it.
+> 
+> The problem is that we don't quite know what to do about them :)
+
+	We are not supposed to "do" anything, but to show the
+underlying data in a user friendly way. I can't believe that we could
+not parse this data properly, we manage to parse other IEs
+correctly. If you are debugging a problem with wpa_supplicant, or a
+Access Point issue, what would *you* want to see there.
+
+> johannes
+
+	Have fun...
+
+	Jean
+
+
