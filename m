@@ -1,43 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.228]:63621 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866AbYJXSdb (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:56441 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693AbYJVBCx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 14:33:31 -0400
-Received: by wx-out-0506.google.com with SMTP id h27so486257wxd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2008 11:33:30 -0700 (PDT)
-Message-ID: <43e72e890810241133s7af6958q5e889a81803555c3@mail.gmail.com> (sfid-20081024_203335_577036_76C96F19)
-Date: Fri, 24 Oct 2008 11:33:30 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] wireless: add regulatory_struct_hint
-Cc: "Zhu Yi" <yi.zhu@intel.com>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Marcel Holtmann" <marcel@holtmann.org>
-In-Reply-To: <1224872780.3919.3.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1224585110.5521.8.camel@johannes.berg>
-	 <1224816184.2917.162.camel@debian.sh.intel.com>
-	 <1224841176.6002.124.camel@johannes.berg>
-	 <20081024101518.GB5951@tesla> <1224872780.3919.3.camel@johannes.berg>
+	Tue, 21 Oct 2008 21:02:53 -0400
+Subject: Re: New iwlwifi 3945 uCode available
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: reinette chatre <reinette.chatre@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240810211634k74979933mf9364d405ae6e33a@mail.gmail.com>
+References: <1224613633.10863.43.camel@rc-desk>
+	 <1224624324.28639.9.camel@johannes.berg>
+	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
+	 <1224624899.28639.17.camel@johannes.berg>
+	 <20081021213814.GM17268@tuxdriver.com>
+	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
+	 <1224627187.9386.103.camel@californication>
+	 <1224628088.10863.100.camel@rc-desk>
+	 <1224630394.9386.114.camel@californication>
+	 <1ba2fa240810211634k74979933mf9364d405ae6e33a@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 22 Oct 2008 03:03:48 +0200
+Message-Id: <1224637428.9386.127.camel@californication> (sfid-20081022_030330_026644_39C1AF66)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 24, 2008 at 11:26 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2008-10-24 at 03:15 -0700, Luis R. Rodriguez wrote:
->
->> >  * if a wiphy has the "hw regulatory" flag set and the
->> >    cfg80211_regdomain is the world regdomain (whether hard-coded or
->> >    gotten from CRDA)
->>
->> And if initiator == CORE
->
-> Makes sense, yeah.
+Hi Tomas,
 
-Now that i think about it, this would suffice for the check, no need
-to check for world reg. Thoughts?
+> >> > > >> > >> Two new versions of 3945 uCode is now available for download from
+> >> > > >> > >> http://intellinuxwireless.org/?n=Downloads. Two versions are available
+> >> > > >> > >> as we have updated the API version of the uCode and included pending
+> >> > > >> > >> fixes in both API versions.
+> >> > > >> > >>
+> >> > > >> > >> Version 15.28.1.8 supports API v1 and can be used with most current 3945
+> >> > > >> > >> drivers. Version 15.28.2.8 (API v2) is required when you start using the
+> >> > > >> > >> latest 3945 driver from wireless-testing at the time it includes the
+> >> > > >> > >> patch "iwl3945 : Fix a-band association for passive channels".
+> >> > > >> > >
+> >> > > >> > > Can you make the driver work with the old ucode? We even do that for
+> >> > > >> > > drivers where we don't control the ucode like b43...
+> >> > > >> >
+> >> > > >> > What for?
+> >> > > >>
+> >> > > >> Well, so that installing a new kernel doesn't suddenly break your
+> >> > > >> network connection and ability to download the firmware, for instance.
+> >> > > >> If you want more arguments you can go read all the "b43 sucks" threads
+> >> > > >> about it.
+> >> > > >
+> >> > > > Johnannes has a point, that is a lot nicer to users...
+> >> > >
+> >> > > Maybe, but it will complicate the code beyond good taste to just
+> >> > > satisfy the single moment when kernel is upgraded. I don't mean in
+> >> > > general I mean in this particular case when API changes.
+> >> > > Anyhow a good distro shell deal with this in packaging dependencies
+> >> > > and normal person will keep old kernel around when compiling new one.
+> >> > > Both ucodes can be present on the file system at the same time  so I
+> >> > > hope the risk is low.
+> >> >
+> >> > it is the same argument as for everything else. We should be able to run
+> >> > a new kernel with old userspace.
+> >>
+> >> I do not believe our request is unreasonable. If a user runs a new
+> >> kernel the log will print a message that the firmware is incorrect ...
+> >> all the user needs to do is go to
+> >> http://intellinuxwireless.org/?n=Downloads and download the latest
+> >> firmware. This does not require any subtle changes that may affect other
+> >> aspects of the system ... just the firmware file that is only used by
+> >> the driver.
+> >>
+> >> We are focused on upstream development. If there is a need to support
+> >> older ucode then we face a similar challenge as was solved through the
+> >> compat-wireless project for the driver self.
+> >
+> > I haven't checked this particular case, but in some cases it is simple
+> > to keep backward compatible code around that would let us support the
+> > old firmware for a few releases. In other cases the driver and firmware
+> > interface might have evolved too much to do so. In these cases we might
+> > wanna keep the old drivers around so users can have a choice.
+> 
+> If it wasn't so awkward in this case I wouldn't mind to support old firmware.
+> Second when we touch  firmware especially for old HW it means that it
+> solves a bug so why ones would use old driver for something else then
+> to download the new firmware.
 
-  Luis
+if possible, we should try to support old ucode APIs with the latest
+drivers. In some situations that might be not possible, but we should at
+least try.
+
+> > We do have something like drivers/staging/ now. It might make sense to
+> > have introduce drivers/deprecated/ for old drivers that we just keep
+> > around for a few releases to ease a transition. Just thinking out loud.
+> 
+> Sounds like good idea... need some configuration tricks tough unlike
+> staging here we have 2 drivers for the same hw
+
+That is just some Kconfig magic :)
+
+> > And I have been bitten by ucode API changes in the past. It is just not
+> > clear when actually compiling the new kernel. We could also have compile
+> > time checks that check the new firmware file is actually present at the
+> > compile time of the new kernel. The driver should have a MODULE_FIRMWARE
+> > tag and we could process it and match it to /lib/firmware.
+> 
+> It has MODULE_FIRMWARE already
+
+I know, but we need to actually make better use of this information in a
+generic post compile step to check that the firmware is actually in
+place and warn if it is not. Then you can go ahead and download it
+before actually booting a kernel with a now broken wireless card. This
+is not even Intel or wireless specific. We should do this for all kinds
+of drivers.
+
+Regards
+
+Marcel
+
+
