@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:45385 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751680AbYJNV6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 17:58:08 -0400
-Message-ID: <48F515D7.9030002@openwrt.org> (sfid-20081014_235812_152196_CD307AEA)
-Date: Tue, 14 Oct 2008 23:57:43 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ben Martel <benm@symmetric.co.nz>,
+Received: from xc.sipsolutions.net ([83.246.72.84]:55426 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755253AbYJVTuQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 15:50:16 -0400
+Subject: [PATCH v3] wireless: make regdom passing semantics simpler
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	John Linville <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211 fix regression introduced by "mac80211: free up
- 2 bytes in skb->cb"
-References: <48F416A3.3060205@blacksapphire.com> <1223990364.10113.28.camel@johannes.berg>
-In-Reply-To: <1223990364.10113.28.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20081022123621.GJ6190@tesla>
+References: <1224579720.5521.2.camel@johannes.berg>
+	 <20081022113751.GD6190@tesla> <1224701263.30459.45.camel@johannes.berg>
+	 <1224701394.30459.48.camel@johannes.berg>  <20081022123621.GJ6190@tesla>
+Content-Type: text/plain
+Date: Wed, 22 Oct 2008 21:50:06 +0200
+Message-Id: <1224705006.30459.73.camel@johannes.berg> (sfid-20081022_215022_445189_5386CA20)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hw_key pointer is used (and obviously NULL) after skb->cb is
-memset to 0. This patch grabs the iv_len before the memset call.
+The regdom struct is given to the core, so it might as well
+free it in error conditions.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/nl80211.c |    5 +----
+ net/wireless/reg.c     |    9 +++++----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 1676ac4..451d410 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -374,7 +374,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
- 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
- 	struct txentry_desc txdesc;
- 	struct skb_frame_desc *skbdesc;
--	unsigned int iv_len;
-+	unsigned int iv_len = 0;
+--- everything.orig/net/wireless/nl80211.c	2008-10-21 10:36:13.000000000 +0200
++++ everything/net/wireless/nl80211.c	2008-10-21 10:41:13.000000000 +0200
+@@ -1756,12 +1756,9 @@ static int nl80211_set_reg(struct sk_buf
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 	r = set_regdom(rd);
+ 	mutex_unlock(&cfg80211_drv_mutex);
+-	if (r)
+-		goto bad_reg;
+-
+ 	return r;
  
- 	if (unlikely(rt2x00queue_full(queue)))
- 		return -EINVAL;
-@@ -395,6 +395,9 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
- 	entry->skb = skb;
- 	rt2x00queue_create_tx_descriptor(entry, &txdesc);
+-bad_reg:
++ bad_reg:
+ 	kfree(rd);
+ 	return -EINVAL;
+ }
+--- everything.orig/net/wireless/reg.c	2008-10-21 10:38:59.000000000 +0200
++++ everything/net/wireless/reg.c	2008-10-21 10:41:13.000000000 +0200
+@@ -606,7 +606,6 @@ int __regulatory_hint(struct wiphy *wiph
+ 	return r;
+ }
  
-+	if (IEEE80211_SKB_CB(skb)->control.hw_key != NULL)
-+		iv_len = IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
-+
- 	/*
- 	 * All information is retreived from the skb->cb array,
- 	 * now we should claim ownership of the driver part of that
-@@ -410,9 +413,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
- 	 * the frame so we can provide it to the driver seperately.
- 	 */
- 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc.flags) &&
--	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags) &&
--		(IEEE80211_SKB_CB(skb)->control.hw_key != NULL)) {
--		iv_len = IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
-+	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags)) {
- 		rt2x00crypto_tx_remove_iv(skb, iv_len);
- 	}
+-/* If rd is not NULL and if this call fails the caller must free it */
+ int regulatory_hint(struct wiphy *wiphy, const char *alpha2,
+ 	struct ieee80211_regdomain *rd)
+ {
+@@ -691,6 +690,7 @@ void print_regdomain_info(const struct i
+ 	print_rd_rules(rd);
+ }
  
++/* Takes ownership of rd only if it doesn't fail */
+ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ {
+ 	/* Some basic sanity checks first */
+@@ -752,16 +752,17 @@ static int __set_regdom(const struct iee
+ 
+ /* Use this call to set the current regulatory domain. Conflicts with
+  * multiple drivers can be ironed out later. Caller must've already
+- * kmalloc'd the rd structure. If this calls fails you should kfree()
+- * the passed rd. Caller must hold cfg80211_drv_mutex */
++ * kmalloc'd the rd structure. Caller must hold cfg80211_drv_mutex */
+ int set_regdom(const struct ieee80211_regdomain *rd)
+ {
+ 	int r;
+ 
+ 	/* Note that this doesn't update the wiphys, this is done below */
+ 	r = __set_regdom(rd);
+-	if (r)
++	if (r) {
++		kfree(rd);
+ 		return r;
++	}
+ 
+ 	/* This would make this whole thing pointless */
+ 	BUG_ON(rd != cfg80211_regdomain);
+
+
