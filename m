@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59674 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753219AbYJFQ42 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:39524 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751963AbYJVW6K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 12:56:28 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <43e72e890810060952p6a9a7ae5i30bdda28f1a9fab8@mail.gmail.com> (sfid-20081006_185305_022497_32408FE5)
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 <1221123779.2513.88.camel@debian.sh.intel.com>
-	 <1221184060.11498.3.camel@californication>
-	 <1221185432.6695.0.camel@californication>
-	 <1223296221.15196.6.camel@johannes.berg>
-	 <1223296592.11272.163.camel@violet.holtmann.net>
-	 <1223296783.15196.13.camel@johannes.berg>
-	 <43e72e890810060952p6a9a7ae5i30bdda28f1a9fab8@mail.gmail.com>
-	 (sfid-20081006_185305_022497_32408FE5)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P/lEQCnENRYrn2o0GIg9"
-Date: Mon, 06 Oct 2008 18:55:54 +0200
-Message-Id: <1223312155.15196.43.camel@johannes.berg> (sfid-20081006_185631_596418_C328105C)
+	Wed, 22 Oct 2008 18:58:10 -0400
+Subject: Re: New iwlwifi 3945 uCode available
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: reinette chatre <reinette.chatre@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224707446.10863.155.camel@rc-desk>
+References: <1224613633.10863.43.camel@rc-desk>
+	 <1224624324.28639.9.camel@johannes.berg>
+	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
+	 <1224624899.28639.17.camel@johannes.berg>
+	 <20081021213814.GM17268@tuxdriver.com>
+	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
+	 <1224627187.9386.103.camel@californication>
+	 <1224628088.10863.100.camel@rc-desk>
+	 <1224660449.28639.22.camel@johannes.berg>
+	 <1224662185.9386.131.camel@californication>
+	 <1224707446.10863.155.camel@rc-desk>
+Content-Type: text/plain
+Date: Thu, 23 Oct 2008 00:59:07 +0200
+Message-Id: <1224716347.9386.151.camel@californication> (sfid-20081023_005814_938297_6E8A7A8C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Reinette,
 
---=-P/lEQCnENRYrn2o0GIg9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > > I really don't know why we let you get away with this and bitch
+> > > endlessly when b43 does such a change, to the point where we finally
+> > > cave in and support both versions. Why should a community-supported
+> > > driver be held to higher standards?
+> > 
+> > If in any way possible, we should support both versions of the firmware.
+> 
+> I would like to hear some suggestions on how we can do this as I am not
+> familiar with the other drivers. The driver is closely tied to the
+> firmware ... and I am actually tempted to draw an analogy between the
+> interface between the driver and mac80211 here. From what I understand,
+> for the driver to support many versions of the firmware it dynamically
+> needs to detect which features are supported at runtime and act
+> accordingly. This is a hard problem. What am I missing?
 
-On Mon, 2008-10-06 at 09:52 -0700, Luis R. Rodriguez wrote:
+in some cases it might be possible with a set of quirks or special
+functions that can be switched at runtime. Check the whole bunch of USB
+drivers that have special handling depending on what hardware it finds.
+We could do the same. In some cases this effort might be too much, but
+if possible we should at least try.
 
-> > I have a different interpretation of the original issue, since afaik th=
-e
-> > value it was doing a BUG_ON on is a value that is only passed in by the
-> > driver and copied by the ucode to the response, hence it shouldn't
-> > actually crash unless the driver is passing bogus stuff in or, as it
-> > seems to be the case here, the DMA programming is completely fucked and
-> > the ucode just goes to write to random memory locations.
->=20
-> Seems like a good enough argument to call for it to be opened up.
+It all depends on how much the ucode API changes and sometimes we really
+wanna cleanup the driver and remove the old code, but in that case we
+have to tell the users via modules_install that this kernel will break
+or we have to keep the old driver around. Breaking it from one kernel
+version to the next one without the user noticing only after reboot is
+just not good enough.
 
-But there's a chance that the DMA programming being fucked up will make
-it scribble over your filesystem buffers. So it's surely safer to
-BUG_ON.
+Regards
 
-johannes
+Marcel
 
---=-P/lEQCnENRYrn2o0GIg9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI6kMXAAoJEKVg1VMiehFYHA4QAIernGWAksUAbcrDbwxncel8
-IKOpaJ7obogTVDXjSDFkX097J0c6icRoK3quUcnqJsFJRng2/rUC3ZN1iCyLxy9W
-YpSGzor618Q3XEEIQ4WKKsvecdoKyFLgogLItvlkMfvcihvC5YS+TAfjcI/VShP5
-ZsbiwNofi/9uwUh7WqxImIkfLhPm0+SX0QTE1DvqrgYL9nWgpBTdBzoJslUfA+hc
-u8/hv18+3RozBlo/UxyXdoxK0x+0upGazJGl1yTKLzOrKtvru96dtjkhr4q7Fxba
-Hh9BC7/NiU8Cc1naD7dxVvo+M9D57zXLm7gKIVUTzUJ9p1FgM8aRm/0hBplLUw9b
-0gNRxEOflH5DHlC+odeQZxp6Ib2vs8BxlYt8M8ZWtcpo8yT09wZdhZqNMDVDXFFK
-NYMoZ7j9eqU/ySif5TBIaVCvu4bmm2+ieNtVyJLo1W/nXWJ0dsm7fjjf+5zILRxK
-J9Gvbtp11RZjHO3xwdCw9egHF6yhWh196Y4xjDuZPfbngytix1EJ0hnvwTtcDJVQ
-AGojDk4+vgjWVNxj14gGwA83XZd6byg8yWqSwtDM+jWI52hsz8eLcO/PNiyl9kjY
-3kYJzKKEJKpsRXS9mc9XNkbuO6PaCauenKqxZWs7EKaARiKI2c1MU/5Ue7lR1mcI
-JT+s/isoF0VqYjZ1MsAb
-=V7Mb
------END PGP SIGNATURE-----
-
---=-P/lEQCnENRYrn2o0GIg9--
 
