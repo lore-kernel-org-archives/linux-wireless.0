@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43574 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754351AbYJ1Sub (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43401 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753050AbYJVXkb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 14:50:31 -0400
-Subject: Re: [PATCH] wireless: fix a few sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225219702.11483.0.camel@brick> (sfid-20081028_194828_204041_E0B216C6)
-References: <1225208981.3598.10.camel@johannes.berg>
-	 <1225219702.11483.0.camel@brick> (sfid-20081028_194828_204041_E0B216C6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qGrzoNFNrNpfR0iStSN7"
-Date: Tue, 28 Oct 2008 19:50:25 +0100
-Message-Id: <1225219825.3598.43.camel@johannes.berg> (sfid-20081028_195050_460241_FFAA556A)
-Mime-Version: 1.0
+	Wed, 22 Oct 2008 19:40:31 -0400
+Date: Wed, 22 Oct 2008 19:39:38 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@linux.intel.com>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: New iwlwifi 3945 uCode available
+Message-ID: <20081022233921.GO15808@tuxdriver.com> (sfid-20081023_014047_218267_670E33E5)
+References: <1224624899.28639.17.camel@johannes.berg> <20081021213814.GM17268@tuxdriver.com> <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com> <1224627187.9386.103.camel@californication> <1224628088.10863.100.camel@rc-desk> <1224660449.28639.22.camel@johannes.berg> <1224662185.9386.131.camel@californication> <1224707446.10863.155.camel@rc-desk> <1224716347.9386.151.camel@californication> <1224717261.10863.219.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1224717261.10863.219.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 22, 2008 at 04:14:21PM -0700, reinette chatre wrote:
+> On Wed, 2008-10-22 at 15:59 -0700, Marcel Holtmann wrote:
+> 
+> > in some cases it might be possible with a set of quirks or special
+> > functions that can be switched at runtime. Check the whole bunch of USB
+> > drivers that have special handling depending on what hardware it finds.
+> > We could do the same. In some cases this effort might be too much, but
+> > if possible we should at least try.
+> 
+> I don't think we can easily apply the hardware quirk solution here. This
+> is because hardware can be identified by id that does not change and the
+> hardware self does not really change (unless it has firmware that
+> changes ...). In this firmware case we do not have "an id" (we have one
+> file that is loaded by firmware loader so we cannot know what we get
+> just by "looking at it" unless we enforce a version number in the
+> filename as we currently do in our driver) and the firmware can change,
+> potentially frequently, with the consequence of many "quirks" that need
+> to be maintained.
 
---=-qGrzoNFNrNpfR0iStSN7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+You can try to load the new firmware, and if that fails you can try
+the older firmware.  Whichever one succeeds first can govern the API
+you use.  In fact, I had a patch like this for Fedora back when you
+first added an API version to your firmware.  Of course, at that point
+there was no need to rememebr what got loaded since there really was
+only one API...
 
-On Tue, 2008-10-28 at 11:48 -0700, Harvey Harrison wrote:
-> On Tue, 2008-10-28 at 16:49 +0100, Johannes Berg wrote:
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
->=20
-> It's helpful to put the warnings that are being fixed in the commit
-> message.
-
-Indeed, but I fixed them over time so I was too lazy to reproduce
-them :) In any case, it should be easy to deduce them by looking at the
-patch.
-
-johannes
-
---=-qGrzoNFNrNpfR0iStSN7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJB17uAAoJEKVg1VMiehFY0kEP/imJZMLLMa5fHfKR8vu3uYny
-3/M/dt2j+6eunfpAo4SrekAkFGA0Wmdlh/RsNINcQ8kG+oxhChPXj66bG43kopcO
-uymidMna+MKwatmeQL/uu5gvL9uPeg8CuuzOYhOtCuJVWnM3ia/M7t1pCjbCZUph
-x7ON88LGQcORH26vxGrMHcI3JD7qOx/hZJqL/VXPpwff1hlRQg8LKGw/elHXm4Wq
-58iFh0RFz7bZNnsRwnRRK6ChLxvIGUpuK6Q+rZcbrcB4s3MhdfWbP4kvey6kvtnI
-8cSKgOMAmrC3gvkBwyZoA9X2a2H1H9eh+DKz1MpJYv4YUY5Jdbw8p5WRhwTQDj/P
-YdFMrnNlSsAqGDNMswe/7AgL89LPPEDE0GUfVJToIZTsUlShXth1oy/IWIMsvmDT
-N3T36xXsjxllGPWyTn8T+ECXD9NvmtuhsEK3L5ytalIITsP2jJbxR1REnhkCEKxc
-OUV205hdhY+3Tmc8S4RcsZgRL70OlST4mT1OsMe8Y5QfySTQSfgwnRlxT8j1xsVY
-AGsMpLeJvl1ZmIdCSuvgMxNS+1fnwy3rJc6xc1djsIzQMwwQCHxNTFAIiXqlGDZ2
-qYt9W9onNIEzmcsWEKcLxIiPvs+hD0jpyUjhB0W1lBWb4hEJ3f32pB9hyAK7VVIQ
-qgDs9Z9LQc/riANMVuJ+
-=Yuc/
------END PGP SIGNATURE-----
-
---=-qGrzoNFNrNpfR0iStSN7--
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
