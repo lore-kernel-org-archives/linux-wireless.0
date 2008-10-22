@@ -1,81 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:49706 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753612AbYJHTiu (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.227]:37018 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011AbYJVHAu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2008 15:38:50 -0400
-Received: by qw-out-2122.google.com with SMTP id 3so985864qwe.37
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2008 12:38:49 -0700 (PDT)
-Message-ID: <69e28c910810081238m612ece22l2c26b38a88aba608@mail.gmail.com> (sfid-20081008_213854_558900_CBA3F0BC)
-Date: Wed, 8 Oct 2008 21:38:49 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC PATCH] rtl8187: do not report ACKs if USB Tx status is non-zero
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081008184205.GB32472@tuxdriver.com>
+	Wed, 22 Oct 2008 03:00:50 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2807767rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 00:00:47 -0700 (PDT)
+Message-ID: <eb3ff54b0810220000p71a54f53ped88651b62c6d35c@mail.gmail.com> (sfid-20081022_090054_784916_B111DDFD)
+Date: Wed, 22 Oct 2008 09:00:47 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH ] mac80211: check return value of dev_alloc_skb() in ieee80211_sta_join_ibss().
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223407098-23060-1-git-send-email-linville@tuxdriver.com>
-	 <20081008184205.GB32472@tuxdriver.com>
+Content-Type: multipart/mixed;
+	boundary="----=_Part_22966_27556019.1224658847466"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 8, 2008 at 8:42 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Tue, Oct 07, 2008 at 03:18:18PM -0400, John W. Linville wrote:
->> The vendor-supplied driver treats a USB Tx failure as an un-ACKed frame.
->> I don't see why we shouldn't do the same thing -- hopefully this makes
->> rate-scaling algorithms behave sanely with the rtl8187 driver.
->>
->> Thanks to Felix Fietkau <nbd@openwrt.org> for suggesting this as an
->> option.
->>
->> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> ---
->> This is currently untested -- anyone with rtl8187 bored enough to try
->> it? :-)
->
-> AFAICT, this doesn't actually trigger -- at least, the device can
-> go into its typical failure mode (no frames ACKed until you force a
-> lower rate) without ever hitting the "assume ACK not received" clause.
->
-> I'll keep looking at it -- there are a couple of 'secrets' still
-> buried in the vendor driver (if I can stomach to keep looking at it)...
->
-> John
-> --
-> John W. Linville                Linux should be at the core
-> linville@tuxdriver.com                  of your literate lifestyle.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+------=_Part_22966_27556019.1224658847466
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Another weird thing: the code above essentially attempts to do this:
-Wait for an ACK
-If not TX_CTL_NO_ACK:
-   If acked:
-      Report the packet as acked.
-   Endif
-   If no ACK until timeout:
-      Report packet as unacked
-   Endif
-Endif
+This patch adds a check on the return value of dev_alloc_skb() in
+ieee80211_sta_join_ibss()
+in net/mac80211/mlme.c.
 
-This would be better, as it doesn't waste time waiting for an ACK for
-unacked frames:
+The patch is to wireless-next-2.6.
 
-If not TX_CTL_NO_ACK:
-Wait for an ACK
-   If acked:
-      Report the packet as acked.
-   Endif
-   If no ACK until timeout:
-      Report packet as unacked
-   Endif
-Endif
 
-Of course, this only works if "Wait for an ACK" actually works.
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+------=_Part_22966_27556019.1224658847466
+Content-Type: text/plain; name=patch.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fmlm6z7y0
+Content-Disposition: attachment; filename=patch.txt
+
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9tbG1lLmMgYi9uZXQvbWFjODAyMTEvbWxtZS5jCmlu
+ZGV4IDQ5Zjg2ZmEuLjJkZDUzZWYgMTAwNjQ0Ci0tLSBhL25ldC9tYWM4MDIxMS9tbG1lLmMKKysr
+IGIvbmV0L21hYzgwMjExL21sbWUuYwpAQCAtMTQxNCw2MiArMTQxNCw2NyBAQCBzdGF0aWMgaW50
+IGllZWU4MDIxMV9zdGFfam9pbl9pYnNzKHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNk
+YXRhLAogCiAJLyogQnVpbGQgSUJTUyBwcm9iZSByZXNwb25zZSAqLwogCXNrYiA9IGRldl9hbGxv
+Y19za2IobG9jYWwtPmh3LmV4dHJhX3R4X2hlYWRyb29tICsgNDAwKTsKLQlpZiAoc2tiKSB7Ci0J
+CXNrYl9yZXNlcnZlKHNrYiwgbG9jYWwtPmh3LmV4dHJhX3R4X2hlYWRyb29tKTsKKwlpZiAoIXNr
+YikgeworCQlwcmludGsoS0VSTl9ERUJVRyAiJXM6IGZhaWxlZCB0byBhbGxvY2F0ZSBidWZmZXIg
+Zm9yIHByb2JlICIKKwkJICAgICAgICJyZXNwb25zZVxuIiwgc2RhdGEtPmRldi0+bmFtZSk7CisJ
+CXJldHVybiAtMTsKKwl9CiAKLQkJbWdtdCA9IChzdHJ1Y3QgaWVlZTgwMjExX21nbXQgKikKLQkJ
+CXNrYl9wdXQoc2tiLCAyNCArIHNpemVvZihtZ210LT51LmJlYWNvbikpOwotCQltZW1zZXQobWdt
+dCwgMCwgMjQgKyBzaXplb2YobWdtdC0+dS5iZWFjb24pKTsKLQkJbWdtdC0+ZnJhbWVfY29udHJv
+bCA9IGNwdV90b19sZTE2KElFRUU4MDIxMV9GVFlQRV9NR01UIHwKLQkJCQkJCSAgSUVFRTgwMjEx
+X1NUWVBFX1BST0JFX1JFU1ApOwotCQltZW1zZXQobWdtdC0+ZGEsIDB4ZmYsIEVUSF9BTEVOKTsK
+LQkJbWVtY3B5KG1nbXQtPnNhLCBzZGF0YS0+ZGV2LT5kZXZfYWRkciwgRVRIX0FMRU4pOwotCQlt
+ZW1jcHkobWdtdC0+YnNzaWQsIGlmc3RhLT5ic3NpZCwgRVRIX0FMRU4pOwotCQltZ210LT51LmJl
+YWNvbi5iZWFjb25faW50ID0KLQkJCWNwdV90b19sZTE2KGxvY2FsLT5ody5jb25mLmJlYWNvbl9p
+bnQpOwotCQltZ210LT51LmJlYWNvbi50aW1lc3RhbXAgPSBjcHVfdG9fbGU2NChic3MtPnRpbWVz
+dGFtcCk7Ci0JCW1nbXQtPnUuYmVhY29uLmNhcGFiX2luZm8gPSBjcHVfdG9fbGUxNihic3MtPmNh
+cGFiaWxpdHkpOwotCi0JCXBvcyA9IHNrYl9wdXQoc2tiLCAyICsgaWZzdGEtPnNzaWRfbGVuKTsK
+LQkJKnBvcysrID0gV0xBTl9FSURfU1NJRDsKLQkJKnBvcysrID0gaWZzdGEtPnNzaWRfbGVuOwot
+CQltZW1jcHkocG9zLCBpZnN0YS0+c3NpZCwgaWZzdGEtPnNzaWRfbGVuKTsKLQotCQlyYXRlcyA9
+IGJzcy0+c3VwcF9yYXRlc19sZW47Ci0JCWlmIChyYXRlcyA+IDgpCi0JCQlyYXRlcyA9IDg7Ci0J
+CXBvcyA9IHNrYl9wdXQoc2tiLCAyICsgcmF0ZXMpOwotCQkqcG9zKysgPSBXTEFOX0VJRF9TVVBQ
+X1JBVEVTOwotCQkqcG9zKysgPSByYXRlczsKLQkJbWVtY3B5KHBvcywgYnNzLT5zdXBwX3JhdGVz
+LCByYXRlcyk7CisJc2tiX3Jlc2VydmUoc2tiLCBsb2NhbC0+aHcuZXh0cmFfdHhfaGVhZHJvb20p
+OwogCi0JCWlmIChic3MtPmJhbmQgPT0gSUVFRTgwMjExX0JBTkRfMkdIWikgewotCQkJcG9zID0g
+c2tiX3B1dChza2IsIDIgKyAxKTsKLQkJCSpwb3MrKyA9IFdMQU5fRUlEX0RTX1BBUkFNUzsKLQkJ
+CSpwb3MrKyA9IDE7Ci0JCQkqcG9zKysgPSBpZWVlODAyMTFfZnJlcXVlbmN5X3RvX2NoYW5uZWwo
+YnNzLT5mcmVxKTsKLQkJfQorCW1nbXQgPSAoc3RydWN0IGllZWU4MDIxMV9tZ210ICopCisJCXNr
+Yl9wdXQoc2tiLCAyNCArIHNpemVvZihtZ210LT51LmJlYWNvbikpOworCW1lbXNldChtZ210LCAw
+LCAyNCArIHNpemVvZihtZ210LT51LmJlYWNvbikpOworCW1nbXQtPmZyYW1lX2NvbnRyb2wgPSBj
+cHVfdG9fbGUxNihJRUVFODAyMTFfRlRZUEVfTUdNVCB8CisJCQkJCQlJRUVFODAyMTFfU1RZUEVf
+UFJPQkVfUkVTUCk7CisJbWVtc2V0KG1nbXQtPmRhLCAweGZmLCBFVEhfQUxFTik7CisJbWVtY3B5
+KG1nbXQtPnNhLCBzZGF0YS0+ZGV2LT5kZXZfYWRkciwgRVRIX0FMRU4pOworCW1lbWNweShtZ210
+LT5ic3NpZCwgaWZzdGEtPmJzc2lkLCBFVEhfQUxFTik7CisJbWdtdC0+dS5iZWFjb24uYmVhY29u
+X2ludCA9CisJCWNwdV90b19sZTE2KGxvY2FsLT5ody5jb25mLmJlYWNvbl9pbnQpOworCW1nbXQt
+PnUuYmVhY29uLnRpbWVzdGFtcCA9IGNwdV90b19sZTY0KGJzcy0+dGltZXN0YW1wKTsKKwltZ210
+LT51LmJlYWNvbi5jYXBhYl9pbmZvID0gY3B1X3RvX2xlMTYoYnNzLT5jYXBhYmlsaXR5KTsKIAot
+CQlwb3MgPSBza2JfcHV0KHNrYiwgMiArIDIpOwotCQkqcG9zKysgPSBXTEFOX0VJRF9JQlNTX1BB
+UkFNUzsKLQkJKnBvcysrID0gMjsKLQkJLyogRklYOiBzZXQgQVRJTSB3aW5kb3cgYmFzZWQgb24g
+c2NhbiByZXN1bHRzICovCi0JCSpwb3MrKyA9IDA7Ci0JCSpwb3MrKyA9IDA7CisJcG9zID0gc2ti
+X3B1dChza2IsIDIgKyBpZnN0YS0+c3NpZF9sZW4pOworCSpwb3MrKyA9IFdMQU5fRUlEX1NTSUQ7
+CisJKnBvcysrID0gaWZzdGEtPnNzaWRfbGVuOworCW1lbWNweShwb3MsIGlmc3RhLT5zc2lkLCBp
+ZnN0YS0+c3NpZF9sZW4pOwogCi0JCWlmIChic3MtPnN1cHBfcmF0ZXNfbGVuID4gOCkgewotCQkJ
+cmF0ZXMgPSBic3MtPnN1cHBfcmF0ZXNfbGVuIC0gODsKLQkJCXBvcyA9IHNrYl9wdXQoc2tiLCAy
+ICsgcmF0ZXMpOwotCQkJKnBvcysrID0gV0xBTl9FSURfRVhUX1NVUFBfUkFURVM7Ci0JCQkqcG9z
+KysgPSByYXRlczsKLQkJCW1lbWNweShwb3MsICZic3MtPnN1cHBfcmF0ZXNbOF0sIHJhdGVzKTsK
+LQkJfQorCXJhdGVzID0gYnNzLT5zdXBwX3JhdGVzX2xlbjsKKwlpZiAocmF0ZXMgPiA4KQorCQly
+YXRlcyA9IDg7CisJcG9zID0gc2tiX3B1dChza2IsIDIgKyByYXRlcyk7CisJKnBvcysrID0gV0xB
+Tl9FSURfU1VQUF9SQVRFUzsKKwkqcG9zKysgPSByYXRlczsKKwltZW1jcHkocG9zLCBic3MtPnN1
+cHBfcmF0ZXMsIHJhdGVzKTsKIAotCQlpZnN0YS0+cHJvYmVfcmVzcCA9IHNrYjsKKwlpZiAoYnNz
+LT5iYW5kID09IElFRUU4MDIxMV9CQU5EXzJHSFopIHsKKwkJcG9zID0gc2tiX3B1dChza2IsIDIg
+KyAxKTsKKwkJKnBvcysrID0gV0xBTl9FSURfRFNfUEFSQU1TOworCQkqcG9zKysgPSAxOworCQkq
+cG9zKysgPSBpZWVlODAyMTFfZnJlcXVlbmN5X3RvX2NoYW5uZWwoYnNzLT5mcmVxKTsKKwl9CisK
+Kwlwb3MgPSBza2JfcHV0KHNrYiwgMiArIDIpOworCSpwb3MrKyA9IFdMQU5fRUlEX0lCU1NfUEFS
+QU1TOworCSpwb3MrKyA9IDI7CisJLyogRklYOiBzZXQgQVRJTSB3aW5kb3cgYmFzZWQgb24gc2Nh
+biByZXN1bHRzICovCisJKnBvcysrID0gMDsKKwkqcG9zKysgPSAwOwogCi0JCWllZWU4MDIxMV9p
+Zl9jb25maWcoc2RhdGEsIElFRUU4MDIxMV9JRkNDX0JFQUNPTik7CisJaWYgKGJzcy0+c3VwcF9y
+YXRlc19sZW4gPiA4KSB7CisJCXJhdGVzID0gYnNzLT5zdXBwX3JhdGVzX2xlbiAtIDg7CisJCXBv
+cyA9IHNrYl9wdXQoc2tiLCAyICsgcmF0ZXMpOworCQkqcG9zKysgPSBXTEFOX0VJRF9FWFRfU1VQ
+UF9SQVRFUzsKKwkJKnBvcysrID0gcmF0ZXM7CisJCW1lbWNweShwb3MsICZic3MtPnN1cHBfcmF0
+ZXNbOF0sIHJhdGVzKTsKIAl9CiAKKwlpZnN0YS0+cHJvYmVfcmVzcCA9IHNrYjsKKworCWllZWU4
+MDIxMV9pZl9jb25maWcoc2RhdGEsIElFRUU4MDIxMV9JRkNDX0JFQUNPTik7CisgCisKIAlyYXRl
+cyA9IDA7CiAJc2JhbmQgPSBsb2NhbC0+aHcud2lwaHktPmJhbmRzW2xvY2FsLT5ody5jb25mLmNo
+YW5uZWwtPmJhbmRdOwogCWZvciAoaSA9IDA7IGkgPCBic3MtPnN1cHBfcmF0ZXNfbGVuOyBpKysp
+IHsK
+------=_Part_22966_27556019.1224658847466--
