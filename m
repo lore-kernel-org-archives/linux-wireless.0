@@ -1,72 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:51866 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759437AbYJJRw1 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53578 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759799AbYJVRqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 13:52:27 -0400
-Received: by gxk9 with SMTP id 9so1057124gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 10:52:26 -0700 (PDT)
-Message-ID: <43e72e890810101052v2cfc5b9bg406dddfebbfbb66@mail.gmail.com> (sfid-20081010_195230_897442_50F6419B)
-Date: Fri, 10 Oct 2008 10:52:26 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Vendor support stickers for devices supported under Linux wireless
-Cc: drago01 <drago01@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890810101051w7ef39193h3a4473a0c8a4965e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
-	 <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
-	 <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com>
-	 <1217498887.10489.138.camel@johannes.berg>
-	 <43e72e890807311005l3fd7823ej68497586ec9ff6bc@mail.gmail.com>
-	 <1217524322.10489.148.camel@johannes.berg>
-	 <43e72e890807311019x1c4baa43t622c776999bec152@mail.gmail.com>
-	 <43e72e890810101051w7ef39193h3a4473a0c8a4965e@mail.gmail.com>
+	Wed, 22 Oct 2008 13:46:44 -0400
+Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, Jouni Malinen <j@w1.fi>,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <20081022173721.GA5786@bougret.hpl.hp.com>
+References: <48FDFCCA.8040604@lwfinger.net>
+	 <20081022072840.GD16005@jm.kir.nu> <48FF5933.3080501@lwfinger.net>
+	 <1224695189.30459.6.camel@johannes.berg>
+	 <20081022173721.GA5786@bougret.hpl.hp.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sSRdTBaFhg2j8CwjAiw8"
+Date: Wed, 22 Oct 2008 19:46:27 +0200
+Message-Id: <1224697587.30459.37.camel@johannes.berg> (sfid-20081022_194726_446196_0440CA38)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 10, 2008 at 10:51 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, Jul 31, 2008 at 10:19 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Thu, Jul 31, 2008 at 10:12 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Thu, 2008-07-31 at 10:05 -0700, Luis R. Rodriguez wrote:
->>>
->>>> > I would also add to the contract a requirement to offer Linux support
->>>> > for, say, the next five years.
->>>>
->>>> Not sure if we should call it a contract unless its understood its an
->>>> informal contract with the community.
->>>
->>> There has to be some form of contract. The logo is copyrighted,
->>> obviously, so there has to be a contract for you to be allowed to print
->>> it on a box.
->>
->> Heh, Whatever makes the copyright holders happy :) I suspect the
->> copyright holder are after the community's best interests anyway.
->>
->>>> Also I don't think we should be
->>>> specific about a time frame for support -- its difficult enough to get
->>>> the driver upstream, not that its not possible I just think it we
->>>> should strive to at least get vendors to properly support Linux by
->>>> submitting their drivers for upstream into Linus' tree. Support tends
->>>> to come naturally after that :)
->>>
->>> Because sometimes there are users who care. I think though that the
->>> vendor should participate in future development by testing and fixing
->>> their driver, for at least a period of time. Five years may be too much,
->>> given the current chip livetime maybe one or two would make sense,
->>> kernel releases are only roughly every three months.
->>>
->>> Mind you, I wasn't talking about user support, but rather development
->>> support, kinda like a SUPPORTED tag in the MAINTAINERS file.
->>
->> This seems reasonable.
->
-> If we can formalize on this it would be great.
 
-Oh and the reason is we want to help users track devices supported by
-us on the kernel (2.6.27, which was released today).
+--=-sSRdTBaFhg2j8CwjAiw8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Wed, 2008-10-22 at 10:37 -0700, Jean Tourrilhes wrote:
+
+> 	If you want me to understand what it's about, you may want to
+> give me a bit more context.
+
+Sorry. Basically, Larry is saying that due to a kernel change, iwlist
+will print out things like
+                    IE: Unknown: 0017465249545A21426F7820466F6E20574C414E20=
+37313133
+                    IE: Unknown: 010482848B96
+                    IE: Unknown: 030106
+                    IE: Unknown: 2A0106
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : TKIP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: 32080C1218243048606C
+                    IE: WPA Version 1
+                        Group Cipher : TKIP
+                        Pairwise Ciphers (1) : TKIP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: DD0A0800280101000200FF0F
+                    IE: Unknown: DD180050F2020101800003A4000027A4000042435E=
+0062322F00
+
+
+where all the IE: Unknown lines are unexpected.
+
+> 	Alternatively, just send me a patch for Wireless Tools, and
+> I'll put it in the next release. Wireless Tools is still maintained
+> and I still do releases, even if I don't put much cycles into it.
+
+The problem is that we don't quite know what to do about them :)
+
+johannes
+
+--=-sSRdTBaFhg2j8CwjAiw8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/2bvAAoJEKVg1VMiehFYrIYP/0ybXX5gOhzVJZT9WRau0ND6
+Yck6NYVJ54/pBzaGv2Sr4XEOMU4TGnxSu8XO//dsAUxqYppc9slh4fqP1S1a2NiB
+RwkfhXnmtxRgTEgaBHPc1uKMTOk1mULcYI5AkGaRdYpxiJucx3WC9XhNUzstLgBF
+12du7CNHf3Ph8y1FCp7pQJvuV2+Hu6R0sChVLnAdGZl8QbJU8pRXzeXqqdsqVMyg
+GFmCWJvUrLrCCSD8O4YmYjC46FvF6zYR/ptubeWsdgEr5a2bv4RShx3P0o7EoyUg
+paZEqLJAGg2mbXDgYFbq8mhph2LDKCxpjsgAa34Ja3MX+Y3LgEe0L0DjVFYiJGGh
+Bbl+LoQqZVuQN8wUdZQuRSUfa06tlSHoSsx2e6yJWjVwuZy9IMyNMAibXy8VPUhG
+j5XDZXlfJB7F7SOA0MfD+955Z1WrbYrBi7TFDKA+EiBENJ7uOwQcrYy6doxbXDBI
+0/2pr2VAMie6HNbVnTprELRLa4vZf1s5uOsbXRSoZGpUWnJwkl3XhHqvRwx0bl4b
+FRQhSi3xV7hED68ydy00Qmr9j5ho9u4SgZWT4HWX7uIhbXmLzkhBHdX5U4jQ3W+7
+dLWJO1Mx48Y6gVG/h1Q+NVkH9Yg2Q9WyrKU7unBEuHDuU0z6vIFR07M9xtKG6of6
+O9UiLSYpnZZI6GIepsYm
+=jRPW
+-----END PGP SIGNATURE-----
+
+--=-sSRdTBaFhg2j8CwjAiw8--
+
