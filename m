@@ -1,103 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:36351 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754314AbYJBV3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 17:29:24 -0400
-Subject: Re: Agere Hermes source-code: copyright situation
-From: Dan Williams <dcbw@redhat.com>
-To: Greg KH <greg@kroah.com>
-Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
-	Dave <kilroyd@googlemail.com>, TJ <linux@tjworld.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Casual J. Programmer" <casualprogrammer@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	Alexander Shirshikov <alexander.shirshikov@gmail.com>
-In-Reply-To: <20081002203731.GA25314@kroah.com>
-References: <200809290949.35749.arvidjaar@mail.ru>
-	 <20081001200039.GA29874@kroah.com> <48E400FA.2090305@gmail.com>
-	 <200810020637.27321.arvidjaar@mail.ru> <20081002200023.GC20902@kroah.com>
-	 <1222979517.12505.33.camel@72-58-93-37.area3.spcsdns.net>
-	 <20081002203731.GA25314@kroah.com>
-Content-Type: text/plain
-Date: Thu, 02 Oct 2008 17:28:34 -0400
-Message-Id: <1222982914.12505.37.camel@72-58-93-37.area3.spcsdns.net> (sfid-20081002_232928_356668_DF1EFDE7)
+Received: from xc.sipsolutions.net ([83.246.72.84]:57116 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbYJVIJt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 04:09:49 -0400
+Subject: Re: [PATCH ] mac80211: [RESEND] check return value of
+	dev_alloc_skb() in ieee80211_sta_join_ibss().
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <eb3ff54b0810220058h281e2008h7bba7f756c795ae3@mail.gmail.com> (sfid-20081022_095842_068521_A11FD88D)
+References: <eb3ff54b0810220058h281e2008h7bba7f756c795ae3@mail.gmail.com>
+	 (sfid-20081022_095842_068521_A11FD88D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Utky3uYSdhwtjxRIoCOI"
+Date: Wed, 22 Oct 2008 10:09:42 +0200
+Message-Id: <1224662982.28639.34.camel@johannes.berg> (sfid-20081022_100954_202130_DF4E326E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-10-02 at 13:37 -0700, Greg KH wrote:
-> On Thu, Oct 02, 2008 at 04:31:57PM -0400, Dan Williams wrote:
-> > On Thu, 2008-10-02 at 13:00 -0700, Greg KH wrote:
-> > > On Thu, Oct 02, 2008 at 06:37:18AM +0400, Andrey Borzenkov wrote:
-> > > > TJ you can answer me using arvidjaar (at) newmail dot ru. Hopefully
-> > > > one of them works. Re WPA2 - there is no information how to setup
-> > > > CCMP/AES (even if firmware supports it); so no WPA2.
-> > > > 
-> > > > On Thursday 02 October 2008, Dave wrote:
-> > > > > Greg KH wrote:
-> > > > > > On Wed, Oct 01, 2008 at 05:40:29PM +0100, TJ wrote:
-> > > > > >> On Wed, 2008-10-01 at 14:13 +0400, Andrey Borzenkov wrote:
-> > > > > >>>On Wednesday 01 October 2008, Greg KH wrote:
-> > > > > >>>> On Mon, Sep 29, 2008 at 09:49:34AM +0400, Andrey Borzenkov wrote:
-> > > > > >>>>> I have here driver that can be built for two different types of
-> > > > > >>>>> hardware from basically the same sources (this is port of old Agere
-> > > > > >>>>> drivers for Hermes-I/Hermes-II chipsets).
-> > > > > >>>> 
-> > > > > >>>> Cool, do you have a link to the code, I'd be glad to add it to
-> > > > > >>>> drivers/staging/ if it's not in a fully-mergable state yet to get wider
-> > > > > >>>> users for it.
-> > > > > >>>
-> > > > > >>> You can look at it here: http://arvidjaar.newmail.ru/wlags49.tar.bz
-> > > > > >>>
-> > > > > >>> I doubt that it is suitable for inclusion at current state if ever.
-> > > > > >>> This is taken directly from Agere 2.4 sources; the only parts that were
-> > > > > >>> touched are kernel glue and wireless extensions interface.
-> > > > > >>>
-> > > > > >>> And it is not GPL'ed, of course. I attach E-Mail I received a while
-> > > > > >>> back with answere from Agere legal department.
-> > > > > >>
-> > > > > >> I'm attaching the original email I sent to Agere and their response for
-> > > > > >> the record, hoping it helps clarify the legal position.
-> > > > > > 
-> > > > > > Very nice, thanks for forwarding this on.
-> > > > > > 
-> > > > > > As the license is BSD, that means we can place it in the kernel tree.
-> > > > > > Do you all mind if I add it to the drivers/staging/ directory so you can
-> > > > > > work on cleaning it up within the main kernel tree infrastructure?
-> > > > >
-> > > > 
-> > > > I do not mind but it is likely makes no sense for H-I now; and
-> > > > I do not own H-II myself so cannot work on it. If we are focusing on
-> > > > H-2/2.5, it would make more sense to make similar modifications to
-> > > > 7.22 driver set from Agere to avoid overlap with Orinoco.
-> > > 
-> > > Ok, let me know what you think is the best thing to do, and I'll be glad
-> > > to help you out with it.
-> > 
-> > I tend to think that only for USB hardware do we need a new driver, and
-> > that driver can share some things with both hostap and orinoco.  If at
-> > all possible, lets integrate missing hardware support into _existing_
-> > drivers instead of importing drivers of questionable quality.  I've seen
-> > wlags49 before and it's not great.  Right now we don't have any viable
-> > Orinoco USB driver, and while linux-wlan-ng was proposed, there's no way
-> > we're taking a third 802.11 "stack" or the bits in those drivers that
-> > overlap with existing drivers' hardware support.
-> 
-> I just added the wlan-ng usb driver (and stack) to the drivers/staging/
-> tree a few hours ago :)
-> 
-> So yes, we do need to do this kind of migration, at the moment I am
-> trying to track down all out-of-tree drivers that distros and users are
-> relying on to get them into staging/ and then we can work on cleaning
-> them up and moving them to the proper place in the kernel tree.
-> 
-> Sound good?
-> 
-> So, for this driver, should I do the same thing, as I don't think these
-> devices are covered by any other driver at the moment, right?
 
-Prism II USB devices are only covered by linux-wlan-ng, yes.
+--=-Utky3uYSdhwtjxRIoCOI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Dan
+On Wed, 2008-10-22 at 09:58 +0200, Rami Rosen wrote:
+> This patch add a check on the return value of dev_alloc_skb() in
+> ieee80211_sta_join_ibss()
+> in net/mac80211/mlme.c.
 
+This looks better, but why the line break there? :)
+
+> The patch is to wireless-next-2.6.
+
+That doesn't belong into the patch description. If you're planning to
+send more patches, you really should work on getting them inlined into
+your emails properly too.
+
+johannes
+
+--=-Utky3uYSdhwtjxRIoCOI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJI/t/DAAoJEKVg1VMiehFYV3IQAIAe8jjE5gLxB0JtYAE9K0Yf
+kTXimRnWY27lu7c/oTUn2X35txHve1fYS6P2HLHvdrBx8LEPCuYDZCf+olwYEFle
+tGKt2jjbmnt6kTiwpro7mCS/Ce/TjV39qQql7F1br5E5HkIlJ1Im1z4HUU/GwAcc
+zTcsOHB4dkCZEI8ME6G9Qq2QJIcyRo/Y3j+jWIz4adE7Klb0RNGSYA4poq9+J8y3
+/EMZ0jkZTWjp8NStt9rHr+KQFvqb6B5S5v3ESm/y/7N9oFWCXXt8EShKrUibMeGW
+ZNrchtYWWEl2RrM16kyPoy2IpUVTeWAb+kZrCfYWo94RIwCFsPaL1JDlsZeR+TtF
+AQnPZJeXTAx+JxPOIQhXx95jSqSeMqXkMUwJq//V3Y1639GzG8FzjPA7oqDRRWUG
+Xac5xon4a8u2Sz4pT8Qn2BrWwikDsJkbaigBddcyq92u+t8/whPZK0b0vGH2dQa7
+mAwc4RjRuZUtGjklpEkPDkneTz0I3XH4kDoz4x1P1ECC3s2L7f3XnrWzkd3ae5o2
+UkbY1peCawYICqXspJUruT2FajAXn9kflKfuO5NXHsgvbtY4yn77zlZzGpDFAapv
+QZGCyk1Gjx/m4/36GzTk8UOgcGRIZ6nd4zr6p2gkYKtsoddp9f/ETjWTZvEuzJrQ
+3t7+U46TuiKe3mjBHRX0
+=Ttr7
+-----END PGP SIGNATURE-----
+
+--=-Utky3uYSdhwtjxRIoCOI--
 
