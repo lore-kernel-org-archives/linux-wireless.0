@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37056 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753491AbYJTMrm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 08:47:42 -0400
-Message-ID: <48FC7DEC.9060200@gmx.de> (sfid-20081020_144803_251705_97A98430)
-Date: Mon, 20 Oct 2008 14:47:40 +0200
-From: Dieter Ries <clip2@gmx.de>
+Received: from mail.atheros.com ([12.36.123.2]:48364 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753052AbYJVROF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 13:14:05 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 10:14:05 -0700
+Date: Wed, 22 Oct 2008 03:13:59 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Zhu Yi <yi.zhu@intel.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: New Regulatory Domain Api.
+Message-ID: <20081022101359.GA6190@tesla> (sfid-20081022_191409_747666_4C032CE5)
+References: <1224561748.24677.274.camel@debian.sh.intel.com> <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com> <1224569252.9386.77.camel@californication> <43e72e890810202329g732a97ccxf176bdf4e035ccda@mail.gmail.com> <1224571890.9386.85.camel@californication> <20081021171328.GG17268@tuxdriver.com> <1224611033.9386.98.camel@californication> <20081021174800.GJ17268@tuxdriver.com> <20081021110203.GA8224@tesla> <1224667215.2917.75.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomasw@gmail.com>
-Subject: Re: iwl3945 broken in current git
-References: <48FC6C05.6020901@gmx.de>	 <20081020121710.GA3607@isilmar.linta.de>	 (sfid-20081020_141718_690091_E56EF8AB) <1224506010.27899.23.camel@johannes.berg>	 <48FC7B1A.10307@gmx.de> (sfid-20081020_143609_718157_68144039) <1224506366.27899.25.camel@johannes.berg>
-In-Reply-To: <1224506366.27899.25.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1224667215.2917.75.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg schrieb:
-> On Mon, 2008-10-20 at 14:35 +0200, Dieter Ries wrote:
->> Johannes Berg schrieb:
->>> On Mon, 2008-10-20 at 14:17 +0200, Dominik Brodowski wrote:
->>>
->>>>> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
->>>>> iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq
->>>>> 0x4416 ser 0x0000004B
->>>>> iwl3945: Can't stop Rx DMA.
->>>> It needs a more recent uCode -- the driver really should scream out loudly
->>>> that the old firmware no longer suffices.
->>> You could try reverting ef224ca2ce55e81acc6c3a74c3e8c00a00941c70, that's
->>> the only commit I can find that seems to be vaguely related to the
->>> problem as Tomas described it. Not that it might not be hidden in some
->>> other commit...
->> The new firmware did it. It works now, but it should really scream out
->> loud ...
+On Wed, Oct 22, 2008 at 02:20:15AM -0700, Zhu Yi wrote:
+> On Tue, 2008-10-21 at 04:02 -0700, Luis R. Rodriguez wrote:
+> > This thread has about 65 messages on it, and no patches yet from
+> > Intel.
 > 
-> Do you still have the old one? Would you try anyway?
+> Seems you jumped up when I offered a patch.
+> http://marc.info/?l=linux-wireless&m=122455333027226&w=2
 
-ahem, I don't seem to have ef224ca2ce55e81acc6c3a74c3e8c00a00941c70, are
-you sure that is the right hash?
+You complained about nobody willing to do foo, and yet I had already
+provided a patch. That's what I "jumped" about.
 
+> > I rather we talk productively about trying to resolve it with actual
+> > code like Johannes or I am.
 > 
-> johannes
+> Good. See my patch on the other thread. The problem is also not the dual
+> bands support. The regulatory framework should support hardware to do
+> regulatory check and don't duplicate the work.
 
-cu
-Dieter
+Huh? Hardware to do regulatory check? Now you really got me confused.
+
+  Luis
