@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:50481 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760147AbYJIQtB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 12:49:01 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC][PATCH 1/5] p54: broken out vdcf code
-Date: Thu, 9 Oct 2008 18:53:01 +0200
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-References: <200810050238.28100.chunkeey@web.de> <48EE2139.102@lwfinger.net>
-In-Reply-To: <48EE2139.102@lwfinger.net>
+Received: from madara.hpl.hp.com ([192.6.19.124]:50432 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751631AbYJVSAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 14:00:21 -0400
+Date: Wed, 22 Oct 2008 10:37:21 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, Jouni Malinen <j@w1.fi>,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Regression in 2.6.27-git from commit 43ac2ca3840f64
+Message-ID: <20081022173721.GA5786@bougret.hpl.hp.com> (sfid-20081022_200031_996115_378166B0)
+Reply-To: jt@hpl.hp.com
+References: <48FDFCCA.8040604@lwfinger.net> <20081022072840.GD16005@jm.kir.nu> <48FF5933.3080501@lwfinger.net> <1224695189.30459.6.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810091853.02076.chunkeey@web.de> (sfid-20081009_184923_549113_E2CC3F8E)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1224695189.30459.6.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 09 October 2008 17:20:25 Larry Finger wrote:
-> Christian Lamparter wrote:
-> > Broken out the vdcf's code into another patch, as it caused problems in the last RFC.
+On Wed, Oct 22, 2008 at 07:06:29PM +0200, Johannes Berg wrote:
+> On Wed, 2008-10-22 at 09:47 -0700, Larry Finger wrote:
 > 
-> This patch has the following insertion as a replacement:
+> > When a utility starts spitting messages that it doesn't understand what the
+> > kernel is providing _AND_ the commit message does not mention that this will
+> > happen, can someone be blamed for thinking it is a bug?
 > 
-> +struct p54_tx_vdcf_queues {
-> +	u8 aifs;
-> +	u8 padding;
-> +	__le16 cwmin;
-> +	__le16 cwmax;
-> +	__le16 txop;
-> +} __attribute__ ((packed));
+> Heh, no, not really. It was fairly obvious us, but I guess we were just
+> routine-blinded.
+> 
+> > Clearly this is not a regression. Are there plans to update the wireless utilities?
+> 
+> I suspect it could just be made to ignore them. Or skip a select few,
+> but obviously it will never be able to parse all of them...
+> 
+> johannes
 
-Well, I took this idea from stlc45xx. But now, after some digging in the specs about WMM...
-I came to the conclusion that this is superfluous. I'll revert back to the original __le16 aifs,
-in the next RFC/RFT round... But now, we should better fix the code for big-endian machines.
+	Hi,
 
-I tried to use qemu to emulate a PPC machine, but it's painfully slow and the QEMU's USB 
-loop through code doesn't work as advertised (yet?).
+	If you want me to understand what it's about, you may want to
+give me a bit more context.
+	Alternatively, just send me a patch for Wireless Tools, and
+I'll put it in the next release. Wireless Tools is still maintained
+and I still do releases, even if I don't put much cycles into it.
+	Have a great day...
 
-Regards,
-	Chr
+	Jean
+
