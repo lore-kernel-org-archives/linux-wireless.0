@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f18.google.com ([209.85.217.18]:51093 "EHLO
-	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870AbYJ1IRb (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.30]:58211 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752061AbYJVOTm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 04:17:31 -0400
-Received: by gxk11 with SMTP id 11so1182181gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 01:17:30 -0700 (PDT)
-Message-ID: <43e72e890810280117t44e4b0b8nbf1a2b68a989d3a2@mail.gmail.com> (sfid-20081028_091734_749712_CCAC7CB1)
-Date: Tue, 28 Oct 2008 01:17:29 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: rtl2860 driver in mainline?
-Cc: "Thorsten Leemhuis" <fedora@leemhuis.info>,
-	"Greg KH" <greg@kroah.com>, rt2400-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1225181562.3796.76.camel@johannes.berg>
+	Wed, 22 Oct 2008 10:19:42 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so547654ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 07:19:41 -0700 (PDT)
+Message-ID: <48FF3676.1060909@gmail.com> (sfid-20081022_161949_669829_629890D9)
+Date: Wed, 22 Oct 2008 16:19:34 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: Gregory Nietsky <gregory@dnstelecom.co.za>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 1/1] Ath5k: add AP mode
+References: <1223844850-26551-1-git-send-email-jirislaby@gmail.com> <40f31dec0810211108l6700d806o4804b43d9fe47bf7@mail.gmail.com>
+In-Reply-To: <40f31dec0810211108l6700d806o4804b43d9fe47bf7@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
-References: <20081028004915.GA3442@kroah.com> <4906B944.4010105@leemhuis.info>
-	 <1225180598.3796.66.camel@johannes.berg>
-	 <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com>
-	 <1225181562.3796.76.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2008 at 1:12 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-10-28 at 01:02 -0700, Luis R. Rodriguez wrote:
->
->> > I don't think it makes sense either, at _best_ it'll do nothing but help
->> > a few users [1], and if somebody actually starts working on the vendor
->> > driver because it's in staging that's actively harmful to the real
->> > driver by diverting resources away from it.
->> >
->> > johannes
->> >
->> > [1] I used to think the point wasn't to make users happy but to make it
->> > easier to work on those drivers, but that objective seems long gone
+On 10/21/2008 08:08 PM, Nick Kossifidis wrote:
+> 2008/10/12 Jiri Slaby <jirislaby@gmail.com>:
+>> Add support for AP mode. This involves:
+>> - enablement in ath5k_beacon_config -- initialize beacon timer
+>> - add AP to the supported modes in ath5k_add_interface
+>> - handle beacon change even for AP in ath5k_config_interface
+>> - remove useless test for IBSS in ath5k_beacon_update
 >>
->> Problem is distributions already ship crap anyway.
->
-> Well, yes, but that's fine, it doesn't mean people will work on the
-> crap, it means people will use the crap. As far as I understood, putting
-> it into staging was supposed to mean "here is some crap for people to
-> work on", which is a huge difference.
+>> Note that it doesn't enable the AP mode for the driver. It must
+>> be enabled by NL80211_IFTYPE_AP bit added to interface_modes.
+[...]
+> a) It won't work without the following as Gregory pointed out
 
-Well its not staging if it doesn't work as well, if we are going to
-stage might as well let it work while there are no alternatives no?
+This was intentional, see the changelog.
 
-  Luis
+> b) For some reason it only works with 5212/5213 cards, i tested it on
+> a 5413 and an 2425 and it didn't work (hostapd seems to hang).
+
+I've ordered 5413 ;), will come with updates.
+
+Thanks for testing, Nick.
