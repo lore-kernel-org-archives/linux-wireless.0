@@ -1,89 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37273 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:56677 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753807AbYJGUK3 (ORCPT
+	with ESMTP id S1755891AbYJWGwr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 16:10:29 -0400
-Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+	Thu, 23 Oct 2008 02:52:47 -0400
+Subject: Re: [PATCH] mac80211: Change WARN_ON to WARN_ON_ONCE
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240810071306sb282e06h9d29ea2c36f5c3d5@mail.gmail.com> (sfid-20081007_220641_767871_38DFEF2F)
-References: <1223311803.15196.36.camel@johannes.berg>
-	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
-	 <200810070821.56462.hs4233@mail.mn-solutions.de>
-	 <20081007071529.GA5010@infradead.org> <20081007131615.GR3448@tuxdriver.com>
-	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
-	 <1223398724.7328.45.camel@johannes.berg>
-	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
-	 <1223408085.3618.2.camel@johannes.berg>
-	 <1223408342.3618.7.camel@johannes.berg>
-	 <1ba2fa240810071306sb282e06h9d29ea2c36f5c3d5@mail.gmail.com>
-	 (sfid-20081007_220641_767871_38DFEF2F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jao1Zx3/UDNhpnz4pH1I"
-Date: Tue, 07 Oct 2008 22:10:26 +0200
-Message-Id: <1223410226.3618.13.camel@johannes.berg> (sfid-20081007_221033_680500_CF7C857B)
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@Atheros.com, Luis.Rodriguez@Atheros.com
+In-Reply-To: <18688.7474.39470.106619@gargle.gargle.HOWL>
+References: <18688.7474.39470.106619@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GXzBBSrB1+RR/G2yUt8k"
+Date: Thu, 23 Oct 2008 08:52:42 +0200
+Message-Id: <1224744762.5865.19.camel@johannes.berg> (sfid-20081023_085312_899271_25A5C87A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-jao1Zx3/UDNhpnz4pH1I
+--=-GXzBBSrB1+RR/G2yUt8k
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-10-07 at 22:06 +0200, Tomas Winkler wrote:
+On Thu, 2008-10-23 at 12:14 +0530, Sujith wrote:
+> A warning would be printed for every packet that
+> is transmitted if the rate control information isn't
+> setup. Change this to WARN_ON_ONCE.
 
-> > bytes (with nibbles): | . | . | . | . | . | . || . | . | . | . | . | . =
-|
-> >                      | addr 1          |len1 || addr 2          |len2 |
-> > your forced layout:   |               |                |               =
-|
-> > my layout:            |               |       ||               |       =
-|
-> >
-> > Note how this actually matches the border between the border between th=
-e
-> > two descriptors, the || border.
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+but please do set up the rate control information to fix the
+fragmentation issue etc. :)
+
+> ---
+>  net/mac80211/tx.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 >=20
-> Your layout put addr2 (which is 32 bit) sits on 16 bit boundary
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 8b56048..3678325 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -565,8 +565,8 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx=
+)
+>  				IEEE80211_TX_RC_USE_RTS_CTS;
+> =20
+>  		/* RC is busted */
+> -		if (WARN_ON(info->control.rates[i].idx >=3D
+> -			    sband->n_bitrates)) {
+> +		if (WARN_ON_ONCE(info->control.rates[i].idx >=3D
+> +				 sband->n_bitrates)) {
+>  			info->control.rates[i].idx =3D -1;
+>  			continue;
+>  		}
 
-So? Yours makes it need two words, which is even less efficient to
-access. And since the struct is packed, on those architectures that
-don't do unaligned accesses efficiently won't need any put_unaligned
-either.
-
-Also, keep in mind that address 2 is _never_ used at all anyway because
-we don't and cannot do fragmented frames due to the lack of IP
-checksumming in hardware, as I and davem have tried to explain to you
-multiple times already.
-
-johannes
-
---=-jao1Zx3/UDNhpnz4pH1I
+--=-GXzBBSrB1+RR/G2yUt8k
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI68IvAAoJEKVg1VMiehFYMrEQAKqB+iZGxWyJ5Lyk57zs2F6b
-daxigFBKceQQrC4Rpn6YOG6ihlexGMPHbPw4h4h9wpwdNh6FT7gUGQKmpvMe22u5
-DR/TVExRGGNNNMvgjMckfNbTzItosrQffejl7BBsCJr52AXOQFj50iRUvnsjk4HO
-vGtHghOsZbwfTlFQFD7kC5DZAPfzguhjpV6O3qvdyvq0epZD89UupS/GxUDFP4Ik
-/JKorIi09mAntRwYxv6iD4FvjheaUVgF41VI87V+x/eiopBqVrv90hbT6RrlAqWG
-LJe7S/sdhPuJk5veKq0GcCL57J0ezFZNm0JJBhoGVdsi9ZpjiinFAV0VQ0NyjFPP
-PEaRJRhOCfVo4e8Uwhv/33jzImSG/m/POu28aT7FyyMPEGAsyaPRKUrtVYVxti+X
-bGRIbwgvhAcCF84rjhwKc9PjalTTPcvh8zQcdqY6YkdZYBMMnFBUWrHBL2k7xCEE
-zQYBtDl+i2Jj8J7c2w+ViVHZ+N5S0VDHMljMLDM28/baHXJUTqRzd7zp/YFwoaY/
-wtW8Ye+KU2TEQZ+AxGwNgrpcvuXyCGNApbsi/Ih0qO7bhW43bVKsqtwMDb6Dk8p1
-5kmsBPZxQ6aGdDVrpnaE7VzqRrJOl8ut/+eFuYkk8sOaVdJ7GWFWqcFyzup/gIL3
-IIX1fDA348N5u7wa0Vm5
-=7a77
+iQIcBAABAgAGBQJJAB83AAoJEKVg1VMiehFYPT0QAKomlEZ0ndDP/+NYhTs8L1+x
+pWKNsr1r744VDwbtmT4uRIUFz+Oh5nBriYuH2LlhZW909FfFwVWDQxz7qU+QBiMA
+AvfSONAGuovqQlWIiAwKb9TGpiMG6BZdytVCDz72Gp1PHB/AnZzeR2lf9ybUbt0a
+UL7eqcFtJEJPFanDScd87YgKguj6zjgLmoqLpkJZ5tbSmx1H4WWkBceyQYaKXdKA
+K13yjzMErH/nD1tzf5MWsJ8r6GxrGknjlPnV5v6od/U3SpxUeZBX+lLfjyZzI5Pg
+19uqNnpTnoymWjYxAN1dEMySVJy+J80wOyURqKAVrAocDdZJ+cP0eexPHW/7CYvE
+TOAnjDlOp2snSMU/upChBvmwIMaDNawaVkJdjIxXz0Rj9ZeHMCn+T+hoOwKMh71o
+EyjVnc/f1t39QNCEK0uuF1S+D/6vrcXhhecVJvjddGTlEbr67LVUyvzB+BXSCb8Z
+T3yjtLO8mAJfA+NZcAsbEs8FBZhKY9sci1m4sYWtcfe8AJE85QFyoEqpPcdcijGW
+Gxr0w79zU6eCetdmrTbyq5worxhwhrQVamz+kr67mG+tzKKi9gh9ZTWrrvsj3oqw
+aFYCPdbevYWzbTMm0WBpMbdmJzMKMzqCAJeu/lgO/MsOjr/lJUakBMWnCOhbmanY
+4Ip63HVra1FERx2M1VJU
+=0Rvh
 -----END PGP SIGNATURE-----
 
---=-jao1Zx3/UDNhpnz4pH1I--
+--=-GXzBBSrB1+RR/G2yUt8k--
 
