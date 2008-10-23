@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:50363 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753685AbYJFNBN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 09:01:13 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1223296783.15196.13.camel@johannes.berg>
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 <1221123779.2513.88.camel@debian.sh.intel.com>
-	 <1221184060.11498.3.camel@californication>
-	 <1221185432.6695.0.camel@californication>
-	 (sfid-20080912_041007_653566_F8146EC3)  <1223296221.15196.6.camel@johannes.berg>
-	 <1223296592.11272.163.camel@violet.holtmann.net>
-	 <1223296783.15196.13.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 06 Oct 2008 15:01:30 +0200
-Message-Id: <1223298090.11272.167.camel@violet.holtmann.net> (sfid-20081006_150119_794981_847911AA)
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:42682 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751915AbYJWGbr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2008 02:31:47 -0400
+Date: Wed, 22 Oct 2008 23:26:55 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	otus-devel@lists.madwifi-project.org
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Release of Atheros 802.11n USB Linux driver
+Message-ID: <20081023062655.GA8039@kroah.com> (sfid-20081023_083150_954823_FEF3C2EB)
+References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> <20081022065045.GA2400@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081022065045.GA2400@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-> > > > I take this back. It took a couple of hours, but it crashed again.
-> > > 
-> > > Do you have 64k pages enabled? My issue goes away entirely when I
-> > > disable 64k pages.
-> > 
-> > so the initial issue was a BUG_ON when the ucode reports back an
-> > unsupported event. That should have been fixed by now since we just
-> > can't crash the whole kernel, because some piece of firmware acts bogus
-> > now and then. 
+On Tue, Oct 21, 2008 at 11:50:45PM -0700, Greg KH wrote:
+> On Tue, Oct 21, 2008 at 07:04:17PM -0700, Luis R. Rodriguez wrote:
+> > We would like to see our Atheros 802.11n USB Linux driver upstream
+> > however we need help with this so we are releasing our Atheros 11n USB
+> > Otus Linux driver under the ISC to the community. The goal is to work
+> > with the community to help move this forward upstream. We are hoping
+> > for community help and leadership on this (*cough*).
 > 
-> I have a different interpretation of the original issue, since afaik the
-> value it was doing a BUG_ON on is a value that is only passed in by the
-> driver and copied by the ucode to the response, hence it shouldn't
-> actually crash unless the driver is passing bogus stuff in or, as it
-> seems to be the case here, the DMA programming is completely fucked and
-> the ucode just goes to write to random memory locations.
-
-that patch wasn't enough, but neverless we shouldn't crash the whole
-kernel based on this.
-
-In addition they were working on some IOMMU stuff and that explains what
-you are seeing. I never got that far at all. My machine just dies on me.
-
-> > However there seems to be some other issues with me
-> > running a 64-bit OS and connecting to an N-capable access point.
+> Yeah!
 > 
-> Strange. My test AP isn't N capable though.
+> I'll grab this and put it in drivers/staging/ so it gets some users and
+> more developers to help out with it.
 
-We had some discussion about the fact the different firmware versions
-might be causing this. Don't have my X61 handy at the moment.
+Ok, it seems to need some basic work to merely build properly on
+"modern" kernel versions.
 
-Regards
+So, how should we do this if I want to move it into staging?  Can I just
+take a snapshot of what you have in this repo, move it in-kernel, fix
+the build errors and apply that patch (as your contribution of course)?
 
-Marcel
+Then future development can go off of the in-kernel version?  Or do you
+plan to keep this git tree active somehow?
 
+thanks,
 
+greg k-h
