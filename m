@@ -1,75 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45776 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254AbYJWGY0 (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.186]:33460 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118AbYJWTvO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 02:24:26 -0400
-Subject: Re: [PATCH] wireless: update regulatory sample code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081022144056.GM6190@tesla>
-References: <1224701752.30459.53.camel@johannes.berg>
-	 <20081022123505.GI6190@tesla> <1224704488.30459.69.camel@johannes.berg>
-	 <20081022144056.GM6190@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tzXK9Rvozt7/egFy7JXQ"
-Date: Thu, 23 Oct 2008 08:24:19 +0200
-Message-Id: <1224743059.5865.8.camel@johannes.berg> (sfid-20081023_082429_156500_7CF4967C)
-Mime-Version: 1.0
+	Thu, 23 Oct 2008 15:51:14 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so331026rnd.17
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 12:51:09 -0700 (PDT)
+Message-ID: <43e72e890810231251s27f2c014y6f4db8e8f1c5b840@mail.gmail.com> (sfid-20081023_215119_217681_606876ED)
+Date: Thu, 23 Oct 2008 12:51:09 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>
+Subject: Re: [PATCH] wireless: add regulatory_struct_hint
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"Marcel Holtmann" <marcel@holtmann.org>
+In-Reply-To: <8F0C2E89B9AA20448D482EB589641EB306B6390D@orsmsx507.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1224585110.5521.8.camel@johannes.berg>
+	 <20081022122148.GF6190@tesla>
+	 <8F0C2E89B9AA20448D482EB589641EB306B6390D@orsmsx507.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 23, 2008 at 12:40 PM, Perez-Gonzalez, Inaky
+<inaky.perez-gonzalez@intel.com> wrote:
+>>From: Luis R. Rodriguez [mailto:lrodriguez@atheros.com]
+>>
+>>Since this is only for wiphys this seems reasonable. I just keep in the
+>>back of my mind leaving open the possibility for other wireless
+>>subsystems to be able to make use of the currently set regulatory domain
+>>and its regulatory rules, but this is in keeping with that as our
+>>current requests are not changing the regulatory definitions, and just
+>>as we have a wiphy for last_request we can add later struct
+>>foo_new_wireless_type there too. I am curious if band definitions
+>>should be shared between Bluetooth and 802.11 though. I don't think
+>>BT devices have any notion of regulatory though nor are they capable of
+>>exporting it though. Marcel is this correct? Inaky -- how about uwb, or
+>>WiMax?
+>
+> UWB swipes over all the bands (from 3.1 to 10.6G), but keeping emission below FCCp15 limits (-41dBm, if memory serves) so it looks as interference to others. All the channel assignments are fixed and known, so in theory,
+> it'd be possible to coordinate.
+>
+> On WiMAX the bands are allocated per country and per operator, so if the
+> device can tell us what it supports or what the operator is telling it to
+> use, it should be possible for it to report it to some band controller for coordination, but I don't know if it'll make any sense to ask the device to use only bands so and so, because the knowledge of what's allowed is in the network side.
+>
+> I might be missing the crux of the question though :)
 
---=-tzXK9Rvozt7/egFy7JXQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Actually that helps a lot. As you had mentioned before though we are
+not sure if *all* WiMAX devices will operate in the same way but its
+good to know what yours are doing. I was wondering specifically if
+other wireless technology can contribute to the regulatory rules
+collection we have in the future. It seems it *might* be more than
+anything we need coexistence technology.
 
-On Wed, 2008-10-22 at 07:40 -0700, Luis R. Rodriguez wrote:
-
-> > > Should we mention how currently this should be avoided unless
-> > > your regulatory definition is also intersected with hw capabilities
-> > > and that the same channels are the ones that are registered to cfg802=
-11?
->=20
-> Well rd hint for when we provide a structure, that code right now
-> disregards when initiator =3D=3D USER, and this works well only for
-> when the driver sending the rd struct hint also only registered
-> to cfg80211 the channels its legally capable of. If a driver
-> which does not use reg_notifier() and registers *all* of its channels
-> uses this then the USER set regdom will be used and *all* channels
-> will be left intact.
-
-No, only those that are available from CRDA will be used. And this is
-totally irrelevant in the case where this applies anyway because the
-Intel drivers register only the channels from their eeprom, the same set
-they hint at. Yet it's still unrelated.
-
-johannes
-
---=-tzXK9Rvozt7/egFy7JXQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJABiPAAoJEKVg1VMiehFYLIMP/jw7JLbY2/dJtED7ns7s33V4
-7Hsa3DNlA8KgUmk7oCxBFZhsNLN+cxsVXEkYc4cOL5I4smWIwYRHkJBzmkz0EX6c
-ka9WAktnKV56RCvML6RizBi/RcX6RcbUK9P0RdwU1g5XGNsRM5HbdSqWw5aiE9i0
-NbAJ65iGmA4njvWorRFQvDlxdMi0vaABk+xVAh1a6TWaTq9bWG+Dd+RmJ3GFiFhJ
-bW+PwuZYVyS6EMERaBxNVbjQEMMt/tkQb9S3ataG4RDOHD6Hhi81NhjPYcEYTUV3
-q0DyIOxfT04s8VkJ/z3cWtkQPFRnsHnUFZnoB47qgsWhH7R6eEBg53y6kvKdmnlf
-ZbuYc8UWz5iPIj1pgrHJJ0oeElmsowzn8iVaYZHVawY+WhKhJTOO978S7na1X3o6
-ApxK/61Lm0riKkV1xvs7yZOjp4+e583tECH3t8wvitmq2zHJ0F2+wg3Vc/yrhKkq
-gSWlZ0bMOa32HQviBgmy+Dv7ya//901gnLnmsvLe8zYiDIkDzoUBYO0tiCLBTCuc
-idwXMTHHglZmta0EvzBpVSognPREVpF7BdwpMjezQen8x+MililBuWv7sdH7AAz7
-QOFgY/R9PEOdP+z/d0PiXB9dmFU4HYdmAbVRn+pSL8vG1eobbbRALKkcV0bLdOlr
-75r/ULEJx34JYQZHmT+j
-=91uT
------END PGP SIGNATURE-----
-
---=-tzXK9Rvozt7/egFy7JXQ--
-
+  Luis
