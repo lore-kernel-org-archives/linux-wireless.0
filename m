@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:59824 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbYJFSU7 (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:7598 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906AbYJWUSr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 14:20:59 -0400
-Subject: Re: at76_usb driver status
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Dan Williams <dcbw@redhat.com>, Greg KH <greg@kroah.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	"proski@gnu.org" <proski@gnu.org>,
+	Thu, 23 Oct 2008 16:18:47 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so175015ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 13:18:45 -0700 (PDT)
+Message-ID: <43e72e890810231318t2ef200e4wed96b48efefa62bb@mail.gmail.com> (sfid-20081023_221851_979205_757ED539)
+Date: Thu, 23 Oct 2008 13:18:44 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	Sujith <Sujith.Manoharan@atheros.com>,
 	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081006102302.GA6288@tesla>
-References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com>
-	 <20081005061603.GB28533@kroah.com>
-	 <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
-	 <20081006102302.GA6288@tesla>
-Content-Type: text/plain
-Date: Mon, 06 Oct 2008 20:21:17 +0200
-Message-Id: <1223317277.11272.222.camel@violet.holtmann.net> (sfid-20081006_202115_189231_C76E137E)
-Mime-Version: 1.0
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <1ba2fa240810231131l9c9597au2acf166a13a8c03b@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224495531.18024.55.camel@johannes.berg>
+	 <18684.24323.743610.871307@gargle.gargle.HOWL>
+	 <1224505349.27899.17.camel@johannes.berg>
+	 <18684.51206.771543.514682@localhost.localdomain>
+	 <1224669612.28639.49.camel@johannes.berg>
+	 <18688.17545.136327.991699@gargle.gargle.HOWL>
+	 <1224773124.6002.32.camel@johannes.berg>
+	 <43e72e890810231023q5650184r8ce50cb51b63e706@mail.gmail.com>
+	 <1ba2fa240810231131l9c9597au2acf166a13a8c03b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Thu, Oct 23, 2008 at 11:31 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Thu, Oct 23, 2008 at 7:23 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
-> > Well, you have to ask yourself then, what's the point of putting that
-> > driver with it's own 802.11 stack into staging when it's never going to
-> > go into the mainline kernel until it uses mac80211?
-> 
-> And provided that there is an alternative driver that uses mac80211. Die
-> out of tree drivers, die.
+>> I checked internally to verify where you would decide when to AMPDU
+>> and to try to get different reviews and opinions, and it seems that
+>> the path we take right now is correct as there is not much overhead so
+>> we always use AMPDU with whoever supports it with data frames. If
+>> you're a STA you do it all the time with the AP for data frames.
+>>
+>> I noticed iwlagn had some more logic within the RC but I gave up
+>> trying to follow the logic. I suspect they do the same though, Tomas?
 
-I can only second that. If it is a SoftMAC and not using mac80211 then
-it is not even worth it. We want the mac80211 ported driver to go
-upstream. Everything else is just waste of time.
+Thanks for the feedback!
 
-Regards
+> I got different output from our system engineering. APMDU has overhead
 
-Marcel
+Is that because of the interactions required in firmware for scheduling BTW?
 
+> and if there is not requirement
+> for high throughput we don't initiate one.
 
+This makes sense to me regardless.
+
+> What is for sure we shounld
+> not have aggregation enabled for VO AC.
+
+Any particular reason? I'll review this too, but my guess would be the
+buffering required before TXing. I'll see how we perform with aggr on
+VO AC.
+
+> I've payed attention that there are different APs do that differently
+> some opens BA session on BE AC immediately upon association some do it
+> on high throughput I haven't seen in the second case it will be opened
+> on simple ping.
+> Anyhow if we would implement the triggering on throughput  simply
+> setting starting and stopping thresholds to small values will have
+> same effect as your solution and setting it to 0 and maximum will
+> respectively will have effect on  opening BA session upon association.
+
+Seems reasonable. If this is set then as a hw configurable option in
+mac80211 then we can even allow RC control this, should this ever be
+needed (we don't).
+
+  Luis
