@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:50428 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753802AbYJBQcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 12:32:21 -0400
-From: Elias Oltmanns <eo@nebensachen.de>
-To: "Bob Copeland" <me@bobcopeland.com>
-Cc: jirislaby@gmail.com, mickflemm@gmail.com,
-	johannes@sipsolutions.net, toralf.foerster@gmx.de,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-In-Reply-To: <20081002144600.M31352@bobcopeland.com> (Bob Copeland's message
-	of "Thu, 2 Oct 2008 11:02:02 -0400")
-References: <200808101401.03339.toralf.foerster@gmx.de>
-	<b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
-	<200810012055.58085.toralf.foerster@gmx.de>
-	<87ej30m376.fsf@denkblock.local>
-	<b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
-	<87ljx8ndw1.fsf@denkblock.local>
-	<b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com>
-	<87od23mo08.fsf@denkblock.local>
-	<b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
-	<20081002144600.M31352@bobcopeland.com>
-Date: Thu, 02 Oct 2008 18:31:55 +0200
-Message-ID: <87bpy32c1w.fsf@denkblock.local> (sfid-20081002_183226_225680_7E94C27C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from senator.holtmann.net ([87.106.208.187]:33919 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753787AbYJWTxo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2008 15:53:44 -0400
+Subject: RE: [PATCH] wireless: add regulatory_struct_hint
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <8F0C2E89B9AA20448D482EB589641EB306B6390D@orsmsx507.amr.corp.intel.com>
+References: <1224585110.5521.8.camel@johannes.berg>
+	 <20081022122148.GF6190@tesla>
+	 <8F0C2E89B9AA20448D482EB589641EB306B6390D@orsmsx507.amr.corp.intel.com>
+Content-Type: text/plain
+Date: Thu, 23 Oct 2008 21:54:44 +0200
+Message-Id: <1224791684.9386.194.camel@californication> (sfid-20081023_215348_333964_76ABC1E4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Bob Copeland" <me@bobcopeland.com> wrote:
-> On Thu, 2 Oct 2008 08:52:58 -0400, Bob Copeland wrote
->> > Not sure I agree there. Why should calibration take place regularly even
->
->> > though the interface appears to be shut down from user-space's point of
->> > view? It simply doesn't make sense  to start the interface if nobody
->> > intends to use it.
->> 
->> Hmm, yeah, you're right.  So, I guess we can just do your patch except
->> with another status bit that says it's active instead of changing
->> mac80211 (b43 does something along those lines).
->
-> Something like this?  It's kind of ugly, but the state bit needs
-> to be in the _init/_stop critical section to avoid the race there.
-> This makes it match other drivers' suspend methods, but is only a 
-> stop-gap until we have mac80211 suspend callbacks.
->
-> Jiri, Nick, any comments?  
->
-> Based on a patch by Elias Oltmanns.  We call ath5k_init in resume even
-> if we didn't previously open the device.  Besides starting up the
-> device unnecessarily, this also causes an OOPS on rmmod because
-> mac80211 will not invoke ath5k_stop and softirqs are left running after
-> the module has been unloaded.  Add a new state bit, ATH5K_STAT_STARTED,
-> to indicate that we have been started up.
+Hi Luis,
 
-Sorry, but I don't think this is safe. Checking and restoring the
-started flag has to be protected too, otherwise there can be races
-against ->stop().
+> >Since this is only for wiphys this seems reasonable. I just keep in the
+> >back of my mind leaving open the possibility for other wireless
+> >subsystems to be able to make use of the currently set regulatory domain
+> >and its regulatory rules, but this is in keeping with that as our
+> >current requests are not changing the regulatory definitions, and just
+> >as we have a wiphy for last_request we can add later struct
+> >foo_new_wireless_type there too. I am curious if band definitions
+> >should be shared between Bluetooth and 802.11 though. I don't think
+> >BT devices have any notion of regulatory though nor are they capable of
+> >exporting it though. Marcel is this correct? Inaky -- how about uwb, or
+> >WiMax?
+> 
+> UWB swipes over all the bands (from 3.1 to 10.6G), but keeping emission below FCCp15 limits (-41dBm, if memory serves) so it looks as interference to others. All the channel assignments are fixed and known, so in theory,
+> it'd be possible to coordinate.
 
-Regards,
+and Bluetooth uses the full 2.4 GHz band (split into 79 channels) and it
+uses the full band equally and is allowed to. The regulatory efforts of
+the Bluetooth SIG made it possible to use this world-wide. No regulatory
+stuff is needed here.
 
-Elias
+Bluetooth will also use UWB in the future in the range of 6 GHz and it
+will get the same world-wide regulatory effort.
+
+The only part I am not sure is Bluetooth over 802.11 since they have
+some weird stuff in there and the specification is not final yet.
+
+Regards
+
+Marcel
+
+
