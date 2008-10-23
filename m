@@ -1,35 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:50940 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329AbYJFOlX (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:4147 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751552AbYJWXWl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 10:41:23 -0400
-Received: by wx-out-0506.google.com with SMTP id h27so593389wxd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 07:41:22 -0700 (PDT)
-Message-ID: <1ba2fa240810060741o35c8071ere77460305b88545c@mail.gmail.com> (sfid-20081006_164126_750685_1E2C2883)
-Date: Mon, 6 Oct 2008 16:41:20 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Rami Rosen" <ramirose@gmail.com>
-Subject: Re: [PATCH 1/2] iwlwifi: fix compliation warning in iwl-agn-rs.c when CONFIG_IWLWIFI_DEBUG is not set.
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	yi.zhu@intel.com
-In-Reply-To: <eb3ff54b0810060658p2241a6d0k9c6f504d976e0f@mail.gmail.com>
+	Thu, 23 Oct 2008 19:22:41 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so209727ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 16:22:40 -0700 (PDT)
+Message-ID: <43e72e890810231622t27ef5f23jf5e35c493447aee3@mail.gmail.com> (sfid-20081024_012248_004897_0FBCD3F4)
+Date: Thu, 23 Oct 2008 16:22:40 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Davide Pesavento" <davidepesa@gmail.com>
+Subject: Re: [CRDA PATCH 1/6] Consolidate db signature validation in one function.
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081023230459.GA8681@PesaBook.pesa.homelinux.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <eb3ff54b0810060658p2241a6d0k9c6f504d976e0f@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20081023230459.GA8681@PesaBook.pesa.homelinux.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 6, 2008 at 3:58 PM, Rami Rosen <ramirose@gmail.com> wrote:
-> When CONFIG_IWLWIFI_DEBUG is not set and CONFIG_IWLWIFI is set,
-> we get this compilation warning:
-> /wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c: In
-> function 'rs_free_sta':
-> /wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:2425:
-> warning: unused variable 'priv'
->
-> This patch (against wireless-next-2.6 tree) fixes it.
->
+On Thu, Oct 23, 2008 at 4:04 PM, Davide Pesavento <davidepesa@gmail.com> wrote:
 
-I prefer marking it.
-struct iwl_priv *priv = priv_r __maybe_unused;
+Very nice, thanks for all of these, applied and pushed.
+
+  Luis
