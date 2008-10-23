@@ -1,515 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57602 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752310AbYJNRSc (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:28194 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753752AbYJWVRD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 13:18:32 -0400
-Subject: [PATCH v2] mac80211: make retry limits part of hw config
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <1223682835.29811.10.camel@johannes.berg> (sfid-20081011_015401_399183_657B22DD)
-References: <1223682835.29811.10.camel@johannes.berg>
-	 (sfid-20081011_015401_399183_657B22DD)
-Content-Type: text/plain
-Date: Tue, 14 Oct 2008 19:17:54 +0200
-Message-Id: <1224004674.10113.46.camel@johannes.berg> (sfid-20081014_191839_707333_44EFEA89)
-Mime-Version: 1.0
+	Thu, 23 Oct 2008 17:17:03 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so521855wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 14:17:02 -0700 (PDT)
+Message-ID: <1ba2fa240810231417s55f6754cl54a38d9b79526cd8@mail.gmail.com> (sfid-20081023_231710_321485_CDB22615)
+Date: Thu, 23 Oct 2008 23:17:02 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <43e72e890810231318t2ef200e4wed96b48efefa62bb@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <18684.24323.743610.871307@gargle.gargle.HOWL>
+	 <1224505349.27899.17.camel@johannes.berg>
+	 <18684.51206.771543.514682@localhost.localdomain>
+	 <1224669612.28639.49.camel@johannes.berg>
+	 <18688.17545.136327.991699@gargle.gargle.HOWL>
+	 <1224773124.6002.32.camel@johannes.berg>
+	 <43e72e890810231023q5650184r8ce50cb51b63e706@mail.gmail.com>
+	 <1ba2fa240810231131l9c9597au2acf166a13a8c03b@mail.gmail.com>
+	 <43e72e890810231318t2ef200e4wed96b48efefa62bb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of having a separate callback, use the HW config callback
-with a new flag to change retry limits.
+On Thu, Oct 23, 2008 at 10:18 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Oct 23, 2008 at 11:31 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+>> On Thu, Oct 23, 2008 at 7:23 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>
+>>> I checked internally to verify where you would decide when to AMPDU
+>>> and to try to get different reviews and opinions, and it seems that
+>>> the path we take right now is correct as there is not much overhead so
+>>> we always use AMPDU with whoever supports it with data frames. If
+>>> you're a STA you do it all the time with the AP for data frames.
+>>>
+>>> I noticed iwlagn had some more logic within the RC but I gave up
+>>> trying to follow the logic. I suspect they do the same though, Tomas?
+>
+> Thanks for the feedback!
+>
+>> I got different output from our system engineering. APMDU has overhead
+>
+> Is that because of the interactions required in firmware for scheduling BTW?
+>
+No HW support make aggregation faster, the overhead is in the air. BA
+is bigger then ACK so if you don't have burst than you need to send BA
+for single frame it's slower then sending ACK.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: update b43 changes
+>> and if there is not requirement
+>> for high throughput we don't initiate one.
+>
+> This makes sense to me regardless.
+>
+>> What is for sure we shounld
+>> not have aggregation enabled for VO AC.
+>
+> Any particular reason? I'll review this too, but my guess would be the
+> buffering required before TXing. I'll see how we perform with aggr on
 
- drivers/net/wireless/ath9k/main.c       |    1 
- drivers/net/wireless/b43/main.c         |   60 ++++++++++++--------------------
- drivers/net/wireless/b43legacy/main.c   |   59 +++++++++++--------------------
- drivers/net/wireless/rt2x00/rt2400pci.c |    2 -
- drivers/net/wireless/rt2x00/rt2500pci.c |    2 -
- drivers/net/wireless/rt2x00/rt2x00.h    |    3 +
- drivers/net/wireless/rt2x00/rt2x00mac.c |    9 ++++
- drivers/net/wireless/rt2x00/rt61pci.c   |    2 -
- drivers/net/wireless/rt2x00/rt73usb.c   |    2 -
- include/net/mac80211.h                  |   14 +++++--
- net/mac80211/debugfs.c                  |    4 +-
- net/mac80211/ieee80211_i.h              |    2 -
- net/mac80211/main.c                     |    4 +-
- net/mac80211/tx.c                       |    4 +-
- net/mac80211/wext.c                     |   28 ++++++--------
- 15 files changed, 89 insertions(+), 107 deletions(-)
+No the problem is on the receiver side you don't release packets to
+network stuck out of order so there is inherit delay in aggregation.
+Voice is sensitive to delay and jitter.
 
---- everything.orig/include/net/mac80211.h	2008-10-14 16:31:10.000000000 +0200
-+++ everything/include/net/mac80211.h	2008-10-14 19:10:01.000000000 +0200
-@@ -473,6 +473,7 @@ static inline int __deprecated __IEEE802
-  * @IEEE80211_CONF_CHANGE_PS: the PS flag changed
-  * @IEEE80211_CONF_CHANGE_POWER: the TX power changed
-  * @IEEE80211_CONF_CHANGE_CHANNEL: the channel changed
-+ * @IEEE80211_CONF_CHANGE_RETRY_LIMITS: retry limits changed
-  */
- enum ieee80211_conf_changed {
- 	IEEE80211_CONF_CHANGE_RADIO_ENABLED	= BIT(0),
-@@ -482,6 +483,7 @@ enum ieee80211_conf_changed {
- 	IEEE80211_CONF_CHANGE_PS		= BIT(4),
- 	IEEE80211_CONF_CHANGE_POWER		= BIT(5),
- 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
-+	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
- };
- 
- /**
-@@ -497,6 +499,12 @@ enum ieee80211_conf_changed {
-  * @ht_cap: describes current self configuration of 802.11n HT capabilities
-  * @ht_bss_conf: describes current BSS configuration of 802.11n HT parameters
-  * @channel: the channel to tune to
-+ * @long_frame_max_tx_count: Maximum number of transmissions for a "long" frame
-+ *	(a frame not RTS protected), called "dot11LongRetryLimit" in 802.11,
-+ *	but actually means the number of transmissions not the number of retries
-+ * @short_frame_max_tx_count: Maximum number of transmissions for a "short" frame,
-+ *	called "dot11ShortRetryLimit" in 802.11, but actually means the number
-+ *	of transmissions not the number of retries
-  */
- struct ieee80211_conf {
- 	int beacon_int;
-@@ -506,6 +514,8 @@ struct ieee80211_conf {
- 	u16 listen_interval;
- 	bool radio_enabled;
- 
-+	u8 long_frame_max_tx_count, short_frame_max_tx_count;
-+
- 	struct ieee80211_channel *channel;
- 
- 	struct ieee80211_sta_ht_cap ht_cap;
-@@ -1192,8 +1202,6 @@ enum ieee80211_ampdu_mlme_action {
-  *	the device does fragmentation by itself; if this method is assigned then
-  *	the stack will not do fragmentation.
-  *
-- * @set_retry_limit: Configuration of retry limits (if device needs it)
-- *
-  * @sta_notify: Notifies low level driver about addition or removal
-  *	of assocaited station or AP.
-  *
-@@ -1263,8 +1271,6 @@ struct ieee80211_ops {
- 			     u32 *iv32, u16 *iv16);
- 	int (*set_rts_threshold)(struct ieee80211_hw *hw, u32 value);
- 	int (*set_frag_threshold)(struct ieee80211_hw *hw, u32 value);
--	int (*set_retry_limit)(struct ieee80211_hw *hw,
--			       u32 short_retry, u32 long_retr);
- 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum sta_notify_cmd, struct ieee80211_sta *sta);
- 	int (*conf_tx)(struct ieee80211_hw *hw, u16 queue,
---- everything.orig/net/mac80211/ieee80211_i.h	2008-10-14 16:31:10.000000000 +0200
-+++ everything/net/mac80211/ieee80211_i.h	2008-10-14 19:10:02.000000000 +0200
-@@ -632,8 +632,6 @@ struct ieee80211_local {
- 
- 	int rts_threshold;
- 	int fragmentation_threshold;
--	int short_retry_limit; /* dot11ShortRetryLimit */
--	int long_retry_limit; /* dot11LongRetryLimit */
- 
- 	struct crypto_blkcipher *wep_tx_tfm;
- 	struct crypto_blkcipher *wep_rx_tfm;
---- everything.orig/net/mac80211/main.c	2008-10-14 16:31:10.000000000 +0200
-+++ everything/net/mac80211/main.c	2008-10-14 19:10:05.000000000 +0200
-@@ -673,8 +673,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 
- 	local->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
- 	local->fragmentation_threshold = IEEE80211_MAX_FRAG_THRESHOLD;
--	local->short_retry_limit = 7;
--	local->long_retry_limit = 4;
-+	local->hw.conf.long_frame_max_tx_count = 4;
-+	local->hw.conf.short_frame_max_tx_count = 7;
- 	local->hw.conf.radio_enabled = true;
- 
- 	INIT_LIST_HEAD(&local->interfaces);
---- everything.orig/net/mac80211/wext.c	2008-10-14 12:24:43.000000000 +0200
-+++ everything/net/mac80211/wext.c	2008-10-14 19:10:05.000000000 +0200
-@@ -802,21 +802,16 @@ static int ieee80211_ioctl_siwretry(stru
- 	    (retry->flags & IW_RETRY_TYPE) != IW_RETRY_LIMIT)
- 		return -EINVAL;
- 
--	if (retry->flags & IW_RETRY_MAX)
--		local->long_retry_limit = retry->value;
--	else if (retry->flags & IW_RETRY_MIN)
--		local->short_retry_limit = retry->value;
--	else {
--		local->long_retry_limit = retry->value;
--		local->short_retry_limit = retry->value;
-+	if (retry->flags & IW_RETRY_MAX) {
-+		local->hw.conf.long_frame_max_tx_count = retry->value;
-+	} else if (retry->flags & IW_RETRY_MIN) {
-+		local->hw.conf.short_frame_max_tx_count = retry->value;
-+	} else {
-+		local->hw.conf.long_frame_max_tx_count = retry->value;
-+		local->hw.conf.short_frame_max_tx_count = retry->value;
- 	}
- 
--	if (local->ops->set_retry_limit) {
--		return local->ops->set_retry_limit(
--			local_to_hw(local),
--			local->short_retry_limit,
--			local->long_retry_limit);
--	}
-+	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_RETRY_LIMITS);
- 
- 	return 0;
- }
-@@ -833,14 +828,15 @@ static int ieee80211_ioctl_giwretry(stru
- 		/* first return min value, iwconfig will ask max value
- 		 * later if needed */
- 		retry->flags |= IW_RETRY_LIMIT;
--		retry->value = local->short_retry_limit;
--		if (local->long_retry_limit != local->short_retry_limit)
-+		retry->value = local->hw.conf.short_frame_max_tx_count;
-+		if (local->hw.conf.long_frame_max_tx_count !=
-+		    local->hw.conf.short_frame_max_tx_count)
- 			retry->flags |= IW_RETRY_MIN;
- 		return 0;
- 	}
- 	if (retry->flags & IW_RETRY_MAX) {
- 		retry->flags = IW_RETRY_LIMIT | IW_RETRY_MAX;
--		retry->value = local->long_retry_limit;
-+		retry->value = local->hw.conf.long_frame_max_tx_count;
- 	}
- 
- 	return 0;
---- everything.orig/drivers/net/wireless/ath9k/main.c	2008-10-14 12:24:44.000000000 +0200
-+++ everything/drivers/net/wireless/ath9k/main.c	2008-10-14 19:10:05.000000000 +0200
-@@ -1657,7 +1657,6 @@ static struct ieee80211_ops ath9k_ops = 
- 	.get_tkip_seq       = NULL,
- 	.set_rts_threshold  = NULL,
- 	.set_frag_threshold = NULL,
--	.set_retry_limit    = NULL,
- 	.get_tsf 	    = ath9k_get_tsf,
- 	.reset_tsf 	    = ath9k_reset_tsf,
- 	.tx_last_beacon     = NULL,
---- everything.orig/drivers/net/wireless/b43/main.c	2008-10-14 12:24:44.000000000 +0200
-+++ everything/drivers/net/wireless/b43/main.c	2008-10-14 19:12:26.000000000 +0200
-@@ -3320,6 +3320,22 @@ init_failure:
- 	return err;
- }
- 
-+/* Write the short and long frame retry limit values. */
-+static void b43_set_retry_limits(struct b43_wldev *dev,
-+				 unsigned int short_retry,
-+				 unsigned int long_retry)
-+{
-+	/* The retry limit is a 4-bit counter. Enforce this to avoid overflowing
-+	 * the chip-internal counter. */
-+	short_retry = min(short_retry, (unsigned int)0xF);
-+	long_retry = min(long_retry, (unsigned int)0xF);
-+
-+	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_SRLIMIT,
-+			short_retry);
-+	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_LRLIMIT,
-+			long_retry);
-+}
-+
- static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct b43_wl *wl = hw_to_b43_wl(hw);
-@@ -3340,6 +3356,13 @@ static int b43_op_config(struct ieee8021
- 	dev = wl->current_dev;
- 	phy = &dev->phy;
- 
-+	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS)
-+		b43_set_retry_limits(dev, conf->short_frame_max_tx_count,
-+					  conf->long_frame_max_tx_count);
-+	changed &= ~IEEE80211_CONF_CHANGE_RETRY_LIMITS;
-+	if (!changed)
-+		goto out_unlock_mutex;
-+
- 	/* Disable IRQs while reconfiguring the device.
- 	 * This makes it possible to drop the spinlock throughout
- 	 * the reconfiguration process. */
-@@ -3860,22 +3883,6 @@ static void b43_imcfglo_timeouts_workaro
- #endif /* CONFIG_SSB_DRIVER_PCICORE */
- }
- 
--/* Write the short and long frame retry limit values. */
--static void b43_set_retry_limits(struct b43_wldev *dev,
--				 unsigned int short_retry,
--				 unsigned int long_retry)
--{
--	/* The retry limit is a 4-bit counter. Enforce this to avoid overflowing
--	 * the chip-internal counter. */
--	short_retry = min(short_retry, (unsigned int)0xF);
--	long_retry = min(long_retry, (unsigned int)0xF);
--
--	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_SRLIMIT,
--			short_retry);
--	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_LRLIMIT,
--			long_retry);
--}
--
- static void b43_set_synth_pu_delay(struct b43_wldev *dev, bool idle)
- {
- 	u16 pu_delay;
-@@ -4196,26 +4203,6 @@ static void b43_op_stop(struct ieee80211
- 	cancel_work_sync(&(wl->txpower_adjust_work));
- }
- 
--static int b43_op_set_retry_limit(struct ieee80211_hw *hw,
--				  u32 short_retry_limit, u32 long_retry_limit)
--{
--	struct b43_wl *wl = hw_to_b43_wl(hw);
--	struct b43_wldev *dev;
--	int err = 0;
--
--	mutex_lock(&wl->mutex);
--	dev = wl->current_dev;
--	if (unlikely(!dev || (b43_status(dev) < B43_STAT_INITIALIZED))) {
--		err = -ENODEV;
--		goto out_unlock;
--	}
--	b43_set_retry_limits(dev, short_retry_limit, long_retry_limit);
--out_unlock:
--	mutex_unlock(&wl->mutex);
--
--	return err;
--}
--
- static int b43_op_beacon_set_tim(struct ieee80211_hw *hw,
- 				 struct ieee80211_sta *sta, bool set)
- {
-@@ -4252,7 +4239,6 @@ static const struct ieee80211_ops b43_hw
- 	.get_tx_stats		= b43_op_get_tx_stats,
- 	.start			= b43_op_start,
- 	.stop			= b43_op_stop,
--	.set_retry_limit	= b43_op_set_retry_limit,
- 	.set_tim		= b43_op_beacon_set_tim,
- 	.sta_notify		= b43_op_sta_notify,
- };
---- everything.orig/drivers/net/wireless/b43legacy/main.c	2008-10-14 12:24:44.000000000 +0200
-+++ everything/drivers/net/wireless/b43legacy/main.c	2008-10-14 19:13:36.000000000 +0200
-@@ -2556,6 +2556,20 @@ init_failure:
- 	return err;
- }
- 
-+/* Write the short and long frame retry limit values. */
-+static void b43legacy_set_retry_limits(struct b43legacy_wldev *dev,
-+				       unsigned int short_retry,
-+				       unsigned int long_retry)
-+{
-+	/* The retry limit is a 4-bit counter. Enforce this to avoid overflowing
-+	 * the chip-internal counter. */
-+	short_retry = min(short_retry, (unsigned int)0xF);
-+	long_retry = min(long_retry, (unsigned int)0xF);
-+
-+	b43legacy_shm_write16(dev, B43legacy_SHM_WIRELESS, 0x0006, short_retry);
-+	b43legacy_shm_write16(dev, B43legacy_SHM_WIRELESS, 0x0007, long_retry);
-+}
-+
- static int b43legacy_op_dev_config(struct ieee80211_hw *hw,
- 				   u32 changed)
- {
-@@ -2577,6 +2591,14 @@ static int b43legacy_op_dev_config(struc
- 	dev = wl->current_dev;
- 	phy = &dev->phy;
- 
-+	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS)
-+		b43legacy_set_retry_limits(dev,
-+					   conf->short_frame_max_tx_count,
-+					   conf->long_frame_max_tx_count);
-+	changed &= ~IEEE80211_CONF_CHANGE_RETRY_LIMITS;
-+	if (!changed)
-+		goto out_unlock_mutex;
-+
- 	/* Switch the PHY mode (if necessary). */
- 	switch (conf->channel->band) {
- 	case IEEE80211_BAND_2GHZ:
-@@ -2989,20 +3011,6 @@ static void b43legacy_imcfglo_timeouts_w
- #endif /* CONFIG_SSB_DRIVER_PCICORE */
- }
- 
--/* Write the short and long frame retry limit values. */
--static void b43legacy_set_retry_limits(struct b43legacy_wldev *dev,
--				       unsigned int short_retry,
--				       unsigned int long_retry)
--{
--	/* The retry limit is a 4-bit counter. Enforce this to avoid overflowing
--	 * the chip-internal counter. */
--	short_retry = min(short_retry, (unsigned int)0xF);
--	long_retry = min(long_retry, (unsigned int)0xF);
--
--	b43legacy_shm_write16(dev, B43legacy_SHM_WIRELESS, 0x0006, short_retry);
--	b43legacy_shm_write16(dev, B43legacy_SHM_WIRELESS, 0x0007, long_retry);
--}
--
- static void b43legacy_set_synth_pu_delay(struct b43legacy_wldev *dev,
- 					  bool idle) {
- 	u16 pu_delay = 1050;
-@@ -3367,28 +3375,6 @@ static void b43legacy_op_stop(struct iee
- 	mutex_unlock(&wl->mutex);
- }
- 
--static int b43legacy_op_set_retry_limit(struct ieee80211_hw *hw,
--					u32 short_retry_limit,
--					u32 long_retry_limit)
--{
--	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
--	struct b43legacy_wldev *dev;
--	int err = 0;
--
--	mutex_lock(&wl->mutex);
--	dev = wl->current_dev;
--	if (unlikely(!dev ||
--		     (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED))) {
--		err = -ENODEV;
--		goto out_unlock;
--	}
--	b43legacy_set_retry_limits(dev, short_retry_limit, long_retry_limit);
--out_unlock:
--	mutex_unlock(&wl->mutex);
--
--	return err;
--}
--
- static int b43legacy_op_beacon_set_tim(struct ieee80211_hw *hw,
- 				       struct ieee80211_sta *sta, bool set)
- {
-@@ -3414,7 +3400,6 @@ static const struct ieee80211_ops b43leg
- 	.get_tx_stats		= b43legacy_op_get_tx_stats,
- 	.start			= b43legacy_op_start,
- 	.stop			= b43legacy_op_stop,
--	.set_retry_limit	= b43legacy_op_set_retry_limit,
- 	.set_tim		= b43legacy_op_beacon_set_tim,
- };
- 
---- everything.orig/drivers/net/wireless/rt2x00/rt2400pci.c	2008-10-14 12:24:44.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt2400pci.c	2008-10-14 16:31:10.000000000 +0200
-@@ -1576,7 +1576,6 @@ static const struct ieee80211_ops rt2400
- 	.config_interface	= rt2x00mac_config_interface,
- 	.configure_filter	= rt2x00mac_configure_filter,
- 	.get_stats		= rt2x00mac_get_stats,
--	.set_retry_limit	= rt2400pci_set_retry_limit,
- 	.bss_info_changed	= rt2x00mac_bss_info_changed,
- 	.conf_tx		= rt2400pci_conf_tx,
- 	.get_tx_stats		= rt2x00mac_get_tx_stats,
-@@ -1605,6 +1604,7 @@ static const struct rt2x00lib_ops rt2400
- 	.config_intf		= rt2400pci_config_intf,
- 	.config_erp		= rt2400pci_config_erp,
- 	.config			= rt2400pci_config,
-+	.set_retry_limit	= rt2400pci_set_retry_limit,
- };
- 
- static const struct data_queue_desc rt2400pci_queue_rx = {
---- everything.orig/drivers/net/wireless/rt2x00/rt2x00.h	2008-10-14 12:24:44.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt2x00.h	2008-10-14 16:31:10.000000000 +0200
-@@ -599,6 +599,9 @@ struct rt2x00lib_ops {
- #define CONFIG_UPDATE_SLOT_TIME 	( 1 << 5 )
- #define CONFIG_UPDATE_BEACON_INT	( 1 << 6 )
- #define CONFIG_UPDATE_ALL		0xffff
-+
-+	int (*set_retry_limit) (struct ieee80211_hw *hw,
-+				u32 short_limit, u32 long_limit);
- };
- 
- /*
---- everything.orig/drivers/net/wireless/rt2x00/rt2500pci.c	2008-10-14 12:24:44.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt2500pci.c	2008-10-14 16:31:10.000000000 +0200
-@@ -1877,7 +1877,6 @@ static const struct ieee80211_ops rt2500
- 	.config_interface	= rt2x00mac_config_interface,
- 	.configure_filter	= rt2x00mac_configure_filter,
- 	.get_stats		= rt2x00mac_get_stats,
--	.set_retry_limit	= rt2500pci_set_retry_limit,
- 	.bss_info_changed	= rt2x00mac_bss_info_changed,
- 	.conf_tx		= rt2x00mac_conf_tx,
- 	.get_tx_stats		= rt2x00mac_get_tx_stats,
-@@ -1906,6 +1905,7 @@ static const struct rt2x00lib_ops rt2500
- 	.config_intf		= rt2500pci_config_intf,
- 	.config_erp		= rt2500pci_config_erp,
- 	.config			= rt2500pci_config,
-+	.set_retry_limit	= rt2500pci_set_retry_limit,
- };
- 
- static const struct data_queue_desc rt2500pci_queue_rx = {
---- everything.orig/drivers/net/wireless/rt2x00/rt61pci.c	2008-10-14 12:24:44.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt61pci.c	2008-10-14 16:31:10.000000000 +0200
-@@ -2726,7 +2726,6 @@ static const struct ieee80211_ops rt61pc
- 	.configure_filter	= rt2x00mac_configure_filter,
- 	.set_key		= rt2x00mac_set_key,
- 	.get_stats		= rt2x00mac_get_stats,
--	.set_retry_limit	= rt61pci_set_retry_limit,
- 	.bss_info_changed	= rt2x00mac_bss_info_changed,
- 	.conf_tx		= rt61pci_conf_tx,
- 	.get_tx_stats		= rt2x00mac_get_tx_stats,
-@@ -2759,6 +2758,7 @@ static const struct rt2x00lib_ops rt61pc
- 	.config_intf		= rt61pci_config_intf,
- 	.config_erp		= rt61pci_config_erp,
- 	.config			= rt61pci_config,
-+	.set_retry_limit	= rt61pci_set_retry_limit,
- };
- 
- static const struct data_queue_desc rt61pci_queue_rx = {
---- everything.orig/drivers/net/wireless/rt2x00/rt73usb.c	2008-10-14 12:24:44.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt73usb.c	2008-10-14 16:31:10.000000000 +0200
-@@ -2317,7 +2317,6 @@ static const struct ieee80211_ops rt73us
- 	.configure_filter	= rt2x00mac_configure_filter,
- 	.set_key		= rt2x00mac_set_key,
- 	.get_stats		= rt2x00mac_get_stats,
--	.set_retry_limit	= rt73usb_set_retry_limit,
- 	.bss_info_changed	= rt2x00mac_bss_info_changed,
- 	.conf_tx		= rt73usb_conf_tx,
- 	.get_tx_stats		= rt2x00mac_get_tx_stats,
-@@ -2349,6 +2348,7 @@ static const struct rt2x00lib_ops rt73us
- 	.config_intf		= rt73usb_config_intf,
- 	.config_erp		= rt73usb_config_erp,
- 	.config			= rt73usb_config,
-+	.set_retry_limit	= rt73usb_set_retry_limit,
- };
- 
- static const struct data_queue_desc rt73usb_queue_rx = {
---- everything.orig/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-10-14 12:24:44.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-10-14 19:10:03.000000000 +0200
-@@ -349,6 +349,15 @@ int rt2x00mac_config(struct ieee80211_hw
- 	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
- 		return 0;
- 
-+	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
-+		rt2x00dev->ops->lib->set_retry_limit(hw,
-+			conf->short_frame_max_tx_count,
-+			conf->long_frame_max_tx_count);
-+	}
-+	changed &= ~IEEE80211_CONF_CHANGE_RETRY_LIMITS;
-+	if (!changed)
-+		return 0;
-+
- 	/*
- 	 * Only change device state when the radio is enabled. It does not
- 	 * matter what parameters we have configured when the radio is disabled
---- everything.orig/net/mac80211/debugfs.c	2008-10-14 12:24:44.000000000 +0200
-+++ everything/net/mac80211/debugfs.c	2008-10-14 16:31:10.000000000 +0200
-@@ -52,9 +52,9 @@ DEBUGFS_READONLY_FILE(rts_threshold, 20,
- DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
- 		      local->fragmentation_threshold);
- DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
--		      local->short_retry_limit);
-+		      local->hw.conf.short_frame_max_tx_count);
- DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
--		      local->long_retry_limit);
-+		      local->hw.conf.long_frame_max_tx_count);
- DEBUGFS_READONLY_FILE(total_ps_buffered, 20, "%d",
- 		      local->total_ps_buffered);
- DEBUGFS_READONLY_FILE(wep_iv, 20, "%#06x",
---- everything.orig/net/mac80211/tx.c	2008-10-14 16:31:10.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-10-14 19:10:02.000000000 +0200
-@@ -507,10 +507,10 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
- 				info->flags |=
- 					IEEE80211_TX_CTL_LONG_RETRY_LIMIT;
- 				info->control.retry_limit =
--					tx->local->long_retry_limit;
-+					tx->local->hw.conf.long_frame_max_tx_count - 1;
- 			} else {
- 				info->control.retry_limit =
--					tx->local->short_retry_limit;
-+					tx->local->hw.conf.short_frame_max_tx_count - 1;
- 			}
- 		} else {
- 			info->control.retry_limit = 1;
-
-
+>> I've payed attention that there are different APs do that differently
+>> some opens BA session on BE AC immediately upon association some do it
+>> on high throughput I haven't seen in the second case it will be opened
+>> on simple ping.
+>> Anyhow if we would implement the triggering on throughput  simply
+>> setting starting and stopping thresholds to small values will have
+>> same effect as your solution and setting it to 0 and maximum will
+>> respectively will have effect on  opening BA session upon association.
+>
+> Seems reasonable. If this is set then as a hw configurable option in
+> mac80211 then we can even allow RC control this, should this ever be
+> needed (we don't).
+>
+>  Luis
+>
