@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38301 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135AbYJYJR2 (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:46802 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752211AbYJWTpu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 05:17:28 -0400
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>
-In-Reply-To: <4902DEBB.3050205@hotmail.com> (sfid-20081025_111023_101434_86228069)
-References: <4902DEBB.3050205@hotmail.com>
-	 (sfid-20081025_111023_101434_86228069)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-22Qag55smQqW6uYPWfSp"
-Date: Sat, 25 Oct 2008 11:17:21 +0200
-Message-Id: <1224926241.6695.1.camel@johannes.berg> (sfid-20081025_111732_924681_40DD4DFE)
-Mime-Version: 1.0
+	Thu, 23 Oct 2008 15:45:50 -0400
+From: "Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 23 Oct 2008 12:40:50 -0700
+Subject: RE: [PATCH] wireless: add regulatory_struct_hint
+Message-ID: <8F0C2E89B9AA20448D482EB589641EB306B6390D@orsmsx507.amr.corp.intel.com> (sfid-20081023_214554_256214_79396CA2)
+References: <1224585110.5521.8.camel@johannes.berg>
+ <20081022122148.GF6190@tesla>
+In-Reply-To: <20081022122148.GF6190@tesla>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From: Luis R. Rodriguez [mailto:lrodriguez@atheros.com]
+>
+>Since this is only for wiphys this seems reasonable. I just keep in the
+>back of my mind leaving open the possibility for other wireless
+>subsystems to be able to make use of the currently set regulatory domain
+>and its regulatory rules, but this is in keeping with that as our
+>current requests are not changing the regulatory definitions, and just
+>as we have a wiphy for last_request we can add later struct
+>foo_new_wireless_type there too. I am curious if band definitions
+>should be shared between Bluetooth and 802.11 though. I don't think
+>BT devices have any notion of regulatory though nor are they capable of
+>exporting it though. Marcel is this correct? Inaky -- how about uwb, or
+>WiMax?
 
---=-22Qag55smQqW6uYPWfSp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+UWB swipes over all the bands (from 3.1 to 10.6G), but keeping emission below FCCp15 limits (-41dBm, if memory serves) so it looks as interference to others. All the channel assignments are fixed and known, so in theory,
+it'd be possible to coordinate.
 
-> [  277.190494] Kernel unaligned access at TPC[10129b68] zd_mac_rx+0x144/0=
-x32c [zd1211rw]
+On WiMAX the bands are allocated per country and per operator, so if the
+device can tell us what it supports or what the operator is telling it to
+use, it should be possible for it to report it to some band controller for coordination, but I don't know if it'll make any sense to ask the device to use only bands so and so, because the knowledge of what's allowed is in the network side.
 
-my best bet is this:
-
-        fc =3D *(__le16 *)buffer;
-
-could you try something with get_unaligned? Though if this is it,
-then ... We really need disassembly of the exact spot.
-
-johannes
-
---=-22Qag55smQqW6uYPWfSp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJAuQdAAoJEKVg1VMiehFYgC8P/0IC6Bt8uvQudnHBzBKWfrqf
-MQQ+U3nLpY8tg+gbxCKqzdHGvDAuO8VB/b6IdlFL4KJLUcFwcXWc7CXmB07XGUyu
-kAp271VzUn+2XjlxT9KGaBK4CaBSeU+5oBPgrPlO/+KUjtN9n18JAViP8rYKkDTo
-498dkh20NqQGewzYUb0F2tQSr1Id81OjHOm8VFDcbjgibJM8MQoRrP1P6CqxJLOY
-NK/cvn0zQbn3JYldfr4QF+U4eezjUIngNGh4f3J+Rd4Qd4nKpX6+c+z6ncJDPpnY
-+ff+EhhzKcWDaHqq9S6FaWruIwYwCMQN9YITpDtUIKmiEDisJu776uxnfLrU77yt
-oMI2qRPGB7jNqre9jZ5VEEqiGdq82cMIReYwZ8CBeyZ6yU0bIhECC7QQu7Qo1jlY
-If3FhzLqzHBkhFHM2uY0Ou44j3X14HbG/TCq0/g/fLrRFNuEwv8Est6rX7SeiCM5
-vUa000gEg/MJzsGoaxln/yQG6nxak2aNwjdKoIB1ZBFnt4JHyfWy4JGeOY2+366U
-+IQwtGcEmkP5zTqa+kV1FvhzhOQq+33J0PzLZxJZD7ilJIsSPS2nClchgUK164/6
-QUzkec0iHE5CYAV9NZLDK8mP7LeakAZu9QwMI63RC7vJgOhFWWEdAQnPn+aX8/fR
-+OqUlRv633kteeWSYUm6
-=J4LZ
------END PGP SIGNATURE-----
-
---=-22Qag55smQqW6uYPWfSp--
+I might be missing the crux of the question though :)
 
