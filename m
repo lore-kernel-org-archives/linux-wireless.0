@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51029 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750846AbYJ0N37 (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.186]:15878 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbYJWQy6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 09:29:59 -0400
-Date: Mon, 27 Oct 2008 09:28:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Chr <chunkeey@web.de>, mcgrof <mcgrof@gmail.com>
-Subject: Re: build warnings
-Message-ID: <20081027132858.GA20389@tuxdriver.com> (sfid-20081027_143017_357927_6C8D24FF)
-References: <1224923050.27353.1.camel@johannes.berg> <1ba2fa240810270330u15e3ce04y9d077904f48e04e7@mail.gmail.com> <1397eb932d5573ecf093fcbc82c02adb.squirrel@secure.sipsolutions.net> <1ba2fa240810270341l9332ec3qeee761ba764d5617@mail.gmail.com>
+	Thu, 23 Oct 2008 12:54:58 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so237176tic.23
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 09:54:57 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240810270341l9332ec3qeee761ba764d5617@mail.gmail.com>
+Message-ID: <18688.43984.384332.787060@localhost.localdomain> (sfid-20081023_185504_127328_74E7B7CA)
+Date: Thu, 23 Oct 2008 22:22:32 +0530
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, Luis.Rodriguez@atheros.com,
+	Jouni.Malinen@atheros.com, johannes@sipsolutions.net,
+	tomasw@gmail.com
+Subject: Re: [PATCH v3] mac80211: Re-enable aggregation
+In-Reply-To: <20081023145102.GA5816@tuxdriver.com>
+References: <18685.37489.577735.596008@gargle.gargle.HOWL>
+	<43e72e890810222010w215b278bya788e0c94250b517@mail.gmail.com>
+	<20081023145102.GA5816@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 27, 2008 at 12:41:22PM +0200, Tomas Winkler wrote:
-> On Mon, Oct 27, 2008 at 12:34 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > Tomas Winkler wrote:
-> >> On Sat, Oct 25, 2008 at 10:24 AM, Johannes Berg
-> >> <johannes@sipsolutions.net> wrote:
-> >>> just FYI in case you haven't seen them. the p54 one looks like a genuine
-> >>> problem.
-> >>>
-> >>> drivers/net/wireless/iwlwifi/iwl-scan.c:69: warning: 'scan_tx_ant'
-> >>> defined but not used
-> >>
-> >> Strange. This variable was removed in 'iwlwifi: unify tx antenna toggling'
-> >> patch
-> >
-> > odd. maybe I don't have the right tree here. Just mentioning the warnings
-> > because in my experienced different gcc versions differ.
-> >
-> Really odd, the lines are just not there. Try to diff to
-> wireless-testing master branch.
+John W. Linville wrote:
+> > Poke.
+> 
+> Just waiting to see comments from those who understand aggregation
+> better than I do...
 
-I advise you do the same -- I see the warning too.
+It doesn't change the existing behaviour in any way, ath9k doesn't need
+all the extra queue stuff, so this is only a temporary fix until
+we have a decent model in mac80211 to support HW with no ampdu_queues.
 
-The fault would seem to lie somewhere between me and git -- that bit
-seems to have been added back with "wireless: consolidate on a single
-escape_essid implementation".  Presumably this happened when I rebased
-those patches, although I don't recall having done any manual fixups
-that I could have flubbed.
+But that patch probably won't apply now, I'll rebase it and send again.
 
-Anyway, don't worry -- I'll take care of this one.
-
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Sujith
