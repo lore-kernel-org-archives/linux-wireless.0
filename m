@@ -1,97 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 207-172-69-77.c3-0.smr-ubr3.sbo-smr.ma.static.cable.rcn.com ([207.172.69.77]:55615
-	"EHLO luto.stanford.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751367AbYJSP1v (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:43996 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430AbYJWVVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 11:27:51 -0400
-Message-ID: <48FB4FBE.2060909@myrealbox.com> (sfid-20081019_172755_858572_65457C40)
-Date: Sun, 19 Oct 2008 11:18:22 -0400
-From: Andy Lutomirski <luto@myrealbox.com>
+	Thu, 23 Oct 2008 17:21:20 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so190694yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 14:21:18 -0700 (PDT)
+Message-ID: <1ba2fa240810231421l3056daf8j2beed3720e499775@mail.gmail.com> (sfid-20081023_232124_382948_8F291442)
+Date: Thu, 23 Oct 2008 23:21:18 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Marcel Holtmann" <holtmann@linux.intel.com>
+Subject: Re: [PATCH] wireless: add regulatory_struct_hint
+Cc: "Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1224791684.9386.194.camel@californication>
 MIME-Version: 1.0
-To: richard@scherping.de
-CC: tomasw@gmail.com, Frederik Himpe <fhimpe@telenet.be>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: iwlagn: associating with AP causes kernel hiccup
-References: <gd5gs4$abi$1@ger.gmane.org> <1224104363.19219.30.camel@rc-desk>	 <gd9v3f$3ft$1@ger.gmane.org> <gd9vpo$5ql$1@ger.gmane.org>	 <48F8AEF1.5030603@scherping.de> <1ba2fa240810171302h7dcc92acr18c060425c4a93d@mail.gmail.com> <48FA0C27.8010301@scherping.de>
-In-Reply-To: <48FA0C27.8010301@scherping.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224585110.5521.8.camel@johannes.berg>
+	 <20081022122148.GF6190@tesla>
+	 <8F0C2E89B9AA20448D482EB589641EB306B6390D@orsmsx507.amr.corp.intel.com>
+	 <1224791684.9386.194.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Richard Scherping wrote:
-> Tomas Winkler schrieb:
->> On Fri, Oct 17, 2008 at 5:27 PM, Richard Scherping <richard-YwAN3MSemFZ6lmGzAMPh1A@public.gmane.org> wrote:
->>>>>>> When I associate with an AP, Linux 2.6.27 seems to "hang" for a few
->>>>>>> seconds. During that time, all sound stops playing and keyboard and
->>>>>>> mouse input is impossible.
->>>>> I'm using Mandriva 2009.0 x86_64 with wpa_supplicant and Mandriva's
->>>>> wireless network configuration tool (drakroam).
->>>>>
->>>>> Actually I just found out that running # ifconfig wlan0 down
->>>>> is enough to trigger the sound and mouse hanging for a few seconds.
->>>> And shortly after I wrote that, while associating while getting an IP
->>>> with dhclient when associating with a WPA encrypted AP, I got this
->>>> backtrace in my logs:
->>>> [...]
->>> I have a similar problem here. No crash up to now, but the very same "hang" for a few seconds on "ifconfig wlan0 down". Interestingly this does only happen after a normal boot - once I did a suspend and resume (S3), there is no hang anymore.
->>>
->>> Hardware: Thinkpad T61p with Intel 4965 agn
->>> Software: Debian Lenny x86_64 with vanilla 2.6.27 kernel
->>>
->> Driver in 2.6.27 is not stable, please try to reproduce this in
->> current wireless-testing.git.
-> 
-> I do not have the time to compile and test wireless-testing ATM, sorry.
-> 
-> In fact I am annoyed by the fact that iwlagn is "known to be unstable" in a stable kernel release and that this even seems to be a totally normal thing...
-
-Amen.  This driver has been available and more-or-less working for ages. 
-    What kernel am I supposed to run if I just want a stable system? 
-Haven't found one yet, other than distro kernels...
-
-In any case, I've seen these complete system hiccups with iwl4965 and 
-iwlagn since at least 2.6.25 and through quite a few wireless-testing 
-versions.  I bet that this, along with things like it, is the culprit:
-
-In many, many functions:
-  spin_lock_irqsave(&priv->lock, flags);
-  ...
-  ret = iwl_grab_nic_access(priv);
-
-In iwl-io.h (2.6.26.something):
-static inline int _iwl_grab_nic_access(struct iwl_priv *priv)
-{
-	...
-         ret = _iwl_poll_bit(priv, CSR_GP_CNTRL,
-                            CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
-                            (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
-                             CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 50);
-	...
-}
-
-static inline int _iwl_poll_bit(struct iwl_priv *priv, u32 addr,
-                                 u32 bits, u32 mask, int timeout)
-{
-         int i = 0;
-
-         do {
-                 if ((_iwl_read32(priv, addr) & mask) == (bits & mask))
-                         return i;
-                 mdelay(10);
-                 i += 10;
-         } while (i < timeout);
-
-         return -ETIMEDOUT;
-}
-
-Polling the hardware waiting for firmware to do something *with IRQs 
-disabled*?  I'd really rather the drivers on my system didn't do this.
-
-I'd attempt to fix this myself, but I have no clue what the locking 
-rules are supposed to be.
-
-Would I be out of line for wishing the iwlwifi developers would fix 
-longstanding issues (latency and maybe horkage after resume, although 
-the latter seems much improved lately) before adding fancy new things?
-
---Andy
+On Thu, Oct 23, 2008 at 9:54 PM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+> Hi Luis,
+>
+>> >Since this is only for wiphys this seems reasonable. I just keep in the
+>> >back of my mind leaving open the possibility for other wireless
+>> >subsystems to be able to make use of the currently set regulatory domain
+>> >and its regulatory rules, but this is in keeping with that as our
+>> >current requests are not changing the regulatory definitions, and just
+>> >as we have a wiphy for last_request we can add later struct
+>> >foo_new_wireless_type there too. I am curious if band definitions
+>> >should be shared between Bluetooth and 802.11 though. I don't think
+>> >BT devices have any notion of regulatory though nor are they capable of
+>> >exporting it though. Marcel is this correct? Inaky -- how about uwb, or
+>> >WiMax?
+>>
+>> UWB swipes over all the bands (from 3.1 to 10.6G), but keeping emission below FCCp15 limits (-41dBm, if memory serves) so it looks as interference to others. All the channel assignments are fixed and known, so in theory,
+>> it'd be possible to coordinate.
+>
+> and Bluetooth uses the full 2.4 GHz band (split into 79 channels) and it
+> uses the full band equally and is allowed to. The regulatory efforts of
+> the Bluetooth SIG made it possible to use this world-wide. No regulatory
+> stuff is needed here.
+>
+> Bluetooth will also use UWB in the future in the range of 6 GHz and it
+> will get the same world-wide regulatory effort.
+>
+> The only part I am not sure is Bluetooth over 802.11 since they have
+> some weird stuff in there and the specification is not final yet.
+>
+> Regards
+>
+> Marcel
+>
+There is a similar effort going on in WiFi but it probably will take
+some time, till this regulator nonsense is removed
+Tomas
