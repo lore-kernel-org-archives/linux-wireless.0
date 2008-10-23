@@ -1,93 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:45545 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752889AbYJAWet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 18:34:49 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KlAHL-0001Z7-GL
-	for linux-wireless@vger.kernel.org; Wed, 01 Oct 2008 22:34:43 +0000
-Received: from pd9e87db2.dip.t-dialin.net ([217.232.125.178])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 22:34:43 +0000
-Received: from eo by pd9e87db2.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 22:34:43 +0000
-To: linux-wireless@vger.kernel.org
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-Date: Thu, 02 Oct 2008 00:34:22 +0200
-Message-ID: <87ljx8ndw1.fsf@denkblock.local> (sfid-20081002_003452_822691_939E8FEB)
-References: <200808101401.03339.toralf.foerster@gmx.de>
-	<b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
-	<200810012055.58085.toralf.foerster@gmx.de>
-	<87ej30m376.fsf@denkblock.local>
-	<b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
+Received: from senator.holtmann.net ([87.106.208.187]:57396 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391AbYJWBMD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 21:12:03 -0400
+Subject: Re: New iwlwifi 3945 uCode available
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: reinette chatre <reinette.chatre@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224717261.10863.219.camel@rc-desk>
+References: <1224613633.10863.43.camel@rc-desk>
+	 <1224624324.28639.9.camel@johannes.berg>
+	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
+	 <1224624899.28639.17.camel@johannes.berg>
+	 <20081021213814.GM17268@tuxdriver.com>
+	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
+	 <1224627187.9386.103.camel@californication>
+	 <1224628088.10863.100.camel@rc-desk>
+	 <1224660449.28639.22.camel@johannes.berg>
+	 <1224662185.9386.131.camel@californication>
+	 <1224707446.10863.155.camel@rc-desk>
+	 <1224716347.9386.151.camel@californication>
+	 <1224717261.10863.219.camel@rc-desk>
+Content-Type: text/plain
+Date: Thu, 23 Oct 2008 03:12:59 +0200
+Message-Id: <1224724379.9386.155.camel@californication> (sfid-20081023_031209_638234_0DE60149)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Cc: ath5k-devel@lists.ath5k.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Bob Copeland" <me@bobcopeland.com> wrote:
-> On Wed, Oct 1, 2008 at 5:10 PM, Elias Oltmanns <eo@nebensachen.de> wr=
-ote:
->> Toralf F=F6rster <toralf.foerster@gmx.de> wrote:
->
->>> Hello,
->>>
->>> the issue (initially reported in August 2008) still remains in the =
-current
->>> kernel at my ThinkPad T41, a screen shot is attached. The steps to =
-reproduce
->>> are :
->>>
->>> 1. modprobe it
->>> 2. suspend the system to ram
->>> 3. wake it up
->>> 4. rmmod the driver
->>
->> Yes, I have run into this problem too. The patch below (applies to
->> 2.6.27-rc8) fixes the problem, but since I'm not a wireless hacker,
->> developers might prefer a different approach. Please let me know if =
-I
->> should change anything. Perhaps I should split this into two separat=
-e
->> patches?
->
-> Thanks for the patch.  I do think a different approach is probably
-> warranted, though. ath5k_init() is supposed to be able to be called f=
-rom
-> resume.  Do you have a better idea of why calib_tim isn't cleaned up
-> properly by ath5k_stop_hw?
+Hi Reinette,
 
-Oh, but it is cleaned up by ath5k_stop_hw(). The issue is a different
-one here:
+> > in some cases it might be possible with a set of quirks or special
+> > functions that can be switched at runtime. Check the whole bunch of USB
+> > drivers that have special handling depending on what hardware it finds.
+> > We could do the same. In some cases this effort might be too much, but
+> > if possible we should at least try.
+> 
+> I don't think we can easily apply the hardware quirk solution here. This
+> is because hardware can be identified by id that does not change and the
+> hardware self does not really change (unless it has firmware that
+> changes ...). In this firmware case we do not have "an id" (we have one
+> file that is loaded by firmware loader so we cannot know what we get
+> just by "looking at it" unless we enforce a version number in the
+> filename as we currently do in our driver) and the firmware can change,
+> potentially frequently, with the consequence of many "quirks" that need
+> to be maintained.
 
-ath5k_init() =3D=3D ->start()
-ath5k_stop_hw() =3D=3D ->stop()
+we have the API version of the firmware file. If the new one can't be
+found, then load the old one via request_firmware() and we know that we
+have to use the old API. We can program our hardware only with one
+firmware at a time anyway and we know which one we loaded.
 
-Since the mac80211 layer never opened a device, it won't close it
-either. Thus, ath5k_stop_hw() does not get called on module unload. By
-calling ath5k_init() on resume, the driver has effectively started the
-device when it was not supposed to do so and this event is not being
-tracked by the higher layers.
+We already apply the rules that if the firmware changes the API in an
+incompatible way, we have to change the firmware filename.
 
->
-> I'm not near my laptop to test -- does the issue ever happen if you d=
-o
-> NOT suspend?
+Regards
 
-If you don't do a suspend / resume cycle but simply load and unload the
-module, this is not an issue because ath5k_init() never gets called
-unless the mac80211 layer tells the driver to do so.
+Marcel
 
-Regards,
 
-Elias
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
