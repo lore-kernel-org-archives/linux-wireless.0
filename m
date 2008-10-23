@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:41324 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753529AbYJPPqS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 11:46:18 -0400
-Message-ID: <48F761CA.5040102@lwfinger.net> (sfid-20081016_174647_664575_D3BECAD6)
-Date: Thu, 16 Oct 2008 08:46:18 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
+Received: from mga11.intel.com ([192.55.52.93]:57682 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753483AbYJWC3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2008 22:29:31 -0400
+Subject: Re: New Regulatory Domain Api.
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 6/6] p54: integrate parts of lmac_longbow.h and other
- parts of stlc45xx
-References: <200810150408.44363.chunkeey@web.de>
-In-Reply-To: <200810150408.44363.chunkeey@web.de>
-Content-Type: text/plain; charset=UTF-8
+	Tomas Winkler <tomasw@gmail.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081022101359.GA6190@tesla>
+References: <1224561748.24677.274.camel@debian.sh.intel.com>
+	 <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
+	 <1224569252.9386.77.camel@californication>
+	 <43e72e890810202329g732a97ccxf176bdf4e035ccda@mail.gmail.com>
+	 <1224571890.9386.85.camel@californication>
+	 <20081021171328.GG17268@tuxdriver.com>
+	 <1224611033.9386.98.camel@californication>
+	 <20081021174800.GJ17268@tuxdriver.com> <20081021110203.GA8224@tesla>
+	 <1224667215.2917.75.camel@debian.sh.intel.com>
+	 <20081022101359.GA6190@tesla>
+Content-Type: text/plain
+Date: Thu, 23 Oct 2008 10:29:58 +0800
+Message-Id: <1224728998.2917.89.camel@debian.sh.intel.com> (sfid-20081023_042936_879389_B89FFCFF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> This patch removes most/all? of the "magic" numbers and unknown structure 
-> variables inside the code and replaces them with meaningful prototypes.
+On Wed, 2008-10-22 at 04:13 -0600, Luis R. Rodriguez wrote:
+> You complained about nobody willing to do foo, and yet I had already
+> provided a patch. That's what I "jumped" about.
+
+You patch is wrong and nobody likes it (including yourself).
+
+> > > I rather we talk productively about trying to resolve it with
+> actual
+> > > code like Johannes or I am.
+> >
+> > Good. See my patch on the other thread. The problem is also not the
+> dual
+> > bands support. The regulatory framework should support hardware to
+> do
+> > regulatory check and don't duplicate the work.
 > 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
+> Huh? Hardware to do regulatory check? Now you really got me confused.
 
-The following change of ack_rssi from __le16 to u8 generates the sparse warning
-"drivers/net/wireless/p54/p54common.c:660:5: warning: cast to restricted __le16":
+Please stop talking in this thread. Take a look at my patch or even try
+it.
 
-> +struct p54_frame_sent {
->  	u8 status;
-> -	u8 retries;
-> -	__le16 ack_rssi;
-> +	u8 tries;
-> +	u8 ack_rssi;
-> +	u8 quality;
-
-The statement in question is:
-
-info->status.ack_signal = p54_rssi_to_dbm(dev,
-                le16_to_cpu(payload->ack_rssi));
-
-The following patch fixes the warning:
-
-Index: wireless-testing/drivers/net/wireless/p54/p54common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54common.c
-+++ wireless-testing/drivers/net/wireless/p54/p54common.c
-@@ -657,7 +657,7 @@ static void p54_rx_frame_sent(struct iee
-                if (payload->status & 0x02)
-                        info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
-                info->status.ack_signal = p54_rssi_to_dbm(dev,
--                               le16_to_cpu(payload->ack_rssi));
-+                               (int)payload->ack_rssi);
-                skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
-                ieee80211_tx_status_irqsafe(dev, entry);
-                goto out;
-
-Larry
-
+Thanks,
+-yi
 
