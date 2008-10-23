@@ -1,74 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:56241 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751464AbYJ0RIq (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:45435 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752364AbYJWSb6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 13:08:46 -0400
-Message-ID: <4905F59B.9030107@lwfinger.net> (sfid-20081027_180850_972377_D83F4099)
-Date: Mon, 27 Oct 2008 10:08:43 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 23 Oct 2008 14:31:58 -0400
+Received: by qw-out-2122.google.com with SMTP id 3so216848qwe.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 11:31:57 -0700 (PDT)
+Message-ID: <1ba2fa240810231131l9c9597au2acf166a13a8c03b@mail.gmail.com> (sfid-20081023_203204_167748_8F303F01)
+Date: Thu, 23 Oct 2008 20:31:56 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <43e72e890810231023q5650184r8ce50cb51b63e706@mail.gmail.com>
 MIME-Version: 1.0
-To: Piter PUNK <piterpk@terra.com.br>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL8187B transmit problems
-References: <49041DAE.1060206@terra.com.br> <49050BC7.1010609@lwfinger.net> <49051E0E.2030909@terra.com.br>
-In-Reply-To: <49051E0E.2030909@terra.com.br>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <18684.20459.335157.171344@gargle.gargle.HOWL>
+	 <1224495531.18024.55.camel@johannes.berg>
+	 <18684.24323.743610.871307@gargle.gargle.HOWL>
+	 <1224505349.27899.17.camel@johannes.berg>
+	 <18684.51206.771543.514682@localhost.localdomain>
+	 <1224669612.28639.49.camel@johannes.berg>
+	 <18688.17545.136327.991699@gargle.gargle.HOWL>
+	 <1224773124.6002.32.camel@johannes.berg>
+	 <43e72e890810231023q5650184r8ce50cb51b63e706@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Piter PUNK wrote:
-> Larry Finger wrote:
->> What are the details of your device? Please post the output of 'dmesg
->> | grep -i
->> rtl'.
-> 
-> This is the built-in rtl8187b adapter:
-> 
-> usb 1-1: new high speed USB device using ehci_hcd and address 7
-> usb 1-1: configuration #1 chosen from 1 choice
-> usb 1-1: New USB device found, idVendor=0bda, idProduct=8189
-> usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> usb 1-1: Product: RTL8187B_WLAN_Adapter
-> usb 1-1: Manufacturer: Manufacturer_Realtek
-> usb 1-1: SerialNumber: 00e04c000001
-> rtl8187: 8187B chip detected. Support is EXPERIMENTAL, and could damage
-> your
->          hardware, use at your own risk
-> phy3: Selected rate control algorithm 'pid'
-> phy3: hwaddr 00:16:44:aa:df:bf, RTL8187BvE V0 + rtl8225z2
-> 
-> This is my external rtl8187b USB dongle:
-> 
-> usb 1-3: new high speed USB device using ehci_hcd and address 8
-> usb 1-3: configuration #1 chosen from 1 choice
-> rtl8187: 8187B chip detected. Support is EXPERIMENTAL, and could damage
-> your
->          hardware, use at your own risk
-> phy4: Selected rate control algorithm 'pid'
-> phy4: hwaddr 00:18:e7:42:2c:23, RTL8187BvE V0 + rtl8225z2
-> usb 1-3: New USB device found, idVendor=0bda, idProduct=8189
-> usb 1-3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> usb 1-3: Product: RTL8187B_WLAN_Adapter
-> usb 1-3: Manufacturer: Manufacturer_Realtek
-> usb 1-3: SerialNumber: 00e04c000001
-> 
-> Both have the same "not-working" results. Using any of my other
-> adapters the transmission works fine. (ok, it didn't work with
-> USB Marvell dongle... but it isn't even detected)
+On Thu, Oct 23, 2008 at 7:23 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Oct 23, 2008 at 7:45 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Thu, 2008-10-23 at 15:01 +0530, Sujith wrote:
+>>> Johannes Berg wrote:
+>>> > It seems that should be a rate control decision? Possibly taking into
+>>> > account more than just always doing aggregation sessions. Then again, I
+>>> > suppose aggregation sessions are cheap. What about latency here?
+>>> >
+>>>
+>>> Well, that is what Luis seems to think too, but our RC
+>>> doesn't do much now, so we try to setup an aggregation session with any
+>>> associated STA.
+>>
+>> If that was done in the RC at least (could easily be moved I suppose)
+>> and you cleaned up the RC, then surely nbd would play with porting
+>> minstrel and making it aware of such things, which probably makes for a
+>> better RC... And since you have to clean up the RC anyway :)
+>
+> I checked internally to verify where you would decide when to AMPDU
+> and to try to get different reviews and opinions, and it seems that
+> the path we take right now is correct as there is not much overhead so
+> we always use AMPDU with whoever supports it with data frames. If
+> you're a STA you do it all the time with the AP for data frames.
+>
+> I noticed iwlagn had some more logic within the RC but I gave up
+> trying to follow the logic. I suspect they do the same though, Tomas?
 
-My device is a little different that yours:
+I got different output from our system engineering. APMDU has overhead
+and if there is not requirement
+for high throughput we don't initiate one. What is for sure we shounld
+not have aggregation enabled for VO AC.
+I've payed attention that there are different APs do that differently
+some opens BA session on BE AC immediately upon association some do it
+on high throughput I haven't seen in the second case it will be opened
+on simple ping.
+Anyhow if we would implement the triggering on throughput  simply
+setting starting and stopping thresholds to small values will have
+same effect as your solution and setting it to 0 and maximum will
+respectively will have effect on  opening BA session upon association.
 
-rtl8187: 8187B chip detected. Support is EXPERIMENTAL, and could damage your
-         hardware, use at your own risk
-rtl8187: inconsistency between id with OEM info!
-phy1: Selected rate control algorithm 'pid'
-phy1: hwaddr 00:11:6b:3e:c4:0a, RTL8187BvB(early) V0 + rtl8225z2
-
-I'll review the code to look at the differences in paths for your device and
-mine. Just in case there is a data dependency, please send me (privately) your
-2048 byte file.
-
-Thanks,
-
-Larry
+Tomas
