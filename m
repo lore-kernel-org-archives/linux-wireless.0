@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:3238 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757316AbYJQUCD (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.188]:45453 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752124AbYJWWHi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2008 16:02:03 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so150347ywe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 13:02:01 -0700 (PDT)
-Message-ID: <1ba2fa240810171302h7dcc92acr18c060425c4a93d@mail.gmail.com> (sfid-20081017_220221_342899_1266BCB0)
-Date: Fri, 17 Oct 2008 22:02:01 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Richard Scherping" <richard@scherping.de>
-Subject: Re: iwlagn: associating with AP causes kernel hiccup
-Cc: "Frederik Himpe" <fhimpe@telenet.be>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <48F8AEF1.5030603@scherping.de>
+	Thu, 23 Oct 2008 18:07:38 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so392313rnd.17
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 15:07:37 -0700 (PDT)
+Message-ID: <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com> (sfid-20081024_000742_626566_B9F0B044)
+Date: Thu, 23 Oct 2008 15:07:36 -0700
+From: "Javier Cardona" <javier@cozybit.com>
+To: "Andrey Yurovsky" <andrey@cozybit.com>
+Subject: Re: [RFC] mac80211 rx filter in mesh mode, rt2x00 mesh point operation
+Cc: linux-wireless@vger.kernel.org, ivdoorn@gmail.com
+In-Reply-To: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <gd5gs4$abi$1@ger.gmane.org> <1224104363.19219.30.camel@rc-desk>
-	 <gd9v3f$3ft$1@ger.gmane.org> <gd9vpo$5ql$1@ger.gmane.org>
-	 <48F8AEF1.5030603@scherping.de>
+References: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 17, 2008 at 5:27 PM, Richard Scherping <richard@scherping.de> wrote:
->>>>> When I associate with an AP, Linux 2.6.27 seems to "hang" for a few
->>>>> seconds. During that time, all sound stops playing and keyboard and
->>>>> mouse input is impossible.
->>>
->>> I'm using Mandriva 2009.0 x86_64 with wpa_supplicant and Mandriva's
->>> wireless network configuration tool (drakroam).
->>>
->>> Actually I just found out that running # ifconfig wlan0 down
->>> is enough to trigger the sound and mouse hanging for a few seconds.
->>
->> And shortly after I wrote that, while associating while getting an IP
->> with dhclient when associating with a WPA encrypted AP, I got this
->> backtrace in my logs:
->> [...]
+Andrey,
+
+On Thu, Oct 23, 2008 at 2:49 PM, Andrey Yurovsky <andrey@cozybit.com> w=
+rote:
+> I've come across a problem with the RX filter setting while testing m=
+esh point
+> operation in the rt2x00 driver (my hardware is rt73usb).  We transmit=
+ and
+> receive mesh beacons but mesh peer link action frames are dropped.  A=
+ patch
+> for enabling mesh point mode is included here, this works except that=
+:
 >
-> I have a similar problem here. No crash up to now, but the very same "hang" for a few seconds on "ifconfig wlan0 down". Interestingly this does only happen after a normal boot - once I did a suspend and resume (S3), there is no hang anymore.
+> The RX filter, as set by mac80211 in mesh mode is 0x02, that is FIF_A=
+LLMULTI is
+> set.  This is sufficient for other drivers but not for rt2x00.  I not=
+iced that
+> running tcpdump on the MP interface sets the filter to 0x43, this add=
+s
+> FIF_OTHER_BSS and FIF_PROMISC_IN_BSS, and rt2x00 is then able to make=
+ peer
+> links and mesh point mode works correctly.
 >
-> Hardware: Thinkpad T61p with Intel 4965 agn
-> Software: Debian Lenny x86_64 with vanilla 2.6.27 kernel
->
-Driver in 2.6.27 is not stable, please try to reproduce this in
-current wireless-testing.git.
-Thanks
+> Actually for rt2x00, setting either FIF_OTHER_BSS or FIF_PROMISC_IN_B=
+SS is the
+> key here because they are both treated as FIF_PROMISC_IN_BSS, which c=
+auses the
+> driver to enable TXRX_CSR0_DROP_TO_DS.
+
+Mesh frames have 4 addresses and no BSSID, so BSSID filtering should
+be disabled (i.e. FIF_OTHER_BSS should be set).
+The ALL_MULTI flag is also needed for mesh mode because an
+intermediate node has to forward multicast traffic for addresses that
+it may not be listening to.
+
+But promiscuous mode is not necessary:  mesh points don't need to
+receive unicast frames not addressed=B9 to them.  Furthermore, enabling
+promiscuous mode normally disables acknowledgments, which are needed
+for proper mesh operation.
+
+So my recommendation would be to configure the RX filter in mesh mode
+to be ( FIF_ALLMULTI | FIF_OTHER_BSS )
+
+Cheers,
+
+Javier
+
+[1] By addressed I mean that the node's address is in the first
+address field, RA, not necessarily in the DA.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
