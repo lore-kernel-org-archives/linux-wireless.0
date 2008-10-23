@@ -1,80 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:61756 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751179AbYJUW2E (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53408 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601AbYJWO6j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 18:28:04 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: reinette chatre <reinette.chatre@linux.intel.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224627187.9386.103.camel@californication>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-Content-Type: text/plain
-Date: Tue, 21 Oct 2008 15:28:08 -0700
-Message-Id: <1224628088.10863.100.camel@rc-desk> (sfid-20081022_002809_657213_850F002E)
-Mime-Version: 1.0
+	Thu, 23 Oct 2008 10:58:39 -0400
+Date: Thu, 23 Oct 2008 10:55:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Luis.Rodriguez@atheros.com,
+	Jouni.Malinen@atheros.com, johannes@sipsolutions.net,
+	tomasw@gmail.com, Sujith <Sujith.Manoharan@atheros.com>
+Subject: Re: [PATCH v3] mac80211: Re-enable aggregation
+Message-ID: <20081023145102.GA5816@tuxdriver.com> (sfid-20081023_165843_352872_3053938F)
+References: <18685.37489.577735.596008@gargle.gargle.HOWL> <43e72e890810222010w215b278bya788e0c94250b517@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890810222010w215b278bya788e0c94250b517@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-21 at 15:13 -0700, Marcel Holtmann wrote:
-> Hi Tomas,
-> 
-> > >> > > On Tue, 2008-10-21 at 11:27 -0700, reinette chatre wrote:
-> > >> > >> Two new versions of 3945 uCode is now available for download from
-> > >> > >> http://intellinuxwireless.org/?n=Downloads. Two versions are available
-> > >> > >> as we have updated the API version of the uCode and included pending
-> > >> > >> fixes in both API versions.
-> > >> > >>
-> > >> > >> Version 15.28.1.8 supports API v1 and can be used with most current 3945
-> > >> > >> drivers. Version 15.28.2.8 (API v2) is required when you start using the
-> > >> > >> latest 3945 driver from wireless-testing at the time it includes the
-> > >> > >> patch "iwl3945 : Fix a-band association for passive channels".
-> > >> > >
-> > >> > > Can you make the driver work with the old ucode? We even do that for
-> > >> > > drivers where we don't control the ucode like b43...
-> > >> >
-> > >> > What for?
-> > >>
-> > >> Well, so that installing a new kernel doesn't suddenly break your
-> > >> network connection and ability to download the firmware, for instance.
-> > >> If you want more arguments you can go read all the "b43 sucks" threads
-> > >> about it.
-> > >
-> > > Johnannes has a point, that is a lot nicer to users...
+On Wed, Oct 22, 2008 at 08:10:42PM -0700, Luis R. Rodriguez wrote:
+> On Tue, Oct 21, 2008 at 1:27 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> > Wireless HW without any dedicated queues for aggregation
+> > do not need the ampdu_queues mechanism present right now
+> > in mac80211. Since mac80211 is still incomplete wrt TX MQ
+> > changes, do not allow aggregation sessions for drivers that
+> > set ampdu_queues.
 > >
-> > Maybe, but it will complicate the code beyond good taste to just
-> > satisfy the single moment when kernel is upgraded. I don't mean in
-> > general I mean in this particular case when API changes.
-> > Anyhow a good distro shell deal with this in packaging dependencies
-> > and normal person will keep old kernel around when compiling new one.
-> > Both ucodes can be present on the file system at the same time  so I
-> > hope the risk is low.
+> > This is only an interim hack until Intel fixes the requeue issue.
+> >
+> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> > Signed-off-by: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
 > 
-> it is the same argument as for everything else. We should be able to run
-> a new kernel with old userspace.
+> Poke.
 
-I do not believe our request is unreasonable. If a user runs a new
-kernel the log will print a message that the firmware is incorrect ...
-all the user needs to do is go to
-http://intellinuxwireless.org/?n=Downloads and download the latest
-firmware. This does not require any subtle changes that may affect other
-aspects of the system ... just the firmware file that is only used by
-the driver.
+Just waiting to see comments from those who understand aggregation
+better than I do...
 
-We are focused on upstream development. If there is a need to support
-older ucode then we face a similar challenge as was solved through the
-compat-wireless project for the driver self.
-
-Reinette
-
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
