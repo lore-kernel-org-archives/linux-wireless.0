@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:47789 "EHLO vs166246.vserver.de"
+Received: from smtp1-g19.free.fr ([212.27.42.27]:58593 "EHLO smtp1-g19.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751089AbYJYLbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 07:31:46 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-Date: Sat, 25 Oct 2008 13:31:24 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>
-References: <4902DEBB.3050205@hotmail.com> <200810251325.07916.mb@bu3sch.de> <20081025112813.GC12252@Chamillionaire.breakpoint.cc>
-In-Reply-To: <20081025112813.GC12252@Chamillionaire.breakpoint.cc>
+	id S1751993AbYJWFQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2008 01:16:32 -0400
+Message-ID: <490008AC.7020100@free.fr> (sfid-20081023_071636_830131_AFB3A2FF)
+Date: Thu, 23 Oct 2008 07:16:28 +0200
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200810251331.24311.mb@bu3sch.de> (sfid-20081025_133148_789767_CDE40B7D)
+To: jt@hpl.hp.com
+CC: "Luis R. Rodriguez" <lrodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 4/5] crda: Updated regulatory information for France (FR)
+References: <cover.1223583376.git.benoit.papillault@free.fr> <48FE399E.6050907@free.fr> <20081022150323.GO6190@tesla> <20081022222306.GA8920@bougret.hpl.hp.com>
+In-Reply-To: <20081022222306.GA8920@bougret.hpl.hp.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 25 October 2008 13:28:13 Sebastian Andrzej Siewior wrote:
-> @@ -662,7 +663,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 *buffer, unsigned int length)
->  			&& !mac->pass_ctrl)
->  		return 0;
->  
-> -	fc = *(__le16 *)buffer;
-> +	fc = get_unaligned_le16(buffer);
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-This still does semantically change the code.
-fc is supposed to be LE and is used as LE in the following code.
+Jean Tourrilhes a =E9crit :
+> On Wed, Oct 22, 2008 at 08:03:23AM -0700, Luis R. Rodriguez wrote:
+>> CC'ing Jean as he's another French wireless developer.
+>>
+>=20
+> 	I have not been living in France for a while, like more than
+> 10 years ;-)
+> 	I think Benoit is on top of things, and as I'm not familiar
+> with it, I'll defer to him.
+>=20
+> 	Jean
 
->  	need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
->  
->  	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
+Indeed, I read lots of paper, website, source code and I know a lot for
+sure. But at the end, that's my own interpretation and I might still be
+wrong, so having peer review is still needed.
 
--- 
-Greetings Michael.
+Regards,
+Benoit
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFJAAisOR6EySwP7oIRAhW9AJ9vUcgHiPLQGcUwgyHRBsKdMLZgcwCfQEyn
+bwGnbRXBEARYX6TCy3eqVns=3D
+=3DRr7k
+-----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
