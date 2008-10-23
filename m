@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27309 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:48175 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753524AbYJ2VFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:05:25 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/7] iwlwifi driver updates
-Date: Wed, 29 Oct 2008 14:05:42 -0700
-Message-Id: <1225314349-11139-1-git-send-email-reinette.chatre@intel.com> (sfid-20081029_220532_073383_2766BBD4)
-In-Reply-To: <>
-References: <>
+	id S1755773AbYJWTDW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2008 15:03:22 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 12:03:22 -0700
+Date: Thu, 23 Oct 2008 05:03:16 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: make use of regulatory tx power settings on
+	change of tx power
+Message-ID: <20081023120316.GD5979@tesla> (sfid-20081023_210327_484236_4175FC0A)
+References: <1224706433-12582-1-git-send-email-lrodriguez@atheros.com> <1224742961.5865.5.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1224742961.5865.5.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some iwlwifi updates.
+On Wed, Oct 22, 2008 at 11:22:41PM -0700, Johannes Berg wrote:
+> On Wed, 2008-10-22 at 13:13 -0700, Luis R. Rodriguez wrote:
+> 
+> > +	if (data->txpower.fixed)
+> > +		new_power_level = min(data->txpower.value, chan->max_power);
+> 
+> Incidentally, are the units really the same? Just wondering, haven't
+> checked, if yes this looks good to me.
 
-[PATCH 1/7] iwlwifi: reorganize flow handler bitology
-[PATCH 2/7] iwlwifi: trivial removal of some 4965 remaining from iwl-agn-rs.h
-[PATCH 3/7] iwlwifi: fix priv->iw_mode setting when multiple vif are configured
-[PATCH 4/7] iwlwifi: rename generic iwlagn functions that had a HW specific name
-[PATCH 5/7] iwlwifi: rename double inclusion protection name in iwl-commands.h
-[PATCH 6/7] iwlwifi: iwl-agn-rs: initialize rs with valid antenna
-[PATCH 7/7] iwlwifi: do not call statistics from rfkill
+Yes, we were using both in the previous case too, this just uses
+the min() now.
 
-
-Thank you
-
-Reinette
+  Luis
