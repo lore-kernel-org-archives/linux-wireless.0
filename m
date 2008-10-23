@@ -1,81 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55347 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753457AbYJ3KM5 (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.189]:14868 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbYJWRdE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 06:12:57 -0400
-Subject: [PATCH] wireless: implement basic rate helper function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 29 Oct 2008 20:00:45 +0100
-Message-Id: <1225306845.5439.29.camel@johannes.berg> (sfid-20081030_111311_687869_656104BE)
-Mime-Version: 1.0
+	Thu, 23 Oct 2008 13:33:04 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so252688rnd.17
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 10:33:01 -0700 (PDT)
+Message-ID: <43e72e890810231033i20c411aat2926c8fffdc0a5cf@mail.gmail.com> (sfid-20081023_193308_615531_E0ADE74E)
+Date: Thu, 23 Oct 2008 10:33:01 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Sujith <m.sujith@gmail.com>
+Subject: Re: [PATCH v3] mac80211: Re-enable aggregation
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Luis.Rodriguez@atheros.com,
+	Jouni.Malinen@atheros.com, johannes@sipsolutions.net,
+	tomasw@gmail.com
+In-Reply-To: <18688.43984.384332.787060@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <18685.37489.577735.596008@gargle.gargle.HOWL>
+	 <43e72e890810222010w215b278bya788e0c94250b517@mail.gmail.com>
+	 <20081023145102.GA5816@tuxdriver.com>
+	 <18688.43984.384332.787060@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a helper function that, given a bitmap of basic
-rates and a bitrate returns the response rate for this rate.
+On Thu, Oct 23, 2008 at 9:52 AM, Sujith <m.sujith@gmail.com> wrote:
+> John W. Linville wrote:
+>> > Poke.
+>>
+>> Just waiting to see comments from those who understand aggregation
+>> better than I do...
+>
+> It doesn't change the existing behaviour in any way, ath9k doesn't need
+> all the extra queue stuff, so this is only a temporary fix until
+> we have a decent model in mac80211 to support HW with
+> no ampdu_queues.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/wireless.h |   16 ++++++++++++++++
- net/wireless/util.c    |   19 +++++++++++++++++++
- 2 files changed, 35 insertions(+)
+Just to give some perspective, the reason this has been painful is we
+are dealing with the two most distinct type of wireless devices you
+could get and we deal with aggregation in different ways. Aggregation
+is also very new to mac80211 but its implementation was designed
+specifically for cases where you have "amdpu queues". Our design
+requires everything done in software and as such the real clean
+solution is to eventually try to move *as much as is possible* to
+mac80211 to allow other devices which behave the same to be able to
+use the same aggregation code. For now though for the non amdpu queue
+case we only have Atheros 11n though and we are trying to resolve that
+case first.
 
---- everything.orig/net/wireless/util.c	2008-10-29 19:16:26.000000000 +0100
-+++ everything/net/wireless/util.c	2008-10-29 19:16:54.000000000 +0100
-@@ -7,6 +7,25 @@
- #include <asm/bitops.h>
- #include "core.h"
- 
-+struct ieee80211_rate *
-+ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
-+			    u64 basic_rates, int bitrate)
-+{
-+	struct ieee80211_rate *result = &sband->bitrates[0];
-+	int i;
-+
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		if (!(basic_rates & BIT(i)))
-+			continue;
-+		if (sband->bitrates[i].bitrate > bitrate)
-+			continue;
-+		result = &sband->bitrates[i];
-+	}
-+
-+	return result;
-+}
-+EXPORT_SYMBOL(ieee80211_get_response_rate);
-+
- int ieee80211_channel_to_frequency(int chan)
- {
- 	if (chan < 14)
---- everything.orig/include/net/wireless.h	2008-10-29 19:16:26.000000000 +0100
-+++ everything/include/net/wireless.h	2008-10-29 19:16:47.000000000 +0100
-@@ -341,6 +341,22 @@ ieee80211_get_channel(struct wiphy *wiph
- }
- 
- /**
-+ * ieee80211_get_response_rate - get basic rate for a given rate
-+ *
-+ * @sband: the band to look for rates in
-+ * @basic_rates: bitmap of basic rates
-+ * @bitrate: the bitrate for which to find the basic rate
-+ *
-+ * This function returns the basic rate corresponding to a given
-+ * bitrate, that is the next lower bitrate contained in the basic
-+ * rate map, which is, for this function, given as a bitmap of
-+ * indices of rates in the band's bitrate table.
-+ */
-+struct ieee80211_rate *
-+ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
-+			    u64 basic_rates, int bitrate);
-+
-+/**
-  * regulatory_hint - driver hint to the wireless core a regulatory domain
-  * @wiphy: the wireless device giving the hint (used only for reporting
-  *	conflicts)
+We will commit to move as much stuff up as we can, and this will
+become more important as we get another device supported using the
+same design. I've been trying hard to review and ask about the design
+details of the other devices out in the market. In any case I think
+this is the right step forward in the meantime, I also made a
+suggestion as to how the ampdu queue case might be resolved. We just
+need to be sure we keep in mind what needs to be done and move towards
+it.
 
+That's my two colones.
 
+  Luis
