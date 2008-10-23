@@ -1,34 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:10469 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764628AbYJJVil (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54364 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459AbYJXJrY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 17:38:41 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so363256nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 14:38:39 -0700 (PDT)
-Message-ID: <48EFCB5C.6090303@gmail.com> (sfid-20081010_233917_192758_364D2116)
-Date: Fri, 10 Oct 2008 22:38:36 +0100
-MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-CC: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] orinoco: fix unsafe locking in orinoco_cs_resume
-References: <200810102022.40027.arvidjaar@mail.ru>
-In-Reply-To: <200810102022.40027.arvidjaar@mail.ru>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+	Fri, 24 Oct 2008 05:47:24 -0400
+Subject: Re: [PATCH/RFT] iwlagn: remove pointless TX frame check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1223630089.3930.71.camel@johannes.berg> (sfid-20081010_111517_870111_CBA3F26D)
+References: <1223547733.22490.43.camel@johannes.berg>
+	 <1ba2fa240810091308r167b9147p46f74421329a55c1@mail.gmail.com>
+	 (sfid-20081009_220831_876301_EA9D5BD1)  <1223630089.3930.71.camel@johannes.berg>
+	 (sfid-20081010_111517_870111_CBA3F26D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/E7xHKwZGxkh7868wgem"
+Date: Thu, 23 Oct 2008 22:42:12 +0200
+Message-Id: <1224794532.6002.73.camel@johannes.berg> (sfid-20081024_114728_369906_13A28C41)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
-> Attached patch should fixe lockdep warning. Unfortunately it is rather
-> hard to trigger on purpose.
 
-ACK.
+--=-/E7xHKwZGxkh7868wgem
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Looks like spectrum_cs has the same problem with suspend. I'll submit a patch for that.
+On Fri, 2008-10-10 at 11:14 +0200, Johannes Berg wrote:
 
+> > NACK, the completion of association of mac80211 and iwlagn isn't fully
+> > synchronized so there is still
+> > a race.
+>=20
+> Can we fix that?
 
+Ping? Any idea _where_ the two can get desynchronized?
 
-Dave.
+johannes
+
+--=-/E7xHKwZGxkh7868wgem
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJAOGhAAoJEKVg1VMiehFYEfMP/2wSQXXY7ryEnrIRRMs+RIWB
+M7n+sj3O6eVqAKmcIgp1bjrMao+tuKVtp/HB0/A8kyCTvfBDsoD85aS/ue4mlM06
+kXNY8xSXhRp01dffprlpGmfQ0wqEkdKETTIe9BaIUOYJkI4cVdx897xqCaHeVX6U
+GXKi23xcD3UvjwhXPkjqhzCoZ9UhPih8vHux2aIDYFG+/jeJoyNQZSOUb2tDbHOZ
++GlbCguyihMV3JLYVCK2MW8vVixVeqS3HVZxLTbfhynva+59CcPYxYbUZINBw+tP
+lZY7UwdbnTwiF9gHILDbSOrNxJziPA1LW2DPyFvifh5K3snZ60iWk4PxkzRA0r/J
+274/WdHM+1cpGKu9VRjcHMDJSf0fIPnfBf0woiGhrB4uavzhTH+zIKC22rw+HhoQ
+E4js42QKOcm9m0/GriwhliYSiDNU2cwMsw+eyTIk5WvWQ8eQ7GqFJbgRViGqbDUN
+u978/bqADB70bjDUugWbw/Rmqiv+9hXa3AD70WPDj1ewSIPbVEMBMKCHxf4dIzW0
+uzDt+0pZtoKctmom4FmNMpBydKCKwCPhBWMCihq5esdmXZ2DHPfaYIf1+QsTW5VW
+MOQg2EXRsZcvKXb/ST/4bKXE0aJwRvXOkGjjLusx8MXUach9GoSTBcTzVvrjg3KR
+j7ieco877LflXH8EBGXS
+=/1bV
+-----END PGP SIGNATURE-----
+
+--=-/E7xHKwZGxkh7868wgem--
+
