@@ -1,70 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42477 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754002AbYJWD2y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 23:28:54 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 20:28:54 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath9k: Allow user to change tx power when asked
-Date: Wed, 22 Oct 2008 13:28:45 -0700
-Message-ID: <1224707325-13101-3-git-send-email-lrodriguez@atheros.com> (sfid-20081023_052913_211688_155DC9EE)
-In-Reply-To: <1224707325-13101-2-git-send-email-lrodriguez@atheros.com>
-References: <1224707325-13101-1-git-send-email-lrodriguez@atheros.com>
- <1224707325-13101-2-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:33112 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753003AbYJWPAz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2008 11:00:55 -0400
+Subject: Re: [PATCH v3] mac80211: Re-enable aggregation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, Luis.Rodriguez@atheros.com,
+	Jouni.Malinen@atheros.com, tomasw@gmail.com,
+	Sujith <Sujith.Manoharan@atheros.com>
+In-Reply-To: <20081023145102.GA5816@tuxdriver.com>
+References: <18685.37489.577735.596008@gargle.gargle.HOWL>
+	 <43e72e890810222010w215b278bya788e0c94250b517@mail.gmail.com>
+	 <20081023145102.GA5816@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-26CpvHQxE5Ps3u76twPM"
+Date: Thu, 23 Oct 2008 17:00:13 +0200
+Message-Id: <1224774013.6002.40.camel@johannes.berg> (sfid-20081023_170105_430552_7FAEF3F3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were also changing tx power even when we were not asked to,
-this enforces the change only when we are asked nicely. When
-not asked we simply try to use the max power, we don't tx power
-at all for rate control.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    3 ++-
- drivers/net/wireless/ath9k/xmit.c |    8 +++++++-
- 2 files changed, 9 insertions(+), 2 deletions(-)
+--=-26CpvHQxE5Ps3u76twPM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 5b49552..02e00bd 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1251,7 +1251,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		sc->sc_ah->ah_channels[pos].chanmode =
- 			ath_get_extchanmode(sc, curchan);
- 
--	sc->sc_config.txpowlimit = 2 * conf->power_level;
-+	if (changed & IEEE80211_CONF_CHANGE_POWER)
-+		sc->sc_config.txpowlimit = 2 * conf->power_level;
- 
- 	/* set h/w channel */
- 	if (ath_set_channel(sc, &sc->sc_ah->ah_channels[pos]) < 0)
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 781c6cc..7fbcb20 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -230,7 +230,13 @@ static int ath_tx_prepare(struct ath_softc *sc,
- 
- 	txctl->if_id = 0;
- 	txctl->frmlen = skb->len + FCS_LEN - (hdrlen & 3);
--	txctl->txpower = MAX_RATE_POWER; /* FIXME */
-+
-+	/* Always try at highest power possible unless the the device
-+	 * was configured by the user to use another power. */
-+	if (likely(sc->sc_config.txpowlimit == ATH_TXPOWER_MAX))
-+		txctl->txpower = ATH_TXPOWER_MAX;
-+	else
-+		txctl->txpower = sc->sc_config.txpowlimit;
- 
- 	/* Fill Key related fields */
- 
--- 
-1.5.6.3
+On Thu, 2008-10-23 at 10:55 -0400, John W. Linville wrote:
+> On Wed, Oct 22, 2008 at 08:10:42PM -0700, Luis R. Rodriguez wrote:
+> > On Tue, Oct 21, 2008 at 1:27 AM, Sujith <Sujith.Manoharan@atheros.com> =
+wrote:
+> > > Wireless HW without any dedicated queues for aggregation
+> > > do not need the ampdu_queues mechanism present right now
+> > > in mac80211. Since mac80211 is still incomplete wrt TX MQ
+> > > changes, do not allow aggregation sessions for drivers that
+> > > set ampdu_queues.
+> > >
+> > > This is only an interim hack until Intel fixes the requeue issue.
+> > >
+> > > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> > > Signed-off-by: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+> >=20
+> > Poke.
+>=20
+> Just waiting to see comments from those who understand aggregation
+> better than I do...
+
+Who does? Code looks fine to me, but obviously it doesn't really solve
+the problem, just adds workarounds for the current ath9k driver. Whether
+you want that or not I'll leave up to you.
+
+johannes
+
+--=-26CpvHQxE5Ps3u76twPM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJAJF5AAoJEKVg1VMiehFYnAQQAJ7Y6SDNExUNRlwzZCo2+8w2
+/uEWWKnqlJt6iW+sOkwZ4xNlN9yLePGvyMZE7XKAXDf9wPMoPqAXCA2M3tf/o4ex
+qhRDmTYE1hfApOVAlM1E7idGcJIQ+KUGKbjjpnkSVP8WfREv2ZLYN6+Fy2nyYNxZ
+6rSBUXg9MXq7RYvDNPciDSY4wfOkm7xIIs1YLcyaXJpA2rQln1rPhwrf+92K2lrZ
+Hfyu4Skmzz/4EYtNklEa7/AjgM5ZsfNnerqmca0XkJEZ4D2CGGjHu2iA32dwo3mf
+oxx0TL70IH3eV5ZVTA4VccHYn6ZbsmAuCLWWpIc6NYPs9iqOgkHQAxKZohGVIKuJ
+U0RYO0CT7W1h1SE9uXTKUu1W38OpDi1vlAo1G6hWVVom/2Dr23WFVdaCfMHbE/ib
+o0RA2PFAtwhjTiFPnlCYdpN9BBRe7mdbzdbrFFGZIc6ofSJG6khMKmmjwuu7/I/d
+01atChhe0GARu3gpXr24zXyFv/rAe7RWOrxmhE0OtQu9pC3FoT0R4OdXBucFlDuU
+1jmneUZpIPwFpDC7jgoCWWFTn5V9EkTiFKtSQeotM3gb4+U3xHBcZUZCuAJsrT2K
+eQTFkoF9LHogWpuwYAqAxiKPfOYBMYaGKvcFlyoLjk7lMmEd+dI+ukmPj/kyZEY9
+xkD5hs7Z/sCFj9cKf7CN
+=rW7B
+-----END PGP SIGNATURE-----
+
+--=-26CpvHQxE5Ps3u76twPM--
 
