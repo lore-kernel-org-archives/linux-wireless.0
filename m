@@ -1,149 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:14996 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752694AbYJSWMv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 18:12:51 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1650728wfd.4
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 15:12:50 -0700 (PDT)
-Message-ID: <1ba2fa240810191512i4c6ce748kd13d1671cc2a2ff6@mail.gmail.com> (sfid-20081020_001310_761320_58D1C321)
-Date: Mon, 20 Oct 2008 00:12:50 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Andy Lutomirski" <luto@myrealbox.com>
-Subject: Re: iwlagn: associating with AP causes kernel hiccup
-Cc: richard@scherping.de, "Frederik Himpe" <fhimpe@telenet.be>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <48FB4FBE.2060909@myrealbox.com>
+Received: from smtp5-g19.free.fr ([212.27.42.35]:45698 "EHLO smtp5-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751416AbYJWFbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2008 01:31:16 -0400
+Message-ID: <49000C21.2010808@free.fr> (sfid-20081023_073128_736473_93064082)
+Date: Thu, 23 Oct 2008 07:31:13 +0200
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>
+Subject: Re: [PATCH 4/5] crda: Updated regulatory information for France	(FR)
+References: <cover.1223583376.git.benoit.papillault@free.fr> <48FE399E.6050907@free.fr> <20081022150323.GO6190@tesla>
+In-Reply-To: <20081022150323.GO6190@tesla>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <gd5gs4$abi$1@ger.gmane.org> <1224104363.19219.30.camel@rc-desk>
-	 <gd9v3f$3ft$1@ger.gmane.org> <gd9vpo$5ql$1@ger.gmane.org>
-	 <48F8AEF1.5030603@scherping.de>
-	 <1ba2fa240810171302h7dcc92acr18c060425c4a93d@mail.gmail.com>
-	 <48FA0C27.8010301@scherping.de> <48FB4FBE.2060909@myrealbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 19, 2008 at 5:18 PM, Andy Lutomirski <luto@myrealbox.com> wrote:
-> Richard Scherping wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Luis R. Rodriguez a =E9crit :
+> CC'ing Jean as he's another French wireless developer.
+>=20
+> On Tue, Oct 21, 2008 at 01:20:46PM -0700, Benoit PAPILLAULT wrote:
+>> This patch is for review. It might be tricky to use the INDOOR/OUTDO=
+OR
+>> with those definitions, but it will be another issue.
+>=20
+> INDOOR/OUTDOOR flag is welcomed when it can be determined. In order
+> to make use of it we will need to add wireless state in cfg80211, and
+> let the user be able to update this, say through iw or wpa_supplicant=
+=2E
+> But that's for later just as with DFS.
+
+=46ine with me here.
+
+>=20
+> But using it in the db is great, thanks.
+>=20
+>> Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
+>> ---
+>>  db.txt |   15 ++++++++++-----
+>>  1 files changed, 10 insertions(+), 5 deletions(-)
 >>
->> Tomas Winkler schrieb:
->>>
->>> On Fri, Oct 17, 2008 at 5:27 PM, Richard Scherping
->>> <richard-YwAN3MSemFZ6lmGzAMPh1A@public.gmane.org> wrote:
->>>>>>>>
->>>>>>>> When I associate with an AP, Linux 2.6.27 seems to "hang" for a few
->>>>>>>> seconds. During that time, all sound stops playing and keyboard and
->>>>>>>> mouse input is impossible.
->>>>>>
->>>>>> I'm using Mandriva 2009.0 x86_64 with wpa_supplicant and Mandriva's
->>>>>> wireless network configuration tool (drakroam).
->>>>>>
->>>>>> Actually I just found out that running # ifconfig wlan0 down
->>>>>> is enough to trigger the sound and mouse hanging for a few seconds.
->>>>>
->>>>> And shortly after I wrote that, while associating while getting an IP
->>>>> with dhclient when associating with a WPA encrypted AP, I got this
->>>>> backtrace in my logs:
->>>>> [...]
->>>>
->>>> I have a similar problem here. No crash up to now, but the very same
->>>> "hang" for a few seconds on "ifconfig wlan0 down". Interestingly this does
->>>> only happen after a normal boot - once I did a suspend and resume (S3),
->>>> there is no hang anymore.
->>>>
->>>> Hardware: Thinkpad T61p with Intel 4965 agn
->>>> Software: Debian Lenny x86_64 with vanilla 2.6.27 kernel
->>>>
->>> Driver in 2.6.27 is not stable, please try to reproduce this in
->>> current wireless-testing.git.
->>
->> I do not have the time to compile and test wireless-testing ATM, sorry.
->>
->> In fact I am annoyed by the fact that iwlagn is "known to be unstable" in
->> a stable kernel release and that this even seems to be a totally normal
->> thing...
+>> diff --git a/db.txt b/db.txt
+>> index 6a282b6..bfc91ef 100644
+>> --- a/db.txt
+>> +++ b/db.txt
+>> @@ -199,12 +199,17 @@ country FI:
+>>         (5170 - 5250 @ 40), (N/A, 20)
+>>         (5250 - 5330 @ 40), (N/A, 20), DFS
+>>         (5490 - 5710 @ 40), (N/A, 27), DFS
+>> -
+>> +# Data from http://www.arcep.fr/index.php?id=3D9272#12931
+>> +# Updated 2008-10-04
+>> +# 1W =3D> 30dBm, 200mW =3D> 23dBm, 100mW =3D> 20dBm, 10mW =3D> 10dB=
+m
+>> +# TPC is needed for 5250-5350 and 5470-5725, which flag to use?
+>>  country FR:
+>> -       (2402 - 2482 @ 40), (N/A, 20)
+>> -       (5170 - 5250 @ 40), (N/A, 20)
+>> -       (5250 - 5330 @ 40), (N/A, 20), DFS
+>> -       (5490 - 5710 @ 40), (N/A, 27), DFS
+>> +       (2400 - 2454 @ 40), (N/A, 20)
+>> +       (2454 - 2483.5 @ 40), (N/A, 20), NO-OUTDOOR
+>=20
+> 2483.5 - 2454 =3D 29.5 so 29.5 should be the max bandwidth.
 
->
-> Amen.
-Stable doesn't mean all components are stable, citation  from Linus blog:
-"It doesn't have to be perfect (and obviously no release ever is), but
-it needs to be in reasonable shape"
+Not exactly. The maximum power in this band depends on whether we are
+indoor or outdoor. If we are indoor, we are allowed to have 20dBm in th=
+e
+whole 2400 - 2454 MHz band and can still use 40MHz bandwidth. Maybe I
+should describe that different?
 
-The fact is that some critical patches were rejected as not
-regressions in rc cycle and probably need to be pushed to the stable
-version now or distribution will merge them.
-We gave more priority for testing 32 bit version so it is more stable
-then 64 bit which got much less in house testing and we've missed many
-issues there. The driver doesn't get full exposure till it's get to
-the public in stable version therefore  no bugs are opened in the rc
-cycle so also are not fixed in the stable version. and unfortunately
-there is no much system testing at all for what get's into merging
-window.
-Second the whole mac80211 stack didn't address fully MQ rewrite so
-it's a bit shaky as well and this will be fact also in 2.6.28.
+	(2412 - 2483.5 @ 40), (N/A, 20), NO-OUTDOOR
+        (2412 - 2454 @ 40), (N/A, 20), NO-INDOOR
+        (2454 - 2483.5 @ 40) (N/A, 10), NO-INDOOR
 
-This driver has been available and more-or-less working for ages.
-> What kernel am I supposed to run if I just want a stable system? Haven't
-> found one yet, other than distro kernels...
->
-> In any case, I've seen these complete system hiccups with iwl4965 and iwlagn
-> since at least 2.6.25 and through quite a few wireless-testing versions.  I
-> bet that this, along with things like it, is the culprit:
+In fact, this depends on the indoor/outdoor flags issue which can be
+resolved later.
 
-Haven't seen you've filled bug for it.
+>=20
+>> +       (2454 - 2483.5 @ 40), (N/A, 10), NO-INDOOR
+>=20
+> Same here.
+>=20
+>> +       (5150 - 5250 @ 40), (N/A, 23), NO-OUTDOOR
+>> +       (5250 - 5350 @ 40), (N/A, 23), NO-OUTDOOR, DFS, PASSIVE-SCAN
+>> +       (5470 - 5725 @ 40), (N/A, 30), DFS, PASSIVE-SCAN
+>=20
+> Hm, actually so I had removed PASSIVE-SCAN from all entries
+> as I had determined that this was only used for DFS purposes.
+> As you can see in your case both have DFS so I'd leave only DFS.
+> So essentially we can get rid of these:
+>=20
+>         RRF_PASSIVE_SCAN        =3D 1<<7, /* passive scan is required=
+ */
+>         RRF_NO_IBSS             =3D 1<<8, /* IBSS is not allowed */
+>=20
+> What I noted was that PASSIVE-SCAN for example was only used for when
+> we don't have DFS in STA and NO_IBSS when we don't have DFS in IBSS.
+>=20
+> So we can just stick to DFS flag, unless you are aware of other
+> considerations for them. Thoughts?
 
->
-> In many, many functions:
->  spin_lock_irqsave(&priv->lock, flags);
->  ...
->  ret = iwl_grab_nic_access(priv);
->
-> In iwl-io.h (2.6.26.something):
+If it's documented that the DFS flag implies PASSIVE_SCAN, that's fine
+with me.
 
-This code is here from version 2.6.18 at least was just moved around.
+>=20
+>   Luis
 
-> static inline int _iwl_grab_nic_access(struct iwl_priv *priv)
-> {
->        ...
->        ret = _iwl_poll_bit(priv, CSR_GP_CNTRL,
->                           CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
->                           (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
->                            CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 50);
->        ...
-> }
->
-> static inline int _iwl_poll_bit(struct iwl_priv *priv, u32 addr,
->                                u32 bits, u32 mask, int timeout)
-> {
->        int i = 0;
->
->        do {
->                if ((_iwl_read32(priv, addr) & mask) == (bits & mask))
->                        return i;
->                mdelay(10);
->                i += 10;
->        } while (i < timeout);
->
->        return -ETIMEDOUT;
-> }
->
-> Polling the hardware waiting for firmware to do something *with IRQs
-> disabled*?  I'd really rather the drivers on my system didn't do this.
->
-> I'd attempt to fix this myself, but I have no clue what the locking rules
-> are supposed to be.
+Regards,
+Benoit
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-Locking need to be really revised but till now I didn't see show
-stoppers issues so it didn't get priority
-
-> Would I be out of line for wishing the iwlwifi developers
-Patches are always welcome
-
-would fix
-> longstanding issues (latency and maybe horkage after resume, although the
-> latter seems much improved lately) before adding fancy new things?
-
-There are also problem in mac80211 it self and we did as well some
-work to improve it a bit.
-Tomas
+iD8DBQFJAAwhOR6EySwP7oIRApcqAKC/+B/fPUu6+8caHOqnA/GwsnGCdwCfcuSR
+YX46su0CSrQCynR/RQ1CLnM=3D
+=3D9NM9
+-----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
