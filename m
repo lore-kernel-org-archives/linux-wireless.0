@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:55480 "EHLO vs166246.vserver.de"
+Received: from mga11.intel.com ([192.55.52.93]:58349 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751246AbYJTJ7h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 05:59:37 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Subject: Re: Regression: USB Wi-Fi Device Removal Panic
-Date: Mon, 20 Oct 2008 11:59:12 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <gdhj21$hdq$1@ger.gmane.org>
-In-Reply-To: <gdhj21$hdq$1@ger.gmane.org>
+	id S1756636AbYJWTyn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2008 15:54:43 -0400
+From: "Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>, Marcel Holtmann <marcel@holtmann.org>
+Date: Thu, 23 Oct 2008 12:53:54 -0700
+Subject: RE: [PATCH] wireless: add regulatory_struct_hint
+Message-ID: <8F0C2E89B9AA20448D482EB589641EB306B63920@orsmsx507.amr.corp.intel.com> (sfid-20081023_215456_220174_967616FA)
+References: <1224585110.5521.8.camel@johannes.berg>
+	 <20081022122148.GF6190@tesla>
+	 <8F0C2E89B9AA20448D482EB589641EB306B6390D@orsmsx507.amr.corp.intel.com>
+ <43e72e890810231251s27f2c014y6f4db8e8f1c5b840@mail.gmail.com>
+In-Reply-To: <43e72e890810231251s27f2c014y6f4db8e8f1c5b840@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810201159.12344.mb@bu3sch.de> (sfid-20081020_115946_313047_2C2BF177)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 20 October 2008 11:29:37 Daniel Gimpelevich wrote:
-> Using the compat-wireless-old-2008-10-19.tar.bz2 tarball with Ubuntu 
-> Hardy's 2.6.24-21-generic kernel, anytime any USB wi-fi device is 
-> unplugged, regardless of anything else, the kernel panics. I have 
-> confirmed this to occur with a zd1211b device, an rt73 device, and an 
-> rtl8187b device. This is especially inconvenient in the rtl8187b case, 
-> because after some time, that driver inexplicably stops passing any 
-> traffic, seemingly triggered by HTTPS access in Firefox. The panic from 
-> removing the rtl8187b device is attached inline, and similar backtraces 
-> result from removing the rt73 or the zd1211b.
+>From: mcgrof@gmail.com [mailto:mcgrof@gmail.com] On Behalf Of Luis R.
+>
+>Actually that helps a lot. As you had mentioned before though we are
+>not sure if *all* WiMAX devices will operate in the same way but its
+>good to know what yours are doing. I was wondering specifically if
+>other wireless technology can contribute to the regulatory rules
+>collection we have in the future. It seems it *might* be more than
+>anything we need coexistence technology.
 
-Any chance you can post a backtrace for zd1211?
-I reported a crash-on-pull issue earlier. Just want to check if this is
-a different one or the same.
+You bet -- I just need the time to implement the proof of concept
+we presented in the summit :)
 
--- 
-Greetings Michael.
+Glad it helped,
+
