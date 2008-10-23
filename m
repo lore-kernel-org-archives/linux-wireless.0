@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:10469 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752119AbYJNQA6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45720 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770AbYJWGWs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 12:00:58 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1261264tic.23
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2008 09:00:56 -0700 (PDT)
-Message-ID: <ea11fea30810140900n572c326r938fa88fdb5843d8@mail.gmail.com> (sfid-20081014_180110_274426_7112AA9F)
-Date: Tue, 14 Oct 2008 21:30:56 +0530
-From: "Manish Katiyar" <mkatiyar@gmail.com>
-To: dcbw@redhat.com, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas : Remove unused variable warning "old_channel" from drivers/net/wireless/libertas/cmd.c
-Cc: mkatiyar@gmail.com
-In-Reply-To: <ea11fea30810130352i3cea0579g9950289254c8e628@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <ea11fea30810130352i3cea0579g9950289254c8e628@mail.gmail.com>
+	Thu, 23 Oct 2008 02:22:48 -0400
+Subject: Re: [PATCH] mac80211: make use of regulatory tx power settings on
+	change of tx power
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1224706433-12582-1-git-send-email-lrodriguez@atheros.com>
+References: <1224706433-12582-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rt1YiDLXQRiVtiOzUKcv"
+Date: Thu, 23 Oct 2008 08:22:41 +0200
+Message-Id: <1224742961.5865.5.camel@johannes.berg> (sfid-20081023_082252_340129_98D45844)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 13, 2008 at 4:22 PM, Manish Katiyar <mkatiyar@gmail.com> wrote:
-> Below patch removes the following warning during compilation.
->
-> drivers/net/wireless/libertas/cmd.c:826: warning: unused variable 'old_channel'
 
-Any ack/nack on this ??
+--=-rt1YiDLXQRiVtiOzUKcv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks -
-Manish
+On Wed, 2008-10-22 at 13:13 -0700, Luis R. Rodriguez wrote:
 
->
->
-> Signed-off-by : Manish Katiyar <mkatiyar@gmail.com>
-> ---
->  drivers/net/wireless/libertas/cmd.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/libertas/cmd.c
-> b/drivers/net/wireless/libertas/cmd.c
-> index a912fb6..297696d 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -823,7 +823,9 @@ int lbs_update_channel(struct lbs_private *priv)
->  int lbs_set_channel(struct lbs_private *priv, u8 channel)
->  {
->        struct cmd_ds_802_11_rf_channel cmd;
-> +#ifdef DEBUG
->        u8 old_channel = priv->curbssparams.channel;
-> +#endif
->        int ret = 0;
->
->        lbs_deb_enter(LBS_DEB_CMD);
-> --
-> 1.5.4.3
->
->
-> Thanks -
-> Manish
->
+> +	if (data->txpower.fixed)
+> +		new_power_level =3D min(data->txpower.value, chan->max_power);
+
+Incidentally, are the units really the same? Just wondering, haven't
+checked, if yes this looks good to me.
+
+johannes
+
+--=-rt1YiDLXQRiVtiOzUKcv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJABguAAoJEKVg1VMiehFYCJ4QAKB16UneUZ4lzTKMPXbzY1ae
+ahqzq12Myo4qaPjnExsaP+HBU+vDCpku6uWotumDGAnvGFzuvviEcIUzGDivSe9z
+HZG2OYUN1nvMkOBQW+V1PMb1NyCuGhfQjEMCIxJan0T3Az/+WDbAxQAS8IYDFnQR
+nmeMOPFnPIUftEPABczfQMZscDpqSLTYq1zw3E2uNE9Gek0xMSjM32aoB+xdavVg
+/pgSmDE7MOvzTZdqvQWWqALHx9cag0FlrCK8jcSDQCn5RRae36D9pVLgx9sywACz
+B7RrH1pvic8l0T5MoI8GJS2hsvDUmiATSnmIO/XgAsrFfnHEipZGe697ADc4VMRw
+mb7r/iHIk0HDC+seDAUqIZa26vmDNuRLKEEL2GjbIWrwDwT6PvQDX+HbAKnBAvTb
+J+wU/rdRObyHQX1BMdBNBIzkjKz2oS8SDvmjzWV00FbwWIb+MkUNXVtmwUC6YiM2
+1/Tm41RqrzNpSecEoZuLeqmUYnAUYQW/CvGgh+GKUcNzu5pI1pc5V2/pYtua1QV8
+5rjWhTnyA4P8WYfLollvtb/4fNA5JJc0CWxcPOhT9Tgdd3uiPiVUCDr/iY89Bl2c
+FiHYaDauOpJV0aibAW6b8DC7mgseoyA2qSytCiNdrlbQ8mdI5OU6Lw4UPwEK+vsx
+gRP5s4/lf9ixg+FtCgr2
+=1FQv
+-----END PGP SIGNATURE-----
+
+--=-rt1YiDLXQRiVtiOzUKcv--
+
