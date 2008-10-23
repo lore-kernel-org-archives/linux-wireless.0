@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48458 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752803AbYJ2Lua (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:28442 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751890AbYJWXhu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 07:50:30 -0400
-Subject: [PATCH] libertas: fix buffer overrun
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain
-Date: Wed, 29 Oct 2008 11:43:32 +0100
-Message-Id: <1225277012.5439.0.camel@johannes.berg> (sfid-20081029_125042_603863_90BE3C56)
-Mime-Version: 1.0
+	Thu, 23 Oct 2008 19:37:50 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so212665yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 16:37:49 -0700 (PDT)
+Message-ID: <43e72e890810231637v51591edak5345faccd81d594b@mail.gmail.com> (sfid-20081024_013755_060059_6E843F08)
+Date: Thu, 23 Oct 2008 16:37:48 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>,
+	otus-devel@lists.madwifi-project.org
+Subject: Re: Release of Atheros 802.11n USB Linux driver
+In-Reply-To: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If somebody sends an invalid beacon/probe response, that can trash the
-whole BSS descriptor. The descriptor is, luckily, large enough so that
-it cannot scribble past the end of it; it's well above 400 bytes long.
+On Tue, Oct 21, 2008 at 7:04 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> We would like to see our Atheros 802.11n USB Linux driver upstream
+> however we need help with this so we are releasing our Atheros 11n USB
+> Otus Linux driver under the ISC to the community. The goal is to work
+> with the community to help move this forward upstream. We are hoping
+> for community help and leadership on this (*cough*).
+>
+> In the meantime users should be able to use this driver and patches
+> are welcomed to add newer wireless extension support so users on newer
+> kernels can get their devices working. The focus should be upstream
+> though :)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: stable@kernel.org [2.6.24-2.6.27, bug present in some form since driver was added (2.6.22)]
----
-Not really tested for lack of hw.
+So for those of you who want to know which devices to buy
 
-John, this is part of the other patch I sent, but this one's
-for 2.6.28.
+Dlink
+    * DWA-160A1
 
-The function there needs to be reviewed more, it seems to access
-potentially invalid memory when an AP sends other, too short,
-information elements.
+Netgear
+    * WNDA3100
+    * WN111v2
 
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -598,8 +598,8 @@ static int lbs_process_bss(struct bss_descriptor *bss,
- 
- 		switch (elem->id) {
- 		case MFIE_TYPE_SSID:
--			bss->ssid_len = elem->len;
--			memcpy(bss->ssid, elem->data, elem->len);
-+			bss->ssid_len = min_t(int, 32, elem->len);
-+			memcpy(bss->ssid, elem->data, bss->ssid_len);
- 			lbs_deb_scan("got SSID IE: '%s', len %u\n",
- 			             escape_essid(bss->ssid, bss->ssid_len),
- 			             bss->ssid_len);
+TP-Link
+    * TL-WN821N
 
+We now have on the wiki for the driver too, to help followup progress
+on development for this driver.
 
+http://wireless.kernel.org/en/users/Drivers/otus
+
+  Luis
