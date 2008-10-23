@@ -1,207 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56136 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752582AbYJ1Shp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 14:37:45 -0400
-Subject: [PATCH] mac80211: remove SSID driver code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 28 Oct 2008 18:54:11 +0100
-Message-Id: <1225216451.3598.34.camel@johannes.berg> (sfid-20081028_193748_601006_A8B32DB9)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:57108 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751032AbYJWI7o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2008 04:59:44 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 01:59:44 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18688.15460.336059.400706@gargle.gargle.HOWL> (sfid-20081023_105949_709705_A7925F01)
+Date: Thu, 23 Oct 2008 14:27:08 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Tomas Winkler <tomasw@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+In-Reply-To: <1224696170.30459.12.camel@johannes.berg>
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	<18684.18492.94865.480736@gargle.gargle.HOWL>
+	<1224493957.18024.47.camel@johannes.berg>
+	<18684.20459.335157.171344@gargle.gargle.HOWL>
+	<1224495531.18024.55.camel@johannes.berg>
+	<18684.24323.743610.871307@gargle.gargle.HOWL>
+	<1224505349.27899.17.camel@johannes.berg>
+	<18684.51206.771543.514682@localhost.localdomain>
+	<1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com>
+	<1224669827.28639.54.camel@johannes.berg>
+	<1ba2fa240810220459m1dcffd24k58cf6b72c688913c@mail.gmail.com>
+	<1224696170.30459.12.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the SSID from the driver API since now there is no
-driver that requires knowing the SSID and I think it's
-unlikely that any hardware design that does require the
-SSID will play well with mac80211.
+Johannes Berg wrote:
+> On Wed, 2008-10-22 at 13:59 +0200, Tomas Winkler wrote:
+> 
+> > It answers BA i n RX path and interpret BA in TX Scheduling
+> > retransmission of not acked frames is done in HW (not firmware) no
+> > need to requeue them. In corner case when retries are exhausted  BA
+> > request is issued from mac80211 to advance RX side window.
+> 
+> Ok, but if we do both of that in mac80211, it wouldn't really matter
+> since we never see the relevant frames, right? Or we can add a flag to
+> ignore them.
+> 
+> > > Like I said, from what I can tell bcom is really similar, and I'd like
+> > > to not have to re-implement all this first. mac80211 used to have a more
+> > > push-model, which we've deviated from with the HT stuff you did, but for
+> > > most hardware the push-model is still appropriate, so imho we should try
+> > > to go to one even with HT and then see.
+> > 
+> > Works for me. What I stumble upon is retransmission from within TX
+> > response  path
+> > how this go together with context of regular TX path. Even in iwlwifi
+> > we need to be able to kick/start the internal aggregation queue?
+> 
+> Yeah, this is something we definitely need to work out. We haven't even
+> managed to decide yet how aggregated packets are given to the driver :)
+> I think for atheros and bcom a model where mac80211 decides pretty much
+> everything and hands the driver a list of skbs to aggregate would work
+> best, but then I think that wouldn't work with your hw at all.
+> 
 
-This also removes support for setting the SSID in master
-mode which will require a patch to hostapd to not try.
+Retransmission of unacked frames is done within the driver, in ath9k.
+In case of retry exhaustion (failed transmission), we do what Intel does,
+i.e, request for a BAR to be sent out.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 -------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 -------
- include/net/mac80211.h                      |    6 +-----
- net/mac80211/ieee80211_i.h                  |    3 ---
- net/mac80211/main.c                         |   15 +++------------
- net/mac80211/mlme.c                         |   14 --------------
- net/mac80211/wext.c                         |   16 ----------------
- 7 files changed, 4 insertions(+), 64 deletions(-)
-
---- everything.orig/include/net/mac80211.h	2008-10-28 18:46:28.000000000 +0100
-+++ everything/include/net/mac80211.h	2008-10-28 18:46:45.000000000 +0100
-@@ -616,14 +616,12 @@ struct ieee80211_if_init_conf {
-  * enum ieee80211_if_conf_change - interface config change flags
-  *
-  * @IEEE80211_IFCC_BSSID: The BSSID changed.
-- * @IEEE80211_IFCC_SSID: The SSID changed.
-  * @IEEE80211_IFCC_BEACON: The beacon for this interface changed
-  *	(currently AP and MESH only), use ieee80211_beacon_get().
-  */
- enum ieee80211_if_conf_change {
- 	IEEE80211_IFCC_BSSID	= BIT(0),
--	IEEE80211_IFCC_SSID	= BIT(1),
--	IEEE80211_IFCC_BEACON	= BIT(2),
-+	IEEE80211_IFCC_BEACON	= BIT(1),
- };
- 
- /**
-@@ -643,8 +641,6 @@ enum ieee80211_if_conf_change {
- struct ieee80211_if_conf {
- 	u32 changed;
- 	u8 *bssid;
--	u8 *ssid;
--	size_t ssid_len;
- };
- 
- /**
---- everything.orig/net/mac80211/main.c	2008-10-28 18:46:28.000000000 +0100
-+++ everything/net/mac80211/main.c	2008-10-28 18:46:45.000000000 +0100
-@@ -171,19 +171,13 @@ int ieee80211_if_config(struct ieee80211
- 	conf.changed = changed;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION ||
--	    sdata->vif.type == NL80211_IFTYPE_ADHOC) {
-+	    sdata->vif.type == NL80211_IFTYPE_ADHOC)
- 		conf.bssid = sdata->u.sta.bssid;
--		conf.ssid = sdata->u.sta.ssid;
--		conf.ssid_len = sdata->u.sta.ssid_len;
--	} else if (sdata->vif.type == NL80211_IFTYPE_AP) {
-+	else if (sdata->vif.type == NL80211_IFTYPE_AP)
- 		conf.bssid = sdata->dev->dev_addr;
--		conf.ssid = sdata->u.ap.ssid;
--		conf.ssid_len = sdata->u.ap.ssid_len;
--	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
-+	else if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		u8 zero[ETH_ALEN] = { 0 };
- 		conf.bssid = zero;
--		conf.ssid = zero;
--		conf.ssid_len = 0;
- 	} else {
- 		WARN_ON(1);
- 		return -EINVAL;
-@@ -192,9 +186,6 @@ int ieee80211_if_config(struct ieee80211
- 	if (WARN_ON(!conf.bssid && (changed & IEEE80211_IFCC_BSSID)))
- 		return -EINVAL;
- 
--	if (WARN_ON(!conf.ssid && (changed & IEEE80211_IFCC_SSID)))
--		return -EINVAL;
--
- 	return local->ops->config_interface(local_to_hw(local),
- 					    &sdata->vif, &conf);
- }
---- everything.orig/net/mac80211/wext.c	2008-10-28 18:46:28.000000000 +0100
-+++ everything/net/mac80211/wext.c	2008-10-28 18:46:45.000000000 +0100
-@@ -407,13 +407,6 @@ static int ieee80211_ioctl_siwessid(stru
- 		return 0;
- 	}
- 
--	if (sdata->vif.type == NL80211_IFTYPE_AP) {
--		memcpy(sdata->u.ap.ssid, ssid, len);
--		memset(sdata->u.ap.ssid + len, 0,
--		       IEEE80211_MAX_SSID_LEN - len);
--		sdata->u.ap.ssid_len = len;
--		return ieee80211_if_config(sdata, IEEE80211_IFCC_SSID);
--	}
- 	return -EOPNOTSUPP;
- }
- 
-@@ -437,15 +430,6 @@ static int ieee80211_ioctl_giwessid(stru
- 		return res;
- 	}
- 
--	if (sdata->vif.type == NL80211_IFTYPE_AP) {
--		len = sdata->u.ap.ssid_len;
--		if (len > IW_ESSID_MAX_SIZE)
--			len = IW_ESSID_MAX_SIZE;
--		memcpy(ssid, sdata->u.ap.ssid, len);
--		data->length = len;
--		data->flags = 1;
--		return 0;
--	}
- 	return -EOPNOTSUPP;
- }
- 
---- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-28 18:46:28.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-28 18:46:45.000000000 +0100
-@@ -6744,13 +6744,6 @@ static int iwl3945_mac_config_interface(
- 
- 	/* XXX: this MUST use conf->mac_addr */
- 
--	if ((priv->iw_mode == NL80211_IFTYPE_AP) &&
--	    (!conf->ssid_len)) {
--		IWL_DEBUG_MAC80211
--		    ("Leaving in AP mode because HostAPD is not ready.\n");
--		return 0;
--	}
--
- 	if (!iwl3945_is_alive(priv))
- 		return -EAGAIN;
- 
---- everything.orig/net/mac80211/ieee80211_i.h	2008-10-28 18:46:28.000000000 +0100
-+++ everything/net/mac80211/ieee80211_i.h	2008-10-28 18:46:45.000000000 +0100
-@@ -212,9 +212,6 @@ struct ieee80211_if_ap {
- 
- 	struct list_head vlans;
- 
--	u8 ssid[IEEE80211_MAX_SSID_LEN];
--	size_t ssid_len;
--
- 	/* yes, this looks ugly, but guarantees that we can later use
- 	 * bitmap_empty :)
- 	 * NB: don't touch this bitmap, use sta_info_{set,clear}_tim_bit */
---- everything.orig/net/mac80211/mlme.c	2008-10-28 18:46:28.000000000 +0100
-+++ everything/net/mac80211/mlme.c	2008-10-28 18:46:45.000000000 +0100
-@@ -2460,7 +2460,6 @@ void ieee80211_sta_req_auth(struct ieee8
- int ieee80211_sta_set_ssid(struct ieee80211_sub_if_data *sdata, char *ssid, size_t len)
- {
- 	struct ieee80211_if_sta *ifsta;
--	int res;
- 
- 	if (len > IEEE80211_MAX_SSID_LEN)
- 		return -EINVAL;
-@@ -2472,19 +2471,6 @@ int ieee80211_sta_set_ssid(struct ieee80
- 		memcpy(ifsta->ssid, ssid, len);
- 		ifsta->ssid_len = len;
- 		ifsta->flags &= ~IEEE80211_STA_PREV_BSSID_SET;
--
--		res = 0;
--		/*
--		 * Hack! MLME code needs to be cleaned up to have different
--		 * entry points for configuration and internal selection change
--		 */
--		if (netif_running(sdata->dev))
--			res = ieee80211_if_config(sdata, IEEE80211_IFCC_SSID);
--		if (res) {
--			printk(KERN_DEBUG "%s: Failed to config new SSID to "
--			       "the low-level driver\n", sdata->dev->name);
--			return res;
--		}
- 	}
- 
- 	if (len)
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-28 18:46:28.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-28 18:46:45.000000000 +0100
-@@ -2965,13 +2965,6 @@ static int iwl4965_mac_config_interface(
- 			return rc;
- 	}
- 
--	if ((priv->iw_mode == NL80211_IFTYPE_AP) &&
--	    (!conf->ssid_len)) {
--		IWL_DEBUG_MAC80211
--		    ("Leaving in AP mode because HostAPD is not ready.\n");
--		return 0;
--	}
--
- 	if (!iwl_is_alive(priv))
- 		return -EAGAIN;
- 
-
-
+Sujith
