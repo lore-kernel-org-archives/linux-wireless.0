@@ -1,47 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:40867 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752955AbYJ2Om6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54387 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbYJXJsD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 10:42:58 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so23962wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 07:42:57 -0700 (PDT)
-Message-ID: <40f31dec0810290742j2c94e047u8548dfe2bdcde058@mail.gmail.com> (sfid-20081029_154301_468712_C7C165B9)
-Date: Wed, 29 Oct 2008 16:42:57 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [PATCH] ath5k: update keycache to support TKIP handling
-Cc: linville@tuxdriver.com, jirislaby@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <1225283457-24417-3-git-send-email-me@bobcopeland.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1225283457-24417-3-git-send-email-me@bobcopeland.com>
+	Fri, 24 Oct 2008 05:48:03 -0400
+Subject: Re: [PATCH 07/10] iwlwifi: refactor tx byte count table usage
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@linux.intel.com>
+Cc: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1224830938-1577-8-git-send-email-reinette.chatre@linux.intel.com>
+References: <>
+	 <1224830938-1577-1-git-send-email-reinette.chatre@linux.intel.com>
+	 <1224830938-1577-2-git-send-email-reinette.chatre@linux.intel.com>
+	 <1224830938-1577-3-git-send-email-reinette.chatre@linux.intel.com>
+	 <1224830938-1577-4-git-send-email-reinette.chatre@linux.intel.com>
+	 <1224830938-1577-5-git-send-email-reinette.chatre@linux.intel.com>
+	 <1224830938-1577-6-git-send-email-reinette.chatre@linux.intel.com>
+	 <1224830938-1577-7-git-send-email-reinette.chatre@linux.intel.com>
+	 <1224830938-1577-8-git-send-email-reinette.chatre@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-riuFNNLkFblCYi9ywKAt"
+Date: Fri, 24 Oct 2008 10:27:53 +0200
+Message-Id: <1224836873.6002.75.camel@johannes.berg> (sfid-20081024_114808_810258_F1C03238)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
-> index 69755fc..037e36d 100644
-> --- a/drivers/net/wireless/ath5k/reg.h
-> +++ b/drivers/net/wireless/ath5k/reg.h
-> @@ -1811,6 +1811,7 @@
->  #define AR5K_KEYTABLE_ANTENNA          0x00000008      /* [5212+] */
->  #define AR5K_KEYTABLE_MAC0(_n)         AR5K_KEYTABLE_OFF(_n, 6)
->  #define AR5K_KEYTABLE_MAC1(_n)         AR5K_KEYTABLE_OFF(_n, 7)
-> +#define AR5K_KEYTABLE_MIC_OFFSET       64
->  #define AR5K_KEYTABLE_VALID            0x00008000
->
->  /* If key type is TKIP and MIC is enabled
 
-Just below...
+--=-riuFNNLkFblCYi9ywKAt
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-/* If key type is TKIP and MIC is enabled
- * MIC key goes in offset entry + 64 */
-#define	AR5K_KEYTABLE_MIC_OFFSET	64
+On Thu, 2008-10-23 at 23:48 -0700, Reinette Chatre wrote:
+> From: Tomas Winkler <tomas.winkler@intel.com>
+>=20
+> This patch drops unreadable usage of IWL_SET/GET_BITS16 in byte count
+> tables handling
+> This patch also cleans a bit the byte count table code and adds
+> WARN_ON traps on invalid values
+>=20
+> This patch is pure cleanup, no functional changes.
 
+Great, thanks!
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+johannes
+
+--=-riuFNNLkFblCYi9ywKAt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJAYcFAAoJEKVg1VMiehFYzM4P/Aod/VP51G+QkaCgDrR8y6Kt
+akCh3rXqQVWGXTvwxxh7cqn30t3+KKWeaZ6Q4zOtXxKiecJ6lJQhNL/zM5Jmdk3Q
+fbUvOe7J1Yn678IfBKuqz59kbu/GyUsc71m1kx25TD/XnE003a98CHTTPP7a3n58
+9zxQJguPGBc5jFECBrecnL0Yf0HHmiUK4RbPabc9joiiqAygLR+DfHxgn1B8WaJ+
+CVAG5cjSwQrp0dbNMFPnhjpFybLQTovqPgbbQWib71QVQP5NCstUW/9stqjCKbsC
+itLzRTF7CL3JNNde5ttALfEEXvc7nmgU9rguxt7pWwxnJ7ccdM52rKXBfrGqm6do
+VkKjN67Z87bMldINQsQXfouCkJmJPge4kIE/ODYCNx0rTAM4gosRbyg0Iuo0kw7y
+S6JRz/HvryH+xK0HEdr/glki7Hl7zBcoB8/ORDtdyEIdQIz3q839dNs6cvUu17Yq
+bzdt962iaSj/5a6TJgXUajZb+S2oF2iJjuXOo77ZncZfVN9M3uFUjt4/kc+lz28U
+Q2oHRCeZqjatCd9yYzezRvs5+xzRDoiThu0DWFm2Vj62IGgJh6HZNGEem1ZD9hpc
+0+WQO8i1xKLjN/ROC/aZVFdRLq4EPX9CQ2LGU52DUUO6Ui7sqOoIg/47AZZtFuv2
+40d7n9GBaTR9H3XJUq4W
+=xOUm
+-----END PGP SIGNATURE-----
+
+--=-riuFNNLkFblCYi9ywKAt--
+
