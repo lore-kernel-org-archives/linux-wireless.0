@@ -1,79 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59245 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbYJRMVt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2008 08:21:49 -0400
-Subject: Re: powerpc allmodconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: David Miller <davem@davemloft.net>, akpm@linux-foundation.org,
-	dan.j.williams@intel.com, tiwai@suse.de,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
-	ralf@linux-mips.org, mchehab@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org
-In-Reply-To: <20081016130237.4984967c@infradead.org>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
-	 <20081015.220247.262683261.davem@davemloft.net>
-	 <1224169039.735.57.camel@johannes.berg>
-	 <20081016.124923.222595655.davem@davemloft.net>
-	 <20081016130237.4984967c@infradead.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qXvhJ3JmCNBpXIwnMVne"
-Date: Sat, 18 Oct 2008 14:20:02 +0200
-Message-Id: <1224332402.6324.0.camel@johannes.berg> (sfid-20081018_142202_560008_F8EB558E)
+Received: from main.gmane.org ([80.91.229.2]:48083 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752051AbYJ0JFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 05:05:05 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1KuO22-0003ou-Ol
+	for linux-wireless@vger.kernel.org; Mon, 27 Oct 2008 09:05:03 +0000
+Received: from 221.221.233.227 ([221.221.233.227])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 09:05:02 +0000
+Received: from eeuix by 221.221.233.227 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 09:05:02 +0000
+To: linux-wireless@vger.kernel.org
+From: JUN <eeuix@yahoo.com>
+Subject: Re: Release of Atheros 802.11abg HAL under the ISC
+Date: Fri, 24 Oct 2008 02:26:22 +0000 (UTC)
+Message-ID: <loom.20081024T022046-734@post.gmane.org> (sfid-20081027_100513_733611_AD92CBED)
+References: <20080926215701.GC5972@tesla>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis R. Rodriguez <lrodriguez@...> writes:
 
---=-qXvhJ3JmCNBpXIwnMVne
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> 
+> As part of our commitment to help support all of our Atheros devices
+> under Linux we'd like to announce the release of our Atheros HAL for
+> our 802.11abg chipsets under the ISC license.
+> 
+> You can find it here:
+> 
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/legacy-hal.tar.bz2
+> 
+> This can be used as a source of documentation to help ath5k move
+> forward to support our 802.11abg chipsets as best as possible in
+> the Linux kernel. We look forward to keep working strongly with the
+> community on advancing support of all our Atheros chipsets under Linux.
+> 
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-On Thu, 2008-10-16 at 13:02 -0700, Arjan van de Ven wrote:
-> On Thu, 16 Oct 2008 12:49:23 -0700 (PDT)
-> David Miller <davem@davemloft.net> wrote:
-> > #endif
-> > #define __WARN() warn_on_slowpath(__FILE__, __LINE__)
-> > #define __WARN_printf(arg...) warn_slowpath(__FILE__, __LINE__, arg)
-> > #else
-> > #define __WARN_printf(arg...) __WARN()
->=20
-> the easiest way I suppose would be to do
->=20
-> #define __WARN_printf(arg..) do { printk(arg); __WARN(); } while (0)
->=20
-> any obvious problems with this ?
+Thanks for your great job
 
-No, not really. You won't get it on kerneloops, but I guess that's not
-an easily tractable problem.
+would you tell me which version of the madwifi you tested
+with the HAL source, and work? I've tried with madwifi-0.9.3.1 and simply
+replaced the xscale-be-elf.hal.o.uu with the new one. 
+madwifi-0.9.3.1 use HAL 0.9.18 by default, and the HAL from 
+your source is 0.9.17.1.
 
-johannes
 
---=-qXvhJ3JmCNBpXIwnMVne
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI+dRuAAoJEKVg1VMiehFYmDYP/0kTJWdpsf24PrUnYtMIXVLv
-C46H78KmP/qVYLbDiE0uK4fCq6T5agsZga7fSK5kBA8NiNIL1wXc4X7KjibaDWkr
-lEmpAchTZZZgcgO4oW7AAuxoPtFJwJ0GVe8IOU93N+ItbPuCahA+XgbSC670VOIT
-G5655z9ApbE1Zk2ovPVezBgOhsQgCNEX+V57ALRLqNrW5/w3yFsaAcJSjWdNQQ6z
-YqKBNB96Ds8Y9aJNoFSoG9Y09FU3tuCvN0RyQTURxpwHKZ6f/PWBzdlGUZRYMUh0
-dHSrUvow0SzAFhWyZmhmAeRtCwC2F0T95wxun9LOht4o37hrKE3xN9ScIbSOFIYq
-m8KD5ZAd39nFuCEj41GBi4B0CRy0IhTqGeCIRqyVFYtKSFR4M+eJ9fskrPyWYJXI
-zofkGWlIqKBIGM9v8vMBWX5dalocIFBZFyYiPj/NYMsMRsRfJ33i0UVYk6VGijIs
-8b5gyl5ASmS/yjJAB5DwOQEW7UZs2RrTFSKI0A9BlQOp73Qplwdie7zas7QK/wHM
-vtosJ2/aTo3SdLumy+B9KphBwJBk09FxhNiU76aJnLtXsWnQ0/9kxQKlfW9dctTi
-bKCqB8k2XhGkZ13SEJvpKs9WGSfLXchv2kAOs/O7P+OWEMaz/4FpbZPhV+CGn5Ty
-Ff7sKOr58jw93iMShX+S
-=OjGy
------END PGP SIGNATURE-----
-
---=-qXvhJ3JmCNBpXIwnMVne--
 
