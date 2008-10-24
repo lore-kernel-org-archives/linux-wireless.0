@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:36072 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149AbYJ3BTC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 21:19:02 -0400
-Message-ID: <b6c5339f0810291819ld7d6043k56b11128bc6252cb@mail.gmail.com> (sfid-20081030_021911_978084_75E29EFA)
-Date: Wed, 29 Oct 2008 21:19:01 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: pull request: wireless-2.6 2008-10-29
-Cc: "Arjan van de Ven" <arjan@infradead.org>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mcgrof@gmail.com, mickflemm@gmail.com
-In-Reply-To: <20081029233350.GE3485@tuxdriver.com>
+Received: from mail.gmx.net ([213.165.64.20]:36699 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751040AbYJXNmB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2008 09:42:01 -0400
+Message-ID: <4901D0A5.7060707@gmx.de> (sfid-20081024_154208_694707_4376F569)
+Date: Fri, 24 Oct 2008 15:41:57 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081029231855.GD3485@tuxdriver.com>
-	 <20081029162324.28f5864d@infradead.org>
-	 <20081029233350.GE3485@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>,
+	otus-devel@lists.madwifi-project.org
+Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
+References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> <43e72e890810231637v51591edak5345faccd81d594b@mail.gmail.com>
+In-Reply-To: <43e72e890810231637v51591edak5345faccd81d594b@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 7:33 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Oct 29, 2008 at 04:23:24PM -0700, Arjan van de Ven wrote:
->> On Wed, 29 Oct 2008 19:18:55 -0400
->> "John W. Linville" <linville@tuxdriver.com> wrote:
->> it seems to have added a few WARN_ON()s which now end up at the top of
->> the list .. are these known or should I spend some time writing reports
->> for netdev ?
+On 10/24/2008 01:37 AM, Luis R. Rodriguez wrote:
 
-Pavel Roskin posted one such WARN_ON to ath5k-devel a few days ago.
-Seems related to setup of the rate tables, but I haven't reproduced it
-here yet.  I'll see if he has more info...
+> So for those of you who want to know which devices to buy
 
--- 
-Bob Copeland %% www.bobcopeland.com
+I'd guess the
+
+* AVM FRITZ!WLAN N USB Stick (USB ID 0x57c, 0x8401)
+
+should be in this list, too.
+
+I don't own one (yet), but the Windows driver contains:
+$ strings -t x fwlanusbn_wxp.sys
+...
+4de20 Atheros OTUS Wireless Network Adapter
+...
+
+Could some owner please confirm the chipset of this stick?
+
