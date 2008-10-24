@@ -1,241 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50346 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753405AbYJASfL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 14:35:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 11:35:11 -0700
-Date: Wed, 1 Oct 2008 04:34:58 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Pavel Machek <pavel@suse.cz>
-CC: kernel list <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>,
-	"kaszak@gmail.com" <kaszak@gmail.com>,
-	"lcostantino@gmail.com" <lcostantino@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: w35und wifi driver for linux-staging
-Message-ID: <20081001113458.GC6126@tesla> (sfid-20081001_203518_350124_A4B9BCEC)
-References: <20081001123656.GA30942@elf.ucw.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20081001123656.GA30942@elf.ucw.cz>
+Received: from xc.sipsolutions.net ([83.246.72.84]:50903 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751135AbYJXSed (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2008 14:34:33 -0400
+Message-Id: <20081024183322.499355000@sipsolutions.net> (sfid-20081024_203442_562916_344FEECF)
+References: <20081024183219.735241000@sipsolutions.net>
+Date: Fri, 24 Oct 2008 20:32:21 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4] wireless: remove struct regdom hinting
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 01, 2008 at 05:36:56AM -0700, Pavel Machek wrote:
-> Hi!
-> 
-> This is driver for w35und usb wifi -- also in kohjinsha
-> subnotebook. It should work well enough to associate and ping, but it
-> obviously needs to be rewritten two more times...
-> 
-> OTOH worst horrors (like embedded wifi stack) should have been fixed
-> already...
-> 
-> (against 2.6.27-rc8).
-> 
-> Signed-off-by: Pavel Machek <pavel@suse.cz>
+The code needs to be split out and cleaned up, so as a
+first step remove the capability, to add it back in a
+subsequent patch as a separate function. Also remove the
+publically facing return value of the function and the
+wiphy argument. A number of internal functions go from
+being generic helpers to just being used for alpha2
+setting.
 
-Quick review just looking at only a few files.
-This can be removed:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ Documentation/networking/regulatory.txt |   11 +++--
+ drivers/net/wireless/zd1211rw/zd_mac.c  |    2 -
+ include/net/wireless.h                  |   23 ++---------
+ net/wireless/nl80211.c                  |    2 -
+ net/wireless/reg.c                      |   63 ++++++++------------------------
+ net/wireless/reg.h                      |   23 +++--------
+ 6 files changed, 36 insertions(+), 88 deletions(-)
 
-> diff --git a/drivers/net/wireless/winbond/winbondport/SVN_CHANGELOG b/drivers/net/wireless/winbond/winbondport/SVN_CHANGELOG
-> diff --git a/drivers/net/wireless/winbond/winbondport/VersionNote.txt
-> diff --git a/drivers/net/wireless/winbond/winbondport/VersionNote.txt b/drivers/net/wireless/winbond/winbondport/VersionNote.txt
+--- everything.orig/include/net/wireless.h	2008-10-24 10:39:38.000000000 +0200
++++ everything/include/net/wireless.h	2008-10-24 11:08:36.000000000 +0200
+@@ -342,34 +342,19 @@ ieee80211_get_channel(struct wiphy *wiph
+ 
+ /**
+  * regulatory_hint - driver hint to the wireless core a regulatory domain
+- * @wiphy: the driver's very own &struct wiphy
++ * @wiphy: the wireless device giving the hint (used only for reporting
++ *	conflicts)
+  * @alpha2: the ISO/IEC 3166 alpha2 the driver claims its regulatory domain
+  * 	should be in. If @rd is set this should be NULL. Note that if you
+  * 	set this to NULL you should still set rd->alpha2 to some accepted
+  * 	alpha2.
+- * @rd: a complete regulatory domain provided by the driver. If passed
+- * 	the driver does not need to worry about freeing it.
+  *
+  * Wireless drivers can use this function to hint to the wireless core
+  * what it believes should be the current regulatory domain by
+  * giving it an ISO/IEC 3166 alpha2 country code it knows its regulatory
+  * domain should be in or by providing a completely build regulatory domain.
+  * If the driver provides an ISO/IEC 3166 alpha2 userspace will be queried
+- * for a regulatory domain structure for the respective country. If
+- * a regulatory domain is build and passed you should set the alpha2
+- * if possible, otherwise set it to the special value of "99" which tells
+- * the wireless core it is unknown.
+- *
+- * Returns -EALREADY if *a regulatory domain* has already been set. Note that
+- * this could be by another driver. It is safe for drivers to continue if
+- * -EALREADY is returned, if drivers are not capable of world roaming they
+- * should not register more channels than they support. Right now we only
+- * support listening to the first driver hint. If the driver is capable
+- * of world roaming but wants to respect its own EEPROM mappings for
+- * specific regulatory domains it should register the @reg_notifier callback
+- * on the &struct wiphy. Returns 0 if the hint went through fine or through an
+- * intersection operation. Otherwise a standard error code is returned.
++ * for a regulatory domain structure for the respective country.
+  */
+-extern int regulatory_hint(struct wiphy *wiphy,
+-		const char *alpha2, struct ieee80211_regdomain *rd);
++extern void regulatory_hint(struct wiphy *wiphy, const char *alpha2);
+ #endif /* __NET_WIRELESS_H */
+--- everything.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2008-10-24 10:38:03.000000000 +0200
++++ everything/drivers/net/wireless/zd1211rw/zd_mac.c	2008-10-24 11:07:28.000000000 +0200
+@@ -171,7 +171,7 @@ int zd_mac_init_hw(struct ieee80211_hw *
+ 
+ 	r = zd_reg2alpha2(mac->regdomain, alpha2);
+ 	if (!r)
+-		regulatory_hint(hw->wiphy, alpha2, NULL);
++		regulatory_hint(hw->wiphy, alpha2);
+ 
+ 	r = 0;
+ disable_int:
+--- everything.orig/net/wireless/nl80211.c	2008-10-24 10:39:38.000000000 +0200
++++ everything/net/wireless/nl80211.c	2008-10-24 11:05:18.000000000 +0200
+@@ -1695,7 +1695,7 @@ static int nl80211_req_set_reg(struct sk
+ 		return -EINVAL;
+ #endif
+ 	mutex_lock(&cfg80211_drv_mutex);
+-	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, NULL);
++	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data);
+ 	mutex_unlock(&cfg80211_drv_mutex);
+ 	return r;
+ }
+--- everything.orig/net/wireless/reg.c	2008-10-24 10:39:38.000000000 +0200
++++ everything/net/wireless/reg.c	2008-10-24 11:06:46.000000000 +0200
+@@ -42,7 +42,10 @@
+ #include "core.h"
+ #include "reg.h"
+ 
+-/* wiphy is set if this request's initiator is REGDOM_SET_BY_DRIVER */
++/*
++ * wiphy is set if this request's initiator is
++ * REGDOM_SET_BY_COUNTRY_IE or _DRIVER
++ */
+ struct regulatory_request {
+ 	struct wiphy *wiphy;
+ 	enum reg_set_by initiator;
+@@ -298,7 +301,7 @@ static int call_crda(const char *alpha2)
+ /* This has the logic which determines when a new request
+  * should be ignored. */
+ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+-	char *alpha2, struct ieee80211_regdomain *rd)
++			  const char *alpha2)
+ {
+ 	/* All initial requests are respected */
+ 	if (!last_request)
+@@ -343,22 +346,8 @@ static int ignore_request(struct wiphy *
+ 		return 1;
+ 	case REGDOM_SET_BY_DRIVER:
+ 		BUG_ON(!wiphy);
+-		if (last_request->initiator == REGDOM_SET_BY_DRIVER) {
+-			/* Two separate drivers hinting different things,
+-			 * this is possible if you have two devices present
+-			 * on a system with different EEPROM regulatory
+-			 * readings. XXX: Do intersection, we support only
+-			 * the first regulatory hint for now */
+-			if (last_request->wiphy != wiphy)
+-				return -EALREADY;
+-			if (rd)
+-				return -EALREADY;
+-			/* Driver should not be trying to hint different
+-			 * regulatory domains! */
+-			BUG_ON(!alpha2_equal(alpha2,
+-					cfg80211_regdomain->alpha2));
++		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
+ 			return -EALREADY;
+-		}
+ 		if (last_request->initiator == REGDOM_SET_BY_CORE)
+ 			return 0;
+ 		/* XXX: Handle intersection, and add the
+@@ -557,40 +546,32 @@ void wiphy_update_regulatory(struct wiph
+ 
+ /* Caller must hold &cfg80211_drv_mutex */
+ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+-		      const char *alpha2, struct ieee80211_regdomain *rd)
++		      const char *alpha2)
+ {
+ 	struct regulatory_request *request;
+-	char *rd_alpha2;
+ 	int r = 0;
+ 
+-	r = ignore_request(wiphy, set_by, (char *) alpha2, rd);
++	r = ignore_request(wiphy, set_by, alpha2);
+ 	if (r)
+ 		return r;
+ 
+-	if (rd)
+-		rd_alpha2 = rd->alpha2;
+-	else
+-		rd_alpha2 = (char *) alpha2;
+-
+ 	switch (set_by) {
+ 	case REGDOM_SET_BY_CORE:
+ 	case REGDOM_SET_BY_COUNTRY_IE:
+ 	case REGDOM_SET_BY_DRIVER:
+ 	case REGDOM_SET_BY_USER:
+ 		request = kzalloc(sizeof(struct regulatory_request),
+-			GFP_KERNEL);
++				  GFP_KERNEL);
+ 		if (!request)
+ 			return -ENOMEM;
+ 
+-		request->alpha2[0] = rd_alpha2[0];
+-		request->alpha2[1] = rd_alpha2[1];
++		request->alpha2[0] = alpha2[0];
++		request->alpha2[1] = alpha2[1];
+ 		request->initiator = set_by;
+ 		request->wiphy = wiphy;
+ 
+ 		kfree(last_request);
+ 		last_request = request;
+-		if (rd)
+-			break;
+ 		r = call_crda(alpha2);
+ #ifndef CONFIG_WIRELESS_OLD_REGULATORY
+ 		if (r)
+@@ -605,25 +586,13 @@ int __regulatory_hint(struct wiphy *wiph
+ 	return r;
+ }
+ 
+-int regulatory_hint(struct wiphy *wiphy, const char *alpha2,
+-	struct ieee80211_regdomain *rd)
++void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ {
+-	int r;
+-	BUG_ON(!rd && !alpha2);
++	BUG_ON(!alpha2);
+ 
+ 	mutex_lock(&cfg80211_drv_mutex);
+-
+-	r = __regulatory_hint(wiphy, REGDOM_SET_BY_DRIVER, alpha2, rd);
+-	if (r || !rd)
+-		goto unlock_and_exit;
+-
+-	/* If the driver passed a regulatory domain we skipped asking
+-	 * userspace for one so we can now go ahead and set it */
+-	r = set_regdom(rd);
+-
+-unlock_and_exit:
++	__regulatory_hint(wiphy, REGDOM_SET_BY_DRIVER, alpha2);
+ 	mutex_unlock(&cfg80211_drv_mutex);
+-	return r;
+ }
+ EXPORT_SYMBOL(regulatory_hint);
+ 
+@@ -792,11 +761,11 @@ int regulatory_init(void)
+ 	 * that is not a valid ISO / IEC 3166 alpha2 */
+ 	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
+ 		err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE,
+-					ieee80211_regdom, NULL);
++					ieee80211_regdom);
+ #else
+ 	cfg80211_regdomain = cfg80211_world_regdom;
+ 
+-	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", NULL);
++	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00");
+ 	if (err)
+ 		printk(KERN_ERR "cfg80211: calling CRDA failed - "
+ 		       "unable to update world regulatory domain, "
+--- everything.orig/net/wireless/reg.h	2008-10-24 10:38:03.000000000 +0200
++++ everything/net/wireless/reg.h	2008-10-24 10:39:38.000000000 +0200
+@@ -11,30 +11,21 @@ int set_regdom(const struct ieee80211_re
+ 
+ /**
+  * __regulatory_hint - hint to the wireless core a regulatory domain
+- * @wiphy: if a driver is providing the hint this is the driver's very
+- * 	own &struct wiphy
++ * @wiphy: if the hint comes from country information from an AP, this
++ *	is required to be set to the wiphy that received the information
+  * @alpha2: the ISO/IEC 3166 alpha2 being claimed the regulatory domain
+- * 	should be in. If @rd is set this should be NULL
+- * @rd: a complete regulatory domain, if passed the caller need not worry
+- * 	about freeing it
++ *	should be in.
+  *
+  * The Wireless subsystem can use this function to hint to the wireless core
+  * what it believes should be the current regulatory domain by
+  * giving it an ISO/IEC 3166 alpha2 country code it knows its regulatory
+- * domain should be in or by providing a completely build regulatory domain.
++ * domain should be in.
+  *
+- * Returns -EALREADY if *a regulatory domain* has already been set. Note that
+- * this could be by another driver. It is safe for drivers to continue if
+- * -EALREADY is returned, if drivers are not capable of world roaming they
+- * should not register more channels than they support. Right now we only
+- * support listening to the first driver hint. If the driver is capable
+- * of world roaming but wants to respect its own EEPROM mappings for
+- * specific regulatory domains it should register the @reg_notifier callback
+- * on the &struct wiphy. Returns 0 if the hint went through fine or through an
+- * intersection operation. Otherwise a standard error code is returned.
++ * Returns zero if all went fine, %-EALREADY if a regulatory domain had
++ * already been set or other standard error codes.
+  *
+  */
+ extern int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+-		const char *alpha2, struct ieee80211_regdomain *rd);
++			     const char *alpha2);
+ 
+ #endif  /* __NET_WIRELESS_REG_H */
+--- everything.orig/Documentation/networking/regulatory.txt	2008-10-24 10:39:38.000000000 +0200
++++ everything/Documentation/networking/regulatory.txt	2008-10-24 11:07:53.000000000 +0200
+@@ -131,11 +131,13 @@ are expected to do this during initializ
+ 
+ 	r = zd_reg2alpha2(mac->regdomain, alpha2);
+ 	if (!r)
+-		regulatory_hint(hw->wiphy, alpha2, NULL);
++		regulatory_hint(hw->wiphy, alpha2);
+ 
+ Example code - drivers providing a built in regulatory domain:
+ --------------------------------------------------------------
+ 
++[NOTE: This API is not currently available, it can be added when required]
++
+ If you have regulatory information you can obtain from your
+ driver and you *need* to use this we let you build a regulatory domain
+ structure and pass it to the wireless core. To do this you should
+@@ -182,6 +184,7 @@ Then in some part of your code after you
+ 	memcpy(rd, &mydriver_jp_regdom, sizeof(struct ieee80211_regdomain));
+ 
+ 	for (i=0; i < num_rules; i++)
+-		memcpy(&rd->reg_rules[i], &mydriver_jp_regdom.reg_rules[i],
+-			sizeof(struct ieee80211_reg_rule));
+-	return regulatory_hint(hw->wiphy, NULL, rd);
++		memcpy(&rd->reg_rules[i],
++		       &mydriver_jp_regdom.reg_rules[i],
++		       sizeof(struct ieee80211_reg_rule));
++	regulatory_struct_hint(rd);
 
+-- 
 
-> +++ b/drivers/net/wireless/winbond/winbondport/adapter.h
-> @@ -0,0 +1,23 @@
-> +//
-> +// ADAPTER.H -
-> +// Windows NDIS global variable 'Adapter' typedef
-> +//
-
-Better kdoc or /* use this style of comments */
-
-> +#define MAX_ANSI_STRING                40
-> +typedef struct WB32_ADAPTER
-> +{
-
-Typedefs need to be removed.
-
-> +void CreateWpaIE(PWB32_ADAPTER Adapter, u16* iFildOffset, PUCHAR msg, struct  Management_Frame* msgHeader,
-> +                                struct Association_Request_Frame_Body* msgBody, u16 iMSindex); //added by WS 05/14/05
-> +
-
-Please run patch against checkpatch.pl.
-
-> +#ifdef _WPA2_
-> +void CreateRsnIE(PWB32_ADAPTER Adapter, u16* iFildOffset, PUCHAR msg, struct  Management_Frame* msgHeader,
-> +                                struct Association_Request_Frame_Body* msgBody, u16 iMSindex);//added by WS 05/14/05
-> +
-> +u16 SearchPmkid(PWB32_ADAPTER Adapter, struct  Management_Frame* msgHeader,
-> +                                  struct PMKID_Information_Element * AssoReq_PMKID );
-> +#endif
-> +//=============================================================================
-> +// IOCTLS defined for DUT (Device Under Test)
-
-
-
-> +
-> +// IOCTL_WB_802_11_DUT_MAC_ADDRESS
-> +// Query: Return the dot11StationID
-> +// Set  : Set the dot11StationID. Demo only.
-> +//
-> +#define IOCTL_WB_802_11_DUT_MAC_ADDRESS     CTL_CODE(  \
-> +            FILE_DEVICE_UNKNOWN,                        \
-> +            WB_IOCTL_DUT_INDEX + 1,                     \
-> +            METHOD_BUFFERED,                            \
-> +            FILE_ANY_ACCESS)
-> +
-
-IOCTL stuff? What? This unused anyway.
-
-> +// IOCTL_WB_802_11_DUT_BSS_DESCRIPTION
-> +// Query: Return the info. of the current connected BSS.
-> +// Set  : None.
-> +//
-> +#define IOCTL_WB_802_11_DUT_BSS_DESCRIPTION   CTL_CODE(  \
-> +            FILE_DEVICE_UNKNOWN,                          \
-> +            WB_IOCTL_DUT_INDEX + 2,                       \
-> +            METHOD_BUFFERED,                              \
-> +            FILE_ANY_ACCESS)
-> +
-
-This too.
-
-> +#define IOCTL_WB_802_11_DUT_TX_RATE_MODE CTL_CODE(    \
-> +            FILE_DEVICE_UNKNOWN,                            \
-> +            WB_IOCTL_DUT_INDEX + 30,                        \
-> +            METHOD_BUFFERED,                                \
-> +            FILE_ANY_ACCESS)
-
-And this guy.. etc...
-
-> +++ b/drivers/net/wireless/winbond/winbondport/linux/Makefile
-> @@ -0,0 +1,37 @@
-> +#=========================================================================
-> +#
-> +#  Module Name:
-> +#  w35und.ko Makefile for the ISSC wireless networking driver in linux kernel 2.6.x
-> +#  Port from Original
-> +
-> +#  Abstract:
-> +#  Linux 2.6 driver for IS89C35D 802.11 a/b/g Wireless USB
-> +#
-> +#=========================================================================
-> +
-> +
-> +# This is not used for build when the wifi module is build into kernel
-> +#
-> +       KERNELDIR := /lib/modules/$(shell uname -r)/build
-> +       PWD := $(shell pwd)
-> +       WPA_DIR=../wpa
-> +
-> +obj-m := w35und.o
-> +
-> +w35und-objs := wbusb.o wb35reg.o wb35rx.o wb35tx.o\
-> +       ../bssdbase.o ../ds_tkip.o ../knl.o ../mds.o ../mlme_assoc.o ../mlme_auth.o ../mlmetask.o ../mlmetxrx.o \
-> +       ../mto.o ../phy_calibration.o ../reg.o ../roamtask.o ../rxisr.o ../scan_probe.o ../scantask.o \
-> +       ../sme_api.o ../smetask.o ../wbhal.o ../wblinux.o \
-> +       $(WPA_DIR)/eap.o $(WPA_DIR)/4Way.o $(WPA_DIR)/Adapter_Bridge.o $(WPA_DIR)/STLFunction.o \
-> +       $(WPA_DIR)/passphrase.o $(WPA_DIR)/prf.o  \
-
-> + $(WPA_DIR)/rc4.o $(WPA_DIR)/sha1.o $(WPA_DIR)/hmac_sha1.o \
-> +       $(WPA_DIR)/hmac_md5.o $(WPA_DIR)/md5.o $(WPA_DIR)/aes.o $(WPA_DIR)/aes_wrap.o
-
-The kernel has most of these if not all.
-
-> +++ b/drivers/net/wireless/winbond/winbondport/linux/Makefile.debug
-
-Make this a CONFIG option instead of using another file.
-
-> diff --git a/drivers/net/wireless/winbond/winbondport/linux/README.PORT b/drivers/net/wireless/winbond/winbondport/linux/README.PORT
-
-Can be removed or moved to Documentation/networking/ somewhere if its really useful.
-
-> +++ b/drivers/net/wireless/winbond/winbondport/linux/README.RXART
-
-This can be removed.
-
-> diff --git a/drivers/net/wireless/winbond/winbondport/linux/README.txt b/drivers/net/wireless/winbond/winbondport/linux/README.txt
-
-Documentation/networking/ somewhere, but this documentation is not
-relevant for the kernel.
-
-> +0. To build driver
-> +       #cd linux/
-> +        #make
-> +
-> +       ( For debug mode )
-> +        #cp Makefile.debug Makefile
-> +        #make
-> +
-> +        #make install  ( if want it on /lib/modules..)
-> +
-> +        w35und.ko should be created
-
-Like this.
-
-> +
-> +1. Installation
-> +
-> +       # insmod w35und.ko    or    #modprobe w35und  ( if "make install", ( check depmod too.. ) )
-> +
-> +       Notes:
-> +       After your inserted this module to system, your can use special commands
-> +       of user guider to connect your desired AP or IBSS station. After connected,
-> +       you can use this command to assign an IP address and up it.
-> +
-> +       # ifconfig wlan0 xxx.xxx.xxx.xxx. up
-> +
-> +
-> +
-> +2. Un-Installation
-> +
-> +       # rmmod w35und
-> +
-> +       Notes:
-> +       If you have up our driver, you must down your dirver with this command
-> +       before you remove this module:
-> +
-> +       #ifconfig wlan0 down
-> +
-> +
-> +
-> +3. User Guide
-> +
-> +  3.0.1  <Set/Get region>
-> +
-> +       # iwpriv wlan0 set_region XXX
-> +       # iwpriv wlan0 get_region
-> +
-> +       Notes:
-> +               XXX is a string, includes : Europe, Japan, USA, Reg_Unknown
-
-Please consider using cfg80211 and new regulatory framework for this.
-Then you can refer to iw:
-
-http://wireless.kernel.org/en/users/Documentation/iw
-
-Regulatory stuff:
-
-http://wireless.kernel.org/en/developers/Regulatory
-
-Also please read Documentation/networking/regulatory.txt
-
-> diff --git a/drivers/net/wireless/winbond/winbondport/linux/common.h b/drivers/net/wireless/winbond/winbondport/linux/common.h
-
-Please keep files in its own directory.
-
-> +unsigned char
-> +Wb35Reg_Read(phw_data_t pHwData, u16 RegisterNo,  PULONG pRegisterValue )
-> +{
-
-Please install sparse and then compile the driver using C=1, and correct
-the warnings.
-
-Ok well that should take a while..
-
-  Luis
