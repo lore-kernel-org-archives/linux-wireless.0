@@ -1,138 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:60334 "EHLO mail.nebensachen.de"
+Received: from smtp8-g19.free.fr ([212.27.42.65]:53597 "EHLO smtp8-g19.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751663AbYJZUrq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2008 16:47:46 -0400
-From: Elias Oltmanns <eo@nebensachen.de>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-References: <87prlr9mna.fsf@denkblock.local>
-	<40f31dec0810251621l3d720a69mf21b5253e9135010@mail.gmail.com>
-	<87abcrtfa8.fsf@denkblock.local>
-	<40f31dec0810261132w2747d66em2a2a53ff9e1ecc04@mail.gmail.com>
-Date: Sun, 26 Oct 2008 21:47:25 +0100
-Message-ID: <87wsfvt76q.fsf@denkblock.local> (sfid-20081026_214753_546080_121969CE)
+	id S1750778AbYJXIrG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2008 04:47:06 -0400
+Message-ID: <49018B87.8070908@free.fr> (sfid-20081024_104712_921855_1BF9AECA)
+Date: Fri, 24 Oct 2008 10:47:03 +0200
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>
+Subject: Re: [PATCH 4/5] crda: Updated regulatory information for France	(FR)
+References: <cover.1223583376.git.benoit.papillault@free.fr> <48FE399E.6050907@free.fr> <20081022150323.GO6190@tesla> <49000C21.2010808@free.fr> <20081023110746.GA5979@tesla>
+In-Reply-To: <20081023110746.GA5979@tesla>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Nick Kossifidis" <mickflemm@gmail.com> wrote:
-> 2008/10/26 Elias Oltmanns <eo@nebensachen.de>:
->>
->
->> Let me quote from legacy-hal:
->>
->> ar5212/ar5212_reset.c:
->> 373:            OS_REG_RMW_FIELD(ah, AR_PHY_DAG_CTRLCCK,
->> 374:                    AR_PHY_DAG_CTRLCCK_RSSI_THR, 2);
->>
->> ah_internal.h:
->> 598:    #define OS_REG_RMW_FIELD(_a, _r, _f, _v) \
->> 599:        OS_REG_WRITE(_a, _r, \
->> 600:            (OS_REG_READ(_a, _r) &~ _f) | (((_v) << _f##_S) & _f))
->>
->> Please note the last argument to OS_REG_RMW_FIELD() which is 2 in this
->> case. Unless I've made a mistake, this translates into the
->>
->> data |= 0x00000800;
->>
->> in my patch.
->>
->> There definitely is no way for me to connect to an ap (or even get a
->> list of aps) with current 2.6.27.4. Perhaps we'll hear something from
->> Nils on that matter too.
->>
->
-> Some lines above...
->
-> 	/* Overwrite INI values for revised chipsets */
-> 	if (AH_PRIVATE(ah)->ah_phyRev >= AR_PHY_CHIP_ID_REV_2) {
->
-> so
->
-> 		/* Add barker RSSI thresh enable as disabled */
-> 		OS_REG_CLR_BIT(ah, AR_PHY_DAG_CTRLCCK,
-> 			AR_PHY_DAG_CTRLCCK_EN_RSSI_THR);
-> 		OS_REG_RMW_FIELD(ah, AR_PHY_DAG_CTRLCCK,
-> 			AR_PHY_DAG_CTRLCCK_RSSI_THR, 2);
->
-> is for phy (BB) revisions > 2 since you have RF5111 this code should
-> not run but (and here is our bug) instead of checking bb revision we
-> run this code for all AR5212 chips
->
-> 		/*
-> 		 * Write some more initial register settings
-> 		 */
-> 		if (ah->ah_version == AR5K_AR5212) {
->
-[...]
-> So can you please change the check on ath5k_hw_reset + add initial
-> rssi threshold setting and retry ?
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Is this what you had in mind? It works for me.
+Luis R. Rodriguez a =E9crit :
+> On Wed, Oct 22, 2008 at 10:31:13PM -0700, Benoit PAPILLAULT wrote:
+>>> 2483.5 - 2454 =3D 29.5 so 29.5 should be the max bandwidth.
+>> Not exactly. The maximum power in this band depends on whether we ar=
+e
+>> indoor or outdoor. If we are indoor, we are allowed to have 20dBm in=
+ the
+>> whole 2400 - 2454 MHz band and can still use 40MHz bandwidth. Maybe =
+I
+>> should describe that different?
+>>
+>>         (2412 - 2483.5 @ 40), (N/A, 20), NO-OUTDOOR
+>>         (2412 - 2454 @ 40), (N/A, 20), NO-INDOOR
+>>         (2454 - 2483.5 @ 40) (N/A, 10), NO-INDOOR
+>>
+>> In fact, this depends on the indoor/outdoor flags issue which can be
+>> resolved later.
+>=20
+> But I wasn't speaking about power, I was speaking about channel
+> bandwidth. You cannot fit a 40 MHz channel into the freq range
+> 2483.5 - 2454.
+
+The whole band is still 2412-2483.5MHz in both cases (indoor/outdoor),
+this is just that different TX power rules apply for frequencies below
+2454 MHz and above when used outdoor.
+
+To me, it's valid to have a 40MHz channel centered at 2462 MHz covering
+the range [2442, 2482] MHz. When used outdoor, it will be limited to 10
+dBm on the whole range.
 
 Regards,
+Benoit
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-Elias
-
---------
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-
-Take care to handle register 0xa228 exactly as in the HAL released by
-Atheros. This change is required to make ath5k work again on my system
-since commit 2203d6be (ath5k: Misc hw_reset updates), thus fixing a
-regression in 2.6.27 and therefore hopefully eligible for inclusion into
-a stable release.
-
-v2: Only overwrite initial register values on later revisions of AR5212
-    chips.
-
-Cc: stable <stable@kernel.org>
-Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
----
-
- drivers/net/wireless/ath5k/hw.c       |    4 +++-
- drivers/net/wireless/ath5k/initvals.c |    2 ++
- 2 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index ad1a5b4..68cf2ae 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -828,7 +828,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		/*
- 		 * Write some more initial register settings
- 		 */
--		if (ah->ah_version == AR5K_AR5212) {
-+		if (ah->ah_version == AR5K_AR5212 &&
-+		    ah->ah_radio > AR5K_RF5111) {
- 			ath5k_hw_reg_write(ah, 0x0002a002, 0x982c);
- 
- 			if (channel->hw_value == CHANNEL_G)
-@@ -858,6 +859,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 
- 			data = ath5k_hw_reg_read(ah, 0xa228);
- 			data &= 0xfffe03ff;
-+			data |= 0x00000800;
- 			ath5k_hw_reg_write(ah, data, 0xa228);
- 			data = 0;
- 
-diff --git a/drivers/net/wireless/ath5k/initvals.c b/drivers/net/wireless/ath5k/initvals.c
-index 2806b21..cf7ebd1 100644
---- a/drivers/net/wireless/ath5k/initvals.c
-+++ b/drivers/net/wireless/ath5k/initvals.c
-@@ -810,6 +810,8 @@ static const struct ath5k_ini_mode ar5212_rf5111_ini_mode_end[] = {
- 		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 } },
- 	{ AR5K_PHY(642),
- 		{ 0xd03e6788, 0xd03e6788, 0xd03e6788, 0xd03e6788, 0xd03e6788 } },
-+	{ 0xa228,
-+		{ 0x000001b5, 0x000001b5, 0x000001b5, 0x000001b5, 0x000001b5 } },
- 	{ 0xa23c,
- 		{ 0x13c889af, 0x13c889af, 0x13c889af, 0x13c889af, 0x13c889af } },
- };
+iD8DBQFJAYuHOR6EySwP7oIRAseyAKCjiDkOs39MIBnhjA3OQDsgfCJzYQCgr1aA
+R9UNky9HVhPQwtl9pwInL88=3D
+=3D7Rzj
+-----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
