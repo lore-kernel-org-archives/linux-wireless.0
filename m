@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:37727 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751379AbYJ1PZx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 11:25:53 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Date: Tue, 28 Oct 2008 16:30:27 +0100
-Cc: "Carlos R. Mafra" <crmafra2@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Soeren Sonnenburg" <kernel@nn7.de>, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810272350.29429.rjw@sisk.pl> <1ba2fa240810271612g72bb2b08p6ebab9f6f02f5b98@mail.gmail.com>
-In-Reply-To: <1ba2fa240810271612g72bb2b08p6ebab9f6f02f5b98@mail.gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.184]:65462 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751755AbYJXJfe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2008 05:35:34 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so317367nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2008 02:35:33 -0700 (PDT)
+Message-ID: <f6ca9fed0810240235h58902994ub6dbdd305c3c5253@mail.gmail.com> (sfid-20081024_113539_446579_693A9930)
+Date: Fri, 24 Oct 2008 11:35:32 +0200
+From: drago01 <drago01@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Best USB wireless interface with Linux?
+Cc: "Carlo Nyto" <carlonyto@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890810231857m5262d975i7f67615362cde15b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200810281630.28389.rjw@sisk.pl> (sfid-20081028_162559_233973_BFDC1C6D)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <9d95d80e0810231803p6e753150w36fcd6d657613a27@mail.gmail.com>
+	 <43e72e890810231857m5262d975i7f67615362cde15b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, 28 of October 2008, Tomas Winkler wrote:
-> h
-> 
-> On Tue, Oct 28, 2008 at 12:50 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Monday, 27 of October 2008, Tomas Winkler wrote:
-> >> On Tue, Oct 28, 2008 at 12:28 AM, Carlos R. Mafra <crmafra2@gmail.com> wrote:
-> >> > On Mon 27.Oct'08 at 23:07:00 +0200, Tomas Winkler wrote:
-> >> >>[...]
-> >> >>
-> >> >> Can someone try this one (it might be space broken I've just pasted
-> >> >> that in) It's on top of 1d63e726408dfdb3e10ed8f00c383b30ebb333d3
-> >> >> (latest linux-2.6.git)
-> >> >
-> >> >
-> >> > Yes, this one also works for me (I applied it manually).
-> >> Good, this was actually part of some older and bigger patch I wasn't
-> >> aware it has this affect. It has some millage in iwl5000 branch.
-> >> RFKIll went through some changes in the mainline so it wasn't merged yet.
-> >
-> > Are you going to push this patch upstream now?  It's quite important to get
-> > this resume regression fixed ASAP.
-> 
-> Definitely I would post it to wireless and stable.
+On Fri, Oct 24, 2008 at 3:57 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Oct 23, 2008 at 6:03 PM, Carlo Nyto <carlonyto@gmail.com> wrote:
+>> I am looking to choose a USB wireless network interface that works
+>> well under Linux.
+>
+> Atheros zd1211rw:
+> http://wireless.kernel.org/en/users/Drivers/zd1211rw
+>
+> Atheros otus (802.11n, not upstream though):
+>
+> http://wireless.kernel.org/en/users/Drivers/otus
+>
+> * Intersil p54:
+>
+> http://wireless.kernel.org/en/users/Drivers/p54
+>
+> rndis_wlan:
+>
+> http://wireless.kernel.org/en/users/Drivers/rndis_wlan
+>
+> * Marvel usb -- no website
+>
+> I'll be inclined to support zd1211rw due to the amount of time its
+> been in the kernel and the amount of wide testing it has received.
+> Atheros 11n otus is the only 11n usb driver I'm aware of for Linux.
 
-Please send a CC to me too.
-
-Thanks,
-Rafael
+rt2800usb but afaik the driver is not in a working state yet. (the
+vendor supplied one should work)
