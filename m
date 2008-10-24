@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:44513 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752648AbYJ3Ukl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 16:40:41 -0400
-Subject: Re: [PATCH] iwlagn: avoid sleep in softirq context
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225390341-7117-1-git-send-email-linville@tuxdriver.com>
-References: <>  <1225390341-7117-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 30 Oct 2008 13:41:05 -0700
-Message-Id: <1225399265.1115.356.camel@rc-desk> (sfid-20081030_214046_487793_5D89910E)
-Mime-Version: 1.0
+Received: from mga07.intel.com ([143.182.124.22]:59900 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751542AbYJXGso (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2008 02:48:44 -0400
+From: Reinette Chatre <reinette.chatre@linux.intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Fabrice Bellet <fabrice@bellet.info>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 09/10] iwl3945: iwl3945_mac_get_tsf() should not return zero
+Date: Thu, 23 Oct 2008 23:48:57 -0700
+Message-Id: <1224830938-1577-10-git-send-email-reinette.chatre@linux.intel.com> (sfid-20081024_090856_776903_9C941B4B)
+In-Reply-To: <1224830938-1577-9-git-send-email-reinette.chatre@linux.intel.com>
+References: <>
+ <1224830938-1577-1-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-2-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-3-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-4-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-5-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-6-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-7-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-8-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-9-git-send-email-reinette.chatre@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-10-30 at 11:12 -0700, John W. Linville wrote:
-> __ieee80211_tasklet_handler -> __ieee80211_rx ->
-> 	__ieee80211_rx_handle_packet -> ieee80211_invoke_rx_handlers ->
-> 	ieee80211_rx_h_decrypt -> ieee80211_crypto_tkip_decrypt ->
-> 	ieee80211_tkip_decrypt_data -> iwl4965_mac_update_tkip_key ->
-> 	iwl_scan_cancel_timeout -> msleep
-> 
-> Ooops!
-> 
-> Avoid the sleep by changing iwl_scan_cancel_timeout with
-> iwl_scan_cancel and simply returning on failure if the scan persists.
-> This will cause hardware decryption to fail and we'll handle a few more
-> frames with software decryption.
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+From: Fabrice Bellet <fabrice@bellet.info>
 
-Thank you very much
+The problem fixed here is that iwl3945_mac_get_tsf() returns 0, as the
+function is not implemented, and this is considered as a valid value by
+the mac layer in mlme.c:1605. The consequence is that the STA in ad-hoc
+mode is inserted/removed quite frequently due to IBSS merging.
 
->  
-> -	iwl_scan_cancel_timeout(priv, 100);
-> +	if (iwl_scan_cancel(priv)) {
-> +		/* cancel scan failed, just live w/ bad key and rely
-> +		   briefly on SW decrpyption */
+This patch fixes :
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1781
+and https://bugzilla.redhat.com/show_bug.cgi?id=459401
 
-Could you please add some debugging (IWL_DEBUG_MAC80211 ) here to log
-the problem? Also watch for the small typo. 
+Signed-off-by: Fabrice Bellet <fabrice@bellet.info>
+Acked-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 ---------
+ 1 files changed, 0 insertions(+), 9 deletions(-)
 
-Reinette
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 2870b61..813662f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -7209,14 +7209,6 @@ static int iwl3945_mac_get_stats(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
+-static u64 iwl3945_mac_get_tsf(struct ieee80211_hw *hw)
+-{
+-	IWL_DEBUG_MAC80211("enter\n");
+-	IWL_DEBUG_MAC80211("leave\n");
+-
+-	return 0;
+-}
+-
+ static void iwl3945_mac_reset_tsf(struct ieee80211_hw *hw)
+ {
+ 	struct iwl3945_priv *priv = hw->priv;
+@@ -7859,7 +7851,6 @@ static struct ieee80211_ops iwl3945_hw_ops = {
+ 	.get_stats = iwl3945_mac_get_stats,
+ 	.get_tx_stats = iwl3945_mac_get_tx_stats,
+ 	.conf_tx = iwl3945_mac_conf_tx,
+-	.get_tsf = iwl3945_mac_get_tsf,
+ 	.reset_tsf = iwl3945_mac_reset_tsf,
+ 	.bss_info_changed = iwl3945_bss_info_changed,
+ 	.hw_scan = iwl3945_mac_hw_scan
+-- 
+1.5.4.3
 
