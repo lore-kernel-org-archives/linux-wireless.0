@@ -1,64 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:51702 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754253AbYJIQyO (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.236]:47225 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754637AbYJXTBI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 12:54:14 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
-Date: Thu, 9 Oct 2008 18:58:17 +0200
-Cc: Pavel Roskin <proski@gnu.org>,
+	Fri, 24 Oct 2008 15:01:08 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1002051rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2008 12:01:07 -0700 (PDT)
+Message-ID: <b6c5339f0810241201r7f8ba34ej6f39a96e371849eb@mail.gmail.com> (sfid-20081024_210114_371100_A16C6B71)
+Date: Fri, 24 Oct 2008 15:01:07 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [ath5k-devel] ath5k: badness at net/mac80211/rx.c:2200, status->rate_idx = 255
+Cc: ath5k-devel@lists.ath5k.org,
 	wireless <linux-wireless@vger.kernel.org>
-References: <48EE20FB.4060700@lwfinger.net>
-In-Reply-To: <48EE20FB.4060700@lwfinger.net>
+In-Reply-To: <b6c5339f0810241158t59b15861qc9eb05a3f3f032a2@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200810091858.17451.chunkeey@web.de> (sfid-20081009_185417_693022_24BF969A)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224799927.22806.15.camel@dv>
+	 <20081023213333.4t4427vw5ws8ccck-cebfxv@webmail.spamcop.net>
+	 <b6c5339f0810241158t59b15861qc9eb05a3f3f032a2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 09 October 2008 17:19:23 Larry Finger wrote:
-> This patch is meant for testing on big-endian hardware. Every indication
-> is that the data in the bootrec structure is little endian. This patch fixes
-> a usage of the u32 data array as a string of u8's.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> Index: wireless-testing/drivers/net/wireless/p54/p54common.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/p54/p54common.h
-> +++ wireless-testing/drivers/net/wireless/p54/p54common.h
-> @@ -18,7 +18,10 @@
->  struct bootrec {
->  	__le32 code;
->  	__le32 len;
-> -	u32 data[10];
-> +	union {
-> +		u32 data[10];
-> +		u8 data_char[40];
-> +	} __attribute__((packed));
->  	__le16 rx_mtu;
->  } __attribute__((packed));
-> 
-? how did rx_mtu end up there? it should be a part of bootrec_desc
-(which is a few lines down in p54common.h)
-struct bootrec_desc {
-        __le16 modes;
-        __le16 flags;
-        __le32 rx_start;
-        __le32 rx_end;
-        u8 headroom;
-        u8 tailroom;
-        u8 unimportant[6];
-        u8 rates[16];
-+	__le16 rx_mtu;
-} __attribute__((packed));
+On Fri, Oct 24, 2008 at 2:58 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/22711
+>
+> I guess like ath9k, rc stuff isn't setup properly, but I wouldn't know.
 
-This structure is equivalent to struct s_lm_descr from "lmac_longbow.h", which
-can be found on wireless.kernel.org's resource page.
+Err, that's tx path not rx, so maybe not.
 
-Regards,
-	Chr
+-- 
+Bob Copeland %% www.bobcopeland.com
