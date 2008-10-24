@@ -1,33 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34907 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752641AbYJFRXP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 13:23:15 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 10:23:15 -0700
-Date: Mon, 6 Oct 2008 03:23:02 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Dan Williams <dcbw@redhat.com>
-CC: Greg KH <greg@kroah.com>, Kalle Valo <kalle.valo@iki.fi>,
-	"proski@gnu.org" <proski@gnu.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: at76_usb driver status
-Message-ID: <20081006102302.GA6288@tesla> (sfid-20081006_192317_319477_DC3699AD)
-References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com> <20081005061603.GB28533@kroah.com> <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com>
+Received: from mga07.intel.com ([143.182.124.22]:7737 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751555AbYJXGso (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2008 02:48:44 -0400
+From: Reinette Chatre <reinette.chatre@linux.intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel Halperin <daniel.c.halperin@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/10] iwlwifi: Update reclaim flag
+Date: Thu, 23 Oct 2008 23:48:58 -0700
+Message-Id: <1224830938-1577-11-git-send-email-reinette.chatre@linux.intel.com> (sfid-20081024_084858_184697_45F1CC84)
+In-Reply-To: <1224830938-1577-10-git-send-email-reinette.chatre@linux.intel.com>
+References: <>
+ <1224830938-1577-1-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-2-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-3-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-4-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-5-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-6-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-7-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-8-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-9-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-10-git-send-email-reinette.chatre@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 06, 2008 at 08:23:13AM -0700, Dan Williams wrote:
-> Well, you have to ask yourself then, what's the point of putting that
-> driver with it's own 802.11 stack into staging when it's never going to
-> go into the mainline kernel until it uses mac80211?
+From: Daniel Halperin <daniel.c.halperin@intel.com>
 
-And provided that there is an alternative driver that uses mac80211. Die
-out of tree drivers, die.
+The reclaim flag should include REPLY_RX_MPDU_CMD in the list of commands
+issued by uCode. This is for safety in case the SEQ_RX_FRAME bit is set
+incorrectly.
 
-  Luis
+Signed-off-by: Daniel Halperin <daniel.c.halperin@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 9980c38..89450e3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1392,6 +1392,7 @@ void iwl_rx_handle(struct iwl_priv *priv)
+ 		reclaim = !(pkt->hdr.sequence & SEQ_RX_FRAME) &&
+ 			(pkt->hdr.cmd != REPLY_RX_PHY_CMD) &&
+ 			(pkt->hdr.cmd != REPLY_RX) &&
++			(pkt->hdr.cmd != REPLY_RX_MPDU_CMD) &&
+ 			(pkt->hdr.cmd != REPLY_COMPRESSED_BA) &&
+ 			(pkt->hdr.cmd != STATISTICS_NOTIFICATION) &&
+ 			(pkt->hdr.cmd != REPLY_TX);
+-- 
+1.5.4.3
+
