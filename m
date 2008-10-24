@@ -1,66 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sr05-07.mta.terra.com.br ([200.154.152.66]:18034 "EHLO
-	sr05-07.mta.terra.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751389AbYJ0BtH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2008 21:49:07 -0400
-Message-ID: <49051E0E.2030909@terra.com.br> (sfid-20081027_024927_497802_D527F0D0)
-Date: Sun, 26 Oct 2008 23:49:02 -0200
-From: Piter PUNK <piterpk@terra.com.br>
+Received: from mail.atheros.com ([12.36.123.2]:24335 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751173AbYJXRPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2008 13:15:24 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2008 10:15:24 -0700
+Date: Fri, 24 Oct 2008 03:15:18 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Zhu Yi <yi.zhu@intel.com>, John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] wireless: add regulatory_struct_hint
+Message-ID: <20081024101518.GB5951@tesla> (sfid-20081024_191527_764124_6328FEC1)
+References: <1224585110.5521.8.camel@johannes.berg> <1224816184.2917.162.camel@debian.sh.intel.com> <1224841176.6002.124.camel@johannes.berg>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL8187B transmit problems
-References: <49041DAE.1060206@terra.com.br> <49050BC7.1010609@lwfinger.net>
-In-Reply-To: <49050BC7.1010609@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1224841176.6002.124.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> What are the details of your device? Please post the output of 'dmesg | grep -i
-> rtl'.
+On Fri, Oct 24, 2008 at 02:39:36AM -0700, Johannes Berg wrote:
+> On Fri, 2008-10-24 at 10:43 +0800, Zhu Yi wrote:
+> >         
+> >         The patch extends the current regulatory framework to support regulatory
+> >         enforcement by device hardware (firmware). If the regulatory check is
+> >         performed by hardware, the driver uses a special flag to indicate the
+> >         regulatory framework, so that the regulatory framework will bypass all
+> >         the regulatory checks for this device and delegate it to the hardware.
+> 
+> The way I'm reading this, it's incorrect because it doesn't allow the
+> user to override the hardware's idea of the regulatory domain. I think
+> it's just a wrong description though.
+> 
+> However, there is another major problem with this, if I use a USB device
+> that has no regulatory information on a laptop that has this virtual
+> regdomain configured because of a built-in Intel device, my USB device
+> will wrongly enable all channels.
+> 
+> But inspired by your patch, here's a different idea:
+> 
+>  * remove the struct regdomain hint thing
+>  * introduce a "hardware has regulatory check" flag, which means that
+>     - hardware will enforce regulatory compliance to whatever it thinks
+>       the regulatory domain is
+>     - the driver will, of course, still also enforce the information in
+>       wiphy->bands as it does now
+>  * if a wiphy has the "hw regulatory" flag set and the
+>    cfg80211_regdomain is the world regdomain (whether hard-coded or
+>    gotten from CRDA)
 
-This is the built-in rtl8187b adapter:
+And if initiator == CORE
 
-usb 1-1: new high speed USB device using ehci_hcd and address 7
-usb 1-1: configuration #1 chosen from 1 choice
-usb 1-1: New USB device found, idVendor=0bda, idProduct=8189
-usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-usb 1-1: Product: RTL8187B_WLAN_Adapter
-usb 1-1: Manufacturer: Manufacturer_Realtek
-usb 1-1: SerialNumber: 00e04c000001
-rtl8187: 8187B chip detected. Support is EXPERIMENTAL, and could damage your
-          hardware, use at your own risk
-phy3: Selected rate control algorithm 'pid'
-phy3: hwaddr 00:16:44:aa:df:bf, RTL8187BvE V0 + rtl8225z2
+> , then (and only then!) don't apply the
+>    cfg80211_regdomain to it
 
-This is my external rtl8187b USB dongle:
+I like this approach.
 
-usb 1-3: new high speed USB device using ehci_hcd and address 8
-usb 1-3: configuration #1 chosen from 1 choice
-rtl8187: 8187B chip detected. Support is EXPERIMENTAL, and could damage your
-          hardware, use at your own risk
-phy4: Selected rate control algorithm 'pid'
-phy4: hwaddr 00:18:e7:42:2c:23, RTL8187BvE V0 + rtl8225z2
-usb 1-3: New USB device found, idVendor=0bda, idProduct=8189
-usb 1-3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-usb 1-3: Product: RTL8187B_WLAN_Adapter
-usb 1-3: Manufacturer: Manufacturer_Realtek
-usb 1-3: SerialNumber: 00e04c000001
+> This would have the following consequences:
+>  + much less code since all the hint stuff goes away
+>  + still works for users who move around with a hw-regulatory based
+>    laptop if they set the regdomain to something other than world
+>    manually
+>  - secondary hardware cannot benefit of the, now no longer given, hint
+>    which regdomain the laptop is in and will be restricted to world
+>  - some degree of confusion possible when one device can use channel 13
+>    (say iwl-agn hardware configured for Europe) and another cannot (say
+>    a USB device without regulatory information, leading to the world
+>    regdomain being the used one)
 
-Both have the same "not-working" results. Using any of my other
-adapters the transmission works fine. (ok, it didn't work with
-USB Marvell dongle... but it isn't even detected)
+This will not be a problem if distributions end up asking to
+set regdomain for a country for the user, which I think they should.
 
-Thanks!
+like_this_approach++
 
-Piter PUNK
--- 
-     |        E-Mail: piterpk@terra.com.br
-    .|.
-    /V\
-   // \\      UIN:116043354  Homepage:http://piterpunk.info02.com.br
-  /(   )\
-   ^`~'^         ----> Slackware Linux <----
-  #105432
+  Luis
