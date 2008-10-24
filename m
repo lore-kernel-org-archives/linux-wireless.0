@@ -1,73 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:39026 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751899AbYJQMGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2008 08:06:19 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Kqo5u-0005Xt-QN
-	for linux-wireless@vger.kernel.org; Fri, 17 Oct 2008 12:06:14 +0000
-Received: from artipc9.vub.ac.be ([134.184.26.59])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 12:06:14 +0000
-Received: from fhimpe by artipc9.vub.ac.be with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 12:06:14 +0000
-To: linux-wireless@vger.kernel.org
-From: Frederik Himpe <fhimpe@telenet.be>
-Subject: Re: iwlagn: associating with AP causes kernel hiccup
-Date: Fri, 17 Oct 2008 12:06:08 +0000 (UTC)
-Message-ID: <gd9v3f$3ft$1@ger.gmane.org> (sfid-20081017_140623_309802_E3A72D17)
-References: <gd5gs4$abi$1@ger.gmane.org> <1224104363.19219.30.camel@rc-desk>
+Received: from xc.sipsolutions.net ([83.246.72.84]:42681 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754587AbYJXJyf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2008 05:54:35 -0400
+Subject: Re: [RFC] mac80211 rx filter in mesh mode, rt2x00 mesh point
+	operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org, ivdoorn@gmail.com
+In-Reply-To: <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com> (sfid-20081024_000742_626566_B9F0B044)
+References: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com>
+	 <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com>
+	 (sfid-20081024_000742_626566_B9F0B044)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KAZCCXe7H0A6wMgHfZMx"
+Date: Fri, 24 Oct 2008 11:02:01 +0200
+Message-Id: <1224838921.6002.98.camel@johannes.berg> (sfid-20081024_115444_269414_2DD9A1C1)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Cc: linux-kernel@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 15 Oct 2008 13:59:23 -0700, reinette chatre wrote:
 
-> On Wed, 2008-10-15 at 19:38 +0000, Frederik Himpe wrote:
->> When I associate with an AP, Linux 2.6.27 seems to "hang" for a few
->> seconds. During that time, all sound stops playing and keyboard and
->> mouse input is impossible. In the log I see this:
->> 
->> wlan0: authenticate with AP 00:15:f2:0a:ab:43 wlan0: authenticate with
->> AP 00:15:f2:0a:ab:43 wlan0: authenticate with AP 00:15:f2:0a:ab:43
->> wlan0: authenticated
->> wlan0: associate with AP 00:15:f2:0a:ab:43 wlan0: RX AssocResp from
->> 00:15:f2:0a:ab:43 (capab=0x431 status=0 aid=2) wlan0: associated
->> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready iwlagn 0000:0c:00.0:
->> PCI INT A disabled iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 (level,
->> low) -> IRQ 17 iwlagn 0000:0c:00.0: restoring config space at offset
->> 0x1 (was 0x100102, writing 0x100106)
-> 
-> Are you running wpa_supplicant and/or network manager?
+--=-KAZCCXe7H0A6wMgHfZMx
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I'm using Mandriva 2009.0 x86_64 with wpa_supplicant and Mandriva's 
-wireless network configuration tool (drakroam).
+Javier,
 
-> Can you try testing without them?
+On Thu, 2008-10-23 at 15:07 -0700, Javier Cardona wrote:
+> Mesh frames have 4 addresses and no BSSID, so BSSID filtering should
+> be disabled (i.e. FIF_OTHER_BSS should be set).
 
-Actually I just found out that running
-# ifconfig wlan0 down
-is enough to trigger the sound and mouse hanging for a few seconds.
+The BSSID is zeroed, right?
 
-This is what appears in the kernel logs when running that command:
+> The ALL_MULTI flag is also needed for mesh mode because an
+> intermediate node has to forward multicast traffic for addresses that
+> it may not be listening to.
+>=20
+> But promiscuous mode is not necessary:  mesh points don't need to
+> receive unicast frames not addressed=C2=B9 to them.  Furthermore, enablin=
+g
+> promiscuous mode normally disables acknowledgments, which are needed
+> for proper mesh operation.
+>=20
+> So my recommendation would be to configure the RX filter in mesh mode
+> to be ( FIF_ALLMULTI | FIF_OTHER_BSS )
 
-Oct 17 14:04:51 defected kernel: iwlagn 0000:0c:00.0: PCI INT A disabled
-Oct 17 14:04:52 defected kernel: iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 
-(level, low) -> IRQ 17
-Oct 17 14:04:52 defected kernel: iwlagn 0000:0c:00.0: restoring config 
-space at offset 0x1 (was 0x100102, writing 0x100106)
-Oct 17 14:04:52 defected kernel: Registered led device: iwl-phy0:radio
-Oct 17 14:04:52 defected kernel: Registered led device: iwl-phy0:assoc
-Oct 17 14:04:52 defected kernel: Registered led device: iwl-phy0:RX
-Oct 17 14:04:52 defected kernel: Registered led device: iwl-phy0:TX
-Oct 17 14:04:52 defected kernel: ADDRCONF(NETDEV_UP): wlan0: link is not 
-ready
+I agree, mesh really has no concept of a BSS so it shouldn't try to
+filter on the BSSID.
 
--- 
-Frederik Himpe
+johannes
 
+--=-KAZCCXe7H0A6wMgHfZMx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJAY8FAAoJEKVg1VMiehFYFcgQAIhKqtd73JeJhpKrAjGH4ysv
+T5HdpV7GkwoeoWrt9kAATv/WoLW4BlpAjRscPc1iEdCqJiIvP0yBbBLwl4F4+udw
+x3SHe5QC8MIZiT/T3WZn5Zm1evLrpEZ8+u/txkTbEHiQyf9h4Hg1PeV/lbovW2Ih
+FebQhPeaqHZaiIKTJ5v6bZq3um08wnhUA7rOxxuGXkuyRDXvLEDKjDElW0rHHHOl
+AgqONg9lvzjA1RR0TLgfq5RymqSAGI9lIR9BPvcTpcbsfsf6hsHuALf6kXJr8Vyl
+5BeIDupLL5QcyWR6aP2+gx08kSw7BqYsjyZwfBqqXIix6oqsiB2sjQy+NNXTxC9e
+4U9osLrpkXHRQsg1y7ipLM3Tij8kSzey0bq8OKHY9RZkKEKmB+OcFGJg39YCo3jg
+npIzhKw7Oj+JNQtAmJ6owpQwQLKBtviizMu+a7wgtE4ml8mez2530WNLAa1bnoZz
+E+guTHkI0H/skWdnaXVkm8cb6AmDzhjv0//JpTZ5Cx2fAH435nF+MOJ2m5U92PZN
+Vc3MKacFk5yoSQ5Ui0EJPl8whl4o/kpUD4aLMnwMss5igR4hqxolT+6iKg9p5bc9
+Tum5yzCrvIxHrgxielrWxzcZO6+XdWkGrpPuuPMYNyE96xMTYiQddILDk3Ztg8ZU
+AYGo+2IgxEubQV6+WXfL
+=inr1
+-----END PGP SIGNATURE-----
+
+--=-KAZCCXe7H0A6wMgHfZMx--
 
