@@ -1,71 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34744 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753764AbYJGQ6q (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:26146 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751575AbYJXVck (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 12:58:46 -0400
-Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com> (sfid-20081007_160333_602786_FAD0D1AE)
-References: <1223311803.15196.36.camel@johannes.berg>
-	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
-	 <200810070821.56462.hs4233@mail.mn-solutions.de>
-	 <20081007071529.GA5010@infradead.org> <20081007131615.GR3448@tuxdriver.com>
-	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
-	 (sfid-20081007_160333_602786_FAD0D1AE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mPLxwSSzqQ9n6OlyGtPc"
-Date: Tue, 07 Oct 2008 18:58:44 +0200
-Message-Id: <1223398724.7328.45.camel@johannes.berg> (sfid-20081007_185850_915647_41B80E1B)
-Mime-Version: 1.0
+	Fri, 24 Oct 2008 17:32:40 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1079281fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2008 14:32:39 -0700 (PDT)
+Message-ID: <45e8e6c40810241432q4d25d352g5f7f50961ecc0194@mail.gmail.com> (sfid-20081024_233245_513969_8FBE8B46)
+Date: Fri, 24 Oct 2008 14:32:38 -0700
+From: "Andrey Yurovsky" <andrey@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Subject: iw: hanging when doing station or mpath dump
+Cc: "Johannes Berg" <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We noticed that iw hangs after running "station dump" or "mpath dump"
+commands.  The expected output is displayed before the hang.  For
+example:
 
---=-mPLxwSSzqQ9n6OlyGtPc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+# iw dev mesh station dump
 
-On Tue, 2008-10-07 at 16:03 +0200, Tomas Winkler wrote:
+...will display stations (if any) and then hang until iw is killed.
+According to strace, iw is waiting on the netlink socket like this:
 
-> > Now, can we discuss the patch rather than Johannes' intemperate
-> > word choice?
->=20
-> With Johannes permissions I will split the patch into chunks first so
-> I can take smaller steps second
-> it will better fit into patches I have in pipe.
+recvmsg(3, {msg_name(12)={sa_family=AF_NETLINK, pid=0,
+groups=00000000},
+msg_iov(1)=[{"\24\0\0\0\3\0\2\0C\256\2I\27\20\0\0\0\0\0\0\0\0\0\0\0\0"...,
+4096}], msg_controllen=0, msg_flags=0}, 0) = 20
+recvmsg(3,
 
-Fine with me, can you adopt the first one too that cleans up the DMA
-code? And please keep the 10 pairs -> 20 addresses, it's a lot easier to
-understand :)
+...which never returns.  This seems to be a somewhat recent regression
+but we haven't had a chance to look more closely into it so I'm
+mentioning it here in case someone has an idea of what could have gone
+wrong.  Thanks,
 
-johannes
-
---=-mPLxwSSzqQ9n6OlyGtPc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI65VBAAoJEKVg1VMiehFYCfoP/Au4ihnwj718qDy5w15JFYY5
-ktvDPMhiN4ALrW4EIer9ODktgndFrYVw+tQS4V+GBQBdh5Zh/7OTrpp4L1CIHTOP
-U431yTt96rF5G5uAbqsaQTMml1bHi91gGvO1tOq7OzBH8J3HhA38tkY/IdDIoMVy
-ZELdYBYYGoj+pftHy7ip/hKaarU3ht+MsBApoIOGJasbjJdDagd7qucH8PA1fxRh
-+VYKNxKeoZJcaNeagEh5DhrBIMKKhP8VuAzQmJ9hte55Y7Gfu/bhcljMiZ6Hhm4B
-Bns+3uWaLBDtJmtqzjZhGkyqLhAiSh/ygsWDOEsxyDb8FHTkRqxrnCKJT+4DAhcC
-XP/XCHfLtwz9fMgTz8JiqgGS9CHrVKRwy3dpzOGN7MaeH1dv7H2OsuCcstJnXfo6
-GJvj3wWzwD1ZVfBZVAqLA3jdtjQbFEM5uUFtVIDKu67lSoJJIku9k0n/XjlEV+F6
-XuCdP6InruVJJW1ASXGq0TZ3yzZFE36gYckVggD8I7phewTi9rZ0IOVf74bJ54dj
-N7NsN8h2rGjnQAm/d8kniEjFoc/iRRQDZUGiV6ThHxNpeVBmwc/ykfHIIQJcSbS/
-H+JtWQnFfoSsv2utM+DNn7VshfIRwfXeXjxhgB5acwUd+yQtmZ8HU5YxxfymZOK9
-+ChRhqOdAxlkkaAkyIAp
-=uilq
------END PGP SIGNATURE-----
-
---=-mPLxwSSzqQ9n6OlyGtPc--
-
+  -Andrey
