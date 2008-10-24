@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:23550 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754024AbYJNImm (ORCPT
+Received: from mga07.intel.com ([143.182.124.22]:13263 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751432AbYJXGsm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 04:42:42 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1993529wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2008 01:42:42 -0700 (PDT)
-Message-ID: <a8e1da0810140142g633486br12c2799b2fa1670e@mail.gmail.com> (sfid-20081014_104247_960957_83721B84)
-Date: Tue, 14 Oct 2008 16:42:42 +0800
-From: "Dave Young" <hidave.darkstar@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: [BUG] hang with ath5k
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"kernel list" <linux-kernel@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 24 Oct 2008 02:48:42 -0400
+From: Reinette Chatre <reinette.chatre@linux.intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Daniel C. Halperin" <daniel.c.halperin@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/10] iwlwifi: convert correctly rate_n_flags to PLCP index for mimo3 packets
+Date: Thu, 23 Oct 2008 23:48:53 -0700
+Message-Id: <1224830938-1577-6-git-send-email-reinette.chatre@linux.intel.com> (sfid-20081024_084854_019482_6A7243AE)
+In-Reply-To: <1224830938-1577-5-git-send-email-reinette.chatre@linux.intel.com>
+References: <>
+ <1224830938-1577-1-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-2-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-3-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-4-git-send-email-reinette.chatre@linux.intel.com>
+ <1224830938-1577-5-git-send-email-reinette.chatre@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Daniel C. Halperin <daniel.c.halperin@intel.com>
 
-2.6.27 + ath5k, while using wpa_supplicant & wpa_gui system hangs
-occasionally, keyboard not respond, network stop working.
+The driver does not properly convert rate_n_flags to PLCP index for mimo3
+packets. This makes mac80211 drop the packets
 
-There's same problem in before kernel version, but I don't know the
-first version which introduce it.
+Signed-off-by: Daniel C. Halperin <daniel.c.halperin@intel.com>
+Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-The last messege on xconsole is:
-
-disassosiating by local choice
-
-I reproduced it by:
-
-1) run wpa_supplicant
-2) ctrl + C
-3) goto 1)
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 20c7ff3..a3f97a0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -120,7 +120,9 @@ int iwl_hwrate_to_plcp_idx(u32 rate_n_flags)
+ 	if (rate_n_flags & RATE_MCS_HT_MSK) {
+ 		idx = (rate_n_flags & 0xff);
+ 
+-		if (idx >= IWL_RATE_MIMO2_6M_PLCP)
++		if (idx >= IWL_RATE_MIMO3_6M_PLCP)
++			idx = idx - IWL_RATE_MIMO3_6M_PLCP;
++		else if (idx >= IWL_RATE_MIMO2_6M_PLCP)
+ 			idx = idx - IWL_RATE_MIMO2_6M_PLCP;
+ 
+ 		idx += IWL_FIRST_OFDM_RATE;
 -- 
-Regards
-dave
+1.5.4.3
+
