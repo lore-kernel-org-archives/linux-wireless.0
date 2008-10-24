@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55588 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756175AbYJMXhc (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:40879 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265AbYJXS7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 19:37:32 -0400
-Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: Pavel Roskin <proski@gnu.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
+	Fri, 24 Oct 2008 14:59:00 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1001275rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2008 11:58:59 -0700 (PDT)
+Message-ID: <b6c5339f0810241158t59b15861qc9eb05a3f3f032a2@mail.gmail.com> (sfid-20081024_205906_530246_E1E5D601)
+Date: Fri, 24 Oct 2008 14:58:59 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [ath5k-devel] ath5k: badness at net/mac80211/rx.c:2200, status->rate_idx = 255
+Cc: ath5k-devel@lists.ath5k.org,
 	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200810140131.38439.chunkeey@web.de> (sfid-20081014_012807_857638_E68FA116)
-References: <48EE20FB.4060700@lwfinger.net> <1223938526.27118.6.camel@dv>
-	 <1223939151.27769.3.camel@dv>  <200810140131.38439.chunkeey@web.de>
-	 (sfid-20081014_012807_857638_E68FA116)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sAgoBkxfMxGEcmKzaBMu"
-Date: Tue, 14 Oct 2008 01:36:56 +0200
-Message-Id: <1223941016.10113.12.camel@johannes.berg> (sfid-20081014_013735_727252_715DDD87)
-Mime-Version: 1.0
+In-Reply-To: <20081023213333.4t4427vw5ws8ccck-cebfxv@webmail.spamcop.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224799927.22806.15.camel@dv>
+	 <20081023213333.4t4427vw5ws8ccck-cebfxv@webmail.spamcop.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 23, 2008 at 9:33 PM, Pavel Roskin <proski@gnu.org> wrote:
+> Oh well, I still get the same badness:
+> status->rate_idx = -1, sband->n_bitrates = 12
 
---=-sAgoBkxfMxGEcmKzaBMu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There have been a rash of warnings in this area lately:
 
-On Tue, 2008-10-14 at 01:31 +0200, Christian Lamparter wrote:
+http://article.gmane.org/gmane.linux.drivers.ath5k.devel/1311
+http://article.gmane.org/gmane.linux.drivers.ath5k.devel/1353 (end)
 
-> hmm, strange...
-> so dev->conf.channel->band =3D 1 (=3D> IEEE80211_BAND_2GHZ)
+also possibly related:
 
-Ummm, no, 0 is 2 GHz, 1 is 5 GHz.
+http://article.gmane.org/gmane.linux.kernel.wireless.general/22711
 
-johannes
+I guess like ath9k, rc stuff isn't setup properly, but I wouldn't know.
 
---=-sAgoBkxfMxGEcmKzaBMu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI89uUAAoJEKVg1VMiehFY2g0P/29PNu1LS89WBEU+3R+5bfo9
-+qbQrIirHB97sQRQIhpuWb/nSTizVa1m3N0+68tNobZRyCKDxUESnhngtRCguml0
-LTYisyizvtlpVitin6RfdsUracgeHHA+GTkjSmCjEvcDV5yPBPMnWcHIKieGMxRf
-v9jZ2Qhg8TPrMglT0TpQVNr8uX1/Fo6jYjGoOKkDIALYAUnBqQ2DZs63gyJUB36r
-yhDEm0YmsCf89EAZroLszXi1R1GWYeC4xEuG8oGLVkp0xsqbAFN2tjQOI/SbGUKf
-i7TrDruMi13wL6y3XKe1Uyp5e9hWI1Umg5X/q5SgASo+DKI3vCMt20BdagmERcp9
-13cEML70GjeAG9Wn26p5oqGCqR2BNMRCOirg/tbVG4wwm/abCsc4YOBBGs3Yb/7h
-ibJziF+qEToGjM+iT3qQDzJMFu9yPBIkP7J3UaR8Wu98OxtIvjridxB8pCJkmeS8
-N/RsDHMDcNSifs/yw5opX1lOS/sz7ez12ONWVogRQ/Q2iVB9aMrZ5shlrPrea6O3
-6pWA3vK5xdchUbdxWwqTSYI8Qg/7JKFvwOgwE0qkQ2DfRa5FHy9+CDjyX10dErdJ
-fEPg4QJq2Q8sLdRFbeiFxRcb69vuLABj5QNcRtOrVR/F9HS5yHurXu0Ypea08Rae
-SReWsrRfckXO6Z5JVRyp
-=e/m+
------END PGP SIGNATURE-----
-
---=-sAgoBkxfMxGEcmKzaBMu--
-
+-- 
+Bob Copeland %% www.bobcopeland.com
