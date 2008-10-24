@@ -1,79 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:53049 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754755AbYJ2Q2t (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40027 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753997AbYJXSen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 12:28:49 -0400
-Received: by ug-out-1314.google.com with SMTP id 39so662679ugf.37
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 09:28:47 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/5] rt2x00: Remove ieee80211_bss_conf from rt2x00_intf
-Date: Wed, 29 Oct 2008 17:18:22 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200810291716.47342.IvDoorn@gmail.com> <200810291717.57687.IvDoorn@gmail.com>
-In-Reply-To: <200810291717.57687.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810291718.22724.IvDoorn@gmail.com> (sfid-20081029_172914_722020_CE4E5D70)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 24 Oct 2008 14:34:43 -0400
+Message-Id: <20081024183323.354025000@sipsolutions.net> (sfid-20081024_203446_937137_58C58EDE)
+References: <20081024183219.735241000@sipsolutions.net>
+Date: Fri, 24 Oct 2008 20:32:22 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] wireless: clean up regulatory ignore_request function
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can safely remove ieee80211_bss_conf from rt2x00_intf,
-it is provided by mac80211 in ieee80211_vif as well.
-(rt2x00_intf is the drv_priv field of ieee80211_vif).
+This function has a few WARNs that may eventually trigger
+when an AP sends rogue beacons, those must be removed. Some
+of the comments in the function are also inappropriate as
+this function is concerned with the global hint, not a per-
+wiphy thing (which a multidomain flag on a wiphy would imply).
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+I'm convinced that we don't need to do anything to implement
+multi-domain capability as 802.11-2007 specifies it because
+it makes only two things mandatory:
+ * starting of BSS/IBSS must have country information
+   (this can easily be done with a mac80211 patch)
+ * a STA must adopt the country information (we already have
+   the framework for this)
+
+But we don't have anything implemented anyway for now.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/rt2x00/rt2x00.h    |    7 -------
- drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c |    1 -
- 3 files changed, 1 insertions(+), 9 deletions(-)
+ net/wireless/reg.c |   67 +++++++++++++++++++++--------------------------------
+ 1 file changed, 27 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 4d983e6..ca1f9fe 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -348,13 +348,6 @@ struct rt2x00_intf {
- 	spinlock_t lock;
- 
- 	/*
--	 * BSS configuration. Copied from the structure
--	 * passed to us through the bss_info_changed()
--	 * callback funtion.
--	 */
--	struct ieee80211_bss_conf conf;
--
--	/*
- 	 * MAC of the device.
- 	 */
- 	u8 mac[ETH_ALEN];
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index e1feab8..c42e4fd 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -417,7 +417,7 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
- 	 */
- 	spin_lock(&intf->lock);
- 
--	memcpy(&conf, &intf->conf, sizeof(conf));
-+	memcpy(&conf, &vif->bss_conf, sizeof(conf));
- 	delayed_flags = intf->delayed_flags;
- 	intf->delayed_flags = 0;
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 3a3b5ad..8fc2315 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -634,7 +634,6 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+--- everything.orig/net/wireless/reg.c	2008-10-24 11:06:46.000000000 +0200
++++ everything/net/wireless/reg.c	2008-10-24 11:09:16.000000000 +0200
+@@ -311,24 +311,25 @@ static int ignore_request(struct wiphy *
+ 	case REGDOM_SET_BY_INIT:
+ 		return -EINVAL;
+ 	case REGDOM_SET_BY_CORE:
+-		/* Always respect new wireless core hints, should only
+-		 * come in for updating the world regulatory domain at init
+-		 * anyway */
++		/*
++		 * Always respect new wireless core hints, should only happen
++		 * when updating the world regulatory domain at init.
++		 */
+ 		return 0;
+ 	case REGDOM_SET_BY_COUNTRY_IE:
++		if (unlikely(!is_an_alpha2(alpha2)))
++			return -EINVAL;
+ 		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
+ 			if (last_request->wiphy != wiphy) {
+-				/* Two cards with two APs claiming different
+-				 * different Country IE alpha2s!
+-				 * You're special!! */
+-				if (!alpha2_equal(last_request->alpha2,
+-						cfg80211_regdomain->alpha2)) {
+-					/* XXX: Deal with conflict, consider
+-					 * building a new one out of the
+-					 * intersection */
+-					WARN_ON(1);
++				/*
++				 * Two cards with two APs claiming different
++				 * different Country IE alpha2s. We could
++				 * intersect them, but that seems unlikely
++				 * to be correct. Reject second one for now.
++				 */
++				if (!alpha2_equal(alpha2,
++						  cfg80211_regdomain->alpha2))
+ 					return -EOPNOTSUPP;
+-				}
+ 				return -EALREADY;
+ 			}
+ 			/* Two consecutive Country IE hints on the same wiphy */
+@@ -336,42 +337,28 @@ static int ignore_request(struct wiphy *
+ 				return 0;
+ 			return -EALREADY;
+ 		}
+-		if (WARN_ON(!is_alpha2_set(alpha2) || !is_an_alpha2(alpha2)),
+-				"Invalid Country IE regulatory hint passed "
+-				"to the wireless core\n")
+-			return -EINVAL;
+-		/* We ignore Country IE hints for now, as we haven't yet
+-		 * added the dot11MultiDomainCapabilityEnabled flag
+-		 * for wiphys */
+-		return 1;
++		/*
++		 * Ignore Country IE hints for now, need to think about
++		 * what we need to do to support multi-domain operation.
++		 */
++		return -EOPNOTSUPP;
+ 	case REGDOM_SET_BY_DRIVER:
+-		BUG_ON(!wiphy);
+ 		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
+ 			return -EALREADY;
+-		if (last_request->initiator == REGDOM_SET_BY_CORE)
+-			return 0;
+-		/* XXX: Handle intersection, and add the
+-		 * dot11MultiDomainCapabilityEnabled flag to wiphy. For now
+-		 * we assume the driver has this set to false, following the
+-		 * 802.11d dot11MultiDomainCapabilityEnabled documentation */
+-		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
+-			return 0;
+ 		return 0;
+ 	case REGDOM_SET_BY_USER:
+-		if (last_request->initiator == REGDOM_SET_BY_USER ||
+-		    last_request->initiator == REGDOM_SET_BY_CORE)
+-			return 0;
+-		/* Drivers can use their wiphy's reg_notifier()
+-		 * to override any information */
+-		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
+-			return 0;
+-		/* XXX: Handle intersection */
++		/*
++		 * If the user wants to override the AP's hint, we may
++		 * need to follow both and use the intersection. For now,
++		 * reject any such attempt (but we don't support country
++		 * IEs right now anyway.)
++		 */
+ 		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
+ 			return -EOPNOTSUPP;
+ 		return 0;
+-	default:
+-		return -EINVAL;
  	}
++
++	return -EINVAL;
+ }
  
- 	spin_lock(&intf->lock);
--	memcpy(&intf->conf, bss_conf, sizeof(*bss_conf));
- 	if (delayed) {
- 		intf->delayed_flags |= delayed;
- 		schedule_work(&rt2x00dev->intf_work);
+ /* Used by nl80211 before kmalloc'ing our regulatory domain */
+
 -- 
-1.5.6.1
 
