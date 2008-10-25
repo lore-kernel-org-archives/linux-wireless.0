@@ -1,74 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46740 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755999AbYJGRN0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 13:13:26 -0400
-Message-ID: <48EB98A6.4050406@openwrt.org> (sfid-20081007_191343_614525_3708FB3A)
-Date: Tue, 07 Oct 2008 19:13:10 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:60189 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751805AbYJYDW5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2008 23:22:57 -0400
+Message-ID: <4902910E.1000604@lwfinger.net> (sfid-20081025_052303_063402_5A6441E8)
+Date: Fri, 24 Oct 2008 20:22:54 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 2/4] mac80211: add multi-rate retry support
-References: <48E8E48E.5090300@openwrt.org> <48E8E528.7060501@openwrt.org>	 <48E8E588.30001@openwrt.org> <1223329786.3778.38.camel@johannes.berg>
-In-Reply-To: <1223329786.3778.38.camel@johannes.berg>
+To: John Linville <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Problem booting wireless-testing 2.6.28-rc1
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sun, 2008-10-05 at 18:04 +0200, Felix Fietkau wrote:
->> This patch adjusts the rate control API to allow multi-rate retry
->> if supported by the driver. The ieee80211_hw struct specifies how
->> many alternate rate selections the driver supports.
-> 
-> Don't those drivers that announce supporting max_altrates = 1 have to
-> update the status for alternative rates too? Also, should
-> max_altrate_tries == 0 indicate that that is fixed?
-IMHO yes.
+If you download and boot 2.6.28-rc1 from wireless-testing, you may have a
+problem in the boot process finding your hard drive. The fix has been found in
+mainline and consists of the following patch:
 
-> But b43 with the
-> default firmware actually _is_ capable of changing the number of retries
-> (default to 3/3 or 3/4 I think), just not per frame. Should we have that
-> in the API too?
-Minstrel won't use it, because the value that it selects is dependent
-on the rate that is to be used there. Maybe it'd make sense for other 
-stuff, though.
+commit e013e13bf605b9e6b702adffbe2853cfc60e7806
+Author: Jens Axboe <jens.axboe@oracle.com>
+Date:   Fri Oct 24 09:22:42 2008 +0200
 
-> Another thing, it seems you didn't update those drivers to report the
-> rates and number of tries, at least for b43 that is actually possible.
-> 
-> Also, can you explain the use of IEEE80211_TX_CTL_RATE_CTRL_PROBE?
-When using MRR and the get_rate function determines that it's time to do
-some sampling, and the sampling rate it selected is lower than the calculated
-max throughput rate, it wouldn't make sense to put the sampling rate in the
-first stage of the MRR chain, because that would lower the effective
-throughput unnecessarily.
+    libata: fix bug with non-ncq devices
 
-Instead it throws the sampling rate in the second stage of the MRR chain
-and increases a separate counter to prevent it from doing large bursts of
-sampling attempts.
+    The recent commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e ("libata:
+    switch to using block layer tagging support") to enable support for
+    block layer tagging in libata was broken for non-NCQ devices
 
-However if the hw never gets to the second MRR stage, because the first one
-worked just fine, it should not mark this as a successful sampling, because
-the sample rate was not actually attempted.
+    The block layer initializes the tag field to -1 to detect invalid uses
+    of a tag, and if the libata devices does NOT support NCQ, we just used
+    that field to index the internal command list.  So we need to check for
+    -1 first and only use the tag field if it's valid.
 
-The IEEE80211_TX_CTL_RATE_CTRL_PROBE flag is used to tell the tx_status
-function that there is a sampling rate in the second MRR stage, so that
-it can update the sampling counter accordingly, in case the sampling rate
-actually got used.
+    Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+    Reported-by: Alexander Beregalov <a.beregalov@gmail.com>
+    Tested-by: Paul Mundt <lethal@linux-sh.org>
+    Tested-by: Dave Young <hidave.darkstar@gmail.com>
+    Tested-by: Rafael J. Wysocki <rjw@sisk.pl>
+    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
 
-If the sampling counter instead was to be updated unconditionally, then
-minstrel would frequently not use the second MRR stage as an opportunity
-to figure out which of the lower rates actually work and thus might leave
-most of them with a calculated probability of 0% until the max throughput
-rate gets reduced through a change in the link quality.
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d5b9b72..4b95c43 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -708,7 +708,11 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct
+ata_device *dev,
+ {
+ 	struct ata_queued_cmd *qc;
 
-That itself would cause the algorithm to use a much lower fallback rate than 
-it has to, thus taking more time to get proper stats in place once the 
-link becomes just a little bit weaker.
+-	qc = ata_qc_new_init(dev, cmd->request->tag);
++	if (cmd->request->tag != -1)
++		qc = ata_qc_new_init(dev, cmd->request->tag);
++	else
++		qc = ata_qc_new_init(dev, 0);
++
+ 	if (qc) {
+ 		qc->scsicmd = cmd;
+ 		qc->scsidone = done;
 
-- Felix
+
+Larry
+
