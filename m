@@ -1,60 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40853 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913AbYJYN4D (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:49213 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752153AbYJYLVt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 09:56:03 -0400
-Date: Sat, 25 Oct 2008 09:55:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alexey Fisher <bug-track@fisher-privat.net>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: why differnet wlan drivers need different settings?
-Message-ID: <20081025135512.GG19057@tuxdriver.com> (sfid-20081025_155613_054762_9AD4EDF1)
-References: <200810251153.25533.bug-track@fisher-privat.net> <200810251303.35295.rjw@sisk.pl>
+	Sat, 25 Oct 2008 07:21:49 -0400
+Date: Sat, 25 Oct 2008 13:21:47 +0200
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: linux-wireless@vger.kernel.org,
+	Shaddy Baddah <shaddy_baddah@hotmail.com>
+Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
+Message-ID: <20081025112147.GA12252@Chamillionaire.breakpoint.cc> (sfid-20081025_132155_219418_F2F1F56B)
+References: <4902DEBB.3050205@hotmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200810251303.35295.rjw@sisk.pl>
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <4902DEBB.3050205@hotmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 25, 2008 at 01:03:34PM +0200, Rafael J. Wysocki wrote:
-> On Saturday, 25 of October 2008, Alexey Fisher wrote:
-> > May be this is the wrong plase to ask. 
-> 
-> Yeah, better ask that on linux-wireless@vger.kernel.org (CCed).
-> 
-> > The question is: Why differnet wlan drivers use different settings to stay 
-> > silent - powered on but not trying to associate to any accespoint?
-> > For example: ipw2200 - if wlan was connfigured like:
-> > 
-> > iwconfig wlan1 essid "my-ap" chan 6 ap my:aps:mac ?key s:pass
-> > 
-> > this will normaly connect to my secure ?AP. and if i set after this:
-> > ?
-> > iwconfig wlan1 essid off ap off
-> > 
-> > it will connect to unsecure AP of my neighbour or of Dr.Evil :)
-> > to disable association on ipw2200 i need to set all this and plus "chan 0".
-> > With this cnowleg i want to set up iwl3945, and surprise it's not working. 
-> > This driver do not accepted "chan 0" and instead of "essid off" it did 
-> > "essid """
-> > 
-> > Are there any unified way to keep adapter powered on but not trying to 
-> > associate to some AP?
+* Shaddy Baddah | 2008-10-25 19:54:19 [+1100]:
 
-That is from the bad-ole-days.  I could be wrong, but AFAIK only the
-ipw2x00 drivers do that anyway.  I recently merged a patch to change
-the default for that for ipw2200 into wireless-testing.  We should
-probably have one for ipw2100 as well.
+> [  282.300681] Kernel unaligned access at TPC[10129b68] 
+> zd_mac_rx+0x144/0x32c [zd1211rw]
+>
+> periodically is reported even after the ifconfig command completes 
+> (seemingly successfully).
+>
+> Thanks in advance for your assistance,
+Could you try this patch:
 
-Anyway, there are module options for those.  Add "options ipw2200
-associate=0" to /etc/modprobe.conf.
+>From a46436536ab13926ff3f592cfa3c333e06a99a0a Mon Sep 17 00:00:00 2001
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Date: Sat, 25 Oct 2008 13:15:14 +0200
+Subject: [PATCH] wireless/zd1211rw: use  get_unaligned_le16 helper
 
-Hth!
+Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |    5 +++--
+ drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 4d7b98b..bf4b4a4 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -25,6 +25,7 @@
+ #include <linux/usb.h>
+ #include <linux/jiffies.h>
+ #include <net/ieee80211_radiotap.h>
++#include <asm/unaligned.h>
+ 
+ #include "zd_def.h"
+ #include "zd_chip.h"
+@@ -662,7 +663,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 *buffer, unsigned int length)
+ 			&& !mac->pass_ctrl)
+ 		return 0;
+ 
+-	fc = *(__le16 *)buffer;
++	fc = get_unaligned_le32(buffer);
+ 	need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
+ 
+ 	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
+@@ -758,7 +759,7 @@ void zd_process_intr(struct work_struct *work)
+ 	u16 int_status;
+ 	struct zd_mac *mac = container_of(work, struct zd_mac, process_intr);
+ 
+-	int_status = le16_to_cpu(*(__le16 *)(mac->intr_buffer+4));
++	int_status = get_unaligned_le16(mac->intr_buffer+4);
+ 	if (int_status & INT_CFG_NEXT_BCN) {
+ 		if (net_ratelimit())
+ 			dev_dbg_f(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index a60ae86..0b27778 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -355,7 +355,7 @@ static inline void handle_regs_int(struct urb *urb)
+ 	ZD_ASSERT(in_interrupt());
+ 	spin_lock(&intr->lock);
+ 
+-	int_num = le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
++	int_num = get_unaligned_le16(urb->transfer_buffer+2);
+ 	if (int_num == CR_INTERRUPT) {
+ 		struct zd_mac *mac = zd_hw_mac(zd_usb_to_hw(urb->context));
+ 		memcpy(&mac->intr_buffer, urb->transfer_buffer,
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+1.6.0.2
