@@ -1,59 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:3725 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750941AbYJ3Uoo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 16:44:44 -0400
-Subject: Re: Guidelines regarding separate directory
-From: Pavel Roskin <proski@gnu.org>
-To: Dave <kilroyd@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-In-Reply-To: <490A17F3.5050802@gmail.com>
-References: <4909EA78.3060700@lwfinger.net>
-	 (sfid-20081030_181107_189082_5740895D) <1225387309.3690.73.camel@johannes.berg>
-	 <490A17F3.5050802@gmail.com>
-Content-Type: text/plain
-Date: Thu, 30 Oct 2008 16:44:41 -0400
-Message-Id: <1225399481.7931.5.camel@dv> (sfid-20081030_214448_835859_AFA0998F)
-Mime-Version: 1.0
+Received: from ey-out-2122.google.com ([74.125.78.25]:34013 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089AbYJYK2W convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2008 06:28:22 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so483529eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2008 03:28:21 -0700 (PDT)
+To: "Javier Cardona" <javier@cozybit.com>
+Subject: Re: [RFC] mac80211 rx filter in mesh mode, rt2x00 mesh point operation
+Date: Sat, 25 Oct 2008 12:28:17 +0200
+Cc: "Andrey Yurovsky" <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+References: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com> <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com>
+In-Reply-To: <445f43ac0810231507l790332b9h2c05e95aa0212392@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200810251228.17562.IvDoorn@gmail.com> (sfid-20081025_122847_525438_6F6D55D9)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-10-30 at 20:24 +0000, Dave wrote:
-> Johannes Berg wrote:
+On Friday 24 October 2008, Javier Cardona wrote:
+> Andrey,
+>=20
+> On Thu, Oct 23, 2008 at 2:49 PM, Andrey Yurovsky <andrey@cozybit.com>=
+ wrote:
+> > I've come across a problem with the RX filter setting while testing=
+ mesh point
+> > operation in the rt2x00 driver (my hardware is rt73usb).  We transm=
+it and
+> > receive mesh beacons but mesh peer link action frames are dropped. =
+ A patch
+> > for enabling mesh point mode is included here, this works except th=
+at:
+> >
+> > The RX filter, as set by mac80211 in mesh mode is 0x02, that is FIF=
+_ALLMULTI is
+> > set.  This is sufficient for other drivers but not for rt2x00.  I n=
+oticed that
+> > running tcpdump on the MP interface sets the filter to 0x43, this a=
+dds
+> > FIF_OTHER_BSS and FIF_PROMISC_IN_BSS, and rt2x00 is then able to ma=
+ke peer
+> > links and mesh point mode works correctly.
+> >
+> > Actually for rt2x00, setting either FIF_OTHER_BSS or FIF_PROMISC_IN=
+_BSS is the
+> > key here because they are both treated as FIF_PROMISC_IN_BSS, which=
+ causes the
+> > driver to enable TXRX_CSR0_DROP_TO_DS.
+>=20
+> Mesh frames have 4 addresses and no BSSID, so BSSID filtering should
+> be disabled (i.e. FIF_OTHER_BSS should be set).
+> The ALL_MULTI flag is also needed for mesh mode because an
+> intermediate node has to forward multicast traffic for addresses that
+> it may not be listening to.
+>=20
+> But promiscuous mode is not necessary:  mesh points don't need to
+> receive unicast frames not addressed=B9 to them.  Furthermore, enabli=
+ng
+> promiscuous mode normally disables acknowledgments, which are needed
+> for proper mesh operation.
+>=20
+> So my recommendation would be to configure the RX filter in mesh mode
+> to be ( FIF_ALLMULTI | FIF_OTHER_BSS )
 
-> On a similar note, would anyone object to collecting the orinoco files
-> in a subdirectory?
+=46or rt2x00 this would turn into:
+	FIF_ALLMULTI | FIF_OTHER_BSS | FIF_PROMISC_IN_BSS
 
-Fine with me.
+because it cannot filter on other BSS, but this conversion is within rt=
+2x00
+based on capabilities by the driver. So as long as mac80211 provides th=
+e flags
+it wants (FIF_ALLMULTI | FIF_OTHER_BSS), rt2x00 will convert it to the =
+flags that
+make sure those frames will at least get through (FIF_ALLMULTI | FIF_OT=
+HER_BSS | FIF_PROMISC_IN_BSS),
+including some additional noise from frames mac80211 didn't request spe=
+cifically,
+but those can be filtered out in mac80211.
 
-> I'm looking at doing some refactoring of orinoco.c
-> which I think can be split into at least 3 files.
-
-Maybe it's too late at this point, but it would be nice to support
-Orinoco USB eventually.  It uses modified orinoco.c.  Please keep it in
-mind when splitting.  It may be possible to reuse some of the new parts
-in the USB driver.
-
-> PS the existing files that would move:
-> airport.c
-> hermes.c
-> hermes.h
-> hermes_dld.c
-> hermes_dld.h
-> hermes_rid.h
-> orinoco.c
-> orinoco.h
-> orinoco_cs.c
-> orinoco_pci.c
-
-orinoco_pci.c is a good candidate for removal.  It only supports the
-hardware that is already supported by hostap_pci.
-
--- 
-Regards,
-Pavel Roskin
+Ivo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
