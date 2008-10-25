@@ -1,51 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52710 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751634AbYJUVjE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 17:39:04 -0400
-Date: Tue, 21 Oct 2008 17:38:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	reinette chatre <reinette.chatre@linux.intel.com>,
+Received: from mail.gmx.net ([213.165.64.20]:56587 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751041AbYJYUph (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2008 16:45:37 -0400
+From: Alexey Fisher <bug-track@fisher-privat.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: why differnet wlan drivers need different settings?
+Date: Sat, 25 Oct 2008 22:45:29 +0200
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
 	linux-wireless@vger.kernel.org
-Subject: Re: New iwlwifi 3945 uCode available
-Message-ID: <20081021213814.GM17268@tuxdriver.com> (sfid-20081021_233909_575258_86798E6D)
-References: <1224613633.10863.43.camel@rc-desk> <1224624324.28639.9.camel@johannes.berg> <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com> <1224624899.28639.17.camel@johannes.berg>
+References: <200810251153.25533.bug-track@fisher-privat.net> <200810251303.35295.rjw@sisk.pl> <20081025135512.GG19057@tuxdriver.com>
+In-Reply-To: <20081025135512.GG19057@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1224624899.28639.17.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810252245.30279.bug-track@fisher-privat.net> (sfid-20081025_224547_444010_4B96E77A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2008 at 11:34:59PM +0200, Johannes Berg wrote:
-> On Tue, 2008-10-21 at 23:33 +0200, Tomas Winkler wrote:
-> > On Tue, Oct 21, 2008 at 11:25 PM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> > > On Tue, 2008-10-21 at 11:27 -0700, reinette chatre wrote:
-> > >> Two new versions of 3945 uCode is now available for download from
-> > >> http://intellinuxwireless.org/?n=Downloads. Two versions are available
-> > >> as we have updated the API version of the uCode and included pending
-> > >> fixes in both API versions.
-> > >>
-> > >> Version 15.28.1.8 supports API v1 and can be used with most current 3945
-> > >> drivers. Version 15.28.2.8 (API v2) is required when you start using the
-> > >> latest 3945 driver from wireless-testing at the time it includes the
-> > >> patch "iwl3945 : Fix a-band association for passive channels".
+On Saturday 25 October 2008 15:55:12 John W. Linville wrote:
+> On Sat, Oct 25, 2008 at 01:03:34PM +0200, Rafael J. Wysocki wrote:
+> > On Saturday, 25 of October 2008, Alexey Fisher wrote:
+> > > May be this is the wrong plase to ask.
+> >
+> > Yeah, better ask that on linux-wireless@vger.kernel.org (CCed).
+> >
+> > > The question is: Why differnet wlan drivers use different settings to
+> > > stay silent - powered on but not trying to associate to any accespoint?
+> > > For example: ipw2200 - if wlan was connfigured like:
 > > >
-> > > Can you make the driver work with the old ucode? We even do that for
-> > > drivers where we don't control the ucode like b43...
-> > 
-> > What for?
-> 
-> Well, so that installing a new kernel doesn't suddenly break your
-> network connection and ability to download the firmware, for instance.
-> If you want more arguments you can go read all the "b43 sucks" threads
-> about it.
+> > > iwconfig wlan1 essid "my-ap" chan 6 ap my:aps:mac ?key s:pass
+> > >
+> > > this will normaly connect to my secure ?AP. and if i set after this:
+> > > ?
+> > > iwconfig wlan1 essid off ap off
+> > >
+> > > it will connect to unsecure AP of my neighbour or of Dr.Evil :)
+> > > to disable association on ipw2200 i need to set all this and plus "chan
+> > > 0". With this cnowleg i want to set up iwl3945, and surprise it's not
+> > > working. This driver do not accepted "chan 0" and instead of "essid
+> > > off" it did "essid """
+> > >
+> > > Are there any unified way to keep adapter powered on but not trying to
+> > > associate to some AP?
+>
+> That is from the bad-ole-days.  I could be wrong, but AFAIK only the
+> ipw2x00 drivers do that anyway.  I recently merged a patch to change
+> the default for that for ipw2200 into wireless-testing.  We should
+> probably have one for ipw2100 as well.
+>
+> Anyway, there are module options for those.  Add "options ipw2200
+> associate=0" to /etc/modprobe.conf.
 
-Johnannes has a point, that is a lot nicer to users...
+I use associate=0 with smole workaround:
 
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index dcce354..92583c6 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -7582,7 +7582,7 @@ static int ipw_associate(void *data)
+ 
+ 	if (!(priv->config & CFG_ASSOCIATE) &&
+ 	    !(priv->config & (CFG_STATIC_ESSID |
+-			      CFG_STATIC_CHANNEL | CFG_STATIC_BSSID))) {
++			      CFG_STATIC_BSSID))) {
+ 		IPW_DEBUG_ASSOC("Not attempting association (associate=0)\n");
+ 		return 0;
+ 	}
+
+becouse networkmanager do not set channel=0 to be compartibel with other 
+drivers. 
+Are there any better solution?
