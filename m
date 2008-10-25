@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:39920 "EHLO pasmtpA.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751674AbYJ0TWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 15:22:04 -0400
-Date: Mon, 27 Oct 2008 20:20:58 +0100
-From: Jens Axboe <jens.axboe@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Carlos R. Mafra" <crmafra2@gmail.com>,
-	Soeren Sonnenburg <kernel@nn7.de>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	tomas.winkler@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Message-ID: <20081027192057.GJ22217@kernel.dk> (sfid-20081027_202210_732035_D426A1A8)
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost> <1225132278.3796.32.camel@johannes.berg> <1225133082.3796.35.camel@johannes.berg> <20081027190011.GA3951@localhost.aei.mpg.de> <20081027190631.GG22217@kernel.dk> <1225134571.3796.41.camel@johannes.berg> <20081027191307.GI22217@kernel.dk> <1225135018.3796.49.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1225135018.3796.49.camel@johannes.berg>
+Received: from xc.sipsolutions.net ([83.246.72.84]:58651 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbYJYIYS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2008 04:24:18 -0400
+Subject: build warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Chr <chunkeey@web.de>, Tomas Winkler <tomasw@gmail.com>,
+	mcgrof <mcgrof@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Sat, 25 Oct 2008 10:24:10 +0200
+Message-Id: <1224923050.27353.1.camel@johannes.berg> (sfid-20081025_102423_133893_CBC33AEC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 27 2008, Johannes Berg wrote:
-> On Mon, 2008-10-27 at 20:13 +0100, Jens Axboe wrote:
-> 
-> > If you want something else tested, just let me know. I don't care a
-> > whole lot about how it gets fixed, as long as it does :-). I use STR
-> > heavily, so it's quite a burden to have it broken.
-> 
-> I don't really know. Like I said to Carlos, figuring out which of the
-> functions called from set_disassoc hangs would be useful, but you'd
-> probably want to coordinate with him so you don't both do it. Or if you
-> both do, it'd confirm it twice ;)
+just FYI in case you haven't seen them. the p54 one looks like a genuin=
+e
+problem.
 
-OK, I can try and do that tomorrow when I'm at the desktop again, I have
-the dock there serial console.
+drivers/net/wireless/iwlwifi/iwl-scan.c:69: warning: =E2=80=98scan_tx_a=
+nt=E2=80=99 defined but not used
+drivers/net/wireless/ath9k/hw.c: In function =E2=80=98ath9k_hw_eeprom_s=
+et_board_values=E2=80=99:
+drivers/net/wireless/ath9k/hw.c:544: warning: =E2=80=98ant_config=E2=80=
+=99 may be used uninitialized in this function
+drivers/net/wireless/p54/p54common.c: In function =E2=80=98p54_parse_ee=
+prom=E2=80=99:
+drivers/net/wireless/p54/p54common.c:325: warning: =E2=80=98synth=E2=80=
+=99 may be used uninitialized in this function
 
--- 
-Jens Axboe
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
