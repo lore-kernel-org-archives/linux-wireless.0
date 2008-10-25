@@ -1,33 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45207
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751316AbYJ2FH4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 01:07:56 -0400
-Date: Tue, 28 Oct 2008 22:07:33 -0700 (PDT)
-Message-Id: <20081028.220733.88410572.davem@davemloft.net> (sfid-20081029_060759_941937_8ACCCAAA)
-To: johannes@sipsolutions.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: clean up sysfs code using %pM
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1225198854.3598.6.camel@johannes.berg>
-References: <1225198854.3598.6.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bu3sch.de ([62.75.166.246]:46471 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751871AbYJYLZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2008 07:25:30 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
+Date: Sat, 25 Oct 2008 13:25:07 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Shaddy Baddah <shaddy_baddah@hotmail.com>
+References: <4902DEBB.3050205@hotmail.com> <20081025112147.GA12252@Chamillionaire.breakpoint.cc>
+In-Reply-To: <20081025112147.GA12252@Chamillionaire.breakpoint.cc>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810251325.07916.mb@bu3sch.de> (sfid-20081025_132533_587384_111E9BBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 28 Oct 2008 14:00:54 +0100
+On Saturday 25 October 2008 13:21:47 Sebastian Andrzej Siewior wrote:
+> -	fc = *(__le16 *)buffer;
+> +	fc = get_unaligned_le32(buffer);
 
-> Remove converting the MAC address to a string by a direct byte
-> conversion and use %pM instead, since the code is now boilerplate
-> use a macro to define the show functions, and also use the shorter
-> __ATTR_RO macro to define the attributes.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> John, just FYI, it needs to go through net-next-2.6 since it depends on
-> %pM. Won't cause conflicts either :)
+I'd say this semantically changes the code.
 
-I'll let John get this one.
+>  	need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
+>  
+>  	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
+
+-- 
+Greetings Michael.
