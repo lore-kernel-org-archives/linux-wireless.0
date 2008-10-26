@@ -1,185 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ox1.aei.mpg.de ([194.94.224.6]:34788 "EHLO ox1.aei.mpg.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752096AbYJ0Uiw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 16:38:52 -0400
-Date: Mon, 27 Oct 2008 21:39:25 +0100
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Soeren Sonnenburg <kernel@nn7.de>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	tomas.winkler@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Message-ID: <20081027203925.GA4416@localhost.aei.mpg.de> (sfid-20081027_213855_643879_5C27B992)
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost> <1225132278.3796.32.camel@johannes.berg> <1225133082.3796.35.camel@johannes.berg> <20081027190011.GA3951@localhost.aei.mpg.de> <1225134195.3796.39.camel@johannes.berg> <20081027191118.GA4058@localhost.aei.mpg.de> <1225134823.3796.45.camel@johannes.berg>
+Received: from wf-out-1314.google.com ([209.85.200.174]:44011 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbYJZJ0p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Oct 2008 05:26:45 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1561537wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2008 02:26:45 -0700 (PDT)
+Message-ID: <31436f4a0810260226q3528e9deh1e90e48516e7d13@mail.gmail.com> (sfid-20081026_102657_866419_2D8BA421)
+Date: Sun, 26 Oct 2008 11:26:44 +0200
+From: "David Shwatrz" <dshwatrz@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: zd1211rw and master mode (was :Best USB wireless interface with Linux?)
+Cc: "Carlo Nyto" <carlonyto@gmail.com>, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1225134823.3796.45.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 27.Oct'08 at 20:13:43 +0100, Johannes Berg wrote:
-> On Mon, 2008-10-27 at 20:11 +0100, Carlos R. Mafra wrote:
-> 
-> > > Do you get any kernel messages output? If you do, could you put messages
-> > > into each line of ieee80211_set_disassoc to see where it hangs?
-> > 
-> > No messages appear, just a black screen.
-> > 
-> > But I can use the SysRq keys, and when I umount the
-> > screen shows the message that umount succeed. I also tried SysRq+t but
-> > the messages appear to fast to read.
-> 
-> Ok, but that means you _can_ get messages, it would help a lot if you
-> could put a few printks into the set_disassoc function before/after each
-> other function call, so we know where exactly it hangs. Pretty much all
-> of them could possibly hang if there is some sort of locking error
-> happening or anything relies on userspace to be running...
+Hello,
+  Does zd1211rw support master mode (which is needed for access point)?
 
-Ok, I humbly tried to do that with the patch at the end of the email,
-but I did not appear to hang in this function tough.
+I had problems with it in the past:
+see:
+http://marc.info/?l=linux-wireless&m=122209000105893&w=2
+and the answer:
+http://marc.info/?l=linux-wireless&m=122219434714437&w=2
 
-Somehow I could get some messages printed when it was a black screen
-before (I think it has to do with the debug level I set with SysRq...)
-and I could see all the printks I've put there. 
+I want to say that I **did** try the patch with the latest
+linux-wireless-next ; it did *not* work !
 
-The good thing is that I could get the complete syslog of the boot until 
-the it failed after suspending to RAM (in 2.6.28-rc2 with my debug patch
-below applied). The last messages before the laptop become unresponsive
-(except for the SysRq) were these ones:
+when running," iwconfig wlan0 mode master"
+I still get:
+Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlan0 ; Invalid argument.
 
-Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:radio
-Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:assoc
-Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:RX
-Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:TX
-Oct 27 21:03:06 localhost kernel: before rcu_read_lock
-Oct 27 21:03:06 localhost kernel: before netif_tx_stop_all_queues
-Oct 27 21:03:06 localhost kernel: before netif_carrier_off
-Oct 27 21:03:06 localhost kernel: before ieee80211_sta
-Oct 27 21:03:06 localhost kernel: inside sef_disconnected 1
-Oct 27 21:03:06 localhost kernel: before ieee8021_led_assoc
-Oct 27 21:03:06 localhost kernel: before ieee8021_sta_send_apinfo
-Oct 27 21:03:06 localhost kernel: before sta_info_unlink
-Oct 27 21:03:06 localhost kernel: before rcu_read_unlock
-Oct 27 21:03:06 localhost kernel: before sta_info_destroy
-Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Starting disk
-Oct 27 21:03:06 localhost kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-Oct 27 21:03:06 localhost kernel: ata1.00: configured for UDMA/100
-Oct 27 21:03:06 localhost kernel: ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x9 t4
-Oct 27 21:03:06 localhost kernel: ata1: irq_stat 0x00000040, connection status changed
-Oct 27 21:03:06 localhost kernel: ata1: hard resetting link
-Oct 27 21:03:06 localhost kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
-Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-Oct 27 21:03:06 localhost kernel: ata1.00: configured for UDMA/100
-Oct 27 21:03:06 localhost kernel: ata1: EH complete
-Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
-Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
-Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
-Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
-Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-Oct 27 21:03:06 localhost kernel: Restarting tasks ... done.
-Oct 27 21:03:07 localhost ifplugd(wlan0)[3182]: Link beat lost.
-Oct 27 21:03:13 localhost ifplugd(wlan0)[3182]: Executing '/etc/ifplugd/ifplugd.action wlan0 down'.
-Oct 27 21:06:20 localhost kernel: SysRq : Changing Loglevel
-Oct 27 21:06:20 localhost kernel: Loglevel set to 4
-Oct 27 21:06:22 localhost kernel: SysRq : Changing Loglevel
-Oct 27 21:06:22 localhost kernel: Loglevel set to 6
-Oct 27 21:06:32 localhost kernel: ffff80251670>] ? autoremove_wake_function+0x0/0x40
-Oct 27 21:06:32 localhost kernel:  [<ffffffff8024e200>] ? worker_thread+0x0/0x110
-Oct 27 21:06:32 localhost kernel:  [<ffffffff8025119d>] kthread+0x4d/0x80
-Oct 27 21:06:32 localhost kernel:  [<ffffffff8020d1b9>] child_rip+0xa/0x11
+So, it seems to me that something else is needed so that  zd1211rw
+will be able to be run in master mode.
 
-and I have the complete trace also. I can try to put it somewhere in the web if it helps
-(I already tried it, but I am new at the institute here and I could not set up my
-webpage yet :-(
+I would appreciate if anybody can shed any light on this and
+solve the mystery.
 
-This is the patch I applied, I don't know if this helps or not...
+As far as I know, according to the vendors, zd1211 **should**
+support master mode.
 
----
- net/mac80211/mlme.c |   17 +++++++++++++++--
- 1 files changed, 15 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 87665d7..c6e3338 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -819,10 +819,12 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	struct sta_info *sta;
- 	u32 changed = BSS_CHANGED_ASSOC;
- 
-+	printk("before rcu_read_lock\n");
- 	rcu_read_lock();
- 
- 	sta = sta_info_get(local, ifsta->bssid);
- 	if (!sta) {
-+		printk("before rcu_read_unlock\n");
- 		rcu_read_unlock();
- 		return;
- 	}
-@@ -834,18 +836,24 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	ifsta->assoc_scan_tries = 0;
- 	ifsta->assoc_tries = 0;
- 
-+	printk("before netif_tx_stop_all_queues\n");
- 	netif_tx_stop_all_queues(sdata->dev);
-+	printk("before netif_carrier_off\n");
- 	netif_carrier_off(sdata->dev);
- 
-+	printk("before ieee80211_sta\n");
- 	ieee80211_sta_tear_down_BA_sessions(sdata, sta->sta.addr);
- 
- 	if (self_disconnected) {
--		if (deauth)
-+		if (deauth) {
-+			printk("inside sef_disconnected 1\n");
- 			ieee80211_send_deauth_disassoc(sdata,
- 				IEEE80211_STYPE_DEAUTH, reason);
--		else
-+		} else {
-+			printk("inside sef_disconnected 2\n");
- 			ieee80211_send_deauth_disassoc(sdata,
- 				IEEE80211_STYPE_DISASSOC, reason);
-+		}
- 	}
- 
- 	ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
-@@ -858,18 +866,23 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	sdata->bss_conf.ht_conf = NULL;
- 	sdata->bss_conf.ht_bss_conf = NULL;
- 
-+	printk("before ieee8021_led_assoc\n");
- 	ieee80211_led_assoc(local, 0);
- 	sdata->bss_conf.assoc = 0;
- 
-+	printk("before ieee8021_sta_send_apinfo\n");
- 	ieee80211_sta_send_apinfo(sdata, ifsta);
- 
- 	if (self_disconnected)
- 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
- 
-+	printk("before sta_info_unlink\n");
- 	sta_info_unlink(&sta);
- 
-+	printk("before rcu_read_unlock\n");
- 	rcu_read_unlock();
- 
-+	printk("before sta_info_destroy\n");
- 	sta_info_destroy(sta);
- }
- 
+Rgs,
+DS
 
 
 
-
+On Fri, Oct 24, 2008 at 3:57 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Oct 23, 2008 at 6:03 PM, Carlo Nyto <carlonyto@gmail.com> wrote:
+>> I am looking to choose a USB wireless network interface that works
+>> well under Linux.
+>
+> Atheros zd1211rw:
+> http://wireless.kernel.org/en/users/Drivers/zd1211rw
+>
+> Atheros otus (802.11n, not upstream though):
+>
+> http://wireless.kernel.org/en/users/Drivers/otus
+>
+> * Intersil p54:
+>
+> http://wireless.kernel.org/en/users/Drivers/p54
+>
+> rndis_wlan:
+>
+> http://wireless.kernel.org/en/users/Drivers/rndis_wlan
+>
+> * Marvel usb -- no website
+>
+> I'll be inclined to support zd1211rw due to the amount of time its
+> been in the kernel and the amount of wide testing it has received.
+> Atheros 11n otus is the only 11n usb driver I'm aware of for Linux.
+>
+>  Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
