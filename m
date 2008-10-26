@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44061 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753329AbYJFUcJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41201 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965AbYJZJH3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 16:32:09 -0400
-Date: Mon, 6 Oct 2008 16:31:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Greg KH <greg@kroah.com>, Kalle Valo <kalle.valo@iki.fi>,
-	proski@gnu.org, linux-wireless@vger.kernel.org
-Subject: Re: at76_usb driver status
-Message-ID: <20081006203118.GG3448@tuxdriver.com> (sfid-20081006_223213_249783_E57EA54A)
-References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com> <20081005061603.GB28533@kroah.com> <1223306593.31040.33.camel@dhcp-100-3-195.bos.redhat.com> <20081006183520.GA17647@kroah.com> <1223323940.31717.3.camel@dhcp-100-3-195.bos.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223323940.31717.3.camel@dhcp-100-3-195.bos.redhat.com>
+	Sun, 26 Oct 2008 05:07:29 -0400
+Subject: [ANN] iw version 0.9.6
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Colin McCabe <colin@cozybit.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-owCyk40ESYOz7NDZNHZ1"
+Date: Sun, 26 Oct 2008 10:07:24 +0100
+Message-Id: <1225012044.3478.40.camel@johannes.berg> (sfid-20081026_100734_167192_D15C4D30)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 06, 2008 at 04:12:20PM -0400, Dan Williams wrote:
-> On Mon, 2008-10-06 at 11:35 -0700, Greg KH wrote:
 
-> > I'll gladly drop it from drivers/staging when the "real" version hits
-> > mainline, until then, it should stay in staging, as that is the whole
-> > point of it.
-> 
-> It does nobody any good if (a) the drivers are _never_ going to go
-> upstream, and (b) if the drivers aren't going to get any attention in
-> their current form because of (a).
-> 
-> I don't care if the driver allows peoples hardware to work; I want a
-> driver that makes peoples hardware work _well_.  Out of tree drivers
-> that are never going upstream will not work well.
+--=-owCyk40ESYOz7NDZNHZ1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I think/thought the main point of -staging was to give drivers
-visibility in hopes of people working to fix them.
+Just a minor release, which adds:
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+ * bug fix for it hanging on dumps
+ * some HT parsing (if your kernel is new enough)
+ * some mesh attribute setting (ditto)
+ * 'iw event', sample code to print out nl80211 events from the kernel,
+   not very useful as the kernel only sends events for phy renames now
+
+Tarball is at http://wireless.kernel.org/download/iw/iw-0.9.6.tar.bz2,
+git is at http://git.sipsolutions.net/iw.git/ and documentation is at
+http://wireless.kernel.org/en/users/Documentation/iw/.
+
+Enjoy.
+
+johannes
+
+--=-owCyk40ESYOz7NDZNHZ1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBDNGAAoJEKVg1VMiehFYfU0P/iwSKExV4c8nHNANDuxn77TD
+Y7BwEuj5S5uWmwNUQ1EuV93Okul3cq6k3lNqzkgTc/fuIhq8QwKwrtDqBCGOd/Y8
+sskss1WCydlrRmWZ4NJYyVUKYsyX3akgTbXq/RPdXQiev+AqxfREkn8FT4nhwXJg
+LVxA9Xwiq5CfBqnG0UJK9nMJvz9V3riWoxcAVYk+sJEYQublUFv47k533G8c+lzE
+UeilwjJaWVLGPqL0Cfx2E6OOnJmW4cN30rfoG41+pbqyKtLhs68pMGX9eODs8Fe7
+TPcNqtv9gtOxM94dqngiQkl1Gs3k1/edCQGDPzlstRis4T7yb+1FB2L2gCDuAYHD
+wg8hYVafVaDGPe6HbGoDWoxg5HfYVv05GNoTzj1qmNXst30lVdNU2HJquiodsODb
+eHYyfxtNlUjCkCYsvmtCKU3/EtRIreIdDxeCApJ5/0zZoVNNbT+EdUmB2SE+N6zi
+TNsqM6gtSnQbzcyoxvuZWgiZpS4wm/FBJmzBTILGSGfOrlBe9oEGnwtPOfaGesIw
+G7YIoifPnbc1Ja5LtunYIss2JHCeYMXRFpjL1zJc2oyjZJt53cpG86SgKxvwEE/x
+/98wSOD9JmUb5jrkLPOu1OkoBI0pXiDTKQrrHjYEf3kBAOKJnHBE/g15TzITqz7h
+YcCHEDzCP88pay8633ZQ
+=0GM5
+-----END PGP SIGNATURE-----
+
+--=-owCyk40ESYOz7NDZNHZ1--
+
