@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49411 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752109AbYJVTem (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:1319 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365AbYJZQbi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 15:34:42 -0400
-Date: Wed, 22 Oct 2008 15:33:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: Re: [PATCH 7/9] iwl3945 : Fix a-band association for passive
-	channels
-Message-ID: <20081022193353.GG15808@tuxdriver.com> (sfid-20081022_213446_545533_832ACFDF)
-References: <1224012769-8920-1-git-send-email-reinette.chatre@intel.com> <1224012769-8920-2-git-send-email-reinette.chatre@intel.com> <1224012769-8920-3-git-send-email-reinette.chatre@intel.com> <1224012769-8920-4-git-send-email-reinette.chatre@intel.com> <1224012769-8920-5-git-send-email-reinette.chatre@intel.com> <1224012769-8920-6-git-send-email-reinette.chatre@intel.com> <1224012769-8920-7-git-send-email-reinette.chatre@intel.com> <1224012769-8920-8-git-send-email-reinette.chatre@intel.com>
+	Sun, 26 Oct 2008 12:31:38 -0400
+Date: Sun, 26 Oct 2008 12:31:25 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	nbd@openwrt.org
+Subject: Re: [PATCH] ath5k: Update interrupt masking code
+Message-ID: <20081026163125.GA15292@hash.localnet> (sfid-20081026_173143_387684_A568A2EC)
+References: <20081026031957.GA3090@makis>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1224012769-8920-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <20081026031957.GA3090@makis>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 14, 2008 at 12:32:47PM -0700, Reinette Chatre wrote:
-> From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> 
-> This patch fixes the a-band association for passive channels.
-> This fix will only work with uCode version 15.28.1.8 and above.
-> uCode API version is incremented to 2.
-> 
-> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+On Sun, Oct 26, 2008 at 05:19:57AM +0200, Nick Kossifidis wrote:
+> +	AR5K_INT_QCBRURN =	0x20000000, /* Non common */
 
-BTW, what is wrong with "the a-band association for passive channels"?
-As you may know, we have been trying to get better changelog
-information from the iwlwifi team for a while now...
+Are you sure about the values? ar5212reg.h from legacy-hal has:
 
-John
+#define AR_ISR_QCBRURN                  0x04000000 /* QCU CBR underrun
+interrupt */
+[...]
+#define AR_IMR_QCBRURN                  0x04000000 /* QCU CBR underrun
+interrupt */
+
+>  #define	AR5K_TXNOFRM_QCU	0x000ffc00
+> +#define	AR5K_TXNOFRM_QCU_S	9
+
+10? :)
+
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Bob Copeland %% www.bobcopeland.com
+
