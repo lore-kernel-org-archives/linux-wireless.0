@@ -1,157 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:2848 "EHLO mga01.intel.com"
+Received: from mx27.mail.ru ([194.67.23.23]:56592 "EHLO mx27.mail.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751679AbYJFIMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 04:12:03 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 6/7] iwlwifi: remove STATUS_CONF_PENDING in scanning
-Date: Mon,  6 Oct 2008 16:05:32 +0800
-Message-Id: <1223280333-4383-7-git-send-email-yi.zhu@intel.com> (sfid-20081006_101208_941754_3EA7C316)
-In-Reply-To: <1223280333-4383-6-git-send-email-yi.zhu@intel.com>
-References: <1223280333-4383-1-git-send-email-yi.zhu@intel.com>
- <1223280333-4383-2-git-send-email-yi.zhu@intel.com>
- <1223280333-4383-3-git-send-email-yi.zhu@intel.com>
- <1223280333-4383-4-git-send-email-yi.zhu@intel.com>
- <1223280333-4383-5-git-send-email-yi.zhu@intel.com>
- <1223280333-4383-6-git-send-email-yi.zhu@intel.com>
+	id S1751713AbYJZI3i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Oct 2008 04:29:38 -0400
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] orinoco: cache downloadable firmware image in memory for use during resume
+Date: Sun, 26 Oct 2008 12:29:35 +0400
+Cc: orinoco-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart38286511.lB7vzvk4mH";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200810261129.36971.arvidjaar@mail.ru> (sfid-20081026_092956_549650_40BEB97B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+--nextPart38286511.lB7vzvk4mH
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-This patch removes STATUS_CONF_PENDING usage that called from
-iwl4965_mac_config internally after scan completed.
+=46rom: Andrey Borzenkov <arvidjaar@mail.ru>
+Date: Sun, 19 Oct 2008 12:06:11 +0400
+Subject: [PATCH 2/2] orinoco: cache downloadable firmware image in memory f=
+or use during resume
 
-It's called anyway from the mac80211 ieee80211_scan_completed():
+If card is using downloadable firmware (like Agere 9.x), firmware has
+to be reloaded during resume. It is not possible to use request_firmware
+for that, because tasks are still frozen, so request_firmware will
+just timeout and fail. So cache firmware image in memory for later
+reuse in ->resume method.
 
-	if (local->hw_scanning) {
-		local->hw_scanning = false;
-		if (ieee80211_hw_config(local))
-		...
-	}
+Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
+=2D--
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |   28 ----------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h |    3 +--
- drivers/net/wireless/iwlwifi/iwl-scan.c |   23 +++++++++++++++++++++--
- 3 files changed, 22 insertions(+), 32 deletions(-)
+This version transparently works both with external and built-in firmware.
+In case of built in extra overhead is one "struct firmware".
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 204abab..24a1aeb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2569,30 +2569,6 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
- 
- }
- 
--static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
--
--static void iwl_bg_scan_completed(struct work_struct *work)
--{
--	struct iwl_priv *priv =
--	    container_of(work, struct iwl_priv, scan_completed);
--
--	IWL_DEBUG_SCAN("SCAN complete scan\n");
--
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
--
--	if (test_bit(STATUS_CONF_PENDING, &priv->status))
--		iwl4965_mac_config(priv->hw, ieee80211_get_hw_conf(priv->hw));
--
--	ieee80211_scan_completed(priv->hw);
--
--	/* Since setting the TXPOWER may have been deferred while
--	 * performing the scan, fire one off */
--	mutex_lock(&priv->mutex);
--	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
--	mutex_unlock(&priv->mutex);
--}
--
- /*****************************************************************************
-  *
-  * mac80211 entry point functions
-@@ -2812,7 +2788,6 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
- 	if (unlikely(!priv->cfg->mod_params->disable_hw_scan &&
- 		     test_bit(STATUS_SCANNING, &priv->status))) {
- 		IWL_DEBUG_MAC80211("leave - scanning\n");
--		set_bit(STATUS_CONF_PENDING, &priv->status);
- 		mutex_unlock(&priv->mutex);
- 		return 0;
+spectrum_cs has used delayed work to reset card after resume. After
+reading multiple discussions on lkml I got impression, that this is
+unreliable - there is no way to sycnronize delayed task with unfreezing
+of user space.
+
+ drivers/net/wireless/orinoco.c |   28 +++++++++++++++++++++-------
+ drivers/net/wireless/orinoco.h |    5 +++++
+ 2 files changed, 26 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index 860803e..653306f 100644
+=2D-- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -487,12 +487,17 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	if (err)
+ 		goto free;
+=20
+=2D	err =3D request_firmware(&fw_entry, firmware, priv->dev);
+=2D	if (err) {
+=2D		printk(KERN_ERR "%s: Cannot find firmware %s\n",
+=2D		       dev->name, firmware);
+=2D		err =3D -ENOENT;
+=2D		goto free;
++	if (priv->cached_fw)
++		fw_entry =3D priv->cached_fw;
++	else {
++		err =3D request_firmware(&fw_entry, firmware, priv->dev);
++		if (err) {
++			printk(KERN_ERR "%s: Cannot find firmware %s\n",
++			       dev->name, firmware);
++			err =3D -ENOENT;
++			goto free;
++		}
++		priv->cached_fw =3D fw_entry;
  	}
-@@ -2898,7 +2873,6 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
- 	IWL_DEBUG_MAC80211("leave\n");
- 
- out:
--	clear_bit(STATUS_CONF_PENDING, &priv->status);
- 	mutex_unlock(&priv->mutex);
- 	return ret;
+=20
+ 	hdr =3D (const struct orinoco_fw_header *) fw_entry->data;
+@@ -535,7 +540,11 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	       dev->name, hermes_present(hw));
+=20
+ abort:
+=2D	release_firmware(fw_entry);
++	/* In case of error, assume firmware was bogus and release it */
++	if (err) {
++		priv->cached_fw =3D NULL;
++		release_firmware(fw_entry);
++	}
+=20
+ free:
+ 	kfree(pda);
+@@ -3534,6 +3543,8 @@ struct net_device
+ 	netif_carrier_off(dev);
+ 	priv->last_linkstatus =3D 0xffff;
+=20
++	priv->cached_fw =3D NULL;
++
+ 	return dev;
  }
-@@ -4117,8 +4091,6 @@ static void iwl_setup_deferred_work(struct iwl_priv *priv)
- 	INIT_DELAYED_WORK(&priv->init_alive_start, iwl_bg_init_alive_start);
- 	INIT_DELAYED_WORK(&priv->alive_start, iwl_bg_alive_start);
- 
--	/* FIXME : remove when resolved PENDING */
--	INIT_WORK(&priv->scan_completed, iwl_bg_scan_completed);
- 	iwl_setup_scan_deferred_work(priv);
- 	iwl_setup_power_deferred_work(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 55a4b58..288b6a8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -333,8 +333,7 @@ void iwl_dump_nic_event_log(struct iwl_priv *priv);
- #define STATUS_SCAN_HW		15
- #define STATUS_POWER_PMI	16
- #define STATUS_FW_ERROR		17
--#define STATUS_CONF_PENDING	18
--#define STATUS_MODE_PENDING	19
-+#define STATUS_MODE_PENDING	18
- 
- 
- static inline int iwl_is_ready(struct iwl_priv *priv)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 639904a..3b0bee3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -916,10 +916,29 @@ static void iwl_bg_abort_scan(struct work_struct *work)
- 	mutex_unlock(&priv->mutex);
- }
- 
-+static void iwl_bg_scan_completed(struct work_struct *work)
-+{
-+	struct iwl_priv *priv =
-+	    container_of(work, struct iwl_priv, scan_completed);
+=20
+@@ -3545,6 +3556,9 @@ void free_orinocodev(struct net_device *dev)
+ 	 * when we call tasklet_kill it will run one final time,
+ 	 * emptying the list */
+ 	tasklet_kill(&priv->rx_tasklet);
++	if (priv->cached_fw)
++		release_firmware(priv->cached_fw);
++	priv->cached_fw =3D NULL;
+ 	priv->wpa_ie_len =3D 0;
+ 	kfree(priv->wpa_ie);
+ 	orinoco_mic_free(priv);
+diff --git a/drivers/net/wireless/orinoco.h b/drivers/net/wireless/orinoco.h
+index 981570b..8c29538 100644
+=2D-- a/drivers/net/wireless/orinoco.h
++++ b/drivers/net/wireless/orinoco.h
+@@ -66,6 +66,8 @@ struct orinoco_rx_data {
+ 	struct list_head list;
+ };
+=20
++struct firmware;
 +
-+	IWL_DEBUG_SCAN("SCAN complete scan\n");
+ struct orinoco_private {
+ 	void *card;	/* Pointer to card dependent structure */
+ 	struct device *dev;
+@@ -164,6 +166,9 @@ struct orinoco_private {
+ 	unsigned int wpa_enabled:1;
+ 	unsigned int tkip_cm_active:1;
+ 	unsigned int key_mgmt:3;
 +
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		return;
-+
-+	ieee80211_scan_completed(priv->hw);
-+
-+	/* Since setting the TXPOWER may have been deferred while
-+	 * performing the scan, fire one off */
-+	mutex_lock(&priv->mutex);
-+	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
-+	mutex_unlock(&priv->mutex);
-+}
-+
-+
- void iwl_setup_scan_deferred_work(struct iwl_priv *priv)
- {
--	/*  FIXME: move here when resolved PENDING
--	 *  INIT_WORK(&priv->scan_completed, iwl_bg_scan_completed); */
-+	INIT_WORK(&priv->scan_completed, iwl_bg_scan_completed);
- 	INIT_WORK(&priv->request_scan, iwl_bg_request_scan);
- 	INIT_WORK(&priv->abort_scan, iwl_bg_abort_scan);
- 	INIT_DELAYED_WORK(&priv->scan_check, iwl_bg_scan_check);
--- 
-1.5.3.6
++	/* Cached in memory firmware to use in ->resume */
++	const struct firmware *cached_fw;
+ };
+=20
+ #ifdef ORINOCO_DEBUG
+=2D-=20
+1.6.0.2
 
+
+--nextPart38286511.lB7vzvk4mH
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkkEKnAACgkQR6LMutpd94whYgCgltBfCu21IfdvpNvmzfBLvQh1
+qP8AnA3eitMqHDXCz7jxJIbpRrTgOuWV
+=a1w5
+-----END PGP SIGNATURE-----
+
+--nextPart38286511.lB7vzvk4mH--
