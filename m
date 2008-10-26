@@ -1,55 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:41123 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750764AbYJ1Xio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 19:38:44 -0400
-Date: Wed, 29 Oct 2008 00:38:41 +0100
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-Message-ID: <20081028233841.GA12554@isilmar.linta.de> (sfid-20081029_003848_791037_E9F8188E)
-References: <20081018231046.GA10977@isilmar.linta.de> <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com> <20081019075916.GA12904@isilmar.linta.de> <1225145468.1115.139.camel@rc-desk> <20081027230326.GA23250@isilmar.linta.de> <1225154823.1115.149.camel@rc-desk> <20081028194323.GA14303@isilmar.linta.de> <1225225434.1115.217.camel@rc-desk> <1225235731.1369.8.camel@johannes.berg> <1225236760.1115.245.camel@rc-desk>
+Received: from nebensachen.de ([195.34.83.29]:50415 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750914AbYJZRwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Oct 2008 13:52:46 -0400
+From: Elias Oltmanns <eo@nebensachen.de>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Jiri Slaby" <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
+References: <87prlr9mna.fsf@denkblock.local>
+	<40f31dec0810251621l3d720a69mf21b5253e9135010@mail.gmail.com>
+Date: Sun, 26 Oct 2008 18:52:31 +0100
+Message-ID: <87abcrtfa8.fsf@denkblock.local> (sfid-20081026_185251_779081_1435E77C)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1225236760.1115.245.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+[Bcc'ing Nils who has reported similar issues with ath5k on 2.6.27.
+Nils, can you perhaps test my patch below and report back? ]
 
-On Tue, Oct 28, 2008 at 04:32:40PM -0700, reinette chatre wrote:
-> On Tue, 2008-10-28 at 16:15 -0700, Johannes Berg wrote:
-> > On Tue, 2008-10-28 at 13:23 -0700, reinette chatre wrote:
-> > 
-> > > (adding linux-wireless so I am keeping the log below)
-> > > 
-> > > This helps a lot - thanks!
-> > > 
-> > > Could you please recompile wireless with CONFIG_WIRELESS_OLD_REGULATORY?
-> > 
-> > Btw, any idea why this helps? Shouldn't the driver just work, albeit
-> > with a restricted channel set? Are we messing something up like no
-> > usable channels at all? (I fixed a bug like that IIRC)
-> > 
-> 
-> Without the regulatory information the number of 5G channels to scan is
-> zero.
+"Nick Kossifidis" <mickflemm@gmail.com> wrote:
+> 2008/10/23 Elias Oltmanns <eo@nebensachen.de>:
+>> Take care to handle register 0xa228 exactly as in the HAL released by
+>
+>> Atheros. This change is required to make ath5k work again on my system
+>> since commit 2203d6be (ath5k: Misc hw_reset updates), thus fixing a
+>> regression in 2.6.27 and therefore hopefully eligible for inclusion into
+>> a stable release.
+>>
+>> Cc: stable <stable@kernel.org>
+>> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+>> ---
+>> Applies to 2.6.27. Please let me know if I should do something
+>> differently and resend.
+>>
+>>  drivers/net/wireless/ath5k/hw.c       |    1 +
+>>  drivers/net/wireless/ath5k/initvals.c |    2 ++
+>>  2 files changed, 3 insertions(+), 0 deletions(-)
+>>
+>
+> Current code works fine on my CM6 (AR5212 + RF5111) and i see nothing like
+>
+> data |= 0x00000800
+>
+> on the HAL Atheros released
 
-But what about the 2.4G channels? This is the one I'd like to use here, and
-this is the one which is used with the correct firmware...
+Let me quote from legacy-hal:
 
-wlan0	  IEEE 802.11abg  ESSID:"<not reported on this list>"
-	  Mode:Managed  Frequency:2.417 GHz
-	  Bit Rate=54 Mb/s   Tx-Power=15 dBm   
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B   
-          Power Management:off
-          Link Quality=96/100  Signal level:-31 dBm  Noise level=-127 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+ar5212/ar5212_reset.c:
+373:		OS_REG_RMW_FIELD(ah, AR_PHY_DAG_CTRLCCK,
+374:			AR_PHY_DAG_CTRLCCK_RSSI_THR, 2);
 
-	
-Will test with CONFIG_WIRELESS_OLD_REGULATORY soon. Best,
+ah_internal.h:
+598:	#define OS_REG_RMW_FIELD(_a, _r, _f, _v) \
+599:	    OS_REG_WRITE(_a, _r, \
+600:	        (OS_REG_READ(_a, _r) &~ _f) | (((_v) << _f##_S) & _f))
 
-	Dominik
+Please note the last argument to OS_REG_RMW_FIELD() which is 2 in this
+case. Unless I've made a mistake, this translates into the
+
+data |= 0x00000800;
+
+in my patch.
+
+There definitely is no way for me to connect to an ap (or even get a
+list of aps) with current 2.6.27.4. Perhaps we'll hear something from
+Nils on that matter too.
+
+>
+> Problem is that we are updating 0xa228 (RSSI threshold in this case)
+> for all AR5212 based cards and we are not checking right now for BB
+> revision. These settings according to Atheros HAL are only for BB
+> revisions > 2. I'm going to update reset.c this week hopefully.
+>
+> BTW can you please run latest ath_info on your card ? Let's see what's
+> the rssi threshold stored on EEPROM and how much different is from my
+> card.
+
+Well, I don't see how to get that information from the dump. Please have
+a look for yourself, I'm going to send you my dump by pm.
+
+Since my original email has not appeared on linux-wireless (due to a
+mistake of mine), I'm attaching the patch again, so others can have a
+look at it and, more importantly, Nils can test it.
+
+Regards,
+
+Elias
+
+--------
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
+
+Take care to handle register 0xa228 exactly as in the HAL released by
+Atheros. This change is required to make ath5k work again on my system
+since commit 2203d6be (ath5k: Misc hw_reset updates), thus fixing a
+regression in 2.6.27 and therefore hopefully eligible for inclusion into
+a stable release.
+
+Cc: stable <stable@kernel.org>
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+---
+
+ drivers/net/wireless/ath5k/hw.c       |    1 +
+ drivers/net/wireless/ath5k/initvals.c |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index ad1a5b4..f1a7f71 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -858,6 +858,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 
+ 			data = ath5k_hw_reg_read(ah, 0xa228);
+ 			data &= 0xfffe03ff;
++			data |= 0x00000800;
+ 			ath5k_hw_reg_write(ah, data, 0xa228);
+ 			data = 0;
+ 
+diff --git a/drivers/net/wireless/ath5k/initvals.c b/drivers/net/wireless/ath5k/initvals.c
+index 2806b21..cf7ebd1 100644
+--- a/drivers/net/wireless/ath5k/initvals.c
++++ b/drivers/net/wireless/ath5k/initvals.c
+@@ -810,6 +810,8 @@ static const struct ath5k_ini_mode ar5212_rf5111_ini_mode_end[] = {
+ 		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 } },
+ 	{ AR5K_PHY(642),
+ 		{ 0xd03e6788, 0xd03e6788, 0xd03e6788, 0xd03e6788, 0xd03e6788 } },
++	{ 0xa228,
++		{ 0x000001b5, 0x000001b5, 0x000001b5, 0x000001b5, 0x000001b5 } },
+ 	{ 0xa23c,
+ 		{ 0x13c889af, 0x13c889af, 0x13c889af, 0x13c889af, 0x13c889af } },
+ };
