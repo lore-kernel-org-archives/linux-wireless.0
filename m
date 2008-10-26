@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32771 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750989AbYJNEIS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 00:08:18 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 21:08:18 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
-	<mickflemm@gmail.com>, <jirislaby@gmail.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/3] ath5k/ath9k: correct signal quality
-Date: Mon, 13 Oct 2008 14:08:07 -0700
-Message-ID: <1223932090-9274-1-git-send-email-lrodriguez@atheros.com> (sfid-20081014_060823_555120_0826C9B1)
+Received: from wf-out-1314.google.com ([209.85.200.171]:38537 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752169AbYJZQvG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Oct 2008 12:51:06 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1670748wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2008 09:51:05 -0700 (PDT)
+Message-ID: <40f31dec0810260951h1f9ec844xf3c7eb520a4dcddd@mail.gmail.com> (sfid-20081026_175120_593432_9AC6409D)
+Date: Sun, 26 Oct 2008 18:51:05 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Update interrupt masking code
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	nbd@openwrt.org
+In-Reply-To: <20081026163125.GA15292@hash.localnet>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+References: <20081026031957.GA3090@makis>
+	 <20081026163125.GA15292@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that we officially are supporting ath5k I can do this
-at work hours.
+2008/10/26 Bob Copeland <me@bobcopeland.com>:
+> On Sun, Oct 26, 2008 at 05:19:57AM +0200, Nick Kossifidis wrote:
+>> +     AR5K_INT_QCBRURN =      0x20000000, /* Non common */
+>
+> Are you sure about the values? ar5212reg.h from legacy-hal has:
+>
+> #define AR_ISR_QCBRURN                  0x04000000 /* QCU CBR underrun
+> interrupt */
+> [...]
+> #define AR_IMR_QCBRURN                  0x04000000 /* QCU CBR underrun
+> interrupt */
+>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- MAINTAINERS |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Check out set_imr/get_isr AR5K_INT_* are for the driver part (ath5k.h)
+and values marked as "non common" are mapped to chip-specific values
+(AR5K_IMR_*/AR5K_ISR_*) (reg.h).
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8dae455..3503cac 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -731,7 +731,7 @@ M:	jirislaby@gmail.com
- P:	Nick Kossifidis
- M:	mickflemm@gmail.com
- P:	Luis R. Rodriguez
--M:	mcgrof@gmail.com
-+M:	lrodriguez@atheros.com
- L:	linux-wireless@vger.kernel.org
- L:	ath5k-devel@lists.ath5k.org
- S:	Maintained
+>>  #define      AR5K_TXNOFRM_QCU        0x000ffc00
+>> +#define      AR5K_TXNOFRM_QCU_S      9
+>
+> 10? :)
+>
+
+Yup, i missed that one ;-)
+
+
+
 -- 
-1.5.6.rc2.15.g457bb.dirty
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
