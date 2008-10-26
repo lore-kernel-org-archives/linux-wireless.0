@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39677 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118AbYJUSGI (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.224]:16612 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752577AbYJZWdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 14:06:08 -0400
-Date: Tue, 21 Oct 2008 14:05:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: New Regulatory Domain Api.
-Message-ID: <20081021180512.GK17268@tuxdriver.com> (sfid-20081021_200612_927410_1B79B695)
-References: <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com> <1224561748.24677.274.camel@debian.sh.intel.com> <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com> <1224569252.9386.77.camel@californication> <43e72e890810202329g732a97ccxf176bdf4e035ccda@mail.gmail.com> <1224571890.9386.85.camel@californication> <20081021171328.GG17268@tuxdriver.com> <1224611033.9386.98.camel@californication> <20081021174800.GJ17268@tuxdriver.com> <20081021110203.GA8224@tesla>
+	Sun, 26 Oct 2008 18:33:42 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1831606rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2008 15:33:40 -0700 (PDT)
+Message-ID: <40f31dec0810261533g3143bd9bue0f3eff88c6936e9@mail.gmail.com> (sfid-20081026_233404_693402_D8308473)
+Date: Mon, 27 Oct 2008 00:33:40 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Elias Oltmanns" <eo@nebensachen.de>
+Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Jiri Slaby" <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <87wsfvt76q.fsf@denkblock.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081021110203.GA8224@tesla>
+Content-Type: text/plain; charset=UTF-8
+References: <87prlr9mna.fsf@denkblock.local>
+	 <40f31dec0810251621l3d720a69mf21b5253e9135010@mail.gmail.com>
+	 <87abcrtfa8.fsf@denkblock.local>
+	 <40f31dec0810261132w2747d66em2a2a53ff9e1ecc04@mail.gmail.com>
+	 <87wsfvt76q.fsf@denkblock.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2008 at 04:02:03AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Oct 21, 2008 at 10:48:00AM -0700, John W. Linville wrote:
-> > On Tue, Oct 21, 2008 at 07:43:53PM +0200, Marcel Holtmann wrote:
-> > 
-> > > > > No we can't have a new (or updated) driver require new userspace. If you
-> > > > > install a 2.6.30 kernel on an Ubuntu Hardy system, it should make the
-> > > > > hardware work without installing an extra userspace component. And yes,
-> > > > > it works for the first card if it provides a regulatory hint, but it
-> > > > > should also work for the second card.
-> > > >
-> > > > That is what WIRELESS_OLD_REGULATORY is for, no?
-> > >
-> > > but that would go away with 2.6.29 if it proceeds as planned.
-> > 
-> > I don't see a huge maintenance burden to it the way it is implemented
-> > now.  I know Luis will hate the idea, but perhaps we could just let
-> > it linger indefinitely?
-> 
-> This thread has about 65 messages on it, and no patches yet from Intel.
-> I rather we talk productively about trying to resolve it with actual
-> code like Johannes or I am. OLD_REGULATORY should still go IMO.
+2008/10/26 Elias Oltmanns <eo@nebensachen.de>:
+>
+>                /*
+>                 * Write some more initial register settings
+>                 */
+> -               if (ah->ah_version == AR5K_AR5212) {
+> +               if (ah->ah_version == AR5K_AR5212 &&
+> +                   ah->ah_radio > AR5K_RF5111) {
 
-Ok, but it isn't clear to me that any patch will resolve the issue of
-someone running a new kernel on an old userland unless OLD_REGULATORY
-is enabled...?
+even better: ah->ah_phy_revision > AR5K_SREV_PHY_5212
 
-John
+>                        ath5k_hw_reg_write(ah, 0x0002a002, 0x982c);
+>
+>                        if (channel->hw_value == CHANNEL_G)
+> @@ -858,6 +859,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>
+>                        data = ath5k_hw_reg_read(ah, 0xa228);
+>                        data &= 0xfffe03ff;
+> +                       data |= 0x00000800;
+>                        ath5k_hw_reg_write(ah, data, 0xa228);
+>                        data = 0;
+>
+
+Can you please use the macros from ath5k.h to set these parameters ?
+(i got the above from decompiling binary HAL that's why i have fixed
+masks -no magic values- but now that we know what's going on we must
+make the code human-readable)
+And also please change 0xa228 with it's name from reg.h :
+
+2557 #define AR5K_PHY_DAG_CCK_CTL                    0xa228
+2558 #define AR5K_PHY_DAG_CCK_CTL_EN_RSSI_THR        0x00000200
+2559 #define AR5K_PHY_DAG_CCK_CTL_RSSI_THR           0x0001fc00
+2560 #define AR5K_PHY_DAG_CCK_CTL_RSSI_THR_S         10
+
+Normaly i'll update reset.c this week so you can always wait for a
+more generic fix ;-)
+
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
