@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:56449 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503AbYJKW3y (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.183]:47010 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751809AbYJZIiG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 18:29:54 -0400
-Received: by gxk9 with SMTP id 9so2223901gxk.13
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Oct 2008 15:29:52 -0700 (PDT)
-Message-ID: <43e72e890810111529l1cb14bd2g32e7382b054b0b1b@mail.gmail.com> (sfid-20081012_003026_469755_3DFBADBA)
-Date: Sat, 11 Oct 2008 18:29:52 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] nl80211: export HT capabilities
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223675046.29811.0.camel@johannes.berg>
+	Sun, 26 Oct 2008 04:38:06 -0400
+Received: by ik-out-1112.google.com with SMTP id c29so18197ika.5
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2008 01:38:02 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211 rx filter in mesh mode, rt2x00 mesh point operation
+Date: Sun, 26 Oct 2008 09:37:58 +0100
+Cc: Javier Cardona <javier@cozybit.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+References: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com> <445f43ac0810251820p71e6e330tba6ba9475ca8aa48@mail.gmail.com> <1225008571.3478.14.camel@johannes.berg>
+In-Reply-To: <1225008571.3478.14.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1223547613.22490.41.camel@johannes.berg>
-	 <20081009085747.GB11530@tesla>
-	 <1223630622.17594.0.camel@johannes.berg>
-	 <20081010213610.GB20509@tuxdriver.com>
-	 <1223675046.29811.0.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810260937.58724.IvDoorn@gmail.com> (sfid-20081026_093811_402312_4FC55E23)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 10, 2008 at 5:44 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2008-10-10 at 17:36 -0400, John W. Linville wrote:
->> On Fri, Oct 10, 2008 at 11:23:42AM +0200, Johannes Berg wrote:
->> > On Thu, 2008-10-09 at 01:57 -0700, Luis R. Rodriguez wrote:
->> > > On Thu, Oct 09, 2008 at 03:20:13AM -0700, Johannes Berg wrote:
->> > > > +#define NL80211_BAND_ATTR_HT_CAPA NL80211_BAND_ATTR_HT_CAPA
->> > >
->> > > Typo
->> >
->> > Hmm? Am I too dense?
->>
->> Well, it looks a little useless to define something as itself...
->
-> Yeah but you can use that to check "has the nl80211.h I'm compiling
-> against defined the HT stuff yet?"
+On Sunday 26 October 2008, Johannes Berg wrote:
+> On Sat, 2008-10-25 at 18:20 -0700, Javier Cardona wrote:
+> > Ivo,
+> > 
+> > On Sat, Oct 25, 2008 at 3:28 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > For rt2x00 this would turn into:
+> > >        FIF_ALLMULTI | FIF_OTHER_BSS | FIF_PROMISC_IN_BSS
+> > 
+> > With the above configuration, will the rt2x00 device acknowledge 1)
+> > unicast frames addressed to itself? 2) unicast frames addressed to
+> > others? 3) none of the above?
+> 
+> It should always only be (1), mac80211 might set OTHER_BSS if it (well,
+> the user) wants to see traffic on the same channel from other BSSes.
 
-So you're going to #ifdef on the iw nl80211.h?
+As far as I know, rt2x00 devices will only do (1).
 
-Can't we use something better and more obvious like defining an
-nl80211 version (as kernel version won't do us any good for bleeding
-edge wireless-testing users) or something like that?
-
-  Luis
+Ivo
