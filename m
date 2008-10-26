@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37317 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751116AbYJ1CAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 22:00:03 -0400
-Date: Tue, 28 Oct 2008 02:59:47 +0100
-From: Mirco Tischler <mt-ml@gmx.de>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
-Message-ID: <20081028025947.6c9c3274@mtlp.12.dimension> (sfid-20081028_030010_054435_3517B6A9)
-In-Reply-To: <1225157618.2917.215.camel@debian.sh.intel.com>
-References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
-	<1225157618.2917.215.camel@debian.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/aadVAZvxF7e5TJ8.DYXDhyE";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
+Received: from mail.deathmatch.net ([70.167.247.36]:3726 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754616AbYJZPZX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Oct 2008 11:25:23 -0400
+Date: Sun, 26 Oct 2008 11:24:48 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: lrodriguez@atheros.com, jmalinen@atheros.com
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: remove useless conditional
+Message-ID: <20081026152448.GA15496@hash.localnet> (sfid-20081026_162527_986339_E7AF0EF5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/aadVAZvxF7e5TJ8.DYXDhyE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Tue, 28 Oct 2008 09:33:37 +0800, Zhu Yi wrote:
->=20
-> Looks good so far. But I failed to see what are you trying to connect?
-> Can you try "iwconfig wlan0 channnel <> essid <>"?
-Sorry. I should have supplied that information on the first try. The networ=
-k is
-a standard WPA-protected G-band network at 2.437Ghz (channel 6).
-That command seems to help a bit. At least I was able to connect more often
-after executing it. I will observe that in detail tomorrow though.
->=20
-> Does your AP work on A band?
->=20
-> Thanks,
-> -yi
+I saw this while reading through the ath9k code.  Not sure if it was
+just dead code or if it should be returning false.
 
---Sig_/aadVAZvxF7e5TJ8.DYXDhyE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+From: Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath9k: remove useless conditional
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+ath9k_hw_keyreset returns true in either branch.
 
-iEYEARECAAYFAkkGciAACgkQz+diZ7c2xfiRfgCfT4HzEHYqupPRtNrlZay135VQ
-WSgAn0ULlFWKRyt6gAD9yjfE16KDrZH9
-=bl3v
------END PGP SIGNATURE-----
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath9k/hw.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
---Sig_/aadVAZvxF7e5TJ8.DYXDhyE--
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 98bc25c..c920822 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -7194,9 +7194,6 @@ bool ath9k_hw_keyreset(struct ath_hal *ah, u16 entry)
+ 
+ 	}
+ 
+-	if (ah->ah_curchan == NULL)
+-		return true;
+-
+ 	return true;
+ }
+ 
+-- 
+1.5.4.2.182.gb3092
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
