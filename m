@@ -1,81 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37152 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:56649 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753914AbYJGUGt (ORCPT
+	with ESMTP id S1751096AbYJ0So5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 16:06:49 -0400
-Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
+	Mon, 27 Oct 2008 14:44:57 -0400
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
+To: Soeren Sonnenburg <kernel@nn7.de>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"Carlos R. Mafra" <crmafra2@gmail.com>,
+	linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240810071301k185eebf6qbca6841af120e0ea@mail.gmail.com> (sfid-20081007_220146_394802_A38B4CB7)
-References: <1223311803.15196.36.camel@johannes.berg>
-	 <1ba2fa240810061135t24f2dfbv2a5eb0cd5d9e8cd7@mail.gmail.com>
-	 <200810070821.56462.hs4233@mail.mn-solutions.de>
-	 <20081007071529.GA5010@infradead.org> <20081007131615.GR3448@tuxdriver.com>
-	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
-	 <1223398724.7328.45.camel@johannes.berg>
-	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
-	 <1223408085.3618.2.camel@johannes.berg>
-	 <1ba2fa240810071301k185eebf6qbca6841af120e0ea@mail.gmail.com>
-	 (sfid-20081007_220146_394802_A38B4CB7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r2ORoJqwTYIZb1jSHJjF"
-Date: Tue, 07 Oct 2008 22:06:43 +0200
-Message-Id: <1223410003.3618.9.camel@johannes.berg> (sfid-20081007_220653_145606_CE1214DF)
+In-Reply-To: <1225132278.3796.32.camel@johannes.berg> (sfid-20081027_193136_021274_A4C6EBE7)
+References: <20081027162054.GA4015@localhost.aei.mpg.de>
+	 <200810271832.40717.rjw@sisk.pl>  <1225130844.4466.0.camel@localhost>
+	 <1225132278.3796.32.camel@johannes.berg>
+	 (sfid-20081027_193136_021274_A4C6EBE7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Q3YMf2nMgym+0ZgF+yhm"
+Date: Mon, 27 Oct 2008 19:44:42 +0100
+Message-Id: <1225133082.3796.35.camel@johannes.berg> (sfid-20081027_194504_734676_03B55CE5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-r2ORoJqwTYIZb1jSHJjF
+--=-Q3YMf2nMgym+0ZgF+yhm
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-10-07 at 22:01 +0200, Tomas Winkler wrote:
-> On Tue, Oct 7, 2008 at 9:34 PM, Johannes Berg <johannes@sipsolutions.net>=
- wrote:
-> > On Tue, 2008-10-07 at 21:28 +0200, Tomas Winkler wrote:
-> >
-> >> > And please keep the 10 pairs -> 20 addresses, it's a lot easier to
-> >> > understand :)
-> >
-> >> I don't like on this solution two things one is that it 32 bit
-> >> variables sits on unaligned address
-> >
-> > That doesn't matter at all since it's packed, and the bitwise accesses
-> > you did previously are way less efficient.
+On Mon, 2008-10-27 at 19:31 +0100, Johannes Berg wrote:
+> On Mon, 2008-10-27 at 19:07 +0100, Soeren Sonnenburg wrote:
 >=20
-> This is not packet this is shared memory.
+> > > Johannes, can you pls have a look?
+>=20
+> I did, and I have no idea. Makes no sense at all.
 
-??
-The struct is _packed_, nothing to do with packets.
+The only thing I can remotely think of is that iwlwifi doesn't like
+being called back from within the call that it did to mac80211, which
+obviously happens here. But I have no idea, the code as it stands is
+correct, just the interaction with iwlwifi's resume seems to be broken.
+
+Try this patch instead:
+
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-27 19:44=
+:12.000000000 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-27 19:44:15.0=
+00000000 +0100
+@@ -2084,7 +2084,6 @@ static void iwl_alive_start(struct iwl_p
+ 		iwl4965_error_recovery(priv);
+=20
+ 	iwl_power_update_mode(priv, 1);
+-	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+=20
+ 	if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
+ 		iwl4965_set_mode(priv, priv->iw_mode);
+
 
 johannes
 
---=-r2ORoJqwTYIZb1jSHJjF
+--=-Q3YMf2nMgym+0ZgF+yhm
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI68FPAAoJEKVg1VMiehFYmjwQAI9BjIeeFjO5An3DKtbcLvwa
-1HaAow0fiBUPsFvY0MMCGEUE3zdse0+6rm/G0bPgOHe+cp6yixNyucb+CarQGMLD
-z8Y6B7YWcDBTsU3gdCNkQnuLPP58rN79268sBgoyrnWSD0FAjNb7/JcV2bbY6ZT4
-I0qfr8OEs9vkP4yTLTJja5CJUfecRn0iIJ8Q2WOEHYXLqqGkhcv5Nncxexb/WA6U
-E2F8IyRFue3JrwgMlL7Fxo6JVwayhW+pgmmLwzS06B7fRBL8ZlzUZKaNR3AFkNXB
-tru+y8ZAaW3RbM8HUNqApAk1w58JxuOwoSYMh8NDjjbc47qv7WnsdrSTpo2kcsQd
-lguSQSXJPRzQb0pJCne220antSr/3wvJOk0iWelldWdEgCLZKXQG1A3z4lbGr5rU
-SAYNZeUuQr6r8/ClAjk6teRM+eZFJr9LnuP1HcV1me53dlwBCYknJjDQnChQSTIa
-OvGAf9ppWjn9eK1XBPnLl3WiSAV5FOuPy3Hbi/jBBMpuEIzvZl45W8nBSWpfagY0
-91WS2A4E8OqvlwCaX/xCMlfZ3uELSaU7ThvOXSxksKFMlqQ00jrq1zO1Ca/R6+3E
-8nrFbrL+QYCdLRyYk/2vXggEtoKvnp+1m637LFfDAQ+p/3yZvsbH+o2WL7T/50rs
-P3mICSpC7gm3Wpm5AZQd
-=CxOk
+iQIcBAABAgAGBQJJBgwTAAoJEKVg1VMiehFY2b4QAL/H1+ky6uzZZ7mCSrVt19U8
+JomwyBUfGemGrWpUddupLGuwbwU39qMKQUopi+PWCkY7u2mH/ML15Sg6efHM+ytQ
+X6FEvbTOyDo68JeqJBQZJgnjFiefdUs0vVfso28Fr/CITVhtl/O1ix3tet5ZQDpe
+GLzOt0t++oAC+LFqX8q6b7UB8/pIpO1uYEzR8XigUnLpNI42WPze4jWSfFWB+6/c
+qKcilG5dAHmzzwv3J7Qp+5+MoqbDuGQCsa4HbpR07OF69ZGYrFhZ1DN7Ps3VkM54
+LOYrSRP/0w+9hKA7XyMXI7hDQT3BPPGYCae5sIN5lQ9zWSutv8ZHfyEcOCvKJCyu
+tHF3wrT3ArtMqPi/nVdO394HZvKjJJrMDmaN1gttyGY/IHvdGU2s26uCvtPsBygb
+AKREhODpWF0Yv9NuY5N4LdMJvA8zbfxuXf78Ae1epKCTw7up+ViHlD5erhl6kP5f
+h6WZGAWhIqcXi8k0plkvJ3SOl+bxK00gQWsPUIHY6btowK8tWRGcy/iSeSkNz3ZD
+J2zaU/Wk4AX92zgEFH8N83Rl6KE1xHCwUFc9YnYjS7CGJOcYGv9fXYJMA3Vq4CmZ
+i5uVjQDMqsH4u8ntWuPGwDbpAc1uChG3EPHNSdpJhlIA/dtuqibMjC8EwB4sBuXy
+G/5o68rFs0bWmDC1xMut
+=O046
 -----END PGP SIGNATURE-----
 
---=-r2ORoJqwTYIZb1jSHJjF--
+--=-Q3YMf2nMgym+0ZgF+yhm--
 
