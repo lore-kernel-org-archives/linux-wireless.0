@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:4750 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107AbYJGHSc (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:20076 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742AbYJ0QzD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 03:18:32 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so508124ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 00:18:30 -0700 (PDT)
-Message-ID: <43e72e890810070018p2028da6bua2287bed6d8ea16@mail.gmail.com> (sfid-20081007_091839_170266_CDF23030)
-Date: Tue, 7 Oct 2008 00:18:30 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Temporary aggregation patches for 2.6.27 and wireless-testing
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 27 Oct 2008 12:55:03 -0400
+Date: Mon, 27 Oct 2008 09:54:18 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] mac80211.h: fix kernel-doc excesses
+Message-Id: <20081027095418.43579048.randy.dunlap@oracle.com> (sfid-20081027_175508_345440_9BBD536F)
+In-Reply-To: <1225126326.3796.31.camel@johannes.berg>
+References: <20081027094703.754167e2.randy.dunlap@oracle.com>
+	<1225126326.3796.31.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK so I'm done with some patches that don't oops, at least
-immediately, and its nothing pretty. I have patchsets for 2.6.27-rc8
-and for wireless-testing as of today. I only tested the patchset for
-2.6.27-rc8 but remember -- this is just for distributions who want
-some 11n throughput on 2.6.27 or developers who want to test/hack on
-aggregation. This is in no way shape or form should be considered to
-be merged as its not up to upstream merge inclusion standards:
+On Mon, 27 Oct 2008 17:52:06 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
- * The patch does too much rework
- * I think ieee80211_reque() is requeuing onto the the same queue upon
-removal of a queue, could be wrong
- * I see no point in using ieee80211_requeue() being called upon rmmod path
- * I just uncommented ieee80211_ht_agg_queue_remove() out which fixes
-rmmod panic on scheduling while atomic -- this path only gets hit upon
-ieee80211_stop_tx_ba_cb() which so far I've seen happen upon rmmod,
-but I'm sure there are some other code paths it hits somewhere I
-guess.
+> On Mon, 2008-10-27 at 09:47 -0700, Randy Dunlap wrote:
+> > From: Randy Dunlap <randy.dunlap@oracle.com>
+> > 
+> > Fix mac80211.h kernel-doc: it had some extra parameters that were
+> > no longer valid and incorrect format for a return value in 2 places.
+> > 
+> > Warning(lin2628-rc2//include/net/mac80211.h:1487): Excess function
+> > parameter or struct member 'control' description in
+> > 'ieee80211_beacon_get'
+> 
+> Cool, is that new functionality? Thanks.
 
-If indeed ignoring ieee80211_ht_agg_queue_remove() is OK under
-ieee80211_stop_tx_ba_cb() I'd feel more comfortable on recommending
-this strongly but at this point I am just not sure.
+Yes, but it reports some false positives, so I haven't
+merged it yet.
 
-Anyway at this point I'm going to stop looking at 2.6.27 as we just
-need to give aggregation a good cleaning and this needs to happen on
-wireless-testing. First priority is to get it working, and if I get to
-it first I plan on doing that by removing the whole tid to queue
-mapping, and simply mapping skbs to ACs. Then the driver can do what
-it needs for scheduling. Let me know what you think.
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Use at your own risk.
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/mac80211/aggrv9-2.6.27.tar
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/mac80211/aggrv9-wl.tar
-
-  Luis
+-- 
+~Randy
