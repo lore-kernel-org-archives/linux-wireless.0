@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:57751 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754407AbYJNVJ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 17:09:26 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] make ieee80211 invisible
-Date: Tue, 14 Oct 2008 23:09:00 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1224006562.10113.47.camel@johannes.berg>
-In-Reply-To: <1224006562.10113.47.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200810142309.00479.mb@bu3sch.de> (sfid-20081014_230934_127892_4B5E43EF)
+Received: from casper.infradead.org ([85.118.1.10]:50444 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201AbYJ0Rcr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 13:32:47 -0400
+Date: Mon, 27 Oct 2008 10:33:03 -0700
+From: Arjan van de Ven <arjan@infradead.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: bisected: 2.6.28-rc broke my iwl4965 wireless
+Message-ID: <20081027103303.0fed7aa0@infradead.org> (sfid-20081027_183257_266804_B1E324B0)
+In-Reply-To: <20081027163812.GB6377@tesla>
+References: <20081025222208.1d2a2c8b@infradead.org>
+	<20081027163812.GB6377@tesla>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 14 October 2008 19:49:22 Johannes Berg wrote:
+On Mon, 27 Oct 2008 09:38:12 -0700
+"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
+
+> Additionally if the old behaviour is desired for now (until
+> distributions catch up and add CRDA) CONFIG_WIRELESS_OLD_REGULATORY
+> can be enabled and you'll get the old behaviour of defaulting to
+> country "US".
 > 
-> This makes CONFIG_IEEE80211 invisible. The drivers that require it
-> (ipw2100, ipw2200, hostap) select it, and everybody else really
-> shouldn't even think about using it. Also, since there really is
-> no point in compiling anything without crypto support these days,
-> remove the crypto options and just enable them, leaving only the
-> debugging option which only shows up when a driver is select that
-> requires it. This makes it hard to enable, but most people wouldn't
-> want to anyway.
+> Please let me know if there are any issues.
 
-I think in the long term we should also rename it to ipw-ieee80211
-and move it into another directory like drivers/net/wireless/ipw-ieee80211.
-This way it's a lot less confusing for new developers joining the wireless developers.
+the point is that this compatibility behavior should have been the
+default... since it'll be at least 6 months before current distros will
+even ship the userland..
 
-(Probably also rename the symbols. I'm not sure if it's worth it, however)
 
 -- 
-Greetings Michael.
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
