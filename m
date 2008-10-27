@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2002 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752955AbYJCTn6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 15:43:58 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: jirislaby@gmail.com, toralf.foerster@gmx.de,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-Date: Fri, 3 Oct 2008 15:43:33 -0400
-Message-Id: <20081003193739.M19356@bobcopeland.com> (sfid-20081003_214403_081595_129160A6)
-In-Reply-To: <87fxnd2112.fsf@denkblock.local>
-References: <200808101401.03339.toralf.foerster@gmx.de> <200810012055.58085.toralf.foerster@gmx.de> <87ej30m376.fsf@denkblock.local> <b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com> <87ljx8ndw1.fsf@denkblock.local> <b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com> <87od23mo08.fsf@denkblock.local> <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com> <20081002144600.M31352@bobcopeland.com> <87bpy32c1w.fsf@denkblock.local> <b6c5339f0810021137g3d93c5c8t5fa8fb3784294a86@mail.gmail.com> <20081003134648.M45120@bobcopeland.com> <87fxnd2112.fsf@denkblock.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+Received: from mga09.intel.com ([134.134.136.24]:29563 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751761AbYJ0WKr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 18:10:47 -0400
+Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
+From: reinette chatre <reinette.chatre@intel.com>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081019075916.GA12904@isilmar.linta.de>
+References: <20081018231046.GA10977@isilmar.linta.de>
+	 <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
+	 <20081019075916.GA12904@isilmar.linta.de>
+Content-Type: text/plain
+Date: Mon, 27 Oct 2008 15:11:08 -0700
+Message-Id: <1225145468.1115.139.camel@rc-desk> (sfid-20081027_231051_169282_478D2F09)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 03 Oct 2008 16:42:17 +0200, Elias Oltmanns wrote
-> I still feel uneasy about this. Granted, I haven't thought this through
-> too carefully, but I'd rather not rely on the fact that ath5k_stop_hw()
-> will not get called between the check for ATH_STAT_STARTED and the call
-> to ath5k_init if I can help it. Perhaps you can add an argument `reinit'
-> to ath5k_init() and do something like this under the mutex:
+On Sun, 2008-10-19 at 00:59 -0700, Dominik Brodowski wrote:
+> On Sun, Oct 19, 2008 at 01:30:50AM +0200, Tomas Winkler wrote:
+> > On Sun, Oct 19, 2008 at 1:10 AM, Dominik Brodowski
+> > > [   37.340901] iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> > > [   37.340944] iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4413 ser 0x0000004B
+> > > [   37.342349] iwl3945: Can't stop Rx DMA.
+> > >
+> > > The iwlwifi-3945-1.ucode is the one shipped with Ubuntu's 2.6.24-21-generic
+> > > kernel sources (md5sum: 26d10014b09439dc5a8573c2a6f85b0a ). And, as
+> > > mentioned in the subject, 2.6.27 or 2.6.26 work perfectly fine.
+> >
+> > I think you need new uCode, the API has changed to support stealth APs
+> > .... I believe there was some misscommunication...
 > 
-> 	if (reinit && !test_bit(ATH_STAT_STARTED, sc->status)) {
-> 		mutex_unlock(...);
-> 		return;
-> 	}
+> Thanks for the hint -- indeed, the newest uCode works both with 2.6.26 and
+> current git... so the uCode is backwards compatible, but the kernel code is
+> not. Should the uCode be named iwlwifi-3945-2.ucode therefore, to notify the
+> users that they need something newer? Or can the kernel code be made to work
+> with the old uCode again?
 
-Shouldn't the freezer take care of this?  If userspace is suspended until
-after devices are resumed, then, in a hand-wavy argument, I don't believe
-->stop() could be called.  
+(let me try again... sorry for the spam)
 
-Adding a flag to ath5k_init to make sure we do everything in the mutex would
-certainly ensure that there's no issues.  On the other hand, I don't want to
-cruft up the code too much since we know at some point mac80211 is going to
-take down the interfaces in its suspend/resume callbacks, at which time the
-flags can probably get tossed.
+Could you please try the following patch instead of updating your ucode?
 
--- 
-Bob Copeland %% www.bobcopeland.com
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index d15a2c9..0f811dd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6100,7 +6100,7 @@ static void iwl3945_bg_request_scan(struct
+work_struct *data)
+ 	int rc = 0;
+ 	struct iwl3945_scan_cmd *scan;
+ 	struct ieee80211_conf *conf = NULL;
+-	u8 n_probes = 2;
++	u8 n_probes = 0;
+ 	enum ieee80211_band band;
+ 
+ 	conf = ieee80211_get_hw_conf(priv->hw);
 
 
