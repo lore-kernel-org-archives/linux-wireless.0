@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:36045 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753092AbYJGR42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 13:56:28 -0400
-Message-ID: <48EBA2BE.9070705@openwrt.org> (sfid-20081007_195632_134041_62F1CCB5)
-Date: Tue, 07 Oct 2008 19:56:14 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51029 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846AbYJ0N37 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 09:29:59 -0400
+Date: Mon, 27 Oct 2008 09:28:59 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Chr <chunkeey@web.de>, mcgrof <mcgrof@gmail.com>
+Subject: Re: build warnings
+Message-ID: <20081027132858.GA20389@tuxdriver.com> (sfid-20081027_143017_357927_6C8D24FF)
+References: <1224923050.27353.1.camel@johannes.berg> <1ba2fa240810270330u15e3ce04y9d077904f48e04e7@mail.gmail.com> <1397eb932d5573ecf093fcbc82c02adb.squirrel@secure.sipsolutions.net> <1ba2fa240810270341l9332ec3qeee761ba764d5617@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 2/4] mac80211: add multi-rate retry support
-References: <48E8E48E.5090300@openwrt.org> <48E8E528.7060501@openwrt.org>	 <48E8E588.30001@openwrt.org> <1223329786.3778.38.camel@johannes.berg>	 <48EB98A6.4050406@openwrt.org> <1223400436.7328.54.camel@johannes.berg>
-In-Reply-To: <1223400436.7328.54.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240810270341l9332ec3qeee761ba764d5617@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2008-10-07 at 19:13 +0200, Felix Fietkau wrote:
->> Johannes Berg wrote:
->> > On Sun, 2008-10-05 at 18:04 +0200, Felix Fietkau wrote:
->> >> This patch adjusts the rate control API to allow multi-rate retry
->> >> if supported by the driver. The ieee80211_hw struct specifies how
->> >> many alternate rate selections the driver supports.
->> > 
->> > Don't those drivers that announce supporting max_altrates = 1 have to
->> > update the status for alternative rates too? Also, should
->> > max_altrate_tries == 0 indicate that that is fixed?
->> IMHO yes.
-> Should we document that?
-Maybe ;)
+On Mon, Oct 27, 2008 at 12:41:22PM +0200, Tomas Winkler wrote:
+> On Mon, Oct 27, 2008 at 12:34 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > Tomas Winkler wrote:
+> >> On Sat, Oct 25, 2008 at 10:24 AM, Johannes Berg
+> >> <johannes@sipsolutions.net> wrote:
+> >>> just FYI in case you haven't seen them. the p54 one looks like a genuine
+> >>> problem.
+> >>>
+> >>> drivers/net/wireless/iwlwifi/iwl-scan.c:69: warning: 'scan_tx_ant'
+> >>> defined but not used
+> >>
+> >> Strange. This variable was removed in 'iwlwifi: unify tx antenna toggling'
+> >> patch
+> >
+> > odd. maybe I don't have the right tree here. Just mentioning the warnings
+> > because in my experienced different gcc versions differ.
+> >
+> Really odd, the lines are just not there. Try to diff to
+> wireless-testing master branch.
 
->> The IEEE80211_TX_CTL_RATE_CTRL_PROBE flag is used to tell the tx_status
->> function that there is a sampling rate in the second MRR stage, so that
->> it can update the sampling counter accordingly, in case the sampling rate
->> actually got used.
-> So if I read that correctly you're saying it's not part of the driver
-> API but just something to be preserved from tx to tx-status. Can you
-> document that in the header file too please?
-Will send a new patch updating the docs soon. Should that hint apply to
-only this particular flag or the whole flags struct member?
+I advise you do the same -- I see the warning too.
 
-- Felix
+The fault would seem to lie somewhere between me and git -- that bit
+seems to have been added back with "wireless: consolidate on a single
+escape_essid implementation".  Presumably this happened when I rebased
+those patches, although I don't recall having done any manual fixups
+that I could have flubbed.
+
+Anyway, don't worry -- I'll take care of this one.
+
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
