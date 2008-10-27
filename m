@@ -1,32 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:63217 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752873AbYJVWX3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 18:23:29 -0400
-Date: Wed, 22 Oct 2008 15:23:06 -0700
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 4/5] crda: Updated regulatory information for France (FR)
-Message-ID: <20081022222306.GA8920@bougret.hpl.hp.com> (sfid-20081023_002333_474942_F03A0DA9)
-Reply-To: jt@hpl.hp.com
-References: <cover.1223583376.git.benoit.papillault@free.fr> <48FE399E.6050907@free.fr> <20081022150323.GO6190@tesla>
+Received: from isilmar.linta.de ([213.133.102.198]:50127 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753316AbYJ0XD3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 19:03:29 -0400
+Date: Tue, 28 Oct 2008 00:03:27 +0100
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
+Message-ID: <20081027230326.GA23250@isilmar.linta.de> (sfid-20081028_000345_857009_6EF97F0A)
+References: <20081018231046.GA10977@isilmar.linta.de> <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com> <20081019075916.GA12904@isilmar.linta.de> <1225145468.1115.139.camel@rc-desk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081022150323.GO6190@tesla>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <1225145468.1115.139.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 08:03:23AM -0700, Luis R. Rodriguez wrote:
-> CC'ing Jean as he's another French wireless developer.
-> 
+Hi,
 
-	I have not been living in France for a while, like more than
-10 years ;-)
-	I think Benoit is on top of things, and as I'm not familiar
-with it, I'll defer to him.
+On Mon, Oct 27, 2008 at 03:11:08PM -0700, reinette chatre wrote:
+> Could you please try the following patch instead of updating your ucode?
 
-	Jean
+Thanks for the patch -- it doesn't work with the old uCode, unfortunately;
+while the new uCode works with or without this patch.
+
+Best,
+	Dominik
