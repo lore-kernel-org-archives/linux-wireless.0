@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:20129 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757333AbYJJOi1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 10:38:27 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so355276fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 07:38:25 -0700 (PDT)
-Message-ID: <1ba2fa240810100738t66afce30va60b2f883e5153b8@mail.gmail.com> (sfid-20081010_163830_562643_C2BC4254)
-Date: Fri, 10 Oct 2008 16:38:25 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwlwifi TX reply bug
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223645283.3748.2.camel@johannes.berg>
+Received: from ogre.sisk.pl ([217.79.144.158]:59754 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751372AbYJ0R2U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 13:28:20 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Carlos R. Mafra" <crmafra2@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+Date: Mon, 27 Oct 2008 18:32:39 +0100
+Cc: linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
+	kernel@nn7.de, "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20081027162054.GA4015@localhost.aei.mpg.de>
+In-Reply-To: <20081027162054.GA4015@localhost.aei.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223629897.3930.69.camel@johannes.berg>
-	 <1ba2fa240810100545o79b70feay9c2da4fa6aa48a6b@mail.gmail.com>
-	 <1223645283.3748.2.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810271832.40717.rjw@sisk.pl> (sfid-20081027_182826_821511_4EF2AD19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 10, 2008 at 3:28 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2008-10-10 at 14:45 +0200, Tomas Winkler wrote:
->> On Fri, Oct 10, 2008 at 11:11 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> >        sta_id = iwl_get_ra_sta_id(priv, hdr);
->> >        if (txq->sched_retry && unlikely(sta_id == IWL_INVALID_STATION)) {
->> >                IWL_ERROR("Station not known\n");
->> >                return;
->> >        }
->> >
->> >        if (txq->sched_retry) {
->> > [...]
->> >        } else {
->> > [...]
->> >                if (index != -1) {
->> >                    int freed = iwl_tx_queue_reclaim(priv, txq_id, index);
->> >                    if (tid != MAX_TID_COUNT)
->> >                        priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
->> > [...]
->> >
->> >
->> > priv->stations has 32 entries, IWL_INVALID_STATION is 255.
->>
->> Don't see a problem this is what iwl_find_station returns if it cannot find
->
-> The last line I quoted uses the sta_id regardless of what was returned.
+[Added some CCs]
 
-Thanks, I'll check if this is a problem also in new code.
-Tomas
+On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> Hi,
+> 
+> So I managed to bisect my suspend to RAM regression in 2.6.27-rc2
+> to commit 3b7ee69d0caefbdb85a606a98bff841b8c63b97e ("mac80211: disassociate 
+> when moving to new BSS") by Tomas Winkler (Cc:-ed).
+> 
+> Unfortunately it doesn't revert cleanly so I can't double check it.
+> 
+> My laptop is a Vaio FZ240E Core2Duo@2GHz and I use the iwlagn module
+> for the wireless connection.
+> 
+> The symptom is that suspending to RAM from inside X with 'echo mem >
+> /sys/power/state' leaves me a black screen when resuming back.
+> 
+> I can test any patches and provide more information of my laptop too.
+
+Carlos, thanks a lot for bisecting this.
+
+Johannes, can you pls have a look?
+
+Thanks,
+Rafael
