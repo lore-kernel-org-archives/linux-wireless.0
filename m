@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:24458 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218AbYJ1Xs7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39056 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751883AbYJ0Sba (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 19:48:59 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2892833wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 16:48:58 -0700 (PDT)
-Message-ID: <1ba2fa240810281648wff91b13ree84f41dd9d6ba2@mail.gmail.com> (sfid-20081029_004903_598081_88B9467C)
-Date: Wed, 29 Oct 2008 01:48:58 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] iwlwifi: remove implicit direct scan
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225234763.1369.3.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1225214465.3598.27.camel@johannes.berg>
-	 <1ba2fa240810281353u4b038cf2gb46cb830b278a278@mail.gmail.com>
-	 <1ba2fa240810281454v434182f0t5f42ee6cef6c408d@mail.gmail.com>
-	 <1225234763.1369.3.camel@johannes.berg>
+	Mon, 27 Oct 2008 14:31:30 -0400
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Soeren Sonnenburg <kernel@nn7.de>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"Carlos R. Mafra" <crmafra2@gmail.com>,
+	linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1225130844.4466.0.camel@localhost>
+References: <20081027162054.GA4015@localhost.aei.mpg.de>
+	 <200810271832.40717.rjw@sisk.pl>  <1225130844.4466.0.camel@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-neRwo8qyXkIh2DzqgDeJ"
+Date: Mon, 27 Oct 2008 19:31:18 +0100
+Message-Id: <1225132278.3796.32.camel@johannes.berg> (sfid-20081027_193136_021274_A4C6EBE7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 12:59 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-10-28 at 23:54 +0200, Tomas Winkler wrote:
->
->> >> Am I missing something? This seems very strange! What specifies that
->> >> when an SSID is set on an interface the user wants to scan for that one?
->> >> The interface might just have been associated previously to that SSID,
->> >> now disassociated and network manager is asking for a scan to get
->> >> information about networks to let the user select a new one.
->> >
->> > NACK, this is a heuristic that helps connection to configured SSID. It
->> > doesn't mean that other ssid won't be scanned.
->> > This code might be revised again when multiple SSID scan will be implemented
->> > Tomas
->> >
->> Okay I've only now have  seen the real reason for this. The SSID
->> removal from the driver API. It's much better argument for removing
->> this code anyway have to think how this will be substituted.
->
-> :)
-> Unless somebody can come up with a good argument for requiring the SSID?
-> I don't see it being necessary the way beaconing and everything is
-> designed in mac80211 now, and this leaves only the BSSID in the
-> interface config which I'll move to BSS config and then remove the
-> interface config thing completely.
->
-> Also, doesn't ieee80211_sta_config_auth already do exactly this
-> heuristic thing? If it doesn't know about the BSS it'll initiate a scan
-> for the SSID it's looking for?
 
-Yep, you are right.
-Tomas
->
-> johannes
->
+--=-neRwo8qyXkIh2DzqgDeJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2008-10-27 at 19:07 +0100, Soeren Sonnenburg wrote:
+
+> > Johannes, can you pls have a look?
+
+I did, and I have no idea. Makes no sense at all.
+
+> Hmmhh, I still have the problem when removing the mac80211 and other
+> wireless modules before s2ram...
+
+And that makes even less sense :)
+
+johannes
+
+--=-neRwo8qyXkIh2DzqgDeJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBgjyAAoJEKVg1VMiehFYLoYQALMCjQMdsnzhz1HQSD31b4Eq
+kB7NAaPMjzdfwlZyDqadZSmeVNfd6LMMyESGVUay+g7p4AEnA06Pqa7ZK4Zk8PeK
+dfUYAbnjzlL/Ll2yt32qL+XZVYL8exR/f4f4EW4d/NYYZDHWtsfhooT7yqDwYRa0
+v6zHT5IPo5Ssq1qy/rJSyBbDk/TodsbTwXpYYFuimDUNi9N57LkI+6pxtS3nKeLF
+WjM6LfLQSbrpVFlwcWueFNu2OF78zKNMHU7jqFudMojqMqdfA3Vjr35e1ajlnl6t
+eIWVO1CcYlZnG/7y6OJ7OX+mXsdPZucvQ6nXERHI14Q5YDW+JW/Mueb0gasF4psG
+e58lQTct7q0yY1oBike0oyGpRUUBiUE/DVkVGmIxD8lb8W3BBrvSF+QNmXkZUaP3
+w2fBcrCB36cE4u6Pw2H353ieWY9F958TEc+3YzRI395WWF2e3F6bSDf5W42OEZuQ
+Ax2pHh2A5BhIU1iXVSrVwoO1/BLmLTP/X+ROVBzJ//jaMYTIGQXvW3C80Dp6LoI2
++5pASUZbztdm1ow0rPnfNd3Gl2sq1l1ERXwO5SwQqJD3cE0E/R06/d8yA+jk5Q/y
+cEu3AiOZ0qLwVKtYI6jT8nMRF2AVx/ncw1ltpCbk5bWJ9KEC6l9zSymfPujPhhJl
+dYeVN8rjsllLwbQzHPxc
+=N19b
+-----END PGP SIGNATURE-----
+
+--=-neRwo8qyXkIh2DzqgDeJ--
+
