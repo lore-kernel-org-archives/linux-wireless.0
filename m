@@ -1,101 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4799 "EHLO mga02.intel.com"
+Received: from ox1.aei.mpg.de ([194.94.224.6]:54806 "EHLO ox1.aei.mpg.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751790AbYJNTfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 15:35:20 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 7/9] iwl3945 : Fix a-band association for passive channels
-Date: Tue, 14 Oct 2008 12:32:47 -0700
-Message-Id: <1224012769-8920-8-git-send-email-reinette.chatre@intel.com> (sfid-20081014_213529_086644_B03F15A6)
-In-Reply-To: <1224012769-8920-7-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1224012769-8920-1-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-2-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-3-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-4-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-5-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-6-git-send-email-reinette.chatre@intel.com>
- <1224012769-8920-7-git-send-email-reinette.chatre@intel.com>
+	id S1751727AbYJ0SgM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 14:36:12 -0400
+Date: Mon, 27 Oct 2008 19:36:48 +0100
+From: "Carlos R. Mafra" <crmafra2@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
+	kernel@nn7.de, linux-wireless@vger.kernel.org
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+Message-ID: <20081027183648.GA4165@localhost.aei.mpg.de> (sfid-20081027_193617_168334_DF68AEAE)
+References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271839.39236.rjw@sisk.pl> <20081027175719.GA5759@localhost.aei.mpg.de> <200810271916.38079.rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200810271916.38079.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+On Mon 27.Oct'08 at 19:16:37 +0100, Rafael J. Wysocki wrote:
+> On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> > On Mon 27.Oct'08 at 18:39:38 +0100, Rafael J. Wysocki wrote:
+> > > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> > > > Hi,
+> > > > 
+> > > > So I managed to bisect my suspend to RAM regression in 2.6.27-rc2
+> > > > to commit 3b7ee69d0caefbdb85a606a98bff841b8c63b97e ("mac80211: disassociate 
+> > > > when moving to new BSS") by Tomas Winkler (Cc:-ed).
+> > > > 
+> > > > Unfortunately it doesn't revert cleanly so I can't double check it.
+> > > 
+> > > Why are you saying it doesn't revert cleanly?  For me it does revert without
+> > > rejects from 2.6.28-rc2.
+> > 
+> > I get this
+> > 
+> > [mafra@localhost:linux-2.6]$ git checkout v2.6.28-rc2 -b s2ram
+> > Switched to a new branch "s2ram"
+> > [mafra@localhost:linux-2.6]$ git revert 3b7ee69d
+> > warning: too many files, skipping inexact rename detection
+> > Auto-merged net/mac80211/mlme.c
+> > CONFLICT (content): Merge conflict in net/mac80211/mlme.c
+> > Automatic revert failed.  After resolving the conflicts,
+> > mark the corrected paths with 'git add <paths>' or 'git rm <paths>' and commit the result.
+> > 
+> > I don't know what is happening here :-(
+> 
+> If you have quilt installed, you can do:
+> 
+> $ git show 3b7ee69d > suspicious.patch
+> $ quilt import -R suspicious.patch
+> $ quilt push
+> 
+> (that should work without rejects) and build the kernel.
 
-This patch fixes the a-band association for passive channels.
-This fix will only work with uCode version 15.28.1.8 and above.
-uCode API version is incremented to 2.
+I wanted to do it with git, but gave up after some time :-(
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+So I finally read the commit in 
+question 3b7ee69d0caefbdb85a606a98bff841b8c63b97e and applied
+the patch below, which reverts it up to the whitespace fixes.
+
+And reverting it really made my brand new 2.6.28-rc2-something
+work again, regarding suspend to RAM.
+
+So consider it confirmed that this commit is guilty here.
+
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   22 +++++++++++++++-------
- 2 files changed, 16 insertions(+), 8 deletions(-)
+ net/mac80211/mlme.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index bdd3247..c124e9f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -54,7 +54,7 @@ extern struct pci_device_id iwl3945_hw_card_ids[];
-  *   *only* when uCode interface or architecture changes so that it
-  *   is not compatible with earlier drivers.
-  * This number will also appear in << 8 position of 1st dword of uCode file */
--#define IWL3945_UCODE_API "-1"
-+#define IWL3945_UCODE_API "-2"
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 87665d7..1751ebb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2396,10 +2396,6 @@ void ieee80211_sta_req_auth(struct ieee80211_sub_if_data *sdata,
+ 	    (ifsta->flags & (IEEE80211_STA_SSID_SET |
+ 			     IEEE80211_STA_AUTO_SSID_SEL))) {
  
- /* Default noise level to report when noise measurement is not available.
-  *   This may be because we're:
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index ce12609..4bd92c3 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4876,18 +4876,26 @@ static int iwl3945_get_channels_for_scan(struct iwl3945_priv *priv,
- 			continue;
- 		}
- 
-+		/* If passive , set up for auto-switch
-+		 *  and use long active_dwell time.
-+		 */
- 		if (!is_active || is_channel_passive(ch_info) ||
--		    (channels[i].flags & IEEE80211_CHAN_PASSIVE_SCAN))
-+		    (channels[i].flags & IEEE80211_CHAN_PASSIVE_SCAN)) {
- 			scan_ch->type = 0;	/* passive */
--		else
-+			scan_ch->active_dwell = cpu_to_le16(passive_dwell - 1);
-+		} else {
- 			scan_ch->type = 1;	/* active */
-+			scan_ch->active_dwell = cpu_to_le16(active_dwell);
-+		}
-+		scan_ch->passive_dwell = cpu_to_le16(passive_dwell);
- 
--		if ((scan_ch->type & 1) && n_probes)
-+		/* Set direct probe bits. These may be used both for active
-+		 * scan channels (probes gets sent right away),
-+		 * or for passive channels (probes get se sent only after
-+		 * hearing clear Rx packet).*/
-+		if (n_probes)
- 			scan_ch->type |= IWL_SCAN_PROBE_MASK(n_probes);
- 
--		scan_ch->active_dwell = cpu_to_le16(active_dwell);
--		scan_ch->passive_dwell = cpu_to_le16(passive_dwell);
+-		if (ifsta->state == IEEE80211_STA_MLME_ASSOCIATED)
+-			ieee80211_set_disassoc(sdata, ifsta, true, true,
+-					       WLAN_REASON_DEAUTH_LEAVING);
 -
- 		/* Set txpower levels to defaults */
- 		scan_ch->tpc.dsp_atten = 110;
- 		/* scan_pwr_info->tpc.dsp_atten; */
-@@ -6100,7 +6108,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 	int rc = 0;
- 	struct iwl3945_scan_cmd *scan;
- 	struct ieee80211_conf *conf = NULL;
--	u8 n_probes = 2;
-+	u8 n_probes = 0;
- 	enum ieee80211_band band;
- 
- 	conf = ieee80211_get_hw_conf(priv->hw);
+ 		set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
+ 		queue_work(local->hw.workqueue, &ifsta->work);
+ 	}
 -- 
-1.5.4.3
+1.6.0.rc2
+
 
