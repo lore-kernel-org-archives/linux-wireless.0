@@ -1,49 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:35180 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754852AbYJNJNz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 05:13:55 -0400
-Received: by gxk9 with SMTP id 9so4866245gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2008 02:13:53 -0700 (PDT)
-Message-ID: <43e72e890810140213w291d729cl6c1bd1149109320d@mail.gmail.com> (sfid-20081014_111359_434984_16B9D82F)
-Date: Tue, 14 Oct 2008 02:13:53 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: New Regulatory Domain Api.
-Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
-	 <20081009154547.GB13349@tesla>
-	 <1223608949.2510.1061.camel@debian.sh.intel.com>
-	 <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com>
-	 <1223967581.2570.144.camel@debian.sh.intel.com>
-	 <43e72e890810140004k6bfa72edsf39acbafcf317fa6@mail.gmail.com>
-	 <1223969808.2570.153.camel@debian.sh.intel.com>
-	 <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:52521 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750782AbYJ0QSm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 12:18:42 -0400
+Subject: Re: why differnet wlan drivers need different settings?
+From: Dan Williams <dcbw@redhat.com>
+To: Alexey Fisher <bug-track@fisher-privat.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200810252245.30279.bug-track@fisher-privat.net>
+References: <200810251153.25533.bug-track@fisher-privat.net>
+	 <200810251303.35295.rjw@sisk.pl> <20081025135512.GG19057@tuxdriver.com>
+	 <200810252245.30279.bug-track@fisher-privat.net>
+Content-Type: text/plain
+Date: Mon, 27 Oct 2008 12:13:43 -0400
+Message-Id: <1225124023.13499.40.camel@localhost.localdomain> (sfid-20081027_171847_767684_141A198B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 14, 2008 at 2:04 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
+On Sat, 2008-10-25 at 22:45 +0200, Alexey Fisher wrote:
+> On Saturday 25 October 2008 15:55:12 John W. Linville wrote:
+> > On Sat, Oct 25, 2008 at 01:03:34PM +0200, Rafael J. Wysocki wrote:
+> > > On Saturday, 25 of October 2008, Alexey Fisher wrote:
+> > > > May be this is the wrong plase to ask.
+> > >
+> > > Yeah, better ask that on linux-wireless@vger.kernel.org (CCed).
+> > >
+> > > > The question is: Why differnet wlan drivers use different settings to
+> > > > stay silent - powered on but not trying to associate to any accespoint?
+> > > > For example: ipw2200 - if wlan was connfigured like:
+> > > >
+> > > > iwconfig wlan1 essid "my-ap" chan 6 ap my:aps:mac ?key s:pass
+> > > >
+> > > > this will normaly connect to my secure ?AP. and if i set after this:
+> > > > ?
+> > > > iwconfig wlan1 essid off ap off
+> > > >
+> > > > it will connect to unsecure AP of my neighbour or of Dr.Evil :)
+> > > > to disable association on ipw2200 i need to set all this and plus "chan
+> > > > 0". With this cnowleg i want to set up iwl3945, and surprise it's not
+> > > > working. This driver do not accepted "chan 0" and instead of "essid
+> > > > off" it did "essid """
+> > > >
+> > > > Are there any unified way to keep adapter powered on but not trying to
+> > > > associate to some AP?
+> >
+> > That is from the bad-ole-days.  I could be wrong, but AFAIK only the
+> > ipw2x00 drivers do that anyway.  I recently merged a patch to change
+> > the default for that for ipw2200 into wireless-testing.  We should
+> > probably have one for ipw2100 as well.
+> >
+> > Anyway, there are module options for those.  Add "options ipw2200
+> > associate=0" to /etc/modprobe.conf.
+> 
+> I use associate=0 with smole workaround:
+> 
+> diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+> index dcce354..92583c6 100644
+> --- a/drivers/net/wireless/ipw2200.c
+> +++ b/drivers/net/wireless/ipw2200.c
+> @@ -7582,7 +7582,7 @@ static int ipw_associate(void *data)
+>  
+>  	if (!(priv->config & CFG_ASSOCIATE) &&
+>  	    !(priv->config & (CFG_STATIC_ESSID |
+> -			      CFG_STATIC_CHANNEL | CFG_STATIC_BSSID))) {
+> +			      CFG_STATIC_BSSID))) {
+>  		IPW_DEBUG_ASSOC("Not attempting association (associate=0)\n");
+>  		return 0;
+>  	}
 
-> I have a feeling I am missing the question or problem here though.
-> Please let me know.
+Yeah, that's probably appropriate, otherwise just 'iwconfig eth1 channel
+6' would trigger association to _something_, which is wrong.  Changing
+the channel should (and does) trigger reassociation, but only if there
+is an SSID to associate with!
 
-I believe your issue is that your "regulatory domain" is not a
-regulatory domain but hw capabilities so this is why you asked me what
-values to add in case 2, please correct me if I'm wrong. In that case
--- yes, you should add regulatory rules even if the card is only
-single band; but you can't because you don't have that information in
-your driver. So you should just go with what you have and that is to
-only provide the hardware capabilities. In that case a single band
-card will report according to its regulatory info it can only work on
-the 2 GHz band while a dual band card will report both 2 GHz and 5
-GHz. The intersection is still 2 GHz.
+In plain english, this if statement should read:
 
-Not sure what the issue is still.
+"If associate=0, and no locked SSID or locked BSSID have been set, don't
+associate"
 
-  Luis
+> becouse networkmanager do not set channel=0 to be compartibel with other 
+> drivers. 
+
+wpa_supplicant sets (or doesn't set) the channel, not NM...
+
+Care to submit a patch with the appropriate signed-off-by tag?
+
+Thanks!
+Dan
+
+
