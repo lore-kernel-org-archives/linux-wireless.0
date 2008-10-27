@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52826 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752041AbYJ2Xet (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 19:34:49 -0400
-Date: Wed, 29 Oct 2008 19:33:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	me@bobcopeland.com, mcgrof@gmail.com, mickflemm@gmail.com
-Subject: Re: pull request: wireless-2.6 2008-10-29
-Message-ID: <20081029233350.GE3485@tuxdriver.com> (sfid-20081030_003454_786976_8BBAA4E4)
-References: <20081029231855.GD3485@tuxdriver.com> <20081029162324.28f5864d@infradead.org>
+Received: from pasmtpa.tele.dk ([80.160.77.114]:45642 "EHLO pasmtpA.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751901AbYJ0TOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 15:14:15 -0400
+Date: Mon, 27 Oct 2008 20:13:07 +0100
+From: Jens Axboe <jens.axboe@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Carlos R. Mafra" <crmafra2@gmail.com>,
+	Soeren Sonnenburg <kernel@nn7.de>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	tomas.winkler@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+Message-ID: <20081027191307.GI22217@kernel.dk> (sfid-20081027_201429_558043_7E5D9550)
+References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost> <1225132278.3796.32.camel@johannes.berg> <1225133082.3796.35.camel@johannes.berg> <20081027190011.GA3951@localhost.aei.mpg.de> <20081027190631.GG22217@kernel.dk> <1225134571.3796.41.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081029162324.28f5864d@infradead.org>
+In-Reply-To: <1225134571.3796.41.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 04:23:24PM -0700, Arjan van de Ven wrote:
-> On Wed, 29 Oct 2008 19:18:55 -0400
-> "John W. Linville" <linville@tuxdriver.com> wrote:
-> 
-> > Dave,
+On Mon, Oct 27 2008, Johannes Berg wrote:
+> On Mon, 2008-10-27 at 20:06 +0100, Jens Axboe wrote:
+> > On Mon, Oct 27 2008, Carlos R. Mafra wrote:
+> > > On Mon 27.Oct'08 at 19:44:42 +0100, Johannes Berg wrote:
+> > > > On Mon, 2008-10-27 at 19:31 +0100, Johannes Berg wrote:
+> > > > > On Mon, 2008-10-27 at 19:07 +0100, Soeren Sonnenburg wrote:
+> > > > > 
+> > > > > > > Johannes, can you pls have a look?
+> > > > > 
+> > > > > I did, and I have no idea. Makes no sense at all.
+> > > > 
+> > > > The only thing I can remotely think of is that iwlwifi doesn't like
+> > > > being called back from within the call that it did to mac80211, which
+> > > > obviously happens here. But I have no idea, the code as it stands is
+> > > > correct, just the interaction with iwlwifi's resume seems to be broken.
+> > > > 
+> > > > Try this patch instead:
+> > > 
+> > > Yep, with this patch it also works!
 > > 
-> > Another quick round of fixes intended for 2.6.28...
-> > 
-> > This includes fixes for bugs 11749 and 11845, fixes a reset-related
-> > regression in ath5k, fixes a Kconfig-related error for rt2x00, and
-> > fixes some sparse warnings and a possible buffer overrun in libertas.
-> > Also, it corrects a spelling error and marks Bob Copeland as an
-> > ath5k maintainer.
+> > Confirmed here as well, my x60 is happy again.
 > 
-> speaking of ath5k:
-> 
-> http://www.kerneloops.org/version.php?start=1835008&end=1867775&version=28-rc
-> 
-> it seems to have added a few WARN_ON()s which now end up at the top of
-> the list .. are these known or should I spend some time writing reports
-> for netdev ?
+> Thanks. Another alternative I could think of is deferring the
+> notifications to a work struct, but I'd rather see that in the driver I
+> think, not sure though, could be argued either way.
 
-I wasn't aware of them -- thanks... :-)
+If you want something else tested, just let me know. I don't care a
+whole lot about how it gets fixed, as long as it does :-). I use STR
+heavily, so it's quite a burden to have it broken.
+
 
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Jens Axboe
+
