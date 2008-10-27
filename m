@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:62368 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752368AbYJ1Tlj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 15:41:39 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 12:41:39 -0700
-Date: Tue, 28 Oct 2008 12:41:37 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"stable@kernel.org" <stable@kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] ath9k: remove duplicate set_frag_threshold
-Message-ID: <20081028194137.GG8463@tesla> (sfid-20081028_204143_869398_3212B196)
-References: <1225209597.3598.18.camel@johannes.berg> <43e72e890810281201n6e119153k959283ced1abb757@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <43e72e890810281201n6e119153k959283ced1abb757@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44526 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752029AbYJ0QwL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 12:52:11 -0400
+Subject: Re: [PATCH] mac80211.h: fix kernel-doc excesses
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20081027094703.754167e2.randy.dunlap@oracle.com>
+References: <20081027094703.754167e2.randy.dunlap@oracle.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-k38kNmEkLvpyZoK4HXQ8"
+Date: Mon, 27 Oct 2008 17:52:06 +0100
+Message-Id: <1225126326.3796.31.camel@johannes.berg> (sfid-20081027_175216_035536_D82F75BC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes a duplicate set_frag_threshold which was overlooked.
-The last set_frag_threshold simply overwrites the pointer for
-set_rts_threshold so no harm is currently done.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez" <lrodriguez@atheros.com>
+--=-k38kNmEkLvpyZoK4HXQ8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
+On Mon, 2008-10-27 at 09:47 -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+>=20
+> Fix mac80211.h kernel-doc: it had some extra parameters that were
+> no longer valid and incorrect format for a return value in 2 places.
+>=20
+> Warning(lin2628-rc2//include/net/mac80211.h:1487): Excess function
+> parameter or struct member 'control' description in
+> 'ieee80211_beacon_get'
 
-Feel free to ignore this patch for stable as I see no issue
-with the current behaviour which would cause an oops.
+Cool, is that new functionality? Thanks.
 
---- a/drivers/net/wireless/ath9k/main.c.orig	2008-10-28 11:55:49.000000000 -0700
-+++ b/drivers/net/wireless/ath9k/main.c	2008-10-28 11:56:00.000000000 -0700
-@@ -1031,7 +1031,6 @@
- 	.hw_scan            = NULL,
- 	.get_tkip_seq       = NULL,
- 	.set_rts_threshold  = NULL,
--	.set_frag_threshold = NULL,
- 	.set_retry_limit    = NULL,
- 	.get_tsf 	    = ath9k_get_tsf,
- 	.reset_tsf 	    = ath9k_reset_tsf,
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+johannes
+
+--=-k38kNmEkLvpyZoK4HXQ8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBfGyAAoJEKVg1VMiehFYHmcP/30CjYt27GqnHXaEEY5RG/Ow
+j3Axi6qvlffkTGJmrY2TAPenuDgB3DNSg7kd6jrkoSSe53Jvi9TaZFyMfCHZS4ep
+ioIi3sQGpRVT0tgbr/ohnlggXUl9N7B+k1XHON2fkhGD7SNp5J8LRsisc6v2QcGC
+12wnzGiojdg0OjwE7tQTQgTXbyhMaQyz7DNBeKQSyuC5ADo8I/vZJLDlz1wTEo35
+yPxZuLz+oqg6WXS0wSOcQSgUgDXofWC0KjIRE0AiGg5g7pptNvaP/gMRSB7ZLG/c
+3s9dLWk90X0ZTdarl2WfvK1ErVwhna2MLL4be+w3HXUAb13Qf7UmzZlmQS0ZwxDS
+K1OS9nhVZtRC/twxNLViu6OJIleMGlSJCII0REjdjmAc0jxScLVsF+qoa2JibWg7
+AZyAjQwZgGxXnfFF2qtZGyJJw8tDk6nqZo7V/00uIbVFs5d4F2i/xs7y5tw2hZ4x
+aq+fPQ6ypfRJ2sdodCh1evAo2okQUCrbFsf9F5YTiswZiZk57VgxsD5YLW7VY4FJ
+T0S4upaYLq6YOBxMfW6H14SxU926zHVBYg5bBcQKPdReiRChRfHoYB38g4PQGs4t
+wXydDazt/+zkXKWRU1g4Vn8dAWQRAwSfTKjb0RYmSOcTJNGgLur9WaWYaHy5jjo7
+b9tU8aA0Bac70UVEArGR
+=lnSz
+-----END PGP SIGNATURE-----
+
+--=-k38kNmEkLvpyZoK4HXQ8--
+
