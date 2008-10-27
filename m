@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:59512 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753149AbYJVTlu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 15:41:50 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 12:41:50 -0700
-Date: Wed, 22 Oct 2008 05:41:39 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] wireless: remove struct regdom hinting
-Message-ID: <20081022124139.GK6190@tesla> (sfid-20081022_214152_963712_0C862864)
-References: <1224585042.5521.7.camel@johannes.berg> <20081022113950.GE6190@tesla> <1224701496.30459.50.camel@johannes.berg> <20081022122914.GH6190@tesla> <1224703869.30459.63.camel@johannes.berg>
+Received: from rv-out-0506.google.com ([209.85.198.224]:30972 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256AbYJ0O1Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 10:27:25 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2158157rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 07:27:24 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1224703869.30459.63.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18693.53054.116942.355275@localhost.localdomain> (sfid-20081027_152731_505123_42BF3958)
+Date: Mon, 27 Oct 2008 19:55:02 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+In-Reply-To: <1224773201.6002.35.camel@johannes.berg>
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	<18684.18492.94865.480736@gargle.gargle.HOWL>
+	<1224493957.18024.47.camel@johannes.berg>
+	<18684.20459.335157.171344@gargle.gargle.HOWL>
+	<1224495531.18024.55.camel@johannes.berg>
+	<18684.24323.743610.871307@gargle.gargle.HOWL>
+	<1224505349.27899.17.camel@johannes.berg>
+	<18684.51206.771543.514682@localhost.localdomain>
+	<1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com>
+	<1224669827.28639.54.camel@johannes.berg>
+	<1ba2fa240810220459m1dcffd24k58cf6b72c688913c@mail.gmail.com>
+	<1224696170.30459.12.camel@johannes.berg>
+	<18688.15460.336059.400706@gargle.gargle.HOWL>
+	<1224773201.6002.35.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 12:31:09PM -0700, Johannes Berg wrote:
-> On Wed, 2008-10-22 at 05:29 -0700, Luis R. Rodriguez wrote:
-> > On Wed, Oct 22, 2008 at 11:51:36AM -0700, Johannes Berg wrote:
-> > > -/* wiphy is set if this request's initiator is REGDOM_SET_BY_DRIVER */
-> > > +/* wiphy is set if this request's initiator is REGDOM_SET_BY_COUNTRY_IE */
-> > 
-> > Why don't we want to keep track of the wiphy if the driver set it?
-> 
-> Why would we? I removed it from the hinting functions so that we don't
-> need to have a valid wiphy to call a hint, which seems quite possible?
+Johannes Berg wrote:
+> We have this "ampdu_ack_map" parameter in the TX status which could be
+> set by the driver. But that assumes we only want a single TX status for
+> all A-MPDU frames, do we really? Or do we want to split them up and
+> handle it all in mac80211?
 
-Well, the alpha2 hint from country IE we'd built it from the IE
-and then try call an rd hint routine, I take it now it would be the new
-struct one. OK -- in that one we have the wiphy. In that case that
-routine needs to be updated to check to see if the initiator is
-country IE and if so mark XXX do to intersection.
+I wasn't aware of this parameter at all. Looks useful.
 
-Then the reason I kept the wiphy around for the regular alpha2 case is
-you will want to keep track if a different wiphy sent this new alpha2
-request. If so I think we do interesection then, or let the user disable
-one or something.
+Atheros HW reports the Block Ack bitmap of the entire aggregate.
+So passing that up to mac80211, and letting mac80211 handle retransmissions would work.
+I am not sure about Intel.
 
-But yea its useful to keep track of I think. I thought you didn't remove
-it from ignore_request(), hm.. that's where we use it to do all these
-checks.
+Sujith
 
-  Luis
