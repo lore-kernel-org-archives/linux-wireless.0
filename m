@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13743 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753550AbYJVVlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 17:41:03 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 14:41:03 -0700
-Date: Wed, 22 Oct 2008 07:40:56 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless: update regulatory sample code
-Message-ID: <20081022144056.GM6190@tesla> (sfid-20081022_234129_944431_869F7DA2)
-References: <1224701752.30459.53.camel@johannes.berg> <20081022123505.GI6190@tesla> <1224704488.30459.69.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1224704488.30459.69.camel@johannes.berg>
+Received: from rgminet01.oracle.com ([148.87.113.118]:34254 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480AbYJ0QsU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 12:48:20 -0400
+Date: Mon, 27 Oct 2008 09:47:03 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH] mac80211.h: fix kernel-doc excesses
+Message-Id: <20081027094703.754167e2.randy.dunlap@oracle.com> (sfid-20081027_174825_277758_952E43EB)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 12:41:28PM -0700, Johannes Berg wrote:
-> On Wed, 2008-10-22 at 05:35 -0700, Luis R. Rodriguez wrote:
-> > On Wed, Oct 22, 2008 at 11:55:52AM -0700, Johannes Berg wrote:
-> > > Update the same code for the recent changes. I did this as a
-> > > separate patch to avoid removing a lot of sample code only
-> > > to add it back again in the next patch.
-> > > 
-> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > > ---
-> > >  Documentation/networking/regulatory.txt |   19 ++++++++-----------
-> > >  1 file changed, 8 insertions(+), 11 deletions(-)
-> > > 
-> > > --- everything.orig/Documentation/networking/regulatory.txt     2008-10-22 20:51:50.000000000 +0200
-> > > +++ everything/Documentation/networking/regulatory.txt  2008-10-22 20:54:12.000000000 +0200
-> > > @@ -131,7 +131,7 @@ are expected to do this during initializ
-> > > 
-> > >         r = zd_reg2alpha2(mac->regdomain, alpha2);
-> > >         if (!r)
-> > > -               regulatory_hint(hw->wiphy, alpha2, NULL);
-> > > +               regulatory_hint(alpha2);
-> > > 
-> > >  Example code - drivers providing a built in regulatory domain:
-> > 
-> > Should we mention how currently this should be avoided unless
-> > your regulatory definition is also intersected with hw capabilities
-> > and that the same channels are the ones that are registered to cfg80211?
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Well rd hint for when we provide a structure, that code right now
-disregards when initiator == USER, and this works well only for
-when the driver sending the rd struct hint also only registered
-to cfg80211 the channels its legally capable of. If a driver
-which does not use reg_notifier() and registers *all* of its channels
-uses this then the USER set regdom will be used and *all* channels
-will be left intact.
+Fix mac80211.h kernel-doc: it had some extra parameters that were
+no longer valid and incorrect format for a return value in 2 places.
 
-  Luis
+Warning(lin2628-rc2//include/net/mac80211.h:1487): Excess function parameter or struct member 'control' description in 'ieee80211_beacon_get'
+Warning(lin2628-rc2//include/net/mac80211.h:1596): Excess function parameter or struct member 'control' description in 'ieee80211_get_buffered_bc'
+Warning(lin2628-rc2//include/net/mac80211.h:1632): Excess function parameter or struct member 'rc4key' description in 'ieee80211_get_tkip_key'
+Warning(lin2628-rc2//include/net/mac80211.h:1735): Excess function parameter or struct member 'return' description in 'ieee80211_start_tx_ba_session'
+Warning(lin2628-rc2//include/net/mac80211.h:1775): Excess function parameter or struct member 'return' description in 'ieee80211_stop_tx_ba_session'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ include/net/mac80211.h |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+--- lin2628-rc2.orig/include/net/mac80211.h
++++ lin2628-rc2/include/net/mac80211.h
+@@ -1474,7 +1474,6 @@ void ieee80211_tx_status_irqsafe(struct 
+  * ieee80211_beacon_get - beacon generation function
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from &struct ieee80211_if_init_conf.
+- * @control: will be filled with information needed to send this beacon.
+  *
+  * If the beacon frames are generated by the host system (i.e., not in
+  * hardware/firmware), the low-level driver uses this function to receive
+@@ -1575,7 +1574,6 @@ __le16 ieee80211_generic_frame_duration(
+  * ieee80211_get_buffered_bc - accessing buffered broadcast and multicast frames
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from &struct ieee80211_if_init_conf.
+- * @control: will be filled with information needed to send returned frame.
+  *
+  * Function for accessing buffered broadcast and multicast frames. If
+  * hardware/firmware does not implement buffering of broadcast/multicast
+@@ -1623,9 +1621,8 @@ unsigned int ieee80211_hdrlen(__le16 fc)
+  *
+  * @keyconf: the parameter passed with the set key
+  * @skb: the skb for which the key is needed
+- * @rc4key: a buffer to which the key will be written
+  * @type: TBD
+- * @key: TBD
++ * @key: a buffer to which the key will be written
+  */
+ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+ 				struct sk_buff *skb,
+@@ -1726,7 +1723,8 @@ void ieee80211_iterate_active_interfaces
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+  * @ra: receiver address of the BA session recipient
+  * @tid: the TID to BA on.
+- * @return: success if addBA request was sent, failure otherwise
++ *
++ * Return: success if addBA request was sent, failure otherwise
+  *
+  * Although mac80211/low level driver/user space application can estimate
+  * the need to start aggregation on a certain RA/TID, the session level
+@@ -1764,7 +1762,8 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
+  * @ra: receiver address of the BA session recipient
+  * @tid: the TID to stop BA.
+  * @initiator: if indicates initiator DELBA frame will be sent.
+- * @return: error if no sta with matching da found, success otherwise
++ *
++ * Return: error if no sta with matching da found, success otherwise
+  *
+  * Although mac80211/low level driver/user space application can estimate
+  * the need to stop aggregation on a certain RA/TID, the session level
+-- 
+~Randy
