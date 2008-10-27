@@ -1,77 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:36215 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751932AbYJ1Akb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 20:40:31 -0400
-Date: Mon, 27 Oct 2008 17:29:19 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Kernel <linux-kernel@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Joey Krane <linuxbsd2004@gmail.com>
-Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
-Message-ID: <20081028002919.GB2992@kroah.com> (sfid-20081028_014036_910776_0DA258B2)
-References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> <20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com> <20081023111103.GB5979@tesla> <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:51368 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752151AbYJ0TNw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 15:13:52 -0400
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Carlos R. Mafra" <crmafra2@gmail.com>
+Cc: Soeren Sonnenburg <kernel@nn7.de>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	tomas.winkler@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081027191118.GA4058@localhost.aei.mpg.de>
+References: <20081027162054.GA4015@localhost.aei.mpg.de>
+	 <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost>
+	 <1225132278.3796.32.camel@johannes.berg>
+	 <1225133082.3796.35.camel@johannes.berg>
+	 <20081027190011.GA3951@localhost.aei.mpg.de>
+	 <1225134195.3796.39.camel@johannes.berg>
+	 <20081027191118.GA4058@localhost.aei.mpg.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KMtfDeYdhhrHMcPb16hw"
+Date: Mon, 27 Oct 2008 20:13:43 +0100
+Message-Id: <1225134823.3796.45.camel@johannes.berg> (sfid-20081027_201358_869515_32AB7A7F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 27, 2008 at 04:35:11PM -0700, Luis R. Rodriguez wrote:
-> On Thu, Oct 23, 2008 at 4:11 AM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > On Wed, Oct 22, 2008 at 11:26:55PM -0700, Greg KH wrote:
-> >> On Tue, Oct 21, 2008 at 11:50:45PM -0700, Greg KH wrote:
-> >> > On Tue, Oct 21, 2008 at 07:04:17PM -0700, Luis R. Rodriguez wrote:
-> >> > > We would like to see our Atheros 802.11n USB Linux driver upstream
-> >> > > however we need help with this so we are releasing our Atheros 11n USB
-> >> > > Otus Linux driver under the ISC to the community. The goal is to work
-> >> > > with the community to help move this forward upstream. We are hoping
-> >> > > for community help and leadership on this (*cough*).
-> >> >
-> >> > Yeah!
-> >> >
-> >> > I'll grab this and put it in drivers/staging/ so it gets some users and
-> >> > more developers to help out with it.
-> >>
-> >> Ok, it seems to need some basic work to merely build properly on
-> >> "modern" kernel versions.
-> >
-> > Yeah, it works up to 2.6.24.
-> 
-> This is now fixed on the master branch, also the branch "for-upstream"
-> does a lot of cleanup I thought you may like before stuffing it into
-> staging like removing all KERNEL_VERSION checks, all wireless
-> extensions checks, some compile warnings, removal of compat, dos2unix,
-> use utf-8, etc. Unfortunately this still requires a specific version
-> of wpa_supplicant but it seems it works. Not sure what bars you have
-> for staging at this point.
 
-Pretty much the only "bar" is "it compiles" :)
+--=-KMtfDeYdhhrHMcPb16hw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Will you take this in, and expect patches for fixing it to use
-> standard wext and also report standard wireless statistic (yeap, this
-> is not there yet either).
+On Mon, 2008-10-27 at 20:11 +0100, Carlos R. Mafra wrote:
 
-Yes, I can do that.
+> > Do you get any kernel messages output? If you do, could you put message=
+s
+> > into each line of ieee80211_set_disassoc to see where it hangs?
+>=20
+> No messages appear, just a black screen.
+>=20
+> But I can use the SysRq keys, and when I umount the
+> screen shows the message that umount succeed. I also tried SysRq+t but
+> the messages appear to fast to read.
 
-> Joey is one user which reported the driver working now with the
-> compile fixes for newer kernels for 2.6.28-rc2 using the specific
-> version of wpa_supplicant for it.
-> 
-> Joey can you test the for-upstream branch on otus git?
+Ok, but that means you _can_ get messages, it would help a lot if you
+could put a few printks into the set_disassoc function before/after each
+other function call, so we know where exactly it hangs. Pretty much all
+of them could possibly hang if there is some sort of locking error
+happening or anything relies on userspace to be running...
 
-If someone can tell me what device this is for, I can try to go buy it
-so that I can verify changes I make don't drasticly break things.
+johannes
 
-I'll go try to get this tree into a buildable state and put it into
-staging tonight.
+--=-KMtfDeYdhhrHMcPb16hw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-thanks,
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-greg k-h
+iQIcBAABAgAGBQJJBhLjAAoJEKVg1VMiehFYtUEQAI40VHy8uvSWuKcpeHm5q4Nf
+snMqWHg67wia13KqdKZPQbALU5d9Ck00n3j6r6ye2bH7yPXLVqQpnQYsVO+waBBR
+5PyRSCKb5AouHcBczpIcDFSt0g5Tyqks55p56kF1ZC5aozsVqshtVobP47liLFsD
+uC4+ZcDuYuUI4gmFsdlztw31NOWGGGtaymNOHnVNURwq1Ytf5l4GSgDDIzNHidMP
+qo4ls8dLVeHKrqP7A6nBYxFeLK2mmMk5u8Kql4XAkJq5qC+2CgaI4zBiwVDaaUOl
+6+EC//Y1xAiV+b/+DXJHAvuc3d9dZ8C947nEmBiSi7qq+NLpX5uUj/oWmQMgQe2B
+zUOe1HkBBg5m6xcusfBXgn2JemCp8wyKP3twMrnbmj/8raF8sa77IBHFziDpaXQP
+uBt4JF26a1iSu7ui0DWgJ+eIS2VUVo8XgVtyer0sWHfqTAuDbD1xw/qsRj4KCGjZ
+acwES60/sRYrJhi+SCud13n5ZXNiop9Zy5JsFMiQIF15Ew5GPDxZeYazRf3NWymT
+49/xEFpSwkLeZNWzYC3spmoSX0zSlLy4zOylyYKD5tck1r9qSELtYxFPqKznOzjd
+PkDtPzE4tRhMO9h2DF1GMZ37gNE5hwbEaG+qrhRuyyB4pJEzA57Wqj5/0huTKQ0T
+0e9eO5uh+JNgBIJXL0R3
+=R6Rm
+-----END PGP SIGNATURE-----
+
+--=-KMtfDeYdhhrHMcPb16hw--
+
