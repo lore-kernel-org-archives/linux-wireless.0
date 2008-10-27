@@ -1,38 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4799 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751783AbYJNTfZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 15:35:25 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/9] iwlwifi driver updates
-Date: Tue, 14 Oct 2008 12:32:40 -0700
-Message-Id: <1224012769-8920-1-git-send-email-reinette.chatre@intel.com> (sfid-20081014_213530_843027_47540AB9)
-In-Reply-To: <>
-References: <>
+Received: from xc.sipsolutions.net ([83.246.72.84]:51206 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327AbYJ0TJp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 15:09:45 -0400
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: "Carlos R. Mafra" <crmafra2@gmail.com>,
+	Soeren Sonnenburg <kernel@nn7.de>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	tomas.winkler@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081027190631.GG22217@kernel.dk>
+References: <20081027162054.GA4015@localhost.aei.mpg.de>
+	 <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost>
+	 <1225132278.3796.32.camel@johannes.berg>
+	 <1225133082.3796.35.camel@johannes.berg>
+	 <20081027190011.GA3951@localhost.aei.mpg.de>
+	 <20081027190631.GG22217@kernel.dk>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-63pwmylKpRDpSxJtRIdy"
+Date: Mon, 27 Oct 2008 20:09:31 +0100
+Message-Id: <1225134571.3796.41.camel@johannes.berg> (sfid-20081027_200950_483698_C13B96CF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contain updates for iwlwifi drivers. 
-Patch 8 is a rework of Johannes's patch titled 
-"iwlwifi: fix DMA code and bugs". We do not have the hardware to ensure the
-problem is fixed and would thus appreciate feedback.
 
-[PATCH 1/3] iwlwifi: define firmware file name once
-[PATCH 2/3] iwlwifi: expand error lookup and align output
-[PATCH 3/3] iwlwifi: remove host commands structures from iwl_cmd
-[PATCH 4/9] iwlwifi: add iwl_cmd_queue_free for readability
-[PATCH 5/9] iwlwifi: unify tx antenna toggling
-[PATCH 6/9] iwlwifi: refactor TX response flow
-[PATCH 7/9] iwl3945 : Fix a-band association for passive channels
-[PATCH 8/9] iwlwifi: fix TX cmd dma unmapping
-[PATCH 9/9] iwlwifi: tx command must run on same tfd as packet
+--=-63pwmylKpRDpSxJtRIdy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2008-10-27 at 20:06 +0100, Jens Axboe wrote:
+> On Mon, Oct 27 2008, Carlos R. Mafra wrote:
+> > On Mon 27.Oct'08 at 19:44:42 +0100, Johannes Berg wrote:
+> > > On Mon, 2008-10-27 at 19:31 +0100, Johannes Berg wrote:
+> > > > On Mon, 2008-10-27 at 19:07 +0100, Soeren Sonnenburg wrote:
+> > > >=20
+> > > > > > Johannes, can you pls have a look?
+> > > >=20
+> > > > I did, and I have no idea. Makes no sense at all.
+> > >=20
+> > > The only thing I can remotely think of is that iwlwifi doesn't like
+> > > being called back from within the call that it did to mac80211, which
+> > > obviously happens here. But I have no idea, the code as it stands is
+> > > correct, just the interaction with iwlwifi's resume seems to be broke=
+n.
+> > >=20
+> > > Try this patch instead:
+> >=20
+> > Yep, with this patch it also works!
+>=20
+> Confirmed here as well, my x60 is happy again.
 
-Thank you
+Thanks. Another alternative I could think of is deferring the
+notifications to a work struct, but I'd rather see that in the driver I
+think, not sure though, could be argued either way.
 
-Reinette
+johannes
+
+--=-63pwmylKpRDpSxJtRIdy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBhHoAAoJEKVg1VMiehFYjeAP/RMVTGHzKzCkkpps8mLEgnAe
+SAxiCpNJkxqLRyJGvNvw2DqAx156N0uOrESYuPuY2ardcTMAeKWgVO1iGVJ6Xfcz
+CDgAbTO4anVpXnJLBqPve/0FBW88YPajN4ebYt9Bm6QW0dDHpcIHNsrxLT/XLHQm
+rPjFKUfyTC+BRnhcbRyWr2RsC5nLDPK5EDbigPEv0W+c0mAt6PuE15W/DtrSbBoa
+WfyC9Gr1eAnLtR7OjwJHz/XUmAnMvqk/FOcYYqCp3J35VpBvj2zjKo47Pm1wHs7q
+VoGevvLtZJy6NVTMVlweMr8WjdUaDIXduUU0z7w5+uT8XSwfd5p03oef2CKsScHr
+e2hApv11DxoF57HUcpogGXTPhEgshkEhofKAzBkmc0C8xynuUApgKyHQUYvMoSAY
+7pbo45aa7w2jwTj/bErDkDrqHglnxSYh7w/V1VUv1FsFPzD7QyZvvyH/fcM+Gf6n
+mSNY7RGnHKezivqxsjHdHMFFJM7OVB86Rh3VixxU1P5yro5QNGJcg1vvh7mUI0OO
+a5H8APFx8hEdRJxFgMWGcEl8SX5+cNP9rvnARIOJhkUGKLYcIccD96C6fS7yyENQ
++0T7xYhYUuJBiIi93iKhYJJvjEnfibwhXn+C5Af7SqvG5jwjuVmlxow3x0ugLFlK
+1VSMAQgKNO2c1gx7br/8
+=+9wD
+-----END PGP SIGNATURE-----
+
+--=-63pwmylKpRDpSxJtRIdy--
 
