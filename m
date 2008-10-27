@@ -1,131 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21162 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753408AbYJPB4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 21:56:44 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 18:56:43 -0700
-Date: Wed, 15 Oct 2008 11:56:36 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: New Regulatory Domain Api.
-Message-ID: <20081015185636.GH15902@tesla> (sfid-20081016_035648_652055_885998FC)
-References: <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com> <1224092868.28173.21.camel@californication> <20081015112517.GF6509@tesla> <1224098748.28173.32.camel@californication> <20081015131622.GH6509@tesla> <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com> <20081015170830.GA15902@tesla> <1ba2fa240810151735t100ceda5s7fe7b495f735c507@mail.gmail.com> <20081015174447.GF15902@tesla> <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com>
+Received: from wf-out-1314.google.com ([209.85.200.172]:58460 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781AbYJ0Iel (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 04:34:41 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1946971wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 01:34:40 -0700 (PDT)
+Message-ID: <a8e1da0810270134i26753dd1v6e9a5d122136bbbf@mail.gmail.com> (sfid-20081027_093446_804650_170B50F3)
+Date: Mon, 27 Oct 2008 16:34:40 +0800
+From: "Dave Young" <hidave.darkstar@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [BUG] hang with ath5k
+Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org,
+	"kernel list" <linux-kernel@vger.kernel.org>
+In-Reply-To: <200810250040.24324.rjw@sisk.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <a8e1da0810140142g633486br12c2799b2fa1670e@mail.gmail.com>
+	 <48F6133D.1070508@gmail.com>
+	 <a8e1da0810152334x6c596f88i1fd74548dc166f3a@mail.gmail.com>
+	 <200810250040.24324.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 15, 2008 at 05:57:20PM -0700, Tomas Winkler wrote:
-> On Wed, Oct 15, 2008 at 7:44 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > Anyway since you only have 3 this should be very simple to resolve...
-> > Just add the 5 GHz frequency ranges you always support. Obviously the BG
-> > card will not be able to make use of them :)
-> 
-> It's ugly but possible w/a but we still have 3945 and 4965 where it is
-> not so simple.
+On Sat, Oct 25, 2008 at 6:40 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, 16 of October 2008, Dave Young wrote:
+>> On Wed, Oct 15, 2008 at 11:58 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
+>> > On 10/14/2008 10:42 AM, Dave Young wrote:
+>> >> 1) run wpa_supplicant
+>> >> 2) ctrl + C
+>> >> 3) goto 1)
+>> >
+>> > It doesn't happen here. How many iterations in average you need to reproduce this?
+>> >
+>>
+>> About 15 times for me,
+>> BTW, wpa_gui running while testing
+>
+> Is this a regression from 2.6.26?
+>
+> Rafael
+>
 
-Ah. I see. Ok then please try this patch. What do you guys think?
+Test with 2.6.28-rc2,  run
+wpa_supplicant -i wlan0 -c /etc/wpa_supplicant.conf,
+kernel warning triggered:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 626dbb6..703382a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -469,6 +469,31 @@ static u32 freq_max_bandwidth(const struct ieee80211_freq_range *freq_range,
- 	return 0;
- }
- 
-+/**
-+ * freq_in_rule_band - tells us if a frequency rule is in freqs band
-+ * @freq_range: frequency rule we want to query
-+ * @freq_khz: frequency we are inquiring about
-+ *
-+ * This lets us know if a specific frequency rule is or is not relevant to
-+ * a specific frequency's band. Bands are device specific and artificial
-+ * definitions (the "2.4 GHz band" and the "5 GHz band"), however it is
-+ * safe for now to assume that a frequency rule should not be part of a
-+ * frequency's band if the start freq or end freq are off by more than 2 GHz.
-+ * This resolution can be lowered and should be considered as we add
-+ * regulatory rule support for other "bands".
-+ **/
-+static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
-+	u32 freq_khz)
-+{
-+#define ONE_GHZ_IN_HZ	1000000000
-+	if (abs(freq_khz - freq_range->start_freq_khz) <= (2 * ONE_GHZ_IN_HZ))
-+		return true;
-+	if (abs(freq_khz - freq_range->end_freq_khz) <= (2 * ONE_GHZ_IN_HZ))
-+		return true;
-+	return false;
-+#undef ONE_GHZ_IN_HZ
-+}
-+
- /* XXX: add support for the rest of enum nl80211_reg_rule_flags, we may
-  * want to just have the channel structure use these */
- static u32 map_regdom_flags(u32 rd_flags)
-@@ -492,11 +517,17 @@ static u32 map_regdom_flags(u32 rd_flags)
-  * @reg_rule: the regulatory rule which we have for this frequency
-  *
-  * Use this function to get the regulatory rule for a specific frequency.
-+ * It returns 0 if it was able to find a valid regulatory rule which does
-+ * apply to the given center_freq otherwise it returns non-zero. It will
-+ * also -ERANGE if we determine the given center_freq does not even have
-+ * a regulatory rule for a frequency range in the center_freq's band. See
-+ * freq_in_rule_band() for our current definition of a band.
-  */
- static int freq_reg_info(u32 center_freq, u32 *bandwidth,
- 			 const struct ieee80211_reg_rule **reg_rule)
- {
- 	int i;
-+	bool band_rule_found = false;
- 	u32 max_bandwidth = 0;
- 
- 	if (!cfg80211_regdomain)
-@@ -510,6 +541,9 @@ static int freq_reg_info(u32 center_freq, u32 *bandwidth,
- 		rr = &cfg80211_regdomain->reg_rules[i];
- 		fr = &rr->freq_range;
- 		pr = &rr->power_rule;
-+
-+		band_rule_found = freq_in_rule_band(fr, center_freq);
-+
- 		max_bandwidth = freq_max_bandwidth(fr, center_freq);
- 		if (max_bandwidth && *bandwidth <= max_bandwidth) {
- 			*reg_rule = rr;
-@@ -518,6 +552,9 @@ static int freq_reg_info(u32 center_freq, u32 *bandwidth,
- 		}
- 	}
- 
-+	if (!band_rule_found)
-+		return -ERANGE;
-+
- 	return !max_bandwidth;
- }
- 
-@@ -533,8 +570,15 @@ static void handle_channel(struct ieee80211_channel *chan)
- 		&max_bandwidth, &reg_rule);
- 
- 	if (r) {
--		flags |= IEEE80211_CHAN_DISABLED;
--		chan->flags = flags;
-+		/* This means a regulatory rule was found with a frequency
-+		 * range in center_freq's band. In this case we know the
-+		 * regulatory rule has at least *one* regulatory rule for
-+		 * the band so we must respect its band definitions. Otherwise
-+		 * we assume it may not even know anything about our band */
-+		if (r != -ERANGE) {
-+			flags |= IEEE80211_CHAN_DISABLED;
-+			chan->flags = flags;
-+		}
- 		return;
- 	}
- 
+[ 1648.091084] ------------[ cut here ]------------
+[ 1648.091090] WARNING: at net/mac80211/rx.c:2201
+__ieee80211_rx+0x1d0/0x5f0 [mac80211]()
+[ 1648.091094] Modules linked in: rfcomm l2cap bluetooth container
+fuse ath5k mac80211 led_class psmouse serio_raw sg cfg80211 e100 mii
+intel_agp agpgart thermal button processor thermal_sys evdev
+[ 1648.091127] Pid: 0, comm: swapper Not tainted 2.6.28-rc1-smp #15
+[ 1648.091130] Call Trace:
+[ 1648.091140]  [<c01318a9>] warn_on_slowpath+0x59/0x80
+[ 1648.091148]  [<c01a15a6>] ? check_bytes_and_report+0x26/0xd0
+[ 1648.091155]  [<c03f2b06>] ? __kfree_skb+0x36/0x90
+[ 1648.091160]  [<c0157bff>] ? validate_chain+0xbf/0xea0
+[ 1648.091165]  [<c03f2b06>] ? __kfree_skb+0x36/0x90
+[ 1648.091170]  [<c0158c8a>] ? __lock_acquire+0x2aa/0x9a0
+[ 1648.091187]  [<e01b7640>] __ieee80211_rx+0x1d0/0x5f0 [mac80211]
+[ 1648.091199]  [<e017a001>] ? ath5k_hw_get_tsf64+0x51/0x90 [ath5k]
+[ 1648.091205]  [<c0476e0e>] ? _spin_lock+0x5e/0x70
+[ 1648.091215]  [<e01815f8>] ath5k_tasklet_rx+0x2f8/0x6b0 [ath5k]
+[ 1648.091221]  [<c0158c8a>] ? __lock_acquire+0x2aa/0x9a0
+[ 1648.091227]  [<c0137173>] tasklet_action+0x53/0xd0
+[ 1648.091232]  [<c01368e7>] __do_softirq+0xa7/0x170
+[ 1648.091237]  [<c0136a15>] do_softirq+0x65/0x70
+[ 1648.091242]  [<c0136eb7>] irq_exit+0x77/0x90
+[ 1648.091247]  [<c0106756>] do_IRQ+0x96/0xc0
+[ 1648.091252]  [<c0104a0c>] common_interrupt+0x28/0x30
+[ 1648.091258]  [<c015007b>] ? timer_list_show+0x14b/0xd70
+[ 1648.091263]  [<c010b0a2>] ? default_idle+0x42/0x60
+[ 1648.091267]  [<c010279e>] cpu_idle+0x6e/0xc0
+[ 1648.091272]  [<c04646f3>] rest_init+0x53/0x60
+[ 1648.091276] ---[ end trace c0bb2248162783d9 ]---
+[ 3856.835188] ------------[ cut here ]------------
+
+-- 
+Regards
+dave
