@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:63111 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964AbYJATQn (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.225]:13291 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbYJ0KlX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 15:16:43 -0400
-Received: by gxk9 with SMTP id 9so610585gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 12:16:42 -0700 (PDT)
-Message-ID: <43e72e890810011216y17c3f4a6v28c74215c023ecb2@mail.gmail.com> (sfid-20081001_211648_004202_EFFEEB15)
-Date: Wed, 1 Oct 2008 12:16:42 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [RFC v4] mac80211: re-enable aggregation on 2.6.27
-Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240809301707i22cab6b7hb1b22fc88ebda7f0@mail.gmail.com>
+	Mon, 27 Oct 2008 06:41:23 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2070717rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 03:41:22 -0700 (PDT)
+Message-ID: <1ba2fa240810270341l9332ec3qeee761ba764d5617@mail.gmail.com> (sfid-20081027_114132_450800_86A28CB1)
+Date: Mon, 27 Oct 2008 12:41:22 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: build warnings
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Chr <chunkeey@web.de>, mcgrof <mcgrof@gmail.com>
+In-Reply-To: <1397eb932d5573ecf093fcbc82c02adb.squirrel@secure.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1222790548-7391-1-git-send-email-lrodriguez@atheros.com>
-	 <1ba2fa240809301318p16bedbdr31fdaea97c3cf3be@mail.gmail.com>
-	 <20080930152524.GA8131@tesla>
-	 <1ba2fa240809301707i22cab6b7hb1b22fc88ebda7f0@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224923050.27353.1.camel@johannes.berg>
+	 <1ba2fa240810270330u15e3ce04y9d077904f48e04e7@mail.gmail.com>
+	 <1397eb932d5573ecf093fcbc82c02adb.squirrel@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 30, 2008 at 5:07 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Tue, Sep 30, 2008 at 6:25 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> A quick test indicates it works but the removal is still an issue.
+On Mon, Oct 27, 2008 at 12:34 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Tomas Winkler wrote:
+>> On Sat, Oct 25, 2008 at 10:24 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>> just FYI in case you haven't seen them. the p54 one looks like a genuine
+>>> problem.
+>>>
+>>> drivers/net/wireless/iwlwifi/iwl-scan.c:69: warning: 'scan_tx_ant'
+>>> defined but not used
+>>
+>> Strange. This variable was removed in 'iwlwifi: unify tx antenna toggling'
+>> patch
 >
-> I didn't implement it yet I just wanted a feedback if I'm in correct
-> direction with the starting part.
-
-Seems reasonable so far, my concern so far was just the introduction
-of a new spinlock for the ba_session list, but I can't see yet a
-better way.
-
-At this point I've given up hope of this getting merged but I do think
-distributions using 2.6.27 will want this anyway so we might as well
-finish the job and maintain it ourselves should it not get merged.
-What do you think?
-
-> yes ieee80211_init_agg()
-
-Thanks, I'm using this now.
-
->> I don't think it was locking before under the code which is now
->> under initiate_aggr_and_timer() though.
+> odd. maybe I don't have the right tree here. Just mentioning the warnings
+> because in my experienced different gcc versions differ.
 >
-> Correct you cannot lock this part it leads to soft lock.
+Really odd, the lines are just not there. Try to diff to
+wireless-testing master branch.
+Tomas
 
-Oh ok v3 had this order.
-
-  Luis
+>
