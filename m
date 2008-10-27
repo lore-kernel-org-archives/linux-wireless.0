@@ -1,60 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42786 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:60061 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753764AbYJGSQC (ORCPT
+	with ESMTP id S1751480AbYJ0TRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 14:16:02 -0400
-Subject: wpa supplicant interface up delay
+	Mon, 27 Oct 2008 15:17:11 -0400
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>, Dan Williams <dcbw@redhat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Eg2gCKTLNSp1CvrMoaMG"
-Date: Tue, 07 Oct 2008 20:16:01 +0200
-Message-Id: <1223403361.7328.71.camel@johannes.berg> (sfid-20081007_201608_134402_34146830)
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: "Carlos R. Mafra" <crmafra2@gmail.com>,
+	Soeren Sonnenburg <kernel@nn7.de>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	tomas.winkler@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081027191307.GI22217@kernel.dk>
+References: <20081027162054.GA4015@localhost.aei.mpg.de>
+	 <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost>
+	 <1225132278.3796.32.camel@johannes.berg>
+	 <1225133082.3796.35.camel@johannes.berg>
+	 <20081027190011.GA3951@localhost.aei.mpg.de>
+	 <20081027190631.GG22217@kernel.dk> <1225134571.3796.41.camel@johannes.berg>
+	 <20081027191307.GI22217@kernel.dk>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C/fJRfY0ZfhKpyzAoRwj"
+Date: Mon, 27 Oct 2008 20:16:58 +0100
+Message-Id: <1225135018.3796.49.camel@johannes.berg> (sfid-20081027_201716_494859_5B09DCFB)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Eg2gCKTLNSp1CvrMoaMG
+--=-C/fJRfY0ZfhKpyzAoRwj
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-                         * Wait some time to allow driver to initialize bef=
-ore
-                         * starting configuring the driver. This seems to b=
-e =20
-                         * needed at least some drivers that load firmware =
-etc.
-                         * when the interface is set up.
+On Mon, 2008-10-27 at 20:13 +0100, Jens Axboe wrote:
 
-which drivers are those, and why can't we fix the drivers instead? This
-seems like a bug in the drivers that they return from their open
-callback prematurely.
+> If you want something else tested, just let me know. I don't care a
+> whole lot about how it gets fixed, as long as it does :-). I use STR
+> heavily, so it's quite a burden to have it broken.
+
+I don't really know. Like I said to Carlos, figuring out which of the
+functions called from set_disassoc hangs would be useful, but you'd
+probably want to coordinate with him so you don't both do it. Or if you
+both do, it'd confirm it twice ;)
 
 johannes
 
---=-Eg2gCKTLNSp1CvrMoaMG
+--=-C/fJRfY0ZfhKpyzAoRwj
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI66deAAoJEKVg1VMiehFYVJ0P/1YvvDS8SjNel/eF38tTvUk9
-1BBZURNY/EQ1d/uZ6d7WoSjU/ylto4vXCVOvTVGL2yDJrYTWzrLesa2Ce2EHHMMM
-+GFyOmzAtptBR8Rz57HdZS0Xt6IhyoYOdJBJnBcIjkNtkLrj9FuxivBanRR7EpGX
-ZKp7/K1W36kMeTAZLD7ei417b2lvB6sWaGgZLf0TGeH0v5icAaq1NeoSY+HYgzap
-PCMn7J7CU1kuilOxOkhDyDJXPiGnOD5jJcSA1+MqfBNkxUo1gCCi88oJ605fBhgm
-/GdqV1yA6Lld5AvnJhdyTdl3XDa6QelW5865pRdcxTX93nRha4pujdWjF2h+xxoQ
-sJKl1ry54sRmHoSiomCiUwZvkRABE6fBivR4Od+QXHcy0hrpuvf4APYwYTiMUYha
-QoWRntWQLllCZNQT0xCfQyobHfKDxN4dUydWQ6nP3omS/vsW8iSduPfoStiJAEt6
-GU5liNPVsZZfJa58TBT9VUa9LVsOeVCdvlZHsDIC6J30PRUE4JuV+hwaog2gLjn1
-P+b3xRL3rdGgH5E43rzC5d5LVBIJR0fDFLGn2mwsmQjKU31k4XO42K9Op2/vsqKQ
-FXklORZP3aY0JcnFS320hCsKFSFc4Wx/tcVKUM8U+PC3WNFxJDN2ueqAnqjjHMSd
-VP8vn6iWEDoTWxup2W7E
-=YCoK
+iQIcBAABAgAGBQJJBhOmAAoJEKVg1VMiehFYRrIP/0Noz/ekFExzkBXk1pxnMS6Q
+tsUWD91pWxBPKJQIJNz9OHlVxrwGQQpAULDV0rT7pDYPdlq2Y5/SKLr3y2axGNC1
+00o9XlTqb5OITngYZObbgHp+DOqEJiiNWoFzmih87FgApk3H9hjM7sg99cKIxWEB
+X/xmmW0D6YqYZaSZUxnygb2KCciV6CZEipSMYaDWVgWRg5Z07jv0A4jHhCeQ+tDx
+GZDAJFap/S6c9qhbQBJ3dpPW3w9/vYzSzk2zNSrn+nifiQwq0V9ZRE/cZdQFKWHZ
+tYqedG78Nkw9I8gupnm4Kp3DbCOevcpMuf84/ebGt1xuhksPyF4OOq3oul1LSQLI
+iHwkz7V+rpmgn/qff10M/zKWl8uaSOKWKC0IIXHwb8W8WuZGAKoBqYqF6I8Smuhm
+c3WeDAxfZi9jqpSu+NXzH4zYF3CCWdQmaA8r6TDNuIWU6wvXETC2QueqUBz4MnRf
+4QcIaXMaHlgikg+G+O7zsl+nsVSf4pI+26sSaEiZWNAymRjKgg7pNgIc5dw0Ue7F
+Es/ZaqRAYzj6dPgzj1Eo+ItKXA4fWxGduBqptn4AbuVstDwSHXbYVgXbqlEQebF4
+L19Sr+uN173jNdjpKa38g/EP/yPSvKmop1ifE/dj+8Nw+fn/2vTPnEVZrbSHQJUj
+QKSuO1HvEbFsVXIpLEKx
+=x8bT
 -----END PGP SIGNATURE-----
 
---=-Eg2gCKTLNSp1CvrMoaMG--
+--=-C/fJRfY0ZfhKpyzAoRwj--
 
