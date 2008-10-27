@@ -1,65 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42240 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:39293 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758986AbYJVSz7 (ORCPT
+	with ESMTP id S1751346AbYJ0HAi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 14:55:59 -0400
-Subject: [PATCH] wireless: update regulatory sample code
+	Mon, 27 Oct 2008 03:00:38 -0400
+Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 22 Oct 2008 20:55:52 +0200
-Message-Id: <1224701752.30459.53.camel@johannes.berg> (sfid-20081022_205621_814527_E767F34E)
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: linux-wireless@vger.kernel.org,
+	Shaddy Baddah <shaddy_baddah@hotmail.com>
+In-Reply-To: <20081026220030.GA20964@Chamillionaire.breakpoint.cc>
+References: <4902DEBB.3050205@hotmail.com>
+	 <1224926241.6695.1.camel@johannes.berg>
+	 <20081025112526.GB12252@Chamillionaire.breakpoint.cc>
+	 <1224936311.3410.0.camel@johannes.berg>
+	 <20081026220030.GA20964@Chamillionaire.breakpoint.cc>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RTVrSFJiCpVum+MymDuW"
+Date: Mon, 27 Oct 2008 08:00:34 +0100
+Message-Id: <1225090834.3746.9.camel@johannes.berg> (sfid-20081027_080042_393693_BB42AD3C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the same code for the recent changes. I did this as a
-separate patch to avoid removing a lot of sample code only
-to add it back again in the next patch.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- Documentation/networking/regulatory.txt |   19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+--=-RTVrSFJiCpVum+MymDuW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/Documentation/networking/regulatory.txt	2008-10-22 20:51:50.000000000 +0200
-+++ everything/Documentation/networking/regulatory.txt	2008-10-22 20:54:12.000000000 +0200
-@@ -131,7 +131,7 @@ are expected to do this during initializ
- 
- 	r = zd_reg2alpha2(mac->regdomain, alpha2);
- 	if (!r)
--		regulatory_hint(hw->wiphy, alpha2, NULL);
-+		regulatory_hint(alpha2);
- 
- Example code - drivers providing a built in regulatory domain:
- --------------------------------------------------------------
-@@ -178,17 +178,14 @@ Then in some part of your code after you
- 
- 	rd = kzalloc(size_of_regd, GFP_KERNEL);
- 	if (!rd)
--	return -ENOMEM;
-+		return -ENOMEM;
- 
- 	memcpy(rd, &mydriver_jp_regdom, sizeof(struct ieee80211_regdomain));
- 
--	for (i=0; i < num_rules; i++) {
--		memcpy(&rd->reg_rules[i], &mydriver_jp_regdom.reg_rules[i],
--			sizeof(struct ieee80211_reg_rule));
--	}
--	r = regulatory_hint(hw->wiphy, NULL, rd);
--	if (r) {
--		kfree(rd);
--		return r;
--	}
-+	for (i=0; i < num_rules; i++)
-+		memcpy(&rd->reg_rules[i],
-+		       &mydriver_jp_regdom.reg_rules[i],
-+		       sizeof(struct ieee80211_reg_rule));
- 
-+	regulatory_struct_hint(rd, BIT(IEEE80211_BAND_2GHZ) |
-+				   BIT(IEEE80211_BAND_5GHZ));
+On Sun, 2008-10-26 at 23:00 +0100, Sebastian Andrzej Siewior wrote:
 
+> On my x86_64 box the address of the buffer pointer right after the add
+> of ZD_PLCP_HEADER_SIZE is:
+> [   28.462273] buffer: ffff88003e310005
+>=20
+> so it looks to me like it was perfectly aligned before the add. Is it
+> possible that it is not a new bug and we need a get_unaligend helper
+> here?
+
+Possible, yeah, maybe before we only saw problems with the IP alignment
+and somehow this shows up now. Not sure. Anyway, if that fixes it,
+obviously we want such a patch :)
+
+johannes
+
+--=-RTVrSFJiCpVum+MymDuW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBWcPAAoJEKVg1VMiehFY+HkP/RIdEsQiEv+AAmXi87ITkV8z
+jowzd7VlY41+Mjm/0tVC1P48XXjQCNJSIeF5htTxAe9HYebilmSsZfv8naw0qmJ9
+ChHOX4lmfGODfx1qOXHTAhsXfndJKPoz4bYskPc3P8cO8ou226OeUi/1aVGuHU0I
+QSSqsWRh2gmUwsGOcn/BojHfeipRY60H9i6tVME4ssRCEnbIfm6JephVa4J1oPmu
+0Ie79w69L39SOn8pshw8ELsMU2mV+FbR5ol2RZfbzFMEQjNPBfPGDa9B3mvglbl0
+pjZG6DKo9nuFIkNpfbwOhaC1zxE44Qb/M2lJkqN4x4efC2viv/vQEV40wk09Bess
+dWfHMHGCURt+7Mp8pitvOy978lOtfXXnlPybivbbgXpwSs1EW5JIOnk7pOhXpubx
+ZFtWNgQ2mfkvKHcfTLdUaQ2w1GK3PhXd+haKZPIRF1d8wOPiykzbCMA+ZVdr7AWe
+nKJHS64BuCstG6AfKjmZPcn0WjHTX7bMrGkIH17dZf9SX4UYinX1iCNCcjytW3Yf
+GqridvElTSrCf0Bq+/350vgl/zMlB6HgZmjhBM29QwlEmw9rs5Uv8U3lP+F2MIHw
+exj4/7OV9jS+ptipiFKmmyEDFdniHe0oEAwAY+zkLJXJJSd9MKEc094P4+cjtF9P
+SqqmtXuBh3hJYE75p44z
+=mC1F
+-----END PGP SIGNATURE-----
+
+--=-RTVrSFJiCpVum+MymDuW--
 
