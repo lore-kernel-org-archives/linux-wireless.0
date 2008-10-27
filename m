@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:59808 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756082AbYJMWz3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 18:55:29 -0400
-Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
-From: Pavel Roskin <proski@gnu.org>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200810140055.34065.chunkeey@web.de>
-References: <48EE20FB.4060700@lwfinger.net>
-	 <1223936680.10113.7.camel@johannes.berg> <1223937392.27118.2.camel@dv>
-	 <200810140055.34065.chunkeey@web.de>
-Content-Type: text/plain
-Date: Mon, 13 Oct 2008 18:55:26 -0400
-Message-Id: <1223938526.27118.6.camel@dv> (sfid-20081014_005533_594184_8696035F)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52695
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750744AbYJ0WxG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 18:53:06 -0400
+Date: Mon, 27 Oct 2008 15:52:43 -0700 (PDT)
+Message-Id: <20081027.155243.206513005.davem@davemloft.net> (sfid-20081027_235314_028800_0384586E)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [PATCH/RFC] mac80211: convert to %pM away from print_mac
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1224892243.3919.32.camel@johannes.berg>
+References: <1224892243.3919.32.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-14 at 00:55 +0200, Christian Lamparter wrote:
-> > I don't get that on i386.  But the values don't seem to be corrupted
-> by
-> > byte-swapping.
-> >
-> Hmm, this should be impossible since:
-> "p54: report appropriate rate and band values for 802.11a"
-> 5f840304b5f7dff0028407fa9b284aecb85a94aa
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Sat, 25 Oct 2008 01:50:43 +0200
 
-I see.  It's recent code, so maybe it wasn't broken yet when I was
-testing it on i386.
+> Also remove a few stray DECLARE_MAC_BUF that were no longer
+> used at all.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> Not sure this will apply to your tree, I prepared it against John's tree
+> which might have more things. If you put the previous patch in, I
+> suppose John _could_ put it into his tree, but then he'd have to pull in
+> yours which he normally doesn't... No idea. I can also just postpone
+> this?
 
-This code in drivers/net/wireless/p54/p54common.c sets rate_idx:
+I munged this to apply to my tree, the only conflicts were in
+mlme.c
 
-  rx_status.rate_idx = (dev->conf.channel->band == IEEE80211_BAND_2GHZ ?
-  hdr->rate : (hdr->rate - 4)) & 0xf;
-
-printk() shows:
-
-dev->conf.channel->band = 1, hdr->rate = 0, rx_status.rate_idx = 12
-
--- 
-Regards,
-Pavel Roskin
+Sorry John, one of us had to deal with this :-)
