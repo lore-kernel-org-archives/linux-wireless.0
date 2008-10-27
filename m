@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39905 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753872AbYJIJty (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:39652 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751153AbYJ0AbH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 05:49:54 -0400
-Subject: Re: HT capabilities IE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240810080630n1a1f26f6pab575d2457ce4cbf@mail.gmail.com> (sfid-20081008_153021_291470_B065F886)
-References: <1223460098.3618.53.camel@johannes.berg>
-	 <1ba2fa240810080540m32134461t26096022d11c6dfa@mail.gmail.com>
-	 <1ba2fa240810080630n1a1f26f6pab575d2457ce4cbf@mail.gmail.com>
-	 (sfid-20081008_153021_291470_B065F886)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xTL2o6KvaF9Dnd3jIDiT"
-Date: Thu, 09 Oct 2008 11:49:54 +0200
-Message-Id: <1223545794.22490.23.camel@johannes.berg> (sfid-20081009_114959_451664_3E922DEB)
-Mime-Version: 1.0
+	Sun, 26 Oct 2008 20:31:07 -0400
+Message-ID: <49050BC7.1010609@lwfinger.net> (sfid-20081027_013113_098623_49798ADD)
+Date: Sun, 26 Oct 2008 17:31:03 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Piter PUNK <piterpk@terra.com.br>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RTL8187B transmit problems
+References: <49041DAE.1060206@terra.com.br>
+In-Reply-To: <49041DAE.1060206@terra.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Piter PUNK wrote:
+> 
+> Hi,
+> 
+> I did some new tests to see what's my transmission problems with
+> rtl8187b. I can associate and can send pings (and even to connect
+> through ssh with other hosts) but i can't transmit "big" files. But
+> at first mail I didn't know how big must be a "big" file.
+> 
+> I tested with 64, 128, 256, 512, 1024 and 2048 bytes files. From 64 to
+> 512 I always can transmit the file. 1024 sometimes hangs and 2048
+> always hangs. All files can be transmitted using rt73usb wireless.
 
---=-xTL2o6KvaF9Dnd3jIDiT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have not downloaded your tcpdump file yet to see your details. On my system, I
+am unable to duplicate your results. I used dd with /dev/urandom as the source
+to create files of 1024, 2048, 4096, 8192, 16384, and 32768 bytes. All of these
+could be transmitted to a second host on my local network using scp.
 
-On Wed, 2008-10-08 at 15:30 +0200, Tomas Winkler wrote:
-> On Wed, Oct 8, 2008 at 2:40 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> > On Wed, Oct 8, 2008 at 12:01 PM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> >> Hi,
-> >>
-> >> quick question, I can't seem to read that from the draft, is the HT
-> >> capabilities IE supposed to be constant when, say, sent from an AP in
-> >> every beacon? Most fields look very constant, but e.g. the SM power sa=
-ve
-> >> mode might not be?
-> >
-> > SM has to be changed using action frame by the spec IIRC
->=20
-> Sorry, wrong answer in, this is only the STA side.
->=20
-> There is whole section about Legacy HT coexistence when connection
-> parameters changes. But  I didn't spent time on it much so I would
-> have to look into the spec myself
+What are the details of your device? Please post the output of 'dmesg | grep -i
+rtl'.
 
-Alright, thanks. I think I have it covered differently now anyway. Will
-have to revisit that anyway.
+Larry
 
-johannes
-
---=-xTL2o6KvaF9Dnd3jIDiT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI7dO/AAoJEKVg1VMiehFYGcUP/29DZ5aCddD5ObOq79mKQGUZ
-YZ/GkI9OU2bn3Rhm7WU2Yy2Pijh03AoYPwwqKNtIbdTdh6p613PgUnipEco6dWpU
-85ZwzU7uJTVaaPntrqQ5aWLrqaDOKNAp+yxoAWjxP2c+b6hUvTiyELJI6qKYve5F
-jXLEfh32uvJ2W00b6um4VYDaUHtQqv+DDxOXuCJAImTIRG4FJVVW7i67GPGlD56x
-GOSM2/G0mffa1k0kjxSzbnjXN1DGA3m2hZ2+hngzLZF6TN/4Nl4OOQvjV47VkL9U
-k44k1QNm1l17HmrF7yKUTWWPZozpKEXMdXn9xRoVoVpclPc4Jp07pYdH9dLXmL1P
-lUetevFjJwfmYokh/8KEZkMDpE5WgOIhbtPufkiTicbiLjZOjtoE14KeepD5iPms
-tDK93KOg4l/d3BUSHoYQ/5VL8qUQ/cq1KAFSGLzMkIC36lyNnySS3fGz2Ku/IT5Z
-4CYYYuoFoNMNbPQ2WXTn1EL+r4VsaYT38BPfNRS35Xfa6vY2IKhT8YH841DFqR0S
-xEYXz0SheuPUPNjpDiRGV/gu6f9W34MbqsUjF80aYOWPqJLcHmv/Xg2QLGpAcp3o
-XX+PAc97jND3uUHC5gkIg9nIDD+pDcPmZhQN7+AvIRvwu1bwLROEljmDEdzCkwkm
-FfuoM3mITYuwOZnHzOK+
-=BAlp
------END PGP SIGNATURE-----
-
---=-xTL2o6KvaF9Dnd3jIDiT--
 
