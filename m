@@ -1,63 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:54892 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbYJGUqt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753300AbYJ0Qls (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 16:46:49 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2956432fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 13:46:44 -0700 (PDT)
-Message-ID: <1ba2fa240810071346n506b8f1clffaebb7f1f72a10f@mail.gmail.com> (sfid-20081007_224654_487221_1AC749AE)
-Date: Tue, 7 Oct 2008 22:46:43 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Christoph Hellwig" <hch@infradead.org>,
-	"Holger Schurig" <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1223410226.3618.13.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223311803.15196.36.camel@johannes.berg>
-	 <20081007071529.GA5010@infradead.org>
-	 <20081007131615.GR3448@tuxdriver.com>
-	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
-	 <1223398724.7328.45.camel@johannes.berg>
-	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
-	 <1223408085.3618.2.camel@johannes.berg>
-	 <1223408342.3618.7.camel@johannes.berg>
-	 <1ba2fa240810071306sb282e06h9d29ea2c36f5c3d5@mail.gmail.com>
-	 <1223410226.3618.13.camel@johannes.berg>
+	Mon, 27 Oct 2008 12:41:48 -0400
+Subject: Re: bisected: 2.6.28-rc broke my iwl4965 wireless
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081027163812.GB6377@tesla> (sfid-20081027_173820_318230_ACAD18C7)
+References: <20081025222208.1d2a2c8b@infradead.org>
+	 <20081027163812.GB6377@tesla> (sfid-20081027_173820_318230_ACAD18C7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8HvvIqjmKeRLps5zwWdp"
+Date: Mon, 27 Oct 2008 17:41:34 +0100
+Message-Id: <1225125694.3796.28.camel@johannes.berg> (sfid-20081027_174217_980574_37F4D6E3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 7, 2008 at 10:10 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-10-07 at 22:06 +0200, Tomas Winkler wrote:
->
->> > bytes (with nibbles): | . | . | . | . | . | . || . | . | . | . | . | . |
->> >                      | addr 1          |len1 || addr 2          |len2 |
->> > your forced layout:   |               |                |               |
->> > my layout:            |               |       ||               |       |
->> >
->> > Note how this actually matches the border between the border between the
->> > two descriptors, the || border.
->>
->> Your layout put addr2 (which is 32 bit) sits on 16 bit boundary
->
-> So? Yours makes it need two words, which is even less efficient to
-> access. And since the struct is packed, on those architectures that
-> don't do unaligned accesses efficiently won't need any put_unaligned
-> either.
->
-> Also, keep in mind that address 2 is _never_ used at all anyway
-This is not correct we always use first 2 pointers. First for tx command
-second for the actual packet.
 
-because
-> we don't and cannot do fragmented frames due to the lack of IP
-> checksumming in hardware, as I and davem have tried to explain to you
-> multiple times already.
+--=-8HvvIqjmKeRLps5zwWdp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This is bad side of current Linux implementation
-Tomas
+On Mon, 2008-10-27 at 09:38 -0700, Luis R. Rodriguez wrote:
+
+> > 2.6.28-rc1 broke my (intel 4965) wireless, and I've bisected it down to
+> > the commit below..... something's fishy with this...
+
+> Additionally if the old behaviour is desired for now (until distributions
+> catch up and add CRDA) CONFIG_WIRELESS_OLD_REGULATORY can be enabled
+> and you'll get the old behaviour of defaulting to country "US".
+
+Luis, Arjan's bug is actually indicative of a driver bug, he told me
+that he actually runs into driver message like "cannot set TX power
+while scanning", and it's fixed by setting WIRELESS_OLD_REGULATORY for
+some reason. Arjan, do you still have the actual messages you get when
+it fails? That's a separate bug we should address, rather than relying
+on it not happening with the old regulatory setting.
+
+johannes
+
+--=-8HvvIqjmKeRLps5zwWdp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBe87AAoJEKVg1VMiehFY2AsQAIEMsK0HKHWQ3k1aRyETRkJV
+OiGqANDU9i0nCGO7Y4TWZqJzUJtu1/vEdbfwhW6ZXPdsT2WKwrmHVsAX0PnpZH+Q
+OZDVRF/eePx0e+gpUiJVnmg/KHfRtd5cYiXt1tOQZejvSYAU3pRc7Yp0GGub/HoY
+gG0q7Q6HarW+zNCrPqQNDxa/Ug0hlaXc3EAl8SD/CWe0li5V35ZkDnay1QR+Z35K
+EPVCKDvMUV2+w4lI9cvSZ2+epbWeYqQ1xgxiv9GP8KIzJT1LqDRS0yeuMHVNq01S
+t7BaTfaVPp83mUkWqaSXdgJ6i6r4OQb6ZmpcLdATmqXP+EMSRCq3YcdJThMuWqyy
+6xUoyGx3dQyJw+gGJxs17gbARILMGMX8lhNPUBuN+hhl07n0I+M4W4H0IXbF/PTL
+syIceJhzOL5Qh5kvngLEM/yEGEgDj5VfFzKb+AR5uFbiHCwWx3KYvZ5csVsZWSzm
+b5DA/RGGUNeV8owa6g9/1Aa5GNMT3yarFNe4GxxVpiY/di36tSwv8EWG3BFlxjLU
+TTbjChnwkBhgFxKRAA5Pk5g60Kyqznukfn4NDMBkLAy15goBGt/8uCI/f85HrgdL
+BOrH8oBgDFFTxtXzEhGc2bDWk9Ue3y/cUuRZxh6odCYTCklXaihc7n6rDs5gJGlh
+hadv/GfPgJp+l/k+i601
+=VlGa
+-----END PGP SIGNATURE-----
+
+--=-8HvvIqjmKeRLps5zwWdp--
+
