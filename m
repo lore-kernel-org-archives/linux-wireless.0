@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45459 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204AbYJCIFI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 04:05:08 -0400
-Subject: Re: Regulatory Framework & rt2x00.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org
-In-Reply-To: <48E52D07.8050900@kpnplanet.nl> (sfid-20081002_222035_260539_19D08D89)
-References: <48E52D07.8050900@kpnplanet.nl>
-	 (sfid-20081002_222035_260539_19D08D89)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EaWOZ/UkFGr6FJIfOE4M"
-Date: Fri, 03 Oct 2008 10:05:04 +0200
-Message-Id: <1223021104.24551.61.camel@johannes.berg> (sfid-20081003_100518_451352_7A74CF95)
+Received: from mga01.intel.com ([192.55.52.88]:36759 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752664AbYJ0UCO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 16:02:14 -0400
+Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
+From: reinette chatre <reinette.chatre@intel.com>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081019075916.GA12904@isilmar.linta.de>
+References: <20081018231046.GA10977@isilmar.linta.de>
+	 <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
+	 <20081019075916.GA12904@isilmar.linta.de>
+Content-Type: text/plain
+Date: Mon, 27 Oct 2008 13:02:35 -0700
+Message-Id: <1225137755.1115.121.camel@rc-desk> (sfid-20081027_210223_077663_28D15543)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 2008-10-19 at 00:59 -0700, Dominik Brodowski wrote:
+> On Sun, Oct 19, 2008 at 01:30:50AM +0200, Tomas Winkler wrote:
+> > On Sun, Oct 19, 2008 at 1:10 AM, Dominik Brodowski
+> > > [   37.340901] iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> > > [   37.340944] iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4413 ser 0x0000004B
+> > > [   37.342349] iwl3945: Can't stop Rx DMA.
+> > >
+> > > The iwlwifi-3945-1.ucode is the one shipped with Ubuntu's 2.6.24-21-generic
+> > > kernel sources (md5sum: 26d10014b09439dc5a8573c2a6f85b0a ). And, as
+> > > mentioned in the subject, 2.6.27 or 2.6.26 work perfectly fine.
+> >
+> > I think you need new uCode, the API has changed to support stealth APs
+> > .... I believe there was some misscommunication...
+> 
+> Thanks for the hint -- indeed, the newest uCode works both with 2.6.26 and
+> current git... so the uCode is backwards compatible, but the kernel code is
+> not. Should the uCode be named iwlwifi-3945-2.ucode therefore, to notify the
+> users that they need something newer? Or can the kernel code be made to work
+> with the old uCode again?
 
---=-EaWOZ/UkFGr6FJIfOE4M
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Instead of new ucode ... could you please try this patch ?
 
-On Thu, 2008-10-02 at 22:20 +0200, Gertjan van Wingerde wrote:
+Thank you
 
-> The problem I'm facing is that many of the Ralink devices have 2 region=20
-> settings in their EEPROM, one for 802.11a networks, and one for=20
-> 802.11[bgn] networks. So far I have only seen devices where these two=20
-> settings contain the same region indication, but I don't know whether=20
-> this is the case for all devices.
->=20
-> At this point in time I use the regulatory_hint function at driver=20
-> start-up time to communicate the region setting that matches the=20
-> configured band, but that would (probably) not hold up when the user=20
-> reconfigures the mode.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c
+b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 6c8ac3a..61c9a40 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -709,7 +709,7 @@ static void iwl_bg_request_scan(struct work_struct
+*data)
+ 	u32 tx_ant;
+ 	u16 cmd_len;
+ 	enum ieee80211_band band;
+-	u8 n_probes = 2;
++	u8 n_probes = 0;
+ 	u8 rx_chain = 0x7; /* bitmap: ABC chains */
+ 
+ 	conf = ieee80211_get_hw_conf(priv->hw);
 
-I think you basically have two choices depending on whether you have a
-country code in the eeprom or not.
-
-If you have a country code, I suggest you just use either one.
-
-As far as I know, though, you don't have country codes. So if there's a
-valid code in the EEPROM you probably should use the regdomain struct
-hint rather than the alpha2 hint and build a regdomain that contains
-both 2.4 and 5 GHz channels based on the two region values you have.
-
-johannes
-
---=-EaWOZ/UkFGr6FJIfOE4M
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI5dIsAAoJEKVg1VMiehFYm+EQAIH+czvvOm2gotDIp5k4hVmi
-dp9LahKiY04BSCFSLqNQny2p3v1e+rhdvEeJaqHr/hm6JHGR7dhLeDjSHDZUreZa
-1GWdPjyJFhgK0nPnmEbw7dXcWM6bq3Svplnofxp0xEKS7QPecPKNmPUa5k/4RJ3S
-gak5DcMezuRC6Ckh7XqNtZWXN5HSd7u+KxwZOh/Kxoy85x1ILB+CbC0C2PtVZeLG
-dURdKuZLaV31fE5AEZSOVxYlxWzyNQw//2p2K7KncKohkCLfpngR7/uLtxPmrS+n
-XC6tj0/RsaTq6a3LEcGCq9XFqCXYWIv64PfxXayL8MbzSe8OaTRZ1W8RN14J0QZu
-Wc4UCe8yzJGPX2/FxbGCxHugPFo7TiCrZonBjC6FVC9A2qNfH+LD096CxJpHkaku
-fo2v76Yu8KgmsjJY0x7UuACYvpbXsodL7I0Nu+JvH/YIJFLfx9xrcBiyU7SlJMhE
-U+qKCn7WRhmdV7QcM2xT5H0q9bBAkzjyXwhLnv5t6DQ1gHkO8CpJlT/xxea22G/f
-4Mq78UjJUc9jEb/chVu8TPckd1A27EKsqIYvgcNyTcR/CX0KMACA/Ac1dvJIoW9K
-qJ/JW8JXDscPdtF7em272KN4E0I4FHDbKNHEhRCnQTCN9h3NvJr193qogB/DuEL+
-OBwkzYhv+QGORLEmo6kc
-=NsyK
------END PGP SIGNATURE-----
-
---=-EaWOZ/UkFGr6FJIfOE4M--
 
