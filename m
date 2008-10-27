@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:38505 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753885AbYJEBCg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Oct 2008 21:02:36 -0400
-Received: by gxk9 with SMTP id 9so3903320gxk.13
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Oct 2008 18:02:35 -0700 (PDT)
-Message-ID: <43e72e890810041802w5091a941ma781b8b40f8b5672@mail.gmail.com> (sfid-20081005_030243_069731_1AC3B516)
-Date: Sat, 4 Oct 2008 18:02:34 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [PATCH 4/5] ath5k: Fix SREV reporting after SREV updates
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, nbd@openwrt.org
-In-Reply-To: <20081005003710.GA3222@hash.localnet>
+Received: from ogre.sisk.pl ([217.79.144.158]:59958 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751450AbYJ0SML (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 14:12:11 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Carlos R. Mafra" <crmafra2@gmail.com>
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+Date: Mon, 27 Oct 2008 19:16:37 +0100
+Cc: linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
+	kernel@nn7.de, linux-wireless@vger.kernel.org
+References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271839.39236.rjw@sisk.pl> <20081027175719.GA5759@localhost.aei.mpg.de>
+In-Reply-To: <20081027175719.GA5759@localhost.aei.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080928222444.GD21335@makis>
-	 <20081005003710.GA3222@hash.localnet>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810271916.38079.rjw@sisk.pl> (sfid-20081027_191217_668033_4665C996)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 4, 2008 at 5:37 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Mon, Sep 29, 2008 at 01:24:44AM +0300, Nick Kossifidis wrote:
->>  * Fix srev reporting during attach
->>
->>  Changes-Licensed-under: ISC
->>  Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
->
-> This now identifies my card as 5414, whereas ath5k used to call it 5424
-> (mac srev 0xa3, phy 0x61).
->
-> But, madwifi has:
->  #define AR5K_SREV_VER_AR5424     0xa3 /* PCI-E */
->
-> It still works so not a major problem, but who's right?
+On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> On Mon 27.Oct'08 at 18:39:38 +0100, Rafael J. Wysocki wrote:
+> > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> > > Hi,
+> > > 
+> > > So I managed to bisect my suspend to RAM regression in 2.6.27-rc2
+> > > to commit 3b7ee69d0caefbdb85a606a98bff841b8c63b97e ("mac80211: disassociate 
+> > > when moving to new BSS") by Tomas Winkler (Cc:-ed).
+> > > 
+> > > Unfortunately it doesn't revert cleanly so I can't double check it.
+> > 
+> > Why are you saying it doesn't revert cleanly?  For me it does revert without
+> > rejects from 2.6.28-rc2.
+> 
+> I get this
+> 
+> [mafra@localhost:linux-2.6]$ git checkout v2.6.28-rc2 -b s2ram
+> Switched to a new branch "s2ram"
+> [mafra@localhost:linux-2.6]$ git revert 3b7ee69d
+> warning: too many files, skipping inexact rename detection
+> Auto-merged net/mac80211/mlme.c
+> CONFLICT (content): Merge conflict in net/mac80211/mlme.c
+> Automatic revert failed.  After resolving the conflicts,
+> mark the corrected paths with 'git add <paths>' or 'git rm <paths>' and commit the result.
+> 
+> I don't know what is happening here :-(
 
-Since legacy-hal.tar.bz2 comes directly from our latest codebase I
-expect that to have the latest correct information. If there are
-doubts that is another thing and we can look into it.
+If you have quilt installed, you can do:
 
-  Luis
+$ git show 3b7ee69d > suspicious.patch
+$ quilt import -R suspicious.patch
+$ quilt push
+
+(that should work without rejects) and build the kernel.
+
+Thanks,
+Rafael
