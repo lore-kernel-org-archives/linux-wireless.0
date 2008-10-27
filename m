@@ -1,109 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.tglx.de ([62.245.132.106]:50784 "EHLO www.tglx.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755485AbYJOTxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 15:53:15 -0400
-Date: Wed, 15 Oct 2008 21:53:06 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Elias Oltmanns <eo@nebensachen.de>
-cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: ath5k: kernel timing screwed - due to unserialised register
- access?
-In-Reply-To: <87tzbdzump.fsf@denkblock.local>
-Message-ID: <alpine.LFD.2.00.0810152139530.6848@apollo> (sfid-20081015_215329_951967_08FF1C9E)
-References: <87k5cm3ee2.fsf@denkblock.local> <alpine.LFD.2.00.0810052354000.3398@apollo> <87d4id3jmr.fsf@denkblock.local> <alpine.LFD.2.00.0810061614490.3166@apollo> <87skr8h1de.fsf@denkblock.local> <alpine.LFD.2.00.0810071946460.3166@apollo>
- <alpine.LFD.2.00.0810072042140.3166@apollo> <87hc7ot804.fsf@denkblock.local> <87myhfnwne.fsf@denkblock.local> <alpine.LFD.2.00.0810082203360.3237@apollo> <alpine.LFD.2.00.0810091313380.3237@apollo> <87k5cgg87j.fsf@denkblock.local> <alpine.LFD.2.00.0810101127560.3271@apollo>
- <87abdck6sn.fsf@denkblock.local> <alpine.LFD.2.00.0810101432540.3271@apollo> <alpine.LFD.2.00.0810111149420.3356@apollo> <87k5ceeuxy.fsf@denkblock.local> <alpine.LFD.2.00.0810142054580.6848@apollo> <87skqyj0ps.fsf@denkblock.local> <alpine.LFD.2.00.0810150752380.6848@apollo>
- <87tzbdzump.fsf@denkblock.local>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from xc.sipsolutions.net ([83.246.72.84]:53317 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbYJ0TD0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 15:03:26 -0400
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Carlos R. Mafra" <crmafra2@gmail.com>
+Cc: Soeren Sonnenburg <kernel@nn7.de>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	tomas.winkler@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081027190011.GA3951@localhost.aei.mpg.de>
+References: <20081027162054.GA4015@localhost.aei.mpg.de>
+	 <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost>
+	 <1225132278.3796.32.camel@johannes.berg>
+	 <1225133082.3796.35.camel@johannes.berg>
+	 <20081027190011.GA3951@localhost.aei.mpg.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dpJMs2MMxba3zMyCoiIA"
+Date: Mon, 27 Oct 2008 20:03:15 +0100
+Message-Id: <1225134195.3796.39.camel@johannes.berg> (sfid-20081027_200331_545948_D234ADE3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 15 Oct 2008, Elias Oltmanns wrote:
-> Thomas Gleixner <tglx@linutronix.de> wrote:
-> > On Wed, 15 Oct 2008, Elias Oltmanns wrote:
-> >> Thomas Gleixner <tglx@linutronix.de> wrote:
-> >
-> >> > On Sat, 11 Oct 2008, Elias Oltmanns wrote:
-> >> >> > Compile the acpi_processor module in to the kernel
-> >> >
-> >> >> > (CONFIG_ACPI_PROCESSOR=y) and add processor.max_cstate=1 to the kernel
-> >> >> > command line. If I analysed the problem correctly this will make the
-> >> >> > jiffies problem go away. I'm working on a fix.
-> >> >> 
-> >> >> Spot on, it does go away regardless whether NO_HZ or HIGH_RES are
-> >> >> enabled or disabled. Looking forward to testing your fix ;-).
-> >> >
-> >> > Here you go.
-> >> 
-> >> Bad luck, I'm afraid. Your patch seems to fix the issue for NO_HZ=n +
-> >> HIGH_RES=y. As soon as NO_HZ=y, however, the problem reappears. See the
-> >
-> > Hmm. You should have seen the same problem w/o that patch in the
-> > "CONFIG_ACPI_PROCESSOR=y / processor.max_cstate=1" test with NOHZ=y.
-> 
-> Right you are, I've just retested that case. The reason why I didn't hit
-> this the last time is that it seems to be triggered far less often than
-> without the processor.max_cstate=1 option.
-> 
-> >
-> > Anyway, I can see what the NOHZ problem is. Updated patch below.
-> 
-> Nice, it seems to have done the trick. I'll keep an eye on my logs to
-> make sure it doesn't pop up again.
 
-Thanks. I queue it for .28 and tag it for stable as well.
- 
-> >
-> >> output below. (Still testing on 2.6.27, mind. Should I test something
-> >> more up-to-date?)
-> >
-> > .27 is fine. 
-> >
-> > Did you make any progress finding out why the ath5k softirq runs for
-> > >20ms ?  We need to fix this madness as well :)
-> 
-> Well, it wasn't obvious to me so far, whether the logs really indicated
-> that 20 msecs had been spent in te callback or whether all this was due
-> to the bug in the timing code. With your patch applied, I have
-> eventually made further investigations into the matter. The problem is
-> the following snippet from
-> drivers/net/wireless/ath5k/phy.c:ath5k_hw_noise_floor_calibration():
-> 
-> 	/*
-> 	 * Enable noise floor calibration
-> 	 */
-> 	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
-> 				AR5K_PHY_AGCCTL_NF);
-> 
-> 	ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
-> 			AR5K_PHY_AGCCTL_NF, 0, false);
-> 
-> The first call sets a bit in the AR5K_PHY_AGCCTL register and the second
-> waits for that bit to be cleared by the hardware again. Apparently, it
-> takes roughly 20 ms to clear that bit.
+--=-dpJMs2MMxba3zMyCoiIA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-That happens in softirq context ? So to verify this it's easy to just
-measure the time with ktime_get() across the both calls.
+On Mon, 2008-10-27 at 20:00 +0100, Carlos R. Mafra wrote:
+> On Mon 27.Oct'08 at 19:44:42 +0100, Johannes Berg wrote:
+> > On Mon, 2008-10-27 at 19:31 +0100, Johannes Berg wrote:
+> > > On Mon, 2008-10-27 at 19:07 +0100, Soeren Sonnenburg wrote:
+> > >=20
+> > > > > Johannes, can you pls have a look?
+> > >=20
+> > > I did, and I have no idea. Makes no sense at all.
+> >=20
+> > The only thing I can remotely think of is that iwlwifi doesn't like
+> > being called back from within the call that it did to mac80211, which
+> > obviously happens here. But I have no idea, the code as it stands is
+> > correct, just the interaction with iwlwifi's resume seems to be broken.
+> >=20
+> > Try this patch instead:
+>=20
+> Yep, with this patch it also works!
 
-> In order to execute ath5k_hw_noise_floor_calibration() in process
-> context, I'd suggest introducing a single threaded workqueue for the
-> ath5k driver and scheduling calibration from the calib_timer callback.
-> Additionally, it would be necessary to schedule resets in a similar
-> manner instead of using the ath5k_tasklet_reset() tasklet. This requires
-> some serialisation but in my opinion there are various serialisation
-> issues in ath5k as it is that need fixing. Unfortunately, none of the
-> concerns I have raised wrt the ath5k driver seem to have resulted in a
-> commit that I'm aware of even though patches have been supplied. Perhaps
-> it's the merge window that consumes people's resources. Maybe I'll post
-> a patch addressing this particular issue in the next few days.
+> > --- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-27 1=
+9:44:12.000000000 +0100
+> > +++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-27 19:44:=
+15.000000000 +0100
+> > @@ -2084,7 +2084,6 @@ static void iwl_alive_start(struct iwl_p
+> >  		iwl4965_error_recovery(priv);
+> > =20
+> >  	iwl_power_update_mode(priv, 1);
+> > -	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
 
-Sounds like a candidate for threaded interrupt handler :)
+alright, well, if nothing else turns up soon then we should probably put
+this patch in rather than reverting the other one, imho mac80211 is
+doing the right thing there and the driver is calling into it at a point
+where either mac80211 or the driver cannot handle it.
 
-Anyway, measuring the time of the softirq and pointing it out when it
-takes more than a couple of cycles is the right thing to do.
+Do you get any kernel messages output? If you do, could you put messages
+into each line of ieee80211_set_disassoc to see where it hangs?
 
-Thanks,
+johannes
 
-	tglx
+--=-dpJMs2MMxba3zMyCoiIA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBhBwAAoJEKVg1VMiehFYBtEP/3qMrIKq1nnROC8GlJPgru1z
+KzEUKZqhM3XbVfbsYIeYnvy1VeciMVr1Rtlz5lxGbyMiP/bagCiXp+yNnSo5+JfY
+qvG1OR+lSsIEPzGQ8kigk54wD/uYshTpsf1jYu6SIcS4y+Ojkyva/dSozfjapq2I
+WyxQ+cscuM/2iGkHYZXVsRM547H8F22GTpGblQxHh/PIpkfoZqFCTWkWee/HG3rZ
+CJpaVRb/QfJb5lDO6CIDbWXlKe2FeNZqyc/Y+r6aNHMletQzUHTwtLF1ghFPWsZP
+3HoGv3O0afze/KRAr5TwknjddWkOpnJEPtPFjqfybyf8SHVsvkktmvPQi8XqnlsH
+OZCCIkixZUE0YeGmxW8SUHSPqpQMTSrpFjAdlEf6PmVNs9T31jLK68ebcjG3iogT
+uB69fllnm6v4SxTWTbxNGuv5x7o638h/DQP/7+bxkkylIjcjOu2/0AhL2SWn1orv
+IYDPAhOjcHnWdBy0JONK7nSI9VJjovo7obMnE9FlND4B/onDCMiDtbIb9sIeGbcK
+jZRRZwPcfRUTYxhm9uDuNkVM9unYF4vSQs8dcZY6u5CQeF21Cn+/V2EX9jLdfsfu
+aaa8fMXZjCow48ADIpJo3g60u2zbpzeTT7vU6jArn1RpYxNIyzhUrA+tbb2LWOe9
+PapDdvIdupgWGca6ksFg
+=XfXT
+-----END PGP SIGNATURE-----
+
+--=-dpJMs2MMxba3zMyCoiIA--
+
