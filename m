@@ -1,99 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:55843 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754796AbYJVSYM (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:32530 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713AbYJ0BZv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 14:24:12 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	reinette chatre <reinette.chatre@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240810220528w6b2e4e60k7d2390328d9b5c49@mail.gmail.com>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1224628088.10863.100.camel@rc-desk> <20081022100758.GA27595@infradead.org>
-	 <1ba2fa240810220528w6b2e4e60k7d2390328d9b5c49@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 22 Oct 2008 20:25:08 +0200
-Message-Id: <1224699908.9386.145.camel@californication> (sfid-20081022_202418_825285_E8E05414)
-Mime-Version: 1.0
+	Sun, 26 Oct 2008 21:25:51 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1885218rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2008 18:25:50 -0700 (PDT)
+Message-ID: <a8e1da0810261825s356ee43ck638487eb14ce3244@mail.gmail.com> (sfid-20081027_022556_818612_85408CF4)
+Date: Mon, 27 Oct 2008 09:25:50 +0800
+From: "Dave Young" <hidave.darkstar@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [BUG] hang with ath5k
+Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org,
+	"kernel list" <linux-kernel@vger.kernel.org>
+In-Reply-To: <200810250040.24324.rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <a8e1da0810140142g633486br12c2799b2fa1670e@mail.gmail.com>
+	 <48F6133D.1070508@gmail.com>
+	 <a8e1da0810152334x6c596f88i1fd74548dc166f3a@mail.gmail.com>
+	 <200810250040.24324.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
+On Sat, Oct 25, 2008 at 6:40 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, 16 of October 2008, Dave Young wrote:
+>> On Wed, Oct 15, 2008 at 11:58 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
+>> > On 10/14/2008 10:42 AM, Dave Young wrote:
+>> >> 1) run wpa_supplicant
+>> >> 2) ctrl + C
+>> >> 3) goto 1)
+>> >
+>> > It doesn't happen here. How many iterations in average you need to reproduce this?
+>> >
+>>
+>> About 15 times for me,
+>> BTW, wpa_gui running while testing
+>
+> Is this a regression from 2.6.26?
 
-> >> I do not believe our request is unreasonable. If a user runs a new
-> >> kernel the log will print a message that the firmware is incorrect ...
-> >> all the user needs to do is go to
-> >> http://intellinuxwireless.org/?n=Downloads and download the latest
-> >> firmware. This does not require any subtle changes that may affect other
-> >> aspects of the system ... just the firmware file that is only used by
-> >> the driver.
-> >
-> > with the wireless that doesn't work.  Nice.  Sorry guys, but requiring
-> > a new firmware version for a new driver release is completely
-> > unreasonable.  You can drop support for older firmware ABIs after a few
-> > years,but not immediately.
-> 
-> Years.. this HW will be obsolete in year or two, hopefully recycled.
-> I personally don't want people using this buggy firmware for years.
+Hi, I don't think so, There's such problem in 2.6.26 as well.
 
-seems I have to put clearly my community hat on now.
+>
+> Rafael
+>
 
-This is not true at all. I am still using a ipw2100 in one of my
-machine. So the 3945 and 4965 will be in use for a long time. The
-community measurement of obsolete and companies measurement are totally
-different. Also don't forget these countries where laptops and
-electronics are still expensive. The old Intel wireless cards will still
-be used for a long time there.
 
-> This is development branch after all, it's not even scheduled for 2.6.28.
-> 
-> Ucode API for 4965 was changed to -2 without much pain, So there is a
-> precedence this work quite well. This time there were some hiccups in
-> handling this since the API version wasn't updated it as should be.
-> really our fault. But I don't think this situation is so dramatic as
-> you describe it.
 
-Actually that is your impression. I was falling over the 4965 ucode API
-change twice and it took me longer than 5 minutes to even debug and
-understand what went wrong here. Since there is no real warning anywhere
-and the wireless device does show up. And I do know how to handle these
-things.
-
-> The objective of the objections is not that we want to immensely hurt
-> users but rather the trade off between maintain even uglier code and
-> users running buggy firmware versus logging into older kernel and
-> downloading new firmware in 5 minutes looks to me not proportional.
-> Distro users that pull updates won't even notice. I might be wrong
-> though.
-
-There will be cases where it is too much of a burden and too complicated
-to keep support for both APIs, but in all other cases we should try to
-have the driver work with it. I am fully behind Johannes and Christoph
-here since that is what the community expects.
-
-So if we ran into a case where we need to abandon the support for the
-old API, then we first should make sure that the modules_install will
-warn loudly about the missing firmware. And with MODULE_FIRMWARE and the
-firmware work from David, we do have everything in place to actually do
-this. So lets do it.
-
-An additional option would be to create drivers/deprecated/ and put a
-copy of the old driver there and have some Kconfig magic to allow
-selecting only one of the drivers.
-
+-- 
 Regards
-
-Marcel
-
-
+dave
