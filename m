@@ -1,74 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:23475 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbYJVFzy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 01:55:54 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2862628wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2008 22:55:53 -0700 (PDT)
-Message-ID: <48FEC067.8040307@gmail.com> (sfid-20081022_075611_201498_4707A32A)
-Date: Tue, 21 Oct 2008 22:55:51 -0700
-From: John Daiker <daikerjohn@gmail.com>
+Received: from ox1.aei.mpg.de ([194.94.224.6]:55627 "EHLO ox1.aei.mpg.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751246AbYJ0Sus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 14:50:48 -0400
+Date: Mon, 27 Oct 2008 19:51:19 +0100
+From: "Carlos R. Mafra" <crmafra2@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
+	kernel@nn7.de, linux-wireless@vger.kernel.org
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+Message-ID: <20081027185119.GA4057@localhost.aei.mpg.de> (sfid-20081027_195055_545769_E05CD8DB)
+References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271839.39236.rjw@sisk.pl> <20081027175719.GA5759@localhost.aei.mpg.de> <200810271916.38079.rjw@sisk.pl> <20081027183648.GA4165@localhost.aei.mpg.de>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Marvell TopDog Driver Work
-References: <48A5DBAB.9080405@erley.org> <20080815195825.GD5935@tesla>	 <1218830917.14841.20.camel@localhost.localdomain>	 <gdidhg$hdq$3@ger.gmane.org>	 <1224524168.29822.46.camel@dhcp-100-3-195.bos.redhat.com>	 <1224525810.6873.8.camel@the-omnibook>	 <43e72e890810201245t3ac18fd6taf229af88350958f@mail.gmail.com>	 <1224533105.6873.22.camel@the-omnibook> <1224595093.24581.15.camel@localhost.localdomain>
-In-Reply-To: <1224595093.24581.15.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081027183648.GA4165@localhost.aei.mpg.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-snip
-> Definitely, I've looked at marvell.git (topdog) and Luis's code, and
-> earlier Marvell GPL code quite extensively.  The firmware interface is
-> quite similar between the TopDog (802.11n) parts and the b/g parts, as
-> are the TX and RX descriptors.  From my research, I didn't think it
-> would be that hard to support both parts in the same driver.
->
-> My strategy would be this, assuming you have TopDog hardware.  If you do
-> not, I can ship you a CardBus TopDog card:
->
-> 1) Use marvell.git and Luis' attempt to get minimal b/g support working
-> for the TopDog parts
-Don't think I can help with this part, as I don't have TopDog hardware...
->
-> 2) Start adding in the support for 8335/8310 parts using mrv8k (and
-> possibly BSD's malo(4)) as a guide
-But I do have 8335 hardware:
+On Mon 27.Oct'08 at 19:36:48 +0100, Carlos R. Mafra wrote:
+> On Mon 27.Oct'08 at 19:16:37 +0100, Rafael J. Wysocki wrote:
+> > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> > > On Mon 27.Oct'08 at 18:39:38 +0100, Rafael J. Wysocki wrote:
+> > > > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> > > > > Hi,
+> > > > > 
+> > > > > So I managed to bisect my suspend to RAM regression in 2.6.27-rc2
+> > > > > to commit 3b7ee69d0caefbdb85a606a98bff841b8c63b97e ("mac80211: disassociate 
+> > > > > when moving to new BSS") by Tomas Winkler (Cc:-ed).
+> > > > > 
+> > > > > Unfortunately it doesn't revert cleanly so I can't double check it.
+> > > > 
+> > > > Why are you saying it doesn't revert cleanly?  For me it does revert without
+> > > > rejects from 2.6.28-rc2.
+> > > 
+> > > I get this
+> > > 
+> > > [mafra@localhost:linux-2.6]$ git checkout v2.6.28-rc2 -b s2ram
+> > > Switched to a new branch "s2ram"
+> > > [mafra@localhost:linux-2.6]$ git revert 3b7ee69d
+> > > warning: too many files, skipping inexact rename detection
+> > > Auto-merged net/mac80211/mlme.c
+> > > CONFLICT (content): Merge conflict in net/mac80211/mlme.c
+> > > Automatic revert failed.  After resolving the conflicts,
+> > > mark the corrected paths with 'git add <paths>' or 'git rm <paths>' and commit the result.
+> > > 
+> > > I don't know what is happening here :-(
+> > 
+> > If you have quilt installed, you can do:
+> > 
+> > $ git show 3b7ee69d > suspicious.patch
+> > $ quilt import -R suspicious.patch
+> > $ quilt push
+> > 
+> > (that should work without rejects) and build the kernel.
+> 
+> I wanted to do it with git, but gave up after some time :-(
+> 
+> So I finally read the commit in 
+> question 3b7ee69d0caefbdb85a606a98bff841b8c63b97e and applied
+> the patch below, which reverts it up to the whitespace fixes.
+> 
+> And reverting it really made my brand new 2.6.28-rc2-something
+> work again, regarding suspend to RAM.
+> 
+> So consider it confirmed that this commit is guilty here.
 
-00:0c.0 Ethernet controller: Marvell Technology Group Ltd. 88w8335 
-[Libertas] 802.11b/g Wireless (rev 03)
+I double checked it.
 
---snip from the old mrv8k driver from a few months ago--
-(mrv8k): successfully uploaded firmware
-(mrv8k): HW ver. 1, FW ver. 0x3000036, 2 antennas, regulatory domain US 
-(FCC)
---snip--
+Linus' tree v2.6.28-rc2-58-g1d63e72 does not work, whereas
+with the patch below applied makes suspend to RAM work again.
 
-If memory serves, it's a Netgear 311v3 PCI... but the packaging isn't 
-around and I'm too lazy to turn my machine off to physically look at the 
-card (and stand on my head!).
->
-> 3) Add the 802.11n bits of TopDog stuff
->
-> The _most_ important thing is first to get a stable b/g driver, then add
-> the candy later.  Since we have a full TopDog driver implementation,
-> that might be the best thing to get working first.  mrv8k was never able
-> to get very far for me when I was poking at it, I couldn't even get
-> reliable scan results.
->
->> I don't think there is any question of *whether* TopDog support is
->> possible in mrv8k, only when, and "right now" does not yet appear to be
->> the answer. I really hope to be proven wrong on that, though.
->
-> Oh, it's certainly possible in mrv8k.  But obviously you just want to
-> get something up and running first, then add the tasty bits like N
-> support later.
->
-> Dan
-I am more than willing to help test and/or debug any driver developments 
-that come down the pipeline for the 8335 chip.
 
-JD
+> ---
+>  net/mac80211/mlme.c |    4 ----
+>  1 files changed, 0 insertions(+), 4 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 87665d7..1751ebb 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2396,10 +2396,6 @@ void ieee80211_sta_req_auth(struct ieee80211_sub_if_data *sdata,
+>  	    (ifsta->flags & (IEEE80211_STA_SSID_SET |
+>  			     IEEE80211_STA_AUTO_SSID_SEL))) {
+>  
+> -		if (ifsta->state == IEEE80211_STA_MLME_ASSOCIATED)
+> -			ieee80211_set_disassoc(sdata, ifsta, true, true,
+> -					       WLAN_REASON_DEAUTH_LEAVING);
+> -
+>  		set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
+>  		queue_work(local->hw.workqueue, &ifsta->work);
+>  	}
+> -- 
+> 1.6.0.rc2
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
