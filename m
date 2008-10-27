@@ -1,41 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53484 "EHLO mail.atheros.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:60955 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754851AbYJWGrw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 02:47:52 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 23:47:52 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1750782AbYJ0VDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 17:03:09 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Carlos R. Mafra" <crmafra2@gmail.com>
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+Date: Mon, 27 Oct 2008 22:07:42 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Soeren Sonnenburg <kernel@nn7.de>,
+	linux-kernel@vger.kernel.org, tomas.winkler@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810272151.01244.rjw@sisk.pl> <20081027205204.GA4566@localhost.aei.mpg.de>
+In-Reply-To: <20081027205204.GA4566@localhost.aei.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18688.7551.438939.184353@gargle.gargle.HOWL> (sfid-20081023_084755_781925_0AE54DDD)
-Date: Thu, 23 Oct 2008 12:15:19 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>, <Vasanth.Thiagarajan@Atheros.com>
-Subject: [PATCH] ath9k: Check if the STA supports HT when initializing rate control
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810272207.43498.rjw@sisk.pl> (sfid-20081027_220315_259526_8529A259)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/rc.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> On Mon 27.Oct'08 at 21:51:00 +0100, Rafael J. Wysocki wrote:
+> > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> > > On Mon 27.Oct'08 at 20:13:43 +0100, Johannes Berg wrote:
+> > > > On Mon, 2008-10-27 at 20:11 +0100, Carlos R. Mafra wrote:
+> > > > 
+> > > > > > Do you get any kernel messages output? If you do, could you put messages
+> > > > > > into each line of ieee80211_set_disassoc to see where it hangs?
+> > > > > 
+> > > > > No messages appear, just a black screen.
+> > > > > 
+> > > > > But I can use the SysRq keys, and when I umount the
+> > > > > screen shows the message that umount succeed. I also tried SysRq+t but
+> > > > > the messages appear to fast to read.
+> > > > 
+> > > > Ok, but that means you _can_ get messages, it would help a lot if you
+> > > > could put a few printks into the set_disassoc function before/after each
+> > > > other function call, so we know where exactly it hangs. Pretty much all
+> > > > of them could possibly hang if there is some sort of locking error
+> > > > happening or anything relies on userspace to be running...
+> > > 
+> > > Ok, I humbly tried to do that with the patch at the end of the email,
+> > > but I did not appear to hang in this function tough.
+> > > 
+> > > Somehow I could get some messages printed when it was a black screen
+> > > before (I think it has to do with the debug level I set with SysRq...)
+> > > and I could see all the printks I've put there. 
+> > > 
+> > > The good thing is that I could get the complete syslog of the boot until 
+> > > the it failed after suspending to RAM (in 2.6.28-rc2 with my debug patch
+> > > below applied). The last messages before the laptop become unresponsive
+> > > (except for the SysRq) were these ones:
+> > > 
+> > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:radio
+> > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:assoc
+> > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:RX
+> > > Oct 27 21:03:06 localhost kernel: Registered led device: iwl-phy0:TX
+> > > Oct 27 21:03:06 localhost kernel: before rcu_read_lock
+> > > Oct 27 21:03:06 localhost kernel: before netif_tx_stop_all_queues
+> > > Oct 27 21:03:06 localhost kernel: before netif_carrier_off
+> > > Oct 27 21:03:06 localhost kernel: before ieee80211_sta
+> > > Oct 27 21:03:06 localhost kernel: inside sef_disconnected 1
+> > > Oct 27 21:03:06 localhost kernel: before ieee8021_led_assoc
+> > > Oct 27 21:03:06 localhost kernel: before ieee8021_sta_send_apinfo
+> > > Oct 27 21:03:06 localhost kernel: before sta_info_unlink
+> > > Oct 27 21:03:06 localhost kernel: before rcu_read_unlock
+> > > Oct 27 21:03:06 localhost kernel: before sta_info_destroy
+> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Starting disk
+> > > Oct 27 21:03:06 localhost kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: configured for UDMA/100
+> > > Oct 27 21:03:06 localhost kernel: ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x9 t4
+> > > Oct 27 21:03:06 localhost kernel: ata1: irq_stat 0x00000040, connection status changed
+> > > Oct 27 21:03:06 localhost kernel: ata1: hard resetting link
+> > > Oct 27 21:03:06 localhost kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd ef/90:03:00:00:00:a0 succeeded
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+> > > Oct 27 21:03:06 localhost kernel: ata1.00: configured for UDMA/100
+> > > Oct 27 21:03:06 localhost kernel: ata1: EH complete
+> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
+> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
+> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
+> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
+> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> > > Oct 27 21:03:06 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> > > Oct 27 21:03:06 localhost kernel: Restarting tasks ... done.
+> > > Oct 27 21:03:07 localhost ifplugd(wlan0)[3182]: Link beat lost.
+> > > Oct 27 21:03:13 localhost ifplugd(wlan0)[3182]: Executing '/etc/ifplugd/ifplugd.action wlan0 down'.
+> > > Oct 27 21:06:20 localhost kernel: SysRq : Changing Loglevel
+> > > Oct 27 21:06:20 localhost kernel: Loglevel set to 4
+> > > Oct 27 21:06:22 localhost kernel: SysRq : Changing Loglevel
+> > > Oct 27 21:06:22 localhost kernel: Loglevel set to 6
+> > > Oct 27 21:06:32 localhost kernel: ffff80251670>] ? autoremove_wake_function+0x0/0x40
+> > > Oct 27 21:06:32 localhost kernel:  [<ffffffff8024e200>] ? worker_thread+0x0/0x110
+> > > Oct 27 21:06:32 localhost kernel:  [<ffffffff8025119d>] kthread+0x4d/0x80
+> > > Oct 27 21:06:32 localhost kernel:  [<ffffffff8020d1b9>] child_rip+0xa/0x11
+> > > 
+> > > and I have the complete trace also. I can try to put it somewhere in the web if it helps
+> > > (I already tried it, but I am new at the institute here and I could not set up my
+> > > webpage yet :-(
+> > 
+> > Please attach it to http://bugzilla.kernel.org/show_bug.cgi?id=11845 .
+> 
+> Done.
 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index f1dbae3..c7800e0 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -2027,7 +2027,7 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 	DPRINTF(sc, ATH_DBG_RATE, "%s\n", __func__);
- 
- 	ath_setup_rates(sc, sband, sta, ath_rc_priv);
--	if (sc->hw->conf.ht.enabled) {
-+	if (sta->ht_cap.ht_supported) {
- 		for (i = 0; i < 77; i++) {
- 			if (sta->ht_cap.mcs.rx_mask[i/8] & (1<<(i%8)))
- 				ath_rc_priv->neg_ht_rates.rs_rates[j++] = i;
--- 
-1.6.0.2
+Hmm, this looks like a result of playing with the magic SysRq.  Did you try to
+press SysRq-something when the box became unresponsive?
 
+Rafael
