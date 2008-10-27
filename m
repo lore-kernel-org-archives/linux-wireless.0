@@ -1,57 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.183]:14778 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756731AbYJVRGE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 13:06:04 -0400
-Received: by ik-out-1112.google.com with SMTP id c30so2056414ika.5
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 10:06:02 -0700 (PDT)
-To: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Subject: Re: [PATCH] RFKILL: fix input layer initialisation
-Date: Wed, 22 Oct 2008 19:05:58 +0200
-Cc: linux-wireless@vger.kernel.org, linux-input@vger.kernel.org
-References: <1224694375-29318-1-git-send-email-dbaryshkov@gmail.com>
-In-Reply-To: <1224694375-29318-1-git-send-email-dbaryshkov@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200810221905.58169.IvDoorn@gmail.com> (sfid-20081022_190626_371668_774F35DF)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:1692 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750846AbYJ0DI6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Oct 2008 23:08:58 -0400
+Subject: Re: [PATCH] wireless: add regulatory_struct_hint
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1224841176.6002.124.camel@johannes.berg>
+References: <1224585110.5521.8.camel@johannes.berg>
+	 <1224816184.2917.162.camel@debian.sh.intel.com>
+	 <1224841176.6002.124.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 27 Oct 2008 11:08:49 +0800
+Message-Id: <1225076929.2917.200.camel@debian.sh.intel.com> (sfid-20081027_040913_304871_D6A69EB4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 22 October 2008, Dmitry Baryshkov wrote:
-> Initialise correctly last fields, so tasks can be actually executed.
-> On some architectures the initial jiffies value is not zero, so later
-> all rfkill incorrectly decides that rfkill_*.last is in future.
+On Fri, 2008-10-24 at 02:39 -0700, Johannes Berg wrote:
+> On Fri, 2008-10-24 at 10:43 +0800, Zhu Yi wrote:
+> >         
+> >         The patch extends the current regulatory framework to support regulatory
+> >         enforcement by device hardware (firmware). If the regulatory check is
+> >         performed by hardware, the driver uses a special flag to indicate the
+> >         regulatory framework, so that the regulatory framework will bypass all
+> >         the regulatory checks for this device and delegate it to the hardware.
 > 
-> Signed-off-by: Dmitry Baryshkov <dbaryshkov@gmail.com>
-> ---
->  net/rfkill/rfkill-input.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
+> The way I'm reading this, it's incorrect because it doesn't allow the
+> user to override the hardware's idea of the regulatory domain. I think
+> it's just a wrong description though.
 > 
-> diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-> index e5b6955..cd93f48 100644
-> --- a/net/rfkill/rfkill-input.c
-> +++ b/net/rfkill/rfkill-input.c
-> @@ -255,6 +255,11 @@ static struct input_handler rfkill_handler = {
->  
->  static int __init rfkill_handler_init(void)
->  {
-> +	unsigned long last_run = jiffies - msecs_to_jiffies(500);
-> +	rfkill_wlan.last = last_run;
-> +	rfkill_bt.last = last_run;
-> +	rfkill_uwb.last = last_run;
-> +	rfkill_wimax.last = last_run;
->  	return input_register_handler(&rfkill_handler);
->  }
+> However, there is another major problem with this, if I use a USB device
+> that has no regulatory information on a laptop that has this virtual
+> regdomain configured because of a built-in Intel device, my USB device
+> will wrongly enable all channels.
+> 
+> But inspired by your patch, here's a different idea:
+> 
+>  * remove the struct regdomain hint thing
+>  * introduce a "hardware has regulatory check" flag, which means that
+>     - hardware will enforce regulatory compliance to whatever it thinks
+>       the regulatory domain is
+>     - the driver will, of course, still also enforce the information in
+>       wiphy->bands as it does now
+>  * if a wiphy has the "hw regulatory" flag set and the
+>    cfg80211_regdomain is the world regdomain (whether hard-coded or
+>    gotten from CRDA), then (and only then!) don't apply the
+>    cfg80211_regdomain to it
+> 
+> This would have the following consequences:
+>  + much less code since all the hint stuff goes away
+>  + still works for users who move around with a hw-regulatory based
+>    laptop if they set the regdomain to something other than world
+>    manually
+>  - secondary hardware cannot benefit of the, now no longer given, hint
+>    which regdomain the laptop is in and will be restricted to world
+>  - some degree of confusion possible when one device can use channel 13
+>    (say iwl-agn hardware configured for Europe) and another cannot (say
+>    a USB device without regulatory information, leading to the world
+>    regdomain being the used one)
 
-I believe Dmitry Torokhov recently moved the rfkill structures for wlan, bt, etc
-into an array which allowed for easy looping through all structures. That would
-make updating all entries easier (and less prone to errors when a new structure
-is added).
+I totally agree.
 
-Could you rebase thise patch on top of that one?
 Thanks,
+-yi
 
-Ivo
