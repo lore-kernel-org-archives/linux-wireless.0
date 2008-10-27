@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:58083 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752421AbYJQV6o (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39483 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750942AbYJ0SBs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2008 17:58:44 -0400
-Received: by ug-out-1314.google.com with SMTP id k3so182219ugf.37
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 14:58:41 -0700 (PDT)
-Message-ID: <48F5F50C.5010802@gmail.com> (sfid-20081017_235848_139241_79CDB618)
-Date: Wed, 15 Oct 2008 14:50:04 +0100
-MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-CC: "John W. Linville" <linville@tuxdriver.com>,
+	Mon, 27 Oct 2008 14:01:48 -0400
+Date: Mon, 27 Oct 2008 14:00:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Carlos R. Mafra" <crmafra2@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	tomas.winkler@intel.com, kernel@nn7.de,
 	linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-10-14
-References: <20081015013204.GH3349@tuxdriver.com> <48F6419B.80104@gmail.com> <200810160656.52910.arvidjaar@mail.ru>
-In-Reply-To: <200810160656.52910.arvidjaar@mail.ru>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+Message-ID: <20081027180049.GF20389@tuxdriver.com> (sfid-20081027_190154_398204_708813B8)
+References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271839.39236.rjw@sisk.pl> <20081027175719.GA5759@localhost.aei.mpg.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081027175719.GA5759@localhost.aei.mpg.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
->>> Just wanted to check whether you'd seen/intend to apply the orinoco
->>> patch Andrey posted in <http://marc.info/?l=linux-kernel&m=122365972026045&w=4>.
- >>> It fixes a regression (vs 2.6.26) when using 4k stacks.
+On Mon, Oct 27, 2008 at 06:57:19PM +0100, Carlos R. Mafra wrote:
+> On Mon 27.Oct'08 at 18:39:38 +0100, Rafael J. Wysocki wrote:
+> > On Monday, 27 of October 2008, Carlos R. Mafra wrote:
+> > > Hi,
+> > > 
+> > > So I managed to bisect my suspend to RAM regression in 2.6.27-rc2
+> > > to commit 3b7ee69d0caefbdb85a606a98bff841b8c63b97e ("mac80211: disassociate 
+> > > when moving to new BSS") by Tomas Winkler (Cc:-ed).
+> > > 
+> > > Unfortunately it doesn't revert cleanly so I can't double check it.
+> > 
+> > Why are you saying it doesn't revert cleanly?  For me it does revert without
+> > rejects from 2.6.28-rc2.
 > 
-> well ... this is not a regression actually as the bug is triggered by
-> new code that was added in 2.6.28.
+> I get this
+> 
+> [mafra@localhost:linux-2.6]$ git checkout v2.6.28-rc2 -b s2ram
+> Switched to a new branch "s2ram"
+> [mafra@localhost:linux-2.6]$ git revert 3b7ee69d
+> warning: too many files, skipping inexact rename detection
+> Auto-merged net/mac80211/mlme.c
+> CONFLICT (content): Merge conflict in net/mac80211/mlme.c
+> Automatic revert failed.  After resolving the conflicts,
+> mark the corrected paths with 'git add <paths>' or 'git rm <paths>' and commit the result.
+> 
+> I don't know what is happening here :-(
 
-Added in 2.6.28, but from then all Agere cards will execute 
-orinoco_dl_firmware and clear 1K of stack, regardless of whether there 
-is firmware in /lib/firmware. I'm not certain it'll blow the stack, but 
-the remaining download functions don't use much more so it'll be close.
+That conflict is easy to resolve.  Just delete everything between
+"<<<<" and ">>>>" (including those lines).
 
-Basically, I expect anyone configuring 4k stacks and using an Agere card 
-to see the problem you saw. Which is a regression wrt 2.6.27.
+Hth!
 
+John
 
-Regards,
+P.S.  I don't see any obvious reason why that should affect X on
+resume -- maybe the iwlwifi guys have some ideas.
 
-Dave.
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
