@@ -1,87 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:33896 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbYJTQm2 (ORCPT
+Received: from mail-gx0-f18.google.com ([209.85.217.18]:47363 "EHLO
+	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751978AbYJ1RYW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 12:42:28 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224487340.24677.192.camel@debian.sh.intel.com>
-References: <20081015112517.GF6509@tesla>
-	 <1224126030.24677.78.camel@debian.sh.intel.com>
-	 <20081016113848.GB5899@tesla>
-	 <1224471102.24677.124.camel@debian.sh.intel.com>
-	 <43e72e890810192040w567fa4f6j1bf40e80084a857e@mail.gmail.com>
-	 <1224479933.24677.148.camel@debian.sh.intel.com>
-	 <43e72e890810192333r7b3f6a0m56d499d0aed9240e@mail.gmail.com>
-	 <1224484685.18024.5.camel@johannes.berg>
-	 <43e72e890810192346q5e0eadbcm26febe45392a2172@mail.gmail.com>
-	 <1224485431.18024.12.camel@johannes.berg>
-	 <43e72e890810192359g2bc75316v49377ddc9eded934@mail.gmail.com>
-	 <1224487340.24677.192.camel@debian.sh.intel.com>
-Content-Type: text/plain
-Date: Mon, 20 Oct 2008 18:43:19 +0200
-Message-Id: <1224520999.9386.72.camel@californication> (sfid-20081020_184233_864448_25CE57D2)
-Mime-Version: 1.0
+	Tue, 28 Oct 2008 13:24:22 -0400
+Received: by gxk11 with SMTP id 11so1884307gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 10:24:21 -0700 (PDT)
+Message-ID: <43e72e890810281024q5b69d35dofb7c401512c23053@mail.gmail.com> (sfid-20081028_182427_970445_04C4A4CE)
+Date: Tue, 28 Oct 2008 10:24:21 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: rtl2860 driver in mainline?
+Cc: "Greg KH" <greg@kroah.com>, "Ivo Van Doorn" <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <1225205997.2387.12.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20081028004915.GA3442@kroah.com>
+	 <a32f33a40810272248j5ee755ccoc8f6a8c8d5338cb8@mail.gmail.com>
+	 <20081028061023.GA6568@kroah.com>
+	 <1225205997.2387.12.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+On Tue, Oct 28, 2008 at 7:59 AM, Dan Williams <dcbw@redhat.com> wrote:
+> On Mon, 2008-10-27 at 23:10 -0700, Greg KH wrote:
+>> On Tue, Oct 28, 2008 at 06:48:31AM +0100, Ivo Van Doorn wrote:
+>> > Hi,
+>> >
+>> > > So, on my quest to suck up every out-of-tree driver and get it into the
+>> > > main kernel tree (drivers/staging/ to start with), I've been pointed at
+>> > > the rtl2860 driver.
+>> >
+>> > in that case make sure you include rt2870 on your list as well then. ;)
+>>
+>> Do you have a pointer to it?
+>>
+>> > > Does anyone know of a "cleaned up" version of this driver that is
+>> > > newer/better than the one on ralink's web site?  I found the
+>> > > 2008_0918_RT2860_Linux_STA_v1.8.0.0.tar.bz2 version there, and will
+>> > > start with that if no one else has yet.
+>> >
+>> > rt2800pci/rt2800usb development is in progress in the rt2x00.git
+>> > experimental branch:
+>> > http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=shortlog;h=experimental
+>> >
+>> > The current status is that rt2800usb has working RX with some warnings
+>> > regarding the
+>> > RX signal, and a non functional TX. rt2800pci isn't complete yet.
+>> >
+>> > So far progress has been very slow because of lack of time, so any help with the
+>> > development of the drivers is welcome.
+>>
+>> Is this a port of the tarball driver to the in-kernel wireless stack, or
+>> starting over from scratch?
+>>
+>> As it's not really working, do you mind if I just dump the tarball
+>> driver into the staging tree for users to use now (hint, they already
+>> are, the distros are shipping that driver as a kernel module package),
+>> and then when this "real" driver is up and working properly, we can drop
+>> the staging version?
+>
+> Seriously, how does including this help _anybody_ beyond today?
 
-> > > Ack on both points, which is why I said "If we're going to [...]". I
-> > > don't think I've seen a convincing use case for this other than test
-> > > environments, in which you can very well just use crda.
-> > 
-> > Ah, ok :)
-> 
-> OK, my point is here:
-> http://marc.info/?l=linux-wireless&m=122403515521098&w=2
-> 
-> Maybe Marcel has more to say when he wakes up...
+In this particular case if Joe the Plumber installs Linux 6 months
+from now chances are this move will get his Ralink 802.11n device
+supported. Perhaps 6 months from now the rt2x00 driver port will be
+ready though, in those cases people smarter than Joe the Plumber will
+be able to use compat-wireless, lets say, or the latest -rc kernel
+release to use an upstream driver which replaces it instead.
 
-I do wanna keep it as simple as possible, but on the other hand we
-should do a pretty decent job with picking a regulatory domain when no
-userspace is present (old or CRDA missing).
+> The
+> vendor driver is not going to get upstream,
 
-So my current thinking is that the regulatory hint for a card is limited
-to the frequencies the card actually registers with mac80211. If the
-internal card is 2.4 GHz, then we limit the hint to this. So the 5 GHz
-band is still a virgin. If a 5 GHz card comes along and it is the first
-in its band, then we take its regulatory hint for that band, but for the
-2.4 GHz band it has to follow the first cards hint.
+Once in staging it means it is upstream now though.
 
-As I mentioned before, first card wins is a perfect solution from my
-point of view, but we should not punish a second card in a different
-band if the first card is not touching this band at all. And I can see
-these user scenarios happening and in some cases they might be done on
-purpose to serve every band with a different piece of hardware.
+> and shipping it in staging
+> suggests that people help fix the vendor driver there,
 
-And for the cases where new bands might be used in the future. In that
-case we do have to do this right since userspace might be outdated. Lets
-face it, we should always support a new kernel with an old userspace.
-That is how the Linux kernel is suppose to work. That is probably the
-only reason why wireless extensions are still around ;)
+It actually means developers have the option to work on what they
+like, crap or not crap. And crap that works, or cool-stuff that
+doesn't work quite well yet.
 
-The idea of having a 2.4 GHz only card provide a hint for 5 GHz is just
-plain wrong. If the hardware is designed for 2.4 GHz it should not mess
-with other frequencies.
+> not work on the
+> driver that will actually go upstream.
 
-So my solution would be first regulatory hint in each band wins.
+It is not barring people who do want to work on the ubber cool
+upstream driver from doing so; it *may* deviate effort of a few
+developers -- this is true and this is what hurts. But like Johannes
+says too, people spend tons of hours uselessly watching TV. So
+technically it just gives developers and users more options. That is
+all.
 
-Also we should have printk that shows up in dmesg in cases where neither
-crda or iw modified the regulatory domain and we have clash with the
-hints provided by two or more cards.
+> staging drivers are supposed to eventually go "mainstream" if somebody
+> fixes them up, right?  So how does cramming in a driver that will go
+> nowhere help anyone in the medium or long term?
 
-Regards
+Problem is having no support yet and that distributions still work on
+getting the crap into their own distribution. Getting it into staging
+should reduce the turnaround time for device to get supported.
 
-Marcel
+> Should we have shipped
+> madwifi with the open HAL in staging
 
+They're not compatible though.
 
+> while ath5k was getting brought up
+> to speed?
+
+If a real HAL did work I don't see why not if the premise is we are
+willing to accept complete crap into staging.
+
+> Would that have taken effort away from ath5k?
+
+Yes but this cannot be avoided, despite my efforts people still want
+to poke and maintain MadWifi. I have to respect that but it doesn't
+mean my own resources or what I push for has to be dedicated towards
+that.
+
+> I highly respect the work that you're doing with staging, but just
+> because the driver is out of tree doesn't mean that it'll ever go
+> mainline, and that including some drivers will just sap effort from
+> where it's needed.
+
+This is the danger, and I wonder how much this is really true or
+rather if this actually attracts more developers to keep crap working
+for users willing to use crap in the meantime while other more
+seasoned developers get stuff working *properly*.
+
+> Cleaning up crappy vendor driver code is _not_ where
+> the effort is needed.  We have a higher standard of quality.
+
+We do, but crap developers don't, and crap vendor developers don't either.
+
+Should we have TAINT_CRAP ? :) Oh wait look!!!!
+
+     { TAINT_CRAP, 'C', ' ' },
+
+ *  'C' - modules from drivers/staging are loaded.
+
+>From panic.c! Yay!
+
+  Luis
+  Luis
