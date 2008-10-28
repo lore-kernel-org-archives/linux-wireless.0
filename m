@@ -1,75 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54803 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:56074 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbYJFM1e (ORCPT
+	with ESMTP id S1752144AbYJ1Sgb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 08:27:34 -0400
-Subject: Re: bad DMAR interaction with iwlagn and SATA
+	Tue, 28 Oct 2008 14:36:31 -0400
+Subject: sparse warnings
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Andres Freund <andres@anarazel.de>,
-	Muli Ben-Yehuda <muli@il.ibm.com>,
-	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240809290140i5a47d534qa30f9088df834162@mail.gmail.com> (sfid-20080929_104025_440809_8C8FD26C)
-References: <200809251511.20132.andres@anarazel.de>
-	 <1222441955.3798.13.camel@johannes.berg>
-	 <1ba2fa240809261630y7a8e5f20g75ab47ff98a1e614@mail.gmail.com>
-	 <200809291027.50453.andres@anarazel.de>
-	 <1ba2fa240809290140i5a47d534qa30f9088df834162@mail.gmail.com>
-	 (sfid-20080929_104025_440809_8C8FD26C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wtKHr93MKiRybIorpimQ"
-Date: Mon, 06 Oct 2008 14:26:55 +0200
-Message-Id: <1223296015.15196.2.camel@johannes.berg> (sfid-20081006_142739_316303_43A5A20C)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Tomas Winkler <tomasw@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	Daniel Drake <dsd@gentoo.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-buDxcgSuZp+BwGSdfJ1B"
+Date: Tue, 28 Oct 2008 16:57:17 +0100
+Message-Id: <1225209437.3598.16.camel@johannes.berg> (sfid-20081028_193636_333303_B358B632)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-wtKHr93MKiRybIorpimQ
-Content-Type: text/plain
+--=-buDxcgSuZp+BwGSdfJ1B
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-09-29 at 11:40 +0300, Tomas Winkler wrote:
-> On Mon, Sep 29, 2008 at 11:27 AM, Andres Freund <andres@anarazel.de> wrot=
-e:
-> > Hi,
-> >
-> > On Saturday 27 September 2008, Tomas Winkler wrote in "Re: bad DMAR
-> > interaction with iwlagn and SATA":
-> >> Meanwhile it all reported bugs in this case points to 64 bit
-> >> installations, I'll give it more testing
-> > Would it help to test on 32bit? I have some dissk with 32bit system ins=
-talled
-> > lying around somewhere...
->=20
-> It would help to try to isolate this as 64 bit issue
+These look like bugs:
 
-Andres, can you post your config?
+drivers/net/wireless/iwlwifi/iwl3945-base.c:4848:18: warning: invalid assig=
+nment: |=3D
+drivers/net/wireless/iwlwifi/iwl3945-base.c:4848:18:    left side has type =
+unsigned char
+drivers/net/wireless/iwlwifi/iwl3945-base.c:4848:18:    right side has type=
+ restricted __le32
+
+drivers/net/wireless/libertas/cmd.c:609:16: warning: cast to restricted __l=
+e16
+drivers/net/wireless/libertas/cmd.c:611:16: warning: cast to restricted __l=
+e16
+
+
+These seem harmless:
+
+drivers/net/wireless/zd1211rw/zd_usb.c:359:17: warning: implicit cast from =
+nocast type
+
+drivers/net/wireless/ath9k/main.c:1836:28: warning: incorrect type in argum=
+ent 2 (different base types)
+drivers/net/wireless/ath9k/main.c:1836:28:    expected restricted pci_power=
+_t [usertype] state
+drivers/net/wireless/ath9k/main.c:1836:28:    got int
+drivers/net/wireless/ath9k/hw.c: In function =E2=80=98ath9k_hw_eeprom_set_b=
+oard_values=E2=80=99:
+drivers/net/wireless/ath9k/hw.c:544: warning: =E2=80=98ant_config=E2=80=99 =
+may be used uninitialized in this function
+drivers/net/wireless/ath9k/hw.c:4818:17: warning: symbol 'tmp' shadows an e=
+arlier one
+drivers/net/wireless/ath9k/hw.c:4681:6: originally declared here
+drivers/net/wireless/ath9k/hw.c:5020:17: warning: symbol 'tmp' shadows an e=
+arlier one
+drivers/net/wireless/ath9k/hw.c:4930:6: originally declared here
+
+[and a whole bunch in b43]
 
 johannes
 
---=-wtKHr93MKiRybIorpimQ
+--=-buDxcgSuZp+BwGSdfJ1B
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI6gQLAAoJEKVg1VMiehFYP+IQAI7XD5VWcGPIE1Q/6HzhZtU4
-Vgq6x8fTDI8afDZ1M5w+RKGuFR4TlqoPnvYjtRk+33ij+dWv653TM0H2VwnFQUFD
-ugvKzojyzWLXIrHoOeN3App/98qlg7jknP7olPLOsLf6myllw9nXkDirQziJENfD
-dqcdXF6GHA6mMv/ZLnVvYJioXS6uyUQDBwwq+FzMg6msB2Y+nn6cqZWtUJTXZIEK
-ZPaBB6OJxIk4MvUg79KpIDtVNQjxbQBBuF4dXyybVK09BU0v+aT4C/FSTgDyC3yT
-IIDSbYr5rk3CL7E4uMp/kepCqkCVXJRKyTWcuyC3T21JGTFhMUrsAp5dwo3mo9v2
-elMOUfklTH0WMlvkPHdxnZ4+JXBHyiNXZrEloVQyupy3aV67V9/X1CzzveW4whA+
-n5tBJsmMiBQh5c38tTO7Yz1zfPaTFD4dTBKkWoPAqsuadA1V4lRYSXONfJhxFUA2
-uNHf15XrkH67sanWeSXbsvIzxYhsYOQOlPOAXdn82N6yRNnJ2iRtt/r82Qstx0HF
-r9TNgGTafoKjSNwRcOM4vwQiuy/Tr25QGtXryuV5nGKnWJHmpzuZrWG/J5l4ZR+L
-w7ZQYhAWc0HHuRZSVm2XIvGieX7nqqOqwBvLC88iHgVj9mkM+2/urF68tWIxGMPG
-GKiPJVTkree9SDrxQMNK
-=MZCq
+iQIcBAABAgAGBQJJBzZZAAoJEKVg1VMiehFYED4P/iwwOXOOern+0I2jiwdWo/63
+2T8ErZFEMmL+cL6aktUKzCor3NGZSFzYeID5NHXyHDSWvrySL91LdJIXgKYyEYfq
+nj0zefBcuOvI1rMdyLlUyA6p8UjkI+c+qQQMapAHmxN2ALxqKKObYD58pfCAc1G5
+phIeHLh2xpfizeHQroCo8GUXrJ5UUuF8TzjoK91S3T2FR0EcdunAvlH4waw06mbl
+plz4V3dZyRt8O8lZMiEYEhPqzJrce3+fU9vGzWTst+5+ZFVliKVavWdKG31Jfw5Q
+Mc37Xpr22n4UbzIIhFK8Gb5tBJmr7vLwBjEnI1fLGV2smeRcik1QBXgOxm98rKUC
+HJGuUySI2D+JFAtjl1XZHVAyCeb+uuim7KPTSQt33R3G6JDx4Ec7duCoxyfMxFmP
+juDyB2Z2pBSXTVIKuRrpDYXxKhQZr0s3DHlPpnqjdeQS64OUBpEdBLfutCWINvKm
+/lnxTIWAId4rZ3pxAzMyz2DW8dNvz21qi7dPPZLptv6hhxccu1IAtj+iv0vmca4G
+c+iYJLq9LoTaneMU/u51c280M5AzUwy3+0/Kc+GZJOBdTX6mxLSd/PTZ+xQmxerI
+f0onjzuJmMmufMRAVEqfnaACgiDu1TVyFw41pY253itKdET7km6PuFCRbJsCXJJ5
+x0kSXcoZlSvhsfuPKD3i
+=2SKh
 -----END PGP SIGNATURE-----
 
---=-wtKHr93MKiRybIorpimQ--
+--=-buDxcgSuZp+BwGSdfJ1B--
 
