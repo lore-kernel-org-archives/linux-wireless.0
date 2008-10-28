@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:57193 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751384AbYJSQvJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 12:51:09 -0400
-Message-ID: <48FB6577.4010406@lwfinger.net> (sfid-20081019_185113_182606_9B851987)
-Date: Sun, 19 Oct 2008 09:51:03 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from kroah.org ([198.145.64.141]:47879 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752250AbYJ1F7H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 01:59:07 -0400
+Date: Mon, 27 Oct 2008 22:56:09 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Joey Krane <linuxbsd2004@gmail.com>
+Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
+Message-ID: <20081028055609.GA6468@kroah.com> (sfid-20081028_065912_891052_94CF7208)
+References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> <20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com> <20081023111103.GB5979@tesla> <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com> <20081028002919.GB2992@kroah.com> <20081028005553.GE6377@tesla>
 MIME-Version: 1.0
-To: metin <kormetin@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: B43 randomly and silently dropping connections...
-References: <200810161959.43084.mcbrides9@comcast.net> <gdfak8$cng$1@ger.gmane.org>
-In-Reply-To: <gdfak8$cng$1@ger.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081028005553.GE6377@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-metin wrote:
-> Yes I can confirm this problem.
-> I have bcm4318 card and my connection frequently and unexpectidely is
-> dropping with b43 (I had no problem with bcm43xx module). It did not
-> differ at all which firmware I used.
-> dmesg gives:
+On Mon, Oct 27, 2008 at 05:55:53PM -0700, Luis R. Rodriguez wrote:
 > 
-> b43-phy1: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-> Registered led device: b43-phy1::tx
-> Registered led device: b43-phy1::rx
-> Registered led device: b43-phy1::radio
-> ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> wlan0: deauthenticating by local choice (reason=3)
-> input: b43-phy1 as /devices/virtual/input/input10
-> b43-phy1: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-> Registered led device: b43-phy1::tx
-> Registered led device: b43-phy1::rx
-> Registered led device: b43-phy1::radio
-> ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> wlan0: authenticate with AP 00:73:05:10:a0:84
-> wlan0: authenticated
-> wlan0: associate with AP 00:73:05:10:a0:84
-> wlan0: RX AssocResp from 00:73:05:10:a0:84 (capab=0x471 status=0 aid=2)
-> wlan0: associated
-> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> wlan0: no IPv6 routers present
-> 
-> ...
-> wlan0: No ProbeResp from current AP 00:73:05:10:a0:84 - assume out of range
-> wlan0: authenticate with AP 00:73:05:10:a0:84
-> wlan0: authenticate with AP 00:73:05:10:a0:84
-> wlan0: authenticate with AP 00:73:05:10:a0:84
-> wlan0: authenticate with AP 00:73:05:10:a0:84
-> wlan0: authentication with AP 00:73:05:10:a0:84 timed out
-> 
-> Please help...
+> Excellent, if no one send patches I guess I will.
 
-What kernel version? There have been a number of recent changes in mac80211 that
-make connections a lot more robust. If you are not running 2.6.27, I suggest
-getting it, or (even better) a copy of wireless-testing.
+Ok, I've now added it to the staging tree and will forward it on to
+Linus.  After it gets there you can probably drop the git tree.
 
-Larry
+> So we have a page for this now:
+> 
+> http://wireless.kernel.org/en/users/Drivers/otus
+
+You might want to link to this off of the "main" drivers page as well.
+
+> Init you can find a list of devices. Let me just paste what we have
+> there now:
+> 
+> Dlink
+> 
+>     * DWA-160A1 
+> 
+> Netgear
+> 
+>     * WNDA3100
+>     * WN111v2 
+> 
+> TP-Link
+> 
+>     * TL-WN821N 
+> 
+> AVM
+> 
+>     * FRITZ!WLAN N USB Stick (USB ID 0x57c, 0x8401) 
+
+Cool, I'll go poke around the store and see if I can find one of these.
+
+> > I'll go try to get this tree into a buildable state and put it into
+> > staging tonight.
+> 
+> Thanks! BTW if you add a kconfig option for it please point users with
+> this info:
+
+Oops, forgot this, I'll go add it.
+
+thanks,
+
+greg k-h
