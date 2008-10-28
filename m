@@ -1,36 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57732 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760103AbYJJSCL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 14:02:11 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 11:02:11 -0700
-Date: Fri, 10 Oct 2008 04:01:58 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>
-Subject: Re: [PATCH 1/1] Ath9k: fix uninitialized value in ath9k_hw_reset
-Message-ID: <20081010110158.GG6766@tesla> (sfid-20081010_200216_215253_50ED95E0)
-References: <1223661403-21803-1-git-send-email-jirislaby@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1223661403-21803-1-git-send-email-jirislaby@gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:56064 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752317AbYJ1SgM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 14:36:12 -0400
+Subject: [PATCH] wireless: fix a few sparse warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 28 Oct 2008 16:49:41 +0100
+Message-Id: <1225208981.3598.10.camel@johannes.berg> (sfid-20081028_193616_533909_49FF65A0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 10, 2008 at 10:56:43AM -0700, Jiri Slaby wrote:
-> status ath9k_hw_reset() parameter should be set in every case, since
-> it is used in callers to find out an error code.
-> 
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/rc80211_minstrel.c |    2 +-
+ net/mac80211/tx.c               |    1 -
+ net/wireless/reg.c              |    2 +-
+ 3 files changed, 2 insertions(+), 3 deletions(-)
 
-Thanks!
+--- everything.orig/net/mac80211/rc80211_minstrel.c	2008-10-28 16:42:59.000000000 +0100
++++ everything/net/mac80211/rc80211_minstrel.c	2008-10-28 16:43:08.000000000 +0100
+@@ -225,7 +225,7 @@ minstrel_get_next_sample(struct minstrel
+ 	return sample_ndx;
+ }
+ 
+-void
++static void
+ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 		  void *priv_sta, struct ieee80211_tx_rate_control *txrc)
+ {
+--- everything.orig/net/mac80211/tx.c	2008-10-28 16:43:18.000000000 +0100
++++ everything/net/mac80211/tx.c	2008-10-28 16:43:44.000000000 +0100
+@@ -700,7 +700,6 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 	left = payload_len - per_fragm;
+ 	for (i = 0; i < num_fragm - 1; i++) {
+ 		struct ieee80211_hdr *fhdr;
+-		struct ieee80211_tx_info *info;
+ 		size_t copylen;
+ 
+ 		if (left <= 0)
+--- everything.orig/net/wireless/reg.c	2008-10-28 16:45:29.000000000 +0100
++++ everything/net/wireless/reg.c	2008-10-28 16:45:33.000000000 +0100
+@@ -638,7 +638,7 @@ static void print_regdomain(const struct
+ 	print_rd_rules(rd);
+ }
+ 
+-void print_regdomain_info(const struct ieee80211_regdomain *rd)
++static void print_regdomain_info(const struct ieee80211_regdomain *rd)
+ {
+ 	printk(KERN_INFO "cfg80211: Regulatory domain: %c%c\n",
+ 		rd->alpha2[0], rd->alpha2[1]);
 
-Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-  Luis
