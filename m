@@ -1,87 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:33355 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752041AbYJ1CF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 22:05:26 -0400
-Date: Tue, 28 Oct 2008 03:05:13 +0100
-From: Mirco Tischler <mircotischler@gmx.net>
-To: lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
-Message-ID: <20081028030513.11158870@mtlp.12.dimension> (sfid-20081028_030531_930082_31A08335)
-In-Reply-To: <20081028020212.0dfcb6c9@mtlp.12.dimension>
-References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
+Received: from mga14.intel.com ([143.182.124.37]:22447 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751978AbYJ1Aqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 20:46:42 -0400
+Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
+From: reinette chatre <reinette.chatre@intel.com>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081027230326.GA23250@isilmar.linta.de>
+References: <20081018231046.GA10977@isilmar.linta.de>
+	 <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
+	 <20081019075916.GA12904@isilmar.linta.de>
+	 <1225145468.1115.139.camel@rc-desk>
+	 <20081027230326.GA23250@isilmar.linta.de>
+Content-Type: text/plain
+Date: Mon, 27 Oct 2008 17:47:03 -0700
+Message-Id: <1225154823.1115.149.camel@rc-desk> (sfid-20081028_014646_540786_3F9EDC06)
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/7.IAd2PpRHQ6K46J07ogSoJ";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/7.IAd2PpRHQ6K46J07ogSoJ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, 2008-10-27 at 16:03 -0700, Dominik Brodowski wrote:
+> Hi,
+> 
+> On Mon, Oct 27, 2008 at 03:11:08PM -0700, reinette chatre wrote:
+> > Could you please try the following patch instead of updating your ucode?
+> 
+> Thanks for the patch -- it doesn't work with the old uCode, unfortunately;
+> while the new uCode works with or without this patch.
+> 
 
-On Tue, 28 Oct 2008 02:02:12 +0100, Mirco Tischler wrote:
-> Hi
->=20
-> I have problems connecting to wlan with my iwl4965 chip and 2.6.28-rc2 (d=
-idn't
-> test -rc1). Networkmanager just times out every time.
-> Only after playing around with rmmod/modprobe and killswitch I am sometim=
-es
-> able to connect. But I cannot reproduce this reliably yet.
->=20
-> This is what I get in dmesg (from modprobe iwlagn to connection failure):
->=20
-> [ 1881.884690] iwlagn: Intel(R) Wireless WiFi Link AGN driver for
-> Linux,1.3.27kds
-> [ 1881.884692] iwlagn: Copyright(c) 2003-2008 Intel Corporation
-> [ 1881.884809] iwlagn 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> I=
-RQ 18
-> [ 1881.884836] iwlagn 0000:06:00.0: setting latency timer to 64
-> [ 1881.884952] iwlagn: Detected Intel Wireless WiFi Link 4965AGN REV=3D0x4
-> [ 1881.935149] iwlagn: Tunable channels: 13 802.11bg, 19 802.11a channels
-> [ 1881.936327] phy4: Selected rate control algorithm 'iwl-agn-rs'
-> [ 1885.965591] iwlagn 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> I=
-RQ 18
-> [ 1885.965874] iwlagn 0000:06:00.0: irq 41 for MSI/MSI-X
-> [ 1885.965974] iwlagn 0000:06:00.0: firmware: requesting iwlwifi-4965-2.u=
-code
-> [ 1886.181600] Registered led device: iwl-phy4:radio
-> [ 1886.181618] Registered led device: iwl-phy4:assoc
-> [ 1886.181635] Registered led device: iwl-phy4:RX
-> [ 1886.181654] Registered led device: iwl-phy4:TX
-> [ 1886.213631] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [ 1887.572768] iwlagn: TX Power requested while scanning!
->=20
-> What might be related is this early on boot:
->=20
-> [    0.163009] cfg80211: Calling CRDA to update world regulatory domain
-> [    0.163012] cfg80211: Failed calling CRDA
-> [    0.163024] cfg80211: calling CRDA failed - unable to update world
-> regulatory domain, using static definition
->=20
-> Need any further info?
->=20
-> thanks
->=20
-> Mirco
-Resubmit because of broken email header.
+We would like to trace what is causing that microcode error - could you
+please reproduce the problem while debugging is enabled in the driver?
+That will give us a full log of the microcode error. Please compile your
+driver with debugging (CONFIG_IWL3945_DEBUG) and load the module with
+option "debug=0x43fff". Please run the test without the patch I just
+sent.
 
---Sig_/7.IAd2PpRHQ6K46J07ogSoJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Thank you very much
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+Reinette
 
-iEYEARECAAYFAkkGc2IACgkQz+diZ7c2xfjASwCaA0oDTz33u9VYqFXlKj0O8snt
-jg8An11QPMd5untfG4eXPGcWkJfmRrBp
-=Mo8c
------END PGP SIGNATURE-----
 
---Sig_/7.IAd2PpRHQ6K46J07ogSoJ--
