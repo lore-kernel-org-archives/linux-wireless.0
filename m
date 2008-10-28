@@ -1,72 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:53688 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754900AbYJKSSw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2008 14:18:52 -0400
-Message-ID: <48F0EE06.4020803@lwfinger.net> (sfid-20081011_201856_360337_97899DAB)
-Date: Sat, 11 Oct 2008 11:18:46 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from kroah.org ([198.145.64.141]:36215 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751932AbYJ1Akb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 20:40:31 -0400
+Date: Mon, 27 Oct 2008 17:29:19 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Joey Krane <linuxbsd2004@gmail.com>
+Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
+Message-ID: <20081028002919.GB2992@kroah.com> (sfid-20081028_014036_910776_0DA258B2)
+References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> <20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com> <20081023111103.GB5979@tesla> <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, bugme-daemon@bugzilla.kernel.org,
-	zOOmER.gm@gmail.com
-Subject: Re: [Bugme-new] [Bug 11728] New: 2.6.27 RTL8187b wireless driver
- missing card support 0bda:8198
-References: <bug-11728-10286@http.bugzilla.kernel.org/> <20081010103108.7a7a3fbf.akpm@linux-foundation.org> <20081010181841.GA20509@tuxdriver.com>
-In-Reply-To: <20081010181841.GA20509@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Fri, Oct 10, 2008 at 10:31:08AM -0700, Andrew Morton wrote:
->> (switched to email.  Please respond via emailed reply-to-all, not via the
->> bugzilla web interface).
->>
->> On Fri, 10 Oct 2008 08:29:17 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
->>
->>> http://bugzilla.kernel.org/show_bug.cgi?id=11728
->>>
->>>            Summary: 2.6.27 RTL8187b wireless driver missing card support
->>>                     0bda:8198
->>>            Product: Drivers
->>>            Version: 2.5
->>>      KernelVersion: 2.6.27
->>>           Platform: All
->>>         OS/Version: Linux
->>>               Tree: Mainline
->>>             Status: NEW
->>>           Severity: normal
->>>           Priority: P1
->>>          Component: Network
->>>         AssignedTo: jgarzik@pobox.com
->>>         ReportedBy: zOOmER.gm@gmail.com
->>>
->>>
->>> Hardware Environment: Toshiba Satellite L300-110 laptop (with built-in USB
->>> wireless card RTL8187b, DEVICE ID 0bda:8198)
->>>
->>> Problem Description:
->>> 2.6.27 Kernel cannot detect wireless card.
->>>
->>> Problem goes out, if in rtl8187_dev.c file i add a line with this card DEVID:
->>> {USB_DEVICE(0x0bda, 0x8198), .driver_info = DEVICE_RTL8187B},
->>> After this done and recompiling module, card works fine(tested it for hours
->>> with WEP and without authentication)
->>>
->  
-> From: John W. Linville <linville@tuxdriver.com>
-> Subject: [PATCH] rtl8187: add device ID 0bda:8198
+On Mon, Oct 27, 2008 at 04:35:11PM -0700, Luis R. Rodriguez wrote:
+> On Thu, Oct 23, 2008 at 4:11 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > On Wed, Oct 22, 2008 at 11:26:55PM -0700, Greg KH wrote:
+> >> On Tue, Oct 21, 2008 at 11:50:45PM -0700, Greg KH wrote:
+> >> > On Tue, Oct 21, 2008 at 07:04:17PM -0700, Luis R. Rodriguez wrote:
+> >> > > We would like to see our Atheros 802.11n USB Linux driver upstream
+> >> > > however we need help with this so we are releasing our Atheros 11n USB
+> >> > > Otus Linux driver under the ISC to the community. The goal is to work
+> >> > > with the community to help move this forward upstream. We are hoping
+> >> > > for community help and leadership on this (*cough*).
+> >> >
+> >> > Yeah!
+> >> >
+> >> > I'll grab this and put it in drivers/staging/ so it gets some users and
+> >> > more developers to help out with it.
+> >>
+> >> Ok, it seems to need some basic work to merely build properly on
+> >> "modern" kernel versions.
+> >
+> > Yeah, it works up to 2.6.24.
 > 
-> Reported by zOOmER.gm@gmail.com to work here:
-> 
-> 	http://bugzilla.kernel.org/show_bug.cgi?id=11728
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-ACK
+> This is now fixed on the master branch, also the branch "for-upstream"
+> does a lot of cleanup I thought you may like before stuffing it into
+> staging like removing all KERNEL_VERSION checks, all wireless
+> extensions checks, some compile warnings, removal of compat, dos2unix,
+> use utf-8, etc. Unfortunately this still requires a specific version
+> of wpa_supplicant but it seems it works. Not sure what bars you have
+> for staging at this point.
 
-Larry
+Pretty much the only "bar" is "it compiles" :)
 
+> Will you take this in, and expect patches for fixing it to use
+> standard wext and also report standard wireless statistic (yeap, this
+> is not there yet either).
+
+Yes, I can do that.
+
+> Joey is one user which reported the driver working now with the
+> compile fixes for newer kernels for 2.6.28-rc2 using the specific
+> version of wpa_supplicant for it.
+> 
+> Joey can you test the for-upstream branch on otus git?
+
+If someone can tell me what device this is for, I can try to go buy it
+so that I can verify changes I make don't drasticly break things.
+
+I'll go try to get this tree into a buildable state and put it into
+staging tonight.
+
+thanks,
+
+greg k-h
