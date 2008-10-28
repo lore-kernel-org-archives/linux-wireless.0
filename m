@@ -1,139 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:1372 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754020AbYJBPCm (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:11127 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752666AbYJ1TIn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 11:02:42 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Elias Oltmanns" <eo@nebensachen.de>, jirislaby@gmail.com,
-	mickflemm@gmail.com, johannes@sipsolutions.net,
-	toralf.foerster@gmx.de
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-Date: Thu, 2 Oct 2008 11:02:02 -0400
-Message-Id: <20081002144600.M31352@bobcopeland.com> (sfid-20081002_170246_650116_07F8A6C3)
-In-Reply-To: <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
-References: <200808101401.03339.toralf.foerster@gmx.de> <b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com> <200810012055.58085.toralf.foerster@gmx.de> <87ej30m376.fsf@denkblock.local> <b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com> <87ljx8ndw1.fsf@denkblock.local> <b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com> <87od23mo08.fsf@denkblock.local> <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com>
+	Tue, 28 Oct 2008 15:08:43 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so677935ywe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 12:08:41 -0700 (PDT)
+Message-ID: <43e72e890810281201n6e119153k959283ced1abb757@mail.gmail.com> (sfid-20081028_200848_342141_46BFA8A7)
+Date: Tue, 28 Oct 2008 12:01:25 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>, stable@kernel.org
+Subject: Re: [PATCH] ath9k: remove useless NULL initialisers
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <1225209597.3598.18.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+Content-Type: multipart/mixed;
+	boundary="----=_Part_39362_3856445.1225220485750"
+References: <1225209597.3598.18.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2 Oct 2008 08:52:58 -0400, Bob Copeland wrote
-> > Not sure I agree there. Why should calibration take place regularly even
-> > though the interface appears to be shut down from user-space's point of
-> > view? It simply doesn't make sense  to start the interface if nobody
-> > intends to use it.
-> 
-> Hmm, yeah, you're right.  So, I guess we can just do your patch except
-> with another status bit that says it's active instead of changing
-> mac80211 (b43 does something along those lines).
+------=_Part_39362_3856445.1225220485750
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Something like this?  It's kind of ugly, but the state bit needs
-to be in the _init/_stop critical section to avoid the race there.
-This makes it match other drivers' suspend methods, but is only a 
-stop-gap until we have mac80211 suspend callbacks.
+Seems you forgot to cc linux-wireless so I'll leave the entire patch
+in my reply. Seems right for stable too, so sending a reduced version
+which applies to it (using gmail right now, will send shortly inline).
 
-Jiri, Nick, any comments?  
+On Tue, Oct 28, 2008 at 8:59 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> When I added .set_frag_threshold I didn't realise it was already
+> there which now generated a sparse warning. Therefore, remove
+> the .set_frag_threshold NULL initialiser, and while at it all the
+> other useless ones.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Based on a patch by Elias Oltmanns.  We call ath5k_init in resume even
-if we didn't previously open the device.  Besides starting up the
-device unnecessarily, this also causes an OOPS on rmmod because
-mac80211 will not invoke ath5k_stop and softirqs are left running after
-the module has been unloaded.  Add a new state bit, ATH5K_STAT_STARTED,
-to indicate that we have been started up.
+ACKed-by: lrodriguez@atheros.com
 
----
- drivers/net/wireless/ath5k/base.c |   21 ++++++++++++++++++---
- drivers/net/wireless/ath5k/base.h |    3 ++-
- 2 files changed, 20 insertions(+), 4 deletions(-)
+  Luis
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index e09ed2c..a40b75f 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -626,11 +626,17 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- {
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath5k_softc *sc = hw->priv;
-+	int is_started;
- 
- 	ath5k_led_off(sc);
- 
-+	is_started = test_bit(ATH_STAT_STARTED, sc->status);
- 	ath5k_stop_hw(sc);
- 
-+	/* restore started flag for resume */
-+	if (is_started)
-+		set_bit(ATH_STAT_STARTED, sc->status);
-+
- 	free_irq(pdev->irq, sc);
- 	pci_save_state(pdev);
- 	pci_disable_device(pdev);
-@@ -666,9 +672,12 @@ ath5k_pci_resume(struct pci_dev *pdev)
- 		goto err_no_irq;
- 	}
- 
--	err = ath5k_init(sc);
--	if (err)
--		goto err_irq;
-+	if (test_bit(ATH_STAT_STARTED, sc->status)) {
-+		err = ath5k_init(sc);
-+		if (err)
-+			goto err_irq;
-+	}
-+
- 	ath5k_led_enable(sc);
- 
- 	/*
-@@ -2153,6 +2162,8 @@ ath5k_init(struct ath5k_softc *sc)
- 
- 	mutex_lock(&sc->lock);
- 
-+	__clear_bit(ATH_STAT_STARTED, sc->status);
-+
- 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "mode %d\n", sc->opmode);
- 
- 	/*
-@@ -2177,6 +2188,8 @@ ath5k_init(struct ath5k_softc *sc)
- 	if (ret)
- 		goto done;
- 
-+	__set_bit(ATH_STAT_STARTED, sc->status);
-+
- 	/* Set ack to be sent at low bit-rates */
- 	ath5k_hw_set_ack_bitrate_high(sc->ah, false);
- 
-@@ -2269,6 +2282,8 @@ ath5k_stop_hw(struct ath5k_softc *sc)
- 	}
- 	ath5k_txbuf_free(sc, sc->bbuf);
- 	mmiowb();
-+
-+	__clear_bit(ATH_STAT_STARTED, sc->status);
- 	mutex_unlock(&sc->lock);
- 
- 	del_timer_sync(&sc->calib_tim);
-diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-index 9d0b728..06d1054 100644
---- a/drivers/net/wireless/ath5k/base.h
-+++ b/drivers/net/wireless/ath5k/base.h
-@@ -128,11 +128,12 @@ struct ath5k_softc {
- 	size_t			desc_len;	/* size of TX/RX descriptors */
- 	u16			cachelsz;	/* cache line size */
- 
--	DECLARE_BITMAP(status, 4);
-+	DECLARE_BITMAP(status, 5);
- #define ATH_STAT_INVALID	0		/* disable hardware accesses */
- #define ATH_STAT_MRRETRY	1		/* multi-rate retry support */
- #define ATH_STAT_PROMISC	2
- #define ATH_STAT_LEDSOFT	3		/* enable LED gpio status */
-+#define ATH_STAT_STARTED	4		/* opened & irqs enabled */
- 
- 	unsigned int		filter_flags;	/* HW flags, AR5K_RX_FILTER_* */
- 	unsigned int		curmode;	/* current phy mode */
--- 
-1.5.4.2.182.gb3092
+> ---
+>  drivers/net/wireless/ath9k/main.c |    8 --------
+>  1 file changed, 8 deletions(-)
+>
+> --- everything.orig/drivers/net/wireless/ath9k/main.c   2008-10-28 16:57:36.000000000 +0100
+> +++ everything/drivers/net/wireless/ath9k/main.c        2008-10-28 16:57:45.000000000 +0100
+> @@ -1651,20 +1651,12 @@ static struct ieee80211_ops ath9k_ops =
+>        .config             = ath9k_config,
+>        .config_interface   = ath9k_config_interface,
+>        .configure_filter   = ath9k_configure_filter,
+> -       .get_stats          = NULL,
+>        .sta_notify         = ath9k_sta_notify,
+>        .conf_tx            = ath9k_conf_tx,
+> -       .get_tx_stats       = NULL,
+>        .bss_info_changed   = ath9k_bss_info_changed,
+> -       .set_tim            = NULL,
+>        .set_key            = ath9k_set_key,
+> -       .hw_scan            = NULL,
+> -       .get_tkip_seq       = NULL,
+> -       .set_rts_threshold  = NULL,
+> -       .set_frag_threshold = NULL,
+>        .get_tsf            = ath9k_get_tsf,
+>        .reset_tsf          = ath9k_reset_tsf,
+> -       .tx_last_beacon     = NULL,
+>        .ampdu_action       = ath9k_ampdu_action,
+>        .set_frag_threshold = ath9k_no_fragmentation,
+>  };
+>
+>
+>
 
+------=_Part_39362_3856445.1225220485750
+Content-Type: text/x-patch; name=remove-dupe-frag.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fmuwlmyh0
+Content-Disposition: attachment; filename=remove-dupe-frag.patch
 
+LS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoOWsvbWFpbi5jLm9yaWcJMjAwOC0xMC0yOCAx
+MTo1NTo0OS4wMDAwMDAwMDAgLTA3MDAKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoOWsv
+bWFpbi5jCTIwMDgtMTAtMjggMTE6NTY6MDAuMDAwMDAwMDAwIC0wNzAwCkBAIC0xMDMxLDcgKzEw
+MzEsNiBAQAogCS5od19zY2FuICAgICAgICAgICAgPSBOVUxMLAogCS5nZXRfdGtpcF9zZXEgICAg
+ICAgPSBOVUxMLAogCS5zZXRfcnRzX3RocmVzaG9sZCAgPSBOVUxMLAotCS5zZXRfZnJhZ190aHJl
+c2hvbGQgPSBOVUxMLAogCS5zZXRfcmV0cnlfbGltaXQgICAgPSBOVUxMLAogCS5nZXRfdHNmIAkg
+ICAgPSBhdGg5a19nZXRfdHNmLAogCS5yZXNldF90c2YgCSAgICA9IGF0aDlrX3Jlc2V0X3RzZiwK
 
+------=_Part_39362_3856445.1225220485750--
