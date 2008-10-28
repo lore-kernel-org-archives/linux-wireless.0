@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:36950 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751875AbYJYL2O (ORCPT
+Received: from basicbox7.server-home.net ([195.137.212.29]:46507 "EHLO
+	basicbox7.server-home.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690AbYJ1Hfp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 07:28:14 -0400
-Date: Sat, 25 Oct 2008 13:28:13 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-Message-ID: <20081025112813.GC12252@Chamillionaire.breakpoint.cc> (sfid-20081025_132816_618712_0C295E62)
-References: <4902DEBB.3050205@hotmail.com> <20081025112147.GA12252@Chamillionaire.breakpoint.cc> <200810251325.07916.mb@bu3sch.de>
+	Tue, 28 Oct 2008 03:35:45 -0400
+Message-ID: <4906B944.4010105@leemhuis.info> (sfid-20081028_083550_035307_58424396)
+Date: Tue, 28 Oct 2008 08:03:32 +0100
+From: Thorsten Leemhuis <fedora@leemhuis.info>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <200810251325.07916.mb@bu3sch.de>
+To: Greg KH <greg@kroah.com>
+CC: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: rtl2860 driver in mainline?
+References: <20081028004915.GA3442@kroah.com>
+In-Reply-To: <20081028004915.GA3442@kroah.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Michael Buesch | 2008-10-25 13:25:07 [+0200]:
+On 28.10.2008 01:49, Greg KH wrote:
+> So, on my quest to suck up every out-of-tree driver and get it into the
+> main kernel tree (drivers/staging/ to start with), I've been pointed at
+> the rtl2860 driver.
 
->On Saturday 25 October 2008 13:21:47 Sebastian Andrzej Siewior wrote:
->> -	fc = *(__le16 *)buffer;
->> +	fc = get_unaligned_le32(buffer);
->
->I'd say this semantically changes the code.
-argh,
-sorry,
+Does it really make sense to include a driver when a different one for 
+mainline inclusion is being actively developed? It might give some 
+developers the impression that it's worth spending time improving the 
+rtl2860/2870 drivers -- which might be wasted time in the end.
 
-Subject: [PATCH] wireless/zd1211rw: use  get_unaligned_le16 helper (v2)
+> Does anyone know of a "cleaned up" version of this driver that is
+> newer/better than the one on ralink's web site?  I found the
+> 2008_0918_RT2860_Linux_STA_v1.8.0.0.tar.bz2 version there, and will
+> start with that if no one else has yet.
+> 
+> Any pointers are appreciated.
 
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- drivers/net/wireless/zd1211rw/zd_mac.c |    5 +++--
- drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+You can find a few patches (needed for 2.6.26 and 2.6.27 iirc; not sure 
+if they are enough to make it work on current mainline) for both rt2860 
+and rt2870 in CVS for RPM Fusion:
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 4d7b98b..bf4b4a4 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -25,6 +25,7 @@
- #include <linux/usb.h>
- #include <linux/jiffies.h>
- #include <net/ieee80211_radiotap.h>
-+#include <asm/unaligned.h>
- 
- #include "zd_def.h"
- #include "zd_chip.h"
-@@ -662,7 +663,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 *buffer, unsigned int length)
- 			&& !mac->pass_ctrl)
- 		return 0;
- 
--	fc = *(__le16 *)buffer;
-+	fc = get_unaligned_le16(buffer);
- 	need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
- 
- 	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
-@@ -758,7 +759,7 @@ void zd_process_intr(struct work_struct *work)
- 	u16 int_status;
- 	struct zd_mac *mac = container_of(work, struct zd_mac, process_intr);
- 
--	int_status = le16_to_cpu(*(__le16 *)(mac->intr_buffer+4));
-+	int_status = get_unaligned_le16(mac->intr_buffer+4);
- 	if (int_status & INT_CFG_NEXT_BCN) {
- 		if (net_ratelimit())
- 			dev_dbg_f(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index a60ae86..0b27778 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -355,7 +355,7 @@ static inline void handle_regs_int(struct urb *urb)
- 	ZD_ASSERT(in_interrupt());
- 	spin_lock(&intr->lock);
- 
--	int_num = le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
-+	int_num = get_unaligned_le16(urb->transfer_buffer+2);
- 	if (int_num == CR_INTERRUPT) {
- 		struct zd_mac *mac = zd_hw_mac(zd_usb_to_hw(urb->context));
- 		memcpy(&mac->intr_buffer, urb->transfer_buffer,
--- 
-1.6.0.2
+http://cvs.rpmfusion.org/viewvc/rpms/rt2860-kmod/devel/?root=free
+http://cvs.rpmfusion.org/viewvc/rpms/rt2870-kmod/devel/?root=free
 
+HTH
+
+CU
+knurd
