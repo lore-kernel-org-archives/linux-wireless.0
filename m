@@ -1,61 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:20709 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751119AbYJ1Jam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 05:30:42 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linux-stable@vger.kernel.org, rjw@sisk.pl--to,
-	johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] iwlwifi: fix suspend to RAM in iwlwifi
-Date: Tue, 28 Oct 2008 11:30:38 +0200
-Message-Id: <1225186238-22883-1-git-send-email-tomas.winkler@intel.com> (sfid-20081028_103047_397840_58AD42DA)
-Content-Type: text/plain; charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:56151 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651AbYJ1Sh5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 14:37:57 -0400
+Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mirco Tischler <mt-ml@gmx.de>
+Cc: Zhu Yi <yi.zhu@intel.com>, Arjan van de Ven <arjan@infradead.org>,
+	lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W.Linville" <linville@tuxdriver.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>
+In-Reply-To: <20081028172418.3c8e91f1@mtlp.12.dimension> (sfid-20081028_172505_344390_B01D226B)
+References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
+	 <1225157618.2917.215.camel@debian.sh.intel.com>
+	 <20081027213217.53558319@infradead.org>
+	 <1225171414.2917.229.camel@debian.sh.intel.com>
+	 <20081028172418.3c8e91f1@mtlp.12.dimension>
+	 (sfid-20081028_172505_344390_B01D226B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aUi0c4MsSnVdpn0b7GFr"
+Date: Tue, 28 Oct 2008 19:36:34 +0100
+Message-Id: <1225218994.3598.41.camel@johannes.berg> (sfid-20081028_193800_897353_99FB6C15)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes suspend to RAM after by moving
-notify_mac out of iwlwifi mutex
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11845
+--=-aUi0c4MsSnVdpn0b7GFr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Reported-by: Carlos R. Mafra <crmafra2@gmail.com>
-Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Tue, 2008-10-28 at 17:24 +0100, Mirco Tischler wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 89450e3..bbfaef0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2085,7 +2085,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 		iwl4965_error_recovery(priv);
- 
- 	iwl_power_update_mode(priv, 1);
--	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
- 
- 	if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
- 		iwl4965_set_mode(priv, priv->iw_mode);
-@@ -2337,6 +2336,7 @@ static void iwl_bg_alive_start(struct work_struct *data)
- 	mutex_lock(&priv->mutex);
- 	iwl_alive_start(priv);
- 	mutex_unlock(&priv->mutex);
-+	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
- }
- 
- static void iwl4965_bg_rf_kill(struct work_struct *work)
--- 
-1.5.4.3
+> > This is a different bug. He has the wireless worked sometimes.
+> >=20
+> > I think your problem relates to 5GHz channel usage. We have already a
+> > patch queued to resolve the problem. We will have regulatory framework
+> > reworked to better solve the problem. But I guess it will be in .29 tim=
+e
+> > frame.
+> >=20
+> > Thanks,
+> > -yi
+> I tested Arjan's solution nevertheless and it seems to do the job. I can'=
+t find
+> the "TX Power requested" line anymore on dmesg output with that config op=
+tion
+> enabled anymore and it connects without problems.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Can we have a dmesg output with the "TX power requested" line posted
+here?
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+johannes
+
+--=-aUi0c4MsSnVdpn0b7GFr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJB1uvAAoJEKVg1VMiehFY6ZwP/RHbu4/+BODKzryx9FYmvcW8
+5Mo/3uFmFYbcvRJ1nr+GVnTcK93dGkJSnFh3lx6e6blcZvJEij3YHcetZmByM4+p
+tbVX4KyqmxTmYB0h0gWX5uWp834tT9M1eOJgrVEHH00OM+zo8Cco43VqrAoipTN2
+Nw1VYljVWOwUSiSAExCyocxAVACE78tAlVqG1B6i+gPxyGKX9ckgmjuNypkFUHH5
+nMPAHREznHwdhFoG2tRKxpmAGL19vjhJx2iulLlooX1IJ25CwrL1ajvgW+TCbY7y
+yb4xF7cki8MdeQSIjKFPfFiR0UEwzFESpZk6qunTyVLHML08ZLto2SZrkOy2eXop
+u4xKXq3dbypHneUHcASJ7ohX7DcL+X+I1StXHaawYfQTncyuEjDTSSLd9cEgTDiy
+7SEiUxIskwmTu8fxuIKUePrttFP+1bTuHsXba+K20uJ0IEufMLRd3W0bT1l+i5IW
+du9wmM4bsyYt+ac8sABpvQ26DO+NdlhqXReeMV+dCDvkBOw7IAHKoSeFXpGwSglf
+JQgI/Ht6PrcwhdpTK1FVQ+qcZegD3kcDRHP1pxePDq/AgO9as3jLxJqUzE4Rey7d
+uuSRXMH1vTg17/ueg8fRxloRAg6bMnQupTS7xrGdKZA0wgNJckcc/yRVw5/dw+SE
+BUt/D+jnaj6DCjIA5D1U
+=CMEv
+-----END PGP SIGNATURE-----
+
+--=-aUi0c4MsSnVdpn0b7GFr--
 
