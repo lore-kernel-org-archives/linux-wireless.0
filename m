@@ -1,73 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54387 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbYJXJsD (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:27472 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752228AbYJ1FzB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 05:48:03 -0400
-Subject: Re: [PATCH 07/10] iwlwifi: refactor tx byte count table usage
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Reinette Chatre <reinette.chatre@linux.intel.com>
-Cc: linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1224830938-1577-8-git-send-email-reinette.chatre@linux.intel.com>
-References: <>
-	 <1224830938-1577-1-git-send-email-reinette.chatre@linux.intel.com>
-	 <1224830938-1577-2-git-send-email-reinette.chatre@linux.intel.com>
-	 <1224830938-1577-3-git-send-email-reinette.chatre@linux.intel.com>
-	 <1224830938-1577-4-git-send-email-reinette.chatre@linux.intel.com>
-	 <1224830938-1577-5-git-send-email-reinette.chatre@linux.intel.com>
-	 <1224830938-1577-6-git-send-email-reinette.chatre@linux.intel.com>
-	 <1224830938-1577-7-git-send-email-reinette.chatre@linux.intel.com>
-	 <1224830938-1577-8-git-send-email-reinette.chatre@linux.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-riuFNNLkFblCYi9ywKAt"
-Date: Fri, 24 Oct 2008 10:27:53 +0200
-Message-Id: <1224836873.6002.75.camel@johannes.berg> (sfid-20081024_114808_810258_F1C03238)
-Mime-Version: 1.0
+	Tue, 28 Oct 2008 01:55:01 -0400
+Message-ID: <2411f6b20810272254u4c13efb7w1cf8fb68145fcb14@mail.gmail.com> (sfid-20081028_065508_574973_17DB9158)
+Date: Tue, 28 Oct 2008 11:24:59 +0530
+From: "Joey Krane" <linuxbsd2004@gmail.com>
+To: "Greg KH" <greg@kroah.com>
+Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <20081028002919.GB2992@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>
+	 <20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com>
+	 <20081023111103.GB5979@tesla>
+	 <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com>
+	 <20081028002919.GB2992@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 28, 2008 at 5:59 AM, Greg KH <greg@kroah.com> wrote:
+> On Mon, Oct 27, 2008 at 04:35:11PM -0700, Luis R. Rodriguez wrote:
+>> On Thu, Oct 23, 2008 at 4:11 AM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
+>> > On Wed, Oct 22, 2008 at 11:26:55PM -0700, Greg KH wrote:
+>> >> On Tue, Oct 21, 2008 at 11:50:45PM -0700, Greg KH wrote:
+>> >> > On Tue, Oct 21, 2008 at 07:04:17PM -0700, Luis R. Rodriguez wrote:
+>> >> > > We would like to see our Atheros 802.11n USB Linux driver upstream
+>> >> > > however we need help with this so we are releasing our Atheros 11n USB
+>> >> > > Otus Linux driver under the ISC to the community. The goal is to work
+>> >> > > with the community to help move this forward upstream. We are hoping
+>> >> > > for community help and leadership on this (*cough*).
+>> >> >
+>> >> > Yeah!
+>> >> >
+>> >> > I'll grab this and put it in drivers/staging/ so it gets some users and
+>> >> > more developers to help out with it.
+>> >>
+>> >> Ok, it seems to need some basic work to merely build properly on
+>> >> "modern" kernel versions.
+>> >
+>> > Yeah, it works up to 2.6.24.
+>>
+>> This is now fixed on the master branch, also the branch "for-upstream"
+>> does a lot of cleanup I thought you may like before stuffing it into
+>> staging like removing all KERNEL_VERSION checks, all wireless
+>> extensions checks, some compile warnings, removal of compat, dos2unix,
+>> use utf-8, etc. Unfortunately this still requires a specific version
+>> of wpa_supplicant but it seems it works. Not sure what bars you have
+>> for staging at this point.
+>
+> Pretty much the only "bar" is "it compiles" :)
+>
+>> Will you take this in, and expect patches for fixing it to use
+>> standard wext and also report standard wireless statistic (yeap, this
+>> is not there yet either).
+>
+> Yes, I can do that.
+>
+>> Joey is one user which reported the driver working now with the
+>> compile fixes for newer kernels for 2.6.28-rc2 using the specific
+>> version of wpa_supplicant for it.
+>>
+>> Joey can you test the for-upstream branch on otus git?
+>
+> If someone can tell me what device this is for, I can try to go buy it
+> so that I can verify changes I make don't drasticly break things.
+>
 
---=-riuFNNLkFblCYi9ywKAt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I've tested the TL-WN821N (it's the cheapest N USB I think) with a
+generic 802.11g router (WPA enabled) on 2.6.24.7, 2.6.27.4 and
+2.6.28-rc2.
 
-On Thu, 2008-10-23 at 23:48 -0700, Reinette Chatre wrote:
-> From: Tomas Winkler <tomas.winkler@intel.com>
->=20
-> This patch drops unreadable usage of IWL_SET/GET_BITS16 in byte count
-> tables handling
-> This patch also cleans a bit the byte count table code and adds
-> WARN_ON traps on invalid values
->=20
-> This patch is pure cleanup, no functional changes.
+http://www.newegg.com/Product/Product.aspx?Item=N82E16833704032
 
-Great, thanks!
+I'll test the for-upstream branch soon.
 
-johannes
-
---=-riuFNNLkFblCYi9ywKAt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJAYcFAAoJEKVg1VMiehFYzM4P/Aod/VP51G+QkaCgDrR8y6Kt
-akCh3rXqQVWGXTvwxxh7cqn30t3+KKWeaZ6Q4zOtXxKiecJ6lJQhNL/zM5Jmdk3Q
-fbUvOe7J1Yn678IfBKuqz59kbu/GyUsc71m1kx25TD/XnE003a98CHTTPP7a3n58
-9zxQJguPGBc5jFECBrecnL0Yf0HHmiUK4RbPabc9joiiqAygLR+DfHxgn1B8WaJ+
-CVAG5cjSwQrp0dbNMFPnhjpFybLQTovqPgbbQWib71QVQP5NCstUW/9stqjCKbsC
-itLzRTF7CL3JNNde5ttALfEEXvc7nmgU9rguxt7pWwxnJ7ccdM52rKXBfrGqm6do
-VkKjN67Z87bMldINQsQXfouCkJmJPge4kIE/ODYCNx0rTAM4gosRbyg0Iuo0kw7y
-S6JRz/HvryH+xK0HEdr/glki7Hl7zBcoB8/ORDtdyEIdQIz3q839dNs6cvUu17Yq
-bzdt962iaSj/5a6TJgXUajZb+S2oF2iJjuXOo77ZncZfVN9M3uFUjt4/kc+lz28U
-Q2oHRCeZqjatCd9yYzezRvs5+xzRDoiThu0DWFm2Vj62IGgJh6HZNGEem1ZD9hpc
-0+WQO8i1xKLjN/ROC/aZVFdRLq4EPX9CQ2LGU52DUUO6Ui7sqOoIg/47AZZtFuv2
-40d7n9GBaTR9H3XJUq4W
-=xOUm
------END PGP SIGNATURE-----
-
---=-riuFNNLkFblCYi9ywKAt--
-
+Joey
