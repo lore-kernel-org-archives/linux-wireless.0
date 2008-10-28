@@ -1,56 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta4.srv.hcvlny.cv.net ([167.206.4.199]:37406 "EHLO
-	mta4.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750878AbYJNOWh (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40733 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753325AbYJ1XNu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 10:22:37 -0400
-Received: from [192.168.1.10] (ool-44c60ac6.dyn.optonline.net [68.198.10.198])
- by mta4.srv.hcvlny.cv.net
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0K8Q005IOFXMC060@mta4.srv.hcvlny.cv.net> for
- linux-wireless@vger.kernel.org; Tue, 14 Oct 2008 10:22:35 -0400 (EDT)
-Date: Tue, 14 Oct 2008 10:22:33 -0400
-From: Jerry Quinn <jlquinn@optonline.net>
-Subject: ath5k: No connection with 5424 and latest compat-old
-To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Message-id: <48F4AB29.5030303@optonline.net> (sfid-20081014_162244_235356_6B47E886)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 28 Oct 2008 19:13:50 -0400
+Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mirco Tischler <mt-ml@gmx.de>
+Cc: Zhu Yi <yi.zhu@intel.com>, Arjan van de Ven <arjan@infradead.org>,
+	lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W.Linville" <linville@tuxdriver.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>
+In-Reply-To: <20081028235841.78942d67@mtlp.12.dimension> (sfid-20081028_235928_003125_A4476F93)
+References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
+	 <1225157618.2917.215.camel@debian.sh.intel.com>
+	 <20081027213217.53558319@infradead.org>
+	 <1225171414.2917.229.camel@debian.sh.intel.com>
+	 <20081028172418.3c8e91f1@mtlp.12.dimension>
+	 <1225218994.3598.41.camel@johannes.berg>
+	 <20081028235841.78942d67@mtlp.12.dimension>
+	 (sfid-20081028_235928_003125_A4476F93)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6pu5HRzt4sa1KOMec8up"
+Date: Wed, 29 Oct 2008 00:06:17 +0100
+Message-Id: <1225235177.1369.5.camel@johannes.berg> (sfid-20081029_001417_927757_1C0EFB37)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've installed the latest compat-wireless-2.6-old on Debian 2.6.26-1 
-i686 v2.6.26-7.  I downloaded it last night Oct 13, 2008.
 
-naga:~/compat-wireless-2.6-old# cat compat-release
-v4.5-56-gcd7615b
+--=-6pu5HRzt4sa1KOMec8up
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I can build, install, and modprobe the ath5k module, giving:
+On Tue, 2008-10-28 at 23:58 +0100, Mirco Tischler wrote:
+> On Tue, 28 Oct 2008 19:36:34 +0100, Johannes Berg wrote:
+> > Can we have a dmesg output with the "TX power requested" line posted
+> > here?
 
-Oct  14 23:31:09 naga kernel: [17974.660295] ACPI: PCI Interrupt 
-0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-Oct  14 23:31:09 naga kernel: [17974.660368] ath5k_pci 0000:03:00.0: 
-registered as 'phy0'
-Oct  14 23:31:09 naga kernel: [17974.789588] phy0: Selected rate control 
-algorithm 'pid'
-Oct  14 23:31:09 naga kernel: [17974.790580] Registered led device: 
-ath5k-phy0::rx
-Oct  14 23:31:09 naga kernel: [17974.790602] Registered led device: 
-ath5k-phy0::tx
-Oct  14 23:31:09 naga kernel: [17974.790605] ath5k phy0: Atheros AR5424 
-chip found (MAC: 0xa3, PHY: 0x61)
-Oct  14 23:31:09 naga kernel: [17974.814333] udev: renamed network 
-interface wlan0 to ath0
+> You mean the hole output? Cause I posted the wireless part in my initial =
+mail.
 
-When I try to ifup the interface, connecting through DHCP, I get no 
-connection, and in the kernel log, I just get:
+Sorry, I got confused, the initial mail is fine.
 
-Oct  5 20:32:17 naga kernel: [18042.759550] ADDRCONF(NETDEV_UP): ath0: 
-link is not ready
+johannes
 
-iwlist ath0 scan works, however.
+--=-6pu5HRzt4sa1KOMec8up
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Thanks,
-Jerry Quinn
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJJB5rmAAoJEKVg1VMiehFYLRwP/0vpdoOSco4sADMGjczQVLk1
+hosskmojSTVOhxHJktp3pxLW+RVP4cyqOp+/+m/Zu6MyIaOLeYUPoVau1inrmrWs
+jEuzbud6KIQPvBIUUcSBGhoEqF+0S966CNDFbqsMeGunaBnIKlKb0QBgKS+vufS4
+8mgHVzzNqRDVlDEXL8gnRfldh+kUwxt4wzLFsBlILtLUJd8yiaB/AIDxul/ecSIq
+GYk46y0xZtyyhKwOEu9TXnHs7PYNtdhs6jTt+R4MyXXhJMsjsvOe15C1rGiPCxl5
+IelHJWtlfP6wYttk/qYNoRQ44Ot+tOsP0M4M3oHmAWM9gaat//c8dxUxoXgac6x5
+Mxzj1g/xy65miZjwaHI9kwWL3cwEj1TSIigHVG6PSkQEYuwAmHkWFv8qmrt242ps
+nMGYSojzNrmPTYzxGvVSGoOCqgvjgKWPtgmIECDXKV1CLjjPGqA20MSOtM+v9Vti
+gpZ6Qh4vccvjIfpAvfkgMwU8gksY1B80s3iajuEEIWcQ6JWzOtn4ywt+mUGVQ+6g
+sdNHidYux2GG4fNmjCNjq70nunV8qeSCKz3TWfJ1gQJG4FXSCd1Yj9Jp2+kPjJbi
+/+daadcz6HCr56VcYPwcq9N9LNQwBVLYPSfS4tqtUPoVxJf/yCsq28sXtrzKKDD1
+lLXqgUycfqqxco/LOBPD
+=3ub8
+-----END PGP SIGNATURE-----
+
+--=-6pu5HRzt4sa1KOMec8up--
 
