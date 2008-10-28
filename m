@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659AbYJYIYS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 04:24:18 -0400
-Subject: build warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Chr <chunkeey@web.de>, Tomas Winkler <tomasw@gmail.com>,
-	mcgrof <mcgrof@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Sat, 25 Oct 2008 10:24:10 +0200
-Message-Id: <1224923050.27353.1.camel@johannes.berg> (sfid-20081025_102423_133893_CBC33AEC)
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:45816 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751930AbYJ1PUe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 11:20:34 -0400
+Date: Tue, 28 Oct 2008 08:18:22 -0700
+From: Greg KH <greg@kroah.com>
+To: Joerg Albert <jal2@gmx.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
+Message-ID: <20081028151822.GA8783@kroah.com> (sfid-20081028_162038_803823_EE837448)
+References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> <20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com> <20081023111103.GB5979@tesla> <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com> <49071272.8050700@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49071272.8050700@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-just FYI in case you haven't seen them. the p54 one looks like a genuin=
-e
-problem.
+On Tue, Oct 28, 2008 at 02:24:02PM +0100, Joerg Albert wrote:
+> On 10/28/2008 12:35 AM, Luis R. Rodriguez wrote:
+>
+>> This is now fixed on the master branch, also the branch "for-upstream"
+>> does a lot of cleanup I thought you may like before stuffing it into
+>> staging like removing all KERNEL_VERSION checks, all wireless
+>> extensions checks, some compile warnings, removal of compat, dos2unix,
+>> use utf-8, etc. Unfortunately this still requires a specific version
+>> of wpa_supplicant but it seems it works. Not sure what bars you have
+>> for staging at this point.
+>
+> I was a bit disappointed to find binary-only firmware inside the driver 
+> (HalPlus/OTUS_FB50/{hpfwbu,hpfwuinit}.c which is downloaded into the device 
+> during startup (initially thought this to be a complete OpenSource driver 
+> :-(
 
-drivers/net/wireless/iwlwifi/iwl-scan.c:69: warning: =E2=80=98scan_tx_a=
-nt=E2=80=99 defined but not used
-drivers/net/wireless/ath9k/hw.c: In function =E2=80=98ath9k_hw_eeprom_s=
-et_board_values=E2=80=99:
-drivers/net/wireless/ath9k/hw.c:544: warning: =E2=80=98ant_config=E2=80=
-=99 may be used uninitialized in this function
-drivers/net/wireless/p54/p54common.c: In function =E2=80=98p54_parse_ee=
-prom=E2=80=99:
-drivers/net/wireless/p54/p54common.c:325: warning: =E2=80=98synth=E2=80=
-=99 may be used uninitialized in this function
+Binary firmware for a device does make the driver still "open source"
+except for how some people intrepret it.
 
+It is legal from a kernel standpoint though, and so it is fine to add to
+the kernel as-is.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Unless the attitude towards binary chunks inside the Linux kernel have 
+> changed, I guess these should be moved into userspace using the 
+> firmware_class driver to access it.
+
+Yes they should, patches gladly accepted :)
+
+thanks,
+
+greg k-h
