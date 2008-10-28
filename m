@@ -1,106 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36910 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753764AbYJGRjp (ORCPT
+Received: from basicbox7.server-home.net ([195.137.212.29]:54677 "EHLO
+	basicbox7.server-home.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955AbYJ1IGV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 13:39:45 -0400
-Subject: Re: mac80211 driver API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chr <chunkeey@web.de>, Ivo van Doorn <ivdoorn@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <20081007172149.GA3287@tuxdriver.com>
-References: <1223398885.7328.47.camel@johannes.berg>
-	 <20081007172149.GA3287@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-D8bBbMk5FTSwUpMHyOKy"
-Date: Tue, 07 Oct 2008 19:39:41 +0200
-Message-Id: <1223401181.7328.59.camel@johannes.berg> (sfid-20081007_193949_188922_862B8862)
-Mime-Version: 1.0
+	Tue, 28 Oct 2008 04:06:21 -0400
+Message-ID: <4906C7FA.8040804@leemhuis.info> (sfid-20081028_090626_355983_6BC2191B)
+Date: Tue, 28 Oct 2008 09:06:18 +0100
+From: Thorsten Leemhuis <fedora@leemhuis.info>
+MIME-Version: 1.0
+To: Luis Correia <luis.f.correia@gmail.com>
+CC: Thorsten Leemhuis <fedora@leemhuis.info>, Greg KH <greg@kroah.com>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: rtl2860 driver in mainline?
+References: <20081028004915.GA3442@kroah.com> <4906B944.4010105@leemhuis.info> <efe7343f0810280048j57158020n67176d7a56f0bbea@mail.gmail.com>
+In-Reply-To: <efe7343f0810280048j57158020n67176d7a56f0bbea@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 28.10.2008 08:48, Luis Correia wrote:
+> On Tue, Oct 28, 2008 at 07:03, Thorsten Leemhuis <fedora@leemhuis.info> wrote:
+>> On 28.10.2008 01:49, Greg KH wrote:
+>>> So, on my quest to suck up every out-of-tree driver and get it into the
+>>> main kernel tree (drivers/staging/ to start with), I've been pointed at
+>>> the rtl2860 driver.
+>> Does it really make sense to include a driver when a different one for
+>> mainline inclusion is being actively developed? It might give some
+>> developers the impression that it's worth spending time improving the
+>> rtl2860/2870 drivers -- which might be wasted time in the end.
+> 
+> Is it just me or you are suggesting we use the Ralink supplied driver,
+> with its own wireless stack, rather then work with the rt2x00 team?
 
---=-D8bBbMk5FTSwUpMHyOKy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No, I'm definitely not suggesting that! In fact it's the other way 
+around: I wondering if it's more harm- than helpful to include the 
+current Ralink supplied driver as staging driver.
 
-On Tue, 2008-10-07 at 13:21 -0400, John W. Linville wrote:
-> On Tue, Oct 07, 2008 at 07:01:25PM +0200, Johannes Berg wrote:
->=20
-> > Another thing I noticed when looking at the short slot stuff is that a
-> > number of drivers do not use the use_short_preamble flag but also do no=
-t
-> > set IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE; this seems like a bug
-> > affecting at least b43legacy, ath5k, at76_usb, rtl8180, rtl8187.
-> >=20
-> > You should review the mac80211 driver API for things you aren't using
-> > but should be using, this affects a number of drivers, for example
-> > adm8211, p54, stlc45xx, ath5k, ath9k, libertas_tf, rtl8180, rtl8187
-> > don't use radio_enabled; a number of drivers don't use power_level.
-> >=20
-> > There are also still drivers (ath5k, adm8211, rtl8180, iwlwifi,
-> > libertas_tf, zd1211rw, mac80211_hwsim, ...?) not using the
-> > IEEE80211_TX_CTL_ASSIGN_SEQ flag, I can fix those since I broke them,
-> > but help from the authors would be appreciated since I don't know the h=
-w
-> > in all cases, I know that stlc45xx for example can use a corresponding
-> > firmware flag for it.
->=20
-> Should we recruit janitor's (or gregkh's army) to help with stuff
-> like the above?
+Or, to say it more directly: I think the Ralink drivers should not get 
+included as staging driver, as that might track away resources from the 
+rt2x00 effort (just my 2 cent as LKML and linux-wlan lurker of course).
 
-Not sure that's possible, they'd have to ask a lot about how the hw
-works.
+ > [...]
+>>> Does anyone know of a "cleaned up" version of this driver that is
+>>> newer/better than the one on ralink's web site?  I found the
+>>> 2008_0918_RT2860_Linux_STA_v1.8.0.0.tar.bz2 version there, and will
+>>> start with that if no one else has yet.
+>>>
+>>> Any pointers are appreciated.
+>> You can find a few patches (needed for 2.6.26 and 2.6.27 iirc; not sure if
+>> they are enough to make it work on current mainline) for both rt2860 and
+>> rt2870 in CVS for RPM Fusion:
+>>
+>> http://cvs.rpmfusion.org/viewvc/rpms/rt2860-kmod/devel/?root=free
+>> http://cvs.rpmfusion.org/viewvc/rpms/rt2870-kmod/devel/?root=free
+> 
+> This seems to be only a set of 'mixed-up-lets-just-use-ralink-code' patchset.
 
-> > Do we need a document that indicates which parts of the API must be
-> > implemented? Or should we mark such things in mac80211.h? Would
-> > something like this help? I've thrown this together quickly so it
-> > probably isn't complete yet...
->=20
-> <snip>
->=20
-> Looks like a good start, and I would definitely value such a list.
-> Please continue to improve it, and we'll figure-out where it needs
-> to live in the long run.
+Sure -- nevertheless those patches might be helpful for Greg, that's why 
+I pointed him there.
 
-I've put it up on
-http://wireless.kernel.org/en/developers/Documentation/mac80211/API for
-now, can those folks who did the HT/mesh/spectrum mgmt/etc. stuff help
-completing it?
+BTW, RPM Fusion provides the drivers just as a interim solution for 
+Fedora users, as there was quite some demand for it (even from one well 
+known kernel developer who actually created the initial rt2860 package 
+for Livna/RPM Fusion); soon after a working and stable driver with a 
+similar featureset is in mainline and shipped as update by Fedora we'll 
+stop providing those drivers from Ralink.
 
-johannes
+> p.s. I apologize in advance if I misunderstood the meaning of the
+> original reply.
 
---=-D8bBbMk5FTSwUpMHyOKy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+np ;-)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI657ZAAoJEKVg1VMiehFY2QQP/R9rny7fHDLuI5GmrpyH0SVb
-MZDZrVh2T6gdBPuF3WFw+N75ccIDW3C4l2NqYYrRPfkEn7eEbnqkWty6peg71EcG
-J9XuZY2vCYwF5vdWfIFB7xiHNVY9FW8TWYtJWzTYdUHNzYP5SGRQorEYOictkmL8
-e2vqWMHdBQV4PbHW74iCiO5xLa5In90rEJ53DZCw4T0zAWbC6pYmAGjzG0FXqn6A
-lx4HOTEPT7GI8gHvtCk/tXivZZIGMQ4l/JuXWZ24MdnJz5OUKHDCUvPbOHRZoJRt
-bvxLzeKtm/Q8lWFBIS1M2yi0nbOrG9JpQOiKyTnP/ceiIha9tTxz/UQLkV6JTdWI
-gRxZn9MCgOb9f+Ga5Zf8uoUGzGILDvd+59iFcdWmlKnNVzKbneiumyzwp/f3eBF9
-bekvqkXBk17811LJnJGgckHPfmosrd3FSBZRczTmTZdMH4g6RWGk2xd9ZtMw1n/P
-kfvy2LWozT2Sx9FpPGMIwB5h1A+e59pvlVPZ76iP+GbhHeXA3B+megCreUCxWc0p
-3xrjPGexI5z5TvuXr+7OWIJJJ1ZZaCjqI38xdemWAPHtw0iLjvfd32B4v4efS2Cd
-SbnIOAtv8uVy0Xg7bkpDhcpJBuxqt0BC0BBCjLOURErcjstgfsiXMmxRXl6WJ28n
-MJAklFtMoet8CsXuuflT
-=6mhK
------END PGP SIGNATURE-----
-
---=-D8bBbMk5FTSwUpMHyOKy--
-
+CU
+knurd
