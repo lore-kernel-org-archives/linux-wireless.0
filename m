@@ -1,32 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:36827 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755226AbYJMVHo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42126 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752275AbYJ1IMs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 17:07:44 -0400
-Received: by gxk9 with SMTP id 9so4290862gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2008 14:07:43 -0700 (PDT)
-Message-ID: <43e72e890810131407s26af165dw3b43ba88311bb7da@mail.gmail.com> (sfid-20081013_230750_094826_21BA0685)
-Date: Mon, 13 Oct 2008 14:07:42 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Alexander Petukhov" <al_petukhov@mail.ru>
-Subject: Re: [ath9k-devel] D-Link DWA-547, connection periodicly losts
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081013234957.839f3488.al_petukhov@mail.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081013234957.839f3488.al_petukhov@mail.ru>
+	Tue, 28 Oct 2008 04:12:48 -0400
+Subject: Re: rtl2860 driver in mainline?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Thorsten Leemhuis <fedora@leemhuis.info>, Greg KH <greg@kroah.com>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com> (sfid-20081028_090258_690109_8388E0BD)
+References: <20081028004915.GA3442@kroah.com>
+	 <4906B944.4010105@leemhuis.info> <1225180598.3796.66.camel@johannes.berg>
+	 <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com>
+	 (sfid-20081028_090258_690109_8388E0BD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-G0WvHuWQngdbYiOS01Fz"
+Date: Tue, 28 Oct 2008 09:12:42 +0100
+Message-Id: <1225181562.3796.76.camel@johannes.berg> (sfid-20081028_091253_144159_C9B71CC0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 13, 2008 at 12:49 PM, Alexander Petukhov
-<al_petukhov@mail.ru> wrote:
-> hmm.. have found a bug with similar simptoms - http://bugzilla.kernel.org/show_bug.cgi?id=11570
-> but it is fixed and patch is already applied in 2.6.27 release as i see, but i have this bug on 2.6.27. Do i have to reopen it?
 
-Perhaps you can elaborate a little more. Also please be sure to check
+--=-G0WvHuWQngdbYiOS01Fz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://wireless.kernel.org/en/users/Reporting_bugs
+On Tue, 2008-10-28 at 01:02 -0700, Luis R. Rodriguez wrote:
 
-  Luis
+> > I don't think it makes sense either, at _best_ it'll do nothing but hel=
+p
+> > a few users [1], and if somebody actually starts working on the vendor
+> > driver because it's in staging that's actively harmful to the real
+> > driver by diverting resources away from it.
+> >
+> > johannes
+> >
+> > [1] I used to think the point wasn't to make users happy but to make it
+> > easier to work on those drivers, but that objective seems long gone
+>=20
+> Problem is distributions already ship crap anyway.
+
+Well, yes, but that's fine, it doesn't mean people will work on the
+crap, it means people will use the crap. As far as I understood, putting
+it into staging was supposed to mean "here is some crap for people to
+work on", which is a huge difference.
+
+johannes
+
+--=-G0WvHuWQngdbYiOS01Fz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBsl3AAoJEKVg1VMiehFYNvEP/Rw9Ju0mmiw5u5+NLH1H7oSY
+c4TpCchoJ0My7unwO3lNHyytcmMFvMHhEoLyfKa7VaUK8QMoLbet6HSBulta2jSb
+v1Hft+kSI8iwQRVJWLy54/+mxW/NCTH4ZwINODST1kXAd4N35luztZal67lUM4Qp
+jSinsebQnxcZFrPJgW0T6oCoGHmxRxMdY07UF96QMu+hL5r9oCSNMyqGQP84Rdsn
+gAjss/t3OrtPgyA5fTbs6jveDqfw3hJ9YNB50Gk2KpQWh/hM6xLjdeXNzyRAxDRJ
+sqhAWvDaSvaqNAkjBcjkeQGQL0RpAYefdcsWYn78S5caGhTYMYWWluG9tbcrGXJ6
+/+MnaLQaEOYTwdyc8PIdOCaaoL9H9DtILQJnRL19HVgf3Jt4buP837TvKxoTMwir
+ZBgxG9uHMi9VrtTAY460wEfS8hw+SMO7H9srcIakAD0DAHRnpXWeqxKGG0VxeswC
+kx9sxIxWNMOSqM8ml3PUATX6qdXT+qhC+HOJYAdLTTsUCgkRJcPOlPJ2l+e5FBG2
+Zjg6Z7vATNer9AtZ9ynSlJHPUJP2BCpQdn8SemZwpzIWTMWnpo+P5FfACiCZJ/pG
+yrC6+f48nOE1FeuAzAqvFy75r1LecQsi24ja5pm2TUOBkwNl2ARU/qa1sskwytIl
+9O2qKIeLm3bbxXNObq0R
+=0IIz
+-----END PGP SIGNATURE-----
+
+--=-G0WvHuWQngdbYiOS01Fz--
+
