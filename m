@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:26787 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753154AbYJBMw7 (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:23009 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751379AbYJ1IC1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 08:52:59 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1127128rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 05:52:58 -0700 (PDT)
-Message-ID: <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com> (sfid-20081002_145304_681834_A1D34082)
-Date: Thu, 2 Oct 2008 08:52:58 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Elias Oltmanns" <eo@nebensachen.de>
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <87od23mo08.fsf@denkblock.local>
+	Tue, 28 Oct 2008 04:02:27 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so606250yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 01:02:26 -0700 (PDT)
+Message-ID: <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com> (sfid-20081028_090233_161573_8644B5F7)
+Date: Tue, 28 Oct 2008 01:02:26 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: rtl2860 driver in mainline?
+Cc: "Thorsten Leemhuis" <fedora@leemhuis.info>,
+	"Greg KH" <greg@kroah.com>, rt2400-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1225180598.3796.66.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200808101401.03339.toralf.foerster@gmx.de>
-	 <b6c5339f0808101124x6f9359dct9ad828db1e6d1b2c@mail.gmail.com>
-	 <200810012055.58085.toralf.foerster@gmx.de>
-	 <87ej30m376.fsf@denkblock.local>
-	 <b6c5339f0810011515n770fa89bs3d09c16411121c79@mail.gmail.com>
-	 <87ljx8ndw1.fsf@denkblock.local>
-	 <b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com>
-	 <87od23mo08.fsf@denkblock.local>
+Content-Type: text/plain; charset=UTF-8
+References: <20081028004915.GA3442@kroah.com> <4906B944.4010105@leemhuis.info>
+	 <1225180598.3796.66.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 2, 2008 at 3:53 AM, Elias Oltmanns <eo@nebensachen.de> wrote:
->> Ah, yes, good analysis... and ath5k_init is scheduling the timer.  I
->> doubt ieee80211_opened would fly; probably the better thing to do is
->> ensure that the cleanup gets called regardless of whether ath5k_stop
->> gets called (it shouldn't matter since the irqs all get created in
->> _attach).
+On Tue, Oct 28, 2008 at 12:56 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-10-28 at 08:03 +0100, Thorsten Leemhuis wrote:
+>> On 28.10.2008 01:49, Greg KH wrote:
+>> > So, on my quest to suck up every out-of-tree driver and get it into the
+>> > main kernel tree (drivers/staging/ to start with), I've been pointed at
+>> > the rtl2860 driver.
+>>
+>> Does it really make sense to include a driver when a different one for
+>> mainline inclusion is being actively developed? It might give some
+>> developers the impression that it's worth spending time improving the
+>> rtl2860/2870 drivers -- which might be wasted time in the end.
 >
-> Not sure I agree there. Why should calibration take place regularly even
-> though the interface appears to be shut down from user-space's point of
-> view? It simply doesn't make sense  to start the interface if nobody
-> intends to use it.
+> I don't think it makes sense either, at _best_ it'll do nothing but help
+> a few users [1], and if somebody actually starts working on the vendor
+> driver because it's in staging that's actively harmful to the real
+> driver by diverting resources away from it.
+>
+> johannes
+>
+> [1] I used to think the point wasn't to make users happy but to make it
+> easier to work on those drivers, but that objective seems long gone
 
-Hmm, yeah, you're right.  So, I guess we can just do your patch except
-with another status bit that says it's active instead of changing
-mac80211 (b43 does something along those lines).
+Problem is distributions already ship crap anyway.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+  Luis
