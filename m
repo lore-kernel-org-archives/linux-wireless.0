@@ -1,76 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45022 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751552AbYJGSDJ (ORCPT
+Received: from mtagate7.uk.ibm.com ([195.212.29.140]:46228 "EHLO
+	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517AbYJ1GdA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 14:03:09 -0400
-Subject: Re: mac80211 and IEEE80211_CONF_SHORT_SLOT_TIME
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chr <chunkeey@web.de>, Pavel Roskin <proski@gnu.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-In-Reply-To: <200810071957.55250.IvDoorn@gmail.com> (sfid-20081007_195801_431295_43E0A96C)
-References: <1223370325.3778.69.camel@johannes.berg>
-	 <200810071957.55250.IvDoorn@gmail.com>
-	 (sfid-20081007_195801_431295_43E0A96C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LEG9EOuuowhAQMy2vGbE"
-Date: Tue, 07 Oct 2008 20:03:07 +0200
-Message-Id: <1223402587.7328.68.camel@johannes.berg> (sfid-20081007_200313_052730_E66926DC)
-Mime-Version: 1.0
+	Tue, 28 Oct 2008 02:33:00 -0400
+From: Christian Borntraeger <borntraeger@de.ibm.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+Date: Tue, 28 Oct 2008 07:32:12 +0100
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"Carlos R. Mafra" <crmafra2@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Soeren Sonnenburg" <kernel@nn7.de>, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810272151.01244.rjw@sisk.pl> <1ba2fa240810271407o15f1f150t2d2793f4e5ad6e5b@mail.gmail.com>
+In-Reply-To: <1ba2fa240810271407o15f1f150t2d2793f4e5ad6e5b@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810280732.12930.borntraeger@de.ibm.com> (sfid-20081028_073307_506504_647073D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Montag, 27. Oktober 2008 schrieb Tomas Winkler:
+> Can someone try this one (it might be space broken I've just pasted
+> that in) It's on top of 1d63e726408dfdb3e10ed8f00c383b30ebb333d3
+> (latest linux-2.6.git)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index 24a1aeb..321dbc8 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -2090,7 +2090,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
+>                 iwl4965_error_recovery(priv);
+> 
+>         iwl_power_update_mode(priv, 1);
+> -       ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+> 
+>         if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
+>                 iwl4965_set_mode(priv, priv->iw_mode);
+> @@ -2342,6 +2341,7 @@ static void iwl_bg_alive_start(struct work_struct 
+*data)
+>         mutex_lock(&priv->mutex);
+>         iwl_alive_start(priv);
+>         mutex_unlock(&priv->mutex);
+> +       ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+>  }
+> 
+>  static void iwl4965_bg_rf_kill(struct work_struct *work)
 
---=-LEG9EOuuowhAQMy2vGbE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2008-10-07 at 19:57 +0200, Ivo van Doorn wrote:
-> Hi,
->=20
-> > I just realised that for whatever reason mac80211 isn't setting the
-> > IEEE80211_CONF_SHORT_SLOT_TIME flag. I'm not sure when or why that was
-> > removed, but clearly it isn't used.
-> >=20
-> > Can you please fix the drivers using it (b43, b43legacy, iwlwifi, p54,
-> > rt2x00, rtl8180, rtl8187) to use the bss_conf's use_short_slot instead?
-> > I'll fix mac80211 to set that appropriately.
->=20
-> Didn't you have such a patch for rt2x00 already?
-
-I had something a long time ago, but it never worked out right. I  still
-have it in my patches dir as *-BROKEN-mac80211-bss-slot-time.patch.
-
-> If not I'll see what I can do in a few days.
-
-Thanks,
-Johannes
-
---=-LEG9EOuuowhAQMy2vGbE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI66RXAAoJEKVg1VMiehFYxVwP/2xI2w1Dlb5You3UEKZaHFhT
-qHqxkIOd0U5Sc0VxaPIJW9ZrDkCPP0gudS7Xvzj7u+d+yZo1os4TvYWlpfdv1nOf
-4/WtsE2Zt0lhGL+LPjs5nZsrQbq76p8NI8rINKZsmmGhSa+YtOey7aNfOilLvJE3
-7IstYPZxntmg3Sz846ZspINYqhx7d2DWfaZ0Uali5d0WO89khbc7PpBN6D7Ad0br
-aTHuJoHBt9MByqGzWbqzCh5yGM5YF/6TzPlS9868rqmBTGv3WxM+6DUGrLxGnDDH
-0g+Q95uUbxsNmnPiSlS+l1oaUmFYuRhlGhXo+xfs7a9BMDqW9Qq4mrCUqVOw4DrS
-CpY4g+VyZhMNaUx8IAvuLFBrAErYAUQsbZM88pB0PxOv2V0r2U/dXsbL8rXAtjGN
-XklmQc+LQqADm6zTvhQRIBC0J/eYIS+mSojhVPgL3qroPQ6FW7+PP8vzyx6uQtm1
-6GzCxxEB3BcyQz0MW+uDhyEywqM4WA38TaiRWRPIbS7RZ4geI87zix3dtiPyZa7Q
-MkmFmw6n/krqWhhREPY69jHSlej/gIDw3B7410rYu1wYGKw+eF1CUCC+MdVULxam
-ySFBeRKhzXTKJXE+XEc9brc9wDAjxoBIS0JLgQY/ECrnJ3ydsZzFEij0HeUyXBXX
-bQTxSujjf47vGLIoFchI
-=so3A
------END PGP SIGNATURE-----
-
---=-LEG9EOuuowhAQMy2vGbE--
-
+This one works on my T61p.
