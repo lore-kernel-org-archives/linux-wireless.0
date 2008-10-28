@@ -1,162 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:7622 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751789AbYJSVf4 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40708 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299AbYJ1H4o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 17:35:56 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1641724wfd.4
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2008 14:35:54 -0700 (PDT)
-Message-ID: <1ba2fa240810191435o2f86a3c6ve6181fff8d195a96@mail.gmail.com> (sfid-20081019_233600_799964_F1EC4F17)
-Date: Sun, 19 Oct 2008 23:35:54 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: [PATCH] mac80211: inform userspace of probe/auth/assoc timeout
-Cc: linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <1224443903-9135-1-git-send-email-kalle.valo@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <873ait6s4e.fsf@nokia.com>
-	 <1224443903-9135-1-git-send-email-kalle.valo@nokia.com>
+	Tue, 28 Oct 2008 03:56:44 -0400
+Subject: Re: rtl2860 driver in mainline?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thorsten Leemhuis <fedora@leemhuis.info>
+Cc: Greg KH <greg@kroah.com>, rt2400-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4906B944.4010105@leemhuis.info> (sfid-20081028_083550_035307_58424396)
+References: <20081028004915.GA3442@kroah.com>
+	 <4906B944.4010105@leemhuis.info> (sfid-20081028_083550_035307_58424396)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xeyeRlh72Xua+lWHEIVJ"
+Date: Tue, 28 Oct 2008 08:56:38 +0100
+Message-Id: <1225180598.3796.66.camel@johannes.berg> (sfid-20081028_085701_572381_F38478C9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 19, 2008 at 9:18 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
->
-> I noticed that when for some reason [1] the probe or auth times
-> out, wpa_supplicant doesn't realise this and only tries the next
-> AP when it runs into its own timeout, which is ten seconds, and
-> that's quite long. Fix this by making mac80211 notify userspace
-> that it didn't associate.
->
-> [1] my wrt350n in mixed B/G/HT mode often runs into this, maybe
-> it's because one of the antennas is broken off and for whatever
-> reason it decides to use that antenna to transmit the response
-> frames (auth, probe); I do see beacons fine so it's not totally
-> broken. Works fine in pure-G mode.
->
-> kvalo: backported to 2.6.27
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-> ---
->
-> Here's a backport of Johannes' patch for 2.6.27
 
-and one function of mine :)
-Ack
-Tomas
+--=-xeyeRlh72Xua+lWHEIVJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-in case anyone
-> considers this for stable releases.
-and
+On Tue, 2008-10-28 at 08:03 +0100, Thorsten Leemhuis wrote:
+> On 28.10.2008 01:49, Greg KH wrote:
+> > So, on my quest to suck up every out-of-tree driver and get it into the
+> > main kernel tree (drivers/staging/ to start with), I've been pointed at
+> > the rtl2860 driver.
+>=20
+> Does it really make sense to include a driver when a different one for=20
+> mainline inclusion is being actively developed? It might give some=20
+> developers the impression that it's worth spending time improving the=20
+> rtl2860/2870 drivers -- which might be wasted time in the end.
 
->  net/mac80211/mlme.c |   23 +++++++++++++++++------
->  1 files changed, 17 insertions(+), 6 deletions(-)
->
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 902cac1..ca80acd 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -475,6 +475,17 @@ int ieee80211_ht_addt_info_ie_to_ht_bss_info(
->        return 0;
->  }
->
-> +static void ieee80211_sta_send_apinfo(struct ieee80211_sub_if_data *sdata,
-> +                                     struct ieee80211_if_sta *ifsta)
-> +{
-> +       union iwreq_data wrqu;
-> +       memset(&wrqu, 0, sizeof(wrqu));
-> +       if (ifsta->flags & IEEE80211_STA_ASSOCIATED)
-> +               memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
-> +       wrqu.ap_addr.sa_family = ARPHRD_ETHER;
-> +       wireless_send_event(sdata->dev, SIOCGIWAP, &wrqu, NULL);
-> +}
-> +
->  static void ieee80211_sta_send_associnfo(struct net_device *dev,
->                                         struct ieee80211_if_sta *ifsta)
->  {
-> @@ -533,7 +544,6 @@ static void ieee80211_set_associated(struct net_device *dev,
->        struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->        struct ieee80211_local *local = sdata->local;
->        struct ieee80211_conf *conf = &local_to_hw(local)->conf;
-> -       union iwreq_data wrqu;
->        u32 changed = BSS_CHANGED_ASSOC;
->
->        if (assoc) {
-> @@ -567,7 +577,6 @@ static void ieee80211_set_associated(struct net_device *dev,
->
->                ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
->                memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
-> -               memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
->                ieee80211_sta_send_associnfo(dev, ifsta);
->        } else {
->                netif_carrier_off(dev);
-> @@ -578,8 +587,6 @@ static void ieee80211_set_associated(struct net_device *dev,
->                sdata->bss_conf.assoc_ht = 0;
->                sdata->bss_conf.ht_conf = NULL;
->                sdata->bss_conf.ht_bss_conf = NULL;
-> -
-> -               memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
->        }
->        ifsta->last_probe = jiffies;
->        ieee80211_led_assoc(local, assoc);
-> @@ -590,8 +597,7 @@ static void ieee80211_set_associated(struct net_device *dev,
->        if (assoc)
->                netif_carrier_on(dev);
->
-> -       wrqu.ap_addr.sa_family = ARPHRD_ETHER;
-> -       wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
-> +       ieee80211_sta_send_apinfo(sdata, ifsta);
->  }
->
->  static void ieee80211_set_disassoc(struct net_device *dev,
-> @@ -662,6 +668,7 @@ static void ieee80211_send_auth(struct net_device *dev,
->  static void ieee80211_authenticate(struct net_device *dev,
->                                   struct ieee80211_if_sta *ifsta)
->  {
-> +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->        DECLARE_MAC_BUF(mac);
->
->        ifsta->auth_tries++;
-> @@ -670,6 +677,7 @@ static void ieee80211_authenticate(struct net_device *dev,
->                       " timed out\n",
->                       dev->name, print_mac(mac, ifsta->bssid));
->                ifsta->state = IEEE80211_DISABLED;
-> +               ieee80211_sta_send_apinfo(sdata, ifsta);
->                return;
->        }
->
-> @@ -1003,6 +1011,7 @@ static int ieee80211_privacy_mismatch(struct net_device *dev,
->  static void ieee80211_associate(struct net_device *dev,
->                                struct ieee80211_if_sta *ifsta)
->  {
-> +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->        DECLARE_MAC_BUF(mac);
->
->        ifsta->assoc_tries++;
-> @@ -1011,6 +1020,7 @@ static void ieee80211_associate(struct net_device *dev,
->                       " timed out\n",
->                       dev->name, print_mac(mac, ifsta->bssid));
->                ifsta->state = IEEE80211_DISABLED;
-> +               ieee80211_sta_send_apinfo(sdata, ifsta);
->                return;
->        }
->
-> @@ -1021,6 +1031,7 @@ static void ieee80211_associate(struct net_device *dev,
->                printk(KERN_DEBUG "%s: mismatch in privacy configuration and "
->                       "mixed-cell disabled - abort association\n", dev->name);
->                ifsta->state = IEEE80211_DISABLED;
-> +               ieee80211_sta_send_apinfo(sdata, ifsta);
->                return;
->        }
->
-> --
-> 1.5.6.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I don't think it makes sense either, at _best_ it'll do nothing but help
+a few users [1], and if somebody actually starts working on the vendor
+driver because it's in staging that's actively harmful to the real
+driver by diverting resources away from it.
+
+johannes
+
+[1] I used to think the point wasn't to make users happy but to make it
+easier to work on those drivers, but that objective seems long gone
+
+--=-xeyeRlh72Xua+lWHEIVJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBsWyAAoJEKVg1VMiehFYqAsQAJ9PluubraVrnoaiwpJIMCSH
+8ByKgfXixchtZ2p628IeBRyM65A3oOC2FzTLaM895H/K+txM0RWgqJINKSHQsQPZ
+igw6/0H5AJG/VxpzSVdLrBKR7lpwpcc5OL9aGrNDu5F8xBVtTTP6byBHuALXPLzY
+TcZ5egz2C1g1b3kUXKFbgRgW+gaQs/4RkeJDSF5kmZxXALZ08QgJvNyuexscW56+
+dReq2jwX2EdkG4mozaVk7B/f0pDWKvYF2nS2h2mZUq3zvRYoKM7F9l/Mm8fygou8
+KW4EQhFUpU5MILnIl2pNXILl8/iL/FcNGtpKgMLL3b3w0Ne4jrHmD0YUvBX58oZV
+fef3+NG+H0KU3Zv1XhE7VJLuUh1G+9gaBzIiLXD8r0mv/wR4lgcqYZNp9otB3eYQ
+EmChUCH0xmSiqQR5+uBxGin4n9EQCeiq2zOayUkNOSCfjtSdepkidgLJw/IBZWBv
+1L9lg/z06ExeyakzEv/rygJIvM9nZ0C3qG4C7iWoTQ8Y3JwaNanpEBrAGVBi0GoG
+s8y2CkZL91rfEIIqFEntnssr7Iu9Fcd7+/hNP97mMpK1KN1K7JFo6o3H28+sBe+s
+fN1v9U+Ro4lbpheaG29lHHw0X/AAM/YrqMYUzhVOYuifWoX8XlOaDLPq6N+5ZsDc
+WwX8r57OpCxKNl47d+eT
+=h8oa
+-----END PGP SIGNATURE-----
+
+--=-xeyeRlh72Xua+lWHEIVJ--
+
