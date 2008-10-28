@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ox1.aei.mpg.de ([194.94.224.6]:56894 "EHLO ox1.aei.mpg.de"
+Received: from mail.atheros.com ([12.36.123.2]:56915 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751464AbYJ0TKn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 15:10:43 -0400
-Date: Mon, 27 Oct 2008 20:11:18 +0100
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Soeren Sonnenburg <kernel@nn7.de>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	tomas.winkler@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
-Message-ID: <20081027191118.GA4058@localhost.aei.mpg.de> (sfid-20081027_201048_271220_862ABF5A)
-References: <20081027162054.GA4015@localhost.aei.mpg.de> <200810271832.40717.rjw@sisk.pl> <1225130844.4466.0.camel@localhost> <1225132278.3796.32.camel@johannes.berg> <1225133082.3796.35.camel@johannes.berg> <20081027190011.GA3951@localhost.aei.mpg.de> <1225134195.3796.39.camel@johannes.berg>
+	id S1751180AbYJ1Bij (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 21:38:39 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 18:38:39 -0700
+Date: Mon, 27 Oct 2008 18:38:37 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Davide Pesavento <davidepesa@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: crda packaging
+Message-ID: <20081028013837.GB27884@tesla> (sfid-20081028_023843_746073_FE558BC7)
+References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com> <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com> <2da21fe50810201336r29ed4e83g18d57e6d01b97349@mail.gmail.com> <20081020140438.GD9035@tesla> <2da21fe50810201448y6f05770at1d611d5a9ddc7e5b@mail.gmail.com> <43e72e890810201515k79ad4e3cj90643ad853e3acfe@mail.gmail.com> <2da21fe50810201539k74dedcfbwf4d63827e10e6c40@mail.gmail.com> <20081020154315.GL9035@tesla> <2da21fe50810250254w67d0d485v79ffdb40ed2a3b4b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1225134195.3796.39.camel@johannes.berg>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2da21fe50810250254w67d0d485v79ffdb40ed2a3b4b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 27.Oct'08 at 20:03:15 +0100, Johannes Berg wrote:
-> On Mon, 2008-10-27 at 20:00 +0100, Carlos R. Mafra wrote:
-> > On Mon 27.Oct'08 at 19:44:42 +0100, Johannes Berg wrote:
-> > > On Mon, 2008-10-27 at 19:31 +0100, Johannes Berg wrote:
-> > > > On Mon, 2008-10-27 at 19:07 +0100, Soeren Sonnenburg wrote:
-> > > > 
-> > > > > > Johannes, can you pls have a look?
-> > > > 
-> > > > I did, and I have no idea. Makes no sense at all.
-> > > 
-> > > The only thing I can remotely think of is that iwlwifi doesn't like
-> > > being called back from within the call that it did to mac80211, which
-> > > obviously happens here. But I have no idea, the code as it stands is
-> > > correct, just the interaction with iwlwifi's resume seems to be broken.
-> > > 
-> > > Try this patch instead:
-> > 
-> > Yep, with this patch it also works!
+On Sat, Oct 25, 2008 at 02:54:30AM -0700, Davide Pesavento wrote:
+> Only a couple of issues now remain in crda:
 > 
-> > > --- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-27 19:44:12.000000000 +0100
-> > > +++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-10-27 19:44:15.000000000 +0100
-> > > @@ -2084,7 +2084,6 @@ static void iwl_alive_start(struct iwl_p
-> > >  		iwl4965_error_recovery(priv);
-> > >  
-> > >  	iwl_power_update_mode(priv, 1);
-> > > -	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
-> 
-> alright, well, if nothing else turns up soon then we should probably put
-> this patch in rather than reverting the other one, imho mac80211 is
-> doing the right thing there and the driver is calling into it at a point
-> where either mac80211 or the driver cannot handle it.
-> 
-> Do you get any kernel messages output? If you do, could you put messages
-> into each line of ieee80211_set_disassoc to see where it hangs?
+> (1) crda needs <linux/nl80211.h>, thus a kernel source tree is
+> required to build it.
+> Solution: ship nl80211.h like iw does.
 
-No messages appear, just a black screen.
+Sure, I'll just steal Johannes' version.
 
-But I can use the SysRq keys, and when I umount the
-screen shows the message that umount succeed. I also tried SysRq+t but
-the messages appear to fast to read.
+> (2) `make verify` fails to validate the db signature if openssl is
+> selected instead of gcrypt.
 
+Hmm, I'll take a look if I can, right now am looking at interesection
+though to automatically generate world and to use that later upstream
+for 11d.
 
-> 
-> johannes
+Thanks,
 
-
+  Luis
