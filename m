@@ -1,64 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:35222 "EHLO c60.cesmail.net"
+Received: from mga01.intel.com ([192.55.52.88]:12160 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754586AbYJNBUm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 21:20:42 -0400
-Message-ID: <20081013212039.dy5fki5pck4g0cg4-cebfxv@webmail.spamcop.net> (sfid-20081014_032102_961937_80AF673F)
-Date: Mon, 13 Oct 2008 21:20:39 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
-References: <48EE20FB.4060700@lwfinger.net> <1223941001.28019.3.camel@dv>
-	<1223942439.28019.9.camel@dv> <200810140215.47242.chunkeey@web.de>
-In-Reply-To: <200810140215.47242.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+	id S1752538AbYJ1RjU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 13:39:20 -0400
+Subject: Re: iwl4965 crash in iwl-tx.c
+From: reinette chatre <reinette.chatre@intel.com>
+To: Noah Meyerhans <frodo@morgul.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081024191700.GD14438@morgul.net>
+References: <20081024180514.GA14438@morgul.net>
+	 <20081024185419.GA19057@tuxdriver.com>  <20081024191700.GD14438@morgul.net>
+Content-Type: text/plain
+Date: Tue, 28 Oct 2008 10:39:43 -0700
+Message-Id: <1225215583.1115.195.camel@rc-desk> (sfid-20081028_183924_366329_F687FF6D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Christian Lamparter <chunkeey@web.de>:
+On Fri, 2008-10-24 at 12:17 -0700, Noah Meyerhans wrote:
+> On Fri, Oct 24, 2008 at 02:54:20PM -0400, John W. Linville wrote:
+> > You might want to Cc: linux-wireless@vger.kernel.org...
+> 
+> Thanks; I'll follow up there and leave linux-kernel off of future
+> replies.
+> 
+> > 
+> > Can you by chance recreate this with 2.6.28-rc1?
+> 
+> Compiling this now...
 
-> I ask again:
-> What Card/MAC & RF-Chip do you have? Indigo/Duette/Firsbee or XBow?
+There is an open bug for this problem at
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703. Please
+add your results there.
 
-Sorry if I missed your question.
+Reinette
 
-This is a MiniPCI card that has a label with "XG-600" printed on it.   
-The driver shows following in the kernel log:
-
-firmware: requesting isl3886
-p54: LM86 firmware
-p54: FW rev 2.7.0.0 - Softmac protocol 4.1
-p54: unknown eeprom code : 0x1
-p54: unknown eeprom code : 0x3
-p54: unknown eeprom code : 0x1007
-p54: unknown eeprom code : 0x1008
-p54: unknown eeprom code : 0x1100
-p54: unknown eeprom code : 0x1905
-phy10: hwaddr 00:60:b3:c9:04:f2, MAC:isl3890 RF:Indigo?
-phy10: Selected rate control algorithm 'pid'
-udev: renamed network interface wlan1 to wlan2
-firmware: requesting isl3886
-
-I understand the driver detects it as Indigo.
-
-# lspci -v -s 01:04.0
-01:04.0 Network controller: Intersil Corporation ISL3890 [Prism  
-GT/Prism Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
-         Subsystem: Z-Com, Inc. XG-600 and clones Wireless Adapter
-         Flags: bus master, medium devsel, latency 16, IRQ 25
-         Memory at 80882000 (32-bit, non-prefetchable) [size=8K]
-         Capabilities: [dc] Power Management version 1
-         Kernel driver in use: p54pci
-         Kernel modules: prism54, p54pci
-
--- 
-Regards,
-Pavel Roskin
