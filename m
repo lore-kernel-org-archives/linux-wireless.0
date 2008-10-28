@@ -1,101 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44997 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455AbYJTGtO (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:26570 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127AbYJ1GXR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 02:49:14 -0400
-Subject: Re: [PATCH v3] mac80211/drivers: rewrite the rate control API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <1224484940.24677.169.camel@debian.sh.intel.com>
-References: <1223996147.10113.33.camel@johannes.berg>
-	 (sfid-20081014_165703_092655_BE6BA58D)  <1224052607.3027.20.camel@johannes.berg>
-	 <1224484940.24677.169.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JrTmBf2MVwoSj+WoTXNd"
-Date: Mon, 20 Oct 2008 08:48:38 +0200
-Message-Id: <1224485319.18024.9.camel@johannes.berg> (sfid-20081020_084916_841164_C0CBE5DA)
-Mime-Version: 1.0
+	Tue, 28 Oct 2008 02:23:17 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1315148wah.21
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 23:23:16 -0700 (PDT)
+Message-ID: <a32f33a40810272323y4b15cc03o1b82730a6c93f60e@mail.gmail.com> (sfid-20081028_072321_628251_0D566FFA)
+Date: Tue, 28 Oct 2008 07:23:16 +0100
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "Greg KH" <greg@kroah.com>
+Subject: Re: rtl2860 driver in mainline?
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <20081028061023.GA6568@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081028004915.GA3442@kroah.com>
+	 <a32f33a40810272248j5ee755ccoc8f6a8c8d5338cb8@mail.gmail.com>
+	 <20081028061023.GA6568@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>> > So, on my quest to suck up every out-of-tree driver and get it into the
+>> > main kernel tree (drivers/staging/ to start with), I've been pointed at
+>> > the rtl2860 driver.
+>>
+>> in that case make sure you include rt2870 on your list as well then. ;)
+>
+> Do you have a pointer to it?
 
---=-JrTmBf2MVwoSj+WoTXNd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+http://www.ralinktech.com.tw/data/drivers/2008_0925_RT2870_Linux_STA_v1.4.0.0.tar.bz2
 
-On Mon, 2008-10-20 at 14:42 +0800, Zhu Yi wrote:
+But as mentioned the rt2800usb is underway.
 
-> > @@ -318,9 +348,33 @@ static void iwl3945_rx_reply_tx(struct i
-> >         }
-> >=20
-> >         info =3D IEEE80211_SKB_CB(txq->txb[txq->q.read_ptr].skb[0]);
-> > -       memset(&info->status, 0, sizeof(info->status));
-> > +       ieee80211_tx_info_clear_status(info);
-> > +
-> > +       /* Fill the MRR chain with some info about on-chip retransmissi=
-ons */
-> > +       rate_idx =3D iwl3945_hwrate_to_plcp_idx(tx_resp->rate);
-> > +       if (info->band =3D=3D IEEE80211_BAND_5GHZ)
-> > +               rate_idx -=3D IWL_FIRST_OFDM_RATE;
-> > +
-> > +       info->status.rates[0].count =3D tx_resp->failure_frame + 1;
->=20
-> This is useless. And it is even confusable with the later count++.
+>> > Does anyone know of a "cleaned up" version of this driver that is
+>> > newer/better than the one on ralink's web site?  I found the
+>> > 2008_0918_RT2860_Linux_STA_v1.8.0.0.tar.bz2 version there, and will
+>> > start with that if no one else has yet.
+>>
+>> rt2800pci/rt2800usb development is in progress in the rt2x00.git
+>> experimental branch:
+>> http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=shortlog;h=experimental
+>>
+>> The current status is that rt2800usb has working RX with some warnings
+>> regarding the
+>> RX signal, and a non functional TX. rt2800pci isn't complete yet.
+>>
+>> So far progress has been very slow because of lack of time, so any help with the
+>> development of the drivers is welcome.
+>
+> Is this a port of the tarball driver to the in-kernel wireless stack, or
+> starting over from scratch?
 
-In what way useless? We've changed the semantics and made "count" be the
-"transmit count" rather than the "# of retries", so it has to be one
-more. Or was there a bug in the previous understanding? Wouldn't
-surprise me, and we can fix the bug here.
+Starting from scratch, well actually hooking it into the rt2x00lib library,
+so only the real register initializations are being copied. ;)
 
-> > +       fail =3D tx_resp->failure_frame;
-> > +       for(i =3D 0; i < 4; i++) {
->=20
-> Where does the '4' come from? Why not IEEE80211_TX_MAX_RATES?
->=20
-> > +               int next =3D iwl3945_rs_next_rate(priv, rate_idx);
-> > +
-> > +               info->status.rates[i].idx =3D rate_idx;
-> > +
-> > +               if ((rate_idx =3D=3D next) || (i =3D=3D 3)) {
->=20
-> ditto
+> As it's not really working, do you mind if I just dump the tarball
+> driver into the staging tree for users to use now (hint, they already
+> are, the distros are shipping that driver as a kernel module package),
+> and then when this "real" driver is up and working properly, we can drop
+> the staging version?
 
-Probably should be MAX_RATES, but I'm not sure, can you explain how the
-hardware will behave for retries?
+No objections, but who is going to provide support for them and maintain them
+to make sure they compile?
+I am already stretched in time, and I have absolutely no interest in maintaining
+or supporting those old drivers. I understood there were quite a lot
+of problems with
+the drivers, so putting them in an "official" tree might lead to a
+large series of
+support requests.
 
-> [...]
->=20
-> Other iwlwifi changes looks fine to me.
-
-Thanks for looking.
-
-johannes
-
---=-JrTmBf2MVwoSj+WoTXNd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/CnBAAoJEKVg1VMiehFYciUP/1KaYEwwbuMyAhZOks3902t+
-ClPdoYEEReqy6U/fOijJiCv88x2+H2AbZyBL6EsX3bIzn/Zslk1RICZqpIxaLUEL
-UNWahkzDNTX23F/QDQ9VQ7dklsvJOhwUOeATxGUiVKkn8WZjTycCNfRD5hiMkTpL
-80i8sy+qcK44qZ7ejh1CIzipJWO1dP0RzfdLimB+jD/vLszmIRZ9kjj6qKCXlZFF
-S/276z49J/Hj+ukEwFXL2Jko5xPKRmliqZIm36I0YLu//OxN48j9A7IhN85TpAaA
-1XTRZz1jhEvz6BS9VPrg5F5JCAMtpjbUIMk1RhFP6DPuU4/hdCbWkGUjql7HDPYT
-zV7EWk7XjBamhlwkO3paiN3JB4f0g6J+fVPRMrdFVjHg+jCsDaorvlhFGHfdvD68
-5tAkPo+cpZBzS6UTlOkQ6d7loo02QVDQN7cHCBOgZiqIYvVueKN31GGLzzev4LYU
-JD40Tq6o+VQDGzAJdGmH/0MjUCi4SxdmbsX6n5uhn8cCaj1gRZ58MafCNkXk7aQ9
-lY5z1aPskZtb3M19q5ZjMb14/hj9xYnfljRk5d4r6tlGYBu1U6spRA6hZG1aU/g3
-vTuOw8UXyee51lYLwV6mxFBtoWSEVKNCX7u772/VxVfZoypU5xCY8k4evu3qDOxP
-Sdc1pFS2gMLW1hAHV6Jh
-=jjUB
------END PGP SIGNATURE-----
-
---=-JrTmBf2MVwoSj+WoTXNd--
-
+Ivo
