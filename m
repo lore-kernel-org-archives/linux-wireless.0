@@ -1,105 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:44050 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954AbYJOBZ6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56147 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752560AbYJ1Shy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 21:25:58 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54: enable 2.4/5GHz spectrum by eeprom bits.
-Date: Wed, 15 Oct 2008 03:30:06 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>,
-	John W Linville <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810150330.07228.chunkeey@web.de> (sfid-20081015_032604_434100_ABAFC00D)
+	Tue, 28 Oct 2008 14:37:54 -0400
+Subject: Re: rtl2860 driver in mainline?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Greg KH <greg@kroah.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Thorsten Leemhuis <fedora@leemhuis.info>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <20081028170838.GA4818@kroah.com>
+References: <20081028004915.GA3442@kroah.com>
+	 <4906B944.4010105@leemhuis.info> <1225180598.3796.66.camel@johannes.berg>
+	 <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com>
+	 <1225181562.3796.76.camel@johannes.berg>  <20081028170838.GA4818@kroah.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NxZIzt7K6PurtfR/Nnc3"
+Date: Tue, 28 Oct 2008 19:35:52 +0100
+Message-Id: <1225218952.3598.39.camel@johannes.berg> (sfid-20081028_193756_382628_82C22D1C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a crash/badness in wireless-next / wireless-testing:
-Badness at /home/proski/src/linux-2.6/net/mac80211/rx.c:2200
-NIP: c02bc850 LR: c02ab268 CTR: 00000000
-REGS: ef01fcc0 TRAP: 0700   Tainted: G        W  (2.6.27-wl)
-MSR: 00029032 <EE,ME,IR,DR>  CR: 22004084  XER: 20000000
-TASK = c1a58800[1778] 'p54pci' THREAD: ef01e000
-[...]
-NIP [c02bc850] __ieee80211_rx+0x17c/0x638
-LR [c02ab268] ieee80211_tasklet_handler+0x104/0x120
-Call Trace:
-[ef01fd70] [c1a0c020] 0xc1a0c020 (unreliable)
-[ef01fdb0] [c02ab268] ieee80211_tasklet_handler+0x104/0x120
-[...]
 
-the problem was that some older cards are mis-identified and didn't support
-5GHz rates, while they have the right MAC & Synth chip.
+--=-NxZIzt7K6PurtfR/Nnc3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This patch changes the way how p54 decides if it should enable 11a channels
-or not.
+On Tue, 2008-10-28 at 10:08 -0700, Greg KH wrote:
 
-Reported-by: Pavel Roskin <proski@gnu.org>
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 0180466..48f91f3 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -306,8 +306,8 @@ static int p54_convert_rev1(struct ieee80211_hw *dev,
- 	return 0;
- }
- 
--static const char *p54_rf_chips[] = { "NULL", "Indigo?", "Duette",
--                              "Frisbee", "Xbow", "Longbow" };
-+static const char *p54_rf_chips[] = { "NULL", "Duette3", "Duette2",
-+                              "Frisbee", "Xbow", "Longbow", "NULL", "NULL" };
- static int p54_init_xbow_synth(struct ieee80211_hw *dev);
- 
- static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
-@@ -319,6 +319,7 @@ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 	void *tmp;
- 	int err;
- 	u8 *end = (u8 *)eeprom + len;
-+	u16 synth;
- 	DECLARE_MAC_BUF(mac);
- 
- 	wrap = (struct eeprom_pda_wrap *) eeprom;
-@@ -400,8 +401,8 @@ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 			tmp = entry->data;
- 			while ((u8 *)tmp < entry->data + data_len) {
- 				struct bootrec_exp_if *exp_if = tmp;
--				if (le16_to_cpu(exp_if->if_id) == 0xF)
--					priv->rxhw = le16_to_cpu(exp_if->variant) & 0x07;
-+				if (le16_to_cpu(exp_if->if_id) == 0xf)
-+					synth = le16_to_cpu(exp_if->variant);
- 				tmp += sizeof(struct bootrec_exp_if);
- 			}
- 			break;
-@@ -427,22 +428,13 @@ static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 		goto err;
- 	}
- 
--	switch (priv->rxhw) {
--	case 4: /* XBow */
-+	priv->rxhw = synth & 0x07;
-+	if (priv->rxhw == 4)
- 		p54_init_xbow_synth(dev);
--	case 1: /* Indigo? */
--	case 2: /* Duette */
--		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
--	case 3: /* Frisbee */
--	case 5: /* Longbow */
-+	if (!(synth & 0x40))
- 		dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
--		break;
--	default:
--		printk(KERN_ERR "%s: unsupported RF-Chip\n",
--			wiphy_name(dev->wiphy));
--		err = -EINVAL;
--		goto err;
--	}
-+	if (!(synth & 0x80))
-+		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
- 
- 	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
- 		u8 perm_addr[ETH_ALEN];
+> "Work on", or "USE".
+>=20
+> The problem is, users have this hardware, and they want to run Linux on
+> it.  Many distros already support this hardware with the "crap" driver,
+> so we might as well add that to the kernel tree so they at least get the
+> latest "crap" so that users have an easier time of it.
+>=20
+> Now, the fact that there is a competing driver being developed outside
+> of the tree does make this a bit more complicated.  However, as it
+> doesn't work yet, there's not much we can do about including it, right?
+>=20
+> So adding the driver to the "crap" tree makes users happy in that they
+> can use their hardware.  I'll support the "crap" to a point, and no one
+> has to do any API changes to the drivers/staging/ tree either, I can
+> easily handle that.
+>=20
+> Then, when the "correct" driver is finished, I will drop the crap driver
+> at the same time the "correct" one is added to the tree.
+>=20
+> This way, everyone wins, right?
+
+Only if the point is "use" rather than "work on". As far as I understood
+about staging, the point was more "work on" which would direct effort to
+the wrong driver.
+
+johannes
+
+--=-NxZIzt7K6PurtfR/Nnc3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJB1uFAAoJEKVg1VMiehFYt78QAJ+Wc9OldgUJOT83sFiYXhyE
+PPKOEfn05mLbmeGvzAdwu4/dArtCLAXpWKHhAvPIaCSvY4mXWs18RFG2omytB8Oh
+fbvWKIHlm/59hQoo/GBxuv5ptxV21dJ1/Jat77JNvME6jiDoVDysv6bptq1xJtSb
+amtgNsHYSzO1ESEoZhK9v6jtDuQVSKScNIFPPLRYxf2ZA+3wSX1+P4K6XDvMCYVz
+z2OLxIhMMbw/yLvfr8RvfylG++ZAfMyXcFLR07feFmtRBEbjXvmA2iDeSwfcicMa
+/o2DkX/EiElWJk/eiktNaWdDOiu2WBHtuNXqwgpAvvvRARdh6TIzlii7BHkNF7Le
+JoK/+rcCPFRDIe5v42P09oBzIzlf9Q1mm+xuOq7Ttl/pvZkMRLGwovcnKn1Q5B9K
+w5NhM/K3e5yXpe0cmkgbOO6FxbPMBft/R+FCF8vbu96eMEll/s3/0asnR416G6Sq
+rKeOKt1rsOOvl1ahfjR6ndUUg5ljqqcnPqzn470xKNRsfQUvfY7WpcbzMTEuHSn1
+EV1roG/aHzBsmOvBizlNcxWHYPrqlyyqovJOCtvPogr4Syge9rBSQi/MT8RODHO8
+Rnz3qzKeFUs6Iu9JzBOO+rdE0afSFiWCXv3RuErpHLV4hdegJoToTSpBZHBqihOA
+7qCm5If31SHyqubSlvs1
+=JRwt
+-----END PGP SIGNATURE-----
+
+--=-NxZIzt7K6PurtfR/Nnc3--
+
