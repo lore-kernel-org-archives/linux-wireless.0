@@ -1,31 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:50127 "EHLO linta.de"
+Received: from kroah.org ([198.145.64.141]:52334 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753316AbYJ0XD3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 19:03:29 -0400
-Date: Tue, 28 Oct 2008 00:03:27 +0100
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-Message-ID: <20081027230326.GA23250@isilmar.linta.de> (sfid-20081028_000345_857009_6EF97F0A)
-References: <20081018231046.GA10977@isilmar.linta.de> <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com> <20081019075916.GA12904@isilmar.linta.de> <1225145468.1115.139.camel@rc-desk>
+	id S1753789AbYJ1SUX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 14:20:23 -0400
+Date: Tue, 28 Oct 2008 10:10:24 -0700
+From: Greg KH <greg@kroah.com>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Thorsten Leemhuis <fedora@leemhuis.info>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: rtl2860 driver in mainline?
+Message-ID: <20081028171024.GC4818@kroah.com> (sfid-20081028_192030_069023_1CA15134)
+References: <20081028004915.GA3442@kroah.com> <4906B944.4010105@leemhuis.info> <efe7343f0810280048j57158020n67176d7a56f0bbea@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1225145468.1115.139.camel@rc-desk>
+In-Reply-To: <efe7343f0810280048j57158020n67176d7a56f0bbea@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Oct 28, 2008 at 07:48:54AM +0000, Luis Correia wrote:
+> Hi!
+> 
+> On Tue, Oct 28, 2008 at 07:03, Thorsten Leemhuis <fedora@leemhuis.info> wrote:
+> > On 28.10.2008 01:49, Greg KH wrote:
+> >>
+> >> So, on my quest to suck up every out-of-tree driver and get it into the
+> >> main kernel tree (drivers/staging/ to start with), I've been pointed at
+> >> the rtl2860 driver.
+> >
+> > Does it really make sense to include a driver when a different one for
+> > mainline inclusion is being actively developed? It might give some
+> > developers the impression that it's worth spending time improving the
+> > rtl2860/2870 drivers -- which might be wasted time in the end.
+> 
+> Is it just me or you are suggesting we use the Ralink supplied driver,
+> with its own wireless stack, rather then work with the rt2x00 team?
 
-On Mon, Oct 27, 2008 at 03:11:08PM -0700, reinette chatre wrote:
-> Could you please try the following patch instead of updating your ucode?
+No, See my other post in this thread about what I am suggesting.
 
-Thanks for the patch -- it doesn't work with the old uCode, unfortunately;
-while the new uCode works with or without this patch.
+> Do we really want that again (several wireless stacks)?
 
-Best,
-	Dominik
+We already have that in the "crap" tree today (see drivers/staging/) :)
+
+thanks,
+
+greg k-h
