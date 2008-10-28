@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:45142 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753146AbYJ2Rx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 13:53:27 -0400
-Message-Id: <20081029175220.543918201@localhost> (sfid-20081029_185329_415124_A453BAF0)
-References: <20081029174934.817700763@localhost>
-Date: Wed, 29 Oct 2008 19:49:35 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] mac80211_hwsim: Debug info for BSS config changes
+Received: from xc.sipsolutions.net ([83.246.72.84]:52014 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751954AbYJ1IT7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 04:19:59 -0400
+Subject: Re: rtl2860 driver in mainline?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Thorsten Leemhuis <fedora@leemhuis.info>, Greg KH <greg@kroah.com>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890810280117t44e4b0b8nbf1a2b68a989d3a2@mail.gmail.com> (sfid-20081028_091737_503016_9AA85644)
+References: <20081028004915.GA3442@kroah.com>
+	 <4906B944.4010105@leemhuis.info> <1225180598.3796.66.camel@johannes.berg>
+	 <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com>
+	 <1225181562.3796.76.camel@johannes.berg>
+	 <43e72e890810280117t44e4b0b8nbf1a2b68a989d3a2@mail.gmail.com>
+	 (sfid-20081028_091737_503016_9AA85644)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IrbfI+EBUbecsyAtU5kJ"
+Date: Tue, 28 Oct 2008 09:19:53 +0100
+Message-Id: <1225181993.3796.78.camel@johannes.berg> (sfid-20081028_092002_846838_BF650FA8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Provide detailed information on BSS configuration changes to make it
-easier to debug mac80211 functionality.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+--=-IrbfI+EBUbecsyAtU5kJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Index: wireless-testing/drivers/net/wireless/mac80211_hwsim.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c
-+++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c
-@@ -415,6 +415,37 @@ static void mac80211_hwsim_bss_info_chan
- 					    u32 changed)
- {
- 	hwsim_check_magic(vif);
-+	printk(KERN_DEBUG "%s:%s(changed=0x%x)\n",
-+	       wiphy_name(hw->wiphy), __func__, changed);
-+
-+	if (changed & BSS_CHANGED_ASSOC) {
-+		printk(KERN_DEBUG "  ASSOC: assoc=%d aid=%d\n",
-+		       info->assoc, info->aid);
-+	}
-+
-+	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
-+		printk(KERN_DEBUG "  ERP_CTS_PROT: %d\n", info->use_cts_prot);
-+	}
-+
-+	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
-+		printk(KERN_DEBUG "  ERP_PREAMBLE: %d\n",
-+		       info->use_short_preamble);
-+	}
-+
-+	if (changed & BSS_CHANGED_ERP_SLOT) {
-+		printk(KERN_DEBUG "  ERP_SLOT: %d\n", info->use_short_slot);
-+	}
-+
-+	if (changed & BSS_CHANGED_HT) {
-+		printk(KERN_DEBUG "  HT: sec_ch_offs=%d width_40_ok=%d "
-+		       "op_mode=%d\n", info->ht.secondary_channel_offset,
-+		       info->ht.width_40_ok, info->ht.operation_mode);
-+	}
-+
-+	if (changed & BSS_CHANGED_BASIC_RATES) {
-+		printk(KERN_DEBUG "  BASIC_RATES: 0x%llx\n",
-+		       info->basic_rates);
-+	}
- }
- 
- static void mac80211_hwsim_sta_notify(struct ieee80211_hw *hw,
+On Tue, 2008-10-28 at 01:17 -0700, Luis R. Rodriguez wrote:
 
---
+> >> Problem is distributions already ship crap anyway.
+> >
+> > Well, yes, but that's fine, it doesn't mean people will work on the
+> > crap, it means people will use the crap. As far as I understood, puttin=
+g
+> > it into staging was supposed to mean "here is some crap for people to
+> > work on", which is a huge difference.
+>=20
+> Well its not staging if it doesn't work as well, if we are going to
+> stage might as well let it work while there are no alternatives no?
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+They can always use the distro shipped crap and hack on the real driver.
+
+johannes
+
+--=-IrbfI+EBUbecsyAtU5kJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJBsslAAoJEKVg1VMiehFY+RcQALMpEWETG4fEfYnQpZ6n6HRD
+mAtLM6KXVemH+sXQT/YdylnJhIE7v7oL8DvCjg9iUiMOmgp7nhv85BWx1sOpLjs5
+91RxLSw5xWjER4kRgt1Ki8vjIYa/LrOqQS6EmGOMatceE9Sy4rjuHz2mvyeY6QEA
+hlUHaIAJ7hiA5p1KVUmlaKEsV7Mcfo5MaBZ8ERdT0q2KY5Da9gKGQiJbFTuhjc+3
+rnT/8o36jAItPrSNyX3vfiXuJ+M0ij9g3+2BursezPcNkMtRWppNg+54VxS0BnLK
+9Abs7MkZhvzKJqzGhtIbqQkEbD/IXXNUSujyZTA2r8xKovP/+0kCFRIfYLuUG6tk
+kjxcgQMlG1P6Q59CP2XdlReFszuklLK4X0Ks+e1p/uN9laDAcMUnRwG5kd6lYaJ1
+pMfgJvVcvqqitWcGz0hs+ULh6jCZRNoZgfyUMFrwkLzmFj0Y17PMigaMITaV3tgg
+VVZrg4Py272CVQSkp3/EvsHV1EGv5v30RsiRKPPERATuvOzB9cHdWxOULYywOoqG
+40fx4sdnVpq/MwvVQrNj4GWv/EWnwV2CCQeFFMg8raugWy9Gd+SjBg7thT9HpYxm
+4ARL0uhRVuvvGbM4C7dGXU3/kL3+34L4znnk5TkeUs14xGAfZSVRWqOe9EvXUMAO
+YhEMHnNZz562lLuj68eB
+=lLkr
+-----END PGP SIGNATURE-----
+
+--=-IrbfI+EBUbecsyAtU5kJ--
+
