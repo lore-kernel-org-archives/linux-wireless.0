@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52014 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954AbYJ1IT7 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:14088 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752764AbYJ1MHy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 04:19:59 -0400
-Subject: Re: rtl2860 driver in mainline?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Thorsten Leemhuis <fedora@leemhuis.info>, Greg KH <greg@kroah.com>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890810280117t44e4b0b8nbf1a2b68a989d3a2@mail.gmail.com> (sfid-20081028_091737_503016_9AA85644)
-References: <20081028004915.GA3442@kroah.com>
-	 <4906B944.4010105@leemhuis.info> <1225180598.3796.66.camel@johannes.berg>
-	 <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com>
-	 <1225181562.3796.76.camel@johannes.berg>
-	 <43e72e890810280117t44e4b0b8nbf1a2b68a989d3a2@mail.gmail.com>
-	 (sfid-20081028_091737_503016_9AA85644)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IrbfI+EBUbecsyAtU5kJ"
-Date: Tue, 28 Oct 2008 09:19:53 +0100
-Message-Id: <1225181993.3796.78.camel@johannes.berg> (sfid-20081028_092002_846838_BF650FA8)
-Mime-Version: 1.0
+	Tue, 28 Oct 2008 08:07:54 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2572682wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 05:07:54 -0700 (PDT)
+Message-ID: <1ba2fa240810280507y36443ec0nb62e4e9896911473@mail.gmail.com> (sfid-20081028_130804_542588_4E6F4BFE)
+Date: Tue, 28 Oct 2008 14:07:53 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jouni Malinen" <j@w1.fi>
+Subject: Re: [PATCH] mac80211: print reason code for deauth/dissoc frames
+Cc: "Zhu Yi" <yi.zhu@intel.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20081028120059.GM19710@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1225180711-5204-1-git-send-email-yi.zhu@intel.com>
+	 <1ba2fa240810280431m21080a96i7655e67769cb1579@mail.gmail.com>
+	 <20081028120059.GM19710@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 28, 2008 at 2:00 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Tue, Oct 28, 2008 at 01:31:13PM +0200, Tomas Winkler wrote:
+>
+>> Do anyone has idea how to push it to the user space?
+>> We already use ieee80211_sta_send_apinfo (SIOCGIWAP) for notification.
+>> Can be reason code attached without breaking user space?  The
+>> iwreq_data it self has enough space to add this and this can be queued
+>> at the end.
+>
+> Taken into account how broken WEXT events are already on 64/32-bit
+> systems, it would probably be better to add this as a new nl80211 event
+> which we will hopefully get in the near future. I'm looking for that to
+> fix the association info reporting, too (and issue that I fixed with
+> WEXT, but the fix was reverted due to userspace interop issues..).
 
---=-IrbfI+EBUbecsyAtU5kJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2008-10-28 at 01:17 -0700, Luis R. Rodriguez wrote:
-
-> >> Problem is distributions already ship crap anyway.
-> >
-> > Well, yes, but that's fine, it doesn't mean people will work on the
-> > crap, it means people will use the crap. As far as I understood, puttin=
-g
-> > it into staging was supposed to mean "here is some crap for people to
-> > work on", which is a huge difference.
->=20
-> Well its not staging if it doesn't work as well, if we are going to
-> stage might as well let it work while there are no alternatives no?
-
-They can always use the distro shipped crap and hack on the real driver.
-
-johannes
-
---=-IrbfI+EBUbecsyAtU5kJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJBsslAAoJEKVg1VMiehFY+RcQALMpEWETG4fEfYnQpZ6n6HRD
-mAtLM6KXVemH+sXQT/YdylnJhIE7v7oL8DvCjg9iUiMOmgp7nhv85BWx1sOpLjs5
-91RxLSw5xWjER4kRgt1Ki8vjIYa/LrOqQS6EmGOMatceE9Sy4rjuHz2mvyeY6QEA
-hlUHaIAJ7hiA5p1KVUmlaKEsV7Mcfo5MaBZ8ERdT0q2KY5Da9gKGQiJbFTuhjc+3
-rnT/8o36jAItPrSNyX3vfiXuJ+M0ij9g3+2BursezPcNkMtRWppNg+54VxS0BnLK
-9Abs7MkZhvzKJqzGhtIbqQkEbD/IXXNUSujyZTA2r8xKovP/+0kCFRIfYLuUG6tk
-kjxcgQMlG1P6Q59CP2XdlReFszuklLK4X0Ks+e1p/uN9laDAcMUnRwG5kd6lYaJ1
-pMfgJvVcvqqitWcGz0hs+ULh6jCZRNoZgfyUMFrwkLzmFj0Y17PMigaMITaV3tgg
-VVZrg4Py272CVQSkp3/EvsHV1EGv5v30RsiRKPPERATuvOzB9cHdWxOULYywOoqG
-40fx4sdnVpq/MwvVQrNj4GWv/EWnwV2CCQeFFMg8raugWy9Gd+SjBg7thT9HpYxm
-4ARL0uhRVuvvGbM4C7dGXU3/kL3+34L4znnk5TkeUs14xGAfZSVRWqOe9EvXUMAO
-YhEMHnNZz562lLuj68eB
-=lLkr
------END PGP SIGNATURE-----
-
---=-IrbfI+EBUbecsyAtU5kJ--
-
+Okay, thanks for the info. will look into nl direction.
+Tomas
