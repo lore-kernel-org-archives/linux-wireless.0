@@ -1,55 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:8571 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751371AbYJ3Fib (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:43663 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752393AbYJ1OYJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 01:38:31 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so142808yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 22:38:30 -0700 (PDT)
-Message-ID: <43e72e890810292238x36b37839x759c1691541534bf@mail.gmail.com> (sfid-20081030_063836_207134_14BE6F3C)
-Date: Wed, 29 Oct 2008 22:38:30 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "jon doe" <mass.of.doughnuts@gmail.com>
-Subject: Re: compile problems
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1225334965.25716.1.camel@indika.weed.com>
+	Tue, 28 Oct 2008 10:24:09 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so637037ywe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 07:24:07 -0700 (PDT)
+Message-ID: <1ba2fa240810280724i54bfc61cqd2fde19bc37e3639@mail.gmail.com> (sfid-20081028_152416_573203_76A81C21)
+Date: Tue, 28 Oct 2008 16:24:06 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: Re-enable aggregation
+Cc: Sujith <m.sujith@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <1225123449.3796.24.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1225334965.25716.1.camel@indika.weed.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <18684.16351.638713.791015@gargle.gargle.HOWL>
+	 <1224669827.28639.54.camel@johannes.berg>
+	 <1ba2fa240810220459m1dcffd24k58cf6b72c688913c@mail.gmail.com>
+	 <1224696170.30459.12.camel@johannes.berg>
+	 <18688.15460.336059.400706@gargle.gargle.HOWL>
+	 <1224773201.6002.35.camel@johannes.berg>
+	 <18693.53054.116942.355275@localhost.localdomain>
+	 <1225119894.3796.0.camel@johannes.berg>
+	 <1ba2fa240810270856g7f585ddcvb1d0ef49aa31af45@mail.gmail.com>
+	 <1225123449.3796.24.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2008 at 7:49 PM, jon doe <mass.of.doughnuts@gmail.com> wrote:
-> please help
+On Mon, Oct 27, 2008 at 6:04 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-10-27 at 17:56 +0200, Tomas Winkler wrote:
 >
-> heres the error
+>> In addition iwlwifi HW release TX packets in order to mac80211 i.e. no
+>> need to maintain the transition window
+>> so simple flag maybe shell revert the flow into regular tx response
+>> flow in mac80211.
+>> Only rate scaling is aware that the packets were transmitted
+>> aggregated, we did some hacking there around this it should be cleaned
+>> up.
 >
-> make -C /lib/modules/2.6.27.3-indika/build
-> M=/home/jon/compat-wireless-2008-10-29 modules
-> make[1]: Entering directory `/usr/src/linux-2.6.27.3'
->  CC      /home/jon/compat-wireless-2008-10-29/net/mac80211/main.o
-> /home/jon/compat-wireless-2008-10-29/net/mac80211/main.c: In function
-> 'ieee80211_handle_filtered_frame':
-> /home/jon/compat-wireless-2008-10-29/net/mac80211/main.c:435: error:
-> 'struct sk_buff' has no member named 'requeue'
-> /home/jon/compat-wireless-2008-10-29/net/mac80211/main.c:437: error:
-> 'struct sk_buff' has no member named 'requeue'
-> make[3]: *** [/home/jon/compat-wireless-2008-10-29/net/mac80211/main.o]
-> Error 1
-> make[2]: *** [/home/jon/compat-wireless-2008-10-29/net/mac80211] Error 2
-> make[1]: *** [_module_/home/jon/compat-wireless-2008-10-29] Error 2
-> make[1]: Leaving directory `/usr/src/linux-2.6.27.3'
-> make: *** [modules] Error 2
+> I wonder how we're going to pass them down to the driver anyway. And how
+> about rate control, is that really done per sub-frame? Does that make
+> any sense?
 
-The compat code for aggregation wasn't added yet, but it should now be
-there thanks to Tim. Please grab new tarball and try that.
+Sub frame? This is bit misleading in this context .This is not AMSDU.
+This is rather a regular frame to be sent in a burst.
 
-git-describe says:
-v2.6.28-rc2-4159-g6c11cd2
-wireless-testing latest tag:
-master-2008-10-29
-This is compat-release:
-v1.1-1-g1818f32
+>I'm thinking that if we pass a fraglist down for the ampdu,
 
+If you are able to do this you can also build AMSDU frame from the
+frames, in AMPDU i prefer the streaming approach
+and the decision about how many frames get into current TXOP is pushed
+as low as possible, But maybe again I'm seeing this from iwlwifi
+perspective.
 
-  Luis
+> then we should have the fraglist in tx status too, in one go... If rate
+> control is per subframe maybe it just needs to be made aware to walk the
+> fraglist?
+
+The rate scale should be aware of aggregation in order to be more
+responsive (consider each aggregation as single transition) while
+frame completion should be in order to preserve ordered definition of
+802.11. protocol to upper layers (only completed sub window is
+released up)
+
+Tomas
