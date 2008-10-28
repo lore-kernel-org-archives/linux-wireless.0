@@ -1,52 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:55687 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751292AbYJaQPm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 12:15:42 -0400
-Subject: Re: Guidelines regarding separate directory
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Pavel Roskin <proski@gnu.org>, Dave <kilroyd@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-In-Reply-To: <1225447269.3535.4.camel@johannes.berg>
-References: <4909EA78.3060700@lwfinger.net>
-	 (sfid-20081030_181107_189082_5740895D) <1225387309.3690.73.camel@johannes.berg>
-	 <490A17F3.5050802@gmail.com> <1225399481.7931.5.camel@dv>
-	 <1225399682.3690.82.camel@johannes.berg>
-	 <20081030231054.ehd21qipcow4kg88-cebfxv@webmail.spamcop.net>
-	 <1225447269.3535.4.camel@johannes.berg>
+Received: from xc.sipsolutions.net ([83.246.72.84]:56060 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751873AbYJ1SgJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 14:36:09 -0400
+Subject: [PATCH] wireless: clean up sysfs code using %pM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Fri, 31 Oct 2008 12:13:28 -0400
-Message-Id: <1225469608.27440.11.camel@localhost.localdomain> (sfid-20081031_171548_934692_369D5E31)
+Date: Tue, 28 Oct 2008 14:00:54 +0100
+Message-Id: <1225198854.3598.6.camel@johannes.berg> (sfid-20081028_193616_104085_C67FCEEF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-10-31 at 11:01 +0100, Johannes Berg wrote:
-> On Thu, 2008-10-30 at 23:10 -0400, Pavel Roskin wrote:
-> > Quoting Johannes Berg <johannes@sipsolutions.net>:
-> 
-> > The WPA support in orinoco is limited to Agere firmware.  Maybe Symbol  
-> > firmware will be supported at some point.  But adding WPA support for  
-> > Intersil firmware would duplicate efforts.
-> 
-> Yes, I know, but wouldn't adding that based on the hostap stuff be
-> fairly simple? I know nobody has time to...
-> 
-> > The only thing I would like to change in hostap is that it should  
-> > default to managed mode, like other drivers do.
-> 
-> No, that's not true, just see
-> http://bugzilla.kernel.org/show_bug.cgi?id=11802 for example. The AP
-> part also duplicates a lot of mac80211 functionality.
+Remove converting the MAC address to a string by a direct byte
+conversion and use %pM instead, since the code is now boilerplate
+use a macro to define the show functions, and also use the shorter
+__ATTR_RO macro to define the attributes.
 
-Orinoco is a mostly-fullmac driver, while hostap is quasi-softmac,
-right?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+John, just FYI, it needs to go through net-next-2.6 since it depends on
+%pM. Won't cause conflicts either :)
 
-Dan
+ net/wireless/sysfs.c |   25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
+
+--- test-tree.orig/net/wireless/sysfs.c	2008-10-28 13:45:27.000000000 +0100
++++ test-tree/net/wireless/sysfs.c	2008-10-28 13:56:50.000000000 +0100
+@@ -23,25 +23,20 @@ static inline struct cfg80211_registered
+ 	return container_of(dev, struct cfg80211_registered_device, wiphy.dev);
+ }
+ 
+-static ssize_t _show_index(struct device *dev, struct device_attribute *attr,
+-			   char *buf)
+-{
+-	return sprintf(buf, "%d\n", dev_to_rdev(dev)->idx);
++#define SHOW_FMT(name, fmt, member)					\
++static ssize_t name ## _show(struct device *dev,			\
++			      struct device_attribute *attr,		\
++			      char *buf)				\
++{									\
++	return sprintf(buf, fmt "\n", dev_to_rdev(dev)->member);	\
+ }
+ 
+-static ssize_t _show_permaddr(struct device *dev,
+-			      struct device_attribute *attr,
+-			      char *buf)
+-{
+-	unsigned char *addr = dev_to_rdev(dev)->wiphy.perm_addr;
+-
+-	return sprintf(buf, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n",
+-		       addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+-}
++SHOW_FMT(index, "%d", idx);
++SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
+ 
+ static struct device_attribute ieee80211_dev_attrs[] = {
+-	__ATTR(index, S_IRUGO, _show_index, NULL),
+-	__ATTR(macaddress, S_IRUGO, _show_permaddr, NULL),
++	__ATTR_RO(index),
++	__ATTR_RO(macaddress),
+ 	{}
+ };
+ 
 
 
