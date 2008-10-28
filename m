@@ -1,38 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:45560 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753543AbYJATGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 15:06:43 -0400
-Date: Wed, 1 Oct 2008 11:53:52 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Pavel Machek <pavel@suse.cz>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	"kaszak@gmail.com" <kaszak@gmail.com>,
-	"lcostantino@gmail.com" <lcostantino@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: w35und wifi driver for linux-staging
-Message-ID: <20081001185352.GA15713@kroah.com> (sfid-20081001_210650_860109_BAFF953B)
-References: <20081001123656.GA30942@elf.ucw.cz> <20081001113458.GC6126@tesla>
+Received: from mail.atheros.com ([12.36.123.2]:44821 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752020AbYJ1Azz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 20:55:55 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 17:55:55 -0700
+Date: Mon, 27 Oct 2008 17:55:53 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Greg KH <greg@kroah.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Joey Krane <linuxbsd2004@gmail.com>
+Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
+Message-ID: <20081028005553.GE6377@tesla> (sfid-20081028_015558_645113_F26B7951)
+References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com> <20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com> <20081023111103.GB5979@tesla> <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com> <20081028002919.GB2992@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081001113458.GC6126@tesla>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20081028002919.GB2992@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 01, 2008 at 04:34:58AM -0700, Luis R. Rodriguez wrote:
-> Please install sparse and then compile the driver using C=1, and correct
-> the warnings.
+On Mon, Oct 27, 2008 at 05:29:19PM -0700, Greg KH wrote:
+> On Mon, Oct 27, 2008 at 04:35:11PM -0700, Luis R. Rodriguez wrote:
+> > On Thu, Oct 23, 2008 at 4:11 AM, Luis R. Rodriguez
+> > <lrodriguez@atheros.com> wrote:
+> > > On Wed, Oct 22, 2008 at 11:26:55PM -0700, Greg KH wrote:
+> > >> On Tue, Oct 21, 2008 at 11:50:45PM -0700, Greg KH wrote:
+> > >> > On Tue, Oct 21, 2008 at 07:04:17PM -0700, Luis R. Rodriguez wrote:
+> > >> > > We would like to see our Atheros 802.11n USB Linux driver upstream
+> > >> > > however we need help with this so we are releasing our Atheros 11n USB
+> > >> > > Otus Linux driver under the ISC to the community. The goal is to work
+> > >> > > with the community to help move this forward upstream. We are hoping
+> > >> > > for community help and leadership on this (*cough*).
+> > >> >
+> > >> > Yeah!
+> > >> >
+> > >> > I'll grab this and put it in drivers/staging/ so it gets some users and
+> > >> > more developers to help out with it.
+> > >>
+> > >> Ok, it seems to need some basic work to merely build properly on
+> > >> "modern" kernel versions.
+> > >
+> > > Yeah, it works up to 2.6.24.
+> >
+> > This is now fixed on the master branch, also the branch "for-upstream"
+> > does a lot of cleanup I thought you may like before stuffing it into
+> > staging like removing all KERNEL_VERSION checks, all wireless
+> > extensions checks, some compile warnings, removal of compat, dos2unix,
+> > use utf-8, etc. Unfortunately this still requires a specific version
+> > of wpa_supplicant but it seems it works. Not sure what bars you have
+> > for staging at this point.
 > 
-> Ok well that should take a while..
+> Pretty much the only "bar" is "it compiles" :)
+> 
+> > Will you take this in, and expect patches for fixing it to use
+> > standard wext and also report standard wireless statistic (yeap, this
+> > is not there yet either).
+> 
+> Yes, I can do that.
 
-Heh, in the mean time, I'll suck it into drivers/staging/, moving the
-files around so that it is self-contained and remove the extra crud and
-fix up the build stuff so that it plays nice with the rest of the
-kernel.
+Excellent, if no one send patches I guess I will.
 
-I'll post the updated patch when it goes into my tree.
+> > Joey is one user which reported the driver working now with the
+> > compile fixes for newer kernels for 2.6.28-rc2 using the specific
+> > version of wpa_supplicant for it.
+> >
+> > Joey can you test the for-upstream branch on otus git?
+> 
+> If someone can tell me what device this is for, I can try to go buy it
+> so that I can verify changes I make don't drasticly break things.
 
-thanks,
+So we have a page for this now:
 
-greg k-h
+http://wireless.kernel.org/en/users/Drivers/otus
+
+Init you can find a list of devices. Let me just paste what we have
+there now:
+
+Dlink
+
+    * DWA-160A1 
+
+Netgear
+
+    * WNDA3100
+    * WN111v2 
+
+TP-Link
+
+    * TL-WN821N 
+
+AVM
+
+    * FRITZ!WLAN N USB Stick (USB ID 0x57c, 0x8401) 
+
+> I'll go try to get this tree into a buildable state and put it into
+> staging tonight.
+
+Thanks! BTW if you add a kconfig option for it please point users with
+this info:
+
+This driver requires its own supplicant driver for
+wpa_supplicant 0.4.8. For your convenience you can find
+the tarball here:
+
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/otus/wpa_supplicant-0.4.8_otus.tar.bz2
+
+Before compiling wpa_supplicant, ensure your .config has atleast the
+following
+
+CONFIG_WIRELESS_EXTENSION=y
+CONFIG_EAP_WSC=y
+CONFIG_WSC_IE=y
+CONFIG_DRIVER_WEXT=y
+CONFIG_DRIVER_OTUS=y
+
+After a successful compile, you can use the device with wpa_supplicant
+as follows:
+
+wpa_supplicant -Dotus -i <atheros device from ifconfig> -c /path/to/wpa_supplicant.conf -d
+
+  Luis
