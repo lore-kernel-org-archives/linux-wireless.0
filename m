@@ -1,338 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:7210 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754005AbYJKAc0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 20:32:26 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so477952fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2008 17:32:24 -0700 (PDT)
-Message-ID: <1ba2fa240810101732y610b4cc8g1b914b2c8eb726e5@mail.gmail.com> (sfid-20081011_023230_323759_1CC72803)
-Date: Sat, 11 Oct 2008 02:32:24 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: move bss_conf into vif
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223682711.29811.7.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223682711.29811.7.camel@johannes.berg>
+Received: from mail.gmx.net ([213.165.64.20]:39758 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752472AbYJ1QYf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 12:24:35 -0400
+Date: Tue, 28 Oct 2008 17:24:18 +0100
+From: Mirco Tischler <mt-ml@gmx.de>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W.Linville" <linville@tuxdriver.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
+Message-ID: <20081028172418.3c8e91f1@mtlp.12.dimension> (sfid-20081028_172441_311937_40D84470)
+In-Reply-To: <1225171414.2917.229.camel@debian.sh.intel.com>
+References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
+	<1225157618.2917.215.camel@debian.sh.intel.com>
+	<20081027213217.53558319@infradead.org>
+	<1225171414.2917.229.camel@debian.sh.intel.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/QYcKPLFonHn/Ijg6q/W=P3d";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 11, 2008 at 1:51 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Move bss_conf into the vif struct so that drivers can
-> access it during ->tx without having to store it in
-> the private data or similar. No driver updates because
-> this is only for when they want to start using it.
+--Sig_/QYcKPLFonHn/Ijg6q/W=P3d
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-What protection should driver take to be sure it won't be changed underneath ?
-With prive copy you know this is changed only in bss_info changed is called.
+On Tue, 28 Oct 2008 13:23:34 +0800, Zhu Yi wrote:
+> On Mon, 2008-10-27 at 22:32 -0600, Arjan van de Ven wrote:
+> > I had this same issue
+> >=20
+> > turning on CONFIG_WIRELESS_OLD_REGULATORY fixed it for me....
+>=20
+> Arjan,
+>=20
+> This is a different bug. He has the wireless worked sometimes.
+>=20
+> I think your problem relates to 5GHz channel usage. We have already a
+> patch queued to resolve the problem. We will have regulatory framework
+> reworked to better solve the problem. But I guess it will be in .29 time
+> frame.
+>=20
+> Thanks,
+> -yi
+I tested Arjan's solution nevertheless and it seems to do the job. I can't =
+find
+the "TX Power requested" line anymore on dmesg output with that config opti=
+on
+enabled anymore and it connects without problems.
+This is how it looks now:
+[  777.680750] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux,1.3=
+.27kds=20
+[  777.680753] iwlagn: Copyright(c) 2003-2008 Intel Corporation
+[  777.680878] iwlagn 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ=
+ 18
+[  777.680908] iwlagn 0000:06:00.0: setting latency timer to 64
+[  777.680977] iwlagn: Detected Intel Wireless WiFi Link 4965AGN REV=3D0x4
+[  777.731255] iwlagn: Tunable channels: 13 802.11bg, 19 802.11a channels
+[  777.732432] phy1: Selected rate control algorithm 'iwl-agn-rs'
+[  781.764539] iwlagn 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ=
+ 18
+[  781.764821] iwlagn 0000:06:00.0: irq 41 for MSI/MSI-X
+[  781.764919] iwlagn 0000:06:00.0: firmware: requesting iwlwifi-4965-2.uco=
+de
+[  781.980719] Registered led device: iwl-phy1:radio
+[  781.980764] Registered led device: iwl-phy1:assoc
+[  781.980808] Registered led device: iwl-phy1:RX
+[  781.980856] Registered led device: iwl-phy1:TX
+[  782.014001] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  783.633713] wlan0: authenticate with AP 00:c0:a8:e5:e5:a5
+[  783.635637] wlan0: authenticated
+[  783.635644] wlan0: associate with AP 00:c0:a8:e5:e5:a5
+[  783.642770] wlan0: RX AssocResp from 00:c0:a8:e5:e5:a5 (capab=3D0x431 st=
+atus=3D0
+aid=3D1)=20
+[  783.642776] wlan0: associated [  783.669684] ADDRCONF(NETDEV_CHANGE): wl=
+an0:
+link becomes ready
+
+I tested it quickly and not very thoroughly on the wpa-eap encrypted networ=
+k at
+university and it showed the same behaviour: no connection without
+CONFIG_WIRELESS_OLD_REGULATORY and no problems with it enabled.
 
 Thanks
-Tomas
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  include/net/mac80211.h        |    3 +++
->  net/mac80211/cfg.c            |    6 +++---
->  net/mac80211/debugfs_netdev.c |    2 +-
->  net/mac80211/ieee80211_i.h    |    3 ---
->  net/mac80211/iface.c          |    2 +-
->  net/mac80211/main.c           |    8 ++++----
->  net/mac80211/mlme.c           |   30 +++++++++++++++---------------
->  net/mac80211/tx.c             |   16 ++++++++--------
->  net/mac80211/util.c           |    6 +++---
->  9 files changed, 38 insertions(+), 38 deletions(-)
->
-> --- everything.orig/include/net/mac80211.h      2008-10-11 01:46:05.000000000 +0200
-> +++ everything/include/net/mac80211.h   2008-10-11 01:46:29.000000000 +0200
-> @@ -519,11 +519,14 @@ struct ieee80211_conf {
->  * use during the life of a virtual interface.
->  *
->  * @type: type of this virtual interface
-> + * @bss_conf: BSS configuration for this interface, either our own
-> + *     or the BSS we're associated to
->  * @drv_priv: data area for driver use, will always be aligned to
->  *     sizeof(void *).
->  */
->  struct ieee80211_vif {
->        enum nl80211_iftype type;
-> +       struct ieee80211_bss_conf bss_conf;
->        /* must be last */
->        u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
->  };
-> --- everything.orig/net/mac80211/ieee80211_i.h  2008-10-11 01:46:05.000000000 +0200
-> +++ everything/net/mac80211/ieee80211_i.h       2008-10-11 01:46:29.000000000 +0200
-> @@ -440,9 +440,6 @@ struct ieee80211_sub_if_data {
->
->        u16 sequence_number;
->
-> -       /* BSS configuration for this interface. */
-> -       struct ieee80211_bss_conf bss_conf;
-> -
->        /*
->         * AP this belongs to: self in AP mode and
->         * corresponding AP in VLAN mode, NULL for
-> --- everything.orig/net/mac80211/main.c 2008-10-11 01:46:05.000000000 +0200
-> +++ everything/net/mac80211/main.c      2008-10-11 01:46:29.000000000 +0200
-> @@ -249,15 +249,15 @@ void ieee80211_bss_info_change_notify(st
->        if (local->ops->bss_info_changed)
->                local->ops->bss_info_changed(local_to_hw(local),
->                                             &sdata->vif,
-> -                                            &sdata->bss_conf,
-> +                                            &sdata->vif.bss_conf,
->                                             changed);
->  }
->
->  u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata)
->  {
-> -       sdata->bss_conf.use_cts_prot = false;
-> -       sdata->bss_conf.use_short_preamble = false;
-> -       sdata->bss_conf.use_short_slot = false;
-> +       sdata->vif.bss_conf.use_cts_prot = false;
-> +       sdata->vif.bss_conf.use_short_preamble = false;
-> +       sdata->vif.bss_conf.use_short_slot = false;
->        return BSS_CHANGED_ERP_CTS_PROT |
->               BSS_CHANGED_ERP_PREAMBLE |
->               BSS_CHANGED_ERP_SLOT;
-> --- everything.orig/net/mac80211/iface.c        2008-10-11 01:46:05.000000000 +0200
-> +++ everything/net/mac80211/iface.c     2008-10-11 01:46:29.000000000 +0200
-> @@ -695,7 +695,7 @@ int ieee80211_if_change_type(struct ieee
->        ieee80211_setup_sdata(sdata, type);
->
->        /* reset some values that shouldn't be kept across type changes */
-> -       sdata->bss_conf.basic_rates =
-> +       sdata->vif.bss_conf.basic_rates =
->                ieee80211_mandatory_rates(sdata->local,
->                        sdata->local->hw.conf.channel->band);
->        sdata->drop_unencrypted = 0;
-> --- everything.orig/net/mac80211/mlme.c 2008-10-11 01:46:05.000000000 +0200
-> +++ everything/net/mac80211/mlme.c      2008-10-11 01:46:29.000000000 +0200
-> @@ -572,7 +572,7 @@ static void ieee80211_sta_wmm_params(str
->  static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
->                                           u16 capab, bool erp_valid, u8 erp)
->  {
-> -       struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
-> +       struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
->  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
->        struct ieee80211_if_sta *ifsta = &sdata->u.sta;
->        DECLARE_MAC_BUF(mac);
-> @@ -720,9 +720,9 @@ static void ieee80211_set_associated(str
->                                   ifsta->ssid, ifsta->ssid_len);
->        if (bss) {
->                /* set timing information */
-> -               sdata->bss_conf.beacon_int = bss->beacon_int;
-> -               sdata->bss_conf.timestamp = bss->timestamp;
-> -               sdata->bss_conf.dtim_period = bss->dtim_period;
-> +               sdata->vif.bss_conf.beacon_int = bss->beacon_int;
-> +               sdata->vif.bss_conf.timestamp = bss->timestamp;
-> +               sdata->vif.bss_conf.dtim_period = bss->dtim_period;
->
->                changed |= ieee80211_handle_bss_capability(sdata,
->                        bss->capability, bss->has_erp_value, bss->erp_value);
-> @@ -732,9 +732,9 @@ static void ieee80211_set_associated(str
->
->        if (conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE) {
->                changed |= BSS_CHANGED_HT;
-> -               sdata->bss_conf.assoc_ht = 1;
-> -               sdata->bss_conf.ht_cap = &conf->ht_cap;
-> -               sdata->bss_conf.ht_bss_conf = &conf->ht_bss_conf;
-> +               sdata->vif.bss_conf.assoc_ht = 1;
-> +               sdata->vif.bss_conf.ht_cap = &conf->ht_cap;
-> +               sdata->vif.bss_conf.ht_bss_conf = &conf->ht_bss_conf;
->        }
->
->        ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
-> @@ -744,7 +744,7 @@ static void ieee80211_set_associated(str
->        ifsta->last_probe = jiffies;
->        ieee80211_led_assoc(local, 1);
->
-> -       sdata->bss_conf.assoc = 1;
-> +       sdata->vif.bss_conf.assoc = 1;
->        /*
->         * For now just always ask the driver to update the basic rateset
->         * when we have associated, we aren't checking whether it actually
-> @@ -853,15 +853,15 @@ static void ieee80211_set_disassoc(struc
->        ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
->        changed |= ieee80211_reset_erp_info(sdata);
->
-> -       if (sdata->bss_conf.assoc_ht)
-> +       if (sdata->vif.bss_conf.assoc_ht)
->                changed |= BSS_CHANGED_HT;
->
-> -       sdata->bss_conf.assoc_ht = 0;
-> -       sdata->bss_conf.ht_cap = NULL;
-> -       sdata->bss_conf.ht_bss_conf = NULL;
-> +       sdata->vif.bss_conf.assoc_ht = 0;
-> +       sdata->vif.bss_conf.ht_cap = NULL;
-> +       sdata->vif.bss_conf.ht_bss_conf = NULL;
->
->        ieee80211_led_assoc(local, 0);
-> -       sdata->bss_conf.assoc = 0;
-> +       sdata->vif.bss_conf.assoc = 0;
->
->        ieee80211_sta_send_apinfo(sdata, ifsta);
->
-> @@ -1194,7 +1194,7 @@ static void ieee80211_rx_mgmt_assoc_resp
->        u64 rates, basic_rates;
->        u16 capab_info, status_code, aid;
->        struct ieee802_11_elems elems;
-> -       struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
-> +       struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
->        u8 *pos;
->        int i, j;
->        DECLARE_MAC_BUF(mac);
-> @@ -1337,7 +1337,7 @@ static void ieee80211_rx_mgmt_assoc_resp
->        }
->
->        sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
-> -       sdata->bss_conf.basic_rates = basic_rates;
-> +       sdata->vif.bss_conf.basic_rates = basic_rates;
->
->        /* cf. IEEE 802.11 9.2.12 */
->        if (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ &&
-> --- everything.orig/net/mac80211/cfg.c  2008-10-11 01:46:05.000000000 +0200
-> +++ everything/net/mac80211/cfg.c       2008-10-11 01:46:29.000000000 +0200
-> @@ -966,16 +966,16 @@ static int ieee80211_change_bss(struct w
->                return -EINVAL;
->
->        if (params->use_cts_prot >= 0) {
-> -               sdata->bss_conf.use_cts_prot = params->use_cts_prot;
-> +               sdata->vif.bss_conf.use_cts_prot = params->use_cts_prot;
->                changed |= BSS_CHANGED_ERP_CTS_PROT;
->        }
->        if (params->use_short_preamble >= 0) {
-> -               sdata->bss_conf.use_short_preamble =
-> +               sdata->vif.bss_conf.use_short_preamble =
->                        params->use_short_preamble;
->                changed |= BSS_CHANGED_ERP_PREAMBLE;
->        }
->        if (params->use_short_slot_time >= 0) {
-> -               sdata->bss_conf.use_short_slot =
-> +               sdata->vif.bss_conf.use_short_slot =
->                        params->use_short_slot_time;
->                changed |= BSS_CHANGED_ERP_SLOT;
->        }
-> --- everything.orig/net/mac80211/debugfs_netdev.c       2008-10-11 01:46:05.000000000 +0200
-> +++ everything/net/mac80211/debugfs_netdev.c    2008-10-11 01:46:29.000000000 +0200
-> @@ -120,7 +120,7 @@ static ssize_t ieee80211_if_fmt_flags(
->                 sdata->u.sta.flags & IEEE80211_STA_AUTHENTICATED ? "AUTH\n" : "",
->                 sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED ? "ASSOC\n" : "",
->                 sdata->u.sta.flags & IEEE80211_STA_PROBEREQ_POLL ? "PROBEREQ POLL\n" : "",
-> -                sdata->bss_conf.use_cts_prot ? "CTS prot\n" : "");
-> +                sdata->vif.bss_conf.use_cts_prot ? "CTS prot\n" : "");
->  }
->  __IEEE80211_IF_FILE(flags);
->
-> --- everything.orig/net/mac80211/tx.c   2008-10-11 01:46:05.000000000 +0200
-> +++ everything/net/mac80211/tx.c        2008-10-11 01:46:29.000000000 +0200
-> @@ -116,7 +116,7 @@ static __le16 ieee80211_duration(struct
->                if (r->bitrate > txrate->bitrate)
->                        break;
->
-> -               if (tx->sdata->bss_conf.basic_rates & BIT(i))
-> +               if (tx->sdata->vif.bss_conf.basic_rates & BIT(i))
->                        rate = r->bitrate;
->
->                switch (sband->band) {
-> @@ -150,7 +150,7 @@ static __le16 ieee80211_duration(struct
->         * to closest integer */
->
->        dur = ieee80211_frame_duration(local, 10, rate, erp,
-> -                               tx->sdata->bss_conf.use_short_preamble);
-> +                               tx->sdata->vif.bss_conf.use_short_preamble);
->
->        if (next_frag_len) {
->                /* Frame is fragmented: duration increases with time needed to
-> @@ -159,7 +159,7 @@ static __le16 ieee80211_duration(struct
->                /* next fragment */
->                dur += ieee80211_frame_duration(local, next_frag_len,
->                                txrate->bitrate, erp,
-> -                               tx->sdata->bss_conf.use_short_preamble);
-> +                               tx->sdata->vif.bss_conf.use_short_preamble);
->        }
->
->        return cpu_to_le16(dur);
-> @@ -465,7 +465,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
->        } else
->                info->control.retries[0].rate_idx = -1;
->
-> -       if (tx->sdata->bss_conf.use_cts_prot &&
-> +       if (tx->sdata->vif.bss_conf.use_cts_prot &&
->            (tx->flags & IEEE80211_TX_FRAGMENTED) && (rsel.nonerp_idx >= 0)) {
->                tx->last_frag_rate_idx = tx->rate_idx;
->                if (rsel.probe_idx >= 0)
-> @@ -531,7 +531,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
->        if ((tx->sdata->flags & IEEE80211_SDATA_OPERATING_GMODE) &&
->            (sband->bitrates[tx->rate_idx].flags & IEEE80211_RATE_ERP_G) &&
->            (tx->flags & IEEE80211_TX_UNICAST) &&
-> -           tx->sdata->bss_conf.use_cts_prot &&
-> +           tx->sdata->vif.bss_conf.use_cts_prot &&
->            !(info->flags & IEEE80211_TX_CTL_USE_RTS_CTS))
->                info->flags |= IEEE80211_TX_CTL_USE_CTS_PROTECT;
->
-> @@ -540,7 +540,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
->         * available on the network at the current point in time. */
->        if (ieee80211_is_data(hdr->frame_control) &&
->            (sband->bitrates[tx->rate_idx].flags & IEEE80211_RATE_SHORT_PREAMBLE) &&
-> -           tx->sdata->bss_conf.use_short_preamble &&
-> +           tx->sdata->vif.bss_conf.use_short_preamble &&
->            (!tx->sta || test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))) {
->                info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
->        }
-> @@ -560,7 +560,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
->                for (idx = 0; idx < sband->n_bitrates; idx++) {
->                        if (sband->bitrates[idx].bitrate > rate->bitrate)
->                                continue;
-> -                       if (tx->sdata->bss_conf.basic_rates & BIT(idx) &&
-> +                       if (tx->sdata->vif.bss_conf.basic_rates & BIT(idx) &&
->                            (baserate < 0 ||
->                             (sband->bitrates[baserate].bitrate
->                              < sband->bitrates[idx].bitrate)))
-> @@ -1981,7 +1981,7 @@ struct sk_buff *ieee80211_beacon_get(str
->        info->flags |= IEEE80211_TX_CTL_NO_ACK;
->        info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
->        info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
-> -       if (sdata->bss_conf.use_short_preamble &&
-> +       if (sdata->vif.bss_conf.use_short_preamble &&
->            sband->bitrates[rsel.rate_idx].flags & IEEE80211_RATE_SHORT_PREAMBLE)
->                info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
->
-> --- everything.orig/net/mac80211/util.c 2008-10-11 01:46:05.000000000 +0200
-> +++ everything/net/mac80211/util.c      2008-10-11 01:46:29.000000000 +0200
-> @@ -239,7 +239,7 @@ __le16 ieee80211_generic_frame_duration(
->        erp = 0;
->        if (vif) {
->                sdata = vif_to_sdata(vif);
-> -               short_preamble = sdata->bss_conf.use_short_preamble;
-> +               short_preamble = sdata->vif.bss_conf.use_short_preamble;
->                if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
->                        erp = rate->flags & IEEE80211_RATE_ERP_G;
->        }
-> @@ -272,7 +272,7 @@ __le16 ieee80211_rts_duration(struct iee
->        erp = 0;
->        if (vif) {
->                sdata = vif_to_sdata(vif);
-> -               short_preamble = sdata->bss_conf.use_short_preamble;
-> +               short_preamble = sdata->vif.bss_conf.use_short_preamble;
->                if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
->                        erp = rate->flags & IEEE80211_RATE_ERP_G;
->        }
-> @@ -312,7 +312,7 @@ __le16 ieee80211_ctstoself_duration(stru
->        erp = 0;
->        if (vif) {
->                sdata = vif_to_sdata(vif);
-> -               short_preamble = sdata->bss_conf.use_short_preamble;
-> +               short_preamble = sdata->vif.bss_conf.use_short_preamble;
->                if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
->                        erp = rate->flags & IEEE80211_RATE_ERP_G;
->        }
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Mirco
+
+--Sig_/QYcKPLFonHn/Ijg6q/W=P3d
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAkkHPL4ACgkQz+diZ7c2xfjQnACeMmJUXCPSWQKkVDfR80db4Rwj
+7k4An1TJLd7OuByRyuO02uRpSkWVdDH+
+=ODct
+-----END PGP SIGNATURE-----
+
+--Sig_/QYcKPLFonHn/Ijg6q/W=P3d--
