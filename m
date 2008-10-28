@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yorgi.telenet-ops.be ([195.130.133.69]:34250 "EHLO
-	yorgi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459AbYJPH7O (ORCPT
+Received: from mail-gx0-f18.google.com ([209.85.217.18]:40547 "EHLO
+	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752329AbYJ1QMM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 03:59:14 -0400
-Date: Thu, 16 Oct 2008 09:58:36 +0200 (CEST)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: David Miller <davem@davemloft.net>
-cc: akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
-	ralf@linux-mips.org, mchehab@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org
-Subject: Re: powerpc allmodconfig
-In-Reply-To: <20081016.003644.74134312.davem@davemloft.net>
-Message-ID: <Pine.LNX.4.64.0810160958000.25933@anakin> (sfid-20081016_095921_035557_877528FE)
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
- <20081015.220247.262683261.davem@davemloft.net> <Pine.LNX.4.64.0810160930300.25933@anakin>
- <20081016.003644.74134312.davem@davemloft.net>
+	Tue, 28 Oct 2008 12:12:12 -0400
+Message-ID: <1ba2fa240810280912pea7284ejd6de5d04efbb974f@mail.gmail.com> (sfid-20081028_171218_874314_62F8D4BA)
+Date: Tue, 28 Oct 2008 18:12:09 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Suspend to RAM regression in 2.6.28-rc2 (bisected)
+Cc: "Carlos R. Mafra" <crmafra2@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Soeren Sonnenburg" <kernel@nn7.de>, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200810281630.28389.rjw@sisk.pl>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081027162054.GA4015@localhost.aei.mpg.de>
+	 <200810272350.29429.rjw@sisk.pl>
+	 <1ba2fa240810271612g72bb2b08p6ebab9f6f02f5b98@mail.gmail.com>
+	 <200810281630.28389.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 16 Oct 2008, David Miller wrote:
-> From: Geert Uytterhoeven <geert@linux-m68k.org>
-> Date: Thu, 16 Oct 2008 09:31:29 +0200 (CEST)
-> 
-> > On Wed, 15 Oct 2008, David Miller wrote:
-> > > > kernel/resource.c: In function '__reserve_region_with_split':
-> > > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'resource_size_t'
-> > > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 4 has type 'resource_size_t'
-> > > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'resource_size_t'
-> > > > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 7 has type 'resource_size_t'
-> > > 
-> > > Known issue, Ben wants to add a new variant of %pX in order to print resources so that
-> > > resource_size_t vs. unsigned long stuff doesn't matter like this any more.
-> > 
-> > Will still give a warning, as resource_size_t is not a pointer.
-> 
-> The idea is to pass in a pointer to the resource struct,
-> and the %pX variant specified says what part to print.
-
-Neat! So we can also have a separate variant to print the resource
-range.
-
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+On Tue, Oct 28, 2008 at 5:30 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Tuesday, 28 of October 2008, Tomas Winkler wrote:
+>> h
+>>
+>> On Tue, Oct 28, 2008 at 12:50 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > On Monday, 27 of October 2008, Tomas Winkler wrote:
+>> >> On Tue, Oct 28, 2008 at 12:28 AM, Carlos R. Mafra <crmafra2@gmail.com> wrote:
+>> >> > On Mon 27.Oct'08 at 23:07:00 +0200, Tomas Winkler wrote:
+>> >> >>[...]
+>> >> >>
+>> >> >> Can someone try this one (it might be space broken I've just pasted
+>> >> >> that in) It's on top of 1d63e726408dfdb3e10ed8f00c383b30ebb333d3
+>> >> >> (latest linux-2.6.git)
+>> >> >
+>> >> >
+>> >> > Yes, this one also works for me (I applied it manually).
+>> >> Good, this was actually part of some older and bigger patch I wasn't
+>> >> aware it has this affect. It has some millage in iwl5000 branch.
+>> >> RFKIll went through some changes in the mainline so it wasn't merged yet.
+>> >
+>> > Are you going to push this patch upstream now?  It's quite important to get
+>> > this resume regression fixed ASAP.
+>>
+>> Definitely I would post it to wireless and stable.
+>
+> Please send a CC to me too.
+Hmm. It looks like I've misspelled your email when I've sent the patch.
+Will send it again
+Tomas
