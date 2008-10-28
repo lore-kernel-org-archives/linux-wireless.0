@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:34378 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753522AbYJATS5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56056 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751873AbYJ1SgG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 15:18:57 -0400
-Received: by gxk9 with SMTP id 9so613522gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 12:18:56 -0700 (PDT)
-Message-ID: <43e72e890810011218q501e773dx7544cc355c47438c@mail.gmail.com> (sfid-20081001_211900_395248_D6842EC3)
-Date: Wed, 1 Oct 2008 12:18:56 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Trigve <trigves@yahoo.com>
-Subject: Re: intel wifi 5100 (iwlagn) authentication timed out
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20081001T185846-857@post.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <loom.20081001T181402-749@post.gmane.org>
-	 <43e72e890810011142r62f8cbf2mfdb6bc2a0a2a7bbc@mail.gmail.com>
-	 <loom.20081001T185846-857@post.gmane.org>
+	Tue, 28 Oct 2008 14:36:06 -0400
+Subject: [PATCH] wireless: move mesh config length constant
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 28 Oct 2008 11:12:57 +0100
+Message-Id: <1225188777.3598.2.camel@johannes.berg> (sfid-20081028_193616_379279_C76D11AD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 1, 2008 at 12:00 PM, Trigve <trigves@yahoo.com> wrote:
-> Luis R. Rodriguez <mcgrof@...> writes:
->>
->> What kernel? Also, please see:
->>
->> http://wireless.kernel.org/en/users/Reporting_bugs
->>
->>   Luis
->
-> Forgot to mention that I wasn't using NetworkManager and used only iwconfig,
-> ifconfig and wpa_supplicant (if needed).
+This is a constant from the 802.11 specification.
 
-I hate to ask but are you sure Network Manager and wpa_supplicant were
-not running? Did you check ps -ef ? Anyway, yes please upgrade your
-kernel. Unless of course you wish to help move compat-wireless-old
-move forward and help hack it to work.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Javier Cardona <javier@cozybit.com>
+---
+ include/linux/ieee80211.h |    3 +++
+ net/mac80211/mesh.c       |    2 +-
+ net/mac80211/mesh.h       |    5 +----
+ net/mac80211/scan.c       |    2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-  Luis
+--- everything.orig/net/mac80211/scan.c	2008-10-28 11:08:56.000000000 +0100
++++ everything/net/mac80211/scan.c	2008-10-28 11:08:59.000000000 +0100
+@@ -159,7 +159,7 @@ ieee80211_rx_mesh_bss_add(struct ieee802
+ {
+ 	struct ieee80211_bss *bss;
+ 
+-	if (mesh_config_len != MESH_CFG_LEN)
++	if (mesh_config_len != IEEE80211_MESH_CONFIG_LEN)
+ 		return NULL;
+ 
+ 	bss = kzalloc(sizeof(*bss), GFP_ATOMIC);
+--- everything.orig/include/linux/ieee80211.h	2008-10-28 11:08:55.000000000 +0100
++++ everything/include/linux/ieee80211.h	2008-10-28 11:09:30.000000000 +0100
+@@ -97,7 +97,10 @@
+ #define IEEE80211_MAX_FRAME_LEN		2352
+ 
+ #define IEEE80211_MAX_SSID_LEN		32
++
+ #define IEEE80211_MAX_MESH_ID_LEN	32
++#define IEEE80211_MESH_CONFIG_LEN	19
++
+ #define IEEE80211_QOS_CTL_LEN		2
+ #define IEEE80211_QOS_CTL_TID_MASK	0x000F
+ #define IEEE80211_QOS_CTL_TAG1D_MASK	0x0007
+--- everything.orig/net/mac80211/mesh.c	2008-10-28 11:08:56.000000000 +0100
++++ everything/net/mac80211/mesh.c	2008-10-28 11:08:59.000000000 +0100
+@@ -238,7 +238,7 @@ void mesh_mgmt_ies_add(struct sk_buff *s
+ 
+ 	pos = skb_put(skb, 21);
+ 	*pos++ = WLAN_EID_MESH_CONFIG;
+-	*pos++ = MESH_CFG_LEN;
++	*pos++ = IEEE80211_MESH_CONFIG_LEN;
+ 	/* Version */
+ 	*pos++ = 1;
+ 
+--- everything.orig/net/mac80211/mesh.h	2008-10-28 11:08:56.000000000 +0100
++++ everything/net/mac80211/mesh.h	2008-10-28 11:11:34.000000000 +0100
+@@ -145,9 +145,6 @@ struct mesh_rmc {
+ };
+ 
+ 
+-/* Mesh IEs constants */
+-#define MESH_CFG_LEN		19
+-
+ /*
+  * MESH_CFG_COMP_LEN Includes:
+  * 	- Active path selection protocol ID.
+@@ -157,7 +154,7 @@ struct mesh_rmc {
+  * Does not include mesh capabilities, which may vary across nodes in the same
+  * mesh
+  */
+-#define MESH_CFG_CMP_LEN 	17
++#define MESH_CFG_CMP_LEN 	(IEEE80211_MESH_CONFIG_LEN - 2)
+ 
+ /* Default values, timeouts in ms */
+ #define MESH_TTL 		5
+
+
