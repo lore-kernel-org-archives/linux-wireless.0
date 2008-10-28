@@ -1,48 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:48364 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753052AbYJVROF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 13:14:05 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 10:14:05 -0700
-Date: Wed, 22 Oct 2008 03:13:59 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Zhu Yi <yi.zhu@intel.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: New Regulatory Domain Api.
-Message-ID: <20081022101359.GA6190@tesla> (sfid-20081022_191409_747666_4C032CE5)
-References: <1224561748.24677.274.camel@debian.sh.intel.com> <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com> <1224569252.9386.77.camel@californication> <43e72e890810202329g732a97ccxf176bdf4e035ccda@mail.gmail.com> <1224571890.9386.85.camel@californication> <20081021171328.GG17268@tuxdriver.com> <1224611033.9386.98.camel@californication> <20081021174800.GJ17268@tuxdriver.com> <20081021110203.GA8224@tesla> <1224667215.2917.75.camel@debian.sh.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1224667215.2917.75.camel@debian.sh.intel.com>
+Received: from mail.gmx.net ([213.165.64.20]:54910 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751299AbYJ1Xfz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 19:35:55 -0400
+Date: Wed, 29 Oct 2008 00:35:47 +0100
+From: Mirco Tischler <mircotischler@gmx.net>
+To: Mirco Tischler <mt-ml@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Arjan van de Ven <arjan@infradead.org>,
+	lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W.Linville" <linville@tuxdriver.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>
+Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
+Message-ID: <20081029003547.773745ba@mtlp.12.dimension> (sfid-20081029_003600_099632_515DDD61)
+In-Reply-To: <20081028235841.78942d67@mtlp.12.dimension>
+References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
+	<1225157618.2917.215.camel@debian.sh.intel.com>
+	<20081027213217.53558319@infradead.org>
+	<1225171414.2917.229.camel@debian.sh.intel.com>
+	<20081028172418.3c8e91f1@mtlp.12.dimension>
+	<1225218994.3598.41.camel@johannes.berg>
+	<20081028235841.78942d67@mtlp.12.dimension>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/RLA2icrSvbyrMd=RJhoH=UC";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 02:20:15AM -0700, Zhu Yi wrote:
-> On Tue, 2008-10-21 at 04:02 -0700, Luis R. Rodriguez wrote:
-> > This thread has about 65 messages on it, and no patches yet from
-> > Intel.
-> 
-> Seems you jumped up when I offered a patch.
-> http://marc.info/?l=linux-wireless&m=122455333027226&w=2
+--Sig_/RLA2icrSvbyrMd=RJhoH=UC
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-You complained about nobody willing to do foo, and yet I had already
-provided a patch. That's what I "jumped" about.
+In between I found out that suspend and hibernation are broken too. I would
+open a new thread but in the "Suspend to RAM regression in 2.6.28-rc2
+(bisected)" thread that handled a similar problem iwlwifi was blamed, at le=
+ast
+in the mails I read. So maybe this is related here too.
 
-> > I rather we talk productively about trying to resolve it with actual
-> > code like Johannes or I am.
-> 
-> Good. See my patch on the other thread. The problem is also not the dual
-> bands support. The regulatory framework should support hardware to do
-> regulatory check and don't duplicate the work.
+The machine suspends and hibernates fine, but doesn't wake up anymore corre=
+ctly.
+On hibernation I end up with a black screen and only the mouse which I can
+still move. But anything else is locked up. I can't switch to virtual conso=
+le
+with ctrl+alt+f? nor can I restart the xserver. I can't even connect on
+network. The only thing I can do is move the mouse on a black screen or push
+the power button.
 
-Huh? Hardware to do regulatory check? Now you really got me confused.
+On suspend it is a little better. After wakeup I see the frames of the wind=
+ows
+but not the content, and the gnome panel. And again I can move the mouse bu=
+t I
+can't interact with anything. At least I can connect over network using ssh.
+But processes like compiz don't respond to kill -9 PID and when I try to ki=
+ll
+Xorg the machine completely locks up.
 
-  Luis
+Another thing that I just noticed is very slow boot. From startup of udev u=
+ntil
+short before X starts the boot lasts minutes. What I noticed is that there =
+are
+long phases of no hard disk activity. And I don't really  have the heart to
+write this but I have the impression that keyboard activity (i.e. pressing
+random keys) causes the harddisk to read again and the hole boot to go on.
+
+Sorry for this long subjective description of symptoms only without any
+kernel messages or anything but that's all I can deliver at the moment. May=
+be
+tomorrow I find more than only half an hour to dig into this.
+
+Thanks again
+
+Mirco
+
+--Sig_/RLA2icrSvbyrMd=RJhoH=UC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAkkHodcACgkQz+diZ7c2xfhhYgCfTFHzHbvSfFDBa5Ft3Z0rDKix
+kMAAn2A6QNjIFWRZlOgcp28Zj4ZCvKoB
+=7sfz
+-----END PGP SIGNATURE-----
+
+--Sig_/RLA2icrSvbyrMd=RJhoH=UC--
