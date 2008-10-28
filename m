@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:7443 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754334AbYJBVZP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 17:25:15 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so441998eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2008 14:25:14 -0700 (PDT)
-Message-ID: <48E53C1F.4040909@gmail.com> (sfid-20081002_232521_659419_8E9AE13A)
-Date: Thu, 02 Oct 2008 22:24:47 +0100
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: avoid "Wireless Event too big" message for
- assoc response
-References: <1222890302-32486-1-git-send-email-linville@linville-t61.local>
-In-Reply-To: <1222890302-32486-1-git-send-email-linville@linville-t61.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+Received: from mga14.intel.com ([143.182.124.37]:25036 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752149AbYJ1IEV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 04:04:21 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] mac80211: print reason code for deauth/dissoc frames
+Date: Tue, 28 Oct 2008 15:58:31 +0800
+Message-Id: <1225180711-5204-1-git-send-email-yi.zhu@intel.com> (sfid-20081028_090432_399434_02E86D17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> An attempt was made by Jouni Malinen to correct this issue by
-> converting to use IWEVASSOCREQIE and IWEVASSOCRESPIE messages instead
-> ("mac80211: Use IWEVASSOCREQIE instead of IWEVCUSTOM").  Unfortunately,
-> that caused a problem due to 32-/64-bit interactions on some systems and
-> was reverted after the 'userland ABI' rule was invoked.
+The patch prints reason code for deauth/dissoc frames to give users
+more ideas what's happened for the disconnection.
 
-I was unaware of this, and used IWEVASSOCREQIE and IWEVASSOCRESPIE in the
-orinoco wpa updates since the events were available in linux/wireless.h.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/mlme.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-Should I post a patch to use IWEVCUSTOM instead?
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d5006b2..0752e09 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1134,7 +1134,8 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+ 	reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
+ 
+ 	if (ifsta->flags & IEEE80211_STA_AUTHENTICATED)
+-		printk(KERN_DEBUG "%s: deauthenticated\n", sdata->dev->name);
++		printk(KERN_DEBUG "%s: deauthenticated (Reason: %u)\n",
++				sdata->dev->name, reason_code);
+ 
+ 	if (ifsta->state == IEEE80211_STA_MLME_AUTHENTICATE ||
+ 	    ifsta->state == IEEE80211_STA_MLME_ASSOCIATE ||
+@@ -1166,7 +1167,8 @@ static void ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	reason_code = le16_to_cpu(mgmt->u.disassoc.reason_code);
+ 
+ 	if (ifsta->flags & IEEE80211_STA_ASSOCIATED)
+-		printk(KERN_DEBUG "%s: disassociated\n", sdata->dev->name);
++		printk(KERN_DEBUG "%s: disassociated (Reason: %u)\n",
++				sdata->dev->name, reason_code);
+ 
+ 	if (ifsta->state == IEEE80211_STA_MLME_ASSOCIATED) {
+ 		ifsta->state = IEEE80211_STA_MLME_ASSOCIATE;
+-- 
+1.5.3.6
 
-
-Thanks,
-
-Dave.
