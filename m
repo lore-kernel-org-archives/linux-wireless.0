@@ -1,85 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54635 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754345AbYJKAz4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 20:55:56 -0400
-Subject: Re: [PATCH] mac80211: move bss_conf into vif
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240810101749k5d053451kdaef3194a954b442@mail.gmail.com> (sfid-20081011_024943_373346_968487FF)
-References: <1223682711.29811.7.camel@johannes.berg>
-	 <1ba2fa240810101732y610b4cc8g1b914b2c8eb726e5@mail.gmail.com>
-	 <1223685820.29811.23.camel@johannes.berg>
-	 <1ba2fa240810101749k5d053451kdaef3194a954b442@mail.gmail.com>
-	 (sfid-20081011_024943_373346_968487FF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rT50PcekfI/5bvcOBFgw"
-Date: Sat, 11 Oct 2008 02:55:53 +0200
-Message-Id: <1223686553.29811.30.camel@johannes.berg> (sfid-20081011_025559_406223_8B819614)
+Received: from mail.gmx.net ([213.165.64.20]:45090 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751826AbYJ1DTy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2008 23:19:54 -0400
+Date: Tue, 28 Oct 2008 04:19:41 +0100
+From: Mirco Tischler <mt-ml@gmx.de>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W.Linville" <linville@tuxdriver.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
+Message-ID: <20081028041941.6e5d6583@mtlp.12.dimension> (sfid-20081028_042002_862801_5C622BF2)
+In-Reply-To: <1225160390.2917.221.camel@debian.sh.intel.com>
+References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
+	<1225157618.2917.215.camel@debian.sh.intel.com>
+	<20081028025947.6c9c3274@mtlp.12.dimension>
+	<1225160390.2917.221.camel@debian.sh.intel.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/A5NiPveinrknEboQ6qqaWpt";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-rT50PcekfI/5bvcOBFgw
-Content-Type: text/plain
+--Sig_/A5NiPveinrknEboQ6qqaWpt
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-10-11 at 02:49 +0200, Tomas Winkler wrote:
-> On Sat, Oct 11, 2008 at 2:43 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Sat, 2008-10-11 at 02:32 +0200, Tomas Winkler wrote:
-> >> On Sat, Oct 11, 2008 at 1:51 AM, Johannes Berg
-> >> <johannes@sipsolutions.net> wrote:
-> >> > Move bss_conf into the vif struct so that drivers can
-> >> > access it during ->tx without having to store it in
-> >> > the private data or similar. No driver updates because
-> >> > this is only for when they want to start using it.
-> >>
-> >> What protection should driver take to be sure it won't be changed unde=
-rneath ?
-> >> With prive copy you know this is changed only in bss_info changed is c=
-alled.
-> >
-> > Yeah, that's true, I guess you can only access those fields there that
-> > you can access atomically. That's actually most of the fields though.
-> >
-> > Also, we don't actually take care about locking this structure at all
-> > even in mac80211, something we might need to think about.
->=20
-> When working on SM PS I have the  same dilemma I have with
-> ieee80211_conf do you think I need to take a private copy of it?
+On Tue, 28 Oct 2008 10:19:50 +0800, Zhu Yi wrote:
+> You don't need this command if wpa_supplicant works correctly. Is it a
+> hidden SSID AP?
+No it isn't. Did I mention it worked well with 2.6.27?
+> Thanks,
+> -yi
 
-Well, what do you use it for? If you absolutely rely on it having the
-same value, then you probably need to do that, but if you just use it
-then I don't see why you'd have to, unless it's some value that can't be
-read atomically.
-
-johannes
-
---=-rT50PcekfI/5bvcOBFgw
+--Sig_/A5NiPveinrknEboQ6qqaWpt
 Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJI7/mVAAoJEKVg1VMiehFYl00P/AjKkadUeK6mSqXN+O67KaxV
-wLp2lBzcAvhhSQTi1AuSnuaOVguVDsx8cKIZdPtDAjTbgzrKLeKHCDhFzLsK6DZd
-ELnNDBLrlKvIfdhYVL3M+4C+J/+QUAkwf/dLikVuUc9lZQvbpW/WPL+dUKRFaOLy
-JWtFQ+qRQs1/eUjLdSuDUDvueL/VR9jnjvPbYfMnDapUsl95axVt1GHmD9o3vWPL
-nwlhOPH9C+fWOmBxdCeRKwr4aHWcSNQB8xujmVVA/aqflcutSdVxtHh8peQ22PLB
-CDDv8Rmnh7PkeY1iVy3hGGTYSb8148OfJGgD04P95QnrS8zVi7rvsiwY/bW3y1Gn
-C0u/z9Edp/0d0h5qaCnY5oVJyJioHo60RSQlc/Z59C+16L728NBD0N+p+AXBo7fg
-QaZEXPOlH8NYze5yidAIjRX4WadcN94F0E24p5Z/lJz2BVgb/YPLdKBTwD+FR5vO
-MFtuEkmCEuHmy7e8BOG9iEXlDyZ4cpeQZTp+TPJSGbiTSw/KEtr43yZOYqAQ3nia
-0ZI333AHlM/q75WLZxOw/z6Jgq6SJCGhFnDNcBAJ8K4XwyJs6Q/YgtLHPXppmwBn
-CWSsfPflFQoErz2oowi/LsMFnonX9EW+btd9yPWzwn/6opmuRkjlsjeGSE4zXT3P
-lCzIKwFxkpmfPnMI+UGa
-=d79S
+iEYEARECAAYFAkkGhNcACgkQz+diZ7c2xfhatgCfRh5RF0kGlEowz2guEhsp72dk
+EZ4AoIY6LE/GQ5a6AgoUWKkwS3hw/gMX
+=QzL9
 -----END PGP SIGNATURE-----
 
---=-rT50PcekfI/5bvcOBFgw--
-
+--Sig_/A5NiPveinrknEboQ6qqaWpt--
