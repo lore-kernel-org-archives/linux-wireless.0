@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.183]:48520 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822AbYJaSft (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 14:35:49 -0400
-Message-ID: <40f31dec0810311135w76c01729lef1a6c93f18c0095@mail.gmail.com> (sfid-20081031_193554_374046_B37D6F53)
-Date: Fri, 31 Oct 2008 20:35:47 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Matthew Garrett" <mjg59@srcf.ucam.org>
-Subject: Re: ath5k gets lost with eeepc-laptop removal
-Cc: "Alan Jenkins" <alan-jenkins@tuffmail.co.uk>,
-	"Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	willy@linux.intel.com, lrodriguez@atheros.com
-In-Reply-To: <20081031142318.GA9009@srcf.ucam.org>
+Received: from mail.atheros.com ([12.36.123.2]:47765 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752665AbYJ2JSk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 05:18:40 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 02:18:40 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081031110502.18e33eba@doriath.conectiva>
-	 <490B0D75.8020601@tuffmail.co.uk>
-	 <20081031142318.GA9009@srcf.ucam.org>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18696.10706.405455.724835@gargle.gargle.HOWL> (sfid-20081029_101846_822971_4E44FF14)
+Date: Wed, 29 Oct 2008 14:46:02 +0530
+To: Tomas Winkler <tomasw@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 16/16] mac80211: Add a new event in
+ ieee80211_ampdu_mlme_action
+In-Reply-To: <1ba2fa240810290211s16f5506cgf7c828b5c3d8aea9@mail.gmail.com>
+References: <18695.60248.383916.563413@gargle.gargle.HOWL>
+	<1ba2fa240810290211s16f5506cgf7c828b5c3d8aea9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/10/31 Matthew Garrett <mjg59@srcf.ucam.org>:
-> On Fri, Oct 31, 2008 at 01:51:49PM +0000, Alan Jenkins wrote:
->
->> Matthew: I nagged you twice about different consequences of this
->> commit, so here's a third :).  You said rfkill no longer automatically
->> frobs on suspend/resume, which was what I was worried about last time.
->> Should the core code also be modified so it doesn't do anything when
->> the rfkill device is unregistered?
->
-> I think there's definitely an argument in favour of that, though I
-> suspect that's a design feature - if you remove the control mechanism
-> for a radio, the safe state for that radio to be in is not transmitting.
->
+Tomas Winkler wrote:
+> On Wed, Oct 29, 2008 at 6:49 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> > Send a notification to the driver on succesful
+> > reception of an ADDBA response, add IEEE80211_AMPDU_TX_RESUME
+> > for this purpose.
+> 
+> What what is wrong with IEEE80211_AMPDU_TX_START ? I don' t understand
+> why this is needed?
 
-It doesn't leave the radio in a state that's not transmitting, it
-leaves the card in a state that doesn't get any power at all. I don't
-see any reason for this, how do you define "safe" ?
+On receiving an IEEE80211_AMPDU_TX_START notification, packets destined to
+that TID are stored in a buffer, and to send them out as aggregates, ath9k
+needs to know whether the ADDBA exchange has completed or not.
 
+If the ADDBA request has been declined, IEEE80211_AMPDU_TX_STOP is sent to
+the driver, but no notification is sent if the ADDBA request has been accepted.
 
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Sujith
