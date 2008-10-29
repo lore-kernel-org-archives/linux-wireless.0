@@ -1,78 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:34534 "EHLO mx2.redhat.com"
+Received: from nebensachen.de ([195.34.83.29]:38500 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753267AbYJ1PBc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 11:01:32 -0400
-Subject: Re: rtl2860 driver in mainline?
-From: Dan Williams <dcbw@redhat.com>
-To: Greg KH <greg@kroah.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20081028061023.GA6568@kroah.com>
-References: <20081028004915.GA3442@kroah.com>
-	 <a32f33a40810272248j5ee755ccoc8f6a8c8d5338cb8@mail.gmail.com>
-	 <20081028061023.GA6568@kroah.com>
-Content-Type: text/plain
-Date: Tue, 28 Oct 2008 10:59:57 -0400
-Message-Id: <1225205997.2387.12.camel@localhost.localdomain> (sfid-20081028_160138_377463_4115E780)
-Mime-Version: 1.0
+	id S1752392AbYJ2X4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 19:56:54 -0400
+From: Elias Oltmanns <eo@nebensachen.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+To: "John W. Linville" <linville-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
+	"Bob Copeland" <me@bobcopeland.com>,
+	"Jiri Slaby" <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Cc: Elias Oltmanns <eo-oA28OIkTjSVZXbeN9DUtxg@public.gmane.org>,
+	Nick Kossifidis
+	<mickflemm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>,
+	Bob Copeland <me-aXfl/3sk2vNUbtYUoyoikg@public.gmane.org>,
+	Jiri Slaby <jirislaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>,
+	"Luis R. Rodriguez" <mcgrof-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>,
+	linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
+References: <87wsfvt76q.fsf@denkblock.local>
+	<40f31dec0810261533g3143bd9bue0f3eff88c6936e9@mail.gmail.com>
+	<87r663t1ds.fsf@denkblock.local>
+	<40f31dec0810271331n7f374562x77da8ae55b9032db@mail.gmail.com>
+	<873aifsfc9.fsf@denkblock.local>
+	<40f31dec0810290749u2c065d17g5788eb22cf508142@mail.gmail.com>
+	<87wsfrqw2t.fsf@denkblock.local>
+	<b6c5339f0810290828g2c600d5cm9f78df9d427f5c1f@mail.gmail.com>
+	<40f31dec0810291051j605a281dg641d873bd0e3bbc1@mail.gmail.com>
+	<87mygn2dd7.fsf@denkblock.local> <20081029233426.GF3485@tuxdriver.com>
+Date: Thu, 30 Oct 2008 00:56:34 +0100
+In-Reply-To: <20081029233426.GF3485@tuxdriver.com> (John W. Linville's message
+	of "Wed, 29 Oct 2008 19:34:26 -0400")
+Message-ID: <878ws72bwt.fsf@denkblock.local> (sfid-20081030_005659_969268_03A4AD6C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-27 at 23:10 -0700, Greg KH wrote:
-> On Tue, Oct 28, 2008 at 06:48:31AM +0100, Ivo Van Doorn wrote:
-> > Hi,
-> > 
-> > > So, on my quest to suck up every out-of-tree driver and get it into the
-> > > main kernel tree (drivers/staging/ to start with), I've been pointed at
-> > > the rtl2860 driver.
-> > 
-> > in that case make sure you include rt2870 on your list as well then. ;)
-> 
-> Do you have a pointer to it?
-> 
-> > > Does anyone know of a "cleaned up" version of this driver that is
-> > > newer/better than the one on ralink's web site?  I found the
-> > > 2008_0918_RT2860_Linux_STA_v1.8.0.0.tar.bz2 version there, and will
-> > > start with that if no one else has yet.
-> > 
-> > rt2800pci/rt2800usb development is in progress in the rt2x00.git
-> > experimental branch:
-> > http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=shortlog;h=experimental
-> > 
-> > The current status is that rt2800usb has working RX with some warnings
-> > regarding the
-> > RX signal, and a non functional TX. rt2800pci isn't complete yet.
-> > 
-> > So far progress has been very slow because of lack of time, so any help with the
-> > development of the drivers is welcome.
-> 
-> Is this a port of the tarball driver to the in-kernel wireless stack, or
-> starting over from scratch?
-> 
-> As it's not really working, do you mind if I just dump the tarball
-> driver into the staging tree for users to use now (hint, they already
-> are, the distros are shipping that driver as a kernel module package),
-> and then when this "real" driver is up and working properly, we can drop
-> the staging version?
+"John W. Linville" <linville-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org> wrote:
+> Well, I already merged v3...what is new here?
 
-Seriously, how does including this help _anybody_ beyond today?  The
-vendor driver is not going to get upstream, and shipping it in staging
-suggests that people help fix the vendor driver there, not work on the
-driver that will actually go upstream.
+Yes, that's alright. The only difference is that I've replaced all the
+ugly hex-numbers by the appropriate constants in ath5k/reg.h that have
+been introduced in 2.6.28-rc1. So, it's really just a matter of style.
 
-staging drivers are supposed to eventually go "mainstream" if somebody
-fixes them up, right?  So how does cramming in a driver that will go
-nowhere help anyone in the medium or long term?  Should we have shipped
-madwifi with the open HAL in staging while ath5k was getting brought up
-to speed?  Would that have taken effort away from ath5k?
+Regards,
 
-I highly respect the work that you're doing with staging, but just
-because the driver is out of tree doesn't mean that it'll ever go
-mainline, and that including some drivers will just sap effort from
-where it's needed.  Cleaning up crappy vendor driver code is _not_ where
-the effort is needed.  We have a higher standard of quality.
-
-Dan
-
-
+Elias
