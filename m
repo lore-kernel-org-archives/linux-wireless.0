@@ -1,81 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:60254 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753181AbYJ2KDE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 06:03:04 -0400
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-From: Dan Williams <dcbw@redhat.com>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081029002713.GA16554@isilmar.linta.de>
-References: <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
-	 <20081019075916.GA12904@isilmar.linta.de>
-	 <1225145468.1115.139.camel@rc-desk>
-	 <20081027230326.GA23250@isilmar.linta.de>
-	 <1225154823.1115.149.camel@rc-desk>
-	 <20081028194323.GA14303@isilmar.linta.de>
-	 <1225225434.1115.217.camel@rc-desk> <1225235731.1369.8.camel@johannes.berg>
-	 <1225236760.1115.245.camel@rc-desk>
-	 <20081028233841.GA12554@isilmar.linta.de>
-	 <20081029002713.GA16554@isilmar.linta.de>
-Content-Type: text/plain
-Date: Wed, 29 Oct 2008 06:01:09 -0400
-Message-Id: <1225274469.28968.3.camel@localhost.localdomain> (sfid-20081029_110310_345097_2CF71962)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.239]:46390 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752868AbYJ2OF0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 10:05:26 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so8160rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 07:05:25 -0700 (PDT)
+Message-ID: <b6c5339f0810290705j36995186j382a8415886fb061@mail.gmail.com> (sfid-20081029_150531_132344_F0461AFC)
+Date: Wed, 29 Oct 2008 10:05:25 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Update PCU code
+Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <40f31dec0810290408h5ee08c8l1e14d576064f01a4@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081029021121.GA3079@makis>
+	 <20081029024603.GA22759@hash.localnet>
+	 <40f31dec0810290408h5ee08c8l1e14d576064f01a4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-29 at 01:27 +0100, Dominik Brodowski wrote:
-> Hi,
-> 
-> On Wed, Oct 29, 2008 at 12:38:41AM +0100, Dominik Brodowski wrote:
-> > On Tue, Oct 28, 2008 at 04:32:40PM -0700, reinette chatre wrote:
-> > > On Tue, 2008-10-28 at 16:15 -0700, Johannes Berg wrote:
-> > > > On Tue, 2008-10-28 at 13:23 -0700, reinette chatre wrote:
-> > > > 
-> > > > > (adding linux-wireless so I am keeping the log below)
-> > > > > 
-> > > > > This helps a lot - thanks!
-> > > > > 
-> > > > > Could you please recompile wireless with CONFIG_WIRELESS_OLD_REGULATORY?
-> > > > 
-> > > > Btw, any idea why this helps? Shouldn't the driver just work, albeit
-> > > > with a restricted channel set? Are we messing something up like no
-> > > > usable channels at all? (I fixed a bug like that IIRC)
-> > > > 
-> > > 
-> > > Without the regulatory information the number of 5G channels to scan is
-> > > zero.
-> > 
-> > But what about the 2.4G channels? This is the one I'd like to use here, and
-> > this is the one which is used with the correct firmware...
-> > 
-> > wlan0	  IEEE 802.11abg  ESSID:"<not reported on this list>"
-> > 	  Mode:Managed  Frequency:2.417 GHz
-> > 	  Bit Rate=54 Mb/s   Tx-Power=15 dBm   
-> >           Retry min limit:7   RTS thr:off   Fragment thr=2352 B   
-> >           Power Management:off
-> >           Link Quality=96/100  Signal level:-31 dBm  Noise level=-127 dBm
-> >           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-> >           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-> > 
-> > 	
-> > Will test with CONFIG_WIRELESS_OLD_REGULATORY soon.
-> 
-> With CONFIG_WIRELESS_OLD_REGULATORY=y, both the old and the new firmware
-> works. Without, only the old firmware works.
-> 
-> I'd think that at least the error message could be clarified a bit
-> (is it really a "Microcode SW error"?)... also, it might be a corner case
+On Wed, Oct 29, 2008 at 7:08 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2008/10/29 Bob Copeland <me@bobcopeland.com>:
+>> On Wed, Oct 29, 2008 at 04:11:22AM +0200, Nick Kossifidis wrote:
+>>>  * Properly clean MIC key from keytable when TKIP is used (Bob is
+>>>  working on set_key function etc so i leave it for now).
+>>
+>> Heh, I was just prepping patches to send out.  I had basically the
+>> same thing for _reset_key too so I'll just rebase mine on top of this.
+>>
+>
+> ACK, sorry for the bad coordination ;-(
 
-Yes, because Intel's firmware (intentionally) crashes when given
-commands or input that contravenes the firmware's idea of the regulatory
-region.  Thus, you have to go to enormous lengths to keep the driver and
-the firmware worldview in sync.  Yes, it's pretty fragile design, but
-apparently driven by their interpretation of legal requirements.
+No worries, it was easy enough to drop that hunk.  But I do think this:
 
-Dan
+> +       /* Reset associated MIC entry if TKIP
+> +        * is enabled located at offset (entry + 64) */
+> +       if (type == AR5K_KEYTABLE_TYPE_TKIP) {
+> +               entry = entry + AR5K_KEYTABLE_MIC_OFFSET;
+> +               AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
+> +               for (i = 0; i < AR5K_KEYCACHE_SIZE / 2 ; i++)
+> +                       ath5k_hw_reg_write(ah, 0, AR5K_KEYTABLE_OFF(entry, i));
+> +       }
+> +
 
+...should move a couple of lines down or use a temporary for the micentry
+slot; otherwise we are setting keytype to NULL in the mic entry and not
+the original key slot.
 
+The only other difference in mine was I went ahead and reset the whole line
+instead of just the first 4 words... since nothing goes in that half of the
+cache line that's probably wasted effort, and the HAL does the above so it
+should be fine.  I just wasn't sure if power-up state clears the keytype
+properly.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
