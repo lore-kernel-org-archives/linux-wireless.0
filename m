@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44526 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029AbYJ0QwL (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:8609 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754111AbYJ2Q2x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 12:52:11 -0400
-Subject: Re: [PATCH] mac80211.h: fix kernel-doc excesses
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20081027094703.754167e2.randy.dunlap@oracle.com>
-References: <20081027094703.754167e2.randy.dunlap@oracle.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-k38kNmEkLvpyZoK4HXQ8"
-Date: Mon, 27 Oct 2008 17:52:06 +0100
-Message-Id: <1225126326.3796.31.camel@johannes.berg> (sfid-20081027_175216_035536_D82F75BC)
-Mime-Version: 1.0
+	Wed, 29 Oct 2008 12:28:53 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so35864eyi.37
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 09:28:51 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 4/5] rt2x00: Fix build error when mac80211=M rt2x00=Y
+Date: Wed, 29 Oct 2008 17:19:08 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200810291716.47342.IvDoorn@gmail.com> <200810291718.22724.IvDoorn@gmail.com> <200810291718.46231.IvDoorn@gmail.com>
+In-Reply-To: <200810291718.46231.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810291719.08229.IvDoorn@gmail.com> (sfid-20081029_172916_215235_9D02CAA7)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Make menuconfig RT2X00 a tristate instead of boolean,
+otherwise we do not correctly inherit the mac80211 value
+on which RT2X00 depends, and makes it possible to
+compile rt2x00 into the kernel while mac80211 is a
+module.
 
---=-k38kNmEkLvpyZoK4HXQ8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Mon, 2008-10-27 at 09:47 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
->=20
-> Fix mac80211.h kernel-doc: it had some extra parameters that were
-> no longer valid and incorrect format for a return value in 2 places.
->=20
-> Warning(lin2628-rc2//include/net/mac80211.h:1487): Excess function
-> parameter or struct member 'control' description in
-> 'ieee80211_beacon_get'
-
-Cool, is that new functionality? Thanks.
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-johannes
-
---=-k38kNmEkLvpyZoK4HXQ8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJBfGyAAoJEKVg1VMiehFYHmcP/30CjYt27GqnHXaEEY5RG/Ow
-j3Axi6qvlffkTGJmrY2TAPenuDgB3DNSg7kd6jrkoSSe53Jvi9TaZFyMfCHZS4ep
-ioIi3sQGpRVT0tgbr/ohnlggXUl9N7B+k1XHON2fkhGD7SNp5J8LRsisc6v2QcGC
-12wnzGiojdg0OjwE7tQTQgTXbyhMaQyz7DNBeKQSyuC5ADo8I/vZJLDlz1wTEo35
-yPxZuLz+oqg6WXS0wSOcQSgUgDXofWC0KjIRE0AiGg5g7pptNvaP/gMRSB7ZLG/c
-3s9dLWk90X0ZTdarl2WfvK1ErVwhna2MLL4be+w3HXUAb13Qf7UmzZlmQS0ZwxDS
-K1OS9nhVZtRC/twxNLViu6OJIleMGlSJCII0REjdjmAc0jxScLVsF+qoa2JibWg7
-AZyAjQwZgGxXnfFF2qtZGyJJw8tDk6nqZo7V/00uIbVFs5d4F2i/xs7y5tw2hZ4x
-aq+fPQ6ypfRJ2sdodCh1evAo2okQUCrbFsf9F5YTiswZiZk57VgxsD5YLW7VY4FJ
-T0S4upaYLq6YOBxMfW6H14SxU926zHVBYg5bBcQKPdReiRChRfHoYB38g4PQGs4t
-wXydDazt/+zkXKWRU1g4Vn8dAWQRAwSfTKjb0RYmSOcTJNGgLur9WaWYaHy5jjo7
-b9tU8aA0Bac70UVEArGR
-=lnSz
------END PGP SIGNATURE-----
-
---=-k38kNmEkLvpyZoK4HXQ8--
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index f839ce0..95511ac 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -1,5 +1,5 @@
+ menuconfig RT2X00
+-	bool "Ralink driver support"
++	tristate "Ralink driver support"
+ 	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
+ 	---help---
+ 	  This will enable the experimental support for the Ralink drivers,
+-- 
+1.5.6.1
 
