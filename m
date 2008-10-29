@@ -1,56 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:58918 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117AbYJFN6O (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54788 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753024AbYJ2NAx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 09:58:14 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so417230yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2008 06:58:13 -0700 (PDT)
-Message-ID: <eb3ff54b0810060658p2241a6d0k9c6f504d976e0f@mail.gmail.com> (sfid-20081006_155816_959290_E8A6BE2B)
-Date: Mon, 6 Oct 2008 15:58:12 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH 1/2] iwlwifi: fix compliation warning in iwl-agn-rs.c when CONFIG_IWLWIFI_DEBUG is not set.
-Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com
+	Wed, 29 Oct 2008 09:00:53 -0400
+Date: Wed, 29 Oct 2008 08:59:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: mickflemm@gmail.com, jirislaby@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH] ath5k: correct misspelling in debug help
+Message-ID: <20081029125948.GF24103@tuxdriver.com> (sfid-20081029_140057_653179_8BEEAC43)
+References: <1225283457-24417-1-git-send-email-me@bobcopeland.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_55851_11422655.1223301492818"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1225283457-24417-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_55851_11422655.1223301492818
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Wed, Oct 29, 2008 at 08:30:53AM -0400, Bob Copeland wrote:
+> Change "mamagement" to "management"
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
 
-When CONFIG_IWLWIFI_DEBUG is not set and CONFIG_IWLWIFI is set,
-we get this compilation warning:
-/wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c: In
-function 'rs_free_sta':
-/wireless-next-2.6/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:2425:
-warning: unused variable 'priv'
+"mamagement" -- there must be a joke in there somewhere... :-)
 
-This patch (against wireless-next-2.6 tree) fixes it.
-
-
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
-
-------=_Part_55851_11422655.1223301492818
-Content-Type: text/plain; name=patch1.txt
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_flz63y1y0
-Content-Disposition: attachment; filename=patch1.txt
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1ycy5jIGIv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXJzLmMKaW5kZXggOTM5NDRkZS4u
-MWVkNDM5NyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWdu
-LXJzLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXJzLmMKQEAg
-LTI0MjIsMTEgKzI0MjIsMTUgQEAgc3RhdGljIHZvaWQgcnNfZnJlZV9zdGEodm9pZCAqcHJpdl9y
-LCBzdHJ1Y3QgaWVlZTgwMjExX3N0YSAqc3RhLAogCQkJdm9pZCAqcHJpdl9zdGEpCiB7CiAJc3Ry
-dWN0IGl3bF9scV9zdGEgKmxxX3N0YSA9IHByaXZfc3RhOworI2lmZGVmIENPTkZJR19JV0xXSUZJ
-X0RFQlVHCiAJc3RydWN0IGl3bF9wcml2ICpwcml2ID0gcHJpdl9yOwogCiAJSVdMX0RFQlVHX1JB
-VEUoImVudGVyXG4iKTsKKyNlbmRpZiAvKiBDT05GSUdfSVdMV0lGSV9ERUJVRyAqLwkKIAlrZnJl
-ZShscV9zdGEpOworI2lmZGVmIENPTkZJR19JV0xXSUZJX0RFQlVHCQogCUlXTF9ERUJVR19SQVRF
-KCJsZWF2ZVxuIik7CisjZW5kaWYgLyogQ09ORklHX0lXTFdJRklfREVCVUcgKi8KIH0KIAogCg==
-
-------=_Part_55851_11422655.1223301492818--
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
