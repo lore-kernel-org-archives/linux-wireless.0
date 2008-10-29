@@ -1,78 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178AbYJFSeb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 14:34:31 -0400
-Subject: Re: [PATCH v2] iwlwifi: fix DMA code and bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240810061130w6b1a2282ga80156e7d756c74@mail.gmail.com> (sfid-20081006_203031_079989_141A8A38)
-References: <1223308831.15196.28.camel@johannes.berg>
-	 <1223309405.15196.32.camel@johannes.berg>
-	 <1ba2fa240810060949w5404944dud9f7b6b373542981@mail.gmail.com>
-	 <1223311876.15196.38.camel@johannes.berg>
-	 <1223312084.15196.41.camel@johannes.berg>
-	 <1ba2fa240810061130w6b1a2282ga80156e7d756c74@mail.gmail.com>
-	 (sfid-20081006_203031_079989_141A8A38)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XrzvetUo2Fl3feQFr85i"
-Date: Mon, 06 Oct 2008 20:34:00 +0200
-Message-Id: <1223318040.3778.18.camel@johannes.berg> (sfid-20081006_203434_220208_24F7AFDD)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:57634 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751196AbYJ2Euz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 00:50:55 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 21:50:55 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18695.60174.383882.826913@gargle.gargle.HOWL> (sfid-20081029_060858_123843_881BE5F7)
+Date: Wed, 29 Oct 2008 10:18:14 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 13/16] ath9k: Remove ath_tx_aggr_resp()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Accessing mac80211's internal state machine is wrong.
+Will add resumption of a TID in a later patch.
 
---=-XrzvetUo2Fl3feQFr85i
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/core.h |   11 +-----
+ drivers/net/wireless/ath9k/rc.c   |   66 ++-----------------------------------
+ drivers/net/wireless/ath9k/xmit.c |   13 ++-----
+ 3 files changed, 8 insertions(+), 82 deletions(-)
 
-On Mon, 2008-10-06 at 20:30 +0200, Tomas Winkler wrote:
-
-> > Of course, I would very much appreciate you review the actual bug fix i=
-n
-> > iwl_hcmd_queue_reclaim, which consist of the addition of the line
-> >
-> > +               bd =3D &txq->bd[index];
->=20
-> Okay I found the source of the evil, with your big pointer :)
-> The bug caused by this memory optimization juggling we've done and
-> very  bad cut and paste coding
-> We moved for command buffers from pcI_alloc consitent to kmalloc which
-> required pci mapping that that was coded wrongly. Now this kmalloc
-> stuff is not good as well since we have this 36 bit memory limitation
-> on 64 bit platforms.
-> This is the issue I'm trying to address recently I'm not sure what yet
-> what allocation schema would be best yet.
-
-That can't be all though; it still crashes right away when I enable 64k
-pages on my box.
-
-johannes
-
---=-XrzvetUo2Fl3feQFr85i
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI6loUAAoJEKVg1VMiehFYuCcQAL17FsPeUGtOj3NF+SK7ojYM
-J+5X4mBxWktBHAiHqnGmO0EFefAHDmshdBgmQ9OSlZS6oTH9IM02oo5vjdYljwNU
-rXisxO3NzPe0hbQfulGR7r8SxTPYW/hC7rumdDOsLKxTvjls8v3CdkrY6mx7uvsi
-wWCdUqygVCMEDcfmnNqCuS1u9hESp+j+iRTNx3fDh62Uhzc6mmkg8LWobV/69fht
-r6xl5C1zTt+uOcX9GevOerlE/V29VjxCkumV4pYlrlY/XgQ5k68ulTYAFNmQd/Zt
-S8qujnoqhCXwwl4ehdNJ87ITkTx1Y0t/kjvzhP0MfydgAnEEVujgyOZ0iscNQQkj
-0Vu039x1MI5XV3NXCLWUFIENmSq9AiduE1lf1KychreEHG0DBSuIPxZNqxV8XG1P
-QkLJT0hyassdDaEbyVZQjZb0fUHKwFgAZPMbh6nwafP3HF8qD11pF6NqKTwzt81S
-lX/lxInfrSraTe/VlC4iF+oa6hli4cIIwAdOkB5FykwsFspWNa1DLHZF7APxKZy9
-La9WYnB+IAL8etW1hisp4BdyjpRSLaVCUYxwU8Ejg8BrPr50yWImeS18LABtk4Du
-iJ2HWupaiCapxoJC4srwbA1qZeSlcaG3CEgoYmfCW/p3Up+avCVnaGHm4Ssv8nMi
-0IST+Pqovj2ZJlYLmtfG
-=ER/R
------END PGP SIGNATURE-----
-
---=-XrzvetUo2Fl3feQFr85i--
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 49d2f89..dd33cb7 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -588,14 +588,6 @@ enum ATH_AGGR_STATUS {
+ 	ATH_AGGR_8K_LIMITED,
+ };
+ 
+-enum ATH_AGGR_CHECK {
+-	AGGR_NOT_REQUIRED,
+-	AGGR_REQUIRED,
+-	AGGR_CLEANUP_PROGRESS,
+-	AGGR_EXCHANGE_PROGRESS,
+-	AGGR_EXCHANGE_DONE
+-};
+-
+ struct aggr_rifs_param {
+ 	int param_max_frames;
+ 	int param_max_len;
+@@ -621,8 +613,7 @@ struct ath_node {
+ 
+ void ath_tx_resume_tid(struct ath_softc *sc,
+ 	struct ath_atx_tid *tid);
+-enum ATH_AGGR_CHECK ath_tx_aggr_check(struct ath_softc *sc,
+-	struct ath_node *an, u8 tidno);
++bool ath_tx_aggr_check(struct ath_softc *sc, struct ath_node *an, u8 tidno);
+ void ath_tx_aggr_teardown(struct ath_softc *sc,
+ 	struct ath_node *an, u8 tidno);
+ void ath_rx_aggr_teardown(struct ath_softc *sc,
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index ad29270..aa6bfd7 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -1879,49 +1879,6 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	tx_info->control.vif = NULL;
+ }
+ 
+-static void ath_tx_aggr_resp(struct ath_softc *sc,
+-			     struct ieee80211_supported_band *sband,
+-			     struct ieee80211_sta *sta,
+-			     struct ath_node *an,
+-			     u8 tidno)
+-{
+-	struct ath_atx_tid *txtid;
+-	u16 buffersize = 0;
+-	int state;
+-	struct sta_info *si;
+-
+-	if (!(sc->sc_flags & SC_OP_TXAGGR))
+-		return;
+-
+-	txtid = ATH_AN_2_TID(an, tidno);
+-	if (!txtid->paused)
+-		return;
+-
+-	/*
+-	 * XXX: This is entirely busted, we aren't supposed to
+-	 *	access the sta from here because it's internal
+-	 *	to mac80211, and looking at the state without
+-	 *	locking is wrong too.
+-	 */
+-	si = container_of(sta, struct sta_info, sta);
+-	buffersize = IEEE80211_MIN_AMPDU_BUF <<
+-		sband->ht_cap.ampdu_factor; /* FIXME */
+-	state = si->ampdu_mlme.tid_state_tx[tidno];
+-
+-	if (state & HT_ADDBA_RECEIVED_MSK) {
+-		txtid->state |= AGGR_ADDBA_COMPLETE;
+-		txtid->state &= ~AGGR_ADDBA_PROGRESS;
+-		txtid->baw_size = buffersize;
+-
+-		DPRINTF(sc, ATH_DBG_AGGR,
+-			"%s: Resuming tid, buffersize: %d\n",
+-			__func__,
+-			buffersize);
+-
+-		ath_tx_resume_tid(sc, txtid);
+-	}
+-}
+-
+ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 			 struct ieee80211_tx_rate_control *txrc)
+ {
+@@ -1934,11 +1891,10 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	struct ath_rate_node *ath_rc_priv = priv_sta;
+ 	struct ath_node *an;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+-	int is_probe = FALSE, chk, ret;
++	int is_probe = FALSE;
+ 	s8 lowest_idx;
+ 	__le16 fc = hdr->frame_control;
+ 	u8 *qc, tid;
+-	DECLARE_MAC_BUF(mac);
+ 
+ 	DPRINTF(sc, ATH_DBG_RATE, "%s\n", __func__);
+ 
+@@ -1982,26 +1938,10 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 		if (ieee80211_is_data_qos(fc)) {
+ 			qc = ieee80211_get_qos_ctl(hdr);
+ 			tid = qc[0] & 0xf;
+-
+ 			an = (struct ath_node *)sta->drv_priv;
+ 
+-			chk = ath_tx_aggr_check(sc, an, tid);
+-			if (chk == AGGR_REQUIRED) {
+-				ret = ieee80211_start_tx_ba_session(hw,
+-					hdr->addr1, tid);
+-				if (ret)
+-					DPRINTF(sc, ATH_DBG_AGGR,
+-						"%s: Unable to start tx "
+-						"aggr for: %s\n",
+-						__func__,
+-						print_mac(mac, hdr->addr1));
+-				else
+-					DPRINTF(sc, ATH_DBG_AGGR,
+-						"%s: Started tx aggr for: %s\n",
+-						__func__,
+-						print_mac(mac, hdr->addr1));
+-			} else if (chk == AGGR_EXCHANGE_PROGRESS)
+-				ath_tx_aggr_resp(sc, sband, sta, an, tid);
++			if(ath_tx_aggr_check(sc, an, tid))
++				ieee80211_start_tx_ba_session(hw, hdr->addr1, tid);
+ 		}
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 2d9fd10..7e6f4e5 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -2322,29 +2322,24 @@ u32 ath_txq_aggr_depth(struct ath_softc *sc, int qnum)
+ 	return sc->sc_txq[qnum].axq_aggr_depth;
+ }
+ 
+-/* Check if an ADDBA is required. A valid node must be passed. */
+-enum ATH_AGGR_CHECK ath_tx_aggr_check(struct ath_softc *sc,
+-				      struct ath_node *an,
+-				      u8 tidno)
++bool ath_tx_aggr_check(struct ath_softc *sc, struct ath_node *an, u8 tidno)
+ {
+ 	struct ath_atx_tid *txtid;
+-	DECLARE_MAC_BUF(mac);
+ 
+ 	if (!(sc->sc_flags & SC_OP_TXAGGR))
+-		return AGGR_NOT_REQUIRED;
++		return false;
+ 
+-	/* ADDBA exchange must be completed before sending aggregates */
+ 	txtid = ATH_AN_2_TID(an, tidno);
+ 
+ 	if (!(txtid->state & AGGR_ADDBA_COMPLETE)) {
+ 		if (!(txtid->state & AGGR_ADDBA_PROGRESS) &&
+ 		    (txtid->addba_exchangeattempts < ADDBA_EXCHANGE_ATTEMPTS)) {
+ 			txtid->addba_exchangeattempts++;
+-			return AGGR_REQUIRED;
++			return true;
+ 		}
+ 	}
+ 
+-	return AGGR_NOT_REQUIRED;
++	return false;
+ }
+ 
+ /* Start TX aggregation */
+-- 
+1.6.0.3
 
