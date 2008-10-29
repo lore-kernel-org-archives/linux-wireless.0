@@ -1,184 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34717 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755894AbYJGQ6S (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.233]:17066 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbYJ2JL1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 12:58:18 -0400
-Message-Id: <20081007100443.395429000@sipsolutions.net> (sfid-20081007_185842_408797_9F85B905)
-References: <20081007100428.868688000@sipsolutions.net>
-Date: Tue, 07 Oct 2008 12:04:36 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 8/8] mac80211: fix short slot handling
-Mime-Version: 1.0
+	Wed, 29 Oct 2008 05:11:27 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so3197738rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 02:11:26 -0700 (PDT)
+Message-ID: <1ba2fa240810290211s16f5506cgf7c828b5c3d8aea9@mail.gmail.com> (sfid-20081029_101145_640033_AD995EBB)
+Date: Wed, 29 Oct 2008 11:11:26 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Subject: Re: [PATCH 16/16] mac80211: Add a new event in ieee80211_ampdu_mlme_action
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@atheros.com, Luis.Rodriguez@atheros.com,
+	johannes@sipsolutions.net
+In-Reply-To: <18695.60248.383916.563413@gargle.gargle.HOWL>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <18695.60248.383916.563413@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes mac80211 handle short slot requests from
-the AP properly.
+On Wed, Oct 29, 2008 at 6:49 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Send a notification to the driver on succesful
+> reception of an ADDBA response, add IEEE80211_AMPDU_TX_RESUME
+> for this purpose.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/mac80211.h |    8 +++--
- net/mac80211/main.c    |    9 +++--
- net/mac80211/mlme.c    |   74 ++++++++++++++++++++++++++-----------------------
- 3 files changed, 52 insertions(+), 39 deletions(-)
-
---- everything.orig/net/mac80211/main.c	2008-10-07 11:27:04.000000000 +0200
-+++ everything/net/mac80211/main.c	2008-10-07 11:51:31.000000000 +0200
-@@ -346,9 +346,12 @@ void ieee80211_bss_info_change_notify(st
- 
- u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata)
- {
--	sdata->bss_conf.use_cts_prot = 0;
--	sdata->bss_conf.use_short_preamble = 0;
--	return BSS_CHANGED_ERP_CTS_PROT | BSS_CHANGED_ERP_PREAMBLE;
-+	sdata->bss_conf.use_cts_prot = false;
-+	sdata->bss_conf.use_short_preamble = false;
-+	sdata->bss_conf.use_short_slot = false;
-+	return BSS_CHANGED_ERP_CTS_PROT |
-+	       BSS_CHANGED_ERP_PREAMBLE |
-+	       BSS_CHANGED_ERP_SLOT;
- }
- 
- void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
---- everything.orig/net/mac80211/mlme.c	2008-10-07 11:26:49.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-10-07 11:51:30.000000000 +0200
-@@ -568,9 +568,8 @@ static void ieee80211_sta_wmm_params(str
- 	}
- }
- 
--static u32 ieee80211_handle_protect_preamb(struct ieee80211_sub_if_data *sdata,
--					   bool use_protection,
--					   bool use_short_preamble)
-+static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
-+					   u16 capab, bool erp_valid, u8 erp)
- {
- 	struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-@@ -578,6 +577,19 @@ static u32 ieee80211_handle_protect_prea
- 	DECLARE_MAC_BUF(mac);
- #endif
- 	u32 changed = 0;
-+	bool use_protection;
-+	bool use_short_preamble;
-+	bool use_short_slot;
-+
-+	if (erp_valid) {
-+		use_protection = (erp & WLAN_ERP_USE_PROTECTION) != 0;
-+		use_short_preamble = (erp & WLAN_ERP_BARKER_PREAMBLE) == 0;
-+	} else {
-+		use_protection = false;
-+		use_short_preamble = !!(capab & WLAN_CAPABILITY_SHORT_PREAMBLE);
-+	}
-+
-+	use_short_slot = !!(capab & WLAN_CAPABILITY_SHORT_SLOT_TIME);
- 
- 	if (use_protection != bss_conf->use_cts_prot) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-@@ -607,30 +619,18 @@ static u32 ieee80211_handle_protect_prea
- 		changed |= BSS_CHANGED_ERP_PREAMBLE;
- 	}
- 
--	return changed;
--}
--
--static u32 ieee80211_handle_erp_ie(struct ieee80211_sub_if_data *sdata,
--				   u8 erp_value)
--{
--	bool use_protection = (erp_value & WLAN_ERP_USE_PROTECTION) != 0;
--	bool use_short_preamble = (erp_value & WLAN_ERP_BARKER_PREAMBLE) == 0;
--
--	return ieee80211_handle_protect_preamb(sdata,
--			use_protection, use_short_preamble);
--}
--
--static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
--					   struct ieee80211_bss *bss)
--{
--	u32 changed = 0;
--
--	if (bss->has_erp_value)
--		changed |= ieee80211_handle_erp_ie(sdata, bss->erp_value);
--	else {
--		u16 capab = bss->capability;
--		changed |= ieee80211_handle_protect_preamb(sdata, false,
--				(capab & WLAN_CAPABILITY_SHORT_PREAMBLE) != 0);
-+	if (use_short_slot != bss_conf->use_short_slot) {
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+		if (net_ratelimit()) {
-+			printk(KERN_DEBUG "%s: switched to %s slot"
-+			       " (BSSID=%s)\n",
-+			       sdata->dev->name,
-+			       use_short_slot ? "short" : "long",
-+			       print_mac(mac, ifsta->bssid));
-+		}
-+#endif
-+		bss_conf->use_short_slot = use_short_slot;
-+		changed |= BSS_CHANGED_ERP_SLOT;
- 	}
- 
- 	return changed;
-@@ -721,7 +721,8 @@ static void ieee80211_set_associated(str
- 		sdata->bss_conf.timestamp = bss->timestamp;
- 		sdata->bss_conf.dtim_period = bss->dtim_period;
- 
--		changed |= ieee80211_handle_bss_capability(sdata, bss);
-+		changed |= ieee80211_handle_bss_capability(sdata,
-+			bss->capability, bss->has_erp_value, bss->erp_value);
- 
- 		ieee80211_rx_bss_put(local, bss);
- 	}
-@@ -1673,6 +1674,8 @@ static void ieee80211_rx_mgmt_beacon(str
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_conf *conf = &local->hw.conf;
- 	u32 changed = 0;
-+	bool erp_valid;
-+	u8 erp_value = 0;
- 
- 	/* Process beacon from the current BSS */
- 	baselen = (u8 *) mgmt->u.beacon.variable - (u8 *) mgmt;
-@@ -1694,13 +1697,16 @@ static void ieee80211_rx_mgmt_beacon(str
- 	ieee80211_sta_wmm_params(local, ifsta, elems.wmm_param,
- 				 elems.wmm_param_len);
- 
--	if (elems.erp_info && elems.erp_info_len >= 1)
--		changed |= ieee80211_handle_erp_ie(sdata, elems.erp_info[0]);
--	else {
--		u16 capab = le16_to_cpu(mgmt->u.beacon.capab_info);
--		changed |= ieee80211_handle_protect_preamb(sdata, false,
--				(capab & WLAN_CAPABILITY_SHORT_PREAMBLE) != 0);
-+
-+	if (elems.erp_info && elems.erp_info_len >= 1) {
-+		erp_valid = true;
-+		erp_value = elems.erp_info[0];
-+	} else {
-+		erp_valid = false;
- 	}
-+	changed |= ieee80211_handle_bss_capability(sdata,
-+			le16_to_cpu(mgmt->u.beacon.capab_info),
-+			erp_valid, erp_value);
- 
- 	if (elems.ht_cap_elem && elems.ht_info_elem &&
- 	    elems.wmm_param && conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE) {
---- everything.orig/include/net/mac80211.h	2008-10-07 11:53:41.000000000 +0200
-+++ everything/include/net/mac80211.h	2008-10-07 11:54:23.000000000 +0200
-@@ -180,8 +180,12 @@ enum ieee80211_bss_change {
-  * @assoc: association status
-  * @aid: association ID number, valid only when @assoc is true
-  * @use_cts_prot: use CTS protection
-- * @use_short_preamble: use 802.11b short preamble
-- * @use_short_slot: use short slot time (only relevant for ERP)
-+ * @use_short_preamble: use 802.11b short preamble;
-+ *	if the hardware cannot handle this it must set the
-+ *	IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE hardware flag
-+ * @use_short_slot: use short slot time (only relevant for ERP);
-+ *	if the hardware cannot handle this it must set the
-+ *	IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE hardware flag
-  * @dtim_period: num of beacons before the next DTIM, for PSM
-  * @timestamp: beacon timestamp
-  * @beacon_int: beacon interval
-
--- 
-
+What what is wrong with IEEE80211_AMPDU_TX_START ? I don' t understand
+why this is needed?
+Tomas
+>
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+>  drivers/net/wireless/ath9k/core.h |    1 +
+>  drivers/net/wireless/ath9k/main.c |    3 +++
+>  drivers/net/wireless/ath9k/xmit.c |   19 +++++++++++++++++++
+>  include/net/mac80211.h            |    2 ++
+>  net/mac80211/ht.c                 |   10 +++++++++-
+>  5 files changed, 34 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+> index 5b17e88..69e8d3e 100644
+> --- a/drivers/net/wireless/ath9k/core.h
+> +++ b/drivers/net/wireless/ath9k/core.h
+> @@ -581,6 +581,7 @@ void ath_tx_aggr_teardown(struct ath_softc *sc,
+>  int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+>                      u16 tid, u16 *ssn);
+>  int ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
+> +void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
+>  void ath_newassoc(struct ath_softc *sc,
+>        struct ath_node *node, int isnew, int isuapsd);
+>  void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta);
+> diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+> index 376c530..5d07952 100644
+> --- a/drivers/net/wireless/ath9k/main.c
+> +++ b/drivers/net/wireless/ath9k/main.c
+> @@ -1484,6 +1484,9 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+>
+>                ieee80211_stop_tx_ba_cb_irqsafe(hw, sta->addr, tid);
+>                break;
+> +       case IEEE80211_AMPDU_TX_RESUME:
+> +               ath_tx_aggr_resume(sc, sta, tid);
+> +               break;
+>        default:
+>                DPRINTF(sc, ATH_DBG_FATAL,
+>                        "%s: Unknown AMPDU action\n", __func__);
+> diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+> index 7e6f4e5..fe386b6 100644
+> --- a/drivers/net/wireless/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath9k/xmit.c
+> @@ -2371,6 +2371,25 @@ int ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+>        return 0;
+>  }
+>
+> +/* Resume tx aggregation */
+> +
+> +void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+> +{
+> +       struct ath_atx_tid *txtid;
+> +       struct ath_node *an;
+> +
+> +       an = (struct ath_node *)sta->drv_priv;
+> +
+> +       if (sc->sc_flags & SC_OP_TXAGGR) {
+> +               txtid = ATH_AN_2_TID(an, tid);
+> +               txtid->baw_size =
+> +                       IEEE80211_MIN_AMPDU_BUF << sta->ht_cap.ampdu_factor;
+> +               txtid->state |= AGGR_ADDBA_COMPLETE;
+> +               txtid->state &= ~AGGR_ADDBA_PROGRESS;
+> +               ath_tx_resume_tid(sc, txtid);
+> +       }
+> +}
+> +
+>  /*
+>  * Performs transmit side cleanup when TID changes from aggregated to
+>  * unaggregated.
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 0b983be..4051f0a 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -1136,12 +1136,14 @@ enum ieee80211_filter_flags {
+>  * @IEEE80211_AMPDU_RX_STOP: stop Rx aggregation
+>  * @IEEE80211_AMPDU_TX_START: start Tx aggregation
+>  * @IEEE80211_AMPDU_TX_STOP: stop Tx aggregation
+> + * @IEEE80211_AMPDU_TX_RESUME: resume TX aggregation
+>  */
+>  enum ieee80211_ampdu_mlme_action {
+>        IEEE80211_AMPDU_RX_START,
+>        IEEE80211_AMPDU_RX_STOP,
+>        IEEE80211_AMPDU_TX_START,
+>        IEEE80211_AMPDU_TX_STOP,
+> +       IEEE80211_AMPDU_TX_RESUME,
+>  };
+>
+>  /**
+> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+> index 1453cb5..0ffbe12 100644
+> --- a/net/mac80211/ht.c
+> +++ b/net/mac80211/ht.c
+> @@ -995,7 +995,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+>  {
+>        struct ieee80211_hw *hw = &local->hw;
+>        u16 capab;
+> -       u16 tid;
+> +       u16 tid, start_seq_num;
+>        u8 *state;
+>
+>        capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
+> @@ -1032,6 +1032,14 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+>                    local->hw.ampdu_queues)
+>                        ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
+>
+> +               if (local->ops->ampdu_action) {
+> +                       (void)local->ops->ampdu_action(hw,
+> +                                              IEEE80211_AMPDU_TX_RESUME,
+> +                                              &sta->sta, tid, &start_seq_num);
+> +               }
+> +#ifdef CONFIG_MAC80211_HT_DEBUG
+> +               printk(KERN_DEBUG "Resuming TX aggregation for tid %d\n", tid);
+> +#endif /* CONFIG_MAC80211_HT_DEBUG */
+>                spin_unlock_bh(&sta->lock);
+>        } else {
+>                sta->ampdu_mlme.addba_req_num[tid]++;
+> --
+> 1.6.0.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
