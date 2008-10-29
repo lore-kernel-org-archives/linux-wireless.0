@@ -1,227 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flock1.newmail.ru ([82.204.219.207]:42254 "HELO
-	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752640AbYJJHmN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 03:42:13 -0400
-From: Andrey Borzenkov <arvidjaar@newmail.ru>
-To: Dave <kilroyd@googlemail.com>
-Subject: Re: rc9 + orinoco WPA patchset: BUG: scheduling while atomic loading firmware with PCMCIA adapter
-Date: Fri, 10 Oct 2008 11:41:37 +0400
-Cc: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <200810091722.56812.arvidjaar@newmail.ru> <200810092321.55033.arvidjaar@newmail.ru> <48EE89ED.3050309@gmail.com>
-In-Reply-To: <48EE89ED.3050309@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1858793.2UlJZDQuiS";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200810101141.38929.arvidjaar@newmail.ru> (sfid-20081010_094226_410193_E77EAA85)
+Received: from hostap.isc.org ([149.20.54.63]:45160 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754033AbYJ2Rxm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 13:53:42 -0400
+Message-Id: <20081029175238.066813010@localhost> (sfid-20081029_185344_333111_64EEB953)
+References: <20081029174934.817700763@localhost>
+Date: Wed, 29 Oct 2008 19:49:36 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4] nl80211: Add basic rate configuration for AP mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1858793.2UlJZDQuiS
-Content-Type: multipart/mixed;
-  boundary="Boundary-01=_ycw7Io7cC/CHOhG"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Add a new attribute, NL80211_ATTR_BSS_BASIC_RATES, that can be used with
+NL80211_CMD_SET_BSS for userspace (e.g., hostapd) to set which rates are
+in the basic rate set.
 
---Boundary-01=_ycw7Io7cC/CHOhG
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-On Friday 10 October 2008, Dave wrote:
-> Thanks for identifying the problem. The Agere case looks good - a few sug=
-gestions for the Symbol case though:
-
-Updated patch attached
-
-> =20
-> But you absolutely have to kfree(pda) here.
-
-Yes, I forgot; sorry.
-
-> Dan Williams wrote:
-> > maybe you should not use priv->pda_size but
-> > #define SYMBOL_PDA_SIZE 256 and use that for the hermes_read_pda()
-> > length just to ensure the patched code is functionally the same as
-> > before the patch.
->=20
-> Using fw->pda_size should be fine. The value comes from a const static, s=
-et to 0x100 for Symbol.
->=20
-
-Actually it allocated 512 byte before. Should it probably be set to 0x200?
-
---Boundary-01=_ycw7Io7cC/CHOhG
-Content-Type: text/x-diff;
-  charset="iso-8859-1";
-  name="orinoco-reduce-stack-usage"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline;
-	filename="orinoco-reduce-stack-usage"
-
-Subject: [PATCH] orinoco: reduce stack usage in firmware download path
-=46rom: Andrey Borzenkov <arvidjaar@mail.ru>
-
-orinoco_dl_firmware and symbol_dl_mage allocate large local
-variables (1K); at least orinoco fails with panic or hung
-kernel if 4K stacks is enabled.
-
-Allocate large buffers dynamically at run time.
-
-Tested-By: Andrey Borzenkov <arvidjaar@mail.ru> for Agere case
-Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
-
-=2D--
-
- drivers/net/wireless/orinoco.c |   40 ++++++++++++++++++++++++++++--------=
-=2D---
- 1 files changed, 28 insertions(+), 12 deletions(-)
-
-
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index 9a2fcc0..e225fec 100644
-=2D-- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -458,7 +458,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
- 		    int ap)
- {
- 	/* Plug Data Area (PDA) */
-=2D	__le16 pda[512] =3D { 0 };
-+	__le16 *pda;
-=20
- 	hermes_t *hw =3D &priv->hw;
- 	const struct firmware *fw_entry;
-@@ -467,7 +467,11 @@ orinoco_dl_firmware(struct orinoco_private *priv,
- 	const unsigned char *end;
- 	const char *firmware;
- 	struct net_device *dev =3D priv->ndev;
-=2D	int err;
-+	int err =3D 0;
+Index: wireless-testing/include/linux/nl80211.h
+===================================================================
+--- wireless-testing.orig/include/linux/nl80211.h
++++ wireless-testing/include/linux/nl80211.h
+@@ -243,6 +243,9 @@ enum nl80211_commands {
+  *	(u8, 0 or 1)
+  * @NL80211_ATTR_BSS_SHORT_SLOT_TIME: whether short slot time enabled
+  *	(u8, 0 or 1)
++ * @NL80211_ATTR_BSS_BASIC_RATES: basic rates, array of basic
++ *	rates in format defined by IEEE 802.11 7.3.2.2 but without the length
++ *	restriction (at most %NL80211_MAX_SUPP_RATES).
+  *
+  * @NL80211_ATTR_HT_CAPABILITY: HT Capability information element (from
+  *	association request when used with NL80211_CMD_NEW_STATION)
+@@ -307,6 +310,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_MESH_PARAMS,
+ 
++	NL80211_ATTR_BSS_BASIC_RATES,
 +
-+	pda =3D kzalloc(fw->pda_size, GFP_KERNEL);
-+	if (!pda)
-+		return -ENOMEM;
-=20
- 	if (ap)
- 		firmware =3D fw->ap_fw;
-@@ -478,17 +482,17 @@ orinoco_dl_firmware(struct orinoco_private *priv,
- 	       dev->name, firmware);
-=20
- 	/* Read current plug data */
-=2D	err =3D hermes_read_pda(hw, pda, fw->pda_addr,
-=2D			      min_t(u16, fw->pda_size, sizeof(pda)), 0);
-+	err =3D hermes_read_pda(hw, pda, fw->pda_addr, fw->pda_size, 0);
- 	printk(KERN_DEBUG "%s: Read PDA returned %d\n", dev->name, err);
- 	if (err)
-=2D		return err;
-+		goto free;
-=20
- 	err =3D request_firmware(&fw_entry, firmware, priv->dev);
- 	if (err) {
- 		printk(KERN_ERR "%s: Cannot find firmware %s\n",
- 		       dev->name, firmware);
-=2D		return -ENOENT;
-+		err =3D -ENOENT;
-+		goto free;
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -318,6 +323,7 @@ enum nl80211_attrs {
+  * here
+  */
+ #define NL80211_ATTR_HT_CAPABILITY NL80211_ATTR_HT_CAPABILITY
++#define NL80211_ATTR_BSS_BASIC_RATES NL80211_ATTR_BSS_BASIC_RATES
+ 
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_MAX_SUPP_REG_RULES		32
+Index: wireless-testing/include/net/cfg80211.h
+===================================================================
+--- wireless-testing.orig/include/net/cfg80211.h
++++ wireless-testing/include/net/cfg80211.h
+@@ -280,11 +280,16 @@ struct mpath_info {
+  *	(0 = no, 1 = yes, -1 = do not change)
+  * @use_short_slot_time: Whether the use of short slot time is allowed
+  *	(0 = no, 1 = yes, -1 = do not change)
++ * @basic_rates: basic rates in IEEE 802.11 format
++ *	(or NULL for no change)
++ * @basic_rates_len: number of basic rates
+  */
+ struct bss_parameters {
+ 	int use_cts_prot;
+ 	int use_short_preamble;
+ 	int use_short_slot_time;
++	u8 *basic_rates;
++	u8 basic_rates_len;
+ };
+ 
+ /**
+Index: wireless-testing/net/mac80211/cfg.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/cfg.c
++++ wireless-testing/net/mac80211/cfg.c
+@@ -1046,6 +1046,24 @@ static int ieee80211_change_bss(struct w
+ 		changed |= BSS_CHANGED_ERP_SLOT;
  	}
-=20
- 	hdr =3D (const struct orinoco_fw_header *) fw_entry->data;
-@@ -532,6 +536,9 @@ orinoco_dl_firmware(struct orinoco_private *priv,
-=20
- abort:
- 	release_firmware(fw_entry);
+ 
++	if (params->basic_rates) {
++		int i, j;
++		u32 rates = 0;
++		struct ieee80211_local *local = wiphy_priv(wiphy);
++		struct ieee80211_supported_band *sband =
++			wiphy->bands[local->oper_channel->band];
 +
-+free:
-+	kfree(pda);
- 	return err;
- }
-=20
-@@ -549,12 +556,12 @@ symbol_dl_image(struct orinoco_private *priv, const s=
-truct fw_info *fw,
- 		int secondary)
- {
- 	hermes_t *hw =3D &priv->hw;
-=2D	int ret;
-+	int ret =3D 0;
- 	const unsigned char *ptr;
- 	const unsigned char *first_block;
-=20
- 	/* Plug Data Area (PDA) */
-=2D	__le16 pda[256];
-+	__le16 *pda =3D NULL;
-=20
- 	/* Binary block begins after the 0x1A marker */
- 	ptr =3D image;
-@@ -563,28 +570,33 @@ symbol_dl_image(struct orinoco_private *priv, const s=
-truct fw_info *fw,
-=20
- 	/* Read the PDA from EEPROM */
- 	if (secondary) {
-=2D		ret =3D hermes_read_pda(hw, pda, fw->pda_addr, sizeof(pda), 1);
-+		pda =3D kzalloc(fw->pda_size, GFP_KERNEL);
-+		if (!pda)
-+			return -ENOMEM;
++		for (i = 0; i < params->basic_rates_len; i++) {
++			int rate = (params->basic_rates[i] & 0x7f) * 5;
++			for (j = 0; j < sband->n_bitrates; j++) {
++				if (sband->bitrates[j].bitrate == rate)
++					rates |= BIT(j);
++			}
++		}
++		sdata->vif.bss_conf.basic_rates = rates;
++		changed |= BSS_CHANGED_BASIC_RATES;
++	}
 +
-+		ret =3D hermes_read_pda(hw, pda, fw->pda_addr, fw->pda_size, 1);
- 		if (ret)
-=2D			return ret;
-+			goto free;
- 	}
-=20
- 	/* Stop the firmware, so that it can be safely rewritten */
- 	if (priv->stop_fw) {
- 		ret =3D priv->stop_fw(priv, 1);
- 		if (ret)
-=2D			return ret;
-+			goto free;
- 	}
-=20
- 	/* Program the adapter with new firmware */
- 	ret =3D hermes_program(hw, first_block, end);
- 	if (ret)
-=2D		return ret;
-+		goto free;
-=20
- 	/* Write the PDA to the adapter */
- 	if (secondary) {
- 		size_t len =3D hermes_blocks_length(first_block);
- 		ptr =3D first_block + len;
- 		ret =3D hermes_apply_pda(hw, ptr, pda);
-+		kfree(pda);
- 		if (ret)
- 			return ret;
- 	}
-@@ -608,6 +620,10 @@ symbol_dl_image(struct orinoco_private *priv, const st=
-ruct fw_info *fw,
- 		return -ENODEV;
-=20
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
  	return 0;
-+
-+free:
-+	kfree(pda);
-+	return ret;
- }
-=20
-=20
+Index: wireless-testing/net/wireless/nl80211.c
+===================================================================
+--- wireless-testing.orig/net/wireless/nl80211.c
++++ wireless-testing/net/wireless/nl80211.c
+@@ -95,6 +95,8 @@ static struct nla_policy nl80211_policy[
+ 	[NL80211_ATTR_BSS_CTS_PROT] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_BSS_SHORT_PREAMBLE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_BSS_SHORT_SLOT_TIME] = { .type = NLA_U8 },
++	[NL80211_ATTR_BSS_BASIC_RATES] = { .type = NLA_BINARY,
++					   .len = NL80211_MAX_SUPP_RATES },
+ 
+ 	[NL80211_ATTR_MESH_PARAMS] = { .type = NLA_NESTED },
+ 
+@@ -1613,6 +1615,12 @@ static int nl80211_set_bss(struct sk_buf
+ 	if (info->attrs[NL80211_ATTR_BSS_SHORT_SLOT_TIME])
+ 		params.use_short_slot_time =
+ 		    nla_get_u8(info->attrs[NL80211_ATTR_BSS_SHORT_SLOT_TIME]);
++	if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
++		params.basic_rates =
++			nla_data(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
++		params.basic_rates_len =
++			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
++	}
+ 
+ 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
+ 	if (err)
 
---Boundary-01=_ycw7Io7cC/CHOhG--
+--
 
---nextPart1858793.2UlJZDQuiS
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkjvBzIACgkQR6LMutpd94zw9ACguVeROiv9a39E3HrE0N88DkPP
-/osAn0O/9FXZ9fxS/9Z1JuBaUA58h3ZL
-=nTQc
------END PGP SIGNATURE-----
-
---nextPart1858793.2UlJZDQuiS--
+-- 
+Jouni Malinen                                            PGP id EFC895FA
