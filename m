@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:36934 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753507AbYJaQvi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 12:51:38 -0400
-Message-ID: <490B3798.40206@lwfinger.net> (sfid-20081031_175200_871183_5399553E)
-Date: Fri, 31 Oct 2008 09:51:36 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: htl10@users.sourceforge.net,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>,
+Received: from web23104.mail.ird.yahoo.com ([217.146.189.44]:22838 "HELO
+	web23104.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753744AbYJ2TpJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 15:45:09 -0400
+Date: Wed, 29 Oct 2008 19:38:26 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT] rtl8187: Reduce delays to reduce startup time
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: Pavel Roskin <proski@gnu.org>,
 	wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/6] rtl8187: Reduce delays to reduce startup time
-References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>
-In-Reply-To: <49088F7D.8020102@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <200810291642.16697.herton@mandriva.com.br>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <731229.28216.qm@web23104.mail.ird.yahoo.com> (sfid-20081029_204515_072363_B38F45AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current version of the rtl8187 driver contains a large number of msleep()
-commands that cause initialization to take a long time. This series of patches
-include revisions that were found by looking at the latest version of the
-vendor's driver (rtl8187B_linux_26.1036.0708.2008), and others that were found
-to be OK with testing.
+--- On Wed, 29/10/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
+> Tested-by: Herton Ronaldo Krzesinski
+> <herton@mandriva.com.br>
 
-To keep each of the patches relatively small, these changes are split into 6
-parts. The changes in them are as follows:
-
-1. Remove all delays of greater than 1 sec.
-2. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_ofdm().
-3. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_cck().
-4. Remove the msleep(1) that immediately follow calls to rtl8225_write().
-5. Remove the nsleep() calls from rtl8187_write_phy(), rtl8225_write_bitbang(),
-and rtl8225_write_8051().
-6. Remove the msleep(10) that preceeds a channel change.
-
-Before these changes, routine rtl8187b_init_hw() took 15.82 sec to execute. It
-now takes 3.76 sec.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
 
 
+Seems to work just as well for me as well.
+
+Hin-Tak
+
+
+      
