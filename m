@@ -1,111 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:12394 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759654AbYJ3VvF (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48472 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753133AbYJ2Lur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 17:51:05 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so377800yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 14:51:04 -0700 (PDT)
-Message-ID: <40f31dec0810301451t3f704406u50c8514c1aa3bd4a@mail.gmail.com> (sfid-20081030_225113_005353_9106CC81)
-Date: Thu, 30 Oct 2008 23:51:03 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Update PCU code
-Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20081030032426.GB26970@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081029021121.GA3079@makis>
-	 <20081029024603.GA22759@hash.localnet>
-	 <40f31dec0810290408h5ee08c8l1e14d576064f01a4@mail.gmail.com>
-	 <b6c5339f0810290705j36995186j382a8415886fb061@mail.gmail.com>
-	 <40f31dec0810290741t6378eebelbdacf4e5c8d63bff@mail.gmail.com>
-	 <20081030032426.GB26970@hash.localnet>
+	Wed, 29 Oct 2008 07:50:47 -0400
+Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1225236760.1115.245.camel@rc-desk>
+References: <20081018231046.GA10977@isilmar.linta.de>
+	 <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
+	 <20081019075916.GA12904@isilmar.linta.de>
+	 <1225145468.1115.139.camel@rc-desk>
+	 <20081027230326.GA23250@isilmar.linta.de>
+	 <1225154823.1115.149.camel@rc-desk>
+	 <20081028194323.GA14303@isilmar.linta.de>
+	 <1225225434.1115.217.camel@rc-desk>
+	 (sfid-20081028_212343_098446_12401F4B)  <1225235731.1369.8.camel@johannes.berg>
+	 <1225236760.1115.245.camel@rc-desk>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-++ZPY7JBm3AbhSFWC8rk"
+Date: Wed, 29 Oct 2008 12:48:41 +0100
+Message-Id: <1225280921.5439.2.camel@johannes.berg> (sfid-20081029_125049_901987_36965921)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/10/30 Bob Copeland <me@bobcopeland.com>:
-> On Wed, Oct 29, 2008 at 04:41:22PM +0200, Nick Kossifidis wrote:
->> 2008/10/29 Bob Copeland <me@bobcopeland.com>:
->> Yup you are right, we should set both to NULL so a temp micentry var
->> would do the trick.
->>
->> Should i resend this one or you 'll resend yours ?
->
-> Well I just decided to put this in a different patch.  Then I saw the
-> 5211 check.. we already read the type without such a check and the
-> other tkip stuff may well all blow up on such hardware.  So not sure
-> what to do about that case.
->
-> Anyway feel free to just roll this up into your original patch, or to
-> write it differently given the above.
->
-> From: Bob Copeland <me@bobcopeland.com>
-> Subject: [PATCH] ath5k: fix keytable type buglet in ath5k_hw_reset_key
->
-> Be sure we clear out both the mic (if applicable) and
-> the encryption key type.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  drivers/net/wireless/ath5k/pcu.c |   15 +++++++++++----
->  1 files changed, 11 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
-> index 9b46d64..d7f0c10 100644
-> --- a/drivers/net/wireless/ath5k/pcu.c
-> +++ b/drivers/net/wireless/ath5k/pcu.c
-> @@ -960,6 +960,7 @@ int ath5k_hw_beaconq_finish(struct ath5k_hw *ah, unsigned long phys_addr)
->  int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
->  {
->        unsigned int i, type;
-> +       u16 micentry = entry + AR5K_KEYTABLE_MIC_OFFSET;
->
->        ATH5K_TRACE(ah->ah_sc);
->        AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
-> @@ -972,10 +973,10 @@ int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
->        /* Reset associated MIC entry if TKIP
->         * is enabled located at offset (entry + 64) */
->        if (type == AR5K_KEYTABLE_TYPE_TKIP) {
-> -               entry = entry + AR5K_KEYTABLE_MIC_OFFSET;
-> -               AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
-> +               AR5K_ASSERT_ENTRY(micentry, AR5K_KEYTABLE_SIZE);
->                for (i = 0; i < AR5K_KEYCACHE_SIZE / 2 ; i++)
-> -                       ath5k_hw_reg_write(ah, 0, AR5K_KEYTABLE_OFF(entry, i));
-> +                       ath5k_hw_reg_write(ah, 0,
-> +                               AR5K_KEYTABLE_OFF(micentry, i));
->        }
->
->        /*
-> @@ -987,10 +988,16 @@ int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
->         * Note2: Windows driver (ndiswrapper) sets this to
->         *        0x00000714 instead of 0x00000007
->         */
-> -       if (ah->ah_version > AR5K_AR5211)
-> +       if (ah->ah_version > AR5K_AR5211) {
->                ath5k_hw_reg_write(ah, AR5K_KEYTABLE_TYPE_NULL,
->                                AR5K_KEYTABLE_TYPE(entry));
->
-> +               if (type == AR5K_KEYTABLE_TYPE_TKIP) {
-> +                       ath5k_hw_reg_write(ah, AR5K_KEYTABLE_TYPE_NULL,
-> +                               AR5K_KEYTABLE_TYPE(micentry));
-> +               }
-> +       }
-> +
->        return 0;
->  }
->
 
-Let's apply this for now and i'll take a look on what's going on for
-AR5211 (i don't know if TKIP/MIC is supported or not right now, i'll
-have to test this). Let's finish with AR5212 first (i also have a
-patch for QCU updates pending) since many people want AR5212 hw
-encryption support ;-)
+--=-++ZPY7JBm3AbhSFWC8rk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2008-10-28 at 16:32 -0700, reinette chatre wrote:
 
+> Without the regulatory information the number of 5G channels to scan is
+> zero.
+>=20
+> > [ 1094.582562] iwl3945: U iwl3945_bg_request_scan Kicking off one
+> indirect scan.
+> > [ 1094.582574] iwl3945: U iwl3945_get_channels_for_scan total channels
+> to scan 0
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+That, however, is a valid case either way, if I move to a country that
+doesn't allow using 5 GHz band at all, or not those channels that your
+SKU ships.
+
+johannes
+
+--=-++ZPY7JBm3AbhSFWC8rk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJCE2VAAoJEKVg1VMiehFYtBwP/24aYSvjzQp1NCYb5dhvJ4cO
+hxQBxba9rM+o3yXk+auM1A1spyKRGmekRcrnxr31UqlpShD1zFqACEtkEjj/R55d
+qqzfGzfiNo7PUxgnBtYrlzwll7NxAVEaK9YngvRJLs8l+APrU+wjQrtTLKiFPnpN
+3hjGaVwVfJCdV2f5FEGxStfESOhI33Z1cZp1W9v8c55g8gWrdApmEeAYCbFUd4/+
+HBAkWTcvyCwo3Pb8wC8I3LT57djU6w5lv1nPOXsbXThAAe24z/6GFbafioh2MbjB
+QgXYid6sOLSqwMUqJW2HoH7sQJwm0AOfvDcoZRNRt12T4TmKXJFEw7Q7OHLu4Ghi
+mmOSeSPQgESbwr3OafYGtH9kaapvwI47dSAgA9hD/M3qxxI0VuXIUEgqwdeq5AGA
+PpYn7MM/T4nIe/iC1EFFWFhzY+zp94w/XUi44rccLFy5d8DHwgy3yC2/DByOfEH7
+uLRjcCSQ4YTZtGhtWxp+vIJPw2NgmvQON0bj+VaAYaddmx+xXpASRsz3J2YigGKz
+z9FjibZETtKjOs/pIJ+piF7+iT+AFEMX6V3d800iwvXNWEUwQrMvQrSYBD3jDgMC
+m+cg8RzqqtAo8pTrNYoCgkw3KsWeVP2uFqsj61dx7HIH90zqaKXtg2G7FWKGNTsM
+oaHOjI3Dk8JZJcsuh823
+=At/O
+-----END PGP SIGNATURE-----
+
+--=-++ZPY7JBm3AbhSFWC8rk--
+
