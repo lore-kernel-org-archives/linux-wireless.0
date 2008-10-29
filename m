@@ -1,176 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3919 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753125AbYJGBfu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 21:35:50 -0400
-Date: Mon, 6 Oct 2008 21:35:29 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: jirislaby@gmail.com, toralf.foerster@gmx.de,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com
-Subject: Re: [ath5k-devel] Oops with current kernel and ath5k
-Message-ID: <20081007013529.GA9691@hash.localnet> (sfid-20081007_033555_558270_89D8F5AF)
-References: <b6c5339f0810011904h1208aa1dr197580780896197d@mail.gmail.com> <87od23mo08.fsf@denkblock.local> <b6c5339f0810020552m7b745a0fr336ae7b245b3b899@mail.gmail.com> <20081002144600.M31352@bobcopeland.com> <87bpy32c1w.fsf@denkblock.local> <b6c5339f0810021137g3d93c5c8t5fa8fb3784294a86@mail.gmail.com> <20081003134648.M45120@bobcopeland.com> <87fxnd2112.fsf@denkblock.local> <20081003193739.M19356@bobcopeland.com> <877i8nky65.fsf@denkblock.local>
+Received: from ogre.sisk.pl ([217.79.144.158]:45312 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753991AbYJ2Uic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 16:38:32 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Dave <kilroyd@googlemail.com>
+Subject: Re: [Orinoco-devel] 2.6.28-rc2: new PCMCIA device instance after resume - orinoco can't download firmware
+Date: Wed, 29 Oct 2008 21:43:05 +0100
+Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
+	orinoco-devel@lists.sourceforge.net,
+	linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Dominik Brodowski <linux@dominikbrodowski.net>
+References: <200810282219.51492.arvidjaar@mail.ru> <200810291819.20848.arvidjaar@mail.ru> <4908B03C.400@gmail.com>
+In-Reply-To: <4908B03C.400@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <877i8nky65.fsf@denkblock.local>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810292143.06027.rjw@sisk.pl> (sfid-20081029_213851_035923_B940AA4E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 05, 2008 at 02:45:54PM +0200, Elias Oltmanns wrote:
-> ath5k_init() is declared statically, so I don't see why adding an
-> argument which may well be dropped again later should be too much
-> trouble.
+On Wednesday, 29 of October 2008, Dave wrote:
+> Andrey Borzenkov wrote:
+> > On Wednesday 29 October 2008, Rafael J. Wysocki wrote:
+> >>> Do you have any idea what could it be? Original message is here:
+> >>> http://marc.info/?l=linux-wireless&m=122522165719760&w=2
+> >> This probably is a result of the fact that we don't include firmware blobs
+> >> into modular drivers any more.  Please try to compile your driver directly
+> >> into the kernel and enable CONFIG_FIRMWARE_IN_KERNEL.
+> >>
+> >> If this helps, we'll know what the problem is.
+> >>
+> > 
+> > Ehh ... you miss the point. The problem is NOT missing firmware (I have
+> > already been running with external firmware just fine in 2.6.27). The
+> > problem is that during resume instead of simply resume *existing*
+> > device/driver instance PCMCIA suddenly decides to re-discover the *same*
+> > device yet another again.
+> > 
+> > bisecting will
+> > take ages here. I need some advice which options to turn on.
+> 
+> I attempted to bisect, but ran into problems. As an alternative, I added
+> a WARN_ON(err) immediately after the request_firmware call to get a
+> stack dump:
+> 
+> orinoco_cs 0.0: firmware: requesting agere_sta_fw.bin
+> ------------[ cut here ]------------
+> WARNING: at
+> /usr/src/linux-current/wireless-testing/drivers/net/wireless/orinoco.c:495
+> orinoco_dl_firmware+0xbb/0x1ce [orinoco]()
+> Modules linked in: orinoco_cs orinoco hermes_dld hermes michael_mic
+> aty128fb snd_maestro3 [last unloaded: hermes]
+> Pid: 22157, comm: bash Not tainted 2.6.28-rc2-wl #41
+> Call Trace:
+>  [<c0117a8c>] warn_on_slowpath+0x3e/0x57
+>  [<c019578a>] release_sysfs_dirent+0x50/0x60
+>  [<c0195b3d>] sysfs_addrm_finish+0x73/0x78
+>  [<c0195d03>] remove_dir+0x21/0x27
+>  [<c02a8901>] fw_dev_release+0x15/0x1d
+>  [<c022cfbe>] kobject_release+0x0/0x5
+>  [<c022d68b>] kref_put+0x3f/0x4c
+>  [<c02a8c7d>] _request_firmware+0x176/0x1bd
+>  [<d1083381>] orinoco_dl_firmware+0xbb/0x1ce [orinoco]
+>  [<d10836d0>] orinoco_download+0x1f/0x30 [orinoco]
+>  [<d1086b39>] orinoco_init+0x63/0x4aa [orinoco]
+>  [<c0362ee8>] __dev_get_by_name+0x18/0x72
+>  [<c03632ed>] __dev_alloc_name+0x110/0x128
+>  [<c03660e5>] netdev_init_queue_locks+0x29/0x41
+>  [<c03661e6>] register_netdevice+0x60/0x1d7
+>  [<c036638c>] register_netdev+0x2f/0x3b
+>  [<d10912a0>] orinoco_cs_config+0xe1/0x174 [orinoco_cs]
+>  [<c02ecdda>] pcmcia_device_probe+0xfa/0x144
+>  [<c0196200>] sysfs_do_create_link+0x3c/0x10f
+>  [<c02a559e>] __device_attach+0x0/0x5
+>  [<c02a54d9>] really_probe+0x70/0xea
+>  [<c02a5596>] driver_probe_device+0x34/0x3c
+>  [<c02a4a53>] bus_for_each_drv+0x38/0x59
+>  [<c02a55ee>] device_attach+0x4b/0x5e
+>  [<c02a559e>] __device_attach+0x0/0x5
+>  [<c02a4c00>] bus_attach_device+0x21/0x4f
+>  [<c02a3955>] device_add+0x147/0x272
+>  [<c02ed29b>] pcmcia_device_add+0x1ca/0x253
+>  [<c02ed3a1>] pcmcia_card_add+0x7d/0x8a       <----- ??
+>  [<c0112185>] dequeue_task_fair+0xf/0x10
+>  [<c0101c8d>] __switch_to+0x1d/0x139
+>  [<c011407b>] finish_task_switch+0x22/0x66
+>  [<c03e18fb>] __sched_text_start+0x2d3/0x2ec
+>  [<c022cf6d>] kobject_get+0xf/0x13
+>  [<c02a3a9e>] get_device+0xe/0x14
+>  [<c02e928a>] pcmcia_get_socket+0xe/0x7e
+>  [<c02edf0e>] ds_event+0x77/0x94
+>  [<c02e96b1>] send_event+0x84/0x9d
+>  [<c02e9bee>] socket_resume+0xa1/0xb5
+>  [<c02e9255>] pcmcia_socket_dev_resume+0x49/0x70
+>  [<c0238d42>] pci_legacy_resume+0x13/0x1a
+>  [<c0238e81>] pci_pm_resume+0x42/0x46
+>  [<c02a7887>] pm_op+0x2b/0x48
+>  [<c02a7a42>] resume_device+0x2e/0xa8
+>  [<c02a7b21>] dpm_resume+0x65/0xfc
+>  [<c02a7cf1>] device_resume+0x8/0x10
+>  [<c0135173>] suspend_devices_and_enter+0x72/0xa1
+>  [<c013521d>] enter_state+0x62/0x7a
+>  [<c013533f>] state_store+0x9f/0xb4
+>  [<c01352a0>] state_store+0x0/0xb4
+>  [<c022d0b8>] kobj_attr_store+0x18/0x1c
+>  [<c0194cf1>] flush_write_buffer+0x38/0x4c
+>  [<c0194d37>] sysfs_write_file+0x32/0x51
+>  [<c015eb9b>] vfs_write+0x81/0xf3
+>  [<c015ecab>] sys_write+0x3c/0x62
+>  [<c0102ced>] sysenter_do_call+0x12/0x21
+> ---[ end trace 596cca76ed6aae6a ]---
+> eth1: Cannot find firmware agere_sta_fw.bin
+> 
+> ?? Is that supposed to happen on resume?
 
-Ok here's take 3, I gave it a brief bit of testing, seems to work fine.
-If you agree can I get your signed-off-by, Elias?  Toralf, do you want 
-to add your reported-by?
+Hm, what exactly do you mean?
 
-Subject: [PATCH] ath5k: correct hardware startup sequence in resume
-
-Based on a patch by Elias Oltmanns, we call ath5k_init in resume even
-if we didn't previously open the device.  Besides starting up the
-device unnecessarily, this also causes an oops on rmmod because
-mac80211 will not invoke ath5k_stop and softirqs are left running after
-the module has been unloaded.  Add a new state bit, ATH_STAT_STARTED,
-to indicate that we have been started up.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/base.c |   28 ++++++++++++++++++++--------
- drivers/net/wireless/ath5k/base.h |    3 ++-
- 2 files changed, 22 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index c151588..5388de8 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -340,9 +340,9 @@ static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
- }
- 
- /* Interrupt handling */
--static int 	ath5k_init(struct ath5k_softc *sc);
-+static int 	ath5k_init(struct ath5k_softc *sc, bool is_resume);
- static int 	ath5k_stop_locked(struct ath5k_softc *sc);
--static int 	ath5k_stop_hw(struct ath5k_softc *sc);
-+static int 	ath5k_stop_hw(struct ath5k_softc *sc, bool is_suspend);
- static irqreturn_t ath5k_intr(int irq, void *dev_id);
- static void 	ath5k_tasklet_reset(unsigned long data);
- 
-@@ -640,7 +640,7 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 
- 	ath5k_led_off(sc);
- 
--	ath5k_stop_hw(sc);
-+	ath5k_stop_hw(sc, true);
- 
- 	free_irq(pdev->irq, sc);
- 	pci_save_state(pdev);
-@@ -677,9 +677,10 @@ ath5k_pci_resume(struct pci_dev *pdev)
- 		goto err_no_irq;
- 	}
- 
--	err = ath5k_init(sc);
-+	err = ath5k_init(sc, true);
- 	if (err)
- 		goto err_irq;
-+
- 	ath5k_led_enable(sc);
- 
- 	/*
-@@ -2158,12 +2159,17 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- \********************/
- 
- static int
--ath5k_init(struct ath5k_softc *sc)
-+ath5k_init(struct ath5k_softc *sc, bool is_resume)
- {
- 	int ret;
- 
- 	mutex_lock(&sc->lock);
- 
-+	if (is_resume && !test_bit(ATH_STAT_STARTED, sc->status))
-+		goto out_ok;
-+
-+	__clear_bit(ATH_STAT_STARTED, sc->status);
-+
- 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "mode %d\n", sc->opmode);
- 
- 	/*
-@@ -2188,12 +2194,15 @@ ath5k_init(struct ath5k_softc *sc)
- 	if (ret)
- 		goto done;
- 
-+	__set_bit(ATH_STAT_STARTED, sc->status);
-+
- 	/* Set ack to be sent at low bit-rates */
- 	ath5k_hw_set_ack_bitrate_high(sc->ah, false);
- 
- 	mod_timer(&sc->calib_tim, round_jiffies(jiffies +
- 			msecs_to_jiffies(ath5k_calinterval * 1000)));
- 
-+out_ok:
- 	ret = 0;
- done:
- 	mmiowb();
-@@ -2248,7 +2257,7 @@ ath5k_stop_locked(struct ath5k_softc *sc)
-  * stop is preempted).
-  */
- static int
--ath5k_stop_hw(struct ath5k_softc *sc)
-+ath5k_stop_hw(struct ath5k_softc *sc, bool update_status)
- {
- 	int ret;
- 
-@@ -2280,6 +2289,9 @@ ath5k_stop_hw(struct ath5k_softc *sc)
- 	}
- 	ath5k_txbuf_free(sc, sc->bbuf);
- 	mmiowb();
-+
-+	if (update_status)
-+		__clear_bit(ATH_STAT_STARTED, sc->status);
- 	mutex_unlock(&sc->lock);
- 
- 	del_timer_sync(&sc->calib_tim);
-@@ -2676,12 +2688,12 @@ ath5k_reset_wake(struct ath5k_softc *sc)
- 
- static int ath5k_start(struct ieee80211_hw *hw)
- {
--	return ath5k_init(hw->priv);
-+	return ath5k_init(hw->priv, false);
- }
- 
- static void ath5k_stop(struct ieee80211_hw *hw)
- {
--	ath5k_stop_hw(hw->priv);
-+	ath5k_stop_hw(hw->priv, false);
- }
- 
- static int ath5k_add_interface(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-index 9d0b728..06d1054 100644
---- a/drivers/net/wireless/ath5k/base.h
-+++ b/drivers/net/wireless/ath5k/base.h
-@@ -128,11 +128,12 @@ struct ath5k_softc {
- 	size_t			desc_len;	/* size of TX/RX descriptors */
- 	u16			cachelsz;	/* cache line size */
- 
--	DECLARE_BITMAP(status, 4);
-+	DECLARE_BITMAP(status, 5);
- #define ATH_STAT_INVALID	0		/* disable hardware accesses */
- #define ATH_STAT_MRRETRY	1		/* multi-rate retry support */
- #define ATH_STAT_PROMISC	2
- #define ATH_STAT_LEDSOFT	3		/* enable LED gpio status */
-+#define ATH_STAT_STARTED	4		/* opened & irqs enabled */
- 
- 	unsigned int		filter_flags;	/* HW flags, AR5K_RX_FILTER_* */
- 	unsigned int		curmode;	/* current phy mode */
--- 
-1.5.4.2.182.gb3092
-
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Rafael
