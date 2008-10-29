@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.230]:1957 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754120AbYJPQWQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52826 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752041AbYJ2Xet (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 12:22:16 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so64596rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Oct 2008 09:22:15 -0700 (PDT)
-Message-ID: <4807377b0810160922q70fdcc95u36d937f29c473f14@mail.gmail.com> (sfid-20081016_182236_490942_68DC6033)
-Date: Thu, 16 Oct 2008 09:22:15 -0700
-From: "Jesse Brandeburg" <jesse.brandeburg@gmail.com>
-To: "David Miller" <davem@davemloft.net>,
-	"Jeff Kirsher" <jeffrey.t.kirsher@intel.com>
-Subject: Re: powerpc allmodconfig
-Cc: brice@myri.com, dan.j.williams@intel.com,
-	akpm@linux-foundation.org, tiwai@suse.de,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
-	ralf@linux-mips.org, mchehab@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, jesse.brandeburg@intel.com
-In-Reply-To: <20081015.235844.206136521.davem@davemloft.net>
+	Wed, 29 Oct 2008 19:34:49 -0400
+Date: Wed, 29 Oct 2008 19:33:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	me@bobcopeland.com, mcgrof@gmail.com, mickflemm@gmail.com
+Subject: Re: pull request: wireless-2.6 2008-10-29
+Message-ID: <20081029233350.GE3485@tuxdriver.com> (sfid-20081030_003454_786976_8BBAA4E4)
+References: <20081029231855.GD3485@tuxdriver.com> <20081029162324.28f5864d@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081015.220247.262683261.davem@davemloft.net>
-	 <1224137292.26782.5.camel@dwillia2-linux.ch.intel.com>
-	 <48F6E54C.5010207@myri.com>
-	 <20081015.235844.206136521.davem@davemloft.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081029162324.28f5864d@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 15, 2008 at 11:58 PM, David Miller <davem@davemloft.net> wrote:
->> There's already a completely different fix queued in netdev patchworks
->> (for myri10ge only right now, to be duplicated for Intel drivers). The
->> idea is to stop having almost-unrelated drivers select each other
->> directly, let people select which drivers they really want, and have
->> Kconfig handle modules/builtin-stuff correctly. See
->> http://patchwork.ozlabs.org/patch/4506/
->
-> Right, my plan was to duplicate this for the other drivers.
+On Wed, Oct 29, 2008 at 04:23:24PM -0700, Arjan van de Ven wrote:
+> On Wed, 29 Oct 2008 19:18:55 -0400
+> "John W. Linville" <linville@tuxdriver.com> wrote:
+> 
+> > Dave,
+> > 
+> > Another quick round of fixes intended for 2.6.28...
+> > 
+> > This includes fixes for bugs 11749 and 11845, fixes a reset-related
+> > regression in ath5k, fixes a Kconfig-related error for rt2x00, and
+> > fixes some sparse warnings and a possible buffer overrun in libertas.
+> > Also, it corrects a spelling error and marks Bob Copeland as an
+> > ath5k maintainer.
+> 
+> speaking of ath5k:
+> 
+> http://www.kerneloops.org/version.php?start=1835008&end=1867775&version=28-rc
+> 
+> it seems to have added a few WARN_ON()s which now end up at the top of
+> the list .. are these known or should I spend some time writing reports
+> for netdev ?
 
-The work is already done for ixgbe and igb, and we have it in testing.
- It should be in your inbox today or tomorrow.
+I wasn't aware of them -- thanks... :-)
+
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
