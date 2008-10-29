@@ -1,90 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49552
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750925AbYJPFDL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2008 01:03:11 -0400
-Date: Wed, 15 Oct 2008 22:02:47 -0700 (PDT)
-Message-Id: <20081015.220247.262683261.davem@davemloft.net> (sfid-20081016_070321_484206_CF986FB8)
-To: akpm@linux-foundation.org
-Cc: dan.j.williams@intel.com, tiwai@suse.de,
-	linux-ext4@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, bzolnier@gmail.com,
-	marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com,
-	ralf@linux-mips.org, mchehab@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@ozlabs.org
-Subject: Re: powerpc allmodconfig
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20081015213337.a99a9595.akpm@linux-foundation.org>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mx30.mail.ru ([194.67.23.238]:16154 "EHLO mx30.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752652AbYJ2Dn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2008 23:43:59 -0400
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: Dominik Brodowski <linux@dominikbrodowski.net>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.28-rc2: new PCMCIA device instance after resume - orinoco can't download firmware
+Date: Wed, 29 Oct 2008 06:43:50 +0300
+Cc: linux-wireless@vger.kernel.org, linux-pcmcia@lists.infradead.org,
+	orinoco-devel@lists.sourceforge.net
+References: <200810282219.51492.arvidjaar@mail.ru> <20081029004235.GA17879@isilmar.linta.de>
+In-Reply-To: <20081029004235.GA17879@isilmar.linta.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1431681.2TQ0hodyI7";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200810290643.54707.arvidjaar@mail.ru> (sfid-20081029_044410_561693_899102B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrew Morton <akpm@linux-foundation.org>
-Date: Wed, 15 Oct 2008 21:33:37 -0700
+--nextPart1431681.2TQ0hodyI7
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> kernel/resource.c: In function '__reserve_region_with_split':
-> kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'resource_size_t'
-> kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 4 has type 'resource_size_t'
-> kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'resource_size_t'
-> kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 7 has type 'resource_size_t'
+On Wednesday 29 October 2008, Dominik Brodowski wrote:
+> Hi,
+>=20
+> On Tue, Oct 28, 2008 at 10:19:50PM +0300, Andrey Borzenkov wrote:
+> > I am running PCMCIA based orinoco with WPA support (external firmware)
+> > and two patches to cache it after request_firmware to use in resume.
+> >=20
+> > This worked fine in 27 and wtopped working in 28-rc. The apparent diffe=
+rence
+> > I see:
+>=20
+> Hm, can't find any suspect patch which would change this behaviour in PCM=
+CIA
+> land. Could you try to bisect it on {drivers/base/ kernel/power
+> drivers/pcmcia drivers/net/wireless/orinoco*.c} possibly?
+>=20
 
-Known issue, Ben wants to add a new variant of %pX in order to print resources so that
-resource_size_t vs. unsigned long stuff doesn't matter like this any more.
+Yes, I too checked log for drivers/pcmcia and could not find anything
+spectacular.
 
-> net/dccp/options.c: In function 'dccp_parse_options':
-> net/dccp/options.c:67: warning: 'value' may be used uninitialized in this function
+I am afraid I can't estimate when (if) I will be able to do bisect :(
 
-Known issue, not trivial to fix, gcc is just being incredibly silly here as it
-can't see all of the control flow.
+Rafael, it looks like some serious changes in suspend/resume framework?
+Do you have any idea what could it be? Original message is here:
+http://marc.info/?l=3Dlinux-wireless&m=3D122522165719760&w=3D2
 
-> drivers/dma/ioat_dca.c: In function 'dca_enabled_in_bios':
-> drivers/dma/ioat_dca.c:81: error: implicit declaration of function 'cpuid_eax'
-> drivers/dma/ioat_dca.c: In function 'system_has_dca_enabled':
-> drivers/dma/ioat_dca.c:91: error: implicit declaration of function 'boot_cpu_has'
-> drivers/dma/ioat_dca.c:91: error: 'X86_FEATURE_DCA' undeclared (first use in this function)
-> drivers/dma/ioat_dca.c:91: error: (Each undeclared identifier is reported only once
-> drivers/dma/ioat_dca.c:91: error: for each function it appears in.)
-> drivers/dma/ioat_dca.c: In function 'ioat_dca_get_tag':
-> drivers/dma/ioat_dca.c:190: error: implicit declaration of function 'cpu_physical_id'
+TIA
 
-Known issue.  I tried to ping Jeff Garzik about doing a driver bug fix run in
-order to fix this, but he hasn't shown any signs of life.
+=2Dandrey
 
-So I'll do it myself later tonight. :-/
+--nextPart1431681.2TQ0hodyI7
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-> net/sched/sch_generic.c: In function 'dev_watchdog':
-> net/sched/sch_generic.c:224: warning: unused variable 'drivername'
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-Sucky, if WARN_ONCE() evaluates to nothing the sprintf() string buffer
-on the stack looks unused.
+iEYEABECAAYFAkkH2/cACgkQR6LMutpd94z7aACeP4lsm3RECoNFCj3mhFyPBQXy
+vUAAoMwt67NpqMT8XdsBoel/LSrcruwf
+=RLJn
+-----END PGP SIGNATURE-----
 
-> drivers/rtc/rtc-ds1286.c: In function 'ds1286_rtc_read':
-> drivers/rtc/rtc-ds1286.c:33: error: implicit declaration of function '__raw_readl'
-> drivers/rtc/rtc-ds1286.c: In function 'ds1286_rtc_write':
-> drivers/rtc/rtc-ds1286.c:38: error: implicit declaration of function '__raw_writel'
-> drivers/rtc/rtc-ds1286.c: In function 'ds1286_probe':
-> drivers/rtc/rtc-ds1286.c:345: error: implicit declaration of function 'ioremap'
-> drivers/rtc/rtc-ds1286.c:345: warning: assignment makes pointer from integer without a cast
-> drivers/rtc/rtc-ds1286.c:365: error: implicit declaration of function 'iounmap'
-
-Missing asm/io.h include.
-
-> drivers/rtc/rtc-m48t35.c: In function 'm48t35_read_time':
-> drivers/rtc/rtc-m48t35.c:59: error: implicit declaration of function 'readb'
-> drivers/rtc/rtc-m48t35.c:60: error: implicit declaration of function 'writeb'
-> drivers/rtc/rtc-m48t35.c: In function 'm48t35_probe':
-> drivers/rtc/rtc-m48t35.c:168: error: implicit declaration of function 'ioremap'
-> drivers/rtc/rtc-m48t35.c:168: warning: assignment makes pointer from integer without a cast
-> drivers/rtc/rtc-m48t35.c:188: error: implicit declaration of function 'iounmap'
-
-Likewise.
-
-> drivers/net/wireless/libertas_tf/if_usb.c: In function '__if_usb_submit_rx_urb':
-> drivers/net/wireless/libertas_tf/if_usb.c:334: warning: cast to pointer from integer of different size
-
-I've seen this one on sparc64 too, I think the arg is totally unused in the end
-for this callback control flow and we can just use NULL or zero instead.
+--nextPart1431681.2TQ0hodyI7--
