@@ -1,41 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:3377 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438AbYJOTQu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 15:16:50 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1317009nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 12:16:47 -0700 (PDT)
-Message-ID: <48F6419B.80104@gmail.com> (sfid-20081015_211655_986602_D08CE33B)
-Date: Wed, 15 Oct 2008 20:16:43 +0100
+Received: from mail.atheros.com ([12.36.123.2]:57633 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751170AbYJ2Eus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 00:50:48 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 21:50:48 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: arvidjaar@mail.ru, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-10-14
-References: <20081015013204.GH3349@tuxdriver.com>
-In-Reply-To: <20081015013204.GH3349@tuxdriver.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
-From: Dave <kilroyd@googlemail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18695.60154.759782.919661@gargle.gargle.HOWL> (sfid-20081029_060857_997300_7521D438)
+Date: Wed, 29 Oct 2008 10:17:54 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 12/16] ath9k: Enable interrupts at the proper place
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> Here is a nice little batch of wireless fixes in time for 2.6.28-rc1.
-> There are also a few USB ID additions as well.  I think this is all
-> mostly obvious, and hopefully still acceptable at this stage.
-> 
-> Please let me know if there are problems!
+config_interface() was the wrong place to enable interrupts
+when bringing up an interface, move it to ath_open().
 
-> Andrey Borzenkov (1):
->       orinoco: fix unsafe locking in orinoco_cs_resume
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/core.c |    9 ++++-----
+ drivers/net/wireless/ath9k/main.c |    6 ------
+ 2 files changed, 4 insertions(+), 11 deletions(-)
 
-Hi John,
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index 1826818..d138446 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -675,13 +675,12 @@ int ath_open(struct ath_softc *sc, struct ath9k_channel *initial_chan)
+ 
+ 	ath_setcurmode(sc, ath_chan2mode(initial_chan));
+ 
+-	/*
+-	 *  Don't enable interrupts here as we've not yet built our
+-	 *  vap and node data structures, which will be needed as soon
+-	 *  as we start receiving.
+-	 */
+ 	sc->sc_flags &= ~SC_OP_INVALID;
+ 
++	/* Disable BMISS interrupt when we're not associated */
++	sc->sc_imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
++	ath9k_hw_set_interrupts(sc->sc_ah,sc->sc_imask);
++
+ 	ieee80211_wake_queues(sc->hw);
+ done:
+ 	return error;
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index d2b53b5..494d4a0 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1239,12 +1239,6 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
+ 			/* Set aggregation protection mode parameters */
+ 			sc->sc_config.ath_aggr_prot = 0;
+ 
+-			/* Disable BMISS interrupt when we're not associated */
+-			ath9k_hw_set_interrupts(sc->sc_ah,
+-					sc->sc_imask &
+-					~(ATH9K_INT_SWBA | ATH9K_INT_BMISS));
+-			sc->sc_imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
+-
+ 			DPRINTF(sc, ATH_DBG_CONFIG,
+ 				"%s: RX filter 0x%x bssid %s aid 0x%x\n",
+ 				__func__, rfilt,
+-- 
+1.6.0.3
 
-Just wanted to check whether you'd seen/intend to apply the orinoco patch Andrey posted in <http://marc.info/?l=linux-kernel&m=122365972026045&w=4>. It fixes a regression (vs 2.6.26) when using 4k stacks.
-
-Or whether you'd prefer that patch resent with an updated subject?
-
-
-Regards,
-
-Dave.
