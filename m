@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.190]:16174 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752629AbYJAJQa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:32951 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778AbYJ2LtP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2008 05:16:30 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so179996tic.23
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2008 02:16:28 -0700 (PDT)
-Message-ID: <e001a6370810010216w3d1d15bdu124ab1f8b4b19e5c@mail.gmail.com> (sfid-20081001_111634_528466_A80365B3)
-Date: Wed, 1 Oct 2008 14:46:28 +0530
-From: "Anadi Mishra" <reachanadi@gmail.com>
-To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
-Subject: Re: Problem with Libertas USB8388 WLAN card firmware
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200809301307.59344.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <e001a6370809150258t10873497jcf04e68005db566b@mail.gmail.com>
-	 <200809301018.31678.hs4233@mail.mn-solutions.de>
-	 <e001a6370809300234j7f84a9f0j50213e9912dd5c08@mail.gmail.com>
-	 <200809301307.59344.hs4233@mail.mn-solutions.de>
+	Wed, 29 Oct 2008 07:49:15 -0400
+Subject: [PATCH] iwl3945: remove bogus comment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 29 Oct 2008 01:02:27 +0100
+Message-Id: <1225238548.1369.10.camel@johannes.berg> (sfid-20081029_124930_172035_D3C9AE0F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 30, 2008 at 4:37 PM, Holger Schurig
-<hs4233@mail.mn-solutions.de> wrote:
->> regarding rest of the things u pointed out, its all greek to
->> me (I am noob). But could u plz tell me from where can i get
->> the firmware details of the card
->> USB8388??
->
-> I don't think that you have a firmware problem.
->
-> Probably some compiler / alignment issue.
->
-> Result codes from the firmware are 16 bit, but 0x160000 doesn't
-> fit into an 16 bits. So you need to search why your
-> compiler/hardware creates 0x160000 out of two transferred bytes.
+I added this comment myself, but it's clearly wrong. I had meant
+to place it in iwl_mac_add_interface, which at the time didn't
+honour the MAC address setting, but it does now.
 
-  Sorry for the trouble but can u give some hint how to go about it?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-Thanks a lot.
-
-> But *ANY* firmware for the 8388 chips returns the result as 16
-> bits, that is two bytes. If you get bogus / hosed result, you
-> have a problem there. And using a different firmware won't help
-> you there. There is an underlying problem that you need to solve
-> first.
->
->
-> BTW: you can get the firmware specification via this driver
-> portal: http://wireless.kernel.org/en/users/Drivers/libertas
->
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-29 00:58:17.000000000 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-10-29 00:58:26.000000000 +0100
+@@ -6742,8 +6742,6 @@ static int iwl3945_mac_config_interface(
+ 			return rc;
+ 	}
+ 
+-	/* XXX: this MUST use conf->mac_addr */
+-
+ 	if (!iwl3945_is_alive(priv))
+ 		return -EAGAIN;
+ 
 
 
-
--- 
-Thanks and Regards,
-Anadi Mishra,
-Mumbai,
-9987388960.
