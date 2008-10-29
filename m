@@ -1,87 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42616 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:59367 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751756AbYJXJwp (ORCPT
+	with ESMTP id S1752302AbYJ2MBp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 05:52:45 -0400
-Subject: Re: [PATCH] mac80211: allow all interfaces types to handle RX
-	action frames
+	Wed, 29 Oct 2008 08:01:45 -0400
+Subject: Re: linux-next: Tree for October 28
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4900da4d.0d87460a.2d4b.1120@mx.google.com> (sfid-20081023_221058_192076_2D6A771F)
-References: <4900da4d.0d87460a.2d4b.1120@mx.google.com>
-	 (sfid-20081023_221058_192076_2D6A771F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IQ6UG+WFRfEoe8Vgs0Pr"
-Date: Fri, 24 Oct 2008 10:42:09 +0200
-Message-Id: <1224837729.6002.88.camel@johannes.berg> (sfid-20081024_115249_683872_193119D7)
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-ia64@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	linux-wireless@vger.kernel.org, Mark Fasheh <mfasheh@suse.com>,
+	Joel Becker <Joel.Becker@oracle.com>
+In-Reply-To: <20081028220741.f5d331ba.akpm@linux-foundation.org> (sfid-20081029_060823_839692_3F85A756)
+References: <20081028183055.fbcf5420.sfr@canb.auug.org.au>
+	 <20081028220741.f5d331ba.akpm@linux-foundation.org>
+	 (sfid-20081029_060823_839692_3F85A756)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-e088Dj2w9G7nGlmS0qHw"
+Date: Wed, 29 Oct 2008 13:01:21 +0100
+Message-Id: <1225281681.5439.7.camel@johannes.berg> (sfid-20081029_130155_559488_573EE9AE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-IQ6UG+WFRfEoe8Vgs0Pr
+--=-e088Dj2w9G7nGlmS0qHw
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2008-10-23 at 13:10 -0700, Andrey Yurovsky wrote:
-> Eliminate the vif.type check in ieee80211_rx_h_action.  This check is
-> unnecessary (these action frames can be handled by all interface types) a=
-nd=20
-> currently prevents, for example, AP interfaces from handling BACK action =
-frames
-> such as ADDBA and DELBA requests.
->=20
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+On Tue, 2008-10-28 at 22:07 -0700, Andrew Morton wrote:
 
-Fine with me.
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> and wireless needs some Kconfig help.  Please don't just break other
+> architecture's build like this.
+>=20
+> drivers/staging/wlan-ng/wlan_compat.h:136:3: #error "No CPU identified!"
+> drivers/staging/wlan-ng/wlan_compat.h:695:6: warning: "WLAN_CPU_FAMILY" i=
+s not defined
+> drivers/staging/wlan-ng/wlan_compat.h:699:6: warning: "WLAN_CPU_FAMILY" i=
+s not defined
 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index a0db162..59bcbb6 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1552,14 +1552,6 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx=
-)
->  	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
->  		return RX_DROP_MONITOR;
-> =20
-> -	/*
-> -	 * FIXME: revisit this, I'm sure we should handle most
-> -	 *	  of these frames in other modes as well!
-> -	 */
-> -	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION &&
-> -	    sdata->vif.type !=3D NL80211_IFTYPE_ADHOC)
-> -		return RX_CONTINUE;
-> -
->  	switch (mgmt->u.action.category) {
->  	case WLAN_CATEGORY_BACK:
->  		switch (mgmt->u.action.u.addba_req.action_code) {
->=20
->=20
->=20
+This isn't wireless, it's staging. Talk to Greg, not to linux-wireless.
 
---=-IQ6UG+WFRfEoe8Vgs0Pr
+johannes
+
+--=-e088Dj2w9G7nGlmS0qHw
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJAYpdAAoJEKVg1VMiehFYk5oP/3IksrBFggKR7Rspq0jSIvqo
-zV8bKfonU4SG2dD7RVoV5/OYbpXoWJIy4j2A6MB3XA3+DxQkcuTEQ6rfZUu3yMLH
-+Xpul4DMGmHfJOYumyX3jQOeHx1XiSZ7XNYVamwOK0eTxJMuJHrZNGiOswap+/1x
-dHP6lQhRJc1+rLO2NdCAttl4mfkHiJEou5Jtux1A/RfMhjqcClUQRrkG0Qn6xYMd
-mc/itmMcSTGwbFLpDnCGjtXoqRcFXK2s8nM4rF7FxLeXo0taFlfEfNN/8C/w3JOL
-iM6LKlYf7ZqmGxvleqO7Nc7nq6NObN31L3TLkGMbaePOhMpHL5RUh0+ncDcYItWu
-vGWBHyxSerZHtfF25NHytPzKVEI7gjNU8IgQDM11DsZSO7BWMzlMNSwC9bCBRmvs
-DpLIXf24q/RLSjRDDNz8boC2O7WN6DPwhDnAWJHHqt+1lM8IoMsl+u9XcFmln9UZ
-QZ48nNPY3uYkcMs79CscMdnT+UCKKppaMI+oFaWcn4XnaXtsig3rYYF9drSYUbXt
-RjL5T3mgK8eT3Lnq0P1yapRH+uYdhIXCn9b9mRJv9ZjJFJagt/XA09SZ2xO5HbE2
-CVAA8JhnH46GnQglNLMCwKPkYPU9CkM+IlzdXN0pmM7xtPNsbN30I7+YZFiTkZPC
-wlLRptDdwd9BfGopZhO4
-=Y84P
+iQIcBAABAgAGBQJJCFCNAAoJEKVg1VMiehFYFIkP/0YGJO/fu/libSPrwysAyYt6
+O7RS96vjcjqEdde7OzwLQuJar75KdTe2XWg2CVv/SgNlFZRwGVKwqcZ1Yc08b7EW
+SNatkJdsZ08tkmdRIzb2UZ+91efB8+Id+vOV/H4pRxLghznB7QII7z94QwUq9JAi
+XkPGMvMNXq5jjv8dZNZNtFXTTyVnPNuLQLcMZli6GWVBUHEpguJxz7N+oLDU/wz1
+rs7HQOQ3bWv2NxgRUKJZUaF6NWzWpCy3pqazxDmR1yTq9kewrjGB/akDYzJjt9p/
+fTXl5AVYVLhrppxL4aQhWZYdMYYOagxM3/m5QTf63ivllBa+R4wsse4UPU+qdVlN
+o7sIZZhV0AaMDQOx6SzNgxj0Yh1ruSrWlH1DBHbVzHaAsT7IvgEe9zAOrcPNmitS
+9AJQtqhM17gfxXuaFFtO9Q3+WJ5Bz4njwh7RfxQsNgulp95T7DsQtIfPghe7vBmG
+l4VaQZbVw4d9n+6akB0sdz0bS4YOZWRI5TAZMCbrNyQV1mUJEuIvd+b3k6ANo+i6
+3K2FJk3VF8+yb6gC5PkfliRgc45Q5g4qLjqy36vJAi5/8cKPEQn3Ke1BDxUpUhF9
+sl7m7hfU3P+WXMxrqwQMkJ2Qx4BVHNnvzWhM3PnNltnx2aZGcPtRZpuecrCa0Ytx
+olvxtw+c2oLCtwOv3EVh
+=JjNC
 -----END PGP SIGNATURE-----
 
---=-IQ6UG+WFRfEoe8Vgs0Pr--
+--=-e088Dj2w9G7nGlmS0qHw--
 
