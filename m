@@ -1,357 +1,527 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55938 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751449AbYJFQKj (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:38679 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753149AbYJ2SlK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2008 12:10:39 -0400
-Subject: [PATCH v2] iwlwifi: fix DMA code and bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1223308831.15196.28.camel@johannes.berg> (sfid-20081006_180110_939098_1A64839A)
-References: <1223308831.15196.28.camel@johannes.berg>
-	 (sfid-20081006_180110_939098_1A64839A)
-Content-Type: text/plain
-Date: Mon, 06 Oct 2008 18:10:05 +0200
-Message-Id: <1223309405.15196.32.camel@johannes.berg> (sfid-20081006_181043_313891_E9288151)
-Mime-Version: 1.0
+	Wed, 29 Oct 2008 14:41:10 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so65751eyi.37
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 11:41:07 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Remove debugfs CSR access wrappers
+Date: Wed, 29 Oct 2008 19:41:03 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810291941.03793.IvDoorn@gmail.com> (sfid-20081029_194116_417524_FAB1D6E0)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch cleans up the DMA code to be understandable and not
-completely wrong. In particular:
- * there is no need to have a weird iwl_tfd_frame_data struct that is
-   used 10 times, just use an address struct 20 times
- * therefore, all the is_odd junk goes away
- * fix a bug in iwl_hcmd_queue_reclaim where it would reclaim all the
-   fragments of a descriptor rather than all descriptors (this may be
-   the cause of the dma unmapping problem I reported)
- * some more cleanups
+Move calculation of CSR register offset into rt2x00debug.c
+and remove the wrapper functions from each individual driver.
+(Except rt2500usb, which still needs to wrap for the
+different value type argument).
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-Tested on 5000 hw, please apply.
+ drivers/net/wireless/rt2x00/rt2400pci.c   |   23 +++++++----------------
+ drivers/net/wireless/rt2x00/rt2400pci.h   |    2 ++
+ drivers/net/wireless/rt2x00/rt2500pci.c   |   23 +++++++----------------
+ drivers/net/wireless/rt2x00/rt2500pci.h   |    2 ++
+ drivers/net/wireless/rt2x00/rt2500usb.c   |   25 +++++++++++++++----------
+ drivers/net/wireless/rt2x00/rt2500usb.h   |    2 ++
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   22 ++++++++++++++++------
+ drivers/net/wireless/rt2x00/rt2x00debug.h |   13 +++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00pci.h   |    8 ++++----
+ drivers/net/wireless/rt2x00/rt61pci.c     |   23 +++++++----------------
+ drivers/net/wireless/rt2x00/rt61pci.h     |    2 ++
+ drivers/net/wireless/rt2x00/rt73usb.c     |   23 +++++++----------------
+ drivers/net/wireless/rt2x00/rt73usb.h     |    2 ++
+ 13 files changed, 86 insertions(+), 84 deletions(-)
 
-v2: fixes small issue with getting rid of iwl_get_dma_hi_address.
-
-Oh and who came up with struct iwl_tfd_frame_data? Were drugs involved?
-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h |   98 ++++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-5000.c    |    3 
- drivers/net/wireless/iwlwifi/iwl-helpers.h |    5 -
- drivers/net/wireless/iwlwifi/iwl-tx.c      |   84 +++++-------------------
- 4 files changed, 70 insertions(+), 120 deletions(-)
-
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965-hw.h	2008-10-06 17:55:40.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-4965-hw.h	2008-10-06 17:55:45.000000000 +0200
-@@ -822,54 +822,11 @@ enum {
- #define IWL49_NUM_QUEUES	16
- #define IWL49_NUM_AMPDU_QUEUES	8
- 
--/**
-- * struct iwl_tfd_frame_data
-- *
-- * Describes up to 2 buffers containing (contiguous) portions of a Tx frame.
-- * Each buffer must be on dword boundary.
-- * Up to 10 iwl_tfd_frame_data structures, describing up to 20 buffers,
-- * may be filled within a TFD (iwl_tfd_frame).
-- *
-- * Bit fields in tb1_addr:
-- * 31- 0: Tx buffer 1 address bits [31:0]
-- *
-- * Bit fields in val1:
-- * 31-16: Tx buffer 2 address bits [15:0]
-- * 15- 4: Tx buffer 1 length (bytes)
-- *  3- 0: Tx buffer 1 address bits [32:32]
-- *
-- * Bit fields in val2:
-- * 31-20: Tx buffer 2 length (bytes)
-- * 19- 0: Tx buffer 2 address bits [35:16]
-- */
--struct iwl_tfd_frame_data {
--	__le32 tb1_addr;
--
--	__le32 val1;
--	/* __le32 ptb1_32_35:4; */
--#define IWL_tb1_addr_hi_POS 0
--#define IWL_tb1_addr_hi_LEN 4
--#define IWL_tb1_addr_hi_SYM val1
--	/* __le32 tb_len1:12; */
--#define IWL_tb1_len_POS 4
--#define IWL_tb1_len_LEN 12
--#define IWL_tb1_len_SYM val1
--	/* __le32 ptb2_0_15:16; */
--#define IWL_tb2_addr_lo16_POS 16
--#define IWL_tb2_addr_lo16_LEN 16
--#define IWL_tb2_addr_lo16_SYM val1
--
--	__le32 val2;
--	/* __le32 ptb2_16_35:20; */
--#define IWL_tb2_addr_hi20_POS 0
--#define IWL_tb2_addr_hi20_LEN 20
--#define IWL_tb2_addr_hi20_SYM val2
--	/* __le32 tb_len2:12; */
--#define IWL_tb2_len_POS 20
--#define IWL_tb2_len_LEN 12
--#define IWL_tb2_len_SYM val2
--} __attribute__ ((packed));
--
-+struct iwl_tfd_addr_desc {
-+	__le32 lo;
-+	/* 4 bits address, 12 bits length */
-+	__le16 hi_len;
-+} __attribute__((packed));
- 
- /**
-  * struct iwl_tfd_frame
-@@ -908,11 +865,54 @@ struct iwl_tfd_frame {
- #define IWL_num_tbs_SYM val0
- 	/* __le32 rsvd2:1; */
- 	/* __le32 padding:2; */
--	struct iwl_tfd_frame_data pa[10];
-+	struct iwl_tfd_addr_desc addrs[20];
- 	__le32 reserved;
- } __attribute__ ((packed));
- 
- 
-+static inline dma_addr_t iwl_get_addr(struct iwl_tfd_frame *frame, u8 idx)
-+{
-+	struct iwl_tfd_addr_desc *dsc = &frame->addrs[idx];
-+
-+	BUG_ON(idx >= 20);
-+
-+	return (u64)le32_to_cpu(dsc->lo) |
-+		((u64)(le16_to_cpu(dsc->hi_len) & 0xF)) << 32;
-+}
-+
-+static inline u16 iwl_get_len(struct iwl_tfd_frame *frame, u8 idx)
-+{
-+	struct iwl_tfd_addr_desc *dsc = &frame->addrs[idx];
-+
-+	BUG_ON(idx >= 20);
-+
-+	return le16_to_cpu(dsc->hi_len) >> 4;
-+}
-+
-+static inline void iwl_set_addr(struct iwl_tfd_frame *frame, u8 idx, dma_addr_t addr)
-+{
-+	struct iwl_tfd_addr_desc *dsc = &frame->addrs[idx];
-+
-+	BUG_ON(idx >= 20);
-+	BUG_ON(addr & ~0xFFFFFFFFFULL);
-+	WARN_ON(addr & 0x3);
-+
-+	dsc->lo = cpu_to_le32(addr);
-+	dsc->hi_len &= cpu_to_le16(~0xF);
-+	dsc->hi_len |= cpu_to_le16((u64)addr >> 32);
-+}
-+
-+static inline void iwl_set_len(struct iwl_tfd_frame *frame, u8 idx, u16 len)
-+{
-+	struct iwl_tfd_addr_desc *dsc = &frame->addrs[idx];
-+
-+	BUG_ON(idx >= 20);
-+
-+	dsc->hi_len &= cpu_to_le16(0xF);
-+	dsc->hi_len |= cpu_to_le16(len << 4);
-+}
-+
-+
- /**
-  * struct iwl4965_queue_byte_cnt_entry
-  *
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-tx.c	2008-10-06 17:55:40.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-tx.c	2008-10-06 18:06:38.000000000 +0200
-@@ -63,63 +63,39 @@ static const u16 default_tid_to_tx_fifo[
-  * Does NOT advance any TFD circular buffer read/write indexes
-  * Does NOT free the TFD itself (which is within circular buffer)
-  */
--static int iwl_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
-+static void iwl_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- {
- 	struct iwl_tfd_frame *bd_tmp = (struct iwl_tfd_frame *)&txq->bd[0];
- 	struct iwl_tfd_frame *bd = &bd_tmp[txq->q.read_ptr];
- 	struct pci_dev *dev = priv->pci_dev;
- 	int i;
- 	int counter = 0;
--	int index, is_odd;
- 
- 	/* Host command buffers stay mapped in memory, nothing to clean */
- 	if (txq->q.id == IWL_CMD_QUEUE_NUM)
--		return 0;
-+		return;
- 
- 	/* Sanity check on number of chunks */
- 	counter = IWL_GET_BITS(*bd, num_tbs);
--	if (counter > MAX_NUM_OF_TBS) {
-+	if (counter >= MAX_NUM_OF_TBS) {
- 		IWL_ERROR("Too many chunks: %i\n", counter);
- 		/* @todo issue fatal error, it is quite serious situation */
--		return 0;
-+		return;
- 	}
- 
--	/* Unmap chunks, if any.
--	 * TFD info for odd chunks is different format than for even chunks. */
-+	/* Unmap chunks, if any. */
- 	for (i = 0; i < counter; i++) {
--		index = i / 2;
--		is_odd = i & 0x1;
--
--		if (is_odd)
--			pci_unmap_single(
--				dev,
--				IWL_GET_BITS(bd->pa[index], tb2_addr_lo16) |
--				(IWL_GET_BITS(bd->pa[index],
--					      tb2_addr_hi20) << 16),
--				IWL_GET_BITS(bd->pa[index], tb2_len),
--				PCI_DMA_TODEVICE);
--
--		else if (i > 0)
--			pci_unmap_single(dev,
--					 le32_to_cpu(bd->pa[index].tb1_addr),
--					 IWL_GET_BITS(bd->pa[index], tb1_len),
--					 PCI_DMA_TODEVICE);
--
--		/* Free SKB, if any, for this chunk */
--		if (txq->txb[txq->q.read_ptr].skb[i]) {
--			struct sk_buff *skb = txq->txb[txq->q.read_ptr].skb[i];
-+		pci_unmap_single(dev, iwl_get_addr(bd, i), iwl_get_len(bd, i),
-+				 PCI_DMA_TODEVICE);
- 
--			dev_kfree_skb(skb);
--			txq->txb[txq->q.read_ptr].skb[i] = NULL;
--		}
-+		dev_kfree_skb(txq->txb[txq->q.read_ptr].skb[i]);
-+		txq->txb[txq->q.read_ptr].skb[i] = NULL;
- 	}
--	return 0;
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 34ee431..2350f43 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -188,43 +188,34 @@ static void rt2400pci_eepromregister_write(struct eeprom_93cx6 *eeprom)
  }
  
- static int iwl_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv, void *ptr,
- 				 dma_addr_t addr, u16 len)
- {
--	int index, is_odd;
- 	struct iwl_tfd_frame *tfd = ptr;
- 	u32 num_tbs = IWL_GET_BITS(*tfd, num_tbs);
- 
-@@ -130,20 +106,8 @@ static int iwl_hw_txq_attach_buf_to_tfd(
- 		return -EINVAL;
- 	}
- 
--	index = num_tbs / 2;
--	is_odd = num_tbs & 0x1;
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-#define CSR_OFFSET(__word)	( CSR_REG_BASE + ((__word) * sizeof(u32)) )
 -
--	if (!is_odd) {
--		tfd->pa[index].tb1_addr = cpu_to_le32(addr);
--		IWL_SET_BITS(tfd->pa[index], tb1_addr_hi,
--			     iwl_get_dma_hi_address(addr));
--		IWL_SET_BITS(tfd->pa[index], tb1_len, len);
--	} else {
--		IWL_SET_BITS(tfd->pa[index], tb2_addr_lo16,
--			     (u32) (addr & 0xffff));
--		IWL_SET_BITS(tfd->pa[index], tb2_addr_hi20, addr >> 16);
--		IWL_SET_BITS(tfd->pa[index], tb2_len, len);
--	}
-+	iwl_set_addr(tfd, num_tbs, addr);
-+	iwl_set_len(tfd, num_tbs, len);
- 
- 	IWL_SET_BITS(*tfd, num_tbs, num_tbs + 1);
- 
-@@ -950,7 +914,7 @@ int iwl_tx_skb(struct iwl_priv *priv, st
- 	scratch_phys = txcmd_phys + sizeof(struct iwl_cmd_header) +
- 		offsetof(struct iwl_tx_cmd, scratch);
- 	tx_cmd->dram_lsb_ptr = cpu_to_le32(scratch_phys);
--	tx_cmd->dram_msb_ptr = iwl_get_dma_hi_address(scratch_phys);
-+	tx_cmd->dram_msb_ptr = ((u64)scratch_phys >> 32) & 0xFF;
- 
- 	if (!ieee80211_has_morefrags(hdr->frame_control)) {
- 		txq->need_update = 1;
-@@ -1106,6 +1070,8 @@ int iwl_tx_queue_reclaim(struct iwl_priv
- 	struct iwl_tx_info *tx_info;
- 	int nfreed = 0;
- 
-+	BUILD_BUG_ON(sizeof(struct iwl_tfd_frame) != 128);
-+
- 	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
- 		IWL_ERROR("Read index for DMA queue txq id (%d), index %d, "
- 			  "is out of range [0-%d] %d %d.\n", txq_id,
-@@ -1113,8 +1079,9 @@ int iwl_tx_queue_reclaim(struct iwl_priv
- 		return 0;
- 	}
- 
--	for (index = iwl_queue_inc_wrap(index, q->n_bd); q->read_ptr != index;
--		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd)) {
-+	for (index = iwl_queue_inc_wrap(index, q->n_bd);
-+	     q->read_ptr != index;
-+	     q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd)) {
- 
- 		tx_info = &txq->txb[txq->q.read_ptr];
- 		ieee80211_tx_status_irqsafe(priv->hw, tx_info->skb[0]);
-@@ -1143,8 +1110,6 @@ static void iwl_hcmd_queue_reclaim(struc
- 	struct iwl_tx_queue *txq = &priv->txq[txq_id];
- 	struct iwl_queue *q = &txq->q;
- 	struct iwl_tfd_frame *bd = &txq->bd[index];
--	dma_addr_t dma_addr;
--	int is_odd, buf_len;
- 	int nfreed = 0;
- 
- 	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
-@@ -1156,25 +1121,16 @@ static void iwl_hcmd_queue_reclaim(struc
- 
- 	for (index = iwl_queue_inc_wrap(index, q->n_bd); q->read_ptr != index;
- 		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd)) {
-+		bd = &txq->bd[index];
- 
- 		if (nfreed > 1) {
- 			IWL_ERROR("HCMD skipped: index (%d) %d %d\n", index,
- 					q->write_ptr, q->read_ptr);
- 			queue_work(priv->workqueue, &priv->restart);
- 		}
--		is_odd = (index/2) & 0x1;
--		if (is_odd) {
--			dma_addr = IWL_GET_BITS(bd->pa[index], tb2_addr_lo16) |
--					(IWL_GET_BITS(bd->pa[index],
--							tb2_addr_hi20) << 16);
--			buf_len = IWL_GET_BITS(bd->pa[index], tb2_len);
--		} else {
--			dma_addr = le32_to_cpu(bd->pa[index].tb1_addr);
--			buf_len = IWL_GET_BITS(bd->pa[index], tb1_len);
--		}
- 
--		pci_unmap_single(priv->pci_dev, dma_addr, buf_len,
--				 PCI_DMA_TODEVICE);
-+		pci_unmap_single(priv->pci_dev, iwl_get_addr(bd, 0),
-+				 iwl_get_len(bd, 0), PCI_DMA_TODEVICE);
- 		nfreed++;
- 	}
- }
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-helpers.h	2008-09-11 05:22:48.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-helpers.h	2008-10-06 17:55:45.000000000 +0200
-@@ -159,11 +159,6 @@ static inline unsigned long elapsed_jiff
- 	return end + (MAX_JIFFY_OFFSET - start) + 1;
- }
- 
--static inline u8 iwl_get_dma_hi_address(dma_addr_t addr)
+-static void rt2400pci_read_csr(struct rt2x00_dev *rt2x00dev,
+-			       const unsigned int word, u32 *data)
 -{
--	return sizeof(addr) > sizeof(u32) ? (addr >> 16) >> 16 : 0;
+-	rt2x00pci_register_read(rt2x00dev, CSR_OFFSET(word), data);
 -}
 -
- /**
-  * iwl_queue_inc_wrap - increment queue index, wrap back to beginning
-  * @index -- current index
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-5000.c	2008-09-11 23:03:03.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-5000.c	2008-10-06 18:04:24.000000000 +0200
-@@ -535,8 +535,7 @@ static int iwl5000_load_section(struct i
+-static void rt2400pci_write_csr(struct rt2x00_dev *rt2x00dev,
+-				const unsigned int word, u32 data)
+-{
+-	rt2x00pci_register_write(rt2x00dev, CSR_OFFSET(word), data);
+-}
+-
+ static const struct rt2x00debug rt2400pci_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt2400pci_read_csr,
+-		.write		= rt2400pci_write_csr,
++		.read		= rt2x00pci_register_read,
++		.write		= rt2x00pci_register_write,
++		.flags		= RT2X00DEBUGFS_OFFSET,
++		.word_base	= CSR_REG_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= CSR_REG_SIZE / sizeof(u32),
+ 	},
+ 	.eeprom	= {
+ 		.read		= rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
++		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+ 		.read		= rt2400pci_bbp_read,
+ 		.write		= rt2400pci_bbp_write,
++		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+ 		.read		= rt2x00_rf_read,
+ 		.write		= rt2400pci_rf_write,
++		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= RF_SIZE / sizeof(u32),
+ 	},
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
+index bbff381..9aefda4 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.h
++++ b/drivers/net/wireless/rt2x00/rt2400pci.h
+@@ -46,7 +46,9 @@
+ #define CSR_REG_SIZE			0x014c
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0100
++#define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0020
++#define RF_BASE				0x0000
+ #define RF_SIZE				0x0010
  
- 	iwl_write_direct32(priv,
- 		FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL),
--		(iwl_get_dma_hi_address(phy_addr)
--			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_cnt);
-+		(((u64)phy_addr >> 32) << FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_cnt);
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 3e755b5..9e9a6b8 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -188,43 +188,34 @@ static void rt2500pci_eepromregister_write(struct eeprom_93cx6 *eeprom)
+ }
  
- 	iwl_write_direct32(priv,
- 		FH_TCSR_CHNL_TX_BUF_STS_REG(FH_SRVC_CHNL),
-
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-#define CSR_OFFSET(__word)	( CSR_REG_BASE + ((__word) * sizeof(u32)) )
+-
+-static void rt2500pci_read_csr(struct rt2x00_dev *rt2x00dev,
+-			       const unsigned int word, u32 *data)
+-{
+-	rt2x00pci_register_read(rt2x00dev, CSR_OFFSET(word), data);
+-}
+-
+-static void rt2500pci_write_csr(struct rt2x00_dev *rt2x00dev,
+-				const unsigned int word, u32 data)
+-{
+-	rt2x00pci_register_write(rt2x00dev, CSR_OFFSET(word), data);
+-}
+-
+ static const struct rt2x00debug rt2500pci_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt2500pci_read_csr,
+-		.write		= rt2500pci_write_csr,
++		.read		= rt2x00pci_register_read,
++		.write		= rt2x00pci_register_write,
++		.flags		= RT2X00DEBUGFS_OFFSET,
++		.word_base	= CSR_REG_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= CSR_REG_SIZE / sizeof(u32),
+ 	},
+ 	.eeprom	= {
+ 		.read		= rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
++		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+ 		.read		= rt2500pci_bbp_read,
+ 		.write		= rt2500pci_bbp_write,
++		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+ 		.read		= rt2x00_rf_read,
+ 		.write		= rt2500pci_rf_write,
++		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= RF_SIZE / sizeof(u32),
+ 	},
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.h b/drivers/net/wireless/rt2x00/rt2500pci.h
+index 8c26bef..e135247 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.h
++++ b/drivers/net/wireless/rt2x00/rt2500pci.h
+@@ -57,7 +57,9 @@
+ #define CSR_REG_SIZE			0x0174
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0200
++#define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0040
++#define RF_BASE				0x0000
+ #define RF_SIZE				0x0014
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 66ff8fa..36d0fab 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -245,43 +245,48 @@ rf_write:
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-#define CSR_OFFSET(__word)	( CSR_REG_BASE + ((__word) * sizeof(u16)) )
+-
+-static void rt2500usb_read_csr(struct rt2x00_dev *rt2x00dev,
+-			       const unsigned int word, u32 *data)
++static void _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
++				     const unsigned int offset,
++				     u32 *value)
+ {
+-	rt2500usb_register_read(rt2x00dev, CSR_OFFSET(word), (u16 *) data);
++	rt2500usb_register_read(rt2x00dev, offset, (u16 *)value);
+ }
+ 
+-static void rt2500usb_write_csr(struct rt2x00_dev *rt2x00dev,
+-				const unsigned int word, u32 data)
++static void _rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
++				      const unsigned int offset,
++				      u32 value)
+ {
+-	rt2500usb_register_write(rt2x00dev, CSR_OFFSET(word), data);
++	rt2500usb_register_write(rt2x00dev, offset, value);
+ }
+ 
+ static const struct rt2x00debug rt2500usb_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt2500usb_read_csr,
+-		.write		= rt2500usb_write_csr,
++		.read		= _rt2500usb_register_read,
++		.write		= _rt2500usb_register_write,
++		.flags		= RT2X00DEBUGFS_OFFSET,
++		.word_base	= CSR_REG_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= CSR_REG_SIZE / sizeof(u16),
+ 	},
+ 	.eeprom	= {
+ 		.read		= rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
++		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+ 		.read		= rt2500usb_bbp_read,
+ 		.write		= rt2500usb_bbp_write,
++		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+ 		.read		= rt2x00_rf_read,
+ 		.write		= rt2500usb_rf_write,
++		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= RF_SIZE / sizeof(u32),
+ 	},
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
+index 89e5ed2..dbb5d68 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.h
++++ b/drivers/net/wireless/rt2x00/rt2500usb.h
+@@ -57,7 +57,9 @@
+ #define CSR_REG_SIZE			0x0100
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x006a
++#define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0060
++#define RF_BASE				0x0000
+ #define RF_SIZE				0x0014
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index a31418a..54dd100 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -424,16 +424,21 @@ static ssize_t rt2x00debug_read_##__name(struct file *file,	\
+ 	const struct rt2x00debug *debug = intf->debug;		\
+ 	char line[16];						\
+ 	size_t size;						\
++	unsigned int index = intf->offset_##__name;		\
+ 	__type value;						\
+ 								\
+ 	if (*offset)						\
+ 		return 0;					\
+ 								\
+-	if (intf->offset_##__name >= debug->__name.word_count)	\
++	if (index >= debug->__name.word_count)			\
+ 		return -EINVAL;					\
+ 								\
+-	debug->__name.read(intf->rt2x00dev,			\
+-			   intf->offset_##__name, &value);	\
++	if (debug->__name.flags & RT2X00DEBUGFS_OFFSET)		\
++		index *= debug->__name.word_size;		\
++								\
++	index += debug->__name.word_base;			\
++								\
++	debug->__name.read(intf->rt2x00dev, index, &value);	\
+ 								\
+ 	size = sprintf(line, __format, value);			\
+ 								\
+@@ -454,12 +459,13 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,	\
+ 	const struct rt2x00debug *debug = intf->debug;		\
+ 	char line[16];						\
+ 	size_t size;						\
++	unsigned int index = intf->offset_##__name;		\
+ 	__type value;						\
+ 								\
+ 	if (*offset)						\
+ 		return 0;					\
+ 								\
+-	if (intf->offset_##__name >= debug->__name.word_count)	\
++	if (index >= debug->__name.word_count)			\
+ 		return -EINVAL;					\
+ 								\
+ 	if (copy_from_user(line, buf, length))			\
+@@ -468,8 +474,12 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,	\
+ 	size = strlen(line);					\
+ 	value = simple_strtoul(line, NULL, 0);			\
+ 								\
+-	debug->__name.write(intf->rt2x00dev,			\
+-			    intf->offset_##__name, value);	\
++	if (debug->__name.flags & RT2X00DEBUGFS_OFFSET)		\
++		index *= debug->__name.word_size;		\
++								\
++	index += debug->__name.word_base;			\
++								\
++	debug->__name.write(intf->rt2x00dev, index, value);	\
+ 								\
+ 	*offset += size;					\
+ 	return size;						\
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.h b/drivers/net/wireless/rt2x00/rt2x00debug.h
+index c4ce895..a92104d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.h
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.h
+@@ -28,6 +28,16 @@
+ 
+ struct rt2x00_dev;
+ 
++/**
++ * enum rt2x00debugfs_entry_flags: Flags for debugfs registry entry
++ *
++ * @RT2X00DEBUGFS_OFFSET: rt2x00lib should pass the register offset
++ *	as argument when using the callback function read()/write()
++ */
++enum rt2x00debugfs_entry_flags {
++	RT2X00DEBUGFS_OFFSET	= (1 << 0),
++};
++
+ #define RT2X00DEBUGFS_REGISTER_ENTRY(__name, __type)		\
+ struct reg##__name {						\
+ 	void (*read)(struct rt2x00_dev *rt2x00dev,		\
+@@ -35,6 +45,9 @@ struct reg##__name {						\
+ 	void (*write)(struct rt2x00_dev *rt2x00dev,		\
+ 		      const unsigned int word, __type data);	\
+ 								\
++	unsigned int flags;					\
++								\
++	unsigned int word_base;					\
+ 	unsigned int word_size;					\
+ 	unsigned int word_count;				\
+ } __name
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.h b/drivers/net/wireless/rt2x00/rt2x00pci.h
+index 80bf97c..a83f45f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.h
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
+@@ -58,7 +58,7 @@
+  * Register access.
+  */
+ static inline void rt2x00pci_register_read(struct rt2x00_dev *rt2x00dev,
+-					   const unsigned long offset,
++					   const unsigned int offset,
+ 					   u32 *value)
+ {
+ 	*value = readl(rt2x00dev->csr.base + offset);
+@@ -66,14 +66,14 @@ static inline void rt2x00pci_register_read(struct rt2x00_dev *rt2x00dev,
+ 
+ static inline void
+ rt2x00pci_register_multiread(struct rt2x00_dev *rt2x00dev,
+-			     const unsigned long offset,
++			     const unsigned int offset,
+ 			     void *value, const u16 length)
+ {
+ 	memcpy_fromio(value, rt2x00dev->csr.base + offset, length);
+ }
+ 
+ static inline void rt2x00pci_register_write(struct rt2x00_dev *rt2x00dev,
+-					    const unsigned long offset,
++					    const unsigned int offset,
+ 					    u32 value)
+ {
+ 	writel(value, rt2x00dev->csr.base + offset);
+@@ -81,7 +81,7 @@ static inline void rt2x00pci_register_write(struct rt2x00_dev *rt2x00dev,
+ 
+ static inline void
+ rt2x00pci_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+-			      const unsigned long offset,
++			      const unsigned int offset,
+ 			      const void *value, const u16 length)
+ {
+ 	memcpy_toio(rt2x00dev->csr.base + offset, value, length);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index dc1c869..a8c3057 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -228,43 +228,34 @@ static void rt61pci_eepromregister_write(struct eeprom_93cx6 *eeprom)
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-#define CSR_OFFSET(__word)	( CSR_REG_BASE + ((__word) * sizeof(u32)) )
+-
+-static void rt61pci_read_csr(struct rt2x00_dev *rt2x00dev,
+-			     const unsigned int word, u32 *data)
+-{
+-	rt2x00pci_register_read(rt2x00dev, CSR_OFFSET(word), data);
+-}
+-
+-static void rt61pci_write_csr(struct rt2x00_dev *rt2x00dev,
+-			      const unsigned int word, u32 data)
+-{
+-	rt2x00pci_register_write(rt2x00dev, CSR_OFFSET(word), data);
+-}
+-
+ static const struct rt2x00debug rt61pci_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt61pci_read_csr,
+-		.write		= rt61pci_write_csr,
++		.read		= rt2x00pci_register_read,
++		.write		= rt2x00pci_register_write,
++		.flags		= RT2X00DEBUGFS_OFFSET,
++		.word_base	= CSR_REG_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= CSR_REG_SIZE / sizeof(u32),
+ 	},
+ 	.eeprom	= {
+ 		.read		= rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
++		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+ 		.read		= rt61pci_bbp_read,
+ 		.write		= rt61pci_bbp_write,
++		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+ 		.read		= rt2x00_rf_read,
+ 		.write		= rt61pci_rf_write,
++		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= RF_SIZE / sizeof(u32),
+ 	},
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
+index 8ec1451..65fe333 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.h
++++ b/drivers/net/wireless/rt2x00/rt61pci.h
+@@ -48,7 +48,9 @@
+ #define CSR_REG_SIZE			0x04b0
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0100
++#define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0080
++#define RF_BASE				0x0000
+ #define RF_SIZE				0x0014
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index b2d7066..a5a9341 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -249,43 +249,34 @@ rf_write:
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-#define CSR_OFFSET(__word)	( CSR_REG_BASE + ((__word) * sizeof(u32)) )
+-
+-static void rt73usb_read_csr(struct rt2x00_dev *rt2x00dev,
+-			     const unsigned int word, u32 *data)
+-{
+-	rt73usb_register_read(rt2x00dev, CSR_OFFSET(word), data);
+-}
+-
+-static void rt73usb_write_csr(struct rt2x00_dev *rt2x00dev,
+-			      const unsigned int word, u32 data)
+-{
+-	rt73usb_register_write(rt2x00dev, CSR_OFFSET(word), data);
+-}
+-
+ static const struct rt2x00debug rt73usb_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt73usb_read_csr,
+-		.write		= rt73usb_write_csr,
++		.read		= rt73usb_register_read,
++		.write		= rt73usb_register_write,
++		.flags		= RT2X00DEBUGFS_OFFSET,
++		.word_base	= CSR_REG_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= CSR_REG_SIZE / sizeof(u32),
+ 	},
+ 	.eeprom	= {
+ 		.read		= rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
++		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+ 		.read		= rt73usb_bbp_read,
+ 		.write		= rt73usb_bbp_write,
++		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+ 		.read		= rt2x00_rf_read,
+ 		.write		= rt73usb_rf_write,
++		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= RF_SIZE / sizeof(u32),
+ 	},
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.h b/drivers/net/wireless/rt2x00/rt73usb.h
+index 868386c..46e1405 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.h
++++ b/drivers/net/wireless/rt2x00/rt73usb.h
+@@ -48,7 +48,9 @@
+ #define CSR_REG_SIZE			0x04b0
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0100
++#define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0080
++#define RF_BASE				0x0000
+ #define RF_SIZE				0x0014
+ 
+ /*
+-- 
+1.5.6.1
 
