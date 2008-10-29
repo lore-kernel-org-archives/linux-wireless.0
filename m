@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:45054 "EHLO mx1.suse.de"
+Received: from mail.atheros.com ([12.36.123.2]:47788 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752250AbYJ2VjE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:39:04 -0400
-Date: Wed, 29 Oct 2008 14:39:02 -0700
-From: Mark Fasheh <mfasheh@suse.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-ia64@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	linux-wireless@vger.kernel.org,
-	Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: linux-next: Tree for October 28
-Message-ID: <20081029213902.GF15154@wotan.suse.de> (sfid-20081029_223912_598784_EE35A042)
-Reply-To: Mark Fasheh <mfasheh@suse.com>
-References: <20081028183055.fbcf5420.sfr@canb.auug.org.au> <20081028220741.f5d331ba.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081028220741.f5d331ba.akpm@linux-foundation.org>
+	id S1752814AbYJ2J0J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 05:26:09 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 02:26:09 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18696.11155.901222.622630@gargle.gargle.HOWL> (sfid-20081029_102615_048193_2E55653F)
+Date: Wed, 29 Oct 2008 14:53:31 +0530
+To: Tomas Winkler <tomasw@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 04/16] ath9k: Remove SM Power Save as it is not
+ supported now
+In-Reply-To: <1ba2fa240810290214r57f097fcsed092776af077c7f@mail.gmail.com>
+References: <18695.59972.967807.657751@gargle.gargle.HOWL>
+	<1ba2fa240810290214r57f097fcsed092776af077c7f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2008 at 10:07:41PM -0700, Andrew Morton wrote:
-> plus of course enough compile warnings to start a small war.   ocfs2 is
-> prominent.
+Tomas Winkler wrote:
+> Is not supported by HW or by mac80211? It's not clear from the commit message?
+> Since I'm still trying to push this into mac80211 it was just delayed
+> by other tasks
+> Tomas
 > 
-> fs/ocfs2/xattr.c: In function `ocfs2_xattr_index_block_find':
-> fs/ocfs2/xattr.c:2338: warning: long long unsigned int format, u64 arg (arg 7)
-> fs/ocfs2/xattr.c:2338: warning: long long unsigned int format, u64 arg (arg 7)
-> fs/ocfs2/xattr.c:2338: warning: long long unsigned int format, u64 arg (arg 7)
 
-Thanks for pointing these out Andrew. They slipped by me. I'll get them
-fixed up before the conflict escalates  ;)
-	--Mark
+That was just legacy code maintaining a STA's PS state within the driver,
+which logically should be in the stack, so it has been removed.
 
---
-Mark Fasheh
+Sujith
