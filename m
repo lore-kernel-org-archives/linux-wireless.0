@@ -1,88 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53054 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055AbYJORqG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 13:46:06 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com> (sfid-20081015_193938_934932_4EB690B0)
-References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
-	 <1223969808.2570.153.camel@debian.sh.intel.com>
-	 <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
-	 <20081014203510.GD3349@tuxdriver.com>
-	 <1224018957.3027.9.camel@johannes.berg>
-	 <20081014211912.GF3349@tuxdriver.com>
-	 <1224019662.3027.13.camel@johannes.berg>
-	 <1224085609.4764.18.camel@californication>
-	 <1224086374.735.4.camel@johannes.berg>
-	 <1224091577.28173.9.camel@californication>
-	 <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
-	 (sfid-20081015_193938_934932_4EB690B0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oC9k9gb3sKcfYD6HCAvi"
-Date: Wed, 15 Oct 2008 19:45:23 +0200
-Message-Id: <1224092724.735.21.camel@johannes.berg> (sfid-20081015_194614_582523_4CDD919C)
+Received: from mx2.redhat.com ([66.187.237.31]:37760 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752366AbYJ2KOr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 06:14:47 -0400
+Subject: Re: rtl2860 driver in mainline?
+From: Dan Williams <dcbw@redhat.com>
+To: Greg KH <greg@kroah.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Thorsten Leemhuis <fedora@leemhuis.info>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <20081028224535.GA27948@kroah.com>
+References: <20081028004915.GA3442@kroah.com>
+	 <4906B944.4010105@leemhuis.info> <1225180598.3796.66.camel@johannes.berg>
+	 <43e72e890810280102i3df34e2h9bf281c5d1e00a48@mail.gmail.com>
+	 <1225181562.3796.76.camel@johannes.berg> <20081028170838.GA4818@kroah.com>
+	 <1225218952.3598.39.camel@johannes.berg> <20081028224535.GA27948@kroah.com>
+Content-Type: text/plain
+Date: Wed, 29 Oct 2008 06:13:04 -0400
+Message-Id: <1225275184.28968.13.camel@localhost.localdomain> (sfid-20081029_111452_401821_CA38EFE4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2008-10-28 at 15:45 -0700, Greg KH wrote:
+> On Tue, Oct 28, 2008 at 07:35:52PM +0100, Johannes Berg wrote:
+> > On Tue, 2008-10-28 at 10:08 -0700, Greg KH wrote:
+> > 
+> > > "Work on", or "USE".
+> > > 
+> > > The problem is, users have this hardware, and they want to run Linux on
+> > > it.  Many distros already support this hardware with the "crap" driver,
+> > > so we might as well add that to the kernel tree so they at least get the
+> > > latest "crap" so that users have an easier time of it.
+> > > 
+> > > Now, the fact that there is a competing driver being developed outside
+> > > of the tree does make this a bit more complicated.  However, as it
+> > > doesn't work yet, there's not much we can do about including it, right?
+> > > 
+> > > So adding the driver to the "crap" tree makes users happy in that they
+> > > can use their hardware.  I'll support the "crap" to a point, and no one
+> > > has to do any API changes to the drivers/staging/ tree either, I can
+> > > easily handle that.
+> > > 
+> > > Then, when the "correct" driver is finished, I will drop the crap driver
+> > > at the same time the "correct" one is added to the tree.
+> > > 
+> > > This way, everyone wins, right?
+> > 
+> > Only if the point is "use" rather than "work on". As far as I understood
+> > about staging, the point was more "work on" which would direct effort to
+> > the wrong driver.
+> 
+> I'm not going to turn away patches that people send me to get the stable
+> drivers cleaned up and in better shape.
+> 
+> I've now added the rtl2860 driver to the staging tree with a big note
+> that any comments should be made to me only, and that the wireless
+> developers would really have people work on their driver instead to get
+> it into a mergable state.
 
---=-oC9k9gb3sKcfYD6HCAvi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Who's going to support this driver now that you're essentially
+green-lighting distros to ship it?  I seriously disagree with this
+decision to add rtl2860.  Adding drivers like at76_usb is fine because
+those are the drivers that people should be working on.  But adding crap
+code just because it gets people's hardware working, but that has NO
+FUTURE in the wireless tree, is misguided at best.
 
-On Wed, 2008-10-15 at 10:39 -0700, Luis R. Rodriguez wrote:
+If we just wanted to get everyone's hardware "working" [1], why aren't
+we shipping ndiswrapper?  At least add a "TAINT_STAGING" flag so that
+when people _run_ the crappy code and report errors the wireless
+developers are aware of it right off the bat.
 
-> We decided on our discussions to respect the built-in card first. For
-> more cards we can take the intersection if we want to keep being more
-> restrictive. Its what makes sense if you think about it.
+Dan
 
-I'm not really too sure the intersection makes most sense, we mostly
-used the first hint because it's likely to be from the built-in card,
-ergo announcing a region for which the whole product was certified. If
-you add a card, we basically don't trust it currently.
-
-> My suggestion is to add a default minimal 5 GHz regulatory domain
-> definition to your driver on single band cards to deal with this. When
-> a dual band card is present then all of the full card's capabilities
-> will be used.
-
-Unfortunately, there's no such thing as a default minimal 5 GHz
-regulatory domain. This might work with systems built purely out of
-Intel cards, but to be honest, I wouldn't want to see this because it
-would mean that if you add a dual-band prism54 USB then it'll start
-sending on those 5 GHz channels regardless of where you are and what
-you're allowed to do.
-
-johannes
-
---=-oC9k9gb3sKcfYD6HCAvi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI9iwtAAoJEKVg1VMiehFYuNEQAIWNREasnzmAlGQu1Gh0FvOY
-i4RqtLojFtDkJ578G6Z3jrzdx4LyDkdmcXbBoTBWJSPVwqzRIPrE7ggu0NBtjdse
-ld4L4MmIxdZqZhoHxtAlSChiShsN9UEdH9NFNbmcv3qED1aNkJqAooLgrgF64B8u
-yRQ6oXzqpNglPBPPwBssfUVOM5RYYmGI76hFARyz5aRyd4hDHyztL46mmPRiwMhG
-IWLDoKEWOQy25NzT2LMCvvZ74F3gjxxcGMdLbsE01etbk6PhpLoxoNgHrilZATEA
-7HlfAlw62lcVLzxDubPk+9vwsUhzk0lvBaB65yF4qODwuIniUALwLc45wpdCmApX
-RSKBtrb97aqCiRSbjvUuDGFteUSIM1QruD1FonOnivftXvzXV7+1a3wu2T7DjAbK
-iSO783Q3bVKXSZJZFwM11in/6ilXOBvoGRv5TNMJ3LzXgt9n4HRJahu+SGFJ83n+
-WQPHwNgW5ymfca7aAMM0ym0PObIa4Jymiz72ejUsxU+iIFipvOzAD6An+kNhve8r
-U85av4Z+REFTQ4oCTCsbsF+IiNUY6wYA7muUDDFcKeVVO+eUPCOj706M5ihThNHu
-5M0ZNn6r3YBwofk4QUvMpmSgBB7GznAPgb02nuFHX/0paVbZ8dg+MUl2HSsp9bSP
-JTEVX7caiaY6ebU3WblY
-=Ibh7
------END PGP SIGNATURE-----
-
---=-oC9k9gb3sKcfYD6HCAvi--
+[1] but obviously not very well or else we'd be putting effort where it
+was needed!
 
