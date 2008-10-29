@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:44930 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751962AbYJ1NYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 09:24:09 -0400
-Message-ID: <49071272.8050700@gmx.de> (sfid-20081028_142415_897587_D8136567)
-Date: Tue, 28 Oct 2008 14:24:02 +0100
-From: Joerg Albert <jal2@gmx.de>
+Received: from c60.cesmail.net ([216.154.195.49]:43076 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755340AbYJ2V2r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 17:28:47 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] ieee80211: compile fixes
+To: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 29 Oct 2008 17:28:43 -0400
+Message-ID: <20081029212843.1583.62881.stgit@dv.roinet.com> (sfid-20081029_222903_370231_6FF8D10C)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>
-CC: "otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Kernel <linux-kernel@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
-References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>	<20081022065045.GA2400@kroah.com> <20081023062655.GA8039@kroah.com>	<20081023111103.GB5979@tesla> <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com>
-In-Reply-To: <43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/28/2008 12:35 AM, Luis R. Rodriguez wrote:
+Use comma, not semicolon in ieee80211_parse_info_param().  Declare ssid
+in ieee80211_wx_set_encode().
 
-> This is now fixed on the master branch, also the branch "for-upstream"
-> does a lot of cleanup I thought you may like before stuffing it into
-> staging like removing all KERNEL_VERSION checks, all wireless
-> extensions checks, some compile warnings, removal of compat, dos2unix,
-> use utf-8, etc. Unfortunately this still requires a specific version
-> of wpa_supplicant but it seems it works. Not sure what bars you have
-> for staging at this point.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ net/ieee80211/ieee80211_rx.c |    2 +-
+ net/ieee80211/ieee80211_wx.c |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
-I was a bit disappointed to find binary-only firmware inside the 
-driver (HalPlus/OTUS_FB50/{hpfwbu,hpfwuinit}.c which is downloaded 
-into the device during startup (initially thought this to be a 
-complete OpenSource driver :-(
-
-Unless the attitude towards binary chunks inside the Linux kernel 
-have changed, I guess these should be moved into userspace using the 
-firmware_class driver to access it.
-
-/Joerg
+diff --git a/net/ieee80211/ieee80211_rx.c b/net/ieee80211/ieee80211_rx.c
+index b0bc39d..d6d5317 100644
+--- a/net/ieee80211/ieee80211_rx.c
++++ b/net/ieee80211/ieee80211_rx.c
+@@ -1178,7 +1178,7 @@ static int ieee80211_parse_info_param(struct ieee80211_info_element
+ 
+ 			IEEE80211_DEBUG_MGMT("MFIE_TYPE_SSID: '%s' len=%d.\n",
+ 					     print_ssid(ssid, network->ssid,
+-							network->ssid_len);
++							network->ssid_len),
+ 					     network->ssid_len);
+ 			break;
+ 
+diff --git a/net/ieee80211/ieee80211_wx.c b/net/ieee80211/ieee80211_wx.c
+index 698a856..70665e1 100644
+--- a/net/ieee80211/ieee80211_wx.c
++++ b/net/ieee80211/ieee80211_wx.c
+@@ -310,6 +310,7 @@ int ieee80211_wx_set_encode(struct ieee80211_device *ieee,
+ 	int i, key, key_provided, len;
+ 	struct ieee80211_crypt_data **crypt;
+ 	int host_crypto = ieee->host_encrypt || ieee->host_decrypt || ieee->host_build_iv;
++	DECLARE_SSID_BUF(ssid);
+ 
+ 	IEEE80211_DEBUG_WX("SET_ENCODE\n");
+ 
