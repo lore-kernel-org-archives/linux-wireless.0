@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:41480 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751999AbYJaSnB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 14:43:01 -0400
-Date: Fri, 31 Oct 2008 16:43:51 -0200
-From: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	willy@linux.intel.com, lrodriguez@atheros.com
-Subject: Re: ath5k gets lost with eeepc-laptop removal
-Message-ID: <20081031164351.3e4a9d4e@doriath.conectiva> (sfid-20081031_194307_685528_C9F74BF5)
-In-Reply-To: <40f31dec0810311133v65001e59h28cf6946ac3f14e7@mail.gmail.com>
-References: <20081031110502.18e33eba@doriath.conectiva>
-	<40f31dec0810310926p6edd0af5o24d7616eb54c6d0@mail.gmail.com>
-	<20081031151901.2d68c32d@doriath.conectiva>
-	<40f31dec0810311133v65001e59h28cf6946ac3f14e7@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from ns1.suse.de ([195.135.220.2]:45368 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753511AbYJ2QGx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 12:06:53 -0400
+Date: Wed, 29 Oct 2008 09:01:26 -0700
+From: Greg KH <gregkh@suse.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-ia64@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	linux-wireless@vger.kernel.org, Mark Fasheh <mfasheh@suse.com>,
+	Joel Becker <Joel.Becker@oracle.com>
+Subject: Re: linux-next: Tree for October 28
+Message-ID: <20081029160126.GA19132@suse.de> (sfid-20081029_170710_326003_800B4E9D)
+References: <20081028183055.fbcf5420.sfr@canb.auug.org.au> <20081028220741.f5d331ba.akpm@linux-foundation.org> <20081029125449.GD24103@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081029125449.GD24103@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Fri, 31 Oct 2008 20:33:43 +0200
-"Nick Kossifidis" <mickflemm@gmail.com> escreveu:
+On Wed, Oct 29, 2008 at 08:54:49AM -0400, John W. Linville wrote:
+> On Tue, Oct 28, 2008 at 10:07:41PM -0700, Andrew Morton wrote:
+> > On Tue, 28 Oct 2008 18:30:55 +1100 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> > 
+> > > I have created today's linux-next tree at
+> > > git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
+> > > (patches at
+> > > http://www.kernel.org/pub/linux/kernel/people/sfr/linux-next/).
+> 
+> > and wireless needs some Kconfig help.  Please don't just break other
+> > architecture's build like this.
+> > 
+> > drivers/staging/wlan-ng/wlan_compat.h:136:3: #error "No CPU identified!"
+> > drivers/staging/wlan-ng/wlan_compat.h:695:6: warning: "WLAN_CPU_FAMILY" is not defined
+> > drivers/staging/wlan-ng/wlan_compat.h:699:6: warning: "WLAN_CPU_FAMILY" is not defined
+> 
+> For the record, I blame Greg K-H for this... :-)
 
-| 2008/10/31 Luiz Fernando N. Capitulino <lcapitulino@mandriva.com.br>:
-| >
-| >  No, it doesn't. It says:
-| >
-| > """
-| > MAC revision 0xffff is not supported!
-| > """
-| >
-| >  And I have realized that I get a flood of 'failed to wakeup'
-| > and 'can't reset the hardware' error messages, just some seconds
-| > after the eeepc-laptop module removal.
-| >
-| 
-| Well it seems that during module removal, card gets no power at all.
-| I don't see any reason for this behaviour. Do you have pci-e hotplug enabled ?
+Ick, yes, _ANYTHING_ in drivers/staging/ is my fault, please let me know
+about this.
 
- Well, the pciehp module is not loaded and the eeepc's function keys
-don't work anyway (this is the original problem I was looking at).
+I'll fix this up, thanks for the report.
 
--- 
-Luiz Fernando N. Capitulino
+greg k-h
