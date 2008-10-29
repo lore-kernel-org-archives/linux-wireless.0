@@ -1,104 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:39758 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752472AbYJ1QYf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 12:24:35 -0400
-Date: Tue, 28 Oct 2008 17:24:18 +0100
-From: Mirco Tischler <mt-ml@gmx.de>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
-Message-ID: <20081028172418.3c8e91f1@mtlp.12.dimension> (sfid-20081028_172441_311937_40D84470)
-In-Reply-To: <1225171414.2917.229.camel@debian.sh.intel.com>
-References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
-	<1225157618.2917.215.camel@debian.sh.intel.com>
-	<20081027213217.53558319@infradead.org>
-	<1225171414.2917.229.camel@debian.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/QYcKPLFonHn/Ijg6q/W=P3d";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
+Received: from mga01.intel.com ([192.55.52.88]:27309 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753642AbYJ2VFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 17:05:25 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/7] iwlwifi: reorganize flow handler bitology
+Date: Wed, 29 Oct 2008 14:05:43 -0700
+Message-Id: <1225314349-11139-2-git-send-email-reinette.chatre@intel.com> (sfid-20081029_220533_306004_B0E93285)
+In-Reply-To: <1225314349-11139-1-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1225314349-11139-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/QYcKPLFonHn/Ijg6q/W=P3d
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-On Tue, 28 Oct 2008 13:23:34 +0800, Zhu Yi wrote:
-> On Mon, 2008-10-27 at 22:32 -0600, Arjan van de Ven wrote:
-> > I had this same issue
-> >=20
-> > turning on CONFIG_WIRELESS_OLD_REGULATORY fixed it for me....
->=20
-> Arjan,
->=20
-> This is a different bug. He has the wireless worked sometimes.
->=20
-> I think your problem relates to 5GHz channel usage. We have already a
-> patch queued to resolve the problem. We will have regulatory framework
-> reworked to better solve the problem. But I guess it will be in .29 time
-> frame.
->=20
-> Thanks,
-> -yi
-I tested Arjan's solution nevertheless and it seems to do the job. I can't =
-find
-the "TX Power requested" line anymore on dmesg output with that config opti=
-on
-enabled anymore and it connects without problems.
-This is how it looks now:
-[  777.680750] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux,1.3=
-.27kds=20
-[  777.680753] iwlagn: Copyright(c) 2003-2008 Intel Corporation
-[  777.680878] iwlagn 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ=
- 18
-[  777.680908] iwlagn 0000:06:00.0: setting latency timer to 64
-[  777.680977] iwlagn: Detected Intel Wireless WiFi Link 4965AGN REV=3D0x4
-[  777.731255] iwlagn: Tunable channels: 13 802.11bg, 19 802.11a channels
-[  777.732432] phy1: Selected rate control algorithm 'iwl-agn-rs'
-[  781.764539] iwlagn 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ=
- 18
-[  781.764821] iwlagn 0000:06:00.0: irq 41 for MSI/MSI-X
-[  781.764919] iwlagn 0000:06:00.0: firmware: requesting iwlwifi-4965-2.uco=
-de
-[  781.980719] Registered led device: iwl-phy1:radio
-[  781.980764] Registered led device: iwl-phy1:assoc
-[  781.980808] Registered led device: iwl-phy1:RX
-[  781.980856] Registered led device: iwl-phy1:TX
-[  782.014001] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  783.633713] wlan0: authenticate with AP 00:c0:a8:e5:e5:a5
-[  783.635637] wlan0: authenticated
-[  783.635644] wlan0: associate with AP 00:c0:a8:e5:e5:a5
-[  783.642770] wlan0: RX AssocResp from 00:c0:a8:e5:e5:a5 (capab=3D0x431 st=
-atus=3D0
-aid=3D1)=20
-[  783.642776] wlan0: associated [  783.669684] ADDRCONF(NETDEV_CHANGE): wl=
-an0:
-link becomes ready
+This patch cleans up FH bits and adds missing register values
+that will be used later in TX initialization rewrite
 
-I tested it quickly and not very thoroughly on the wpa-eap encrypted networ=
-k at
-university and it showed the same behaviour: no connection without
-CONFIG_WIRELESS_OLD_REGULATORY and no problems with it enabled.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    8 ++--
+ drivers/net/wireless/iwlwifi/iwl-fh.h   |   52 +++++++++++++++++-------------
+ drivers/net/wireless/iwlwifi/iwl-tx.c   |    4 +-
+ 3 files changed, 35 insertions(+), 29 deletions(-)
 
-Thanks
-Mirco
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 4348c7d..1608b28 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -535,7 +535,7 @@ static int iwl5000_load_section(struct iwl_priv *priv,
+ 	iwl_write_direct32(priv,
+ 		FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
+ 		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE	|
+-		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE_VAL |
++		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE	|
+ 		FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD);
+ 
+ 	iwl_release_nic_access(priv);
+@@ -549,14 +549,13 @@ static int iwl5000_load_given_ucode(struct iwl_priv *priv,
+ {
+ 	int ret = 0;
+ 
+-	ret = iwl5000_load_section(
+-		priv, inst_image, RTC_INST_LOWER_BOUND);
++	ret = iwl5000_load_section(priv, inst_image, RTC_INST_LOWER_BOUND);
+ 	if (ret)
+ 		return ret;
+ 
+ 	IWL_DEBUG_INFO("INST uCode section being loaded...\n");
+ 	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
+-				priv->ucode_write_complete, 5 * HZ);
++					priv->ucode_write_complete, 5 * HZ);
+ 	if (ret == -ERESTARTSYS) {
+ 		IWL_ERROR("Could not load the INST uCode section due "
+ 			"to interrupt\n");
+@@ -753,6 +752,7 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
+ 	priv->cfg->ops->lib->txq_set_sched(priv, IWL_MASK(0, 7));
+ 
+ 	iwl5000_set_wr_ptrs(priv, IWL_CMD_QUEUE_NUM, 0);
++
+ 	/* map qos queues to fifos one-to-one */
+ 	for (i = 0; i < ARRAY_SIZE(iwl5000_default_queue_to_tx_fifo); i++) {
+ 		int ac = iwl5000_default_queue_to_tx_fifo[i];
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index f2688d5..97e2cf4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -318,34 +318,40 @@
+ #define FH_TCSR_UPPER_BOUND  (FH_MEM_LOWER_BOUND + 0xE60)
+ 
+ /* Find Control/Status reg for given Tx DMA/FIFO channel */
+-#define FH_TCSR_CHNL_TX_CONFIG_REG(_chnl) \
+-	(FH_TCSR_LOWER_BOUND + 0x20 * _chnl)
++#define FH49_TCSR_CHNL_NUM                            (7)
++#define FH50_TCSR_CHNL_NUM                            (8)
+ 
+-#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE_VAL    (0x00000000)
+-#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE_VAL     (0x00000008)
++#define FH_TCSR_CHNL_TX_CONFIG_REG(_chnl)	\
++		(FH_TCSR_LOWER_BOUND + 0x20 * (_chnl))
++#define FH_TCSR_CHNL_TX_CREDIT_REG(_chnl)	\
++		(FH_TCSR_LOWER_BOUND + 0x20 * (_chnl) + 0x4)
++#define FH_TCSR_CHNL_TX_BUF_STS_REG(_chnl)	\
++		(FH_TCSR_LOWER_BOUND + 0x20 * (_chnl) + 0x8)
+ 
+-#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE            (0x00000000)
+-#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE_EOF        (0x40000000)
+-#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE           (0x80000000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_MSG_MODE_TXF		(0x00000000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_MSG_MODE_DRV		(0x00000001)
+ 
+-#define FH_TCSR_CHNL_NUM                            (7)
++#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE	(0x00000000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE	(0x00000008)
+ 
+-#define FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_EMPTY          (0x00000000)
+-#define FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_WAIT           (0x00002000)
+-#define FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_VALID          (0x00000003)
++#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_NOINT	(0x00000000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD	(0x00100000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_IFTFD	(0x00200000)
+ 
+-#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_NOINT           (0x00000000)
+-#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD          (0x00100000)
+-#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_IFTFD           (0x00200000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_RTC_NOINT	(0x00000000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_RTC_ENDTFD	(0x00400000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_RTC_IFTFD	(0x00800000)
+ 
+-#define FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM      (20)
+-#define FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_IDX      (12)
+-#define FH_TCSR_CHNL_TX_CONFIG_REG(_chnl) \
+-	(FH_TCSR_LOWER_BOUND + 0x20 * _chnl)
+-#define FH_TCSR_CHNL_TX_CREDIT_REG(_chnl) \
+-	  (FH_TCSR_LOWER_BOUND + 0x20 * _chnl + 0x4)
+-#define FH_TCSR_CHNL_TX_BUF_STS_REG(_chnl) \
+-	 (FH_TCSR_LOWER_BOUND + 0x20 * _chnl + 0x8)
++#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE	(0x00000000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE_EOF	(0x40000000)
++#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE	(0x80000000)
++
++#define FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_EMPTY	(0x00000000)
++#define FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_WAIT	(0x00002000)
++#define FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_VALID	(0x00000003)
++
++#define FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM		(20)
++#define FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_IDX		(12)
+ 
+ /**
+  * Tx Shared Status Registers (TSSR)
+@@ -362,7 +368,7 @@
+ #define FH_TSSR_LOWER_BOUND		(FH_MEM_LOWER_BOUND + 0xEA0)
+ #define FH_TSSR_UPPER_BOUND		(FH_MEM_LOWER_BOUND + 0xEC0)
+ 
+-#define FH_TSSR_TX_STATUS_REG	(FH_TSSR_LOWER_BOUND + 0x010)
++#define FH_TSSR_TX_STATUS_REG		(FH_TSSR_LOWER_BOUND + 0x010)
+ 
+ #define FH_TSSR_TX_STATUS_REG_BIT_BUFS_EMPTY(_chnl) ((1 << (_chnl)) << 24)
+ #define FH_TSSR_TX_STATUS_REG_BIT_NO_PEND_REQ(_chnl) ((1 << (_chnl)) << 16)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 3649360..785da5e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -431,8 +431,8 @@ static int iwl_hw_tx_queue_init(struct iwl_priv *priv,
+ 
+ 	/* Enable DMA channel, using same id as for TFD queue */
+ 	iwl_write_direct32(priv, FH_TCSR_CHNL_TX_CONFIG_REG(txq_id),
+-		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
+-		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE_VAL);
++			FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
++			FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE);
+ 
+ 	iwl_release_nic_access(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+-- 
+1.5.4.3
 
---Sig_/QYcKPLFonHn/Ijg6q/W=P3d
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAkkHPL4ACgkQz+diZ7c2xfjQnACeMmJUXCPSWQKkVDfR80db4Rwj
-7k4An1TJLd7OuByRyuO02uRpSkWVdDH+
-=ODct
------END PGP SIGNATURE-----
-
---Sig_/QYcKPLFonHn/Ijg6q/W=P3d--
