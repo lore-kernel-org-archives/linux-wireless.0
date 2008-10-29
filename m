@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:56915 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751180AbYJ1Bij (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 21:38:39 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 18:38:39 -0700
-Date: Mon, 27 Oct 2008 18:38:37 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Davide Pesavento <davidepesa@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: crda packaging
-Message-ID: <20081028013837.GB27884@tesla> (sfid-20081028_023843_746073_FE558BC7)
-References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com> <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com> <2da21fe50810201336r29ed4e83g18d57e6d01b97349@mail.gmail.com> <20081020140438.GD9035@tesla> <2da21fe50810201448y6f05770at1d611d5a9ddc7e5b@mail.gmail.com> <43e72e890810201515k79ad4e3cj90643ad853e3acfe@mail.gmail.com> <2da21fe50810201539k74dedcfbwf4d63827e10e6c40@mail.gmail.com> <20081020154315.GL9035@tesla> <2da21fe50810250254w67d0d485v79ffdb40ed2a3b4b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <2da21fe50810250254w67d0d485v79ffdb40ed2a3b4b@mail.gmail.com>
+Received: from mail.deathmatch.net ([70.167.247.36]:3361 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753396AbYJ2MbP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 08:31:15 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, mickflemm@gmail.com, jirislaby@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath5k: honor FIF_BCN_PRBRESP_PROMISC in STA mode
+Date: Wed, 29 Oct 2008 08:30:56 -0400
+Message-Id: <1225283457-24417-4-git-send-email-me@bobcopeland.com> (sfid-20081029_133122_397022_A95EC067)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 25, 2008 at 02:54:30AM -0700, Davide Pesavento wrote:
-> Only a couple of issues now remain in crda:
-> 
-> (1) crda needs <linux/nl80211.h>, thus a kernel source tree is
-> required to build it.
-> Solution: ship nl80211.h like iw does.
+We were setting RX_FILTER_BEACON even after entering STA mode,
+which leads to a lot of unnecessary wakeups.  This should fix the
+bug "Ath5k driver has too many interrupts per second at idle" at
+http://bugzilla.kernel.org/show_bug.cgi?id=11749.
 
-Sure, I'll just steal Johannes' version.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/base.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-> (2) `make verify` fails to validate the db signature if openssl is
-> selected instead of gcrypt.
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index c7ffcbb..5ef8cc4 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2952,10 +2952,8 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
+ 		sc->opmode != NL80211_IFTYPE_MESH_POINT &&
+ 		test_bit(ATH_STAT_PROMISC, sc->status))
+ 		rfilt |= AR5K_RX_FILTER_PROM;
+-	if (sc->opmode == NL80211_IFTYPE_STATION ||
+-		sc->opmode == NL80211_IFTYPE_ADHOC) {
++	if (sc->opmode == NL80211_IFTYPE_ADHOC)
+ 		rfilt |= AR5K_RX_FILTER_BEACON;
+-	}
+ 	if (sc->opmode == NL80211_IFTYPE_MESH_POINT)
+ 		rfilt |= AR5K_RX_FILTER_CONTROL | AR5K_RX_FILTER_BEACON |
+ 			AR5K_RX_FILTER_PROBEREQ | AR5K_RX_FILTER_PROM;
+-- 
+1.5.4.2.182.gb3092
 
-Hmm, I'll take a look if I can, right now am looking at interesection
-though to automatically generate world and to use that later upstream
-for 11d.
 
-Thanks,
-
-  Luis
