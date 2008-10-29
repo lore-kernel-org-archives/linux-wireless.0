@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bandspeed.com ([24.227.171.243]:2542 "EHLO
-	mars.bandspeed.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753336AbYJIPlK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 11:41:10 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: HT capabilities IE
-Date: Thu, 9 Oct 2008 10:41:04 -0500
-Message-ID: <6EACAD9615B47B42A780C005414307E1014956CE@mars.bandspeed.com> (sfid-20081009_174114_846197_4BF5C52E)
-In-Reply-To: <1223546085.22490.29.camel@johannes.berg>
-References: <1223460098.3618.53.camel@johannes.berg> <6EACAD9615B47B42A780C005414307E1014956B2@mars.bandspeed.com> <1223546085.22490.29.camel@johannes.berg>
-From: "Nils Bagge" <nbagge@bandspeed.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:36487 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753928AbYJ2VF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 17:05:27 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 5/7] iwlwifi: rename double inclusion protection name in iwl-commands.h
+Date: Wed, 29 Oct 2008 14:05:47 -0700
+Message-Id: <1225314349-11139-6-git-send-email-reinette.chatre@intel.com> (sfid-20081029_220536_351053_53B63D84)
+In-Reply-To: <1225314349-11139-5-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1225314349-11139-1-git-send-email-reinette.chatre@intel.com>
+ <1225314349-11139-2-git-send-email-reinette.chatre@intel.com>
+ <1225314349-11139-3-git-send-email-reinette.chatre@intel.com>
+ <1225314349-11139-4-git-send-email-reinette.chatre@intel.com>
+ <1225314349-11139-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Right, but if you enter dynamic SM PS then it doesn't matter much
-> anyway, does it? I mean, there's no protection requirement in that
-> case, is there? Or am I reading it wrong? I _think_ I will handle the
-> SM PS change in mac80211, but I'm not entirely sure right now.
-> 
-> Johannes
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
+This patch change the name of the double inclusion protection in
+iwl-commands.h
 
-Well, upon a more careful reading of 11.2.3, the second paragraph would
-seem to indicate that some kind of protection/wake-up is required prior
-to a multi-spatial stream transmission, if the receiver is in dynamic SM
-power save mode. The 'protection' frame that is received, is received by
-a single RX chain. It is suggested to use an RTS/CTS. The other RX
-chains are powered-on after the RTS is received. 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-You could use an RTS/CTS, as suggested. I suspect there are more
-efficient ways to kickoff the TXOP, and the 4th paragraph suggests that
-any frame with matching RA will wake up all the RX chains for the
-duration of the TXOP. That is probably the way to go, assuming you can.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 5ab74fc..8aade00 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -66,8 +66,8 @@
+  * Please use iwl-dev.h for driver implementation definitions.
+  */
+ 
+-#ifndef __iwl4965_commands_h__
+-#define __iwl4965_commands_h__
++#ifndef __iwl_commands_h__
++#define __iwl_commands_h__
+ 
+ enum {
+ 	REPLY_ALIVE = 0x1,
+@@ -3064,4 +3064,4 @@ struct iwl_rx_packet {
+ 
+ #define IWL_RX_FRAME_SIZE        (4 + sizeof(struct iwl4965_rx_frame))
+ 
+-#endif				/* __iwl4965_commands_h__ */
++#endif				/* __iwl_commands_h__ */
+-- 
+1.5.4.3
 
-If the STA is in static power save, it simply cannot receive 2+ spatial
-stream MCS's, until it exits that mode.
-
-So, I guess, yes, it does matter after all. 
-
-
-Nils
