@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43746 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300AbYJ0Qls (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 12:41:48 -0400
-Subject: Re: bisected: 2.6.28-rc broke my iwl4965 wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081027163812.GB6377@tesla> (sfid-20081027_173820_318230_ACAD18C7)
-References: <20081025222208.1d2a2c8b@infradead.org>
-	 <20081027163812.GB6377@tesla> (sfid-20081027_173820_318230_ACAD18C7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8HvvIqjmKeRLps5zwWdp"
-Date: Mon, 27 Oct 2008 17:41:34 +0100
-Message-Id: <1225125694.3796.28.camel@johannes.berg> (sfid-20081027_174217_980574_37F4D6E3)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:51562 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751154AbYJ2Et3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 00:49:29 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2008 21:49:29 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18695.60092.575797.975549@gargle.gargle.HOWL> (sfid-20081029_054932_483896_45824289)
+Date: Wed, 29 Oct 2008 10:16:52 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 09/16] ath9k: Remove unused function ath_get_currentCountry()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/core.c |   23 -----------------------
+ drivers/net/wireless/ath9k/core.h |    2 --
+ 2 files changed, 0 insertions(+), 25 deletions(-)
 
---=-8HvvIqjmKeRLps5zwWdp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2008-10-27 at 09:38 -0700, Luis R. Rodriguez wrote:
-
-> > 2.6.28-rc1 broke my (intel 4965) wireless, and I've bisected it down to
-> > the commit below..... something's fishy with this...
-
-> Additionally if the old behaviour is desired for now (until distributions
-> catch up and add CRDA) CONFIG_WIRELESS_OLD_REGULATORY can be enabled
-> and you'll get the old behaviour of defaulting to country "US".
-
-Luis, Arjan's bug is actually indicative of a driver bug, he told me
-that he actually runs into driver message like "cannot set TX power
-while scanning", and it's fixed by setting WIRELESS_OLD_REGULATORY for
-some reason. Arjan, do you still have the actual messages you get when
-it fails? That's a separate bug we should address, rather than relying
-on it not happening with the old regulatory setting.
-
-johannes
-
---=-8HvvIqjmKeRLps5zwWdp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJBe87AAoJEKVg1VMiehFY2AsQAIEMsK0HKHWQ3k1aRyETRkJV
-OiGqANDU9i0nCGO7Y4TWZqJzUJtu1/vEdbfwhW6ZXPdsT2WKwrmHVsAX0PnpZH+Q
-OZDVRF/eePx0e+gpUiJVnmg/KHfRtd5cYiXt1tOQZejvSYAU3pRc7Yp0GGub/HoY
-gG0q7Q6HarW+zNCrPqQNDxa/Ug0hlaXc3EAl8SD/CWe0li5V35ZkDnay1QR+Z35K
-EPVCKDvMUV2+w4lI9cvSZ2+epbWeYqQ1xgxiv9GP8KIzJT1LqDRS0yeuMHVNq01S
-t7BaTfaVPp83mUkWqaSXdgJ6i6r4OQb6ZmpcLdATmqXP+EMSRCq3YcdJThMuWqyy
-6xUoyGx3dQyJw+gGJxs17gbARILMGMX8lhNPUBuN+hhl07n0I+M4W4H0IXbF/PTL
-syIceJhzOL5Qh5kvngLEM/yEGEgDj5VfFzKb+AR5uFbiHCwWx3KYvZ5csVsZWSzm
-b5DA/RGGUNeV8owa6g9/1Aa5GNMT3yarFNe4GxxVpiY/di36tSwv8EWG3BFlxjLU
-TTbjChnwkBhgFxKRAA5Pk5g60Kyqznukfn4NDMBkLAy15goBGt/8uCI/f85HrgdL
-BOrH8oBgDFFTxtXzEhGc2bDWk9Ue3y/cUuRZxh6odCYTCklXaihc7n6rDs5gJGlh
-hadv/GfPgJp+l/k+i601
-=VlGa
------END PGP SIGNATURE-----
-
---=-8HvvIqjmKeRLps5zwWdp--
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index aa1f1fc..b45953f 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -17,8 +17,6 @@
+ #include "core.h"
+ #include "regd.h"
+ 
+-static int ath_outdoor;		/* enable outdoor use */
+-
+ static u32 ath_chainmask_sel_up_rssi_thres =
+ 	ATH_CHAINMASK_SEL_UP_RSSI_THRES;
+ static u32 ath_chainmask_sel_down_rssi_thres =
+@@ -1349,27 +1347,6 @@ void ath_update_txpow(struct ath_softc *sc)
+ 	}
+ }
+ 
+-/* Return the current country and domain information */
+-void ath_get_currentCountry(struct ath_softc *sc,
+-	struct ath9k_country_entry *ctry)
+-{
+-	ath9k_regd_get_current_country(sc->sc_ah, ctry);
+-
+-	/* If HAL not specific yet, since it is band dependent,
+-	 * use the one we passed in. */
+-	if (ctry->countryCode == CTRY_DEFAULT) {
+-		ctry->iso[0] = 0;
+-		ctry->iso[1] = 0;
+-	} else if (ctry->iso[0] && ctry->iso[1]) {
+-		if (!ctry->iso[2]) {
+-			if (ath_outdoor)
+-				ctry->iso[2] = 'O';
+-			else
+-				ctry->iso[2] = 'I';
+-		}
+-	}
+-}
+-
+ /**************************/
+ /* Slow Antenna Diversity */
+ /**************************/
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index c03acf7..fdaecb1 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -1018,8 +1018,6 @@ int ath_get_mac80211_qnum(u32 queue, struct ath_softc *sc);
+ void ath_setslottime(struct ath_softc *sc);
+ void ath_update_txpow(struct ath_softc *sc);
+ int ath_cabq_update(struct ath_softc *);
+-void ath_get_currentCountry(struct ath_softc *sc,
+-	struct ath9k_country_entry *ctry);
+ u64 ath_extend_tsf(struct ath_softc *sc, u32 rstamp);
+ 
+ #endif /* CORE_H */
+-- 
+1.6.0.3
 
