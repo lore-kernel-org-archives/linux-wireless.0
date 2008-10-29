@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:46698 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195AbYJUXLB (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.187]:56639 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754802AbYJ2Q35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 19:11:01 -0400
-Subject: Re: New iwlwifi 3945 uCode available
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	reinette chatre <reinette.chatre@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890810211609t4ed76b3cq76d400d4a7c025e2@mail.gmail.com>
-References: <1224613633.10863.43.camel@rc-desk>
-	 <1224624324.28639.9.camel@johannes.berg>
-	 <1ba2fa240810211433q2e7a13b2p45cb8d38a74393c9@mail.gmail.com>
-	 <1224624899.28639.17.camel@johannes.berg>
-	 <20081021213814.GM17268@tuxdriver.com>
-	 <1ba2fa240810211453y40739183v84999364c89886ee@mail.gmail.com>
-	 <1224627187.9386.103.camel@californication>
-	 <1ba2fa240810211523x2327351fxf8c1c54207d7706b@mail.gmail.com>
-	 <1224630116.9386.108.camel@californication>
-	 <43e72e890810211609t4ed76b3cq76d400d4a7c025e2@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 22 Oct 2008 01:11:56 +0200
-Message-Id: <1224630716.9386.117.camel@californication> (sfid-20081022_011107_115297_EF5F8617)
-Mime-Version: 1.0
+	Wed, 29 Oct 2008 12:29:57 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so44515nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 09:28:46 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/5] rt2x00: Optimize configuration handling
+Date: Wed, 29 Oct 2008 17:17:57 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200810291716.47342.IvDoorn@gmail.com>
+In-Reply-To: <200810291716.47342.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810291717.57687.IvDoorn@gmail.com> (sfid-20081029_173002_413909_214DA321)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Implement latest changed from mac80211 configuration
+handling to optmize configuration handling in rt2x00.
 
-> > as long as the firmware is a file on the filesystem, it is the old
-> > userspace. It is simpler to update a firmware file (in this case
-> > installing a new one) then installing additional software, but that
-> > doesn't change anything.
-> >
-> > Our current problem is that our firmware is still not part of the
-> > firmware tree David Woodhouse is maintaining. Then we could link it
-> > together with the kernel tree. And yes, that is license issue, but it is
-> > one that can be solved.
-> 
-> What license issue BTW?
+ * Remove set_retry_limit callback function, handled
+   through config()
+ * Move config_antenna to its own callback function,
+   it isn't handled by mac80211 anymore
+ * Use IEEE80211_CONF_CHANGED_* flags and remove manual
+   checks
+ * Removed deprecated short slot setting through config()
+   and put it in config_erp() through which mac80211 now
+   configures it
+ * Remove config_phymode() and move contents to config_erp()
+   since it only managed the basic rates which is now
+   determined by mac80211 through config_erp().
 
-about putting our ucode into the linux-firmware.git tree?
-
-Regards
-
-Marcel
-
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+Patch has a size of 52Kb, it can be found here:
+http://www.kernel.org/pub/linux/kernel/people/ivd/patches/0001-rt2x00-Optimize-configuration-handling.patch
