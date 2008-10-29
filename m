@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:50019 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086AbYJURnE (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.181]:24297 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754102AbYJ2Q2x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 13:43:04 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Marcel Holtmann <holtmann@linux.intel.com>
+	Wed, 29 Oct 2008 12:28:53 -0400
+Received: by ik-out-1112.google.com with SMTP id c29so76007ika.5
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 09:28:52 -0700 (PDT)
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081021171328.GG17268@tuxdriver.com>
-References: <1224520999.9386.72.camel@californication>
-	 <1224552899.24677.245.camel@debian.sh.intel.com>
-	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
-	 <1224554323.24677.248.camel@debian.sh.intel.com>
-	 <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com>
-	 <1224561748.24677.274.camel@debian.sh.intel.com>
-	 <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
-	 <1224569252.9386.77.camel@californication>
-	 <43e72e890810202329g732a97ccxf176bdf4e035ccda@mail.gmail.com>
-	 <1224571890.9386.85.camel@californication>
-	 <20081021171328.GG17268@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 21 Oct 2008 19:43:53 +0200
-Message-Id: <1224611033.9386.98.camel@californication> (sfid-20081021_194308_140761_DDEB7FFF)
-Mime-Version: 1.0
+Subject: [PATCH 5/5] rt2x00: Release rt2x00 2.2.2
+Date: Wed, 29 Oct 2008 17:19:29 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200810291716.47342.IvDoorn@gmail.com> <200810291718.46231.IvDoorn@gmail.com> <200810291719.08229.IvDoorn@gmail.com>
+In-Reply-To: <200810291719.08229.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200810291719.29480.IvDoorn@gmail.com> (sfid-20081029_172916_976644_E16902A4)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Version bump.
 
-> > > And you can use new kernels on old distributions with old wireless
-> > > drivers, however new mac80211 based drivers can reasonably require new
-> > > userspace utilities, and in this case we have a new userspace
-> > > requirement *only* when cfg80211/mac80211 based drivers do not provide
-> > > their own regutory_hint() or in the particular case outlined in this
-> > > thread. Additionally this new feature allows users who want to be more
-> > > compliant to do so by s specifying a country.
-> > 
-> > No we can't have a new (or updated) driver require new userspace. If you
-> > install a 2.6.30 kernel on an Ubuntu Hardy system, it should make the
-> > hardware work without installing an extra userspace component. And yes,
-> > it works for the first card if it provides a regulatory hint, but it
-> > should also work for the second card.
-> 
-> That is what WIRELESS_OLD_REGULATORY is for, no?
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-but that would go away with 2.6.29 if it proceeds as planned.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index ca1f9fe..f85eedb 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -44,7 +44,7 @@
+ /*
+  * Module information.
+  */
+-#define DRV_VERSION	"2.2.1"
++#define DRV_VERSION	"2.2.2"
+ #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
+ 
+ /*
+-- 
+1.5.6.1
 
