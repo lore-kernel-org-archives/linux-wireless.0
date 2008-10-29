@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28618 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752939AbYJ2RKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 13:10:32 -0400
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-From: reinette chatre <reinette.chatre@intel.com>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081029002713.GA16554@isilmar.linta.de>
-References: <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
-	 <20081019075916.GA12904@isilmar.linta.de>
-	 <1225145468.1115.139.camel@rc-desk>
-	 <20081027230326.GA23250@isilmar.linta.de>
-	 <1225154823.1115.149.camel@rc-desk>
-	 <20081028194323.GA14303@isilmar.linta.de>
-	 <1225225434.1115.217.camel@rc-desk> <1225235731.1369.8.camel@johannes.berg>
-	 <1225236760.1115.245.camel@rc-desk>
-	 <20081028233841.GA12554@isilmar.linta.de>
-	 <20081029002713.GA16554@isilmar.linta.de>
-Content-Type: text/plain
-Date: Wed, 29 Oct 2008 10:10:52 -0700
-Message-Id: <1225300252.1115.266.camel@rc-desk> (sfid-20081029_181040_978514_838DF7EC)
+Received: from casper.infradead.org ([85.118.1.10]:46702 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755871AbYJ2XW6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 19:22:58 -0400
+Date: Wed, 29 Oct 2008 16:23:24 -0700
+From: Arjan van de Ven <arjan@infradead.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	me@bobcopeland.com
+Subject: Re: pull request: wireless-2.6 2008-10-29
+Message-ID: <20081029162324.28f5864d@infradead.org> (sfid-20081030_002320_551898_3C4DAB39)
+In-Reply-To: <20081029231855.GD3485@tuxdriver.com>
+References: <20081029231855.GD3485@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-10-28 at 17:27 -0700, Dominik Brodowski wrote:
-> With CONFIG_WIRELESS_OLD_REGULATORY=y, both the old and the new firmware
-> works. Without, only the old firmware works.
+On Wed, 29 Oct 2008 19:18:55 -0400
+"John W. Linville" <linville@tuxdriver.com> wrote:
 
-(I assume you mean "only the new firmware works")
-
+> Dave,
 > 
-> I'd think that at least the error message could be clarified a bit
-> (is it really a "Microcode SW error"?)... also, it might be a corner case
-> whether the new firmware would better be called -2 because of this
-> incompatibility?
+> Another quick round of fixes intended for 2.6.28...
+> 
+> This includes fixes for bugs 11749 and 11845, fixes a reset-related
+> regression in ath5k, fixes a Kconfig-related error for rt2x00, and
+> fixes some sparse warnings and a possible buffer overrun in libertas.
+> Also, it corrects a spelling error and marks Bob Copeland as an
+> ath5k maintainer.
 
-We can do away with the error message with a driver change. This patch
-should take care of it:
+speaking of ath5k:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 0758f8f..ab7c93d 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6219,6 +6219,11 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 					      n_probes,
- 			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
- 
-+	if (scan->channel_count == 0) {
-+		IWL_DEBUG_SCAN("channel count %d\n", scan->channel_count);
-+		goto done;
-+	}
-+
- 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
- 	    scan->channel_count * sizeof(struct iwl3945_scan_channel);
- 	cmd.data = scan;
+http://www.kerneloops.org/version.php?start=1835008&end=1867775&version=28-rc
 
-
+it seems to have added a few WARN_ON()s which now end up at the top of
+the list .. are these known or should I spend some time writing reports
+for netdev ?
