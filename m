@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g19.free.fr ([212.27.42.27]:58593 "EHLO smtp1-g19.free.fr"
+Received: from mga01.intel.com ([192.55.52.88]:63540 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751993AbYJWFQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 01:16:32 -0400
-Message-ID: <490008AC.7020100@free.fr> (sfid-20081023_071636_830131_AFB3A2FF)
-Date: Thu, 23 Oct 2008 07:16:28 +0200
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-MIME-Version: 1.0
-To: jt@hpl.hp.com
-CC: "Luis R. Rodriguez" <lrodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 4/5] crda: Updated regulatory information for France (FR)
-References: <cover.1223583376.git.benoit.papillault@free.fr> <48FE399E.6050907@free.fr> <20081022150323.GO6190@tesla> <20081022222306.GA8920@bougret.hpl.hp.com>
-In-Reply-To: <20081022222306.GA8920@bougret.hpl.hp.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1753829AbYJ2VF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 17:05:27 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 6/7] iwlwifi: iwl-agn-rs: initialize rs with valid antenna
+Date: Wed, 29 Oct 2008 14:05:48 -0700
+Message-Id: <1225314349-11139-7-git-send-email-reinette.chatre@intel.com> (sfid-20081029_220538_716866_519D188F)
+In-Reply-To: <1225314349-11139-6-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1225314349-11139-1-git-send-email-reinette.chatre@intel.com>
+ <1225314349-11139-2-git-send-email-reinette.chatre@intel.com>
+ <1225314349-11139-3-git-send-email-reinette.chatre@intel.com>
+ <1225314349-11139-4-git-send-email-reinette.chatre@intel.com>
+ <1225314349-11139-5-git-send-email-reinette.chatre@intel.com>
+ <1225314349-11139-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-Jean Tourrilhes a =E9crit :
-> On Wed, Oct 22, 2008 at 08:03:23AM -0700, Luis R. Rodriguez wrote:
->> CC'ing Jean as he's another French wireless developer.
->>
->=20
-> 	I have not been living in France for a while, like more than
-> 10 years ;-)
-> 	I think Benoit is on top of things, and as I'm not familiar
-> with it, I'll defer to him.
->=20
-> 	Jean
+This patch fix rate scaling initialization. Rate scaling
+was initialized always with B antenna.
 
-Indeed, I read lots of paper, website, source code and I know a lot for
-sure. But at the end, that's my own interpretation and I might still be
-wrong, so having peer review is still needed.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-Regards,
-Benoit
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 4ba3163..af68709 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2073,15 +2073,13 @@ static void rs_initialize_lq(struct iwl_priv *priv,
+ 	if ((i < 0) || (i >= IWL_RATE_COUNT))
+ 		i = 0;
+ 
+-	/* FIXME:RS: This is also wrong in 4965 */
+ 	rate = iwl_rates[i].plcp;
+-	rate |= RATE_MCS_ANT_B_MSK;
+-	rate &= ~RATE_MCS_ANT_A_MSK;
++	tbl->ant_type = first_antenna(valid_tx_ant);
++	rate |= tbl->ant_type << RATE_MCS_ANT_POS;
+ 
+ 	if (i >= IWL_FIRST_CCK_RATE && i <= IWL_LAST_CCK_RATE)
+ 		rate |= RATE_MCS_CCK_MSK;
+ 
+-	tbl->ant_type = ANT_B;
+ 	rs_get_tbl_info_from_mcs(rate, priv->band, tbl, &rate_idx);
+ 	if (!rs_is_valid_ant(valid_tx_ant, tbl->ant_type))
+ 	    rs_toggle_antenna(valid_tx_ant, &rate, tbl);
+-- 
+1.5.4.3
 
-iD8DBQFJAAisOR6EySwP7oIRAhW9AJ9vUcgHiPLQGcUwgyHRBsKdMLZgcwCfQEyn
-bwGnbRXBEARYX6TCy3eqVns=3D
-=3DRr7k
------END PGP SIGNATURE-----
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
