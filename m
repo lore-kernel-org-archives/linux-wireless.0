@@ -1,81 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:37296 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752734AbYJZWxU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2008 18:53:20 -0400
-From: Elias Oltmanns <eo@nebensachen.de>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:36573 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753264AbYJ3PIq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 11:08:46 -0400
+Subject: Re: [PATCHv2 5/5] mac80211_hwsim: Make sure beacon_timer gets
+	deleted
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-References: <87prlr9mna.fsf@denkblock.local>
-	<40f31dec0810251621l3d720a69mf21b5253e9135010@mail.gmail.com>
-	<87abcrtfa8.fsf@denkblock.local>
-	<40f31dec0810261132w2747d66em2a2a53ff9e1ecc04@mail.gmail.com>
-	<87wsfvt76q.fsf@denkblock.local>
-	<40f31dec0810261533g3143bd9bue0f3eff88c6936e9@mail.gmail.com>
-Date: Sun, 26 Oct 2008 23:52:47 +0100
-In-Reply-To: <40f31dec0810261533g3143bd9bue0f3eff88c6936e9@mail.gmail.com>
-	(Nick Kossifidis's message of "Mon, 27 Oct 2008 00:33:40 +0200")
-Message-ID: <87r663t1ds.fsf@denkblock.local> (sfid-20081026_235324_501794_81C2111B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081030150254.961883544@localhost>
+References: <20081030145920.233178987@localhost>
+	 <20081030150254.961883544@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PazSVFG2Fw71IUZpuENO"
+Date: Thu, 30 Oct 2008 16:08:40 +0100
+Message-Id: <1225379320.3690.58.camel@johannes.berg> (sfid-20081030_160849_037954_A53D6618)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Nick Kossifidis" <mickflemm@gmail.com> wrote:
-> 2008/10/26 Elias Oltmanns <eo@nebensachen.de>:
->>
->
->>                /*
->>                 * Write some more initial register settings
->>                 */
->> -               if (ah->ah_version == AR5K_AR5212) {
->> +               if (ah->ah_version == AR5K_AR5212 &&
->> +                   ah->ah_radio > AR5K_RF5111) {
->
-> even better: ah->ah_phy_revision > AR5K_SREV_PHY_5212
 
-Just to be absolutely sure: ah->ah_phy_revision >= AR5K_SREV_PHY_5212
-right?
+--=-PazSVFG2Fw71IUZpuENO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->
->>                        ath5k_hw_reg_write(ah, 0x0002a002, 0x982c);
->>
->>                        if (channel->hw_value == CHANNEL_G)
->> @@ -858,6 +859,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
->>
->>                        data = ath5k_hw_reg_read(ah, 0xa228);
->>                        data &= 0xfffe03ff;
->> +                       data |= 0x00000800;
->>                        ath5k_hw_reg_write(ah, data, 0xa228);
->>                        data = 0;
->>
->
-> Can you please use the macros from ath5k.h to set these parameters ?
-> (i got the above from decompiling binary HAL that's why i have fixed
-> masks -no magic values- but now that we know what's going on we must
-> make the code human-readable)
-> And also please change 0xa228 with it's name from reg.h :
->
-> 2557 #define AR5K_PHY_DAG_CCK_CTL                    0xa228
-> 2558 #define AR5K_PHY_DAG_CCK_CTL_EN_RSSI_THR        0x00000200
-> 2559 #define AR5K_PHY_DAG_CCK_CTL_RSSI_THR           0x0001fc00
-> 2560 #define AR5K_PHY_DAG_CCK_CTL_RSSI_THR_S         10
->
-> Normaly i'll update reset.c this week so you can always wait for a
-> more generic fix ;-)
+On Thu, 2008-10-30 at 16:59 +0200, Jouni Malinen wrote:
+> plain text document attachment (hwsim_del_timer.patch)
+> It was possible to trigger a kernel panic because beacon_timer may not
+> have been deleted in all cases when the kernel module was removed while
+> hostapd was still running.
+>=20
+> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+>=20
+> Index: wireless-testing/drivers/net/wireless/mac80211_hwsim.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2008-10-3=
+0 16:11:33.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2008-10-30 16:=
+26:49.000000000 +0200
+> @@ -290,6 +290,7 @@
+>  {
+>  	struct mac80211_hwsim_data *data =3D hw->priv;
+>  	data->started =3D 0;
+> +	del_timer(&data->beacon_timer);
 
-Well, I'm always happy to leave the work to others ;-). The only reason
-why I kept resending patches was to make sure that a minimal fix would
-get merged into a stable release eventually. Presumably, a rework of the
-reset sequence in itself would not be appropriate for stable. Still, if
-you'll take care get something into stable, that's fine with me.
-Otherwise, just let me know and I'll keep those patches coming and you
-occupied reviewing them ;-).
+should that be del_timer_sync, just in case? Not sure how that works
+with the rearming thing, I never really understood rearming timers.
 
-Regards,
+johannes
 
-Elias
+--=-PazSVFG2Fw71IUZpuENO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJCc30AAoJEKVg1VMiehFYkBIQAK71/U3Z3/EHI1BPqz7Tpbry
+F0cdR5j0ipjdl8eySuuzfzYdoAA1yGRfQvVUmaGJEz52+7GATnmjbNXHiR+Vj8iN
+OcJig/GeHbKJPY7fEpQ01UXoQHT/EDBXtyBnv3z9TIfjudXKT9KBsB1I3agHKXcF
+AUTNBnk9zipBA8aHHEU14iJM4CVBvGA++2E2CdEFHcnlFUS5Av941tH8hjtu99SK
+EstRt/bQY6eAbwOYItF6qsIRWjygJsUkYyl0iHMIb/RDNo8nFcWKy0LpuFoUcxNm
+HTdw1+76AmUSG0UNgzG1BCXOL0ShFumVrdi41YbG6ZNFCCvIbw/MCzcSBczMEjYQ
+iy1M/YKKI/rw3JbsH6eqju3ZbywmxgoxW7BP1DlURuve+78aBzsW356+ZORSXnFo
+uVF334H/9x6mKbY9t5I2ilvYriHr7qiEp9n43c8qcS04TJbFm4nGB5ZwUHK4CWVu
+SVqIshkSM8UJe9K6oYKE2oMsFr4MC9YQzm2WJYbqvPLHT192uljcwZCZNoYfhiLP
+JG2VdfdQUbBjk5WNGvmT8dSmHtxx6O/NG1h/DIekUMU6H+R8C+Tp2zR+2A72DV5+
+QvlDVe/8M3KcDZ7scmZMck10wCQtnN+kwXiNUgqB916t6Wzh36ZZbaDTQ+E4thlj
+bur0escBhPNtEhe8dl2i
+=+bSX
+-----END PGP SIGNATURE-----
+
+--=-PazSVFG2Fw71IUZpuENO--
+
