@@ -1,32 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:48838 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754611AbYJEBeI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752965AbYJ3RVz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Oct 2008 21:34:08 -0400
-Received: by gxk9 with SMTP id 9so3914252gxk.13
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Oct 2008 18:34:05 -0700 (PDT)
-Message-ID: <43e72e890810041834s57061803tccd74d708112ca98@mail.gmail.com> (sfid-20081005_033412_623120_3A83E589)
-Date: Sat, 4 Oct 2008 18:34:05 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 4/5] ath5k: Fix SREV reporting after SREV updates
-Cc: "Bob Copeland" <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	jirislaby@gmail.com, nbd@openwrt.org
-In-Reply-To: <40f31dec0810041825s49fad088x1efb9562bcc68cce@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080928222444.GD21335@makis>
-	 <20081005003710.GA3222@hash.localnet>
-	 <40f31dec0810041825s49fad088x1efb9562bcc68cce@mail.gmail.com>
+	Thu, 30 Oct 2008 13:21:55 -0400
+Subject: Re: Guidelines regarding separate directory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+In-Reply-To: <4909EA78.3060700@lwfinger.net> (sfid-20081030_181107_189082_5740895D)
+References: <4909EA78.3060700@lwfinger.net>
+	 (sfid-20081030_181107_189082_5740895D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xA/R1Eeg2hyLbPFemooY"
+Date: Thu, 30 Oct 2008 18:21:49 +0100
+Message-Id: <1225387309.3690.73.camel@johannes.berg> (sfid-20081030_182158_381151_A0F42367)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 4, 2008 at 6:25 PM, Nick Kossifidis <mickflemm@gmail.com>
-> Luis Is there a pci-e version of 5414 ? Is 5424 the pci-e version of
-> 5414 or it's another chip ?
 
-I am not sure, I'll  have to check or ask.
+--=-xA/R1Eeg2hyLbPFemooY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Thu, 2008-10-30 at 10:10 -0700, Larry Finger wrote:
+> I am planning on adding code to control the LEDs on the RTL8187 devices b=
+ased on
+> the latest vendor driver. From the expected size of the code, I think tha=
+t
+> separate files will be best.
+>=20
+> What number of files in a driver make it advisable to create a separate
+> directory? Between the rtl8180 and rtl8187 drivers, there are now 15 file=
+s and I
+> will be adding at least 2 more. Is this the time to create a rtl818x dire=
+ctory
+> under drivers/net/wireless?
+
+I for one think that should have been done already, makes finding
+drivers easier imho. But I don't think there are strict guidelines in
+any way.
+
+johannes
+
+--=-xA/R1Eeg2hyLbPFemooY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJCe0pAAoJEKVg1VMiehFYdX0P/2Frorr/4d6yD0CeMWEcmxyk
+4aRv6c7Fx5c2HnA2x+h258pn89aunOxIZMkc/5w5O9M5BFud/QRkOyGFNFe2KfRv
+sR7PnR8yALgF6oTugCZh52rwN9j8NwjI1pLrmWYLfQL5H/z8b0E9zHafgZ8tTKhx
+On9DdC2qbSTQnen8bd+wV64bIZNoRc86kqmXdg3TJ5TutjjvOvdYgyDmfOecWcmG
+S/Lo6d7TNtNEh7dRbi4efIbdxUWATqyyUDQIAiVj/HE7ZpHRVq+pv/d4W4JJ9R8G
+Y9FWufFxdZAlXjuYquJtwIkqdNmqiGN1mv5/CMx0tAVCowxDBRmxkekUHckFqVhQ
+MRCTk+sNKWt1cTq5ePu5rQhK3w3WblpKl/iWyn8abLfM/1AIM5SgBcMiy/3/vZ9X
+vTAKqtCh1peoz5tCi+gU27/B+uiRrEtnbJiS7p+3Gmgt62YBuGdWE8cOfHdZx0M8
+v+7ljsyS4UaZ3SBP7N+WqXOkdWvHqHtNRT7wOCN+MOx16D72qey11MdNKRgWYrhK
+g7H6f0U5tq4CU+wp8NpxoQuQRerTfOvmAIqExOhnEtHdypt0HXFg10jxjuuzP+EX
+TzeDG3mtdS0ufeotlZ1EQZNq6FjiNjpYZMsK7iHpQZM1U8CVqvhuSI+yS05s8+Rx
+Ee8cAGpmW6bmI3BACoZB
+=30wC
+-----END PGP SIGNATURE-----
+
+--=-xA/R1Eeg2hyLbPFemooY--
+
