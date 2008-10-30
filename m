@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:58323 "EHLO
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:44575 "EHLO
 	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753944AbYJ3Xrq (ORCPT
+	by vger.kernel.org with ESMTP id S1753772AbYJ3AyK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 19:47:46 -0400
-Message-ID: <490A47A0.8060103@lwfinger.net> (sfid-20081031_004807_244853_9DD2736D)
-Date: Thu, 30 Oct 2008 16:47:44 -0700
+	Wed, 29 Oct 2008 20:54:10 -0400
+Message-ID: <490905AC.9030800@lwfinger.net> (sfid-20081030_015413_038749_DE770821)
+Date: Wed, 29 Oct 2008 17:54:04 -0700
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: Guidelines regarding separate directory
-References: <4909EA78.3060700@lwfinger.net> <20081030172919.GA4330@tuxdriver.com>
-In-Reply-To: <20081030172919.GA4330@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: htl10@users.sourceforge.net
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: [RFC/RFT PATCH 6/6] rtl8187: Reduce channel switch delay
+References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>
+In-Reply-To: <49088F7D.8020102@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> 
-> Yes.  It should have been done long ago -- I had them all in
-> drivers/net/wireless due to my own misinterpretation of the policy
-> in the past.
+The latest vendor driver (rtl8187B_linux_26.1036.0708.2008) has a 10 msec
+delay after the call to set a new channel, but not before.
 
-I will do it, but not until some timing patches have been reviewed and
-submitted. At least there is some time before the 2.6.29 merge window.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Larry
+Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
+@@ -870,7 +870,6 @@ static int rtl8187_config(struct ieee802
+ 	 */
+ 	rtl818x_iowrite32(priv, &priv->map->TX_CONF,
+ 			  reg | RTL818X_TX_CONF_LOOPBACK_MAC);
+-	msleep(10);
+ 	priv->rf->set_chan(dev, conf);
+ 	msleep(10);
+ 	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
+
+
 
