@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:35919 "EHLO
+Received: from yw-out-2324.google.com ([74.125.46.31]:16179 "EHLO
 	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757808AbYJ3Rnn (ORCPT
+	with ESMTP id S1754379AbYJ3OjG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 13:43:43 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so297644ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 10:43:41 -0700 (PDT)
-Message-ID: <43e72e890810301043g17c2867cn8023c9a170bd5487@mail.gmail.com> (sfid-20081030_184408_208311_9D183EF5)
-Date: Thu, 30 Oct 2008 10:43:41 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Thu, 30 Oct 2008 10:39:06 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so232244ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 07:39:04 -0700 (PDT)
+Message-ID: <1ba2fa240810300739m69ec943didc1d76b82da7f1e5@mail.gmail.com> (sfid-20081030_153912_910164_5EC3FD76)
+Date: Thu, 30 Oct 2008 16:39:03 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 6/6] cfg80211: enable 5 GHz band for world regulatory domain
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1225387137.3690.70.camel@johannes.berg>
+Subject: Re: [PATCH for 2.6.28] mac80211: fix basic rates
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1225376692.3690.46.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1225329594-21704-1-git-send-email-lrodriguez@atheros.com>
-	 <1225329594-21704-2-git-send-email-lrodriguez@atheros.com>
-	 <1225329594-21704-3-git-send-email-lrodriguez@atheros.com>
-	 <1225329594-21704-4-git-send-email-lrodriguez@atheros.com>
-	 <1225329594-21704-5-git-send-email-lrodriguez@atheros.com>
-	 <1225329594-21704-6-git-send-email-lrodriguez@atheros.com>
-	 <1225329594-21704-7-git-send-email-lrodriguez@atheros.com>
-	 <53ad401862d734b26836f0706a394525.squirrel@secure.sipsolutions.net>
-	 <43e72e890810300909if0e2db1qf5ff8512ab760275@mail.gmail.com>
-	 <1225387137.3690.70.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1225300446.5439.27.camel@johannes.berg>
+	 <1ba2fa240810300623o51dbd0a6p7a7bc89795dc5d35@mail.gmail.com>
+	 <1225376692.3690.46.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 30, 2008 at 10:18 AM, Johannes Berg
+On Thu, Oct 30, 2008 at 4:24 PM, Johannes Berg
 <johannes@sipsolutions.net> wrote:
-> On Thu, 2008-10-30 at 09:09 -0700, Luis R. Rodriguez wrote:
->> On Thu, Oct 30, 2008 at 2:24 AM, Johannes Berg
+> On Thu, 2008-10-30 at 15:23 +0200, Tomas Winkler wrote:
+>> On Wed, Oct 29, 2008 at 7:14 PM, Johannes Berg
 >> <johannes@sipsolutions.net> wrote:
->> > Luis R. Rodriguez wrote:
->> >> Technically speaking since some countries do not support
->> >> some channels in 5 GHz the world regulatory domain should not
->> >> use them however APs should *not* be shipped in those countries
->> >> which don't allow 5 GHz operation. Because of this we can
->> >> safely assume we operate correctly in STA mode by forcing
->> >> passive scan and disabling ad-hoc in 5 GHz. We leave out
->> >> all DFS channels as we don't support DFS yet.
+>> > This fixes the basic rate bitmap calculation in mac80211.
 >> >
->> > No,  this is incorrect. The linux kernel can well act as an AP.
+>> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> > Cc: stable@kernel.org [2.6.25, 2.6.26, 2.6.27]
+>> > ---
+>> > Is this appropriate for stable? It's a trivial and obvious fix, and can
+>> > throw off the duration calculation, but it's likely nobody will ever
+>> > really notice...
 >>
->> An AP would/should not want to use the world regulatory domain though :)
+>> You would should fail association if one of the basic rates is not
+>> supported  by the station
 >
-> Yeah but if a user just starts hostapd without crda then we shouldn't
-> allow it to operate in 5GHz
+> No, this has nothing to do with association, it's just setting the
+> internal variable about which rates are basic in the BSS.
 
-Should we rename NO-IBSS to NO-BEACONS ? This would mean we would not
-allow IBSS, AP or Mesh.
+I understand that but What your patch is doing it is preventing
+of setting basic rates for ratest that are not sported by the driver,
+but according
+the spec it is not permissible that driver will not support one of the
+basic rates.
 
-  Luis
+Tomas
