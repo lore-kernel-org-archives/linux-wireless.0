@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:51904 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751218AbYJ3ELX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 00:11:23 -0400
-Subject: Re: [PATCH] don't use net/ieee80211.h
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225243531.1369.18.camel@johannes.berg>
-References: <1225243531.1369.18.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 30 Oct 2008 00:09:47 -0400
-Message-Id: <1225339787.32092.16.camel@localhost.localdomain> (sfid-20081030_051128_015010_F3B07044)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.229]:41926 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752800AbYJ3BWw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 21:22:52 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so304388rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 18:22:51 -0700 (PDT)
+Message-ID: <b6c5339f0810291822g33c0ce4cvc21a2449d8ee5458@mail.gmail.com> (sfid-20081030_022257_316532_E4BB2AEE)
+Date: Wed, 29 Oct 2008 21:22:51 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [ath5k-devel] ath5k: badness at net/mac80211/rx.c:2200, status->rate_idx = 255
+Cc: ath5k-devel@lists.ath5k.org,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1224882332.10804.0.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224799927.22806.15.camel@dv>
+	 <20081023213333.4t4427vw5ws8ccck-cebfxv@webmail.spamcop.net>
+	 <b6c5339f0810241158t59b15861qc9eb05a3f3f032a2@mail.gmail.com>
+	 <b6c5339f0810241201r7f8ba34ej6f39a96e371849eb@mail.gmail.com>
+	 <1224882332.10804.0.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-29 at 02:25 +0100, Johannes Berg wrote:
-> Convert all the drivers using net/ieee80211.h to use linux/ieee80211.h.
-> Contains a bugfix in libertas where the SSID parsing could overrun the
-> buffer when the AP sends invalid information.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  drivers/net/wireless/airo.c                |   50 +++++++++---------
->  drivers/net/wireless/libertas/assoc.c      |   18 +++---
->  drivers/net/wireless/libertas/cmd.c        |    5 -
->  drivers/net/wireless/libertas/dev.h        |    7 ++
->  drivers/net/wireless/libertas/main.c       |    3 -
->  drivers/net/wireless/libertas/persistcfg.c |    2 
->  drivers/net/wireless/libertas/scan.c       |   77 ++++++++++++++---------------
->  drivers/net/wireless/libertas/scan.h       |    4 +
->  drivers/net/wireless/libertas/types.h      |    5 -
->  drivers/net/wireless/libertas/wext.c       |    1 
+On Fri, Oct 24, 2008 at 5:05 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Fri, 2008-10-24 at 15:01 -0400, Bob Copeland wrote:
+>> On Fri, Oct 24, 2008 at 2:58 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>> > http://article.gmane.org/gmane.linux.kernel.wireless.general/22711
+>> >
+>> > I guess like ath9k, rc stuff isn't setup properly, but I wouldn't know.
+>>
+>> Err, that's tx path not rx, so maybe not.
+>
+> Correct.  But
+> http://article.gmane.org/gmane.linux.drivers.ath5k.devel/1311 is what
+> I'm seeing.
 
-airo & libertas:
+So, any hints on how to reproduce this one?  Seems lots of people are
+hitting it but I haven't seen it yet (though I was working on
+2.6.27-rc2 up until yesterday).
 
-Acked-by: Dan Williams <dcbw@redhat.com>
-
-
-
+-- 
+Bob Copeland %% www.bobcopeland.com
