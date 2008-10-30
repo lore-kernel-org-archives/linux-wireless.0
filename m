@@ -1,90 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:52853 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752041AbYJaVJj (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35224 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754848AbYJ3PQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2008 17:09:39 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1415764wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2008 14:09:38 -0700 (PDT)
-Message-ID: <1ba2fa240810311409i5203bcccu2b944dcc505deb30@mail.gmail.com> (sfid-20081031_220945_108222_2C1000E3)
-Date: Fri, 31 Oct 2008 23:09:38 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcel Holtmann" <marcel@holtmann.org>
-Subject: Re: Still 4965 issues with wireless-testing
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <BF4BAA7D-FEBC-40F7-AE07-D6BBD31A2A0B@holtmann.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com>
-	 <DAD31980-B029-46D4-A687-9B0426899853@holtmann.org>
-	 <1ba2fa240810310652t351b0b77k819a7e03659503eb@mail.gmail.com>
-	 <BF4BAA7D-FEBC-40F7-AE07-D6BBD31A2A0B@holtmann.org>
+	Thu, 30 Oct 2008 11:16:32 -0400
+Subject: Re: [PATCH 1/1] mac80211: fix basic rates setting from association
+	response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1225379288-7482-1-git-send-email-tomas.winkler@intel.com>
+References: <1225379288-7482-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tVI2RyS1mEoGozI8ZHu9"
+Date: Thu, 30 Oct 2008 16:16:27 +0100
+Message-Id: <1225379787.3690.68.camel@johannes.berg> (sfid-20081030_161651_167326_0E198CFE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 31, 2008 at 8:57 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Tomas,
->
->>>> so besides the point that the Ubuntu 8.10 kernel has a broken driver for
->>>> the Intel 4965 cards which will crash my X61 after less than one minute
->>>> uptime when it connects to my access point, I have my dmesg full with
->>>> warnings from the latest wireless-testing kernel.
->>>>
->>>> I know that we have discussed this before and Johannes' patch at least
->>>> turns it into warnings instead of killing my system completely, but I am
->>>> still surprised why this hasn't been fixed.
->>>
->>> so this becomes more and more annoying. I get this WARN_ON now multiple
->>> times pre minute. Only the first few minutes after loading the firmware
->>> everything is okay and then it keeps filling my dmesg. And on top of
->>> that, I
->>> now see these:
->>>
->>> __ratelimit: 1189 callbacks suppressed
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> __ratelimit: 57695 callbacks suppressed
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>> __ratelimit: 3345 callbacks suppressed
->>> iwlagn: Can not allocate SKB buffers
->>> iwlagn: Can not allocate SKB buffers
->>>
->>> What is going on here? This is a normal setup and nothing fancy. Access
->>> point is N-Capable from D-Link btw.
->>
->>
->> I have D-Link too I don't see this. What kernel version is this? Is
->> this your ubuntu version or wireless-testing?
->> Any more data you can provide (.config. slabinfo)
->
-> this is from wireless-testing. The Ubuntu 2.6.27 kernel is totally broken.
-> It will crash the kernel since we are missing the patch to turn this into a
-> warning :)
->
-> Attached is my config. The slabinfo will follow once the SKB errors come up
-> again. It normally takes a few hours before they show. Just resumed that
-> machine.
 
-I've downloaded whole moblin last night over 2.6.27.4, it's a bit slow
-because the missing calibrations but it didn't crashed.
+--=-tVI2RyS1mEoGozI8ZHu9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I will test your config, your machine is T61  am I right?
+On Thu, 2008-10-30 at 17:08 +0200, Tomas Winkler wrote:
+> In previous code all the rates were marked as basic.
 
-Tomas
+thanks.
+
+johannes
+
+--=-tVI2RyS1mEoGozI8ZHu9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJCc/HAAoJEKVg1VMiehFYBgUP/3uw6W6HbxTBUqZAinNVGVeg
+k/NM5OuAUh5pjiltQEfhcJjGs2ejZxNL4Mb4Uq+0jquJj89u4OpSUjDhtWKP7AlQ
+FbwZ3ldApd6/oTZ7cZGQ/5KWHYTSY8QB/w7HxhPiepY/QcGLXYfpsGzDYimj5VFm
+t9GVQlhVws+OXW6evti2albPpLWq/1hdoXy2NckXDpXnHYNvgH5KKvMfWon8NQYM
+F4HymwJ3s/RO+ca8H0jEll640maTo0jqyUgLU3aqgk04U9ShvAAFc2pwt/lS9EYF
+YPdK72/ESe3OKLr93nElZ7Jy0UtK8JP2/pzfFFo7CUD50hHIq8QnoKfaXoc6stjl
+Z/WS2tyVf5hW0CvtaR+1tyZpYKH7GpIHqsyMVTiQJuXgNKcdiCXiqBUTowdvy0VM
+LAUFqsjOOQ6mp7RcjnXfcHQuULjnJ3haHA5hsUflPQjAZ9JXHmIbzRmB6dHe2/l8
+eFYff4DrtsXFE/WcvF3+AQF194h9FcrOmfM4k4Y+VdXqDwu8uISIik3FnmT7JCaT
+I2I+l66CUm7MMg5TFC/WWuilh7ivj2PgsqDQl3OBQ7jFipck/ly/wErB8ONQicvn
+ICfKRof6pFeBefbuExi3QxFbxwLITgDgruZb6JAdy09RLjhsYzQANRdTg4UPUoPa
+82v3vWGZHF0ALj+0MsXw
+=bblS
+-----END PGP SIGNATURE-----
+
+--=-tVI2RyS1mEoGozI8ZHu9--
+
