@@ -1,115 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:48402 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753423AbYJJA5D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 20:57:03 -0400
-Message-ID: <48EEA84F.4060809@openwrt.org> (sfid-20081010_025706_629245_3E95976D)
-Date: Fri, 10 Oct 2008 02:56:47 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH 2/2] b43: fix tx status reporting on rate fallback
-References: <48EEA7A4.2020303@openwrt.org> <48EEA7F7.6020508@openwrt.org>
-In-Reply-To: <48EEA7F7.6020508@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:45319 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754336AbYJ3Oy4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 10:54:56 -0400
+Subject: Re: [PATCH for 2.6.28] mac80211: fix basic rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240810300751h5c1ba5e0mefc4fc89dbc7418e@mail.gmail.com> (sfid-20081030_155201_619699_E768280A)
+References: <1225300446.5439.27.camel@johannes.berg>
+	 <1ba2fa240810300623o51dbd0a6p7a7bc89795dc5d35@mail.gmail.com>
+	 <1225376692.3690.46.camel@johannes.berg>
+	 <1ba2fa240810300739m69ec943didc1d76b82da7f1e5@mail.gmail.com>
+	 <1225377700.3690.53.camel@johannes.berg>
+	 <1ba2fa240810300751h5c1ba5e0mefc4fc89dbc7418e@mail.gmail.com>
+	 (sfid-20081030_155201_619699_E768280A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VID+GUmChDe4mLU0Pn+g"
+Date: Thu, 30 Oct 2008 15:54:52 +0100
+Message-Id: <1225378492.3690.56.camel@johannes.berg> (sfid-20081030_155500_593010_236F3761)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the hardware uses RTS/CTS reporting and the actual RTS/CTS
-handshake failed, it will switch to the fallback rate, even
-though the main rate was never actually attempted.
-Make sure that this does not screw up rate control statistics.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+--=-VID+GUmChDe4mLU0Pn+g
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -778,6 +778,9 @@ struct b43_wldev {
- #ifdef CONFIG_B43_DEBUG
- 	struct b43_dfsentry *dfsentry;
- #endif
-+
-+	/* necessary for figuring out the correct tx status */
-+	int short_retry;
- };
- 
- static inline struct b43_wl *hw_to_b43_wl(struct ieee80211_hw *hw)
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1393,7 +1393,7 @@ void b43_dma_handle_txstatus(struct b43_
- 			 * Call back to inform the ieee80211 subsystem about
- 			 * the status of the transmission.
- 			 */
--			frame_succeed = b43_fill_txstatus_report(info, status);
-+			frame_succeed = b43_fill_txstatus_report(dev, info, status);
- #ifdef CONFIG_B43_DEBUG
- 			if (frame_succeed)
- 				ring->nr_succeed_tx_packets++;
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3892,6 +3892,7 @@ static void b43_set_retry_limits(struct 
- 			short_retry);
- 	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_LRLIMIT,
- 			long_retry);
-+	dev->short_retry = short_retry;
- }
- 
- static void b43_set_synth_pu_delay(struct b43_wldev *dev, bool idle)
---- a/drivers/net/wireless/b43/pio.c
-+++ b/drivers/net/wireless/b43/pio.c
-@@ -589,7 +589,7 @@ void b43_pio_handle_txstatus(struct b43_
- 	info = IEEE80211_SKB_CB(pack->skb);
- 	memset(&info->status, 0, sizeof(info->status));
- 
--	b43_fill_txstatus_report(info, status);
-+	b43_fill_txstatus_report(dev, info, status);
- 
- 	total_len = pack->skb->len + b43_txhdr_size(dev);
- 	total_len = roundup(total_len, 4);
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -687,7 +687,8 @@ void b43_handle_txstatus(struct b43_wlde
- /* Fill out the mac80211 TXstatus report based on the b43-specific
-  * txstatus report data. This returns a boolean whether the frame was
-  * successfully transmitted. */
--bool b43_fill_txstatus_report(struct ieee80211_tx_info *report,
-+bool b43_fill_txstatus_report(struct b43_wldev *dev,
-+			      struct ieee80211_tx_info *report,
- 			      const struct b43_txstatus *status)
- {
- 	bool frame_success = 1;
-@@ -706,8 +707,19 @@ bool b43_fill_txstatus_report(struct iee
- 	if (status->frame_count == 0) {
- 		/* The frame was not transmitted at all. */
- 		report->status.retry_count = 0;
--	} else
-+	} else if (status->rts_count > dev->short_retry) {
-+		/*
-+		 * If the short retries (RTS, not data frame) have exceeded
-+		 * the limit, the hw will not have tried the selected rate,
-+		 * but will have used the fallback rate instead.
-+		 * Don't let the rate control count attempts for the selected
-+		 * rate in this case, otherwise the statistics will be off.
-+		 */
-+		report->tx_rate_idx = 0;
-+		report->status.retry_count = 0;
-+	} else {
- 		report->status.retry_count = status->frame_count - 1;
-+	}
- 
- 	return frame_success;
- }
---- a/drivers/net/wireless/b43/xmit.h
-+++ b/drivers/net/wireless/b43/xmit.h
-@@ -294,7 +294,8 @@ void b43_rx(struct b43_wldev *dev, struc
- 
- void b43_handle_txstatus(struct b43_wldev *dev,
- 			 const struct b43_txstatus *status);
--bool b43_fill_txstatus_report(struct ieee80211_tx_info *report,
-+bool b43_fill_txstatus_report(struct b43_wldev *dev,
-+			      struct ieee80211_tx_info *report,
- 			      const struct b43_txstatus *status);
- 
- void b43_tx_suspend(struct b43_wldev *dev);
+On Thu, 2008-10-30 at 16:51 +0200, Tomas Winkler wrote:
+
+> Oh, I now I got it out of index. What about coding it in more readable wa=
+y?
+>=20
+>=20
+> for (i =3D 0; i < elems.supp_rates_len; i++) {
+>                 int rate =3D (elems.supp_rates[i] & 0x7f) * 5;
+>                 bool is_basic =3D !!(elems.supp_rates[i] & 0x80);
+>=20
+>                 if (rate > 110)
+>                         have_higher_than_11mbit =3D true;
+>=20
+>                 for (j =3D 0; j < sband->n_bitrates; j++) {
+>                         if (sband->bitrates[j].bitrate =3D=3D rate) {
+>                                 rates |=3D BIT(j);
+>                                 if (is_basic)
+>                                         basic_rates |=3D BIT(j);
+>                                 break;
+
+yeah, that works too, and the break is probably a good idea, want to
+send a patch to supersede this one?
+
+johannes
+
+--=-VID+GUmChDe4mLU0Pn+g
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJCcq4AAoJEKVg1VMiehFYjiEP/21BYk1SEqIICMeZeRvvsN9P
+MAwoFZK5YZ9olxsXit1wAcPuxYLW18riZmMZtLsJwlwluQpXHjXytAVZ19izkuvl
+pOIZAtHtKFkqd/Oop9jF3Ql7KB95/oZYVcpZOvXPXxOHVKcTB3uUwLa+tp0hm7ml
+1iPQ8+i0jzSqh8nmC0prpxhomn7qYta1IiSF9B2jfmVuCloxYLLoY8ajodbMabAz
+nsO914dqJ5MoXEfXtGGb8eKwtt1jsYvgVfJUt30KrpB47X+Q/H0trE1GjNPWuZN0
+skgvKR1HXXNpIF6KF/gI1SmIF1znSS/S5C2CWjAQJK1g9TNFUSvXQPSWBOvsdmMT
+4vl7Oh0b2AUqm8G0Z/OzzGUHO0JULi+JSB1rvMo7T9TMqxHweRBZPaZvk9arL+GX
+txqS9gDVfgm/NO9PhNxuO6tYevckR9nlptwyXkE7NQNp5JykaXTA097rn5jgz4Vt
+WXexWWvmoKDM3aakke6Wiy2HGqhWxksEjITc2K+WyXNFmgUjw7L6y7Ta66bfbMLq
+xsQmXj+F6yKgNrzGozcAF/qGWIx8LlpfWAjPemlX9iDLJnKDLbQzne6Y6mw/GU1v
+BItfYIgJaXbGB8Ah3+JtksyjWDpM2XszoZ1uawa3zaVpGGigdDfQzVokHrhU6tlV
+dlDjgrpja7MnBNB+VzP9
+=8SxP
+-----END PGP SIGNATURE-----
+
+--=-VID+GUmChDe4mLU0Pn+g--
+
