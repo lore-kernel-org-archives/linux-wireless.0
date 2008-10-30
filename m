@@ -1,84 +1,276 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44177 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832AbYJBJYI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 05:24:08 -0400
-Subject: Re: rate control vs. bands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>, Tomas Winkler <tomas.winkler@intel.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <1221223890.11204.33.camel@johannes.berg> (sfid-20080912_145214_760432_1456136F)
-References: <1221223890.11204.33.camel@johannes.berg>
-	 (sfid-20080912_145214_760432_1456136F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-e6VkR/PHNw73tPOuh0oH"
-Date: Thu, 02 Oct 2008 10:40:45 +0200
-Message-Id: <1222936845.24551.34.camel@johannes.berg> (sfid-20081002_112412_267237_BBD009D3)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:34722 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753273AbYJ3BT7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 21:19:59 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 18:19:59 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/6] cfg80211: Add regulatory domain intersection capability
+Date: Wed, 29 Oct 2008 18:19:50 -0700
+Message-ID: <1225329594-21704-3-git-send-email-lrodriguez@atheros.com> (sfid-20081030_022004_885525_6C06C996)
+In-Reply-To: <1225329594-21704-2-git-send-email-lrodriguez@atheros.com>
+References: <1225329594-21704-1-git-send-email-lrodriguez@atheros.com>
+ <1225329594-21704-2-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There are certain scenerios where we require intersecting
+two regulatory domains. This adds intersection support.
+When we enable 802.11d support we will use this to intersect
+the regulatory domain from the AP's country IE and what our
+regulatory agent believes is correct for a country.
 
---=-e6VkR/PHNw73tPOuh0oH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch enables intersection for now in the case where
+the last regdomain was set by a country IE which was parsed
+and the user then wants to set the regulatory domain. Since
+we don't support country IE parsing yet this code path will not
+be hit, however this allows us to pave the way for 11d support.
 
+Intersection code has been tested in userspace with CRDA.
 
-> During my rate control work I noticed that the band handling there is
-> somewhat awkward, and I wanted to collect opinions.
->=20
-> Currently, much of the code assumes that neither we nor station in our
-> bSS change bands; the PID algorithm even says:
->=20
->         /* We can safely assume that sband won't change unless we get
->          * reinitialized. */
->=20
-> which doesn't really seem true.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |  166 +++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 files changed, 158 insertions(+), 8 deletions(-)
 
-I haven't checked so far, but I think you can make it switch:
- * bring up two IBSS interfaces in 2.4 GHz, have them sync
- * switch the leader to a channel in 5 GHz
- * the follower will hopefully find the leader and switch there, but the
-   sta_info for the follower will, on the leader, still have sband 2GHz
-
-> For the rate control algorithms, I was just thinking about removing the
-> rate_init() callback because this can just as well be done when
-> allocating the station. However, currently we don't pass the band to the
-> alloc_sta function, so that isn't possible right now.
-
-So it seems that this sucks for rate control algorithms; we need to make
-sure rate_init is always called during alloc_sta initially (so we don't
-forget like mesh does right now! nbd, make sure to test mesh and
-possibly fix it please.)
-
-We also need to investigate calling rate_init again when the sta has
-switched band for some reason.
-
-johannes
-
---=-e6VkR/PHNw73tPOuh0oH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI5IkKAAoJEKVg1VMiehFYW6EP/3Cb30hNFZb78R6xx2reAxR6
-CkmCI+W9Zwl7D21hqHBh5BeCzE/Wh6vtFniipG/Ji9ebmeZEavYcyPOofOBNNSt8
-Goe55BEf/D2JkGuh47J7pjRWVxktkXuptaiIdkPPKq8mhE1ITCdMbb5Y3i0jIdkU
-3tTIs7qT8ZaTv2SB4Y4ni4bez3RGTWjk6ofT760jStzVLQbytwLTrIuRVqTb5vlX
-Zu/8fdknBGBaBAoikn8LNNuGPSLwjJ/myYvCm0N86770Tty8avFj45J1MTQAAmYJ
-p/xNfo4zGZC0VQ2xA8wJ0aWPOVNotZpPwMcsjmZKSPXNuaUdF4eq6yXHa96Jhhas
-pjz2C71bUk7NBL2IKGaGuvusxzI8lbQ8bC8TUDqpVqIKifzTth/3W5xbVdDQI0K9
-3NMB8e6fP6pyJBrrHl+PdCI2BDnL68IWehJ4ia5YQhNEa1JA4tkqBnSoCaYgLSbg
-/MaFFR7uA9ua2sikgTC9xdkstVoR02o+5HFkrMZqXyP5ic9+16s14fppppwffxU2
-Av2lhMCO+28UOyLHMf254SL8hsFlmFOIynh6hBnSGoSqzheoRjmsRjSpThCFQwS0
-lBt8131nj/X0wztjA6aTnfd83vhcbyhZT4st/uHBLx3qtSqk2MNFDsiedpamOFuT
-M2iUFBDEbHUSphXhlHOJ
-=uaYN
------END PGP SIGNATURE-----
-
---=-e6VkR/PHNw73tPOuh0oH--
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ff706f9..c996a74 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -50,6 +50,7 @@ struct regulatory_request {
+ 	struct wiphy *wiphy;
+ 	enum reg_set_by initiator;
+ 	char alpha2[2];
++	bool intersect;
+ };
+ 
+ static struct regulatory_request *last_request;
+@@ -359,6 +360,143 @@ static u32 freq_max_bandwidth(const struct ieee80211_freq_range *freq_range,
+ 	return 0;
+ }
+ 
++/* Helper for regdom_intersect(), this does the real
++ * mathematical intersection fun */
++static int reg_rules_intersect(
++	const struct ieee80211_reg_rule *rule1,
++	const struct ieee80211_reg_rule *rule2,
++	struct ieee80211_reg_rule *intersected_rule)
++{
++	const struct ieee80211_freq_range *freq_range1, *freq_range2;
++	struct ieee80211_freq_range *freq_range;
++	const struct ieee80211_power_rule *power_rule1, *power_rule2;
++	struct ieee80211_power_rule *power_rule;
++	u32 freq_diff;
++
++	freq_range1 = &rule1->freq_range;
++	freq_range2 = &rule2->freq_range;
++	freq_range = &intersected_rule->freq_range;
++
++	power_rule1 = &rule1->power_rule;
++	power_rule2 = &rule2->power_rule;
++	power_rule = &intersected_rule->power_rule;
++
++	freq_range->start_freq_khz = max(freq_range1->start_freq_khz,
++		freq_range2->start_freq_khz);
++	freq_range->end_freq_khz = min(freq_range1->end_freq_khz,
++		freq_range2->end_freq_khz);
++	freq_range->max_bandwidth_khz = min(freq_range1->max_bandwidth_khz,
++		freq_range2->max_bandwidth_khz);
++
++	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
++	if (freq_range->max_bandwidth_khz > freq_diff)
++		freq_range->max_bandwidth_khz = freq_diff;
++
++	power_rule->max_eirp = min(power_rule1->max_eirp,
++		power_rule2->max_eirp);
++	power_rule->max_antenna_gain = min(power_rule1->max_antenna_gain,
++		power_rule2->max_antenna_gain);
++
++	intersected_rule->flags = (rule1->flags | rule2->flags);
++
++	if (!is_valid_reg_rule(intersected_rule))
++		return -EINVAL;
++
++	return 0;
++}
++
++/**
++ * regdom_intersect - do the intersection between two regulatory domains
++ * @rd1: first regulatory domain
++ * @rd2: second regulatory domain
++ *
++ * Use this function to get the intersection between two regulatory domains.
++ * Once completed we will mark the alpha2 for the rd as intersected, "98",
++ * as no one single alpha2 can represent this regulatory domain.
++ *
++ * Returns a pointer to the regulatory domain structure which will hold the
++ * resulting intersection of rules between rd1 and rd2. We will
++ * kzalloc() this structure for you.
++ */
++static struct ieee80211_regdomain *regdom_intersect(
++	const struct ieee80211_regdomain *rd1,
++	const struct ieee80211_regdomain *rd2)
++{
++	int r, size_of_regd;
++	unsigned int x, y;
++	unsigned int num_rules = 0, rule_idx = 0;
++	const struct ieee80211_reg_rule *rule1, *rule2;
++	struct ieee80211_reg_rule *intersected_rule;
++	struct ieee80211_regdomain *rd;
++	/* This is just a dummy holder to help us count */
++	struct ieee80211_reg_rule irule;
++
++	/* Uses the stack temporarily for counter arithmetic */
++	intersected_rule = &irule;
++
++	memset(intersected_rule, 0, sizeof(struct ieee80211_reg_rule));
++
++	if (!rd1 || !rd2)
++		return NULL;
++
++	/* First we get a count of the rules we'll need, then we actually
++	 * build them. This is to so we can malloc() and free() a
++	 * regdomain once. The reason we use reg_rules_intersect() here
++	 * is it will return -EINVAL if the rule computed makes no sense.
++	 * All rules that do check out OK are valid. */
++
++	for (x = 0; x < rd1->n_reg_rules; x++) {
++		rule1 = &rd1->reg_rules[x];
++		for (y = 0; y < rd2->n_reg_rules; y++) {
++			rule2 = &rd2->reg_rules[y];
++			if (!reg_rules_intersect(rule1, rule2,
++					intersected_rule))
++				num_rules++;
++			memset(intersected_rule, 0,
++					sizeof(struct ieee80211_reg_rule));
++		}
++	}
++
++	if (!num_rules)
++		return NULL;
++
++	size_of_regd = sizeof(struct ieee80211_regdomain) +
++		((num_rules + 1) * sizeof(struct ieee80211_reg_rule));
++
++	rd = kzalloc(size_of_regd, GFP_KERNEL);
++	if (!rd)
++		return NULL;
++
++	for (x = 0; x < rd1->n_reg_rules; x++) {
++		rule1 = &rd1->reg_rules[x];
++		for (y = 0; y < rd2->n_reg_rules; y++) {
++			rule2 = &rd2->reg_rules[y];
++			/* This time around instead of using the stack lets
++			 * write to the target rule directly saving ourselves
++			 * a memcpy() */
++			intersected_rule = &rd->reg_rules[rule_idx];
++			r = reg_rules_intersect(rule1, rule2,
++				intersected_rule);
++			/* No need to memset 0 here the intersected rule here as we're
++			 * not using the stack anymore on each iteration */
++			if (r)
++				continue;
++			rule_idx++;
++		}
++	}
++
++	if (rule_idx != num_rules) {
++		kfree(rd);
++		return NULL;
++	}
++
++	rd->n_reg_rules = num_rules;
++	rd->alpha2[0] = '9';
++	rd->alpha2[1] = '8';
++
++	return rd;
++}
++
+ /* XXX: add support for the rest of enum nl80211_reg_rule_flags, we may
+  * want to just have the channel structure use these */
+ static u32 map_regdom_flags(u32 rd_flags)
+@@ -468,6 +606,10 @@ void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
+ 	}
+ }
+ 
++/* Return value which can be used by ignore_request() to indicate
++ * it has been determined we shoud intersect two regulatory domains */
++#define REG_INTERSECT	1
++
+ /* This has the logic which determines when a new request
+  * should be ignored. */
+ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+@@ -517,14 +659,8 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 			return -EALREADY;
+ 		return 0;
+ 	case REGDOM_SET_BY_USER:
+-		/*
+-		 * If the user wants to override the AP's hint, we may
+-		 * need to follow both and use the intersection. For now,
+-		 * reject any such attempt (but we don't support country
+-		 * IEs right now anyway.)
+-		 */
+ 		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
+-			return -EOPNOTSUPP;
++			return REG_INTERSECT;
+ 		return 0;
+ 	}
+ 
+@@ -536,10 +672,14 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		      const char *alpha2)
+ {
+ 	struct regulatory_request *request;
++	bool intersect = false;
+ 	int r = 0;
+ 
+ 	r = ignore_request(wiphy, set_by, alpha2);
+-	if (r)
++
++	if (r == REG_INTERSECT)
++		intersect = true;
++	else if (r)
+ 		return r;
+ 
+ 	switch (set_by) {
+@@ -556,6 +696,7 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		request->alpha2[1] = alpha2[1];
+ 		request->initiator = set_by;
+ 		request->wiphy = wiphy;
++		request->intersect = intersect;
+ 
+ 		kfree(last_request);
+ 		last_request = request;
+@@ -648,6 +789,7 @@ void print_regdomain_info(const struct ieee80211_regdomain *rd)
+ /* Takes ownership of rd only if it doesn't fail */
+ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ {
++	const struct ieee80211_regdomain *intersected_rd = NULL;
+ 	/* Some basic sanity checks first */
+ 
+ 	if (is_world_regdom(rd->alpha2)) {
+@@ -697,6 +839,14 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		return -EOPNOTSUPP;
+ 	}
+ 
++	if (unlikely(last_request->intersect)) {
++		intersected_rd = regdom_intersect(rd, cfg80211_regdomain);
++		if (!intersected_rd)
++			return -EINVAL;
++		kfree(rd);
++		rd = intersected_rd;
++	}
++
+ 	/* Tada! */
+ 	cfg80211_regdomain = rd;
+ 
+-- 
+1.5.6.3
 
