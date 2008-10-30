@@ -1,136 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:50415 "EHLO mail.nebensachen.de"
+Received: from mx30.mail.ru ([194.67.23.238]:32594 "EHLO mx30.mail.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750914AbYJZRwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2008 13:52:46 -0400
-From: Elias Oltmanns <eo@nebensachen.de>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-References: <87prlr9mna.fsf@denkblock.local>
-	<40f31dec0810251621l3d720a69mf21b5253e9135010@mail.gmail.com>
-Date: Sun, 26 Oct 2008 18:52:31 +0100
-Message-ID: <87abcrtfa8.fsf@denkblock.local> (sfid-20081026_185251_779081_1435E77C)
+	id S1757750AbYJ3Sjn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 14:39:43 -0400
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: Dave <kilroyd@googlemail.com>
+Subject: Re: [Orinoco-devel] 2.6.28-rc2: new PCMCIA device instance after resume - orinoco can't download firmware
+Date: Thu, 30 Oct 2008 21:39:36 +0300
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-pcmcia@lists.infradead.org,
+	orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Dominik Brodowski <linux@dominikbrodowski.net>
+References: <200810282219.51492.arvidjaar@mail.ru> <20081029215142.GA29780@flint.arm.linux.org.uk> <4909F9BC.3050306@gmail.com>
+In-Reply-To: <4909F9BC.3050306@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart5817223.MoGt4UGyqb";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200810302139.37864.arvidjaar@mail.ru> (sfid-20081030_193948_461085_11D6A025)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Bcc'ing Nils who has reported similar issues with ath5k on 2.6.27.
-Nils, can you perhaps test my patch below and report back? ]
+--nextPart5817223.MoGt4UGyqb
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-"Nick Kossifidis" <mickflemm@gmail.com> wrote:
-> 2008/10/23 Elias Oltmanns <eo@nebensachen.de>:
->> Take care to handle register 0xa228 exactly as in the HAL released by
->
->> Atheros. This change is required to make ath5k work again on my system
->> since commit 2203d6be (ath5k: Misc hw_reset updates), thus fixing a
->> regression in 2.6.27 and therefore hopefully eligible for inclusion into
->> a stable release.
->>
->> Cc: stable <stable@kernel.org>
->> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
->> ---
->> Applies to 2.6.27. Please let me know if I should do something
->> differently and resend.
->>
->>  drivers/net/wireless/ath5k/hw.c       |    1 +
->>  drivers/net/wireless/ath5k/initvals.c |    2 ++
->>  2 files changed, 3 insertions(+), 0 deletions(-)
->>
->
-> Current code works fine on my CM6 (AR5212 + RF5111) and i see nothing like
->
-> data |= 0x00000800
->
-> on the HAL Atheros released
+On Thursday 30 October 2008, Dave wrote:
+> After much faffing about, I managed to bisect this. In retrospect the
+> above hint (thanks Russell) and a code inspection ought to have made the
+> bug obvious. The offending commit is:
+>=20
+> commit 1168386aa7d850ead2ae135d5a7949a592c6e9a0
+> pcmcia: deprecate CS_OUT_OF_RESOURCE
+>=20
+> in which the following change is made (among others):
+>=20
+> @@ -352,7 +352,9 @@ int verify_cis_cache(struct pcmcia_socket *s)
+>=20
+>         buf =3D kmalloc(256, GFP_KERNEL);
+>         if (buf =3D=3D NULL)
+> -               return -1;
+> +               dev_printk(KERN_WARNING, &s->dev,
+> +                          "no memory for verifying CIS\n");
+> +               return -ENOMEM;
+>         list_for_each_entry(cis, &s->cis_cache, node) {
+>                 int len =3D cis->len;
+>=20
 
-Let me quote from legacy-hal:
+Oh, my ... I have been looking over this dozens of times ... it just
+proves how addictive to bisecting in place of proper debugging we became :(
+Dave, thank you!
 
-ar5212/ar5212_reset.c:
-373:		OS_REG_RMW_FIELD(ah, AR_PHY_DAG_CTRLCCK,
-374:			AR_PHY_DAG_CTRLCCK_RSSI_THR, 2);
+Rafael, this falls in obvious "regression with patches" case I think.
 
-ah_internal.h:
-598:	#define OS_REG_RMW_FIELD(_a, _r, _f, _v) \
-599:	    OS_REG_WRITE(_a, _r, \
-600:	        (OS_REG_READ(_a, _r) &~ _f) | (((_v) << _f##_S) & _f))
+Tested-by: Andrey Borzenkov <arvidjaar@mail.ru>
 
-Please note the last argument to OS_REG_RMW_FIELD() which is 2 in this
-case. Unless I've made a mistake, this translates into the
 
-data |= 0x00000800;
+>=20
+> The attached patch should fix things.
+>=20
+> Regards,
+>=20
+> Dave.
+> ---
+> pcmcia: Actually verify against the cached CIS
+>=20
+> Commit 1168386aa7d850ead2ae135d5a7949a592c6e9a0 introduced a printk into
+> a single line if without adding braces, resulting in PCMCIA devices
+> being added as new on resume.
+>=20
+> Add the necessary braces.
+>=20
+> Reported by: Andrey Borzenkov <arvidjaar@mail.ru>
+> Signed-off by: David Kilroy <kilroyd@gmail.com>
+> ---
+> diff --git a/drivers/pcmcia/cistpl.c b/drivers/pcmcia/cistpl.c
+> index 8d37768..91a00ec 100644
+> --- a/drivers/pcmcia/cistpl.c
+> +++ b/drivers/pcmcia/cistpl.c
+> @@ -351,10 +351,12 @@ int verify_cis_cache(struct pcmcia_socket *s)
+>         char *buf;
+>=20
+>         buf =3D kmalloc(256, GFP_KERNEL);
+> -       if (buf =3D=3D NULL)
+> +       if (buf =3D=3D NULL) {
+>                 dev_printk(KERN_WARNING, &s->dev,
+>                            "no memory for verifying CIS\n");
+>                 return -ENOMEM;
+> +       }
+> +
+>         list_for_each_entry(cis, &s->cis_cache, node) {
+>                 int len =3D cis->len;
+>=20
+>=20
+>=20
+>=20
 
-in my patch.
 
-There definitely is no way for me to connect to an ap (or even get a
-list of aps) with current 2.6.27.4. Perhaps we'll hear something from
-Nils on that matter too.
 
->
-> Problem is that we are updating 0xa228 (RSSI threshold in this case)
-> for all AR5212 based cards and we are not checking right now for BB
-> revision. These settings according to Atheros HAL are only for BB
-> revisions > 2. I'm going to update reset.c this week hopefully.
->
-> BTW can you please run latest ath_info on your card ? Let's see what's
-> the rssi threshold stored on EEPROM and how much different is from my
-> card.
+--nextPart5817223.MoGt4UGyqb
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-Well, I don't see how to get that information from the dump. Please have
-a look for yourself, I'm going to send you my dump by pm.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-Since my original email has not appeared on linux-wireless (due to a
-mistake of mine), I'm attaching the patch again, so others can have a
-look at it and, more importantly, Nils can test it.
+iEYEABECAAYFAkkJ/2kACgkQR6LMutpd94z2lQCfa7I3R7G61sfCAwPqT2mK0XRg
+p2cAn2woGB5KlR4kf3RojfZEEHd/1jDT
+=ShCQ
+-----END PGP SIGNATURE-----
 
-Regards,
-
-Elias
-
---------
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-
-Take care to handle register 0xa228 exactly as in the HAL released by
-Atheros. This change is required to make ath5k work again on my system
-since commit 2203d6be (ath5k: Misc hw_reset updates), thus fixing a
-regression in 2.6.27 and therefore hopefully eligible for inclusion into
-a stable release.
-
-Cc: stable <stable@kernel.org>
-Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
----
-
- drivers/net/wireless/ath5k/hw.c       |    1 +
- drivers/net/wireless/ath5k/initvals.c |    2 ++
- 2 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index ad1a5b4..f1a7f71 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -858,6 +858,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 
- 			data = ath5k_hw_reg_read(ah, 0xa228);
- 			data &= 0xfffe03ff;
-+			data |= 0x00000800;
- 			ath5k_hw_reg_write(ah, data, 0xa228);
- 			data = 0;
- 
-diff --git a/drivers/net/wireless/ath5k/initvals.c b/drivers/net/wireless/ath5k/initvals.c
-index 2806b21..cf7ebd1 100644
---- a/drivers/net/wireless/ath5k/initvals.c
-+++ b/drivers/net/wireless/ath5k/initvals.c
-@@ -810,6 +810,8 @@ static const struct ath5k_ini_mode ar5212_rf5111_ini_mode_end[] = {
- 		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 } },
- 	{ AR5K_PHY(642),
- 		{ 0xd03e6788, 0xd03e6788, 0xd03e6788, 0xd03e6788, 0xd03e6788 } },
-+	{ 0xa228,
-+		{ 0x000001b5, 0x000001b5, 0x000001b5, 0x000001b5, 0x000001b5 } },
- 	{ 0xa23c,
- 		{ 0x13c889af, 0x13c889af, 0x13c889af, 0x13c889af, 0x13c889af } },
- };
+--nextPart5817223.MoGt4UGyqb--
