@@ -1,51 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46025 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752152AbYJIPIP (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3277 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103AbYJ3DTc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2008 11:08:15 -0400
-Date: Thu, 9 Oct 2008 11:05:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, Rami Rosen <ramirose@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH ] mac80211: fix wrong link typo in mac80211_hwsim
-	documentation.
-Message-ID: <20081009150426.GA3765@tuxdriver.com> (sfid-20081009_170819_808125_46D7D9D0)
-References: <eb3ff54b0810080243r416b8413uf2e12f51c309a8b7@mail.gmail.com> <1223459201.3618.49.camel@johannes.berg> <20081008161834.GL4941@jm.kir.nu> <20081008190109.GC32472@tuxdriver.com> <20081008193754.GM4941@jm.kir.nu> <20081008200334.GE32472@tuxdriver.com> <1223545199.22490.5.camel@johannes.berg>
+	Wed, 29 Oct 2008 23:19:32 -0400
+Date: Wed, 29 Oct 2008 23:19:14 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linville@tuxdriver.com, jirislaby@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH] ath5k: update keycache to support TKIP handling
+Message-ID: <20081030031914.GA26970@hash.localnet> (sfid-20081030_042001_439307_02EAA838)
+References: <1225283457-24417-3-git-send-email-me@bobcopeland.com> <40f31dec0810290742j2c94e047u8548dfe2bdcde058@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1223545199.22490.5.camel@johannes.berg>
+In-Reply-To: <40f31dec0810290742j2c94e047u8548dfe2bdcde058@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 09, 2008 at 11:39:59AM +0200, Johannes Berg wrote:
-> On Wed, 2008-10-08 at 16:03 -0400, John W. Linville wrote:
-> > On Wed, Oct 08, 2008 at 10:37:54PM +0300, Jouni Malinen wrote:
-> > > On Wed, Oct 08, 2008 at 03:01:09PM -0400, John W. Linville wrote:
-> > > 
-> > > > Well I might be OK with that -- but are you (and Johannes) ready
-> > > > to deal with the various "ap mode doesn't work with my hostapd
-> > > > configuration" problems?
-> > > 
-> > > I think that that is a better and more productive problem to handle
-> > > assuming the issues are indeed because of something missing from
-> > > cfg80211 configuration. I'm supposed to make sure that everything needed
-> > > is there anyway and getting additional people testing various
-> > > combinations and reporting potential problems sounds useful.
-> > 
-> > I'm inclined to agree.  I'd like it if Johannes agreed too. :-)
-> 
-> I'd hate shipping it when there are still things to work out; how about
-> we put it into -testing but not into -next? I just looked at the list
-> and we still have
->   * basic rate set
->   * tx queue params
-> 
-> left to do.
+Newer parts have slots at entry+64 for michael mic and can do WPA-TKIP
+in hardware.  The open-sourced Atheros HAL has code for accessing this
+portion so now we know how where to put the key material.
 
-I can probably live with that.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+
+v2, without the extra definition of AR5K_KEYTABLE_MIC_OFFSET
+
+ drivers/net/wireless/ath5k/base.c |    5 ++-
+ drivers/net/wireless/ath5k/pcu.c  |   64 ++++++++++++++++++++++++++++++++++---
+ 2 files changed, 62 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 4bf3678..c7ffcbb 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2983,8 +2983,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 	switch (key->alg) {
+ 	case ALG_WEP:
+-		break;
+ 	case ALG_TKIP:
++		break;
+ 	case ALG_CCMP:
+ 		return -EOPNOTSUPP;
+ 	default:
+@@ -3003,7 +3003,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		}
+ 		__set_bit(key->keyidx, sc->keymap);
+ 		key->hw_key_idx = key->keyidx;
+-		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++		key->flags |= (IEEE80211_KEY_FLAG_GENERATE_IV |
++			       IEEE80211_KEY_FLAG_GENERATE_MMIC);
+ 		break;
+ 	case DISABLE_KEY:
+ 		ath5k_hw_reset_key(sc->ah, key->keyidx);
+diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
+index 5674639..9b46d64 100644
+--- a/drivers/net/wireless/ath5k/pcu.c
++++ b/drivers/net/wireless/ath5k/pcu.c
+@@ -1014,17 +1014,29 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+ 		const struct ieee80211_key_conf *key, const u8 *mac)
+ {
+ 	unsigned int i;
++	int keylen;
+ 	__le32 key_v[5] = {};
++	__le32 key0 = 0, key1 = 0;
++	__le32 *rxmic, *txmic;
+ 	u32 keytype;
++	u16 micentry = entry + AR5K_KEYTABLE_MIC_OFFSET;
++	bool is_tkip;
+ 
+ 	ATH5K_TRACE(ah->ah_sc);
+ 
+-	/* key->keylen comes in from mac80211 in bytes */
++	is_tkip = (key->alg == ALG_TKIP);
+ 
+-	if (key->keylen > AR5K_KEYTABLE_SIZE / 8)
++	/*
++	 * key->keylen comes in from mac80211 in bytes.
++	 * TKIP is 128 bit + 128 bit mic
++	 */
++	keylen = (is_tkip) ? (128 / 8) : key->keylen;
++
++	if (entry > AR5K_KEYTABLE_SIZE ||
++		(is_tkip && micentry > AR5K_KEYTABLE_SIZE))
+ 		return -EOPNOTSUPP;
+ 
+-	switch (key->keylen) {
++	switch (keylen) {
+ 	/* WEP 40-bit   = 40-bit  entered key + 24 bit IV = 64-bit */
+ 	case 40 / 8:
+ 		memcpy(&key_v[0], key->key, 5);
+@@ -1038,24 +1050,66 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+ 		memcpy(&key_v[4], &key->key[12], 1);
+ 		keytype = AR5K_KEYTABLE_TYPE_104;
+ 		break;
+-	/* WEP 128-bit  = 128-bit entered key + 24 bit IV = 152-bit */
++	/* WEP/TKIP 128-bit  = 128-bit entered key + 24 bit IV = 152-bit */
+ 	case 128 / 8:
+ 		memcpy(&key_v[0], &key->key[0], 6);
+ 		memcpy(&key_v[2], &key->key[6], 6);
+ 		memcpy(&key_v[4], &key->key[12], 4);
+-		keytype = AR5K_KEYTABLE_TYPE_128;
++		keytype = is_tkip ?
++			AR5K_KEYTABLE_TYPE_TKIP :
++			AR5K_KEYTABLE_TYPE_128;
+ 		break;
+ 
+ 	default:
+ 		return -EINVAL; /* shouldn't happen */
+ 	}
+ 
++	/* intentionally corrupt key until mic is installed */
++	if (is_tkip) {
++		key0 = key_v[0] = ~key_v[0];
++		key1 = key_v[1] = ~key_v[1];
++	}
++
+ 	for (i = 0; i < ARRAY_SIZE(key_v); i++)
+ 		ath5k_hw_reg_write(ah, le32_to_cpu(key_v[i]),
+ 				AR5K_KEYTABLE_OFF(entry, i));
+ 
+ 	ath5k_hw_reg_write(ah, keytype, AR5K_KEYTABLE_TYPE(entry));
+ 
++	if (is_tkip) {
++		/* Install rx/tx MIC */
++		rxmic = (__le32 *) &key->key[16];
++		txmic = (__le32 *) &key->key[24];
++#if 0
++		/* MISC_MODE register & 0x04 - for mac srev >= griffin */
++		key_v[0] = rxmic[0];
++		key_v[1] = (txmic[0] >> 16) & 0xffff;
++		key_v[2] = rxmic[1];
++		key_v[3] = txmic[0] & 0xffff;
++		key_v[4] = txmic[1];
++#else
++		key_v[0] = rxmic[0];
++		key_v[1] = 0;
++		key_v[2] = rxmic[1];
++		key_v[3] = 0;
++		key_v[4] = 0;
++#endif
++		for (i = 0; i < ARRAY_SIZE(key_v); i++)
++			ath5k_hw_reg_write(ah, le32_to_cpu(key_v[i]),
++				AR5K_KEYTABLE_OFF(micentry, i));
++
++		ath5k_hw_reg_write(ah, AR5K_KEYTABLE_TYPE_NULL,
++			AR5K_KEYTABLE_TYPE(micentry));
++		ath5k_hw_reg_write(ah, 0, AR5K_KEYTABLE_MAC0(micentry));
++		ath5k_hw_reg_write(ah, 0, AR5K_KEYTABLE_MAC1(micentry));
++
++		/* restore first 2 words of key */
++		ath5k_hw_reg_write(ah, le32_to_cpu(~key0),
++			AR5K_KEYTABLE_OFF(entry, 0));
++		ath5k_hw_reg_write(ah, le32_to_cpu(~key1),
++			AR5K_KEYTABLE_OFF(entry, 1));
++	}
++
+ 	return ath5k_hw_set_key_lladdr(ah, entry, mac);
+ }
+ 
+-- 
+1.5.4.2.182.gb3092
 
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Bob Copeland %% www.bobcopeland.com
+
