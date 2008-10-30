@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f18.google.com ([209.85.217.18]:41395 "EHLO
-	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753522AbYJ2Otb (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:17051 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753530AbYJ3VUE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 10:49:31 -0400
-Received: by gxk11 with SMTP id 11so2813944gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 07:49:30 -0700 (PDT)
-Message-ID: <40f31dec0810290749u2c065d17g5788eb22cf508142@mail.gmail.com> (sfid-20081029_154945_962585_F62CE145)
-Date: Wed, 29 Oct 2008 16:49:29 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Elias Oltmanns" <eo@nebensachen.de>
-Subject: Re: [PATCH] ath5k: Fix reset sequence for AR5212 in general and RF5111 in particular
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <873aifsfc9.fsf@denkblock.local>
+	Thu, 30 Oct 2008 17:20:04 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so395115nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 14:19:55 -0700 (PDT)
+Message-ID: <490A24F0.7010305@gmail.com> (sfid-20081030_222010_889806_19FAD2C4)
+Date: Thu, 30 Oct 2008 21:19:44 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <87prlr9mna.fsf@denkblock.local>
-	 <40f31dec0810251621l3d720a69mf21b5253e9135010@mail.gmail.com>
-	 <87abcrtfa8.fsf@denkblock.local>
-	 <40f31dec0810261132w2747d66em2a2a53ff9e1ecc04@mail.gmail.com>
-	 <87wsfvt76q.fsf@denkblock.local>
-	 <40f31dec0810261533g3143bd9bue0f3eff88c6936e9@mail.gmail.com>
-	 <87r663t1ds.fsf@denkblock.local>
-	 <40f31dec0810271331n7f374562x77da8ae55b9032db@mail.gmail.com>
-	 <873aifsfc9.fsf@denkblock.local>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>, Pavel Roskin <proski@gnu.org>,
+	kilroyd <kilroyd@googlemail.com>
+Subject: Re: [PATCH v2] don't use net/ieee80211.h
+References: <1225243531.1369.18.camel@johannes.berg>	 (sfid-20081029_125021_786122_12E56128) <1225400994.3690.86.camel@johannes.berg>
+In-Reply-To: <1225400994.3690.86.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/10/29 Elias Oltmanns <eo@nebensachen.de>:
->
-> Right, so here is another attempt. Unfortunately, in 2.6.27 no constants
-> have been defined for the phy revisions, nor the 0xa228 register and the
-> bit masks involved in resetting this register. Perhaps we should consult
-> the stable team on this matter because the minimal approach, as
-> presented below, certainly lacks even the smallest degree of readability
-> even though we actually know reasonably well what we are doing here. The
-> changelog, by the way, will be adapted to quote your changeset fixing
-> this in mainline once it has been committed. What do you think?
->
+Johannes Berg wrote:
+> Convert all the drivers using net/ieee80211.h to use linux/ieee80211.h.
+> Contains a bugfix in libertas where the SSID parsing could overrun the
+> buffer when the AP sends invalid information.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Acked-by: Dan Williams <dcbw@redhat.com> [airo, libertas]
+> ---
+>  drivers/net/wireless/orinoco.c             |   30 ++++++-----
 
-Patch looks OK, thanks a lot ;-)
-
-John can we get this get in stable until i update reset.c on wireless-testing ?
-Would it be possible later to update mainline from wireless-testing ?
+Orinoco bits Acked-by: David Kilroy <kilroyd@googlemail.com>
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Thanks,
+
+Dave.
