@@ -1,71 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42115 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930AbYJVTnt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 15:43:49 -0400
-Subject: Re: [PATCH v2] wireless: remove struct regdom hinting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081022124139.GK6190@tesla>
-References: <1224585042.5521.7.camel@johannes.berg>
-	 <20081022113950.GE6190@tesla> <1224701496.30459.50.camel@johannes.berg>
-	 <20081022122914.GH6190@tesla> <1224703869.30459.63.camel@johannes.berg>
-	 <20081022124139.GK6190@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XQTC2FM6myBOVAF0KVbR"
-Date: Wed, 22 Oct 2008 21:43:42 +0200
-Message-Id: <1224704622.30459.71.camel@johannes.berg> (sfid-20081022_214351_928022_21E19172)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:22492 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753987AbYJ3UeE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 16:34:04 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 13:34:04 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/5] cfg80211: make use of reg macros on REG_RULE
+Date: Thu, 30 Oct 2008 13:33:55 -0700
+Message-ID: <1225398836-28633-5-git-send-email-lrodriguez@atheros.com> (sfid-20081030_213408_746889_DB20670B)
+In-Reply-To: <1225398836-28633-4-git-send-email-lrodriguez@atheros.com>
+References: <1225398836-28633-1-git-send-email-lrodriguez@atheros.com>
+ <1225398836-28633-2-git-send-email-lrodriguez@atheros.com>
+ <1225398836-28633-3-git-send-email-lrodriguez@atheros.com>
+ <1225398836-28633-4-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ensure regulatory converstion macros safely accept
+multiple arguments and make REG_RULE() use them.
 
---=-XQTC2FM6myBOVAF0KVbR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/cfg80211.h |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-On Wed, 2008-10-22 at 05:41 -0700, Luis R. Rodriguez wrote:
-
-> Well, the alpha2 hint from country IE we'd built it from the IE
-> and then try call an rd hint routine, I take it now it would be the new
-> struct one.=20
-
-No, we'll have to add a new one for that
-
-> But yea its useful to keep track of I think. I thought you didn't remove
-> it from ignore_request(), hm.. that's where we use it to do all these
-> checks.
-
-Actually there was only one pointless warning where a driver does two
-hints for the same wiphy (that's just a code bug), and it's otherwise
-unused.
-
-johannes
-
---=-XQTC2FM6myBOVAF0KVbR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI/4JrAAoJEKVg1VMiehFYK8wP/1Rz6t61pC/4rbJU+JQYoJsp
-lpyFf8YN4aWrsZvDIhFpJRtbJYSI6PbfxASgimzoVjPd8Ly8V6NyiwuJiFBiSgGG
-D1sJIhuaWoHtFMm53Z8Su7gwZvde8LtCx7Rn6hOrSo3YC712V/7RSQCxCI0Lm/5u
-4nbz8Po3f4U1dXhSQh9xJl55F7c7uxIxZ60W1Aca/wriWHfDltSqULylF9dB+ZMT
-qV8HP3XI8IH/cCP8LRsTnpr7q5oGmYkjHjMRMcfm5ha+drMKxCul2LdLw61IPdow
-/KgZ4YNgIHUA8n6AeYBR5lHoIwIVWbsv41WfJVWvjp36wFzhJWPsFIkqkqbakCAF
-c6csSWptle4hjwW2/LXa7ckPOLzNXiZ8VZxHM7BxHUXcqcaGKTK+Lnh3+ZDab2Gg
-wGRBCQHuCJoS4L24H8VRauH1e81TAkjur42sD/hmM4J+duKGMMP1iYmz2gjIo2v7
-VQkNY+GMcRr7/uSb6UnCs6B03XLDuPpNCtrsEjc7obS/losKFrv2dhzhY384WI51
-Q4ndb8ViKJ26WlVnvIUXattw5WLP6WxW4c9RKSp3tb+2OXL3DMg1BWFE3LNoRyqS
-tFMMBOHLDSO79vNbtamySskrVE45WovcbQHIMfxYNjKFmnp2hVN0fLyXZdXStH3g
-79s9oK+BlzFjmC63BIjL
-=zix0
------END PGP SIGNATURE-----
-
---=-XQTC2FM6myBOVAF0KVbR--
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 03e1e88..81c97a7 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -331,19 +331,19 @@ struct ieee80211_regdomain {
+ 	struct ieee80211_reg_rule reg_rules[];
+ };
+ 
+-#define MHZ_TO_KHZ(freq) (freq * 1000)
+-#define KHZ_TO_MHZ(freq) (freq / 1000)
+-#define DBI_TO_MBI(gain) (gain * 100)
+-#define MBI_TO_DBI(gain) (gain / 100)
+-#define DBM_TO_MBM(gain) (gain * 100)
+-#define MBM_TO_DBM(gain) (gain / 100)
++#define MHZ_TO_KHZ(freq) ((freq) * 1000)
++#define KHZ_TO_MHZ(freq) ((freq) / 1000)
++#define DBI_TO_MBI(gain) ((gain) * 100)
++#define MBI_TO_DBI(gain) ((gain) / 100)
++#define DBM_TO_MBM(gain) ((gain) * 100)
++#define MBM_TO_DBM(gain) ((gain) / 100)
+ 
+ #define REG_RULE(start, end, bw, gain, eirp, reg_flags) { \
+-	.freq_range.start_freq_khz = (start) * 1000, \
+-	.freq_range.end_freq_khz = (end) * 1000, \
+-	.freq_range.max_bandwidth_khz = (bw) * 1000, \
+-	.power_rule.max_antenna_gain = (gain) * 100, \
+-	.power_rule.max_eirp = (eirp) * 100, \
++	.freq_range.start_freq_khz = MHZ_TO_KHZ(start), \
++	.freq_range.end_freq_khz = MHZ_TO_KHZ(end), \
++	.freq_range.max_bandwidth_khz = MHZ_TO_KHZ(bw), \
++	.power_rule.max_antenna_gain = DBI_TO_MBI(gain), \
++	.power_rule.max_eirp = DBM_TO_MBM(eirp), \
+ 	.flags = reg_flags, \
+ 	}
+ 
+-- 
+1.5.6.3
 
