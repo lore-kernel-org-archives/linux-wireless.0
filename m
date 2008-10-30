@@ -1,88 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56748 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754162AbYJKAyE (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3398 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752273AbYJ3DYb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 20:54:04 -0400
-Subject: Re: [PATCH] mac80211: Fix scan RX processing oops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081011004828.GB15802@jm.kir.nu>
-References: <20081011002955.GA15802@jm.kir.nu>
-	 <1223685486.29811.17.camel@johannes.berg>
-	 <20081011004828.GB15802@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C1x0IkHFyVQrb17XYltr"
-Date: Sat, 11 Oct 2008 02:53:58 +0200
-Message-Id: <1223686439.29811.27.camel@johannes.berg> (sfid-20081011_025408_896462_89BF6EBB)
-Mime-Version: 1.0
+	Wed, 29 Oct 2008 23:24:31 -0400
+Date: Wed, 29 Oct 2008 23:24:26 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Update PCU code
+Message-ID: <20081030032426.GB26970@hash.localnet> (sfid-20081030_042435_588516_80861066)
+References: <20081029021121.GA3079@makis> <20081029024603.GA22759@hash.localnet> <40f31dec0810290408h5ee08c8l1e14d576064f01a4@mail.gmail.com> <b6c5339f0810290705j36995186j382a8415886fb061@mail.gmail.com> <40f31dec0810290741t6378eebelbdacf4e5c8d63bff@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0810290741t6378eebelbdacf4e5c8d63bff@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 29, 2008 at 04:41:22PM +0200, Nick Kossifidis wrote:
+> 2008/10/29 Bob Copeland <me@bobcopeland.com>:
+> Yup you are right, we should set both to NULL so a temp micentry var
+> would do the trick.
+> 
+> Should i resend this one or you 'll resend yours ?
 
---=-C1x0IkHFyVQrb17XYltr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Well I just decided to put this in a different patch.  Then I saw the
+5211 check.. we already read the type without such a check and the 
+other tkip stuff may well all blow up on such hardware.  So not sure
+what to do about that case.
 
-On Sat, 2008-10-11 at 03:48 +0300, Jouni Malinen wrote:
-> On Sat, Oct 11, 2008 at 02:38:06AM +0200, Johannes Berg wrote:
-> > > -	ieee80211_rx_bss_put(sdata->local, bss);
-> > > +	if (bss)
-> > > +		ieee80211_rx_bss_put(sdata->local, bss);
-> >=20
-> > I keep falling into that trap, maybe the put function should just handl=
-e
-> > NULL instead...
->=20
-> I though about that for half a second or so ;-) and ended up doing this
-> instead after checking that other ieee80211_rx_bss_put() calls were only
-> passing in non-NULL values. Anyway, I would be fine with _put() being
-> able to handle NULL, too.
+Anyway feel free to just roll this up into your original patch, or to 
+write it differently given the above.
 
-I looked at it before and for some reason decided against it too. Let's
-stick to this patch, I'll re-evaluate making it handle NULL.
+From: Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath5k: fix keytable type buglet in ath5k_hw_reset_key
 
-> PS.
->=20
-> I don't know what exactly was triggering this oops (or well, what was
-> triggering ieee80211_bss_info_update() to return NULL to be more exact),
-> but it was happening very consistently in our office (but not anywhere
-> else I've been this week).
+Be sure we clear out both the mic (if applicable) and
+the encryption key type.
 
-Strange. You probably have a mesh network with bogus mesh config or mesh
-ID IEs, I can't see the allocation fail consistently in your office ;)
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/pcu.c |   15 +++++++++++----
+ 1 files changed, 11 insertions(+), 4 deletions(-)
 
-> It was kind of funny to see that oops at the
-> very moment when I was convincing people in a meeting that we can change
-> mac80211 and should do so if it is the best location for something and
-> makes it easier to implement something in a driver.. ;-)
+diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
+index 9b46d64..d7f0c10 100644
+--- a/drivers/net/wireless/ath5k/pcu.c
++++ b/drivers/net/wireless/ath5k/pcu.c
+@@ -960,6 +960,7 @@ int ath5k_hw_beaconq_finish(struct ath5k_hw *ah, unsigned long phys_addr)
+ int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
+ {
+ 	unsigned int i, type;
++	u16 micentry = entry + AR5K_KEYTABLE_MIC_OFFSET;
+ 
+ 	ATH5K_TRACE(ah->ah_sc);
+ 	AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
+@@ -972,10 +973,10 @@ int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
+ 	/* Reset associated MIC entry if TKIP
+ 	 * is enabled located at offset (entry + 64) */
+ 	if (type == AR5K_KEYTABLE_TYPE_TKIP) {
+-		entry = entry + AR5K_KEYTABLE_MIC_OFFSET;
+-		AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
++		AR5K_ASSERT_ENTRY(micentry, AR5K_KEYTABLE_SIZE);
+ 		for (i = 0; i < AR5K_KEYCACHE_SIZE / 2 ; i++)
+-			ath5k_hw_reg_write(ah, 0, AR5K_KEYTABLE_OFF(entry, i));
++			ath5k_hw_reg_write(ah, 0,
++				AR5K_KEYTABLE_OFF(micentry, i));
+ 	}
+ 
+ 	/*
+@@ -987,10 +988,16 @@ int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
+ 	 * Note2: Windows driver (ndiswrapper) sets this to
+ 	 *        0x00000714 instead of 0x00000007
+ 	 */
+-	if (ah->ah_version > AR5K_AR5211)
++	if (ah->ah_version > AR5K_AR5211) {
+ 		ath5k_hw_reg_write(ah, AR5K_KEYTABLE_TYPE_NULL,
+ 				AR5K_KEYTABLE_TYPE(entry));
+ 
++		if (type == AR5K_KEYTABLE_TYPE_TKIP) {
++			ath5k_hw_reg_write(ah, AR5K_KEYTABLE_TYPE_NULL,
++				AR5K_KEYTABLE_TYPE(micentry));
++		}
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+1.5.4.2.182.gb3092
 
-Ouch, sorry :)
 
-johannes
 
---=-C1x0IkHFyVQrb17XYltr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI7/kjAAoJEKVg1VMiehFYCygP/0huZeepKQA1jG6o5V4Q0cRO
-xQo5RAggnb3fkpa+ssGWpmwHFj0GLbVoXkuciq+Lnxqiuogfvxsk2cGr+iNP2LCY
-T67em6LZlBKNX3tfaWkGxLZryw4oqcYbMbVon7+/OBUqy+gyC8j13V6xbGwWWvOh
-qBqrlma6qhCu0biYTIskA8lwtuuJKcQ1BjaaAa/YeeHWQk+2G08aOvxfpv6sX6uH
-K88xwWkbQht0xXvtq7mgZkGEIW6ypOBAwxlO+f8xJ7t2r5lmY6EszBCUNhcMKj61
-Md+4xHQ6W7YkbzIzjOz2V8zYXGJ8AaVZ9qMGT8T2AWC96MkZteIrcyTEVrxPwpDX
-a67+CMXmYKOibxlfI5+3/lULK2h0xjBMSLs8az2tziwqYCZ77Be4cvxWUySnltfh
-ed+tJvI8wOaj0R8ITbsE2AOCFiR8SbGEYG/Rllr9alDKBymwEaUy8hW/k4Xo3+Vd
-DZxjIRS/MB/gPwE8KQUr/IZCWqhusXpBDd0GPNjxOsk0YycS1r2Jxuujm098BC3d
-3XQDO7A3tANjDZUNXgHXFPUAPFZsc/wTp0cXN0TG8U+kZh2fEr+T/RFt3BCbbc9n
-yhR0sXhjrM2gDC+p+e0YwjOHxmWkdGRTM8mvADoCBNPMp/e3mZK12c/A696Nj/Zf
-ZcmGeNq/Ku492FWq/ls8
-=P9HO
------END PGP SIGNATURE-----
-
---=-C1x0IkHFyVQrb17XYltr--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
