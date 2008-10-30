@@ -1,53 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:12875 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753037AbYJaDK7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 23:10:59 -0400
-Message-ID: <20081030231054.ehd21qipcow4kg88-cebfxv@webmail.spamcop.net> (sfid-20081031_041103_396953_8772C582)
-Date: Thu, 30 Oct 2008 23:10:54 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dave <kilroyd@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: Guidelines regarding separate directory
-References: <4909EA78.3060700@lwfinger.net>
-	(sfid-20081030_181107_189082_5740895D)
-	<1225387309.3690.73.camel@johannes.berg> <490A17F3.5050802@gmail.com>
-	<1225399481.7931.5.camel@dv> <1225399682.3690.82.camel@johannes.berg>
-In-Reply-To: <1225399682.3690.82.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Received: from xc.sipsolutions.net ([83.246.72.84]:35179 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754209AbYJ3PPQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 11:15:16 -0400
+Subject: Re: [RFC] mac80211_hwsim: Add support for client PS mode testing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081030150455.GA3923@jm.kir.nu>
+References: <20081030150455.GA3923@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qEJuMsKbw5eN3YU0U88o"
+Date: Thu, 30 Oct 2008 16:15:15 +0100
+Message-Id: <1225379715.3690.66.camel@johannes.berg> (sfid-20081030_161522_891353_37653B97)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Johannes Berg <johannes@sipsolutions.net>:
 
->
->> > orinoco_pci.c
->>
->> orinoco_pci.c is a good candidate for removal.  It only supports the
->> hardware that is already supported by hostap_pci.
->
-> Wait wait. I think everybody would rather see hostap go than orinoco
-> since hostap is a huge complex thing and quite buggy.
+--=-qEJuMsKbw5eN3YU0U88o
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The WPA support in orinoco is limited to Agere firmware.  Maybe Symbol  
-firmware will be supported at some point.  But adding WPA support for  
-Intersil firmware would duplicate efforts.
+On Thu, 2008-10-30 at 17:04 +0200, Jouni Malinen wrote:
 
-The only thing I would like to change in hostap is that it should  
-default to managed mode, like other drivers do.
 
-But since there are objections, let's keep orinoco_pci as long as it  
-doesn't stand in the way of further changes.
+> This introduces a debugfs file (mac80211_hwsim/phy#/ps) that can be
+> used
 
--- 
-Regards,
-Pavel Roskin
+Why not use the cfg80211-provided debugfs dir /ieee80211/phy#/ and maybe
+put it below hwsim/ in there because mac80211 has things in there too?
+That way you save all the code setting up the directory etc.
+
+> Mode 2 (automatic PS-Poll) does not yet parse Beacon frames, but
+> eventually, it should take a look at TIM IE and send PS-Poll if a
+> traffic bit is set for our AID.
+
+Out of curiosity, is there any hw that implements this? b43 surely would
+need such code too, and then it could be in mac80211? I can see setting
+the PM bit be a decision of the driver, but if more than one driver ends
+up needing ps-poll, maybe mac80211 should be handling it?
+
+johannes
+
+--=-qEJuMsKbw5eN3YU0U88o
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJCc+AAAoJEKVg1VMiehFY3BIP/iTQlX1z5QWL4KMYxlqVWg8A
+T1LHM1A3AZnaIiPCJLxfXP5fHDPHEWnfv8oLjIzt+jDGQfjweTyoyFzEXAMUft7F
+bd9WgwpLrK3YPH7cuMz9YEzRIPwhBu82kTOyLGhwZngK2wzhk6DHCDZUhkhLx+ws
+dRGkAa99zo444zFWCh6JdTE1Aa3pS14kxZFaL0/2aZkdc9r8wu0CT4fZse1yfCv/
+DxXLy6ndfr0PGReccXJ4qUzS/BDvOJDURKMEEl4uOQD0mLag2kKJQmh6GKQK9rAW
+cF4q3RvzMvmoClR0fXIree+vlcCvtl7QiQj9iNlfzcj7IrXM8VW9y3idnBXcrT1/
++mBTKn5I9W/6Ytz/PNV/Qo6T316ISItoX58kgxg6d2yKihnWIwSKAVeBn3R/iG+l
+J7xmvflEwQHOaDeY1zz/IbJ9k/UeV4h/5ki1rcsuqmmsS2kNm/dLLua72mfsul2T
+e9RhBLdZS8vFtTI90DZoCa0NAO2NQ0db1748qT/3aVUfqUhzpWuQWw6Ih6ZULDqT
+vn8XaS/jxpzzM64a7TT2SqgzQr4BFFpdtCPoJnl10I0bQ2DwAu5RtFMkUXyzqsQl
+51GvmVmJQTkgOa3dbvIq2z/QgOE+v8tIMeXX6eMyJsO2TP6w/wV0xqmqlewMDzBd
+0JOGSNFSLjyJ1+SGrm+g
+=1T69
+-----END PGP SIGNATURE-----
+
+--=-qEJuMsKbw5eN3YU0U88o--
+
