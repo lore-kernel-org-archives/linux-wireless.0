@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38641 "EHLO mga09.intel.com"
+Received: from hostap.isc.org ([149.20.54.63]:56420 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752504AbYJ2XGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 19:06:16 -0400
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-From: reinette chatre <reinette.chatre@intel.com>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
+	id S1755222AbYJ3PD0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 11:03:26 -0400
+Message-Id: <20081030150227.154812323@localhost> (sfid-20081030_160329_698330_3E57E05B)
+References: <20081030145920.233178987@localhost>
+Date: Thu, 30 Oct 2008 16:59:23 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081029215325.GA14849@isilmar.linta.de>
-References: <1225145468.1115.139.camel@rc-desk>
-	 <20081027230326.GA23250@isilmar.linta.de>
-	 <1225154823.1115.149.camel@rc-desk>
-	 <20081028194323.GA14303@isilmar.linta.de>
-	 <1225225434.1115.217.camel@rc-desk> <1225235731.1369.8.camel@johannes.berg>
-	 <1225236760.1115.245.camel@rc-desk>
-	 <20081028233841.GA12554@isilmar.linta.de>
-	 <20081029002713.GA16554@isilmar.linta.de>
-	 <1225300252.1115.266.camel@rc-desk>
-	 <20081029215325.GA14849@isilmar.linta.de>
-Content-Type: text/plain
-Date: Wed, 29 Oct 2008 16:06:29 -0700
-Message-Id: <1225321589.1115.313.camel@rc-desk> (sfid-20081030_000622_476148_2EC3563C)
-Mime-Version: 1.0
+	linux-wireless@vger.kernel.org
+Subject: [PATCHv2 3/5] mac80211_hwsim: Debug info for TX queue parameters
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-29 at 14:53 -0700, Dominik Brodowski wrote:
+Provide detailed information on TX queue parameter changes to make it
+easier to debug mac80211 functionality.
 
-> but could we get a more meaningful error message instead? Such as "No
-> regulartory information found -- therefore the microcode fails to cooperate
-> with you! Either use iw available at ... or recompile with
-> CONFIG_WIRELESS_OLD_REGULATORY set to yes." ?
-> 
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-This is not an error ... the driver sets the information according to
-what it thinks is correct and then mac80211 changes it to what it thinks
-is correct.
+Index: wireless-testing/drivers/net/wireless/mac80211_hwsim.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2008-10-30 16:09:28.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2008-10-30 16:11:33.000000000 +0200
+@@ -478,6 +478,17 @@
+ 	return 0;
+ }
  
-We are working on changes for the driver to work better with cfg80211
++static int mac80211_hwsim_conf_tx(
++	struct ieee80211_hw *hw, u16 queue,
++	const struct ieee80211_tx_queue_params *params)
++{
++	printk(KERN_DEBUG "%s:%s (queue=%d txop=%d cw_min=%d cw_max=%d "
++	       "aifs=%d)\n",
++	       wiphy_name(hw->wiphy), __func__, queue,
++	       params->txop, params->cw_min, params->cw_max, params->aifs);
++	return 0;
++}
++
+ static const struct ieee80211_ops mac80211_hwsim_ops =
+ {
+ 	.tx = mac80211_hwsim_tx,
+@@ -491,6 +502,7 @@
+ 	.bss_info_changed = mac80211_hwsim_bss_info_changed,
+ 	.sta_notify = mac80211_hwsim_sta_notify,
+ 	.set_tim = mac80211_hwsim_set_tim,
++	.conf_tx = mac80211_hwsim_conf_tx,
+ };
+ 
+ 
 
-Reinette
+--
 
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
