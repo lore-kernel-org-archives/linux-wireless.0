@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:40121 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757058AbYJVRPI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 13:15:08 -0400
-Date: Wed, 22 Oct 2008 15:15:02 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-input@vger.kernel.org
-Subject: Re: [PATCH] RFKILL: fix input layer initialisation
-Message-ID: <20081022171502.GD1069@khazad-dum.debian.net> (sfid-20081022_191520_607032_A30AEECB)
-References: <1224694375-29318-1-git-send-email-dbaryshkov@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1224694375-29318-1-git-send-email-dbaryshkov@gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:51904 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751218AbYJ3ELX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 00:11:23 -0400
+Subject: Re: [PATCH] don't use net/ieee80211.h
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1225243531.1369.18.camel@johannes.berg>
+References: <1225243531.1369.18.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 30 Oct 2008 00:09:47 -0400
+Message-Id: <1225339787.32092.16.camel@localhost.localdomain> (sfid-20081030_051128_015010_F3B07044)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 22 Oct 2008, Dmitry Baryshkov wrote:
-> Initialise correctly last fields, so tasks can be actually executed.
-> On some architectures the initial jiffies value is not zero, so later
-> all rfkill incorrectly decides that rfkill_*.last is in future.
+On Wed, 2008-10-29 at 02:25 +0100, Johannes Berg wrote:
+> Convert all the drivers using net/ieee80211.h to use linux/ieee80211.h.
+> Contains a bugfix in libertas where the SSID parsing could overrun the
+> buffer when the AP sends invalid information.
 > 
-> Signed-off-by: Dmitry Baryshkov <dbaryshkov@gmail.com>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > ---
->  net/rfkill/rfkill-input.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-> index e5b6955..cd93f48 100644
-> --- a/net/rfkill/rfkill-input.c
-> +++ b/net/rfkill/rfkill-input.c
-> @@ -255,6 +255,11 @@ static struct input_handler rfkill_handler = {
->  
->  static int __init rfkill_handler_init(void)
->  {
-> +	unsigned long last_run = jiffies - msecs_to_jiffies(500);
-> +	rfkill_wlan.last = last_run;
-> +	rfkill_bt.last = last_run;
-> +	rfkill_uwb.last = last_run;
-> +	rfkill_wimax.last = last_run;
->  	return input_register_handler(&rfkill_handler);
->  }
+>  drivers/net/wireless/airo.c                |   50 +++++++++---------
+>  drivers/net/wireless/libertas/assoc.c      |   18 +++---
+>  drivers/net/wireless/libertas/cmd.c        |    5 -
+>  drivers/net/wireless/libertas/dev.h        |    7 ++
+>  drivers/net/wireless/libertas/main.c       |    3 -
+>  drivers/net/wireless/libertas/persistcfg.c |    2 
+>  drivers/net/wireless/libertas/scan.c       |   77 ++++++++++++++---------------
+>  drivers/net/wireless/libertas/scan.h       |    4 +
+>  drivers/net/wireless/libertas/types.h      |    5 -
+>  drivers/net/wireless/libertas/wext.c       |    1 
 
-This is not needed for wireless-testing's rfkill-input.
+airo & libertas:
 
-It is needed on 2.6.28, since AFAIK the stuff in wireless-testing is not
-going to be sent for 2.6.28.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-A similar patch to this was sent not a month ago, I think.  One of the two
-needs to be merged for 2.6.28.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+
