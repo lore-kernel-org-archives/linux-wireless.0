@@ -1,49 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:34680 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752822AbYJ3LoN (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:21764 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752989AbYJ3Vxw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 07:44:13 -0400
-Date: Thu, 30 Oct 2008 13:43:41 +0200 (EET)
-From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
-To: linville@tuxdriver.com, Larry.Finger@lwfinger.net
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/10] b43legacy: reindent misleading statement
-In-Reply-To: <Pine.LNX.4.64.0810301307160.7072@wrl-59.cs.helsinki.fi>
-Message-ID: <Pine.LNX.4.64.0810301341480.7072@wrl-59.cs.helsinki.fi> (sfid-20081030_124417_861425_C36A5829)
-References: <Pine.LNX.4.64.0810301307160.7072@wrl-59.cs.helsinki.fi>
+	Thu, 30 Oct 2008 17:53:52 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so815414wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 14:53:51 -0700 (PDT)
+Message-ID: <40f31dec0810301453q3b2f1f2dmd3d178d503023952@mail.gmail.com> (sfid-20081030_225356_995685_593168F6)
+Date: Thu, 30 Oct 2008 23:53:50 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [PATCH] ath5k: update keycache to support TKIP handling
+Cc: linville@tuxdriver.com, jirislaby@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <20081030031914.GA26970@hash.localnet>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-696208474-2122282121-1225367021=:7072"
+Content-Type: text/plain; charset=UTF-8
+References: <1225283457-24417-3-git-send-email-me@bobcopeland.com>
+	 <40f31dec0810290742j2c94e047u8548dfe2bdcde058@mail.gmail.com>
+	 <20081030031914.GA26970@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+2008/10/30 Bob Copeland <me@bobcopeland.com>:
+> Newer parts have slots at entry+64 for michael mic and can do WPA-TKIP
+> in hardware.  The open-sourced Atheros HAL has code for accessing this
+> portion so now we know how where to put the key material.
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>
+> v2, without the extra definition of AR5K_KEYTABLE_MIC_OFFSET
+>
+>  drivers/net/wireless/ath5k/base.c |    5 ++-
+>  drivers/net/wireless/ath5k/pcu.c  |   64 ++++++++++++++++++++++++++++++++++---
+>  2 files changed, 62 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 4bf3678..c7ffcbb 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -2983,8 +2983,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+>
+>        switch (key->alg) {
+>        case ALG_WEP:
+> -               break;
+>        case ALG_TKIP:
+> +               break;
+>        case ALG_CCMP:
+>                return -EOPNOTSUPP;
+>        default:
+> @@ -3003,7 +3003,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+>                }
+>                __set_bit(key->keyidx, sc->keymap);
+>                key->hw_key_idx = key->keyidx;
+> -               key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+> +               key->flags |= (IEEE80211_KEY_FLAG_GENERATE_IV |
+> +                              IEEE80211_KEY_FLAG_GENERATE_MMIC);
+>                break;
+>        case DISABLE_KEY:
+>                ath5k_hw_reset_key(sc->ah, key->keyidx);
+> diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
+> index 5674639..9b46d64 100644
+> --- a/drivers/net/wireless/ath5k/pcu.c
+> +++ b/drivers/net/wireless/ath5k/pcu.c
+> @@ -1014,17 +1014,29 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+>                const struct ieee80211_key_conf *key, const u8 *mac)
+>  {
+>        unsigned int i;
+> +       int keylen;
+>        __le32 key_v[5] = {};
+> +       __le32 key0 = 0, key1 = 0;
+> +       __le32 *rxmic, *txmic;
+>        u32 keytype;
+> +       u16 micentry = entry + AR5K_KEYTABLE_MIC_OFFSET;
+> +       bool is_tkip;
+>
+>        ATH5K_TRACE(ah->ah_sc);
+>
+> -       /* key->keylen comes in from mac80211 in bytes */
+> +       is_tkip = (key->alg == ALG_TKIP);
+>
+> -       if (key->keylen > AR5K_KEYTABLE_SIZE / 8)
+> +       /*
+> +        * key->keylen comes in from mac80211 in bytes.
+> +        * TKIP is 128 bit + 128 bit mic
+> +        */
+> +       keylen = (is_tkip) ? (128 / 8) : key->keylen;
+> +
+> +       if (entry > AR5K_KEYTABLE_SIZE ||
+> +               (is_tkip && micentry > AR5K_KEYTABLE_SIZE))
+>                return -EOPNOTSUPP;
+>
+> -       switch (key->keylen) {
+> +       switch (keylen) {
+>        /* WEP 40-bit   = 40-bit  entered key + 24 bit IV = 64-bit */
+>        case 40 / 8:
+>                memcpy(&key_v[0], key->key, 5);
+> @@ -1038,24 +1050,66 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+>                memcpy(&key_v[4], &key->key[12], 1);
+>                keytype = AR5K_KEYTABLE_TYPE_104;
+>                break;
+> -       /* WEP 128-bit  = 128-bit entered key + 24 bit IV = 152-bit */
+> +       /* WEP/TKIP 128-bit  = 128-bit entered key + 24 bit IV = 152-bit */
+>        case 128 / 8:
+>                memcpy(&key_v[0], &key->key[0], 6);
+>                memcpy(&key_v[2], &key->key[6], 6);
+>                memcpy(&key_v[4], &key->key[12], 4);
+> -               keytype = AR5K_KEYTABLE_TYPE_128;
+> +               keytype = is_tkip ?
+> +                       AR5K_KEYTABLE_TYPE_TKIP :
+> +                       AR5K_KEYTABLE_TYPE_128;
+>                break;
+>
+>        default:
+>                return -EINVAL; /* shouldn't happen */
+>        }
+>
+> +       /* intentionally corrupt key until mic is installed */
+> +       if (is_tkip) {
+> +               key0 = key_v[0] = ~key_v[0];
+> +               key1 = key_v[1] = ~key_v[1];
+> +       }
+> +
+>        for (i = 0; i < ARRAY_SIZE(key_v); i++)
+>                ath5k_hw_reg_write(ah, le32_to_cpu(key_v[i]),
+>                                AR5K_KEYTABLE_OFF(entry, i));
+>
+>        ath5k_hw_reg_write(ah, keytype, AR5K_KEYTABLE_TYPE(entry));
+>
+> +       if (is_tkip) {
+> +               /* Install rx/tx MIC */
+> +               rxmic = (__le32 *) &key->key[16];
+> +               txmic = (__le32 *) &key->key[24];
+> +#if 0
+> +               /* MISC_MODE register & 0x04 - for mac srev >= griffin */
+> +               key_v[0] = rxmic[0];
+> +               key_v[1] = (txmic[0] >> 16) & 0xffff;
+> +               key_v[2] = rxmic[1];
+> +               key_v[3] = txmic[0] & 0xffff;
+> +               key_v[4] = txmic[1];
+> +#else
+> +               key_v[0] = rxmic[0];
+> +               key_v[1] = 0;
+> +               key_v[2] = rxmic[1];
+> +               key_v[3] = 0;
+> +               key_v[4] = 0;
+> +#endif
+> +               for (i = 0; i < ARRAY_SIZE(key_v); i++)
+> +                       ath5k_hw_reg_write(ah, le32_to_cpu(key_v[i]),
+> +                               AR5K_KEYTABLE_OFF(micentry, i));
+> +
+> +               ath5k_hw_reg_write(ah, AR5K_KEYTABLE_TYPE_NULL,
+> +                       AR5K_KEYTABLE_TYPE(micentry));
+> +               ath5k_hw_reg_write(ah, 0, AR5K_KEYTABLE_MAC0(micentry));
+> +               ath5k_hw_reg_write(ah, 0, AR5K_KEYTABLE_MAC1(micentry));
+> +
+> +               /* restore first 2 words of key */
+> +               ath5k_hw_reg_write(ah, le32_to_cpu(~key0),
+> +                       AR5K_KEYTABLE_OFF(entry, 0));
+> +               ath5k_hw_reg_write(ah, le32_to_cpu(~key1),
+> +                       AR5K_KEYTABLE_OFF(entry, 1));
+> +       }
+> +
+>        return ath5k_hw_set_key_lladdr(ah, entry, mac);
+>  }
+>
+> --
+> 1.5.4.2.182.gb3092
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+>
+>
 
----696208474-2122282121-1225367021=:7072
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
+> We were setting RX_FILTER_BEACON even after entering STA mode,
+> which leads to a lot of unnecessary wakeups.  This should fix the
+> bug "Ath5k driver has too many interrupts per second at idle" at
+> http://bugzilla.kernel.org/show_bug.cgi?id=11749.
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath5k/base.c |    4 +---
+>  1 files changed, 1 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index c7ffcbb..5ef8cc4 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -2952,10 +2952,8 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
+>                sc->opmode != NL80211_IFTYPE_MESH_POINT &&
+>                test_bit(ATH_STAT_PROMISC, sc->status))
+>                rfilt |= AR5K_RX_FILTER_PROM;
+> -       if (sc->opmode == NL80211_IFTYPE_STATION ||
+> -               sc->opmode == NL80211_IFTYPE_ADHOC) {
+> +       if (sc->opmode == NL80211_IFTYPE_ADHOC)
+>                rfilt |= AR5K_RX_FILTER_BEACON;
+> -       }
+>        if (sc->opmode == NL80211_IFTYPE_MESH_POINT)
+>                rfilt |= AR5K_RX_FILTER_CONTROL | AR5K_RX_FILTER_BEACON |
+>                        AR5K_RX_FILTER_PROBEREQ | AR5K_RX_FILTER_PROM;
+
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@helsinki.fi>
----
- drivers/net/wireless/b43legacy/dma.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
-index fb6819e..786e028 100644
---- a/drivers/net/wireless/b43legacy/dma.c
-+++ b/drivers/net/wireless/b43legacy/dma.c
-@@ -919,7 +919,7 @@ struct b43legacy_dmaring *b43legacy_setup_dmaring(struct b43legacy_wldev *dev,
- 			if (!ring->txhdr_cache)
- 				goto err_kfree_meta;
- 
--				dma_test = ssb_dma_map_single(dev->dev,
-+			dma_test = ssb_dma_map_single(dev->dev,
- 					ring->txhdr_cache,
- 					sizeof(struct b43legacy_txhdr_fw3),
- 					DMA_TO_DEVICE);
 -- 
-1.5.2.2
-
----696208474-2122282121-1225367021=:7072--
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
