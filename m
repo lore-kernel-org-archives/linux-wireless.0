@@ -1,93 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38912 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753340AbYJORrL (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.185]:3433 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752460AbYJ3QJs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 13:47:11 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
-References: <B27EBC40D200ED48A3F4CC2EBEABAE0B16C892F2@orsmsx501.amr.corp.intel.com>
-	 <1223969808.2570.153.camel@debian.sh.intel.com>
-	 <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
-	 <20081014203510.GD3349@tuxdriver.com>
-	 <1224018957.3027.9.camel@johannes.berg>
-	 <20081014211912.GF3349@tuxdriver.com>
-	 <1224019662.3027.13.camel@johannes.berg>
-	 <1224085609.4764.18.camel@californication>
-	 <1224086374.735.4.camel@johannes.berg>
-	 <1224091577.28173.9.camel@californication>
-	 <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 15 Oct 2008 19:47:48 +0200
-Message-Id: <1224092868.28173.21.camel@californication> (sfid-20081015_194717_265789_AD8376E4)
-Mime-Version: 1.0
+	Thu, 30 Oct 2008 12:09:48 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so503050rnd.17
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 09:09:46 -0700 (PDT)
+Message-ID: <43e72e890810300909if0e2db1qf5ff8512ab760275@mail.gmail.com> (sfid-20081030_170952_529214_D41F7450)
+Date: Thu, 30 Oct 2008 09:09:46 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 6/6] cfg80211: enable 5 GHz band for world regulatory domain
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <53ad401862d734b26836f0706a394525.squirrel@secure.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1225329594-21704-1-git-send-email-lrodriguez@atheros.com>
+	 <1225329594-21704-2-git-send-email-lrodriguez@atheros.com>
+	 <1225329594-21704-3-git-send-email-lrodriguez@atheros.com>
+	 <1225329594-21704-4-git-send-email-lrodriguez@atheros.com>
+	 <1225329594-21704-5-git-send-email-lrodriguez@atheros.com>
+	 <1225329594-21704-6-git-send-email-lrodriguez@atheros.com>
+	 <1225329594-21704-7-git-send-email-lrodriguez@atheros.com>
+	 <53ad401862d734b26836f0706a394525.squirrel@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Thu, Oct 30, 2008 at 2:24 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Luis R. Rodriguez wrote:
+>> Technically speaking since some countries do not support
+>> some channels in 5 GHz the world regulatory domain should not
+>> use them however APs should *not* be shipped in those countries
+>> which don't allow 5 GHz operation. Because of this we can
+>> safely assume we operate correctly in STA mode by forcing
+>> passive scan and disabling ad-hoc in 5 GHz. We leave out
+>> all DFS channels as we don't support DFS yet.
+>
+> No,  this is incorrect. The linux kernel can well act as an AP.
 
-> > I can see it useful when companies actually start building products with
-> > two or more cards in the system and have different cards for different
-> > tasks in it. So if you stick one card for one band and another one for
-> > the other band in there, then it would make sense to do a per-band
-> > regulatory hinting.
-> 
-> Sure, but custom solutions can require custom regulatory dbs and
-> people can do any crazy thing they want here, just as when they need
-> custom regulatory domains not allowed by the FCC in the USA for
-> example. Remember that by default the design is trying to cover the
-> usual scenario of users with 1 wireless card or 2 with one built in.
-> We decided on our discussions to respect the built-in card first. For
-> more cards we can take the intersection if we want to keep being more
-> restrictive. Its what makes sense if you think about it.
+An AP would/should not want to use the world regulatory domain though :)
 
-I must admit that I never thought about the implications of multiple
-bands with multiple hardware. I am not against keeping it simple and
-forcing to have userspace in place to change it. However we do wanna
-have support for old laptops that are currently working fine with no
-extra userspace, but newer kernels where they just add the second card
-to access an A-network. Also remember that internal cards can't really
-be disabled most of the times.
-
-> > Not sure if this really ever ends up in a product. However I can see the
-> > case where you have a laptop with a BG-card and then attach an A-card to
-> > it do access an A-network and then it doesn't work. It would be nice to
-> > just have this working. Currently this would not work.
-> 
-> Yes it does, it just doesn't work for your hardware as Intel put into
-> regulatory hardware capability and these are two *very* different
-> things. That is the problem.
-> 
-> My suggestion is to add a default minimal 5 GHz regulatory domain
-> definition to your driver on single band cards to deal with this. When
-> a dual band card is present then all of the full card's capabilities
-> will be used.
-
-That would be one option, but it sounds really strange to me that a
-BG-card has to "think" about A-bands.
-
-Let not try to put this down into the drivers if we can solve this
-nicely with a per-band regulatory hints inside the core.
-
-> > Also the case when we unplug the first card, does the regulatory hint
-> > gets reset and the next card could bring in a new one? I can see use
-> > cases where you don't wanna use the built-in card, because it is just
-> > too limited.
-> 
-> For now nl80211 supports changing regulatory domains.
-
-Please keep in mind the case where we do have a new kernel with old
-userspace or an userspace without CRDA.
-
-Regards
-
-Marce
-
-
+  Luis
