@@ -1,141 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:45890 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827AbYJHBOX (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:65120 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753755AbYJ3NYA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 21:14:23 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 and IEEE80211_CONF_SHORT_SLOT_TIME
-Date: Tue, 7 Oct 2008 22:14:12 -0300
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chr <chunkeey@web.de>, Ivo van Doorn <ivdoorn@gmail.com>,
-	Pavel Roskin <proski@gnu.org>
-References: <1223370325.3778.69.camel@johannes.berg>
-In-Reply-To: <1223370325.3778.69.camel@johannes.berg>
+	Thu, 30 Oct 2008 09:24:00 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so206072yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 06:23:59 -0700 (PDT)
+Message-ID: <1ba2fa240810300623o51dbd0a6p7a7bc89795dc5d35@mail.gmail.com> (sfid-20081030_142407_090756_F1C62AE8)
+Date: Thu, 30 Oct 2008 15:23:58 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH for 2.6.28] mac80211: fix basic rates
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1225300446.5439.27.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200810072214.13206.herton@mandriva.com.br> (sfid-20081008_031428_282768_F74E145D)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1225300446.5439.27.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 07 October 2008 06:05:24 Johannes Berg wrote:
-> Hi,
+On Wed, Oct 29, 2008 at 7:14 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> This fixes the basic rate bitmap calculation in mac80211.
 >
-> I just realised that for whatever reason mac80211 isn't setting the
-> IEEE80211_CONF_SHORT_SLOT_TIME flag. I'm not sure when or why that was
-> removed, but clearly it isn't used.
->
-> Can you please fix the drivers using it (b43, b43legacy, iwlwifi, p54,
-> rt2x00, rtl8180, rtl8187) to use the bss_conf's use_short_slot instead?
-> I'll fix mac80211 to set that appropriately.
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: stable@kernel.org [2.6.25, 2.6.26, 2.6.27]
+> ---
+> Is this appropriate for stable? It's a trivial and obvious fix, and can
+> throw off the duration calculation, but it's likely nobody will ever
+> really notice...
 
-About 8187 and 8187b, I think the changes below may handle it, I have yet to 
-test them, just posting to have some feedback in case there is something 
-missing or wrong. I'll try to review the other things too (like 
-use_short_preamble warned in the other thread):
-
-diff --git a/drivers/net/wireless/rtl8187_dev.c 
-b/drivers/net/wireless/rtl8187_dev.c
-index e990261..7f1cac8 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -870,6 +870,32 @@ static void rtl8187_remove_interface(struct ieee80211_hw 
-*dev,
- 	mutex_unlock(&priv->conf_mutex);
- }
- 
-+static void rtl8187_conf_slot(struct rtl8187_priv *priv, bool use_short_slot)
-+{
-+	if (priv->is_rtl8187b) {
-+		if (use_short_slot) {
-+			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
-+			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x1c);
-+		} else {
-+			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
-+			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x32);
-+		}
-+		rtl818x_iowrite8(priv, &priv->map->EIFS, 0x5b);
-+	} else {
-+		if (use_short_slot) {
-+			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
-+			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
-+			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
-+			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
-+		} else {
-+			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
-+			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
-+			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
-+			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
-+		}
-+	}
-+}
-+
- static int rtl8187_config(struct ieee80211_hw *dev, struct ieee80211_conf 
-*conf)
- {
- 	struct rtl8187_priv *priv = dev->priv;
-@@ -888,21 +914,8 @@ static int rtl8187_config(struct ieee80211_hw *dev, 
-struct ieee80211_conf *conf)
- 	msleep(10);
- 	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
- 
--	if (!priv->is_rtl8187b) {
--		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
--
--		if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
--			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
--			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
--			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
--			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
--		} else {
--			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
--			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
--			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
--			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
--		}
--	}
-+	rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
-+	rtl8187_conf_slot(priv, conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME);
- 
- 	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
- 	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
-@@ -938,6 +951,15 @@ static int rtl8187_config_interface(struct ieee80211_hw 
-*dev,
- 	return 0;
- }
- 
-+static void rtl8187_bss_info_changed(struct ieee80211_hw *dev,
-+				    struct ieee80211_vif *vif,
-+				    struct ieee80211_bss_conf *info,
-+				    u32 changed)
-+{
-+	if (changed & BSS_CHANGED_ERP_SLOT)
-+		rtl8187_conf_slot(dev->priv, info->use_short_slot);
-+}
-+
- static void rtl8187_configure_filter(struct ieee80211_hw *dev,
- 				     unsigned int changed_flags,
- 				     unsigned int *total_flags,
-@@ -978,6 +1000,7 @@ static const struct ieee80211_ops rtl8187_ops = {
- 	.remove_interface	= rtl8187_remove_interface,
- 	.config			= rtl8187_config,
- 	.config_interface	= rtl8187_config_interface,
-+	.bss_info_changed	= rtl8187_bss_info_changed,
- 	.configure_filter	= rtl8187_configure_filter,
- };
- 
-
-The values used for SLOT etc. are kept for 8187, for 8187b I got the values 
-from realtek GPL driver (nothing is specified in the datasheet).
+You would should fail association if one of the basic rates is not
+supported  by the station
+Tomas
 
 >
-> johannes
-
---
-[]'s
-Herton
+>  net/mac80211/mlme.c |   10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+>
+> --- everything.orig/net/mac80211/mlme.c 2008-10-29 18:08:12.000000000 +0100
+> +++ everything/net/mac80211/mlme.c      2008-10-29 18:08:19.000000000 +0100
+> @@ -1307,8 +1307,9 @@ static void ieee80211_rx_mgmt_assoc_resp
+>                        have_higher_than_11mbit = true;
+>
+>                for (j = 0; j < sband->n_bitrates; j++) {
+> -                       if (sband->bitrates[j].bitrate == rate)
+> -                               rates |= BIT(j);
+> +                       if (sband->bitrates[j].bitrate != rate)
+> +                               continue;
+> +                       rates |= BIT(j);
+>                        if (elems.supp_rates[i] & 0x80)
+>                                basic_rates |= BIT(j);
+>                }
+> @@ -1321,8 +1322,9 @@ static void ieee80211_rx_mgmt_assoc_resp
+>                        have_higher_than_11mbit = true;
+>
+>                for (j = 0; j < sband->n_bitrates; j++) {
+> -                       if (sband->bitrates[j].bitrate == rate)
+> -                               rates |= BIT(j);
+> +                       if (sband->bitrates[j].bitrate != rate)
+> +                               continue;
+> +                       rates |= BIT(j);
+>                        if (elems.ext_supp_rates[i] & 0x80)
+>                                basic_rates |= BIT(j);
+>                }
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
