@@ -1,122 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:52171 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753022AbYJ2Sto (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 14:49:44 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so67770eyi.37
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 11:49:42 -0700 (PDT)
-Message-ID: <4908B03C.400@gmail.com> (sfid-20081029_194949_039891_19F76BB6)
-Date: Wed, 29 Oct 2008 18:49:32 +0000
+Received: from hostap.isc.org ([149.20.54.63]:52630 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755240AbYJ3Pvs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 11:51:48 -0400
+Date: Thu, 30 Oct 2008 17:50:46 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211_hwsim: Add support for client PS mode testing
+Message-ID: <20081030155046.GC3923@jm.kir.nu> (sfid-20081030_165209_511884_BB818D09)
+References: <20081030150455.GA3923@jm.kir.nu> <1225379715.3690.66.camel@johannes.berg>
 MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	orinoco-devel@lists.sourceforge.net,
-	linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: [Orinoco-devel] 2.6.28-rc2: new PCMCIA device instance after
- resume - orinoco can't download firmware
-References: <200810282219.51492.arvidjaar@mail.ru>	<200810290643.54707.arvidjaar@mail.ru>	<200810291318.05373.rjw@sisk.pl> <200810291819.20848.arvidjaar@mail.ru>
-In-Reply-To: <200810291819.20848.arvidjaar@mail.ru>
-Content-Type: text/plain; charset=ISO-8859-1
-From: Dave <kilroyd@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1225379715.3690.66.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
-> On Wednesday 29 October 2008, Rafael J. Wysocki wrote:
->>> Do you have any idea what could it be? Original message is here:
->>> http://marc.info/?l=linux-wireless&m=122522165719760&w=2
->> This probably is a result of the fact that we don't include firmware blobs
->> into modular drivers any more.  Please try to compile your driver directly
->> into the kernel and enable CONFIG_FIRMWARE_IN_KERNEL.
->>
->> If this helps, we'll know what the problem is.
->>
+On Thu, Oct 30, 2008 at 04:15:15PM +0100, Johannes Berg wrote:
+> On Thu, 2008-10-30 at 17:04 +0200, Jouni Malinen wrote:
+> > This introduces a debugfs file (mac80211_hwsim/phy#/ps) that can be
+> > used
 > 
-> Ehh ... you miss the point. The problem is NOT missing firmware (I have
-> already been running with external firmware just fine in 2.6.27). The
-> problem is that during resume instead of simply resume *existing*
-> device/driver instance PCMCIA suddenly decides to re-discover the *same*
-> device yet another again.
+> Why not use the cfg80211-provided debugfs dir /ieee80211/phy#/ and maybe
+> put it below hwsim/ in there because mac80211 has things in there too?
+> That way you save all the code setting up the directory etc.
+
+Good point.. I did actually find out about that some time ago, but did
+not remember anymore. I'll move the files there.
+
+> > Mode 2 (automatic PS-Poll) does not yet parse Beacon frames, but
+> > eventually, it should take a look at TIM IE and send PS-Poll if a
+> > traffic bit is set for our AID.
 > 
-> bisecting will
-> take ages here. I need some advice which options to turn on.
+> Out of curiosity, is there any hw that implements this? b43 surely would
+> need such code too, and then it could be in mac80211? I can see setting
+> the PM bit be a decision of the driver, but if more than one driver ends
+> up needing ps-poll, maybe mac80211 should be handling it?
 
-I attempted to bisect, but ran into problems. As an alternative, I added
-a WARN_ON(err) immediately after the request_firmware call to get a
-stack dump:
+Yes, or well, firmware more likely. Anyway, AP will have to support it
+and the main purpose of this hwsim code is indeed to allow AP PS
+buffering code to be tested. Anyway, should there be other drivers that
+would like to do the same, this could of course be eventually moved to
+mac80211. I'm just not sure whether I would expect this (Beacon parsing)
+to happen in driver. Rather, I would expect the hardware to provide
+helper here (i.e., process Beacon frames without indicating them to
+host, generate an interrupt on Beacon frame that has TIM IE with our bit
+set). Sending the PS-Poll could potentially be done in mac80211. I would
+need to take a closer look at how this is done in modern wlan designs..
+Then again, many vendors choose not to use PS-Poll at all even.
 
-orinoco_cs 0.0: firmware: requesting agere_sta_fw.bin
-------------[ cut here ]------------
-WARNING: at
-/usr/src/linux-current/wireless-testing/drivers/net/wireless/orinoco.c:495
-orinoco_dl_firmware+0xbb/0x1ce [orinoco]()
-Modules linked in: orinoco_cs orinoco hermes_dld hermes michael_mic
-aty128fb snd_maestro3 [last unloaded: hermes]
-Pid: 22157, comm: bash Not tainted 2.6.28-rc2-wl #41
-Call Trace:
- [<c0117a8c>] warn_on_slowpath+0x3e/0x57
- [<c019578a>] release_sysfs_dirent+0x50/0x60
- [<c0195b3d>] sysfs_addrm_finish+0x73/0x78
- [<c0195d03>] remove_dir+0x21/0x27
- [<c02a8901>] fw_dev_release+0x15/0x1d
- [<c022cfbe>] kobject_release+0x0/0x5
- [<c022d68b>] kref_put+0x3f/0x4c
- [<c02a8c7d>] _request_firmware+0x176/0x1bd
- [<d1083381>] orinoco_dl_firmware+0xbb/0x1ce [orinoco]
- [<d10836d0>] orinoco_download+0x1f/0x30 [orinoco]
- [<d1086b39>] orinoco_init+0x63/0x4aa [orinoco]
- [<c0362ee8>] __dev_get_by_name+0x18/0x72
- [<c03632ed>] __dev_alloc_name+0x110/0x128
- [<c03660e5>] netdev_init_queue_locks+0x29/0x41
- [<c03661e6>] register_netdevice+0x60/0x1d7
- [<c036638c>] register_netdev+0x2f/0x3b
- [<d10912a0>] orinoco_cs_config+0xe1/0x174 [orinoco_cs]
- [<c02ecdda>] pcmcia_device_probe+0xfa/0x144
- [<c0196200>] sysfs_do_create_link+0x3c/0x10f
- [<c02a559e>] __device_attach+0x0/0x5
- [<c02a54d9>] really_probe+0x70/0xea
- [<c02a5596>] driver_probe_device+0x34/0x3c
- [<c02a4a53>] bus_for_each_drv+0x38/0x59
- [<c02a55ee>] device_attach+0x4b/0x5e
- [<c02a559e>] __device_attach+0x0/0x5
- [<c02a4c00>] bus_attach_device+0x21/0x4f
- [<c02a3955>] device_add+0x147/0x272
- [<c02ed29b>] pcmcia_device_add+0x1ca/0x253
- [<c02ed3a1>] pcmcia_card_add+0x7d/0x8a       <----- ??
- [<c0112185>] dequeue_task_fair+0xf/0x10
- [<c0101c8d>] __switch_to+0x1d/0x139
- [<c011407b>] finish_task_switch+0x22/0x66
- [<c03e18fb>] __sched_text_start+0x2d3/0x2ec
- [<c022cf6d>] kobject_get+0xf/0x13
- [<c02a3a9e>] get_device+0xe/0x14
- [<c02e928a>] pcmcia_get_socket+0xe/0x7e
- [<c02edf0e>] ds_event+0x77/0x94
- [<c02e96b1>] send_event+0x84/0x9d
- [<c02e9bee>] socket_resume+0xa1/0xb5
- [<c02e9255>] pcmcia_socket_dev_resume+0x49/0x70
- [<c0238d42>] pci_legacy_resume+0x13/0x1a
- [<c0238e81>] pci_pm_resume+0x42/0x46
- [<c02a7887>] pm_op+0x2b/0x48
- [<c02a7a42>] resume_device+0x2e/0xa8
- [<c02a7b21>] dpm_resume+0x65/0xfc
- [<c02a7cf1>] device_resume+0x8/0x10
- [<c0135173>] suspend_devices_and_enter+0x72/0xa1
- [<c013521d>] enter_state+0x62/0x7a
- [<c013533f>] state_store+0x9f/0xb4
- [<c01352a0>] state_store+0x0/0xb4
- [<c022d0b8>] kobj_attr_store+0x18/0x1c
- [<c0194cf1>] flush_write_buffer+0x38/0x4c
- [<c0194d37>] sysfs_write_file+0x32/0x51
- [<c015eb9b>] vfs_write+0x81/0xf3
- [<c015ecab>] sys_write+0x3c/0x62
- [<c0102ced>] sysenter_do_call+0x12/0x21
----[ end trace 596cca76ed6aae6a ]---
-eth1: Cannot find firmware agere_sta_fw.bin
+As far as setting FC PwrMgt bit is concerned, that could possible be in
+mac80211. Though, there is some timing consideration and likely
+potential race conditions that would need to be understood based on the
+exact hardware design.
 
-?? Is that supposed to happen on resume?
-
-
-
-Dave.
+-- 
+Jouni Malinen                                            PGP id EFC895FA
