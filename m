@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56399 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757078AbYJJNy1 (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:8571 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371AbYJ3Fib (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 09:54:27 -0400
-Subject: Re: ath9k rate control API abuse
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223629834.3930.67.camel@johannes.berg> (sfid-20081010_111517_036937_322F0165)
-References: <1223629834.3930.67.camel@johannes.berg>
-	 (sfid-20081010_111517_036937_322F0165)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-W38k9MQUiKUaHUdAT9vd"
-Date: Fri, 10 Oct 2008 15:54:25 +0200
-Message-Id: <1223646865.3748.8.camel@johannes.berg> (sfid-20081010_155431_014406_153A7161)
-Mime-Version: 1.0
+	Thu, 30 Oct 2008 01:38:31 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so142808yxm.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 22:38:30 -0700 (PDT)
+Message-ID: <43e72e890810292238x36b37839x759c1691541534bf@mail.gmail.com> (sfid-20081030_063836_207134_14BE6F3C)
+Date: Wed, 29 Oct 2008 22:38:30 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "jon doe" <mass.of.doughnuts@gmail.com>
+Subject: Re: compile problems
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1225334965.25716.1.camel@indika.weed.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1225334965.25716.1.camel@indika.weed.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 29, 2008 at 7:49 PM, jon doe <mass.of.doughnuts@gmail.com> wrote:
+> please help
+>
+> heres the error
+>
+> make -C /lib/modules/2.6.27.3-indika/build
+> M=/home/jon/compat-wireless-2008-10-29 modules
+> make[1]: Entering directory `/usr/src/linux-2.6.27.3'
+>  CC      /home/jon/compat-wireless-2008-10-29/net/mac80211/main.o
+> /home/jon/compat-wireless-2008-10-29/net/mac80211/main.c: In function
+> 'ieee80211_handle_filtered_frame':
+> /home/jon/compat-wireless-2008-10-29/net/mac80211/main.c:435: error:
+> 'struct sk_buff' has no member named 'requeue'
+> /home/jon/compat-wireless-2008-10-29/net/mac80211/main.c:437: error:
+> 'struct sk_buff' has no member named 'requeue'
+> make[3]: *** [/home/jon/compat-wireless-2008-10-29/net/mac80211/main.o]
+> Error 1
+> make[2]: *** [/home/jon/compat-wireless-2008-10-29/net/mac80211] Error 2
+> make[1]: *** [_module_/home/jon/compat-wireless-2008-10-29] Error 2
+> make[1]: Leaving directory `/usr/src/linux-2.6.27.3'
+> make: *** [modules] Error 2
 
---=-W38k9MQUiKUaHUdAT9vd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The compat code for aggregation wasn't added yet, but it should now be
+there thanks to Tim. Please grab new tarball and try that.
 
-On Fri, 2008-10-10 at 11:10 +0200, Johannes Berg wrote:
-> Hi,
->=20
-> I decided to review ath9k as well wrt. the RC algorithm (Intel stuff
-> coming later). It doesn't exactly have the same deficiencies as the
-> Intel drivers, but it's still very very very fragile.
->=20
-> For example, you can make it crash with a double-free like this:
->=20
-> # iwconfig wlan0 frag 300
+git-describe says:
+v2.6.28-rc2-4159-g6c11cd2
+wireless-testing latest tag:
+master-2008-10-29
+This is compat-release:
+v1.1-1-g1818f32
 
-As a band-aid, you can provide the set_frag_threshold function and have
-it do nothing.
 
-johannes
-
---=-W38k9MQUiKUaHUdAT9vd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI716NAAoJEKVg1VMiehFYTUEP/j6/z/e6R0KYXC0+KB6Vpr18
-lhZuhQkbOgo69SYTyu+qosxubas/gOayV8sgBg6BDAEwlD2SNfYtZK+xa4w/orhe
-F1UyD929hA4osr/wjV60witzF58Znr1EnGbEL8Mae78+GmIgR+fDc36uayEfluZe
-oWT3whVaGsIDB8cpn2Pd4S/T/syqHFEqNrcrjAFcRHHBH/qoWRC+oTruLd9us7Vo
-f0HpQtgBwsEvkY8YVLtsCI3Of6xkkzugFCvP9FdnInNVhqu1pgxC/62bNxq0zxPb
-wqdkAsWUIfRqT/0SLO6L0S+vqoBe6GyWA1VeX+E/veqA1jxYxrGV8c1gR6RQ60Lo
-JUNaeKzPfTZERvlhTgHPdaL+x418mm3GLwK+pQ2lT/1VbszH8Dh0vwsBURuEqNve
-y+7/x9MM2kyclwgnAVjJ6D8rXJvfO2ugbK9mousTJoNL6Gws0WKbox6Sd4my0Uod
-CewdyazqmE6iHVfTELaw5nsGpvlIK9t1qvnhbtCrkcgn0WFycBSeaVoBoKJNEBpR
-9Dlsh1ZbsAr0xlaEqNEb8lcmvLRPvb1oNkYuyrpIShCOI8El2pa4z8fQorHZ/fOx
-tazHJjzEU1PmFb3hsP7FE3sXBCHJ7PTA6RPoxp1QUkvzoo4XtEekYimmUUn2lGCj
-6bgU67A470x9kEKjvSAt
-=kt1d
------END PGP SIGNATURE-----
-
---=-W38k9MQUiKUaHUdAT9vd--
-
+  Luis
