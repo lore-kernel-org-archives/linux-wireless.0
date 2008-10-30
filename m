@@ -1,78 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:37916 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752190AbYJEGRn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 02:17:43 -0400
-Date: Sat, 4 Oct 2008 23:16:03 -0700
-From: Greg KH <greg@kroah.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: proski@gnu.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: at76_usb driver status
-Message-ID: <20081005061603.GB28533@kroah.com> (sfid-20081005_081747_203662_A998164E)
-References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com>
+Received: from the2masters.de ([213.146.113.64]:41147 "EHLO
+	smtp.the2masters.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753572AbYJ3P6V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 11:58:21 -0400
+Message-ID: <4909C93E.7020400@the2masters.de> (sfid-20081030_165828_538461_D0715670)
+Date: Thu, 30 Oct 2008 15:48:30 +0100
+From: Stefan Hellermann <stefan@the2masters.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87y713y48r.fsf@nokia.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Arjan van de Ven <arjan@infradead.org>, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, me@bobcopeland.com, mcgrof@gmail.com,
+	mickflemm@gmail.com
+Subject: Re: pull request: wireless-2.6 2008-10-29
+References: <20081029231855.GD3485@tuxdriver.com> <20081029162324.28f5864d@infradead.org> <20081029233350.GE3485@tuxdriver.com>
+In-Reply-To: <20081029233350.GE3485@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 05, 2008 at 08:56:20AM +0300, Kalle Valo wrote:
-> Greg KH <greg@kroah.com> writes:
-> > In my quest to suck drivers into drivers/staging/ I noticed that the
-> > at76_usb driver is being shipped by both Fedora and Ubuntu in their
-> > kernels.
-> 
-> Yes, that's the original at76_usb driver which has it's own 802.11
-> stack. Pavel Rosking was the maintainer of that driver. Based on the
-> feedback in linux-wireless I then started porting the driver to use
-> mac80211. 
-> 
-> (Maybe I should have renamed the port to something else than at76_usb
-> because having two different drivers with the same name creates
-> confusion.)
-> 
-> > So I was wondering what the status of this driver is, and if I
-> > could/should add it to drivers/staging/?
-> 
-> The original at76_usb is working quite well, but it's unacceptable for
-> the mainline because we cannot have two 802.11 stacks in kernel.
+John W. Linville schrieb:
+> On Wed, Oct 29, 2008 at 04:23:24PM -0700, Arjan van de Ven wrote:
+>   
+>> On Wed, 29 Oct 2008 19:18:55 -0400
+>> "John W. Linville" <linville@tuxdriver.com> wrote:
+>>
+>>     
+>>> Dave,
+>>>
+>>> Another quick round of fixes intended for 2.6.28...
+>>>
+>>> This includes fixes for bugs 11749 and 11845, fixes a reset-related
+>>> regression in ath5k, fixes a Kconfig-related error for rt2x00, and
+>>> fixes some sparse warnings and a possible buffer overrun in libertas.
+>>> Also, it corrects a spelling error and marks Bob Copeland as an
+>>> ath5k maintainer.
+>>>       
+>> speaking of ath5k:
+>>
+>> http://www.kerneloops.org/version.php?start=1835008&end=1867775&version=28-rc
+>>
+>> it seems to have added a few WARN_ON()s which now end up at the top of
+>> the list .. are these known or should I spend some time writing reports
+>> for netdev ?
+>>     
+>
+> I wasn't aware of them -- thanks... :-)
+>
+>   
+I think some of the reports on kerneloops are from my machine, I'm
+running wireless-testing#master in the hope to get my card fully
+working. It's a AR2425 chip (MAC: 0xe2, PHY: 0x70), in a Lenovo Notebook.
 
-I understand this, but for the issue of the drivers/staging/ tree, it's
-ok for us to have as many 802.11 stacks in the kernel as we can cram in
-there :)
+The wireless-connection is nearly unusable. I can provide access to this
+machine or test patches if anyone can help.
 
-See my previous posts on lkml for details on the staging tree if you
-have questions about it.
+I get many warnings like
 
-So for now, if no one really screams, I'll put Pavel's driver into the
-drivers/staging/ tree so that users can use their devices.  When your
-driver is merged, we can merely delete this driver instead.
+WARNING: at /srv/devel/kernel/net/mac80211/rx.c:2203
+ath5k_tasklet_rx+0x318/0x5c0()
+Modules linked in:
+Pid: 0, comm: swapper Not tainted 2.6.28-rc1-wl #46
+Call Trace:
+ [<c014744f>] warn_on_slowpath+0x5f/0xa0
+ [<c013ef69>] enqueue_task_fair+0xb9/0x100
+ [<c013ef69>] enqueue_task_fair+0xb9/0x100
+ [<c0137835>] default_spin_lock_flags+0x5/0x10
+ [<c0574fbb>] _spin_lock_irqsave+0x2b/0x40
+ [<c0151347>] lock_timer_base+0x27/0x60
+ [<c01514e0>] __mod_timer+0x90/0xa0
+ [<c03e8dea>] rexmit_timer+0x36a/0x3d0
+ [<c03aebe8>] ath5k_tasklet_rx+0x318/0x5c0
+ [<c014bfb0>] tasklet_action+0x70/0x100
+ [<c014ca97>] __do_softirq+0x97/0x160
+ [<c014ca00>] __do_softirq+0x0/0x160
+ <IRQ>  [<c0170c50>] handle_fasteoi_irq+0x0/0xe0
+ [<c014c7bd>] irq_exit+0x5d/0x80
+ [<c012297c>] do_IRQ+0xcc/0x100
+ [<c0120aeb>] common_interrupt+0x23/0x28
+ [<c0334f88>] acpi_idle_enter_bm+0x315/0x39e
+ [<c04346c4>] cpuidle_idle_call+0x74/0xc0
+ [<c011eded>] cpu_idle+0x6d/0xd0
+---[ end trace 8ac847f454371229 ]---
 
-Sound good?
-
-> > And, did you merge the USB DFU code into the driver itself?
-> 
-> Yes, someone implemented it in driver.
-> 
-> > Having that kind of functionality in the USB core is fine with me if
-> > you want me to add that portion there, no reason it needs to be
-> > burried in individual drivers.
-> 
-> USB DFU is a standard? So it seems:
-> 
-> http://wiki.openmoko.org/wiki/USB_DFU
-> 
-> Heh, I didn't know this. I though it was some Atmel proprietary
-> interface :)
-
-Oh yeah, I wrote portions of that spec, oh so long ago :)
-
-> I might be interested in getting DFU into USB core, because I would
-> like to learn more about USB. But first I need to get at76_usb stable.
-
-Fair enough, patches are always welcome.
-
-thanks,
-
-greg k-h
