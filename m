@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:14727 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751346AbYJTXbj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 19:31:39 -0400
-Subject: Re: 10-17-2008 Build issues - Intel 3945abg - Ubuntu Intrepid
-From: reinette chatre <reinette.chatre@intel.com>
-To: "myk.robinson@kingdomcomputer.info"
-	<myk.robinson@kingdomcomputer.info>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224336809.6934.1.camel@mobileOne>
-References: <1224248117.28593.3.camel@mobileOne>
-	 <1224258314.11187.1.camel@rc-desk>  <1224271086.6775.8.camel@mobileOne>
-	 <1224279527.11187.58.camel@rc-desk>  <1224336809.6934.1.camel@mobileOne>
-Content-Type: text/plain
-Date: Mon, 20 Oct 2008 16:31:55 -0700
-Message-Id: <1224545515.8698.5.camel@rc-desk> (sfid-20081021_013143_119966_1AACCC1B)
-Mime-Version: 1.0
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:54907 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753720AbYJ3MPl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 08:15:41 -0400
+Date: Thu, 30 Oct 2008 14:15:38 +0200 (EET)
+From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 08/10] ath9k: add block braces to match indentation
+In-Reply-To: <1225367129.3690.40.camel@johannes.berg>
+Message-ID: <Pine.LNX.4.64.0810301410420.7072@wrl-59.cs.helsinki.fi> (sfid-20081030_131546_985684_10911895)
+References: <Pine.LNX.4.64.0810301307160.7072@wrl-59.cs.helsinki.fi>
+ <Pine.LNX.4.64.0810301339550.7072@wrl-59.cs.helsinki.fi>
+ (sfid-20081030_124200_919823_8E5E3369) <1225367129.3690.40.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-696208474-885134069-1225368938=:7072"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-10-18 at 06:33 -0700, Myk Robinson wrote:
-> On Fri, 2008-10-17 at 14:38 -0700, reinette chatre wrote:
-> > On Fri, 2008-10-17 at 14:18 -0500, Myk Robinson wrote:
-> > > Sure will
-> > >
-> > > Just curious, what can you tell me about the dmesg I posted? I don't
-> > > understand much of it, that is just what I have learned to run right
-> > > after stuff happens :)
-> >
-> > The log shows that the driver is loaded/unloaded a couple of times -
-> > probably by wpa_supplicant. The details surrounding the error will
-> > become clear when we get more debugging.
-> >
-> >
-> > > As for the module, can you tell me how to autoload it with those
-> > > parameters? Or should i jsut upon booting rmmod the module then reload
-> > > it with your suggested parameters?
-> >
-> > You could ask modprobe to load the module with parameters. perhaps
-> > in /etc/modprobe.d/options. You could also use the rmmod/modprobe after
-> > system reboot as you suggested.
-> >
-> > Reinette
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---696208474-885134069-1225368938=:7072
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
+
+On Thu, 30 Oct 2008, Johannes Berg wrote:
+
+> On Thu, 2008-10-30 at 13:41 +0200, Ilpo Järvinen wrote:
+> > This isn't a behavior problem as is, and fixing indentation
+> > inconsistency either way would be fine (reindent or braces).
+> > 
+> > Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@helsinki.fi>
+> > ---
+> >  drivers/net/wireless/ath9k/main.c |    3 ++-
+> >  1 files changed, 2 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+> > index f05f584..0f67b1b 100644
+> > --- a/drivers/net/wireless/ath9k/main.c
+> > +++ b/drivers/net/wireless/ath9k/main.c
+> > @@ -467,9 +467,10 @@ void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+> >  	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK ||
+> >  		tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
+> >  		/* free driver's private data area of tx_info */
+> > -		if (tx_info->driver_data[0] != NULL)
+> > +		if (tx_info->driver_data[0] != NULL) {
+> >  			kfree(tx_info->driver_data[0]);
+> >  			tx_info->driver_data[0] = NULL;
+> > +		}
 > 
-> Here is some more output from dmesg with the module parameters loaded.
-> SOrry if there is some output that you don't need in there too.
-> 
-> http://pastebin.com/m47cf17c9
+> Since kfree(NULL) is fine, how about just removing the if?
 
-Your driver is not compiled with debugging support.Could you please
-recompile the driver to support debugging (CONFIG_IWL3945_DEBUG) and
-rerun your test?
+Agreed. I had perhaps done too many of these already when I came to this 
+one and failed to notice such obviousness... :-)
 
-Thank you
+> Also, this code has been removed in a recent change in the wireless 
+> tree, I think (the rate control revamp)
 
-Reinette
+Ok. A bit hard for me to track all the upcoming changes tree wide, I once 
+did this kind of things in -next but since it had the break recently I 
+didn't remember to return to it.
 
+-- 
+ i.
+---696208474-885134069-1225368938=:7072--
