@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:58387 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750830AbYJDPQa (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.239]:59892 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755811AbYJ3QRt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Oct 2008 11:16:30 -0400
-Message-ID: <48E788BC.7030806@lwfinger.net> (sfid-20081004_171641_615662_0238186A)
-Date: Sat, 04 Oct 2008 08:16:12 -0700
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 30 Oct 2008 12:17:49 -0400
+Message-ID: <b6c5339f0810300917i25b4164fof2ba51569d4e7012@mail.gmail.com> (sfid-20081030_171756_722643_69ECE670)
+Date: Thu, 30 Oct 2008 12:17:48 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Stefan Hellermann" <stefan@the2masters.de>
+Subject: Re: pull request: wireless-2.6 2008-10-29
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Arjan van de Ven" <arjan@infradead.org>, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mcgrof@gmail.com, mickflemm@gmail.com
+In-Reply-To: <4909C93E.7020400@the2masters.de>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Drake <dsd@gentoo.org>
-Subject: Re: Trendnet TEW-424UB now Realtek 8187B
-References: <20081004011510.GA10015@gate.kl-ic.com>	 <1223109126.24551.70.camel@johannes.berg>	 <43e72e890810040147j6f15966awbe555b6d37135960@mail.gmail.com>	 (sfid-20081004_104814_044310_A217A3F8) <1223110250.24551.72.camel@johannes.berg>
-In-Reply-To: <1223110250.24551.72.camel@johannes.berg>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <20081029231855.GD3485@tuxdriver.com>
+	 <20081029162324.28f5864d@infradead.org>
+	 <20081029233350.GE3485@tuxdriver.com>
+	 <4909C93E.7020400@the2masters.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2008-10-04 at 01:47 -0700, Luis R. Rodriguez wrote:
->> What Realtek driver? Just FYI rtl8187 does *not* claim the RTL8187B. See:
->>
->> http://wireless.kernel.org/en/users/Drivers/rtl8187
-> 
-> Oh, I thought there was a version now that did.
+On Thu, Oct 30, 2008 at 10:48 AM, Stefan Hellermann
+<stefan@the2masters.de> wrote:
+> I think some of the reports on kerneloops are from my machine, I'm
+> running wireless-testing#master in the hope to get my card fully
+> working. It's a AR2425 chip (MAC: 0xe2, PHY: 0x70), in a Lenovo Notebook.
 
-There is. Both Linus's tree and wireless-testing support the 8187B. In
-fact, I'm using one right now.
+Okay, I just added a bugzilla for this:
 
-As for the contention that it is buggy - I don't find it any worse
-than b43, and quite a bit better than p54usb, the two other wireless
-drivers that I use. Reports of failures that are posted in the Redhat
-Bugzilla cannot be duplicated by me.
+http://bugzilla.kernel.org/show_bug.cgi?id=11901
 
-Larry
-
+I can reproduce it here after all...
+-- 
+Bob Copeland %% www.bobcopeland.com
