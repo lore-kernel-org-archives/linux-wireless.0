@@ -1,32 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40656 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751365AbYJ1ORx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 10:17:53 -0400
-Message-ID: <49071F0E.3050604@gmx.de> (sfid-20081028_151800_549135_65530874)
-Date: Tue, 28 Oct 2008 15:17:50 +0100
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Greg KH <greg@kroah.com>,
-	"otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Kernel <linux-kernel@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [otus-devel] Release of Atheros 802.11n USB Linux driver
-References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>	<20081022065045.GA2400@kroah.com>	<20081023062655.GA8039@kroah.com> <20081023111103.GB5979@tesla>	<43e72e890810271635i5b6dd6e4ua06b48e624991435@mail.gmail.com>	<20081028002919.GB2992@kroah.com> <20081028005553.GE6377@tesla>
-In-Reply-To: <20081028005553.GE6377@tesla>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from hostap.isc.org ([149.20.54.63]:56402 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755157AbYJ3PDO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 11:03:14 -0400
+Message-Id: <20081030150209.478795959@localhost> (sfid-20081030_160317_160720_ADA593C9)
+References: <20081030145920.233178987@localhost>
+Date: Thu, 30 Oct 2008 16:59:22 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCHv2 2/5] nl80211: Add basic rate configuration for AP mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/28/2008 01:55 AM, Luis R. Rodriguez wrote:
+Add a new attribute, NL80211_ATTR_BSS_BASIC_RATES, that can be used with
+NL80211_CMD_SET_BSS for userspace (e.g., hostapd) to set which rates are
+in the basic rate set.
 
-> AVM
-> 
->     * FRITZ!WLAN N USB Stick (USB ID 0x57c, 0x8401) 
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-This one still has problems (download of binary firmware fails) with 
-the Linux driver (see the other thread in the otus-devel ml).
+Index: wireless-testing/include/linux/nl80211.h
+===================================================================
+--- wireless-testing.orig/include/linux/nl80211.h	2008-10-28 19:50:57.000000000 +0200
++++ wireless-testing/include/linux/nl80211.h	2008-10-28 19:57:07.000000000 +0200
+@@ -243,6 +243,9 @@
+  *	(u8, 0 or 1)
+  * @NL80211_ATTR_BSS_SHORT_SLOT_TIME: whether short slot time enabled
+  *	(u8, 0 or 1)
++ * @NL80211_ATTR_BSS_BASIC_RATES: basic rates, array of basic
++ *	rates in format defined by IEEE 802.11 7.3.2.2 but without the length
++ *	restriction (at most %NL80211_MAX_SUPP_RATES).
+  *
+  * @NL80211_ATTR_HT_CAPABILITY: HT Capability information element (from
+  *	association request when used with NL80211_CMD_NEW_STATION)
+@@ -307,6 +310,8 @@
+ 
+ 	NL80211_ATTR_MESH_PARAMS,
+ 
++	NL80211_ATTR_BSS_BASIC_RATES,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -318,6 +323,7 @@
+  * here
+  */
+ #define NL80211_ATTR_HT_CAPABILITY NL80211_ATTR_HT_CAPABILITY
++#define NL80211_ATTR_BSS_BASIC_RATES NL80211_ATTR_BSS_BASIC_RATES
+ 
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_MAX_SUPP_REG_RULES		32
+Index: wireless-testing/include/net/cfg80211.h
+===================================================================
+--- wireless-testing.orig/include/net/cfg80211.h	2008-10-28 19:59:34.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2008-10-28 20:00:43.000000000 +0200
+@@ -280,11 +280,16 @@
+  *	(0 = no, 1 = yes, -1 = do not change)
+  * @use_short_slot_time: Whether the use of short slot time is allowed
+  *	(0 = no, 1 = yes, -1 = do not change)
++ * @basic_rates: basic rates in IEEE 802.11 format
++ *	(or NULL for no change)
++ * @basic_rates_len: number of basic rates
+  */
+ struct bss_parameters {
+ 	int use_cts_prot;
+ 	int use_short_preamble;
+ 	int use_short_slot_time;
++	u8 *basic_rates;
++	u8 basic_rates_len;
+ };
+ 
+ /**
+Index: wireless-testing/net/mac80211/cfg.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/cfg.c	2008-10-28 20:01:20.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2008-10-28 20:20:42.000000000 +0200
+@@ -1048,6 +1048,24 @@
+ 		changed |= BSS_CHANGED_ERP_SLOT;
+ 	}
+ 
++	if (params->basic_rates) {
++		int i, j;
++		u32 rates = 0;
++		struct ieee80211_local *local = wiphy_priv(wiphy);
++		struct ieee80211_supported_band *sband =
++			wiphy->bands[local->oper_channel->band];
++
++		for (i = 0; i < params->basic_rates_len; i++) {
++			int rate = (params->basic_rates[i] & 0x7f) * 5;
++			for (j = 0; j < sband->n_bitrates; j++) {
++				if (sband->bitrates[j].bitrate == rate)
++					rates |= BIT(j);
++			}
++		}
++		sdata->vif.bss_conf.basic_rates = rates;
++		changed |= BSS_CHANGED_BASIC_RATES;
++	}
++
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	return 0;
+Index: wireless-testing/net/wireless/nl80211.c
+===================================================================
+--- wireless-testing.orig/net/wireless/nl80211.c	2008-10-28 19:56:53.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2008-10-28 19:59:00.000000000 +0200
+@@ -95,6 +95,8 @@
+ 	[NL80211_ATTR_BSS_CTS_PROT] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_BSS_SHORT_PREAMBLE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_BSS_SHORT_SLOT_TIME] = { .type = NLA_U8 },
++	[NL80211_ATTR_BSS_BASIC_RATES] = { .type = NLA_BINARY,
++					   .len = NL80211_MAX_SUPP_RATES },
+ 
+ 	[NL80211_ATTR_MESH_PARAMS] = { .type = NLA_NESTED },
+ 
+@@ -1613,6 +1615,12 @@
+ 	if (info->attrs[NL80211_ATTR_BSS_SHORT_SLOT_TIME])
+ 		params.use_short_slot_time =
+ 		    nla_get_u8(info->attrs[NL80211_ATTR_BSS_SHORT_SLOT_TIME]);
++	if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
++		params.basic_rates =
++			nla_data(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
++		params.basic_rates_len =
++			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
++	}
+ 
+ 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
+ 	if (err)
+
+--
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
