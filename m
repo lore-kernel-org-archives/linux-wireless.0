@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([198.107.51.143]:1987 "EHLO mail.tpi.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:51720 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750794AbYJNQZM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 12:25:12 -0400
-Message-ID: <48F4C7E8.4020201@tpi.com> (sfid-20081014_182519_109984_4FB94716)
-Date: Tue, 14 Oct 2008 10:25:12 -0600
-From: Tim Gardner <timg@tpi.com>
-Reply-To: timg@tpi.com
+	id S1753703AbYJ3Wlh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 18:41:37 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: Re: [Orinoco-devel] 2.6.28-rc2: new PCMCIA device instance after resume - orinoco can't download firmware
+Date: Thu, 30 Oct 2008 23:46:10 +0100
+Cc: Dave <kilroyd@googlemail.com>, linux-pcmcia@lists.infradead.org,
+	orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Dominik Brodowski <linux@dominikbrodowski.net>
+References: <200810282219.51492.arvidjaar@mail.ru> <4909F9BC.3050306@gmail.com> <200810302139.37864.arvidjaar@mail.ru>
+In-Reply-To: <200810302139.37864.arvidjaar@mail.ru>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ipw2200: Change driver default policies
-References: <20081014145708.CAF215A1D8@sepang.rtg.net> <1223998992.3936.28.camel@localhost.localdomain>
-In-Reply-To: <1223998992.3936.28.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810302346.11547.rjw@sisk.pl> (sfid-20081030_234152_948202_A8783352)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Tue, 2008-10-14 at 08:57 -0600, Tim Gardner wrote:
->> From 41804698de6f2ce121c1452943b9ad2b8a54988b Mon Sep 17 00:00:00 2001
->> From: Tim Gardner <tim.gardner@canonical.com>
->> Date: Tue, 14 Oct 2008 08:16:09 -0600
->> Subject: [PATCH] ipw2200: change default policies for auto-associate, auto-create, and auto-roaming
->>
->> We now have applications available to set policy. This patch changes the driver defaults to:
->>
->> 1) associate=0 - do not automatically associate to an SSID.
+On Thursday, 30 of October 2008, Andrey Borzenkov wrote:
+> On Thursday 30 October 2008, Dave wrote:
+> > After much faffing about, I managed to bisect this. In retrospect the
+> > above hint (thanks Russell) and a code inspection ought to have made the
+> > bug obvious. The offending commit is:
+> > 
+> > commit 1168386aa7d850ead2ae135d5a7949a592c6e9a0
+> > pcmcia: deprecate CS_OUT_OF_RESOURCE
+> > 
+> > in which the following change is made (among others):
+> > 
+> > @@ -352,7 +352,9 @@ int verify_cis_cache(struct pcmcia_socket *s)
+> > 
+> >         buf = kmalloc(256, GFP_KERNEL);
+> >         if (buf == NULL)
+> > -               return -1;
+> > +               dev_printk(KERN_WARNING, &s->dev,
+> > +                          "no memory for verifying CIS\n");
+> > +               return -ENOMEM;
+> >         list_for_each_entry(cis, &s->cis_cache, node) {
+> >                 int len = cis->len;
+> > 
 > 
-> This one is fine.
-> 
->> 2) auto_create=0 - do not automatically create an ad-hoc network
-> 
-> This will break adhoc network creation, thus NAK.  I think we should
-> just remove the module parameter and default to 1 anyway.  This is the
-> way adhoc _should_ work in the first place, if the adhoc network you're
-> attempting to join does not yet exist, the driver should create that
-> network.  This is the way it works for all other drivers as well.
-> 
-> Disabling this effectively means you can only join existing adhoc
-> networks, not start your own.
-> 
+> Oh, my ... I have been looking over this dozens of times ... it just
+> proves how addictive to bisecting in place of proper debugging we became :(
 
-Agreed - I missed the part where its qualified by IW_MODE_ADHOC.
+Bisection is one of debugging techiques and it's as much "proper" as any other
+one of them IMO.
 
->> 3) roaming=0 - do not automatically roam to another AP with the same SSID.
+> Dave, thank you!
 > 
-> Not really sure why this should be changed?  Were there reported issues
-> with this behavior?
-> 
+> Rafael, this falls in obvious "regression with patches" case I think.
 
-Its been my expereince that wireless drivers rarely make the correct
-decision about when or where to roam. It also seems like a policy
-decision that ought to be made elsewhere.
+Yes, I added it as http://bugzilla.kernel.org/show_bug.cgi?id=11911 .
 
-Frankly, I'm not that concerned about the roaming option. The default
-for 'associate' was the one I _really_ wanted changed. I'll submit a v2
-patch with just that change.
-
-rtg
--- 
-Tim Gardner timg@tpi.com www.tpi.com
-OR 503-601-0234 x102 MT 406-443-5357
+Thanks,
+Rafael
