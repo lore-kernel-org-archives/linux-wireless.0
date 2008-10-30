@@ -1,57 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:59634 "EHLO mx2.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:61064 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752107AbYJ2KTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 06:19:05 -0400
-Subject: Re: [PATCH] libertas: remove two libertas sparse warning
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200810291035.02763.hs4233@mail.mn-solutions.de>
-References: <200810291035.02763.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 29 Oct 2008 06:17:33 -0400
-Message-Id: <1225275453.28968.15.camel@localhost.localdomain> (sfid-20081029_111911_561576_8BC02DB9)
-Mime-Version: 1.0
+	id S1753264AbYJ3PIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 11:08:13 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] mac80211: fix basic rates setting from association response
+Date: Thu, 30 Oct 2008 17:08:08 +0200
+Message-Id: <1225379288-7482-1-git-send-email-tomas.winkler@intel.com> (sfid-20081030_160817_895745_857450A9)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-29 at 10:35 +0100, Holger Schurig wrote:
-> Johannes Berg detected this two sparse warnings:
-> 
-> drivers/net/wireless/libertas/cmd.c:609:16: warning: cast to restricted __le16
-> drivers/net/wireless/libertas/cmd.c:611:16: warning: cast to restricted __le16
-> 
-> ... but cmd.minlevel is "s8", so we can access it directly and hope
-> for the sign-extension-code in the compiler to convert that to the
-> "s16" type.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+In previous code all the rates were marked as basic.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |   18 ++++++++++++------
+ 1 files changed, 12 insertions(+), 6 deletions(-)
 
-> 
-> ---
-> Sent this to Linville, johill and Dan, but forgot the mailing list ;-/
-> 
-> Index: linux-wl/drivers/net/wireless/libertas/cmd.c
-> ===================================================================
-> --- linux-wl.orig/drivers/net/wireless/libertas/cmd.c	2008-10-29 08:22:28.000000000 +0100
-> +++ linux-wl/drivers/net/wireless/libertas/cmd.c	2008-10-29 08:22:36.000000000 +0100
-> @@ -606,9 +606,9 @@ int lbs_get_tx_power(struct lbs_private 
->  	if (ret == 0) {
->  		*curlevel = le16_to_cpu(cmd.curlevel);
->  		if (minlevel)
-> -			*minlevel = le16_to_cpu(cmd.minlevel);
-> +			*minlevel = cmd.minlevel;
->  		if (maxlevel)
-> -			*maxlevel = le16_to_cpu(cmd.maxlevel);
-> +			*maxlevel = cmd.maxlevel;
->  	}
->  
->  	lbs_deb_leave(LBS_DEB_CMD);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d5006b2..9ea7b28 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1302,29 +1302,35 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 
+ 	for (i = 0; i < elems.supp_rates_len; i++) {
+ 		int rate = (elems.supp_rates[i] & 0x7f) * 5;
++		bool is_basic = !!(elems.supp_rates[i] & 0x80);
+ 
+ 		if (rate > 110)
+ 			have_higher_than_11mbit = true;
+ 
+ 		for (j = 0; j < sband->n_bitrates; j++) {
+-			if (sband->bitrates[j].bitrate == rate)
++			if (sband->bitrates[j].bitrate == rate) {
+ 				rates |= BIT(j);
+-			if (elems.supp_rates[i] & 0x80)
+-				basic_rates |= BIT(j);
++				if (is_basic)
++					basic_rates |= BIT(j);
++				break;
++			}
+ 		}
+ 	}
+ 
+ 	for (i = 0; i < elems.ext_supp_rates_len; i++) {
+ 		int rate = (elems.ext_supp_rates[i] & 0x7f) * 5;
++		bool is_basic = !!(elems.supp_rates[i] & 0x80);
+ 
+ 		if (rate > 110)
+ 			have_higher_than_11mbit = true;
+ 
+ 		for (j = 0; j < sband->n_bitrates; j++) {
+-			if (sband->bitrates[j].bitrate == rate)
++			if (sband->bitrates[j].bitrate == rate) {
+ 				rates |= BIT(j);
+-			if (elems.ext_supp_rates[i] & 0x80)
+-				basic_rates |= BIT(j);
++				if (is_basic)
++					basic_rates |= BIT(j);
++				break;
++			}
+ 		}
+ 	}
+ 
+-- 
+1.5.4.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
