@@ -1,31 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36731 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbYJ0KaH (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:33091 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753522AbYJ3QuS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 06:30:07 -0400
-Message-ID: <43a78063e09f1da380410e0c1ddedcd4.squirrel@secure.sipsolutions.net>
-In-Reply-To: <loom.20081024T022046-734@post.gmane.org> 
-References: <20080926215701.GC5972@tesla>
-    <loom.20081024T022046-734@post.gmane.org>
-Date: Mon, 27 Oct 2008 11:30:03 +0100 (CET)
-Subject: Re: Release of Atheros 802.11abg HAL under the ISC
-From: "Johannes Berg" <johannes@sipsolutions.net>
-To: "JUN" <eeuix@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
+	Thu, 30 Oct 2008 12:50:18 -0400
+Message-ID: <4909E5B8.5000508@lwfinger.net> (sfid-20081030_175024_941624_43A53A07)
+Date: Thu, 30 Oct 2008 09:50:00 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: Pavel Roskin <proski@gnu.org>
+CC: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, flamingice@sourmilk.net
+Subject: Re: [PATCH] p54: don't report known but unhandled EEPROM codes as
+ unknown
+References: <20081029213143.4497.77258.stgit@dv.roinet.com>
+In-Reply-To: <20081029213143.4497.77258.stgit@dv.roinet.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-JUN wrote:
-> would you tell me which version of the madwifi you tested
-> with the HAL source, and work? I've tried with madwifi-0.9.3.1 and simply
-> replaced the xscale-be-elf.hal.o.uu with the new one.
-> madwifi-0.9.3.1 use HAL 0.9.18 by default, and the HAL from
-> your source is 0.9.17.1.
+Pavel Roskin wrote:
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
+>  drivers/net/wireless/p54/p54common.c |   24 ++++++++++++++++++++++++
+>  1 files changed, 24 insertions(+), 0 deletions(-)
+> 
 
-this code isn't meant to be used, with madwifi or otherwise, other than
-for improving ath5k, so what you're asking isn't a sensible question.
+ACK - This patch cleans up my logs.
 
-johannes
+Larry
+
