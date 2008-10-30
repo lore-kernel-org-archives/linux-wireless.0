@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:45260 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752886AbYJTRct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 13:32:49 -0400
-Date: Mon, 20 Oct 2008 10:27:50 -0700
-From: Greg KH <greg@kroah.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	Pavel Machek <pavel@suse.cz>,
-	kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
-	lcostantino@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: w35und wifi driver for linux-staging
-Message-ID: <20081020172750.GA9587@kroah.com> (sfid-20081020_193255_955168_1967DBE3)
-References: <20081001123656.GA30942@elf.ucw.cz> <20081018141918.2c7377c6@infradead.org> <1224521874.29822.11.camel@dhcp-100-3-195.bos.redhat.com>
+Received: from yw-out-2324.google.com ([74.125.46.29]:14856 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750869AbYJ3TkG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 15:40:06 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so339191ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 12:40:04 -0700 (PDT)
+Message-ID: <43e72e890810301240p602b5e99gd2ba0984f078dea4@mail.gmail.com> (sfid-20081030_204014_772191_F61C5593)
+Date: Thu, 30 Oct 2008 12:40:03 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/6] cfg80211: a reg rule is invalid if freq diff is 0
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <be0976f315094fc29b6d0ee915f8026a.squirrel@secure.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1224521874.29822.11.camel@dhcp-100-3-195.bos.redhat.com>
+Content-Type: text/plain; charset=UTF-8
+References: <1225329594-21704-1-git-send-email-lrodriguez@atheros.com>
+	 <1225329594-21704-2-git-send-email-lrodriguez@atheros.com>
+	 <be0976f315094fc29b6d0ee915f8026a.squirrel@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 12:57:54PM -0400, Dan Williams wrote:
-> On Sat, 2008-10-18 at 14:19 -0700, Arjan van de Ven wrote:
-> > On Wed, 1 Oct 2008 14:36:56 +0200
-> > Pavel Machek <pavel@suse.cz> wrote:
-> > 
-> > > Hi!
-> > > 
-> > > This is driver for w35und usb wifi -- also in kohjinsha
-> > > subnotebook. It should work well enough to associate and ping, but it
-> > > obviously needs to be rewritten two more times...
-> > > 
-> > > OTOH worst horrors (like embedded wifi stack) should have been fixed
-> > > already...
-> > 
-> > > diff --git a/drivers/net/wireless/winbond/Kconfig
-> > > b/drivers/net/wireless/winbond/Kconfig new file mode 100644
-> > > index 0000000..94499d3
-> > > --- /dev/null
-> > > +++ b/drivers/net/wireless/winbond/Kconfig
-> > > @@ -0,0 +1,6 @@
-> > > +config W35UND
-> > > +	tristate "Winbond driver"
-> > > +	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
-> > > && !4KSTACKS
-> > 
-> > why this !4KSTACKS? At minimum that should be in the "to fix" list ;)
-> 
-> Yeah seriously, the driver isn't going anywhere unless it works with 4k
-> stacks...
+On Thu, Oct 30, 2008 at 2:22 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Luis R. Rodriguez wrote:
+>> A regulatory rule is invalid when the frequency difference
+>> between the end of the frequency range and the start is 0.
+>>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  net/wireless/reg.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index 9dff716..ff706f9 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -321,7 +321,7 @@ static bool is_valid_reg_rule(const struct
+>> ieee80211_reg_rule *rule)
+>>
+>>       freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
+>>
+>> -     if (freq_range->max_bandwidth_khz > freq_diff)
+>> +     if (freq_diff == 0 || freq_range->max_bandwidth_khz > freq_diff)
+>
+> Might want to make that <= 0 just in case?
 
-Well, it's going into the staging tree, where it can now be fixed up :)
+Absolutely, thanks.
 
-And yes, I'll go add that to the TODO list for this driver, thanks.
-
-greg k-h
+  Luis
