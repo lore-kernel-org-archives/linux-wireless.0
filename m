@@ -1,78 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50610 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:58426 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647AbYJKAiL (ORCPT
+	with ESMTP id S1753306AbYJ3Lpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2008 20:38:11 -0400
-Subject: Re: [PATCH] mac80211: Fix scan RX processing oops
+	Thu, 30 Oct 2008 07:45:40 -0400
+Subject: Re: [PATCH 08/10] ath9k: add block braces to match indentation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: John Linville <linville@tuxdriver.com>,
+To: Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@helsinki.fi>
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20081011002955.GA15802@jm.kir.nu>
-References: <20081011002955.GA15802@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GUcBR2HdgGH/7pwieBIO"
-Date: Sat, 11 Oct 2008 02:38:06 +0200
-Message-Id: <1223685486.29811.17.camel@johannes.berg> (sfid-20081011_023820_970509_039DEA1A)
+In-Reply-To: <Pine.LNX.4.64.0810301339550.7072@wrl-59.cs.helsinki.fi> (sfid-20081030_124200_919823_8E5E3369)
+References: <Pine.LNX.4.64.0810301307160.7072@wrl-59.cs.helsinki.fi>
+	 <Pine.LNX.4.64.0810301339550.7072@wrl-59.cs.helsinki.fi>
+	 (sfid-20081030_124200_919823_8E5E3369)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rKMt9PhQhkcVWnqTD5j/"
+Date: Thu, 30 Oct 2008 12:45:29 +0100
+Message-Id: <1225367129.3690.40.camel@johannes.berg> (sfid-20081030_124542_456042_D73A3D40)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GUcBR2HdgGH/7pwieBIO
-Content-Type: text/plain
+--=-rKMt9PhQhkcVWnqTD5j/
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-10-11 at 03:29 +0300, Jouni Malinen wrote:
-> ieee80211_bss_info_update() can return NULL. Verify that this is not the
-> case before calling ieee802111_rx_bss_put() which would trigger an oops
-> in interrupt context in atomic_dec_and_lock().
+On Thu, 2008-10-30 at 13:41 +0200, Ilpo J=C3=A4rvinen wrote:
+> This isn't a behavior problem as is, and fixing indentation
+> inconsistency either way would be fine (reindent or braces).
 >=20
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
+> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@helsinki.fi>
+> ---
+>  drivers/net/wireless/ath9k/main.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
 >=20
-> Index: wireless-testing/net/mac80211/scan.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/net/mac80211/scan.c
-> +++ wireless-testing/net/mac80211/scan.c
-> @@ -388,7 +388,8 @@ ieee80211_scan_rx(struct ieee80211_sub_i
->  	bss =3D ieee80211_bss_info_update(sdata->local, rx_status,
->  					mgmt, skb->len, &elems,
->  					freq, beacon);
-> -	ieee80211_rx_bss_put(sdata->local, bss);
-> +	if (bss)
-> +		ieee80211_rx_bss_put(sdata->local, bss);
+> diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath=
+9k/main.c
+> index f05f584..0f67b1b 100644
+> --- a/drivers/net/wireless/ath9k/main.c
+> +++ b/drivers/net/wireless/ath9k/main.c
+> @@ -467,9 +467,10 @@ void ath_tx_complete(struct ath_softc *sc, struct sk=
+_buff *skb,
+>  	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK ||
+>  		tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
+>  		/* free driver's private data area of tx_info */
+> -		if (tx_info->driver_data[0] !=3D NULL)
+> +		if (tx_info->driver_data[0] !=3D NULL) {
+>  			kfree(tx_info->driver_data[0]);
+>  			tx_info->driver_data[0] =3D NULL;
+> +		}
 
-I keep falling into that trap, maybe the put function should just handle
-NULL instead...
+Since kfree(NULL) is fine, how about just removing the if? Also, this
+code has been removed in a recent change in the wireless tree, I think
+(the rate control revamp)
 
 johannes
 
---=-GUcBR2HdgGH/7pwieBIO
+--=-rKMt9PhQhkcVWnqTD5j/
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI7/VqAAoJEKVg1VMiehFYdo0P/08JK1oE1LvqL+VgICbohel2
-/O6TvCWuKrkiDMU86QpVbzt434PL37A6F2uhYHrvqj1Q1PA5sZo/nx5v8P5KhvcO
-T7i4SH1qDNoqbfABQ6GCVtdiudhgza04c84H5J4th7FAuHuLa1f4t67SzXSDVxWt
-e1RWIGwO73xVzSB1iFKyeOnMbJ/kJrl+943j0QXZAx33SFn69XlcpvbOgXu5ccm2
-kcAqoMTbxZ57h6x0sZvWGGt4uqXGRHNF5VOcc0IAXqviaxE+vtYph/80FeRA3uQE
-MSWSyNX+l/HSYluFezDNQ9aAa2hPfY1pLP53s5P4aKafS9/9pa0CQyuBSBvMQWTU
-baFqelNH/zFJKjGY72roV0a+2hpSJtzsRVvwzFN3/5+0QmWKBaKr05iqqyZkC76I
-yJdqX+ZEnjTDIWrzw36z35dFXTUIhFg5pQx81gZsbGlI7acFEY/4Ew8WrjTVJjE0
-WyF9QTEIRNzHfnytsk4PhhQrlBjA1uNQbtzzuei/4bm2IJBOLqxgxahMUG6+NV/f
-1iBKeodYqeH06trwv58QJg6aTJtEbyJO4lDh8z3dTsJlWMY/OLH/rW7qJ3BAxdCS
-sOlKLeQba5iYUadS7oTCSxXymueMehGIOVoKoecjz+6Ft7u0iAGq8VDZ56oYkoa+
-eALWqwV1UeVhNQbGR/o2
-=x5Kn
+iQIcBAABAgAGBQJJCZ5VAAoJEKVg1VMiehFY/RcP/0W6APCTcoX6agnitGuRrcPT
+oNwqRsgyEdfghluckisF9Zf40YQDJ0wKAzoufdyqkZY6ydJxh8u7IxEy7UlKeJdJ
+3bWVcYMAexVWQLmUCZM3t5wKDSu+SFLLIFMIMlhQZb495SQy5IAUpVQhjHHpadxi
+tXORCG/p5BZKJDS5nwSBPojM04IvFbLq5Hvphw2c+QMxf7+iUBYgAIJbU2PPqRre
+cmnXIpR25Xji5i26ftFC4/gT0ljOeqqruySltcXX+sDdjWGwuROh/tVk5/EHAkWC
+SwKVwaVnzx5VNp2tcSMzF01H2Ilj3lIG4gXPeDb4Piq8aUEvFyIoVLKGlJ/9Fo+b
+ByY/2ssjNdDGr/b592m6RYwkygEZt9egYg5zKUCutNpfqeCI0aIWoThsFMNgCzle
+hCTSaFq5Kh7ifu8fAS9PgkZGSLusWMWWhyWqybVcW6/BKLdNKxCqt/tcABZhu4bi
+8VjvLGP6oNLJB+cbh/6oi4ZuQVXAZX1AxQJDXCt6WVABZVTgszcL+3kmvkg6Stn+
+/WuzzRYxyVSWr3iuFVJsaFxdlxxJHtbEHYS6pw1T4CrnyqUlZFhT3lSVj/QVS9Vg
+Q5JllKdIExXiFWvAgN16VWSnLAUMtyTcQBHj5FYSnlb5rxm3Eh3PZ9EFuRXbYDn0
+cn/4POqMMOzHihKZsxOj
+=xZsA
 -----END PGP SIGNATURE-----
 
---=-GUcBR2HdgGH/7pwieBIO--
+--=-rKMt9PhQhkcVWnqTD5j/--
 
