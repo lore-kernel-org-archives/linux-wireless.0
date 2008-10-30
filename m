@@ -1,52 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54612 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:22496 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752840AbYJOUQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 16:16:29 -0400
+	id S1753893AbYJ3UeF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 16:34:05 -0400
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 13:16:29 -0700
-Date: Wed, 15 Oct 2008 06:16:22 -0700
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 13:34:05 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: New Regulatory Domain Api.
-Message-ID: <20081015131622.GH6509@tesla> (sfid-20081015_221634_140008_93FF1964)
-References: <1224018957.3027.9.camel@johannes.berg> <20081014211912.GF3349@tuxdriver.com> <1224019662.3027.13.camel@johannes.berg> <1224085609.4764.18.camel@californication> <1224086374.735.4.camel@johannes.berg> <1224091577.28173.9.camel@californication> <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com> <1224092868.28173.21.camel@californication> <20081015112517.GF6509@tesla> <1224098748.28173.32.camel@californication>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/5] cfg80211: Add kdoc for struct regulatory_request
+Date: Thu, 30 Oct 2008 13:33:56 -0700
+Message-ID: <1225398836-28633-6-git-send-email-lrodriguez@atheros.com> (sfid-20081030_213411_223104_932606F4)
+In-Reply-To: <1225398836-28633-5-git-send-email-lrodriguez@atheros.com>
+References: <1225398836-28633-1-git-send-email-lrodriguez@atheros.com>
+ <1225398836-28633-2-git-send-email-lrodriguez@atheros.com>
+ <1225398836-28633-3-git-send-email-lrodriguez@atheros.com>
+ <1225398836-28633-4-git-send-email-lrodriguez@atheros.com>
+ <1225398836-28633-5-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1224098748.28173.32.camel@californication>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 15, 2008 at 12:25:48PM -0700, Marcel Holtmann wrote:
-> > The problem here is not this though the problem here is the case
-> > where people are using 2.6.28 without no iw or crda *and* have more
-> > than two cards :)
-> 
-> it might sound like an unlikely case and it will most likely only be the
-> A-band usage anyway, but it is a valid case. People with old laptops do
-> use newer wireless cards in PCMCIA or USB form factor to get better WiFi
-> performance and/or stability. In some cases you can just replace your
-> internal card, but with the switch from MiniPCI to half-MiniPCI this is
-> not as likely anymore. So the use of a second external card becomes more
-> likely.
+As regulatory_request gets bigger there will be more questions
+of what things means, so clarify documenation for it and
+keep track of the special alpha2 codes we use internally
+and on the userspace regulatory agents.
 
-Right, and the proposed solution I had was to use an intersection
-between two regulatory domains. This solution just doesn't currently
-work well with Intel cards due to the capability <-> regulatory one to
-one mapping.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   22 +++++++++++++++++++---
+ 1 files changed, 19 insertions(+), 3 deletions(-)
 
-> I am still for the first card wins concept when no CRDA is present or
-> the userspace just doesn't know about setting the regulatory domain.
-> However we should have it separated for each band to not lock some
-> people out who have no clue on why they now loose the 5 GHz band.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3f18a1d..4c7e39d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -42,9 +42,24 @@
+ #include "core.h"
+ #include "reg.h"
+ 
+-/*
+- * wiphy is set if this request's initiator is
+- * REGDOM_SET_BY_COUNTRY_IE or _DRIVER
++/**
++ * struct regulatory_request - receipt of last regulatory request
++ *
++ * @wiphy: this is set if this request's initiator is
++ * 	%REGDOM_SET_BY_COUNTRY_IE or %REGDOM_SET_BY_DRIVER. This
++ * 	can be used by the wireless core to deal with conflicts
++ * 	and potentially inform users of which devices specifically
++ * 	cased the conflicts.
++ * @initiator: indicates who sent this request, could be any of
++ * 	of those set in reg_set_by, %REGDOM_SET_BY_*
++ * @alpha2: the ISO / IEC 3166 alpha2 country code of the requested
++ * 	regulatory domain. We have a few special codes:
++ * 	00 - World regulatory domain
++ * 	99 - built by driver but a specific alpha2 cannot be determined
++ * 	98 - result of an intersection between two regulatory domains
++ * @intersect: indicates whether the wireless core should intersect
++ * 	the requested regulatory domain with the presently set regulatory
++ * 	domain.
+  */
+ struct regulatory_request {
+ 	struct wiphy *wiphy;
+@@ -53,6 +68,7 @@ struct regulatory_request {
+ 	bool intersect;
+ };
+ 
++/* Receipt of information from last regulatory request */
+ static struct regulatory_request *last_request;
+ 
+ /* To trigger userspace events */
+-- 
+1.5.6.3
 
-Sure.
-
-  Luis
