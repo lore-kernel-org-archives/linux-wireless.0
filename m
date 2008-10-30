@@ -1,85 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56706 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153AbYJ0PFI (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:51863 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbYJ3UfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 11:05:08 -0400
-Subject: Re: [RFC] mac80211: Re-enable aggregation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <m.sujith@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-In-Reply-To: <18693.53054.116942.355275@localhost.localdomain> (sfid-20081027_152757_384279_DEF256E4)
-References: <18684.16351.638713.791015@gargle.gargle.HOWL>
-	 <18684.18492.94865.480736@gargle.gargle.HOWL>
-	 <1224493957.18024.47.camel@johannes.berg>
-	 <18684.20459.335157.171344@gargle.gargle.HOWL>
-	 <1224495531.18024.55.camel@johannes.berg>
-	 <18684.24323.743610.871307@gargle.gargle.HOWL>
-	 <1224505349.27899.17.camel@johannes.berg>
-	 <18684.51206.771543.514682@localhost.localdomain>
-	 <1ba2fa240810201446x429e0b5aud3f20e2fadb19f1@mail.gmail.com>
-	 <1224669827.28639.54.camel@johannes.berg>
-	 <1ba2fa240810220459m1dcffd24k58cf6b72c688913c@mail.gmail.com>
-	 <1224696170.30459.12.camel@johannes.berg>
-	 <18688.15460.336059.400706@gargle.gargle.HOWL>
-	 <1224773201.6002.35.camel@johannes.berg>
-	 <18693.53054.116942.355275@localhost.localdomain>
-	 (sfid-20081027_152757_384279_DEF256E4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JwMp33viL/7uXPafoi63"
-Date: Mon, 27 Oct 2008 16:04:54 +0100
-Message-Id: <1225119894.3796.0.camel@johannes.berg> (sfid-20081027_160526_819113_41E61FBA)
-Mime-Version: 1.0
+	Thu, 30 Oct 2008 16:35:13 -0400
+Received: by ug-out-1314.google.com with SMTP id 39so1062349ugf.37
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 13:34:27 -0700 (PDT)
+Message-ID: <490A17F3.5050802@gmail.com> (sfid-20081030_213527_852044_44445DB3)
+Date: Thu, 30 Oct 2008 20:24:19 +0000
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: Guidelines regarding separate directory
+References: <4909EA78.3060700@lwfinger.net>	 (sfid-20081030_181107_189082_5740895D) <1225387309.3690.73.camel@johannes.berg>
+In-Reply-To: <1225387309.3690.73.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> On Thu, 2008-10-30 at 10:10 -0700, Larry Finger wrote:
+>> I am planning on adding code to control the LEDs on the RTL8187 devices based on
+>> the latest vendor driver. From the expected size of the code, I think that
+>> separate files will be best.
+>>
+>> What number of files in a driver make it advisable to create a separate
+>> directory? Between the rtl8180 and rtl8187 drivers, there are now 15 files and I
+>> will be adding at least 2 more. Is this the time to create a rtl818x directory
+>> under drivers/net/wireless?
+> 
+> I for one think that should have been done already, makes finding
+> drivers easier imho. But I don't think there are strict guidelines in
+> any way.
 
---=-JwMp33viL/7uXPafoi63
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On a similar note, would anyone object to collecting the orinoco files
+in a subdirectory? I'm looking at doing some refactoring of orinoco.c
+which I think can be split into at least 3 files.
 
-On Mon, 2008-10-27 at 19:55 +0530, Sujith wrote:
-> Johannes Berg wrote:
-> > We have this "ampdu_ack_map" parameter in the TX status which could be
-> > set by the driver. But that assumes we only want a single TX status for
-> > all A-MPDU frames, do we really? Or do we want to split them up and
-> > handle it all in mac80211?
->=20
-> I wasn't aware of this parameter at all. Looks useful.
->=20
-> Atheros HW reports the Block Ack bitmap of the entire aggregate.
-> So passing that up to mac80211, and letting mac80211 handle retransmissio=
-ns would work.
-> I am not sure about Intel.
 
-Intel does the retransmissions in hw. Not sure how we'd want to handle
-that difference.
+Regards,
 
-johannes
+Dave.
 
---=-JwMp33viL/7uXPafoi63
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJBdiSAAoJEKVg1VMiehFYzSsP/31RmkeEv/0vFz/D/ywTqnKw
-J5H6bBbJfp4xsZ15JZt016zR9fKvv34XcNibJFforPy58L1bQ6YgpZDgUcCxhk+R
-QHgtRj9FbFZ2k51bKvJ+GB96sl+Qgm1ka25yxUffEBH7EjVEXFwfvPMzX2QdwT2r
-UxZpG8Ffwgt2SoSt1+ReD5qfT6sAM1Zn0QsdCjnxsxN6a3n1pDuMpuoRNFYfkWGl
-lxX/FAe2Rn3qQCbT6gMOuySB9Psos+z/GzkAxCXNvs4Q9oqrIIUQYTjrWj3Vg/bJ
-zdI/oB1aMEHHz1epSwIg9RpnC2MnDHjmhFQhZpcey72a3SNcSlj1MJo8dSyGjxGr
-vfrox4Ex7sKcFB7Wz+cD74RGlfApOunwvRIecnqBFEfiLMVXV7rI60s1V1pGmJ5z
-JIhzFdBOzsMHnZU6dJC0ldWQHXzCIfnAor7U2W+L6J5GMXwWl9u9KdB9hlrulf1c
-SvZu1JRj29E5eTi7MIPOoM+HvLRlApb/1MK4fM1EATGbVW0Oxvp7VGjNMtggvZkT
-TlvqbbH5xGxLrDOIywFWnpy83TcY42gUk23SWKJvIluU99h2LMi6fMtLvXEXr+pF
-heOLNbrsb94fqO5alXakjxLCZhdJsmchdxFz117sIMokDLt97vpGveL7+HJ/K/jH
-ECAACG0aMB06M3FCkktB
-=a0UR
------END PGP SIGNATURE-----
-
---=-JwMp33viL/7uXPafoi63--
-
+PS the existing files that would move:
+airport.c
+hermes.c
+hermes.h
+hermes_dld.c
+hermes_dld.h
+hermes_rid.h
+orinoco.c
+orinoco.h
+orinoco_cs.c
+orinoco_pci.c
+orinoco_pci.h
+orinoco_plx.c
+orinoco_tmd.c
+orinoco_nortel.c
+spectrum_cs.c
