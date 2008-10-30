@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:63136 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753428AbYJCUst (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33143 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941AbYJ3ASn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 16:48:49 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1801100wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Oct 2008 13:48:49 -0700 (PDT)
-Subject: [PATCH 2/8] b43: remove remaining b43_radio_{read|write}16 from
- main.c
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 03 Oct 2008 13:48:46 -0700
-Message-Id: <1223066926.6512.27.camel@brick> (sfid-20081003_224857_463366_E5466199)
-Mime-Version: 1.0
+	Wed, 29 Oct 2008 20:18:43 -0400
+Date: Wed, 29 Oct 2008 20:17:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jerry McBride <mcbrides9@comcast.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: B43 randomly and silently dropping connections...
+Message-ID: <20081030001739.GG3485@tuxdriver.com> (sfid-20081030_011847_787113_536B3BB3)
+References: <200810292010.06442.mcbrides9@comcast.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200810292010.06442.mcbrides9@comcast.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 16 is not necessary anymore and is defnined to read/write.
+On Wed, Oct 29, 2008 at 08:10:06PM -0400, Jerry McBride wrote:
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/b43/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+> SHORT STORY:
+> -- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
+> 
+> -- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
+> but fragile connections that drop randomly and without complaint. B43LEGACY 
+> does nothing.
+> 
+> Any help would be appreciated. I'd really like to get this ironed out. I 
+> highly desire to use current kernels.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 6df9b65..cc1f4a9 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -789,7 +789,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
- 	b43_write16(dev, 0x0502, 0x0030);
- 
- 	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
--		b43_radio_write16(dev, 0x0051, 0x0017);
-+		b43_radio_write(dev, 0x0051, 0x0017);
- 	for (i = 0x00; i < max_loop; i++) {
- 		value = b43_read16(dev, 0x050E);
- 		if (value & 0x0080)
-@@ -809,7 +809,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
- 		udelay(10);
- 	}
- 	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
--		b43_radio_write16(dev, 0x0051, 0x0037);
-+		b43_radio_write(dev, 0x0051, 0x0037);
- 
- 	write_unlock(&wl->tx_lock);
- 	spin_unlock_irq(&wl->irq_lock);
+Are you running a distro kernel?  Or one you have built yourself?
+
+If the latter, have you opened a bug at bugzilla.kernel.org?
+Otherwise, have you opened a bug with your distro's bug tracking
+system?
+
+Do you have wireshark captures taken with another device in monitor
+mode that show these connection drops?
+
+Are you using NetworkManager or wpa_supplicant?  Or just configuring
+your connection with iwconfig?  If the latter, consider the former.
+If you are using NM, does the connection get re-established
+automatically?  Or is NM unable to reestablish the connection?
+Use wpa_supplicant directly if NM just doesn't work for you.
+
+It seems clear that posting the same message to the mailing lists
+again and again is not resolving the issue for you.  Please perform
+the actions requested above (including opening a bug at the appropriate
+place) and collect some useable data for us.
+
+Thanks,
+
+John
 -- 
-1.6.0.2.471.g47a76
-
-
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
