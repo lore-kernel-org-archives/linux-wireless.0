@@ -1,88 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:15441 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752657AbYJVWD3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 18:03:29 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 15:03:29 -0700
-Date: Wed, 22 Oct 2008 08:03:23 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>
-Subject: Re: [PATCH 4/5] crda: Updated regulatory information for France
-	(FR)
-Message-ID: <20081022150323.GO6190@tesla> (sfid-20081023_000333_558599_7E890E13)
-References: <cover.1223583376.git.benoit.papillault@free.fr> <48FE399E.6050907@free.fr>
+Received: from qmta01.emeryville.ca.mail.comcast.net ([76.96.30.16]:55251 "EHLO
+	QMTA01.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751100AbYJ3AKJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 20:10:09 -0400
+To: linux-wireless@vger.kernel.org
+Subject: B43 randomly and silently dropping connections...
+From: Jerry McBride <mcbrides9@comcast.net>
+Date: Wed, 29 Oct 2008 20:10:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <48FE399E.6050907@free.fr>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200810292010.06442.mcbrides9@comcast.net> (sfid-20081030_011014_950238_C3D6F6DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CC'ing Jean as he's another French wireless developer.
 
-On Tue, Oct 21, 2008 at 01:20:46PM -0700, Benoit PAPILLAULT wrote:
-> This patch is for review. It might be tricky to use the INDOOR/OUTDOOR
-> with those definitions, but it will be another issue.
+The story is...
 
-INDOOR/OUTDOOR flag is welcomed when it can be determined. In order
-to make use of it we will need to add wireless state in cfg80211, and
-let the user be able to update this, say through iw or wpa_supplicant.
-But that's for later just as with DFS.
+I've moved from 2.6.25.x using BCM43XX with a Broadcom 4306 (rev3) 802.11 
+chipset to 2.6.26.6 using the B43 and appropriate firmware. This on a COMPAQ 
+Presario R3000 P4 and  a gig of memory and ATI graphics.
 
-But using it in the db is great, thanks.
+I followed the install (upgrade) directions at linuxwireless.org. Piece of 
+cake! However... I find that I've gone from "bulletproof" BCM43XX wifi 
+connections to "bullethole" connections with B43.  
 
-> Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
-> ---
->  db.txt |   15 ++++++++++-----
->  1 files changed, 10 insertions(+), 5 deletions(-)
-> 
-> diff --git a/db.txt b/db.txt
-> index 6a282b6..bfc91ef 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -199,12 +199,17 @@ country FI:
->         (5170 - 5250 @ 40), (N/A, 20)
->         (5250 - 5330 @ 40), (N/A, 20), DFS
->         (5490 - 5710 @ 40), (N/A, 27), DFS
-> -
-> +# Data from http://www.arcep.fr/index.php?id=9272#12931
-> +# Updated 2008-10-04
-> +# 1W => 30dBm, 200mW => 23dBm, 100mW => 20dBm, 10mW => 10dBm
-> +# TPC is needed for 5250-5350 and 5470-5725, which flag to use?
->  country FR:
-> -       (2402 - 2482 @ 40), (N/A, 20)
-> -       (5170 - 5250 @ 40), (N/A, 20)
-> -       (5250 - 5330 @ 40), (N/A, 20), DFS
-> -       (5490 - 5710 @ 40), (N/A, 27), DFS
-> +       (2400 - 2454 @ 40), (N/A, 20)
-> +       (2454 - 2483.5 @ 40), (N/A, 20), NO-OUTDOOR
+Under the old BCM43XX the handshake and connections were flawless and 
+unfaltering. Now with the new B43, handshakes with AP's are perfect, but the 
+connections randomly and silently fail. There are no debug messages, no 
+complaints what-so-ever in /var/log/messages... 
 
-2483.5 - 2454 = 29.5 so 29.5 should be the max bandwidth.
+To gt wireless back, I have to reinitialize the connection. I've gotten so 
+good at it, that I can recite by heart the appropriate commands...
 
-> +       (2454 - 2483.5 @ 40), (N/A, 10), NO-INDOOR
+It's killling me! I've got to get this ironed out... it's not just my laptop, 
+it's happening quite regularly with people I know with similar chips and 
+laptops.
 
-Same here.
+Trying 2.6.27-rc's and now 2.6.27 and the situation is no better.
 
-> +       (5150 - 5250 @ 40), (N/A, 23), NO-OUTDOOR
-> +       (5250 - 5350 @ 40), (N/A, 23), NO-OUTDOOR, DFS, PASSIVE-SCAN
-> +       (5470 - 5725 @ 40), (N/A, 30), DFS, PASSIVE-SCAN
+So I ask... Who is the B43/B43LEGACY maintainer and would you be interested in 
+debugging this mess? I'll bend over backward to help you... Email me 
+direct... I'm very willing.
 
-Hm, actually so I had removed PASSIVE-SCAN from all entries
-as I had determined that this was only used for DFS purposes.
-As you can see in your case both have DFS so I'd leave only DFS.
-So essentially we can get rid of these:
+SHORT STORY:
+-- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
 
-        RRF_PASSIVE_SCAN        = 1<<7, /* passive scan is required */
-        RRF_NO_IBSS             = 1<<8, /* IBSS is not allowed */
+-- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
+but fragile connections that drop randomly and without complaint. B43LEGACY 
+does nothing.
 
-What I noted was that PASSIVE-SCAN for example was only used for when
-we don't have DFS in STA and NO_IBSS when we don't have DFS in IBSS.
+Any help would be appreciated. I'd really like to get this ironed out. I 
+highly desire to use current kernels.
 
-So we can just stick to DFS flag, unless you are aware of other
-considerations for them. Thoughts?
+Feel free to email me direct.
 
-  Luis
+-- 
+
+*****************************************************************************
+                                       
+                             From the desk of:
+                             Jerome D. McBride
+                                       
+   19:17:28 up 15 days, 23:35,  5 users,  load average: 0.33, 0.11, 0.03
+ 
+*****************************************************************************
