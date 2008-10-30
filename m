@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:60189 "EHLO
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:43770 "EHLO
 	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751805AbYJYDW5 (ORCPT
+	by vger.kernel.org with ESMTP id S1753004AbYJ3AtU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 23:22:57 -0400
-Message-ID: <4902910E.1000604@lwfinger.net> (sfid-20081025_052303_063402_5A6441E8)
-Date: Fri, 24 Oct 2008 20:22:54 -0700
+	Wed, 29 Oct 2008 20:49:20 -0400
+Message-ID: <49090486.3050103@lwfinger.net> (sfid-20081030_014924_937484_6016085E)
+Date: Wed, 29 Oct 2008 17:49:10 -0700
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Problem booting wireless-testing 2.6.28-rc1
-Content-Type: text/plain; charset=ISO-8859-1
+To: htl10@users.sourceforge.net
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: [RFC/RFT PATCH 0/6] rtl8187: Reduce delays to reduce startup time
+References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>
+In-Reply-To: <49088F7D.8020102@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you download and boot 2.6.28-rc1 from wireless-testing, you may have a
-problem in the boot process finding your hard drive. The fix has been found in
-mainline and consists of the following patch:
+The current version of the rtl8187 driver contains a large number of msleep()
+commands that cause initialization to take a long time. This series of patches
+include revisions that were found by looking at the latest version of the
+vendor's driver (rtl8187B_linux_26.1036.0708.2008), and others that were found
+to be OK with testing.
 
-commit e013e13bf605b9e6b702adffbe2853cfc60e7806
-Author: Jens Axboe <jens.axboe@oracle.com>
-Date:   Fri Oct 24 09:22:42 2008 +0200
+To keep each of the patches relatively small, these changes are split into 6
+parts. The changes in them are as follows:
 
-    libata: fix bug with non-ncq devices
+1. Remove all delays of greater than 1 sec.
+2. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_ofdm().
+3. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_cck().
+4. Remove the msleep(1) that immediately follow calls to rtl8225_write().
+5. Remove the nsleep() calls from rtl8187_write_phy(), rtl8225_write_bitbang(),
+and rtl8225_write_8051().
+6. Remove the msleep(10) that preceeds a channel change.
 
-    The recent commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e ("libata:
-    switch to using block layer tagging support") to enable support for
-    block layer tagging in libata was broken for non-NCQ devices
+Before these changes, routine rtl8187b_init_hw() took 15.82 sec to execute. It
+now takes 3.76 sec.
 
-    The block layer initializes the tag field to -1 to detect invalid uses
-    of a tag, and if the libata devices does NOT support NCQ, we just used
-    that field to index the internal command list.  So we need to check for
-    -1 first and only use the tag field if it's valid.
-
-    Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-    Reported-by: Alexander Beregalov <a.beregalov@gmail.com>
-    Tested-by: Paul Mundt <lethal@linux-sh.org>
-    Tested-by: Dave Young <hidave.darkstar@gmail.com>
-    Tested-by: Rafael J. Wysocki <rjw@sisk.pl>
-    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d5b9b72..4b95c43 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -708,7 +708,11 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct
-ata_device *dev,
- {
- 	struct ata_queued_cmd *qc;
-
--	qc = ata_qc_new_init(dev, cmd->request->tag);
-+	if (cmd->request->tag != -1)
-+		qc = ata_qc_new_init(dev, cmd->request->tag);
-+	else
-+		qc = ata_qc_new_init(dev, 0);
-+
- 	if (qc) {
- 		qc->scsicmd = cmd;
- 		qc->scsidone = done;
-
-
-Larry
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
