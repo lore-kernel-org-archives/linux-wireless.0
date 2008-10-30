@@ -1,106 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:43931 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752366AbYJWVtd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 17:49:33 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so195270ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2008 14:49:32 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: ivdoorn@gmail.com
-From: Andrey Yurovsky <andrey@cozybit.com>
-Subject: [RFC] mac80211 rx filter in mesh mode, rt2x00 mesh point operation
-Date: Thu, 23 Oct 2008 14:49:31 -0700 (PDT)
-Message-ID: <4900f16b.0b0c360a.2bc3.ffffa11a@mx.google.com> (sfid-20081023_234939_327415_9F99109E)
+Received: from web23101.mail.ird.yahoo.com ([217.146.189.41]:38156 "HELO
+	web23101.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752811AbYJ3Swu convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 14:52:50 -0400
+Date: Thu, 30 Oct 2008 18:52:48 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT] rtl8187: Change TX power settings
+To: Piter PUNK <piterpk@terra.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4909E5F6.9040401@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <949582.41137.qm@web23101.mail.ird.yahoo.com> (sfid-20081030_195255_514208_B0A9B8E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've come across a problem with the RX filter setting while testing mesh point
-operation in the rt2x00 driver (my hardware is rt73usb).  We transmit and 
-receive mesh beacons but mesh peer link action frames are dropped.  A patch
-for enabling mesh point mode is included here, this works except that:
+Hi Larry,
 
-The RX filter, as set by mac80211 in mesh mode is 0x02, that is FIF_ALLMULTI is
-set.  This is sufficient for other drivers but not for rt2x00.  I noticed that
-running tcpdump on the MP interface sets the filter to 0x43, this adds
-FIF_OTHER_BSS and FIF_PROMISC_IN_BSS, and rt2x00 is then able to make peer
-links and mesh point mode works correctly.
+I think one needs to be more careful about removing some of the
+(priv->hw_rev == RTL8187BvB) in the 2nd half of the patch. The latest vendor driver can stop supporting the older 8187BvB chip (intentionally or by mistake), but linux users often/occasionally have older hardware. I
+think one wants to make sure that numbers from the new code are no-bigger
+than numbers from the old in the 2nd part of the patch below 
+in the case of (priv->hw_rev == RTL8187BvB).
 
-Actually for rt2x00, setting either FIF_OTHER_BSS or FIF_PROMISC_IN_BSS is the 
-key here because they are both treated as FIF_PROMISC_IN_BSS, which causes the 
-driver to enable TXRX_CSR0_DROP_TO_DS.
+Hin-Tak
 
-To solve this problem, it seems that we can either:
-1. change the RX filter specified in mesh point mode.  I am concerned that this
-   would pass up unnecessary frames to the other drivers which otherwise work
-   fine with just FIF_ALLMULTI set.  Are there any opinions on this?
-2. modify the rt2x00 rx filter setting implementation to set additional flags,
-   possibly with knowledge that the interface is in mesh point mode.  This 
-   seems hacky as the filter setting is supposed to be fairly generic.
-3. revisit the setting of TXRX_CSR0_DROP_TO_DS and possibly other bits in the
-   HW rx filter, CCing Ivo regarding this.
+--- On Thu, 30/10/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 7910147..3021c2a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -42,6 +42,7 @@ void rt2x00lib_config_intf(struct rt2x00_dev *rt2x00dev,
- 	switch (type) {
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		conf.sync = TSF_SYNC_BEACON;
- 		break;
- 	case NL80211_IFTYPE_STATION:
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 697806c..2b9d0a0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -466,7 +466,8 @@ static void rt2x00lib_beacondone_iter(void *data, u8 *mac,
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
- 
- 	if (vif->type != NL80211_IFTYPE_AP &&
--	    vif->type != NL80211_IFTYPE_ADHOC)
-+	    vif->type != NL80211_IFTYPE_ADHOC &&
-+	    vif->type != NL80211_IFTYPE_MESH_POINT)
- 		return;
- 
- 	/*
-@@ -1053,7 +1054,8 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->hw->wiphy->interface_modes =
- 	    BIT(NL80211_IFTYPE_AP) |
- 	    BIT(NL80211_IFTYPE_STATION) |
--	    BIT(NL80211_IFTYPE_ADHOC);
-+	    BIT(NL80211_IFTYPE_ADHOC) |
-+	    BIT(NL80211_IFTYPE_MESH_POINT);
- 
- 	/*
- 	 * Let the driver probe the device to detect the capabilities.
-@@ -1208,10 +1210,11 @@ static void rt2x00lib_resume_intf(void *data, u8 *mac,
- 
- 
- 	/*
--	 * Master or Ad-hoc mode require a new beacon update.
-+	 * Master, Ad-hoc, or Mesh Point mode require a new beacon update.
- 	 */
- 	if (vif->type == NL80211_IFTYPE_AP ||
--	    vif->type == NL80211_IFTYPE_ADHOC)
-+	    vif->type == NL80211_IFTYPE_ADHOC ||
-+	    vif->type == NL80211_IFTYPE_MESH_POINT)
- 		intf->delayed_flags |= DELAYED_UPDATE_BEACON;
- 
- 	spin_unlock(&intf->lock);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index da7b49a..d4bd072 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -229,6 +229,7 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		/*
- 		 * We don't support mixed combinations of
- 		 * sta and ap interfaces.
+> The latest vendor driver (rtl8187B_linux_26.1036.0708.2008)
+> has changed the
+> CCK and OFDM power setting code as compared with previous
+> versions. This
+> patch implements those changes for the Linux driver.
+> 
+> Signed-off-by: Larry Finger
+> <Larry.Finger@lwfinger.net>
+> ---
+> 
+> Piter,
+> 
+> Does this help your devices?
+> 
+> Larry
+> 
+> 
+> Index:
+> wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
+> ===================================================================
+> ---
+> wireless-testing.orig/drivers/net/wireless/rtl8187_rtl8225.c
+> +++ wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
+> @@ -578,23 +578,27 @@ static void
+> rtl8225z2_b_rf_set_tx_power(
+>  {
+>  	struct rtl8187_priv *priv = dev->priv;
+>  	u8 cck_power, ofdm_power;
+> +	u8 min_cck_power = (priv->hw_rev == RTL8187BvB) ? 0 :
+> 7;
+> +	u8 max_cck_power = (priv->hw_rev == RTL8187BvB) ? 15 :
+> 22;
+> +	u8 min_ofdm_power = (priv->hw_rev == RTL8187BvB) ? 2 :
+> 10;
+> +	u8 max_ofdm_power = (priv->hw_rev == RTL8187BvB) ? 17
+> : 25;
+>  	const u8 *tmp;
+>  	int i;
+> 
+>  	cck_power = priv->channels[channel - 1].hw_value &
+> 0xF;
+>  	ofdm_power = priv->channels[channel - 1].hw_value
+> >> 4;
+> 
+> -	if (cck_power > 15)
+> -		cck_power = (priv->hw_rev == RTL8187BvB) ? 15 : 22;
+> +	if (cck_power > max_cck_power - min_cck_power)
+> +		cck_power = max_cck_power;
+>  	else
+> -		cck_power += (priv->hw_rev == RTL8187BvB) ? 0 : 7;
+> +		cck_power += min_cck_power;
+>  	cck_power += priv->txpwr_base & 0xF;
+>  	cck_power = min(cck_power, (u8)35);
+> 
+> -	if (ofdm_power > 15)
+> -		ofdm_power = (priv->hw_rev == RTL8187BvB) ? 17 : 25;
+> +	if (ofdm_power > max_ofdm_power - min_ofdm_power)
+> +		ofdm_power = max_ofdm_power;
+>  	else
+> -		ofdm_power += (priv->hw_rev == RTL8187BvB) ? 2 : 10;
+> +		ofdm_power += min_ofdm_power;
+>  	ofdm_power += (priv->txpwr_base >> 4) & 0xF;
+>  	ofdm_power = min(ofdm_power, (u8)35);
+> 
+> @@ -625,7 +629,7 @@ static void
+> rtl8225z2_b_rf_set_tx_power(
+>  		rtl8225_write_phy_cck(dev, 0x44 + i, *tmp++);
+> 
+>  	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK,
+> -			 rtl8225z2_tx_gain_cck_ofdm[cck_power]);
+> +			 rtl8225z2_tx_gain_cck_ofdm[cck_power] << 1);
+>  	msleep(1);
+> 
+>  	rtl818x_iowrite8(priv,
+> &priv->map->TX_GAIN_OFDM,
 
 
+      
