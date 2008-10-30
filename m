@@ -1,91 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47668 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454AbYJNV5l (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:45677 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353AbYJ3EOe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 17:57:41 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081014215050.GG3349@tuxdriver.com>
-References: <1223608949.2510.1061.camel@debian.sh.intel.com>
-	 <43e72e890810100949i78c1d813x1b66c6bc0239ef28@mail.gmail.com>
-	 <1223967581.2570.144.camel@debian.sh.intel.com>
-	 <43e72e890810140004k6bfa72edsf39acbafcf317fa6@mail.gmail.com>
-	 <1223969808.2570.153.camel@debian.sh.intel.com>
-	 <43e72e890810140204ne135e72kefe379dd3d26f7bc@mail.gmail.com>
-	 <20081014203510.GD3349@tuxdriver.com>
-	 <1224018957.3027.9.camel@johannes.berg>
-	 <20081014211912.GF3349@tuxdriver.com>
-	 <1224019662.3027.13.camel@johannes.berg>
-	 <20081014215050.GG3349@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZyZZ918/akh2pLvn94df"
-Date: Tue, 14 Oct 2008 23:57:02 +0200
-Message-Id: <1224021422.3027.15.camel@johannes.berg> (sfid-20081014_235744_460591_235D7614)
-Mime-Version: 1.0
+	Thu, 30 Oct 2008 00:14:34 -0400
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Message-Id: <3004345D-F3F9-4C05-AF12-196F31E9FCEB@linux.intel.com> (sfid-20081030_051436_410558_3F85284B)
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: reinette chatre <reinette.chatre@intel.com>
+In-Reply-To: <1225321298.1115.309.camel@rc-desk>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: Still 4965 issues with wireless-testing
+Date: Thu, 30 Oct 2008 05:14:30 +0100
+References: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com> <1225321298.1115.309.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Reinette,
 
---=-ZyZZ918/akh2pLvn94df
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>> so besides the point that the Ubuntu 8.10 kernel has a broken driver
+>> for the Intel 4965 cards which will crash my X61 after less than one
+>> minute uptime when it connects to my access point, I have my dmesg
+>> full with warnings from the latest wireless-testing kernel.
+>>
+>> I know that we have discussed this before and Johannes' patch at  
+>> least
+>> turns it into warnings instead of killing my system completely, but I
+>> am still surprised why this hasn't been fixed.
+>>
+>> Attached is one of the dmesg snippets. They occur multiple times per
+>> minute.
+>
+> Could you please compare your testing with that done in
+> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703 ?
 
-On Tue, 2008-10-14 at 17:50 -0400, John W. Linville wrote:
-> On Tue, Oct 14, 2008 at 11:27:42PM +0200, Johannes Berg wrote:
-> > On Tue, 2008-10-14 at 17:19 -0400, John W. Linville wrote:
->=20
-> > > Should there be an "I make no representation of authority" flag in
-> > > the regulatory maps?
-> >=20
-> > The only reasonable solution I can come up with is have it make separat=
-e
-> > hints for 2.4 and 5 GHz and then a single-band card won't say anything
-> > about 5 GHz so the dual-band gets to set that part. But OTOH I don't se=
-e
-> > a reasonable use-case for this whole thing so far---we really only adde=
-d
-> > this after discussions with Marcel at OLS so embedded systems can
-> > function w/o crda, but who would build an embedded system with two
-> > different cards like that?
->=20
-> And couldn't such a person also do the equivalent of the OLD_REGULATORY
-> stuff that we have now?
+so as usual I am running a 64-bit kernel and the AP is N-capable. I  
+just connect to it with wpa_supplicant and after a few minutes these  
+warnings keep showing and then they keep coming. The ucode is the  
+latest downloaded from the website.
 
-Could even just write a trivial app that once during boot requests a
-setting from the kernel and then sets it.
+Regards
 
-Kinda like
-iw reg set XY
-and the resulting crda call rolled in one.
-
-johannes
-
---=-ZyZZ918/akh2pLvn94df
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI9RWqAAoJEKVg1VMiehFY/+AQAKbS7TaD1B8Fz8cwrA9PwZvp
-jNjPZ3aKzOUMr2N3lFS6sONOhLHO+fjwnX4oFF4GNnddeu9YwMcQFVqUjC8FbWhz
-Jdy2zu4V8Zmgfyy8U6bUQBGQSzOc3gzBkBH0t+SC3xtXH4w01nIdftxx2Lp5WipI
-UvODi495xwqgfFcJjcQQ1Ido0/gQr0tG5kREeI6vmrckambt+Y6o3QkvgwGxbJg+
-mswyANtXXxWzyJJYlYOqvbzGqlUc1zefFB0lF2CR3Rf036z2ltGHpDIwkwKNp/BP
-y9CYQ2750fzKOmfbK/PUb0fqZVEKhBW8AZpU6Og1Uo1h76UyNueCtdTnV0q9uNOW
-aumWPLmi9OkrSEo/Pit4lA7NG+CGM0kHokUEEVVyvFdfRyVEHfDXbbptb/EvmUMZ
-5m67kpMeY4AJKATCExJOw5YUCFVT7WQBHhPLhTXXgbC7GK1mCEdMZ7q6XRuYkqwo
-2OXBmSZrTdp0gOOcPsPkboyK8fyNM74t4IjtcgAKsZUpP1DB/gbnjlwGsffqsGg2
-xCC3EEOOVlCQbKEXUDODx4G+qD8UV5TG6LRrxYA2ySfoTa6uCgADW2UPi4jZlB1n
-87bRIA1U+gK51ESwz5M5HlhkU4TfK84v4gES37Dw6m3YDUapBiXSt8Wej9ByVKcv
-y3xeUhB2gpJXzvw6Pffx
-=ryud
------END PGP SIGNATURE-----
-
---=-ZyZZ918/akh2pLvn94df--
+Marcel
 
