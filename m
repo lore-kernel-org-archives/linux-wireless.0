@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:57052 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753515AbYJGUI6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2008 16:08:58 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2943736fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2008 13:08:55 -0700 (PDT)
-Message-ID: <1ba2fa240810071308o65d15c39r239f5d653d6aaa37@mail.gmail.com> (sfid-20081007_220900_608447_45C46303)
-Date: Tue, 7 Oct 2008 22:08:55 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] iwlwifi: get rid of IWL_{GET,SET}_BITS crap
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Christoph Hellwig" <hch@infradead.org>,
-	"Holger Schurig" <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1223410003.3618.9.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1223311803.15196.36.camel@johannes.berg>
-	 <200810070821.56462.hs4233@mail.mn-solutions.de>
-	 <20081007071529.GA5010@infradead.org>
-	 <20081007131615.GR3448@tuxdriver.com>
-	 <1ba2fa240810070703j471faa30mce3678febf3c20e8@mail.gmail.com>
-	 <1223398724.7328.45.camel@johannes.berg>
-	 <1ba2fa240810071228m52a60861r5558529426b9b487@mail.gmail.com>
-	 <1223408085.3618.2.camel@johannes.berg>
-	 <1ba2fa240810071301k185eebf6qbca6841af120e0ea@mail.gmail.com>
-	 <1223410003.3618.9.camel@johannes.berg>
+Received: from mga11.intel.com ([192.55.52.93]:60426 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753605AbYJ3VCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 17:02:46 -0400
+Subject: Re: [PATCH] iwlagn: avoid sleep in softirq context
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1225390341-7117-1-git-send-email-linville@tuxdriver.com>
+References: <>  <1225390341-7117-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 30 Oct 2008 14:03:11 -0700
+Message-Id: <1225400591.1115.359.camel@rc-desk> (sfid-20081030_220251_880205_B186B626)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 7, 2008 at 10:06 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-10-07 at 22:01 +0200, Tomas Winkler wrote:
->> On Tue, Oct 7, 2008 at 9:34 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Tue, 2008-10-07 at 21:28 +0200, Tomas Winkler wrote:
->> >
->> >> > And please keep the 10 pairs -> 20 addresses, it's a lot easier to
->> >> > understand :)
->> >
->> >> I don't like on this solution two things one is that it 32 bit
->> >> variables sits on unaligned address
->> >
->> > That doesn't matter at all since it's packed, and the bitwise accesses
->> > you did previously are way less efficient.
->>
->> This is not packet this is shared memory.
->
-> ??
-> The struct is _packed_, nothing to do with packets.
-I'm tired .. :)
+On Thu, 2008-10-30 at 11:12 -0700, John W. Linville wrote:
+> __ieee80211_tasklet_handler -> __ieee80211_rx ->
+> 	__ieee80211_rx_handle_packet -> ieee80211_invoke_rx_handlers ->
+> 	ieee80211_rx_h_decrypt -> ieee80211_crypto_tkip_decrypt ->
+> 	ieee80211_tkip_decrypt_data -> iwl4965_mac_update_tkip_key ->
+> 	iwl_scan_cancel_timeout -> msleep
+> 
+> Ooops!
+> 
+> Avoid the sleep by changing iwl_scan_cancel_timeout with
+> iwl_scan_cancel and simply returning on failure if the scan persists.
+> This will cause hardware decryption to fail and we'll handle a few more
+> frames with software decryption.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
+
+I forgot to mention that this patch will cause some trivial (name change) conflicts when merged together with one we submitted recently (http://marc.info/?l=linux-wireless&m=122531440910147&w=2 )
+
+Reinette
+
+
