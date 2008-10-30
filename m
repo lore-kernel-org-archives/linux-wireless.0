@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:12681 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbYJVI2a convert rfc822-to-8bit (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:44778 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753768AbYJ3AzH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 04:28:30 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so275406fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2008 01:28:28 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: Release of Atheros 802.11n USB Linux driver
-Date: Wed, 22 Oct 2008 10:28:17 +0200
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Kernel <linux-kernel@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-References: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>
-In-Reply-To: <43e72e890810211904x7bd243dem68dfcfe7a795ec6f@mail.gmail.com>
+	Wed, 29 Oct 2008 20:55:07 -0400
+Message-ID: <490905E9.8040005@lwfinger.net> (sfid-20081030_015524_786628_B58C93AF)
+Date: Wed, 29 Oct 2008 17:55:05 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200810221028.18087.florian@openwrt.org> (sfid-20081022_102835_731091_A792EE84)
+To: htl10@users.sourceforge.net
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: [RFC/RFT PATCH 5/6] rtl8187: Remove primitive write delays
+References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>
+In-Reply-To: <49088F7D.8020102@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Each of the primary write routines, rtl8187_write_phy(),
+rtl8225_write_bitbang(), and rtl8225_write_8051() all conclude with an
+msleep() command. Testing shows that these are not needed.
 
-Le Wednesday 22 October 2008 04:04:17 Luis R. Rodriguez, vous avez =C3=A9=
-crit=C2=A0:
-> We would like to see our Atheros 802.11n USB Linux driver upstream
-> however we need help with this so we are releasing our Atheros 11n US=
-B
-> Otus Linux driver under the ISC to the community. The goal is to work
-> with the community to help move this forward upstream. We are hoping
-> for community help and leadership on this (*cough*).
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-This is great news ! Any plans on supporting older sticks as well, like=
-=20
-AR5005UG/X based sticks ?
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
+@@ -152,8 +152,6 @@ void rtl8187_write_phy(struct ieee80211_
+ 	rtl818x_iowrite8(priv, &priv->map->PHY[2], (data >> 16) & 0xFF);
+ 	rtl818x_iowrite8(priv, &priv->map->PHY[1], (data >> 8) & 0xFF);
+ 	rtl818x_iowrite8(priv, &priv->map->PHY[0], data & 0xFF);
+-
+-	msleep(1);
+ }
+
+ static void rtl8187_tx_cb(struct urb *urb)
+Index: wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187_rtl8225.c
++++ wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
+@@ -64,7 +64,6 @@ static void rtl8225_write_bitbang(struct
+
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
+-	msleep(2);
+ }
+
+ static void rtl8225_write_8051(struct ieee80211_hw *dev, u8 addr, __le16 data)
+@@ -98,7 +97,6 @@ static void rtl8225_write_8051(struct ie
+
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
+-	msleep(2);
+ }
+
+ static void rtl8225_write(struct ieee80211_hw *dev, u8 addr, u16 data)
+
+
+
