@@ -1,123 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:54108 "EHLO
-	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbYJUTlz (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.234]:36072 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbYJ3BTC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 15:41:55 -0400
-Date: Tue, 21 Oct 2008 21:43:24 +0200
-From: Pavel Machek <pavel@suse.cz>
-To: jbenc@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
-	i.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: iwl3945: if I leave my machine running overnight, wifi will
-	not work in the morning
-Message-ID: <20081021194324.GA1811@elf.ucw.cz> (sfid-20081021_214200_333058_440CDC05)
-References: <20081019214035.GA30485@elf.ucw.cz> <20081019220655.GA1827@elf.ucw.cz> <20081021194031.GB17255@elf.ucw.cz>
+	Wed, 29 Oct 2008 21:19:02 -0400
+Message-ID: <b6c5339f0810291819ld7d6043k56b11128bc6252cb@mail.gmail.com> (sfid-20081030_021911_978084_75E29EFA)
+Date: Wed, 29 Oct 2008 21:19:01 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: pull request: wireless-2.6 2008-10-29
+Cc: "Arjan van de Ven" <arjan@infradead.org>, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mcgrof@gmail.com, mickflemm@gmail.com
+In-Reply-To: <20081029233350.GE3485@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081021194031.GB17255@elf.ucw.cz>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081029231855.GD3485@tuxdriver.com>
+	 <20081029162324.28f5864d@infradead.org>
+	 <20081029233350.GE3485@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue 2008-10-21 21:40:31, Pavel Machek wrote:
-> On Mon 2008-10-20 00:06:55, Pavel Machek wrote:
-> > On Sun 2008-10-19 23:40:35, Pavel Machek wrote:
-> > > Hi!
-> > > 
-> > > Kernel 2.6.27-rc8; happened few times already.
-> > 
-> > ...
-> > > After reboot, network will work (I believe ;-).
-> > 
-> > Hmm, it did not this time.
-> 
-> Happened again...
-> 
-> root@amd:/mnt# ifconfig wlan0 down
-> root@amd:/mnt# iwlist wlan0 scan
-> Warning: Driver for device wlan0 has been compiled with version 22
-> of Wireless Extension, while this program supports up to version 17.
-> Some things may be broken...
-> 
-> wlan0     Interface doesn't support scanning : Network is down
-> 
-> root@amd:/mnt# ifconfig wlan0 10.0.0.6 up
-> root@amd:/mnt# iwlist wlan0 scan
-> Warning: Driver for device wlan0 has been compiled with version 22
-> of Wireless Extension, while this program supports up to version 17.
-> Some things may be broken...
-> 
-> wlan0     Scan completed :
->           Cell 01 - Address: 00:11:2F:0E:95:A0
->                     ESSID:"pavel"
->                     Mode:Master
->                     Channel:1
->                     Frequency:2.412 GHz (Channel 1)
->                     Quality=95/100  Signal level:-34 dBm  Noise
-> level=-68 dBm
->                     Encryption key:off
->                     Bit Rate:1 Mb/s
->                     Bit Rate:2 Mb/s
->                     Bit Rate:5.5 Mb/s
->                     Bit Rate:11 Mb/s
->                     Bit Rate:6 Mb/s
->                     Bit Rate:9 Mb/s
->                     Bit Rate:12 Mb/s
->                     Bit Rate:18 Mb/s
->                     Bit Rate:24 Mb/s
->                     Bit Rate:36 Mb/s
->                     Bit Rate:48 Mb/s
->                     Bit Rate:54 Mb/s
->                     Extra:tsf=000000262894417f
->                     Extra: Last beacon: 76ms ago
-> 
-> root@amd:/mnt# iwconfig wlan0 essid pavel
-> root@amd:/mnt# ping hobit
-> PING hobit.ucw.cz (10.0.0.2): 56 data bytes
-> ^C
-> --- hobit.ucw.cz ping statistics ---
-> 4 packets transmitted, 0 packets received, 100% packet loss
-> root@amd:/mnt# 
-> 
-> 
-> This time I tried rebooting the AP, but it did not help. dmesg says:
-> 
-> wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
-> range
-> wlan0: deauthenticated
-> iwl3945 0000:03:00.0: PCI INT A disabled
-> iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> iwl3945 0000:03:00.0: restoring config space at offset 0x1 (was
-> 0x100102, writing 0x100106)
-> Registered led device: iwl-phy0:radio
-> Registered led device: iwl-phy0:assoc
-> Registered led device: iwl-phy0:RX
-> Registered led device: iwl-phy0:TX
-> wlan0: authenticate with AP 00:11:2f:0e:95:a0
-> wlan0: authenticate with AP 00:11:2f:0e:95:a0
-> wlan0: authenticated
-> wlan0: associate with AP 00:11:2f:0e:95:a0
-> wlan0: RX AssocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
-> aid=1)
-> wlan0: associated
-> wlan0: authenticate with AP 00:11:2f:0e:95:a0
-> wlan0: authenticated
-> wlan0: associate with AP 00:11:2f:0e:95:a0
-> wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
-> aid=1)
-> wlan0: associated
-> wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
-> range
-> wlan0: authenticate with AP 00:11:2f:0e:95:a0
-> wlan0: authenticated
-> wlan0: associate with AP 00:11:2f:0e:95:a0
-> wlan0: RX ReassocResp from 00:11:2f:0e:95:a0 (capab=0x401 status=0
-> aid=1)
-> wlan0: associated
-> root@amd:/mnt# 
+On Wed, Oct 29, 2008 at 7:33 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Oct 29, 2008 at 04:23:24PM -0700, Arjan van de Ven wrote:
+>> On Wed, 29 Oct 2008 19:18:55 -0400
+>> "John W. Linville" <linville@tuxdriver.com> wrote:
+>> it seems to have added a few WARN_ON()s which now end up at the top of
+>> the list .. are these known or should I spend some time writing reports
+>> for netdev ?
 
-reboot, and network is back.
+Pavel Roskin posted one such WARN_ON to ath5k-devel a few days ago.
+Seems related to setup of the rate tables, but I haven't reproduced it
+here yet.  I'll see if he has more info...
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Bob Copeland %% www.bobcopeland.com
