@@ -1,86 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from the2masters.de ([213.146.113.64]:41147 "EHLO
-	smtp.the2masters.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753572AbYJ3P6V (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60243 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753126AbYJ3JWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 11:58:21 -0400
-Message-ID: <4909C93E.7020400@the2masters.de> (sfid-20081030_165828_538461_D0715670)
-Date: Thu, 30 Oct 2008 15:48:30 +0100
-From: Stefan Hellermann <stefan@the2masters.de>
+	Thu, 30 Oct 2008 05:22:47 -0400
+Message-ID: <be0976f315094fc29b6d0ee915f8026a.squirrel@secure.sipsolutions.net>
+In-Reply-To: <1225329594-21704-2-git-send-email-lrodriguez@atheros.com> 
+References: <1225329594-21704-1-git-send-email-lrodriguez@atheros.com>
+    <1225329594-21704-2-git-send-email-lrodriguez@atheros.com>
+Date: Thu, 30 Oct 2008 10:22:42 +0100 (CET)
+Subject: Re: [PATCH 1/6] cfg80211: a reg rule is invalid if freq diff is 0
+From: "Johannes Berg" <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Arjan van de Ven <arjan@infradead.org>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, me@bobcopeland.com, mcgrof@gmail.com,
-	mickflemm@gmail.com
-Subject: Re: pull request: wireless-2.6 2008-10-29
-References: <20081029231855.GD3485@tuxdriver.com> <20081029162324.28f5864d@infradead.org> <20081029233350.GE3485@tuxdriver.com>
-In-Reply-To: <20081029233350.GE3485@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville schrieb:
-> On Wed, Oct 29, 2008 at 04:23:24PM -0700, Arjan van de Ven wrote:
->   
->> On Wed, 29 Oct 2008 19:18:55 -0400
->> "John W. Linville" <linville@tuxdriver.com> wrote:
->>
->>     
->>> Dave,
->>>
->>> Another quick round of fixes intended for 2.6.28...
->>>
->>> This includes fixes for bugs 11749 and 11845, fixes a reset-related
->>> regression in ath5k, fixes a Kconfig-related error for rt2x00, and
->>> fixes some sparse warnings and a possible buffer overrun in libertas.
->>> Also, it corrects a spelling error and marks Bob Copeland as an
->>> ath5k maintainer.
->>>       
->> speaking of ath5k:
->>
->> http://www.kerneloops.org/version.php?start=1835008&end=1867775&version=28-rc
->>
->> it seems to have added a few WARN_ON()s which now end up at the top of
->> the list .. are these known or should I spend some time writing reports
->> for netdev ?
->>     
+Luis R. Rodriguez wrote:
+> A regulatory rule is invalid when the frequency difference
+> between the end of the frequency range and the start is 0.
 >
-> I wasn't aware of them -- thanks... :-)
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  net/wireless/reg.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >
->   
-I think some of the reports on kerneloops are from my machine, I'm
-running wireless-testing#master in the hope to get my card fully
-working. It's a AR2425 chip (MAC: 0xe2, PHY: 0x70), in a Lenovo Notebook.
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 9dff716..ff706f9 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -321,7 +321,7 @@ static bool is_valid_reg_rule(const struct
+> ieee80211_reg_rule *rule)
+>
+>  	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
+>
+> -	if (freq_range->max_bandwidth_khz > freq_diff)
+> +	if (freq_diff == 0 || freq_range->max_bandwidth_khz > freq_diff)
 
-The wireless-connection is nearly unusable. I can provide access to this
-machine or test patches if anyone can help.
+Might want to make that <= 0 just in case?
 
-I get many warnings like
-
-WARNING: at /srv/devel/kernel/net/mac80211/rx.c:2203
-ath5k_tasklet_rx+0x318/0x5c0()
-Modules linked in:
-Pid: 0, comm: swapper Not tainted 2.6.28-rc1-wl #46
-Call Trace:
- [<c014744f>] warn_on_slowpath+0x5f/0xa0
- [<c013ef69>] enqueue_task_fair+0xb9/0x100
- [<c013ef69>] enqueue_task_fair+0xb9/0x100
- [<c0137835>] default_spin_lock_flags+0x5/0x10
- [<c0574fbb>] _spin_lock_irqsave+0x2b/0x40
- [<c0151347>] lock_timer_base+0x27/0x60
- [<c01514e0>] __mod_timer+0x90/0xa0
- [<c03e8dea>] rexmit_timer+0x36a/0x3d0
- [<c03aebe8>] ath5k_tasklet_rx+0x318/0x5c0
- [<c014bfb0>] tasklet_action+0x70/0x100
- [<c014ca97>] __do_softirq+0x97/0x160
- [<c014ca00>] __do_softirq+0x0/0x160
- <IRQ>  [<c0170c50>] handle_fasteoi_irq+0x0/0xe0
- [<c014c7bd>] irq_exit+0x5d/0x80
- [<c012297c>] do_IRQ+0xcc/0x100
- [<c0120aeb>] common_interrupt+0x23/0x28
- [<c0334f88>] acpi_idle_enter_bm+0x315/0x39e
- [<c04346c4>] cpuidle_idle_call+0x74/0xc0
- [<c011eded>] cpu_idle+0x6d/0xd0
----[ end trace 8ac847f454371229 ]---
-
+johannes
