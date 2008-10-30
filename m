@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:36487 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753928AbYJ2VF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 17:05:27 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/7] iwlwifi: rename double inclusion protection name in iwl-commands.h
-Date: Wed, 29 Oct 2008 14:05:47 -0700
-Message-Id: <1225314349-11139-6-git-send-email-reinette.chatre@intel.com> (sfid-20081029_220536_351053_53B63D84)
-In-Reply-To: <1225314349-11139-5-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1225314349-11139-1-git-send-email-reinette.chatre@intel.com>
- <1225314349-11139-2-git-send-email-reinette.chatre@intel.com>
- <1225314349-11139-3-git-send-email-reinette.chatre@intel.com>
- <1225314349-11139-4-git-send-email-reinette.chatre@intel.com>
- <1225314349-11139-5-git-send-email-reinette.chatre@intel.com>
+Received: from wf-out-1314.google.com ([209.85.200.173]:7325 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092AbYJ3AYp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 20:24:45 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so270702wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 17:24:44 -0700 (PDT)
+Subject: Re: B43 randomly and silently dropping connections...
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jerry McBride <mcbrides9@comcast.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081030001739.GG3485@tuxdriver.com>
+References: <200810292010.06442.mcbrides9@comcast.net>
+	 <20081030001739.GG3485@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 29 Oct 2008 17:24:42 -0700
+Message-Id: <1225326282.5496.5.camel@brick> (sfid-20081030_012449_923271_3699ABE4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, 2008-10-29 at 20:17 -0400, John W. Linville wrote:
+> On Wed, Oct 29, 2008 at 08:10:06PM -0400, Jerry McBride wrote:
+> 
+> > SHORT STORY:
+> > -- Kernel 2.6.25.x with BCM43XX, firmware 4.80.53.0.. just perfect.
+> > 
+> > -- Kernels 2.6.26 or higher with B43 and firware 4.150.10.5 good negotiations, 
+> > but fragile connections that drop randomly and without complaint. B43LEGACY 
+> > does nothing.
+> > 
+> > Any help would be appreciated. I'd really like to get this ironed out. I 
+> > highly desire to use current kernels.
+> 
+> Are you running a distro kernel?  Or one you have built yourself?
+> 
+> If the latter, have you opened a bug at bugzilla.kernel.org?
+> Otherwise, have you opened a bug with your distro's bug tracking
+> system?
+> 
+> Do you have wireshark captures taken with another device in monitor
+> mode that show these connection drops?
+> 
+> Are you using NetworkManager or wpa_supplicant?  Or just configuring
+> your connection with iwconfig?  If the latter, consider the former.
+> If you are using NM, does the connection get re-established
+> automatically?  Or is NM unable to reestablish the connection?
+> Use wpa_supplicant directly if NM just doesn't work for you.
+> 
+> It seems clear that posting the same message to the mailing lists
+> again and again is not resolving the issue for you.  Please perform
+> the actions requested above (including opening a bug at the appropriate
+> place) and collect some useable data for us.
 
-This patch change the name of the double inclusion protection in
-iwl-commands.h
+In addition, have you tried updated firmware that was pointed to
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/22790
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+No idea if it will fix it or not.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 5ab74fc..8aade00 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -66,8 +66,8 @@
-  * Please use iwl-dev.h for driver implementation definitions.
-  */
- 
--#ifndef __iwl4965_commands_h__
--#define __iwl4965_commands_h__
-+#ifndef __iwl_commands_h__
-+#define __iwl_commands_h__
- 
- enum {
- 	REPLY_ALIVE = 0x1,
-@@ -3064,4 +3064,4 @@ struct iwl_rx_packet {
- 
- #define IWL_RX_FRAME_SIZE        (4 + sizeof(struct iwl4965_rx_frame))
- 
--#endif				/* __iwl4965_commands_h__ */
-+#endif				/* __iwl_commands_h__ */
--- 
-1.5.4.3
+Harvey
 
