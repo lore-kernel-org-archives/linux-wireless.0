@@ -1,71 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:5775 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753353AbYJCVdH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2008 17:33:07 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1822911wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Oct 2008 14:33:06 -0700 (PDT)
-Subject: Re: [PATCH 3/8] b43: remove b43_radio_{read|write}16 from lo.c
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200810032317.19971.mb@bu3sch.de>
-References: <1223066926.6512.28.camel@brick>
-	 <200810032317.19971.mb@bu3sch.de>
+Received: from mail.atheros.com ([12.36.123.2]:34720 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751835AbYJ3BT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2008 21:19:56 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2008 18:19:56 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/6] cfg80211: few regulatory updates
+Date: Wed, 29 Oct 2008 18:19:48 -0700
+Message-ID: <1225329594-21704-1-git-send-email-lrodriguez@atheros.com> (sfid-20081030_022000_829372_87CEA87E)
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Fri, 03 Oct 2008 14:33:04 -0700
-Message-Id: <1223069584.6512.42.camel@brick> (sfid-20081003_233311_411949_581122B9)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-10-03 at 23:17 +0200, Michael Buesch wrote:
-> On Friday 03 October 2008 22:48:46 Harvey Harrison wrote:
-> > Mostly by using the mask/set helpers. Some temporary variables have
-> > also been eliminated.
-> 
-> I already told you two times that I do not like these patches.
-> I also explained in great detail why this is the case.
-> 
-> Please drop these patches!
-> If you send them one more time, I will immediately add your email address to
-> my exim blacklist.
-> 
+Here's a set of updates to cfg80211 for regulatory.
+This paves the way for 11d support and also addresses
+recent complaints about no working 5 GHz channels. I believe
+the compromise is reasonable.
 
-OK, but you should still look at patch 1 for the unaligned access
-helpers.
+I haven't tested this yet though, but I'll let you know tomorrow
+how they go. Just wanted to get these out for review for now.
 
-Patch 2 is small and easy to verify (only two lines), but fair enough.
+I've tested intersection in userspace on CRDA, check out running
+./intersect regulatory.bin for an example of it intersecting
+all regulatory domains. Special review with this is greatly
+appreciated.
 
-Patch 3 makes the code flow a lot more obvious rather than relying on
-a tmp variable to compose the masking/setting.
+Working on 11d should be fairly easy after this.
 
-The rest I'll kick to the bitbucket...although I think you should look
-at the portion of patch 5 that touches the function b43_radio_init2060
-as it points out the _one_ place where a register is masking the value
-of some other register...which is absolutely impossible to see unless
-you do a series of patches like this.
-
-It may be that it is intentional, and it has been this way as far back
-in the git history as I can find, but at least now it can be seen.
-
--       b43_radio_write16(dev, 0x0005,
--                         (b43_radio_read16(dev, 0x0081) & ~0x0008) | 0x0008);
-
-Cheers,
-
-Harvey
-
-Just for kicks, a combined diffstat:
- drivers/net/wireless/b43/lo.c          |  110 +++++--------
- drivers/net/wireless/b43/main.c        |   58 ++-----
- drivers/net/wireless/b43/phy_a.c       |  219 ++++++++++---------------
- drivers/net/wireless/b43/phy_common.c  |   10 +-
- drivers/net/wireless/b43/phy_common.h  |    2 -
- drivers/net/wireless/b43/phy_g.c       |  285 ++++++++++++++------------------
- drivers/net/wireless/b43/phy_n.c       |   62 ++++----
- drivers/net/wireless/b43/tables_nphy.c |    2 +-
- drivers/net/wireless/b43/wa.c          |    5 +-
- 9 files changed, 300 insertions(+), 453 deletions(-)
-
+  Luis
