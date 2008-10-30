@@ -1,151 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:42455 "EHLO mga14.intel.com"
+Received: from hostap.isc.org ([149.20.54.63]:40365 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752893AbYJPDAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 23:00:30 -0400
-Subject: Re: New Regulatory Domain Api.
-From: Zhu Yi <yi.zhu@intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081015185636.GH15902@tesla>
-References: <43e72e890810151039s34ad8d79nd2744847dd254b4e@mail.gmail.com>
-	 <1224092868.28173.21.camel@californication> <20081015112517.GF6509@tesla>
-	 <1224098748.28173.32.camel@californication> <20081015131622.GH6509@tesla>
-	 <1ba2fa240810151631t37edc367hfe59c76926c7b82e@mail.gmail.com>
-	 <20081015170830.GA15902@tesla>
-	 <1ba2fa240810151735t100ceda5s7fe7b495f735c507@mail.gmail.com>
-	 <20081015174447.GF15902@tesla>
-	 <1ba2fa240810151757r11060dfble6b58c76a7d0d8d1@mail.gmail.com>
-	 <20081015185636.GH15902@tesla>
-Content-Type: text/plain
-Date: Thu, 16 Oct 2008 11:00:30 +0800
-Message-Id: <1224126030.24677.78.camel@debian.sh.intel.com> (sfid-20081016_050034_392327_60281155)
-Mime-Version: 1.0
+	id S1753384AbYJ3PmX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 11:42:23 -0400
+Date: Thu, 30 Oct 2008 17:41:23 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 5/5] mac80211_hwsim: Make sure beacon_timer gets
+	deleted
+Message-ID: <20081030154123.GB3923@jm.kir.nu> (sfid-20081030_164228_528130_E8127B13)
+References: <20081030145920.233178987@localhost> <20081030150254.961883544@localhost> <1225379320.3690.58.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1225379320.3690.58.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-15 at 12:56 -0600, Luis R. Rodriguez wrote:
-> On Wed, Oct 15, 2008 at 05:57:20PM -0700, Tomas Winkler wrote:
-> > On Wed, Oct 15, 2008 at 7:44 PM, Luis R. Rodriguez
-> > <lrodriguez@atheros.com> wrote:
-> > > Anyway since you only have 3 this should be very simple to resolve...
-> > > Just add the 5 GHz frequency ranges you always support. Obviously the BG
-> > > card will not be able to make use of them :)
-> >
-> > It's ugly but possible w/a but we still have 3945 and 4965 where it is
-> > not so simple.
+On Thu, Oct 30, 2008 at 04:08:40PM +0100, Johannes Berg wrote:
+> On Thu, 2008-10-30 at 16:59 +0200, Jouni Malinen wrote:
+> > Index: wireless-testing/drivers/net/wireless/mac80211_hwsim.c
+> > @@ -290,6 +290,7 @@
+> >  {
+> >  	struct mac80211_hwsim_data *data = hw->priv;
+> >  	data->started = 0;
+> > +	del_timer(&data->beacon_timer);
 > 
-> Ah. I see. Ok then please try this patch. What do you guys think?
+> should that be del_timer_sync, just in case? Not sure how that works
+> with the rearming thing, I never really understood rearming timers.
 
-With this patch, the second card own A band reg_rules are not enforced
-for itself. (Still use the first card BG, second card ABG example.)
-Think about the second card is not Intel like card which enforces the
-regulatory in the firmware. The second card uses alpha2 hint. But the
-regdomain allows ALL A band channels.
+No idea.. I have to admit I don't care that much in this particular
+case (hwsim is a test driver), but if someone can explain how this is
+supposed to be done properly, I would be happy to fix this ;-).
 
-Thanks,
--yi
+That started=0 will prevent future timer handlers from using add_timer,
+but a currently running handler may miss that and as such,
+del_timer_sync() might not be enough. I would assume calling
+del_timer_sync() here twice would take care of that corner case, but
+that looks somewhat funny.
 
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index 626dbb6..703382a 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -469,6 +469,31 @@ static u32 freq_max_bandwidth(const struct ieee80211_freq_range *freq_range,
->         return 0;
->  }
-> 
-> +/**
-> + * freq_in_rule_band - tells us if a frequency rule is in freqs band
-> + * @freq_range: frequency rule we want to query
-> + * @freq_khz: frequency we are inquiring about
-> + *
-> + * This lets us know if a specific frequency rule is or is not relevant to
-> + * a specific frequency's band. Bands are device specific and artificial
-> + * definitions (the "2.4 GHz band" and the "5 GHz band"), however it is
-> + * safe for now to assume that a frequency rule should not be part of a
-> + * frequency's band if the start freq or end freq are off by more than 2 GHz.
-> + * This resolution can be lowered and should be considered as we add
-> + * regulatory rule support for other "bands".
-> + **/
-> +static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
-> +       u32 freq_khz)
-> +{
-> +#define ONE_GHZ_IN_HZ  1000000000
-> +       if (abs(freq_khz - freq_range->start_freq_khz) <= (2 * ONE_GHZ_IN_HZ))
-> +               return true;
-> +       if (abs(freq_khz - freq_range->end_freq_khz) <= (2 * ONE_GHZ_IN_HZ))
-> +               return true;
-> +       return false;
-> +#undef ONE_GHZ_IN_HZ
-> +}
-> +
->  /* XXX: add support for the rest of enum nl80211_reg_rule_flags, we may
->   * want to just have the channel structure use these */
->  static u32 map_regdom_flags(u32 rd_flags)
-> @@ -492,11 +517,17 @@ static u32 map_regdom_flags(u32 rd_flags)
->   * @reg_rule: the regulatory rule which we have for this frequency
->   *
->   * Use this function to get the regulatory rule for a specific frequency.
-> + * It returns 0 if it was able to find a valid regulatory rule which does
-> + * apply to the given center_freq otherwise it returns non-zero. It will
-> + * also -ERANGE if we determine the given center_freq does not even have
-> + * a regulatory rule for a frequency range in the center_freq's band. See
-> + * freq_in_rule_band() for our current definition of a band.
->   */
->  static int freq_reg_info(u32 center_freq, u32 *bandwidth,
->                          const struct ieee80211_reg_rule **reg_rule)
->  {
->         int i;
-> +       bool band_rule_found = false;
->         u32 max_bandwidth = 0;
-> 
->         if (!cfg80211_regdomain)
-> @@ -510,6 +541,9 @@ static int freq_reg_info(u32 center_freq, u32 *bandwidth,
->                 rr = &cfg80211_regdomain->reg_rules[i];
->                 fr = &rr->freq_range;
->                 pr = &rr->power_rule;
-> +
-> +               band_rule_found = freq_in_rule_band(fr, center_freq);
-> +
->                 max_bandwidth = freq_max_bandwidth(fr, center_freq);
->                 if (max_bandwidth && *bandwidth <= max_bandwidth) {
->                         *reg_rule = rr;
-> @@ -518,6 +552,9 @@ static int freq_reg_info(u32 center_freq, u32 *bandwidth,
->                 }
->         }
-> 
-> +       if (!band_rule_found)
-> +               return -ERANGE;
-> +
->         return !max_bandwidth;
->  }
-> 
-> @@ -533,8 +570,15 @@ static void handle_channel(struct ieee80211_channel *chan)
->                 &max_bandwidth, &reg_rule);
-> 
->         if (r) {
-> -               flags |= IEEE80211_CHAN_DISABLED;
-> -               chan->flags = flags;
-> +               /* This means a regulatory rule was found with a frequency
-> +                * range in center_freq's band. In this case we know the
-> +                * regulatory rule has at least *one* regulatory rule for
-> +                * the band so we must respect its band definitions. Otherwise
-> +                * we assume it may not even know anything about our band */
-> +               if (r != -ERANGE) {
-> +                       flags |= IEEE80211_CHAN_DISABLED;
-> +                       chan->flags = flags;
-> +               }
->                 return;
->         }
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John, can you at least apply the first four patches from this series? I
+would be fine with getting the fifth one in as-is, too, since it does at
+least make it quite a bit less likely to hit the kernel panic. We can
+then update this if someone can tell what the recommended way of killing
+this type of timer is.
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
