@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58265 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754568AbYJVS1Z (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.225]:45599 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753793AbYJ3OM0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2008 14:27:25 -0400
-Date: Wed, 22 Oct 2008 14:26:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dave <kilroyd@googlemail.com>
-Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
-	orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] orinoco: reload firmware on resume
-Message-ID: <20081022182636.GE15808@tuxdriver.com> (sfid-20081022_202730_533812_71889F2E)
-References: <200810111816.26370.arvidjaar@mail.ru> <48F0E58F.6000900@gmail.com> <200810121636.34373.arvidjaar@mail.ru> <48F6450E.7040809@gmail.com>
+	Thu, 30 Oct 2008 10:12:26 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so621680rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 07:12:25 -0700 (PDT)
+Message-ID: <b6c5339f0810300712p40b79c3r9613989f5af41777@mail.gmail.com> (sfid-20081030_151232_418939_CD40BC73)
+Date: Thu, 30 Oct 2008 10:12:25 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [ath5k-devel] ath5k: badness at net/mac80211/rx.c:2200, status->rate_idx = 255
+Cc: ath5k-devel@lists.ath5k.org,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <b6c5339f0810291822g33c0ce4cvc21a2449d8ee5458@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48F6450E.7040809@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1224799927.22806.15.camel@dv>
+	 <20081023213333.4t4427vw5ws8ccck-cebfxv@webmail.spamcop.net>
+	 <b6c5339f0810241158t59b15861qc9eb05a3f3f032a2@mail.gmail.com>
+	 <b6c5339f0810241201r7f8ba34ej6f39a96e371849eb@mail.gmail.com>
+	 <1224882332.10804.0.camel@dv>
+	 <b6c5339f0810291822g33c0ce4cvc21a2449d8ee5458@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 15, 2008 at 08:31:26PM +0100, Dave wrote:
-> Andrey Borzenkov wrote:
->> On Saturday 11 October 2008, Dave wrote:
->>>> -	int err;
->>>> +	int err = 0;
->>
->> Fixed version attached.
->
-> Acked-by: David Kilroy <kilroyd@googlemail.com>
+On Wed, Oct 29, 2008 at 9:22 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> So, any hints on how to reproduce this one?  Seems lots of people are
+> hitting it but I haven't seen it yet (though I was working on
+> 2.6.27-rc2 up until yesterday).
 
-Please repost this series with the finalized patches, rebased on the
-current wireless-testing.  Also, please include the patches inline,
-as your MIME encoding is confusing my tools.
+Nevermind, leaving it on overnight, I got the warning too.  I guess I'll
+sprinkle some printks about.
 
-John
+If nothing else, the -1 and u8 stuff is ugly and should probably be fixed,
+but it will result in the same warning since rate_idx will be >> n_bitrates.
+
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Bob Copeland %% www.bobcopeland.com
