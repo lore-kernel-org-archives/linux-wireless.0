@@ -1,72 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx30.mail.ru ([194.67.23.238]:16154 "EHLO mx30.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752652AbYJ2Dn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 23:43:59 -0400
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: Dominik Brodowski <linux@dominikbrodowski.net>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.28-rc2: new PCMCIA device instance after resume - orinoco can't download firmware
-Date: Wed, 29 Oct 2008 06:43:50 +0300
-Cc: linux-wireless@vger.kernel.org, linux-pcmcia@lists.infradead.org,
-	orinoco-devel@lists.sourceforge.net
-References: <200810282219.51492.arvidjaar@mail.ru> <20081029004235.GA17879@isilmar.linta.de>
-In-Reply-To: <20081029004235.GA17879@isilmar.linta.de>
+Received: from yw-out-2324.google.com ([74.125.46.30]:37635 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267AbYJaQ0a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 12:26:30 -0400
+Message-ID: <40f31dec0810310926p6edd0af5o24d7616eb54c6d0@mail.gmail.com> (sfid-20081031_172635_406042_8CDD1FC4)
+Date: Fri, 31 Oct 2008 18:26:28 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
+Subject: Re: ath5k gets lost with eeepc-laptop removal
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	willy@linux.intel.com, lrodriguez@atheros.com
+In-Reply-To: <20081031110502.18e33eba@doriath.conectiva>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1431681.2TQ0hodyI7";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200810290643.54707.arvidjaar@mail.ru> (sfid-20081029_044410_561693_899102B7)
+Content-Type: text/plain; charset=UTF-8
+References: <20081031110502.18e33eba@doriath.conectiva>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1431681.2TQ0hodyI7
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+2008/10/31 Luiz Fernando N. Capitulino <lcapitulino@mandriva.com.br>:
+>
+>  Hi guys,
+>
+>  If I do a 'rmmod eeepc-laptop', while connected to my AP, I get the
+> following error messages from ath5k:
+>
+> """
+> ath5k phy0: noise floor calibration timeout (2417MHz)
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: can't reset hardware (-5)
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: can't reset hardware (-5)
+> wlan0: No ProbeResp from current AP 00:1d:0f:e9:c7:c0 - assume out of range
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> wlan0: failed to set freq to 2412 MHz for scan
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> wlan0: failed to set freq to 2417 MHz for scan
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> wlan0: failed to set freq to 2422 MHz for scan
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> wlan0: failed to set freq to 2427 MHz for scan
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> wlan0: failed to set freq to 2432 MHz for scan
+> wlan0: failed to set freq to 2437 MHz for scan
+> wlan0: failed to set freq to 2442 MHz for scan
+> wlan0: failed to set freq to 2447 MHz for scan
+> wlan0: failed to set freq to 2452 MHz for scan
+> wlan0: failed to set freq to 2457 MHz for scan
+> wlan0: failed to set freq to 2462 MHz for scan
+> wlan0: failed to set freq to 2467 MHz for scan
+> wlan0: failed to set freq to 2472 MHz for scan
+> wlan0: failed to set freq to 2484 MHz for scan
+> wlan0: failed to restore operational channel after scan
+> wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
+> wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
+> wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
+> wlan0: authentication with AP 00:1d:0f:e9:c7:c0 timed out
+> """
+>
+>  Then I lost my wireless connection.
+>
+>  I'm running latest Linus git tree (2.6.28-rc2) on a Eeepc 701.
+>
+>  The problem doesn't happen on 2.6.27.4, but as 2.6.28-rc1 doesn't
+> boot on this machine, it would be a bit difficult to bisect it.
+>
+>  Thanks.
+>
 
-On Wednesday 29 October 2008, Dominik Brodowski wrote:
-> Hi,
->=20
-> On Tue, Oct 28, 2008 at 10:19:50PM +0300, Andrey Borzenkov wrote:
-> > I am running PCMCIA based orinoco with WPA support (external firmware)
-> > and two patches to cache it after request_firmware to use in resume.
-> >=20
-> > This worked fine in 27 and wtopped working in 28-rc. The apparent diffe=
-rence
-> > I see:
->=20
-> Hm, can't find any suspect patch which would change this behaviour in PCM=
-CIA
-> land. Could you try to bisect it on {drivers/base/ kernel/power
-> drivers/pcmcia drivers/net/wireless/orinoco*.c} possibly?
->=20
+After this does ath_info work ?
 
-Yes, I too checked log for drivers/pcmcia and could not find anything
-spectacular.
 
-I am afraid I can't estimate when (if) I will be able to do bisect :(
-
-Rafael, it looks like some serious changes in suspend/resume framework?
-Do you have any idea what could it be? Original message is here:
-http://marc.info/?l=3Dlinux-wireless&m=3D122522165719760&w=3D2
-
-TIA
-
-=2Dandrey
-
---nextPart1431681.2TQ0hodyI7
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkkH2/cACgkQR6LMutpd94z7aACeP4lsm3RECoNFCj3mhFyPBQXy
-vUAAoMwt67NpqMT8XdsBoel/LSrcruwf
-=RLJn
------END PGP SIGNATURE-----
-
---nextPart1431681.2TQ0hodyI7--
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
