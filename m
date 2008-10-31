@@ -1,40 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:3842 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752140AbYJ1CT6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 22:19:58 -0400
-Subject: Re: [2.6.28-rc2]: iwl4965 doesn't connect / cfg80211 failure
-From: Zhu Yi <yi.zhu@intel.com>
-To: Mirco Tischler <mt-ml@gmx.de>
-Cc: lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20081028025947.6c9c3274@mtlp.12.dimension>
-References: <20081028020212.0dfcb6c9@mtlp.12.dimension>
-	 <1225157618.2917.215.camel@debian.sh.intel.com>
-	 <20081028025947.6c9c3274@mtlp.12.dimension>
-Content-Type: text/plain
-Date: Tue, 28 Oct 2008 10:19:50 +0800
-Message-Id: <1225160390.2917.221.camel@debian.sh.intel.com> (sfid-20081028_032003_106014_FCF6A1BF)
+Received: from perninha.conectiva.com.br ([200.140.247.100]:42564 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbYJaRSN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 13:18:13 -0400
+Date: Fri, 31 Oct 2008 15:19:01 -0200
+From: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	willy@linux.intel.com, lrodriguez@atheros.com
+Subject: Re: ath5k gets lost with eeepc-laptop removal
+Message-ID: <20081031151901.2d68c32d@doriath.conectiva> (sfid-20081031_181819_590888_8FAC745D)
+In-Reply-To: <40f31dec0810310926p6edd0af5o24d7616eb54c6d0@mail.gmail.com>
+References: <20081031110502.18e33eba@doriath.conectiva>
+	<40f31dec0810310926p6edd0af5o24d7616eb54c6d0@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-27 at 18:59 -0700, Mirco Tischler wrote:
-> > Looks good so far. But I failed to see what are you trying to
-> connect?
-> > Can you try "iwconfig wlan0 channnel <> essid <>"?
-> Sorry. I should have supplied that information on the first try. The
-> network is
-> a standard WPA-protected G-band network at 2.437Ghz (channel 6).
-> That command seems to help a bit. At least I was able to connect more
-> often after executing it.
+Em Fri, 31 Oct 2008 18:26:28 +0200
+"Nick Kossifidis" <mickflemm@gmail.com> escreveu:
 
-You don't need this command if wpa_supplicant works correctly. Is it a
-hidden SSID AP?
+| 2008/10/31 Luiz Fernando N. Capitulino <lcapitulino@mandriva.com.br>:
+| >
+| >  Hi guys,
+| >
+| >  If I do a 'rmmod eeepc-laptop', while connected to my AP, I get the
+| > following error messages from ath5k:
+| >
+| > """
+| > ath5k phy0: noise floor calibration timeout (2417MHz)
+| > ath5k phy0: failed to wakeup the MAC Chip
+| > ath5k phy0: can't reset hardware (-5)
+| > ath5k phy0: failed to wakeup the MAC Chip
+| > ath5k phy0: can't reset hardware (-5)
+| > wlan0: No ProbeResp from current AP 00:1d:0f:e9:c7:c0 - assume out of range
+| > ath5k phy0: failed to wakeup the MAC Chip
+| > ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+| > wlan0: failed to set freq to 2412 MHz for scan
+| > ath5k phy0: failed to wakeup the MAC Chip
+| > ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+| > wlan0: failed to set freq to 2417 MHz for scan
+| > ath5k phy0: failed to wakeup the MAC Chip
+| > ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+| > wlan0: failed to set freq to 2422 MHz for scan
+| > ath5k phy0: failed to wakeup the MAC Chip
+| > ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+| > wlan0: failed to set freq to 2427 MHz for scan
+| > ath5k phy0: failed to wakeup the MAC Chip
+| > ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+| > wlan0: failed to set freq to 2432 MHz for scan
+| > wlan0: failed to set freq to 2437 MHz for scan
+| > wlan0: failed to set freq to 2442 MHz for scan
+| > wlan0: failed to set freq to 2447 MHz for scan
+| > wlan0: failed to set freq to 2452 MHz for scan
+| > wlan0: failed to set freq to 2457 MHz for scan
+| > wlan0: failed to set freq to 2462 MHz for scan
+| > wlan0: failed to set freq to 2467 MHz for scan
+| > wlan0: failed to set freq to 2472 MHz for scan
+| > wlan0: failed to set freq to 2484 MHz for scan
+| > wlan0: failed to restore operational channel after scan
+| > wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
+| > wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
+| > wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
+| > wlan0: authentication with AP 00:1d:0f:e9:c7:c0 timed out
+| > """
+| >
+| >  Then I lost my wireless connection.
+| >
+| >  I'm running latest Linus git tree (2.6.28-rc2) on a Eeepc 701.
+| >
+| >  The problem doesn't happen on 2.6.27.4, but as 2.6.28-rc1 doesn't
+| > boot on this machine, it would be a bit difficult to bisect it.
+| >
+| >  Thanks.
+| >
+| 
+| After this does ath_info work ?
 
-Thanks,
--yi
+ No, it doesn't. It says:
 
+"""
+MAC revision 0xffff is not supported!
+"""
+
+ And I have realized that I get a flood of 'failed to wakeup'
+and 'can't reset the hardware' error messages, just some seconds
+after the eeepc-laptop module removal.
+
+-- 
+Luiz Fernando N. Capitulino
