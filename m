@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:48384 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751295AbYJXWfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2008 18:35:53 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: [BUG] hang with ath5k
-Date: Sat, 25 Oct 2008 00:40:23 +0200
-Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org,
-	"kernel list" <linux-kernel@vger.kernel.org>
-References: <a8e1da0810140142g633486br12c2799b2fa1670e@mail.gmail.com> <48F6133D.1070508@gmail.com> <a8e1da0810152334x6c596f88i1fd74548dc166f3a@mail.gmail.com>
-In-Reply-To: <a8e1da0810152334x6c596f88i1fd74548dc166f3a@mail.gmail.com>
+Received: from perninha.conectiva.com.br ([200.140.247.100]:52397 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099AbYJaSDT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 14:03:19 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 0/6] rtl8187: Reduce delays to reduce startup time
+Date: Fri, 31 Oct 2008 16:03:28 -0200
+Cc: John Linville <linville@tuxdriver.com>,
+	htl10@users.sourceforge.net, Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net> <490B3798.40206@lwfinger.net>
+In-Reply-To: <490B3798.40206@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
-Message-Id: <200810250040.24324.rjw@sisk.pl> (sfid-20081025_003559_995045_4D3846CB)
+Message-Id: <200810311603.29317.herton@mandriva.com.br> (sfid-20081031_190324_619410_1D0A05A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, 16 of October 2008, Dave Young wrote:
-> On Wed, Oct 15, 2008 at 11:58 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
-> > On 10/14/2008 10:42 AM, Dave Young wrote:
-> >> 1) run wpa_supplicant
-> >> 2) ctrl + C
-> >> 3) goto 1)
-> >
-> > It doesn't happen here. How many iterations in average you need to reproduce this?
-> >
+On Friday 31 October 2008 14:51:36 Larry Finger wrote:
+> The current version of the rtl8187 driver contains a large number of msleep()
+> commands that cause initialization to take a long time. This series of patches
+> include revisions that were found by looking at the latest version of the
+> vendor's driver (rtl8187B_linux_26.1036.0708.2008), and others that were found
+> to be OK with testing.
 > 
-> About 15 times for me,
-> BTW, wpa_gui running while testing
+> To keep each of the patches relatively small, these changes are split into 6
+> parts. The changes in them are as follows:
+> 
+> 1. Remove all delays of greater than 1 sec.
+> 2. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_ofdm().
+> 3. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_cck().
+> 4. Remove the msleep(1) that immediately follow calls to rtl8225_write().
+> 5. Remove the nsleep() calls from rtl8187_write_phy(), rtl8225_write_bitbang(),
+> and rtl8225_write_8051().
+> 6. Remove the msleep(10) that preceeds a channel change.
+> 
+> Before these changes, routine rtl8187b_init_hw() took 15.82 sec to execute. It
+> now takes 3.76 sec.
 
-Is this a regression from 2.6.26?
+I tested here the 6 patches, and didn't found problems with them (testing with
+two 8187 models, one an old 8187L and other an 8187B).
 
-Rafael
+Tested-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+
+--
+[]'s
+Herton
