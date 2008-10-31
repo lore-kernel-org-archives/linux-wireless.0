@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:26500 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754717AbYJOTbc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44243 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751474AbYJaSxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 15:31:32 -0400
-Received: by ik-out-1112.google.com with SMTP id c30so2145724ika.5
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2008 12:31:30 -0700 (PDT)
-Message-ID: <48F6450E.7040809@gmail.com> (sfid-20081015_213137_263284_DB346BE1)
-Date: Wed, 15 Oct 2008 20:31:26 +0100
+	Fri, 31 Oct 2008 14:53:34 -0400
+Date: Fri, 31 Oct 2008 10:54:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?T25kxZllaiBLdcSNZXJh?= <ondrej.kucera@centrum.cz>
+Cc: yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, jikos@suse.cz
+Subject: Re: PROBLEM: Led for wifi blinking all the time
+Message-ID: <20081031145434.GB4310@tuxdriver.com> (sfid-20081031_195337_543316_90516B5C)
+References: <490A5D39.1090605@centrum.cz>
 MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-CC: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] orinoco: reload firmware on resume
-References: <200810111816.26370.arvidjaar@mail.ru> <48F0E58F.6000900@gmail.com> <200810121636.34373.arvidjaar@mail.ru>
-In-Reply-To: <200810121636.34373.arvidjaar@mail.ru>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <490A5D39.1090605@centrum.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
-> On Saturday 11 October 2008, Dave wrote:
->>> -	int err;
->>> +	int err = 0;
-> 
-> Fixed version attached.
+On Fri, Oct 31, 2008 at 02:19:53AM +0100, Ond=C5=99ej Ku=C4=8Dera wrote=
+:
+> Hello,
+>
+> this is my first kernel bug report ever so I'm not 100% sure about th=
+e =20
+> protocol but I'll try my best...
+>
+> After upgrading to 2.6.27 the wifi led starts blinking right after =20
+> connecting to the network and then continues blinking even when there=
+'s =20
+> no network traffic at all. This wasn't happening before, the led used=
+ to =20
+> be just "on" when I was connected but not generating any traffic.
+>
+> Up to kernel 2.6.26.5 (the last 2.6.26.* kernel in my distribution - =
+=20
+> ArchLinux) the behavior was correct, the problem first occurred with =
+=20
+> 2.6.27 and is present up to 2.6.27.4 (the last of 2.6.27.* I've tried=
+). =20
+> The driver used is iwl3945, the corresponding line from lspci:
+> 03:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG =20
+> Network Connection (rev 02)
+>
+> If any other information is relevant, please tell me and I'll try to =
+=20
+> provide it, too.
 
-Acked-by: David Kilroy <kilroyd@googlemail.com>
+I'm pretty sure this is how the iwlwifi team wants the LEDs to work...
 
-
-Note that if the firmware download fails the card won't work because we no longer  allocate a fid. However even if we were to allocate a fid the driver flags would be inconsistent with the firmware capabilities, and the driver would just encounter a bunch of errors.
-
-We should probably think about how we can fall back to the inbuilt firmware after a failed firmware download - but this can be done separately.
-
-
-Regards,
-
-Dave.
+John
+--=20
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
