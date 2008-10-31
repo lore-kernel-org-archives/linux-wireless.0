@@ -1,43 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:21407 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756099AbYJQTdS (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43420 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703AbYJaVyb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2008 15:33:18 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so718326rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2008 12:33:18 -0700 (PDT)
-Message-ID: <b6c5339f0810171233v59e80b4bxce7bdb049e38a5f7@mail.gmail.com> (sfid-20081017_213323_611511_B33D3EA7)
-Date: Fri, 17 Oct 2008 15:33:18 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "John Daiker" <daikerjohn@gmail.com>
-Subject: Re: [PATCH] ath5k: reduce checkpatch.pl errors
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <48F8E470.8000103@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48F8E470.8000103@gmail.com>
+	Fri, 31 Oct 2008 17:54:31 -0400
+Subject: Re: [PATCH] mac80211: disable BSSID filtering for mesh interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <490b7d94.18038e0a.6666.ffff8d72@mx.google.com> (sfid-20081031_225017_677715_6F575E2C)
+References: <490b7d94.18038e0a.6666.ffff8d72@mx.google.com>
+	 (sfid-20081031_225017_677715_6F575E2C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ygGcKVmyrYPBQy9G4PQ5"
+Date: Fri, 31 Oct 2008 22:54:30 +0100
+Message-Id: <1225490070.3550.2.camel@johannes.berg> (sfid-20081031_225435_956380_9B679AD2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 17, 2008 at 3:16 PM, John Daiker <daikerjohn@gmail.com> wrote:
-> A few changes to reduce checkpatch.pl errors in the ath5k driver.  For the
-> most part, I only fixed cosmetic things, and left the actual 'code flow'
-> untouched (hopefully)!
->
-> Diff is against wireless-testing HEAD.
->
-> Signed-off-by: John Daiker <daikerjohn@gmail.com>
 
-Please post patches inline if you can; they are easier to review that way.
+--=-ygGcKVmyrYPBQy9G4PQ5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-One easy way to convince yourself (and us) that there are no code changes
-is to compile with and without the patch and compare resulting binaries
-for no differences.
+On Fri, 2008-10-31 at 14:50 -0700, Andrey Yurovsky wrote:
+> Mesh interfaces are currently opened with the FIF_ALLMULTI rx filter flag=
+ set,
+> however there is no BSSID in mesh so BSSID filtering should be disabled b=
+y
+> setting the FIF_OTHER_BSS flag as well.  Also explicitly call=20
+> ieee80211_configure_filter for mesh.
+>=20
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+> Signed-off-by: Javier Cardona <javier@cozbit.com>
 
-All that said, I reviewed this one and it looks good...
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Reviewed-by: Bob Copeland <me@bobcopeland.com>
+> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+> index cde1452..6c3901a 100644
+> --- a/net/mac80211/iface.c
+> +++ b/net/mac80211/iface.c
+> @@ -229,8 +229,14 @@ static int ieee80211_open(struct net_device *dev)
+>  		if (res)
+>  			goto err_stop;
+> =20
+> -		if (ieee80211_vif_is_mesh(&sdata->vif))
+> +		if (ieee80211_vif_is_mesh(&sdata->vif)) {
+> +			local->fif_other_bss++;
+> +			netif_addr_lock_bh(local->mdev);
+> +			ieee80211_configure_filter(local);
+> +			netif_addr_unlock_bh(local->mdev);
+> +
+>  			ieee80211_start_mesh(sdata);
+> +		}
+>  		changed |=3D ieee80211_reset_erp_info(sdata);
+>  		ieee80211_bss_info_change_notify(sdata, changed);
+>  		ieee80211_enable_keys(sdata);
+> @@ -456,8 +462,15 @@ static int ieee80211_stop(struct net_device *dev)
+>  		/* fall through */
+>  	case NL80211_IFTYPE_MESH_POINT:
+>  		if (ieee80211_vif_is_mesh(&sdata->vif)) {
+> -			/* allmulti is always set on mesh ifaces */
+> +			/* other_bss and allmulti are always set on mesh
+> +			 * ifaces */
+> +			local->fif_other_bss--;
+>  			atomic_dec(&local->iff_allmultis);
+> +
+> +			netif_addr_lock_bh(local->mdev);
+> +			ieee80211_configure_filter(local);
+> +			netif_addr_unlock_bh(local->mdev);
+> +
+>  			ieee80211_stop_mesh(sdata);
+>  		}
+>  		/* fall through */
+>=20
+>=20
+>=20
 
--- 
-Bob Copeland %% www.bobcopeland.com
+--=-ygGcKVmyrYPBQy9G4PQ5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJC36SAAoJEKVg1VMiehFYOpwP/2go0dD9q91Dx3fvo47sJMpF
+jB0hZyTobI70mPPAfwTNPkQm/iyFgWVIoFb5AfiAaq1HdRSnPpu6toEpFofk/0H/
+WTcRWm9avKJqWBvsJgFB507pTFKYg/WkoJYAXovd6LapjEwaO73PHmqh2mpBqUq9
+azVfTx63Ru8MJLRFnwrqsnh3FRuFbzqiS/ymSeojoGOuzIr1wASJO2AHPprlbhoc
+kNQSRfzRRb1kO813aWX1LfWAvIUCRXEtkbhOvgB61lZ4osPdLvoaPmXQ8QmYVrOU
+ztaffqqK6vGbaKMvNgcuy2MT/rKxYG/ohp5A5Md1CpjymRxg4qMk4rp9lf4OZRJq
+KzPpFK+3nniS2Oz3iXvb7dK+LBUB4nOZu1x0F+2JqUeBD8h+qHv7G1A2RYDt8kOe
+r2hAR/or9+J6lMk8J4JXVv/kFLesLrJ4vR+cjoAqfpXL2qeJvVNU7ppf/dSwdXFl
+O+8ufm2yIwIZzhvBUbPgeeAACkOPWadnv0SxhZ8AC6f1ZR8C4/TE3gudK3m98VXn
+3jkQlceCNoMNN5u8zh7ZL1M56RkOFrjQpOEKx42WU6liX6pXzVx/dw50SyLEdCnm
+It5KIss1VHsXd7TyM+lsQv5COoEtgs+sAemMdixO6e+ZEgeV44CoUepa+y8DAB6z
+spU0te4FAgGb16JhrYts
+=ir4k
+-----END PGP SIGNATURE-----
+
+--=-ygGcKVmyrYPBQy9G4PQ5--
+
