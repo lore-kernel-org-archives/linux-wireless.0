@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53408 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44246 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601AbYJWO6j (ORCPT
+	with ESMTP id S1750842AbYJaSxi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2008 10:58:39 -0400
-Date: Thu, 23 Oct 2008 10:55:39 -0400
+	Fri, 31 Oct 2008 14:53:38 -0400
+Date: Fri, 31 Oct 2008 14:22:07 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Luis.Rodriguez@atheros.com,
-	Jouni.Malinen@atheros.com, johannes@sipsolutions.net,
-	tomasw@gmail.com, Sujith <Sujith.Manoharan@atheros.com>
-Subject: Re: [PATCH v3] mac80211: Re-enable aggregation
-Message-ID: <20081023145102.GA5816@tuxdriver.com> (sfid-20081023_165843_352872_3053938F)
-References: <18685.37489.577735.596008@gargle.gargle.HOWL> <43e72e890810222010w215b278bya788e0c94250b517@mail.gmail.com>
+To: Wang Chen <wangchen@cn.fujitsu.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	NETDEV <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 16/18] netdevice zd1201: Convert directly reference of
+	netdev->priv to netdev->ml_priv
+Message-ID: <20081031182207.GD4310@tuxdriver.com> (sfid-20081031_195342_478105_13C5BFB0)
+References: <48C0A219.2030004@cn.fujitsu.com> <48C0A7A0.9030200@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890810222010w215b278bya788e0c94250b517@mail.gmail.com>
+In-Reply-To: <48C0A7A0.9030200@cn.fujitsu.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2008 at 08:10:42PM -0700, Luis R. Rodriguez wrote:
-> On Tue, Oct 21, 2008 at 1:27 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> > Wireless HW without any dedicated queues for aggregation
-> > do not need the ampdu_queues mechanism present right now
-> > in mac80211. Since mac80211 is still incomplete wrt TX MQ
-> > changes, do not allow aggregation sessions for drivers that
-> > set ampdu_queues.
-> >
-> > This is only an interim hack until Intel fixes the requeue issue.
-> >
-> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> > Signed-off-by: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+On Fri, Sep 05, 2008 at 11:29:36AM +0800, Wang Chen wrote:
+> We have some reasons to kill netdev->priv:
+> 1. netdev->priv is equal to netdev_priv().
+> 2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
+>    netdev_priv() is more flexible than netdev->priv.
+> But we cann't kill netdev->priv, because so many drivers reference to it
+> directly.
 > 
-> Poke.
+> OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
+> and I want to kill netdev->priv later, I decided to convert all the direct
+> reference of netdev->priv first.
+> 
+> Different to readonly reference of netdev->priv, in this driver, netdev->priv
+> was changed. I use netdev->ml_priv to replace netdev->priv.
+> 
+> Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
 
-Just waiting to see comments from those who understand aggregation
-better than I do...
+I don't think this is the right approach for this driver.  Alternative
+patch to follow...
 
 John
 -- 
