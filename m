@@ -1,109 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:47129 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753511AbYJBTMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2008 15:12:54 -0400
-Subject: Re: w35und wifi driver for linux-staging
-From: Dan Williams <dcbw@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Pavel Machek <pavel@suse.cz>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, kaszak@gmail.com,
-	lcostantino@gmail.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20081001125248.GA29661@infradead.org>
-References: <20081001123656.GA30942@elf.ucw.cz>
-	 <20081001125248.GA29661@infradead.org>
-Content-Type: text/plain
-Date: Thu, 02 Oct 2008 15:12:04 -0400
-Message-Id: <1222974724.12505.7.camel@72-58-93-37.area3.spcsdns.net> (sfid-20081002_211257_781181_1A1F4DED)
-Mime-Version: 1.0
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:36934 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753507AbYJaQvi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 12:51:38 -0400
+Message-ID: <490B3798.40206@lwfinger.net> (sfid-20081031_175200_871183_5399553E)
+Date: Fri, 31 Oct 2008 09:51:36 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: htl10@users.sourceforge.net,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/6] rtl8187: Reduce delays to reduce startup time
+References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>
+In-Reply-To: <49088F7D.8020102@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-10-01 at 08:52 -0400, Christoph Hellwig wrote:
-> On Wed, Oct 01, 2008 at 02:36:56PM +0200, Pavel Machek wrote:
-> > +source "drivers/net/wireless/winbond/Kconfig"
-> 
-> winbond is a little too generic, please use the same name as the driver
-> name for the directory.
-> 
-> > @@ -0,0 +1,6 @@
-> > +config W35UND
-> > +	tristate "Winbond driver"
-> > +	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL && !4KSTACKS
-> > +	---help---
-> > +	  This is highly experimental driver for winbond wifi card on some Kohjinsha notebooks
-> > +	  Check http://code.google.com/p/winbondport/ for new version
-> 
-> Again, please give the option a useful name, and a useful description
-> including mentioning the actual chip name in there.
-> 
-> Also the !4KSTACKS dependency looks rather odd.
+The current version of the rtl8187 driver contains a large number of msleep()
+commands that cause initialization to take a long time. This series of patches
+include revisions that were found by looking at the latest version of the
+vendor's driver (rtl8187B_linux_26.1036.0708.2008), and others that were found
+to be OK with testing.
 
-Whatever in the driver uses lots of stack space needs to be fixed, plain
-an simple...  no excuse for that.
+To keep each of the patches relatively small, these changes are split into 6
+parts. The changes in them are as follows:
 
-Dan
+1. Remove all delays of greater than 1 sec.
+2. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_ofdm().
+3. Remove the msleep(1) that immediately follow calls to rtl8225_write_phy_cck().
+4. Remove the msleep(1) that immediately follow calls to rtl8225_write().
+5. Remove the nsleep() calls from rtl8187_write_phy(), rtl8225_write_bitbang(),
+and rtl8225_write_8051().
+6. Remove the msleep(10) that preceeds a channel change.
 
-> > diff --git a/drivers/net/wireless/winbond/Makefile b/drivers/net/wireless/winbond/Makefile
-> > new file mode 100644
-> > index 0000000..4682dd1
-> > --- /dev/null
-> > +++ b/drivers/net/wireless/winbond/Makefile
-> > @@ -0,0 +1,17 @@
-> > +	BASE_DIR=./winbondport
-> > +	DRIVER_DIR=./winbondport/linux
-> > +
-> > +obj-m := w35und.o
-> > +
-> > +w35und-objs := $(DRIVER_DIR)/wbusb.o $(DRIVER_DIR)/wb35reg.o $(DRIVER_DIR)/wb35rx.o $(DRIVER_DIR)/wb35tx.o \
-> > +	$(BASE_DIR)/mds.o \
-> > +	$(BASE_DIR)/mlmetxrx.o \
-> > +	$(BASE_DIR)/mto.o $(BASE_DIR)/phy_calibration.o $(BASE_DIR)/reg.o \
-> > +	$(BASE_DIR)/rxisr.o \
-> > +	$(BASE_DIR)/sme_api.o $(BASE_DIR)/wbhal.o $(BASE_DIR)/wblinux.o  \
-> > +
-> > +
-> > +obj-$(CONFIG_W35UND) += w35und.o
-> 
-> This is not a proper Makefile, and having these files in subdirectories
-> is not really a good idea either.  So move all files into one directory
-> and write a proper Makefile for it:
-> 
-> w35und-y	+= wbusb.o wb35reg.o wb35rx.o wb35tx.o mds.o mlmetxrx.o \
-> 		   mto.o phy_calibration.o reg.o rxisr.o sme_api.o wbhal.o \
-> 		   wblinux.o
-> 
-> obj-$(CONFIG_W35UND)	+= w35und.o
-> 
-> > diff --git a/drivers/net/wireless/winbond/winbondport/Makefile b/drivers/net/wireless/winbond/winbondport/Makefile
-> > new file mode 100644
-> > index 0000000..b03564c
-> > --- /dev/null
-> > +++ b/drivers/net/wireless/winbond/winbondport/Makefile
-> > @@ -0,0 +1,5 @@
-> > +#
-> > +# Makefile for the Winbond wireless networking driver
-> > +#
-> > +	
-> > +include $(TOPDIR)/Rules.make
-> 
-> This looks like some 2.4 leftover.
-> 
-> > diff --git a/drivers/net/wireless/winbond/winbondport/SVN_CHANGELOG b/drivers/net/wireless/winbond/winbondport/SVN_CHANGELOG
-> > new file mode 100644
-> 
-> should not be in the git tree.
-> 
-> > +++ b/drivers/net/wireless/winbond/winbondport/VersionNote.txt
-> 
-> neither.
-> 
-> 
-> No comments on the code now, I don't think I want to look at it..
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Before these changes, routine rtl8187b_init_hw() took 15.82 sec to execute. It
+now takes 3.76 sec.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+
 
