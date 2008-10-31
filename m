@@ -1,70 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59367 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752302AbYJ2MBp (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60387
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751614AbYJaGuU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2008 08:01:45 -0400
-Subject: Re: linux-next: Tree for October 28
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-ia64@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	linux-wireless@vger.kernel.org, Mark Fasheh <mfasheh@suse.com>,
-	Joel Becker <Joel.Becker@oracle.com>
-In-Reply-To: <20081028220741.f5d331ba.akpm@linux-foundation.org> (sfid-20081029_060823_839692_3F85A756)
-References: <20081028183055.fbcf5420.sfr@canb.auug.org.au>
-	 <20081028220741.f5d331ba.akpm@linux-foundation.org>
-	 (sfid-20081029_060823_839692_3F85A756)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-e088Dj2w9G7nGlmS0qHw"
-Date: Wed, 29 Oct 2008 13:01:21 +0100
-Message-Id: <1225281681.5439.7.camel@johannes.berg> (sfid-20081029_130155_559488_573EE9AE)
+	Fri, 31 Oct 2008 02:50:20 -0400
+Date: Thu, 30 Oct 2008 23:49:55 -0700 (PDT)
+Message-Id: <20081030.234955.245404696.davem@davemloft.net> (sfid-20081031_075036_174167_CF34D9FB)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-10-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20081029231855.GD3485@tuxdriver.com>
+References: <20081029231855.GD3485@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 29 Oct 2008 19:18:55 -0400
 
---=-e088Dj2w9G7nGlmS0qHw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Another quick round of fixes intended for 2.6.28...
+> 
+> This includes fixes for bugs 11749 and 11845, fixes a reset-related
+> regression in ath5k, fixes a Kconfig-related error for rt2x00, and
+> fixes some sparse warnings and a possible buffer overrun in libertas.
+> Also, it corrects a spelling error and marks Bob Copeland as an
+> ath5k maintainer.
+> 
+> Please let me know if there are problems!
 
-On Tue, 2008-10-28 at 22:07 -0700, Andrew Morton wrote:
-
-> and wireless needs some Kconfig help.  Please don't just break other
-> architecture's build like this.
->=20
-> drivers/staging/wlan-ng/wlan_compat.h:136:3: #error "No CPU identified!"
-> drivers/staging/wlan-ng/wlan_compat.h:695:6: warning: "WLAN_CPU_FAMILY" i=
-s not defined
-> drivers/staging/wlan-ng/wlan_compat.h:699:6: warning: "WLAN_CPU_FAMILY" i=
-s not defined
-
-This isn't wireless, it's staging. Talk to Greg, not to linux-wireless.
-
-johannes
-
---=-e088Dj2w9G7nGlmS0qHw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJCFCNAAoJEKVg1VMiehFYFIkP/0YGJO/fu/libSPrwysAyYt6
-O7RS96vjcjqEdde7OzwLQuJar75KdTe2XWg2CVv/SgNlFZRwGVKwqcZ1Yc08b7EW
-SNatkJdsZ08tkmdRIzb2UZ+91efB8+Id+vOV/H4pRxLghznB7QII7z94QwUq9JAi
-XkPGMvMNXq5jjv8dZNZNtFXTTyVnPNuLQLcMZli6GWVBUHEpguJxz7N+oLDU/wz1
-rs7HQOQ3bWv2NxgRUKJZUaF6NWzWpCy3pqazxDmR1yTq9kewrjGB/akDYzJjt9p/
-fTXl5AVYVLhrppxL4aQhWZYdMYYOagxM3/m5QTf63ivllBa+R4wsse4UPU+qdVlN
-o7sIZZhV0AaMDQOx6SzNgxj0Yh1ruSrWlH1DBHbVzHaAsT7IvgEe9zAOrcPNmitS
-9AJQtqhM17gfxXuaFFtO9Q3+WJ5Bz4njwh7RfxQsNgulp95T7DsQtIfPghe7vBmG
-l4VaQZbVw4d9n+6akB0sdz0bS4YOZWRI5TAZMCbrNyQV1mUJEuIvd+b3k6ANo+i6
-3K2FJk3VF8+yb6gC5PkfliRgc45Q5g4qLjqy36vJAi5/8cKPEQn3Ke1BDxUpUhF9
-sl7m7hfU3P+WXMxrqwQMkJ2Qx4BVHNnvzWhM3PnNltnx2aZGcPtRZpuecrCa0Ytx
-olvxtw+c2oLCtwOv3EVh
-=JjNC
------END PGP SIGNATURE-----
-
---=-e088Dj2w9G7nGlmS0qHw--
-
+Pulled, thanks a lot John.
