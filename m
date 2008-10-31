@@ -1,104 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42447 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751771AbYJ0QiO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2008 12:38:14 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2008 09:38:14 -0700
-Date: Mon, 27 Oct 2008 09:38:12 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Arjan van de Ven <arjan@infradead.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: bisected: 2.6.28-rc broke my iwl4965 wireless
-Message-ID: <20081027163812.GB6377@tesla> (sfid-20081027_173820_318230_ACAD18C7)
-References: <20081025222208.1d2a2c8b@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20081025222208.1d2a2c8b@infradead.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44241 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbYJaSxc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 14:53:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlagn: avoid sleep in softirq context
+Date: Fri, 31 Oct 2008 13:58:24 -0400
+Message-Id: <1225475904-25184-1-git-send-email-linville@tuxdriver.com> (sfid-20081031_195336_378707_3338F8C3)
+In-Reply-To: <1225399265.1115.356.camel@rc-desk>
+References: <1225399265.1115.356.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 25, 2008 at 10:22:08PM -0700, Arjan van de Ven wrote:
-> [resend, first version got corrupted]
-> 
-> 2.6.28-rc1 broke my (intel 4965) wireless, and I've bisected it down to
-> the commit below..... something's fishy with this...
-> 
-> 
-> b2e1b30290539b344cbaff0d9da38012e03aa347 is first bad commit
-> commit b2e1b30290539b344cbaff0d9da38012e03aa347
-> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Date:   Tue Sep 9 23:19:48 2008 -0700
-> 
->     cfg80211: Add new wireless regulatory infrastructure
-> 
->     This adds the new wireless regulatory infrastructure. The
->     main motiviation behind this was to centralize regulatory
->     code as each driver was implementing their own regulatory solution,
->     and to replace the initial centralized code we have where:
-> 
->     * only 3 regulatory domains are supported: US, JP and EU
->     * regulatory domains can only be changed through module parameter
->     * all rules were built statically in the kernel
-> 
->     We now have support for regulatory domains for many countries
->     and regulatory domains are now queried through a userspace agent
->     through udev allowing distributions to update regulatory rules
->     without updating the kernel.
-> 
->     Each driver can regulatory_hint() a regulatory domain
->     based on either their EEPROM mapped regulatory domain value to a
->     respective ISO/IEC 3166-1 country code or pass an internally built
->     regulatory domain. We also add support to let the user set the
->     regulatory domain through userspace in case of faulty EEPROMs to
->     further help compliance.
-> 
->     Support for world roaming will be added soon for cards capable of
->     this.
-> 
->     For more information see:
-> 
->     http://wireless.kernel.org/en/developers/Regulatory/CRDA
-> 
->     For now we leave an option to enable the old module parameter,
->     ieee80211_regdom, and to build the 3 old regdomains statically
->     (US, JP and EU). This option is CONFIG_WIRELESS_OLD_REGULATORY.
->     These old static definitions and the module parameter is being
->     scheduled for removal for 2.6.29. Note that if you use this
->     you won't make use of a world regulatory domain as its pointless.
->     If you leave this option enabled and if CRDA is present and you
->     use US or JP we will try to ask CRDA to update us a regulatory
->     domain for us.
-> 
->     Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+__ieee80211_tasklet_handler -> __ieee80211_rx ->
+	__ieee80211_rx_handle_packet -> ieee80211_invoke_rx_handlers ->
+	ieee80211_rx_h_decrypt -> ieee80211_crypto_tkip_decrypt ->
+	ieee80211_tkip_decrypt_data -> iwl4965_mac_update_tkip_key ->
+	iwl_scan_cancel_timeout -> msleep
 
-Arjan,
+Ooops!
 
-so newer kernels require CRDA and iw to set regulatory domain,
-otherwise only the world regulatory domain is set so if your AP
-is not in the world regulatory domain it won't connect. To enable
-the other channels you need CRDA and iw installed.
+Avoid the sleep by changing iwl_scan_cancel_timeout with
+iwl_scan_cancel and simply returning on failure if the scan persists.
+This will cause hardware decryption to fail and we'll handle a few more
+frames with software decryption.
 
-http://wireless.kernel.org/en/developers/Regulatory/CRDA
-http://wireless.kernel.org/en/users/Documentation/iw
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-Drivers can also hint to CRDA as per the API a country and in those cases
-only CRDA is required, however right now only zd1211rw is using this
-hint, work on the other drivers is in progress so for now calling iw
-for your country is required. What is expected is in the future
-wpa_supplicant will carry a country config element and it hints it.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 89450e3..5cca7bf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3247,7 +3247,12 @@ static void iwl4965_mac_update_tkip_key(struct ieee80211_hw *hw,
+ 		return;
+ 	}
+ 
+-	iwl_scan_cancel_timeout(priv, 100);
++	if (iwl_scan_cancel(priv)) {
++		/* cancel scan failed, just live w/ bad key and rely
++		   briefly on SW decrpyption */
++		IWL_DEBUG_MAC80211("leave - failed to cancel scan\n");
++		return;
++	}
+ 
+ 	key_flags |= (STA_KEY_FLG_TKIP | STA_KEY_FLG_MAP_KEY_MSK);
+ 	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
+-- 
+1.5.4.3
 
-Additionally if the old behaviour is desired for now (until distributions
-catch up and add CRDA) CONFIG_WIRELESS_OLD_REGULATORY can be enabled
-and you'll get the old behaviour of defaulting to country "US".
-
-Please let me know if there are any issues.
-
-  Luis
