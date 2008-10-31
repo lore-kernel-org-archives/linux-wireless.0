@@ -1,75 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx27.mail.ru ([194.67.23.23]:64502 "EHLO mx27.mail.ru"
+Received: from mail.atheros.com ([12.36.123.2]:47715 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752040AbYJPC46 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2008 22:56:58 -0400
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: Dave <kilroyd@googlemail.com>
-Subject: Re: pull request: wireless-2.6 2008-10-14
-Date: Thu, 16 Oct 2008 06:56:48 +0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20081015013204.GH3349@tuxdriver.com> <48F6419B.80104@gmail.com>
-In-Reply-To: <48F6419B.80104@gmail.com>
+	id S1752496AbYJaCFj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2008 22:05:39 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 19:05:39 -0700
+Date: Thu, 30 Oct 2008 19:05:37 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Steven Rostedt <rostedt@goodmis.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	reinette chatre <reinette.chatre@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux-Kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [MEMO] ftrace suckage++
+Message-ID: <20081031020537.GJ21459@tesla> (sfid-20081031_030545_220556_35511E65)
+References: <43e72e890810301445r665a0139g752fb1c97069fe59@mail.gmail.com> <alpine.DEB.1.10.0810302149330.21031@gandalf.stny.rr.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1334082.JPPloevjKT";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200810160656.52910.arvidjaar@mail.ru> (sfid-20081016_045702_251873_96382EB3)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <alpine.DEB.1.10.0810302149330.21031@gandalf.stny.rr.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1334082.JPPloevjKT
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, Oct 30, 2008 at 06:54:00PM -0700, Steven Rostedt wrote:
+> 
+> On Thu, 30 Oct 2008, Luis R. Rodriguez wrote:
+> 
+> > As johannes pointed out to me the culprit to the e1000e corruption was
+> > determined to be ftrace related [1]. Well it seems I hit an oops with
+> > ftrace using iwlagn after a simple load of the module using
+> > wireless-testing. I'm not sure if john's tree yet has ftrace fixes.
+> > Both Fedora 10 and Ubuntu 8.10 had dynamic ftrace enabled so users on
+> > these first kernels and using compat-wireless may run into this so
+> > just putting this out there. I'll can check for this flag in
+> > compat-wireless for now and bitch/exit if its enabled unless someone
+> > has a better idea.
+> >
+> > [1] http://lwn.net/Articles/303390/
+> >
+> > Oops, using wireless-testing and iwlagn with these options enabled:
+> >
+> > CONFIG_HAVE_FTRACE=y
+> > CONFIG_HAVE_DYNAMIC_FTRACE=y
+> > CONFIG_FTRACE=y
+> > CONFIG_DYNAMIC_FTRACE=y
+> >
+> 
+> Yes, ftrace in 2.6.27 is known to be broken. That's why 2.6.27.1 labeled
+> it as such. What is currently in Linus's 2.6.28 git tree is a completely
+> rewritten version of the dynamic ftracer, which addresses all of the
+> issues that caused breakage in the 2.6.27 release.
+> 
+> Do not use the 2.6.27 dynamic ftracer, it is known bad. 2.6.28 is fine. If
+> you find issues with what is currently in 2.6.28, please let me know.
+> There is currently some, "make allyesconfig" breakage that ftrace caused
+> on archs other than x86,ppc and sparc, but patches to fix them are
+> in queue to Linus.
 
-On Wednesday 15 October 2008, Dave wrote:
-> John W. Linville wrote:
-> > Here is a nice little batch of wireless fixes in time for 2.6.28-rc1.
-> > There are also a few USB ID additions as well.  I think this is all
-> > mostly obvious, and hopefully still acceptable at this stage.
-> >=20
-> > Please let me know if there are problems!
->=20
-> > Andrey Borzenkov (1):
-> >       orinoco: fix unsafe locking in orinoco_cs_resume
->=20
-> Hi John,
->=20
-> Just wanted to check whether you'd seen/intend to apply the orinoco patch=
- Andrey posted in <http://marc.info/?l=3Dlinux-kernel&m=3D122365972026045&w=
-=3D4>. It fixes a regression (vs 2.6.26) when using 4k stacks.
->=20
+OK then in that case if *and only if* on 27 and if dynamic tracer is enabled
+I'll set compat stuff to simply bail out at compile time.
 
-well ... this is not a regression actually as the bug is triggered by
-new code that was added in 2.6.28. Still it is valid bug fix for new code
-in 2.6.28 and IMHO quite appropriate. We better add it earlier so it
-gets more testing.
+Thanks,
 
-Personally I think that two other patches should go in as well. They have
-low regression potential (they apply to new code only; existing functionali=
-ty
-is not touched); and they make downloadable FW (and hence WPA) more
-usable.
-
-> Or whether you'd prefer that patch resent with an updated subject?
->=20
-
-Me too?
-
---nextPart1334082.JPPloevjKT
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkj2rXEACgkQR6LMutpd94yTrwCffZANYzqPlEiliXBSExX+Og1y
-po0AoMeN+dTC9ubC6CZY30F3k9LuZDr2
-=9C1z
------END PGP SIGNATURE-----
-
---nextPart1334082.JPPloevjKT--
+  Luis
