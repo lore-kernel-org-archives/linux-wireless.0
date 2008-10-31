@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37666 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752501AbYJDIsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Oct 2008 04:48:21 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 2/8] b43: remove remaining b43_radio_{read|write}16 from main.c
-Date: Sat, 4 Oct 2008 10:47:57 +0200
-Cc: Harvey Harrison <harvey.harrison@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1223066926.6512.27.camel@brick> <48E6C8A1.1060404@lwfinger.net>
-In-Reply-To: <48E6C8A1.1060404@lwfinger.net>
-MIME-Version: 1.0
-Message-Id: <200810041047.58066.mb@bu3sch.de> (sfid-20081004_104834_461206_D9B48AAC)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from senator.holtmann.net ([87.106.208.187]:59737 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042AbYJaIls (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 04:41:48 -0400
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Message-Id: <DAD31980-B029-46D4-A687-9B0426899853@holtmann.org> (sfid-20081031_094155_311410_C5C63BA6)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+In-Reply-To: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: Still 4965 issues with wireless-testing
+Date: Fri, 31 Oct 2008 09:41:43 +0100
+References: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 04 October 2008 03:36:33 Larry Finger wrote:
-> Harvey Harrison wrote:
-> > The 16 is not necessary anymore and is defnined to read/write.
-> > 
-> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> > ---
-> >  drivers/net/wireless/b43/main.c |    4 ++--
-> >  1 files changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> > index 6df9b65..cc1f4a9 100644
-> > --- a/drivers/net/wireless/b43/main.c
-> > +++ b/drivers/net/wireless/b43/main.c
-> > @@ -789,7 +789,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
-> >  	b43_write16(dev, 0x0502, 0x0030);
-> >  
-> >  	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
-> > -		b43_radio_write16(dev, 0x0051, 0x0017);
-> > +		b43_radio_write(dev, 0x0051, 0x0017);
-> >  	for (i = 0x00; i < max_loop; i++) {
-> >  		value = b43_read16(dev, 0x050E);
-> >  		if (value & 0x0080)
-> > @@ -809,7 +809,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
-> >  		udelay(10);
-> >  	}
-> >  	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
-> > -		b43_radio_write16(dev, 0x0051, 0x0037);
-> > +		b43_radio_write(dev, 0x0051, 0x0037);
-> >  
-> >  	write_unlock(&wl->tx_lock);
-> >  	spin_unlock_irq(&wl->irq_lock);
-> 
-> NACK. The two extra characters are absolutely harmless, but they do
-> contain useful information. In addition, who knows if a future
-> Broadcom device starts using 32-bit read/writes.
+Hi again,
 
-Ok, there are valid reasons for it, there are valid reasons against it...
+> so besides the point that the Ubuntu 8.10 kernel has a broken driver  
+> for the Intel 4965 cards which will crash my X61 after less than one  
+> minute uptime when it connects to my access point, I have my dmesg  
+> full with warnings from the latest wireless-testing kernel.
+>
+> I know that we have discussed this before and Johannes' patch at  
+> least turns it into warnings instead of killing my system  
+> completely, but I am still surprised why this hasn't been fixed.
 
-Can we just agree now that we're not going to apply _any_ cleanups to the
-PHY code, please? (So I revoke my mail from Sat Oct  4 00:35:35 2008)
+so this becomes more and more annoying. I get this WARN_ON now  
+multiple times pre minute. Only the first few minutes after loading  
+the firmware everything is okay and then it keeps filling my dmesg.  
+And on top of that, I now see these:
 
-Actual bugfixes are welcome, of course.
+__ratelimit: 1189 callbacks suppressed
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+__ratelimit: 57695 callbacks suppressed
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
+__ratelimit: 3345 callbacks suppressed
+iwlagn: Can not allocate SKB buffers
+iwlagn: Can not allocate SKB buffers
 
--- 
-Greetings Michael.
+What is going on here? This is a normal setup and nothing fancy.  
+Access point is N-Capable from D-Link btw.
+
+Regards
+
+Marcel
+
