@@ -1,98 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:26435 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbYJUGCP (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:54854 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751536AbYJaQwl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2008 02:02:15 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so380899yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2008 23:02:13 -0700 (PDT)
-Message-ID: <43e72e890810202302j6cdf5be0m127846b502f395a0@mail.gmail.com> (sfid-20081021_080219_974158_1D276E3A)
-Date: Mon, 20 Oct 2008 23:02:13 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: New Regulatory Domain Api.
-Cc: "Marcel Holtmann" <holtmann@linux.intel.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224566923.24677.289.camel@debian.sh.intel.com>
+	Fri, 31 Oct 2008 12:52:41 -0400
+Message-ID: <490B37D7.7080503@lwfinger.net> (sfid-20081031_175256_483223_A785E7A7)
+Date: Fri, 31 Oct 2008 09:52:39 -0700
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: htl10@users.sourceforge.net
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/6] rtl8187: Remove OFDM delays
+References: <838057.50079.qm@web23102.mail.ird.yahoo.com> <49088F7D.8020102@lwfinger.net>
+In-Reply-To: <49088F7D.8020102@lwfinger.net>
 Content-Type: text/plain; charset=UTF-8
-References: <20081015112517.GF6509@tesla>
-	 <1224487340.24677.192.camel@debian.sh.intel.com>
-	 <1224520999.9386.72.camel@californication>
-	 <1224552899.24677.245.camel@debian.sh.intel.com>
-	 <43e72e890810201842o44db616ekd8d5bc66cd1006f@mail.gmail.com>
-	 <1224554323.24677.248.camel@debian.sh.intel.com>
-	 <43e72e890810201937l3be24156t2172590138fda132@mail.gmail.com>
-	 <1224561748.24677.274.camel@debian.sh.intel.com>
-	 <43e72e890810202158m197b52a8y98844fdc9e1ccfd8@mail.gmail.com>
-	 <1224566923.24677.289.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 10:28 PM, Zhu Yi <yi.zhu@intel.com> wrote:
-> On Mon, 2008-10-20 at 21:58 -0700, Luis R. Rodriguez wrote:
->> I do not agree. Consider old devices with built-in regulatory rules in
->> hardware which go out of date. The regulatory framework accounts for
->> such flaws and *helps* to remain compliant.
->
-> That's another story. For these devices, you can do what you want in
-> user space. But for other correct behavioured devices, bypass regulatory
-> framework is necessary. Because you have to trust the driver anyway.
+Routine rtl8225_write_phy_ofdm() calls rtl8225_write_phy(), which concludes
+with a sleep of 1 msec; therefore a call to rtl8225_write_phy_ofdm()
+immediately followed by an msleep(1) is not needed.
 
-We do trust the driver and we do let it say "I know better". More on this below.
+Signed-off-by: Larry Finger <Larry.Finger@larry.finger>
+Tested-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+---
 
->> >To solve the problem,
->>
->> What problem?
->
-> The problem a driver is not able to give a SKU as regulatory hint.
+John,
 
-That is not the problem though as there is a solution to that.
+This is 2.6.29 material.
 
-The issue at hand, which started this 60-message thread, involves a
-built-in Intel single band 2 GHz card and an external dual band card.
-The issue is the dual band card's regulatory_hint() is ignored as the
-current infrastructure ignores secondary requests and the first one
-did not define a set of rules for 5 GHz as part of its
-regulatory_hint(). A resolution to this is to have crda called for the
-country the user is in. The reason this solves the issue at and is
-hardware which is designed to not allow channels out of its EEPROM
-won't be enabled as these channels are not registered and channels
-which *should* be disabled based on the user's location *are*
-disabled. The 5 GHz channels on the dual band card which *should* be
-allowed are allowed. Additionally we do allow drivers to be cocky
-about regulatory and to claim they know better through reg_notifier().
+Larry
+---
 
->> > I'd
->> > suggest a special regdomain named EVERYTHING. In the case the driver
->> or
->> > firmware enforces reg_rules, the core wireless reg_rules are safe to
->> be
->> > bypassed.
->>
->> You mean we add a flag to allow cfg80211 to ignore applying its
->> central regulatory definition to a wiphy? I disagree -- consider
->> outdated set of rules.
->
-> It has nothing to do with ourdated rules. If a reg_rule is "wrong" in a
-> device, it will still be wrong after the regulatory_hint() call.
+Index: wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187_rtl8225.c
++++ wireless-testing/drivers/net/wireless/rtl8187_rtl8225.c
+@@ -375,50 +375,48 @@ static void rtl8225_rf_init(struct ieee8
 
-If a hardware device has a built in channel 14 and a user in the US
-buys this device and goes to the US he/she should disable this channel
-to remain compliant. Under your current suggestion this is not dealt
-with. That is what I mean by handling outdated rules.
+ 	for (i = 0; i < ARRAY_SIZE(rtl8225_agc); i++) {
+ 		rtl8225_write_phy_ofdm(dev, 0xB, rtl8225_agc[i]);
+-		msleep(1);
+ 		rtl8225_write_phy_ofdm(dev, 0xA, 0x80 + i);
+-		msleep(1);
+ 	}
 
-> The current regulatory framework 100% trust the alpha2 or regdomain the
-> driver provided. Thus it should also trust a hint from driver "bypass
-> your regulatory check, I'll handle it myself".
+ 	msleep(1);
 
-Agreed 100%, and this is why we allowed a reg_notfier() callback so
-bossy drivers can review the information and say "Let me review this..
-I think I know better, so I'm in charge here".
+-	rtl8225_write_phy_ofdm(dev, 0x00, 0x01); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x01, 0x02); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x02, 0x42); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x03, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x04, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x05, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x06, 0x40); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x07, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x08, 0x40); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x0a, 0x09); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x0c, 0x01); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x10, 0x84); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x11, 0x06); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x12, 0x20); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x13, 0x20); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x14, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x15, 0x40); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x16, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x17, 0x40); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x18, 0xef); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x19, 0x19); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1a, 0x20); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1b, 0x76); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1c, 0x04); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1e, 0x95); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1f, 0x75); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x20, 0x1f); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x21, 0x27); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x22, 0x16); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x24, 0x46); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x25, 0x20); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x27, 0x88); msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x00, 0x01);
++	rtl8225_write_phy_ofdm(dev, 0x01, 0x02);
++	rtl8225_write_phy_ofdm(dev, 0x02, 0x42);
++	rtl8225_write_phy_ofdm(dev, 0x03, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x04, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x05, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x06, 0x40);
++	rtl8225_write_phy_ofdm(dev, 0x07, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x08, 0x40);
++	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe);
++	rtl8225_write_phy_ofdm(dev, 0x0a, 0x09);
++	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80);
++	rtl8225_write_phy_ofdm(dev, 0x0c, 0x01);
++	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3);
++	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38);
++	rtl8225_write_phy_ofdm(dev, 0x10, 0x84);
++	rtl8225_write_phy_ofdm(dev, 0x11, 0x06);
++	rtl8225_write_phy_ofdm(dev, 0x12, 0x20);
++	rtl8225_write_phy_ofdm(dev, 0x13, 0x20);
++	rtl8225_write_phy_ofdm(dev, 0x14, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x15, 0x40);
++	rtl8225_write_phy_ofdm(dev, 0x16, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x17, 0x40);
++	rtl8225_write_phy_ofdm(dev, 0x18, 0xef);
++	rtl8225_write_phy_ofdm(dev, 0x19, 0x19);
++	rtl8225_write_phy_ofdm(dev, 0x1a, 0x20);
++	rtl8225_write_phy_ofdm(dev, 0x1b, 0x76);
++	rtl8225_write_phy_ofdm(dev, 0x1c, 0x04);
++	rtl8225_write_phy_ofdm(dev, 0x1e, 0x95);
++	rtl8225_write_phy_ofdm(dev, 0x1f, 0x75);
++	rtl8225_write_phy_ofdm(dev, 0x20, 0x1f);
++	rtl8225_write_phy_ofdm(dev, 0x21, 0x27);
++	rtl8225_write_phy_ofdm(dev, 0x22, 0x16);
++	rtl8225_write_phy_ofdm(dev, 0x24, 0x46);
++	rtl8225_write_phy_ofdm(dev, 0x25, 0x20);
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90);
++	rtl8225_write_phy_ofdm(dev, 0x27, 0x88);
 
-  Luis
+ 	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[2 * 4]);
+ 	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[2 * 4 + 2]);
+@@ -459,7 +457,7 @@ static void rtl8225_rf_init(struct ieee8
+
+ 	/* RX antenna default to A */
+ 	rtl8225_write_phy_cck(dev, 0x10, 0x9b); msleep(1);	/* B: 0xDB */
+-	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); msleep(1);	/* B: 0x10 */
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90);		/* B: 0x10 */
+
+ 	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
+ 	msleep(1);
+@@ -736,53 +734,51 @@ static void rtl8225z2_rf_init(struct iee
+
+ 	for (i = 0; i < ARRAY_SIZE(rtl8225_agc); i++) {
+ 		rtl8225_write_phy_ofdm(dev, 0xB, rtl8225_agc[i]);
+-		msleep(1);
+ 		rtl8225_write_phy_ofdm(dev, 0xA, 0x80 + i);
+-		msleep(1);
+ 	}
+
+ 	msleep(1);
+
+-	rtl8225_write_phy_ofdm(dev, 0x00, 0x01); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x01, 0x02); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x02, 0x42); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x03, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x04, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x05, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x06, 0x40); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x07, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x08, 0x40); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x0a, 0x08); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x0c, 0x01); msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x00, 0x01);
++	rtl8225_write_phy_ofdm(dev, 0x01, 0x02);
++	rtl8225_write_phy_ofdm(dev, 0x02, 0x42);
++	rtl8225_write_phy_ofdm(dev, 0x03, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x04, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x05, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x06, 0x40);
++	rtl8225_write_phy_ofdm(dev, 0x07, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x08, 0x40);
++	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe);
++	rtl8225_write_phy_ofdm(dev, 0x0a, 0x08);
++	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80);
++	rtl8225_write_phy_ofdm(dev, 0x0c, 0x01);
+ 	rtl8225_write_phy_ofdm(dev, 0x0d, 0x43);
+-	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x10, 0x84); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x11, 0x07); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x12, 0x20); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x13, 0x20); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x14, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x15, 0x40); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x16, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x17, 0x40); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x18, 0xef); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x19, 0x19); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1a, 0x20); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1b, 0x15); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1c, 0x04); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1d, 0xc5); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1e, 0x95); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x1f, 0x75); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x20, 0x1f); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x21, 0x17); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x22, 0x16); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x23, 0x80); msleep(1); //FIXME: not needed?
+-	rtl8225_write_phy_ofdm(dev, 0x24, 0x46); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x25, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x27, 0x88); msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3);
++	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38);
++	rtl8225_write_phy_ofdm(dev, 0x10, 0x84);
++	rtl8225_write_phy_ofdm(dev, 0x11, 0x07);
++	rtl8225_write_phy_ofdm(dev, 0x12, 0x20);
++	rtl8225_write_phy_ofdm(dev, 0x13, 0x20);
++	rtl8225_write_phy_ofdm(dev, 0x14, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x15, 0x40);
++	rtl8225_write_phy_ofdm(dev, 0x16, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x17, 0x40);
++	rtl8225_write_phy_ofdm(dev, 0x18, 0xef);
++	rtl8225_write_phy_ofdm(dev, 0x19, 0x19);
++	rtl8225_write_phy_ofdm(dev, 0x1a, 0x20);
++	rtl8225_write_phy_ofdm(dev, 0x1b, 0x15);
++	rtl8225_write_phy_ofdm(dev, 0x1c, 0x04);
++	rtl8225_write_phy_ofdm(dev, 0x1d, 0xc5);
++	rtl8225_write_phy_ofdm(dev, 0x1e, 0x95);
++	rtl8225_write_phy_ofdm(dev, 0x1f, 0x75);
++	rtl8225_write_phy_ofdm(dev, 0x20, 0x1f);
++	rtl8225_write_phy_ofdm(dev, 0x21, 0x17);
++	rtl8225_write_phy_ofdm(dev, 0x22, 0x16);
++	rtl8225_write_phy_ofdm(dev, 0x23, 0x80);
++	rtl8225_write_phy_ofdm(dev, 0x24, 0x46);
++	rtl8225_write_phy_ofdm(dev, 0x25, 0x00);
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90);
++	rtl8225_write_phy_ofdm(dev, 0x27, 0x88);
+
+ 	rtl8225_write_phy_ofdm(dev, 0x0b, rtl8225z2_gain_bg[4 * 3]);
+ 	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225z2_gain_bg[4 * 3 + 1]);
+@@ -823,7 +819,7 @@ static void rtl8225z2_rf_init(struct iee
+
+ 	/* RX antenna default to A */
+ 	rtl8225_write_phy_cck(dev, 0x10, 0x9b); msleep(1);	/* B: 0xDB */
+-	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); msleep(1);	/* B: 0x10 */
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90);		/* B: 0x10 */
+
+ 	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
+ 	msleep(1);
+@@ -889,10 +885,10 @@ static void rtl8225z2_b_rf_init(struct i
+ 	rtl818x_iowrite32(priv, (__le32 *)0xFFFC, (7 << 12) | (3 << 8) | 28);
+ 	rtl818x_iowrite8(priv, &priv->map->ACM_CONTROL, 0);
+
+-	rtl8225_write_phy_ofdm(dev, 0x97, 0x46); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0xa4, 0xb6); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x85, 0xfc); msleep(1);
+-	rtl8225_write_phy_cck(dev, 0xc1, 0x88); msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x97, 0x46);
++	rtl8225_write_phy_ofdm(dev, 0xa4, 0xb6);
++	rtl8225_write_phy_ofdm(dev, 0x85, 0xfc);
++	rtl8225_write_phy_cck(dev, 0xc1, 0x88);
+ }
+
+ static void rtl8225_rf_stop(struct ieee80211_hw *dev)
+
+
+
+
