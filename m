@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:49213 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752153AbYJYLVt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2008 07:21:49 -0400
-Date: Sat, 25 Oct 2008 13:21:47 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-Message-ID: <20081025112147.GA12252@Chamillionaire.breakpoint.cc> (sfid-20081025_132155_219418_F2F1F56B)
-References: <4902DEBB.3050205@hotmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:57090 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752487AbYJaVXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 17:23:04 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: linux-pm@lists.linux-foundation.org
+Subject: Re: [linux-pm] [RFC PATCH 1/2] orinoco: Use PM notifier to cache firmware for use during resume
+Date: Fri, 31 Oct 2008 22:27:38 +0100
+Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
+	David Kilroy <kilroyd@googlemail.com>,
+	orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <1225415743-28209-1-git-send-email-kilroyd@googlemail.com> <1225415743-28209-2-git-send-email-kilroyd@googlemail.com> <200810312037.00936.arvidjaar@mail.ru>
+In-Reply-To: <200810312037.00936.arvidjaar@mail.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <4902DEBB.3050205@hotmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200810312227.39057.rjw@sisk.pl> (sfid-20081031_222313_873887_C3FF1A1E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Shaddy Baddah | 2008-10-25 19:54:19 [+1100]:
+On Friday, 31 of October 2008, Andrey Borzenkov wrote:
+> On Friday 31 October 2008, David Kilroy wrote:
+> > When preparing for either suspend or hibernation, load the necessary
+> > firmware from userspace.
+> > 
+> > Upon error or resume, release the firmware.
+> > 
+> > Works for both Agere and Symbol firmware.
+> > 
+> > Signed-off by: David Kilroy <kilroyd@gmail.com>
+> 
+> This is on top of my old patch; was it ever accepted anywhere? I guess
+> it should be rediffed against clean tree.
+> 
+> > @@ -621,7 +620,7 @@ symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
+> >  	ret = hermes_init(hw);
+> >  
+> >  	/* hermes_reset() should return 0 with the secondary firmware */
+> > -	if (secondary && ret != 0)
+> > +	if (secondary && (ret != 0))
+> 
+> Extra parenthesis are redundant, are not they?
+> 
+> >  /********************************************************************/
+> > +/* Power management                                                 */
+> > +/********************************************************************/
+> > +
+> > +static int orinoco_pm_notifier(struct notifier_block *notifier,
+> > +			       unsigned long pm_event,
+> > +			       void *unused)
+> 
+> It probably should be conditional on CONFIG_PM somehow? 
 
-> [  282.300681] Kernel unaligned access at TPC[10129b68] 
-> zd_mac_rx+0x144/0x32c [zd1211rw]
->
-> periodically is reported even after the ifconfig command completes 
-> (seemingly successfully).
->
-> Thanks in advance for your assistance,
-Could you try this patch:
+CONFIG_PM_SLEEP, actually.
 
->From a46436536ab13926ff3f592cfa3c333e06a99a0a Mon Sep 17 00:00:00 2001
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Date: Sat, 25 Oct 2008 13:15:14 +0200
-Subject: [PATCH] wireless/zd1211rw: use  get_unaligned_le16 helper
-
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- drivers/net/wireless/zd1211rw/zd_mac.c |    5 +++--
- drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 4d7b98b..bf4b4a4 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -25,6 +25,7 @@
- #include <linux/usb.h>
- #include <linux/jiffies.h>
- #include <net/ieee80211_radiotap.h>
-+#include <asm/unaligned.h>
- 
- #include "zd_def.h"
- #include "zd_chip.h"
-@@ -662,7 +663,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 *buffer, unsigned int length)
- 			&& !mac->pass_ctrl)
- 		return 0;
- 
--	fc = *(__le16 *)buffer;
-+	fc = get_unaligned_le32(buffer);
- 	need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
- 
- 	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
-@@ -758,7 +759,7 @@ void zd_process_intr(struct work_struct *work)
- 	u16 int_status;
- 	struct zd_mac *mac = container_of(work, struct zd_mac, process_intr);
- 
--	int_status = le16_to_cpu(*(__le16 *)(mac->intr_buffer+4));
-+	int_status = get_unaligned_le16(mac->intr_buffer+4);
- 	if (int_status & INT_CFG_NEXT_BCN) {
- 		if (net_ratelimit())
- 			dev_dbg_f(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index a60ae86..0b27778 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -355,7 +355,7 @@ static inline void handle_regs_int(struct urb *urb)
- 	ZD_ASSERT(in_interrupt());
- 	spin_lock(&intr->lock);
- 
--	int_num = le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
-+	int_num = get_unaligned_le16(urb->transfer_buffer+2);
- 	if (int_num == CR_INTERRUPT) {
- 		struct zd_mac *mac = zd_hw_mac(zd_usb_to_hw(urb->context));
- 		memcpy(&mac->intr_buffer, urb->transfer_buffer,
--- 
-1.6.0.2
+Thanks,
+Rafael
