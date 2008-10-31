@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40886 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755986AbYJMXI0 (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:41480 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751999AbYJaSnB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2008 19:08:26 -0400
-Subject: Re: [RFC/RFT] p54: Fix for big-endian architecture
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1223939151.27769.3.camel@dv>
-References: <48EE20FB.4060700@lwfinger.net>
-	 <1223936680.10113.7.camel@johannes.berg> <1223937392.27118.2.camel@dv>
-	 <200810140055.34065.chunkeey@web.de>  <1223938526.27118.6.camel@dv>
-	 <1223939151.27769.3.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nL92g0xXv0V033HbDxj2"
-Date: Tue, 14 Oct 2008 01:07:51 +0200
-Message-Id: <1223939271.10113.10.camel@johannes.berg> (sfid-20081014_010828_539926_CA333E01)
+	Fri, 31 Oct 2008 14:43:01 -0400
+Date: Fri, 31 Oct 2008 16:43:51 -0200
+From: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	willy@linux.intel.com, lrodriguez@atheros.com
+Subject: Re: ath5k gets lost with eeepc-laptop removal
+Message-ID: <20081031164351.3e4a9d4e@doriath.conectiva> (sfid-20081031_194307_685528_C9F74BF5)
+In-Reply-To: <40f31dec0810311133v65001e59h28cf6946ac3f14e7@mail.gmail.com>
+References: <20081031110502.18e33eba@doriath.conectiva>
+	<40f31dec0810310926p6edd0af5o24d7616eb54c6d0@mail.gmail.com>
+	<20081031151901.2d68c32d@doriath.conectiva>
+	<40f31dec0810311133v65001e59h28cf6946ac3f14e7@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Em Fri, 31 Oct 2008 20:33:43 +0200
+"Nick Kossifidis" <mickflemm@gmail.com> escreveu:
 
---=-nL92g0xXv0V033HbDxj2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+| 2008/10/31 Luiz Fernando N. Capitulino <lcapitulino@mandriva.com.br>:
+| >
+| >  No, it doesn't. It says:
+| >
+| > """
+| > MAC revision 0xffff is not supported!
+| > """
+| >
+| >  And I have realized that I get a flood of 'failed to wakeup'
+| > and 'can't reset the hardware' error messages, just some seconds
+| > after the eeepc-laptop module removal.
+| >
+| 
+| Well it seems that during module removal, card gets no power at all.
+| I don't see any reason for this behaviour. Do you have pci-e hotplug enabled ?
 
-On Mon, 2008-10-13 at 19:05 -0400, Pavel Roskin wrote:
+ Well, the pciehp module is not loaded and the eeepc's function keys
+don't work anyway (this is the original problem I was looking at).
 
-> And if I set rx_status.rate_idx to 0, I still get that badness for the
-> same reason (status->rate_idx =3D 12, sband->n_bitrates =3D 8). =20
-
-??
-That's not right, if you set rx_status.rate_idx to 0 status->rate_idx
-should be 0 :)
-
-> Also, there
-> is another badness reported sometimes:
-
-That's new. On a whim I decided that I wanted to know why config() had a
-return value ;) Will see why p54 makes it fail, maybe there's a mac80211
-bug.
-
-johannes
-
---=-nL92g0xXv0V033HbDxj2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI89TDAAoJEKVg1VMiehFYGYsP/0LoobCquny+hhfVsL/zwG1P
-Gf6ElRBWwcGXRqlAKj8ar/Z8McZ9lnF4M+RdWp9vXNl7fpYNAUXOZ8FHPJVWtJdo
-gU9MCRm+XHTRc6HwuZZFVc9ItS+Kis80uU8nd6ie9cXJvrhN79si+mUeZFbU+Sbo
-I21PgA7FLTp6+lZ7597PmuYsfgwEhN6kx/fDVkpomBP64E91UlCjDlcIfiKGCN/v
-cUluDFSvM1dMUs9zTsvHhuuyBiNfSczqqsOtKhTloVYGFN29g3K6JjfoGKQ9TO+7
-UZpDQ8g+yeqxtmFYm0WC1rah5sbRZw+IWEXuXVVJxc9KK4KnMsNZgcc7xhKRwY78
-R2d7ZvO7+c5MO4Z79eQFNM8K6mxSeGl0rpiMQUkkiKSPrtl2pXqUayYBpc4MwYxq
-TH5ZYMl7GM3211DgHLva1C52CoJpTgER2MyKvMBe7BVDh9nP4JAwjoWquV719jsG
-O8A8IgP5pWmtV/sgZyt+UGq/BgWK1Gh2xE2KyzzM21cMFTmKZceHadgxPFoXZDVU
-88/grCFgJaTo8A8ZdcBrmfvtEIfcXsf/UzLjVY0HN5kURlFsIYHvv+x9KcG9sqAU
-3M50ZISgvhcNl0Bi7n3EHoYcJs3iBKI6D6xm+PeIwJalTNPTzYlsWkK0oHdy6cCO
-Q4ouomfkl8u6jI0w4FAH
-=HVf4
------END PGP SIGNATURE-----
-
---=-nL92g0xXv0V033HbDxj2--
-
+-- 
+Luiz Fernando N. Capitulino
