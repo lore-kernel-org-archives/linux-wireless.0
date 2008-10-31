@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:47606 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757474AbYJEQQu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46890 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbYJaVr3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 12:16:50 -0400
-Subject: Re: at76_usb driver status
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Greg KH <greg@kroah.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, proski@gnu.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20081005151429.GB20764@kroah.com>
-References: <20081002210742.GA27221@kroah.com> <87y713y48r.fsf@nokia.com>
-	 <20081005061603.GB28533@kroah.com>
-	 <1223188872.11272.87.camel@violet.holtmann.net>
-	 <20081005151429.GB20764@kroah.com>
-Content-Type: text/plain
-Date: Sun, 05 Oct 2008 18:17:06 +0200
-Message-Id: <1223223426.11272.101.camel@violet.holtmann.net> (sfid-20081005_181707_598887_329113C2)
+	Fri, 31 Oct 2008 17:47:29 -0400
+Subject: Re: crash with rt61pci when resuming with card ejected
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200810312031.03314.IvDoorn@gmail.com> (sfid-20081031_203107_683292_57F3282C)
+References: <1225361553.3690.3.camel@johannes.berg>
+	 <200810302247.28609.IvDoorn@gmail.com>
+	 <1225408055.3535.1.camel@johannes.berg>
+	 <200810312031.03314.IvDoorn@gmail.com>
+	 (sfid-20081031_203107_683292_57F3282C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MuqqhHhg8+IPdlX1tQ4A"
+Date: Fri, 31 Oct 2008 22:47:24 +0100
+Message-Id: <1225489644.3550.0.camel@johannes.berg> (sfid-20081031_224734_145434_04B5DF12)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
 
-> > > > > In my quest to suck drivers into drivers/staging/ I noticed that the
-> > > > > at76_usb driver is being shipped by both Fedora and Ubuntu in their
-> > > > > kernels.
-> > > > 
-> > > > Yes, that's the original at76_usb driver which has it's own 802.11
-> > > > stack. Pavel Rosking was the maintainer of that driver. Based on the
-> > > > feedback in linux-wireless I then started porting the driver to use
-> > > > mac80211. 
-> > > > 
-> > > > (Maybe I should have renamed the port to something else than at76_usb
-> > > > because having two different drivers with the same name creates
-> > > > confusion.)
-> > > > 
-> > > > > So I was wondering what the status of this driver is, and if I
-> > > > > could/should add it to drivers/staging/?
-> > > > 
-> > > > The original at76_usb is working quite well, but it's unacceptable for
-> > > > the mainline because we cannot have two 802.11 stacks in kernel.
-> > > 
-> > > I understand this, but for the issue of the drivers/staging/ tree, it's
-> > > ok for us to have as many 802.11 stacks in the kernel as we can cram in
-> > > there :)
-> > 
-> > did you start working for Ubuntu now ;)
-> 
-> Heh, no, I'm just, to quote Linux, now the "Maintainer of Crap".  See
-> the lwn.net summary of the kernel summit for details :)
+--=-MuqqhHhg8+IPdlX1tQ4A
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I was mainly referring to Kyle from OLS a year ago ;)
+On Fri, 2008-10-31 at 20:31 +0100, Ivo van Doorn wrote:
 
-Regards
+> Hmm, it looks like CSR base is NULL, after which the H2M_MAILBOX_CSR
+> offset is added to it (0x2100)
+>=20
+> The strange part is thet CSR is freed and set to NULL _after_ the
+> rt2x00lib_remove_dev() call...
+> Oh wait never mind, I get the picture, I missed the "ejected _while_ susp=
+ended"
+> part. I think what is happening is that first the suspend handler is call=
+ed,
+> and during resume not the resume handler but the remove handler is runnin=
+g,
+> and rt2x00 doesn't protect against that.
+>=20
+> Could you check if below patch does the trick? If I am not mistaken only =
+the
+> LED handler actually accesses the hardware to make sure they are off.
 
-Marcel
+Now it crashes in config_pairwise_key or something like that, I can send
+you the image if you want.
 
+johannes
+
+--=-MuqqhHhg8+IPdlX1tQ4A
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJC3zoAAoJEKVg1VMiehFYSiEP/2RzVMHS32MHuUqGRdOgMYZL
+gKN3Diwl4AOemMEJN1OFUxMoH6bPEgUSjmOb0la8gLX+KVfZHMlH4gH8qgJlqzTT
+4RXURgknliTI/iDfoJWA8mEFcOkcALMsSR6N+IYiT7viJuOjMYfIJqLZEBTy+k5E
+I/5akKJ6d/5Ngpjny61T0Krviyes06QtZ6buhC/gMn4yUcvI/mq9NeT1xpRMS7Pg
+XXCN4W0vACo8xb8LWLqyPT+D59cSwyihqMKOm1j0lI/LY+9A2rUlecw9LMo/txZZ
+ySUnP5W2OQk74uQwrMDMY2Juz7/luLqq7ch+3qy5rAyY9+OFLsRL6Ce6OekXGJsK
+AZfstrFThM7c0Ajq1vZbM1vPMRB471pq++83xv7u9FdO4WBu/SKNB9k362cVZHEq
+NDJtrclIWKI2EibA6tLULiIZb5AnnuN2AyDXdjGdcCocKwA7q0QbDW49NKfbgAtW
+ogBCMvN/WhLNoEsb0AjSQ+0H/xJMDeC8gb4GrRze4Lb0uBi2ezbkcxOUr/p5pZzS
+x9BKfCZWtTx0n/o7n1EADd7df3YIF5KQ3QmIIiTxzeq8gYr4+7R66TMJvpJABZlK
+aMruPA4Q8zyI2UIcUeoC/FXfQ/pyAwvqTS3WdqVNbHj2xRou5WAHgF3fXto4fNKb
+3zc3uXf4DCsDDRPNP0cB
+=gvfC
+-----END PGP SIGNATURE-----
+
+--=-MuqqhHhg8+IPdlX1tQ4A--
 
