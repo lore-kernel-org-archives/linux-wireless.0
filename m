@@ -1,66 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53553 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751451AbYJEIio (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:49969 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbYJaVgg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2008 04:38:44 -0400
-Subject: Re: Infinite loop in sta_info_debugfs_add_work().
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Robin Holt <holt@sgi.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <20081005023143.GJ8534@sgi.com>
-References: <20081004103144.GI8534@sgi.com>
-	 <1223165956.24551.76.camel@johannes.berg>  <20081005023143.GJ8534@sgi.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9LV1kJFh3nRhvJ8Wf2JY"
-Date: Sun, 05 Oct 2008 10:38:41 +0200
-Message-Id: <1223195921.24551.79.camel@johannes.berg> (sfid-20081005_103929_421441_3920CD82)
-Mime-Version: 1.0
+	Fri, 31 Oct 2008 17:36:36 -0400
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Message-Id: <C202FD8E-EB1E-417D-8086-7ADFBC72A1D3@holtmann.org> (sfid-20081031_223640_263821_32D6E947)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <1ba2fa240810311409i5203bcccu2b944dcc505deb30@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: Still 4965 issues with wireless-testing
+Date: Fri, 31 Oct 2008 22:36:31 +0100
+References: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com> <DAD31980-B029-46D4-A687-9B0426899853@holtmann.org> <1ba2fa240810310652t351b0b77k819a7e03659503eb@mail.gmail.com> <BF4BAA7D-FEBC-40F7-AE07-D6BBD31A2A0B@holtmann.org> <1ba2fa240810311409i5203bcccu2b944dcc505deb30@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Tomas,
 
---=-9LV1kJFh3nRhvJ8Wf2JY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>>>>> so besides the point that the Ubuntu 8.10 kernel has a broken  
+>>>>> driver for
+>>>>> the Intel 4965 cards which will crash my X61 after less than one  
+>>>>> minute
+>>>>> uptime when it connects to my access point, I have my dmesg full  
+>>>>> with
+>>>>> warnings from the latest wireless-testing kernel.
+>>>>>
+>>>>> I know that we have discussed this before and Johannes' patch at  
+>>>>> least
+>>>>> turns it into warnings instead of killing my system completely,  
+>>>>> but I am
+>>>>> still surprised why this hasn't been fixed.
+>>>>
+>>>> so this becomes more and more annoying. I get this WARN_ON now  
+>>>> multiple
+>>>> times pre minute. Only the first few minutes after loading the  
+>>>> firmware
+>>>> everything is okay and then it keeps filling my dmesg. And on top  
+>>>> of
+>>>> that, I
+>>>> now see these:
+>>>>
+>>>> __ratelimit: 1189 callbacks suppressed
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> __ratelimit: 57695 callbacks suppressed
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> __ratelimit: 3345 callbacks suppressed
+>>>> iwlagn: Can not allocate SKB buffers
+>>>> iwlagn: Can not allocate SKB buffers
+>>>>
+>>>> What is going on here? This is a normal setup and nothing fancy.  
+>>>> Access
+>>>> point is N-Capable from D-Link btw.
+>>>
+>>>
+>>> I have D-Link too I don't see this. What kernel version is this? Is
+>>> this your ubuntu version or wireless-testing?
+>>> Any more data you can provide (.config. slabinfo)
+>>
+>> this is from wireless-testing. The Ubuntu 2.6.27 kernel is totally  
+>> broken.
+>> It will crash the kernel since we are missing the patch to turn  
+>> this into a
+>> warning :)
+>>
+>> Attached is my config. The slabinfo will follow once the SKB errors  
+>> come up
+>> again. It normally takes a few hours before they show. Just resumed  
+>> that
+>> machine.
+>
+> I've downloaded whole moblin last night over 2.6.27.4, it's a bit slow
+> because the missing calibrations but it didn't crashed.
+>
+> I will test your config, your machine is T61  am I right?
 
-On Sat, 2008-10-04 at 21:31 -0500, Robin Holt wrote:
->=20
-> Will try it.  To reproduce, suspend, wait 5 or so minutes, resume,
-> repeat until your keyboard leds stop flashing (usually within 3 or so
-> cycles).  I think this will kick us out of the loop.
+I have a X61 and running the 64-bit version of kernel and userspace.
 
-Thanks; I cannot reproduce so far and I suspend pretty much all the
-time.
+Regards
 
-> As for not configured correctly, I just took the standard Ubuntu config
-> and answered the unconfigured items with their default settings.
-
-Can you show me the DEBUG_FS and MAC80211 entries in your config?
-
-johannes
-
---=-9LV1kJFh3nRhvJ8Wf2JY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI6H0NAAoJEKVg1VMiehFYBeoP/3x/BI3wSbfmMOpnoRFtPk64
-HTCxiUm/61PZKBr0dwRove1VwTX2xSFVf29TGdoXVaNuaUiNXqAZdh9s0U6LI3S0
-h2hbiFgAtuKS9123A3Y80g/vE3q3QLogAiS8KylvXdhYGk1b4nkhUEL9ikXO1Fgk
-T0WB9Fyg2yKbwvGjuM5wuaivYqFbK3F5JuysXYZ/h+YgUZBMiBHJNlUTC/N0Zh60
-VLLpnSCwaw+2/q5s+tFFpJffg++KL9sZnCkXpubme0k8yXVj8D7X/KxI9DZRP+TT
-EnMTwFDDu9NkV5q1tB2tBkQn2ZJcJ6VOPm0I5H3p+GLxwn12TnN6Y5M0gz3E5HJQ
-0E1c37VKRdLix6kAvJb+TKXmaZfQUn1oVm40FZQCOFjxkWOwRRHGr2m7EVOfuif8
-zqm6lptCKNQobG3XJNjtk/WU43Nv2h4znYZgaXLo/MZo4O3rY4dqwY9neAjH+hOA
-ZrAt9jMzFMxN7BjueBzBmofEJlD41GNOAWS6V2qGWvzhuX547vf336VuxUOciGJ4
-yX8O7k/py9ZdgoUrfntAxZGD+k4TRiTxNCu0juPHMCsrntn5CQXsev6lB040h1uk
-rRmtoBlONZYcpmCaFSO0aJv2Wy/uOFf6OmmKhBWGihmmfX/W1ViX9cIp9/+bvD/F
-BEsgjXWx360Bf3GEwXFA
-=V2re
------END PGP SIGNATURE-----
-
---=-9LV1kJFh3nRhvJ8Wf2JY--
+Marcel
 
