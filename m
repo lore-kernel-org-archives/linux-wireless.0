@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:37243 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750719AbYJSH7T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2008 03:59:19 -0400
-Date: Sun, 19 Oct 2008 09:59:16 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-Message-ID: <20081019075916.GA12904@isilmar.linta.de> (sfid-20081019_095946_890304_F65EC16D)
-References: <20081018231046.GA10977@isilmar.linta.de> <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
+Received: from el-out-1112.google.com ([209.85.162.183]:48520 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbYJaSft (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 14:35:49 -0400
+Message-ID: <40f31dec0810311135w76c01729lef1a6c93f18c0095@mail.gmail.com> (sfid-20081031_193554_374046_B37D6F53)
+Date: Fri, 31 Oct 2008 20:35:47 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Matthew Garrett" <mjg59@srcf.ucam.org>
+Subject: Re: ath5k gets lost with eeepc-laptop removal
+Cc: "Alan Jenkins" <alan-jenkins@tuffmail.co.uk>,
+	"Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	willy@linux.intel.com, lrodriguez@atheros.com
+In-Reply-To: <20081031142318.GA9009@srcf.ucam.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20081031110502.18e33eba@doriath.conectiva>
+	 <490B0D75.8020601@tuffmail.co.uk>
+	 <20081031142318.GA9009@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 19, 2008 at 01:30:50AM +0200, Tomas Winkler wrote:
-> On Sun, Oct 19, 2008 at 1:10 AM, Dominik Brodowski
-> > [   37.340901] iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> > [   37.340944] iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4413 ser 0x0000004B
-> > [   37.342349] iwl3945: Can't stop Rx DMA.
-> >
-> > The iwlwifi-3945-1.ucode is the one shipped with Ubuntu's 2.6.24-21-generic
-> > kernel sources (md5sum: 26d10014b09439dc5a8573c2a6f85b0a ). And, as
-> > mentioned in the subject, 2.6.27 or 2.6.26 work perfectly fine.
-> 
-> I think you need new uCode, the API has changed to support stealth APs
-> .... I believe there was some misscommunication...
+2008/10/31 Matthew Garrett <mjg59@srcf.ucam.org>:
+> On Fri, Oct 31, 2008 at 01:51:49PM +0000, Alan Jenkins wrote:
+>
+>> Matthew: I nagged you twice about different consequences of this
+>> commit, so here's a third :).  You said rfkill no longer automatically
+>> frobs on suspend/resume, which was what I was worried about last time.
+>> Should the core code also be modified so it doesn't do anything when
+>> the rfkill device is unregistered?
+>
+> I think there's definitely an argument in favour of that, though I
+> suspect that's a design feature - if you remove the control mechanism
+> for a radio, the safe state for that radio to be in is not transmitting.
+>
 
-Thanks for the hint -- indeed, the newest uCode works both with 2.6.26 and
-current git... so the uCode is backwards compatible, but the kernel code is
-not. Should the uCode be named iwlwifi-3945-2.ucode therefore, to notify the
-users that they need something newer? Or can the kernel code be made to work
-with the old uCode again?
+It doesn't leave the radio in a state that's not transmitting, it
+leaves the card in a state that doesn't get any power at all. I don't
+see any reason for this, how do you define "safe" ?
 
-Thanks,
-	Dominik
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
