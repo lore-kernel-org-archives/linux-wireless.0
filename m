@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36537 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbYJ1XPe (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43127 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602AbYJaTqE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2008 19:15:34 -0400
-Subject: Re: 2.6.28-rc regression: Can't stop Rx DMA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1225225434.1115.217.camel@rc-desk> (sfid-20081028_212343_098446_12401F4B)
-References: <20081018231046.GA10977@isilmar.linta.de>
-	 <1ba2fa240810181630t781468dbi23b103e656f64153@mail.gmail.com>
-	 <20081019075916.GA12904@isilmar.linta.de>
-	 <1225145468.1115.139.camel@rc-desk>
-	 <20081027230326.GA23250@isilmar.linta.de>
-	 <1225154823.1115.149.camel@rc-desk>
-	 <20081028194323.GA14303@isilmar.linta.de>
-	 <1225225434.1115.217.camel@rc-desk> (sfid-20081028_212343_098446_12401F4B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7NY/aK1cTUxaA63vKii1"
-Date: Wed, 29 Oct 2008 00:15:31 +0100
-Message-Id: <1225235731.1369.8.camel@johannes.berg> (sfid-20081029_001538_795100_9A7867CB)
-Mime-Version: 1.0
+	Fri, 31 Oct 2008 15:46:04 -0400
+Date: Fri, 31 Oct 2008 15:35:04 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Anna Neal <anna@cozybit.com>, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org, Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC] libertas: iwpriv commands to configure fine grained
+	wake-on-(w)lan
+Message-ID: <20081031193504.GF4310@tuxdriver.com> (sfid-20081031_204611_205737_1CB8278A)
+References: <48fe2917.131e640a.7efb.7d0b@mx.google.com> <1224620028.15561.10.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1224620028.15561.10.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 21, 2008 at 04:13:47PM -0400, Dan Williams wrote:
+> On Mon, 2008-10-20 at 16:49 -0700, Anna Neal wrote:
+> > View README for new API.
+> > 
+> > This patch implements the userspace interface for fine-grained configuration of
+> > wake-on-(w)lan.  We are aware that iwpriv's are discouraged, but this is a
+> > vendor-specific feature that's currently being used in the OLPC project.
+> > 
+> > We are aware that all iwprivs were removed from this driver.  These used the old
+> > API for iwprivs.  We've implemented this iwpriv as a private handler which relies
+> > on wireless extensions to do bounds checking and copying to/from user memory.
+> > Specific suggestions on how to make this more palatable for upstream inclusion
+> > are welcome.  If iwprivs are completely unacceptable then this can serve as a
+> > public reference for interfacing with these features.
+> 
+> IMHO we should be adding the functionality where's it's needed, which is
+> that ethtool, which doesn't have a verbose enough syntax for it's WOL
+> support.  If ethtool's existing WOL got fixed up to support these
+> use-cases, then we wouldn't need iwpriv commands, we wouldn't have
+> duplicate functionality running around, and everyone gets a pony.  Lets
+> kick off that discussion...
+> 
+> Jeff: could something like this syntax be added to ethtool, or maybe
+> discreet commands instead of one?  Thoughts?
 
---=-7NY/aK1cTUxaA63vKii1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Did anything come out of this discussion?  I'd prefer not to add new
+iwpriv stuff...
 
-On Tue, 2008-10-28 at 13:23 -0700, reinette chatre wrote:
-
-> (adding linux-wireless so I am keeping the log below)
->=20
-> This helps a lot - thanks!
->=20
-> Could you please recompile wireless with CONFIG_WIRELESS_OLD_REGULATORY?
-
-Btw, any idea why this helps? Shouldn't the driver just work, albeit
-with a restricted channel set? Are we messing something up like no
-usable channels at all? (I fixed a bug like that IIRC)
-
-johannes
-
---=-7NY/aK1cTUxaA63vKii1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJB50PAAoJEKVg1VMiehFY7uQQAMRUq5myQeLOTkfzW9/868UG
-eebn2+0miMQswgEyF2GDkxd5ewIzuFhUjAuON30GPCPrCozGFQtJho7tX9cYeG1T
-wYLkGwvbNmSPucsB1KX2pr5WsiClyLxwmn/ozef9woWO7BblCul7pGZwsHvVkcI/
-qZwsGnvSaLWVqfdlitJAMiIkKqKaZw1J5Zq6AVrMUCn5FY2ZbklgNHkmuV3Q3089
-UFnecpm+l9HxtnxcmN/I5VahSjEd2dd4LoDQAJKKIb0MV8Gk1A9/AV+gjZ/qAeOB
-tX5T5HRCkwWFD4CG5MUs/dMjUp2xyY1+0ddDmvwOE8S48TNq2wSSEqKLh0bMROaM
-EIWhMYjit5dXmQIoIUy36l3uD2dF/16U+HpB9I7auoovmqtT0LloY6+uhbEsYU7e
-Lnd41kKfIzPBWookuDyVBKTC9mHBf0uoH822sCxqzRX46WnXBGNTqzlLXT3gjmo5
-dj1XmFwiUVsDUEhN000+So6Sw86sBwBddk2yLXLSQiPQaELcHmyYXNsy8FOTFpLr
-iQ0ArnZdkRuGrlPp8U6iFXuD9RUNxwfBIzEyCaSfblQRVWQ6TAU+WV38AFUnRUPp
-eoDWFuUqBQpTPgUL+/iAHPcKPdtP19hMK6CF1UbfH1AjZ31k63EXkCv/X/a7IWxI
-r4HcvNfWsF6QMi20mxVU
-=zBzD
------END PGP SIGNATURE-----
-
---=-7NY/aK1cTUxaA63vKii1--
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
