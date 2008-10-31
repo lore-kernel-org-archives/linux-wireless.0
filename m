@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50417 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753211AbYJACZx (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:19697 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753101AbYJaBPs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 22:25:53 -0400
-Received: from sapphire.tuxdriver.com ([70.61.120.61] helo=linville-t43.local)
-	by smtp.tuxdriver.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1KkrPU-0007rJ-Af
-	for linux-wireless@vger.kernel.org; Tue, 30 Sep 2008 22:25:52 -0400
-Received: from linville-t43.local (linville-t43.local [127.0.0.1])
-	by linville-t43.local (8.14.2/8.14.2) with ESMTP id m912Frbm002198
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Sep 2008 22:21:13 -0400
-Received: (from linville@localhost)
-	by linville-t43.local (8.14.2/8.14.2/Submit) id m912Fq6n002197
-	for linux-wireless@vger.kernel.org; Tue, 30 Sep 2008 22:15:52 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/5] wireless: single escape_essid implementation and related cleanups
-Date: Tue, 30 Sep 2008 22:15:47 -0400
-Message-Id: <1222827352-1978-1-git-send-email-linville@tuxdriver.com> (sfid-20081001_042555_515889_ED71740D)
-In-Reply-To: <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
-References: <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
+	Thu, 30 Oct 2008 21:15:48 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so363356eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2008 18:15:46 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Cc: arvidjaar@mail.ru, linux-pm@lists.linux-foundation.org,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC PATCH 0/2] orinoco: Don't keep cached firmware around permanently
+Date: Fri, 31 Oct 2008 01:15:41 +0000
+Message-Id: <1225415743-28209-1-git-send-email-kilroyd@googlemail.com> (sfid-20081031_021553_096622_24ABDEBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a repost of my escape_essid consolidation.  Also included are
-some suggested changes from the original post and a few cleanups.  There
-is still plenty to be done -- of course, this isn't really high priority
-work either...
+The recent patch to load orinoco firmware correctly on resume simply
+kept the firmware in RAM for the entire time the module was loaded, and
+only applied to Agere firmware.
 
-[PATCH 1/5] wireless: consolidate on a single escape_essid implementation
-[PATCH 2/5] wireless: remove NETWORK_EMPTY_ESSID flag
-[PATCH 3/5] wireless: escape_ssid should handle non-printables
-[PATCH 4/5] wireless: use individual buffers for printing ssid values
-[PATCH 5/5] wireless: avoid some net/ieee80211.h vs. linux/ieee80211.h conflicts
+The first patch uses the new power management notifiers to load and
+release the firmware prior to suspend and after resume (for both Agere
+and Symbol). I'm not an expert on where suspend/resume is headed, so I'd
+appreciate any advice from linux-pm on whether this is the preferred way
+to do things.
 
-Comments welcome!
+The second patch makes the spectrum_cs driver actually invoke this
+functionality during resume.
 
-John
---
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+David Kilroy (2):
+  orinoco: Use PM notifier to cache firmware for use during resume
+  orinoco: Resume spectrum_cs in the same way as orinoco_cs
+
+ drivers/net/wireless/orinoco.c     |  140 ++++++++++++++++++++++++++++--------
+ drivers/net/wireless/orinoco.h     |    8 ++-
+ drivers/net/wireless/spectrum_cs.c |   21 +++++-
+ 3 files changed, 135 insertions(+), 34 deletions(-)
+
