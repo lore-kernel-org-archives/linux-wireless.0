@@ -1,134 +1,435 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:56402 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755157AbYJ3PDO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2008 11:03:14 -0400
-Message-Id: <20081030150209.478795959@localhost> (sfid-20081030_160317_160720_ADA593C9)
-References: <20081030145920.233178987@localhost>
-Date: Thu, 30 Oct 2008 16:59:22 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCHv2 2/5] nl80211: Add basic rate configuration for AP mode
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44249 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751771AbYJaSxj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 14:53:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	NETDEV <netdev@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wang Chen <wangchen@cn.fujitsu.com>
+Subject: [PATCH] netdevice zd1201: Convert directly reference of netdev->priv to netdev_priv()
+Date: Fri, 31 Oct 2008 14:48:16 -0400
+Message-Id: <1225478896-28987-1-git-send-email-linville@tuxdriver.com> (sfid-20081031_195352_614454_EAD286A0)
+In-Reply-To: <20081031182207.GD4310@tuxdriver.com>
+References: <20081031182207.GD4310@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new attribute, NL80211_ATTR_BSS_BASIC_RATES, that can be used with
-NL80211_CMD_SET_BSS for userspace (e.g., hostapd) to set which rates are
-in the basic rate set.
+We have some reasons to kill netdev->priv:
+1. netdev->priv is equal to netdev_priv().
+2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
+   netdev_priv() is more flexible than netdev->priv.
+But we cann't kill netdev->priv, because so many drivers reference to it
+directly.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
+and I want to kill netdev->priv later, I decided to convert all the direct
+reference of netdev->priv first.
 
-Index: wireless-testing/include/linux/nl80211.h
-===================================================================
---- wireless-testing.orig/include/linux/nl80211.h	2008-10-28 19:50:57.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2008-10-28 19:57:07.000000000 +0200
-@@ -243,6 +243,9 @@
-  *	(u8, 0 or 1)
-  * @NL80211_ATTR_BSS_SHORT_SLOT_TIME: whether short slot time enabled
-  *	(u8, 0 or 1)
-+ * @NL80211_ATTR_BSS_BASIC_RATES: basic rates, array of basic
-+ *	rates in format defined by IEEE 802.11 7.3.2.2 but without the length
-+ *	restriction (at most %NL80211_MAX_SUPP_RATES).
-  *
-  * @NL80211_ATTR_HT_CAPABILITY: HT Capability information element (from
-  *	association request when used with NL80211_CMD_NEW_STATION)
-@@ -307,6 +310,8 @@
+(Original patch posted by Wang Chen <wangchen@cn.fujitsu.com> w/ above
+changelog but using dev->ml_priv.  That doesn't seem appropriate
+to me for this driver, so I've revamped it to use netdev_priv()
+instead. -- JWL)
+
+Cc: Wang Chen <wangchen@cn.fujitsu.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/zd1201.c |  115 ++++++++++++++++++++---------------------
+ 1 files changed, 56 insertions(+), 59 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
+index b16ec6e..1652d67 100644
+--- a/drivers/net/wireless/zd1201.c
++++ b/drivers/net/wireless/zd1201.c
+@@ -745,7 +745,7 @@ static int zd1201_join(struct zd1201 *zd, char *essid, int essidlen)
  
- 	NL80211_ATTR_MESH_PARAMS,
+ static int zd1201_net_open(struct net_device *dev)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
  
-+	NL80211_ATTR_BSS_BASIC_RATES,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -318,6 +323,7 @@
-  * here
+ 	/* Start MAC with wildcard if no essid set */
+ 	if (!zd->mac_enabled)
+@@ -783,7 +783,7 @@ static int zd1201_net_stop(struct net_device *dev)
   */
- #define NL80211_ATTR_HT_CAPABILITY NL80211_ATTR_HT_CAPABILITY
-+#define NL80211_ATTR_BSS_BASIC_RATES NL80211_ATTR_BSS_BASIC_RATES
+ static int zd1201_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	unsigned char *txbuf = zd->txdata;
+ 	int txbuflen, pad = 0, err;
+ 	struct urb *urb = zd->tx_urb;
+@@ -833,7 +833,7 @@ static int zd1201_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
  
- #define NL80211_MAX_SUPP_RATES			32
- #define NL80211_MAX_SUPP_REG_RULES		32
-Index: wireless-testing/include/net/cfg80211.h
-===================================================================
---- wireless-testing.orig/include/net/cfg80211.h	2008-10-28 19:59:34.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2008-10-28 20:00:43.000000000 +0200
-@@ -280,11 +280,16 @@
-  *	(0 = no, 1 = yes, -1 = do not change)
-  * @use_short_slot_time: Whether the use of short slot time is allowed
-  *	(0 = no, 1 = yes, -1 = do not change)
-+ * @basic_rates: basic rates in IEEE 802.11 format
-+ *	(or NULL for no change)
-+ * @basic_rates_len: number of basic rates
-  */
- struct bss_parameters {
- 	int use_cts_prot;
- 	int use_short_preamble;
- 	int use_short_slot_time;
-+	u8 *basic_rates;
-+	u8 basic_rates_len;
- };
+ static void zd1201_tx_timeout(struct net_device *dev)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
  
- /**
-Index: wireless-testing/net/mac80211/cfg.c
-===================================================================
---- wireless-testing.orig/net/mac80211/cfg.c	2008-10-28 20:01:20.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2008-10-28 20:20:42.000000000 +0200
-@@ -1048,6 +1048,24 @@
- 		changed |= BSS_CHANGED_ERP_SLOT;
- 	}
+ 	if (!zd)
+ 		return;
+@@ -848,7 +848,7 @@ static void zd1201_tx_timeout(struct net_device *dev)
+ static int zd1201_set_mac_address(struct net_device *dev, void *p)
+ {
+ 	struct sockaddr *addr = p;
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	int err;
  
-+	if (params->basic_rates) {
-+		int i, j;
-+		u32 rates = 0;
-+		struct ieee80211_local *local = wiphy_priv(wiphy);
-+		struct ieee80211_supported_band *sband =
-+			wiphy->bands[local->oper_channel->band];
+ 	if (!zd)
+@@ -865,21 +865,21 @@ static int zd1201_set_mac_address(struct net_device *dev, void *p)
+ 
+ static struct net_device_stats *zd1201_get_stats(struct net_device *dev)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 
+ 	return &zd->stats;
+ }
+ 
+ static struct iw_statistics *zd1201_get_wireless_stats(struct net_device *dev)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 
+ 	return &zd->iwstats;
+ }
+ 
+ static void zd1201_set_multicast(struct net_device *dev)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	struct dev_mc_list *mc = dev->mc_list;
+ 	unsigned char reqbuf[ETH_ALEN*ZD1201_MAXMULTI];
+ 	int i;
+@@ -899,7 +899,7 @@ static void zd1201_set_multicast(struct net_device *dev)
+ static int zd1201_config_commit(struct net_device *dev, 
+     struct iw_request_info *info, struct iw_point *data, char *essid)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 
+ 	return zd1201_mac_reset(zd);
+ }
+@@ -914,7 +914,7 @@ static int zd1201_get_name(struct net_device *dev,
+ static int zd1201_set_freq(struct net_device *dev,
+     struct iw_request_info *info, struct iw_freq *freq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short channel = 0;
+ 	int err;
+ 
+@@ -939,7 +939,7 @@ static int zd1201_set_freq(struct net_device *dev,
+ static int zd1201_get_freq(struct net_device *dev,
+     struct iw_request_info *info, struct iw_freq *freq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short channel;
+ 	int err;
+ 
+@@ -955,7 +955,7 @@ static int zd1201_get_freq(struct net_device *dev,
+ static int zd1201_set_mode(struct net_device *dev,
+     struct iw_request_info *info, __u32 *mode, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short porttype, monitor = 0;
+ 	unsigned char buffer[IW_ESSID_MAX_SIZE+2];
+ 	int err;
+@@ -1017,7 +1017,7 @@ static int zd1201_set_mode(struct net_device *dev,
+ static int zd1201_get_mode(struct net_device *dev,
+     struct iw_request_info *info, __u32 *mode, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short porttype;
+ 	int err;
+ 
+@@ -1093,7 +1093,7 @@ static int zd1201_get_range(struct net_device *dev,
+ static int zd1201_get_wap(struct net_device *dev,
+     struct iw_request_info *info, struct sockaddr *ap_addr, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	unsigned char buffer[6];
+ 
+ 	if (!zd1201_getconfig(zd, ZD1201_RID_COMMSQUALITY, buffer, 6)) {
+@@ -1121,7 +1121,7 @@ static int zd1201_set_scan(struct net_device *dev,
+ static int zd1201_get_scan(struct net_device *dev,
+     struct iw_request_info *info, struct iw_point *srq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	int err, i, j, enabled_save;
+ 	struct iw_event iwe;
+ 	char *cev = extra;
+@@ -1213,7 +1213,7 @@ static int zd1201_get_scan(struct net_device *dev,
+ static int zd1201_set_essid(struct net_device *dev,
+     struct iw_request_info *info, struct iw_point *data, char *essid)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 
+ 	if (data->length > IW_ESSID_MAX_SIZE)
+ 		return -EINVAL;
+@@ -1228,7 +1228,7 @@ static int zd1201_set_essid(struct net_device *dev,
+ static int zd1201_get_essid(struct net_device *dev,
+     struct iw_request_info *info, struct iw_point *data, char *essid)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 
+ 	memcpy(essid, zd->essid, zd->essidlen);
+ 	data->flags = 1;
+@@ -1249,7 +1249,7 @@ static int zd1201_get_nick(struct net_device *dev, struct iw_request_info *info,
+ static int zd1201_set_rate(struct net_device *dev,
+     struct iw_request_info *info, struct iw_param *rrq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short rate;
+ 	int err;
+ 
+@@ -1282,7 +1282,7 @@ static int zd1201_set_rate(struct net_device *dev,
+ static int zd1201_get_rate(struct net_device *dev,
+     struct iw_request_info *info, struct iw_param *rrq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short rate;
+ 	int err;
+ 
+@@ -1315,7 +1315,7 @@ static int zd1201_get_rate(struct net_device *dev,
+ static int zd1201_set_rts(struct net_device *dev, struct iw_request_info *info,
+     struct iw_param *rts, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	int err;
+ 	short val = rts->value;
+ 
+@@ -1335,7 +1335,7 @@ static int zd1201_set_rts(struct net_device *dev, struct iw_request_info *info,
+ static int zd1201_get_rts(struct net_device *dev, struct iw_request_info *info,
+     struct iw_param *rts, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short rtst;
+ 	int err;
+ 
+@@ -1352,7 +1352,7 @@ static int zd1201_get_rts(struct net_device *dev, struct iw_request_info *info,
+ static int zd1201_set_frag(struct net_device *dev, struct iw_request_info *info,
+     struct iw_param *frag, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	int err;
+ 	short val = frag->value;
+ 
+@@ -1373,7 +1373,7 @@ static int zd1201_set_frag(struct net_device *dev, struct iw_request_info *info,
+ static int zd1201_get_frag(struct net_device *dev, struct iw_request_info *info,
+     struct iw_param *frag, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short fragt;
+ 	int err;
+ 
+@@ -1402,7 +1402,7 @@ static int zd1201_get_retry(struct net_device *dev,
+ static int zd1201_set_encode(struct net_device *dev,
+     struct iw_request_info *info, struct iw_point *erq, char *key)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short i;
+ 	int err, rid;
+ 
+@@ -1459,7 +1459,7 @@ static int zd1201_set_encode(struct net_device *dev,
+ static int zd1201_get_encode(struct net_device *dev,
+     struct iw_request_info *info, struct iw_point *erq, char *key)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short i;
+ 	int err;
+ 
+@@ -1492,7 +1492,7 @@ static int zd1201_get_encode(struct net_device *dev,
+ static int zd1201_set_power(struct net_device *dev, 
+     struct iw_request_info *info, struct iw_param *vwrq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short enabled, duration, level;
+ 	int err;
+ 
+@@ -1531,7 +1531,7 @@ out:
+ static int zd1201_get_power(struct net_device *dev,
+     struct iw_request_info *info, struct iw_param *vwrq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short enabled, level, duration;
+ 	int err;
+ 
+@@ -1618,7 +1618,7 @@ static const iw_handler zd1201_iw_handler[] =
+ static int zd1201_set_hostauth(struct net_device *dev,
+     struct iw_request_info *info, struct iw_param *rrq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 
+ 	if (!zd->ap)
+ 		return -EOPNOTSUPP;
+@@ -1629,7 +1629,7 @@ static int zd1201_set_hostauth(struct net_device *dev,
+ static int zd1201_get_hostauth(struct net_device *dev,
+     struct iw_request_info *info, struct iw_param *rrq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short hostauth;
+ 	int err;
+ 
+@@ -1648,7 +1648,7 @@ static int zd1201_get_hostauth(struct net_device *dev,
+ static int zd1201_auth_sta(struct net_device *dev,
+     struct iw_request_info *info, struct sockaddr *sta, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	unsigned char buffer[10];
+ 
+ 	if (!zd->ap)
+@@ -1664,7 +1664,7 @@ static int zd1201_auth_sta(struct net_device *dev,
+ static int zd1201_set_maxassoc(struct net_device *dev,
+     struct iw_request_info *info, struct iw_param *rrq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	int err;
+ 
+ 	if (!zd->ap)
+@@ -1679,7 +1679,7 @@ static int zd1201_set_maxassoc(struct net_device *dev,
+ static int zd1201_get_maxassoc(struct net_device *dev,
+     struct iw_request_info *info, struct iw_param *rrq, char *extra)
+ {
+-	struct zd1201 *zd = (struct zd1201 *)dev->priv;
++	struct zd1201 *zd = netdev_priv(dev);
+ 	short maxassoc;
+ 	int err;
+ 
+@@ -1731,6 +1731,7 @@ static int zd1201_probe(struct usb_interface *interface,
+ 			const struct usb_device_id *id)
+ {
+ 	struct zd1201 *zd;
++	struct net_device *dev;
+ 	struct usb_device *usb;
+ 	int err;
+ 	short porttype;
+@@ -1738,9 +1739,12 @@ static int zd1201_probe(struct usb_interface *interface,
+ 
+ 	usb = interface_to_usbdev(interface);
+ 
+-	zd = kzalloc(sizeof(struct zd1201), GFP_KERNEL);
+-	if (!zd)
++	dev = alloc_etherdev(sizeof(*zd));
++	if (!dev)
+ 		return -ENOMEM;
++	zd = netdev_priv(dev);
++	zd->dev = dev;
 +
-+		for (i = 0; i < params->basic_rates_len; i++) {
-+			int rate = (params->basic_rates[i] & 0x7f) * 5;
-+			for (j = 0; j < sband->n_bitrates; j++) {
-+				if (sband->bitrates[j].bitrate == rate)
-+					rates |= BIT(j);
-+			}
-+		}
-+		sdata->vif.bss_conf.basic_rates = rates;
-+		changed |= BSS_CHANGED_BASIC_RATES;
-+	}
-+
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
- 	return 0;
-Index: wireless-testing/net/wireless/nl80211.c
-===================================================================
---- wireless-testing.orig/net/wireless/nl80211.c	2008-10-28 19:56:53.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2008-10-28 19:59:00.000000000 +0200
-@@ -95,6 +95,8 @@
- 	[NL80211_ATTR_BSS_CTS_PROT] = { .type = NLA_U8 },
- 	[NL80211_ATTR_BSS_SHORT_PREAMBLE] = { .type = NLA_U8 },
- 	[NL80211_ATTR_BSS_SHORT_SLOT_TIME] = { .type = NLA_U8 },
-+	[NL80211_ATTR_BSS_BASIC_RATES] = { .type = NLA_BINARY,
-+					   .len = NL80211_MAX_SUPP_RATES },
- 
- 	[NL80211_ATTR_MESH_PARAMS] = { .type = NLA_NESTED },
- 
-@@ -1613,6 +1615,12 @@
- 	if (info->attrs[NL80211_ATTR_BSS_SHORT_SLOT_TIME])
- 		params.use_short_slot_time =
- 		    nla_get_u8(info->attrs[NL80211_ATTR_BSS_SHORT_SLOT_TIME]);
-+	if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
-+		params.basic_rates =
-+			nla_data(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
-+		params.basic_rates_len =
-+			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
-+	}
- 
- 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
+ 	zd->ap = ap;
+ 	zd->usb = usb;
+ 	zd->removed = 0;
+@@ -1775,34 +1779,29 @@ static int zd1201_probe(struct usb_interface *interface,
  	if (err)
-
---
-
+ 		goto err_start;
+ 
+-	zd->dev = alloc_etherdev(0);
+-	if (!zd->dev)
+-		goto err_start;
+-
+-	zd->dev->priv = zd;
+-	zd->dev->open = zd1201_net_open;
+-	zd->dev->stop = zd1201_net_stop;
+-	zd->dev->get_stats = zd1201_get_stats;
+-	zd->dev->wireless_handlers =
++	dev->open = zd1201_net_open;
++	dev->stop = zd1201_net_stop;
++	dev->get_stats = zd1201_get_stats;
++	dev->wireless_handlers =
+ 	    (struct iw_handler_def *)&zd1201_iw_handlers;
+-	zd->dev->hard_start_xmit = zd1201_hard_start_xmit;
+-	zd->dev->watchdog_timeo = ZD1201_TX_TIMEOUT;
+-	zd->dev->tx_timeout = zd1201_tx_timeout;
+-	zd->dev->set_multicast_list = zd1201_set_multicast;
+-	zd->dev->set_mac_address = zd1201_set_mac_address;
+-	strcpy(zd->dev->name, "wlan%d");
++	dev->hard_start_xmit = zd1201_hard_start_xmit;
++	dev->watchdog_timeo = ZD1201_TX_TIMEOUT;
++	dev->tx_timeout = zd1201_tx_timeout;
++	dev->set_multicast_list = zd1201_set_multicast;
++	dev->set_mac_address = zd1201_set_mac_address;
++	strcpy(dev->name, "wlan%d");
+ 
+ 	err = zd1201_getconfig(zd, ZD1201_RID_CNFOWNMACADDR, 
+-	    zd->dev->dev_addr, zd->dev->addr_len);
++	    dev->dev_addr, dev->addr_len);
+ 	if (err)
+-		goto err_net;
++		goto err_start;
+ 
+ 	/* Set wildcard essid to match zd->essid */
+ 	*(__le16 *)buf = cpu_to_le16(0);
+ 	err = zd1201_setconfig(zd, ZD1201_RID_CNFDESIREDSSID, buf,
+ 	    IW_ESSID_MAX_SIZE+2, 1);
+ 	if (err)
+-		goto err_net;
++		goto err_start;
+ 
+ 	if (zd->ap)
+ 		porttype = ZD1201_PORTTYPE_AP;
+@@ -1810,30 +1809,28 @@ static int zd1201_probe(struct usb_interface *interface,
+ 		porttype = ZD1201_PORTTYPE_BSS;
+ 	err = zd1201_setconfig16(zd, ZD1201_RID_CNFPORTTYPE, porttype);
+ 	if (err)
+-		goto err_net;
++		goto err_start;
+ 
+-	SET_NETDEV_DEV(zd->dev, &usb->dev);
++	SET_NETDEV_DEV(dev, &usb->dev);
+ 
+-	err = register_netdev(zd->dev);
++	err = register_netdev(dev);
+ 	if (err)
+-		goto err_net;
++		goto err_start;
+ 	dev_info(&usb->dev, "%s: ZD1201 USB Wireless interface\n",
+-	    zd->dev->name);
++	    dev->name);
+ 
+ 	usb_set_intfdata(interface, zd);
+ 	zd1201_enable(zd);	/* zd1201 likes to startup enabled, */
+ 	zd1201_disable(zd);	/* interfering with all the wifis in range */
+ 	return 0;
+ 
+-err_net:
+-	free_netdev(zd->dev);
+ err_start:
+ 	/* Leave the device in reset state */
+ 	zd1201_docmd(zd, ZD1201_CMDCODE_INIT, 0, 0, 0);
+ err_zd:
+ 	usb_free_urb(zd->tx_urb);
+ 	usb_free_urb(zd->rx_urb);
+-	kfree(zd);
++	free_netdev(dev);
+ 	return err;
+ }
+ 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.4.3
+
