@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60350 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956AbYJNR67 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:55832 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842AbYJaS7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2008 13:58:59 -0400
-Subject: Re: [PATCH] mac80211: fixme for kernel-doc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <20081013091501.33146a4d.randy.dunlap@oracle.com>
-References: <20081013091501.33146a4d.randy.dunlap@oracle.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cec1nG9Dr/rscdGcoNep"
-Date: Tue, 14 Oct 2008 19:58:23 +0200
-Message-Id: <1224007103.3027.0.camel@johannes.berg> (sfid-20081014_195902_623441_B0A4E527)
-Mime-Version: 1.0
+	Fri, 31 Oct 2008 14:59:16 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so521681eyi.37
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2008 11:59:08 -0700 (PDT)
+Message-ID: <42bbb5c30810311159v50785ac7jfc8ef8eb3e32ea9b@mail.gmail.com> (sfid-20081031_195918_673524_FBA58430)
+Date: Fri, 31 Oct 2008 16:59:08 -0200
+From: "Marcos Barbosa" <marcosestevesbarbosa@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ipw3945-devel] PROBLEM: Led for wifi blinking all the time
+Cc: "=?ISO-8859-2?Q?Ond=F8ej_Ku=E8era?=" <ondrej.kucera@centrum.cz>,
+	jikos@suse.cz, yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20081031145434.GB4310@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-2
+References: <490A5D39.1090605@centrum.cz> <20081031145434.GB4310@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-cec1nG9Dr/rscdGcoNep
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2008-10-13 at 09:15 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
->=20
-> Fix kernel-doc warnings in mac80211.h.
-> Fields need real explanations added to them.
->=20
-> Warning(lin2627-g3-kdocfixes//include/net/mac80211.h:659): No description=
- found for parameter 'icv_len'
-> Warning(lin2627-g3-kdocfixes//include/net/mac80211.h:659): No description=
- found for parameter 'iv_len'
-
-Thanks Randy, nbd was going to add those.
-
-johannes
-
---=-cec1nG9Dr/rscdGcoNep
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI9N27AAoJEKVg1VMiehFYB7cP/2+8awJGwM4tSRwefgveJEI5
-bbOVcahml+sf8YBsvPtc0Sj+TpgT6ADX4m5TWTqRyHmvRVQvTVkOmpW9s6S3i7ae
-zT2F80lGgaRV2HZMtzK7r7n9W7PocrkpLtsyruZrEk+ayfVo34n54lYYpOeA78F6
-7pzwPtrBdXozPwIAv1We4W+HOWguYUrjW6bIX6QNC8zmBZZliHwaYqtSHT5V+685
-cyHAHq6bWAP+/VrT9kBsgWVkeuuD/rXs0jeCxjMtrzjRUG+BGDmMLN6UQmcvaSeT
-mE+K0BxuNfTKdgAX3qSKkRZdJCzXIo142idrLbpbOhi2XCvLRtbedPidv2qgzQka
-BAibRHgZFZm5uj5SXud0aW0BzOEVexm6b5cbIUoyhUE15DPACiicpHBj/MgQdQQu
-FysPH1Dv+r8VS8IPiNyh9NlrcPunUxUfvejBua3ownnZlZoaUozVkKUMeKnc+mjY
-i1zXanalKuDbw6ZaMZ3d6fy7nHX+N3GvSsHbEhVu5IgX5auMWtuYfHokj300YrJi
-zOqbx224WjxsRd8YSKcRxO9+WXaifkE18r/lQllONhh11hxYuiMD2blHguUlyqU9
-WMiyyUh+JJOY02kRUEsEScRiOLT1RQJqSz889zScnm5Z4kKToGeksUlKPOMLLFWg
-dwHQc8y+Yyj2/4LInP9L
-=qCiR
------END PGP SIGNATURE-----
-
---=-cec1nG9Dr/rscdGcoNep--
-
+VHJhZmZpYyBleGlzdHMgYWxsIHRoZSB0aW1lLCBiZWNhdXNlIHRoZSBjb21tYW5kcyB0byBjb250
+cm9sCmNvbm5lY3Rpb24uIFRvIGNhbmNlbCBhbGwgdHJhZmZpYywgZG93biB0aGUgd2lyZWxlc3Mg
+aW50ZXJmYWNlLgoKMjAwOC8xMC8zMSBKb2huIFcuIExpbnZpbGxlIDxsaW52aWxsZUB0dXhkcml2
+ZXIuY29tPjoKPiBPbiBGcmksIE9jdCAzMSwgMjAwOCBhdCAwMjoxOTo1M0FNICswMTAwLCBPbmT4
+ZWogS3XoZXJhIHdyb3RlOgo+PiBIZWxsbywKPj4KPj4gdGhpcyBpcyBteSBmaXJzdCBrZXJuZWwg
+YnVnIHJlcG9ydCBldmVyIHNvIEknbSBub3QgMTAwJSBzdXJlIGFib3V0IHRoZQo+PiBwcm90b2Nv
+bCBidXQgSSdsbCB0cnkgbXkgYmVzdC4uLgo+Pgo+PiBBZnRlciB1cGdyYWRpbmcgdG8gMi42LjI3
+IHRoZSB3aWZpIGxlZCBzdGFydHMgYmxpbmtpbmcgcmlnaHQgYWZ0ZXIKPj4gY29ubmVjdGluZyB0
+byB0aGUgbmV0d29yayBhbmQgdGhlbiBjb250aW51ZXMgYmxpbmtpbmcgZXZlbiB3aGVuIHRoZXJl
+J3MKPj4gbm8gbmV0d29yayB0cmFmZmljIGF0IGFsbC4gVGhpcyB3YXNuJ3QgaGFwcGVuaW5nIGJl
+Zm9yZSwgdGhlIGxlZCB1c2VkIHRvCj4+IGJlIGp1c3QgIm9uIiB3aGVuIEkgd2FzIGNvbm5lY3Rl
+ZCBidXQgbm90IGdlbmVyYXRpbmcgYW55IHRyYWZmaWMuCj4+Cj4+IFVwIHRvIGtlcm5lbCAyLjYu
+MjYuNSAodGhlIGxhc3QgMi42LjI2Lioga2VybmVsIGluIG15IGRpc3RyaWJ1dGlvbiAtCj4+IEFy
+Y2hMaW51eCkgdGhlIGJlaGF2aW9yIHdhcyBjb3JyZWN0LCB0aGUgcHJvYmxlbSBmaXJzdCBvY2N1
+cnJlZCB3aXRoCj4+IDIuNi4yNyBhbmQgaXMgcHJlc2VudCB1cCB0byAyLjYuMjcuNCAodGhlIGxh
+c3Qgb2YgMi42LjI3LiogSSd2ZSB0cmllZCkuCj4+IFRoZSBkcml2ZXIgdXNlZCBpcyBpd2wzOTQ1
+LCB0aGUgY29ycmVzcG9uZGluZyBsaW5lIGZyb20gbHNwY2k6Cj4+IDAzOjAwLjAgTmV0d29yayBj
+b250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlvbiBQUk8vV2lyZWxlc3MgMzk0NUFCRwo+PiBOZXR3
+b3JrIENvbm5lY3Rpb24gKHJldiAwMikKPj4KPj4gSWYgYW55IG90aGVyIGluZm9ybWF0aW9uIGlz
+IHJlbGV2YW50LCBwbGVhc2UgdGVsbCBtZSBhbmQgSSdsbCB0cnkgdG8KPj4gcHJvdmlkZSBpdCwg
+dG9vLgo+Cj4gSSdtIHByZXR0eSBzdXJlIHRoaXMgaXMgaG93IHRoZSBpd2x3aWZpIHRlYW0gd2Fu
+dHMgdGhlIExFRHMgdG8gd29yay4uLgo+Cj4gSm9obgo+IC0tCj4gSm9obiBXLiBMaW52aWxsZSAg
+ICAgICAgICAgICAgICBMaW51eCBzaG91bGQgYmUgYXQgdGhlIGNvcmUKPiBsaW52aWxsZUB0dXhk
+cml2ZXIuY29tICAgICAgICAgICAgICAgICAgb2YgeW91ciBsaXRlcmF0ZSBsaWZlc3R5bGUuCj4K
+PiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tCj4gVGhpcyBTRi5OZXQgZW1haWwgaXMgc3BvbnNvcmVkIGJ5IHRo
+ZSBNb2JsaW4gWW91ciBNb3ZlIERldmVsb3BlcidzIGNoYWxsZW5nZQo+IEJ1aWxkIHRoZSBjb29s
+ZXN0IExpbnV4IGJhc2VkIGFwcGxpY2F0aW9ucyB3aXRoIE1vYmxpbiBTREsgJiB3aW4gZ3JlYXQg
+cHJpemVzCj4gR3JhbmQgcHJpemUgaXMgYSB0cmlwIGZvciB0d28gdG8gYW4gT3BlbiBTb3VyY2Ug
+ZXZlbnQgYW55d2hlcmUgaW4gdGhlIHdvcmxkCj4gaHR0cDovL21vYmxpbi1jb250ZXN0Lm9yZy9y
+ZWRpcmVjdC5waHA/YmFubmVyX2lkPTEwMCZ1cmw9Lwo+IF9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCj4gSXB3Mzk0NS1kZXZlbCBtYWlsaW5nIGxpc3QKPiBJ
+cHczOTQ1LWRldmVsQGxpc3RzLnNvdXJjZWZvcmdlLm5ldAo+IGh0dHBzOi8vbGlzdHMuc291cmNl
+Zm9yZ2UubmV0L2xpc3RzL2xpc3RpbmZvL2lwdzM5NDUtZGV2ZWwKPgoKCgotLSAKTWFyY29zIEhl
+bnJpcXVlIEVzdGV2ZXMgQmFyYm9zYQptYXJjb3Nlc3RldmVzYmFyYm9zYUBnbWFpbC5jb20K
