@@ -1,65 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47543 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519AbYJTMwC (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:27913 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbYJaNv6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2008 08:52:02 -0400
-Subject: Re: iwl3945 broken in current git
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dieter Ries <clip2@gmx.de>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <48FC7DEC.9060200@gmx.de> (sfid-20081020_144811_359409_AFE17DE7)
-References: <48FC6C05.6020901@gmx.de>
-	 <20081020121710.GA3607@isilmar.linta.de>
-	 (sfid-20081020_141718_690091_E56EF8AB) <1224506010.27899.23.camel@johannes.berg>
-	 <48FC7B1A.10307@gmx.de>
-	 (sfid-20081020_143609_718157_68144039) <1224506366.27899.25.camel@johannes.berg>
-	 <48FC7DEC.9060200@gmx.de> (sfid-20081020_144811_359409_AFE17DE7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5NYKols06RYpaIinV0V1"
-Date: Mon, 20 Oct 2008 14:51:57 +0200
-Message-Id: <1224507117.27899.29.camel@johannes.berg> (sfid-20081020_145208_273516_ACA57385)
-Mime-Version: 1.0
+	Fri, 31 Oct 2008 09:51:58 -0400
+Message-ID: <490B0D75.8020601@tuffmail.co.uk> (sfid-20081031_145203_486907_E02526EE)
+Date: Fri, 31 Oct 2008 13:51:49 +0000
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	willy@linux.intel.com, lrodriguez@atheros.com,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: ath5k gets lost with eeepc-laptop removal
+References: <20081031110502.18e33eba@doriath.conectiva>
+In-Reply-To: <20081031110502.18e33eba@doriath.conectiva>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luiz Fernando N. Capitulino wrote:
+>  Hi guys,
+> 
+>  If I do a 'rmmod eeepc-laptop', while connected to my AP, I get the
+> following error messages from ath5k:
+> 
+> """
+> ath5k phy0: noise floor calibration timeout (2417MHz)
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: can't reset hardware (-5)
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: can't reset hardware (-5)
+> wlan0: No ProbeResp from current AP 00:1d:0f:e9:c7:c0 - assume out of range
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> wlan0: failed to set freq to 2412 MHz for scan
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> wlan0: failed to set freq to 2417 MHz for scan
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> wlan0: failed to set freq to 2422 MHz for scan
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> wlan0: failed to set freq to 2427 MHz for scan
+> ath5k phy0: failed to wakeup the MAC Chip
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> wlan0: failed to set freq to 2432 MHz for scan
+> wlan0: failed to set freq to 2437 MHz for scan
+> wlan0: failed to set freq to 2442 MHz for scan
+> wlan0: failed to set freq to 2447 MHz for scan
+> wlan0: failed to set freq to 2452 MHz for scan
+> wlan0: failed to set freq to 2457 MHz for scan
+> wlan0: failed to set freq to 2462 MHz for scan
+> wlan0: failed to set freq to 2467 MHz for scan
+> wlan0: failed to set freq to 2472 MHz for scan
+> wlan0: failed to set freq to 2484 MHz for scan
+> wlan0: failed to restore operational channel after scan
+> wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
+> wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
+> wlan0: authenticate with AP 00:1d:0f:e9:c7:c0
+> wlan0: authentication with AP 00:1d:0f:e9:c7:c0 timed out
+> """
+> 
+>  Then I lost my wireless connection.
+> 
+>  I'm running latest Linus git tree (2.6.28-rc2) on a Eeepc 701.
+> 
+>  The problem doesn't happen on 2.6.27.4, but as 2.6.28-rc1 doesn't
+> boot on this machine, it would be a bit difficult to bisect it.
+> 
+>  Thanks.
+> 
 
---=-5NYKols06RYpaIinV0V1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The trick with bisection is to identify the fix, use "git cherry-pick" to apply it before testing, and then "git reset --hard HEAD^" to unapply the fix before "git bisect {good|bad}".
 
-On Mon, 2008-10-20 at 14:47 +0200, Dieter Ries wrote:
+But you shouldn't need to bisect.  It'll be the addition of rfkill support (see below).
 
-> ahem, I don't seem to have ef224ca2ce55e81acc6c3a74c3e8c00a00941c70, are
-> you sure that is the right hash?
+Matthew: I nagged you twice about different consequences of this commit, so here's a third :).  You said rfkill no longer automatically frobs on suspend/resume, which was what I was worried about last time.  Should the core code also  be modified so it doesn't do anything when the rfkill device is unregistered?
 
-If anything, it's probably f93405206557077d6508682b624117ec68ea48f6, but
-the commit messages aren't very enlightening.
+Thanks
+Alan
 
-johannes
+---
 
---=-5NYKols06RYpaIinV0V1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+commit a195dcdcff33b8ef01a23cbc489fdfcdfa28c88e
+Author: Matthew Garrett <mjg59@srcf.ucam.org>
+Date:   Tue Aug 19 12:13:20 2008 +0100
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+    eeepc-laptop: Use standard interfaces
 
-iQIcBAABAgAGBQJI/H7qAAoJEKVg1VMiehFYEN4P/1NRCv0I0xVVjCgs9v7BnrYW
-IhBD07TsyHOP/5pODhEy90r/mx/OOzXad+Nz26fzUT5tILMudQ2s5ZNiktP4wQLM
-qCFk43IMrbMG0H4o/u43G17idQ2tdTODupxLodNx1kL/7peIZHg/J6WJrVYWy/Rh
-gqji0PtpRMV8V4VqkpLOgb6vSNccsY1zK3Bn98RD6LDbrSmuuZ1Nr+OQg8nfFya0
-6umXT7aJlcggj7k1fpuMX1G2GOq5JJyFmpM1o5PWQsGQbAYMUjrsw+IR3L100xR8
-EOOS8LAs6FlDnh+WvMX2qI+U0TjlzsNnW8wSmg57fwCeaGerew8+vvvhPuxVaCZf
-u8aRPS1jxEYy6Icr7iEEgpjpT+gon9pxtn9s/HhxlaEWzSLEJWVqHayipAv3Fv8Q
-cRODWa2prWMBB6mSYeu6mrUhMplztY2Ysy/NHdj+8NPnBUdB4QjyI785uZZ1H589
-vFNMcV5sIxhQabSWCseUfgEx7K6lLogdvnQps98jNDNZO/0Su+RlQyjGkuRXXJmK
-v3lW7Jif2xWtEVBFCxQ4OyugXa7Y/M5Ftqpi3G4FaYIfGQdJIaOjJvxncCe26l6S
-kFB9KjCpmtv4IhRnRTrFst39nu2RRWl1pQ7qdEqYqlZW6vBHC0eMSjcfKYmOiDXE
-21ihyenv3rtNQBcmPTLv
-=RnzY
------END PGP SIGNATURE-----
+    eeepc-laptop currently only sends key events via ACPI and has
+    non-standard rfkill control. Add an input device and use the rfkill
+    infrastructure.
 
---=-5NYKols06RYpaIinV0V1--
-
+    Signed-off-by: Matthew Garrett <mjg@redhat.com>
+    Signed-off-by: Len Brown <len.brown@intel.com>
