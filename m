@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23105.mail.ird.yahoo.com ([217.146.189.45]:46791 "HELO
-	web23105.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754711AbYKJVzn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 16:55:43 -0500
-Date: Mon, 10 Nov 2008 21:55:40 +0000 (GMT)
-From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-Subject: Re: throughput problem Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-In-Reply-To: <200811101936.49887.herton@mandriva.com.br>
+Received: from hostap.isc.org ([149.20.54.63]:52278 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750791AbYKALtG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Nov 2008 07:49:06 -0400
+Date: Sat, 1 Nov 2008 13:47:54 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Allow AP mode to be enabled
+Message-ID: <20081101114754.GY3923@jm.kir.nu> (sfid-20081101_124912_071771_FD703B38)
+References: <20081030175030.GD3923@jm.kir.nu> <878ws3ptrh.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <301990.42064.qm@web23105.mail.ird.yahoo.com> (sfid-20081110_225601_318643_8618A9FE)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <878ws3ptrh.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Mon, 10/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
+On Sat, Nov 01, 2008 at 01:31:30PM +0200, Kalle Valo wrote:
 
-> Here I don't get such low transfer rate, may be a
-> regression in 
-> wireless-testing? Try a bisect to see, besides that I
-> don't have other ideas 
-> what could be. BTW, do you checked wireless-testing, so can
-> I add your 
-> tested-by then to the "feedback transmitted
-> packets..."  patch? I plan to 
-> submit the final patch to inclusion in wireless-testing
-> soon.
+> I tried to test this with latest hostapd (commit b6a55236) and
+> wireless-testing (commit d80fe0040), but unfortunately I wasn't
+> succesful. Here's the output from hostapd with b43:
 
-Yes, I suppose I'll need to go the git bisect route to find out what's wrong with the throughput. The "feedback transmitted packets" patch is
-good - have it with wireless testing - please send it in with tested-by.
+> ioctl[SIOCSIWESSID]: Operation not supported
+> len=4
+> Could not set SSID for kernel driver
 
-Hin-Tak  
+Thanks for reporting this. I fixed it now in hostap.git. Johannes
+removed SSID configuration from AP mode and I was just waiting for this
+to hit wireless-testing before committing the change into hostapd.
 
-
-      
+-- 
+Jouni Malinen                                            PGP id EFC895FA
