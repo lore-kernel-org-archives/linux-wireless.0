@@ -1,77 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34908 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750935AbYKXRgk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 12:36:40 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 09:36:40 -0800
-Date: Mon, 24 Nov 2008 09:36:37 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Davide Pesavento <davidepesa@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<rworkman@slackware.com>
-Subject: Re: crda packaging
-Message-ID: <20081124173637.GA6245@tesla> (sfid-20081124_183644_081914_EE468DC1)
-References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com> <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com> <2da21fe50811161258v58efe236r492d59c8b9228b81@mail.gmail.com> <20081117202749.GB5994@tesla> <43e72e890811171421j3f41234dnf451e25d5e58abdc@mail.gmail.com> <2da21fe50811231040i45c3cda5l16379093b4e85265@mail.gmail.com>
+Received: from ey-out-2122.google.com ([74.125.78.26]:14543 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbYKAXiX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Nov 2008 19:38:23 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so664662eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 16:38:22 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/4] rt2x00: Block set_key() during suspend/shutdown
+Date: Sun, 2 Nov 2008 00:37:25 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200811020036.40746.IvDoorn@gmail.com> <200811020037.09726.IvDoorn@gmail.com>
+In-Reply-To: <200811020037.09726.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <2da21fe50811231040i45c3cda5l16379093b4e85265@mail.gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200811020037.25439.IvDoorn@gmail.com> (sfid-20081102_003835_911852_B282A762)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 23, 2008 at 10:40:58AM -0800, Davide Pesavento wrote:
-> On Mon, Nov 17, 2008 at 23:21, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Mon, Nov 17, 2008 at 12:27 PM, Luis R. Rodriguez
-> > <lrodriguez@atheros.com> wrote:
-> >> On Sun, Nov 16, 2008 at 12:58:43PM -0800, Davide Pesavento wrote:
-> >>> On Mon, Oct 20, 2008 at 02:28, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> >>> > On Sun, Oct 19, 2008 at 8:57 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
-> >>> >>
-> >>> >> Do you think the regulatory database should be split from the package
-> >>> >> that contains the crda daemon? If so, regulatory.bin should be
-> >>> >> versioned as well...
-> >>> >
-> >>> > Yes, absolutely, the idea is to split db.txt into a separate git tree
-> >>> > too actually so that should help with keeping track of changes
-> >>> > separately and thinking of them separately.
-> >>> >
-> >>> > We just need to get this git tree created. What crda will need though
-> >>> > is to wget the RSA public key so it can be built with support for new
-> >>> > arbitrary updates to the binary db. Give us a few days, we'll get this
-> >>> > setup.
-> >>> >
-> >>> >  Luis
-> >>> >
-> >>>
-> >>> Any updates on this?
-> >>
-> >> I think we'll have this done by the end of the day.
-> >
-> > OK this is now done. We have a new git tree which John maintains for
-> > the database:
-> >
-> > git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
-> >
-> > All you need from that is the regulatory.bin, you don't need to run
-> > make or anything, just cp the regulatory.bin to the preferred
-> > location. Right now this is built into CRDA and its
-> > /usr/lib/crda/regulatory.bin.
-> >
-> > Then do a git pull on crda and try to build and let us know if you run
-> > into any issues for packaging. The documentation on the
-> > wireless.kernel.org wiki needs some good updating.
-> >
-> >  Luis
-> >
-> 
-> Great! Thanks a lot!
-> Are there any tarballs around? I couldn't find them on
-> http://wireless.kernel.org/download/...
+mac80211 will call set_key() when the device is
+shutting down. When the device is unplugged the
+keys will be lost automatically due to the power
+loss. When the device is not plugged but the module
+is only unloaded the keys can remain in the device
+hardware, when the module is loaded the keys will
+be cleaned up during initialization.
 
-I was working on that and now I'm done, heh. I'll send a new post
-announcing these URLs.
+This should prevent the problem reported by Johannes Berg,
+where unplugging the device while suspended resulted in
+a NULL pointer error during set_key() which was
+caused because of the CSR base address being freed.
 
-  Luis
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 8fc2315..188f891 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -486,7 +486,9 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			struct ieee80211_key_conf *key);
+ 	struct rt2x00lib_crypto crypto;
+ 
+-	if (!test_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		return 0;
++	else if (!test_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags))
+ 		return -EOPNOTSUPP;
+ 	else if (key->keylen > 32)
+ 		return -ENOSPC;
+-- 
+1.5.6.1
+
