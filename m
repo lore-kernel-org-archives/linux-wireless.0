@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:35414 "EHLO waste.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751987AbYKFPuo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 10:50:44 -0500
-Subject: iwlagn: wrong command queue 31, command id 0x0
-From: Matt Mackall <mpm@selenic.com>
-To: yi.zhu@intel.com
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Wed, 05 Nov 2008 22:16:19 -0600
-Message-Id: <1225944979.3792.3.camel@calx> (sfid-20081106_165100_575772_32B61730)
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.122.230]:49948 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751450AbYKAQau (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Nov 2008 12:30:50 -0400
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+Subject: Re: Michael MIC failures in AP mode?
+References: <87wsfnldq9.fsf@nokia.com> <20081101151938.GA4857@jm.kir.nu>
+	<1225554697.3619.13.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sat, 01 Nov 2008 18:30:34 +0200
+In-Reply-To: <1225554697.3619.13.camel@johannes.berg> (ext Johannes Berg's message of "Sat\, 01 Nov 2008 16\:51\:37 +0100")
+Message-ID: <87od0zl87p.fsf@nokia.com> (sfid-20081101_173054_908817_EF9C5965)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As of 75fa67706cce5272bcfc51ed646f2da21f3bdb6e, I'm seeing this:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-[ 5470.869820] WARNING: at drivers/net/wireless/iwlwifi/iwl-tx.c:1204
-iwl_rx_handle+0x11a/0x21b [iwlagn]()
-[ 5470.869824] wrong command queue 31, command id 0x0
-[ 5470.869827] Modules linked in: nls_utf8 hfsplus usb_storage uvcvideo
-compat_ioctl32 videodev v4l1_compat iwlagn snd_hda_intel sdhci_pci
-ehci_hcd uhci_hcd
-[ 5470.869850] Pid: 0, comm: swapper Tainted: G        W  2.6.28-rc3 #39
-[ 5470.869854] Call Trace:
-[ 5470.869858]  <IRQ>  [<ffffffff8024fc7e>] warn_slowpath+0xb4/0xda
-[ 5470.869873]  [<ffffffff803559cd>] __next_cpu+0x19/0x26
-[ 5470.869885]  [<ffffffffa009b032>] iwl_rx_handle+0x11a/0x21b [iwlagn]
-[ 5470.869896]  [<ffffffffa009b335>] iwl4965_irq_tasklet+0x202/0x2b4
-[iwlagn]
-[ 5470.869906]  [<ffffffffa0097592>] iwl4965_isr+0x21/0x101 [iwlagn]
-[ 5470.869912]  [<ffffffff80254459>] tasklet_action+0x89/0xf1
-[ 5470.869918]  [<ffffffff80254c6b>] __do_softirq+0x8e/0x163
-[ 5470.869925]  [<ffffffff8022674c>] call_softirq+0x1c/0x28
-[ 5470.869930]  [<ffffffff80227db5>] do_softirq+0x45/0xa5
-[ 5470.869935]  [<ffffffff802547a5>] irq_exit+0x4e/0x94
-[ 5470.869946]  [<ffffffff8022802d>] do_IRQ+0xc2/0xe1
-[ 5470.869950]  [<ffffffff80225338>] ret_from_intr+0x0/0x2e
-[ 5470.869953]  <EOI>  [<ffffffff80265663>] ktime_get_ts+0x21/0x4a
-[ 5470.869963]  [<ffffffff80391123>] acpi_idle_enter_bm+0x2ca/0x35c
-[ 5470.869968]  [<ffffffff8039112b>] acpi_idle_enter_bm+0x2d2/0x35c
-[ 5470.869973]  [<ffffffff80391123>] acpi_idle_enter_bm+0x2ca/0x35c
-[ 5470.869979]  [<ffffffff80435f0e>] cpuidle_idle_call+0x90/0xce
-[ 5470.869985]  [<ffffffff80223ec0>] cpu_idle+0x56/0x9a
-[ 5470.869988] ---[ end trace cacb4f9954dd9364 ]---
+> On Sat, 2008-11-01 at 17:19 +0200, Jouni Malinen wrote:
+>
+>> Anyway, if you just want to test Michael MIC error processing on a
+>> client, force mac80211 to do software encryption
+>
+> On that matter, should we put a debugfs control knob in place to
+> completely disable HW encryption in mac80211, so we don't need this
+> override in all drivers?
 
-Device is a 4965:
+I think there's a need for this and we should do it. Just look at this
+commit from earlier this week:
 
-14:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or
-AGN [Kedron] Network Connection (rev 61)
+commit 05e6eb6f607cc3623c50b2a7c62b29ba6707a316
+Author: Bob Copeland <me@bobcopeland.com>
+Date:   Wed Oct 29 08:30:54 2008 -0400
+
+    ath5k: enable hardware encryption for WEP
+    
+    This change re-enables hardware encryption for ath5k after setting up
+    mac80211 to handle the initialization vectors which happens to make it
+    work.  Add a module param (nohwcrypt) to optionally turn it off.
+    
+    Signed-off-by: Bob Copeland <me@bobcopeland.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+Having a support in mac80211 would make it easier both for the driver
+developers and users.
 
 -- 
-Mathematics is the supreme nostalgia of our time.
-
+Kalle Valo
