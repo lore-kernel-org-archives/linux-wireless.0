@@ -1,94 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:48185 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755490AbYKTWH5 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:44911 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752397AbYKAUO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 17:07:57 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so419145ugf.37
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 14:07:55 -0800 (PST)
-Message-ID: <7fe9ff8d0811201407x51da0bcfwf1306c859e28c308@mail.gmail.com> (sfid-20081120_230800_958284_E0B286CC)
-Date: Thu, 20 Nov 2008 23:07:54 +0100
-From: "Kamil Dzida" <kamil.dzida@gmail.com>
-To: "Andrey Borzenkov" <arvidjaar@mail.ru>
-Subject: Re: Symbol orinoco firmware under BSD, no extracting tools needed
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200811202053.52132.arvidjaar@mail.ru>
+	Sat, 1 Nov 2008 16:14:28 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1819330wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 13:14:27 -0700 (PDT)
+Message-ID: <1ba2fa240811011314i182695e6wc577a2559fab64b6@mail.gmail.com> (sfid-20081101_211435_325871_F8ABEEC4)
+Date: Sat, 1 Nov 2008 22:14:27 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Marcel Holtmann" <marcel@holtmann.org>
+Subject: Re: Still 4965 issues with wireless-testing
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <FB3E29C0-9493-4A1C-B725-734C100ADF3D@holtmann.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <7fe9ff8d0811200345o5c2a219dk256483a55c3b9e6a@mail.gmail.com>
-	 <200811202053.52132.arvidjaar@mail.ru>
+References: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com>
+	 <DAD31980-B029-46D4-A687-9B0426899853@holtmann.org>
+	 <1ba2fa240810310652t351b0b77k819a7e03659503eb@mail.gmail.com>
+	 <BF4BAA7D-FEBC-40F7-AE07-D6BBD31A2A0B@holtmann.org>
+	 <1ba2fa240810311409i5203bcccu2b944dcc505deb30@mail.gmail.com>
+	 <C202FD8E-EB1E-417D-8086-7ADFBC72A1D3@holtmann.org>
+	 <1ba2fa240810311635t69165473hef0ef64bf4426d3a@mail.gmail.com>
+	 <FB3E29C0-9493-4A1C-B725-734C100ADF3D@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 20, 2008 at 6:53 PM, Andrey Borzenkov <arvidjaar@mail.ru> wrote:
-> On Thursday 20 November 2008, Kamil Dzida wrote:
->> Hello, for some time I have been interested in situation of firmware
->> for Linux drivers. I found something interesting.
->>
->> Some time ago I found that Agree firmware for orinoco driver was
->> submitted to linux-firmware tree. From driver documentation
->> (http://www.linuxwireless.org/en/users/Drivers/orinoco) I found that
->> orinoco driver also works with Symbol "Spectrum24" chipset. The
->> documentation states that firmware for that chipset is only available
->> by cutting it from Windows or Apple drivers (like Broadcom microcode).
->> Fortunately I found that it is not true. The firmware binary blobs for
->> Spectrum24 can be found on NetBSD and OpenBSD servers under BSD
->> license. Both have build in this firmware in their operating systems.
->>
+On Sat, Nov 1, 2008 at 9:11 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Tomas,
 >
-> Does it support WPA and/or WPA2? Have you tested this firmware with
-> orinoco driver?
+>>>>>>>> so besides the point that the Ubuntu 8.10 kernel has a broken driver
+>>>>>>>> for
+>>>>>>>> the Intel 4965 cards which will crash my X61 after less than one
+>>>>>>>> minute
+>>>>>>>> uptime when it connects to my access point, I have my dmesg full
+>>>>>>>> with
+>>>>>>>> warnings from the latest wireless-testing kernel.
+>>>>>>>>
+>>>>>>>> I know that we have discussed this before and Johannes' patch at
+>>>>>>>> least
+>>>>>>>> turns it into warnings instead of killing my system completely, but
+>>>>>>>> I
+>>>>>>>> am
+>>>>>>>> still surprised why this hasn't been fixed.
+>>>>>>>
+>>>>>>> so this becomes more and more annoying. I get this WARN_ON now
+>>>>>>> multiple
+>>>>>>> times pre minute. Only the first few minutes after loading the
+>>>>>>> firmware
+>>>>>>> everything is okay and then it keeps filling my dmesg. And on top of
+>>>>>>> that, I
+>>>>>>> now see these:
+>>>>>>>
+>>>>>>> __ratelimit: 1189 callbacks suppressed
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> __ratelimit: 57695 callbacks suppressed
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> __ratelimit: 3345 callbacks suppressed
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>> iwlagn: Can not allocate SKB buffers
+>>>>>>>
+>>>>>>> What is going on here? This is a normal setup and nothing fancy.
+>>>>>>> Access
+>>>>>>> point is N-Capable from D-Link btw.
+>>>>>>
+>>>>>>
+>>>>>> I have D-Link too I don't see this. What kernel version is this? Is
+>>>>>> this your ubuntu version or wireless-testing?
+>>>>>> Any more data you can provide (.config. slabinfo)
+>>>>>
+>>>>> this is from wireless-testing. The Ubuntu 2.6.27 kernel is totally
+>>>>> broken.
+>>>>> It will crash the kernel since we are missing the patch to turn this
+>>>>> into
+>>>>> a
+>>>>> warning :)
+>>>>>
+>>>>> Attached is my config. The slabinfo will follow once the SKB errors
+>>>>> come
+>>>>> up
+>>>>> again. It normally takes a few hours before they show. Just resumed
+>>>>> that
+>>>>> machine.
+>>>>
+>>>> I've downloaded whole moblin last night over 2.6.27.4, it's a bit slow
+>>>> because the missing calibrations but it didn't crashed.
+>>>>
+>>>> I will test your config, your machine is T61  am I right?
+>>>
+>>> I have a X61 and running the 64-bit version of kernel and userspace.
+>>
+>> I found in sky2 driver comment
+>>
+>> * The buffer returned from netdev_alloc_skb is
+>> * aligned except if slab debugging is enabled
+>>
+>> Since you have slub debug enabled, can you run this debug patch on
+>> your system (might be withe space broken, I've  just pasted in)
 >
-> Thank you!
->
->
->>
->> This statement can be found in OpenBSD CVS:
->>
->> from netbsd:
->> Generated from the firmware binaries for T3 series CF adapter.
->> Obtained from Tim Gardner <timg@tpi.com> who developed the Linux driver.
->> And approved by Brad Lefore <blefore@sj.symbol.com> to redistribute it
->> with BSD license.
->>
->> (http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/microcode/symbol/esecsym?sortby=rev)
->>
->> This means that the only difference between firmware that Linux uses
->> and the *BSD firmware is that BSD people successfully negotiated
->> license change to BSD. Theoretically by simple drag and dropping the
->> files from OpenBSD/NetBSD to linux-firmware tree and renaming the
->> files will allow Linux users out of the box support of Symbol cards
->> without any firmware extraction tools. Just in case, contacting Mr.
->> Lefore of Symbol first would be also recommended.
->>
->> I hope this information will be helpful for orinoco driver development.
->>
->>
->> OpenBSD resources:
->> http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/microcode/symbol/?sortby=rev#dirlist
->>
->> and licence:
->>
->> http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/microcode/symbol/symbol-license?rev=1.4;content-type=text%2Fplain;sortby=rev
->>
->> NetBSD resources:
->> http://cvsweb.netbsd.org/bsdweb.cgi/src/sys/dev/microcode/wi/?only_with_tag=MAIN
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
->
->
-Unfortunately I haven't got Symbol card to test the firmware. OpeBSD
-driver seems to be more advanced still their online manual doesn't
-mention WPA/WPA2 only WEP 104-bit. Actually I did not know that
-extracted firmware that Linux uses include WPA support. Why not try
-the NetBSD trick? Extract the firmware with WPA support and ask Symbol
-to re-licence it under BSD/ISC. On the other hand as far as I know
-OpenBSD got WPA support in their system in summer this year (no
-kidding!), so perhaps the firmware can do WPA, but software part is
-not ready to handle it yet. Summarizing someone with Spectrum based
-card is needed here.
+> I applied your patch and ran the latest wireless-testing for over 24 hours
+> now. The iwl_tx_cmd_complete issues shows up on a regular basis and the
+> allocate SKB buffers, too. However it didn't trigger the extra WARN_ON you
+> added.
+
+Thanks for the report, will try different directions.
+Tomas
