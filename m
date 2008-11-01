@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:28504 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753531AbYKSPh3 (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.176]:33345 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750867AbYKAV0d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 10:37:29 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so2937ugf.37
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 07:37:27 -0800 (PST)
-Message-ID: <f76a32050811190737w37937e17ra361364ed345fd33@mail.gmail.com> (sfid-20081119_163733_464931_B9660D6E)
-Date: Wed, 19 Nov 2008 16:37:27 +0100
-From: "Stefan Steuerwald" <salsasepp@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
-In-Reply-To: <1227095773.26243.22.camel@johannes.berg>
+	Sat, 1 Nov 2008 17:26:33 -0400
+Received: by el-out-1112.google.com with SMTP id z25so942234ele.1
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 14:26:31 -0700 (PDT)
+Message-ID: <43e72e890811011419k460b11e0he08d66022cbd606e@mail.gmail.com> (sfid-20081101_222653_039951_8D4E9B3B)
+Date: Sat, 1 Nov 2008 14:19:55 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: tim.gardner@canonical.com
+Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
+Cc: mick@madwifi.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Bob Copeland" <me@bobcopeland.com>
+In-Reply-To: <4908B754.1050400@tpi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
-	 <f76a32050811190316o28a49cddte30214c217877078@mail.gmail.com>
-	 <1227095773.26243.22.camel@johannes.berg>
+References: <4908B754.1050400@tpi.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> http://wireless.kernel.org/en/users/Documentation/modes#AccessPoint.28AP.29infrastructuremode
-> johannes
+On Wed, Oct 29, 2008 at 12:19 PM, Tim Gardner <tcanonical@tpi.com> wrote:
+> This commit 'ath5k: Update interrupt masking code' causes stalls under
+> load when built using compat-wireless on 2.6.27. There is no output from
+> dmesg, but it occasionally recovers and moves a few more packets before
+> stalling again. Luis suggested reverting
+> eb9d4e8399181357cb6f6625ba7f849987432c6c which I did. Now it appears to
+> work normally.
+>
+> I also think this patch should be broken into multiple pieces. There
+> appear to be at least 3 functional changes addressed in this single patch.
 
-Thank you, that's it, took the latest hostapd from git.
-I can now connect from my iPod to the XG-603 in AP mode (unencrypted
-and WPA/TKIP, WPA2/TKIP, WPA2/CCMP tested).
-However - data throughput seems low; accessing a webserver I get an
-update "now and then". I'm aware this can have a lots of causes - I
-have more time and more cards available (XG-601/ISL3880, and an
-AR5212/5213 one) and will play with this.
+Agreed, I just tested with the latest wireless-testing and the issue
+is still present. I reviewed the commit but its a big too large to pin
+point the exact issue, my AR5414 goes up but then quickly becomes
+unusable. Nick how about we revert this and you can then split this up
+into a good number of patches to make the review easier and also to be
+able to pin point the exact issue better?
 
-Stefan.
+The SHA1 remains the same but just in case the title of the patch is:
+
+   ath5k: Update interrupt masking code
+
+With it reverted I'm cruising and can ditch MadWifi completely, which
+is the idea.
+
+  Luis
