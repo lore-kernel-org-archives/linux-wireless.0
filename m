@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:25533 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758429AbYKDQwl convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60581 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbYKAOx0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 11:52:41 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so1639390qwe.37
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 08:52:40 -0800 (PST)
-Message-ID: <69e28c910811040852u7f3f3481t7bf31ad3af8c03ad@mail.gmail.com> (sfid-20081104_175256_109274_E34D4749)
-Date: Tue, 4 Nov 2008 17:52:40 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Wilson Ribeiro" <wribjr@gmail.com>
-Subject: Re: Realtek wireless 8187se
+	Sat, 1 Nov 2008 10:53:26 -0400
+Subject: Re: Michael MIC failures in AP mode?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <740646d0811040501w5571d464u757e05399803f768@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <740646d0811040501w5571d464u757e05399803f768@mail.gmail.com>
+In-Reply-To: <87wsfnldq9.fsf@nokia.com> (sfid-20081101_153138_893209_47C4FC8F)
+References: <87wsfnldq9.fsf@nokia.com>
+	 (sfid-20081101_153138_893209_47C4FC8F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-deM09LJd5S7IIiv8s7Mk"
+Date: Sat, 01 Nov 2008 15:53:25 +0100
+Message-Id: <1225551205.3619.7.camel@johannes.berg> (sfid-20081101_155330_130972_5945C3FE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 4, 2008 at 2:01 PM, Wilson Ribeiro <wribjr@gmail.com> wrote=
-:
-> Hi people,
->
-> i recently bought a MSI Wind and it came with a wireless nic
-> rtl8187se, is there support on current stable kernel for that wireles=
-s
-> card?
->
-> Thanks,
->
-> --
-> Wilson Ribeiro
-> Consultor de Tecnologia da Informa=E7=E3o
-> e-mail: wribjr@gmail.com
-> phone: 55 21 34117748
-> mobile: 55 21 82424280
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-Can you check the actual print on the chip itself? "RTL8187L" and
-"RTL8187B" are supported currently. Also, what is the USB device ID of
-the chip? 0x8187, 0x8189, 0x8197 and 0x8198 are known to work in the
-latest preview kernels.
+--=-deM09LJd5S7IIiv8s7Mk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, 2008-11-01 at 16:31 +0200, Kalle Valo wrote:
+
+> Now that AP mode works in mac80211 I want to use it to test Michael
+> MIC failures in a wlan driver. Any recommendations, or tips, how to
+> easily create them with mac80211 and hostapd?
+
+Inject frames maybe? Easiest is probably to disable hw crypto, then
+you'll see the fully encrypted frames on a new monitor interface and can
+inject them again.
+
+johannes
+
+--=-deM09LJd5S7IIiv8s7Mk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJDG1hAAoJEKVg1VMiehFY2NMP/Awc7oZUJpcLsks6KOB4t4x8
+izywGp3CU4X72WmoMaXpE3x9LPLWQObVwMbuFXK1RALutsSXfNBkFwxSk+EIcS+j
+xyVRrjLzAyFcc9q1zqDOSP3nRDigVAEfAiq2vVYtzsZ2iJiW0N9UVYuSLSdvPhIz
+6IBO6g+3y8swl1BYui8f8229ClRZi3dtxoqrOyt8iqc/AgqOUV2X0o3dCXJPOnt1
+RfFgsmb4IyeqxTGka2v3sLmCY8hBKUYJZ8Wt3bamREcY0LBn546ILK8qGIsrOGQI
+fUTHlZKkOrZ1bSYLbU373415xqF2+qVaOdt7E8fYVAjeQ/v4wtqBFAnycbxjIR3Z
+KXuMRM5yv6xbFewab9Bf+BZ0ipaZlAlwvJ5SAX5g3lvAUdRJ7JN9Teb4/OT5PFQP
+ieOJb/AOson9IeCfpZQm+H4SBVb+wePbPEXDdUkHpTyaPF9joRqk5tTMZwzyNzcD
+95Kcp9cgT1gr4Uo57tBDaCBCQ1JutUSKpo/jS5g1CED6wbSdo4Qa/5Wfu+qGawQX
+sWxSFUs3LJV2WVlAlc84GPD/X36TPo9ZhNjd/gPxTPsMRdaRwV9FXlsaVnh1V/LW
+IJ+Osk2G0TSAG+hRZmLoiGEFpE0gwxTC8WmB73V9+iiYcWOFOSjLrBw7VqptVWx9
+g/I88O3UR0iRHuTxbmLO
+=pBQ0
+-----END PGP SIGNATURE-----
+
+--=-deM09LJd5S7IIiv8s7Mk--
+
