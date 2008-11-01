@@ -1,92 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:53458 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750746AbYK0FLv (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:12762 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbYKAXiZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 00:11:51 -0500
-Received: by fk-out-0910.google.com with SMTP id 18so738544fkq.5
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 21:11:49 -0800 (PST)
-Message-ID: <e38d12ff0811262111o49895c9k6c96e75da3a9c947@mail.gmail.com> (sfid-20081127_061221_687962_360B16DA)
-Date: Thu, 27 Nov 2008 00:11:49 -0500
-From: "Andrey Vul" <andrey.vul@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: cannot compile compat-wireless-2.6-old
-Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081127010443.GC13226@tesla>
+	Sat, 1 Nov 2008 19:38:25 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so664663eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 16:38:24 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 4/4] rt2x00: Fix BUG_ON() with antenna handling
+Date: Sun, 2 Nov 2008 00:38:10 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200811020036.40746.IvDoorn@gmail.com> <200811020037.09726.IvDoorn@gmail.com> <200811020037.25439.IvDoorn@gmail.com>
+In-Reply-To: <200811020037.25439.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com>
-	 <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com>
-	 <20081125203244.GD5950@tesla>
-	 <e38d12ff0811251330x2b2d9a35h608b1619441f1252@mail.gmail.com>
-	 <e38d12ff0811251651k32a66cd5r3de7f1d504b4723@mail.gmail.com>
-	 <20081126173453.GC6515@tesla>
-	 <e38d12ff0811261554o1a918853x21bc192e8488be85@mail.gmail.com>
-	 <20081127010443.GC13226@tesla>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200811020038.10589.IvDoorn@gmail.com> (sfid-20081102_003836_698789_66F7D77F)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 26, 2008 at 20:04, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-> On Wed, Nov 26, 2008 at 03:54:14PM -0800, Andrey Vul wrote:
->> On Wed, Nov 26, 2008 at 12:34, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
->> > On Tue, Nov 25, 2008 at 04:51:48PM -0800, Andrey Vul wrote:
->> >> On Tue, Nov 25, 2008 at 16:30, Andrey Vul <andrey.vul@gmail.com> wrote:
->> >> > On Tue, Nov 25, 2008 at 15:32, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
->> >> >> On Tue, Nov 25, 2008 at 09:57:57AM -0800, Andrey Vul wrote:
->> >> >>> I cannot compile the current compat tarball.
->> >> >>> Make log:
->> >> >>> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
->> >> >>> make -C /usr/src/linux-2.6.26.6-rt11/ M=/root/compat-wireless-2.6-old modules
->> >> >>> make[1]: Entering directory `/usr/src/linux-2.6.26.6-rt11'
->> >> >>>  CC [M]  /root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o
->> >> >>> In file included from <command-line>:0:
->> >> >>> /root/compat-wireless-2.6-old/include/net/compat.h:877: error:
->> >> >>> redefinition of 'list_splice_tail'
->> >> >>> include/linux/list.h:356: error: previous definition of
->> >> >>> 'list_splice_tail' was here
->> >> >>> /root/compat-wireless-2.6-old/include/net/compat.h:892: error:
->> >> >>> redefinition of 'list_splice_tail_init'
->> >> >>> include/linux/list.h:379: error: previous definition of
->> >> >>> 'list_splice_tail_init' was here
->> >> >>
->> >> >> list_splice_tail was added as of 2.6.27, and you have 2.6.26. Which
->> >> >> means your kernel headers for your box are completely messed up. This
->> >> >> means you can expect a kernel panic if you were to successfully
->> >> >> compile external modules. Go fix that first.
->> >> >>
->> >> I have $(uname -r)/include/linux/list.h containing list_splice_tail,
->> >> where uname -r is 2.6.26.5-rt9.
->> >> Frankly, I need rt and the code for my wifi card is only in the compat tarball.
->> >> Is this a problem with .[56] or with -rt?
->> >
->> > Ah, yeah RT had their own list_splice_tail(), try this. BTW what driver
->> > are you going to be using?
->> >
->>
->> I'm going to be using iwl5000 which depends on iwlwifi, iwlcore,
->> iwlwifi-leds, and iwlwifi-rfkill .
->>
->> So, in short, all I have to do is this?
->> #!/bin/bash
->> for a in `find ~/compat-wireless-2.6-old -name '*.c' -or -name '*.h'`; do
->> sed -e 's/list_splice_tail/list_splice_tail27/' -i $a;
->> done
->>
->> The only thing I see as possibly problematic is
->> list_splice_tail27_init() (sed is regex after all).
->
-> Yup, but since there are some RT 2.6.26 kernels out there if we want
-> this fixed in compat-wireless-old I'd rather apply a patch there too.
-> Anyway list_splice_tail() is only used for ath9k.
-It's used in ath9k but exported to all the drivers via net/compat.h,
-leading to the redefinition errors from gcc when compiling an
-unrelated (to ath9k) wireless driver.
+With the new configuration handling, and more specifically
+splitting the configuration of the antenna from the normal
+configuration steps allowed a BUG_ON() to be triggered
+in the driver because the SW_DIVERSITY was send to the
+driver. This fixes that by catching the value early in
+rt2x00config.c and replacing it with a sensible value.
 
-So for RT-safety, just do the sed -i in the previous message on
-drivers/net/wirelss/ath9k/xmit.c and on include/net/compat.h .
+This also fixes a problem where the antenna is not being
+initialized at all when the radio is enabled. Since it
+no longer is part of the mac80211 configuration the
+only place where rt2x00 configured it was the SW diversity
+handler. Obviously this is broken for all non-diversity
+hardware and breaks SW diversity due to a broken initialization.
 
-Unless grep found other instances of list_splice_tail, which it didn't.
+When the radio is enabled the antenna will be configured
+once as soon as the config() callback function is called.
 
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h       |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00config.c |   35 ++++++++++++++++++++-------
+ drivers/net/wireless/rt2x00/rt2x00dev.c    |   22 +++++++++--------
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c    |   13 ++++++++-
+ 5 files changed, 51 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index f85eedb..8fa971c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -723,8 +723,7 @@ struct rt2x00_dev {
+ 
+ 	/*
+ 	 * This is the default TX/RX antenna setup as indicated
+-	 * by the device's EEPROM. When mac80211 sets its
+-	 * antenna value to 0 we should be using these values.
++	 * by the device's EEPROM.
+ 	 */
+ 	struct antenna_setup default_ant;
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 3e4eee3..1059b4d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -109,15 +109,32 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+-			      enum antenna rx, enum antenna tx)
++			      struct antenna_setup *ant)
+ {
+-	struct antenna_setup ant;
+-
+-	ant.rx = rx;
+-	ant.tx = tx;
++	/*
++	 * Failsafe: Make sure we are not sending the
++	 * ANTENNA_SW_DIVERSITY state to the driver.
++	 * If that happes fallback to hardware default,
++	 * or our own default.
++	 */
++	if (ant->rx == ANTENNA_SW_DIVERSITY) {
++		if (rt2x00dev->default_ant.rx == ANTENNA_SW_DIVERSITY)
++			ant->rx = ANTENNA_B;
++		else
++			ant->rx = rt2x00dev->default_ant.rx;
++	}
++	if (ant->tx == ANTENNA_SW_DIVERSITY) {
++		if (rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY)
++			ant->tx = ANTENNA_B;
++		else
++			ant->tx = rt2x00dev->default_ant.tx;
++	}
+ 
+-	if (rx == rt2x00dev->link.ant.active.rx &&
+-	    tx == rt2x00dev->link.ant.active.tx)
++	/*
++	 * Only reconfigure when something has changed.
++	 */
++	if (ant->rx == rt2x00dev->link.ant.active.rx &&
++	    ant->tx == rt2x00dev->link.ant.active.tx)
+ 		return;
+ 
+ 	/*
+@@ -132,12 +149,12 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 	 * The latter is required since we need to recalibrate the
+ 	 * noise-sensitivity ratio for the new setup.
+ 	 */
+-	rt2x00dev->ops->lib->config_ant(rt2x00dev, &ant);
++	rt2x00dev->ops->lib->config_ant(rt2x00dev, ant);
+ 
+ 	rt2x00lib_reset_link_tuner(rt2x00dev);
+ 	rt2x00_reset_link_ant_rssi(&rt2x00dev->link);
+ 
+-	memcpy(&rt2x00dev->link.ant.active, &ant, sizeof(ant));
++	memcpy(&rt2x00dev->link.ant.active, ant, sizeof(*ant));
+ 
+ 	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON_LINK);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index a8fee68..e8ca1cb 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -176,13 +176,14 @@ void rt2x00lib_toggle_rx(struct rt2x00_dev *rt2x00dev, enum dev_state state)
+ 
+ static void rt2x00lib_evaluate_antenna_sample(struct rt2x00_dev *rt2x00dev)
+ {
+-	enum antenna rx = rt2x00dev->link.ant.active.rx;
+-	enum antenna tx = rt2x00dev->link.ant.active.tx;
++	struct antenna_setup ant;
+ 	int sample_a =
+ 	    rt2x00_get_link_ant_rssi_history(&rt2x00dev->link, ANTENNA_A);
+ 	int sample_b =
+ 	    rt2x00_get_link_ant_rssi_history(&rt2x00dev->link, ANTENNA_B);
+ 
++	memcpy(&ant, &rt2x00dev->link.ant.active, sizeof(ant));
++
+ 	/*
+ 	 * We are done sampling. Now we should evaluate the results.
+ 	 */
+@@ -200,21 +201,22 @@ static void rt2x00lib_evaluate_antenna_sample(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 
+ 	if (rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY)
+-		rx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
++		ant.rx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
+ 
+ 	if (rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY)
+-		tx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
++		ant.tx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
+ 
+-	rt2x00lib_config_antenna(rt2x00dev, rx, tx);
++	rt2x00lib_config_antenna(rt2x00dev, &ant);
+ }
+ 
+ static void rt2x00lib_evaluate_antenna_eval(struct rt2x00_dev *rt2x00dev)
+ {
+-	enum antenna rx = rt2x00dev->link.ant.active.rx;
+-	enum antenna tx = rt2x00dev->link.ant.active.tx;
++	struct antenna_setup ant;
+ 	int rssi_curr = rt2x00_get_link_ant_rssi(&rt2x00dev->link);
+ 	int rssi_old = rt2x00_update_ant_rssi(&rt2x00dev->link, rssi_curr);
+ 
++	memcpy(&ant, &rt2x00dev->link.ant.active, sizeof(ant));
++
+ 	/*
+ 	 * Legacy driver indicates that we should swap antenna's
+ 	 * when the difference in RSSI is greater that 5. This
+@@ -230,12 +232,12 @@ static void rt2x00lib_evaluate_antenna_eval(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00dev->link.ant.flags |= ANTENNA_MODE_SAMPLE;
+ 
+ 	if (rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY)
+-		rx = (rx == ANTENNA_A) ? ANTENNA_B : ANTENNA_A;
++		ant.rx = (ant.rx == ANTENNA_A) ? ANTENNA_B : ANTENNA_A;
+ 
+ 	if (rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY)
+-		tx = (tx == ANTENNA_A) ? ANTENNA_B : ANTENNA_A;
++		ant.tx = (ant.tx == ANTENNA_A) ? ANTENNA_B : ANTENNA_A;
+ 
+-	rt2x00lib_config_antenna(rt2x00dev, rx, tx);
++	rt2x00lib_config_antenna(rt2x00dev, &ant);
+ }
+ 
+ static void rt2x00lib_evaluate_antenna(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index c52ee21..0c3a355 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -93,7 +93,7 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+ 			  struct rt2x00_intf *intf,
+ 			  struct ieee80211_bss_conf *conf);
+ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+-			      enum antenna rx, enum antenna tx);
++			      struct antenna_setup *ant);
+ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+ 		      struct ieee80211_conf *conf,
+ 		      const unsigned int changed_flags);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 188f891..48636b0 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -339,7 +339,6 @@ int rt2x00mac_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct ieee80211_conf *conf = &hw->conf;
+-	int radio_on;
+ 	int status;
+ 
+ 	/*
+@@ -356,7 +355,6 @@ int rt2x00mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	 * some configuration parameters (e.g. channel and antenna values) can
+ 	 * only be set when the radio is enabled.
+ 	 */
+-	radio_on = test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags);
+ 	if (conf->radio_enabled) {
+ 		/* For programming the values, we have to turn RX off */
+ 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF);
+@@ -372,6 +370,17 @@ int rt2x00mac_config(struct ieee80211_hw *hw, u32 changed)
+ 		 */
+ 		rt2x00lib_config(rt2x00dev, conf, changed);
+ 
++		/*
++		 * The radio was enabled, configure the antenna to the
++		 * default settings, the link tuner will later start
++		 * continue configuring the antenna based on the software
++		 * diversity. But for non-diversity configurations, we need
++		 * to have configured the correct state now.
++		 */
++		if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED)
++			rt2x00lib_config_antenna(rt2x00dev,
++						 &rt2x00dev->default_ant);
++
+ 		/* Turn RX back on */
+ 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
+ 	} else {
 -- 
-Andrey Vul
+1.5.6.1
+
