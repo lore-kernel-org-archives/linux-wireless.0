@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44275 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751068AbYKMAbO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 19:31:14 -0500
-Date: Wed, 12 Nov 2008 19:28:04 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Karakontakis Apostolos <akarako@freemail.gr>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: zd1211rw problem
-Message-ID: <20081113002804.GA11329@tuxdriver.com> (sfid-20081113_013118_700329_0228B197)
-References: <200811130120.48659.akarako@freemail.gr>
+Received: from web23108.mail.ird.yahoo.com ([217.146.189.48]:40397 "HELO
+	web23108.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750756AbYKAAHr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 20:07:47 -0400
+Date: Sat, 1 Nov 2008 00:07:45 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT PATCH 0/2] rtl8187: implement conf_tx callback/correctly ack tx pkts
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+In-Reply-To: <490B957E.8020406@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200811130120.48659.akarako@freemail.gr>
+Content-Type: text/plain; charset=utf-8
+Message-ID: <405096.56076.qm@web23108.mail.ird.yahoo.com> (sfid-20081101_010752_215270_19C9391E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 13, 2008 at 01:20:48AM +0200, Karakontakis Apostolos wrote:
-> Hi,
-> 
-> I have recenetly bought a usb wireless stick that requires zd1211rw driver 
-> (ZyDAS ZD1211B chipset).With kernel 2.6.24 it works ok but with kernel 
-> 2.6.27.2 it dos not.
-> 
-> 1. I have the latest firmware in /lib/firmware/zd1211
-> 2. i have CONFIG_MAC80211 and CONFIG_FW_LOADER = y
-> 3. i have CONFIG_ZD1211RW=m
-> 
-> when i insert the module i get the following errors
-> 
-> Nov 13 01:02:20 hakarako kernel: mac80211: Unknown parameter 
-> `ieee80211_regdom'
 
-This parameter no longer exists for mac80211.  A similar parameter
-now exists for cfg80211, but the format is different.
+--- On Fri, 31/10/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-The mac80211 module isn't loading due to the unknown parameter.
+> With these patches installed, my RTL8187B device was stuck
+> at 1 Mbs using the
+> 'pid' algorithm. Without them, the rate rapidly
+> increases to 54 Mbs. I'm roughly
+> 2 m from my AP, and get an indicated signal of -22 dBm and
+> a link quality of
+> 98/100. My kernel is from wireless-testing
+> (v2.6.28-rc2-4159-g6c11cd2) with the
+> rtl8187 power control and timing patches submitted earlier.
+> There are no changes
+> to any of the mac80211 components.
 
-> Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol ieee80211_free_hw
-> Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol ieee80211_alloc_hw
-> Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-> ieee80211_register_hw
-> Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-> ieee80211_tx_status_irqsafe
-> Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-> ieee80211_wake_queues
-> Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-> ieee80211_stop_queues
-> Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-> ieee80211_unregister_hw
-> Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol ieee80211_beacon_get
-> Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol ieee80211_rx_irqsafe
+This behavior was mentioned in Herton's e-mail, and said to be likely due to recent rewrite of the rate-control api?
 
-Since mac80211 didn't load, zd1211rw won't load.
+I am still using the early incarnation of the rate-control patch with 2.6.26.7-86.fc9.x86_64 and 2.6.27.4-69.fc10.x86_64 (by rolling back wireless-testing to 2.6.27.x to match), and my rate does go up and down (between 11M to 36M just now) and generally feels more responsive. Apologies I haven't looked at the newly posted rate-control patch yet - is there any significant code difference?
 
-Remove that mac80211 option from modprobe.conf (and possibly add the
-equivalent parameter to cfg80211), the modprobe zd1211rw again.
+Hin-Tak
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Hin-Tak
+
+
+      
