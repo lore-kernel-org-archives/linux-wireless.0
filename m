@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23102.mail.ird.yahoo.com ([217.146.189.42]:38891 "HELO
-	web23102.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751568AbYKFAAR convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 19:00:17 -0500
-Date: Thu, 6 Nov 2008 00:00:13 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-In-Reply-To: <200811051936.46361.herton@mandriva.com.br>
+Received: from smtp.nokia.com ([192.100.122.230]:45783 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543AbYKAObd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Nov 2008 10:31:33 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mA1EVSRP027313
+	for <linux-wireless@vger.kernel.org>; Sat, 1 Nov 2008 16:31:30 +0200
+Received: from tikku (essapo-nirac252172.europe.nokia.com [10.162.252.172])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mA1EVRlI032251
+	for <linux-wireless@vger.kernel.org>; Sat, 1 Nov 2008 16:31:27 +0200
+To: linux-wireless@vger.kernel.org
+Subject: Michael MIC failures in AP mode?
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sat, 01 Nov 2008 16:31:26 +0200
+Message-ID: <87wsfnldq9.fsf@nokia.com> (sfid-20081101_153138_893209_47C4FC8F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <813803.32421.qm@web23102.mail.ird.yahoo.com> (sfid-20081106_010023_053276_83EC88EF)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Wed, 5/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
-Tested-by Hin-Tak Leung <htl10@users.sourceforge.net>
+Hello,
 
-Okay, I managed to patch compat-wireless and install it (with 2.6.27.4-24.fc9.x86_64 which has mac80211 as a module, not compiled-in).
+Now that AP mode works in mac80211 I want to use it to test Michael
+MIC failures in a wlan driver. Any recommendations, or tips, how to
+easily create them with mac80211 and hostapd?
 
-I am having the stuck-at-1Mb problem, so rate control does not work.
-
-Before installing compat-wireless, I think the rate started at 36Mb and moves up to 54Mb and get stuck at 54Mb as soon as any traffic is getting through; after installing the patched compat-wireless, the rate changes beteen 1Mb and 9Mb for a bit but get stuck at 1Mb as soon as any substantial traffic is getting through. I can manually switch it with "iwconfig wlan2 rate 36M", for example, but with an auto, "iwconfig wlan2 rate 36M auto", it drops back to 1Mb very soon.
-
-Baring changes in the rest of the wireless stack (which might come to the same thing), it is probably the changes surrounding status.rate[0].count vs status.retry_count which causes the 1Mb-rate-stuck... 
-
-Did Larry get the v2 patches to do rate-control working (i.e. the rate actually changing with demand), or not? Larry's reply was "the rate-control mechanism works the way it did before" - I am  not sure about the "it did" bit - same as v1 (rate stuck at 1Mb) or same as the prototype patch for 2.6.27 (rate changing with demand)?  
-
-Hin-Tak
-
-
-
-      
+-- 
+Kalle Valo
