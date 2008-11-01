@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:20800 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017AbYKMFrf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 00:47:35 -0500
-Subject: Re: Issue with ifconfig down and 4965 driver
-From: reinette chatre <reinette.chatre@intel.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <BCB72601-9DA2-4D89-BDF1-7B96254DA17C@linux.intel.com>
-References: <BCB72601-9DA2-4D89-BDF1-7B96254DA17C@linux.intel.com>
-Content-Type: text/plain
-Date: Wed, 12 Nov 2008 21:48:13 -0800
-Message-Id: <1226555293.1115.939.camel@rc-desk> (sfid-20081113_064740_377377_13FC973C)
-Mime-Version: 1.0
+Received: from qw-out-2122.google.com ([74.125.92.25]:11336 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751403AbYKAQGr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Nov 2008 12:06:47 -0400
+Received: by qw-out-2122.google.com with SMTP id 3so772408qwe.37
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 09:06:45 -0700 (PDT)
+Message-ID: <69e28c910811010906y1ab8ea6ydf43671a73eae9@mail.gmail.com> (sfid-20081101_170655_546978_CD6CD631)
+Date: Sat, 1 Nov 2008 17:06:45 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Michael MIC failures in AP mode?
+Cc: "Jouni Malinen" <j@w1.fi>, "Kalle Valo" <kalle.valo@nokia.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1225554697.3619.13.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <87wsfnldq9.fsf@nokia.com> <20081101151938.GA4857@jm.kir.nu>
+	 <1225554697.3619.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-11-12 at 20:14 -0800, Marcel Holtmann wrote:
-> Hi guys,
-> 
-> so I am running a 2.6.28-rc4 kernel and every time I stop  
-> wpa_supplicant or call ifconfig down on the 4965 card, I get a user  
-> noticeable delay (mouse freezes). Seems that some part inside the  
-> driver is actively sleeping with a busy-loop. This is really not an  
-> acceptable behavior since it is a day-to-day task to bring the device  
-> down. And for power concerns, we really wanna allow to bring down the  
-> interface.
-> 
+On Sat, Nov 1, 2008 at 4:51 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sat, 2008-11-01 at 17:19 +0200, Jouni Malinen wrote:
+>
+>> Anyway, if you just want to test Michael MIC error processing on a
+>> client, force mac80211 to do software encryption
+>
+> On that matter, should we put a debugfs control knob in place to
+> completely disable HW encryption in mac80211, so we don't need this
+> override in all drivers?
+>
+> johannes
+>
 
-Please add your information to
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790
+Good idea.
 
-Reinette
+Also, we might want to auto-disable HW encryption on a PHY that has
+one of the following configurations:
+-both station and AP interfaces on a single PHY with different
+encryption on the station and the AP (do we already do this?)
+-only a monitor interface present
+-(possibly) multiple monitor interfaces on the same PHY
 
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
