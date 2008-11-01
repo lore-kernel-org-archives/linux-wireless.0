@@ -1,78 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f11.google.com ([209.85.217.11]:53449 "EHLO
-	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754565AbYKJTAo (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:45146 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750987AbYKAVbJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 14:00:44 -0500
-Received: by gxk4 with SMTP id 4so2087466gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 11:00:43 -0800 (PST)
-Message-ID: <43e72e890811101100s9068862u88b36ec49d68c1d5@mail.gmail.com> (sfid-20081110_200051_179382_D8BD8F2D)
-Date: Mon, 10 Nov 2008 11:00:42 -0800
+	Sat, 1 Nov 2008 17:31:09 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so765910yxm.1
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 14:31:07 -0700 (PDT)
+Message-ID: <43e72e890811011431j1f286d5ewf8985373e1312657@mail.gmail.com> (sfid-20081101_223117_232580_0EDB43D4)
+Date: Sat, 1 Nov 2008 14:31:07 -0700
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "=?UTF-8?Q?Stefanik_G=C3=A1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: Where is allow-ap-vlan-modes.patch ?
-Cc: "David Shwatrz" <dshwatrz@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kalle Valo" <kalle.valo@nokia.com>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910811101054h55a20799o9ed3476f844077b0@mail.gmail.com>
+To: "Julien HENRY" <henryju@yahoo.fr>
+Subject: Re: Re : Not associated with Intel 4965
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <170039.58975.qm@web28509.mail.ukl.yahoo.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com>
-	 <200811091604.43705.IvDoorn@gmail.com>
-	 <31436f4a0811100048h5c7520d3ga4eedd815f8c793a@mail.gmail.com>
-	 <874p2g0x9d.fsf@nokia.com> <20081110142806.GG3546@tuxdriver.com>
-	 <31436f4a0811100742p6154e2f9p34f3dfb1de2f71e3@mail.gmail.com>
-	 <69e28c910811101054h55a20799o9ed3476f844077b0@mail.gmail.com>
+References: <170039.58975.qm@web28509.mail.ukl.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBOb3YgMTAsIDIwMDggYXQgMTA6NTQgQU0sIFN0ZWZhbmlrIEfDoWJvcgo8bmV0cm9s
-bGxlci4zZEBnbWFpbC5jb20+IHdyb3RlOgo+IE9uIE1vbiwgTm92IDEwLCAyMDA4IGF0IDQ6NDIg
-UE0sIERhdmlkIFNod2F0cnogPGRzaHdhdHJ6QGdtYWlsLmNvbT4gd3JvdGU6Cj4+IEhlbGxvLAo+
-PiBGaXJzdCwgSSBob3BlIHlvdSBmZWVsIGJldHRlciBzb29uLgo+Pgo+PiBTZWNvbmQ6Cj4+IExv
-b2tpbmcgYXQgdGhlIHBhdGNoZXMgYXQgdGhlIG1haWxpbmcgbGlzdCwgSSBkbyBub3Qgc2VlCj4+
-IHRoYXQgYW55d2hlcmUgaXQgc2F5cyBhZ2FpbnN0IHdoaWNoIGdpdCB0cmVlIHRoZXkgd2VyZSBt
-YWRlLgo+PiBJdCBjb3VsZCBiZSA6IHdpcmVsZXNzLW5leHQtMi42LHdpcmVsZXNzLTIuNiwgYW5k
-IHdpcmVsZXNzLXRlc3RpbmcuCj4+Cj4+IEkgZ3Vlc3MgdGhhdCB0aGVyZSBhcmUgbWFueSBjYXNl
-cyBpbiB3aGljaCBhIHBhdGNoIGNhbiBiZSBhcHBsaWVkIHRvCj4+IHR3byBvZiB0aGVzZSB0cmVl
-cyAob3IgbWF5YmUgYWxsIHRocmVlIG9mIHRoZW0pLAo+PiB3aGVyZWFzIHRoZXJlIGFyZSB0aW1l
-cyBpbiB3aGljaCBpdCBjYW4gYmUgYXBwbGllZCB0byBvbmx5IG9uZSBnaXQgdHJlZS4KPj4KPj4g
-SG93IGlzIGl0IGRldGVybWluZWQgdG8gd2hpY2ggdHJlZSB0aGUgcGF0Y2hlcyBzaG91bGQgYmUK
-Pj4gYXBwbGllZCA/Cj4+Cj4+IFJncywKPj4gRFMKPj4KPj4gT24gTW9uLCBOb3YgMTAsIDIwMDgg
-YXQgNDoyOCBQTSwgSm9obiBXLiBMaW52aWxsZQo+PiA8bGludmlsbGVAdHV4ZHJpdmVyLmNvbT4g
-d3JvdGU6Cj4+PiBPbiBNb24sIE5vdiAxMCwgMjAwOCBhdCAxMTowMjoyMkFNICswMjAwLCBLYWxs
-ZSBWYWxvIHdyb3RlOgo+Pj4+IERhdmlkIFNod2F0cnogPGRzaHdhdHJ6QGdtYWlsLmNvbT4gd3Jp
-dGVzOgo+Pj4+Cj4+Pj4gPiBJbiB0aGlzIG9jY2FzaW9uIG1heSBJIGFzayAtIHdoYXQgaXMgdGhl
-IHdpcmVsZXNzLXRlc3RpbmcgZ2l0IHRyZWU/Cj4+Pj4gPiBpcyBpdCBiYXNlZCBvbiB3aXJlbGVz
-cy1uZXh0LTIuNiBvciBvbiB3aXJlbGVzcy0yLjYgdHJlZT8KPj4+Pgo+Pj4+IEl0J3MgYmFzZWQg
-b24gTGludXMnIHJjIHJlbGVhc2VzIGFuZCBoYXMgYWxsIHRoZSB3aXJlbGVzcyBwYXRjaGVzCj4+
-Pj4gd2hpY2ggaGF2ZSBiZWVuIHVuZGVyIGRldmVsb3BtZW50LiBJIHRoaW5rIEpvaG4gY2hlcnJ5
-IHBpY2tzIHRoZQo+Pj4+IHBhdGNoZXMgZnJvbSB3aXJlbGVzcy10ZXN0aW5nIHRvIHdpcmVsZXNz
-LTIuNiBvciB3aXJlbGVzcy1uZXh0LTIuNi4gU28KPj4+PiB3aXJlbGVzcy10ZXN0aW5nIGNvbnRh
-aW5zIHRoZSBibGVlZGluZyBlZGdlIHdpcmVsZXNzIHBhdGNoZXMgYW5kIGlmCj4+Pj4gSm9obiB0
-aGlua3MgdGhleSBhcmUgZ29vZCBlbm91Z2gsIGhlIHN1Ym1pdHMgdGhlbSBmb3J3YXJkLgo+Pj4+
-Cj4+Pj4gUGxlYXNlIGNvcnJlY3QgbWUgaWYgSSBoYXZlIHVuZGVyc3Rvb2Qgc29tZXRoaW5nIHdy
-b25nLgo+Pj4KPj4+IFRoYXQgaXMgYmFzaWNhbGx5IHJpZ2h0Lgo+Pj4KPj4+IEluIHRoZSBwYXN0
-IHBhdGNoZXMgb2Z0ZW4gd2VudCB0byB3aXJlbGVzcy10ZXN0aW5nIGFuZCB0bwo+Pj4gd2lyZWxl
-c3MtbmV4dC0yLjYvd2lyZWxlc3MtMi42IGF0IHRoZSBhYm91dCB0aGUgc2FtZSB0aW1lLiAgSG93
-ZXZlcgo+Pj4gdXBzdHJlYW0gc3RhbmRhcmRzIGhhdmUgdGlnaHRlbmVkIGluIHdheXMgdGhhdCBt
-YWtlIG1lIGZlZWwgaXQgaXMKPj4+IGFwcHJvcHJpYXRlIHRvIGdpdmUgcGF0Y2hlcyBtb3JlIHB1
-YmxpYyB0ZXN0aW5nIGV2ZW4gYmVmb3JlIHNlbmRpbmcKPj4+IHRoZW0gZm9yIC1uZXh0Lgo+Pj4K
-Pj4+IEluIHRoaXMgY2FzZSwgSSB3YXMgYWxzbyBzaWNrIGFsbCBsYXN0IHdlZWsgd2hpY2ggaGFz
-IHNsb3dlZCB0aGluZwo+Pj4gYSBiaXQgbW9yZS4uLgo+Pj4KPj4+IFRoYW5rcywKPj4+Cj4+PiBK
-b2huCj4+PiAtLQo+Pj4gSm9obiBXLiBMaW52aWxsZSAgICAgICAgICAgICAgICBMaW51eCBzaG91
-bGQgYmUgYXQgdGhlIGNvcmUKPj4+IGxpbnZpbGxlQHR1eGRyaXZlci5jb20gICAgICAgICAgICAg
-ICAgICBvZiB5b3VyIGxpdGVyYXRlIGxpZmVzdHlsZS4KPj4+Cj4+IC0tCj4+IFRvIHVuc3Vic2Ny
-aWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJl
-bGVzcyIgaW4KPj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5l
-bC5vcmcKPj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9t
-YWpvcmRvbW8taW5mby5odG1sCj4+Cj4KPiBUaGUgdGFyZ2V0IHRyZWUgdXNlZCB0byBiZSB3aXJl
-bGVzcy0yLjYncyAiZXZlcnl0aGluZyIgYnJhbmNoLiBUaGVyZQo+IHdhcyBhIGxvdCBvZiBjb25m
-dXNpb24gb3ZlciBwZW9wbGUgbWlzdGFrZW5seSBwdWxsaW5nICJtYXN0ZXIiIGluc3RlYWQKPiBv
-ZiAiZXZlcnl0aGluZyIgKCJtYXN0ZXIiIGlzIHRoZSBkZWZhdWx0KSwgc28gdGhlICJldmVyeXRo
-aW5nIiBicmFuY2gKPiB3YXMgcmVwbGFjZWQgYnkgYSBzZXBhcmF0ZSByZXBvLCB3aXJlbGVzcy10
-ZXN0aW5nLgoKV2UgYWxzbyB0cnkgdG8ga2VlcCB0aGlzIHR5cGUgb2YgaW5mb3JtYXRpb24gdXAg
-dG8gZGF0ZSBpbiBvdXIgd2lraToKCmh0dHA6Ly93aXJlbGVzcy5rZXJuZWwub3JnL2VuL2RldmVs
-b3BlcnMvRG9jdW1lbnRhdGlvbgoKICBMdWlzCg==
+On Sat, Nov 1, 2008 at 1:48 PM, Julien HENRY <henryju@yahoo.fr> wrote:
+>> We no longer have iwl4965, the new name is iwlagn, try that.
+>
+> Not better (please note that I've upgraded to kernel 2.6.27.4-desktop-0.uc1mnb since my last post):
+>
+> # modprobe iwlagn
+> WARNING: Error inserting iwlcore (/lib/modules/2.6.27.4-desktop-0.uc1mnb/updates/drivers/net/wireless/iwlwifi/iwlcore.ko): Unknown symbol in module, or unknown parameter (see dmesg)
+> FATAL: Error inserting iwlagn (/lib/modules/2.6.27.4-desktop-0.uc1mnb/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko.gz): Unknown symbol in module, or unknown parameter (see dmesg)
+
+I see a discrepancy on the directory where the modules are being
+picked up on. The ones that should be used are the ones in updates for
+compat-wireless, your kernel drivers are under kernel. Lets try this
+to be sure:
+
+cd /lib/modules/2.6.27.4-desktop-0.uc1mnb/kernel/drivers/net/wireless/iwlwifi
+
+rename everything there from foo to foo.ignore, for example, then run
+
+sudo depmod -ae
+
+and finally then try unloading all the wireless modules and then try
+loading iwlagn.
