@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34668 "EHLO mga09.intel.com"
+Received: from main.gmane.org ([80.91.229.2]:54621 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751AbYKTAid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 19:38:33 -0500
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+	id S1754327AbYKCXaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 18:30:05 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1Kx8ry-0008Mx-W1
+	for linux-wireless@vger.kernel.org; Mon, 03 Nov 2008 23:30:02 +0000
+Received: from host220-22-dynamic.53-82-r.retail.telecomitalia.it ([82.53.22.220])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 23:30:02 +0000
+Received: from msan by host220-22-dynamic.53-82-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 23:30:02 +0000
 To: linux-wireless@vger.kernel.org
-Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Subject: [PATCH] mac80211 : Fix setting ad-hoc mode and non-ibss channel
-Date: Wed, 19 Nov 2008 16:38:32 -0800
-Message-Id: <1227141512-5636-1-git-send-email-abhijeet.kolekar@intel.com> (sfid-20081120_013837_745962_A235554D)
-In-Reply-To: <>
-References: <>
+From: msan <msan@email.it>
+Subject: problems with ath5k driver.
+Date: Sat, 1 Nov 2008 21:39:48 +0000 (UTC)
+Message-ID: <geiib4$apo$2@ger.gmane.org> (sfid-20081104_003014_378510_AC82F564)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch fixes the kernel trace when user tries to set
-ad-hoc mode on non IBSS channel.
-e.g iwconfig wlan0 chan 36 mode ad-hoc
+Hallo.
+Sorry for my bad english.
+I have an Esprimo D9500 Fujitsu Semens notebook.
+My lspci reports for wireless card: "06:00.0 Ethernet controller: Atheros 
+Communications Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev 
+04)"
+Dmesg says: "ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 
+0x70)".
+Iwconfig says: "
+wmaster0  no wireless extensions.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
----
- net/mac80211/wext.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+wlan0     IEEE 802.11  ESSID:"" 
+          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-
+Associated  
+          Tx-Power=20 dBm  
+          Retry min limit:7   RTS thr:off   Fragment thr=2352 B  
+          Encryption key:off
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 63f36e9..5a9bc8c 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -271,6 +271,7 @@ static int ieee80211_ioctl_siwmode(struct net_device *dev,
- 				   __u32 *mode, char *extra)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	int type;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-@@ -281,6 +282,15 @@ static int ieee80211_ioctl_siwmode(struct net_device *dev,
- 		type = NL80211_IFTYPE_STATION;
- 		break;
- 	case IW_MODE_ADHOC:
-+		/* Following check added to avoid misconfiguration if
-+		 * you set mode and frequency at the same time.
-+		 */
-+		if (local->oper_channel && local->oper_channel->flags &
-+					IEEE80211_CHAN_NO_IBSS) {
-+			printk(KERN_DEBUG "Not a valid IBSS channel\n");
-+			return -EOPNOTSUPP;
-+		}
-+
- 		type = NL80211_IFTYPE_ADHOC;
- 		break;
- 	case IW_MODE_REPEAT:
--- 
-1.5.4.3
+When I run "iwlist wlan0 scan" it says:" no scan results".
+I can't access to any wireless lan, it seems that my atheros card doesn't 
+work.
+With another card, a Lonshine, I can connect to my wifi lan but with 
+Atheros it is impossible.
+There is any support for AR2425 chip?
+
 
