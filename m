@@ -1,62 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:9847 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750947AbYK0Fsq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 00:48:46 -0500
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37684
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750795AbYKAAEX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2008 20:04:23 -0400
+Date: Fri, 31 Oct 2008 17:03:58 -0700 (PDT)
+Message-Id: <20081031.170358.188963325.davem@davemloft.net> (sfid-20081101_010428_470385_2B26A5E9)
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, davem@davemloft.net,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: [PATCH 2.6.28] ipw2200: fix netif_*_queue() removal regression
-Date: Thu, 27 Nov 2008 13:42:20 +0800
-Message-Id: <1227764540-9439-1-git-send-email-yi.zhu@intel.com> (sfid-20081127_064903_432791_37326D5C)
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-10-31
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20081031233735.GH4310@tuxdriver.com>
+References: <20081031233735.GH4310@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 521c4d96e0840ecce25b956e00f416ed499ef2ba, netif_stop_queue()
-and netif_wake_queue() were removed with the reason
-"netif_carrier_{on,off}() handles starting and stopping packet flow into
-the driver". The patch also removes a valid condition check that
-ipw_tx_skb() cannot be called if device is not in STATUS_ASSOCIATED state.
-But netif_carrier_off() doesn't guarantee netdev->hard_start_xmit won't
-be called because linkwatch event is handled in a delayed workqueue. This
-caused a kernel oops reported by Frank Seidel:
-https://bugzilla.novell.com/show_bug.cgi?id=397390
-
-This patch fixes the problem by moving the STATUS_ASSOCIATED check back
-to ipw_tx_skb(). It also adds a missing netif_carrier_off() call to
-ipw_disassociate().
-
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Chatre, Reinette <reinette.chatre@intel.com>
-Tested-by: Frank Seidel <fseidel@suse.de>
----
- drivers/net/wireless/ipw2200.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index dcce354..7a9f901 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -3897,6 +3897,7 @@ static int ipw_disassociate(void *data)
- 	if (!(priv->status & (STATUS_ASSOCIATED | STATUS_ASSOCIATING)))
- 		return 0;
- 	ipw_send_disassociate(data, 0);
-+	netif_carrier_off(priv->net_dev);
- 	return 1;
- }
- 
-@@ -10190,6 +10191,9 @@ static int ipw_tx_skb(struct ipw_priv *priv, struct ieee80211_txb *txb,
- 	u16 remaining_bytes;
- 	int fc;
- 
-+	if (!(priv->status & STATUS_ASSOCIATED))
-+		goto drop;
-+
- 	hdr_len = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_ctl));
- 	switch (priv->ieee->iw_mode) {
- 	case IW_MODE_ADHOC:
--- 
-1.5.3.6
-
+RnJvbTogIkpvaG4gVy4gTGludmlsbGUiIDxsaW52aWxsZUB0dXhkcml2ZXIuY29tPg0KRGF0ZTog
+RnJpLCAzMSBPY3QgMjAwOCAxOTozNzozNSAtMDQwMA0KDQo+IEhlcmUgaXMgYSBzcG9va3kgSGFs
+bG93ZWVuIHB1bGwgcmVxdWVzdCBmb3Igd2lyZWxlc3MgYml0cyBpbnRlbmRlZCBmb3INCj4gMi42
+LjI5IC0tIEJvbyEgIEFyZSB5b3Ugc2NhcmVkPw0KDQpCZXN0IHB1bGwgcmVxdWVzdCBldmVyIDot
+KQ0KDQo+IFRoZXJlIGlzIGEgdG9uIG9mIHN0dWZmIGhlcmUuICBUaGUgZ29vZCBuZXdzIGlzIHRo
+YXQgaXQgaGFzIGJlZW4gY29va2luZw0KPiBpbiB3aXJlbGVzcy10ZXN0aW5nIGZvciBhIHdoaWxl
+IGFuZCBpdCBzZWVtcyBPSy4gOi0pICBUaGVyZSBhcmUgc29tZQ0KPiB3YXJuaW5nIGluIHRoZSBi
+dWlsZCBsaWtlICLigJhfX0lFRUU4MDIxMV9DT05GX1NIT1JUX1NMT1RfVElNReKAmSBpcw0KPiBk
+ZXByZWNhdGVkIi4gIERvbid0IHdvcnJ5LCBJIGFscmVhZHkgaGF2ZSBtb3JlIHBhdGNoZXMgY29v
+a2luZyBpbg0KPiB3aXJlbGVzcy10ZXN0aW5nIHRoYXQgd2lsbCB0YWtlIGNhcmUgb2YgdGhvc2Ug
+d2FybmluZ3MgaW4gdGhlIG5leHQNCj4gcm91bmQuDQo+IA0KPiBQbGVhc2UgbGV0IG1lIGtub3cg
+aWYgdGhlcmUgYXJlIHByb2JsZW1zIQ0KDQpQdWxsZWQsIHRoYW5rcyBhIGxvdCENCg==
