@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.228]:12862 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbYKLSTJ (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:48837 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752225AbYKBBpz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 13:19:09 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so526063rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 10:19:08 -0800 (PST)
-Subject: Re: [RFC PATCH 1/4] lib80211: absorb crypto bits from net/ieee80211
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081112180228.GC2411@tuxdriver.com>
-References: <1226440265-21240-1-git-send-email-linville@tuxdriver.com>
-	 <1226508514.5368.21.camel@brick>  <20081112180228.GC2411@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 12 Nov 2008 10:19:03 -0800
-Message-Id: <1226513943.16649.0.camel@brick> (sfid-20081112_191917_368629_FF28580A)
-Mime-Version: 1.0
+	Sat, 1 Nov 2008 21:45:55 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC/RFT PATCH 0/2] rtl8187: implement conf_tx callback/correctly ack tx pkts
+Date: Sat, 1 Nov 2008 23:27:08 -0200
+Cc: linux-wireless@vger.kernel.org,
+	"Hin-Tak Leung" <htl10@users.sourceforge.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+References: <1225467722-31684-1-git-send-email-herton@mandriva.com.br> <490B957E.8020406@lwfinger.net>
+In-Reply-To: <490B957E.8020406@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200811012327.09178.herton@mandriva.com.br> (sfid-20081102_024618_080581_1C816F09)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-11-12 at 13:02 -0500, John W. Linville wrote:
-> On Wed, Nov 12, 2008 at 08:48:34AM -0800, Harvey Harrison wrote:
-> > On Tue, 2008-11-11 at 16:51 -0500, John W. Linville wrote:
-> > > These bits are shared already between ipw2x00 and hostap, and could
-> > > probably be shared both more cleanly and with other drivers.  This
-> > > commit simply relocates the code to lib80211 and adjusts the drivers
-> > > appropriately.
-> > > 
-> > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > > ---
-> > 
-> > Wouldn't it have been better to start from the mac80211 crypto bits
-> > as lib80211 and modify hostap/ipw2x00 to use the 'new' lib80211
-> > crypto bits?
-> 
-> I'm sorry, but you forgot to attach your patches...
-> 
+On Friday 31 October 2008 21:32:14 Larry Finger wrote:
+> Herton Ronaldo Krzesinski wrote:
+> > Two patches for two current issues in rtl8187:
+> > - First it should implement conf_tx callback, instead of hardcoding some
+> > tx queue values.
+> > - The second one should make rate control work for 8187B sending correct
+> >   feedback about transmitted packet status, using one of the Bulk In
+> > endpoints that provides this info. Unfortunately after recently rate
+> > control api rewrite in my testing here I don't get anymore greater than
+> > 1M rate with pid, before I would still get until 9M (and after some time
+> > falling to 1M, then going back up in steps, and so on) on same
+> > environment, don't know if it's expected to the new rate control api be
+> > more strict/have different behaviour, or if something additional must be
+> > done in rtl8187 (the link/signal quality may be too low and may be new
+> > rate control changes are more sensitive).
+> >
+> > Please test and check if there are any additional issues.
+>
+> With these patches installed, my RTL8187B device was stuck at 1 Mbs using
+> the 'pid' algorithm. Without them, the rate rapidly increases to 54 Mbs.
+> I'm roughly 2 m from my AP, and get an indicated signal of -22 dBm and a
+> link quality of 98/100. My kernel is from wireless-testing
+> (v2.6.28-rc2-4159-g6c11cd2) with the rtl8187 power control and timing
+> patches submitted earlier. There are no changes to any of the mac80211
+> components.
 
-I will if it's desired, I just wanted to know if there was a particular
-reason for going this way.
+I'll look why this behaviour of being stuck at 1M, I saw this too, but posted 
+the patch to confirm and if meanwhile may be someone sees something missing 
+or wrong with current version or in new rate api. While testing when 
+wireless-testing was still at 2.6.27, it didn't have this behaviour. Then I 
+updated to latest wireless-testing and had to fix the patch to build for new 
+rate control api, that I guess is the cause of being stuck at 1M, I have to 
+investigate more what is happening now. The first patch is another issue and 
+shouldn't affect rate control.
 
-Cheers,
+>
+> Larry
 
-Harvey
-
+-- 
+[]'s
+Herton
