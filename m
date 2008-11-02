@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48263 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204AbYKLXQz (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:52261 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150AbYKBW6v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 18:16:55 -0500
-Subject: Re: [FYI] ar9170 driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1226531034.14186.39.camel@johannes.berg> (sfid-20081113_000444_962024_07ACD3CC)
-References: <1226531034.14186.39.camel@johannes.berg>
-	 (sfid-20081113_000444_962024_07ACD3CC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rghDHymeJw/ThGUULfjv"
-Date: Thu, 13 Nov 2008 00:16:28 +0100
-Message-Id: <1226531788.14186.41.camel@johannes.berg> (sfid-20081113_001659_069366_BA2AA5E2)
-Mime-Version: 1.0
+	Sun, 2 Nov 2008 17:58:51 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so872119yxm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 14:58:49 -0800 (PST)
+Message-ID: <43e72e890811021458h1444d350v33a5e5b984b76495@mail.gmail.com> (sfid-20081102_235854_922430_CEB5B0CE)
+Date: Sun, 2 Nov 2008 14:58:49 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: No ProbeResp - assume out of range
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com>
+	 <200811022303.54476.mb@bu3sch.de>
+	 <1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Nov 2, 2008 at 2:42 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Mon, Nov 3, 2008 at 12:03 AM, Michael Buesch <mb@bu3sch.de> wrote:
+>> On Sunday 02 November 2008 22:05:56 Luis R. Rodriguez wrote:
+>>> I'm curious if others are getting this frequently as I am:
+>>>
+>>> No ProbeResp from current AP 00:DE:AD:BE:EE:FF - assume out of range
+>>>
+>>> I get this with ath5k and ath9k, can be triggered easily in ath5k by
+>>> doing a lot of consecutive:
+>>>
+>>> iwlist wlan0 scan
+>>>
+>>> I have to check if I can trigger this with ath9k by scanning too. We
+>>> were seeing this with ath9k but were thinking it was ath9k related as
+>>> it can be triggered on it after doing a large TX. Wondering if this is
+>>> more of a generic and mac80211 issue.
+>>
+>> IMO this is a mac80211 issue.
+>> mac80211 immediately assumes the connection is broken, if one probe-resp
+>> to a keekalife-proberequest is lost.
+>> So if you scan just after the request got sent, you'll never receive the response
+>> and mac80211 will terminate the connection.
+>> It should try a few times, instead, before blowing up things.
+>
+> I've seen this happening  in high traffic with some APs but it can be
+> also NIC issue. It needs to really investigate the sniffer capture I
+> wouldn't assume its only mac80211 issue.  Probe is issued only when RX
+> is not received for some time so there is some problem, nevertheless
+> monitoring beacons is a better approach from my experience.
 
---=-rghDHymeJw/ThGUULfjv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Agreed if it can be NIC issue, but it seems to be a common issue now
+across a few drivers, not just ath5k/ath9k.
 
-On Thu, 2008-11-13 at 00:03 +0100, Johannes Berg wrote:
+Hm, ieee80211_rx_mgmt_beacon() is not being hit with ath5k, something is fishy.
 
->  * use rate hw_value instead of huge switch statement
-
-done,
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/
-(look for *-ar9170.patch)
-
-johannes
-
---=-rghDHymeJw/ThGUULfjv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJG2PIAAoJEKVg1VMiehFYhmYP/0JQiGHKgbovVNuUs0F05mok
-gnb5qOXC0pSU63JkaYyXzgiG13fl9+34oEjEzcCrvw8k6yEpY+DgGVBi/PoDoCqi
-KfAm9uuzMnM/OVwY2yl0JYStYZPoZyFBgKrbKEms2EY6G/KOkKn7NWrjn9OfY1Ls
-E8qfbRbo54Uv0/jMNRsLnatH2EbIQSotVlanX7TwzJfSYlJl3EpOtc86B8Vo9PHa
-PXF4iAS7u7f5B7QNhr8ERv4Q6bhBVyF3jZxakLdbsGhsDd3SIiktBSq0eFovw/ey
-RE9G3UtBXkaVhtHbUhMskSN5ka0HQd2tIqVreYhiZkUUuGOlRoUFzDiJhnF3DKSi
-ged6SxAQUAIuq6vgh6DLv02f3UQzeXAHj4EhZcbf2hfmjSdoicwMgMxNZ3SgCSMo
-u9oi1DvXPKBmAiSGN3punAOB8ojmgBTV+2Kcm4SIHxEkSNMeSQL9nafCltG840OX
-cbNVg/vXsjGrjsyQ+gpGxgRNYBN3sKGTod4wTKhxF/ORSPxvGaDoajMO+PnLFP4W
-WgcCoKvrBdkWBhEC69Oo6mk57udPYnzdDFvQ8nPWaCkMv/2IKAL6IAype2x53n9H
-i/pVqR1uuGnGAaGY9aMUwVCCTYwGmiKPfRdXmPP4fnYL8s5HF4cqh1QJtbtg3IVK
-jcb5oXErKC1r/dEc7Ppo
-=P9Ia
------END PGP SIGNATURE-----
-
---=-rghDHymeJw/ThGUULfjv--
-
+  Luis
