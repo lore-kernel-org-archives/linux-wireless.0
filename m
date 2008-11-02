@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:47230 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824AbYKMKLe (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:59354 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824AbYKBJEo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 05:11:34 -0500
-Message-ID: <491BF73B.4080403@linux.intel.com> (sfid-20081113_111138_704362_B09F9328)
-Date: Thu, 13 Nov 2008 10:45:31 +0100
-From: Marcel Holtmann <holtmann@linux.intel.com>
+	Sun, 2 Nov 2008 04:04:44 -0500
+Date: Sun, 2 Nov 2008 09:04:36 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	willy@linux.intel.com, lrodriguez@atheros.com
+Subject: Re: ath5k gets lost with eeepc-laptop removal
+Message-ID: <20081102090436.GA10983@srcf.ucam.org> (sfid-20081102_100453_439576_7E741850)
+References: <20081031110502.18e33eba@doriath.conectiva> <40f31dec0810310926p6edd0af5o24d7616eb54c6d0@mail.gmail.com> <20081031151901.2d68c32d@doriath.conectiva> <40f31dec0810311133v65001e59h28cf6946ac3f14e7@mail.gmail.com> <20081031164351.3e4a9d4e@doriath.conectiva> <20081031164859.7808de23@doriath.conectiva>
 MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Issue with ifconfig down and 4965 driver
-References: <BCB72601-9DA2-4D89-BDF1-7B96254DA17C@linux.intel.com> <1226555293.1115.939.camel@rc-desk>
-In-Reply-To: <1226555293.1115.939.camel@rc-desk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081031164859.7808de23@doriath.conectiva>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Reinette,
+On Fri, Oct 31, 2008 at 04:48:59PM -0200, Luiz Fernando N. Capitulino wrote:
 
->> so I am running a 2.6.28-rc4 kernel and every time I stop  
->> wpa_supplicant or call ifconfig down on the 4965 card, I get a user  
->> noticeable delay (mouse freezes). Seems that some part inside the  
->> driver is actively sleeping with a busy-loop. This is really not an  
->> acceptable behavior since it is a day-to-day task to bring the device  
->> down. And for power concerns, we really wanna allow to bring down the  
->> interface.
->>
-> 
-> Please add your information to
-> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790
+>  Hmm. You think this could be related, Matthew?
 
-all information are already in the Bugzilla. It is nothing fancy and 
-easy to reproduce. Do we have a patch for it?
+No, I think that's unrelated. But unloading eeepc-laptop will cause 
+rfkill to shut down the platform radio, which on the eee triggers a PCIe 
+unplug of the card and powers it down.
 
-Regards
-
-Marcel
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
