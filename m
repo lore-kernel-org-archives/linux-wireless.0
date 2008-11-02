@@ -1,78 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59804 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753949AbYKTRxY (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3657 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754194AbYKBVwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 12:53:24 -0500
-Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Rami Rosen <ramirose@gmail.com>,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de
-In-Reply-To: <20081120082750.GG5078@jm.kir.nu>
-References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com>
-	 <1226943608.3902.36.camel@johannes.berg>
-	 <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com>
-	 <1227106146.26243.43.camel@johannes.berg>
-	 <eb3ff54b0811190709q76e8b073ic71831fd38ceba18@mail.gmail.com>
-	 <1227107869.26243.52.camel@johannes.berg>
-	 <20081119160135.GB3485@tuxdriver.com>
-	 <1227126620.26243.71.camel@johannes.berg> <20081120082750.GG5078@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-84cvlquOhZxdYqMiKzpr"
-Date: Thu, 20 Nov 2008 18:52:45 +0100
-Message-Id: <1227203565.3766.18.camel@johannes.berg> (sfid-20081120_185328_261812_A91FABD4)
-Mime-Version: 1.0
+	Sun, 2 Nov 2008 16:52:50 -0500
+Date: Sun, 2 Nov 2008 16:52:18 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, mickflemm@gmail.com, jirislaby@gmail.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linux-kernel@vger.kernel.org, michael+ath5k@stapelberg.de
+Subject: Re: [ath5k-devel] [PATCH] ath5k: fix detection of jumbo frames
+Message-ID: <20081102215218.GA6203@hash.localnet> (sfid-20081102_225255_475694_DD2AAAC4)
+References: <1225652938-6244-1-git-send-email-me@bobcopeland.com> <43e72e890811021300o6bef49b0i515d0f72974cef00@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890811021300o6bef49b0i515d0f72974cef00@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Nov 02, 2008 at 01:00:27PM -0800, Luis R. Rodriguez wrote:
+> >, and, since
+> > 63266a653589e1a237527479f10212ea77ce7844 "ath5k: rates cleanup", we do not fall back to the basic rate, such packets would trigger
+> > the following WARN_ON:
+> 
+> So its slow because using rate 0 takes a while? If indeed you don't
+> see a valid use for this rate I'd say to completely disallow it and
+> use BUG_ON() on it.
 
---=-84cvlquOhZxdYqMiKzpr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Not sure I follow - these are incoming frames, which all had a status_0
+of 0x1a40 (rs_more=0x1000 & length=0xa40).  So hw rate index was zero
+on these for some reason, but in my testing the rate index of all other 
+packets was something reasonable, e.g. 0x27.  
 
-On Thu, 2008-11-20 at 10:27 +0200, Jouni Malinen wrote:
+I looked over the rate tables compared to hal-legacy; I think what we
+have now is correct, just the old ath5k code in hw_to_driver_rix would 
+set rate=1 for any hw rate index that we didn't know about:
 
-> I would be fine adding such a warning into hostapd if someone comes up
-> with the patch and mac80211/nl80211 changes to provide the
-> working-PS-mode capability flag.
+-       /* Something went wrong, fallback to basic rate for this band */
+-       if ((mac80211_rix >= sc->curband->n_bitrates) ||
+-               (mac80211_rix <= 0 ))
+-               mac80211_rix = 1;
 
-Alright. I don't particularly care, so I'm not going to do that ;)
+That's gone now, and that's why we didn't have the WARN_ON previously.
 
-> Is the problem with zd1211rw just in PS buffering of multicast/broadcast
-> frames or does it also have problems with unicast? Many use cases could
-> handle the multicast/broadcast case, but if unicast PS buffering does
-> not work properly, there may be more issues.. Anyway, this leaves a
-> nasty surprise for the end user who may not even realize what power
-> saving really means in context of 802.11 and would not have any way of
-> figuring out why the connection does not work suddenly when the STA goes
-> to power save mode.
+For TX-side, I think we don't use rate 0 already since Bruno's cleanup,
+we should just use the hw_value fields in ath5k_rates which are all 
+nonzero.
 
-unicast buffering should be doable well in software though, no?
-
-johannes
-
---=-84cvlquOhZxdYqMiKzpr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJJaPpAAoJEKVg1VMiehFYr+MP/2TCoCOx79Hx802GZD1GQzJj
-+8C+TimKqXcvNa94EvGhy5Ci7vSJzJ1DrcGm8nXyAh2hozYW5Yh8L5eOvRbFXG6E
-1fMeCCTmuajfGLUeYuY7canp9f9/AQtKGVZn9cbPa3wPONhTVXKGeclnXVHHksjj
-OPaS1bGc9x6uXCAWmbbmCFHiX2Q70ma0rALCryFEp7NkUp1upXiIGqRSbgSUoXRN
-ckVTMndsH7yCnA5E9CbtvVP53YKLo1gsLdLWm31Fuqbqk4EYxEJyD+PzPhYP8rNV
-I4MF+iEc8ZBDvhTdOVsGRBA8mcxeWdFZQzpGZ7WgLymFj82H8ax7JRdAUIYsgIL4
-3evFWf+WLTxKGq3l1e3HEMl502DMOTcux+A1MHRd8f4OMquilOTntp3bfDLREG74
-Af5HTNESfzz7sh6b/Gk5dEDWhOq1oa6vPs+Hc5ZISkxDrCQpHlWNrmIQbcXkwYMJ
-hqp6H99MofzklgkMFyus5R4C2Y0icKyClvy/guja1ZZ9zAM74eCifEyABJHZwvWw
-56vvo5jZzWDadNyvnNoY+bin9FtCQMgf64yJEvV7UMMfZ5IgPtTBxDUMNzVOuQ6F
-HePOF2nsIl7vcqRQIk/X6fmRtCehJgDnMvdghgYAXNkJr8OYiVgBkr1BkAxW4yJt
-FEla59AUAo058j/C5yQ8
-=N4dS
------END PGP SIGNATURE-----
-
---=-84cvlquOhZxdYqMiKzpr--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
