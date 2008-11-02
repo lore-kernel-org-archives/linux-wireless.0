@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:54668 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752492AbYK3S4e (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.30]:17249 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228AbYKBWdq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2008 13:56:34 -0500
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mAUIuVBx015353
-	for <linux-wireless@vger.kernel.org>; Sun, 30 Nov 2008 12:56:32 -0600
-Received: from localhost.localdomain (essapo-nirac253237.europe.nokia.com [10.162.253.237])
-	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mAUIuSQr021554
-	for <linux-wireless@vger.kernel.org>; Sun, 30 Nov 2008 20:56:29 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: document ieee80211_tx_info.pad
-Date: Sun, 30 Nov 2008 20:56:28 +0200
-Message-Id: <1228071388-19303-1-git-send-email-kalle.valo@nokia.com> (sfid-20081130_195648_258951_400D8BCE)
+	Sun, 2 Nov 2008 17:33:46 -0500
+Message-ID: <43e72e890811021433q61fe925bt5817f9e1ab0ba581@mail.gmail.com> (sfid-20081102_233349_867409_7287B6FD)
+Date: Sun, 2 Nov 2008 14:33:44 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: fix detection of jumbo frames
+Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	michael+ath5k@stapelberg.de, linville@tuxdriver.com
+In-Reply-To: <20081102215218.GA6203@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1225652938-6244-1-git-send-email-me@bobcopeland.com>
+	 <43e72e890811021300o6bef49b0i515d0f72974cef00@mail.gmail.com>
+	 <20081102215218.GA6203@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes htmldocs warning:
+On Sun, Nov 2, 2008 at 1:52 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Sun, Nov 02, 2008 at 01:00:27PM -0800, Luis R. Rodriguez wrote:
+>> >, and, since
+>> > 63266a653589e1a237527479f10212ea77ce7844 "ath5k: rates cleanup", we do not fall back to the basic rate, such packets would trigger
+>> > the following WARN_ON:
+>>
+>> So its slow because using rate 0 takes a while? If indeed you don't
+>> see a valid use for this rate I'd say to completely disallow it and
+>> use BUG_ON() on it.
+>
+> Not sure I follow - these are incoming frames, which all had a status_0
+> of 0x1a40 (rs_more=0x1000 & length=0xa40).  So hw rate index was zero
+> on these for some reason, but in my testing the rate index of all other
+> packets was something reasonable, e.g. 0x27.
 
-Warning(mac80211.h:379): No description found for parameter 'pad[2]'
+Interesting -- I will have to check on what this means.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- include/net/mac80211.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> I looked over the rate tables compared to hal-legacy; I think what we
+> have now is correct, just the old ath5k code in hw_to_driver_rix would
+> set rate=1 for any hw rate index that we didn't know about:
+>
+> -       /* Something went wrong, fallback to basic rate for this band */
+> -       if ((mac80211_rix >= sc->curband->n_bitrates) ||
+> -               (mac80211_rix <= 0 ))
+> -               mac80211_rix = 1;
+>
+> That's gone now, and that's why we didn't have the WARN_ON previously.
+>
+> For TX-side, I think we don't use rate 0 already since Bruno's cleanup,
+> we should just use the hw_value fields in ath5k_rates which are all
+> nonzero.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6a1d4ea..287f7be 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -323,6 +323,7 @@ struct ieee80211_tx_rate {
-  * @flags: transmit info flags, defined above
-  * @band: the band to transmit on (use for checking for races)
-  * @antenna_sel_tx: antenna to use, 0 for automatic diversity
-+ * @pad: padding, ignore
-  * @control: union for control data
-  * @status: union for status data
-  * @driver_data: array of driver_data pointers
--- 
-1.5.6.5
+Oh ok thanks.
 
+  Luis
