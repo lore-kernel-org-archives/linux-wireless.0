@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.185]:63335 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbYKAWQN (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.178]:3924 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753367AbYKBM3Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 18:16:13 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so1452907rnd.17
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 15:16:12 -0700 (PDT)
-Message-ID: <43e72e890811011516y2e375cbem911fdca8372c909a@mail.gmail.com> (sfid-20081101_231639_239775_D8D9B1D2)
-Date: Sat, 1 Nov 2008 15:16:12 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Julien HENRY" <henryju@yahoo.fr>
-Subject: Re: Re : Re : Not associated with Intel 4965
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <564175.76346.qm@web28511.mail.ukl.yahoo.com>
+	Sun, 2 Nov 2008 07:29:24 -0500
+Received: by ik-out-1112.google.com with SMTP id c29so706250ika.5
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 04:29:21 -0800 (PST)
+Message-ID: <490D9D19.5070600@gmail.com> (sfid-20081102_132945_110106_091676C6)
+Date: Sun, 02 Nov 2008 12:29:13 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <564175.76346.qm@web28511.mail.ukl.yahoo.com>
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+CC: linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	linux-pm@lists.linux-foundation.org
+Subject: Re: [RFC PATCH 0/2] orinoco: Don't keep cached firmware around permanently
+References: <1225415743-28209-1-git-send-email-kilroyd@googlemail.com> <200811021335.20241.arvidjaar@mail.ru>
+In-Reply-To: <200811021335.20241.arvidjaar@mail.ru>
+Content-Type: text/plain; charset=ISO-8859-1
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 1, 2008 at 3:00 PM, Julien HENRY <henryju@yahoo.fr> wrote:
-> OK, now I can load the module... but nothing better concerning association.
->
-> Nov  1 22:39:24 Capgemini kernel: cfg80211: Using static regulatory domain info
-> Nov  1 22:39:24 Capgemini kernel: cfg80211: Regulatory domain: JP
-> Nov  1 22:39:24 Capgemini kernel:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> Nov  1 22:39:24 Capgemini kernel:     (2402000 KHz - 2494000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> Nov  1 22:39:24 Capgemini kernel:     (5160000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> Nov  1 22:39:24 Capgemini kernel:     (5250000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> Nov  1 22:39:24 Capgemini kernel: cfg80211: Calling CRDA for country: JP
-> Nov  1 22:39:24 Capgemini kernel: iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
-> Nov  1 22:39:24 Capgemini kernel: iwlagn: Copyright(c) 2003-2008 Intel Corporation
-> Nov  1 22:39:24 Capgemini kernel: iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> Nov  1 22:39:24 Capgemini kernel: iwlagn: Detected Intel Wireless WiFi Link 4965AGN REV=0x4
-> Nov  1 22:39:24 Capgemini kernel: iwlagn: Tunable channels: 13 802.11bg, 19 802.11a channels
-> ...
-> Nov  1 22:39:41 Capgemini kernel: iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> Nov  1 22:39:41 Capgemini kernel: firmware: requesting iwlwifi-4965-2.ucode
-> Nov  1 22:39:41 Capgemini kernel: Registered led device: iwl-phy0:radio
-> Nov  1 22:39:41 Capgemini kernel: Registered led device: iwl-phy0:assoc
-> Nov  1 22:39:41 Capgemini kernel: Registered led device: iwl-phy0:RX
-> Nov  1 22:39:41 Capgemini kernel: Registered led device: iwl-phy0:TX
-> Nov  1 22:39:41 Capgemini kernel: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> Nov  1 22:39:41 Capgemini kernel: iwlagn: TX Power requested while scanning!
-> Nov  1 22:39:41 Capgemini kernel: iwlagn: Error sending TX power (-11)
->
-> ...
-> Nov  1 22:39:47 Capgemini kernel: iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> Nov  1 22:39:47 Capgemini kernel: Registered led device: iwl-phy0:radio
-> Nov  1 22:39:47 Capgemini kernel: Registered led device: iwl-phy0:assoc
-> Nov  1 22:39:47 Capgemini kernel: Registered led device: iwl-phy0:RX
-> Nov  1 22:39:47 Capgemini kernel: Registered led device: iwl-phy0:TX
-> Nov  1 22:39:47 Capgemini kernel: ADDRCONF(NETDEV_UP): wlan0: link is not ready
->
-> Anything I can try?
+Andrey Borzenkov wrote:
+> On Friday 31 October 2008, David Kilroy wrote:
+>> The first patch uses the new power management notifiers to load and
+>> release the firmware prior to suspend and after resume (for both Agere
+>> and Symbol). I'm not an expert on where suspend/resume is headed, so I'd
+>> appreciate any advice from linux-pm on whether this is the preferred way
+>> to do things.
+> 
+> I tested this and it works, and looking how callbacks are invoked I think
+> it is techically correct. But I have some concerns about general idea of
+> requesting firmware multiple times that are not related to PM.
+> 
+> Many properties for the currently running device/driver instance depend on
+> particular firmware type and version. Now we blindly replace firmware; how
+> can we be sure it is actually the same one as was at the time feature set
+> was detected?
+> 
+> Even if some sort of checksumming were impemented we still have to be
+> prepared to completely reinitialize card on FW mismatch.
 
-Looks good to me. Try the usual commands/applications to connect to an
-AP. I'm not going to help you with that.
+Right. We actually have the same problem on card reset (which can happen
+via private ioctl or firmware lockup). We certainly need to be able to
+reinitialise the driver flags. I think it would involve something like
 
-  Luis
+--> On init, resume, reset
+1. fw download.
+2. detect version (+checksum?).
+3a. if version unchanged continue.
+3b. if version different reset all driver settings.
+4. record fw version.
+
+3b requires some refactorring of initialisation. And I'm not sure how
+this would interact with userspace on resume - presumably the driver
+should call netif_device_detach or something.
+
+
+Dave.
+
+> I checked what the rest of drivers/net does and either they do not cache at
+> all (does not work in this case) or they cache FW im memory after initial
+> request.
