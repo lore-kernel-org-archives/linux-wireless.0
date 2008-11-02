@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:15884 "EHLO
+Received: from wf-out-1314.google.com ([209.85.200.168]:2271 "EHLO
 	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408AbYKIHN5 (ORCPT
+	with ESMTP id S1753307AbYKBWmt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2008 02:13:57 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so2004344wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Nov 2008 23:13:56 -0800 (PST)
-Message-ID: <1ba2fa240811082313q57cca1fayf94aea9357f52a58@mail.gmail.com> (sfid-20081109_081405_907396_2AE5B960)
-Date: Sun, 9 Nov 2008 09:13:56 +0200
+	Sun, 2 Nov 2008 17:42:49 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so2214577wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 14:42:48 -0800 (PST)
+Message-ID: <1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com> (sfid-20081102_234254_252416_21A41A2A)
+Date: Mon, 3 Nov 2008 00:42:48 +0200
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Greg KH" <greg@kroah.com>
-Subject: Re: [stable] [PATCH 0/2] iwlwifi fixes for stable 2.6.27
-Cc: stable@kernel.org, rjw@sisk.pl, linville@tuxdriver.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20081109041808.GA1017@kroah.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: No ProbeResp - assume out of range
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <200811022303.54476.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1226191867-22324-1-git-send-email-tomas.winkler@intel.com>
-	 <20081109041808.GA1017@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com>
+	 <200811022303.54476.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 9, 2008 at 6:18 AM, Greg KH <greg@kroah.com> wrote:
-> On Sun, Nov 09, 2008 at 02:51:05AM +0200, Tomas Winkler wrote:
->> First one didn't make it into the stable due to type in emails
->> Second is important bug fix that was kept out 2.6.27 merging window.
->> There is no visible kernel bug but w/o this patch the 5000 iwlwifi HW
->> is left un-calibrated which is critical
+On Mon, Nov 3, 2008 at 12:03 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Sunday 02 November 2008 22:05:56 Luis R. Rodriguez wrote:
+>> I'm curious if others are getting this frequently as I am:
+>>
+>> No ProbeResp from current AP 00:DE:AD:BE:EE:FF - assume out of range
+>>
+>> I get this with ath5k and ath9k, can be triggered easily in ath5k by
+>> doing a lot of consecutive:
+>>
+>> iwlist wlan0 scan
+>>
+>> I have to check if I can trigger this with ath9k by scanning too. We
+>> were seeing this with ath9k but were thinking it was ath9k related as
+>> it can be triggered on it after doing a large TX. Wondering if this is
+>> more of a generic and mac80211 issue.
 >
-> Are these already in Linus's tree?  If so, do you have a git commit id
-> for them?
+> IMO this is a mac80211 issue.
+> mac80211 immediately assumes the connection is broken, if one probe-resp
+> to a keekalife-proberequest is lost.
+> So if you scan just after the request got sent, you'll never receive the response
+> and mac80211 will terminate the connection.
+> It should try a few times, instead, before blowing up things.
 
-iwlwifi: fix suspend to RAM in iwlwifi 10d0bd56966571d0324dfd9bbb8aa913a60bef5f
-iwlwifi: generic init calibrations framework
-6e21f2c109edd746a10e08186484bae8168cdd0c
+I've seen this happening  in high traffic with some APs but it can be
+also NIC issue. It needs to really investigate the sniffer capture I
+wouldn't assume its only mac80211 issue.  Probe is issued only when RX
+is not received for some time so there is some problem, nevertheless
+monitoring beacons is a better approach from my experience.
 
-Thanks
 Tomas
