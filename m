@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:50346 "EHLO ciao.gmane.org"
+Received: from mx34.mail.ru ([194.67.23.200]:14372 "EHLO mx34.mail.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755071AbYKEVM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 16:12:28 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Kxpfq-0004iv-6C
-	for linux-wireless@vger.kernel.org; Wed, 05 Nov 2008 21:12:22 +0000
-Received: from host251-18-dynamic.51-82-r.retail.telecomitalia.it ([82.51.18.251])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 21:12:22 +0000
-Received: from msan by host251-18-dynamic.51-82-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 21:12:22 +0000
-To: linux-wireless@vger.kernel.org
-From: msan <msan@email.it>
-Subject: Re: problems with ath5k driver.
-Date: Wed, 5 Nov 2008 21:12:14 +0000 (UTC)
-Message-ID: <get27e$ka2$1@ger.gmane.org> (sfid-20081105_221245_810387_1D5F83C1)
-References: <geiib4$apo$2@ger.gmane.org>
-	<20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	id S1753329AbYKBKfZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Nov 2008 05:35:25 -0500
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: David Kilroy <kilroyd@googlemail.com>
+Subject: Re: [RFC PATCH 0/2] orinoco: Don't keep cached firmware around permanently
+Date: Sun, 2 Nov 2008 13:35:19 +0300
+Cc: linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	linux-pm@lists.linux-foundation.org
+References: <1225415743-28209-1-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1225415743-28209-1-git-send-email-kilroyd@googlemail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart3282186.GzpBzu53If";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200811021335.20241.arvidjaar@mail.ru> (sfid-20081102_113552_318513_705EFA8A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Il Mon, 03 Nov 2008 19:16:25 -0500, Pavel Roskin ha scritto:
+--nextPart3282186.GzpBzu53If
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> Quoting msan <msan@email.it>:
-> 
->> I have an Esprimo D9500 Fujitsu Semens notebook. My lspci reports for
->> wireless card: "06:00.0 Ethernet controller: Atheros Communications
->> Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev 04)"
->> Dmesg says: "ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY:
->> 0x70)".
-> 
-> This device is only supported in Linux 2.6.27 and newer.
+On Friday 31 October 2008, David Kilroy wrote:
+> The recent patch to load orinoco firmware correctly on resume simply
+> kept the firmware in RAM for the entire time the module was loaded, and
+> only applied to Agere firmware.
+>=20
+> The first patch uses the new power management notifiers to load and
+> release the firmware prior to suspend and after resume (for both Agere
+> and Symbol). I'm not an expert on where suspend/resume is headed, so I'd
+> appreciate any advice from linux-pm on whether this is the preferred way
+> to do things.
+>=20
 
-Now I've installed debian package for Linux 2.6.27 taken from http://
-kernel-archive.buildserver.net/debian-kernel/pool/main/l/linux-2.6/
-and I have the same message from kernel:
+I tested this and it works, and looking how callbacks are invoked I think
+it is techically correct. But I have some concerns about general idea of
+requesting firmware multiple times that are not related to PM.
 
-"ath5k phy0: Support for RF2425 is under development."
+Many properties for the currently running device/driver instance depend on
+particular firmware type and version. Now we blindly replace firmware; how
+can we be sure it is actually the same one as was at the time feature set
+was detected?
 
-So it doesn't work even with linux 2.6.27.
+Even if some sort of checksumming were impemented we still have to be
+prepared to completely reinitialize card on FW mismatch.
 
+I checked what the rest of drivers/net does and either they do not cache at
+all (does not work in this case) or they cache FW im memory after initial
+request.
 
+Comments?
+
+--nextPart3282186.GzpBzu53If
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkkNgmgACgkQR6LMutpd94yAUACfXkLSfy1T+M2y7sBSK9UNFlu9
+Z64AoI7rzWoC46HSwZKgIUz/udJzkjHZ
+=rHoj
+-----END PGP SIGNATURE-----
+
+--nextPart3282186.GzpBzu53If--
