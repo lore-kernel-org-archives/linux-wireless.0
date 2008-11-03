@@ -1,82 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45032 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041AbYK2Jl4 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:10579 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096AbYKCSAn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2008 04:41:56 -0500
-Subject: Re: [PATCH 1/3] mac80211: add power state transition callbacks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Stefan Steuerwald <salsasepp@googlemail.com>
-In-Reply-To: <200811282345.48379.chunkeey@web.de>
-References: <200811282345.48379.chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HWvImUd/NJZ7RwBfnIny"
-Date: Sat, 29 Nov 2008 10:41:49 +0100
-Message-Id: <1227951709.3542.1.camel@johannes.berg> (sfid-20081129_104201_088320_7934C4ED)
-Mime-Version: 1.0
+	Mon, 3 Nov 2008 13:00:43 -0500
+Message-ID: <490F3C44.7080504@tuffmail.co.uk> (sfid-20081103_190049_967616_2BC2EE66)
+Date: Mon, 03 Nov 2008 18:00:36 +0000
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+CC: linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rfkill, stupid question #6
+References: <20081102040008.GB29606@khazad-dum.debian.net> <490D8C4E.3010201@tuffmail.co.uk> <20081102130655.GA12766@srcf.ucam.org> <20081103141628.GB31078@khazad-dum.debian.net> <20081103141836.GA31894@srcf.ucam.org> <490F0ACC.4000808@tuffmail.co.uk> <20081103145145.GD31078@khazad-dum.debian.net> <20081103145543.GA496@srcf.ucam.org> <20081103150229.GF31078@khazad-dum.debian.net> <20081103150843.GA1107@srcf.ucam.org> <20081103163311.GA2417@khazad-dum.debian.net>
+In-Reply-To: <20081103163311.GA2417@khazad-dum.debian.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Henrique de Moraes Holschuh wrote:
+> On Mon, 03 Nov 2008, Matthew Garrett wrote:
+>   
+>> On Mon, Nov 03, 2008 at 01:02:29PM -0200, Henrique de Moraes Holschuh wrote:
+>>     
+>>> Right now, you should still rfkill_force_state().  Please wait for an hour
+>>> or two while I clean up that broken resume handling, and I will tell you for
+>>> sure.
+>>>       
+>> Cool. I'll hold off posting my cleanups until then in that case.
+>>     
+>
+> Ok, two bugs reproduced, the fixes are ready and tested, and I will be
+> sending it now to linux-wireless.  You're in the CC, so you will get them.
+>
+> I will also need to send patches for -stable, as the ones for mainline won't
+> apply to -stable.
+>
+> Now, for what you asked: you DO NOT HAVE to use rfkill_force_state() in your
+> driver's resume method, as long as you NEVER make use of
+> RFKILL_STATE_HARD_BLOCKED.   I have fixed the bug that was messing this up.
+>   
 
---=-HWvImUd/NJZ7RwBfnIny
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks for fixing this, even though it doesn't affect my
+non-STATE_HARD_BLOCKED-using hardware.
 
-On Fri, 2008-11-28 at 23:45 +0100, Christian Lamparter wrote:
+I have one more question.  I read that if a STATE_SOFT_BLOCKED request
+is made when the hardware is in STATE_HARD_BLOCKED, the rfkill driver is
+expected to "double block".
 
->  /**
->   * enum sta_notify_cmd - sta notify command
->   *
-> - * Used with the sta_notify() callback in &struct ieee80211_ops, this
-> - * indicates addition and removal of a station to station table.
-> + * Used with the sta_notify() callback in &struct ieee80211_ops.
-> + * this command indicates addition and removal of a station to
-> + * station table, or if a station made a power state transition.
->   *
->   * @STA_NOTIFY_ADD: a station was added to the station table
->   * @STA_NOTIFY_REMOVE: a station being removed from the station table
-> + * @STA_NOTIFY_SLEEP: a station is now sleeping
-> + * @STA_NOTIFY_AWAKE: a sleeping station woke up
->   */
->  enum sta_notify_cmd {
-> -	STA_NOTIFY_ADD, STA_NOTIFY_REMOVE
-> +	STA_NOTIFY_ADD, STA_NOTIFY_REMOVE,
-> +	STA_NOTIFY_SLEEP, STA_NOTIFY_AWAKE,
->  };
+If the hard block is later cleared, the driver is expected to call
+rfkill_force_state(SOFT_BLOCKED).  The SOFT_BLOCKED state can then be
+cleared as normal.
 
-You know, I'm sorry, but I've come to realise that adding it to
-sta_notify isn't a good idea after all. The one thing I forgot is that
-this new callback has to be atomic because it's called from the rx path,
-and sta_notify doesn't have to be.
+But if there is an UNBLOCK request in the double-blocked state, the
+rfkill core will reject it and preserve the  double-blocked state.  Is
+this intended, or a known issue?
 
-Unless we want to defer RX packet processing to a workqueue rather than
-a tasklet?
+Wouldn't it be simpler to use a bitmask so that the rfkill core can at
+least represent this double-blocked state?  I guess the problem would be
+how to shoehorn it into the sysfs interface.
 
-johannes
-
---=-HWvImUd/NJZ7RwBfnIny
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJMQ5UAAoJEKVg1VMiehFYfuMP/08IrdvugLDnxCVYhFHDQH+O
-DeBwDdLajYKzTFOUGLTkCKoqbKTWLWGn6VRvHgexvlNz3wfCPRnWraocw+O87jKu
-5HwjVIZ8joiGc+QvRHdC1/L8NCkCiAa6wYs0n0zDUkxI2CkvigmU8jlIdezYrE6e
-GiuIVqhIVQUAixehRXtMV2dbb85+R0wnBTDDol0bd6mNINg++bXHranyC6vrcSoO
-n/T/r1k+NR2wx3rI2PSV2R6il5ogHI/I+SFPNOxfDv2x+KvqPum5rlLhFmfy3WM3
-ThQHcwcig7lDDGMl9iLNJ7+FDrZ7VkCfiFfv/4XBKqqSWenLPn0lxYgkTEBO9nif
-01e5mtLnz3+AtJS0NIz/BRgYpOPco5vWfWidz4Mt/F/ephAHAdCZODR4T5eFvAGM
-wJ/q4TIKTUbon6KaNEhiW/9SkoHE9hyE/9fufWhOFTGa3GdZrrLibIz08OXcAkK/
-JYV5DYve/w6iNoSjHmler36gA8RjzIlUkU9FMOcJbNZKBoVQULVSWNQ8rYl6LelF
-MT6d1Umquj6yqEH6zzye2Z7CDHhe2RijIcd9DpQtVNQS2NXAbK1Bspl+CM9gnF6P
-NPIrMpdSvW7SpN7LDXcJ7JiJkuBiu02+IRezkbWMRUP1UQ0d1f6C892LVHmzs507
-6hFKUlpiA6qGP7GvUsNR
-=rGZ8
------END PGP SIGNATURE-----
-
---=-HWvImUd/NJZ7RwBfnIny--
-
+Thanks
+Alan
