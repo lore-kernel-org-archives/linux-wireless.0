@@ -1,71 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28020 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754914AbYKDRfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 12:35:04 -0500
-Subject: Re: [ipw3945-devel] PROBLEM: Led for wifi blinking all the time
-From: reinette chatre <reinette.chatre@intel.com>
-To: =?UTF-8?Q?Ond=C5=99ej_Ku=C4=8Dera?= <ondrej.kucera@centrum.cz>
-Cc: Marcos Barbosa <marcosestevesbarbosa@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"jikos@suse.cz" <jikos@suse.cz>, "Zhu, Yi" <yi.zhu@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <490FAC3B.6030205@centrum.cz>
-References: <490A5D39.1090605@centrum.cz>
-	 <20081031145434.GB4310@tuxdriver.com>
-	 <42bbb5c30810311159v50785ac7jfc8ef8eb3e32ea9b@mail.gmail.com>
-	 <490FAC3B.6030205@centrum.cz>
-Content-Type: text/plain; charset=utf-8
-Date: Tue, 04 Nov 2008 09:35:33 -0800
-Message-Id: <1225820133.1115.522.camel@rc-desk> (sfid-20081104_183511_419985_A48CAADA)
+Received: from xc.sipsolutions.net ([83.246.72.84]:35845 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754395AbYKCHzG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 02:55:06 -0500
+Subject: Re: wireless-testing commit
+	eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	tim.gardner@canonical.com, mick@madwifi.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com> (sfid-20081103_085123_312223_8FACF40C)
+References: <4908B754.1050400@tpi.com>
+	 <43e72e890811011419k460b11e0he08d66022cbd606e@mail.gmail.com>
+	 <40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com>
+	 <40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
+	 <20081102184146.GA6065@hash.localnet>
+	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
+	 <1225696692.3619.18.camel@johannes.berg>
+	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
+	 <1225697686.3619.25.camel@johannes.berg>
+	 <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
+	 (sfid-20081103_085123_312223_8FACF40C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HbH/VoN14QMajLw2SU0j"
+Date: Mon, 03 Nov 2008 08:54:27 +0100
+Message-Id: <1225698867.3619.31.camel@johannes.berg> (sfid-20081103_085512_665179_665B7F07)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-11-03 at 17:58 -0800, Ond=C5=99ej Ku=C4=8Dera wrote:
-> Hi,
+
+--=-HbH/VoN14QMajLw2SU0j
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, 2008-11-02 at 23:51 -0800, Luis R. Rodriguez wrote:
+> On Sun, Nov 2, 2008 at 11:34 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sun, 2008-11-02 at 23:29 -0800, Luis R. Rodriguez wrote:
+> >
+> >> >> Not sure I agree with the WARN_ON() if the driver's mac80211 config=
+()
+> >> >> callback fails. In our case when we tune to a different channel we
+> >> >> have to clear any DMA operations first and then we reset the chip.
+> >> >> Reseting the chip can fail for whatever strange hw issue cases. The
+> >> >> patch fixes the complaint but is the complaint sane?
+> >> >
+> >> > What's mac80211 to do when it fails?
+> >>
+> >> How about a shiny new nl80211 event?
+> >
+> > And wtf would userspace do?
 >=20
-> Marcos Barbosa wrote:
-> > Traffic exists all the time, because the commands to control
-> > connection. To cancel all traffic, down the wireless interface.
->=20
-> OK, let me rephrase. It may by true that from a low-level point of vi=
-ew=20
-> there exists some traffic all the time. But let's see it from user's=20
-> point of view. With 2.6.26 I connected to network during which the le=
-d=20
-> was blinking. After the connection was established, it stopped blinki=
-ng=20
-> and was just on. Then when I started downloading something (wget=20
-> http://server.com/foo.bar), it started blinking and shortly after the=
-=20
-> download was completed, it stopped to be just "on" again. I consider=20
-> this a very reasonable behavior. With 2.6.27 it is blinking really al=
-l=20
-> the time, whether the user is consciously downloading/uploading some=20
-> data or not. The main problem is that such periodic non-stop blinking=
- is=20
-> very eye catching and it draws your attention away from the things yo=
-u=20
-> are actually doing. So I really believe this is a regression. One mor=
-e=20
-> reason, even though I'm not sure if I should even bring it up - on MS=
-=20
-> Windows it behaves more or less in a similar manner as with 2.6.26=20
-> kernel. Now I'm far from saying that things should work the way they=20
-> work on Windows but in this case I think they actually have it right.
+> If multiple configuration attempts fail perhaps stop trying, and
+> inform the user?
 
-Could you please add your feedback to
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=3D1771 ?
+But you're saying it's "normal" to get this failure, so wouldn't it
+always do that sooner or later and always say your hw is broken? Also,
+that's a bad thing to do in userspace, imho. Why can it fail here
+anyway? hw borked is one obvious case, but it shouldn't happen enough
+for this to be a problem yet.
 
-Thanks
+johannes
 
-Reinette
+--=-HbH/VoN14QMajLw2SU0j
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJDq4vAAoJEKVg1VMiehFY3WsP/3LbsEaJgYCjmXiRq4Fgop34
+uYNPavumcD1pvEnsAZcsFHLcjCfjLH//b30hopLmmQyX8j96qRkM7quMmNN4mLKU
+gdbJPjdspelPAXjPiZuejyTw9AMUS3zaKEan/5cXeA5tsFarmAJGkNUCQglwJfEW
+Be2H1u0EFXvNLTdShm4yjM9fHhiAB5+NuS4sF7JXYWO+VPG58HxiYWJwuQg+v8eS
+m3wDOUIReOWWhQp2U+NeucR4Y2Uw5GobGZTxv5b0ScC5nplwDjsHeRA3Ih/tb+uI
+DapT9hOQscz4eee5VKBQyWOsn/77vz+AFvglyunJI46/LsQM2TJjtvJOrtzFZf83
+++B1OIUjlxPR6U42nsT7+TKpJiYI5gs7T29d6gkbaUUS0B8+RHpOByc34QRqLpfg
+LyRA/pt5KC+oLbowJ2XVvM3pbgwjhUqf3C5hwARzHMLKg0Pb8bcE7fCj9YcseWpn
+Kes+d3SZA12d+yD2CBNQObdqQyXUTh+eCiX/ts0QV4gjhvJCMwTfmzCMXM672hgd
+WkSG7gLaJAKDuOhYmGpXetPhFbCN7erSJq29uHaAtHUf/zFzNs41VgfefS2bOt8X
+T64jMoQz+SADGGxSx5hxic4cXF3CgzTciULvrJCPbB0xBSICxD1fWwuHzJQSk96P
+NU8jKaTFHNSdRXJn9upf
+=WNIb
+-----END PGP SIGNATURE-----
+
+--=-HbH/VoN14QMajLw2SU0j--
+
