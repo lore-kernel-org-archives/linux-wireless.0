@@ -1,89 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57723 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755565AbYKKM4S (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.178]:36899 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751942AbYKCIBQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 07:56:18 -0500
-Subject: Re: scheduling while atomic: iwl3945 in mmotm 2008-09-23-11-27
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"flamingice@sourmilk.net" <flamingice@sourmilk.net>,
-	Tomas Winkler <tomasw@gmail.com>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1226375524.2604.328.camel@debian.sh.intel.com>
-References: <48DE8EC9.80306@gmail.com>
-	 (sfid-20080927_215201_348716_1480E298)  <1222588029.3798.77.camel@johannes.berg>
-	 <1226375524.2604.328.camel@debian.sh.intel.com>
-Content-Type: text/plain
-Date: Tue, 11 Nov 2008 11:28:04 +0100
-Message-Id: <1226399284.3890.5.camel@johannes.berg> (sfid-20081111_135622_918367_8DE432AD)
-Mime-Version: 1.0
+	Mon, 3 Nov 2008 03:01:16 -0500
+Received: by el-out-1112.google.com with SMTP id z25so1129480ele.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 00:01:15 -0800 (PST)
+Message-ID: <43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com> (sfid-20081103_090121_231477_C77FAC7E)
+Date: Mon, 3 Nov 2008 00:01:15 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
+Cc: "Bob Copeland" <me@bobcopeland.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>, tim.gardner@canonical.com,
+	mick@madwifi.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1225698867.3619.31.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <4908B754.1050400@tpi.com>
+	 <40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com>
+	 <40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
+	 <20081102184146.GA6065@hash.localnet>
+	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
+	 <1225696692.3619.18.camel@johannes.berg>
+	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
+	 <1225697686.3619.25.camel@johannes.berg>
+	 <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
+	 <1225698867.3619.31.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-11-11 at 11:52 +0800, Zhu Yi wrote:
+On Sun, Nov 2, 2008 at 11:54 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2008-11-02 at 23:51 -0800, Luis R. Rodriguez wrote:
+>> On Sun, Nov 2, 2008 at 11:34 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Sun, 2008-11-02 at 23:29 -0800, Luis R. Rodriguez wrote:
+>> >
+>> >> >> Not sure I agree with the WARN_ON() if the driver's mac80211 config()
+>> >> >> callback fails. In our case when we tune to a different channel we
+>> >> >> have to clear any DMA operations first and then we reset the chip.
+>> >> >> Reseting the chip can fail for whatever strange hw issue cases. The
+>> >> >> patch fixes the complaint but is the complaint sane?
+>> >> >
+>> >> > What's mac80211 to do when it fails?
+>> >>
+>> >> How about a shiny new nl80211 event?
+>> >
+>> > And wtf would userspace do?
+>>
+>> If multiple configuration attempts fail perhaps stop trying, and
+>> inform the user?
+>
+> But you're saying it's "normal" to get this failure,
 
-> > >  [<ffffffff80257315>] synchronize_rcu+0x35/0x40
-> > 
-> > >  [<ffffffff80551d17>] sta_info_destroy+0x47/0x110
-> > >  [<ffffffff80559156>] ieee80211_set_disassoc+0x146/0x250
-> > >  [<ffffffff805593d5>] ieee80211_sta_req_auth+0x85/0x90
-> > >  [<ffffffff8055b156>] ieee80211_notify_mac+0x56/0xa0
+No, I'm just sayings its possible, right now mac80211 assumes its not
+and if it does its because we somehow lied to mac80211 of our
+capabilities.
 
-> > We can fix this by using RTNL locking instead, not sure though that'll
-> > work because I don't know how iwl3945 calls this, I'll let Tomas deal
-> > with it.
-> 
-> Johannes, this scheduleing in atomic has nothing to do with the caller.
-> iwl3945 already calls it in a workqueue. The problem is inside
-> ieee80211_notify_mac(). Unfortunately, iwl3945/iwlagn turns to be the
-> only user at this time.
+> so wouldn't it
+> always do that sooner or later and always say your hw is broken?
 
-I see. But the suggestion above is valid nonetheless and works fine if
-it's called from a workqueue. I take no blame for this though, you guys
-added this function and you also changed ieee80211_set_disassoc() in
-ways that made the original implementation wrong :P
+Nope
 
-John, please apply the patch below.
+> Also,
+> that's a bad thing to do in userspace, imho.
 
-johannes
+What should we do with these rare failures then?
 
+> Why can it fail here
+> anyway?
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: fix notify_mac function
+Look at all the reasons for which a hw reset can fail for ath9k and ath5k.
 
-The ieee80211_notify_mac() function uses ieee80211_sta_req_auth() which
-in turn calls ieee80211_set_disassoc() which calls a few functions that
-need to be able to sleep, so ieee80211_notify_mac() cannot use RCU
-locking for the interface list and must use rtnl locking instead.
+> hw borked is one obvious case, but it shouldn't happen enough
+> for this to be a problem yet.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+This I agree with. It is rare, its just possible, right now mac80211
+assumes it never will.
 
---- everything.orig/net/mac80211/mlme.c	2008-11-11 11:23:09.000000000 +0100
-+++ everything/net/mac80211/mlme.c	2008-11-11 11:23:24.000000000 +0100
-@@ -2596,14 +2596,14 @@ void ieee80211_notify_mac(struct ieee802
- 
- 	switch (notif_type) {
- 	case IEEE80211_NOTIFY_RE_ASSOC:
--		rcu_read_lock();
--		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		rtnl_lock();
-+		list_for_each_entry(sdata, &local->interfaces, list) {
- 			if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 				continue;
- 
- 			ieee80211_sta_req_auth(sdata, &sdata->u.sta);
- 		}
--		rcu_read_unlock();
-+		rtnl_unlock();
- 		break;
- 	}
- }
-
-
+  Luis
