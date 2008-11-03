@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:48597 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939AbYKLKjY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 05:39:24 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so155061ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 02:39:23 -0800 (PST)
-Message-ID: <646765f40811120239t51fda54v3f87426be18d3c7a@mail.gmail.com> (sfid-20081112_113927_989563_C63A5F14)
-Date: Wed, 12 Nov 2008 21:39:22 +1100
-From: "Julian Calaby" <julian.calaby@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [RFC PATCH 4/4] net/ieee80211 -> drivers/net/ipw2x00/libipw_* rename
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200811121129.43125.mb@bu3sch.de>
+Received: from mail.atheros.com ([12.36.123.2]:32001 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751571AbYKCWnG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 17:43:06 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 14:43:06 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] ath5k: allow APs to receive beacons
+Date: Mon, 3 Nov 2008 14:43:00 -0800
+Message-ID: <1225752181-1343-3-git-send-email-lrodriguez@atheros.com> (sfid-20081103_234313_325774_9F9EF87F)
+In-Reply-To: <1225752181-1343-2-git-send-email-lrodriguez@atheros.com>
+References: <1225752181-1343-1-git-send-email-lrodriguez@atheros.com>
+ <1225752181-1343-2-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1226440265-21240-3-git-send-email-linville@tuxdriver.com>
-	 <20081111232102.GA5827@tuxdriver.com>
-	 <646765f40811111927y7e25bca1xb2bdb7e2b4db112a@mail.gmail.com>
-	 <200811121129.43125.mb@bu3sch.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2008 at 21:29, Michael Buesch <mb@bu3sch.de> wrote:
-> That's how it currently works in the patch.
-> The help text is only there for the reader of the Kconfig file. It won't
-> show up in menuconfig or whatever.
+Allow APs to receive beacons to detect when it needs
+to use protection to update the NAV correctly on
+11b stations.
 
-Oh. I guess I need to learn more about Kconfig then.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath5k/base.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Sorry for the noise.
-
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 1ed152f..b2365be 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2953,7 +2953,8 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
+ 		test_bit(ATH_STAT_PROMISC, sc->status))
+ 		rfilt |= AR5K_RX_FILTER_PROM;
+ 	if (sc->opmode == NL80211_IFTYPE_STATION ||
+-		sc->opmode == NL80211_IFTYPE_ADHOC) {
++			sc->opmode == NL80211_IFTYPE_ADHOC ||
++			sc->opmode == NL80211_IFTYPE_AP) {
+ 		rfilt |= AR5K_RX_FILTER_BEACON;
+ 	}
+ 	if (sc->opmode == NL80211_IFTYPE_MESH_POINT)
 -- 
+1.5.6.rc2.15.g457bb.dirty
 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
