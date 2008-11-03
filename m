@@ -1,60 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:56085 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752907AbYKSNA1 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37390
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754852AbYKCHfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 08:00:27 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so3689188wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 05:00:26 -0800 (PST)
-Message-ID: <1ba2fa240811190500h56e97908of7a29a1e70c8b54e@mail.gmail.com> (sfid-20081119_140034_152800_45AF5815)
-Date: Wed, 19 Nov 2008 15:00:26 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"reinette chatre" <reinette.chatre@intel.com>,
-	"Marcel Holtmann" <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1227097737.26243.28.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1226969241.4014.24.camel@johannes.berg>
-	 <1227001390.4014.43.camel@johannes.berg>
-	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
-	 <1227055693.4014.95.camel@johannes.berg>
-	 <1ba2fa240811190121h3ff51824o90b72a206192e793@mail.gmail.com>
-	 <1227094832.26243.10.camel@johannes.berg>
-	 <1ba2fa240811190424v4b9074e5u4e679bea278b1f3@mail.gmail.com>
-	 <1227097737.26243.28.camel@johannes.berg>
+	Mon, 3 Nov 2008 02:35:53 -0500
+Date: Sun, 02 Nov 2008 23:35:28 -0800 (PST)
+Message-Id: <20081102.233528.91273615.davem@davemloft.net> (sfid-20081103_083618_184141_CCC72C0C)
+To: johannes@sipsolutions.net
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org
+Subject: Re: Alignment issue with 4965 and 2.6.28-rc3
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1225697100.3619.21.camel@johannes.berg>
+References: <DFAA4A8C-F8D5-4D08-9C6E-8BB65E3BCFC2@holtmann.org>
+	<1225697100.3619.21.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2008 at 2:28 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-11-19 at 14:24 +0200, Tomas Winkler wrote:
->> On Wed, Nov 19, 2008 at 1:40 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Wed, 2008-11-19 at 11:21 +0200, Tomas Winkler wrote:
->> >
->> >> > Indeed. One would seem to be the buffer list itself, which also needs to
->> >> > fit within a 40-bit mask with 256 alignment (rxq->bd), the rb_stts needs
->> >> > 16-byte alignment which probably is always satisfied, but I'm not sure,
->> >> > you'll need to research the alignment guarantees.
->> >>
->> >> Note these are allocated using persistent calls and not kmalloc I hope
->> >> at least does are page alignment.
->> >
->> > Good point. On powerpc at least that uses alloc_pages internally.
->>
->> Not sure if if wouldn't be better just work directly with pages in RX?
->
-> Well, in theory yes, but it's not possible to have skb->data point to a
-> separate page rather than a kmalloc area. And while you could allocate
-> an skb with very little headroom and the rest of the skb data in the
-> fraglist with pages, mac80211 couldn't handle it.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 03 Nov 2008 08:25:00 +0100
 
-I will look how this is handled in Ethernet drivers there should be
-some example with jumbo packets.
-Tomas
+> I've tried sending a patch to add
+> CONFIG_HAVE_EFFICIENT_ALIGNED_ACCESS or something like that so that
+> we can fix it up if that is unset or make the driver depend on it,
+> but it hasn't stuck so far, so for now, ignore the warning and don't
+> try to use Intel wireless hw on platforms that don't like unaligned
+> loads.
+
+What are you smoking? ;-)
+
+arch/Kconfig:config HAVE_EFFICIENT_UNALIGNED_ACCESS
+arch/powerpc/Kconfig:	select HAVE_EFFICIENT_UNALIGNED_ACCESS
+arch/x86/Kconfig:	select HAVE_EFFICIENT_UNALIGNED_ACCESS
