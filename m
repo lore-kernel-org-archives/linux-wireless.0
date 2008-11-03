@@ -1,88 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39065 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:35365 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195AbYKIIwp (ORCPT
+	with ESMTP id S1751348AbYKCRuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2008 03:52:45 -0500
-Subject: Re: [PATCH 1/1] mac80211: rc80211_pid eliminate sparse warnings
+	Mon, 3 Nov 2008 12:50:16 -0500
+Subject: Re: No ProbeResp - assume out of range
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1226181055-713-1-git-send-email-tomas.winkler@intel.com>
-References: <1226181055-713-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0EwKMUucWapNDZhRz+sh"
-Date: Sun, 09 Nov 2008 09:52:42 +0100
-Message-Id: <1226220762.3614.12.camel@johannes.berg> (sfid-20081109_095304_403699_EF1DDFBD)
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@nokia.com>
+In-Reply-To: <490F2B6C.9090002@openwrt.org> (sfid-20081103_174852_988997_5757C55B)
+References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com>
+	 <200811022303.54476.mb@bu3sch.de>
+	 <1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com>
+	 <43e72e890811021458h1444d350v33a5e5b984b76495@mail.gmail.com>
+	 <20081103002558.GA14153@tesla>  <490F2B6C.9090002@openwrt.org>
+	 (sfid-20081103_174852_988997_5757C55B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kTaZ9hFraIQ/7Hh3XiOR"
+Date: Mon, 03 Nov 2008 18:50:05 +0100
+Message-Id: <1225734605.3619.39.camel@johannes.berg> (sfid-20081103_185022_297275_376F55BF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-0EwKMUucWapNDZhRz+sh
+--=-kTaZ9hFraIQ/7Hh3XiOR
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-11-08 at 23:50 +0200, Tomas Winkler wrote:
-> This patch eliminates sparse warnings in pid rate scale algorithm
-> 'debugfs: allow access to signed values' patch hit the dead end
-> year ago w/o much echo so I guess there is no real need to address this
-> properly.
+On Mon, 2008-11-03 at 17:48 +0100, Felix Fietkau wrote:
+> Luis R. Rodriguez wrote:
+> > OK I found the issue with ath5k, no beacons were being passed at all, I=
+'ll post
+> > a patch.
+> Why not configure the beacon miss interrupt instead of passing beacons to
+> mac80211 in STA mode? That should save some battery on Laptops because it=
+=20
+> won't cause 10 extra wakeups every second.
 
-And I guess nobody uses these debugfs knobs anyway :)
-Looks like an acceptable workaround.
+We have no way to indicate to mac80211 that the hw is watching beacons,
+so that'd be equivalent to just dropping them. We've discussed such API,
+and I hope somebody will implement it :)
 
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+johannes
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  net/mac80211/rc80211_pid_algo.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_a=
-lgo.c
-> index 2328ba5..96ceb7e 100644
-> --- a/net/mac80211/rc80211_pid_algo.c
-> +++ b/net/mac80211/rc80211_pid_algo.c
-> @@ -403,11 +403,11 @@ static void *rate_control_pid_alloc(struct ieee8021=
-1_hw *hw,
->  						 S_IRUSR | S_IWUSR, debugfsdir,
->  						 &pinfo->sampling_period);
->  	de->coeff_p =3D debugfs_create_u32("coeff_p", S_IRUSR | S_IWUSR,
-> -					 debugfsdir, &pinfo->coeff_p);
-> +					 debugfsdir, (u32 *)&pinfo->coeff_p);
->  	de->coeff_i =3D debugfs_create_u32("coeff_i", S_IRUSR | S_IWUSR,
-> -					 debugfsdir, &pinfo->coeff_i);
-> +					 debugfsdir, (u32 *)&pinfo->coeff_i);
->  	de->coeff_d =3D debugfs_create_u32("coeff_d", S_IRUSR | S_IWUSR,
-> -					 debugfsdir, &pinfo->coeff_d);
-> +					 debugfsdir, (u32 *)&pinfo->coeff_d);
->  	de->smoothing_shift =3D debugfs_create_u32("smoothing_shift",
->  						 S_IRUSR | S_IWUSR, debugfsdir,
->  						 &pinfo->smoothing_shift);
-
---=-0EwKMUucWapNDZhRz+sh
+--=-kTaZ9hFraIQ/7Hh3XiOR
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJFqTWAAoJEKVg1VMiehFYnmkQAI94Aly/8q+SFOUk1wJq+2xC
-vZ76Eo3eTgzHh0sGqD4gBgLSz2nACQrwhzwrlQqxlfVLtHcBYvdmxwGb1z6UUvAj
-KDIDxfUck3fggcCVpRcKzZ8sI6pXYCIAYQnhkTPIyjb4XC7Td5s372QJ6RkrEmNa
-cHSuHnPNEplxnt0YbJJLep2Ua/r+fFxhZH61lywKVphZU1iPMdbg5HtUSgLsVJk7
-uqVMApkqK/yQ9/B8OI84LWgPNhAfy+zt00yxHc16n/PwyM6H9JUpbLkIw0ED6elU
-DdwNCxmAwGzsDFXaWxEJ13G14h7sKGS3s9dyUht1F47qINtXDbVE9yCf2khfT3q8
-AAfxey8KK+N0duqPzSGatjshjxmwNR9mz/npoTCDU+F8zE36BHg2kYebv1MH1j/9
-WXTSvZ7O3zUsVD8V6IlAEjMJV59Dt8h9hidz924sFxgMGwm51dvZBIWKdL4ST7xW
-vJ6dU7Asria8s8gJJKrm6zMaDs+9OTJPQjJ+DB6CF/8EJgSQaFgL8G6jX40CQlUy
-GUkrigLvcyyZvoEo4ttxKYbIEuEaq6JleQpA8bM3hSYkD1/G1hq4XeF5XFuknYhX
-+9IrbU3EuZhWgwSaJZPPypdO75TtDYfabb4h66jKkxkd18nj3tsPfwHwMKOwMNEw
-vOe0eUHTqWhYptnoXKby
-=H1Xy
+iQIcBAABAgAGBQJJDznJAAoJEKVg1VMiehFY6xwP/2yNGu1DCDkr34n774n2cFNV
+RcI8B7hJQ2k1ST/L4hi7XOHB72Cj6X8vdY3p1IyrA41y5LCmbALaAzYtVWBwm7wf
+i7DPZNla2VDpVCpfpbFdywo3kAQx0DO1aCePzG4MZxcqAoDhiQKXKPPi2O/RsoV4
+458QKxZYQkxGIYwGTM9dRz5XpbnYAvOGxPe8gMZDKszOek4wd4JITgM9rwTcizOB
+wrBzz9p29K1j7G+km1UmiKkOwhzJZXEjQRStdjq9Bo8qZsC/UV5W5dQrGb6vICC8
+3R33HhA6FRJc354CrKJwySWEDutgNJ3Sht2FrSYTbRAaQf0hnk4fIjT3jXx94k4r
+PQ5MTnm1w8r/YTjf8UzorP7B0UCNP4lghm6Pp0HK3zLagzVPHaFZ6USu49O/5AQM
+lqc2/qeTgTNuWYx/yPqqJe5LW4zTbFb36CvBEx6exq6gWBAYd22cm5nVk6hwhCHd
+XaiJ1ZboFqJkroLolrNszqYOBjGLzpq5cAQrjwmIgX4DhgAHGXzP0ud6omBSU3aV
+NxS6JVpeTT41HA7J8N9LwP2LN1OTUizltD+uORTPxJbdv4pB6GoUYKO5diRBWy4G
+zgPRHI8Dm+N/6ry5BNTDJ7OvwOYzfcvr2NCz4T1/yh6nTLfT6A+TvhLqpewJl/rS
+8JwF/a43ZZLT7rqPd7oS
+=3BYJ
 -----END PGP SIGNATURE-----
 
---=-0EwKMUucWapNDZhRz+sh--
+--=-kTaZ9hFraIQ/7Hh3XiOR--
 
