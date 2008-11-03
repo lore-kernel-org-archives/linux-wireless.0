@@ -1,197 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:28177 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752023AbYKYR6A (ORCPT
+Received: from mail-gx0-f12.google.com ([209.85.217.12]:57437 "EHLO
+	mail-gx0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754525AbYKCEwo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 12:58:00 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so46716ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 09:57:58 -0800 (PST)
-Message-ID: <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com> (sfid-20081125_185806_011622_BCADFB24)
-Date: Tue, 25 Nov 2008 12:57:57 -0500
-From: "Andrey Vul" <andrey.vul@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: cannot compile compat-wireless-2.6-old
-In-Reply-To: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com>
+	Sun, 2 Nov 2008 23:52:44 -0500
+Received: by gxk5 with SMTP id 5so763242gxk.13
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 20:52:43 -0800 (PST)
+Message-ID: <43e72e890811022052n8c5e7d3ic722caa65c711481@mail.gmail.com> (sfid-20081103_055255_249849_FC5BEA56)
+Date: Sun, 2 Nov 2008 20:52:42 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [PATCH] ath5k: enable RXing beacons
+Cc: "Dan Williams" <dcbw@redhat.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890811022049l386789f5qf8bde98eedcd4d2c@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com>
+References: <1225672612-15106-1-git-send-email-lrodriguez@atheros.com>
+	 <1225676353.13684.2.camel@localhost.localdomain>
+	 <b6c5339f0811021810w229d1d9al2b27bdf4144cde69@mail.gmail.com>
+	 <43e72e890811022043t5525d924vcb776569a7bebbc8@mail.gmail.com>
+	 <43e72e890811022049l386789f5qf8bde98eedcd4d2c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I cannot compile the current compat tarball.
-Make log:
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-make -C /usr/src/linux-2.6.26.6-rt11/ M=/root/compat-wireless-2.6-old modules
-make[1]: Entering directory `/usr/src/linux-2.6.26.6-rt11'
- CC [M]  /root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o
-In file included from <command-line>:0:
-/root/compat-wireless-2.6-old/include/net/compat.h:877: error:
-redefinition of 'list_splice_tail'
-include/linux/list.h:356: error: previous definition of
-'list_splice_tail' was here
-/root/compat-wireless-2.6-old/include/net/compat.h:892: error:
-redefinition of 'list_splice_tail_init'
-include/linux/list.h:379: error: previous definition of
-'list_splice_tail_init' was here
-make[3]: *** [/root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o]
-Error 1
-make[2]: *** [/root/compat-wireless-2.6-old/drivers/net/wireless] Error 2
-make[1]: *** [_module_/root/compat-wireless-2.6-old] Error 2
-make[1]: Leaving directory `/usr/src/linux-2.6.26.6-rt11'
-make: *** [modules] Error 2
+On Sun, Nov 2, 2008 at 8:49 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Sun, Nov 2, 2008 at 8:43 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Sun, Nov 2, 2008 at 6:10 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>>> On Sun, Nov 2, 2008 at 8:39 PM, Dan Williams <dcbw@redhat.com> wrote:
+>>>> On Sun, 2008-11-02 at 16:36 -0800, Luis R. Rodriguez wrote:
+>>>>> Prior to this we would rely only on probe responses
+>>>>> from the AP to keep associated. We now receive beacons
+>>>>> on ath5k. This should fix sporadic disassociations.
+>>>>>
+>>>>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>>>
+>>>> Is this also a candidate for -stable?
+>>>
+>>> Don't think so, see below...
+>>>
+>>>>
+>>>>> ---
+>>>>>  drivers/net/wireless/ath5k/base.c |    2 ++
+>>>>>  1 files changed, 2 insertions(+), 0 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+>>>>> index f5f46fe..5505f45 100644
+>>>>> --- a/drivers/net/wireless/ath5k/base.c
+>>>>> +++ b/drivers/net/wireless/ath5k/base.c
+>>>>> @@ -2948,6 +2948,8 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
+>>>>>                       AR5K_RX_FILTER_PROBEREQ | AR5K_RX_FILTER_PROM;
+>>>>>       if (sc->opmode != NL80211_IFTYPE_STATION)
+>>>>>               rfilt |= AR5K_RX_FILTER_PROBEREQ;
+>>>>> +     if (sc->opmode == NL80211_IFTYPE_STATION)
+>>>>> +             rfilt |= AR5K_RX_FILTER_BEACON;
+>>>>>       if (sc->opmode != NL80211_IFTYPE_AP &&
+>>>>>               sc->opmode != NL80211_IFTYPE_MESH_POINT &&
+>>>>>               test_bit(ATH_STAT_PROMISC, sc->status))
+>>>
+>>> Sorry, my fault, this was a direct result of
+>>> 60c7e22196fb4230b76db1f5fb283e811b8f3fb3 "ath5k: honor
+>>> FIF_BCN_PRBRESP_PROMISC."  The problem remains that we have too many
+>>> interrupts though if PRBRESP_PROMISC is not set.  IIRC my patch made
+>>> ath5k behave same as ath9k.  Any ideas on a proper fix?
+>>
+>> If we don't have beacons coming in on ath9k its also an issue and may
+>> explain the same exact issue we see there.
+>
+> I see what you saw now too.. hmmm, either we handle that wrong right
+> now too or there is something else that should enable the beacons to
+> come through. Something is fishy for sure. Will get back to you.
 
-KLIB_BUILD/.config:
+OK Vasanth confirmed this is correct, and ath9k actually has incorrect
+behavior so we have to fix that there as well. If stable got the ath5k
+changes to the filter then yes we should push it there too.
 
-#
-# Bus options (PCI etc.)
-#
-CONFIG_PCI=y
-CONFIG_PCI_DIRECT=y
-CONFIG_PCI_MMCONFIG=y
-CONFIG_PCI_DOMAINS=y
-CONFIG_DMAR=y
-CONFIG_DMAR_GFX_WA=y
-CONFIG_DMAR_FLOPPY_WA=y
-CONFIG_PCIEPORTBUS=y
-CONFIG_HOTPLUG_PCI_PCIE=y
-CONFIG_PCIEAER=y
-# CONFIG_PCIEASPM is not set
-CONFIG_ARCH_SUPPORTS_MSI=y
-CONFIG_PCI_MSI=y
-# CONFIG_PCI_LEGACY is not set
-# CONFIG_PCI_DEBUG is not set
-CONFIG_HT_IRQ=y
-CONFIG_ISA_DMA_API=y
-CONFIG_K8_NB=y
-# CONFIG_PCCARD is not set
-CONFIG_HOTPLUG_PCI=y
-# CONFIG_HOTPLUG_PCI_FAKE is not set
-CONFIG_HOTPLUG_PCI_ACPI=m
-# CONFIG_HOTPLUG_PCI_ACPI_IBM is not set
-# CONFIG_HOTPLUG_PCI_CPCI is not set
-CONFIG_HOTPLUG_PCI_SHPC=m
-
-#
-# Networking
-#
-CONFIG_NET=y
-
-
-#
-# Wireless
-#
-CONFIG_CFG80211=y
-CONFIG_NL80211=y
-CONFIG_WIRELESS_EXT=y
-CONFIG_MAC80211=y
-
-#
-# Rate control algorithm selection
-#
-CONFIG_MAC80211_RC_DEFAULT_PID=y
-# CONFIG_MAC80211_RC_DEFAULT_NONE is not set
-
-#
-# Selecting 'y' for an algorithm will
-#
-
-#
-# build the algorithm into mac80211.
-#
-CONFIG_MAC80211_RC_DEFAULT="pid"
-CONFIG_MAC80211_RC_PID=y
-# CONFIG_MAC80211_MESH is not set
-CONFIG_MAC80211_LEDS=y
-# CONFIG_MAC80211_DEBUGFS is not set
-# CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT is not set
-# CONFIG_MAC80211_DEBUG is not set
-# CONFIG_IEEE80211 is not set
-CONFIG_RFKILL=m
-CONFIG_RFKILL_INPUT=m
-CONFIG_RFKILL_LEDS=y
-# CONFIG_NET_9P is not set
-
-#
-# Device Drivers
-#
-
-#
-# Wireless LAN
-#
-# CONFIG_WLAN_PRE80211 is not set
-CONFIG_WLAN_80211=y
-# CONFIG_IPW2100 is not set
-# CONFIG_IPW2200 is not set
-# CONFIG_LIBERTAS is not set
-# CONFIG_AIRO is not set
-# CONFIG_HERMES is not set
-# CONFIG_ATMEL is not set
-# CONFIG_PRISM54 is not set
-# CONFIG_USB_ZD1201 is not set
-# CONFIG_USB_NET_RNDIS_WLAN is not set
-# CONFIG_RTL8180 is not set
-# CONFIG_RTL8187 is not set
-# CONFIG_ADM8211 is not set
-# CONFIG_P54_COMMON is not set
-# CONFIG_ATH5K is not set
-CONFIG_IWLWIFI=m
-CONFIG_IWLCORE=m
-# CONFIG_IWLWIFI_LEDS is not set
-CONFIG_IWLWIFI_RFKILL=y
-# CONFIG_IWL4965 is not set
-# CONFIG_IWL3945 is not set
-# CONFIG_HOSTAP is not set
-# CONFIG_B43 is not set
-# CONFIG_B43LEGACY is not set
-# CONFIG_ZD1211RW is not set
-# CONFIG_RT2X00 is not set
-
-CONFIG_NEW_LEDS=y
-CONFIG_LEDS_CLASS=y
-
-#
-# LED drivers
-#
-CONFIG_LEDS_CLEVO_MAIL=m
-
-#
-# LED Triggers
-#
-CONFIG_LEDS_TRIGGERS=y
-CONFIG_LEDS_TRIGGER_TIMER=m
-CONFIG_LEDS_TRIGGER_HEARTBEAT=m
-CONFIG_LEDS_TRIGGER_DEFAULT_ON=m
-# CONFIG_ACCESSIBILITY is not set
-# CONFIG_INFINIBAND is not set
-# CONFIG_EDAC is not set
-CONFIG_RTC_LIB=y
-CONFIG_RTC_CLASS=y
-CONFIG_RTC_HCTOSYS=y
-CONFIG_RTC_HCTOSYS_DEVICE="rtc0"
-# CONFIG_RTC_DEBUG is not set
-
-#
-# Library routines
-#
-CONFIG_BITREVERSE=y
-CONFIG_GENERIC_FIND_FIRST_BIT=y
-CONFIG_GENERIC_FIND_NEXT_BIT=y
-# CONFIG_CRC_CCITT is not set
-# CONFIG_CRC16 is not set
-CONFIG_CRC_ITU_T=y
-CONFIG_CRC32=y
-# CONFIG_CRC7 is not set
-CONFIG_LIBCRC32C=y
-CONFIG_ZLIB_INFLATE=y
-CONFIG_ZLIB_DEFLATE=y
-CONFIG_PLIST=y
-CONFIG_HAS_IOMEM=y
-CONFIG_HAS_IOPORT=y
-CONFIG_HAS_DMA=y
-
-
-
---
-Andrey Vul
-
-PS: I'm not subscribed to linux-wireless - CC me when replying.
+  Luis
