@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:13289 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751971AbYKUHiz (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:35529 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752521AbYKCHTs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 02:38:55 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
-Date: Fri, 21 Nov 2008 08:38:25 +0100
-Cc: "Stefan Steuerwald" <salsasepp@googlemail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com> <200811201537.19047.hs4233@mail.mn-solutions.de> <f76a32050811201121r27ba1d82ma788e5a55bfd422b@mail.gmail.com>
-In-Reply-To: <f76a32050811201121r27ba1d82ma788e5a55bfd422b@mail.gmail.com>
+	Mon, 3 Nov 2008 02:19:48 -0500
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: No ProbeResp - assume out of range
+References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com>
+	<200811022303.54476.mb@bu3sch.de>
+	<1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 03 Nov 2008 09:19:32 +0200
+In-Reply-To: <1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com> (ext Tomas Winkler's message of "Mon\, 3 Nov 2008 00\:42\:48 +0200")
+Message-ID: <87prldb7jv.fsf@nokia.com> (sfid-20081103_081951_298161_55D0DD52)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200811210838.25977.hs4233@mail.mn-solutions.de> (sfid-20081121_083900_514249_BB2FB5C0)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 November 2008 20:21:44 Stefan Steuerwald wrote:
-> The iPod alternates Null Functions with the PWR MGT bit on and
-> off - whatever that means. Is it ignoring the AP and snoring
-> away?
+Tomas Winkler <tomasw@gmail.com> writes:
 
-This is because the Ipod WLAN card all the time takes a nap of 
-sleep. Whenever it goes to sleep, it sets the PWR_MGT bit. When 
-it wakes up, it sends again a null packet with the bit off. So 
-the AP should always know if the station sleeps or not.
+>> mac80211 immediately assumes the connection is broken, if one probe-resp
+>> to a keekalife-proberequest is lost.
+>> So if you scan just after the request got sent, you'll never receive the response
+>> and mac80211 will terminate the connection.
+>> It should try a few times, instead, before blowing up things.
+>
+> I've seen this happening  in high traffic with some APs but it can be
+> also NIC issue. It needs to really investigate the sniffer capture I
+> wouldn't assume its only mac80211 issue.  Probe is issued only when RX
+> is not received for some time so there is some problem, nevertheless
+> monitoring beacons is a better approach from my experience.
 
-If the Ipod has data for the Ipod while it sleeps, it simply 
-wakes up and sends the data, with the PWR_MGT bit off. Maybe it 
-also sends a NULL packet iwth the PWR_MGT bit off in advance.
+I agree, monitoring received beacons and the number of failed
+transmissions would be better. But on the other hand some broken APs
+might work better if we periodically send frames to them.
 
-If the AP has data for the Ipod while the Ipod sleeps, it sets 
-the bit that corresponds to the AID of the Ipod in its TIM map. 
-This is sent in the beacons of the AP. Even when a WLAN station 
-sleeps, it knows when a beacon get's broadcasted and wakes up 
-just in order to receive this beacon and check for it's AID bit. 
-If it is set, it wakes up fully, notifies the AP about this and 
-the AP sends the data packet to the now fully awoke WLAN 
-station.
+-- 
+Kalle Valo
