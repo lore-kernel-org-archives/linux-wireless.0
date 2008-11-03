@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:48365 "EHLO venema.h4ckr.net"
+Received: from mail.atheros.com ([12.36.123.2]:21401 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752251AbYKZFxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 00:53:50 -0500
-Message-ID: <1417.92.50.109.198.1227678824.squirrel@webmail.madwifi.org> (sfid-20081126_065355_127204_2D4457A1)
-In-Reply-To: <20081126010218.GP5950@tesla>
-References: <492B2B74.7040404@gmail.com> <20081124231204.GN6245@tesla>
-    <1227568883.28878.15.camel@dv>
-    <43e72e890811241526o1ea6ecf7ge05a2319d6ff3641@mail.gmail.com>
-    <492B623E.5030202@gmail.com> <1227580299.32415.2.camel@dv>
-    <20081126001942.GN5950@tesla> <1227659754.2556.11.camel@dv>
-    <20081126010218.GP5950@tesla>
-Date: Wed, 26 Nov 2008 06:53:44 +0100 (CET)
-Subject: Re: wireless-regdb: flaw in general functionality
-From: "Michael Renzmann" <mrenzmann@madwifi-project.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Pavel Roskin" <proski@gnu.org>,
-	"Richard Farina" <sidhayn@gmail.com>,
-	"John Linville" <linville@tuxdriver.com>,
-	"wireless" <linux-wireless@vger.kernel.org>,
-	"Michael Green" <michael.green@atheros.com>
+	id S1756252AbYKCUMI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 15:12:08 -0500
+Date: Mon, 3 Nov 2008 12:12:06 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Subject: Re: print_ssid undefined (linux-next 20081103)
+Message-ID: <20081103201206.GB6378@tesla> (sfid-20081103_211235_025472_9CBE55C6)
+References: <20081103114222.b257f711.randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20081103114222.b257f711.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+On Mon, Nov 03, 2008 at 11:42:22AM -0800, Randy Dunlap wrote:
+> Hi,
+> 
+> I'm seeing a few instances of
+> 
+> ERROR: "print_ssid" [drivers/net/wireless/ipw2100.ko] undefined!
+> 
+> with ipw2100 & ipw2200 in today's linux-next (20081103).
+> 
+> These configs have
+> # CONFIG_WIRELESS is not set
+> CONFIG_WIRELESS_EXT=y
+> 
+> In looking into this more, I see that the wireless drivers can be enabled
+> & built even when CONFIG_WIRELESS=n.  Is this the expected behavior?
+> Seems a bit odd.
 
-Luis R. Rodriguez wrote:
-> When in a DFS freq, if you don't support DFS in your mode of operation,
-> then you cannot TX.
+Try this.
 
-Side note: this behaviour is not required in all jurisdictions. German
-regulatory body for example allows use of non-DFS-compliant gear even on
-(at least some) DFS channels, but only with low TX power. Is that
-supported already?
-
-Bye, Mike
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 42afaed..6f85bec 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -125,7 +125,7 @@ config PCMCIA_RAYCS
+ 
+ config IPW2100
+ 	tristate "Intel PRO/Wireless 2100 Network Connection"
+-	depends on PCI && WLAN_80211
++	depends on PCI && WLAN_80211 && LIB80211
+ 	select WIRELESS_EXT
+ 	select FW_LOADER
+ 	select IEEE80211
+@@ -183,7 +183,7 @@ config IPW2100_DEBUG
+ 
+ config IPW2200
+ 	tristate "Intel PRO/Wireless 2200BG and 2915ABG Network Connection"
+-	depends on PCI && WLAN_80211
++	depends on PCI && WLAN_80211 && LIB80211
+ 	select WIRELESS_EXT
+ 	select FW_LOADER
+ 	select IEEE80211
