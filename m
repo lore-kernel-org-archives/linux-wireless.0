@@ -1,108 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59901 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38587 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753456AbYKTR4T (ORCPT
+	with ESMTP id S1754086AbYKCIFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 12:56:19 -0500
-Subject: Re: [ipw3945-devel] [PATCH 7/7] iwlwifi: prevent double key removal
+	Mon, 3 Nov 2008 03:05:22 -0500
+Subject: Re: wireless-testing commit
+	eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1ba2fa240811200046y67f18e48ubc8a2f4a586be627@mail.gmail.com> (sfid-20081120_094650_232097_C74A008C)
-References: <1227137548-28718-1-git-send-email-reinette.chatre@intel.com>
-	 <1227137548-28718-2-git-send-email-reinette.chatre@intel.com>
-	 <1227137548-28718-3-git-send-email-reinette.chatre@intel.com>
-	 <1227137548-28718-4-git-send-email-reinette.chatre@intel.com>
-	 <1227137548-28718-5-git-send-email-reinette.chatre@intel.com>
-	 <1227137548-28718-6-git-send-email-reinette.chatre@intel.com>
-	 <1227137548-28718-7-git-send-email-reinette.chatre@intel.com>
-	 <1227137548-28718-8-git-send-email-reinette.chatre@intel.com>
-	 <1227164164.17336.18.camel@johannes.berg>
-	 <1ba2fa240811200046y67f18e48ubc8a2f4a586be627@mail.gmail.com>
-	 (sfid-20081120_094650_232097_C74A008C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GN7csIcZ9yV5o919HpqV"
-Date: Thu, 20 Nov 2008 18:56:11 +0100
-Message-Id: <1227203771.3766.22.camel@johannes.berg> (sfid-20081120_185622_592642_A632F92D)
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	tim.gardner@canonical.com, mick@madwifi.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com> (sfid-20081103_090117_991216_F03C9222)
+References: <4908B754.1050400@tpi.com>
+	 <40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com>
+	 <40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
+	 <20081102184146.GA6065@hash.localnet>
+	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
+	 <1225696692.3619.18.camel@johannes.berg>
+	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
+	 <1225697686.3619.25.camel@johannes.berg>
+	 <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
+	 <1225698867.3619.31.camel@johannes.berg>
+	 <43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com>
+	 (sfid-20081103_090117_991216_F03C9222)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z1rd5bTeEDsiSsZWpt8C"
+Date: Mon, 03 Nov 2008 09:04:42 +0100
+Message-Id: <1225699482.3619.34.camel@johannes.berg> (sfid-20081103_090527_287036_E4651888)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GN7csIcZ9yV5o919HpqV
+--=-z1rd5bTeEDsiSsZWpt8C
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2008-11-20 at 10:46 +0200, Tomas Winkler wrote:
-> On Thu, Nov 20, 2008 at 8:56 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2008-11-19 at 15:32 -0800, Reinette Chatre wrote:
-> >
-> >
-> >> When the key is removed a second time the offset is set to 255 - this =
-index
-> >> is not valid for the ucode_key_table and corrupts the eeprom pointer (=
-which
-> >> is 255 bits from ucode_key_table).
-> >
-> >> +     if (WARN(priv->stations[sta_id].sta.key.key_offset =3D=3D WEP_IN=
-VALID_OFFSET,
-> >> +              "Removing wrong key %d 0x%x\n", keyconf->keyidx, key_fl=
-ags)) {
-> >> +             spin_unlock_irqrestore(&priv->sta_lock, flags);
-> >> +             return 0;
-> >> +     }
-> >
-> > So, since _this_ patch has been tested to fix the problem, the WARN_ON
-> > must be triggering.
+On Mon, 2008-11-03 at 00:01 -0800, Luis R. Rodriguez wrote:
+
+> > But you're saying it's "normal" to get this failure,
 >=20
-> It fix the immediate problem of crashing the kernel but not the
-> problem why the key is removed twice.
-> I'm analyzing the log I've got from Carlos to figure this out you can
-> have a look as well.
-> It should be probably considered as a test patch. The purpose is not
-> to hide the bug buy fixing a symptom.
-> I suspect there is some problem in mac80211 is that this is happening
-> only on suspend/resumes not in regular flow
+> No, I'm just sayings its possible, right now mac80211 assumes its not
+> and if it does its because we somehow lied to mac80211 of our
+> capabilities.
 
-Hmm. Since we don't have suspend/resume that seems a bit odd. Maybe
-because we don't have suspend/resume in mac80211? Maybe you've already
-killed all the keys at suspend, but mac80211 doesn't know about that and
-removes them after resume when we disassoc?
+Well, yes, sort of.
 
-> > What are you doing to address the actual bug that causes it to trigger?
+> > so wouldn't it
+> > always do that sooner or later and always say your hw is broken?
 >=20
-> If the flow of double removal of a key is okay from mac80211
-> perspective we just catch it internally which is always good otherwise
-> we need to fix also mac80211.
+> Nope
 
-Do we really want the WARN() in this patch though? We already know the
-information from Carlos's log, so do we need to bother users?
+Why not?
+
+> > Also,
+> > that's a bad thing to do in userspace, imho.
+>=20
+> What should we do with these rare failures then?
+
+print an error message? ignore them? try again?
+
+> > hw borked is one obvious case, but it shouldn't happen enough
+> > for this to be a problem yet.
+>=20
+> This I agree with. It is rare, its just possible, right now mac80211
+> assumes it never will.
+
+It's _always_ assumed that by ignoring the return value, now it's just
+noisy about it because clearly it doesn't like when the driver fails to
+do what it wants since then the hw and sw states get out of sync. I
+really don't see what to do other than retry maybe, but that might well
+be done in the driver instead.
 
 johannes
 
---=-GN7csIcZ9yV5o919HpqV
+--=-z1rd5bTeEDsiSsZWpt8C
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJJaS3AAoJEKVg1VMiehFYPzIP/jMaIR9uEL1FLC4Cr1V1O3iB
-5tzS60JUUV/oCS2UYgDseesCTWTOMOxAsGIqkSWHWbM3fFafRB47ngDahmNlAoh7
-10pwJZAb1W3IZPwNeOwpCi/T5Sgh1zk9FBdpZXVej5gRiIQtkqFV2yesVD/PuxTi
-gjrmL29EF5iSVzj5/HMWQRQB28v4FweRSw3rbg8ZeRp1HX+bVPYpaXSI7F0LSrdJ
-k8O3/DAi4fb2qKal7/RIQtN1zMhbqpCoZmPF3zAaC2ARMQae3mUjIAWIGDoG9P6F
-1o+QLlXMTyhPE0JcFWZ/uhk/Qw97MOc8t3B26MdCu0fSf7qclGJU1uQ2K9pozIwz
-osGFpQUWy7JcPMvSVKWSDjcT4eJLX7oiWn1QZ3hKsH7TbbKjK4TLRkcXCl2CnH32
-Icj/jc7WA4LyxufXh+jULLozEL6J+uFCe/XP9Px6pBfxxqXpFgSQNUc++O1zjm2H
-OlQbe9361iWFchx4sq3z4icjMgsaHQ6G6nNiTffcJ381Md0BFUMNahh5HZk83e04
-pZjpu+l9oO0x3c8AFdeuhLoMKTs6Wp8JuPo/laFruqB/CLSRXSXdDgWiArMcvNCK
-EWIbNiCvt20i3kMwwaGwEBPbk6MeXFpwoByeW40uZ630kp6yc+gHh65qBlDlCHzD
-td7HqVicrJn8EJX/NJ6P
-=GdQm
+iQIcBAABAgAGBQJJDrCXAAoJEKVg1VMiehFYiWIP/24Uic7JTkLvN9g7aXEZfsCG
+fbZM2YObJytlwRLtqk20vccHDXc0k+SPYjuju0ff8goPHoNV57GUlRehpp3CRZCy
+lOqpdJzOvH281LitdwAFS8R1QKnYm/sqqyP3yy2Rq4CuPkP9i/+GIOXwcckROYYQ
+u+Me2pKPCmz3AvONeUGyeJs6SaTuFgzRX+jK47aU4cDRwUjmIMb6tIY8oS0HLG9B
+PoE4hRPshkzG2AeXwgUFWyBwsVoMmhVQDf1Rji2C7E0J7TiFxu9Ncm6UGynfBzD7
+XXox80H9w6Bj63FvzjTbhCt8rO7M2Fiv07amz61c9AqzcyNTfyy4PdCpWrumL14M
+4Nb0TSomUWG5DBCrRts9RbgB/plGyRqp3qQkw8U04JrDZzOaQemM3vRLhhcM19/2
+cfSOsbghP45kQplCSqODZ0BC8Y8ehvnZ9jnblio914xP/ftas/4XJhfvuLt9Pwxv
+ke5s0o4HsVwY6sJSWSZ1nfVHcVZzEm4lnwGBWCtxLK9A29pJ7JvGury7P3+cVAYo
+3iZ6zCZra5hc7jlH7xQLNcHXEYe5EKGLg0Pbmy4rreeBS6//IbFnXvTUbc8V7d38
+x7CuFwySMlNf+Rm2+ZFfFBOoeg5XtjoXJp3uAwTEPZPPeR0D5KTFihXSHYwbQa5I
+qsJt5JiVBUH2bT9OqjEh
+=4Fwe
 -----END PGP SIGNATURE-----
 
---=-GN7csIcZ9yV5o919HpqV--
+--=-z1rd5bTeEDsiSsZWpt8C--
 
