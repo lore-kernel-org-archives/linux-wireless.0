@@ -1,43 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45281 "EHLO mail.atheros.com"
+Received: from mail.tpi.com ([198.107.51.143]:1580 "EHLO mail.tpi.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752914AbYKTS2k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 13:28:40 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 10:28:40 -0800
-Message-ID: <4924FC30.7080906@atheros.com> (sfid-20081120_192843_512812_BB32F7E4)
-Date: Thu, 20 Nov 2008 11:27:04 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+	id S1751160AbYKCT1w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 14:27:52 -0500
+Message-ID: <490F50AB.6080502@tpi.com> (sfid-20081103_202755_902646_EA939BB9)
+Date: Mon, 03 Nov 2008 12:27:39 -0700
+From: Tim Gardner <timg@tpi.com>
+Reply-To: timg@tpi.com
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>
-Subject: Re: [PATCH] ath9k: Dont update rate control for every AMPDU
-References: <1227160312-5078-1-git-send-email-vasanth@atheros.com>	 (sfid-20081120_192323_892886_92014C1D) <1227205528.3766.29.camel@johannes.berg>
-In-Reply-To: <1227205528.3766.29.camel@johannes.berg>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: [PATCH] ath5k: ignore the return value of ath5k_hw_noise_floor_calibration
+References: <490ED21A.9080508@openwrt.org>
+In-Reply-To: <490ED21A.9080508@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2008-11-20 at 11:21 +0530, Vasanthakumar Thiagarajan wrote:
+Felix Fietkau wrote:
+> Noise floor calibration occasionally fails on Atheros hardware.
+> This is not fatal and can happen if there's simply too much 
+> noise on the air. Ignoring the calibration error is the right
+> thing to do here, because when the error is ignored, the hardware
+> will still work, whereas if the error causes the driver to bail out
+> of a bigger configuration function and does not configure the tx
+> queues or the IMR (as is the case in reset.c), the hw no longer
+> works properly until the next reset.
 > 
->> +	u8 update_rc;
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 > 
->> +	tx_info_priv->update_rc = 0;
+> diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+> --- a/drivers/net/wireless/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath5k/phy.c
+> @@ -2196,9 +2196,7 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
+>  		return ret;
+>  	}
+>  
+> -	ret = ath5k_hw_noise_floor_calibration(ah, channel->center_freq);
+> -	if (ret)
+> -		return ret;
+> +	ath5k_hw_noise_floor_calibration(ah, channel->center_freq);
+>  
+>  	/*
+>  	 * Re-enable RX/TX and beacons
+> diff --git a/drivers/net/wireless/ath5k/reset.c b/drivers/net/wireless/ath5k/reset.c
+> --- a/drivers/net/wireless/ath5k/reset.c
+> +++ b/drivers/net/wireless/ath5k/reset.c
+> @@ -842,9 +842,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>  	 *
+>  	 * XXX: Find an interval that's OK for all cards...
+>  	 */
+> -	ret = ath5k_hw_noise_floor_calibration(ah, channel->center_freq);
+> -	if (ret)
+> -		return ret;
+> +	ath5k_hw_noise_floor_calibration(ah, channel->center_freq);
+>  
+>  	/*
+>  	 * Reset queues and start beacon timers at the end of the reset routine
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
->> +			tx_info_priv->update_rc = 1;
-> 
-> You could use a bool and use false/true, that'd generate exactly the
-> same code but might be easier to read. Not that it matters much I guess.
-> 
-> johannes
 
+ACK
 
-Sure, if it improves the readability.
+While I'm not sure I agree with your theory on why noise floor
+calibration fails, this patch certainly cuts down on log noise without
+introducing any adverse side effects.
 
-Vasanth
+rtg
+-- 
+Tim Gardner timg@tpi.com www.tpi.com
+OR 503-601-0234 x102 MT 406-443-5357
