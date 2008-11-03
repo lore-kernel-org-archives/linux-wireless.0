@@ -1,154 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f11.google.com ([209.85.217.11]:59019 "EHLO
-	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447AbYKZRNK (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:51923 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750794AbYKCRU1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 12:13:10 -0500
-Received: by gxk4 with SMTP id 4so581397gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 09:13:08 -0800 (PST)
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: [PATCH] ipw2200: rework scan handling while associated
-Date: Wed, 26 Nov 2008 18:05:38 +0100
-Cc: ipw2100-devel@lists.sourceforge.net, "Zhu, Yi" <yi.zhu@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>
+	Mon, 3 Nov 2008 12:20:27 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so1033418nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 09:20:13 -0800 (PST)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 1/2] rfkill: preserve state across suspend
+Date: Mon, 3 Nov 2008 18:20:09 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+References: <1225730537-2679-1-git-send-email-hmh@hmh.eng.br> <1225730537-2679-2-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1225730537-2679-2-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200811261805.39953.helmut.schaa@gmail.com> (sfid-20081126_181314_990261_5485225E)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+  charset="iso-8859-15"
+Message-Id: <200811031820.10179.IvDoorn@gmail.com> (sfid-20081103_182034_148125_28444306)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch touches three different aspects:
+On Monday 03 November 2008, Henrique de Moraes Holschuh wrote:
+> The rfkill class API requires that the driver connected to a class
+> call rfkill_force_state() on resume to update the real state of the
+> rfkill controller, OR that it provides a get_state() hook.
+> 
+> This means there is potentially a hidden call in the resume code flow
+> that changes rfkill->state (i.e. rfkill_force_state()), so the
+> previous state of the transmitter was being lost.
+> 
+> The simplest and most future-proof way to fix this is to explicitly
+> store the pre-sleep state on the rfkill structure, and restore from
+> that on resume.
+> 
+> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> Cc: Matthew Garrett <mjg59@srcf.ucam.org>
+> Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 
-1) If the firmware does not notify the driver about the scan completion withing
-   the timeout, do not restart the firmware but simply cancel the scan. Hence,
-   the association isn't dropped.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-2) If one beacon was missed during a scan the driver will cancel the scan
-   immediately. Hence, while associated most scans will not finish
-   successfully (although the firmware tries to switch back to the operating
-   channel at TBTT). Increase the number of allowed beacon misses to 3 to
-   improve scanning while associated.
+> ---
+>  include/linux/rfkill.h |    1 +
+>  net/rfkill/rfkill.c    |    7 ++++++-
+>  2 files changed, 7 insertions(+), 1 deletions(-)
+> 
+> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> index 4cd64b0..f376a93 100644
+> --- a/include/linux/rfkill.h
+> +++ b/include/linux/rfkill.h
+> @@ -108,6 +108,7 @@ struct rfkill {
+>  
+>  	struct device dev;
+>  	struct list_head node;
+> +	enum rfkill_state state_for_resume;
+>  };
+>  #define to_rfkill(d)	container_of(d, struct rfkill, dev)
+>  
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index f949a48..caee717 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -511,10 +511,15 @@ static void rfkill_release(struct device *dev)
+>  #ifdef CONFIG_PM
+>  static int rfkill_suspend(struct device *dev, pm_message_t state)
+>  {
+> +	struct rfkill *rfkill = to_rfkill(dev);
+> +
+>  	/* mark class device as suspended */
+>  	if (dev->power.power_state.event != state.event)
+>  		dev->power.power_state = state;
+>  
+> +	/* store state for the resume handler */
+> +	rfkill->state_for_resume = rfkill->state;
+> +
+>  	return 0;
+>  }
+>  
+> @@ -528,7 +533,7 @@ static int rfkill_resume(struct device *dev)
+>  		dev->power.power_state.event = PM_EVENT_ON;
+>  
+>  		/* restore radio state AND notify everybody */
+> -		rfkill_toggle_radio(rfkill, rfkill->state, 1);
+> +		rfkill_toggle_radio(rfkill, rfkill->state_for_resume, 1);
+>  
+>  		mutex_unlock(&rfkill->mutex);
+>  	}
 
-3) Fix passive a-band scanning timeout (only 2915). During a scan (while
-   associated) the firmware will switch back to the operating channel to
-   receive the beacon frame at each TBTT. The driver passes the times to the
-   firmware how long it has to stay on a scanned channel depending on the
-   channel flags (active vs. passive). The dwell time for passive channels
-   is currently set to 120 (TUs). However, if the beacon interval is smaller
-   than 120 the firmware will switch back to the operating channel before it
-   stayed on the channel for 120 TUs. Thereupon the firmware will scan the
-   same channel again but will again not be able to stay on that channel for
-   120 TUs and enters an infinite loop until either the scan is canceled or
-   the firmware gets restarted (that's my interpretation of what I was able
-   to notice while sniffing the traffic).
 
-   In order to avoid that infinite loop this patch adapts the dwell time for
-   passive channels to beacon_interval - 10 if the card is in associated state.
-   Of course the probability for finding an AP on a passive channel is reduced
-   but it allows the scan to finish sucessfully even while associated.
-
-Signed-off-by: helmut.schaa@googlemail.com
----
-
-Could somebody please review the patch?
-Should I split the patch into three single patches?
-Thanks.
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index c73173a..f17b5b2 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -2310,10 +2310,10 @@ static void ipw_scan_check(void *data)
- {
- 	struct ipw_priv *priv = data;
- 	if (priv->status & (STATUS_SCANNING | STATUS_SCAN_ABORTING)) {
--		IPW_DEBUG_SCAN("Scan completion watchdog resetting "
--			       "adapter after (%dms).\n",
-+		IPW_DEBUG_SCAN("Scan completion watchdog: aborting "
-+			       "scan after (%dms).\n",
- 			       jiffies_to_msecs(IPW_SCAN_CHECK_WATCHDOG));
--		queue_work(priv->workqueue, &priv->adapter_restart);
-+		queue_work(priv->workqueue, &priv->abort_scan);
- 	}
- }
- 
-@@ -4346,7 +4346,8 @@ static void ipw_handle_missed_beacon(struct ipw_priv *priv,
- 		return;
- 	}
- 
--	if (priv->status & STATUS_SCANNING) {
-+	if (priv->status & STATUS_SCANNING &&
-+	    missed_count > priv->cancel_scan_threshold) {
- 		/* Stop scan to keep fw from getting
- 		 * stuck (only if we aren't roaming --
- 		 * otherwise we'll never scan more than 2 or 3
-@@ -6281,6 +6282,18 @@ static void ipw_add_scan_channels(struct ipw_priv *priv,
- 	}
- }
- 
-+static int ipw_passive_dwell_time(struct ipw_priv *priv)
-+{
-+	/* staying on passive channels longer than the beacon interval causes
-+	 * the firmware to enter an infinite loop. Hence, don't stay on passive
-+	 * longer than the beacon interval.
-+	 */
-+	if (priv->status & STATUS_ASSOCIATED && priv->assoc_network->beacon_interval > 10)
-+		return priv->assoc_network->beacon_interval - 10;
-+	else
-+		return 120;
-+}
-+
- static int ipw_request_scan_helper(struct ipw_priv *priv, int type, int direct)
- {
- 	struct ipw_scan_request_ext scan;
-@@ -6327,7 +6340,7 @@ static int ipw_request_scan_helper(struct ipw_priv *priv, int type, int direct)
- 	  	IPW_DEBUG_WX("use passive scanning\n");
- 	  	scan_type = IPW_SCAN_PASSIVE_FULL_DWELL_SCAN;
- 		scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] =
--			cpu_to_le16(120);
-+			cpu_to_le16(ipw_passive_dwell_time(priv));
- 		ipw_add_scan_channels(priv, &scan, scan_type);
- 		goto send_request;
- 	}
-@@ -6343,7 +6356,8 @@ static int ipw_request_scan_helper(struct ipw_priv *priv, int type, int direct)
- 	scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_AND_DIRECT_SCAN] =
- 		cpu_to_le16(20);
- 
--  	scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] = cpu_to_le16(120);
-+  	scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] =
-+		cpu_to_le16(ipw_passive_dwell_time(priv));
- 	scan.dwell_time[IPW_SCAN_ACTIVE_DIRECT_SCAN] = cpu_to_le16(20);
- 
- #ifdef CONFIG_IPW2200_MONITOR
-@@ -8628,6 +8642,7 @@ static int ipw_sw_reset(struct ipw_priv *priv, int option)
- 
- 	priv->disassociate_threshold = IPW_MB_DISASSOCIATE_THRESHOLD_DEFAULT;
- 	priv->roaming_threshold = IPW_MB_ROAMING_THRESHOLD_DEFAULT;
-+	priv->cancel_scan_threshold = IPW_MB_SCAN_CANCEL_THRESHOLD;
- 
- 	priv->rts_threshold = DEFAULT_RTS_THRESHOLD;
- 	priv->short_retry_limit = DEFAULT_SHORT_RETRY_LIMIT;
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.h b/drivers/net/wireless/ipw2x00/ipw2200.h
-index 0a84d52..ec133b9 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.h
-@@ -245,6 +245,7 @@ enum connection_manager_assoc_states {
- #define HOST_NOTIFICATION_S36_MEASUREMENT_REFUSED       31
- 
- #define HOST_NOTIFICATION_STATUS_BEACON_MISSING         1
-+#define IPW_MB_SCAN_CANCEL_THRESHOLD                    3
- #define IPW_MB_ROAMING_THRESHOLD_MIN                    1
- #define IPW_MB_ROAMING_THRESHOLD_DEFAULT                8
- #define IPW_MB_ROAMING_THRESHOLD_MAX                    30
-@@ -1218,6 +1219,7 @@ struct ipw_priv {
- 	u32 hcmd_seq;		  /**< sequence number for hcmd */
- 	u32 disassociate_threshold;
- 	u32 roaming_threshold;
-+	u32 cancel_scan_threshold;
- 
- 	struct ipw_associate assoc_request;
- 	struct ieee80211_network *assoc_network;
