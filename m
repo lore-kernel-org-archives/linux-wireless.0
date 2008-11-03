@@ -1,93 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:51923 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794AbYKCRU1 (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:54748 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754716AbYKCI0F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 12:20:27 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so1033418nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 09:20:13 -0800 (PST)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 1/2] rfkill: preserve state across suspend
-Date: Mon, 3 Nov 2008 18:20:09 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-References: <1225730537-2679-1-git-send-email-hmh@hmh.eng.br> <1225730537-2679-2-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1225730537-2679-2-git-send-email-hmh@hmh.eng.br>
+	Mon, 3 Nov 2008 03:26:05 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so920905yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 00:26:03 -0800 (PST)
+Message-ID: <43e72e890811030026t319c551cp91807318f9a6b838@mail.gmail.com> (sfid-20081103_092612_709228_B6BCE439)
+Date: Mon, 3 Nov 2008 00:26:03 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
+Cc: "Bob Copeland" <me@bobcopeland.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>, tim.gardner@canonical.com,
+	mick@madwifi.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1225699482.3619.34.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200811031820.10179.IvDoorn@gmail.com> (sfid-20081103_182034_148125_28444306)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <4908B754.1050400@tpi.com> <20081102184146.GA6065@hash.localnet>
+	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
+	 <1225696692.3619.18.camel@johannes.berg>
+	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
+	 <1225697686.3619.25.camel@johannes.berg>
+	 <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
+	 <1225698867.3619.31.camel@johannes.berg>
+	 <43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com>
+	 <1225699482.3619.34.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 03 November 2008, Henrique de Moraes Holschuh wrote:
-> The rfkill class API requires that the driver connected to a class
-> call rfkill_force_state() on resume to update the real state of the
-> rfkill controller, OR that it provides a get_state() hook.
-> 
-> This means there is potentially a hidden call in the resume code flow
-> that changes rfkill->state (i.e. rfkill_force_state()), so the
-> previous state of the transmitter was being lost.
-> 
-> The simplest and most future-proof way to fix this is to explicitly
-> store the pre-sleep state on the rfkill structure, and restore from
-> that on resume.
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Matthew Garrett <mjg59@srcf.ucam.org>
-> Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+On Mon, Nov 3, 2008 at 12:04 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-11-03 at 00:01 -0800, Luis R. Rodriguez wrote:
+>
+>> > But you're saying it's "normal" to get this failure,
+>>
+>> No, I'm just sayings its possible, right now mac80211 assumes its not
+>> and if it does its because we somehow lied to mac80211 of our
+>> capabilities.
+>
+> Well, yes, sort of.
+>
+>> > so wouldn't it
+>> > always do that sooner or later and always say your hw is broken?
+>>
+>> Nope
+>
+> Why not?
+>
+>> > Also,
+>> > that's a bad thing to do in userspace, imho.
+>>
+>> What should we do with these rare failures then?
+>
+> print an error message? ignore them? try again?
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+I'd prefer a simple error print than a WARN_ON().
 
-> ---
->  include/linux/rfkill.h |    1 +
->  net/rfkill/rfkill.c    |    7 ++++++-
->  2 files changed, 7 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index 4cd64b0..f376a93 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -108,6 +108,7 @@ struct rfkill {
->  
->  	struct device dev;
->  	struct list_head node;
-> +	enum rfkill_state state_for_resume;
->  };
->  #define to_rfkill(d)	container_of(d, struct rfkill, dev)
->  
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index f949a48..caee717 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -511,10 +511,15 @@ static void rfkill_release(struct device *dev)
->  #ifdef CONFIG_PM
->  static int rfkill_suspend(struct device *dev, pm_message_t state)
->  {
-> +	struct rfkill *rfkill = to_rfkill(dev);
-> +
->  	/* mark class device as suspended */
->  	if (dev->power.power_state.event != state.event)
->  		dev->power.power_state = state;
->  
-> +	/* store state for the resume handler */
-> +	rfkill->state_for_resume = rfkill->state;
-> +
->  	return 0;
->  }
->  
-> @@ -528,7 +533,7 @@ static int rfkill_resume(struct device *dev)
->  		dev->power.power_state.event = PM_EVENT_ON;
->  
->  		/* restore radio state AND notify everybody */
-> -		rfkill_toggle_radio(rfkill, rfkill->state, 1);
-> +		rfkill_toggle_radio(rfkill, rfkill->state_for_resume, 1);
->  
->  		mutex_unlock(&rfkill->mutex);
->  	}
+>> > hw borked is one obvious case, but it shouldn't happen enough
+>> > for this to be a problem yet.
+>>
+>> This I agree with. It is rare, its just possible, right now mac80211
+>> assumes it never will.
+>
+> It's _always_ assumed that by ignoring the return value, now it's just
+> noisy about it because clearly it doesn't like when the driver fails to
+> do what it wants since then the hw and sw states get out of sync. I
+> really don't see what to do other than retry maybe, but that might well
+> be done in the driver instead.
 
+As can be seen from the patch suggested what some drivers will end up
+doing is just ignoring failures but I guess that can be up to the
+drivers to deal with as you are suggesting. I'd be inclined to try to
+disable the device in case of a few failed resets to be specific with
+ath5k. Would mac80211 want to be informed of that through the return
+value? Is the WARN still appropriate?
 
+  Luis
