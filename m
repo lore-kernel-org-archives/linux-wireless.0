@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:32579 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750812AbYKXUaP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 15:30:15 -0500
-Subject: Re: [PATCH 1/2] mac80211: enabling an AP that can't support fully
-	PS clients (wireless-testing).
-From: Pavel Roskin <proski@gnu.org>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, j@w1.fi
-In-Reply-To: <eb3ff54b0811232344m77f979aaj79e9e965eefa325c@mail.gmail.com>
-References: <eb3ff54b0811232344m77f979aaj79e9e965eefa325c@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 24 Nov 2008 15:30:12 -0500
-Message-Id: <1227558612.28878.1.camel@dv> (sfid-20081124_213019_748805_AB0310EC)
-Mime-Version: 1.0
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:34195 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752740AbYKCTG0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 14:06:26 -0500
+Date: Mon, 3 Nov 2008 17:06:17 -0200
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rfkill, stupid question #6
+Message-ID: <20081103190617.GE2417@khazad-dum.debian.net> (sfid-20081103_200644_501820_3D47F88E)
+References: <20081102130655.GA12766@srcf.ucam.org> <20081103141628.GB31078@khazad-dum.debian.net> <20081103141836.GA31894@srcf.ucam.org> <490F0ACC.4000808@tuffmail.co.uk> <20081103145145.GD31078@khazad-dum.debian.net> <20081103145543.GA496@srcf.ucam.org> <20081103150229.GF31078@khazad-dum.debian.net> <20081103150843.GA1107@srcf.ucam.org> <20081103163311.GA2417@khazad-dum.debian.net> <490F3C44.7080504@tuffmail.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <490F3C44.7080504@tuffmail.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-11-24 at 09:44 +0200, Rami Rosen wrote:
-> This patch enables mac80211 to support the PS challenged mode when
-> used in master mode.
-> A new attribute, NL80211_ATTR_WIPHY_AP_PS_CHALLENGED, was added to
-> nl80211_attrs; also a new member (ap_ps_challenged) was added to
-> struct wiphy; and nl80211_send_wiphy() was adjusted accordingly.
-> 
-> User space applications (like hostapd) should check the
-> NL80211_ATTR_WIPHY_AP_PS_CHALLENGED
-> attribute and  display a proper message, if it is set, to inform the
-> users.
+On Mon, 03 Nov 2008, Alan Jenkins wrote:
+> I have one more question.  I read that if a STATE_SOFT_BLOCKED request
+> is made when the hardware is in STATE_HARD_BLOCKED, the rfkill driver is
+> expected to "double block".
 
-Maybe it would be better to require a switch to hostapd to enable
-support for such devices?  Messages are too easy to ignore.
+If it can do so, yes.  It makes for marginally better use interaction.
+
+> If the hard block is later cleared, the driver is expected to call
+> rfkill_force_state(SOFT_BLOCKED).  The SOFT_BLOCKED state can then be
+> cleared as normal.
+
+Exactly.
+
+> But if there is an UNBLOCK request in the double-blocked state, the
+> rfkill core will reject it and preserve the  double-blocked state.  Is
+> this intended, or a known issue?
+
+It is intended.  The user wants to unblock the radio (not "prepare it to
+unblock when I release the hardware rfkill line by doing something else"),
+so we have to error it out.
+
+And, frankly, I don't very much like the idea of the core returning a
+-EPERM and yet having done a call toggle_radio(UNBLOCK).   Not to mention
+it is yet another border condition for the hook API.
+
+So, if something took the pains to cause a double block, we require
+explicit unblocking AFTER the hardware rfkill lines are released (i.e. the
+device goes from HARD to SOFT blocked).
+
+BUT I don't feel strongly about it, so if someone wants to change that, I
+won't stand in the way.
+
+> Wouldn't it be simpler to use a bitmask so that the rfkill core can at
+> least represent this double-blocked state?  I guess the problem would be
+> how to shoehorn it into the sysfs interface.
+
+The core doesn't care, and doesn't have to in order to implement such a
+thing.  The drivers track it separately.
+
+The two problems is that it can be REALLY confusing for the end user, and
+that it requires a ABI change.  I don't know if it is worth it, I just know
+I am not going to be the one doing it :-)
 
 -- 
-Regards,
-Pavel Roskin
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
