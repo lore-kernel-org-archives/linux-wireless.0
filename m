@@ -1,231 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:58701 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664AbYKOAyM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 19:54:12 -0500
-To: linux-wireless@vger.kernel.org
-Subject: [RFC][RFT][PATCH] p54: WEP & CCMP accelerator v2
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Kalle Valo <kalle.valo@nokia.com>
-From: Christian Lamparter <chunkeey@web.de>
-Date: Sat, 15 Nov 2008 01:54:09 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811150154.09729.chunkeey@web.de> (sfid-20081115_015417_073323_A6C80A40)
+Received: from mga01.intel.com ([192.55.52.88]:27294 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751112AbYKCT0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 14:26:07 -0500
+Subject: Re: [PATCH] iwlagn: avoid sleep in softirq context
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1225475904-25184-1-git-send-email-linville@tuxdriver.com>
+References: <1225399265.1115.356.camel@rc-desk>
+	 <1225475904-25184-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Mon, 03 Nov 2008 11:26:36 -0800
+Message-Id: <1225740396.1115.453.camel@rc-desk> (sfid-20081103_202612_817138_48F6DB6A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows p54 to utilize its WEP and CCMP accelerator.
+On Fri, 2008-10-31 at 10:58 -0700, John W. Linville wrote:
+> __ieee80211_tasklet_handler -> __ieee80211_rx ->
+> 	__ieee80211_rx_handle_packet -> ieee80211_invoke_rx_handlers ->
+> 	ieee80211_rx_h_decrypt -> ieee80211_crypto_tkip_decrypt ->
+> 	ieee80211_tkip_decrypt_data -> iwl4965_mac_update_tkip_key ->
+> 	iwl_scan_cancel_timeout -> msleep
+> 
+> Ooops!
+> 
+> Avoid the sleep by changing iwl_scan_cancel_timeout with
+> iwl_scan_cancel and simply returning on failure if the scan persists.
+> This will cause hardware decryption to fail and we'll handle a few more
+> frames with software decryption.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index 89450e3..5cca7bf 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -3247,7 +3247,12 @@ static void iwl4965_mac_update_tkip_key(struct ieee80211_hw *hw,
+>  		return;
+>  	}
+>  
+> -	iwl_scan_cancel_timeout(priv, 100);
+> +	if (iwl_scan_cancel(priv)) {
+> +		/* cancel scan failed, just live w/ bad key and rely
+> +		   briefly on SW decrpyption */
+> +		IWL_DEBUG_MAC80211("leave - failed to cancel scan\n");
+> +		return;
+> +	}
 
-However, I'm not sure how TKIP is supposed to work... Kalle?
+Thanks for adding the debugging. The small typo is still there (in the
+comments ... "decrpyption"). Could you please change it when you merge
+this patch?
 
-changes:
-- fix reject if "[PATCH 3/4] p54pci: cache firmware for suspend/resume" is applied
-  instead of the original "[PATCH 3/4] p54: protect against sudden firmware file changes".
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-11-14 18:37:34.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-11-14 18:55:53.000000000 +0100
-@@ -26,6 +26,9 @@
- #include "p54.h"
- #include "p54common.h"
- 
-+static int modparam_nohwcrypt;
-+module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
-+MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
- MODULE_DESCRIPTION("Softmac Prism54 common code");
- MODULE_LICENSE("GPL");
-@@ -196,6 +199,8 @@ int p54_parse_firmware(struct ieee80211_
- 			priv->rx_end = le32_to_cpu(desc->rx_end) - 0x3500;
- 			priv->headroom = desc->headroom;
- 			priv->tailroom = desc->tailroom;
-+			priv->privacy_caps = desc->privacy_caps;
-+			priv->rx_keycache_size = desc->rx_keycache_size;
- 			if (le32_to_cpu(bootrec->len) == 11)
- 				priv->rx_mtu = le16_to_cpu(desc->rx_mtu);
- 			else
-@@ -238,6 +243,15 @@ int p54_parse_firmware(struct ieee80211_
- 		priv->tx_stats[7].limit = 2;		/* AC_BK */
- 		dev->queues = 4;
- 	}
-+
-+	if (!modparam_nohwcrypt)
-+		printk(KERN_INFO "%s: Available cryptographic accelerator for"
-+				 " WEP:%s, TKIP:no, CCMP:%s\n",
-+			wiphy_name(dev->wiphy),
-+			(priv->privacy_caps & BR_DESC_PRIV_CAP_WEP) ? "YES" :
-+			"no", (priv->privacy_caps & BR_DESC_PRIV_CAP_AESCCMP) ?
-+			"YES" : "no");
-+
- 	priv->fw_crc = crc;
- 
- 	return 0;
-@@ -539,6 +553,11 @@ static int p54_rx_data(struct ieee80211_
- 			return 0;
- 	}
- 
-+	if (hdr->decrypt_status == P54_DECRYPT_OK)
-+		rx_status.flag |= RX_FLAG_DECRYPTED;
-+	if (hdr->decrypt_status == P54_DECRYPT_FAIL_MICHAEL)
-+		rx_status.flag |= RX_FLAG_MMIC_ERROR;
-+
- 	rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);
- 	rx_status.noise = priv->noise;
- 	/* XX correct? */
-@@ -1087,6 +1106,20 @@ static int p54_tx_fill(struct ieee80211_
- 	return ret;
- }
- 
-+static u8 p54_convert_algo(enum ieee80211_key_alg alg)
-+{
-+	switch (alg) {
-+	case ALG_WEP:
-+		return P54_CRYPTO_WEP;
-+	case ALG_TKIP:
-+		return P54_CRYPTO_TKIPMICHAEL;
-+	case ALG_CCMP:
-+		return P54_CRYPTO_AESCCMP;
-+	default:
-+		return 0;
-+	}
-+}
-+
- static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -1097,13 +1130,14 @@ static int p54_tx(struct ieee80211_hw *d
- 	size_t padding, len, tim_len = 0;
- 	int i, j, ridx;
- 	u16 hdr_flags = 0, aid = 0;
--	u8 rate, queue;
-+	u8 rate, queue, crypt_offset;
- 	u8 cts_rate = 0x20;
- 	u8 rc_flags;
- 	u8 calculated_tries[4];
- 	u8 nrates = 0, nremaining = 8;
- 
- 	queue = skb_get_queue_mapping(skb);
-+	crypt_offset = ieee80211_get_hdrlen_from_skb(skb);
- 
- 	if (p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid)) {
- 		current_queue = &priv->tx_stats[queue];
-@@ -1209,10 +1243,23 @@ static int p54_tx(struct ieee80211_hw *d
- 	/* TODO: enable bursting */
- 	hdr->flags = cpu_to_le16(hdr_flags);
- 	hdr->tries = ridx;
--	txhdr->crypt_offset = 0;
- 	txhdr->rts_rate_idx = 0;
--	txhdr->key_type = 0;
--	txhdr->key_len = 0;
-+	if (info->control.hw_key) {
-+		crypt_offset += info->control.hw_key->iv_len;
-+		if (info->control.hw_key->flags & IEEE80211_KEY_FLAG_WMM_STA)
-+			crypt_offset += IEEE80211_QOS_CTL_LEN;
-+		txhdr->crypt_offset = crypt_offset;
-+		txhdr->key_type = p54_convert_algo(info->control.hw_key->alg);
-+		txhdr->key_len = min((u8)16, info->control.hw_key->keylen);
-+		memcpy(txhdr->key, info->control.hw_key->key, txhdr->key_len);
-+
-+		/* reserve some space for ICV */
-+		hdr->len += info->control.hw_key->icv_len;
-+	} else {
-+		txhdr->crypt_offset = 0;
-+		txhdr->key_type = 0;
-+		txhdr->key_len = 0;
-+	}
- 	txhdr->hw_queue = queue;
- 	if (current_queue)
- 		txhdr->backlog = current_queue->len;
-@@ -1841,6 +1888,66 @@ static void p54_bss_info_changed(struct 
- 
- }
- 
-+static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
-+		       const u8 *local_address, const u8 *address,
-+		       struct ieee80211_key_conf *key)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct sk_buff *skb;
-+	struct p54_keycache *rxkey;
-+	u8 algo = 0;
-+
-+	if (modparam_nohwcrypt)
-+		return -ENOSPC;
-+
-+	if (cmd == DISABLE_KEY)
-+		algo = 0;
-+	else {
-+		switch (key->alg) {
-+		case ALG_TKIP:
-+			return -EOPNOTSUPP;
-+			break;
-+		case ALG_WEP:
-+			if (!(priv->privacy_caps & BR_DESC_PRIV_CAP_WEP))
-+				return -EOPNOTSUPP;
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+			algo = P54_CRYPTO_WEP;
-+			break;
-+		case ALG_CCMP:
-+			if (!(priv->privacy_caps & BR_DESC_PRIV_CAP_AESCCMP))
-+				return -EOPNOTSUPP;
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+			algo = P54_CRYPTO_AESCCMP;
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+	}
-+
-+	mutex_lock(&priv->conf_mutex);
-+	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*rxkey) +
-+			sizeof(struct p54_hdr),	P54_CONTROL_TYPE_RX_KEYCACHE,
-+			GFP_ATOMIC);
-+	if (!skb) {
-+		mutex_unlock(&priv->conf_mutex);
-+		return -ENOMEM;
-+	}
-+
-+	rxkey = (struct p54_keycache *)skb_put(skb, sizeof(*rxkey));
-+	rxkey->entry = cpu_to_le16(key->keyidx);
-+	rxkey->key_id = cpu_to_le16(key->keyidx);
-+	rxkey->key_len = min((u8)16, key->keylen);
-+	rxkey->key_type = algo;
-+	if (address)
-+		memcpy(rxkey->mac, address, ETH_ALEN);
-+	else
-+		memset(rxkey->mac, ~0, ETH_ALEN);
-+	memcpy(rxkey->key, key->key, rxkey->key_len);
-+	priv->tx(dev, skb, 1);
-+	mutex_unlock(&priv->conf_mutex);
-+	return 0;
-+}
-+
- static const struct ieee80211_ops p54_ops = {
- 	.tx			= p54_tx,
- 	.start			= p54_start,
-@@ -1848,6 +1955,7 @@ static const struct ieee80211_ops p54_op
- 	.add_interface		= p54_add_interface,
- 	.remove_interface	= p54_remove_interface,
- 	.set_tim		= p54_set_tim,
-+	.set_key		= p54_set_key,
- 	.config			= p54_config,
- 	.config_interface	= p54_config_interface,
- 	.bss_info_changed	= p54_bss_info_changed,
-diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
---- a/drivers/net/wireless/p54/p54.h	2008-11-14 17:19:36.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54.h	2008-11-14 18:54:15.000000000 +0100
-@@ -116,6 +116,8 @@ struct p54_common {
- 	int noise;
- 	void *eeprom;
- 	struct completion eeprom_comp;
-+	u8 privacy_caps;
-+	u8 rx_keycache_size;
- };
- 
- int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb);
+Reinette
+
+
