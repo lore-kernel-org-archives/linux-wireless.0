@@ -1,34 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53377 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753098AbYKIMAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2008 07:00:49 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-Date: Sun, 9 Nov 2008 13:00:26 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>
-References: <4902DEBB.3050205@hotmail.com> <1226149894.3610.8.camel@johannes.berg> <BAY104-DAV7C39A232BE9A213EB2122991B0@phx.gbl>
-In-Reply-To: <BAY104-DAV7C39A232BE9A213EB2122991B0@phx.gbl>
+Received: from rv-out-0506.google.com ([209.85.198.231]:51250 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751465AbYKDMhL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2008 07:37:11 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so3248974rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 04:37:10 -0800 (PST)
+Message-ID: <b6c5339f0811040437h4da7f3a1v3b606145c0702243@mail.gmail.com> (sfid-20081104_133717_832536_982372B3)
+Date: Tue, 4 Nov 2008 07:37:10 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] ath5k: enable RXing beacons
+Cc: "Dan Williams" <dcbw@redhat.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org
+In-Reply-To: <b6c5339f0811030717mfa8ac56hdd58c367563ed931@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811091300.26316.mb@bu3sch.de> (sfid-20081109_130120_622787_AF2071F4)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1225672612-15106-1-git-send-email-lrodriguez@atheros.com>
+	 <1225676353.13684.2.camel@localhost.localdomain>
+	 <b6c5339f0811021810w229d1d9al2b27bdf4144cde69@mail.gmail.com>
+	 <43e72e890811022043t5525d924vcb776569a7bebbc8@mail.gmail.com>
+	 <43e72e890811022049l386789f5qf8bde98eedcd4d2c@mail.gmail.com>
+	 <43e72e890811022052n8c5e7d3ic722caa65c711481@mail.gmail.com>
+	 <b6c5339f0811030717mfa8ac56hdd58c367563ed931@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 09 November 2008 04:06:14 Shaddy Baddah wrote:
-> Looking into this, and the underlying problem is again 
-> compare_ether_addr(). Now, I'm sure that replacing this with a memcmp() 
-> is now treading on more toes than just zd1211rw users. And for this 
-> reason, I think a better solution is going to be required.
+On Mon, Nov 3, 2008 at 10:17 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Sun, Nov 2, 2008 at 11:52 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>>> Sorry, my fault, this was a direct result of
+>>>>> 60c7e22196fb4230b76db1f5fb283e811b8f3fb3 "ath5k: honor
+> [...]
+>> OK Vasanth confirmed this is correct, and ath9k actually has incorrect
+>> behavior so we have to fix that there as well. If stable got the ath5k
+>> changes to the filter then yes we should push it there too.
 
-I think this requires a comment in the code why we do not use
-compare_ether_addr() at this place. Something like:
+BTW perhaps we should still look at the filter for ath5k since, once
+associated, we still get beacons from every AP in the world instead of
+just those with our BSSID.
 
-/* We use memcmp() instead of compare_ether_addr(), because the
- * packet might not be 4-byte aligned, yet. This is done later. */
+     FIF_BCN_PRBRESP_PROMISC
+
+     This flag is set during scanning to indicate to the hardware
+     that it should not filter beacons or probe responses by BSSID.
+     Filtering them can greatly reduce the amount of processing
+     mac80211 needs to do and the amount of CPU wakeups, so
+     you should honour this flag if possible.
+
+Right now with ath5k there's basically no difference between having or
+not having that flag in station mode, even though we do set the bssid
+in ath5k_hw_set_associd AFAICT.
 
 -- 
-Greetings Michael.
+Bob Copeland %% www.bobcopeland.com
