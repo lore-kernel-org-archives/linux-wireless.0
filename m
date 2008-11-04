@@ -1,100 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:39357 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752489AbYK1Iuh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 03:50:37 -0500
-Subject: Re: [Ipw2100-devel] [PATCH] ipw2200: rework scan handling while
-	associated
-From: Zhu Yi <yi.zhu@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>
-In-Reply-To: <200811261805.39953.helmut.schaa@gmail.com>
-References: <200811261805.39953.helmut.schaa@gmail.com>
-Content-Type: text/plain
-Date: Fri, 28 Nov 2008 16:51:38 +0800
-Message-Id: <1227862298.2558.107.camel@debian.sh.intel.com> (sfid-20081128_095041_935269_181BDEF3)
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([70.167.247.36]:4095 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752015AbYKDDOb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 22:14:31 -0500
+Date: Mon, 3 Nov 2008 22:14:00 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, mickflemm@gmail.com, jirislaby@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linux-kernel@vger.kernel.org, proski@gnu.org,
+	michael+ath5k@stapelberg.de
+Subject: [PATCH] ath5k: correct handling of rx status fields
+Message-ID: <20081104031400.GA14502@hash.localnet> (sfid-20081104_041437_087793_49B37779)
+References: <1225652938-6244-1-git-send-email-me@bobcopeland.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1225652938-6244-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-11-27 at 01:05 +0800, Helmut Schaa wrote:
-> Could somebody please review the patch?
-> Should I split the patch into three single patches?
+ath5k_rx_status fields rs_antenna and rs_more are u8s, but we
+were setting them with bitwise ANDs of 32-bit values.
 
-Thank you for your patch. See my comments below.
+As a consequence, jumbo frames would not be discarded as intended.
+Then, because the hw rate value of such frames is zero, and, since
+63266a653589e1a237527479f10212ea77ce7844 "ath5k: rates cleanup",
+we do not fall back to the basic rate, such packets would trigger
+the following WARN_ON:
 
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-> index c73173a..f17b5b2 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-> @@ -2310,10 +2310,10 @@ static void ipw_scan_check(void *data)
->  {
->  	struct ipw_priv *priv = data;
->  	if (priv->status & (STATUS_SCANNING | STATUS_SCAN_ABORTING)) {
-> -		IPW_DEBUG_SCAN("Scan completion watchdog resetting "
-> -			       "adapter after (%dms).\n",
-> +		IPW_DEBUG_SCAN("Scan completion watchdog: aborting "
-> +			       "scan after (%dms).\n",
->  			       jiffies_to_msecs(IPW_SCAN_CHECK_WATCHDOG));
-> -		queue_work(priv->workqueue, &priv->adapter_restart);
-> +		queue_work(priv->workqueue, &priv->abort_scan);
->  	}
->  }
+------------[ cut here ]------------
+WARNING: at net/mac80211/rx.c:2192 __ieee80211_rx+0x4d/0x57e [mac80211]()
+Modules linked in: ath5k af_packet sha256_generic aes_i586 aes_generic cbc loop i915 drm binfmt_misc acpi_cpufreq fan container nls_utf8 hfsplus dm_crypt dm_mod kvm_intel kvm fuse sbp2 snd_hda_intel snd_pcm_oss snd_pcm snd_mixer_oss snd_seq_dummy snd_seq_oss arc4 joydev hid_apple ecb snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq snd_timer snd_seq_device usbhid appletouch mac80211 sky2 snd ehci_hcd ohci1394 bitrev crc32 sr_mod cdrom rtc sg uhci_hcd snd_page_alloc cfg80211 ieee1394 thermal ac battery processor button evdev unix [last unloaded: ath5k]
+Pid: 0, comm: swapper Tainted: G        W  2.6.28-rc2-wl #14
+Call Trace:
+ [<c0123d1e>] warn_on_slowpath+0x41/0x5b
+ [<c012005d>] ? sched_debug_show+0x31e/0x9c6
+ [<c012489f>] ? vprintk+0x369/0x389
+ [<c0309539>] ? _spin_unlock_irqrestore+0x54/0x58
+ [<c011cd8f>] ? try_to_wake_up+0x14f/0x15a
+ [<f81918cb>] __ieee80211_rx+0x4d/0x57e [mac80211]
+ [<f828872a>] ath5k_tasklet_rx+0x5a1/0x5e4 [ath5k]
+ [<c013b9cd>] ? clockevents_program_event+0xd4/0xe3
+ [<c01283a9>] tasklet_action+0x94/0xfd
+ [<c0127d19>] __do_softirq+0x8c/0x13e
+ [<c0127e04>] do_softirq+0x39/0x55
+ [<c0128082>] irq_exit+0x46/0x85
+ [<c010576c>] do_IRQ+0x9a/0xb2
+ [<c010461c>] common_interrupt+0x28/0x30
+ [<f80e934a>] ? acpi_idle_enter_bm+0x2ad/0x31b [processor]
+ [<c02976bf>] cpuidle_idle_call+0x65/0x9a
+ [<c010262c>] cpu_idle+0x76/0xa6
+ [<c02fb402>] rest_init+0x62/0x64
 
-We need something like the network Tx watchdog to prevent the firmware
-stick forever when something is wrong during scan. At this time, no
-command (include ABORT_SCAN) is going to be processed. We need something
-can really move the firmware back to the correct state, that is the
-adapter_restart. If you do see the watchdog files a lot, increasing
-IPW_SCAN_CHECK_WATCHDOG should be the way to go.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
 
-> @@ -4346,7 +4346,8 @@ static void ipw_handle_missed_beacon(struct ipw_priv *priv,
->  		return;
->  	}
->  
-> -	if (priv->status & STATUS_SCANNING) {
-> +	if (priv->status & STATUS_SCANNING &&
-> +	    missed_count > priv->cancel_scan_threshold) {
->  		/* Stop scan to keep fw from getting
->  		 * stuck (only if we aren't roaming --
->  		 * otherwise we'll never scan more than 2 or 3
+v2
+  - different subject and patch description
+  - use !! instead of mask + shift for rs_more
+  - remove unneeded changes to desc.h
 
-I'm OK with this. Since you don't change priv->cancel_scan_threadhold
-anywhere, can you use IPW_MB_SCAN_CANCEL_THRESHOLD directly? 
+ drivers/net/wireless/ath5k/desc.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-> @@ -6281,6 +6282,18 @@ static void ipw_add_scan_channels(struct ipw_priv *priv,
->  	}
->  }
->  
-> +static int ipw_passive_dwell_time(struct ipw_priv *priv)
-> +{
-> +	/* staying on passive channels longer than the beacon interval causes
-> +	 * the firmware to enter an infinite loop. Hence, don't stay on passive
-> +	 * longer than the beacon interval.
-> +	 */
-> +	if (priv->status & STATUS_ASSOCIATED && priv->assoc_network->beacon_interval > 10)
-> +		return priv->assoc_network->beacon_interval - 10;
-> +	else
-> +		return 120;
-> +}
+diff --git a/drivers/net/wireless/ath5k/desc.c b/drivers/net/wireless/ath5k/desc.c
+index dd13740..5e362a7 100644
+--- a/drivers/net/wireless/ath5k/desc.c
++++ b/drivers/net/wireless/ath5k/desc.c
+@@ -531,10 +531,10 @@ static int ath5k_hw_proc_5210_rx_status(struct ath5k_hw *ah,
+ 		AR5K_5210_RX_DESC_STATUS0_RECEIVE_SIGNAL);
+ 	rs->rs_rate = AR5K_REG_MS(rx_status->rx_status_0,
+ 		AR5K_5210_RX_DESC_STATUS0_RECEIVE_RATE);
+-	rs->rs_antenna = rx_status->rx_status_0 &
+-		AR5K_5210_RX_DESC_STATUS0_RECEIVE_ANTENNA;
+-	rs->rs_more = rx_status->rx_status_0 &
+-		AR5K_5210_RX_DESC_STATUS0_MORE;
++	rs->rs_antenna = AR5K_REG_MS(rx_status->rx_status_0,
++		AR5K_5210_RX_DESC_STATUS0_RECEIVE_ANTENNA);
++	rs->rs_more = !!(rx_status->rx_status_0 &
++		AR5K_5210_RX_DESC_STATUS0_MORE);
+ 	/* TODO: this timestamp is 13 bit, later on we assume 15 bit */
+ 	rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
+ 		AR5K_5210_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
+@@ -607,10 +607,10 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
+ 		AR5K_5212_RX_DESC_STATUS0_RECEIVE_SIGNAL);
+ 	rs->rs_rate = AR5K_REG_MS(rx_status->rx_status_0,
+ 		AR5K_5212_RX_DESC_STATUS0_RECEIVE_RATE);
+-	rs->rs_antenna = rx_status->rx_status_0 &
+-		AR5K_5212_RX_DESC_STATUS0_RECEIVE_ANTENNA;
+-	rs->rs_more = rx_status->rx_status_0 &
+-		AR5K_5212_RX_DESC_STATUS0_MORE;
++	rs->rs_antenna = AR5K_REG_MS(rx_status->rx_status_0,
++		AR5K_5212_RX_DESC_STATUS0_RECEIVE_ANTENNA);
++	rs->rs_more = !!(rx_status->rx_status_0 &
++		AR5K_5212_RX_DESC_STATUS0_MORE);
+ 	rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
+ 		AR5K_5212_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
+ 	rs->rs_status = 0;
+-- 
+1.5.4.2.182.gb3092
 
-Is it still a problem with the above IPW_MB_SCAN_CANCEL_THRESHOLD used?
-We assume most APs use 100ms beacon interval. But in case you are
-associated with an AP which uses 20ms beacon interval, do you want to
-set the passive_dwell time to 10ms here? 120ms makes sure we can at
-least receive a beacon for normal APs.
-
-BTW, another thing might help to resolve the scan-while-associate
-problem. Currently we scan 5GHz band channels first, then 2.4GHz band
-(see ipw_add_scan_channels). Normally most channels in 5GHz band are
-passive ones. Thus they use longer dwell time. If we change to scan
-2.4GHz band channels first, we can get more scan result before a scan
-abort. Can you please try it?
-
-Thanks,
--yi
 
