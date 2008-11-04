@@ -1,173 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:49913 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751822AbYKOSaW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2008 13:30:22 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] p54pci: cache firmware for suspend/resume v2
-Date: Sat, 15 Nov 2008 19:30:19 +0100
-Cc: John W Linville <linville@tuxdriver.com>
-References: <200811141941.56752.chunkeey@web.de> <1226707350.4120.34.camel@johannes.berg> <200811150142.28447.chunkeey@web.de>
-In-Reply-To: <200811150142.28447.chunkeey@web.de>
+Received: from web23107.mail.ird.yahoo.com ([217.146.189.47]:21603 "HELO
+	web23107.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753794AbYKDU1P convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2008 15:27:15 -0500
+Date: Tue, 4 Nov 2008 20:27:12 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
+To: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+In-Reply-To: <1225806649-10050-3-git-send-email-herton@mandriva.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200811151930.19854.chunkeey@web.de> (sfid-20081115_193026_739612_6ACB0834)
+Content-Type: text/plain; charset=utf-8
+Message-ID: <244535.27936.qm@web23107.mail.ird.yahoo.com> (sfid-20081104_212725_056619_144F3635)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes pointed out that the driver has cache the firmware for
-suspend/resume cycles. 
- 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-v1 removed a bit too much. it was very chatty about the firmware capabilities...
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-11-14 18:08:22.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-11-15 18:57:30.000000000 +0100
-@@ -1525,16 +1525,24 @@ static int p54_start(struct ieee80211_hw
- 
- 	mutex_lock(&priv->conf_mutex);
- 	err = priv->open(dev);
--	if (!err)
--		priv->mode = NL80211_IFTYPE_MONITOR;
-+	if (err)
-+		goto out;
- 	P54_SET_QUEUE(priv->qos_params[0], 0x0002, 0x0003, 0x0007, 47);
- 	P54_SET_QUEUE(priv->qos_params[1], 0x0002, 0x0007, 0x000f, 94);
- 	P54_SET_QUEUE(priv->qos_params[2], 0x0003, 0x000f, 0x03ff, 0);
- 	P54_SET_QUEUE(priv->qos_params[3], 0x0007, 0x000f, 0x03ff, 0);
- 	err = p54_set_edcf(dev);
--	if (!err)
--		err = p54_init_stats(dev);
-+	if (err)
-+		goto out;
-+	err = p54_init_stats(dev);
-+	if (err)
-+		goto out;
-+	err = p54_setup_mac(dev, P54_FILTER_TYPE_NONE, NULL);
-+	if (err)
-+		goto out;
-+	priv->mode = NL80211_IFTYPE_MONITOR;
- 
-+out:
- 	mutex_unlock(&priv->conf_mutex);
- 	return err;
- }
-diff -Nurp a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
---- a/drivers/net/wireless/p54/p54pci.c	2008-11-14 00:14:59.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54pci.c	2008-11-15 01:33:58.000000000 +0100
-@@ -47,7 +47,6 @@ MODULE_DEVICE_TABLE(pci, p54p_table);
- static int p54p_upload_firmware(struct ieee80211_hw *dev)
- {
- 	struct p54p_priv *priv = dev->priv;
--	const struct firmware *fw_entry = NULL;
- 	__le32 reg;
- 	int err;
- 	__le32 *data;
-@@ -73,23 +72,15 @@ static int p54p_upload_firmware(struct i
- 	P54P_WRITE(ctrl_stat, reg);
- 	wmb();
- 
--	err = request_firmware(&fw_entry, "isl3886pci", &priv->pdev->dev);
--	if (err) {
--		printk(KERN_ERR "%s (p54pci): cannot find firmware "
--		       "(isl3886pci)\n", pci_name(priv->pdev));
--		err = request_firmware(&fw_entry, "isl3886", &priv->pdev->dev);
--		if (err)
--			return err;
--	}
-+	/* wait for the firmware to reset properly */
-+	mdelay(10);
- 
--	err = p54_parse_firmware(dev, fw_entry);
--	if (err) {
--		release_firmware(fw_entry);
-+	err = p54_parse_firmware(dev, priv->firmware);
-+	if (err)
- 		return err;
--	}
- 
--	data = (__le32 *) fw_entry->data;
--	remains = fw_entry->size;
-+	data = (__le32 *) priv->firmware->data;
-+	remains = priv->firmware->size;
- 	device_addr = ISL38XX_DEV_FIRMWARE_ADDR;
- 	while (remains) {
- 		u32 i = 0;
-@@ -107,8 +98,6 @@ static int p54p_upload_firmware(struct i
- 		P54P_READ(int_enable);
- 	}
- 
--	release_firmware(fw_entry);
--
- 	reg = P54P_READ(ctrl_stat);
- 	reg &= cpu_to_le32(~ISL38XX_CTRL_STAT_CLKRUN);
- 	reg &= cpu_to_le32(~ISL38XX_CTRL_STAT_RESET);
-@@ -501,15 +490,14 @@ static int __devinit p54p_probe(struct p
- 	if (mem_len < sizeof(struct p54p_csr)) {
- 		printk(KERN_ERR "%s (p54pci): Too short PCI resources\n",
- 		       pci_name(pdev));
--		pci_disable_device(pdev);
--		return err;
-+		goto err_disable_dev;
- 	}
- 
- 	err = pci_request_regions(pdev, "p54pci");
- 	if (err) {
- 		printk(KERN_ERR "%s (p54pci): Cannot obtain PCI resources\n",
- 		       pci_name(pdev));
--		return err;
-+		goto err_disable_dev;
- 	}
- 
- 	if (pci_set_dma_mask(pdev, DMA_32BIT_MASK) ||
-@@ -562,6 +550,17 @@ static int __devinit p54p_probe(struct p
- 	spin_lock_init(&priv->lock);
- 	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
- 
-+	err = request_firmware(&priv->firmware, "isl3886pci",
-+			       &priv->pdev->dev);
-+	if (err) {
-+		printk(KERN_ERR "%s (p54pci): cannot find firmware "
-+			"(isl3886pci)\n", pci_name(priv->pdev));
-+		err = request_firmware(&priv->firmware, "isl3886",
-+				       &priv->pdev->dev);
-+		if (err)
-+			goto err_free_common;
-+	}
-+
- 	err = p54p_open(dev);
- 	if (err)
- 		goto err_free_common;
-@@ -580,6 +579,7 @@ static int __devinit p54p_probe(struct p
- 	return 0;
- 
-  err_free_common:
-+	release_firmware(priv->firmware);
- 	p54_free_common(dev);
- 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
- 			    priv->ring_control, priv->ring_control_dma);
-@@ -593,6 +593,7 @@ static int __devinit p54p_probe(struct p
- 
-  err_free_reg:
- 	pci_release_regions(pdev);
-+ err_disable_dev:
- 	pci_disable_device(pdev);
- 	return err;
- }
-diff -Nurp a/drivers/net/wireless/p54/p54pci.h b/drivers/net/wireless/p54/p54pci.h
---- a/drivers/net/wireless/p54/p54pci.h	2008-11-14 00:14:59.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54pci.h	2008-11-15 18:58:41.000000000 +0100
-@@ -93,7 +93,7 @@ struct p54p_priv {
- 	struct pci_dev *pdev;
- 	struct p54p_csr __iomem *map;
- 	struct tasklet_struct rx_tasklet;
--
-+	const struct firmware *firmware;
- 	spinlock_t lock;
- 	struct p54p_ring_control *ring_control;
- 	dma_addr_t ring_control_dma;
+--- On Tue, 4/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
+
+> Realtek 8187B has a receive command queue to feedback beacon
+> interrupt
+> and transmitted packet status. Use it to feedback mac80211
+> about status
+> of transmitted packets. Unfortunately in the course of
+> testing I found
+> that the sequence number reported by hardware includes
+> entire sequence
+> control in a 12 bit only field, so a workaround is done to
+> check only
+> lowest bits.
+
+> ---
+>  v2: fix rate stuck at 1M reported by Larry Finger, Hin-Tak
+> and also seen by me.
+>      btw, I noted now with a ralink device that rt2500usb
+> (rt2x00) has same
+>      issue currently.
+
+
+> -		hdr->retry =
+> cpu_to_le32((info->control.rates[0].count - 1) <<
+> 8);
+> +		hdr->retry =
+> cpu_to_le32(info->control.rates[0].count << 8);
+
+> -		hdr->retry =
+> cpu_to_le32((info->control.rates[0].count - 1) <<
+> 8);
+> +		hdr->retry =
+> cpu_to_le32(info->control.rates[0].count << 8);
+
+These are the only lines which changed between the two versions of the patch - if removing the two -1's fixes the rate stuck (and these two lines are newly introduced), shouldn't this be a separate commit if it fixes a problem introduced by an earlier commit?
+
+I did *not* (and do not) have a rate-stuck problem, but I am running a slightly mod version of the patch against 2.6.27, which doesn't have "rates[x].count" yet, with the retry_count struct member which seems to have since been removed.
+
+
+      
