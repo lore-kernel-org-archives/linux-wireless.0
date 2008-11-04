@@ -1,103 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42055 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820AbYKAIC7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 04:02:59 -0400
-Subject: Re: [PATCH] mac80211_hwsim: enable Mesh Point operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrey Yurovsky <andrey@cozybit.com>
+Received: from c60.cesmail.net ([216.154.195.49]:24510 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750835AbYKDAQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 19:16:29 -0500
+Message-ID: <20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net> (sfid-20081104_011634_057711_776C53F5)
+Date: Mon, 03 Nov 2008 19:16:25 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: msan <msan@email.it>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <490bf5e7.2a528c0a.3951.19a9@mx.google.com> (sfid-20081101_072403_704359_64603084)
-References: <490bf5e7.2a528c0a.3951.19a9@mx.google.com>
-	 (sfid-20081101_072403_704359_64603084)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GkhMQvVofDQQv/sqp4Ny"
-Date: Sat, 01 Nov 2008 09:02:58 +0100
-Message-Id: <1225526578.3550.8.camel@johannes.berg> (sfid-20081101_090323_500520_54D3DDA5)
-Mime-Version: 1.0
+Subject: Re: problems with ath5k driver.
+References: <geiib4$apo$2@ger.gmane.org>
+In-Reply-To: <geiib4$apo$2@ger.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting msan <msan@email.it>:
 
---=-GkhMQvVofDQQv/sqp4Ny
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I have an Esprimo D9500 Fujitsu Semens notebook.
+> My lspci reports for wireless card: "06:00.0 Ethernet controller: Atheros
+> Communications Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev
+> 04)"
+> Dmesg says: "ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY:
+> 0x70)".
 
-On Fri, 2008-10-31 at 23:23 -0700, Andrey Yurovsky wrote:
-> Initial mesh support: add Mesh Point to supported interfaces mask and all=
-ow=20
-> hwsim to send beacons in mesh mode.
+This device is only supported in Linux 2.6.27 and newer.
 
-That'll do AP beacons, right? And it won't really help because all
-virtual stations see each other?
+> When I run "iwlist wlan0 scan" it says:" no scan results".
 
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless=
-/mac80211_hwsim.c
-> index 430d8b1..34f643f 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.c
-> +++ b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -370,7 +370,8 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *m=
-ac,
-> =20
->  	hwsim_check_magic(vif);
-> =20
-> -	if (vif->type !=3D NL80211_IFTYPE_AP)
-> +	if (vif->type !=3D NL80211_IFTYPE_AP && vif->type !=3D
-> +			NL80211_IFTYPE_MESH_POINT)
->  		return;
+That's what you would see with older kernels.
 
-I think I'd prefer if you'd write it as
+> There is any support for AR2425 chip?
 
-if (vif->type !=3D NL80211... &&
-    vif->type !=3D NL80211....)
-	return;
+Yes.
 
-but ultimately, I don't think it matters much. That above just looks a
-little quirky, at least to me. :)
+Next time, please specify versions of the software you are having  
+trouble with.
 
-> =20
->  	skb =3D ieee80211_beacon_get(hw, vif);
-> @@ -777,7 +778,8 @@ static int __init init_mac80211_hwsim(void)
->  		hw->queues =3D 4;
->  		hw->wiphy->interface_modes =3D
->  			BIT(NL80211_IFTYPE_STATION) |
-> -			BIT(NL80211_IFTYPE_AP);
-> +			BIT(NL80211_IFTYPE_AP) |
-> +			BIT(NL80211_IFTYPE_MESH_POINT);
->  		hw->ampdu_queues =3D 1;
-> =20
->  		/* ask mac80211 to reserve space for magic */
->=20
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---=-GkhMQvVofDQQv/sqp4Ny
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJDA0uAAoJEKVg1VMiehFY920P+wTrelDy280jYtM+5xXuZd/y
-8djdkyTutsSwLvrgYWW0eWdBR4J64XtY5Jn218fpCnW32k50IZ92OCO82xzLJQXC
-0Nz9adFK4BNq2Oc6EKwg0nE3ro2vexnlT806SjLKIvbDlnccEJh59XSZNqW+00Tr
-ZuNGEebqmq8RnlWH+/UW3VHSBt40/0cYIkQ4KBAT5VceET8wtB61DtusKCVvC4rD
-s0PfbArNWwZmvbgsPZWbkwVUkJPRNo8Ph8WRRBpxbz0Kc8ROnKgb8wZbheVmea+7
-rROVlGLu6zW0lOdc1Yw5guToAgYyqMbd+d+w9uyBBTXzPpXErFiJ93TrnUSSBYLF
-Q91O58S+qz7zmC+DXhKlxZmC/4hdpK812KYefJ+5zfre9xaAuTHh2zgSfqSIplMy
-qJd120XP2vme/z8SunD45fJWHXHt10eCJBPFvyN3fIfhsq7Qs0VAp+FrOx/3fYl+
-NWp/f940MMJOe19Pc7rdnxBZkwQtBEoBaT3C9amIATeD5bBFqC8kTWWCv5obFSyJ
-liKRmxqRpoBEGby0tzxNnTRjowKntvf+52jIX2RUbWwrjnRN8xdmG7X/TsUSzE+u
-QIWou91RUgf0Hh3TVTSV6HfWi79QjHNWgv4OAs9UrBCxWp6zrTZeZ9utmPRs1o/4
-LXRlUcTELCEa2pMpxD/O
-=gzs1
------END PGP SIGNATURE-----
-
---=-GkhMQvVofDQQv/sqp4Ny--
-
+-- 
+Regards,
+Pavel Roskin
