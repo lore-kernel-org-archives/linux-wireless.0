@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3384 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418AbYKUDBY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 22:01:24 -0500
-Date: Thu, 20 Nov 2008 22:00:22 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [PATCH] ath5k: Clean up eeprom parsing and add missing calibration data
-Message-ID: <20081121030022.GA25726@hash.localnet> (sfid-20081121_040131_364234_69957D66)
-References: <49257136.2050902@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49257136.2050902@openwrt.org>
+Received: from mail.gmx.net ([213.165.64.20]:56552 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754789AbYKDWBp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2008 17:01:45 -0500
+From: Alexey Fisher <bug-track@fisher-privat.net>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, rjw@sisk.pl,
+	kernel-testers@vger.kernel.org,
+	Alexey Fisher <bug-track@fisher-privat.net>
+Subject: [PATCH] make assocaittion only if SSID is known.
+Date: Tue,  4 Nov 2008 23:01:41 +0100
+Message-Id: <1225836101-5723-1-git-send-email-bug-track@fisher-privat.net> (sfid-20081104_230150_680239_C3FE7BE6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 20, 2008 at 03:16:22PM +0100, Felix Fietkau wrote:
-> +
-> +	if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_4_0) {
-> +		AR5K_EEPROM_READ_HDR(AR5K_EEPROM_MISC0, ee_misc0);
-> +		AR5K_EEPROM_READ_HDR(AR5K_EEPROM_MISC1, ee_misc1);
+'iwconfig eth1 channel 6' would trigger association to _something_, which is wrong.  Changing the channel should (and does) trigger reassociation, but only if there is an SSID to associate with!
+---
+ drivers/net/wireless/ipw2200.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Can we add the rest here?
-
-+		AR5K_EEPROM_READ_HDR(AR5K_EEPROM_MISC2, ee_misc2);
-+		AR5K_EEPROM_READ_HDR(AR5K_EEPROM_MISC3, ee_misc3);
-+		AR5K_EEPROM_READ_HDR(AR5K_EEPROM_MISC4, ee_misc4);
-+		AR5K_EEPROM_READ_HDR(AR5K_EEPROM_MISC5, ee_misc5);
-
-I'm adding CCMP support and it wants to use AR5K_EEPROM_AES_DIS(ee_misc5).
-
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index dcce354..d26beed 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -7581,8 +7581,7 @@ static int ipw_associate(void *data)
+ 	}
+ 
+ 	if (!(priv->config & CFG_ASSOCIATE) &&
+-	    !(priv->config & (CFG_STATIC_ESSID |
+-			      CFG_STATIC_CHANNEL | CFG_STATIC_BSSID))) {
++	    !(priv->config & (CFG_STATIC_ESSID | CFG_STATIC_BSSID))) {
+ 		IPW_DEBUG_ASSOC("Not attempting association (associate=0)\n");
+ 		return 0;
+ 	}
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.3
 
