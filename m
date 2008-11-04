@@ -1,80 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:54748 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754716AbYKCI0F (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:44186 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbYKDNBh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 03:26:05 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so920905yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 00:26:03 -0800 (PST)
-Message-ID: <43e72e890811030026t319c551cp91807318f9a6b838@mail.gmail.com> (sfid-20081103_092612_709228_B6BCE439)
-Date: Mon, 3 Nov 2008 00:26:03 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-Cc: "Bob Copeland" <me@bobcopeland.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>, tim.gardner@canonical.com,
-	mick@madwifi.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1225699482.3619.34.camel@johannes.berg>
+	Tue, 4 Nov 2008 08:01:37 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so3260708rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 05:01:37 -0800 (PST)
+Message-ID: <740646d0811040501w5571d464u757e05399803f768@mail.gmail.com> (sfid-20081104_140141_281673_C9C53A90)
+Date: Tue, 4 Nov 2008 11:01:36 -0200
+From: "Wilson Ribeiro" <wribjr@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Realtek wireless 8187se
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4908B754.1050400@tpi.com> <20081102184146.GA6065@hash.localnet>
-	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
-	 <1225696692.3619.18.camel@johannes.berg>
-	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
-	 <1225697686.3619.25.camel@johannes.berg>
-	 <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
-	 <1225698867.3619.31.camel@johannes.berg>
-	 <43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com>
-	 <1225699482.3619.34.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 3, 2008 at 12:04 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-11-03 at 00:01 -0800, Luis R. Rodriguez wrote:
->
->> > But you're saying it's "normal" to get this failure,
->>
->> No, I'm just sayings its possible, right now mac80211 assumes its not
->> and if it does its because we somehow lied to mac80211 of our
->> capabilities.
->
-> Well, yes, sort of.
->
->> > so wouldn't it
->> > always do that sooner or later and always say your hw is broken?
->>
->> Nope
->
-> Why not?
->
->> > Also,
->> > that's a bad thing to do in userspace, imho.
->>
->> What should we do with these rare failures then?
->
-> print an error message? ignore them? try again?
+Hi people,
 
-I'd prefer a simple error print than a WARN_ON().
+i recently bought a MSI Wind and it came with a wireless nic
+rtl8187se, is there support on current stable kernel for that wireless
+card?
 
->> > hw borked is one obvious case, but it shouldn't happen enough
->> > for this to be a problem yet.
->>
->> This I agree with. It is rare, its just possible, right now mac80211
->> assumes it never will.
->
-> It's _always_ assumed that by ignoring the return value, now it's just
-> noisy about it because clearly it doesn't like when the driver fails to
-> do what it wants since then the hw and sw states get out of sync. I
-> really don't see what to do other than retry maybe, but that might well
-> be done in the driver instead.
+Thanks,
 
-As can be seen from the patch suggested what some drivers will end up
-doing is just ignoring failures but I guess that can be up to the
-drivers to deal with as you are suggesting. I'd be inclined to try to
-disable the device in case of a few failed resets to be specific with
-ath5k. Would mac80211 want to be informed of that through the return
-value? Is the WARN still appropriate?
-
-  Luis
+--
+Wilson Ribeiro
+Consultor de Tecnologia da Informa=E7=E3o
+e-mail: wribjr@gmail.com
+phone: 55 21 34117748
+mobile: 55 21 82424280
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
