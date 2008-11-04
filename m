@@ -1,95 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:30374 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752218AbYKGR6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 12:58:19 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, "Zhu, Yi" <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/13] iwlwifi: use Rx single frame mode (one Rx frame per RB)
-Date: Fri,  7 Nov 2008 09:58:46 -0800
-Message-Id: <1226080726-24860-14-git-send-email-reinette.chatre@intel.com> (sfid-20081107_190902_973855_80D13144)
-In-Reply-To: <1226080726-24860-13-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-7-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-8-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-9-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-12-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-13-git-send-email-reinette.chatre@intel.com>
+Received: from rv-out-0506.google.com ([209.85.198.226]:23770 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753372AbYKDIip (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2008 03:38:45 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so3130140rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 00:38:44 -0800 (PST)
+Message-ID: <1ba2fa240811040038y54b20a46y88e2b849f98c78cf@mail.gmail.com> (sfid-20081104_093854_262731_C1099CD5)
+Date: Tue, 4 Nov 2008 10:38:44 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Bob Copeland" <me@bobcopeland.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>, tim.gardner@canonical.com,
+	mick@madwifi.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <87ljw0arrq.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <4908B754.1050400@tpi.com>
+	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
+	 <1225696692.3619.18.camel@johannes.berg>
+	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
+	 <1225697686.3619.25.camel@johannes.berg>
+	 <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
+	 <1225698867.3619.31.camel@johannes.berg>
+	 <43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com>
+	 <1225699482.3619.34.camel@johannes.berg> <87ljw0arrq.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu, Yi <yi.zhu@intel.com>
+On Tue, Nov 4, 2008 at 9:12 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>
+>>> > Also,
+>>> > that's a bad thing to do in userspace, imho.
+>>>
+>>> What should we do with these rare failures then?
+>>
+>> print an error message? ignore them? try again?
+>
+> I would say that try few (three?) times and if it still fails, restart
+> firmware and push the same settings again to the firmware. There's
+> very little that mac80211 could do here, driver has to make the
+> decisions in case like this.
 
-The RCSR default value for single frame mode is off (a RB contains more than
-one frames). But the driver assumes single frame mode apparently. This patch
-enables single frame mode for the hardware. It also adds a BUG_ON to make sure
-the allocated skb satisfies the hardware alignment requirement and removes
-a useless check.
-
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fh.h |    2 ++
- drivers/net/wireless/iwlwifi/iwl-rx.c |    8 ++++++--
- 2 files changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index 2c5f919..e46300c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -266,6 +266,8 @@
- #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL    (0x00000000)
- #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL  (0x00001000)
- 
-+#define FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME	(0x00008000)
-+
- 
- /**
-  * Rx Shared Status Registers (RSSR)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 516cd11..90e6648 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -218,8 +218,7 @@ int iwl_rx_queue_restock(struct iwl_priv *priv)
- 
- 	/* If we've added more space for the firmware to place data, tell it.
- 	 * Increment device's write pointer in multiples of 8. */
--	if ((write != (rxq->write & ~0x7))
--	    || (abs(rxq->write - rxq->read) > 7)) {
-+	if (write != (rxq->write & ~0x7)) {
- 		spin_lock_irqsave(&rxq->lock, flags);
- 		rxq->need_update = 1;
- 		spin_unlock_irqrestore(&rxq->lock, flags);
-@@ -268,6 +267,10 @@ void iwl_rx_allocate(struct iwl_priv *priv)
- 		/* Get physical address of RB/SKB */
- 		rxb->dma_addr = pci_map_single(priv->pci_dev, rxb->skb->data,
- 			   priv->hw_params.rx_buf_size, PCI_DMA_FROMDEVICE);
-+
-+		/* RBD must be 256 bytes aligned and no more than 36 bits */
-+		BUG_ON(rxb->dma_addr & (~DMA_BIT_MASK(36) & 0xff));
-+
- 		list_add_tail(&rxb->list, &rxq->rx_free);
- 		rxq->free_count++;
- 	}
-@@ -431,6 +434,7 @@ int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 			   FH_RCSR_RX_CONFIG_CHNL_EN_ENABLE_VAL |
- 			   FH_RCSR_CHNL0_RX_IGNORE_RXF_EMPTY |
- 			   FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL |
-+			   FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME |
- 			   rb_size|
- 			   (rb_timeout << FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_POS)|
- 			   (rfdnlog << FH_RCSR_RX_CONFIG_RBDCB_SIZE_POS));
--- 
-1.5.4.3
-
+Mac should be aware that card is iin TODO list.
+Tomas
