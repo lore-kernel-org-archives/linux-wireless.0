@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57690 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752721AbYKHLBY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2008 06:01:24 -0500
-Subject: Re: problems with ath5k driver.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: msan <msan@email.it>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <gf3rag$l51$1@ger.gmane.org> (sfid-20081108_115741_111995_B4A89A2F)
-References: <geiib4$apo$2@ger.gmane.org>
-	 <20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net>
-	 <get27e$ka2$1@ger.gmane.org>
-	 <43e72e890811051322m43efbf03gd21770be382e807d@mail.gmail.com>
-	 <1225989658.4276.4.camel@dv>  <gf3rag$l51$1@ger.gmane.org>
-	 (sfid-20081108_115741_111995_B4A89A2F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NymYBO7SCbRRyWMfJYpB"
-Date: Sat, 08 Nov 2008 12:01:25 +0100
-Message-Id: <1226142085.3610.4.camel@johannes.berg> (sfid-20081108_120127_620686_7578A1A3)
-Mime-Version: 1.0
+Received: from ns.pescomnet.cz ([82.100.5.251]:46332 "EHLO ns.pescomnet.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751679AbYKDB6x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2008 20:58:53 -0500
+Message-ID: <490FAC3B.6030205@centrum.cz> (sfid-20081104_025859_080362_C23DDE54)
+Date: Tue, 04 Nov 2008 02:58:19 +0100
+From: =?ISO-8859-2?Q?Ond=F8ej_Ku=E8era?= <ondrej.kucera@centrum.cz>
+MIME-Version: 1.0
+To: Marcos Barbosa <marcosestevesbarbosa@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>, jikos@suse.cz,
+	yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] PROBLEM: Led for wifi blinking all the time
+References: <490A5D39.1090605@centrum.cz> <20081031145434.GB4310@tuxdriver.com> <42bbb5c30810311159v50785ac7jfc8ef8eb3e32ea9b@mail.gmail.com>
+In-Reply-To: <42bbb5c30810311159v50785ac7jfc8ef8eb3e32ea9b@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-2;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-NymYBO7SCbRRyWMfJYpB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Marcos Barbosa wrote:
+> Traffic exists all the time, because the commands to control
+> connection. To cancel all traffic, down the wireless interface.
 
-On Sat, 2008-11-08 at 10:57 +0000, msan wrote:
-> Il Thu, 06 Nov 2008 11:40:58 -0500, Pavel Roskin ha scritto:
->=20
-> > Actually, I tested AR5007EG with Linux 2.6.27 and it worked, even with
-> > WPA.  So the problem is probably elsewhere (bad antenna, lack of APs
-> > around, curly hands, irrational fear of things "under development" etc)=
-.
-> >=20
->=20
-> If I can say, the card now works perfectly but is rather slow.
-> I am downloading some files from another computer inside my lan at home,=20
-> not from internet.
-> The other computer is connected with an ethernet card while my computer=20
-> is connected with my wireless card, ATheros.
-> The download starts at 1Mb and more but quickly degrades at 200 - 170 kb.=
+OK, let me rephrase. It may by true that from a low-level point of view=
 =20
-> it.
-> Perhaps the driver needs some work yet.
+there exists some traffic all the time. But let's see it from user's=20
+point of view. With 2.6.26 I connected to network during which the led=20
+was blinking. After the connection was established, it stopped blinking=
+=20
+and was just on. Then when I started downloading something (wget=20
+http://server.com/foo.bar), it started blinking and shortly after the=20
+download was completed, it stopped to be just "on" again. I consider=20
+this a very reasonable behavior. With 2.6.27 it is blinking really all=20
+the time, whether the user is consciously downloading/uploading some=20
+data or not. The main problem is that such periodic non-stop blinking i=
+s=20
+very eye catching and it draws your attention away from the things you=20
+are actually doing. So I really believe this is a regression. One more=20
+reason, even though I'm not sure if I should even bring it up - on MS=20
+Windows it behaves more or less in a similar manner as with 2.6.26=20
+kernel. Now I'm far from saying that things should work the way they=20
+work on Windows but in this case I think they actually have it right.
 
-Which RC algorithm are you using? Use minstrel if you can.
+Ond=F8ej
 
-johannes
 
---=-NymYBO7SCbRRyWMfJYpB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJFXGCAAoJEKVg1VMiehFYE0UQALyRsgLu5AFqv9nGGbBHu92D
-vKoZBSoGrZq8H55kWWa+B1gak4aY7V/KABnRzFjBgwnhr6lZ1AtkVbpmvk7OedoG
-fellKTdP9UsxC+4nYhBXAL56pC9GAUqMFuPeTBL18JnsYodGFqzUJ5+2zGYS3VKm
-2XQhy1MPl6Z2/1lA02cR5d6IdRxiUa/SYmaTH1GFEsPZbrKPSPy5yJUjbqm2t6g0
-ww3ojFOLRDlcFY4hgKZ7jdZNZFi4RWIPxMmgikMgv/0/KnPSQeFdETwCsR0rCSGh
-c1WDUPD2u9JBv6Sa9HtehVgJ507LqKJwD0x6EZsIm57oLzXFdS5l48bN6finPhRz
-t/g8ayQTdblIMW6LFeSkm5vthGotHzJAc9Rvuag3EtLtOWaFbJGuBa88MSAPIk82
-8IHyZiSts3BN2XCaTd7cuCNRSgkkpnXs1Djg4OiZUMUUGX6YGrmm96ZwqAMp+yNv
-cb9Va/ObKDmDDTtyuOWxOjZRs+2i1kzRxfd41SXwmK2nLzZmIK9VA9ltsr97tq+u
-t6RuXGTw94YUAlTpF3zEVvZpWC6MjyaJaDo2bEsxq2n1bSzve7tbVP25cfCaa9dG
-Vil/NeVafD0NVkOLF5FlF/y0yJ1Ib0aeIsUnnNWsWz7n/VDhcQYj1g+LxUShWJJj
-JbMt8siP4Nf58N6pXxxm
-=f78q
------END PGP SIGNATURE-----
-
---=-NymYBO7SCbRRyWMfJYpB--
-
+--=20
+Cheers,
+Ond=F8ej Ku=E8era
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
