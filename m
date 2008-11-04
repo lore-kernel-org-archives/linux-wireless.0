@@ -1,76 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42987 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751205AbYKXMpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 07:45:12 -0500
-Message-ID: <492AA1BC.3080205@suse.de> (sfid-20081124_134518_766564_124506FE)
-Date: Mon, 24 Nov 2008 13:44:44 +0100
-From: Frank Seidel <fseidel@suse.de>
+Received: from perninha.conectiva.com.br ([200.140.247.100]:38250 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236AbYKDVaY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2008 16:30:24 -0500
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
+Date: Tue, 4 Nov 2008 19:30:27 -0200
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+References: <244535.27936.qm@web23107.mail.ird.yahoo.com>
+In-Reply-To: <244535.27936.qm@web23107.mail.ird.yahoo.com>
 MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"hschaa@suse.de" <hschaa@suse.de>
-Subject: Re: [PATCH] Re: Problem with Kernel Oops in ipw2200
-References: <49130E75.1000903@suse.de> <49131173.3010409@suse.de>	 <20081112213350.GJ2411@tuxdriver.com>  <491BF062.4050705@suse.de>	 <1226631539.2604.411.camel@debian.sh.intel.com>  <49214BF3.8050306@suse.de> <1227296397.13619.33.camel@rc-desk>
-In-Reply-To: <1227296397.13619.33.camel@rc-desk>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200811041930.29564.herton@mandriva.com.br> (sfid-20081104_223038_082022_4DE71D05)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tuesday 04 November 2008 18:27:12 Hin-Tak Leung wrote:
+> --- On Tue, 4/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> 
+wrote:
+> > Realtek 8187B has a receive command queue to feedback beacon
+> > interrupt
+> > and transmitted packet status. Use it to feedback mac80211
+> > about status
+> > of transmitted packets. Unfortunately in the course of
+> > testing I found
+> > that the sequence number reported by hardware includes
+> > entire sequence
+> > control in a 12 bit only field, so a workaround is done to
+> > check only
+> > lowest bits.
+> >
+> > ---
+> >  v2: fix rate stuck at 1M reported by Larry Finger, Hin-Tak
+> > and also seen by me.
+> >      btw, I noted now with a ralink device that rt2500usb
+> > (rt2x00) has same
+> >      issue currently.
+> >
+> >
+> > -		hdr->retry =
+> > cpu_to_le32((info->control.rates[0].count - 1) <<
+> > 8);
+> > +		hdr->retry =
+> > cpu_to_le32(info->control.rates[0].count << 8);
+> >
+> > -		hdr->retry =
+> > cpu_to_le32((info->control.rates[0].count - 1) <<
+> > 8);
+> > +		hdr->retry =
+> > cpu_to_le32(info->control.rates[0].count << 8);
+>
+> These are the only lines which changed between the two versions of the
+> patch - if removing the two -1's fixes the rate stuck (and these two lines
+> are newly introduced), shouldn't this be a separate commit if it fixes a
+> problem introduced by an earlier commit?
 
-reinette chatre wrote:
-> Frank,
-> 
-> The patch above was not accepted. Would it be possible for you to try
-> the patch below instead? Thank you very much.
+No, there was other change as well:
+info->status.rates[0].count = pkt_rc - 1;
+to
+info->status.rates[0].count = pkt_rc;
 
-sadfully this patch doesn't seem to fix this issue like the last one.
-When applied i run in the following Oops:
+that's in fact what fixes the rate control problem with pid (from what I 
+understand from the code, if rates[0].count is not zero (that will be always 
+the case here) pid would register the tx with errors, and would explain the 
+rate stuck at 1M).
 
-BUG: unable to handle kernel NULL pointer dereference at 00000000
-IP: [<f92405bf>] :ipw2200:ipw_net_hard_start_xmit+0x428/0x875
-*pde = 00000000 
-Oops: 0002 [#1] SMP 
-last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:02:03.0/rf_kill
-Modules linked in: aes_i586(N) crypto_blkcipher(N) aes_generic(N) ieee80211_crypt_ccmp(N) af_packet(N) microcode(N) binfmt_misc(N) cpufreq_conservative(N) cpufreq_userspace(N) cpufreq_powersave(N) acpi_cpufreq(N) speedstep_lib(N) snd_pcm_oss(N) snd_mixer_oss(N) snd_seq(N) snd_seq_device(N) ipv6(N) fuse(N) loop(N) dm_mod(N) snd_intel8x0(N) pcmcia(N) ipw2200(N) snd_ac97_codec(N) ieee80211(N) yenta_socket(N) ohci1394(N) ac97_bus(N) ieee80211_crypt(N) r8169(N) rsrc_nonstatic(N) ieee1394(N) snd_pcm(N) pcmcia_core(N) snd_timer(N) shpchp(N) snd(N) video(N) rtc_cmos(N) pci_hotplug(N) i2c_i801(N) intel_agp(N) container(N) soundcore(N) sr_mod(N) iTCO_wdt(N) rtc_core(N) output(N) battery(N) ac(N) rtc_lib(N) serio_raw(N) joydev(N) pcspkr(N) i2c_core(N) agpgart(N) cdrom(N) button(N) snd_page_alloc(N) iTCO_vendor_support(N) sg(N) sd_mod(N) crc_t10dif(N) ehci_hcd(N) uhci_hcd(N) usbcore(N) edd(N) ext3(N) mbcache(N) jbd(N) fan(N) ide_pci_generic(N) piix(N) ide_core(N) ata_generic(N) ata_piix(
-N) libata(N) scsi_mod(N) dock(N) thermal(N) processor(N) thermal_sys(N) hwmon(N)
-Supported: No
+The other changes is because now with new rate control api, it changed 
+semantics but is passing a different retry_count than before now, while 
+testing I found for example, connecting to an ap using wep, it is passing in 
+tx packet in same conditions retry_count=6 now instead of 7 as before rate 
+control api, so I considered a bug, unless this is desired (also depending on 
+code path the retry count in tx packet could be set to zero now, is this 
+right?); if new behaviour of retry_count in this case is right (and my change 
+is wrong) please someone explain to me what is the semantic now behind the 
+new rate control api (looking at the rate control api change why there is 
+some differences between drivers?, as some drivers simply just replaced 
+retry_count with rates[0].count usage while others changed 
+to "rates[0].count - 1".)
 
-Pid: 3538, comm: ping Tainted: G          (2.6.27.5-2-default #1)
-EIP: 0060:[<f92405bf>] EFLAGS: 00010046 CPU: 0
-EIP is at ipw_net_hard_start_xmit+0x428/0x875 [ipw2200]
-EAX: 00000000 EBX: 00000000 ECX: f7ac7c60 EDX: 00000000
-ESI: f79ba480 EDI: 00000000 EBP: 00000000 ESP: ecef1ab0
- DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-Process ping (pid: 3538, ti=ecef0000 task=f7507000 task.ti=ecef0000)
-Stack: f7534b04 ecd5fc00 f8e986f6 ecd5fc00 f7534b24 f7534af4 f8eb9181 00529280 
-       00000000 00000000 f79ba000 f7ac7c60 f79bac60 f79bac5c 00000282 0000000c 
-       ecd5fc00 f7abd080 00000018 00000001 00004b14 f7534af4 f8eb9860 0001005c 
-Call Trace:
- [<f91e1d59>] ieee80211_xmit+0x9f0/0xa63 [ieee80211]
- [<c02e3474>] dev_hard_start_xmit+0x1e0/0x247
- [<c02f1e91>] __qdisc_run+0xa6/0x1ad
- [<c02e3920>] dev_queue_xmit+0x35b/0x493
- [<c03037b1>] ip_finish_output+0x1d6/0x20f
- [<c0302b1b>] ip_local_out+0x15/0x17
- [<c0302d70>] ip_push_pending_frames+0x253/0x2ae
- [<c03198ad>] raw_sendmsg+0x5ff/0x677
- [<c0320a82>] inet_sendmsg+0x3b/0x45
- [<c02d855a>] sock_sendmsg+0xc9/0xe4
- [<c02d86ff>] sys_sendmsg+0x18a/0x1eb
- [<c02d9a03>] sys_socketcall+0x241/0x290
- [<c0104c8b>] sysenter_do_call+0x12/0x2f
- [<ffffe430>] 0xffffe430
- =======================
-Code: 24 4c 8b 4c 24 2c 48 89 44 24 64 6b c0 28 03 44 24 34 8b 90 ac 04 00 00 89 d5 c1 e5 07 03 a8 c8 04 00 00 8b 80 cc 04 00 00 89 ef <89> 0c 90 b9 20 00 00 00 31 c0 f3 ab 88 5d 08 c6 45 00 00 c6 45 
-EIP: [<f92405bf>] ipw_net_hard_start_xmit+0x428/0x875 [ipw2200] SS:ESP 0068:ecef1ab0
-Kernel panic - not syncing: Fatal exception in interrupt
-------------[ cut here ]------------
+>
+> I did *not* (and do not) have a rate-stuck problem, but I am running a
+> slightly mod version of the patch against 2.6.27, which doesn't have
+> "rates[x].count" yet, with the retry_count struct member which seems to
+> have since been removed.
 
+Please try and check the patches with latest wireless-testing.
 
+--
+[]'s
+Herton
