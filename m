@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:51923 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974AbYKCRUp (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:49544 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752981AbYKDSCZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 12:20:45 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so1033418nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 09:20:44 -0800 (PST)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [GIT PATCH] rfkill fixes for 2.6.28-rc3
-Date: Mon, 3 Nov 2008 18:20:40 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-References: <1225730537-2679-1-git-send-email-hmh@hmh.eng.br> <200811031747.16326.IvDoorn@gmail.com> <20081103170243.GB2417@khazad-dum.debian.net>
-In-Reply-To: <20081103170243.GB2417@khazad-dum.debian.net>
+	Tue, 4 Nov 2008 13:02:25 -0500
+Message-ID: <49108E26.4040205@lwfinger.net> (sfid-20081104_190229_573175_8C1F2950)
+Date: Tue, 04 Nov 2008 10:02:14 -0800
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811031820.41165.IvDoorn@gmail.com> (sfid-20081103_182048_107690_06C085D2)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+CC: Wilson Ribeiro <wribjr@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Realtek wireless 8187se
+References: <740646d0811040501w5571d464u757e05399803f768@mail.gmail.com> <69e28c910811040852u7f3f3481t7bf31ad3af8c03ad@mail.gmail.com>
+In-Reply-To: <69e28c910811040852u7f3f3481t7bf31ad3af8c03ad@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 03 November 2008, Henrique de Moraes Holschuh wrote:
-> On Mon, 03 Nov 2008, Ivo van Doorn wrote:
-> > On Monday 03 November 2008, Henrique de Moraes Holschuh wrote:
-> > > This small patchset contains two fixes to issues in the suspend/resume
-> > > handling of the rfkill class core.
-> > > 
-> > > It needs to go to 2.6.28.  These patches are based on 2.6.28-rc3.
-> > 
-> > Are they real regressions or normal bugfixes?
-> 
-> I am not sure if they regress anything, but I am pretty sure there is no
-> bugzilla entry about them yet.  I have added two more interested parties to
-> the CC.
-> 
-> So, if there is a strong feeling this would best be held until the next
-> merge window, I can certainly respin the patches to on top of
-> wireless-testing...
+Stefanik G=E1bor wrote:
+>=20
+> Can you check the actual print on the chip itself? "RTL8187L" and
+> "RTL8187B" are supported currently. Also, what is the USB device ID o=
+f
+> the chip? 0x8187, 0x8189, 0x8197 and 0x8198 are known to work in the
+> latest preview kernels.
+>=20
 
-Well I'll give my ACK to the 2 patches, but I'll let john decide if they
-are "regression" enough for 2.6.28. ;)
+Both work with 2.6.27.
 
-Ivo
+Larry
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
