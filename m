@@ -1,72 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx34.mail.ru ([194.67.23.200]:14372 "EHLO mx34.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753329AbYKBKfZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 05:35:25 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: David Kilroy <kilroyd@googlemail.com>
-Subject: Re: [RFC PATCH 0/2] orinoco: Don't keep cached firmware around permanently
-Date: Sun, 2 Nov 2008 13:35:19 +0300
-Cc: linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	linux-pm@lists.linux-foundation.org
-References: <1225415743-28209-1-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1225415743-28209-1-git-send-email-kilroyd@googlemail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3282186.GzpBzu53If";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200811021335.20241.arvidjaar@mail.ru> (sfid-20081102_113552_318513_705EFA8A)
+Received: from xc.sipsolutions.net ([83.246.72.84]:33863 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753307AbYKDKcI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2008 05:32:08 -0500
+Subject: Re: [RFC/RFT PATCH 0/2] rtl8187: implement conf_tx
+	callback/correctly ack tx pkts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: htl10@users.sourceforge.net
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+In-Reply-To: <118209.17192.qm@web23108.mail.ird.yahoo.com>
+References: <118209.17192.qm@web23108.mail.ird.yahoo.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iugzhZUYGgHhGENNgZlh"
+Date: Tue, 04 Nov 2008 11:31:53 +0100
+Message-Id: <1225794713.3619.69.camel@johannes.berg> (sfid-20081104_113213_214395_924D103B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3282186.GzpBzu53If
-Content-Type: text/plain;
-  charset="utf-8"
+
+--=-iugzhZUYGgHhGENNgZlh
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Friday 31 October 2008, David Kilroy wrote:
-> The recent patch to load orinoco firmware correctly on resume simply
-> kept the firmware in RAM for the entire time the module was loaded, and
-> only applied to Agere firmware.
+
+> if (condition)
+>     info->flags |=3D IEEE80211_TX_STAT_ACK;
+> else=20
+>     info->status.excessive_retries =3D 1;
+> ---------------
 >=20
-> The first patch uses the new power management notifiers to load and
-> release the firmware prior to suspend and after resume (for both Agere
-> and Symbol). I'm not an expert on where suspend/resume is headed, so I'd
-> appreciate any advice from linux-pm on whether this is the preferred way
-> to do things.
+> But the else-clause is missing in the latest patch (of two), which also s=
+eems to be where both you and Larry are having rate stuck at 1Mb/s for.
+> - and the line below
+> "info->status.rates[0].count =3D pkt_rc +1 ;" doesn't compile
+> under 2.6.27, so I changed the rates[0].count to the retry_count,
+> and simultaneously adding the else-clause back.=20
 >=20
+> My question is this: is the removal of the else-clause unintensional,
+> could it result in your 1Mb/s rate?
 
-I tested this and it works, and looking how callbacks are invoked I think
-it is techically correct. But I have some concerns about general idea of
-requesting firmware multiple times that are not related to PM.
+The excessive_retries status thing has been removed and mac80211 ought
+to always use STAT_ACK now.
 
-Many properties for the currently running device/driver instance depend on
-particular firmware type and version. Now we blindly replace firmware; how
-can we be sure it is actually the same one as was at the time feature set
-was detected?
+johannes
 
-Even if some sort of checksumming were impemented we still have to be
-prepared to completely reinitialize card on FW mismatch.
-
-I checked what the rest of drivers/net does and either they do not cache at
-all (does not work in this case) or they cache FW im memory after initial
-request.
-
-Comments?
-
---nextPart3282186.GzpBzu53If
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+--=-iugzhZUYGgHhGENNgZlh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iEYEABECAAYFAkkNgmgACgkQR6LMutpd94yAUACfXkLSfy1T+M2y7sBSK9UNFlu9
-Z64AoI7rzWoC46HSwZKgIUz/udJzkjHZ
-=rHoj
+iQIcBAABAgAGBQJJECSVAAoJEKVg1VMiehFYxGYP/3Ln1OfitGUD8GJihNyKC7lS
+zSMjLj93NneYj/Xx44pvdQwOvDNaro5x0qTRjki4do5R5Bhd/NOvFhD9JYAE45yt
+Y42DFPL5U2ZtbrA6j6X18KZl7djyi5rEyTU6N/M+XVFf6ZIrppdK730NHLpboFHY
+Ti6zFCz61wbkaC9+dUgxAwUEdOvXtD356l0+9hJCyJn3FBCG6JVwG+bI3/aQ52oZ
+sckABM8xRfdglu+j8Bz5Y5gUTwOiXUk4mag3liXXqjAG5xPpoVFrG4VydOVxqO6t
+Xho1+FS17q/mqhUCXKqzhYCSYVaX+vN/hW3YUAGNXfZTsCSG174B2c/XmgQKK8km
+U7dCYIdlueWtzvpUWVVLfM3dP37bnvw3OoIP48NmDJSTiSrfYHyVnGruwmZayH5W
+ZFPnG/ty6k4j21WFyWgUKaKdRVHjcOGsoLtPUT3c/YFHZh36U7IM/Y0TzQOPGPMs
+l5QBwbxLBjGsf9/kfCS8zktJ9UqR8k6L4v3BA+LxZRusP5X+MykZg/EbOoNmr+r3
+4eXxnaBeRyKDXIuxCHg+NSl34hepz+7jTsbppli8n5XZKwDFpQ3hBQBGGLISmGfj
+/EWAn37634OB2dCCM02qqRTpsZNJd3giEn2dw/+WaYUO0sAq3Is1DJg0aJq3XyxX
+c5VvUt99QsyDx9E42c5f
+=T1Ec
 -----END PGP SIGNATURE-----
 
---nextPart3282186.GzpBzu53If--
+--=-iugzhZUYGgHhGENNgZlh--
+
