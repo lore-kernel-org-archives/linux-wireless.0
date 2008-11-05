@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:35529 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752521AbYKCHTs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 02:19:48 -0500
-To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: No ProbeResp - assume out of range
-References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com>
-	<200811022303.54476.mb@bu3sch.de>
-	<1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 03 Nov 2008 09:19:32 +0200
-In-Reply-To: <1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com> (ext Tomas Winkler's message of "Mon\, 3 Nov 2008 00\:42\:48 +0200")
-Message-ID: <87prldb7jv.fsf@nokia.com> (sfid-20081103_081951_298161_55D0DD52)
+Received: from mail.atheros.com ([12.36.123.2]:44595 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751568AbYKEXgG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 18:36:06 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 15:36:06 -0800
+Date: Wed, 5 Nov 2008 15:35:59 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets
+	using tx close descriptor for 8187B
+Message-ID: <20081105233559.GE9028@tesla> (sfid-20081106_003612_863707_DBC2BD5A)
+References: <20081105224329.GC9028@tesla> <943428.93674.qm@web23107.mail.ird.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <943428.93674.qm@web23107.mail.ird.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler <tomasw@gmail.com> writes:
+On Wed, Nov 05, 2008 at 03:16:42PM -0800, Hin-Tak Leung wrote:
+> --- On Wed, 5/11/08, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+> > Umm I have an FC10 box and I see a mac80211.ko. But of
+> > course, I have an
+> > early release of FC10, its on
+> > 2.6.27-0.244.rc2.git1.fc10.x86_64.
+> >
+> > Did the new ones really put it built in?
+> 
+> Yes,
+> $ grep 'MAC80211=' /boot/config-2.6.2*fc10*
+> /boot/config-2.6.27.4-69.fc10.x86_64:CONFIG_MAC80211=y
+> /boot/config-2.6.27.4-73.fc10.x86_64:CONFIG_MAC80211=y
+> 
+> I looked through koji and found it was removed between
+> 0.345.rc7.fc10
+> 0.339.rc7.fc10
+> but the log entry between does not say why.
+> 
+> I filed this as https://bugzilla.redhat.com/show_bug.cgi?id=470143 ,
 
->> mac80211 immediately assumes the connection is broken, if one probe-resp
->> to a keekalife-proberequest is lost.
->> So if you scan just after the request got sent, you'll never receive the response
->> and mac80211 will terminate the connection.
->> It should try a few times, instead, before blowing up things.
->
-> I've seen this happening  in high traffic with some APs but it can be
-> also NIC issue. It needs to really investigate the sniffer capture I
-> wouldn't assume its only mac80211 issue.  Probe is issued only when RX
-> is not received for some time so there is some problem, nevertheless
-> monitoring beacons is a better approach from my experience.
+Thanks, I've put this on the wiki:
 
-I agree, monitoring received beacons and the number of failed
-transmissions would be better. But on the other hand some broken APs
-might work better if we periodically send frames to them.
+http://wireless.kernel.org/en/users/Download#DoIneedthisonFedora.3F
 
--- 
-Kalle Valo
+> if John wants to grab it before somebody else assign it his way :-).
+
+  Luis
