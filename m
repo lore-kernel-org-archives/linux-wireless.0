@@ -1,83 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.178]:36899 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751942AbYKCIBQ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56124 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756398AbYKEUOC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 03:01:16 -0500
-Received: by el-out-1112.google.com with SMTP id z25so1129480ele.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 00:01:15 -0800 (PST)
-Message-ID: <43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com> (sfid-20081103_090121_231477_C77FAC7E)
-Date: Mon, 3 Nov 2008 00:01:15 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-Cc: "Bob Copeland" <me@bobcopeland.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>, tim.gardner@canonical.com,
-	mick@madwifi.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1225698867.3619.31.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4908B754.1050400@tpi.com>
-	 <40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com>
-	 <40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
-	 <20081102184146.GA6065@hash.localnet>
-	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
-	 <1225696692.3619.18.camel@johannes.berg>
-	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
-	 <1225697686.3619.25.camel@johannes.berg>
-	 <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
-	 <1225698867.3619.31.camel@johannes.berg>
+	Wed, 5 Nov 2008 15:14:02 -0500
+Subject: Re: [PATCH 7/7] cfg80211/mac80211: Add Country IE parsing/802.11d
+	support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <43e72e890811051210x499dab3bhd4195f592c2aeaf2@mail.gmail.com> (sfid-20081105_211036_848548_C996DD5F)
+References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-5-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-6-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-7-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-8-git-send-email-lrodriguez@atheros.com>
+	 <1225887783.3619.108.camel@johannes.berg>
+	 <43e72e890811050857p7a6e371dq96880853dc310741@mail.gmail.com>
+	 <1225908658.3619.135.camel@johannes.berg>
+	 <43e72e890811051124g3931e244i3e29c413a05c08f3@mail.gmail.com>
+	 <1225914733.3619.150.camel@johannes.berg>
+	 <43e72e890811051210x499dab3bhd4195f592c2aeaf2@mail.gmail.com>
+	 (sfid-20081105_211036_848548_C996DD5F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xdGbdTPZ+TmF8zoybKlW"
+Date: Wed, 05 Nov 2008 21:14:01 +0100
+Message-Id: <1225916041.3619.168.camel@johannes.berg> (sfid-20081105_211408_421976_52F38905)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 2, 2008 at 11:54 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2008-11-02 at 23:51 -0800, Luis R. Rodriguez wrote:
->> On Sun, Nov 2, 2008 at 11:34 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Sun, 2008-11-02 at 23:29 -0800, Luis R. Rodriguez wrote:
->> >
->> >> >> Not sure I agree with the WARN_ON() if the driver's mac80211 config()
->> >> >> callback fails. In our case when we tune to a different channel we
->> >> >> have to clear any DMA operations first and then we reset the chip.
->> >> >> Reseting the chip can fail for whatever strange hw issue cases. The
->> >> >> patch fixes the complaint but is the complaint sane?
->> >> >
->> >> > What's mac80211 to do when it fails?
->> >>
->> >> How about a shiny new nl80211 event?
->> >
->> > And wtf would userspace do?
->>
->> If multiple configuration attempts fail perhaps stop trying, and
->> inform the user?
->
-> But you're saying it's "normal" to get this failure,
 
-No, I'm just sayings its possible, right now mac80211 assumes its not
-and if it does its because we somehow lied to mac80211 of our
-capabilities.
+--=-xdGbdTPZ+TmF8zoybKlW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> so wouldn't it
-> always do that sooner or later and always say your hw is broken?
+On Wed, 2008-11-05 at 12:10 -0800, Luis R. Rodriguez wrote:
 
-Nope
+> > Ok, checksums are nice to avoid having to memcmp large things, but
+> > afaict we're talking about maybe 12 bytes, right?
+>=20
+> Depends on the number of triplets, but since we only support 32 reg
+> rules this means we only support 32 triplets and therefore we only
+> support a max IE of size of 99 bytes (32 * 3 + 3). Realistically in JP
+> I expect there to be around 3, 4, or 5 or maybe even 6 triplets which
+> is 21 bytes.
 
-> Also,
-> that's a bad thing to do in userspace, imho.
+Alright, not so bad either though.
 
-What should we do with these rare failures then?
+> > If so, why don't we
+> > just keep a copy of the country IE and compare it fully every time?
+>=20
+> Eh. I'm inclined to leave the checksum then. We'd then have to bother
+> with freeing yet another thing later.
 
-> Why can it fail here
-> anyway?
+Yeah, ok, I don't really care much, it just seemed the checksum
+complicated the code a bit. I guess much of that was due to the somewhat
+unnatural split between cfg80211 and mac80211 though.
 
-Look at all the reasons for which a hw reset can fail for ath9k and ath5k.
+johannes
 
-> hw borked is one obvious case, but it shouldn't happen enough
-> for this to be a problem yet.
+--=-xdGbdTPZ+TmF8zoybKlW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-This I agree with. It is rare, its just possible, right now mac80211
-assumes it never will.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-  Luis
+iQIcBAABAgAGBQJJEf6CAAoJEKVg1VMiehFYM+cQAKtxyt8l59HBerdmYjeQPVmE
+6WSLaxQtFLLPKJJ/rNsRQrPvMg6W00cNtfDx1yOs59/5sU6jv6kPvhCaHRoIFXKu
+Wj/hU/e5aPFzvZkEwXMkv7lPj9LpbVto/RqiwUzHGZ9YmjPYs8UwfG2dXDX3Sxjd
+W1HIsir6wEdsgpTkCMIvGatQcVvOcc1ORBFsZFxkEGpDz6OEXBtgVyitkYq5B96U
+COdG3UlVgzTYWZNZfqsZvQ/QvKmuChd6Nl3RNtYgcA4/TTVrVBr9t9r3WJ0aHl4n
+I2u2UFVRvmhmjZQKCwvFVoeTb2E7dFGFHWl9bQEXDEPN3zry3SpfqkcdsOFQSdvC
+yhQ8vuUfnVNwFSmfHFICzgr/pzYkUo3QBgnMiRDWGX1Kaa0Yuw587vD3ixEvHDPe
+g4nR2Rku3ptQgmQ12IBE+AUumEZaCh227bO+9wHwncNp5aGMR647BpG+HD8kZgMC
+Y3Hqme8axtbSn7PypnT8wJ7l1q3vQqkieAzU1bRL9YDW9LkRSQrmVOK6MIhyEKT1
+5EGrMGtVqRvzdAe4xLnVcyRH0yDh3wX7APoTR7TVd/fiG4D2IOiPjtIBEOr83Za7
+1faXsO9wuUsBXBEpTwNsYLd4HBOqeV9gP06a+uDJgHBPLbVK8HI1J5/p2JOy3zMr
+xYHXVerDGEjYuYhYSrJh
+=CyIf
+-----END PGP SIGNATURE-----
+
+--=-xdGbdTPZ+TmF8zoybKlW--
+
