@@ -1,95 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13731 "EHLO mail.atheros.com"
+Received: from main.gmane.org ([80.91.229.2]:50346 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752843AbYKLWWL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 17:22:11 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:22:11 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/10] cfg80211: separate intersection section in __set_regdom()
-Date: Wed, 12 Nov 2008 14:21:58 -0800
-Message-ID: <1226528524-32678-5-git-send-email-lrodriguez@atheros.com> (sfid-20081112_232217_495504_27711B0D)
-In-Reply-To: <1226528524-32678-4-git-send-email-lrodriguez@atheros.com>
-References: <1226528524-32678-1-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-2-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-4-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755071AbYKEVM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 16:12:28 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Kxpfq-0004iv-6C
+	for linux-wireless@vger.kernel.org; Wed, 05 Nov 2008 21:12:22 +0000
+Received: from host251-18-dynamic.51-82-r.retail.telecomitalia.it ([82.51.18.251])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 21:12:22 +0000
+Received: from msan by host251-18-dynamic.51-82-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 21:12:22 +0000
+To: linux-wireless@vger.kernel.org
+From: msan <msan@email.it>
+Subject: Re: problems with ath5k driver.
+Date: Wed, 5 Nov 2008 21:12:14 +0000 (UTC)
+Message-ID: <get27e$ka2$1@ger.gmane.org> (sfid-20081105_221245_810387_1D5F83C1)
+References: <geiib4$apo$2@ger.gmane.org>
+	<20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So far the __set_regdom() code is pretty generic as the
-intersection case is fairly straight forward; this will however
-change when 802.11d support is added so lets separate intersection
-code for now in preparation for 802.11d support.
+Il Mon, 03 Nov 2008 19:16:25 -0500, Pavel Roskin ha scritto:
 
-This patch only has slight functional changes.
+> Quoting msan <msan@email.it>:
+> 
+>> I have an Esprimo D9500 Fujitsu Semens notebook. My lspci reports for
+>> wireless card: "06:00.0 Ethernet controller: Atheros Communications
+>> Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev 04)"
+>> Dmesg says: "ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY:
+>> 0x70)".
+> 
+> This device is only supported in Linux 2.6.27 and newer.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/reg.c |   29 +++++++++++++++++++++--------
- 1 files changed, 21 insertions(+), 8 deletions(-)
+Now I've installed debian package for Linux 2.6.27 taken from http://
+kernel-archive.buildserver.net/debian-kernel/pool/main/l/linux-2.6/
+and I have the same message from kernel:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 290ecec..845e2d3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -826,10 +826,6 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	if (WARN_ON(!reg_is_valid_request(rd->alpha2)))
- 		return -EINVAL;
- 
--	reset_regdomains();
--
--	/* Country IE parsing coming soon */
--
- 	if (!is_valid_rd(rd)) {
- 		printk(KERN_ERR "cfg80211: Invalid "
- 			"regulatory domain detected:\n");
-@@ -837,16 +833,33 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		return -EINVAL;
- 	}
- 
--	if (unlikely(last_request->intersect)) {
-+	if (!last_request->intersect) {
-+		reset_regdomains();
-+		cfg80211_regdomain = rd;
-+		return 0;
-+	}
-+
-+	/* Intersection requires a bit more work */
-+
-+	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE) {
-+
- 		intersected_rd = regdom_intersect(rd, cfg80211_regdomain);
- 		if (!intersected_rd)
- 			return -EINVAL;
-+
-+		/* We can trash what CRDA provided now */
- 		kfree(rd);
--		rd = intersected_rd;
-+		rd = NULL;
-+
-+		reset_regdomains();
-+		cfg80211_regdomain = intersected_rd;
-+
-+		return 0;
- 	}
- 
--	/* Tada! */
--	cfg80211_regdomain = rd;
-+	/* Country IE parsing coming soon */
-+	reset_regdomains();
-+	WARN_ON(1);
- 
- 	return 0;
- }
--- 
-1.5.6.3
+"ath5k phy0: Support for RF2425 is under development."
+
+So it doesn't work even with linux 2.6.27.
+
 
