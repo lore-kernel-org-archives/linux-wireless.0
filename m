@@ -1,79 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nexus.dynaweb.hu ([195.70.37.87]:47134 "EHLO nexus.dynaweb.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750953AbYKLV73 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 16:59:29 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by nexus.dynaweb.hu (Postfix) with ESMTP id E812960597
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 22:48:10 +0100 (CET)
-Received: from nexus.dynaweb.hu ([127.0.0.1])
-	by localhost (nexus.dynaweb.hu [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id ExP-0o+cliBk for <linux-wireless@vger.kernel.org>;
-	Wed, 12 Nov 2008 22:48:10 +0100 (CET)
-Received: from raketa.ipn.dynaweb.hu (catv-80-98-178-15.catv.broadband.hu [80.98.178.15])
-	by nexus.dynaweb.hu (Postfix) with ESMTPSA id 6A62461310
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 22:48:10 +0100 (CET)
-Date: Wed, 12 Nov 2008 22:48:10 +0100
-From: RUMI Szabolcs <rumi_ml@rtfm.hu>
-To: linux-wireless@vger.kernel.org
-Subject: ath5k master (AP) mode
-Message-Id: <20081112224810.8d4ca179.rumi_ml@rtfm.hu> (sfid-20081112_225933_817506_3D668660)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp.nokia.com ([192.100.105.134]:39652 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753059AbYKEV0I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 16:26:08 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Thoughts about mac80211 client PS implementation
+References: <87k5bhkjf1.fsf@nokia.com>
+	<1225917235.3619.180.camel@johannes.berg> <87fxm5ki6s.fsf@nokia.com>
+	<1225919146.3619.190.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 05 Nov 2008 23:25:56 +0200
+In-Reply-To: <1225919146.3619.190.camel@johannes.berg> (ext Johannes Berg's message of "Wed\, 05 Nov 2008 22\:05\:46 +0100")
+Message-ID: <877i7hkgpn.fsf@nokia.com> (sfid-20081105_222612_799195_B88199A9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-I've been trying to set an Atheros NIC to AP mode using the ath5k
-driver but it fails:
+> On Wed, 2008-11-05 at 22:54 +0200, Kalle Valo wrote:
+>
+>> >> PS should be disabled while associated and running software scan, and
+>> >> naturally re-enabled after the scan has finished. I assume hardware
+>> >> scanning implementations are clever enough to disable PS when scanning
+>> >> and we don't have to worry about that case.
+>> >
+>> > And on that too. And should there be a monitor flag that disables PS, so
+>> > that we can "refcount" the PS bit in a way?
+>> 
+>> Sorry, I don't follow you here. What do you mean by a monitor flag?
+>
+> Well if you add a monitor interface you may want to turn off PS,
 
-# iwconfig wlan0 mode master
-Error for wireless request "Set Mode" (8B06) :
-    SET failed on device wlan0 ; Invalid argument.
+Ok, now I got it. I think your proposal makes sense.
 
-lspci:
+> but I suppose you can just do that on the wlan0 interface you're
+> associated on.
 
-03:03.0 Ethernet controller: Atheros Communications, Inc. AR5212 802.11abg NIC (rev 01)
+Yeah, but that's an extra hassle. In my opinion better to do it in
+mac80211.
 
-dmesg (with compat-wireless-2008-11-12):
- 
-ath5k_pci 0000:03:03.0: PCI INT A disabled
-cfg80211: Using static regulatory domain info
-cfg80211: Regulatory domain: EU
-	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-	(2402000 KHz - 2482000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-	(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-	(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-	(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-	(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-	(5490000 KHz - 5710000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
-ath5k_pci 0000:03:03.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-ath5k_pci 0000:03:03.0: registered as 'phy0'
-phy0: Selected rate control algorithm 'pid'
-ath5k phy0: Atheros AR2414 chip found (MAC: 0x79, PHY: 0x45)
-__ratelimit: 6 callbacks suppressed
-ath5k phy0: gain calibration timeout (2412MHz)
-ath5k phy0: can't reset hardware (-11)
-ath5k phy0: gain calibration timeout (2412MHz)
-ath5k phy0: can't reset hardware (-11)
-ath5k phy0: gain calibration timeout (2412MHz)
-ath5k phy0: can't reset hardware (-11)
-ath5k phy0: gain calibration timeout (2452MHz)
-ath5k phy0: can't reset hardware (-11)
-ath5k phy0: gain calibration timeout (2452MHz)
-ath5k phy0: can't reset hardware (-11)
-__ratelimit: 6 callbacks suppressed
-ath5k phy0: gain calibration timeout (2452MHz)
-ath5k phy0: can't reset hardware (-11)
+>> > Why would you queue up frames? To reduce the number of radio wakeups
+>> > when TX traffic is low?
+>> 
+>> Just because I assume that invoke_tx_handlers() cannot sleep but
+>> ieee80211_hw_config() sleeps. I didn't think of any other way to solve
+>> this, but I haven't thought that much about this. What do you think?
+>
+> But wouldn't that mean the other way around, i.e. whenever we transmit
+> we disable it and then start a timer that re-enables it? Ah, you're
+> thinking because TX handlers cannot sleep and the config callback may
+> sleep?
 
-First I've tried this with the driver version that is included with 2.6.27
-but when I saw that it doesn't work I have installed the compat-wireless
-tarball from today (2008-11-12) but it still doesn't work.
+Yes, that's what I'm worrying. And I definitely want op_config() to
+sleep, it makes my implementation in stlc45xx a lot easier :)
 
-Is this how it supposed to be (eg. not supported yet) or am I just doing
-something wrong?
+> Hmm. I suppose then we'd have to defer the actual disable PS mode to
+> a work struct.
 
-Thanks,
+Yes, that's what I was thinking. But now that I have thought about
+this more, I think queueing of the frames is not necessary. The first
+frames can be sent while in Power Save mode (ie. PSM bit set in Frame
+Control) and PS disable can happen later when the work struct is
+scheduled. I don't think this being a problem, we just have to be
+careful with race conditions.
 
-Sab
+> Maybe we don't want to disable PS for a single frame though
+
+Actually I think we do. The reason why I'm interested in dynamic PS is
+the receive latency (transmit latency minimal is in practise). For
+example, let's think about DNS request. In the best scenario only one
+frame is transmitted, and if we don't come out receiving the reply to
+the dns request will take a long time. If DTIM is 3 and beacon
+interval 100 ms, the RTT for the DNS request/reply would be 300 ms.
+That's a long delay to a case where user has pressed a link in the
+browser and the browser starts to load a web page.
+
+> so how about this:
+>
+>  * When a frame is transmitted, store the current frame counter (do we
+>    have one? we could add one) somewhere and arm a timer to fire N
+>    milliseconds in the future.
+>  * The timer checks that we have transmitted
+>    more than M frames in the time since it was started, and if so queues
+>    a work struct to disable PS.
+>  * The work function also sets a flags somewhere "dynamic PS has
+>    disabled PS" and arms another timer to fire after R millisecinds,
+>    that timer will queue work to enable PS again
+>  * the TX code, when the "dynamic PS has disabled PS" flag is set, mods
+>    the re-enable timer to be R milliseconds in the future again
+>
+> That way, M frames within a period of N milliseconds will disable PS,
+> and it'll still disabled until R milliseconds elapse without traffic,
+> and no timers are fired unless they are needed.
+
+I think this sounds good. As I said above, I'm not sure about checking
+of M frames, but I'll implement it anyway and test it in practise.
+
+Johannes, thanks a lot for the help, again :)
+
+-- 
+Kalle Valo
