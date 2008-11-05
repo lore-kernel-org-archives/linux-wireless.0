@@ -1,72 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45659 "EHLO mail.atheros.com"
+Received: from mga09.intel.com ([134.134.136.24]:18823 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751215AbYKOAgJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 19:36:09 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 16:36:09 -0800
-Date: Fri, 14 Nov 2008 16:36:08 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Dan McGee <dpmcgee@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>, Sujith <m.sujith@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Message-ID: <20081115003608.GK27642@tesla> (sfid-20081115_013613_636032_9E17F76C)
-References: <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com> <18717.49111.572993.44410@localhost.localdomain> <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com> <18717.50308.330801.765686@localhost.localdomain> <43e72e890811141037j5328f71fx7badb6f2b0e0831d@mail.gmail.com> <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com> <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com> <43e72e890811141241k7ae83fc3qe90e2e42d61b8df6@mail.gmail.com> <43e72e890811141313t33b6a3edo86488bea9a7b3371@mail.gmail.com> <449c10960811141625o171d1e31v974d2f921f5a825@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <449c10960811141625o171d1e31v974d2f921f5a825@mail.gmail.com>
+	id S1753231AbYKETNj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 14:13:39 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/2 2.6.28] iwl3945 : Fix channel scanning/association in 5Ghz band
+Date: Wed,  5 Nov 2008 11:14:09 -0800
+Message-Id: <1225912449-26625-2-git-send-email-reinette.chatre@intel.com> (sfid-20081105_201403_830022_BA9B4D6A)
+In-Reply-To: <1225912449-26625-1-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1225912449-26625-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2008 at 04:25:53PM -0800, Dan McGee wrote:
-> On Fri, Nov 14, 2008 at 3:13 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Fri, Nov 14, 2008 at 12:41 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> >> On Fri, Nov 14, 2008 at 12:33 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> >>> On Fri, Nov 14, 2008 at 2:33 PM, Dan McGee <dpmcgee@gmail.com> wrote:
-> >>>> On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> >>>>> On Fri, Nov 14, 2008 at 10:33 AM, Sujith <m.sujith@gmail.com> wrote:
-> >>>>>> Luis R. Rodriguez wrote:
-> >>>>>>> > From the original log:
-> >>>>>>> > ath5k_pci 0000:01:00.0: registered as ''
-> >>>>>>>
-> >>>>>>> That comes from
-> >>>>>>>
-> >>>>>>> dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
-> >>>>>>>
-> >>>>>>> which means that may be buggy too as wiphy_name() gets
-> >>>>>>>
-> >>>>>>> return wiphy->dev.bus_id;
-> >>>>>>>
-> >>>>>>> and we only have set at that point wiphy->dev.parent IIRC.
-> >>>>>>>
-> >>>>>>
-> >>>>>> Nope, parent is set after that call in SET_IEEE80211_DEV()
-> >>>>>> phy[x] gets assigned in alloc_hw().
-> >>>>>>
-> >>>>>> So why is it NULL even if alloc_hw() succeeds ?
-> >>>>>
-> >>>>> Parent is wiphy->dev.parent not wiphy->dev though
-> >>>
-> >>> Sujith is right, wiphy->dev.bus_id should be set by the time that's printed,
-> >>> since wiphy_new in alloc_hw fills it in.
-> >>
-> >> Ah, I see, yes, oh man. Well this is good :)
-> >
-> > OK then try the patch in the other thread. If that doesn't fix it then
-> > it has to be another issue.
-> 
-> Can someone point me to the "other thread"? I don't think I was CCed
-> on it since I came late to the party.
-> 
-> Someone also inquired about versions. I'm using stable kernel 2.6.27.6
-> and compat-wireless-2008-11-13 (10-28 was doing the same thing
-> however).
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Bounced you a copy. Please give it a try.
+A new wireless regulatory API has been added and
+static definitions of regulatory alpha2 have been removed.
+As a result of this 5Ghz channels have been disabled by default.
+Patch takes care of this by setting the regulatory domain
+by reading the EEPROM contents.
+It uses regulatory_hint function to dynamically set the regulatory
+channels.
 
-  Luis
+This patch is related to bug 11870 at bugzilla.kernel.org. With
+correct regulatory information the number of channels to scan
+will be correct and not zero as seen in that bug.
+
+This patch eliminates the need for wireless to be compiled with
+CONFIG_WIRELESS_OLD_REGULATORY to get correct regulatory behavior with
+iwl3945.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+Could you please send up to 2.6.28? This patch is not valid for
+wireless-testing - we will send another patch when regulatory_struct_hint
+is available.
+
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    3 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   89 +++++++++++++++++++++++++--
+ 2 files changed, 87 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index bdd3247..f095b13 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -626,6 +626,7 @@ extern void iwl3945_hw_cancel_deferred_work(struct iwl3945_priv *priv);
+ extern int iwl3945_hw_rxq_stop(struct iwl3945_priv *priv);
+ extern int iwl3945_hw_set_hw_setting(struct iwl3945_priv *priv);
+ extern int iwl3945_hw_nic_init(struct iwl3945_priv *priv);
++extern int iwl3945_set_reg_domain(struct iwl3945_priv *priv);
+ extern int iwl3945_hw_nic_stop_master(struct iwl3945_priv *priv);
+ extern void iwl3945_hw_txq_ctx_free(struct iwl3945_priv *priv);
+ extern void iwl3945_hw_txq_ctx_stop(struct iwl3945_priv *priv);
+@@ -705,6 +706,8 @@ struct iwl3945_priv {
+ 	struct ieee80211_rate *ieee_rates;
+ 	struct iwl_3945_cfg *cfg; /* device configuration */
+ 
++	struct ieee80211_regdomain *rd; /*Regulatroy Domain Information */
++
+ 	/* temporary frame storage list */
+ 	struct list_head free_frames;
+ 	int frames_count;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index d15a2c9..f956c5d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4936,6 +4936,38 @@ static void iwl3945_init_hw_rates(struct iwl3945_priv *priv,
+ 		}
+ 	}
+ }
++/* Regulatory Domains
++* After 2.6.29 , driver has to pass regulatory domain or alpha2 to
++* core wireless CRDA using regulatory_hint api
++*/
++
++/**
++ * iwl3945_set_reg_domain - Set Regulatory Domain
++ */
++
++int iwl3945_set_reg_domain(struct iwl3945_priv *priv)
++{
++	int err;
++
++	IWL_DEBUG_INFO("Setting Regulatory Domain\n");
++	err = regulatory_hint(priv->hw->wiphy, NULL, priv->rd);
++	if (err)  {
++		if (err == -EALREADY)
++			err = 0;
++		kfree(priv->rd);
++	}
++
++	return err;
++}
++
++#define REG_RULES(rule, start, end, bw, gain, eirp, reg_flags) { \
++		rule.freq_range.start_freq_khz = (start) * 1000; \
++		rule.freq_range.end_freq_khz = (end) * 1000; \
++		rule.freq_range.max_bandwidth_khz = (bw) * 1000; \
++		rule.power_rule.max_antenna_gain = (gain) * 100; \
++		rule.power_rule.max_eirp = (eirp) * 100; \
++		rule.flags = reg_flags; \
++		}
+ 
+ /**
+  * iwl3945_init_geos - Initialize mac80211's geo/channel info based from eeprom
+@@ -4947,7 +4979,9 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
+ 	struct ieee80211_channel *channels;
+ 	struct ieee80211_channel *geo_ch;
+ 	struct ieee80211_rate *rates;
+-	int i = 0;
++	int i = 0, reg_flags = 0, reg_count;
++	struct ieee80211_reg_rule *reg_rule;
++	int size_of_regd;
+ 
+ 	if (priv->bands[IEEE80211_BAND_2GHZ].n_bitrates ||
+ 	    priv->bands[IEEE80211_BAND_5GHZ].n_bitrates) {
+@@ -4956,14 +4990,22 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
+ 		return 0;
+ 	}
+ 
++	reg_rule = kzalloc(sizeof(struct ieee80211_reg_rule) *
++			  priv->channel_count, GFP_KERNEL);
++	if (!reg_rule)
++		return -ENOMEM;
++
+ 	channels = kzalloc(sizeof(struct ieee80211_channel) *
+ 			   priv->channel_count, GFP_KERNEL);
+-	if (!channels)
++	if (!channels) {
++		kfree(reg_rule);
+ 		return -ENOMEM;
++	}
+ 
+ 	rates = kzalloc((sizeof(struct ieee80211_rate) * (IWL_RATE_COUNT + 1)),
+ 			GFP_KERNEL);
+ 	if (!rates) {
++		kfree(reg_rule);
+ 		kfree(channels);
+ 		return -ENOMEM;
+ 	}
+@@ -4986,7 +5028,7 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
+ 
+ 	iwl3945_init_hw_rates(priv, rates);
+ 
+-	for (i = 0;  i < priv->channel_count; i++) {
++	for (i = 0, reg_count = 0;  i < priv->channel_count; i++) {
+ 		ch = &priv->channel_info[i];
+ 
+ 		/* FIXME: might be removed if scan is OK*/
+@@ -5006,11 +5048,15 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
+ 		geo_ch->hw_value = ch->channel;
+ 
+ 		if (is_channel_valid(ch)) {
+-			if (!(ch->flags & EEPROM_CHANNEL_IBSS))
++			if (!(ch->flags & EEPROM_CHANNEL_IBSS)) {
++				reg_flags |= NL80211_RRF_NO_IBSS;
+ 				geo_ch->flags |= IEEE80211_CHAN_NO_IBSS;
++			}
+ 
+-			if (!(ch->flags & EEPROM_CHANNEL_ACTIVE))
++			if (!(ch->flags & EEPROM_CHANNEL_ACTIVE)) {
++				reg_flags |= NL80211_RRF_PASSIVE_SCAN;
+ 				geo_ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
++			}
+ 
+ 			if (ch->flags & EEPROM_CHANNEL_RADAR)
+ 				geo_ch->flags |= IEEE80211_CHAN_RADAR;
+@@ -5025,6 +5071,13 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
+ 		/* Save flags for reg domain usage */
+ 		geo_ch->orig_flags = geo_ch->flags;
+ 
++		/* Add new Regulatory channel */
++		REG_RULES(reg_rule[reg_count], geo_ch->center_freq - 20,
++			 geo_ch->center_freq + 20, 40, geo_ch->max_antenna_gain,
++			 geo_ch->max_power, reg_flags);
++		reg_flags = 0;
++		reg_count++;
++
+ 		IWL_DEBUG_INFO("Channel %d Freq=%d[%sGHz] %s flag=0%X\n",
+ 				ch->channel, geo_ch->center_freq,
+ 				is_channel_a_band(ch) ?  "5.2" : "2.4",
+@@ -5054,8 +5107,28 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
+ 		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&priv->bands[IEEE80211_BAND_5GHZ];
+ 
++	size_of_regd = sizeof(struct ieee80211_regdomain) +
++			(reg_count * sizeof(struct ieee80211_reg_rule));
++
++	priv->rd = kzalloc(size_of_regd, GFP_KERNEL);
++	if (!priv->rd) {
++		kfree(reg_rule);
++		kfree(channels);
++		kfree(rates);
++		return -ENOMEM;
++	}
++
++	priv->rd->n_reg_rules = reg_count;
++	strncpy(priv->rd->alpha2, "99", 2);
++
++	for (i = 0; i < reg_count; i++) {
++		memcpy(&priv->rd->reg_rules[i], &reg_rule[i],
++			sizeof(struct ieee80211_reg_rule));
++	}
++
+ 	set_bit(STATUS_GEO_CONFIGURED, &priv->status);
+ 
++	kfree(reg_rule);
+ 	return 0;
+ }
+ 
+@@ -8071,6 +8144,12 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+ 
++	err = iwl3945_set_reg_domain(priv);
++	if (err) {
++		IWL_ERROR("Failed to set regulatory domain (error %d)\n", err);
++		goto out_free_geos;
++	}
++
+ 	err = iwl3945_rfkill_init(priv);
+ 	if (err)
+ 		IWL_ERROR("Unable to initialize RFKILL system. "
+-- 
+1.5.4.3
+
