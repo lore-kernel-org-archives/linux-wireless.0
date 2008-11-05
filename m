@@ -1,88 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43814 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:60646 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751929AbYKSLlJ (ORCPT
+	with ESMTP id S1757134AbYKET7d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 06:41:09 -0500
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+	Wed, 5 Nov 2008 14:59:33 -0500
+Subject: Re: [PATCH 5/7] cfg80211: expect different rd in cfg80211 when
+	intersecting
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240811190121h3ff51824o90b72a206192e793@mail.gmail.com> (sfid-20081119_102145_152719_5F0C41AF)
-References: <1226969241.4014.24.camel@johannes.berg>
-	 <1227001390.4014.43.camel@johannes.berg>
-	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
-	 <1227055693.4014.95.camel@johannes.berg>
-	 <1ba2fa240811190121h3ff51824o90b72a206192e793@mail.gmail.com>
-	 (sfid-20081119_102145_152719_5F0C41AF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aa3zvAAdEJbdrLXKG6IL"
-Date: Wed, 19 Nov 2008 12:40:32 +0100
-Message-Id: <1227094832.26243.10.camel@johannes.berg> (sfid-20081119_124113_117458_AF871637)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890811051155q3cf0a16exa0911675d86959ae@mail.gmail.com> (sfid-20081105_205524_966915_1FB112C2)
+References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-2-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-3-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-4-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-5-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-6-git-send-email-lrodriguez@atheros.com>
+	 <1225886489.3619.84.camel@johannes.berg>
+	 <43e72e890811051155q3cf0a16exa0911675d86959ae@mail.gmail.com>
+	 (sfid-20081105_205524_966915_1FB112C2)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xBPOkcfw/v8WO0oDhgof"
+Date: Wed, 05 Nov 2008 20:59:33 +0100
+Message-Id: <1225915173.3619.161.camel@johannes.berg> (sfid-20081105_205938_520057_E3553354)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-aa3zvAAdEJbdrLXKG6IL
+--=-xBPOkcfw/v8WO0oDhgof
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-11-19 at 11:21 +0200, Tomas Winkler wrote:
+On Wed, 2008-11-05 at 11:55 -0800, Luis R. Rodriguez wrote:
 
-> > Indeed. One would seem to be the buffer list itself, which also needs t=
-o
-> > fit within a 40-bit mask with 256 alignment (rxq->bd), the rb_stts need=
-s
-> > 16-byte alignment which probably is always satisfied, but I'm not sure,
-> > you'll need to research the alignment guarantees.
->=20
-> Note these are allocated using persistent calls and not kmalloc I hope
-> at least does are page alignment.
-
-Good point. On powerpc at least that uses alloc_pages internally.
-
-> We have some alignment requirements also on TX side
->=20
+> >>       /* This would make this whole thing pointless */
+> >> -     BUG_ON(rd !=3D cfg80211_regdomain);
+> >> +     if (!last_request->intersect)
+> >> +             BUG_ON(rd !=3D cfg80211_regdomain);
+> >>
+> >>       /* update all wiphys now with the new established regulatory dom=
+ain */
+> >>       update_all_wiphy_regulatory(last_request->initiator);
+> >>
+> >> -     print_regdomain(rd);
+> >> +     print_regdomain(cfg80211_regdomain);
 > >
-> > Another, different, question: I don't see where the driver tells the
-> > hardware how large the buffers are it allocated. Can you point me to
-> > that? You can switch 4k/8k ampdu but I don't see where you tell the
-> > hardware.
+> > Maybe the printing here should be removed? It seems confusing now.
 >=20
-> in iwl_rx_init
->  rb_size =3D
->  FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K .. 8K .. can go up to 16K.
-> This  amsdu size (not ampdu) influence the size of RB we choose
+> Well IMHO its correct to print it here as *this* is after its been set
+> and passed through all wiphys. ACK?
 
-Thanks. Yeah, ampdus are deaggregated already, my mistake.
+Ah, hmm, rd is intersected before this, right? I think I just got
+confused with the code flow, yeah, seems fine.
 
 johannes
 
---=-aa3zvAAdEJbdrLXKG6IL
+--=-xBPOkcfw/v8WO0oDhgof
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJI/ssAAoJEKVg1VMiehFYagoP/j6RvxQZDE5kfghS04kq8h/g
-9dFIru+9kGMv/jRu6fBny8zGvnbMizdo7GWJZS/fyVNtiwzNdOAkD5Rr3AABDtMM
-26BknALD9qo1fmwgMXK2wk8N9696C9Vi+ZFt6ouF8t1ZDmUH1v0w2BznQcjeNOZ0
-DqDQWlJCJL7IHHw2bBY6Itlvc8HG7/v/9J1wYLkRwEU5ZGt8c94mZyKCr+P7Ji7k
-h4OznK0kHCCy5hkHnkwxGA1pDEJ67ldt7MYKRSqFj5uWD1VcGQSbavlVW3QobAic
-FUHdbSXnJXUt+35QrXFr+kuqnkywBeMIDp+mBFKjKvXrKUSxRlD+yKPaq2sWEGSQ
-e1iH/u0MSs9TqKGxOxHExx6qFQv2L6ndN+FpSsOhdDPhINa693UO684XnbIFkrj9
-NsgBW7OK4LZtbwbIf9U8GZ/xhOtx00gYO0JbVW2gBdHBEEEiii+7TCKoclRZQcrU
-oFG8BdkyWvXsNZZmqFvaaFf2fNr8M5wCRxs5CfNPUlZizZ8nJzttrunMZbnhLs5e
-5mRwk6ZcF521c0WBwNZW0IH8oYN3Z80tZGxGRzwUKArXGq1pAorwH0lHv/iF22Oq
-OJLYIjN7Bqk5y/6iX9Sh/cD2cEptEULeGENHC/cdfaK5yBn0yQgxGMbZ487Gi1O6
-aBUQz7JPH5MMNMlQeC0b
-=6FR7
+iQIcBAABAgAGBQJJEfsiAAoJEKVg1VMiehFYYb0P/jsqfkRnzQU8kKUxA6xKWs6L
+xFNDBJZMwjkABldaE6QiL8NRnyHiIcyEMx6i7pkLWP5hTv7saunhZ1ds+B3mPkO9
+zOBmzkccgikPA51689ws7YtXbVrPoUCyvZ80kIwmm9raoDLOQY8ozKg51ZRA4aWe
++fDBsdNhTBtZNK10OHSg0UjwpoEPo7VKYXRisdwrF8V1EpGJtS/JdNspZTGUd4ee
+4BfM9F6y3DsJe8F1CmM5MXhnJNN67AMo7N4r54PyDpcl4oSi2y7Q6cVKE6e1BG+j
+8PKty8CdfIs2sbZ4IYc1WeeveUZQbhqmMn4MLyKGQ8hDYBQw82w+bmbPY0Dkx6ey
+3deev6BNs5qC9ZGbA0TSDE2+C6ORgtdg6b3p4hPgeGFr5swxjPa67fbmkNOsU4N2
+R6PDXnwkQP8jUT45x1qMyBM5vnwn9MTSZ+SGgzJiVhFwEAgS/yTbKLENd/2O2vNe
+Mf8IfTSq2ozu+eFsnEX4s+eW9/22FsFr1DmuDa4WSAovF+z5bKT4bEx0P2uS8VVP
+lEeEZjK6J+ftcasjjOt1GqctEZ8uSAG62BShw/xVCnDrjisgNbsowHpyWYg6kQtf
+oS7qPHYcpB/ZmTiJ+R6qIlqXBk/6JNn6bKplrDro9KVyYMoeqHMBasv9rZHiB23T
+L5W4aZibgin3bzKY6RAZ
+=Hep9
 -----END PGP SIGNATURE-----
 
---=-aa3zvAAdEJbdrLXKG6IL--
+--=-xBPOkcfw/v8WO0oDhgof--
 
