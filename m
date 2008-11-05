@@ -1,144 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:51228 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751334AbYK1Qx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 11:53:27 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 08:53:27 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18736.8527.664371.487538@gargle.gargle.HOWL> (sfid-20081128_175330_110916_CC18E0A1)
-Date: Fri, 28 Nov 2008 22:20:23 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 4/5] ath9k: Add initial layout for an ath9k specific debugfs mechanism
+Received: from xc.sipsolutions.net ([83.246.72.84]:54347 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755399AbYKEL4b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 06:56:31 -0500
+Subject: Re: [PATCH 1/7] cfg80211: mark negative frequencies as invalid
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1225853406-16322-2-git-send-email-lrodriguez@atheros.com>
+References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-2-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lFwQlmJrTD5mrHPSJpu+"
+Date: Wed, 05 Nov 2008 12:56:29 +0100
+Message-Id: <1225886189.3619.76.camel@johannes.berg> (sfid-20081105_125634_992650_127431CB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/core.h  |   20 ++++++++++++++++----
- drivers/net/wireless/ath9k/debug.c |   26 +++++++++++++++++++++++---
- drivers/net/wireless/ath9k/main.c  |    4 +++-
- 3 files changed, 42 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 4493879..5b75558 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -88,8 +88,15 @@ enum ATH_DEBUG {
- 
- #ifdef CONFIG_ATH9K_DEBUG
- 
-+struct ath9k_debug {
-+	int debug_mask;
-+	struct dentry *debugfs_root;
-+	struct dentry *debugfs_phy;
-+};
-+
- void DPRINTF(struct ath_softc *sc, int dbg_mask, const char *fmt, ...);
--void ath9k_init_debug(struct ath_softc *sc);
-+int ath9k_init_debug(struct ath_softc *sc);
-+void ath9k_exit_debug(struct ath_softc *sc);
- 
- #else
- 
-@@ -98,11 +105,16 @@ static inline void DPRINTF(struct ath_softc *sc, int dbg_mask,
- {
- }
- 
--static inline ath9k_init_debug(struct ath_softc *sc)
-+static inline int ath9k_init_debug(struct ath_softc *sc)
- {
-+	return 0;
- }
- 
--#endif
-+static inline void ath9k_exit_debug(struct ath_softc *sc)
-+{
-+}
-+
-+#endif /* CONFIG_ATH9K_DEBUG */
- 
- struct ath_config {
- 	u32 ath_aggr_prot;
-@@ -619,7 +631,7 @@ struct ath_softc {
- 	u8 sc_bssidmask[ETH_ALEN];
- 
- #ifdef CONFIG_ATH9K_DEBUG
--	int sc_debug;
-+	struct ath9k_debug sc_debug;
- #endif
- 	u32 sc_intrstatus;
- 	u32 sc_flags; /* SC_OP_* */
-diff --git a/drivers/net/wireless/ath9k/debug.c b/drivers/net/wireless/ath9k/debug.c
-index 31af7cc..c146e48 100644
---- a/drivers/net/wireless/ath9k/debug.c
-+++ b/drivers/net/wireless/ath9k/debug.c
-@@ -24,7 +24,7 @@ void DPRINTF(struct ath_softc *sc, int dbg_mask, const char *fmt, ...)
- 	if (!sc)
- 		return;
- 
--	if (sc->sc_debug & dbg_mask) {
-+	if (sc->sc_debug.debug_mask & dbg_mask) {
- 		va_list args;
- 
- 		va_start(args, fmt);
-@@ -34,7 +34,27 @@ void DPRINTF(struct ath_softc *sc, int dbg_mask, const char *fmt, ...)
- 	}
- }
- 
--void ath9k_init_debug(struct ath_softc *sc)
-+int ath9k_init_debug(struct ath_softc *sc)
- {
--	sc->sc_debug = ath9k_debug;
-+	sc->sc_debug.debug_mask = ath9k_debug;
-+
-+	sc->sc_debug.debugfs_root = debugfs_create_dir(KBUILD_MODNAME, NULL);
-+	if (!sc->sc_debug.debugfs_root)
-+		goto err;
-+
-+	sc->sc_debug.debugfs_phy = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
-+						      sc->sc_debug.debugfs_root);
-+	if (!sc->sc_debug.debugfs_phy)
-+		goto err;
-+
-+	return 0;
-+err:
-+	ath9k_exit_debug(sc);
-+	return -ENOMEM;
-+}
-+
-+void ath9k_exit_debug(struct ath_softc *sc)
-+{
-+	debugfs_remove(sc->sc_debug.debugfs_phy);
-+	debugfs_remove(sc->sc_debug.debugfs_root);
- }
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 6e624be..aca7848 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1300,6 +1300,7 @@ static void ath_detach(struct ath_softc *sc)
- 			ath_tx_cleanupq(sc, &sc->sc_txq[i]);
- 
- 	ath9k_hw_detach(sc->sc_ah);
-+	ath9k_exit_debug(sc);
- }
- 
- static int ath_init(u16 devid, struct ath_softc *sc)
-@@ -1312,7 +1313,8 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	/* XXX: hardware will not be ready until ath_open() being called */
- 	sc->sc_flags |= SC_OP_INVALID;
- 
--	ath9k_init_debug(sc);
-+	if (ath9k_init_debug(sc) < 0)
-+		printk(KERN_ERR "Unable to create debugfs files\n");
- 
- 	spin_lock_init(&sc->sc_resetlock);
- 	tasklet_init(&sc->intr_tq, ath9k_tasklet, (unsigned long)sc);
--- 
-1.6.0.3
+--=-lFwQlmJrTD5mrHPSJpu+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2008-11-04 at 18:50 -0800, Luis R. Rodriguez wrote:
+> Regulatory rules with negative frequencies are now
+> marked as invalid in is_valid_reg_rule().
+>=20
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/wireless/reg.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 4c7e39d..7a2ce27 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -330,7 +330,7 @@ static bool is_valid_reg_rule(const struct ieee80211_=
+reg_rule *rule)
+>  	const struct ieee80211_freq_range *freq_range =3D &rule->freq_range;
+>  	u32 freq_diff;
+> =20
+> -	if (freq_range->start_freq_khz =3D=3D 0 || freq_range->end_freq_khz =3D=
+=3D 0)
+> +	if (freq_range->start_freq_khz <=3D 0 || freq_range->end_freq_khz <=3D =
+0)
+>  		return false;
+> =20
+>  	if (freq_range->start_freq_khz > freq_range->end_freq_khz)
+
+--=-lFwQlmJrTD5mrHPSJpu+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJEYnpAAoJEKVg1VMiehFYE0UP/RHycQvuQdqFE+4xF4K6jQLn
+YtNC53K1zV679rS/ML2eEVVLuR/VyLm9DuY+BVuTabahGBPL6TYLg4JRfBKWCscG
+JrDLes6NR7ajEceIQ8UAVIR/C9Qdx+0MocV9X18SJQrHLQHPr1HpF66/AHm2F16I
+d39rKUHkn/FaRu94bzhf33s24d7+k7iJbv5+fZjBdq3utNMEd1oqBZGlOBIYdHNj
+zf/I3eFHjqpqovrkJgjQzHTCT4+KqOE+FZshkmsmqdZye4SGK25TgL0dXBqmpQZX
+3ajB2MpKYDPPpoC6J7jox/Rv6bUTL+4PDCbptc+iWTPhht4g6kGe29mYEmakgrDo
+SKx8/FZwZSLh5LZeHTB/kWIZojM0nTtQ9Dir5O/w6dyT+B3qTG8pAE4Mdd9BtCIB
+KbPbcIeFbQtI+D3t39z7zPxwolHeV3vLz+hlX2ml9yPzLh/rSVp61wlrqLdWeJUZ
+Di7au23LuRXy/Q3pq4Ql0MXU3uhLVJNm3PgkBsIHtUdmZ76ITXlxYj1vkQNPVY8f
+WPFcgw1sh6By615e93YFgW4H0iicRSV9GKWsH7luz42dT5rgImoOyidU6omTImjb
+DDbQuWio5FkL9UOjgKcpz2GLWnu363ypdCAa5LD3w84vlagmmxRg8cFaQ2jpq9it
+VHYBXGWkvNrwi7NAK5eJ
+=T4HO
+-----END PGP SIGNATURE-----
+
+--=-lFwQlmJrTD5mrHPSJpu+--
 
