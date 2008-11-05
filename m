@@ -1,123 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:10060 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753191AbYKSXb5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 18:31:57 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/7] iwlwifi: TX setup fix confusion between TX queue and TX DMA channel
-Date: Wed, 19 Nov 2008 15:32:26 -0800
-Message-Id: <1227137548-28718-6-git-send-email-reinette.chatre@intel.com> (sfid-20081120_003218_419512_8C771F53)
-In-Reply-To: <1227137548-28718-5-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1227137548-28718-1-git-send-email-reinette.chatre@intel.com>
- <1227137548-28718-2-git-send-email-reinette.chatre@intel.com>
- <1227137548-28718-3-git-send-email-reinette.chatre@intel.com>
- <1227137548-28718-4-git-send-email-reinette.chatre@intel.com>
- <1227137548-28718-5-git-send-email-reinette.chatre@intel.com>
+Received: from yw-out-2324.google.com ([74.125.46.29]:37405 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751580AbYKEVWG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 16:22:06 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so124731ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 13:22:05 -0800 (PST)
+Message-ID: <43e72e890811051322m43efbf03gd21770be382e807d@mail.gmail.com> (sfid-20081105_222213_193897_F41675CF)
+Date: Wed, 5 Nov 2008 13:22:04 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: msan <msan@email.it>
+Subject: Re: problems with ath5k driver.
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <get27e$ka2$1@ger.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <geiib4$apo$2@ger.gmane.org>
+	 <20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net>
+	 <get27e$ka2$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+On Wed, Nov 5, 2008 at 1:12 PM, msan <msan@email.it> wrote:
+> Il Mon, 03 Nov 2008 19:16:25 -0500, Pavel Roskin ha scritto:
+>
+>> Quoting msan <msan@email.it>:
+>>
+>>> I have an Esprimo D9500 Fujitsu Semens notebook. My lspci reports for
+>>> wireless card: "06:00.0 Ethernet controller: Atheros Communications
+>>> Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev 04)"
+>>> Dmesg says: "ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY:
+>>> 0x70)".
+>>
+>> This device is only supported in Linux 2.6.27 and newer.
+>
+> Now I've installed debian package for Linux 2.6.27 taken from http://
+> kernel-archive.buildserver.net/debian-kernel/pool/main/l/linux-2.6/
+> and I have the same message from kernel:
+>
+> "ath5k phy0: Support for RF2425 is under development."
+>
+> So it doesn't work even with linux 2.6.27.
 
-This patch configures correctly TX DMA channel. It is not
-the same as TX queue.
+Now that you are on 2.6.27 try compat-wireless:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |   10 ++++++++--
- drivers/net/wireless/iwlwifi/iwl-5000.c |    9 ++++++++-
- drivers/net/wireless/iwlwifi/iwl-tx.c   |    5 -----
- 3 files changed, 16 insertions(+), 8 deletions(-)
+http://wireless.kernel.org/en/users/Download
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index b96f553..60769b1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -692,9 +692,9 @@ static const u16 default_queue_to_tx_fifo[] = {
- static int iwl4965_alive_notify(struct iwl_priv *priv)
- {
- 	u32 a;
--	int i = 0;
- 	unsigned long flags;
- 	int ret;
-+	int i, chan;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-@@ -718,6 +718,12 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
- 	iwl_write_prph(priv, IWL49_SCD_DRAM_BASE_ADDR,
- 			priv->scd_bc_tbls.dma >> 10);
- 
-+	/* Enable DMA channel */
-+	for (chan = 0; chan < FH49_TCSR_CHNL_NUM ; chan++)
-+		iwl_write_direct32(priv, FH_TCSR_CHNL_TX_CONFIG_REG(chan),
-+				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
-+				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE);
-+
- 	/* Disable chain mode for all queues */
- 	iwl_write_prph(priv, IWL49_SCD_QUEUECHAIN_SEL, 0);
- 
-@@ -748,7 +754,7 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
- 				 (1 << priv->hw_params.max_txq_num) - 1);
- 
- 	/* Activate all Tx DMA/FIFO channels */
--	priv->cfg->ops->lib->txq_set_sched(priv, IWL_MASK(0, 7));
-+	priv->cfg->ops->lib->txq_set_sched(priv, IWL_MASK(0, 6));
- 
- 	iwl4965_set_wr_ptrs(priv, IWL_CMD_QUEUE_NUM, 0);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 478c5c3..d73760c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -700,9 +700,9 @@ static int iwl5000_send_wimax_coex(struct iwl_priv *priv)
- static int iwl5000_alive_notify(struct iwl_priv *priv)
- {
- 	u32 a;
--	int i = 0;
- 	unsigned long flags;
- 	int ret;
-+	int i, chan;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-@@ -725,6 +725,13 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
- 
- 	iwl_write_prph(priv, IWL50_SCD_DRAM_BASE_ADDR,
- 		       priv->scd_bc_tbls.dma >> 10);
-+
-+	/* Enable DMA channel */
-+	for (chan = 0; chan < FH50_TCSR_CHNL_NUM ; chan++)
-+		iwl_write_direct32(priv, FH_TCSR_CHNL_TX_CONFIG_REG(chan),
-+				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
-+				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE);
-+
- 	iwl_write_prph(priv, IWL50_SCD_QUEUECHAIN_SEL,
- 		IWL50_SCD_QUEUECHAIN_SEL_ALL(priv->hw_params.max_txq_num));
- 	iwl_write_prph(priv, IWL50_SCD_AGGR_SEL, 0);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 6db11af..9e638c2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -449,11 +449,6 @@ static int iwl_hw_tx_queue_init(struct iwl_priv *priv,
- 	iwl_write_direct32(priv, FH_MEM_CBBC_QUEUE(txq_id),
- 			     txq->q.dma_addr >> 8);
- 
--	/* Enable DMA channel, using same id as for TFD queue */
--	iwl_write_direct32(priv, FH_TCSR_CHNL_TX_CONFIG_REG(txq_id),
--			FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
--			FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE);
--
- 	iwl_release_nic_access(priv);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--- 
-1.5.4.3
+This gets you bleeding edge. Or you can also just try wireless-testing directly.
 
+  Luis
