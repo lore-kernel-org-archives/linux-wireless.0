@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26084 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:64228 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752674AbYKEWnb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 17:43:31 -0500
+	id S1753785AbYKECuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2008 21:50:09 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 14:43:31 -0800
-Date: Wed, 5 Nov 2008 14:43:29 -0800
+	for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 18:50:09 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets
-	using tx close descriptor for 8187B
-Message-ID: <20081105224329.GC9028@tesla> (sfid-20081105_234335_297911_F2A9044B)
-References: <200811051936.46361.herton@mandriva.com.br> <557861.93619.qm@web23105.mail.ird.yahoo.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/7] cfg80211: mark negative frequencies as invalid
+Date: Tue, 4 Nov 2008 18:50:00 -0800
+Message-ID: <1225853406-16322-2-git-send-email-lrodriguez@atheros.com> (sfid-20081105_035022_665564_4C834F81)
+In-Reply-To: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <557861.93619.qm@web23105.mail.ird.yahoo.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 05, 2008 at 02:05:31PM -0800, Hin-Tak Leung wrote:
-> --- On Wed, 5/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
-> 
-> > Don't know about fc10 kernel, but the changes also
-> > include mac80211.ko
-> 
-> Yes, I know the change includes mac802111.ko, that's why I was surprised that mac80211.ko didn't get built with compat-wireless.
-> 
-> Turned out that fc10 kernels have mac80211 built-in rather than as modules, so there is no way of replacing them with compat-wireless. 
+Regulatory rules with negative frequencies are now
+marked as invalid in is_valid_reg_rule().
 
-Umm I have an FC10 box and I see a mac80211.ko. But of course, I have an
-early release of FC10, its on 2.6.27-0.244.rc2.git1.fc10.x86_64.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Did the new ones really put it built in?
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4c7e39d..7a2ce27 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -330,7 +330,7 @@ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
+ 	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
+ 	u32 freq_diff;
+ 
+-	if (freq_range->start_freq_khz == 0 || freq_range->end_freq_khz == 0)
++	if (freq_range->start_freq_khz <= 0 || freq_range->end_freq_khz <= 0)
+ 		return false;
+ 
+ 	if (freq_range->start_freq_khz > freq_range->end_freq_khz)
+-- 
+1.5.6.3
 
-  Luis
