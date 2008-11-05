@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45893 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752401AbYKSL7D (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.30]:31368 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879AbYKEUQ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 06:59:03 -0500
-Subject: Re: [PATCH] iw: Makefile changes for easier packaging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Robby Workman <rworkman@slackware.com>
-Cc: linux-wireless@vger.kernel.org, antiwire@gmail.com
-In-Reply-To: <alpine.LNX.1.10.0811182015230.6923@bob.slackware.com> (sfid-20081119_060422_947202_BBB99A28)
-References: <alpine.LNX.1.10.0811182015230.6923@bob.slackware.com>
-	 (sfid-20081119_060422_947202_BBB99A28)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I5cbgDFOKb6cljFVNmTJ"
-Date: Wed, 19 Nov 2008 12:58:27 +0100
-Message-Id: <1227095907.26243.24.camel@johannes.berg> (sfid-20081119_125907_968920_7400411D)
-Mime-Version: 1.0
+	Wed, 5 Nov 2008 15:16:58 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so110798ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 12:16:57 -0800 (PST)
+Message-ID: <43e72e890811051216w26acca38t6eb26081509bdf28@mail.gmail.com> (sfid-20081105_211701_152644_F74AC770)
+Date: Wed, 5 Nov 2008 12:16:57 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: Re: [PATCH 0/7] cfg80211/mac80211: Add 802.11d support
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Nov 4, 2008 at 6:49 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> This patch series adds 802.11d support to mac80211 and
+> cfg80211. I've tried to split the required changes as much
+> as possible to make it easier for review. I've tested this
+> on iwlagn with OLD_REG enabled and disable and with /sbin/crda
+> missing and not. I'm sure I've missed a few corner cases, but
+> I think this is a good start.
 
---=-I5cbgDFOKb6cljFVNmTJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+OK John here's the review, in case it helps
 
-On Tue, 2008-11-18 at 20:18 -0800, Robby Workman wrote:
-> Attached is a trivial patch to make packaging a bit easier.
-> No strong feelings either way, so rejection will cause no
-> hard feelings :-)
+patch 1-5 are ACKed
+patch 6 is unnecessary
+I'll respin patch 7, and actually I'll split it in two to account for
+the call_crda() return value thing.
 
-Heh. You really should CC me, but I've applied it.
-
-johannes
-
---=-I5cbgDFOKb6cljFVNmTJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJI/9gAAoJEKVg1VMiehFYQqoQAL+/V1WpRV8cYb0Q/oF+4YuX
-/9ac0DOJFrcqCzvoWOO2x60oW+iwteIIut82z7Yi4MIvD8R7XgQCp8y7+RZ2Sc2O
-VN5bnkrGNLxnyFdZm1GMBM1Mw3Hx2nIg1qGEDYTarWCYy8rgMr+Nm0nDm0sk11Ai
-mXKb/D+ASiXTvh8TLgIA4IzttdeDGv64aiRKilQ4LI3YXBVoRc8sOcbjR2yKKScw
-5pSPoHFE4ed177ShqvdQ2inJpobHPnKdiQOL+JBscCCu8cs2Y7fy4f5yaKmxK0W/
-wO5O+NYJQZ+rTeXrRDpYFV3Lo59of5Bgw4FvL+jpIF79BoURielx8hDkJgP7ju7K
-fmfvypl1lMsJF/mmKICEme+yOs9hp0LMxdyk51szbeNy/f+HDIlPl5H5Fcq9Yeri
-xboGFuFLVUcPrZPN5kNqdChTx/0iRIVzevzReduGB0/AH0ptPXoZLbWZHFaH8gTT
-YwdEdw0zgjtWqg37nt9hp9631FJnxWaZ3bafLz9mK9OBRm8EeWUML4rV7i/qM7ei
-GcKhJDvcYT+IXMhZKTEXxwLzscrDCdHzYkQTpILUDvbORpUTOHqzZmJolxxvyL8s
-/3zdENVlEBxgYThL1o+dVwcio6TtiMijiwtbpN98EOraCUzhWWVLza8wRTYrLjUn
-fMBtwzDpcK/cBGPCxV3/
-=4QDU
------END PGP SIGNATURE-----
-
---=-I5cbgDFOKb6cljFVNmTJ--
-
+  Luis
