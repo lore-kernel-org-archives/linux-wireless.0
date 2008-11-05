@@ -1,78 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:26778 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753592AbYKJPm7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33704 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757150AbYKET6N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 10:42:59 -0500
-Received: by an-out-0708.google.com with SMTP id d40so349226and.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 07:42:56 -0800 (PST)
-Message-ID: <31436f4a0811100742p6154e2f9p34f3dfb1de2f71e3@mail.gmail.com> (sfid-20081110_164314_464529_D6722990)
-Date: Mon, 10 Nov 2008 17:42:56 +0200
-From: "David Shwatrz" <dshwatrz@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Where is allow-ap-vlan-modes.patch ?
-Cc: "Kalle Valo" <kalle.valo@nokia.com>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081110142806.GG3546@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com>
-	 <200811091604.43705.IvDoorn@gmail.com>
-	 <31436f4a0811100048h5c7520d3ga4eedd815f8c793a@mail.gmail.com>
-	 <874p2g0x9d.fsf@nokia.com> <20081110142806.GG3546@tuxdriver.com>
+	Wed, 5 Nov 2008 14:58:13 -0500
+Subject: Re: [PATCH 6/7] cfg80211: initialize last_request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890811051153x555cb21fib1f227fb616ad8a5@mail.gmail.com> (sfid-20081105_205325_710681_80EC0FB0)
+References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-2-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-3-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-4-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-5-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-6-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-7-git-send-email-lrodriguez@atheros.com>
+	 <1225886536.3619.86.camel@johannes.berg>
+	 <43e72e890811051153x555cb21fib1f227fb616ad8a5@mail.gmail.com>
+	 (sfid-20081105_205325_710681_80EC0FB0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mEHnxe5FJlhWJm3P82yN"
+Date: Wed, 05 Nov 2008 20:58:12 +0100
+Message-Id: <1225915092.3619.158.camel@johannes.berg> (sfid-20081105_205820_090400_DA374F9A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-First, I hope you feel better soon.
 
-Second:
-Looking at the patches at the mailing list, I do not see
-that anywhere it says against which git tree they were made.
-It could be : wireless-next-2.6,wireless-2.6, and wireless-testing.
+--=-mEHnxe5FJlhWJm3P82yN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I guess that there are many cases in which a patch can be applied to
-two of these trees (or maybe all three of them),
-whereas there are times in which it can be applied to only one git tree.
+On Wed, 2008-11-05 at 11:53 -0800, Luis R. Rodriguez wrote:
+> On Wed, Nov 5, 2008 at 4:02 AM, Johannes Berg <johannes@sipsolutions.net>=
+ wrote:
+> > On Tue, 2008-11-04 at 18:50 -0800, Luis R. Rodriguez wrote:
+> >> last_request was not being initialized. By initializing it
+> >> we don't fix a bug as we are not checking for it before prior
+> >> to a regulatory hint however we may do so at a later time.
+> >
+> > It's a static variable, it always starts out as NULL, this isn't
+> > necessary.
+>=20
+> You're right but this is not true in userspace, why is this different BTW=
+?
 
-How is it determined to which tree the patches should be
-applied ?
+TBH, I'm not entirely sure. Must be something about the kernel
+initialising memory all around, and userspace not doing that.
 
-Rgs,
-DS
+johannes
 
-On Mon, Nov 10, 2008 at 4:28 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Mon, Nov 10, 2008 at 11:02:22AM +0200, Kalle Valo wrote:
->> David Shwatrz <dshwatrz@gmail.com> writes:
->>
->> > In this occasion may I ask - what is the wireless-testing git tree?
->> > is it based on wireless-next-2.6 or on wireless-2.6 tree?
->>
->> It's based on Linus' rc releases and has all the wireless patches
->> which have been under development. I think John cherry picks the
->> patches from wireless-testing to wireless-2.6 or wireless-next-2.6. So
->> wireless-testing contains the bleeding edge wireless patches and if
->> John thinks they are good enough, he submits them forward.
->>
->> Please correct me if I have understood something wrong.
->
-> That is basically right.
->
-> In the past patches often went to wireless-testing and to
-> wireless-next-2.6/wireless-2.6 at the about the same time.  However
-> upstream standards have tightened in ways that make me feel it is
-> appropriate to give patches more public testing even before sending
-> them for -next.
->
-> In this case, I was also sick all last week which has slowed thing
-> a bit more...
->
-> Thanks,
->
-> John
-> --
-> John W. Linville                Linux should be at the core
-> linville@tuxdriver.com                  of your literate lifestyle.
->
+--=-mEHnxe5FJlhWJm3P82yN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJEfrRAAoJEKVg1VMiehFYSysQAJgYOVO+9I6rK9XyiQv/PJK4
+uMgxnonNbxyU85ciYaZiwcF4JWxKOftF8KUQl3vBdX80vhMTV1HDzCqGpNmg9KOy
+aqQUldZy5d71oj08o8uwQG1PTlupE8R89Glr4ZawFbfzVEKoIzEkTV2crut8+IOq
+Ck/979ynPWQWrWOOJuc4A/uDoeiKabcMacZun4VAypWfFiKaHcCEzQuHOV8vpg3l
+byBcyohV2SrNWDujxpysty1iB4RNhsiWYBgfXC0D9iXVvoXYs+6q0ofuv81q34FV
+rhuh6hE1SXFPZInwH7EVOfQ0lfJ6ckzHcbH6PEpgHq64Onqx3BqTUy5IqmQYXrQe
+DXr4/SYC6aQBi5EYySE7xSYT+hRcEuKaJcQ1+rM2d+HA1+5hnAvcRRW7QD/Ir0/e
+2HwC//CcrzI1UuUYBr5RfCyebich6LshtdVRP6AIdlxgOHV/lZv3m7rrHnrNtQ5f
+BPLEwTNBGHR+5IjNiWSBGBAm3g9pHieh2qI3SxKw0K9D0HzQ0Nta+vy9irPzY+mI
+89/m1/IkoQxRicPWODDL7l9wUm6SRI7ZQ1rnQkjkBH9PjYmUUYUg77H3ej5cbkWQ
+UM9+3h9oUQutvKg0HpVBSEs6DscbJ5pXDpOiR1SknO8OulmBTYx8fS4bN/PHW8t/
+5nTV4daWcmP0aRs5ZrOv
+=3UBB
+-----END PGP SIGNATURE-----
+
+--=-mEHnxe5FJlhWJm3P82yN--
+
