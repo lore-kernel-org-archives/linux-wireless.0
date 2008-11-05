@@ -1,99 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:11458 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751394AbYKKXBn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 18:01:43 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so71656nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2008 15:01:41 -0800 (PST)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Fix TX failure path
-Date: Wed, 12 Nov 2008 00:01:37 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Received: from smtp4-g19.free.fr ([212.27.42.30]:52503 "EHLO smtp4-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751593AbYKENOj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 08:14:39 -0500
+Message-ID: <49119C3D.1060406@free.fr> (sfid-20081105_141445_043523_C66F9F3C)
+Date: Wed, 05 Nov 2008 14:14:37 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200811120001.37837.IvDoorn@gmail.com> (sfid-20081112_000148_633622_3B3317C9)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Kalle Valo <kalle.valo@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k : Display MAC/BB and RF version at startup
+References: <490F63B6.8080600@free.fr> <878ws0ar2u.fsf@nokia.com> <20081105030223.GD16413@tesla>
+In-Reply-To: <20081105030223.GD16413@tesla>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The callback function write_tx_data() can only fail
-when our ENTRY_OWNER_DEVICE_DATA flag on a queue entry
-failed to determine the entry was not available and
-it is in fact still owned by the hardware.
-This means that if that function fails the queue
-must be stopped in mac80211.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-When rt2x00queue_get_queue() returns NULL in the TX
-path, it means mac80211 has passed us an invalid queue,
-although this should be impossible, it shouldn't hurt
-if we send mac80211 a signal to stop the queue either.
+Luis R. Rodriguez a =E9crit :
+>> I recommend adding a separate function returning the string instead =
+of
+>> this ugly "%s%s%s%s" trick. Much cleaner that way.
 
-Both issues can simply be resolved by removing their
-manual failure handler and making them use the failure path
-provided in rt2x00mac_tx().
+I'm going to send an updated patch.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 48636b0..4c03957 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -132,8 +132,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		ERROR(rt2x00dev,
- 		      "Attempt to send packet over invalid queue %d.\n"
- 		      "Please file bug report to %s.\n", qid, DRV_PROJECT);
--		dev_kfree_skb_any(skb);
--		return NETDEV_TX_OK;
-+		goto exit_fail;
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index d7752db..b8de9d2 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -386,7 +386,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
- 	u8 rate_idx, rate_flags;
- 
- 	if (unlikely(rt2x00queue_full(queue)))
--		return -EINVAL;
-+		return -ENOBUFS;
- 
- 	if (test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags)) {
- 		ERROR(queue->rt2x00dev,
-@@ -415,7 +415,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	rate_idx = tx_info->control.rates[0].idx;
- 	rate_flags = tx_info->control.rates[0].flags;
--	skbdesc = get_skb_frame_desc(entry->skb);
-+	skbdesc = get_skb_frame_desc(skb);
- 	memset(skbdesc, 0, sizeof(*skbdesc));
- 	skbdesc->entry = entry;
- 	skbdesc->tx_rate_idx = rate_idx;
-@@ -427,20 +427,18 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
- 	 * the frame so we can provide it to the driver seperately.
- 	 */
- 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc.flags) &&
--	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags)) {
-+	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags))
- 		rt2x00crypto_tx_remove_iv(skb, iv_len);
--	}
- 
- 	/*
- 	 * It could be possible that the queue was corrupted and this
--	 * call failed. Just drop the frame, we cannot rollback and pass
--	 * the frame to mac80211 because the skb->cb has now been tainted.
-+	 * call failed. Since we always return NETDEV_TX_OK to mac80211,
-+	 * this frame will simply be dropped.
- 	 */
- 	if (unlikely(queue->rt2x00dev->ops->lib->write_tx_data(entry))) {
- 		clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
--		dev_kfree_skb_any(entry->skb);
- 		entry->skb = NULL;
--		return 0;
-+		return -EIO;
- 	}
- 
- 	if (test_bit(DRIVER_REQUIRE_DMA, &queue->rt2x00dev->flags))
+>=20
+> Agreed, also please remove 3x3 comment as we don't have support for
+> those yet nor do I even have hardware for it. To be clear ath9k suppo=
+rts
+> 2x2 right now. :)
+
+Hummm... This is what the Atheros web site says and I have 3 antennas
+(very nice connector from UBNT btw). Of course, i don't know if it is
+supported by the driver, but at least, I think, it's supported by the
+hardware.
+
+Reference : http://www.atheros.com/pt/AR9001AP-3NX2.htm
+
+Regards,
+Benoit
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFJEZw9OR6EySwP7oIRApusAKDnN+sBIl4hAR2YoAxMaTDkSvvn1QCgompH
+a6SODwjspKIGFe8JLT7TnHY=3D
+=3DuiLr
+-----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
