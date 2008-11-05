@@ -1,130 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:18567 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752538AbYK1Tt6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54400 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755411AbYKEL6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 14:49:58 -0500
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mASJnhLE025375
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 13:49:56 -0600
-Received: from localhost.localdomain (essapo-nirac25338.europe.nokia.com [10.162.253.38])
-	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mASJnjSk003187
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:49:51 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v3 4/4] mac80211: move dynamic_ps_timeout to hw.conf
-Date: Fri, 28 Nov 2008 21:49:44 +0200
-Message-Id: <1227901784-5325-5-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205007_938345_E176B04D)
-In-Reply-To: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
-References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+	Wed, 5 Nov 2008 06:58:04 -0500
+Subject: Re: [PATCH 3/7] cfg80211: remove switch from __set_regdom()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1225853406-16322-4-git-send-email-lrodriguez@atheros.com>
+References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-2-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-3-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-4-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S4MYnvJkD2bT76HkqHxQ"
+Date: Wed, 05 Nov 2008 12:58:06 +0100
+Message-Id: <1225886286.3619.80.camel@johannes.berg> (sfid-20081105_125807_808649_0E5A90A5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- include/net/mac80211.h     |    1 +
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |    4 ++--
- net/mac80211/tx.c          |    4 ++--
- net/mac80211/wext.c        |    8 ++++----
- 5 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 53a0dc5..aae8991 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -560,6 +560,7 @@ struct ieee80211_conf {
- 
- 	u16 listen_interval;
- 	bool radio_enabled;
-+	int dynamic_ps_timeout;
- 
- 	u8 long_frame_max_tx_count, short_frame_max_tx_count;
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ab0e2df..1317c7a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -690,7 +690,6 @@ struct ieee80211_local {
- 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
- 
- 	bool powersave;
--	int dynamic_ps_timeout;
- 	struct work_struct ps_enable_work;
- 	struct work_struct ps_disable_work;
- 	struct timer_list dynamic_ps_timer;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1d3c72b..52b2239 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -747,9 +747,9 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
- 
- 	if (local->powersave) {
--		if (local->dynamic_ps_timeout > 0)
-+		if (local->hw.conf.dynamic_ps_timeout > 0)
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
--				  msecs_to_jiffies(local->dynamic_ps_timeout));
-+				  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 		else {
- 			conf->flags |= IEEE80211_CONF_PS;
- 			ieee80211_hw_config(local,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1d7ef18..12256bd 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1477,7 +1477,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	}
- 
- 	if (local->hw.flags & IEEE80211_HW_NO_DYNAMIC_PS &&
--	    local->dynamic_ps_timeout > 0) {
-+	    local->hw.conf.dynamic_ps_timeout > 0) {
- 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 			netif_tx_stop_all_queues(local->mdev);
- 			queue_work(local->hw.workqueue,
-@@ -1485,7 +1485,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		}
- 
- 		mod_timer(&local->dynamic_ps_timer, jiffies +
--			  msecs_to_jiffies(local->dynamic_ps_timeout));
-+			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 	}
- 
- 	nh_pos = skb_network_header(skb) - skb->data;
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index b3ee0dc..95455d0 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -962,7 +962,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
- 
- 	if (wrq->disabled) {
- 		ps = false;
--		local->dynamic_ps_timeout = 0;
-+		local->hw.conf.dynamic_ps_timeout = 0;
- 		goto set;
- 	}
- 
-@@ -977,7 +977,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
- 	}
- 
- 	if (wrq->flags & IW_POWER_TIMEOUT)
--		local->dynamic_ps_timeout = wrq->value / 1000;
-+		local->hw.conf.dynamic_ps_timeout = wrq->value / 1000;
- 
- 	if (ps == local->powersave)
- 		return ret;
-@@ -986,9 +986,9 @@ set:
- 	local->powersave = ps;
- 
- 	if (ifsta->flags & IEEE80211_STA_ASSOCIATED) {
--		if (local->dynamic_ps_timeout > 0)
-+		if (conf->dynamic_ps_timeout > 0)
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
--				  msecs_to_jiffies(local->dynamic_ps_timeout));
-+				  msecs_to_jiffies(conf->dynamic_ps_timeout));
- 		else {
- 			if (local->powersave)
- 				conf->flags |= IEEE80211_CONF_PS;
--- 
-1.5.6.5
+--=-S4MYnvJkD2bT76HkqHxQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2008-11-04 at 18:50 -0800, Luis R. Rodriguez wrote:
+> We have control over the REGDOM_SET_BY_* macros passed
+> so remove the switch.
+>=20
+> This patch has no functional changes.
+>=20
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/wireless/reg.c |   21 ++++++---------------
+>  1 files changed, 6 insertions(+), 15 deletions(-)
+>=20
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index e44f005..290ecec 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -829,21 +829,12 @@ static int __set_regdom(const struct ieee80211_regd=
+omain *rd)
+>  	reset_regdomains();
+> =20
+>  	/* Country IE parsing coming soon */
+> -	switch (last_request->initiator) {
+> -	case REGDOM_SET_BY_CORE:
+> -	case REGDOM_SET_BY_DRIVER:
+> -	case REGDOM_SET_BY_USER:
+> -		if (!is_valid_rd(rd)) {
+> -			printk(KERN_ERR "cfg80211: Invalid "
+> -				"regulatory domain detected:\n");
+> -			print_regdomain_info(rd);
+> -			return -EINVAL;
+> -		}
+> -		break;
+> -	case REGDOM_SET_BY_COUNTRY_IE: /* Not yet */
+> -		WARN_ON(1);
+> -	default:
+> -		return -EOPNOTSUPP;
+> +
+> +	if (!is_valid_rd(rd)) {
+> +		printk(KERN_ERR "cfg80211: Invalid "
+> +			"regulatory domain detected:\n");
+> +		print_regdomain_info(rd);
+> +		return -EINVAL;
+>  	}
+> =20
+>  	if (unlikely(last_request->intersect)) {
+
+--=-S4MYnvJkD2bT76HkqHxQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJEYpJAAoJEKVg1VMiehFYlh8P/3UvLqUVtBoNmySb7NqpLtet
+WefGIzGgc5P/nNute5pLZn2OS2Z/ixDBiZbfOsx0ptL1uVE9eou9sagTk1aLLBcu
+FgfkiUl26Wf49ozCSsjO/tqnf053KdaqehA1FTnVT/zwRmsVYJPHr3uYMJ5R8dsm
+3NHlsKyAvLenAoTePzBeEhddH2S80iHBcyoxDPYYDp/V1EPRi2IwGivbtZUTzMBX
+wqymwd40VCMd8/+52gfzr7cyqSK+cUYpdAUvs63op1Eecuzo8HQIfkgdGw04FwgH
+h+YJMKr41GGh4pkb93lzJC7vuhj8tFcirR+iDxoapY1B1KCzQvaO147jPqrwNMug
+PghrxBFrgM1dwQlyRFgDk5OZBsO/ntwFrfCe7M06Q7iSpemWwSHvcYatnzAe50zt
+wLZfjXGVlrdqi/X4WbI2B1iEQexN5r6yfbh9u5E5ACXvLmz+MQ/iqeSwploh0slT
+ChbEmRVkUXj1ucGDYnVdBPiWVe2xp+BEO2lnDIbNXylBPpLxTuZ3SK6tweZ+uyoV
+Io4DXZ0lan23BFF/aZDXXRoV+OAhMh7APzPwwP1wLdf+pwInFhsuC1SkoteOWcM6
+U+eQD+nbwLcSF/RFYZXGXqdis8KOizFEqRSYMd4B3aZthLc2Ti4CdyoksyIlouKA
+4O4ROLqIMX2gHrGyPo+A
+=wxIX
+-----END PGP SIGNATURE-----
+
+--=-S4MYnvJkD2bT76HkqHxQ--
 
