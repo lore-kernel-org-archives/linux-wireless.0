@@ -1,82 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39801 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755283AbYKMT6R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 14:58:17 -0500
-Subject: Re: [FYI] ar9170 driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1226531034.14186.39.camel@johannes.berg> (sfid-20081113_000444_962024_07ACD3CC)
-References: <1226531034.14186.39.camel@johannes.berg>
-	 (sfid-20081113_000444_962024_07ACD3CC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+kwS5vLcni3YZq0U4OhK"
-Date: Thu, 13 Nov 2008 20:57:42 +0100
-Message-Id: <1226606262.5839.37.camel@johannes.berg> (sfid-20081113_205838_337869_BDE81783)
-Mime-Version: 1.0
+Received: from web23103.mail.ird.yahoo.com ([217.146.189.43]:46274 "HELO
+	web23103.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753445AbYKECCK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2008 21:02:10 -0500
+Date: Wed, 5 Nov 2008 02:02:07 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <970642.22610.qm@web23103.mail.ird.yahoo.com> (sfid-20081105_030215_193458_A43B9638)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--- On Tue, 4/11/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> > Signed-off-by: Herton Ronaldo Krzesinski
+> <herton@mandriva.com.br>
+> 
+> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
 
---=-+kwS5vLcni3YZq0U4OhK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I tried with this combo:
 
-On Thu, 2008-11-13 at 00:03 +0100, Johannes Berg wrote:
-> This patch adds the ar9170 driver for Atheros 802.11n
-> USB hardware ("otus").
->=20
-> NOTES/TODO
->  * locks up RX part of the device after a while and the device
->    starts messing with the USB bus
->    (message will be "complete rx %p (0b, -75)")
+compat-wireless: master-2008-10-31
+wireless-testing: v2.6.28-rc2-4239-gd80fe00
 
-seems fixed
+and applying the two patches on top, they applies cleanly and compile okay except for some warnings in a different module about missing symbols (<something>_sta) but the result dies very painfully with a kernel oops:
+-------------
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000307
+IP: [<ffffffffa0105988>] rtl8187_probe+0x7f/0x836 [rtl8187]
+PGD 754c4067 PUD 751d5067 PMD 0 
+Oops: 0002 [1] SMP 
+CPU 0 
+Modules linked in: rtl8187(+) snd_page_alloc video firewire_ohci firewire_core shpchp pcspkr eeprom_93cx6 output ac battery joydev r8169 crc_itu_t soundcore 
+i2c_piix4 k8temp hwmon pata_atiixp radeon drm i2c_algo_bit i2c_core
+Pid: 829, comm: modprobe Not tainted 2.6.27.4-73.fc10.x86_64 #1
+RIP: 0010:[<ffffffffa0105988>]  [<ffffffffa0105988>] rtl8187_probe+0x7f/0x836 [rtl8187]
+RSP: 0018:ffff880074de1c48  EFLAGS: 00010246
+RAX: ffffffffa0108520 RBX: ffff880074de1cd0 RCX: 0000000000000001
+RDX: 0000000000000000 RSI: ffff8800754763c8 RDI: 0000000000000040
+RBP: ffff880074de1d08 R08: 00000000000003e8 R09: ffff8800776ed868
+R10: ffff8800754761c4 R11: 000000000000000a R12: 0000000000000000
+R13: ffff8800754762e0 R14: 0000000000000038 R15: ffff880074958000
+FS:  00007f5c8bef66f0(0000) GS:ffffffff8158a100(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 0000000000000307 CR3: 0000000074dc6000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process modprobe (pid: 829, threadinfo ffff880074de0000, task ffff880075420000)
+Stack:  ffff880074de1cb8 ffffffff8110d22f ffff880074de1c78 ffff880074de1c78
+ ffff88007402af50 ffff88007402af50 ffffffffa0108520 ffff88007487a000
+ ffff880074958000 ffffffff81031023 ffff880074de1ca8 ffffffff81353562
+Call Trace:
+ [<ffffffff8110d22f>] ? sysfs_addrm_finish+0x69/0x20e
+ [<ffffffff81031023>] ? need_resched+0x1e/0x28
+ [<ffffffff81353562>] ? _cond_resched+0x9/0x38
+ [<ffffffff81353aee>] ? mutex_lock+0x22/0x33
+ [<ffffffff81240d08>] ? usb_match_one_id+0x2b/0x88
+ [<ffffffff812412df>] ? usb_autopm_do_device+0xc8/0xd4
+ [<ffffffff812418b5>] usb_probe_interface+0x10e/0x14b
+ [<ffffffff811f64c4>] driver_probe_device+0xc0/0x16e
+ [<ffffffff811f65c1>] __driver_attach+0x4f/0x79
+ [<ffffffff811f6572>] ? __driver_attach+0x0/0x79
+ [<ffffffff811f5d57>] bus_for_each_dev+0x4f/0x89
+ [<ffffffff811f630f>] driver_attach+0x1c/0x1e
+ [<ffffffff811f5677>] bus_add_driver+0xb7/0x201
+ [<ffffffff811f67b0>] driver_register+0xa8/0x128
+ [<ffffffff81241aff>] usb_register_driver+0x80/0xe4
+ [<ffffffffa00bb000>] ? rtl8187_init+0x0/0x20 [rtl8187]
+ [<ffffffffa00bb01e>] rtl8187_init+0x1e/0x20 [rtl8187]
+ [<ffffffff8100a047>] do_one_initcall+0x47/0x12e
+ [<ffffffff81065be1>] sys_init_module+0xa9/0x1b6
+ [<ffffffff8101024a>] system_call_fastpath+0x16/0x1b
 
->  * use rate hw_value instead of huge switch statement
->  * implement configure_filter
 
-done too
+Code: 24 e1 e9 98 07 00 00 48 81 eb 88 00 00 00 48 89 5d 80 4c 8b 60 40 48 8d 5d c8 48 8b 85 70 ff ff ff 4d 8d 74 24 38 48 83 78 10 01 <41> 0f 94 84 24 07 03
+ 00 00 48 8b 85 78 ff ff ff 49 8b 55 28 48 
+RIP  [<ffffffffa0105988>] rtl8187_probe+0x7f/0x836 [rtl8187]
+ RSP <ffff880074de1c48>
+CR2: 0000000000000307
+---[ end trace aed852fa39b00f8c ]---
+---------
 
-> * need to implement RF, TX power calibration based on EEPROM
->    values (maybe causing the RX hangs? doubt it)
->  * already needs some code cleanups
->  * implement bss_config call
->  * implement beaconing
->  * implement hardware crypto
->  * implement AP mode
->  * implement mesh mode
 
-will do
+Hin-Tak
 
-I got annoyed with quilt, so now you can find the driver at
-http://git.sipsolutions.net/ar9170.git
 
-johannes
 
---=-+kwS5vLcni3YZq0U4OhK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJHIayAAoJEKVg1VMiehFYSOQQAIv17DJQbU+ivaaXF1t3y6Ez
-lAUmPBt1AwuEioMHqlHKxAbEMfGKXFJe4MCdcB01LnMepiejGg9Eh0tE6+mQLwqT
-G2p8tp7uy9U9gW7Zs5nffI4do41xwej0mwMhmo+f0e9H7JCGNjGxwBQs2xeQbMyW
-kNdTmExKQ5+hZanKG7CQ0iRSztI8PlRJ+2v4Pe9MfzakdmWStedTOl4WeJD2bAQK
-3ldrCJC7OMxXJIIbk9YueSsBc4yK7VyKuUM0xJ+vbvZWyKdmZOxdRlYE1WxqLXR5
-X7mRQ9Iqwk1KtLeHNP+HXK9sTaRTa9oWq4/kRo/vnCI5ZnCa85JwSX6LwxfLeSsu
-1xDGyWNk4G77zuGfsb1DODkEZocZHCyuaajmP9uofZqadRhIvX1iP1oCc/gOxHQ2
-2+5wZz6SxSl1f093LWsKEGSnOzjaOT6/CPAkG9QkKzZmkc6cwQ8RodZkA4qux7q0
-TdwKWdWNNW37/clK73LeaJ5E9N9CET3eGKg/srAvXuuJJOu+YfWo+xZ6tg/hD2is
-STYd8Y99lvo52bYlnWJRNeEJbfQPI9s9s2JVT2LcEDw1UOnntoWggomuhV8PyzGT
-/BrbzDBo/uXlNY9aPQ/JgzS0KK5W9rDLvSVxXsQ+OP6zKpjh3x2jxoyILHuvsIdx
-BGpriIGyZiR3cTIibX+o
-=QPKf
------END PGP SIGNATURE-----
-
---=-+kwS5vLcni3YZq0U4OhK--
-
+      
