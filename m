@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:48045 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750910AbYKFPxI (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:62009 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754398AbYKEKai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 10:53:08 -0500
-Message-ID: <491312D2.5050008@lwfinger.net> (sfid-20081106_165312_290064_BD13A473)
-Date: Thu, 06 Nov 2008 07:52:50 -0800
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 5 Nov 2008 05:30:38 -0500
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Christoph Hellwig" <hch@infradead.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: No ProbeResp - assume out of range
+References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com>
+	<20081104181958.GA22897@infradead.org>
+	<43e72e890811041115v1f7901a0w36593f9852d03c86@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 05 Nov 2008 12:30:20 +0200
+Message-ID: <87ljvyfosj.fsf@nokia.com> (sfid-20081105_113042_247448_C82EB9E9)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH/RFT] b43legacy: implement short slot and basic rate handling
-References: <1225981091.3619.227.camel@johannes.berg>
-In-Reply-To: <1225981091.3619.227.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Subject: b43legacy: implement short slot and basic rate handling
-> 
-> This implements proper short slot handling and adds code to
-> program the hardware for the correct response rates derived
-> from the basic rate set for the current BSS.
-> 
-> (port from b43)
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> Needs testing, I'm not 100% sure about those shm offsets.
+Luis R. Rodriguez <mcgrof@gmail.com> writes:
 
-I will be able to test in about a week. I'm currently on the road and I don't
-have that computer with me.
+> I posted a patch which enables beacons to be received by the STA --
+> this however, as was pointed out by the patch that disabled the beacon
+> filter on ath5k (note not ath9k, but ath9k also had it disabled),
+> increases the number of interrupts on the device, as it seems it
+> enables beacons not only for the BSSID you are on but for all BSSIDs.
+> Not sure what other devices support and how their beacon filter, if
+> they have any, works.
 
-Larry
+There are beacon filter implementations, for example stlc4560 works
+such that it doesn't send any beacons to the host but sends an event
+whenever it cannot here beacons anymore.
+
+> The patch I posted is a fix that works with what mac80211 expects --
+> beacons. The way I'm inclined to resolve this properly in mac80211
+> is so that we tell drivers to enable beacons in STA mode (if it
+> supports this, HW_CAP flag I guess) only after we miss a probe
+> reply, or while we are scanning, that way we can also listen for
+> beacons in case we want to roam away to another AP. Just throwing
+> some ideas out there. Any comments?
+
+I and Johannes discussed about this earlier:
+
+http://marc.info/?l=linux-wireless&m=122441202315681&w=2
+
+It should be fairly trivial to implement as a first step, we can
+improve it as we learn more.
+
+-- 
+Kalle Valo
