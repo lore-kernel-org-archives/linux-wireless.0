@@ -1,75 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49275 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbYKQR2n (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:30835 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755414AbYKEKVw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 12:28:43 -0500
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com> (sfid-20081117_161447_403583_F9BC9E33)
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
-	 <1226933141.3902.19.camel@johannes.berg>
-	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>
-	 (sfid-20081117_161447_403583_F9BC9E33)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-R0D3Z09jsXFplC0/Amct"
-Date: Mon, 17 Nov 2008 18:28:07 +0100
-Message-Id: <1226942887.3902.30.camel@johannes.berg> (sfid-20081117_182846_914831_D0AE3397)
-Mime-Version: 1.0
+	Wed, 5 Nov 2008 05:21:52 -0500
+To: "Alexey Fisher" <bug-track@fisher-privat.net>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, rjw@sisk.pl, kernel-testers@vger.kernel.org
+Subject: Re: [PATCH] make assocaittion only if SSID is known.
+References: <1225836101-5723-1-git-send-email-bug-track@fisher-privat.net>
+	<1225838828.22671.0.camel@localhost.localdomain>
+	<871vxq217k.fsf@nokia.com> <1225875556.5905.11.camel@zwerg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 05 Nov 2008 12:20:28 +0200
+In-Reply-To: <1225875556.5905.11.camel@zwerg> (ext Alexey Fisher's message of "Wed\, 05 Nov 2008 09\:59\:15 +0100")
+Message-ID: <87skq6fp8z.fsf@nokia.com> (sfid-20081105_112200_007765_66173444)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Alexey Fisher <bug-track@fisher-privat.net> writes:
 
---=-R0D3Z09jsXFplC0/Amct
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Am Mittwoch, den 05.11.2008, 07:25 +0200 schrieb Kalle Valo:
+>> Dan Williams <dcbw@redhat.com> writes:
+>> 
+>> > On Tue, 2008-11-04 at 23:01 +0100, Alexey Fisher wrote:
+>> >> 'iwconfig eth1 channel 6' would trigger association to _something_,
+>> >> which is wrong. Changing the channel should (and does) trigger
+>> >> reassociation, but only if there is an SSID to associate with!
+>> >
+>> > Heh :)  Need the Signed-off-by: here too though.
+>> 
+>> And the subject should contain the driver name, for example like this:
+>
+> I found some time to _read_ linux-2.6/Documentation/Submit* ! ;)
+> but i think it need some "howto submit the patch with git". My englisch
+> is to bad to make documentation. Here was my steps:
+>
+> $git clone
+> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+> $git pull
+> $vi make/changes
+> $git-commit -a
 
-On Mon, 2008-11-17 at 17:14 +0200, Tomas Winkler wrote:
+In this phase just write the commit log in this style:
 
-> > The point is that the whole thing about disassociation is already the
-> > wrong assumption. As I've outlined, it only works in STA mode, and thus
-> > the function is generally not very useful.
-> >
-> >> I agree that resume/suspend shell be handled properly in the mac80211
-> >> regardless of this issue.
-> >
-> > And it will handle the "firmware crashed" case perfectly too.
->=20
-> You may have a case, anyhow, please show us some RFC before you remove
-> of mac notify.
+----------------------------------------------------------------------
+stlc45xx: fix bug in blah blah
 
-I don't have any, but given the current deficiencies, I don't think the
-notify callback is worth keeping especially in light of the locking
-nightmare it's creating. What does it fix anyway? No user ever
-complained about slow re-association at resume time that I've heard, and
-no driver but iwlwifi tries to speed it up.
+stlc45xx was really broken in blah blah blah, I had
+to blah blah blah.
 
-johannes
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+----------------------------------------------------------------------
 
---=-R0D3Z09jsXFplC0/Amct
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+git will take care of the rest.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJIamjAAoJEKVg1VMiehFYMKgP/1DkUCDd56qFTawtJEdYSITe
-QJSGXF3lrKpcLDbOr8XDtoMli/aGAdFrRB7fWtlhNmH2vQjNY9z6KCurzCABDaJO
-SlLisZfNfzz44Aukrp4sYnf436jZ5faJyhTTla7z8T2OotZZ7ROLg3eizvXmmCe1
-V6XqT/MFynUFC1xxpDVSzspeYpkZoGXEMwpYX341iHn4/+gxW0s56uwFaCBQAN+8
-SNQ9fKX4wMMYdYklUgzY4KkxU6RlDmvTKKkCVQGo5Ud/MN3HaBpjnHDPcE4/RbEf
-iX0YkcUEbgTGz6tr0Wd0yOoBUdQNyHCnkpEE6Y/jsfuT7jkdDVqaKCObr5ro9qRF
-PF1wh/2tnCug5KEuJCeMARYjnJ5IxFDCXI2G8WyCJpG3ADVvB+jmjXOxXt/7s4uI
-/wzj0rmOJHc+F9lb3CoAD0Uf6Gv9aTDctHLq9XTFKNz/ThD1mGYkT4nyl9Klx5oH
-3dwPezsoBi+1HxWk+tUbKfcXmQ5BV82gDNv3+rIpMy0Yzud2r40HBw81FDH4IXbL
-0/p7i0RFp54sBoJTc9VUYimN9SDa+HFZR+RGEd3uaGLvpx5Z2cm3tCpQ2GG7xXYy
-FSow4ZrG31KtZXUBYF3jUK3/N9OKSclGZcD4kUn4hH1xnZ9Li7IxAMLrPQDB/J0t
-VhBNDOGhoM55piFjJb1m
-=9V3L
------END PGP SIGNATURE-----
-
---=-R0D3Z09jsXFplC0/Amct--
-
+-- 
+Kalle Valo
