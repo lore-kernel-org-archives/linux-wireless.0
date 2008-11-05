@@ -1,63 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50912 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753972AbYKTR77 (ORCPT
+Received: from mail-gx0-f11.google.com ([209.85.217.11]:65035 "EHLO
+	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755822AbYKEULo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 12:59:59 -0500
-Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	Stefan Steuerwald <salsasepp@googlemail.com>
-In-Reply-To: <200811201537.19047.hs4233@mail.mn-solutions.de>
-References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
-	 <f76a32050811200050u48bc150en34e94c7671672ae6@mail.gmail.com>
-	 <f76a32050811200544p3c647cb3t392025feef02c8f9@mail.gmail.com>
-	 <200811201537.19047.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+o9WqbNMmkaHXYFXyU70"
-Date: Thu, 20 Nov 2008 18:59:54 +0100
-Message-Id: <1227203994.3766.24.camel@johannes.berg> (sfid-20081120_190002_736689_4D8E33F3)
-Mime-Version: 1.0
+	Wed, 5 Nov 2008 15:11:44 -0500
+Received: by gxk4 with SMTP id 4so3748gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 12:11:34 -0800 (PST)
+Message-ID: <43e72e890811051210x499dab3bhd4195f592c2aeaf2@mail.gmail.com> (sfid-20081105_211148_540837_AC6B8D72)
+Date: Wed, 5 Nov 2008 12:10:04 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 7/7] cfg80211/mac80211: Add Country IE parsing/802.11d support
+Cc: linville@tuxdriver.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Felix Fietkau" <nbd@openwrt.org>
+In-Reply-To: <1225914733.3619.150.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-5-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-6-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-7-git-send-email-lrodriguez@atheros.com>
+	 <1225853406-16322-8-git-send-email-lrodriguez@atheros.com>
+	 <1225887783.3619.108.camel@johannes.berg>
+	 <43e72e890811050857p7a6e371dq96880853dc310741@mail.gmail.com>
+	 <1225908658.3619.135.camel@johannes.berg>
+	 <43e72e890811051124g3931e244i3e29c413a05c08f3@mail.gmail.com>
+	 <1225914733.3619.150.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Nov 5, 2008 at 11:52 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-11-05 at 11:24 -0800, Luis R. Rodriguez wrote:
+>> On Wed, Nov 5, 2008 at 10:10 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
 
---=-+o9WqbNMmkaHXYFXyU70
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>> >> > When I suggested to use a checksum I was thinking of an easy way to
+>> >> > debounce. But a checksum is never perfect. Hence, the WARN_ON you added
+>> >> > might trigger despite the debounce checksum. Or we might fail to follow
+>> >> > changes.
+>> >>
+>> >> Let me know what you think about the alpha2 + BSSID thing above. I
+>> >> guess it should also consider the environment (I, O, ' ') in case the
+>> >> AP is reconfigured to be outdoor (without being moved). I don't think
+>> >> we should care about supporting these cases on the fly but we should
+>> >> ensure the change won't break things.
+>> >
+>> > Well I haven't checked in detail which things you care about in the IE
+>> > now, but shouldn't you check if those changed?
+>>
+>> We only care about the channel triplet and that has:
+>>
+>> a. Channel start
+>> b. Number of channels
+>> c. Power
+>>
+>> But I think that if the alpha2+environment is the same that's enough
+>> for the STA to assume the BSSID has not changed the IE. At least with
+>> openwrt I need to bring down the interface of the AP to change 11d.
+>> I'd guess most home APs act the same way as in that they require a
+>> reboot or something. On some APs I use I use iwpriv to change it but I
+>> haven't checked to see internally what that will do while its on.
+>>
+>> The checksum really only should be useful if a secondary device tries
+>> to associate to an AP and it gets a country IE. It needs a way to know
+>> if the IE is different than the one an already-present device is
+>> using. What I'm suggesting is that if these things are the same we can
+>> assume it doesn't change: BSSID+alpha2+environment.
+>
+> Ok, checksums are nice to avoid having to memcmp large things, but
+> afaict we're talking about maybe 12 bytes, right?
 
-On Thu, 2008-11-20 at 15:37 +0100, Holger Schurig wrote:
+Depends on the number of triplets, but since we only support 32 reg
+rules this means we only support 32 triplets and therefore we only
+support a max IE of size of 99 bytes (32 * 3 + 3). Realistically in JP
+I expect there to be around 3, 4, or 5 or maybe even 6 triplets which
+is 21 bytes.
 
-> Just make a trace with beacons towards your mac80211 based AP and=20
-> one trace towards another access points and compare the beacon.
+> If so, why don't we
+> just keep a copy of the country IE and compare it fully every time?
 
-No need to compare; you just need to check whether the AID bit is
-properly set in the TIM. I think p54 may have problems with that, in
-fact.
+Eh. I'm inclined to leave the checksum then. We'd then have to bother
+with freeing yet another thing later.
 
-johannes
+> The way I see it, driver/mac80211 calls cfg80211's
+>        regulatory_11d(wiphy, ie, ie_length)
+> function and that sorts out whether to do anything at all, ignore it
+> because it already knows etc. So regardless of what we do we can just do
+> it all in here and not bother anything elsewhere with checksums,
+> debouncing etc, and will be free to change it easily.
 
---=-+o9WqbNMmkaHXYFXyU70
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+You have sold on this.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJJaWXAAoJEKVg1VMiehFYjRAP/3rLiy2sJT9zBXr5OfM2Y6qf
-o5yeRQJgtGqCaSEyRFp2HDKVt/B/lWkkZg4K5BON8SrgsBASAsYFjSRfzdeFXKZD
-j0xFh3cyJpMz3F4O1TvGZd9HqhCvrd9bv9gL51pl6rM+gruW1M7DN5pDrxOeWQoz
-/eklureZ49u2dmjmN/zsXmR0yuPC5/9YNPx2q4VMFDXpu2K/XrNM3H/mSIPr8SGD
-d6q9Ahk3dxbYIhyBZxZNilJxuOu74qoEkx/qPQf7DQbPcAgPyxFm1HLv5pUavZ0V
-RJ75ZNcDVUbNOBtYnUxglU971QdzfT+qMc4k0kexQ/1iFQ4eJsoXEUwqAUWv3Je7
-umpRDXA0BuIb+8YYE/Amf1bPfpF5hzWslVl5rofz+kQyX9UeGQZBuFBYi8Vox61L
-0w6zQEUP2ERp6gEquGi4b1SRv+bB9aqEpTeQsbaSHnrL4HOx63GWVKGw6td59Bpk
-yzX1DheYlNM/BKlaWI3HvAZaZBl9srv3ZarjOOLqPWyoFlRsgEtk+NTjHlVbQLTc
-UIx4mHRANy5Y0uK74XncBt6UO5JEuV7MIirURedIAHhWr2gq7G52tzl1nWAEzGUP
-9B9sGhS62VUjRm6/kWzWLPwVYDB5MOUENLqU7X5KR+HSF/55jkJsJwFPPFK0TDu2
-chqjYzDccTOkUqzPEvp6
-=OLxS
------END PGP SIGNATURE-----
-
---=-+o9WqbNMmkaHXYFXyU70--
-
+  Luis
