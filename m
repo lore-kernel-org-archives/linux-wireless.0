@@ -1,143 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:33614 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbYK1Jbb (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38651 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752688AbYKEPuF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 04:31:31 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so1914192ugf.37
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 01:31:29 -0800 (PST)
-To: Zhu Yi <yi.zhu@intel.com>
-Subject: Re: [Ipw2100-devel] [PATCH] ipw2200: rework scan handling while associated
-Date: Fri, 28 Nov 2008 10:31:04 +0100
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>
-References: <200811261805.39953.helmut.schaa@gmail.com> <1227862298.2558.107.camel@debian.sh.intel.com>
-In-Reply-To: <1227862298.2558.107.camel@debian.sh.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811281031.04996.helmut.schaa@gmail.com> (sfid-20081128_103135_870721_D8F838BD)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+	Wed, 5 Nov 2008 10:50:05 -0500
+Subject: Re: include/net/mac80211.h:405: error: size of array 'type name'
+	is negative
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081105154049.GA10264@x200.localdomain> (sfid-20081105_163747_744831_98B56797)
+References: <20081105154049.GA10264@x200.localdomain>
+	 (sfid-20081105_163747_744831_98B56797)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4kmHHvQH3JdYGMsROA5c"
+Date: Wed, 05 Nov 2008 16:50:07 +0100
+Message-Id: <1225900207.3619.123.camel@johannes.berg> (sfid-20081105_165009_838364_B9827F4E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 28. November 2008 schrieb Zhu Yi:
-> On Thu, 2008-11-27 at 01:05 +0800, Helmut Schaa wrote:
-> > Could somebody please review the patch?
-> > Should I split the patch into three single patches?
-> 
-> Thank you for your patch. See my comments below.
-> 
-> > diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-> > index c73173a..f17b5b2 100644
-> > --- a/drivers/net/wireless/ipw2x00/ipw2200.c
-> > +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-> > @@ -2310,10 +2310,10 @@ static void ipw_scan_check(void *data)
-> >  {
-> >  	struct ipw_priv *priv = data;
-> >  	if (priv->status & (STATUS_SCANNING | STATUS_SCAN_ABORTING)) {
-> > -		IPW_DEBUG_SCAN("Scan completion watchdog resetting "
-> > -			       "adapter after (%dms).\n",
-> > +		IPW_DEBUG_SCAN("Scan completion watchdog: aborting "
-> > +			       "scan after (%dms).\n",
-> >  			       jiffies_to_msecs(IPW_SCAN_CHECK_WATCHDOG));
-> > -		queue_work(priv->workqueue, &priv->adapter_restart);
-> > +		queue_work(priv->workqueue, &priv->abort_scan);
-> >  	}
-> >  }
-> 
-> We need something like the network Tx watchdog to prevent the firmware
-> stick forever when something is wrong during scan. At this time, no
-> command (include ABORT_SCAN) is going to be processed.
 
-Hmm, I was able to reproduce the firmware looping endlessly reasonably
-reliable (turned off the beacon-miss-cancels-scan-behaviour and increased the
-scan watchdog timeout) and the ABORT_SCAN command was processed in that case
-and canceled the scan which resulted in a
-HOST_NOTIFICATION_STATUS_SCAN_COMPLETED notification with status 2 (not sure
-if it really was 2). So, at least the failure I noticed here could be corrected
-by aborting the scan instead of restarting the adapter.
+--=-4kmHHvQH3JdYGMsROA5c
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-What about the following:
-After the first scan timeout we try to cancel the scan and if that does not
-succeed in a few seconds we can still restart the fw.
+On Wed, 2008-11-05 at 18:40 +0300, Alexey Dobriyan wrote:
+> As seen on various arm configs:
+>=20
+> In file included from net/mac80211/main.c:11:
+> include/net/mac80211.h: In function 'ieee80211_tx_info_clear_status':
+> include/net/mac80211.h:405: error: size of array 'type name' is negative
+> net/mac80211/main.c: In function 'ieee80211_init':
+> net/mac80211/main.c:957: error: size of array 'type name' is negative
+>=20
+> whic is BUILD_BUG_ON wich suggests something with u64 alignment.
 
-> We need something 
-> can really move the firmware back to the correct state, that is the
-> adapter_restart. If you do see the watchdog files a lot, increasing
-> IPW_SCAN_CHECK_WATCHDOG should be the way to go.
+Thanks. It's actually, special ARM u8 alignment. A fix is on the way.
 
-I see the timeout because the firmware will never stop scanning until either
-the beacon miss notification cancels the scan or the IPW_SCAN_CHECK_WATCHDOG
-timeout restarts the adapter. I already tried a scan timeout of 25 seconds but
-the firmware insists on scanning the first passive channel (in my setup 52)
-over and over again.
+johannes
 
-> > @@ -4346,7 +4346,8 @@ static void ipw_handle_missed_beacon(struct ipw_priv *priv,
-> >  		return;
-> >  	}
-> >  
-> > -	if (priv->status & STATUS_SCANNING) {
-> > +	if (priv->status & STATUS_SCANNING &&
-> > +	    missed_count > priv->cancel_scan_threshold) {
-> >  		/* Stop scan to keep fw from getting
-> >  		 * stuck (only if we aren't roaming --
-> >  		 * otherwise we'll never scan more than 2 or 3
-> 
-> I'm OK with this. Since you don't change priv->cancel_scan_threadhold
-> anywhere, can you use IPW_MB_SCAN_CANCEL_THRESHOLD directly? 
+--=-4kmHHvQH3JdYGMsROA5c
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Right.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-> > @@ -6281,6 +6282,18 @@ static void ipw_add_scan_channels(struct ipw_priv *priv,
-> >  	}
-> >  }
-> >  
-> > +static int ipw_passive_dwell_time(struct ipw_priv *priv)
-> > +{
-> > +	/* staying on passive channels longer than the beacon interval causes
-> > +	 * the firmware to enter an infinite loop. Hence, don't stay on passive
-> > +	 * longer than the beacon interval.
-> > +	 */
-> > +	if (priv->status & STATUS_ASSOCIATED && priv->assoc_network->beacon_interval > 10)
-> > +		return priv->assoc_network->beacon_interval - 10;
-> > +	else
-> > +		return 120;
-> > +}
-> 
-> Is it still a problem with the above IPW_MB_SCAN_CANCEL_THRESHOLD used?
+iQIcBAABAgAGBQJJEcCrAAoJEKVg1VMiehFYSPoP/1o8TkzxspkQYvNIV7YRAqTW
+/GxPOh2kY7lXB/Sr/L4uCTjNu/Q865h3cP5uqESF7K/FxBBqXuwmlASHQQ1HI8H5
+fGv4U1DO7SnDGzEi6XPfW2+X/7X+QCwRKjcgOu9J9h1Qjm2AFSCsVQFTpAbMZEh8
+Wls2LZYkG26/SoW8ea7rmP8Xt6Sz4qbP3K3BB+wVS5J06OuSsVawSdWxnvFnCJio
+JtpyedHWpzvNYAfyzPN1RDnxU2YZyZRbdGpm87OLAEVvbb3A2IZQS74fW4c+C0aO
+xhn72yJd6ABklCe4BHHNIvGDLJH471IwAe1tXlRAD2IPgnK9r0enRolOnLJb6CX6
+T7GiLrvWGIXYsxdX3bvbA5FJkQvO1ImQkTkWnTIQ+9xPAWJP4vHtTjqZb7EszB1t
+nHlwvs/JddCYPs1u3nf+AgnyAxt6JGh/YG3XKdgjZ85Bh816kXxjmx2HkEetnkEv
+OloO+g0TD4lfTSfkLoL+xr5I0Uz9cS5JIYB9SpFuuDg3LTtRnC5AuK4qs19b8UIC
+ZTBk7R/K8wQ/aejoqJl6cBKRCALSwV5UP0WQ79k7Ch5sxLSMPV0XQo+Jh6b2ix3/
+7Sda1GYLiKdgKMWpBbDTRvCy1nWZcGWscuvIhjU7jtMMoBlrSzy3Gv5LNBPBNpq0
+il0LKEUKs/ov1U3WnjTR
+=BH7I
+-----END PGP SIGNATURE-----
 
-Yes, it is. If the passive channel dwell time is larger than the beacon
-interval the firmware will be stuck at the first passive channel. Thus the
-scan will never succeed.
+--=-4kmHHvQH3JdYGMsROA5c--
 
-> We assume most APs use 100ms beacon interval. But in case you are
-> associated with an AP which uses 20ms beacon interval, do you want to
-> set the passive_dwell time to 10ms here? 
-
-Yes, either that or just leaving all channels out that need to be scanned
-for a longer period than the beacon interval. In case of a 20ms beacon interval
-I'm pretty sure the active scan on all other channels will results in a
-endless scan loop in the fw too.
-
-> 120ms makes sure we can at 
-> least receive a beacon for normal APs.
-
-Yes, but I'd favour a successful scan that does not find every AP on passive
-channels over a canceled scan.
-
-> BTW, another thing might help to resolve the scan-while-associate
-> problem. Currently we scan 5GHz band channels first, then 2.4GHz band
-> (see ipw_add_scan_channels). Normally most channels in 5GHz band are
-> passive ones. Thus they use longer dwell time. If we change to scan
-> 2.4GHz band channels first, we can get more scan result before a scan
-> abort. Can you please try it?
-
-That's true but in case the scan is canceled the results are not forwarded
-to user space as they may be incomplete.
-
-Thanks,
-Helmut
