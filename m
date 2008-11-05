@@ -1,60 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:18638 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636AbYK1TuE (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.229]:63925 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751496AbYKEP2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 14:50:04 -0500
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx06.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mASJnbic001864
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:50:01 +0200
-Received: from localhost.localdomain (essapo-nirac25338.europe.nokia.com [10.162.253.38])
-	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mASJnjSg003187
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:49:46 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
+	Wed, 5 Nov 2008 10:28:32 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so46576rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 07:28:32 -0800 (PST)
+Message-ID: <f96d234e0811050728t63f3793eqc395ff979dafd9f6@mail.gmail.com> (sfid-20081105_162837_225849_AF63D3FD)
+Date: Wed, 5 Nov 2008 10:28:31 -0500
+From: "Cliff Brake" <cliff.brake@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: [RFC v3] mac80211 dynamic power save
-Date: Fri, 28 Nov 2008 21:49:40 +0200
-Message-Id: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205009_436711_4E21FF28)
+Subject: plan for libertas and mac80211 and cfg80211
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is v3 of my dynamic powersave patches. I have tested them only
-with stlc45xx on Nokia N810. I'm also working with iwl3945 and iwlagn
-patches based on these patches, I'll try to send them during this
-weekend.
+Hello,
 
-These are RFC patches, not yet to be applied. Hopefully in next round
-they are ready.
+I am using the marvell 8686 in several projects.  Is there any plan to
+move the libertas driver to mac80211 in the future?  If not, will
+cfg80211 mechanisms be supported with this driver?
 
-Patch 3 contains a new flag IEEE80211_HW_NO_DYNAMIC_PS. So all drivers
-which firmware doesn't support dynamic power save should use this flag
-to enable the feature in mac80211. This is a separate patch just for
-easier review. If it's ok, I'll fold it to patch 2.
+Thanks,
+Cliff
 
-Patch 4 moves the dynamic_ps_timeout to ieee80211_conf struct. That
-way the drivers which have dynamic power save support in firmware can
-use the same timeout provided by user space. If this ok I'll fold this
-to patch 2.
-
-changes in v3:
-o add a hw flag to notify that driver doesn't support dynamic power save and
-  which will enable mac80211 implementation
-o delete dynamic_ps_timer and cancel ps_enable_work during
-  association, hopefully it's race free now
-o provide timeout value to the drivers, for example iwlwifi should use
-  it (example patch under works)
-o fix a bad bug in testing IEEE80211_STA_ASSOCIATED flag with && operator
-
-TODO:
-o test with iwlwifi (only in-tree driver using IEEE80211_CONF_PS)
-o documentation for dynamic_ps_timeout and IEEE80211_HW_NO_DYNAMIC_PS
-o prefix ieee80211_ps_[enable|disable]_work with _dynamic
-
-Power save related features which I'll implement later:
-o disable power save when software scanning
-o beacon period (wakeup period) to the drivers, can be set from user
-  space but otherwise is bss's DTIM value
-
-I'll add missing features to the wiki tomorrow.
-
-
+-- 
+=======================
+Cliff Brake
+http://bec-systems.com
