@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:14889 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:46128 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128AbYKXUex (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 15:34:53 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 12:34:53 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 24 Nov 2008 12:34:51 -0800
-To: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <mcgrof@gmail.com>
-Subject: [ANN] CRDA and wireless-regdb release
-Message-ID: <20081124203451.GB6245@tesla> (sfid-20081124_213457_798688_9B13881E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	id S1756132AbYKEQyz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 11:54:55 -0500
+Subject: Re: plan for libertas and mac80211 and cfg80211
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Cliff Brake <cliff.brake@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1225900330.3619.125.camel@johannes.berg>
+References: <f96d234e0811050728t63f3793eqc395ff979dafd9f6@mail.gmail.com>
+	 (sfid-20081105_162837_225849_AF63D3FD)  <1225900330.3619.125.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 05 Nov 2008 11:53:02 -0500
+Message-Id: <1225903982.25627.3.camel@localhost.localdomain> (sfid-20081105_175513_149574_03A3E989)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have official releases now of wireless regulatory database and
-of CRDA. Our latest is:
+On Wed, 2008-11-05 at 16:52 +0100, Johannes Berg wrote:
+> On Wed, 2008-11-05 at 10:28 -0500, Cliff Brake wrote:
+> > Hello,
+> > 
+> > I am using the marvell 8686 in several projects.  Is there any plan to
+> > move the libertas driver to mac80211 in the future?  
+> 
+> There's the libertas_tf driver that uses a different firmware, the
+> libertas driver uses a smarter firmware that's "too smart" to be used
+> with mac80211.
 
-  * wireless-regdb-master-2008-11-17
-  * crda-0.9.4
+libertas_tf thin firmware is only compatible with usb8388 cards at this
+time.
 
-You can find both here:
+> > If not, will
+> > cfg80211 mechanisms be supported with this driver?
+> 
+> Depends which mechanisms and who's interested in doing any work on it.
 
-http://wireless.kernel.org/download/wireless-regdb/
-http://wireless.kernel.org/download/crda/
+Yes, we're interested in porting to cfg80211 and I definitely see that
+in the future.
 
-The usage of crda + regdb has allowed us to move regulatory restrictions
-out from drivers in the kernel out to userspace. You can use CRDA + regdb
-on kernels > 2.6.28 (or anyone using compat-wireless). CRDA and the
-wireless-regdb are intended to be provided as separate packages so regulatory
-rule updates can be provided without having to update the crda binary.
+Dan
 
-When packaging/building keep in mind you'll only need the regulatory.bin from
-wireless-regdb. The crda binary is just a udev helper, distributions are
-expected to install the provided regulatory.rules file. Users wishing to
-read the installed database can use:
-
-regdbdump /path/regulatory.bin
-
-Users/developers wishing to patch the regulatory database can send
-patches against John's wireless-regdb tree:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
-
-These are automated releases based on new git tags but we will send out e-mails
-when we have new releases.
-
-For futher information please see:
-
-http://wireless.kernel.org/en/developers/Regulatory
-
-  Luis
 
