@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28445 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:65115 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752293AbYKZATo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 19:19:44 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 16:19:44 -0800
-Date: Tue, 25 Nov 2008 16:19:42 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Pavel Roskin <proski@gnu.org>
-CC: Richard Farina <sidhayn@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: wireless-regdb: flaw in general functionality
-Message-ID: <20081126001942.GN5950@tesla> (sfid-20081126_011948_194794_A597BBB8)
-References: <492B2B74.7040404@gmail.com> <20081124231204.GN6245@tesla> <1227568883.28878.15.camel@dv> <43e72e890811241526o1ea6ecf7ge05a2319d6ff3641@mail.gmail.com> <492B623E.5030202@gmail.com> <1227580299.32415.2.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1227580299.32415.2.camel@dv>
+	id S1752828AbYKFBDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 20:03:15 -0500
+Subject: Re: [PATCH] ipw2200: make assocaittion only if SSID is known.
+From: Zhu Yi <yi.zhu@intel.com>
+To: Alexey Fisher <bug-track@fisher-privat.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"kernel-testers@vger.kernel.org" <kernel-testers@vger.kernel.org>
+In-Reply-To: <1225874758-5948-1-git-send-email-bug-track@fisher-privat.net>
+References: <1225874758-5948-1-git-send-email-bug-track@fisher-privat.net>
+Content-Type: text/plain
+Date: Thu, 06 Nov 2008 09:03:51 +0800
+Message-Id: <1225933431.2604.95.camel@debian.sh.intel.com> (sfid-20081106_020319_166591_075715E1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 24, 2008 at 06:31:39PM -0800, Pavel Roskin wrote:
-> On Mon, 2008-11-24 at 21:26 -0500, Richard Farina wrote:
+On Wed, 2008-11-05 at 16:45 +0800, Alexey Fisher wrote:
+> 'iwconfig eth1 channel 6' would trigger association to _something_, 
+> which is wrong.  Changing the channel should (and does) trigger
+> reassociation, 
+> but only if there is an SSID to associate with.
 > 
-> > I'm all for adding it to crda as no-transmit but, is that a valid flag?
-> > Also, how well does it work?  From a monitor mode interface you can
-> > inject raw packets out of the interface.  Would just adding
-> > "no-transmit" into the crda line work?  I certainly don't see this in
-> > the crda code anywhere, nor in the definition of regdb file.  I presume
-> > this has to be added?
-> 
-> I don't know anything about the process for introducing new CRDA flags.
+> Signed-off-by: Alexey Fisher <bug-track@fisher-privat.net>
 
-This is documented here:
+Acked-by: Zhu Yi <yi.zhu@intel.com>
 
-http://wireless.kernel.org/en/developers/Regulatory#Changingthedatabasefileformat
+Thanks,
+-yi
 
-  Luis
