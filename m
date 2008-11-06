@@ -1,46 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40364 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752589AbYKSVAs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 16:00:48 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 13:00:48 -0800
-Date: Wed, 19 Nov 2008 13:00:46 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Rami Rosen <ramirose@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kune@deine-taler.de" <kune@deine-taler.de>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
-Message-ID: <20081119210046.GC5900@tesla> (sfid-20081119_220052_353077_781BF6D7)
-References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com> <1226943608.3902.36.camel@johannes.berg> <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com> <1227106146.26243.43.camel@johannes.berg> <eb3ff54b0811190709q76e8b073ic71831fd38ceba18@mail.gmail.com> <1227107869.26243.52.camel@johannes.berg> <20081119160135.GB3485@tuxdriver.com> <1227126620.26243.71.camel@johannes.berg>
+Received: from yx-out-2324.google.com ([74.125.44.30]:4363 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbYKFPdf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 10:33:35 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so253487yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 07:33:33 -0800 (PST)
+Message-ID: <49135499.60707@gmail.com> (sfid-20081106_163339_585611_B74CA521)
+Date: Thu, 06 Nov 2008 15:33:29 -0500
+From: Gert Steenssens <gsteenss@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1227126620.26243.71.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Subject: error when building Intel compat wireless
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2008 at 12:30:19PM -0800, Johannes Berg wrote:
-> On Wed, 2008-11-19 at 11:01 -0500, John W. Linville wrote:
-> 
-> > Is there some way we could take that into account?  I'm sure there
-> > are users who would prefer to have an AP (i.e. their laptop) that
-> > can't support PS clients rather than not having an AP at all.
-> 
-> That's a good question. The distinction here is between empowering users
-> to do the wrong thing (AP without proper PS support) and enforcing the
-> right thing (with the consequence of complete loss of AP functionality).
-> The issue I see here is that users will see "ohh shiny, AP support"
-> without knowing that it doesn't actually really support it. Not sure
-> which side of the line we want to stand on, I prefer the correctness
-> side but I can see arguments for the other side, would just like to have
-> users know. Maybe we could have some way to tell hostapd this and then
-> have hostapd print a huge warning about it when started up?
+Hi,
 
-How about making it Kconfigable for broken AP support and add the
-warning there?
+I am trying to build Intel compat wireless drivers for 2.6.22 on Ubuntu
+7.10 but get the errors shown below.
 
-  Luis
+At some point during making ( i guess during or after:
+=2E/scripts/gen-compat-autoconf.sh config.mk ) it reports: 'Fatal: not =
+a
+git repository'
+
+any idea how to fix this?
+
+Thanks,
+Gert
+
+
+
+
+make -C /lib/modules/2.6.22-15-generic/build
+M=3D/home/gsteenss/compat-wireless-2.6-old modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.22-15-generic'
+LD /home/gsteenss/compat-wireless-2.6-old/drivers/misc/built-in.o
+CC [M] /home/gsteenss/compat-wireless-2.6-old/drivers/misc/eeprom_93cx6=
+=2Eo
+LD /home/gsteenss/compat-wireless-2.6-old/drivers/net/built-in.o
+CC [M] /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.o
+In file included from
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:34:
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.h:361: error:
+field =91napi=92 has incomplete type
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
+=91b44_poll=92:
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:849: warning:
+type defaults to =91int=92 in declaration of =91__mptr=92
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:849: warning:
+initialization from incompatible pointer type
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:879: error: to=
+o
+many arguments to function =91netif_rx_complete=92
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
+=91b44_interrupt=92:
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:911: error: to=
+o
+many arguments to function =91netif_rx_schedule_prep=92
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:917: error: to=
+o
+many arguments to function =91__netif_rx_schedule=92
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
+=91b44_open=92:
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:1433: warning:
+implicit declaration of function =91napi_enable=92
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:1442: warning:
+implicit declaration of function =91napi_disable=92
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: At top level:
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:2051: error:
+unknown field =91get_sset_count=92 specified in initializer
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:2051: warning:
+initialization from incompatible pointer type
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
+=91b44_init_one=92:
+/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:2159: warning:
+implicit declaration of function =91netif_napi_add=92
+make[3]: *** [/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.o]
+Error 1
+make[2]: *** [/home/gsteenss/compat-wireless-2.6-old/drivers/net] Error=
+ 2
+make[1]: *** [_module_/home/gsteenss/compat-wireless-2.6-old] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.22-15-generic'
+make: *** [modules] Error 2
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
