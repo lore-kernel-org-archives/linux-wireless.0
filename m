@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:44854 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753756AbYKTSXV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 13:23:21 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 10:23:21 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>
-Subject: [PATCH] ath9k: Dont update rate control for every AMPDU
-Date: Thu, 20 Nov 2008 11:21:52 +0530
-Message-ID: <1227160312-5078-1-git-send-email-vasanth@atheros.com> (sfid-20081120_192323_892886_92014C1D)
-MIME-Version: 1.0
+Received: from xc.sipsolutions.net ([83.246.72.84]:38606 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080AbYKFQU1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 11:20:27 -0500
+Subject: [PATCH] b43: remove rate index warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
+Date: Thu, 06 Nov 2008 17:20:24 +0100
+Message-Id: <1225988424.3619.249.camel@johannes.berg> (sfid-20081106_172031_416434_52F08D76)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update rate control only with the tx status of first AMPDU
-of an aggregation. This fixes frequent drops in throughput.
+I frequently run into this warning, and added some
+debugging to see why, and got this:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+b43 bad rx: 00000000: 2f d2 e2 63 cf a7 14 04 28 18 c8 5f 88 4a a2 00
+                      bogus junk       | plcp            | fctl| dur
+
+b43 bad rx: 00000010: 00 11 24 91 07 4d 00 06 25 ff 8f 78 00 06 25 ff
+                      my MAC address   | BSSID           | AP MAC
+b43 bad rx: 00000020: 8f 76 20 74 00 00 42 07 00 20 00 00 00 00 aa aa
+                           | seq | QoS | CCMP IV               | data
+                      ...
+
+As you can see, there are 6 bogus bytes (sometimes only five) and then
+the frame. I don't know why, and I don't see how to recover, so let's
+just drop these frames.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath9k/rc.c   |    3 ++-
- drivers/net/wireless/ath9k/rc.h   |    1 +
- drivers/net/wireless/ath9k/xmit.c |    2 ++
- 3 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/net/wireless/b43/xmit.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index e118824..7d1913d 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1413,7 +1413,8 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	an = (struct ath_node *)sta->drv_priv;
- 	final_ts_idx = tx_info_priv->tx.ts_rateindex;
- 
--	if (!an || !priv_sta || !ieee80211_is_data(fc))
-+	if (!an || !priv_sta || !ieee80211_is_data(fc) ||
-+	    !tx_info_priv->update_rc)
- 		goto exit;
- 
- 	if (tx_info_priv->tx.ts_status & ATH9K_TXERR_FILT)
-diff --git a/drivers/net/wireless/ath9k/rc.h b/drivers/net/wireless/ath9k/rc.h
-index 297dff9..083e006 100644
---- a/drivers/net/wireless/ath9k/rc.h
-+++ b/drivers/net/wireless/ath9k/rc.h
-@@ -188,6 +188,7 @@ struct ath_tx_info_priv {
- 	struct ath_tx_status tx;
- 	int n_frames;
- 	int n_bad_frames;
-+	u8 update_rc;
- };
- 
- #define ATH_TX_INFO_PRIV(tx_info) \
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 50d4105..bea48c3 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -950,6 +950,7 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_desc *ds, int nbad)
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ath_tx_info_priv *tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
- 
-+	tx_info_priv->update_rc = 0;
- 	if (ds->ds_txstat.ts_status & ATH9K_TXERR_FILT)
- 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
- 
-@@ -960,6 +961,7 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_desc *ds, int nbad)
- 			       sizeof(tx_info_priv->tx));
- 			tx_info_priv->n_frames = bf->bf_nframes;
- 			tx_info_priv->n_bad_frames = nbad;
-+			tx_info_priv->update_rc = 1;
- 		}
+--- everything.orig/drivers/net/wireless/b43/xmit.c	2008-11-06 16:52:53.000000000 +0100
++++ everything/drivers/net/wireless/b43/xmit.c	2008-11-06 17:10:06.000000000 +0100
+@@ -46,7 +46,6 @@ static int b43_plcp_get_bitrate_idx_cck(
+ 	case 0x6E:
+ 		return 3;
  	}
+-	B43_WARN_ON(1);
+ 	return -1;
  }
--- 
-1.5.5.1
+ 
+@@ -73,7 +72,6 @@ static u8 b43_plcp_get_bitrate_idx_ofdm(
+ 	case 0xC:
+ 		return base + 7;
+ 	}
+-	B43_WARN_ON(1);
+ 	return -1;
+ }
+ 
+@@ -608,6 +606,8 @@ void b43_rx(struct b43_wldev *dev, struc
+ 						phytype == B43_PHYTYPE_A);
+ 	else
+ 		status.rate_idx = b43_plcp_get_bitrate_idx_cck(plcp);
++	if (unlikely(status.rate_idx == -1))
++		goto drop;
+ 	status.antenna = !!(phystat0 & B43_RX_PHYST0_ANT);
+ 
+ 	/*
+
 
