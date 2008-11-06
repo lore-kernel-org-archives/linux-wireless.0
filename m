@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:52571 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753364AbYKPQil (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Nov 2008 11:38:41 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so898667yxm.1
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Nov 2008 08:38:40 -0800 (PST)
-Message-ID: <449c10960811160838h70fd1852g66d8a51c7551530b@mail.gmail.com> (sfid-20081116_173845_335395_BF938A73)
-Date: Sun, 16 Nov 2008 10:38:39 -0600
-From: "Dan McGee" <dpmcgee@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>
-In-Reply-To: <20081116162019.GA15851@hash.localnet>
+Received: from mail.atheros.com ([12.36.123.2]:28767 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751166AbYKFUpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 15:45:30 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 12:45:30 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/3] cfg80211: call_crda() won't tell us if CRDA was present
+Date: Thu, 6 Nov 2008 12:45:25 -0800
+Message-ID: <1226004327-10290-2-git-send-email-lrodriguez@atheros.com> (sfid-20081106_214539_018811_20C6396B)
+In-Reply-To: <1226004327-10290-1-git-send-email-lrodriguez@atheros.com>
+References: <1226004327-10290-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
-	 <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
-	 <449c10960811151811s32fdd2b6p361d2ec9dd674fcc@mail.gmail.com>
-	 <449c10960811151838m3fcae118n65139be735c10665@mail.gmail.com>
-	 <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com>
-	 <20081116055312.GA14126@hash.localnet>
-	 <43e72e890811152205k13318ab7yad8695d9f6dd409c@mail.gmail.com>
-	 <43e72e890811152206s3683ecabm658fac255112a262@mail.gmail.com>
-	 <43e72e890811152215h5cf389a3ufe4dc10b021b0c0f@mail.gmail.com>
-	 <20081116162019.GA15851@hash.localnet>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 16, 2008 at 10:20 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> As you can see, the modules think "phy0" should be at offset 164, but
-> it's really at 160.
+kobject_uevent_env() can return an error but it just tells us
+if the uvent was built/sent or not, it doesn't tell us anything
+about what happened in userspace, whether the udev rule was present
+nor does it tell us if CRDA was present or not. So remove
+the informative complaint about it assuming it will tell us
+such things.
 
-> Also I noticed the original config had CONFIG_DYNAMIC_FTRACE=y, unfortunately
-> turning that off didn't seem to change anything (hmm, I didn't get a build
-> bug, was the breakage fixed in 2.6.27.y?)
+Note that you can determine if CRDA is present after loading cfg80211
+by using:
 
-Note that HAVE is set if the architecture supports it; CONFIG_FTRACE
-itself was turned off (and CONFIG_DYNAMIC_FTRACE is not even present):
-$ grep FTRACE .config
-CONFIG_HAVE_FTRACE=y
-CONFIG_HAVE_DYNAMIC_FTRACE=y
-# CONFIG_FTRACE is not set
+is_old_static_regdom(cfg80211_regdomain)
 
--Dan
+but this doesn't account for possible user install after initial
+boot, and also for when the user uses the static EU regulatory
+domain.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    9 +--------
+ 1 files changed, 1 insertions(+), 8 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f062b8b..f8e7beb 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -711,14 +711,7 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+ 
+ 	kfree(last_request);
+ 	last_request = request;
+-	r = call_crda(alpha2);
+-
+-#ifndef CONFIG_WIRELESS_OLD_REGULATORY
+-	if (r)
+-		printk(KERN_ERR "cfg80211: Failed calling CRDA\n");
+-#endif
+-
+-	return r;
++	return call_crda(alpha2);
+ }
+ 
+ void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+-- 
+1.5.6.3
+
