@@ -1,61 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26626 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751864AbYKRDfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 22:35:32 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 19:35:32 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:60929 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752690AbYKFBnH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 20:43:07 -0500
+Message-ID: <49124B87.7050901@lwfinger.net> (sfid-20081106_024314_121096_25F9F281)
+Date: Wed, 05 Nov 2008 17:42:31 -0800
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18722.14164.513269.623545@gargle.gargle.HOWL> (sfid-20081118_043538_261578_1D4FB048)
-Date: Tue, 18 Nov 2008 09:02:36 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 00/18] ath9k: Driver updates
+To: htl10@users.sourceforge.net
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets
+ using tx close descriptor for 8187B
+References: <968895.35316.qm@web23104.mail.ird.yahoo.com>
+In-Reply-To: <968895.35316.qm@web23104.mail.ird.yahoo.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+Hin-Tak Leung wrote:
+> 
+> Seems that in my situation (my access point is a slow machine), the behavior of the rate control mechanism depends on the *type* of work load - I was restoring a firefox session with a lot of windows, and it is stuck at 1Mb all the time. But once all the windows are stored, doing a ping I can indeed have the rate going up (and eventually coming down) to 24-36Mb.
 
-A bunch of driver updates, mostly rate control cleanup.
-This series applies on top of all the pending patches for ath9k.
-( The series from Senthil, PCI fixes from Luis, and an antenna fix from Vasanth )
+Are those default pings? It may work differently with those short packets thaqn
+it does with the longer ones found with browsing.
 
-Sujith
-
-Sujith (18):
-  ath9k: Merge struct ath_tx_ratectrl with ath_rate_node
-  ath9k: Simplify RC alloc/free functions
-  ath9k: Remove ath_setup_rates
-  ath9k: Remove ath_rate_newassoc()
-  ath9k: Remove half/quarter rate tables
-  ath9k: Nuke fixed rate handling in driver
-  ath9k: Revamp RX handling
-  ath9k: We don't support non-HT devices, so remove superfluous code.
-  ath9k: Remove rate control reference in VAP
-  ath9k: Remove ath_rate_softc
-  ath9k: Use rate_driver_data
-  ath9k: Remove ath9k_rate_table
-  ath9k: General code scrub
-  ath9k: Use helpers
-  ath9k: Move TX completion routine to xmit.c
-  ath9k: Fix bug in deciphering channel flags
-  ath9k: Update TX trigger level on a FIFO underrun.
-  ath9k: Use straightforward PCI routines to setup the TX buffer.
-
- drivers/net/wireless/ath9k/ath9k.h  |   47 +-
- drivers/net/wireless/ath9k/beacon.c |    8 +-
- drivers/net/wireless/ath9k/core.c   |   60 +--
- drivers/net/wireless/ath9k/core.h   |  118 +--
- drivers/net/wireless/ath9k/hw.c     |  205 +----
- drivers/net/wireless/ath9k/mac.c    |    4 +-
- drivers/net/wireless/ath9k/main.c   |  148 +---
- drivers/net/wireless/ath9k/rc.c     | 1700 +++++++++++++----------------------
- drivers/net/wireless/ath9k/rc.h     |  218 +----
- drivers/net/wireless/ath9k/recv.c   |  577 +++++--------
- drivers/net/wireless/ath9k/xmit.c   |  443 +++------
- 11 files changed, 1124 insertions(+), 2404 deletions(-)
-
+Larry
