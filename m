@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.191]:57786 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312AbYKYVay (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 16:30:54 -0500
-Received: by gv-out-0910.google.com with SMTP id e6so97701gvc.37
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 13:30:52 -0800 (PST)
-Message-ID: <e38d12ff0811251330x2b2d9a35h608b1619441f1252@mail.gmail.com> (sfid-20081125_223057_901500_7130DD5F)
-Date: Tue, 25 Nov 2008 16:30:51 -0500
-From: "Andrey Vul" <andrey.vul@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: cannot compile compat-wireless-2.6-old
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081125203244.GD5950@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com>
-	 <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com>
-	 <20081125203244.GD5950@tesla>
+Received: from main.gmane.org ([80.91.229.2]:33122 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752513AbYKFBAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 20:00:36 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1KxtEd-0004Wv-As
+	for linux-wireless@vger.kernel.org; Thu, 06 Nov 2008 01:00:31 +0000
+Received: from ppp-88-217-36-175.dynamic.mnet-online.de ([88.217.36.175])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 01:00:31 +0000
+Received: from berni by ppp-88-217-36-175.dynamic.mnet-online.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 01:00:31 +0000
+To: linux-wireless@vger.kernel.org
+From: Bernhard Schmidt <berni@birkenwald.de>
+Subject: Re: b43: Everybody with PHY TX error, please try
+Date: Thu, 6 Nov 2008 01:00:21 +0000 (UTC)
+Message-ID: <getfj5$vl5$3@ger.gmane.org> (sfid-20081106_020040_888237_D4F2E4C2)
+References: <200810242032.04295.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 25, 2008 at 15:32, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-> On Tue, Nov 25, 2008 at 09:57:57AM -0800, Andrey Vul wrote:
->> I cannot compile the current compat tarball.
->> Make log:
->> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
->> make -C /usr/src/linux-2.6.26.6-rt11/ M=/root/compat-wireless-2.6-old modules
->> make[1]: Entering directory `/usr/src/linux-2.6.26.6-rt11'
->>  CC [M]  /root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o
->> In file included from <command-line>:0:
->> /root/compat-wireless-2.6-old/include/net/compat.h:877: error:
->> redefinition of 'list_splice_tail'
->> include/linux/list.h:356: error: previous definition of
->> 'list_splice_tail' was here
->> /root/compat-wireless-2.6-old/include/net/compat.h:892: error:
->> redefinition of 'list_splice_tail_init'
->> include/linux/list.h:379: error: previous definition of
->> 'list_splice_tail_init' was here
->
-> list_splice_tail was added as of 2.6.27, and you have 2.6.26. Which
-> means your kernel headers for your box are completely messed up. This
-> means you can expect a kernel panic if you were to successfully
-> compile external modules. Go fix that first.
->
->  Luis
->
+Michael Buesch <mb@bu3sch.de> wrote:
 
-Ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooh, it
-used /usr/include/* , not KLIB_BUILD/include/*
+> Everybody with PHY TX error, please try updated firmware from
+> ftp://ftp.linksys.com/opensourcecode/wrt610n/1.00.00.018/wrt610n_v1.00.00.018_us.tgz
+> (Yeah, big tarball. It's 87MB)
+>
+> Extract the file wrt610n_v1.00.00.018_us/release/src/wl/linux/wl.o out of the archive.
+> Get latest b43-tools:
+> git clone http://git.bu3sch.de/git/b43-tools.git
+>
+> Build and install fwcutter from latest b43-tools.git
+>
+> Extract the firmware from the wl.o file:
+> b43-fwcutter --unsupported -w /lib/firmware/DESTPATH  wl.o
+>
+> Try to reproduce the PHY TX error with the new firmware.
 
-I now see what happened. I had 2.6.27 headers installed because the
-default kernel was 2.6.27.
-Should I have done the following: # cd KLIB_BUILD && make
-headers_check && make headers_install && cp -Rv include/* /usr/include
-?
--- 
-Andrey Vul
+Still getting them, OpenWRT Kamikaze trunk on a Linksys WRT54G
+
+b43-phy0: Broadcom 5352 WLAN found
+b43-phy0 debug: Found PHY: Analog 2, Type 2, Revision 7
+b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+b43-phy0 debug: DebugFS (CONFIG_DEBUG_FS) not enabled in kernel config
+input: b43-phy0 as /devices/virtual/input/input0
+b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+b43-phy0 debug: Chip initialized
+b43-phy0 debug: 32-bit DMA initialized
+Registered led device: b43-phy0::radio
+b43-phy0 debug: Wireless interface started
+b43-phy0 debug: Adding Interface type 2
+b43-phy0 debug: Removing Interface type 2
+b43-phy0 debug: Wireless interface stopped
+b43-phy0 debug: DMA-32 rx_ring: Used slots 0/64, Failed frames 0/0 =
+0.0%, Average tries 0.00
+b43-phy0 debug: DMA-32 tx_ring_AC_BK: Used slots 0/128, Failed frames
+0/0 = 0.0%, Average tries 0.00
+b43-phy0 debug: DMA-32 tx_ring_AC_BE: Used slots 0/128, Failed frames
+0/0 = 0.0%, Average tries 0.00
+b43-phy0 debug: DMA-32 tx_ring_AC_VI: Used slots 0/128, Failed frames
+0/0 = 0.0%, Average tries 0.00
+b43-phy0 debug: DMA-32 tx_ring_AC_VO: Used slots 0/128, Failed frames
+0/0 = 0.0%, Average tries 0.00
+b43-phy0 debug: DMA-32 tx_ring_mcast: Used slots 0/128, Failed frames
+0/0 = 0.0%, Average tries 0.00
+input: b43-phy0 as /devices/virtual/input/input1
+b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+
+Bernhard
+
