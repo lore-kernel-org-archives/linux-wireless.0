@@ -1,83 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57634 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493AbYKAOcl (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:33102 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbYKFPIV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 10:32:41 -0400
-Subject: Re: [PATCH] mac80211: Allow AP mode to be enabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <871vxvmsnd.fsf@nokia.com>
-References: <20081030175030.GD3923@jm.kir.nu> <878ws3ptrh.fsf@nokia.com>
-	 <20081101114754.GY3923@jm.kir.nu>  <871vxvmsnd.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6FswuUXHayTxqk1UH5m5"
-Date: Sat, 01 Nov 2008 15:32:34 +0100
-Message-Id: <1225549954.3619.4.camel@johannes.berg> (sfid-20081101_153244_296136_8C9EE466)
-Mime-Version: 1.0
+	Thu, 6 Nov 2008 10:08:21 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so722747wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 07:08:20 -0800 (PST)
+Message-ID: <1ba2fa240811060708v7620b306p2812bd139b96dd52@mail.gmail.com> (sfid-20081106_160839_351050_38B3956C)
+Date: Thu, 6 Nov 2008 17:08:20 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/2 2.6.28] iwlwifi : Fix channel scanning/association in 5Ghz band
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Marcel Holtmann" <holtmann@linux.intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Abhijeet Kolekar" <abhijeet.kolekar@intel.com>,
+	"Zhu Yi" <yi.zhu@intel.com>
+In-Reply-To: <1225983480.3619.244.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1225912449-26625-1-git-send-email-reinette.chatre@intel.com>
+	 <B887D922-0154-4365-A44D-F284A5DF9386@linux.intel.com>
+	 <20081106134950.GB14184@tuxdriver.com>
+	 <1225982253.3619.233.camel@johannes.berg>
+	 <1ba2fa240811060647x688f1efp1728e5f80dbb6b35@mail.gmail.com>
+	 <1225983103.3619.242.camel@johannes.berg>
+	 <1ba2fa240811060654w3c55bbc3ufb242a322ab5207e@mail.gmail.com>
+	 <1225983480.3619.244.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Nov 6, 2008 at 4:58 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2008-11-06 at 16:54 +0200, Tomas Winkler wrote:
+>> On Thu, Nov 6, 2008 at 4:51 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Thu, 2008-11-06 at 16:47 +0200, Tomas Winkler wrote:
+>> >
+>> >> The problem with missing A band is that this info was supplied to
+>> >> driver too late. after registration otherwise
+>> >> the iwlwifi dealt properly with missing band This was change in design
+>> >> that wasn't reflected in the driver.
+>> >>
+>> >> This can happen _regardless_ of the setting of old regulatory,
+>> >>
+>> >> With old regulatory the channel was known prior to registration
+>> >
+>> > Ah, you mean the driver wasn't updated (and previously not prepared) to
+>> > handle changing regulatory information?
+>>
+>> Yep.
+>
+> That's fixed now though, right? At least I thought it was fixed by some
+> change but I can't seem to find it now.
 
---=-6FswuUXHayTxqk1UH5m5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, 2008-11-01 at 16:23 +0200, Kalle Valo wrote:
-> Jouni Malinen <j@w1.fi> writes:
->=20
-> > On Sat, Nov 01, 2008 at 01:31:30PM +0200, Kalle Valo wrote:
-> >
-> >> I tried to test this with latest hostapd (commit b6a55236) and
-> >> wireless-testing (commit d80fe0040), but unfortunately I wasn't
-> >> succesful. Here's the output from hostapd with b43:
-> >
-> >> ioctl[SIOCSIWESSID]: Operation not supported
-> >> len=3D4
-> >> Could not set SSID for kernel driver
-> >
-> > Thanks for reporting this. I fixed it now in hostap.git. Johannes
-> > removed SSID configuration from AP mode and I was just waiting for this
-> > to hit wireless-testing before committing the change into hostapd.
->=20
-> Thanks a lot, I updated to hostap commit 4aac554c and it works now
-> with b43. I was able to associate with N810 and ping worked. Even PSM
-> seems to work, but I haven't made any power consumption measurements
-> yet.
-
-I'd be interested in power consumption measurements, but it should work
-fine. There might be a slight bug in b43 wrt. the beacon timestamp
-offset though.
-
-> I'm very happy now, thank you Johannes and Jouni! :D
-
-:)
-
-johannes
-
---=-6FswuUXHayTxqk1UH5m5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJDGh+AAoJEKVg1VMiehFYwCUP/1faEZINvbrdU+W59BCZcvuo
-jbljvCORMiwOYFEACqRv8rXBFBOu8InEr6R6dP1+XaJ2vfnOILa/w/fjqgYh/iDI
-Gjap8ekI46jOjxTAnwtEEnk1FNmjepp0JGNbeISTIRphBYM8p+g/rpwyijw2+LWg
-ZFNWvMBxH9whNWotNn2PWbl9zf7FjhenzjPbcxFbgMa/97q949GqaOIxmZ5a5JsI
-rftEcHg+2KikKmV0BFyaPagUfGT6LjnBcDLufSxL+Ym9i5dcqsxROCp8rjLfquqt
-fP6n1ucgOsJJeC0BqIgaPdUZhiy2crs2fthRTBvZHo5vgf3aIF7CJyKBIoH7lnbU
-G22AL6etYjVG+QxnXLPYy46PBEITV6Qg9pomOFVYJppBNkqvolx3PmkZY1z/hYrr
-XUCs0hIl5Wp/Y9OxpIwsutqFtQoipsyBBgSUGIBzakgETwb7sm+S65HIoscMUEtQ
-A/0TO8W7fzI2oenLtbaR0lH8rLxYZ5uK2I3sOhf7JUrPC3LgiSyHXxqyaOHvGBRi
-onsrbjm2uSHoh8UZQHxK/8R3Gl64aKQoKwN0vCCU20ibVm/yOS2/DjEDYJXIG1MQ
-RIKhIPVShYVcIp7mLJcH2WmZAF6QvxaWlz0eQPBdf3nLdxyXRfu9oaE0J10FqDqL
-cAiIZDDr/DgCBFrFspJH
-=Y+OH
------END PGP SIGNATURE-----
-
---=-6FswuUXHayTxqk1UH5m5--
-
+Yeah it's fixed but if someone will disable the same way G band it
+will fail. Should never happen though
+Tomas
