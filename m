@@ -1,70 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:59435 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755061AbYKVKhw (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55229 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753399AbYKFMQQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 05:37:52 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so531313eyi.37
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Nov 2008 02:37:51 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: arvidjaar@mail.ru, David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 3/4] orinoco: Resume spectrum_cs in the same way as orinoco_cs
-Date: Sat, 22 Nov 2008 10:37:27 +0000
-Message-Id: <1227350248-8917-4-git-send-email-kilroyd@googlemail.com> (sfid-20081122_113754_414158_90E1D53A)
-In-Reply-To: <1227350248-8917-3-git-send-email-kilroyd@googlemail.com>
-References: <1227350248-8917-1-git-send-email-kilroyd@googlemail.com>
- <1227350248-8917-2-git-send-email-kilroyd@googlemail.com>
- <1227350248-8917-3-git-send-email-kilroyd@googlemail.com>
+	Thu, 6 Nov 2008 07:16:16 -0500
+Subject: Re: b43: Everybody with PHY TX error, please try
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200810242032.04295.mb@bu3sch.de> (sfid-20081024_203730_616101_C9986446)
+References: <200810242032.04295.mb@bu3sch.de>
+	 (sfid-20081024_203730_616101_C9986446)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Bxj2+QVPvznYfAZPtpA/"
+Date: Thu, 06 Nov 2008 13:16:13 +0100
+Message-Id: <1225973773.3619.216.camel@johannes.berg> (sfid-20081106_131619_854118_54B9C005)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Retrieval of external firmware has been resolved, and should work with
-the standard orinoco resume algorithm.
 
-This fixes an issue where priv->hw_unavailable indicates the card is
-ready when firmware has not been loaded.
+--=-Bxj2+QVPvznYfAZPtpA/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/spectrum_cs.c |   21 ++++++++++++++++++++-
- 1 files changed, 20 insertions(+), 1 deletions(-)
+On Fri, 2008-10-24 at 20:32 +0200, Michael Buesch wrote:
 
-diff --git a/drivers/net/wireless/orinoco/spectrum_cs.c b/drivers/net/wireless/orinoco/spectrum_cs.c
-index 852789a..c6c6d12 100644
---- a/drivers/net/wireless/orinoco/spectrum_cs.c
-+++ b/drivers/net/wireless/orinoco/spectrum_cs.c
-@@ -450,10 +450,29 @@ spectrum_cs_resume(struct pcmcia_device *link)
- {
- 	struct net_device *dev = link->priv;
- 	struct orinoco_private *priv = netdev_priv(dev);
-+	unsigned long flags;
-+	int err;
-+
-+	err = orinoco_reinit_firmware(dev);
-+	if (err) {
-+		printk(KERN_ERR "%s: Error %d re-initializing firmware\n",
-+		       dev->name, err);
-+		return -EIO;
-+	}
-+
-+	spin_lock_irqsave(&priv->lock, flags);
- 
- 	netif_device_attach(dev);
- 	priv->hw_unavailable--;
--	schedule_work(&priv->reset_work);
-+
-+	if (priv->open && !priv->hw_unavailable) {
-+		err = __orinoco_up(dev);
-+		if (err)
-+			printk(KERN_ERR "%s: Error %d restarting card\n",
-+			       dev->name, err);
-+	}
-+
-+	spin_unlock_irqrestore(&priv->lock, flags);
- 
- 	return 0;
- }
--- 
-1.5.6.4
+> Try to reproduce the PHY TX error with the new firmware.
+
+This helped neither with the PHY TX errors nor with the RX errors where
+I'm getting invalid frames passed up from the firmware and run into a
+WARN_ON:
+
+drivers/net/wireless/b43/xmit.c:49
+(b43_plcp_get_bitrate_idx_cck)
+
+johannes
+
+--=-Bxj2+QVPvznYfAZPtpA/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJEuAIAAoJEKVg1VMiehFYdncP/jGsI68fnbuiCugarlTW0xiu
+7olSeaOoIY/RRlUBzrKksG41zSszvJAOAajBKnLGJV8bGzSafAEBI95eGVJj3Onz
+fohOgA/HdsNR8Av0jw8yqNtrZUG3VF06u7VTFg2NUd43UCZwLiMuctyUOeO+5U3d
+wQ7ug/dbhqHwRZm0HN9MgRHKuVrg1iSXySNGDJOaPL7iWgKvAe3MZyZTfmbLp/7t
+Y89x11mEvUKF5I0NKtXIFGhQ9qs9xIQWd3QlQTxEo9MEO6Tfort6N0XsKY5IyEDI
+wGbwPPlhSyDFaAUUht1BOiRk/wKRZWeONV/XDdmOcemmSc6frfzj9x8aoyuyuCyz
+FJ9qPU1szxGhTRw+noPpaQCwI5gA/OtA2dK/iEDQ65EqQQxbiVEoShvvWKzuDsp9
+22SsVOzV0uYqyp6Im2woCNVktdmM4meulA1BAWGvKwQHTRSkWuTN26yg+UZjo1pt
+u7HpvmRKaELePAdS9+6nP81r/Q4cxuBDgwFWZSIndvA5zOyqPvaSj2wLHr0Qm/JZ
+/7BakCTF59hUkHEETRHcWlkDsPrfgY7KIwRJZvRiaNXAOCkGlxJk4Z1Vat6le1qg
+n5oi9LLYjK44reoFJIQFAN1Lr1KFqlTU/KcAy0flKo73s2vPtmhU5UjZoz42UZdG
+z++zgAZoLZ9pH/V6yhbN
+=5RFk
+-----END PGP SIGNATURE-----
+
+--=-Bxj2+QVPvznYfAZPtpA/--
 
