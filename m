@@ -1,77 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13769 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752882AbYKLWWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 17:22:20 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:22:20 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/10] iwlwifi: enable custom fw regulatory solution
-Date: Wed, 12 Nov 2008 14:22:04 -0800
-Message-ID: <1226528524-32678-11-git-send-email-lrodriguez@atheros.com> (sfid-20081112_233858_008065_58ABF7DA)
-In-Reply-To: <1226528524-32678-10-git-send-email-lrodriguez@atheros.com>
-References: <1226528524-32678-1-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-2-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-4-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-5-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-6-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-7-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-8-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-9-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-10-git-send-email-lrodriguez@atheros.com>
+Received: from pne-smtpout2-sn2.hy.skanova.net ([81.228.8.164]:51497 "EHLO
+	pne-smtpout2-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750759AbYKFONB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 09:13:01 -0500
+From: "Lars Ericsson" <Lars_Ericsson@telia.com>
+To: <linux-wireless@vger.kernel.org>,
+	<rt2400-devel@lists.sourceforge.net>
+Subject: PID control in Linux 2.6.27.4
+Date: Thu, 6 Nov 2008 14:03:32 +0100
+Message-ID: <9D4D31A146C744FE823A2BEF8490178F@gotws1589> (sfid-20081106_151308_511429_72A8BEC7)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This enables the custom firmware regulatory solution option
-on iwlwifi drivers. These devices are uncapable of mapping their
-EEPROM regulatory domain to a specific ISO / IEC alpha2.
-Although the new 11n devices (>= iwl 5000) have only
-3 regultaory SKUs -- MOW, ABG (no N) and BG -- the older
-devices (3945 and 4965) have a more complex SKU arrangement
-and therefore its not practical to move this to the driver.
+Hi, 
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c     |    3 +++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+Running some initial evaluation test on Linux 2.6.27.4 from Linux git.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 8bd4d08..fccd150 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -832,6 +832,9 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 		BIT(NL80211_IFTYPE_AP) |
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
-+
-+	hw->wiphy->fw_handles_regulatory = true;
-+
- 	/* Default value; 4 EDCA QOS priorities */
- 	hw->queues = 4;
- 	/* queues to support 11n aggregation */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index dec9e04..208d88a 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -7861,6 +7861,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
- 
-+	hw->wiphy->fw_handles_regulatory = true;
-+
- 	/* 4 EDCA QOS priorities */
- 	hw->queues = 4;
- 
--- 
-1.5.6.3
+I have seen some strange behaviour on the rate control. 
+Using an 11b AP works fine.
+Using an 11b/g AP will not give high speed result. 
+In fact it gives lower speed compared to the 11b AP
+
+I'm using the rt61 minPCI as the WLAN HW.
+
+
+I have the following linux config:
+#
+# Rate control algorithm selection
+#
+CONFIG_MAC80211_RC_PID=y
+CONFIG_MAC80211_RC_DEFAULT_PID=y
+CONFIG_MAC80211_RC_DEFAULT="pid"
+# CONFIG_MAC80211_MESH is not set
+# CONFIG_MAC80211_LEDS is not set
+CONFIG_MAC80211_DEBUGFS=y
+# CONFIG_MAC80211_DEBUG_MENU is not set
+# CONFIG_IEEE80211 is not set
+# CONFIG_RFKILL is not set
+# CONFIG_NET_9P is not set
+
+
+Are there any know issues with the PID function in this Linux version ?
+
+/Lars
 
