@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from neuf-infra-smtp-out-sp604007av.neufgp.fr ([84.96.92.120]:35302
-	"EHLO neuf-infra-smtp-out-sp604007av.neufgp.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1749667AbYKVHtN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 02:49:13 -0500
-From: Alexander <linalex1965@neuf.fr>
-Reply-To: linalex1965@neuf.fr
-To: linux-wireless@vger.kernel.org
-Subject: Issues with AR5213A
-Date: Sat, 22 Nov 2008 08:48:58 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200811220849.01619.linalex1965@neuf.fr> (sfid-20081122_084917_855527_CDB1B3ED)
+Received: from waste.org ([66.93.16.53]:35414 "EHLO waste.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751987AbYKFPuo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 10:50:44 -0500
+Subject: iwlagn: wrong command queue 31, command id 0x0
+From: Matt Mackall <mpm@selenic.com>
+To: yi.zhu@intel.com
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Wed, 05 Nov 2008 22:16:19 -0600
+Message-Id: <1225944979.3792.3.camel@calx> (sfid-20081106_165100_575772_32B61730)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Atheros Experts,
+As of 75fa67706cce5272bcfc51ed646f2da21f3bdb6e, I'm seeing this:
 
-I have an issue with an atheros card that was working fine under suse10=
-=2E3 after=20
-installation of the madwifi drivers. When installing suse 11.0, a drive=
-r was=20
-automatically loaded, but it does not work.=20
+[ 5470.869820] WARNING: at drivers/net/wireless/iwlwifi/iwl-tx.c:1204
+iwl_rx_handle+0x11a/0x21b [iwlagn]()
+[ 5470.869824] wrong command queue 31, command id 0x0
+[ 5470.869827] Modules linked in: nls_utf8 hfsplus usb_storage uvcvideo
+compat_ioctl32 videodev v4l1_compat iwlagn snd_hda_intel sdhci_pci
+ehci_hcd uhci_hcd
+[ 5470.869850] Pid: 0, comm: swapper Tainted: G        W  2.6.28-rc3 #39
+[ 5470.869854] Call Trace:
+[ 5470.869858]  <IRQ>  [<ffffffff8024fc7e>] warn_slowpath+0xb4/0xda
+[ 5470.869873]  [<ffffffff803559cd>] __next_cpu+0x19/0x26
+[ 5470.869885]  [<ffffffffa009b032>] iwl_rx_handle+0x11a/0x21b [iwlagn]
+[ 5470.869896]  [<ffffffffa009b335>] iwl4965_irq_tasklet+0x202/0x2b4
+[iwlagn]
+[ 5470.869906]  [<ffffffffa0097592>] iwl4965_isr+0x21/0x101 [iwlagn]
+[ 5470.869912]  [<ffffffff80254459>] tasklet_action+0x89/0xf1
+[ 5470.869918]  [<ffffffff80254c6b>] __do_softirq+0x8e/0x163
+[ 5470.869925]  [<ffffffff8022674c>] call_softirq+0x1c/0x28
+[ 5470.869930]  [<ffffffff80227db5>] do_softirq+0x45/0xa5
+[ 5470.869935]  [<ffffffff802547a5>] irq_exit+0x4e/0x94
+[ 5470.869946]  [<ffffffff8022802d>] do_IRQ+0xc2/0xe1
+[ 5470.869950]  [<ffffffff80225338>] ret_from_intr+0x0/0x2e
+[ 5470.869953]  <EOI>  [<ffffffff80265663>] ktime_get_ts+0x21/0x4a
+[ 5470.869963]  [<ffffffff80391123>] acpi_idle_enter_bm+0x2ca/0x35c
+[ 5470.869968]  [<ffffffff8039112b>] acpi_idle_enter_bm+0x2d2/0x35c
+[ 5470.869973]  [<ffffffff80391123>] acpi_idle_enter_bm+0x2ca/0x35c
+[ 5470.869979]  [<ffffffff80435f0e>] cpuidle_idle_call+0x90/0xce
+[ 5470.869985]  [<ffffffff80223ec0>] cpu_idle+0x56/0x9a
+[ 5470.869988] ---[ end trace cacb4f9954dd9364 ]---
 
-I have posted the details here: http://forums.opensuse.org/network-
-internet/wireless/400074-atheros-5005g-card-doesnt-find-signal.html#pos=
-t1898247
+Device is a 4965:
 
-Larry proposed me to mail the output of dmesg to you. I would appreciat=
-e if=20
-you could help me solving this issue.
+14:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or
+AGN [Kedron] Network Connection (rev 61)
 
-Thanks in advance
+-- 
+Mathematics is the supreme nostalgia of our time.
 
-Alexander=20
-
-----------------------------------------------------
-
-The critical section is as follows:
-
-ath5k_pci 0000:02:00.0: registered as 'phy0'
-phy0: Selected rate control algorithm 'pid'
-ath5k phy0: Atheros AR5213A chip found (MAC: 0x78, PHY: 0x45)
-ath5k phy0: RF2112A 2GHz radio found (0x56)
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
-ath5k phy0: failed to wakeup the MAC Chip
-ath5k phy0: can't reset hardware (-5)
-pccard: card ejected from slot 0
-
-It appears that the ath5k driver does not support the AR5213A.
-
-Please post these lines to linux-wireless@vger.kernel.org. The Atheros =
-experts
-hang out there.
-
-Larry
-=EF=BF=BC=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
