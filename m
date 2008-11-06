@@ -1,210 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:31028 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbYKNFqI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 00:46:08 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so570955yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 21:46:07 -0800 (PST)
-Message-ID: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com> (sfid-20081114_064624_181159_88900B00)
-Date: Thu, 13 Nov 2008 23:46:06 -0600
-From: "Dan McGee" <dpmcgee@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Received: from smtp3-g19.free.fr ([212.27.42.29]:42729 "EHLO smtp3-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751091AbYKFV1D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 16:27:03 -0500
+Message-ID: <49136119.6060407@free.fr> (sfid-20081106_222708_939718_5CFC8C0F)
+Date: Thu, 06 Nov 2008 22:26:49 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k : Display MAC/BB and RF version at startup (v2)
+References: <490F63B6.8080600@free.fr> <878ws0ar2u.fsf@nokia.com> <20081105030223.GD16413@tesla> <49119C3D.1060406@free.fr>
+In-Reply-To: <49119C3D.1060406@free.fr>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also reported here a few times, I've been seeing this bug every time I
-try to load up the ath5k module in my kernel:
-http://www.kerneloops.org/search.php?search=ieee80211_register_hw&btnG=Function+Search
+This patch decodes the MAC/BB version (for instance: AR5416) and the RF
+part version (for instance: AR5133). It has been tested on AR5416/AR5133
+which is a 2.4/5GHz 11n device. It also makes the differences between
+AR5416 (PCI) and AR5418 (PCI Express). Both are named AR5416 in
+the register definitions.
 
-If you guys have any suggestions, I'd love to hear them. I
-disassembled the code in question but am not very good with these
-things. It looks to be somewhere between lines 804-825 in
-net/mac80211/main.c.
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
 
--Dan
+diff --git a/drivers/net/wireless/ath9k/hw.c
+b/drivers/net/wireless/ath9k/hw.c
+index ded9453..f2916a5 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -382,8 +382,9 @@ static const char *ath9k_hw_devname(u16 devid)
+ {
+ 	switch (devid) {
+ 	case AR5416_DEVID_PCI:
+-	case AR5416_DEVID_PCIE:
+ 		return "Atheros 5416";
++	case AR5416_DEVID_PCIE:
++		return "Atheros 5418";
+ 	case AR9160_DEVID_PCI:
+ 		return "Atheros 9160";
+ 	case AR9280_DEVID_PCI:
+diff --git a/drivers/net/wireless/ath9k/main.c
+b/drivers/net/wireless/ath9k/main.c
+index c67dadc..2913c13 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -18,6 +18,7 @@
 
-ath5k_pci 0000:01:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-ath5k_pci 0000:01:00.0: setting latency timer to 64
-ath5k_pci 0000:01:00.0: registered as ''
-BUG: unable to handle kernel NULL pointer dereference at 00000000
-IP: [<b80c1252>] :mac80211:ieee80211_register_hw+0x10f/0x2d6
-*pde = 00000000
-Oops: 0000 [#1] PREEMPT
-Modules linked in: ath5k(+) mac80211
+ #include <linux/nl80211.h>
+ #include "core.h"
++#include "reg.h"
 
-Pid: 818, comm: modprobe Not tainted (2.6.27.6eee #3)
-EIP: 0060:[<b80c1252>] EFLAGS: 00010286 CPU: 0
-EIP is at ieee80211_register_hw+0x10f/0x2d6 [mac80211]
-EAX: 00000000 EBX: b7345000 ECX: 00000001 EDX: 00000001
-ESI: b681c180 EDI: 00000000 EBP: b7183000 ESP: b7365e00
- DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-Process modprobe (pid: 818, ti=b7364000 task=b71f7130 task.ti=b7364000)
-Stack: 00000000 00000000 b681cd00 b681cd00 b681fe06 b80ea639 b7365e70 b681cd00
-       00000005 b7064458 b7365e70 b7064400 781689c9 b7007000 b8060000 b681cd00
-       b681c180 00000000 b681fde4 b7183000 0c0c45e9 0000001a b681cde8 b7183000
-Call Trace:
- [<b80ea639>] ath5k_pci_probe+0xc27/0x1150 [ath5k]
- [<781689c9>] find_inode+0x1b/0x56
- [<781e0b0e>] pci_device_probe+0x36/0x55
- [<78252342>] driver_probe_device+0xa1/0x132
- [<7825240a>] __driver_attach+0x37/0x55
- [<78251d86>] bus_for_each_dev+0x35/0x5c
- [<782521f1>] driver_attach+0x11/0x13
- [<782523d3>] __driver_attach+0x0/0x55
- [<7825184b>] bus_add_driver+0x91/0x1a7
- [<b802d000>] init_ath5k_pci+0x0/0x2f [ath5k]
- [<78252571>] driver_register+0x7d/0xd6
- [<b802d000>] init_ath5k_pci+0x0/0x2f [ath5k]
- [<781e0d11>] __pci_register_driver+0x35/0x60
- [<b802d01a>] init_ath5k_pci+0x1a/0x2f [ath5k]
- [<7810111f>] _stext+0x37/0xfb
- [<78137d76>] sys_init_module+0x87/0x175
- [<78102de9>] sysenter_do_call+0x12/0x25
- =======================
-Code: 83 c8 00 00 00 21 03 c7 83 b4 00 00 00 1c 49 0d b8 c7 83 0c 02
-00 00 ee 17 0c b8 8b 46 1c 8b 40 7c 8b 80 bc 00 00 00 6a 00 6a 00 <8b>
-00 e8 75 64 06 c0 5f bf f4 ff ff ff 85 c0 89 46 20 5a 0f 84
-EIP: [<b80c1252>] ieee80211_register_hw+0x10f/0x2d6 [mac80211] SS:ESP
-0068:b7365e00
----[ end trace 0b0fad82f83782b1 ]---
+ #define ATH_PCI_VERSION "0.1"
 
+@@ -1519,15 +1520,74 @@ static struct ieee80211_ops ath9k_ops = {
+ 	.set_frag_threshold = ath9k_no_fragmentation,
+ };
 
-GDB disassembly:
++static struct {
++	u32 version;
++	const char * name;
++} ath_mac_bb_names[] = {
++	{ AR_SREV_VERSION_5416_PCI,	"5416" },
++	{ AR_SREV_VERSION_5416_PCIE,	"5418" },
++	{ AR_SREV_VERSION_9100,		"9100" },
++	{ AR_SREV_VERSION_9160,		"9160" },
++	{ AR_SREV_VERSION_9280,		"9280" },
++	{ AR_SREV_VERSION_9285,		"9285" }
++};
++
++static struct {
++	u16 version;
++	const char * name;
++} ath_rf_names[] = {
++	{ 0,				"5133" },
++	{ AR_RAD5133_SREV_MAJOR,	"5133" },
++	{ AR_RAD5122_SREV_MAJOR,	"5122" },
++	{ AR_RAD2133_SREV_MAJOR,	"2133" },
++	{ AR_RAD2122_SREV_MAJOR,	"2122" }
++};
++
++/*
++ * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
++ */
++
++static const char *
++ath_mac_bb_name(u32 mac_bb_version)
++{
++	int i;
++
++	for (i=0; i<ARRAY_SIZE(ath_mac_bb_names); i++) {
++		if (ath_mac_bb_names[i].version == mac_bb_version) {
++			return ath_mac_bb_names[i].name;
++		}
++	}
++
++	return "????";
++}
++
++/*
++ * Return the RF name. "????" is returned if the RF is unknown.
++ */
++
++static const char *
++ath_rf_name(u16 rf_version)
++{
++	int i;
++
++	for (i=0; i<ARRAY_SIZE(ath_rf_names); i++) {
++		if (ath_rf_names[i].version == rf_version) {
++			return ath_rf_names[i].name;
++		}
++	}
++
++	return "????";
++}
++
+ static int ath_pci_probe(struct pci_dev *pdev, const struct
+pci_device_id *id)
+ {
+ 	void __iomem *mem;
+ 	struct ath_softc *sc;
+ 	struct ieee80211_hw *hw;
+-	const char *athname;
+ 	u8 csz;
+ 	u32 val;
+ 	int ret = 0;
++	struct ath_hal *ah;
 
-0x0000028f <ieee80211_register_hw+296>: cmpl   $0xd,0x30(%esi)
-0x00000293 <ieee80211_register_hw+300>: mov    $0xd,%eax
-0x00000298 <ieee80211_register_hw+305>: cmovae 0x30(%esi),%eax
-0x0000029c <ieee80211_register_hw+309>: cmpl   $0x9,(%esi)
-0x0000029f <ieee80211_register_hw+312>: mov    %eax,0x9c(%esi)
-0x000002a5 <ieee80211_register_hw+318>: jg     0x2ad <ieee80211_register_hw+326>
-0x000002a7 <ieee80211_register_hw+320>: movl   $0x64,(%esi)
-0x000002ad <ieee80211_register_hw+326>: cmpw   $0x0,0x44(%esi)
-0x000002b2 <ieee80211_register_hw+331>: jne    0x2ba <ieee80211_register_hw+339>
-0x000002b4 <ieee80211_register_hw+333>: movw   $0x1,0x44(%esi)
-0x000002ba <ieee80211_register_hw+339>: mov    0x2c(%esi),%ecx
-0x000002bd <ieee80211_register_hw+342>: mov    0x44(%esi),%eax
-0x000002c0 <ieee80211_register_hw+345>: mov    %ecx,%edx
-0x000002c2 <ieee80211_register_hw+347>: mov    %ax,0xc(%esi)
----Type <return> to continue, or q <return> to quit---
-0x000002c6 <ieee80211_register_hw+351>: mov    %cl,%al
-0x000002c8 <ieee80211_register_hw+353>: and    $0xe0,%al
-0x000002ca <ieee80211_register_hw+355>: cmp    $0x1,%al
-0x000002cc <ieee80211_register_hw+357>: sbb    %eax,%eax
-0x000002ce <ieee80211_register_hw+359>: and    $0x100,%edx
-0x000002d4 <ieee80211_register_hw+365>: and    $0xf,%al
-0x000002d6 <ieee80211_register_hw+367>: inc    %al
-^^^ HERE ^^^
-0x000002d8 <ieee80211_register_hw+369>: or     0x98(%esi),%al
-0x000002de <ieee80211_register_hw+375>: cmp    $0x1,%edx
-0x000002e1 <ieee80211_register_hw+378>: sbb    %edx,%edx
-0x000002e3 <ieee80211_register_hw+380>: and    $0x3c,%dl
-0x000002e6 <ieee80211_register_hw+383>: add    $0x4,%dl
-0x000002e9 <ieee80211_register_hw+386>: or     %al,%dl
-0x000002eb <ieee80211_register_hw+388>: test   %cl,%cl
-0x000002ed <ieee80211_register_hw+390>: mov    %dl,0x98(%esi)
-0x000002f3 <ieee80211_register_hw+396>: jns    0x2fe <ieee80211_register_hw+407>
-0x000002f5 <ieee80211_register_hw+398>: or     $0x8,%dl
-0x000002f8 <ieee80211_register_hw+401>: mov    %dl,0x98(%esi)
-0x000002fe <ieee80211_register_hw+407>: mov    %esi,%eax
-0x00000300 <ieee80211_register_hw+409>: call   0x301 <ieee80211_register_hw+410>
-0x00000305 <ieee80211_register_hw+414>: test   %eax,%eax
-0x00000307 <ieee80211_register_hw+416>: mov    %eax,%edi
-0x00000309 <ieee80211_register_hw+418>: js     0x41b <ieee80211_register_hw+692>
-0x0000030f <ieee80211_register_hw+424>: call   0x310 <ieee80211_register_hw+425>
-0x00000314 <ieee80211_register_hw+429>: mov    0x54(%esi),%eax
-0x00000317 <ieee80211_register_hw+432>: mov    %eax,%edx
+ 	if (pci_enable_device(pdev))
+ 		return -EIO;
+@@ -1614,11 +1674,15 @@ static int ath_pci_probe(struct pci_dev *pdev,
+const struct pci_device_id *id)
+ 		goto bad4;
+ 	}
 
-GCC assembly compile:
+-	athname = ath9k_hw_probe(id->vendor, id->device);
+-
+-	printk(KERN_INFO "%s: %s: mem=0x%lx, irq=%d\n",
++	ah = sc->sc_ah;
++	printk(KERN_INFO
++	       "%s: Atheros AR%s MAC/BB Rev:%x "
++	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
+ 	       wiphy_name(hw->wiphy),
+-	       athname ? athname : "Atheros ???",
++	       ath_mac_bb_name(ah->ah_macVersion),
++	       ah->ah_macRev,
++	       ath_rf_name((ah->ah_analog5GhzRev & AR_RADIO_SREV_MAJOR)),
++	       ah->ah_phyRev,
+ 	       (unsigned long)mem, pdev->irq);
 
-	call	ieee80211_rx_bss_list_init
-	movl	$1, %edx
-	movl	$1, %ecx
-	movl	$ieee80211_master_start_xmit, 412(%ebx)
-	movl	$ieee80211_master_open, 508(%ebx)
-	movl	$ieee80211_master_stop, 512(%ebx)
-	movw	$801, 200(%ebx)
-	movl	$ieee80211_header_ops, 180(%ebx)
-	movl	$ieee80211_master_set_multicast_list, 524(%ebx)
-	movl	28(%esi), %eax
-	movl	124(%eax), %eax
-	movl	188(%eax), %eax
-	pushl	$0
-	pushl	$0
-	movl	(%eax), %eax
-	call	__create_workqueue_key
-	popl	%edi
-	movl	$-12, %edi
-	testl	%eax, %eax
-	movl	%eax, 32(%esi)
-	popl	%edx
-	je	.L34
-	cmpl	$13, 48(%esi)
-	movl	$13, %eax
-	cmovae	48(%esi), %eax
-	cmpl	$9, (%esi)
-	movl	%eax, 156(%esi)
-	jg	.L35
-	movl	$100, (%esi)
-.L35:
-	cmpw	$0, 68(%esi)
-	jne	.L36
-	movw	$1, 68(%esi)
-.L36:
-	movl	44(%esi), %ecx
-	movl	68(%esi), %eax
-	movl	%ecx, %edx
-	movw	%ax, 12(%esi)
-	movb	%cl, %al
-	andb	$-32, %al
-	cmpb	$1, %al
-	sbbl	%eax, %eax
-	andl	$256, %edx
-	andb	$15, %al
-	incb	%al
-^^^ HERE ^^^
-	orb	152(%esi), %al
-	cmpl	$1, %edx
-	sbbl	%edx, %edx
-	andb	$60, %dl
-	addb	$4, %dl
-	orb	%al, %dl
-	testb	%cl, %cl
-	movb	%dl, 152(%esi)
-	jns	.L41
-	orb	$8, %dl
-	movb	%dl, 152(%esi)
-.L41:
-	movl	%esi, %eax
-	call	sta_info_start
-	testl	%eax, %eax
-	movl	%eax, %edi
-	js	.L42
-	call	rtnl_lock
-	movl	84(%esi), %eax
-	movl	%eax, %edx
-	call	dev_alloc_name
-	testl	%eax, %eax
-	movl	%eax, %edi
-	js	.L43
-	movl	28(%esi), %edx
-	movl	84(%esi), %ecx
-	movl	(%edx), %eax
-	movl	%eax, 308(%ecx)
-	movw	4(%edx), %ax
-	movw	%ax, 312(%ecx)
-	movl	28(%esi), %eax
-	movl	84(%esi), %edx
-	movl	124(%eax), %eax
-	movl	%eax, 688(%edx)
-	movl	84(%esi), %eax
-	call	register_netdevice
-	testl	%eax, %eax
-	movl	%eax, %edi
-	js	.L43
-	movl	36(%esi), %edx
-	movl	%esi, %eax
-	call	ieee80211_init_rate_ctrl_alg
+ 	return 0;
