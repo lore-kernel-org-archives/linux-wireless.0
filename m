@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36394 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733AbYKFOvs (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:23860 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904AbYKFOl6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 09:51:48 -0500
-Subject: Re: [PATCH 1/2 2.6.28] iwlwifi : Fix channel scanning/association
-	in 5Ghz band
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <1ba2fa240811060647x688f1efp1728e5f80dbb6b35@mail.gmail.com> (sfid-20081106_154710_192457_283691F4)
-References: <1225912449-26625-1-git-send-email-reinette.chatre@intel.com>
-	 <B887D922-0154-4365-A44D-F284A5DF9386@linux.intel.com>
-	 <20081106134950.GB14184@tuxdriver.com>
-	 <1225982253.3619.233.camel@johannes.berg>
-	 <1ba2fa240811060647x688f1efp1728e5f80dbb6b35@mail.gmail.com>
-	 (sfid-20081106_154710_192457_283691F4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UPR7o/74eBDQH2i+zoc3"
-Date: Thu, 06 Nov 2008 15:51:43 +0100
-Message-Id: <1225983103.3619.242.camel@johannes.berg> (sfid-20081106_155153_529126_FCEFC16C)
-Mime-Version: 1.0
+	Thu, 6 Nov 2008 09:41:58 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so710058wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 06:41:57 -0800 (PST)
+Message-ID: <1ba2fa240811060641xe70c29cgf4e8dbf36b29636@mail.gmail.com> (sfid-20081106_154201_339863_02DFA75F)
+Date: Thu, 6 Nov 2008 16:41:57 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH/RFT] iwlagn: remove pointless TX frame check
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1225974603.3619.219.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1223547733.22490.43.camel@johannes.berg>
+	 <1ba2fa240810091308r167b9147p46f74421329a55c1@mail.gmail.com>
+	 <1223630089.3930.71.camel@johannes.berg>
+	 <1224794532.6002.73.camel@johannes.berg>
+	 <1225974603.3619.219.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Nov 6, 2008 at 2:30 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2008-10-23 at 22:42 +0200, Johannes Berg wrote:
+>> On Fri, 2008-10-10 at 11:14 +0200, Johannes Berg wrote:
+>>
+>> > > NACK, the completion of association of mac80211 and iwlagn isn't fully
+>> > > synchronized so there is still
+>> > > a race.
+>> >
+>> > Can we fix that?
+>>
+>> Ping? Any idea _where_ the two can get desynchronized?
+>
+> Ping again. I like verifiable reasons for a "NACK".
 
---=-UPR7o/74eBDQH2i+zoc3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm working on it right now. Practically instead of association check
+what will  remain is check if everything is station is properly
+configured. Meaning stations is configured in the set in the firmware
+and rate scale is also set.
+This will cover all modes. Need to implement sta_notify handler and
+move some code from rate scaling to the driver.
+There will be never full synchronization between mac80211 and the
+driver about internal station state but the check might be very
+simplified.
 
-On Thu, 2008-11-06 at 16:47 +0200, Tomas Winkler wrote:
-
-> The problem with missing A band is that this info was supplied to
-> driver too late. after registration otherwise
-> the iwlwifi dealt properly with missing band This was change in design
-> that wasn't reflected in the driver.
->=20
-> This can happen _regardless_ of the setting of old regulatory,
->=20
-> With old regulatory the channel was known prior to registration
-
-Ah, you mean the driver wasn't updated (and previously not prepared) to
-handle changing regulatory information?
-
-johannes
-
---=-UPR7o/74eBDQH2i+zoc3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJEwR7AAoJEKVg1VMiehFYR+8P/jwnEmFSWkHWPbF+AMoShA9C
-9ejfzoQ2oqzZed3qPn+qIwAZy4DYh7bQSnSYn1mq2XOWfO6S/U0U/09omO3A1Z70
-9+uY5Yf120wqat75xJ7wX1QAuyjmwnxXqsPL/ZPHioNh2KY8cSYPfLCzniOmcmau
-fG90n3zubLKszdd/vx3g+ZSmRpOJIINoUEpJHIUqTR4jt/bPJrLHD0bOXKWcVjl4
-b/HyznxujLFMOqkgDODrpBwpI5omy3SWXf6t54qgcFqE8HDtN7jEGphXm3QBhdCn
-C1ZhpC/mDtym6JtBUuxYdAgL4fFlTJJpSqVZDy3xV9sZxO4Lswi+bNJ/dHgpFVY1
-HzKJOVJkVffoKgyT4dK485QN1qD8dQbFFnLKbrXaFH17BqPLXYYwOe0UU5xQ1Ccw
-/LzlINajXBCpAF/CnAjcs7AYVUO678KqBOFCcLty7Noz/rbmGHEysZxfCTXhUS0F
-mXjMw0owRDGbqN3bK3fBdo9Zzui0FQTgggFRG5aYZUA6QOb4LHnpwJW1jiPscmgS
-7dGSgYjcetRb41NN40hqAh43xE6RefIyimZSZ/URGVYL/5zLVURAb99cdCv6NMir
-G5Pf3HzC8FQR5az7dcKOjalhfhB4tNhz6orrWMzaUvZgvhxyzhi0IeomCNht8H0A
-6TZzXRDTK0ueINDhVikf
-=Mn5C
------END PGP SIGNATURE-----
-
---=-UPR7o/74eBDQH2i+zoc3--
-
+Thanks
+Tomas
