@@ -1,40 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:44102 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755038AbYKJR5s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 12:57:48 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 09:57:48 -0800
-Date: Mon, 10 Nov 2008 09:57:46 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: msan <msan@email.it>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: problems with ath5k driver.
-Message-ID: <20081110175746.GC6918@tesla> (sfid-20081110_185809_179394_E3A893FF)
-References: <geiib4$apo$2@ger.gmane.org> <20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net> <get27e$ka2$1@ger.gmane.org> <43e72e890811051322m43efbf03gd21770be382e807d@mail.gmail.com> <1225989658.4276.4.camel@dv> <gf3rag$l51$1@ger.gmane.org> <1226142085.3610.4.camel@johannes.berg> <gf3s12$l51$2@ger.gmane.org>
+Received: from smtp.nokia.com ([192.100.105.134]:30162 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752865AbYKFHgO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 02:36:14 -0500
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Thoughts about mac80211 client PS implementation
+References: <87k5bhkjf1.fsf@nokia.com>
+	<1225917235.3619.180.camel@johannes.berg> <87fxm5ki6s.fsf@nokia.com>
+	<1225919146.3619.190.camel@johannes.berg> <877i7hkgpn.fsf@nokia.com>
+	<1ba2fa240811051355y4a38c5f1jc6433ac4eeb9dd1f@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Thu, 06 Nov 2008 09:35:19 +0200
+In-Reply-To: <1ba2fa240811051355y4a38c5f1jc6433ac4eeb9dd1f@mail.gmail.com> (ext Tomas Winkler's message of "Wed\, 5 Nov 2008 23\:55\:31 +0200")
+Message-ID: <874p2l71e0.fsf@nokia.com> (sfid-20081106_083624_907894_D4BC6F9D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <gf3s12$l51$2@ger.gmane.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 08, 2008 at 03:09:22AM -0800, msan wrote:
-> Il Sat, 08 Nov 2008 12:01:25 +0100, Johannes Berg ha scritto:
-> 
-> >> If I can say, the card now works perfectly but is rather slow. I am
-> >> downloading some files from another computer inside my lan at home, not
-> >> from internet.
-> >> The other computer is connected with an ethernet card while my computer
-> >> is connected with my wireless card, ATheros. The download starts at 1Mb
-> >> and more but quickly degrades at 200 - 170 kb. it.
-> >> Perhaps the driver needs some work yet.
-> >
-> > Which RC algorithm are you using? Use minstrel if you can.
-> 
-> Sorry for my ignorance but....where I can set the algorithm that I must
-> use?
+Tomas Winkler <tomasw@gmail.com> writes:
 
-make menuconfig on the kernel
+> What I wonder in this whole conversation is how the power is saved
+> here. How and what do you shut down physically in the NIC.
 
-  Luis
+In stlc45xx it works such that the driver controls firmware's Power
+Save Mode with LM_OID_PSM command. When the driver enables PSM, the
+firmware sleeps as much as possible and it will wakeup only for
+beacons (interval is configurable). If the driver sends a frame, the
+firmware sets PSM bit in frames's frame control and goes to sleep
+immeaditely after receiving an ack for the frame.
+
+If the driver disables the PSM in firmware, the firmware is awake all
+the time.
+
+> I'm not sure how much u save if u're just not receiving frames bur
+> you are still busy with scheduling timers.
+
+With this scheme we will have significant power savings because the
+radios can be turned off for long idle periods, but it doesn't
+sacrifice the latency that much.
+
+> In iwlwifi all the gory timing issues are handled in the firmware
+> and driver just may option to configure some parameters according
+> battery life, user preferences and current throughput plus firmware
+> is able to close different part of the HW as well. I'm have strong
+> hunch that also other vendors handle this in low level as this is
+> kind of real time to be in sync with DITIMs and listen intervals
+> etc.
+
+In stlc45xx the firmware takes care of waking up for beacons (of
+course, linux is not a real time OS). It's just that in stlc45xx
+firmware's PS implementation isn't as advanced as yours is and we have
+to something in host as well.
+
+> One other think is that PS can be enabled also in non associated state
+> from the HW perspective only during association and scanning it's
+> disabled but that not connected to the spec.
+
+I don't see how Power Save Mode can be useful when disassociated. PSM
+is about AP buffering frames for us, but what does it buffer when the
+client is disassociated? Sure, turning off radios when not associated
+is very wise to do but we can control that already with op_start() and
+op_stop(). No need to use Power Save features here.
+
+> Currently we have all what you describing here enabled onfiguring
+> through iwconfig power and it's already working so I'm trying to
+> figure out how our strange HW :) will fit into this new stuff.
+
+I haven't investigated how PS works in your hw, yet. But if any
+problems appear, I'll add a HW flag for the driver to disable dynamic
+PS, or something like that.
+
+-- 
+Kalle Valo
