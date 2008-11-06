@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:38009 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751793AbYKUUBJ (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45102 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751762AbYKFAS3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 15:01:09 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so1151595wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 12:01:08 -0800 (PST)
-Message-ID: <b6c5339f0811211201i384ee31dyb5b3998fe02136af@mail.gmail.com> (sfid-20081121_210115_279054_AC4D8198)
-Date: Fri, 21 Nov 2008 15:01:08 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Maxim Levitsky" <maximlevitsky@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in add_interface
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <492710E6.7020506@gmail.com>
+	Wed, 5 Nov 2008 19:18:29 -0500
+Message-ID: <491237C1.4090701@lwfinger.net> (sfid-20081106_011834_212701_B7BF6C88)
+Date: Wed, 05 Nov 2008 16:18:09 -0800
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081118044037.GA18983@hash.localnet> <492710E6.7020506@gmail.com>
+To: htl10@users.sourceforge.net
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets
+ using tx close descriptor for 8187B
+References: <813803.32421.qm@web23102.mail.ird.yahoo.com>
+In-Reply-To: <813803.32421.qm@web23102.mail.ird.yahoo.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 21, 2008 at 2:49 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> Bob Copeland wrote:
->> Hi Maxim,
->>
->> Please try this patch.  I didn't have a problem changing the mac address
->> after it was set to something else.  I did kick it to re-associate with
->> the AP, though.
->>
->
-> Tested it, this still doesn't work:
->
-> iwconfig wlan0 down
-> macchanger wlan0
-> iwconfig wlan0 up
+Hin-Tak Leung wrote:
+> 
+> Before installing compat-wireless, I think the rate started at 36Mb and moves up to 54Mb and get stuck at 54Mb as soon as any traffic is getting through; after installing the patched compat-wireless, the rate changes beteen 1Mb and 9Mb for a bit but get stuck at 1Mb as soon as any substantial traffic is getting through. I can manually switch it with "iwconfig wlan2 rate 36M", for example, but with an auto, "iwconfig wlan2 rate 36M auto", it drops back to 1Mb very soon.
+> 
+> Baring changes in the rest of the wireless stack (which might come to the same thing), it is probably the changes surrounding status.rate[0].count vs status.retry_count which causes the 1Mb-rate-stuck... 
+> 
+> Did Larry get the v2 patches to do rate-control working (i.e. the rate actually changing with demand), or not? Larry's reply was "the rate-control mechanism works the way it did before" - I am  not sure about the "it did" bit - same as v1 (rate stuck at 1Mb) or same as the prototype patch for 2.6.27 (rate changing with demand)?  
 
-Wait, don't you want to do ifconfig here?  Or was that just a typo?
+On my system is started at 1 Mbs and rapidly moved to 54Mbs. It went so quickly
+that by the time I started a ping, switched terminals, and issued an ivconfig,
+it was already at 54 Mbs.
 
-I did exactly that (ifconfig down/macchanger/ifconfig up) and it
-worked here.  In particular if you have mac80211 debugging on it should
-show the mac address changing.  In my case, it didn't matter whether
-I'd previously associated or not.  I did have to tell NetworkManager
-to re-associate though.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+Larry
