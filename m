@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:45687 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752696AbYKBIcO (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:29117 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674AbYKFNep (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 03:32:14 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so2033223rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 01:32:13 -0700 (PDT)
-Message-ID: <40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com> (sfid-20081102_093317_788593_3C23ADB6)
-Date: Sun, 2 Nov 2008 10:32:13 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-Cc: tim.gardner@canonical.com, mick@madwifi.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Bob Copeland" <me@bobcopeland.com>
-In-Reply-To: <43e72e890811011419k460b11e0he08d66022cbd606e@mail.gmail.com>
+	Thu, 6 Nov 2008 08:34:45 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so343461wah.21
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 05:34:44 -0800 (PST)
+Message-ID: <e27b78a40811060534jf290197uc521a88ccd6fba2b@mail.gmail.com> (sfid-20081106_143450_370759_D3787D2F)
+Date: Thu, 6 Nov 2008 13:34:43 +0000
+From: Keir <keirlawson@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Fwd: debugging 802.11s
+In-Reply-To: <e27b78a40811060444y150553a9j81f5b14b84982754@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4908B754.1050400@tpi.com>
-	 <43e72e890811011419k460b11e0he08d66022cbd606e@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <e27b78a40811060444y150553a9j81f5b14b84982754@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/11/1 Luis R. Rodriguez <mcgrof@gmail.com>:
-> On Wed, Oct 29, 2008 at 12:19 PM, Tim Gardner <tcanonical@tpi.com> wrote:
->> This commit 'ath5k: Update interrupt masking code' causes stalls under
->> load when built using compat-wireless on 2.6.27. There is no output from
->> dmesg, but it occasionally recovers and moves a few more packets before
->> stalling again. Luis suggested reverting
->> eb9d4e8399181357cb6f6625ba7f849987432c6c which I did. Now it appears to
->> work normally.
->>
->> I also think this patch should be broken into multiple pieces. There
->> appear to be at least 3 functional changes addressed in this single patch.
->
-> Agreed, I just tested with the latest wireless-testing and the issue
-> is still present. I reviewed the commit but its a big too large to pin
-> point the exact issue, my AR5414 goes up but then quickly becomes
-> unusable. Nick how about we revert this and you can then split this up
-> into a good number of patches to make the review easier and also to be
-> able to pin point the exact issue better?
->
-> The SHA1 remains the same but just in case the title of the patch is:
->
->   ath5k: Update interrupt masking code
->
-> With it reverted I'm cruising and can ditch MadWifi completely, which
-> is the idea.
->
->  Luis
->
-
-Code doesn't introduce many functional changes, we can't eg. patch
-only the code that reads interrupt status and not the code that masks
-interrupts etc. Also if you compare the code with legacy-hal you'll
-see that legacy-hal does mostly the same (we just handle all cases and
-have better abstraction on ath5k.h + the RXNOFRM/TXNOFRM trick) + most
-of the code is about interrupts we don't enable anyway. Anyway i think
-i found the problem (on base.c we don't unmask TXDESC on PIMR), i'll
-do a few more tests and come back to you asap ;-)
+---------- Forwarded message ----------
+From: Keir <keirlawson@gmail.com>
+Date: 2008/11/6
+Subject: debugging 802.11s
+To: devel@lists.open80211s.org
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Hello,
+
+I've been trying to set up an 802.11s network (between just two nodes
+initially), I have followed the howto at
+http://www.open80211s.org/trac/wiki/HOWTO-0.2.1 however when I run "iw
+dev mesh station dump" nothing is listed, I've set my machine's IPs to
+be 10.0.0.1 and 10.0.0.2 and they both have the same mesh id and on
+the default channel (ie I havent specified one).  I'm wondering how I
+would start finding out what the problem is? I'm using an ath5k card
+with wireless-testing (quite a recent revsion, havent worked out how
+to get git to tell me which one exactly!)
+
+Cheers
+
+Keir
