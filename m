@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46671 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503AbYKXVBO (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.181]:44932 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750964AbYKFTEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 16:01:14 -0500
-Date: Mon, 24 Nov 2008 15:45:31 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Rami Rosen <ramirose@gmail.com>, linux-wireless@vger.kernel.org,
-	j@w1.fi
-Subject: Re: [PATCH 1/2] mac80211: enabling an AP that can't support fully
-	PS clients (wireless-testing).
-Message-ID: <20081124204531.GC3983@tuxdriver.com> (sfid-20081124_220119_575325_EBBCFDB8)
-References: <eb3ff54b0811232344m77f979aaj79e9e965eefa325c@mail.gmail.com> <1227522732.3599.58.camel@johannes.berg>
+	Thu, 6 Nov 2008 14:04:45 -0500
+Received: by el-out-1112.google.com with SMTP id z25so400876ele.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 11:04:44 -0800 (PST)
+Message-ID: <43e72e890811061104r2671065dod054793a6bf8ebef@mail.gmail.com> (sfid-20081106_200450_555544_A1513709)
+Date: Thu, 6 Nov 2008 11:04:44 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Andrey Yurovsky" <andrey@cozybit.com>
+Subject: Re: debugging 802.11s
+Cc: Keir <keirlawson@gmail.com>, linux-wireless@vger.kernel.org,
+	"Javier Cardona" <javier@cozybit.com>,
+	YanBo <dreamfly281@gmail.com>
+In-Reply-To: <45e8e6c40811061050n39cc04eetfe51b7bb6bfb8cd7@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1227522732.3599.58.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <e27b78a40811060444y150553a9j81f5b14b84982754@mail.gmail.com>
+	 <e27b78a40811060534jf290197uc521a88ccd6fba2b@mail.gmail.com>
+	 <43e72e890811061035q48ea617ci42200bf539860a48@mail.gmail.com>
+	 <45e8e6c40811061050n39cc04eetfe51b7bb6bfb8cd7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 24, 2008 at 11:32:12AM +0100, Johannes Berg wrote:
-> On Mon, 2008-11-24 at 09:44 +0200, Rami Rosen wrote:
-> > This patch enables mac80211 to support the PS challenged mode when
-> > used in master mode.
-> > A new attribute, NL80211_ATTR_WIPHY_AP_PS_CHALLENGED, was added to
-> > nl80211_attrs; also a new member (ap_ps_challenged) was added to
-> > struct wiphy; and nl80211_send_wiphy() was adjusted accordingly.
-> > 
-> > User space applications (like hostapd) should check the
-> > NL80211_ATTR_WIPHY_AP_PS_CHALLENGED
-> > attribute and  display a proper message, if it is set, to inform the
-> > users.
-> 
-> Jouni, thoughts about the naming? I proposed this to Rami but I'm not
-> married to it, any better idea?
+On Thu, Nov 6, 2008 at 10:50 AM, Andrey Yurovsky <andrey@cozybit.com> wrote:
+> On Thu, Nov 6, 2008 at 10:35 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Thu, Nov 6, 2008 at 5:34 AM, Keir <keirlawson@gmail.com> wrote:
+>>> ---------- Forwarded message ----------
+>>> From: Keir <keirlawson@gmail.com>
+>>> Date: 2008/11/6
+>>> Subject: debugging 802.11s
+>>> To: devel@lists.open80211s.org
+>>>
+>>>
+>>> Hello,
+>>>
+>>> I've been trying to set up an 802.11s network (between just two nodes
+>>> initially), I have followed the howto at
+>>> http://www.open80211s.org/trac/wiki/HOWTO-0.2.1
+>>
+>> It would be good if someone *cough* could move this to the Linux
+>> wireless wiki for iw when they get a chance:
+>
+> Done.
 
-NL80211_ATTR_WIPHY_AP_PS_UNSUPPORTED?
+Wow thanks!
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+  Luis
