@@ -1,53 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s31.bay0.hotmail.com ([65.54.246.231]:30713 "EHLO
-	bay0-omc3-s31.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751335AbYK1GIV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 01:08:21 -0500
-Message-ID: <BAY104-DAV12C684E461A14C31A996999040@phx.gbl> (sfid-20081128_070823_496875_94C2D125)
-Message-ID: <492F8ACA.5080606@hotmail.com>
-Date: Fri, 28 Nov 2008 17:08:10 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Reply-To: linux-wireless@vger.kernel.org,
-	  Shaddy Baddah <shaddy_baddah@hotmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:59450 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751716AbYKFPeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 10:34:17 -0500
+Message-ID: <49130E75.1000903@suse.de> (sfid-20081106_163437_493434_35704301)
+Date: Thu, 06 Nov 2008 16:34:13 +0100
+From: Frank Seidel <fseidel@suse.de>
 MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: use unaligned safe memcmp() in-place of compare_ether_addr()
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: "David S. Miller" <davem@davemloft.net>,
+	James Ketrenos <jketreno@linux.intel.com>
+Subject: Problem with Kernel Oops in ipw2200
+Content-Type: multipart/mixed;
+ boundary="------------070908070404080406040100"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After fixing zd1211rw: use unaligned safe memcmp() in-place of
-compare_ether_addr(), I started to see kernel log messages detailing
-unaligned access:
+This is a multi-part message in MIME format.
+--------------070908070404080406040100
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 
-  Kernel unaligned access at TPC[100f7f44] sta_info_get+0x24/0x68 [mac80211]
+Hi,
 
-As with the aforementioned patch, the unaligned access was eminating
-from a compare_ether_addr() call. Concerned that whilst it was safe to
-assume that unalignment was the norm for the zd1211rw, and take
-preventative measures, it may not be the case or acceptable to use the
-easy fix of changing the call to memcmp().
+after getting this bug
+https://bugzilla.novell.com/show_bug.cgi?id=397390
+i tried to reproduce this and even got a kernel Oops
+in ipw2200 (ipw_tx_skb) after about 15 Minutes pinging
+through a wpa enterprise connection.
 
-My research however indicated that it was OK to do this, as there are
-a few instances where memcmp() is the preferred mechanism for doing
-mac address comparisons throughout the module.
+After some tests i came up with the attaced patch that
+fixes the issue for me here, but is probably the wrong
+way to go as this is my first attempt in the wireless network
+area.
+Ever suggestion is very appreciated.
 
-Signed-off-by: Shaddy Baddah <shaddy_baddah@hotmail.com>
+Thanks,
+Frank
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 7fef8ea..d254446 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -99,7 +99,7 @@ struct sta_info *sta_info_get(struct ieee80211_local 
-*local, const u8 *addr)
+--------------070908070404080406040100
+Content-Type: text/x-patch;
+ name="ipw2200_panic_fix.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ipw2200_panic_fix.patch"
+
+From: Frank Seidel <fseidel@suse.de>
+Subject: fix panic on reauth
+Patch-mainline: not yet
+References: bnc#397390
+
+This is mainly a rework/partly revocation of the patch
+from David S. Miller <davem@davemloft.net>
+commit 521c4d96e0840ecce25b956e00f416ed499ef2ba
+
+Signed-off-by: Frank Seidel <fseidel@suse.de>
+
+---
+ drivers/net/wireless/ipw2200.c |   23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -10153,8 +10153,14 @@ static  void init_sys_config(struct ipw_
  
-     sta = rcu_dereference(local->sta_hash[STA_HASH(addr)]);
-     while (sta) {
--        if (compare_ether_addr(sta->sta.addr, addr) == 0)
-+        if (memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
-             break;
-         sta = rcu_dereference(sta->hnext);
-     }
+ static int ipw_net_open(struct net_device *dev)
+ {
++	struct ipw_priv *priv = ieee80211_priv(dev);
+ 	IPW_DEBUG_INFO("dev->open\n");
+-	netif_start_queue(dev);
++	/* we should be verifying the device is ready to be opened */
++	mutex_lock(&priv->mutex);
++	if (!(priv->status & STATUS_RF_KILL_MASK) &&
++	    (priv->status & STATUS_ASSOCIATED))
++		netif_start_queue(dev);
++	mutex_unlock(&priv->mutex);
+ 	return 0;
+ }
+ 
+@@ -10474,6 +10480,13 @@ static int ipw_net_hard_start_xmit(struc
+ 	IPW_DEBUG_TX("dev->xmit(%d bytes)\n", txb->payload_size);
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
++	if (!(priv->status & STATUS_ASSOCIATED)) {
++		IPW_DEBUG_INFO("Tx attempt while not associated.\n");
++		priv->ieee->stats.tx_carrier_errors++;
++		netif_stop_queue(dev);
++		goto fail_unlock;
++	}
++
+ #ifdef CONFIG_IPW2200_PROMISCUOUS
+ 	if (rtap_iface && netif_running(priv->prom_net_dev))
+ 		ipw_handle_promiscuous_tx(priv, txb);
+@@ -10485,6 +10498,10 @@ static int ipw_net_hard_start_xmit(struc
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	return ret;
++
++      fail_unlock:
++	spin_unlock_irqrestore(&priv->lock, flags);
++	return 1;
+ }
+ 
+ static struct net_device_stats *ipw_net_get_stats(struct net_device *dev)
+@@ -10685,6 +10702,10 @@ static void ipw_link_up(struct ipw_priv
+ 	priv->last_packet_time = 0;
+ 
+ 	netif_carrier_on(priv->net_dev);
++	if (netif_queue_stopped(priv->net_dev)) {
++		IPW_DEBUG_NOTIF("waking queue\n");
++		netif_wake_queue(priv->net_dev);
++	}
+ 
+ 	cancel_delayed_work(&priv->request_scan);
+ 	cancel_delayed_work(&priv->request_direct_scan);
 
-
+--------------070908070404080406040100--
