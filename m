@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:29017 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751776AbYKZOCn (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.188]:20678 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753048AbYKFMy3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 09:02:43 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so480180rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 06:02:42 -0800 (PST)
-Message-ID: <dac45060811260602s3c552ed9o6878031096c30892@mail.gmail.com> (sfid-20081126_150247_771385_BA70627E)
-Date: Wed, 26 Nov 2008 16:02:42 +0200
-From: "Mark Ryden" <markryde@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: AP (Master Mode) of wireless drivers
-Cc: "Vladimir Koutny" <vlado@work.ksp.sk>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <1227707883.4613.105.camel@johannes.berg>
+	Thu, 6 Nov 2008 07:54:29 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so449375rnd.17
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 04:54:27 -0800 (PST)
+Message-ID: <fe1e5a8c0811060446u4d171283t4c6cda924abcc299@mail.gmail.com> (sfid-20081106_135434_305717_BB318651)
+Date: Thu, 6 Nov 2008 12:46:55 +0000
+From: "Przemek Kulczycki" <przemekkulczycki@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: b43: Everybody with PHY TX error, please try
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200810242032.04295.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <dac45060811250735m6922688fn13c03ebe388d3137@mail.gmail.com>
-	 <1227633414.15224.6.camel@dv> <492D0A26.9090801@work.ksp.sk>
-	 <1227693793.4613.57.camel@johannes.berg>
-	 <dac45060811260547w2c9d7a7dg839792f5c98011d1@mail.gmail.com>
-	 <1227707883.4613.105.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <200810242032.04295.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
->> IEEE80211_TX_CTL_SEND_AFTER_DTIM appears only in rt2x00mac.c
-
->It's also in b43 and p54. I think your grep-fu is weak ;)
-
-Sorry, my grep was indeed wrong. You are right.
-Mark
-
-
-On Wed, Nov 26, 2008 at 3:58 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> "For AP mode, it must
->> honour IEEE80211_TX_CTL_SEND_AFTER_DTIM or set
->>               IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING and use the
->> ieee80211_get_buffered_bc() function"
->>
->> see:
->>  http://wireless.kernel.org/en/developers/Documentation/mac80211/API
->
-> Yup.
->
->> However, I found out that in wireless-testing, this is the situation:
->>
->>
->> IEEE80211_TX_CTL_SEND_AFTER_DTIM appears only in rt2x00mac.c
->
-> It's also in b43 and p54. I think your grep-fu is weak ;)
->
->> There is a call to ieee80211_get_buffered_bc() only in:
->> 1) drivers/net/wireless/ath9k/beacon.c
->> 2) wireless-testing/drivers/net/wireless/libertas_tf/main.c
->>
->> According to this , b43/b43legacy (Broadcom chips), Intel ipw2200,
->
-> ipw2200 is a very special case, and it doesn't use mac80211 so that
-> constant above won't occur in it anyway. Not sure if anybody has
-> recently tried, I'd almost assume it's broken since the project hasn't
-> been maintained forever, afaict.
->
-> johannes
->
+T24gRnJpLCBPY3QgMjQsIDIwMDggYXQgNjozMiBQTSwgTWljaGFlbCBCdWVzY2ggPG1iQGJ1M3Nj
+aC5kZT4gd3JvdGU6Cj4gRXZlcnlib2R5IHdpdGggUEhZIFRYIGVycm9yLCBwbGVhc2UgdHJ5IHVw
+ZGF0ZWQgZmlybXdhcmUgZnJvbQo+IGZ0cDovL2Z0cC5saW5rc3lzLmNvbS9vcGVuc291cmNlY29k
+ZS93cnQ2MTBuLzEuMDAuMDAuMDE4L3dydDYxMG5fdjEuMDAuMDAuMDE4X3VzLnRnego+IChZZWFo
+LCBiaWcgdGFyYmFsbC4gSXQncyA4N01CKQo+Cj4gRXh0cmFjdCB0aGUgZmlsZSB3cnQ2MTBuX3Yx
+LjAwLjAwLjAxOF91cy9yZWxlYXNlL3NyYy93bC9saW51eC93bC5vIG91dCBvZiB0aGUgYXJjaGl2
+ZS4KPiBHZXQgbGF0ZXN0IGI0My10b29sczoKPiBnaXQgY2xvbmUgaHR0cDovL2dpdC5idTNzY2gu
+ZGUvZ2l0L2I0My10b29scy5naXQKPgo+IEJ1aWxkIGFuZCBpbnN0YWxsIGZ3Y3V0dGVyIGZyb20g
+bGF0ZXN0IGI0My10b29scy5naXQKPgo+IEV4dHJhY3QgdGhlIGZpcm13YXJlIGZyb20gdGhlIHds
+Lm8gZmlsZToKPiBiNDMtZndjdXR0ZXIgLS11bnN1cHBvcnRlZCAtdyAvbGliL2Zpcm13YXJlL0RF
+U1RQQVRIICB3bC5vCj4KPiBUcnkgdG8gcmVwcm9kdWNlIHRoZSBQSFkgVFggZXJyb3Igd2l0aCB0
+aGUgbmV3IGZpcm13YXJlLgoKSWYgdGhpcyB0YXJiYWxsIGlzIHNvIGxhcmdlIHRoZW4gbWF5YmUg
+ZG93bmxvYWRpbmcgbGF0ZXN0IHVidW50dQpyZXN0cmljdGVkIG1vZHVsZXMgd2lsbCBiZSBmYXN0
+ZXIuCmh0dHA6Ly9wYWNrYWdlcy51YnVudHUuY29tL2ludHJlcGlkL2xpbnV4LXJlc3RyaWN0ZWQt
+bW9kdWxlcy0yLjYuMjctNy1nZW5lcmljCkFGQUlLIHRoaXMgcGFja2FnZSBjb250YWlucyB0aGUg
+cHJvcHJpZXRhcnkgQnJvYWRjb20gV0wgZHJpdmVyIHNvIHRoZQpsYXRlc3QgZmlybXdhcmUgbWln
+aHQgYmUgaW4gaXQgdG9vLgoKLS0gCiMjIFByemVteXPFgmF3IEt1bGN6eWNraSA+Pjw8IEF6cmFl
+bCBOaWdodHdhbGtlciAjIwojIGphYmJlcjogYXpyYWVsW25hXWphYnN0ZXIucGwgfCB0bGVuOiBh
+enJhZWwyOWEgIwojIyMgd3d3OiBodHRwOi8vcmVrc2lvLmZ0ai5hZ2guZWR1LnBsL35henJhZWwv
+ICMjIwo=
