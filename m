@@ -1,77 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51061 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51263 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086AbYKYTNH (ORCPT
+	with ESMTP id S1751414AbYKFO6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 14:13:07 -0500
-Subject: Re: [RFC] nl80211: Add frequency configuration (including HT40)
+	Thu, 6 Nov 2008 09:58:06 -0500
+Subject: Re: [PATCH 1/2 2.6.28] iwlwifi : Fix channel scanning/association
+	in 5Ghz band
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081125190533.GA27879@jm.kir.nu>
-References: <20081125190533.GA27879@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fhJ5luL5ie2yP5VyS51n"
-Date: Tue, 25 Nov 2008 20:13:04 +0100
-Message-Id: <1227640384.4613.44.camel@johannes.berg> (sfid-20081125_201311_859346_3F8C7315)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <1ba2fa240811060654w3c55bbc3ufb242a322ab5207e@mail.gmail.com> (sfid-20081106_155409_847949_E36B5F63)
+References: <1225912449-26625-1-git-send-email-reinette.chatre@intel.com>
+	 <B887D922-0154-4365-A44D-F284A5DF9386@linux.intel.com>
+	 <20081106134950.GB14184@tuxdriver.com>
+	 <1225982253.3619.233.camel@johannes.berg>
+	 <1ba2fa240811060647x688f1efp1728e5f80dbb6b35@mail.gmail.com>
+	 <1225983103.3619.242.camel@johannes.berg>
+	 <1ba2fa240811060654w3c55bbc3ufb242a322ab5207e@mail.gmail.com>
+	 (sfid-20081106_155409_847949_E36B5F63)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-J4ADk2tWvZafcAkozCTI"
+Date: Thu, 06 Nov 2008 15:58:00 +0100
+Message-Id: <1225983480.3619.244.camel@johannes.berg> (sfid-20081106_155810_148212_5DBC81F7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-fhJ5luL5ie2yP5VyS51n
+--=-J4ADk2tWvZafcAkozCTI
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-11-25 at 21:05 +0200, Jouni Malinen wrote:
+On Thu, 2008-11-06 at 16:54 +0200, Tomas Winkler wrote:
+> On Thu, Nov 6, 2008 at 4:51 PM, Johannes Berg <johannes@sipsolutions.net>=
+ wrote:
+> > On Thu, 2008-11-06 at 16:47 +0200, Tomas Winkler wrote:
+> >
+> >> The problem with missing A band is that this info was supplied to
+> >> driver too late. after registration otherwise
+> >> the iwlwifi dealt properly with missing band This was change in design
+> >> that wasn't reflected in the driver.
+> >>
+> >> This can happen _regardless_ of the setting of old regulatory,
+> >>
+> >> With old regulatory the channel was known prior to registration
+> >
+> > Ah, you mean the driver wasn't updated (and previously not prepared) to
+> > handle changing regulatory information?
+>=20
+> Yep.
 
-> +	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
-> +		int sec_chan_offset =3D 0;
-> +
-> +		if (!rdev->ops->set_channel) {
-> +			result =3D -EOPNOTSUPP;
-> +			goto bad_res;
-> +		}
-> +
-> +		if (info->attrs[NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET]) {
-> +			u8 val =3D nla_get_u8(
-> +				info->attrs[
-> +					NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET]);
-> +			if (val =3D=3D NL80211_SEC_CHAN_BELOW)
-> +				sec_chan_offset =3D -1;
-> +			else if (val =3D=3D NL80211_SEC_CHAN_ABOVE)
-> +				sec_chan_offset =3D 1;
-> +		}
-> +		result =3D rdev->ops->set_channel(
-> +			&rdev->wiphy,
-> +			nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
-> +			sec_chan_offset);
-
-Isn't that missing regulatory enforcement? I'd rather see that in
-cfg80211 than re-implemented in all drivers.
+That's fixed now though, right? At least I thought it was fixed by some
+change but I can't seem to find it now.
 
 johannes
 
---=-fhJ5luL5ie2yP5VyS51n
+--=-J4ADk2tWvZafcAkozCTI
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJLE47AAoJEKVg1VMiehFYi1oP/1vJn4cdhbVfRQuP3prnHKiA
-QpFTB9A2s57eDsFqke6Mp1NFGYOcmy/6JIZmriBwyBlsYJPKtRqKU8e6dsix1NeI
-T/RAL7ocvRkV3T4oBjlO/c/zfHL9eFY1p8+cUtlaRv+DRRN0nv+Gofv5Mi9GuuGD
-f8eNtEEzKw4k+4M0ZNkjfgkLFrauDphI+y/8KkeMylQRDc0aGMxIl1892DKe3Y1V
-wSrCkc8FlKqezcO8Hp+H5hw3cIdQlBvVOhpp5nIs9i8JMo1WWpsp07/9CTsPznxM
-d3x9w9qz5lDRaZDrZGc/qVDymuvUCyuGaKZphTejVzhCBVAq/ZkzublkNjl5XcZM
-KIqekyDmQf+MelEK/dWM9sO9vA6JIJH62rA9rMfLsKyjSHE3Eq27y2wu2Q8MVsbv
-zuRf30lSc2oj4odG66FFoTp+Pkhg9ejw8wehqQ8sjppH5+Lq6SA5C8VyETftT4te
-UJ13XiyKQkzFVHQOL2vKMZjBddtsazAURgdGTw5yndpMZP0UDLuMB7QVsKk8gwQu
-o4x5EYJjP8P+UatcQHjGhfFtGv/MJGq7PuxtbjXqx9EGfcPONRwefNebK0bU6Z/Z
-vufm52CwDJRBYvWIkxaKcXIZQJGAidMt4oJm7QaNtOVonB1djvjXx9CVMgJHE3+E
-V/EQhKXqnmVRoX8ednqY
-=JYxP
+iQIcBAABAgAGBQJJEwX0AAoJEKVg1VMiehFYd8kP/1ih8e2/yYid3ANzEoiGgRAH
+xM9PX/VYOaaoYcxjESZgq7wvp8pQOSDLDw9oDdJECV/0cUxMN1XZMCGoz8AMqhFt
+7cgDeqE2VnxH1cimqRen61V7eTfkFD1B02RDkNGUI3geL8zhlPaBLnI8d7FAaYgQ
+lmnqiZdGOokr8ruxnfYRL3djvrlcJl72uyE1p5exVsLCorNct8wcSkzB/ahX91YW
++/p0fEelKKK9MTthBJvMDDd/vSqidfjukicipD88+57IL+/evjcS7R3EY7PKrdlZ
+yIMsQPUuPWsUqf/F57q+RrHjlI14SvFnaaAh9FBKPLdSdYPhM0l61a1FO0/9H0cD
+/DVhkjtZmmlS9H2AeReKhYpX/Hf4zf3R+fRvF3hQzPkUoOE1HB8konfYg9jNbrEv
+XqG7BBKGkfnrgjQ4iTQfRrv069WbLKWKrhLcmJh9wFeErDvawG7VK36GPGm1jXiM
+F8L3Oqojka7TWXRhSFKhRkRWmFxYzgW4iT+gECnJHLRj3KZACTpQYtGnlBd4gDgz
+0ThKCRJW3jQgN0RCwQOCRB1EscBoDwdBEgDrofdiKsSQf2ykPWrInCh4wM2ibb71
+CLwRO7Yp3ZFWPSVm/mEVxSAMoqH8knPI4qwACMSsU8dQGxxsPSO+f4gbBAZfInQH
+/eZhbaRcXJzr5AFwgRNl
+=RMs/
 -----END PGP SIGNATURE-----
 
---=-fhJ5luL5ie2yP5VyS51n--
+--=-J4ADk2tWvZafcAkozCTI--
 
