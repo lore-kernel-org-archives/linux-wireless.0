@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from winston.telenet-ops.be ([195.130.137.75]:47275 "EHLO
-	winston.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753619AbYKTIBG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 03:01:06 -0500
-Date: Thu, 20 Nov 2008 09:01:00 +0100 (CET)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-cc: linux-wireless@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: m68k: linux-next allmodconfig
-In-Reply-To: <20081119170211.b4029fc4.akpm@linux-foundation.org>
-Message-ID: <Pine.LNX.4.64.0811200859590.6519@anakin> (sfid-20081120_090111_689524_419E8287)
-References: <20081119170211.b4029fc4.akpm@linux-foundation.org>
+Received: from web23104.mail.ird.yahoo.com ([217.146.189.44]:20914 "HELO
+	web23104.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753069AbYKFBgc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2008 20:36:32 -0500
+Date: Thu, 6 Nov 2008 01:36:29 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+In-Reply-To: <491237C1.4090701@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+Message-ID: <968895.35316.qm@web23104.mail.ird.yahoo.com> (sfid-20081106_023636_758773_88264D45)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 19 Nov 2008, Andrew Morton wrote:
-> include/net/mac80211.h: In function 'ieee80211_tx_info_clear_status':
-> include/net/mac80211.h:400: error: size of array 'type name' is negative
-> include/net/mac80211.h:405: error: size of array 'type name' is negative
-> 
-> due to:
-> 
-> static inline void
-> ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-> {
->         int i;
-> 
->         BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) !=
->                      offsetof(struct ieee80211_tx_info, control.rates));
->         BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) !=
->                      offsetof(struct ieee80211_tx_info, driver_rates));
-> -->     BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) != 8);
->         /* clear the rate counts */
->         for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
->                 info->status.rates[i].count = 0;
-> 
-> -->     BUILD_BUG_ON(
+--- On Thu, 6/11/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Yep, missing explicit padding in struct ieee80211_tx_info, breaking havoc on
-m68k where the alignment requirement for 32-bit values is 2 bytes, not 4.
+> On my system is started at 1 Mbs and rapidly moved to
+> 54Mbs. It went so quickly
+> that by the time I started a ping, switched terminals, and
+> issued an ivconfig,
+> it was already at 54 Mbs.
 
-AFAIK, a fix should be floating around.
+Seems that in my situation (my access point is a slow machine), the behavior of the rate control mechanism depends on the *type* of work load - I was restoring a firefox session with a lot of windows, and it is stuck at 1Mb all the time. But once all the windows are stored, doing a ping I can indeed have the rate going up (and eventually coming down) to 24-36Mb.
 
-Gr{oetje,eeting}s,
+Hin-Tak
 
-						Geert
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+      
