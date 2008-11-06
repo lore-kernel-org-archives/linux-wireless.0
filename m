@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57582 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907AbYKSAXw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2008 19:23:52 -0500
-Subject: [PATCH] iwlagn: fix DMA sync
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from c60.cesmail.net ([216.154.195.49]:18879 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750917AbYKFQpR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 11:45:17 -0500
+Subject: Re: problems with ath5k driver.
+From: Pavel Roskin <proski@gnu.org>
 To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
-	Christophe Dumez <dchris@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
-	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
-	Thomas Witt <witt_th@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andres Freund <andres@anarazel.de>
-In-Reply-To: <43e72e890811181520r362fd0f9w33d568935d10f732@mail.gmail.com> (sfid-20081119_002251_694020_EE2729FA)
-References: <1226969241.4014.24.camel@johannes.berg>
-	 <1227005557.4014.47.camel@johannes.berg>
-	 <43e72e890811181520r362fd0f9w33d568935d10f732@mail.gmail.com>
-	 (sfid-20081119_002251_694020_EE2729FA)
+Cc: msan <msan@email.it>, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890811051322m43efbf03gd21770be382e807d@mail.gmail.com>
+References: <geiib4$apo$2@ger.gmane.org>
+	 <20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net>
+	 <get27e$ka2$1@ger.gmane.org>
+	 <43e72e890811051322m43efbf03gd21770be382e807d@mail.gmail.com>
 Content-Type: text/plain
-Date: Wed, 19 Nov 2008 01:22:51 +0100
-Message-Id: <1227054171.4014.89.camel@johannes.berg> (sfid-20081119_012357_022836_0D8AB20B)
+Date: Thu, 06 Nov 2008 11:40:58 -0500
+Message-Id: <1225989658.4276.4.camel@dv> (sfid-20081106_174523_017914_35DFBFB9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the RX DMA fix for iwlwifi ("iwlagn: fix RX skb alignment") Luis
-pointed out:
+On Wed, 2008-11-05 at 13:22 -0800, Luis R. Rodriguez wrote:
 
-> aligned_dma_addr can obviously be > real_dma_addr at this point, what
-> guarantees we can use it on our own whim?
+> > "ath5k phy0: Support for RF2425 is under development."
+> >
+> > So it doesn't work even with linux 2.6.27.
+> 
+> Now that you are on 2.6.27 try compat-wireless:
+> 
+> http://wireless.kernel.org/en/users/Download
+> 
+> This gets you bleeding edge. Or you can also just try wireless-testing directly.
 
-I asked around, and he's right, there may be platforms that do not allow
-passing such such an address to the DMA API functions. This patch
-changes it by using the proper dma_sync_single_range_for_cpu API
-invented for this purpose.
+Actually, I tested AR5007EG with Linux 2.6.27 and it worked, even with
+WPA.  So the problem is probably elsewhere (bad antenna, lack of APs
+around, curly hands, irrational fear of things "under development" etc).
 
-Cc: Luis R. Rodriguez <mcgrof@gmail.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-19 01:16:12.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-19 01:19:13.000000000 +0100
-@@ -1229,9 +1229,11 @@ void iwl_rx_handle(struct iwl_priv *priv
- 
- 		rxq->queue[i] = NULL;
- 
--		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->aligned_dma_addr,
--					    priv->hw_params.rx_buf_size,
--					    PCI_DMA_FROMDEVICE);
-+		dma_sync_single_range_for_cpu(
-+				&priv->pci_dev->dev, rxb->real_dma_addr,
-+				rxb->aligned_dma_addr - rxb->real_dma_addr,
-+				priv->hw_params.rx_buf_size,
-+				PCI_DMA_FROMDEVICE);
- 		pkt = (struct iwl_rx_packet *)rxb->skb->data;
- 
- 		/* Reclaim a command buffer only if this packet is a response
-
-
+-- 
+Regards,
+Pavel Roskin
