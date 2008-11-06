@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60581 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:49701 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603AbYKAOx0 (ORCPT
+	with ESMTP id S1753742AbYKFNPR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 10:53:26 -0400
-Subject: Re: Michael MIC failures in AP mode?
+	Thu, 6 Nov 2008 08:15:17 -0500
+Subject: Re: b43: Everybody with PHY TX error, please try
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <87wsfnldq9.fsf@nokia.com> (sfid-20081101_153138_893209_47C4FC8F)
-References: <87wsfnldq9.fsf@nokia.com>
-	 (sfid-20081101_153138_893209_47C4FC8F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-deM09LJd5S7IIiv8s7Mk"
-Date: Sat, 01 Nov 2008 15:53:25 +0100
-Message-Id: <1225551205.3619.7.camel@johannes.berg> (sfid-20081101_155330_130972_5945C3FE)
+To: Przemek Kulczycki <przemekkulczycki@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <fe1e5a8c0811060446u4d171283t4c6cda924abcc299@mail.gmail.com> (sfid-20081106_135434_305717_BB318651)
+References: <200810242032.04295.mb@bu3sch.de>
+	 <fe1e5a8c0811060446u4d171283t4c6cda924abcc299@mail.gmail.com>
+	 (sfid-20081106_135434_305717_BB318651)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-s6Fvv7vpT4MwbdoZOrpn"
+Date: Thu, 06 Nov 2008 14:15:16 +0100
+Message-Id: <1225977316.3619.221.camel@johannes.berg> (sfid-20081106_141521_660013_CC06157B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-deM09LJd5S7IIiv8s7Mk
+--=-s6Fvv7vpT4MwbdoZOrpn
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-11-01 at 16:31 +0200, Kalle Valo wrote:
+On Thu, 2008-11-06 at 12:46 +0000, Przemek Kulczycki wrote:
+> On Fri, Oct 24, 2008 at 6:32 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> > Everybody with PHY TX error, please try updated firmware from
+> > ftp://ftp.linksys.com/opensourcecode/wrt610n/1.00.00.018/wrt610n_v1.00.=
+00.018_us.tgz
+> > (Yeah, big tarball. It's 87MB)
 
-> Now that AP mode works in mac80211 I want to use it to test Michael
-> MIC failures in a wlan driver. Any recommendations, or tips, how to
-> easily create them with mac80211 and hostapd?
+> If this tarball is so large then maybe downloading latest ubuntu
+> restricted modules will be faster.
+> http://packages.ubuntu.com/intrepid/linux-restricted-modules-2.6.27-7-gen=
+eric
+> AFAIK this package contains the proprietary Broadcom WL driver so the
+> latest firmware might be in it too.
 
-Inject frames maybe? Easiest is probably to disable hw crypto, then
-you'll see the fully encrypted frames on a new monitor interface and can
-inject them again.
+No, not at all.
 
 johannes
 
---=-deM09LJd5S7IIiv8s7Mk
+--=-s6Fvv7vpT4MwbdoZOrpn
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJDG1hAAoJEKVg1VMiehFY2NMP/Awc7oZUJpcLsks6KOB4t4x8
-izywGp3CU4X72WmoMaXpE3x9LPLWQObVwMbuFXK1RALutsSXfNBkFwxSk+EIcS+j
-xyVRrjLzAyFcc9q1zqDOSP3nRDigVAEfAiq2vVYtzsZ2iJiW0N9UVYuSLSdvPhIz
-6IBO6g+3y8swl1BYui8f8229ClRZi3dtxoqrOyt8iqc/AgqOUV2X0o3dCXJPOnt1
-RfFgsmb4IyeqxTGka2v3sLmCY8hBKUYJZ8Wt3bamREcY0LBn546ILK8qGIsrOGQI
-fUTHlZKkOrZ1bSYLbU373415xqF2+qVaOdt7E8fYVAjeQ/v4wtqBFAnycbxjIR3Z
-KXuMRM5yv6xbFewab9Bf+BZ0ipaZlAlwvJ5SAX5g3lvAUdRJ7JN9Teb4/OT5PFQP
-ieOJb/AOson9IeCfpZQm+H4SBVb+wePbPEXDdUkHpTyaPF9joRqk5tTMZwzyNzcD
-95Kcp9cgT1gr4Uo57tBDaCBCQ1JutUSKpo/jS5g1CED6wbSdo4Qa/5Wfu+qGawQX
-sWxSFUs3LJV2WVlAlc84GPD/X36TPo9ZhNjd/gPxTPsMRdaRwV9FXlsaVnh1V/LW
-IJ+Osk2G0TSAG+hRZmLoiGEFpE0gwxTC8WmB73V9+iiYcWOFOSjLrBw7VqptVWx9
-g/I88O3UR0iRHuTxbmLO
-=pBQ0
+iQIcBAABAgAGBQJJEu3gAAoJEKVg1VMiehFY52EP/ilWoGDoKMN/a6uUr2QWbg9L
++3AJ+RivrfkbvA+IOEWhvDAxchzfC+/eKo5mfBrA1SWMe+qm3kjYbV1IQZOcQgCR
+1dmktxI9HkMy8ARM5fQurYF6YPyXxuuocdHxZHTRAaNH0asnd1jBRyDlNlBLz6KV
+dEQLDrm+8BAQJX3O/HPzkw9JSqhwU3PkQT5oObbMQMfPKOUeqWbQBtUc8joEtSpD
+5hhxljXmQ9/TwdBEXgiu9QwptRzjBMH9RwKcNDKeRF829d579HIIC1QAkp+o4kiz
+m6l9a6tshATEajLGT9EWEStraIPk8CKVmg6iaWTcySckjT0pBxwseXtzNsQYBjI1
+2DhzBvZHj3GPJleD2Vx6mwKy0kHqEfkan84xwe1SYZnQFUa60bArKSkV78EVdgOz
+gw5382mXwb27Q+Ilvm1IQjUBZvr/IemoJaD/IY50d/MUq2pI4ans8BanpmJoD9tx
+4NGyy3kfvN5Y3yEV5GgHeuBoVNCjnU6Plrv+vVrWH6hj917V/JbYm884J8jiFbya
+AZ7Jxg/LGlUAhlK55uKBWJtvgxFZ31V1J9U1/ekePSDz4kvcq1l/wRke7jGKPAiH
+JWX7H/6I2JrKuvf7HWyR3CA5esvd4GOKWXOPgRdOPfbFp2Yq0qW3vBF6k9SijMPp
+vnxJs2whiKH2teBdHv4i
+=2rCr
 -----END PGP SIGNATURE-----
 
---=-deM09LJd5S7IIiv8s7Mk--
+--=-s6Fvv7vpT4MwbdoZOrpn--
 
