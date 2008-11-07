@@ -1,65 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:50053 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbYK0L0G (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33709 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300AbYKGVGD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 06:26:06 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFT][RFC][PATCH] p54: utilize cryptographic accelerator
-Date: Thu, 27 Nov 2008 12:26:05 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200811242215.00475.chunkeey@web.de> <492DE6BD.5060206@lwfinger.net>
-In-Reply-To: <492DE6BD.5060206@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811271226.05700.chunkeey@web.de> (sfid-20081127_122610_631948_7C68C5EC)
+	Fri, 7 Nov 2008 16:06:03 -0500
+Subject: Re: [PATCH v2 2/3] cfg80211: mark regdomains with >
+	NL80211_MAX_SUPP_REG_RULES invalid
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1226004327-10290-3-git-send-email-lrodriguez@atheros.com>
+References: <1226004327-10290-1-git-send-email-lrodriguez@atheros.com>
+	 <1226004327-10290-2-git-send-email-lrodriguez@atheros.com>
+	 <1226004327-10290-3-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hb33147q3hvAV/MUa4Jy"
+Date: Fri, 07 Nov 2008 22:06:02 +0100
+Message-Id: <1226091963.11203.12.camel@johannes.berg> (sfid-20081107_220608_206929_1216091A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 27 November 2008 01:15:57 Larry Finger wrote:
-> > diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> > --- a/drivers/net/wireless/p54/p54common.c	2008-11-24 21:05:42.590287518 +0100
-> > +++ b/drivers/net/wireless/p54/p54common.c	2008-11-24 22:06:13.951266225 +0100
-> > @@ -843,6 +863,8 @@ static int p54_assign_address(struct iee
-> >  
-> >  	spin_lock_irqsave(&priv->tx_queue.lock, flags);
-> >  	left = skb_queue_len(&priv->tx_queue);
-> > +	if (left > 30)
-> > +		return -ENOMEM;
-> 
-> The above returns with tx_queue.lock still set.
-Oops, this piece should be in another patch.
-So, ok it's gone now.
 
-> --snip--
-> > +		}
-> > +	}
-> > +
-> > +	mutex_lock(&priv->conf_mutex);
-> > +	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*rxkey) +
-> > +			sizeof(struct p54_hdr),	P54_CONTROL_TYPE_RX_KEYCACHE,
-> > +			GFP_ATOMIC);
-> > +	if (!skb) {
-> > +		mutex_unlock(&priv->conf_mutex);
-> > +		return -ENOMEM;
-> > +	}
-> > +
-> > +	rxkey = (struct p54_keycache *)skb_put(skb, sizeof(*rxkey));
-> > +	rxkey->entry = cpu_to_le16(key->keyidx);
-> > +	rxkey->key_id = cpu_to_le16(key->keyidx);
-> 
-> Sparse objects to the above two statments because key->keyidx is of type s8, and
-> both rxkey->entry and rxkey->key_id are of type u8. A conversion to le16 is not
-> needed.
-> 
-> A patch for both problems is below:
-Thanks... I guess the final RFT/RFC will be ready on friday/saturday.
-there are a two outstanding issues:
-	- do we need to swap CCMP's IV as well?
-	- does MIC failure & replay detection work?
-		(or did you test that, when you were working with TKIP?)
+--=-hb33147q3hvAV/MUa4Jy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-	Chr
+On Thu, 2008-11-06 at 12:45 -0800, Luis R. Rodriguez wrote:
+> Lets remain consistent and mark rds with > NL80211_MAX_SUPP_REG_RULES
+> number of reg rules as invalid in is_valid_rd().
+>=20
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+Seems fine, if that's not userspace triggerable, but it isn't, right?
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/wireless/reg.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index f8e7beb..f0ff3d1 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -352,6 +352,9 @@ static bool is_valid_rd(const struct ieee80211_regdom=
+ain *rd)
+>  	if (!rd->n_reg_rules)
+>  		return false;
+> =20
+> +	if (WARN_ON(rd->n_reg_rules > NL80211_MAX_SUPP_REG_RULES))
+> +		return false;
+> +
+>  	for (i =3D 0; i < rd->n_reg_rules; i++) {
+>  		reg_rule =3D &rd->reg_rules[i];
+>  		if (!is_valid_reg_rule(reg_rule))
+
+--=-hb33147q3hvAV/MUa4Jy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJFK23AAoJEKVg1VMiehFY9d8QAJLhhb9IrrwhJbg4F1tkF7/+
+iMzxod93MO3LFqor44jKZjCwUjTBPpjrcfiLYUoqFd6mLqwdYjyXmipPc+sV45zK
+wDD09l5GmGLnRPyxk8a1swJdLbiZyuus94QwjrXU+6kD4idpPO/YzFJF/MWvpJq+
+c6s0yvg7UzVsRtvlxSoASPWTStx7i9lzeWmnRZmSrUmp6mm7Z4RLVoSNyttzVIiG
+4fBXzdPC9L0TDO2wrxKL95FXr8C4QMkS8Cs2Hn5NnbjhB9p5QV5BMRf23Hl5KgFE
+yChIvZuBBmOme3DiQEaDKnZi1k1zOcMrIRtjkqBpoNB/8W8adndqf06H/rSOWbL+
+2Zgg+zFH97vTXYmcREjsuo6bVGcdfQj8b/j0VPYVoKTJF5tKdgwz3iLDmLZkqvuh
+TNZl1/wxWWBvhRIpZCLFYBrTFt1j8RTpKJpxP0Q401MPo1Ti8cK5CJxDMpNTPPep
+9Uz1MTClhPTvB1VwIW3VLcY0Mkbw4smtRSOOhKKLIHvYPAaKrdz7LZogj4kkGEPf
+Qf3CdqSFea3SSyiRnHEap1wH2uRTGY+Wa4qGeQKI0ItI1MCS9csky2bViue5Wem+
+Qc4E0IjoXd1AGEfmfgzHRRlod0i+g0g5871rCU9ywpynqyhb8y3wJSSUiiMxBLMA
+NNihyiaHOVQxch/P3JQi
+=Sve0
+-----END PGP SIGNATURE-----
+
+--=-hb33147q3hvAV/MUa4Jy--
+
