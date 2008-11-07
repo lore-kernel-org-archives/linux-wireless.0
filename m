@@ -1,26 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:49759 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754844AbYKCKRI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 05:17:08 -0500
-Message-ID: <490ECF97.90601@openwrt.org> (sfid-20081103_111714_427240_B85ADD41)
-Date: Mon, 03 Nov 2008 11:16:55 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:64947 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752324AbYKGAsd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 19:48:33 -0500
+Message-ID: <4913905F.4080203@lwfinger.net> (sfid-20081107_014838_037176_10DCBA7A)
+Date: Thu, 06 Nov 2008 16:48:31 -0800
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: enable RXing beacons
-References: <1225672612-15106-1-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1225672612-15106-1-git-send-email-lrodriguez@atheros.com>
+To: Wilson Ribeiro <wribjr@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	=?ISO-8859-1?Q?Stefanik_G=E1?= =?ISO-8859-1?Q?bor?=
+	<netrolller.3d@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Realtek wireless 8187se
+References: <740646d0811040501w5571d464u757e05399803f768@mail.gmail.com>	 <69e28c910811040852u7f3f3481t7bf31ad3af8c03ad@mail.gmail.com>	 <49108E26.4040205@lwfinger.net> <740646d0811041021qd4ab88bs434ddb8d1ad65a80@mail.gmail.com>
+In-Reply-To: <740646d0811041021qd4ab88bs434ddb8d1ad65a80@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> Prior to this we would rely only on probe responses
-> from the AP to keep associated. We now receive beacons
-> on ath5k. This should fix sporadic disassociations.
-IMHO beacons should be received in AP mode as well, at least
-in 11g mode (for automatically enabling protection mode).
+I found someone that has hacked the 8185 driver to work with the 8187se. If you
+are willing to test, I will look at the differences between his driver and the
+Realtek version that he started with.
 
-- Felix
+If you want to participate, you will need the 2.6.27 kernel of the
+wireless-testing git tree (better) and the tools to build your own kernel. That
+will include (at least) make and gcc. For the wireless-testing kernel, you will
+also need git.
+
+Larry
