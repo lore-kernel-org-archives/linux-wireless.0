@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:43216 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752692AbYKSMZB (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:32857 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776AbYKGU6y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 07:25:01 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so3676458wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 04:25:00 -0800 (PST)
-Message-ID: <1ba2fa240811190424v4b9074e5u4e679bea278b1f3@mail.gmail.com> (sfid-20081119_132506_697331_EBB54972)
-Date: Wed, 19 Nov 2008 14:24:59 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"reinette chatre" <reinette.chatre@intel.com>,
-	"Marcel Holtmann" <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1227094832.26243.10.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1226969241.4014.24.camel@johannes.berg>
-	 <1227001390.4014.43.camel@johannes.berg>
-	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
-	 <1227055693.4014.95.camel@johannes.berg>
-	 <1ba2fa240811190121h3ff51824o90b72a206192e793@mail.gmail.com>
-	 <1227094832.26243.10.camel@johannes.berg>
+	Fri, 7 Nov 2008 15:58:54 -0500
+Subject: Re: [PATCH 01/13] iwlagn: fix resume for ADHOC network
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Mohamed Abbas <mohamed.abbas@intel.com>
+In-Reply-To: <1226080726-24860-2-git-send-email-reinette.chatre@intel.com> (sfid-20081107_185819_873292_6E3A05A1)
+References: <> <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
+	 (sfid-20081107_185819_873292_6E3A05A1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-O1/hQjlU1DuaIbLh+wnZ"
+Date: Fri, 07 Nov 2008 21:58:53 +0100
+Message-Id: <1226091533.11203.6.camel@johannes.berg> (sfid-20081107_215857_885352_2708AF24)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2008 at 1:40 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-11-19 at 11:21 +0200, Tomas Winkler wrote:
->
->> > Indeed. One would seem to be the buffer list itself, which also needs to
->> > fit within a 40-bit mask with 256 alignment (rxq->bd), the rb_stts needs
->> > 16-byte alignment which probably is always satisfied, but I'm not sure,
->> > you'll need to research the alignment guarantees.
->>
->> Note these are allocated using persistent calls and not kmalloc I hope
->> at least does are page alignment.
->
-> Good point. On powerpc at least that uses alloc_pages internally.
 
-Not sure if if wouldn't be better just work directly with pages in RX?
+--=-O1/hQjlU1DuaIbLh+wnZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Tomas
+On Fri, 2008-11-07 at 09:58 -0800, Reinette Chatre wrote:
+> From: Mohamed Abbas <mohamed.abbas@intel.com>
+>=20
+>  ieee80211_notify_mac only reconnect BSS networks. Since IBSS does
+>  not need any auth or assoc steps we can just resume to the same
+>  condition before suspend. This patch will reestablish the ad-hoc
+>  network once it comes back from resume.
+>=20
+> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=3D1774
+
+This is fine, I guess, but I'd really love people to spend some time on
+just making suspend work in mac80211, then all this code can be deleted
+again :)
+
+johannes
+
+--=-O1/hQjlU1DuaIbLh+wnZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJFKwJAAoJEKVg1VMiehFYykwP/jzYWgRoxCvrWPj3FYwg6eQF
+Sbe5I/RSo9IOHddRBJ+mJvhp0wtDXR0juykQgxC9UfIi9PaUPddc3OiSaxz1TnqZ
+Gz/EVti0OreFHRQL9eaRhl102oXIfWY4rcWo4DEa+PDseFIfCtXNBXYCOYNf0Qpe
+9WBZ9FzbFAEhORnbituEXs7Sg0L2KRwrb9ARidgZWhx8ed8h4Zxi2HV64v+IJiPi
+Mrp53Ez89AHkiYgHrJUv3poHdxeoVZ4sS+SuxvdM1b/5Sf9W5RgJKEGhRx4VyuRZ
+Ra0Pu2sML7U+B9bHGIcrjD0Lsw9JWADuUvfsIH3uZCQ4zsMusV4YSWUITdgheZQU
+FgOaLM78+9u50qQdl7YRkEgmHJ7MH619KGmUU2JaTHpB+q5cWBtymqWIXYp+O08e
+rsB2hHwSow/rRytyUOtXhz7EQJoQQGmRowIEAMOg79Shd5axHL7P5RcCm4YVC54x
+ivMyjUCaWli3OJftENZ0bUozF7iHvQ3vvjZID4TejOlWsbTwqgVxRNrwMccM9E6k
+kZtxdalei5seLr1TnupWORxSS7+VZHMSaP63t48ndwxp/bFZHWspJY6Yo3gkBRNT
+AM44rtr1njzYRUDy3+jzW80BJRgcAbhuUVh6tSh3rQwhE4ZoXbwrt7u7bDX6eqYP
+isC3MagBv5qmupZWCenL
+=OIqi
+-----END PGP SIGNATURE-----
+
+--=-O1/hQjlU1DuaIbLh+wnZ--
+
