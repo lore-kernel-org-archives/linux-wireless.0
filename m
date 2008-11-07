@@ -1,80 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47580 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751181AbYKTSx2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 13:53:28 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 10:53:28 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>
-Subject: [PATCH] ath9k: Dont update rate control for every AMPDU
-Date: Thu, 20 Nov 2008 11:51:18 +0530
-Message-ID: <1227162078-6042-1-git-send-email-vasanth@atheros.com> (sfid-20081120_195334_811665_2F57A3B7)
-MIME-Version: 1.0
+Received: from yw-out-2324.google.com ([74.125.46.28]:1254 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091AbYKGSEF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2008 13:04:05 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so545601ywe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2008 10:04:04 -0800 (PST)
+Subject: Re: [PATCH 10/13] iwlwifi: move iwl_print_hex_dump to iwl-debug.h
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+In-Reply-To: <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
+References: <> <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-7-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-8-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-9-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
 Content-Type: text/plain
+Date: Fri, 07 Nov 2008 10:03:59 -0800
+Message-Id: <1226081039.11596.20.camel@brick> (sfid-20081107_190410_391297_D8B9A728)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the rate control only with the tx status of first
-AMPDU of an aggregation. This patch fixes frequent drops
-in throughput.
+On Fri, 2008-11-07 at 09:58 -0800, Reinette Chatre wrote:
+> From: Winkler, Tomas <tomas.winkler@intel.com>
+> 
+> This patch moves iwl_print_hex_dump to iwl-debug.h
+> where it belongs
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-debug.h |   10 ++++++++++
+>  drivers/net/wireless/iwlwifi/iwl-dev.h   |   17 -----------------
+>  2 files changed, 10 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+> index 84b7772..0e79a6a 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-debug.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+> @@ -40,6 +40,13 @@ do { if ((priv->debug_level & (level)) && net_ratelimit()) \
+>    dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), "%c %s " fmt, \
+>  	 in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+>  
+> +#define iwl_print_hex_dump(priv, level, p, len) 			\
+> +do {                                            			\
+> +	if (priv->debug_level & level)          			\
+> +		print_hex_dump(KERN_DEBUG, "iwl data: ",		\
+> +			       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);	\
+> +} while (0)
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath9k/rc.c   |    3 ++-
- drivers/net/wireless/ath9k/rc.h   |    1 +
- drivers/net/wireless/ath9k/xmit.c |    2 ++
- 3 files changed, 5 insertions(+), 1 deletions(-)
+static inline please.
 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index e118824..7d1913d 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1413,7 +1413,8 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	an = (struct ath_node *)sta->drv_priv;
- 	final_ts_idx = tx_info_priv->tx.ts_rateindex;
- 
--	if (!an || !priv_sta || !ieee80211_is_data(fc))
-+	if (!an || !priv_sta || !ieee80211_is_data(fc) ||
-+	    !tx_info_priv->update_rc)
- 		goto exit;
- 
- 	if (tx_info_priv->tx.ts_status & ATH9K_TXERR_FILT)
-diff --git a/drivers/net/wireless/ath9k/rc.h b/drivers/net/wireless/ath9k/rc.h
-index 297dff9..97c60d1 100644
---- a/drivers/net/wireless/ath9k/rc.h
-+++ b/drivers/net/wireless/ath9k/rc.h
-@@ -188,6 +188,7 @@ struct ath_tx_info_priv {
- 	struct ath_tx_status tx;
- 	int n_frames;
- 	int n_bad_frames;
-+	bool update_rc;
- };
- 
- #define ATH_TX_INFO_PRIV(tx_info) \
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 50d4105..dad81a9 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -950,6 +950,7 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_desc *ds, int nbad)
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ath_tx_info_priv *tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
- 
-+	tx_info_priv->update_rc = false;
- 	if (ds->ds_txstat.ts_status & ATH9K_TXERR_FILT)
- 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
- 
-@@ -960,6 +961,7 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_desc *ds, int nbad)
- 			       sizeof(tx_info_priv->tx));
- 			tx_info_priv->n_frames = bf->bf_nframes;
- 			tx_info_priv->n_bad_frames = nbad;
-+			tx_info_priv->update_rc = true;
- 		}
- 	}
- }
--- 
-1.5.5.1
+> +
+>  #ifdef CONFIG_IWLWIFI_DEBUGFS
+>  struct iwl_debugfs {
+>  	const char *name;
+> @@ -70,6 +77,9 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv);
+>  #else
+>  #define IWL_DEBUG(level, fmt, args...)
+>  #define IWL_DEBUG_LIMIT(level, fmt, args...)
+> +static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
+> +				      void *p, u32 len)
+> +{}
+>  #endif				/* CONFIG_IWLWIFI_DEBUG */
+
+To keep it in sync with this.
+
+Cheers,
+
+Harvey
 
