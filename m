@@ -1,68 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39192 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752863AbYKZIku (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 03:40:50 -0500
-Subject: Re: [RFC] nl80211: Add frequency configuration (including HT40)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <m.sujith@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <18732.54720.739365.435163@localhost.localdomain> (sfid-20081126_055341_209295_AA6EF881)
-References: <20081125190533.GA27879@jm.kir.nu>
-	 <18732.54720.739365.435163@localhost.localdomain>
-	 (sfid-20081126_055341_209295_AA6EF881)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6M+b4ABf/A3FLQssjeqQ"
-Date: Wed, 26 Nov 2008 09:40:45 +0100
-Message-Id: <1227688845.4613.53.camel@johannes.berg> (sfid-20081126_094058_766579_B2EA694B)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:53924 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751342AbYKGVMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2008 16:12:03 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2008 13:12:03 -0800
+Date: Fri, 7 Nov 2008 13:12:00 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/3] cfg80211: mark regdomains with >
+	NL80211_MAX_SUPP_REG_RULES invalid
+Message-ID: <20081107211200.GB5912@tesla> (sfid-20081107_221208_253196_EF2631E6)
+References: <1226004327-10290-1-git-send-email-lrodriguez@atheros.com> <1226004327-10290-2-git-send-email-lrodriguez@atheros.com> <1226004327-10290-3-git-send-email-lrodriguez@atheros.com> <1226091963.11203.12.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1226091963.11203.12.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Nov 07, 2008 at 01:06:02PM -0800, Johannes Berg wrote:
+> On Thu, 2008-11-06 at 12:45 -0800, Luis R. Rodriguez wrote:
+> > Lets remain consistent and mark rds with > NL80211_MAX_SUPP_REG_RULES
+> > number of reg rules as invalid in is_valid_rd().
+> > 
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> 
+> Seems fine, if that's not userspace triggerable, but it isn't, right?
 
---=-6M+b4ABf/A3FLQssjeqQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Nope, nl80211 has a check of its own, hence the addition of the
+WARN_ON().
 
-On Wed, 2008-11-26 at 10:21 +0530, Sujith wrote:
-> Jouni Malinen wrote:
-> > + * @NL80211_ATTR_WIPHY_FREQ: frequency of the selected channel in MHz
-> > + * @NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET: included with NL80211_ATTR_WIP=
-HY_FREQ
-> > + *	if HT40 (40 MHz channels) are allowed:
-> > + *	NL80211_SEC_CHAN_BELOW =3D secondary channel is below the primary c=
-hannel
-> > + *	NL80211_SEC_CHAN_ABOVE =3D secondary channel is above the primary c=
-hannel
->=20
-> The driver needs to know if the selected channel is HT or not.
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Can you explain what difference that makes? Is it for running the phy in
-pure legacy mode?
+Thanks,
 
-johannes
-
---=-6M+b4ABf/A3FLQssjeqQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJLQuJAAoJEKVg1VMiehFYLAQQAKf/88Ol8slRHRB8aRKmJjb1
-u6D37rTu9U/MLlm9aOi95p4+zuSsm6M9+tjvwtPYsw44OMIC1tP4fm5c1PbpEDO1
-3b4k5ZyAtGyvudaLFFhUdmUNz6Lg+qfvAIG3jltskCZSc7b2AXdXrFNyBdi2Bl5M
-HZJ0mEAaSiUBzEsWMugCuTVV6OyxJGTAkDpCpq7FmGvHdBxaZp+4A9SIr0UVk/vI
-UhuWTuCIcxtAYhwDJ9+sC4Q0ZzRHRKGPClMUxoqvmUi/X40PMWB2gtjd3C2MUeWq
-KF+KCWJyphEgfeU14ItXzoasQByEgh4aBnmBJI8pREy8ivL84AVH1Yl6Ki5llOL/
-EdRBJML4gK2hH0qLF1bvs6heCrQdbllRie02sutWc6dWiCAYKriQwp5SOsx990nD
-xruyDqcXAqL2PkHQR6xVJoenpif6Qp7DgwWcgdTqIqABZBKc5E/YxVWST1LYR8We
-u4A2vJeKKyEOgm4PVfWrbDYLyUGEzt540laKwFrHojz4SkBip9lPAtTPpquvv2ES
-+9438aqCfU/MfjWVZO/E6ydlHKvafCv0MluhsV04QYk/pOuVd14er4H3LO4R8Wwr
-4/YbeHyI9uMFw7iA4J5vOkkzYZSazuiZzl2Fcp6yz+3tnMNSEM2Q7mww22KzUf6B
-kc5ojl9FQcNHyfCjssBY
-=fMXN
------END PGP SIGNATURE-----
-
---=-6M+b4ABf/A3FLQssjeqQ--
-
+  Luis
