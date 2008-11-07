@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24643 "EHLO mail.atheros.com"
+Received: from mga03.intel.com ([143.182.124.21]:61306 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752630AbYKHCBN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 21:01:13 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2008 18:01:13 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>, <yi.zhu@intel.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] iwlwifi: enable custom fw regulatory solution
-Date: Fri, 7 Nov 2008 18:01:08 -0800
-Message-ID: <1226109668-13778-3-git-send-email-lrodriguez@atheros.com> (sfid-20081108_030118_190090_9782F13A)
-In-Reply-To: <1226109668-13778-2-git-send-email-lrodriguez@atheros.com>
-References: <1226109668-13778-1-git-send-email-lrodriguez@atheros.com>
- <1226109668-13778-2-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1751121AbYKGUJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2008 15:09:42 -0500
+Subject: Re: [PATCH 11/13] iwl3945 : Simplify iwl3945_send_beacon_cmd
+From: reinette chatre <reinette.chatre@intel.com>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
+In-Reply-To: <1226081360.11596.25.camel@brick>
+References: <> <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-7-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-8-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-9-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-12-git-send-email-reinette.chatre@intel.com>
+	 <1226081360.11596.25.camel@brick>
 Content-Type: text/plain
+Date: Fri, 07 Nov 2008 12:10:05 -0800
+Message-Id: <1226088605.1115.692.camel@rc-desk> (sfid-20081107_210949_254330_C80DE422)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This enables the custom firmware regulatory solution option
-on iwlwifi drivers. These devices are uncapable of mapping their
-EEPROM regulatory domain to a specific ISO / IEC alpha2.
-Although the new 11n devices (>= iwl 50000) have only
-3 regultaory SKUs -- MOW, ABG (no N) and BG -- the older
-devices (3945 and 4965) have a more complex SKU arrangement
-and therefore its not practical to move this to the driver.
+On Fri, 2008-11-07 at 10:09 -0800, Harvey Harrison wrote:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c     |    3 +++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+> Perhaps a helpful define for these two magic mask values is called for.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 8eb0203..053ac55 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -879,6 +879,9 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 		BIT(NL80211_IFTYPE_AP) |
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
-+
-+	hw->wiphy->fw_handles_regulatory = true;
-+
- 	/* Default value; 4 EDCA QOS priorities */
- 	hw->queues = 4;
- 	/* queues to support 11n aggregation */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 7222d7c..624a884 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -7839,6 +7839,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
- 
-+	hw->wiphy->fw_handles_regulatory = true;
-+
- 	/* 4 EDCA QOS priorities */
- 	hw->queues = 4;
- 
--- 
-1.5.6.3
+yes ... the defines are actually available already ... we just need to
+use it here. Will send another patch on top of this as this is not the
+only spot we are using these magic values.
+
+Reinette
 
