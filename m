@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37051 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753208AbYKFIvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 03:51:25 -0500
-From: Alexey Fisher <bug-track@fisher-privat.net>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, rjw@sisk.pl,
-	kernel-testers@vger.kernel.org, torvalds@linux-foundation.org,
-	yi.zhu@intel.com, Alexey Fisher <bug-track@fisher-privat.net>
-Subject: [PATCH] ipw2200: make assocaittion only if SSID is known.
-Date: Thu,  6 Nov 2008 09:51:16 +0100
-Message-Id: <1225961476-5658-1-git-send-email-bug-track@fisher-privat.net> (sfid-20081106_095130_381333_E35BA0BA)
+Received: from waste.org ([66.93.16.53]:36253 "EHLO waste.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828AbYKGF6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2008 00:58:50 -0500
+Subject: Re: iwlagn: wrong command queue 31, command id 0x0
+From: Matt Mackall <mpm@selenic.com>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <5109BB99-53F1-499A-9D0B-FAB77591FBD5@linux.intel.com>
+References: <1225944979.3792.3.camel@calx>
+	 <5109BB99-53F1-499A-9D0B-FAB77591FBD5@linux.intel.com>
+Content-Type: text/plain
+Date: Thu, 06 Nov 2008 23:58:38 -0600
+Message-Id: <1226037518.3023.60.camel@calx> (sfid-20081107_065855_298314_B002C68F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'iwconfig eth1 channel 6' would trigger association to _something_, 
-which is wrong.  Changing the channel should (and does) trigger reassociation, 
-but only if there is an SSID to associate with.
+On Fri, 2008-11-07 at 05:40 +0100, Marcel Holtmann wrote:
+> Hi Matt,
+> 
+> > [ 5470.869820] WARNING: at drivers/net/wireless/iwlwifi/iwl-tx.c:1204
+> > iwl_rx_handle+0x11a/0x21b [iwlagn]()
+> > [ 5470.869824] wrong command queue 31, command id 0x0
+> 
+> I am seeing this a lot with my X61 running a 64-bit kernel/OS and my D- 
+> Link DIR-615 access point. With some other access points I am seeing  
+> it never or a lot less.
 
-Signed-off-by: Alexey Fisher <bug-track@fisher-privat.net>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
+> What kind of laptop and access point are you using? Is you access  
+> point 802.11n capable? Do you run the i386 or x86_64 version of your  
+> distro?
 
----
- drivers/net/wireless/ipw2200.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+Laptop is a Fujitsu 8010p. I've tried this with kernel only once with a
+G-capable Airport (with various other unknown access points in range),
+but it failed to find any networks. 64-bit kernel and Debian unstable.
 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index dcce354..d26beed 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -7581,8 +7581,7 @@ static int ipw_associate(void *data)
- 	}
- 
- 	if (!(priv->config & CFG_ASSOCIATE) &&
--	    !(priv->config & (CFG_STATIC_ESSID |
--			      CFG_STATIC_CHANNEL | CFG_STATIC_BSSID))) {
-+	    !(priv->config & (CFG_STATIC_ESSID | CFG_STATIC_BSSID))) {
- 		IPW_DEBUG_ASSOC("Not attempting association (associate=0)\n");
- 		return 0;
- 	}
+2.6.27 mostly works fine here, though occasionally I need to load/unload
+iwlagn after s2ram.
+
 -- 
-1.5.6.3
+Mathematics is the supreme nostalgia of our time.
 
