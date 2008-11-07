@@ -1,48 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12972 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:30374 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751479AbYKQU15 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 15:27:57 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 12:27:57 -0800
-Date: Mon, 17 Nov 2008 12:27:49 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Davide Pesavento <davidepesa@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: crda packaging
-Message-ID: <20081117202749.GB5994@tesla> (sfid-20081117_212800_758659_4D6EA736)
-References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com> <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com> <2da21fe50811161258v58efe236r492d59c8b9228b81@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <2da21fe50811161258v58efe236r492d59c8b9228b81@mail.gmail.com>
+	id S1751828AbYKGR6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2008 12:58:18 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/13] iwlwifi: move iwl_print_hex_dump to iwl-debug.h
+Date: Fri,  7 Nov 2008 09:58:43 -0800
+Message-Id: <1226080726-24860-11-git-send-email-reinette.chatre@intel.com> (sfid-20081107_190857_600305_A86107F9)
+In-Reply-To: <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-7-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-8-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-9-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 16, 2008 at 12:58:43PM -0800, Davide Pesavento wrote:
-> On Mon, Oct 20, 2008 at 02:28, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Sun, Oct 19, 2008 at 8:57 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
-> >>
-> >> Do you think the regulatory database should be split from the package
-> >> that contains the crda daemon? If so, regulatory.bin should be
-> >> versioned as well...
-> >
-> > Yes, absolutely, the idea is to split db.txt into a separate git tree
-> > too actually so that should help with keeping track of changes
-> > separately and thinking of them separately.
-> >
-> > We just need to get this git tree created. What crda will need though
-> > is to wget the RSA public key so it can be built with support for new
-> > arbitrary updates to the binary db. Give us a few days, we'll get this
-> > setup.
-> >
-> >  Luis
-> >
-> 
-> Any updates on this?
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-I think we'll have this done by the end of the day.
+This patch moves iwl_print_hex_dump to iwl-debug.h
+where it belongs
 
-  Luis
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debug.h |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h   |   17 -----------------
+ 2 files changed, 10 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 84b7772..0e79a6a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -40,6 +40,13 @@ do { if ((priv->debug_level & (level)) && net_ratelimit()) \
+   dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), "%c %s " fmt, \
+ 	 in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+ 
++#define iwl_print_hex_dump(priv, level, p, len) 			\
++do {                                            			\
++	if (priv->debug_level & level)          			\
++		print_hex_dump(KERN_DEBUG, "iwl data: ",		\
++			       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);	\
++} while (0)
++
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ struct iwl_debugfs {
+ 	const char *name;
+@@ -70,6 +77,9 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv);
+ #else
+ #define IWL_DEBUG(level, fmt, args...)
+ #define IWL_DEBUG_LIMIT(level, fmt, args...)
++static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
++				      void *p, u32 len)
++{}
+ #endif				/* CONFIG_IWLWIFI_DEBUG */
+ 
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 4126a4c..7b51dd9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1088,23 +1088,6 @@ static inline int is_channel_ibss(const struct iwl_channel_info *ch)
+ 	return ((ch->flags & EEPROM_CHANNEL_IBSS)) ? 1 : 0;
+ }
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
+-				      void *p, u32 len)
+-{
+-	if (!(priv->debug_level & level))
+-		return;
+-
+-	print_hex_dump(KERN_DEBUG, "iwl data: ", DUMP_PREFIX_OFFSET, 16, 1,
+-			p, len, 1);
+-}
+-#else
+-static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
+-				      void *p, u32 len)
+-{
+-}
+-#endif
+-
+ extern const struct iwl_channel_info *iwl_get_channel_info(
+ 	const struct iwl_priv *priv, enum ieee80211_band band, u16 channel);
+ 
+-- 
+1.5.4.3
+
