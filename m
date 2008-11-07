@@ -1,82 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f11.google.com ([209.85.217.11]:61057 "EHLO
-	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751349AbYKNUlH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 15:41:07 -0500
-Received: by gxk4 with SMTP id 4so836002gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 12:41:05 -0800 (PST)
-Message-ID: <43e72e890811141241k7ae83fc3qe90e2e42d61b8df6@mail.gmail.com> (sfid-20081114_214111_162938_D677F72D)
-Date: Fri, 14 Nov 2008 12:41:05 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Cc: "Dan McGee" <dpmcgee@gmail.com>, Sujith <m.sujith@gmail.com>,
-	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
-	 <43e72e890811140937h4dc03cf8g50df7f74efcd28b2@mail.gmail.com>
-	 <b6c5339f0811140949m462e3eecx49f114f729b33e7c@mail.gmail.com>
-	 <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
-	 <18717.49111.572993.44410@localhost.localdomain>
-	 <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com>
-	 <18717.50308.330801.765686@localhost.localdomain>
-	 <43e72e890811141037j5328f71fx7badb6f2b0e0831d@mail.gmail.com>
-	 <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com>
-	 <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:30374 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752218AbYKGR6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2008 12:58:19 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, "Zhu, Yi" <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 13/13] iwlwifi: use Rx single frame mode (one Rx frame per RB)
+Date: Fri,  7 Nov 2008 09:58:46 -0800
+Message-Id: <1226080726-24860-14-git-send-email-reinette.chatre@intel.com> (sfid-20081107_190902_973855_80D13144)
+In-Reply-To: <1226080726-24860-13-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-7-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-8-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-9-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-12-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-13-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2008 at 12:33 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Fri, Nov 14, 2008 at 2:33 PM, Dan McGee <dpmcgee@gmail.com> wrote:
->> On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> On Fri, Nov 14, 2008 at 10:33 AM, Sujith <m.sujith@gmail.com> wrote:
->>>> Luis R. Rodriguez wrote:
->>>>> > From the original log:
->>>>> > ath5k_pci 0000:01:00.0: registered as ''
->>>>>
->>>>> That comes from
->>>>>
->>>>> dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
->>>>>
->>>>> which means that may be buggy too as wiphy_name() gets
->>>>>
->>>>> return wiphy->dev.bus_id;
->>>>>
->>>>> and we only have set at that point wiphy->dev.parent IIRC.
->>>>>
->>>>
->>>> Nope, parent is set after that call in SET_IEEE80211_DEV()
->>>> phy[x] gets assigned in alloc_hw().
->>>>
->>>> So why is it NULL even if alloc_hw() succeeds ?
->>>
->>> Parent is wiphy->dev.parent not wiphy->dev though
->
-> Sujith is right, wiphy->dev.bus_id should be set by the time that's printed,
-> since wiphy_new in alloc_hw fills it in.
+From: Zhu, Yi <yi.zhu@intel.com>
 
-Ah, I see, yes, oh man. Well this is good :)
+The RCSR default value for single frame mode is off (a RB contains more than
+one frames). But the driver assumes single frame mode apparently. This patch
+enables single frame mode for the hardware. It also adds a BUG_ON to make sure
+the allocated skb satisfies the hardware alignment requirement and removes
+a useless check.
 
-> Curiouser and curiouser.  I look
-> forward to this being an obvious and embarrassing bug :)
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fh.h |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-rx.c |    8 ++++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-I sure hope so.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index 2c5f919..e46300c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -266,6 +266,8 @@
+ #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL    (0x00000000)
+ #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL  (0x00001000)
+ 
++#define FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME	(0x00008000)
++
+ 
+ /**
+  * Rx Shared Status Registers (RSSR)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 516cd11..90e6648 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -218,8 +218,7 @@ int iwl_rx_queue_restock(struct iwl_priv *priv)
+ 
+ 	/* If we've added more space for the firmware to place data, tell it.
+ 	 * Increment device's write pointer in multiples of 8. */
+-	if ((write != (rxq->write & ~0x7))
+-	    || (abs(rxq->write - rxq->read) > 7)) {
++	if (write != (rxq->write & ~0x7)) {
+ 		spin_lock_irqsave(&rxq->lock, flags);
+ 		rxq->need_update = 1;
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+@@ -268,6 +267,10 @@ void iwl_rx_allocate(struct iwl_priv *priv)
+ 		/* Get physical address of RB/SKB */
+ 		rxb->dma_addr = pci_map_single(priv->pci_dev, rxb->skb->data,
+ 			   priv->hw_params.rx_buf_size, PCI_DMA_FROMDEVICE);
++
++		/* RBD must be 256 bytes aligned and no more than 36 bits */
++		BUG_ON(rxb->dma_addr & (~DMA_BIT_MASK(36) & 0xff));
++
+ 		list_add_tail(&rxb->list, &rxq->rx_free);
+ 		rxq->free_count++;
+ 	}
+@@ -431,6 +434,7 @@ int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+ 			   FH_RCSR_RX_CONFIG_CHNL_EN_ENABLE_VAL |
+ 			   FH_RCSR_CHNL0_RX_IGNORE_RXF_EMPTY |
+ 			   FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL |
++			   FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME |
+ 			   rb_size|
+ 			   (rb_timeout << FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_POS)|
+ 			   (rfdnlog << FH_RCSR_RX_CONFIG_RBDCB_SIZE_POS));
+-- 
+1.5.4.3
 
->> So I'm at work for another 4 or 5 hours, but I should have a chance to
->> hack at anything tonight you guys want me to. Let me know if the
->> earlier suggestions in this thread still apply.
->
-> I think the printks will still be useful, if only to verify we're on
-> the right track.  Which compat-wireless version are you using?
->
-> BTW from kerneloops, several people are having this with other drivers than
-> ath5k.
-
-Yeah I ran into it with iwlagn a few days ago but never found the root
-cause, it was sporadic.
-
-  Luis
