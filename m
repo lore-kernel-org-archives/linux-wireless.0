@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48212 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752583AbYKTBQM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 20:16:12 -0500
-Date: Wed, 19 Nov 2008 20:03:19 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-wireless@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: m68k: linux-next allmodconfig
-Message-ID: <20081120010318.GA13464@tuxdriver.com> (sfid-20081120_021616_295028_B7907D51)
-References: <20081119170211.b4029fc4.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081119170211.b4029fc4.akpm@linux-foundation.org>
+Received: from mga03.intel.com ([143.182.124.21]:43982 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751358AbYKGSSX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2008 13:18:23 -0500
+Subject: Re: [PATCH 09/13] iwl3945 : Fix Sparse Warnings
+From: reinette chatre <reinette.chatre@intel.com>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
+In-Reply-To: <1226081276.11596.24.camel@brick>
+References: <> <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-7-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-8-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-9-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
+	 <1226081276.11596.24.camel@brick>
+Content-Type: text/plain
+Date: Fri, 07 Nov 2008 10:18:55 -0800
+Message-Id: <1226081935.1115.688.camel@rc-desk> (sfid-20081107_191826_852814_5C7183FA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2008 at 05:02:11PM -0800, Andrew Morton wrote:
+On Fri, 2008-11-07 at 10:07 -0800, Harvey Harrison wrote:
+> On Fri, 2008-11-07 at 09:58 -0800, Reinette Chatre wrote:
+> > From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
+> >
+> > Patch fixes sparse warnings. No need to convert u8 variable
+> > to 32.
+> >
+> > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> > ---
 > 
-> include/net/mac80211.h: In function 'ieee80211_tx_info_clear_status':
-> include/net/mac80211.h:400: error: size of array 'type name' is negative
-> include/net/mac80211.h:405: error: size of array 'type name' is negative
-> 
-> due to:
-> 
-> static inline void
-> ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-> {
->         int i;
-> 
->         BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) !=
->                      offsetof(struct ieee80211_tx_info, control.rates));
->         BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) !=
->                      offsetof(struct ieee80211_tx_info, driver_rates));
-> -->     BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) != 8);
->         /* clear the rate counts */
->         for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
->                 info->status.rates[i].count = 0;
-> 
-> -->     BUILD_BUG_ON(
->             offsetof(struct ieee80211_tx_info, status.ampdu_ack_len) != 23);
->         memset(&info->status.ampdu_ack_len, 0,
->                sizeof(struct ieee80211_tx_info) -
->                offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
-> }
+> It's customary to put the actual sparse warnings being fixed in the
+> commit message.  
 
-I just sent a pull request yesterday that contains a patch to correct this.
+sorry - will do next time.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+> In this case I assume it was this:
+> 
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:4838:18: warning: invalid assignment: |=
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:4838:18:    left side has type unsigned char
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:4838:18:    right side has type restricted __le32
+
+yes ... this is the warning being fixed.
+
+Thanks for the review
+
+Reinette
+
