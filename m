@@ -1,102 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13769 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:61438 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752957AbYKLWWT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 17:22:19 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:22:19 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/10] cfg80211: add support for custom firmware regulatory solutions
-Date: Wed, 12 Nov 2008 14:22:03 -0800
-Message-ID: <1226528524-32678-10-git-send-email-lrodriguez@atheros.com> (sfid-20081112_232226_123374_A211FAE4)
-In-Reply-To: <1226528524-32678-9-git-send-email-lrodriguez@atheros.com>
-References: <1226528524-32678-1-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-2-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-4-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-5-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-6-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-7-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-8-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-9-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752347AbYKGR6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2008 12:58:19 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/13] iwl3945 : Simplify iwl3945_send_beacon_cmd
+Date: Fri,  7 Nov 2008 09:58:44 -0800
+Message-Id: <1226080726-24860-12-git-send-email-reinette.chatre@intel.com> (sfid-20081107_190902_491725_EE103FE0)
+In-Reply-To: <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-7-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-8-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-9-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
+ <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds API to cfg80211 to allow wireless drivers to inform
-us if their firmware can handle regulatory considerations *and*
-they cannot map these regulatory domains to an ISO / IEC 3166
-alpha2. In these cases we skip the first regulatory hint instead
-of expecting the driver to build their own regulatory structure,
-providing us with an alpha2, or using the reg_notifier().
+From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
+Moved rate_msk calculation to iwl3945_rate_get_lowest_plcp.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- include/net/wireless.h |    7 +++++++
- net/wireless/reg.c     |   13 ++++++++++++-
- 2 files changed, 19 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   26 ++++++++++++++------------
+ 1 files changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 618b8aa..aedefa5 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -181,6 +181,11 @@ struct ieee80211_supported_band {
-  * struct wiphy - wireless hardware description
-  * @idx: the wiphy index assigned to this item
-  * @class_dev: the class device representing /sys/class/ieee80211/<wiphy-name>
-+ * @fw_handles_regulatory: tells us the firmware for this device
-+ * 	has its own regulatory solution and cannot identify the
-+ * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
-+ * 	we will disregard the first regulatory hint (when the
-+ * 	initiator is %REGDOM_SET_BY_CORE).
-  * @reg_notifier: the driver's regulatory notification callback
-  */
- struct wiphy {
-@@ -192,6 +197,8 @@ struct wiphy {
- 	/* Supported interface modes, OR together BIT(NL80211_IFTYPE_...) */
- 	u16 interface_modes;
- 
-+	bool fw_handles_regulatory;
-+
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
- 	 * know whether it points to a wiphy your driver has registered
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4dab993..0990059 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -816,12 +816,23 @@ static void handle_band(struct ieee80211_supported_band *sband)
- 		handle_channel(&sband->channels[i]);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 51f1c81..dec9e04 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1420,9 +1420,16 @@ unsigned int iwl3945_fill_beacon_frame(struct iwl3945_priv *priv,
+ 	return priv->ibss_beacon->len;
  }
  
-+static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
-+{
-+	if (!last_request)
-+		return true;
-+	if (setby == REGDOM_SET_BY_CORE &&
-+		  wiphy->fw_handles_regulatory)
-+		return true;
-+	return false;
-+}
-+
- static void update_all_wiphy_regulatory(enum reg_set_by setby)
+-static u8 iwl3945_rate_get_lowest_plcp(int rate_mask)
++static u8 iwl3945_rate_get_lowest_plcp(struct iwl3945_priv *priv)
  {
- 	struct cfg80211_registered_device *drv;
+ 	u8 i;
++	int rate_mask;
++
++	/* Set rate mask*/
++	if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK)
++		rate_mask = priv->active_rate_basic & 0xF;
++	else
++		rate_mask = priv->active_rate_basic & 0xFF0;
  
- 	list_for_each_entry(drv, &cfg80211_drv_list, list)
--		wiphy_update_regulatory(&drv->wiphy, setby);
-+		if (!ignore_reg_update(&drv->wiphy, setby))
-+			wiphy_update_regulatory(&drv->wiphy, setby);
+ 	for (i = IWL_RATE_1M_INDEX; i != IWL_RATE_INVALID;
+ 	     i = iwl3945_rates[i].next_ieee) {
+@@ -1430,7 +1437,11 @@ static u8 iwl3945_rate_get_lowest_plcp(int rate_mask)
+ 			return iwl3945_rates[i].plcp;
+ 	}
+ 
+-	return IWL_RATE_INVALID;
++	/* No valid rate was found. Assign the lowest one */
++	if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK)
++		return IWL_RATE_1M_PLCP;
++	else
++		return IWL_RATE_6M_PLCP;
  }
  
- void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
+ static int iwl3945_send_beacon_cmd(struct iwl3945_priv *priv)
+@@ -1448,16 +1459,7 @@ static int iwl3945_send_beacon_cmd(struct iwl3945_priv *priv)
+ 		return -ENOMEM;
+ 	}
+ 
+-	if (!(priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK)) {
+-		rate = iwl3945_rate_get_lowest_plcp(priv->active_rate_basic &
+-						0xFF0);
+-		if (rate == IWL_INVALID_RATE)
+-			rate = IWL_RATE_6M_PLCP;
+-	} else {
+-		rate = iwl3945_rate_get_lowest_plcp(priv->active_rate_basic & 0xF);
+-		if (rate == IWL_INVALID_RATE)
+-			rate = IWL_RATE_1M_PLCP;
+-	}
++	rate = iwl3945_rate_get_lowest_plcp(priv);
+ 
+ 	frame_size = iwl3945_hw_get_beacon_cmd(priv, frame, rate);
+ 
 -- 
-1.5.6.3
+1.5.4.3
 
