@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:55418 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751251AbYKCWZ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 17:25:57 -0500
-Date: Tue, 4 Nov 2008 00:25:54 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	me@bobcopeland.com, nbd@openwrt.org
-Subject: [PATCH] ath5k: Fix IMR init
-Message-ID: <20081103222554.GA3006@makis> (sfid-20081103_232603_024556_66BEBA47)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from senator.holtmann.net ([87.106.208.187]:35225 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbYKGEhU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2008 23:37:20 -0500
+Cc: Matt Mackall <mpm@selenic.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Message-Id: <2AADE700-38A1-48BC-B586-9962AAC38147@holtmann.org> (sfid-20081107_053729_631676_83A92DD7)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <1226020422.2604.148.camel@debian.sh.intel.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: iwlagn: wrong command queue 31, command id 0x0
+Date: Fri, 7 Nov 2008 05:37:18 +0100
+References: <1225944979.3792.3.camel@calx> <1226020422.2604.148.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- *On a previous patch i splitted AR5K_INT_TX to multiple different TX 
- interrupt flags for better handling but i forgot to unmask the new 
- TXDESC and TXEOL interrupts on ath5k_init and only left TXOK. However 
- for each queue we enable TXDESC and TXEOL interrupts, not TXOK so we don't 
- handle TX interrupts at all (because these interrupts remain masked on 
- PISR) and under load it results packet loss. Fix the problem by 
- unmasking TXDESC and TXEOL on ath5k_init.
+Hi Yi,
 
+>> As of 75fa67706cce5272bcfc51ed646f2da21f3bdb6e, I'm seeing this:
+>
+> On which git repo? I couldn't find the commit on either linux-2.6 or
+> wireless-testing/-2.6.
 
- Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+don't bother trying to track down the exact commit. This bug has been  
+introduced sometime between 2.6.26 and 2.6.27 and was originally a BUG  
+that crashed your machine. My last working kernel without this problem  
+was the Ubuntu 8.04 kernel.
 
----
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 5ef8cc4..f5f46fe 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -2219,9 +2219,9 @@ ath5k_init(struct ath5k_softc *sc, bool is_resume)
- 	 */
- 	sc->curchan = sc->hw->conf.channel;
- 	sc->curband = &sc->sbands[sc->curchan->band];
--	sc->imask = AR5K_INT_RXOK | AR5K_INT_TXOK | AR5K_INT_RXEOL |
--		AR5K_INT_RXORN | AR5K_INT_FATAL | AR5K_INT_GLOBAL |
--		AR5K_INT_MIB;
-+	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
-+		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
-+		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
- 	ret = ath5k_reset(sc, false, false);
- 	if (ret)
- 		goto done;
+So starting with 2.6.28-rc1, Johannes turned the BUG into a WARN_ON  
+and now we do actually see the issue and the code in question. Check  
+kerneloops.org for reference since I did post all of my warnings there.
+
+Regards
+
+Marcel
+
