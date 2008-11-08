@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.187]:41525 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922AbYKQPOq (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:49881 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751491AbYKHTyo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 10:14:46 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so2007422rnd.17
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 07:14:45 -0800 (PST)
-Message-ID: <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com> (sfid-20081117_161450_423663_CF2C8C88)
-Date: Mon, 17 Nov 2008 17:14:44 +0200
+	Sat, 8 Nov 2008 14:54:44 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so904502wah.21
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Nov 2008 11:54:44 -0800 (PST)
+Message-ID: <1ba2fa240811081154y4090c8cbk57cd9d975e86df1f@mail.gmail.com> (sfid-20081108_205451_170641_56726B56)
+Date: Sat, 8 Nov 2008 21:54:44 +0200
 From: "Tomas Winkler" <tomasw@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1226933141.3902.19.camel@johannes.berg>
+Subject: Re: iwconfig power timeout
+Cc: "Kalle Valo" <kalle.valo@nokia.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1226142620.3610.6.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
-	 <1226933141.3902.19.camel@johannes.berg>
+References: <87tzaiwn3z.fsf@nokia.com> <1226140536.3610.2.camel@johannes.berg>
+	 <87prl6wk73.fsf@nokia.com> <1226142620.3610.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 17, 2008 at 4:45 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-11-17 at 16:32 +0200, Tomas Winkler wrote:
+On Sat, Nov 8, 2008 at 1:10 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sat, 2008-11-08 at 13:06 +0200, Kalle Valo wrote:
 >
->> IMHO Not the concept but the implementation of this function is wrong.
+>> I don't think so. If mac80211 responds with -EINVAL the error would be
+>> something like this:
+>>
+>> $ iwconfig wlan0 power 5m
+>> Error for wireless request "Set Power Management" (8B2C) :
+>>     SET failed on device wlan0 ; Operation not permitted.
 >
-> I disagree.
+> That looks like -EPERM. But then iwconfig always had messed up error
+> handling.
 >
->> It should be no implementation difference between mac notification and
->> reception of one RX frames that triggers oneof the connection step
->> such as association response. If this would be handled in this context
->> and there won't be any locking issue.
->> If driver crashes internally and lost association info it can generate
->> "local disassociation frame" and mac will try to reapply association
->> in a regular flow.
+>> So the error seems to happen happen during argument parsing. Oh yeah,
+>> and I even had a printk in mac80211 and it wasn't printed.
 >
-> The point is that the whole thing about disassociation is already the
-> wrong assumption. As I've outlined, it only works in STA mode, and thus
-> the function is generally not very useful.
+> Ok I'm convinced then :)
 >
->> I agree that resume/suspend shell be handled properly in the mac80211
->> regardless of this issue.
+>> I'm going
+>> to investigate this with gdb and try to understand how iwconfig really
+>> parses the arguments.
 >
-> And it will handle the "firmware crashed" case perfectly too.
+> Well there is source code too ;)
 
-You may have a case, anyhow, please show us some RFC before you remove
-of mac notify.
+There bugs in command parsing in v29 grab v30 beta where this bugs are fixed.
 Tomas
