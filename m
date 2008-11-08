@@ -1,47 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:40022 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753892AbYKTI2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 03:28:55 -0500
-Date: Thu, 20 Nov 2008 10:27:50 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Rami Rosen <ramirose@gmail.com>,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de
-Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
-Message-ID: <20081120082750.GG5078@jm.kir.nu> (sfid-20081120_092901_337239_CA2B67F3)
-References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com> <1226943608.3902.36.camel@johannes.berg> <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com> <1227106146.26243.43.camel@johannes.berg> <eb3ff54b0811190709q76e8b073ic71831fd38ceba18@mail.gmail.com> <1227107869.26243.52.camel@johannes.berg> <20081119160135.GB3485@tuxdriver.com> <1227126620.26243.71.camel@johannes.berg>
+Received: from mail.candelatech.com ([208.74.158.172]:36093 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971AbYKHGLT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Nov 2008 01:11:19 -0500
+Received: from [71.112.128.23] (pool-71-112-128-23.sttlwa.dsl-w.verizon.net [71.112.128.23])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id mA85BcqW019914
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 7 Nov 2008 21:11:39 -0800
+Message-ID: <49151F8A.7040901@candelatech.com> (sfid-20081108_071123_869572_3B2D3E27)
+Date: Fri, 07 Nov 2008 21:11:38 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1227126620.26243.71.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Subject: Trouble with bcm4312 rev 01 on the HP 2133
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2008 at 09:30:19PM +0100, Johannes Berg wrote:
+I'm trying kernel 2.6.27.4-79.fc10 (Fedora 10 preview) on an HP 2133 
+mini-note system.
 
-> That's a good question. The distinction here is between empowering users
-> to do the wrong thing (AP without proper PS support) and enforcing the
-> right thing (with the consequence of complete loss of AP functionality).
-> The issue I see here is that users will see "ohh shiny, AP support"
-> without knowing that it doesn't actually really support it. Not sure
-> which side of the line we want to stand on, I prefer the correctness
-> side but I can see arguments for the other side, would just like to have
-> users know. Maybe we could have some way to tell hostapd this and then
-> have hostapd print a huge warning about it when started up?
+I *believe* I extracted the firmware properly, but when I load b43, I 
+get only a single
+line in /var/log/messages, like it doesn't find the hardware or 
+something?  Will there be
+any obvious errors I could check for to see if the firmware is correct?
 
-I would be fine adding such a warning into hostapd if someone comes up
-with the patch and mac80211/nl80211 changes to provide the
-working-PS-mode capability flag.
+Nov  7 20:48:17 localhost kernel: Broadcom 43xx driver loaded [ 
+Features: PMLR, Firmware-ID: FW13 ]
 
-Is the problem with zd1211rw just in PS buffering of multicast/broadcast
-frames or does it also have problems with unicast? Many use cases could
-handle the multicast/broadcast case, but if unicast PS buffering does
-not work properly, there may be more issues.. Anyway, this leaves a
-nasty surprise for the end user who may not even realize what power
-saving really means in context of 802.11 and would not have any way of
-figuring out why the connection does not work suddenly when the STA goes
-to power save mode.
+
+According to lspci, I have this wifi NIC:
+
+lspci -x
+02:00.0 Network controller: Broadcom Corporation BCM4312 802.11b/g (rev 01)
+00: e4 14 15 43 06 01 10 00 01 00 80 02 08 00 00 00
+10: 04 c0 ff fd 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 3c 10 7c 13
+30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 01 00 00
+
+lspci -v
+02:00.0 Network controller: Broadcom Corporation BCM4312 802.11b/g (rev 01)
+        Subsystem: Hewlett-Packard Company BCM4312 802.11b/g Wireless 
+LAN Controller
+        Flags: bus master, fast devsel, latency 0, IRQ 10
+        Memory at fdffc000 (64-bit, non-prefetchable) [size=16K]
+        Capabilities: [40] Power Management version 3
+        Capabilities: [58] Vendor Specific Information <?>
+        Capabilities: [e8] Message Signalled Interrupts: Mask- 64bit+ 
+Count=1/1 Enable-
+        Capabilities: [d0] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- 
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACS Voil-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- 
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACS Voil-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- 
+UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACS Voil-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
+NonFatalErr+
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
+NonFatalErr+
+                AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ 
+ChkEn-
+        Capabilities: [13c] Virtual Channel <?>
+        Capabilities: [160] Device Serial Number 21-00-25-ff-ff-00-02-6d
+        Capabilities: [16c] Power Budgeting <?>
+
+Any idea of what I might be doing wrong?
+
+Thanks,
+Ben
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Ben Greear <greearb@candelatech.com> 
+Candela Technologies Inc  http://www.candelatech.com
+
+
