@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37390
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754852AbYKCHfx (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:39275 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750749AbYKHKDu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 02:35:53 -0500
-Date: Sun, 02 Nov 2008 23:35:28 -0800 (PST)
-Message-Id: <20081102.233528.91273615.davem@davemloft.net> (sfid-20081103_083618_184141_CCC72C0C)
-To: johannes@sipsolutions.net
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org
-Subject: Re: Alignment issue with 4965 and 2.6.28-rc3
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1225697100.3619.21.camel@johannes.berg>
-References: <DFAA4A8C-F8D5-4D08-9C6E-8BB65E3BCFC2@holtmann.org>
-	<1225697100.3619.21.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 8 Nov 2008 05:03:50 -0500
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mA8A3dFm016823
+	for <linux-wireless@vger.kernel.org>; Sat, 8 Nov 2008 04:03:48 -0600
+Received: from tikku (essapo-nirac252165.europe.nokia.com [10.162.252.165])
+	by mgw-int02.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mA8A3j5P029897
+	for <linux-wireless@vger.kernel.org>; Sat, 8 Nov 2008 12:03:45 +0200
+To: linux-wireless@vger.kernel.org
+Subject: iwconfig power timeout
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sat, 08 Nov 2008 12:03:44 +0200
+Message-ID: <87tzaiwn3z.fsf@nokia.com> (sfid-20081108_110355_356167_0D74E561)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 03 Nov 2008 08:25:00 +0100
+Hello,
 
-> I've tried sending a patch to add
-> CONFIG_HAVE_EFFICIENT_ALIGNED_ACCESS or something like that so that
-> we can fix it up if that is unset or make the driver depend on it,
-> but it hasn't stuck so far, so for now, ignore the warning and don't
-> try to use Intel wireless hw on platforms that don't like unaligned
-> loads.
+I'm trying to set power save timeout for mac80211 with iwconfig, but
+I'm having problems with iwconfig on Nokia N810:
 
-What are you smoking? ;-)
+Nokia-N810-35-3:~# iwconfig wlan0 power timeout 500m
+Error for wireless request "Set Power Management" (8B2C) :
+    invalid argument "500m".
+Nokia-N810-35-3:~# iwconfig wlan0 power timeout 3
+Error for wireless request "Set Power Management" (8B2C) :
+    invalid argument "3".
+Nokia-N810-35-3:~# 
 
-arch/Kconfig:config HAVE_EFFICIENT_UNALIGNED_ACCESS
-arch/powerpc/Kconfig:	select HAVE_EFFICIENT_UNALIGNED_ACCESS
-arch/x86/Kconfig:	select HAVE_EFFICIENT_UNALIGNED_ACCESS
+Looking at iwconfig sources the error means that either my syntax is
+wrong or iwconfig has a bug in the parser. I'm guessing the latter
+based on reading iwconfig(5). But before I will start investigating
+iwconfig's magic, has anyone else seen this?
+
+I'm using wireless-tools 29~pre21-2.osso1 on my N810, but I see a
+similar error with wireless-tools 29-1.1 on my laptop running debian
+unstable.
+
+-- 
+Kalle Valo
