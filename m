@@ -1,51 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:23770 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753372AbYKDIip (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57690 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbYKHLBY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 03:38:45 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so3130140rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 00:38:44 -0800 (PST)
-Message-ID: <1ba2fa240811040038y54b20a46y88e2b849f98c78cf@mail.gmail.com> (sfid-20081104_093854_262731_C1099CD5)
-Date: Tue, 4 Nov 2008 10:38:44 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Bob Copeland" <me@bobcopeland.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>, tim.gardner@canonical.com,
-	mick@madwifi.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <87ljw0arrq.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4908B754.1050400@tpi.com>
-	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
-	 <1225696692.3619.18.camel@johannes.berg>
-	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
-	 <1225697686.3619.25.camel@johannes.berg>
-	 <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
-	 <1225698867.3619.31.camel@johannes.berg>
-	 <43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com>
-	 <1225699482.3619.34.camel@johannes.berg> <87ljw0arrq.fsf@nokia.com>
+	Sat, 8 Nov 2008 06:01:24 -0500
+Subject: Re: problems with ath5k driver.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: msan <msan@email.it>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <gf3rag$l51$1@ger.gmane.org> (sfid-20081108_115741_111995_B4A89A2F)
+References: <geiib4$apo$2@ger.gmane.org>
+	 <20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net>
+	 <get27e$ka2$1@ger.gmane.org>
+	 <43e72e890811051322m43efbf03gd21770be382e807d@mail.gmail.com>
+	 <1225989658.4276.4.camel@dv>  <gf3rag$l51$1@ger.gmane.org>
+	 (sfid-20081108_115741_111995_B4A89A2F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NymYBO7SCbRRyWMfJYpB"
+Date: Sat, 08 Nov 2008 12:01:25 +0100
+Message-Id: <1226142085.3610.4.camel@johannes.berg> (sfid-20081108_120127_620686_7578A1A3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 4, 2008 at 9:12 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->>> > Also,
->>> > that's a bad thing to do in userspace, imho.
->>>
->>> What should we do with these rare failures then?
->>
->> print an error message? ignore them? try again?
->
-> I would say that try few (three?) times and if it still fails, restart
-> firmware and push the same settings again to the firmware. There's
-> very little that mac80211 could do here, driver has to make the
-> decisions in case like this.
 
-Mac should be aware that card is iin TODO list.
-Tomas
+--=-NymYBO7SCbRRyWMfJYpB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Sat, 2008-11-08 at 10:57 +0000, msan wrote:
+> Il Thu, 06 Nov 2008 11:40:58 -0500, Pavel Roskin ha scritto:
+>=20
+> > Actually, I tested AR5007EG with Linux 2.6.27 and it worked, even with
+> > WPA.  So the problem is probably elsewhere (bad antenna, lack of APs
+> > around, curly hands, irrational fear of things "under development" etc)=
+.
+> >=20
+>=20
+> If I can say, the card now works perfectly but is rather slow.
+> I am downloading some files from another computer inside my lan at home,=20
+> not from internet.
+> The other computer is connected with an ethernet card while my computer=20
+> is connected with my wireless card, ATheros.
+> The download starts at 1Mb and more but quickly degrades at 200 - 170 kb.=
+=20
+> it.
+> Perhaps the driver needs some work yet.
+
+Which RC algorithm are you using? Use minstrel if you can.
+
+johannes
+
+--=-NymYBO7SCbRRyWMfJYpB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJFXGCAAoJEKVg1VMiehFYE0UQALyRsgLu5AFqv9nGGbBHu92D
+vKoZBSoGrZq8H55kWWa+B1gak4aY7V/KABnRzFjBgwnhr6lZ1AtkVbpmvk7OedoG
+fellKTdP9UsxC+4nYhBXAL56pC9GAUqMFuPeTBL18JnsYodGFqzUJ5+2zGYS3VKm
+2XQhy1MPl6Z2/1lA02cR5d6IdRxiUa/SYmaTH1GFEsPZbrKPSPy5yJUjbqm2t6g0
+ww3ojFOLRDlcFY4hgKZ7jdZNZFi4RWIPxMmgikMgv/0/KnPSQeFdETwCsR0rCSGh
+c1WDUPD2u9JBv6Sa9HtehVgJ507LqKJwD0x6EZsIm57oLzXFdS5l48bN6finPhRz
+t/g8ayQTdblIMW6LFeSkm5vthGotHzJAc9Rvuag3EtLtOWaFbJGuBa88MSAPIk82
+8IHyZiSts3BN2XCaTd7cuCNRSgkkpnXs1Djg4OiZUMUUGX6YGrmm96ZwqAMp+yNv
+cb9Va/ObKDmDDTtyuOWxOjZRs+2i1kzRxfd41SXwmK2nLzZmIK9VA9ltsr97tq+u
+t6RuXGTw94YUAlTpF3zEVvZpWC6MjyaJaDo2bEsxq2n1bSzve7tbVP25cfCaa9dG
+Vil/NeVafD0NVkOLF5FlF/y0yJ1Ib0aeIsUnnNWsWz7n/VDhcQYj1g+LxUShWJJj
+JbMt8siP4Nf58N6pXxxm
+=f78q
+-----END PGP SIGNATURE-----
+
+--=-NymYBO7SCbRRyWMfJYpB--
+
