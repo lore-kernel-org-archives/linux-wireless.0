@@ -1,67 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12019 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753425AbYKEDCZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 22:02:25 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 19:02:25 -0800
-Date: Tue, 4 Nov 2008 19:02:23 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:58996 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752587AbYKHKfh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Nov 2008 05:35:37 -0500
+Subject: Re: iwconfig power timeout
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Kalle Valo <kalle.valo@nokia.com>
-CC: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] ath9k : Display MAC/BB and RF version at startup
-Message-ID: <20081105030223.GD16413@tesla> (sfid-20081105_040229_717220_2EAEEB17)
-References: <490F63B6.8080600@free.fr> <878ws0ar2u.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <878ws0ar2u.fsf@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87tzaiwn3z.fsf@nokia.com> (sfid-20081108_110355_356167_0D74E561)
+References: <87tzaiwn3z.fsf@nokia.com>
+	 (sfid-20081108_110355_356167_0D74E561)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-D7d/MnSM5wn+FxlKwrrW"
+Date: Sat, 08 Nov 2008 11:35:36 +0100
+Message-Id: <1226140536.3610.2.camel@johannes.berg> (sfid-20081108_113550_596055_6823A885)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 03, 2008 at 11:27:37PM -0800, Kalle Valo wrote:
-> "Benoit PAPILLAULT" <benoit.papillault@free.fr> writes:
-> 
-> > This patch decodes the MAC/BB version (for instance: AR5416) and the RF
-> > part version (for instance: AR5133). It has been tested on AR5416/AR5133
-> > which is a 2.4/5GHz 3x3 11n device. It also makes the differences
-> > between AR5416 (PCI) and AR5418 (PCI Express). Both are named AR5416 in
-> > the register definitions.
-> >
-> > Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
-> 
-> [...]
-> 
-> > -     printk(KERN_INFO "%s: %s: mem=0x%lx, irq=%d\n",
-> > +     ah = sc->sc_ah;
-> > +     macVersion = ah->ah_macVersion;
-> > +     rfVersion  = (ah->ah_analog5GhzRev & AR_RADIO_SREV_MAJOR);
-> > +     printk(KERN_INFO
-> > +            "%s: Atheros AR%s%s%s%s%s%s MAC/BB Rev:%x "
-> > +            "AR%s%s%s%s%s RF Rev:%x: mem=0x%lx, irq=%d\n",
-> >              wiphy_name(hw->wiphy),
-> > -            athname ? athname : "Atheros ???",
-> > +            macVersion == AR_SREV_VERSION_5416_PCI  ? "5416" : "",
-> > +            macVersion == AR_SREV_VERSION_5416_PCIE ? "5418" : "",
-> > +            macVersion == AR_SREV_VERSION_9100      ? "9100" : "",
-> > +            macVersion == AR_SREV_VERSION_9160      ? "9160" : "",
-> > +            macVersion == AR_SREV_VERSION_9280      ? "9280" : "",
-> > +            macVersion == AR_SREV_VERSION_9285      ? "9285" : "",
-> > +            ah->ah_macRev,
-> > +            rfVersion  == 0                         ? "5133" : "",
-> > +            rfVersion  == AR_RAD5133_SREV_MAJOR     ? "5133" : "",
-> > +            rfVersion  == AR_RAD5122_SREV_MAJOR     ? "5122" : "",
-> > +            rfVersion  == AR_RAD2133_SREV_MAJOR     ? "2133" : "",
-> > +            rfVersion  == AR_RAD2122_SREV_MAJOR     ? "2122" : "",
-> > +            ah->ah_phyRev,
-> 
-> I recommend adding a separate function returning the string instead of
-> this ugly "%s%s%s%s" trick. Much cleaner that way.
 
-Agreed, also please remove 3x3 comment as we don't have support for
-those yet nor do I even have hardware for it. To be clear ath9k supports
-2x2 right now. :)
+--=-D7d/MnSM5wn+FxlKwrrW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Sat, 2008-11-08 at 12:03 +0200, Kalle Valo wrote:
+> Hello,
+>=20
+> I'm trying to set power save timeout for mac80211 with iwconfig, but
+> I'm having problems with iwconfig on Nokia N810:
+>=20
+> Nokia-N810-35-3:~# iwconfig wlan0 power timeout 500m
+> Error for wireless request "Set Power Management" (8B2C) :
+>     invalid argument "500m".
+> Nokia-N810-35-3:~# iwconfig wlan0 power timeout 3
+> Error for wireless request "Set Power Management" (8B2C) :
+>     invalid argument "3".
+> Nokia-N810-35-3:~#=20
+>=20
+> Looking at iwconfig sources the error means that either my syntax is
+> wrong or iwconfig has a bug in the parser. I'm guessing the latter
+> based on reading iwconfig(5). But before I will start investigating
+> iwconfig's magic, has anyone else seen this?
+
+Looks like mac80211 is rejecting that setting with -EINVAL, and that may
+well be true.
+
+johannes
+
+--=-D7d/MnSM5wn+FxlKwrrW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJFWt1AAoJEKVg1VMiehFYszcQALishDuWVaV8UFZZYOa196s1
+O5OB/EP8xvqTQDJ2mRMQcGLq85sZUrhqY1AE8HW20crao1ipYqwS5LV6PWJgo9/Z
+odMFxX1w8Zq6it6gDxyfwurSh4NILzDht7chxP9JyJcLfC9RMuIedNP3vlbHd89E
+dH+R8kXuz+97vaxVEWe+zjGf3/BdBK9KNmtb93NP/SmcmJ2VgnQ2jtuM9UbGGNhW
+hAD9emKDEbMwlkVn6I0AgbADWBUyA0+GjNXhv2/Y6TbXU2yKcax6cHKMoDWQPyLF
+h/iCGrZEh2BL4JhQn/YayUX/FMdliSojJcu2lgr2+ovbaY0AXSV5c5QBH0EyAn+g
+9vRBWpOc7KWzXatyakQw/k646Eqn025wwHq0PinknXopUlT4zCIekuDzaRmBqh+p
+2/IESW/YSbo0+xPh8LTMZdVTLB5ug0BICszlChHrQBUmcd+kQPevd9D1rScImOwY
+ZkGJxaoQ/JYf/baM5Fa3clTB33O7j3AOUyCeP7C4kwf5wYwkYN16+OcweXdKfPaK
+1LDLPEyipuQVQPniwd45JPb5AAFEJV/37tWxzQf2IMKyZyQ4Hy8EUtkrREa+m/Zw
+RO/fB3jykIiIeAYxkgazFzPgymgQRFgziIlNw8O4D6CZFxwSmM0PODzWgm6f4Om2
+VKLJsWd0dNah4soWm274
+=eqrc
+-----END PGP SIGNATURE-----
+
+--=-D7d/MnSM5wn+FxlKwrrW--
+
