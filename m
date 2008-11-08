@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:20918 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752878AbYKXUww (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:27921 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752757AbYKHLGu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 15:52:52 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so933171ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 12:52:50 -0800 (PST)
-Message-ID: <40f31dec0811241252k76bb76b9u2766173ac914c60@mail.gmail.com> (sfid-20081124_215255_102338_914E97A8)
-Date: Mon, 24 Nov 2008 22:52:50 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Richard Farina" <sidhayn@gmail.com>
-Subject: Re: [Fwd: please don't regress ath5k.h]
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Michael Renzmann" <mrenzmann@madwifi-project.org>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <40f31dec0811241225s1109b83aw244c96f2cb8ed59@mail.gmail.com>
+	Sat, 8 Nov 2008 06:06:50 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwconfig power timeout
+References: <87tzaiwn3z.fsf@nokia.com> <1226140536.3610.2.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sat, 08 Nov 2008 13:06:40 +0200
+In-Reply-To: <1226140536.3610.2.camel@johannes.berg> (ext Johannes Berg's message of "Sat\, 08 Nov 2008 11\:35\:36 +0100")
+Message-ID: <87prl6wk73.fsf@nokia.com> (sfid-20081108_120654_306580_DE08A3D1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <492A14A7.4040808@gmail.com>
-	 <1205.94.79.146.217.1227505499.squirrel@webmail.madwifi.org>
-	 <1227507381.3599.55.camel@johannes.berg> <492AC870.3030103@gmail.com>
-	 <40f31dec0811241225s1109b83aw244c96f2cb8ed59@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/11/24 Nick Kossifidis <mickflemm@gmail.com>:
+Johannes Berg <johannes@sipsolutions.net> writes:
+
+> On Sat, 2008-11-08 at 12:03 +0200, Kalle Valo wrote:
+>> Hello,
+>> 
+>> I'm trying to set power save timeout for mac80211 with iwconfig, but
+>> I'm having problems with iwconfig on Nokia N810:
+>> 
+>> Nokia-N810-35-3:~# iwconfig wlan0 power timeout 500m
+>> Error for wireless request "Set Power Management" (8B2C) :
+>>     invalid argument "500m".
+>> Nokia-N810-35-3:~# iwconfig wlan0 power timeout 3
+>> Error for wireless request "Set Power Management" (8B2C) :
+>>     invalid argument "3".
+>> Nokia-N810-35-3:~# 
+>> 
+>> Looking at iwconfig sources the error means that either my syntax is
+>> wrong or iwconfig has a bug in the parser. I'm guessing the latter
+>> based on reading iwconfig(5). But before I will start investigating
+>> iwconfig's magic, has anyone else seen this?
 >
-> CHAN_DEBUG is an option i used a lot of time ago while debuging
-> channel flags on madwifi-old-openhal. When we switched to mac80211 and
-> ath5k, this code got useless, it just changes the maximum number of
-> channels the driver allocates and has nothing to do with debuging,
-> that's why i've put that TODO there. If you just want to register* more
-> channels on mac80211, you can always change or redefine ATH_CHAN_MAX.
->
+> Looks like mac80211 is rejecting that setting with -EINVAL, and that may
+> well be true.
 
-*Correction: allocate
+I don't think so. If mac80211 responds with -EINVAL the error would be
+something like this:
 
-ATH_CHAN_MAX has nothing to do with how many channels we register,
-it's jut used on base.h to set how many channels we 'll have on our
-channel array.
+$ iwconfig wlan0 power 5m
+Error for wireless request "Set Power Management" (8B2C) :
+    SET failed on device wlan0 ; Operation not permitted.
 
+So the error seems to happen happen during argument parsing. Oh yeah,
+and I even had a printk in mac80211 and it wasn't printed. I'm going
+to investigate this with gdb and try to understand how iwconfig really
+parses the arguments.
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Kalle Valo
