@@ -1,96 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:64241 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753785AbYKECuL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 21:50:11 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 18:50:11 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/7] cfg80211: remove switch from __regulatory_hint()
-Date: Tue, 4 Nov 2008 18:50:01 -0800
-Message-ID: <1225853406-16322-3-git-send-email-lrodriguez@atheros.com> (sfid-20081105_035024_346557_BD3AB9DB)
-In-Reply-To: <1225853406-16322-2-git-send-email-lrodriguez@atheros.com>
-References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
- <1225853406-16322-2-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:48900 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751920AbYKHHKD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Nov 2008 02:10:03 -0500
+Subject: Re: [PATCH 0/2] Add reg options for intel regulatory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1226109668-13778-1-git-send-email-lrodriguez@atheros.com> (sfid-20081108_030116_424285_074E898A)
+References: <1226109668-13778-1-git-send-email-lrodriguez@atheros.com>
+	 (sfid-20081108_030116_424285_074E898A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SLuzWfEs+oE5rmayXjeR"
+Date: Sat, 08 Nov 2008 08:09:44 +0100
+Message-Id: <1226128184.3610.0.camel@johannes.berg> (sfid-20081108_081017_903472_91DD2647)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have complete control over REGDOM_SET_BY_* enum passed
-down to __regulatory_hint() as such there is no need to
-account for unexpected REGDOM_SET_BY_*'s, lets just remove
-the switch statement as this code does not change and
-won't change even when we add 802.11d support.
 
-This patch has no functional changes.
+--=-SLuzWfEs+oE5rmayXjeR
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   43 +++++++++++++++++--------------------------
- 1 files changed, 17 insertions(+), 26 deletions(-)
+On Fri, 2008-11-07 at 18:01 -0800, Luis R. Rodriguez wrote:
+> As we discussed we can ignore the first hint for the
+> iwlwifi drivers. This adds that work. Please test and
+> let me know what you think.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7a2ce27..e44f005 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -698,34 +698,25 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
- 	else if (r)
- 		return r;
- 
--	switch (set_by) {
--	case REGDOM_SET_BY_CORE:
--	case REGDOM_SET_BY_COUNTRY_IE:
--	case REGDOM_SET_BY_DRIVER:
--	case REGDOM_SET_BY_USER:
--		request = kzalloc(sizeof(struct regulatory_request),
--				  GFP_KERNEL);
--		if (!request)
--			return -ENOMEM;
--
--		request->alpha2[0] = alpha2[0];
--		request->alpha2[1] = alpha2[1];
--		request->initiator = set_by;
--		request->wiphy = wiphy;
--		request->intersect = intersect;
--
--		kfree(last_request);
--		last_request = request;
--		r = call_crda(alpha2);
-+	request = kzalloc(sizeof(struct regulatory_request),
-+			  GFP_KERNEL);
-+	if (!request)
-+		return -ENOMEM;
-+
-+	request->alpha2[0] = alpha2[0];
-+	request->alpha2[1] = alpha2[1];
-+	request->initiator = set_by;
-+	request->wiphy = wiphy;
-+	request->intersect = intersect;
-+
-+	kfree(last_request);
-+	last_request = request;
-+	r = call_crda(alpha2);
-+
- #ifndef CONFIG_WIRELESS_OLD_REGULATORY
--		if (r)
--			printk(KERN_ERR "cfg80211: Failed calling CRDA\n");
-+	if (r)
-+		printk(KERN_ERR "cfg80211: Failed calling CRDA\n");
- #endif
--		break;
--	default:
--		r = -ENOTSUPP;
--		break;
--	}
- 
- 	return r;
- }
--- 
-1.5.6.3
+Looks good to me, thanks. Of course now we have to live with the slight
+discrepancy here between hw, so rememember to ask for 'iw phy phy0 info'
+output when something goes wrong :)
+
+johannes
+
+--=-SLuzWfEs+oE5rmayXjeR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJFTs0AAoJEKVg1VMiehFYUEkP/0oWIEcOfqo93/0iZHApMs05
+i9mLljgvnec+DExtx6JPcStML3OyuqmLf7BQZIfc40YLqfxwNIKKSZWl8alm54Lf
+wtFaXB/sBE0x9xGNz9wXMoDgc50c72SB1+Od4krnSeCP9NmT5d8TSLsKkEhhJ16s
+C202fKQ8ABhyeBFfD9rCUWNpmxcIitVxF4Hg3b8kopV/hXNPJT3q2+sjydji2IIq
+7FaMAd0+zS+/iv9cTOl5OjvzDui9ud+S8Ezov8hi7hiYyfbrzISN2XAcNuzINfdC
+IMgSBTnHLHFonMFEAbB0inQRwSCrDdrxLEcKRB5upHFSdDuIMfJLLRsGIELUBHVG
+oN3Q6bXIAX8ad4Yg1YRh683+2oms4noK49xFFUbpi/YJ14R5vxyZQbTsmaz2U0Ny
+Vn85b+s7KXYHaOt0mfD8Hi9WZSYvSUoF2QSy3yLQNQ3m5TyRSnQs412RPSqMs148
+K9LF65N0koUb8QrnNvNFUk5dmKEycaEc0UIXeAGQ043ac0mg6iF1q98Yuvsx8TSh
+OpLUiloZnvgVOg4vCrKRvm8ZHoH8y2wkDrEGNSeJ874G4ye+9F1S6sqA5CJ/4DYS
+/LAqIqaOsauJyY36EeK3PZr76C12GmcHn45DrZuyfddHAvfDaphh5cRGF/X/PVM6
+09gvcKUgr2d8enf93iVU
+=W1lO
+-----END PGP SIGNATURE-----
+
+--=-SLuzWfEs+oE5rmayXjeR--
 
