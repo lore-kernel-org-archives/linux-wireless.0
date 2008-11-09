@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:40760 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757361AbYKTOtg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42071 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002AbYKIJDz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 09:49:36 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
+	Sun, 9 Nov 2008 04:03:55 -0500
+Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
-Date: Thu, 20 Nov 2008 15:49:12 +0100
-Cc: "Stefan Steuerwald" <salsasepp@googlemail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com> <f76a32050811200050u48bc150en34e94c7671672ae6@mail.gmail.com> <f76a32050811200544p3c647cb3t392025feef02c8f9@mail.gmail.com>
-In-Reply-To: <f76a32050811200544p3c647cb3t392025feef02c8f9@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200811201549.13078.hs4233@mail.mn-solutions.de> (sfid-20081120_154955_831205_3F660406)
+Cc: Shaddy Baddah <shaddy_baddah@hotmail.com>
+In-Reply-To: <1226220992.3614.16.camel@johannes.berg> (sfid-20081109_095632_336911_F61525F4)
+References: <4902DEBB.3050205@hotmail.com>
+	 <20081025112147.GA12252@Chamillionaire.breakpoint.cc>
+	 <200810251325.07916.mb@bu3sch.de>
+	 <20081025112813.GC12252@Chamillionaire.breakpoint.cc>
+	 <49033782.5040701@hotmail.com>  <491589ED.4090904@hotmail.com>
+	 <1226149894.3610.8.camel@johannes.berg>  <491653A6.20705@hotmail.com>
+	 <1226220992.3614.16.camel@johannes.berg>
+	 (sfid-20081109_095632_336911_F61525F4)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F1TwtxbyhoobVSKzW1IS"
+Date: Sun, 09 Nov 2008 10:03:58 +0100
+Message-Id: <1226221438.3614.20.camel@johannes.berg> (sfid-20081109_100411_082442_8D83DAEB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some comments about 
-your "ipod_http_request_probe_responses.pcap":
 
-I think here the same problem happens.
+--=-F1TwtxbyhoobVSKzW1IS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-In packet 10 and again in packet 12 your Ipod tells the AP that 
-it is now sleeping. The AP acknowledges both packets.
+On Sun, 2008-11-09 at 09:56 +0100, Johannes Berg wrote:
 
-Then I see lots of probe responses from the AP to a different 
-MAC, but they seem to be unrelated to your Ipod. Also the probe 
-requests that one can see are from somebody else, e.g.
+> I think you forgot to attach the patch.
 
-In packet 121 your Ipod tells the AP that it now woke up and 
-immediately closed the HTTP connection.
+Sorry, I missed your second mail. (btw, if you generate patches with -p
+in diff arguments it helps a bit reading them)
 
+Ok so it looks like the buffer you're getting is unaligned. This is
+strange, but I'm too unfamiliar with the code. It seems that there's the
+PLCP 5 byte header in front. Well, try the printk I asked for, because
+at that point zd1211 should avoid "leaking" the alignment problem.
 
+johannes
 
-And you might have guess by now that also in 
-your "ipod_http_request_tcp_reset.pcap" the problem started once 
-your Ipod told the AP that it goes to sleep, again with two 
-packets.
+--=-F1TwtxbyhoobVSKzW1IS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJFqd6AAoJEKVg1VMiehFYjPEP/RHiun3+FrYP8SCICMu9h6PR
+mncGFR5XVjpAMB+PHZvcawAanADMkoDD4j7hHNFS/rLBFsIODN1n57z3iVnPHCc9
+35Nc8a1DKMF9kVxWvRGrFceW70oGqc/PmtbYOawUSP3ibtW0wS9FodE8kJBCWirr
+JyHSaN8l+833rGlEesTqa9Mz/Y+CFIBtDrpr3mUxAxA8kZhAPPBKiJ9cHtNCZRDD
+jnOXOpk3yp+rp2m8yN93JcJmn+lgH1Vv+kq4VDwQ1FNdhna2gqzvZDT1GWJ9648U
+RzscXiYotWnLDWlohvu1KaNPc5ZVTFvgbl8qyeHy8gl9IdfTvc3p3udLyAEm1NUx
+6F3TYV98hHEG6p4JZTqsnr0nJDxSKOXXjLBZgsTI4NlB5ajETd1TutMdAtYOCQ9H
+zuCswpuitj8BML5bzyUXm0xAuTboALXKv2p12WqKqBNUNf3mwCM8VjOJkTcqukco
+U3Y111Rorhwq/zWRBB6gilEhj+qcPIbjlbLdbs/P15nP21oF6+RdqsaoFhsFUD2T
+oJathrt+Bt7jexn0TkYzsl/VB6LKvHq4BvMbB2GB6yzQ25XUq7pbO0z2vC8cAO7I
+ie64G718F/H5FFjP+oTRFsXh8cICA8R6ptXPTXKN5j5KI1qX0rTEwRD5WxSpqtze
++UULMVYu+QEMZeduP3jM
+=oQMm
+-----END PGP SIGNATURE-----
+
+--=-F1TwtxbyhoobVSKzW1IS--
+
