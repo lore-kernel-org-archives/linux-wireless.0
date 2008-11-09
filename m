@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:38193 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751942AbYKUTuF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 14:50:05 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so457310eyi.37
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 11:50:03 -0800 (PST)
-Message-ID: <492710E6.7020506@gmail.com> (sfid-20081121_205010_462617_679AD8D6)
-Date: Fri, 21 Nov 2008 21:49:58 +0200
-From: Maxim Levitsky <maximlevitsky@gmail.com>
+Received: from mgw1.diku.dk ([130.225.96.91]:43608 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756146AbYKIQ4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Nov 2008 11:56:13 -0500
+Date: Sun, 9 Nov 2008 17:56:10 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: lrodriguez@atheros.com, jmalinen@atheros.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 6/8] drivers/net/wireless/ath9k/rc.c: use ARRAY_SIZE
+Message-ID: <Pine.LNX.4.64.0811091755500.32509@ask.diku.dk> (sfid-20081109_175643_541534_D63CC279)
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: set mac address in add_interface
-References: <20081118044037.GA18983@hash.localnet>
-In-Reply-To: <20081118044037.GA18983@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> Hi Maxim, 
-> 
-> Please try this patch.  I didn't have a problem changing the mac address 
-> after it was set to something else.  I did kick it to re-associate with
-> the AP, though.
-> 
+From: Julia Lawall <julia@diku.dk>
 
-Tested it, this still doesn't work:
+ARRAY_SIZE is more concise to use when the size of an array is divided by
+the size of its type or the size of its first element.
 
-iwconfig wlan0 down
-macchanger wlan0
-iwconfig wlan0 up
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-......
-at that point card doesn't associate.
+// <smpl>
+@i@
+@@
 
-if I now set mac back to original, it works.
+#include <linux/kernel.h>
 
+@depends on i using "paren.iso"@
+type T;
+T[] E;
+@@
 
-setting the mac before first ifconfig up (or networkmanager)
-works.
+- (sizeof(E)/sizeof(E[...]))
++ ARRAY_SIZE(E)
+// </smpl>
 
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-I did some more testing on wireless transfer speeds, I post a separate
-message about that, very soon.
+---
+ drivers/net/wireless/ath9k/rc.c     |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-
-Best regards,
-	Maxim Levitsky
-
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index cca2fc5..ea37673 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -1272,8 +1272,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 				rate_ctrl->state[tx_rate].per = 100;
+ 		} else {
+ 			/* xretries == 2 */
+-			count = sizeof(nretry_to_per_lookup) /
+-				sizeof(nretry_to_per_lookup[0]);
++			count = ARRAY_SIZE(nretry_to_per_lookup);
+ 			if (retries >= count)
+ 				retries = count - 1;
+ 			/* new_PER = 7/8*old_PER + 1/8*(currentPER) */
+@@ -1291,8 +1290,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	} else {	/* xretries == 0 */
+ 		/* Update the PER. */
+ 		/* Make sure it doesn't index out of array's bounds. */
+-		count = sizeof(nretry_to_per_lookup) /
+-			sizeof(nretry_to_per_lookup[0]);
++		count = ARRAY_SIZE(nretry_to_per_lookup);
+ 		if (retries >= count)
+ 			retries = count - 1;
+ 		if (info_priv->n_bad_frames) {
