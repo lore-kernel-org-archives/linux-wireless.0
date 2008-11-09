@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:60947 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755793AbYKCQm0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 11:42:26 -0500
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: [GIT PATCH] rfkill fixes for 2.6.28-rc3
-Date: Mon,  3 Nov 2008 14:42:15 -0200
-Message-Id: <1225730537-2679-1-git-send-email-hmh@hmh.eng.br> (sfid-20081103_174234_357018_7D423BEF)
+Received: from kroah.org ([198.145.64.141]:55803 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753828AbYKIETe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Nov 2008 23:19:34 -0500
+Date: Sat, 8 Nov 2008 20:18:08 -0800
+From: Greg KH <greg@kroah.com>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: stable@kernel.org, rjw@sisk.pl, linville@tuxdriver.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [stable] [PATCH 0/2] iwlwifi fixes for stable 2.6.27
+Message-ID: <20081109041808.GA1017@kroah.com> (sfid-20081109_051946_489257_DAD7A74B)
+References: <1226191867-22324-1-git-send-email-tomas.winkler@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1226191867-22324-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Nov 09, 2008 at 02:51:05AM +0200, Tomas Winkler wrote:
+> First one didn't make it into the stable due to type in emails
+> Second is important bug fix that was kept out 2.6.27 merging window. 
+> There is no visible kernel bug but w/o this patch the 5000 iwlwifi HW  
+> is left un-calibrated which is critical
 
-John, Ivo,
+Are these already in Linus's tree?  If so, do you have a git commit id
+for them?
 
-This small patchset contains two fixes to issues in the suspend/resume
-handling of the rfkill class core.
+thanks,
 
-It needs to go to 2.6.28.  These patches are based on 2.6.28-rc3.
-
-Chances are they will *clash* with what is in wireless-testing, so I will
-send a rebased patchset for wireless-testing with these patches on the
-bottom of the stack (to make merging easier with mainline).
-
-The patches are also needed on stable, but won't apply automatically.  I
-don't think I will bother with 2.6.26 since the suspend/resume restore of
-radio state there is not going to work well anyway, unless I backport a bit
-more stuff... but 2.6.27 deserves to get them.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+greg k-h
