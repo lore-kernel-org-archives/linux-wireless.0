@@ -1,227 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:59726 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753988AbYKNSmw (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60320 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753536AbYKII42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 13:42:52 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC][RFT][PATCH] p54: WEP & CCMP accelerator
-Date: Fri, 14 Nov 2008 19:42:50 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Kalle Valo <kalle.valo@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200811141942.50398.chunkeey@web.de> (sfid-20081114_194254_975168_80637658)
+	Sun, 9 Nov 2008 03:56:28 -0500
+Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org,
+	Shaddy Baddah <shaddy_baddah@hotmail.com>
+In-Reply-To: <491653A6.20705@hotmail.com>
+References: <4902DEBB.3050205@hotmail.com>
+	 <20081025112147.GA12252@Chamillionaire.breakpoint.cc>
+	 <200810251325.07916.mb@bu3sch.de>
+	 <20081025112813.GC12252@Chamillionaire.breakpoint.cc>
+	 <49033782.5040701@hotmail.com>  <491589ED.4090904@hotmail.com>
+	 <1226149894.3610.8.camel@johannes.berg>  <491653A6.20705@hotmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TKRINHvO0gDbQvrv1jEI"
+Date: Sun, 09 Nov 2008 09:56:31 +0100
+Message-Id: <1226220992.3614.16.camel@johannes.berg> (sfid-20081109_095632_336911_F61525F4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows p54 to utilize its WEP and CCMP accelerator.
 
-However, I'm not sure how TKIP is supposed to work... Kalle?
+--=-TKRINHvO0gDbQvrv1jEI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-11-14 18:37:34.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-11-14 18:55:53.000000000 +0100
-@@ -26,6 +26,9 @@
- #include "p54.h"
- #include "p54common.h"
- 
-+static int modparam_nohwcrypt;
-+module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
-+MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
- MODULE_DESCRIPTION("Softmac Prism54 common code");
- MODULE_LICENSE("GPL");
-@@ -196,6 +199,8 @@ int p54_parse_firmware(struct ieee80211_
- 			priv->rx_end = le32_to_cpu(desc->rx_end) - 0x3500;
- 			priv->headroom = desc->headroom;
- 			priv->tailroom = desc->tailroom;
-+			priv->privacy_caps = desc->privacy_caps;
-+			priv->rx_keycache_size = desc->rx_keycache_size;
- 			if (le32_to_cpu(bootrec->len) == 11)
- 				priv->rx_mtu = le16_to_cpu(desc->rx_mtu);
- 			else
-@@ -238,6 +243,15 @@ int p54_parse_firmware(struct ieee80211_
- 		priv->tx_stats[7].limit = 2;		/* AC_BK */
- 		dev->queues = 4;
- 	}
-+
-+	if (!modparam_nohwcrypt)
-+		printk(KERN_INFO "%s: Available cryptographic accelerator for"
-+				 " WEP:%s, TKIP:no, CCMP:%s\n",
-+			wiphy_name(dev->wiphy),
-+			(priv->privacy_caps & BR_DESC_PRIV_CAP_WEP) ? "YES" :
-+			"no", (priv->privacy_caps & BR_DESC_PRIV_CAP_AESCCMP) ?
-+			"YES" : "no");
-+
- 	priv->fw_crc = crc;
- 
- 	return 0;
-@@ -539,6 +553,11 @@ static int p54_rx_data(struct ieee80211_
- 			return 0;
- 	}
- 
-+	if (hdr->decrypt_status == P54_DECRYPT_OK)
-+		rx_status.flag |= RX_FLAG_DECRYPTED;
-+	if (hdr->decrypt_status == P54_DECRYPT_FAIL_MICHAEL)
-+		rx_status.flag |= RX_FLAG_MMIC_ERROR;
-+
- 	rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);
- 	rx_status.noise = priv->noise;
- 	/* XX correct? */
-@@ -1087,6 +1106,20 @@ static int p54_tx_fill(struct ieee80211_
- 	return ret;
- }
- 
-+static u8 p54_convert_algo(enum ieee80211_key_alg alg)
-+{
-+	switch (alg) {
-+	case ALG_WEP:
-+		return P54_CRYPTO_WEP;
-+	case ALG_TKIP:
-+		return P54_CRYPTO_TKIPMICHAEL;
-+	case ALG_CCMP:
-+		return P54_CRYPTO_AESCCMP;
-+	default:
-+		return 0;
-+	}
-+}
-+
- static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -1097,13 +1130,14 @@ static int p54_tx(struct ieee80211_hw *d
- 	size_t padding, len, tim_len = 0;
- 	int i, j, ridx;
- 	u16 hdr_flags = 0, aid = 0;
--	u8 rate, queue;
-+	u8 rate, queue, crypt_offset;
- 	u8 cts_rate = 0x20;
- 	u8 rc_flags;
- 	u8 calculated_tries[4];
- 	u8 nrates = 0, nremaining = 8;
- 
- 	queue = skb_get_queue_mapping(skb);
-+	crypt_offset = ieee80211_get_hdrlen_from_skb(skb);
- 
- 	if (p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid)) {
- 		current_queue = &priv->tx_stats[queue];
-@@ -1209,10 +1243,23 @@ static int p54_tx(struct ieee80211_hw *d
- 	/* TODO: enable bursting */
- 	hdr->flags = cpu_to_le16(hdr_flags);
- 	hdr->tries = ridx;
--	txhdr->crypt_offset = 0;
- 	txhdr->rts_rate_idx = 0;
--	txhdr->key_type = 0;
--	txhdr->key_len = 0;
-+	if (info->control.hw_key) {
-+		crypt_offset += info->control.hw_key->iv_len;
-+		if (info->control.hw_key->flags & IEEE80211_KEY_FLAG_WMM_STA)
-+			crypt_offset += IEEE80211_QOS_CTL_LEN;
-+		txhdr->crypt_offset = crypt_offset;
-+		txhdr->key_type = p54_convert_algo(info->control.hw_key->alg);
-+		txhdr->key_len = min((u8)16, info->control.hw_key->keylen);
-+		memcpy(txhdr->key, info->control.hw_key->key, txhdr->key_len);
-+
-+		/* reserve some space for ICV */
-+		hdr->len += info->control.hw_key->icv_len;
-+	} else {
-+		txhdr->crypt_offset = 0;
-+		txhdr->key_type = 0;
-+		txhdr->key_len = 0;
-+	}
- 	txhdr->hw_queue = queue;
- 	if (current_queue)
- 		txhdr->backlog = current_queue->len;
-@@ -1841,6 +1888,66 @@ static void p54_bss_info_changed(struct 
- 
- }
- 
-+static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
-+		       const u8 *local_address, const u8 *address,
-+		       struct ieee80211_key_conf *key)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct sk_buff *skb;
-+	struct p54_keycache *rxkey;
-+	u8 algo = 0;
-+
-+	if (modparam_nohwcrypt)
-+		return -ENOSPC;
-+
-+	if (cmd == DISABLE_KEY)
-+		algo = 0;
-+	else {
-+		switch (key->alg) {
-+		case ALG_TKIP:
-+			return -EOPNOTSUPP;
-+			break;
-+		case ALG_WEP:
-+			if (!(priv->privacy_caps & BR_DESC_PRIV_CAP_WEP))
-+				return -EOPNOTSUPP;
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+			algo = P54_CRYPTO_WEP;
-+			break;
-+		case ALG_CCMP:
-+			if (!(priv->privacy_caps & BR_DESC_PRIV_CAP_AESCCMP))
-+				return -EOPNOTSUPP;
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+			algo = P54_CRYPTO_AESCCMP;
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+	}
-+
-+	mutex_lock(&priv->conf_mutex);
-+	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*rxkey) +
-+			sizeof(struct p54_hdr),	P54_CONTROL_TYPE_RX_KEYCACHE,
-+			GFP_ATOMIC);
-+	if (!skb) {
-+		mutex_unlock(&priv->conf_mutex);
-+		return -ENOMEM;
-+	}
-+
-+	rxkey = (struct p54_keycache *)skb_put(skb, sizeof(*rxkey));
-+	rxkey->entry = cpu_to_le16(key->keyidx);
-+	rxkey->key_id = cpu_to_le16(key->keyidx);
-+	rxkey->key_len = min((u8)16, key->keylen);
-+	rxkey->key_type = algo;
-+	if (address)
-+		memcpy(rxkey->mac, address, ETH_ALEN);
-+	else
-+		memset(rxkey->mac, ~0, ETH_ALEN);
-+	memcpy(rxkey->key, key->key, rxkey->key_len);
-+	priv->tx(dev, skb, 1);
-+	mutex_unlock(&priv->conf_mutex);
-+	return 0;
-+}
-+
- static const struct ieee80211_ops p54_ops = {
- 	.tx			= p54_tx,
- 	.start			= p54_start,
-@@ -1848,6 +1955,7 @@ static const struct ieee80211_ops p54_op
- 	.add_interface		= p54_add_interface,
- 	.remove_interface	= p54_remove_interface,
- 	.set_tim		= p54_set_tim,
-+	.set_key		= p54_set_key,
- 	.config			= p54_config,
- 	.config_interface	= p54_config_interface,
- 	.bss_info_changed	= p54_bss_info_changed,
-diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
---- a/drivers/net/wireless/p54/p54.h	2008-11-14 17:19:36.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54.h	2008-11-14 18:54:15.000000000 +0100
-@@ -116,6 +116,8 @@ struct p54_common {
- 	int noise;
- 	void *eeprom;
- 	struct completion eeprom_comp;
-+	u8 privacy_caps;
-+	u8 rx_keycache_size;
- };
- 
- int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb);
+Hi,
+
+
+> So, looking into this problem, I was able to come up with a patch=20
+> (attached. Note, it also includes remnants of the patch recommended by=20
+> Sebastian Andrzej Siewior in=20
+> http://marc.info/?l=3Dlinux-wireless&m=3D122493409906326&w=3D2). The prob=
+lem=20
+> occurs within compare_ether_addr() and this immediately reminded me that=20
+> the patches recommended to me way back last year=20
+> (http://marc.info/?l=3Dlinux-wireless&m=3D119543627712471&w=3D2) also dea=
+lt=20
+> with this problem.
+
+I think you forgot to attach the patch.
+
+> Looking into how it was solved then, all the compare_ether_addr() calls=20
+> were replaced with memcmp() calls. This is what I have done with my=20
+> patch as well... but this approach did not fill me with confidence. It=20
+> seemed to me like a quick fix that didn't directly address the alignment=20
+> problem. And IMO my subsequent findings confirm this.
+>=20
+> I now hit the following kernel errors:
+>=20
+>  > [  240.139093] Kernel unaligned access at TPC[100f7f44]
+>  > sta_info_get+0x24/0x68 [mac80211]
+>  > [  240.233255] Kernel unaligned access at TPC[100f7f48]
+>  > sta_info_get+0x28/0x68 [mac80211]
+>  > [  240.328015] Kernel unaligned access at TPC[100f7f50]
+>  > sta_info_get+0x30/0x68 [mac80211]
+>  > [  240.422771] Kernel unaligned access at TPC[100f7f44]
+>  > sta_info_get+0x24/0x68 [mac80211]
+>  > [  240.517554] Kernel unaligned access at TPC[100f7f48]
+>  > sta_info_get+0x28/0x68 [mac80211]
+>=20
+> Looking into this, and the underlying problem is again=20
+> compare_ether_addr(). Now, I'm sure that replacing this with a memcmp()=20
+> is now treading on more toes than just zd1211rw users. And for this=20
+> reason, I think a better solution is going to be required.
+>=20
+> Does that sound right? I will persist in trying to understand the code=20
+> to try and come up with a fix. But obviously, I hope that I can get help=20
+> with this to make the former an education exercise, not a kernel=20
+> maintenance exercise.
+
+:)
+Yes, I think you're right, it appears that the 802.11 header isn't
+aligned on a 2-byte boundary, which is extremely strange. Can you, with
+your patch applied, do something like
+
+	printk(KERN_DEBUG "%p\n", skb->data);
+
+before this code in zd_mac.c:
+
+        memcpy(skb_put(skb, length), buffer, length);
+
+        ieee80211_rx_irqsafe(hw, skb, &stats);
+
+
+johannes
+
+--=-TKRINHvO0gDbQvrv1jEI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJFqW8AAoJEKVg1VMiehFYEAMP/ikGKbnRIf/hBNTWFNQW4tO7
+BxeJEYLst3bMo0FVlCTH5j8pNM+bvjgZ1VnSNwVarPVH1MEMzl3rw5TkuT2wZuWc
+HlRcRFE51dqN/CX3/iqTRIDLSdTBY/V6dlWkmmWNdM9/2KuNNWIc0CmNvGtjtaqO
+y7izayIGvxkG2rlTdGAOygTZC0PX0Od/GGBgbXE1PdW1o+jrjDhtN0QO7qnbf8fV
+pRWPZiWJGN2NpRZIYyoWiGKjHZuHwvHnIKOMwOIhpxIp0ArobOf+DuaPyH3neP7N
+2gkGi5PC1xUKzXF6HR6jq502QJ3/8NSZI9Pl+laXMiekjlnc3qMfJcN1RGkoQ3NF
+DTAsm+XmdVy4brmZZLG/8hjZSG9mUjiZEBO3zLchQ1T59TGEO86dcvuoX947o9XF
+9xhdi6xrAEFmA7v8Mrx9XOulbPArlr3Zw5Somr8p553RSawbmWeN+x4RRI3lSzOq
+kb1B8AVGpdEcYPa2FDveazulyQscUl1WSZT2n9o2d3YLEqrVY7hnXBl0yT3Ou4oW
+gbsnYnS4UdBgo4FzEpgxuqWmotVhDBTJbTNSkfAnORxH6irTXiaNlrqeE6WdY8wk
+OK1BjlLzKZnqqqc1reM97XRrkXULYPSL5fuMNYb0QLHja/tybGof3Yu2XYtSpXwV
+qWKxAY2oti0GxA+YhN/0
+=6Nef
+-----END PGP SIGNATURE-----
+
+--=-TKRINHvO0gDbQvrv1jEI--
+
