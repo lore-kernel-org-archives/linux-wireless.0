@@ -1,38 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:33599 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751579AbYKKUOL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 15:14:11 -0500
-Date: Tue, 11 Nov 2008 12:04:57 -0800
-From: Greg KH <greg@kroah.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [stable] [PATCH 2/2] iwlwifi: fix suspend to RAM in iwlwifi
-Message-ID: <20081111200457.GB1784@kroah.com> (sfid-20081111_211417_005912_7B6AD3DD)
-References: <1226191867-22324-1-git-send-email-tomas.winkler@intel.com> <1226191867-22324-2-git-send-email-tomas.winkler@intel.com> <1226191867-22324-3-git-send-email-tomas.winkler@intel.com> <1226280376.2604.280.camel@debian.sh.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1226280376.2604.280.camel@debian.sh.intel.com>
+Received: from mga02.intel.com ([134.134.136.20]:10830 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753506AbYKIAqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Nov 2008 19:46:45 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: stable@vger.kernel.org, rjw@sisk.pl, linville@tuxdriver.com,
+	reinette.chatre@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 2/2] iwlwifi: fix suspend to RAM in iwlwifi
+Date: Sun,  9 Nov 2008 02:46:36 +0200
+Message-Id: <1226191596-22192-3-git-send-email-tomas.winkler@intel.com> (sfid-20081109_014657_939716_B8EEE347)
+In-Reply-To: <1226191596-22192-2-git-send-email-tomas.winkler@intel.com>
+References: <1226191596-22192-1-git-send-email-tomas.winkler@intel.com>
+ <1226191596-22192-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 10, 2008 at 09:26:16AM +0800, Zhu Yi wrote:
-> On Sun, 2008-11-09 at 08:51 +0800, Tomas Winkler wrote:
-> > This patch fixes suspend to RAM after by moving
-> > notify_mac out of iwlwifi mutex
-> > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=11845
-> 
-> Greg, please also merge the iwl3945 counterpart for this problem.
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d54bc4e3fc5c56600a13c9ebc0a7e1077ac05d59
+This patch fixes suspend to RAM after by moving
+notify_mac out of iwlwifi mutex
 
-I've added this now.
+http://bugzilla.kernel.org/show_bug.cgi?id=11845
 
-thanks,
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Tested-by: Carlos R. Mafra <crmafra2@gmail.com>
+Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
+Cc: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index e01f048..edab202 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2090,7 +2090,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
+ 		iwl4965_error_recovery(priv);
+ 
+ 	iwl_power_update_mode(priv, 1);
+-	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+ 
+ 	if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
+ 		iwl4965_set_mode(priv, priv->iw_mode);
+@@ -2342,6 +2341,7 @@ static void iwl_bg_alive_start(struct work_struct *data)
+ 	mutex_lock(&priv->mutex);
+ 	iwl_alive_start(priv);
+ 	mutex_unlock(&priv->mutex);
++	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+ }
+ 
+ static void iwl4965_bg_rf_kill(struct work_struct *work)
+-- 
+1.5.4.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
