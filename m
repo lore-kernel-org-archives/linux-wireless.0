@@ -1,100 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out8.libero.it ([212.52.84.108]:33396 "EHLO
-	cp-out8.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132AbYKQUWr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39065 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195AbYKIIwp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 15:22:47 -0500
-Received: from [192.168.1.102] (151.48.11.15) by cp-out8.libero.it (8.5.016.1)
-        id 49198CCD00EB2CE6 for linux-wireless@vger.kernel.org; Mon, 17 Nov 2008 21:22:45 +0100
-From: Fabio Rossi <rossi.f@inwind.it>
-To: linux-wireless@vger.kernel.org
-Subject: Re: ath5k: problems during the connection to a sitecom AP
-Date: Mon, 17 Nov 2008 21:20:11 +0100
-References: <200811150207.12084.rossi.f@inwind.it>
-In-Reply-To: <200811150207.12084.rossi.f@inwind.it>
-MIME-Version: 1.0
-Message-Id: <200811172120.11299.rossi.f@inwind.it> (sfid-20081117_212252_390062_26297D25)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	Sun, 9 Nov 2008 03:52:45 -0500
+Subject: Re: [PATCH 1/1] mac80211: rc80211_pid eliminate sparse warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1226181055-713-1-git-send-email-tomas.winkler@intel.com>
+References: <1226181055-713-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0EwKMUucWapNDZhRz+sh"
+Date: Sun, 09 Nov 2008 09:52:42 +0100
+Message-Id: <1226220762.3614.12.camel@johannes.berg> (sfid-20081109_095304_403699_EF1DDFBD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Which is the best way to proceed with the debug to understand why my 
-card isn't going through the authentication-association process with the 
-hidden SSID?
 
-Thanks,
-Fabio
+--=-0EwKMUucWapNDZhRz+sh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Saturday 15 November 2008, you wrote:
+On Sat, 2008-11-08 at 23:50 +0200, Tomas Winkler wrote:
+> This patch eliminates sparse warnings in pid rate scale algorithm
+> 'debugfs: allow access to signed values' patch hit the dead end
+> year ago w/o much echo so I guess there is no real need to address this
+> properly.
 
-> I'm testing the ath5k driver (wireless-testing v2.6.28-rc4-5172-gc1a847c)
-> with my 3com 3CRDAG675 PCI card (atheros AR5212). I can try alternatively
-> two different access points (both configured with WEP + hidden SSID), the
-> procedure I use is the same but the results are different.
->
-> Here are the commands used:
->
-> modprobe ath5k
-> ifconfig ath0 192.168.1.2 up
-> iwconfig ath0 key <MYKEY>
-> iwconfig ath0 ap <AP_MAC>
-> iwconfig ath0 essid <MY_ESSID>
->
->
-> *** 3com AP ***
-> With this one I can associate without problems at the first try (SSID not
-> broadcast + WEP encryption):
->
-> ath5k_pci 0000:00:0b.0: PCI INT A -> Link[LNKB] -> GSI 10 (level, low) ->
-> IRQ 10
-> ath5k_pci 0000:00:0b.0: registered as 'phy1'
-> phy1: Selected rate control algorithm 'minstrel'
-> ath5k phy1: Atheros AR5212 chip found (MAC: 0x56, PHY: 0x41)
-> ath5k phy1: RF5112B multiband radio found (0x36)
-> udev: renamed network interface wlan0 to ath0
-> ath0: direct probe to AP <AP_MAC> try 1
-> ath0 direct probe responded
-> ath0: authenticate with AP <AP_MAC>
-> ath0: authenticated
-> ath0: associate with AP <AP_MAC>
-> ath0: RX AssocResp from <AP_MAC> (capab=0x421 status=0 aid=4)
-> ath0: associated
-> phy1: Allocated STA <AP_MAC>
-> phy1: Inserted STA <AP_MAC>
-> ath0: switched to short barker preamble (BSSID=<AP_MAC>)
-> ath0: switched to short slot (BSSID=<AP_MAC>)
->
-> *** Sitecom AP ***
-> With this one I'm able to associate only when the SSID is broadcast (with
-> or without encryption). Moreover the association process isn't successful
-> at first try (like for the 3com AP) and the link quality is very bad. An
-> example of ping statistics is the following
->
-> 629 packets transmitted, 527 received, 16% packet loss, time 711605ms
-> rtt min/avg/max/mdev = 6.332/6303.120/151334.339/18133.729 ms, pipe 114
->
-> and it's common to get the following error message (transmission buffer
-> saturated?):
->
-> ping: sendmsg: No buffer space available
->
-> When I disable the SSID I can't associate anymore to the AP, the only debug
-> messages are the following:
->
-> ath5k_pci 0000:00:0b.0: PCI INT A -> Link[LNKB] -> GSI 10 (level, low) ->
-> IRQ 10
-> ath5k_pci 0000:00:0b.0: registered as 'phy12'
-> phy12: Selected rate control algorithm 'minstrel'
-> ath5k phy12: Atheros AR5212 chip found (MAC: 0x56, PHY: 0x41)
-> ath5k phy12: RF5112B multiband radio found (0x36)
-> udev: renamed network interface wlan0 to ath0
->
-> How can I debug to provide more details (e.g. using debugfs)?
->
-> Thank you for any help,
-> Fabio
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And I guess nobody uses these debugfs knobs anyway :)
+Looks like an acceptable workaround.
+
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/mac80211/rc80211_pid_algo.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_a=
+lgo.c
+> index 2328ba5..96ceb7e 100644
+> --- a/net/mac80211/rc80211_pid_algo.c
+> +++ b/net/mac80211/rc80211_pid_algo.c
+> @@ -403,11 +403,11 @@ static void *rate_control_pid_alloc(struct ieee8021=
+1_hw *hw,
+>  						 S_IRUSR | S_IWUSR, debugfsdir,
+>  						 &pinfo->sampling_period);
+>  	de->coeff_p =3D debugfs_create_u32("coeff_p", S_IRUSR | S_IWUSR,
+> -					 debugfsdir, &pinfo->coeff_p);
+> +					 debugfsdir, (u32 *)&pinfo->coeff_p);
+>  	de->coeff_i =3D debugfs_create_u32("coeff_i", S_IRUSR | S_IWUSR,
+> -					 debugfsdir, &pinfo->coeff_i);
+> +					 debugfsdir, (u32 *)&pinfo->coeff_i);
+>  	de->coeff_d =3D debugfs_create_u32("coeff_d", S_IRUSR | S_IWUSR,
+> -					 debugfsdir, &pinfo->coeff_d);
+> +					 debugfsdir, (u32 *)&pinfo->coeff_d);
+>  	de->smoothing_shift =3D debugfs_create_u32("smoothing_shift",
+>  						 S_IRUSR | S_IWUSR, debugfsdir,
+>  						 &pinfo->smoothing_shift);
+
+--=-0EwKMUucWapNDZhRz+sh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJFqTWAAoJEKVg1VMiehFYnmkQAI94Aly/8q+SFOUk1wJq+2xC
+vZ76Eo3eTgzHh0sGqD4gBgLSz2nACQrwhzwrlQqxlfVLtHcBYvdmxwGb1z6UUvAj
+KDIDxfUck3fggcCVpRcKzZ8sI6pXYCIAYQnhkTPIyjb4XC7Td5s372QJ6RkrEmNa
+cHSuHnPNEplxnt0YbJJLep2Ua/r+fFxhZH61lywKVphZU1iPMdbg5HtUSgLsVJk7
+uqVMApkqK/yQ9/B8OI84LWgPNhAfy+zt00yxHc16n/PwyM6H9JUpbLkIw0ED6elU
+DdwNCxmAwGzsDFXaWxEJ13G14h7sKGS3s9dyUht1F47qINtXDbVE9yCf2khfT3q8
+AAfxey8KK+N0duqPzSGatjshjxmwNR9mz/npoTCDU+F8zE36BHg2kYebv1MH1j/9
+WXTSvZ7O3zUsVD8V6IlAEjMJV59Dt8h9hidz924sFxgMGwm51dvZBIWKdL4ST7xW
+vJ6dU7Asria8s8gJJKrm6zMaDs+9OTJPQjJ+DB6CF/8EJgSQaFgL8G6jX40CQlUy
+GUkrigLvcyyZvoEo4ttxKYbIEuEaq6JleQpA8bM3hSYkD1/G1hq4XeF5XFuknYhX
++9IrbU3EuZhWgwSaJZPPypdO75TtDYfabb4h66jKkxkd18nj3tsPfwHwMKOwMNEw
+vOe0eUHTqWhYptnoXKby
+=H1Xy
+-----END PGP SIGNATURE-----
+
+--=-0EwKMUucWapNDZhRz+sh--
+
