@@ -1,124 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:1545 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751589AbYKRElg (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:38154 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755025AbYKIPRE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 23:41:36 -0500
-Date: Mon, 17 Nov 2008 23:40:38 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: maximlevitsky@gmail.com
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] ath5k: set mac address in add_interface
-Message-ID: <20081118044037.GA18983@hash.localnet> (sfid-20081118_054141_131750_6B7D2AD0)
+	Sun, 9 Nov 2008 10:17:04 -0500
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Cc: "David Shwatrz" <dshwatrz@gmail.com>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: Where is allow-ap-vlan-modes.patch ?
+References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com>
+	<200811091604.43705.IvDoorn@gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sun, 09 Nov 2008 17:16:35 +0200
+In-Reply-To: <200811091604.43705.IvDoorn@gmail.com> (ext Ivo van Doorn's message of "Sun\, 9 Nov 2008 16\:04\:43 +0100")
+Message-ID: <874p2h2alo.fsf@nokia.com> (sfid-20081109_161709_624849_AD3593E7)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Maxim, 
+Ivo van Doorn <ivdoorn@gmail.com> writes:
 
-Please try this patch.  I didn't have a problem changing the mac address 
-after it was set to something else.  I did kick it to re-associate with
-the AP, though.
+>> I have a question:
+>> Why was the allow-ap-vlan-modes.patch removed from
+>> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/?
+>> 
+>> I see that it was there until recently (to be accurate,
+>> 30.10.08 was the last time it was there).
+>> 
+>> I do not see that it was applied; I have the latest git tree of
+>> wireless-2.6 and wireless-next-2.6
+>
+> It is currently present in the wireless-testing git tree.
 
-Subject: [PATCH] ath5k: set mac address in add_interface
-
-Configure the mac address in add_interface and clear it in
-remove_interface so that users can change the mac address
-to something other than the one in the eeprom.  Also avoid
-setting it at attach time so that we won't ack packets
-until fully set up.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/attach.c |   12 +++---------
- drivers/net/wireless/ath5k/base.c   |   13 +++++++++++--
- 2 files changed, 14 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/attach.c b/drivers/net/wireless/ath5k/attach.c
-index 51d5698..49d82d7 100644
---- a/drivers/net/wireless/ath5k/attach.c
-+++ b/drivers/net/wireless/ath5k/attach.c
-@@ -106,7 +106,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- {
- 	struct ath5k_hw *ah;
- 	struct pci_dev *pdev = sc->pdev;
--	u8 mac[ETH_ALEN];
-+	u8 mac[ETH_ALEN] = {};
- 	int ret;
- 	u32 srev;
- 
-@@ -317,15 +317,9 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 		goto err_free;
- 	}
- 
--	/* Set MAC address */
--	ret = ath5k_eeprom_read_mac(ah, mac);
--	if (ret) {
--		ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
--			sc->pdev->device);
--		goto err_free;
--	}
--
-+	/* MAC address is cleared until add_interface */
- 	ath5k_hw_set_lladdr(ah, mac);
-+
- 	/* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
- 	memset(ah->ah_bssid, 0xff, ETH_ALEN);
- 	ath5k_hw_set_associd(ah, ah->ah_bssid, 0);
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 34cd1a4..d5bf62a 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -707,7 +707,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- {
- 	struct ath5k_softc *sc = hw->priv;
- 	struct ath5k_hw *ah = sc->ah;
--	u8 mac[ETH_ALEN];
-+	u8 mac[ETH_ALEN] = {};
- 	int ret;
- 
- 	ATH5K_DBG(sc, ATH5K_DEBUG_ANY, "devid 0x%x\n", pdev->device);
-@@ -777,7 +777,13 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
- 	setup_timer(&sc->calib_tim, ath5k_calibrate, (unsigned long)sc);
- 
--	ath5k_hw_get_lladdr(ah, mac);
-+	ret = ath5k_eeprom_read_mac(ah, mac);
-+	if (ret) {
-+		ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
-+			sc->pdev->device);
-+		goto err_queues;
-+	}
-+	
- 	SET_IEEE80211_PERM_ADDR(hw, mac);
- 	/* All MAC address bits matter for ACKs */
- 	memset(sc->bssidmask, 0xff, ETH_ALEN);
-@@ -2765,6 +2771,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- 	/* Set to a reasonable value. Note that this will
- 	 * be set to mac80211's value at ath5k_config(). */
- 	sc->bintval = 1000;
-+	ath5k_hw_set_lladdr(sc->ah, conf->mac_addr);
- 
- 	ret = 0;
- end:
-@@ -2777,11 +2784,13 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
- 			struct ieee80211_if_init_conf *conf)
- {
- 	struct ath5k_softc *sc = hw->priv;
-+	u8 mac[ETH_ALEN] = {};
- 
- 	mutex_lock(&sc->lock);
- 	if (sc->vif != conf->vif)
- 		goto end;
- 
-+	ath5k_hw_set_lladdr(sc->ah, mac);
- 	sc->vif = NULL;
- end:
- 	mutex_unlock(&sc->lock);
--- 
-1.5.4.2.182.gb3092
+Yes, I can verify that. I have AP mode working in b43 using latest
+hostapd from git and wireless-testing.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+Kalle Valo
