@@ -1,246 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:50719 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752078AbYKDNuj (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:3003 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754016AbYKJSCG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 08:50:39 -0500
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
-Date: Tue,  4 Nov 2008 08:50:49 -0500
-Message-Id: <1225806649-10050-3-git-send-email-herton@mandriva.com.br> (sfid-20081104_145047_761196_F4DE45BD)
-In-Reply-To: <1225806649-10050-1-git-send-email-herton@mandriva.com.br>
-References: <1225806649-10050-1-git-send-email-herton@mandriva.com.br>
+	Mon, 10 Nov 2008 13:02:06 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so950304ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 10:02:04 -0800 (PST)
+Message-ID: <40f31dec0811101002u7e2ec485vb4d2954cfa2ed6e2@mail.gmail.com> (sfid-20081110_190216_508520_B7F8CD17)
+Date: Mon, 10 Nov 2008 20:02:04 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] ath5k: name pci driver "ath5k" too
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1226339820.3650.9.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1226339820.3650.9.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Realtek 8187B has a receive command queue to feedback beacon interrupt
-and transmitted packet status. Use it to feedback mac80211 about status
-of transmitted packets. Unfortunately in the course of testing I found
-that the sequence number reported by hardware includes entire sequence
-control in a 12 bit only field, so a workaround is done to check only
-lowest bits.
+2008/11/10 Johannes Berg <johannes@sipsolutions.net>:
+> Call the ath5k pci driver struct "ath5k" too to be less
+> confusing in sysfs.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> resend, forgot the list
+>
+>  drivers/net/wireless/ath5k/base.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> --- everything.orig/drivers/net/wireless/ath5k/base.c   2008-11-10 18:54:15.000000000 +0100
+> +++ everything/drivers/net/wireless/ath5k/base.c        2008-11-10 18:54:26.000000000 +0100
+> @@ -200,7 +200,7 @@ static int          ath5k_pci_resume(struct pci_
+>  #endif /* CONFIG_PM */
+>
+>  static struct pci_driver ath5k_pci_driver = {
+> -       .name           = "ath5k_pci",
+> +       .name           = KBUILD_MODNAME,
+>        .id_table       = ath5k_pci_id_table,
+>        .probe          = ath5k_pci_probe,
+>        .remove         = __devexit_p(ath5k_pci_remove),
+>
+>
+>
 
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
----
- v2: fix rate stuck at 1M reported by Larry Finger, Hin-Tak and also seen by me.
-     btw, I noted now with a ralink device that rt2500usb (rt2x00) has same
-     issue currently.
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
- Hin-Tak: didn't add your tested-by yet as this patch has v2 fix comparing to
- others, please test it again so I can add your tested-by
-
- drivers/net/wireless/rtl8187.h     |    5 ++
- drivers/net/wireless/rtl8187_dev.c |  131 ++++++++++++++++++++++++++++++++++-
- 2 files changed, 132 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
-index f09872e..c385407 100644
---- a/drivers/net/wireless/rtl8187.h
-+++ b/drivers/net/wireless/rtl8187.h
-@@ -113,6 +113,11 @@ struct rtl8187_priv {
- 	u8 noise;
- 	u8 slot_time;
- 	u8 aifsn[4];
-+	struct {
-+		__le64 buf;
-+		struct urb *urb;
-+		struct sk_buff_head queue;
-+	} b_tx_status;
- };
- 
- void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
-diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-index a84bff9..7758779 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -165,8 +165,27 @@ static void rtl8187_tx_cb(struct urb *urb)
- 	skb_pull(skb, priv->is_rtl8187b ? sizeof(struct rtl8187b_tx_hdr) :
- 					  sizeof(struct rtl8187_tx_hdr));
- 	ieee80211_tx_info_clear_status(info);
--	info->flags |= IEEE80211_TX_STAT_ACK;
--	ieee80211_tx_status_irqsafe(hw, skb);
-+
-+	if (!urb->status &&
-+	    !(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
-+	    priv->is_rtl8187b) {
-+		skb_queue_tail(&priv->b_tx_status.queue, skb);
-+
-+		/* queue is "full", discard last items */
-+		while (skb_queue_len(&priv->b_tx_status.queue) > 5) {
-+			struct sk_buff *old_skb;
-+
-+			dev_dbg(&priv->udev->dev,
-+				"transmit status queue full\n");
-+
-+			old_skb = skb_dequeue(&priv->b_tx_status.queue);
-+			ieee80211_tx_status_irqsafe(hw, old_skb);
-+		}
-+	} else {
-+		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) && !urb->status)
-+			info->flags |= IEEE80211_TX_STAT_ACK;
-+		ieee80211_tx_status_irqsafe(hw, skb);
-+	}
- }
- 
- static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
-@@ -208,7 +227,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- 		hdr->flags = cpu_to_le32(flags);
- 		hdr->len = 0;
- 		hdr->rts_duration = rts_dur;
--		hdr->retry = cpu_to_le32((info->control.rates[0].count - 1) << 8);
-+		hdr->retry = cpu_to_le32(info->control.rates[0].count << 8);
- 		buf = hdr;
- 
- 		ep = 2;
-@@ -226,7 +245,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- 		memset(hdr, 0, sizeof(*hdr));
- 		hdr->flags = cpu_to_le32(flags);
- 		hdr->rts_duration = rts_dur;
--		hdr->retry = cpu_to_le32((info->control.rates[0].count - 1) << 8);
-+		hdr->retry = cpu_to_le32(info->control.rates[0].count << 8);
- 		hdr->tx_duration =
- 			ieee80211_generic_frame_duration(dev, priv->vif,
- 							 skb->len, txrate);
-@@ -392,6 +411,105 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
- 	return 0;
- }
- 
-+static void rtl8187b_status_cb(struct urb *urb)
-+{
-+	struct ieee80211_hw *hw = (struct ieee80211_hw *)urb->context;
-+	struct rtl8187_priv *priv = hw->priv;
-+	u64 val;
-+	unsigned int cmd_type;
-+
-+	if (unlikely(urb->status)) {
-+		usb_free_urb(urb);
-+		return;
-+	}
-+
-+	/*
-+	 * Read from status buffer:
-+	 *
-+	 * bits [30:31] = cmd type:
-+	 * - 0 indicates tx beacon interrupt
-+	 * - 1 indicates tx close descriptor
-+	 *
-+	 * In the case of tx beacon interrupt:
-+	 * [0:9] = Last Beacon CW
-+	 * [10:29] = reserved
-+	 * [30:31] = 00b
-+	 * [32:63] = Last Beacon TSF
-+	 * 
-+	 * If it's tx close descriptor:
-+	 * [0:7] = Packet Retry Count
-+	 * [8:14] = RTS Retry Count
-+	 * [15] = TOK
-+	 * [16:27] = Sequence No
-+	 * [28] = LS
-+	 * [29] = FS
-+	 * [30:31] = 01b
-+	 * [32:47] = unused (reserved?)
-+	 * [48:63] = MAC Used Time
-+	 */
-+	val = le64_to_cpu(priv->b_tx_status.buf);
-+
-+	cmd_type = (val >> 30) & 0x3;
-+	if (cmd_type == 1) {
-+		unsigned int pkt_rc, seq_no;
-+		bool tok;
-+		struct sk_buff *skb;
-+		struct ieee80211_hdr *ieee80211hdr;
-+		unsigned long flags;
-+
-+		pkt_rc = val & 0xFF;
-+		tok = val & (1 << 15);
-+		seq_no = (val >> 16) & 0xFFF;
-+
-+		spin_lock_irqsave(&priv->b_tx_status.queue.lock, flags);
-+		skb_queue_reverse_walk(&priv->b_tx_status.queue, skb) {
-+			ieee80211hdr = (struct ieee80211_hdr *)skb->data;
-+
-+			/* 
-+			 * Instead of returning just the 12 bits of sequence
-+			 * number, hardware is returning entire sequence
-+			 * control, overflowing after some time. As a
-+			 * workaround, just consider the lower bits, and expect
-+			 * it's unlikely we wrongly ack some sent data
-+			 */
-+			if ((le16_to_cpu(ieee80211hdr->seq_ctrl) & 0xFFF) == seq_no)
-+				break;
-+		}
-+		if (skb != (struct sk_buff *) &priv->b_tx_status.queue) {
-+			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+			__skb_unlink(skb, &priv->b_tx_status.queue);
-+			if (tok)
-+				info->flags |= IEEE80211_TX_STAT_ACK;
-+			info->status.rates[0].count = pkt_rc;
-+
-+			ieee80211_tx_status_irqsafe(hw, skb);
-+		}
-+		spin_unlock_irqrestore(&priv->b_tx_status.queue.lock, flags);
-+	}
-+
-+	usb_submit_urb(urb, GFP_ATOMIC);
-+}
-+
-+static int rtl8187b_init_status_urb(struct ieee80211_hw *dev)
-+{
-+	struct rtl8187_priv *priv = dev->priv;
-+	struct urb *entry;
-+
-+	entry = usb_alloc_urb(0, GFP_KERNEL);
-+	if (!entry)
-+		return -ENOMEM;
-+	priv->b_tx_status.urb = entry;
-+
-+	usb_fill_bulk_urb(entry, priv->udev, usb_rcvbulkpipe(priv->udev, 9),
-+			  &priv->b_tx_status.buf, sizeof(priv->b_tx_status.buf),
-+			  rtl8187b_status_cb, dev);
-+
-+	usb_submit_urb(entry, GFP_KERNEL);
-+
-+	return 0;
-+}
-+
- static int rtl8187_cmd_reset(struct ieee80211_hw *dev)
- {
- 	struct rtl8187_priv *priv = dev->priv;
-@@ -744,6 +862,7 @@ static int rtl8187_start(struct ieee80211_hw *dev)
- 				  (7 << 0  /* long retry limit */) |
- 				  (7 << 21 /* MAX TX DMA */));
- 		rtl8187_init_urbs(dev);
-+		rtl8187b_init_status_urb(dev);
- 		mutex_unlock(&priv->conf_mutex);
- 		return 0;
- 	}
-@@ -820,6 +939,9 @@ static void rtl8187_stop(struct ieee80211_hw *dev)
- 		usb_kill_urb(info->urb);
- 		kfree_skb(skb);
- 	}
-+	while ((skb = skb_dequeue(&priv->b_tx_status.queue)))
-+		dev_kfree_skb_any(skb);
-+	usb_kill_urb(priv->b_tx_status.urb);
- 	mutex_unlock(&priv->conf_mutex);
- }
- 
-@@ -1307,6 +1429,7 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
- 		goto err_free_dev;
- 	}
- 	mutex_init(&priv->conf_mutex);
-+	skb_queue_head_init(&priv->b_tx_status.queue);
- 
- 	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
- 	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
 -- 
-1.6.0.2
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
