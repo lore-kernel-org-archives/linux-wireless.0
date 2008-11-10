@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:44186 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398AbYKDNBh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 08:01:37 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so3260708rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 05:01:37 -0800 (PST)
-Message-ID: <740646d0811040501w5571d464u757e05399803f768@mail.gmail.com> (sfid-20081104_140141_281673_C9C53A90)
-Date: Tue, 4 Nov 2008 11:01:36 -0200
-From: "Wilson Ribeiro" <wribjr@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Realtek wireless 8187se
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:34161 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756048AbYKJBMT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Nov 2008 20:12:19 -0500
+Subject: Re: BUG: scheduling while atomic: iwl3945/0/3680/0x00000002 during
+	resume from suspend
+From: Zhu Yi <yi.zhu@intel.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Michal Hocko <mhocko@suse.cz>, LKML <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <49172112.60508@gmail.com>
+References: <20081109141412.GA5858@dhcp35.suse.cz>
+	 <49172112.60508@gmail.com>
+Content-Type: text/plain
+Date: Mon, 10 Nov 2008 09:12:20 +0800
+Message-Id: <1226279540.2604.277.camel@debian.sh.intel.com> (sfid-20081110_021226_524413_E2A4C0D6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi people,
+On Mon, 2008-11-10 at 01:42 +0800, Jiri Slaby wrote:
+> I think the same as:
+> http://marc.info/?l=linux-wireless&m=122254514501379&w=2
 
-i recently bought a MSI Wind and it came with a wireless nic
-rtl8187se, is there support on current stable kernel for that wireless
-card?
+Yup. Try this fix.
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=605b6cd038c5002f8dcbd3695aa934a130257af4
 
 Thanks,
+-yi
 
---
-Wilson Ribeiro
-Consultor de Tecnologia da Informa=E7=E3o
-e-mail: wribjr@gmail.com
-phone: 55 21 34117748
-mobile: 55 21 82424280
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
