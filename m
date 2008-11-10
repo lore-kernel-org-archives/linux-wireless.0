@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36659 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52534 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbYKNObL (ORCPT
+	with ESMTP id S1751491AbYKJObI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 09:31:11 -0500
-Date: Fri, 14 Nov 2008 09:19:13 -0500
+	Mon, 10 Nov 2008 09:31:08 -0500
+Date: Mon, 10 Nov 2008 09:28:07 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: Kalle Valo <kalle.valo@nokia.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mark Ryden <markryde@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Master mode in iw
-Message-ID: <20081114141912.GB3443@tuxdriver.com> (sfid-20081114_153116_380795_6C886184)
-References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com> <87ej1f6ggq.fsf@nokia.com> <dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com> <87wsf74z6f.fsf@nokia.com> <1226578011.5105.8.camel@johannes.berg> <87fxlu4rdx.fsf@nokia.com> <69e28c910811140539p57fa13dej4c13aa0d09c76f95@mail.gmail.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: David Shwatrz <dshwatrz@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: Where is allow-ap-vlan-modes.patch ?
+Message-ID: <20081110142806.GG3546@tuxdriver.com> (sfid-20081110_153112_538468_9DD681F9)
+References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com> <200811091604.43705.IvDoorn@gmail.com> <31436f4a0811100048h5c7520d3ga4eedd815f8c793a@mail.gmail.com> <874p2g0x9d.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <69e28c910811140539p57fa13dej4c13aa0d09c76f95@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <874p2g0x9d.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2008 at 02:39:50PM +0100, Stefanik G=E1bor wrote:
-> On Fri, Nov 14, 2008 at 9:56 AM, Kalle Valo <kalle.valo@nokia.com> wr=
-ote:
+On Mon, Nov 10, 2008 at 11:02:22AM +0200, Kalle Valo wrote:
+> David Shwatrz <dshwatrz@gmail.com> writes:
+> 
+> > In this occasion may I ask - what is the wireless-testing git tree?
+> > is it based on wireless-next-2.6 or on wireless-2.6 tree?
+> 
+> It's based on Linus' rc releases and has all the wireless patches
+> which have been under development. I think John cherry picks the
+> patches from wireless-testing to wireless-2.6 or wireless-next-2.6. So
+> wireless-testing contains the bleeding edge wireless patches and if
+> John thinks they are good enough, he submits them forward.
+> 
+> Please correct me if I have understood something wrong.
 
-> > Actually I was thinking about fullmac hardware which support AP mod=
-e.
-> > In theory we might need to support those, but I guess in practise
-> > there hasn't been, nor ever will be, such hardware. I'll just shut =
-up
-> > now :)
+That is basically right.
 
-> I doubt that any fullmac hardware should have a mac80211-based driver=
-=2E..
+In the past patches often went to wireless-testing and to
+wireless-next-2.6/wireless-2.6 at the about the same time.  However
+upstream standards have tightened in ways that make me feel it is
+appropriate to give patches more public testing even before sending
+them for -next.
 
-cfg80211 !=3D mac80211
+In this case, I was also sick all last week which has slowed thing
+a bit more...
 
---=20
+Thanks,
+
+John
+-- 
 John W. Linville		Linux should be at the core
 linville@tuxdriver.com			of your literate lifestyle.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
