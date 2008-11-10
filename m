@@ -1,84 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out7.libero.it ([212.52.84.107]:49982 "EHLO
-	cp-out7.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758583AbYKVQhy (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43158 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752582AbYKJQQK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 11:37:54 -0500
-From: Fabio Rossi <rossi.f@inwind.it>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: ath5k: problems during the connection to a sitecom AP
-Date: Sat, 22 Nov 2008 17:33:56 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200811150207.12084.rossi.f@inwind.it> <200811192315.35537.rossi.f@inwind.it> <b6c5339f0811211222t745c65fve38958c9baa98e46@mail.gmail.com>
-In-Reply-To: <b6c5339f0811211222t745c65fve38958c9baa98e46@mail.gmail.com>
+	Mon, 10 Nov 2008 11:16:10 -0500
+Date: Mon, 10 Nov 2008 11:04:16 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Shwatrz <dshwatrz@gmail.com>
+Cc: Kalle Valo <kalle.valo@nokia.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: Where is allow-ap-vlan-modes.patch ?
+Message-ID: <20081110160416.GI3546@tuxdriver.com> (sfid-20081110_171614_429881_E5F4D760)
+References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com> <200811091604.43705.IvDoorn@gmail.com> <31436f4a0811100048h5c7520d3ga4eedd815f8c793a@mail.gmail.com> <874p2g0x9d.fsf@nokia.com> <20081110142806.GG3546@tuxdriver.com> <31436f4a0811100742p6154e2f9p34f3dfb1de2f71e3@mail.gmail.com>
 MIME-Version: 1.0
-Message-Id: <200811221733.56583.rossi.f@inwind.it> (sfid-20081122_173838_429867_380436DB)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <31436f4a0811100742p6154e2f9p34f3dfb1de2f71e3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 21 November 2008, Bob Copeland wrote:
+On Mon, Nov 10, 2008 at 05:42:56PM +0200, David Shwatrz wrote:
+> Hello,
+> First, I hope you feel better soon.
+> 
+> Second:
+> Looking at the patches at the mailing list, I do not see
+> that anywhere it says against which git tree they were made.
+> It could be : wireless-next-2.6,wireless-2.6, and wireless-testing.
+> 
+> I guess that there are many cases in which a patch can be applied to
+> two of these trees (or maybe all three of them),
+> whereas there are times in which it can be applied to only one git tree.
+> 
+> How is it determined to which tree the patches should be
+> applied ?
 
-> On Wed, Nov 19, 2008 at 5:15 PM, Fabio Rossi <rossi.f@inwind.it> wrote:
-> > I've attached a kernel log of what's happening and a commands log with
-> > time references. I hope it's useful, tell me if you need other data.
->
-> Ok, well at least we know we see beacons from the AP in question.
-> Other than that, it doesn't help a whole lot, as all the log captured
-> was beacons from various APs.  Can you try again without the 'trace'
-> option?  Also if you turn on CONFIG_MAC80211_VERBOSE_DEBUG then we
-> can see the probe requests etc.
+I ask for people to send patches against wireless-testing in general.
 
-CONFIG_MAC80211_VERBOSE_DEBUG was already set in the previous log (I 
-used "echo -n "all" > /debug/ath5k/phy1/debug"). The problem is that there 
-are no direct probe requests, the card doesn't transmit at all (there are no 
-TX dumps).
-
-I have compared the logs with the two access points (both are configured in 
-the same way, no SSID broadcast, WEP and 802.11b&g mode). With the 3com AP at 
-a certain point I see the following lines (with TX and RX dumps not reported 
-here):
-
-kernel: ath0: direct probe to AP 00:0d:54:fb:55:33 try 1
-kernel: ath0 direct probe responded
-kernel: ath0: authenticate with AP 00:0d:54:fb:55:33
-kernel: ath0: authenticated
-kernel: ath0: associate with AP 00:0d:54:fb:55:33
-kernel: ath0: RX AssocResp from 00:0d:54:fb:55:33 (capab=0x431 status=0 aid=5)
-kernel: ath0: associated
-kernel: phy14: Allocated STA 00:0d:54:fb:55:33
-kernel: phy14: Inserted STA 00:0d:54:fb:55:33
-
-while with the Sitecom AP I see nothing similar.
-
-I have also tried a PCMCIA card which uses the rtl8180 driver. The result is 
-the same, I can associate to the 3com AP but not to the Sitecom one.
-
-I'm suspecting that it's not an ath5k driver issue but an higher level issue 
-in the mac80211 framework.
-
-When I do a scan after having loaded the driver, the iwlist can't report the 
-SSID because it's hidden. I don't know if this is a problem but I have 
-noticed that the reported SSIDs of the two APs are a little bit different. 
-With the 3com AP (the working one) I get ESSID:" " (1 char blank 
-string) while with the Sitecom AP ESSID:"" (0 chars empty string).
-
-> If you do have another wireless card, that would still be better.  You
-> can use it like this:
->
->    # ifconfig wlan1 down
->    # iwconfig wlan1 mode monitor
->    # ifconfig wlan1 up
->    # tcpdump -s 1000 -w assoc.cap -i wlan1
->
-> Then you can load assoc.cap into wireshark (you can capture from inside
-> wireshark too if you prefer).
-
-Now I'm able to use a second additional PCMCIA wireless card in RFmon mode. 
-The capturing confirms that there is no network traffic generated by the 
-ath5k wireless card during the authentication & association with the Sitecom 
-AP (no packets with the source MAC address of the wireless card).
-
-Regards,
-Fabio
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
