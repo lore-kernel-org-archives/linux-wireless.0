@@ -1,30 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:44658 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752705AbYKLPz3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 10:55:29 -0500
-Subject: Re: libertas_tf should replace libertas_usb on compat-wireless?
-From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890811111632x2c641d2cmeb69c0a0ea95382e@mail.gmail.com>
-References: <43e72e890811111632x2c641d2cmeb69c0a0ea95382e@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 12 Nov 2008 10:53:25 -0500
-Message-Id: <1226505205.13536.13.camel@localhost.localdomain> (sfid-20081112_165534_352624_6D71A00D)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.227]:51245 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856AbYKJIs2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2008 03:48:28 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so2365628rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 00:48:27 -0800 (PST)
+Message-ID: <31436f4a0811100048h5c7520d3ga4eedd815f8c793a@mail.gmail.com> (sfid-20081110_094833_040421_3D55E953)
+Date: Mon, 10 Nov 2008 10:48:25 +0200
+From: "David Shwatrz" <dshwatrz@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: Where is allow-ap-vlan-modes.patch ?
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+In-Reply-To: <200811091604.43705.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com>
+	 <200811091604.43705.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-11-11 at 16:32 -0800, Luis R. Rodriguez wrote:
-> By default do we want users of compat-wireless to get libertas_usb or
-> libertas_tf? Both drivers are for Marvell Libertas 8388 USB 802.11b/g
-> cards so we need to pick one.
+Hello,
+  Thanks. I got the testing git tree; it is indeed there (though in a
+bit different form; the method in  net/mac80211/cfg.c is called
+nl80211_type_check() and not nl80211_type_to_mac80211_type() as in the
+patch from
+ allow-ap-vlan-modes.patch (2008-06-12). But it allows master mode for AP.
 
-I think libertas_tf is still experimental at this time.  Louis could
-elaborate more.
+In this occasion may I ask - what is the wireless-testing git tree?
+is it based on wireless-next-2.6 or on wireless-2.6 tree?
 
-Dan
+Regards,
+DS
 
 
+
+On Sun, Nov 9, 2008 at 5:04 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Sunday 09 November 2008, David Shwatrz wrote:
+>> Hello,
+>>
+>> I have a question:
+>> Why was the allow-ap-vlan-modes.patch removed from
+>> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/?
+>>
+>> I see that it was there until recently (to be accurate,
+>> 30.10.08 was the last time it was there).
+>>
+>> I do not see that it was applied; I have the latest git tree of
+>> wireless-2.6 and wireless-next-2.6
+>
+> It is currently present in the wireless-testing git tree.
+>
+> Ivo
+>
