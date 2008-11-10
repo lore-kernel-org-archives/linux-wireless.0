@@ -1,35 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:7462 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751657AbYKSLRA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 06:17:00 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so1637903nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 03:16:59 -0800 (PST)
-Message-ID: <f76a32050811190316o28a49cddte30214c217877078@mail.gmail.com> (sfid-20081119_121706_513504_3F0FBBDB)
-Date: Wed, 19 Nov 2008 12:16:59 +0100
-From: "Stefan Steuerwald" <salsasepp@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Fwd: p54: testing AP mode: cannot switch to master mode
-In-Reply-To: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:20961 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755585AbYKJB62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Nov 2008 20:58:28 -0500
+Subject: Re: [PATCH 1/2] cfg80211: add support for custom firmware
+	regulatory solutions
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1226109668-13778-2-git-send-email-lrodriguez@atheros.com>
+References: <1226109668-13778-1-git-send-email-lrodriguez@atheros.com>
+	 <1226109668-13778-2-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
+Date: Mon, 10 Nov 2008 09:58:44 +0800
+Message-Id: <1226282324.2604.282.camel@debian.sh.intel.com> (sfid-20081110_025920_459384_B24E6B7F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'd like to test the recent p54 AP mode patches against my XG-603
-(ISL3886) MiniPCI card.
-Tried that with the current wireless-testing.git, compiled ok, module
-loads with 2.13.1.0.arm firmware.
-I was under the impression that this should now work:
-    iwconfig wlan1 mode Master
-however it errors with:
-    Error for wireless request "Set Mode" (8B06) : SET failed on
-device wlan1 ; Invalid argument.
+On Sat, 2008-11-08 at 10:01 +0800, Luis R. Rodriguez wrote:
+> This adds API to cfg80211 to allow wireless drivers to inform
+> us if their firmware can handle regulatory considerations *and*
+> they cannot map these regulatory domains to an ISO / IEC 3166
+> alpha2. In these cases we skip the first regulatory hint instead
+> of expecting the driver to build their own regulatory structure,
+> providing us with an alpha2, or using the reg_notifier().
+> 
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Being new to wireless, I'd please like a pointer on what to
-investigate and which info to provide.
+Thanks!
 
-Thank you,
-  Stefan.
+Acked-by: Zhu Yi <yi.zhu@intel.com>
+
+-yi
+
