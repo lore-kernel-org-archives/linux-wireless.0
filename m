@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:61916 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750921AbYKCPRF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 10:17:05 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so2628480rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 07:17:04 -0800 (PST)
-Message-ID: <b6c5339f0811030717mfa8ac56hdd58c367563ed931@mail.gmail.com> (sfid-20081103_161710_755671_D91CF1A5)
-Date: Mon, 3 Nov 2008 10:17:04 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] ath5k: enable RXing beacons
-Cc: "Dan Williams" <dcbw@redhat.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890811022052n8c5e7d3ic722caa65c711481@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:44102 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755038AbYKJR5s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2008 12:57:48 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 09:57:48 -0800
+Date: Mon, 10 Nov 2008 09:57:46 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: msan <msan@email.it>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: problems with ath5k driver.
+Message-ID: <20081110175746.GC6918@tesla> (sfid-20081110_185809_179394_E3A893FF)
+References: <geiib4$apo$2@ger.gmane.org> <20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net> <get27e$ka2$1@ger.gmane.org> <43e72e890811051322m43efbf03gd21770be382e807d@mail.gmail.com> <1225989658.4276.4.camel@dv> <gf3rag$l51$1@ger.gmane.org> <1226142085.3610.4.camel@johannes.berg> <gf3s12$l51$2@ger.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1225672612-15106-1-git-send-email-lrodriguez@atheros.com>
-	 <1225676353.13684.2.camel@localhost.localdomain>
-	 <b6c5339f0811021810w229d1d9al2b27bdf4144cde69@mail.gmail.com>
-	 <43e72e890811022043t5525d924vcb776569a7bebbc8@mail.gmail.com>
-	 <43e72e890811022049l386789f5qf8bde98eedcd4d2c@mail.gmail.com>
-	 <43e72e890811022052n8c5e7d3ic722caa65c711481@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <gf3s12$l51$2@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 2, 2008 at 11:52 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>>> Sorry, my fault, this was a direct result of
->>>> 60c7e22196fb4230b76db1f5fb283e811b8f3fb3 "ath5k: honor
-[...]
-> OK Vasanth confirmed this is correct, and ath9k actually has incorrect
-> behavior so we have to fix that there as well. If stable got the ath5k
-> changes to the filter then yes we should push it there too.
+On Sat, Nov 08, 2008 at 03:09:22AM -0800, msan wrote:
+> Il Sat, 08 Nov 2008 12:01:25 +0100, Johannes Berg ha scritto:
+> 
+> >> If I can say, the card now works perfectly but is rather slow. I am
+> >> downloading some files from another computer inside my lan at home, not
+> >> from internet.
+> >> The other computer is connected with an ethernet card while my computer
+> >> is connected with my wireless card, ATheros. The download starts at 1Mb
+> >> and more but quickly degrades at 200 - 170 kb. it.
+> >> Perhaps the driver needs some work yet.
+> >
+> > Which RC algorithm are you using? Use minstrel if you can.
+> 
+> Sorry for my ignorance but....where I can set the algorithm that I must
+> use?
 
-Heh, yeah I thought the hardware was doing magic on our behalf too; I
-guess I should've asked about ath9k rather than assume it was right
-and ath5k was wrong.
+make menuconfig on the kernel
 
-I don't think the change got submitted for stable and it only went for
-rc3 a day or two ago.  John, can you revert
-60c7e22196fb4230b76db1f5fb283e811b8f3fb3 or take Luis' patch which
-effectively does the same?
-
--- 
-Bob Copeland %% www.bobcopeland.com
+  Luis
