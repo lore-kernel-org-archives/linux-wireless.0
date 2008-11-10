@@ -1,29 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53704 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751584AbYKDLSg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 06:18:36 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: No ProbeResp - assume out of range
-Date: Tue, 4 Nov 2008 12:17:50 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com> <43e72e890811021458h1444d350v33a5e5b984b76495@mail.gmail.com> <20081103002558.GA14153@tesla>
-In-Reply-To: <20081103002558.GA14153@tesla>
+Received: from an-out-0708.google.com ([209.85.132.250]:26778 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753592AbYKJPm7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2008 10:42:59 -0500
+Received: by an-out-0708.google.com with SMTP id d40so349226and.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 07:42:56 -0800 (PST)
+Message-ID: <31436f4a0811100742p6154e2f9p34f3dfb1de2f71e3@mail.gmail.com> (sfid-20081110_164314_464529_D6722990)
+Date: Mon, 10 Nov 2008 17:42:56 +0200
+From: "David Shwatrz" <dshwatrz@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Where is allow-ap-vlan-modes.patch ?
+Cc: "Kalle Valo" <kalle.valo@nokia.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081110142806.GG3546@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811041217.51096.mb@bu3sch.de> (sfid-20081104_121842_158736_92D8E9D7)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com>
+	 <200811091604.43705.IvDoorn@gmail.com>
+	 <31436f4a0811100048h5c7520d3ga4eedd815f8c793a@mail.gmail.com>
+	 <874p2g0x9d.fsf@nokia.com> <20081110142806.GG3546@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well, so it seems this is caused by the driver honoring the filter flag for
-beacons. b43 and b43legacy do this, too. So they most likely have the same
-misbehaviour.
-In the end, I'd still call this a mac80211 bug. Why does mac80211 suppress
-beacons (by clearing the flag), if it needs them?
+Hello,
+First, I hope you feel better soon.
 
--- 
-Greetings Michael.
+Second:
+Looking at the patches at the mailing list, I do not see
+that anywhere it says against which git tree they were made.
+It could be : wireless-next-2.6,wireless-2.6, and wireless-testing.
+
+I guess that there are many cases in which a patch can be applied to
+two of these trees (or maybe all three of them),
+whereas there are times in which it can be applied to only one git tree.
+
+How is it determined to which tree the patches should be
+applied ?
+
+Rgs,
+DS
+
+On Mon, Nov 10, 2008 at 4:28 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Mon, Nov 10, 2008 at 11:02:22AM +0200, Kalle Valo wrote:
+>> David Shwatrz <dshwatrz@gmail.com> writes:
+>>
+>> > In this occasion may I ask - what is the wireless-testing git tree?
+>> > is it based on wireless-next-2.6 or on wireless-2.6 tree?
+>>
+>> It's based on Linus' rc releases and has all the wireless patches
+>> which have been under development. I think John cherry picks the
+>> patches from wireless-testing to wireless-2.6 or wireless-next-2.6. So
+>> wireless-testing contains the bleeding edge wireless patches and if
+>> John thinks they are good enough, he submits them forward.
+>>
+>> Please correct me if I have understood something wrong.
+>
+> That is basically right.
+>
+> In the past patches often went to wireless-testing and to
+> wireless-next-2.6/wireless-2.6 at the about the same time.  However
+> upstream standards have tightened in ways that make me feel it is
+> appropriate to give patches more public testing even before sending
+> them for -next.
+>
+> In this case, I was also sick all last week which has slowed thing
+> a bit more...
+>
+> Thanks,
+>
+> John
+> --
+> John W. Linville                Linux should be at the core
+> linville@tuxdriver.com                  of your literate lifestyle.
+>
