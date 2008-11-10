@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:49373 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751160AbYKKRBL (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49992 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753637AbYKJJxJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 12:01:11 -0500
-Message-ID: <4919BA54.8040802@lwfinger.net> (sfid-20081111_180115_005740_B33B7E62)
-Date: Tue, 11 Nov 2008 11:01:08 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-Subject: Re: throughput problem/bisect with rtl8187B
-References: <992048.28671.qm@web23108.mail.ird.yahoo.com>
-In-Reply-To: <992048.28671.qm@web23108.mail.ird.yahoo.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 10 Nov 2008 04:53:09 -0500
+Subject: Re: [RFC 2/2] mac80211: implement dynamic power save
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87myg7zz95.fsf@nokia.com>
+References: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com>
+	 <1226245439-30329-3-git-send-email-kalle.valo@nokia.com>
+	 <1226309808.4004.16.camel@johannes.berg>  <87myg7zz95.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-o0mjtwamlUNjtmICmshf"
+Date: Mon, 10 Nov 2008 10:53:13 +0100
+Message-Id: <1226310793.4004.18.camel@johannes.berg> (sfid-20081110_105316_635679_59983AF9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> --- On Tue, 11/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
-> 
-> <snipped>
->> Lets try to identify what part is broken, I guess is this,
->> can you try this
->> patch on latest wireless-testing?
-> 
-> Tried it, no improvement. 
-> 
-> Can you /did you see any problem similiar to mine with throughput on your system(s)?
 
-I may see a slight improvement with the patch. Throughput using sftp goes from
-386 KB/s to 460 KB/s when I put in the patch, but there is some jitter and that
-change may not be significant.
+--=-o0mjtwamlUNjtmICmshf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-What rate-setting method are you using? I'm using "pid", which rapidly goes to
-54 Mb/s on my device. I tried using minstrel and found that it gets an
-occasional burst of speed, but that it usually stays at 1 Mb/s.
+On Mon, 2008-11-10 at 11:49 +0200, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>=20
+> > On Sun, 2008-11-09 at 17:43 +0200, Kalle Valo wrote:
+> >
+> >>  	bool powersave;
+> >> +	int dynamic_ps_timeout;
+> >> +	struct work_struct ps_enable_work;
+> >> +	struct work_struct ps_disable_work;
+> >> +	struct timer_list dynamic_ps_timer;
+> >
+> > I think you could use a delayed work for the enable-work+timer, that
+> > combines them already.
+>=20
+> I was planning to but I didn't find mod_timer() equivalent for
+> delayed_work. I need it because I need to cancel the timer all the
+> time. Is there similar functionality with delayed_work?
 
-Larry
+Ah, you're right, that doesn't seem to exist.
+
+johannes
+
+--=-o0mjtwamlUNjtmICmshf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJGASFAAoJEKVg1VMiehFYvuQQAKKOcahZBMV8YlpwG2Huzqv6
+HrZc28pSRBV9gpBRFO0wjo6vPVCcYhT2bto2YJX4OP7Um7Hs+rU4IN4vugNM3i+D
+dhxVB46aWPhzRcpIf7k3iI4orZhfOWyBsXHCkC3bULAJSvJMWMWJl9/YTlGVr7EK
++U/am7PIngCyvwnFEUKuNjYAsko9ECBqvRLmr76BLoXNN+XbV8lbcnEdeKeIqSWx
+PkrkXpPGbhild0U4LOY26hSJZiYFJJeS6mIRvRJ9ryiqJkzeT+YQj1SdogPiBIqS
+ChorEsGYRe72WINEb+QALnT/a+CT+QXLkK5PruWMeeSSrTYGTzAgSAu/WuaKXR9o
+KEiMeLHnVqvpbvbr85nqNKTDs7d+V7hDMs/HGHF1VRKFbG6iQeB2ArysbkaFZJQz
+UP3X9XesML/tuU3qFvvgN+j/pBpahEHk1NGR7iaWV6fsdNUJfQap1Fxtp/GtbL0g
+4FsvoAzKHg/vFtSZskaFanYHFUr4yc1jEKxp0jXnqXXyz3dfXYRlKxz9fY0VFRIc
+nZHgaUypfOmTYkRcDsCvmaq4c2S3oikFBM3jQAW64m1SJQkbXAxIwCeaJQR+XjAw
+83PjrK4pu+pXc2ly/cBweZwD7fSoABI6w68oYTkCWGZVm4kpaGlZ22BuC3+cZsLq
+pK5qXesdKxyVWOp3E9IV
+=XO0b
+-----END PGP SIGNATURE-----
+
+--=-o0mjtwamlUNjtmICmshf--
+
