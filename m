@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:33869 "EHLO ciao.gmane.org"
+Received: from mail.atheros.com ([12.36.123.2]:36783 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752721AbYKHK5f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2008 05:57:35 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KylVT-0002lr-3h
-	for linux-wireless@vger.kernel.org; Sat, 08 Nov 2008 10:57:31 +0000
-Received: from host130-31-dynamic.49-82-r.retail.telecomitalia.it ([82.49.31.130])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Nov 2008 10:57:31 +0000
-Received: from msan by host130-31-dynamic.49-82-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Nov 2008 10:57:31 +0000
-To: linux-wireless@vger.kernel.org
-From: msan <msan@email.it>
-Subject: Re: problems with ath5k driver.
-Date: Sat, 8 Nov 2008 10:57:20 +0000 (UTC)
-Message-ID: <gf3rag$l51$1@ger.gmane.org> (sfid-20081108_115741_111995_B4A89A2F)
-References: <geiib4$apo$2@ger.gmane.org>
-	<20081103191625.4rwqio60gsgs0gso-cebfxv@webmail.spamcop.net>
-	<get27e$ka2$1@ger.gmane.org>
-	<43e72e890811051322m43efbf03gd21770be382e807d@mail.gmail.com>
-	<1225989658.4276.4.camel@dv>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	id S1750759AbYKJUOq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2008 15:14:46 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 12:14:46 -0800
+Date: Mon, 10 Nov 2008 12:14:44 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/2] mac80211: implement dynamic power save
+Message-ID: <20081110201444.GI6918@tesla> (sfid-20081110_211451_516334_3EF91993)
+References: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com> <1226245439-30329-3-git-send-email-kalle.valo@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1226245439-30329-3-git-send-email-kalle.valo@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Il Thu, 06 Nov 2008 11:40:58 -0500, Pavel Roskin ha scritto:
-
-> Actually, I tested AR5007EG with Linux 2.6.27 and it worked, even with
-> WPA.  So the problem is probably elsewhere (bad antenna, lack of APs
-> around, curly hands, irrational fear of things "under development" etc).
+On Sun, Nov 09, 2008 at 07:43:59AM -0800, Kalle Valo wrote:
+> Enable power save only after an idle transmit timeout. The timeout can
+> be enabled with:
 > 
+> iwconfig wlan0 power timeout 500m
+> 
+> Thanks to Johannes Berg for the help with the design.
+> 
+> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+> ---
+>  net/mac80211/ieee80211_i.h |    9 +++++++++
+>  net/mac80211/main.c        |    5 +++++
+>  net/mac80211/mlme.c        |   43 +++++++++++++++++++++++++++++++++++++++++--
+>  net/mac80211/tx.c          |   18 ++++++++++++++++++
+>  net/mac80211/wext.c        |    8 ++++++--
+>  5 files changed, 79 insertions(+), 4 deletions(-)
+> 
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index 3f25955..ab0e2df 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -688,7 +688,12 @@ struct ieee80211_local {
+>                                 */
+>         int wifi_wme_noack_test;
+>         unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
+> +
+>         bool powersave;
+> +       int dynamic_ps_timeout;
+> +       struct work_struct ps_enable_work;
+> +       struct work_struct ps_disable_work;
+> +       struct timer_list dynamic_ps_timer;
+> 
+>  #ifdef CONFIG_MAC80211_DEBUGFS
+>         struct local_debugfsdentries {
+> @@ -973,6 +978,10 @@ int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
+>  u64 ieee80211_mandatory_rates(struct ieee80211_local *local,
+>                               enum ieee80211_band band);
+> 
+> +void ieee80211_ps_enable_work(struct work_struct *work);
+> +void ieee80211_ps_disable_work(struct work_struct *work);
 
-If I can say, the card now works perfectly but is rather slow.
-I am downloading some files from another computer inside my lan at home, 
-not from internet.
-The other computer is connected with an ethernet card while my computer 
-is connected with my wireless card, ATheros.
-The download starts at 1Mb and more but quickly degrades at 200 - 170 kb. 
-it.
-Perhaps the driver needs some work yet.
-Thank you and sorry for my bad english.
+Should these also be prefixed with _dynamic ? May confuse other people
+working on regular ps mode I think.
 
+Also can you elaborate a bit in the patch/log as to what dynamic power save
+concept is, what drivers who implement it are expected to do as well?
 
+Thanks,
+
+  Luis
