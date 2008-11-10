@@ -1,73 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15365 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752208AbYKMAVi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 19:21:38 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH RFC 1/1] mac80211: disassociate prior to unlinking AP/sta
-Date: Thu, 13 Nov 2008 02:21:33 +0200
-Message-Id: <1226535693-22979-1-git-send-email-tomas.winkler@intel.com> (sfid-20081113_012142_693115_1F416268)
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-gx0-f11.google.com ([209.85.217.11]:53449 "EHLO
+	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754565AbYKJTAo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2008 14:00:44 -0500
+Received: by gxk4 with SMTP id 4so2087466gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 11:00:43 -0800 (PST)
+Message-ID: <43e72e890811101100s9068862u88b36ec49d68c1d5@mail.gmail.com> (sfid-20081110_200051_179382_D8BD8F2D)
+Date: Mon, 10 Nov 2008 11:00:42 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "=?UTF-8?Q?Stefanik_G=C3=A1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: Where is allow-ap-vlan-modes.patch ?
+Cc: "David Shwatrz" <dshwatrz@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Kalle Valo" <kalle.valo@nokia.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910811101054h55a20799o9ed3476f844077b0@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com>
+	 <200811091604.43705.IvDoorn@gmail.com>
+	 <31436f4a0811100048h5c7520d3ga4eedd815f8c793a@mail.gmail.com>
+	 <874p2g0x9d.fsf@nokia.com> <20081110142806.GG3546@tuxdriver.com>
+	 <31436f4a0811100742p6154e2f9p34f3dfb1de2f71e3@mail.gmail.com>
+	 <69e28c910811101054h55a20799o9ed3476f844077b0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch reorders calls during disassociation in
-ieee80211_set_disassoc func.
-Since sta_info_unlink calls sta_notify(REMOVE) it will
-remove the AP from the driver before it has disassociated from
-it (bss_info_changed).
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/mlme.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 60ef983..ae831ab 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -857,16 +857,26 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	if (self_disconnected)
- 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
- 
--	sta_info_unlink(&sta);
--
- 	rcu_read_unlock();
- 
--	sta_info_destroy(sta);
--
- 	local->hw.conf.ht.enabled = false;
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_HT);
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
-+
-+	rcu_read_lock();
-+
-+	sta = sta_info_get(local, ifsta->bssid);
-+	if (!sta) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	sta_info_unlink(&sta);
-+
-+	rcu_read_unlock();
-+
-+	sta_info_destroy(sta);
- }
- 
- static int ieee80211_sta_wep_configured(struct ieee80211_sub_if_data *sdata)
--- 
-1.5.4.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+T24gTW9uLCBOb3YgMTAsIDIwMDggYXQgMTA6NTQgQU0sIFN0ZWZhbmlrIEfDoWJvcgo8bmV0cm9s
+bGxlci4zZEBnbWFpbC5jb20+IHdyb3RlOgo+IE9uIE1vbiwgTm92IDEwLCAyMDA4IGF0IDQ6NDIg
+UE0sIERhdmlkIFNod2F0cnogPGRzaHdhdHJ6QGdtYWlsLmNvbT4gd3JvdGU6Cj4+IEhlbGxvLAo+
+PiBGaXJzdCwgSSBob3BlIHlvdSBmZWVsIGJldHRlciBzb29uLgo+Pgo+PiBTZWNvbmQ6Cj4+IExv
+b2tpbmcgYXQgdGhlIHBhdGNoZXMgYXQgdGhlIG1haWxpbmcgbGlzdCwgSSBkbyBub3Qgc2VlCj4+
+IHRoYXQgYW55d2hlcmUgaXQgc2F5cyBhZ2FpbnN0IHdoaWNoIGdpdCB0cmVlIHRoZXkgd2VyZSBt
+YWRlLgo+PiBJdCBjb3VsZCBiZSA6IHdpcmVsZXNzLW5leHQtMi42LHdpcmVsZXNzLTIuNiwgYW5k
+IHdpcmVsZXNzLXRlc3RpbmcuCj4+Cj4+IEkgZ3Vlc3MgdGhhdCB0aGVyZSBhcmUgbWFueSBjYXNl
+cyBpbiB3aGljaCBhIHBhdGNoIGNhbiBiZSBhcHBsaWVkIHRvCj4+IHR3byBvZiB0aGVzZSB0cmVl
+cyAob3IgbWF5YmUgYWxsIHRocmVlIG9mIHRoZW0pLAo+PiB3aGVyZWFzIHRoZXJlIGFyZSB0aW1l
+cyBpbiB3aGljaCBpdCBjYW4gYmUgYXBwbGllZCB0byBvbmx5IG9uZSBnaXQgdHJlZS4KPj4KPj4g
+SG93IGlzIGl0IGRldGVybWluZWQgdG8gd2hpY2ggdHJlZSB0aGUgcGF0Y2hlcyBzaG91bGQgYmUK
+Pj4gYXBwbGllZCA/Cj4+Cj4+IFJncywKPj4gRFMKPj4KPj4gT24gTW9uLCBOb3YgMTAsIDIwMDgg
+YXQgNDoyOCBQTSwgSm9obiBXLiBMaW52aWxsZQo+PiA8bGludmlsbGVAdHV4ZHJpdmVyLmNvbT4g
+d3JvdGU6Cj4+PiBPbiBNb24sIE5vdiAxMCwgMjAwOCBhdCAxMTowMjoyMkFNICswMjAwLCBLYWxs
+ZSBWYWxvIHdyb3RlOgo+Pj4+IERhdmlkIFNod2F0cnogPGRzaHdhdHJ6QGdtYWlsLmNvbT4gd3Jp
+dGVzOgo+Pj4+Cj4+Pj4gPiBJbiB0aGlzIG9jY2FzaW9uIG1heSBJIGFzayAtIHdoYXQgaXMgdGhl
+IHdpcmVsZXNzLXRlc3RpbmcgZ2l0IHRyZWU/Cj4+Pj4gPiBpcyBpdCBiYXNlZCBvbiB3aXJlbGVz
+cy1uZXh0LTIuNiBvciBvbiB3aXJlbGVzcy0yLjYgdHJlZT8KPj4+Pgo+Pj4+IEl0J3MgYmFzZWQg
+b24gTGludXMnIHJjIHJlbGVhc2VzIGFuZCBoYXMgYWxsIHRoZSB3aXJlbGVzcyBwYXRjaGVzCj4+
+Pj4gd2hpY2ggaGF2ZSBiZWVuIHVuZGVyIGRldmVsb3BtZW50LiBJIHRoaW5rIEpvaG4gY2hlcnJ5
+IHBpY2tzIHRoZQo+Pj4+IHBhdGNoZXMgZnJvbSB3aXJlbGVzcy10ZXN0aW5nIHRvIHdpcmVsZXNz
+LTIuNiBvciB3aXJlbGVzcy1uZXh0LTIuNi4gU28KPj4+PiB3aXJlbGVzcy10ZXN0aW5nIGNvbnRh
+aW5zIHRoZSBibGVlZGluZyBlZGdlIHdpcmVsZXNzIHBhdGNoZXMgYW5kIGlmCj4+Pj4gSm9obiB0
+aGlua3MgdGhleSBhcmUgZ29vZCBlbm91Z2gsIGhlIHN1Ym1pdHMgdGhlbSBmb3J3YXJkLgo+Pj4+
+Cj4+Pj4gUGxlYXNlIGNvcnJlY3QgbWUgaWYgSSBoYXZlIHVuZGVyc3Rvb2Qgc29tZXRoaW5nIHdy
+b25nLgo+Pj4KPj4+IFRoYXQgaXMgYmFzaWNhbGx5IHJpZ2h0Lgo+Pj4KPj4+IEluIHRoZSBwYXN0
+IHBhdGNoZXMgb2Z0ZW4gd2VudCB0byB3aXJlbGVzcy10ZXN0aW5nIGFuZCB0bwo+Pj4gd2lyZWxl
+c3MtbmV4dC0yLjYvd2lyZWxlc3MtMi42IGF0IHRoZSBhYm91dCB0aGUgc2FtZSB0aW1lLiAgSG93
+ZXZlcgo+Pj4gdXBzdHJlYW0gc3RhbmRhcmRzIGhhdmUgdGlnaHRlbmVkIGluIHdheXMgdGhhdCBt
+YWtlIG1lIGZlZWwgaXQgaXMKPj4+IGFwcHJvcHJpYXRlIHRvIGdpdmUgcGF0Y2hlcyBtb3JlIHB1
+YmxpYyB0ZXN0aW5nIGV2ZW4gYmVmb3JlIHNlbmRpbmcKPj4+IHRoZW0gZm9yIC1uZXh0Lgo+Pj4K
+Pj4+IEluIHRoaXMgY2FzZSwgSSB3YXMgYWxzbyBzaWNrIGFsbCBsYXN0IHdlZWsgd2hpY2ggaGFz
+IHNsb3dlZCB0aGluZwo+Pj4gYSBiaXQgbW9yZS4uLgo+Pj4KPj4+IFRoYW5rcywKPj4+Cj4+PiBK
+b2huCj4+PiAtLQo+Pj4gSm9obiBXLiBMaW52aWxsZSAgICAgICAgICAgICAgICBMaW51eCBzaG91
+bGQgYmUgYXQgdGhlIGNvcmUKPj4+IGxpbnZpbGxlQHR1eGRyaXZlci5jb20gICAgICAgICAgICAg
+ICAgICBvZiB5b3VyIGxpdGVyYXRlIGxpZmVzdHlsZS4KPj4+Cj4+IC0tCj4+IFRvIHVuc3Vic2Ny
+aWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJl
+bGVzcyIgaW4KPj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5l
+bC5vcmcKPj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9t
+YWpvcmRvbW8taW5mby5odG1sCj4+Cj4KPiBUaGUgdGFyZ2V0IHRyZWUgdXNlZCB0byBiZSB3aXJl
+bGVzcy0yLjYncyAiZXZlcnl0aGluZyIgYnJhbmNoLiBUaGVyZQo+IHdhcyBhIGxvdCBvZiBjb25m
+dXNpb24gb3ZlciBwZW9wbGUgbWlzdGFrZW5seSBwdWxsaW5nICJtYXN0ZXIiIGluc3RlYWQKPiBv
+ZiAiZXZlcnl0aGluZyIgKCJtYXN0ZXIiIGlzIHRoZSBkZWZhdWx0KSwgc28gdGhlICJldmVyeXRo
+aW5nIiBicmFuY2gKPiB3YXMgcmVwbGFjZWQgYnkgYSBzZXBhcmF0ZSByZXBvLCB3aXJlbGVzcy10
+ZXN0aW5nLgoKV2UgYWxzbyB0cnkgdG8ga2VlcCB0aGlzIHR5cGUgb2YgaW5mb3JtYXRpb24gdXAg
+dG8gZGF0ZSBpbiBvdXIgd2lraToKCmh0dHA6Ly93aXJlbGVzcy5rZXJuZWwub3JnL2VuL2RldmVs
+b3BlcnMvRG9jdW1lbnRhdGlvbgoKICBMdWlzCg==
