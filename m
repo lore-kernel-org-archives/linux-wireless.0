@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:53191 "EHLO waste.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750962AbYKGBXj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 20:23:39 -0500
-Subject: Re: iwlagn: wrong command queue 31, command id 0x0
-From: Matt Mackall <mpm@selenic.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1226020422.2604.148.camel@debian.sh.intel.com>
-References: <1225944979.3792.3.camel@calx>
-	 <1226020422.2604.148.camel@debian.sh.intel.com>
-Content-Type: text/plain
-Date: Thu, 06 Nov 2008 19:23:08 -0600
-Message-Id: <1226020988.3023.54.camel@calx> (sfid-20081107_022343_666790_13458C01)
-Mime-Version: 1.0
+Received: from web23105.mail.ird.yahoo.com ([217.146.189.45]:46791 "HELO
+	web23105.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754711AbYKJVzn convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2008 16:55:43 -0500
+Date: Mon, 10 Nov 2008 21:55:40 +0000 (GMT)
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+Subject: Re: throughput problem Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+In-Reply-To: <200811101936.49887.herton@mandriva.com.br>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <301990.42064.qm@web23105.mail.ird.yahoo.com> (sfid-20081110_225601_318643_8618A9FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-11-07 at 09:13 +0800, Zhu Yi wrote:
-> On Thu, 2008-11-06 at 12:16 +0800, Matt Mackall wrote:
-> > As of 75fa67706cce5272bcfc51ed646f2da21f3bdb6e, I'm seeing this:
-> 
-> On which git repo? I couldn't find the commit on either linux-2.6 or
-> wireless-testing/-2.6.
+--- On Mon, 10/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
 
-Appears to be the head of Linus' tree:
+> Here I don't get such low transfer rate, may be a
+> regression in 
+> wireless-testing? Try a bisect to see, besides that I
+> don't have other ideas 
+> what could be. BTW, do you checked wireless-testing, so can
+> I add your 
+> tested-by then to the "feedback transmitted
+> packets..."  patch? I plan to 
+> submit the final patch to inclusion in wireless-testing
+> soon.
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=75fa67706cce5272bcfc51ed646f2da21f3bdb6e
+Yes, I suppose I'll need to go the git bisect route to find out what's wrong with the throughput. The "feedback transmitted packets" patch is
+good - have it with wireless testing - please send it in with tested-by.
 
--- 
-Mathematics is the supreme nostalgia of our time.
+Hin-Tak  
 
+
+      
