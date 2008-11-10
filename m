@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36697 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319AbYKOPBK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2008 10:01:10 -0500
-Date: Sat, 15 Nov 2008 09:56:56 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [Orinoco-devel] Agere PCMCIA sometimes takes very long time to
-	associate with 9.48 FW
-Message-ID: <20081115145655.GB31553@tuxdriver.com> (sfid-20081115_160133_400342_0BDD161B)
-References: <200810191436.13298.arvidjaar@mail.ru> <491349BC.8090606@gmail.com> <49134F66.4020608@gmail.com> <200811151115.48750.arvidjaar@mail.ru>
+Received: from promwad.com ([83.149.69.23]:50710 "EHLO promwad.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751922AbYKJXsI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2008 18:48:08 -0500
+Received: from mail.promwad.com ([212.98.183.232] helo=intranet.promwad.com)
+	by promwad.com with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.63)
+	(envelope-from <ivan.kuten@promwad.com>)
+	id 1KzgUH-00058K-3z
+	for linux-wireless@vger.kernel.org; Tue, 11 Nov 2008 01:48:06 +0200
+Received: from intranet.promwad.com ([192.168.10.1] helo=promwad.com)
+	by intranet.promwad.com with esmtpa (Exim 4.69)
+	(envelope-from <ivan.kuten@promwad.com>)
+	id 1KzgUF-0006mn-Ru
+	for linux-wireless@vger.kernel.org; Tue, 11 Nov 2008 01:48:03 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200811151115.48750.arvidjaar@mail.ru>
+Date: Tue, 11 Nov 2008 01:47:58 +0200
+From: Ivan Kuten <ivan.kuten@promwad.com>
+To: linux-wireless@vger.kernel.org
+Subject: rtl8187: patch adding Abocom usb id
+Message-ID: <806c81b61e7dedacfda32d6638548dbb@promwad.com> (sfid-20081111_004822_219265_37EA84D0)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 15, 2008 at 11:15:47AM +0300, Andrey Borzenkov wrote:
+rtl8187: Add Abocom usb id
 
-> - we should not be doing it in ->open. It is technically legal to set
-> wireless parameters before "icfonfig up" and we lose all of them. I will
-> try next week with similar patch in orinoco_stop().
+Signed-off-by: Ivan Kuten <ivan.kuten@promwad.com>
 
-That seems wrong...
+-------------
 
-> - I am still not even sure we should do it at all. What is sematic of
-> ifconfig up/down w.r.t. wireless parameters? I.e. is "ifconfig down"
-> expected to clean all device state and start from scratch?
+--- linux-2.6.28-rc3/drivers/net/wireless/rtl8187_dev.c 2008-11-10
+18:53:50.000000000 +0200
++++ linux-2.6.28-rc3.new/drivers/net/wireless/rtl8187_dev.c     2008-11-10
+19:02:34.000000000 +0200
+@@ -48,6 +48,8 @@
+        {USB_DEVICE(0x03f0, 0xca02), .driver_info = DEVICE_RTL8187},
+        /* Sitecom */
+        {USB_DEVICE(0x0df6, 0x000d), .driver_info = DEVICE_RTL8187},
++       /* Abocom */
++       {USB_DEVICE(0x13d1, 0xabe6), .driver_info = DEVICE_RTL8187},
+        {}
+ };
 
-No.  Unfortunately, it is mostly a matter of opinion as to what
-wireless extensions expects.
+--------------
 
-FWIW, some drivers (particularly mac80211-based ones) require the
-device to be 'down' in order to change the mode (i.e. "managed",
-"ad-hoc", etc).  Further, some drivers (particularly mac80211-based
-ones) use the setting of the SSID as a trigger for an association.
-So for example, bringing-up a mac80211-based device needs to look
-something like this:
+Regards,
+Ivan
 
-	ifconfig wlan0 down
-	iwconfig wlan0 mode Managed
-	ifconfig wlan0 up
-	iwconfig wlan0 essid SSID
 
-Beyond that, taking the device down would probably cause a loss of
-association.  So later marking it up would be insufficient without
-also (re-)setting the SSID.  But, e.g. channel settings should remain
-in effect.
-
-Hopefully I haven't confused the issue -- I'll stop now. :-)
-
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
