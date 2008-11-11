@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:15875 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752354AbYKLW2A convert rfc822-to-8bit (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.186]:47604 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbYKKEcn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 17:28:00 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:28:00 -0800
-Date: Wed, 12 Nov 2008 14:27:58 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-CC: Andrey Yurovsky <andrey@cozybit.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: Re: libertas_tf should replace libertas_usb on compat-wireless?
-Message-ID: <20081112222758.GB15803@tesla> (sfid-20081112_232806_442920_2710A76E)
-References: <43e72e890811111632x2c641d2cmeb69c0a0ea95382e@mail.gmail.com> <1226505205.13536.13.camel@localhost.localdomain> <1226512649.3940.0.camel@localhost.localdomain> <20081112195515.GA15803@tesla> <45e8e6c40811121307v32ca4c2cq77714ff14bec4563@mail.gmail.com> <69e28c910811121316i285ec2dbr7acf6c3fe660536a@mail.gmail.com>
+	Mon, 10 Nov 2008 23:32:43 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so3673567fkq.5
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 20:32:41 -0800 (PST)
+Message-ID: <8e92b4100811102032j7698254ct7020879e4cd5af1d@mail.gmail.com> (sfid-20081111_053249_569004_980D64BD)
+Date: Tue, 11 Nov 2008 10:02:41 +0530
+From: "Vivek Natarajan" <vivek.natraj@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: [RFC] mac80211 dynamic powersave
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <69e28c910811121316i285ec2dbr7acf6c3fe660536a@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2008 at 01:16:36PM -0800, Stefanik G=E1bor wrote:
-> On Wed, Nov 12, 2008 at 10:07 PM, Andrey Yurovsky <andrey@cozybit.com=
-> wrote:
-> > libertas_tf is a softmac driver developed mainly so that XO's can r=
-un
-> > hostapd and the like.  libertas is the general (fullmac) driver and=
-,
-> > in my opinion, should be the one users get unless they specifically
-> > wanted libertas_tf because they're experimenting with AP mode or ot=
-her
-> > mac80211 features.  So I guess I'd vote for libertas over libertas_=
-tf
-> > at this time, for what it's worth.
-> >
-> >  -Andrey
->=20
-> I think libertas_usb should be a default (as it's HW accelerated), bu=
-t
-> libertas_tf should be included as an option (disabled by default in
-> config.mk, or auto-added to /etc/modprobe.d/blacklist upon make
-> install).
+On Sun, Nov 9, 2008 at 9:13 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+>
+> Here's my first version of dynamic powersave patches. I have tested them
+> only with stlc45xx on Nokia N810. Unfortunately stlc45xx's psm command is
+> buggy and I haven't been able to run any longer tests, yet. Next week I will
+> also test with iwl3945.
+>
+> These are RFC patches, not to be applied.
+>
+> TODO:
+> o Johannes' subif_start_xmit suggestion
+> o test with intel hardware (only in-tree driver using IEEE80211_CONF_PS)
+> o disable power save when software scanning
+> o association check to the work structs?
+> o cancel_work_sync()
+>
+Hello Kalle,
+  I have a few questions on the PS implementation. Here they are,
 
-OK so I've done this on config.mk:
+1) I see from your patch that power save is enabled whenever there
+   is no Tx for the specified 'timeout' period. Should we also take into
+   account the type of power connection( i.e battery or direct ac supply)
+   before enabling PS?
 
-ifneq ($(CONFIG_USB),)
-ifneq ($(CONFIG_LIBERTAS_THINFIRM_USB),m)
-CONFIG_LIBERTAS_USB=3Dm
-NEED_LIBERTAS=3Dy
-endif
-endif
+2) Do you intend to leave the NULL frame formation, waking up the chip
+     for TIM and modifying sleep/awake time according to  DTIM to
+    the driver since I did not see this in your TODO list?( I understand from
+    the iwlwifi code that it just sends a request to the firmware for sending
+    NULL frame and the firmware takes care of the rest. But it may not be
+    so in the case of other vendor drivers.)
 
-This means you'll get CONFIG_LIBERTAS_USB unless your kernel
-already was built with CONFIG_LIBERTAS_THINFIRM_USB for all those
-building with it. If your kernel was built with both then its your
-problem.
+3) Is the PS-POLL concept(or M frames in N milliseconds concept of Johannes)
+     dropped after the DNS response timings related discussion that you had
+     since it might save some more power in low-traffic conditions?
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Vivek.
