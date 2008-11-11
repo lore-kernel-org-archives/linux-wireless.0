@@ -1,95 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:58157 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751279AbYKDDLu (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:64771 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753334AbYKKNJT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 22:11:50 -0500
-Date: Mon, 3 Nov 2008 20:39:56 -0500
-From: Forest Bond <forest@alittletooquiet.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: b43: Everybody with PHY TX error, please try
-Message-ID: <20081104013956.GB483@storm.local.network> (sfid-20081104_041230_108472_69F87045)
-References: <200810242032.04295.mb@bu3sch.de>
+	Tue, 11 Nov 2008 08:09:19 -0500
+To: "Vivek Natarajan" <vivek.natraj@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/2] mac80211: implement dynamic power save
+References: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com>
+	<1226245439-30329-3-git-send-email-kalle.valo@nokia.com>
+	<20081110201444.GI6918@tesla> <87zlk6vink.fsf@nokia.com>
+	<8e92b4100811110218q2b45f70amdba39159ef9799bd@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 11 Nov 2008 15:09:07 +0200
+In-Reply-To: <8e92b4100811110218q2b45f70amdba39159ef9799bd@mail.gmail.com> (ext Vivek Natarajan's message of "Tue\, 11 Nov 2008 15\:48\:24 +0530")
+Message-ID: <87fxlybea4.fsf@nokia.com> (sfid-20081111_140924_671521_89FA591C)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3uo+9/B/ebqu+fSQ"
-In-Reply-To: <200810242032.04295.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Vivek Natarajan <vivek.natraj@gmail.com> writes:
 
---3uo+9/B/ebqu+fSQ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Currently there is no support for powersave in ath9k( Not sure about
+> ath5k though). There is a code level implementation for the following
+> although we do not enable them:
+>  Support for network sleep mode:
+>      If a request for network sleep comes from higher layers, the
+> sleep duration having been configured based on beacon interval and the
+> TIM offset in the beacon based on AID is all configured, then the
+> chip will happily go to sleep and wake up for the beacon to read TIM.
 
-Hi,
+> But the code for calulating TIM offset, reading TIM, to decide the power
+> level based on TIM, extending awake time based on DTIM needs to be
+> done. 
 
-On Fri, Oct 24, 2008 at 08:32:04PM +0200, Michael Buesch wrote:
-> Everybody with PHY TX error, please try updated firmware from
-> ftp://ftp.linksys.com/opensourcecode/wrt610n/1.00.00.018/wrt610n_v1.00.00=
-=2E018_us.tgz
-> (Yeah, big tarball. It's 87MB)
+Thanks, this was useful. Is the interface for these power save
+commands available somewhere? I would like to take a look so that I
+understand what kind of paremeters the driver can set.
 
-Sorry, I'm arriving to this late.  I'm seeing the following:
+> Since these are common to all drivers, these may get into mac80211(
+> Not sure if it is already implemented). Please correct me if I am
+> wrong here.
 
-[30447.008408] __ratelimit: 2795 callbacks suppressed
-[30447.008466] b43-phy0 ERROR: PHY transmission error
-[30447.008496] b43-phy0 ERROR: PHY transmission error
-[30447.008523] b43-phy0 ERROR: PHY transmission error
-[30447.008551] b43-phy0 ERROR: PHY transmission error
-[30447.008577] b43-phy0 ERROR: PHY transmission error
-[30447.008606] b43-phy0 ERROR: PHY transmission error
-[30447.008634] b43-phy0 ERROR: PHY transmission error
-[30447.008662] b43-phy0 ERROR: PHY transmission error
-[30447.008690] b43-phy0 ERROR: PHY transmission error
-[30447.384079] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:3=
-2:10)
-[30447.500347] b43-pci-bridge 0000:02:00.0: PCI: Disallowing DAC for device
-[30447.500376] b43-phy0: DMA mask fallback from 64-bit to 32-bit
-[30447.526191] Registered led device: b43-phy0::tx
-[30447.526960] Registered led device: b43-phy0::rx
-[30447.527543] Registered led device: b43-phy0::radio
-[30454.780114] wlan1: No ProbeResp from current AP 00:1e:2a:e4:de:84 - assu=
-me out of range
-[30455.681012] wlan1: authenticate with AP 00:1e:2a:e4:de:84
-[30455.682225] wlan1: authenticate with AP 00:1e:2a:e4:de:84
-[30455.684847] wlan1: authenticated
-[30455.684873] wlan1: associate with AP 00:1e:2a:e4:de:84
-[30455.688707] wlan1: RX ReassocResp from 00:1e:2a:e4:de:84 (capab=3D0x411 =
-status=3D0 aid=3D1)
-[30455.688730] wlan1: associated
+Yes, if both stlc45xx and ath5/9k need these it would make sense to
+add support to mac80211.
 
-This happens repeatedly during file transfers.  Everything is quite slow.  =
-You
-can see that the device was reset.
+> I believe all these are done in the firmware for Intel since Tomas mentioned
+> sometime back that all the power save features works in iwlwifi.
 
-Will the firmware upgrade fix this?  Must I be running the latest b43 drive=
-r to
-use the new firmware?
+Yes. I have seen other hardware as well which have the power save
+support in firmware.
 
-I'm on Ubuntu 8.10 with kernel version 2.6.27-7-generic.
+>>  Actually there are three types of power save now:
+>> AP mode buffering for clients in power save, the normal ("static")
+>> power save for client mode and the dynamic version. So this will get
+>> very confusing.
+>
+> I have come across  this dynamic power save(Switch off radio when there
+> is no RX/Tx for sometime) and also buffering in AP mode. I would be happy to
+> know about the static power save.
 
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
+The term "static power save" is just my own invention and it means
+opposite of dynamic power save. For me static power save means that
+the chip sleeps as much as possible, for example transmits a frame and
+goes back to sleep immediately after receiving the ack.
 
---3uo+9/B/ebqu+fSQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Sorry for bad wording, all the power save terms should be standardised :)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFJD6fsRO4fQQdv5AwRAmXhAKCo7OQM/iOtYQQyGCgXuvW21GWUAQCgs7eV
-oP1f4J1JcEkImZDS9dokRr8=
-=bH8I
------END PGP SIGNATURE-----
-
---3uo+9/B/ebqu+fSQ--
+-- 
+Kalle Valo
