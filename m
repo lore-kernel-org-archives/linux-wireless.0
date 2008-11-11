@@ -1,48 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:15583 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752536AbYK0XKe (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57723 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755565AbYKKM4S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 18:10:34 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so1843985ugf.37
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2008 15:10:31 -0800 (PST)
-Message-ID: <3ace41890811271510t6879dc6q7022779e985d8f6a@mail.gmail.com> (sfid-20081128_001039_157692_56F39A74)
-Date: Thu, 27 Nov 2008 23:10:31 +0000
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
-Subject: Re: [RFC] rtl8187: Do not wait for an ACK when IEEE80211_TX_CTL_NO_ACK is set
-Cc: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200811271952.21408.herton@mandriva.com.br>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910811261431u26e341d3p51ebadca807f4b61@mail.gmail.com>
-	 <200811271543.59126.herton@mandriva.com.br>
-	 <69e28c910811271202s295bbf5bo3dc8c04c50b08a01@mail.gmail.com>
-	 <200811271952.21408.herton@mandriva.com.br>
+	Tue, 11 Nov 2008 07:56:18 -0500
+Subject: Re: scheduling while atomic: iwl3945 in mmotm 2008-09-23-11-27
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"flamingice@sourmilk.net" <flamingice@sourmilk.net>,
+	Tomas Winkler <tomasw@gmail.com>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1226375524.2604.328.camel@debian.sh.intel.com>
+References: <48DE8EC9.80306@gmail.com>
+	 (sfid-20080927_215201_348716_1480E298)  <1222588029.3798.77.camel@johannes.berg>
+	 <1226375524.2604.328.camel@debian.sh.intel.com>
+Content-Type: text/plain
+Date: Tue, 11 Nov 2008 11:28:04 +0100
+Message-Id: <1226399284.3890.5.camel@johannes.berg> (sfid-20081111_135622_918367_8DE432AD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 27, 2008 at 9:52 PM, Herton Ronaldo Krzesinski
-<herton@mandriva.com.br> wrote:
-<snipped>
->> Also, v26.1010 of the vendor driver does exactly what my patch does.
->
-> Is this newer than 26.1036.0708.2008 I have here? The version it never sets 0,
-> in code there is this:
-<snipped>
-> I didn't found this version 26.1010 to download, do you know where I can get?
+On Tue, 2008-11-11 at 11:52 +0800, Zhu Yi wrote:
 
-26.1010 is the non-B driver - I happened to have it on my hard disc -
-the url is
-ftp://152.104.238.19/cn/wlan/rtl8187_linux_26.1010.zip .
+> > >  [<ffffffff80257315>] synchronize_rcu+0x35/0x40
+> > 
+> > >  [<ffffffff80551d17>] sta_info_destroy+0x47/0x110
+> > >  [<ffffffff80559156>] ieee80211_set_disassoc+0x146/0x250
+> > >  [<ffffffff805593d5>] ieee80211_sta_req_auth+0x85/0x90
+> > >  [<ffffffff8055b156>] ieee80211_notify_mac+0x56/0xa0
 
-it is quite old - it unpacks to rtl8187_linux_26.1010.0622.2006 -
-which as far as my understanding of the naming goes,
-is for 2.6 kernel, release 1010, on 2006 June 22nd, so it is a lot
-older than every B vendor driver we have.
+> > We can fix this by using RTNL locking instead, not sure though that'll
+> > work because I don't know how iwl3945 calls this, I'll let Tomas deal
+> > with it.
+> 
+> Johannes, this scheduleing in atomic has nothing to do with the caller.
+> iwl3945 already calls it in a workqueue. The problem is inside
+> ieee80211_notify_mac(). Unfortunately, iwl3945/iwlagn turns to be the
+> only user at this time.
 
-Hin-Tak
+I see. But the suggestion above is valid nonetheless and works fine if
+it's called from a workqueue. I take no blame for this though, you guys
+added this function and you also changed ieee80211_set_disassoc() in
+ways that made the original implementation wrong :P
+
+John, please apply the patch below.
+
+johannes
+
+
+From: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: fix notify_mac function
+
+The ieee80211_notify_mac() function uses ieee80211_sta_req_auth() which
+in turn calls ieee80211_set_disassoc() which calls a few functions that
+need to be able to sleep, so ieee80211_notify_mac() cannot use RCU
+locking for the interface list and must use rtnl locking instead.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+--- everything.orig/net/mac80211/mlme.c	2008-11-11 11:23:09.000000000 +0100
++++ everything/net/mac80211/mlme.c	2008-11-11 11:23:24.000000000 +0100
+@@ -2596,14 +2596,14 @@ void ieee80211_notify_mac(struct ieee802
+ 
+ 	switch (notif_type) {
+ 	case IEEE80211_NOTIFY_RE_ASSOC:
+-		rcu_read_lock();
+-		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		rtnl_lock();
++		list_for_each_entry(sdata, &local->interfaces, list) {
+ 			if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 				continue;
+ 
+ 			ieee80211_sta_req_auth(sdata, &sdata->u.sta);
+ 		}
+-		rcu_read_unlock();
++		rtnl_unlock();
+ 		break;
+ 	}
+ }
+
+
