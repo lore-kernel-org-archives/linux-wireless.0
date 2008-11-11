@@ -1,197 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:12354 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754119AbYKUURS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 15:17:18 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so554441nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 12:17:16 -0800 (PST)
-Message-ID: <49271749.1060601@tuffmail.co.uk> (sfid-20081121_211723_225171_A8143E0C)
-Date: Fri, 21 Nov 2008 20:17:13 +0000
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Received: from web23104.mail.ird.yahoo.com ([217.146.189.44]:28502 "HELO
+	web23104.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752713AbYKKIjm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2008 03:39:42 -0500
+Date: Tue, 11 Nov 2008 08:39:40 +0000 (GMT)
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+Subject: throughput problem/bisect with rtl8187B
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <200811101936.49887.herton@mandriva.com.br>
 MIME-Version: 1.0
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] Bugs in ath5k on aspire one (AR2425)
-References: <492712D9.7080004@gmail.com>
-In-Reply-To: <492712D9.7080004@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Message-ID: <41448.77528.qm@web23104.mail.ird.yahoo.com> (sfid-20081111_093946_619346_C3F3C8C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Levitsky wrote:
-> Hi,
->
-> I captured few errors in dmesg, will post them here.
-> If I see more errors, I add them to this thread.
->
->
-> [   69.516498] ath5k phy0: gain calibration timeout (2412MHz)
-> [   69.516509] ath5k phy0: can't reset hardware (-11)
-> [   69.516516] phy0: failed to restore operational channel after scan
-> [   69.628572] ath5k phy0: noise floor calibration failed (2412MHz)
-> [   69.686894] ath5k phy0: noise floor calibration failed (2417MHz)
-> [   69.770067] ath5k phy0: noise floor calibration failed (2417MHz)
-> [   70.419785] ath5k phy0: gain calibration timeout (2422MHz)
-> [   70.419800] ath5k phy0: can't reset hardware (-11)
-> [   70.419809] phy0: failed to set freq to 2422 MHz for scan
-> [   71.356436] ath5k phy0: gain calibration timeout (2427MHz)
-> [   71.356450] ath5k phy0: can't reset hardware (-11)
-> [   71.356458] phy0: failed to set freq to 2427 MHz for scan
-> [   72.119219] ath5k phy0: gain calibration timeout (2432MHz)
-> [   72.119234] phy0: failed to set freq to 2432 MHz for scan
-> [   72.764447] phy0: failed to set freq to 2437 MHz for scan
-> [   73.410438] phy0: failed to set freq to 2442 MHz for scan
-> [   74.027807] phy0: failed to set freq to 2447 MHz for scan
-> [   74.640495] __ratelimit: 7 callbacks suppressed
-> [   74.640504] ath5k phy0: gain calibration timeout (2452MHz)
-> [   74.640511] ath5k phy0: can't reset hardware (-11)
-> [   74.640517] phy0: failed to set freq to 2452 MHz for scan
-> [   75.256551] ath5k phy0: gain calibration timeout (2457MHz)
-> [   75.256565] ath5k phy0: can't reset hardware (-11)
-> [   75.256573] phy0: failed to set freq to 2457 MHz for scan
-> [   75.874414] ath5k phy0: gain calibration timeout (2462MHz)
-> [   75.874424] ath5k phy0: can't reset hardware (-11)
-> [   75.874430] phy0: failed to set freq to 2462 MHz for scan
-> [   76.488436] ath5k phy0: gain calibration timeout (2412MHz)
-> [   76.488447] ath5k phy0: can't reset hardware (-11)
-> [   76.488452] phy0: failed to restore operational channel after scan
-> [   76.488543] wlan0: authenticate with AP 00:1b:9e:d8:77:02
-> [   76.688125] wlan0: authenticate with AP 00:1b:9e:d8:77:02
-> [   76.889098] wlan0: authenticate with AP 00:1b:9e:d8:77:02
-> [   77.088122] wlan0: authentication with AP 00:1b:9e:d8:77:02 timed out
-> [   78.415786] ath5k phy0: noise floor calibration timeout (2417MHz)
-> [   78.810771] ath5k phy0: gain calibration timeout (2417MHz)
-> [   78.810782] phy0: failed to set freq to 2417 MHz for scan
-> [   79.427510] phy0: failed to set freq to 2422 MHz for scan
-> [   80.056900] __ratelimit: 3 callbacks suppressed
-> [   80.056910] ath5k phy0: gain calibration timeout (2427MHz)
-> [   80.056919] ath5k phy0: can't reset hardware (-11)
-> [   80.056925] phy0: failed to set freq to 2427 MHz for scan
-> [   80.670529] ath5k phy0: gain calibration timeout (2432MHz)
-> [   80.670540] ath5k phy0: can't reset hardware (-11)
-> [   80.670546] phy0: failed to set freq to 2432 MHz for scan
-> [   81.285272] ath5k phy0: gain calibration timeout (2437MHz)
-> [   81.285285] ath5k phy0: can't reset hardware (-11)
-> [   81.285294] phy0: failed to set freq to 2437 MHz for scan
-> [   81.911449] ath5k phy0: gain calibration timeout (2442MHz)
-> [   81.911461] ath5k phy0: can't reset hardware (-11)
-> [   81.911470] phy0: failed to set freq to 2442 MHz for scan
-> [   82.526023] ath5k phy0: gain calibration timeout (2447MHz)
-> [   82.526034] ath5k phy0: can't reset hardware (-11)
-> [   82.526040] phy0: failed to set freq to 2447 MHz for scan
-> [   83.141962] phy0: failed to set freq to 2452 MHz for scan
-> [   83.759025] phy0: failed to set freq to 2457 MHz for scan
-> [   84.373688] phy0: failed to set freq to 2462 MHz for scan
-> [   84.990322] phy0: failed to restore operational channel after scan
-> [   89.419876] __ratelimit: 8 callbacks suppressed
-> [   89.419890] ath5k phy0: noise floor calibration timeout (2412MHz)
-> [   90.087509] ath5k phy0: gain calibration timeout (2417MHz)
-> [   90.087519] ath5k phy0: can't reset hardware (-11)
-> [   90.087525] phy0: failed to set freq to 2417 MHz for scan
-> [   90.700892] ath5k phy0: gain calibration timeout (2422MHz)
-> [   90.700903] ath5k phy0: can't reset hardware (-11)
-> [   90.700909] phy0: failed to set freq to 2422 MHz for scan
-> [   91.315752] ath5k phy0: gain calibration timeout (2427MHz)
-> [   91.315763] ath5k phy0: can't reset hardware (-11)
-> [   91.315770] phy0: failed to set freq to 2427 MHz for scan
-> [   91.935144] ath5k phy0: gain calibration timeout (2432MHz)
-> [   91.935155] ath5k phy0: can't reset hardware (-11)
-> [   91.935161] phy0: failed to set freq to 2432 MHz for scan
-> [   92.550491] ath5k phy0: gain calibration timeout (2437MHz)
-> [   92.550505] phy0: failed to set freq to 2437 MHz for scan
-> [   93.220305] phy0: failed to set freq to 2442 MHz for scan
-> [   93.837228] phy0: failed to set freq to 2447 MHz for scan
-> [   94.450800] phy0: failed to set freq to 2452 MHz for scan
-> [   95.069019] phy0: failed to set freq to 2457 MHz for scan
-> [   95.690239] __ratelimit: 9 callbacks suppressed
-> [   95.690251] ath5k phy0: gain calibration timeout (2462MHz)
-> [   95.690261] ath5k phy0: can't reset hardware (-11)
-> [   95.690269] phy0: failed to set freq to 2462 MHz for scan
-> [   96.305163] ath5k phy0: gain calibration timeout (2412MHz)
-> [   96.305173] ath5k phy0: can't reset hardware (-11)
-> [   96.305179] phy0: failed to restore operational channel after scan
-> [  100.084643] ath5k phy0: noise floor calibration failed (2412MHz)
-> [  100.689317] ath5k phy0: gain calibration timeout (2417MHz)
-> [  100.689328] ath5k phy0: can't reset hardware (-11)
-> [  100.689334] phy0: failed to set freq to 2417 MHz for scan
-> [  101.308123] ath5k phy0: gain calibration timeout (2422MHz)
-> [  101.308134] ath5k phy0: can't reset hardware (-11)
-> [  101.308140] phy0: failed to set freq to 2422 MHz for scan
-> [  101.923409] ath5k phy0: gain calibration timeout (2427MHz)
-> [  101.923419] ath5k phy0: can't reset hardware (-11)
-> [  101.923425] phy0: failed to set freq to 2427 MHz for scan
-> [  102.536898] ath5k phy0: gain calibration timeout (2432MHz)
-> [  102.536911] ath5k phy0: can't reset hardware (-11)
-> [  102.536920] phy0: failed to set freq to 2432 MHz for scan
-> [  103.153227] ath5k phy0: gain calibration timeout (2437MHz)
-> [  103.153238] ath5k phy0: can't reset hardware (-11)
-> [  103.153244] phy0: failed to set freq to 2437 MHz for scan
-> [  103.766742] ath5k phy0: gain calibration timeout (2442MHz)
-> [  103.766753] ath5k phy0: can't reset hardware (-11)
-> [  103.766759] phy0: failed to set freq to 2442 MHz for scan
-> [  104.382792] phy0: failed to set freq to 2447 MHz for scan
-> [  104.998713] phy0: failed to set freq to 2452 MHz for scan
-> [  105.612695] phy0: failed to set freq to 2457 MHz for scan
-> [  106.227980] phy0: failed to set freq to 2462 MHz for scan
-> [  106.846579] __ratelimit: 8 callbacks suppressed
-> [  106.846591] ath5k phy0: gain calibration timeout (2412MHz)
-> [  106.846601] ath5k phy0: can't reset hardware (-11)
-> [  106.846609] phy0: failed to restore operational channel after scan
-> [  111.388603] ath5k phy0: noise floor calibration failed (2412MHz)
-> [  112.002756] ath5k phy0: gain calibration timeout (2417MHz)
-> [  112.002769] ath5k phy0: can't reset hardware (-11)
-> [  112.002776] phy0: failed to set freq to 2417 MHz for scan
-> [  112.618112] ath5k phy0: gain calibration timeout (2422MHz)
-> [  112.618123] ath5k phy0: can't reset hardware (-11)
-> [  112.618129] phy0: failed to set freq to 2422 MHz for scan
-> [  113.234943] ath5k phy0: gain calibration timeout (2427MHz)
-> [  113.234957] ath5k phy0: can't reset hardware (-11)
-> [  113.234965] phy0: failed to set freq to 2427 MHz for scan
-> [  113.855231] ath5k phy0: gain calibration timeout (2432MHz)
-> [  113.855242] ath5k phy0: can't reset hardware (-11)
-> [  113.855248] phy0: failed to set freq to 2432 MHz for scan
->
-> Happened on boot, and card stopped working.
-> Only a reboot helped.
->   
+Hi Herton,
 
-A patch has been submitted which stops the card getting wedged this way,
+I bisected through recent wireless-testing, and found the commit which results in my throughput problem - it is one of yours :-(. Can you and also possibly Larry give this a try: transfering some large files (>50MB) before and after reverting this particular commit, and see what sftp says about the transfer rate? You need to let sftp keep going for a while to see what rate it settles at. (>50MB should do, so a kernel source tarball
+would be appropriate). The difference is quite obvious in my case - 
+<60kB/s, and 7x - 10x that if I revert this commit. 
 
-<http://www.spinics.net/lists/linux-wireless/msg23404.html>
+The commit is all magic numbers, so if you see the problem, can you please
+have a look and check the numbers?
 
-from the messages it's not clear whether this is a complete fix, or more
-of a workaround for an underlying problem.  It sounds like it got an ACK
-from another tester (and I can add mine as well!), but no-one has
-accepted or reviewed it :(.
+Thanks,
+Hin-Tak 
 
-> When transferring large amounts of data from/to desktop pc, 
-> assotiation with ap is dropped often which results is minute/two of no wireless
-> activety and this:
->
-> [ 1522.872096] wlan0: direct probe to AP 00:1b:9e:d8:77:02 try 1
-> [ 1523.072094] wlan0: direct probe to AP 00:1b:9e:d8:77:02 try 2
-> [ 1523.268098] wlan0: direct probe to AP 00:1b:9e:d8:77:02 try 3
-> [ 1523.477204] wlan0: direct probe to AP 00:1b:9e:d8:77:02 timed out
-> [ 1524.569452] wlan0: authenticate with AP 00:1b:9e:d8:77:02
-> [ 1524.571157] wlan0: authenticated
-> [ 1524.571179] wlan0: associate with AP 00:1b:9e:d8:77:02
-> [ 1524.574284] wlan0: RX ReassocResp from 00:1b:9e:d8:77:02 (capab=0x411 status=0 aid=1)
->
->
->
-> Also when downloading from AP (from desktop) I see this:
->
-> ath5k phy0: unsupported jumbo
->   
+-------------
+>From 9c1493477380e51d152a2e0ef560291d7445e9ea Mon Sep 17 00:00:00 2001
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Date: Mon, 13 Oct 2008 18:11:00 +0000
+Subject: [PATCH] rtl8187: add short slot handling for 8187B
 
-Known issue, just what it says on the tin.  There used to be a bug here,
-but it's fixed now.  Just an unsupported performance feature which you
-should be able to live without, for the time being :).
+This change adds short slot handling for 8187B variant of rtl8187 chips.
+Some things to note about changes done:
+* Values used are chosen to met 802.11-2007 spec. This raised a question
+  about SIFS value used with 8187L: 0x22 (34) doesn't match any spec
+  value. For now just don't change 8187L, but is something to be
+  looked at.
+* On 8187B, the location of EIFS register is at the same place as BRSR+1
+  of struct rtl818x_csr. Unfortunately there is no clean way to
+  accomodate 8187B differences currently, just use address of BRSR+1 and
+  comment about it. The same thing happens for Ack timeout register,
+  that is on CARRIER_SENSE_COUNTER location of 8187L. The eifs and ack
+  timeout values are in units of 4us. All these registers information
+  was gathered from references being the vendor gpl driver and 8180
+  datasheet, unfortunately there is no information about this on 8187B
+  datasheet. Also the ack timeout value was inspired by the same
+  calculation as done on rt2x00.
+-----------------
 
-(the bugfix thread is here, it confirms the intention to ignore jumbo
-frames <http://thread.gmane.org/gmane.linux.kernel.wireless.general/23383>).
 
-Regards
-Alan
+      
