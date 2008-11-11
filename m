@@ -1,80 +1,248 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59980 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752066AbYKXNiI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 08:38:08 -0500
-Subject: Re: p54: AP mode: no data frame despite traffic indication set in
-	TIM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefan Steuerwald <salsasepp@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Chr <chunkeey@web.de>
-In-Reply-To: <f76a32050811210612i13ee251ewd6c1cab616a62529@mail.gmail.com> (sfid-20081121_151226_825613_6BD7F761)
-References: <f76a32050811210612i13ee251ewd6c1cab616a62529@mail.gmail.com>
-	 (sfid-20081121_151226_825613_6BD7F761)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ir55+/dpiGxh1LK5ImRy"
-Date: Mon, 24 Nov 2008 14:37:54 +0100
-Message-Id: <1227533874.2927.2.camel@johannes.berg> (sfid-20081124_143812_530218_CA2F202E)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:28720 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751160AbYKKXMl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2008 18:12:41 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2008 15:12:41 -0800
+Date: Tue, 11 Nov 2008 15:12:33 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hin-Tak Leung <htl10@users.sourceforge.net>
+CC: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	"compat-masters@lists.madwifi.org" <compat-masters@lists.madwifi.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: a couple of small bugs in compat-wireless
+Message-ID: <20081111231233.GK14202@tesla> (sfid-20081112_001245_721463_7DD0F88F)
+References: <252423.50522.qm@web23105.mail.ird.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <252423.50522.qm@web23105.mail.ird.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Nov 10, 2008 at 09:28:59PM -0800, Hin-Tak Leung wrote:
+> "make unload" doesn't unload iwlagn, and iwlagn keeps mac80211 in the kernel, which results in make unload failing. Needs to include iwlagn
+> in the unload list in script/unload.sh. Should be trivial to fix, and
+> probably quicker "just do it" then having a patch from me :-).
+> 
+> There is another annoyance - probably not strictly speaking a bug, but nonetheless, for some unexplainable reasons, I expect "make clean" to do the usual thing, and it doesn't - this is probably easy to fix by having an almost empty libertas_tf/Makefile ? (this shows an older compat-wireless , but current compat-wireless also seem to have this problem
+> if I remember correctly):
+> ---------------
+> scripts/Makefile.clean:17: /tmp/compat-wireless-2008-10-23/drivers/net/wireless/libertas_tf/Makefile: No such file or directory
+> make[4]: *** No rule to make target `/tmp/compat-wireless-2008-10-23/drivers/net/wireless/libertas_tf/Makefile'.  Stop.
+> make[3]: *** [/tmp/compat-wireless-2008-10-23/drivers/net/wireless/libertas_tf] Error 2
+> make[2]: *** [/tmp/compat-wireless-2008-10-23/drivers/net/wireless] Error 2
+> make[1]: *** [_clean_/tmp/compat-wireless-2008-10-23] Error 2
+> make[1]: Leaving directory `/usr/src/kernels/2.6.27.5-92.fc10.x86_64'
+> make: *** [clean] Error 2
+> ---------------
 
---=-ir55+/dpiGxh1LK5ImRy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Try this patch, but the issue you see is related to libertas... anyway,
+I've added this patch I'll try to see what's wrong with libertas.
 
-On Fri, 2008-11-21 at 15:12 +0100, Stefan Steuerwald wrote:
+  Luis
 
-> - frame 7: http request
-> - frame 13: iPod goes to sleep
-> - frame 23: AP beacon indicates traffic for iPod (AID 1 in TIM)
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
+[PATCH] Add iwl-load, and make sure we disable iwl4965 upon install
 
-in 24 too, the ipod probably didn't see the beacon in frame 23 even
-though 23 was a dtim beacon (which is a bit odd, but maybe the ipod
-doesn't care about mcast at this point)
+We now has two drivers for different kernel releases for
+the Intel 4965 device. To account for this we add a script
+to allow us to disable and enable one or each other.
+By default we disable iwl4965 as we are replacing it with
+iwlagn.
 
-> - frame 25: iPod wakes up
+If you want to enable iwl4965:
 
-26: ack from the AP
+iwl-load iwl4965
 
-> - in between: MISSING DATA ???
-> - frame 27: AP beacon with no traffic indicated ???
-> - frame 29: iPod goes to sleep again
-> - subsequent frames: repetitions of this, until the TCP connection is clo=
-sed
->=20
-> My understanding is that the AP would not indicate any traffic without
-> actually having some ready to send? Wrong assumption?
+If you want to enable iwlagn:
 
-Indeed. Christian, is it possible that the p54 device is actually
-filtering these frames? I'm pretty sure mac80211 behaves correctly, and
-it unsetting the TIM bit means that it must no longer have traffic
-buffered.
+iwl-load iwlagn
 
-johannes
+By default we'll use iwlagn.
 
---=-ir55+/dpiGxh1LK5ImRy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ Makefile           |   14 ++++++++++++
+ scripts/iwl-enable |   47 ++++++++++++++++++++++++++++++++++++++++++
+ scripts/iwl-load   |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 119 insertions(+), 0 deletions(-)
+ create mode 100755 scripts/iwl-enable
+ create mode 100755 scripts/iwl-load
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJKq4tAAoJEKVg1VMiehFYXycQAI0yOzAtBQ6wddQdAUwnF96F
-ZESWVu20YKdNNjPUjwK+v9GyW8DWvflP96DT3KKH8LscqMQCTxkFcYkgnfL4nsAb
-2qJbCw6A/01Y41RoJ+DIYsL4TKyQV+FFy4kITGPa+/Qe07QsKbuGVbCldcBiSoTI
-FTQj8jK9q7KO2tC4s9rl15AJ1PZ+uWDZUficxFpSE+7DtmCYNTr7vubrDLbkP4lq
-+0wNmjtA603g3XgrU42Tp8Q9tJkzo81SrDfBor4zq74ks2ENDJ0cCp2tAnhlNe5p
-6X3okDGiMgv1LReqBXj/6+D/Q6VOZ1ZN83HMPqHm3gxC41RYuvlFaSzhKpwEvFU/
-t8dKj6LJ2qT1GWfcLZ3roz+flIWtJ/MLQbxMOl4IIlwXuA1ySpyf7GT8o/zZIbQZ
-DxFGhPhcb2z+QCX6c+lKLINu1lpYdaSbs38CtuqO32wqnpVuyBLOQ96HUS2vfp4l
-TWKiE4nLJQGQYCY2SuQVKfBMWnPcDyBiRQgvxDl2KBaaOgSm6YOBHTdDq7/ts9QU
-X7D4N9Cjyf4frowzmm80H7jLZcbDeFGcFCKzuyBkcybpLGLSGW6jepdG+z5ZKana
-uwMmzeSXibeDPN89ye70cQn0SzbJmViyM7clqmtdM3xZq6hYWBx7KNgAoAHQX9pH
-hFYpeSbKDTXUwQLanZU+
-=qFIs
------END PGP SIGNATURE-----
-
---=-ir55+/dpiGxh1LK5ImRy--
+diff --git a/Makefile b/Makefile
+index c0ccbd5..7383214 100644
+--- a/Makefile
++++ b/Makefile
+@@ -9,6 +9,7 @@ export KLIB_BUILD ?=	$(KLIB)/build
+ # Sometimes not available in the path
+ MODPROBE := /sbin/modprobe
+ MADWIFI=$(shell $(MODPROBE) -l ath_pci)
++OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
+ 
+ ifneq ($(KERNELRELEASE),)
+ 
+@@ -67,8 +68,10 @@ install: uninstall modules
+ 	@# This is to allow switching between drivers without blacklisting
+ 	@install scripts/athenable	/usr/sbin/
+ 	@install scripts/b43enable	/usr/sbin/
++	@install scripts/iwl-enable	/usr/sbin/
+ 	@install scripts/athload	/usr/sbin/
+ 	@install scripts/b43load	/usr/sbin/
++	@install scripts/iwl-load	/usr/sbin/
+ 	@if [ ! -z $(MADWIFI) ]; then \
+ 		echo ;\
+ 		echo -n "Note: madwifi detected, we're going to disable it. "  ;\
+@@ -79,6 +82,15 @@ install: uninstall modules
+ 		/usr/sbin/athenable ath5k ;\
+ 	fi
+ 	@/sbin/depmod -ae
++	@if [ ! -z $(OLD_IWL) ]; then \
++		echo ;\
++		echo -n "Note: iwl4965 detected, we're going to disable it. "  ;\
++		echo "If you would like to enable it later you can run:"  ;\
++		echo "    sudo iwl-load iwl4965"  ;\
++		echo ;\
++		echo Running iwl-enable iwlagn...;\
++		/usr/sbin/iwl-enable iwlagn ;\
++	fi
+ 	@echo
+ 	@echo "Currently detected wireless subsystem modules:"
+ 	@echo 
+@@ -95,6 +107,7 @@ install: uninstall modules
+ 	@$(MODPROBE) -l ssb
+ 	@$(MODPROBE) -l iwl3945
+ 	@$(MODPROBE) -l iwl4965
++	@$(MODPROBE) -l iwlagn
+ 	@$(MODPROBE) -l ipw2100
+ 	@$(MODPROBE) -l ipw2200
+ 	@$(MODPROBE) -l ieee80211
+@@ -153,6 +166,7 @@ uninstall:
+ 	@$(MODPROBE) -l rc80211_simple
+ 	@$(MODPROBE) -l iwl3945
+ 	@$(MODPROBE) -l iwl4965
++	@$(MODPROBE) -l iwlagn
+ 	@$(MODPROBE) -l ipw2100
+ 	@$(MODPROBE) -l ipw2200
+ 	@$(MODPROBE) -l ieee80211
+diff --git a/scripts/iwl-enable b/scripts/iwl-enable
+new file mode 100755
+index 0000000..1236deb
+--- /dev/null
++++ b/scripts/iwl-enable
+@@ -0,0 +1,47 @@
++#!/bin/bash
++#
++# Copyright 2007	Luis R. Rodriguez <lrodriguez@atheros.com>
++#
++# Makes sure either iwlagn (new) or iwl4965 (old)
++# is enabled to be used. This allows us to choose any driver without 
++# blacklisting each other.
++
++. /usr/lib/compat-wireless/modlib.sh
++
++if [[ $UID -ne 0 ]]; then
++	echo "Run with root privileges"
++	exit
++fi
++
++IWL_NEW="iwlagn"
++IWL_OLD="iwl4965"
++
++# Appended to module file at the end when we want to ignore one
++USAGE="Usage: $0 [ $IWL | $IWL_OLD ]"
++
++function enable_iwlagn {
++	module_disable $IWL_OLD
++	for i in $IWL_NEW; do
++		module_enable $i
++	done
++}
++
++# Default behavior: disables the old iwl4965 driver and enables iwlagn
++if [ $# -eq 0 ]; then
++	enable_iwlagn
++	exit
++elif [ $# -ne 1 ]; then
++	echo "$USAGE"
++	exit
++fi
++
++MODULE=$1
++if [ "$MODULE" == "iwl4954" ]; then
++	module_disable $IWL_NEW
++	module_enable $IWL_OLD
++elif [ "$MODULE" == "iwlagn" ]; then
++	enable_iwlagn
++else
++	echo "$USAGE"
++	exit
++fi
+diff --git a/scripts/iwl-load b/scripts/iwl-load
+new file mode 100755
+index 0000000..96b6d89
+--- /dev/null
++++ b/scripts/iwl-load
+@@ -0,0 +1,58 @@
++#!/bin/bash
++# Copyright 2008	Luis R. Rodriguez <lrodriguez@atheros.com>
++#
++# Loads new Intel iwl (iwlagn) or the old ones (iwl4965)
++
++. /usr/lib/compat-wireless/modlib.sh
++
++IWL_OLD="iwl4965"
++IWL_NEW="iwlagn"
++
++if [[ $UID -ne 0 ]]; then
++	echo "Run with root privileges"
++	exit
++fi
++
++
++USAGE="Usage: $0 [ iwlagn | iwl4965 ]"
++
++# Default behavior: unload iwl4965 and load iwlagn
++if [ $# -eq 0 ]; then
++	1=iwlagn
++elif [ $# -ne 1 ]; then
++	echo "$USAGE"
++	exit
++fi
++
++MODULE=$1
++if [ "$MODULE" == "iwlagn" ]; then
++        grep iwl4965 /proc/modules 2>&1 > /dev/null
++        if [ $? -eq 0 ]; then
++                echo Unloading $i...
++		modprobe -r --ignore-remove iwl4965
++        fi
++	# Enables both b43 and b43legacy
++	iwl-enable iwlagn
++	modprobe iwlagn
++	CHECK=`modprobe -l iwlagn`
++	if [ ! -z $CHECK ]; then
++		echo "iwlagn loaded successfully"
++	fi
++elif [ "$MODULE" == "iwl4965" ]; then
++	CHECK=`modprobe -l iwlagn`
++	if [ ! -z $CHECK ]; then
++		echo "iwlagn currently loaded, going to try to unload the module..."
++		modprobe -r --ignore-remove iwlagn
++	fi
++	iwl-enable iwl4965
++	# iwl4965 may be loaded already lets remove it first
++	modprobe -r --ignore-remov iwl4965 2>&1 > /dev/null
++	modprobe iwl4965
++	CHECK=`modprobe -l iwl4965`
++	if [ ! -z $CHECK ]; then
++		echo "iwl4965 loaded successfully!"
++	fi
++else
++	echo "$USAGE"
++	exit
++fi
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
