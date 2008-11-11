@@ -1,69 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49845 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753450AbYKFMaE (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:11458 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751394AbYKKXBn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 07:30:04 -0500
-Subject: Re: [PATCH/RFT] iwlagn: remove pointless TX frame check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1224794532.6002.73.camel@johannes.berg> (sfid-20081024_114728_369906_13A28C41)
-References: <1223547733.22490.43.camel@johannes.berg>
-	 <1ba2fa240810091308r167b9147p46f74421329a55c1@mail.gmail.com>
-	 (sfid-20081009_220831_876301_EA9D5BD1)  <1223630089.3930.71.camel@johannes.berg>
-	 (sfid-20081010_111517_870111_CBA3F26D)  <1224794532.6002.73.camel@johannes.berg>
-	 (sfid-20081024_114728_369906_13A28C41)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EVvnj8lLmr0E5R9045NN"
-Date: Thu, 06 Nov 2008 13:30:03 +0100
-Message-Id: <1225974603.3619.219.camel@johannes.berg> (sfid-20081106_133010_464300_7B62BBBF)
-Mime-Version: 1.0
+	Tue, 11 Nov 2008 18:01:43 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so71656nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2008 15:01:41 -0800 (PST)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Fix TX failure path
+Date: Wed, 12 Nov 2008 00:01:37 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200811120001.37837.IvDoorn@gmail.com> (sfid-20081112_000148_633622_3B3317C9)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The callback function write_tx_data() can only fail
+when our ENTRY_OWNER_DEVICE_DATA flag on a queue entry
+failed to determine the entry was not available and
+it is in fact still owned by the hardware.
+This means that if that function fails the queue
+must be stopped in mac80211.
 
---=-EVvnj8lLmr0E5R9045NN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+When rt2x00queue_get_queue() returns NULL in the TX
+path, it means mac80211 has passed us an invalid queue,
+although this should be impossible, it shouldn't hurt
+if we send mac80211 a signal to stop the queue either.
 
-On Thu, 2008-10-23 at 22:42 +0200, Johannes Berg wrote:
-> On Fri, 2008-10-10 at 11:14 +0200, Johannes Berg wrote:
->=20
-> > > NACK, the completion of association of mac80211 and iwlagn isn't full=
-y
-> > > synchronized so there is still
-> > > a race.
-> >=20
-> > Can we fix that?
->=20
-> Ping? Any idea _where_ the two can get desynchronized?
+Both issues can simply be resolved by removing their
+manual failure handler and making them use the failure path
+provided in rt2x00mac_tx().
 
-Ping again. I like verifiable reasons for a "NACK".
-
-johannes
-
---=-EVvnj8lLmr0E5R9045NN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJEuNIAAoJEKVg1VMiehFYIMYP/1i9eHkIe3wD0flUxLRgPVrI
-d8FzR+fYUW/kufmElN9wov6b+qne8WIOn+yUsQvi+i/BTGDiLHbFxpYaFtyNXTeA
-QllPgair1IkN73Am9nRT1pokP2wxR5bqK9zv4bxKqIqY2UQWwlGUXAGZyHTCbFHl
-TanN00ZAHf2IWy+UOgACvLeafAVBB89E3TsgqCiDZm68aozXVq8uds4iYWcD+Vwc
-ChE1iRz058QQWG5+Oo4gYePJf4iOAWs/y0RHAg83K0CWOMQVcvW1xMN0J48blZbc
-75cYG+Xi1XEuwxKQt6Y0jac0M9tNSRzfY/2yN4Yk4mfYJ4/HXD0UyYSBbPhqiXQy
-zSj1YCHb472XzkZ8rAlqx+tQqd4Q4FbTIRayct76QTr5q8kOylFhxfI63n2awTH2
-imOgZTz3+4y6vFXWR8m3FNuzUic9MbS4suJDxlhLly/vJDojupwnds4uKkIjLJYI
-7eA9quVpVK264MAPudv+SsFl1kiDxWS6+Sc5B9MftOeGuJOifI05Rad7lTxkx7Eq
-7K2KYe1GQ4CiAohWoz0CYnmPRWlYhGeN9ggM33mei5c+tcJIcK7CWe5WVygnbJXQ
-NRuXdmSJK+zHCFFnlmxf8dpnPo6N7I/8JN3dhviq+Aj4cJzUdakhw9Y2XQXFa38y
-M57OE4A284cyklBC1YSV
-=29EL
------END PGP SIGNATURE-----
-
---=-EVvnj8lLmr0E5R9045NN--
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 48636b0..4c03957 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -132,8 +132,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		ERROR(rt2x00dev,
+ 		      "Attempt to send packet over invalid queue %d.\n"
+ 		      "Please file bug report to %s.\n", qid, DRV_PROJECT);
+-		dev_kfree_skb_any(skb);
+-		return NETDEV_TX_OK;
++		goto exit_fail;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index d7752db..b8de9d2 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -386,7 +386,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ 	u8 rate_idx, rate_flags;
+ 
+ 	if (unlikely(rt2x00queue_full(queue)))
+-		return -EINVAL;
++		return -ENOBUFS;
+ 
+ 	if (test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags)) {
+ 		ERROR(queue->rt2x00dev,
+@@ -415,7 +415,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ 	tx_info = IEEE80211_SKB_CB(skb);
+ 	rate_idx = tx_info->control.rates[0].idx;
+ 	rate_flags = tx_info->control.rates[0].flags;
+-	skbdesc = get_skb_frame_desc(entry->skb);
++	skbdesc = get_skb_frame_desc(skb);
+ 	memset(skbdesc, 0, sizeof(*skbdesc));
+ 	skbdesc->entry = entry;
+ 	skbdesc->tx_rate_idx = rate_idx;
+@@ -427,20 +427,18 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ 	 * the frame so we can provide it to the driver seperately.
+ 	 */
+ 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc.flags) &&
+-	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags)) {
++	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags))
+ 		rt2x00crypto_tx_remove_iv(skb, iv_len);
+-	}
+ 
+ 	/*
+ 	 * It could be possible that the queue was corrupted and this
+-	 * call failed. Just drop the frame, we cannot rollback and pass
+-	 * the frame to mac80211 because the skb->cb has now been tainted.
++	 * call failed. Since we always return NETDEV_TX_OK to mac80211,
++	 * this frame will simply be dropped.
+ 	 */
+ 	if (unlikely(queue->rt2x00dev->ops->lib->write_tx_data(entry))) {
+ 		clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
+-		dev_kfree_skb_any(entry->skb);
+ 		entry->skb = NULL;
+-		return 0;
++		return -EIO;
+ 	}
+ 
+ 	if (test_bit(DRIVER_REQUIRE_DMA, &queue->rt2x00dev->flags))
