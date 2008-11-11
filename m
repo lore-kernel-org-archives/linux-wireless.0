@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60813 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753166AbYKLVqM (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.187]:30835 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754593AbYKKKS1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 16:46:12 -0500
-Date: Wed, 12 Nov 2008 16:33:50 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Frank Seidel <fseidel@suse.de>
-Cc: linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>, yi.zhu@intel.com,
-	reinette.chatre@intel.com, ipw2100-devel@lists.sourceforge.net
-Subject: Re: Problem with Kernel Oops in ipw2200
-Message-ID: <20081112213350.GJ2411@tuxdriver.com> (sfid-20081112_224617_010636_FDBFA0F8)
-References: <49130E75.1000903@suse.de> <49131173.3010409@suse.de>
+	Tue, 11 Nov 2008 05:18:27 -0500
+Received: by mu-out-0910.google.com with SMTP id g7so3319679muf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2008 02:18:25 -0800 (PST)
+Message-ID: <8e92b4100811110218q2b45f70amdba39159ef9799bd@mail.gmail.com> (sfid-20081111_111831_891321_FF738977)
+Date: Tue, 11 Nov 2008 15:48:24 +0530
+From: "Vivek Natarajan" <vivek.natraj@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: [RFC 2/2] mac80211: implement dynamic power save
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87zlk6vink.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49131173.3010409@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com>
+	 <1226245439-30329-3-git-send-email-kalle.valo@nokia.com>
+	 <20081110201444.GI6918@tesla> <87zlk6vink.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 06, 2008 at 04:46:59PM +0100, Frank Seidel wrote:
-> Frank Seidel schrieb:
-> > Ever suggestion is very appreciated.
-> 
-> My first search through the ipw2200 logs pointed
-> me to Davids last commit (521c4d96e0840ecce25b956e00f416ed499ef2ba)
-> and really after reverting it the problem disappeared here.
-> The patch from my last post was the smallest subset of
-> the revertion that still works for me here.
-> Any comments?
+On Tue, Nov 11, 2008 at 12:44 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
 
-I think it would be better to make sure that ipw2200 (and/or
-ieee80211) is properly using netif_carrier_{on,off}() instead?
+> While talking about power save, can you give me any hints how power
+> save in client mode works in ath5k/ath9k? I haven't looked at the
+> drivers yet, but any hints (even how small) always help and save time.
+> I'm trying to understand how power save is implemented in different
+> hardware so that I can take that into account in my patches.
 
-Thanks,
+Currently there is no support for powersave in ath9k( Not sure about
+ath5k though). There is a code level implementation for the following
+although we do not enable them:
+ Support for network sleep mode:
+     If a request for network sleep comes from higher layers, the
+sleep duration having been configured based on beacon interval and the
+TIM offset in the beacon based on AID is all configured, then the
+chip will happily go to sleep and wake up for the beacon to read TIM.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+But the code for calulating TIM offset, reading TIM, to decide the power
+level based on TIM, extending awake time based on DTIM needs to be
+done. Since these are common to all drivers, these may get into
+mac80211( Not sure if it is already implemented). Please correct me if
+I am wrong here.
+
+I believe all these are done in the firmware for Intel since Tomas mentioned
+sometime back that all the power save features works in iwlwifi.
+
+>  Actually there are three types of power save now:
+> AP mode buffering for clients in power save, the normal ("static")
+> power save for client mode and the dynamic version. So this will get
+> very confusing.
+I have come across  this dynamic power save(Switch off radio when there
+is no RX/Tx for sometime) and also buffering in AP mode. I would be happy to
+know about the static power save.
+
+Regards,
+Vivek.
