@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44138 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753016AbYKPWGG (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57770 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755735AbYKKM5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Nov 2008 17:06:06 -0500
-Message-ID: <4920994B.3090600@lwfinger.net> (sfid-20081116_230612_181960_511F97B4)
-Date: Sun, 16 Nov 2008 16:06:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Rate setting problem with pid algorithm for (at least) p54usb and
- b43
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 11 Nov 2008 07:57:15 -0500
+Subject: Re: [RFC] mac80211 dynamic powersave
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: Vivek Natarajan <vivek.natraj@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <87k5babg4l.fsf@nokia.com> (sfid-20081111_133043_344251_5D49B0EF)
+References: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com>
+	 <8e92b4100811102018q4a13568l625abf2c59dca253@mail.gmail.com>
+	 <87k5babg4l.fsf@nokia.com> (sfid-20081111_133043_344251_5D49B0EF)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aEAyG2UY3LwGsD2j5e0I"
+Date: Tue, 11 Nov 2008 13:57:00 +0100
+Message-Id: <1226408220.3890.40.camel@johannes.berg> (sfid-20081111_135719_070307_CF6DBAC9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
 
-In testing today, I discovered that p54usb and b43 never advance beyond 1 Mb/s
-when using the pid algorithm. When I monitored rc_pid_events in
-/sys/kernel/debug/.../, I discovered the rate-setting details as follows:
+--=-aEAyG2UY3LwGsD2j5e0I
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-3547 4302748627 pf_sample 12800 -9216 -9216 0
+On Tue, 2008-11-11 at 14:29 +0200, Kalle Valo wrote:
 
-IIRC from debugging b43legacy in the past, this indicates that the pid code is
-never seeing any successful transmissions. I debugged the code in
-rate_control_pid_tx_status() and found that p54usb is passing 1 in
-status.rates[0].count, thus the following fragment is handling each frame as
-though it had retries, even though there were none:
+> Yes, that's how I have understood iwlwifi to work. Currently stlc45xx
+> is the only hardware which requires the driver to create the null
+> frames, but if we are more than one hardware I think we need to
+> considering adding the feature to mac80211 (with a new HW flag, of
+> course).
 
-        /* We count frames that totally failed to be transmitted as two bad
-         * frames, those that made it out but had some retries as one good and
-         * one bad frame. */
-        if (!(info->flags & IEEE80211_TX_STAT_ACK)) {
-                spinfo->tx_num_failed += 2;
-                spinfo->tx_num_xmit++;
-        } else if (info->status.rates[0].count) {
-                spinfo->tx_num_failed++;
-                spinfo->tx_num_xmit++;
-        }
+b43 will need that too, if we get PS mode working there.
 
-This is a regression introduced in commit 9ea2c74 "mac80211/drivers: rewrite the
-rate control API".
+johannes
 
-The following patch fixes the problem. Is it right?
+--=-aEAyG2UY3LwGsD2j5e0I
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Index: wireless-testing/net/mac80211/rc80211_pid_algo.c
-===================================================================
---- wireless-testing.orig/net/mac80211/rc80211_pid_algo.c
-+++ wireless-testing/net/mac80211/rc80211_pid_algo.c
-@@ -256,7 +256,7 @@ static void rate_control_pid_tx_status(v
-        if (!(info->flags & IEEE80211_TX_STAT_ACK)) {
-                spinfo->tx_num_failed += 2;
-                spinfo->tx_num_xmit++;
--       } else if (info->status.rates[0].count) {
-+       } else if (info->status.rates[0].count > 1) {
-                spinfo->tx_num_failed++;
-                spinfo->tx_num_xmit++;
-        }
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Larry
+iQIcBAABAgAGBQJJGYEZAAoJEKVg1VMiehFYN0kP/AvNAC8E9AKa+zNtqFf6ViIf
+OZRMGntHcmFcOPgVN/zCz2mjgFsxTqygOT9Qo3ekGA4BljixoCwTHeYa68Sjje2k
+/23Rs6yjBRz1FrKRr+ySfpsGW7gzzKk8i66Rg5sOXzvIATHbo78u9kvKuUwm+HSN
+D2VPkjhjWpEyUZDj8hCfIVtJNA8KcG+64ErJ4AyfO5GLNWU/3HuLHxiAXZl1bSkq
+NETgMLHXQ62+fE7GIYDN9YK5loySZdb+mrjmvfrE0uegWs+9MaFUJhIgAbPU5a6T
+ARqfDneA6TWAkJS7EmhVPdX/Bww51Fubvh+SH7jbwpMSvK8dA7Z+CTryidk0oR09
+82vB3VR3t5LsrBqIMeyEzrL6UgxHLK1dRZ7hSW9u2SKjOevgh3CvtC368oLErCSc
+1XaSc9/XbvHo+9+niIY6WlFS6w2hrdX1fo6m59VIp0UjRrMMA3OYROTfVy1pj5qr
+KOsth9At3oEh7zNGHLOaGJvsSfQyEwsxVKRIxRJEIBLQvyy1fMRiuZThupT+uV2Y
+WN5TSg+oCtT/CafqiXBHnmO4Qso8OVNOPEpKOokEkzDT74K6Wkjl3ZMjXEI6J/r2
+Yd6rsfLPK0J4UXTMDCffgEcGmQBM8rNS1R86kOLnUG7K0CTlEQD+uPDe52cNANku
+n6K87NvMNSseXfCGU+nz
+=Lou2
+-----END PGP SIGNATURE-----
+
+--=-aEAyG2UY3LwGsD2j5e0I--
+
