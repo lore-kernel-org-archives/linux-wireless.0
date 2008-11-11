@@ -1,129 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx5.mail.ru ([194.67.23.25]:30735 "EHLO mx5.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751105AbYKVH40 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 02:56:26 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: Dave <kilroyd@googlemail.com>
-Subject: Re: [Orinoco-devel] Agere PCMCIA sometimes takes very long time to associate with 9.48 FW
-Date: Sat, 22 Nov 2008 10:56:21 +0300
-Cc: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200810191436.13298.arvidjaar@mail.ru> <200811172229.41361.arvidjaar@mail.ru> <4921D616.3040207@gmail.com>
-In-Reply-To: <4921D616.3040207@gmail.com>
+Received: from smtp.nokia.com ([192.100.105.134]:30735 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756110AbYKKMaX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2008 07:30:23 -0500
+To: "Vivek Natarajan" <vivek.natraj@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211 dynamic powersave
+References: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com>
+	<8e92b4100811102018q4a13568l625abf2c59dca253@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 11 Nov 2008 14:29:14 +0200
+In-Reply-To: <8e92b4100811102018q4a13568l625abf2c59dca253@mail.gmail.com> (ext Vivek Natarajan's message of "Tue\, 11 Nov 2008 09\:48\:23 +0530")
+Message-ID: <87k5babg4l.fsf@nokia.com> (sfid-20081111_133043_344251_5D49B0EF)
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4388712.nQBSq0meGh";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200811221056.22061.arvidjaar@mail.ru> (sfid-20081122_085629_578096_F2C99455)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4388712.nQBSq0meGh
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Vivek Natarajan <vivek.natraj@gmail.com> writes:
 
-On Monday 17 November 2008, Dave wrote:
+> Hello Kalle,
 
-> > Looking at wpa_supplicant log intersting part is
-> >=20
-> > Wireless event: cmd=3D0x8c07 len=3D32
-> > AssocReq IE wireless event - hexdump(len=3D24): dd 16 00 50 f2 01 01 00=
- 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
-> > RTM_NEWLINK: operstate=3D0 ifi_flags=3D0x11003 ([UP][LOWER_UP])
-> > RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
-> > Wireless event: cmd=3D0x8b15 len=3D20
-> > Wireless event: new AP: 00:60:b3:ca:91:b0
-> > Association info event
-> > req_ies - hexdump(len=3D24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 =
-00 50 f2 02 01 00 00 50 f2 02
-> > WPA: set own WPA/RSN IE - hexdump(len=3D24): dd 16 00 50 f2 01 01 00 00=
- 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
-> > State: ASSOCIATING -> ASSOCIATED
-> > wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
-> > WEXT: Operstate: linkmode=3D-1, operstate=3D5
-> > Associated to a new BSS: BSSID=3D44:44:44:44:44:44
->=20
-> > in other words, wpa_drv_get_bssid() returns 44:... BSSID. I could not f=
-ind
-> > any place in kernel or wpa_supplicant that would set it, so I can only =
-assume
-> > that firmware returns it for watever reason.
->=20
-> It is a firmware value, but I don't know what the it means. I know
-> hostap checks for it in hostap_main:prism2_sta_deauth.
->=20
+Hello Vivek,
 
-In some place wpa_supplicant is using this to mark invalid BSSID; I
-do not think it leaks it into the driver now though.
+>   I have a few questions on the PS implementation. Here they are,
+>
+> 1) I see from your patch that power save is enabled whenever there
+>    is no Tx for the specified 'timeout' period. Should we also take into
+>    account the type of power connection( i.e battery or direct ac supply)
+>    before enabling PS?
 
-And it is value that is use by Hermes to indicate invalid BSSID. It is even
-documents in iwconfig.c :)
+That's a policy decision and should be in user space. User space can
+enable or disable the dynamic PS as it sees fit based on different
+parameters.
 
-/*
- * Display an Wireless Access Point Socket Address in readable format.
- * Note : 0x44 is an accident of history, that's what the Orinoco/PrismII
- * chipset report, and the driver doesn't filter it.
- */
+> 2) Do you intend to leave the NULL frame formation
 
-Anyway I now have Yet Another Theory that actually fits quite well into
-what I have seen in wpa_supplicant logs and explains 44:... BSSID as well.
+[to the driver]
 
-Mandriva is using approximately the following sequence to start wireless:
+Yes, that was my and Johannes' plan.
 
-ifconfig eth1 up
-iwconfig eth1 whatever-is-set-for-it
-wpa_supplicant eth1
+> waking up the chip for TIM
 
-Now I had these parameters for eth1:
+What do you mean by this? Sending a beacon interval setting to the chip?
 
-### WIRELESS_MODE=3DManaged
-### WIRELESS_ESSID=3D"Home, sweet home"
-WIRELESS_WPA_DRIVER=3Dwext
-### WIRELESS_POWER=3Don
-### WIRELESS_SENS=3D3
+> and modifying sleep/awake time according to DTIM to the driver since
+> I did not see this in your TODO list?
 
-Notice WIRELESS_ESSID. So what happened was apparently this
+I think these should be in mac80211, just haven't thought that far
+yet. I'll add it to the TODO list.
 
-iwcofnig eth1 ESSID
-                      driver starts associating
-wpa_supplicant starts
-                      driver associated and send IWEVASSOCREQIE
-wpa_supplicant calls SIOCSIWESSID  |
-         +-------------------------+
-         |
-         |            driver *again* starts associating
-        /
-wpa_supplicant receives SIOCSIWESSID
-wpa_supplicant calls SIOCGIWAP
-                      at this point driver has not yet
-                        completed *second* association
-                        so it returns invalid BSSID
-                        (44:44:44:44:44:44)
+> ( I understand from the iwlwifi code that it just sends a request to
+> the firmware for sending NULL frame and the firmware takes care of
+> the rest. But it may not be so in the case of other vendor drivers.)
 
+Yes, that's how I have understood iwlwifi to work. Currently stlc45xx
+is the only hardware which requires the driver to create the null
+frames, but if we are more than one hardware I think we need to
+considering adding the feature to mac80211 (with a new HW flag, of
+course).
 
-So it looks like user space issue after all. There is little driver can
-do (except returning "officially blessed" indication for invalid BSSID).
-As it is now, wpa_supplicant does not seem to check for invalid BSSID
-from SIOCGIWAP in wpa_supplicant_event_assoc() at all. It enters quite a
-long retry loop using invalid value until it finally decides to trigger
-association again.
+> 3) Is the PS-POLL concept(or M frames in N milliseconds concept of Johannes)
+>
+>      dropped after the DNS response timings related discussion that you had
+>      since it might save some more power in low-traffic conditions?
 
-It also explains why nobody was able to reproduce it - it is really
-quite unique timing issue. Any change in scheduling could have "fixed" it.
+I have dropped it for now. I try to get a simple implementation
+approved first, we can add advanced stuff later.
 
---nextPart4388712.nQBSq0meGh
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkknuyUACgkQR6LMutpd94zwXQCgjrQtxr069cDA7zwdCRk/d4G0
-ABMAn3VJ8NDyCglU5kgF6IlJ6baZ4k1K
-=x/YQ
------END PGP SIGNATURE-----
-
---nextPart4388712.nQBSq0meGh--
+-- 
+Kalle Valo
