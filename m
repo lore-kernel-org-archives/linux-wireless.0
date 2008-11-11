@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:60759 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752498AbYKEQ5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 11:57:16 -0500
-Subject: Re: plan for libertas and mac80211 and cfg80211
-From: Dan Williams <dcbw@redhat.com>
-To: Cliff Brake <cliff.brake@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <f96d234e0811050728t63f3793eqc395ff979dafd9f6@mail.gmail.com>
-References: <f96d234e0811050728t63f3793eqc395ff979dafd9f6@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 05 Nov 2008 11:55:29 -0500
-Message-Id: <1225904129.25627.7.camel@localhost.localdomain> (sfid-20081105_175719_182947_98437619)
-Mime-Version: 1.0
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:65509 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752010AbYKKTmS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2008 14:42:18 -0500
+Message-ID: <4919E017.8000301@lwfinger.net> (sfid-20081111_204223_637576_861CAAD9)
+Date: Tue, 11 Nov 2008 13:42:15 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: Hin-Tak Leung <hintak_leung@yahoo.co.uk>,
+	linux-wireless@vger.kernel.org
+Subject: Re: throughput problem/bisect with rtl8187B
+References: <992048.28671.qm@web23108.mail.ird.yahoo.com> <200811111634.14786.herton@mandriva.com.br>
+In-Reply-To: <200811111634.14786.herton@mandriva.com.br>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-11-05 at 10:28 -0500, Cliff Brake wrote:
-> Hello,
+Herton Ronaldo Krzesinski wrote:
+> On Tuesday 11 November 2008 14:48:52 Hin-Tak Leung wrote:
+>> --- On Tue, 11/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
+>>
+>> <snipped>
+>>> Lets try to identify what part is broken, I guess is this,
+>>> can you try this
+>>> patch on latest wireless-testing?
+>> Tried it, no improvement. 
+>>
+>> Can you /did you see any problem similiar to mine with throughput on your system(s)?
 > 
-> I am using the marvell 8686 in several projects.  Is there any plan to
-> move the libertas driver to mac80211 in the future?  If not, will
+> Nope, here I can scp a large file from another machine, rate stabilizes at 6M
+> with minstrel, transfer rate stays around 400-480KB/s, and drops/fluctuates
+> below 400KB/s usually (must be affected by other network traffic, I can't do
+> the test now on a clean environment).
+> 
+> Please check this patch to see if things improve, if not, can you check with
+> the patch I posted earlier, "Add conf_tx callback and use it to configure tx
+> queues of 8187L/8187B.", if things improve? (I think you already checked, but
+> just in case you tested only the rate control related patch)
 
-The libertas parts are "fullmac" parts, and implement most functionality
-in firmware.  mac80211 is a "softmac" stack, which implements
-functionality on the host CPU.  Thus, it's simply impossible to use
-mac80211 with the fullmac libertas parts (838x, 838x).
+With patch #2 I get an upload speed of 463 KB/s, which is the same as before.
 
-Furthermore, that would be sort of counter to what the fullmac parts are
-supposed to be, which is embedded, power-efficient parts that don't
-require much interaction from the host CPU.
+Hin-tak: If you use "minstrel" as the rate-control algorithm, mac80211 says so.
+You are using "pid".
 
-> cfg80211 mechanisms be supported with this driver?
-
-Since cfg80211 itself is intended to be independent of mac80211, and
-should be able to be used as the configuration interface for all
-drivers, be they fullmac or softmac, yes.
-
-Dan
-
-
+Larry
