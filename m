@@ -1,225 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25115 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752119AbYK0ETl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 23:19:41 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 20:19:41 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from kroah.org ([198.145.64.141]:33594 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751388AbYKKUOL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2008 15:14:11 -0500
+Date: Tue, 11 Nov 2008 12:03:41 -0800
+From: Greg KH <greg@kroah.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: stable@kernel.org, rjw@sisk.pl, linville@tuxdriver.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [stable] [PATCH 0/2] iwlwifi fixes for stable 2.6.27
+Message-ID: <20081111200340.GA1784@kroah.com> (sfid-20081111_211416_308764_444D6341)
+References: <1226191867-22324-1-git-send-email-tomas.winkler@intel.com> <20081109041808.GA1017@kroah.com> <1ba2fa240811082313q57cca1fayf94aea9357f52a58@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18734.7963.952033.626436@gargle.gargle.HOWL> (sfid-20081127_051946_774158_39B64109)
-Date: Thu, 27 Nov 2008 09:46:27 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] ath9k: Handle channel initialization for AP mode
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240811082313q57cca1fayf94aea9357f52a58@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hostapd now passes the HT parameters through the config()
-callback, use these to set the appropriate channel in AP mode.
+On Sun, Nov 09, 2008 at 09:13:56AM +0200, Tomas Winkler wrote:
+> On Sun, Nov 9, 2008 at 6:18 AM, Greg KH <greg@kroah.com> wrote:
+> > On Sun, Nov 09, 2008 at 02:51:05AM +0200, Tomas Winkler wrote:
+> >> First one didn't make it into the stable due to type in emails
+> >> Second is important bug fix that was kept out 2.6.27 merging window.
+> >> There is no visible kernel bug but w/o this patch the 5000 iwlwifi HW
+> >> is left un-calibrated which is critical
+> >
+> > Are these already in Linus's tree?  If so, do you have a git commit id
+> > for them?
+> 
+> iwlwifi: fix suspend to RAM in iwlwifi 10d0bd56966571d0324dfd9bbb8aa913a60bef5f
+> iwlwifi: generic init calibrations framework
+> 6e21f2c109edd746a10e08186484bae8168cdd0c
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
-Note: This patch depends on [PATCHv2] nl80211: Add frequency configuration (including HT40)
-posted by Jouni.
+Thanks, I've now added them, and a few others that were asked for by
+other developers.
 
- drivers/net/wireless/ath9k/main.c |   60 ++++++++++++++++++++++++++----------
- drivers/net/wireless/ath9k/rc.c   |   55 +++++++++++++++++++++++++++++----
- 2 files changed, 91 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 6e103d5..d1ddb07 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -622,35 +622,35 @@ static int ath_get_channel(struct ath_softc *sc,
- 	return -1;
- }
- 
-+/* ext_chan_offset: (-1, 0, 1) (below, none, above) */
-+
- static u32 ath_get_extchanmode(struct ath_softc *sc,
- 			       struct ieee80211_channel *chan,
--			       struct ieee80211_bss_conf *bss_conf)
-+			       int ext_chan_offset,
-+			       enum ath9k_ht_macmode tx_chan_width)
- {
- 	u32 chanmode = 0;
--	u8 ext_chan_offset = bss_conf->ht.secondary_channel_offset;
--	enum ath9k_ht_macmode tx_chan_width = (bss_conf->ht.width_40_ok) ?
--		ATH9K_HT_MACMODE_2040 : ATH9K_HT_MACMODE_20;
- 
- 	switch (chan->band) {
- 	case IEEE80211_BAND_2GHZ:
--		if ((ext_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_NONE) &&
-+		if ((ext_chan_offset == 0) &&
- 		    (tx_chan_width == ATH9K_HT_MACMODE_20))
- 			chanmode = CHANNEL_G_HT20;
--		if ((ext_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE) &&
-+		if ((ext_chan_offset == 1) &&
- 		    (tx_chan_width == ATH9K_HT_MACMODE_2040))
- 			chanmode = CHANNEL_G_HT40PLUS;
--		if ((ext_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW) &&
-+		if ((ext_chan_offset == -1) &&
- 		    (tx_chan_width == ATH9K_HT_MACMODE_2040))
- 			chanmode = CHANNEL_G_HT40MINUS;
- 		break;
- 	case IEEE80211_BAND_5GHZ:
--		if ((ext_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_NONE) &&
-+		if ((ext_chan_offset == 0) &&
- 		    (tx_chan_width == ATH9K_HT_MACMODE_20))
- 			chanmode = CHANNEL_A_HT20;
--		if ((ext_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE) &&
-+		if ((ext_chan_offset == 1) &&
- 		    (tx_chan_width == ATH9K_HT_MACMODE_2040))
- 			chanmode = CHANNEL_A_HT40PLUS;
--		if ((ext_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW) &&
-+		if ((ext_chan_offset == -1) &&
- 		    (tx_chan_width == ATH9K_HT_MACMODE_2040))
- 			chanmode = CHANNEL_A_HT40MINUS;
- 		break;
-@@ -841,6 +841,18 @@ static void ath9k_ht_conf(struct ath_softc *sc,
- 	}
- }
- 
-+static inline int ath_sec_offset(u8 ext_offset)
-+{
-+	if (ext_offset == IEEE80211_HT_PARAM_CHA_SEC_NONE)
-+		return 0;
-+	else if (ext_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE)
-+		return 1;
-+	else if (ext_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW)
-+		return -1;
-+
-+	return 0;
-+}
-+
- static void ath9k_bss_assoc_info(struct ath_softc *sc,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_bss_conf *bss_conf)
-@@ -893,13 +905,14 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
- 		}
- 
- 		if (hw->conf.ht.enabled) {
--			sc->sc_ah->ah_channels[pos].chanmode =
--				ath_get_extchanmode(sc, curchan, bss_conf);
-+			int offset =
-+				ath_sec_offset(bss_conf->ht.secondary_channel_offset);
-+			sc->tx_chan_width = (bss_conf->ht.width_40_ok) ?
-+				ATH9K_HT_MACMODE_2040 : ATH9K_HT_MACMODE_20;
- 
--			if (bss_conf->ht.width_40_ok)
--				sc->tx_chan_width = ATH9K_HT_MACMODE_2040;
--			else
--				sc->tx_chan_width = ATH9K_HT_MACMODE_20;
-+			sc->sc_ah->ah_channels[pos].chanmode =
-+				ath_get_extchanmode(sc, curchan,
-+						    offset, sc->tx_chan_width);
- 		} else {
- 			sc->sc_ah->ah_channels[pos].chanmode =
- 				(curchan->band == IEEE80211_BAND_2GHZ) ?
-@@ -2172,9 +2185,22 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 			(curchan->band == IEEE80211_BAND_2GHZ) ?
- 			CHANNEL_G : CHANNEL_A;
- 
--		if (ath_set_channel(sc, &sc->sc_ah->ah_channels[pos]) < 0)
-+		if ((sc->sc_ah->ah_opmode == ATH9K_M_HOSTAP) &&
-+		    (conf->ht.enabled)) {
-+			sc->tx_chan_width = (!!conf->ht.sec_chan_offset) ?
-+				ATH9K_HT_MACMODE_2040 : ATH9K_HT_MACMODE_20;
-+
-+			sc->sc_ah->ah_channels[pos].chanmode =
-+				ath_get_extchanmode(sc, curchan,
-+						    conf->ht.sec_chan_offset,
-+						    sc->tx_chan_width);
-+		}
-+
-+		if (ath_set_channel(sc, &sc->sc_ah->ah_channels[pos]) < 0) {
- 			DPRINTF(sc, ATH_DBG_FATAL,
- 				"%s: Unable to set channel\n", __func__);
-+			return -EINVAL;
-+		}
- 	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_HT)
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 93dfea8..7c08583 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1304,6 +1304,38 @@ static void ath_rc_tx_status(struct ath_softc *sc,
- 			 xretries, long_retry);
- }
- 
-+static struct ath_rate_table *ath_choose_rate_table(struct ath_softc *sc,
-+						    enum ieee80211_band band,
-+						    bool is_ht, bool is_cw_40)
-+{
-+	int mode = 0;
-+
-+	switch(band) {
-+	case IEEE80211_BAND_2GHZ:
-+		mode = ATH9K_MODE_11G;
-+		if (is_ht)
-+			mode = ATH9K_MODE_11NG_HT20;
-+		if (is_cw_40)
-+			mode = ATH9K_MODE_11NG_HT40PLUS;
-+		break;
-+	case IEEE80211_BAND_5GHZ:
-+		mode = ATH9K_MODE_11A;
-+		if (is_ht)
-+			mode = ATH9K_MODE_11NA_HT20;
-+		if (is_cw_40)
-+			mode = ATH9K_MODE_11NA_HT40PLUS;
-+		break;
-+	default:
-+		DPRINTF(sc, ATH_DBG_RATE, "Invalid band\n");
-+		return NULL;
-+	}
-+
-+	BUG_ON(mode >= ATH9K_MODE_MAX);
-+
-+	DPRINTF(sc, ATH_DBG_RATE, "Choosing rate table for mode: %d\n", mode);
-+	return sc->hw_rate_table[mode];
-+}
-+
- static void ath_rc_init(struct ath_softc *sc,
- 			struct ath_rate_priv *ath_rc_priv,
- 			struct ieee80211_supported_band *sband,
-@@ -1314,16 +1346,25 @@ static void ath_rc_init(struct ath_softc *sc,
- 	u8 *ht_mcs = (u8 *)&ath_rc_priv->neg_ht_rates;
- 	u8 i, j, k, hi = 0, hthi = 0;
- 
--	rate_table = sc->hw_rate_table[sc->sc_curmode];
-+	/* FIXME: Adhoc */
-+	if ((sc->sc_ah->ah_opmode == ATH9K_M_STA) ||
-+	    (sc->sc_ah->ah_opmode == ATH9K_M_IBSS)) {
-+		bool is_cw_40 = sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+		rate_table = ath_choose_rate_table(sc, sband->band,
-+						   sta->ht_cap.ht_supported,
-+						   is_cw_40);
-+	} else if (sc->sc_ah->ah_opmode == ATH9K_M_HOSTAP) {
-+		/* sc_curmode would be set on init through config() */
-+		rate_table = sc->hw_rate_table[sc->sc_curmode];
-+	}
- 
--	if (sta->ht_cap.ht_supported) {
--		if (sband->band == IEEE80211_BAND_2GHZ)
--			rate_table = sc->hw_rate_table[ATH9K_MODE_11NG_HT20];
--		else
--			rate_table = sc->hw_rate_table[ATH9K_MODE_11NA_HT20];
-+	if (!rate_table) {
-+		DPRINTF(sc, ATH_DBG_FATAL, "Rate table not initialized\n");
-+		return;
-+	}
- 
-+	if (sta->ht_cap.ht_supported) {
- 		ath_rc_priv->ht_cap = (WLAN_RC_HT_FLAG | WLAN_RC_DS_FLAG);
--
- 		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
- 			ath_rc_priv->ht_cap |= WLAN_RC_40_FLAG;
- 	}
--- 
-1.6.0.3
-
+greg k-h
