@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:46128 "EHLO mx2.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:14084 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756132AbYKEQyz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 11:54:55 -0500
-Subject: Re: plan for libertas and mac80211 and cfg80211
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Cliff Brake <cliff.brake@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1225900330.3619.125.camel@johannes.berg>
-References: <f96d234e0811050728t63f3793eqc395ff979dafd9f6@mail.gmail.com>
-	 (sfid-20081105_162837_225849_AF63D3FD)  <1225900330.3619.125.camel@johannes.berg>
+	id S1752668AbYKKQxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2008 11:53:34 -0500
+Subject: Re: [PATCH 05/13] iwlwifi: update iwl-commands.h for 3 stream
+	support
+From: reinette chatre <reinette.chatre@intel.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Halperin, Daniel C" <daniel.c.halperin@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+In-Reply-To: <491528F5.3070408@holtmann.org>
+References: <> <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
+	 <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
+	 <491528F5.3070408@holtmann.org>
 Content-Type: text/plain
-Date: Wed, 05 Nov 2008 11:53:02 -0500
-Message-Id: <1225903982.25627.3.camel@localhost.localdomain> (sfid-20081105_175513_149574_03A3E989)
+Date: Tue, 11 Nov 2008 08:54:09 -0800
+Message-Id: <1226422449.1115.784.camel@rc-desk> (sfid-20081111_175339_101921_22E8EF4B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-11-05 at 16:52 +0100, Johannes Berg wrote:
-> On Wed, 2008-11-05 at 10:28 -0500, Cliff Brake wrote:
-> > Hello,
-> > 
-> > I am using the marvell 8686 in several projects.  Is there any plan to
-> > move the libertas driver to mac80211 in the future?  
-> 
-> There's the libertas_tf driver that uses a different firmware, the
-> libertas driver uses a smarter firmware that's "too smart" to be used
-> with mac80211.
+On Fri, 2008-11-07 at 21:51 -0800, Marcel Holtmann wrote:
+> your Signed-off-by line has 
+> to be the last one
 
-libertas_tf thin firmware is only compatible with usb8388 cards at this
-time.
+sorry for the omission
 
-> > If not, will
-> > cfg80211 mechanisms be supported with this driver?
-> 
-> Depends which mechanisms and who's interested in doing any work on it.
-
-Yes, we're interested in porting to cfg80211 and I definitely see that
-in the future.
-
-Dan
-
+Reinette
 
