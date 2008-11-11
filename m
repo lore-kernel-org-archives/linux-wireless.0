@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:4529 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595AbYKQPvc (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:49373 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751160AbYKKRBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 10:51:32 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so1188801nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 07:51:31 -0800 (PST)
-Message-ID: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com> (sfid-20081117_165138_429172_482A518A)
-Date: Mon, 17 Nov 2008 17:51:31 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
-Cc: linux-wireless@vger.kernel.org, kune@deine-taler.de
+	Tue, 11 Nov 2008 12:01:11 -0500
+Message-ID: <4919BA54.8040802@lwfinger.net> (sfid-20081111_180115_005740_B33B7E62)
+Date: Tue, 11 Nov 2008 11:01:08 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Subject: Re: throughput problem/bisect with rtl8187B
+References: <992048.28671.qm@web23108.mail.ird.yahoo.com>
+In-Reply-To: <992048.28671.qm@web23108.mail.ird.yahoo.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds initial support for master mode for zd1211rw USB
-wireless driver (via tools such as  hostapd).
-It enables basic functionality like association from a managed station
-and identifying the master mode by scanning from a station.
+Hin-Tak Leung wrote:
+> --- On Tue, 11/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
+> 
+> <snipped>
+>> Lets try to identify what part is broken, I guess is this,
+>> can you try this
+>> patch on latest wireless-testing?
+> 
+> Tried it, no improvement. 
+> 
+> Can you /did you see any problem similiar to mine with throughput on your system(s)?
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+I may see a slight improvement with the patch. Throughput using sftp goes from
+386 KB/s to 460 KB/s when I put in the patch, but there is some jitter and that
+change may not be significant.
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c
-b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 980acdf..03be818 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -721,6 +721,7 @@ static int zd_op_add_interface(struct ieee80211_hw *hw,
- 		return -EOPNOTSUPP;
+What rate-setting method are you using? I'm using "pid", which rapidly goes to
+54 Mb/s on my device. I tried using minstrel and found that it gets an
+occasional burst of speed, but that it usually stays at 1 Mb/s.
 
- 	switch (conf->type) {
-+	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_STATION:
-@@ -972,6 +973,7 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct
-usb_interface *intf)
- 		    IEEE80211_HW_SIGNAL_DB;
-
- 	hw->wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_AP) |
- 		BIT(NL80211_IFTYPE_MESH_POINT) |
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
+Larry
