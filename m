@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:41260 "EHLO ogre.sisk.pl"
+Received: from mail.atheros.com ([12.36.123.2]:40951 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752874AbYKOXSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2008 18:18:22 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Nico -telmich- Schottelius" <nico-linux-iwlwifi5100@schottelius.org>
-Subject: Re: 2.6.28-rc4: iwlagn / 5100 state
-Date: Sun, 16 Nov 2008 00:22:43 +0100
-Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-References: <20081114150508.GC4877@denkbrett.schottelius.org>
-In-Reply-To: <20081114150508.GC4877@denkbrett.schottelius.org>
+	id S1752063AbYKLTzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2008 14:55:17 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 11:55:17 -0800
+Date: Wed, 12 Nov 2008 11:55:15 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Dan Williams <dcbw@redhat.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: Re: libertas_tf should replace libertas_usb on compat-wireless?
+Message-ID: <20081112195515.GA15803@tesla> (sfid-20081112_205523_381530_02E54FBC)
+References: <43e72e890811111632x2c641d2cmeb69c0a0ea95382e@mail.gmail.com> <1226505205.13536.13.camel@localhost.localdomain> <1226512649.3940.0.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200811160022.43906.rjw@sisk.pl> (sfid-20081116_001826_235053_F7E262AB)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1226512649.3940.0.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Cc to linux-wireless@vger.kernel.org)
+On Wed, Nov 12, 2008 at 09:57:29AM -0800, Dan Williams wrote:
+> On Wed, 2008-11-12 at 10:53 -0500, Dan Williams wrote:
+> > On Tue, 2008-11-11 at 16:32 -0800, Luis R. Rodriguez wrote:
+> > > By default do we want users of compat-wireless to get libertas_usb or
+> > > libertas_tf? Both drivers are for Marvell Libertas 8388 USB 802.11b/g
+> > > cards so we need to pick one.
+> >
+> > I think libertas_tf is still experimental at this time.  Louis could
+> > elaborate more.
+> 
+> And that would be Luis (luisca) not Louis.  Sorry Luis! :)
 
-On Friday, 14 of November 2008, Nico -telmich- Schottelius wrote:
-> Hello!
-> 
-> Using that kernel I see the following features / bugs:
-> 
->    - loading the firmware "freezes" the system for a few seconds
->    - setting the link up of wlan0 "freezes" the system for a few seconds
->    - connecting to 802.11b/g works (802.11a is untested)
->    - roaming does *NOT* work -> just looses the AP, does not connect
->      to other AP with same essid
->    - connecting to a ap sometimes does not work, though essid is set
->       -> sometimes it helps to specify "ap <addr>"
->       -> sometimes setting down and up the link helps
->       -> with earlier kernels one sometimes needed to rmmod and insmod
->          the module again, so there is some progress :-)
-> 
-> So far it is somehow usable, though the connection problems and missing
-> roaming is a bit painful.
+Heh, thanks. Hm, I thik Luis is on his trip around the world.
+
+  Luis
