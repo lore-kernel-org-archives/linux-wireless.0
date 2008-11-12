@@ -1,107 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:60840 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751AbYKZP3f (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45432 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253AbYKLUBJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 10:29:35 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so251757yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 07:29:33 -0800 (PST)
-Message-ID: <40f31dec0811260729o4a239826m9f72238beed7a497@mail.gmail.com> (sfid-20081126_162939_951737_EAC29013)
-Date: Wed, 26 Nov 2008 17:29:33 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Andrey Yurovsky" <andrey@cozybit.com>
-Subject: Re: ath5k: mesh mode broken by commit "ath5k: Update PCU code"
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <45e8e6c40811251754q4b08be7dn96308f3ae9f10123@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <45e8e6c40811251754q4b08be7dn96308f3ae9f10123@mail.gmail.com>
+	Wed, 12 Nov 2008 15:01:09 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rtl8180: adapt for deprecated IEEE80211_CONF_SHORT_SLOT_TIME flag
+Date: Wed, 12 Nov 2008 14:49:22 -0500
+Message-Id: <1226519362-14226-1-git-send-email-linville@tuxdriver.com> (sfid-20081112_210116_220216_ADD24C7B)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/11/26 Andrey Yurovsky <andrey@cozybit.com>:
-> Hello.  I noticed that commit dc300b5c5291d779a53d83af960fdf9388bf0544
-> "ath5k: Update PCU code"  by Nick Kossifidis breaks Mesh Point
-> operation, which had been working right up to that patch.  As I am not
-> familiar with the antenna-related code that this is touching, can
-> someone please assist with resolving this problem?  Thanks,
->
->  -Andrey
->
+This updates rtl8180 handling for short slot after "mac80211: fix short
+slot handling". Only rtl8180_rtl8225 actually had code for handling
+short slot times, so the other RF devices are untouched by this change.
 
-ath5k_beacon_setup can be an issue, right now it assumes you have 2
-antennas and it changes the antenna on tx descriptor every 4 beacons,
-before this patch we instructed hw to use the default antenna for rts
-(instead of the antenna we set on tx descriptor), now we don't. We
-should not handle antenna switching on sw imho since hw already has
-automatic controls for it (we just have to configure them -now we use
-the default settings-), as a first step i'd suggest always using 0 for
-antenna mode on tx descriptor, in other words comment out this...
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180_dev.c     |   12 ++++++++++++
+ drivers/net/wireless/rtl818x/rtl8180_rtl8225.c |   14 +++++++++++---
+ drivers/net/wireless/rtl818x/rtl818x.h         |    1 +
+ 3 files changed, 24 insertions(+), 3 deletions(-)
 
-1955                 /*
-1956                  * Switch antenna every 4 beacons if txantenna is not set
-1957                  * XXX assumes two antennas
-1958                  */
-1959                 if (antenna == 0)
-1960                         antenna = sc->bsent & 4 ? 2 : 1;
-
-Some more infos on antenna switching...
-
-We have 5 controls for antenna selection:
-
-a) The default antenna register AR5K_DEFAULT_ANTENNA (you can write it
-using ath5k_hw_set_def_antenna) which sets the default antenna during
-Rx and if AR5K_STA_ID1_DEFAULT_ANTENNA is set on AR5K_STA_ID1 it also
-controls tx antenna if antenna mode is set to 0 on tx descriptor (see
-below). By default, it's value is 1 (antenna A -main) but some setups
-might have misconnected the antennas (eg. connected the only antenna
-available to aux port -antenna B/C/D/.., so there is no antenna
-connected on main port) so we have to keep some stats based on rxed
-frames and choose the default antenna (maybe after a scan). Also
-default antenna is expected to be an omni-directional antenna.
-
-b) Settings on AR5K_STA_ID1 register:
-AR5K_STA_ID1_DEFAULT_ANTENNA if antenna mode is set to 0 on tx
-descriptor and this bit is set to 1, then hw uses default antenna
-setting from default antenna register to transmit. If it's set to 0 it
-uses the cached tx antenna (based on successful txed frames -we get
-CTS and ACKs). Cached antenna goes on keycache (to support multiple
-stations eg. on AP mode) if AR5K_STA_ID1_DESC_ANTENNA is set to 0 or
-on default antenna register if it's set to 1 (see below).
-
-AR5K_STA_ID1_DESC_ANTENNA if set to 1, hw updates default antenna
-register according to the antenna set on tx descriptor. This is used
-for STA modes when we are sure that we are locked on one AP so we
-cache the tx antenna on default antenna register (making it also the
-default antenna for Rx).
-
-AR5K_STA_ID1_RTS_DEF_ANTENNA if set to 1, hw always uses the default
-antenna to send RTS and not the one set by descriptor.
-
-AR5K_STA_ID1_SELFGEN_DEF_ANT if set to 1, hw sends self-generated
-frames from default antenna (have to verify which MAC
-versions/revisions support this)
-
-Default settings for all modes:
-AR5K_STA_ID1_DEFAULT_ANTENNA: 1 (or maybe 2 for misconnected antennas)
-AR5K_STA_ID1_DEFAULT_ANTENNA: 0
-AR5K_STA_ID1_DESC_ANTENNA: 0
-AR5K_STA_ID1_RTS_DEF_ANTENNA: 0
-Anenna mode on tx descriptor: 0
-
-If we have multiple sector antennas on our aux ports (antennas
-B/C/D...) then we can use antenna mode setting on tx descriptor for
-choosing the antenna to transmit BUT we have to send RTS from our omni
-antenna (default antenna) by setting AR5K_STA_ID1_RTS_DEF_ANTENNA.
-
-If we see that default settings don't work ok for all (which is weird
-because 99% use single or dual omnis), we can introduce a
-ath5k_hw_set_antenna_mode function to do that and provide a
-module/configfs option to switch antenna modes. Right now
-ath5k_hw_set_def_antenna is all we need.
-
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+index 29ef4e7..f9e62e6 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+@@ -720,6 +720,17 @@ static int rtl8180_config_interface(struct ieee80211_hw *dev,
+ 	return 0;
+ }
+ 
++static void rtl8180_bss_info_changed(struct ieee80211_hw *dev,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_bss_conf *info,
++				     u32 changed)
++{
++	struct rtl8180_priv *priv = dev->priv;
++
++	if (changed & BSS_CHANGED_ERP_SLOT && priv->rf->conf_erp)
++	        priv->rf->conf_erp(dev, info);
++}
++
+ static void rtl8180_configure_filter(struct ieee80211_hw *dev,
+ 				     unsigned int changed_flags,
+ 				     unsigned int *total_flags,
+@@ -760,6 +771,7 @@ static const struct ieee80211_ops rtl8180_ops = {
+ 	.remove_interface	= rtl8180_remove_interface,
+ 	.config			= rtl8180_config,
+ 	.config_interface	= rtl8180_config_interface,
++	.bss_info_changed	= rtl8180_bss_info_changed,
+ 	.configure_filter	= rtl8180_configure_filter,
+ };
+ 
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_rtl8225.c b/drivers/net/wireless/rtl818x/rtl8180_rtl8225.c
+index cd22781..4d2be0d 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_rtl8225.c
++++ b/drivers/net/wireless/rtl818x/rtl8180_rtl8225.c
+@@ -725,8 +725,14 @@ static void rtl8225_rf_set_channel(struct ieee80211_hw *dev,
+ 
+ 	rtl8225_write(dev, 0x7, rtl8225_chan[chan - 1]);
+ 	msleep(10);
++}
++
++static void rtl8225_rf_conf_erp(struct ieee80211_hw *dev,
++				struct ieee80211_bss_conf *info)
++{
++	struct rtl8180_priv *priv = dev->priv;
+ 
+-	if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
++	if (info->use_short_slot) {
+ 		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
+ 		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
+ 		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
+@@ -745,14 +751,16 @@ static const struct rtl818x_rf_ops rtl8225_ops = {
+ 	.name		= "rtl8225",
+ 	.init		= rtl8225_rf_init,
+ 	.stop		= rtl8225_rf_stop,
+-	.set_chan	= rtl8225_rf_set_channel
++	.set_chan	= rtl8225_rf_set_channel,
++	.conf_erp	= rtl8225_rf_conf_erp,
+ };
+ 
+ static const struct rtl818x_rf_ops rtl8225z2_ops = {
+ 	.name		= "rtl8225z2",
+ 	.init		= rtl8225z2_rf_init,
+ 	.stop		= rtl8225_rf_stop,
+-	.set_chan	= rtl8225_rf_set_channel
++	.set_chan	= rtl8225_rf_set_channel,
++	.conf_erp	= rtl8225_rf_conf_erp,
+ };
+ 
+ const struct rtl818x_rf_ops * rtl8180_detect_rf(struct ieee80211_hw *dev)
+diff --git a/drivers/net/wireless/rtl818x/rtl818x.h b/drivers/net/wireless/rtl818x/rtl818x.h
+index 3538b15..34a5555 100644
+--- a/drivers/net/wireless/rtl818x/rtl818x.h
++++ b/drivers/net/wireless/rtl818x/rtl818x.h
+@@ -191,6 +191,7 @@ struct rtl818x_rf_ops {
+ 	void (*init)(struct ieee80211_hw *);
+ 	void (*stop)(struct ieee80211_hw *);
+ 	void (*set_chan)(struct ieee80211_hw *, struct ieee80211_conf *);
++	void (*conf_erp)(struct ieee80211_hw *, struct ieee80211_bss_conf *);
+ };
+ 
+ /* Tx/Rx flags are common between RTL818X chips */
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.4.3
+
