@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2143 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754302AbYKWEmD (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:12862 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830AbYKLSTJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 23:42:03 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: Bob Copeland <me@bobcopeland.com>
-Subject: [RFC PATCH 0/2] mac80211 suspend/resume
-Date: Sat, 22 Nov 2008 23:41:24 -0500
-Message-Id: <1227415286-30179-1-git-send-email-me@bobcopeland.com> (sfid-20081123_054213_121895_38E03104)
+	Wed, 12 Nov 2008 13:19:09 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so526063rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 10:19:08 -0800 (PST)
+Subject: Re: [RFC PATCH 1/4] lib80211: absorb crypto bits from net/ieee80211
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081112180228.GC2411@tuxdriver.com>
+References: <1226440265-21240-1-git-send-email-linville@tuxdriver.com>
+	 <1226508514.5368.21.camel@brick>  <20081112180228.GC2411@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 12 Nov 2008 10:19:03 -0800
+Message-Id: <1226513943.16649.0.camel@brick> (sfid-20081112_191917_368629_FF28580A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here are suspend/resume callbacks for mac80211.
+On Wed, 2008-11-12 at 13:02 -0500, John W. Linville wrote:
+> On Wed, Nov 12, 2008 at 08:48:34AM -0800, Harvey Harrison wrote:
+> > On Tue, 2008-11-11 at 16:51 -0500, John W. Linville wrote:
+> > > These bits are shared already between ipw2x00 and hostap, and could
+> > > probably be shared both more cleanly and with other drivers.  This
+> > > commit simply relocates the code to lib80211 and adjusts the drivers
+> > > appropriately.
+> > > 
+> > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > > ---
+> > 
+> > Wouldn't it have been better to start from the mac80211 crypto bits
+> > as lib80211 and modify hostap/ipw2x00 to use the 'new' lib80211
+> > crypto bits?
+> 
+> I'm sorry, but you forgot to attach your patches...
+> 
 
-This is not for applying since it is known to be broken.  Particularly,
-it is missing a few things in resume(), it currently triggers warnings, 
-and resume() may want to defer some stuff in case the driver callbacks 
-want an active userspace.  
+I will if it's desired, I just wanted to know if there was a particular
+reason for going this way.
 
-However, here is the code where I left it last, rebased back into
-compiling state, in case anyone wants to hack on it or poke holes.
-This is one representative driver conversion but a series with some 
-more drivers is here:
+Cheers,
 
-    http://bobcopeland.com/kernel/wl/
-
-These mostly just give a rough idea -- especially in the larger driver 
-conversions, I may have excised more than needed.
+Harvey
 
