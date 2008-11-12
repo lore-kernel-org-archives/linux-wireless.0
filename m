@@ -1,76 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47692 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466AbYKNXOg (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:28902 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752176AbYKLW32 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 18:14:36 -0500
-Subject: Re: [PATCH] mac80211: don't assume driver has been attached on
-	registration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <b6c5339f0811141505u1f8c7c3hd6858ebe21cc10bb@mail.gmail.com> (sfid-20081115_000539_525567_2666AA21)
-References: <1226702662-29694-1-git-send-email-lrodriguez@atheros.com>
-	 <b6c5339f0811141505u1f8c7c3hd6858ebe21cc10bb@mail.gmail.com>
-	 (sfid-20081115_000539_525567_2666AA21)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IVUf38TDttmBQr8yU+bJ"
-Date: Sat, 15 Nov 2008 00:14:24 +0100
-Message-Id: <1226704464.4120.32.camel@johannes.berg> (sfid-20081115_001440_412936_FF30A2A7)
-Mime-Version: 1.0
+	Wed, 12 Nov 2008 17:29:28 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so378425qwe.37
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:29:27 -0800 (PST)
+Message-ID: <69e28c910811121429y298158e0i59c39f50fb9b4bc8@mail.gmail.com> (sfid-20081112_232931_395849_3CD93B7F)
+Date: Wed, 12 Nov 2008 23:29:27 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: libertas_tf should replace libertas_usb on compat-wireless?
+Cc: "Andrey Yurovsky" <andrey@cozybit.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"David Woodhouse" <dwmw2@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis Carlos Cobo" <luisca@cozybit.com>
+In-Reply-To: <20081112222758.GB15803@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <43e72e890811111632x2c641d2cmeb69c0a0ea95382e@mail.gmail.com>
+	 <1226505205.13536.13.camel@localhost.localdomain>
+	 <1226512649.3940.0.camel@localhost.localdomain>
+	 <20081112195515.GA15803@tesla>
+	 <45e8e6c40811121307v32ca4c2cq77714ff14bec4563@mail.gmail.com>
+	 <69e28c910811121316i285ec2dbr7acf6c3fe660536a@mail.gmail.com>
+	 <20081112222758.GB15803@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Nov 12, 2008 at 11:27 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Nov 12, 2008 at 01:16:36PM -0800, Stefanik G=E1bor wrote:
+>> On Wed, Nov 12, 2008 at 10:07 PM, Andrey Yurovsky <andrey@cozybit.co=
+m> wrote:
+>> > libertas_tf is a softmac driver developed mainly so that XO's can =
+run
+>> > hostapd and the like.  libertas is the general (fullmac) driver an=
+d,
+>> > in my opinion, should be the one users get unless they specificall=
+y
+>> > wanted libertas_tf because they're experimenting with AP mode or o=
+ther
+>> > mac80211 features.  So I guess I'd vote for libertas over libertas=
+_tf
+>> > at this time, for what it's worth.
+>> >
+>> >  -Andrey
+>>
+>> I think libertas_usb should be a default (as it's HW accelerated), b=
+ut
+>> libertas_tf should be included as an option (disabled by default in
+>> config.mk, or auto-added to /etc/modprobe.d/blacklist upon make
+>> install).
+>
+> OK so I've done this on config.mk:
+>
+> ifneq ($(CONFIG_USB),)
+> ifneq ($(CONFIG_LIBERTAS_THINFIRM_USB),m)
+> CONFIG_LIBERTAS_USB=3Dm
+> NEED_LIBERTAS=3Dy
+> endif
+> endif
+>
+> This means you'll get CONFIG_LIBERTAS_USB unless your kernel
+> already was built with CONFIG_LIBERTAS_THINFIRM_USB for all those
+> building with it. If your kernel was built with both then its your
+> problem.
+>
+>  Luis
+>
 
---=-IVUf38TDttmBQr8yU+bJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If the kernel has both, compat-wireless should also build both.
 
-On Fri, 2008-11-14 at 18:05 -0500, Bob Copeland wrote:
-> On Fri, Nov 14, 2008 at 5:44 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > mac80211's ieee80211_register_hw() is often called within the
-> > probe path so it cannot assume the device's driver structure
-> > has been attached yet so to create a workqueue instead of
-> > using driver->name use the wiphy's phy%d name. The name doesn't
-> > really matter anyway.
-> >
-> > This should fix sporadic oopses found when we race to beat the
-> > driver pointer setting. Not even sure how this was working properly.
->=20
-> I'd still like to identify the race first.  This patch won't hurt
-> anything, but I'm not confident it will solve any problem either (the
-> pci_dev->driver setting I was seeing after probe was for a different
-> struct driver).  Also it could make the bug harder to track down.
->=20
-> In the reported case, wiphy_name will be empty string which isn't too
-> helpful for the workqueue name either, though it probably won't crash.
-
-That can't be right! wiphy_name is assigned right in wiphy_new()!
-
-johannes
-
---=-IVUf38TDttmBQr8yU+bJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJHgZNAAoJEKVg1VMiehFYjkYP/RSMJq6xLQnsl39ohvCQMoLI
-zzNXAvOX//xvP9cLYVWJ6p/qMTIUuSArhzDHFX8qLK73JhBZBsX4WXgwkrB9Zq1K
-kOwiZNJnVs9BTqz+gGD8fhw7a/KaMGCehWFWfHXpB/tNEoyzy6RBl+Hh0DDkrlya
-AEpYuHrZ1R86Tb07p6fsWYhEW1odlr/nYxP3b1j4yFLL/5RzpPBYJHtWyzAFn14z
-R+MfJhIQxQSpbygdKg7A05r2f57cgWfZqnSpfcwyBnLf/c0ariu6iZYNpRemTpw5
-PekJ7AsE5Dk9k+DFHdV4bSNgXxBO4jrcOne24zD4ljs51UILcK48406m2R5QiNA/
-uL1qD3dwhEUXId1T5GBH4zHZNDy7q4MENvGf+VZPSQnSezyQ06DMJUi6Ay8AZYaN
-990UIGwpFs0zmz0rfnMZdMMxhbYLSRf7M0r4IY6LMtzDVubs9FSXcHeT9bTsW60i
-8WvYA4/qNJq18KDnthyy/UCANAvA2teYQojnOYQPuMUnnYhjRUE9oRDBgwp+spMC
-gaPUhBnZYkNJJ4L2HLxfcIPdildricJIgXPNLcZG6Hvnll+Vo4R2dyrTO+F6+1zZ
-y8MlhZ8sevAF/fOU1A3flFDr4pq4cpkxOaW8X1XF9TwkezochKTcZp+Yh1Qel4rw
-LDIX8kidCP+mulM5tqQF
-=2O/P
------END PGP SIGNATURE-----
-
---=-IVUf38TDttmBQr8yU+bJ--
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
