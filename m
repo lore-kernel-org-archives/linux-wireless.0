@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out12.libero.it ([212.52.84.112]:57496 "EHLO
-	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968AbYKSWXy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 17:23:54 -0500
-From: Fabio Rossi <rossi.f@inwind.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: ath5k: problems during the connection to a sitecom AP
-Date: Wed, 19 Nov 2008 22:00:27 +0100
-References: <200811150207.12084.rossi.f@inwind.it> <200811172120.11299.rossi.f@inwind.it> <1226953429.3902.61.camel@johannes.berg>
-In-Reply-To: <1226953429.3902.61.camel@johannes.berg>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200811192200.27640.rossi.f@inwind.it> (sfid-20081119_232358_995233_159EB561)
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Received: from mga01.intel.com ([192.55.52.88]:16352 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751422AbYKLVNr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2008 16:13:47 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/8] iwlwifi driver updates
+Date: Wed, 12 Nov 2008 13:14:03 -0800
+Message-Id: <1226524451-3417-1-git-send-email-reinette.chatre@intel.com> (sfid-20081112_221350_329478_7479DA22)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 17 November 2008, Johannes Berg wrote:
+Mostly code cleanup. The exception is "iwlwifi: configure_filter rewrite"
+that better maps the mac80211 and iwlwifi hardware filter flags.
 
-> On Mon, 2008-11-17 at 21:20 +0100, Fabio Rossi wrote:
-> > Which is the best way to proceed with the debug to understand why my
-> > card isn't going through the authentication-association process with the
-> > hidden SSID?
->
-> get a second wireless card and look at what's happening.
->
-> johannes
+[PATCH 1/8] iwl3945 : Simplify iwl3945_pci_probe
+[PATCH 2/8] iwlwifi: consolidate station management code
+[PATCH 3/8] iwlwifi: rs: remove fc variable and other cleanups
+[PATCH 4/8] iwlwifi: replace magic constants with define
+[PATCH 5/8] iwlwifi : fix checkpatch.pl errors
+[PATCH 6/8] iwlwifi: configure_filter rewrite
+[PATCH 7/8] iwlwifi: some fh document fix and cleanup
+[PATCH 8/8] iwlwifi: iwl-fh.h cleanup
 
-I have 2 PCMCIA cards but none work correctly up to now :-( I have to test 
-them with mac80211...
+Thank you
 
-Which is the best tool to use, kismet or aircrack-ng? I have never used this 
-kind of program.
-
-Regards,
-Fabio
+Reinette
