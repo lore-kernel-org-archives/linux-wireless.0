@@ -1,65 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19588 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:13769 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752973AbYKUOji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 09:39:38 -0500
-Received: from mail.atheros.com ([10.10.20.105])
+	id S1752882AbYKLWWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2008 17:22:20 -0500
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 06:39:38 -0800
-Date: Fri, 21 Nov 2008 20:13:06 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Look out for some other AP when disassoc is
-	received.
-Message-ID: <20081122041306.GA4206@myhost.users.atheros.com> (sfid-20081121_153942_182132_3C8493BC)
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:22:20 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/10] iwlwifi: enable custom fw regulatory solution
+Date: Wed, 12 Nov 2008 14:22:04 -0800
+Message-ID: <1226528524-32678-11-git-send-email-lrodriguez@atheros.com> (sfid-20081112_233858_008065_58ABF7DA)
+In-Reply-To: <1226528524-32678-10-git-send-email-lrodriguez@atheros.com>
+References: <1226528524-32678-1-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-2-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-4-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-5-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-6-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-7-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-8-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-9-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-10-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a disassoc packet is received with a reason code of
-'AP leaving the BSS', mac80211 should start looking for some
-other AP instead of trying to associate with the same AP.
+This enables the custom firmware regulatory solution option
+on iwlwifi drivers. These devices are uncapable of mapping their
+EEPROM regulatory domain to a specific ISO / IEC alpha2.
+Although the new 11n devices (>= iwl 5000) have only
+3 regultaory SKUs -- MOW, ABG (no N) and BG -- the older
+devices (3945 and 4965) have a more complex SKU arrangement
+and therefore its not practical to move this to the driver.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
 ---
- net/mac80211/mlme.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    3 +++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 90ad5a4..ee15e75 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -808,6 +808,10 @@ static void ieee80211_authenticate(struct ieee80211_sub_if_data *sdata,
- 	mod_timer(&ifsta->timer, jiffies + IEEE80211_AUTH_TIMEOUT);
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 8bd4d08..fccd150 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -832,6 +832,9 @@ int iwl_setup_mac(struct iwl_priv *priv)
+ 		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
++
++	hw->wiphy->fw_handles_regulatory = true;
++
+ 	/* Default value; 4 EDCA QOS priorities */
+ 	hw->queues = 4;
+ 	/* queues to support 11n aggregation */
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index dec9e04..208d88a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -7861,6 +7861,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
  
-+/*
-+ * The disassoc 'reason' argument can be either our own reason
-+ * if self disconnected or a reason code from the AP.
-+ */
- static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 				   struct ieee80211_if_sta *ifsta, bool deauth,
- 				   bool self_disconnected, u16 reason)
-@@ -854,7 +858,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_sta_send_apinfo(sdata, ifsta);
- 
--	if (self_disconnected)
-+	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT)
- 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
- 
- 	sta_info_unlink(&sta);
-@@ -1175,7 +1179,7 @@ static void ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
- 				      IEEE80211_RETRY_AUTH_INTERVAL);
- 	}
- 
--	ieee80211_set_disassoc(sdata, ifsta, false, false, 0);
-+	ieee80211_set_disassoc(sdata, ifsta, false, false, reason_code);
- }
- 
++	hw->wiphy->fw_handles_regulatory = true;
++
+ 	/* 4 EDCA QOS priorities */
+ 	hw->queues = 4;
  
 -- 
-1.5.6.4
+1.5.6.3
 
