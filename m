@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:54621 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754327AbYKCXaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 18:30:05 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1Kx8ry-0008Mx-W1
-	for linux-wireless@vger.kernel.org; Mon, 03 Nov 2008 23:30:02 +0000
-Received: from host220-22-dynamic.53-82-r.retail.telecomitalia.it ([82.53.22.220])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 23:30:02 +0000
-Received: from msan by host220-22-dynamic.53-82-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 23:30:02 +0000
-To: linux-wireless@vger.kernel.org
-From: msan <msan@email.it>
-Subject: problems with ath5k driver.
-Date: Sat, 1 Nov 2008 21:39:48 +0000 (UTC)
-Message-ID: <geiib4$apo$2@ger.gmane.org> (sfid-20081104_003014_378510_AC82F564)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37118 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261AbYKLSqJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2008 13:46:09 -0500
+Date: Wed, 12 Nov 2008 13:35:10 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH 1/4] lib80211: absorb crypto bits from net/ieee80211
+Message-ID: <20081112183509.GE2411@tuxdriver.com> (sfid-20081112_194614_425067_4DB5A030)
+References: <1226440265-21240-1-git-send-email-linville@tuxdriver.com> <1226508514.5368.21.camel@brick> <20081112180228.GC2411@tuxdriver.com> <1226513943.16649.0.camel@brick> <20081112182814.GD2411@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081112182814.GD2411@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hallo.
-Sorry for my bad english.
-I have an Esprimo D9500 Fujitsu Semens notebook.
-My lspci reports for wireless card: "06:00.0 Ethernet controller: Atheros 
-Communications Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev 
-04)"
-Dmesg says: "ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 
-0x70)".
-Iwconfig says: "
-wmaster0  no wireless extensions.
+On Wed, Nov 12, 2008 at 01:28:14PM -0500, John W. Linville wrote:
+> On Wed, Nov 12, 2008 at 10:19:03AM -0800, Harvey Harrison wrote:
+> > On Wed, 2008-11-12 at 13:02 -0500, John W. Linville wrote:
+> > > On Wed, Nov 12, 2008 at 08:48:34AM -0800, Harvey Harrison wrote:
+> > > > On Tue, 2008-11-11 at 16:51 -0500, John W. Linville wrote:
+> > > > > These bits are shared already between ipw2x00 and hostap, and could
+> > > > > probably be shared both more cleanly and with other drivers.  This
+> > > > > commit simply relocates the code to lib80211 and adjusts the drivers
+> > > > > appropriately.
+> > > > > 
+> > > > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > > > > ---
+> > > > 
+> > > > Wouldn't it have been better to start from the mac80211 crypto bits
+> > > > as lib80211 and modify hostap/ipw2x00 to use the 'new' lib80211
+> > > > crypto bits?
+> > > 
+> > > I'm sorry, but you forgot to attach your patches...
+> > > 
+> > 
+> > I will if it's desired, I just wanted to know if there was a particular
+> > reason for going this way.
+> 
+> Those bits are already shared between ieee80211 and the hostap driver.
+> Unfortunately, they are not shared with a clean API.  I don't think
+> hacking on mac80211's crypto code is worthwhile until these drivers
+> are given a bit more discipline in this area.  IMHO, this is the
+> better way to start.
 
-wlan0     IEEE 802.11  ESSID:"" 
-          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-
-Associated  
-          Tx-Power=20 dBm  
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B  
-          Encryption key:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+Oh, and removing hostap's dependency on ieee80211 enables us to turn
+ieee80211 into libipw now instead of waiting even longer while we
+refactor all the crypto code, potentially destabilizing ipw2100,
+ipw2200, hostap and (potentially) mac80211 along the way.
 
-When I run "iwlist wlan0 scan" it says:" no scan results".
-I can't access to any wireless lan, it seems that my atheros card doesn't 
-work.
-With another card, a Lonshine, I can connect to my wifi lan but with 
-Atheros it is impossible.
-There is any support for AR2425 chip?
-
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
