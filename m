@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:43492 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751546AbYKLD2A (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60813 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753166AbYKLVqM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 22:28:00 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so121212ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2008 19:27:58 -0800 (PST)
-Message-ID: <646765f40811111927y7e25bca1xb2bdb7e2b4db112a@mail.gmail.com> (sfid-20081112_042808_052625_B5643BDC)
-Date: Wed, 12 Nov 2008 14:27:58 +1100
-From: "Julian Calaby" <julian.calaby@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC PATCH 4/4] net/ieee80211 -> drivers/net/ipw2x00/libipw_* rename
-Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <20081111232102.GA5827@tuxdriver.com>
+	Wed, 12 Nov 2008 16:46:12 -0500
+Date: Wed, 12 Nov 2008 16:33:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Frank Seidel <fseidel@suse.de>
+Cc: linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>, yi.zhu@intel.com,
+	reinette.chatre@intel.com, ipw2100-devel@lists.sourceforge.net
+Subject: Re: Problem with Kernel Oops in ipw2200
+Message-ID: <20081112213350.GJ2411@tuxdriver.com> (sfid-20081112_224617_010636_FDBFA0F8)
+References: <49130E75.1000903@suse.de> <49131173.3010409@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1226440265-21240-3-git-send-email-linville@tuxdriver.com>
-	 <1226440265-21240-4-git-send-email-linville@tuxdriver.com>
-	 <200811112322.33623.mb@bu3sch.de>
-	 <20081111232102.GA5827@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49131173.3010409@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2008 at 10:21, John W. Linville <linville@tuxdriver.com> wrote:
-> On Tue, Nov 11, 2008 at 11:22:33PM +0100, Michael Buesch wrote:
->> On Tuesday 11 November 2008 22:51:05 John W. Linville wrote:
->> > +config LIBIPW
->> > +   tristate
->> > +   select WIRELESS_EXT
->> > +   select CRYPTO
->> > +   select CRYPTO_ARC4
->> > +   select CRYPTO_ECB
->> > +   select CRYPTO_AES
->> > +   select CRYPTO_MICHAEL_MIC
->> > +   select CRYPTO_ECB
->> > +   select CRC32
->> > +   select LIB80211
->> > +   select LIB80211_CRYPT_WEP
->> > +   select LIB80211_CRYPT_TKIP
->> > +   select LIB80211_CRYPT_CCMP
->> > +   ---help---
->> > +   This option enables the hardware independent IEEE 802.11
->> > +   networking stack.  This component is deprecated in favor of the
->> > +   mac80211 component.
->>
->> Let's remove this helptext, or replace it by something that's actually true. ;)
->>       ---help---
->>         This option enables common routines for the IPW2100 and IPW2200 drivers.
->
-> Yes, good comment.
+On Thu, Nov 06, 2008 at 04:46:59PM +0100, Frank Seidel wrote:
+> Frank Seidel schrieb:
+> > Ever suggestion is very appreciated.
+> 
+> My first search through the ipw2200 logs pointed
+> me to Davids last commit (521c4d96e0840ecce25b956e00f416ed499ef2ba)
+> and really after reverting it the problem disappeared here.
+> The patch from my last post was the smallest subset of
+> the revertion that still works for me here.
+> Any comments?
 
-Does this option even need to be visible?
-
-Only the ipw2x00 drivers use it - and they select it - so do we need
-to bother the user with it?
+I think it would be better to make sure that ipw2200 (and/or
+ieee80211) is properly using netif_carrier_{on,off}() instead?
 
 Thanks,
 
+John
 -- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
