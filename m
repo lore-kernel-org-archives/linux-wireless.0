@@ -1,108 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:34953 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752360AbYKSQvu (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.181]:12787 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324AbYKLBIn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 11:51:50 -0500
-Received: by an-out-0708.google.com with SMTP id c3so22723ana.23
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 08:51:49 -0800 (PST)
-Message-ID: <1ba2fa240811190851i5dda6734w10d38b0f27e5ac97@mail.gmail.com> (sfid-20081119_175201_410324_FDD7142F)
-Date: Wed, 19 Nov 2008 18:51:49 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: pull request: wireless-2.6 2008-11-18
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sfr@canb.auug.org.au
-In-Reply-To: <20081119143919.GA3485@tuxdriver.com>
+	Tue, 11 Nov 2008 20:08:43 -0500
+Received: by el-out-1112.google.com with SMTP id z25so114856ele.1
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2008 17:08:41 -0800 (PST)
+Message-ID: <43e72e890811111702x7b817c4bpdeed5acf39b2a5fd@mail.gmail.com> (sfid-20081112_020851_688671_5007ADEB)
+Date: Tue, 11 Nov 2008 17:02:34 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Hin-Tak Leung" <htl10@users.sourceforge.net>
+Subject: Re: a couple of small bugs in compat-wireless -- libertas
+Cc: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	"compat-masters@lists.madwifi.org" <compat-masters@lists.madwifi.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	dwmw2@infradead.org, dcbw@redhat.com, linville@tuxdriver.com,
+	tim.gardner@canonical.com
+In-Reply-To: <20081112005420.GQ14202@tesla>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <20081119000719.GA19756@tuxdriver.com>
-	 <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com>
-	 <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com>
-	 <20081119143919.GA3485@tuxdriver.com>
+References: <252423.50522.qm@web23105.mail.ird.yahoo.com>
+	 <20081111231233.GK14202@tesla> <20081112005420.GQ14202@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2008 at 4:39 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Nov 19, 2008 at 11:34:37AM +0200, Tomas Winkler wrote:
->> On Wed, Nov 19, 2008 at 8:46 AM, Tomas Winkler <tomasw@gmail.com> wrote:
->> > On Wed, Nov 19, 2008 at 2:07 AM, John W. Linville
->> > <linville@tuxdriver.com> wrote:
->
->> >>      mac80211: remove ieee80211_notify_mac
->> >>      iwlagn: fix RX skb alignment
+On Tue, Nov 11, 2008 at 4:54 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Nov 11, 2008 at 03:12:33PM -0800, Luis Rodriguez wrote:
+>> On Mon, Nov 10, 2008 at 09:28:59PM -0800, Hin-Tak Leung wrote:
+>> > "make unload" doesn't unload iwlagn, and iwlagn keeps mac80211 in the kernel, which results in make unload failing. Needs to include iwlagn
+>> > in the unload list in script/unload.sh. Should be trivial to fix, and
+>> > probably quicker "just do it" then having a patch from me :-).
 >> >
->> > IMHO its premature pushing ttese 2 patches up, they came in yestrday
->> > and nobody here has run tthe code
+>> > There is another annoyance - probably not strictly speaking a bug, but nonetheless, for some unexplainable reasons, I expect "make clean" to do the usual thing, and it doesn't - this is probably easy to fix by having an almost empty libertas_tf/Makefile ? (this shows an older compat-wireless , but current compat-wireless also seem to have this problem
+>> > if I remember correctly):
+>> > ---------------
+>> > scripts/Makefile.clean:17: /tmp/compat-wireless-2008-10-23/drivers/net/wireless/libertas_tf/Makefile: No such file or directory
+>> > make[4]: *** No rule to make target `/tmp/compat-wireless-2008-10-23/drivers/net/wireless/libertas_tf/Makefile'.  Stop.
+>> > make[3]: *** [/tmp/compat-wireless-2008-10-23/drivers/net/wireless/libertas_tf] Error 2
+>> > make[2]: *** [/tmp/compat-wireless-2008-10-23/drivers/net/wireless] Error 2
+>> > make[1]: *** [_clean_/tmp/compat-wireless-2008-10-23] Error 2
+>> > make[1]: Leaving directory `/usr/src/kernels/2.6.27.5-92.fc10.x86_64'
+>> > make: *** [clean] Error 2
+>> > ---------------
+>>
+>> Try this patch, but the issue you see is related to libertas... anyway,
+>> I've added this patch I'll try to see what's wrong with libertas.
 >
-> Well, thanks for your opinion.  Here is mine:
->
-> The iwlwifi drivers have been hitting these problems for months,
-> and I have seen no effort by your team to address the problems.
+> OK for your issue you can try this patch.
 
-There is a lot of effort to solve this I'm not sure what mailing list
-are u reading.
-We even presented test patches with alignment issues as Johannes few
-month ago but
-we didn't get the feedback that it hit anything. So you are totally off here.
+This patch should actually be useless to you as you probably are just
+downloading the tarball.. so just download the latest tarball, I just
+regenerated it with the patches applied.
 
-> It is possible that your team is working on them behind closed doors
-> and will eventually throw something over the wall to us.  I'm tired
-> of waiting for that, and I imagine that hordes of iwlagn users are
-> tired of waiting as well.
-
-This is embarrassing also for us that we cannot locate this specific
-problem but it not like we are not doing anything.Not sure there are
-other examples that we are not addressing bugs promptly.
-
-> Johannes has presented us with plausible fixes, and people are
-> reporting that the patches work for them.
-
-I'm not against merging these patches to wireless-testing but pushing
-them upstream before testing them
-is just plainly wrong and all I asked for to test them. You are
-presenting here double standards here.
-
- I can merge these patches,
-> or wait/hope/pray for some to come from your team.  Experience suggests
-> that if fixes do come from your team that they will either be buried
-> in some monster patch that largely addresses something else, or
-> that the patches will arrive with a changelog that is terse and/or
-> unintelligble.  Subsequently, I am not optimistic about waiting.
-
-I've believe that we are addressing all the complains above and
-currently  if you are not seeing this I'm really sorry.
-
-> I think Johannes cited four different bugzilla.kernel.org entries
-> between those two patches.  What is your team doing to address
-> those bugs?
-
-Again you are not reading the mailing list and not the bugs logs.
-
->
-> Obviously, I still think that those patches should be merged.
-
-I'm not against just give it day or two to run it.  We have for
-example nightly regression builds with publicly available results why
-you cannot wait till we can run?  I think you've hurried to push it up
-just as a statement forgetting of possible regressions.
-
->
->> Just checked our bug database,  the ieee80211_notify_mac was
->> introduced mainly to overcome HW bug when
->> receiver become deaf  in heavy traffic such as ftp in noisy
->> environment. Otherwise reconnection was too slow to keep ftp going. We
->> need to check whether we are still hitting this before applying
->> removal this function
->
-> You are welcome to submit patches that address your hardware issue
-> and which do not introduce locking problems.
-
-That was my suggestion that we fix it and I believe  we have normal
-discussion about it till you took your eager pushing steps. Replacing
-one regression with another is just not sane.
-
-Thanks
-Tomas
+  Luis
