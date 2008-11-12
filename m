@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:49324 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674AbYKNS3v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 13:29:51 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so681668yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 10:29:50 -0800 (PST)
-Message-ID: <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com> (sfid-20081114_192955_659364_218D6196)
-Date: Fri, 14 Nov 2008 10:29:50 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Cc: "Bob Copeland" <me@bobcopeland.com>,
-	"Dan McGee" <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <18717.49111.572993.44410@localhost.localdomain>
+Received: from mail.atheros.com ([12.36.123.2]:13758 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752913AbYKLWWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2008 17:22:15 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:22:15 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/10] cfg80211: mark regdomains with > NL80211_MAX_SUPP_REG_RULES invalid
+Date: Wed, 12 Nov 2008 14:22:01 -0800
+Message-ID: <1226528524-32678-8-git-send-email-lrodriguez@atheros.com> (sfid-20081112_232222_012554_4E591532)
+In-Reply-To: <1226528524-32678-7-git-send-email-lrodriguez@atheros.com>
+References: <1226528524-32678-1-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-2-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-4-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-5-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-6-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-7-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
-	 <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
-	 <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
-	 <43e72e890811140937h4dc03cf8g50df7f74efcd28b2@mail.gmail.com>
-	 <b6c5339f0811140949m462e3eecx49f114f729b33e7c@mail.gmail.com>
-	 <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
-	 <18717.49111.572993.44410@localhost.localdomain>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2008 at 10:13 AM, Sujith <m.sujith@gmail.com> wrote:
-> Luis R. Rodriguez wrote:
->> On Fri, Nov 14, 2008 at 9:49 AM, Bob Copeland <me@bobcopeland.com> wrote:
->> > On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> >> Anyway we do set the parent before calling ieee80211_register_hw() by
->> >> using SET_IEEE80211_DEV(hw, &pdev->dev) (oh ok here is the parent). so
->> >> when we try to get the name with parent->driver I am not sure if
->> >> driver has been set yet because ath5k_pci_probe() hasn't finished yet
->> >> as probe called ath5k_hw_attach(). When does ->driver get set and why
->> >> would it fail only for ath5k?
->> >
->> > Ahh, I believe that would be in pci-driver.c __pci_device_probe, after driver
->> > probe is run successfully.  Yes, we do ieee80211_register_hw from within
->> > probe...  So, how did this ever work again? /me scratches head.
->>
->> Wow.. ok, yeah I see that, this is a mac8021 bug then unless mac80211
->> wants us to not callieee80211_register_hw() from probe or its children
->> which would be weird.
->
-> From the original log:
-> ath5k_pci 0000:01:00.0: registered as ''
+Lets remain consistent and mark rds with > NL80211_MAX_SUPP_REG_RULES
+number of reg rules as invalid in is_valid_rd().
 
-That comes from
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/reg.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f8e7beb..f0ff3d1 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -352,6 +352,9 @@ static bool is_valid_rd(const struct ieee80211_regdomain *rd)
+ 	if (!rd->n_reg_rules)
+ 		return false;
+ 
++	if (WARN_ON(rd->n_reg_rules > NL80211_MAX_SUPP_REG_RULES))
++		return false;
++
+ 	for (i = 0; i < rd->n_reg_rules; i++) {
+ 		reg_rule = &rd->reg_rules[i];
+ 		if (!is_valid_reg_rule(reg_rule))
+-- 
+1.5.6.3
 
-which means that may be buggy too as wiphy_name() gets
-
-return wiphy->dev.bus_id;
-
-and we only have set at that point wiphy->dev.parent IIRC.
-
-  Luis
