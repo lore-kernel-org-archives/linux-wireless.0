@@ -1,69 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57492 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750703AbYKXGQY (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:40906 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756444AbYKLXj6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 01:16:24 -0500
-Subject: Re: [Fwd: please don't regress ath5k.h]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Renzmann <mrenzmann@madwifi-project.org>
-Cc: Richard Farina <sidhayn@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1205.94.79.146.217.1227505499.squirrel@webmail.madwifi.org> (sfid-20081124_071514_224762_60872498)
-References: <492A14A7.4040808@gmail.com>
-	 <1205.94.79.146.217.1227505499.squirrel@webmail.madwifi.org>
-	 (sfid-20081124_071514_224762_60872498)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3c+sXYF9zX+2D4UIxdia"
-Date: Mon, 24 Nov 2008 07:16:20 +0100
-Message-Id: <1227507381.3599.55.camel@johannes.berg> (sfid-20081124_071627_637871_D7BDED77)
-Mime-Version: 1.0
+	Wed, 12 Nov 2008 18:39:58 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 15:39:58 -0800
+Date: Wed, 12 Nov 2008 15:39:56 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Dan Williams <dcbw@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: Re: libertas_tf should replace libertas_usb on compat-wireless?
+Message-ID: <20081112233956.GC15803@tesla> (sfid-20081113_004020_847768_CE5E4A66)
+References: <43e72e890811111632x2c641d2cmeb69c0a0ea95382e@mail.gmail.com> <1226505205.13536.13.camel@localhost.localdomain> <1226512649.3940.0.camel@localhost.localdomain> <20081112195515.GA15803@tesla> <45e8e6c40811121307v32ca4c2cq77714ff14bec4563@mail.gmail.com> <69e28c910811121316i285ec2dbr7acf6c3fe660536a@mail.gmail.com> <20081112222758.GB15803@tesla> <69e28c910811121429y298158e0i59c39f50fb9b4bc8@mail.gmail.com> <43e72e890811121432k2ffd1902p665df2a11cf3b3d7@mail.gmail.com> <69e28c910811121523n49f79c8ye490a29ee165508b@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c910811121523n49f79c8ye490a29ee165508b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-3c+sXYF9zX+2D4UIxdia
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2008-11-24 at 06:44 +0100, Michael Renzmann wrote:
-> Hi.
+On Wed, Nov 12, 2008 at 03:23:05PM -0800, Stefanik G=E1bor wrote:
+> On Wed, Nov 12, 2008 at 11:32 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > On Wed, Nov 12, 2008 at 2:29 PM, Stefanik G=E1bor <netrolller.3d@gm=
+ail.com> wrote:
+> >> On Wed, Nov 12, 2008 at 11:27 PM, Luis R. Rodriguez
+> >> <lrodriguez@atheros.com> wrote:
+> >>> On Wed, Nov 12, 2008 at 01:16:36PM -0800, Stefanik G=E1bor wrote:
+> >>>> On Wed, Nov 12, 2008 at 10:07 PM, Andrey Yurovsky <andrey@cozybi=
+t.com> wrote:
+> >>>> > libertas_tf is a softmac driver developed mainly so that XO's =
+can run
+> >>>> > hostapd and the like.  libertas is the general (fullmac) drive=
+r and,
+> >>>> > in my opinion, should be the one users get unless they specifi=
+cally
+> >>>> > wanted libertas_tf because they're experimenting with AP mode =
+or other
+> >>>> > mac80211 features.  So I guess I'd vote for libertas over libe=
+rtas_tf
+> >>>> > at this time, for what it's worth.
+> >>>> >
+> >>>> >  -Andrey
+> >>>>
+> >>>> I think libertas_usb should be a default (as it's HW accelerated=
+), but
+> >>>> libertas_tf should be included as an option (disabled by default=
+ in
+> >>>> config.mk, or auto-added to /etc/modprobe.d/blacklist upon make
+> >>>> install).
+> >>>
+> >>> OK so I've done this on config.mk:
+> >>>
+> >>> ifneq ($(CONFIG_USB),)
+> >>> ifneq ($(CONFIG_LIBERTAS_THINFIRM_USB),m)
+> >>> CONFIG_LIBERTAS_USB=3Dm
+> >>> NEED_LIBERTAS=3Dy
+> >>> endif
+> >>> endif
+> >>>
+> >>> This means you'll get CONFIG_LIBERTAS_USB unless your kernel
+> >>> already was built with CONFIG_LIBERTAS_THINFIRM_USB for all those
+> >>> building with it. If your kernel was built with both then its you=
+r
+> >>> problem.
+> >>>
+> >>>  Luis
+> >>>
+> >>
+> >> If the kernel has both, compat-wireless should also build both.
+> >
+> > The kernel has both, compat-wireless has both but we respect your
+> > kernel .config unless we know better (we picked b43 over bcm43xx
+> > before). In this case we don't want to prefer one over the other so=
+ we
+> > simply stick to the decision of whoever built your kernel.
+> >
+> >  Luis
+> >
 >=20
-> Richard Farina wrote:
-> > I recently saw this additional comment added to wireless-testing.git an=
-d
-> > it has me a bit concerned.  I use this feature for a specific patch set
-> > that I maintain and it would break it pretty bad to remove this.
->=20
-> Just an idea: what prevents you to add a patch to that patchset that
-> reenables the amount of code you require from the CHAN_DEBUG stuff should
-> it be removed upstream?
+> I mean if both are enabled, and both were built.
 
-Seconded, upstream should remove all the junk that it doesn't directly
-need.
+OK yeah agreed, but if the user has nothing then we should pick one
+for them too, in this case it'll be LIBERTAS_USB.
 
-johannes
-
---=-3c+sXYF9zX+2D4UIxdia
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJKkaxAAoJEKVg1VMiehFY6YIQAI7iX4UzQevCIkr/84dJZH+t
-U9zI1QnWq9AaljGttQ/MesEKF3LXtbCwCrNo/7HbzfmvfJl6juQStiHtYj/obV5i
-Q01Ps3UxQUTNiGT7PrfQrz10aj1DMsdc+59g+KZ3/lbyvg4at6s1Io/skMbCXw0f
-PFZyhboacRGgaCZUZXQ6K2uRLNvZyObyQtK8NmTNo1EYnbrqkHDZz/dUB6JWlw+0
-i9GXURGb3TEgL7YrguuLTVOkb8ps+Ezyv0E1f7uJEiD1RshtjJIOF3cbWvJjWpJC
-ThiqlT+DpfIK/Fd5evurUUaVbV7hE+tVFd50pNxCaQ7GUt7+NrjabzuR46WC4olt
-ElWRN1gsb1cp73zFWeyUDvIYM4unJwaDocdn1MKoLXjfyP7roopO33Ytl8iCaUNd
-gYGFVFu7+SKKhByYKEntkdnbarRKOpB81ckJM7uuoA3gAOpZe0qb2EOvh3b1zjIg
-db328jsemD5QwBiNJoYyPPAp7HAOuc9bvKAeH81kMZ+iYom37IsCfbtrLSp6Rmlr
-sc2r+diLQ/BbEbIlZLKc9I7I6agRna9PlSXyjDWwutLfW84ID2Y8xZDwtb9VwzH0
-eJ4t7nlwRC7MICI5cKATsq+8VSXLlPy4TmzsDAk+h3LcLurjjMH0lzAKqm2c2WFs
-1J4Vb3dm1mgIDxSxgyJD
-=bbM4
------END PGP SIGNATURE-----
-
---=-3c+sXYF9zX+2D4UIxdia--
-
+ Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
