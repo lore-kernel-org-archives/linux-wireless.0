@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:15628 "EHLO c60.cesmail.net"
+Received: from bu3sch.de ([62.75.166.246]:38628 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753513AbYKJO0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 09:26:13 -0500
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] orinoco: fix last beacon reporting on 64-bit systems
-To: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 10 Nov 2008 09:25:53 -0500
-Message-ID: <20081110142553.12216.42412.stgit@dv.roinet.com> (sfid-20081110_152618_374108_DC98CF2C)
+	id S1751006AbYKLLER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2008 06:04:17 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: EforeZZ <EforeZZ@gmail.com>
+Subject: Re: broadcom driver
+Date: Wed, 12 Nov 2008 12:03:55 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <cc2a6eec0811120248q1a0850deg390aec1549700cd0@mail.gmail.com>
+In-Reply-To: <cc2a6eec0811120248q1a0850deg390aec1549700cd0@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200811121203.55747.mb@bu3sch.de> (sfid-20081112_120422_910273_6DA80392)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-orinoco_translate_scan() and orinoco_translate_ext_scan() wrongly
-truncate last_scanned argument from unsigned long to unsigned int.
+On Wednesday 12 November 2008 11:48:04 EforeZZ wrote:
+> Hi guys,
+> 
+> We're trying to write a broadcom WiFi driver for FreeBSD.
+> We looked at M$ Windows driver and found these structures..
+> We'd be very grateful if anyone tells the standard and/or description
+> of what these values may mean..
+> 
+> struct _locale_info_t
+> {
+>    unsigned char   valid_channels[28];
+>    struct radar_channels;
+>    struct restricted_channels;
+>    unsigned char   maxpwr[6];
+>    unsigned char   pub_maxpwr[5];
+>    unsigned char   flags;
+> };
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/orinoco/orinoco.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Hm, it's pretty obvious what this is. Just read it.
+It's channel tables for different locales. Not very interesting stuff.
 
-diff --git a/drivers/net/wireless/orinoco/orinoco.c b/drivers/net/wireless/orinoco/orinoco.c
-index 12059f4..da5ba5e 100644
---- a/drivers/net/wireless/orinoco/orinoco.c
-+++ b/drivers/net/wireless/orinoco/orinoco.c
-@@ -5448,7 +5448,7 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 					   char *current_ev,
- 					   char *end_buf,
- 					   union hermes_scan_info *bss,
--					   unsigned int last_scanned)
-+					   unsigned long last_scanned)
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
- 	u16			capabilities;
-@@ -5595,7 +5595,7 @@ static inline char *orinoco_translate_ext_scan(struct net_device *dev,
- 					       char *current_ev,
- 					       char *end_buf,
- 					       struct agere_ext_scan_info *bss,
--					       unsigned int last_scanned)
-+					       unsigned long last_scanned)
- {
- 	u16			capabilities;
- 	u16			channel;
+Anyway, you should probably contact Dragonfly people. They are already
+writing a BSD licensed driver.
+
+-- 
+Greetings Michael.
