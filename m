@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38054 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686AbYKNWAd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 17:00:33 -0500
-Subject: Re: [PATCH 3/4] p54: protect against sudden firmware file changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>
-In-Reply-To: <200811141941.56752.chunkeey@web.de> (sfid-20081114_194201_685940_C3159ACC)
-References: <200811141941.56752.chunkeey@web.de>
-	 (sfid-20081114_194201_685940_C3159ACC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zmIp/68LRsElY9H7IQ/N"
-Date: Fri, 14 Nov 2008 23:00:28 +0100
-Message-Id: <1226700028.4120.28.camel@johannes.berg> (sfid-20081114_230036_741483_323F3508)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:13723 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752865AbYKLWWK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2008 17:22:10 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:22:10 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/10] cfg80211: remove switch from __set_regdom()
+Date: Wed, 12 Nov 2008 14:21:57 -0800
+Message-ID: <1226528524-32678-4-git-send-email-lrodriguez@atheros.com> (sfid-20081112_232215_934210_7DC04853)
+In-Reply-To: <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
+References: <1226528524-32678-1-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-2-git-send-email-lrodriguez@atheros.com>
+ <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We have control over the REGDOM_SET_BY_* macros passed
+so remove the switch.
 
---=-zmIp/68LRsElY9H7IQ/N
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch has no functional changes.
 
-On Fri, 2008-11-14 at 19:41 +0100, Christian Lamparter wrote:
-> Thanks to "p54: introduce new names for device firmwares"
-> (325ca16910a380c...) people are now migrating away from the buggy firmwar=
-es.=20
-> Of course this is a very good idea, but no one told them to unload the dr=
-iver first.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/reg.c |   21 ++++++---------------
+ 1 files changed, 6 insertions(+), 15 deletions(-)
 
-that seems weird. Doesn't the driver pretty much have to cache the
-firmware anyway for suspend/resume?
-
-johannes
-
---=-zmIp/68LRsElY9H7IQ/N
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJHfT5AAoJEKVg1VMiehFYkkkP/RajDsSYeoLigerpcxNNT2gI
-xfTvxNS3yBB9BejWJu324CUWhvqDYwDpqJFF431R1xv24Z9zWGIcxNFF0XZ61kek
-dTcbSNfnm+wfFf8+nzMRHtr2n0uD9ytMHGuhIJtj3RsQ1BCBfPcFZnTjJIG3RP9O
-uE9Ny1k5RAdza/hVcfWa/4QI79CkdYoUhXGQDgJoDhroV5ufn3fQNDZOFDVWZsKU
-5A1z+SHdVi9GxdaGUmilOjnlcLXmkxasxArat8/Ur97auPg3ocOspbhSXPZJlKRa
-Qv0K7ZddoIXFcPpaSwPMIdRvp/rkbV/9K6oCgSBnXoWHwaz7w6BuX4ISxR2zOw/q
-jPEOmfgSDQRM+YG617KaNROlIbR1gT3mjNIXlFeIE7IPiNLeXW9AzYhpIPGMU0Cw
-auUm80cvM2qwPLn177DR1ICks1/dQeSHUnXlYvUn6hbw7XTzdxRTsUct0+L0Xs1h
-gbcudg9v8YNLD5sTFbtLpddzA1XbptUnsmM5DYtrsAkkudHCMOidOcWhuf7BMwIy
-v8vuzFNPIJP1RqRtXudifzZ6vm2WU046wKPWviIjRqnFktGXrivb923mVPIHCeF6
-M/E0bhm87IhO0TGEtPerGqPHES/theFhYWTZDLKgKq5+kHCw8+c9+qG7r5ZxgfFw
-oSKHy6ynAeIFufLXplts
-=Fndx
------END PGP SIGNATURE-----
-
---=-zmIp/68LRsElY9H7IQ/N--
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index e44f005..290ecec 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -829,21 +829,12 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	reset_regdomains();
+ 
+ 	/* Country IE parsing coming soon */
+-	switch (last_request->initiator) {
+-	case REGDOM_SET_BY_CORE:
+-	case REGDOM_SET_BY_DRIVER:
+-	case REGDOM_SET_BY_USER:
+-		if (!is_valid_rd(rd)) {
+-			printk(KERN_ERR "cfg80211: Invalid "
+-				"regulatory domain detected:\n");
+-			print_regdomain_info(rd);
+-			return -EINVAL;
+-		}
+-		break;
+-	case REGDOM_SET_BY_COUNTRY_IE: /* Not yet */
+-		WARN_ON(1);
+-	default:
+-		return -EOPNOTSUPP;
++
++	if (!is_valid_rd(rd)) {
++		printk(KERN_ERR "cfg80211: Invalid "
++			"regulatory domain detected:\n");
++		print_regdomain_info(rd);
++		return -EINVAL;
+ 	}
+ 
+ 	if (unlikely(last_request->intersect)) {
+-- 
+1.5.6.3
 
