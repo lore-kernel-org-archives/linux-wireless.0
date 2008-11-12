@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46064 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48263 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936AbYKNKyW (ORCPT
+	with ESMTP id S1753204AbYKLXQz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 05:54:22 -0500
+	Wed, 12 Nov 2008 18:16:55 -0500
 Subject: Re: [FYI] ar9170 driver
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
-Cc: "otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>,
-	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
-In-Reply-To: <491D380D.7050707@teltonika.lt>
+To: "otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1226531034.14186.39.camel@johannes.berg> (sfid-20081113_000444_962024_07ACD3CC)
 References: <1226531034.14186.39.camel@johannes.berg>
-	 <491D380D.7050707@teltonika.lt>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3ggJKCki52VIwGUHeBkr"
-Date: Fri, 14 Nov 2008 11:53:38 +0100
-Message-Id: <1226660018.4120.1.camel@johannes.berg> (sfid-20081114_115426_474693_C457FCFD)
+	 (sfid-20081113_000444_962024_07ACD3CC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rghDHymeJw/ThGUULfjv"
+Date: Thu, 13 Nov 2008 00:16:28 +0100
+Message-Id: <1226531788.14186.41.camel@johannes.berg> (sfid-20081113_001659_069366_BA2AA5E2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-3ggJKCki52VIwGUHeBkr
+--=-rghDHymeJw/ThGUULfjv
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2008-11-14 at 10:34 +0200, Paulius Zaleckas wrote:
+On Thu, 2008-11-13 at 00:03 +0100, Johannes Berg wrote:
 
-> If this driver is not going in through wireless or any other tree, becaus=
-e it
-> still needs some work, maybe it is worth to get it to staging tree mainta=
-ined
-> by Greg?
+>  * use rate hw_value instead of huge switch statement
 
-No way. It _will_ go through the wireless tree, trust me, it's just not
-ready yet. Meanwhile, Greg has the mess of a vendor driver.
+done,
+http://johannes.sipsolutions.net/patches/kernel/all/LATEST/
+(look for *-ar9170.patch)
 
 johannes
 
---=-3ggJKCki52VIwGUHeBkr
+--=-rghDHymeJw/ThGUULfjv
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJHViuAAoJEKVg1VMiehFY3hcQAJSBAOfpwQiShrqcxekwO/g8
-prbSiAz4j59mRw0Dx7bfCZx7lYYmXzByz69C174aJQubLNrgPmW7oNu42YSj62tJ
-6iscfGy7sl8R9A43ZkRRe+Fp4V8u3WDu0lh0JC9kgkb9yfSfjnLV8Hw+gVSUw6YE
-FtWRflGCbNd9K7BKUYezf+vaAf1lca6jRcQBREZ3Nl4kS2NkmRaEaCL8R/MVf/JW
-1dFEPDPjc6IBZRpX5rZCuYDWw+7uMV/XBljpnxOhADelKTsttzFmeqGhZm8jlap2
-BFHNEX8+S4pcg+0tFZFza41L0nFc1iuBVO4FVN0uSrWL8XiwF6hPJ9Yt7Wx3nH2/
-TysgNqx40H/AJEMvenZ4qing4BssrsKXiM6o3JXkUH977I8NtKwkjU4QvTCc/B2e
-3nzA9DLh7yGZFI71V9aoVrv8Kx2eBmAzw/ppZzG+7gvEE7fy52FeLaGIa8T+LR6o
-G/FmTVFXAS7AJX7rsVBoj7rA5xQ9i9YfbCsFd2QXXGAD7GWfJ5BZXXOqiMhDJFOw
-aOgrD3KwH/RA0Cl//ix1d6SS9NiB2nvN0VsuOdQjhCvor5Ks2ph23xnEYDEtZ4eC
-SdQ4B7eCbOCA+af0KtNZKMdgJiothCH5EHKrzAShs3AlbtxuENy/DAUGPzitdbXg
-QW38Bzc+OrJf8k3++muI
-=QRLq
+iQIcBAABAgAGBQJJG2PIAAoJEKVg1VMiehFYhmYP/0JQiGHKgbovVNuUs0F05mok
+gnb5qOXC0pSU63JkaYyXzgiG13fl9+34oEjEzcCrvw8k6yEpY+DgGVBi/PoDoCqi
+KfAm9uuzMnM/OVwY2yl0JYStYZPoZyFBgKrbKEms2EY6G/KOkKn7NWrjn9OfY1Ls
+E8qfbRbo54Uv0/jMNRsLnatH2EbIQSotVlanX7TwzJfSYlJl3EpOtc86B8Vo9PHa
+PXF4iAS7u7f5B7QNhr8ERv4Q6bhBVyF3jZxakLdbsGhsDd3SIiktBSq0eFovw/ey
+RE9G3UtBXkaVhtHbUhMskSN5ka0HQd2tIqVreYhiZkUUuGOlRoUFzDiJhnF3DKSi
+ged6SxAQUAIuq6vgh6DLv02f3UQzeXAHj4EhZcbf2hfmjSdoicwMgMxNZ3SgCSMo
+u9oi1DvXPKBmAiSGN3punAOB8ojmgBTV+2Kcm4SIHxEkSNMeSQL9nafCltG840OX
+cbNVg/vXsjGrjsyQ+gpGxgRNYBN3sKGTod4wTKhxF/ORSPxvGaDoajMO+PnLFP4W
+WgcCoKvrBdkWBhEC69Oo6mk57udPYnzdDFvQ8nPWaCkMv/2IKAL6IAype2x53n9H
+i/pVqR1uuGnGAaGY9aMUwVCCTYwGmiKPfRdXmPP4fnYL8s5HF4cqh1QJtbtg3IVK
+jcb5oXErKC1r/dEc7Ppo
+=P9Ia
 -----END PGP SIGNATURE-----
 
---=-3ggJKCki52VIwGUHeBkr--
+--=-rghDHymeJw/ThGUULfjv--
 
