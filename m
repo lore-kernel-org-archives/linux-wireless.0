@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37810 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751935AbYKRUBL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2008 15:01:11 -0500
-Date: Tue, 18 Nov 2008 14:46:52 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-Message-ID: <20081118194652.GD21772@tuxdriver.com> (sfid-20081118_210116_728123_1EABF436)
-References: <1226915999.3599.33.camel@johannes.berg> <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com> <1226933141.3902.19.camel@johannes.berg> <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com> <1226942887.3902.30.camel@johannes.berg> <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com> <1226944799.3902.52.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1226944799.3902.52.camel@johannes.berg>
+Received: from mga09.intel.com ([134.134.136.24]:63902 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753099AbYKLVoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2008 16:44:30 -0500
+Subject: Re: [PATCH 1/2 2.6.28] iwlwifi : Fix channel scanning/association
+	in 5Ghz band
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <20081112212900.GI2411@tuxdriver.com>
+References: <1225912449-26625-1-git-send-email-reinette.chatre@intel.com>
+	 <B887D922-0154-4365-A44D-F284A5DF9386@linux.intel.com>
+	 <20081106134950.GB14184@tuxdriver.com>
+	 <20081112212900.GI2411@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 12 Nov 2008 13:45:04 -0800
+Message-Id: <1226526304.1115.890.camel@rc-desk> (sfid-20081112_224433_845434_2A148918)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 17, 2008 at 06:59:59PM +0100, Johannes Berg wrote:
-> On Mon, 2008-11-17 at 19:34 +0200, Tomas Winkler wrote:
+On Wed, 2008-11-12 at 13:29 -0800, John W. Linville wrote:
+> On Thu, Nov 06, 2008 at 08:49:50AM -0500, John W. Linville wrote:
+> > On Wed, Nov 05, 2008 at 11:17:22PM +0100, Marcel Holtmann wrote:
+> > 
+> > >> This patch is related to bug 11870 at bugzilla.kernel.org. With
+> > >> correct regulatory information the number of channels to scan
+> > >> will be correct and not zero as seen in that bug.
+> > >>
+> > >> This patch eliminates the need for wireless to be compiled with
+> > >> CONFIG_WIRELESS_OLD_REGULATORY to get correct regulatory behavior with
+> > >> iwlwifi.
+> > >
+> > > so this is still for 2.6.28, but for 2.6.29 and wireless-testing the API 
+> > > changed and we need a separate or different patch.
+> > >
+> > > John, Dave what is your take on pushing this to Linus this late in the  
+> > > merge window? I personally think we should do that. And if not, then  
+> > > change the Intel wireless Kconfig to select  
+> > > CONFIG_WIRELESS_OLD_REGULATORY by default at least.
+> > 
+> > CONFIG_WIRELESS_OLD_REGULATORY is already 'default y' now.  I don't
+> > really see why iwlwifi should _require_ that if someone decides to
+> > choose a non-default configuration.
 > 
-> > There actually complains about slow reconnection, 
-> 
-> Ok I guess then I haven't seen them for some reason.
-> 
-> Either way, here's a quick summary:
->  * locking issues with the callback are fixed by removing it
->  * callback is incorrect when you're only suspended for a very short
->    time
->  * callback is incorrect when you're in non-STA modes
->  * suspend/resume cannot be implemented well through this callback, at
->    least not the way it is written now and needs to do a whole lot more
->  * there's no "slow" issue when you actually resume in a different
->    location where the AP is not around any more
->  * there should be no "slow" issue when the AP properly deauthenticates
->    when receiving data frames
-> 
-> This was an RFC. I'm convinced it should go in, but I don't make those
-> decisions anyway. I've outlined my reasons for it.
+> In case this was unclear, I'm dropping these patches for 2.6.28.
 
-I agree that it seems to solve problems, and there is little benefit
-tokeeping the callback in question.  I'm going to send this upstream.
+ok.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+> The original post said different patches are needed for -next anyway.
+
+The patches needed for -next was recently submitted by Luis (http://marc.info/?l=linux-wireless&m=122610969314498&w=2 ).
+
+Reinette
+
