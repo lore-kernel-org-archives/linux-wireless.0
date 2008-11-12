@@ -1,106 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:53935 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753223AbYKZVNG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 16:13:06 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: "Stefan Steuerwald" <salsasepp@googlemail.com>
-Subject: Re: p54: AP mode: no data frame despite traffic indication set in TIM
-Date: Wed, 26 Nov 2008 22:13:03 +0100
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-References: <200811242124.16358.chunkeey@web.de> <f76a32050811260538n6f4f03e9qa05dced498e21fd8@mail.gmail.com>
-In-Reply-To: <f76a32050811260538n6f4f03e9qa05dced498e21fd8@mail.gmail.com>
+Received: from web23107.mail.ird.yahoo.com ([217.146.189.47]:29762 "HELO
+	web23107.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751593AbYKLBMo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2008 20:12:44 -0500
+Date: Wed, 12 Nov 2008 01:12:42 +0000 (GMT)
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+Subject: Re: throughput problem/bisect with rtl8187B
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <200811111634.14786.herton@mandriva.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200811262213.03751.chunkeey@web.de> (sfid-20081126_221323_205174_1F2BD428)
+Content-Type: text/plain; charset=utf-8
+Message-ID: <413196.94590.qm@web23107.mail.ird.yahoo.com> (sfid-20081112_021247_779722_728CF495)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 26 November 2008 14:38:59 Stefan Steuerwald wrote:
-> console [netcon0] enabled
-> netconsole: network logging started
-> BUG: unable to handle kernel NULL pointer dereference at 00000038
-> IP: [<d08260fa>] p54_assign_address+0x67/0x14b [p54common]
-> *pde = 00000000
-> Oops: 0000 [#1]
-> last sysfs file: /sys/class/net/lo/operstate
-> Modules linked in: netconsole ipv6 loop evdev ehci_hcd ohci_hcd
-> rtc_cmos rtc_core pcspkr rtc_lib p54pci usbcore via_rhine p54common
-> geode_aes mii [last unloaded: netconsole]
-> 
-> Pid: 0, comm: swapper Not tainted (2.6.28-rc6-wl #16)
-> EIP: 0060:[<d08260fa>] EFLAGS: 00010002 CPU: 0
-> EIP is at p54_assign_address+0x67/0x14b [p54common]
-> EAX: cf98b178 EBX: cf86ee40 ECX: 00000000 EDX: 00000000
-> ESI: 000000f8 EDI: 00000000 EBP: 0002027c ESP: c03f9c4c
->  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-> Process swapper (pid: 0, ti=c03f8000 task=c03c4380 task.ti=c03f8000)
-> Stack:
->  00000002 ce4d5880 ce4c48b4 cf86e1a0 00000000 00000038 00020200 00000286
->  cf86ee40 00000004 ce4d58b2 ce4d588c d0826fd7 00000090 014c48d4 ce4c48b4
->  cf86e1a0 0086ee40 00000004 02000282 ce4c48d4 cf86ef10 cf86ee40 ce4d5880
-> Call Trace:
->  [<d0826fd7>] p54_tx+0x416/0x482 [p54common]
->  [<c02fb7c2>] __ieee80211_tx+0x35/0xf8
->  [<c02fc235>] ieee80211_master_start_xmit+0x2ab/0x396
->  [<c01048d3>] common_interrupt+0x23/0x30
->  [<c0297368>] dev_hard_start_xmit+0x16e/0x1c9
->  [<c02a3518>] __qdisc_run+0xa2/0x15c
->  [<c0297796>] dev_queue_xmit+0x2f5/0x3c5
->  [<c02f8608>] ieee80211_invoke_rx_handlers+0x488/0x1486
->  [<c02d9d14>] bictcp_cong_avoid+0x10/0x160
->  [<c02bd904>] tcp_ack+0x16f0/0x1850
->  [<c01170f0>] enqueue_task_fair+0x12a/0x16b
->  [<c02c0c37>] tcp_current_mss+0x6b/0xe4
->  [<c02f9b50>] __ieee80211_rx_handle_packet+0x54a/0x56d
->  [<c02fa1fe>] __ieee80211_rx+0x491/0x4e3
->  [<c02ec95d>] ieee80211_tasklet_handler+0x60/0xd6
->  [<c011cfae>] tasklet_action+0x3e/0x64
->  [<c011d305>] __do_softirq+0x4a/0xbc
->  [<c011d399>] do_softirq+0x22/0x26
->  [<c011d44f>] irq_exit+0x25/0x55
->  [<c0105996>] do_IRQ+0x5a/0x6c
->  [<c01048d3>] common_interrupt+0x23/0x30
->  [<c0108743>] default_idle+0x25/0x38
->  [<c0102926>] cpu_idle+0x41/0x5b
-> Code: 0f 84 01 01 00 00 9c 8f 44 24 1c fa 8b 53 10 31 ff 89 6c 24 18
-> 89 14 24 31 d2 eb 3f 8b 4c 24 10 83 c1 38 89 4c 24 14 8b 4c 24 10 <8b>
-> 41 38 29 e8 85 d2 75 0d 39 f0 72 09 8b 51 04 29 f0 89 6c 24
-> EIP: [<d08260fa>] p54_assign_address+0x67/0x14b [p54common] SS:ESP 0068:c03f9c4c
-> Kernel panic - not syncing: Fatal exception in interrupt
-> 
-wt*, this bug is "impossible":
+--- On Tue, 11/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
 
-The bug happens when p54_assign_address looks for a free space for a new frame:
-here's the code:
-[...]
-if (!skb)
-	return -EINVAL;   <--- we don't accept "null" skbs
+> Please check this patch to see if things improve, if not,
+> can you check with
+> the patch I posted earlier, "Add conf_tx callback and
+> use it to configure tx
+> queues of 8187L/8187B.", if things improve? (I think
+> you already checked, but
+> just in case you tested only the rate control related
+> patch)
 
-spin_lock_irqsave(&priv->tx_queue.lock, flags); <--- we are under a spin_lock with irq disabled
-left = skb_queue_len(&priv->tx_queue);
-while (left--) {
-		u32 hole_size;
-		info = IEEE80211_SKB_CB(entry);  <--- Here it BUGs,
-[...]
+okay, very good - this one does it. I didn't try the conf_tx callback patch when I posted the problem, but I did this time - so I have the
+conf_tx callback patch, feedback patch, and a modified version of this new
+one, and I get decent throughput; reverting the 3rd patch, (ie. just the conf_tx callback and feekback transmitted patch) and the throughput is appalling. So you can add tested-by me to both the conf_tx and feedback patches, and either tested-by or signed-off-by for this version of the 3rd patch (I made some small changes just so that it applies on top of the conf_tx patch which has a priv->slot_time rather than local slot_time).
+Sorry about the indentation - no doubt you'll polish it up before sending off the three.
 
-your binary module said that skb->cb is at 0x38,
-so our "entry" is really NULL right when it BUGS.
-And this only happens means that the queue was
-modified "outside" of our driver.
+These 3 are tested against v2.6.28-rc4-5168-gaafbf3d (moved on a bit since my last tests).
 
-Since we always take the spin_lock_irqsave (of course,
-only of "our" tx_queue). if we need to do anything with the data in the queue, 
+Thanks for looking into this.
 
-Of course, since the package as queued while the station was sleeping
-somewhere mac80211, so maybe it still holds a reference to, but then
-other drivers would have already spotted this misbehaviour long time ago...
+Hin-Tak
 
-So? back to square one... I guess.
+------------------------------
+--- rtl8187_dev.c.orig	2008-11-11 23:49:09.000000000 +0000
++++ rtl8187_dev.c	2008-11-12 00:11:54.000000000 +0000
+@@ -1050,45 +1050,29 @@
+ 
+ #define SIFS_TIME 0xa
+ 
+-static void rtl8187_conf_erp(struct rtl8187_priv *priv, bool use_short_slot,
+-			     bool use_short_preamble)
++static void rtl8187_conf_erp(struct rtl8187_priv *priv, bool use_short_slot)
+ {
+ 	if (priv->is_rtl8187b) {
+-		u8 difs, eifs;
+-		u16 ack_timeout;
++		u8 difs;
+ 		int queue;
+ 
+-		if (use_short_slot) {
++		if (use_short_slot)
+ 			priv->slot_time = 0x9;
+-			difs = 0x1c;
+-			eifs = 0x53;
+-		} else {
++		else
+ 			priv->slot_time = 0x14;
+-			difs = 0x32;
+-			eifs = 0x5b;
+-		}
+-		rtl818x_iowrite8(priv, &priv->map->SIFS, SIFS_TIME);
++  difs = 10 + 2 * priv->slot_time;
++		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
+ 		rtl818x_iowrite8(priv, &priv->map->SLOT, priv->slot_time);
+ 		rtl818x_iowrite8(priv, &priv->map->DIFS, difs);
+ 
+ 		/*
+-		 * BRSR+1 on 8187B is in fact EIFS register
+-		 * Value in units of 4 us
++        * On 8187B:
++        * - BRSR+1 is in fact EIFS register
++        * - CARRIER_SENSE_COUNTER is ack timeout register
++        * Values in units of 4 us
+ 		 */
+-		rtl818x_iowrite8(priv, (u8 *)&priv->map->BRSR + 1, eifs);
+-
+-		/*
+-		 * For 8187B, CARRIER_SENSE_COUNTER is in fact ack timeout
+-		 * register. In units of 4 us like eifs register
+-		 * ack_timeout = ack duration + plcp + difs + preamble
+-		 */
+-		ack_timeout = 112 + 48 + difs;
+-		if (use_short_preamble)
+-			ack_timeout += 72;
+-		else
+-			ack_timeout += 144;
+-		rtl818x_iowrite8(priv, &priv->map->CARRIER_SENSE_COUNTER,
+-				 DIV_ROUND_UP(ack_timeout, 4));
++   rtl818x_iowrite8(priv, (u8 *)&priv->map->BRSR + 1, 0x5b);
++   rtl818x_iowrite8(priv, &priv->map->CARRIER_SENSE_COUNTER, 0x5b);
+ 
+ 		for (queue = 0; queue < 4; queue++)
+ 			rtl818x_iowrite8(priv, (u8 *) rtl8187b_ac_addr[queue],
+@@ -1115,9 +1099,8 @@
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 
+-	if (changed & (BSS_CHANGED_ERP_SLOT | BSS_CHANGED_ERP_PREAMBLE))
+-		rtl8187_conf_erp(priv, info->use_short_slot,
+-				 info->use_short_preamble);
++    if (changed & BSS_CHANGED_ERP_SLOT)
++        rtl8187_conf_erp(priv, info->use_short_slot);
+ }
+ 
+ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
+------------------------
 
-Regards,
-	Chr
+
+
+
+
+
+      
