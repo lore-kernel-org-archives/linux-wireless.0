@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:18929 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750966AbYKMLtC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44363 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786AbYKLSbJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 06:49:02 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so380000ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 03:49:01 -0800 (PST)
-Message-ID: <dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com> (sfid-20081113_124909_880883_E87D5DC5)
-Date: Thu, 13 Nov 2008 13:49:01 +0200
-From: "Mark Ryden" <markryde@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: Master mode in iw
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-In-Reply-To: <87ej1f6ggq.fsf@nokia.com>
+	Wed, 12 Nov 2008 13:31:09 -0500
+Date: Wed, 12 Nov 2008 13:28:14 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH 1/4] lib80211: absorb crypto bits from net/ieee80211
+Message-ID: <20081112182814.GD2411@tuxdriver.com> (sfid-20081112_193114_409736_C6ABA22C)
+References: <1226440265-21240-1-git-send-email-linville@tuxdriver.com> <1226508514.5368.21.camel@brick> <20081112180228.GC2411@tuxdriver.com> <1226513943.16649.0.camel@brick>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com>
-	 <87ej1f6ggq.fsf@nokia.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1226513943.16649.0.camel@brick>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-Thanks for you quick response.
-I know that I can set master mode with hostapd.
+On Wed, Nov 12, 2008 at 10:19:03AM -0800, Harvey Harrison wrote:
+> On Wed, 2008-11-12 at 13:02 -0500, John W. Linville wrote:
+> > On Wed, Nov 12, 2008 at 08:48:34AM -0800, Harvey Harrison wrote:
+> > > On Tue, 2008-11-11 at 16:51 -0500, John W. Linville wrote:
+> > > > These bits are shared already between ipw2x00 and hostap, and could
+> > > > probably be shared both more cleanly and with other drivers.  This
+> > > > commit simply relocates the code to lib80211 and adjusts the drivers
+> > > > appropriately.
+> > > > 
+> > > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > > > ---
+> > > 
+> > > Wouldn't it have been better to start from the mac80211 crypto bits
+> > > as lib80211 and modify hostap/ipw2x00 to use the 'new' lib80211
+> > > crypto bits?
+> > 
+> > I'm sorry, but you forgot to attach your patches...
+> > 
+> 
+> I will if it's desired, I just wanted to know if there was a particular
+> reason for going this way.
 
-My question is - is there something inherent which
-prevents implementing it with "iw"?
-When comparing to the old set of tools, which includes
-iwconifg,
-"iwconfig wlan0 mode Master" works on some interfaces.
+Those bits are already shared between ieee80211 and the hostap driver.
+Unfortunately, they are not shared with a clean API.  I don't think
+hacking on mac80211's crypto code is worthwhile until these drivers
+are given a bit more discipline in this area.  IMHO, this is the
+better way to start.
 
-Regards,
-Mark
+Perhaps you should find something more helpful to do instead.
 
-
-On Thu, Nov 13, 2008 at 12:57 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> Mark Ryden <markryde@gmail.com> writes:
->
->> Hello,
->
-> Hello,
->
->> I have a question about the iw: is it possible to
->> set with it an interface to be in master mode ? (as in the case of
->> Access Point)
->>
->> I had git cloned the sources according to the URL from
->> http://linuxwireless.org/en/users/Documentation/iw; and as far
->> as I understand from the code, it is not implemented yet. It will only
->> display when an interface is in master mode (but you cannot set to master mode).
->>
->> I want to verify this point and ask if there is an inhernet reason for
->> not implementing this (setting other modes,
->> like mesh and monitor, is implemented). Or is it simply on the to-do list ?
->
-> You have to use hostapd. See earlier mails in this list for more
-> information.
->
-> --
-> Kalle Valo
->
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
