@@ -1,87 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36964 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754234AbYKEL3N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 06:29:13 -0500
-Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets
-	using tx close descriptor for 8187B
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-In-Reply-To: <4910CD42.4010402@lwfinger.net>
-References: <1225806649-10050-1-git-send-email-herton@mandriva.com.br>
-	 <1225806649-10050-3-git-send-email-herton@mandriva.com.br>
-	 <4910CD42.4010402@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3+uXc6LiVAIYnMiXgKzy"
-Date: Wed, 05 Nov 2008 12:29:12 +0100
-Message-Id: <1225884552.3619.74.camel@johannes.berg> (sfid-20081105_122916_417373_FB034536)
+Received: from mx2.redhat.com ([66.187.237.31]:32768 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751608AbYKMV4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 16:56:41 -0500
+Subject: Re: hostap managed mode, blank ESSID
+From: Dan Williams <dcbw@redhat.com>
+To: IskiMJ@gmail.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <NGBBIAECGKIICNHKJGIPCEIPCIAA.IskiMJ@gmail.com>
+References: <NGBBIAECGKIICNHKJGIPCEIPCIAA.IskiMJ@gmail.com>
+Content-Type: text/plain
+Date: Thu, 13 Nov 2008 16:54:35 -0500
+Message-Id: <1226613275.29010.1.camel@localhost.localdomain> (sfid-20081113_225645_795791_7D34CB43)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2008-11-13 at 13:02 -0700, iskimj@gmail.com wrote:
+> I'm running Ubuntu with kernel 2.6.27-7. I am trying to set up a
+> Prism/Intersil PCMCIA card (Microsoft MN-520) with firmware version 1.4.9.
+> 
+> I am able to the orinoco module but I get many errors. I asked in that
+> mailing list and one suggestion was to try the hostap module. I am trying to
+> set up hostap but need a bit of help.
+> 
+> It is my understanding that I need to operate it in "managed" mode to
+> connect as a client to a wireless AP. I can set the managed mode but I can't
+> seem to set the ESSID, iwconfig will report EASED: " ". If I then change to
+> "master" mode it reports the correct ESSID. Are there some additional steps
+> that I need to do? Is there a bug in the driver?
 
---=-3+uXc6LiVAIYnMiXgKzy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Master mode means the card will act like an AP, so it isn't what you
+want.
 
-On Tue, 2008-11-04 at 14:31 -0800, Larry Finger wrote:
-> Herton Ronaldo Krzesinski wrote:
-> > Realtek 8187B has a receive command queue to feedback beacon interrupt
-> > and transmitted packet status. Use it to feedback mac80211 about status
-> > of transmitted packets. Unfortunately in the course of testing I found
-> > that the sequence number reported by hardware includes entire sequence
-> > control in a 12 bit only field, so a workaround is done to check only
-> > lowest bits.
-> >=20
-> > Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
->=20
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
->=20
->=20
-> Quilt shows the following warning:
->=20
-> Warning: trailing whitespace in lines 438,468 of drivers/net/wireless/rtl=
-8187_dev.c
->=20
-> scripts/checkpatch shows the following:
->=20
-> WARNING: line over 80 characters
-> #138: FILE: drivers/net/wireless/rtl8187_dev.c:475:
-> +                       if ((le16_to_cpu(ieee80211hdr->seq_ctrl) & 0xFFF)=
- =3D=3D seq_no)
+When the card reports a blank SSID, that means it simply hasn't
+associated to the AP.  Are you sure your WEP or WPA keys are correct?
+You might also try a higher firmware version; 1.7.x are known to work
+quite a bit better than 1.4.9; I haven't had luck with 1.4.9.  Firmware
+flashing is somewhat arcane, but here's the link:
 
-Besides, that line looks wrong? the lowest 4 bits are teh fragment
-number.
+http://linux.junsun.net/intersil-prism/
 
-johannes
+Dan
 
---=-3+uXc6LiVAIYnMiXgKzy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJEYOEAAoJEKVg1VMiehFYU8AQAMC9jxLzNpozxbCRQSuVmVIw
-l1mOF/aJtTCahekky+Ut3Wf6mazqGvZ8ZHdZpAGaKW2poUyXYE2lWSPsd8Z0OGN9
-WBYr+yHHFMbWJhpGl2xqXy6SuEMrqH3LfFJZL9hetXncIoxqSN6WD2+dxTHMQJbL
-r7UV1jgzDx0QigvdN+fqQmVe1m9ZpoLzwofks6cG4qCZ/fQJt/NSgq0T++J8V2QN
-LxaBihzPEyRh+awe3TFOXKxh2vOI2CFhsNsUp/rbsxWzO68m/VM2Nthj58qJm/na
-qvf/ynRF733ZNuBWz8DE4NBSJx3Mi2KOXcRk/MKwtt0AIIJaHY5cR7pNVEhEKEZi
-gdgiXfTqg6/9hISVj2DXyFp2YGwnuSvK3vnjwSMLdszhqvf8rLm9CvS2485EKwvy
-Z9s8KjT+QrIQ9acuhOGBle0lUTD9U5o+9xQ5f6veSsAfaHbUgFm12nn3xc7rIXmm
-OaF6oELu/pmwguWpiJ4UeiR3+9lF1tGT8ZD98OpGknVjNvWuTQ92tHeDAsbdIo1E
-c010HNpOYlgELJg+j5OItErvaBPvHbUuCC05jg1VQaQ2NitzfnzU1ngvEokol5PY
-DRc4zymgfQyH8mxFWSeZHQEUxP6w7RNzrtwpUiSJrkXpEBV7Kpt85nWazaRTBHhn
-jk4jNKJrwO8gm09BN5ag
-=fJ3h
------END PGP SIGNATURE-----
-
---=-3+uXc6LiVAIYnMiXgKzy--
 
