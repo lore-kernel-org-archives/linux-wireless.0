@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:45080 "EHLO c60.cesmail.net"
+Received: from c60.cesmail.net ([216.154.195.49]:63627 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750921AbYKCOha convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 09:37:30 -0500
-Message-ID: <20081103094047.7zjz0fcy88gc4wo8-cebfxv@webmail.spamcop.net> (sfid-20081103_153734_646829_472CC354)
-Date: Mon, 03 Nov 2008 09:40:47 -0500
+	id S1751511AbYKMUsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 15:48:39 -0500
+Subject: Re: [madwifi-project] [RFC] Closing the project
 From: Pavel Roskin <proski@gnu.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	michael+ath5k@stapelberg.de, linux-kernel@vger.kernel.org
-Subject: Re: [ath5k-devel] [PATCH] ath5k: fix detection of jumbo frames
-References: <1225652938-6244-1-git-send-email-me@bobcopeland.com>
-	<1225719328.3575.9.camel@dv>
-	<b6c5339f0811030626rf9e7147peb1d4a2ca085bba@mail.gmail.com>
-In-Reply-To: <b6c5339f0811030626rf9e7147peb1d4a2ca085bba@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Michael Renzmann <mrenzmann@madwifi-project.org>,
+	madwifi-project@lists.madwifi-project.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <43e72e890811131142p3f72c964t802d424b0ddb3456@mail.gmail.com>
+References: <2576.194.45.26.221.1226491274.squirrel@webmail.madwifi.org>
+	 <1226511194.9952.38.camel@dv>
+	 <43e72e890811121224w4fc53e1s29080a42111186e9@mail.gmail.com>
+	 <1226547092.11785.49.camel@dv>
+	 <43e72e890811131142p3f72c964t802d424b0ddb3456@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 13 Nov 2008 15:48:36 -0500
+Message-Id: <1226609316.2904.18.camel@dv> (sfid-20081113_214844_910288_15A38EA5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Bob Copeland <me@bobcopeland.com>:
+On Thu, 2008-11-13 at 11:42 -0800, Luis R. Rodriguez wrote:
 
-> On Mon, Nov 3, 2008 at 8:35 AM, Pavel Roskin <proski@gnu.org> wrote:
->> Thanks for catching it!  Please mention rs_antenna in addition to
->> rs_more.
->>
->>> -     rs->rs_antenna = rx_status->rx_status_0 &
->>> -             AR5K_5210_RX_DESC_STATUS0_RECEIVE_ANTENNA;
->>> -     rs->rs_more = rx_status->rx_status_0 &
->>> -             AR5K_5210_RX_DESC_STATUS0_MORE;
->>> +     rs->rs_antenna = AR5K_REG_MS(rx_status->rx_status_0,
->>> +             AR5K_5210_RX_DESC_STATUS0_RECEIVE_ANTENNA);
->>> +     rs->rs_more = AR5K_REG_MS(rx_status->rx_status_0,
->>> +             AR5K_5210_RX_DESC_STATUS0_MORE);
->>
->> rs_more should be boolean.  It would be better to use "!!" to calculate
->> rs_rate.  No need to shift anything.  As for rs_antenna, it's fine with
->    ^^^^^^
-> I assume you meant rs_more again:  rs_more = !!(rx_status_0 & ...)
+> We will be working on DFS on mac80211, I will start first with STA
+> DFS. Also expect a lot of work from us on AP support.
 
-Yes, sorry.
+That's great news!
 
->>> +#define AR5K_5212_RX_DESC_STATUS0_DECOMP_CRC_ERROR_S 13
->>
->> This doesn't belong to the patch.  It looks like it's another boolean
->> value, but it's not currently used.
->
-> ACK, all valid.  I'll respin.
+> >> I think MadWifi has become a big bureaucratic entity and this large
+> >> bureaucracy is simply not needed.
+> >
+> > I agree that we have a lot of documentation that is becoming irrelevant.
+> > I prefer to keep documentation to the minimum, as it stimulates
+> > developers to write software that just works, without lengthy
+> > instructions.
+> >
+> > But the bug tracking system has some important information that we still
+> > may need.
+> >
+> > I think the biggest impediment to MadWifi development was not
+> > bureaucracy.  It was the non-free HAL.
+> 
+> Not really, even with an alternative people are still used to coding
+> with it and find it easier to commit into an svn repository than
+> submit  patches upstream. Maybe our process is move involved but there
+> its also why Linux code has a certain quality in it. We tend to frown
+> upon crap. If MadWifi ever were to touch Linux it would be tainted
+> with CRAP.
 
-Please do.
+OK, HAL was not the only reason.  Let's say there is good bureaucracy
+and bad bureaucracy.  The difference is the former is helpful and the
+later is not.  The kernel is an excellent example of good bureaucracy
+that we should learn from.
+
+It would be great to have a detailed analysis why MadWifi failed.  It
+would be useful for other projects.  I'm short on time to do it right
+now, but I may do it later.
+
+I think we should have done more to prevent incomplete or broken changes
+from being committed.  The reason I cannot backport SMP fixes is because
+they were committed as series of commits that involved other issues as
+well.  Such sloppiness should have been prevented.
+
+> Just my advice: let MadWifi die already, stop wasting your time.
+
+I understand what you mean, but I have to deal with MadWifi anyway.  As
+I said before, I'd rather share my fixes that keep them to myself.
 
 -- 
 Regards,
