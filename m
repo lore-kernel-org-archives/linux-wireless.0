@@ -1,68 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:55315 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751480AbYKEP7k (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:11617 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752597AbYKMGMZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 10:59:40 -0500
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
-Date: Wed, 5 Nov 2008 13:59:50 -0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	"Hin-Tak Leung" <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-References: <1225806649-10050-1-git-send-email-herton@mandriva.com.br> <200811051338.33882.herton@mandriva.com.br> <1225899623.3619.119.camel@johannes.berg>
-In-Reply-To: <1225899623.3619.119.camel@johannes.berg>
+	Thu, 13 Nov 2008 01:12:25 -0500
+From: "Xu, Martin" <martin.xu@intel.com>
+To: Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
+	Vikram Kandukuri <Vikram.Kandukuri@atheros.com>,
+	Jothikumar Mothilal <Jothikumar.Mothilal@atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"Liu, Bing Wei" <bing.wei.liu@intel.com>,
+	"Selbak, Rolla N" <rolla.n.selbak@intel.com>,
+	"Wang, Yong Y" <yong.y.wang@intel.com>
+Date: Thu, 13 Nov 2008 14:12:17 +0800
+Subject: RE: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts
+ per second at idle
+Message-ID: <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com> (sfid-20081113_071243_328645_0695E42B)
+References: <bug-11749-13098@http.bugzilla.kernel.org/>
+ <20081013150525.884BC108058@picon.linux-foundation.org>
+ <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
+ <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com>
+In-Reply-To: <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200811051359.51665.herton@mandriva.com.br> (sfid-20081105_165945_000361_AEA44408)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 05 November 2008 13:40:22 Johannes Berg wrote:
-> On Wed, 2008-11-05 at 13:38 -0200, Herton Ronaldo Krzesinski wrote:
-> > > > WARNING: line over 80 characters
-> > > > #138: FILE: drivers/net/wireless/rtl8187_dev.c:475:
-> > > > +                       if ((le16_to_cpu(ieee80211hdr->seq_ctrl) &
-> > > > 0xFFF) == seq_no)
-> >
-> > Ops, I forgot to run checkpatch.pl here, will run and fix it when I
-> > submit next patch.
->
-> I wouldn't worry about lines > 80 chars too much, breaking this down
-> wouldn't make more readable but less so, in my opinion. I tend to ignore
-> that rule where it makes the code unreadable :)
->
-> > > Besides, that line looks wrong? the lowest 4 bits are teh fragment
-> > > number.
-> >
-> > It's intended, because the hardware instead of reporting just the
-> > sequence number in its 12 bits is reporting fragment number + sequence
-> > number, this is a workaround.
->
-> Ah. A comment might be appropriate that "seq_no" doesn't actually
-> contain the sequence number?
+Hi all:
+I have a patch that can be used to fix the bug.
+The patch resolved the issue by disabling the beacon filter when disassociated with AP and enabling beacon when associate with AP.
+See http://bugzilla.kernel.org/show_bug.cgi?id=11749
+Please review it. Thanks!
 
-Yes, I'll improve comment there, will change by this:
-
-/*
- * While testing, it was discovered that the seq_no doesn't
- * actually contains the sequence number. Instead
- * of returning just the 12 bits of sequence number,
- * hardware is returning entire sequence control (fragment
- * number plus sequence number) in a 12 bit only field
- * overflowing after some time. As a workaround,
- * just consider the lower bits, and expect it's unlikely
- * we wrongly ack some sent data
- */
-
->
-> johannes
-
---
-[]'s
-Herton
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 34cd1a4..d774a6a 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -241,6 +241,10 @@ static int ath5k_get_tx_stats(struct ieee80211_hw *hw,
+ static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
+ static void ath5k_reset_tsf(struct ieee80211_hw *hw);
+ static int ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb);
++static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
++                                struct ieee80211_vif *vif,
++                                struct ieee80211_bss_conf *bss_conf,
++                                u32 changes);
+ 
+ static struct ieee80211_ops ath5k_hw_ops = {
+ 	.tx 		= ath5k_tx,
+@@ -257,6 +261,7 @@ static struct ieee80211_ops ath5k_hw_ops = {
+ 	.get_tx_stats 	= ath5k_get_tx_stats,
+ 	.get_tsf 	= ath5k_get_tsf,
+ 	.reset_tsf 	= ath5k_reset_tsf,
++	.bss_info_changed = ath5k_bss_info_changed, 
+ };
+ 
+ /*
+@@ -2952,7 +2957,7 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
+ 		sc->opmode != NL80211_IFTYPE_MESH_POINT &&
+ 		test_bit(ATH_STAT_PROMISC, sc->status))
+ 		rfilt |= AR5K_RX_FILTER_PROM;
+-	if (sc->opmode == NL80211_IFTYPE_STATION ||
++	if ( (sc->opmode == NL80211_IFTYPE_STATION && sc->assoc) ||
+ 		sc->opmode == NL80211_IFTYPE_ADHOC ||
+ 		sc->opmode == NL80211_IFTYPE_AP)
+ 		rfilt |= AR5K_RX_FILTER_BEACON;
+@@ -3093,3 +3098,54 @@ ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb)
+ 	return ret;
+ }
+ 
++static void
++enable_beacon_filter(struct ieee80211_hw *hw)
++{
++        struct ath5k_softc *sc = hw->priv;
++        struct ath5k_hw *ah = sc->ah;
++        u32 rfilt;
++        rfilt = ath5k_hw_get_rx_filter(ah);
++        if ( !(rfilt & AR5K_RX_FILTER_BEACON) ){
++                rfilt |= AR5K_RX_FILTER_BEACON;
++                ath5k_hw_set_rx_filter(ah,rfilt);
++                sc->filter_flags = rfilt;
++        }
++        rfilt = ath5k_hw_get_rx_filter(ah);
++        return;
++}
++
++static void
++disable_beacon_filter(struct ieee80211_hw *hw)
++{
++        struct ath5k_softc *sc = hw->priv;
++        struct ath5k_hw *ah = sc->ah;
++        u32 rfilt;
++        rfilt = ath5k_hw_get_rx_filter(ah);
++        if ( rfilt & AR5K_RX_FILTER_BEACON ){
++                rfilt &= ~AR5K_RX_FILTER_BEACON;
++                ath5k_hw_set_rx_filter(ah,rfilt);
++                sc->filter_flags = rfilt;
++        }
++
++        return;
++}
++
++static void ath5k_bss_info_changed(struct ieee80211_hw *hw, 
++                                struct ieee80211_vif *vif,
++                                struct ieee80211_bss_conf *bss_conf,
++                                u32 changes)
++{
++        struct ath5k_softc *sc = hw->priv;
++        if (changes & BSS_CHANGED_ASSOC){
++		mutex_lock(&sc->lock);
++                sc->assoc = bss_conf->assoc;
++                if ( sc->opmode == NL80211_IFTYPE_STATION && sc-> assoc){
++                        enable_beacon_filter(hw);
++                }
++                if ( sc->opmode == NL80211_IFTYPE_STATION && !sc-> assoc ){
++                        disable_beacon_filter(hw);
++                }
++		mutex_unlock(&sc->lock);
++        }
++        return;
++}
+diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
+index 06d1054..facc60d 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -179,6 +179,7 @@ struct ath5k_softc {
+ 
+ 	struct timer_list	calib_tim;	/* calibration timer */
+ 	int 			power_level;	/* Requested tx power in dbm */
++	bool			assoc;		/* assocate state */
+ };
+ 
+ #define ath5k_hw_hasbssidmask(_ah) \
