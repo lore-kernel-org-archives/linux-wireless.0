@@ -1,76 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42656 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbYKQOpu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 09:45:50 -0500
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com> (sfid-20081117_153229_848291_1314E086)
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
-	 (sfid-20081117_153229_848291_1314E086)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZCdi/06nenN8jY+Nn3P1"
-Date: Mon, 17 Nov 2008 15:45:41 +0100
-Message-Id: <1226933141.3902.19.camel@johannes.berg> (sfid-20081117_154553_802205_6E627011)
-Mime-Version: 1.0
+Received: from mx1.suse.de ([195.135.220.2]:41178 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751235AbYKMJQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 04:16:30 -0500
+Message-ID: <491BF062.4050705@suse.de> (sfid-20081113_101636_701704_DA90178E)
+Date: Thu, 13 Nov 2008 10:16:18 +0100
+From: Frank Seidel <fseidel@suse.de>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>, yi.zhu@intel.com,
+	reinette.chatre@intel.com, ipw2100-devel@lists.sourceforge.net,
+	hschaa@suse.de
+Subject: Re: Problem with Kernel Oops in ipw2200
+References: <49130E75.1000903@suse.de> <49131173.3010409@suse.de> <20081112213350.GJ2411@tuxdriver.com>
+In-Reply-To: <20081112213350.GJ2411@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-ZCdi/06nenN8jY+Nn3P1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+John W. Linville schrieb:
+> On Thu, Nov 06, 2008 at 04:46:59PM +0100, Frank Seidel wrote:
+>> Frank Seidel schrieb:
+>>> Ever suggestion is very appreciated.
+>> My first search through the ipw2200 logs pointed
+>> me to Davids last commit (521c4d96e0840ecce25b956e00f416ed499ef2ba)
+>> and really after reverting it the problem disappeared here.
+>> The patch from my last post was the smallest subset of
+>> the revertion that still works for me here.
+>> Any comments?
+> 
+> I think it would be better to make sure that ipw2200 (and/or
+> ieee80211) is properly using netif_carrier_{on,off}() instead?
 
-On Mon, 2008-11-17 at 16:32 +0200, Tomas Winkler wrote:
+Thanks for your answer. But i am not sure i understand you correctly.
+Do you propose to let the patch in place like it is?
+The problem is that before this patch ipw2200 didn't have that problem
+and now with it is constantly on various machines is running in
+a kernel oops at ipw_tx_skb called by ipw_net_hard_start_xmit.
+So imho that patch introduced the bug somehow and even partly reverting
+it fixes the problem here on my testmachine.
 
-> IMHO Not the concept but the implementation of this function is wrong.
-
-I disagree.
-
-> It should be no implementation difference between mac notification and
-> reception of one RX frames that triggers oneof the connection step
-> such as association response. If this would be handled in this context
-> and there won't be any locking issue.
-> If driver crashes internally and lost association info it can generate
-> "local disassociation frame" and mac will try to reapply association
-> in a regular flow.
-
-The point is that the whole thing about disassociation is already the
-wrong assumption. As I've outlined, it only works in STA mode, and thus
-the function is generally not very useful.
-
-> I agree that resume/suspend shell be handled properly in the mac80211
-> regardless of this issue.
-
-And it will handle the "firmware crashed" case perfectly too.
-
-johannes
-
---=-ZCdi/06nenN8jY+Nn3P1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJIYOPAAoJEKVg1VMiehFY+NkP/jGfNPeZrwB5KVSxZQV2JBk5
-H1mlNRK6ycPh2uK8rngOnaJrbQnEi3EhDGokJxqVCItdGycbRj4iTxH7KpmOZO6j
-CJwykaRY3EvNURGNg/5KCTKPKQ8O57j4l9WfRnrndR8osQvc97hA0FjRNjfuE7JY
-3i/fcL++05bO59RMdMcdEKLeJ4JzqUUSYhq7Cue0EzMi7RD/Tdu6K+iT8eJs5bxQ
-0hmd/tJ2Wb41gCxq+msRKnuEVMaprRMLd/sRIHKySlQTYxNV87MyTGYgLrhs7qhO
-ayjQoAFPY5jfFIK9H/DMdQyIN30TD2whJ4x1y8DT9Wuh6yLl98g3+IGsp34n91OW
-jsvOj5RKAkQa0ldbEISy0TcA4RoR0e3CUbg9hqqoON9D4uuQPQdbky/F7QSnnIu/
-820eUFOEQ4h8oB05d3rG/kERoE6s+Vv02gOB5GRJyGyTxZ3oWZXb8aiNX4u2opKk
-ITzrkWh2t/E3sfAPV35rNwEMEqArZwHT8YzJrQDkBeQgaAzYO5QJXzVpQ20NvXrD
-5WP1UQh9tky591tiSNTHWtsHPWbi2vUEQOr726UIuE6IB+AK4G0yTo2YUT+asJEG
-DJzrwMNLQMvQUvxZ57nzHlAmdiFpS/i6TSHds8MVXWFATxKJ224uSgDwoVs56IVo
-iJ6JnIosV0rEE+XRyKD6
-=2+CZ
------END PGP SIGNATURE-----
-
---=-ZCdi/06nenN8jY+Nn3P1--
-
+Thanks for any help,
+Frank
