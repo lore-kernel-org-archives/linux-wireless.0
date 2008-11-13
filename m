@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:44317 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423AbYK2RGX (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:41637 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbYKMK6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2008 12:06:23 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/3] mac80211: add power state transition callbacks
-Date: Sat, 29 Nov 2008 18:06:19 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Stefan Steuerwald <salsasepp@googlemail.com>
-References: <200811282345.48379.chunkeey@web.de> <200811291315.01685.chunkeey@web.de> <1227961293.3542.7.camel@johannes.berg>
-In-Reply-To: <1227961293.3542.7.camel@johannes.berg>
+	Thu, 13 Nov 2008 05:58:48 -0500
+To: "Mark Ryden" <markryde@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: Master mode in iw
+References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Thu, 13 Nov 2008 12:57:41 +0200
+In-Reply-To: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com> (ext Mark Ryden's message of "Thu\, 13 Nov 2008 12\:46\:25 +0200")
+Message-ID: <87ej1f6ggq.fsf@nokia.com> (sfid-20081113_115902_797591_76F9827B)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200811291806.20309.chunkeey@web.de> (sfid-20081129_180626_878941_68D660FF)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 29 November 2008 13:21:33 Johannes Berg wrote:
-> On Sat, 2008-11-29 at 13:15 +0100, Christian Lamparter wrote:
-> 
-> > > Unless we want to defer RX packet processing to a workqueue rather than
-> > > a tasklet?
-> 
-> > Hmm, but if we put the RX packet processing into a workqueue, we have to
-> > put the tx status report processing in one too (see comment about rx/tx race
-> > in main.c line 400)?
-> 
-> Yeah, probably. I don't know all the details all the time, so I write
-> such comments ;)
-> 
-> > Or do you mean I should only put ap_sta_ps_end  (& ap_sta_ps_start) 
-> > resending stuff into a workqueue? (Yeah, this makes a lot more sense,
-> > and might actually work!, well let's prepare another patch)
-> 
-> No idea!
-> 
-> The only thing I was thinking is that it's not a good plan to have a
-> callback that has different locking requirements depending on a
-> parameter.
+Mark Ryden <markryde@gmail.com> writes:
 
-yeah...  go back to the extra sta_notify_ps callback approach?
-I tried to do this with workqueues, but It turned out that queue_work
-doesn't work since we disabled the irqs in the rx path.
-( http://linux.derkeiler.com/Mailing-Lists/Kernel/2005-02/3350.html
- has a story about the bitter consequences of queue_work & irq_disabled) 
+> Hello,
 
-Regards,
-	Chr
+Hello,
+
+> I have a question about the iw: is it possible to
+> set with it an interface to be in master mode ? (as in the case of
+> Access Point)
+>
+> I had git cloned the sources according to the URL from
+> http://linuxwireless.org/en/users/Documentation/iw; and as far
+> as I understand from the code, it is not implemented yet. It will only
+> display when an interface is in master mode (but you cannot set to master mode).
+>
+> I want to verify this point and ask if there is an inhernet reason for
+> not implementing this (setting other modes,
+> like mesh and monitor, is implemented). Or is it simply on the to-do list ?
+
+You have to use hostapd. See earlier mails in this list for more
+information.
+
+-- 
+Kalle Valo
