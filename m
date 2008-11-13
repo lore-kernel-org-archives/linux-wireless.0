@@ -1,68 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:39462 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752580AbYKURCe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 12:02:34 -0500
-Date: Fri, 21 Nov 2008 19:01:30 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Report max TX power in NL80211_BAND_ATTR_FREQS
-Message-ID: <20081121170130.GA4887@jm.kir.nu> (sfid-20081121_180238_649198_423B9B26)
+Received: from senator.holtmann.net ([87.106.208.187]:47230 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824AbYKMKLe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 05:11:34 -0500
+Message-ID: <491BF73B.4080403@linux.intel.com> (sfid-20081113_111138_704362_B09F9328)
+Date: Thu, 13 Nov 2008 10:45:31 +0100
+From: Marcel Holtmann <holtmann@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: reinette chatre <reinette.chatre@intel.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Issue with ifconfig down and 4965 driver
+References: <BCB72601-9DA2-4D89-BDF1-7B96254DA17C@linux.intel.com> <1226555293.1115.939.camel@rc-desk>
+In-Reply-To: <1226555293.1115.939.camel@rc-desk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is useful information to provide for userspace (e.g., hostapd needs
-this to generate Country IE).
+Hi Reinette,
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+>> so I am running a 2.6.28-rc4 kernel and every time I stop  
+>> wpa_supplicant or call ifconfig down on the 4965 card, I get a user  
+>> noticeable delay (mouse freezes). Seems that some part inside the  
+>> driver is actively sleeping with a busy-loop. This is really not an  
+>> acceptable behavior since it is a day-to-day task to bring the device  
+>> down. And for power concerns, we really wanna allow to bring down the  
+>> interface.
+>>
+> 
+> Please add your information to
+> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790
 
+all information are already in the Bugzilla. It is nothing fancy and 
+easy to reproduce. Do we have a patch for it?
 
-Index: wireless-testing/include/linux/nl80211.h
-===================================================================
---- wireless-testing.orig/include/linux/nl80211.h	2008-11-21 18:35:40.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2008-11-21 18:38:10.000000000 +0200
-@@ -508,6 +508,7 @@
-  *	on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_RADAR: Radar detection is mandatory
-  *	on this channel in current regulatory domain.
-+ * @NL80211_FREQUENCY_ATTR_MAX_TX_POWER: Maximum transmission power in dBm.
-  */
- enum nl80211_frequency_attr {
- 	__NL80211_FREQUENCY_ATTR_INVALID,
-@@ -516,12 +517,15 @@
- 	NL80211_FREQUENCY_ATTR_PASSIVE_SCAN,
- 	NL80211_FREQUENCY_ATTR_NO_IBSS,
- 	NL80211_FREQUENCY_ATTR_RADAR,
-+	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
- 	NL80211_FREQUENCY_ATTR_MAX = __NL80211_FREQUENCY_ATTR_AFTER_LAST - 1
- };
- 
-+#define NL80211_FREQUENCY_ATTR_MAX_TX_POWER NL80211_FREQUENCY_ATTR_MAX_TX_POWER
-+
- /**
-  * enum nl80211_bitrate_attr - bitrate attributes
-  * @NL80211_BITRATE_ATTR_RATE: Bitrate in units of 100 kbps
-Index: wireless-testing/net/wireless/nl80211.c
-===================================================================
---- wireless-testing.orig/net/wireless/nl80211.c	2008-11-21 18:37:10.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2008-11-21 18:37:56.000000000 +0200
-@@ -198,6 +198,9 @@
- 			if (chan->flags & IEEE80211_CHAN_RADAR)
- 				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR);
- 
-+			NLA_PUT_U8(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-+				   chan->max_power);
-+
- 			nla_nest_end(msg, nl_freq);
- 		}
- 
+Regards
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Marcel
+
