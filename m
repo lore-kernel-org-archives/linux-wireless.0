@@ -1,41 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:25329 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750738AbYKSVwB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 16:52:01 -0500
-Subject: Re: [PATCH] wireless: sysfs was displaying different values for
-	level and noise than procfs
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081119200856.GH3485@tuxdriver.com>
-References: <200811151831.26403.arvidjaar@mail.ru>
-	 <1227122019.2196.14.camel@dv> <200811192245.29487.arvidjaar@mail.ru>
-	 <20081119200856.GH3485@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 19 Nov 2008 16:51:58 -0500
-Message-Id: <1227131518.3571.16.camel@dv> (sfid-20081119_225207_085809_144B09A0)
-Mime-Version: 1.0
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:52204 "EHLO
+	XServe-2.services.indranet.co.nz" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751802AbYKMXcd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 18:32:33 -0500
+Date: Fri, 14 Nov 2008 12:26:19 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Pavel Roskin <proski@gnu.org>
+cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	madwifi-project@lists.madwifi-project.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [madwifi-project] [RFC] Closing the project
+In-Reply-To: <1226610718.2904.23.camel@dv>
+Message-ID: <alpine.DEB.1.00.0811141207010.7976@kauri.acheron.indranet.co.nz> (sfid-20081114_003238_980956_99B12E79)
+References: <2576.194.45.26.221.1226491274.squirrel@webmail.madwifi.org> <1226511194.9952.38.camel@dv> <43e72e890811121224w4fc53e1s29080a42111186e9@mail.gmail.com> <1226547092.11785.49.camel@dv> <43e72e890811131142p3f72c964t802d424b0ddb3456@mail.gmail.com>
+ <1226609316.2904.18.camel@dv> <43e72e890811131254q35ff4f48xf58c7c26d5c9a5a4@mail.gmail.com> <1226610718.2904.23.camel@dv>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-11-19 at 15:08 -0500, John W. Linville wrote:
+On Thu, 13 Nov 2008, Pavel Roskin wrote:
+> On Thu, 2008-11-13 at 12:54 -0800, Luis R. Rodriguez wrote:
+>> On Thu, Nov 13, 2008 at 12:48 PM, Pavel Roskin <proski@gnu.org> wrote:
 
-> > But positive dBm is not even possible to represnt right now. It is
-> > u8 and is displayed as ((s32)level - 256); so it is *always*
-> > negative.
+>>>> Just my advice: let MadWifi die already, stop wasting your time.
+Good advise.
 
-I would force dBm to be between -192 and 63.  That would cover
-everything even remotely possible.
 
-> And what is your perspective regarding potential 'userland ABI'
-> issues of either this patch or of Pavel's suggestion?
+> Specifically for me - just three letters.  DFS.
+Why are you worried about DFS?
+There is only one feature that is important:
+  Reliability. It has to work for months, without rebooting.
 
-In my opinion, discrepancy between procfs and sysfs is permissible.  If
-the sysfs interface has been wrong, we should be able to change the
-format.  As for the procfs interface, it could be deprecated.
+Consider a very reasonable use of madwifi - in a linux router. It has to
+work reliably - without being rebooted by the user.
+Consider an AP box that had madwifi in it. Every couple of days, the user
+has to reboot it to get the box to work again. The user gets upset and 
+returns the box. This is not a commercial product. Yes, the box did DFS, 
+but it had to be rebooted regularly.
+While the DFS is nice - it is not reliable.
 
+Now - you have noticed the comments about SMP issues in this thread.
+Do you know what that implies? There are races races races in the code.
+There are contention issues. What is the only reliable fix for SMP?
+complete redesign. Pull the code apart - and work out what each tasklet 
+and interrupt does. Ensure there is no contention.
+
+
+Have you noticed the long standing bugs in the bug tracker? Stuck beacon, 
+ping ramping in adhoc. Do you know why these bugs are long standing?
+Cause noone has the skill/ability/knowledge to fix them. ((Sure, there is 
+a purported fix for ping ramping - but this fixes the symptom, not 
+cause)). I have a fix for ping ramping - it required a complete redesign 
+of the codebase. I can report it, and give you the code, but you cannot 
+use it in madwifi cause it breaks wds, scanning, dfs, ap, sta modes.
+
+The options are clear::
+  a)Fix stabilise madwifi
+or
+  b)add features to mac80211
+
+a is a lot of work in a short lived project
+b is a lot of work in a project that is going to be around for years.
+
+===================================
+Sure, if we abandon development on madwifi - we are breaking our promise.
+
+Given the current rate of development, we will not be able to provide a
+stable reliable code base with DFS etc in the promised timescale. thus, if 
+we continue developing madwifi, we will fail to meet objective, and end up
+breaking our promise in the future.
+
+Conclusion:: break the promise now, or later.
+
+As an end user of madwifi, it is more reasonable to break the promise now.
+
+I end up being forced to agree with Luis:
+>>>> Just my advice: let MadWifi die already, stop wasting your time.
+
+
+Derek.
 -- 
-Regards,
-Pavel Roskin
+Derek Smithies Ph.D.
+IndraNet Technologies Ltd.
+Email: derek@indranet.co.nz
+ph +64 3 365 6485
+Web: http://www.indranet-technologies.com/
