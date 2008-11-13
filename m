@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:38151 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751793AbYKXP3y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 10:29:54 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so774020ugf.37
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 07:29:52 -0800 (PST)
-Message-ID: <492AC870.3030103@gmail.com> (sfid-20081124_162958_727157_0E91F357)
-Date: Mon, 24 Nov 2008 10:29:52 -0500
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
+Received: from nexus.dynaweb.hu ([195.70.37.87]:43976 "EHLO nexus.dynaweb.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755126AbYKMW7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 17:59:30 -0500
+Date: Thu, 13 Nov 2008 23:59:28 +0100
+From: RUMI Szabolcs <rumi_ml@rtfm.hu>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Renzmann <mrenzmann@madwifi-project.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Fwd: please don't regress ath5k.h]
-References: <492A14A7.4040808@gmail.com>	 <1205.94.79.146.217.1227505499.squirrel@webmail.madwifi.org>	 (sfid-20081124_071514_224762_60872498) <1227507381.3599.55.camel@johannes.berg>
-In-Reply-To: <1227507381.3599.55.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: ath5k master (AP) mode
+Message-Id: <20081113235928.3ed79ff6.rumi_ml@rtfm.hu> (sfid-20081113_235941_810109_7B5C345C)
+In-Reply-To: <1226598550.5839.3.camel@johannes.berg>
+References: <20081112224810.8d4ca179.rumi_ml@rtfm.hu>
+	<1226530010.15173.0.camel@dv>
+	<20081113004632.d8d821c5.rumi_ml@rtfm.hu>
+	<20081113181155.c556bde1.rumi_ml@rtfm.hu>
+	<1226598550.5839.3.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2008-11-24 at 06:44 +0100, Michael Renzmann wrote:
->   
->> Hi.
->>
->> Richard Farina wrote:
->>     
->>> I recently saw this additional comment added to wireless-testing.git and
->>> it has me a bit concerned.  I use this feature for a specific patch set
->>> that I maintain and it would break it pretty bad to remove this.
->>>       
->> Just an idea: what prevents you to add a patch to that patchset that
->> reenables the amount of code you require from the CHAN_DEBUG stuff should
->> it be removed upstream?
->>     
->
-> Seconded, upstream should remove all the junk that it doesn't directly
-> need.
->
-> johannes
->   
-I actually don't have a problem with removing chan_debug, I was merely 
-requesting that the size hack it enables not be removed.
+On Thu, 13 Nov 2008 18:49:10 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-More specifically in base.h I believe the code I specifically require is:
+> > I have compiled a kernel from wireless-testing git of today (2.6.28-rc4-wl)
+> > then recompiled and tested hostapd-0.6.5 against that,
+> 
+> look, you need hostapd from git
 
-#if CHAN_DEBUG
-#define ATH_CHAN_MAX    (26+26+26+200+200)
-#else
-#define ATH_CHAN_MAX    (14+14+14+252+20)
-#endif
+If you look a bit further down in that email, I've also tried
+exactly that afterwards but unfortunately it made no difference.
 
+BTW I've made a diff -rduN between hostapd-0.6.5 and todays -git
+but haven't spotted anything relevant to my problem anyway.
 
-When removing chan_debug just please leave the higher max.  To be honest 
-I don't know for sure what this code means but since enabling it fixes 
-my patch it is clearly required.  There is no reason to be removing this 
-as I am hoping to push a few patches upstream to properly support the 
-capabilities of the hardware.
+To summarize:
+
+2.6.27 + hostapd-0.6.5 = NO
+2.6.27 + OpenWRT hack + hostapd-0.6.5 = NO
+compat-wireless-2008-11-12 + hostapd-0.6.5 = NO
+wireless-testing-git + hostapd-0.6.5 = NO
+wireless-testing-git + hostapd-git = NO
+
+In fact I've also tried hostapd-0.6.4 and 0.5.10 at some point
+but they didn't make anything better.
 
 Thanks,
-Rick
+
+Sab
