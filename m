@@ -1,169 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:47714 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845AbYK1WqG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 17:46:06 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] p54: revamp station power save management in access point mode
-Date: Fri, 28 Nov 2008 23:46:12 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Stefan Steuerwald <salsasepp@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200811282346.12464.chunkeey@web.de> (sfid-20081128_234611_280357_4950C471)
+Received: from mga14.intel.com ([143.182.124.37]:62121 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750920AbYKMHGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 02:06:44 -0500
+Subject: Re: iwlagn driver segfault in 2.6.28-rc3
+From: reinette chatre <reinette.chatre@intel.com>
+To: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20081111143410.GA4401@ics.muni.cz>
+References: <20081111143410.GA4401@ics.muni.cz>
+Content-Type: text/plain
+Date: Wed, 12 Nov 2008 23:07:21 -0800
+Message-Id: <1226560041.1115.945.camel@rc-desk> (sfid-20081113_080649_263056_E7E9C463)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch addresses the problem in:
-http://marc.info/?l=linux-wireless&m=122727674810057&w=2
+On Tue, 2008-11-11 at 06:34 -0800, Lukas Hejtmanek wrote:
+> Hello,
+> 
+> I accidentaly got the following oops:
+> 
+> [54644.622141] wlan0: association with AP 00:13:80:43:9d:d0 timed out
+> [54655.006025] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> [54655.006444] iwlagn 0000:03:00.0: irq 40 for MSI/MSI-X
+> [54655.006715] general protection fault: 0000 [#1] SMP 
+> [54655.006723] last sysfs file: /sys/devices/pci0000:00/0000:00:1f.1/host3/target3:0:0/3:0:0:0/block/sr0/stat
+> [54655.006728] Dumping ftrace buffer:
+> [54655.006733]    (ftrace buffer empty)
+> [54655.006737] CPU 0 
+> [54655.006740] Modules linked in: aes_x86_64 aes_generic arc4 ecb iwlagn iwlcore mac80211 cfg80211 i915 drm rfcomm bri
+> dge stp llc bnep sco l2cap tp_smapi thinkpad_ec btusb bluetooth fuse thinkpad_acpi rfkill e1000e wmi intel_agp snd_hda_intel [last unloaded: ehci_hcd]
+> [54655.006785] Pid: 13515, comm: wpa_supplicant Not tainted 2.6.28-rc3 #27
+> [54655.006789] RIP: 0010:[<ffffffffa0149db7>]  [<ffffffffa0149db7>] iwl_eeprom_query16+0x7/0x20 [iwlcore]
+> 
 
-Thanks to Stefan Steuerwald <salsasepp@googlemail.com> 
-extensive iPod touch tests. We could finally squash some bugs in 
-p54's master mode / access point implementation.
+I do not know why the eeprom will not be available at this point. Could you please try the patch below and let us know if you hit the error?
 
-Let's hope we got everything right this time and all stations
-from now on will wake up on TIM and receive their queued frames
-and go to sleep again without any hiccups. 
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-11-28 20:18:53.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-11-28 21:37:45.000000000 +0100
-@@ -653,6 +653,10 @@ static void p54_rx_frame_sent(struct iee
- 		__skb_unlink(entry, &priv->tx_queue);
- 		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index db31a52..307b77e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2585,6 +2585,10 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
  
-+		entry_hdr = (struct p54_hdr *) entry->data;
-+		entry_data = (struct p54_tx_data *) entry_hdr->data;
-+		priv->tx_stats[entry_data->hw_queue].len--;
-+
- 		if (unlikely(entry == priv->cached_beacon)) {
- 			kfree_skb(entry);
- 			priv->cached_beacon = NULL;
-@@ -669,8 +673,6 @@ static void p54_rx_frame_sent(struct iee
- 		BUILD_BUG_ON(offsetof(struct ieee80211_tx_info,
- 				      status.ampdu_ack_len) != 23);
+ 	IWL_DEBUG_MAC80211("enter\n");
  
--		entry_hdr = (struct p54_hdr *) entry->data;
--		entry_data = (struct p54_tx_data *) entry_hdr->data;
- 		if (entry_hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN))
- 			pad = entry_data->align[0];
- 
-@@ -688,7 +690,6 @@ static void p54_rx_frame_sent(struct iee
- 			}
- 		}
- 
--		priv->tx_stats[entry_data->hw_queue].len--;
- 		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
- 		     (!payload->status))
- 			info->flags |= IEEE80211_TX_STAT_ACK;
-@@ -1005,6 +1006,26 @@ static int p54_sta_unlock(struct ieee802
- 	return 0;
- }
- 
-+static void p54_sta_notify(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
-+			      enum sta_notify_cmd notify_cmd,
-+			      struct ieee80211_sta *sta)
-+{
-+	switch (notify_cmd) {
-+	case STA_NOTIFY_ADD:
-+	case STA_NOTIFY_REMOVE:
-+	case STA_NOTIFY_AWAKE:
-+		/*
-+		 * Notify the firmware that we don't want or we don't
-+		 * need to buffer frames for this station anymore.
-+		 */
-+
-+		p54_sta_unlock(dev, sta->addr);
-+		break;
-+	default:
-+		break;
++	if (!priv->eeprom) {
++		IWL_ERROR("EEPROM not initialized.\n");
++		return -EIO;
 +	}
-+}
-+
- static int p54_tx_cancel(struct ieee80211_hw *dev, struct sk_buff *entry)
- {
- 	struct p54_common *priv = dev->priv;
-@@ -1070,7 +1091,7 @@ static int p54_tx_fill(struct ieee80211_
- 		if (info->control.sta)
- 			*aid = info->control.sta->aid;
- 		else
--			*flags = P54_HDR_FLAG_DATA_OUT_NOCANCEL;
-+			*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
- 	}
- 	return ret;
- }
-@@ -1083,7 +1104,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	struct p54_hdr *hdr;
- 	struct p54_tx_data *txhdr;
- 	size_t padding, len, tim_len = 0;
--	int i, j, ridx;
-+	int i, j, ridx, ret;
- 	u16 hdr_flags = 0, aid = 0;
- 	u8 rate, queue;
- 	u8 cts_rate = 0x20;
-@@ -1093,30 +1114,18 @@ static int p54_tx(struct ieee80211_hw *d
- 
- 	queue = skb_get_queue_mapping(skb);
- 
--	if (p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid)) {
--		current_queue = &priv->tx_stats[queue];
--		if (unlikely(current_queue->len > current_queue->limit))
--			return NETDEV_TX_BUSY;
--		current_queue->len++;
--		current_queue->count++;
--		if (current_queue->len == current_queue->limit)
--			ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
--	}
-+	ret = p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid);
-+	current_queue = &priv->tx_stats[queue];
-+	if (unlikely((current_queue->len > current_queue->limit) && ret))
-+		return NETDEV_TX_BUSY;
-+	current_queue->len++;
-+	current_queue->count++;
-+	if ((current_queue->len == current_queue->limit) && ret)
-+		ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
- 
- 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
- 	len = skb->len;
- 
--	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT) {
--		if (info->control.sta)
--			if (p54_sta_unlock(dev, info->control.sta->addr)) {
--				if (current_queue) {
--					current_queue->len--;
--					current_queue->count--;
--				}
--				return NETDEV_TX_BUSY;
--			}
--	}
--
- 	txhdr = (struct p54_tx_data *) skb_push(skb, sizeof(*txhdr) + padding);
- 	hdr = (struct p54_hdr *) skb_push(skb, sizeof(*hdr));
- 
-@@ -1835,6 +1844,7 @@ static const struct ieee80211_ops p54_op
- 	.add_interface		= p54_add_interface,
- 	.remove_interface	= p54_remove_interface,
- 	.set_tim		= p54_set_tim,
-+	.sta_notify		= p54_sta_notify,
- 	.config			= p54_config,
- 	.config_interface	= p54_config_interface,
- 	.bss_info_changed	= p54_bss_info_changed,
-diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
---- a/drivers/net/wireless/p54/p54common.h	2008-11-28 20:18:53.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.h	2008-11-28 20:27:59.000000000 +0100
-@@ -302,7 +302,7 @@ enum p54_frame_sent_status {
- 	P54_TX_OK = 0,
- 	P54_TX_FAILED,
- 	P54_TX_PSM,
--	P54_TX_PSM_CANCELLED
-+	P54_TX_PSM_CANCELLED = 4
- };
- 
- struct p54_frame_sent {
+ 	if (pci_enable_device(priv->pci_dev)) {
+ 		IWL_ERROR("Fail to pci_enable_device\n");
+ 		return -ENODEV;
+
 
