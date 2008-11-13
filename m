@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39293 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972AbYKJTbI (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:53402 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052AbYKMPlz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 14:31:08 -0500
-Date: Mon, 10 Nov 2008 14:19:26 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] cfg80211/mac80211: Add 802.11d support
-Message-ID: <20081110191925.GK3546@tuxdriver.com> (sfid-20081110_203114_628754_2C5B83FA)
-References: <1226097635-9555-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 13 Nov 2008 10:41:55 -0500
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] rtl8187: Update file authorship in comments
+Date: Thu, 13 Nov 2008 13:42:10 -0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>
+References: <491b6768.iqQUkTGJLrREsFyl%Larry.Finger@lwfinger.net>
+In-Reply-To: <491b6768.iqQUkTGJLrREsFyl%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1226097635-9555-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200811131342.10504.herton@mandriva.com.br> (sfid-20081113_164157_626197_0C32CE8A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 07, 2008 at 02:40:35PM -0800, Luis R. Rodriguez wrote:
-> This adds country IE parsing to mac80211 and enables its usage
-> within the new regulatory infrastructure in cfg80211. We parse
-> the country IEs only on management beacons for the BSSID you are
-> associated to and disregard the IEs when the country and environment
-> (indoor, outdoor, any) matches the already processed country IE.
+On Wednesday 12 November 2008 21:31:52 Larry Finger wrote:
+> Modify the file comments to reflect the current maintainers.
 > 
-> To avoid following misinformed or outdated APs we build and use
-> a regulatory domain out of the intersection between what the AP
-> provides us on the country IE and what CRDA is aware is allowed
-> on the same country.
-> 
-> A secondary device is allowed to follow only the same country IE
-> as it make no sense for two devices on a system to be in two
-> different countries.
-> 
-> In the case the AP is using country IEs for an incorrect country
-> the user may help compliance further by setting the regulatory
-> domain before or after the IE is parsed and in that case another
-> intersection will be performed.
-> 
-> CONFIG_WIRELESS_OLD_REGULATORY is supported but requires CRDA
-> present.
-> 
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 > ---
+
+Acked-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+
 > 
-> This addresses Johannes' latest feedback. It replaces 3/3
-> of my last series.
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> @@ -7,6 +7,11 @@
+>   * Based on the r8187 driver, which is:
+>   * Copyright 2005 Andrea Merello <andreamrl@tiscali.it>, et al.
+>   *
+> + * The driver was extended to the RTL8187B in 2008 by:
+> + * 	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+> + *	Hin-Tak Leung <htl10@users.sourceforge.net>
+> + *	Larry Finger <Larry.Finger@lwfinger.net>
+> + *
+>   * Magic delays and register offsets below are taken from the original
+>   * r8187 driver sources.  Thanks to Realtek for their support!
+>   *
+> @@ -27,6 +32,9 @@
+>  
+>  MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
+>  MODULE_AUTHOR("Andrea Merello <andreamrl@tiscali.it>");
+> +MODULE_AUTHOR("Herton Ronaldo Krzesinski <herton@mandriva.com.br>");
+> +MODULE_AUTHOR("Hin-Tak Leung <htl10@users.sourceforge.net>");
+> +MODULE_AUTHOR("Larry Finger <Larry.Finger@lwfinger.net>");
+>  MODULE_DESCRIPTION("RTL8187/RTL8187B USB wireless driver");
+>  MODULE_LICENSE("GPL");
+> 
+>  
+> 
 
-I'm sorry, but I see four different series w/ similar titles but
-with at least some difference in patches between them.  Could you
-just repost a singled unified patch series for 802.11d?
-
-Thanks,
-
-John
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+[]'s
+Herton
