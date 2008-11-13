@@ -1,78 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.189]:62117 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936AbYKNWWE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 17:22:04 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so1421179rnd.17
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 14:22:03 -0800 (PST)
-Message-ID: <45e8e6c40811141422l6e7aa7b9g7227c4243ab701c5@mail.gmail.com> (sfid-20081114_232210_462092_3B1E1E6D)
-Date: Fri, 14 Nov 2008 14:22:03 -0800
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Christian Lamparter" <chunkeey@web.de>
-Subject: Re: [PATCH 1/4] p54: enable Mesh Point support
-Cc: linux-wireless@vger.kernel.org,
-	"John W Linville" <linville@tuxdriver.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Pavel Roskin" <proski@gnu.org>
-In-Reply-To: <200811141941.06542.chunkeey@web.de>
+Received: from mail.atheros.com ([12.36.123.2]:17358 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752077AbYKMM3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 07:29:41 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 04:29:41 -0800
+Date: Thu, 13 Nov 2008 17:59:36 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <jouni.malinen@atheros.com>,
+	<lrodriguez@atheros.com>
+Subject: [PATCH 02/05] ath9k: incorrect noise floor threshold values.
+Message-ID: <20081113122936.GC7688@senthil-lnx.users.atheros.com> (sfid-20081113_132944_703032_734E0BF6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200811141941.06542.chunkeey@web.de>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks!
+This patch fixes incorrect noise floor threshold values.
 
-Acked-by: Andrey Yurovsky <andrey@cozybit.com>
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath9k/calib.c  |    4 ++--
+ drivers/net/wireless/ath9k/eeprom.c |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-On Fri, Nov 14, 2008 at 10:41 AM, Christian Lamparter <chunkeey@web.de> wrote:
-> This patch enables Mesh Point operation for any p54 device.
->
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> --- a/drivers/net/wireless/p54/p54common.c      2008-11-01 20:41:08.000000000 +0100
-> +++ b/drivers/net/wireless/p54/p54common.c      2008-11-02 13:34:24.000000000 +0100
-> @@ -1059,6 +1059,7 @@ static int p54_tx_fill(struct ieee80211_
->                break;
->        case NL80211_IFTYPE_AP:
->        case NL80211_IFTYPE_ADHOC:
-> +       case NL80211_IFTYPE_MESH_POINT:
->                if (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) {
->                        *aid = 0;
->                        *queue = 3;
-> @@ -1571,6 +1572,7 @@ static int p54_add_interface(struct ieee
->        case NL80211_IFTYPE_STATION:
->        case NL80211_IFTYPE_ADHOC:
->        case NL80211_IFTYPE_AP:
-> +       case NL80211_IFTYPE_MESH_POINT:
->                priv->mode = conf->type;
->                break;
->        default:
-> @@ -1590,6 +1592,7 @@ static int p54_add_interface(struct ieee
->                p54_setup_mac(dev, P54_FILTER_TYPE_AP, priv->mac_addr);
->                break;
->        case NL80211_IFTYPE_ADHOC:
-> +       case NL80211_IFTYPE_MESH_POINT:
->                p54_setup_mac(dev, P54_FILTER_TYPE_IBSS, NULL);
->                break;
->        default:
-> @@ -1654,6 +1657,7 @@ static int p54_config_interface(struct i
->                break;
->        case NL80211_IFTYPE_AP:
->        case NL80211_IFTYPE_ADHOC:
-> +       case NL80211_IFTYPE_MESH_POINT:
->                memcpy(priv->bssid, conf->bssid, ETH_ALEN);
->                ret = p54_set_freq(dev, dev->conf.channel->center_freq);
->                if (ret)
-> @@ -1829,6 +1833,7 @@ struct ieee80211_hw *p54_init_common(siz
->
->        dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION |
->                                          NL80211_IFTYPE_ADHOC |
-> +                                         NL80211_IFTYPE_MESH_POINT |
->                                          NL80211_IFTYPE_AP);
->
->        dev->channel_change_time = 1000;        /* TODO: find actual value */
->
+diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
+index 1690759..0e214f7 100644
+--- a/drivers/net/wireless/ath9k/calib.c
++++ b/drivers/net/wireless/ath9k/calib.c
+@@ -176,14 +176,14 @@ static bool getNoiseFloorThresh(struct ath_hal *ah,
+ 	case CHANNEL_A_HT20:
+ 	case CHANNEL_A_HT40PLUS:
+ 	case CHANNEL_A_HT40MINUS:
+-		*nft = (int16_t)ath9k_hw_get_eeprom(ah, EEP_NFTHRESH_5);
++		*nft = (int8_t)ath9k_hw_get_eeprom(ah, EEP_NFTHRESH_5);
+ 		break;
+ 	case CHANNEL_B:
+ 	case CHANNEL_G:
+ 	case CHANNEL_G_HT20:
+ 	case CHANNEL_G_HT40PLUS:
+ 	case CHANNEL_G_HT40MINUS:
+-		*nft = (int16_t)ath9k_hw_get_eeprom(ah, EEP_NFTHRESH_2);
++		*nft = (int8_t)ath9k_hw_get_eeprom(ah, EEP_NFTHRESH_2);
+ 		break;
+ 	default:
+ 		DPRINTF(ah->ah_sc, ATH_DBG_CHANNEL,
+diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
+index 9b2fdc5..180e541 100644
+--- a/drivers/net/wireless/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath9k/eeprom.c
+@@ -1551,9 +1551,9 @@ u32 ath9k_hw_get_eeprom(struct ath_hal *ah,
+ 
+ 	switch (param) {
+ 	case EEP_NFTHRESH_5:
+-		return -pModal[0].noiseFloorThreshCh[0];
++		return pModal[0].noiseFloorThreshCh[0];
+ 	case EEP_NFTHRESH_2:
+-		return -pModal[1].noiseFloorThreshCh[0];
++		return pModal[1].noiseFloorThreshCh[0];
+ 	case AR_EEPROM_MAC(0):
+ 		return pBase->macAddr[0] << 8 | pBase->macAddr[1];
+ 	case AR_EEPROM_MAC(1):
+-- 
+1.5.5
+
