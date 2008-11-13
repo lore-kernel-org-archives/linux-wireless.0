@@ -1,100 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:51701 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754167AbYKCV10 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 16:27:26 -0500
-Subject: Re: why differnet wlan drivers need different settings?
-From: Dan Williams <dcbw@redhat.com>
-To: Alexey Fisher <bug-track@fisher-privat.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1225124023.13499.40.camel@localhost.localdomain>
-References: <200810251153.25533.bug-track@fisher-privat.net>
-	 <200810251303.35295.rjw@sisk.pl> <20081025135512.GG19057@tuxdriver.com>
-	 <200810252245.30279.bug-track@fisher-privat.net>
-	 <1225124023.13499.40.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 03 Nov 2008 16:25:24 -0500
-Message-Id: <1225747524.21347.2.camel@localhost.localdomain> (sfid-20081103_222732_888757_F870975F)
-Mime-Version: 1.0
+Received: from perninha.conectiva.com.br ([200.140.247.100]:53330 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750852AbYKMPjJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 10:39:09 -0500
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Cc: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: [PATCH 2/3] rtl8187: implement conf_tx callback to configure tx queues
+Date: Thu, 13 Nov 2008 10:39:15 -0500
+Message-Id: <1226590756-10743-3-git-send-email-herton@mandriva.com.br> (sfid-20081113_163917_317363_14828D6E)
+In-Reply-To: <1226590756-10743-1-git-send-email-herton@mandriva.com.br>
+References: <1226590756-10743-1-git-send-email-herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-10-27 at 12:13 -0400, Dan Williams wrote:
-> On Sat, 2008-10-25 at 22:45 +0200, Alexey Fisher wrote:
-> > On Saturday 25 October 2008 15:55:12 John W. Linville wrote:
-> > > On Sat, Oct 25, 2008 at 01:03:34PM +0200, Rafael J. Wysocki wrote:
-> > > > On Saturday, 25 of October 2008, Alexey Fisher wrote:
-> > > > > May be this is the wrong plase to ask.
-> > > >
-> > > > Yeah, better ask that on linux-wireless@vger.kernel.org (CCed).
-> > > >
-> > > > > The question is: Why differnet wlan drivers use different settings to
-> > > > > stay silent - powered on but not trying to associate to any accespoint?
-> > > > > For example: ipw2200 - if wlan was connfigured like:
-> > > > >
-> > > > > iwconfig wlan1 essid "my-ap" chan 6 ap my:aps:mac ?key s:pass
-> > > > >
-> > > > > this will normaly connect to my secure ?AP. and if i set after this:
-> > > > > ?
-> > > > > iwconfig wlan1 essid off ap off
-> > > > >
-> > > > > it will connect to unsecure AP of my neighbour or of Dr.Evil :)
-> > > > > to disable association on ipw2200 i need to set all this and plus "chan
-> > > > > 0". With this cnowleg i want to set up iwl3945, and surprise it's not
-> > > > > working. This driver do not accepted "chan 0" and instead of "essid
-> > > > > off" it did "essid """
-> > > > >
-> > > > > Are there any unified way to keep adapter powered on but not trying to
-> > > > > associate to some AP?
-> > >
-> > > That is from the bad-ole-days.  I could be wrong, but AFAIK only the
-> > > ipw2x00 drivers do that anyway.  I recently merged a patch to change
-> > > the default for that for ipw2200 into wireless-testing.  We should
-> > > probably have one for ipw2100 as well.
-> > >
-> > > Anyway, there are module options for those.  Add "options ipw2200
-> > > associate=0" to /etc/modprobe.conf.
-> > 
-> > I use associate=0 with smole workaround:
-> > 
-> > diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-> > index dcce354..92583c6 100644
-> > --- a/drivers/net/wireless/ipw2200.c
-> > +++ b/drivers/net/wireless/ipw2200.c
-> > @@ -7582,7 +7582,7 @@ static int ipw_associate(void *data)
-> >  
-> >  	if (!(priv->config & CFG_ASSOCIATE) &&
-> >  	    !(priv->config & (CFG_STATIC_ESSID |
-> > -			      CFG_STATIC_CHANNEL | CFG_STATIC_BSSID))) {
-> > +			      CFG_STATIC_BSSID))) {
-> >  		IPW_DEBUG_ASSOC("Not attempting association (associate=0)\n");
-> >  		return 0;
-> >  	}
-> 
-> Yeah, that's probably appropriate, otherwise just 'iwconfig eth1 channel
-> 6' would trigger association to _something_, which is wrong.  Changing
-> the channel should (and does) trigger reassociation, but only if there
-> is an SSID to associate with!
-> 
-> In plain english, this if statement should read:
-> 
-> "If associate=0, and no locked SSID or locked BSSID have been set, don't
-> associate"
-> 
-> > becouse networkmanager do not set channel=0 to be compartibel with other 
-> > drivers. 
-> 
-> wpa_supplicant sets (or doesn't set) the channel, not NM...
-> 
-> Care to submit a patch with the appropriate signed-off-by tag?
+Add conf_tx callback and use it to configure tx queues of 8187L/8187B.
 
-Ping; could you submit the patch with the proper signed-off-by
-statement?
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+---
+ drivers/net/wireless/rtl818x/rtl8187.h         |    2 +
+ drivers/net/wireless/rtl818x/rtl8187_dev.c     |   73 ++++++++++++++++++++++--
+ drivers/net/wireless/rtl818x/rtl8187_rtl8225.c |    6 --
+ 3 files changed, 69 insertions(+), 12 deletions(-)
 
-Thanks!
-Dan
-
+diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
+index 33725d0..f09872e 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187.h
++++ b/drivers/net/wireless/rtl818x/rtl8187.h
+@@ -111,6 +111,8 @@ struct rtl8187_priv {
+ 	u8 signal;
+ 	u8 quality;
+ 	u8 noise;
++	u8 slot_time;
++	u8 aifsn[4];
+ };
+ 
+ void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 695e66d..0f8fa36 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -704,6 +704,13 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+ 
+ 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFEC, 0x0800, 1);
+ 
++	priv->slot_time = 0x9;
++	priv->aifsn[0] = 2; /* AIFSN[AC_VO] */
++	priv->aifsn[1] = 2; /* AIFSN[AC_VI] */
++	priv->aifsn[2] = 7; /* AIFSN[AC_BK] */
++	priv->aifsn[3] = 3; /* AIFSN[AC_BE] */
++	rtl818x_iowrite8(priv, &priv->map->ACM_CONTROL, 0);
++
+ 	return 0;
+ }
+ 
+@@ -911,24 +918,38 @@ static int rtl8187_config_interface(struct ieee80211_hw *dev,
+ 	return 0;
+ }
+ 
++/*
++ * With 8187B, AC_*_PARAM clashes with FEMR definition in struct rtl818x_csr for
++ * example. Thus we have to use raw values for AC_*_PARAM register addresses.
++ */
++static __le32 *rtl8187b_ac_addr[4] = {
++	(__le32 *) 0xFFF0, /* AC_VO */
++	(__le32 *) 0xFFF4, /* AC_VI */
++	(__le32 *) 0xFFFC, /* AC_BK */
++	(__le32 *) 0xFFF8, /* AC_BE */
++};
++
++#define SIFS_TIME 0xa
++
+ static void rtl8187_conf_erp(struct rtl8187_priv *priv, bool use_short_slot,
+ 			     bool use_short_preamble)
+ {
+ 	if (priv->is_rtl8187b) {
+-		u8 difs, eifs, slot_time;
++		u8 difs, eifs;
+ 		u16 ack_timeout;
++		int queue;
+ 
+ 		if (use_short_slot) {
+-			slot_time = 0x9;
++			priv->slot_time = 0x9;
+ 			difs = 0x1c;
+ 			eifs = 0x53;
+ 		} else {
+-			slot_time = 0x14;
++			priv->slot_time = 0x14;
+ 			difs = 0x32;
+ 			eifs = 0x5b;
+ 		}
+ 		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
+-		rtl818x_iowrite8(priv, &priv->map->SLOT, slot_time);
++		rtl818x_iowrite8(priv, &priv->map->SLOT, priv->slot_time);
+ 		rtl818x_iowrite8(priv, &priv->map->DIFS, difs);
+ 
+ 		/*
+@@ -949,18 +970,21 @@ static void rtl8187_conf_erp(struct rtl8187_priv *priv, bool use_short_slot,
+ 			ack_timeout += 144;
+ 		rtl818x_iowrite8(priv, &priv->map->CARRIER_SENSE_COUNTER,
+ 				 DIV_ROUND_UP(ack_timeout, 4));
++
++		for (queue = 0; queue < 4; queue++)
++			rtl818x_iowrite8(priv, (u8 *) rtl8187b_ac_addr[queue],
++					 priv->aifsn[queue] * priv->slot_time +
++					 SIFS_TIME);
+ 	} else {
+ 		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
+ 		if (use_short_slot) {
+ 			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
+ 			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
+ 			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
+-			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
+ 		} else {
+ 			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
+ 			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
+ 			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
+-			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
+ 		}
+ 	}
+ }
+@@ -1009,6 +1033,42 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
+ 	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
+ }
+ 
++static int rtl8187_conf_tx(struct ieee80211_hw *dev, u16 queue,
++			   const struct ieee80211_tx_queue_params *params)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u8 cw_min, cw_max;
++
++	if (queue > 3)
++		return -EINVAL;
++
++	cw_min = fls(params->cw_min);
++	cw_max = fls(params->cw_max);
++
++	if (priv->is_rtl8187b) {
++		priv->aifsn[queue] = params->aifs;
++
++		/*
++		 * This is the structure of AC_*_PARAM registers in 8187B:
++		 * - TXOP limit field, bit offset = 16
++		 * - ECWmax, bit offset = 12
++		 * - ECWmin, bit offset = 8
++		 * - AIFS, bit offset = 0
++		 */
++		rtl818x_iowrite32(priv, rtl8187b_ac_addr[queue],
++				  (params->txop << 16) | (cw_max << 12) |
++				  (cw_min << 8) | (params->aifs *
++				  priv->slot_time + SIFS_TIME));
++	} else {
++		if (queue != 0)
++			return -EINVAL;
++
++		rtl818x_iowrite8(priv, &priv->map->CW_VAL,
++				 cw_min | (cw_max << 4));
++	}
++	return 0;
++}
++
+ static const struct ieee80211_ops rtl8187_ops = {
+ 	.tx			= rtl8187_tx,
+ 	.start			= rtl8187_start,
+@@ -1019,6 +1079,7 @@ static const struct ieee80211_ops rtl8187_ops = {
+ 	.config_interface	= rtl8187_config_interface,
+ 	.bss_info_changed	= rtl8187_bss_info_changed,
+ 	.configure_filter	= rtl8187_configure_filter,
++	.conf_tx		= rtl8187_conf_tx
+ };
+ 
+ static void rtl8187_eeprom_register_read(struct eeprom_93cx6 *eeprom)
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+index 69030be..4e75e8e 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+@@ -878,12 +878,6 @@ static void rtl8225z2_b_rf_init(struct ieee80211_hw *dev)
+ 	for (i = 0; i < ARRAY_SIZE(rtl8225z2_ofdm); i++)
+ 		rtl8225_write_phy_ofdm(dev, i, rtl8225z2_ofdm[i]);
+ 
+-	rtl818x_iowrite32(priv, (__le32 *)0xFFF0, (7 << 12) | (3 << 8) | 28);
+-	rtl818x_iowrite32(priv, (__le32 *)0xFFF4, (7 << 12) | (3 << 8) | 28);
+-	rtl818x_iowrite32(priv, (__le32 *)0xFFF8, (7 << 12) | (3 << 8) | 28);
+-	rtl818x_iowrite32(priv, (__le32 *)0xFFFC, (7 << 12) | (3 << 8) | 28);
+-	rtl818x_iowrite8(priv, &priv->map->ACM_CONTROL, 0);
+-
+ 	rtl8225_write_phy_ofdm(dev, 0x97, 0x46);
+ 	rtl8225_write_phy_ofdm(dev, 0xa4, 0xb6);
+ 	rtl8225_write_phy_ofdm(dev, 0x85, 0xfc);
+-- 
+1.6.0.2
 
