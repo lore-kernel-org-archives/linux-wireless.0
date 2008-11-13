@@ -1,136 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11617 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752597AbYKMGMZ convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38409 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598AbYKMBnK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 01:12:25 -0500
-From: "Xu, Martin" <martin.xu@intel.com>
-To: Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
-	Vikram Kandukuri <Vikram.Kandukuri@atheros.com>,
-	Jothikumar Mothilal <Jothikumar.Mothilal@atheros.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"Liu, Bing Wei" <bing.wei.liu@intel.com>,
-	"Selbak, Rolla N" <rolla.n.selbak@intel.com>,
-	"Wang, Yong Y" <yong.y.wang@intel.com>
-Date: Thu, 13 Nov 2008 14:12:17 +0800
-Subject: RE: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts
- per second at idle
-Message-ID: <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com> (sfid-20081113_071243_328645_0695E42B)
-References: <bug-11749-13098@http.bugzilla.kernel.org/>
- <20081013150525.884BC108058@picon.linux-foundation.org>
- <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
- <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com>
-In-Reply-To: <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 12 Nov 2008 20:43:10 -0500
+Subject: Re: [FYI] ar9170 driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1226537117.14186.44.camel@johannes.berg> (sfid-20081113_014611_302976_93001DBF)
+References: <1226531034.14186.39.camel@johannes.berg>
+	 (sfid-20081113_000444_962024_07ACD3CC)  <1226531788.14186.41.camel@johannes.berg>
+	 (sfid-20081113_001659_069366_BA2AA5E2)  <1226537117.14186.44.camel@johannes.berg>
+	 (sfid-20081113_014611_302976_93001DBF)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0o45f9KtGzeXFqzSSKiU"
+Date: Thu, 13 Nov 2008 02:42:39 +0100
+Message-Id: <1226540559.14186.56.camel@johannes.berg> (sfid-20081113_024315_327480_4AB1362F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all:
-I have a patch that can be used to fix the bug.
-The patch resolved the issue by disabling the beacon filter when disassociated with AP and enabling beacon when associate with AP.
-See http://bugzilla.kernel.org/show_bug.cgi?id=11749
-Please review it. Thanks!
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 34cd1a4..d774a6a 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -241,6 +241,10 @@ static int ath5k_get_tx_stats(struct ieee80211_hw *hw,
- static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
- static void ath5k_reset_tsf(struct ieee80211_hw *hw);
- static int ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb);
-+static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
-+                                struct ieee80211_vif *vif,
-+                                struct ieee80211_bss_conf *bss_conf,
-+                                u32 changes);
- 
- static struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
-@@ -257,6 +261,7 @@ static struct ieee80211_ops ath5k_hw_ops = {
- 	.get_tx_stats 	= ath5k_get_tx_stats,
- 	.get_tsf 	= ath5k_get_tsf,
- 	.reset_tsf 	= ath5k_reset_tsf,
-+	.bss_info_changed = ath5k_bss_info_changed, 
- };
- 
- /*
-@@ -2952,7 +2957,7 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
- 		sc->opmode != NL80211_IFTYPE_MESH_POINT &&
- 		test_bit(ATH_STAT_PROMISC, sc->status))
- 		rfilt |= AR5K_RX_FILTER_PROM;
--	if (sc->opmode == NL80211_IFTYPE_STATION ||
-+	if ( (sc->opmode == NL80211_IFTYPE_STATION && sc->assoc) ||
- 		sc->opmode == NL80211_IFTYPE_ADHOC ||
- 		sc->opmode == NL80211_IFTYPE_AP)
- 		rfilt |= AR5K_RX_FILTER_BEACON;
-@@ -3093,3 +3098,54 @@ ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb)
- 	return ret;
- }
- 
-+static void
-+enable_beacon_filter(struct ieee80211_hw *hw)
-+{
-+        struct ath5k_softc *sc = hw->priv;
-+        struct ath5k_hw *ah = sc->ah;
-+        u32 rfilt;
-+        rfilt = ath5k_hw_get_rx_filter(ah);
-+        if ( !(rfilt & AR5K_RX_FILTER_BEACON) ){
-+                rfilt |= AR5K_RX_FILTER_BEACON;
-+                ath5k_hw_set_rx_filter(ah,rfilt);
-+                sc->filter_flags = rfilt;
-+        }
-+        rfilt = ath5k_hw_get_rx_filter(ah);
-+        return;
-+}
-+
-+static void
-+disable_beacon_filter(struct ieee80211_hw *hw)
-+{
-+        struct ath5k_softc *sc = hw->priv;
-+        struct ath5k_hw *ah = sc->ah;
-+        u32 rfilt;
-+        rfilt = ath5k_hw_get_rx_filter(ah);
-+        if ( rfilt & AR5K_RX_FILTER_BEACON ){
-+                rfilt &= ~AR5K_RX_FILTER_BEACON;
-+                ath5k_hw_set_rx_filter(ah,rfilt);
-+                sc->filter_flags = rfilt;
-+        }
-+
-+        return;
-+}
-+
-+static void ath5k_bss_info_changed(struct ieee80211_hw *hw, 
-+                                struct ieee80211_vif *vif,
-+                                struct ieee80211_bss_conf *bss_conf,
-+                                u32 changes)
-+{
-+        struct ath5k_softc *sc = hw->priv;
-+        if (changes & BSS_CHANGED_ASSOC){
-+		mutex_lock(&sc->lock);
-+                sc->assoc = bss_conf->assoc;
-+                if ( sc->opmode == NL80211_IFTYPE_STATION && sc-> assoc){
-+                        enable_beacon_filter(hw);
-+                }
-+                if ( sc->opmode == NL80211_IFTYPE_STATION && !sc-> assoc ){
-+                        disable_beacon_filter(hw);
-+                }
-+		mutex_unlock(&sc->lock);
-+        }
-+        return;
-+}
-diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-index 06d1054..facc60d 100644
---- a/drivers/net/wireless/ath5k/base.h
-+++ b/drivers/net/wireless/ath5k/base.h
-@@ -179,6 +179,7 @@ struct ath5k_softc {
- 
- 	struct timer_list	calib_tim;	/* calibration timer */
- 	int 			power_level;	/* Requested tx power in dbm */
-+	bool			assoc;		/* assocate state */
- };
- 
- #define ath5k_hw_hasbssidmask(_ah) \
+--=-0o45f9KtGzeXFqzSSKiU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2008-11-13 at 01:45 +0100, Johannes Berg wrote:
+
+> Better URL is
+> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-ar9170.pat=
+ch
+
+In addition to that, you will want to apply this patch
+http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-fix=
+-tasklet.patch
+too because otherwise sometimes mac80211 will schedule a disabled
+tasklet with the expected dead loop consequence, and then later will
+even wait for it to finish... I'll submit this proper once I've figured
+out why it's happening.
+
+johannes
+
+--=-0o45f9KtGzeXFqzSSKiU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJG4YKAAoJEKVg1VMiehFYfloQAIVoO3GAsbySm0RjATfltXzt
+s1qEHUz2ksOM3KFkfiTmgeWtWFwFPRaMiDIYhV2UZbB1Pn1E1C1dj6H2XwkLOWdM
+EUvebFaqhowc1zgDmTMPJy/O7Hu8df/Mmx2Es/ieVrFXwRAM4jgBYTx3v4Ay7wX2
+TIiM8F+Dsg3IU6BeB9FSDZ+aMmTCq6nLNOsXUxQhGAa4nEJPzfOL03pEz9ZSbJDA
+uVgXCkyhB/I1QWMo5yKe1m2jEj1iNvgxolXLl1JZVMKGQvhtsATlKMkVY4pxLSZd
+2/56nIPUc5N81mbYS49Zqk1GDMivjcgF61swlc0se0VjJg918B1WOkoMAZPAFANQ
+8ZVG9fSv/Lw1rGQBIxC/I8lk6Ec8aNcGzFPG6987cLtQDQ+JwXtaD97OhFxWOwSC
+AUhWaB3Hj9ODHp8JtJ8iSO8LkSXAL/zRQceAOJOl/ZeJZTbUfAU5fHR6HF86O7j9
+GSmelL9Qbp7biUcnMSNcXB7SxDwuor+HID504+u3YxIbnrGpkKIcEg4ASYDWWZ54
+NYNgGfO1y6MWPeJO8OQrMGaKrmQPsho1L1pJ3Fh2dK1454r1SZWORxpem+bsbJGK
+edku55IjBV32oV/EJxVVRKI7mBSCudqVhcND1yRgEN4fnNr8AOeL50OaCbfwfHFk
+cpyV65ZL7wKNakr4ouBe
+=54p4
+-----END PGP SIGNATURE-----
+
+--=-0o45f9KtGzeXFqzSSKiU--
+
