@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3225 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108AbYKPFx5 (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.177]:64230 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734AbYKMCZs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Nov 2008 00:53:57 -0500
-Date: Sun, 16 Nov 2008 00:53:12 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Dan McGee <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Message-ID: <20081116055312.GA14126@hash.localnet> (sfid-20081116_065400_164426_554CEED4)
-References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com> <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com> <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com> <449c10960811151811s32fdd2b6p361d2ec9dd674fcc@mail.gmail.com> <449c10960811151838m3fcae118n65139be735c10665@mail.gmail.com> <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com>
+	Wed, 12 Nov 2008 21:25:48 -0500
+Received: by el-out-1112.google.com with SMTP id z25so400892ele.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 18:25:47 -0800 (PST)
+Message-ID: <43e72e890811121825o538fe026md422c560d4090882@mail.gmail.com> (sfid-20081113_032551_523329_FC06639C)
+Date: Wed, 12 Nov 2008 18:25:46 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [otus-devel] [FYI] ar9170 driver
+Cc: "otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890811121824h70cdaci9eefe4fd625aafc9@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <1226531034.14186.39.camel@johannes.berg>
+	 <1226531788.14186.41.camel@johannes.berg>
+	 <1226537117.14186.44.camel@johannes.berg>
+	 <1226540559.14186.56.camel@johannes.berg>
+	 <43e72e890811121824h70cdaci9eefe4fd625aafc9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 15, 2008 at 09:48:13PM -0800, Luis R. Rodriguez wrote:
-> Not sure why its 00000001, nor do I know if its poison. One thing I am
-> fairly positive about is that the reason why this was wrong all along
-> was because we were trying to get the device's ->driver structure to
-> get driver->name but the device won't get its ->driver pointer
-> assigned until *after* a successful probe. Lets review the PCI probe:
+On Wed, Nov 12, 2008 at 6:24 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Nov 12, 2008 at 5:42 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Thu, 2008-11-13 at 01:45 +0100, Johannes Berg wrote:
+>>
+>>> Better URL is
+>>> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-ar9170.patch
+>>
+>> In addition to that, you will want to apply this patch
+>> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-fix-tasklet.patch
+>> too because otherwise sometimes mac80211 will schedule a disabled
+>> tasklet with the expected dead loop consequence, and then later will
+>> even wait for it to finish... I'll submit this proper once I've figured
+>> out why it's happening.
+>
+> I get a 404 on the second patch.
 
-No, as I later corrected myself, that is pci_dev->driver, but what
-mac80211 is using is pci_dev->dev.driver.  Which actually happens to be
-set up fine.  (I verified this by inserting a printk into the ath5k
-driver and it all works fine.)
+This one works though:
 
-> Yeah don't bother, the issue on this e-mail was fixed, another issue
-> has come up though so that is separate.
-
-I think the second issue is just the first issue, but the fix papered
-over the first bug.
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+http://johannes.sipsolutions.net/patches/kernel/all/LATEST/007-mac80211-fix-tasklet.patch
