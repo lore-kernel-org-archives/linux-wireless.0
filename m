@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55967 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751006AbYKLVbL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 16:31:11 -0500
-Date: Wed, 12 Nov 2008 16:15:30 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	linux-wireless@vger.kernel.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: Re: [GIT PATCH] rfkill fixes for 2.6.28-rc3
-Message-ID: <20081112211530.GH2411@tuxdriver.com> (sfid-20081112_223116_784090_795A741F)
-References: <1225730537-2679-1-git-send-email-hmh@hmh.eng.br> <200811031747.16326.IvDoorn@gmail.com> <20081103170243.GB2417@khazad-dum.debian.net> <200811031820.41165.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200811031820.41165.IvDoorn@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:54330 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751968AbYKMVMA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 16:12:00 -0500
+Subject: Re: [madwifi-project] [RFC] Closing the project
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Michael Renzmann <mrenzmann@madwifi-project.org>,
+	madwifi-project@lists.madwifi-project.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <43e72e890811131254q35ff4f48xf58c7c26d5c9a5a4@mail.gmail.com>
+References: <2576.194.45.26.221.1226491274.squirrel@webmail.madwifi.org>
+	 <1226511194.9952.38.camel@dv>
+	 <43e72e890811121224w4fc53e1s29080a42111186e9@mail.gmail.com>
+	 <1226547092.11785.49.camel@dv>
+	 <43e72e890811131142p3f72c964t802d424b0ddb3456@mail.gmail.com>
+	 <1226609316.2904.18.camel@dv>
+	 <43e72e890811131254q35ff4f48xf58c7c26d5c9a5a4@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 13 Nov 2008 16:11:58 -0500
+Message-Id: <1226610718.2904.23.camel@dv> (sfid-20081113_221208_506553_0A368825)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 03, 2008 at 06:20:40PM +0100, Ivo van Doorn wrote:
-> On Monday 03 November 2008, Henrique de Moraes Holschuh wrote:
-> > On Mon, 03 Nov 2008, Ivo van Doorn wrote:
-> > > On Monday 03 November 2008, Henrique de Moraes Holschuh wrote:
-> > > > This small patchset contains two fixes to issues in the suspend/resume
-> > > > handling of the rfkill class core.
-> > > > 
-> > > > It needs to go to 2.6.28.  These patches are based on 2.6.28-rc3.
-> > > 
-> > > Are they real regressions or normal bugfixes?
-> > 
-> > I am not sure if they regress anything, but I am pretty sure there is no
-> > bugzilla entry about them yet.  I have added two more interested parties to
-> > the CC.
-> > 
-> > So, if there is a strong feeling this would best be held until the next
-> > merge window, I can certainly respin the patches to on top of
-> > wireless-testing...
+On Thu, 2008-11-13 at 12:54 -0800, Luis R. Rodriguez wrote:
+> On Thu, Nov 13, 2008 at 12:48 PM, Pavel Roskin <proski@gnu.org> wrote:
+> > It would be great to have a detailed analysis why MadWifi failed.
 > 
-> Well I'll give my ACK to the 2 patches, but I'll let john decide if they
-> are "regression" enough for 2.6.28. ;)
+> It didn't fail, it was just not the best approach to support Linux
+> from the start, that's why *today* its just silly to go on with it,
+> specially since the vendor involved is *contributing* and helping to
+> implement support the right way.
 
-So I keep looking at these patches, and I'm not sure about them.
-It seems that they restore the rfkill state after resume to what it
-was before the suspend.  What I am unsure about is whether or not
-that is the appropriate thing to do.  I suppose it makes sense under
-the rule of least surprise.
+OK, I mean MadWifi failed to deliver what it could have delivered.  It
+failed to improve the code significantly.  It failed to deal with the
+bugs that could have been fixed.  It failed to release the code that was
+written by the team members.  It failed to stabilize.
 
-I guess the safer alternative would be to always resume with rfkill
-enabled, but that is probably undesirable in the most common case.
-So, I have no objection to these patches.
+> >> Just my advice: let MadWifi die already, stop wasting your time.
+> >
+> > I understand what you mean, but I have to deal with MadWifi anyway.  As
+> > I said before, I'd rather share my fixes that keep them to myself.
+> 
+> Understood -- but perhaps you can identify what is lacking that you
+> need to better help push what is required and missing.
 
-Still, I don't see how they qualify for 2.6.28.  How serious do you
-think this potential problem really is?
+Specifically for me - just three letters.  DFS.
 
-John
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Regards,
+Pavel Roskin
