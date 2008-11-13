@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:46056 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbYKXLJI (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:48048 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751497AbYKMUiZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 06:09:08 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so785661eyi.37
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 03:09:06 -0800 (PST)
-Message-ID: <eb3ff54b0811240309u31944469xa444ee25f8ac8496@mail.gmail.com> (sfid-20081124_120914_364623_F391CDEA)
-Date: Mon, 24 Nov 2008 13:09:06 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] zd1211rw: enable an AP that can't support fully PS clients (wireless-testing).
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org, j@w1.fi,
-	"Daniel Drake" <dsd@gentoo.org>
-In-Reply-To: <1227522918.3599.63.camel@johannes.berg>
+	Thu, 13 Nov 2008 15:38:25 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so500456ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 12:38:24 -0800 (PST)
+Message-ID: <43e72e890811131238s1cda9f9dsadaa23fc36c3cd93@mail.gmail.com> (sfid-20081113_213830_235075_F5367873)
+Date: Thu, 13 Nov 2008 12:38:24 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: sclark46@earthlink.net
+Subject: Re: [madwifi-project] [RFC] Closing the project
+Cc: "Pavel Roskin" <proski@gnu.org>,
+	"Michael Renzmann" <mrenzmann@madwifi-project.org>,
+	madwifi-project@venema.h4ckr.net,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
+In-Reply-To: <491C8C48.3030602@earthlink.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <eb3ff54b0811232344t665fe6abp9ca2be85cfcbd855@mail.gmail.com>
-	 <1227522918.3599.63.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <2576.194.45.26.221.1226491274.squirrel@webmail.madwifi.org>
+	 <1226511194.9952.38.camel@dv>
+	 <43e72e890811121224w4fc53e1s29080a42111186e9@mail.gmail.com>
+	 <1226547092.11785.49.camel@dv>
+	 <43e72e890811131142p3f72c964t802d424b0ddb3456@mail.gmail.com>
+	 <491C8C48.3030602@earthlink.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-If you are talking about whether the zd1211 driver can buffer
-mcast/bcast frames in software, it seems to me that the answer is
-negative, since there is no call for ieee80211_get_buffered_bc() in
-the zd1211rw driver code and also there is no handling of
-IEEE80211_TX_CTL_SEND_AFTER_DTIM or
-IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING in the zd1211rw driver code.
-This what made me add the NL80211_ATTR_WIPHY_AP_PS_CHALLENGED
-attribute and prepare this patch.
+On Thu, Nov 13, 2008 at 12:21 PM, Stephen Clark <sclark46@earthlink.net> wrote:
+> Luis R. Rodriguez wrote:
 
-
-Regards,
-Rami Rosen
-
-
-
-On Mon, Nov 24, 2008 at 12:35 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-11-24 at 09:44 +0200, Rami Rosen wrote:
->> This patch enables master mode support in zd1211rw driver and enables
->> it to support the PS challenged mode when used in master mode.
->>
->> It adds this functionality in the zd1211rw driver by adding support to
->> master mode (NL80211_IFTYPE_AP) in zd_op_add_interface() and in
->> zd_mac_alloc_hw() methods
->> of drivers/net/wireless/zd_mac.c.
->>
->> In addition, the new boolean member of wiphy struct, ap_ps_challenged,
->> is initialized to true in zd_mac_alloc_hw().
+>> Just my advice: let MadWifi die already, stop wasting your time.
 >
-> This is all fine, but I'm starting to wonder why we're doing this at
-> all. Have we actually determined that zd1211 cannot buffer mcast/bcast
-> frames at all? Might it be worth asking around in Zydas/Atheros?
->
-> johannes
->
+> Yeah but ath5k doesn't work on my zyxel ar5212 based wireless card only
+> madwifi works!
+
+The discussion is about further pushing MadWifi vs keeping it in only
+maintenance mode. In your case the code would still exist until ath5k
+make it work appropriately.
+
+Also -- what kernel have you tried ath5k on that it does not work on?
+Have you tried compat-wireless? Keep in mind to use the latest you'll
+need at least 2.6.27 installed.
+
+  Luis
