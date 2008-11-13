@@ -1,34 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:33295 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758267AbYKVPcN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 10:32:13 -0500
-Message-ID: <492825F8.6020606@lwfinger.net> (sfid-20081122_163233_531230_40711FB3)
-Date: Sat, 22 Nov 2008 09:32:08 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Yuval Hager <yuval@avramzon.net>, bcm43xx-dev@lists.berlios.de,
-	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Peter Stuge <peter@stuge.se>
-Subject: Re: BCM4312 Fails when xdm is started
-References: <200811151801.02369.yuval@avramzon.net> <4926FDB3.2030701@lwfinger.net> <200811220839.32674.yuval@avramzon.net> <200811221613.00303.mb@bu3sch.de>
-In-Reply-To: <200811221613.00303.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from mga09.intel.com ([134.134.136.24]:15365 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752208AbYKMAVi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2008 19:21:38 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH RFC 1/1] mac80211: disassociate prior to unlinking AP/sta
+Date: Thu, 13 Nov 2008 02:21:33 +0200
+Message-Id: <1226535693-22979-1-git-send-email-tomas.winkler@intel.com> (sfid-20081113_012142_693115_1F416268)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
+This patch reorders calls during disassociation in
+ieee80211_set_disassoc func.
+Since sta_info_unlink calls sta_notify(REMOVE) it will
+remove the AP from the driver before it has disassociated from
+it (bss_info_changed).
 
-> Somebody disabled MMIO and busmastering.
-> And somebody cleared the CACHE_LINE_SIZE register.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/mlme.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
 
-Are these all the read/write bits in the configuration area? Should I conclude
-that someone zeroed this area?
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 60ef983..ae831ab 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -857,16 +857,26 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	if (self_disconnected)
+ 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
+ 
+-	sta_info_unlink(&sta);
+-
+ 	rcu_read_unlock();
+ 
+-	sta_info_destroy(sta);
+-
+ 	local->hw.conf.ht.enabled = false;
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_HT);
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
++
++	rcu_read_lock();
++
++	sta = sta_info_get(local, ifsta->bssid);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
++	}
++
++	sta_info_unlink(&sta);
++
++	rcu_read_unlock();
++
++	sta_info_destroy(sta);
+ }
+ 
+ static int ieee80211_sta_wep_configured(struct ieee80211_sub_if_data *sdata)
+-- 
+1.5.4.3
 
-In case the kernel memory diagnostics don't help, is there any way to trap
-writes to the configuration registers?
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Larry
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
