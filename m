@@ -1,94 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42280 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212AbYKGUbR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42732 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751546AbYKMLxt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 15:31:17 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>, stable@kernel.org
-Subject: [PATCH] mac80211: avoid possible buffer overrun in sta_agg_status_write
-Date: Fri,  7 Nov 2008 15:26:59 -0500
-Message-Id: <1226089619-726-1-git-send-email-linville@tuxdriver.com> (sfid-20081107_213122_183832_EE35D3B4)
-In-Reply-To: <>
-References: <>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Thu, 13 Nov 2008 06:53:49 -0500
+Subject: Re: Master mode in iw
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mark Ryden <markryde@gmail.com>
+Cc: Kalle Valo <kalle.valo@nokia.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com> (sfid-20081113_124903_288051_86EB6C8C)
+References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com>
+	 <87ej1f6ggq.fsf@nokia.com>
+	 <dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com>
+	 (sfid-20081113_124903_288051_86EB6C8C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QI6pIj3xQQn/wYxg5MN0"
+Date: Thu, 13 Nov 2008 12:53:13 +0100
+Message-Id: <1226577194.5105.6.camel@johannes.berg> (sfid-20081113_125354_458690_B135F522)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This addresses the bug report here:
 
-	http://bugzilla.kernel.org/show_bug.cgi?id=3D11975
+--=-QI6pIj3xQQn/wYxg5MN0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Reported-by: Daniel Marjam=C3=A4ki <danielm77@spray.se>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: stable@kernel.org
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/debugfs_sta.c |    9 ++-------
- 1 files changed, 2 insertions(+), 7 deletions(-)
+On Thu, 2008-11-13 at 13:49 +0200, Mark Ryden wrote:
+> Hello,
+> Thanks for you quick response.
+> I know that I can set master mode with hostapd.
+>=20
+> My question is - is there something inherent which
+> prevents implementing it with "iw"?
+> When comparing to the old set of tools, which includes
+> iwconifg,
+> "iwconfig wlan0 mode Master" works on some interfaces.
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 189d0ba..2e6752a 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -184,7 +184,6 @@ static ssize_t sta_agg_status_write(struct file *fi=
-le,
- 	char buf[32];
- 	int buf_size, rs;
- 	unsigned int tid_num;
--	char state[4];
-=20
- 	memset(buf, 0x00, sizeof(buf));
- 	buf_size =3D min(count, (sizeof(buf)-1));
-@@ -199,35 +198,31 @@ static ssize_t sta_agg_status_write(struct file *=
-file,
- 		/* toggle Rx aggregation command */
- 		tid_num =3D tid_num - 100;
- 		if (tid_static_rx[tid_num] =3D=3D 1) {
--			strcpy(state, "off ");
- 			ieee80211_sta_stop_rx_ba_session(sta->sdata, da, tid_num, 0,
- 					WLAN_REASON_QSTA_REQUIRE_SETUP);
- 			sta->ampdu_mlme.tid_state_rx[tid_num] |=3D
- 					HT_AGG_STATE_DEBUGFS_CTL;
- 			tid_static_rx[tid_num] =3D 0;
- 		} else {
--			strcpy(state, "on ");
- 			sta->ampdu_mlme.tid_state_rx[tid_num] &=3D
- 					~HT_AGG_STATE_DEBUGFS_CTL;
- 			tid_static_rx[tid_num] =3D 1;
- 		}
- 		printk(KERN_DEBUG "debugfs - try switching tid %u %s\n",
--				tid_num, state);
-+				tid_num, tid_static_rx[tid_num] ? "on" : "off");
- 	} else if ((tid_num >=3D 0) && (tid_num <=3D 15)) {
- 		/* toggle Tx aggregation command */
- 		if (tid_static_tx[tid_num] =3D=3D 0) {
--			strcpy(state, "on ");
- 			rs =3D  ieee80211_start_tx_ba_session(hw, da, tid_num);
- 			if (rs =3D=3D 0)
- 				tid_static_tx[tid_num] =3D 1;
- 		} else {
--			strcpy(state, "off");
- 			rs =3D  ieee80211_stop_tx_ba_session(hw, da, tid_num, 1);
- 			if (rs =3D=3D 0)
- 				tid_static_tx[tid_num] =3D 0;
- 		}
- 		printk(KERN_DEBUG "debugfs - switching tid %u %s, return=3D%d\n",
--				tid_num, state, rs);
-+				tid_num, tid_static_tx[tid_num] ? "on" : "off", rs);
- 	}
-=20
- 	return count;
---=20
-1.5.4.3
+Yes, the interface will do _nothing_ if you don't use hostapd.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-QI6pIj3xQQn/wYxg5MN0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJHBUmAAoJEKVg1VMiehFYdUEP/i5vy3n+YmpjmOBbsaJOIueq
+GS0tUtYoCouGl0SDzqXhCS9w4KL22z6XiQf/CX49GXFEd5aUXQYFyUfQB5Ukcfx+
++5c56Rj0ln4euAiMqdVWCsncvABXoehro//yg8amEtuUKckRNqlElCJ+wfhr4sme
+K/AG3rRra79drmi2KjQwzG/s8UIg+NVskbqsfnOw2ftl8ZZyUvFozNFo7dcAO7Yq
+yKid/j2CRhCo4GNEUGkOu8guitWffxg33z+rtJCY7BVFbDqrJGqU/3D+yXjpXKz9
+3zaxGr28mEhybIjmyZSEOmczF/YCvRVgXXT13liZdFfIo+M1rpmPQlwNxwpUYqdq
+WL73Uw1QWx4MvFj5ZYN8vTINe/mkI9BjiH9sh9j6X03HWtk2K33d4Eqwl456qW7+
+tDN9a0yAjvXtmH2UiBGmaopppOe7X8te/PNyV1zcyWQXqJpp22rCWJCKsOXDKdyR
+XxdDXV39FEPYKnm3zDzp1GUc8jlGu6mXMQI0f3RWQgqH2hOTezjR13W7/XBURYb7
+VNfORUO+omaikKYsc1zizLjTZG/F3JhbAY1rxT+dHDFpX7vfDf1F6spSslkoN1zD
+F0v5QxUKcTwrmoeq3auzBKgq+gOM5CI1r47h/8KoCTyeGSxwOlGS13c4huGKJB8K
+LVNRY6s6LglU3tZVjfio
+=0g56
+-----END PGP SIGNATURE-----
+
+--=-QI6pIj3xQQn/wYxg5MN0--
+
