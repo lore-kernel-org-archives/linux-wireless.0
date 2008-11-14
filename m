@@ -1,239 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41780 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752322AbYKZWcP (ORCPT
+Received: from mail-gx0-f11.google.com ([209.85.217.11]:61057 "EHLO
+	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349AbYKNUlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 17:32:15 -0500
-Subject: [PATCH v4] cfg80211: handle SIOCGIWMODE/SIOCSIWMODE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1227736054.14269.4.camel@johannes.berg> (sfid-20081126_224813_585370_776CC57B)
-References: <1227735421.14269.2.camel@johannes.berg>
-	 (sfid-20081126_223837_375323_61A2AED2)  <1227736054.14269.4.camel@johannes.berg>
-	 (sfid-20081126_224813_585370_776CC57B)
-Content-Type: text/plain
-Date: Wed, 26 Nov 2008 23:31:40 +0100
-Message-Id: <1227738701.14269.12.camel@johannes.berg> (sfid-20081126_233228_519046_7FE409AD)
-Mime-Version: 1.0
+	Fri, 14 Nov 2008 15:41:07 -0500
+Received: by gxk4 with SMTP id 4so836002gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 12:41:05 -0800 (PST)
+Message-ID: <43e72e890811141241k7ae83fc3qe90e2e42d61b8df6@mail.gmail.com> (sfid-20081114_214111_162938_D677F72D)
+Date: Fri, 14 Nov 2008 12:41:05 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: "Dan McGee" <dpmcgee@gmail.com>, Sujith <m.sujith@gmail.com>,
+	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
+	 <43e72e890811140937h4dc03cf8g50df7f74efcd28b2@mail.gmail.com>
+	 <b6c5339f0811140949m462e3eecx49f114f729b33e7c@mail.gmail.com>
+	 <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
+	 <18717.49111.572993.44410@localhost.localdomain>
+	 <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com>
+	 <18717.50308.330801.765686@localhost.localdomain>
+	 <43e72e890811141037j5328f71fx7badb6f2b0e0831d@mail.gmail.com>
+	 <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com>
+	 <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Subject: cfg80211: handle SIOCGIWMODE/SIOCSIWMODE
+On Fri, Nov 14, 2008 at 12:33 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Fri, Nov 14, 2008 at 2:33 PM, Dan McGee <dpmcgee@gmail.com> wrote:
+>> On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>> On Fri, Nov 14, 2008 at 10:33 AM, Sujith <m.sujith@gmail.com> wrote:
+>>>> Luis R. Rodriguez wrote:
+>>>>> > From the original log:
+>>>>> > ath5k_pci 0000:01:00.0: registered as ''
+>>>>>
+>>>>> That comes from
+>>>>>
+>>>>> dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
+>>>>>
+>>>>> which means that may be buggy too as wiphy_name() gets
+>>>>>
+>>>>> return wiphy->dev.bus_id;
+>>>>>
+>>>>> and we only have set at that point wiphy->dev.parent IIRC.
+>>>>>
+>>>>
+>>>> Nope, parent is set after that call in SET_IEEE80211_DEV()
+>>>> phy[x] gets assigned in alloc_hw().
+>>>>
+>>>> So why is it NULL even if alloc_hw() succeeds ?
+>>>
+>>> Parent is wiphy->dev.parent not wiphy->dev though
+>
+> Sujith is right, wiphy->dev.bus_id should be set by the time that's printed,
+> since wiphy_new in alloc_hw fills it in.
 
-further reducing wext code in mac80211.
+Ah, I see, yes, oh man. Well this is good :)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v4: d'oh
+> Curiouser and curiouser.  I look
+> forward to this being an obvious and embarrassing bug :)
 
- include/net/cfg80211.h     |    4 ++
- net/mac80211/iface.c       |    4 ++
- net/mac80211/wext.c        |   76 +------------------------------------------
- net/wireless/wext-compat.c |   79 +++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 89 insertions(+), 74 deletions(-)
+I sure hope so.
 
---- everything.orig/include/net/cfg80211.h	2008-11-26 22:41:09.000000000 +0100
-+++ everything/include/net/cfg80211.h	2008-11-26 23:30:43.000000000 +0100
-@@ -521,5 +521,9 @@ struct cfg80211_ops {
- int cfg80211_wext_giwname(struct net_device *dev,
- 			  struct iw_request_info *info,
- 			  char *name, char *extra);
-+int cfg80211_wext_siwmode(struct net_device *dev, struct iw_request_info *info,
-+			  u32 *mode, char *extra);
-+int cfg80211_wext_giwmode(struct net_device *dev, struct iw_request_info *info,
-+			  u32 *mode, char *extra);
- 
- #endif /* __NET_CFG80211_H */
---- everything.orig/net/mac80211/wext.c	2008-11-26 22:41:09.000000000 +0100
-+++ everything/net/mac80211/wext.c	2008-11-26 23:30:44.000000000 +0100
-@@ -224,78 +224,6 @@ static int ieee80211_ioctl_giwrange(stru
- }
- 
- 
--static int ieee80211_ioctl_siwmode(struct net_device *dev,
--				   struct iw_request_info *info,
--				   __u32 *mode, char *extra)
--{
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct ieee80211_local *local = sdata->local;
--	int type;
--
--	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		return -EOPNOTSUPP;
--
--	switch (*mode) {
--	case IW_MODE_INFRA:
--		type = NL80211_IFTYPE_STATION;
--		break;
--	case IW_MODE_ADHOC:
--		/* Setting ad-hoc mode on non ibss channel is not
--		 * supported.
--		 */
--		if (local->oper_channel &&
--		    (local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS))
--			return -EOPNOTSUPP;
--
--		type = NL80211_IFTYPE_ADHOC;
--		break;
--	case IW_MODE_REPEAT:
--		type = NL80211_IFTYPE_WDS;
--		break;
--	case IW_MODE_MONITOR:
--		type = NL80211_IFTYPE_MONITOR;
--		break;
--	default:
--		return -EINVAL;
--	}
--
--	return ieee80211_if_change_type(sdata, type);
--}
--
--
--static int ieee80211_ioctl_giwmode(struct net_device *dev,
--				   struct iw_request_info *info,
--				   __u32 *mode, char *extra)
--{
--	struct ieee80211_sub_if_data *sdata;
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_AP:
--		*mode = IW_MODE_MASTER;
--		break;
--	case NL80211_IFTYPE_STATION:
--		*mode = IW_MODE_INFRA;
--		break;
--	case NL80211_IFTYPE_ADHOC:
--		*mode = IW_MODE_ADHOC;
--		break;
--	case NL80211_IFTYPE_MONITOR:
--		*mode = IW_MODE_MONITOR;
--		break;
--	case NL80211_IFTYPE_WDS:
--		*mode = IW_MODE_REPEAT;
--		break;
--	case NL80211_IFTYPE_AP_VLAN:
--		*mode = IW_MODE_SECOND;		/* FIXME */
--		break;
--	default:
--		*mode = IW_MODE_AUTO;
--		break;
--	}
--	return 0;
--}
--
- static int ieee80211_ioctl_siwfreq(struct net_device *dev,
- 				   struct iw_request_info *info,
- 				   struct iw_freq *freq, char *extra)
-@@ -1109,8 +1037,8 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* SIOCGIWNWID */
- 	(iw_handler) ieee80211_ioctl_siwfreq,		/* SIOCSIWFREQ */
- 	(iw_handler) ieee80211_ioctl_giwfreq,		/* SIOCGIWFREQ */
--	(iw_handler) ieee80211_ioctl_siwmode,		/* SIOCSIWMODE */
--	(iw_handler) ieee80211_ioctl_giwmode,		/* SIOCGIWMODE */
-+	(iw_handler) cfg80211_wext_siwmode,		/* SIOCSIWMODE */
-+	(iw_handler) cfg80211_wext_giwmode,		/* SIOCGIWMODE */
- 	(iw_handler) NULL,				/* SIOCSIWSENS */
- 	(iw_handler) NULL,				/* SIOCGIWSENS */
- 	(iw_handler) NULL /* not used */,		/* SIOCSIWRANGE */
---- everything.orig/net/wireless/wext-compat.c	2008-11-26 22:41:09.000000000 +0100
-+++ everything/net/wireless/wext-compat.c	2008-11-26 22:43:29.000000000 +0100
-@@ -58,3 +58,82 @@ int cfg80211_wext_giwname(struct net_dev
- 	return 0;
- }
- EXPORT_SYMBOL(cfg80211_wext_giwname);
-+
-+int cfg80211_wext_siwmode(struct net_device *dev, struct iw_request_info *info,
-+			  u32 *mode, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev;
-+	struct vif_params vifparams;
-+	enum nl80211_iftype type;
-+
-+	if (!wdev)
-+		return -EOPNOTSUPP;
-+
-+	rdev = wiphy_to_dev(wdev->wiphy);
-+
-+	if (!rdev->ops->change_virtual_intf)
-+		return -EOPNOTSUPP;
-+
-+	/* don't support changing VLANs, you just re-create them */
-+	if (wdev->iftype == NL80211_IFTYPE_AP_VLAN)
-+		return -EOPNOTSUPP;
-+
-+	switch (*mode) {
-+	case IW_MODE_INFRA:
-+		type = NL80211_IFTYPE_STATION;
-+		break;
-+	case IW_MODE_ADHOC:
-+		type = NL80211_IFTYPE_ADHOC;
-+		break;
-+	case IW_MODE_REPEAT:
-+		type = NL80211_IFTYPE_WDS;
-+		break;
-+	case IW_MODE_MONITOR:
-+		type = NL80211_IFTYPE_MONITOR;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	memset(&vifparams, 0, sizeof(vifparams));
-+
-+	return rdev->ops->change_virtual_intf(wdev->wiphy, dev->ifindex, type,
-+					      NULL, &vifparams);
-+}
-+EXPORT_SYMBOL(cfg80211_wext_siwmode);
-+
-+int cfg80211_wext_giwmode(struct net_device *dev, struct iw_request_info *info,
-+			  u32 *mode, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	if (!wdev)
-+		return -EOPNOTSUPP;
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_AP:
-+		*mode = IW_MODE_MASTER;
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		*mode = IW_MODE_INFRA;
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		*mode = IW_MODE_ADHOC;
-+		break;
-+	case NL80211_IFTYPE_MONITOR:
-+		*mode = IW_MODE_MONITOR;
-+		break;
-+	case NL80211_IFTYPE_WDS:
-+		*mode = IW_MODE_REPEAT;
-+		break;
-+	case NL80211_IFTYPE_AP_VLAN:
-+		*mode = IW_MODE_SECOND;		/* FIXME */
-+		break;
-+	default:
-+		*mode = IW_MODE_AUTO;
-+		break;
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL(cfg80211_wext_giwmode);
---- everything.orig/net/mac80211/iface.c	2008-11-26 22:44:38.000000000 +0100
-+++ everything/net/mac80211/iface.c	2008-11-26 23:30:53.000000000 +0100
-@@ -694,6 +694,10 @@ int ieee80211_if_change_type(struct ieee
- 	if (type == sdata->vif.type)
- 		return 0;
- 
-+	/* Setting ad-hoc mode on non-IBSS channel is not supported. */
-+	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS)
-+		return -EOPNOTSUPP;
-+
- 	/*
- 	 * We could, here, on changes between IBSS/STA/MESH modes,
- 	 * invoke an MLME function instead that disassociates etc.
+>> So I'm at work for another 4 or 5 hours, but I should have a chance to
+>> hack at anything tonight you guys want me to. Let me know if the
+>> earlier suggestions in this thread still apply.
+>
+> I think the printks will still be useful, if only to verify we're on
+> the right track.  Which compat-wireless version are you using?
+>
+> BTW from kerneloops, several people are having this with other drivers than
+> ath5k.
 
+Yeah I ran into it with iwlagn a few days ago but never found the root
+cause, it was sporadic.
 
+  Luis
