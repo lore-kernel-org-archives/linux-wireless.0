@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:50877 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751396AbYKJVgg (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:46978 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752313AbYKNOlt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 16:36:36 -0500
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: "Hin-Tak Leung" <hintak_leung@yahoo.co.uk>
-Subject: Re: throughput problem Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
-Date: Mon, 10 Nov 2008 19:36:49 -0200
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-References: <349181.30158.qm@web23105.mail.ird.yahoo.com>
-In-Reply-To: <349181.30158.qm@web23105.mail.ird.yahoo.com>
+	Fri, 14 Nov 2008 09:41:49 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: Master mode in iw
+Date: Fri, 14 Nov 2008 15:41:19 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Kalle Valo" <kalle.valo@nokia.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Mark Ryden" <markryde@gmail.com>, linux-wireless@vger.kernel.org
+References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com> <20081114141912.GB3443@tuxdriver.com> <69e28c910811140635v2c967406p439779c82866f455@mail.gmail.com>
+In-Reply-To: <69e28c910811140635v2c967406p439779c82866f455@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200811101936.49887.herton@mandriva.com.br> (sfid-20081110_223640_995190_DF19F00A)
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200811141541.19964.mb@bu3sch.de> (sfid-20081114_154154_227030_BB7F1AD1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 09 November 2008 04:01:03 Hin-Tak Leung wrote:
-> Without any additional modification, just compat-wireless and
-> wireles-testing v2.6.28-rc3-4651-gb53846d has a preculiar problem - the
-> rate is stuck at 54Mb (known issue to be addressed by Herton's feedback
-> patch) as shown by iwconfig, but sftp doesn't transfer file much higher
-> than 30-40kB/s. blowing away /lib/module/`uname -r`/updates (i.e. reverting
-> to the as shipped 2.6.27.5 rtl8187 & mac80211 ) gives easily over 10 times
-> that speed. anybody seen this problem (with rtl8187 or other mac80211
-> driver with wireless testing)?
+On Friday 14 November 2008 15:35:48 Stefanik G=E1bor wrote:
+> But is cfg80211 supposed to be used for completely-fullmac cards that
+> do AP in hardware?
 
-Here I don't get such low transfer rate, may be a regression in 
-wireless-testing? Try a bisect to see, besides that I don't have other ideas 
-what could be. BTW, do you checked wireless-testing, so can I add your 
-tested-by then to the "feedback transmitted packets..."  patch? I plan to 
-submit the final patch to inclusion in wireless-testing soon.
+it's supposed to be a replacement for wext.
 
+--=20
+Greetings Michael.
 --
-[]'s
-Herton
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
