@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:34886 "EHLO hostap.isc.org"
+Received: from blaine.gmane.org ([80.91.229.8]:38248 "EHLO hugh.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751603AbYKAPUb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 11:20:31 -0400
-Date: Sat, 1 Nov 2008 17:19:38 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Michael MIC failures in AP mode?
-Message-ID: <20081101151938.GA4857@jm.kir.nu> (sfid-20081101_162043_951195_6B30AF69)
-References: <87wsfnldq9.fsf@nokia.com>
+	id S1751416AbYKNNbj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 08:31:39 -0500
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1L0ylk-0004zs-GE
+	for linux-wireless@vger.kernel.org; Fri, 14 Nov 2008 14:31:28 +0100
+Date: Fri, 14 Nov 2008 08:26:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
+Cc: Johannes Berg
+	<public-johannes-cdvu00un1VgdHxzADdlk8Q@hugh.gmane.org>,
+	"otus-devel-qhrM8SXbD5K0lq1k9DReS6gKWPgB4RSr2LY78lusg7I@public.gmane.org"
+	<public-otus-devel-qhrM8SXbD5K0lq1k9DReS6gKWPgB4RSr2LY78lusg7I@hugh.gmane.org>,
+	linux-wireless
+	<public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	Greg KH <greg@kroah.com>
+Subject: Re: [FYI] ar9170 driver
+Message-ID: <20081114132645.GA3443@tuxdriver.com> (sfid-20081114_143143_375015_38B15BD9)
+References: <1226531034.14186.39.camel@johannes.berg> <491D380D.7050707@teltonika.lt>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87wsfnldq9.fsf@nokia.com>
+In-Reply-To: <491D380D.7050707@teltonika.lt>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 01, 2008 at 04:31:26PM +0200, Kalle Valo wrote:
 
-> Now that AP mode works in mac80211 I want to use it to test Michael
-> MIC failures in a wlan driver. Any recommendations, or tips, how to
-> easily create them with mac80211 and hostapd?
 
-There used to be test code for this in mac80211 that allowed testing of
-more or less all TKIP error cases (MIC error on TX/RX, ICV error on
-TX/RX, replay), but it looks like that has been mostly "cleaned up" be
-removal.. You might be able to find it from some old version..
+On Fri, Nov 14, 2008 at 10:34:21AM +0200, Paulius Zaleckas wrote:
+> 
+> 
+> Johannes Berg wrote:
+> > This patch adds the ar9170 driver for Atheros 802.11n
+> > USB hardware ("otus").
+> > 
+> > NOTES/TODO
+> >  * locks up RX part of the device after a while and the device
+> >    starts messing with the USB bus
+> >    (message will be "complete rx %p (0b, -75)")
+> >  * need to implement RF, TX power calibration based on EEPROM
+> >    values (maybe causing the RX hangs? doubt it)
+> >  * already needs some code cleanups
+> >  * use rate hw_value instead of huge switch statement
+> >  * implement configure_filter
+> >  * implement bss_config call
+> >  * implement beaconing
+> >  * implement hardware crypto
+> >  * implement AP mode
+> >  * implement mesh mode
+> 
+> If this driver is not going in through wireless or any other tree, because it
+> still needs some work, maybe it is worth to get it to staging tree maintained
+> by Greg?
 
-Anyway, if you just want to test Michael MIC error processing on a
-client, force mac80211 to do software encryption and modify
-ieee80211_tx_h_michael_mic_add() in net/mac80211/wpa.c to insert an
-incorrect MIC (e.g., add mic[0]++; after the michael_mic() call). You
-will probably need a trigger mechanisms (say debugfs write) to enable
-this for a single TX frame in order to allow proper client testing.
+I really don't think that is necessary.  I don't forsee any problem w/
+Johannes getting his driver merged.
 
-Once I have some time, I could take a look at recovering the old design
-with a debugfs interface (it used to use private ioctl). It is useful to
-be able to test this type of things during development/system
-validation.
-
+John
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
+
