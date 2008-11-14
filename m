@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41377 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752576AbYKHEvq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 23:51:46 -0500
-Message-ID: <491528F5.3070408@holtmann.org> (sfid-20081108_055208_018859_7EF8DA39)
-Date: Sat, 08 Nov 2008 06:51:49 +0100
-From: Marcel Holtmann <marcel@holtmann.org>
+Received: from kroah.org ([198.145.64.141]:44761 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751747AbYKNRoX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 12:44:23 -0500
+Date: Fri, 14 Nov 2008 09:30:09 -0800
+From: Greg KH <greg@kroah.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>,
+	"otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [FYI] ar9170 driver
+Message-ID: <20081114173009.GB22980@kroah.com> (sfid-20081114_184426_809556_BC2204A1)
+References: <1226531034.14186.39.camel@johannes.berg> <491D380D.7050707@teltonika.lt> <1226660018.4120.1.camel@johannes.berg>
 MIME-Version: 1.0
-To: Reinette Chatre <reinette.chatre@intel.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Halperin, Daniel C" <daniel.c.halperin@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 05/13] iwlwifi: update iwl-commands.h for 3 stream support
-References: <> <1226080726-24860-1-git-send-email-reinette.chatre@intel.com> <1226080726-24860-2-git-send-email-reinette.chatre@intel.com> <1226080726-24860-3-git-send-email-reinette.chatre@intel.com> <1226080726-24860-4-git-send-email-reinette.chatre@intel.com> <1226080726-24860-5-git-send-email-reinette.chatre@intel.com> <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1226660018.4120.1.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Reinette,
-
-> From: Halperin, Daniel C <daniel.c.halperin@intel.com>
+On Fri, Nov 14, 2008 at 11:53:38AM +0100, Johannes Berg wrote:
+> On Fri, 2008-11-14 at 10:34 +0200, Paulius Zaleckas wrote:
 > 
-> This patch updates comments and constants to support 1, 2, or 3 spatial streams
-> in rate_n_flags .
+> > If this driver is not going in through wireless or any other tree, because it
+> > still needs some work, maybe it is worth to get it to staging tree maintained
+> > by Greg?
 > 
-> Signed-off-by: Daniel Halperin <daniel.c.halperin@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> No way. It _will_ go through the wireless tree, trust me, it's just not
+> ready yet. Meanwhile, Greg has the mess of a vendor driver.
 
-so this has been mentioned before, but lets do it again. Since you are 
-the person who sends the patches upstream, your Signed-off-by line has 
-to be the last one. If you ever touched the patch, looked at it or not 
-makes no difference here. The line is just there to track the steps it 
-made into mainline.
+I agree, Johannes is doing the right thing here, it doesn't need to be
+in the staging tree at all.
 
-The original or main author is of course the first Signed-off-by line.
+thanks,
 
-So with patch I assume that Daniel send the patch to Tomas and then 
-Tomas queued them up and send a bunch of patches to you. If Tomas just 
-reviewed the patch, I like really to see the proper Acked-by lines in 
-between in the future.
-
-Also there is no problem if we start adding Tested-by from the people 
-that actually run validation tests of the patches.
-
-Regards
-
-Marcel
-
+greg k-h
