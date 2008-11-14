@@ -1,74 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50643 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752883AbYKHLKT (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:40180 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198AbYKNSl7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2008 06:10:19 -0500
-Subject: Re: iwconfig power timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <87prl6wk73.fsf@nokia.com>
-References: <87tzaiwn3z.fsf@nokia.com>
-	 <1226140536.3610.2.camel@johannes.berg>  <87prl6wk73.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bUKNvcUNu9Z5O546kpkV"
-Date: Sat, 08 Nov 2008 12:10:20 +0100
-Message-Id: <1226142620.3610.6.camel@johannes.berg> (sfid-20081108_121023_792431_16B2129E)
-Mime-Version: 1.0
+	Fri, 14 Nov 2008 13:41:59 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] p54: protect against sudden firmware file changes
+Date: Fri, 14 Nov 2008 19:41:56 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200811141941.56752.chunkeey@web.de> (sfid-20081114_194201_685940_C3159ACC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Thanks to "p54: introduce new names for device firmwares"
+(325ca16910a380c...) people are now migrating away from the buggy firmwares. 
+Of course this is a very good idea, but no one told them to unload the driver first.
 
---=-bUKNvcUNu9Z5O546kpkV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, 2008-11-08 at 13:06 +0200, Kalle Valo wrote:
-
-> I don't think so. If mac80211 responds with -EINVAL the error would be
-> something like this:
->=20
-> $ iwconfig wlan0 power 5m
-> Error for wireless request "Set Power Management" (8B2C) :
->     SET failed on device wlan0 ; Operation not permitted.
-
-That looks like -EPERM. But then iwconfig always had messed up error
-handling.
-
-> So the error seems to happen happen during argument parsing. Oh yeah,
-> and I even had a printk in mac80211 and it wasn't printed.=20
-
-Ok I'm convinced then :)
-
-> I'm going
-> to investigate this with gdb and try to understand how iwconfig really
-> parses the arguments.
-
-Well there is source code too ;)
-
-johannes
-
---=-bUKNvcUNu9Z5O546kpkV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJFXOZAAoJEKVg1VMiehFYykgP/iEms4bs8uVlXIU5QP4EJF7a
-uMGQYtqBPGr3c2hzzeOE7LLIxlckqTvJseHQKKCC5hn3zrfvmdR8ObdT10M6txDI
-CjSGejCH6RPSZ9FAk4z7JNBVZIzxlXRPQS6gHeTwFUY5XK/oADkBaHIJulTj8EOL
-NngN47ferixSX3MtrlHGTFnpU5vYsr/ZZS4WDo0gtCqczSiNFtelRU+5GWySvg/p
-/CauLkzZjVG8RgAZrPtwV/53LyovkfiEWEfJcRgBb0vAt9unMnLeYJm7kgjb6at2
-pkwLc+wbL9XIAK63tEBXl/aK1Zyjph9GTdB7ZhlGR2NVnhbZCBPIlrz++XNqumQi
-QU68WBLsHg3xIG1ncZOcK1S5k7h7ge/cWBu7AIl3zyd5/Oq5dV/cCJbd23yYDIQS
-4JR5TgxUylNh5qo3eF2qEOve9NJAaMg+PNZCHSkvfR03TIPrev9KqPHwFMk/+Oni
-acNBTncz3LKUExZ50o81T0sfysL/3N5dMLT2H8nkADN3rWs3myaZW5ZMmxdmePe3
-yzoOcX8r2Q/UHpnIGsJwxLiL3BpBKdVAMh2NMO52PG/SW50ngUqv4zkECy9vroRx
-SCuoTw6s7vyNoyHVdzOrEJ+ipzIQcHR9Sx30/4vRcmqiKySk4zLFA7Niyyr7/p9L
-yE4155RJXm+KioYVhv5W
-=YpUA
------END PGP SIGNATURE-----
-
---=-bUKNvcUNu9Z5O546kpkV--
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-11-14 18:08:22.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2008-11-14 18:12:15.000000000 +0100
+@@ -19,6 +19,7 @@
+ #include <linux/init.h>
+ #include <linux/firmware.h>
+ #include <linux/etherdevice.h>
++#include <linux/crc32.h>
+ 
+ #include <net/mac80211.h>
+ 
+@@ -132,12 +133,22 @@ int p54_parse_firmware(struct ieee80211_
+ 	struct bootrec *bootrec;
+ 	u32 *data = (u32 *)fw->data;
+ 	u32 *end_data = (u32 *)fw->data + (fw->size >> 2);
++	u32 crc = crc32_le(~0, (void *)data, fw->size >> 2);
+ 	u8 *fw_version = NULL;
+ 	size_t len;
+ 	int i;
+ 
+-	if (priv->rx_start)
+-		return 0;
++	if (priv->fw_crc) {
++		if (priv->fw_crc == crc)
++			return 0;
++
++		printk(KERN_ERR "%s: DO NOT (ex)change firmware files while "
++				"the driver is loaded. This device is now "
++				"disabled. Please reload the driver, "
++				"if you want it back!",
++				wiphy_name(dev->wiphy));
++		return -EINVAL;
++	}
+ 
+ 	while (data < end_data && *data)
+ 		data++;
+@@ -227,6 +238,7 @@ int p54_parse_firmware(struct ieee80211_
+ 		priv->tx_stats[7].limit = 2;		/* AC_BK */
+ 		dev->queues = 4;
+ 	}
++	priv->fw_crc = crc;
+ 
+ 	return 0;
+ }
+@@ -1525,16 +1537,24 @@ static int p54_start(struct ieee80211_hw
+ 
+ 	mutex_lock(&priv->conf_mutex);
+ 	err = priv->open(dev);
+-	if (!err)
+-		priv->mode = NL80211_IFTYPE_MONITOR;
++	if (err)
++		goto out;
+ 	P54_SET_QUEUE(priv->qos_params[0], 0x0002, 0x0003, 0x0007, 47);
+ 	P54_SET_QUEUE(priv->qos_params[1], 0x0002, 0x0007, 0x000f, 94);
+ 	P54_SET_QUEUE(priv->qos_params[2], 0x0003, 0x000f, 0x03ff, 0);
+ 	P54_SET_QUEUE(priv->qos_params[3], 0x0007, 0x000f, 0x03ff, 0);
+ 	err = p54_set_edcf(dev);
+-	if (!err)
+-		err = p54_init_stats(dev);
++	if (err)
++		goto out;
++	err = p54_init_stats(dev);
++	if (err)
++		goto out;
++	err = p54_setup_mac(dev, P54_FILTER_TYPE_NONE, NULL);
++	if (err)
++		goto out;
++	priv->mode = NL80211_IFTYPE_MONITOR;
+ 
++out:
+ 	mutex_unlock(&priv->conf_mutex);
+ 	return err;
+ }
+diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+--- a/drivers/net/wireless/p54/p54.h	2008-11-14 00:14:59.000000000 +0100
++++ b/drivers/net/wireless/p54/p54.h	2008-11-05 23:31:28.000000000 +0100
+@@ -73,6 +73,7 @@ struct p54_edcf_queue_param {
+ struct p54_common {
+ 	u32 rx_start;
+ 	u32 rx_end;
++	u32 fw_crc;
+ 	struct sk_buff_head tx_queue;
+ 	void (*tx)(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 		   int free_on_tx);
