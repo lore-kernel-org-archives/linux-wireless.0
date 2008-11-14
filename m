@@ -1,51 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:17303 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898AbYKGGGS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 01:06:18 -0500
-Message-ID: <43e72e890811062206w1c2e669fnc16dc5fcf9e2d505@mail.gmail.com> (sfid-20081107_070622_860296_26B9967C)
-Date: Thu, 6 Nov 2008 22:06:17 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Matt Mackall" <mpm@selenic.com>
-Subject: Re: iwlagn: wrong command queue 31, command id 0x0
-Cc: "Marcel Holtmann" <holtmann@linux.intel.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1226037518.3023.60.camel@calx>
+Received: from mail.atheros.com ([12.36.123.2]:56845 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751454AbYKNDMA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 22:12:00 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 19:12:00 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: make DMA memory consistent
+Date: Thu, 13 Nov 2008 19:11:57 -0800
+Message-ID: <1226632317-23688-2-git-send-email-lrodriguez@atheros.com> (sfid-20081114_041208_383001_5DCBA46A)
+In-Reply-To: <1226632317-23688-1-git-send-email-lrodriguez@atheros.com>
+References: <1226632317-23688-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1225944979.3792.3.camel@calx>
-	 <5109BB99-53F1-499A-9D0B-FAB77591FBD5@linux.intel.com>
-	 <1226037518.3023.60.camel@calx>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 6, 2008 at 9:58 PM, Matt Mackall <mpm@selenic.com> wrote:
-> On Fri, 2008-11-07 at 05:40 +0100, Marcel Holtmann wrote:
->> Hi Matt,
->>
->> > [ 5470.869820] WARNING: at drivers/net/wireless/iwlwifi/iwl-tx.c:1204
->> > iwl_rx_handle+0x11a/0x21b [iwlagn]()
->> > [ 5470.869824] wrong command queue 31, command id 0x0
->>
->> I am seeing this a lot with my X61 running a 64-bit kernel/OS and my D-
->> Link DIR-615 access point. With some other access points I am seeing
->> it never or a lot less.
->
->> What kind of laptop and access point are you using? Is you access
->> point 802.11n capable? Do you run the i386 or x86_64 version of your
->> distro?
->
-> Laptop is a Fujitsu 8010p. I've tried this with kernel only once with a
-> G-capable Airport (with various other unknown access points in range),
-> but it failed to find any networks. 64-bit kernel and Debian unstable.
->
-> 2.6.27 mostly works fine here, though occasionally I need to load/unload
-> iwlagn after s2ram.
+Make the DMAable mameory consistent with pci_set_consistent_dma_mask().
+The DMA-mapping.txt Documentation recommends this but for PCI-X
+considerations and on strange architecture like SGI SN2, not sure
+why it would fix an issue but lets see if it does, just in case.
 
-FWIW I get this on 32 bit kernel, wireless-testing, 11G AP, and it
-happens a lot. But its a very noisy environment.
+Before this, this driver was tested with x86_64 with about
+7 GB of RAM, not sure if this is really needed.
 
-  Luis
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index e6701b7..828d27a 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1594,9 +1594,18 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (pci_enable_device(pdev))
+ 		return -EIO;
+ 
+-	if (pci_set_dma_mask(pdev, DMA_32BIT_MASK)) {
++	ret =  pci_set_dma_mask(pdev, DMA_32BIT_MASK);
++
++	if (ret) {
+ 		printk(KERN_ERR "ath9k: 32-bit DMA not available\n");
+-		ret = -ENODEV;
++		goto bad;
++	}
++
++	ret = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
++
++	if (ret) {
++		printk(KERN_ERR "ath9k: 32-bit DMA consistent "
++			"DMA enable faled\n");
+ 		goto bad;
+ 	}
+ 
+-- 
+1.5.6.rc2.15.g457bb.dirty
+
