@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4125 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909AbYKXWcj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 17:32:39 -0500
-Date: Mon, 24 Nov 2008 17:29:51 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211: add suspend/resume callbacks
-Message-ID: <20081124222951.GE30249@hash.localnet> (sfid-20081124_233241_736775_88BAAA14)
-References: <1227415286-30179-2-git-send-email-me@bobcopeland.com> <1227431953.3599.37.camel@johannes.berg>
+Received: from mail.atheros.com ([12.36.123.2]:56843 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751345AbYKNDL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2008 22:11:59 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 19:11:59 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Clarify we only want 32-bit DMA
+Date: Thu, 13 Nov 2008 19:11:56 -0800
+Message-ID: <1226632317-23688-1-git-send-email-lrodriguez@atheros.com> (sfid-20081114_041203_778468_27814957)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1227431953.3599.37.camel@johannes.berg>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 23, 2008 at 10:19:13AM +0100, Johannes Berg wrote:
+Use DMA_32BIT_MASK to clarify we only want 32-bit DMA
+memory. What was there before is also 32-bit but this makes it
+clearer
 
-Great, thanks for the feedback!
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-> > +	/* disable aggregation and notify that STAs are going away */
-> 
-> I think this should run through interfaces twice, in the first run to
-> remove keys, then remove stas and then in the second run remove the
-> interfaces, because otherwise you may be having keys left when the sta
-> for which the key was has been removed.
-
-Ok, that makes sense.
-
-> > +	/* setup RTS and frag thresholds */
-> > +	if (local->ops->set_rts_threshold)
-> > +		local->ops->set_rts_threshold(hw, local->rts_threshold);
-> > +
-> > +	if (local->ops->set_frag_threshold)
-> > +		local->ops->set_frag_threshold(hw, 
-> > +			local->fragmentation_threshold);
-> 
-> Heh, I didn't even think of those.
-
-They were in your original email on the website.  I'm not making up too 
-much, yet :) 
-
-> What were you thinking of when you said something is missing? I can't
-> think of anything right now. And what warnings do you get?
-
-conf_tx was the last callback from your email that I hadn't yet worked in.
-
-Predictably, I got the netif_running() warning on ieee80211_enable_keys,
-so hopefully the reordering and checking first will take care of that.
-
-> Resume definitely needs to defer to schedule_work(), I think, but that's
-> a trivial change.
-
-Yeah that shouldn't be a problem.
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 04342ec..e6701b7 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1594,9 +1594,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (pci_enable_device(pdev))
+ 		return -EIO;
  
+-	/* XXX 32-bit addressing only */
+-	if (pci_set_dma_mask(pdev, 0xffffffff)) {
+-		printk(KERN_ERR "ath_pci: 32-bit DMA not available\n");
++	if (pci_set_dma_mask(pdev, DMA_32BIT_MASK)) {
++		printk(KERN_ERR "ath9k: 32-bit DMA not available\n");
+ 		ret = -ENODEV;
+ 		goto bad;
+ 	}
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.rc2.15.g457bb.dirty
 
