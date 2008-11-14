@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47852 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271AbYKSVbU (ORCPT
+Received: from mail-gx0-f11.google.com ([209.85.217.11]:51997 "EHLO
+	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295AbYKNSkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 16:31:20 -0500
-Date: Wed, 19 Nov 2008 16:18:26 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Rami Rosen <ramirose@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kune@deine-taler.de" <kune@deine-taler.de>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
-Message-ID: <20081119211826.GJ3485@tuxdriver.com> (sfid-20081119_223124_924576_06639F55)
-References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com> <1226943608.3902.36.camel@johannes.berg> <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com> <1227106146.26243.43.camel@johannes.berg> <eb3ff54b0811190709q76e8b073ic71831fd38ceba18@mail.gmail.com> <1227107869.26243.52.camel@johannes.berg> <20081119160135.GB3485@tuxdriver.com> <1227126620.26243.71.camel@johannes.berg> <20081119210046.GC5900@tesla>
+	Fri, 14 Nov 2008 13:40:06 -0500
+Received: by mail-gx0-f11.google.com with SMTP id 4so783167gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 10:40:05 -0800 (PST)
+Message-ID: <43e72e890811141037j5328f71fx7badb6f2b0e0831d@mail.gmail.com> (sfid-20081114_194013_607102_689D5B0B)
+Date: Fri, 14 Nov 2008 10:37:11 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Sujith <m.sujith@gmail.com>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: "Bob Copeland" <me@bobcopeland.com>,
+	"Dan McGee" <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <18717.50308.330801.765686@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081119210046.GC5900@tesla>
+Content-Type: text/plain; charset=UTF-8
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
+	 <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
+	 <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
+	 <43e72e890811140937h4dc03cf8g50df7f74efcd28b2@mail.gmail.com>
+	 <b6c5339f0811140949m462e3eecx49f114f729b33e7c@mail.gmail.com>
+	 <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
+	 <18717.49111.572993.44410@localhost.localdomain>
+	 <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com>
+	 <18717.50308.330801.765686@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2008 at 01:00:46PM -0800, Luis R. Rodriguez wrote:
-> On Wed, Nov 19, 2008 at 12:30:19PM -0800, Johannes Berg wrote:
-> > On Wed, 2008-11-19 at 11:01 -0500, John W. Linville wrote:
-> > 
-> > > Is there some way we could take that into account?  I'm sure there
-> > > are users who would prefer to have an AP (i.e. their laptop) that
-> > > can't support PS clients rather than not having an AP at all.
-> > 
-> > That's a good question. The distinction here is between empowering users
-> > to do the wrong thing (AP without proper PS support) and enforcing the
-> > right thing (with the consequence of complete loss of AP functionality).
-> > The issue I see here is that users will see "ohh shiny, AP support"
-> > without knowing that it doesn't actually really support it. Not sure
-> > which side of the line we want to stand on, I prefer the correctness
-> > side but I can see arguments for the other side, would just like to have
-> > users know. Maybe we could have some way to tell hostapd this and then
-> > have hostapd print a huge warning about it when started up?
-> 
-> How about making it Kconfigable for broken AP support and add the
-> warning there?
+On Fri, Nov 14, 2008 at 10:33 AM, Sujith <m.sujith@gmail.com> wrote:
+> Luis R. Rodriguez wrote:
+>> > From the original log:
+>> > ath5k_pci 0000:01:00.0: registered as ''
+>>
+>> That comes from
+>>
+>> dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
+>>
+>> which means that may be buggy too as wiphy_name() gets
+>>
+>> return wiphy->dev.bus_id;
+>>
+>> and we only have set at that point wiphy->dev.parent IIRC.
+>>
+>
+> Nope, parent is set after that call in SET_IEEE80211_DEV()
+> phy[x] gets assigned in alloc_hw().
+>
+> So why is it NULL even if alloc_hw() succeeds ?
 
-That doesn't really associate the bad behavior with specific drivers.
-Probably better to send something do dmesg and/or make hostap aware
-of the issue.
+Parent is wiphy->dev.parent not wiphy->dev though
 
-Any idea if many STAs are smart enough to stop going to sleep once
-(or if) they realize they are missing frames?
-
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+  Luis
