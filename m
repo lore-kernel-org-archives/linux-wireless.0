@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:55485 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029AbYKXIds (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.26]:1887 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751558AbYKNNjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 03:33:48 -0500
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"sfr@canb.auug.org.au" <sfr@canb.auug.org.au>
-Message-Id: <3A9C0F67-8E8C-4E38-AC96-4437ED0D53DD@linux.intel.com> (sfid-20081124_093352_489693_04F802EB)
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <1227508394.2548.307.camel@debian.sh.intel.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: pull request: wireless-2.6 2008-11-18
-Date: Mon, 24 Nov 2008 09:33:38 +0100
-References: <20081119000719.GA19756@tuxdriver.com> <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com> <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com> <20081119143919.GA3485@tuxdriver.com> <1227497655.2548.257.camel@debian.sh.intel.com> <7E134DC0-A86D-460A-B5DC-22E6D9BEED92@linux.intel.com> <1227508394.2548.307.camel@debian.sh.intel.com>
+	Fri, 14 Nov 2008 08:39:51 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so829698qwe.37
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 05:39:50 -0800 (PST)
+Message-ID: <69e28c910811140539p57fa13dej4c13aa0d09c76f95@mail.gmail.com> (sfid-20081114_143956_622656_B09502F4)
+Date: Fri, 14 Nov 2008 14:39:50 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: Master mode in iw
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Mark Ryden" <markryde@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <87fxlu4rdx.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com>
+	 <87ej1f6ggq.fsf@nokia.com>
+	 <dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com>
+	 <87wsf74z6f.fsf@nokia.com> <1226578011.5105.8.camel@johannes.berg>
+	 <87fxlu4rdx.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
-
->> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703
+On Fri, Nov 14, 2008 at 9:56 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>
+>>> > My question is - is there something inherent which prevents
+>>> > implementing it with "iw"? When comparing to the old set of tools,
+>>> > which includes iwconifg, "iwconfig wlan0 mode Master" works on some
+>>> > interfaces.
+>>>
+>>> Just guessing, but most probably because there are no drivers which
+>>> use nl80211 and support AP mode without hostapd, so nobody hasn't
+>>> bothered to implement it, yet.
 >>
->> and just relying on Bugzilla is not gonna be good enough. The Linux
->> kernel development has always been done via mailing lists. And while
->> there is a kernel and other Bugzillas, the main authority is still  
->> the
->> mailing list. So if you wanna get massive feedback or have testing
->> patches for debugging, then these need to be posted to linux-wireless
->> and not "hidden" into a Bugzilla.
+>> And there never will be since we don't want the whole AP MLME in the
+>> kernel regardless of the driver.
 >
-> This is generally true for bugs easy to debug with. But in this  
-> example,
-> the first reporter opened this bug 4 months ago. People usually don't
-> follow thread for such a long time. There are also some reporters  
-> never
-> show up in this ML.
-
-true to some degree, but searching mailing list archives is a lot  
-simpler then bug reports.
-
->> I do have a perfect environment in Vancouver that allows me to  
->> trigger
->> this behavior within a few minutes. So if you really wanna debug  
->> this,
->> then just send debug patches to the mailing list and I am happy to  
->> run
->> such kernels.
+> Actually I was thinking about fullmac hardware which support AP mode.
+> In theory we might need to support those, but I guess in practise
+> there hasn't been, nor ever will be, such hardware. I'll just shut up
+> now :)
 >
-> Can you still reproduce this bug with Johannes' patch?
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-we will see once I am back in Vancouver. Will be some time in December  
-though.
+I doubt that any fullmac hardware should have a mac80211-based driver...
 
-Regards
-
-Marcel
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
