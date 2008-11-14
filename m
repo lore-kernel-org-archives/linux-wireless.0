@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:37763 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123AbYKCHpu (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:50892 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750729AbYKNI5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 02:45:50 -0500
-To: "Zhu Yi" <yi.zhu@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.28-rc2-wl: network lockups with iwl3945
-References: <871vxuh70u.fsf@nokia.com> <87iqr5ri67.fsf@nokia.com>
-	<1225697173.3619.23.camel@johannes.berg>
-	<1225698103.2917.312.camel@debian.sh.intel.com>
+	Fri, 14 Nov 2008 03:57:16 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: Mark Ryden <markryde@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Master mode in iw
+References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com>
+	<87ej1f6ggq.fsf@nokia.com>
+	<dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com>
+	<87wsf74z6f.fsf@nokia.com> <1226578011.5105.8.camel@johannes.berg>
 From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 03 Nov 2008 09:44:48 +0200
-In-Reply-To: <1225698103.2917.312.camel@debian.sh.intel.com> (ext Zhu Yi's message of "Mon\, 03 Nov 2008 15\:41\:43 +0800")
-Message-ID: <87hc6pb6dr.fsf@nokia.com> (sfid-20081103_084554_474505_C44443E6)
+Date: Fri, 14 Nov 2008 10:56:58 +0200
+In-Reply-To: <1226578011.5105.8.camel@johannes.berg> (ext Johannes Berg's message of "Thu\, 13 Nov 2008 13\:06\:51 +0100")
+Message-ID: <87fxlu4rdx.fsf@nokia.com> (sfid-20081114_095721_421330_A3FF08A1)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zhu Yi <yi.zhu@intel.com> writes:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> On Mon, 2008-11-03 at 15:26 +0800, Johannes Berg wrote:
->> I think this has been fixed for iwlagn recently, but I guess iwl3945
->> will always be forgotten ;)
+>> > My question is - is there something inherent which prevents
+>> > implementing it with "iw"? When comparing to the old set of tools,
+>> > which includes iwconifg, "iwconfig wlan0 mode Master" works on some
+>> > interfaces.
+>> 
+>> Just guessing, but most probably because there are no drivers which
+>> use nl80211 and support AP mode without hostapd, so nobody hasn't
+>> bothered to implement it, yet.
 >
-> Yup. Please try attached patch.
+> And there never will be since we don't want the whole AP MLME in the
+> kernel regardless of the driver.
 
-Thanks! I'm travelling today, but I try to find some free time and an
-open AP to test this :)
+Actually I was thinking about fullmac hardware which support AP mode.
+In theory we might need to support those, but I guess in practise
+there hasn't been, nor ever will be, such hardware. I'll just shut up
+now :)
 
 -- 
 Kalle Valo
