@@ -1,79 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n2b.bullet.mail.ac4.yahoo.com ([76.13.13.72]:30598 "HELO
-	n2b.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753196AbYKYCgy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 21:36:54 -0500
-Date: Mon, 24 Nov 2008 18:36:53 -0800 (PST)
-From: Irwan Siajadi <dev.bahamot@yahoo.com>
-Subject: Re: ath5k: can't browse at all.
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1227552792.26229.6.camel@dv>
+Received: from mail.atheros.com ([12.36.123.2]:64564 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751416AbYKNWoY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 17:44:24 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 14:44:24 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: don't assume driver has been attached on registration
+Date: Fri, 14 Nov 2008 14:44:22 -0800
+Message-ID: <1226702662-29694-1-git-send-email-lrodriguez@atheros.com> (sfid-20081114_234428_933381_3CC6F744)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <334331.29428.qm@web59608.mail.ac4.yahoo.com> (sfid-20081125_033656_941240_20EAAA79)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+mac80211's ieee80211_register_hw() is often called within the
+probe path so it cannot assume the device's driver structure
+has been attached yet so to create a workqueue instead of
+using driver->name use the wiphy's phy%d name. The name doesn't
+really matter anyway.
 
+This should fix sporadic oopses found when we race to beat the
+driver pointer setting. Not even sure how this was working properly.
 
+http://www.kerneloops.org/search.php?search=ieee80211_register_hw
 
---- On Mon, 11/24/08, Pavel Roskin <proski@gnu.org> wrote:
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
 
-> From: Pavel Roskin <proski@gnu.org>
-> Subject: Re: ath5k: can't browse at all.
-> To: "Irwan Siajadi" <dev.bahamot@yahoo.com>
-> Cc: linux-wireless@vger.kernel.org
-> Date: Monday, November 24, 2008, 6:53 PM
-> On Mon, 2008-11-24 at 09:41 -0800, Irwan Siajadi wrote:
-> > The AR2425 is able to obtain IP address from the
-> router, 
-> > able to ping with good results, but can't browse
-> at all.
-> > Below are the info on my setup, if you need more info
-> please let me know.
-> 
-> That's unlikely to be a driver problem.  The driver
-> doesn't distinguish
-> pings from other packets.  The only significant difference
-> could be in
-> the packet size.  You can try ping with larger packets to
-> check if
-> that's the problem.
+This has been acked now.
 
-Ping with large packet size doesn't seem to be a problem.
-[root@localhost staff]# ping 192.168.1.254 -s 1500
-PING 192.168.1.254 (192.168.1.254) 1500(1528) bytes of data.
-1508 bytes from 192.168.1.254: icmp_seq=1 ttl=128 time=2.75 ms
-1508 bytes from 192.168.1.254: icmp_seq=2 ttl=128 time=2.61 ms
-...
-1508 bytes from 192.168.1.254: icmp_seq=13 ttl=128 time=2.69 ms
-1508 bytes from 192.168.1.254: icmp_seq=14 ttl=128 time=2.72 ms
-^C
---- 192.168.1.254 ping statistics ---
-14 packets transmitted, 14 received, 0% packet loss, time 13574ms
-rtt min/avg/max/mdev = 2.586/2.692/2.781/0.091 ms
+ net/mac80211/main.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-
-> 
-> I suggest that you use normal network troubleshooting
-> procedures and not
-> assume the driver to be a problem unless you have a better
-> evidence.
-> Check routing, check if the nameservers in /etc/resolv.conf
-> are working.
-> I'm sure there are detailed guides how to troubleshoot
-> networks.
-
-I believe the problem is in the driver because I can browse normally as soon as I change the driver to ndiswrapper. Tracepath shows there's nothing wrong with routing or nameservers.
-
-
-> 
-> -- 
-> Regards,
-> Pavel Roskin
-
-
-      
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d631dc9..cec9b6d 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -722,7 +722,6 @@ EXPORT_SYMBOL(ieee80211_alloc_hw);
+ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	const char *name;
+ 	int result;
+ 	enum ieee80211_band band;
+ 	struct net_device *mdev;
+@@ -787,8 +786,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	mdev->header_ops = &ieee80211_header_ops;
+ 	mdev->set_multicast_list = ieee80211_master_set_multicast_list;
+ 
+-	name = wiphy_dev(local->hw.wiphy)->driver->name;
+-	local->hw.workqueue = create_freezeable_workqueue(name);
++	local->hw.workqueue =
++		create_freezeable_workqueue(wiphy_name(local->hw.wiphy));
+ 	if (!local->hw.workqueue) {
+ 		result = -ENOMEM;
+ 		goto fail_workqueue;
+-- 
+1.5.6.3
 
