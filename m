@@ -1,75 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34136 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751526AbYKNLDd (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.186]:8699 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753165AbYKNSRG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 06:03:33 -0500
-Subject: Re: [PATCH] mac80211: Use the HT capabilities from the IE instead
-	of the station's caps.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <18717.22961.296661.281335@gargle.gargle.HOWL>
-References: <18717.22961.296661.281335@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TTPPyEwEEQ59WeiqSMJy"
-Date: Fri, 14 Nov 2008 12:02:58 +0100
-Message-Id: <1226660579.4120.5.camel@johannes.berg> (sfid-20081114_120336_489033_FB6B48D3)
-Mime-Version: 1.0
+	Fri, 14 Nov 2008 13:17:06 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so920161tic.23
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 10:17:04 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18717.49111.572993.44410@localhost.localdomain> (sfid-20081114_191711_705877_0B70AEB0)
+Date: Fri, 14 Nov 2008 23:43:43 +0530
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Bob Copeland" <me@bobcopeland.com>,
+	"Dan McGee" <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+In-Reply-To: <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
+	<43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
+	<b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
+	<43e72e890811140937h4dc03cf8g50df7f74efcd28b2@mail.gmail.com>
+	<b6c5339f0811140949m462e3eecx49f114f729b33e7c@mail.gmail.com>
+	<43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis R. Rodriguez wrote:
+> On Fri, Nov 14, 2008 at 9:49 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> > On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> >> Anyway we do set the parent before calling ieee80211_register_hw() by
+> >> using SET_IEEE80211_DEV(hw, &pdev->dev) (oh ok here is the parent). so
+> >> when we try to get the name with parent->driver I am not sure if
+> >> driver has been set yet because ath5k_pci_probe() hasn't finished yet
+> >> as probe called ath5k_hw_attach(). When does ->driver get set and why
+> >> would it fail only for ath5k?
+> >
+> > Ahh, I believe that would be in pci-driver.c __pci_device_probe, after driver
+> > probe is run successfully.  Yes, we do ieee80211_register_hw from within
+> > probe...  So, how did this ever work again? /me scratches head.
+> 
+> Wow.. ok, yeah I see that, this is a mac8021 bug then unless mac80211
+> wants us to not callieee80211_register_hw() from probe or its children
+> which would be weird.
 
---=-TTPPyEwEEQ59WeiqSMJy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>From the original log:
+ath5k_pci 0000:01:00.0: registered as ''
 
-On Fri, 2008-11-14 at 16:27 +0530, Sujith wrote:
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-
-Thanks.
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  net/mac80211/ht.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-> index 0ffbe12..ece79ae 100644
-> --- a/net/mac80211/ht.c
-> +++ b/net/mac80211/ht.c
-> @@ -36,7 +36,7 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211=
-_supported_band *sband,
-> =20
->  	ht_cap->ht_supported =3D true;
-> =20
-> -	ht_cap->cap =3D ht_cap->cap & sband->ht_cap.cap;
-> +	ht_cap->cap =3D le16_to_cpu(ht_cap_ie->cap_info) & sband->ht_cap.cap;
->  	ht_cap->cap &=3D ~IEEE80211_HT_CAP_SM_PS;
->  	ht_cap->cap |=3D sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS;
-> =20
-
---=-TTPPyEwEEQ59WeiqSMJy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJHVrfAAoJEKVg1VMiehFY9c8P/0jJWat0+JMvv25MQVGVJMBp
-sCX7crJn5c4U6+SNwCQWtaYkFmx2R5WYU5x+LdNStaUyCWNaAa+iVUmmGTfm+wYR
-+nUk534K3Zn33Qe/81PnEQK3kQslXNYW5ZWbjFY7tUWJ/0o7RURjqmXfWDL0i6yq
-qWulPYGy7H9M3jxqVptrfp9RIAR8UHvFkqNpuH4WXewypzcbkY29ej7rfz+DzRoX
-be05b7Qj/rPH8+oGzZSuS8GpfQjr8ZBngAW9cLZ/AHTI/4F1BvezDR6f4IZ3wZMh
-lbihc8IpN/1h5HjFYm0LQ1SuWdG4iSPVUdAykIsXNvYKbIuwbhlXc3Sou/B+TZgX
-ChrgpyFJkrEvoRMEFI2QtuYlc/VYOYCL9o6L/9iZ91rsfORrj1TiFo+wbz1XbvB0
-7ZOqHxVRisXzs6Q3ACtGPKlPrmRPOrya71DtZ+wJW6kEQhcMxttazR+4gHJsEhiB
-I+5FH5s8QuANNRjROQf7+MlT0jQZyRHrdiYy/8SkNYOpkLjQ6rRq8o8vbE9xQRpk
-T57SlW/w+lhuZ2sFX9dRZ8t9HOZjXzHWi/uxExUxM7VYZW0Sq2MUEAZa8v1SRY4m
-pbLh1JtYycLCvEMvlksYVMPTAuzcx3pV4N3qNIqky9IXg/+h2nm+3TPhL0q0KM8I
-goq0F2x4mjfdw7mJCWEd
-=zGWQ
------END PGP SIGNATURE-----
-
---=-TTPPyEwEEQ59WeiqSMJy--
-
+Sujith
