@@ -1,201 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:53330 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852AbYKMPjJ (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:59571 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856AbYKNSml (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 10:39:09 -0500
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+	Fri, 14 Nov 2008 13:42:41 -0500
+From: Christian Lamparter <chunkeey@web.de>
 To: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] p54: honour bss_info_changed's basic_rates and other settings
+Date: Fri, 14 Nov 2008 19:42:39 +0100
 Cc: John W Linville <linville@tuxdriver.com>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: [PATCH 2/3] rtl8187: implement conf_tx callback to configure tx queues
-Date: Thu, 13 Nov 2008 10:39:15 -0500
-Message-Id: <1226590756-10743-3-git-send-email-herton@mandriva.com.br> (sfid-20081113_163917_317363_14828D6E)
-In-Reply-To: <1226590756-10743-1-git-send-email-herton@mandriva.com.br>
-References: <1226590756-10743-1-git-send-email-herton@mandriva.com.br>
+	Pavel Roskin <proski@gnu.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200811141942.39666.chunkeey@web.de> (sfid-20081114_194245_687599_F692F4F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add conf_tx callback and use it to configure tx queues of 8187L/8187B.
+As was pointed out in "p54: honour bss_info_changed's short slot time settings" (84c693dbf07503...)
 
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+bss_info_changed provides more useful settings that can be used by the driver.
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- drivers/net/wireless/rtl818x/rtl8187.h         |    2 +
- drivers/net/wireless/rtl818x/rtl8187_dev.c     |   73 ++++++++++++++++++++++--
- drivers/net/wireless/rtl818x/rtl8187_rtl8225.c |    6 --
- 3 files changed, 69 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
-index 33725d0..f09872e 100644
---- a/drivers/net/wireless/rtl818x/rtl8187.h
-+++ b/drivers/net/wireless/rtl818x/rtl8187.h
-@@ -111,6 +111,8 @@ struct rtl8187_priv {
- 	u8 signal;
- 	u8 quality;
- 	u8 noise;
-+	u8 slot_time;
-+	u8 aifsn[4];
- };
- 
- void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index 695e66d..0f8fa36 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -704,6 +704,13 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 
- 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFEC, 0x0800, 1);
- 
-+	priv->slot_time = 0x9;
-+	priv->aifsn[0] = 2; /* AIFSN[AC_VO] */
-+	priv->aifsn[1] = 2; /* AIFSN[AC_VI] */
-+	priv->aifsn[2] = 7; /* AIFSN[AC_BK] */
-+	priv->aifsn[3] = 3; /* AIFSN[AC_BE] */
-+	rtl818x_iowrite8(priv, &priv->map->ACM_CONTROL, 0);
-+
- 	return 0;
- }
- 
-@@ -911,24 +918,38 @@ static int rtl8187_config_interface(struct ieee80211_hw *dev,
- 	return 0;
- }
- 
-+/*
-+ * With 8187B, AC_*_PARAM clashes with FEMR definition in struct rtl818x_csr for
-+ * example. Thus we have to use raw values for AC_*_PARAM register addresses.
-+ */
-+static __le32 *rtl8187b_ac_addr[4] = {
-+	(__le32 *) 0xFFF0, /* AC_VO */
-+	(__le32 *) 0xFFF4, /* AC_VI */
-+	(__le32 *) 0xFFFC, /* AC_BK */
-+	(__le32 *) 0xFFF8, /* AC_BE */
-+};
-+
-+#define SIFS_TIME 0xa
-+
- static void rtl8187_conf_erp(struct rtl8187_priv *priv, bool use_short_slot,
- 			     bool use_short_preamble)
- {
- 	if (priv->is_rtl8187b) {
--		u8 difs, eifs, slot_time;
-+		u8 difs, eifs;
- 		u16 ack_timeout;
-+		int queue;
- 
- 		if (use_short_slot) {
--			slot_time = 0x9;
-+			priv->slot_time = 0x9;
- 			difs = 0x1c;
- 			eifs = 0x53;
- 		} else {
--			slot_time = 0x14;
-+			priv->slot_time = 0x14;
- 			difs = 0x32;
- 			eifs = 0x5b;
- 		}
- 		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
--		rtl818x_iowrite8(priv, &priv->map->SLOT, slot_time);
-+		rtl818x_iowrite8(priv, &priv->map->SLOT, priv->slot_time);
- 		rtl818x_iowrite8(priv, &priv->map->DIFS, difs);
- 
- 		/*
-@@ -949,18 +970,21 @@ static void rtl8187_conf_erp(struct rtl8187_priv *priv, bool use_short_slot,
- 			ack_timeout += 144;
- 		rtl818x_iowrite8(priv, &priv->map->CARRIER_SENSE_COUNTER,
- 				 DIV_ROUND_UP(ack_timeout, 4));
-+
-+		for (queue = 0; queue < 4; queue++)
-+			rtl818x_iowrite8(priv, (u8 *) rtl8187b_ac_addr[queue],
-+					 priv->aifsn[queue] * priv->slot_time +
-+					 SIFS_TIME);
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-11-14 18:12:15.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2008-11-14 18:37:34.000000000 +0100
+@@ -1262,20 +1262,20 @@ static int p54_setup_mac(struct ieee8021
+ 	setup->rx_antenna = priv->rx_antenna;
+ 	setup->rx_align = 0;
+ 	if (priv->fw_var < 0x500) {
+-		setup->v1.basic_rate_mask = cpu_to_le32(0x15f);
++		setup->v1.basic_rate_mask = cpu_to_le32(priv->basic_rate_mask);
+ 		memset(setup->v1.rts_rates, 0, 8);
+ 		setup->v1.rx_addr = cpu_to_le32(priv->rx_end);
+ 		setup->v1.max_rx = cpu_to_le16(priv->rx_mtu);
+ 		setup->v1.rxhw = cpu_to_le16(priv->rxhw);
+-		setup->v1.wakeup_timer = cpu_to_le16(500);
++		setup->v1.wakeup_timer = cpu_to_le16(priv->wakeup_timer);
+ 		setup->v1.unalloc0 = cpu_to_le16(0);
  	} else {
- 		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
- 		if (use_short_slot) {
- 			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
- 			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
- 			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
--			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
- 		} else {
- 			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
- 			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
- 			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
--			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
- 		}
+ 		setup->v2.rx_addr = cpu_to_le32(priv->rx_end);
+ 		setup->v2.max_rx = cpu_to_le16(priv->rx_mtu);
+ 		setup->v2.rxhw = cpu_to_le16(priv->rxhw);
+-		setup->v2.timer = cpu_to_le16(1000);
++		setup->v2.timer = cpu_to_le16(priv->wakeup_timer);
+ 		setup->v2.truncate = cpu_to_le16(48896);
+-		setup->v2.basic_rate_mask = cpu_to_le32(0x15f);
++		setup->v2.basic_rate_mask = cpu_to_le32(priv->basic_rate_mask);
+ 		setup->v2.sbss_offset = 0;
+ 		setup->v2.mcast_window = 0;
+ 		setup->v2.rx_rssi_threshold = 0;
+@@ -1361,7 +1361,7 @@ static int p54_set_freq(struct ieee80211
+ 	} else {
+ 		chan->v2.rssical_mul = cpu_to_le16(130);
+ 		chan->v2.rssical_add = cpu_to_le16(0xfe70);
+-		chan->v2.basic_rate_mask = cpu_to_le32(0x15f);
++		chan->v2.basic_rate_mask = cpu_to_le32(priv->basic_rate_mask);
+ 		memset(chan->v2.rts_rates, 0, 8);
  	}
- }
-@@ -1009,6 +1033,42 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
- 	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
- }
- 
-+static int rtl8187_conf_tx(struct ieee80211_hw *dev, u16 queue,
-+			   const struct ieee80211_tx_queue_params *params)
-+{
-+	struct rtl8187_priv *priv = dev->priv;
-+	u8 cw_min, cw_max;
-+
-+	if (queue > 3)
-+		return -EINVAL;
-+
-+	cw_min = fls(params->cw_min);
-+	cw_max = fls(params->cw_max);
-+
-+	if (priv->is_rtl8187b) {
-+		priv->aifsn[queue] = params->aifs;
-+
-+		/*
-+		 * This is the structure of AC_*_PARAM registers in 8187B:
-+		 * - TXOP limit field, bit offset = 16
-+		 * - ECWmax, bit offset = 12
-+		 * - ECWmin, bit offset = 8
-+		 * - AIFS, bit offset = 0
-+		 */
-+		rtl818x_iowrite32(priv, rtl8187b_ac_addr[queue],
-+				  (params->txop << 16) | (cw_max << 12) |
-+				  (cw_min << 8) | (params->aifs *
-+				  priv->slot_time + SIFS_TIME));
-+	} else {
-+		if (queue != 0)
-+			return -EINVAL;
-+
-+		rtl818x_iowrite8(priv, &priv->map->CW_VAL,
-+				 cw_min | (cw_max << 4));
+ 	priv->tx(dev, skb, 1);
+@@ -1821,6 +1821,24 @@ static void p54_bss_info_changed(struct 
+ 		priv->use_short_slot = info->use_short_slot;
+ 		p54_set_edcf(dev);
+ 	}
++	if (changed & BSS_CHANGED_BASIC_RATES) {
++		if (dev->conf.channel->band == IEEE80211_BAND_5GHZ)
++			priv->basic_rate_mask = (info->basic_rates << 4);
++		else
++			priv->basic_rate_mask = info->basic_rates;
++		p54_setup_mac(dev, priv->mac_mode, priv->bssid);
++		if (priv->fw_var >= 0x500)
++			p54_set_freq(dev, dev->conf.channel->center_freq);
 +	}
-+	return 0;
-+}
++	if (changed & BSS_CHANGED_ASSOC) {
++		if (info->assoc) {
++			priv->aid = info->aid;
++			priv->wakeup_timer = info->beacon_int *
++					     info->dtim_period * 5;
++			p54_setup_mac(dev, priv->mac_mode, priv->bssid);
++		}
++	}
 +
- static const struct ieee80211_ops rtl8187_ops = {
- 	.tx			= rtl8187_tx,
- 	.start			= rtl8187_start,
-@@ -1019,6 +1079,7 @@ static const struct ieee80211_ops rtl8187_ops = {
- 	.config_interface	= rtl8187_config_interface,
- 	.bss_info_changed	= rtl8187_bss_info_changed,
- 	.configure_filter	= rtl8187_configure_filter,
-+	.conf_tx		= rtl8187_conf_tx
- };
+ }
  
- static void rtl8187_eeprom_register_read(struct eeprom_93cx6 *eeprom)
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-index 69030be..4e75e8e 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-@@ -878,12 +878,6 @@ static void rtl8225z2_b_rf_init(struct ieee80211_hw *dev)
- 	for (i = 0; i < ARRAY_SIZE(rtl8225z2_ofdm); i++)
- 		rtl8225_write_phy_ofdm(dev, i, rtl8225z2_ofdm[i]);
+ static const struct ieee80211_ops p54_ops = {
+@@ -1850,6 +1868,7 @@ struct ieee80211_hw *p54_init_common(siz
  
--	rtl818x_iowrite32(priv, (__le32 *)0xFFF0, (7 << 12) | (3 << 8) | 28);
--	rtl818x_iowrite32(priv, (__le32 *)0xFFF4, (7 << 12) | (3 << 8) | 28);
--	rtl818x_iowrite32(priv, (__le32 *)0xFFF8, (7 << 12) | (3 << 8) | 28);
--	rtl818x_iowrite32(priv, (__le32 *)0xFFFC, (7 << 12) | (3 << 8) | 28);
--	rtl818x_iowrite8(priv, &priv->map->ACM_CONTROL, 0);
--
- 	rtl8225_write_phy_ofdm(dev, 0x97, 0x46);
- 	rtl8225_write_phy_ofdm(dev, 0xa4, 0xb6);
- 	rtl8225_write_phy_ofdm(dev, 0x85, 0xfc);
--- 
-1.6.0.2
-
+ 	priv = dev->priv;
+ 	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
++	priv->basic_rate_mask = 0x15f;
+ 	skb_queue_head_init(&priv->tx_queue);
+ 	dev->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+ 		     IEEE80211_HW_SIGNAL_DBM |
+diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+--- a/drivers/net/wireless/p54/p54.h	2008-11-05 23:31:28.000000000 +0100
++++ b/drivers/net/wireless/p54/p54.h	2008-11-14 17:19:36.000000000 +0100
+@@ -103,6 +103,9 @@ struct p54_common {
+ 	unsigned int output_power;
+ 	u32 tsf_low32;
+ 	u32 tsf_high32;
++	u64 basic_rate_mask;
++	u16 wakeup_timer;
++	u16 aid;
+ 	struct ieee80211_tx_queue_stats tx_stats[8];
+ 	struct p54_edcf_queue_param qos_params[8];
+ 	struct ieee80211_low_level_stats stats;
