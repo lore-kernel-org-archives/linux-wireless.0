@@ -1,75 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:54975 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754482AbYKCIkC (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34136 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751526AbYKNLDd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 03:40:02 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so921985yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 00:40:01 -0800 (PST)
-Message-ID: <43e72e890811030040r6b090f7ai4b8aa9fc55b4f78c@mail.gmail.com> (sfid-20081103_094008_534362_751B1E22)
-Date: Mon, 3 Nov 2008 00:40:01 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-Cc: "Bob Copeland" <me@bobcopeland.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>, tim.gardner@canonical.com,
-	mick@madwifi.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1225701024.3619.37.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4908B754.1050400@tpi.com> <1225696692.3619.18.camel@johannes.berg>
-	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
-	 <1225697686.3619.25.camel@johannes.berg>
-	 <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
-	 <1225698867.3619.31.camel@johannes.berg>
-	 <43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com>
-	 <1225699482.3619.34.camel@johannes.berg>
-	 <43e72e890811030026t319c551cp91807318f9a6b838@mail.gmail.com>
-	 <1225701024.3619.37.camel@johannes.berg>
+	Fri, 14 Nov 2008 06:03:33 -0500
+Subject: Re: [PATCH] mac80211: Use the HT capabilities from the IE instead
+	of the station's caps.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <18717.22961.296661.281335@gargle.gargle.HOWL>
+References: <18717.22961.296661.281335@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TTPPyEwEEQ59WeiqSMJy"
+Date: Fri, 14 Nov 2008 12:02:58 +0100
+Message-Id: <1226660579.4120.5.camel@johannes.berg> (sfid-20081114_120336_489033_FB6B48D3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 3, 2008 at 12:30 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-11-03 at 00:26 -0800, Luis R. Rodriguez wrote:
->
->> >> What should we do with these rare failures then?
->> >
->> > print an error message? ignore them? try again?
->>
->> I'd prefer a simple error print than a WARN_ON().
->
-> Just so you don't get blamed on kerneloops.org? :)
 
-No because like I said a hw reset can fail and don't think software
-should be blamed. Right now we do that.
+--=-TTPPyEwEEQ59WeiqSMJy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->> >> > hw borked is one obvious case, but it shouldn't happen enough
->> >> > for this to be a problem yet.
->> >>
->> >> This I agree with. It is rare, its just possible, right now mac80211
->> >> assumes it never will.
->> >
->> > It's _always_ assumed that by ignoring the return value, now it's just
->> > noisy about it because clearly it doesn't like when the driver fails to
->> > do what it wants since then the hw and sw states get out of sync. I
->> > really don't see what to do other than retry maybe, but that might well
->> > be done in the driver instead.
->>
->> As can be seen from the patch suggested what some drivers will end up
->> doing is just ignoring failures but I guess that can be up to the
->> drivers to deal with as you are suggesting. I'd be inclined to try to
->> disable the device in case of a few failed resets to be specific with
->> ath5k. Would mac80211 want to be informed of that through the return
->> value? Is the WARN still appropriate?
->
-> I think the warning is appropriate, yes, since mac80211 has no concept
-> of failing hardware configuration. You're free to add such a concept,
-> but I really don't know what mac80211 would be supposed to do when
-> things fail, just try to stop/start? panic()? Instruct the user to
-> reboot? to swap hardware? See?
+On Fri, 2008-11-14 at 16:27 +0530, Sujith wrote:
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 
-Sure, OK then the error will be "deal with".
+Thanks.
 
-  Luis
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/mac80211/ht.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+> index 0ffbe12..ece79ae 100644
+> --- a/net/mac80211/ht.c
+> +++ b/net/mac80211/ht.c
+> @@ -36,7 +36,7 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211=
+_supported_band *sband,
+> =20
+>  	ht_cap->ht_supported =3D true;
+> =20
+> -	ht_cap->cap =3D ht_cap->cap & sband->ht_cap.cap;
+> +	ht_cap->cap =3D le16_to_cpu(ht_cap_ie->cap_info) & sband->ht_cap.cap;
+>  	ht_cap->cap &=3D ~IEEE80211_HT_CAP_SM_PS;
+>  	ht_cap->cap |=3D sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS;
+> =20
+
+--=-TTPPyEwEEQ59WeiqSMJy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJHVrfAAoJEKVg1VMiehFY9c8P/0jJWat0+JMvv25MQVGVJMBp
+sCX7crJn5c4U6+SNwCQWtaYkFmx2R5WYU5x+LdNStaUyCWNaAa+iVUmmGTfm+wYR
++nUk534K3Zn33Qe/81PnEQK3kQslXNYW5ZWbjFY7tUWJ/0o7RURjqmXfWDL0i6yq
+qWulPYGy7H9M3jxqVptrfp9RIAR8UHvFkqNpuH4WXewypzcbkY29ej7rfz+DzRoX
+be05b7Qj/rPH8+oGzZSuS8GpfQjr8ZBngAW9cLZ/AHTI/4F1BvezDR6f4IZ3wZMh
+lbihc8IpN/1h5HjFYm0LQ1SuWdG4iSPVUdAykIsXNvYKbIuwbhlXc3Sou/B+TZgX
+ChrgpyFJkrEvoRMEFI2QtuYlc/VYOYCL9o6L/9iZ91rsfORrj1TiFo+wbz1XbvB0
+7ZOqHxVRisXzs6Q3ACtGPKlPrmRPOrya71DtZ+wJW6kEQhcMxttazR+4gHJsEhiB
+I+5FH5s8QuANNRjROQf7+MlT0jQZyRHrdiYy/8SkNYOpkLjQ6rRq8o8vbE9xQRpk
+T57SlW/w+lhuZ2sFX9dRZ8t9HOZjXzHWi/uxExUxM7VYZW0Sq2MUEAZa8v1SRY4m
+pbLh1JtYycLCvEMvlksYVMPTAuzcx3pV4N3qNIqky9IXg/+h2nm+3TPhL0q0KM8I
+goq0F2x4mjfdw7mJCWEd
+=zGWQ
+-----END PGP SIGNATURE-----
+
+--=-TTPPyEwEEQ59WeiqSMJy--
+
