@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:21446 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753543AbYKIAv1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2008 19:51:27 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: stable@kernel.org, rjw@sisk.pl, linville@tuxdriver.com,
-	reinette.chatre@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2/2] iwlwifi: fix suspend to RAM in iwlwifi
-Date: Sun,  9 Nov 2008 02:51:07 +0200
-Message-Id: <1226191867-22324-3-git-send-email-tomas.winkler@intel.com> (sfid-20081109_015130_725473_372D028C)
-In-Reply-To: <1226191867-22324-2-git-send-email-tomas.winkler@intel.com>
-References: <1226191867-22324-1-git-send-email-tomas.winkler@intel.com>
- <1226191867-22324-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:46064 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbYKNKyW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 05:54:22 -0500
+Subject: Re: [FYI] ar9170 driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
+Cc: "otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>,
+	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
+In-Reply-To: <491D380D.7050707@teltonika.lt>
+References: <1226531034.14186.39.camel@johannes.berg>
+	 <491D380D.7050707@teltonika.lt>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3ggJKCki52VIwGUHeBkr"
+Date: Fri, 14 Nov 2008 11:53:38 +0100
+Message-Id: <1226660018.4120.1.camel@johannes.berg> (sfid-20081114_115426_474693_C457FCFD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes suspend to RAM after by moving
-notify_mac out of iwlwifi mutex
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11845
+--=-3ggJKCki52VIwGUHeBkr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Tested-by: Carlos R. Mafra <crmafra2@gmail.com>
-Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
-Cc: Rafael J. Wysocki <rjw@sisk.pl>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Fri, 2008-11-14 at 10:34 +0200, Paulius Zaleckas wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e01f048..edab202 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2090,7 +2090,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 		iwl4965_error_recovery(priv);
- 
- 	iwl_power_update_mode(priv, 1);
--	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
- 
- 	if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
- 		iwl4965_set_mode(priv, priv->iw_mode);
-@@ -2342,6 +2341,7 @@ static void iwl_bg_alive_start(struct work_struct *data)
- 	mutex_lock(&priv->mutex);
- 	iwl_alive_start(priv);
- 	mutex_unlock(&priv->mutex);
-+	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
- }
- 
- static void iwl4965_bg_rf_kill(struct work_struct *work)
--- 
-1.5.4.3
+> If this driver is not going in through wireless or any other tree, becaus=
+e it
+> still needs some work, maybe it is worth to get it to staging tree mainta=
+ined
+> by Greg?
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+No way. It _will_ go through the wireless tree, trust me, it's just not
+ready yet. Meanwhile, Greg has the mess of a vendor driver.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+johannes
+
+--=-3ggJKCki52VIwGUHeBkr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJHViuAAoJEKVg1VMiehFY3hcQAJSBAOfpwQiShrqcxekwO/g8
+prbSiAz4j59mRw0Dx7bfCZx7lYYmXzByz69C174aJQubLNrgPmW7oNu42YSj62tJ
+6iscfGy7sl8R9A43ZkRRe+Fp4V8u3WDu0lh0JC9kgkb9yfSfjnLV8Hw+gVSUw6YE
+FtWRflGCbNd9K7BKUYezf+vaAf1lca6jRcQBREZ3Nl4kS2NkmRaEaCL8R/MVf/JW
+1dFEPDPjc6IBZRpX5rZCuYDWw+7uMV/XBljpnxOhADelKTsttzFmeqGhZm8jlap2
+BFHNEX8+S4pcg+0tFZFza41L0nFc1iuBVO4FVN0uSrWL8XiwF6hPJ9Yt7Wx3nH2/
+TysgNqx40H/AJEMvenZ4qing4BssrsKXiM6o3JXkUH977I8NtKwkjU4QvTCc/B2e
+3nzA9DLh7yGZFI71V9aoVrv8Kx2eBmAzw/ppZzG+7gvEE7fy52FeLaGIa8T+LR6o
+G/FmTVFXAS7AJX7rsVBoj7rA5xQ9i9YfbCsFd2QXXGAD7GWfJ5BZXXOqiMhDJFOw
+aOgrD3KwH/RA0Cl//ix1d6SS9NiB2nvN0VsuOdQjhCvor5Ks2ph23xnEYDEtZ4eC
+SdQ4B7eCbOCA+af0KtNZKMdgJiothCH5EHKrzAShs3AlbtxuENy/DAUGPzitdbXg
+QW38Bzc+OrJf8k3++muI
+=QRLq
+-----END PGP SIGNATURE-----
+
+--=-3ggJKCki52VIwGUHeBkr--
 
