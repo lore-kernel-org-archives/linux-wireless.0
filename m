@@ -1,78 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:31244 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751119AbYKGR6P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 12:58:15 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Halperin, Daniel C" <daniel.c.halperin@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 05/13] iwlwifi: update iwl-commands.h for 3 stream support
-Date: Fri,  7 Nov 2008 09:58:38 -0800
-Message-Id: <1226080726-24860-6-git-send-email-reinette.chatre@intel.com> (sfid-20081107_185822_897055_062C5907)
-In-Reply-To: <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
+Received: from fmmailgate01.web.de ([217.72.192.221]:40645 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198AbYKNSlY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 13:41:24 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4] p54: minor fixes
+Date: Fri, 14 Nov 2008 19:41:22 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200811141941.22513.chunkeey@web.de> (sfid-20081114_194126_527233_40278930)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Halperin, Daniel C <daniel.c.halperin@intel.com>
+This patch contains only contains a one-liner fixes and enhancements
 
-This patch updates comments and constants to support 1, 2, or 3 spatial streams
-in rate_n_flags .
-
-Signed-off-by: Daniel Halperin <daniel.c.halperin@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-commands.h |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 8aade00..1fe83d4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -213,10 +213,11 @@ struct iwl_cmd_header {
- } __attribute__ ((packed));
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-11-14 17:57:47.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2008-11-14 18:08:22.000000000 +0100
+@@ -531,6 +531,8 @@ static int p54_rx_data(struct ieee80211_
+ 	rx_status.noise = priv->noise;
+ 	/* XX correct? */
+ 	rx_status.qual = (100 * hdr->rssi) / 127;
++	if (hdr->rate & 0x10)
++		rx_status.flag |= RX_FLAG_SHORTPRE;
+ 	rx_status.rate_idx = (dev->conf.channel->band == IEEE80211_BAND_2GHZ ?
+ 			hdr->rate : (hdr->rate - 4)) & 0xf;
+ 	rx_status.freq = freq;
+@@ -577,7 +579,7 @@ void p54_free_skb(struct ieee80211_hw *d
+ 	unsigned long flags;
+ 	u32 freed = 0, last_addr = priv->rx_start;
  
- /**
-- * 4965 rate_n_flags bit fields
-+ * iwlagn rate_n_flags bit fields
-  *
-- * rate_n_flags format is used in following 4965 commands:
-+ * rate_n_flags format is used in following iwlagn commands:
-  *  REPLY_RX (response only)
-+ *  REPLY_RX_MPDU (response only)
-  *  REPLY_TX (both command and response)
-  *  REPLY_TX_LINK_QUALITY_CMD
-  *
-@@ -230,8 +231,9 @@ struct iwl_cmd_header {
-  *        6)  54 Mbps
-  *        7)  60 Mbps
-  *
-- *    3:  0)  Single stream (SISO)
-+ *  4-3:  0)  Single stream (SISO)
-  *        1)  Dual stream (MIMO)
-+ *        2)  Triple stream (MIMO)
-  *
-  *    5:  Value of 0x20 in bits 7:0 indicates 6 Mbps FAT duplicate data
-  *
-@@ -252,8 +254,8 @@ struct iwl_cmd_header {
-  *        110)  11 Mbps
-  */
- #define RATE_MCS_CODE_MSK 0x7
--#define RATE_MCS_MIMO_POS 3
--#define RATE_MCS_MIMO_MSK 0x8
-+#define RATE_MCS_SPATIAL_POS 3
-+#define RATE_MCS_SPATIAL_MSK 0x18
- #define RATE_MCS_HT_DUP_POS 5
- #define RATE_MCS_HT_DUP_MSK 0x20
+-	if (!skb || !dev)
++	if (unlikely(!skb || !dev || !skb_queue_len(&priv->tx_queue)))
+ 		return;
  
--- 
-1.5.4.3
-
+ 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+@@ -1200,7 +1202,10 @@ static int p54_tx(struct ieee80211_hw *d
+ 	txhdr->key_type = 0;
+ 	txhdr->key_len = 0;
+ 	txhdr->hw_queue = queue;
+-	txhdr->backlog = 32;
++	if (current_queue)
++		txhdr->backlog = current_queue->len;
++	else
++		txhdr->backlog = 0;
+ 	memset(txhdr->durations, 0, sizeof(txhdr->durations));
+ 	txhdr->tx_antenna = (info->antenna_sel_tx == 0) ?
+ 		2 : info->antenna_sel_tx - 1;
+@@ -1549,7 +1554,6 @@ static void p54_stop(struct ieee80211_hw
+ 	while ((skb = skb_dequeue(&priv->tx_queue)))
+ 		kfree_skb(skb);
+ 
+-	kfree(priv->cached_beacon);
+ 	priv->cached_beacon = NULL;
+ 	priv->stop(dev);
+ 	priv->tsf_high32 = priv->tsf_low32 = 0;
+diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
+--- a/drivers/net/wireless/p54/p54common.h	2008-11-05 23:30:57.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.h	2008-11-14 00:16:44.000000000 +0100
+@@ -259,7 +259,7 @@ enum p54_rx_decrypt_status {
+ 	P54_DECRYPT_NOCKIPMIC,
+ 	P54_DECRYPT_FAIL_WEP,
+ 	P54_DECRYPT_FAIL_TKIP,
+-	P54_DECRYPT_FAIL_MICAHEL,
++	P54_DECRYPT_FAIL_MICHAEL,
+ 	P54_DECRYPT_FAIL_CKIPKP,
+ 	P54_DECRYPT_FAIL_CKIPMIC,
+ 	P54_DECRYPT_FAIL_AESCCMP
