@@ -1,79 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nexus.dynaweb.hu ([195.70.37.87]:50184 "EHLO nexus.dynaweb.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751351AbYKMRMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 12:12:01 -0500
-Date: Thu, 13 Nov 2008 18:11:55 +0100
-From: RUMI Szabolcs <rumi_ml@rtfm.hu>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath5k master (AP) mode
-Message-Id: <20081113181155.c556bde1.rumi_ml@rtfm.hu> (sfid-20081113_181208_041137_43B0B792)
-In-Reply-To: <20081113004632.d8d821c5.rumi_ml@rtfm.hu>
-References: <20081112224810.8d4ca179.rumi_ml@rtfm.hu>
-	<1226530010.15173.0.camel@dv>
-	<20081113004632.d8d821c5.rumi_ml@rtfm.hu>
+Received: from xc.sipsolutions.net ([83.246.72.84]:55034 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbYKNV4f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 16:56:35 -0500
+Subject: Re: Master mode in iw
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Mark Ryden <markryde@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910811140635v2c967406p439779c82866f455@mail.gmail.com> (sfid-20081114_153554_950885_42ADE9B7)
+References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com>
+	 <87ej1f6ggq.fsf@nokia.com>
+	 <dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com>
+	 <87wsf74z6f.fsf@nokia.com> <1226578011.5105.8.camel@johannes.berg>
+	 <87fxlu4rdx.fsf@nokia.com>
+	 <69e28c910811140539p57fa13dej4c13aa0d09c76f95@mail.gmail.com>
+	 <20081114141912.GB3443@tuxdriver.com>
+	 <69e28c910811140635v2c967406p439779c82866f455@mail.gmail.com>
+	 (sfid-20081114_153554_950885_42ADE9B7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Mon6GnGeluDal11AFjZP"
+Date: Fri, 14 Nov 2008 22:56:24 +0100
+Message-Id: <1226699784.4120.24.camel@johannes.berg> (sfid-20081114_225639_529569_067960B9)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 13 Nov 2008 00:46:32 +0100
-RUMI Szabolcs <rumi_ml@rtfm.hu> wrote:
 
-> On Wed, 12 Nov 2008 17:46:50 -0500
-> Pavel Roskin <proski@gnu.org> wrote:
-> 
-> > On Wed, 2008-11-12 at 22:48 +0100, RUMI Szabolcs wrote:
-> > > Hello!
-> > > 
-> > > I've been trying to set an Atheros NIC to AP mode using the ath5k
-> > > driver but it fails:
-> > > 
-> > > # iwconfig wlan0 mode master
-> > > Error for wireless request "Set Mode" (8B06) :
-> > >     SET failed on device wlan0 ; Invalid argument.
-> > 
-> > You need to use hostapd for master mode.
-> 
-> Well, I have installed hostapd-0.6.5 with the nl80211 driver and it says:
-> 
-> # hostapd -dd /etc/hostapd/hostapd.conf
-> Configuration file: /etc/hostapd/hostapd.conf
-> ctrl_interface_group=0
-> Failed to set interface wlan0 to master mode.
-> nl80211 driver initialization failed.
-> wlan0: Unable to setup interface.
-> Flushing old station entries
-> Deauthenticate all stations
-> rmdir[ctrl_interface]: No such file or directory
-> ELOOP: remaining socket: sock=8 eloop_data=0x9f4ea98 user_data=(nil) handler=0x8082920
+--=-Mon6GnGeluDal11AFjZP
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Some news about what I have tried since yesterday:
+On Fri, 2008-11-14 at 15:35 +0100, Stefanik G=C3=A1bor wrote:
 
-I have compiled a kernel from wireless-testing git of today (2.6.28-rc4-wl)
-then recompiled and tested hostapd-0.6.5 against that, but it exhibited the
-same behavior as above. Then I've compiled libnl git of today which did
-compile but any version of hostapd failed to compile against it so I gave
-up on that. Then I have compiled the hostapd git of today against libnl-1.1
-and the wireless-testing kernel which did compile but runtime it exhibited
-the same error as above. So basically whatever I do it fails to set master
-mode on ath5k...
+> But is cfg80211 supposed to be used for completely-fullmac cards that
+> do AP in hardware?
 
-I have also tried to patch 2.6.27 with a patch that the OpenWRT people
-seemed to be using and has this in net/mac80211/cfg.c:
+I very much hope that such cards will never exist, or at least will have
+a mode where everything is done by the host software in which case the
+driver will be using that mode. Everything else is plain stupid anyway,
+with all the new amendments coming out all the time.
 
-@@ -33,6 +33,10 @@ nl80211_type_to_mac80211_type(enum nl802
-       case NL80211_IFTYPE_MESH_POINT:
-              return IEEE80211_IF_TYPE_MESH_POINT;
-#endif
-+      case NL80211_IFTYPE_AP:
-+              return IEEE80211_IF_TYPE_AP;
-+      case NL80211_IFTYPE_AP_VLAN:
-+              return IEEE80211_IF_TYPE_VLAN;
+johannes
 
-But this also ended up with the same error like anything else.
+--=-Mon6GnGeluDal11AFjZP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Thanks,
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Sab
+iQIcBAABAgAGBQJJHfQFAAoJEKVg1VMiehFYNUwQALdlV4Npox55e5RuCdpLL8/t
+zM2z/aA8JzhX9bLATe7ZGRxMNGgpQuEDwdYCV5BvMlwk4fKWyb7l1BbMTzQvg1Es
+ndbRfwtKTGT3lNKymi9xR8lpGtaCwn5cfHYzj27NIEyOamxu3mZu0m3gZ7ZgDYtQ
+T/wdLxUFJxSYf/0+Cm2EgMzmo7+86TfEdtB7MRqehd1rWR+NeP2bNnlUZ4vFH8zk
+brTkzu2/E6RJMzZoRlBlUZaQx+wAGwKV++QYY5Wa62H2KECnvUnny6wC/XsDxBfy
+LlZ+Sk9jWN2ez414VmizKzdZsmdy3rwz0cwLLTQ2wpsZBtzjTxvS/HnYLwAzznHJ
++xxOYfzmnux+I4fVVD1Wy+jpppxDQ54OTFR7yrTLeEAEB5Pa41VduHvm/4Bi7TZG
+eDIIpbkg3Wqt1rNNkbF6ux/frkfXzEUwWN/5DShBWzJNL4WY8uP0Bk7CZLtJiwUH
+2KSx74604bh65r1id9vfNWBkrDYVFCGv22HNb6eTSaVkko1n5aNQXM3+2jpmoQvC
+FDGYm+7JFU6SSayI/rQEt9nL9tBvU0iP7M/O2OiiVD6S3z9hzi1FLpIuf1VbROGq
+Kh2u53lRufjYQYrFIoqy9LbVDmg+E+Vjy6y77VqnizfQcKj9G/kq6+cceWhdxcVL
+tbSQnAcyWL23iyERWX6Q
+=DGAP
+-----END PGP SIGNATURE-----
+
+--=-Mon6GnGeluDal11AFjZP--
+
