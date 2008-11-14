@@ -1,125 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:44911 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397AbYKAUO2 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47692 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466AbYKNXOg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 16:14:28 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1819330wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 13:14:27 -0700 (PDT)
-Message-ID: <1ba2fa240811011314i182695e6wc577a2559fab64b6@mail.gmail.com> (sfid-20081101_211435_325871_F8ABEEC4)
-Date: Sat, 1 Nov 2008 22:14:27 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcel Holtmann" <marcel@holtmann.org>
-Subject: Re: Still 4965 issues with wireless-testing
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <FB3E29C0-9493-4A1C-B725-734C100ADF3D@holtmann.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com>
-	 <DAD31980-B029-46D4-A687-9B0426899853@holtmann.org>
-	 <1ba2fa240810310652t351b0b77k819a7e03659503eb@mail.gmail.com>
-	 <BF4BAA7D-FEBC-40F7-AE07-D6BBD31A2A0B@holtmann.org>
-	 <1ba2fa240810311409i5203bcccu2b944dcc505deb30@mail.gmail.com>
-	 <C202FD8E-EB1E-417D-8086-7ADFBC72A1D3@holtmann.org>
-	 <1ba2fa240810311635t69165473hef0ef64bf4426d3a@mail.gmail.com>
-	 <FB3E29C0-9493-4A1C-B725-734C100ADF3D@holtmann.org>
+	Fri, 14 Nov 2008 18:14:36 -0500
+Subject: Re: [PATCH] mac80211: don't assume driver has been attached on
+	registration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <b6c5339f0811141505u1f8c7c3hd6858ebe21cc10bb@mail.gmail.com> (sfid-20081115_000539_525567_2666AA21)
+References: <1226702662-29694-1-git-send-email-lrodriguez@atheros.com>
+	 <b6c5339f0811141505u1f8c7c3hd6858ebe21cc10bb@mail.gmail.com>
+	 (sfid-20081115_000539_525567_2666AA21)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IVUf38TDttmBQr8yU+bJ"
+Date: Sat, 15 Nov 2008 00:14:24 +0100
+Message-Id: <1226704464.4120.32.camel@johannes.berg> (sfid-20081115_001440_412936_FF30A2A7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 1, 2008 at 9:11 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Tomas,
->
->>>>>>>> so besides the point that the Ubuntu 8.10 kernel has a broken driver
->>>>>>>> for
->>>>>>>> the Intel 4965 cards which will crash my X61 after less than one
->>>>>>>> minute
->>>>>>>> uptime when it connects to my access point, I have my dmesg full
->>>>>>>> with
->>>>>>>> warnings from the latest wireless-testing kernel.
->>>>>>>>
->>>>>>>> I know that we have discussed this before and Johannes' patch at
->>>>>>>> least
->>>>>>>> turns it into warnings instead of killing my system completely, but
->>>>>>>> I
->>>>>>>> am
->>>>>>>> still surprised why this hasn't been fixed.
->>>>>>>
->>>>>>> so this becomes more and more annoying. I get this WARN_ON now
->>>>>>> multiple
->>>>>>> times pre minute. Only the first few minutes after loading the
->>>>>>> firmware
->>>>>>> everything is okay and then it keeps filling my dmesg. And on top of
->>>>>>> that, I
->>>>>>> now see these:
->>>>>>>
->>>>>>> __ratelimit: 1189 callbacks suppressed
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> __ratelimit: 57695 callbacks suppressed
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> __ratelimit: 3345 callbacks suppressed
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>>
->>>>>>> What is going on here? This is a normal setup and nothing fancy.
->>>>>>> Access
->>>>>>> point is N-Capable from D-Link btw.
->>>>>>
->>>>>>
->>>>>> I have D-Link too I don't see this. What kernel version is this? Is
->>>>>> this your ubuntu version or wireless-testing?
->>>>>> Any more data you can provide (.config. slabinfo)
->>>>>
->>>>> this is from wireless-testing. The Ubuntu 2.6.27 kernel is totally
->>>>> broken.
->>>>> It will crash the kernel since we are missing the patch to turn this
->>>>> into
->>>>> a
->>>>> warning :)
->>>>>
->>>>> Attached is my config. The slabinfo will follow once the SKB errors
->>>>> come
->>>>> up
->>>>> again. It normally takes a few hours before they show. Just resumed
->>>>> that
->>>>> machine.
->>>>
->>>> I've downloaded whole moblin last night over 2.6.27.4, it's a bit slow
->>>> because the missing calibrations but it didn't crashed.
->>>>
->>>> I will test your config, your machine is T61  am I right?
->>>
->>> I have a X61 and running the 64-bit version of kernel and userspace.
->>
->> I found in sky2 driver comment
->>
->> * The buffer returned from netdev_alloc_skb is
->> * aligned except if slab debugging is enabled
->>
->> Since you have slub debug enabled, can you run this debug patch on
->> your system (might be withe space broken, I've  just pasted in)
->
-> I applied your patch and ran the latest wireless-testing for over 24 hours
-> now. The iwl_tx_cmd_complete issues shows up on a regular basis and the
-> allocate SKB buffers, too. However it didn't trigger the extra WARN_ON you
-> added.
 
-Thanks for the report, will try different directions.
-Tomas
+--=-IVUf38TDttmBQr8yU+bJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2008-11-14 at 18:05 -0500, Bob Copeland wrote:
+> On Fri, Nov 14, 2008 at 5:44 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > mac80211's ieee80211_register_hw() is often called within the
+> > probe path so it cannot assume the device's driver structure
+> > has been attached yet so to create a workqueue instead of
+> > using driver->name use the wiphy's phy%d name. The name doesn't
+> > really matter anyway.
+> >
+> > This should fix sporadic oopses found when we race to beat the
+> > driver pointer setting. Not even sure how this was working properly.
+>=20
+> I'd still like to identify the race first.  This patch won't hurt
+> anything, but I'm not confident it will solve any problem either (the
+> pci_dev->driver setting I was seeing after probe was for a different
+> struct driver).  Also it could make the bug harder to track down.
+>=20
+> In the reported case, wiphy_name will be empty string which isn't too
+> helpful for the workqueue name either, though it probably won't crash.
+
+That can't be right! wiphy_name is assigned right in wiphy_new()!
+
+johannes
+
+--=-IVUf38TDttmBQr8yU+bJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJHgZNAAoJEKVg1VMiehFYjkYP/RSMJq6xLQnsl39ohvCQMoLI
+zzNXAvOX//xvP9cLYVWJ6p/qMTIUuSArhzDHFX8qLK73JhBZBsX4WXgwkrB9Zq1K
+kOwiZNJnVs9BTqz+gGD8fhw7a/KaMGCehWFWfHXpB/tNEoyzy6RBl+Hh0DDkrlya
+AEpYuHrZ1R86Tb07p6fsWYhEW1odlr/nYxP3b1j4yFLL/5RzpPBYJHtWyzAFn14z
+R+MfJhIQxQSpbygdKg7A05r2f57cgWfZqnSpfcwyBnLf/c0ariu6iZYNpRemTpw5
+PekJ7AsE5Dk9k+DFHdV4bSNgXxBO4jrcOne24zD4ljs51UILcK48406m2R5QiNA/
+uL1qD3dwhEUXId1T5GBH4zHZNDy7q4MENvGf+VZPSQnSezyQ06DMJUi6Ay8AZYaN
+990UIGwpFs0zmz0rfnMZdMMxhbYLSRf7M0r4IY6LMtzDVubs9FSXcHeT9bTsW60i
+8WvYA4/qNJq18KDnthyy/UCANAvA2teYQojnOYQPuMUnnYhjRUE9oRDBgwp+spMC
+gaPUhBnZYkNJJ4L2HLxfcIPdildricJIgXPNLcZG6Hvnll+Vo4R2dyrTO+F6+1zZ
+y8MlhZ8sevAF/fOU1A3flFDr4pq4cpkxOaW8X1XF9TwkezochKTcZp+Yh1Qel4rw
+LDIX8kidCP+mulM5tqQF
+=2O/P
+-----END PGP SIGNATURE-----
+
+--=-IVUf38TDttmBQr8yU+bJ--
+
