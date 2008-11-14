@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:62121 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750920AbYKMHGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 02:06:44 -0500
-Subject: Re: iwlagn driver segfault in 2.6.28-rc3
-From: reinette chatre <reinette.chatre@intel.com>
-To: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20081111143410.GA4401@ics.muni.cz>
-References: <20081111143410.GA4401@ics.muni.cz>
-Content-Type: text/plain
-Date: Wed, 12 Nov 2008 23:07:21 -0800
-Message-Id: <1226560041.1115.945.camel@rc-desk> (sfid-20081113_080649_263056_E7E9C463)
-Mime-Version: 1.0
+Received: from fmmailgate02.web.de ([217.72.192.227]:48989 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751844AbYKNXyd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 18:54:33 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 3/4] p54: protect against sudden firmware file changes
+Date: Sat, 15 Nov 2008 00:54:29 +0100
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+References: <200811141941.56752.chunkeey@web.de> <1226700028.4120.28.camel@johannes.berg>
+In-Reply-To: <1226700028.4120.28.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200811150054.30113.chunkeey@web.de> (sfid-20081115_005437_658038_229D5F8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-11-11 at 06:34 -0800, Lukas Hejtmanek wrote:
-> Hello,
+On Friday 14 November 2008 23:00:28 Johannes Berg wrote:
+> On Fri, 2008-11-14 at 19:41 +0100, Christian Lamparter wrote:
+> > Thanks to "p54: introduce new names for device firmwares"
+> > (325ca16910a380c...) people are now migrating away from the buggy firmwares. 
+> > Of course this is a very good idea, but no one told them to unload the driver first.
 > 
-> I accidentaly got the following oops:
-> 
-> [54644.622141] wlan0: association with AP 00:13:80:43:9d:d0 timed out
-> [54655.006025] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> [54655.006444] iwlagn 0000:03:00.0: irq 40 for MSI/MSI-X
-> [54655.006715] general protection fault: 0000 [#1] SMP 
-> [54655.006723] last sysfs file: /sys/devices/pci0000:00/0000:00:1f.1/host3/target3:0:0/3:0:0:0/block/sr0/stat
-> [54655.006728] Dumping ftrace buffer:
-> [54655.006733]    (ftrace buffer empty)
-> [54655.006737] CPU 0 
-> [54655.006740] Modules linked in: aes_x86_64 aes_generic arc4 ecb iwlagn iwlcore mac80211 cfg80211 i915 drm rfcomm bri
-> dge stp llc bnep sco l2cap tp_smapi thinkpad_ec btusb bluetooth fuse thinkpad_acpi rfkill e1000e wmi intel_agp snd_hda_intel [last unloaded: ehci_hcd]
-> [54655.006785] Pid: 13515, comm: wpa_supplicant Not tainted 2.6.28-rc3 #27
-> [54655.006789] RIP: 0010:[<ffffffffa0149db7>]  [<ffffffffa0149db7>] iwl_eeprom_query16+0x7/0x20 [iwlcore]
-> 
+> that seems weird. Doesn't the driver pretty much have to cache the
+> firmware anyway for suspend/resume?
 
-I do not know why the eeprom will not be available at this point. Could you please try the patch below and let us know if you hit the error?
+well, that's odd. No one complained about this bug yet?!
+Even better, this bug/quirk is even present in the initial p54pci version that made it
+into the kernel. In fact it looks like its even present in the fullmac driver! Luis?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index db31a52..307b77e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2585,6 +2585,10 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
- 
- 	IWL_DEBUG_MAC80211("enter\n");
- 
-+	if (!priv->eeprom) {
-+		IWL_ERROR("EEPROM not initialized.\n");
-+		return -EIO;
-+	}
- 	if (pci_enable_device(priv->pci_dev)) {
- 		IWL_ERROR("Fail to pci_enable_device\n");
- 		return -ENODEV;
+I guess, I have to leave it that way to provide "bug-to-bug" compatibility! ;-)
 
-
+Regards,
+	Chr
