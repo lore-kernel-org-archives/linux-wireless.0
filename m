@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n19.bullet.mail.mud.yahoo.com ([68.142.206.146]:27531 "HELO
-	n19.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751605AbYK3Qxh (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:12706 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192AbYKNOfu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2008 11:53:37 -0500
-Date: Sun, 30 Nov 2008 08:53:36 -0800 (PST)
-From: Irwan Siajadi <dev.bahamot@yahoo.com>
-Subject: Re: ath5k: can't browse at all.
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1227643358.4162.4.camel@dv>
+	Fri, 14 Nov 2008 09:35:50 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so843459qwe.37
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 06:35:48 -0800 (PST)
+Message-ID: <69e28c910811140635v2c967406p439779c82866f455@mail.gmail.com> (sfid-20081114_153553_271165_7B2D59AE)
+Date: Fri, 14 Nov 2008 15:35:48 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Master mode in iw
+Cc: "Kalle Valo" <kalle.valo@nokia.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Mark Ryden" <markryde@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20081114141912.GB3443@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <892922.93252.qm@web59609.mail.ac4.yahoo.com> (sfid-20081130_175343_242979_AD2C6423)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com>
+	 <87ej1f6ggq.fsf@nokia.com>
+	 <dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com>
+	 <87wsf74z6f.fsf@nokia.com> <1226578011.5105.8.camel@johannes.berg>
+	 <87fxlu4rdx.fsf@nokia.com>
+	 <69e28c910811140539p57fa13dej4c13aa0d09c76f95@mail.gmail.com>
+	 <20081114141912.GB3443@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Tue, 11/25/08, Pavel Roskin <proski@gnu.org> wrote:
+On Fri, Nov 14, 2008 at 3:19 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Fri, Nov 14, 2008 at 02:39:50PM +0100, Stefanik G=E1bor wrote:
+>> On Fri, Nov 14, 2008 at 9:56 AM, Kalle Valo <kalle.valo@nokia.com> w=
+rote:
+>
+>> > Actually I was thinking about fullmac hardware which support AP mo=
+de.
+>> > In theory we might need to support those, but I guess in practise
+>> > there hasn't been, nor ever will be, such hardware. I'll just shut=
+ up
+>> > now :)
+>
+>> I doubt that any fullmac hardware should have a mac80211-based drive=
+r...
+>
+> cfg80211 !=3D mac80211
+>
+> --
+> John W. Linville                Linux should be at the core
+> linville@tuxdriver.com                  of your literate lifestyle.
+>
 
-> From: Pavel Roskin <proski@gnu.org>
-> Subject: Re: ath5k: can't browse at all.
-> To: "Irwan Siajadi" <dev.bahamot@yahoo.com>
-> Cc: linux-wireless@vger.kernel.org
-> Date: Tuesday, November 25, 2008, 8:02 PM
-> On Tue, 2008-11-25 at 09:24 -0800, Irwan Siajadi wrote:
-> 
-> > Further testing shows that if I change from WPA2/AES
-> to WPA/TIKIP, I
-> > can finally browse. But it's still hit and missed,
-> I need to reload
-> > the pages once or twice before the pages can load
-> properly. 
-> 
-> Try disabling hardware crypto in the driver:
-> 
-> rmmod ath5k
-> modprobe ath5k nohwcrypt=1
+But is cfg80211 supposed to be used for completely-fullmac cards that
+do AP in hardware?
 
-Sorry for the late reply, being busy with other stuffs.
-Anyway, disabling hardware cyrpto didn't make any changes. 
-
-> 
-> In any case, check messages from wpa_supplicant.  Maybe
-> it's
-> reauthenticating very often.  If you flood ping the router
-> ("ping -f"),
-> you would probably see growing dots that represent lost
-> packets.
-
-Flood ping the router doesn't have any lost packets (although only for a 
-minute or so). And my router's log shows that the laptop didn't 
-re-authenticate very often.
-
-I've also compiled vanilla 2.6.26 and 2.6.27 with ath5k (compat-wireless). 
-
-- 2.6.26.8 + ath5k (compat-wireless-old-2008-11-29, files last editted on
-2008-09-16):
--> ping shows some packets loss.
--> can browse any websites.
-
-- 2.6.27.7 + ath5k (compat-wireless-2008-11-26):
--> ping doesn't have any packet loss.
--> can't browse, browser always waiting for the response from the server.
-Monitoring the traffics shows that there are tx packets, but there's no rx 
-packets.
-
-Anything else I can try?
-
-> 
-> -- 
-> Regards,
-> Pavel Roskin
-
-Thanks,
-Irwan.
-
-
-      
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
