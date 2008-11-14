@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:41703 "EHLO hostap.isc.org"
+Received: from mail.atheros.com ([12.36.123.2]:40666 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755085AbYKIQjs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2008 11:39:48 -0500
-Date: Sun, 9 Nov 2008 18:38:51 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211_hwsim: Update documentation (AP mode enabled)
-Message-ID: <20081109163851.GI12829@jm.kir.nu> (sfid-20081109_173959_488855_44032E52)
+	id S1752680AbYKOHvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Nov 2008 02:51:12 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 23:51:12 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	<Don.breslin@atheros.com>
+Subject: [PATCH] ath9k: Configure AR_PHY_SWITCH_COM with apropriate antenna control
+Date: Sat, 15 Nov 2008 00:49:49 +0530
+Message-ID: <1226690389-26636-1-git-send-email-vasanth@atheros.com> (sfid-20081115_085116_396010_6BF3D836)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AP mode is now enabled in mac80211, so there is no need to point users
-to an additional patch to enable the mode. In addition, add a pointer to
-more hwsim test cases in hostap.git.
+This fixes the poor wireless connection which happens even
+if we are very well in the range.
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Don.breslin@atheros.com
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath9k/eeprom.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-Index: wireless-testing/Documentation/networking/mac80211_hwsim/README
-===================================================================
---- wireless-testing.orig/Documentation/networking/mac80211_hwsim/README
-+++ wireless-testing/Documentation/networking/mac80211_hwsim/README
-@@ -50,10 +50,6 @@ associates with the AP. hostapd and wpa_
- care of WPA2-PSK authentication. In addition, hostapd is also
- processing access point side of association.
+diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
+index f5fd03c..a5d02b7 100644
+--- a/drivers/net/wireless/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath9k/eeprom.c
+@@ -1244,7 +1244,7 @@ bool ath9k_hw_eeprom_set_board_values(struct ath_hal *ah,
  
--Please note that the current Linux kernel does not enable AP mode, so a
--simple patch is needed to enable AP mode selection:
--http://johannes.sipsolutions.net/patches/kernel/all/LATEST/006-allow-ap-vlan-modes.patch
--
+ 	txRxAttenLocal = IS_CHAN_2GHZ(chan) ? 23 : 44;
  
- # Build mac80211_hwsim as part of kernel configuration
+-	ath9k_hw_get_eeprom_antenna_cfg(ah, chan, 1, &ant_config);
++	ath9k_hw_get_eeprom_antenna_cfg(ah, chan, 0, &ant_config);
+ 	REG_WRITE(ah, AR_PHY_SWITCH_COM, ant_config);
  
-@@ -65,3 +61,8 @@ hostapd hostapd.conf
- 
- # Run wpa_supplicant (station) for wlan1
- wpa_supplicant -Dwext -iwlan1 -c wpa_supplicant.conf
-+
-+
-+More test cases are available in hostap.git:
-+git://w1.fi/srv/git/hostap.git and mac80211_hwsim/tests subdirectory
-+(http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=tree;f=mac80211_hwsim/tests)
-
+ 	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.5.1
+
