@@ -1,36 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:56719 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751159AbYKNOqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 09:46:11 -0500
-Message-ID: <491D8F23.4030407@suse.de> (sfid-20081114_154614_566835_D68AAE1E)
-Date: Fri, 14 Nov 2008 15:45:55 +0100
-From: Frank Seidel <fseidel@suse.de>
+Received: from rn-out-0910.google.com ([64.233.170.189]:62117 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbYKNWWE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 17:22:04 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so1421179rnd.17
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 14:22:03 -0800 (PST)
+Message-ID: <45e8e6c40811141422l6e7aa7b9g7227c4243ab701c5@mail.gmail.com> (sfid-20081114_232210_462092_3B1E1E6D)
+Date: Fri, 14 Nov 2008 14:22:03 -0800
+From: "Andrey Yurovsky" <andrey@cozybit.com>
+To: "Christian Lamparter" <chunkeey@web.de>
+Subject: Re: [PATCH 1/4] p54: enable Mesh Point support
+Cc: linux-wireless@vger.kernel.org,
+	"John W Linville" <linville@tuxdriver.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Pavel Roskin" <proski@gnu.org>
+In-Reply-To: <200811141941.06542.chunkeey@web.de>
 MIME-Version: 1.0
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"hschaa@suse.de" <hschaa@suse.de>
-Subject: Re: Problem with Kernel Oops in ipw2200
-References: <49130E75.1000903@suse.de> <49131173.3010409@suse.de>	 <20081112213350.GJ2411@tuxdriver.com>  <491BF062.4050705@suse.de> <1226631539.2604.411.camel@debian.sh.intel.com>
-In-Reply-To: <1226631539.2604.411.camel@debian.sh.intel.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200811141941.06542.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zhu Yi wrote:
-> Please try if attached patch fix the problem.
+Thanks!
 
-Unfortunately this bug isn't that easy to reproduce, this
-is why my tests took so long.
-But finally i can say this if clause really is hit and
-circumvents the oops!
-Thank you very much!
-So, can this patch please be taken?
+Acked-by: Andrey Yurovsky <andrey@cozybit.com>
 
-Thanks,
-Frank
+On Fri, Nov 14, 2008 at 10:41 AM, Christian Lamparter <chunkeey@web.de> wrote:
+> This patch enables Mesh Point operation for any p54 device.
+>
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
+> diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+> --- a/drivers/net/wireless/p54/p54common.c      2008-11-01 20:41:08.000000000 +0100
+> +++ b/drivers/net/wireless/p54/p54common.c      2008-11-02 13:34:24.000000000 +0100
+> @@ -1059,6 +1059,7 @@ static int p54_tx_fill(struct ieee80211_
+>                break;
+>        case NL80211_IFTYPE_AP:
+>        case NL80211_IFTYPE_ADHOC:
+> +       case NL80211_IFTYPE_MESH_POINT:
+>                if (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) {
+>                        *aid = 0;
+>                        *queue = 3;
+> @@ -1571,6 +1572,7 @@ static int p54_add_interface(struct ieee
+>        case NL80211_IFTYPE_STATION:
+>        case NL80211_IFTYPE_ADHOC:
+>        case NL80211_IFTYPE_AP:
+> +       case NL80211_IFTYPE_MESH_POINT:
+>                priv->mode = conf->type;
+>                break;
+>        default:
+> @@ -1590,6 +1592,7 @@ static int p54_add_interface(struct ieee
+>                p54_setup_mac(dev, P54_FILTER_TYPE_AP, priv->mac_addr);
+>                break;
+>        case NL80211_IFTYPE_ADHOC:
+> +       case NL80211_IFTYPE_MESH_POINT:
+>                p54_setup_mac(dev, P54_FILTER_TYPE_IBSS, NULL);
+>                break;
+>        default:
+> @@ -1654,6 +1657,7 @@ static int p54_config_interface(struct i
+>                break;
+>        case NL80211_IFTYPE_AP:
+>        case NL80211_IFTYPE_ADHOC:
+> +       case NL80211_IFTYPE_MESH_POINT:
+>                memcpy(priv->bssid, conf->bssid, ETH_ALEN);
+>                ret = p54_set_freq(dev, dev->conf.channel->center_freq);
+>                if (ret)
+> @@ -1829,6 +1833,7 @@ struct ieee80211_hw *p54_init_common(siz
+>
+>        dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION |
+>                                          NL80211_IFTYPE_ADHOC |
+> +                                         NL80211_IFTYPE_MESH_POINT |
+>                                          NL80211_IFTYPE_AP);
+>
+>        dev->channel_change_time = 1000;        /* TODO: find actual value */
+>
