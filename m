@@ -1,86 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37566 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752669AbYKEPkZ (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.189]:46855 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbYKNGRN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 10:40:25 -0500
-Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets
-	using tx close descriptor for 8187B
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-In-Reply-To: <200811051338.33882.herton@mandriva.com.br>
-References: <1225806649-10050-1-git-send-email-herton@mandriva.com.br>
-	 <4910CD42.4010402@lwfinger.net> <1225884552.3619.74.camel@johannes.berg>
-	 <200811051338.33882.herton@mandriva.com.br>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QlkqzfBIB/cPBwqqWMuz"
-Date: Wed, 05 Nov 2008 16:40:22 +0100
-Message-Id: <1225899623.3619.119.camel@johannes.berg> (sfid-20081105_164030_068362_95680E10)
-Mime-Version: 1.0
+	Fri, 14 Nov 2008 01:17:13 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so1133183rnd.17
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 22:17:12 -0800 (PST)
+Message-ID: <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com> (sfid-20081114_071717_774921_CFA367FF)
+Date: Thu, 13 Nov 2008 22:17:11 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Dan McGee" <dpmcgee@gmail.com>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>
+In-Reply-To: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Nov 13, 2008 at 9:46 PM, Dan McGee <dpmcgee@gmail.com> wrote:
+> Also reported here a few times, I've been seeing this bug every time I
+> try to load up the ath5k module in my kernel:
+> http://www.kerneloops.org/search.php?search=ieee80211_register_hw&btnG=Function+Search
+>
+> If you guys have any suggestions, I'd love to hear them. I
+> disassembled the code in question but am not very good with these
+> things. It looks to be somewhere between lines 804-825 in
+> net/mac80211/main.c.
+>
+> -Dan
+>
+> ath5k_pci 0000:01:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+> ath5k_pci 0000:01:00.0: setting latency timer to 64
+> ath5k_pci 0000:01:00.0: registered as ''
+> BUG: unable to handle kernel NULL pointer dereference at 00000000
+> IP: [<b80c1252>] :mac80211:ieee80211_register_hw+0x10f/0x2d6
+> *pde = 00000000
+> Oops: 0000 [#1] PREEMPT
+> Modules linked in: ath5k(+) mac80211
+>
+> Pid: 818, comm: modprobe Not tainted (2.6.27.6eee #3)
+> EIP: 0060:[<b80c1252>] EFLAGS: 00010286 CPU: 0
+> EIP is at ieee80211_register_hw+0x10f/0x2d6 [mac80211]
 
---=-QlkqzfBIB/cPBwqqWMuz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I don't know assembly but if you compile with debugging symbols you
+can pin point the line at which your EIP points to with gdb.
 
-On Wed, 2008-11-05 at 13:38 -0200, Herton Ronaldo Krzesinski wrote:
+Run
 
-> > > WARNING: line over 80 characters
-> > > #138: FILE: drivers/net/wireless/rtl8187_dev.c:475:
-> > > +                       if ((le16_to_cpu(ieee80211hdr->seq_ctrl) & 0x=
-FFF)
-> > > =3D=3D seq_no)
->=20
-> Ops, I forgot to run checkpatch.pl here, will run and fix it when I submi=
-t=20
-> next patch.
+gdb /lib/modules/`uname -r`/kernel/net/mac80211.ko
 
-I wouldn't worry about lines > 80 chars too much, breaking this down
-wouldn't make more readable but less so, in my opinion. I tend to ignore
-that rule where it makes the code unreadable :)
+Then
 
-> > Besides, that line looks wrong? the lowest 4 bits are teh fragment
-> > number.
->=20
-> It's intended, because the hardware instead of reporting just the sequenc=
-e=20
-> number in its 12 bits is reporting fragment number + sequence number, thi=
-s is=20
-> a workaround.
+l *(ieee80211_register_hw+0x10f)
 
-Ah. A comment might be appropriate that "seq_no" doesn't actually
-contain the sequence number?
+If our offsets are the same then its probably on line 791:
 
-johannes
+(gdb) l *(ieee80211_register_hw+0x10f)
+0x2df is in ieee80211_register_hw (net/mac80211/main.c:791).
+786             mdev->type = ARPHRD_IEEE80211;
+787             mdev->header_ops = &ieee80211_header_ops;
+788             mdev->set_multicast_list = ieee80211_master_set_multicast_list;
+789
+790             name = wiphy_dev(local->hw.wiphy)->driver->name;
+791             local->hw.workqueue = create_freezeable_workqueue(name);
+792             if (!local->hw.workqueue) {
+793                     result = -ENOMEM;
+794                     goto fail_workqueue;
+795             }
 
---=-QlkqzfBIB/cPBwqqWMuz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I have run into this before but on a very rare occasion and it was
+with iwlagn,  and I wasn't able to find the culprit. Do you run into
+this all the time?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJEb5jAAoJEKVg1VMiehFY68IP/j53fwQqYQkJgpur5SN4ojVV
-1jH96XSde7HW0mDtQGsrdGV88GTeOO5QdOJ98/BIx/rMEt+dJZEzOG+BHqNewnYm
-Wj3mpC4o8DM7mGwFpNO1bGL0tuCfeV1fO51kgUqi5VFwdCExeUWxF2Lqt00gnkV3
-1NqPG3NDSpcpVsyqvakqS84qWPF8H5SWPs6fMIl5qtLgE9QDNd1gRdVQl1+lZumQ
-eJS9SaB0doloS/NBeRyvpZtK3O56TLAhKcX7NNdXokp1s8M74TNqT6rNU2Nwo05R
-bPM1S0D/MwR9g49gUm94lCh9mNMlxBend7sokGDIA9RB7l+/fFnelJZciHSz+qwz
-6QvHlp4q/g7FIy1aZ6DDr4TrXMWQ/BD6V6Hyfj0j9gpHMMlwM8Fi5mvqv82jRlL4
-Ry2qPjoAhXwzkSAa32J6IaTmZKeCeFYCy4L4NHBdr0IASzK46kjDyOufLJH2S1vk
-e/FbnfChpjFfI7F2Zvw3O0jE/NO60+Lt/rMqJqojVhXvwVtk/IG+UlVWZLwVvpo7
-d+bikK0JcRj+F4VS7pwoZPEOfmJFwB/Nwio8eWZfQ2Fx4QP0EE1X6QYvxkqflo3f
-Ug2Z6EMlXEdalcuWSwb43ngDRBNNz0bmDfzy7ARNcCYTz35DluIEnBw42tN7rJew
-PB7z8thj8TKOCicTWgJQ
-=qPtc
------END PGP SIGNATURE-----
-
---=-QlkqzfBIB/cPBwqqWMuz--
-
+  Luis
