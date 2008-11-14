@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout2-sn2.hy.skanova.net ([81.228.8.164]:51497 "EHLO
-	pne-smtpout2-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750759AbYKFONB (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:6779 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751726AbYKNRiB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 09:13:01 -0500
-From: "Lars Ericsson" <Lars_Ericsson@telia.com>
-To: <linux-wireless@vger.kernel.org>,
-	<rt2400-devel@lists.sourceforge.net>
-Subject: PID control in Linux 2.6.27.4
-Date: Thu, 6 Nov 2008 14:03:32 +0100
-Message-ID: <9D4D31A146C744FE823A2BEF8490178F@gotws1589> (sfid-20081106_151308_511429_72A8BEC7)
+	Fri, 14 Nov 2008 12:38:01 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so673724ywe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 09:37:59 -0800 (PST)
+Message-ID: <43e72e890811140937h4dc03cf8g50df7f74efcd28b2@mail.gmail.com> (sfid-20081114_183808_232372_CBB91E70)
+Date: Fri, 14 Nov 2008 09:37:59 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: "Dan McGee" <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
+	 <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
+	 <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, 
+On Fri, Nov 14, 2008 at 9:02 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Fri, Nov 14, 2008 at 1:17 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> If our offsets are the same then its probably on line 791:
+> [...]
+>> 790             name = wiphy_dev(local->hw.wiphy)->driver->name;
+>> 791             local->hw.workqueue = create_freezeable_workqueue(name);
+>
+> I agree, having looked at the objdump output.  Hmm, maybe ->driver pointer
+> is bad even though I can't see that happening.
 
-Running some initial evaluation test on Linux 2.6.27.4 from Linux git.
+Yeah I tried digging through the work queue logic thing and don't see
+why name would be NULL. I believe the name comes from the driver's
+stack memory when it sets up the pci device driver structure. Only
+puzzling thing for me is wiphy_dev() gets the wiphy->dev.parent, that
+still hasn't sunken in yet for me, and how that gets you
+->driver->name or how this can possibly be NULL.
 
-I have seen some strange behaviour on the rate control. 
-Using an 11b AP works fine.
-Using an 11b/g AP will not give high speed result. 
-In fact it gives lower speed compared to the 11b AP
+Anyway we do set the parent before calling ieee80211_register_hw() by
+using SET_IEEE80211_DEV(hw, &pdev->dev) (oh ok here is the parent). so
+when we try to get the name with parent->driver I am not sure if
+driver has been set yet because ath5k_pci_probe() hasn't finished yet
+as probe called ath5k_hw_attach(). When does ->driver get set and why
+would it fail only for ath5k?
 
-I'm using the rt61 minPCI as the WLAN HW.
-
-
-I have the following linux config:
-#
-# Rate control algorithm selection
-#
-CONFIG_MAC80211_RC_PID=y
-CONFIG_MAC80211_RC_DEFAULT_PID=y
-CONFIG_MAC80211_RC_DEFAULT="pid"
-# CONFIG_MAC80211_MESH is not set
-# CONFIG_MAC80211_LEDS is not set
-CONFIG_MAC80211_DEBUGFS=y
-# CONFIG_MAC80211_DEBUG_MENU is not set
-# CONFIG_IEEE80211 is not set
-# CONFIG_RFKILL is not set
-# CONFIG_NET_9P is not set
-
-
-Are there any know issues with the PID function in this Linux version ?
-
-/Lars
-
+  Luis
