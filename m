@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:47329 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751608AbYKDMnV (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36695 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303AbYKOPBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 07:43:21 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so3175070wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 04:43:21 -0800 (PST)
-Message-ID: <b6c5339f0811040443j68758507m7659339f8f6f4aa4@mail.gmail.com> (sfid-20081104_134325_995311_060615BD)
-Date: Tue, 4 Nov 2008 07:43:21 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: No ProbeResp - assume out of range
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <200811041217.51096.mb@bu3sch.de>
+	Sat, 15 Nov 2008 10:01:10 -0500
+Date: Sat, 15 Nov 2008 09:50:04 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] add ar9170 driver
+Message-ID: <20081115145004.GA31553@tuxdriver.com> (sfid-20081115_160132_650350_4E1867A3)
+References: <1226745636.4120.48.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com>
-	 <43e72e890811021458h1444d350v33a5e5b984b76495@mail.gmail.com>
-	 <20081103002558.GA14153@tesla> <200811041217.51096.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1226745636.4120.48.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 4, 2008 at 6:17 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> Well, so it seems this is caused by the driver honoring the filter flag for
-> beacons. b43 and b43legacy do this, too. So they most likely have the same
-> misbehaviour.
-> In the end, I'd still call this a mac80211 bug. Why does mac80211 suppress
-> beacons (by clearing the flag), if it needs them?
+On Sat, Nov 15, 2008 at 11:40:36AM +0100, Johannes Berg wrote:
+> This patch adds the ar9170 driver for Atheros 802.11n
+> USB hardware ("otus"). The driver currently has basic
+> functionality, it will always transmit at 1 or 6 MBit
+> rates and only supports managed mode.
+> 
+> TODO:
+>  * rate control/tx status!
+>  * figure out QoS (does firmware parse QoS control to get AC?)
+>  * implement IBSS mode
+>  * implement hardware crypto
+>  * implement AP mode
+>  * implement mesh mode
+>  * make LEDs blink
+>  * HT
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> Do we want such a basic driver?
 
-The patch in question disables all beacons, not just ones coming from
-other bssid.
+In general, yes.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
