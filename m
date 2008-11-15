@@ -1,90 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:54327 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995AbYK0Rns convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 12:43:48 -0500
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: "Stefanik =?utf-8?q?G=C3=A1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [RFC] rtl8187: Do not wait for an ACK when IEEE80211_TX_CTL_NO_ACK is set
-Date: Thu, 27 Nov 2008 15:43:56 -0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	"Hin-Tak Leung" <hintak.leung@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <69e28c910811261431u26e341d3p51ebadca807f4b61@mail.gmail.com>
-In-Reply-To: <69e28c910811261431u26e341d3p51ebadca807f4b61@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:45659 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751215AbYKOAgJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 19:36:09 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 16:36:09 -0800
+Date: Fri, 14 Nov 2008 16:36:08 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Dan McGee <dpmcgee@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>, Sujith <m.sujith@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Message-ID: <20081115003608.GK27642@tesla> (sfid-20081115_013613_636032_9E17F76C)
+References: <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com> <18717.49111.572993.44410@localhost.localdomain> <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com> <18717.50308.330801.765686@localhost.localdomain> <43e72e890811141037j5328f71fx7badb6f2b0e0831d@mail.gmail.com> <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com> <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com> <43e72e890811141241k7ae83fc3qe90e2e42d61b8df6@mail.gmail.com> <43e72e890811141313t33b6a3edo86488bea9a7b3371@mail.gmail.com> <449c10960811141625o171d1e31v974d2f921f5a825@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200811271543.59126.herton@mandriva.com.br> (sfid-20081127_184352_432385_E63407C9)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <449c10960811141625o171d1e31v974d2f921f5a825@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Quarta 26 Novembro 2008, =C3=A0s 20:31:03, Stefanik G=C3=A1bor escre=
-veu:
-> (Patch also available as an attachment in case Gmail decides to linew=
-rap
-> it.)
->
-> Currently we always wait for an ACK even if IEEE80211_TX_CTL_NO_ACK i=
-s set.
-> This is just the opposite of what other drivers do.
+On Fri, Nov 14, 2008 at 04:25:53PM -0800, Dan McGee wrote:
+> On Fri, Nov 14, 2008 at 3:13 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Fri, Nov 14, 2008 at 12:41 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> >> On Fri, Nov 14, 2008 at 12:33 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> >>> On Fri, Nov 14, 2008 at 2:33 PM, Dan McGee <dpmcgee@gmail.com> wrote:
+> >>>> On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> >>>>> On Fri, Nov 14, 2008 at 10:33 AM, Sujith <m.sujith@gmail.com> wrote:
+> >>>>>> Luis R. Rodriguez wrote:
+> >>>>>>> > From the original log:
+> >>>>>>> > ath5k_pci 0000:01:00.0: registered as ''
+> >>>>>>>
+> >>>>>>> That comes from
+> >>>>>>>
+> >>>>>>> dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
+> >>>>>>>
+> >>>>>>> which means that may be buggy too as wiphy_name() gets
+> >>>>>>>
+> >>>>>>> return wiphy->dev.bus_id;
+> >>>>>>>
+> >>>>>>> and we only have set at that point wiphy->dev.parent IIRC.
+> >>>>>>>
+> >>>>>>
+> >>>>>> Nope, parent is set after that call in SET_IEEE80211_DEV()
+> >>>>>> phy[x] gets assigned in alloc_hw().
+> >>>>>>
+> >>>>>> So why is it NULL even if alloc_hw() succeeds ?
+> >>>>>
+> >>>>> Parent is wiphy->dev.parent not wiphy->dev though
+> >>>
+> >>> Sujith is right, wiphy->dev.bus_id should be set by the time that's printed,
+> >>> since wiphy_new in alloc_hw fills it in.
+> >>
+> >> Ah, I see, yes, oh man. Well this is good :)
+> >
+> > OK then try the patch in the other thread. If that doesn't fix it then
+> > it has to be another issue.
+> 
+> Can someone point me to the "other thread"? I don't think I was CCed
+> on it since I came late to the party.
+> 
+> Someone also inquired about versions. I'm using stable kernel 2.6.27.6
+> and compat-wireless-2008-11-13 (10-28 was doing the same thing
+> however).
 
-nack.
+Bounced you a copy. Please give it a try.
 
-I've seen other drivers set just a flag when hardware has a bit field t=
-o
-signalize that there isn't need to ack the tx packet to be sent, but
-don't saw anyone changing retry in tx hw header. Also setting to 0 in
-no_ack case looks wrong, for example see ath5k where it even checks for
-0 and returns an error if you try to do this.
-
-> Change both RTL8187L and RTL8187B to skip waiting for an ACK when no
-> ACK was requested.
->
-> Signed-off-by: G=C3=A1bor Stefanik <netrolller.3d@gmail.com>
-> ---
->  drivers/net/wireless/rtl818x/rtl8187_dev.c |   10 ++++++++--
->  1 files changed, 8 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> index 9fd23b5..7f12d9f 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -230,7 +230,10 @@ static int rtl8187_tx(struct ieee80211_hw *dev,
-> struct sk_buff *skb)
->  		hdr->flags =3D cpu_to_le32(flags);
->  		hdr->len =3D 0;
->  		hdr->rts_duration =3D rts_dur;
-> -		hdr->retry =3D cpu_to_le32(info->control.rates[0].count << 8);
-> +		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
-> +			hdr->retry =3D cpu_to_le32(info->control.rates[0].count << 8);
-> +		else
-> +			hdr->retry =3D 0;
->  		buf =3D hdr;
->
->  		ep =3D 2;
-> @@ -248,7 +251,10 @@ static int rtl8187_tx(struct ieee80211_hw *dev,
-> struct sk_buff *skb)
->  		memset(hdr, 0, sizeof(*hdr));
->  		hdr->flags =3D cpu_to_le32(flags);
->  		hdr->rts_duration =3D rts_dur;
-> -		hdr->retry =3D cpu_to_le32(info->control.rates[0].count << 8);
-> +		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
-> +			hdr->retry =3D cpu_to_le32(info->control.rates[0].count << 8);
-> +		else
-> +			hdr->retry =3D 0;
->  		hdr->tx_duration =3D
->  			ieee80211_generic_frame_duration(dev, priv->vif,
->  							 skb->len, txrate);
-
---
-[]'s
-Herton
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
