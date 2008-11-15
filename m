@@ -1,60 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:35185 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751681AbYKXJnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 04:43:37 -0500
-Message-ID: <492A7733.2000205@openwrt.org> (sfid-20081124_104341_111603_A3348759)
-Date: Mon, 24 Nov 2008 10:43:15 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail.deathmatch.net ([70.167.247.36]:1456 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770AbYKOSUj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Nov 2008 13:20:39 -0500
+Date: Sat, 15 Nov 2008 13:19:42 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Dan McGee <dpmcgee@gmail.com>
+Cc: mcgrof@gmail.com, m.sujith@gmail.com,
+	linux-wireless@vger.kernel.org, mb@bu3sch.de,
+	johannes@sipsolutions.net
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Message-ID: <20081115181941.GD10702@hash.localnet> (sfid-20081115_192058_035897_89B44BE8)
+References: <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com> <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com> <43e72e890811141241k7ae83fc3qe90e2e42d61b8df6@mail.gmail.com> <43e72e890811141313t33b6a3edo86488bea9a7b3371@mail.gmail.com> <449c10960811141625o171d1e31v974d2f921f5a825@mail.gmail.com> <20081115003608.GK27642@tesla> <449c10960811141805w428df33ak2f98651abb7403e6@mail.gmail.com> <20081115022913.GC10702@hash.localnet> <449c10960811141857u2b0c4153h3735545dbec7ef8b@mail.gmail.com> <449c10960811142229v77ea85f4nf898d447c7e63422@mail.gmail.com>
 MIME-Version: 1.0
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-CC: Maxim Levitsky <maximlevitsky@gmail.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	wally@theblackmoor.net, Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [ath5k-devel] Unusually low speeds with ath5k and iwl3945
-References: <492719ED.5000006@gmail.com> <20081122005240.GA27826@hash.localnet>	<alpine.DEB.2.00.0811221643030.7067@monster> <4927FC0C.10900@gmail.com> <492A5913.3070007@free.fr>
-In-Reply-To: <492A5913.3070007@free.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <449c10960811142229v77ea85f4nf898d447c7e63422@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Benoit PAPILLAULT wrote:
-> I did a similar test here and results is very strange. AP was my good
-> old linksys WRT54G running an iperf server. Client was a laptop running
-> either ath5k or madwifi/trunk and an iperf client. Channel is 5. Both
-> drivers show the same behaviour.
-> 
-> At the beginning, throughput was very low : 500 - 600 kbit/s. Suddenly
-> (after few minutes), it jumps to 15 - 17 Mbit/s and then few minutes
-> later (let's say 10 - 20 minutes maybe), it jumps back to 500 - 600
-> kbit/s. Using a fixed rate has no effect.
-> 
-> I used my latest wireless monitoring tools and I did not saw lost of
-> duplicates or lost packets. The only difference was the number of
-> packets sent by seconds....
-> 
-> Looking a my syslog, I just saw few messages, unrelated in time with the
-> throughput going up or down. They were:
-> - ath5k : unsupported jumbo
-> - switching to short barker preamble
-> - switching to long barker preamble
-> 
-> I can repeat the same test with iwl3945 as well, if needed.
-While reading the code for calculating the frame duration, i noticed
-something odd: It doesn't seem to be taking into account the short
-vs long preamble distinction for ERP rates. IMHO this might be causing
-issues like this. I've seen similar behaviour a long time ago when testing
-iwl3945 against a Broadcom AP with exactly the same throughput drop (500-
-600 kbits/s).
-When I analyzed the problem with an extra monitor mode card, I found out
-that the throughput drop is caused by a huge number of retransmissions,
-and if I remember correctly (I didn't look for this specifically back then),
-the retransmissions went down the rate scaling table until they hit the
-first non-ERP rate and that one worked on the first try.
+On Sat, Nov 15, 2008 at 12:29:34AM -0600, Dan McGee wrote:
+> On Fri, Nov 14, 2008 at 8:57 PM, Dan McGee <dpmcgee@gmail.com> wrote:
+> >
+> > BUG: unable to handle kernel NULL pointer dereference at 00000082
+> > IP: [<7818ca71>] sysfs_find_dirent+0x9/0x23
+> > Oops: 0000 [#1] PREEMPT
+> > Modules linked in: ath5k(+) mac80211
 
-Johannes, does that sound like a probable cause? If so, it should be easy
-to fix.
+So, just to recap, this is with Luis' patch; now you get a null pointer
+dereference in sysfs instead of in ieee80211_register_hw?  It does look 
+like we're deep in register_netdevice now.  If you revert his patch, you
+can still get the error in register_hw every time?
 
-- Felix
+> > Pid: 818 comm: modprobe Not tainted (2.6.27.6eee #1)
+> > EIP: 0060:[<7818ca71>] EFLAGS: 00010206 CPU: 0
+> > EIP is at sysfs_find_dirent+0x9/0x23
+> > EAX: 00000001 EBX: 00000072 ECX: 00000001 EDX: b730b4f0
+> > ESI: b730b4f0 EDI: fffffff4 EBP: b7311490 ESP: b73ffd34
+
+EBX is 00000072, definitely not a pointer.
+
+> And I had the code completely wrong, oops. Looks like we are bailing
+> on the strcmp call in this function or something along those lines? I
+> wish I could be a bigger help with debugging this stuff.
+
+Yep, or at least in the setup code for that.  Don't worry, you're being
+a big help; I think we just don't have a good enough theory yet to
+propose decent debugging patches.
+
+> struct sysfs_dirent *sysfs_find_dirent(struct sysfs_dirent *parent_sd,
+>                                        const unsigned char *name)
+> {
+>  1bc:   56                      push   %esi
+>  1bd:   89 d6                   mov    %edx,%esi
+>  1bf:   53                      push   %ebx
+>         struct sysfs_dirent *sd;
+> 
+>         for (sd = parent_sd->s_dir.children; sd; sd = sd->s_sibling)
+>  1c0:   8b 58 18                mov    0x18(%eax),%ebx
+>  1c3:   eb 11                   jmp    1d6 <sysfs_find_dirent+0x1a>
+>                 if (!strcmp(sd->s_name, name))
+>  1c5:   8b 43 10                mov    0x10(%ebx),%eax
+
+EBX appears to be sd (it's initialized at line 1c0 to parent_sd + 0x18,
+which is &parent_sd->s_dir.children, then it jumps to the loop test).
+Thus EAX must be sd->s_sibling, which we hope to use for strcmp.
+
+So, while traversing the sibling pointers, one of them happens to be
+00000072 (instead of what should probably have been NULL).  0x72 is not
+a poison value I'm aware of.  At this point, things have gone south, but
+the real problem happened earlier.
+
+Can you post your .config?
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
