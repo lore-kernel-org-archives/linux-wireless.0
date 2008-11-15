@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:40506 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312AbYKYV35 (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:4121 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126AbYKOAjf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 16:29:57 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so102297yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 13:29:55 -0800 (PST)
-Message-ID: <b6c5339f0811251329h1130fd4aladcbfda52f0542eb@mail.gmail.com> (sfid-20081125_223001_377084_196CB375)
-Date: Tue, 25 Nov 2008 16:29:55 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath5k-devel] License of changes to ath5k/ath9k
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
-	bkuhn@softwarefreedom.org
-In-Reply-To: <20081125210421.GF5950@tesla>
+	Fri, 14 Nov 2008 19:39:35 -0500
+Date: Fri, 14 Nov 2008 19:38:41 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Dan McGee <dpmcgee@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Sujith <m.sujith@gmail.com>, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Message-ID: <20081115003840.GB10702@hash.localnet> (sfid-20081115_013937_692982_0FAA072F)
+References: <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com> <18717.49111.572993.44410@localhost.localdomain> <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com> <18717.50308.330801.765686@localhost.localdomain> <43e72e890811141037j5328f71fx7badb6f2b0e0831d@mail.gmail.com> <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com> <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com> <43e72e890811141241k7ae83fc3qe90e2e42d61b8df6@mail.gmail.com> <43e72e890811141313t33b6a3edo86488bea9a7b3371@mail.gmail.com> <449c10960811141625o171d1e31v974d2f921f5a825@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081125210421.GF5950@tesla>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <449c10960811141625o171d1e31v974d2f921f5a825@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 25, 2008 at 4:04 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> We'll keep using the ath5k Changes-licensed-under tag until we get
-> advice from SFLC if we have done enough to ensure this is no longer
-> necessary. For ath9k, if we are not sure if you have read the
-> "Developer's Certificate of Origin 1.1" we may ping you with an e-mail
-> just to be sure.
+On Fri, Nov 14, 2008 at 06:25:53PM -0600, Dan McGee wrote:
+> Can someone point me to the "other thread"? I don't think I was CCed
+> on it since I came late to the party.
+> 
+> Someone also inquired about versions. I'm using stable kernel 2.6.27.6
+> and compat-wireless-2008-11-13 (10-28 was doing the same thing
+> however).
 
-I don't consider any of my changes significant enough to confer copyright,
-so by my Signed-off-by, I agree that whatever license the file currently
-has is alright by me.  Even if the changes were significant, the previous
-holds.
+The thread is over there:
 
-However, if everyone + SFLC prefers that we strictly use
-Changes-licensed-under even if we don't claim copyright, then I'll
-happily add the tag generator script to a git commit hook :)
-
-> Ps. Please do not open any can of worms here, this is just informational.
-
-Sure.  I like the ath9k way, but really it doesn't matter that much.
+http://marc.info/?l=linux-wireless&m=122670266931930&w=2
 
 -- 
 Bob Copeland %% www.bobcopeland.com
+
