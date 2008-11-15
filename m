@@ -1,55 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:51250 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751465AbYKDMhL (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:58701 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751664AbYKOAyM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 07:37:11 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so3248974rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 04:37:10 -0800 (PST)
-Message-ID: <b6c5339f0811040437h4da7f3a1v3b606145c0702243@mail.gmail.com> (sfid-20081104_133717_832536_982372B3)
-Date: Tue, 4 Nov 2008 07:37:10 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] ath5k: enable RXing beacons
-Cc: "Dan Williams" <dcbw@redhat.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-In-Reply-To: <b6c5339f0811030717mfa8ac56hdd58c367563ed931@mail.gmail.com>
+	Fri, 14 Nov 2008 19:54:12 -0500
+To: linux-wireless@vger.kernel.org
+Subject: [RFC][RFT][PATCH] p54: WEP & CCMP accelerator v2
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Kalle Valo <kalle.valo@nokia.com>
+From: Christian Lamparter <chunkeey@web.de>
+Date: Sat, 15 Nov 2008 01:54:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1225672612-15106-1-git-send-email-lrodriguez@atheros.com>
-	 <1225676353.13684.2.camel@localhost.localdomain>
-	 <b6c5339f0811021810w229d1d9al2b27bdf4144cde69@mail.gmail.com>
-	 <43e72e890811022043t5525d924vcb776569a7bebbc8@mail.gmail.com>
-	 <43e72e890811022049l386789f5qf8bde98eedcd4d2c@mail.gmail.com>
-	 <43e72e890811022052n8c5e7d3ic722caa65c711481@mail.gmail.com>
-	 <b6c5339f0811030717mfa8ac56hdd58c367563ed931@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200811150154.09729.chunkeey@web.de> (sfid-20081115_015417_073323_A6C80A40)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 3, 2008 at 10:17 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Sun, Nov 2, 2008 at 11:52 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>>>> Sorry, my fault, this was a direct result of
->>>>> 60c7e22196fb4230b76db1f5fb283e811b8f3fb3 "ath5k: honor
-> [...]
->> OK Vasanth confirmed this is correct, and ath9k actually has incorrect
->> behavior so we have to fix that there as well. If stable got the ath5k
->> changes to the filter then yes we should push it there too.
+This patch allows p54 to utilize its WEP and CCMP accelerator.
 
-BTW perhaps we should still look at the filter for ath5k since, once
-associated, we still get beacons from every AP in the world instead of
-just those with our BSSID.
+However, I'm not sure how TKIP is supposed to work... Kalle?
 
-     FIF_BCN_PRBRESP_PROMISC
+changes:
+- fix reject if "[PATCH 3/4] p54pci: cache firmware for suspend/resume" is applied
+  instead of the original "[PATCH 3/4] p54: protect against sudden firmware file changes".
 
-     This flag is set during scanning to indicate to the hardware
-     that it should not filter beacons or probe responses by BSSID.
-     Filtering them can greatly reduce the amount of processing
-     mac80211 needs to do and the amount of CPU wakeups, so
-     you should honour this flag if possible.
-
-Right now with ath5k there's basically no difference between having or
-not having that flag in station mode, even though we do set the bssid
-in ath5k_hw_set_associd AFAICT.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-11-14 18:37:34.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2008-11-14 18:55:53.000000000 +0100
+@@ -26,6 +26,9 @@
+ #include "p54.h"
+ #include "p54common.h"
+ 
++static int modparam_nohwcrypt;
++module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
++MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+ MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
+ MODULE_DESCRIPTION("Softmac Prism54 common code");
+ MODULE_LICENSE("GPL");
+@@ -196,6 +199,8 @@ int p54_parse_firmware(struct ieee80211_
+ 			priv->rx_end = le32_to_cpu(desc->rx_end) - 0x3500;
+ 			priv->headroom = desc->headroom;
+ 			priv->tailroom = desc->tailroom;
++			priv->privacy_caps = desc->privacy_caps;
++			priv->rx_keycache_size = desc->rx_keycache_size;
+ 			if (le32_to_cpu(bootrec->len) == 11)
+ 				priv->rx_mtu = le16_to_cpu(desc->rx_mtu);
+ 			else
+@@ -238,6 +243,15 @@ int p54_parse_firmware(struct ieee80211_
+ 		priv->tx_stats[7].limit = 2;		/* AC_BK */
+ 		dev->queues = 4;
+ 	}
++
++	if (!modparam_nohwcrypt)
++		printk(KERN_INFO "%s: Available cryptographic accelerator for"
++				 " WEP:%s, TKIP:no, CCMP:%s\n",
++			wiphy_name(dev->wiphy),
++			(priv->privacy_caps & BR_DESC_PRIV_CAP_WEP) ? "YES" :
++			"no", (priv->privacy_caps & BR_DESC_PRIV_CAP_AESCCMP) ?
++			"YES" : "no");
++
+ 	priv->fw_crc = crc;
+ 
+ 	return 0;
+@@ -539,6 +553,11 @@ static int p54_rx_data(struct ieee80211_
+ 			return 0;
+ 	}
+ 
++	if (hdr->decrypt_status == P54_DECRYPT_OK)
++		rx_status.flag |= RX_FLAG_DECRYPTED;
++	if (hdr->decrypt_status == P54_DECRYPT_FAIL_MICHAEL)
++		rx_status.flag |= RX_FLAG_MMIC_ERROR;
++
+ 	rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);
+ 	rx_status.noise = priv->noise;
+ 	/* XX correct? */
+@@ -1087,6 +1106,20 @@ static int p54_tx_fill(struct ieee80211_
+ 	return ret;
+ }
+ 
++static u8 p54_convert_algo(enum ieee80211_key_alg alg)
++{
++	switch (alg) {
++	case ALG_WEP:
++		return P54_CRYPTO_WEP;
++	case ALG_TKIP:
++		return P54_CRYPTO_TKIPMICHAEL;
++	case ALG_CCMP:
++		return P54_CRYPTO_AESCCMP;
++	default:
++		return 0;
++	}
++}
++
+ static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+@@ -1097,13 +1130,14 @@ static int p54_tx(struct ieee80211_hw *d
+ 	size_t padding, len, tim_len = 0;
+ 	int i, j, ridx;
+ 	u16 hdr_flags = 0, aid = 0;
+-	u8 rate, queue;
++	u8 rate, queue, crypt_offset;
+ 	u8 cts_rate = 0x20;
+ 	u8 rc_flags;
+ 	u8 calculated_tries[4];
+ 	u8 nrates = 0, nremaining = 8;
+ 
+ 	queue = skb_get_queue_mapping(skb);
++	crypt_offset = ieee80211_get_hdrlen_from_skb(skb);
+ 
+ 	if (p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid)) {
+ 		current_queue = &priv->tx_stats[queue];
+@@ -1209,10 +1243,23 @@ static int p54_tx(struct ieee80211_hw *d
+ 	/* TODO: enable bursting */
+ 	hdr->flags = cpu_to_le16(hdr_flags);
+ 	hdr->tries = ridx;
+-	txhdr->crypt_offset = 0;
+ 	txhdr->rts_rate_idx = 0;
+-	txhdr->key_type = 0;
+-	txhdr->key_len = 0;
++	if (info->control.hw_key) {
++		crypt_offset += info->control.hw_key->iv_len;
++		if (info->control.hw_key->flags & IEEE80211_KEY_FLAG_WMM_STA)
++			crypt_offset += IEEE80211_QOS_CTL_LEN;
++		txhdr->crypt_offset = crypt_offset;
++		txhdr->key_type = p54_convert_algo(info->control.hw_key->alg);
++		txhdr->key_len = min((u8)16, info->control.hw_key->keylen);
++		memcpy(txhdr->key, info->control.hw_key->key, txhdr->key_len);
++
++		/* reserve some space for ICV */
++		hdr->len += info->control.hw_key->icv_len;
++	} else {
++		txhdr->crypt_offset = 0;
++		txhdr->key_type = 0;
++		txhdr->key_len = 0;
++	}
+ 	txhdr->hw_queue = queue;
+ 	if (current_queue)
+ 		txhdr->backlog = current_queue->len;
+@@ -1841,6 +1888,66 @@ static void p54_bss_info_changed(struct 
+ 
+ }
+ 
++static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
++		       const u8 *local_address, const u8 *address,
++		       struct ieee80211_key_conf *key)
++{
++	struct p54_common *priv = dev->priv;
++	struct sk_buff *skb;
++	struct p54_keycache *rxkey;
++	u8 algo = 0;
++
++	if (modparam_nohwcrypt)
++		return -ENOSPC;
++
++	if (cmd == DISABLE_KEY)
++		algo = 0;
++	else {
++		switch (key->alg) {
++		case ALG_TKIP:
++			return -EOPNOTSUPP;
++			break;
++		case ALG_WEP:
++			if (!(priv->privacy_caps & BR_DESC_PRIV_CAP_WEP))
++				return -EOPNOTSUPP;
++			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++			algo = P54_CRYPTO_WEP;
++			break;
++		case ALG_CCMP:
++			if (!(priv->privacy_caps & BR_DESC_PRIV_CAP_AESCCMP))
++				return -EOPNOTSUPP;
++			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++			algo = P54_CRYPTO_AESCCMP;
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++
++	mutex_lock(&priv->conf_mutex);
++	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*rxkey) +
++			sizeof(struct p54_hdr),	P54_CONTROL_TYPE_RX_KEYCACHE,
++			GFP_ATOMIC);
++	if (!skb) {
++		mutex_unlock(&priv->conf_mutex);
++		return -ENOMEM;
++	}
++
++	rxkey = (struct p54_keycache *)skb_put(skb, sizeof(*rxkey));
++	rxkey->entry = cpu_to_le16(key->keyidx);
++	rxkey->key_id = cpu_to_le16(key->keyidx);
++	rxkey->key_len = min((u8)16, key->keylen);
++	rxkey->key_type = algo;
++	if (address)
++		memcpy(rxkey->mac, address, ETH_ALEN);
++	else
++		memset(rxkey->mac, ~0, ETH_ALEN);
++	memcpy(rxkey->key, key->key, rxkey->key_len);
++	priv->tx(dev, skb, 1);
++	mutex_unlock(&priv->conf_mutex);
++	return 0;
++}
++
+ static const struct ieee80211_ops p54_ops = {
+ 	.tx			= p54_tx,
+ 	.start			= p54_start,
+@@ -1848,6 +1955,7 @@ static const struct ieee80211_ops p54_op
+ 	.add_interface		= p54_add_interface,
+ 	.remove_interface	= p54_remove_interface,
+ 	.set_tim		= p54_set_tim,
++	.set_key		= p54_set_key,
+ 	.config			= p54_config,
+ 	.config_interface	= p54_config_interface,
+ 	.bss_info_changed	= p54_bss_info_changed,
+diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+--- a/drivers/net/wireless/p54/p54.h	2008-11-14 17:19:36.000000000 +0100
++++ b/drivers/net/wireless/p54/p54.h	2008-11-14 18:54:15.000000000 +0100
+@@ -116,6 +116,8 @@ struct p54_common {
+ 	int noise;
+ 	void *eeprom;
+ 	struct completion eeprom_comp;
++	u8 privacy_caps;
++	u8 rx_keycache_size;
+ };
+ 
+ int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb);
