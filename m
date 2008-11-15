@@ -1,209 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56574 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752276AbYKZTH1 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:53732 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751711AbYKOXex (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 14:07:27 -0500
-Subject: [PATCH] cfg80211: handle SIOCGIWMODE/SIOCSIWMODE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 26 Nov 2008 20:06:53 +0100
-Message-Id: <1227726413.4613.130.camel@johannes.berg> (sfid-20081126_200731_269115_E243E9A6)
-Mime-Version: 1.0
+	Sat, 15 Nov 2008 18:34:53 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so777437eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Nov 2008 15:34:51 -0800 (PST)
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] rt2x00: Don't switch off LED on initialization
+Date: Sun, 16 Nov 2008 00:34:45 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200811160008.51235.IvDoorn@gmail.com> <200811160025.25678.mb@bu3sch.de>
+In-Reply-To: <200811160025.25678.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200811160034.46520.IvDoorn@gmail.com> (sfid-20081116_003504_802800_E178AE13)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-further reducing wext code in mac80211.
+On Sunday 16 November 2008, Michael Buesch wrote:
+> On Sunday 16 November 2008 00:08:50 Ivo van Doorn wrote:
+> > When we switch off the LEDS during initialization
+> > we kill rt73usb from proper functioning. The immediate
+> > result after the first LED command are MCU failures
+> > and a complete breakdown of TX/RX.
+> > 
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> > ---
+> >  drivers/net/wireless/rt2x00/rt2x00leds.c |    6 ------
+> >  1 files changed, 0 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
+> > index 66c61b1..68f4e0f 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2x00leds.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
+> > @@ -111,12 +111,6 @@ static int rt2x00leds_register_led(struct rt2x00_dev *rt2x00dev,
+> >  	led->led_dev.name = name;
+> >  	led->led_dev.brightness = LED_OFF;
+> >  
+> > -	/*
+> > -	 * Ensure the LED is off, it might have been enabled
+> > -	 * by the hardware when the device was powered on.
+> > -	 */
+> > -	led->led_dev.brightness_set(&led->led_dev, LED_OFF);
+> > -
+> >  	retval = led_classdev_register(device, &led->led_dev);
+> >  	if (retval) {
+> >  		ERROR(rt2x00dev, "Failed to register led handler.\n");
+> 
+> But you know that a brightness_set event can trigger right after the dev
+> was registered?
+> So a random LED event at the right time can kill the rt device?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h     |    4 ++
- net/mac80211/wext.c        |   68 +-------------------------------------
- net/wireless/wext-compat.c |   79 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 85 insertions(+), 66 deletions(-)
+If the user manages to trigger the event right after registration
+yes, then it might be possible (Note that the leds aren't controlled by any triggers,
+neither RFKill nor mac80211 triggers are attached to the rt2x00 leds).
+This is a quick hack, to get the device working by default again.
+I still have to research why exactly the device dies when LED is switched off
+in an early initialization state.
 
---- everything.orig/include/net/cfg80211.h	2008-11-26 19:30:58.000000000 +0100
-+++ everything/include/net/cfg80211.h	2008-11-26 19:59:34.000000000 +0100
-@@ -521,5 +521,9 @@ struct cfg80211_ops {
- int cfg80211_giwname(struct net_device *dev,
- 		     struct iw_request_info *info,
- 		     char *name, char *extra);
-+int cfg80211_siwmode(struct net_device *dev, struct iw_request_info *info,
-+		     u32 *mode, char *extra);
-+int cfg80211_giwmode(struct net_device *dev, struct iw_request_info *info,
-+		     u32 *mode, char *extra);
- 
- #endif /* __NET_CFG80211_H */
---- everything.orig/net/mac80211/wext.c	2008-11-26 19:23:17.000000000 +0100
-+++ everything/net/mac80211/wext.c	2008-11-26 19:23:39.000000000 +0100
-@@ -224,70 +224,6 @@ static int ieee80211_ioctl_giwrange(stru
- }
- 
- 
--static int ieee80211_ioctl_siwmode(struct net_device *dev,
--				   struct iw_request_info *info,
--				   __u32 *mode, char *extra)
--{
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	int type;
--
--	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		return -EOPNOTSUPP;
--
--	switch (*mode) {
--	case IW_MODE_INFRA:
--		type = NL80211_IFTYPE_STATION;
--		break;
--	case IW_MODE_ADHOC:
--		type = NL80211_IFTYPE_ADHOC;
--		break;
--	case IW_MODE_REPEAT:
--		type = NL80211_IFTYPE_WDS;
--		break;
--	case IW_MODE_MONITOR:
--		type = NL80211_IFTYPE_MONITOR;
--		break;
--	default:
--		return -EINVAL;
--	}
--
--	return ieee80211_if_change_type(sdata, type);
--}
--
--
--static int ieee80211_ioctl_giwmode(struct net_device *dev,
--				   struct iw_request_info *info,
--				   __u32 *mode, char *extra)
--{
--	struct ieee80211_sub_if_data *sdata;
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_AP:
--		*mode = IW_MODE_MASTER;
--		break;
--	case NL80211_IFTYPE_STATION:
--		*mode = IW_MODE_INFRA;
--		break;
--	case NL80211_IFTYPE_ADHOC:
--		*mode = IW_MODE_ADHOC;
--		break;
--	case NL80211_IFTYPE_MONITOR:
--		*mode = IW_MODE_MONITOR;
--		break;
--	case NL80211_IFTYPE_WDS:
--		*mode = IW_MODE_REPEAT;
--		break;
--	case NL80211_IFTYPE_AP_VLAN:
--		*mode = IW_MODE_SECOND;		/* FIXME */
--		break;
--	default:
--		*mode = IW_MODE_AUTO;
--		break;
--	}
--	return 0;
--}
--
- static int ieee80211_ioctl_siwfreq(struct net_device *dev,
- 				   struct iw_request_info *info,
- 				   struct iw_freq *freq, char *extra)
-@@ -1101,8 +1037,8 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* SIOCGIWNWID */
- 	(iw_handler) ieee80211_ioctl_siwfreq,		/* SIOCSIWFREQ */
- 	(iw_handler) ieee80211_ioctl_giwfreq,		/* SIOCGIWFREQ */
--	(iw_handler) ieee80211_ioctl_siwmode,		/* SIOCSIWMODE */
--	(iw_handler) ieee80211_ioctl_giwmode,		/* SIOCGIWMODE */
-+	(iw_handler) cfg80211_siwmode,			/* SIOCSIWMODE */
-+	(iw_handler) cfg80211_giwmode,			/* SIOCGIWMODE */
- 	(iw_handler) NULL,				/* SIOCSIWSENS */
- 	(iw_handler) NULL,				/* SIOCGIWSENS */
- 	(iw_handler) NULL /* not used */,		/* SIOCSIWRANGE */
---- everything.orig/net/wireless/wext-compat.c	2008-11-26 19:23:07.000000000 +0100
-+++ everything/net/wireless/wext-compat.c	2008-11-26 20:00:55.000000000 +0100
-@@ -58,3 +58,82 @@ int cfg80211_giwname(struct net_device *
- 	return 0;
- }
- EXPORT_SYMBOL(cfg80211_giwname);
-+
-+int cfg80211_siwmode(struct net_device *dev, struct iw_request_info *info,
-+		     u32 *mode, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev;
-+	struct vif_params vifparams;
-+	enum nl80211_iftype type;
-+
-+	if (!wdev)
-+		return -EOPNOTSUPP;
-+
-+	rdev = wiphy_to_dev(wdev->wiphy);
-+
-+	if (!rdev->ops->change_virtual_intf)
-+		return -EOPNOTSUPP;
-+
-+	/* don't support changing VLANs, you just re-create them */
-+	if (wdev->iftype == NL80211_IFTYPE_AP_VLAN)
-+		return -EOPNOTSUPP;
-+
-+	switch (*mode) {
-+	case IW_MODE_INFRA:
-+		type = NL80211_IFTYPE_STATION;
-+		break;
-+	case IW_MODE_ADHOC:
-+		type = NL80211_IFTYPE_ADHOC;
-+		break;
-+	case IW_MODE_REPEAT:
-+		type = NL80211_IFTYPE_WDS;
-+		break;
-+	case IW_MODE_MONITOR:
-+		type = NL80211_IFTYPE_MONITOR;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	memset(&vifparams, 0, sizeof(vifparams));
-+
-+	return rdev->ops->change_virtual_intf(wdev->wiphy, dev->ifindex, type,
-+					      NULL, &vifparams);
-+}
-+EXPORT_SYMBOL(cfg80211_siwmode);
-+
-+int cfg80211_giwmode(struct net_device *dev, struct iw_request_info *info,
-+		     u32 *mode, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	if (!wdev)
-+		return -EOPNOTSUPP;
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_AP:
-+		*mode = IW_MODE_MASTER;
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		*mode = IW_MODE_INFRA;
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		*mode = IW_MODE_ADHOC;
-+		break;
-+	case NL80211_IFTYPE_MONITOR:
-+		*mode = IW_MODE_MONITOR;
-+		break;
-+	case NL80211_IFTYPE_WDS:
-+		*mode = IW_MODE_REPEAT;
-+		break;
-+	case NL80211_IFTYPE_AP_VLAN:
-+		*mode = IW_MODE_SECOND;		/* FIXME */
-+		break;
-+	default:
-+		*mode = IW_MODE_AUTO;
-+		break;
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL(cfg80211_giwmode);
+But for the rare occasions the user might trigger the LED too early,
+the user just has to plugin the device again. 
 
-
+Ivo
