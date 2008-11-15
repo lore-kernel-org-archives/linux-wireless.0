@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53421 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752689AbYKQR11 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 12:27:27 -0500
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <b6c5339f0811170908u2f5eb552jbc23cd50871186df@mail.gmail.com> (sfid-20081117_180817_823011_14322F6B)
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <b6c5339f0811170908u2f5eb552jbc23cd50871186df@mail.gmail.com>
-	 (sfid-20081117_180817_823011_14322F6B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Uy5gsv+LlYJ202CJgaJ8"
-Date: Mon, 17 Nov 2008 18:26:44 +0100
-Message-Id: <1226942805.3902.27.camel@johannes.berg> (sfid-20081117_182730_979603_5435A52E)
-Mime-Version: 1.0
+Received: from web23105.mail.ird.yahoo.com ([217.146.189.45]:48524 "HELO
+	web23105.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754531AbYKOAKg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 19:10:36 -0500
+Date: Sat, 15 Nov 2008 00:10:34 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH 0/3] rtl8187: throughput fix/conf_tx callback/ack tx pkts
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <491D080E.7040505@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <754954.88237.qm@web23105.mail.ird.yahoo.com> (sfid-20081115_011050_362494_FE2A6D72)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--- On Fri, 14/11/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Herton Ronaldo Krzesinski wrote:
+> > Three patches that fixes/introduces the following in
+> rtl8187:
+> > - Fixes 8187B reported throughput issues after short
+> slot handling addition.
+> > - Implement conf_tx callback, instead of hardcoding
+> some tx queue values.
+> > - Make rate control work for 8187B sending correct
+> feedback about transmitted
+> >   packet status, using one of the Bulk In endpoints
+> that provides this info.
+> 
+> With these 3 patches applied, my throughput improved again.
+> Using sftp with an
+> 128 MB file, my transmit rate increased to to 1.5 MB/s.
+> With tcpperf, I get 9.9
+> Mb/s - roughly the same.
 
---=-Uy5gsv+LlYJ202CJgaJ8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+While anecdotal, yes, I think throughput has improved. 
 
-On Mon, 2008-11-17 at 12:08 -0500, Bob Copeland wrote:
+> 
+> I'm using the 'pid' rate-control method, which
+> now stabilizes at a lower stated
+> rate than previously seen, but the throughput is higher.
+> Curious.
 
-> Deferring stuff in resume until later sounds like a good plan, there can
-> be lots of surprising stuff there (e.g. I didn't see this yet in any
-> drivers, but if someone happens to request_firmware in ->start() and
-> there is no userspace yet, uh oh...)
+The stated rate is probably how fast packets can be shipped, but the actual throughput depends on re-transmission, errors, and whether there is any stutter i.e. bursts of packets with "silences" between.
 
-That happens for sure.
+I am just happy that the driver is shaping up quite nicely. Well-done everybody :-).
 
-johannes
+Hin-Tak
 
---=-Uy5gsv+LlYJ202CJgaJ8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJIalRAAoJEKVg1VMiehFYgfoQAICiFfvJa4l1xalr2tJkSONs
-iZrJg3/bm1aXiGr2bFCZeth+MuBppTbDour2NYzYvL8BSEh5reYLqc8DC6mKrW69
-kUAnZkDhjp7yYw8eG0DhAyfADPuYQkA5MzmSsujBTd230XYVQDrnfevleC+hCDbJ
-H3uY3XiwYk5MgEsp83uGId8MojebS/yuim6a1sHEIqe5o+6zdqXjYdoR4Bcp5/Aq
-ykYb4fA9bG/MCNO611ulySGgUZHwJeZm3R1XA9DtDTzr81446/bYsJfVsvB+54Mx
-gG9CdUHGBKcgf+eZnhVeVfE3ztRfP0sLTpakiz4rPgvq7te/epSV4GdOV02JARkq
-y9YOf3nHZx3GvGv5+/msr1DwQBn2AKoGV7XFlujYgg4l/Njb8NWRa5SDaWxB+xV2
-OIeWC5K9Sq8uaghJq6j04kHEc0sYbBF4QTRrm0kvMQt2lNHwMv7jRSOS4No5iuCE
-jpkfZxE2862U8bC6vlPQXsHy24o4QANVNgVEqfLXqvffyuyZuUAynr2iIgiMknoA
-xzggMuFLznY9pk+WnzAnhbJmeR6NK1WEBW5KLOa4nf5opr5Ax0U+MtnTSh+GAxmt
-gsl9ErUkD6GbWu52mPCtyoAGPjim8RT9AzX1WnfDi9DPgtXbBrBf1WeP1G/xTb8e
-Haz5PsmWouK5bZYv20LA
-=bC+g
------END PGP SIGNATURE-----
-
---=-Uy5gsv+LlYJ202CJgaJ8--
-
+      
