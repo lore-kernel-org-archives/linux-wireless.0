@@ -1,99 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:26419 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774AbYKFSly (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56848 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751844AbYKOACh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 13:41:54 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so306971ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 10:41:53 -0800 (PST)
-Message-ID: <43e72e890811061041x4e203243v3fcd9cceeb707eb7@mail.gmail.com> (sfid-20081106_194158_656489_D3644EAA)
-Date: Thu, 6 Nov 2008 10:41:53 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Gert Steenssens" <gsteenss@gmail.com>
-Subject: Re: error when building Intel compat wireless
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <49135499.60707@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <49135499.60707@gmail.com>
+	Fri, 14 Nov 2008 19:02:37 -0500
+Subject: Re: [PATCH 3/4] p54: protect against sudden firmware file changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <200811150054.30113.chunkeey@web.de>
+References: <200811141941.56752.chunkeey@web.de>
+	 <1226700028.4120.28.camel@johannes.berg>
+	 <200811150054.30113.chunkeey@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Brm1RO7UWgTcRsXpNTjh"
+Date: Sat, 15 Nov 2008 01:02:30 +0100
+Message-Id: <1226707350.4120.34.camel@johannes.berg> (sfid-20081115_010241_205438_1ABD0D93)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 6, 2008 at 12:33 PM, Gert Steenssens <gsteenss@gmail.com> wrote:
-> Hi,
->
-> I am trying to build Intel compat wireless drivers for 2.6.22 on Ubuntu
-> 7.10 but get the errors shown below.
->
-> At some point during making ( i guess during or after:
-> ./scripts/gen-compat-autoconf.sh config.mk ) it reports: 'Fatal: not a
-> git repository'
->
-> any idea how to fix this?
->
-> Thanks,
-> Gert
->
->
->
->
-> make -C /lib/modules/2.6.22-15-generic/build
-> M=/home/gsteenss/compat-wireless-2.6-old modules
-> make[1]: Entering directory `/usr/src/linux-headers-2.6.22-15-generic'
-> LD /home/gsteenss/compat-wireless-2.6-old/drivers/misc/built-in.o
-> CC [M] /home/gsteenss/compat-wireless-2.6-old/drivers/misc/eeprom_93cx6.o
-> LD /home/gsteenss/compat-wireless-2.6-old/drivers/net/built-in.o
-> CC [M] /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.o
-> In file included from
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:34:
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.h:361: error:
-> field 'napi' has incomplete type
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
-> 'b44_poll':
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:849: warning:
-> type defaults to 'int' in declaration of '__mptr'
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:849: warning:
-> initialization from incompatible pointer type
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:879: error: too
-> many arguments to function 'netif_rx_complete'
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
-> 'b44_interrupt':
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:911: error: too
-> many arguments to function 'netif_rx_schedule_prep'
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:917: error: too
-> many arguments to function '__netif_rx_schedule'
 
-Seems b44 needs to be ported or disabled for 2.6.22.
+--=-Brm1RO7UWgTcRsXpNTjh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Sat, 2008-11-15 at 00:54 +0100, Christian Lamparter wrote:
+> On Friday 14 November 2008 23:00:28 Johannes Berg wrote:
+> > On Fri, 2008-11-14 at 19:41 +0100, Christian Lamparter wrote:
+> > > Thanks to "p54: introduce new names for device firmwares"
+> > > (325ca16910a380c...) people are now migrating away from the buggy fir=
+mwares.=20
+> > > Of course this is a very good idea, but no one told them to unload th=
+e driver first.
+> >=20
+> > that seems weird. Doesn't the driver pretty much have to cache the
+> > firmware anyway for suspend/resume?
+>=20
+> well, that's odd. No one complained about this bug yet?!
+> Even better, this bug/quirk is even present in the initial p54pci version=
+ that made it
+> into the kernel. In fact it looks like its even present in the fullmac dr=
+iver! Luis?
+>=20
+> I guess, I have to leave it that way to provide "bug-to-bug" compatibilit=
+y! ;-)
 
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
-> 'b44_open':
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:1433: warning:
-> implicit declaration of function 'napi_enable'
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:1442: warning:
-> implicit declaration of function 'napi_disable'
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: At top level:
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:2051: error:
-> unknown field 'get_sset_count' specified in initializer
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:2051: warning:
-> initialization from incompatible pointer type
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
-> 'b44_init_one':
-> /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:2159: warning:
-> implicit declaration of function 'netif_napi_add'
-> make[3]: *** [/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.o]
-> Error 1
-> make[2]: *** [/home/gsteenss/compat-wireless-2.6-old/drivers/net] Error 2
-> make[1]: *** [_module_/home/gsteenss/compat-wireless-2.6-old] Error 2
-> make[1]: Leaving directory `/usr/src/linux-headers-2.6.22-15-generic'
-> make: *** [modules] Error 2
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Maybe it doesn't upload the firmware at resume? But that'd be odd.
+
+johannes
+
+--=-Brm1RO7UWgTcRsXpNTjh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJHhGTAAoJEKVg1VMiehFYt2wP/3ljSWvBEqYhjtc5cWbCrjx4
+/rXrSbzbj48+SALk1+y3CU55/izvShEt/ZyytvjkVdzWpft+KlxKxlGYTcSH9BoD
+mIs0Ebo7vNHWJZLXsh6SqUykzUsm4Iw/IZgYjyMP+FWKuhkhpFGOcTQDbPI1mVh9
+bm4Om34pRXJhnKIuN2iJdYNXz/InJFPihufy5RtDxbOuMSx1kqrp9QDAq0Bu/zzo
+dSemljo2whCNIeCwArw0iPSpstYOwTENK4y4Xdj9Sr63Gs1pJdWzVu84PnZU+X2v
+3mKlkLR2ap9ynTau0kVvkn9CzeM8TpDTUcqPHIcrrRon2N99uVEmzlDxlZrT71I9
+AuPIn+PpP2myYXJDZ6C/dTBJOH1pkpa3l7nkSlF3r7EDO8OHPGk7E18+oURlYkP9
+4QhHA2mk71UrEKSjvnvGRToGnN51lNHV0Fz/Q/GSSQZBdJRb6Zju5eF9ESrRFwIr
+oxEtfkBxlSZagYiJY8iwFxn0JxJaEhaIqhE1KhEQFoMO5NyJ3IQsGB37yTproxh8
+4/vh8LOlDW9suOie/c8VFotiIsxK7jzzoxVdCLzljFtmbwGaaaRzUXylkAvs8YJ7
+YS9BsC2IeLfTqJgV9BrMKZRkRaca8TEyGTTB1kM8Yruqjn178SqXefFoRV7ds6qd
+e5jLT/AwGHyCWDZ03X5o
+=/m3+
+-----END PGP SIGNATURE-----
+
+--=-Brm1RO7UWgTcRsXpNTjh--
+
