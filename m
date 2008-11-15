@@ -1,58 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23102.mail.ird.yahoo.com ([217.146.189.42]:37129 "HELO
-	web23102.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752028AbYKDA0g convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 19:26:36 -0500
-Date: Tue, 4 Nov 2008 00:26:34 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [RFC/RFT PATCH 0/2] rtl8187: implement conf_tx callback/correctly ack tx pkts
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
+Received: from mail.deathmatch.net ([70.167.247.36]:4062 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750977AbYKOAeu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2008 19:34:50 -0500
+Date: Fri, 14 Nov 2008 19:31:31 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: don't assume driver has been attached on registration
+Message-ID: <20081115003131.GA10702@hash.localnet> (sfid-20081115_013455_476080_829574A8)
+References: <1226702662-29694-1-git-send-email-lrodriguez@atheros.com> <b6c5339f0811141505u1f8c7c3hd6858ebe21cc10bb@mail.gmail.com> <1226704464.4120.32.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <664192.60694.qm@web23102.mail.ird.yahoo.com> (sfid-20081104_012641_539505_6FFF760A)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1226704464.4120.32.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> --- On Fri, 31/10/08, Larry Finger
-> <Larry.Finger@lwfinger.net> wrote:
+On Sat, Nov 15, 2008 at 12:14:24AM +0100, Johannes Berg wrote:
+> > In the reported case, wiphy_name will be empty string which isn't too
+> > helpful for the workqueue name either, though it probably won't crash.
 > 
-> > With these patches installed, my RTL8187B device was
-> stuck
-> > at 1 Mbs using the
-> > 'pid' algorithm. 
+> That can't be right! wiphy_name is assigned right in wiphy_new()!
 
-I back-ported the 2nd rate-change patch 
-"feedback transmitted packets using tx close descriptor for 8187B"
-on its own to 2.6.27 and its behavior is similiar to the earlier rate-control patch but without "tranmit queue full" dmesg flood; and my trans rate goes up and down between 11Mb to 48Mb. So it looks like the rate limitation you are experiencing is either due to the conf_tx patch, the rest of 2.6.27<->2.6.28 wireless changes, or this little snipplet which I had to change for the back port, since the rates[0].* seems to be newly introduced in 2.6.28/wireless-testing.
+I know, it doesn't make any sense.  But the posted dmesg clearly shows 
+ath5k printing the wiphy_name (after ieee80211_alloc_hw returned not
+null): "ath5k_pci xxxx registered as ''".  So, something really odd is
+going on.
 
-----------------------------------------------------
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -494,7 +494,9 @@ static void rtl8187b_status_cb(struct urb *urb)
-             __skb_unlink(skb, &priv->b_tx_status.queue);
-             if (tok)
-                 info->flags |= IEEE80211_TX_STAT_ACK;
--            info->status.rates[0].count = pkt_rc + 1;
-+            else
-+              info->status.excessive_retries = 1;
-+            info->status.retry_count = pkt_rc;
- 
-             ieee80211_tx_status_irqsafe(hw, skb);
-         }
------------------------------------------------------
-I don't know what's the significance of this (and the "+1" above), but I made this change based on the first rate-change patch :-).
+-- 
+Bob Copeland %% www.bobcopeland.com
 
-So you can add <test-by> me for the 2nd patch of these two; the conf_tx callback patch seems to depend on some fairly recently wireless-testing/2.6.28.x changes?
-
-Hin-Tak
-
-
-      
