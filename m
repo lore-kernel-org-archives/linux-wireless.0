@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28241 "EHLO mail.atheros.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:41260 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754636AbYKYVmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 16:42:16 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 13:42:16 -0800
-Message-ID: <492C7251.1040604@atheros.com> (sfid-20081125_224255_148944_9CCBDCBB)
-Date: Tue, 25 Nov 2008 13:46:57 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+	id S1752874AbYKOXSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Nov 2008 18:18:22 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Nico -telmich- Schottelius" <nico-linux-iwlwifi5100@schottelius.org>
+Subject: Re: 2.6.28-rc4: iwlagn / 5100 state
+Date: Sun, 16 Nov 2008 00:22:43 +0100
+Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+References: <20081114150508.GC4877@denkbrett.schottelius.org>
+In-Reply-To: <20081114150508.GC4877@denkbrett.schottelius.org>
 MIME-Version: 1.0
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Bluetooth is active on the channel where wifi  is also active
-References: <492B833E.6050202@atheros.com> <EBB1336F-91C9-4ED6-B663-A1C83FF4A35D@holtmann.org> <492B9246.9010806@atheros.com> <0DF82B8B-D3CE-4347-98C3-F35A27829F50@holtmann.org> <492C5DEB.3050708@atheros.com>
-In-Reply-To: <492C5DEB.3050708@atheros.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200811160022.43906.rjw@sisk.pl> (sfid-20081116_001826_235053_F7E262AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Yeah, hci commands Write_AFH_Channel_Classification_Mode and
-> Set_AFH_Host_Channel_Classification seem to have influence on
-> afh channel map. But the problem is, I could not find a way
-> to send these commands from hci utils. Is it possible to give
-> standard hci commands from any of the hci utilities?. I tried
-> 'cmd' option in hcitool but it does not seem to work.
+(Cc to linux-wireless@vger.kernel.org)
 
-Never mind, these hci commands are not handled in
-hci_core.
-
-Thanks,
-
-Vasanth
-
+On Friday, 14 of November 2008, Nico -telmich- Schottelius wrote:
+> Hello!
+> 
+> Using that kernel I see the following features / bugs:
+> 
+>    - loading the firmware "freezes" the system for a few seconds
+>    - setting the link up of wlan0 "freezes" the system for a few seconds
+>    - connecting to 802.11b/g works (802.11a is untested)
+>    - roaming does *NOT* work -> just looses the AP, does not connect
+>      to other AP with same essid
+>    - connecting to a ap sometimes does not work, though essid is set
+>       -> sometimes it helps to specify "ap <addr>"
+>       -> sometimes setting down and up the link helps
+>       -> with earlier kernels one sometimes needed to rmmod and insmod
+>          the module again, so there is some progress :-)
+> 
+> So far it is somehow usable, though the connection problems and missing
+> roaming is a bit painful.
