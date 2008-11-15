@@ -1,87 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-green-bigip-145.dreamhost.com ([208.97.132.145]:53711 "EHLO
-	spunkymail-a2.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751772AbYKWH3y (ORCPT
+Received: from mail-gx0-f11.google.com ([209.85.217.11]:35879 "EHLO
+	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbYKOAZz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2008 02:29:54 -0500
-From: Yuval Hager <yuval@avramzon.net>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: BCM4312 Fails when xdm is started
-Date: Sun, 23 Nov 2008 09:26:25 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de, LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Peter Stuge <peter@stuge.se>
-References: <200811151801.02369.yuval@avramzon.net> <492825F8.6020606@lwfinger.net> <200811221654.09399.mb@bu3sch.de>
-In-Reply-To: <200811221654.09399.mb@bu3sch.de>
+	Fri, 14 Nov 2008 19:25:55 -0500
+Received: by gxk4 with SMTP id 4so899592gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 16:25:54 -0800 (PST)
+Message-ID: <449c10960811141625o171d1e31v974d2f921f5a825@mail.gmail.com> (sfid-20081115_012600_367190_D86C89C5)
+Date: Fri, 14 Nov 2008 18:25:53 -0600
+From: "Dan McGee" <dpmcgee@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: "Bob Copeland" <me@bobcopeland.com>, Sujith <m.sujith@gmail.com>,
+	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <43e72e890811141313t33b6a3edo86488bea9a7b3371@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart6376066.XXdu72Ki2y";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200811230926.28948.yuval@avramzon.net> (sfid-20081123_083018_271102_ABA82B77)
+Content-Type: text/plain; charset=UTF-8
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
+	 <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
+	 <18717.49111.572993.44410@localhost.localdomain>
+	 <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com>
+	 <18717.50308.330801.765686@localhost.localdomain>
+	 <43e72e890811141037j5328f71fx7badb6f2b0e0831d@mail.gmail.com>
+	 <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com>
+	 <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com>
+	 <43e72e890811141241k7ae83fc3qe90e2e42d61b8df6@mail.gmail.com>
+	 <43e72e890811141313t33b6a3edo86488bea9a7b3371@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart6376066.XXdu72Ki2y
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On Saturday 22 November 2008, Michael Buesch wrote:
-> On Saturday 22 November 2008 16:32:08 Larry Finger wrote:
-> > Michael Buesch wrote:
-> > > Somebody disabled MMIO and busmastering.
-> > > And somebody cleared the CACHE_LINE_SIZE register.
-> >
-> > Are these all the read/write bits in the configuration area? Should I
-> > conclude that someone zeroed this area?
+On Fri, Nov 14, 2008 at 3:13 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Nov 14, 2008 at 12:41 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Fri, Nov 14, 2008 at 12:33 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>>> On Fri, Nov 14, 2008 at 2:33 PM, Dan McGee <dpmcgee@gmail.com> wrote:
+>>>> On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>>> On Fri, Nov 14, 2008 at 10:33 AM, Sujith <m.sujith@gmail.com> wrote:
+>>>>>> Luis R. Rodriguez wrote:
+>>>>>>> > From the original log:
+>>>>>>> > ath5k_pci 0000:01:00.0: registered as ''
+>>>>>>>
+>>>>>>> That comes from
+>>>>>>>
+>>>>>>> dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
+>>>>>>>
+>>>>>>> which means that may be buggy too as wiphy_name() gets
+>>>>>>>
+>>>>>>> return wiphy->dev.bus_id;
+>>>>>>>
+>>>>>>> and we only have set at that point wiphy->dev.parent IIRC.
+>>>>>>>
+>>>>>>
+>>>>>> Nope, parent is set after that call in SET_IEEE80211_DEV()
+>>>>>> phy[x] gets assigned in alloc_hw().
+>>>>>>
+>>>>>> So why is it NULL even if alloc_hw() succeeds ?
+>>>>>
+>>>>> Parent is wiphy->dev.parent not wiphy->dev though
+>>>
+>>> Sujith is right, wiphy->dev.bus_id should be set by the time that's printed,
+>>> since wiphy_new in alloc_hw fills it in.
+>>
+>> Ah, I see, yes, oh man. Well this is good :)
 >
-> Yeah well. I'm not sure. It _looks_ like someone completely cut the
-> physical power line to the card and it reset its complete PCI config.
-> So well, X does poke with the PCI devices. But as you said it also happens
-> if X doesn't run, I'd rule that out.
-> But I would not rule out a fucked BIOS, yet.
-> Does the BIOS have any powersave options and/or spread-spectrum options f=
-or
-> the PCI-bus? Can you try to turn them all off?
-> I have a machine that has PCI-slot autodetect and turns of the PCI clock,
-> if it doesn't detect a card on that slot. Also turn that off, if you have
-> it, too.
->
-> > In case the kernel memory diagnostics don't help, is there any way to
-> > trap writes to the configuration registers?
->
-> Well, if we have random memory corruption, that can hit memory and MMIO.
-> It doesn't hurt to turn on all debugging options. Often you get some hint
-> by doing so.
+> OK then try the patch in the other thread. If that doesn't fix it then
+> it has to be another issue.
 
-I've enabled all CONFIG*DEBUG I could find relevant, and ran the system wit=
-h:
-'debug memory_corruption_check=3D1 devres.log=3D1 debug_objects debugpat=20
-acpi.debug_layer=3D0x00410002 acpi.debug_level=3D0xffffffff'
-but no hint appears in the logs during the failure.
+Can someone point me to the "other thread"? I don't think I was CCed
+on it since I came late to the party.
 
-I did find that certain events recreate the problem immediately. if I 'xset=
-=20
-dpms force standby' it happens on wakeup. 'xset -dpms' causes this=20
-immediately as well. If I load X without DPMS support, it still happens aft=
-er=20
-the monitor is waken up from (hardware?) blackness.
+Someone also inquired about versions. I'm using stable kernel 2.6.27.6
+and compat-wireless-2008-11-13 (10-28 was doing the same thing
+however).
 
-=2D-yuval
-
---nextPart6376066.XXdu72Ki2y
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkkpBaQACgkQl7qmwPqEj9+5xwCePVEdxd06VeZD/7J9W4W37qro
-xN8AniPoNoQykUukczuFFu11P+zm8Mom
-=RM4s
------END PGP SIGNATURE-----
-
---nextPart6376066.XXdu72Ki2y--
+-Dan
