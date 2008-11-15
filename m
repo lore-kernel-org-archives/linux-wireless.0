@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56552 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799AbYKSPmB (ORCPT
+Received: from cp-out8.libero.it ([212.52.84.108]:48413 "EHLO
+	cp-out8.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278AbYKOBOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 10:42:01 -0500
-Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefan Steuerwald <salsasepp@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <f76a32050811190737w37937e17ra361364ed345fd33@mail.gmail.com> (sfid-20081119_163733_464931_B9660D6E)
-References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
-	 <f76a32050811190316o28a49cddte30214c217877078@mail.gmail.com>
-	 <1227095773.26243.22.camel@johannes.berg>
-	 <f76a32050811190737w37937e17ra361364ed345fd33@mail.gmail.com>
-	 (sfid-20081119_163733_464931_B9660D6E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TIpJ8xlUtXnSuAOAsGb3"
-Date: Wed, 19 Nov 2008 16:41:26 +0100
-Message-Id: <1227109286.26243.54.camel@johannes.berg> (sfid-20081119_164207_143843_A05CE149)
-Mime-Version: 1.0
+	Fri, 14 Nov 2008 20:14:17 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: ath5k: problems during the connection to a sitecom AP
+Date: Sat, 15 Nov 2008 02:07:11 +0100
+MIME-Version: 1.0
+Message-Id: <200811150207.12084.rossi.f@inwind.it> (sfid-20081115_021424_052808_FD263604)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I'm testing the ath5k driver (wireless-testing v2.6.28-rc4-5172-gc1a847c) with 
+my 3com 3CRDAG675 PCI card (atheros AR5212). I can try alternatively two 
+different access points (both configured with WEP + hidden SSID), the 
+procedure I use is the same but the results are different.
 
---=-TIpJ8xlUtXnSuAOAsGb3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Here are the commands used:
 
-On Wed, 2008-11-19 at 16:37 +0100, Stefan Steuerwald wrote:
-> > http://wireless.kernel.org/en/users/Documentation/modes#AccessPoint.28A=
-P.29infrastructuremode
-> > johannes
->=20
-> Thank you, that's it, took the latest hostapd from git.
-> I can now connect from my iPod to the XG-603 in AP mode (unencrypted
-> and WPA/TKIP, WPA2/TKIP, WPA2/CCMP tested).
+modprobe ath5k
+ifconfig ath0 192.168.1.2 up
+iwconfig ath0 key <MYKEY>
+iwconfig ath0 ap <AP_MAC>
+iwconfig ath0 essid <MY_ESSID>
 
-Cool
 
-> However - data throughput seems low; accessing a webserver I get an
-> update "now and then". I'm aware this can have a lots of causes - I
-> have more time and more cards available (XG-601/ISL3880, and an
-> AR5212/5213 one) and will play with this.
+*** 3com AP ***
+With this one I can associate without problems at the first try (SSID not 
+broadcast + WEP encryption):
 
-What rate control algorithm did you compile into the kernel? Minstrel
-should perform quite well on p54, unless we made a mistake.
+ath5k_pci 0000:00:0b.0: PCI INT A -> Link[LNKB] -> GSI 10 (level, low) -> IRQ 
+10
+ath5k_pci 0000:00:0b.0: registered as 'phy1'
+phy1: Selected rate control algorithm 'minstrel'
+ath5k phy1: Atheros AR5212 chip found (MAC: 0x56, PHY: 0x41)
+ath5k phy1: RF5112B multiband radio found (0x36)
+udev: renamed network interface wlan0 to ath0
+ath0: direct probe to AP <AP_MAC> try 1
+ath0 direct probe responded
+ath0: authenticate with AP <AP_MAC>
+ath0: authenticated
+ath0: associate with AP <AP_MAC>
+ath0: RX AssocResp from <AP_MAC> (capab=0x421 status=0 aid=4)
+ath0: associated
+phy1: Allocated STA <AP_MAC>
+phy1: Inserted STA <AP_MAC>
+ath0: switched to short barker preamble (BSSID=<AP_MAC>)
+ath0: switched to short slot (BSSID=<AP_MAC>)
 
-johannes
+*** Sitecom AP ***
+With this one I'm able to associate only when the SSID is broadcast (with or 
+without encryption). Moreover the association process isn't successful at 
+first try (like for the 3com AP) and the link quality is very bad. An example 
+of ping statistics is the following
 
---=-TIpJ8xlUtXnSuAOAsGb3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+629 packets transmitted, 527 received, 16% packet loss, time 711605ms
+rtt min/avg/max/mdev = 6.332/6303.120/151334.339/18133.729 ms, pipe 114
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+and it's common to get the following error message (transmission buffer 
+saturated?):
 
-iQIcBAABAgAGBQJJJDOjAAoJEKVg1VMiehFYh7MP/13ZxvMtLg8/wUlHzJ86oTyF
-CWMXZm1kJu+vVIbflIagvTimBjHj2/KmkqhDzRJaZSAt+2063B6C2ce1g8iYPTXe
-EiLXwUekQjaUvCDiqpF3SuZXkbJAaSJHGMkfRlJeWr4Wh+aGaAl0ln7SUccoVwym
-FzHrKilk5Zhik+BK8qWpyh6/DDVzVx8FKUtDZZUfhs6d+qzMITOUhIt8/pwrT/lU
-VTjZu2BCfbwtM+RiouARAUzoEbaB/XqMwljv/Y+h8pp3g3sZn33EWKzcj7b+qw2M
-6Y9ygZAQtlAoWXQaJ0AMJmEPgcG0lwuRWPtusOXyGxyokglI/jx9ePEOPZKE8+S7
-0SHejH3ZDjK4rTN3YdQxhKtWvFN7qEVF7G/MmTcng+W5HPleBpA3KYWNC9iZtgqU
-0RXgsmYuSAgYM07TM+uyDnsaf6Y3Rg1i9OEsOEdt2gTTuvSAODS/qNGJ3RYHKqar
-j7+JlGDtG2oRWzHjsOtpUyu/Ts10eLGyIp+OCRMpxmbUOMSUCSwlfP8XSHqNXWg3
-gp5OM9Gc/Gj1y6/X5wnmDx/fQ8zxfGJ4hoQvLmqEkVjdzDhq99jyS00COh/nIgu6
-w1R4DYoJTSYXgyB2vXknqINvuNOrGO1CzfKpy2MW5vOeFfaoxJmOHT4jBfIZVoXm
-aQixa0VpZNbo+nCYDVVE
-=fbzn
------END PGP SIGNATURE-----
+ping: sendmsg: No buffer space available
 
---=-TIpJ8xlUtXnSuAOAsGb3--
+When I disable the SSID I can't associate anymore to the AP, the only debug 
+messages are the following:
 
+ath5k_pci 0000:00:0b.0: PCI INT A -> Link[LNKB] -> GSI 10 (level, low) -> IRQ 
+10
+ath5k_pci 0000:00:0b.0: registered as 'phy12'
+phy12: Selected rate control algorithm 'minstrel'
+ath5k phy12: Atheros AR5212 chip found (MAC: 0x56, PHY: 0x41)
+ath5k phy12: RF5112B multiband radio found (0x36)
+udev: renamed network interface wlan0 to ath0
+
+How can I debug to provide more details (e.g. using debugfs)?
+
+Thank you for any help,
+Fabio
