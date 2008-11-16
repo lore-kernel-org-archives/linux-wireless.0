@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52629 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751030AbYKVS0X (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:14019 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbYKPSUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 13:26:23 -0500
-Subject: Re: [PATCH] nl80211: Report max TX power in NL80211_BAND_ATTR_FREQS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081122182051.GE4887@jm.kir.nu>
-References: <20081121170130.GA4887@jm.kir.nu>
-	 <1227376464.3599.20.camel@johannes.berg>  <20081122182051.GE4887@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0xG2RKC8c3KqdodbKDgv"
-Date: Sat, 22 Nov 2008 19:26:15 +0100
-Message-Id: <1227378375.3599.27.camel@johannes.berg> (sfid-20081122_192627_914004_931015F9)
-Mime-Version: 1.0
+	Sun, 16 Nov 2008 13:20:25 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so905904yxm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Nov 2008 10:20:24 -0800 (PST)
+Message-ID: <43e72e890811161020n2647416doda69839f2a6ba93@mail.gmail.com> (sfid-20081116_192029_417336_AB0BA52E)
+Date: Sun, 16 Nov 2008 10:20:24 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: "Dan McGee" <dpmcgee@gmail.com>,
+	"Bob Copeland" <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>
+In-Reply-To: <1226858723.3599.2.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
+	 <20081116055312.GA14126@hash.localnet>
+	 <43e72e890811152205k13318ab7yad8695d9f6dd409c@mail.gmail.com>
+	 <43e72e890811152206s3683ecabm658fac255112a262@mail.gmail.com>
+	 <43e72e890811152215h5cf389a3ufe4dc10b021b0c0f@mail.gmail.com>
+	 <20081116162019.GA15851@hash.localnet>
+	 <449c10960811160838h70fd1852g66d8a51c7551530b@mail.gmail.com>
+	 <20081116165213.GC14126@hash.localnet>
+	 <449c10960811161001h547a7ab0l937bba6bec9d46aa@mail.gmail.com>
+	 <1226858723.3599.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Nov 16, 2008 at 10:05 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2008-11-16 at 12:01 -0600, Dan McGee wrote:
+>
+>> I had not seen this cfg80211 stuff before when modprobing. I also see
+>> that cfg80211 is now loaded as a module- was the fact that it was
+>> built into the kernel before causing all these problems? That would be
+>> my strong suspicion, in which case this entire thread is really a bum
+>> bug report, except that compat-wireless should enforce that cfg80211
+>> is a module just like it currently enforces that for mac80211, saving
+>> someone else this headache.
+>
+> Let me guess, symbol versioning was off?
 
---=-0xG2RKC8c3KqdodbKDgv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, 2008-11-22 at 20:20 +0200, Jouni Malinen wrote:
-
-> Well.. Maximum TX power is stored as dBm and it is used as dBm in
-> Country IE. Some of the current uses of EIRP seem to be converting the
-> values between dBm and mBm, so it does not look like the extra accuracy
-> would be needed there. Why was mBm used in the first place? It does not
-> seem to be used anywhere outside Linux regulatory code as a standard
-> unit which makes it quite a bit less obvious than dBm..
-
-Yeah, true, I think we originally wanted it in the regulatory code and
-also push it throughout but then ended up converting it in the kernel.
-However, the userspace API is defined with the extra accuracy.
-
-> I kind of agree with consistency being a good reason for a change here,
-> but I just find the mBm a bit odd choice as a unit unless there is need
-> for greater accuracy than 1 dBm
-
-Broadcom hw at least supports 1/4 dBm steps, iirc. So it could at least
-make some sense.
-
->  (and in that case, the chan->max_power
-> value should likely be changed to use mBm, too).
-
-True, but that's in the kernel and much easier to change later than
-userspace APIs.
-
-johannes
-
---=-0xG2RKC8c3KqdodbKDgv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJKE7DAAoJEKVg1VMiehFYNiIP/3VgH4h9k4HkI7A2oor2SsIG
-bqdzfnG/xbLL+/dOWhpmKZLXBM3s/IlAa/CacD4nzKv9HO6f3Htfb92CNqsrb322
-XsNnzKz/0MadV36xe+Shj+C7VBHTliCzb6rvnFXpOwIGrygoAz2/BCmyZscSkaI1
-fds0zkHzWPwM2Wqg9kc0onxR6S4ro7KHbAtUWqos4CP1JhijaKx5tpDJwuhfWWV5
-dJVgDspHr7l+Lpl8GUysdI4LPsxH7QFuW7PwApHAsbUhGihNbVnMhnu2V46yvWe9
-9DIuRx+b7zHqDTjXynjIWiTcMuldrgyaJ46eQ1E3SFF6ouRbTbYF+ihF0WSJUK6B
-9/l/24miC+IKAVzZdrntPh6HaJC8BwYzr9GZ9hbFnCW0mqbvOTDTF+jkQsajTUJP
-h5eSr9GA4IyE7TEAfCx67vW/AwrklclQj56ACWBTbjJT01m58MebxesETKmmXcj5
-Ubp1eTbcuFXTtxhbea223FIeH8f2I4iJhL6eg1vUWOjG6zP8du8G9nfP6xxCIH+3
-0drQFvBH8nCgC17LX8YdcEnx8bfjNM4d7SFgeVUJpVFO/kPoutoRrVarMlAhXIeD
-QCmiBxW+L/OkFjEdTxGL3GSoFneQeJc0UJNFs0KOBos/1vltciS4f7RvSw0uiX2b
-BA/oS1js0lRTHEXtnMfZ
-=GoOf
------END PGP SIGNATURE-----
-
---=-0xG2RKC8c3KqdodbKDgv--
-
+/me adds complaint on compat-wireless if cfg80211 is built in
