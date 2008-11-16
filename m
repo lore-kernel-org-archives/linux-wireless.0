@@ -1,86 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51263 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751414AbYKFO6G (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:40786 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752214AbYKPPfI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 09:58:06 -0500
-Subject: Re: [PATCH 1/2 2.6.28] iwlwifi : Fix channel scanning/association
-	in 5Ghz band
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <1ba2fa240811060654w3c55bbc3ufb242a322ab5207e@mail.gmail.com> (sfid-20081106_155409_847949_E36B5F63)
-References: <1225912449-26625-1-git-send-email-reinette.chatre@intel.com>
-	 <B887D922-0154-4365-A44D-F284A5DF9386@linux.intel.com>
-	 <20081106134950.GB14184@tuxdriver.com>
-	 <1225982253.3619.233.camel@johannes.berg>
-	 <1ba2fa240811060647x688f1efp1728e5f80dbb6b35@mail.gmail.com>
-	 <1225983103.3619.242.camel@johannes.berg>
-	 <1ba2fa240811060654w3c55bbc3ufb242a322ab5207e@mail.gmail.com>
-	 (sfid-20081106_155409_847949_E36B5F63)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-J4ADk2tWvZafcAkozCTI"
-Date: Thu, 06 Nov 2008 15:58:00 +0100
-Message-Id: <1225983480.3619.244.camel@johannes.berg> (sfid-20081106_155810_148212_5DBC81F7)
-Mime-Version: 1.0
+	Sun, 16 Nov 2008 10:35:08 -0500
+Message-ID: <49203DAA.3000102@lwfinger.net> (sfid-20081116_163514_051320_224E2FBE)
+Date: Sun, 16 Nov 2008 09:35:06 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 3/4] p54pci: cache firmware for suspend/resume v2.1
+References: <200811141941.56752.chunkeey@web.de> <200811150142.28447.chunkeey@web.de> <200811151930.19854.chunkeey@web.de> <200811161220.32828.chunkeey@web.de>
+In-Reply-To: <200811161220.32828.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Christian Lamparter wrote:
+> Johannes pointed out that the driver has cache the firmware for
+> suspend/resume cycles. 
+>  
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
+> v1 removed a bit too much. it was very chatty about the firmware capabilities...
+> v2 forget release_firmware. d'oh!
 
---=-J4ADk2tWvZafcAkozCTI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Christian,
 
-On Thu, 2008-11-06 at 16:54 +0200, Tomas Winkler wrote:
-> On Thu, Nov 6, 2008 at 4:51 PM, Johannes Berg <johannes@sipsolutions.net>=
- wrote:
-> > On Thu, 2008-11-06 at 16:47 +0200, Tomas Winkler wrote:
-> >
-> >> The problem with missing A band is that this info was supplied to
-> >> driver too late. after registration otherwise
-> >> the iwlwifi dealt properly with missing band This was change in design
-> >> that wasn't reflected in the driver.
-> >>
-> >> This can happen _regardless_ of the setting of old regulatory,
-> >>
-> >> With old regulatory the channel was known prior to registration
-> >
-> > Ah, you mean the driver wasn't updated (and previously not prepared) to
-> > handle changing regulatory information?
->=20
-> Yep.
+When you post updated versions, please indicate them in the subject line, as in
+"[PATCH 3/4 V3] ...." or a similar indication. When several versions have the
+same subject, it gets hard to keep them separate.
 
-That's fixed now though, right? At least I thought it was fixed by some
-change but I can't seem to find it now.
+Thanks,
 
-johannes
-
---=-J4ADk2tWvZafcAkozCTI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJEwX0AAoJEKVg1VMiehFYd8kP/1ih8e2/yYid3ANzEoiGgRAH
-xM9PX/VYOaaoYcxjESZgq7wvp8pQOSDLDw9oDdJECV/0cUxMN1XZMCGoz8AMqhFt
-7cgDeqE2VnxH1cimqRen61V7eTfkFD1B02RDkNGUI3geL8zhlPaBLnI8d7FAaYgQ
-lmnqiZdGOokr8ruxnfYRL3djvrlcJl72uyE1p5exVsLCorNct8wcSkzB/ahX91YW
-+/p0fEelKKK9MTthBJvMDDd/vSqidfjukicipD88+57IL+/evjcS7R3EY7PKrdlZ
-yIMsQPUuPWsUqf/F57q+RrHjlI14SvFnaaAh9FBKPLdSdYPhM0l61a1FO0/9H0cD
-/DVhkjtZmmlS9H2AeReKhYpX/Hf4zf3R+fRvF3hQzPkUoOE1HB8konfYg9jNbrEv
-XqG7BBKGkfnrgjQ4iTQfRrv069WbLKWKrhLcmJh9wFeErDvawG7VK36GPGm1jXiM
-F8L3Oqojka7TWXRhSFKhRkRWmFxYzgW4iT+gECnJHLRj3KZACTpQYtGnlBd4gDgz
-0ThKCRJW3jQgN0RCwQOCRB1EscBoDwdBEgDrofdiKsSQf2ykPWrInCh4wM2ibb71
-CLwRO7Yp3ZFWPSVm/mEVxSAMoqH8knPI4qwACMSsU8dQGxxsPSO+f4gbBAZfInQH
-/eZhbaRcXJzr5AFwgRNl
-=RMs/
------END PGP SIGNATURE-----
-
---=-J4ADk2tWvZafcAkozCTI--
-
+Larry
