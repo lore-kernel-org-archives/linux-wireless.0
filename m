@@ -1,339 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57360 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbYKKWBK (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:61264 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752059AbYKPSB3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 17:01:10 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [RFC PATCH 2/4] lib80211: consolidate crypt init routines
-Date: Tue, 11 Nov 2008 16:51:03 -0500
-Message-Id: <1226440265-21240-2-git-send-email-linville@tuxdriver.com> (sfid-20081111_230119_106489_ECA76D13)
-In-Reply-To: <1226440265-21240-1-git-send-email-linville@tuxdriver.com>
-References: <>
- <1226440265-21240-1-git-send-email-linville@tuxdriver.com>
+	Sun, 16 Nov 2008 13:01:29 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so904559yxm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Nov 2008 10:01:27 -0800 (PST)
+Message-ID: <449c10960811161001h547a7ab0l937bba6bec9d46aa@mail.gmail.com> (sfid-20081116_190133_333904_AC2D115D)
+Date: Sun, 16 Nov 2008 12:01:27 -0600
+From: "Dan McGee" <dpmcgee@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>
+In-Reply-To: <20081116165213.GC14126@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
+	 <449c10960811151838m3fcae118n65139be735c10665@mail.gmail.com>
+	 <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com>
+	 <20081116055312.GA14126@hash.localnet>
+	 <43e72e890811152205k13318ab7yad8695d9f6dd409c@mail.gmail.com>
+	 <43e72e890811152206s3683ecabm658fac255112a262@mail.gmail.com>
+	 <43e72e890811152215h5cf389a3ufe4dc10b021b0c0f@mail.gmail.com>
+	 <20081116162019.GA15851@hash.localnet>
+	 <449c10960811160838h70fd1852g66d8a51c7551530b@mail.gmail.com>
+	 <20081116165213.GC14126@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/hostap/hostap_hw.c    |   61 +---------------------------
- drivers/net/wireless/hostap/hostap_ioctl.c |   43 ++++---------------
- include/net/lib80211.h                     |    3 +
- net/ieee80211/ieee80211_module.c           |   26 +-----------
- net/wireless/lib80211.c                    |   38 +++++++++++++++++
- 5 files changed, 54 insertions(+), 117 deletions(-)
+On Sun, Nov 16, 2008 at 10:52 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Sun, Nov 16, 2008 at 10:38:39AM -0600, Dan McGee wrote:
+>> On Sun, Nov 16, 2008 at 10:20 AM, Bob Copeland <me@bobcopeland.com> wrote:
+>> > As you can see, the modules think "phy0" should be at offset 164, but
+>> > it's really at 160.
+>>
+>> > Also I noticed the original config had CONFIG_DYNAMIC_FTRACE=y, unfortunately
+>> > turning that off didn't seem to change anything (hmm, I didn't get a build
+>> > bug, was the breakage fixed in 2.6.27.y?)
+>>
+>> Note that HAVE is set if the architecture supports it; CONFIG_FTRACE
+>> itself was turned off (and CONFIG_DYNAMIC_FTRACE is not even present):
+>> $ grep FTRACE .config
+>> CONFIG_HAVE_FTRACE=y
+>> CONFIG_HAVE_DYNAMIC_FTRACE=y
+>> # CONFIG_FTRACE is not set
+>
+> Oh, you are right.  Thanks.  I probably won't be able to do any more
+> testing today but I would suggest trying to turn off wireless-related
+> options in the main kernel config and see if you can get it working
+> (start with cfg80211 and its dependencies...)
 
-diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
-index 5c5dfd6..89f41f6 100644
---- a/drivers/net/wireless/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/hostap/hostap_hw.c
-@@ -2792,46 +2792,6 @@ static void prism2_check_sta_fw_version(local_info_t *local)
- }
- 
- 
--static void prism2_crypt_deinit_entries(local_info_t *local, int force)
--{
--	struct list_head *ptr, *n;
--	struct lib80211_crypt_data *entry;
--
--	for (ptr = local->crypt_info.crypt_deinit_list.next, n = ptr->next;
--	     ptr != &local->crypt_info.crypt_deinit_list;
--	     ptr = n, n = ptr->next) {
--		entry = list_entry(ptr, struct lib80211_crypt_data, list);
--
--		if (atomic_read(&entry->refcnt) != 0 && !force)
--			continue;
--
--		list_del(ptr);
--
--		if (entry->ops)
--			entry->ops->deinit(entry->priv);
--		kfree(entry);
--	}
--}
--
--
--static void prism2_crypt_deinit_handler(unsigned long data)
--{
--	local_info_t *local = (local_info_t *) data;
--	unsigned long flags;
--
--	spin_lock_irqsave(&local->lock, flags);
--	prism2_crypt_deinit_entries(local, 0);
--	if (!list_empty(&local->crypt_info.crypt_deinit_list)) {
--		printk(KERN_DEBUG "%s: entries remaining in delayed crypt "
--		       "deletion list\n", local->dev->name);
--		local->crypt_info.crypt_deinit_timer.expires = jiffies + HZ;
--		add_timer(&local->crypt_info.crypt_deinit_timer);
--	}
--	spin_unlock_irqrestore(&local->lock, flags);
--
--}
--
--
- static void hostap_passive_scan(unsigned long data)
- {
- 	local_info_t *local = (local_info_t *) data;
-@@ -3256,12 +3216,7 @@ while (0)
- 	INIT_LIST_HEAD(&local->cmd_queue);
- 	init_waitqueue_head(&local->hostscan_wq);
- 
--	local->crypt_info.name = dev->name;
--	local->crypt_info.lock = &local->lock;
--	INIT_LIST_HEAD(&local->crypt_info.crypt_deinit_list);
--	init_timer(&local->crypt_info.crypt_deinit_timer);
--	local->crypt_info.crypt_deinit_timer.data = (unsigned long) local;
--	local->crypt_info.crypt_deinit_timer.function = prism2_crypt_deinit_handler;
-+	lib80211_crypt_info_init(&local->crypt_info, dev->name, &local->lock);
- 
- 	init_timer(&local->passive_scan_timer);
- 	local->passive_scan_timer.data = (unsigned long) local;
-@@ -3362,9 +3317,7 @@ static void prism2_free_local_data(struct net_device *dev)
- 
- 	flush_scheduled_work();
- 
--	if (timer_pending(&local->crypt_info.crypt_deinit_timer))
--		del_timer(&local->crypt_info.crypt_deinit_timer);
--	prism2_crypt_deinit_entries(local, 1);
-+	lib80211_crypt_info_free(&local->crypt_info);
- 
- 	if (timer_pending(&local->passive_scan_timer))
- 		del_timer(&local->passive_scan_timer);
-@@ -3381,16 +3334,6 @@ static void prism2_free_local_data(struct net_device *dev)
- 	if (local->dev_enabled)
- 		prism2_callback(local, PRISM2_CALLBACK_DISABLE);
- 
--	for (i = 0; i < WEP_KEYS; i++) {
--		struct lib80211_crypt_data *crypt = local->crypt_info.crypt[i];
--		if (crypt) {
--			if (crypt->ops)
--				crypt->ops->deinit(crypt->priv);
--			kfree(crypt);
--			local->crypt_info.crypt[i] = NULL;
--		}
--	}
--
- 	if (local->ap != NULL)
- 		hostap_free_data(local->ap);
- 
-diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
-index baf0a26..6bb9be0 100644
---- a/drivers/net/wireless/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/hostap/hostap_ioctl.c
-@@ -116,32 +116,6 @@ static int prism2_get_name(struct net_device *dev,
- }
- 
- 
--static void prism2_crypt_delayed_deinit(local_info_t *local,
--					struct lib80211_crypt_data **crypt)
--{
--	struct lib80211_crypt_data *tmp;
--	unsigned long flags;
--
--	tmp = *crypt;
--	*crypt = NULL;
--
--	if (tmp == NULL)
--		return;
--
--	/* must not run ops->deinit() while there may be pending encrypt or
--	 * decrypt operations. Use a list of delayed deinits to avoid needing
--	 * locking. */
--
--	spin_lock_irqsave(&local->lock, flags);
--	list_add(&tmp->list, &local->crypt_info.crypt_deinit_list);
--	if (!timer_pending(&local->crypt_info.crypt_deinit_timer)) {
--		local->crypt_info.crypt_deinit_timer.expires = jiffies + HZ;
--		add_timer(&local->crypt_info.crypt_deinit_timer);
--	}
--	spin_unlock_irqrestore(&local->lock, flags);
--}
--
--
- static int prism2_ioctl_siwencode(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_point *erq, char *keybuf)
-@@ -166,14 +140,14 @@ static int prism2_ioctl_siwencode(struct net_device *dev,
- 
- 	if (erq->flags & IW_ENCODE_DISABLED) {
- 		if (*crypt)
--			prism2_crypt_delayed_deinit(local, crypt);
-+			lib80211_crypt_delayed_deinit(&local->crypt_info, crypt);
- 		goto done;
- 	}
- 
- 	if (*crypt != NULL && (*crypt)->ops != NULL &&
- 	    strcmp((*crypt)->ops->name, "WEP") != 0) {
- 		/* changing to use WEP; deinit previously used algorithm */
--		prism2_crypt_delayed_deinit(local, crypt);
-+		lib80211_crypt_delayed_deinit(&local->crypt_info, crypt);
- 	}
- 
- 	if (*crypt == NULL) {
-@@ -189,7 +163,7 @@ static int prism2_ioctl_siwencode(struct net_device *dev,
- 			request_module("lib80211_crypt_wep");
- 			new_crypt->ops = lib80211_get_crypto_ops("WEP");
- 		}
--		if (new_crypt->ops)
-+		if (new_crypt->ops && try_module_get(new_crypt->ops->owner))
- 			new_crypt->priv = new_crypt->ops->init(i);
- 		if (!new_crypt->ops || !new_crypt->priv) {
- 			kfree(new_crypt);
-@@ -3271,7 +3245,7 @@ static int prism2_ioctl_siwencodeext(struct net_device *dev,
- 	if ((erq->flags & IW_ENCODE_DISABLED) ||
- 	    ext->alg == IW_ENCODE_ALG_NONE) {
- 		if (*crypt)
--			prism2_crypt_delayed_deinit(local, crypt);
-+			lib80211_crypt_delayed_deinit(&local->crypt_info, crypt);
- 		goto done;
- 	}
- 
-@@ -3319,7 +3293,7 @@ static int prism2_ioctl_siwencodeext(struct net_device *dev,
- 	if (*crypt == NULL || (*crypt)->ops != ops) {
- 		struct lib80211_crypt_data *new_crypt;
- 
--		prism2_crypt_delayed_deinit(local, crypt);
-+		lib80211_crypt_delayed_deinit(&local->crypt_info, crypt);
- 
- 		new_crypt = kzalloc(sizeof(struct lib80211_crypt_data),
- 				GFP_KERNEL);
-@@ -3328,7 +3302,8 @@ static int prism2_ioctl_siwencodeext(struct net_device *dev,
- 			goto done;
- 		}
- 		new_crypt->ops = ops;
--		new_crypt->priv = new_crypt->ops->init(i);
-+		if (new_crypt->ops && try_module_get(new_crypt->ops->owner))
-+			new_crypt->priv = new_crypt->ops->init(i);
- 		if (new_crypt->priv == NULL) {
- 			kfree(new_crypt);
- 			ret = -EINVAL;
-@@ -3505,7 +3480,7 @@ static int prism2_ioctl_set_encryption(local_info_t *local,
- 
- 	if (strcmp(param->u.crypt.alg, "none") == 0) {
- 		if (crypt)
--			prism2_crypt_delayed_deinit(local, crypt);
-+			lib80211_crypt_delayed_deinit(&local->crypt_info, crypt);
- 		goto done;
- 	}
- 
-@@ -3535,7 +3510,7 @@ static int prism2_ioctl_set_encryption(local_info_t *local,
- 	if (*crypt == NULL || (*crypt)->ops != ops) {
- 		struct lib80211_crypt_data *new_crypt;
- 
--		prism2_crypt_delayed_deinit(local, crypt);
-+		lib80211_crypt_delayed_deinit(&local->crypt_info, crypt);
- 
- 		new_crypt = kzalloc(sizeof(struct lib80211_crypt_data),
- 				GFP_KERNEL);
-diff --git a/include/net/lib80211.h b/include/net/lib80211.h
-index dd1079f..a269b23 100644
---- a/include/net/lib80211.h
-+++ b/include/net/lib80211.h
-@@ -114,6 +114,9 @@ struct lib80211_crypt_info {
- 	int crypt_quiesced;
- };
- 
-+int lib80211_crypt_info_init(struct lib80211_crypt_info *info, char *name,
-+                                spinlock_t *lock);
-+void lib80211_crypt_info_free(struct lib80211_crypt_info *info);
- int lib80211_register_crypto_ops(struct lib80211_crypto_ops *ops);
- int lib80211_unregister_crypto_ops(struct lib80211_crypto_ops *ops);
- struct lib80211_crypto_ops *lib80211_get_crypto_ops(const char *name);
-diff --git a/net/ieee80211/ieee80211_module.c b/net/ieee80211/ieee80211_module.c
-index cf21f0b..a2f5616 100644
---- a/net/ieee80211/ieee80211_module.c
-+++ b/net/ieee80211/ieee80211_module.c
-@@ -182,13 +182,7 @@ struct net_device *alloc_ieee80211(int sizeof_priv)
- 
- 	spin_lock_init(&ieee->lock);
- 
--	ieee->crypt_info.name = dev->name;
--	ieee->crypt_info.lock = &ieee->lock;
--	INIT_LIST_HEAD(&ieee->crypt_info.crypt_deinit_list);
--	setup_timer(&ieee->crypt_info.crypt_deinit_timer,
--			lib80211_crypt_deinit_handler,
--			(unsigned long)&ieee->crypt_info);
--	ieee->crypt_info.crypt_quiesced = 0;
-+	lib80211_crypt_info_init(&ieee->crypt_info, dev->name, &ieee->lock);
- 
- 	ieee->wpa_enabled = 0;
- 	ieee->drop_unencrypted = 0;
-@@ -206,23 +200,7 @@ void free_ieee80211(struct net_device *dev)
- {
- 	struct ieee80211_device *ieee = netdev_priv(dev);
- 
--	int i;
--
--	lib80211_crypt_quiescing(&ieee->crypt_info);
--	del_timer_sync(&ieee->crypt_info.crypt_deinit_timer);
--	lib80211_crypt_deinit_entries(&ieee->crypt_info, 1);
--
--	for (i = 0; i < WEP_KEYS; i++) {
--		struct lib80211_crypt_data *crypt = ieee->crypt_info.crypt[i];
--		if (crypt) {
--			if (crypt->ops) {
--				crypt->ops->deinit(crypt->priv);
--				module_put(crypt->ops->owner);
--			}
--			kfree(crypt);
--			ieee->crypt_info.crypt[i] = NULL;
--		}
--	}
-+	lib80211_crypt_info_free(&ieee->crypt_info);
- 
- 	ieee80211_networks_free(ieee);
- 	free_netdev(dev);
-diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
-index d681721..97d411f 100644
---- a/net/wireless/lib80211.c
-+++ b/net/wireless/lib80211.c
-@@ -71,6 +71,44 @@ const char *print_ssid(char *buf, const char *ssid, u8 ssid_len)
- }
- EXPORT_SYMBOL(print_ssid);
- 
-+int lib80211_crypt_info_init(struct lib80211_crypt_info *info, char *name,
-+				spinlock_t *lock)
-+{
-+	memset(info, 0, sizeof(*info));
-+
-+	info->name = name;
-+	info->lock = lock;
-+
-+	INIT_LIST_HEAD(&info->crypt_deinit_list);
-+	setup_timer(&info->crypt_deinit_timer, lib80211_crypt_deinit_handler,
-+			(unsigned long)info);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(lib80211_crypt_info_init);
-+
-+void lib80211_crypt_info_free(struct lib80211_crypt_info *info)
-+{
-+	int i;
-+
-+        lib80211_crypt_quiescing(info);
-+        del_timer_sync(&info->crypt_deinit_timer);
-+        lib80211_crypt_deinit_entries(info, 1);
-+
-+        for (i = 0; i < NUM_WEP_KEYS; i++) {
-+                struct lib80211_crypt_data *crypt = info->crypt[i];
-+                if (crypt) {
-+                        if (crypt->ops) {
-+                                crypt->ops->deinit(crypt->priv);
-+                                module_put(crypt->ops->owner);
-+                        }
-+                        kfree(crypt);
-+                        info->crypt[i] = NULL;
-+                }
-+        }
-+}
-+EXPORT_SYMBOL(lib80211_crypt_info_free);
-+
- void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info, int force)
- {
- 	struct lib80211_crypt_data *entry, *next;
--- 
-1.5.4.3
+The fun continues. If I rebuild the kernel with all wireless options
+turned off except WIRELESS_EXT, then build compat-wireless, our module
+appears to load without issues.
 
+.config:
+#
+# Wireless
+#
+# CONFIG_CFG80211 is not set
+CONFIG_WIRELESS_EXT=y
+CONFIG_WIRELESS_EXT_SYSFS=y
+# CONFIG_MAC80211 is not set
+# CONFIG_IEEE80211 is not set
+# CONFIG_RFKILL is not set
+# CONFIG_NET_9P is not set
+
+dmesg:
+atl2: eth0 NIC Link is Up<100 Mbps Full Duplex>
+evdev.c(EVIOCGBIT): Suspicious buffer size 511, limiting output to 64
+bytes. See http://userweb.kernel.org/~dtor/eviocgbit-bug.html
+<<< boot stopped here, then I modprobed ath5k >>>
+cfg80211: Using static regulatory domain info
+cfg80211: Regulatory domain: US
+	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+	(2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+	(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+	(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+	(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+	(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+	(5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+cfg80211: Calling CRDA for country: US
+ath5k_pci 0000:01:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+ath5k_pci 0000:01:00.0: setting latency timer to 64
+ath5k_pci 0000:01:00.0: registered as 'phy0'
+phy0: Selected rate control algorithm 'pid'
+ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
+wlan0: authenticate with AP 00:1c:10:21:f5:f4
+wlan0: authenticated
+wlan0: associate with AP 00:1c:10:21:f5:f4
+wlan0: RX AssocResp from 00:1c:10:21:f5:f4 (capab=0x411 status=0 aid=3)
+wlan0: associated
+
+I had not seen this cfg80211 stuff before when modprobing. I also see
+that cfg80211 is now loaded as a module- was the fact that it was
+built into the kernel before causing all these problems? That would be
+my strong suspicion, in which case this entire thread is really a bum
+bug report, except that compat-wireless should enforce that cfg80211
+is a module just like it currently enforces that for mac80211, saving
+someone else this headache.
+
+-Dan
