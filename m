@@ -1,97 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:52429 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753616AbYKLRd3 convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3716 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752749AbYKPQVG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 12:33:29 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 09:33:29 -0800
-Date: Wed, 12 Nov 2008 09:33:27 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211 dynamic powersave
-Message-ID: <20081112173326.GA5886@tesla> (sfid-20081112_183344_464427_7A06F63E)
-References: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com> <8e92b4100811102032j7698254ct7020879e4cd5af1d@mail.gmail.com> <1226399895.3890.8.camel@johannes.berg> <8e92b4100811112217p167f5f2ue5fa96475e6bdd44@mail.gmail.com>
+	Sun, 16 Nov 2008 11:21:06 -0500
+Date: Sun, 16 Nov 2008 11:20:19 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Dan McGee <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Message-ID: <20081116162019.GA15851@hash.localnet> (sfid-20081116_172111_497179_787DE4C5)
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com> <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com> <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com> <449c10960811151811s32fdd2b6p361d2ec9dd674fcc@mail.gmail.com> <449c10960811151838m3fcae118n65139be735c10665@mail.gmail.com> <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com> <20081116055312.GA14126@hash.localnet> <43e72e890811152205k13318ab7yad8695d9f6dd409c@mail.gmail.com> <43e72e890811152206s3683ecabm658fac255112a262@mail.gmail.com> <43e72e890811152215h5cf389a3ufe4dc10b021b0c0f@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <8e92b4100811112217p167f5f2ue5fa96475e6bdd44@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890811152215h5cf389a3ufe4dc10b021b0c0f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 11, 2008 at 10:17:54PM -0800, Vivek Natarajan wrote:
-> Johannes Berg <johannes@sipsolutions.net> wrote:
->=20
-> > Vivek Natarajan wrote:
-> >> 2) Do you intend to leave the NULL frame formation, waking up the =
-chip
-> >>      for TIM and modifying sleep/awake time according to  DTIM to
-> >>     the driver since I did not see this in your TODO list?( I unde=
-rstand from
-> >>     the iwlwifi code that it just sends a request to the firmware =
-for sending
-> >>     NULL frame and the firmware takes care of the rest. But it may=
- not be
-> >>     so in the case of other vendor drivers.)
-> >
-> > Can you elaborate on this? I don't think we're concerned with that =
-in
-> > dynPS.
->=20
-> I'm listing  whatever I have understood about 'Power save'.
-> It might be too basic but do correct me if I'm wrong somewhere.
->=20
-> NULL DATA frame:
-> a) A NULL data frame with PM bit ON is to be sent to the AP before
-> going to sleep.
-> b) After sending Null frame, the chip should not go to sleep before
-> getting ack: move to sleep pending state
-> c) In sleep pending state, wait for one more 'timeout' period before
-> sending null frame again
-> d) If ack is received, goto sleep.
->     This is to make sure that the AP buffers frames for us.
->  Sanity check:
-> Check if the hw has been sleeping too long! It could imply that the
-> sleep timers have gotten out of sync with the TSF. If so, force wake
-> until the sleep timers get resynced.
->=20
-> Tx:
-> If there is a frame to transmit, send null data with PM bit off and s=
-tart Tx.
-> Rx:
-> If there is any buffered frames, it is indicated in TIM.
-> TIPS on TIM:
-> Some hardware processes the TIM IE and fires an interrupt when the TI=
-M
-> bit is set.
-> For hardware that doesn't,  we should process the TIM in software as
-> part of processing the received Beacon
-> =E2=86=92 A function to check if TIM bit is set based on the offset i=
-n the beacon.
-> =E2=86=92 A function to put the chip to awake(if TIM is set) and send=
- a null
-> data with PM bit off.
->=20
-> DTIM:
-> The period after which multicast traffic may be transmitted. So be
-> awake even if there is no unicast packets
-> as indicated by TIM.
-> There are some registers related to TIM and DTIM periods in ath5k
-> registers.(Thanks Nick for pointing
-> them out)Need to dig more to see if it is enough to program these
-> registers to be awake for post-DTIM muticast traffic.
+On Sat, Nov 15, 2008 at 10:15:31PM -0800, Luis R. Rodriguez wrote:
+> The answer is drivers/base/dd.c really_probe(). Curious enough guess
+> what, dev->driver = drv; is assigned *before* the device driver probe
+> :) (bus probe in this case first, so dev->bus->probe) contrary to the
+> other way around. So you're absolutely right the patch is not
+> necessary then. Good catch.
 
-Also check out:
+Cool, so that's where that is.  
 
-http://wireless.kernel.org/en/developers/Documentation/ieee80211/power-=
-savings
+I got some more info, this looks like a miscompilation of some kind,
+maybe a mismatch between kernel config and compat-wireless, but I didn't
+see anything obvious.
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Here's what I did:
+
+--- drivers/net/wireless/ath5k/base.c	2008-11-14 00:11:09.000000000 -0500
++++ drivers/net/wireless/ath5k/my-base.c	2008-11-16 11:01:42.000000000 -0500
+@@ -490,6 +490,9 @@
+ 		goto err_map;
+ 	}
+ 
++	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, 
++		hw->wiphy, sizeof(struct wiphy), 1);
++	printk(KERN_INFO "offset: %d\n", offsetof(struct wiphy, dev.bus_id));
+ 	dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
+ 
+ 	/* Initialize driver private data */
+
+Which produced:
+
+ath5k_pci 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+ath5k_pci 0000:02:00.0: setting latency timer to 64
+00000000: 00 00 00 00 00 00 00 00 b4 ea 07 b7 00 00 00 00  ................
+00000010: 00 00 00 00 54 c0 03 b3 54 c0 03 b3 9a c0 24 78  ....T...T.....$x
+00000020: 58 c0 24 78 00 00 00 00 00 00 00 00 00 00 00 00  X.$x............
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000080: c0 c0 03 b3 c0 c0 03 b3 00 00 00 00 40 b2 c0 b5  ............@...
+00000090: 28 cf 42 78 00 00 00 00 01 00 00 00 01 00 00 00  (.Bx............
+000000a0: 70 68 79 30 00 00 00 00 00 00 00 00 00 00 00 00  phy0............
+000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+000000c0: 01 00 00 00 04 c1 03 b3 04 c1 03 b3 00 00 00 00  ................
+000000d0: 00 00 00 00 00 00 00 00 00 c0 03 b3 00 00 00 00  ................
+000000e0: 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00  ................
+000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000100: 40 c1 03 b3 40 c1 03 b3 00 00 00 00 00 00 00 00  @...@...........
+00000110: 50 c1 03 b3 50 c1 03 b3 58 c1 03 b3 58 c1 03 b3  P...P...X...X...
+00000120: 2c 0f 45 78 00 00 00 00 00 00 00 00 00 00 00 00  ,.Ex............
+00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+offset: 164
+ath5k_pci 0000:02:00.0: registered as ''
+BUG: unable to handle kernel NULL pointer dereference at 00000000
+
+As you can see, the modules think "phy0" should be at offset 164, but
+it's really at 160.
+
+Also I noticed the original config had CONFIG_DYNAMIC_FTRACE=y, unfortunately
+turning that off didn't seem to change anything (hmm, I didn't get a build 
+bug, was the breakage fixed in 2.6.27.y?)
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
