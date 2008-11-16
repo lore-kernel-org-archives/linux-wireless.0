@@ -1,71 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32016 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752170AbYKUO2U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 09:28:20 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 06:28:20 -0800
-Date: Fri, 21 Nov 2008 20:01:48 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Look out for some other AP when disassoc is
-	received.
-Message-ID: <20081122040148.GA4201@myhost.users.atheros.com> (sfid-20081121_152824_360434_B8238486)
-References: <20081120000322.GA2828@myhost.users.atheros.com> <1227095716.26243.20.camel@johannes.berg> <8e92b4100811190433l24ab5043nd4e14ff7c7124e20@mail.gmail.com> <1227186290.14852.8.camel@johannes.berg> <8e92b4100811210346r125519d0gb5a71108719e1768@mail.gmail.com> <1227268340.3766.112.camel@johannes.berg>
+Received: from mail1.mobexpert.ro ([82.76.195.162]:39875 "EHLO
+	imap1.mobexpert.ro" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751572AbYKPKqz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Nov 2008 05:46:55 -0500
+Message-ID: <491FF82C.4070207@zando.ro> (sfid-20081116_114659_954211_EE0A4D35)
+Date: Sun, 16 Nov 2008 12:38:36 +0200
+From: =?UTF-8?B?UsSDenZhbiBTYW5kdQ==?= <razvan.sandu@zando.ro>
+Reply-To: razvan.sandu@zando.ro
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1227268340.3766.112.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Subject: Wireless gear on the Romanian market
+Content-Type: multipart/mixed;
+ boundary="------------040906090201050808040902"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vivek Natarajan <vnatarajan@atheros.com>
-Date: Fri, 21 Nov 2008 11:15:19 +0530
-Subject: [PATCH] mac80211: Look out for some other AP when disassoc is received.
+This is a multi-part message in MIME format.
+--------------040906090201050808040902
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-When a disassoc packet is received with a reason code of
-'AP leaving the BSS', mac80211 should start looking for some
-other AP instead of trying to associate with the same AP.
+Hello,
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- net/mac80211/mlme.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 90ad5a4..ee15e75 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -808,6 +808,10 @@ static void ieee80211_authenticate(struct ieee80211_sub_if_data *sdata,
- 	mod_timer(&ifsta->timer, jiffies + IEEE80211_AUTH_TIMEOUT);
- }
- 
-+/*
-+ * The disassoc 'reason' argument can be either our own reason
-+ * if self disconnected or a reason code from the AP.
-+ */
- static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 				   struct ieee80211_if_sta *ifsta, bool deauth,
- 				   bool self_disconnected, u16 reason)
-@@ -854,7 +858,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_sta_send_apinfo(sdata, ifsta);
- 
--	if (self_disconnected)
-+	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT)
- 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
- 
- 	sta_info_unlink(&sta);
-@@ -1175,7 +1179,7 @@ static void ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
- 				      IEEE80211_RETRY_AUTH_INTERVAL);
- 	}
- 
--	ieee80211_set_disassoc(sdata, ifsta, false, false, 0);
-+	ieee80211_set_disassoc(sdata, ifsta, false, false, reason_code);
- }
- 
- 
--- 
-1.5.6.4
+I'm not a programmer myself, but I am making constant efforts to help 
+Linux development by other means (especially beta-testing and marketing).
 
+I've recently made some systematic inquiries in the largest computer 
+stores in Romania, looking after wireless gear and its Linux support 
+(especially draft-N).
+
+
+Here's what I've found:
+
+SMC USB cards
+http://www.smc.com/index.cfm?event=viewProduct&localeCode=EN_USA&cid=5&scid=117&pid=1636
+http://www.smc.com/index.cfm?event=viewProduct&localeCode=EN_USA&cid=5&scid=117&pid=1645
+
+SMC PCMCIA cards
+http://www.smc.com/index.cfm?event=viewProduct&localeCode=EN_USA&cid=5&scid=117&pid=1590
+http://www.smc.com/index.cfm?event=viewProduct&localeCode=EN_USA&cid=5&scid=117&pid=1673
+
+D-Link USB cards
+http://www.d-link.no/?go=gNTyP9CgrdFOIC4AStFCF834mptYKO9ZTdvhLPG3yV3oUop7hqltbNlwaaFp6DQoHDrpzyRC944ABd3h
+
+D-Link PCMCIA cards
+http://www.d-link.no/?go=jN7uAYLx/oIJaWVUDLYZU93ygJVYKuJXStvhLPG3yV3oV4B6galtbNlwaaRp+X19Vnq1zitUvt1LVILi0KfkPk8Ztu3RboK2GNQ=
+http://www.d-link.no/?go=jN7uAYLx/oIJaWVUDLYZU93ygJVYKuJXStvhLPG3yV3oVYx+galtbNlwaaRp+X19Vnq1zitUvt1LVILi0KfkPk0YsOLZa4G0HNc=
+
+D-Link PCI cards
+http://www.d-link.no/?go=jN7uAYLx/oIJaWVUDLYZU93ygJVYKuJXStvhLPG3yV3oWIt9hqltbNlwaaRp+X19Vnq1zitUvt1LVILi0KfkPk8Rte3cb4W1FdQ=
+http://www.d-link.no/?go=jN7uAYLx/oIJaWVUDLYZU93ygJVYKuJXStvhLPG3yV3oV415jqltbNlwaaRp+X19Vnq1zitUvt1LVILi0KfkPk0ZuOjaZ4a+HdY=
+http://www.d-link.no/?go=jN7uAYLx/oIJaWVUDLYZU93ygJVYKuJXStvhLPG3yV3oVYx+gKltbNlwaaRp+X19Vnq1zitUvt1LVILi0KfkPkwTtezbaI60Hto=
+
+Belkin PCI cards
+http://catalog.belkin.com/IWCatProductPage.process?Product_Id=273535
+http://catalog.belkin.com/IWCatProductPage.process?Product_Id=179458
+
+Belkin USB cards
+http://catalog.belkin.com/IWCatProductPage.process?Product_Id=299142
+http://catalog.belkin.com/IWCatProductPage.process?Product_Id=372137
+
+Belkin PCMCIA cards
+http://catalog.belkin.com/IWCatProductPage.process?Product_Id=273544
+http://catalog.belkin.com/IWCatProductPage.process?Product_Id=299617
+http://catalog.belkin.com/IWCatProductPage.process?Product_Id=372032
+http://catalog.belkin.com/IWCatProductPage.process?Product_Id=372146
+http://catalog.belkin.com/IWCatProductPage.process?Product_Id=203586
+
+TrendNet USB cards
+http://trendnet.com/langen/products/proddetail.asp?prod=155_TEW-644UB&cat=42
+http://trendnet.com/langen/products/proddetail.asp?prod=135_TEW-444UB&cat=42
+http://trendnet.com/langen/products/proddetail.asp?prod=150_TEW-429UF&cat=42
+
+TrendNet PCI cards
+http://trendnet.com/langen/products/proddetail.asp?prod=140_TEW-623PI&cat=42
+http://trendnet.com/langen/products/proddetail.asp?prod=165_TEW-643PI&cat=42
+
+TrendNet PCMCIA cards
+http://trendnet.com/langen/products/proddetail.asp?prod=160_TEW-641PC&cat=42
+http://trendnet.com/langen/products/proddetail.asp?prod=135_TEW-621PC&cat=42
+
+
+Now, please, is it possible to find out which of these products are 
+supported in Linux (or will be in the foreseable future) ? This 
+information is critical to Romanian Linux users, as well as others...
+
+
+Thanks A LOT,
+Răzvan
+
+--------------040906090201050808040902
+Content-Type: text/x-vcard; charset=utf-8;
+ name="razvan_sandu.vcf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="razvan_sandu.vcf"
+
+YmVnaW46dmNhcmQNCmZuO3F1b3RlZC1wcmludGFibGU6Uj1DND04M3p2YW4gU2FuZHUNCm47
+cXVvdGVkLXByaW50YWJsZTpTYW5kdTtSPUM0PTgzenZhbg0Kb3JnOlpBTkRPIENPTVBVVEVS
+IFNSTA0KYWRyO3F1b3RlZC1wcmludGFibGU6MXN0IGZsLiwgYXB0LiAyOzsxMiBBZXJvZz1D
+ND04M3JpaSBBdmVudWU7QnVjaGFyZXN0O3NlY3RvciAxOzAxNDA1NDtSb21hbmlhDQplbWFp
+bDtpbnRlcm5ldDpyYXp2YW4uc2FuZHVAemFuZG8ucm8NCnRpdGxlOkdlbmVyYWwgTWFuYWdl
+cg0KdGVsO3dvcms6KzQwIDIxIDIzMjM2MzgNCnRlbDtmYXg6KzQwIDIxIDIzMjM2MzgNCnRl
+bDtjZWxsOis0MCA3NDAgNTkwNjg3DQp4LW1vemlsbGEtaHRtbDpGQUxTRQ0KdXJsOmh0dHA6
+Ly93d3cuemFuZG8ucm8NCnZlcnNpb246Mi4xDQplbmQ6dmNhcmQNCg0K
+--------------040906090201050808040902--
