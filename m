@@ -1,65 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40818 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757407AbYKUUbV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 15:31:21 -0500
-Date: Fri, 21 Nov 2008 15:27:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Xu, Martin" <martin.xu@intel.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
-	Vikram Kandukuri <Vikram.Kandukuri@atheros.com>,
-	Jothikumar Mothilal <Jothikumar.Mothilal@atheros.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"Liu, Bing Wei" <bing.wei.liu@intel.com>,
-	"Selbak, Rolla N" <rolla.n.selbak@intel.com>,
-	"Wang, Yong Y" <yong.y.wang@intel.com>
-Subject: Re: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts
-	per second at idle
-Message-ID: <20081121202734.GC3540@tuxdriver.com> (sfid-20081121_213138_877141_D50F7D1E)
-References: <bug-11749-13098@http.bugzilla.kernel.org/> <20081013150525.884BC108058@picon.linux-foundation.org> <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com> <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com> <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com> <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com> <9F0C1DB20AFA954FA1DA05309350433D410CD777@pdsmsx503.ccr.corp.intel.com> <20081117133737.GA16412@hash.localnet> <9F0C1DB20AFA954FA1DA05309350433D41183AB4@pdsmsx503.ccr.corp.intel.com>
+Received: from ox1.aei.mpg.de ([194.94.224.6]:44305 "EHLO ox1.aei.mpg.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751770AbYKPMGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Nov 2008 07:06:04 -0500
+Date: Sun, 16 Nov 2008 13:06:22 +0100
+From: "Carlos R. Mafra" <crmafra2@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Lukas Hejtmanek <xhejtman@ics.muni.cz>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: iwlagn driver segfault in 2.6.28-rc3
+Message-ID: <20081116120621.GA3937@localhost.aei.mpg.de> (sfid-20081116_130620_760175_499EFF71)
+References: <20081111143410.GA4401@ics.muni.cz> <1226560041.1115.945.camel@rc-desk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9F0C1DB20AFA954FA1DA05309350433D41183AB4@pdsmsx503.ccr.corp.intel.com>
+In-Reply-To: <1226560041.1115.945.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 20, 2008 at 11:13:18AM +0800, Xu, Martin wrote:
-> Hi Bob:
-> Please review below patch thanks.
-> 
-> From: Martin Xu <martin.xu@intel.com>
-> Subject: disable beacon filter when station is not associated with any AP.
-> 
-> Ath5k driver has too many interrupts per second at idle
-> http://bugzilla.kernel.org/show_bug.cgi?id=11749
-> 
-> Signed-off-by: Martin Xu <martin.xu@intel.com>
-> 
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 34cd1a4..37da7cc 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -241,6 +241,10 @@ static int ath5k_get_tx_stats(struct ieee80211_hw *hw,
->  static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
->  static void ath5k_reset_tsf(struct ieee80211_hw *hw);
->  static int ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb);
-> +static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
-> +				struct ieee80211_vif *vif,
-> +				struct ieee80211_bss_conf *bss_conf,
-> +				u32 changes);
->  
->  static struct ieee80211_ops ath5k_hw_ops = {
->  	.tx 		= ath5k_tx,
+I just got (another) one of this too.
 
-This patch defines ath5k_bss_info_changed, but doesn't use it.
-Is that really what you meant to do?
+The wireless connection suddenly lost the AP and I was waiting
+for ifplugd to reconnect to it again automatically, as it always
+does.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+After waiting for one or two minutes I decided to 'modprobe -r
+iwlagn' but this command never returned (it got stuck). 
+
+Then I looked at the end of dmesg and found this:
+
+general protection fault: 0000 [#1] SMP 
+last sysfs file: /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+CPU 1 
+Modules linked in: nls_iso8859_1 nls_cp437 vfat fat usb_storage xt_comment xt_policy xt_tcpmss xt_pkttype xt_owner xt_NFQUEUE xt_NFLOG xt_multiport xt_MARK xt_mark xt_mac xt_limit xt_length xt_iprange xt_hashlimit xt_dscp xt_dccp xt_CLASSIFY snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss nvram ohci1394 ieee1394 snd_hda_intel uvcvideo snd_pcm sg sky2 i2c_i801 sr_mod iwlagn compat_ioctl32 snd_timer evdev videodev snd_page_alloc v4l1_compat snd_hwdep ata_piix ahci libata sd_mod scsi_mod uhci_hcd ohci_hcd ehci_hcd usbcore [last unloaded: scsi_wait_scan]
+Pid: 3163, comm: ifplugd Not tainted 2.6.28-rc4-keypress-00322-g58e20d8 #14
+RIP: 0010:[<ffffffff803d844b>]  [<ffffffff803d844b>] iwl_eeprom_query16+0xb/0x20
+RSP: 0018:ffff88007b631a88  EFLAGS: 00010092
+RAX: 7fff88007dfd5400 RBX: ffff88007d81a000 RCX: 00000000800600f0
+RDX: 0000000000000cfc RSI: 0000000000000090 RDI: ffff88007dcc1940
+RBP: ffff88007b631a88 R08: 0000000000000002 R09: ffff88007b631a5c
+R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000080006
+R13: ffff88007dcc1940 R14: ffff88007dcc29f8 R15: ffff88007d81a740
+FS:  00007f7f93ef16f0(0000) GS:ffff88007f0686c0(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 00002ad88fdfd000 CR3: 000000007d935000 CR4: 00000000000006a0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process ifplugd (pid: 3163, threadinfo ffff88007b630000, task ffff88007b5ba980)
+Stack:
+ ffff88007b631af8 ffffffffa0108526 ffff88007b631af8 ffffffffa00f3aaf
+ 0000000000000000 ffff88007dcc2328 0000000000000292 0000000000000000
+ 0143000000000000 ffff88007d81a000 ffff88007dcc1940 ffff88007dcc2328
+Call Trace:
+ [<ffffffffa0108526>] iwl4965_nic_config+0xa6/0x380 [iwlagn]
+ [<ffffffffa00f3aaf>] ? iwl4965_set_pwr_src+0x1cf/0x3d0 [iwlagn]
+ [<ffffffff803d5a9b>] iwl_hw_nic_init+0x11b/0x1d0
+ [<ffffffffa00fbe17>] __iwl4965_up+0x1a7/0x720 [iwlagn]
+ [<ffffffffa00fd0c8>] iwl4965_mac_start+0xd38/0x1570 [iwlagn]
+ [<ffffffff8022d365>] ? __wake_up_sync+0x55/0x70
+ [<ffffffff8043000f>] ? sock_def_readable+0x6f/0x80
+ [<ffffffff8049b893>] ? unix_dgram_sendmsg+0x463/0x4f0
+ [<ffffffff804b5cf8>] ieee80211_open+0x328/0x830
+ [<ffffffff8042bf5b>] ? sock_sendmsg+0xdb/0xf0
+ [<ffffffff8043cba4>] dev_open+0x64/0xc0
+ [<ffffffff8043ba71>] dev_change_flags+0x91/0x1b0
+ [<ffffffff8047fde3>] devinet_ioctl+0x5b3/0x750
+ [<ffffffff8048096d>] inet_ioctl+0x6d/0x90
+ [<ffffffff8042c4d5>] sock_ioctl+0xc5/0x240
+ [<ffffffff802a60f1>] vfs_ioctl+0x31/0x90
+ [<ffffffff802a647b>] do_vfs_ioctl+0x32b/0x460
+ [<ffffffff802a65fa>] sys_ioctl+0x4a/0x80
+ [<ffffffff8020c1fb>] system_call_fastpath+0x16/0x1b
+Code: 48 8b 47 18 55 48 89 e5 48 8b 40 18 48 8b 00 ff 90 00 01 00 00 c9 c3 66 0f 1f 84 00 00 00 00 00 48 8b 87 98 22 01 00 55 48 89 e5 <0f> b6 54 06 01 0f b6 04 30 c9 c1 e2 08 09 d0 0f b7 c0 c3 66 90 
+RIP  [<ffffffff803d844b>] iwl_eeprom_query16+0xb/0x20
+ RSP <ffff88007b631a88>
+---[ end trace 28eaede31d178563 ]---
+
+
+I tried to reboot but it got stuck too, so I had to SysRq+b.
+
+>From now on I will apply Reinette's patch and wait for it to
+happen again (but it seldom happens).
