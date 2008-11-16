@@ -1,238 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48757 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57781 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbYKZVsJ (ORCPT
+	with ESMTP id S1752313AbYKPPgw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 16:48:09 -0500
-Subject: [PATCH v3] cfg80211: handle SIOCGIWMODE/SIOCSIWMODE
+	Sun, 16 Nov 2008 10:36:52 -0500
+Subject: Re: [PATCH 3/4] p54pci: cache firmware for suspend/resume v2.1
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1227735421.14269.2.camel@johannes.berg> (sfid-20081126_223837_375323_61A2AED2)
-References: <1227735421.14269.2.camel@johannes.berg>
-	 (sfid-20081126_223837_375323_61A2AED2)
-Content-Type: text/plain
-Date: Wed, 26 Nov 2008 22:47:34 +0100
-Message-Id: <1227736054.14269.4.camel@johannes.berg> (sfid-20081126_224813_585370_776CC57B)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+In-Reply-To: <49203DAA.3000102@lwfinger.net> (sfid-20081116_163514_051320_224E2FBE)
+References: <200811141941.56752.chunkeey@web.de>
+	 <200811150142.28447.chunkeey@web.de> <200811151930.19854.chunkeey@web.de>
+	 <200811161220.32828.chunkeey@web.de>  <49203DAA.3000102@lwfinger.net>
+	 (sfid-20081116_163514_051320_224E2FBE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gzltYo7jXxIvlHLivOrn"
+Date: Sun, 16 Nov 2008 16:36:41 +0100
+Message-Id: <1226849801.3599.0.camel@johannes.berg> (sfid-20081116_163655_535453_E61F1286)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-further reducing wext code in mac80211.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v3: make apply on latest tree, _properly_ fix the ibss mode thing, the
-previous patch that disallowed ibss on non-ibss channels still allowed
-doing it via nl80211.
+--=-gzltYo7jXxIvlHLivOrn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- include/net/cfg80211.h     |    4 ++
- net/mac80211/iface.c       |    4 ++
- net/mac80211/wext.c        |   76 +------------------------------------------
- net/wireless/wext-compat.c |   79 +++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 89 insertions(+), 74 deletions(-)
+On Sun, 2008-11-16 at 09:35 -0600, Larry Finger wrote:
 
---- everything.orig/include/net/cfg80211.h	2008-11-26 22:41:09.000000000 +0100
-+++ everything/include/net/cfg80211.h	2008-11-26 22:43:29.000000000 +0100
-@@ -521,5 +521,9 @@ struct cfg80211_ops {
- int cfg80211_wext_giwname(struct net_device *dev,
- 			  struct iw_request_info *info,
- 			  char *name, char *extra);
-+int cfg80211_wext_siwmode(struct net_device *dev, struct iw_request_info *info,
-+			  u32 *mode, char *extra);
-+int cfg80211_wext_giwmode(struct net_device *dev, struct iw_request_info *info,
-+			  u32 *mode, char *extra);
- 
- #endif /* __NET_CFG80211_H */
---- everything.orig/net/mac80211/wext.c	2008-11-26 22:41:09.000000000 +0100
-+++ everything/net/mac80211/wext.c	2008-11-26 22:43:29.000000000 +0100
-@@ -224,78 +224,6 @@ static int ieee80211_ioctl_giwrange(stru
- }
- 
- 
--static int ieee80211_ioctl_siwmode(struct net_device *dev,
--				   struct iw_request_info *info,
--				   __u32 *mode, char *extra)
--{
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct ieee80211_local *local = sdata->local;
--	int type;
--
--	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		return -EOPNOTSUPP;
--
--	switch (*mode) {
--	case IW_MODE_INFRA:
--		type = NL80211_IFTYPE_STATION;
--		break;
--	case IW_MODE_ADHOC:
--		/* Setting ad-hoc mode on non ibss channel is not
--		 * supported.
--		 */
--		if (local->oper_channel &&
--		    (local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS))
--			return -EOPNOTSUPP;
--
--		type = NL80211_IFTYPE_ADHOC;
--		break;
--	case IW_MODE_REPEAT:
--		type = NL80211_IFTYPE_WDS;
--		break;
--	case IW_MODE_MONITOR:
--		type = NL80211_IFTYPE_MONITOR;
--		break;
--	default:
--		return -EINVAL;
--	}
--
--	return ieee80211_if_change_type(sdata, type);
--}
--
--
--static int ieee80211_ioctl_giwmode(struct net_device *dev,
--				   struct iw_request_info *info,
--				   __u32 *mode, char *extra)
--{
--	struct ieee80211_sub_if_data *sdata;
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_AP:
--		*mode = IW_MODE_MASTER;
--		break;
--	case NL80211_IFTYPE_STATION:
--		*mode = IW_MODE_INFRA;
--		break;
--	case NL80211_IFTYPE_ADHOC:
--		*mode = IW_MODE_ADHOC;
--		break;
--	case NL80211_IFTYPE_MONITOR:
--		*mode = IW_MODE_MONITOR;
--		break;
--	case NL80211_IFTYPE_WDS:
--		*mode = IW_MODE_REPEAT;
--		break;
--	case NL80211_IFTYPE_AP_VLAN:
--		*mode = IW_MODE_SECOND;		/* FIXME */
--		break;
--	default:
--		*mode = IW_MODE_AUTO;
--		break;
--	}
--	return 0;
--}
--
- static int ieee80211_ioctl_siwfreq(struct net_device *dev,
- 				   struct iw_request_info *info,
- 				   struct iw_freq *freq, char *extra)
-@@ -1109,8 +1037,8 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* SIOCGIWNWID */
- 	(iw_handler) ieee80211_ioctl_siwfreq,		/* SIOCSIWFREQ */
- 	(iw_handler) ieee80211_ioctl_giwfreq,		/* SIOCGIWFREQ */
--	(iw_handler) ieee80211_ioctl_siwmode,		/* SIOCSIWMODE */
--	(iw_handler) ieee80211_ioctl_giwmode,		/* SIOCGIWMODE */
-+	(iw_handler) cfg80211_wext_siwmode,		/* SIOCSIWMODE */
-+	(iw_handler) cfg80211_wext_giwmode,		/* SIOCGIWMODE */
- 	(iw_handler) NULL,				/* SIOCSIWSENS */
- 	(iw_handler) NULL,				/* SIOCGIWSENS */
- 	(iw_handler) NULL /* not used */,		/* SIOCSIWRANGE */
---- everything.orig/net/wireless/wext-compat.c	2008-11-26 22:41:09.000000000 +0100
-+++ everything/net/wireless/wext-compat.c	2008-11-26 22:43:29.000000000 +0100
-@@ -58,3 +58,82 @@ int cfg80211_wext_giwname(struct net_dev
- 	return 0;
- }
- EXPORT_SYMBOL(cfg80211_wext_giwname);
-+
-+int cfg80211_wext_siwmode(struct net_device *dev, struct iw_request_info *info,
-+			  u32 *mode, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev;
-+	struct vif_params vifparams;
-+	enum nl80211_iftype type;
-+
-+	if (!wdev)
-+		return -EOPNOTSUPP;
-+
-+	rdev = wiphy_to_dev(wdev->wiphy);
-+
-+	if (!rdev->ops->change_virtual_intf)
-+		return -EOPNOTSUPP;
-+
-+	/* don't support changing VLANs, you just re-create them */
-+	if (wdev->iftype == NL80211_IFTYPE_AP_VLAN)
-+		return -EOPNOTSUPP;
-+
-+	switch (*mode) {
-+	case IW_MODE_INFRA:
-+		type = NL80211_IFTYPE_STATION;
-+		break;
-+	case IW_MODE_ADHOC:
-+		type = NL80211_IFTYPE_ADHOC;
-+		break;
-+	case IW_MODE_REPEAT:
-+		type = NL80211_IFTYPE_WDS;
-+		break;
-+	case IW_MODE_MONITOR:
-+		type = NL80211_IFTYPE_MONITOR;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	memset(&vifparams, 0, sizeof(vifparams));
-+
-+	return rdev->ops->change_virtual_intf(wdev->wiphy, dev->ifindex, type,
-+					      NULL, &vifparams);
-+}
-+EXPORT_SYMBOL(cfg80211_wext_siwmode);
-+
-+int cfg80211_wext_giwmode(struct net_device *dev, struct iw_request_info *info,
-+			  u32 *mode, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	if (!wdev)
-+		return -EOPNOTSUPP;
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_AP:
-+		*mode = IW_MODE_MASTER;
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		*mode = IW_MODE_INFRA;
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		*mode = IW_MODE_ADHOC;
-+		break;
-+	case NL80211_IFTYPE_MONITOR:
-+		*mode = IW_MODE_MONITOR;
-+		break;
-+	case NL80211_IFTYPE_WDS:
-+		*mode = IW_MODE_REPEAT;
-+		break;
-+	case NL80211_IFTYPE_AP_VLAN:
-+		*mode = IW_MODE_SECOND;		/* FIXME */
-+		break;
-+	default:
-+		*mode = IW_MODE_AUTO;
-+		break;
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL(cfg80211_wext_giwmode);
---- everything.orig/net/mac80211/iface.c	2008-11-26 22:44:38.000000000 +0100
-+++ everything/net/mac80211/iface.c	2008-11-26 22:46:12.000000000 +0100
-@@ -694,6 +694,10 @@ int ieee80211_if_change_type(struct ieee
- 	if (type == sdata->vif.type)
- 		return 0;
- 
-+	/* Setting ad-hoc mode on non-IBSS channel is not supported. */
-+	if (local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS)
-+		return -EOPNOTSUPP;
-+
- 	/*
- 	 * We could, here, on changes between IBSS/STA/MESH modes,
- 	 * invoke an MLME function instead that disassociates etc.
+> When you post updated versions, please indicate them in the subject line,=
+ as in
+> "[PATCH 3/4 V3] ...." or a similar indication. When several versions have=
+ the
+> same subject, it gets hard to keep them separate.
 
+He did add it at the end, but I agree that putting it into the [PATCH]
+brackets is better since then it won't end up in the git tree changelog.
+
+johannes
+
+--=-gzltYo7jXxIvlHLivOrn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJID4GAAoJEKVg1VMiehFYIj8QAKfpIghZgs49wJCSs2tLZ1Kg
+uzxXgcHi4orIdDLZybciU0ZeXrU97vecxZBmgW/jE+RdvaORFgFbC8LTyKzCyk49
+WknGAdrxQ2rFMrdwv3afRZJoAObY7tUJSUCkjj3PCNR91FoLJgi4UfMAOt6SUe8G
+zf4cwQzwjmGRZfBfr5qycJr8b56xO/CKv5p+6kHPPgCoi3j6tHIWMuxcNLY6qTA4
+qK2m19i6wotdkgHaMpTTmzCInBD20Zl5tlb7KItOVntxS6nnrjyF4gBq7mHn882/
+XsH9c9F3Xt72HGEnD9iNcDHmdDpyQHGTT3aFFo5hcWSiL+X0d3RyN9swWHSXvvcc
+jghd+l585+YK2YYjq1U/vZm73J7IFOm65Ur/dzOAiEm4D2DDI2Uxbn5buoKX8hXn
+4FgkQJk0UYf850131obRlLA+JLDtF+IAXm+wfDg0u5Q/CIV6h1tfjrco9itf3CYX
+zb1w4KOaQ6NWgF11Y5XQpLvEKhXIfHwOfC4G1xwv+3s3KwPu4BovWfaSiIm+TGdv
+Dn+GgGaCSFxd0pkRhfJl2ajTq0NlIHWOv7L+2SHJqLDcIhwIlB73Y3v/JV7BQn9t
+dIEzWjuRjuCobohIb/cRYiTmSkkfg8cLcYHKNd82jDdA0DbkfM6tpfFLusy205ua
+hK+lEpHX4KPVMkUhD8JA
+=SqB4
+-----END PGP SIGNATURE-----
+
+--=-gzltYo7jXxIvlHLivOrn--
 
