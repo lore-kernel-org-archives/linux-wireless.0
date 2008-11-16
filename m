@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet14.oracle.com ([148.87.113.126]:37638 "EHLO
-	rgminet14.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751879AbYKHDxB (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:52571 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753364AbYKPQil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 22:53:01 -0500
-Received: from rgminet13.oracle.com (rcsinet13.oracle.com [148.87.113.125])
-	by rgminet14.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id mA83rYM2031867
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Sat, 8 Nov 2008 03:53:35 GMT
-Date: Fri, 7 Nov 2008 19:50:42 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: linux-wireless@vger.kernel.org
-Cc: akpm@linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: remove more excess kernel-doc
-Message-Id: <20081107195042.be6aa4ec.randy.dunlap@oracle.com> (sfid-20081108_045308_580627_35DAA9FE)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sun, 16 Nov 2008 11:38:41 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so898667yxm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Nov 2008 08:38:40 -0800 (PST)
+Message-ID: <449c10960811160838h70fd1852g66d8a51c7551530b@mail.gmail.com> (sfid-20081116_173845_335395_BF938A73)
+Date: Sun, 16 Nov 2008 10:38:39 -0600
+From: "Dan McGee" <dpmcgee@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>
+In-Reply-To: <20081116162019.GA15851@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
+	 <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
+	 <449c10960811151811s32fdd2b6p361d2ec9dd674fcc@mail.gmail.com>
+	 <449c10960811151838m3fcae118n65139be735c10665@mail.gmail.com>
+	 <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com>
+	 <20081116055312.GA14126@hash.localnet>
+	 <43e72e890811152205k13318ab7yad8695d9f6dd409c@mail.gmail.com>
+	 <43e72e890811152206s3683ecabm658fac255112a262@mail.gmail.com>
+	 <43e72e890811152215h5cf389a3ufe4dc10b021b0c0f@mail.gmail.com>
+	 <20081116162019.GA15851@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Sun, Nov 16, 2008 at 10:20 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> As you can see, the modules think "phy0" should be at offset 164, but
+> it's really at 160.
 
-Delete kernel-doc struct descriptions for fields that don't exist:
+> Also I noticed the original config had CONFIG_DYNAMIC_FTRACE=y, unfortunately
+> turning that off didn't seem to change anything (hmm, I didn't get a build
+> bug, was the breakage fixed in 2.6.27.y?)
 
-Warning(include/net/mac80211.h:1263): Excess struct/union/enum/typedef member 'conf_ht' description in 'ieee80211_ops'
-Warning(net/mac80211/sta_info.h:309): Excess struct/union/enum/typedef member 'addr' description in 'sta_info'
-Warning(net/mac80211/sta_info.h:309): Excess struct/union/enum/typedef member 'aid' description in 'sta_info'
+Note that HAVE is set if the architecture supports it; CONFIG_FTRACE
+itself was turned off (and CONFIG_DYNAMIC_FTRACE is not even present):
+$ grep FTRACE .config
+CONFIG_HAVE_FTRACE=y
+CONFIG_HAVE_DYNAMIC_FTRACE=y
+# CONFIG_FTRACE is not set
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-cc: Johannes Berg <johannes@sipsolutions.net>
-cc: John W. Linville <linville@tuxdriver.com>
----
- include/net/mac80211.h  |    2 --
- net/mac80211/sta_info.h |    3 ---
- 2 files changed, 5 deletions(-)
-
---- linux-2.6.28-rc3-git4.orig/include/net/mac80211.h
-+++ linux-2.6.28-rc3-git4/include/net/mac80211.h
-@@ -1202,8 +1202,6 @@ enum ieee80211_ampdu_mlme_action {
-  *	This is needed only for IBSS mode and the result of this function is
-  *	used to determine whether to reply to Probe Requests.
-  *
-- * @conf_ht: Configures low level driver with 802.11n HT data. Must be atomic.
-- *
-  * @ampdu_action: Perform a certain A-MPDU action
-  * 	The RA/TID combination determines the destination and TID we want
-  * 	the ampdu action to be performed for. The action is defined through
---- linux-2.6.28-rc3-git4.orig/net/mac80211/sta_info.h
-+++ linux-2.6.28-rc3-git4/net/mac80211/sta_info.h
-@@ -167,9 +167,6 @@ struct sta_ampdu_mlme {
-  * @lock: used for locking all fields that require locking, see comments
-  *	in the header file.
-  * @flaglock: spinlock for flags accesses
-- * @addr: MAC address of this STA
-- * @aid: STA's unique AID (1..2007, 0 = not assigned yet),
-- *	only used in AP (and IBSS?) mode
-  * @listen_interval: TBD
-  * @pin_status: TBD
-  * @flags: STA flags, see &enum ieee80211_sta_info_flags
+-Dan
