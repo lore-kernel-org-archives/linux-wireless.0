@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:3924 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753367AbYKBM3Y (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37465 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751709AbYKPKzm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 07:29:24 -0500
-Received: by ik-out-1112.google.com with SMTP id c29so706250ika.5
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 04:29:21 -0800 (PST)
-Message-ID: <490D9D19.5070600@gmail.com> (sfid-20081102_132945_110106_091676C6)
-Date: Sun, 02 Nov 2008 12:29:13 +0000
-MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-CC: linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	linux-pm@lists.linux-foundation.org
-Subject: Re: [RFC PATCH 0/2] orinoco: Don't keep cached firmware around permanently
-References: <1225415743-28209-1-git-send-email-kilroyd@googlemail.com> <200811021335.20241.arvidjaar@mail.ru>
-In-Reply-To: <200811021335.20241.arvidjaar@mail.ru>
-Content-Type: text/plain; charset=ISO-8859-1
-From: Dave <kilroyd@googlemail.com>
+	Sun, 16 Nov 2008 05:55:42 -0500
+Subject: Re: Wireless gear on the Romanian market
+From: Johannes Berg <johannes@sipsolutions.net>
+To: razvan.sandu@zando.ro
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <491FF82C.4070207@zando.ro> (sfid-20081116_114659_954211_EE0A4D35)
+References: <491FF82C.4070207@zando.ro>
+	 (sfid-20081116_114659_954211_EE0A4D35)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9zTq8FD2CROW10MvFuHY"
+Date: Sun, 16 Nov 2008 11:55:34 +0100
+Message-Id: <1226832934.5125.21.camel@johannes.berg> (sfid-20081116_115545_391714_9D1BEAD3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
-> On Friday 31 October 2008, David Kilroy wrote:
->> The first patch uses the new power management notifiers to load and
->> release the firmware prior to suspend and after resume (for both Agere
->> and Symbol). I'm not an expert on where suspend/resume is headed, so I'd
->> appreciate any advice from linux-pm on whether this is the preferred way
->> to do things.
-> 
-> I tested this and it works, and looking how callbacks are invoked I think
-> it is techically correct. But I have some concerns about general idea of
-> requesting firmware multiple times that are not related to PM.
-> 
-> Many properties for the currently running device/driver instance depend on
-> particular firmware type and version. Now we blindly replace firmware; how
-> can we be sure it is actually the same one as was at the time feature set
-> was detected?
-> 
-> Even if some sort of checksumming were impemented we still have to be
-> prepared to completely reinitialize card on FW mismatch.
 
-Right. We actually have the same problem on card reset (which can happen
-via private ioctl or firmware lockup). We certainly need to be able to
-reinitialise the driver flags. I think it would involve something like
+--=-9zTq8FD2CROW10MvFuHY
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
---> On init, resume, reset
-1. fw download.
-2. detect version (+checksum?).
-3a. if version unchanged continue.
-3b. if version different reset all driver settings.
-4. record fw version.
+On Sun, 2008-11-16 at 12:38 +0200, R=C4=83zvan Sandu wrote:
 
-3b requires some refactorring of initialisation. And I'm not sure how
-this would interact with userspace on resume - presumably the driver
-should call netif_device_detach or something.
+> Now, please, is it possible to find out which of these products are=20
+> supported in Linux (or will be in the foreseable future) ? This=20
+> information is critical to Romanian Linux users, as well as others...
 
+There's information on this on http://wireless.kernel.org/ and if you
+post the chipsets the devices use we can tell you whether we support
+them or not. But I doubt anyone will go to the trouble and researching
+the manufacturers for you.
 
-Dave.
+johannes
 
-> I checked what the rest of drivers/net does and either they do not cache at
-> all (does not work in this case) or they cache FW im memory after initial
-> request.
+--=-9zTq8FD2CROW10MvFuHY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJH/wfAAoJEKVg1VMiehFYHSgP/34JtlNAg/gPU+X7D8wzTd/H
+v99eSv35FKoBIxc+0SALOLvV6FJ04Hp/XeTHT3OADDEhZAKfS+8EB8jK9ey1Mpvc
+vihVD4oSSVlr3bsWXwahEs88Dh64ohdh9Vb2EdwgeWaaq9/aIgYXich4qSs1UF70
+eSJGOU8Me01AdFaqV3M8YVTVVFJrQLtrMNKBoKeQVR4VsaA8cQ1ARjdAp3oxtQpX
+x6gfOgs1rYA3EM4MB2p8llYdk8DGy7Xgo+0UyciyZ1flpnispRXvZgpzvCiDZUKG
+5S/GVG9QqxFdO2K2SDCSRKMJ4gEbm+Etev5mq/iTD8j8A8wc0OEb6QrbOZeCH404
++/potNG//6rsFd1ORi3e/ubSdGRLE0Kj5/cAtwR5K6G41pnwI5n6Uxz09+V1IWIw
+8unolbqjQtTL2RVaXPOduKY7zSb8VR8+/HGWJa2tdc3euMp8m1HcibcYeatNb8wp
+G9WhLaw8+r6gbvAcnHD0Y71Tq9m38lId/tMavnRibG5Uhc9Ao/s9gDL8cK60sM/6
+pEmSCXuTaI0Rfv6V0aZQS+8/0yVRfdaX/3+WwE56FxeCpASr8+Or/1Yqsf780YUE
+gmRoGJRReoHbEXsTuaF5gZGZMhAQpUsVVlMVS6ivxyFcjU5mvx/Tbo9X4xn8WlbY
+5McWTF+JTkx5ZgM0FIsO
+=WI+j
+-----END PGP SIGNATURE-----
+
+--=-9zTq8FD2CROW10MvFuHY--
+
