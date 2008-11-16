@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49701 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753742AbYKFNPR (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.190]:41151 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108AbYKPGFX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 08:15:17 -0500
-Subject: Re: b43: Everybody with PHY TX error, please try
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Przemek Kulczycki <przemekkulczycki@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <fe1e5a8c0811060446u4d171283t4c6cda924abcc299@mail.gmail.com> (sfid-20081106_135434_305717_BB318651)
-References: <200810242032.04295.mb@bu3sch.de>
-	 <fe1e5a8c0811060446u4d171283t4c6cda924abcc299@mail.gmail.com>
-	 (sfid-20081106_135434_305717_BB318651)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-s6Fvv7vpT4MwbdoZOrpn"
-Date: Thu, 06 Nov 2008 14:15:16 +0100
-Message-Id: <1225977316.3619.221.camel@johannes.berg> (sfid-20081106_141521_660013_CC06157B)
-Mime-Version: 1.0
+	Sun, 16 Nov 2008 01:05:23 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so1694137rnd.17
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Nov 2008 22:05:22 -0800 (PST)
+Message-ID: <43e72e890811152205k13318ab7yad8695d9f6dd409c@mail.gmail.com> (sfid-20081116_070527_627454_D393E705)
+Date: Sat, 15 Nov 2008 22:05:21 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: "Dan McGee" <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
+	"Michael Buesch" <mb@bu3sch.de>
+In-Reply-To: <20081116055312.GA14126@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
+	 <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
+	 <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
+	 <449c10960811151811s32fdd2b6p361d2ec9dd674fcc@mail.gmail.com>
+	 <449c10960811151838m3fcae118n65139be735c10665@mail.gmail.com>
+	 <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com>
+	 <20081116055312.GA14126@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Nov 15, 2008 at 9:53 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Sat, Nov 15, 2008 at 09:48:13PM -0800, Luis R. Rodriguez wrote:
+>> Not sure why its 00000001, nor do I know if its poison. One thing I am
+>> fairly positive about is that the reason why this was wrong all along
+>> was because we were trying to get the device's ->driver structure to
+>> get driver->name but the device won't get its ->driver pointer
+>> assigned until *after* a successful probe. Lets review the PCI probe:
+>
+> No, as I later corrected myself, that is pci_dev->driver, but what
+> mac80211 is using is pci_dev->dev.driver.
 
---=-s6Fvv7vpT4MwbdoZOrpn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Right, the dev for the pci_dev which hasn't yet had a driver assigned
+yet, no? Who assigns the pci_dev's dev's driver pointer and when? Or
+am I still missing something?
 
-On Thu, 2008-11-06 at 12:46 +0000, Przemek Kulczycki wrote:
-> On Fri, Oct 24, 2008 at 6:32 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> > Everybody with PHY TX error, please try updated firmware from
-> > ftp://ftp.linksys.com/opensourcecode/wrt610n/1.00.00.018/wrt610n_v1.00.=
-00.018_us.tgz
-> > (Yeah, big tarball. It's 87MB)
-
-> If this tarball is so large then maybe downloading latest ubuntu
-> restricted modules will be faster.
-> http://packages.ubuntu.com/intrepid/linux-restricted-modules-2.6.27-7-gen=
-eric
-> AFAIK this package contains the proprietary Broadcom WL driver so the
-> latest firmware might be in it too.
-
-No, not at all.
-
-johannes
-
---=-s6Fvv7vpT4MwbdoZOrpn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJEu3gAAoJEKVg1VMiehFY52EP/ilWoGDoKMN/a6uUr2QWbg9L
-+3AJ+RivrfkbvA+IOEWhvDAxchzfC+/eKo5mfBrA1SWMe+qm3kjYbV1IQZOcQgCR
-1dmktxI9HkMy8ARM5fQurYF6YPyXxuuocdHxZHTRAaNH0asnd1jBRyDlNlBLz6KV
-dEQLDrm+8BAQJX3O/HPzkw9JSqhwU3PkQT5oObbMQMfPKOUeqWbQBtUc8joEtSpD
-5hhxljXmQ9/TwdBEXgiu9QwptRzjBMH9RwKcNDKeRF829d579HIIC1QAkp+o4kiz
-m6l9a6tshATEajLGT9EWEStraIPk8CKVmg6iaWTcySckjT0pBxwseXtzNsQYBjI1
-2DhzBvZHj3GPJleD2Vx6mwKy0kHqEfkan84xwe1SYZnQFUa60bArKSkV78EVdgOz
-gw5382mXwb27Q+Ilvm1IQjUBZvr/IemoJaD/IY50d/MUq2pI4ans8BanpmJoD9tx
-4NGyy3kfvN5Y3yEV5GgHeuBoVNCjnU6Plrv+vVrWH6hj917V/JbYm884J8jiFbya
-AZ7Jxg/LGlUAhlK55uKBWJtvgxFZ31V1J9U1/ekePSDz4kvcq1l/wRke7jGKPAiH
-JWX7H/6I2JrKuvf7HWyR3CA5esvd4GOKWXOPgRdOPfbFp2Yq0qW3vBF6k9SijMPp
-vnxJs2whiKH2teBdHv4i
-=2rCr
------END PGP SIGNATURE-----
-
---=-s6Fvv7vpT4MwbdoZOrpn--
-
+  Luis
