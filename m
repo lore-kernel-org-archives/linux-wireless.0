@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16352 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751422AbYKLVNr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 16:13:47 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/8] iwlwifi driver updates
-Date: Wed, 12 Nov 2008 13:14:03 -0800
-Message-Id: <1226524451-3417-1-git-send-email-reinette.chatre@intel.com> (sfid-20081112_221350_329478_7479DA22)
-In-Reply-To: <>
-References: <>
+Received: from mga02.intel.com ([134.134.136.20]:37980 "EHLO mga02.intel.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752066AbYKPRqu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Nov 2008 12:46:50 -0500
+Subject: Re: iwlagn driver segfault in 2.6.28-rc3
+From: reinette chatre <reinette.chatre@intel.com>
+To: "Carlos R. Mafra" <crmafra2@gmail.com>
+Cc: Lukas Hejtmanek <xhejtman@ics.muni.cz>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20081116120621.GA3937@localhost.aei.mpg.de>
+References: <20081111143410.GA4401@ics.muni.cz>
+	 <1226560041.1115.945.camel@rc-desk>
+	 <20081116120621.GA3937@localhost.aei.mpg.de>
+Content-Type: text/plain
+Date: Sun, 16 Nov 2008 09:47:31 -0800
+Message-Id: <1226857651.1115.1260.camel@rc-desk> (sfid-20081116_184657_540728_865F0B90)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mostly code cleanup. The exception is "iwlwifi: configure_filter rewrite"
-that better maps the mac80211 and iwlwifi hardware filter flags.
+On Sun, 2008-11-16 at 04:06 -0800, Carlos R. Mafra wrote:
 
-[PATCH 1/8] iwl3945 : Simplify iwl3945_pci_probe
-[PATCH 2/8] iwlwifi: consolidate station management code
-[PATCH 3/8] iwlwifi: rs: remove fc variable and other cleanups
-[PATCH 4/8] iwlwifi: replace magic constants with define
-[PATCH 5/8] iwlwifi : fix checkpatch.pl errors
-[PATCH 6/8] iwlwifi: configure_filter rewrite
-[PATCH 7/8] iwlwifi: some fh document fix and cleanup
-[PATCH 8/8] iwlwifi: iwl-fh.h cleanup
+> 
+> From now on I will apply Reinette's patch and wait for it to
+> happen again (but it seldom happens).
 
-Thank you
+Sorry but that patch does not address this problem which turned out to
+be memory corruption, not uninitialized memory. Another patch is being
+worked on.
 
 Reinette
+
