@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:34765 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbYK2GyN (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:50860 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751661AbYKPGG7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2008 01:54:13 -0500
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC v3 2/4] mac80211: implement dynamic power save
-References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
-	<1227901784-5325-3-git-send-email-kalle.valo@nokia.com>
-	<1227910460.3543.3.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Sat, 29 Nov 2008 08:53:34 +0200
-In-Reply-To: <1227910460.3543.3.camel@johannes.berg> (ext Johannes Berg's message of "Fri\, 28 Nov 2008 23\:14\:20 +0100")
-Message-ID: <87vdu710r5.fsf@nokia.com> (sfid-20081129_075416_513020_6EF9A11E)
+	Sun, 16 Nov 2008 01:06:59 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so865416ywe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Nov 2008 22:06:58 -0800 (PST)
+Message-ID: <43e72e890811152206s3683ecabm658fac255112a262@mail.gmail.com> (sfid-20081116_070702_383199_9288BE4B)
+Date: Sat, 15 Nov 2008 22:06:58 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Cc: "Dan McGee" <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
+	"Michael Buesch" <mb@bu3sch.de>
+In-Reply-To: <43e72e890811152205k13318ab7yad8695d9f6dd409c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
+	 <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
+	 <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
+	 <449c10960811151811s32fdd2b6p361d2ec9dd674fcc@mail.gmail.com>
+	 <449c10960811151838m3fcae118n65139be735c10665@mail.gmail.com>
+	 <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com>
+	 <20081116055312.GA14126@hash.localnet>
+	 <43e72e890811152205k13318ab7yad8695d9f6dd409c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Fri, 2008-11-28 at 21:49 +0200, Kalle Valo wrote:
+On Sat, Nov 15, 2008 at 10:05 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Sat, Nov 15, 2008 at 9:53 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>> On Sat, Nov 15, 2008 at 09:48:13PM -0800, Luis R. Rodriguez wrote:
+>>> Not sure why its 00000001, nor do I know if its poison. One thing I am
+>>> fairly positive about is that the reason why this was wrong all along
+>>> was because we were trying to get the device's ->driver structure to
+>>> get driver->name but the device won't get its ->driver pointer
+>>> assigned until *after* a successful probe. Lets review the PCI probe:
+>>
+>> No, as I later corrected myself, that is pci_dev->driver, but what
+>> mac80211 is using is pci_dev->dev.driver.
 >
->> +	/* always wake queues to avoid having them stopped forever */
->> +	netif_tx_wake_all_queues(local->mdev);
->
-> I think we really need to think about keeping track of _who_ wanted the
-> queues stopped now...
+> Right, the dev for the pci_dev which hasn't yet had a driver assigned
+> yet, no? Who assigns the pci_dev's dev's driver pointer and when? Or
+> am I still missing something?
 
-Makes sense.
+Oh nevermind yeah pci_dev->driver = drv; but still who then assigns
+the dev's driver?
 
-> We have a number of users of stopping queues now:
->
->  * driver, obviously
->  * scanning code
->  * PS code
->  * ..?
->
-> So when the driver wants a queue stopped, but the PS code wakes them up,
-> the driver will end up having to drop a packet, which isn't really good.
-> We really need to keep track, for each queue, who wants it
-> stopped/started and then only start the real queue if all the code
-> consents.
-
-Frankly I'm not that familiar with mac80211 queues, but it's a good
-time to learn now :) I'll look into this and will make a proposal.
-
--- 
-Kalle Valo
+  Luis
