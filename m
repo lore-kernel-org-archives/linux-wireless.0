@@ -1,76 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44334 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755496AbYKISbS (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3225 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108AbYKPFx5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2008 13:31:18 -0500
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>
-In-Reply-To: <200811091302.15899.mb@bu3sch.de>
-References: <4902DEBB.3050205@hotmail.com>
-	 <1226220992.3614.16.camel@johannes.berg>
-	 <1226221438.3614.20.camel@johannes.berg>  <200811091302.15899.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RwLqdjZ3Uj3QFG8ZQVzz"
-Date: Sun, 09 Nov 2008 19:31:19 +0100
-Message-Id: <1226255479.3614.29.camel@johannes.berg> (sfid-20081109_193122_604489_FD423B28)
-Mime-Version: 1.0
+	Sun, 16 Nov 2008 00:53:57 -0500
+Date: Sun, 16 Nov 2008 00:53:12 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Dan McGee <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
+Message-ID: <20081116055312.GA14126@hash.localnet> (sfid-20081116_065400_164426_554CEED4)
+References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com> <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com> <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com> <449c10960811151811s32fdd2b6p361d2ec9dd674fcc@mail.gmail.com> <449c10960811151838m3fcae118n65139be735c10665@mail.gmail.com> <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Nov 15, 2008 at 09:48:13PM -0800, Luis R. Rodriguez wrote:
+> Not sure why its 00000001, nor do I know if its poison. One thing I am
+> fairly positive about is that the reason why this was wrong all along
+> was because we were trying to get the device's ->driver structure to
+> get driver->name but the device won't get its ->driver pointer
+> assigned until *after* a successful probe. Lets review the PCI probe:
 
---=-RwLqdjZ3Uj3QFG8ZQVzz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No, as I later corrected myself, that is pci_dev->driver, but what
+mac80211 is using is pci_dev->dev.driver.  Which actually happens to be
+set up fine.  (I verified this by inserting a printk into the ath5k
+driver and it all works fine.)
 
-On Sun, 2008-11-09 at 13:02 +0100, Michael Buesch wrote:
-> On Sunday 09 November 2008 10:03:58 Johannes Berg wrote:
-> > On Sun, 2008-11-09 at 09:56 +0100, Johannes Berg wrote:
-> >=20
-> > > I think you forgot to attach the patch.
-> >=20
-> > Sorry, I missed your second mail. (btw, if you generate patches with -p
-> > in diff arguments it helps a bit reading them)
-> >=20
-> > Ok so it looks like the buffer you're getting is unaligned. This is
-> > strange, but I'm too unfamiliar with the code. It seems that there's th=
-e
-> > PLCP 5 byte header in front. Well, try the printk I asked for, because
-> > at that point zd1211 should avoid "leaking" the alignment problem.
->=20
-> zd1211rw has some code to align the packet to a 4-byte boundary.
-> But the compare_ether_addr() and the other le16 accesses are done before
-> that realignment.
-> This these blow up if (ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc))
+> Yeah don't bother, the issue on this e-mail was fixed, another issue
+> has come up though so that is separate.
 
-Well, yes, however, then his patch should have fixed the whole thing,
-which it didn't.
+I think the second issue is just the first issue, but the fix papered
+over the first bug.
 
-johannes
-
---=-RwLqdjZ3Uj3QFG8ZQVzz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJFyxzAAoJEKVg1VMiehFYa4EQAKnvDEiRyImEwHeyUL5WtpAj
-vjl4Hc1A37xTNVB64bjrlkfrlFf+b1gqwlxxa0K46ojf+azVQn3nJPmW+D0rumWf
-MEzslUbSzug66CIuS14S/taqgA1yQXgcgKDGHItjwjdTpA74VrA/KTEF2G8IBhAG
-sTE6/MXJsDgDrUEneG7V8ut48TYqHpQDjq6BZLruYILPN10TjhtLOmDPfevtR+4h
-N2NY8c/dRO8qG+jPwUzHEWTpyBhGBVYEzBr+EJqBU0eJjiFa+JZm4KBJlWF2H7oG
-XJ6SUZpDxBBpyM8WRyxYo1dOC+Ksqk+CBbeNNab6wyBWVEDGl7sRHaY+6Yia1Svz
-8AmdO97vJd7lqo2rmPQP5SRDOP9bZLUujhqc5ZAwWhDK5dju0r8JndVzviJlImq6
-ZilpGLRHDZ9oIY7M02HwJTArHtx9C0FcmMesUlN1BTOqpQm9vRmA5jNfLdD66va3
-1N0xGhmuHnMgswvZQzBfVqewQmInjtCozQxWRLZRQRQiGT06xyEChAtpTbic1V2n
-fuGH9eb+EiS0xKuhHh80Ut1lAFx99w1igjgtJZ9tPC83pQwk0me1qU1KnZL7hR8E
-B3hc3mWVd5FUG26R8leXRy6UMrVoJJ9tzIbtj3UPCRsg2ONaTaOAb2EOyZ3IWFDn
-i1CNluCG2uEqdtHDZPST
-=fsR6
------END PGP SIGNATURE-----
-
---=-RwLqdjZ3Uj3QFG8ZQVzz--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
