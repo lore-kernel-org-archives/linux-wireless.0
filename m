@@ -1,68 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38606 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:35654 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080AbYKFQU1 (ORCPT
+	with ESMTP id S1752212AbYKQSAi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 11:20:27 -0500
-Subject: [PATCH] b43: remove rate index warning
+	Mon, 17 Nov 2008 13:00:38 -0500
+Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 06 Nov 2008 17:20:24 +0100
-Message-Id: <1225988424.3619.249.camel@johannes.berg> (sfid-20081106_172031_416434_52F08D76)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com> (sfid-20081117_183407_351560_69CFD700)
+References: <1226915999.3599.33.camel@johannes.berg>
+	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
+	 <1226933141.3902.19.camel@johannes.berg>
+	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>
+	 <1226942887.3902.30.camel@johannes.berg>
+	 <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com>
+	 (sfid-20081117_183407_351560_69CFD700)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-B/n87sGdBrV4yuPhRbjH"
+Date: Mon, 17 Nov 2008 18:59:59 +0100
+Message-Id: <1226944799.3902.52.camel@johannes.berg> (sfid-20081117_190041_931182_EF281943)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I frequently run into this warning, and added some
-debugging to see why, and got this:
 
-b43 bad rx: 00000000: 2f d2 e2 63 cf a7 14 04 28 18 c8 5f 88 4a a2 00
-                      bogus junk       | plcp            | fctl| dur
+--=-B/n87sGdBrV4yuPhRbjH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-b43 bad rx: 00000010: 00 11 24 91 07 4d 00 06 25 ff 8f 78 00 06 25 ff
-                      my MAC address   | BSSID           | AP MAC
-b43 bad rx: 00000020: 8f 76 20 74 00 00 42 07 00 20 00 00 00 00 aa aa
-                           | seq | QoS | CCMP IV               | data
-                      ...
+On Mon, 2008-11-17 at 19:34 +0200, Tomas Winkler wrote:
 
-As you can see, there are 6 bogus bytes (sometimes only five) and then
-the frame. I don't know why, and I don't see how to recover, so let's
-just drop these frames.
+> There actually complains about slow reconnection,=20
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/b43/xmit.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Ok I guess then I haven't seen them for some reason.
 
---- everything.orig/drivers/net/wireless/b43/xmit.c	2008-11-06 16:52:53.000000000 +0100
-+++ everything/drivers/net/wireless/b43/xmit.c	2008-11-06 17:10:06.000000000 +0100
-@@ -46,7 +46,6 @@ static int b43_plcp_get_bitrate_idx_cck(
- 	case 0x6E:
- 		return 3;
- 	}
--	B43_WARN_ON(1);
- 	return -1;
- }
- 
-@@ -73,7 +72,6 @@ static u8 b43_plcp_get_bitrate_idx_ofdm(
- 	case 0xC:
- 		return base + 7;
- 	}
--	B43_WARN_ON(1);
- 	return -1;
- }
- 
-@@ -608,6 +606,8 @@ void b43_rx(struct b43_wldev *dev, struc
- 						phytype == B43_PHYTYPE_A);
- 	else
- 		status.rate_idx = b43_plcp_get_bitrate_idx_cck(plcp);
-+	if (unlikely(status.rate_idx == -1))
-+		goto drop;
- 	status.antenna = !!(phystat0 & B43_RX_PHYST0_ANT);
- 
- 	/*
+Either way, here's a quick summary:
+ * locking issues with the callback are fixed by removing it
+ * callback is incorrect when you're only suspended for a very short
+   time
+ * callback is incorrect when you're in non-STA modes
+ * suspend/resume cannot be implemented well through this callback, at
+   least not the way it is written now and needs to do a whole lot more
+ * there's no "slow" issue when you actually resume in a different
+   location where the AP is not around any more
+ * there should be no "slow" issue when the AP properly deauthenticates
+   when receiving data frames
 
+This was an RFC. I'm convinced it should go in, but I don't make those
+decisions anyway. I've outlined my reasons for it.
+
+> Second we used the
+> same mechanism to
+> recover from rfkill which wasn't submitted. rfkill needs also mac80211
+> treatment.
+
+Sure does, and I've even described how I'd do it in some email. Seems
+nobody actually cares enough though to invest the day or two it would
+take to write it. And I don't care about killswitches at all,
+fortunately, so I don't need to touch that mess.
+
+johannes
+
+--=-B/n87sGdBrV4yuPhRbjH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJIbEcAAoJEKVg1VMiehFYGQAP/31vwYIY7+K4kb/UCxMKrWif
+CmtmMuMzNg1ccGwmEbjsk261zsjACGzY0Sd4fIc7XdWBfFcjCoWCfSxJwu6f78/L
+S2V5KFmNXtqjjpu+T/EW2AHvJ2RRQ0BMpC1yqp7VppauERqLvmcG5ukykhebJwnp
+WNyY1X2nJHEOUQPJ9o2pYNmDez3gQ8ayaC9iog8Jyki45uFlhR2D8WKAqOZewuVl
+X+r/uKUmVd0vZcNw9MCE7d4XARlqRCWlCY8XylS4pGmOzufG+URNNPr+oxF6qds9
+Fapy/I0rUxtmHKksezdkwvKRs7GhWGUDKPZ4F8QzommI9LGT3K6T9+sPqHuFlCXx
+9W72DWP6d+8PqlWJWSE8+vgCdkrLbm+cEnTyaqI9XZvY3nQjAVOnbs12Kc2Q0DvY
+mKXN37LNxUF6eBnvC1hQz6kR7qg3FJ4FsSVAlq/UsAdQJK6BsuNSxppz5sR/cnG3
+gmKhf7kiMl81Alm8u6y6HXgsn+BiWu0qETP8NUVkmnBZBgxnezv7bSAmAMH+wf+G
+/3nxgFiFhzxzB8gSP33Ut1sXGVQZcEOvRqMPCRCYunfZR13KzOyEyXjN8ELT6V/r
+2Mz52xZ8po1uh4A0y2en9XbsbL0HfKnJa/RH/JqzsS7zIqLSMT3UHCrhyqhVZ81u
+vU96eVXt/BvdETlEmPmI
+=wvu6
+-----END PGP SIGNATURE-----
+
+--=-B/n87sGdBrV4yuPhRbjH--
 
