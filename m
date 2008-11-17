@@ -1,55 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:48593 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbYKZAvv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60045 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752016AbYKQTrx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 19:51:51 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so1260397ugf.37
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 16:51:49 -0800 (PST)
-Message-ID: <e38d12ff0811251651k32a66cd5r3de7f1d504b4723@mail.gmail.com> (sfid-20081126_015154_469123_B37B3D82)
-Date: Tue, 25 Nov 2008 19:51:48 -0500
-From: "Andrey Vul" <andrey.vul@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: cannot compile compat-wireless-2.6-old
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <e38d12ff0811251330x2b2d9a35h608b1619441f1252@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com>
-	 <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com>
-	 <20081125203244.GD5950@tesla>
-	 <e38d12ff0811251330x2b2d9a35h608b1619441f1252@mail.gmail.com>
+	Mon, 17 Nov 2008 14:47:53 -0500
+Subject: Re: [PATCH] rtl8187: Fix transmission count sent to mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200811171742.48292.herton@mandriva.com.br>
+References: <492188e5.bIuOh01ilT9fPRTO%Larry.Finger@lwfinger.net>
+	 <200811171742.48292.herton@mandriva.com.br>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1vP/AgSSoRdpyL4sSWy6"
+Date: Mon, 17 Nov 2008 20:47:07 +0100
+Message-Id: <1226951228.3902.55.camel@johannes.berg> (sfid-20081117_204756_585625_99B4225E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 25, 2008 at 16:30, Andrey Vul <andrey.vul@gmail.com> wrote:
-> On Tue, Nov 25, 2008 at 15:32, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
->> On Tue, Nov 25, 2008 at 09:57:57AM -0800, Andrey Vul wrote:
->>> I cannot compile the current compat tarball.
->>> Make log:
->>> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
->>> make -C /usr/src/linux-2.6.26.6-rt11/ M=/root/compat-wireless-2.6-old modules
->>> make[1]: Entering directory `/usr/src/linux-2.6.26.6-rt11'
->>>  CC [M]  /root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o
->>> In file included from <command-line>:0:
->>> /root/compat-wireless-2.6-old/include/net/compat.h:877: error:
->>> redefinition of 'list_splice_tail'
->>> include/linux/list.h:356: error: previous definition of
->>> 'list_splice_tail' was here
->>> /root/compat-wireless-2.6-old/include/net/compat.h:892: error:
->>> redefinition of 'list_splice_tail_init'
->>> include/linux/list.h:379: error: previous definition of
->>> 'list_splice_tail_init' was here
->>
->> list_splice_tail was added as of 2.6.27, and you have 2.6.26. Which
->> means your kernel headers for your box are completely messed up. This
->> means you can expect a kernel panic if you were to successfully
->> compile external modules. Go fix that first.
->>
-I have $(uname -r)/include/linux/list.h containing list_splice_tail,
-where uname -r is 2.6.26.5-rt9.
-Frankly, I need rt and the code for my wifi card is only in the compat tarball.
-Is this a problem with .[56] or with -rt?
 
--- 
-Andrey Vul
+--=-1vP/AgSSoRdpyL4sSWy6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2008-11-17 at 17:42 -0200, Herton Ronaldo Krzesinski wrote:
+> On Monday 17 November 2008 13:08:21 Larry Finger wrote:
+> > In the commit entitled "mac80211/drivers: rewrite the rate control API"
+> > (commit 9ea2c74de0ec971e8ec9fc5aaea9cd5b4fec95b6), the meaning of the
+> > packet transmit count was changed from the number of retries to the tot=
+al
+> > number. In driver rtl8187, this change was missed.
+>=20
+> With this change as before, when using pid, rate never go above 1M in tes=
+ting=20
+> here (minstrel doesn't have the same issue). May be because this in=20
+> rate_control_pid_tx_status (inside rc80211_pid_algo.c)?
+>=20
+>         if (!(info->flags & IEEE80211_TX_STAT_ACK)) {
+>                 spinfo->tx_num_failed +=3D 2;
+>                 spinfo->tx_num_xmit++;
+>         } else if (info->status.rates[0].count) {
+>                 spinfo->tx_num_failed++;
+>                 spinfo->tx_num_xmit++;
+>         }
+>=20
+> as pkt_rc + 1, looks like we always will increment tx_num_failed, and may=
+ be=20
+> it's causing this. Well this is only judging by a quick look, I may be wr=
+ong.
+
+Larry recently fixed the above code too.
+
+johannes
+
+--=-1vP/AgSSoRdpyL4sSWy6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJIco4AAoJEKVg1VMiehFYstoP/3aVbl1ukUfz644b1EmMMMYG
+J0ebSpVSezg0SOyyELVX1BcWu9v6Zsuvr7jFgYXZ8kC6zarEOFOSaVCEo3hSZ0tj
+h1p3sWogNY+NsT2hoySfknOnYZnenm1z8EsOGVdslx/4kY/o0TXMJcDuKrGLLT4c
+aiRaMYvIPpNm4qsEgcBsdIY5rQOd+TpAr2UHLhI5E+i9r7B2Ry+PWmZS2R3hYEib
+d4Dn/wA4WqOdjlADYUdaM7c5CpR8MbHmMxOe953IgenwtiMsWg+K38cO1e2frrx8
+dTjY4oeK7oYPzX4+3Ox86VGZ/2w1E/ytv/A+5BpzBpKhtOBR7E/zpAv33L1JnO4z
+HJUHhMCdaTXxjm4YghUFDvMHamKzv8xDFqzG/0QGKDiAJj9V0Y7S63ZuNEcKxjXL
+jzT5XHbP4SjejWmXceVPiXgCLpFNXGE++UEiGuuVU4NrnvLo6gBI3I/jTCcjDIhU
+af9Xx9woZ5BytVqvbxiV6g+wUBgHKGpyO+oh4I8gXj8p8qBwQwFPVb/kLePUnN0H
+WWbtPO1Lz26MdePNGdZxSb3KtkbKMOtv1f2kVjlk282gYu3BQAjNmujRPkhu/hpY
+DF8hX55AyGj0KqC0NVWVa+wwdTdlaegW6iAzQSbCxpXXLtPeZ0D1lbWV39vLDiNX
+MJMFtzYw5+6faAvoQGZ5
+=w4Iu
+-----END PGP SIGNATURE-----
+
+--=-1vP/AgSSoRdpyL4sSWy6--
+
