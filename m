@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10051 "EHLO mail.atheros.com"
+Received: from c60.cesmail.net ([216.154.195.49]:63609 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751189AbYKZVDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 16:03:10 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 13:03:10 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <altape@eden.rutgers.edu>,
-	<luisca@cozybit.com>, <mb@bu3sch.de>, <jouni.malinen@atheros.com>,
-	<colin@cozybit.com>, <javier@cozybit.com>
-Subject: [PATCH] nl80211: relicense nl80211.h under the ISC
-Date: Wed, 26 Nov 2008 13:03:08 -0800
-Message-ID: <1227733388-13182-1-git-send-email-lrodriguez@atheros.com> (sfid-20081126_220316_217738_B738BCA8)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751751AbYKQOY7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 09:24:59 -0500
+Subject: Re: Wireless gear on the Romanian market
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: razvan.sandu@zando.ro, linux-wireless@vger.kernel.org
+In-Reply-To: <1226832934.5125.21.camel@johannes.berg>
+References: <491FF82C.4070207@zando.ro>
+	 (sfid-20081116_114659_954211_EE0A4D35)  <1226832934.5125.21.camel@johannes.berg>
+Content-Type: text/plain; charset=iso-8859-2
+Date: Mon, 17 Nov 2008 09:24:55 -0500
+Message-Id: <1226931895.15076.11.camel@dv> (sfid-20081117_152503_081894_99CC5688)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have a few BSD/ISC licensed userspace applications which
-include nl80211.h from the kernel. To avoid legal ambiguity
-for usage of the header file in these projects we rather simply
-relicense the header file under the ISC. We've received consent
-from all contributors to it.
+On Sun, 2008-11-16 at 11:55 +0100, Johannes Berg wrote:
+> On Sun, 2008-11-16 at 12:38 +0200, R=E3zvan Sandu wrote:
+>=20
+> > Now, please, is it possible to find out which of these products are=
+=20
+> > supported in Linux (or will be in the foreseable future) ? This=20
+> > information is critical to Romanian Linux users, as well as others.=
+=2E.
+>=20
+> There's information on this on http://wireless.kernel.org/ and if you
+> post the chipsets the devices use we can tell you whether we support
+> them or not. But I doubt anyone will go to the trouble and researchin=
+g
+> the manufacturers for you.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Acked-by: Michael Wu <flamingice@sourmilk.net>
-Acked-by: Luis Carlos Cobo <luisca@cozybit.com>
-Acked-by: Michael Buesch <mb@bu3sch.de>
-Acked-by: Jouni Malinen <jouni.malinen@atheros.com>
-Acked-by: Colin McCabe <colin@cozybit.com>
-Acked-by: Javier Cardona <javier@cozybit.com>
-Cc: johannes@sipsolutions.net
-Cc: altape@eden.rutgers.edu
-Cc: luisca@cozybit.com
-Cc: mb@bu3sch.de
-Cc: jouni.malinen@atheros.com
-Cc: colin@cozybit.com
-Cc: javier@cozybit.com
----
- include/linux/nl80211.h |   21 ++++++++++++++++++++-
- 1 files changed, 20 insertions(+), 1 deletions(-)
+It should be possible to find Windows drivers for the devices, unpack
+them and identify what chipsets they are for.  It may happen that
+different revisions of the same hardware use different chipsets, so be
+sure to check all of the revisions.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index e08c8bc..3a7e14c 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -3,7 +3,26 @@
- /*
-  * 802.11 netlink interface public header
-  *
-- * Copyright 2006, 2007 Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2006, 2007, 2008 Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
-+ * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
-+ * Copyright 2008 Michael Buesch <mb@bu3sch.de>
-+ * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
-+ * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
-+ * Copyright 2008 Colin McCabe <colin@cozybit.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ *
-  */
- 
- /**
--- 
-1.5.6.rc2.15.g457bb.dirty
+The unpacking can be done by running installers in wine or by using
+popular archive programs, such as cabextract, unshield, unzip, unrar an=
+d
+lha.  Identification of the driver can be done by looking into *.inf
+files or by using the "strings" command on the *.sys files.
 
+As for the draft 802.11n devices, Intel and Atheros chipsets are
+currently supported, except Atheros USB (the work on it is underway).
+
+--=20
+Regards,
+Pavel Roskin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
