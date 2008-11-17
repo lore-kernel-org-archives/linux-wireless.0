@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:51676 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665AbYKFXNi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 18:13:38 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so997876wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 15:13:37 -0800 (PST)
-Message-ID: <40f31dec0811061513r2691520ahb63373879a1f9459@mail.gmail.com> (sfid-20081107_001343_375044_1348F058)
-Date: Fri, 7 Nov 2008 01:13:37 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Fix IMR init
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>, jirislaby@gmail.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <b6c5339f0811031448hc264513v76b25e7cf93ea388@mail.gmail.com>
+Received: from ox1.aei.mpg.de ([194.94.224.6]:40734 "EHLO ox1.aei.mpg.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754692AbYKQAjU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Nov 2008 19:39:20 -0500
+Date: Mon, 17 Nov 2008 01:39:41 +0100
+From: "Carlos R. Mafra" <crmafra2@gmail.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	Lukas Hejtmanek <xhejtman@ics.muni.cz>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: iwlagn driver segfault in 2.6.28-rc3
+Message-ID: <20081117003941.GA21367@localhost.aei.mpg.de> (sfid-20081117_013925_423085_235C9513)
+References: <20081111143410.GA4401@ics.muni.cz> <1226560041.1115.945.camel@rc-desk> <20081116120621.GA3937@localhost.aei.mpg.de> <1ba2fa240811160429ld8cc080s7e023b0398eeda08@mail.gmail.com> <20081116125148.GA16746@localhost.aei.mpg.de> <1ba2fa240811161554r45d98ae7h3a37ae78c332a4dd@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081103222554.GA3006@makis> <20081103224425.GC6378@tesla>
-	 <b6c5339f0811031448hc264513v76b25e7cf93ea388@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240811161554r45d98ae7h3a37ae78c332a4dd@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/11/4 Bob Copeland <me@bobcopeland.com>:
-> On Mon, Nov 3, 2008 at 5:44 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Mon, Nov 03, 2008 at 02:25:54PM -0800, Nick Kossifidis wrote:
->>>  PISR) and under load it results packet loss. Fix the problem by
->>>  unmasking TXDESC and TXEOL on ath5k_init.
->>>
->>>  Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
->>
->> ACK
->
-> Yes, please - worked great here.
->
+On Mon 17.Nov'08 at  1:54:16 +0200, Tomas Winkler wrote:
+[...]
+> Can you please try this one (might be white space broken, just pasted in)
 
-John any news on this ? Is it ok for inclusion or you want me to
-respin/rebase it ?
+Sure, I've already applied it by hand and will start testing it right away.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+But it will take many days until I can report back about it, because
+this oops happened only two times in one month or so.
+
+Thanks for taking a look at it, the last time you did my regression
+got fixed :-)
+
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c
+> b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> index 61797f3..d848c63 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> @@ -734,6 +734,12 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+>                 return 0;
+>         }
+> 
+> +       if (WARN(priv->stations[sta_id].sta.key.key_offset ==
+> WEP_INVALID_OFFSET,
+> +               "Removing wrong key %d 0x%x\n", keyconf->keyidx, key_flags)) {
+> +               spin_unlock_irqrestore(&priv->sta_lock, flags);
+> +               return 0;
+> +       }
+> +
+>         if (!test_and_clear_bit(priv->stations[sta_id].sta.key.key_offset,
+>                 &priv->ucode_key_table))
+>                 IWL_ERROR("index %d not used in uCode key table.\n",
+> 
+> Thanks
+> Tomas
+> 
