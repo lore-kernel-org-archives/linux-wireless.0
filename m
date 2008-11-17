@@ -1,74 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39882 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751586AbYKXDdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2008 22:33:55 -0500
-Subject: Re: pull request: wireless-2.6 2008-11-18
-From: Zhu Yi <yi.zhu@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"sfr@canb.auug.org.au" <sfr@canb.auug.org.au>
-In-Reply-To: <20081119143919.GA3485@tuxdriver.com>
-References: <20081119000719.GA19756@tuxdriver.com>
-	 <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com>
-	 <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com>
-	 <20081119143919.GA3485@tuxdriver.com>
-Content-Type: text/plain
-Date: Mon, 24 Nov 2008 11:34:15 +0800
-Message-Id: <1227497655.2548.257.camel@debian.sh.intel.com> (sfid-20081124_043405_779859_BA4D194F)
-Mime-Version: 1.0
+Received: from cp-out8.libero.it ([212.52.84.108]:33396 "EHLO
+	cp-out8.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132AbYKQUWr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 15:22:47 -0500
+Received: from [192.168.1.102] (151.48.11.15) by cp-out8.libero.it (8.5.016.1)
+        id 49198CCD00EB2CE6 for linux-wireless@vger.kernel.org; Mon, 17 Nov 2008 21:22:45 +0100
+From: Fabio Rossi <rossi.f@inwind.it>
+To: linux-wireless@vger.kernel.org
+Subject: Re: ath5k: problems during the connection to a sitecom AP
+Date: Mon, 17 Nov 2008 21:20:11 +0100
+References: <200811150207.12084.rossi.f@inwind.it>
+In-Reply-To: <200811150207.12084.rossi.f@inwind.it>
+MIME-Version: 1.0
+Message-Id: <200811172120.11299.rossi.f@inwind.it> (sfid-20081117_212252_390062_26297D25)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-11-19 at 22:39 +0800, John W. Linville wrote:
-> Well, thanks for your opinion.  Here is mine:
-
-I have to say something here. Although not related to the original
-ieee80211_notify_mac change.
-
-> The iwlwifi drivers have been hitting these problems for months,
-> and I have seen no effort by your team to address the problems.
-> It is possible that your team is working on them behind closed doors
-> and will eventually throw something over the wall to us.  I'm tired
-> of waiting for that, and I imagine that hordes of iwlagn users are
-> tired of waiting as well.
-
-This is not correct. We are tracing this problem in our bugzilla. And it
-is the open place. Much more people have used it for a much longer time
-even before the kernel bugzilla existed. If you take a look at the bug,
-you know how much effort we put on it:
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703
-
-> Johannes has presented us with plausible fixes, and people are
-> reporting that the patches work for them.  I can merge these patches,
-> or wait/hope/pray for some to come from your team.  Experience
-> suggests
-> that if fixes do come from your team that they will either be buried
-> in some monster patch that largely addresses something else, or
-> that the patches will arrive with a changelog that is terse and/or
-> unintelligble.  Subsequently, I am not optimistic about waiting.
-> 
-> I think Johannes cited four different bugzilla.kernel.org entries
-> between those two patches.  What is your team doing to address
-> those bugs?
-
-Johannes' effort is great and should certainly be praised. But looking
-down upon Intel's effort is nonsense. We suspected this alignment issue
-in the very beginning. But the set of users helped us to debug with this
-problem happened to have a different root cause than Johannes. Thus came
-with the alignment BUG_ON assert put into the code in case other people
-experience with it (unfortunately, it was a wrong one. As I had
-appologized for this already.)
-
-The problem should at least have two causes. Johannes had resolved one
-of them. The other one (AFAICS) relates to be in an 11n AP environment
-(no need to be associated with it) and takes longer time to reproduce.
-We will keep tracking it whatever we you think us about it.
+Which is the best way to proceed with the debug to understand why my 
+card isn't going through the authentication-association process with the 
+hidden SSID?
 
 Thanks,
--yi
+Fabio
 
+On Saturday 15 November 2008, you wrote:
+
+> I'm testing the ath5k driver (wireless-testing v2.6.28-rc4-5172-gc1a847c)
+> with my 3com 3CRDAG675 PCI card (atheros AR5212). I can try alternatively
+> two different access points (both configured with WEP + hidden SSID), the
+> procedure I use is the same but the results are different.
+>
+> Here are the commands used:
+>
+> modprobe ath5k
+> ifconfig ath0 192.168.1.2 up
+> iwconfig ath0 key <MYKEY>
+> iwconfig ath0 ap <AP_MAC>
+> iwconfig ath0 essid <MY_ESSID>
+>
+>
+> *** 3com AP ***
+> With this one I can associate without problems at the first try (SSID not
+> broadcast + WEP encryption):
+>
+> ath5k_pci 0000:00:0b.0: PCI INT A -> Link[LNKB] -> GSI 10 (level, low) ->
+> IRQ 10
+> ath5k_pci 0000:00:0b.0: registered as 'phy1'
+> phy1: Selected rate control algorithm 'minstrel'
+> ath5k phy1: Atheros AR5212 chip found (MAC: 0x56, PHY: 0x41)
+> ath5k phy1: RF5112B multiband radio found (0x36)
+> udev: renamed network interface wlan0 to ath0
+> ath0: direct probe to AP <AP_MAC> try 1
+> ath0 direct probe responded
+> ath0: authenticate with AP <AP_MAC>
+> ath0: authenticated
+> ath0: associate with AP <AP_MAC>
+> ath0: RX AssocResp from <AP_MAC> (capab=0x421 status=0 aid=4)
+> ath0: associated
+> phy1: Allocated STA <AP_MAC>
+> phy1: Inserted STA <AP_MAC>
+> ath0: switched to short barker preamble (BSSID=<AP_MAC>)
+> ath0: switched to short slot (BSSID=<AP_MAC>)
+>
+> *** Sitecom AP ***
+> With this one I'm able to associate only when the SSID is broadcast (with
+> or without encryption). Moreover the association process isn't successful
+> at first try (like for the 3com AP) and the link quality is very bad. An
+> example of ping statistics is the following
+>
+> 629 packets transmitted, 527 received, 16% packet loss, time 711605ms
+> rtt min/avg/max/mdev = 6.332/6303.120/151334.339/18133.729 ms, pipe 114
+>
+> and it's common to get the following error message (transmission buffer
+> saturated?):
+>
+> ping: sendmsg: No buffer space available
+>
+> When I disable the SSID I can't associate anymore to the AP, the only debug
+> messages are the following:
+>
+> ath5k_pci 0000:00:0b.0: PCI INT A -> Link[LNKB] -> GSI 10 (level, low) ->
+> IRQ 10
+> ath5k_pci 0000:00:0b.0: registered as 'phy12'
+> phy12: Selected rate control algorithm 'minstrel'
+> ath5k phy12: Atheros AR5212 chip found (MAC: 0x56, PHY: 0x41)
+> ath5k phy12: RF5112B multiband radio found (0x36)
+> udev: renamed network interface wlan0 to ath0
+>
+> How can I debug to provide more details (e.g. using debugfs)?
+>
+> Thank you for any help,
+> Fabio
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
