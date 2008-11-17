@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gold.linx.net ([195.66.232.40]:53931 "EHLO gold.linx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751446AbYK0PzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 10:55:05 -0500
-From: Tony Vroon <tony@linx.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] Allow CRDA to be compiled with -Wl,--as-needed
-Message-Id: <20081127154658.5154E10096@gold.linx.net> (sfid-20081127_165510_694386_88E8D633)
-Date: Thu, 27 Nov 2008 15:46:58 +0000 (GMT)
+Received: from rn-out-0910.google.com ([64.233.170.187]:41525 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922AbYKQPOq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 10:14:46 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so2007422rnd.17
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 07:14:45 -0800 (PST)
+Message-ID: <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com> (sfid-20081117_161450_423663_CF2C8C88)
+Date: Mon, 17 Nov 2008 17:14:44 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1226933141.3902.19.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1226915999.3599.33.camel@johannes.berg>
+	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
+	 <1226933141.3902.19.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As libraries are passed in LDFLAGS, it is vital that they be specified after the object 
-files. Otherwise, --as-needed will discard the libraries as unused and linking will fail.
+On Mon, Nov 17, 2008 at 4:45 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-11-17 at 16:32 +0200, Tomas Winkler wrote:
+>
+>> IMHO Not the concept but the implementation of this function is wrong.
+>
+> I disagree.
+>
+>> It should be no implementation difference between mac notification and
+>> reception of one RX frames that triggers oneof the connection step
+>> such as association response. If this would be handled in this context
+>> and there won't be any locking issue.
+>> If driver crashes internally and lost association info it can generate
+>> "local disassociation frame" and mac will try to reapply association
+>> in a regular flow.
+>
+> The point is that the whole thing about disassociation is already the
+> wrong assumption. As I've outlined, it only works in STA mode, and thus
+> the function is generally not very useful.
+>
+>> I agree that resume/suspend shell be handled properly in the mac80211
+>> regardless of this issue.
+>
+> And it will handle the "firmware crashed" case perfectly too.
 
-Signed-off-by: Tony Vroon <tony@linx.net>
-
---- crda-0.9.4/Makefile.orig	2008-11-27 14:44:02.000000000 +0000
-+++ crda-0.9.4/Makefile	2008-11-27 14:45:59.000000000 +0000
-@@ -35,15 +35,15 @@
- 
- crda: keys-ssl.c keys-gcrypt.c reglib.o crda.o
- 	$(NQ) '  LD  ' $@
--	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) `pkg-config --libs libnl-1` -o $@ reglib.o crda.o
-+	$(Q)$(CC) $(CFLAGS) `pkg-config --libs libnl-1` -o $@ reglib.o crda.o $(LDFLAGS)
- 
- regdbdump: keys-ssl.c keys-gcrypt.c reglib.o regdbdump.o
- 	$(NQ) '  LD  ' $@
--	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ reglib.o regdbdump.o
-+	$(Q)$(CC) $(CFLAGS) -o $@ reglib.o regdbdump.o $(LDFLAGS)
- 
- intersect: keys-ssl.c keys-gcrypt.c reglib.o intersect.o
- 	$(NQ) '  LD  ' $@
--	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ reglib.o intersect.o
-+	$(Q)$(CC) $(CFLAGS) -o $@ reglib.o intersect.o $(LDFLAGS)
- 
- verify: $(REG_BIN) regdbdump
- 	$(NQ) '  CHK  $(REG_BIN)'
+You may have a case, anyhow, please show us some RFC before you remove
+of mac notify.
+Tomas
