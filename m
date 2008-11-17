@@ -1,78 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f12.google.com ([209.85.217.12]:57437 "EHLO
-	mail-gx0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525AbYKCEwo (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.189]:2545 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbYKQVTM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 23:52:44 -0500
-Received: by gxk5 with SMTP id 5so763242gxk.13
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 20:52:43 -0800 (PST)
-Message-ID: <43e72e890811022052n8c5e7d3ic722caa65c711481@mail.gmail.com> (sfid-20081103_055255_249849_FC5BEA56)
-Date: Sun, 2 Nov 2008 20:52:42 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [PATCH] ath5k: enable RXing beacons
-Cc: "Dan Williams" <dcbw@redhat.com>, linville@tuxdriver.com,
+	Mon, 17 Nov 2008 16:19:12 -0500
+Received: by gv-out-0910.google.com with SMTP id e6so456755gvc.37
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 13:19:11 -0800 (PST)
+Message-ID: <3ace41890811171319w209d45c1ufd9f2a664e292383@mail.gmail.com> (sfid-20081117_221918_566215_932C398D)
+Date: Mon, 17 Nov 2008 21:19:10 +0000
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
+Subject: Re: [PATCH] rtl8187: Fix transmission count sent to mac80211
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"John W Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890811022049l386789f5qf8bde98eedcd4d2c@mail.gmail.com>
+In-Reply-To: <200811171829.22930.herton@mandriva.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1225672612-15106-1-git-send-email-lrodriguez@atheros.com>
-	 <1225676353.13684.2.camel@localhost.localdomain>
-	 <b6c5339f0811021810w229d1d9al2b27bdf4144cde69@mail.gmail.com>
-	 <43e72e890811022043t5525d924vcb776569a7bebbc8@mail.gmail.com>
-	 <43e72e890811022049l386789f5qf8bde98eedcd4d2c@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <492188e5.bIuOh01ilT9fPRTO%Larry.Finger@lwfinger.net>
+	 <200811171742.48292.herton@mandriva.com.br>
+	 <1226951228.3902.55.camel@johannes.berg>
+	 <200811171829.22930.herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 2, 2008 at 8:49 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Sun, Nov 2, 2008 at 8:43 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Sun, Nov 2, 2008 at 6:10 PM, Bob Copeland <me@bobcopeland.com> wrote:
->>> On Sun, Nov 2, 2008 at 8:39 PM, Dan Williams <dcbw@redhat.com> wrote:
->>>> On Sun, 2008-11-02 at 16:36 -0800, Luis R. Rodriguez wrote:
->>>>> Prior to this we would rely only on probe responses
->>>>> from the AP to keep associated. We now receive beacons
->>>>> on ath5k. This should fix sporadic disassociations.
->>>>>
->>>>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->>>>
->>>> Is this also a candidate for -stable?
->>>
->>> Don't think so, see below...
->>>
->>>>
->>>>> ---
->>>>>  drivers/net/wireless/ath5k/base.c |    2 ++
->>>>>  1 files changed, 2 insertions(+), 0 deletions(-)
->>>>>
->>>>> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
->>>>> index f5f46fe..5505f45 100644
->>>>> --- a/drivers/net/wireless/ath5k/base.c
->>>>> +++ b/drivers/net/wireless/ath5k/base.c
->>>>> @@ -2948,6 +2948,8 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
->>>>>                       AR5K_RX_FILTER_PROBEREQ | AR5K_RX_FILTER_PROM;
->>>>>       if (sc->opmode != NL80211_IFTYPE_STATION)
->>>>>               rfilt |= AR5K_RX_FILTER_PROBEREQ;
->>>>> +     if (sc->opmode == NL80211_IFTYPE_STATION)
->>>>> +             rfilt |= AR5K_RX_FILTER_BEACON;
->>>>>       if (sc->opmode != NL80211_IFTYPE_AP &&
->>>>>               sc->opmode != NL80211_IFTYPE_MESH_POINT &&
->>>>>               test_bit(ATH_STAT_PROMISC, sc->status))
->>>
->>> Sorry, my fault, this was a direct result of
->>> 60c7e22196fb4230b76db1f5fb283e811b8f3fb3 "ath5k: honor
->>> FIF_BCN_PRBRESP_PROMISC."  The problem remains that we have too many
->>> interrupts though if PRBRESP_PROMISC is not set.  IIRC my patch made
->>> ath5k behave same as ath9k.  Any ideas on a proper fix?
->>
->> If we don't have beacons coming in on ath9k its also an issue and may
->> explain the same exact issue we see there.
+On Mon, Nov 17, 2008 at 8:29 PM, Herton Ronaldo Krzesinski
+<herton@mandriva.com.br> wrote:
+<sniped>
+> Ah nice, I didn't saw it, I'm usually lagging reading mail... I saw it now.
 >
-> I see what you saw now too.. hmmm, either we handle that wrong right
-> now too or there is something else that should enable the beacons to
-> come through. Something is fishy for sure. Will get back to you.
+> Acked-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-OK Vasanth confirmed this is correct, and ath9k actually has incorrect
-behavior so we have to fix that there as well. If stable got the ath5k
-changes to the filter then yes we should push it there too.
+Tried the one-liner change on top of wireless-testing. Works alright
+- no noticeable regression.
 
-  Luis
+BTW, i don't check my gmail account as often than the other account
+(and the sf accounts redirects
+to that other account).
+
+Hin-Tak
