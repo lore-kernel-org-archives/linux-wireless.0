@@ -1,61 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:36154 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754893AbYKUQZY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 11:25:24 -0500
-Message-ID: <4926E0F2.5060200@lwfinger.net> (sfid-20081121_172530_208883_4C9DA92C)
-Date: Fri, 21 Nov 2008 10:25:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mga09.intel.com ([134.134.136.24]:36225 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754426AbYKQHfd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 02:35:33 -0500
+From: "Xu, Martin" <martin.xu@intel.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
+	Vikram Kandukuri <Vikram.Kandukuri@atheros.com>,
+	Jothikumar Mothilal <Jothikumar.Mothilal@atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"Liu, Bing Wei" <bing.wei.liu@intel.com>,
+	"Selbak, Rolla N" <rolla.n.selbak@intel.com>,
+	"Wang, Yong Y" <yong.y.wang@intel.com>
+Date: Mon, 17 Nov 2008 15:35:07 +0800
+Subject: RE: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts
+ per second at idle
+Message-ID: <9F0C1DB20AFA954FA1DA05309350433D410CD777@pdsmsx503.ccr.corp.intel.com> (sfid-20081117_083542_366995_20B69D6E)
+References: <bug-11749-13098@http.bugzilla.kernel.org/>
+	 <20081013150525.884BC108058@picon.linux-foundation.org>
+	 <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
+	 <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com>
+	 <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com>
+ <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com>
+In-Reply-To: <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-To: LKML <linux-kernel@vger.kernel.org>
-CC: Peter Stuge <peter@stuge.se>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	Yuval Hager <yuval@avramzon.net>
-Subject: BCM4312 Fails when xdm is started
-References: <200811151801.02369.yuval@avramzon.net>	<491EFB9D.3040002@lwfinger.net>	<200811151907.05636.yuval@avramzon.net> <20081115174623.27321.qmail@stuge.se>
-In-Reply-To: <20081115174623.27321.qmail@stuge.se>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A problem was recently posted to the bcm43xx mailing list that I am unable to
-solve. The machine in question is an HP Mini 2133 (HP product number FU346EA)
-with a BCM4312 PCIe wireless card. This card is known to work with the b43
-driver (I have one.) and it does work on this machine - at least initially.
-
-A problem occurs when xdm/kde is started. Suddenly a read operation on device
-hardware returns all ones as though the register does not exist, or if it were
-suddenly mismapped. If the OP doesn't try to run xdm, the same problem will
-eventually occur, it just takes longer.
-
-This is a 32-bit system running 2.6.28-rc5, but I don't think this is a
-regression from some earlier version as the problem was first reported with
-kernel 2.6.27-gentoo-r2.
-
-I have complete logs, but before spamming the list with them, I have a question
-about the "Zone PFN" settings. On the problem machine, the following list occurs:
-
-[    0.000000] Zone PFN ranges:
-[    0.000000]   DMA      0x00000000 -> 0x00001000
-[    0.000000]   Normal   0x00001000 -> 0x000373fe
-[    0.000000]   HighMem  0x000373fe -> 0x0006feb0
-
-On my 64-bit HP machine, I see:
-
-Zone PFN ranges:
-  DMA      0x00000000 -> 0x00001000
-  DMA32    0x00001000 -> 0x00100000
-  Normal   0x00100000 -> 0x00100000
-
-Is it "normal" for there not to be a DMA32 range with a 32-bit version of Linux?
-Certainly all the memory is available to 32-bit DMA. This card does 64-bit DMA,
-but the driver falls back to a 32-bit mask for this system.
-
-Is there some kind of memory mapping problem in the PCIe system? Should the
-entire log be posted?
-
-Thanks,
-
-Larry
+SGkgYm9io7oNClBsZWFzZSByZXZpZXcgYmVsb3cgcGF0Y2ggd2hpY2ggaGFzIGJlZW4gbW9kaWZp
+ZWQgYWNjb3JkaW5nIHRvIHlvdXIgY29tbWVudHMuDQoNCg0KRnJvbTogTWFydGluIFh1IDxtYXJ0
+aW4ueHVAaW50ZWwuY29tPg0KU3ViamVjdDogZGlzYWJsZSBiZWFjb24gZmlsdGVyIHdoZW4gc3Rh
+dGlvbiBpcyBub3QgYXNzb2NpYXRlZCB3aXRoIGFueSBBUC4NCg0KQXRoNWsgZHJpdmVyIGhhcyB0
+b28gbWFueSBpbnRlcnJ1cHRzIHBlciBzZWNvbmQgYXQgaWRsZQ0KaHR0cDovL2J1Z3ppbGxhLmtl
+cm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTExNzQ5DQoNClNpZ25lZC1vZmYtYnk6IE1hcnRpbiBY
+dSA8bWFydGluLnh1QGludGVsLmNvbT4NCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL2F0aDVrL2Jhc2UuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuYw0KaW5k
+ZXggMzRjZDFhNC4uYmVkMTM3NiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
+aDVrL2Jhc2UuYw0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvYmFzZS5jDQpAQCAt
+MjQxLDYgKzI0MSwxMCBAQCBzdGF0aWMgaW50IGF0aDVrX2dldF90eF9zdGF0cyhzdHJ1Y3QgaWVl
+ZTgwMjExX2h3ICpodywNCiBzdGF0aWMgdTY0IGF0aDVrX2dldF90c2Yoc3RydWN0IGllZWU4MDIx
+MV9odyAqaHcpOw0KIHN0YXRpYyB2b2lkIGF0aDVrX3Jlc2V0X3RzZihzdHJ1Y3QgaWVlZTgwMjEx
+X2h3ICpodyk7DQogc3RhdGljIGludCBhdGg1a19iZWFjb25fdXBkYXRlKHN0cnVjdCBhdGg1a19z
+b2Z0YyAqc2MsIHN0cnVjdCBza19idWZmICpza2IpOw0KK3N0YXRpYyB2b2lkIGF0aDVrX2Jzc19p
+bmZvX2NoYW5nZWQoc3RydWN0IGllZWU4MDIxMV9odyAqaHcsDQorCQkJCXN0cnVjdCBpZWVlODAy
+MTFfdmlmICp2aWYsDQorCQkJCXN0cnVjdCBpZWVlODAyMTFfYnNzX2NvbmYgKmJzc19jb25mLA0K
+KwkJCQl1MzIgY2hhbmdlcyk7DQogDQogc3RhdGljIHN0cnVjdCBpZWVlODAyMTFfb3BzIGF0aDVr
+X2h3X29wcyA9IHsNCiAJLnR4IAkJPSBhdGg1a190eCwNCkBAIC0yOTUyLDcgKzI5NTYsNyBAQCBz
+dGF0aWMgdm9pZCBhdGg1a19jb25maWd1cmVfZmlsdGVyKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3
+LA0KIAkJc2MtPm9wbW9kZSAhPSBOTDgwMjExX0lGVFlQRV9NRVNIX1BPSU5UICYmDQogCQl0ZXN0
+X2JpdChBVEhfU1RBVF9QUk9NSVNDLCBzYy0+c3RhdHVzKSkNCiAJCXJmaWx0IHw9IEFSNUtfUlhf
+RklMVEVSX1BST007DQotCWlmIChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04g
+fHwNCisJaWYgKChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04gJiYgc2MtPmFz
+c29jKSB8fA0KIAkJc2MtPm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9BREhPQyB8fA0KIAkJc2Mt
+Pm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9BUCkNCiAJCXJmaWx0IHw9IEFSNUtfUlhfRklMVEVS
+X0JFQUNPTjsNCkBAIC0zMDkyLDQgKzMwOTYsMzkgQEAgYXRoNWtfYmVhY29uX3VwZGF0ZShzdHJ1
+Y3QgYXRoNWtfc29mdGMgKnNjLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQ0KIA0KIAlyZXR1cm4gcmV0
+Ow0KIH0NCitzdGF0aWMgdm9pZA0KK3NldF9iZWFjb25fZmlsdGVyKHN0cnVjdCBpZWVlODAyMTFf
+aHcgKmh3LCBib29sIGVuYWJsZSkNCit7DQorCXN0cnVjdCBhdGg1a19zb2Z0YyAqc2MgPSBody0+
+cHJpdjsNCisJc3RydWN0IGF0aDVrX2h3ICphaCA9IHNjLT5haDsNCisJdTMyIHJmaWx0Ow0KKwly
+ZmlsdCA9IGF0aDVrX2h3X2dldF9yeF9maWx0ZXIoYWgpOw0KKwlpZiAoZW5hYmxlKQ0KKwkJcmZp
+bHQgfD0gQVI1S19SWF9GSUxURVJfQkVBQ09OOw0KKwllbHNlDQorCQlyZmlsdCAmPSB+QVI1S19S
+WF9GSUxURVJfQkVBQ09OOw0KKwlhdGg1a19od19zZXRfcnhfZmlsdGVyKGFoLCByZmlsdCk7DQor
+CXNjLT5maWx0ZXJfZmxhZ3MgPSByZmlsdDsNCisJcmV0dXJuOw0KK30NCisNCitzdGF0aWMgdm9p
+ZCBhdGg1a19ic3NfaW5mb19jaGFuZ2VkKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LA0KKwkJCQkg
+ICAgc3RydWN0IGllZWU4MDIxMV92aWYgKnZpZiwNCisJCQkJICAgIHN0cnVjdCBpZWVlODAyMTFf
+YnNzX2NvbmYgKmJzc19jb25mLA0KKwkJCQkgICAgdTMyIGNoYW5nZXMpDQorew0KKwlzdHJ1Y3Qg
+YXRoNWtfc29mdGMgKnNjID0gaHctPnByaXY7DQorCWlmIChjaGFuZ2VzICYgQlNTX0NIQU5HRURf
+QVNTT0MpIHsNCisJCW11dGV4X2xvY2soJnNjLT5sb2NrKTsNCisJCXNjLT5hc3NvYyA9IGJzc19j
+b25mLT5hc3NvYzsNCisJCWlmIChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04p
+IHsNCisJCQlpZiAoc2MtPmFzc29jKQ0KKwkJCQlzZXRfYmVhY29uX2ZpbHRlcihodywgMSk7DQor
+CQkJZWxzZQ0KKwkJCQlzZXRfYmVhY29uX2ZpbHRlcihodywgMCk7DQorCQl9DQorCQltdXRleF91
+bmxvY2soJnNjLT5sb2NrKTsNCisJfQ0KKwlyZXR1cm47DQorfQ0KIA0KZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
+aDVrL2Jhc2UuaA0KaW5kZXggMDZkMTA1NC4uZmFjYzYwZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuaA0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRo
+NWsvYmFzZS5oDQpAQCAtMTc5LDYgKzE3OSw3IEBAIHN0cnVjdCBhdGg1a19zb2Z0YyB7DQogDQog
+CXN0cnVjdCB0aW1lcl9saXN0CWNhbGliX3RpbTsJLyogY2FsaWJyYXRpb24gdGltZXIgKi8NCiAJ
+aW50IAkJCXBvd2VyX2xldmVsOwkvKiBSZXF1ZXN0ZWQgdHggcG93ZXIgaW4gZGJtICovDQorCWJv
+b2wJCQlhc3NvYzsJCS8qIGFzc29jYXRlIHN0YXRlICovDQogfTsNCiANCiAjZGVmaW5lIGF0aDVr
+X2h3X2hhc2Jzc2lkbWFzayhfYWgpIFwNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
+b206IGJjb3BlbGFuZEBnbWFpbC5jb20gW21haWx0bzpiY29wZWxhbmRAZ21haWwuY29tXSBPbiBC
+ZWhhbGYgT2YgQm9iIENvcGVsYW5kDQpTZW50OiAyMDA4xOoxMdTCMTTI1SAwOjI2DQpUbzogWHUs
+IE1hcnRpbg0KQ2M6IE5pY2sgS29zc2lmaWRpczsgTHVpcyBSLiBSb2RyaWd1ZXo7IGxpbnV4LXdp
+cmVsZXNzOyB5YW5nLnkueWlAZ21haWwuY29tOyBWaWtyYW0gS2FuZHVrdXJpOyBKb3RoaWt1bWFy
+IE1vdGhpbGFsOyBhdGg1ay1kZXZlbEBsaXN0cy5hdGg1ay5vcmc7IExpdSwgQmluZyBXZWk7IFNl
+bGJhaywgUm9sbGEgTjsgV2FuZywgWW9uZyBZDQpTdWJqZWN0OiBSZTogW2F0aDVrLWRldmVsXSBb
+QnVnIDExNzQ5XSBBdGg1ayBkcml2ZXIgaGFzIHRvbyBtYW55IGludGVycnVwdHMgcGVyIHNlY29u
+ZCBhdCBpZGxlDQoNCk9uIFRodSwgTm92IDEzLCAyMDA4IGF0IDE6MTIgQU0sIFh1LCBNYXJ0aW4g
+PG1hcnRpbi54dUBpbnRlbC5jb20+IHdyb3RlOg0KPiBIaSBhbGw6DQo+IEkgaGF2ZSBhIHBhdGNo
+IHRoYXQgY2FuIGJlIHVzZWQgdG8gZml4IHRoZSBidWcuDQo+IFRoZSBwYXRjaCByZXNvbHZlZCB0
+aGUgaXNzdWUgYnkgZGlzYWJsaW5nIHRoZSBiZWFjb24gZmlsdGVyIHdoZW4gZGlzYXNzb2NpYXRl
+ZCB3aXRoIEFQIGFuZCBlbmFibGluZyBiZWFjb24gd2hlbiBhc3NvY2lhdGUgd2l0aCBBUC4NCj4g
+U2VlIGh0dHA6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD0xMTc0OQ0KPiBQ
+bGVhc2UgcmV2aWV3IGl0LiBUaGFua3MhDQoNClRoYW5rcyBmb3IgdGhlIHBhdGNoIQ0KDQpJIHRo
+aW5rIHRoZSBiYXNpYyBpZGVhIGlzIG9rICh3ZSBvbmx5IGhhdmUgYmVhY29ucyBpZiBQUkJSRVNQ
+X1BST01JU0MgaXMgc2V0DQpvciBpZiB3ZSBhcmUgaW4gU1RBIG1vZGUgX2FuZF8gYXNzb2NpYXRl
+ZCwgb3IgaW4gSUJTUyBtb2RlKS4gIEhvd2V2ZXIsIHRoZXJlDQphcmUgbG90cyBvZiBDb2RpbmdT
+dHlsZSBpc3N1ZXMgd2l0aCB0aGUgcGF0Y2guICBQbGVhc2UgcnVuDQpzY3JpcHRzL2NoZWNrcGF0
+Y2gucGwgb24gaXQgYW5kIGZpeCB0aGUgY29ycmVzcG9uZGluZyB3aGl0ZXNwYWNlIGlzc3Vlcy4N
+Cg0KK3N0YXRpYyB2b2lkDQorZW5hYmxlX2JlYWNvbl9maWx0ZXIoc3RydWN0IGllZWU4MDIxMV9o
+dyAqaHcpDQorew0KKyAgICAgICAgc3RydWN0IGF0aDVrX3NvZnRjICpzYyA9IGh3LT5wcml2Ow0K
+KyAgICAgICAgc3RydWN0IGF0aDVrX2h3ICphaCA9IHNjLT5haDsNCisgICAgICAgIHUzMiByZmls
+dDsNCisgICAgICAgIHJmaWx0ID0gYXRoNWtfaHdfZ2V0X3J4X2ZpbHRlcihhaCk7DQorICAgICAg
+ICBpZiAoICEocmZpbHQgJiBBUjVLX1JYX0ZJTFRFUl9CRUFDT04pICl7DQoNClByb2JhYmx5IG5v
+dCB3b3J0aCBpdCB0byBkbyB0aGUgdGVzdCwgc2luY2UgdGhpcyBpc24ndCBnb2luZyB0byBnZXQN
+CmNhbGxlZCB0aGF0IG9mdGVuLg0KDQorICAgICAgICAgICAgICAgIHJmaWx0IHw9IEFSNUtfUlhf
+RklMVEVSX0JFQUNPTjsNCisgICAgICAgICAgICAgICAgYXRoNWtfaHdfc2V0X3J4X2ZpbHRlcihh
+aCxyZmlsdCk7DQorICAgICAgICAgICAgICAgIHNjLT5maWx0ZXJfZmxhZ3MgPSByZmlsdDsNCisg
+ICAgICAgIH0NCisgICAgICAgIHJmaWx0ID0gYXRoNWtfaHdfZ2V0X3J4X2ZpbHRlcihhaCk7DQor
+ICAgICAgICByZXR1cm47DQoNCkFib3ZlIHR3byBsaW5lcyBhcmUgdW5uZWNlc3NhcnkuDQoNCit9
+DQoNCllvdSByZW1vdmUgYSBoZWFwIG9mIGNvZGUgYnkgbWFraW5nIHRoaXMgc2V0X2JlYWNvbl9m
+aWx0ZXIoaHcsIGJvb2wgZW5hYmxlKQ0KYW5kIGNsZWFuaW5nIHVwIHRoZSBicmFuY2hlcyBpbiBi
+c3NfaW5mb19jaGFuZ2VkLiAgSSBiZWxpZXZlIHRoaXMgY2FuIHJhY2UNCndpdGggY29uZmlndXJl
+X2ZpbHRlciBhcyB3ZWxsIChidXQgY29uZmlndXJlX2ZpbHRlciBhbHJlYWR5IHJhY2VzIHdpdGgN
+CmFueXRoaW5nIHRoYXQgdG91Y2hlcyBzYy0+c3RhdHVzLi4uKS4NCg0KPiBAQCAtMTc5LDYgKzE3
+OSw3IEBAIHN0cnVjdCBhdGg1a19zb2Z0YyB7DQo+DQo+ICAgICAgICBzdHJ1Y3QgdGltZXJfbGlz
+dCAgICAgICBjYWxpYl90aW07ICAgICAgLyogY2FsaWJyYXRpb24gdGltZXIgKi8NCj4gICAgICAg
+IGludCAgICAgICAgICAgICAgICAgICAgIHBvd2VyX2xldmVsOyAgICAvKiBSZXF1ZXN0ZWQgdHgg
+cG93ZXIgaW4gZGJtICovDQo+ICsgICAgICAgYm9vbCAgICAgICAgICAgICAgICAgICAgYXNzb2M7
+ICAgICAgICAgIC8qIGFzc29jYXRlIHN0YXRlICovDQo+ICB9Ow0KDQpzL2Fzc29jYXRlL2Fzc29j
+aWF0ZS4gIEFsc28gaW4gYXRoNWsgd2Ugc29tZXRpbWVzIHVzZSBzYy0+c3RhdHVzIGZvciBzdWNo
+DQpmbGFncywgdGhvdWdoIHRoaXMgY291bGQgZ28gZWl0aGVyIHdheS4NCg0KLS0gDQpCb2IgQ29w
+ZWxhbmQgJSUgd3d3LmJvYmNvcGVsYW5kLmNvbQ0K
