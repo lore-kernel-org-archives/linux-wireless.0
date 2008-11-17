@@ -1,151 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:18566 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752479AbYK1Tt5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49275 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053AbYKQR2n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 14:49:57 -0500
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mASJnhLC025375
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 13:49:54 -0600
-Received: from localhost.localdomain (essapo-nirac25338.europe.nokia.com [10.162.253.38])
-	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mASJnjSh003187
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:49:47 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v3 1/4] mac80211: enable IEEE80211_CONF_PS only when associated
-Date: Fri, 28 Nov 2008 21:49:41 +0200
-Message-Id: <1227901784-5325-2-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205002_114359_21347A04)
-In-Reply-To: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
-References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+	Mon, 17 Nov 2008 12:28:43 -0500
+Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com> (sfid-20081117_161447_403583_F9BC9E33)
+References: <1226915999.3599.33.camel@johannes.berg>
+	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
+	 <1226933141.3902.19.camel@johannes.berg>
+	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>
+	 (sfid-20081117_161447_403583_F9BC9E33)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-R0D3Z09jsXFplC0/Amct"
+Date: Mon, 17 Nov 2008 18:28:07 +0100
+Message-Id: <1226942887.3902.30.camel@johannes.berg> (sfid-20081117_182846_914831_D0AE3397)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also disable power save when disassociated.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   15 +++++++++++++--
- net/mac80211/wext.c        |   30 ++++++++++++++++++++++++------
- 3 files changed, 38 insertions(+), 8 deletions(-)
+--=-R0D3Z09jsXFplC0/Amct
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 155a204..3f25955 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -688,6 +688,7 @@ struct ieee80211_local {
- 				*/
- 	int wifi_wme_noack_test;
- 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
-+	bool powersave;
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct local_debugfsdentries {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 88b0b4d..e7ade66 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -746,6 +746,11 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	bss_info_changed |= BSS_CHANGED_BASIC_RATES;
- 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
- 
-+	if (local->powersave) {
-+		local->hw.conf.flags |= IEEE80211_CONF_PS;
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	}
-+
- 	netif_tx_start_all_queues(sdata->dev);
- 	netif_carrier_on(sdata->dev);
- 
-@@ -818,7 +823,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
--	u32 changed = 0;
-+	u32 changed = 0, config_changed = 0;
- 
- 	rcu_read_lock();
- 
-@@ -868,8 +873,14 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	sta_info_destroy(sta);
- 
- 	local->hw.conf.ht.enabled = false;
--	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_HT);
-+	config_changed |= IEEE80211_CONF_CHANGE_HT;
-+
-+	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-+		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-+		config_changed |= IEEE80211_CONF_PS;
-+	}
- 
-+	ieee80211_hw_config(local, config_changed);
- 	ieee80211_bss_info_change_notify(sdata, changed);
- }
- 
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index b3ce28d..8329de2 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -953,25 +953,44 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
- 				    struct iw_param *wrq,
- 				    char *extra)
- {
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
- 	struct ieee80211_conf *conf = &local->hw.conf;
-+	int ret = 0;
-+	bool ps;
- 
- 	if (wrq->disabled) {
--		conf->flags &= ~IEEE80211_CONF_PS;
--		return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+		ps = false;
-+		goto set;
- 	}
- 
- 	switch (wrq->flags & IW_POWER_MODE) {
- 	case IW_POWER_ON:       /* If not specified */
- 	case IW_POWER_MODE:     /* If set all mask */
- 	case IW_POWER_ALL_R:    /* If explicitely state all */
--		conf->flags |= IEEE80211_CONF_PS;
-+		ps = true;
- 		break;
- 	default:                /* Otherwise we don't support it */
- 		return -EINVAL;
- 	}
- 
--	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	if (ps == local->powersave)
-+		return ret;
-+
-+set:
-+	local->powersave = ps;
-+
-+	if (ifsta->flags && IEEE80211_STA_ASSOCIATED) {
-+		if (local->powersave)
-+			conf->flags |= IEEE80211_CONF_PS;
-+		else
-+			conf->flags &= ~IEEE80211_CONF_PS;
-+
-+		ret = ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	}
-+
-+	return ret;
- }
- 
- static int ieee80211_ioctl_giwpower(struct net_device *dev,
-@@ -980,9 +999,8 @@ static int ieee80211_ioctl_giwpower(struct net_device *dev,
- 				    char *extra)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_conf *conf = &local->hw.conf;
- 
--	wrqu->power.disabled = !(conf->flags & IEEE80211_CONF_PS);
-+	wrqu->power.disabled = !local->powersave;
- 
- 	return 0;
- }
--- 
-1.5.6.5
+On Mon, 2008-11-17 at 17:14 +0200, Tomas Winkler wrote:
+
+> > The point is that the whole thing about disassociation is already the
+> > wrong assumption. As I've outlined, it only works in STA mode, and thus
+> > the function is generally not very useful.
+> >
+> >> I agree that resume/suspend shell be handled properly in the mac80211
+> >> regardless of this issue.
+> >
+> > And it will handle the "firmware crashed" case perfectly too.
+>=20
+> You may have a case, anyhow, please show us some RFC before you remove
+> of mac notify.
+
+I don't have any, but given the current deficiencies, I don't think the
+notify callback is worth keeping especially in light of the locking
+nightmare it's creating. What does it fix anyway? No user ever
+complained about slow re-association at resume time that I've heard, and
+no driver but iwlwifi tries to speed it up.
+
+johannes
+
+--=-R0D3Z09jsXFplC0/Amct
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJIamjAAoJEKVg1VMiehFYMKgP/1DkUCDd56qFTawtJEdYSITe
+QJSGXF3lrKpcLDbOr8XDtoMli/aGAdFrRB7fWtlhNmH2vQjNY9z6KCurzCABDaJO
+SlLisZfNfzz44Aukrp4sYnf436jZ5faJyhTTla7z8T2OotZZ7ROLg3eizvXmmCe1
+V6XqT/MFynUFC1xxpDVSzspeYpkZoGXEMwpYX341iHn4/+gxW0s56uwFaCBQAN+8
+SNQ9fKX4wMMYdYklUgzY4KkxU6RlDmvTKKkCVQGo5Ud/MN3HaBpjnHDPcE4/RbEf
+iX0YkcUEbgTGz6tr0Wd0yOoBUdQNyHCnkpEE6Y/jsfuT7jkdDVqaKCObr5ro9qRF
+PF1wh/2tnCug5KEuJCeMARYjnJ5IxFDCXI2G8WyCJpG3ADVvB+jmjXOxXt/7s4uI
+/wzj0rmOJHc+F9lb3CoAD0Uf6Gv9aTDctHLq9XTFKNz/ThD1mGYkT4nyl9Klx5oH
+3dwPezsoBi+1HxWk+tUbKfcXmQ5BV82gDNv3+rIpMy0Yzud2r40HBw81FDH4IXbL
+0/p7i0RFp54sBoJTc9VUYimN9SDa+HFZR+RGEd3uaGLvpx5Z2cm3tCpQ2GG7xXYy
+FSow4ZrG31KtZXUBYF3jUK3/N9OKSclGZcD4kUn4hH1xnZ9Li7IxAMLrPQDB/J0t
+VhBNDOGhoM55piFjJb1m
+=9V3L
+-----END PGP SIGNATURE-----
+
+--=-R0D3Z09jsXFplC0/Amct--
 
