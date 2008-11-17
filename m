@@ -1,128 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:36225 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754426AbYKQHfd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 02:35:33 -0500
-From: "Xu, Martin" <martin.xu@intel.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
-	Vikram Kandukuri <Vikram.Kandukuri@atheros.com>,
-	Jothikumar Mothilal <Jothikumar.Mothilal@atheros.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"Liu, Bing Wei" <bing.wei.liu@intel.com>,
-	"Selbak, Rolla N" <rolla.n.selbak@intel.com>,
-	"Wang, Yong Y" <yong.y.wang@intel.com>
-Date: Mon, 17 Nov 2008 15:35:07 +0800
-Subject: RE: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts
- per second at idle
-Message-ID: <9F0C1DB20AFA954FA1DA05309350433D410CD777@pdsmsx503.ccr.corp.intel.com> (sfid-20081117_083542_366995_20B69D6E)
-References: <bug-11749-13098@http.bugzilla.kernel.org/>
-	 <20081013150525.884BC108058@picon.linux-foundation.org>
-	 <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
-	 <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com>
-	 <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com>
- <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com>
-In-Reply-To: <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+Received: from xc.sipsolutions.net ([83.246.72.84]:46539 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752018AbYKQKAJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 05:00:09 -0500
+Subject: [RFC] mac80211: remove ieee80211_notify_mac
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 17 Nov 2008 10:59:59 +0100
+Message-Id: <1226915999.3599.33.camel@johannes.berg> (sfid-20081117_110015_263674_C03EEA82)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgYm9io7oNClBsZWFzZSByZXZpZXcgYmVsb3cgcGF0Y2ggd2hpY2ggaGFzIGJlZW4gbW9kaWZp
-ZWQgYWNjb3JkaW5nIHRvIHlvdXIgY29tbWVudHMuDQoNCg0KRnJvbTogTWFydGluIFh1IDxtYXJ0
-aW4ueHVAaW50ZWwuY29tPg0KU3ViamVjdDogZGlzYWJsZSBiZWFjb24gZmlsdGVyIHdoZW4gc3Rh
-dGlvbiBpcyBub3QgYXNzb2NpYXRlZCB3aXRoIGFueSBBUC4NCg0KQXRoNWsgZHJpdmVyIGhhcyB0
-b28gbWFueSBpbnRlcnJ1cHRzIHBlciBzZWNvbmQgYXQgaWRsZQ0KaHR0cDovL2J1Z3ppbGxhLmtl
-cm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTExNzQ5DQoNClNpZ25lZC1vZmYtYnk6IE1hcnRpbiBY
-dSA8bWFydGluLnh1QGludGVsLmNvbT4NCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL2F0aDVrL2Jhc2UuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuYw0KaW5k
-ZXggMzRjZDFhNC4uYmVkMTM3NiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
-aDVrL2Jhc2UuYw0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvYmFzZS5jDQpAQCAt
-MjQxLDYgKzI0MSwxMCBAQCBzdGF0aWMgaW50IGF0aDVrX2dldF90eF9zdGF0cyhzdHJ1Y3QgaWVl
-ZTgwMjExX2h3ICpodywNCiBzdGF0aWMgdTY0IGF0aDVrX2dldF90c2Yoc3RydWN0IGllZWU4MDIx
-MV9odyAqaHcpOw0KIHN0YXRpYyB2b2lkIGF0aDVrX3Jlc2V0X3RzZihzdHJ1Y3QgaWVlZTgwMjEx
-X2h3ICpodyk7DQogc3RhdGljIGludCBhdGg1a19iZWFjb25fdXBkYXRlKHN0cnVjdCBhdGg1a19z
-b2Z0YyAqc2MsIHN0cnVjdCBza19idWZmICpza2IpOw0KK3N0YXRpYyB2b2lkIGF0aDVrX2Jzc19p
-bmZvX2NoYW5nZWQoc3RydWN0IGllZWU4MDIxMV9odyAqaHcsDQorCQkJCXN0cnVjdCBpZWVlODAy
-MTFfdmlmICp2aWYsDQorCQkJCXN0cnVjdCBpZWVlODAyMTFfYnNzX2NvbmYgKmJzc19jb25mLA0K
-KwkJCQl1MzIgY2hhbmdlcyk7DQogDQogc3RhdGljIHN0cnVjdCBpZWVlODAyMTFfb3BzIGF0aDVr
-X2h3X29wcyA9IHsNCiAJLnR4IAkJPSBhdGg1a190eCwNCkBAIC0yOTUyLDcgKzI5NTYsNyBAQCBz
-dGF0aWMgdm9pZCBhdGg1a19jb25maWd1cmVfZmlsdGVyKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3
-LA0KIAkJc2MtPm9wbW9kZSAhPSBOTDgwMjExX0lGVFlQRV9NRVNIX1BPSU5UICYmDQogCQl0ZXN0
-X2JpdChBVEhfU1RBVF9QUk9NSVNDLCBzYy0+c3RhdHVzKSkNCiAJCXJmaWx0IHw9IEFSNUtfUlhf
-RklMVEVSX1BST007DQotCWlmIChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04g
-fHwNCisJaWYgKChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04gJiYgc2MtPmFz
-c29jKSB8fA0KIAkJc2MtPm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9BREhPQyB8fA0KIAkJc2Mt
-Pm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9BUCkNCiAJCXJmaWx0IHw9IEFSNUtfUlhfRklMVEVS
-X0JFQUNPTjsNCkBAIC0zMDkyLDQgKzMwOTYsMzkgQEAgYXRoNWtfYmVhY29uX3VwZGF0ZShzdHJ1
-Y3QgYXRoNWtfc29mdGMgKnNjLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQ0KIA0KIAlyZXR1cm4gcmV0
-Ow0KIH0NCitzdGF0aWMgdm9pZA0KK3NldF9iZWFjb25fZmlsdGVyKHN0cnVjdCBpZWVlODAyMTFf
-aHcgKmh3LCBib29sIGVuYWJsZSkNCit7DQorCXN0cnVjdCBhdGg1a19zb2Z0YyAqc2MgPSBody0+
-cHJpdjsNCisJc3RydWN0IGF0aDVrX2h3ICphaCA9IHNjLT5haDsNCisJdTMyIHJmaWx0Ow0KKwly
-ZmlsdCA9IGF0aDVrX2h3X2dldF9yeF9maWx0ZXIoYWgpOw0KKwlpZiAoZW5hYmxlKQ0KKwkJcmZp
-bHQgfD0gQVI1S19SWF9GSUxURVJfQkVBQ09OOw0KKwllbHNlDQorCQlyZmlsdCAmPSB+QVI1S19S
-WF9GSUxURVJfQkVBQ09OOw0KKwlhdGg1a19od19zZXRfcnhfZmlsdGVyKGFoLCByZmlsdCk7DQor
-CXNjLT5maWx0ZXJfZmxhZ3MgPSByZmlsdDsNCisJcmV0dXJuOw0KK30NCisNCitzdGF0aWMgdm9p
-ZCBhdGg1a19ic3NfaW5mb19jaGFuZ2VkKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LA0KKwkJCQkg
-ICAgc3RydWN0IGllZWU4MDIxMV92aWYgKnZpZiwNCisJCQkJICAgIHN0cnVjdCBpZWVlODAyMTFf
-YnNzX2NvbmYgKmJzc19jb25mLA0KKwkJCQkgICAgdTMyIGNoYW5nZXMpDQorew0KKwlzdHJ1Y3Qg
-YXRoNWtfc29mdGMgKnNjID0gaHctPnByaXY7DQorCWlmIChjaGFuZ2VzICYgQlNTX0NIQU5HRURf
-QVNTT0MpIHsNCisJCW11dGV4X2xvY2soJnNjLT5sb2NrKTsNCisJCXNjLT5hc3NvYyA9IGJzc19j
-b25mLT5hc3NvYzsNCisJCWlmIChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04p
-IHsNCisJCQlpZiAoc2MtPmFzc29jKQ0KKwkJCQlzZXRfYmVhY29uX2ZpbHRlcihodywgMSk7DQor
-CQkJZWxzZQ0KKwkJCQlzZXRfYmVhY29uX2ZpbHRlcihodywgMCk7DQorCQl9DQorCQltdXRleF91
-bmxvY2soJnNjLT5sb2NrKTsNCisJfQ0KKwlyZXR1cm47DQorfQ0KIA0KZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
-aDVrL2Jhc2UuaA0KaW5kZXggMDZkMTA1NC4uZmFjYzYwZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuaA0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRo
-NWsvYmFzZS5oDQpAQCAtMTc5LDYgKzE3OSw3IEBAIHN0cnVjdCBhdGg1a19zb2Z0YyB7DQogDQog
-CXN0cnVjdCB0aW1lcl9saXN0CWNhbGliX3RpbTsJLyogY2FsaWJyYXRpb24gdGltZXIgKi8NCiAJ
-aW50IAkJCXBvd2VyX2xldmVsOwkvKiBSZXF1ZXN0ZWQgdHggcG93ZXIgaW4gZGJtICovDQorCWJv
-b2wJCQlhc3NvYzsJCS8qIGFzc29jYXRlIHN0YXRlICovDQogfTsNCiANCiAjZGVmaW5lIGF0aDVr
-X2h3X2hhc2Jzc2lkbWFzayhfYWgpIFwNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
-b206IGJjb3BlbGFuZEBnbWFpbC5jb20gW21haWx0bzpiY29wZWxhbmRAZ21haWwuY29tXSBPbiBC
-ZWhhbGYgT2YgQm9iIENvcGVsYW5kDQpTZW50OiAyMDA4xOoxMdTCMTTI1SAwOjI2DQpUbzogWHUs
-IE1hcnRpbg0KQ2M6IE5pY2sgS29zc2lmaWRpczsgTHVpcyBSLiBSb2RyaWd1ZXo7IGxpbnV4LXdp
-cmVsZXNzOyB5YW5nLnkueWlAZ21haWwuY29tOyBWaWtyYW0gS2FuZHVrdXJpOyBKb3RoaWt1bWFy
-IE1vdGhpbGFsOyBhdGg1ay1kZXZlbEBsaXN0cy5hdGg1ay5vcmc7IExpdSwgQmluZyBXZWk7IFNl
-bGJhaywgUm9sbGEgTjsgV2FuZywgWW9uZyBZDQpTdWJqZWN0OiBSZTogW2F0aDVrLWRldmVsXSBb
-QnVnIDExNzQ5XSBBdGg1ayBkcml2ZXIgaGFzIHRvbyBtYW55IGludGVycnVwdHMgcGVyIHNlY29u
-ZCBhdCBpZGxlDQoNCk9uIFRodSwgTm92IDEzLCAyMDA4IGF0IDE6MTIgQU0sIFh1LCBNYXJ0aW4g
-PG1hcnRpbi54dUBpbnRlbC5jb20+IHdyb3RlOg0KPiBIaSBhbGw6DQo+IEkgaGF2ZSBhIHBhdGNo
-IHRoYXQgY2FuIGJlIHVzZWQgdG8gZml4IHRoZSBidWcuDQo+IFRoZSBwYXRjaCByZXNvbHZlZCB0
-aGUgaXNzdWUgYnkgZGlzYWJsaW5nIHRoZSBiZWFjb24gZmlsdGVyIHdoZW4gZGlzYXNzb2NpYXRl
-ZCB3aXRoIEFQIGFuZCBlbmFibGluZyBiZWFjb24gd2hlbiBhc3NvY2lhdGUgd2l0aCBBUC4NCj4g
-U2VlIGh0dHA6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD0xMTc0OQ0KPiBQ
-bGVhc2UgcmV2aWV3IGl0LiBUaGFua3MhDQoNClRoYW5rcyBmb3IgdGhlIHBhdGNoIQ0KDQpJIHRo
-aW5rIHRoZSBiYXNpYyBpZGVhIGlzIG9rICh3ZSBvbmx5IGhhdmUgYmVhY29ucyBpZiBQUkJSRVNQ
-X1BST01JU0MgaXMgc2V0DQpvciBpZiB3ZSBhcmUgaW4gU1RBIG1vZGUgX2FuZF8gYXNzb2NpYXRl
-ZCwgb3IgaW4gSUJTUyBtb2RlKS4gIEhvd2V2ZXIsIHRoZXJlDQphcmUgbG90cyBvZiBDb2RpbmdT
-dHlsZSBpc3N1ZXMgd2l0aCB0aGUgcGF0Y2guICBQbGVhc2UgcnVuDQpzY3JpcHRzL2NoZWNrcGF0
-Y2gucGwgb24gaXQgYW5kIGZpeCB0aGUgY29ycmVzcG9uZGluZyB3aGl0ZXNwYWNlIGlzc3Vlcy4N
-Cg0KK3N0YXRpYyB2b2lkDQorZW5hYmxlX2JlYWNvbl9maWx0ZXIoc3RydWN0IGllZWU4MDIxMV9o
-dyAqaHcpDQorew0KKyAgICAgICAgc3RydWN0IGF0aDVrX3NvZnRjICpzYyA9IGh3LT5wcml2Ow0K
-KyAgICAgICAgc3RydWN0IGF0aDVrX2h3ICphaCA9IHNjLT5haDsNCisgICAgICAgIHUzMiByZmls
-dDsNCisgICAgICAgIHJmaWx0ID0gYXRoNWtfaHdfZ2V0X3J4X2ZpbHRlcihhaCk7DQorICAgICAg
-ICBpZiAoICEocmZpbHQgJiBBUjVLX1JYX0ZJTFRFUl9CRUFDT04pICl7DQoNClByb2JhYmx5IG5v
-dCB3b3J0aCBpdCB0byBkbyB0aGUgdGVzdCwgc2luY2UgdGhpcyBpc24ndCBnb2luZyB0byBnZXQN
-CmNhbGxlZCB0aGF0IG9mdGVuLg0KDQorICAgICAgICAgICAgICAgIHJmaWx0IHw9IEFSNUtfUlhf
-RklMVEVSX0JFQUNPTjsNCisgICAgICAgICAgICAgICAgYXRoNWtfaHdfc2V0X3J4X2ZpbHRlcihh
-aCxyZmlsdCk7DQorICAgICAgICAgICAgICAgIHNjLT5maWx0ZXJfZmxhZ3MgPSByZmlsdDsNCisg
-ICAgICAgIH0NCisgICAgICAgIHJmaWx0ID0gYXRoNWtfaHdfZ2V0X3J4X2ZpbHRlcihhaCk7DQor
-ICAgICAgICByZXR1cm47DQoNCkFib3ZlIHR3byBsaW5lcyBhcmUgdW5uZWNlc3NhcnkuDQoNCit9
-DQoNCllvdSByZW1vdmUgYSBoZWFwIG9mIGNvZGUgYnkgbWFraW5nIHRoaXMgc2V0X2JlYWNvbl9m
-aWx0ZXIoaHcsIGJvb2wgZW5hYmxlKQ0KYW5kIGNsZWFuaW5nIHVwIHRoZSBicmFuY2hlcyBpbiBi
-c3NfaW5mb19jaGFuZ2VkLiAgSSBiZWxpZXZlIHRoaXMgY2FuIHJhY2UNCndpdGggY29uZmlndXJl
-X2ZpbHRlciBhcyB3ZWxsIChidXQgY29uZmlndXJlX2ZpbHRlciBhbHJlYWR5IHJhY2VzIHdpdGgN
-CmFueXRoaW5nIHRoYXQgdG91Y2hlcyBzYy0+c3RhdHVzLi4uKS4NCg0KPiBAQCAtMTc5LDYgKzE3
-OSw3IEBAIHN0cnVjdCBhdGg1a19zb2Z0YyB7DQo+DQo+ICAgICAgICBzdHJ1Y3QgdGltZXJfbGlz
-dCAgICAgICBjYWxpYl90aW07ICAgICAgLyogY2FsaWJyYXRpb24gdGltZXIgKi8NCj4gICAgICAg
-IGludCAgICAgICAgICAgICAgICAgICAgIHBvd2VyX2xldmVsOyAgICAvKiBSZXF1ZXN0ZWQgdHgg
-cG93ZXIgaW4gZGJtICovDQo+ICsgICAgICAgYm9vbCAgICAgICAgICAgICAgICAgICAgYXNzb2M7
-ICAgICAgICAgIC8qIGFzc29jYXRlIHN0YXRlICovDQo+ICB9Ow0KDQpzL2Fzc29jYXRlL2Fzc29j
-aWF0ZS4gIEFsc28gaW4gYXRoNWsgd2Ugc29tZXRpbWVzIHVzZSBzYy0+c3RhdHVzIGZvciBzdWNo
-DQpmbGFncywgdGhvdWdoIHRoaXMgY291bGQgZ28gZWl0aGVyIHdheS4NCg0KLS0gDQpCb2IgQ29w
-ZWxhbmQgJSUgd3d3LmJvYmNvcGVsYW5kLmNvbQ0K
+Before ieee80211_notify_mac() was added, it was presented with the
+use case of using it to tell mac80211 that the association may
+have been lost because the firmware crashed/reset.
+
+Since then, it has also been used by iwlwifi to (slightly) speed
+up re-association after resume, a workaround around the fact that
+mac80211 has no suspend/resume handling yet. It is also not used
+by any other drivers, so clearly it cannot be necessary for "good
+enough" suspend/resume.
+
+Unfortunately, the callback suffers from a severe problem: It only
+works for station mode. If suspend/resume happens while in IBSS or
+any other mode (but station), then the callback is pointless.
+
+Recently, it has created a number of locking issues, first because
+it required rtnl locking rather than RCU due to calling sleeping
+functions within the critical section, and now because it's called
+by iwlwifi from the mac80211 workqueue that may not use the rtnl
+because it is flushed under rtnl.
+(cf. http://bugzilla.kernel.org/show_bug.cgi?id=12046)
+
+I think, therefore, that we should take a step back, remove it
+entirely for now and add the small feature it provided properly.
+For suspend and resume we will need to introduce new hooks, and for
+the case where the firmware was reset the driver will probably
+simply just pretend it has done a suspend/resume cycle to get
+mac80211 to reprogram the hardware completely, not just try to
+connect to the current AP again in station mode. When doing so, we
+will need to take into account locking issues and possibly defer
+to schedule_work from within mac80211 for the resume operation,
+while the suspend operation must be done directly.
+
+Proper suspend/resume should also not necessarily try to reconnect
+to the current AP, the time spent in suspend may have been short
+enough to not be disconnected from the AP, mac80211 will detect
+that the AP went out of range quickly if it did, and if the
+association is lost then the AP will disassoc as soon as a data
+frame is sent. We might also take into account WWOL then, and
+have mac80211 program the hardware into such a mode where it is
+available and requested.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 --
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 --
+ include/net/mac80211.h                      |   20 --------------------
+ net/mac80211/mlme.c                         |   22 ----------------------
+ 4 files changed, 46 deletions(-)
+
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-17 03:16:07.000000000 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-17 03:16:55.000000000 +0100
+@@ -2192,7 +2192,6 @@ static void iwl_bg_alive_start(struct wo
+ 	mutex_lock(&priv->mutex);
+ 	iwl_alive_start(priv);
+ 	mutex_unlock(&priv->mutex);
+-	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+ }
+ 
+ static void iwl_bg_rf_kill(struct work_struct *work)
+@@ -2248,7 +2247,6 @@ static void iwl_bg_set_monitor(struct wo
+ 	}
+ 
+ 	mutex_unlock(&priv->mutex);
+-	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+ }
+ 
+ static void iwl_bg_run_time_calib_work(struct work_struct *work)
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-11-17 03:16:07.000000000 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-11-17 03:16:18.000000000 +0100
+@@ -5972,7 +5972,6 @@ static void iwl3945_bg_alive_start(struc
+ 	mutex_lock(&priv->mutex);
+ 	iwl3945_alive_start(priv);
+ 	mutex_unlock(&priv->mutex);
+-	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+ }
+ 
+ static void iwl3945_bg_rf_kill(struct work_struct *work)
+@@ -6023,7 +6022,6 @@ static void iwl3945_bg_set_monitor(struc
+ 			IWL_ERROR("iwl3945_set_mode() failed\n");
+ 
+ 	mutex_unlock(&priv->mutex);
+-	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+ }
+ 
+ #define IWL_SCAN_CHECK_WATCHDOG (7 * HZ)
+--- everything.orig/include/net/mac80211.h	2008-11-17 03:15:20.000000000 +0100
++++ everything/include/net/mac80211.h	2008-11-17 03:15:44.000000000 +0100
+@@ -74,14 +74,6 @@
+  */
+ 
+ /**
+- * enum ieee80211_notification_type - Low level driver notification
+- * @IEEE80211_NOTIFY_RE_ASSOC: start the re-association sequence
+- */
+-enum ieee80211_notification_types {
+-	IEEE80211_NOTIFY_RE_ASSOC,
+-};
+-
+-/**
+  * enum ieee80211_max_queues - maximum number of queues
+  *
+  * @IEEE80211_MAX_QUEUES: Maximum number of regular device queues.
+@@ -1853,18 +1845,6 @@ void ieee80211_stop_tx_ba_cb_irqsafe(str
+ 				     u16 tid);
+ 
+ /**
+- * ieee80211_notify_mac - low level driver notification
+- * @hw: pointer as obtained from ieee80211_alloc_hw().
+- * @notif_type: enum ieee80211_notification_types
+- *
+- * This function must be called by low level driver to inform mac80211 of
+- * low level driver status change or force mac80211 to re-assoc for low
+- * level driver internal error that require re-assoc.
+- */
+-void ieee80211_notify_mac(struct ieee80211_hw *hw,
+-			  enum ieee80211_notification_types  notif_type);
+-
+-/**
+  * ieee80211_find_sta - find a station
+  *
+  * @hw: pointer as obtained from ieee80211_alloc_hw()
+--- everything.orig/net/mac80211/mlme.c	2008-11-17 03:15:56.000000000 +0100
++++ everything/net/mac80211/mlme.c	2008-11-17 03:16:00.000000000 +0100
+@@ -2586,25 +2586,3 @@ void ieee80211_mlme_notify_scan_complete
+ 		ieee80211_restart_sta_timer(sdata);
+ 	rcu_read_unlock();
+ }
+-
+-/* driver notification call */
+-void ieee80211_notify_mac(struct ieee80211_hw *hw,
+-			  enum ieee80211_notification_types  notif_type)
+-{
+-	struct ieee80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata;
+-
+-	switch (notif_type) {
+-	case IEEE80211_NOTIFY_RE_ASSOC:
+-		rtnl_lock();
+-		list_for_each_entry(sdata, &local->interfaces, list) {
+-			if (sdata->vif.type != NL80211_IFTYPE_STATION)
+-				continue;
+-
+-			ieee80211_sta_req_auth(sdata, &sdata->u.sta);
+-		}
+-		rtnl_unlock();
+-		break;
+-	}
+-}
+-EXPORT_SYMBOL(ieee80211_notify_mac);
+
+
