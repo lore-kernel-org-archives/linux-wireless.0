@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:36109 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752549AbYKZAf4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 19:35:56 -0500
-Subject: Re: wireless-regdb: flaw in general functionality
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Richard Farina <sidhayn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081126001942.GN5950@tesla>
-References: <492B2B74.7040404@gmail.com> <20081124231204.GN6245@tesla>
-	 <1227568883.28878.15.camel@dv>
-	 <43e72e890811241526o1ea6ecf7ge05a2319d6ff3641@mail.gmail.com>
-	 <492B623E.5030202@gmail.com> <1227580299.32415.2.camel@dv>
-	 <20081126001942.GN5950@tesla>
-Content-Type: text/plain
-Date: Tue, 25 Nov 2008 19:35:54 -0500
-Message-Id: <1227659754.2556.11.camel@dv> (sfid-20081126_013605_909093_BC4E48ED)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.189]:4529 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752595AbYKQPvc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 10:51:32 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so1188801nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 07:51:31 -0800 (PST)
+Message-ID: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com> (sfid-20081117_165138_429172_482A518A)
+Date: Mon, 17 Nov 2008 17:51:31 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
+Cc: linux-wireless@vger.kernel.org, kune@deine-taler.de
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-11-25 at 16:19 -0800, Luis R. Rodriguez wrote:
+This patch adds initial support for master mode for zd1211rw USB
+wireless driver (via tools such as  hostapd).
+It enables basic functionality like association from a managed station
+and identifying the master mode by scanning from a station.
 
-> This is documented here:
-> 
-> http://wireless.kernel.org/en/developers/Regulatory#Changingthedatabasefileformat
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-I mean, I don't know how painful it can be.  Perhaps it's better to
-anticipate some requirements earlier than to change them later.  I think
-both "don't transmit" and "don't transmit unless permitted by the AP"
-could be useful in some jurisdictions.
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c
+b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 980acdf..03be818 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -721,6 +721,7 @@ static int zd_op_add_interface(struct ieee80211_hw *hw,
+ 		return -EOPNOTSUPP;
 
--- 
-Regards,
-Pavel Roskin
+ 	switch (conf->type) {
++	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_MONITOR:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_STATION:
+@@ -972,6 +973,7 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct
+usb_interface *intf)
+ 		    IEEE80211_HW_SIGNAL_DB;
+
+ 	hw->wiphy->interface_modes =
++		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_MESH_POINT) |
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
