@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.232]:58793 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751924AbYKZIHm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 03:07:42 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so354997rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 00:07:41 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from cantor.suse.de ([195.135.220.2]:60288 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753027AbYKQKsh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 05:48:37 -0500
+Message-ID: <49214BF3.8050306@suse.de> (sfid-20081117_114841_523707_4E6E4EC1)
+Date: Mon, 17 Nov 2008 11:48:19 +0100
+From: Frank Seidel <fseidel@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18733.827.276925.863029@localhost.localdomain> (sfid-20081126_090749_063637_D9F7208C)
-Date: Wed, 26 Nov 2008 13:35:15 +0530
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] nl80211: Add frequency configuration (including HT40)
-In-Reply-To: <20081126075507.GB31499@jm.kir.nu>
-References: <20081125190533.GA27879@jm.kir.nu>
-	<18732.54720.739365.435163@localhost.localdomain>
-	<20081126075507.GB31499@jm.kir.nu>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
+	"hschaa@suse.de" <hschaa@suse.de>
+Subject: [PATCH] Re: Problem with Kernel Oops in ipw2200
+References: <49130E75.1000903@suse.de> <49131173.3010409@suse.de>	 <20081112213350.GJ2411@tuxdriver.com>  <491BF062.4050705@suse.de> <1226631539.2604.411.camel@debian.sh.intel.com>
+In-Reply-To: <1226631539.2604.411.camel@debian.sh.intel.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen wrote:
-> On Wed, Nov 26, 2008 at 10:21:12AM +0530, Sujith wrote:
-> > Jouni Malinen wrote:
-> > > + * @NL80211_ATTR_WIPHY_FREQ: frequency of the selected channel in MHz
-> > > + * @NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET: included with NL80211_ATTR_WIPHY_FREQ
-> > > + *	if HT40 (40 MHz channels) are allowed:
-> > > + *	NL80211_SEC_CHAN_BELOW = secondary channel is below the primary channel
-> > > + *	NL80211_SEC_CHAN_ABOVE = secondary channel is above the primary channel
-> > 
-> > The driver needs to know if the selected channel is HT or not.
-> > It receives only HT20/HT40+/HT40- flags, but a HT/non-HT flag is required too.
-> 
-> Yes, indeed. I added a new enum value for that:
-> NL82011_SEC_CHAN_NO_HT = no HT (this is the default if
-> 	NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET is not included)
-> NL80211_SEC_CHAN_DISABLED = HT20 only
-> NL80211_SEC_CHAN_BELOW = HT40-
-> NL80211_SEC_CHAN_ABOVE = HT40+
-> 
-> The driver will then get hw.conf.ht.{enabled,sec_chan_offset} with the
-> needed information.
+From: Zhu Yi <yi.zhu@intel.com>
 
-That will work, thanks.
+Fixes Oops in ipw2200:ipw_tx_skb when pinging through
+a WPA enterprise connection.
 
-Sujith
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Tested-by: Frank Seidel <fseidel@suse.de>
+Signed-off-by: Ffrank Seidel <fseidel@suse.de>
+
+---
+ drivers/net/wireless/ipw2200.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -10190,6 +10190,11 @@ static int ipw_tx_skb(struct ipw_priv *p
+ 	u16 remaining_bytes;
+ 	int fc;
+ 
++	if (!(priv->status & STATUS_ASSOCIATED)) {
++		IPW_DEBUG_TX("Tx attempt while not associated.\n");
++		goto drop;
++	}
++
+ 	hdr_len = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_ctl));
+ 	switch (priv->ieee->iw_mode) {
+ 	case IW_MODE_ADHOC:
