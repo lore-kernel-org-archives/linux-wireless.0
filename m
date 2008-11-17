@@ -1,27 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:65298 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752801AbYKZCAT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45810 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751931AbYKQUYY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 21:00:19 -0500
-Received: by fk-out-0910.google.com with SMTP id 18so199587fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 18:00:17 -0800 (PST)
-Message-ID: <45e8e6c40811251754q4b08be7dn96308f3ae9f10123@mail.gmail.com> (sfid-20081126_030024_492967_797F60EB)
-Date: Tue, 25 Nov 2008 17:54:24 -0800
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: ath5k: mesh mode broken by commit "ath5k: Update PCU code"
-Cc: ath5k-devel@lists.ath5k.org,
-	"Nick Kossifidis" <mickflemm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 17 Nov 2008 15:24:24 -0500
+Subject: Re: ath5k: problems during the connection to a sitecom AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Fabio Rossi <rossi.f@inwind.it>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200811172120.11299.rossi.f@inwind.it> (sfid-20081117_212252_390062_26297D25)
+References: <200811150207.12084.rossi.f@inwind.it>
+	 <200811172120.11299.rossi.f@inwind.it>
+	 (sfid-20081117_212252_390062_26297D25)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8exlejmkec99I7Qppehb"
+Date: Mon, 17 Nov 2008 21:23:49 +0100
+Message-Id: <1226953429.3902.61.camel@johannes.berg> (sfid-20081117_212428_147860_E6518C5B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.  I noticed that commit dc300b5c5291d779a53d83af960fdf9388bf0544
-"ath5k: Update PCU code"  by Nick Kossifidis breaks Mesh Point
-operation, which had been working right up to that patch.  As I am not
-familiar with the antenna-related code that this is touching, can
-someone please assist with resolving this problem?  Thanks,
 
-  -Andrey
+--=-8exlejmkec99I7Qppehb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2008-11-17 at 21:20 +0100, Fabio Rossi wrote:
+> Which is the best way to proceed with the debug to understand why my=20
+> card isn't going through the authentication-association process with the=20
+> hidden SSID?
+
+get a second wireless card and look at what's happening.
+
+johannes
+
+--=-8exlejmkec99I7Qppehb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJIdLRAAoJEKVg1VMiehFY4OEP/3g0Hk4kqrOBzicIWshnK5v2
+WqhWDfKadfXoXACN582qg2y/HSB4UYbgCUkxwrOfR80GmoBXMQM+94NYFLmJNOFn
+ueltxZrZzchtcbhCjPTqXx+Apx98Xp2MQ7AouoLp8L5rOJ6DRefLwXqo8wDTtSLT
+qK+qyGH2fxFeLoCBArW0lWI3EweNVVHcXMGahWBWQT3mCMWq6/ZD3xWagNfaVOOJ
+3yUAYjOQoWISOG8JyJnxU4S5cfRzWR/XD933c+oi8hmwWkhWGnJs2Mp/vt7uGlkX
+KH7HANvxRWPM/afg4fzWdf4mXzXl/aMfBf2fz/hmBWO2Z/8aciM2POdUuZ6aMYCS
+zQ9PT1iYQOmSXJ3GdNTcKr9872+b5CEcau+w/rruxObvUBpVgZWAXw3Mni7A5a7O
+jjvoW+JHHBo9yjK+BROek71aQF3IQ+stRZoOcd/b0sT88UmXoWb7BkgXLWBhvAuf
+v5inrhE8WsoJcrYmj45HKerPbMbbfX7E6ChjQJe4WzBcRjuINFscRADGJnuvtrYO
+mJ9ClhAbsaGxU+iPknhOJJUFu6KC6yw3tqztoc9OZiQZ2C8Wi5Ud1FVDlTjVHqJa
+ua4PYjaNTAQcqQAoqtRfkMVPO8mUqdYTK5EG3kb4zwmSY4KOwkeON5nTzGVc0vru
+iSUSfNnMgKCL9SGimERD
+=QAZ+
+-----END PGP SIGNATURE-----
+
+--=-8exlejmkec99I7Qppehb--
+
