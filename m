@@ -1,104 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-green-bigip-207.dreamhost.com ([208.97.132.207]:36023 "EHLO
-	spunkymail-a6.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751281AbYKYFpc (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42656 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752202AbYKQOpu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 00:45:32 -0500
-From: Yuval Hager <yuval@avramzon.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: BCM4312 Fails when xdm is started
-Date: Tue, 25 Nov 2008 07:43:22 +0200
-Cc: Michael Buesch <mb@bu3sch.de>, LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-References: <200811151801.02369.yuval@avramzon.net> <200811241155.47079.mb@bu3sch.de> <492AD249.3020309@lwfinger.net>
-In-Reply-To: <492AD249.3020309@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1314015.9U052YQoBR";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200811250745.22487.yuval@avramzon.net> (sfid-20081125_064537_067452_0D3642EA)
+	Mon, 17 Nov 2008 09:45:50 -0500
+Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com> (sfid-20081117_153229_848291_1314E086)
+References: <1226915999.3599.33.camel@johannes.berg>
+	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
+	 (sfid-20081117_153229_848291_1314E086)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZCdi/06nenN8jY+Nn3P1"
+Date: Mon, 17 Nov 2008 15:45:41 +0100
+Message-Id: <1226933141.3902.19.camel@johannes.berg> (sfid-20081117_154553_802205_6E627011)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1314015.9U052YQoBR
-Content-Type: text/plain;
-  charset="iso-8859-15"
+
+--=-ZCdi/06nenN8jY+Nn3P1
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Monday 24 November 2008, Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Monday 24 November 2008 09:49:38 Yuval Hager wrote:
-> >> * Now check this out - the output of lspci -d 14e4:4312 -x
-> >> 02:00.0 Network controller: Broadcom Corporation BCM4312 802.11a/b/g
-> >> (rev ff) 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> >> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> >> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> >> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> >>
-> >> (I double checked this)
-> >>
-> >> huh?
-> >
-> > Hah, interesting. I think your hardware may be faulty, in fact.
-> > To me it really seems like the mainboard has power failures on the PCI
-> > bus.
-> >
-> > This is a laptop, so you can't pull random hardware? Can you run some
-> > hardware burn-in tests like mprime (http://mersenne.org/freesoft/) or
-> > memtest? If that doesn't help, can you try with another operating syste=
-m?
->
-> I also think you are seeing a hardware failure. Another test to try is
-> http://freshmeat.net/projects/cpuburn/?topic_id=3D146, which will exercise
-> the system.
->
-> Larry
+On Mon, 2008-11-17 at 16:32 +0200, Tomas Winkler wrote:
 
-I can't argue with what the bits mean, but I must say it doesn't "feel" lik=
-e a=20
-hardware problem. It is very consistent and deterministic.=20
+> IMHO Not the concept but the implementation of this function is wrong.
 
-I've been running mprime & burnBX & burnMMX for over 6 hours and it is all=
-=20
-fine (memtest not ran yet).
+I disagree.
 
-However, I have some few interesting findings.=20
-=46irst, this is totally unrelated to b43, but to the PCI. I get the flawed=
- 1's=20
-read from lspci even without loading b43.
+> It should be no implementation difference between mac notification and
+> reception of one RX frames that triggers oneof the connection step
+> such as association response. If this would be handled in this context
+> and there won't be any locking issue.
+> If driver crashes internally and lost association info it can generate
+> "local disassociation frame" and mac will try to reapply association
+> in a regular flow.
 
-I played around with different video drivers and the results are:
-* If using the 'via' driver, I lose the PCIe card immediately upon=20
-initialization
-* Using the 'openchrome' (trunk version), It works well in the beginning.=20
-After first blanking the register reads are all 1's, and then when the scre=
-en=20
-is blank I get a different read (some registers are correct, some are wrong=
-),=20
-and when the screen is unblanked, I get 0xff's again. Very consistent and=20
-predictabe (same read every time).
-* Using the 'vesa' driver I could not recreate the problem. I could not get=
-=20
-the screen to blank for some reason, but closing the lid, going on=20
-standby/hibernate, restarting X - all didn't matter much to the PCI and the=
-=20
-wireless card kept on working.
+The point is that the whole thing about disassociation is already the
+wrong assumption. As I've outlined, it only works in STA mode, and thus
+the function is generally not very useful.
 
-=2D-yuval
+> I agree that resume/suspend shell be handled properly in the mac80211
+> regardless of this issue.
 
---nextPart1314015.9U052YQoBR
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+And it will handle the "firmware crashed" case perfectly too.
+
+johannes
+
+--=-ZCdi/06nenN8jY+Nn3P1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iEYEABECAAYFAkkrkPIACgkQl7qmwPqEj9+7dwCdHGvq6qzs4k0IfkfVjx5+JEVr
-GSkAoMrmOEclPv9+7lYt8QK4btCwgEIn
-=cjl+
+iQIcBAABAgAGBQJJIYOPAAoJEKVg1VMiehFY+NkP/jGfNPeZrwB5KVSxZQV2JBk5
+H1mlNRK6ycPh2uK8rngOnaJrbQnEi3EhDGokJxqVCItdGycbRj4iTxH7KpmOZO6j
+CJwykaRY3EvNURGNg/5KCTKPKQ8O57j4l9WfRnrndR8osQvc97hA0FjRNjfuE7JY
+3i/fcL++05bO59RMdMcdEKLeJ4JzqUUSYhq7Cue0EzMi7RD/Tdu6K+iT8eJs5bxQ
+0hmd/tJ2Wb41gCxq+msRKnuEVMaprRMLd/sRIHKySlQTYxNV87MyTGYgLrhs7qhO
+ayjQoAFPY5jfFIK9H/DMdQyIN30TD2whJ4x1y8DT9Wuh6yLl98g3+IGsp34n91OW
+jsvOj5RKAkQa0ldbEISy0TcA4RoR0e3CUbg9hqqoON9D4uuQPQdbky/F7QSnnIu/
+820eUFOEQ4h8oB05d3rG/kERoE6s+Vv02gOB5GRJyGyTxZ3oWZXb8aiNX4u2opKk
+ITzrkWh2t/E3sfAPV35rNwEMEqArZwHT8YzJrQDkBeQgaAzYO5QJXzVpQ20NvXrD
+5WP1UQh9tky591tiSNTHWtsHPWbi2vUEQOr726UIuE6IB+AK4G0yTo2YUT+asJEG
+DJzrwMNLQMvQUvxZ57nzHlAmdiFpS/i6TSHds8MVXWFATxKJ224uSgDwoVs56IVo
+iJ6JnIosV0rEE+XRyKD6
+=2+CZ
 -----END PGP SIGNATURE-----
 
---nextPart1314015.9U052YQoBR--
+--=-ZCdi/06nenN8jY+Nn3P1--
+
