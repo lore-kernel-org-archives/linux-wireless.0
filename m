@@ -1,32 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59062
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750759AbYKJVay (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:24341 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751918AbYKQWVO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 16:30:54 -0500
-Date: Mon, 10 Nov 2008 13:30:54 -0800 (PST)
-Message-Id: <20081110.133054.154011074.davem@davemloft.net> (sfid-20081110_223131_713357_23FD2C3D)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-11-10
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20081110204500.GL3546@tuxdriver.com>
-References: <20081110204500.GL3546@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
+	Mon, 17 Nov 2008 17:21:14 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so1125680ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 14:21:12 -0800 (PST)
+Message-ID: <43e72e890811171421j3f41234dnf451e25d5e58abdc@mail.gmail.com> (sfid-20081117_232118_185702_E167F341)
+Date: Mon, 17 Nov 2008 14:21:12 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Davide Pesavento" <davidepesa@gmail.com>
+Subject: Re: crda packaging
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20081117202749.GB5994@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com>
+	 <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com>
+	 <2da21fe50811161258v58efe236r492d59c8b9228b81@mail.gmail.com>
+	 <20081117202749.GB5994@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogIkpvaG4gVy4gTGludmlsbGUiIDxsaW52aWxsZUB0dXhkcml2ZXIuY29tPg0KRGF0ZTog
-TW9uLCAxMCBOb3YgMjAwOCAxNTo0NTowMCAtMDUwMA0KDQo+IEFuIG92ZXJkdWUgcGFzc2xlIG9m
-IHBhdGNoZXMgaW50ZW5kZWQgZm9yIDIuNi4yOS4uLg0KPiANCj4gVGhlcmUgaXMgYSBidW5jaCBv
-ZiBzdHVmZiBoZXJlLCBtb3N0bHkgZHJpdmVyIHVwZGF0ZXMuICBXZSBmaXggc29tZSBvZg0KPiB0
-aGUgIuKAmF9fSUVFRTgwMjExX0NPTkZfU0hPUlRfU0xPVF9USU1F4oCZIGlzIGRlcHJlY2F0ZWQi
-IHdhcm5pbmdzLA0KPiBhbHRob3VnaCB1bmZvcnR1bmF0ZWx5IGEgY291cGxlIG1vcmUgcmVtYWlu
-IC0tIHdlJ3JlIHdvcmtpbmcgb24gdGhvc2UNCj4gdG9vLg0KPiANCj4gUGxlYXNlIGxldCBtZSBr
-bm93IGlmIHRoZXJlIGFyZSBwcm9ibGVtcyENCg0KUHVsbGVkLCB0aGFua3MgYSBsb3QgSm9obi4g
-IEkgaG9wZSB5b3UncmUgZmVlbGluZyBiZXR0ZXIgdGhpcyB3ZWVrLg0KDQpCVFcsIEkgbm90aWNl
-ZCB0aGF0IHByaW50X3NzaWQoKSBpcyBhIGdvb2QgY2FuZGlkYXRlIGZvciBhIG5ldw0KJXBYIGZv
-cm1hdCBzcGVjaWZpZXIgZXh0ZW5zaW9uLCBqdXN0IGxpa2UgaG93IHdlIGdvdCByaWQgb2YNCnBy
-aW50X21hYygpLCBOSVBRVUFEKCkgYW5kIGZyaWVuZHMgcmVjZW50bHkgaW4gdGhlIG5ldC1uZXh0
-DQp0cmVlLg0K
+On Mon, Nov 17, 2008 at 12:27 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Sun, Nov 16, 2008 at 12:58:43PM -0800, Davide Pesavento wrote:
+>> On Mon, Oct 20, 2008 at 02:28, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> > On Sun, Oct 19, 2008 at 8:57 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
+>> >>
+>> >> Do you think the regulatory database should be split from the package
+>> >> that contains the crda daemon? If so, regulatory.bin should be
+>> >> versioned as well...
+>> >
+>> > Yes, absolutely, the idea is to split db.txt into a separate git tree
+>> > too actually so that should help with keeping track of changes
+>> > separately and thinking of them separately.
+>> >
+>> > We just need to get this git tree created. What crda will need though
+>> > is to wget the RSA public key so it can be built with support for new
+>> > arbitrary updates to the binary db. Give us a few days, we'll get this
+>> > setup.
+>> >
+>> >  Luis
+>> >
+>>
+>> Any updates on this?
+>
+> I think we'll have this done by the end of the day.
+
+OK this is now done. We have a new git tree which John maintains for
+the database:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
+
+All you need from that is the regulatory.bin, you don't need to run
+make or anything, just cp the regulatory.bin to the preferred
+location. Right now this is built into CRDA and its
+/usr/lib/crda/regulatory.bin.
+
+Then do a git pull on crda and try to build and let us know if you run
+into any issues for packaging. The documentation on the
+wireless.kernel.org wiki needs some good updating.
+
+  Luis
