@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32003 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751619AbYKCWnH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 17:43:07 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2008 14:43:07 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath9k: enable RXing of beacons on STA/IBSS
-Date: Mon, 3 Nov 2008 14:43:01 -0800
-Message-ID: <1225752181-1343-4-git-send-email-lrodriguez@atheros.com> (sfid-20081103_234313_883697_5CDC5044)
-In-Reply-To: <1225752181-1343-3-git-send-email-lrodriguez@atheros.com>
-References: <1225752181-1343-1-git-send-email-lrodriguez@atheros.com>
- <1225752181-1343-2-git-send-email-lrodriguez@atheros.com>
- <1225752181-1343-3-git-send-email-lrodriguez@atheros.com>
+Received: from wf-out-1314.google.com ([209.85.200.174]:1222 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752081AbYKQSM6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 13:12:58 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so2726891wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 10:12:57 -0800 (PST)
+Message-ID: <1ba2fa240811171012je2d5215hc9b3ea870468f4f8@mail.gmail.com> (sfid-20081117_191304_306814_686D59EA)
+Date: Mon, 17 Nov 2008 20:12:57 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John Linville" <linville@tuxdriver.com>
+In-Reply-To: <1226944799.3902.52.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+References: <1226915999.3599.33.camel@johannes.berg>
+	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
+	 <1226933141.3902.19.camel@johannes.berg>
+	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>
+	 <1226942887.3902.30.camel@johannes.berg>
+	 <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com>
+	 <1226944799.3902.52.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This enables beacons to come through on STA/IBSS.
-It should fix sporadic connection issues. Right now
-mac80211 expect beacons so give it beacons.
+On Mon, Nov 17, 2008 at 7:59 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-11-17 at 19:34 +0200, Tomas Winkler wrote:
+>
+>> There actually complains about slow reconnection,
+>
+> Ok I guess then I haven't seen them for some reason.
+>
+> Either way, here's a quick summary:
+>  * locking issues with the callback are fixed by removing it
+>  * callback is incorrect when you're only suspended for a very short
+>   time
+>  * callback is incorrect when you're in non-STA modes
+>  * suspend/resume cannot be implemented well through this callback, at
+>   least not the way it is written now and needs to do a whole lot more
+>  * there's no "slow" issue when you actually resume in a different
+>   location where the AP is not around any more
+>  * there should be no "slow" issue when the AP properly deauthenticates
+>   when receiving data frames
+>
+> This was an RFC. I'm convinced it should go in, but I don't make those
+> decisions anyway. I've outlined my reasons for it.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/recv.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+My concern is what is immediate impact of this. Whether we fix mac
+notify for short term
+and we'll remove it when resume/suspend is available or we have
+suspend/resume worked out in 2h.
 
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index 2ecb0a0..2d72ac1 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -296,9 +296,8 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 		rfilt &= ~ATH9K_RX_FILTER_UCAST;
- 	}
- 
--	if (((sc->sc_ah->ah_opmode == ATH9K_M_STA) &&
--	     (sc->rx_filter & FIF_BCN_PRBRESP_PROMISC)) ||
--	    (sc->sc_ah->ah_opmode == ATH9K_M_IBSS))
-+	if (sc->sc_ah->ah_opmode == ATH9K_M_STA ||
-+			sc->sc_ah->ah_opmode == ATH9K_M_IBSS)
- 		rfilt |= ATH9K_RX_FILTER_BEACON;
- 
- 	/* If in HOSTAP mode, want to enable reception of PSPOLL frames
--- 
-1.5.6.rc2.15.g457bb.dirty
+>
+>> Second we used the
+>> same mechanism to
+>> recover from rfkill which wasn't submitted. rfkill needs also mac80211
+>> treatment.
+>
+> Sure does, and I've even described how I'd do it in some email. Seems
+> nobody actually cares enough though to invest the day or two it would
+> take to write it. And I don't care about killswitches at all,
+> fortunately, so I don't need to touch that mess.
 
+I've posted something based on plugging into notification chain. It
+worked but wasn't accepted I hoped that who rejected will supply
+alternative solution...
+
+Tomas
+
+
+> johannes
+>
