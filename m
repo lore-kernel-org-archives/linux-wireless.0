@@ -1,77 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39852 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123AbYKCHf0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 02:35:26 -0500
-Subject: Re: wireless-testing commit
-	eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	tim.gardner@canonical.com, mick@madwifi.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com> (sfid-20081103_083019_853551_F6ECC8A9)
-References: <4908B754.1050400@tpi.com>
-	 <43e72e890811011419k460b11e0he08d66022cbd606e@mail.gmail.com>
-	 <40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com>
-	 <40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
-	 <20081102184146.GA6065@hash.localnet>
-	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
-	 <1225696692.3619.18.camel@johannes.berg>
-	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
-	 (sfid-20081103_083019_853551_F6ECC8A9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IKzh8eFWUCb96AdncNq7"
-Date: Mon, 03 Nov 2008 08:34:46 +0100
-Message-Id: <1225697686.3619.25.camel@johannes.berg> (sfid-20081103_083530_729415_B247DBC6)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:27503 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751868AbYKRDjM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 22:39:12 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 19:39:12 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18722.14386.993159.12774@gargle.gargle.HOWL> (sfid-20081118_043915_354833_98EA8D09)
+Date: Tue, 18 Nov 2008 09:06:18 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 08/18] ath9k: We don't support non-HT devices, so remove superfluous code.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/xmit.c |   39 -------------------------------------
+ 1 files changed, 0 insertions(+), 39 deletions(-)
 
---=-IKzh8eFWUCb96AdncNq7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, 2008-11-02 at 23:29 -0800, Luis R. Rodriguez wrote:
-
-> >> Not sure I agree with the WARN_ON() if the driver's mac80211 config()
-> >> callback fails. In our case when we tune to a different channel we
-> >> have to clear any DMA operations first and then we reset the chip.
-> >> Reseting the chip can fail for whatever strange hw issue cases. The
-> >> patch fixes the complaint but is the complaint sane?
-> >
-> > What's mac80211 to do when it fails?
->=20
-> How about a shiny new nl80211 event?
-
-And wtf would userspace do?
-
-johannes
-
---=-IKzh8eFWUCb96AdncNq7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJDqmSAAoJEKVg1VMiehFYFmUP/i6JxZMjr74u6DhT4gppjdjH
-593cC1lBs4SLC7fnZw/+F3j6NofpRVe92+Jypjr3uvohjf8FVDRK2a/8oJxtCA+8
-2izDb0QHWBq7reu2PLaZMbps5G+1Vh/9fBG+NVIsP59byZFtmGDpxAQLwbEykyD0
-HnflQZzXLtKmYU2UhRdpVADAf85KGW+nxghJuwJKRMjJPYa9Nnf8KxJY6EBkdIlA
-v11gV0Bf/hVLCZ0nsTtfDUF6JJTv1VI9yRUcIZvGsag1LcdJqQKrBOzEBOkk48vs
-eYYuGTWB6h+3OqvLZUsNoMaIw8LPhAe0yKnGzbU77YB2NmsdEn+BZ8SlGvr9RHj3
-fgbgwljmm0lIBYnYQKdTLe+CB5c5s5Vj1ybqWSjunwUg/s6x5HiWHvIBuJAiompK
-bR1vQRvBIoGLPnQlIyJjzm2h0kDNwGprtWbjUY2cX/WC2OmaX9+1j/lbYQ5+UQmo
-fZQUhuxAx38Co0pY/fd6LfMlbwJWMkIN7cIPVPcJWJbhtIiOaXxrv5T0Dq0hXKuJ
-uf9UBRiu1hM2z7NR6zoc3T/1dzvXFtmwyWwjAyahDQfZjtKU2eM/k/uxVt/HxV3x
-/oE39RUT29ZDbP0gLb5MDXj0LBr78lsL0F/4RQ/Q5TEc+VrbRe0xkGukbHuU7AWh
-1EZBEPu1Lhr0ozRjimf/
-=deR8
------END PGP SIGNATURE-----
-
---=-IKzh8eFWUCb96AdncNq7--
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 8937728..44735b6 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -14,10 +14,6 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-/*
+- * Implementation of transmit path.
+- */
+-
+ #include "core.h"
+ 
+ #define BITS_PER_BYTE           8
+@@ -699,41 +695,6 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
+ 	}
+ 
+ 	/*
+-	 * For non-HT devices, calculate RTS/CTS duration in software
+-	 * and disable multi-rate retry.
+-	 */
+-	if (flags && !(ah->ah_caps.hw_caps & ATH9K_HW_CAP_HT)) {
+-		/*
+-		 * Compute the transmit duration based on the frame
+-		 * size and the size of an ACK frame.  We call into the
+-		 * HAL to do the computation since it depends on the
+-		 * characteristics of the actual PHY being used.
+-		 *
+-		 * NB: CTS is assumed the same size as an ACK so we can
+-		 *     use the precalculated ACK durations.
+-		 */
+-		if (flags & ATH9K_TXDESC_RTSENA) {    /* SIFS + CTS */
+-			ctsduration += bf_isshpreamble(bf) ?
+-				rt->info[cix].spAckDuration :
+-				rt->info[cix].lpAckDuration;
+-		}
+-
+-		ctsduration += series[0].PktDuration;
+-
+-		if ((bf->bf_flags & ATH9K_TXDESC_NOACK) == 0) { /* SIFS + ACK */
+-			ctsduration += bf_isshpreamble(bf) ?
+-				rt->info[rix].spAckDuration :
+-				rt->info[rix].lpAckDuration;
+-		}
+-
+-		/*
+-		 * Disable multi-rate retry when using RTS/CTS by clearing
+-		 * series 1, 2 and 3.
+-		 */
+-		memset(&series[1], 0, sizeof(struct ath9k_11n_rate_series) * 3);
+-	}
+-
+-	/*
+ 	 * set dur_update_en for l-sig computation except for PS-Poll frames
+ 	 */
+ 	ath9k_hw_set11n_ratescenario(ah, ds, lastds,
+-- 
+1.6.0.3
 
