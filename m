@@ -1,88 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from durandal.kismetwireless.net ([199.201.145.179]:42190 "EHLO
-	durandal.nerv-un.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753757AbYKUTod (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 14:44:33 -0500
-Received: from localhost (durandal.nerv-un.net [199.201.145.179])
-	by durandal.nerv-un.net (Postfix) with ESMTP id 1FA39259731
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 10:48:57 -0500 (EST)
-Date: Fri, 21 Nov 2008 14:33:48 -0500
-From: Mike Kershaw <dragorn@kismetwireless.net>
-To: linux-wireless@vger.kernel.org
-Subject: iwlagn MAC in deep sleep
-Message-ID: <20081121193348.GA7373@drd1813.lan> (sfid-20081121_204437_178435_6AFA38E7)
-Reply-To: Mike Kershaw <dragorn@kismetwireless.net>
+Received: from mail.atheros.com ([12.36.123.2]:26849 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751876AbYKRDg3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2008 22:36:29 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 19:36:29 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="UugvWAfsgieZRqgk"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18722.14224.545245.875365@gargle.gargle.HOWL> (sfid-20081118_043632_094739_91FAC1F7)
+Date: Tue, 18 Nov 2008 09:03:36 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 02/18] ath9k: Simplify RC alloc/free functions
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/rc.c |   48 +++++---------------------------------
+ 1 files changed, 7 insertions(+), 41 deletions(-)
 
---UugvWAfsgieZRqgk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index 21116c5..09d622a 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -780,29 +780,6 @@ struct ath_rate_softc *ath_rate_attach(struct ath_hal *ah)
+ 	return asc;
+ }
+ 
+-static struct ath_rate_node *ath_rate_node_alloc(struct ath_vap *avp,
+-						 struct ath_rate_softc *rsc,
+-						 gfp_t gfp)
+-{
+-	struct ath_rate_node *anode;
+-
+-	anode = kzalloc(sizeof(struct ath_rate_node), gfp);
+-	if (anode == NULL)
+-		return NULL;
+-
+-	anode->avp = avp;
+-	anode->asc = rsc;
+-	avp->rc_node = anode;
+-
+-	return anode;
+-}
+-
+-static void ath_rate_node_free(struct ath_rate_node *anode)
+-{
+-	if (anode != NULL)
+-		kfree(anode);
+-}
+-
+ void ath_rate_detach(struct ath_rate_softc *asc)
+ {
+ 	if (asc != NULL)
+@@ -1778,17 +1755,6 @@ static int ath_rate_newassoc(struct ath_softc *sc,
+ 	return 0;
+ }
+ 
+-/*
+- *  This routine is called to initialize the rate control parameters
+- *  in the SIB. It is called initially during system initialization
+- *  or when a station is associated with the AP.
+- */
+-static void ath_rc_sib_init(struct ath_rate_node *ath_rc_priv)
+-{
+-	ath_rc_priv->rssi_down_time = jiffies_to_msecs(jiffies);
+-}
+-
+-
+ static void ath_setup_rates(struct ath_softc *sc,
+ 			    struct ieee80211_supported_band *sband,
+ 			    struct ieee80211_sta *sta,
+@@ -1964,21 +1930,23 @@ static void *ath_rate_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp
+ 	struct ath_vap *avp;
+ 	struct ath_rate_node *rate_priv;
+ 
+-	DPRINTF(sc, ATH_DBG_RATE, "%s\n", __func__);
+-
+ 	vif = sc->sc_vaps[0];
+ 	ASSERT(vif);
+ 
+ 	avp = (void *)vif->drv_priv;
+ 
+-	rate_priv = ath_rate_node_alloc(avp, sc->sc_rc, gfp);
++	rate_priv = kzalloc(sizeof(struct ath_rate_node), gfp);
+ 	if (!rate_priv) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"%s: Unable to allocate private rc structure\n",
+ 			__func__);
+ 		return NULL;
+ 	}
+-	ath_rc_sib_init(rate_priv);
++
++	rate_priv->avp = avp;
++	rate_priv->asc = sc->sc_rc;
++	avp->rc_node = rate_priv;
++	rate_priv->rssi_down_time = jiffies_to_msecs(jiffies);
+ 
+ 	return rate_priv;
+ }
+@@ -1987,10 +1955,8 @@ static void ath_rate_free_sta(void *priv, struct ieee80211_sta *sta,
+ 			      void *priv_sta)
+ {
+ 	struct ath_rate_node *rate_priv = priv_sta;
+-	struct ath_softc *sc = priv;
+ 
+-	DPRINTF(sc, ATH_DBG_RATE, "%s", __func__);
+-	ath_rate_node_free(rate_priv);
++	kfree(rate_priv);
+ }
+ 
+ static struct rate_control_ops ath_rate_ops = {
+-- 
+1.6.0.3
 
-hda_intel: azx_get_response timeout, switching to polling mode: last
-cmd=3D0x013f000c
-iwlagn: Microcode HW error detected.  Restarting.
-pciehp: Card not present on Slot(3)
-iwlagn: MAC is in deep sleep!
-pciehp: Card present on Slot(3)
-iwlagn: MAC is in deep sleep!
-iwlagn: MAC is in deep sleep!
-iwlagn: MAC is in deep sleep!
-iwlagn: MAC is in deep sleep!
-iwlagn: MAC is in deep sleep!
-iwlagn: MAC is in deep sleep!
-iwlagn: MAC is in deep sleep!
-iwlagn: Unable to init nic
-mac80211-phy14: failed to remove key (0, 00:1a:1e:80:02:a0) from
-hardware
-(-22)
-lib80211: common routines for IEEE802.11 drivers
-iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27kds
-iwlagn: Copyright(c) 2003-2008 Intel Corporation
-
-
-Card dropped dead during normal use after several days of=20
-operation, 2.6.27.4 kernel with compat-wireless-2008-11-17.
-
-Removing/reloading module didn't restore the card.
-
-Toggling rfkill switch also didn't have any effect.
-
-Had to power off the system to get the card to come back.
-
-IBM T61 laptop, no other kernel logs, system had been suspended/resumed
-to ram multiple times but not w/in 5 hours of the bug happening, first
-time this has happened on my system however a friend with the same
-hardware has seen it continually for several months under high load
-situations (no logs on that one, so anecdotal.)  Not aware of any high
-loads on my system when it triggered, however.
-
--m
-
---=20
-Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
-GPG Fingerprint: 3546 89DF 3C9D ED80 3381  A661 D7B2 8822 738B BDB1
-
-"We're sorry, Susy won't be attending classes for the rest of this academic=
-=20
-year.  She caught the measles, and we had her shot."
-
---UugvWAfsgieZRqgk
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAkknDRwACgkQ17KIInOLvbETGwCgrCNCI/xvKvrc9TyKLuZFt5eH
-zLsAnAuwjX9vY0mg+OwsGthuDJEasHAs
-=IRL4
------END PGP SIGNATURE-----
-
---UugvWAfsgieZRqgk--
