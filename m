@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:55092 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751395AbYKUWkP (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:43187 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197AbYKRIkC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 17:40:15 -0500
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: [PATCH 1/2] rfkill: preserve state across suspend
-Date: Fri, 21 Nov 2008 20:40:09 -0200
-Message-Id: <1227307210-11062-1-git-send-email-hmh@hmh.eng.br> (sfid-20081121_234025_231339_9E4BEF54)
-In-Reply-To: <20081120150330.GC4329@tuxdriver.com>
-References: <20081120150330.GC4329@tuxdriver.com>
+	Tue, 18 Nov 2008 03:40:02 -0500
+Message-ID: <49227F6E.8040203@linux.intel.com> (sfid-20081118_094007_917983_8E3C1A18)
+Date: Tue, 18 Nov 2008 09:40:14 +0100
+From: Marcel Holtmann <holtmann@linux.intel.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Tomas Winkler <tomasw@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
+References: <1226915999.3599.33.camel@johannes.berg>	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>	 <1226933141.3902.19.camel@johannes.berg>	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>	 (sfid-20081117_161447_403583_F9BC9E33) <1226942887.3902.30.camel@johannes.berg>
+In-Reply-To: <1226942887.3902.30.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rfkill class API requires that the driver connected to a class
-call rfkill_force_state() on resume to update the real state of the
-rfkill controller, OR that it provides a get_state() hook.
+Hi Johannes,
 
-This means there is potentially a hidden call in the resume code flow
-that changes rfkill->state (i.e. rfkill_force_state()), so the
-previous state of the transmitter was being lost.
+>>> The point is that the whole thing about disassociation is already the
+>>> wrong assumption. As I've outlined, it only works in STA mode, and thus
+>>> the function is generally not very useful.
+>>>
+>>>> I agree that resume/suspend shell be handled properly in the mac80211
+>>>> regardless of this issue.
+>>> And it will handle the "firmware crashed" case perfectly too.
+>> You may have a case, anyhow, please show us some RFC before you remove
+>> of mac notify.
+> 
+> I don't have any, but given the current deficiencies, I don't think the
+> notify callback is worth keeping especially in light of the locking
+> nightmare it's creating. What does it fix anyway? No user ever
+> complained about slow re-association at resume time that I've heard, and
+> no driver but iwlwifi tries to speed it up.
 
-The simplest and most future-proof way to fix this is to explicitly
-store the pre-sleep state on the rfkill structure, and restore from
-that on resume.
+until we see hard numbers here, I am fine with treating every driver the 
+same and just not do any kind of speed up at all. With all my testing 
+during resume and re-association, the timing has always been good enough 
+so that no real impact for the user happened.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
----
- include/linux/rfkill.h |    1 +
- net/rfkill/rfkill.c    |    7 ++++++-
- 2 files changed, 7 insertions(+), 1 deletions(-)
+The question here is what are the real benefits and for that we need a 
+more detailed measurement that is realistic. In the desktop case for 
+example we have enough time since the users still has to still enter 
+their password to unlock the screensaver. For the embedded type devices 
+like phones etc., the impact is also not present. At least I've never 
+seen it. There are other bottlenecks like updating the DHCP lease etc.
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 4cd64b0..f376a93 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -108,6 +108,7 @@ struct rfkill {
- 
- 	struct device dev;
- 	struct list_head node;
-+	enum rfkill_state state_for_resume;
- };
- #define to_rfkill(d)	container_of(d, struct rfkill, dev)
- 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 69f3a3b..4113454 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -565,10 +565,15 @@ static void rfkill_release(struct device *dev)
- #ifdef CONFIG_PM
- static int rfkill_suspend(struct device *dev, pm_message_t state)
- {
-+	struct rfkill *rfkill = to_rfkill(dev);
-+
- 	/* mark class device as suspended */
- 	if (dev->power.power_state.event != state.event)
- 		dev->power.power_state = state;
- 
-+	/* store state for the resume handler */
-+	rfkill->state_for_resume = rfkill->state;
-+
- 	return 0;
- }
- 
-@@ -590,7 +595,7 @@ static int rfkill_resume(struct device *dev)
- 		rfkill_toggle_radio(rfkill,
- 				rfkill_epo_lock_active ?
- 					RFKILL_STATE_SOFT_BLOCKED :
--					rfkill->state,
-+					rfkill->state_for_resume,
- 				1);
- 
- 		mutex_unlock(&rfkill->mutex);
--- 
-1.5.6.5
+Regards
 
+Marcel
