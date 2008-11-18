@@ -1,47 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:41878 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754159AbYKNSGK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46441 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885AbYKRK4w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 13:06:10 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so676979yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 10:06:09 -0800 (PST)
-Message-ID: <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com> (sfid-20081114_190620_768100_7FB7256F)
-Date: Fri, 14 Nov 2008 10:06:08 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Cc: "Dan McGee" <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <b6c5339f0811140949m462e3eecx49f114f729b33e7c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
-	 <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
-	 <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
-	 <43e72e890811140937h4dc03cf8g50df7f74efcd28b2@mail.gmail.com>
-	 <b6c5339f0811140949m462e3eecx49f114f729b33e7c@mail.gmail.com>
+	Tue, 18 Nov 2008 05:56:52 -0500
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
+	Christophe Dumez <dchris@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
+	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
+	Thomas Witt <witt_th@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andres Freund <andres@anarazel.de>
+In-Reply-To: <1226969241.4014.24.camel@johannes.berg> (sfid-20081118_014839_339263_738F563C)
+References: <1226969241.4014.24.camel@johannes.berg>
+	 (sfid-20081118_014839_339263_738F563C)
+Content-Type: text/plain
+Date: Tue, 18 Nov 2008 11:56:09 +0100
+Message-Id: <1227005769.4014.50.camel@johannes.berg> (sfid-20081118_115655_227526_17663E35)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2008 at 9:49 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> Anyway we do set the parent before calling ieee80211_register_hw() by
->> using SET_IEEE80211_DEV(hw, &pdev->dev) (oh ok here is the parent). so
->> when we try to get the name with parent->driver I am not sure if
->> driver has been set yet because ath5k_pci_probe() hasn't finished yet
->> as probe called ath5k_hw_attach(). When does ->driver get set and why
->> would it fail only for ath5k?
->
-> Ahh, I believe that would be in pci-driver.c __pci_device_probe, after driver
-> probe is run successfully.  Yes, we do ieee80211_register_hw from within
-> probe...  So, how did this ever work again? /me scratches head.
 
-Wow.. ok, yeah I see that, this is a mac8021 bug then unless mac80211
-wants us to not callieee80211_register_hw() from probe or its children
-which would be weird.
+> I'd like to ask anyone who is CC'ed (those are people I know ran into
+> the bug) to try this patch.
 
-So we need to fix that.
+And here's a version against v2.6.28-rc5 (build tested only)
 
-  Luis
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-rx.c  |   26 +++++++++++++++++---------
+ 3 files changed, 22 insertions(+), 13 deletions(-)
+
+--- test-tree.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-18 11:51:49.000000000 +0100
++++ test-tree/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-18 11:52:54.000000000 +0100
+@@ -1384,7 +1384,7 @@ void iwl_rx_handle(struct iwl_priv *priv
+ 
+ 		rxq->queue[i] = NULL;
+ 
+-		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->dma_addr,
++		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->aligned_dma_addr,
+ 					    priv->hw_params.rx_buf_size,
+ 					    PCI_DMA_FROMDEVICE);
+ 		pkt = (struct iwl_rx_packet *)rxb->skb->data;
+@@ -1436,8 +1436,8 @@ void iwl_rx_handle(struct iwl_priv *priv
+ 			rxb->skb = NULL;
+ 		}
+ 
+-		pci_unmap_single(priv->pci_dev, rxb->dma_addr,
+-				 priv->hw_params.rx_buf_size,
++		pci_unmap_single(priv->pci_dev, rxb->real_dma_addr,
++				 priv->hw_params.rx_buf_size + 256,
+ 				 PCI_DMA_FROMDEVICE);
+ 		spin_lock_irqsave(&rxq->lock, flags);
+ 		list_add_tail(&rxb->list, &priv->rxq.rx_used);
+--- test-tree.orig/drivers/net/wireless/iwlwifi/iwl-dev.h	2008-10-23 23:10:47.000000000 +0200
++++ test-tree/drivers/net/wireless/iwlwifi/iwl-dev.h	2008-11-18 11:52:54.000000000 +0100
+@@ -89,7 +89,8 @@ extern struct iwl_cfg iwl5100_abg_cfg;
+ #define	DEFAULT_LONG_RETRY_LIMIT  4U
+ 
+ struct iwl_rx_mem_buffer {
+-	dma_addr_t dma_addr;
++	dma_addr_t real_dma_addr;
++	dma_addr_t aligned_dma_addr;
+ 	struct sk_buff *skb;
+ 	struct list_head list;
+ };
+--- test-tree.orig/drivers/net/wireless/iwlwifi/iwl-rx.c	2008-10-23 23:10:47.000000000 +0200
++++ test-tree/drivers/net/wireless/iwlwifi/iwl-rx.c	2008-11-18 11:54:13.000000000 +0100
+@@ -204,7 +204,7 @@ int iwl_rx_queue_restock(struct iwl_priv
+ 		list_del(element);
+ 
+ 		/* Point to Rx buffer via next RBD in circular buffer */
+-		rxq->bd[rxq->write] = iwl_dma_addr2rbd_ptr(priv, rxb->dma_addr);
++		rxq->bd[rxq->write] = iwl_dma_addr2rbd_ptr(priv, rxb->aligned_dma_addr);
+ 		rxq->queue[rxq->write] = rxb;
+ 		rxq->write = (rxq->write + 1) & RX_QUEUE_MASK;
+ 		rxq->free_count--;
+@@ -251,7 +251,7 @@ void iwl_rx_allocate(struct iwl_priv *pr
+ 		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
+ 
+ 		/* Alloc a new receive buffer */
+-		rxb->skb = alloc_skb(priv->hw_params.rx_buf_size,
++		rxb->skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
+ 				__GFP_NOWARN | GFP_ATOMIC);
+ 		if (!rxb->skb) {
+ 			if (net_ratelimit())
+@@ -266,9 +266,17 @@ void iwl_rx_allocate(struct iwl_priv *pr
+ 		list_del(element);
+ 
+ 		/* Get physical address of RB/SKB */
+-		rxb->dma_addr =
+-		    pci_map_single(priv->pci_dev, rxb->skb->data,
+-			   priv->hw_params.rx_buf_size, PCI_DMA_FROMDEVICE);
++		rxb->real_dma_addr = pci_map_single(
++					priv->pci_dev,
++					rxb->skb->data,
++					priv->hw_params.rx_buf_size + 256,
++					PCI_DMA_FROMDEVICE);
++		/* dma address must be no more than 36 bits */
++		BUG_ON(rxb->real_dma_addr & ~DMA_BIT_MASK(36));
++		/* and also 256 byte aligned! */
++		rxb->aligned_dma_addr = ALIGN(rxb->real_dma_addr, 256);
++		skb_reserve(rxb->skb, rxb->aligned_dma_addr - rxb->real_dma_addr);
++
+ 		list_add_tail(&rxb->list, &rxq->rx_free);
+ 		rxq->free_count++;
+ 	}
+@@ -300,8 +308,8 @@ void iwl_rx_queue_free(struct iwl_priv *
+ 	for (i = 0; i < RX_QUEUE_SIZE + RX_FREE_BUFFERS; i++) {
+ 		if (rxq->pool[i].skb != NULL) {
+ 			pci_unmap_single(priv->pci_dev,
+-					 rxq->pool[i].dma_addr,
+-					 priv->hw_params.rx_buf_size,
++					 rxq->pool[i].real_dma_addr,
++					 priv->hw_params.rx_buf_size + 256,
+ 					 PCI_DMA_FROMDEVICE);
+ 			dev_kfree_skb(rxq->pool[i].skb);
+ 		}
+@@ -354,8 +362,8 @@ void iwl_rx_queue_reset(struct iwl_priv 
+ 		 * to an SKB, so we need to unmap and free potential storage */
+ 		if (rxq->pool[i].skb != NULL) {
+ 			pci_unmap_single(priv->pci_dev,
+-					 rxq->pool[i].dma_addr,
+-					 priv->hw_params.rx_buf_size,
++					 rxq->pool[i].real_dma_addr,
++					 priv->hw_params.rx_buf_size + 256,
+ 					 PCI_DMA_FROMDEVICE);
+ 			priv->alloc_rxb_skb--;
+ 			dev_kfree_skb(rxq->pool[i].skb);
+
+
