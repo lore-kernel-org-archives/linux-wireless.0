@@ -1,59 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mxm.seznam.cz ([77.75.72.45]:59953 "EHLO mxm.seznam.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752371AbYK1PiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 10:38:08 -0500
-In-Reply-To: <1227864737.3883.0.camel@johannes.berg>
-Date: Fri, 28 Nov 2008 16:37:55 +0100 (CET)
-Cc: linux-wireless@vger.kernel.org
-To: linville@tuxdriver.com
-From: =?iso-8859-2?Q?Carlos=20Lau=E9?= <CarlosL@seznam.cz>
-Subject: =?us-ascii?Q?=5BPATCH=5D=20wireless=2Dregdb=3A=20Update=20regulatory=20rules=20for=20Czech=20Republic=20=28CZ=29=20on=205GHz?=
+Received: from xc.sipsolutions.net ([83.246.72.84]:51018 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165AbYKRJoI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Nov 2008 04:44:08 -0500
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
+	Christophe Dumez <dchris@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
+	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
+	Thomas Witt <witt_th@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andres Freund <andres@anarazel.de>
+In-Reply-To: <1226969241.4014.24.camel@johannes.berg> (sfid-20081118_014839_339263_738F563C)
+References: <1226969241.4014.24.camel@johannes.berg>
+	 (sfid-20081118_014839_339263_738F563C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XNd11//xdxXT0BJ1WtZF"
+Date: Tue, 18 Nov 2008 10:43:10 +0100
+Message-Id: <1227001390.4014.43.camel@johannes.berg> (sfid-20081118_104414_757666_6D9EAAD7)
 Mime-Version: 1.0
-Message-Id: <819.1442-26431-1638312140-1227886675@seznam.cz> (sfid-20081128_163815_900945_A9BD6069)
-Content-Type: text/plain;
-	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > OK, I thought we cannot guarantee the automatic power regulation,
-> > using lower values for now, it would be nice to implement the required
-> > mechanism to assure tx power regulation, but then how to define the
-> > two values? two tables, or a flag like "NO-APC -3" indicating that,
-> > without tx power regulation, there is a lower limit for tx power? 
-> 
-> No, it's not that trivial, needs more thought and a db change.
 
-Sure, I realize that, but we should start somewhere... I think  we can discuss how to change it, change at least the db and the parser, then start making little changes all around. I'll send this idea into another e-mail to discuss about. For now, we should stay with the lower settings
+--=-XNd11//xdxXT0BJ1WtZF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > And the patch:
-> 
-> I think you forgot something.
-> 
-> johannes
+On Tue, 2008-11-18 at 01:47 +0100, Johannes Berg wrote:
 
- Yes, there is definitely something missing... sorry... But I remember sending it a second time a couple of minutes later, including the patch. Perhaps something happened between Firefox and my free webmail.... restarted Firefox, let's try again.
+> So I dug deeper into the DMA problems I had with iwlagn and a kind soul
+> helped me in that he said something about pci-e alignment and mentioned
+> the iwl_rx_allocate function to check for crossing 4KB boundaries. Since
+> there's 8KB A-MPDU support, crossing 4k boundaries didn't seem like
+> something the device would fail with
 
-The patch:
+Come to think of it, maybe it does. One common failure case seems to be
+"this goes wrong with an 11n AP, but not on a regular one", so one
+explanation for that would be that the hardware designers expect the
+driver to split up the DMA into multiple DMA descriptors at 4K
+boundaries, but iwlagn uses only one and undefined behaviour results.
+That's something you'll need to ask the HW designers though or look up
+in the datasheet.
 
---- old/db.txt	2008-11-28 00:42:28.000000000 +0100
-+++ new/db.txt	2008-11-28 00:48:43.000000000 +0100
-@@ -141,10 +141,15 @@
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
- 
-+# Data from
-+# http://www.ctu.cz/1/download/Opatreni%20obecne%20povahy/VO_R_12_08_2005_34.pdf
-+# and http://www.ctu.cz/1/download/OOP/Rok_2007/VO_R_10_03_2007_4.pdf
- country CZ:
--	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
-+	(2402 - 2482 @ 40), (N/A, 100 mW)
-+	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
-+	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
-+	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
-+	(5725 - 5875 @ 40), (N/A, 25 mW)
- 
- # Data from "Frequenznutzungsplan" (as published in April 2008),
- # downloaded from http://www.bundesnetzagentur.de/media/archive/13358.pdf
+johannes
+
+--=-XNd11//xdxXT0BJ1WtZF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJIo4qAAoJEKVg1VMiehFYFg4P/2xrZbYEqRjL2fWamMJ/dqhf
+KTa6pt1i7Xe4DZkSbsQQoVOsDgV9aoKJdQQKil24Ih8n18E1ZwgrRT88QU9reLrg
+e+bWm4e7+WwilSPASkU+S5rsDumIqVtD1nlte1Q9yb5lnNn2wg6wySRzv9Bha5ak
+JziZOV47CaWPQYGOVszhYHx6iRCiRU0O9p51M9jTJWNY+OoSQZrnm2UMfSEhqZAP
+chY3iXPNeuD/2VnR24HXTt8GejA0kSF24r48U+QbfuJNDmo6ARgOTWc2HUEX60P7
+jS3aIL3CPJEMuT31Ggdzt0qbqtbWhKQt44/l3R88fq/BvuN0zRSfTidzyx/j9XXP
+gsrcSqtTfFVSHj2CxFIxxe8orXscZpwaPHeIU9jZOz42zUkSu33aMijM05xa4mI0
+ff+LA+MlvVNxcuBZuet6esamnoInq08vvmp7j7uIs2w2rMORmGfWdCm7aw1qALY9
+qzMxqO5jLFf2bZpHc6MQCTzLyaziwT63KZSDH/VGMIe6bBn5lKO0wz7qF4tVxiun
+QdLl5rJm43P4hWXuhS+td/DQO1QnCEJJtKo83mSVHM0YaBB/PHCr7DzqwvJdsvAH
+erXfThFiRDBNCpbboLWlI8SukgXHop/VG202Ub4AsKXI5C3C7kMAGvEdAwAMbvch
+Yo2GMFGdtk65ROJZMfdu
+=Rmm2
+-----END PGP SIGNATURE-----
+
+--=-XNd11//xdxXT0BJ1WtZF--
+
