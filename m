@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:60385 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752799AbYKXXVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 18:21:25 -0500
-Subject: Re: wireless-regdb: flaw in general functionality
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Richard Farina <sidhayn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081124231204.GN6245@tesla>
-References: <492B2B74.7040404@gmail.com>  <20081124231204.GN6245@tesla>
-Content-Type: text/plain
-Date: Mon, 24 Nov 2008 18:21:23 -0500
-Message-Id: <1227568883.28878.15.camel@dv> (sfid-20081125_002129_460872_D604071C)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:55350 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751201AbYKRQiK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Nov 2008 11:38:10 -0500
+Message-ID: <4922EF68.9020504@gmx.de> (sfid-20081118_173815_597792_066E90FD)
+Date: Tue, 18 Nov 2008 17:38:00 +0100
+From: Thomas Witt <witt_th@gmx.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
+	Christophe Dumez <dchris@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
+	=?ISO-8859-1?Q?Jan_Vc=28el=E1k?= <vcelak.jan@seznam.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andres Freund <andres@anarazel.de>
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+References: <1226969241.4014.24.camel@johannes.berg>	 (sfid-20081118_014839_339263_738F563C) <1227005769.4014.50.camel@johannes.berg>
+In-Reply-To: <1227005769.4014.50.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-11-24 at 15:12 -0800, Luis R. Rodriguez wrote:
-
-> Your point about not being able to listen is a good one, and a patch to
-> update the the US in consideration of part 15 rules would be
-> appreciated. Keep in mind we have flags for such things:
+Johannes Berg wrote:
+>> I'd like to ask anyone who is CC'ed (those are people I know ran into
+>> the bug) to try this patch.
 > 
->   -Passive scan
->   -No-IBSS
-> 
-> We should probably rename no-ibss to no-beaconing though as that is the
-> real meaning inention behind it. 
+> And here's a version against v2.6.28-rc5 (build tested only)
 
-Maybe you mean no-transmit?  I don't think seeing an AP transmitting on
-a wrong frequency is an excuse for doing the same.  At least in some
-jurisdictions.
 
--- 
-Regards,
-Pavel Roskin
+
+That one fixes the Problem for me,
+
+Thomas.
