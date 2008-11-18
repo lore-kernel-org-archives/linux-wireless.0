@@ -1,81 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:14664 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198AbYKMXHG (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:1545 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589AbYKRElg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 18:07:06 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so1041978rnd.17
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 15:07:04 -0800 (PST)
-Message-ID: <40f31dec0811131507x7449112cy5746d28c848a2146@mail.gmail.com> (sfid-20081114_000712_974978_C1FCF322)
-Date: Fri, 14 Nov 2008 01:07:04 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "RUMI Szabolcs" <rumi_ml@rtfm.hu>
-Subject: Re: ath5k master (AP) mode
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <20081113235928.3ed79ff6.rumi_ml@rtfm.hu>
+	Mon, 17 Nov 2008 23:41:36 -0500
+Date: Mon, 17 Nov 2008 23:40:38 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: maximlevitsky@gmail.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] ath5k: set mac address in add_interface
+Message-ID: <20081118044037.GA18983@hash.localnet> (sfid-20081118_054141_131750_6B7D2AD0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081112224810.8d4ca179.rumi_ml@rtfm.hu>
-	 <1226530010.15173.0.camel@dv>
-	 <20081113004632.d8d821c5.rumi_ml@rtfm.hu>
-	 <20081113181155.c556bde1.rumi_ml@rtfm.hu>
-	 <1226598550.5839.3.camel@johannes.berg>
-	 <20081113235928.3ed79ff6.rumi_ml@rtfm.hu>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/11/14 RUMI Szabolcs <rumi_ml@rtfm.hu>:
-> On Thu, 13 Nov 2008 18:49:10 +0100
-> Johannes Berg <johannes@sipsolutions.net> wrote:
->
->> > I have compiled a kernel from wireless-testing git of today (2.6.28-rc4-wl)
->> > then recompiled and tested hostapd-0.6.5 against that,
->>
->> look, you need hostapd from git
->
-> If you look a bit further down in that email, I've also tried
-> exactly that afterwards but unfortunately it made no difference.
->
-> BTW I've made a diff -rduN between hostapd-0.6.5 and todays -git
-> but haven't spotted anything relevant to my problem anyway.
->
-> To summarize:
->
-> 2.6.27 + hostapd-0.6.5 = NO
-> 2.6.27 + OpenWRT hack + hostapd-0.6.5 = NO
-> compat-wireless-2008-11-12 + hostapd-0.6.5 = NO
-> wireless-testing-git + hostapd-0.6.5 = NO
-> wireless-testing-git + hostapd-git = NO
->
-> In fact I've also tried hostapd-0.6.4 and 0.5.10 at some point
-> but they didn't make anything better.
->
-> Thanks,
->
-> Sab
+Hi Maxim, 
 
-Have you enabled AP mode on the driver ?
+Please try this patch.  I didn't have a problem changing the mac address 
+after it was set to something else.  I did kick it to re-associate with
+the AP, though.
 
-diff --git a/drivers/net/wireless/ath5k/base.c
-b/drivers/net/wireless/ath5k/base.c
-index e09ed2c..69aad6e 100644
+Subject: [PATCH] ath5k: set mac address in add_interface
+
+Configure the mac address in add_interface and clear it in
+remove_interface so that users can change the mac address
+to something other than the one in the eeprom.  Also avoid
+setting it at attach time so that we won't ack packets
+until fully set up.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/attach.c |   12 +++---------
+ drivers/net/wireless/ath5k/base.c   |   13 +++++++++++--
+ 2 files changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/attach.c b/drivers/net/wireless/ath5k/attach.c
+index 51d5698..49d82d7 100644
+--- a/drivers/net/wireless/ath5k/attach.c
++++ b/drivers/net/wireless/ath5k/attach.c
+@@ -106,7 +106,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ {
+ 	struct ath5k_hw *ah;
+ 	struct pci_dev *pdev = sc->pdev;
+-	u8 mac[ETH_ALEN];
++	u8 mac[ETH_ALEN] = {};
+ 	int ret;
+ 	u32 srev;
+ 
+@@ -317,15 +317,9 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 		goto err_free;
+ 	}
+ 
+-	/* Set MAC address */
+-	ret = ath5k_eeprom_read_mac(ah, mac);
+-	if (ret) {
+-		ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
+-			sc->pdev->device);
+-		goto err_free;
+-	}
+-
++	/* MAC address is cleared until add_interface */
+ 	ath5k_hw_set_lladdr(ah, mac);
++
+ 	/* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
+ 	memset(ah->ah_bssid, 0xff, ETH_ALEN);
+ 	ath5k_hw_set_associd(ah, ah->ah_bssid, 0);
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 34cd1a4..d5bf62a 100644
 --- a/drivers/net/wireless/ath5k/base.c
 +++ b/drivers/net/wireless/ath5k/base.c
-@@ -488,6 +488,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
-
-      hw->wiphy->interface_modes =
-              BIT(NL80211_IFTYPE_STATION) |
-+               BIT(NL80211_IFTYPE_AP) |
-              BIT(NL80211_IFTYPE_ADHOC) |
-              BIT(NL80211_IFTYPE_MESH_POINT);
-
-Code for AP mode is there but it's not enabled yet until we do further
-tests (it didn't work on some 5413 hw etc, now after PCU updates it
-should work but we still need to test it)
-
+@@ -707,7 +707,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ {
+ 	struct ath5k_softc *sc = hw->priv;
+ 	struct ath5k_hw *ah = sc->ah;
+-	u8 mac[ETH_ALEN];
++	u8 mac[ETH_ALEN] = {};
+ 	int ret;
+ 
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_ANY, "devid 0x%x\n", pdev->device);
+@@ -777,7 +777,13 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 	tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
+ 	setup_timer(&sc->calib_tim, ath5k_calibrate, (unsigned long)sc);
+ 
+-	ath5k_hw_get_lladdr(ah, mac);
++	ret = ath5k_eeprom_read_mac(ah, mac);
++	if (ret) {
++		ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
++			sc->pdev->device);
++		goto err_queues;
++	}
++	
+ 	SET_IEEE80211_PERM_ADDR(hw, mac);
+ 	/* All MAC address bits matter for ACKs */
+ 	memset(sc->bssidmask, 0xff, ETH_ALEN);
+@@ -2765,6 +2771,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
+ 	/* Set to a reasonable value. Note that this will
+ 	 * be set to mac80211's value at ath5k_config(). */
+ 	sc->bintval = 1000;
++	ath5k_hw_set_lladdr(sc->ah, conf->mac_addr);
+ 
+ 	ret = 0;
+ end:
+@@ -2777,11 +2784,13 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
+ 			struct ieee80211_if_init_conf *conf)
+ {
+ 	struct ath5k_softc *sc = hw->priv;
++	u8 mac[ETH_ALEN] = {};
+ 
+ 	mutex_lock(&sc->lock);
+ 	if (sc->vif != conf->vif)
+ 		goto end;
+ 
++	ath5k_hw_set_lladdr(sc->ah, mac);
+ 	sc->vif = NULL;
+ end:
+ 	mutex_unlock(&sc->lock);
+-- 
+1.5.4.2.182.gb3092
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Bob Copeland %% www.bobcopeland.com
+
