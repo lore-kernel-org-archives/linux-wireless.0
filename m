@@ -1,157 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:35899 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750992AbYKYLJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 06:09:42 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	reinette.chatre@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] iwlwifi: clean key table in iwl_clear_stations_table function
-Date: Tue, 25 Nov 2008 13:09:39 +0200
-Message-Id: <1227611379-20650-1-git-send-email-tomas.winkler@intel.com> (sfid-20081125_120945_898597_097FAABB)
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-gx0-f11.google.com ([209.85.217.11]:39359 "EHLO
+	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752497AbYKSMW6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 07:22:58 -0500
+Received: by gxk4 with SMTP id 4so2366075gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 04:22:56 -0800 (PST)
+Message-ID: <1ba2fa240811190422o4eebb26ai17ea12825ae8e708@mail.gmail.com> (sfid-20081119_132305_500028_0AC232AC)
+Date: Wed, 19 Nov 2008 14:22:55 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"reinette chatre" <reinette.chatre@intel.com>,
+	"Marcel Holtmann" <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"Matt Mackall" <mpm@selenic.com>,
+	"Christophe Dumez" <dchris@gmail.com>, "Zhu Yi" <yi.zhu@intel.com>,
+	"=?UTF-8?Q?Jan_V=C4=8Del=C3=A1k?=" <vcelak.jan@seznam.cz>,
+	"Thomas Witt" <witt_th@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Andres Freund" <andres@anarazel.de>
+In-Reply-To: <1227094594.26243.6.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1226969241.4014.24.camel@johannes.berg>
+	 <1227001390.4014.43.camel@johannes.berg>
+	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
+	 <1227021904.4014.58.camel@johannes.berg>
+	 <1ba2fa240811190115i6bad0c89wb1d9c8ee281be2f8@mail.gmail.com>
+	 <1227094594.26243.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch cleans uCode key table bit map iwl_clear_stations_table
-since all stations are cleared also the key table must be.
+On Wed, Nov 19, 2008 at 1:36 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-11-19 at 11:15 +0200, Tomas Winkler wrote:
+>
+>> >> You are off here. The constrain is just that address will fit in 32
+>> >> bit register. I don't know why this constrain, but there is always a
+>> >> reason.
+>> >
+>> > There's also the PCI-E constraint of having to split up DMA at 4k
+>> > boundaries, which is what I was talking about above.
+>>
+>> Have to check this but I'm not sure if this is anyhow related.
+>
+> It's not. I misunderstood how RX DMA works, but given that you actually
+> have to allocate the buffers that large the HW has to support splitting.
+>
+>> Not just that, it was never confirmed this is the issue it was the
+>> first place we started to look.
+>> This code is there from time zero of the driver something like kernel
+>> 2.6.18 and the problem popped only in kernel 2.6.27 so what else has
+>> changed.
+>
+> Yeah, it's weird, and it doesn't even seem to solve it for everyone. So
+> there must be another thing too.
 
-Since the keys are not removed properly on suspend by mac80211
-this may result in exhausting key table on resume leading
-to memory corruption during removal
+It seems that your wrong command queue problem is no the same root
+cause  we see on x86 platforms they have just same phenomena, because
+there is 0xff data on the RX buffer.
 
-This patch also fixes a memory corruption problem reported in
-http://marc.info/?l=linux-wireless&m=122641417231586&w=2 and tracked in
-http://bugzilla.kernel.org/show_bug.cgi?id=12040.
+>
+>
+>> Yes I have CONFIG_SWIOTLB=y in my config spec for X86_64, nevertheless
+>> you've mentioned that the allocation problem is due to headroom
+>> allocation in skb?!
+>
+> Well, the skb "head" is _all_ of the skb data that is not part of an
+> extra buffer. So skb->data is the "head" while the skb fraglist is
+> referred to as the data. That can be a bit confusing. Anyway skb->data
+> is just allocated with kmalloc and on my machine that has 128 byte
+> alignment. The IOMMU maps pages, so doesn't change the alignment. If you
+> are using swiotlb (just having it in the config isn't enough, check the
+> kernel messages) then much DMA will be done with bounce buffer.
+>
 
-When the key is removed a second time the offset is set to 255 - this
-index is not valid for the ucode_key_table and corrupts the eeprom pointer
-(which is 255 bits from ucode_key_table).
+Thanks will look at it.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Reported-by: Carlos R. Mafra <crmafra2@gmail.com>
-Reported-by: Lukas Hejtmanek <xhejtman@ics.muni.cz>
----
- drivers/net/wireless/iwlwifi/iwl-sta.c |   31 +++++++++++++++++++++++++------
- 1 files changed, 25 insertions(+), 6 deletions(-)
+>> > Incidentally, where does the 36 bit limit come from? The RX has a 40 bit
+>> > limit if you see that it uses 32 bit pointer that's shifted by 8 bits.
+>>
+>> I'm checking with the HW guys
+>
+> Seems that isn't necessary, there are some things like the rbb stats
+> that are only shifted down by 4 bits, so they need a 36 bit mask. Bit
+> unfortunate that this single allocations forces all into the mask, but I
+> don't right now see how to just get that single one into 36 and the rest
+> into 40.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 0222ef8..2553d4d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -488,6 +488,8 @@ void iwl_clear_stations_table(struct iwl_priv *priv)
- 
- 	priv->num_stations = 0;
- 	memset(priv->stations, 0, sizeof(priv->stations));
-+	/* clean ucode key table bit map */
-+	priv->ucode_key_table = 0;
- 
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- }
-@@ -501,7 +503,7 @@ static int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
- 		if (!test_and_set_bit(i, &priv->ucode_key_table))
- 			return i;
- 
--	return -1;
-+	return WEP_INVALID_OFFSET;
- }
- 
- int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
-@@ -645,6 +647,8 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
- 				 iwl_get_free_ucode_key_index(priv);
- 	/* else, we are overriding an existing key => no need to allocated room
- 	 * in uCode. */
-+	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
-+		"no space for new kew");
- 
- 	priv->stations[sta_id].sta.key.key_flags = key_flags;
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-@@ -663,6 +667,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
- {
- 	unsigned long flags;
- 	__le16 key_flags = 0;
-+	int ret;
- 
- 	key_flags |= (STA_KEY_FLG_CCMP | STA_KEY_FLG_MAP_KEY_MSK);
- 	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
-@@ -690,14 +695,18 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
- 	/* else, we are overriding an existing key => no need to allocated room
- 	 * in uCode. */
- 
-+	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
-+		"no space for new kew");
-+
- 	priv->stations[sta_id].sta.key.key_flags = key_flags;
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
- 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
- 
-+	ret = iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
-+
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
--	IWL_DEBUG_INFO("hwcrypto: modify ucode station key info\n");
--	return iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
-+	return ret;
- }
- 
- static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
-@@ -722,6 +731,9 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
- 	/* else, we are overriding an existing key => no need to allocated room
- 	 * in uCode. */
- 
-+	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
-+		"no space for new kew");
-+
- 	/* This copy is actually not needed: we get the key with each TX */
- 	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
- 
-@@ -736,10 +748,10 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
- 			struct ieee80211_key_conf *keyconf,
- 			const u8 *addr, u32 iv32, u16 *phase1key)
- {
--	u8 sta_id = IWL_INVALID_STATION;
- 	unsigned long flags;
--	__le16 key_flags = 0;
- 	int i;
-+	__le16 key_flags = 0;
-+	u8 sta_id;
- 	DECLARE_MAC_BUF(mac);
- 
- 	sta_id = iwl_find_station(priv, addr);
-@@ -765,7 +777,7 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
- 	spin_lock_irqsave(&priv->sta_lock, flags);
- 
- 	priv->stations[sta_id].sta.key.key_flags = key_flags;
--	priv->stations[sta_id].sta.key.tkip_rx_tsc_byte2 = (u8) iv32;
-+	priv->stations[sta_id].sta.key.tkip_rx_tsc_byte2 = (u8)iv32;
- 
- 	for (i = 0; i < 5; i++)
- 		priv->stations[sta_id].sta.key.tkip_rx_ttak[i] =
-@@ -809,6 +821,13 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
- 		return 0;
- 	}
- 
-+	if (priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET) {
-+		IWL_WARNING("Removing wrong key %d 0x%x\n",
-+			    keyconf->keyidx, key_flags);
-+		spin_unlock_irqrestore(&priv->sta_lock, flags);
-+		return 0;
-+	}
-+
- 	if (!test_and_clear_bit(priv->stations[sta_id].sta.key.key_offset,
- 		&priv->ucode_key_table))
- 		IWL_ERROR("index %d not used in uCode key table.\n",
--- 
-1.5.4.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+I've checked and the 256 alignment is really just to support larger
+memory range in further NICs
+The penalty for this on window is just 256 not so big because there is
+no memory ownership handling
+Thanks
+Tomas
