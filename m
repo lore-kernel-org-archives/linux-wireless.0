@@ -1,57 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37118 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261AbYKLSqJ (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.251]:34953 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360AbYKSQvu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 13:46:09 -0500
-Date: Wed, 12 Nov 2008 13:35:10 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 1/4] lib80211: absorb crypto bits from net/ieee80211
-Message-ID: <20081112183509.GE2411@tuxdriver.com> (sfid-20081112_194614_425067_4DB5A030)
-References: <1226440265-21240-1-git-send-email-linville@tuxdriver.com> <1226508514.5368.21.camel@brick> <20081112180228.GC2411@tuxdriver.com> <1226513943.16649.0.camel@brick> <20081112182814.GD2411@tuxdriver.com>
+	Wed, 19 Nov 2008 11:51:50 -0500
+Received: by an-out-0708.google.com with SMTP id c3so22723ana.23
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 08:51:49 -0800 (PST)
+Message-ID: <1ba2fa240811190851i5dda6734w10d38b0f27e5ac97@mail.gmail.com> (sfid-20081119_175201_410324_FDD7142F)
+Date: Wed, 19 Nov 2008 18:51:49 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: pull request: wireless-2.6 2008-11-18
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sfr@canb.auug.org.au
+In-Reply-To: <20081119143919.GA3485@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081112182814.GD2411@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20081119000719.GA19756@tuxdriver.com>
+	 <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com>
+	 <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com>
+	 <20081119143919.GA3485@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2008 at 01:28:14PM -0500, John W. Linville wrote:
-> On Wed, Nov 12, 2008 at 10:19:03AM -0800, Harvey Harrison wrote:
-> > On Wed, 2008-11-12 at 13:02 -0500, John W. Linville wrote:
-> > > On Wed, Nov 12, 2008 at 08:48:34AM -0800, Harvey Harrison wrote:
-> > > > On Tue, 2008-11-11 at 16:51 -0500, John W. Linville wrote:
-> > > > > These bits are shared already between ipw2x00 and hostap, and could
-> > > > > probably be shared both more cleanly and with other drivers.  This
-> > > > > commit simply relocates the code to lib80211 and adjusts the drivers
-> > > > > appropriately.
-> > > > > 
-> > > > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > > > > ---
-> > > > 
-> > > > Wouldn't it have been better to start from the mac80211 crypto bits
-> > > > as lib80211 and modify hostap/ipw2x00 to use the 'new' lib80211
-> > > > crypto bits?
-> > > 
-> > > I'm sorry, but you forgot to attach your patches...
-> > > 
-> > 
-> > I will if it's desired, I just wanted to know if there was a particular
-> > reason for going this way.
-> 
-> Those bits are already shared between ieee80211 and the hostap driver.
-> Unfortunately, they are not shared with a clean API.  I don't think
-> hacking on mac80211's crypto code is worthwhile until these drivers
-> are given a bit more discipline in this area.  IMHO, this is the
-> better way to start.
+On Wed, Nov 19, 2008 at 4:39 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Nov 19, 2008 at 11:34:37AM +0200, Tomas Winkler wrote:
+>> On Wed, Nov 19, 2008 at 8:46 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+>> > On Wed, Nov 19, 2008 at 2:07 AM, John W. Linville
+>> > <linville@tuxdriver.com> wrote:
+>
+>> >>      mac80211: remove ieee80211_notify_mac
+>> >>      iwlagn: fix RX skb alignment
+>> >
+>> > IMHO its premature pushing ttese 2 patches up, they came in yestrday
+>> > and nobody here has run tthe code
+>
+> Well, thanks for your opinion.  Here is mine:
+>
+> The iwlwifi drivers have been hitting these problems for months,
+> and I have seen no effort by your team to address the problems.
 
-Oh, and removing hostap's dependency on ieee80211 enables us to turn
-ieee80211 into libipw now instead of waiting even longer while we
-refactor all the crypto code, potentially destabilizing ipw2100,
-ipw2200, hostap and (potentially) mac80211 along the way.
+There is a lot of effort to solve this I'm not sure what mailing list
+are u reading.
+We even presented test patches with alignment issues as Johannes few
+month ago but
+we didn't get the feedback that it hit anything. So you are totally off here.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+> It is possible that your team is working on them behind closed doors
+> and will eventually throw something over the wall to us.  I'm tired
+> of waiting for that, and I imagine that hordes of iwlagn users are
+> tired of waiting as well.
+
+This is embarrassing also for us that we cannot locate this specific
+problem but it not like we are not doing anything.Not sure there are
+other examples that we are not addressing bugs promptly.
+
+> Johannes has presented us with plausible fixes, and people are
+> reporting that the patches work for them.
+
+I'm not against merging these patches to wireless-testing but pushing
+them upstream before testing them
+is just plainly wrong and all I asked for to test them. You are
+presenting here double standards here.
+
+ I can merge these patches,
+> or wait/hope/pray for some to come from your team.  Experience suggests
+> that if fixes do come from your team that they will either be buried
+> in some monster patch that largely addresses something else, or
+> that the patches will arrive with a changelog that is terse and/or
+> unintelligble.  Subsequently, I am not optimistic about waiting.
+
+I've believe that we are addressing all the complains above and
+currently  if you are not seeing this I'm really sorry.
+
+> I think Johannes cited four different bugzilla.kernel.org entries
+> between those two patches.  What is your team doing to address
+> those bugs?
+
+Again you are not reading the mailing list and not the bugs logs.
+
+>
+> Obviously, I still think that those patches should be merged.
+
+I'm not against just give it day or two to run it.  We have for
+example nightly regression builds with publicly available results why
+you cannot wait till we can run?  I think you've hurried to push it up
+just as a statement forgetting of possible regressions.
+
+>
+>> Just checked our bug database,  the ieee80211_notify_mac was
+>> introduced mainly to overcome HW bug when
+>> receiver become deaf  in heavy traffic such as ftp in noisy
+>> environment. Otherwise reconnection was too slow to keep ftp going. We
+>> need to check whether we are still hitting this before applying
+>> removal this function
+>
+> You are welcome to submit patches that address your hardware issue
+> and which do not introduce locking problems.
+
+That was my suggestion that we fix it and I believe  we have normal
+discussion about it till you took your eager pushing steps. Replacing
+one regression with another is just not sane.
+
+Thanks
+Tomas
