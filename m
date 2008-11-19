@@ -1,69 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:40413 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbYKNSlJ (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:43216 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752692AbYKSMZB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 13:41:09 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] p54: enable Mesh Point support
-Date: Fri, 14 Nov 2008 19:41:06 +0100
-Cc: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	"Andrey Yurovsky" <andrey@cozybit.com>
+	Wed, 19 Nov 2008 07:25:01 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so3676458wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 04:25:00 -0800 (PST)
+Message-ID: <1ba2fa240811190424v4b9074e5u4e679bea278b1f3@mail.gmail.com> (sfid-20081119_132506_697331_EBB54972)
+Date: Wed, 19 Nov 2008 14:24:59 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"reinette chatre" <reinette.chatre@intel.com>,
+	"Marcel Holtmann" <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1227094832.26243.10.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200811141941.06542.chunkeey@web.de> (sfid-20081114_194114_393716_48A50CFA)
+Content-Type: text/plain; charset=UTF-8
+References: <1226969241.4014.24.camel@johannes.berg>
+	 <1227001390.4014.43.camel@johannes.berg>
+	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
+	 <1227055693.4014.95.camel@johannes.berg>
+	 <1ba2fa240811190121h3ff51824o90b72a206192e793@mail.gmail.com>
+	 <1227094832.26243.10.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables Mesh Point operation for any p54 device.
+On Wed, Nov 19, 2008 at 1:40 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-11-19 at 11:21 +0200, Tomas Winkler wrote:
+>
+>> > Indeed. One would seem to be the buffer list itself, which also needs to
+>> > fit within a 40-bit mask with 256 alignment (rxq->bd), the rb_stts needs
+>> > 16-byte alignment which probably is always satisfied, but I'm not sure,
+>> > you'll need to research the alignment guarantees.
+>>
+>> Note these are allocated using persistent calls and not kmalloc I hope
+>> at least does are page alignment.
+>
+> Good point. On powerpc at least that uses alloc_pages internally.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-11-01 20:41:08.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-11-02 13:34:24.000000000 +0100
-@@ -1059,6 +1059,7 @@ static int p54_tx_fill(struct ieee80211_
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		if (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) {
- 			*aid = 0;
- 			*queue = 3;
-@@ -1571,6 +1572,7 @@ static int p54_add_interface(struct ieee
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		priv->mode = conf->type;
- 		break;
- 	default:
-@@ -1590,6 +1592,7 @@ static int p54_add_interface(struct ieee
- 		p54_setup_mac(dev, P54_FILTER_TYPE_AP, priv->mac_addr);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		p54_setup_mac(dev, P54_FILTER_TYPE_IBSS, NULL);
- 		break;
- 	default:
-@@ -1654,6 +1657,7 @@ static int p54_config_interface(struct i
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		memcpy(priv->bssid, conf->bssid, ETH_ALEN);
- 		ret = p54_set_freq(dev, dev->conf.channel->center_freq);
- 		if (ret)
-@@ -1829,6 +1833,7 @@ struct ieee80211_hw *p54_init_common(siz
- 
- 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION |
- 					  NL80211_IFTYPE_ADHOC |
-+					  NL80211_IFTYPE_MESH_POINT |
- 					  NL80211_IFTYPE_AP);
- 
- 	dev->channel_change_time = 1000;	/* TODO: find actual value */
+Not sure if if wouldn't be better just work directly with pages in RX?
+
+Tomas
