@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:14501 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755461AbYKEUSQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60509 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738AbYKSQQN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 15:18:16 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so109343yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 12:18:15 -0800 (PST)
-Message-ID: <43e72e890811051218u3306222fm360c8d9f15b2f384@mail.gmail.com> (sfid-20081105_211820_292859_A675802A)
-Date: Wed, 5 Nov 2008 12:18:14 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 7/7] cfg80211/mac80211: Add Country IE parsing/802.11d support
-Cc: linville@tuxdriver.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Felix Fietkau" <nbd@openwrt.org>
-In-Reply-To: <1225916041.3619.168.camel@johannes.berg>
+	Wed, 19 Nov 2008 11:16:13 -0500
+Date: Wed, 19 Nov 2008 11:01:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Rami Rosen <ramirose@gmail.com>, linux-wireless@vger.kernel.org,
+	kune@deine-taler.de
+Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
+Message-ID: <20081119160135.GB3485@tuxdriver.com> (sfid-20081119_171616_910264_E5300727)
+References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com> <1226943608.3902.36.camel@johannes.berg> <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com> <1227106146.26243.43.camel@johannes.berg> <eb3ff54b0811190709q76e8b073ic71831fd38ceba18@mail.gmail.com> <1227107869.26243.52.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
-	 <1225853406-16322-7-git-send-email-lrodriguez@atheros.com>
-	 <1225853406-16322-8-git-send-email-lrodriguez@atheros.com>
-	 <1225887783.3619.108.camel@johannes.berg>
-	 <43e72e890811050857p7a6e371dq96880853dc310741@mail.gmail.com>
-	 <1225908658.3619.135.camel@johannes.berg>
-	 <43e72e890811051124g3931e244i3e29c413a05c08f3@mail.gmail.com>
-	 <1225914733.3619.150.camel@johannes.berg>
-	 <43e72e890811051210x499dab3bhd4195f592c2aeaf2@mail.gmail.com>
-	 <1225916041.3619.168.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1227107869.26243.52.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 5, 2008 at 12:14 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-11-05 at 12:10 -0800, Luis R. Rodriguez wrote:
->
->> > Ok, checksums are nice to avoid having to memcmp large things, but
->> > afaict we're talking about maybe 12 bytes, right?
->>
->> Depends on the number of triplets, but since we only support 32 reg
->> rules this means we only support 32 triplets and therefore we only
->> support a max IE of size of 99 bytes (32 * 3 + 3). Realistically in JP
->> I expect there to be around 3, 4, or 5 or maybe even 6 triplets which
->> is 21 bytes.
->
-> Alright, not so bad either though.
->
->> > If so, why don't we
->> > just keep a copy of the country IE and compare it fully every time?
->>
->> Eh. I'm inclined to leave the checksum then. We'd then have to bother
->> with freeing yet another thing later.
->
-> Yeah, ok, I don't really care much, it just seemed the checksum
-> complicated the code a bit. I guess much of that was due to the somewhat
-> unnatural split between cfg80211 and mac80211 though.
+On Wed, Nov 19, 2008 at 04:17:49PM +0100, Johannes Berg wrote:
+> On Wed, 2008-11-19 at 17:09 +0200, Rami Rosen wrote:
+> > Hello,
+> > Thanks for your answer.
+> > 
+> > Now, after looking at the API doc ,  It seems to me that sequence
+> > numbering is also missing in the zd1211rw driver.
+> 
+> Possible, but that's not a huge problem. Not having multicast buffering
+> means it won't work for powersaving clients, which is.
 
-Yeah good point, let me respin and we can see how it looks then with
-this merged to cfg80211.
+Is there some way we could take that into account?  I'm sure there
+are users who would prefer to have an AP (i.e. their laptop) that
+can't support PS clients rather than not having an AP at all.
 
-  Luis
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
