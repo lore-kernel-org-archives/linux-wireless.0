@@ -1,96 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f12.google.com ([209.85.217.12]:55804 "EHLO
-	mail-gx0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752549AbYKCH3s (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56552 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799AbYKSPmB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 02:29:48 -0500
-Received: by gxk5 with SMTP id 5so789418gxk.13
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 23:29:47 -0800 (PST)
-Message-ID: <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com> (sfid-20081103_082952_258052_A0223963)
-Date: Sun, 2 Nov 2008 23:29:47 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-Cc: "Bob Copeland" <me@bobcopeland.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>, tim.gardner@canonical.com,
-	mick@madwifi.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1225696692.3619.18.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4908B754.1050400@tpi.com>
-	 <43e72e890811011419k460b11e0he08d66022cbd606e@mail.gmail.com>
-	 <40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com>
-	 <40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
-	 <20081102184146.GA6065@hash.localnet>
-	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
-	 <1225696692.3619.18.camel@johannes.berg>
+	Wed, 19 Nov 2008 10:42:01 -0500
+Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefan Steuerwald <salsasepp@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <f76a32050811190737w37937e17ra361364ed345fd33@mail.gmail.com> (sfid-20081119_163733_464931_B9660D6E)
+References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
+	 <f76a32050811190316o28a49cddte30214c217877078@mail.gmail.com>
+	 <1227095773.26243.22.camel@johannes.berg>
+	 <f76a32050811190737w37937e17ra361364ed345fd33@mail.gmail.com>
+	 (sfid-20081119_163733_464931_B9660D6E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TIpJ8xlUtXnSuAOAsGb3"
+Date: Wed, 19 Nov 2008 16:41:26 +0100
+Message-Id: <1227109286.26243.54.camel@johannes.berg> (sfid-20081119_164207_143843_A05CE149)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 2, 2008 at 11:18 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2008-11-02 at 12:49 -0800, Luis R. Rodriguez wrote:
->> On Sun, Nov 2, 2008 at 10:41 AM, Bob Copeland <me@bobcopeland.com> wrote:
->> > On Sun, Nov 02, 2008 at 11:10:04AM +0200, Nick Kossifidis wrote:
->> >> Can you test the attached patch ?
->> >>
->> >> It works for me (tested on a AR5413)...
->> >>
->> >> makis linux # iperf -s
->> >> ------------------------------------------------------------
->> >> Server listening on TCP port 5001
->> >> TCP window size: 85.3 KByte (default)
->> >> ------------------------------------------------------------
->> >> [  4] local 192.168.1.104 port 5001 connected with 192.168.1.10 port 43192
->> >> [ ID] Interval       Transfer     Bandwidth
->> >> [  4]  0.0-10.6 sec  21.8 MBytes  17.2 Mbits/sec
->> >
->> > This patch works for me (I was seeing the same stalls).
->> >
->> > I somehow managed to trigger this after reloading the module:
->> >
->> > Nov  2 13:12:05 sludge kernel: ------------[ cut here ]------------
->> > Nov  2 13:12:05 sludge kernel: WARNING: at net/mac80211/main.c:236
->> > ieee80211_hw_config+0x82/0x8c [mac80211]()
->> > Nov  2 13:12:05 sludge kernel: Modules linked in: ath5k af_packet
->> > sha256_generic aes_i586 aes_generic cbc loop i915 drm binfmt_misc
->> > acpi_cpufreq fan container nls_utf8 hfsplus dm_crypt dm_mod kvm_intel
->> > kvm fuse sbp2 snd_hda_intel snd_pcm_oss snd_pcm snd_mixer_oss appletouch
->> > hid_apple snd_seq_dummy snd_seq_oss arc4 ecb snd_seq_midi usbhid
->> > snd_rawmidi snd_seq_midi_event mac80211 snd_seq ohci1394 snd_timer
->> > snd_seq_device sr_mod ieee1394 sky2 cfg80211 sg cdrom rtc ehci_hcd
->> > uhci_hcd thermal bitrev crc32 snd snd_page_alloc battery ac processor
->> > button evdev unix [last unloaded: ath5k]
->> > Nov  2 13:12:05 sludge kernel: Pid: 9748, comm: ath5k_pci Tainted: G
->> > W  2.6.28-rc2-wl #19
->> > [...]
->> >
->> > But I think that was just a coincidence with the hardware getting
->> > stuck in a bad state -- after reboot it was fine.  If not, this at least
->> > papers over the warning :)
->> >
->> > diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
->> > index a298e8a..0308165 100644
->> > --- a/drivers/net/wireless/ath5k/base.c
->> > +++ b/drivers/net/wireless/ath5k/base.c
->> > @@ -2796,7 +2796,8 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
->> >        sc->bintval = conf->beacon_int;
->> >        sc->power_level = conf->power_level;
->> >
->> > -       return ath5k_chan_set(sc, conf->channel);
->> > +       ath5k_chan_set(sc, conf->channel);
->> > +       return 0;
->> >  }
->>
->> Not sure I agree with the WARN_ON() if the driver's mac80211 config()
->> callback fails. In our case when we tune to a different channel we
->> have to clear any DMA operations first and then we reset the chip.
->> Reseting the chip can fail for whatever strange hw issue cases. The
->> patch fixes the complaint but is the complaint sane?
->
-> What's mac80211 to do when it fails?
 
-How about a shiny new nl80211 event?
+--=-TIpJ8xlUtXnSuAOAsGb3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Wed, 2008-11-19 at 16:37 +0100, Stefan Steuerwald wrote:
+> > http://wireless.kernel.org/en/users/Documentation/modes#AccessPoint.28A=
+P.29infrastructuremode
+> > johannes
+>=20
+> Thank you, that's it, took the latest hostapd from git.
+> I can now connect from my iPod to the XG-603 in AP mode (unencrypted
+> and WPA/TKIP, WPA2/TKIP, WPA2/CCMP tested).
+
+Cool
+
+> However - data throughput seems low; accessing a webserver I get an
+> update "now and then". I'm aware this can have a lots of causes - I
+> have more time and more cards available (XG-601/ISL3880, and an
+> AR5212/5213 one) and will play with this.
+
+What rate control algorithm did you compile into the kernel? Minstrel
+should perform quite well on p54, unless we made a mistake.
+
+johannes
+
+--=-TIpJ8xlUtXnSuAOAsGb3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJJDOjAAoJEKVg1VMiehFYh7MP/13ZxvMtLg8/wUlHzJ86oTyF
+CWMXZm1kJu+vVIbflIagvTimBjHj2/KmkqhDzRJaZSAt+2063B6C2ce1g8iYPTXe
+EiLXwUekQjaUvCDiqpF3SuZXkbJAaSJHGMkfRlJeWr4Wh+aGaAl0ln7SUccoVwym
+FzHrKilk5Zhik+BK8qWpyh6/DDVzVx8FKUtDZZUfhs6d+qzMITOUhIt8/pwrT/lU
+VTjZu2BCfbwtM+RiouARAUzoEbaB/XqMwljv/Y+h8pp3g3sZn33EWKzcj7b+qw2M
+6Y9ygZAQtlAoWXQaJ0AMJmEPgcG0lwuRWPtusOXyGxyokglI/jx9ePEOPZKE8+S7
+0SHejH3ZDjK4rTN3YdQxhKtWvFN7qEVF7G/MmTcng+W5HPleBpA3KYWNC9iZtgqU
+0RXgsmYuSAgYM07TM+uyDnsaf6Y3Rg1i9OEsOEdt2gTTuvSAODS/qNGJ3RYHKqar
+j7+JlGDtG2oRWzHjsOtpUyu/Ts10eLGyIp+OCRMpxmbUOMSUCSwlfP8XSHqNXWg3
+gp5OM9Gc/Gj1y6/X5wnmDx/fQ8zxfGJ4hoQvLmqEkVjdzDhq99jyS00COh/nIgu6
+w1R4DYoJTSYXgyB2vXknqINvuNOrGO1CzfKpy2MW5vOeFfaoxJmOHT4jBfIZVoXm
+aQixa0VpZNbo+nCYDVVE
+=fbzn
+-----END PGP SIGNATURE-----
+
+--=-TIpJ8xlUtXnSuAOAsGb3--
+
