@@ -1,68 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:9254 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbYK0Wjf (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:16049 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752080AbYKSJPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 17:39:35 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so535327wah.21
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2008 14:39:34 -0800 (PST)
-Message-ID: <69e28c910811271439g3f7beaffx431ec1aa7549f7b9@mail.gmail.com> (sfid-20081127_233939_546341_FE04773B)
-Date: Thu, 27 Nov 2008 23:39:34 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+	Wed, 19 Nov 2008 04:15:16 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so3604594wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 01:15:16 -0800 (PST)
+Message-ID: <1ba2fa240811190115i6bad0c89wb1d9c8ee281be2f8@mail.gmail.com> (sfid-20081119_101532_080582_98F2737D)
+Date: Wed, 19 Nov 2008 11:15:14 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] rtl8187: Do not wait for an ACK when IEEE80211_TX_CTL_NO_ACK is set
-Cc: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"reinette chatre" <reinette.chatre@intel.com>,
+	"Marcel Holtmann" <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"Matt Mackall" <mpm@selenic.com>,
+	"Christophe Dumez" <dchris@gmail.com>, "Zhu Yi" <yi.zhu@intel.com>,
+	"=?UTF-8?Q?Jan_V=C4=8Del=C3=A1k?=" <vcelak.jan@seznam.cz>,
+	"Thomas Witt" <witt_th@gmx.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hin-Tak Leung" <hintak.leung@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Felix Fietkau" <nbd@openwrt.org>
-In-Reply-To: <1227823149.7559.1.camel@johannes.berg>
+	"Andres Freund" <andres@anarazel.de>
+In-Reply-To: <1227021904.4014.58.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910811261431u26e341d3p51ebadca807f4b61@mail.gmail.com>
-	 <200811271543.59126.herton@mandriva.com.br>
-	 <69e28c910811271202s295bbf5bo3dc8c04c50b08a01@mail.gmail.com>
-	 <200811271952.21408.herton@mandriva.com.br>
-	 <1227823149.7559.1.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <1226969241.4014.24.camel@johannes.berg>
+	 <1227001390.4014.43.camel@johannes.berg>
+	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
+	 <1227021904.4014.58.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 27, 2008 at 10:59 PM, Johannes Berg
+On Tue, Nov 18, 2008 at 5:25 PM, Johannes Berg
 <johannes@sipsolutions.net> wrote:
-> On Thu, 2008-11-27 at 19:52 -0200, Herton Ronaldo Krzesinski wrote:
+> On Tue, 2008-11-18 at 16:13 +0200, Tomas Winkler wrote:
 >
->> In this case then shouldn't mac80211/rate control alg give a right rates[0].count?
+>> >> So I dug deeper into the DMA problems I had with iwlagn and a kind soul
+>> >> helped me in that he said something about pci-e alignment and mentioned
+>> >> the iwl_rx_allocate function to check for crossing 4KB boundaries. Since
+>> >> there's 8KB A-MPDU support, crossing 4k boundaries didn't seem like
+>> >> something the device would fail with
+>> >
+>> > Come to think of it, maybe it does. One common failure case seems to be
+>> > "this goes wrong with an 11n AP, but not on a regular one", so one
+>> > explanation for that would be that the hardware designers expect the
+>> > driver to split up the DMA into multiple DMA descriptors at 4K
+>> > boundaries, but iwlagn uses only one and undefined behaviour results.
+>> > That's something you'll need to ask the HW designers though or look up
+>> > in the datasheet.
+>>
+>> You are off here. The constrain is just that address will fit in 32
+>> bit register. I don't know why this constrain, but there is always a
+>> reason.
 >
-> It probably should put 1 into that value, yes. It doesn't seem to
-> enforce that now though, I'll take a look at doing that.
->
->> And other drivers have same bug?
->
-> possibly.
->
-> Another thing: the ".count" is the number of tries you should do, so if
-> the hardware expects retries then you need to subtract 1.
->
-> johannes
->
+> There's also the PCI-E constraint of having to split up DMA at 4k
+> boundaries, which is what I was talking about above.
 
-I actually tested that 0 is the right setting - I initially tested it
-with 1, and there was evidence that it was still retrying. Setting it
-to 0 truly behaved like a NO_ACK bit would on other HW. (I used
-aireplay-ng to get a view of transmission speed - the "chopchop" and
-"interactive replay" are good indicators. I used a patch to make all
-injected frames NO_ACK, then tested the highest rate that results in
-no multiple tries for the same number in chopchop. With the original
-code, I could transmit 25 frames per second - anything higher resulted
-in chopchop requiring more than 256 packets for each byte. Most
-drivers start to behave this way over about 600 to 700 packets per
-second. Setting the retry count to 1 resulted in a max of 220/s before
-producing more-than-256-attempts errors, still lower than what other
-drivers do with NO_ACK, suggestive of the driver still retrying.
-Setting to 0 resulted in a 625/s max, on par with other drivers.)
-This means, hdr->retry is the number of retries, unlike ".count",
-which is the number of tries, including the initial transmit.
+Have to check this but I'm not sure if this is anyhow related.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+ After reading the
+> code I'm fully aware of the 32-bit pointer (I wouldn't call it a
+> register, it's also just DMA memory)
+
+Just general wording.
+
+>> We've assumed that allocations are on the page or cache boundaries I'm
+>> not who already assured me that this is the case.
+>
+> He lied.
+
+Not just that, it was never confirmed this is the issue it was the
+first place we started to look.
+This code is there from time zero of the driver something like kernel
+2.6.18 and the problem popped only in kernel 2.6.27 so what else has
+changed.
+
+>
+>> I  actually  haven't
+>> encountered this problem on X86_64 I even have the correct check.
+>
+> Are you using swiotlb? That's the only case I can think of where the
+> alignment would always be satisfied.
+>
+Yes I have CONFIG_SWIOTLB=y in my config spec for X86_64, nevertheless
+you've mentioned that the allocation problem is due to headroom
+allocation in skb?!
+
+
+>> What
+>> I know there is difference in memory mapping in PPC64 as it has IOMMU.
+>
+> The powerpc IOMMU design isn't very peculiar. It maps 4k pages of
+> machine memory into device space. If the memory pointer you're mapping
+> isn't aligned, then the device memory pointer will not be either. I
+> suspect the same happens on any iommu design, other than machines
+> without an iommu of course, using swiotlb.
+>
+> And since the skb data is simply assigned with kmalloc, it surely won't
+> be aligned on a 256 byte boundary. 256 is _huge_.
+>
+>>  Hope this address the wrong command queue number bug but I'm not
+>> sure.
+>
+> It certainly does for me.
+>
+>> There are other places with alignment requirement in the driver we
+>> probably need to address as well.
+>
+> Haven't found any, but yeah, anything >16 byte alignment isn't
+> guaranteed (I think, might be 8, might be 32, not exactly sure)
+>
+>
+> Incidentally, where does the 36 bit limit come from? The RX has a 40 bit
+> limit if you see that it uses 32 bit pointer that's shifted by 8 bits.
+
+I'm checking with the HW guys
+Tomas
