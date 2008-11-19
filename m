@@ -1,68 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:34195 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752740AbYKCTG0 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54484 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752157AbYKSUa5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 14:06:26 -0500
-Date: Mon, 3 Nov 2008 17:06:17 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rfkill, stupid question #6
-Message-ID: <20081103190617.GE2417@khazad-dum.debian.net> (sfid-20081103_200644_501820_3D47F88E)
-References: <20081102130655.GA12766@srcf.ucam.org> <20081103141628.GB31078@khazad-dum.debian.net> <20081103141836.GA31894@srcf.ucam.org> <490F0ACC.4000808@tuffmail.co.uk> <20081103145145.GD31078@khazad-dum.debian.net> <20081103145543.GA496@srcf.ucam.org> <20081103150229.GF31078@khazad-dum.debian.net> <20081103150843.GA1107@srcf.ucam.org> <20081103163311.GA2417@khazad-dum.debian.net> <490F3C44.7080504@tuffmail.co.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <490F3C44.7080504@tuffmail.co.uk>
+	Wed, 19 Nov 2008 15:30:57 -0500
+Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Rami Rosen <ramirose@gmail.com>, linux-wireless@vger.kernel.org,
+	kune@deine-taler.de, Jouni Malinen <j@w1.fi>
+In-Reply-To: <20081119160135.GB3485@tuxdriver.com>
+References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com>
+	 <1226943608.3902.36.camel@johannes.berg>
+	 <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com>
+	 <1227106146.26243.43.camel@johannes.berg>
+	 <eb3ff54b0811190709q76e8b073ic71831fd38ceba18@mail.gmail.com>
+	 <1227107869.26243.52.camel@johannes.berg>
+	 <20081119160135.GB3485@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LtU/X96UNaHbVE/p4Gu1"
+Date: Wed, 19 Nov 2008 21:30:19 +0100
+Message-Id: <1227126620.26243.71.camel@johannes.berg> (sfid-20081119_213102_886541_67293718)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 03 Nov 2008, Alan Jenkins wrote:
-> I have one more question.  I read that if a STATE_SOFT_BLOCKED request
-> is made when the hardware is in STATE_HARD_BLOCKED, the rfkill driver is
-> expected to "double block".
 
-If it can do so, yes.  It makes for marginally better use interaction.
+--=-LtU/X96UNaHbVE/p4Gu1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> If the hard block is later cleared, the driver is expected to call
-> rfkill_force_state(SOFT_BLOCKED).  The SOFT_BLOCKED state can then be
-> cleared as normal.
+On Wed, 2008-11-19 at 11:01 -0500, John W. Linville wrote:
 
-Exactly.
+> Is there some way we could take that into account?  I'm sure there
+> are users who would prefer to have an AP (i.e. their laptop) that
+> can't support PS clients rather than not having an AP at all.
 
-> But if there is an UNBLOCK request in the double-blocked state, the
-> rfkill core will reject it and preserve the  double-blocked state.  Is
-> this intended, or a known issue?
+That's a good question. The distinction here is between empowering users
+to do the wrong thing (AP without proper PS support) and enforcing the
+right thing (with the consequence of complete loss of AP functionality).
+The issue I see here is that users will see "ohh shiny, AP support"
+without knowing that it doesn't actually really support it. Not sure
+which side of the line we want to stand on, I prefer the correctness
+side but I can see arguments for the other side, would just like to have
+users know. Maybe we could have some way to tell hostapd this and then
+have hostapd print a huge warning about it when started up?
 
-It is intended.  The user wants to unblock the radio (not "prepare it to
-unblock when I release the hardware rfkill line by doing something else"),
-so we have to error it out.
+johannes
 
-And, frankly, I don't very much like the idea of the core returning a
--EPERM and yet having done a call toggle_radio(UNBLOCK).   Not to mention
-it is yet another border condition for the hook API.
+--=-LtU/X96UNaHbVE/p4Gu1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-So, if something took the pains to cause a double block, we require
-explicit unblocking AFTER the hardware rfkill lines are released (i.e. the
-device goes from HARD to SOFT blocked).
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-BUT I don't feel strongly about it, so if someone wants to change that, I
-won't stand in the way.
+iQIcBAABAgAGBQJJJHdYAAoJEKVg1VMiehFY11sP+wUiFKJb4tvabqhpaVOSBdYi
+UvC7pJthpIp078/uy71Z9tqXLoKpAF0HBtQY36geY+Ia14L0jWb5yzj6uE57Z6DV
+D8tP5sGV3FmpJq5wWAYqeJAbcD4zQjyVoW4s8G2Ov1uAVAuGGb8o2vHR/LebkfEz
+DeQgh7NIjRUHhWo1b+F1KL+O/xW8LbtmhbbCijOH52E//ntHXBQu4Iwojd7MP73j
+KCqEvnUKcpkq8llYgcDIjmRzAsi0yYEjqGvmwttu1kN/8ixNTx7lEAnebexbGlD/
+4Qwn5TQv6b8/Ziryw8bRuekpZ9deuD5wetHclBcJMEK4eVlX+gZU26U9xka1YVX/
+IxkOopv+0B3bWzshSllkuq4dWiGQ0mqzkVtRZKxd+h+XFBqmgNsmk2oiOF1e4ir8
+ftAiUhCA9vD3Ar2uY17bAur06viYSfh5FEBBm3Ri6pISFOXSUjZskk2cmeeIIyPL
+mc3uvAVUadFlPhtpNR7vG+iQm+/JmbC/Vl9pRRCR+pVwuIALIzIXqacE1RJ9+KGw
+utKmB7KHa8sHEY2OAp63wbPCC+rw6PgHsKZB7d4clZk5S94p4xRNgLDe1Mj14L0h
+8E/u4KINwk1iGylxKuNl30yW/IU0Hf9VOPe1P9RH31riDrD9gbm7+MtPyk9Z1wvD
+VBZm+Vz39t/9ksGNCcqw
+=8nQ5
+-----END PGP SIGNATURE-----
 
-> Wouldn't it be simpler to use a bitmask so that the rfkill core can at
-> least represent this double-blocked state?  I guess the problem would be
-> how to shoehorn it into the sysfs interface.
+--=-LtU/X96UNaHbVE/p4Gu1--
 
-The core doesn't care, and doesn't have to in order to implement such a
-thing.  The drivers track it separately.
-
-The two problems is that it can be REALLY confusing for the end user, and
-that it requires a ABI change.  I don't know if it is worth it, I just know
-I am not going to be the one doing it :-)
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
