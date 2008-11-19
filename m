@@ -1,67 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:52064 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075AbYKXDWe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2008 22:22:34 -0500
-Cc: Mike Kershaw <dragorn@kismetwireless.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Message-Id: <307F10CD-3A26-4568-B815-6C61B9FFB7A3@holtmann.org> (sfid-20081124_042239_199992_369144F2)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <1227494724.2548.223.camel@debian.sh.intel.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: iwlagn MAC in deep sleep
-Date: Mon, 24 Nov 2008 04:22:27 +0100
-References: <20081121193348.GA7373@drd1813.lan> <1227491716.2548.213.camel@debian.sh.intel.com> <4270E0F0-BE5E-4448-A6B0-2E74113488F6@holtmann.org> <1227494724.2548.223.camel@debian.sh.intel.com>
+Received: from mga01.intel.com ([192.55.52.88]:64646 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753190AbYKSXb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 18:31:56 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/7] iwlwifi driver updates
+Date: Wed, 19 Nov 2008 15:32:21 -0800
+Message-Id: <1227137548-28718-1-git-send-email-reinette.chatre@intel.com> (sfid-20081120_003215_708214_3D1D2E33)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+This series contains mostly fixes for iwlwifi. Patch 7 is a fix to a bug
+that is tracked as a regression from 2.6.27
+(http://bugzilla.kernel.org/show_bug.cgi?id=12040 ). The patch does apply
+to Linus's tree also - could you please push this patch there?
 
->>> Can you please look for something called vPRO/AMT in your BIOS and
->>> try to disable it?
->>
->> what has that to do with it? You need to explain why this should help
->> at all. Just randomly enabling/disabling features of your core system
->> is not a good debugging method. And even if that makes this go away,
->> it is still a bug that needs fixed.
->
-> iwlagn currently doesn't support AMT, which is another user for the  
-> same
-> hardware. At this time, the only way we can do is to disable it.
->
-> BTW, I assume you ask this question on behalf of other people.  
-> Otherwise
-> you should involve in our internal discussion as active as the  
-> external
-> ones.
+[PATCH 1/7] iwl3945 : Fix ad-hoc mode for 3945
+[PATCH 2/7] iwlwifi: move iwl_clear_stations_table to iwl-sta.c
+[PATCH 3/7] iwlwifi: enable base band calibration in 5000 HW
+[PATCH 4/7] iwlwifi: 4965 define firmware file name once
+[PATCH 5/7] iwlwifi: TX setup fix confusion between TX queue and TX DMA channel
+[PATCH 6/7] iwlwifi: TX update chicken bits
+[PATCH 7/7] iwlwifi: prevent double key removal
 
-you have to see me like any other user of Intel wireless hardware. The  
-hardware is available to the masses and the driver is merged into the  
-upstream kernel. So the only authority of discussion here is the linux- 
-wireless mailing list. This means that everything I have to discuss  
-about wireless goes to this mailing list. Unless it involves Intel  
-confidential information there is absolutely no need for internal  
-discussions.
+Thank you
 
-Back to the topic. So we do have an issue if AMT is enabled. I have it  
-enabled and from time to time this now kills my hardware. Telling  
-someone to disable a system feature is not really the solution here.
-
-So first question is if we can detect that AMT is enabled from the  
-iwlagn driver? If yes, then we should print a warning here to inform  
-the user of a potential issue. This helps users at least to know what  
-is going.
-
-Second question is if we can tell AMT to not manage this hardware? If  
-yes, then we should certainly do so.
-
-And third question is what does it take to fix the driver to play  
-nicely with AMT.
-
-Regards
-
-Marcel
-
+Reinette
