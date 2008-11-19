@@ -1,111 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:55544 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751995AbYKXCtf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2008 21:49:35 -0500
-From: "Xu, Martin" <martin.xu@intel.com>
-To: Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
-	Vikram Kandukuri <Vikram.Kandukuri@atheros.com>,
-	Jothikumar Mothilal <Jothikumar.Mothilal@atheros.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>
-Date: Mon, 24 Nov 2008 10:49:27 +0800
-Subject: RE: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts
- per second at idle
-Message-ID: <9F0C1DB20AFA954FA1DA05309350433D4125B42A@pdsmsx503.ccr.corp.intel.com> (sfid-20081124_034944_208145_3DDF647E)
-References: <bug-11749-13098@http.bugzilla.kernel.org/>
- <20081013150525.884BC108058@picon.linux-foundation.org>
- <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
- <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com>
- <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com>
- <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com>
- <9F0C1DB20AFA954FA1DA05309350433D410CD777@pdsmsx503.ccr.corp.intel.com>
- <20081117133737.GA16412@hash.localnet>
- <9F0C1DB20AFA954FA1DA05309350433D41183AB4@pdsmsx503.ccr.corp.intel.com>
- <20081121202734.GC3540@tuxdriver.com> <20081123222735.GB30249@hash.localnet>
-In-Reply-To: <20081123222735.GB30249@hash.localnet>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+Received: from xc.sipsolutions.net ([83.246.72.84]:45893 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401AbYKSL7D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 06:59:03 -0500
+Subject: Re: [PATCH] iw: Makefile changes for easier packaging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Robby Workman <rworkman@slackware.com>
+Cc: linux-wireless@vger.kernel.org, antiwire@gmail.com
+In-Reply-To: <alpine.LNX.1.10.0811182015230.6923@bob.slackware.com> (sfid-20081119_060422_947202_BBB99A28)
+References: <alpine.LNX.1.10.0811182015230.6923@bob.slackware.com>
+	 (sfid-20081119_060422_947202_BBB99A28)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I5cbgDFOKb6cljFVNmTJ"
+Date: Wed, 19 Nov 2008 12:58:27 +0100
+Message-Id: <1227095907.26243.24.camel@johannes.berg> (sfid-20081119_125907_968920_7400411D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Qm9iOg0KWW91IGFyZSByaWdodCwgdGhlIGJzc19pbmZvcl9jaGFuZ2VkIGlzIGxvc3Qgb24gdGhl
-IHdheS4NClBsZWFzZSByZXZpZXcgYmVsb3cgcGF0Y2g6DQoNCkZyb206IE1hcnRpbiBYdSA8bWFy
-dGluLnh1QGludGVsLmNvbT4NClN1YmplY3Q6IGRpc2FibGUgYmVhY29uIGZpbHRlciB3aGVuIHN0
-YXRpb24gaXMgbm90IGFzc29jaWF0ZWQgd2l0aCBhbnkgQVAuDQoNCkF0aDVrIGRyaXZlciBoYXMg
-dG9vIG1hbnkgaW50ZXJydXB0cyBwZXIgc2Vjb25kIGF0IGlkbGUNCmh0dHA6Ly9idWd6aWxsYS5r
-ZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD0xMTc0OQ0KDQpTaWduZWQtb2ZmLWJ5OiBNYXJ0aW4g
-WHUgPG1hcnRpbi54dUBpbnRlbC5jb20+DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9hdGg1ay9iYXNlLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1ay9iYXNlLmMNCmlu
-ZGV4IDM0Y2QxYTQuLjViNTBmYTMgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9h
-dGg1ay9iYXNlLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuYw0KQEAg
-LTI0MSw2ICsyNDEsMTAgQEAgc3RhdGljIGludCBhdGg1a19nZXRfdHhfc3RhdHMoc3RydWN0IGll
-ZWU4MDIxMV9odyAqaHcsDQogc3RhdGljIHU2NCBhdGg1a19nZXRfdHNmKHN0cnVjdCBpZWVlODAy
-MTFfaHcgKmh3KTsNCiBzdGF0aWMgdm9pZCBhdGg1a19yZXNldF90c2Yoc3RydWN0IGllZWU4MDIx
-MV9odyAqaHcpOw0KIHN0YXRpYyBpbnQgYXRoNWtfYmVhY29uX3VwZGF0ZShzdHJ1Y3QgYXRoNWtf
-c29mdGMgKnNjLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKTsNCitzdGF0aWMgdm9pZCBhdGg1a19ic3Nf
-aW5mb19jaGFuZ2VkKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LA0KKwkJCQlzdHJ1Y3QgaWVlZTgw
-MjExX3ZpZiAqdmlmLA0KKwkJCQlzdHJ1Y3QgaWVlZTgwMjExX2Jzc19jb25mICpic3NfY29uZiwN
-CisJCQkJdTMyIGNoYW5nZXMpOw0KIA0KIHN0YXRpYyBzdHJ1Y3QgaWVlZTgwMjExX29wcyBhdGg1
-a19od19vcHMgPSB7DQogCS50eCAJCT0gYXRoNWtfdHgsDQpAQCAtMjU3LDYgKzI2MSw3IEBAIHN0
-YXRpYyBzdHJ1Y3QgaWVlZTgwMjExX29wcyBhdGg1a19od19vcHMgPSB7DQogCS5nZXRfdHhfc3Rh
-dHMgCT0gYXRoNWtfZ2V0X3R4X3N0YXRzLA0KIAkuZ2V0X3RzZiAJPSBhdGg1a19nZXRfdHNmLA0K
-IAkucmVzZXRfdHNmIAk9IGF0aDVrX3Jlc2V0X3RzZiwNCisJLmJzc19pbmZvX2NoYW5nZWQgPSBh
-dGg1a19ic3NfaW5mb19jaGFuZ2VkLA0KIH07DQogDQogLyoNCkBAIC0yOTUyLDcgKzI5NTcsNyBA
-QCBzdGF0aWMgdm9pZCBhdGg1a19jb25maWd1cmVfZmlsdGVyKHN0cnVjdCBpZWVlODAyMTFfaHcg
-Kmh3LA0KIAkJc2MtPm9wbW9kZSAhPSBOTDgwMjExX0lGVFlQRV9NRVNIX1BPSU5UICYmDQogCQl0
-ZXN0X2JpdChBVEhfU1RBVF9QUk9NSVNDLCBzYy0+c3RhdHVzKSkNCiAJCXJmaWx0IHw9IEFSNUtf
-UlhfRklMVEVSX1BST007DQotCWlmIChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJ
-T04gfHwNCisJaWYgKChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04gJiYgc2Mt
-PmFzc29jKSB8fA0KIAkJc2MtPm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9BREhPQyB8fA0KIAkJ
-c2MtPm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9BUCkNCiAJCXJmaWx0IHw9IEFSNUtfUlhfRklM
-VEVSX0JFQUNPTjsNCkBAIC0zMDkyLDQgKzMwOTcsMzIgQEAgYXRoNWtfYmVhY29uX3VwZGF0ZShz
-dHJ1Y3QgYXRoNWtfc29mdGMgKnNjLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQ0KIA0KIAlyZXR1cm4g
-cmV0Ow0KIH0NCitzdGF0aWMgdm9pZA0KK3NldF9iZWFjb25fZmlsdGVyKHN0cnVjdCBpZWVlODAy
-MTFfaHcgKmh3LCBib29sIGVuYWJsZSkNCit7DQorCXN0cnVjdCBhdGg1a19zb2Z0YyAqc2MgPSBo
-dy0+cHJpdjsNCisJc3RydWN0IGF0aDVrX2h3ICphaCA9IHNjLT5haDsNCisJdTMyIHJmaWx0Ow0K
-KwlyZmlsdCA9IGF0aDVrX2h3X2dldF9yeF9maWx0ZXIoYWgpOw0KKwlpZiAoZW5hYmxlKQ0KKwkJ
-cmZpbHQgfD0gQVI1S19SWF9GSUxURVJfQkVBQ09OOw0KKwllbHNlDQorCQlyZmlsdCAmPSB+QVI1
-S19SWF9GSUxURVJfQkVBQ09OOw0KKwlhdGg1a19od19zZXRfcnhfZmlsdGVyKGFoLCByZmlsdCk7
-DQorCXNjLT5maWx0ZXJfZmxhZ3MgPSByZmlsdDsNCit9DQogDQorc3RhdGljIHZvaWQgYXRoNWtf
-YnNzX2luZm9fY2hhbmdlZChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywNCisJCQkJICAgIHN0cnVj
-dCBpZWVlODAyMTFfdmlmICp2aWYsDQorCQkJCSAgICBzdHJ1Y3QgaWVlZTgwMjExX2Jzc19jb25m
-ICpic3NfY29uZiwNCisJCQkJICAgIHUzMiBjaGFuZ2VzKQ0KK3sNCisJc3RydWN0IGF0aDVrX3Nv
-ZnRjICpzYyA9IGh3LT5wcml2Ow0KKwlpZiAoY2hhbmdlcyAmIEJTU19DSEFOR0VEX0FTU09DKSB7
-DQorCQltdXRleF9sb2NrKCZzYy0+bG9jayk7DQorCQlzYy0+YXNzb2MgPSBic3NfY29uZi0+YXNz
-b2M7DQorCQlpZiAoc2MtPm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9TVEFUSU9OKQ0KKwkJCXNl
-dF9iZWFjb25fZmlsdGVyKGh3LCBzYy0+YXNzb2MpOw0KKwkJbXV0ZXhfdW5sb2NrKCZzYy0+bG9j
-ayk7DQorCX0NCit9DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvYmFz
-ZS5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvYmFzZS5oDQppbmRleCAwNmQxMDU0Li5m
-YWNjNjBkIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvYmFzZS5oDQor
-KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1ay9iYXNlLmgNCkBAIC0xNzksNiArMTc5LDcg
-QEAgc3RydWN0IGF0aDVrX3NvZnRjIHsNCiANCiAJc3RydWN0IHRpbWVyX2xpc3QJY2FsaWJfdGlt
-OwkvKiBjYWxpYnJhdGlvbiB0aW1lciAqLw0KIAlpbnQgCQkJcG93ZXJfbGV2ZWw7CS8qIFJlcXVl
-c3RlZCB0eCBwb3dlciBpbiBkYm0gKi8NCisJYm9vbAkJCWFzc29jOwkJLyogYXNzb2NhdGUgc3Rh
-dGUgKi8NCiB9Ow0KIA0KICNkZWZpbmUgYXRoNWtfaHdfaGFzYnNzaWRtYXNrKF9haCkgXA0KDQot
-LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdl
-ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
-XSBPbiBCZWhhbGYgT2YgQm9iIENvcGVsYW5kDQpTZW50OiAyMDA4xOoxMdTCMjTI1SA2OjI4DQpU
-bzogSm9obiBXLiBMaW52aWxsZQ0KQ2M6IFh1LCBNYXJ0aW47IE5pY2sgS29zc2lmaWRpczsgTHVp
-cyBSLiBSb2RyaWd1ZXo7IGxpbnV4LXdpcmVsZXNzOyB5YW5nLnkueWlAZ21haWwuY29tOyBWaWty
-YW0gS2FuZHVrdXJpOyBKb3RoaWt1bWFyIE1vdGhpbGFsOyBhdGg1ay1kZXZlbEBsaXN0cy5hdGg1
-ay5vcmc7IExpdSwgQmluZyBXZWk7IFNlbGJhaywgUm9sbGEgTjsgV2FuZywgWW9uZyBZDQpTdWJq
-ZWN0OiBSZTogW2F0aDVrLWRldmVsXSBbQnVnIDExNzQ5XSBBdGg1ayBkcml2ZXIgaGFzIHRvbyBt
-YW55IGludGVycnVwdHMgcGVyIHNlY29uZCBhdCBpZGxlDQoNCk9uIEZyaSwgTm92IDIxLCAyMDA4
-IGF0IDAzOjI3OjM0UE0gLTA1MDAsIEpvaG4gVy4gTGludmlsbGUgd3JvdGU6DQo+ID4gK3N0YXRp
-YyB2b2lkIGF0aDVrX2Jzc19pbmZvX2NoYW5nZWQoc3RydWN0IGllZWU4MDIxMV9odyAqaHcsDQo+
-ID4gKwkJCQlzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAqdmlmLA0KPiA+ICsJCQkJc3RydWN0IGllZWU4
-MDIxMV9ic3NfY29uZiAqYnNzX2NvbmYsDQo+ID4gKwkJCQl1MzIgY2hhbmdlcyk7DQo+IA0KPiBU
-aGlzIHBhdGNoIGRlZmluZXMgYXRoNWtfYnNzX2luZm9fY2hhbmdlZCwgYnV0IGRvZXNuJ3QgdXNl
-IGl0Lg0KPiBJcyB0aGF0IHJlYWxseSB3aGF0IHlvdSBtZWFudCB0byBkbz8NCg0KVGhlIGZpcnN0
-IHZlcnNpb24gb2YgdGhpcyBwYXRjaCBzZXQgLmJzc19pbmZvX2NoYW5nZWQgYnV0IGl0IGxvb2tz
-DQpsaWtlIGl0IGdvdCBsb3N0IGFsb25nIHRoZSB3YXkuICBNYXJ0aW4/DQoNCi0tIA0KQm9iIENv
-cGVsYW5kICUlIHd3dy5ib2Jjb3BlbGFuZC5jb20NCg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20g
-dGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4N
-CnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQpNb3Jl
-IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
-Lmh0bWwNCg==
+
+--=-I5cbgDFOKb6cljFVNmTJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2008-11-18 at 20:18 -0800, Robby Workman wrote:
+> Attached is a trivial patch to make packaging a bit easier.
+> No strong feelings either way, so rejection will cause no
+> hard feelings :-)
+
+Heh. You really should CC me, but I've applied it.
+
+johannes
+
+--=-I5cbgDFOKb6cljFVNmTJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJI/9gAAoJEKVg1VMiehFYQqoQAL+/V1WpRV8cYb0Q/oF+4YuX
+/9ac0DOJFrcqCzvoWOO2x60oW+iwteIIut82z7Yi4MIvD8R7XgQCp8y7+RZ2Sc2O
+VN5bnkrGNLxnyFdZm1GMBM1Mw3Hx2nIg1qGEDYTarWCYy8rgMr+Nm0nDm0sk11Ai
+mXKb/D+ASiXTvh8TLgIA4IzttdeDGv64aiRKilQ4LI3YXBVoRc8sOcbjR2yKKScw
+5pSPoHFE4ed177ShqvdQ2inJpobHPnKdiQOL+JBscCCu8cs2Y7fy4f5yaKmxK0W/
+wO5O+NYJQZ+rTeXrRDpYFV3Lo59of5Bgw4FvL+jpIF79BoURielx8hDkJgP7ju7K
+fmfvypl1lMsJF/mmKICEme+yOs9hp0LMxdyk51szbeNy/f+HDIlPl5H5Fcq9Yeri
+xboGFuFLVUcPrZPN5kNqdChTx/0iRIVzevzReduGB0/AH0ptPXoZLbWZHFaH8gTT
+YwdEdw0zgjtWqg37nt9hp9631FJnxWaZ3bafLz9mK9OBRm8EeWUML4rV7i/qM7ei
+GcKhJDvcYT+IXMhZKTEXxwLzscrDCdHzYkQTpILUDvbORpUTOHqzZmJolxxvyL8s
+/3zdENVlEBxgYThL1o+dVwcio6TtiMijiwtbpN98EOraCUzhWWVLza8wRTYrLjUn
+fMBtwzDpcK/cBGPCxV3/
+=4QDU
+-----END PGP SIGNATURE-----
+
+--=-I5cbgDFOKb6cljFVNmTJ--
+
