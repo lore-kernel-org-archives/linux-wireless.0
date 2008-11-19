@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25926 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:41383 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753117AbYKCA0C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 19:26:02 -0500
+	id S1753132AbYKSVQC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 16:16:02 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 16:26:02 -0800
-Date: Sun, 2 Nov 2008 16:25:59 -0800
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 13:16:02 -0800
+Date: Wed, 19 Nov 2008 13:16:00 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Tomas Winkler <tomasw@gmail.com>, Michael Buesch <mb@bu3sch.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: No ProbeResp - assume out of range
-Message-ID: <20081103002558.GA14153@tesla> (sfid-20081103_012607_891466_03CCC8B6)
-References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com> <200811022303.54476.mb@bu3sch.de> <1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com> <43e72e890811021458h1444d350v33a5e5b984b76495@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Rami Rosen <ramirose@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kune@deine-taler.de" <kune@deine-taler.de>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
+Message-ID: <20081119211600.GE5900@tesla> (sfid-20081119_221608_485440_663C01E4)
+References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com> <1226943608.3902.36.camel@johannes.berg> <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com> <1227106146.26243.43.camel@johannes.berg> <eb3ff54b0811190709q76e8b073ic71831fd38ceba18@mail.gmail.com> <1227107869.26243.52.camel@johannes.berg> <20081119160135.GB3485@tuxdriver.com> <1227126620.26243.71.camel@johannes.berg> <20081119210046.GC5900@tesla>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <43e72e890811021458h1444d350v33a5e5b984b76495@mail.gmail.com>
+In-Reply-To: <20081119210046.GC5900@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 02, 2008 at 02:58:49PM -0800, Luis R. Rodriguez wrote:
-> On Sun, Nov 2, 2008 at 2:42 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> > On Mon, Nov 3, 2008 at 12:03 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> >> On Sunday 02 November 2008 22:05:56 Luis R. Rodriguez wrote:
-> >>> I'm curious if others are getting this frequently as I am:
-> >>>
-> >>> No ProbeResp from current AP 00:DE:AD:BE:EE:FF - assume out of range
-> >>>
-> >>> I get this with ath5k and ath9k, can be triggered easily in ath5k by
-> >>> doing a lot of consecutive:
-> >>>
-> >>> iwlist wlan0 scan
-> >>>
-> >>> I have to check if I can trigger this with ath9k by scanning too. We
-> >>> were seeing this with ath9k but were thinking it was ath9k related as
-> >>> it can be triggered on it after doing a large TX. Wondering if this is
-> >>> more of a generic and mac80211 issue.
-> >>
-> >> IMO this is a mac80211 issue.
-> >> mac80211 immediately assumes the connection is broken, if one probe-resp
-> >> to a keekalife-proberequest is lost.
-> >> So if you scan just after the request got sent, you'll never receive the response
-> >> and mac80211 will terminate the connection.
-> >> It should try a few times, instead, before blowing up things.
+On Wed, Nov 19, 2008 at 01:00:46PM -0800, Luis Rodriguez wrote:
+> On Wed, Nov 19, 2008 at 12:30:19PM -0800, Johannes Berg wrote:
+> > On Wed, 2008-11-19 at 11:01 -0500, John W. Linville wrote:
 > >
-> > I've seen this happening  in high traffic with some APs but it can be
-> > also NIC issue. It needs to really investigate the sniffer capture I
-> > wouldn't assume its only mac80211 issue.  Probe is issued only when RX
-> > is not received for some time so there is some problem, nevertheless
-> > monitoring beacons is a better approach from my experience.
+> > > Is there some way we could take that into account?  I'm sure there
+> > > are users who would prefer to have an AP (i.e. their laptop) that
+> > > can't support PS clients rather than not having an AP at all.
+> >
+> > That's a good question. The distinction here is between empowering users
+> > to do the wrong thing (AP without proper PS support) and enforcing the
+> > right thing (with the consequence of complete loss of AP functionality).
+> > The issue I see here is that users will see "ohh shiny, AP support"
+> > without knowing that it doesn't actually really support it. Not sure
+> > which side of the line we want to stand on, I prefer the correctness
+> > side but I can see arguments for the other side, would just like to have
+> > users know. Maybe we could have some way to tell hostapd this and then
+> > have hostapd print a huge warning about it when started up?
 > 
-> Agreed if it can be NIC issue, but it seems to be a common issue now
-> across a few drivers, not just ath5k/ath9k.
-> 
-> Hm, ieee80211_rx_mgmt_beacon() is not being hit with ath5k, something is fishy.
+> How about making it Kconfigable for broken AP support and add the
+> warning there?
 
-OK I found the issue with ath5k, no beacons were being passed at all, I'll post
-a patch.
+That is have something like CONFIG_MAC80211_AP_HALF_ASSED
 
   Luis
-
