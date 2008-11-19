@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41530 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752561AbYKRTbQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2008 14:31:16 -0500
-Date: Tue, 18 Nov 2008 14:23:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Frank Seidel <fseidel@suse.de>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"hschaa@suse.de" <hschaa@suse.de>
-Subject: Re: [PATCH] Re: Problem with Kernel Oops in ipw2200
-Message-ID: <20081118192321.GC21772@tuxdriver.com> (sfid-20081118_203146_473976_A4348626)
-References: <49130E75.1000903@suse.de> <49131173.3010409@suse.de> <20081112213350.GJ2411@tuxdriver.com> <491BF062.4050705@suse.de> <1226631539.2604.411.camel@debian.sh.intel.com> <49214BF3.8050306@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49214BF3.8050306@suse.de>
+Received: from mga01.intel.com ([192.55.52.88]:64646 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753201AbYKSXb5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 18:31:57 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 7/7] iwlwifi: prevent double key removal
+Date: Wed, 19 Nov 2008 15:32:28 -0800
+Message-Id: <1227137548-28718-8-git-send-email-reinette.chatre@intel.com> (sfid-20081120_003216_235323_380F5650)
+In-Reply-To: <1227137548-28718-7-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1227137548-28718-1-git-send-email-reinette.chatre@intel.com>
+ <1227137548-28718-2-git-send-email-reinette.chatre@intel.com>
+ <1227137548-28718-3-git-send-email-reinette.chatre@intel.com>
+ <1227137548-28718-4-git-send-email-reinette.chatre@intel.com>
+ <1227137548-28718-5-git-send-email-reinette.chatre@intel.com>
+ <1227137548-28718-6-git-send-email-reinette.chatre@intel.com>
+ <1227137548-28718-7-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 17, 2008 at 11:48:19AM +0100, Frank Seidel wrote:
-> From: Zhu Yi <yi.zhu@intel.com>
-> 
-> Fixes Oops in ipw2200:ipw_tx_skb when pinging through
-> a WPA enterprise connection.
-> 
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> Tested-by: Frank Seidel <fseidel@suse.de>
-> Signed-off-by: Ffrank Seidel <fseidel@suse.de>
-> 
-> ---
->  drivers/net/wireless/ipw2200.c |    5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> --- a/drivers/net/wireless/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2200.c
-> @@ -10190,6 +10190,11 @@ static int ipw_tx_skb(struct ipw_priv *p
->  	u16 remaining_bytes;
->  	int fc;
->  
-> +	if (!(priv->status & STATUS_ASSOCIATED)) {
-> +		IPW_DEBUG_TX("Tx attempt while not associated.\n");
-> +		goto drop;
-> +	}
-> +
->  	hdr_len = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_ctl));
->  	switch (priv->ieee->iw_mode) {
->  	case IW_MODE_ADHOC:
-> 
+From: Zhu Yi <yi.zhu@intel.com>
 
-Well, I'm sorry to be a PITA...but the changelog doesn't really
-explain how the patch works or what it is doing.  Also, this still
-seems to me more like a band-aid than a real fix...?
+Do not remove the same key twice.
 
-John
+This patch also fixes a memory corruption problem reported in
+http://marc.info/?l=linux-wireless&m=122641417231586&w=2 and tracked in
+http://bugzilla.kernel.org/show_bug.cgi?id=12040.
+
+When the key is removed a second time the offset is set to 255 - this index
+is not valid for the ucode_key_table and corrupts the eeprom pointer (which
+is 255 bits from ucode_key_table).
+
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Tested-by: Carlos R. Mafra <crmafra2@gmail.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+John, Could you please push this patch up to 2.6.28 also?
+
+ drivers/net/wireless/iwlwifi/iwl-sta.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 0222ef8..27f7108 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -809,6 +809,12 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 		return 0;
+ 	}
+ 
++	if (WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
++		 "Removing wrong key %d 0x%x\n", keyconf->keyidx, key_flags)) {
++		spin_unlock_irqrestore(&priv->sta_lock, flags);
++		return 0;
++	}
++
+ 	if (!test_and_clear_bit(priv->stations[sta_id].sta.key.key_offset,
+ 		&priv->ucode_key_table))
+ 		IWL_ERROR("index %d not used in uCode key table.\n",
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+1.5.4.3
+
