@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:62009 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754398AbYKEKai (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:31466 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753168AbYKSN7b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 05:30:38 -0500
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Christoph Hellwig" <hch@infradead.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: No ProbeResp - assume out of range
-References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com>
-	<20081104181958.GA22897@infradead.org>
-	<43e72e890811041115v1f7901a0w36593f9852d03c86@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 05 Nov 2008 12:30:20 +0200
-Message-ID: <87ljvyfosj.fsf@nokia.com> (sfid-20081105_113042_247448_C82EB9E9)
+	Wed, 19 Nov 2008 08:59:31 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so1374107eyi.37
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 05:59:29 -0800 (PST)
+Message-ID: <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com> (sfid-20081119_145935_547433_CC630140)
+Date: Wed, 19 Nov 2008 15:59:29 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	kune@deine-taler.de
+In-Reply-To: <1226943608.3902.36.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com>
+	 <1226943608.3902.36.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <mcgrof@gmail.com> writes:
+Hello,
+Regarding zd1211 working as an access point in master mode:
 
-> I posted a patch which enables beacons to be received by the STA --
-> this however, as was pointed out by the patch that disabled the beacon
-> filter on ath5k (note not ath9k, but ath9k also had it disabled),
-> increases the number of interrupts on the device, as it seems it
-> enables beacons not only for the BSSID you are on but for all BSSIDs.
-> Not sure what other devices support and how their beacon filter, if
-> they have any, works.
+1) Searching for it shows that zd1211 chips do support acting as an
+access point (master mode).
 
-There are beacon filter implementations, for example stlc4560 works
-such that it doesn't send any beacons to the host but sends an event
-whenever it cannot here beacons anymore.
+Two examples:
+1.1) In the link below it says: "ZD1211 can operate in the mode of
+station and access point."
+http://linux.softpedia.com/get/System/Hardware/ZD1211-Driver-12712.shtml
 
-> The patch I posted is a fix that works with what mac80211 expects --
-> beacons. The way I'm inclined to resolve this properly in mac80211
-> is so that we tell drivers to enable beacons in STA mode (if it
-> supports this, HW_CAP flag I guess) only after we miss a probe
-> reply, or while we are scanning, that way we can also listen for
-> beacons in case we want to roam away to another AP. Just throwing
-> some ideas out there. Any comments?
+2) I saw that in the zd1201 driver there is an access point parameter
+to the module ;
+ in drivers/net/wireless/zd1201.c, we have:
+ module_param(ap, int, 0).
 
-I and Johannes discussed about this earlier:
+- Can you please elaborate a bit about how can we know whether a
+device support or does not support multicast buffering ?
 
-http://marc.info/?l=linux-wireless&m=122441202315681&w=2
+- Could it be that some zd1211 chipsets do support multicast
+buffering, and some do not ?
 
-It should be fairly trivial to implement as a first step, we can
-improve it as we learn more.
+Regards,
+Rami Rosen
 
--- 
-Kalle Valo
+
+On Mon, Nov 17, 2008 at 7:40 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-11-17 at 17:51 +0200, Rami Rosen wrote:
+>> This patch adds initial support for master mode for zd1211rw USB
+>> wireless driver (via tools such as  hostapd).
+>> It enables basic functionality like association from a managed station
+>> and identifying the master mode by scanning from a station.
+>
+> NAK. This device does not support multicast buffering.
+>
+> johannes
+>
