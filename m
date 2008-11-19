@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37122 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753760AbYKFObI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 09:31:08 -0500
-Date: Thu, 6 Nov 2008 08:49:50 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: Re: [PATCH 1/2 2.6.28] iwlwifi : Fix channel scanning/association
-	in 5Ghz band
-Message-ID: <20081106134950.GB14184@tuxdriver.com> (sfid-20081106_153132_117397_0A76B85E)
-References: <1225912449-26625-1-git-send-email-reinette.chatre@intel.com> <B887D922-0154-4365-A44D-F284A5DF9386@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <B887D922-0154-4365-A44D-F284A5DF9386@linux.intel.com>
+Received: from c60.cesmail.net ([216.154.195.49]:37145 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754273AbYKSTNm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 14:13:42 -0500
+Subject: Re: [PATCH] wireless: sysfs was displaying different values for
+	level and noise than procfs
+From: Pavel Roskin <proski@gnu.org>
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200811151831.26403.arvidjaar@mail.ru>
+References: <200811151831.26403.arvidjaar@mail.ru>
+Content-Type: text/plain
+Date: Wed, 19 Nov 2008 14:13:39 -0500
+Message-Id: <1227122019.2196.14.camel@dv> (sfid-20081119_201348_225220_15F9403F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 05, 2008 at 11:17:22PM +0100, Marcel Holtmann wrote:
+On Sat, 2008-11-15 at 18:31 +0300, Andrey Borzenkov wrote:
+> Subject: [PATCH] wireless: sysfs was displaying different values for level and noise than procfs
+> From: Andrey Borzenkov <arvidjaar@mail.ru>
+> 
+> /proc/net/wireless asjusts display of signal and noise level depending on
+> whether units are percentage or dBm. Use the same format in sysfs. This
+> makes it easy to know unit - below zero is dBm, above zero is percent.
 
->> This patch is related to bug 11870 at bugzilla.kernel.org. With
->> correct regulatory information the number of channels to scan
->> will be correct and not zero as seen in that bug.
->>
->> This patch eliminates the need for wireless to be compiled with
->> CONFIG_WIRELESS_OLD_REGULATORY to get correct regulatory behavior with
->> iwlwifi.
->
-> so this is still for 2.6.28, but for 2.6.29 and wireless-testing the API 
-> changed and we need a separate or different patch.
->
-> John, Dave what is your take on pushing this to Linus this late in the  
-> merge window? I personally think we should do that. And if not, then  
-> change the Intel wireless Kconfig to select  
-> CONFIG_WIRELESS_OLD_REGULATORY by default at least.
+I've seen received power up to 3 dBm.  The AP was using an amplifier
+(it's specialized hardware), and it's possible that the card on the
+station side was exaggerating the signal.  However, the data we report
+should not need any guesswork to be interpreted.  It may be parsed by
+userspace software.
 
-CONFIG_WIRELESS_OLD_REGULATORY is already 'default y' now.  I don't
-really see why iwlwifi should _require_ that if someone decides to
-choose a non-default configuration.
+Receiving 1 mW out of 200 mW is not impossible in some antenna
+configurations even with consumer devices.
 
-John
+> Before:
+> {pts/1}% cat /sys/class/net/eth1/wireless/level
+> 203
+> {pts/1}% cat /sys/class/net/eth1/wireless/noise
+> 166
+
+> +	return sprintf(buf, format_string, (__s32)iw->field -		\
+> +			((iw->qual.updated & IW_QUAL_DBM) ? 0x100 : 0)); \
+
+I think non-dBm data should be shown in a special format: "203/255"
+where 255 is the maximal value, and the dBm data should be shown as
+numbers: "-48".  This way, we encourage use of dBm data by making it
+easier to parse.
+
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Regards,
+Pavel Roskin
