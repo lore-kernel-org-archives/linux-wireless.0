@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:31244 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751080AbYKGR6O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 12:58:14 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/13] iwlwifi: trivial fix in includes
-Date: Fri,  7 Nov 2008 09:58:36 -0800
-Message-Id: <1226080726-24860-4-git-send-email-reinette.chatre@intel.com> (sfid-20081107_185821_340262_17887B61)
-In-Reply-To: <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39193 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbYKSBe0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Nov 2008 20:34:26 -0500
+Subject: Re: pull request: wireless-2.6 2008-11-18
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sfr@canb.auug.org.au
+In-Reply-To: <20081119000719.GA19756@tuxdriver.com> (sfid-20081119_014629_475391_D51592F4)
+References: <20081119000719.GA19756@tuxdriver.com>
+	 (sfid-20081119_014629_475391_D51592F4)
+Content-Type: text/plain
+Date: Wed, 19 Nov 2008 02:33:38 +0100
+Message-Id: <1227058418.4014.99.camel@johannes.berg> (sfid-20081119_023431_962702_1B01B0BF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+> and a final one fixes some mysterious DMA alignment problems
+> that have been plaguing iwlwifi for some time.
 
-This patch removes one FIXME: in rearranging includes
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> The following changes since commit 5f9021cfdc3524a4c5e3d7ae2d049eb7adcd6776:
+>   Johannes Berg (1):
+>         rtnetlink: propagate error from dev_change_flags in do_setlink()
+
+heh.
+
+>      iwlagn: fix RX skb alignment
+
+So Luis pointed out a bug in that, it might be useful to squish in this
+patch: http://marc.info/?l=linux-wireless&m=122705425425763&w=2
+
+(also below for reference)
+
+But we can also just add it on top, whichever way you prefer.
+
+johannes
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 8eb0203..ec474db 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -30,10 +30,9 @@
- #include <linux/module.h>
- #include <net/mac80211.h>
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-19 01:16:12.000000000 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-19 01:19:13.000000000 +0100
+@@ -1229,9 +1229,11 @@ void iwl_rx_handle(struct iwl_priv *priv
  
--struct iwl_priv; /* FIXME: remove */
--#include "iwl-debug.h"
- #include "iwl-eeprom.h"
- #include "iwl-dev.h" /* FIXME: remove */
-+#include "iwl-debug.h"
- #include "iwl-core.h"
- #include "iwl-io.h"
- #include "iwl-rfkill.h"
--- 
-1.5.4.3
+ 		rxq->queue[i] = NULL;
+ 
+-		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->aligned_dma_addr,
+-					    priv->hw_params.rx_buf_size,
+-					    PCI_DMA_FROMDEVICE);
++		dma_sync_single_range_for_cpu(
++				&priv->pci_dev->dev, rxb->real_dma_addr,
++				rxb->aligned_dma_addr - rxb->real_dma_addr,
++				priv->hw_params.rx_buf_size,
++				PCI_DMA_FROMDEVICE);
+ 		pkt = (struct iwl_rx_packet *)rxb->skb->data;
+ 
+ 		/* Reclaim a command buffer only if this packet is a response
+
 
