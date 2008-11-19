@@ -1,74 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:42744 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751333AbYKNUdF (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50142 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753417AbYKSOtm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 15:33:05 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so1581360wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 12:33:04 -0800 (PST)
-Message-ID: <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com> (sfid-20081114_213312_225829_4885C75B)
-Date: Fri, 14 Nov 2008 15:33:04 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Dan McGee" <dpmcgee@gmail.com>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Sujith <m.sujith@gmail.com>, linux-wireless@vger.kernel.org,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
-	 <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
-	 <43e72e890811140937h4dc03cf8g50df7f74efcd28b2@mail.gmail.com>
-	 <b6c5339f0811140949m462e3eecx49f114f729b33e7c@mail.gmail.com>
-	 <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
-	 <18717.49111.572993.44410@localhost.localdomain>
-	 <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com>
-	 <18717.50308.330801.765686@localhost.localdomain>
-	 <43e72e890811141037j5328f71fx7badb6f2b0e0831d@mail.gmail.com>
-	 <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com>
+	Wed, 19 Nov 2008 09:49:42 -0500
+Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	kune@deine-taler.de
+In-Reply-To: <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com> (sfid-20081119_145930_351555_6430D13C)
+References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com>
+	 <1226943608.3902.36.camel@johannes.berg>
+	 <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com>
+	 (sfid-20081119_145930_351555_6430D13C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7LORQ6Hxk0v3hdW4882c"
+Date: Wed, 19 Nov 2008 15:49:06 +0100
+Message-Id: <1227106146.26243.43.camel@johannes.berg> (sfid-20081119_154945_736781_A57D5DCE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2008 at 2:33 PM, Dan McGee <dpmcgee@gmail.com> wrote:
-> On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Fri, Nov 14, 2008 at 10:33 AM, Sujith <m.sujith@gmail.com> wrote:
->>> Luis R. Rodriguez wrote:
->>>> > From the original log:
->>>> > ath5k_pci 0000:01:00.0: registered as ''
->>>>
->>>> That comes from
->>>>
->>>> dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
->>>>
->>>> which means that may be buggy too as wiphy_name() gets
->>>>
->>>> return wiphy->dev.bus_id;
->>>>
->>>> and we only have set at that point wiphy->dev.parent IIRC.
->>>>
->>>
->>> Nope, parent is set after that call in SET_IEEE80211_DEV()
->>> phy[x] gets assigned in alloc_hw().
->>>
->>> So why is it NULL even if alloc_hw() succeeds ?
->>
->> Parent is wiphy->dev.parent not wiphy->dev though
 
-Sujith is right, wiphy->dev.bus_id should be set by the time that's printed,
-since wiphy_new in alloc_hw fills it in.  Curiouser and curiouser.  I look
-forward to this being an obvious and embarrassing bug :)
+--=-7LORQ6Hxk0v3hdW4882c
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> So I'm at work for another 4 or 5 hours, but I should have a chance to
-> hack at anything tonight you guys want me to. Let me know if the
-> earlier suggestions in this thread still apply.
+On Wed, 2008-11-19 at 15:59 +0200, Rami Rosen wrote:
 
-I think the printks will still be useful, if only to verify we're on
-the right track.  Which compat-wireless version are you using?
+> Two examples:
+> 1.1) In the link below it says: "ZD1211 can operate in the mode of
+> station and access point."
+> http://linux.softpedia.com/get/System/Hardware/ZD1211-Driver-12712.shtml
 
-BTW from kerneloops, several people are having this with other drivers than
-ath5k.
+Maybe it can.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> - Can you please elaborate a bit about how can we know whether a
+> device support or does not support multicast buffering ?
+
+I have no idea. At minimum, the driver needs to do what the wiki says:
+http://wireless.kernel.org/en/developers/Documentation/mac80211/API
+You'll also want to read the 802.11 docs about this.
+
+> - Could it be that some zd1211 chipsets do support multicast
+> buffering, and some do not ?
+
+Doubt it, they all use the same firmware.
+
+johannes
+
+--=-7LORQ6Hxk0v3hdW4882c
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJJCdeAAoJEKVg1VMiehFYxfIP/3jbkWue2ekJKYtk3NN98UE4
+PcKPB3YZV32NQ+YZSNj1yUWhxyzxVYPXxHKix8yu0GjbddY3VOxct6nvhsJojuOq
+rA2txutmjrjAVmkSLI2A6tkxT2NOE+sPxhoOwISQ3IM1iwH8szn2ve35kYz2tHD1
+fP1XQybHMxX74Edqj3tmWjuQBo7ldHOZ4m17GxuX4VhNdvqei4ehIQWXfGM2qWdR
+w50kdfn6GN3qprT7jrst2+H9ERicyr0MsACIeVcoY3r3pFhKWD9wCX2bJ0+qVn6o
+OHY9HaElw+vul7em259qeoQ/GFTXEj/+Kti4yhNVcKB888hEeFMluSNCkUTXTKiy
+bhakgSfCDDTFAuJUk6kJOm5r9k0/K4QOkln7jbEdpMzGTyR43thbz/6znab+59i2
+wJB8GfmgJszfz/r1dOpBr7CMlS7Q1sc76G2SJ62/7mD/wf7FwBEFvyio7jOnvJEz
+rwoJ0z8RtXKe/884nKbdATuyWxnbIaeCPYCeaiUIvKiMVdn5Q+LbVITDSj/7YrqZ
+YxefB2dvtjvyYt+1FRFMq9p7SvOaSeYp0C5d2xzf7ZqoYpwfiLd6hHzjEFVzjlF7
+QWNxiRdwIWT2Vq+cxErtJr+4eeyr/WRWdkJ7GH+b3EuciSbTM1z1xnd203jQF+2O
+vPWlqmhPlmIZVbKk05HG
+=Da73
+-----END PGP SIGNATURE-----
+
+--=-7LORQ6Hxk0v3hdW4882c--
+
