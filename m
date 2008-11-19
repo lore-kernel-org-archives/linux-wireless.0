@@ -1,152 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60509 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:10060 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754307AbYKVBlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 20:41:36 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 17:41:35 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
-	<zenczykowski@gmail.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: Handle -ENOMEM on RX gracefully
-Date: Fri, 21 Nov 2008 17:41:33 -0800
-Message-ID: <1227318093-14825-1-git-send-email-lrodriguez@atheros.com> (sfid-20081122_024138_754815_4429C95B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752502AbYKSXb5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 18:31:57 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/7] iwlwifi: move iwl_clear_stations_table to iwl-sta.c
+Date: Wed, 19 Nov 2008 15:32:23 -0800
+Message-Id: <1227137548-28718-3-git-send-email-reinette.chatre@intel.com> (sfid-20081120_003215_795299_EA586317)
+In-Reply-To: <1227137548-28718-2-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1227137548-28718-1-git-send-email-reinette.chatre@intel.com>
+ <1227137548-28718-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We would get an oops on RX on -ENOMEM by passing
-NULL to the hardware on ath_rx_buf_link(). The oops
-would look something like this:
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-ath_rx_tasklet+0x515/0x53b
-ath9k_tasklet+0x48
-tasklet_action
-__do_softirq
-irq_exit
-do_IRQ
+This patch moves iwl_clear_stations_table into iwl-sta.c
 
-RIP: ath_rx_buf_link+0x3a
-
-We correct this by handling the requeue directly on
-the ath_rx_tasklet() and trying to allocate an skb
-*prior* to sending up the last hardware processed
-skb. If we run out of memory this gauranteees we have
-skbs to work with while it simply drops new received
-frames.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath9k/recv.c |   57 +++++++++++++++++--------------------
- 1 files changed, 26 insertions(+), 31 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.c |   23 +----------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 -
+ drivers/net/wireless/iwlwifi/iwl-sta.c  |   23 +++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-sta.h  |    1 +
+ 4 files changed, 25 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index 0cd2a91..01f37e8 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -90,29 +90,6 @@ static struct sk_buff *ath_rxbuf_alloc(struct ath_softc *sc, u32 len)
- 	return skb;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 8bd4d08..9a2e964 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -37,6 +37,7 @@
+ #include "iwl-io.h"
+ #include "iwl-rfkill.h"
+ #include "iwl-power.h"
++#include "iwl-sta.h"
+ 
+ 
+ MODULE_DESCRIPTION("iwl core");
+@@ -237,28 +238,6 @@ int iwl_hw_nic_init(struct iwl_priv *priv)
  }
+ EXPORT_SYMBOL(iwl_hw_nic_init);
  
--static void ath_rx_requeue(struct ath_softc *sc, struct ath_buf *bf)
+-/**
+- * iwl_clear_stations_table - Clear the driver's station table
+- *
+- * NOTE:  This does not clear or otherwise alter the device's station table.
+- */
+-void iwl_clear_stations_table(struct iwl_priv *priv)
 -{
--	struct sk_buff *skb;
+-	unsigned long flags;
 -
--	ASSERT(bf != NULL);
+-	spin_lock_irqsave(&priv->sta_lock, flags);
 -
--	if (bf->bf_mpdu == NULL) {
--		skb = ath_rxbuf_alloc(sc, sc->sc_rxbufsize);
--		if (skb != NULL) {
--			bf->bf_mpdu = skb;
--			bf->bf_buf_addr = pci_map_single(sc->pdev, skb->data,
--						 sc->sc_rxbufsize,
--						 PCI_DMA_FROMDEVICE);
--			bf->bf_dmacontext = bf->bf_buf_addr;
+-	if (iwl_is_alive(priv) &&
+-	   !test_bit(STATUS_EXIT_PENDING, &priv->status) &&
+-	   iwl_send_cmd_pdu_async(priv, REPLY_REMOVE_ALL_STA, 0, NULL, NULL))
+-		IWL_ERROR("Couldn't clear the station table\n");
 -
--		}
--	}
+-	priv->num_stations = 0;
+-	memset(priv->stations, 0, sizeof(priv->stations));
 -
--	list_move_tail(&bf->list, &sc->sc_rxbuf);
--	ath_rx_buf_link(sc, bf);
+-	spin_unlock_irqrestore(&priv->sta_lock, flags);
 -}
--
--
- static int ath_rate2idx(struct ath_softc *sc, int rate)
+-EXPORT_SYMBOL(iwl_clear_stations_table);
+ 
+ void iwl_reset_qos(struct iwl_priv *priv)
  {
- 	int i = 0, cur_band, n_rates;
-@@ -454,7 +431,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 5d4e2e2..82bf263 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -182,7 +182,6 @@ struct iwl_cfg {
+ struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg,
+ 		struct ieee80211_ops *hw_ops);
+ void iwl_hw_detect(struct iwl_priv *priv);
+-void iwl_clear_stations_table(struct iwl_priv *priv);
+ void iwl_reset_qos(struct iwl_priv *priv);
+ void iwl_set_rxon_chain(struct iwl_priv *priv);
+ int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 2529c23..0222ef8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -470,6 +470,29 @@ out:
+ }
+ EXPORT_SYMBOL(iwl_remove_station);
  
- 	struct ath_buf *bf;
- 	struct ath_desc *ds;
--	struct sk_buff *skb = NULL;
-+	struct sk_buff *skb = NULL, *requeue_skb;
- 	struct ieee80211_rx_status rx_status;
- 	struct ath_hal *ah = sc->sc_ah;
- 	struct ieee80211_hdr *hdr;
-@@ -531,17 +508,28 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		 * chain it back at the queue without processing it.
- 		 */
- 		if (flush)
--			goto rx_next;
-+			goto requeue;
- 
- 		if (!ds->ds_rxstat.rs_datalen)
--			goto rx_next;
-+			goto requeue;
- 
- 		/* The status portion of the descriptor could get corrupted. */
- 		if (sc->sc_rxbufsize < ds->ds_rxstat.rs_datalen)
--			goto rx_next;
-+			goto requeue;
- 
- 		if (!ath_rx_prepare(skb, ds, &rx_status, &decrypt_error, sc))
--			goto rx_next;
-+			goto requeue;
++/**
++ * iwl_clear_stations_table - Clear the driver's station table
++ *
++ * NOTE:  This does not clear or otherwise alter the device's station table.
++ */
++void iwl_clear_stations_table(struct iwl_priv *priv)
++{
++	unsigned long flags;
 +
-+		/* Ensure we always have an skb to requeue once we are done
-+		 * processing the current buffer's skb */
-+		requeue_skb = ath_rxbuf_alloc(sc, sc->sc_rxbufsize);
++	spin_lock_irqsave(&priv->sta_lock, flags);
 +
-+		/* If there is no memory we ignore the current RX'd frame,
-+		 * tell hardware it can give us a new frame using the old
-+		 * skb and put it at the tail of the sc->sc_rxbuf list for
-+		 * processing. */
-+		if (!requeue_skb)
-+			goto requeue;
- 
- 		/* Sync and unmap the frame */
- 		pci_dma_sync_single_for_cpu(sc->pdev, bf->bf_buf_addr,
-@@ -578,7 +566,13 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 
- 		/* Send the frame to mac80211 */
- 		__ieee80211_rx(sc->hw, skb, &rx_status);
--		bf->bf_mpdu = NULL;
++	if (iwl_is_alive(priv) &&
++	   !test_bit(STATUS_EXIT_PENDING, &priv->status) &&
++	   iwl_send_cmd_pdu_async(priv, REPLY_REMOVE_ALL_STA, 0, NULL, NULL))
++		IWL_ERROR("Couldn't clear the station table\n");
 +
-+		/* We will now give hardware our shiny new allocated skb */
-+		bf->bf_mpdu = requeue_skb;
-+		bf->bf_buf_addr = pci_map_single(sc->pdev, requeue_skb->data,
-+					 sc->sc_rxbufsize,
-+					 PCI_DMA_FROMDEVICE);
-+		bf->bf_dmacontext = bf->bf_buf_addr;
++	priv->num_stations = 0;
++	memset(priv->stations, 0, sizeof(priv->stations));
++
++	spin_unlock_irqrestore(&priv->sta_lock, flags);
++}
++EXPORT_SYMBOL(iwl_clear_stations_table);
++
+ static int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
+ {
+ 	int i;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 61eede5..7b98ea4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -53,6 +53,7 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
  
- 		/*
- 		 * change the default rx antenna if rx diversity chooses the
-@@ -590,8 +584,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		} else {
- 			sc->sc_rxotherant = 0;
- 		}
--rx_next:
--		ath_rx_requeue(sc, bf);
-+requeue:
-+		list_move_tail(&bf->list, &sc->sc_rxbuf);
-+		ath_rx_buf_link(sc, bf);
- 	} while (1);
- 
- 	spin_unlock_bh(&sc->sc_rxbuflock);
+ int iwl_rxon_add_station(struct iwl_priv *priv, const u8 *addr, int is_ap);
+ int iwl_remove_station(struct iwl_priv *priv, const u8 *addr, int is_ap);
++void iwl_clear_stations_table(struct iwl_priv *priv);
+ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr);
+ int iwl_get_ra_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr);
+ u8 iwl_add_station_flags(struct iwl_priv *priv, const u8 *addr,
 -- 
-1.5.6.rc2.15.g457bb.dirty
+1.5.4.3
 
