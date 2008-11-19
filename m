@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:36255 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750734AbYKNFJg (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:56085 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752907AbYKSNA1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 00:09:36 -0500
-Message-ID: <491D080E.7040505@lwfinger.net> (sfid-20081114_060943_268492_4F325FD0)
-Date: Thu, 13 Nov 2008 23:09:34 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 19 Nov 2008 08:00:27 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so3689188wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 05:00:26 -0800 (PST)
+Message-ID: <1ba2fa240811190500h56e97908of7a29a1e70c8b54e@mail.gmail.com> (sfid-20081119_140034_152800_45AF5815)
+Date: Wed, 19 Nov 2008 15:00:26 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"reinette chatre" <reinette.chatre@intel.com>,
+	"Marcel Holtmann" <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1227097737.26243.28.camel@johannes.berg>
 MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 0/3] rtl8187: throughput fix/conf_tx callback/ack tx pkts
-References: <1226590756-10743-1-git-send-email-herton@mandriva.com.br>
-In-Reply-To: <1226590756-10743-1-git-send-email-herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+References: <1226969241.4014.24.camel@johannes.berg>
+	 <1227001390.4014.43.camel@johannes.berg>
+	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
+	 <1227055693.4014.95.camel@johannes.berg>
+	 <1ba2fa240811190121h3ff51824o90b72a206192e793@mail.gmail.com>
+	 <1227094832.26243.10.camel@johannes.berg>
+	 <1ba2fa240811190424v4b9074e5u4e679bea278b1f3@mail.gmail.com>
+	 <1227097737.26243.28.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> Three patches that fixes/introduces the following in rtl8187:
-> - Fixes 8187B reported throughput issues after short slot handling addition.
-> - Implement conf_tx callback, instead of hardcoding some tx queue values.
-> - Make rate control work for 8187B sending correct feedback about transmitted
->   packet status, using one of the Bulk In endpoints that provides this info.
+On Wed, Nov 19, 2008 at 2:28 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-11-19 at 14:24 +0200, Tomas Winkler wrote:
+>> On Wed, Nov 19, 2008 at 1:40 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Wed, 2008-11-19 at 11:21 +0200, Tomas Winkler wrote:
+>> >
+>> >> > Indeed. One would seem to be the buffer list itself, which also needs to
+>> >> > fit within a 40-bit mask with 256 alignment (rxq->bd), the rb_stts needs
+>> >> > 16-byte alignment which probably is always satisfied, but I'm not sure,
+>> >> > you'll need to research the alignment guarantees.
+>> >>
+>> >> Note these are allocated using persistent calls and not kmalloc I hope
+>> >> at least does are page alignment.
+>> >
+>> > Good point. On powerpc at least that uses alloc_pages internally.
+>>
+>> Not sure if if wouldn't be better just work directly with pages in RX?
+>
+> Well, in theory yes, but it's not possible to have skb->data point to a
+> separate page rather than a kmalloc area. And while you could allocate
+> an skb with very little headroom and the rest of the skb data in the
+> fraglist with pages, mac80211 couldn't handle it.
 
-With these 3 patches applied, my throughput improved again. Using sftp with an
-128 MB file, my transmit rate increased to to 1.5 MB/s. With tcpperf, I get 9.9
-Mb/s - roughly the same.
-
-I'm using the 'pid' rate-control method, which now stabilizes at a lower stated
-rate than previously seen, but the throughput is higher. Curious.
-
-Larry
+I will look how this is handled in Ethernet drivers there should be
+some example with jumbo packets.
+Tomas
