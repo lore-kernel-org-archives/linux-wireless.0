@@ -1,72 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59850 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:37142 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752715AbYK2VdM (ORCPT
+	with ESMTP id S1752735AbYKSMeB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2008 16:33:12 -0500
-Subject: Re: [PATCH 1/3] mac80211: add power state transition callbacks
+	Wed, 19 Nov 2008 07:34:01 -0500
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org,
-	Stefan Steuerwald <salsasepp@googlemail.com>
-In-Reply-To: <200811291806.20309.chunkeey@web.de>
-References: <200811282345.48379.chunkeey@web.de>
-	 <200811291315.01685.chunkeey@web.de>
-	 <1227961293.3542.7.camel@johannes.berg>
-	 <200811291806.20309.chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pnCCqraw0ZtptXv7s4lg"
-Date: Sat, 29 Nov 2008 22:33:06 +0100
-Message-Id: <1227994386.3542.15.camel@johannes.berg> (sfid-20081129_223315_274155_4DA929E9)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
+	Christophe Dumez <dchris@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
+	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
+	Thomas Witt <witt_th@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andres Freund <andres@anarazel.de>
+In-Reply-To: <1ba2fa240811190422o4eebb26ai17ea12825ae8e708@mail.gmail.com> (sfid-20081119_132259_432501_DF04DFBB)
+References: <1226969241.4014.24.camel@johannes.berg>
+	 <1227001390.4014.43.camel@johannes.berg>
+	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
+	 <1227021904.4014.58.camel@johannes.berg>
+	 <1ba2fa240811190115i6bad0c89wb1d9c8ee281be2f8@mail.gmail.com>
+	 <1227094594.26243.6.camel@johannes.berg>
+	 <1ba2fa240811190422o4eebb26ai17ea12825ae8e708@mail.gmail.com>
+	 (sfid-20081119_132259_432501_DF04DFBB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-COMhdIac1SKYgyBPgRqn"
+Date: Wed, 19 Nov 2008 13:33:13 +0100
+Message-Id: <1227097994.26243.33.camel@johannes.berg> (sfid-20081119_133405_721470_4082DCD2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-pnCCqraw0ZtptXv7s4lg
+--=-COMhdIac1SKYgyBPgRqn
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-11-29 at 18:06 +0100, Christian Lamparter wrote:
+On Wed, 2008-11-19 at 14:22 +0200, Tomas Winkler wrote:
 
-> > The only thing I was thinking is that it's not a good plan to have a
-> > callback that has different locking requirements depending on a
-> > parameter.
+> > Yeah, it's weird, and it doesn't even seem to solve it for everyone. So
+> > there must be another thing too.
 >=20
-> yeah...  go back to the extra sta_notify_ps callback approach?
+> It seems that your wrong command queue problem is no the same root
+> cause  we see on x86 platforms they have just same phenomena, because
+> there is 0xff data on the RX buffer.
 
-Fine with me, yeah. It's not very complicated so we can always change it
-again later.
+Well we've seen at one report that it helps, on x86. And the alignment
+thing is definitely a bug, so fixing it had to help somewhere. But yes,
+it looks like there's a different bug leading to the same symptoms
+elsewhere...
 
-> I tried to do this with workqueues, but It turned out that queue_work
-> doesn't work since we disabled the irqs in the rx path.
-> ( http://linux.derkeiler.com/Mailing-Lists/Kernel/2005-02/3350.html
->  has a story about the bitter consequences of queue_work & irq_disabled)=20
-
-Interesting.
+Here's a thought: iwl_rx_queue_update_write_ptr doesn't synchronise the
+pointer rxq->bd memory to the device. So if you have a platform that's
+not cache coherent for IO devices (mine is) that might be a problem.
 
 johannes
 
---=-pnCCqraw0ZtptXv7s4lg
+--=-COMhdIac1SKYgyBPgRqn
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJMbUPAAoJEKVg1VMiehFYylsQAJ9JoCPf5dISHZzjUr/BoBCx
-UvmtDJoFnpa0hwhhbdM5ZU3APYGa9M6TIjn+xNIXm4SQ6NKZP5N/p0VPG8xkpPb8
-uuUQiDHmC0JiNk1OMLaX44zxa+KaS71V6mcLV55r2I3PzLQhPXTcI645h95CsXue
-tJPVD3Ca0+tWDkY1S8UPPSx1ZFlh5md28XK1b4220pzul1J9l1VpXtKrCh0lEP0N
-ljuFpNCzKpG+FvMWESgmAFikS5TMo9gt4Zju4LWaEyCapWLXNZWzwLboVyXiwwu0
-T738UOl8nMQ4HUw9x6VUhj6f1LqVT0Bu4uoNd5RANdMv/4Vbn0BYSbu0J+tMrN8m
-dRXbaT0QWGdE3CWUqPH/o3mkGyoaleIBEjhFZiqXc9jpjkZU5WEj2vEd8MVFJJRu
-KDvQjpMIxCPGlAzD8kVk6FbUx8li2D+uEvHKgOkMmABzx8Yc9l/p6hVGpNWrXn6R
-QcLjmlTYS+jMrhjT88SFNPcQVFZvoesFYvfg1D2LyMZ6+h2tGGqRsxi1qoejdyGs
-CtNlmdANs0ZH9ul6XEkQZumzbseqhfrIXiqPs/8uoOV9nmaOB9NHtXYXw+0ybEbb
-I1/a0NFsoQU+XtNhvvOFnM1nx8/dT0dq/VMfwltFFuewO9XshsC5drKB3nFbWiMZ
-iVOx684DDgkWMO38/yK1
-=j5jf
+iQIcBAABAgAGBQJJJAeGAAoJEKVg1VMiehFYBIYP/10qZwjzpeBh3kkPmHVD+FtK
+Opv7ypd0Lb1WNPB1Yulzs6VHzmrYFlN8TozcpCTGjRYh+DJgDc/1jfZDJUetQmfK
+R7e32tBsED/YitU95sKa7LYGBbHAnY7LlLPWd6Ym/VhzsMrDktXHvxwC1zIYj7C/
+xmwIQjNOsgJsxv6P1ePB/JmCR0nrdYgUoF0QrBIOnXBkjZ/6iJWcs2AGf3XA3Krs
+7xzVGm7f/UUkPl6eu0SZ7ftptgRDZ5MZctXjkbkmllRzFA/cqUDEFIL+YeAdy582
+w4U/hWosc13yRXkNmhKE2GbWC5UK8VpNsWguiUu9rUyRzzDoh8hdpsGWwRDAblQe
+VDTNtsMqnsQSrVj6+OajWI5rL5yp9ObeJXg9SE24GY8pdteVb3QUmWDRehGZaqRb
+xsVAtuvOYmPuFzXvWcCwktuO+BDj1itMnSuGDzQ1s3M5+ucndyuu4dl/t1ADsUjs
+SgDtiHs5K9bDNMVmWGiGs09ppMpVbDMi3kOTTCh2vPaknbC8MF3MdOFLtia01Ua8
+LmBGIrsS+XxiF5MUKRrOtk5YrzSj7/ThhS6JCAiKWM+IRYhp1zIVusQBrYg7ChNR
+4aUfOSayvUz1UJR5R9v4Rfj/B0sg9lLCz0ri6KCAnnI3Sp4SG+ANZyVxFIFLZ1zK
+n/YyQUZnM3hi0x/h01Ck
+=NuxJ
 -----END PGP SIGNATURE-----
 
---=-pnCCqraw0ZtptXv7s4lg--
+--=-COMhdIac1SKYgyBPgRqn--
 
