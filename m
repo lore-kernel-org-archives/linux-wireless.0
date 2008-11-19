@@ -1,45 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mxm.seznam.cz ([77.75.72.45]:46673 "EHLO mxm.seznam.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751330AbYK0XNN convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58036 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752575AbYKSNKr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 18:13:13 -0500
-Cc: linux-wireless@vger.kernel.org
-To: linville@tuxdriver.com
-Date: Thu, 27 Nov 2008 22:23:14 +0100 (CET)
-From: =?iso-8859-2?Q?Carlos=20Lau=E9?= <CarlosL@seznam.cz>
-Subject: =?us-ascii?Q?wireless=2Dregdb=3A=20Update=20regulatory=20rules=20for=20Czech=20Republic=20=28CZ=29=20on=205GHz?=
+	Wed, 19 Nov 2008 08:10:47 -0500
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
+	Christophe Dumez <dchris@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
+	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
+	Thomas Witt <witt_th@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andres Freund <andres@anarazel.de>
+In-Reply-To: <1ba2fa240811190502j274595e6lf02b957ae047b4c4@mail.gmail.com> (sfid-20081119_140215_205729_C9D74877)
+References: <1226969241.4014.24.camel@johannes.berg>
+	 <1227001390.4014.43.camel@johannes.berg>
+	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
+	 <1227021904.4014.58.camel@johannes.berg>
+	 <1ba2fa240811190115i6bad0c89wb1d9c8ee281be2f8@mail.gmail.com>
+	 <1227094594.26243.6.camel@johannes.berg>
+	 <1ba2fa240811190422o4eebb26ai17ea12825ae8e708@mail.gmail.com>
+	 <1227097994.26243.33.camel@johannes.berg>
+	 <1ba2fa240811190502j274595e6lf02b957ae047b4c4@mail.gmail.com>
+	 (sfid-20081119_140215_205729_C9D74877)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+SecWZcPoBQQ2SckUN1C"
+Date: Wed, 19 Nov 2008 14:09:50 +0100
+Message-Id: <1227100190.26243.36.camel@johannes.berg> (sfid-20081119_141052_748770_CFCF3F4F)
 Mime-Version: 1.0
-Message-Id: <610.1477-13200-1232669665-1227820994@seznam.cz> (sfid-20081128_001318_245944_E312D496)
-Content-Type: text/plain; charset=iso-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-There seems to be outdated information in the regulatory database for C=
-Z. According to the new regulatory laws, which can be found at http://w=
-ww.ctu.cz/1/download/Opatreni obecne povahy/VO_R_12_08_2005_34.pdf (pag=
-e 2) and http://www.ctu.cz/1/download/OOP/Rok_2007/VO_R_10_03_2007_4.pd=
-f (page 3), for 5GHz the table should look like this:
+--=-+SecWZcPoBQQ2SckUN1C
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-5150.000 - 5250.000 ; 40.000 ; NO-OUTDOOR ; N/A ; 23.00 (200.00 mW)
-5250.000 - 5350.000 ; 40.000 ; NO-OUTDOOR,DFS ; N/A ; 23.00 (200.00 mW)
-5470.000 - 5725.000 ; 40.000 ; DFS ; N/A ; 30.00 (1000.00 mW)
-5725.000 - 5875.000 ; 40.000 ;  ; N/A ; 14.00(25.00 mW)
+On Wed, 2008-11-19 at 15:02 +0200, Tomas Winkler wrote:
 
-if there are any difference between values in dBm and in mW, please con=
-sider the value in mW as the right value.=20
+> > Here's a thought: iwl_rx_queue_update_write_ptr doesn't synchronise the
+> > pointer rxq->bd memory to the device. So if you have a platform that's
+> > not cache coherent for IO devices (mine is) that might be a problem.
+>=20
+> Need to issue wmb() there or something like this?
 
-* The values for 5250-5350MHz and 5470-5875MHz are valid only if the de=
-vice is capable of automatic output power regulation (ie.iwconfig wlan0=
- power auto). If there isn't a way to assure this, then the maximum pow=
-er output limit must be set to a value 3dB lower for ranges 5250-5350MH=
-z (20dBm) and 5470-5875MHz.(27dBm).
+well rb is also dma memory, no? So you'd have to use dma_sync_ or
+something, just like with skb data, no?
 
-Carlos Lau=E9
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-+SecWZcPoBQQ2SckUN1C
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJJBAaAAoJEKVg1VMiehFYcE0QAIWMKJsMO59xEhgenEAi7Jff
+1H3eOGvFXL6cxPGNyTpbhy3RSRQrtt4tlt+equ8tR8KXNTO0Ij3n8U/JZudNqgWc
+/k2hxuSOwIxZUcwl+rM7PqfvihVR/hhv6SIQgNu23ioJndV3e9JSzDwrH9JQLipL
+/6gOTLt+fgk3Nn1DBB1z8NK//MfWukVmnxE4gUdRfzZm+94OXmA9Xs9ENOAp5Y4f
+gDQX8VdLvhl6eZLGNfnLzbc0Dt9569g5P+h8d4ic/BuhD1L1MZqPxtq/vBSTiXoN
+X1tVIog0r/SRxn6zZia2+KGY3th+wyXigITm95x6oJND+gwaVUHBQP6yJhRoXWHH
+PzI16RW+5DBHrA4KAfYaIiAxz9IC3bg8nMrplY1i934tiU6FyO5IIbRB4aG19XdT
+TGTYj+vCrKIBtYK93lieyjP0NMefweK1ejtV/lRYGoqhORQkAShYNbC9ynWcWPn0
+j84ApvDtLfFGFSXFrXNUWQAjggEYWOfyORp6nSNmVZrwJZMORim/b0nqPJ7w7npo
+X7tkHTrPmW8imjVbHCrzDd3ajmDs9MSDwfrI2mPKtCBvzOsxN6UZ206Wm4hxXAty
+xDp7D0LPifFfYCnKtyyhsAhI4+xCQkkHjYDmI2Ge1vyF+HlHQOPu33d10FwwSNxP
+t9k1Ii1LX78wdWtB03we
+=VYcm
+-----END PGP SIGNATURE-----
+
+--=-+SecWZcPoBQQ2SckUN1C--
+
