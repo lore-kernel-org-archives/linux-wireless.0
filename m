@@ -1,86 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39029 "EHLO vs166246.vserver.de"
+Received: from c60.cesmail.net ([216.154.195.49]:25329 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750793AbYKFRGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 12:06:15 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] b43: remove rate index warning
-Date: Thu, 6 Nov 2008 18:05:50 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1225988424.3619.249.camel@johannes.berg>
-In-Reply-To: <1225988424.3619.249.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200811061805.50781.mb@bu3sch.de> (sfid-20081106_180620_357348_F62CCC18)
+	id S1750738AbYKSVwB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 16:52:01 -0500
+Subject: Re: [PATCH] wireless: sysfs was displaying different values for
+	level and noise than procfs
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081119200856.GH3485@tuxdriver.com>
+References: <200811151831.26403.arvidjaar@mail.ru>
+	 <1227122019.2196.14.camel@dv> <200811192245.29487.arvidjaar@mail.ru>
+	 <20081119200856.GH3485@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 19 Nov 2008 16:51:58 -0500
+Message-Id: <1227131518.3571.16.camel@dv> (sfid-20081119_225207_085809_144B09A0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 06 November 2008 17:20:24 Johannes Berg wrote:
-> I frequently run into this warning, and added some
-> debugging to see why, and got this:
-> 
-> b43 bad rx: 00000000: 2f d2 e2 63 cf a7 14 04 28 18 c8 5f 88 4a a2 00
->                       bogus junk       | plcp            | fctl| dur
-> 
-> b43 bad rx: 00000010: 00 11 24 91 07 4d 00 06 25 ff 8f 78 00 06 25 ff
->                       my MAC address   | BSSID           | AP MAC
-> b43 bad rx: 00000020: 8f 76 20 74 00 00 42 07 00 20 00 00 00 00 aa aa
->                            | seq | QoS | CCMP IV               | data
->                       ...
-> 
-> As you can see, there are 6 bogus bytes (sometimes only five) and then
-> the frame. I don't know why, and I don't see how to recover, so let's
-> just drop these frames.
-> 
+On Wed, 2008-11-19 at 15:08 -0500, John W. Linville wrote:
 
-I don't know why this happens, but I also see it on the opensource firmware.
-It might probably be a DMA programming error of some kind. (or just a silicon bug).
-But yeah, let's just drop them for now.
+> > But positive dBm is not even possible to represnt right now. It is
+> > u8 and is displayed as ((s32)level - 256); so it is *always*
+> > negative.
 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I would force dBm to be between -192 and 63.  That would cover
+everything even remotely possible.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> And what is your perspective regarding potential 'userland ABI'
+> issues of either this patch or of Pavel's suggestion?
 
-> ---
->  drivers/net/wireless/b43/xmit.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> --- everything.orig/drivers/net/wireless/b43/xmit.c	2008-11-06 16:52:53.000000000 +0100
-> +++ everything/drivers/net/wireless/b43/xmit.c	2008-11-06 17:10:06.000000000 +0100
-> @@ -46,7 +46,6 @@ static int b43_plcp_get_bitrate_idx_cck(
->  	case 0x6E:
->  		return 3;
->  	}
-> -	B43_WARN_ON(1);
->  	return -1;
->  }
->  
-> @@ -73,7 +72,6 @@ static u8 b43_plcp_get_bitrate_idx_ofdm(
->  	case 0xC:
->  		return base + 7;
->  	}
-> -	B43_WARN_ON(1);
->  	return -1;
->  }
->  
-> @@ -608,6 +606,8 @@ void b43_rx(struct b43_wldev *dev, struc
->  						phytype == B43_PHYTYPE_A);
->  	else
->  		status.rate_idx = b43_plcp_get_bitrate_idx_cck(plcp);
-> +	if (unlikely(status.rate_idx == -1))
-> +		goto drop;
->  	status.antenna = !!(phystat0 & B43_RX_PHYST0_ANT);
->  
->  	/*
-> 
-> 
-> 
-> 
-
-
+In my opinion, discrepancy between procfs and sysfs is permissible.  If
+the sysfs interface has been wrong, we should be able to change the
+format.  As for the procfs interface, it could be deprecated.
 
 -- 
-Greetings Michael.
+Regards,
+Pavel Roskin
