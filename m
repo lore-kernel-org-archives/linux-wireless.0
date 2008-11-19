@@ -1,102 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34850 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750793AbYKYWLU convert rfc822-to-8bit (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:24097 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052AbYKSVzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 17:11:20 -0500
-From: "Cahill, Ben M" <ben.m.cahill@intel.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-CC: "ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Tue, 25 Nov 2008 14:06:31 -0800
-Subject: RE: [Ipw2100-devel] [PATCH] ipw2200: increase scan timeout
-Message-ID: <02B3067C068D0549A8CCFCB17D4D318B1CAAB2EF@orsmsx502.amr.corp.intel.com> (sfid-20081125_231125_262971_9D84C2D7)
-References: <200811251809.55461.helmut.schaa@gmail.com>
- <1227637971.13619.262.camel@rc-desk>
-In-Reply-To: <1227637971.13619.262.camel@rc-desk>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 19 Nov 2008 16:55:17 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so95551yxm.1
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 13:55:15 -0800 (PST)
+Message-ID: <1ba2fa240811191355p7218dd84j8517d9ff4bab4e0b@mail.gmail.com> (sfid-20081119_225525_649066_42D3173F)
+Date: Wed, 19 Nov 2008 23:55:15 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: pull request: wireless-2.6 2008-11-18
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sfr@canb.auug.org.au
+In-Reply-To: <20081119185340.GC3485@tuxdriver.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20081119000719.GA19756@tuxdriver.com>
+	 <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com>
+	 <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com>
+	 <20081119143919.GA3485@tuxdriver.com>
+	 <1ba2fa240811190851i5dda6734w10d38b0f27e5ac97@mail.gmail.com>
+	 <20081119185340.GC3485@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- 
+On Wed, Nov 19, 2008 at 8:53 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Nov 19, 2008 at 06:51:49PM +0200, Tomas Winkler wrote:
+>> On Wed, Nov 19, 2008 at 4:39 PM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>> > On Wed, Nov 19, 2008 at 11:34:37AM +0200, Tomas Winkler wrote:
+>> >> On Wed, Nov 19, 2008 at 8:46 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+>> >> > On Wed, Nov 19, 2008 at 2:07 AM, John W. Linville
+>> >> > <linville@tuxdriver.com> wrote:
+>> >
+>> >> >>      mac80211: remove ieee80211_notify_mac
+>> >> >>      iwlagn: fix RX skb alignment
+>> >> >
+>> >> > IMHO its premature pushing ttese 2 patches up, they came in yestrday
+>> >> > and nobody here has run tthe code
+>> >
+>> > Well, thanks for your opinion.  Here is mine:
+>> >
+>> > The iwlwifi drivers have been hitting these problems for months,
+>> > and I have seen no effort by your team to address the problems.
+>>
+>> There is a lot of effort to solve this I'm not sure what mailing list
+>> are u reading.
+>> We even presented test patches with alignment issues as Johannes few
+>> month ago but
+>> we didn't get the feedback that it hit anything. So you are totally off here.
+>
+> Citation needed.  All I see is Johannes' patch followed by your FUD.
+>
 
-> -----Original Message-----
-> From: reinette chatre [mailto:reinette.chatre@intel.com] 
-> Sent: Tuesday, November 25, 2008 1:33 PM
-> To: Helmut Schaa
-> Cc: ipw2100-devel@lists.sourceforge.net; Zhu, Yi; 
-> linux-wireless@vger.kernel.org; linville@tuxdriver.com
-> Subject: Re: [Ipw2100-devel] [PATCH] ipw2200: increase scan timeout
-> 
-> On Tue, 2008-11-25 at 09:09 -0800, Helmut Schaa wrote:
-> > The current scan timeout is set to 5 seconds. If the timeout is hit 
-> > because the firmware did not respond yet, the adapter gets 
-> restarted, 
-> > which results in a disassociation.
-> >
-> > However, in an environment with lots of access points the scan 
-> > sometimes takes longer than 5 seconds. This patch simply 
-> increases the timeout to 10 seconds.
-> >
-> > Signed-off-by: helmut.schaa@googlemail.com
-> > ---
-> >
-> > I was able to reproduce the issue fairly reliable with a 
-> 2915 adapter 
-> > by periodically triggering scans while associated.
-> >
-> > I have no idea in which situations the scan takes longer than 5 
-> > seconds to complete but maybe it might even take longer than 10 
-> > seconds. Has anybody from Intel insight into the firmware scan code?
-> >
-> > diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c 
-> > b/drivers/net/wireless/ipw2x00/ipw2200.c
-> > index c73173a..a776da3 100644
-> > --- a/drivers/net/wireless/ipw2x00/ipw2200.c
-> > +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-> > @@ -2304,7 +2304,7 @@ static void 
-> ipw_bg_adapter_restart(struct work_struct *work)
-> >       mutex_unlock(&priv->mutex);
-> >  }
-> >
-> > -#define IPW_SCAN_CHECK_WATCHDOG (5 * HZ)
-> > +#define IPW_SCAN_CHECK_WATCHDOG (10 * HZ)
-> >
-> >  static void ipw_scan_check(void *data)  {
-> 
-> I do not have insight into the scan code ... but I can try to 
-> find out if there is something specific you need to know.
-> 
-> This change seems harmless and if it helps you it may help 
-> somebody else too.
+http://marc.info/?l=linux-wireless&m=122549613209468&w=2,
+there is Yi's patch also mentioned int in the Johannes commit.
+unfortunately there was a programming typo in it.
 
-It seems harmless to me also, and if anyone is getting burned by it timing out before a scan is complete, then it seems like a good idea.  It's just a "safety net", and should not affect the *actual* time spent scanning.
+There is  named 'iwlwifi: get some more information about command
+failure' in your pull request you've just issued!!!
 
--- Ben --
+>> > It is possible that your team is working on them behind closed doors
+>> > and will eventually throw something over the wall to us.  I'm tired
+>> > of waiting for that, and I imagine that hordes of iwlagn users are
+>> > tired of waiting as well.
+>>
+>> This is embarrassing also for us that we cannot locate this specific
+>> problem but it not like we are not doing anything.Not sure there are
+>> other examples that we are not addressing bugs promptly.
+>>
+>> > Johannes has presented us with plausible fixes, and people are
+>> > reporting that the patches work for them.
+>>
+>> I'm not against merging these patches to wireless-testing but pushing
+>> them upstream before testing them
+>> is just plainly wrong and all I asked for to test them. You are
+>> presenting here double standards here.
+>
+> Others have tested it already.
+
+You cannot be serious about 5 minute testing.  We already have reports
+that it  doesn't solve the issue completely.
+
+>
+>>  I can merge these patches,
+>> > or wait/hope/pray for some to come from your team.  Experience suggests
+>> > that if fixes do come from your team that they will either be buried
+>> > in some monster patch that largely addresses something else, or
+>> > that the patches will arrive with a changelog that is terse and/or
+>> > unintelligble.  Subsequently, I am not optimistic about waiting.
+>>
+>> I've believe that we are addressing all the complains above and
+>> currently  if you are not seeing this I'm really sorry.
+>
+> I'm not seeing i
+
+I've resubmitted  every patch you've had an issue with readability of
+the commit message so you should be first to see it.
+
+>
+>> > I think Johannes cited four different bugzilla.kernel.org entries
+>> > between those two patches.  What is your team doing to address
+>> > those bugs?
+>>
+>> Again you are not reading the mailing list and not the bugs logs.
+>
+> http://bugzilla.kernel.org/show_bug.cgi?id=11731
+> http://bugzilla.kernel.org/show_bug.cgi?id=11818
+> http://bugzilla.kernel.org/show_bug.cgi?id=11923
+> http://bugzilla.kernel.org/show_bug.cgi?id=11983
+> http://bugzilla.kernel.org/show_bug.cgi?id=12017
+> http://bugzilla.kernel.org/show_bug.cgi?id=12044
+> http://bugzilla.kernel.org/show_bug.cgi?id=12046
+>
+All of those are actively tracked by Yi as far as I can say.
+
+> Those are only the ones not assigned to a specific person.  Yet, each
+> of them has a member of your team CC'ed.  Also, I made no effort to
+> track-down the ones in vendor bugzillas.
 
 
-> 
-> Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-> 
-> Thank you
-> 
-> Reinette
-> 
-> 
-> --------------------------------------------------------------
-> -----------
-> This SF.Net email is sponsored by the Moblin Your Move 
-> Developer's challenge Build the coolest Linux based 
-> applications with Moblin SDK & win great prizes Grand prize 
-> is a trip for two to an Open Source event anywhere in the 
-> world http://moblin-contest.org/redirect.php?banner_id=100&url=/
-> _______________________________________________
-> ipw2100-devel mailing list
-> ipw2100-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw2100-devel
-> 
+
+>> > Obviously, I still think that those patches should be merged.
+>>
+>> I'm not against just give it day or two to run it.  We have for
+>> example nightly regression builds with publicly available results why
+>> you cannot wait till we can run?  I think you've hurried to push it up
+>> just as a statement forgetting of possible regressions.
+>
+> I merely did not wait for your blessing, mostly because I have no
+> idea when it might come.
+
+This just prove you are doing  statements.
+
+>
+>> >> Just checked our bug database,  the ieee80211_notify_mac was
+>> >> introduced mainly to overcome HW bug when
+>> >> receiver become deaf  in heavy traffic such as ftp in noisy
+>> >> environment. Otherwise reconnection was too slow to keep ftp going. We
+>> >> need to check whether we are still hitting this before applying
+>> >> removal this function
+>> >
+>> > You are welcome to submit patches that address your hardware issue
+>> > and which do not introduce locking problems.
+>>
+>> That was my suggestion that we fix it and I believe  we have normal
+>> discussion about it till you took your eager pushing steps. Replacing
+>> one regression with another is just not sane.
+>
+> ieee80211_notify_mac is creating locking problems.  I'd rather hit
+> a few disconnects than endure locking problems.
+>
+> Now, if you could put as much energy into fixing these issues as you
+> are putting into arguing with me or anyone else contradicting you...
+
+I'm not a yes man and if I think differently I say so. It's legitimate
+to have another opinion and I'm really trying to keep it technical and
+I'm not ashamed to say if I'm wrong, but you people are so hostile
+from some unknown reason I just hope somebody in anthropology is
+making his doctoral thesis of it to explain it to me.
+
+Tomas
