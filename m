@@ -1,90 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:56420 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841AbYK0OmZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50018 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864AbYKSUZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 09:42:25 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: p54: AP mode: no data frame despite traffic indication set in TIM
-Date: Thu, 27 Nov 2008 15:42:23 +0100
-Cc: Stefan Steuerwald <salsasepp@googlemail.com>,
-	linux-wireless@vger.kernel.org
-References: <200811242124.16358.chunkeey@web.de> <f76a32050811270605s606cc0acjd419987235db44f4@mail.gmail.com> <1227795234.3809.94.camel@johannes.berg>
-In-Reply-To: <1227795234.3809.94.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_PHrLJMxuWcpWm7+"
-Message-Id: <200811271542.23390.chunkeey@web.de> (sfid-20081127_154230_108608_56D03838)
+	Wed, 19 Nov 2008 15:25:10 -0500
+Subject: Re: [PATCH] iw: Makefile changes for easier packaging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Robby Workman <rworkman@slackware.com>
+Cc: linux-wireless@vger.kernel.org, antiwire@gmail.com
+In-Reply-To: <alpine.LNX.1.10.0811190817360.25345@bob.slackware.com>
+References: <alpine.LNX.1.10.0811182015230.6923@bob.slackware.com>
+	 (sfid-20081119_060422_947202_BBB99A28) <1227095907.26243.24.camel@johannes.berg>
+	 <alpine.LNX.1.10.0811190817360.25345@bob.slackware.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1tygnF8K7F0qYIbekArH"
+Date: Wed, 19 Nov 2008 21:24:32 +0100
+Message-Id: <1227126273.26243.65.camel@johannes.berg> (sfid-20081119_212513_450467_E5DA1795)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_PHrLJMxuWcpWm7+
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-On Thursday 27 November 2008 15:13:54 Johannes Berg wrote:
-> On Thu, 2008-11-27 at 15:05 +0100, Stefan Steuerwald wrote:
-> > I'm unfamiliar with kernel dev procedure. I assume you guys are trying
-> > to get confirmation for that and/or submit patches? 
-> 
-> I've already submitted my patch to John, I suppose Christian will submit
-> his and add you as Tested-by.
-p54-sta-flags-v3.diff will be submitted on friday/saturday (probably together
-with the WEP/TKIP & CCMP offload patch, which could be very useful for
-embedded systems accesspoints too)...
+--=-1tygnF8K7F0qYIbekArH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-But I don't know what to do with set-and-clear.diff 
-(I guess it's still one of the three patches, or?, I've attached it again,
-in case johannes missed it? ).
-Is it really necessary or does your application work without it?
+On Wed, 2008-11-19 at 08:18 -0800, Robby Workman wrote:
 
-> > If you need me for
-> > any of that, I'll be there anytime. Also, a hint on whether to send
-> > pizzas or iPods would be appreciated ;-) .
-Johannes,
+> Okay, thanks!  Re the CC, I probably overlooked it, but I didn't=20
+> see iw listed in the Maintainers list on the wiki, and there was
+> no AUTHORS file in the source.=20
 
-Isn't there a donation page on the wiki yet? I thought there is such
-a thing already?!
+Heh, sorry, I guess I figured it was fairly obvious since it's in git
+and I commit everything, it's hosted on my server etc. I can add an
+authors list or just add a note about who maintains it to the readme
+file.
 
-Regards,
-	Chr
+johannes
 
+--=-1tygnF8K7F0qYIbekArH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
---Boundary-00=_PHrLJMxuWcpWm7+
-Content-Type: text/x-diff;
-  charset="iso 8859-15";
-  name="set-and-clear.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="set-and-clear.diff"
+iQIcBAABAgAGBQJJJHX9AAoJEKVg1VMiehFYXhsP/jDO2UPfbeq1FNgqDszrpuvx
+cAHV7cpvW6JxNcKhU6HkPfFEMDPZZdtxX1FudyU4p5M9Ax4GYLrWRmkj9V0Y1DmV
+/PrLnWMUB2w8Io5XdiVXppiOApti433BobFd9ARVsL5ffxMN2AbyLALcDaIf5hEH
+4aRRAH6TK0TtlhT/5LYHW1eT3vWviIkQSobmmfYmoskE67G5vFQc1h24bRDU0O7s
+TF+uwYSGHZRFR0y8lOmNTyRf0fp4bYcdnco6cDjwZbwNtQGy3I8HLsmnX5hht4DA
+7JLoyIWzlGWY0GoJd/OZtkl799kkIRBhH/s/40k8f0xGcjLl2+VuOIjA8FXi1a0G
+/afUSgMRTnCYakxIsP0Go9ueXYOuJwzl3pWpFY6Kmf8Jvm4LRyejDsSx16zB1NGK
+66GaBHBwPSj3VAWbH1T9fDnmM/vuISKCUG+B8WTntsl0VjFVSt86VACk4Yttk48Z
+iS2RI2cofEtK203gxMe+QoV8c820onbCiFC2IjaQvzGmlfboYCIpjwxAxKkPi8LW
+KiOYQOc4ZBF2HTgEh1AsRrS2mKZmoqAL5XjNMLjRrxtcnLeAu4faH3qjXcEOMKNb
++ap/YQ40T0X2MclH91wvfizD+rjgp1SZETtRpLJUcDP9+iw4Apv/MPFtQh6Cv3v7
+DbKnChJztEIbSrydVdrr
+=2IJG
+-----END PGP SIGNATURE-----
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5a1a60f..077fdb7 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -657,7 +657,8 @@ static void ap_sta_ps_start(struct sta_info *sta)
- 	DECLARE_MAC_BUF(mac);
- 
- 	atomic_inc(&sdata->bss->num_sta_ps);
--	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL);
-+	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL |
-+				WLAN_STA_CLEAR_PS_FILT);
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	printk(KERN_DEBUG "%s: STA %s aid %d enters power save mode\n",
- 	       sdata->dev->name, print_mac(mac, sta->sta.addr), sta->sta.aid);
-@@ -674,7 +675,8 @@ static int ap_sta_ps_end(struct sta_info *sta)
- 
- 	atomic_dec(&sdata->bss->num_sta_ps);
- 
--	clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
-+	set_and_clear_sta_flags(sta, WLAN_STA_CLEAR_PS_FILT,
-+				WLAN_STA_PS | WLAN_STA_PSPOLL);
- 
- 	if (!skb_queue_empty(&sta->ps_tx_buf))
- 		sta_info_clear_tim_bit(sta);
+--=-1tygnF8K7F0qYIbekArH--
 
---Boundary-00=_PHrLJMxuWcpWm7+--
