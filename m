@@ -1,51 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22866 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751827AbYKTWlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 17:41:07 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 14:41:07 -0800
-Date: Thu, 20 Nov 2008 14:41:03 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: "Xu, Martin" <martin.xu@intel.com>,
-	"Liu, Bing Wei" <bing.wei.liu@intel.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Wang, Yong Y" <yong.y.wang@intel.com>,
-	Vikram Kandukuri <Vikram.Kandukuri@Atheros.com>,
-	Jothikumar Mothilal <Jothikumar.Mothilal@Atheros.com>,
-	"Selbak, Rolla N" <rolla.n.selbak@intel.com>,
-	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
+Received: from xc.sipsolutions.net ([83.246.72.84]:39395 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751657AbYKSLhi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 06:37:38 -0500
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
 	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts
-	per second at idle
-Message-ID: <20081120224103.GD5899@tesla> (sfid-20081120_234113_380375_CA28991C)
-References: <bug-11749-13098@http.bugzilla.kernel.org/> <20081013150525.884BC108058@picon.linux-foundation.org> <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com> <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com> <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com> <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com> <9F0C1DB20AFA954FA1DA05309350433D410CD777@pdsmsx503.ccr.corp.intel.com> <20081117133737.GA16412@hash.localnet> <9F0C1DB20AFA954FA1DA05309350433D41183AB4@pdsmsx503.ccr.corp.intel.com> <b6c5339f0811201401u18aa9e32nef8433c1aaaf8936@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <b6c5339f0811201401u18aa9e32nef8433c1aaaf8936@mail.gmail.com>
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
+	Christophe Dumez <dchris@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
+	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
+	Thomas Witt <witt_th@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andres Freund <andres@anarazel.de>
+In-Reply-To: <1ba2fa240811190115i6bad0c89wb1d9c8ee281be2f8@mail.gmail.com> (sfid-20081119_101517_611176_902A0F8E)
+References: <1226969241.4014.24.camel@johannes.berg>
+	 <1227001390.4014.43.camel@johannes.berg>
+	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
+	 <1227021904.4014.58.camel@johannes.berg>
+	 <1ba2fa240811190115i6bad0c89wb1d9c8ee281be2f8@mail.gmail.com>
+	 (sfid-20081119_101517_611176_902A0F8E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8CXRFmPugqhC8Ao3Hpc6"
+Date: Wed, 19 Nov 2008 12:36:33 +0100
+Message-Id: <1227094594.26243.6.camel@johannes.berg> (sfid-20081119_123742_338812_28D21D3E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 20, 2008 at 02:01:19PM -0800, Bob Copeland wrote:
-> Hi Martin,
-> 
-> > From: Martin Xu <martin.xu@intel.com>
-> > Subject: disable beacon filter when station is not associated with any AP.
+
+--=-8CXRFmPugqhC8Ao3Hpc6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2008-11-19 at 11:15 +0200, Tomas Winkler wrote:
+
+> >> You are off here. The constrain is just that address will fit in 32
+> >> bit register. I don't know why this constrain, but there is always a
+> >> reason.
 > >
-> > Ath5k driver has too many interrupts per second at idle
-> > http://bugzilla.kernel.org/show_bug.cgi?id=11749
-> >
-> > Signed-off-by: Martin Xu <martin.xu@intel.com>
-> 
-> Thanks for the cleanups.  I don't have any objections to the patch.
-> Anyone else want to weigh in?
+> > There's also the PCI-E constraint of having to split up DMA at 4k
+> > boundaries, which is what I was talking about above.
+>=20
+> Have to check this but I'm not sure if this is anyhow related.
 
-Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+It's not. I misunderstood how RX DMA works, but given that you actually
+have to allocate the buffers that large the HW has to support splitting.
 
-Please close the bug report too.
+> Not just that, it was never confirmed this is the issue it was the
+> first place we started to look.
+> This code is there from time zero of the driver something like kernel
+> 2.6.18 and the problem popped only in kernel 2.6.27 so what else has
+> changed.
 
-  Luis
+Yeah, it's weird, and it doesn't even seem to solve it for everyone. So
+there must be another thing too.
+
+
+> Yes I have CONFIG_SWIOTLB=3Dy in my config spec for X86_64, nevertheless
+> you've mentioned that the allocation problem is due to headroom
+> allocation in skb?!
+
+Well, the skb "head" is _all_ of the skb data that is not part of an
+extra buffer. So skb->data is the "head" while the skb fraglist is
+referred to as the data. That can be a bit confusing. Anyway skb->data
+is just allocated with kmalloc and on my machine that has 128 byte
+alignment. The IOMMU maps pages, so doesn't change the alignment. If you
+are using swiotlb (just having it in the config isn't enough, check the
+kernel messages) then much DMA will be done with bounce buffer.
+
+
+> > Incidentally, where does the 36 bit limit come from? The RX has a 40 bi=
+t
+> > limit if you see that it uses 32 bit pointer that's shifted by 8 bits.
+>=20
+> I'm checking with the HW guys
+
+Seems that isn't necessary, there are some things like the rbb stats
+that are only shifted down by 4 bits, so they need a 36 bit mask. Bit
+unfortunate that this single allocations forces all into the mask, but I
+don't right now see how to just get that single one into 36 and the rest
+into 40.
+
+johannes
+
+--=-8CXRFmPugqhC8Ao3Hpc6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJI/o+AAoJEKVg1VMiehFY5VgP/jSGkfp/UbbsKXoEiE4/Lz1o
+s8THgt58llaDzKnEHEEBikuP7OoprVCS7YpDqBbFcVR/pwVK37+lr5yPhHWreT5l
+dAw4WLvlDWTAeGszuSRh2INNEPvdVYT+cWdgu6UU0isu6P048nEDQLsLBODreabt
+x+EbZmJb6++556kw4/GalQ/NHHw7ml4xS1I5h2EJjtQRq8Do52xvEvsgRW1aE1XM
+s/f+19GEiI34FeTubAbbvbYeTliMxdFA3pZXXYBhejRuIkYi4E8HSKmLaiLJk8O2
+KnIiiRXR37PLbaPIbM71ARg45HhZ46rcm3xubIRNR/BRE+bnvapdoB+waaZnQW+i
+SiSYKlhtQsLkJrBlxKGneyqrpvJulGXz6JwzDZcnzafwLi9o5dxARhkHTSyCrTuc
+ohSMkerRWpS+eMRYyTypggAVkZ6d43f3p76oGsgHIb4y3dyw9rz9+5t+CDHaIYBm
+pAVVt9SkiIymgtTHhH6XKudUVBVzNyi59WGz9XZTPIs+bH1g0vzEGE2U++JIH1nG
+xznicMMauI5pjJkXkDhtFtCVUQmGfvSUu+3S8H+hEadnS51/pa+I2YhpFl7rczSR
+m01+egk+GQHZsKb0Y5a/A/sLUn/IUxpffHSbwLEl+zyPLVF0UtyXk0NN5Xgzal9d
+VMwUQ5fjJdhC4vuiHbL/
+=orRB
+-----END PGP SIGNATURE-----
+
+--=-8CXRFmPugqhC8Ao3Hpc6--
+
