@@ -1,94 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:64260 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754208AbYKECuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 21:50:14 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 18:50:14 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/7] cfg80211: separate intersection section in __set_regdom()
-Date: Tue, 4 Nov 2008 18:50:03 -0800
-Message-ID: <1225853406-16322-5-git-send-email-lrodriguez@atheros.com> (sfid-20081105_035024_561209_2C3E6FC6)
-In-Reply-To: <1225853406-16322-4-git-send-email-lrodriguez@atheros.com>
-References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
- <1225853406-16322-2-git-send-email-lrodriguez@atheros.com>
- <1225853406-16322-3-git-send-email-lrodriguez@atheros.com>
- <1225853406-16322-4-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:36968 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752772AbYKSNNK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2008 08:13:10 -0500
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
+	Christophe Dumez <dchris@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
+	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
+	Thomas Witt <witt_th@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andres Freund <andres@anarazel.de>
+In-Reply-To: <1227100190.26243.36.camel@johannes.berg> (sfid-20081119_141052_748770_CFCF3F4F)
+References: <1226969241.4014.24.camel@johannes.berg>
+	 <1227001390.4014.43.camel@johannes.berg>
+	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
+	 <1227021904.4014.58.camel@johannes.berg>
+	 <1ba2fa240811190115i6bad0c89wb1d9c8ee281be2f8@mail.gmail.com>
+	 <1227094594.26243.6.camel@johannes.berg>
+	 <1ba2fa240811190422o4eebb26ai17ea12825ae8e708@mail.gmail.com>
+	 <1227097994.26243.33.camel@johannes.berg>
+	 <1ba2fa240811190502j274595e6lf02b957ae047b4c4@mail.gmail.com>
+	 (sfid-20081119_140215_205729_C9D74877)  <1227100190.26243.36.camel@johannes.berg>
+	 (sfid-20081119_141052_748770_CFCF3F4F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8VUsOyRqyQaV13m4e+/B"
+Date: Wed, 19 Nov 2008 14:12:27 +0100
+Message-Id: <1227100347.26243.38.camel@johannes.berg> (sfid-20081119_141314_720850_5E82DA6A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So far the __set_regdom() code is pretty generic as the
-intersection case is fairly straight forward; this will however
-change when 802.11d support is added so lets separate intersection
-code for now in preparation for 802.11d support.
 
-This patch only has slight functional changes.
+--=-8VUsOyRqyQaV13m4e+/B
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   29 +++++++++++++++++++++--------
- 1 files changed, 21 insertions(+), 8 deletions(-)
+On Wed, 2008-11-19 at 14:09 +0100, Johannes Berg wrote:
+> On Wed, 2008-11-19 at 15:02 +0200, Tomas Winkler wrote:
+>=20
+> > > Here's a thought: iwl_rx_queue_update_write_ptr doesn't synchronise t=
+he
+> > > pointer rxq->bd memory to the device. So if you have a platform that'=
+s
+> > > not cache coherent for IO devices (mine is) that might be a problem.
+> >=20
+> > Need to issue wmb() there or something like this?
+>=20
+> well rb is also dma memory, no? So you'd have to use dma_sync_ or
+> something, just like with skb data, no?
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 290ecec..845e2d3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -826,10 +826,6 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	if (WARN_ON(!reg_is_valid_request(rd->alpha2)))
- 		return -EINVAL;
- 
--	reset_regdomains();
--
--	/* Country IE parsing coming soon */
--
- 	if (!is_valid_rd(rd)) {
- 		printk(KERN_ERR "cfg80211: Invalid "
- 			"regulatory domain detected:\n");
-@@ -837,16 +833,33 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		return -EINVAL;
- 	}
- 
--	if (unlikely(last_request->intersect)) {
-+	if (!last_request->intersect) {
-+		reset_regdomains();
-+		cfg80211_regdomain = rd;
-+		return 0;
-+	}
-+
-+	/* Intersection requires a bit more work */
-+
-+	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE) {
-+
- 		intersected_rd = regdom_intersect(rd, cfg80211_regdomain);
- 		if (!intersected_rd)
- 			return -EINVAL;
-+
-+		/* We can trash what CRDA provided now */
- 		kfree(rd);
--		rd = intersected_rd;
-+		rd = NULL;
-+
-+		reset_regdomains();
-+		cfg80211_regdomain = intersected_rd;
-+
-+		return 0;
- 	}
- 
--	/* Tada! */
--	cfg80211_regdomain = rd;
-+	/* Country IE parsing coming soon */
-+	reset_regdomains();
-+	WARN_ON(1);
- 
- 	return 0;
- }
--- 
-1.5.6.3
+or maybe not? I can't look into this today, sorry.
+
+johannes
+
+--=-8VUsOyRqyQaV13m4e+/B
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJJBC3AAoJEKVg1VMiehFYzc4P/3itPTENG2h+/x9UbRpT4FxA
+KoWRNEMN8glpGffL6VbLJfleKu2KxY4bZOSJ6sWA06KpF/1BXLqWL8S7hjAiQxmN
+kQxDspjHocQ3qYLVSvAnPRyGHI7e20r4GMSSreWrzGNV7f537fVRXAU22DqmpebO
+JCc/mhAs5PqMO2XcDhiucJZ7hq7R/ZtR4/pIbG1BXQeSnm99l372sHeWLvCEjb/l
+JxlxHouoYWxL2nbm3CSG5ZEOqunpYQsO9evknSZB7/GfymUMRTXPmaHInYr/Ke3A
+zU+oOHvXeJyRCv0sjru8LmM9VN52RnanwEGDCw5McU19fdfJ+E5AOg4Iw6NWzuKM
+t/kwmdG/zgSoTJGI/CCef6PTfPLmKdFSLpME5Zdg5U3DmyxxU9+OP+QyA8MftxxQ
+I/q3gK2C6JnkY4e2pGhv4nUJlJzkojOX9dEMyOtHddLs7nuUs/PNfTi8s5y7iZDi
+w9n+cKq7/f6kTlXpmYwxh34YB7ptlXM4L8fZEBv7vXnbDTw4zSAnz3KLrnkExDid
+Oggvh+p5Lg3icRzjvwgGuBhiyuSyToO0AQXQRKpZZzKOMwT0rytKNuf+ZPBVpV20
+FK1MkePhji7S49VGxD2FS9ormRs3DExnebGlhyNKOcswVPFa//pVH0XR2YWgTkZd
+EkQbTCNOcccCjoL/FaE5
+=fohV
+-----END PGP SIGNATURE-----
+
+--=-8VUsOyRqyQaV13m4e+/B--
 
