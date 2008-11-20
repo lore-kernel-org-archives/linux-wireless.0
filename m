@@ -1,218 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2150 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754646AbYKWEmM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59901 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753456AbYKTR4T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 23:42:12 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/2] mac80211: add suspend/resume callbacks
-Date: Sat, 22 Nov 2008 23:41:25 -0500
-Message-Id: <1227415286-30179-2-git-send-email-me@bobcopeland.com> (sfid-20081123_054218_217354_D63E2DF4)
+	Thu, 20 Nov 2008 12:56:19 -0500
+Subject: Re: [ipw3945-devel] [PATCH 7/7] iwlwifi: prevent double key removal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1ba2fa240811200046y67f18e48ubc8a2f4a586be627@mail.gmail.com> (sfid-20081120_094650_232097_C74A008C)
+References: <1227137548-28718-1-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-2-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-3-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-4-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-5-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-6-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-7-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-8-git-send-email-reinette.chatre@intel.com>
+	 <1227164164.17336.18.camel@johannes.berg>
+	 <1ba2fa240811200046y67f18e48ubc8a2f4a586be627@mail.gmail.com>
+	 (sfid-20081120_094650_232097_C74A008C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GN7csIcZ9yV5o919HpqV"
+Date: Thu, 20 Nov 2008 18:56:11 +0100
+Message-Id: <1227203771.3766.22.camel@johannes.berg> (sfid-20081120_185622_592642_A632F92D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces suspend and resume callbacks to mac80211, allowing
-mac80211 to quiesce its state (bringing down interfaces, removing keys, etc)
-in preparation for suspend.  The driver is responsible for calling
-ieee80211_notify_mac with the appropriate option from its suspend/resume
-hook.
----
- include/net/mac80211.h |   41 +++++++++++++++++
- net/mac80211/Makefile  |    2 +
- net/mac80211/pm.c      |  116 ++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 159 insertions(+), 0 deletions(-)
- create mode 100644 net/mac80211/pm.c
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6a1d4ea..933f82f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1873,6 +1873,47 @@ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw, const u8 *ra,
- struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
- 					 const u8 *addr);
- 
-+#ifdef CONFIG_PM
-+void __ieee80211_suspend(struct ieee80211_hw *);
-+void __ieee80211_resume(struct ieee80211_hw *);
-+#endif
-+/**
-+ * ieee80211_suspend - prepare for platform suspend
-+ *
-+ * Call this function from the low level driver from the bus suspend
-+ * function to prepare for suspend to ram or disk.  The function will 
-+ * quiesce active interfaces and save state for resume.
-+ *
-+ * This function must not be called with any locks held as it may 
-+ * call back into the driver.
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ */
-+static inline void ieee80211_suspend(struct ieee80211_hw *hw)
-+{
-+#ifdef CONFIG_PM
-+	__ieee80211_suspend(hw);
-+#endif
-+}
-+
-+/**
-+ * ieee80211_resume - resume operation from sleep
-+ *
-+ * Call this function from the low level driver from the bus resume
-+ * function to resume from ram or disk.  This will reactivate interfaces 
-+ * and reprogram the hardware to continue normal operation.
-+ *
-+ * This function must not be called with any locks held as it may 
-+ * call back into the driver.
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ */
-+static inline void ieee80211_resume(struct ieee80211_hw *hw)
-+{
-+#ifdef CONFIG_PM
-+	__ieee80211_resume(hw);
-+#endif
-+}
- 
- /* Rate control API */
- 
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index 31cfd1f..0ecbc93 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -37,6 +37,8 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
- 	mesh_plink.o \
- 	mesh_hwmp.o
- 
-+mac80211-$(CONFIG_PM) += pm.o
-+
- # objects for PID algorithm
- rc80211_pid-y := rc80211_pid_algo.o
- rc80211_pid-$(CONFIG_MAC80211_DEBUGFS) += rc80211_pid_debugfs.o
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-new file mode 100644
-index 0000000..e3e537f
---- /dev/null
-+++ b/net/mac80211/pm.c
-@@ -0,0 +1,116 @@
-+#include <net/mac80211.h>
-+#include <net/rtnetlink.h>
-+
-+#include "ieee80211_i.h"
-+#include "led.h"
-+
-+void __ieee80211_suspend(struct ieee80211_hw *hw)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_if_init_conf conf;
-+	struct sta_info *sta;
-+
-+	printk(KERN_DEBUG "mac80211: suspending\n");
-+
-+	rtnl_lock();
-+
-+	flush_workqueue(local->hw.workqueue);
-+
-+	/* disable aggregation and notify that STAs are going away */
-+	list_for_each_entry(sta, &local->sta_list, list) {
-+		sdata = sta->sdata;
-+		ieee80211_sta_tear_down_BA_sessions(sta->sdata, sta->sta.addr);
-+
-+		if (local->ops->sta_notify) {
-+			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+				sdata = container_of(sdata->bss,
-+					     struct ieee80211_sub_if_data,
-+					     u.ap);
-+
-+			local->ops->sta_notify(hw, &sdata->vif, 
-+				STA_NOTIFY_REMOVE, &sta->sta);
-+		}
-+	}
-+
-+	/* remove all interfaces */
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		ieee80211_disable_keys(sdata);
-+
-+		conf.vif = &sdata->vif;
-+		conf.type = sdata->vif.type;
-+		conf.mac_addr = sdata->dev->dev_addr;
-+		local->ops->remove_interface(hw, &conf);
-+	}
-+
-+	/* stop hardware */
-+	if (local->open_count) {
-+		ieee80211_led_radio(local, false);
-+		local->ops->stop(hw);
-+	}
-+
-+	rtnl_unlock();
-+}
-+EXPORT_SYMBOL(__ieee80211_suspend);
-+
-+void __ieee80211_resume(struct ieee80211_hw *hw)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_if_init_conf conf;
-+	struct sta_info *sta;
-+	int res;
-+
-+	printk(KERN_DEBUG "mac80211: resuming\n");
-+	rtnl_lock();
-+
-+	/* restart hardware */
-+	if (local->open_count) {
-+		res = local->ops->start(hw);
-+
-+		ieee80211_led_radio(local, hw->conf.radio_enabled);
-+	}
-+
-+	/* add interfaces */
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		
-+		conf.vif = &sdata->vif;
-+		conf.type = sdata->vif.type;
-+		conf.mac_addr = sdata->dev->dev_addr;
-+		res = local->ops->add_interface(hw, &conf);
-+
-+		ieee80211_enable_keys(sdata);
-+
-+	}
-+
-+	/* notify STAs are back */
-+	list_for_each_entry(sta, &local->sta_list, list) {
-+
-+		if (local->ops->sta_notify) {
-+			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+				sdata = container_of(sdata->bss,
-+					     struct ieee80211_sub_if_data,
-+					     u.ap);
-+
-+			local->ops->sta_notify(hw, &sdata->vif, 
-+				STA_NOTIFY_ADD, &sta->sta);
-+		}
-+	}
-+	rtnl_unlock();
-+
-+	/* setup RTS and frag thresholds */
-+	if (local->ops->set_rts_threshold)
-+		local->ops->set_rts_threshold(hw, local->rts_threshold);
-+
-+	if (local->ops->set_frag_threshold)
-+		local->ops->set_frag_threshold(hw, 
-+			local->fragmentation_threshold);
-+
-+	/* reconfigure hardware */
-+	ieee80211_hw_config(local, ~0);
-+
-+	netif_addr_lock_bh(local->mdev);
-+	ieee80211_configure_filter(local);
-+	netif_addr_unlock_bh(local->mdev);
-+}
-+EXPORT_SYMBOL(__ieee80211_resume);
--- 
-1.5.4.2.182.gb3092
+--=-GN7csIcZ9yV5o919HpqV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, 2008-11-20 at 10:46 +0200, Tomas Winkler wrote:
+> On Thu, Nov 20, 2008 at 8:56 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2008-11-19 at 15:32 -0800, Reinette Chatre wrote:
+> >
+> >
+> >> When the key is removed a second time the offset is set to 255 - this =
+index
+> >> is not valid for the ucode_key_table and corrupts the eeprom pointer (=
+which
+> >> is 255 bits from ucode_key_table).
+> >
+> >> +     if (WARN(priv->stations[sta_id].sta.key.key_offset =3D=3D WEP_IN=
+VALID_OFFSET,
+> >> +              "Removing wrong key %d 0x%x\n", keyconf->keyidx, key_fl=
+ags)) {
+> >> +             spin_unlock_irqrestore(&priv->sta_lock, flags);
+> >> +             return 0;
+> >> +     }
+> >
+> > So, since _this_ patch has been tested to fix the problem, the WARN_ON
+> > must be triggering.
+>=20
+> It fix the immediate problem of crashing the kernel but not the
+> problem why the key is removed twice.
+> I'm analyzing the log I've got from Carlos to figure this out you can
+> have a look as well.
+> It should be probably considered as a test patch. The purpose is not
+> to hide the bug buy fixing a symptom.
+> I suspect there is some problem in mac80211 is that this is happening
+> only on suspend/resumes not in regular flow
+
+Hmm. Since we don't have suspend/resume that seems a bit odd. Maybe
+because we don't have suspend/resume in mac80211? Maybe you've already
+killed all the keys at suspend, but mac80211 doesn't know about that and
+removes them after resume when we disassoc?
+
+> > What are you doing to address the actual bug that causes it to trigger?
+>=20
+> If the flow of double removal of a key is okay from mac80211
+> perspective we just catch it internally which is always good otherwise
+> we need to fix also mac80211.
+
+Do we really want the WARN() in this patch though? We already know the
+information from Carlos's log, so do we need to bother users?
+
+johannes
+
+--=-GN7csIcZ9yV5o919HpqV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJJaS3AAoJEKVg1VMiehFYPzIP/jMaIR9uEL1FLC4Cr1V1O3iB
+5tzS60JUUV/oCS2UYgDseesCTWTOMOxAsGIqkSWHWbM3fFafRB47ngDahmNlAoh7
+10pwJZAb1W3IZPwNeOwpCi/T5Sgh1zk9FBdpZXVej5gRiIQtkqFV2yesVD/PuxTi
+gjrmL29EF5iSVzj5/HMWQRQB28v4FweRSw3rbg8ZeRp1HX+bVPYpaXSI7F0LSrdJ
+k8O3/DAi4fb2qKal7/RIQtN1zMhbqpCoZmPF3zAaC2ARMQae3mUjIAWIGDoG9P6F
+1o+QLlXMTyhPE0JcFWZ/uhk/Qw97MOc8t3B26MdCu0fSf7qclGJU1uQ2K9pozIwz
+osGFpQUWy7JcPMvSVKWSDjcT4eJLX7oiWn1QZ3hKsH7TbbKjK4TLRkcXCl2CnH32
+Icj/jc7WA4LyxufXh+jULLozEL6J+uFCe/XP9Px6pBfxxqXpFgSQNUc++O1zjm2H
+OlQbe9361iWFchx4sq3z4icjMgsaHQ6G6nNiTffcJ381Md0BFUMNahh5HZk83e04
+pZjpu+l9oO0x3c8AFdeuhLoMKTs6Wp8JuPo/laFruqB/CLSRXSXdDgWiArMcvNCK
+EWIbNiCvt20i3kMwwaGwEBPbk6MeXFpwoByeW40uZ630kp6yc+gHh65qBlDlCHzD
+td7HqVicrJn8EJX/NJ6P
+=GdQm
+-----END PGP SIGNATURE-----
+
+--=-GN7csIcZ9yV5o919HpqV--
 
