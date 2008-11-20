@@ -1,39 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:36534 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696AbYKZHZv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 02:25:51 -0500
-To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linville@tuxdriver.com, yi.zhu@intel.com,
-	reinette.chatre@intel.com, ipw2100-devel@lists.sourceforge.net
-Subject: Re: [PATCH] ipw2200: increase scan timeout
-References: <200811251809.55461.helmut.schaa@gmail.com>
-	<200811260706.03160.hs4233@mail.mn-solutions.de>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 26 Nov 2008 09:24:59 +0200
-In-Reply-To: <200811260706.03160.hs4233@mail.mn-solutions.de> (ext Holger Schurig's message of "Wed\, 26 Nov 2008 07\:06\:03 +0000")
-Message-ID: <87bpw3ar04.fsf@nokia.com> (sfid-20081126_082555_541234_D3675B06)
+Received: from mail.atheros.com ([12.36.123.2]:49792 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751827AbYKTTTV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 14:19:21 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 11:19:21 -0800
+Date: Thu, 20 Nov 2008 11:19:19 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: tduckett <duck@tdux.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Error compiling.    Please help
+Message-ID: <20081120191919.GB5899@tesla> (sfid-20081120_201924_552052_C986DBAB)
+References: <002d01c94b03$c2544ee0$0200f00a@video1>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <002d01c94b03$c2544ee0$0200f00a@video1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Holger Schurig <hs4233@mail.mn-solutions.de> writes:
+On Thu, Nov 20, 2008 at 03:33:02AM -0800, tduckett wrote:
+> I never seem to be able to get things compiled  This is what I get when I
+> run make.  What do I need to do to get this to work?
 
-> Second thing: why should the association get's cleared if the 
-> adapter get's reset?  Isn't one a (assoc) at protocol level and 
-> the other (adapter) a hardware thing?
+Seems compat-wireless-old needs some b44 2.6.23 backport love and no one
+cares. Move to at least 2.6.27.
 
-Good point. I once had a bad bug in stlc45xx tx queue handling and
-firmware was crashing all the time. While the firmware was reset
-association state wasn't changed and I could, for example, run iperf
-tests while firmware was resetting without userspace noticing anything
-(expect a slight decreare of throughput of course). This might depend
-on firmware implementation, but at least with softmac devices it
-shouldn't be a problem.
-
--- 
-Kalle Valo
+  Luis
