@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n3a.bullet.mail.ac4.yahoo.com ([76.13.13.66]:33276 "HELO
-	n3a.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754249AbYKXRlf (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:37773 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753945AbYKTIuW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 12:41:35 -0500
-Date: Mon, 24 Nov 2008 09:41:34 -0800 (PST)
-From: Irwan Siajadi <dev.bahamot@yahoo.com>
-Subject: ath5k: can't browse at all.
-To: linux-wireless@vger.kernel.org
+	Thu, 20 Nov 2008 03:50:22 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so169517nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 00:50:20 -0800 (PST)
+Message-ID: <f76a32050811200050u48bc150en34e94c7671672ae6@mail.gmail.com> (sfid-20081120_095026_557603_D2FDAF6C)
+Date: Thu, 20 Nov 2008 09:50:20 +0100
+From: "Stefan Steuerwald" <salsasepp@googlemail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1227126204.26243.62.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <978525.69086.qm@web59613.mail.ac4.yahoo.com> (sfid-20081124_184147_491407_AB87D95E)
+Content-Type: text/plain; charset=UTF-8
+References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
+	 <f76a32050811190316o28a49cddte30214c217877078@mail.gmail.com>
+	 <1227095773.26243.22.camel@johannes.berg>
+	 <f76a32050811190737w37937e17ra361364ed345fd33@mail.gmail.com>
+	 <1227109286.26243.54.camel@johannes.berg>
+	 <f76a32050811190823r51033a4dqa29de6d1e6663388@mail.gmail.com>
+	 <1227126204.26243.62.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR2425 is able to obtain IP address from the router, 
-able to ping with good results, but can't browse at all.
-Below are the info on my setup, if you need more info please let me know.
+2008/11/19 Johannes Berg <johannes@sipsolutions.net>:
+> On Wed, 2008-11-19 at 17:23 +0100, Stefan Steuerwald wrote:
+>
+>> At first glance this improves things, but not enough. I have an ajax
+>> application that is polling the web server and which runs into its 5
+>> sec timeouts fairly regularly. [...deleted...]
+>
+> What's your client? Is it using powersave? Anyone know whether
+> multicast-after-dtim works correctly in p54? Or maybe there's a bug
+> hitting with TIM bits? Do you have an extra card that you could use to
+> monitor and see what happens when it times out?
 
-Driver version: compat-wireless-2008-11-24.tar.bz2.
-Kernel: 2.6.27.4-2mnbcustom (mandriva), compiled with mandriva provided 
-..config but without any WLAN support except WIRELESS_EXT.
-Access point/router is configured to use channel 1 (2.412GHz).
+I have tested multiple clients at this time with my XG-601/ISL3880 p54 card:
+- iPod Touch 2G with firmware 2.1.1
+- Sony Vaio with a Marvell 88E8036 (Vista SP1)
+- Amilo Notebook with Intel 4965AGN (stock Ubuntu 8.10)
+- Amilo Notebook with Netgear USB-WLAN-Stick with RTL8187B (stock Ubuntu 8.10)
 
-dmesg:
-"...
-cfg80211: Using static regulatory domain info
-cfg80211: Regulatory domain: JP
-          (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-          (2402000 KHz - 2494000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-          (5160000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-          (5250000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-cfg80211: Calling CRDA for country: JP
-.....
-ath5k 0000:05:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-ath5k 0000:05:00.0: setting latency timer to 64
-ath5k 0000:05:00.0: registered as 'phy0'
-phy0: Selected rate control algorithm 'minstrel'
-ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
-.....
-wlan0: authenticate with AP 00:04:ed:42:60:67
-wlan0: authenticated
-wlan0: associate with AP 00:04:ed:42:60:67
-wlan0: RX AssocResp from 00:04:ed:42:60:67 (capab=3D0x431 status=3D0 id=3D)
-wlan0: associated
-....."
+Interestingly, only the iPod is unusable, with constant timeouts of my
+web-app. The other clients work 99% of the time with an _occasional_
+timeout. I have multiple clients connected at the same time, and never
+saw a simultaneous timeout with any two clients. I have also a wired
+reference connection which never exhibits any timeouts.
 
-lspci:
-"05:00.0 Ethernet controller: Atheros Communications Inc. AR242x 802.11abg 
-Wireless PCI Express Adapter (rev 01)
-          Subsystem: Device 1a3b:1026
-          Flags: bus master, fast devsel, latency 0, IRQ 16
-          Memory at feaf0000 (64-bit, non-prefetchable) [size=3D64K]
-          Capabilities: [40] Power Management version 2
-          Capabilities: [50] Message Signalled Interrupts: Mask- 64bit Queue=3D0/0 Enable-
-          Capabilities: [60] Express Legacy Endpoint, MSI 00
-          Capabilities: [90] MSI-X: Enable- Mask- TabSize=3D1
-          Capabilities: [100] Advanced Error Reporting <?>
-          Capabilities: [140] Virtual Channel <?>"
+I have no clue about iPod powersave. On the 4965 and the RTL8187 it
+seems to be off (iwconfig output).
 
-TIA,
-Irwan.
+I do have indications of "general" WLAN problems with the iPod
+(Apple's support forum is brimming with complaints). There may not be
+any AP-related problem at all.
 
+I will learn how to set up a card in monitor mode and post more info
+if anything looks suspicious.
 
-      
-
+Thanks!
+  Stefan.
