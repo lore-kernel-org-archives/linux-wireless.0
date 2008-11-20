@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23105.mail.ird.yahoo.com ([217.146.189.45]:23928 "HELO
-	web23105.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751392AbYKMAGT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 19:06:19 -0500
-Date: Thu, 13 Nov 2008 00:06:16 +0000 (GMT)
-From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-Subject: Re: throughput problem/bisect with rtl8187B
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <491B4C0E.6010807@lwfinger.net>
+Received: from wf-out-1314.google.com ([209.85.200.174]:5668 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033AbYKTJ1I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 04:27:08 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so398211wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 01:27:07 -0800 (PST)
+Message-ID: <1ba2fa240811200127m32f69b40h4fdd55de20926b95@mail.gmail.com> (sfid-20081120_102714_976412_B0D9ED91)
+Date: Thu, 20 Nov 2008 11:27:07 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: pull request: wireless-2.6 2008-11-18
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sfr@canb.auug.org.au
+In-Reply-To: <20081120003748.GK3485@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <872129.29728.qm@web23105.mail.ird.yahoo.com> (sfid-20081113_010624_086934_E60312EB)
+Content-Type: text/plain; charset=UTF-8
+References: <20081119000719.GA19756@tuxdriver.com>
+	 <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com>
+	 <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com>
+	 <20081119143919.GA3485@tuxdriver.com>
+	 <1ba2fa240811190851i5dda6734w10d38b0f27e5ac97@mail.gmail.com>
+	 <20081119185340.GC3485@tuxdriver.com>
+	 <1ba2fa240811191355p7218dd84j8517d9ff4bab4e0b@mail.gmail.com>
+	 <20081120003748.GK3485@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Wed, 12/11/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Herton Ronaldo Krzesinski wrote:
-> > Ok, Looks like sifs or eifs setting then expect values
-> in another format or
-> > have a different meaning may be (or just cause some hw
-> bug), it's strange,
-> > I suspect sifs value is the culprit. In the patch I
-> just reverted to values vendor
-> > driver uses, in it difs remains the same, just eifs
-> isn't changed for short slot
-> > case and kept with a default value (along with what is
-> supposed to be ack
-> > timeout register), and sifs set to 0x22. Please try
-> just the following change
-> > to isolate that the SIFS setting caused the throughput
-> issue:
-> > 
-> > diff --git
-> a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> > index d49f2a7..c0392e4 100644
-> > --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> > +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> > @@ -924,7 +924,7 @@ static void
-> rtl8187_conf_erp(struct rtl8187_priv *priv, bool
-> use_short_slot,
-> >  			difs = 0x32;
-> >  			eifs = 0x5b;
-> >  		}
-> > -		rtl818x_iowrite8(priv, &priv->map->SIFS,
-> 0xa);
-> > +		rtl818x_iowrite8(priv, &priv->map->SIFS,
-> 0x22);
-> >  		rtl818x_iowrite8(priv, &priv->map->SLOT,
-> slot_time);
-> >  		rtl818x_iowrite8(priv, &priv->map->DIFS,
-> difs);
-> 
-> This patch gives me the best performance yet. I get about
-> 1.0 MB/s download and
-> 580 KB/s upload with a 25 MB file using sftp.
+On Thu, Nov 20, 2008 at 2:37 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Nov 19, 2008 at 11:55:15PM +0200, Tomas Winkler wrote:
+>> On Wed, Nov 19, 2008 at 8:53 PM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>
+>> > Now, if you could put as much energy into fixing these issues as you
+>> > are putting into arguing with me or anyone else contradicting you...
+>>
+>> I'm not a yes man and if I think differently I say so. It's legitimate
+>> to have another opinion and I'm really trying to keep it technical and
+>> I'm not ashamed to say if I'm wrong, but you people are so hostile
+>> from some unknown reason I just hope somebody in anthropology is
+>> making his doctoral thesis of it to explain it to me.
+>
+> Of course!  You are right and all the rest of us are wrong.  How could
+> I have been so stupid?  Thank you for being so easy to work with
+> while the rest of us are being so difficult.
+>
 
-Yes, confirming this one number fixes the throughput problem I had. And I can also confirm that wireless-testing + this oneliner seems to be better than 2.6.27. 
+Citing my self again ' I'm not ashamed to say if I'm wrong'  I'm not
+always right and  you be careful with majority
+rightness it put whole nations into misery.
 
-I tried it alone on top of wireless-testing, and together with 
-the conf_tx and feedback patches.
+> Are you done?
 
-Thanks for putting time into this!
+Common John you've started that. Compare your IMHO with mine, it's not
+full of empty accusations. I'm not less frustrated with development
+process of mac80211 then you are with our, and if you see the history
+this is where we always clash. I think we also have valid points if
+you would care to listen.
 
-Hin-Tak
-
-
-
-      
+Thanks
+Tomas
