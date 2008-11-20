@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:16858 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752054AbYKMMal (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 07:30:41 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 04:30:41 -0800
-Date: Thu, 13 Nov 2008 18:00:37 +0530
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <jouni.malinen@atheros.com>,
-	<lrodriguez@atheros.com>
-Subject: [PATCH 04/05] ath9k: IRQ should be disabled before calling
-	free_irq()
-Message-ID: <20081113123037.GE7688@senthil-lnx.users.atheros.com> (sfid-20081113_133044_075787_357B32EF)
+Received: from cavan.codon.org.uk ([93.93.128.6]:56849 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753275AbYKTQba (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 11:31:30 -0500
+Date: Thu, 20 Nov 2008 16:31:24 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: drago01 <drago01@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	linux-wireless@vger.kernel.org,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Subject: Re: [GIT PATCH] rfkill fixes for 2.6.28-rc3
+Message-ID: <20081120163124.GA10899@srcf.ucam.org> (sfid-20081120_173135_478019_42C7ED2B)
+References: <1225730537-2679-1-git-send-email-hmh@hmh.eng.br> <200811031747.16326.IvDoorn@gmail.com> <20081103170243.GB2417@khazad-dum.debian.net> <200811031820.41165.IvDoorn@gmail.com> <20081112211530.GH2411@tuxdriver.com> <f6ca9fed0811200827y3e07bb6ag8c46e61c44fbc610@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f6ca9fed0811200827y3e07bb6ag8c46e61c44fbc610@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k frees irq even before IRQs are disabled and existing IRQs
-are flushed when rfkill_register() fails.
+On Thu, Nov 20, 2008 at 05:27:38PM +0100, drago01 wrote:
+> On Wed, Nov 12, 2008 at 10:15 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > So I keep looking at these patches, and I'm not sure about them.
+> > It seems that they restore the rfkill state after resume to what it
+> > was before the suspend.
+> 
+> Wouldn't this break hw kill switches?
+> If I move the switch while the system is suspended it will ignore this
+> event but the hw will still not work.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Whichever driver is responsible for listening to the hardware events 
+should handle that in its own resume method. The rfkill state 
+restoration code will only be relevant for restoring state set by 
+sofware.
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 97f0b47..ce5c0f7 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -811,9 +811,9 @@ static int ath_start_rfkill_poll(struct ath_softc *sc)
- 			rfkill_free(sc->rf_kill.rfkill);
- 
- 			/* Deinitialize the device */
-+			ath_detach(sc);
- 			if (sc->pdev->irq)
- 				free_irq(sc->pdev->irq, sc);
--			ath_detach(sc);
- 			pci_iounmap(sc->pdev, sc->mem);
- 			pci_release_region(sc->pdev, 0);
- 			pci_disable_device(sc->pdev);
+> Well the above scenario would be just broken.
+> Unless the driver rereads the real hw state and updates the rfkill
+> state on resume.
+
+Quite. How else are you going to know if a switch has moved in the 
+intervening time?
+
 -- 
-1.5.5
-
+Matthew Garrett | mjg59@srcf.ucam.org
