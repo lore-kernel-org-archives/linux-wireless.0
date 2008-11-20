@@ -1,85 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:50181 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752752AbYK1Wpm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 17:45:42 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mac80211: add power state transition callbacks
-Date: Fri, 28 Nov 2008 23:45:48 +0100
-Cc: John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stefan Steuerwald <salsasepp@googlemail.com>
+Received: from bu3sch.de ([62.75.166.246]:33767 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755433AbYKTPeb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 10:34:31 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
+Date: Thu, 20 Nov 2008 16:33:59 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Rami Rosen <ramirose@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kune@deine-taler.de" <kune@deine-taler.de>,
+	Jouni Malinen <j@w1.fi>
+References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com> <20081119210046.GC5900@tesla> <20081119211600.GE5900@tesla>
+In-Reply-To: <20081119211600.GE5900@tesla>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200811282345.48379.chunkeey@web.de> (sfid-20081128_234545_476494_A00F7605)
+  charset="iso-8859-1"
+Message-Id: <200811201633.59986.mb@bu3sch.de> (sfid-20081120_163435_923445_C371FCBE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is necessary in order to provide a proper Access point support for p54.
+On Wednesday 19 November 2008 22:16:00 Luis R. Rodriguez wrote:
+> On Wed, Nov 19, 2008 at 01:00:46PM -0800, Luis Rodriguez wrote:
+> > On Wed, Nov 19, 2008 at 12:30:19PM -0800, Johannes Berg wrote:
+> > > On Wed, 2008-11-19 at 11:01 -0500, John W. Linville wrote:
+> > >
+> > > > Is there some way we could take that into account?  I'm sure there
+> > > > are users who would prefer to have an AP (i.e. their laptop) that
+> > > > can't support PS clients rather than not having an AP at all.
+> > >
+> > > That's a good question. The distinction here is between empowering users
+> > > to do the wrong thing (AP without proper PS support) and enforcing the
+> > > right thing (with the consequence of complete loss of AP functionality).
+> > > The issue I see here is that users will see "ohh shiny, AP support"
+> > > without knowing that it doesn't actually really support it. Not sure
+> > > which side of the line we want to stand on, I prefer the correctness
+> > > side but I can see arguments for the other side, would just like to have
+> > > users know. Maybe we could have some way to tell hostapd this and then
+> > > have hostapd print a huge warning about it when started up?
+> > 
+> > How about making it Kconfigable for broken AP support and add the
+> > warning there?
+> 
+> That is have something like CONFIG_MAC80211_AP_HALF_ASSED
 
-Unfortunatly for us, there is no documented way to disable the interfering
-power save buffering mechanism in firmware completely.
+This is not acceptable, IMO, because distros will always enable it and users
+still won't know about it.
+We want _users_ to know.
+So the idea of letting hostapd print a huge message is not that bad.
 
-Therefore we give in and notify the driver through our new sta_notify callback, 
-so that we can update the filter state.
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6a1d4ea..7bd8edc 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -768,14 +768,18 @@ struct ieee80211_sta {
- /**
-  * enum sta_notify_cmd - sta notify command
-  *
-- * Used with the sta_notify() callback in &struct ieee80211_ops, this
-- * indicates addition and removal of a station to station table.
-+ * Used with the sta_notify() callback in &struct ieee80211_ops.
-+ * this command indicates addition and removal of a station to
-+ * station table, or if a station made a power state transition.
-  *
-  * @STA_NOTIFY_ADD: a station was added to the station table
-  * @STA_NOTIFY_REMOVE: a station being removed from the station table
-+ * @STA_NOTIFY_SLEEP: a station is now sleeping
-+ * @STA_NOTIFY_AWAKE: a sleeping station woke up
-  */
- enum sta_notify_cmd {
--	STA_NOTIFY_ADD, STA_NOTIFY_REMOVE
-+	STA_NOTIFY_ADD, STA_NOTIFY_REMOVE,
-+	STA_NOTIFY_SLEEP, STA_NOTIFY_AWAKE,
- };
- 
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5a1a60f..2d311a1 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -654,10 +654,14 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- static void ap_sta_ps_start(struct sta_info *sta)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct ieee80211_local *local = sdata->local;
- 	DECLARE_MAC_BUF(mac);
- 
- 	atomic_inc(&sdata->bss->num_sta_ps);
- 	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL);
-+	if (local->ops->sta_notify)
-+		local->ops->sta_notify(local_to_hw(local), &sdata->vif,
-+				       STA_NOTIFY_SLEEP, &sta->sta);
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	printk(KERN_DEBUG "%s: STA %s aid %d enters power save mode\n",
- 	       sdata->dev->name, print_mac(mac, sta->sta.addr), sta->sta.aid);
-@@ -675,6 +679,9 @@ static int ap_sta_ps_end(struct sta_info *sta)
- 	atomic_dec(&sdata->bss->num_sta_ps);
- 
- 	clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
-+	if (local->ops->sta_notify)
-+		local->ops->sta_notify(local_to_hw(local), &sdata->vif,
-+				       STA_NOTIFY_AWAKE, &sta->sta);
- 
- 	if (!skb_queue_empty(&sta->ps_tx_buf))
- 		sta_info_clear_tim_bit(sta);
+-- 
+Greetings Michael.
