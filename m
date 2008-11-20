@@ -1,32 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2184 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757615AbYKVAxz (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60177
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752700AbYKTMFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 19:53:55 -0500
-Date: Fri, 21 Nov 2008 19:52:40 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: ipw3945-devel@lists.sourceforge.net, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wally@theblackmoor.net
-Subject: Re: Unusually low speeds with ath5k and iwl3945
-Message-ID: <20081122005240.GA27826@hash.localnet> (sfid-20081122_015400_590004_79931552)
-References: <492719ED.5000006@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <492719ED.5000006@gmail.com>
+	Thu, 20 Nov 2008 07:05:07 -0500
+Date: Thu, 20 Nov 2008 04:05:07 -0800 (PST)
+Message-Id: <20081120.040507.127347702.davem@davemloft.net> (sfid-20081120_130516_284622_9F7A4A1F)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sfr@canb.auug.org.au
+Subject: Re: pull request: wireless-2.6 2008-11-18
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20081119000719.GA19756@tuxdriver.com>
+References: <20081119000719.GA19756@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 21, 2008 at 10:28:29PM +0200, Maxim Levitsky wrote:
-> I initially blamed iwl3945, then thought it got fixed, but now I have 
-> ath5k, and speeds are low
-> and I suspect that both drivers has bugs regarding to speed.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 18 Nov 2008 19:07:19 -0500
 
-Quite possible, but both use mac80211 for rate control.  Which rate 
-control algorithm are you using?  
+> Three fixes from Johannes, intended for 2.6.28...  One fixes a 32/64
+> issue in libertas_tf, another removes a mac80211 callback only used
+> by iwlwifi which is not obviously needed and which is causing locking
+> issues, and a final one fixes some mysterious DMA alignment problems
+> that have been plaguing iwlwifi for some time.
+> 
+> Please let me know if there are problems!
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Pulled, thanks John.
