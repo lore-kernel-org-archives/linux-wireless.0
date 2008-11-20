@@ -1,71 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23108.mail.ird.yahoo.com ([217.146.189.48]:30809 "HELO
-	web23108.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753588AbYKDBOb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 20:14:31 -0500
-Date: Tue, 4 Nov 2008 01:14:28 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [RFC/RFT PATCH 0/2] rtl8187: implement conf_tx callback/correctly ack tx pkts
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-In-Reply-To: <200811012339.39592.herton@mandriva.com.br>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <118209.17192.qm@web23108.mail.ird.yahoo.com> (sfid-20081104_021436_069909_C3C94C9D)
+Received: from xc.sipsolutions.net ([83.246.72.84]:52936 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751971AbYKTGsy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 01:48:54 -0500
+Subject: Re: WARNING: at net/mac80211/rx.c:388
+	__ieee80211_rx_handle_packet+0x1fe/0x627 [mac80211]()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Christian Schulte <cs@schulte.it>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081119165329.15e5a6d4.akpm@linux-foundation.org> (sfid-20081120_015353_985468_5559E0F5)
+References: <4922D9D5.2020507@schulte.it>
+	 <20081119165329.15e5a6d4.akpm@linux-foundation.org>
+	 (sfid-20081120_015353_985468_5559E0F5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-THb/KqtDV+KvMdW/HgOC"
+Date: Thu, 20 Nov 2008 07:48:18 +0100
+Message-Id: <1227163698.17336.12.camel@johannes.berg> (sfid-20081120_074858_534826_91ACEF34)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Sun, 2/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
 
-<snipped>
-> Yes, cleanups, minor optimization and fixes, like freeing
-> skbs in status queue
-> on interface stop, btw this was the patch for
-> wireless-testing from some days
-> ago while still in 2.6.27 (different from previous version
-> I sent privately with
-> printks/debug):
+--=-THb/KqtDV+KvMdW/HgOC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-<snipped>
-	__skb_unlink(skb, &priv->b_tx_status.queue);
-> +			if (tok)
-> +				info->flags |= IEEE80211_TX_STAT_ACK;
-> +			else
-> +				info->status.excessive_retries = 1;
-> +			info->status.retry_count = pkt_rc;
-> +			
-> +			ieee80211_tx_status_irqsafe(hw, skb);
-<snipped>
+On Wed, 2008-11-19 at 16:53 -0800, Andrew Morton wrote:
+> (cc linux-wireless)
+>=20
+> On Tue, 18 Nov 2008 16:05:57 +0100
+> Christian Schulte <cs@schulte.it> wrote:
+>=20
+> > this is with the 2.6.27.6 iwl3945 module. Is it some misconfiguration o=
+n
+> > my side ?
 
-okay, I looked through my hard disc and it seems that I have 3 versions of the rate control patch - the first one sent privately, I think, the 2nd one as part of a patch series of 2 with conf-tx, and a 3rd one above
-which is supposedly between the two, posted to wireless-testing (which apologies, I don't subscribe). There is a very crucial difference:
-I noticed that whenever STAT_ACK is always an alternative to
-setting excessive_retries:
+Yes.
 
----------------
-if (condition)
-    info->flags |= IEEE80211_TX_STAT_ACK;
-else 
-    info->status.excessive_retries = 1;
----------------
+config MAC80211_DEBUG_PACKET_ALIGNMENT
+        bool "Enable packet alignment debugging"  =20
+        depends on MAC80211_DEBUG_MENU=20
+        ---help---
+          This option is recommended for driver authors and strongly
+          discouraged for everybody else, it will trigger a warning
+          when a driver hands mac80211 a buffer that is aligned in
+          a way that will cause problems with the IP stack on some
+          architectures.
 
-But the else-clause is missing in the latest patch (of two), which also seems to be where both you and Larry are having rate stuck at 1Mb/s for.
-- and the line below
-"info->status.rates[0].count = pkt_rc +1 ;" doesn't compile
-under 2.6.27, so I changed the rates[0].count to the retry_count,
-and simultaneously adding the else-clause back. 
-
-My question is this: is the removal of the else-clause unintensional,
-could it result in your 1Mb/s rate?
-
-Hin-Tak
+          Say N unless you're writing a mac80211 based driver.
 
 
-      
+> > Nov 15 21:45:35 r60 kernel: WARNING: at net/mac80211/rx.c:388 __ieee802=
+11_rx_handle_packet+0x1fe/0x627 [mac80211]()
+> > Nov 15 21:45:35 r60 kernel: Modules linked in: ipt_MASQUERADE iptable_n=
+at nf_nat nf_conntrack_ipv4 nf_conntrack ip_tables x_tables binfmt_misc fgl=
+rx(P) rfcomm l2cap uinput ipv6 ppdev parport_pc lp parport dm_snapshot dm_m=
+irror dm_log dm_mod sbp2 loop pcmcia hci_usb joydev arc4 ecb crypto_blkciph=
+er battery bluetooth ac bay video output psmouse yenta_socket rsrc_nonstati=
+c serio_raw iwl3945 pcmcia_core mac80211 cfg80211 button snd_hda_intel snd_=
+pcm snd_seq snd_timer snd_seq_device rng_core i2c_i801 snd iTCO_wdt pcspkr =
+intel_agp soundcore snd_page_alloc agpgart evdev xfs sd_mod crc_t10dif ide_=
+cd_mod cdrom ata_generic ata_piix ahci libata usbhid piix hid ohci1394 ide_=
+core scsi_mod ff_memless ieee1394 dock tg3 libphy thermal fan ohci_hcd uhci=
+_hcd ehci_hcd usbcore radeonfb fb_ddc i2c_algo_bit i2c_core acpi_cpufreq fr=
+eq_table processor thermal_sys thinkpad_acpi rfkill led_class nvram
+> > Nov 15 21:45:35 r60 kernel: Pid: 11033, comm: clamd Tainted: P         =
+ 2.6.27.6-workstation #1
+> > Nov 15 21:45:35 r60 kernel:  [<c0123d26>] warn_on_slowpath+0x40/0x63
+> > Nov 15 21:45:35 r60 kernel:  [<f9684817>] ieee80211_wep_decrypt_data+0x=
+72/0x81 [mac80211]
+> > Nov 15 21:45:35 r60 kernel:  [<c02caa65>] __lock_text_start+0x2d/0x33
+> > Nov 15 21:45:35 r60 kernel:  [<c026166b>] skb_queue_tail+0x11/0x2d
+> > Nov 15 21:45:35 r60 kernel:  [<f968ee00>] ieee80211_rx_irqsafe+0x2c/0x4=
+f [mac80211]
+> > Nov 15 21:45:35 r60 kernel:  [<f975dc90>] iwl3945_pass_packet_to_mac802=
+11+0x260/0x272 [iwl3945]
+> > Nov 15 21:45:35 r60 kernel:  [<f968f410>] ieee80211_rx_h_data+0x26/0x62=
+ [mac80211]
+> > Nov 15 21:45:35 r60 kernel:  [<f9690a0c>] __ieee80211_rx_handle_packet+=
+0x1fe/0x627 [mac80211]
+> > Nov 15 21:45:35 r60 kernel:  [<f9691529>] __ieee80211_rx+0x48e/0x4f9 [m=
+ac80211]
+> > Nov 15 21:45:35 r60 kernel:  [<f9750ca2>] iwl3945_rx_queue_restock+0x9a=
+/0x117 [iwl3945]
+
+Intel doesn't care to make their drivers work on platforms that don't
+like unaligned loads, so in the foreseeable future this warning will
+show once if you enable that option above that specifically tells you to
+turn it off.....
+
+johannes
+
+--=-THb/KqtDV+KvMdW/HgOC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJJQgvAAoJEKVg1VMiehFYrMoP/iXK75WRQ1Er2TKTj5KJrpib
+AivxeeG+6uzOsVcdyeLfeZxtT3pTGEE8YpOWtuZb9PuuM8DbWVZOQ+Ep8mV1YRDZ
+UqYxJf56xPagZx/KATrlZ0A7h6Blf3u5vMZxQBK5Wg5LDBVW1gLxEyqyLdYUwNhY
+jhhlnKnTUj3KXCz8sizbzHSzLmke0wEeMieOMCJSHgNcGDEV1Tve2ALeqnhrXNGJ
+WceBVztud9BxJCpGca95XmPasABbNTQg4O7LEZK+2qotwHvum8nk+o2aYD2eJoTW
+AE5cDJHylu8P0a+NKjmcBS5O3Cd3yGs/75UI5p5WB9o4cKOmbAv9N3x0UVgJ2IeG
+yaJpN/i//AiV/KZupgtLuK0s217YGMIv/Q2f1yERTkN2Lhq8AaCA6L/swvyUUKep
+W8UL/SrpJow/2sxxXLILVxWIltNyN2rNcO82fvd3w6Mvmfj+mUjpxsq4essC73YB
+rSTKYNqQh3j4RN+M4Jhp3UIkOXsg9XIns7KnhDJmOf1lP/hb27ZLVXv+qEE26P5d
+j0RtKCfZiWnecsykVcKdZe4GAQELn6iwnfe8Os63GmTjqV24BANKVOE2dlC20fTs
+dN+U1/u7H7swQPHlxOHMRCxCa2IM5msadfW2UBmBxeqZe0pmglnXE1pyQUeo1Daa
+fK23rtO5O1FP08StOX2Y
+=p+so
+-----END PGP SIGNATURE-----
+
+--=-THb/KqtDV+KvMdW/HgOC--
+
