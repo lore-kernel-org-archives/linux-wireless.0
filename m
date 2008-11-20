@@ -1,74 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34310 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752500AbYKYLFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 06:05:48 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	reinette.chatre@intel.com
-Cc: linux-wireless@vger.kernel.org,
+Received: from xc.sipsolutions.net ([83.246.72.84]:59860 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738AbYKTG4n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 01:56:43 -0500
+Subject: Re: [PATCH 7/7] iwlwifi: prevent double key removal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>,
 	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211: disassociate prior to unlinking AP/station
-Date: Tue, 25 Nov 2008 13:05:44 +0200
-Message-Id: <1227611144-20081-1-git-send-email-tomas.winkler@intel.com> (sfid-20081125_120552_726921_E28D3B32)
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1227137548-28718-8-git-send-email-reinette.chatre@intel.com> (sfid-20081120_003216_235323_380F5650)
+References: <> <1227137548-28718-1-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-2-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-3-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-4-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-5-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-6-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-7-git-send-email-reinette.chatre@intel.com>
+	 <1227137548-28718-8-git-send-email-reinette.chatre@intel.com>
+	 (sfid-20081120_003216_235323_380F5650)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-po/x47rnRJ4/MeFwuN3T"
+Date: Thu, 20 Nov 2008 07:56:04 +0100
+Message-Id: <1227164164.17336.18.camel@johannes.berg> (sfid-20081120_075646_740764_012BCFF4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch reorders calls during disassociation in
-ieee80211_set_disassoc function.
-Since sta_info_unlink calls sta_notify(REMOVE) it will
-remove the station representing AP from the driver before
-it has disassociated from it using bss_info_changed callback.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/mlme.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
+--=-po/x47rnRJ4/MeFwuN3T
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 88b0b4d..2a827eb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -861,16 +861,26 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT)
- 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
- 
--	sta_info_unlink(&sta);
--
- 	rcu_read_unlock();
- 
--	sta_info_destroy(sta);
--
- 	local->hw.conf.ht.enabled = false;
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_HT);
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
-+
-+	rcu_read_lock();
-+
-+	sta = sta_info_get(local, ifsta->bssid);
-+	if (!sta) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	sta_info_unlink(&sta);
-+
-+	rcu_read_unlock();
-+
-+	sta_info_destroy(sta);
- }
- 
- static int ieee80211_sta_wep_configured(struct ieee80211_sub_if_data *sdata)
--- 
-1.5.4.3
+On Wed, 2008-11-19 at 15:32 -0800, Reinette Chatre wrote:
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+> When the key is removed a second time the offset is set to 255 - this ind=
+ex
+> is not valid for the ucode_key_table and corrupts the eeprom pointer (whi=
+ch
+> is 255 bits from ucode_key_table).
+
+> +	if (WARN(priv->stations[sta_id].sta.key.key_offset =3D=3D WEP_INVALID_O=
+FFSET,
+> +		 "Removing wrong key %d 0x%x\n", keyconf->keyidx, key_flags)) {
+> +		spin_unlock_irqrestore(&priv->sta_lock, flags);
+> +		return 0;
+> +	}
+
+So, since _this_ patch has been tested to fix the problem, the WARN_ON
+must be triggering.
+
+What are you doing to address the actual bug that causes it to trigger?
+
+johannes
+
+--=-po/x47rnRJ4/MeFwuN3T
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJJQoAAAoJEKVg1VMiehFY/3IP/j13eopYercbBLL4HXqT84yf
+wLGzNyzQ/8pB1tZsU4AzcYf4GWqYZ0ZIE6uHnetsNNQSoUuIXwHu8jilEBpzX2WQ
+YwHATAeOhCH3l5nX7xx+TlzrQcnOzOv5uee37KEjZmq3hOSot1OSCu/ChHld4fat
+o7ObaqebdD/Ybi9GjAH1o0HrL6SBWR7NYKucU8YYAXiRFoV/5kg37gVUXuk28Agg
+W9ik8Ri+t4o3E+cEtHhhn5DF5kAjVsH64kyUpirG5XA0X6e4kfb2Fk+/AsehzNDU
+oIerizBhNkBrAahrE0+ljrfx5tbpfs2C8tKmz23FbRJQlxnIcVBs62Wx8jajDLKN
+vrH+06OH3ArRgrBZ8kGM2n+bu+LwJTA3315r7qhHHd0lwl6yFNfV9O1web0M1z1y
+1N//qLnqD2ICGlOPIZmPyktEbRszTG69JckR4TMxOXgQNqFYI5oKd3eOGoxxQqe9
+15zEmxH0rlVg/0l2acQ2fDOfSRRc2heucBGIvnSWUOl6W/l5KsCP0kXjmM3nTrxs
+mGgFCcKHfMCysRhLZEDIM/kcLIPUNfhhHM2aFicBUR+vZJEdc99v7nM8wnPc9QvD
+QIZUI6jmyX8hYuLoGjNsVUR0MmFoFLGE+58jcpJBuBFghTCcVJs7cEhf1ituzuWT
+SUMSeq1uHolm8yfN0aM0
+=UppJ
+-----END PGP SIGNATURE-----
+
+--=-po/x47rnRJ4/MeFwuN3T--
 
