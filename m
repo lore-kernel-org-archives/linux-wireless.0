@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:12518 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbYKXNLv (ORCPT
+Received: from winston.telenet-ops.be ([195.130.137.75]:47275 "EHLO
+	winston.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753619AbYKTIBG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 08:11:51 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so732066ugf.37
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 05:11:49 -0800 (PST)
-Message-ID: <f76a32050811240511x799fb9cdw9a9870e897e9bd26@mail.gmail.com> (sfid-20081124_141156_370554_897F769A)
-Date: Mon, 24 Nov 2008 14:11:49 +0100
-From: "Stefan Steuerwald" <salsasepp@googlemail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
-Cc: "Holger Schurig" <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1227450758.3599.48.camel@johannes.berg>
+	Thu, 20 Nov 2008 03:01:06 -0500
+Date: Thu, 20 Nov 2008 09:01:00 +0100 (CET)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+cc: linux-wireless@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: m68k: linux-next allmodconfig
+In-Reply-To: <20081119170211.b4029fc4.akpm@linux-foundation.org>
+Message-ID: <Pine.LNX.4.64.0811200859590.6519@anakin> (sfid-20081120_090111_689524_419E8287)
+References: <20081119170211.b4029fc4.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
-	 <200811201537.19047.hs4233@mail.mn-solutions.de>
-	 <f76a32050811201121r27ba1d82ma788e5a55bfd422b@mail.gmail.com>
-	 <200811210838.25977.hs4233@mail.mn-solutions.de>
-	 <f76a32050811210037x5958de39g53b174b2d0dfd41b@mail.gmail.com>
-	 <1227450758.3599.48.camel@johannes.berg>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes,
+On Wed, 19 Nov 2008, Andrew Morton wrote:
+> include/net/mac80211.h: In function 'ieee80211_tx_info_clear_status':
+> include/net/mac80211.h:400: error: size of array 'type name' is negative
+> include/net/mac80211.h:405: error: size of array 'type name' is negative
+> 
+> due to:
+> 
+> static inline void
+> ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+> {
+>         int i;
+> 
+>         BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) !=
+>                      offsetof(struct ieee80211_tx_info, control.rates));
+>         BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) !=
+>                      offsetof(struct ieee80211_tx_info, driver_rates));
+> -->     BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) != 8);
+>         /* clear the rate counts */
+>         for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
+>                 info->status.rates[i].count = 0;
+> 
+> -->     BUILD_BUG_ON(
 
-thank you for providing this patch. Tested, but I'm not sure about the result.
-I THINK the frequency of my app-level timeouts is reduced, but I'm not
-really sure. In any case it doesn't break anything for me.
+Yep, missing explicit padding in struct ieee80211_tx_info, breaking havoc on
+m68k where the alignment requirement for 32-bit values is 2 bytes, not 4.
 
-I'm investigating this reason for my timeouts:
+AFAIK, a fix should be floating around.
 
-http://marc.info/?l=linux-wireless&m=122727674810057&w=2
+Gr{oetje,eeting}s,
 
-and have better log info to post, will followup there.
+						Geert
 
-Thank you,
-  Stefan.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-
-
-2008/11/23 Johannes Berg <johannes@sipsolutions.net>:
-> Can you trhis this patch?
->
-> Also, next time please don't filter the captures so much, it made it
-> hard to diagnose the problem.
->
-> johannes
->
->
-> Subject: mac80211: only transition STAs ps->wake on data frames
->
-> When a station goes to PS mode to scan, it will then send
-> probe requests without the PS bit set. mac80211 will take
-> that as indication that the station woke up, but it didn't.
-> This patch changes mac80211 to only consider doze->wake
-> transitions on data frames to to fix that issue.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/mac80211/rx.c |    8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
->
-> --- everything.orig/net/mac80211/rx.c   2008-11-23 14:58:21.000000000 +0100
-> +++ everything/net/mac80211/rx.c        2008-11-23 14:59:58.000000000 +0100
-> @@ -750,9 +750,11 @@ ieee80211_rx_h_sta_process(struct ieee80
->                /* Change STA power saving mode only in the end of a frame
->                 * exchange sequence */
->                if (test_sta_flags(sta, WLAN_STA_PS) &&
-> -                   !ieee80211_has_pm(hdr->frame_control))
-> -                       rx->sent_ps_buffered += ap_sta_ps_end(sta);
-> -               else if (!test_sta_flags(sta, WLAN_STA_PS) &&
-> +                   !ieee80211_has_pm(hdr->frame_control)) {
-> +                       /* ignore PS bit on non-data frames */
-> +                       if (ieee80211_is_data(hdr->frame_control))
-> +                               rx->sent_ps_buffered += ap_sta_ps_end(sta);
-> +               } else if (!test_sta_flags(sta, WLAN_STA_PS) &&
->                         ieee80211_has_pm(hdr->frame_control))
->                        ap_sta_ps_start(sta);
->        }
->
->
->
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
