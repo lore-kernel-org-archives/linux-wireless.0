@@ -1,108 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57499 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:56461 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063AbYKRCGp (ORCPT
+	with ESMTP id S1751043AbYKTGpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 21:06:45 -0500
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+	Thu, 20 Nov 2008 01:45:17 -0500
+Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
-	Christophe Dumez <dchris@gmail.com>,
-	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
-	Thomas Witt <witt_th@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andres Freund <andres@anarazel.de>
-In-Reply-To: <1226973473.2548.97.camel@debian.sh.intel.com>
-References: <1226969241.4014.24.camel@johannes.berg>
-	 <1226973473.2548.97.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TbtyJYRj2AIr4b/+B7lj"
-Date: Tue, 18 Nov 2008 03:05:50 +0100
-Message-Id: <1226973950.4014.37.camel@johannes.berg> (sfid-20081118_030649_458619_22F63EF3)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Rami Rosen <ramirose@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kune@deine-taler.de" <kune@deine-taler.de>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <20081119211826.GJ3485@tuxdriver.com>
+References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com>
+	 <1226943608.3902.36.camel@johannes.berg>
+	 <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com>
+	 <1227106146.26243.43.camel@johannes.berg>
+	 <eb3ff54b0811190709q76e8b073ic71831fd38ceba18@mail.gmail.com>
+	 <1227107869.26243.52.camel@johannes.berg>
+	 <20081119160135.GB3485@tuxdriver.com>
+	 <1227126620.26243.71.camel@johannes.berg> <20081119210046.GC5900@tesla>
+	 <20081119211826.GJ3485@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BRb76VyVonIGQ0MGgHNZ"
+Date: Thu, 20 Nov 2008 07:37:32 +0100
+Message-Id: <1227163052.17336.7.camel@johannes.berg> (sfid-20081120_074526_592081_47E4DAC2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-TbtyJYRj2AIr4b/+B7lj
+--=-BRb76VyVonIGQ0MGgHNZ
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-11-18 at 09:57 +0800, Zhu Yi wrote:
+On Wed, 2008-11-19 at 16:18 -0500, John W. Linville wrote:
 
-> We do suspect the 256 alignment requirement will be an issue. Thus we do
-> let people can reproduce this problem check with it. See comment #21,
-> #22, #23 in bug
-> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=3D1703. The
-> result is people still see this problem even the DMA address is 256
-> bytes aligned.
-
-Ok. Reading those comments, I wouldn't be too sure that he still ran
-into it without the alignment warning, since he said he missed some
-messages. Remember that the driver posts a whole bunch of RX buffers at
-init time (I saw this, it filled way more than my screen when printing
-just a line for each buffer) and then doesn't do much for quite a while
-until you turn on wireless, and the driver might init earlier than other
-things so he may have missed those messages. Anyway, hard to tell, hence
-me asking if this patch fixes it.
-
-Thanks for the review, you're right about the two missing +256.
-
-Anyone who wants to try it before one of us posts a fixed version should
-fix their version as below, I need to get some sleep.
-
-> > @@ -302,7 +305,7 @@ void iwl_rx_queue_free(struct iwl_priv *
-> >  	for (i =3D 0; i < RX_QUEUE_SIZE + RX_FREE_BUFFERS; i++) {
-> >  		if (rxq->pool[i].skb !=3D NULL) {
-> >  			pci_unmap_single(priv->pci_dev,
-> > -					 rxq->pool[i].dma_addr,
-> > +					 rxq->pool[i].real_dma_addr,
-> >  					 priv->hw_params.rx_buf_size,
+> > How about making it Kconfigable for broken AP support and add the
+> > warning there?
 >=20
-> priv->hw_params.rx_buf_size + 256.
->=20
-> >  					 PCI_DMA_FROMDEVICE);
-> >  			dev_kfree_skb(rxq->pool[i].skb);
-> > @@ -370,7 +373,7 @@ void iwl_rx_queue_reset(struct iwl_priv=20
-> >  		 * to an SKB, so we need to unmap and free potential storage */
-> >  		if (rxq->pool[i].skb !=3D NULL) {
-> >  			pci_unmap_single(priv->pci_dev,
-> > -					 rxq->pool[i].dma_addr,
-> > +					 rxq->pool[i].real_dma_addr,
-> >  					 priv->hw_params.rx_buf_size,
-> >  					 PCI_DMA_FROMDEVICE);
-> >  			priv->alloc_rxb_skb--;
->=20
-> ditto.
+> That doesn't really associate the bad behavior with specific drivers.
+> Probably better to send something do dmesg and/or make hostap aware
+> of the issue.
+
+Indeed. It also doesn't help you when you're sitting on a train, IBSS
+mode isn't working and you need to exchange information with some other
+device :) Mind you, normal users would need to have NM support for APs
+anyway...
+
+> Any idea if many STAs are smart enough to stop going to sleep once
+> (or if) they realize they are missing frames?
+
+They barely have a chance to tell the difference between that and just
+regular packet loss, so I doubt any are. mac80211 certainly wouldn't be,
+and I don't see how to program such a thing easily.
 
 johannes
 
---=-TbtyJYRj2AIr4b/+B7lj
+--=-BRb76VyVonIGQ0MGgHNZ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJIiL6AAoJEKVg1VMiehFYLYkP/iA28HFBnoNrm0jZmnJXZ87T
-WDppniR2tbyvW11v/FrLYiqu7adXCc/VOK52Zmw86lI+f+Djsx0e8huVJ+WDPHvT
-iyixLVf3k2I3tw6nJh+ocw0WRmvf8r/PaIA/cMBKnYFuG1DWjLFZi8Yhp6g/8TYL
-iBDJ1hF+GB7f9QxeLwFKr1GPidVvvMnVgfrfMM3kYaOyxVBgAZJ/mcEW+RdMLo8h
-tL7PGi+T+HdNzNCK+H8ZpQC5CV9X+eexTXzNWyW6YEopq9F/udllwt6QXGoUGWDb
-w88zeA3P9NX4roQLaOsYm1igKcvVHbGXpy7AZ9xCoxHIbMZ/Uhi4yzCyrjHpvRRt
-fDTDJYazqmBpKL24yPyA8VbtfE2Bza/E3pbWLYBHmCchAmV45kQb2IyLFUabACv2
-kVLOlNNsA1bqOJdjyNBXWc49BYzvJyZlFLl1226PjLgZsjOVODRWg+gnKU35BqfC
-kuiIK/h117ol29THKhfpYBhJk36q3c9EHoxbHSn45JFKd8EtLuLLi0+BD2WeHc7p
-gk4QkyUaI2ZlbzSTRGKjeYhFNIKbDnNL7533O+Fwqw5FuQ1se6UHO8VvRPhvcInz
-k7bn3zsBgWPUxH9Bnagl2iHLSQ7lLaznA2zZVyle2c6D20T5BjNtLqrmis//O2Zw
-+wBATHkbK1X+rnW42XLb
-=GOjZ
+iQIcBAABAgAGBQJJJQWoAAoJEKVg1VMiehFYdF0P/327tKQykdgLBc7apQUMx0r5
+me+3zaxzkmFk1oxjGg2/8aweP4MXtq57xensD7CWpgb6+K+Yij8WCQqAvembdjGL
+/fViWewEGBMrzfJnvN1U0r6bqMevsk95Y62lge1SdqM5/58wFLeI4Eu9fu4Ee1DM
+eYIJUHhr6D9PiHmbAe/3G0O2amw6hDUVyuU+3wzMRmFDeEBW6ZT4jk4B7nI28beL
+8qty9dttpenU5jc4VoR48JLYY/OtbA4crNDU8wmeaqxQvc38RiR2rxIOB6Kd/8rr
+vI8XgdrGzTEDXEEUeqdOsyT+kYWO3S0Z9f7SlGmivB5FeSiOAyLze0V6wtjgsdxz
+5RdTtplf4xBLF9gqbsPDM5Rig8p/2BZSz/0bSSJzM3srmCNkSLzTJmyBhwL7Nq04
+RoeURMEnNVpzqMjB5pcrJ8p6F2SLm3+wdCRzEnBZuMvBTk/c/p8FKR7pvSuLlZep
+1NkVRgxp9a6Crg23BQkoFbDFW1kynTQF65otnlw/60UDFq0YAh2/Iv+sDSCdMt58
+LUO70BYiXzl/o96L9c1l/Li2m3KSkNpa0Cz8kYSBlHnT4wfDK6CSDmwZVIm4mSN7
+rbK6GHc9NBAYdRRnWK+rSALpM9by9S15Aben2tQ0ey5/r2jSbfUZ8bpD4HwcFzdT
+3+o7IFVAJvS/Nw7rM0PN
+=xVpS
 -----END PGP SIGNATURE-----
 
---=-TbtyJYRj2AIr4b/+B7lj--
+--=-BRb76VyVonIGQ0MGgHNZ--
 
