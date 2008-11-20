@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23209 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092AbYKSB5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2008 20:57:34 -0500
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
-From: Zhu Yi <yi.zhu@intel.com>
-To: Thomas Witt <witt_th@gmx.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
-	Christophe Dumez <dchris@gmail.com>,
-	Jan =?ISO-8859-1?Q?Vc=28el=E1k?= <vcelak.jan@seznam.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andres Freund <andres@anarazel.de>
-In-Reply-To: <4922EF68.9020504@gmx.de>
-References: <1226969241.4014.24.camel@johannes.berg>
-	 (sfid-20081118_014839_339263_738F563C) <1227005769.4014.50.camel@johannes.berg>
-	 <4922EF68.9020504@gmx.de>
-Content-Type: text/plain
-Date: Wed, 19 Nov 2008 09:58:22 +0800
-Message-Id: <1227059902.2548.173.camel@debian.sh.intel.com> (sfid-20081119_025738_677627_A07DD078)
-Mime-Version: 1.0
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:58514 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752995AbYKTKvM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 05:51:12 -0500
+Date: Thu, 20 Nov 2008 08:51:07 -0200
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Subject: Re: [GIT PATCH] rfkill fixes for 2.6.28-rc3
+Message-ID: <20081120105107.GB20366@khazad-dum.debian.net> (sfid-20081120_115117_361513_7F4E252E)
+References: <1225730537-2679-1-git-send-email-hmh@hmh.eng.br> <200811031747.16326.IvDoorn@gmail.com> <20081103170243.GB2417@khazad-dum.debian.net> <200811031820.41165.IvDoorn@gmail.com> <20081112211530.GH2411@tuxdriver.com> <20081114001624.GA10002@khazad-dum.debian.net> <20081120020054.GB13464@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081120020054.GB13464@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-11-19 at 00:38 +0800, Thomas Witt wrote:
-> Johannes Berg wrote:
-> >> I'd like to ask anyone who is CC'ed (those are people I know ran into
-> >> the bug) to try this patch.
-> > 
-> > And here's a version against v2.6.28-rc5 (build tested only)
-> 
-> 
-> 
-> That one fixes the Problem for me
+On Wed, 19 Nov 2008, John W. Linville wrote:
+> I'm sorry, but I would prefer not to bother with this for 2.6.28.
+> Could you send versions intended for wireless-testing/2.6.29?
 
-Hey, you also said my patch fixed your problem in comment #42. ;-)
+Sure, I can do that.
 
-Johannes, FYI. From the last comment (#47) of bug
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703. The
-problem is not totally solved.
+Which tree/branch you want them based on?  wireless-testing master?  Linus
+mainline?
 
-Thanks,
--yi
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
