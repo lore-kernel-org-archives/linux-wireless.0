@@ -1,104 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from minas.ics.muni.cz ([147.251.4.40]:43579 "EHLO minas.ics.muni.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755992AbYKKOeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 09:34:09 -0500
-Date: Tue, 11 Nov 2008 15:34:10 +0100
-From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: ipw3945-devel@lists.sourceforge.net
-Subject: iwlagn driver segfault in 2.6.28-rc3
-Message-ID: <20081111143410.GA4401@ics.muni.cz> (sfid-20081111_153415_827620_40DE704F)
+Received: from 208-104-20-34.fmgh.2wcm.comporium.net ([208.104.20.34]:52765
+	"EHLO router1.tdux.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1755553AbYKTLdE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 06:33:04 -0500
+Received: from video1 ([10.240.0.2])
+	by router1.tdux.com (8.14.1/8.14.1) with ESMTP id mAKBX2IL021299
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 06:33:03 -0500
+From: "tduckett" <duck@tdux.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Error compiling.    Please help
+Date: Thu, 20 Nov 2008 06:33:02 -0500
+Message-ID: <002d01c94b03$c2544ee0$0200f00a@video1> (sfid-20081120_123317_427189_7B23221D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+I never seem to be able to get things compiled=A0 This is what I get wh=
+en I
+run make.=A0 What do I need to do to get this to work?
 
-I accidentaly got the following oops:
 
-[54644.622141] wlan0: association with AP 00:13:80:43:9d:d0 timed out
-[54655.006025] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) ->=
- IRQ 17
-[54655.006444] iwlagn 0000:03:00.0: irq 40 for MSI/MSI-X
-[54655.006715] general protection fault: 0000 [#1] SMP=20
-[54655.006723] last sysfs file: /sys/devices/pci0000:00/0000:00:1f.1/ho=
-st3/target3:0:0/3:0:0:0/block/sr0/stat
-[54655.006728] Dumping ftrace buffer:
-[54655.006733]    (ftrace buffer empty)
-[54655.006737] CPU 0=20
-[54655.006740] Modules linked in: aes_x86_64 aes_generic arc4 ecb iwlag=
-n iwlcore mac80211 cfg80211 i915 drm rfcomm bri
-dge stp llc bnep sco l2cap tp_smapi thinkpad_ec btusb bluetooth fuse th=
-inkpad_acpi rfkill e1000e wmi intel_agp snd_hda_intel [last unloaded: e=
-hci_hcd]
-[54655.006785] Pid: 13515, comm: wpa_supplicant Not tainted 2.6.28-rc3 =
-#27
-[54655.006789] RIP: 0010:[<ffffffffa0149db7>]  [<ffffffffa0149db7>] iwl=
-_eeprom_query16+0x7/0x20 [iwlcore]
-[54655.006813] RSP: 0018:ffff8800618f5b40  EFLAGS: 00010092
-[54655.006817] RAX: 7fff880074655400 RBX: ffff88007c02d000 RCX: 0000000=
-0800300f0
-[54655.006822] RDX: 0000000000000cfc RSI: 0000000000000090 RDI: ffff880=
-061801940
-[54655.006826] RBP: ffff880061801940 R08: 0000000000000002 R09: ffff880=
-0618f5b0c
-[54655.006831] R10: 0000000000000000 R11: ffffffff804a1010 R12: 0000000=
-000080006
-[54655.006835] R13: ffff880061802a60 R14: ffff880061802390 R15: 0000000=
-000000296
-[54655.006841] FS:  00007f27c48fb6f0(0000) GS:ffffffff806ed240(0000) kn=
-lGS:0000000000000000
-[54655.006846] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[54655.006850] CR2: 0000000000446f50 CR3: 0000000055115000 CR4: 0000000=
-0000006e0
-[54655.006855] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000=
-000000000
-[54655.006859] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000=
-000000400
-[54655.006865] Process wpa_supplicant (pid: 13515, threadinfo ffff88006=
-18f4000, task ffff8800614142c0)
-[54655.006869] Stack:
-[54655.006872]  ffffffffa01cd782 ffffffff806d6148 0000000000000000 0000=
-000000000296
-[54655.006880]  0000000000000000 0143000000000000 ffff88007c02d000 ffff=
-880061801940
-[54655.006888]  ffff880061802390 ffff880061802a60 0000000000000292 ffff=
-8800618f5d3c
-[54655.006898] Call Trace:
-[54655.006901]  [<ffffffffa01cd782>] ? iwl4965_nic_config+0xb2/0x3b0 [i=
-wlagn]
-[54655.006921]  [<ffffffffa0147619>] ? iwl_hw_nic_init+0xa9/0x1f0 [iwlc=
-ore]
-[54655.006939]  [<ffffffffa01c1110>] ? __iwl4965_up+0xd0/0x740 [iwlagn]
-[54655.006953]  [<ffffffffa01c1ee8>] ? iwl4965_mac_start+0x3c8/0x1190 [=
-iwlagn]
-[54655.006968]  [<ffffffff80282a10>] ? find_lock_page+0x30/0x80
-[54655.006978]  [<ffffffff80284260>] ? filemap_fault+0x1c0/0x430
-[54655.006986]  [<ffffffffa01271e9>] ? ieee80211_open+0x309/0x850 [mac8=
-0211]
-[54655.007010]  [<ffffffff804b4e5a>] ? dev_open+0xba/0x100
-[54655.007018]  [<ffffffff804b42e4>] ? dev_change_flags+0x94/0x1e0
-[54655.007025]  [<ffffffff804fa1b3>] ? devinet_ioctl+0x683/0x6e0
-[54655.007034]  [<ffffffff804a41d6>] ? sock_ioctl+0x66/0x270
-[54655.007042]  [<ffffffff802bdf2f>] ? vfs_ioctl+0x2f/0xb0
-[54655.007049]  [<ffffffff802be02c>] ? do_vfs_ioctl+0x7c/0x470
-[54655.007055]  [<ffffffff802ae26e>] ? fd_install+0x2e/0x60
-[54655.007063]  [<ffffffff802be469>] ? sys_ioctl+0x49/0x80
-[54655.007069]  [<ffffffff80530ef9>] ? error_exit+0x0/0x51
-[54655.007076]  [<ffffffff8020c4cb>] ? system_call_fastpath+0x16/0x1b
-[54655.007085] Code: 00 00 00 00 48 8b 47 18 48 8b 40 18 48 8b 00 4c 8b=
- 98 00 01 00 00 41 ff e3 66 66 2e 0f 1f 84 00 00 00 00 00 48 8b 87 00 2=
-3 01 00 <0f> b6 54 30 01 0f b6 04 30 c1 e2 08 09 d0 c3 66 2e 0f 1f 84 0=
-0=20
-[54655.007151] RIP  [<ffffffffa0149db7>] iwl_eeprom_query16+0x7/0x20 [i=
-wlcore]
-[54655.007169]  RSP <ffff8800618f5b40>
-[54655.007174] ---[ end trace d9d4018bdc964b95 ]---
 
---=20
-Luk=E1=B9 Hejtm=E1nek
+make -C /lib/modules/2.6.23.15-80.fc7/build
+M=3D/tmp/t2/compat-wireless-2.6-old modules
+make[1]: Entering directory `/usr/src/kernels/2.6.23.15-80.fc7-i686'
+/tmp/t2/compat-wireless-2.6-old/config.mk:53: "WARNING: You are running=
+ a
+kernel >=3D 2.6.23, you should enable in it CONFIG_NETDEVICES_MULTIQUEU=
+E for
+802.11[ne] support"
+=A0 CC [M]=A0 /tmp/t2/compat-wireless-2.6-old/drivers/net/b44.o
+In file included from /tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c=
+:35:
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.h:361: error: field =E2=
+napi=E2
+has incomplete type
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c: In function =E2b44_p=
+oll=E2:
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:849: warning: type
+defaults to =E2int=E2 in declaration of =E2__mptr=E2
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:849: warning:
+initialization from incompatible pointer type
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:879: error: too many
+arguments to function =E2netif_rx_complete=E2
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c: In function
+=E2b44_interrupt=E2:
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:911: error: too many
+arguments to function =E2netif_rx_schedule_prep=E2
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:917: error: too many
+arguments to function =E2__netif_rx_schedule=E2
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c: In function =E2b44_o=
+pen=E2:
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:1433: error: implicit
+declaration of function =E2napi_enable=E2
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:1442: error: implicit
+declaration of function =E2napi_disable=E2
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c: At top level:
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:2051: error: unknown =
+field
+=E2get_sset_count=E2 specified in initializer
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:2051: warning:
+initialization from incompatible pointer type
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c: In function
+=E2b44_init_one=E2:
+/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.c:2159: error: implicit
+declaration of function =E2netif_napi_add=E2
+make[3]: *** [/tmp/t2/compat-wireless-2.6-old/drivers/net/b44.o] Error =
+1
+make[2]: *** [/tmp/t2/compat-wireless-2.6-old/drivers/net] Error 2
+make[1]: *** [_module_/tmp/t2/compat-wireless-2.6-old] Error 2
+make[1]: Leaving directory `/usr/src/kernels/2.6.23.15-80.fc7-i686'
+make: *** [modules] Error 2
+
+
+Thank you in advance=20
+Duck
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
