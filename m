@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:10830 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753506AbYKIAqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2008 19:46:45 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: stable@vger.kernel.org, rjw@sisk.pl, linville@tuxdriver.com,
-	reinette.chatre@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2/2] iwlwifi: fix suspend to RAM in iwlwifi
-Date: Sun,  9 Nov 2008 02:46:36 +0200
-Message-Id: <1226191596-22192-3-git-send-email-tomas.winkler@intel.com> (sfid-20081109_014657_939716_B8EEE347)
-In-Reply-To: <1226191596-22192-2-git-send-email-tomas.winkler@intel.com>
-References: <1226191596-22192-1-git-send-email-tomas.winkler@intel.com>
- <1226191596-22192-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx51.mymxserver.com ([85.199.173.110]:40760 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757361AbYKTOtg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 09:49:36 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
+Date: Thu, 20 Nov 2008 15:49:12 +0100
+Cc: "Stefan Steuerwald" <salsasepp@googlemail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com> <f76a32050811200050u48bc150en34e94c7671672ae6@mail.gmail.com> <f76a32050811200544p3c647cb3t392025feef02c8f9@mail.gmail.com>
+In-Reply-To: <f76a32050811200544p3c647cb3t392025feef02c8f9@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200811201549.13078.hs4233@mail.mn-solutions.de> (sfid-20081120_154955_831205_3F660406)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes suspend to RAM after by moving
-notify_mac out of iwlwifi mutex
+Some comments about 
+your "ipod_http_request_probe_responses.pcap":
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11845
+I think here the same problem happens.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Tested-by: Carlos R. Mafra <crmafra2@gmail.com>
-Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
-Cc: Rafael J. Wysocki <rjw@sisk.pl>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+In packet 10 and again in packet 12 your Ipod tells the AP that 
+it is now sleeping. The AP acknowledges both packets.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e01f048..edab202 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2090,7 +2090,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 		iwl4965_error_recovery(priv);
- 
- 	iwl_power_update_mode(priv, 1);
--	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
- 
- 	if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
- 		iwl4965_set_mode(priv, priv->iw_mode);
-@@ -2342,6 +2341,7 @@ static void iwl_bg_alive_start(struct work_struct *data)
- 	mutex_lock(&priv->mutex);
- 	iwl_alive_start(priv);
- 	mutex_unlock(&priv->mutex);
-+	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
- }
- 
- static void iwl4965_bg_rf_kill(struct work_struct *work)
--- 
-1.5.4.3
+Then I see lots of probe responses from the AP to a different 
+MAC, but they seem to be unrelated to your Ipod. Also the probe 
+requests that one can see are from somebody else, e.g.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+In packet 121 your Ipod tells the AP that it now woke up and 
+immediately closed the HTTP connection.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
 
+
+And you might have guess by now that also in 
+your "ipod_http_request_tcp_reset.pcap" the problem started once 
+your Ipod told the AP that it goes to sleep, again with two 
+packets.
