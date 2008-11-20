@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:47652 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbYKZOxz convert rfc822-to-8bit (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.228]:44693 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752589AbYKTLpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 09:53:55 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so123920qwe.37
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 06:53:54 -0800 (PST)
-Message-ID: <69e28c910811260653mdb6b96ej97d7f6bee30313b0@mail.gmail.com> (sfid-20081126_155401_243833_161933D7)
-Date: Wed, 26 Nov 2008 15:53:54 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: iw needs a permalink on http://wireless.kernel.org/download/iw/
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
+	Thu, 20 Nov 2008 06:45:15 -0500
+Received: by qb-out-0506.google.com with SMTP id f11so452010qba.17
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 03:45:14 -0800 (PST)
+Message-ID: <7fe9ff8d0811200345o5c2a219dk256483a55c3b9e6a@mail.gmail.com> (sfid-20081120_124521_052361_A208EBE5)
+Date: Thu, 20 Nov 2008 12:45:13 +0100
+From: "Kamil Dzida" <kamil.dzida@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Symbol orinoco firmware under BSD, no extracting tools needed
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Corrently, different versions of iw can be downloaded from
-http://wireless.kernel.org/download/iw/, with the latest being 0.9.6,
-but there is no link that automatically takes users to the latest
-version (e.g. http://wireless.kernel.org/download/iw/iw-latest.tar.bz2
-always redirecting to the most recent release). This prevents me from
-automatically linking to the latest release of iw, so I can only link
-to one specific fixed release.
+Hello, for some time I have been interested in situation of firmware
+for Linux drivers. I found something interesting.
 
-I am in favor of creating a symlink at
-http://wireless.kernel.org/download/iw/iw-latest.tar.bz2.
+Some time ago I found that Agree firmware for orinoco driver was
+submitted to linux-firmware tree. From driver documentation
+(http://www.linuxwireless.org/en/users/Drivers/orinoco) I found that
+orinoco driver also works with Symbol "Spectrum24" chipset. The
+documentation states that firmware for that chipset is only available
+by cutting it from Windows or Apple drivers (like Broadcom microcode).
+Fortunately I found that it is not true. The firmware binary blobs for
+Spectrum24 can be found on NetBSD and OpenBSD servers under BSD
+license. Both have build in this firmware in their operating systems.
 
-Ideas?
 
-Thanks,
-G=E1bor Stefanik
+This statement can be found in OpenBSD CVS:
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+from netbsd:
+Generated from the firmware binaries for T3 series CF adapter.
+Obtained from Tim Gardner <timg@tpi.com> who developed the Linux driver.
+And approved by Brad Lefore <blefore@sj.symbol.com> to redistribute it
+with BSD license.
+
+(http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/microcode/symbol/esecsym?sortby=rev)
+
+This means that the only difference between firmware that Linux uses
+and the *BSD firmware is that BSD people successfully negotiated
+license change to BSD. Theoretically by simple drag and dropping the
+files from OpenBSD/NetBSD to linux-firmware tree and renaming the
+files will allow Linux users out of the box support of Symbol cards
+without any firmware extraction tools. Just in case, contacting Mr.
+Lefore of Symbol first would be also recommended.
+
+I hope this information will be helpful for orinoco driver development.
+
+
+OpenBSD resources:
+http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/microcode/symbol/?sortby=rev#dirlist
+
+and licence:
+
+http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/microcode/symbol/symbol-license?rev=1.4;content-type=text%2Fplain;sortby=rev
+
+NetBSD resources:
+http://cvsweb.netbsd.org/bsdweb.cgi/src/sys/dev/microcode/wi/?only_with_tag=MAIN
