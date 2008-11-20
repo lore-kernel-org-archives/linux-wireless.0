@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:38585 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbYK2GzP (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:53776 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754117AbYKTMIn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2008 01:55:15 -0500
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC v3 3/4] mac80211: add IEEE80211_HW_NO_DYNAMIC_PS flag
-References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
-	<1227901784-5325-4-git-send-email-kalle.valo@nokia.com>
-	<1227910525.3543.5.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Sat, 29 Nov 2008 08:55:03 +0200
-In-Reply-To: <1227910525.3543.5.camel@johannes.berg> (ext Johannes Berg's message of "Fri\, 28 Nov 2008 23\:15\:25 +0100")
-Message-ID: <87r64v10oo.fsf@nokia.com> (sfid-20081129_075519_137146_47428D9C)
+	Thu, 20 Nov 2008 07:08:43 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless: sysfs was displaying different values for level and noise than procfs
+Date: Thu, 20 Nov 2008 13:08:19 +0100
+Cc: Pavel Roskin <proski@gnu.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Andrey Borzenkov <arvidjaar@mail.ru>
+References: <200811151831.26403.arvidjaar@mail.ru> <20081119200856.GH3485@tuxdriver.com> <1227131518.3571.16.camel@dv>
+In-Reply-To: <1227131518.3571.16.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200811201308.19848.hs4233@mail.mn-solutions.de> (sfid-20081120_130847_237904_C280A2B3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+> As for the procfs interface, it could be deprecated.
 
-> On Fri, 2008-11-28 at 21:49 +0200, Kalle Valo wrote:
->> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
->> ---
->>  include/net/mac80211.h |    1 +
->>  net/mac80211/tx.c      |    3 ++-
->>  2 files changed, 3 insertions(+), 1 deletions(-)
->> 
->> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->> index 6a1d4ea..53a0dc5 100644
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -858,6 +858,7 @@ enum ieee80211_hw_flags {
->>  	IEEE80211_HW_NOISE_DBM				= 1<<8,
->>  	IEEE80211_HW_SPECTRUM_MGMT			= 1<<9,
->>  	IEEE80211_HW_AMPDU_AGGREGATION			= 1<<10,
->> +	IEEE80211_HW_NO_DYNAMIC_PS			= 1<<11,
->
-> Add documentation please.
+Sysfs (at least /sys/class/net/*/wireless) is already deprecated, 
+see the help text of WIRELESS_EXT_SYSFS:
 
-Will do. Actually it was on my TODO list already.
+-------------------------------------------
+defined at net/wireless/Kconfig:64
 
--- 
-Kalle Valo
+This option enables the deprecated wireless statistics
+                        ^^^^^^^^^^
+
+files in /sys/class/net/*/wireless/. The same information
+is available via the ioctls as well.
+
+Say Y if you have programs using it, like old versions of
+hal.
+-------------------------------------------
