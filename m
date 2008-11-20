@@ -1,133 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f11.google.com ([209.85.221.11]:44289 "EHLO
-	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751744AbYK0O3x (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:48185 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755490AbYKTWH5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 09:29:53 -0500
-Received: by qyk4 with SMTP id 4so1252222qyk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2008 06:29:51 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
-To: nbd@openwrt.org, lrodriguez@atheros.com, mickflemm@gmail.com,
-	linville@tuxdriver.com, jirislaby@gmail.com
-Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Date: Thu, 27 Nov 2008 09:29:38 -0500
-Message-Id: <20081127142938.5124.70933.sendpatchset@localhost> (sfid-20081127_152959_229111_B62D6927)
-Subject: [PATCH 2/3] ath5k: clean up ath5k_hw_set_key
+	Thu, 20 Nov 2008 17:07:57 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so419145ugf.37
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 14:07:55 -0800 (PST)
+Message-ID: <7fe9ff8d0811201407x51da0bcfwf1306c859e28c308@mail.gmail.com> (sfid-20081120_230800_958284_E0B286CC)
+Date: Thu, 20 Nov 2008 23:07:54 +0100
+From: "Kamil Dzida" <kamil.dzida@gmail.com>
+To: "Andrey Borzenkov" <arvidjaar@mail.ru>
+Subject: Re: Symbol orinoco firmware under BSD, no extracting tools needed
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200811202053.52132.arvidjaar@mail.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <7fe9ff8d0811200345o5c2a219dk256483a55c3b9e6a@mail.gmail.com>
+	 <200811202053.52132.arvidjaar@mail.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 5c4d0c3691a25f158c7e43ce8ca1812cbfd73c82 Mon Sep 17 00:00:00 2001
-From: Bob Copeland <me@bobcopeland.com>
-Date: Tue, 25 Nov 2008 20:55:21 -0500
-Subject: [PATCH] ath5k: clean up ath5k_hw_set_key
-
-With the addition of TKIP (and soon CCMP), key->alg is a more useful
-guide to key type than the key length.
-
-This patch cleans up key type assignment in ath5k_hw_set_key by
-extracting it into its own function.  It also replaces the separate
-memcpy() calls for extracting key material into the hardware format
-with a loop that works regardless of key size.
-
-Finally, the patch removes support for WEP-128 since it is a
-non-standard key length that mac80211 also doesn't use.
-
-Changes-licensed-under: ISC
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
-
-v2 without the errors, patches 1 and 3 should be ok.
-
- drivers/net/wireless/ath5k/pcu.c |   58 ++++++++++++++++++++++---------------
- 1 files changed, 34 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
-index 79879f2..ad7ea36 100644
---- a/drivers/net/wireless/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath5k/pcu.c
-@@ -1013,6 +1013,23 @@ int ath5k_hw_is_key_valid(struct ath5k_hw *ah, u16 entry)
- 		AR5K_KEYTABLE_VALID;
- }
- 
-+static
-+int ath5k_keycache_type(const struct ieee80211_key_conf *key)
-+{
-+	switch (key->alg) {
-+	case ALG_TKIP:
-+		return AR5K_KEYTABLE_TYPE_TKIP;
-+	case ALG_CCMP:
-+		return AR5K_KEYTABLE_TYPE_CCM;
-+	case ALG_WEP:
-+		if (key->keylen == LEN_WEP40)
-+			return AR5K_KEYTABLE_TYPE_40;
-+		else if (key->keylen == LEN_WEP104)
-+			return AR5K_KEYTABLE_TYPE_104;
-+	}
-+	return -EINVAL;
-+}
-+
- /*
-  * Set a key entry on the table
-  */
-@@ -1027,6 +1044,7 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
- 	u32 keytype;
- 	u16 micentry = entry + AR5K_KEYTABLE_MIC_OFFSET;
- 	bool is_tkip;
-+	const u8 *key_ptr;
- 
- 	ATH5K_TRACE(ah->ah_sc);
- 
-@@ -1042,33 +1060,25 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
- 		(is_tkip && micentry > AR5K_KEYTABLE_SIZE))
- 		return -EOPNOTSUPP;
- 
--	switch (keylen) {
--	/* WEP 40-bit   = 40-bit  entered key + 24 bit IV = 64-bit */
--	case 40 / 8:
--		memcpy(&key_v[0], key->key, 5);
--		keytype = AR5K_KEYTABLE_TYPE_40;
--		break;
-+	if (unlikely(keylen > 16))
-+		return -EOPNOTSUPP;
- 
--	/* WEP 104-bit  = 104-bit entered key + 24-bit IV = 128-bit */
--	case 104 / 8:
--		memcpy(&key_v[0], &key->key[0], 6);
--		memcpy(&key_v[2], &key->key[6], 6);
--		memcpy(&key_v[4], &key->key[12], 1);
--		keytype = AR5K_KEYTABLE_TYPE_104;
--		break;
--	/* WEP/TKIP 128-bit  = 128-bit entered key + 24 bit IV = 152-bit */
--	case 128 / 8:
--		memcpy(&key_v[0], &key->key[0], 6);
--		memcpy(&key_v[2], &key->key[6], 6);
--		memcpy(&key_v[4], &key->key[12], 4);
--		keytype = is_tkip ?
--			AR5K_KEYTABLE_TYPE_TKIP :
--			AR5K_KEYTABLE_TYPE_128;
--		break;
-+	keytype = ath5k_keycache_type(key);
-+	if (keytype < 0)
-+		return keytype;
- 
--	default:
--		return -EINVAL; /* shouldn't happen */
-+	/*
-+	 * each key block is 6 bytes wide, written as pairs of
-+	 * alternating 32 and 16 bit le values.
-+	 */
-+	key_ptr = key->key;
-+	for (i = 0; keylen >= 6; keylen -= 6) {
-+		memcpy(&key_v[i], key_ptr, 6);
-+		i += 2;
-+		key_ptr += 6;
- 	}
-+	if (keylen)
-+		memcpy(&key_v[i], key_ptr, keylen);
- 
- 	/* intentionally corrupt key until mic is installed */
- 	if (is_tkip) {
--- 
-1.5.4.2.182.gb3092
-
+On Thu, Nov 20, 2008 at 6:53 PM, Andrey Borzenkov <arvidjaar@mail.ru> wrote:
+> On Thursday 20 November 2008, Kamil Dzida wrote:
+>> Hello, for some time I have been interested in situation of firmware
+>> for Linux drivers. I found something interesting.
+>>
+>> Some time ago I found that Agree firmware for orinoco driver was
+>> submitted to linux-firmware tree. From driver documentation
+>> (http://www.linuxwireless.org/en/users/Drivers/orinoco) I found that
+>> orinoco driver also works with Symbol "Spectrum24" chipset. The
+>> documentation states that firmware for that chipset is only available
+>> by cutting it from Windows or Apple drivers (like Broadcom microcode).
+>> Fortunately I found that it is not true. The firmware binary blobs for
+>> Spectrum24 can be found on NetBSD and OpenBSD servers under BSD
+>> license. Both have build in this firmware in their operating systems.
+>>
+>
+> Does it support WPA and/or WPA2? Have you tested this firmware with
+> orinoco driver?
+>
+> Thank you!
+>
+>
+>>
+>> This statement can be found in OpenBSD CVS:
+>>
+>> from netbsd:
+>> Generated from the firmware binaries for T3 series CF adapter.
+>> Obtained from Tim Gardner <timg@tpi.com> who developed the Linux driver.
+>> And approved by Brad Lefore <blefore@sj.symbol.com> to redistribute it
+>> with BSD license.
+>>
+>> (http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/microcode/symbol/esecsym?sortby=rev)
+>>
+>> This means that the only difference between firmware that Linux uses
+>> and the *BSD firmware is that BSD people successfully negotiated
+>> license change to BSD. Theoretically by simple drag and dropping the
+>> files from OpenBSD/NetBSD to linux-firmware tree and renaming the
+>> files will allow Linux users out of the box support of Symbol cards
+>> without any firmware extraction tools. Just in case, contacting Mr.
+>> Lefore of Symbol first would be also recommended.
+>>
+>> I hope this information will be helpful for orinoco driver development.
+>>
+>>
+>> OpenBSD resources:
+>> http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/microcode/symbol/?sortby=rev#dirlist
+>>
+>> and licence:
+>>
+>> http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/microcode/symbol/symbol-license?rev=1.4;content-type=text%2Fplain;sortby=rev
+>>
+>> NetBSD resources:
+>> http://cvsweb.netbsd.org/bsdweb.cgi/src/sys/dev/microcode/wi/?only_with_tag=MAIN
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>
+>
+>
+Unfortunately I haven't got Symbol card to test the firmware. OpeBSD
+driver seems to be more advanced still their online manual doesn't
+mention WPA/WPA2 only WEP 104-bit. Actually I did not know that
+extracted firmware that Linux uses include WPA support. Why not try
+the NetBSD trick? Extract the firmware with WPA support and ask Symbol
+to re-licence it under BSD/ISC. On the other hand as far as I know
+OpenBSD got WPA support in their system in summer this year (no
+kidding!), so perhaps the firmware can do WPA, but software part is
+not ready to handle it yet. Summarizing someone with Spectrum based
+card is needed here.
