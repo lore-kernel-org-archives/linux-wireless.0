@@ -1,33 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:4364 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157AbYKZJMX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51878 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756696AbYKTOqM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 04:12:23 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so378991rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 01:12:22 -0800 (PST)
-Message-ID: <d9360e520811260112g4710460dj3159e3bfb22c88f4@mail.gmail.com> (sfid-20081126_101227_696611_6F074205)
-Date: Wed, 26 Nov 2008 14:42:22 +0530
-From: "Bharat Bhushan" <bharat.b.bhushan@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: bss _info_change query
+	Thu, 20 Nov 2008 09:46:12 -0500
+Date: Thu, 20 Nov 2008 09:43:01 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	sfr@canb.auug.org.au
+Subject: Re: pull request: wireless-next-2.6 2008-11-18
+Message-ID: <20081120144300.GB4329@tuxdriver.com> (sfid-20081120_154632_944630_4C9BE707)
+References: <20081119000852.GB19756@tuxdriver.com> <20081120.050348.134053835.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081120.050348.134053835.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all
-                   I suppose this api will be executed by open source
-mac when it see any change in the bss info, and this might also serve
-as an indication of various events like assoc/disassoc etc. i was just
-walking through the code and found we are intimating assoc info in
-ieee80211_associated but similar call is missing in
-ieee80211_set_disassoc , although we are computing the various values
-changes but there is no function call like
-ieee80211_bss_info_change_notify.
-Please  help  me whether i am missing anything or should we add a call
-to ieee80211_bss_info_change_notify.
+On Thu, Nov 20, 2008 at 05:03:48AM -0800, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Tue, 18 Nov 2008 19:08:52 -0500
+> 
+> > Here is another big round of updates intended for 2.6.29.  This batch is
+> > mostly driver updates as well as a bunch of file movement.  Also, some
+> > patches from me are working towards refactoring/minimizing the old
+> > ieee80211 component into a support library for ipw2100 and ipw2200 and
+> > also collecting more code into lib80211 for sharing between more
+> > drivers.
+> > 
+> > Please let me know if there are problems!
+>  ...
+> > P.S.  I have included a merge-test branch as an example of how the
+> > merge conflicts with the wireless-2.6 pull request from today should
+> > be resolved.
+> 
+> John, I took the stable fixes and those are in the pull request
+> I just sent to Linus.
+> 
+> Once he takes that in I'll merge those bits into net-next-2.6 and
+> resolve the conflicts created solely by that merge.
+> 
+> What I think makes sense right now for your net-next-2.6 stuff is
+> for you to just sit tight until I do the merge, then you can respin
+> your tree, include Rami Rosen's build fix, and take care of the
+> remaining merge issues at the same time.
+> 
+> I'll post on netdev when I do the merging, as I usually do.
 
-Thanks
+Sure, that sounds fine...thanks!
 
-bharat
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
