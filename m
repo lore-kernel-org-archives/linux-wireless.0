@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from promwad.com ([83.149.69.23]:50710 "EHLO promwad.com"
+Received: from main.gmane.org ([80.91.229.2]:47504 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751922AbYKJXsI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 18:48:08 -0500
-Received: from mail.promwad.com ([212.98.183.232] helo=intranet.promwad.com)
-	by promwad.com with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.63)
-	(envelope-from <ivan.kuten@promwad.com>)
-	id 1KzgUH-00058K-3z
-	for linux-wireless@vger.kernel.org; Tue, 11 Nov 2008 01:48:06 +0200
-Received: from intranet.promwad.com ([192.168.10.1] helo=promwad.com)
-	by intranet.promwad.com with esmtpa (Exim 4.69)
-	(envelope-from <ivan.kuten@promwad.com>)
-	id 1KzgUF-0006mn-Ru
-	for linux-wireless@vger.kernel.org; Tue, 11 Nov 2008 01:48:03 +0200
-MIME-Version: 1.0
-Date: Tue, 11 Nov 2008 01:47:58 +0200
-From: Ivan Kuten <ivan.kuten@promwad.com>
+	id S1754266AbYKTNgV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 08:36:21 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1L39hj-0001kF-HX
+	for linux-wireless@vger.kernel.org; Thu, 20 Nov 2008 13:36:19 +0000
+Received: from htibin536-bam.bfh.ch ([147.87.109.9])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 13:36:19 +0000
+Received: from michael.bernhard by htibin536-bam.bfh.ch with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 13:36:19 +0000
 To: linux-wireless@vger.kernel.org
-Subject: rtl8187: patch adding Abocom usb id
-Message-ID: <806c81b61e7dedacfda32d6638548dbb@promwad.com> (sfid-20081111_004822_219265_37EA84D0)
-Content-Type: text/plain; charset="UTF-8"
+From: Michael Bernhard <michael.bernhard@bfh.ch>
+Subject: Witap: Statusbericht 20.11.2008
+Date: Thu, 20 Nov 2008 14:35:53 +0100
+Message-ID: <gg3p4a$c15$1@ger.gmane.org> (sfid-20081120_143625_915850_F1247F99)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl8187: Add Abocom usb id
+Hallo Rolf
 
-Signed-off-by: Ivan Kuten <ivan.kuten@promwad.com>
+Ich bin bereits ein wenig sp=E4t, doch ich wills lernen :-)
 
--------------
+TODO's f=FCr CAPWAP library
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D
 
---- linux-2.6.28-rc3/drivers/net/wireless/rtl8187_dev.c 2008-11-10
-18:53:50.000000000 +0200
-+++ linux-2.6.28-rc3.new/drivers/net/wireless/rtl8187_dev.c     2008-11-10
-19:02:34.000000000 +0200
-@@ -48,6 +48,8 @@
-        {USB_DEVICE(0x03f0, 0xca02), .driver_info = DEVICE_RTL8187},
-        /* Sitecom */
-        {USB_DEVICE(0x0df6, 0x000d), .driver_info = DEVICE_RTL8187},
-+       /* Abocom */
-+       {USB_DEVICE(0x13d1, 0xabe6), .driver_info = DEVICE_RTL8187},
-        {}
- };
+- Implementation des Discovery Thread beenden
+- Service Thread implementieren
+- CAPWAP state machine implementieren und in Service Thread integrieren
+- DTLS API wie es in CAPWAP beschrieben ist implementieren
+- Retransmition und Fragmentation implementieren
+- MTU-Discovery (optional)
+- Vorhandene Lookup-table generisch machen
+- Testen, testen, testen
 
---------------
+Arbeiten f=FCr heute
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-Regards,
-Ivan
+1. Vorhandene Lookup-table generisch machen
+2. Implementation des Discovery Thread beenden
+3. Arbeiten an CAPWAP state machine beginnen
 
+Gruss
+Michael
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
