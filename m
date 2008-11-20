@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:59659 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752023AbYKQWZn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 17:25:43 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so1125649yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 14:25:41 -0800 (PST)
-Message-ID: <43e72e890811171425i3b1fc1bdk39a2c36333315e11@mail.gmail.com> (sfid-20081117_232548_913405_B6BC1E4E)
-Date: Mon, 17 Nov 2008 14:25:41 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Davide Pesavento" <davidepesa@gmail.com>
-Subject: Re: crda packaging
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <43e72e890811171421j3f41234dnf451e25d5e58abdc@mail.gmail.com>
+Received: from styx.suse.cz ([82.119.242.94]:39695 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756169AbYKTRkX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 12:40:23 -0500
+Date: Thu, 20 Nov 2008 18:40:21 +0100
+From: Michal Hocko <mhocko@suse.cz>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: ipw3945-devel@lists.sourceforge.net, reinette.chatre@intel.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: BUG: scheduling while atomic: iwl3945/0/3680/0x00000002 during
+	resume from suspend
+Message-ID: <20081120174021.GA6518@dhcp35.suse.cz> (sfid-20081120_184038_078615_B8A853C7)
+References: <20081109141412.GA5858@dhcp35.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com>
-	 <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com>
-	 <2da21fe50811161258v58efe236r492d59c8b9228b81@mail.gmail.com>
-	 <20081117202749.GB5994@tesla>
-	 <43e72e890811171421j3f41234dnf451e25d5e58abdc@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081109141412.GA5858@dhcp35.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 17, 2008 at 2:21 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Nov 17, 2008 at 12:27 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Sun, Nov 16, 2008 at 12:58:43PM -0800, Davide Pesavento wrote:
->>> On Mon, Oct 20, 2008 at 02:28, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> > On Sun, Oct 19, 2008 at 8:57 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
->>> >>
->>> >> Do you think the regulatory database should be split from the package
->>> >> that contains the crda daemon? If so, regulatory.bin should be
->>> >> versioned as well...
->>> >
->>> > Yes, absolutely, the idea is to split db.txt into a separate git tree
->>> > too actually so that should help with keeping track of changes
->>> > separately and thinking of them separately.
->>> >
->>> > We just need to get this git tree created. What crda will need though
->>> > is to wget the RSA public key so it can be built with support for new
->>> > arbitrary updates to the binary db. Give us a few days, we'll get this
->>> > setup.
->>> >
->>> >  Luis
->>> >
->>>
->>> Any updates on this?
->>
->> I think we'll have this done by the end of the day.
->
-> OK this is now done. We have a new git tree which John maintains for
-> the database:
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
+On Sun 09-11-08 15:14:12, Michal Hocko wrote:
+> Hi,
+> 
+> I have noticed BUG condition (%subj) during resume from suspend (see
+> attached dmesg from the resume start) if wireless interface is up
+> during suspend to RAM (BUG doesn't occure when interface is not
+> configured during suspend).
+> 
+> Notebook seems to survive this problem without any noticeable problems
+> (wifi is working).
+> 
+> I am using recent Linus git tree (75fa67706cce5272bcfc51ed646f2da21f3bdb6e) 
+> with the config attached but the same problem occurs on the 2.6.28-rc2
+> and 2.6.27 kernels too (see logs). Traces are not the same, but they are
+> very similar.
 
-Oh and this has a tag for date on the release so we'd get a new
-wireless-regdb package for each new tag.
+JFYI: I don't this problem with 7f0f598a0069d1ab072375965a4b69137233169c
+anymore
 
-  Luis
+-- 
+Michal Hocko
+L3 team 
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
