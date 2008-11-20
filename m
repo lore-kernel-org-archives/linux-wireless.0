@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53856 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:53977 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758195AbYKWOcm (ORCPT
+	with ESMTP id S1753756AbYKTT67 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2008 09:32:42 -0500
+	Thu, 20 Nov 2008 14:58:59 -0500
 Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Stefan Steuerwald <salsasepp@googlemail.com>
 Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <f76a32050811210037x5958de39g53b174b2d0dfd41b@mail.gmail.com> (sfid-20081121_093709_047280_C86566C8)
+In-Reply-To: <1227209360.3766.42.camel@johannes.berg> (sfid-20081120_202928_923853_0C4EBF82)
 References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
+	 <f76a32050811200050u48bc150en34e94c7671672ae6@mail.gmail.com>
+	 <f76a32050811200544p3c647cb3t392025feef02c8f9@mail.gmail.com>
 	 <200811201537.19047.hs4233@mail.mn-solutions.de>
 	 <f76a32050811201121r27ba1d82ma788e5a55bfd422b@mail.gmail.com>
-	 <200811210838.25977.hs4233@mail.mn-solutions.de>
-	 <f76a32050811210037x5958de39g53b174b2d0dfd41b@mail.gmail.com>
-	 (sfid-20081121_093709_047280_C86566C8)
-Content-Type: text/plain
-Date: Sun, 23 Nov 2008 15:32:38 +0100
-Message-Id: <1227450758.3599.48.camel@johannes.berg> (sfid-20081123_153246_551740_CE3A1B13)
+	 (sfid-20081120_202146_459597_36951BC6)  <1227209360.3766.42.camel@johannes.berg>
+	 (sfid-20081120_202928_923853_0C4EBF82)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7CKNyj7+8qpmTWGIJEdK"
+Date: Thu, 20 Nov 2008 20:58:52 +0100
+Message-Id: <1227211132.3766.45.camel@johannes.berg> (sfid-20081120_205902_669418_0B756DF8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can you trhis this patch?
 
-Also, next time please don't filter the captures so much, it made it
-hard to diagnose the problem.
+--=-7CKNyj7+8qpmTWGIJEdK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2008-11-20 at 20:29 +0100, Johannes Berg wrote:
+
+> > @Johannes:
+> > I was not able to find any indicated traffic in any of the beacon TIMs.
+>=20
+> Indeed. But did the problem happen during the trace here? It looks like
+> there is no traffic for the ipod between it going to sleep and waking up
+> again at all, should there be?
+
+Never mind, I'm stupid, I set wireshark to assume an FCS and then it
+didn't dissect things correctly. The TIM bit for AID 1 is set, and since
+I guess nothing else is on the network hostapd will have used AID 1 for
+the ipod, and the ipod also wakes up.
+
+Therefore, the problem is something else.
 
 johannes
 
+--=-7CKNyj7+8qpmTWGIJEdK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Subject: mac80211: only transition STAs ps->wake on data frames
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-When a station goes to PS mode to scan, it will then send
-probe requests without the PS bit set. mac80211 will take
-that as indication that the station woke up, but it didn't.
-This patch changes mac80211 to only consider doze->wake
-transitions on data frames to to fix that issue.
+iQIcBAABAgAGBQJJJcF3AAoJEKVg1VMiehFYyv8P/2TJ7pULAKq7nqxZy0Fa5tZB
+fLg7QmoRgB6tO+TCkcuBHHEEOuq6c7AqTjptILNm8V2ur2BgCsyeyIIaxt+zqiat
+XzNDW7m8Ej13hk+iPShufadxWcCS9r1tZx30VgIRqpvXoJ/lc03KtqDqV0EJ7ZgR
+NPTnCzdqf8+lwFrYW+DkO08DUzWjvDoAZEJfbf0t+YnDp4iSptvws8wfQIGRHaTt
+3hk7sQshOKTBePl49Jxc5pibI5/P3D4uhRTpVg7pojTckO4HR7KJTas/su+Unmpq
+ceVzZL/PHBTRLuZzcqPRe9FZFRqhXHBenKODOCpbLNhR3UyuegcJTMgevgX3bYHW
+HxFraP6gB7vov619tJ8yZpyObEYOZu1oKsTVEjAjUm78e1qq+2Env53Bi2OsbpsN
+vVCJwBp4PZAIoIzEKxTyC4F/h5JipfXYhwinL3LjwT3Sgl0emGlexHa9gnMtUq4J
+kcmIBbKGgmihZMojtvLPwopzDxHbyfHagl/N+AH/PJ9hVF6nWtT+hLsQnME4zp14
+1VcfnFNxqSXRD5p+ou/HrG7J6R6iHtgkaflbkMohYtTZTKiy6nJxgiVDenV18uNn
+6yeJsUbr0f8UU5fjEsIpPDKBySRxoezG2HPeG2VlMKJGAjZUzYQaNLWw8bnPIrlB
+qqG7lSinPhYrJoqTp5pe
+=A+7T
+-----END PGP SIGNATURE-----
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/rx.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
---- everything.orig/net/mac80211/rx.c	2008-11-23 14:58:21.000000000 +0100
-+++ everything/net/mac80211/rx.c	2008-11-23 14:59:58.000000000 +0100
-@@ -750,9 +750,11 @@ ieee80211_rx_h_sta_process(struct ieee80
- 		/* Change STA power saving mode only in the end of a frame
- 		 * exchange sequence */
- 		if (test_sta_flags(sta, WLAN_STA_PS) &&
--		    !ieee80211_has_pm(hdr->frame_control))
--			rx->sent_ps_buffered += ap_sta_ps_end(sta);
--		else if (!test_sta_flags(sta, WLAN_STA_PS) &&
-+		    !ieee80211_has_pm(hdr->frame_control)) {
-+			/* ignore PS bit on non-data frames */
-+			if (ieee80211_is_data(hdr->frame_control))
-+				rx->sent_ps_buffered += ap_sta_ps_end(sta);
-+		} else if (!test_sta_flags(sta, WLAN_STA_PS) &&
- 			 ieee80211_has_pm(hdr->frame_control))
- 			ap_sta_ps_start(sta);
- 	}
-
+--=-7CKNyj7+8qpmTWGIJEdK--
 
