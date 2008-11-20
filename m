@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:1887 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751558AbYKNNjv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 08:39:51 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so829698qwe.37
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 05:39:50 -0800 (PST)
-Message-ID: <69e28c910811140539p57fa13dej4c13aa0d09c76f95@mail.gmail.com> (sfid-20081114_143956_622656_B09502F4)
-Date: Fri, 14 Nov 2008 14:39:50 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: Master mode in iw
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Mark Ryden" <markryde@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <87fxlu4rdx.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com>
-	 <87ej1f6ggq.fsf@nokia.com>
-	 <dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com>
-	 <87wsf74z6f.fsf@nokia.com> <1226578011.5105.8.camel@johannes.berg>
-	 <87fxlu4rdx.fsf@nokia.com>
+Received: from mga09.intel.com ([134.134.136.24]:6412 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756490AbYKTSUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 13:20:37 -0500
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Subject: [PATCH V2] mac80211 : Fix setting ad-hoc mode and non-ibss channel
+Date: Thu, 20 Nov 2008 10:20:31 -0800
+Message-Id: <1227205231-7045-1-git-send-email-abhijeet.kolekar@intel.com> (sfid-20081120_192056_419850_2EC347B0)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2008 at 9:56 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->>> > My question is - is there something inherent which prevents
->>> > implementing it with "iw"? When comparing to the old set of tools,
->>> > which includes iwconifg, "iwconfig wlan0 mode Master" works on some
->>> > interfaces.
->>>
->>> Just guessing, but most probably because there are no drivers which
->>> use nl80211 and support AP mode without hostapd, so nobody hasn't
->>> bothered to implement it, yet.
->>
->> And there never will be since we don't want the whole AP MLME in the
->> kernel regardless of the driver.
->
-> Actually I was thinking about fullmac hardware which support AP mode.
-> In theory we might need to support those, but I guess in practise
-> there hasn't been, nor ever will be, such hardware. I'll just shut up
-> now :)
->
-> --
-> Kalle Valo
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Patch fixes the kernel trace when user tries to set
+ad-hoc mode on non IBSS channel.
+e.g iwconfig wlan0 chan 36 mode ad-hoc
 
-I doubt that any fullmac hardware should have a mac80211-based driver...
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+---
+ net/mac80211/wext.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 63f36e9..b3ce28d 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -271,6 +271,7 @@ static int ieee80211_ioctl_siwmode(struct net_device *dev,
+ 				   __u32 *mode, char *extra)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
+ 	int type;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+@@ -281,6 +282,13 @@ static int ieee80211_ioctl_siwmode(struct net_device *dev,
+ 		type = NL80211_IFTYPE_STATION;
+ 		break;
+ 	case IW_MODE_ADHOC:
++		/* Setting ad-hoc mode on non ibss channel is not
++		 * supported.
++		 */
++		if (local->oper_channel &&
++		    (local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS))
++			return -EOPNOTSUPP;
++
+ 		type = NL80211_IFTYPE_ADHOC;
+ 		break;
+ 	case IW_MODE_REPEAT:
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.5.4.3
+
