@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2779 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752784AbYKUOGE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48073 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbYKTAqR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 09:06:04 -0500
-Date: Fri, 21 Nov 2008 09:05:08 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath5k: Clean up eeprom parsing and add missing calibration data
-Message-ID: <20081121140508.GA26731@hash.localnet> (sfid-20081121_150607_800084_41FFEC3C)
-References: <49257136.2050902@openwrt.org> <20081121030022.GA25726@hash.localnet> <40f31dec0811202121i7d0b5931g9b416a9122f9e0e5@mail.gmail.com>
+	Wed, 19 Nov 2008 19:46:17 -0500
+Date: Wed, 19 Nov 2008 19:37:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sfr@canb.auug.org.au
+Subject: Re: pull request: wireless-2.6 2008-11-18
+Message-ID: <20081120003748.GK3485@tuxdriver.com> (sfid-20081120_014621_434353_A37C37D7)
+References: <20081119000719.GA19756@tuxdriver.com> <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com> <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com> <20081119143919.GA3485@tuxdriver.com> <1ba2fa240811190851i5dda6734w10d38b0f27e5ac97@mail.gmail.com> <20081119185340.GC3485@tuxdriver.com> <1ba2fa240811191355p7218dd84j8517d9ff4bab4e0b@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0811202121i7d0b5931g9b416a9122f9e0e5@mail.gmail.com>
+In-Reply-To: <1ba2fa240811191355p7218dd84j8517d9ff4bab4e0b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 21, 2008 at 07:21:07AM +0200, Nick Kossifidis wrote:
-> 2008/11/21 Bob Copeland <me@bobcopeland.com>:
-> > Can we add the rest here?
-> >
-> > +               AR5K_EEPROM_READ_HDR(AR5K_EEPROM_MISC2, ee_misc2);
+On Wed, Nov 19, 2008 at 11:55:15PM +0200, Tomas Winkler wrote:
+> On Wed, Nov 19, 2008 at 8:53 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+
+> > Now, if you could put as much energy into fixing these issues as you
+> > are putting into arguing with me or anyone else contradicting you...
 > 
-> Problem is that legacy-hal doesn't make use of these infos (along with
-> many other infos stored in eeprom !), so i don't know what eeprom
-> versions have them. Go on and use them but for now assume that they
-> are only available for eeprom versions 5 and above and i'll check out
-> my eeprom dumps etc to find out.
+> I'm not a yes man and if I think differently I say so. It's legitimate
+> to have another opinion and I'm really trying to keep it technical and
+> I'm not ashamed to say if I'm wrong, but you people are so hostile
+> from some unknown reason I just hope somebody in anthropology is
+> making his doctoral thesis of it to explain it to me.
 
-Ok, no rush on this - we can add the patch for these later when we know
-which versions specify misc5.
+Of course!  You are right and all the rest of us are wrong.  How could
+I have been so stupid?  Thank you for being so easy to work with
+while the rest of us are being so difficult.
 
-The legacy-hal uses this bit, but does so by directly reading that
-offset in attach for some reason.  It's the same address as
-AR5K_EEPROM_MISC5, offset 0xc9.  From the HAL:
+Are you done?
 
-> HAL_BOOL
-> ar5212FillCapabilityInfo(struct ath_hal *ah)
-> {
-[...]
-> 	HAL_CAPABILITIES *pCap = &ahpriv->ah_caps;
-> 	u_int16_t capField;
->     u_int16_t regcap;
-> 
-> 	/* Read the capability EEPROM location */
-> 	capField = 0;
-> 	if (ahp->ah_eeversion >= AR_EEPROM_VER5_1 &&
-> 	    !ath_hal_eepromRead(ah, AR_EEPROM_CAPABILITIES_OFFSET, &capField)) {
-> 		HDPRINTF(ah, HAL_DBG_EEPROM, "%s: unable to read caps from eeprom\n", __func__);
-> 		return AH_FALSE;
-> 	}
-
-Ok, so it only works for eeprom 5.1 and better...
-
-[...]
-> 	pCap->halCipherAesCcmSupport =
-> 		(!(capField & AR_EEPROM_EEPCAP_AES_DIS) &&
-> 		 ((AH_PRIVATE(ah)->ah_macVersion > AR_SREV_VERSION_VENICE) ||
-> 		  ((AH_PRIVATE(ah)->ah_macVersion == AR_SREV_VERSION_VENICE) &&
-> 		   (AH_PRIVATE(ah)->ah_macRev >= AR_SREV_VERSION_OAHU))));
-
+John
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
