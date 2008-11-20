@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:46769 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754495AbYKCHvV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 02:51:21 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so917851yxm.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 23:51:20 -0800 (PST)
-Message-ID: <43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com> (sfid-20081103_085125_482357_8D67DF6E)
-Date: Sun, 2 Nov 2008 23:51:20 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-Cc: "Bob Copeland" <me@bobcopeland.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>, tim.gardner@canonical.com,
-	mick@madwifi.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1225697686.3619.25.camel@johannes.berg>
+Received: from hostap.isc.org ([149.20.54.63]:40022 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753892AbYKTI2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 03:28:55 -0500
+Date: Thu, 20 Nov 2008 10:27:50 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Rami Rosen <ramirose@gmail.com>,
+	linux-wireless@vger.kernel.org, kune@deine-taler.de
+Subject: Re: [PATCH ] zd1211rw: enable master mode. (wireless-testing)
+Message-ID: <20081120082750.GG5078@jm.kir.nu> (sfid-20081120_092901_337239_CA2B67F3)
+References: <eb3ff54b0811170751p56544c8fic38d046a868f3bb8@mail.gmail.com> <1226943608.3902.36.camel@johannes.berg> <eb3ff54b0811190559g39c2176h86bd9fb1956d6730@mail.gmail.com> <1227106146.26243.43.camel@johannes.berg> <eb3ff54b0811190709q76e8b073ic71831fd38ceba18@mail.gmail.com> <1227107869.26243.52.camel@johannes.berg> <20081119160135.GB3485@tuxdriver.com> <1227126620.26243.71.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4908B754.1050400@tpi.com>
-	 <43e72e890811011419k460b11e0he08d66022cbd606e@mail.gmail.com>
-	 <40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com>
-	 <40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
-	 <20081102184146.GA6065@hash.localnet>
-	 <43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
-	 <1225696692.3619.18.camel@johannes.berg>
-	 <43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
-	 <1225697686.3619.25.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1227126620.26243.71.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 2, 2008 at 11:34 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2008-11-02 at 23:29 -0800, Luis R. Rodriguez wrote:
->
->> >> Not sure I agree with the WARN_ON() if the driver's mac80211 config()
->> >> callback fails. In our case when we tune to a different channel we
->> >> have to clear any DMA operations first and then we reset the chip.
->> >> Reseting the chip can fail for whatever strange hw issue cases. The
->> >> patch fixes the complaint but is the complaint sane?
->> >
->> > What's mac80211 to do when it fails?
->>
->> How about a shiny new nl80211 event?
->
-> And wtf would userspace do?
+On Wed, Nov 19, 2008 at 09:30:19PM +0100, Johannes Berg wrote:
 
-If multiple configuration attempts fail perhaps stop trying, and
-inform the user?
+> That's a good question. The distinction here is between empowering users
+> to do the wrong thing (AP without proper PS support) and enforcing the
+> right thing (with the consequence of complete loss of AP functionality).
+> The issue I see here is that users will see "ohh shiny, AP support"
+> without knowing that it doesn't actually really support it. Not sure
+> which side of the line we want to stand on, I prefer the correctness
+> side but I can see arguments for the other side, would just like to have
+> users know. Maybe we could have some way to tell hostapd this and then
+> have hostapd print a huge warning about it when started up?
 
-  Luis
+I would be fine adding such a warning into hostapd if someone comes up
+with the patch and mac80211/nl80211 changes to provide the
+working-PS-mode capability flag.
+
+Is the problem with zd1211rw just in PS buffering of multicast/broadcast
+frames or does it also have problems with unicast? Many use cases could
+handle the multicast/broadcast case, but if unicast PS buffering does
+not work properly, there may be more issues.. Anyway, this leaves a
+nasty surprise for the end user who may not even realize what power
+saving really means in context of 802.11 and would not have any way of
+figuring out why the connection does not work suddenly when the STA goes
+to power save mode.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
