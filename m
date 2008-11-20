@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc2-s25.bay0.hotmail.com ([65.54.246.161]:64875 "EHLO
-	bay0-omc2-s25.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750897AbYK1Feq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 00:34:46 -0500
-Message-ID: <BAY104-DAV671C2C6DE8B2A05AD785E99040@phx.gbl> (sfid-20081128_063451_695419_24A9F419)
-Message-ID: <492F82EA.4030902@hotmail.com>
-Date: Fri, 28 Nov 2008 16:34:34 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Reply-To: linux-wireless@vger.kernel.org,
-	  Shaddy Baddah <shaddy_baddah@hotmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:11979 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753011AbYKTGOo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2008 01:14:44 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 22:14:44 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<ath9k-devel@lists.ath9k.org>, <zenczykowski@gmail.com>,
+	<Bennyam.Malavazi@atheros.com>
+Subject: [RFC 2/2] ath9k: correct expected max RX buffer size
+Date: Wed, 19 Nov 2008 22:14:40 -0800
+Message-ID: <1227161680-23229-3-git-send-email-lrodriguez@atheros.com> (sfid-20081120_071456_446791_5F05B3E8)
+In-Reply-To: <1227161680-23229-2-git-send-email-lrodriguez@atheros.com>
+References: <1227161680-23229-1-git-send-email-lrodriguez@atheros.com>
+ <1227161680-23229-2-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-References: <4902DEBB.3050205@hotmail.com>	 <20081025112147.GA12252@Chamillionaire.breakpoint.cc>	 <200810251325.07916.mb@bu3sch.de>	 <20081025112813.GC12252@Chamillionaire.breakpoint.cc>	 <49033782.5040701@hotmail.com>  <491589ED.4090904@hotmail.com>	 <1226149894.3610.8.camel@johannes.berg>  <491653A6.20705@hotmail.com> <1226220992.3614.16.camel@johannes.berg> <4916F1C0.1040703@hotmail.com> <BAY104-DAV1D226EA8FB16BE36E3C84991A0@phx.gbl>
-In-Reply-To: <BAY104-DAV1D226EA8FB16BE36E3C84991A0@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+We should only tell the hardware its capable of DMA'ing
+to us only what we asked dev_alloc_skb(). Prior to this
+it is possible a large RX'd frame could have corrupted
+DMA data but for us but we were saved only because we
+were previously also pci_map_single()'ing the same large
+value. The issue prior to this though was we were unmapping
+a smaller amount which the prior DMA patch fixed.
 
-On 2008-11-11 02:13, Shaddy Baddah wrote:
-> Ok, after a long hard slog at trying to understand all this, I'm going 
-> to have to pause the effort. I am beginning to understand the mechanisms 
-> in place... however, I am not totally sure about anything. My first 
+Note that we dev_alloc_skb() a cache line size - 1 too
+but this is just to help us offset the skb->data *if and only if*
+needed. Even in that case we should still *only* allow the
+hardware to DMA to us a buffer of size sc->sc_rxbufsize.
 
-Devoting a little bit of time here and there to understanding the 
-unaligned accesses, I think I understand a whole lot better now.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/recv.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-First off, I only came to realise that the reason the module seemed to 
-continue operations despite reporting the unaligned access error was 
-because the exception handler actually emulates the intended operation 
-(albeit much slower). Good to know.
-
-I then came to understand that we cannot expect alignment on RX in the 
-zd1211rw module. In fact, we might expect that 80211 packets are always 
-unaligned, because the 5 byte PLCP prefix in the SKB buffer will always 
-push it into an odd address (assuming the SKB buffer is allocated 
-aligned). In which case, as detailed in the 
-Documentation/unaligned-memory-access.txt, replacing 
-compare_ether_addr() with memcmp() is perfectly fine.
-
-After solving that, I was still getting an unaligned access from a 
-compare_ether_addr() call in sta_info_get() from mac80211 module. My 
-dilemma was whether that module would expect alignment always, in which 
-case the same simple function replacement would not be OK. But I saw 
-several places where memcmp() is preferred to compare_ether_addr(), 
-which I assume indicates that mac80211 does not expect alignment of 
-80211 packets passed to it.
-
-Applying Sebastian Andrzej Siewior wireless/zd1211rw: use 
-get_unaligned_le16 helper (v2) patch and my two changes quietens down 
-the kernel completely. I will submit these two patches in follow up emails.
-
-It is interesting (at least to me) to note that a change between kernel 
-versions 2.6.26 and 2.6.28-rc6 fixed something that allowed WPA2 to work 
-on sparc64. At least according to my careful verification. Perhaps one 
-day, I'll narrow that change down.
-
-Regards,
-Shaddy
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 4355c16..0cd2a91 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -41,9 +41,11 @@ static void ath_rx_buf_link(struct ath_softc *sc, struct ath_buf *bf)
+ 	ASSERT(skb != NULL);
+ 	ds->ds_vdata = skb->data;
+ 
+-	/* setup rx descriptors */
++	/* setup rx descriptors. The sc_rxbufsize here tells the harware
++	 * how much data it can DMA to us and that we are prepared
++	 * to process */
+ 	ath9k_hw_setuprxdesc(ah, ds,
+-			     skb_tailroom(skb), /* buffer size */
++			     sc->sc_rxbufsize,
+ 			     0);
+ 
+ 	if (sc->sc_rxlink == NULL)
+@@ -66,6 +68,13 @@ static struct sk_buff *ath_rxbuf_alloc(struct ath_softc *sc, u32 len)
+ 	 * in rx'd frames.
+ 	 */
+ 
++	/* Note: the kernel can allocate a value greater than
++	 * what we ask it to give us. We really only need 4 KB as that
++	 * is this hardware supports and in fact we need at least 3849
++	 * as that is the MAX AMSDU size this hardware supports.
++	 * Unfortunately this means we may get 8 KB here from the
++	 * kernel... and that is actually what is observed on some
++	 * systems :( */
+ 	skb = dev_alloc_skb(len + sc->sc_cachelsz - 1);
+ 	if (skb != NULL) {
+ 		off = ((unsigned long) skb->data) % sc->sc_cachelsz;
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
