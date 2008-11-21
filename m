@@ -1,51 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:42762 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752028AbYKDHNk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 02:13:40 -0500
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	tim.gardner@canonical.com, mick@madwifi.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-References: <4908B754.1050400@tpi.com>
-	<40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com>
-	<40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
-	<20081102184146.GA6065@hash.localnet>
-	<43e72e890811021249x6047b38do5d7ead10fe4098e7@mail.gmail.com>
-	<1225696692.3619.18.camel@johannes.berg>
-	<43e72e890811022329g510a280wfd033538ee9b8c17@mail.gmail.com>
-	<1225697686.3619.25.camel@johannes.berg>
-	<43e72e890811022351m2c03e0b4g2a67a70cd6a7bd3c@mail.gmail.com>
-	<1225698867.3619.31.camel@johannes.berg>
-	<43e72e890811030001x7a3b166am440873fcf2c143d4@mail.gmail.com>
-	<1225699482.3619.34.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 04 Nov 2008 09:12:41 +0200
-In-Reply-To: <1225699482.3619.34.camel@johannes.berg> (ext Johannes Berg's message of "Mon\, 03 Nov 2008 09\:04\:42 +0100")
-Message-ID: <87ljw0arrq.fsf@nokia.com> (sfid-20081104_081344_850935_47938619)
+Received: from hostap.isc.org ([149.20.54.63]:50931 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755054AbYKUREN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 12:04:13 -0500
+Date: Fri, 21 Nov 2008 19:03:18 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHi iw] Report max TX power from NL80211_BAND_ATTR_FREQS
+Message-ID: <20081121170318.GB4887@jm.kir.nu> (sfid-20081121_180416_640931_79FE746E)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
->> > Also,
->> > that's a bad thing to do in userspace, imho.
->> 
->> What should we do with these rare failures then?
->
-> print an error message? ignore them? try again?
 
-I would say that try few (three?) times and if it still fails, restart
-firmware and push the same settings again to the firmware. There's
-very little that mac80211 could do here, driver has to make the
-decisions in case like this.
+diff --git a/info.c b/info.c
+index ced78dd..b8fb163 100644
+--- a/info.c
++++ b/info.c
+@@ -34,6 +34,7 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN] = { .type = NLA_FLAG },
+ 		[NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
+ 		[NL80211_FREQUENCY_ATTR_RADAR] = { .type = NLA_FLAG },
++		[NL80211_FREQUENCY_ATTR_MAX_TX_POWER] = { .type = NLA_U8 },
+ 	};
+ 
+ 	struct nlattr *tb_rate[NL80211_BITRATE_ATTR_MAX + 1];
+@@ -142,6 +143,10 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 			if (!tb_freq[NL80211_FREQUENCY_ATTR_FREQ])
+ 				continue;
+ 			printf("\t\t\t* %d MHz", nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_FREQ]));
++
++			if (!tb_freq[NL80211_FREQUENCY_ATTR_DISABLED])
++				printf(" (%d dBm)", nla_get_u8(tb_freq[NL80211_FREQUENCY_ATTR_MAX_TX_POWER]));
++
+ 			open = 0;
+ 			if (tb_freq[NL80211_FREQUENCY_ATTR_DISABLED])
+ 				print_flag("disabled", &open);
+diff --git a/nl80211.h b/nl80211.h
+index e4cc786..4502cf8 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -497,6 +497,7 @@ enum nl80211_band_attr {
+  *	on this channel in current regulatory domain.
+  * @NL80211_FREQUENCY_ATTR_RADAR: Radar detection is mandatory
+  *	on this channel in current regulatory domain.
++ * @NL80211_FREQUENCY_ATTR_MAX_TX_POWER: Maximum transmission power in dBm.
+  */
+ enum nl80211_frequency_attr {
+ 	__NL80211_FREQUENCY_ATTR_INVALID,
+@@ -505,12 +506,15 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_PASSIVE_SCAN,
+ 	NL80211_FREQUENCY_ATTR_NO_IBSS,
+ 	NL80211_FREQUENCY_ATTR_RADAR,
++	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+ 
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+ 	NL80211_FREQUENCY_ATTR_MAX = __NL80211_FREQUENCY_ATTR_AFTER_LAST - 1
+ };
+ 
++#define NL80211_FREQUENCY_ATTR_MAX_TX_POWER NL80211_FREQUENCY_ATTR_MAX_TX_POWER
++
+ /**
+  * enum nl80211_bitrate_attr - bitrate attributes
+  * @NL80211_BITRATE_ATTR_RATE: Bitrate in units of 100 kbps
 
 -- 
-Kalle Valo
+Jouni Malinen                                            PGP id EFC895FA
