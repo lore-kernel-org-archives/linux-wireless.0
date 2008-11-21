@@ -1,34 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:64646 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753190AbYKSXb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 18:31:56 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/7] iwlwifi driver updates
-Date: Wed, 19 Nov 2008 15:32:21 -0800
-Message-Id: <1227137548-28718-1-git-send-email-reinette.chatre@intel.com> (sfid-20081120_003215_708214_3D1D2E33)
-In-Reply-To: <>
-References: <>
+Received: from mail.deathmatch.net ([70.167.247.36]:2779 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752784AbYKUOGE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 09:06:04 -0500
+Date: Fri, 21 Nov 2008 09:05:08 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ath5k: Clean up eeprom parsing and add missing calibration data
+Message-ID: <20081121140508.GA26731@hash.localnet> (sfid-20081121_150607_800084_41FFEC3C)
+References: <49257136.2050902@openwrt.org> <20081121030022.GA25726@hash.localnet> <40f31dec0811202121i7d0b5931g9b416a9122f9e0e5@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0811202121i7d0b5931g9b416a9122f9e0e5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains mostly fixes for iwlwifi. Patch 7 is a fix to a bug
-that is tracked as a regression from 2.6.27
-(http://bugzilla.kernel.org/show_bug.cgi?id=12040 ). The patch does apply
-to Linus's tree also - could you please push this patch there?
+On Fri, Nov 21, 2008 at 07:21:07AM +0200, Nick Kossifidis wrote:
+> 2008/11/21 Bob Copeland <me@bobcopeland.com>:
+> > Can we add the rest here?
+> >
+> > +               AR5K_EEPROM_READ_HDR(AR5K_EEPROM_MISC2, ee_misc2);
+> 
+> Problem is that legacy-hal doesn't make use of these infos (along with
+> many other infos stored in eeprom !), so i don't know what eeprom
+> versions have them. Go on and use them but for now assume that they
+> are only available for eeprom versions 5 and above and i'll check out
+> my eeprom dumps etc to find out.
 
-[PATCH 1/7] iwl3945 : Fix ad-hoc mode for 3945
-[PATCH 2/7] iwlwifi: move iwl_clear_stations_table to iwl-sta.c
-[PATCH 3/7] iwlwifi: enable base band calibration in 5000 HW
-[PATCH 4/7] iwlwifi: 4965 define firmware file name once
-[PATCH 5/7] iwlwifi: TX setup fix confusion between TX queue and TX DMA channel
-[PATCH 6/7] iwlwifi: TX update chicken bits
-[PATCH 7/7] iwlwifi: prevent double key removal
+Ok, no rush on this - we can add the patch for these later when we know
+which versions specify misc5.
 
-Thank you
+The legacy-hal uses this bit, but does so by directly reading that
+offset in attach for some reason.  It's the same address as
+AR5K_EEPROM_MISC5, offset 0xc9.  From the HAL:
 
-Reinette
+> HAL_BOOL
+> ar5212FillCapabilityInfo(struct ath_hal *ah)
+> {
+[...]
+> 	HAL_CAPABILITIES *pCap = &ahpriv->ah_caps;
+> 	u_int16_t capField;
+>     u_int16_t regcap;
+> 
+> 	/* Read the capability EEPROM location */
+> 	capField = 0;
+> 	if (ahp->ah_eeversion >= AR_EEPROM_VER5_1 &&
+> 	    !ath_hal_eepromRead(ah, AR_EEPROM_CAPABILITIES_OFFSET, &capField)) {
+> 		HDPRINTF(ah, HAL_DBG_EEPROM, "%s: unable to read caps from eeprom\n", __func__);
+> 		return AH_FALSE;
+> 	}
+
+Ok, so it only works for eeprom 5.1 and better...
+
+[...]
+> 	pCap->halCipherAesCcmSupport =
+> 		(!(capField & AR_EEPROM_EEPCAP_AES_DIS) &&
+> 		 ((AH_PRIVATE(ah)->ah_macVersion > AR_SREV_VERSION_VENICE) ||
+> 		  ((AH_PRIVATE(ah)->ah_macVersion == AR_SREV_VERSION_VENICE) &&
+> 		   (AH_PRIVATE(ah)->ah_macRev >= AR_SREV_VERSION_OAHU))));
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
