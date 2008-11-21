@@ -1,94 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eazy.amigager.de ([213.239.192.238]:60385 "EHLO
-	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752740AbYKCUOP (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:60700 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbYKUUef (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 15:14:15 -0500
-Date: Mon, 3 Nov 2008 21:14:12 +0100
-From: Tino Keitel <tino.keitel+iwl@tikei.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: =?utf-8?B?T25kxZllaiBLdcSNZXJh?= <ondrej.kucera@centrum.cz>,
-	jikos@suse.cz, yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] PROBLEM: Led for wifi blinking all the time
-Message-ID: <20081103201412.GB8059@x61> (sfid-20081103_211419_530804_5478AD9C)
-References: <490A5D39.1090605@centrum.cz> <20081031145434.GB4310@tuxdriver.com>
+	Fri, 21 Nov 2008 15:34:35 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so503973ywe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 12:34:34 -0800 (PST)
+Message-ID: <b6c5339f0811211234o61ac9431jf4eb93c857225683@mail.gmail.com> (sfid-20081121_213439_016832_DD73F239)
+Date: Fri, 21 Nov 2008 15:34:33 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Alan Jenkins" <alan-jenkins@tuffmail.co.uk>
+Subject: Re: [ath5k-devel] Bugs in ath5k on aspire one (AR2425)
+Cc: "Maxim Levitsky" <maximlevitsky@gmail.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <49271749.1060601@tuffmail.co.uk>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="Q68bSM7Ycu6FN28Q"
-In-Reply-To: <20081031145434.GB4310@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <492712D9.7080004@gmail.com> <49271749.1060601@tuffmail.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Nov 21, 2008 at 3:17 PM, Alan Jenkins
+<alan-jenkins@tuffmail.co.uk> wrote:
+> Maxim Levitsky wrote:
 
---Q68bSM7Ycu6FN28Q
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+>> [noise calibration timeouts]
+>> Only a reboot helped.
 
-On Fri, Oct 31, 2008 at 10:54:35 -0400, John W. Linville wrote:
-> On Fri, Oct 31, 2008 at 02:19:53AM +0100, Ondřej Kučera wrote:
-> > Hello,
-> >
-> > this is my first kernel bug report ever so I'm not 100% sure about the  
-> > protocol but I'll try my best...
-> >
-> > After upgrading to 2.6.27 the wifi led starts blinking right after  
-> > connecting to the network and then continues blinking even when there's  
-> > no network traffic at all. This wasn't happening before, the led used to  
-> > be just "on" when I was connected but not generating any traffic.
-> >
-> > Up to kernel 2.6.26.5 (the last 2.6.26.* kernel in my distribution -  
-> > ArchLinux) the behavior was correct, the problem first occurred with  
-> > 2.6.27 and is present up to 2.6.27.4 (the last of 2.6.27.* I've tried).  
-> > The driver used is iwl3945, the corresponding line from lspci:
-> > 03:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG  
-> > Network Connection (rev 02)
-> >
-> > If any other information is relevant, please tell me and I'll try to  
-> > provide it, too.
-> 
-> I'm pretty sure this is how the iwlwifi team wants the LEDs to work...
+You can also do a suspend-to-ram cycle as well which effectively
+reboots the card.
 
-To change from the annoying blinking to some more decent traffic
-indicator, I wrote a small patch. I attached the version for 2.6.27.
+> A patch has been submitted which stops the card getting wedged this way,
+>
+> <http://www.spinics.net/lists/linux-wireless/msg23404.html>
+>
+> from the messages it's not clear whether this is a complete fix, or more
+> of a workaround for an underlying problem.  It sounds like it got an ACK
+> from another tester (and I can add mine as well!), but no-one has
+> accepted or reviewed it :(.
 
-Regards,
-Tino
+Actually this had been in wireless-testing for a bit and got sent on to
+net-next today.  The problem also had plagued me for quite a while!
 
---Q68bSM7Ycu6FN28Q
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="iwl-shorter-blink_2.6.27.patch"
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index 4eee1b1..50eff75 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -69,7 +69,7 @@ static const struct {
- 	{15, 95, 95 },
- 	{10, 110, 110},
- 	{5, 130, 130},
--	{0, 167, 167},
-+	{0, 25, 25},
- /* SOLID_ON */
- 	{-1, IWL_LED_SOLID, 0}
- };
-@@ -289,7 +289,7 @@ static int iwl_get_blink_rate(struct iwl_priv *priv)
- 	if (!priv->allow_blinking)
- 		i = IWL_MAX_BLINK_TBL;
- 	else
--		for (i = 0; i < IWL_MAX_BLINK_TBL; i++)
-+		for (i = IWL_MAX_BLINK_TBL - 1 ; i < IWL_MAX_BLINK_TBL; i++)
- 			if (tpt  > (blink_tbl[i].tpt * IWL_1MB_RATE))
- 				break;
- 
-@@ -326,7 +326,7 @@ void iwl_leds_background(struct iwl_priv *priv)
- 	}
- 	if (!priv->last_blink_time ||
- 	    !time_after(jiffies, priv->last_blink_time +
--			msecs_to_jiffies(1000)))
-+			msecs_to_jiffies(40)))
- 		return;
- 
- 	blink_idx = iwl_get_blink_rate(priv);
-
---Q68bSM7Ycu6FN28Q--
+-- 
+Bob Copeland %% www.bobcopeland.com
