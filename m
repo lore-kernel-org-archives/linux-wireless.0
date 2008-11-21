@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:61330 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755653AbYKLVfN (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.187]:37474 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753757AbYKUUWn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 16:35:13 -0500
-Message-ID: <491B4C0E.6010807@lwfinger.net> (sfid-20081112_223519_882751_E385BB61)
-Date: Wed, 12 Nov 2008 15:35:10 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 21 Nov 2008 15:22:43 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so963826rnd.17
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 12:22:42 -0800 (PST)
+Message-ID: <b6c5339f0811211222t745c65fve38958c9baa98e46@mail.gmail.com> (sfid-20081121_212255_682538_52E27A8F)
+Date: Fri, 21 Nov 2008 15:22:41 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Fabio Rossi" <rossi.f@inwind.it>
+Subject: Re: ath5k: problems during the connection to a sitecom AP
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200811192315.35537.rossi.f@inwind.it>
 MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: Hin-Tak Leung <hintak_leung@yahoo.co.uk>,
-	linux-wireless@vger.kernel.org
-Subject: Re: throughput problem/bisect with rtl8187B
-References: <413196.94590.qm@web23107.mail.ird.yahoo.com> <200811121710.17957.herton@mandriva.com.br>
-In-Reply-To: <200811121710.17957.herton@mandriva.com.br>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200811150207.12084.rossi.f@inwind.it>
+	 <200811172120.11299.rossi.f@inwind.it>
+	 <b6c5339f0811180748q354124d2pc3ee9eb3e3cfc745@mail.gmail.com>
+	 <200811192315.35537.rossi.f@inwind.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> Ok, Looks like sifs or eifs setting then expect values in another format or
-> have a different meaning may be (or just cause some hw bug), it's strange,
-> I suspect sifs value is the culprit. In the patch I just reverted to values vendor
-> driver uses, in it difs remains the same, just eifs isn't changed for short slot
-> case and kept with a default value (along with what is supposed to be ack
-> timeout register), and sifs set to 0x22. Please try just the following change
-> to isolate that the SIFS setting caused the throughput issue:
-> 
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> index d49f2a7..c0392e4 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -924,7 +924,7 @@ static void rtl8187_conf_erp(struct rtl8187_priv *priv, bool use_short_slot,
->  			difs = 0x32;
->  			eifs = 0x5b;
->  		}
-> -		rtl818x_iowrite8(priv, &priv->map->SIFS, 0xa);
-> +		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
->  		rtl818x_iowrite8(priv, &priv->map->SLOT, slot_time);
->  		rtl818x_iowrite8(priv, &priv->map->DIFS, difs);
+On Wed, Nov 19, 2008 at 5:15 PM, Fabio Rossi <rossi.f@inwind.it> wrote:
+> I've attached a kernel log of what's happening and a commands log with time
+> references. I hope it's useful, tell me if you need other data.
 
-This patch gives me the best performance yet. I get about 1.0 MB/s download and
-580 KB/s upload with a 25 MB file using sftp.
+Ok, well at least we know we see beacons from the AP in question.
+Other than that, it doesn't help a whole lot, as all the log captured
+was beacons from various APs.  Can you try again without the 'trace'
+option?  Also if you turn on CONFIG_MAC80211_VERBOSE_DEBUG then we
+can see the probe requests etc.
 
-Larry
+If you do have another wireless card, that would still be better.  You
+can use it like this:
+
+   # ifconfig wlan1 down
+   # iwconfig wlan1 mode monitor
+   # ifconfig wlan1 up
+   # tcpdump -s 1000 -w assoc.cap -i wlan1
+
+Then you can load assoc.cap into wireshark (you can capture from inside
+wireshark too if you prefer).
+
+-- 
+Bob Copeland %% www.bobcopeland.com
