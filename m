@@ -1,76 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33863 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753307AbYKDKcI (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:63913 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbYKUU2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 05:32:08 -0500
-Subject: Re: [RFC/RFT PATCH 0/2] rtl8187: implement conf_tx
-	callback/correctly ack tx pkts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: htl10@users.sourceforge.net
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-In-Reply-To: <118209.17192.qm@web23108.mail.ird.yahoo.com>
-References: <118209.17192.qm@web23108.mail.ird.yahoo.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iugzhZUYGgHhGENNgZlh"
-Date: Tue, 04 Nov 2008 11:31:53 +0100
-Message-Id: <1225794713.3619.69.camel@johannes.berg> (sfid-20081104_113213_214395_924D103B)
-Mime-Version: 1.0
+	Fri, 21 Nov 2008 15:28:35 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so218458ugf.37
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 12:28:34 -0800 (PST)
+Message-ID: <492719ED.5000006@gmail.com> (sfid-20081121_212848_164167_5EFCD18C)
+Date: Fri, 21 Nov 2008 22:28:29 +0200
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: ipw3945-devel@lists.sourceforge.net, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wally@theblackmoor.net
+Subject: Unusually low speeds with ath5k and iwl3945
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-iugzhZUYGgHhGENNgZlh
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+sorry for cross-posting, but this issue really spans both iwl3945 and ath5k.
+
+I have two laptops (acer 5720, and aspire one) and I see some strange speed issues.
+
+I initially blamed iwl3945, then thought it got fixed, but now I have ath5k, and speeds are low
+and I suspect that both drivers has bugs regarding to speed.
+
+Walter Francis, once reported similar issue, so I cc'ed him too.
+He says that 2.6.25 works fine for iwl3945.
+I'll test this, and bisect if necessary. 
+
+So here it goes:
+
+System setup:
+
+a wired desktop connected to a router, I call it just router
+as wired connection there is 100 Mbits/s and this can't
+be the bottleneck.
+
+two laptops, both are close to the router, signal strength is -50 dBm on laptop
+and -55 dBm on aspire one (they are really close, they are on same desktop).
+Also I did try to bring both laptops to router, and this really didn't help much.
+
+Only one of laptops was on when I did speed tests between a laptop and router.
+
+I did those tests several times, and interleaved them in different order.
+
+For data transfers, contents of /dev/zero were send to /dev/null via TCP connection,
+using netcat.
 
 
-> if (condition)
->     info->flags |=3D IEEE80211_TX_STAT_ACK;
-> else=20
->     info->status.excessive_retries =3D 1;
-> ---------------
->=20
-> But the else-clause is missing in the latest patch (of two), which also s=
-eems to be where both you and Larry are having rate stuck at 1Mb/s for.
-> - and the line below
-> "info->status.rates[0].count =3D pkt_rc +1 ;" doesn't compile
-> under 2.6.27, so I changed the rates[0].count to the retry_count,
-> and simultaneously adding the else-clause back.=20
->=20
-> My question is this: is the removal of the else-clause unintensional,
-> could it result in your 1Mb/s rate?
+So here are the speeds:
 
-The excessive_retries status thing has been removed and mac80211 ought
-to always use STAT_ACK now.
+router->iwl3945 = 2.3 Mbytes/s, solid speed, never dropped much, was consistent across tests.
 
-johannes
+iwl3945->router	= 1.0 Mbytes/s max, on first test, it dropped often to 300 Kbytes/s
 
---=-iugzhZUYGgHhGENNgZlh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Then in another test for whole session it stayed at 200 Kbytes/s, it was same upload speed
+to ath5k too, the speed varied a lot too.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJECSVAAoJEKVg1VMiehFYxGYP/3Ln1OfitGUD8GJihNyKC7lS
-zSMjLj93NneYj/Xx44pvdQwOvDNaro5x0qTRjki4do5R5Bhd/NOvFhD9JYAE45yt
-Y42DFPL5U2ZtbrA6j6X18KZl7djyi5rEyTU6N/M+XVFf6ZIrppdK730NHLpboFHY
-Ti6zFCz61wbkaC9+dUgxAwUEdOvXtD356l0+9hJCyJn3FBCG6JVwG+bI3/aQ52oZ
-sckABM8xRfdglu+j8Bz5Y5gUTwOiXUk4mag3liXXqjAG5xPpoVFrG4VydOVxqO6t
-Xho1+FS17q/mqhUCXKqzhYCSYVaX+vN/hW3YUAGNXfZTsCSG174B2c/XmgQKK8km
-U7dCYIdlueWtzvpUWVVLfM3dP37bnvw3OoIP48NmDJSTiSrfYHyVnGruwmZayH5W
-ZFPnG/ty6k4j21WFyWgUKaKdRVHjcOGsoLtPUT3c/YFHZh36U7IM/Y0TzQOPGPMs
-l5QBwbxLBjGsf9/kfCS8zktJ9UqR8k6L4v3BA+LxZRusP5X+MykZg/EbOoNmr+r3
-4eXxnaBeRyKDXIuxCHg+NSl34hepz+7jTsbppli8n5XZKwDFpQ3hBQBGGLISmGfj
-/EWAn37634OB2dCCM02qqRTpsZNJd3giEn2dw/+WaYUO0sAq3Is1DJg0aJq3XyxX
-c5VvUt99QsyDx9E42c5f
-=T1Ec
------END PGP SIGNATURE-----
+router->ath5k   = 1.4 Mbytes/s max, was pretty solid, also noticed that
+iwconfig shows maximum 18M, although my router supports all B/G speeds.
+attempts to set higher speed resulted in full connection loss.
+also association was dropping often, and that resulted in few minutes of no transfer
+at all.
 
---=-iugzhZUYGgHhGENNgZlh--
+ath5k->router	= 1.4 Mbytes/s max, also the same 18 Mbytes/s issue , 
+and same association issue.
 
+
+And now for the worst part:
+
+
+ath5k->iwl3945  = 800 Kbytes/s, but speed very often dropped to 600 Kbytes/s, and once it did drop to around 80~100 Kbytes/s
+I did see same association drops, but they were rare. 
+
+iwl3945->ath5k  = 500 Kbytes/s  and often drops to 300 Mbytes/s.
+
+
+
+Best regards,
+	Maxim Levitsky
