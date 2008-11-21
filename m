@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:60914 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511AbYKNRCb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 12:02:31 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so665471ywe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 09:02:30 -0800 (PST)
-Message-ID: <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com> (sfid-20081114_180245_553952_DEABE649)
-Date: Fri, 14 Nov 2008 12:02:30 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Cc: "Dan McGee" <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
-	"Michael Buesch" <mb@bu3sch.de>
-In-Reply-To: <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:44258 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750818AbYKURmh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 12:42:37 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: BCM4312 Fails when xdm is started
+Date: Fri, 21 Nov 2008 18:42:12 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Peter Stuge <peter@stuge.se>
+References: <200811151801.02369.yuval@avramzon.net> <20081115174623.27321.qmail@stuge.se> <4926E0F2.5060200@lwfinger.net>
+In-Reply-To: <4926E0F2.5060200@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
-	 <43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200811211842.13099.mb@bu3sch.de> (sfid-20081121_184246_501493_2DD66E7F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2008 at 1:17 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> If our offsets are the same then its probably on line 791:
-[...]
-> 790             name = wiphy_dev(local->hw.wiphy)->driver->name;
-> 791             local->hw.workqueue = create_freezeable_workqueue(name);
+On Friday 21 November 2008 17:25:22 Larry Finger wrote:
+> A problem was recently posted to the bcm43xx mailing list that I am unable to
+> solve. The machine in question is an HP Mini 2133 (HP product number FU346EA)
+> with a BCM4312 PCIe wireless card. This card is known to work with the b43
+> driver (I have one.) and it does work on this machine - at least initially.
+> 
+> A problem occurs when xdm/kde is started. Suddenly a read operation on device
+> hardware returns all ones as though the register does not exist, or if it were
+> suddenly mismapped. If the OP doesn't try to run xdm, the same problem will
+> eventually occur, it just takes longer.
 
-I agree, having looked at the objdump output.  Hmm, maybe ->driver pointer
-is bad even though I can't see that happening.  Dan, can you try adding a
-printk before line 790 to see if any of the pointers are null?
+Can you dump PCI config space and SSB registers (TMSLOW, maybe others, too).
+It looks like a random bus write disabled the device.
 
-Also, do you have CONFIG_LOCKDEP enabled or no?
+> [    0.000000] Zone PFN ranges:
+> [    0.000000]   DMA      0x00000000 -> 0x00001000
+> [    0.000000]   Normal   0x00001000 -> 0x000373fe
+> [    0.000000]   HighMem  0x000373fe -> 0x0006feb0
+> 
+> On my 64-bit HP machine, I see:
+> 
+> Zone PFN ranges:
+>   DMA      0x00000000 -> 0x00001000
+>   DMA32    0x00001000 -> 0x00100000
+>   Normal   0x00100000 -> 0x00100000
+> 
+> Is it "normal" for there not to be a DMA32 range with a 32-bit version of Linux?
+
+Yeah, I think so.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Greetings Michael.
