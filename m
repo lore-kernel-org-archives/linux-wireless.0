@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.185]:54941 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880AbYKUFy2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 00:54:28 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so812629muf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 21:54:27 -0800 (PST)
-Message-ID: <b25312890811202154o3c739267jd989e595f268acac@mail.gmail.com> (sfid-20081121_065438_339850_C9E683EA)
-Date: Fri, 21 Nov 2008 07:54:26 +0200
-From: "Rami Rosen" <roszenrami@gmail.com>
-To: "Cyril Hrubis" <metan@ucw.cz>
-Subject: Re: zd1211rw breaks s2ram
-Cc: linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
-In-Reply-To: <20081121003918.GA6037@atrey.karlin.mff.cuni.cz>
+Received: from promwad.com ([83.149.69.23]:55009 "EHLO promwad.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752142AbYKUWqt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 17:46:49 -0500
+Received: from mail.promwad.com ([212.98.183.232] helo=intranet.promwad.com)
+	by promwad.com with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.63)
+	(envelope-from <ivan.kuten@promwad.com>)
+	id 1L3elz-0007zT-0F
+	for linux-wireless@vger.kernel.org; Sat, 22 Nov 2008 00:46:47 +0200
+Received: from intranet.promwad.com ([192.168.10.1] helo=promwad.com)
+	by intranet.promwad.com with esmtpa (Exim 4.69)
+	(envelope-from <ivan.kuten@promwad.com>)
+	id 1L3elw-0000Vk-0c
+	for linux-wireless@vger.kernel.org; Sat, 22 Nov 2008 00:46:44 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081121003918.GA6037@atrey.karlin.mff.cuni.cz>
+Date: Sat, 22 Nov 2008 00:46:39 +0200
+From: Ivan Kuten <ivan.kuten@promwad.com>
+To: linux-wireless@vger.kernel.org
+Subject: =?UTF-8?Q?ieee=38=30=32=31=31=5Fwep=5Fencrypt=5Fdata=5Ffix=5Funaligned=5F?=
+ =?UTF-8?Q?access=2Epatch?=
+Message-ID: <eaf88bcfcb5b61c24cf1b8b682c5ff3c@promwad.com> (sfid-20081121_234653_121082_4B762D50)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hello, 
 
->When i run "ifconfig wlan0 up", I get 'ADDRCONF(NETDEV_UP): wlan0: link
->is not ready' in dmesg,
+Please review the following patch which is supposed to fix unaligned access
+on Blackfin architecture.
+In function net/mac80211/wep.c ieee80211_wep_encrypt_data:
+__le32 *icv;
+icv = (__le32 *)(data + data_len); 
 
-This message comes from IPv6; I suggest you ignore it. I also have this message
-when using zd1211rw and it works fine. Disabling IPv6 on your machine,
-if possible, will avoid this error.
+after the operation above icv pointer may become unaligned. 
+The patch below fixes this issue:
 
-To be more specific, this message is from addrconf_notify()
-in net/ipv6/addrconf.c; this method is called when there is event of changing
-flags of an interface.
+
+--- linux-2.6.28-rc3/net/mac80211/wep.c 2008-11-20 00:04:58.000000000 -0500
++++ linux-2.6.86-rc3.new/net/mac80211/wep.c     2008-11-22
+00:37:53.000000000 -0500
+@@ -123,10 +123,10 @@
+ {
+        struct blkcipher_desc desc = { .tfm = tfm };
+        struct scatterlist sg;
+-       __le32 *icv;
++       __le32 icv;
+
+-       icv = (__le32 *)(data + data_len);
+-       *icv = cpu_to_le32(~crc32_le(~0, data, data_len));
++       icv = cpu_to_le32(~crc32_le(~0, data, data_len));
++       put_unaligned(icv, (__le32 *)(data + data_len));
+
+        crypto_blkcipher_setkey(tfm, rc4key, klen);
+        sg_init_one(&sg, data, data_len + WEP_ICV_LEN);
+
+
+Comments?
 
 Regards,
-Rami Rosen
+Ivan
 
 
-
-
-On Fri, Nov 21, 2008 at 2:39 AM, Cyril Hrubis <metan@ucw.cz> wrote:
-> Hi,
-> on my asus eee 1000h notebook, an Usb wifi with driver zd1211rw breaks
-> s2ram. Notebook hangs before suspending (with console on the screen)
-> and doesn't react to anyting but the power button. The dongle is
-> identified as:
->
-> idVendor           0x0ace ZyDAS
-> idProduct          0x1215 WLA-54L WiFi
-> bcdDevice           48.10
-> iManufacturer          16 ZyDAS
-> iProduct               32 USB2.0 WLAN
->
-> I'm using firmware version 4725 (that's default one in Gentoo), kernel
-> is vanilla 2.6.28-rc5.
->
-> When i run "ifconfig wlan0 up", I get 'ADDRCONF(NETDEV_UP): wlan0: link
-> is not ready' in dmesg, however scanning seems works fine.
->
-> --
-> metan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
