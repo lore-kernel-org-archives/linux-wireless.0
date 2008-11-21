@@ -1,117 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40091 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943AbYKEVFq (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:64627 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755468AbYKUS2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 16:05:46 -0500
-Subject: Re: Thoughts about mac80211 client PS implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <87fxm5ki6s.fsf@nokia.com>
-References: <87k5bhkjf1.fsf@nokia.com>
-	 <1225917235.3619.180.camel@johannes.berg>  <87fxm5ki6s.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fPWDSQbzVc2hCjHG30sC"
-Date: Wed, 05 Nov 2008 22:05:46 +0100
-Message-Id: <1225919146.3619.190.camel@johannes.berg> (sfid-20081105_220550_521907_ED296486)
-Mime-Version: 1.0
+	Fri, 21 Nov 2008 13:28:11 -0500
+Message-ID: <4926FDB3.2030701@lwfinger.net> (sfid-20081121_192816_867077_64C8450A)
+Date: Fri, 21 Nov 2008 12:28:03 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Yuval Hager <yuval@avramzon.net>
+CC: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Peter Stuge <peter@stuge.se>
+Subject: Re: BCM4312 Fails when xdm is started
+References: <200811151801.02369.yuval@avramzon.net> <20081115174623.27321.qmail@stuge.se> <4926E0F2.5060200@lwfinger.net> <200811211842.13099.mb@bu3sch.de>
+In-Reply-To: <200811211842.13099.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Yuval,
 
---=-fPWDSQbzVc2hCjHG30sC
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Michael Buesch wrote:
+> 
+> Can you dump PCI config space and SSB registers (TMSLOW, maybe others, too).
+> It looks like a random bus write disabled the device.
 
-On Wed, 2008-11-05 at 22:54 +0200, Kalle Valo wrote:
+Please incorporate the following patch and run your system. In addition, run the
+following command when the wireless is working and after it fails:
 
-> >> PS should be disabled while associated and running software scan, and
-> >> naturally re-enabled after the scan has finished. I assume hardware
-> >> scanning implementations are clever enough to disable PS when scanning
-> >> and we don't have to worry about that case.
-> >
-> > And on that too. And should there be a monitor flag that disables PS, s=
-o
-> > that we can "refcount" the PS bit in a way?
->=20
-> Sorry, I don't follow you here. What do you mean by a monitor flag?
+sudo lspci -d 14e4:4312 -x
 
-Well if you add a monitor interface you may want to turn off PS, but I
-suppose you can just do that on the wlan0 interface you're associated
-on.
+Post the results of the above commands and any entries in /var/log/messages that
+dump registers. They should all be prefaced with ****
 
-> >> The dynamic PS implementation is still a bit open issue for me. I have
-> >> been thinking something like that in tx.c frames will be queued if PS
-> >> is enabled, PS will be disabled in a workqueue by calling
-> >> ieee80211_hw_config() and only after that the queued frames are
-> >> transfered. So something similar as sta->ps_tx_buf does in AP mode. No
-> >> idea if this is feasible or not.
-> >
-> > Not sure I understand the dynamic PS yet.=20
->=20
-> Basically the idea is to disable PS whenever we are transmitting (and
-> maybe also receiving, don't know yet) frames, but whenever there's a
-> long enough idle period PS would be enabled again. So in principle
-> this would be a compromise of low power consumption and low latency.
->=20
-> Naturally the idle period would be configurable with siwpower() and
-> whatever nl80211 equivalent we will have in future.
->=20
-> > Why would you queue up frames? To reduce the number of radio wakeups
-> > when TX traffic is low?
->=20
-> Just because I assume that invoke_tx_handlers() cannot sleep but
-> ieee80211_hw_config() sleeps. I didn't think of any other way to solve
-> this, but I haven't thought that much about this. What do you think?
 
-But wouldn't that mean the other way around, i.e. whenever we transmit
-we disable it and then start a timer that re-enables it? Ah, you're
-thinking because TX handlers cannot sleep and the config callback may
-sleep? Hmm. I suppose then we'd have to defer the actual disable PS mode
-to a work struct.
+Index: linux-2.6/drivers/net/wireless/b43/phy_common.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/b43/phy_common.c
++++ linux-2.6/drivers/net/wireless/b43/phy_common.c
+@@ -133,6 +133,11 @@ void b43_radio_lock(struct b43_wldev *de
 
-Maybe we don't want to disable PS for a single frame though, so how
-about this:
+ 	macctl = b43_read32(dev, B43_MMIO_MACCTL);
+ 	B43_WARN_ON(macctl & B43_MACCTL_RADIOLOCK);
++	if (macctl & B43_MACCTL_RADIOLOCK) {
++		printk(KERN_INFO "****** b43: B43_MMIO_MACCTL 0x%X\n", macctl);
++		printk(KERN_INFO "****** b43: SSB_TMSLOW 0x%X\n",
++			ssb_read32(dev->dev, SSB_TMSLOW));
++	}
+ 	macctl |= B43_MACCTL_RADIOLOCK;
+ 	b43_write32(dev, B43_MMIO_MACCTL, macctl);
+ 	/* Commit the write and wait for the device
+@@ -150,6 +155,11 @@ void b43_radio_unlock(struct b43_wldev *
+ 	/* unlock */
+ 	macctl = b43_read32(dev, B43_MMIO_MACCTL);
+ 	B43_WARN_ON(!(macctl & B43_MACCTL_RADIOLOCK));
++	if (macctl & B43_MACCTL_RADIOLOCK) {
++		printk(KERN_INFO "****** b43: B43_MMIO_MACCTL 0x%X\n", macctl);
++		printk(KERN_INFO "****** b43: SSB_TMSLOW 0x%X\n",
++			ssb_read32(dev->dev, SSB_TMSLOW));
++	}
+ 	macctl &= ~B43_MACCTL_RADIOLOCK;
+ 	b43_write32(dev, B43_MMIO_MACCTL, macctl);
+ }
+Index: linux-2.6/drivers/net/wireless/b43/rfkill.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/b43/rfkill.c
++++ linux-2.6/drivers/net/wireless/b43/rfkill.c
+@@ -63,6 +63,8 @@ static void b43_rfkill_poll(struct input
+ 		report_change = 1;
+ 		b43info(wl, "Radio hardware status changed to %s\n",
+ 			enabled ? "ENABLED" : "DISABLED");
++		b43info(wl, "******** B43_B43_MMIO_RADIO_HWENABLED_HI 0x%X\n",
++			b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI));
+ 	}
+ 	mutex_unlock(&wl->mutex);
 
- * When a frame is transmitted, store the current frame counter (do we
-   have one? we could add one) somewhere and arm a timer to fire N
-   milliseconds in the future.
- * The timer checks that we have transmitted
-   more than M frames in the time since it was started, and if so queues
-   a work struct to disable PS.
- * The work function also sets a flags somewhere "dynamic PS has
-   disabled PS" and arms another timer to fire after R millisecinds,
-   that timer will queue work to enable PS again
- * the TX code, when the "dynamic PS has disabled PS" flag is set, mods
-   the re-enable timer to be R milliseconds in the future again
 
-That way, M frames within a period of N milliseconds will disable PS,
-and it'll still disabled until R milliseconds elapse without traffic,
-and no timers are fired unless they are needed.
-
-johannes
-
---=-fPWDSQbzVc2hCjHG30sC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJEgqnAAoJEKVg1VMiehFY/dIQAMHaVMK7dMBgY3zivYsZvaDR
-6zcoGioj22dVWdGOL0pKpXfo8idjFUUBJDOqRUHhsws7fw92vhSB2kEpjUTV33Kn
-MjXEKpfG8TIMw39o6tnVh07yErJmICpENyekM+SRRMXTjfrhoQe+JivwBOXZ57zj
-4hqMfiONR2/Th99/7jUpBnxbLz+NKwvA3XcEzQZHvMXegac67j+3tp0lSDDMWIlX
-CxbteooU0+kjOHrYqQYkN+OHV3p53BKy+7qeJLeBFQkHLsZQiSO01wXoOLseRRvx
-P4J2E4xc98SrOaHQgUDJPA2wg9OCclhTD2HPBuHufJxcmxDlWSRN3O/kOyukTaWt
-fiPPWfsyuaHa+ek2DhvI93iVKk5Ft2Y2Dqp1ZbZURTGTMkQBCYs/vSL+bfPmkhgl
-ppmZkUYPeOH4TPqwoOmidXGF0+oKE1ybM3RVAuGXOi7s+5BcueFG15F1/T+weryV
-v2mtE9JGXAEulTbOkRRKbwSA2r+lMS7VaqOO/ybJX4j/igWgg2C2XvkExGFJ+FB7
-PUIQ8x4bNA3WtqetHgEvaJbG2l+VdMAbYT0TbFaVAh3KecNqcE2Ft+w/2AyckRHu
-91a9EyTHm1RWejohND+JQdk0ua4LCsUEI8vXeShszjF+z+R43VwnIEQxiAHRktXV
-qkVY+8ggk1Ql3Gxk+Dns
-=uoi+
------END PGP SIGNATURE-----
-
---=-fPWDSQbzVc2hCjHG30sC--
 
