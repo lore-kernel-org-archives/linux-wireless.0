@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:25423 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754484AbYKJSmb (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:36909 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752029AbYKUOEA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 13:42:31 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so997729eyi.37
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 10:42:29 -0800 (PST)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 2/2] rt2x00: Move rt73usb register access wrappers into rt2x00usb
-Date: Mon, 10 Nov 2008 19:42:18 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200811101941.40391.IvDoorn@gmail.com>
-In-Reply-To: <200811101941.40391.IvDoorn@gmail.com>
+	Fri, 21 Nov 2008 09:04:00 -0500
+Received: from [192.168.1.6] (KHP059129241136.ppp-bb.dion.ne.jp [59.129.241.136])
+	by mail.holtmann.org (Postfix) with ESMTP id C79938B2E5
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 15:03:58 +0100 (CET)
+Message-ID: <4926CDEF.4090908@linux.intel.com> (sfid-20081121_150406_993478_90A68C79)
+Date: Fri, 21 Nov 2008 16:04:15 +0100
+From: Marcel Holtmann <holtmann@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200811101942.18478.IvDoorn@gmail.com> (sfid-20081110_194238_023344_8ECC0E8C)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: iwlwifi produces "Can not allocate SKB buffers"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2500usb and rt73usb have different register word sizes,
-for that reason the register access wrappers were never
-moved into rt2x00usb.
-With rt2800usb on its way, we should favor the 32bit
-register access and move those wrappers into rt2x00usb.
-That saves duplicate code, since only rt2500usb will
-need the special 16bit wrappers.
+Hi guys,
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-http://kernel.org/pub/linux/kernel/people/ivd/patches/0002-rt2x00-Move-rt73usb-register-access-wrappers-into-r.patch
+after the DMA issues got fixed, I am still seeing the SKB allocation
+errors. So I put a WARN() into the code:
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c
+b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 8d2b73e..acd9b12 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -252,10 +252,7 @@ void iwl_rx_allocate(struct iwl_priv *priv)
+                 /* Alloc a new receive buffer */
+                 rxb->skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
+                                 __GFP_NOWARN | GFP_ATOMIC);
+-               if (!rxb->skb) {
+-                       if (net_ratelimit())
+-                               printk(KERN_CRIT DRV_NAME
+-                                      ": Can not allocate SKB buffers\n");
++               if (WARN(!rxb->skb, "Can not allocate SKB buffers\n")) {
+                         /* We don't reschedule replenish work here -- we
+will
+                          * call the restock method and if it still needs
+                          * more buffers it will schedule replenish */
 
+This allows me to record these issue via kerneloops.org. And here is one 
+from my current wireless-testing tree I am running:
+
+http://www.kerneloops.org/raw.php?rawid=104543&msgid=
+
+Regards
+
+Marcel
