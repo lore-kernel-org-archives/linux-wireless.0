@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:47368 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479AbYKAOvM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 10:51:12 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Allow AP mode to be enabled
-References: <20081030175030.GD3923@jm.kir.nu> <878ws3ptrh.fsf@nokia.com>
-	<20081101114754.GY3923@jm.kir.nu> <871vxvmsnd.fsf@nokia.com>
-	<1225549954.3619.4.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 01 Nov 2008 16:51:04 +0200
-In-Reply-To: <1225549954.3619.4.camel@johannes.berg> (Johannes Berg's message of "Sat\, 01 Nov 2008 15\:32\:34 +0100")
-Message-ID: <87vdv7wld3.fsf@litku.valot.fi> (sfid-20081101_155147_815545_D26F1DF4)
+Received: from bu3sch.de ([62.75.166.246]:58973 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753892AbYKUTCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 14:02:10 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: What should wireless drivers do under -ENOMEM
+Date: Fri, 21 Nov 2008 20:01:46 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <43e72e890811211055x19882fa1l5ced86b6a031a203@mail.gmail.com>
+In-Reply-To: <43e72e890811211055x19882fa1l5ced86b6a031a203@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200811212001.46336.mb@bu3sch.de> (sfid-20081121_200214_093066_D8EA6618)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Friday 21 November 2008 19:55:12 Luis R. Rodriguez wrote:
+> Under heavy stress you can sometimes run into -ENOMEM and you inform
+> the callers. Now ath5k/ath9k both require dev_alloc_skb()'ing some
+> buffers when RXing. Right now we simply move on, but I think it'd be
+> nicer to inform mac80211 and let mac80211 decide. If the system is
 
->> Thanks a lot, I updated to hostap commit 4aac554c and it works now
->> with b43. I was able to associate with N810 and ping worked. Even PSM
->> seems to work, but I haven't made any power consumption measurements
->> yet.
->
-> I'd be interested in power consumption measurements, but it should work
-> fine.
 
-I did some quick measurements with N810 and, like you mentioned,
-hostapd/mac80211/b43 combination seems to work just fine. Tried with
-DTIM 1 and 10 with beacon period of 100 ms and power consumption of
-N810 is just like what I was expecting.
+Well, what should mac80211 decide?
+If you are under such heavy load that memory allocations fail, we really have
+only one chance. That is drop the network traffic until memory allocation
+works again.
+I don't see anything else we can do.
 
-I have seen a lot of APs with buggy PSM implementation and this setup
-isn't one of them :)
-
-> There might be a slight bug in b43 wrt. the beacon timestamp offset
-> though.
-
-If there's a bug in b43 I cannot see it from my measurements. Usually
-I have seen any problems with the TBTT right away.
 
 -- 
-Kalle Valo
+Greetings Michael.
