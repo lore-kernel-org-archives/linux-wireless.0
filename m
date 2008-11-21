@@ -1,38 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:57932 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751396AbYKAXS5 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:28383 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751926AbYKUT6X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 19:18:57 -0400
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <FDF1BA6C-4A27-4458-870D-CC999FB4F390@holtmann.org> (sfid-20081102_001903_107910_EDAE8651)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Bernhard Schmidt <berni@birkenwald.de>
-In-Reply-To: <geil9a$jdt$1@ger.gmane.org>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: Forcing/Forbidding specific band on iwlagn
-Date: Sun, 2 Nov 2008 00:18:37 +0100
-References: <geil9a$jdt$1@ger.gmane.org>
+	Fri, 21 Nov 2008 14:58:23 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so458984eyi.37
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 11:58:21 -0800 (PST)
+Message-ID: <492712D9.7080004@gmail.com> (sfid-20081121_205846_436089_E092730F)
+Date: Fri, 21 Nov 2008 21:58:17 +0200
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: Bugs in ath5k on aspire one (AR2425)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bernhard,
+Hi,
 
-> I have a rather user-side question, I don't know exactly whether I'm
-> right in here :-)
->
-> I have a Dell Latitude D630 with an Intel IWL4965AGN wireless card
-> running Ubuntu 8.10 amd64 (Linux 2.6.27 -> iwlagn). It is pretty flaky
-> and crashes my system at least once a day (when something happens with
-> my wireless), but that will be the subject of another debugging  
-> session.
+I captured few errors in dmesg, will post them here.
+If I see more errors, I add them to this thread.
 
-that is highly like due to the iwl_tx_cmd_complete BUG_ON. Newer  
-kernels changed it to a WARN_ON, but it is still not solved why this  
-happens.
 
-Regards
+[   69.516498] ath5k phy0: gain calibration timeout (2412MHz)
+[   69.516509] ath5k phy0: can't reset hardware (-11)
+[   69.516516] phy0: failed to restore operational channel after scan
+[   69.628572] ath5k phy0: noise floor calibration failed (2412MHz)
+[   69.686894] ath5k phy0: noise floor calibration failed (2417MHz)
+[   69.770067] ath5k phy0: noise floor calibration failed (2417MHz)
+[   70.419785] ath5k phy0: gain calibration timeout (2422MHz)
+[   70.419800] ath5k phy0: can't reset hardware (-11)
+[   70.419809] phy0: failed to set freq to 2422 MHz for scan
+[   71.356436] ath5k phy0: gain calibration timeout (2427MHz)
+[   71.356450] ath5k phy0: can't reset hardware (-11)
+[   71.356458] phy0: failed to set freq to 2427 MHz for scan
+[   72.119219] ath5k phy0: gain calibration timeout (2432MHz)
+[   72.119234] phy0: failed to set freq to 2432 MHz for scan
+[   72.764447] phy0: failed to set freq to 2437 MHz for scan
+[   73.410438] phy0: failed to set freq to 2442 MHz for scan
+[   74.027807] phy0: failed to set freq to 2447 MHz for scan
+[   74.640495] __ratelimit: 7 callbacks suppressed
+[   74.640504] ath5k phy0: gain calibration timeout (2452MHz)
+[   74.640511] ath5k phy0: can't reset hardware (-11)
+[   74.640517] phy0: failed to set freq to 2452 MHz for scan
+[   75.256551] ath5k phy0: gain calibration timeout (2457MHz)
+[   75.256565] ath5k phy0: can't reset hardware (-11)
+[   75.256573] phy0: failed to set freq to 2457 MHz for scan
+[   75.874414] ath5k phy0: gain calibration timeout (2462MHz)
+[   75.874424] ath5k phy0: can't reset hardware (-11)
+[   75.874430] phy0: failed to set freq to 2462 MHz for scan
+[   76.488436] ath5k phy0: gain calibration timeout (2412MHz)
+[   76.488447] ath5k phy0: can't reset hardware (-11)
+[   76.488452] phy0: failed to restore operational channel after scan
+[   76.488543] wlan0: authenticate with AP 00:1b:9e:d8:77:02
+[   76.688125] wlan0: authenticate with AP 00:1b:9e:d8:77:02
+[   76.889098] wlan0: authenticate with AP 00:1b:9e:d8:77:02
+[   77.088122] wlan0: authentication with AP 00:1b:9e:d8:77:02 timed out
+[   78.415786] ath5k phy0: noise floor calibration timeout (2417MHz)
+[   78.810771] ath5k phy0: gain calibration timeout (2417MHz)
+[   78.810782] phy0: failed to set freq to 2417 MHz for scan
+[   79.427510] phy0: failed to set freq to 2422 MHz for scan
+[   80.056900] __ratelimit: 3 callbacks suppressed
+[   80.056910] ath5k phy0: gain calibration timeout (2427MHz)
+[   80.056919] ath5k phy0: can't reset hardware (-11)
+[   80.056925] phy0: failed to set freq to 2427 MHz for scan
+[   80.670529] ath5k phy0: gain calibration timeout (2432MHz)
+[   80.670540] ath5k phy0: can't reset hardware (-11)
+[   80.670546] phy0: failed to set freq to 2432 MHz for scan
+[   81.285272] ath5k phy0: gain calibration timeout (2437MHz)
+[   81.285285] ath5k phy0: can't reset hardware (-11)
+[   81.285294] phy0: failed to set freq to 2437 MHz for scan
+[   81.911449] ath5k phy0: gain calibration timeout (2442MHz)
+[   81.911461] ath5k phy0: can't reset hardware (-11)
+[   81.911470] phy0: failed to set freq to 2442 MHz for scan
+[   82.526023] ath5k phy0: gain calibration timeout (2447MHz)
+[   82.526034] ath5k phy0: can't reset hardware (-11)
+[   82.526040] phy0: failed to set freq to 2447 MHz for scan
+[   83.141962] phy0: failed to set freq to 2452 MHz for scan
+[   83.759025] phy0: failed to set freq to 2457 MHz for scan
+[   84.373688] phy0: failed to set freq to 2462 MHz for scan
+[   84.990322] phy0: failed to restore operational channel after scan
+[   89.419876] __ratelimit: 8 callbacks suppressed
+[   89.419890] ath5k phy0: noise floor calibration timeout (2412MHz)
+[   90.087509] ath5k phy0: gain calibration timeout (2417MHz)
+[   90.087519] ath5k phy0: can't reset hardware (-11)
+[   90.087525] phy0: failed to set freq to 2417 MHz for scan
+[   90.700892] ath5k phy0: gain calibration timeout (2422MHz)
+[   90.700903] ath5k phy0: can't reset hardware (-11)
+[   90.700909] phy0: failed to set freq to 2422 MHz for scan
+[   91.315752] ath5k phy0: gain calibration timeout (2427MHz)
+[   91.315763] ath5k phy0: can't reset hardware (-11)
+[   91.315770] phy0: failed to set freq to 2427 MHz for scan
+[   91.935144] ath5k phy0: gain calibration timeout (2432MHz)
+[   91.935155] ath5k phy0: can't reset hardware (-11)
+[   91.935161] phy0: failed to set freq to 2432 MHz for scan
+[   92.550491] ath5k phy0: gain calibration timeout (2437MHz)
+[   92.550505] phy0: failed to set freq to 2437 MHz for scan
+[   93.220305] phy0: failed to set freq to 2442 MHz for scan
+[   93.837228] phy0: failed to set freq to 2447 MHz for scan
+[   94.450800] phy0: failed to set freq to 2452 MHz for scan
+[   95.069019] phy0: failed to set freq to 2457 MHz for scan
+[   95.690239] __ratelimit: 9 callbacks suppressed
+[   95.690251] ath5k phy0: gain calibration timeout (2462MHz)
+[   95.690261] ath5k phy0: can't reset hardware (-11)
+[   95.690269] phy0: failed to set freq to 2462 MHz for scan
+[   96.305163] ath5k phy0: gain calibration timeout (2412MHz)
+[   96.305173] ath5k phy0: can't reset hardware (-11)
+[   96.305179] phy0: failed to restore operational channel after scan
+[  100.084643] ath5k phy0: noise floor calibration failed (2412MHz)
+[  100.689317] ath5k phy0: gain calibration timeout (2417MHz)
+[  100.689328] ath5k phy0: can't reset hardware (-11)
+[  100.689334] phy0: failed to set freq to 2417 MHz for scan
+[  101.308123] ath5k phy0: gain calibration timeout (2422MHz)
+[  101.308134] ath5k phy0: can't reset hardware (-11)
+[  101.308140] phy0: failed to set freq to 2422 MHz for scan
+[  101.923409] ath5k phy0: gain calibration timeout (2427MHz)
+[  101.923419] ath5k phy0: can't reset hardware (-11)
+[  101.923425] phy0: failed to set freq to 2427 MHz for scan
+[  102.536898] ath5k phy0: gain calibration timeout (2432MHz)
+[  102.536911] ath5k phy0: can't reset hardware (-11)
+[  102.536920] phy0: failed to set freq to 2432 MHz for scan
+[  103.153227] ath5k phy0: gain calibration timeout (2437MHz)
+[  103.153238] ath5k phy0: can't reset hardware (-11)
+[  103.153244] phy0: failed to set freq to 2437 MHz for scan
+[  103.766742] ath5k phy0: gain calibration timeout (2442MHz)
+[  103.766753] ath5k phy0: can't reset hardware (-11)
+[  103.766759] phy0: failed to set freq to 2442 MHz for scan
+[  104.382792] phy0: failed to set freq to 2447 MHz for scan
+[  104.998713] phy0: failed to set freq to 2452 MHz for scan
+[  105.612695] phy0: failed to set freq to 2457 MHz for scan
+[  106.227980] phy0: failed to set freq to 2462 MHz for scan
+[  106.846579] __ratelimit: 8 callbacks suppressed
+[  106.846591] ath5k phy0: gain calibration timeout (2412MHz)
+[  106.846601] ath5k phy0: can't reset hardware (-11)
+[  106.846609] phy0: failed to restore operational channel after scan
+[  111.388603] ath5k phy0: noise floor calibration failed (2412MHz)
+[  112.002756] ath5k phy0: gain calibration timeout (2417MHz)
+[  112.002769] ath5k phy0: can't reset hardware (-11)
+[  112.002776] phy0: failed to set freq to 2417 MHz for scan
+[  112.618112] ath5k phy0: gain calibration timeout (2422MHz)
+[  112.618123] ath5k phy0: can't reset hardware (-11)
+[  112.618129] phy0: failed to set freq to 2422 MHz for scan
+[  113.234943] ath5k phy0: gain calibration timeout (2427MHz)
+[  113.234957] ath5k phy0: can't reset hardware (-11)
+[  113.234965] phy0: failed to set freq to 2427 MHz for scan
+[  113.855231] ath5k phy0: gain calibration timeout (2432MHz)
+[  113.855242] ath5k phy0: can't reset hardware (-11)
+[  113.855248] phy0: failed to set freq to 2432 MHz for scan
 
-Marcel
+Happened on boot, and card stopped working.
+Only a reboot helped.
+
+
+When transferring large amounts of data from/to desktop pc, 
+assotiation with ap is dropped often which results is minute/two of no wireless
+activety and this:
+
+[ 1522.872096] wlan0: direct probe to AP 00:1b:9e:d8:77:02 try 1
+[ 1523.072094] wlan0: direct probe to AP 00:1b:9e:d8:77:02 try 2
+[ 1523.268098] wlan0: direct probe to AP 00:1b:9e:d8:77:02 try 3
+[ 1523.477204] wlan0: direct probe to AP 00:1b:9e:d8:77:02 timed out
+[ 1524.569452] wlan0: authenticate with AP 00:1b:9e:d8:77:02
+[ 1524.571157] wlan0: authenticated
+[ 1524.571179] wlan0: associate with AP 00:1b:9e:d8:77:02
+[ 1524.574284] wlan0: RX ReassocResp from 00:1b:9e:d8:77:02 (capab=0x411 status=0 aid=1)
+
+
+
+Also when downloading from AP (from desktop) I see this:
+
+ath5k phy0: unsupported jumbo
+
+
+Best regards,
+	Maxim Levitsky
 
