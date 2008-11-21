@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slackware.com ([64.57.102.34]:44112 "EHLO bob.slackware.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750695AbYKSFEQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 00:04:16 -0500
-Date: Tue, 18 Nov 2008 20:18:24 -0800 (PST)
-From: Robby Workman <rworkman@slackware.com>
-To: linux-wireless@vger.kernel.org
-cc: antiwire@gmail.com
-Subject: [PATCH] iw: Makefile changes for easier packaging
-Message-ID: <alpine.LNX.1.10.0811182015230.6923@bob.slackware.com> (sfid-20081119_060422_947202_BBB99A28)
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="960504422-1975104624-1227068304=:6923"
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:60966 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752840AbYKUWkP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 17:40:15 -0500
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Subject: [PATCH 2/2] rfkill: always call get_state() hook on resume
+Date: Fri, 21 Nov 2008 20:40:10 -0200
+Message-Id: <1227307210-11062-2-git-send-email-hmh@hmh.eng.br> (sfid-20081121_234027_856340_D0549503)
+In-Reply-To: <1227307210-11062-1-git-send-email-hmh@hmh.eng.br>
+References: <20081120150330.GC4329@tuxdriver.com>
+ <1227307210-11062-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+We "optimize" away the get_state() hook call on rfkill_toggle_radio
+when doing a forced state change.  This means the resume path is not
+calling get_state() as it should.
 
---960504422-1975104624-1227068304=:6923
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Call it manually on the resume handler, as we don't want to mess with
+the EPO path by removing the optimization.  This has the added benefit
+of making it explicit that rfkill->state could have been modified
+before we hit the rfkill_toggle_radio() call in the class resume
+handler.
 
-Attached is a trivial patch to make packaging a bit easier.
-No strong feelings either way, so rejection will cause no
-hard feelings :-)
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+---
+ net/rfkill/rfkill.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
--RW
---960504422-1975104624-1227068304=:6923
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name=iw-Makefile.diff
-Content-Transfer-Encoding: BASE64
-Content-ID: <alpine.LNX.1.10.0811182018240.6923@bob.slackware.com>
-Content-Description: 
-Content-Disposition: attachment; filename=iw-Makefile.diff
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 4113454..ff3af0e 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -580,6 +580,7 @@ static int rfkill_suspend(struct device *dev, pm_message_t state)
+ static int rfkill_resume(struct device *dev)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
++	enum rfkill_state newstate;
+ 
+ 	if (dev->power.power_state.event != PM_EVENT_ON) {
+ 		mutex_lock(&rfkill->mutex);
+@@ -587,6 +588,15 @@ static int rfkill_resume(struct device *dev)
+ 		dev->power.power_state.event = PM_EVENT_ON;
+ 
+ 		/*
++		 * rfkill->state could have been modified before we got
++		 * called, and won't be updated by rfkill_toggle_radio()
++		 * in force mode.  Sync it FIRST.
++		 */
++		if (rfkill->get_state &&
++		    !rfkill->get_state(rfkill->data, &newstate))
++			rfkill->state = newstate;
++
++		/*
+ 		 * If we are under EPO, kick transmitter offline,
+ 		 * otherwise restore to pre-suspend state.
+ 		 *
+-- 
+1.5.6.5
 
-VHJpdmlhbCBwYXRjaCBmb3IgZWFzaWVyIHBhY2thZ2luZyBvZiBpdw0KU2ln
-bmVkLW9mZi1ieTogUm9iYnkgV29ya21hbiA8cndvcmttYW5Ac2xhY2t3YXJl
-LmNvbT4NCi0tLQ0KZGlmZiAtLWdpdCBhL01ha2VmaWxlIGIvTWFrZWZpbGUN
-CmluZGV4IDNmYTBhODMuLmRmNTliNTEgMTAwNjQ0DQotLS0gYS9NYWtlZmls
-ZQ0KKysrIGIvTWFrZWZpbGUNCkBAIC0yLDEwICsyLDE0IEBADQogDQogTUFL
-RUZMQUdTICs9IC0tbm8tcHJpbnQtZGlyZWN0b3J5DQogDQorUFJFRklYID89
-IC91c3INCitCSU5ESVIgPz0gJChQUkVGSVgpL2Jpbg0KK01BTkRJUiA/PSAk
-KFBSRUZJWCkvc2hhcmUvbWFuDQorDQogTUtESVIgPz0gbWtkaXIgLXANCiBJ
-TlNUQUxMID89IGluc3RhbGwNCi1QUkVGSVggPz0gL3Vzcg0KIENDID89ICJn
-Y2MiDQorDQogQ0ZMQUdTICs9IC1XYWxsIC1XdW5kZWYgLVdzdHJpY3QtcHJv
-dG90eXBlcyAtV25vLXRyaWdyYXBocyAtZm5vLXN0cmljdC1hbGlhc2luZyAt
-Zm5vLWNvbW1vbiAtV2Vycm9yLWltcGxpY2l0LWZ1bmN0aW9uLWRlY2xhcmF0
-aW9uIGBwa2ctY29uZmlnIC0tY2ZsYWdzIGxpYm5sLTFgDQogQ0ZMQUdTICs9
-IC1PMiAtZw0KIExERkxBR1MgKz0gYHBrZy1jb25maWcgLS1saWJzIGxpYm5s
-LTFgDQpAQCAtNDksMTEgKzUzLDExIEBAIGNoZWNrOg0KIA0KIGluc3RhbGw6
-IGl3IGl3LjguZ3oNCiAJQCQoTlEpICcgSU5TVCBpdycNCi0JJChRKSQoTUtE
-SVIpICQoREVTVERJUikkKFBSRUZJWCkvYmluLw0KLQkkKFEpJChJTlNUQUxM
-KSAtbSA3NTUgLW8gcm9vdCAtZyByb290IC10ICQoREVTVERJUikkKFBSRUZJ
-WCkvYmluLyBpdw0KKwkkKFEpJChNS0RJUikgJChERVNURElSKSQoQklORElS
-KQ0KKwkkKFEpJChJTlNUQUxMKSAtbSA3NTUgLXQgJChERVNURElSKSQoQklO
-RElSKSBpdw0KIAlAJChOUSkgJyBJTlNUIGl3LjgnDQotCSQoUSkkKE1LRElS
-KSAkKERFU1RESVIpJChQUkVGSVgpL3NoYXJlL21hbi9tYW44Lw0KLQkkKFEp
-JChJTlNUQUxMKSAtbSA2NDQgLW8gcm9vdCAtZyByb290IC10ICQoREVTVERJ
-UikkKFBSRUZJWCkvc2hhcmUvbWFuL21hbjgvIGl3LjguZ3oNCisJJChRKSQo
-TUtESVIpICQoREVTVERJUikkKE1BTkRJUikvbWFuOC8NCisJJChRKSQoSU5T
-VEFMTCkgLW0gNjQ0IC10ICQoREVTVERJUikkKE1BTkRJUikvbWFuOC8gaXcu
-OC5neg0KIA0KIGNsZWFuOg0KIAkkKFEpcm0gLWYgaXcgKi5vICp+ICouZ3og
-dmVyc2lvbi5oICotc3RhbXANCg==
-
---960504422-1975104624-1227068304=:6923--
