@@ -1,154 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3-g19.free.fr ([212.27.42.29]:42729 "EHLO smtp3-g19.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751091AbYKFV1D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 16:27:03 -0500
-Message-ID: <49136119.6060407@free.fr> (sfid-20081106_222708_939718_5CFC8C0F)
-Date: Thu, 06 Nov 2008 22:26:49 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Received: from ey-out-2122.google.com ([74.125.78.26]:58346 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757231AbYKUVpY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 16:45:24 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so478299eyi.37
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 13:45:22 -0800 (PST)
+Message-ID: <49272BEE.2020106@gmail.com> (sfid-20081121_224533_899591_FA69AAED)
+Date: Fri, 21 Nov 2008 23:45:18 +0200
+From: Maxim Levitsky <maximlevitsky@gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k : Display MAC/BB and RF version at startup (v2)
-References: <490F63B6.8080600@free.fr> <878ws0ar2u.fsf@nokia.com> <20081105030223.GD16413@tesla> <49119C3D.1060406@free.fr>
-In-Reply-To: <49119C3D.1060406@free.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bob Copeland <me@bobcopeland.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in add_interface
+References: <20081118044037.GA18983@hash.localnet> <492710E6.7020506@gmail.com> <b6c5339f0811211201i384ee31dyb5b3998fe02136af@mail.gmail.com> <49271FD1.101@gmail.com>
+In-Reply-To: <49271FD1.101@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch decodes the MAC/BB version (for instance: AR5416) and the RF
-part version (for instance: AR5133). It has been tested on AR5416/AR5133
-which is a 2.4/5GHz 11n device. It also makes the differences between
-AR5416 (PCI) and AR5418 (PCI Express). Both are named AR5416 in
-the register definitions.
+Maxim Levitsky wrote:
+> Bob Copeland wrote:
+>> On Fri, Nov 21, 2008 at 2:49 PM, Maxim Levitsky 
+>> <maximlevitsky@gmail.com> wrote:
+>>> Bob Copeland wrote:
+>>>> Hi Maxim,
+>>>>
+>>>> Please try this patch.  I didn't have a problem changing the mac 
+>>>> address
+>>>> after it was set to something else.  I did kick it to re-associate with
+>>>> the AP, though.
+>>>>
+>>> Tested it, this still doesn't work:
+>>>
+>>> iwconfig wlan0 down
+>>> macchanger wlan0
+>>> iwconfig wlan0 up
+>>
+>> Wait, don't you want to do ifconfig here?  Or was that just a typo?
+>>
+>> I did exactly that (ifconfig down/macchanger/ifconfig up) and it
+>> worked here.  In particular if you have mac80211 debugging on it should
+>> show the mac address changing.  In my case, it didn't matter whether
+>> I'd previously associated or not.  I did have to tell NetworkManager
+>> to re-associate though.
+>>
+> 
+> Yep, I intended to use ifconfig.
+> 
+> First change after module reload works, second doesn't.
+> 
+> I double check that I use right kernel (install it again).
 
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+compiled kernel again, and installed it, same results.
 
-diff --git a/drivers/net/wireless/ath9k/hw.c
-b/drivers/net/wireless/ath9k/hw.c
-index ded9453..f2916a5 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -382,8 +382,9 @@ static const char *ath9k_hw_devname(u16 devid)
- {
- 	switch (devid) {
- 	case AR5416_DEVID_PCI:
--	case AR5416_DEVID_PCIE:
- 		return "Atheros 5416";
-+	case AR5416_DEVID_PCIE:
-+		return "Atheros 5418";
- 	case AR9160_DEVID_PCI:
- 		return "Atheros 9160";
- 	case AR9280_DEVID_PCI:
-diff --git a/drivers/net/wireless/ath9k/main.c
-b/drivers/net/wireless/ath9k/main.c
-index c67dadc..2913c13 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -18,6 +18,7 @@
+Best regards,
+	Maxim Levitsky
 
- #include <linux/nl80211.h>
- #include "core.h"
-+#include "reg.h"
-
- #define ATH_PCI_VERSION "0.1"
-
-@@ -1519,15 +1520,74 @@ static struct ieee80211_ops ath9k_ops = {
- 	.set_frag_threshold = ath9k_no_fragmentation,
- };
-
-+static struct {
-+	u32 version;
-+	const char * name;
-+} ath_mac_bb_names[] = {
-+	{ AR_SREV_VERSION_5416_PCI,	"5416" },
-+	{ AR_SREV_VERSION_5416_PCIE,	"5418" },
-+	{ AR_SREV_VERSION_9100,		"9100" },
-+	{ AR_SREV_VERSION_9160,		"9160" },
-+	{ AR_SREV_VERSION_9280,		"9280" },
-+	{ AR_SREV_VERSION_9285,		"9285" }
-+};
-+
-+static struct {
-+	u16 version;
-+	const char * name;
-+} ath_rf_names[] = {
-+	{ 0,				"5133" },
-+	{ AR_RAD5133_SREV_MAJOR,	"5133" },
-+	{ AR_RAD5122_SREV_MAJOR,	"5122" },
-+	{ AR_RAD2133_SREV_MAJOR,	"2133" },
-+	{ AR_RAD2122_SREV_MAJOR,	"2122" }
-+};
-+
-+/*
-+ * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
-+ */
-+
-+static const char *
-+ath_mac_bb_name(u32 mac_bb_version)
-+{
-+	int i;
-+
-+	for (i=0; i<ARRAY_SIZE(ath_mac_bb_names); i++) {
-+		if (ath_mac_bb_names[i].version == mac_bb_version) {
-+			return ath_mac_bb_names[i].name;
-+		}
-+	}
-+
-+	return "????";
-+}
-+
-+/*
-+ * Return the RF name. "????" is returned if the RF is unknown.
-+ */
-+
-+static const char *
-+ath_rf_name(u16 rf_version)
-+{
-+	int i;
-+
-+	for (i=0; i<ARRAY_SIZE(ath_rf_names); i++) {
-+		if (ath_rf_names[i].version == rf_version) {
-+			return ath_rf_names[i].name;
-+		}
-+	}
-+
-+	return "????";
-+}
-+
- static int ath_pci_probe(struct pci_dev *pdev, const struct
-pci_device_id *id)
- {
- 	void __iomem *mem;
- 	struct ath_softc *sc;
- 	struct ieee80211_hw *hw;
--	const char *athname;
- 	u8 csz;
- 	u32 val;
- 	int ret = 0;
-+	struct ath_hal *ah;
-
- 	if (pci_enable_device(pdev))
- 		return -EIO;
-@@ -1614,11 +1674,15 @@ static int ath_pci_probe(struct pci_dev *pdev,
-const struct pci_device_id *id)
- 		goto bad4;
- 	}
-
--	athname = ath9k_hw_probe(id->vendor, id->device);
--
--	printk(KERN_INFO "%s: %s: mem=0x%lx, irq=%d\n",
-+	ah = sc->sc_ah;
-+	printk(KERN_INFO
-+	       "%s: Atheros AR%s MAC/BB Rev:%x "
-+	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
- 	       wiphy_name(hw->wiphy),
--	       athname ? athname : "Atheros ???",
-+	       ath_mac_bb_name(ah->ah_macVersion),
-+	       ah->ah_macRev,
-+	       ath_rf_name((ah->ah_analog5GhzRev & AR_RADIO_SREV_MAJOR)),
-+	       ah->ah_phyRev,
- 	       (unsigned long)mem, pdev->irq);
-
- 	return 0;
