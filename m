@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41208 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751497AbYKLDQJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 22:16:09 -0500
-Date: Tue, 11 Nov 2008 18:21:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 4/4] net/ieee80211 -> drivers/net/ipw2x00/libipw_*
-	rename
-Message-ID: <20081111232102.GA5827@tuxdriver.com> (sfid-20081112_041614_770371_DA92499B)
-References: <1226440265-21240-3-git-send-email-linville@tuxdriver.com> <1226440265-21240-4-git-send-email-linville@tuxdriver.com> <200811112322.33623.mb@bu3sch.de>
+Received: from hostap.isc.org ([149.20.54.63]:50359 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751072AbYKVSV5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Nov 2008 13:21:57 -0500
+Date: Sat, 22 Nov 2008 20:20:51 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] nl80211: Report max TX power in NL80211_BAND_ATTR_FREQS
+Message-ID: <20081122182051.GE4887@jm.kir.nu> (sfid-20081122_192205_648801_7254E6E3)
+References: <20081121170130.GA4887@jm.kir.nu> <1227376464.3599.20.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200811112322.33623.mb@bu3sch.de>
+In-Reply-To: <1227376464.3599.20.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 11, 2008 at 11:22:33PM +0100, Michael Buesch wrote:
-> On Tuesday 11 November 2008 22:51:05 John W. Linville wrote:
-> > +config LIBIPW
-> > +	tristate
-> > +	select WIRELESS_EXT
-> > +	select CRYPTO
-> > +	select CRYPTO_ARC4
-> > +	select CRYPTO_ECB
-> > +	select CRYPTO_AES
-> > +	select CRYPTO_MICHAEL_MIC
-> > +	select CRYPTO_ECB
-> > +	select CRC32
-> > +	select LIB80211
-> > +	select LIB80211_CRYPT_WEP
-> > +	select LIB80211_CRYPT_TKIP
-> > +	select LIB80211_CRYPT_CCMP
-> > +	---help---
-> > +	This option enables the hardware independent IEEE 802.11
-> > +	networking stack.  This component is deprecated in favor of the
-> > +	mac80211 component.
+On Sat, Nov 22, 2008 at 06:54:24PM +0100, Johannes Berg wrote:
+> On Fri, 2008-11-21 at 19:01 +0200, Jouni Malinen wrote:
+> >  
+> > +			NLA_PUT_U8(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+> > +				   chan->max_power);
+> > +
 > 
-> Let's remove this helptext, or replace it by something that's actually true. ;)
-> 	---help---
-> 	  This option enables common routines for the IPW2100 and IPW2200 drivers.
+> I think for consistency we should use the same format that the
+> regulatory stuff has for NL80211_ATTR_POWER_RULE_MAX_EIRP, i.e. a u32
+> value with mBm (I think)
 
-Yes, good comment.
+Well.. Maximum TX power is stored as dBm and it is used as dBm in
+Country IE. Some of the current uses of EIRP seem to be converting the
+values between dBm and mBm, so it does not look like the extra accuracy
+would be needed there. Why was mBm used in the first place? It does not
+seem to be used anywhere outside Linux regulatory code as a standard
+unit which makes it quite a bit less obvious than dBm..
 
-Thanks,
+I kind of agree with consistency being a good reason for a change here,
+but I just find the mBm a bit odd choice as a unit unless there is need
+for greater accuracy than 1 dBm (and in that case, the chan->max_power
+value should likely be changed to use mBm, too).
 
-John
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Jouni Malinen                                            PGP id EFC895FA
