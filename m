@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:26352 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757631AbYKVNZ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 08:25:57 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so1403119muf.1
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Nov 2008 05:25:55 -0800 (PST)
-Message-ID: <4928085F.7050404@gmail.com> (sfid-20081122_142601_850012_8EFEFF15)
-Date: Sat, 22 Nov 2008 15:25:51 +0200
-From: Maxim Levitsky <maximlevitsky@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:48900 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758531AbYKVPyh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Nov 2008 10:54:37 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: BCM4312 Fails when xdm is started
+Date: Sat, 22 Nov 2008 16:54:09 +0100
+Cc: Yuval Hager <yuval@avramzon.net>, bcm43xx-dev@lists.berlios.de,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Peter Stuge <peter@stuge.se>
+References: <200811151801.02369.yuval@avramzon.net> <200811221613.00303.mb@bu3sch.de> <492825F8.6020606@lwfinger.net>
+In-Reply-To: <492825F8.6020606@lwfinger.net>
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in add_interface
-References: <20081118044037.GA18983@hash.localnet> <492710E6.7020506@gmail.com> <b6c5339f0811211201i384ee31dyb5b3998fe02136af@mail.gmail.com> <49271FD1.101@gmail.com> <49272BEE.2020106@gmail.com> <20081121231527.GA27720@hash.localnet>
-In-Reply-To: <20081121231527.GA27720@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200811221654.09399.mb@bu3sch.de> (sfid-20081122_165445_767839_4FF26B4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> On Fri, Nov 21, 2008 at 11:45:18PM +0200, Maxim Levitsky wrote:
->>> I double check that I use right kernel (install it again).
->> compiled kernel again, and installed it, same results.
+On Saturday 22 November 2008 16:32:08 Larry Finger wrote:
+> Michael Buesch wrote:
 > 
-> Can you confirm that the proper mac address shows up if you do ifconfig
-> or macchanger -s?  I think it's just not associating.  
+> > Somebody disabled MMIO and busmastering.
+> > And somebody cleared the CACHE_LINE_SIZE register.
 > 
-> Also can you try specifying the ap again to trigger a probe after 
-> ifconfig up:
-> 
->     $ iwconfig wlan0 ap <your AP's mac address>
-> 
-> Though I did forget about this gem, try this too:
+> Are these all the read/write bits in the configuration area? Should I conclude
+> that someone zeroed this area?
 
-Mystery solved, and sorry for the noise,
-short answer is, wpa_supplicant.
+Yeah well. I'm not sure. It _looks_ like someone completely cut the physical
+power line to the card and it reset its complete PCI config.
+So well, X does poke with the PCI devices. But as you said it also happens if
+X doesn't run, I'd rule that out.
+But I would not rule out a fucked BIOS, yet.
+Does the BIOS have any powersave options and/or spread-spectrum options for
+the PCI-bus? Can you try to turn them all off?
+I have a machine that has PCI-slot autodetect and turns of the PCI clock, if
+it doesn't detect a card on that slot. Also turn that off, if you have it, too.
 
-My network is WPA2 protected, and I only test against it, and
-it takes time to go to AP settings, change encryption to WEP, and not forget
-to change it back, etc...
+> In case the kernel memory diagnostics don't help, is there any way to trap
+> writes to the configuration registers?
 
-So, wpa_supplicant wasn't aware of new mac, but I remember that WPA uses mac as part
-of encryption.
+Well, if we have random memory corruption, that can hit memory and MMIO.
+It doesn't hurt to turn on all debugging options. Often you get some hint
+by doing so.
 
-restarting it solved the problem.
-
-I also applied (by hand) your latest patch, so maybe it did help, I'll check without it too.
-
-
-Best regards,
-	Maxim Levitsky
-
-
+-- 
+Greetings Michael.
