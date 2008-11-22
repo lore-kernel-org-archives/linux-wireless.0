@@ -1,80 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c1.cosetrain.com ([213.239.209.213]:40283 "EHLO
-	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751145AbYKFTvH (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:51272 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572AbYKVKhm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 14:51:07 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mail.cosetrain.com (Postfix) with ESMTP id 78413A18BB9
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Nov 2008 20:27:15 +0100 (CET)
-Received: from [192.168.42.23] (ppp-88-217-76-138.dynamic.mnet-online.de [88.217.76.138])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.cosetrain.com (Postfix) with ESMTP id 3C120A189E3
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Nov 2008 20:27:15 +0100 (CET)
-Message-ID: <49134511.6060106@cosetrain.com> (sfid-20081106_205113_882167_5D337335)
-Date: Thu, 06 Nov 2008 20:27:13 +0100
-From: Florian Sesser <flomaillist@cosetrain.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Newbie question about including own routing algorithm (SSR) into
- o11s: Where to begin?
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 22 Nov 2008 05:37:42 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so650327nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Nov 2008 02:37:40 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Cc: arvidjaar@mail.ru, David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 1/4] orinoco: Separate fw caching from download
+Date: Sat, 22 Nov 2008 10:37:25 +0000
+Message-Id: <1227350248-8917-2-git-send-email-kilroyd@googlemail.com> (sfid-20081122_113744_837328_D457831D)
+In-Reply-To: <1227350248-8917-1-git-send-email-kilroyd@googlemail.com>
+References: <1227350248-8917-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone!
+This refactorring will make it easier to share logic with Symbol
+firmware.
 
-I'm studying CS at the Technical University of Munich. I want to try
-extending Open80211s mesh networking to include Scalable Source Routing
-(SSR), a routing algorithm conceived by Prof. Thomas Fuhrmann
-(Karlsruhe/Munich) [1].
+Signed-off by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/orinoco.c |   53 +++++++++++++++++++++++---------
+ 1 files changed, 38 insertions(+), 15 deletions(-)
 
-SSR [2] is in some ways similar to the chord overlay network, and is
-based on the idea to "push chord into the underlay". It features some
-very promising performance characteristics [3]. (At least in our
-simulations, that is.)
+diff --git a/drivers/net/wireless/orinoco/orinoco.c b/drivers/net/wireless/orinoco/orinoco.c
+index 5459b69..4cefb80 100644
+--- a/drivers/net/wireless/orinoco/orinoco.c
++++ b/drivers/net/wireless/orinoco/orinoco.c
+@@ -431,9 +431,9 @@ struct fw_info {
+ };
+ 
+ const static struct fw_info orinoco_fw[] = {
+-	{ "", "agere_sta_fw.bin", "agere_ap_fw.bin", 0x00390000, 1000 },
+-	{ "", "prism_sta_fw.bin", "prism_ap_fw.bin", 0, 1024 },
+-	{ "symbol_sp24t_prim_fw", "symbol_sp24t_sec_fw", "", 0x00003100, 512 }
++	{ NULL, "agere_sta_fw.bin", "agere_ap_fw.bin", 0x00390000, 1000 },
++	{ NULL, "prism_sta_fw.bin", "prism_ap_fw.bin", 0, 1024 },
++	{ "symbol_sp24t_prim_fw", "symbol_sp24t_sec_fw", NULL, 0x00003100, 512 }
+ };
+ 
+ /* Structure used to access fields in FW
+@@ -487,18 +487,17 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	if (err)
+ 		goto free;
+ 
+-	if (priv->cached_fw)
+-		fw_entry = priv->cached_fw;
+-	else {
++	if (!priv->cached_fw) {
+ 		err = request_firmware(&fw_entry, firmware, priv->dev);
++
+ 		if (err) {
+ 			printk(KERN_ERR "%s: Cannot find firmware %s\n",
+ 			       dev->name, firmware);
+ 			err = -ENOENT;
+ 			goto free;
+ 		}
+-		priv->cached_fw = fw_entry;
+-	}
++	} else
++		fw_entry = priv->cached_fw;
+ 
+ 	hdr = (const struct orinoco_fw_header *) fw_entry->data;
+ 
+@@ -540,11 +539,9 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	       dev->name, hermes_present(hw));
+ 
+ abort:
+-	/* In case of error, assume firmware was bogus and release it */
+-	if (err) {
+-		priv->cached_fw = NULL;
++	/* If we requested the firmware, release it. */
++	if (!priv->cached_fw)
+ 		release_firmware(fw_entry);
+-	}
+ 
+ free:
+ 	kfree(pda);
+@@ -708,6 +705,30 @@ static int orinoco_download(struct orinoco_private *priv)
+ 	return err;
+ }
+ 
++static void orinoco_cache_fw(struct orinoco_private *priv, int ap)
++{
++	const struct firmware *fw_entry = NULL;
++	const char *fw;
++
++	if (ap)
++		fw = orinoco_fw[priv->firmware_type].ap_fw;
++	else
++		fw = orinoco_fw[priv->firmware_type].sta_fw;
++
++	if (fw) {
++		if (request_firmware(&fw_entry, fw, priv->dev) == 0)
++			priv->cached_fw = fw_entry;
++	}
++}
++
++static void orinoco_uncache_fw(struct orinoco_private *priv)
++{
++	if (priv->cached_fw)
++		release_firmware(priv->cached_fw);
++
++	priv->cached_fw = NULL;
++}
++
+ /********************************************************************/
+ /* Device methods                                                   */
+ /********************************************************************/
+@@ -3308,6 +3329,8 @@ static int orinoco_init(struct net_device *dev)
+ 	}
+ 
+ 	if (priv->do_fw_download) {
++		orinoco_cache_fw(priv, 0);
++
+ 		err = orinoco_download(priv);
+ 		if (err)
+ 			priv->do_fw_download = 0;
+@@ -3557,9 +3580,9 @@ void free_orinocodev(struct net_device *dev)
+ 	 * when we call tasklet_kill it will run one final time,
+ 	 * emptying the list */
+ 	tasklet_kill(&priv->rx_tasklet);
+-	if (priv->cached_fw)
+-		release_firmware(priv->cached_fw);
+-	priv->cached_fw = NULL;
++
++	orinoco_uncache_fw(priv);
++
+ 	priv->wpa_ie_len = 0;
+ 	kfree(priv->wpa_ie);
+ 	orinoco_mic_free(priv);
+-- 
+1.5.6.4
 
-As far as the draft standard is concerned, extending 802.11s to include
-own path selection code and link metrics should be very possible. If I'm
-not mistaken, at present the implementation doesn't quite feature a lot
-of API to make this possible.
-
-Now, where should I begin?
-
-My plan is to first extend the open80211s code in linux-wireless to have
-some path selection/link metric switching capability which should be
-controlled by iw. Then I'll port the SSR code base (C++) to ANSI C and
-include it in linux-wireless (man, that sounds easy. let's see... ;) ).
-(then I will need an OUI, well, ... maybe first test it w/ some own
-value and care about that if my stuff works)
-
-1. Any comments and/or tips on my plan of attack?
-
-2. Linux kernel noob literature has it that i should post my stuff early
-and often. I'm not very experienced, but if you are interested, i'll try
-to follow the plan and post patches that help me reach my goal (which is
-mostly the path link / link metric switching stuff).
-
-3. Rather a motivational question, but anyways: Maybe after having
-tested the code in a real setup (if I'm lucky I can use the wifi testbed
-of the TU Berlin), do you give my (or a related, that is) project any
-chance of being included in the official (vanilla linux) distribution?
-That would totally rock my world. And my grade, probably, too ^^ But
-after all it's just 'proprietary' (as the standard puts it) routing
-code. (of course it will be GPL'd)
-
-Thanks!
-
-Flo
-
-[1] http://www.net.in.tum.de/de/mitarbeiter/fuhrmann/ and
-http://i30www.ira.uka.de/aboutus/people/personal/fuhrmann?lid=en&publ=y
-
-[2] Linyphi is a user-space implementation of SSR done in C++, see
-http://linyphi.net/ and also for a good introduction to SSR in general
-the paper
-http://i30www.ira.uka.de/research/documents/p2p/2006/di06linyphi.pdf
-
-[3] On the performance of SSR:
-http://i30www.ira.uka.de/research/documents/p2p/2007/fuhrmann07wons.pdf
