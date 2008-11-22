@@ -1,135 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47146
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752014AbYK1HKc (ORCPT
+Received: from cp-out7.libero.it ([212.52.84.107]:49982 "EHLO
+	cp-out7.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758583AbYKVQhy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 02:10:32 -0500
-Date: Thu, 27 Nov 2008 23:10:32 -0800 (PST)
-Message-Id: <20081127.231032.71323554.davem@davemloft.net> (sfid-20081128_081037_583951_4153610E)
-To: linux-wireless@vger.kernel.org, shaddy_baddah@hotmail.com
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <BAY104-DAV671C2C6DE8B2A05AD785E99040@phx.gbl>
-References: <4916F1C0.1040703@hotmail.com>
-	<BAY104-DAV1D226EA8FB16BE36E3C84991A0@phx.gbl>
-	<BAY104-DAV671C2C6DE8B2A05AD785E99040@phx.gbl>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 22 Nov 2008 11:37:54 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: ath5k: problems during the connection to a sitecom AP
+Date: Sat, 22 Nov 2008 17:33:56 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200811150207.12084.rossi.f@inwind.it> <200811192315.35537.rossi.f@inwind.it> <b6c5339f0811211222t745c65fve38958c9baa98e46@mail.gmail.com>
+In-Reply-To: <b6c5339f0811211222t745c65fve38958c9baa98e46@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200811221733.56583.rossi.f@inwind.it> (sfid-20081122_173838_429867_380436DB)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Date: Fri, 28 Nov 2008 16:34:34 +1100
+On Friday 21 November 2008, Bob Copeland wrote:
 
-> It is interesting (at least to me) to note that a change between
-> kernel versions 2.6.26 and 2.6.28-rc6 fixed something that allowed
-> WPA2 to work on sparc64. At least according to my careful
-> verification. Perhaps one day, I'll narrow that change down.
+> On Wed, Nov 19, 2008 at 5:15 PM, Fabio Rossi <rossi.f@inwind.it> wrote:
+> > I've attached a kernel log of what's happening and a commands log with
+> > time references. I hope it's useful, tell me if you need other data.
+>
+> Ok, well at least we know we see beacons from the AP in question.
+> Other than that, it doesn't help a whole lot, as all the log captured
+> was beacons from various APs.  Can you try again without the 'trace'
+> option?  Also if you turn on CONFIG_MAC80211_VERBOSE_DEBUG then we
+> can see the probe requests etc.
 
-That would be the following set of changes:
+CONFIG_MAC80211_VERBOSE_DEBUG was already set in the previous log (I 
+used "echo -n "all" > /debug/ath5k/phy1/debug"). The problem is that there 
+are no direct probe requests, the card doesn't transmit at all (there are no 
+TX dumps).
 
-commit 0f5cabba49021d36e9f76bd97d7fa0f4a408063f
-Author: David S. Miller <davem@davemloft.net>
-Date:   Tue Jun 3 07:39:16 2008 -0700
+I have compared the logs with the two access points (both are configured in 
+the same way, no SSID broadcast, WEP and 802.11b&g mode). With the 3com AP at 
+a certain point I see the following lines (with TX and RX dumps not reported 
+here):
 
-    wext: Create IW_REQUEST_FLAG_COMPAT and set it as needed.
-    
-    Now low-level WEXT ioctl handlers can do compat handling
-    when necessary.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
+kernel: ath0: direct probe to AP 00:0d:54:fb:55:33 try 1
+kernel: ath0 direct probe responded
+kernel: ath0: authenticate with AP 00:0d:54:fb:55:33
+kernel: ath0: authenticated
+kernel: ath0: associate with AP 00:0d:54:fb:55:33
+kernel: ath0: RX AssocResp from 00:0d:54:fb:55:33 (capab=0x431 status=0 aid=5)
+kernel: ath0: associated
+kernel: phy14: Allocated STA 00:0d:54:fb:55:33
+kernel: phy14: Inserted STA 00:0d:54:fb:55:33
 
-commit 169a3ec492ddb6b0a8203fccba2ddff077154e26
-Author: David S. Miller <davem@sunset.davemloft.net>
-Date:   Fri Dec 21 03:55:13 2007 -0800
+while with the Sitecom AP I see nothing similar.
 
-    wext: Remove compat handling from fs/compat_ioctl.c
-    
-    No longer used.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
+I have also tried a PCMCIA card which uses the rtl8180 driver. The result is 
+the same, I can associate to the 3com AP but not to the Sitecom one.
 
-commit 87de87d5e47f94b4ea647a5bd1bc8dc1f7930db4
-Author: David S. Miller <davem@davemloft.net>
-Date:   Tue Jun 3 09:14:03 2008 -0700
+I'm suspecting that it's not an ath5k driver issue but an higher level issue 
+in the mac80211 framework.
 
-    wext: Dispatch and handle compat ioctls entirely in net/wireless/wext.c
-    
-    Next we can kill the hacks in fs/compat_ioctl.c and also
-    dispatch compat ioctls down into the driver and 80211 protocol
-    helper layers in order to handle iw_point objects embedded in
-    stream replies which need to be translated.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
+When I do a scan after having loaded the driver, the iwlist can't report the 
+SSID because it's hidden. I don't know if this is a problem but I have 
+noticed that the reported SSIDs of the two APs are a little bit different. 
+With the 3com AP (the working one) I get ESSID:" " (1 char blank 
+string) while with the Sitecom AP ESSID:"" (0 chars empty string).
 
-commit a67fa76d8be4e24e2d61cd76438a893d4c2886f7
-Author: David S. Miller <davem@davemloft.net>
-Date:   Tue Jun 3 07:36:30 2008 -0700
+> If you do have another wireless card, that would still be better.  You
+> can use it like this:
+>
+>    # ifconfig wlan1 down
+>    # iwconfig wlan1 mode monitor
+>    # ifconfig wlan1 up
+>    # tcpdump -s 1000 -w assoc.cap -i wlan1
+>
+> Then you can load assoc.cap into wireshark (you can capture from inside
+> wireshark too if you prefer).
 
-    wext: Pull top-level ioctl dispatch logic into helper function.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
+Now I'm able to use a second additional PCMCIA wireless card in RFmon mode. 
+The capturing confirms that there is no network traffic generated by the 
+ath5k wireless card during the authentication & association with the Sitecom 
+AP (no packets with the source MAC address of the wireless card).
 
-commit d2911255590d9ca561a481b9dbebcfcbbf38fa4e
-Author: David S. Miller <davem@sunset.davemloft.net>
-Date:   Fri Dec 21 03:46:01 2007 -0800
-
-    wext: Pass iwreq pointer down into standard/private handlers.
-    
-    They have no need to see the object as an ifreq.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
-commit ca1e8bb8e4e89e2769e2b39eb29fdcfc5c19cf89
-Author: David S. Miller <davem@sunset.davemloft.net>
-Date:   Fri Dec 21 03:41:45 2007 -0800
-
-    wext: Parameterize the standard/private handlers.
-    
-    The WEXT standard and private handlers to use are now
-    arguments to wireless_process_ioctl().
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
-commit 67dd7608078b17f63f29ff2108fc5bf2407ddcec
-Author: David S. Miller <davem@sunset.davemloft.net>
-Date:   Fri Dec 21 03:36:31 2007 -0800
-
-    wext: Pull ioctl permission checking out into helper function.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
-commit d88174e4d295f0880e5f9cb6d42f26b0367c8fd9
-Author: David S. Miller <davem@sunset.davemloft.net>
-Date:   Fri Dec 21 03:33:46 2007 -0800
-
-    wext: Extract private call iw_point handling into seperate functions.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
-commit 84149b0fca08f9ec554dfc28dabc39839fdf8a06
-Author: David S. Miller <davem@sunset.davemloft.net>
-Date:   Fri Dec 21 03:27:17 2007 -0800
-
-    wext: Extract standard call iw_point handling into seperate function.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
-commit 208887d4cc5a5c1eeb68bd170e21e32b1129cd94
-Author: David S. Miller <davem@sunset.davemloft.net>
-Date:   Fri Dec 21 03:24:24 2007 -0800
-
-    wext: Make adjust_priv_size() take a "struct iw_point *".
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
-commit 25519a2a769d42fc2733a8f119682272d99b1304
-Author: David S. Miller <davem@sunset.davemloft.net>
-Date:   Fri Dec 21 03:22:38 2007 -0800
-
-    wext: Remove inline from get_priv_size() and adjust_priv_size().
-    
-    The compiler inlines when appropriate.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
+Regards,
+Fabio
