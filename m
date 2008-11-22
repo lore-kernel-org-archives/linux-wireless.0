@@ -1,70 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:43608 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756146AbYKIQ4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2008 11:56:13 -0500
-Date: Sun, 9 Nov 2008 17:56:10 +0100 (CET)
-From: Julia Lawall <julia@diku.dk>
-To: lrodriguez@atheros.com, jmalinen@atheros.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 6/8] drivers/net/wireless/ath9k/rc.c: use ARRAY_SIZE
-Message-ID: <Pine.LNX.4.64.0811091755500.32509@ask.diku.dk> (sfid-20081109_175643_541534_D63CC279)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from xc.sipsolutions.net ([83.246.72.84]:58622 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758763AbYKVR7w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Nov 2008 12:59:52 -0500
+Subject: Re: ieee80211_wep_encrypt_data_fix_unaligned_access.patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivan Kuten <ivan.kuten@promwad.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <eaf88bcfcb5b61c24cf1b8b682c5ff3c@promwad.com> (sfid-20081121_234653_121082_4B762D50)
+References: <eaf88bcfcb5b61c24cf1b8b682c5ff3c@promwad.com>
+	 (sfid-20081121_234653_121082_4B762D50)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cYqZBFeY063sDLhG0daU"
+Date: Sat, 22 Nov 2008 18:59:48 +0100
+Message-Id: <1227376788.3599.24.camel@johannes.berg> (sfid-20081122_185954_462483_A4AD4E71)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
 
-ARRAY_SIZE is more concise to use when the size of an array is divided by
-the size of its type or the size of its first element.
+--=-cYqZBFeY063sDLhG0daU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The semantic patch that makes this change is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+On Sat, 2008-11-22 at 00:46 +0200, Ivan Kuten wrote:
+> Hello,=20
+>=20
+> Please review the following patch which is supposed to fix unaligned acce=
+ss
+> on Blackfin architecture.
 
-// <smpl>
-@i@
-@@
+any other architecture too...
 
-#include <linux/kernel.h>
+> In function net/mac80211/wep.c ieee80211_wep_encrypt_data:
+> __le32 *icv;
+> icv =3D (__le32 *)(data + data_len);=20
+>=20
+> after the operation above icv pointer may become unaligned.=20
+> The patch below fixes this issue:
+>=20
+>=20
+> --- linux-2.6.28-rc3/net/mac80211/wep.c 2008-11-20 00:04:58.000000000 -05=
+00
+> +++ linux-2.6.86-rc3.new/net/mac80211/wep.c     2008-11-22
+> 00:37:53.000000000 -0500
+> @@ -123,10 +123,10 @@
+>  {
+>         struct blkcipher_desc desc =3D { .tfm =3D tfm };
+>         struct scatterlist sg;
+> -       __le32 *icv;
+> +       __le32 icv;
+>=20
+> -       icv =3D (__le32 *)(data + data_len);
+> -       *icv =3D cpu_to_le32(~crc32_le(~0, data, data_len));
+> +       icv =3D cpu_to_le32(~crc32_le(~0, data, data_len));
+> +       put_unaligned(icv, (__le32 *)(data + data_len));
+>=20
 
-@depends on i using "paren.iso"@
-type T;
-T[] E;
-@@
+looks fine, you just need to send a proper changelog and s-o-b
 
-- (sizeof(E)/sizeof(E[...]))
-+ ARRAY_SIZE(E)
-// </smpl>
+johannes
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+--=-cYqZBFeY063sDLhG0daU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
----
- drivers/net/wireless/ath9k/rc.c     |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index cca2fc5..ea37673 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1272,8 +1272,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 				rate_ctrl->state[tx_rate].per = 100;
- 		} else {
- 			/* xretries == 2 */
--			count = sizeof(nretry_to_per_lookup) /
--				sizeof(nretry_to_per_lookup[0]);
-+			count = ARRAY_SIZE(nretry_to_per_lookup);
- 			if (retries >= count)
- 				retries = count - 1;
- 			/* new_PER = 7/8*old_PER + 1/8*(currentPER) */
-@@ -1291,8 +1290,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	} else {	/* xretries == 0 */
- 		/* Update the PER. */
- 		/* Make sure it doesn't index out of array's bounds. */
--		count = sizeof(nretry_to_per_lookup) /
--			sizeof(nretry_to_per_lookup[0]);
-+		count = ARRAY_SIZE(nretry_to_per_lookup);
- 		if (retries >= count)
- 			retries = count - 1;
- 		if (info_priv->n_bad_frames) {
+iQIcBAABAgAGBQJJKEiPAAoJEKVg1VMiehFY67YQAJtxNY8rKRnKV7RWHS40pKyw
+o9+xG1+uwtO1LWr6VUuFwUBBNeXpIiFxNUO3zQ7vLRW5VTuDkaCzv23zRa/5cdlY
+kM6qB4LKJkGDv770zz2BWIJCHI/R7TAX57+UaMHngkJR2wzHt0w6IcVJlKv5n9yp
+rm732LFbtR99K1vSEXRs998KT8+0XdftoEnGmNSNz86bT6p4s2exEJCG4hL0MABe
+zWt+WI1WuTRdapCEmtWnYuluF/X3zuzmU8rPmWWCnBfXj+rJhe6zBBxDhVTtUVew
+X+iy6aNfMgL2ypI9mPblbb+w2FJJekIwKg3w3+pw/Fj7SaFTg4j6REn6x6SL4Yce
+YFtUflV/rqEMbHVAlhqB4oSgCCO025K2CiOB0d7eDNgo+nkNGJhfXo65+baeWnZx
+cYHms0rJsemdtSKkVy0yVNIQOwWSl/fs9TVh6gh5RWs+RORN6BWhkhA5afUg4iAs
+lYWjjSxf5IYnea8dyN6x3gwqgfdwdQN10bd5YiA10Qg3qBDZyE0lenuPpoGKzAkj
+/yPWMvg0imdn9MH0ed9a7PNJ3VUxZ+4LHKn/Y6CefcsWY2wEmsVAkj+ivjcBbmDA
+vc7oq0DslDl7iqMYKc3XBcUs46RXPy45zfH+rGIpsaXoJNBF0tPWz8KXfJsNqAHe
+XOt4d8DR1+M11WdpBjUO
+=LogK
+-----END PGP SIGNATURE-----
+
+--=-cYqZBFeY063sDLhG0daU--
+
