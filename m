@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:54462 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343AbYKOQCe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2008 11:02:34 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] p54: enable Mesh Point support v2
-Date: Sat, 15 Nov 2008 17:02:31 +0100
-Cc: "John W Linville" <linville@tuxdriver.com>
-References: <200811141941.06542.chunkeey@web.de> <45e8e6c40811141422l6e7aa7b9g7227c4243ab701c5@mail.gmail.com>
-In-Reply-To: <45e8e6c40811141422l6e7aa7b9g7227c4243ab701c5@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:24149 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754068AbYKUQqX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 11:46:23 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 08:46:22 -0800
+Date: Fri, 21 Nov 2008 22:19:50 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Look out for some other AP when disassoc is
+	received.
+Message-ID: <20081122061950.GA4214@myhost.users.atheros.com> (sfid-20081121_174627_159678_06A34E33)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811151702.31483.chunkeey@web.de> (sfid-20081115_170250_661341_2D7F7C76)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables Mesh Point operation for any p54 device.
- 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+When a disassoc packet is received from the AP with a reason code of
+'leaving the BSS', mac80211 should go into DISABLED state just as it
+would do if the AP suddenly went away for some reason, as that is what
+will happen shortly after the AP leaves anyway.
+
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-11-15 16:50:58.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-11-15 16:50:19.000000000 +0100
-@@ -1059,6 +1059,7 @@ static int p54_tx_fill(struct ieee80211_
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		if (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) {
- 			*aid = 0;
- 			*queue = 3;
-@@ -1571,6 +1572,7 @@ static int p54_add_interface(struct ieee
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		priv->mode = conf->type;
- 		break;
- 	default:
-@@ -1590,6 +1592,7 @@ static int p54_add_interface(struct ieee
- 		p54_setup_mac(dev, P54_FILTER_TYPE_AP, priv->mac_addr);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		p54_setup_mac(dev, P54_FILTER_TYPE_IBSS, NULL);
- 		break;
- 	default:
-@@ -1654,6 +1657,7 @@ static int p54_config_interface(struct i
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		memcpy(priv->bssid, conf->bssid, ETH_ALEN);
- 		ret = p54_set_freq(dev, dev->conf.channel->center_freq);
- 		if (ret)
-@@ -1827,9 +1831,10 @@ struct ieee80211_hw *p54_init_common(siz
- 		     IEEE80211_HW_SIGNAL_DBM |
- 		     IEEE80211_HW_NOISE_DBM;
+ net/mac80211/mlme.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 90ad5a4..ee15e75 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -808,6 +808,10 @@ static void ieee80211_authenticate(struct ieee80211_sub_if_data *sdata,
+ 	mod_timer(&ifsta->timer, jiffies + IEEE80211_AUTH_TIMEOUT);
+ }
  
--	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION |
--					  NL80211_IFTYPE_ADHOC |
--					  NL80211_IFTYPE_AP);
-+	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+				      BIT(NL80211_IFTYPE_ADHOC) |
-+				      BIT(NL80211_IFTYPE_AP) |
-+				      BIT(NL80211_IFTYPE_MESH_POINT);
++/*
++ * The disassoc 'reason' argument can be either our own reason
++ * if self disconnected or a reason code from the AP.
++ */
+ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 				   struct ieee80211_if_sta *ifsta, bool deauth,
+ 				   bool self_disconnected, u16 reason)
+@@ -854,7 +858,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
  
- 	dev->channel_change_time = 1000;	/* TODO: find actual value */
- 	priv->tx_stats[0].limit = 1;		/* Beacon queue */
+ 	ieee80211_sta_send_apinfo(sdata, ifsta);
+ 
+-	if (self_disconnected)
++	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT)
+ 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
+ 
+ 	sta_info_unlink(&sta);
+@@ -1175,7 +1179,7 @@ static void ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+ 				      IEEE80211_RETRY_AUTH_INTERVAL);
+ 	}
+ 
+-	ieee80211_set_disassoc(sdata, ifsta, false, false, 0);
++	ieee80211_set_disassoc(sdata, ifsta, false, false, reason_code);
+ }
+ 
+ 
+-- 
+1.5.6.4
+
