@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f11.google.com ([209.85.217.11]:33672 "EHLO
-	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920AbYKRXWr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2008 18:22:47 -0500
-Received: by gxk4 with SMTP id 4so2186097gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Nov 2008 15:22:45 -0800 (PST)
-Message-ID: <43e72e890811181520r362fd0f9w33d568935d10f732@mail.gmail.com> (sfid-20081119_002251_694020_EE2729FA)
-Date: Tue, 18 Nov 2008 15:20:04 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"reinette chatre" <reinette.chatre@intel.com>,
-	"Marcel Holtmann" <marcel@holtmann.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"Matt Mackall" <mpm@selenic.com>,
-	"Christophe Dumez" <dchris@gmail.com>, "Zhu Yi" <yi.zhu@intel.com>,
-	"=?UTF-8?Q?Jan_V=C4=8Del=C3=A1k?=" <vcelak.jan@seznam.cz>,
-	"Thomas Witt" <witt_th@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Andres Freund" <andres@anarazel.de>
-In-Reply-To: <1227005557.4014.47.camel@johannes.berg>
+Received: from mail.atheros.com ([12.36.123.2]:19588 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752973AbYKUOji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 09:39:38 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 06:39:38 -0800
+Date: Fri, 21 Nov 2008 20:13:06 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Look out for some other AP when disassoc is
+	received.
+Message-ID: <20081122041306.GA4206@myhost.users.atheros.com> (sfid-20081121_153942_182132_3C8493BC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1226969241.4014.24.camel@johannes.berg>
-	 <1227005557.4014.47.camel@johannes.berg>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 18, 2008 at 2:52 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+When a disassoc packet is received with a reason code of
+'AP leaving the BSS', mac80211 should start looking for some
+other AP instead of trying to associate with the same AP.
 
-> @@ -265,11 +265,14 @@ void iwl_rx_allocate(struct iwl_priv *pr
->                list_del(element);
->
->                /* Get physical address of RB/SKB */
-> -               rxb->dma_addr = pci_map_single(priv->pci_dev, rxb->skb->data,
-> -                          priv->hw_params.rx_buf_size, PCI_DMA_FROMDEVICE);
-> +               rxb->real_dma_addr = pci_map_single(priv->pci_dev, rxb->skb->data,
-> +                          priv->hw_params.rx_buf_size + 256, PCI_DMA_FROMDEVICE);
->
-> -               /* RBD must be 256 bytes aligned and no more than 36 bits */
-> -               BUG_ON(rxb->dma_addr & (~DMA_BIT_MASK(36) & 0xff));
-> +               /* dma address must be no more than 36 bits */
-> +               BUG_ON(rxb->real_dma_addr & ~DMA_BIT_MASK(36));
-> +               /* and also 256 byte aligned! */
-> +               rxb->aligned_dma_addr = ALIGN(rxb->real_dma_addr, 256);
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/mlme.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-aligned_dma_addr can obviously be > real_dma_addr at this point, what
-gaurantees we can use it on our own whim?
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 90ad5a4..ee15e75 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -808,6 +808,10 @@ static void ieee80211_authenticate(struct ieee80211_sub_if_data *sdata,
+ 	mod_timer(&ifsta->timer, jiffies + IEEE80211_AUTH_TIMEOUT);
+ }
+ 
++/*
++ * The disassoc 'reason' argument can be either our own reason
++ * if self disconnected or a reason code from the AP.
++ */
+ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 				   struct ieee80211_if_sta *ifsta, bool deauth,
+ 				   bool self_disconnected, u16 reason)
+@@ -854,7 +858,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_sta_send_apinfo(sdata, ifsta);
+ 
+-	if (self_disconnected)
++	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT)
+ 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
+ 
+ 	sta_info_unlink(&sta);
+@@ -1175,7 +1179,7 @@ static void ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+ 				      IEEE80211_RETRY_AUTH_INTERVAL);
+ 	}
+ 
+-	ieee80211_set_disassoc(sdata, ifsta, false, false, 0);
++	ieee80211_set_disassoc(sdata, ifsta, false, false, reason_code);
+ }
+ 
+ 
+-- 
+1.5.6.4
 
-  Luis
