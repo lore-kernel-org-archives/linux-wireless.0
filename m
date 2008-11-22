@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:64251 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754087AbYKECuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 21:50:12 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2008 18:50:12 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/7] cfg80211: remove switch from __set_regdom()
-Date: Tue, 4 Nov 2008 18:50:02 -0800
-Message-ID: <1225853406-16322-4-git-send-email-lrodriguez@atheros.com> (sfid-20081105_035023_880534_E90A5641)
-In-Reply-To: <1225853406-16322-3-git-send-email-lrodriguez@atheros.com>
-References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
- <1225853406-16322-2-git-send-email-lrodriguez@atheros.com>
- <1225853406-16322-3-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:44940 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753619AbYKVRya (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Nov 2008 12:54:30 -0500
+Subject: Re: [PATCH] nl80211: Report max TX power in NL80211_BAND_ATTR_FREQS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081121170130.GA4887@jm.kir.nu>
+References: <20081121170130.GA4887@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+lpeTB6bmKJ/sexx3cp7"
+Date: Sat, 22 Nov 2008 18:54:24 +0100
+Message-Id: <1227376464.3599.20.camel@johannes.berg> (sfid-20081122_185435_960649_736E69E0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have control over the REGDOM_SET_BY_* macros passed
-so remove the switch.
 
-This patch has no functional changes.
+--=-+lpeTB6bmKJ/sexx3cp7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   21 ++++++---------------
- 1 files changed, 6 insertions(+), 15 deletions(-)
+On Fri, 2008-11-21 at 19:01 +0200, Jouni Malinen wrote:
+> =20
+> +			NLA_PUT_U8(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+> +				   chan->max_power);
+> +
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e44f005..290ecec 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -829,21 +829,12 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	reset_regdomains();
- 
- 	/* Country IE parsing coming soon */
--	switch (last_request->initiator) {
--	case REGDOM_SET_BY_CORE:
--	case REGDOM_SET_BY_DRIVER:
--	case REGDOM_SET_BY_USER:
--		if (!is_valid_rd(rd)) {
--			printk(KERN_ERR "cfg80211: Invalid "
--				"regulatory domain detected:\n");
--			print_regdomain_info(rd);
--			return -EINVAL;
--		}
--		break;
--	case REGDOM_SET_BY_COUNTRY_IE: /* Not yet */
--		WARN_ON(1);
--	default:
--		return -EOPNOTSUPP;
-+
-+	if (!is_valid_rd(rd)) {
-+		printk(KERN_ERR "cfg80211: Invalid "
-+			"regulatory domain detected:\n");
-+		print_regdomain_info(rd);
-+		return -EINVAL;
- 	}
- 
- 	if (unlikely(last_request->intersect)) {
--- 
-1.5.6.3
+I think for consistency we should use the same format that the
+regulatory stuff has for NL80211_ATTR_POWER_RULE_MAX_EIRP, i.e. a u32
+value with mBm (I think)
+
+johannes
+
+--=-+lpeTB6bmKJ/sexx3cp7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJKEdKAAoJEKVg1VMiehFYPj4P/A2rv+yo3R29s2k5E+ZUks3X
++m0dC4RYswOCET8zqj88qT8grwCr5E+HI1ywdAUJpK5KWdUtXUngzhcAlZLYR+TY
+sYYRyI6RCuxuT21WWFiF/HY6ZdwA72j/+DJNjlnFGXScxIeRm4G7CLoaVDmRvLwp
+DWF/JO18YA/jZT44Bohrli2KesbovtYRg+j55CxhbR38dPDhAGNz+Vqj2MUBmzig
+qSv5oCie+/sE0kDQEFhNR1L1S0M6cV5rrQS0GFkBD0wpLhZozEUdz1ZKS4WPVz3i
+SchPaeKu50KthMhw171uS8uB0uaO74DMSqItUz4Fqwkl7yZFvvV44Q5AjjTAJ09T
+4olFCBo5PZ+62CIOIhGiLbVhl360JEAqTDME8D4MgLkNfIC+iAQFeZBQOemGy/Jh
+W3FEwa3BKJjiplD1NWgGYLACiJEViJ3yLFubYye0qYWt2wOVcy3ddsllM4spdrxC
+htW9RyV051/jMf28m14wLUEL6JjEjLmLdGgRWTUgN+3KU15DmIkgjaGe3F7TpSQ9
+9yPztL7Jwa3MVzD/cGplUcDBPNgDqnG8XOnO2vWL1lVNr8RpggDt9U45ajOR5OzH
+H1siNIWoKolktN3NcyMcTm/Pcu/S16pYh7mWZP20npYuWMyDDoqpiCDg8eN5UnAm
+iLGJCvENmeCfujNZfWMu
+=N6Ua
+-----END PGP SIGNATURE-----
+
+--=-+lpeTB6bmKJ/sexx3cp7--
 
