@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13758 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752913AbYKLWWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 17:22:15 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:22:15 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/10] cfg80211: mark regdomains with > NL80211_MAX_SUPP_REG_RULES invalid
-Date: Wed, 12 Nov 2008 14:22:01 -0800
-Message-ID: <1226528524-32678-8-git-send-email-lrodriguez@atheros.com> (sfid-20081112_232222_012554_4E591532)
-In-Reply-To: <1226528524-32678-7-git-send-email-lrodriguez@atheros.com>
-References: <1226528524-32678-1-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-2-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-4-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-5-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-6-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-7-git-send-email-lrodriguez@atheros.com>
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:63666 "EHLO
+	XServe-2.services.indranet.co.nz" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753619AbYKVDqP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 22:46:15 -0500
+Date: Sat, 22 Nov 2008 16:46:10 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Bob Copeland <me@bobcopeland.com>
+cc: Maxim Levitsky <maximlevitsky@gmail.com>, wally@theblackmoor.net,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ath5k-devel] Unusually low speeds with ath5k and iwl3945
+In-Reply-To: <20081122005240.GA27826@hash.localnet>
+Message-ID: <alpine.DEB.2.00.0811221643030.7067@monster> (sfid-20081122_044620_293894_5D932DD6)
+References: <492719ED.5000006@gmail.com> <20081122005240.GA27826@hash.localnet>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lets remain consistent and mark rds with > NL80211_MAX_SUPP_REG_RULES
-number of reg rules as invalid in is_valid_rd().
+Hi,
+  to verify that it is a rate control issue, there is one very simple and 
+very practical test.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/reg.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Take both ends of your link, and set them to fixed rate, and at the rate 
+you think it should be achieving.
+If you can achieve significantly higher throughputs with fixed rate, you 
+know that the rate control algorithm (or interface with rate algorithm) 
+has failed.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f8e7beb..f0ff3d1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -352,6 +352,9 @@ static bool is_valid_rd(const struct ieee80211_regdomain *rd)
- 	if (!rd->n_reg_rules)
- 		return false;
- 
-+	if (WARN_ON(rd->n_reg_rules > NL80211_MAX_SUPP_REG_RULES))
-+		return false;
-+
- 	for (i = 0; i < rd->n_reg_rules; i++) {
- 		reg_rule = &rd->reg_rules[i];
- 		if (!is_valid_reg_rule(reg_rule))
+Derek.
+
+On Fri, 21 Nov 2008, Bob Copeland wrote:
+
+> On Fri, Nov 21, 2008 at 10:28:29PM +0200, Maxim Levitsky wrote:
+>> I initially blamed iwl3945, then thought it got fixed, but now I have
+>> ath5k, and speeds are low
+>> and I suspect that both drivers has bugs regarding to speed.
+>
+> Quite possible, but both use mac80211 for rate control.  Which rate
+> control algorithm are you using?
+>
+>
+
 -- 
-1.5.6.3
+Derek Smithies Ph.D.
+IndraNet Technologies Ltd.
+Email: derek@indranet.co.nz
+ph +64 3 365 6485
+Web: http://www.indranet-technologies.com/
 
