@@ -1,60 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42753 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118AbYKAPvl (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2184 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757615AbYKVAxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 11:51:41 -0400
-Subject: Re: Michael MIC failures in AP mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Kalle Valo <kalle.valo@nokia.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20081101151938.GA4857@jm.kir.nu> (sfid-20081101_162043_951195_6B30AF69)
-References: <87wsfnldq9.fsf@nokia.com>  <20081101151938.GA4857@jm.kir.nu>
-	 (sfid-20081101_162043_951195_6B30AF69)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DWaFvn3cRpde3YxS2UC8"
-Date: Sat, 01 Nov 2008 16:51:37 +0100
-Message-Id: <1225554697.3619.13.camel@johannes.berg> (sfid-20081101_165151_774110_5E8F7CB6)
-Mime-Version: 1.0
+	Fri, 21 Nov 2008 19:53:55 -0500
+Date: Fri, 21 Nov 2008 19:52:40 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: ipw3945-devel@lists.sourceforge.net, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wally@theblackmoor.net
+Subject: Re: Unusually low speeds with ath5k and iwl3945
+Message-ID: <20081122005240.GA27826@hash.localnet> (sfid-20081122_015400_590004_79931552)
+References: <492719ED.5000006@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <492719ED.5000006@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Nov 21, 2008 at 10:28:29PM +0200, Maxim Levitsky wrote:
+> I initially blamed iwl3945, then thought it got fixed, but now I have 
+> ath5k, and speeds are low
+> and I suspect that both drivers has bugs regarding to speed.
 
---=-DWaFvn3cRpde3YxS2UC8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Quite possible, but both use mac80211 for rate control.  Which rate 
+control algorithm are you using?  
 
-On Sat, 2008-11-01 at 17:19 +0200, Jouni Malinen wrote:
-
-> Anyway, if you just want to test Michael MIC error processing on a
-> client, force mac80211 to do software encryption
-
-On that matter, should we put a debugfs control knob in place to
-completely disable HW encryption in mac80211, so we don't need this
-override in all drivers?
-
-johannes
-
---=-DWaFvn3cRpde3YxS2UC8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJDHsGAAoJEKVg1VMiehFYdSsP+wWQiNPsLBVE6oKCBv2j8J4x
-swMktyvAFpojR0ZBmX1FRQXKlUIhM1R7xK9XqTTiXGE9M4e8MfQr1KMz1ii5sB6U
-kBtImpKZIErxQTPUmC3oMOYSklUDReHz+PZO+CP6QeMrywzg0Tp/MJBaX2k02+gW
-7+7GWrFKUu5/JQCExcUOsUve1IcWR/DmQCZ6Q16mrZimlWBwDhw5SmSVS7WKnNW4
-3jWlZwR47oeCnAV3CIFuS/sy/5s3dP4BjpUcRG5HGpO3UyQhufSertaY7pttimEn
-VZROh1fzbLYUxgEvSDWopQnNDHqkx9ERxsHZH1Q5kzY1YQnm30cFbeZ1m6013CUd
-f0ZWVjQfDlzj/WMDUr0cTx+TESPjPANWwhDK66rqJq7//PQ99fhftZiHUH5A0I6M
-y6//BxstI6aR404QBVUp3vsBqKMe/GJ1jiaJSNsBWhuARHyh9KK3pEKQpiLy32YS
-IPgYM5oSR5vIK6iDeXnQUaDlQmnr2BWvays0BEeN1t9rwBS5Q4SXXWdG/hqs3aHL
-ctQM85zQFIytFcW5u0sWEp3LB1DWK1f70yjIaA5K5q46Q85i8RfTzuOt+RbLFSZn
-Fjly07ZQjpIfGdunL5gmEIpsGXiJe0jxTBA9H+OmF5/at+BZMSBbS8hztWnVuDPO
-TbF1x+Tf5hDjtqlG5t0X
-=rben
------END PGP SIGNATURE-----
-
---=-DWaFvn3cRpde3YxS2UC8--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
