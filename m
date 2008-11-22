@@ -1,57 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38450 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757366AbYKWLra (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56672
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752741AbYKVBOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2008 06:47:30 -0500
-Subject: Re: [PATCH] iwlwifi: fix build warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wu Fengguang <fengguang.wu@intel.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20081123111812.GA15611@localhost> (sfid-20081123_121840_934709_B7C73186)
-References: <20081123111812.GA15611@localhost>
-	 (sfid-20081123_121840_934709_B7C73186)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-reWxFV7AdFLjqMJ/Co+t"
-Date: Sun, 23 Nov 2008 12:47:22 +0100
-Message-Id: <1227440843.3599.44.camel@johannes.berg> (sfid-20081123_124802_044256_FE8B6BFF)
+	Fri, 21 Nov 2008 20:14:30 -0500
+Date: Fri, 21 Nov 2008 17:14:29 -0800 (PST)
+Message-Id: <20081121.171429.230714868.davem@davemloft.net> (sfid-20081122_021435_198432_423EDD4A)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-11-21
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20081121190338.GB3540@tuxdriver.com>
+References: <20081121190338.GB3540@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 21 Nov 2008 14:03:38 -0500
 
---=-reWxFV7AdFLjqMJ/Co+t
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Here is another big round of updates intended for 2.6.29.  This version
+> is rebased after the 2.6.28-rc6 rebasing of net-next-2.6.  This batch is
+> mostly driver updates as well as a bunch of file movement.  Also, some
+> patches from me are working towards refactoring/minimizing the old
+> ieee80211 component into a support library for ipw2100 and ipw2200 and
+> also collecting more code into lib80211 for sharing between more
+> drivers.
+> 
+> Please let me know if there are problems!
 
-On Sun, 2008-11-23 at 19:18 +0800, Wu Fengguang wrote:
-> iwl_escape_essid() is only used in debugging code for now.
-> So define it only with CONFIG_IWL3945_DEBUG enabled.
-
-that function has been removed recently from this file
-
-johannes
-
---=-reWxFV7AdFLjqMJ/Co+t
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJKULHAAoJEKVg1VMiehFYhsAQAKzY1w5pTeI/IjnAsLj0RHrI
-2GNtEVBEd2O8PXbMrdcKaqYYFS3EngEabnn2XLUP5Qd3CrUDq5D79I/Czp+GfSwK
-0F5jK8y8ex1ufYoxalLDphclorLy7QjsGMiGTFpGk6EmdaK/dRLmVXeDgLWLfSNn
-SLgSZxOBYv7ohq5K1PyAdm7hBW7dw88tD5gH4ltUFmOeNTRR4ljTi8PsRJSvKU2A
-EkDUiW25ZN7mXt++ixm7OB5/QPu3rKqYSQRxhv38AP/v71Jq1exPzCDJY6C8jQRu
-70h1fqadUcuaJvCNKm9lP5/Kf8eWI7QseSbgnuvvX9ti1AUg9FavhClLAGoYkUSK
-/TpwMRySIZGv2ewGsed4LeSHszOxWvhEGnAWHMzvjcTuiUV65br45DCaCLRSqH8M
-4NVpne66FmuNptjpM5tgCbnoRY86Au51Oz9de1KoK+FhX8rAw9iceOApG6uI4VgI
-JDKBuktFyPSeQ4kclKKVBGv+Vjh/dqTjcWqFrhrIL/jAkHttLFhiL++tyAHEdko3
-9K/cAH1CBQUpSkv3wXVtrcd46FDoNtlsh9HbvZeUP5w+bYPFHK5MYsWIs/KrTLAV
-Ho6jtBWlWTSwsTpfp+O08Ey4E/iluOYYiMeFlCNeHcSBl0mf0cosRsuhixwmxKsZ
-mGHg28JQIj6zQuIz0qVV
-=XIVl
------END PGP SIGNATURE-----
-
---=-reWxFV7AdFLjqMJ/Co+t--
-
+Pulled, thanks a lot John!
