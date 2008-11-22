@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4987 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754081AbYKUXQZ (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.189]:23777 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757405AbYKVMdY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 18:16:25 -0500
-Date: Fri, 21 Nov 2008 18:15:27 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in add_interface
-Message-ID: <20081121231527.GA27720@hash.localnet> (sfid-20081122_001629_120551_D78DAD3D)
-References: <20081118044037.GA18983@hash.localnet> <492710E6.7020506@gmail.com> <b6c5339f0811211201i384ee31dyb5b3998fe02136af@mail.gmail.com> <49271FD1.101@gmail.com> <49272BEE.2020106@gmail.com>
+	Sat, 22 Nov 2008 07:33:24 -0500
+Received: by mu-out-0910.google.com with SMTP id g7so1387210muf.1
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Nov 2008 04:33:22 -0800 (PST)
+Message-ID: <4927FC0C.10900@gmail.com> (sfid-20081122_133329_699469_CABB1F37)
+Date: Sat, 22 Nov 2008 14:33:16 +0200
+From: Maxim Levitsky <maximlevitsky@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49272BEE.2020106@gmail.com>
+To: Derek Smithies <derek@indranet.co.nz>
+CC: Bob Copeland <me@bobcopeland.com>, wally@theblackmoor.net,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ath5k-devel] Unusually low speeds with ath5k and iwl3945
+References: <492719ED.5000006@gmail.com> <20081122005240.GA27826@hash.localnet> <alpine.DEB.2.00.0811221643030.7067@monster>
+In-Reply-To: <alpine.DEB.2.00.0811221643030.7067@monster>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 21, 2008 at 11:45:18PM +0200, Maxim Levitsky wrote:
->> I double check that I use right kernel (install it again).
+Derek Smithies wrote:
+> Hi,
+>  to verify that it is a rate control issue, there is one very simple and 
+> very practical test.
 > 
-> compiled kernel again, and installed it, same results.
+> Take both ends of your link, and set them to fixed rate, and at the rate 
+> you think it should be achieving.
+> If you can achieve significantly higher throughputs with fixed rate, you 
+> know that the rate control algorithm (or interface with rate algorithm) 
+> has failed.
+> 
+> Derek.
+> 
+> On Fri, 21 Nov 2008, Bob Copeland wrote:
+> 
+>> On Fri, Nov 21, 2008 at 10:28:29PM +0200, Maxim Levitsky wrote:
+>>> I initially blamed iwl3945, then thought it got fixed, but now I have
+>>> ath5k, and speeds are low
+>>> and I suspect that both drivers has bugs regarding to speed.
+>>
+>> Quite possible, but both use mac80211 for rate control.  Which rate
+>> control algorithm are you using?
+Hi,
 
-Can you confirm that the proper mac address shows up if you do ifconfig
-or macchanger -s?  I think it's just not associating.  
+Well, iwl3945 was showing 54M all the time in iwconfig,
+also it doesn't support setting fixed rate, at least not using iwconfig.
 
-Also can you try specifying the ap again to trigger a probe after 
-ifconfig up:
-
-    $ iwconfig wlan0 ap <your AP's mac address>
-
-Though I did forget about this gem, try this too:
-
-diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
-index d7f0c10..f401691 100644
---- a/drivers/net/wireless/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath5k/pcu.c
-@@ -267,24 +267,23 @@ void ath5k_hw_get_lladdr(struct ath5k_hw *ah, u8 *mac)
-  * @mac: The card's mac address
-  *
-  * Set station id on hw using the provided mac address
-- *
-- * NOTE: This is only called during attach, don't call it
-- * on reset because it overwrites all AR5K_STA_ID1 settings.
-- * We have set_opmode (above) for reset.
-  */
- int ath5k_hw_set_lladdr(struct ath5k_hw *ah, const u8 *mac)
- {
- 	u32 low_id, high_id;
-+	u32 pcu_reg;
+ath5k never shows higher that 18M, and supports setting fixed rate, but if I set it to anything higher that 18M,
+speeds drop to 0Kbytes/s immediately.
+Speeds lower that 18M work, and affect throughput accordantly
+For most of tests speeds are ether 18M or lower, but then when I set them to 18M this didn't increase throughput.
  
- 	ATH5K_TRACE(ah->ah_sc);
- 	/* Set new station ID */
- 	memcpy(ah->ah_sta_id, mac, ETH_ALEN);
- 
-+	pcu_reg = ath5k_hw_reg_read(ah, AR5K_STA_ID1) & 0xffff0000;
-+
- 	low_id = AR5K_LOW_ID(mac);
- 	high_id = AR5K_HIGH_ID(mac);
- 
- 	ath5k_hw_reg_write(ah, low_id, AR5K_STA_ID0);
--	ath5k_hw_reg_write(ah, high_id, AR5K_STA_ID1);
-+	ath5k_hw_reg_write(ah, pcu_reg | high_id, AR5K_STA_ID1);
- 
- 	return 0;
- }
+iwl3945 was always at 54M
 
--- 
-Bob Copeland %% www.bobcopeland.com
 
+
+Best regards,
+	Maxim Levitsky
