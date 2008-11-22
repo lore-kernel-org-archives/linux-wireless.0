@@ -1,83 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60080 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbYKXNlL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 08:41:11 -0500
-Subject: Re: p54: AP mode: no data frame despite traffic indication set in
-	TIM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefan Steuerwald <salsasepp@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Chr <chunkeey@web.de>
-In-Reply-To: <f76a32050811240536n4643d477jb49f8e18cb860820@mail.gmail.com> (sfid-20081124_143654_582633_D11529BD)
-References: <f76a32050811210612i13ee251ewd6c1cab616a62529@mail.gmail.com>
-	 <f76a32050811240536n4643d477jb49f8e18cb860820@mail.gmail.com>
-	 (sfid-20081124_143654_582633_D11529BD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bTqIQMTXBIMFTZPtdF06"
-Date: Mon, 24 Nov 2008 14:41:08 +0100
-Message-Id: <1227534069.2927.5.camel@johannes.berg> (sfid-20081124_144114_502026_DF519C6F)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:60509 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754307AbYKVBlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2008 20:41:36 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 17:41:35 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
+	<zenczykowski@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Handle -ENOMEM on RX gracefully
+Date: Fri, 21 Nov 2008 17:41:33 -0800
+Message-ID: <1227318093-14825-1-git-send-email-lrodriguez@atheros.com> (sfid-20081122_024138_754815_4429C95B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We would get an oops on RX on -ENOMEM by passing
+NULL to the hardware on ath_rx_buf_link(). The oops
+would look something like this:
 
---=-bTqIQMTXBIMFTZPtdF06
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ath_rx_tasklet+0x515/0x53b
+ath9k_tasklet+0x48
+tasklet_action
+__do_softirq
+irq_exit
+do_IRQ
 
-On Mon, 2008-11-24 at 14:36 +0100, Stefan Steuerwald wrote:
+RIP: ath_rx_buf_link+0x3a
 
-> I see "dropped TX filtered frame" messages in the syslog when at the
-> same time I see wireless packet sequences as described below. Please
-> see the attached logs.
+We correct this by handling the requeue directly on
+the ath_rx_tasklet() and trying to allocate an skb
+*prior* to sending up the last hardware processed
+skb. If we run out of memory this gauranteees we have
+skbs to work with while it simply drops new received
+frames.
 
-Ah, very good, thank you.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/recv.c |   57 +++++++++++++++++--------------------
+ 1 files changed, 26 insertions(+), 31 deletions(-)
 
-> Nov 24 13:49:11 alix kernel: wlan0: STA 00:22:41:91:8e:96 aid 1 send
-> PS frame since STA not sleeping anymore
-> Nov 24 13:49:11 alix kernel: phy0: dropped TX filtered frame,
-> queue_len=3D0 PS=3D0 @135594
-
-That confirms my suspicion that something is going on with p54.
-Christian, can you review the comment in net/mac80211/main.c around line
-400, the one about races, wrt. p54?
-
-> which may explain why I don't see any data packet on the air. Also
-> attached is hostapd log.
-
-Indeed.
-
-> Another thing is the fact that we see 24(!) consecutive beacons with
-> TIM bit set until the iPod finally wakes up. It seems to be lying to
-> the AP, as it advertises a listen_interval of only 10. May this cause
-> the above?
-
-That is another issue, yes, but probably not causing it, we'd be seeing
-"expired buffered frame" messages if it was, I think.
-
-johannes
-
---=-bTqIQMTXBIMFTZPtdF06
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJKq7xAAoJEKVg1VMiehFYojkP/1rf97Ed0Pqkg3zIzXoVZsIV
-bZiB7h7iU61p5/JwQai0/SOlUGVb1tDPxjGxJ1LZkzBYt9ZYDx33HSjWhZvZw7Gp
-ygYHijxC+3pZUdXTSf5Bp7lk35wt9OHNtj7nxtjxQXlsJi5J3bpjRn7sc1CPPgac
-E8RJrwb32Ns8n4b4IK1na/9mpDCEgBpvEE7LHH9TaRWCayx54lTBh0ufie5gBF8G
-7LdNq+btNZrBNx5x2rXvhdSlMEruF00Q/+MyiRDiY8tw1vtVHk7DuJIGP84joLfx
-gH2jOxYdOh/NJhR3e9GxgpED5QWWJBc9ukw6lLjdE43F1J7Sbp050NFSBkCvG5XB
-Y4iyXLUQ2/n+1edPlhatz/so36pc4qHqfLFumdFokQkdmWIaX0LH/Po8DxqwOal0
-W7ybJFZbfUPTEaAxYzGU7ElrNAbD9usHhM0d4dEJb5Hhm3XFAql4A2topAcs+B9k
-w08HXeZvlAbJgl9DfiqHS70CMEPVQVfE7bkwrfPQdXCh1K+Yr3cGR993d4mclyxy
-fLPPCP4M5Xpf4pLSnfPfgbiOYxmisgM4SyQw7HMxBX8Znicdsn0AYTCI/1MAL42m
-vLDEmrcQcthJhzF3WyioMyNa0jG6R61mr1brQ7+0CdL9rYQuQWMV9N7vEm5CSjxl
-ZndRIDPEUIegrixb2az+
-=p/WA
------END PGP SIGNATURE-----
-
---=-bTqIQMTXBIMFTZPtdF06--
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 0cd2a91..01f37e8 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -90,29 +90,6 @@ static struct sk_buff *ath_rxbuf_alloc(struct ath_softc *sc, u32 len)
+ 	return skb;
+ }
+ 
+-static void ath_rx_requeue(struct ath_softc *sc, struct ath_buf *bf)
+-{
+-	struct sk_buff *skb;
+-
+-	ASSERT(bf != NULL);
+-
+-	if (bf->bf_mpdu == NULL) {
+-		skb = ath_rxbuf_alloc(sc, sc->sc_rxbufsize);
+-		if (skb != NULL) {
+-			bf->bf_mpdu = skb;
+-			bf->bf_buf_addr = pci_map_single(sc->pdev, skb->data,
+-						 sc->sc_rxbufsize,
+-						 PCI_DMA_FROMDEVICE);
+-			bf->bf_dmacontext = bf->bf_buf_addr;
+-
+-		}
+-	}
+-
+-	list_move_tail(&bf->list, &sc->sc_rxbuf);
+-	ath_rx_buf_link(sc, bf);
+-}
+-
+-
+ static int ath_rate2idx(struct ath_softc *sc, int rate)
+ {
+ 	int i = 0, cur_band, n_rates;
+@@ -454,7 +431,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 
+ 	struct ath_buf *bf;
+ 	struct ath_desc *ds;
+-	struct sk_buff *skb = NULL;
++	struct sk_buff *skb = NULL, *requeue_skb;
+ 	struct ieee80211_rx_status rx_status;
+ 	struct ath_hal *ah = sc->sc_ah;
+ 	struct ieee80211_hdr *hdr;
+@@ -531,17 +508,28 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		 * chain it back at the queue without processing it.
+ 		 */
+ 		if (flush)
+-			goto rx_next;
++			goto requeue;
+ 
+ 		if (!ds->ds_rxstat.rs_datalen)
+-			goto rx_next;
++			goto requeue;
+ 
+ 		/* The status portion of the descriptor could get corrupted. */
+ 		if (sc->sc_rxbufsize < ds->ds_rxstat.rs_datalen)
+-			goto rx_next;
++			goto requeue;
+ 
+ 		if (!ath_rx_prepare(skb, ds, &rx_status, &decrypt_error, sc))
+-			goto rx_next;
++			goto requeue;
++
++		/* Ensure we always have an skb to requeue once we are done
++		 * processing the current buffer's skb */
++		requeue_skb = ath_rxbuf_alloc(sc, sc->sc_rxbufsize);
++
++		/* If there is no memory we ignore the current RX'd frame,
++		 * tell hardware it can give us a new frame using the old
++		 * skb and put it at the tail of the sc->sc_rxbuf list for
++		 * processing. */
++		if (!requeue_skb)
++			goto requeue;
+ 
+ 		/* Sync and unmap the frame */
+ 		pci_dma_sync_single_for_cpu(sc->pdev, bf->bf_buf_addr,
+@@ -578,7 +566,13 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 
+ 		/* Send the frame to mac80211 */
+ 		__ieee80211_rx(sc->hw, skb, &rx_status);
+-		bf->bf_mpdu = NULL;
++
++		/* We will now give hardware our shiny new allocated skb */
++		bf->bf_mpdu = requeue_skb;
++		bf->bf_buf_addr = pci_map_single(sc->pdev, requeue_skb->data,
++					 sc->sc_rxbufsize,
++					 PCI_DMA_FROMDEVICE);
++		bf->bf_dmacontext = bf->bf_buf_addr;
+ 
+ 		/*
+ 		 * change the default rx antenna if rx diversity chooses the
+@@ -590,8 +584,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		} else {
+ 			sc->sc_rxotherant = 0;
+ 		}
+-rx_next:
+-		ath_rx_requeue(sc, bf);
++requeue:
++		list_move_tail(&bf->list, &sc->sc_rxbuf);
++		ath_rx_buf_link(sc, bf);
+ 	} while (1);
+ 
+ 	spin_unlock_bh(&sc->sc_rxbuflock);
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
