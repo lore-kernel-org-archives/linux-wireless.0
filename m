@@ -1,348 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12165 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751469AbYKOBo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 20:44:56 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 17:44:55 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <nbd@openwrt.org>,
-	<derek@indranet.co.nz>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <nbd@openwrt.org>,
-	<derek@indranet.co.nz>
-Subject: [PATCH] mac80211: make Minstrel the default rate control algorithm
-Date: Fri, 14 Nov 2008 17:44:53 -0800
-Message-ID: <1226713493-4449-1-git-send-email-lrodriguez@atheros.com> (sfid-20081115_024502_076099_54F0B072)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.deathmatch.net ([70.167.247.36]:2157 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754876AbYKWEmU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Nov 2008 23:42:20 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/2] ath5k: use mac80211 pm callbacks
+Date: Sat, 22 Nov 2008 23:41:26 -0500
+Message-Id: <1227415286-30179-3-git-send-email-me@bobcopeland.com> (sfid-20081123_054223_739027_7E38E20C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes minstrel the default rate control algorithm
-for mac80211. For more information see:
-
-http://wireless.kernel.org/en/developers/Documentation/mac80211/RateControl/minstrel
-
-If someone can come up with a better algorithm they get a prize
-(undisclosed).
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Let mac80211 take care of stopping/starting device in PM hooks.
 ---
+ drivers/net/wireless/ath5k/base.c |   34 ++++++++++------------------------
+ 1 files changed, 10 insertions(+), 24 deletions(-)
 
-Tested with rm -rf .config ; a fresh install and with the ar9170 driver.
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jberg/ar9170.git
-
- arch/arm/configs/eseries_pxa_defconfig   |    7 ++++---
- arch/arm/configs/ezx_defconfig           |   16 ++++------------
- arch/arm/configs/overo_defconfig         |    7 ++++---
- arch/arm/configs/s3c2410_defconfig       |   15 ++++-----------
- arch/mips/configs/bcm47xx_defconfig      |   18 ++++--------------
- arch/mips/configs/sb1250-swarm_defconfig |    6 +++---
- arch/powerpc/configs/pmac32_defconfig    |    7 ++++---
- arch/powerpc/configs/ppc6xx_defconfig    |    7 ++++---
- arch/powerpc/configs/ps3_defconfig       |    7 ++++---
- arch/sh/configs/ul2_defconfig            |    9 ++++-----
- arch/x86/configs/i386_defconfig          |    7 ++++---
- arch/x86/configs/x86_64_defconfig        |    7 ++++---
- net/mac80211/Kconfig                     |    8 ++++----
- 13 files changed, 51 insertions(+), 70 deletions(-)
-
-diff --git a/arch/arm/configs/eseries_pxa_defconfig b/arch/arm/configs/eseries_pxa_defconfig
-index 2307587..8d4118a 100644
---- a/arch/arm/configs/eseries_pxa_defconfig
-+++ b/arch/arm/configs/eseries_pxa_defconfig
-@@ -447,9 +447,10 @@ CONFIG_MAC80211=m
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_PID=y
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--CONFIG_MAC80211_RC_DEFAULT="pid"
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- # CONFIG_MAC80211_MESH is not set
- # CONFIG_MAC80211_LEDS is not set
- # CONFIG_MAC80211_DEBUG_MENU is not set
-diff --git a/arch/arm/configs/ezx_defconfig b/arch/arm/configs/ezx_defconfig
-index 2a84d55..b992b2e 100644
---- a/arch/arm/configs/ezx_defconfig
-+++ b/arch/arm/configs/ezx_defconfig
-@@ -566,18 +566,10 @@ CONFIG_MAC80211=m
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--# CONFIG_MAC80211_RC_DEFAULT_NONE is not set
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 4bcea5a..3a6368a 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -341,9 +341,9 @@ static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+ }
+ 
+ /* Interrupt handling */
+-static int 	ath5k_init(struct ath5k_softc *sc, bool is_resume);
++static int 	ath5k_init(struct ath5k_softc *sc);
+ static int 	ath5k_stop_locked(struct ath5k_softc *sc);
+-static int 	ath5k_stop_hw(struct ath5k_softc *sc, bool is_suspend);
++static int 	ath5k_stop_hw(struct ath5k_softc *sc);
+ static irqreturn_t ath5k_intr(int irq, void *dev_id);
+ static void 	ath5k_tasklet_reset(unsigned long data);
+ 
+@@ -645,9 +645,9 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath5k_softc *sc = hw->priv;
+ 
+-	ath5k_led_off(sc);
++	ieee80211_suspend(hw);
+ 
+-	ath5k_stop_hw(sc, true);
++	ath5k_led_off(sc);
+ 
+ 	free_irq(pdev->irq, sc);
+ 	pci_save_state(pdev);
+@@ -683,14 +683,10 @@ ath5k_pci_resume(struct pci_dev *pdev)
+ 		goto err_no_irq;
+ 	}
+ 
+-	err = ath5k_init(sc, true);
+-	if (err)
+-		goto err_irq;
+ 	ath5k_led_enable(sc);
 -
--#
--# Selecting 'y' for an algorithm will
--#
++	ieee80211_resume(hw);
+ 	return 0;
+-err_irq:
+-	free_irq(pdev->irq, sc);
++
+ err_no_irq:
+ 	pci_disable_device(pdev);
+ 	return err;
+@@ -2196,18 +2192,13 @@ ath5k_beacon_config(struct ath5k_softc *sc)
+ \********************/
+ 
+ static int
+-ath5k_init(struct ath5k_softc *sc, bool is_resume)
++ath5k_init(struct ath5k_softc *sc)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+ 	int ret, i;
+ 
+ 	mutex_lock(&sc->lock);
+ 
+-	if (is_resume && !test_bit(ATH_STAT_STARTED, sc->status))
+-		goto out_ok;
 -
--#
--# build the algorithm into mac80211.
--#
--CONFIG_MAC80211_RC_DEFAULT="pid"
--CONFIG_MAC80211_RC_PID=y
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- # CONFIG_MAC80211_MESH is not set
- CONFIG_MAC80211_LEDS=y
- # CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT is not set
-diff --git a/arch/arm/configs/overo_defconfig b/arch/arm/configs/overo_defconfig
-index 4920096..fe47064 100644
---- a/arch/arm/configs/overo_defconfig
-+++ b/arch/arm/configs/overo_defconfig
-@@ -461,9 +461,10 @@ CONFIG_MAC80211=y
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_PID=y
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--CONFIG_MAC80211_RC_DEFAULT="pid"
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- # CONFIG_MAC80211_MESH is not set
- CONFIG_MAC80211_LEDS=y
- # CONFIG_MAC80211_DEBUGFS is not set
-diff --git a/arch/arm/configs/s3c2410_defconfig b/arch/arm/configs/s3c2410_defconfig
-index 35faaea..5aebdc2 100644
---- a/arch/arm/configs/s3c2410_defconfig
-+++ b/arch/arm/configs/s3c2410_defconfig
-@@ -474,18 +474,11 @@ CONFIG_MAC80211=m
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--# CONFIG_MAC80211_RC_DEFAULT_NONE is not set
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- 
--#
--# Selecting 'y' for an algorithm will
--#
+-	__clear_bit(ATH_STAT_STARTED, sc->status);
 -
--#
--# build the algorithm into mac80211.
--#
--CONFIG_MAC80211_RC_DEFAULT="pid"
--CONFIG_MAC80211_RC_PID=y
- CONFIG_MAC80211_MESH=y
- CONFIG_MAC80211_LEDS=y
- # CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT is not set
-diff --git a/arch/mips/configs/bcm47xx_defconfig b/arch/mips/configs/bcm47xx_defconfig
-index d869433..da2fbd6 100644
---- a/arch/mips/configs/bcm47xx_defconfig
-+++ b/arch/mips/configs/bcm47xx_defconfig
-@@ -736,20 +736,10 @@ CONFIG_MAC80211=m
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--# CONFIG_MAC80211_RC_DEFAULT_SIMPLE is not set
--# CONFIG_MAC80211_RC_DEFAULT_NONE is not set
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "mode %d\n", sc->opmode);
+ 
+ 	/*
+@@ -2239,15 +2230,12 @@ ath5k_init(struct ath5k_softc *sc, bool is_resume)
+ 	for (i = 0; i < AR5K_KEYTABLE_SIZE; i++)
+ 		ath5k_hw_reset_key(ah, i);
+ 
+-	__set_bit(ATH_STAT_STARTED, sc->status);
 -
--#
--# Selecting 'y' for an algorithm will
--#
--
--#
--# build the algorithm into mac80211.
--#
--CONFIG_MAC80211_RC_DEFAULT="pid"
--CONFIG_MAC80211_RC_PID=y
--# CONFIG_MAC80211_RC_SIMPLE is not set
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- CONFIG_MAC80211_LEDS=y
- # CONFIG_MAC80211_DEBUGFS is not set
- # CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT is not set
-diff --git a/arch/mips/configs/sb1250-swarm_defconfig b/arch/mips/configs/sb1250-swarm_defconfig
-index a9acaa2..1cc5436 100644
---- a/arch/mips/configs/sb1250-swarm_defconfig
-+++ b/arch/mips/configs/sb1250-swarm_defconfig
-@@ -400,7 +400,7 @@ CONFIG_MAC80211=m
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_DEFAULT_PID=y
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
- # CONFIG_MAC80211_RC_DEFAULT_NONE is not set
+ 	/* Set ack to be sent at low bit-rates */
+ 	ath5k_hw_set_ack_bitrate_high(ah, false);
  
- #
-@@ -410,8 +410,8 @@ CONFIG_MAC80211_RC_DEFAULT_PID=y
- #
- # build the algorithm into mac80211.
- #
--CONFIG_MAC80211_RC_DEFAULT="pid"
--CONFIG_MAC80211_RC_PID=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
-+CONFIG_MAC80211_RC_MINSTREL=y
- # CONFIG_MAC80211_MESH is not set
- # CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT is not set
- # CONFIG_MAC80211_DEBUG is not set
-diff --git a/arch/powerpc/configs/pmac32_defconfig b/arch/powerpc/configs/pmac32_defconfig
-index 80481f2..ee548fa 100644
---- a/arch/powerpc/configs/pmac32_defconfig
-+++ b/arch/powerpc/configs/pmac32_defconfig
-@@ -598,9 +598,10 @@ CONFIG_MAC80211=m
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_PID=y
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--CONFIG_MAC80211_RC_DEFAULT="pid"
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- # CONFIG_MAC80211_MESH is not set
- CONFIG_MAC80211_LEDS=y
- # CONFIG_MAC80211_DEBUG_MENU is not set
-diff --git a/arch/powerpc/configs/ppc6xx_defconfig b/arch/powerpc/configs/ppc6xx_defconfig
-index 3c6dbde..107df52 100644
---- a/arch/powerpc/configs/ppc6xx_defconfig
-+++ b/arch/powerpc/configs/ppc6xx_defconfig
-@@ -867,9 +867,10 @@ CONFIG_MAC80211=m
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_PID=y
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--CONFIG_MAC80211_RC_DEFAULT="pid"
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- CONFIG_MAC80211_MESH=y
- CONFIG_MAC80211_LEDS=y
- CONFIG_MAC80211_DEBUGFS=y
-diff --git a/arch/powerpc/configs/ps3_defconfig b/arch/powerpc/configs/ps3_defconfig
-index b6eee7c..49abd26 100644
---- a/arch/powerpc/configs/ps3_defconfig
-+++ b/arch/powerpc/configs/ps3_defconfig
-@@ -413,9 +413,10 @@ CONFIG_MAC80211=m
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_PID=y
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--CONFIG_MAC80211_RC_DEFAULT="pid"
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- # CONFIG_MAC80211_MESH is not set
- # CONFIG_MAC80211_LEDS is not set
- # CONFIG_MAC80211_DEBUGFS is not set
-diff --git a/arch/sh/configs/ul2_defconfig b/arch/sh/configs/ul2_defconfig
-index 9afff67..c44dd07 100644
---- a/arch/sh/configs/ul2_defconfig
-+++ b/arch/sh/configs/ul2_defconfig
-@@ -389,11 +389,10 @@ CONFIG_MAC80211=y
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_PID=y
--# CONFIG_MAC80211_RC_MINSTREL is not set
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--# CONFIG_MAC80211_RC_DEFAULT_MINSTREL is not set
--CONFIG_MAC80211_RC_DEFAULT="pid"
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- # CONFIG_MAC80211_MESH is not set
- # CONFIG_MAC80211_LEDS is not set
- # CONFIG_MAC80211_DEBUG_MENU is not set
-diff --git a/arch/x86/configs/i386_defconfig b/arch/x86/configs/i386_defconfig
-index 13b8c86..a549ca2 100644
---- a/arch/x86/configs/i386_defconfig
-+++ b/arch/x86/configs/i386_defconfig
-@@ -690,9 +690,10 @@ CONFIG_MAC80211=y
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_PID=y
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--CONFIG_MAC80211_RC_DEFAULT="pid"
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- # CONFIG_MAC80211_MESH is not set
- CONFIG_MAC80211_LEDS=y
- # CONFIG_MAC80211_DEBUGFS is not set
-diff --git a/arch/x86/configs/x86_64_defconfig b/arch/x86/configs/x86_64_defconfig
-index f0a03d7..0340af5 100644
---- a/arch/x86/configs/x86_64_defconfig
-+++ b/arch/x86/configs/x86_64_defconfig
-@@ -680,9 +680,10 @@ CONFIG_MAC80211=y
- #
- # Rate control algorithm selection
- #
--CONFIG_MAC80211_RC_PID=y
--CONFIG_MAC80211_RC_DEFAULT_PID=y
--CONFIG_MAC80211_RC_DEFAULT="pid"
-+CONFIG_MAC80211_RC_MINSTREL=y
-+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
-+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-+CONFIG_MAC80211_RC_DEFAULT="minstrel"
- # CONFIG_MAC80211_MESH is not set
- CONFIG_MAC80211_LEDS=y
- # CONFIG_MAC80211_DEBUGFS is not set
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 7f710a2..60c1616 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -16,20 +16,20 @@ menu "Rate control algorithm selection"
+ 	mod_timer(&sc->calib_tim, round_jiffies(jiffies +
+ 			msecs_to_jiffies(ath5k_calinterval * 1000)));
  
- config MAC80211_RC_PID
- 	bool "PID controller based rate control algorithm" if EMBEDDED
--	default y
- 	---help---
- 	  This option enables a TX rate control algorithm for
- 	  mac80211 that uses a PID controller to select the TX
- 	  rate.
+-out_ok:
+ 	ret = 0;
+ done:
+ 	mmiowb();
+@@ -2302,7 +2290,7 @@ ath5k_stop_locked(struct ath5k_softc *sc)
+  * stop is preempted).
+  */
+ static int
+-ath5k_stop_hw(struct ath5k_softc *sc, bool is_suspend)
++ath5k_stop_hw(struct ath5k_softc *sc)
+ {
+ 	int ret;
  
- config MAC80211_RC_MINSTREL
--	bool "Minstrel"
-+	bool "Minstrel" if EMBEDDED
-+	default y
- 	---help---
- 	  This option enables the 'minstrel' TX rate control algorithm
+@@ -2333,8 +2321,6 @@ ath5k_stop_hw(struct ath5k_softc *sc, bool is_suspend)
+ 		}
+ 	}
+ 	ath5k_txbuf_free(sc, sc->bbuf);
+-	if (!is_suspend)
+-		__clear_bit(ATH_STAT_STARTED, sc->status);
  
- choice
- 	prompt "Default rate control algorithm"
--	default MAC80211_RC_DEFAULT_PID
-+	default MAC80211_RC_DEFAULT_MINSTREL
- 	---help---
- 	  This option selects the default rate control algorithm
- 	  mac80211 will use. Note that this default can still be
-@@ -55,8 +55,8 @@ endchoice
+ 	mmiowb();
+ 	mutex_unlock(&sc->lock);
+@@ -2733,12 +2719,12 @@ ath5k_reset_wake(struct ath5k_softc *sc)
  
- config MAC80211_RC_DEFAULT
- 	string
--	default "pid" if MAC80211_RC_DEFAULT_PID
- 	default "minstrel" if MAC80211_RC_DEFAULT_MINSTREL
-+	default "pid" if MAC80211_RC_DEFAULT_PID
- 	default ""
+ static int ath5k_start(struct ieee80211_hw *hw)
+ {
+-	return ath5k_init(hw->priv, false);
++	return ath5k_init(hw->priv);
+ }
  
- endmenu
+ static void ath5k_stop(struct ieee80211_hw *hw)
+ {
+-	ath5k_stop_hw(hw->priv, false);
++	ath5k_stop_hw(hw->priv);
+ }
+ 
+ static int ath5k_add_interface(struct ieee80211_hw *hw,
 -- 
-1.5.6.3
+1.5.4.2.182.gb3092
+
 
