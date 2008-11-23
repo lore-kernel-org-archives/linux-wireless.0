@@ -1,128 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:57172 "EHLO
-	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbYKVJMJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38450 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757366AbYKWLra (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 04:12:09 -0500
-Received: from hp4000.wilsoft.nl ([192.168.4.5])
-	by linux.wilsoft.nl with esmtp (Exim 4.69)
-	(envelope-from <listsrv@wilsoft.nl>)
-	id 1L3oX4-0005El-KK
-	for linux-wireless@vger.kernel.org; Sat, 22 Nov 2008 10:12:02 +0100
-From: "W. van den Akker" <listsrv@wilsoft.nl>
-To: linux-wireless@vger.kernel.org
-Subject: Ath9k wont go in properly AP mode
-Date: Sat, 22 Nov 2008 10:12:01 +0100
-References: <200811220953.05558.listsrv@wilsoft.nl> <200811221007.27348.listsrv@wilsoft.nl>
-In-Reply-To: <200811221007.27348.listsrv@wilsoft.nl>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811221012.01733.listsrv@wilsoft.nl> (sfid-20081122_101215_776895_63F74EF4)
+	Sun, 23 Nov 2008 06:47:30 -0500
+Subject: Re: [PATCH] iwlwifi: fix build warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wu Fengguang <fengguang.wu@intel.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20081123111812.GA15611@localhost> (sfid-20081123_121840_934709_B7C73186)
+References: <20081123111812.GA15611@localhost>
+	 (sfid-20081123_121840_934709_B7C73186)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-reWxFV7AdFLjqMJ/Co+t"
+Date: Sun, 23 Nov 2008 12:47:22 +0100
+Message-Id: <1227440843.3599.44.camel@johannes.berg> (sfid-20081123_124802_044256_FE8B6BFF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Hi,
+--=-reWxFV7AdFLjqMJ/Co+t
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-My ath9k refuses to go into AP mode.
+On Sun, 2008-11-23 at 19:18 +0800, Wu Fengguang wrote:
+> iwl_escape_essid() is only used in debugging code for now.
+> So define it only with CONFIG_IWL3945_DEBUG enabled.
 
-I am using:
-- a 5416 wireless card (WMP300Nv2)
-- linuxkernel 2.7.27.6
-- hostapd 0.6.5
-- wireless-testing 11-11-2008
+that function has been removed recently from this file
 
-When I try to set the ath9k in AP with hostapd I get:
-xxx:/home/xxx# hostapd -dd /etc/hostapd/hostapd.conf
-Configuration file: /etc/hostapd/hostapd.conf
-ctrl_interface_group=0
-Opening raw packet socket for ifindex 0
-BSS count 1, BSSID mask ff:ff:ff:ff:ff:ff (0 bits)
-SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
-Failed to update rate sets in kernel module
-RATE[0] rate=10 flags=0x2
-RATE[1] rate=20 flags=0x2
-RATE[2] rate=55 flags=0x2
-RATE[3] rate=110 flags=0x2
-RATE[4] rate=60 flags=0x0
-RATE[5] rate=90 flags=0x0
-RATE[6] rate=120 flags=0x0
-RATE[7] rate=180 flags=0x0
-RATE[8] rate=240 flags=0x0
-RATE[9] rate=360 flags=0x0
-RATE[10] rate=480 flags=0x0
-RATE[11] rate=540 flags=0x0
-Could not set passive scanning: Unknown error 4294967295
-Flushing old station entries
-Deauthenticate all stations
-Mode: IEEE 802.11g  Channel: 8  Frequency: 2447 MHz
-Failed to set CTS protect in kernel driver
-Failed to set Short Slot Time option in kernel driver
-Could not set preamble for kernel driver
-ioctl[SIOCSIWFRAG]: Operation not supported
-Could not set fragmentation threshold for kernel driver
-wlan0: Unable to setup interface.
-Flushing old station entries
-Deauthenticate all stations
-rmdir[ctrl_interface]: No such file or directory
+johannes
 
-iwconfig shows:
-wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.447 GHz  Tx-Power=27 dBm
-          Retry min limit:7   RTS thr=2347 B   Fragment thr=2346 B
-          Encryption key:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+--=-reWxFV7AdFLjqMJ/Co+t
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-the SSID entry is missing here.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-and iw list shows:
-Wiphy phy0
-        Band 1:
-                Frequencies:
-                        * 2412 MHz
-                        * 2417 MHz
-                        * 2422 MHz
-                        * 2427 MHz
-                        * 2432 MHz
-                        * 2437 MHz
-                        * 2442 MHz
-                        * 2447 MHz
-                        * 2452 MHz
-                        * 2457 MHz
-                        * 2462 MHz
-                Bitrates:
-                        * 1.0 Mbps
-                        * 2.0 Mbps
-                        * 5.5 Mbps
-                        * 11.0 Mbps
-                        * 6.0 Mbps
-                        * 9.0 Mbps
-                        * 12.0 Mbps
-                        * 18.0 Mbps
-                        * 24.0 Mbps
-                        * 36.0 Mbps
-                        * 48.0 Mbps
-                        * 54.0 Mbps
-        Supported interface modes:
-                 * IBSS
-                 * Station
-                 * AP
-                 * AP(VLAN)
-                 * Monitor
+iQIcBAABAgAGBQJJKULHAAoJEKVg1VMiehFYhsAQAKzY1w5pTeI/IjnAsLj0RHrI
+2GNtEVBEd2O8PXbMrdcKaqYYFS3EngEabnn2XLUP5Qd3CrUDq5D79I/Czp+GfSwK
+0F5jK8y8ex1ufYoxalLDphclorLy7QjsGMiGTFpGk6EmdaK/dRLmVXeDgLWLfSNn
+SLgSZxOBYv7ohq5K1PyAdm7hBW7dw88tD5gH4ltUFmOeNTRR4ljTi8PsRJSvKU2A
+EkDUiW25ZN7mXt++ixm7OB5/QPu3rKqYSQRxhv38AP/v71Jq1exPzCDJY6C8jQRu
+70h1fqadUcuaJvCNKm9lP5/Kf8eWI7QseSbgnuvvX9ti1AUg9FavhClLAGoYkUSK
+/TpwMRySIZGv2ewGsed4LeSHszOxWvhEGnAWHMzvjcTuiUV65br45DCaCLRSqH8M
+4NVpne66FmuNptjpM5tgCbnoRY86Au51Oz9de1KoK+FhX8rAw9iceOApG6uI4VgI
+JDKBuktFyPSeQ4kclKKVBGv+Vjh/dqTjcWqFrhrIL/jAkHttLFhiL++tyAHEdko3
+9K/cAH1CBQUpSkv3wXVtrcd46FDoNtlsh9HbvZeUP5w+bYPFHK5MYsWIs/KrTLAV
+Ho6jtBWlWTSwsTpfp+O08Ey4E/iluOYYiMeFlCNeHcSBl0mf0cosRsuhixwmxKsZ
+mGHg28JQIj6zQuIz0qVV
+=XIVl
+-----END PGP SIGNATURE-----
 
-Or am I something missing to get it work. A previous version did set the
-ath9k ok as AP, however it hanged the kernel after some time.
-
-TIA,
-Willem
-
-
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+--=-reWxFV7AdFLjqMJ/Co+t--
 
