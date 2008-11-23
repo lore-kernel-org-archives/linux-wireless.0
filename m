@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.freemail.gr ([81.171.104.132]:47393 "EHLO smtp.freemail.gr"
+Received: from mga03.intel.com ([143.182.124.21]:39445 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752002AbYKLXcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 18:32:11 -0500
-Received: from [192.168.1.2] (adsl36-212.lsf.forthnet.gr [79.103.163.212])
-	by smtp.freemail.gr (Postfix) with ESMTP id AC5A53380F1
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 01:20:53 +0200 (EET)
-From: Karakontakis Apostolos <akarako@freemail.gr>
-To: linux-wireless@vger.kernel.org
-Subject: zd1211rw problem
-Date: Thu, 13 Nov 2008 01:20:48 +0200
+	id S1753848AbYKWLSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2008 06:18:25 -0500
+Date: Sun, 23 Nov 2008 19:18:12 +0800
+From: Wu Fengguang <fengguang.wu@intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iwlwifi: fix build warning
+Message-ID: <20081123111812.GA15611@localhost> (sfid-20081123_121840_934709_B7C73186)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200811130120.48659.akarako@freemail.gr> (sfid-20081113_003214_098900_07B3B635)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+iwl_escape_essid() is only used in debugging code for now.
+So define it only with CONFIG_IWL3945_DEBUG enabled.
 
-I have recenetly bought a usb wireless stick that requires zd1211rw driver 
-(ZyDAS ZD1211B chipset).With kernel 2.6.24 it works ok but with kernel 
-2.6.27.2 it dos not.
-
-1. I have the latest firmware in /lib/firmware/zd1211
-2. i have CONFIG_MAC80211 and CONFIG_FW_LOADER = y
-3. i have CONFIG_ZD1211RW=m
-
-when i insert the module i get the following errors
-
-Nov 13 01:02:20 hakarako kernel: mac80211: Unknown parameter 
-`ieee80211_regdom'
-Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol ieee80211_free_hw
-Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol ieee80211_alloc_hw
-Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-ieee80211_register_hw
-Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-ieee80211_tx_status_irqsafe
-Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-ieee80211_wake_queues
-Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-ieee80211_stop_queues
-Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol 
-ieee80211_unregister_hw
-Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol ieee80211_beacon_get
-Nov 13 01:02:20 hakarako kernel: zd1211rw: Unknown symbol ieee80211_rx_irqsafe
+Signed-off-by: Wu Fengguang <wfg@linux.intel.com>
+---
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index c89365e..412f5d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -70,6 +70,7 @@ static int scan_tx_ant[3] = {
+ 
+ 
+ 
++#ifdef CONFIG_IWL3945_DEBUG
+ static int iwl_is_empty_essid(const char *essid, int essid_len)
+ {
+ 	/* Single white space is for Linksys APs */
+@@ -111,6 +112,7 @@ static const char *iwl_escape_essid(const char *essid, u8 essid_len)
+ 	*d = '\0';
+ 	return escaped;
+ }
++#endif
+ 
+ /**
+  * iwl_scan_cancel - Cancel any currently executing HW scan
