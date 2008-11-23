@@ -1,37 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:25294 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbYKML4i (ORCPT
+Received: from sd-green-bigip-145.dreamhost.com ([208.97.132.145]:53711 "EHLO
+	spunkymail-a2.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751772AbYKWH3y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 06:56:38 -0500
-To: "Mark Ryden" <markryde@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: Master mode in iw
-References: <dac45060811130246n41c9983fx2f06f85946b20c1c@mail.gmail.com>
-	<87ej1f6ggq.fsf@nokia.com>
-	<dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Thu, 13 Nov 2008 13:56:24 +0200
-In-Reply-To: <dac45060811130349k3153fcd6i9e6f35f9df3f52ef@mail.gmail.com> (ext Mark Ryden's message of "Thu\, 13 Nov 2008 13\:49\:01 +0200")
-Message-ID: <87wsf74z6f.fsf@nokia.com> (sfid-20081113_125642_017806_CCB57CC2)
+	Sun, 23 Nov 2008 02:29:54 -0500
+From: Yuval Hager <yuval@avramzon.net>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: BCM4312 Fails when xdm is started
+Date: Sun, 23 Nov 2008 09:26:25 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	bcm43xx-dev@lists.berlios.de, LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Peter Stuge <peter@stuge.se>
+References: <200811151801.02369.yuval@avramzon.net> <492825F8.6020606@lwfinger.net> <200811221654.09399.mb@bu3sch.de>
+In-Reply-To: <200811221654.09399.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart6376066.XXdu72Ki2y";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200811230926.28948.yuval@avramzon.net> (sfid-20081123_083018_271102_ABA82B77)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mark Ryden <markryde@gmail.com> writes:
+--nextPart6376066.XXdu72Ki2y
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> Thanks for you quick response. I know that I can set master mode
-> with hostapd.
+On Saturday 22 November 2008, Michael Buesch wrote:
+> On Saturday 22 November 2008 16:32:08 Larry Finger wrote:
+> > Michael Buesch wrote:
+> > > Somebody disabled MMIO and busmastering.
+> > > And somebody cleared the CACHE_LINE_SIZE register.
+> >
+> > Are these all the read/write bits in the configuration area? Should I
+> > conclude that someone zeroed this area?
 >
-> My question is - is there something inherent which prevents
-> implementing it with "iw"? When comparing to the old set of tools,
-> which includes iwconifg, "iwconfig wlan0 mode Master" works on some
-> interfaces.
+> Yeah well. I'm not sure. It _looks_ like someone completely cut the
+> physical power line to the card and it reset its complete PCI config.
+> So well, X does poke with the PCI devices. But as you said it also happens
+> if X doesn't run, I'd rule that out.
+> But I would not rule out a fucked BIOS, yet.
+> Does the BIOS have any powersave options and/or spread-spectrum options f=
+or
+> the PCI-bus? Can you try to turn them all off?
+> I have a machine that has PCI-slot autodetect and turns of the PCI clock,
+> if it doesn't detect a card on that slot. Also turn that off, if you have
+> it, too.
+>
+> > In case the kernel memory diagnostics don't help, is there any way to
+> > trap writes to the configuration registers?
+>
+> Well, if we have random memory corruption, that can hit memory and MMIO.
+> It doesn't hurt to turn on all debugging options. Often you get some hint
+> by doing so.
 
-Just guessing, but most probably because there are no drivers which
-use nl80211 and support AP mode without hostapd, so nobody hasn't
-bothered to implement it, yet.
+I've enabled all CONFIG*DEBUG I could find relevant, and ran the system wit=
+h:
+'debug memory_corruption_check=3D1 devres.log=3D1 debug_objects debugpat=20
+acpi.debug_layer=3D0x00410002 acpi.debug_level=3D0xffffffff'
+but no hint appears in the logs during the failure.
 
--- 
-Kalle Valo
+I did find that certain events recreate the problem immediately. if I 'xset=
+=20
+dpms force standby' it happens on wakeup. 'xset -dpms' causes this=20
+immediately as well. If I load X without DPMS support, it still happens aft=
+er=20
+the monitor is waken up from (hardware?) blackness.
+
+=2D-yuval
+
+--nextPart6376066.XXdu72Ki2y
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkkpBaQACgkQl7qmwPqEj9+5xwCePVEdxd06VeZD/7J9W4W37qro
+xN8AniPoNoQykUukczuFFu11P+zm8Mom
+=RM4s
+-----END PGP SIGNATURE-----
+
+--nextPart6376066.XXdu72Ki2y--
