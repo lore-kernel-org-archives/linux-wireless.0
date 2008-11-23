@@ -1,86 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55291 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752772AbYKSM3g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 07:29:36 -0500
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240811190424v4b9074e5u4e679bea278b1f3@mail.gmail.com> (sfid-20081119_132502_191402_DA089F51)
-References: <1226969241.4014.24.camel@johannes.berg>
-	 <1227001390.4014.43.camel@johannes.berg>
-	 <1ba2fa240811180613g48c94199s67e4334e89282e76@mail.gmail.com>
-	 <1227055693.4014.95.camel@johannes.berg>
-	 <1ba2fa240811190121h3ff51824o90b72a206192e793@mail.gmail.com>
-	 <1227094832.26243.10.camel@johannes.berg>
-	 <1ba2fa240811190424v4b9074e5u4e679bea278b1f3@mail.gmail.com>
-	 (sfid-20081119_132502_191402_DA089F51)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2ARwvjIcdMNmH8m/NHzF"
-Date: Wed, 19 Nov 2008 13:28:57 +0100
-Message-Id: <1227097737.26243.28.camel@johannes.berg> (sfid-20081119_132939_630525_7FD5CF77)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:33953 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756717AbYKWMU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2008 07:20:58 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Yuval Hager <yuval@avramzon.net>
+Subject: Re: BCM4312 Fails when xdm is started
+Date: Sun, 23 Nov 2008 13:20:30 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	bcm43xx-dev@lists.berlios.de, LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Peter Stuge <peter@stuge.se>
+References: <200811151801.02369.yuval@avramzon.net> <200811221654.09399.mb@bu3sch.de> <200811231350.00207.yuval@avramzon.net>
+In-Reply-To: <200811231350.00207.yuval@avramzon.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200811231320.30289.mb@bu3sch.de> (sfid-20081123_132106_125562_023F34F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 23 November 2008 12:49:55 Yuval Hager wrote:
+> [  182.891400] ****** b43: B43_MMIO_MACCTL 0x840A0503
+> [  182.891409] ****** b43: SSB_TMSLOW 0x20150000
+> [  258.299027] irq 10: nobody cared (try booting with the "irqpoll" option)
 
---=-2ARwvjIcdMNmH8m/NHzF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-11-19 at 14:24 +0200, Tomas Winkler wrote:
-> On Wed, Nov 19, 2008 at 1:40 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2008-11-19 at 11:21 +0200, Tomas Winkler wrote:
-> >
-> >> > Indeed. One would seem to be the buffer list itself, which also need=
-s to
-> >> > fit within a 40-bit mask with 256 alignment (rxq->bd), the rb_stts n=
-eeds
-> >> > 16-byte alignment which probably is always satisfied, but I'm not su=
-re,
-> >> > you'll need to research the alignment guarantees.
-> >>
-> >> Note these are allocated using persistent calls and not kmalloc I hope
-> >> at least does are page alignment.
-> >
-> > Good point. On powerpc at least that uses alloc_pages internally.
->=20
-> Not sure if if wouldn't be better just work directly with pages in RX?
+Does the kernel disable the PCI device, if it ignores the IRQ?
 
-Well, in theory yes, but it's not possible to have skb->data point to a
-separate page rather than a kmalloc area. And while you could allocate
-an skb with very little headroom and the rest of the skb data in the
-fraglist with pages, mac80211 couldn't handle it.
 
-johannes
+> [  258.299038] Pid: 0, comm: swapper Not tainted 2.6.28-rc5 #15
+> [  258.299043] Call Trace:
+> [  258.299062]  [<c0148d9a>] __report_bad_irq+0x24/0x69
+> [  258.299071]  [<c0148da1>] __report_bad_irq+0x2b/0x69
+> [  258.299080]  [<c0148ec8>] note_interrupt+0xe9/0x12d
+> [  258.299090]  [<c014976d>] handle_level_irq+0x87/0xba
+> [  258.299101]  [<c010564e>] do_IRQ+0x89/0x9f
+> [  258.299109]  [<c0103ea8>] common_interrupt+0x28/0x30
+> [  258.299119]  [<c0125406>] do_softirq+0x37/0x4d
+> [  258.299127]  [<c0125301>] __do_softirq+0x62/0x130
+> [  258.299135]  [<c0125406>] do_softirq+0x37/0x4d
+> [  258.299142]  [<c0105653>] do_IRQ+0x8e/0x9f
+> [  258.299150]  [<c0103ea8>] common_interrupt+0x28/0x30
+> [  258.299161]  [<c0108682>] default_idle+0x2f/0x4c
+> [  258.299168]  [<c0101a20>] cpu_idle+0x63/0x77
+> [  258.299173] handlers:
+> [  258.299176] [<f7906455>] (b43_interrupt_handler+0x0/0x1b7 [b43])
+> [  258.299212] Disabling IRQ #10
+> [  258.315148] b43-phy0: Radio hardware status changed to DISABLED
+> [  258.315160] b43-phy0: ******** B43_B43_MMIO_RADIO_HWENABLED_HI 0xFFFFFFFF
+> [  258.342341] kobject: 'rfkill0' (f43b7d78): kobject_uevent_env
+> [  258.342367] kobject: 'rfkill0' (f43b7d78): fill_kobj_path: path = '/class/rfkill/rfkill0'
+> [  258.342418] kobject: 'ssb0:0' (f40dfcd8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:02.0/0000:02:00.0/ssb0:0'
+> [  258.391951] 
+> [  258.391956] =================================
+> [  258.391964] [ INFO: inconsistent lock state ]
+> [  258.391971] 2.6.28-rc5 #15
+> [  258.391975] ---------------------------------
+> [  258.391980] inconsistent {in-hardirq-W} -> {hardirq-on-W} usage.
+> [  258.391987] X/3965 [HC0[0]:SC1[1]:HE1:SE0] takes:
+> [  258.391993]  (&irq_desc_lock_class){++..}, at: [<c0148c60>] try_one_irq+0x15/0xe8
+> [  258.392016] {in-hardirq-W} state was registered at:
+> [  258.392021]   [<c013bc07>] __lock_acquire+0x490/0x6bc
+> [  258.392034]   [<c013be8d>] lock_acquire+0x5a/0x74
+> [  258.392043]   [<c01496f8>] handle_level_irq+0x12/0xba
+> [  258.392053]   [<c03c4842>] _spin_lock+0x1c/0x45
+> [  258.392066]   [<c01496f8>] handle_level_irq+0x12/0xba
+> [  258.392076]   [<c01496f8>] handle_level_irq+0x12/0xba
+> [  258.392085]   [<c010564e>] do_IRQ+0x89/0x9f
+> [  258.392096]   [<c0103ea8>] common_interrupt+0x28/0x30
+> [  258.392105]   [<c03c4cc2>] _spin_unlock_irqrestore+0x37/0x39
+> [  258.392115]   [<c01487e6>] __setup_irq+0x17a/0x1f3
+> [  258.392124]   [<c05ce79d>] start_kernel+0x285/0x2f1
+> [  258.392140]   [<ffffffff>] 0xffffffff
+> [  258.392159] irq event stamp: 1844456
+> [  258.392164] hardirqs last  enabled at (1844456): [<c03c4b6f>] _spin_unlock_irq+0x20/0x23
+> [  258.392175] hardirqs last disabled at (1844455): [<c03c4ac3>] _spin_lock_irq+0xa/0x4b
+> [  258.392186] softirqs last  enabled at (1844310): [<c0125406>] do_softirq+0x37/0x4d
+> [  258.392198] softirqs last disabled at (1844447): [<c0125406>] do_softirq+0x37/0x4d
 
---=-2ARwvjIcdMNmH8m/NHzF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+That's a bit weird. Looks like another bug in the IRQ layer.
 
-iQIcBAABAgAGBQJJJAaFAAoJEKVg1VMiehFY53oP/3xyJxL9BXbnRQry9bzPB7JL
-73f0V8AAHxU1Oo5Nd/Bqin7IKIJ4xsNhbNSoYdC0McDsJPGG2uqPWtjJJRMutSU2
-8ILI2U8RQThhUWz8Ta2aMAX46IfdQ1JfTFTk2COAIC6RygOSFU3x09olALX4DWx9
-4ehjA+v3QdxV6NgnSuoaeE0NSRVKZBgpCsO7fyxV0ABXYjYovXd2ak6/guvIRrdz
-Kl7nnhLGMOdcQjY4/Ts0xgJzQl21DvXGv/jHADW0gzO0FMfgmsrieKp6Csovlu+z
-HHxS0oK3v0hHep2tCw4W6jViPx+MggQ63U5nSsta60e9hzhHgMkoLLgp9QG1RITX
-sKKWYhj8Tdd0jrLzFof6JUM8K3kSTR0ZEoj8bBhnuu48ZXUBjPcrlil57x5X0d8u
-F60hHDqVzzXm5piaiP8A0Z5jwiN7/8AfWjGBZx1BnCWztcsIqMDZTHsHmk5Umbb/
-z5em/qCWkcEKPaRR5Lx8qjwkMBXvsEdaoazAJ7535Y9YcHMAk6qjopM/CvjjKU4b
-YmOBKHG95fTes14BjCcw9E76iEYQQKfh4tNHaf7LaoRNwShPGrytMTZo3iOMofaX
-YyWufE2P9aOC75wSacDhCbZ7I3FO1gmfXwRIopwa1EPTwxGRy2AAitsyxBu2YkJB
-DxSGEv+XPv3yZV3dYvxF
-=P4Et
------END PGP SIGNATURE-----
 
---=-2ARwvjIcdMNmH8m/NHzF--
+> [  258.392208] 
+> [  258.392209] other info that might help us debug this:
+> [  258.392215] no locks held by X/3965.
+> [  258.392219] 
+> [  258.392220] stack backtrace:
+> [  258.392226] Pid: 3965, comm: X Not tainted 2.6.28-rc5 #15
+> [  258.392231] Call Trace:
+> [  258.392241]  [<c0139175>] print_usage_bug+0x13d/0x146
+> [  258.392249]  [<c013a2ff>] mark_lock+0x4b1/0x7c7
+> [  258.392257]  [<c013bc7e>] __lock_acquire+0x507/0x6bc
+> [  258.392266]  [<c013be8d>] lock_acquire+0x5a/0x74
+> [  258.392275]  [<c0148c60>] try_one_irq+0x15/0xe8
+> [  258.392283]  [<c03c4842>] _spin_lock+0x1c/0x45
+> [  258.392291]  [<c0148c60>] try_one_irq+0x15/0xe8
+> [  258.392300]  [<c0148c60>] try_one_irq+0x15/0xe8
+> [  258.392308]  [<c03c4b6f>] _spin_unlock_irq+0x20/0x23
+> [  258.392317]  [<c0148d33>] poll_spurious_irqs+0x0/0x43
+> [  258.392326]  [<c0148d55>] poll_spurious_irqs+0x22/0x43
+> [  258.392338]  [<c012874a>] run_timer_softirq+0x101/0x156
+> [  258.392346]  [<c0125321>] __do_softirq+0x82/0x130
+> [  258.392354]  [<c0125406>] do_softirq+0x37/0x4d
+> [  258.392362]  [<c0105653>] do_IRQ+0x8e/0x9f
+> [  258.392370]  [<c0103ea8>] common_interrupt+0x28/0x30
 
+-- 
+Greetings Michael.
