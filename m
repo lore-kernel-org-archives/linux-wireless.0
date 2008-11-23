@@ -1,118 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:23148 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752293AbYKZTOB (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:46189 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751178AbYKWVJm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 14:14:01 -0500
-Received: by fk-out-0910.google.com with SMTP id 18so537595fkq.5
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 11:14:00 -0800 (PST)
-Message-ID: <45e8e6c40811261113k55d5eb2ap72c84b19a5fba5b9@mail.gmail.com> (sfid-20081126_201406_998885_BAE4A84E)
-Date: Wed, 26 Nov 2008 11:13:59 -0800
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: ath5k: mesh mode broken by commit "ath5k: Update PCU code"
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <40f31dec0811260729o4a239826m9f72238beed7a497@mail.gmail.com>
+	Sun, 23 Nov 2008 16:09:42 -0500
+Message-ID: <4929C68E.6080401@lwfinger.net> (sfid-20081123_220947_137687_12A27B67)
+Date: Sun, 23 Nov 2008 15:09:34 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>, Yuval Hager <yuval@avramzon.net>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: BCM4312 Fails when xdm is started
+References: <200811151801.02369.yuval@avramzon.net> <200811221654.09399.mb@bu3sch.de> <200811231350.00207.yuval@avramzon.net> <200811231320.30289.mb@bu3sch.de> <20081123204631.21061.qmail@stuge.se>
+In-Reply-To: <20081123204631.21061.qmail@stuge.se>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <45e8e6c40811251754q4b08be7dn96308f3ae9f10123@mail.gmail.com>
-	 <40f31dec0811260729o4a239826m9f72238beed7a497@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Nick, that helps me understand the problem.  On my hardware
-(AR5211 miniPCI cards), I have one antenna connected and there's a
-second connector (AUX) as you mentioned.  A couple of other people
-reported mesh problems after this commit and they may have a similar
-setup.
+Peter Stuge wrote:
+> Michael Buesch wrote:
+>> On Sunday 23 November 2008 12:49:55 Yuval Hager wrote:
+>>> [  182.891400] ****** b43: B43_MMIO_MACCTL 0x840A0503
+>>> [  182.891409] ****** b43: SSB_TMSLOW 0x20150000
+>>> [  258.299027] irq 10: nobody cared (try booting with the "irqpoll" option)
+>> Does the kernel disable the PCI device, if it ignores the IRQ?
+> 
+> The kernel disables the IRQ at least internally, maybe also by
+> deconfiguring the interrupt register in any devices using it, which
+> would explain the change in config register 0x3c (but not the changes
+> in all the other bytes, could that be a freak chain reaction inside
+> the hardware?) but I haven't heard/seen the kernel disable the PCI
+> device itself. I don't know if it can.
+> 
+> Why doesn't b43 care about this interrupt? Without APIC interrupt 10
+> is what both device and driver should be using (according to earlier
+> lspci -x output).
 
-  -Andrey
+I think by this point the BCM43xx hardware is disabled.
 
-On Wed, Nov 26, 2008 at 7:29 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2008/11/26 Andrey Yurovsky <andrey@cozybit.com>:
->> Hello.  I noticed that commit dc300b5c5291d779a53d83af960fdf9388bf0544
->> "ath5k: Update PCU code"  by Nick Kossifidis breaks Mesh Point
->> operation, which had been working right up to that patch.  As I am not
->> familiar with the antenna-related code that this is touching, can
->> someone please assist with resolving this problem?  Thanks,
+>>> [  258.299173] handlers:
+>>> [  258.299176] [<f7906455>] (b43_interrupt_handler+0x0/0x1b7 [b43])
+>>> [  258.299212] Disabling IRQ #10
+>>> [  258.315148] b43-phy0: Radio hardware status changed to DISABLED
+>>> [  258.315160] b43-phy0: ******** B43_B43_MMIO_RADIO_HWENABLED_HI 0xFFFFFFFF
+>>> [  258.342341] kobject: 'rfkill0' (f43b7d78): kobject_uevent_env
+>>> [  258.342367] kobject: 'rfkill0' (f43b7d78): fill_kobj_path: path = '/class/rfkill/rfkill0'
+>>> [  258.342418] kobject: 'ssb0:0' (f40dfcd8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:02.0/0000:02:00.0/ssb0:0'
+> 
+> Why does the radio hw status changes here?
+> How is the change notified to the driver?
+
+By setting a bit in the appropriate register; however, device is disabled and
+all bits are set. This is a false indication.
+
+>>> [  258.391951] 
+>>> [  258.391956] =================================
+>>> [  258.391964] [ INFO: inconsistent lock state ]
+>>> [  258.391971] 2.6.28-rc5 #15
+>>> [  258.391975] ---------------------------------
+>>> [  258.391980] inconsistent {in-hardirq-W} -> {hardirq-on-W} usage.
+>>> [  258.391987] X/3965 [HC0[0]:SC1[1]:HE1:SE0] takes:
+>>> [  258.391993]  (&irq_desc_lock_class){++..}, at: [<c0148c60>] try_one_irq+0x15/0xe8
+>>> [  258.392016] {in-hardirq-W} state was registered at:
+>>> [  258.392021]   [<c013bc07>] __lock_acquire+0x490/0x6bc
+>>> [  258.392034]   [<c013be8d>] lock_acquire+0x5a/0x74
+>>> [  258.392043]   [<c01496f8>] handle_level_irq+0x12/0xba
+>>> [  258.392053]   [<c03c4842>] _spin_lock+0x1c/0x45
+>>> [  258.392066]   [<c01496f8>] handle_level_irq+0x12/0xba
+>>> [  258.392076]   [<c01496f8>] handle_level_irq+0x12/0xba
+>>> [  258.392085]   [<c010564e>] do_IRQ+0x89/0x9f
+>>> [  258.392096]   [<c0103ea8>] common_interrupt+0x28/0x30
+>>> [  258.392105]   [<c03c4cc2>] _spin_unlock_irqrestore+0x37/0x39
+>>> [  258.392115]   [<c01487e6>] __setup_irq+0x17a/0x1f3
+>>> [  258.392124]   [<c05ce79d>] start_kernel+0x285/0x2f1
+>>> [  258.392140]   [<ffffffff>] 0xffffffff
+>>> [  258.392159] irq event stamp: 1844456
+>>> [  258.392164] hardirqs last  enabled at (1844456): [<c03c4b6f>] _spin_unlock_irq+0x20/0x23
+>>> [  258.392175] hardirqs last disabled at (1844455): [<c03c4ac3>] _spin_lock_irq+0xa/0x4b
+>>> [  258.392186] softirqs last  enabled at (1844310): [<c0125406>] do_softirq+0x37/0x4d
+>>> [  258.392198] softirqs last disabled at (1844447): [<c0125406>] do_softirq+0x37/0x4d
 >>
->>  -Andrey
->>
->
-> ath5k_beacon_setup can be an issue, right now it assumes you have 2
-> antennas and it changes the antenna on tx descriptor every 4 beacons,
-> before this patch we instructed hw to use the default antenna for rts
-> (instead of the antenna we set on tx descriptor), now we don't. We
-> should not handle antenna switching on sw imho since hw already has
-> automatic controls for it (we just have to configure them -now we use
-> the default settings-), as a first step i'd suggest always using 0 for
-> antenna mode on tx descriptor, in other words comment out this...
->
-> 1955                 /*
-> 1956                  * Switch antenna every 4 beacons if txantenna is not set
-> 1957                  * XXX assumes two antennas
-> 1958                  */
-> 1959                 if (antenna == 0)
-> 1960                         antenna = sc->bsent & 4 ? 2 : 1;
->
-> Some more infos on antenna switching...
->
-> We have 5 controls for antenna selection:
->
-> a) The default antenna register AR5K_DEFAULT_ANTENNA (you can write it
-> using ath5k_hw_set_def_antenna) which sets the default antenna during
-> Rx and if AR5K_STA_ID1_DEFAULT_ANTENNA is set on AR5K_STA_ID1 it also
-> controls tx antenna if antenna mode is set to 0 on tx descriptor (see
-> below). By default, it's value is 1 (antenna A -main) but some setups
-> might have misconnected the antennas (eg. connected the only antenna
-> available to aux port -antenna B/C/D/.., so there is no antenna
-> connected on main port) so we have to keep some stats based on rxed
-> frames and choose the default antenna (maybe after a scan). Also
-> default antenna is expected to be an omni-directional antenna.
->
-> b) Settings on AR5K_STA_ID1 register:
-> AR5K_STA_ID1_DEFAULT_ANTENNA if antenna mode is set to 0 on tx
-> descriptor and this bit is set to 1, then hw uses default antenna
-> setting from default antenna register to transmit. If it's set to 0 it
-> uses the cached tx antenna (based on successful txed frames -we get
-> CTS and ACKs). Cached antenna goes on keycache (to support multiple
-> stations eg. on AP mode) if AR5K_STA_ID1_DESC_ANTENNA is set to 0 or
-> on default antenna register if it's set to 1 (see below).
->
-> AR5K_STA_ID1_DESC_ANTENNA if set to 1, hw updates default antenna
-> register according to the antenna set on tx descriptor. This is used
-> for STA modes when we are sure that we are locked on one AP so we
-> cache the tx antenna on default antenna register (making it also the
-> default antenna for Rx).
->
-> AR5K_STA_ID1_RTS_DEF_ANTENNA if set to 1, hw always uses the default
-> antenna to send RTS and not the one set by descriptor.
->
-> AR5K_STA_ID1_SELFGEN_DEF_ANT if set to 1, hw sends self-generated
-> frames from default antenna (have to verify which MAC
-> versions/revisions support this)
->
-> Default settings for all modes:
-> AR5K_STA_ID1_DEFAULT_ANTENNA: 1 (or maybe 2 for misconnected antennas)
-> AR5K_STA_ID1_DEFAULT_ANTENNA: 0
-> AR5K_STA_ID1_DESC_ANTENNA: 0
-> AR5K_STA_ID1_RTS_DEF_ANTENNA: 0
-> Anenna mode on tx descriptor: 0
->
-> If we have multiple sector antennas on our aux ports (antennas
-> B/C/D...) then we can use antenna mode setting on tx descriptor for
-> choosing the antenna to transmit BUT we have to send RTS from our omni
-> antenna (default antenna) by setting AR5K_STA_ID1_RTS_DEF_ANTENNA.
->
-> If we see that default settings don't work ok for all (which is weird
-> because 99% use single or dual omnis), we can introduce a
-> ath5k_hw_set_antenna_mode function to do that and provide a
-> module/configfs option to switch antenna modes. Right now
-> ath5k_hw_set_def_antenna is all we need.
->
-> --
-> GPG ID: 0xD21DB2DB
-> As you read this post global entropy rises. Have Fun ;-)
-> Nick
->
+>> That's a bit weird. Looks like another bug in the IRQ layer.
+> 
+> Something happens with the hardware that confuses the kernel. It's
+> triggered by software but I don't know where.. Like Michael, I'm
+> not too convinced that it is in b43. :\
+
+>From a config file posted earlier, the OP is using SLAB. Is there any point in
+trying SLUB?
+
+Larry
+
