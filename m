@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23105.mail.ird.yahoo.com ([217.146.189.45]:30496 "HELO
-	web23105.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750737AbYKKF3B convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 00:29:01 -0500
-Date: Tue, 11 Nov 2008 05:28:59 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: a couple of small bugs in compat-wireless
-To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Cc: compat-masters@lists.madwifi.org, linux-wireless@vger.kernel.org
+Received: from mail.deathmatch.net ([70.167.247.36]:4879 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170AbYKWW2t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2008 17:28:49 -0500
+Date: Sun, 23 Nov 2008 17:27:36 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Xu, Martin" <martin.xu@intel.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
+	Vikram Kandukuri <Vikram.Kandukuri@atheros.com>,
+	Jothikumar Mothilal <Jothikumar.Mothilal@atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"Liu, Bing Wei" <bing.wei.liu@intel.com>,
+	"Selbak, Rolla N" <rolla.n.selbak@intel.com>,
+	"Wang, Yong Y" <yong.y.wang@intel.com>
+Subject: Re: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts per second at idle
+Message-ID: <20081123222735.GB30249@hash.localnet> (sfid-20081123_232854_078564_29DFF254)
+References: <bug-11749-13098@http.bugzilla.kernel.org/> <20081013150525.884BC108058@picon.linux-foundation.org> <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com> <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com> <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com> <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com> <9F0C1DB20AFA954FA1DA05309350433D410CD777@pdsmsx503.ccr.corp.intel.com> <20081117133737.GA16412@hash.localnet> <9F0C1DB20AFA954FA1DA05309350433D41183AB4@pdsmsx503.ccr.corp.intel.com> <20081121202734.GC3540@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <252423.50522.qm@web23105.mail.ird.yahoo.com> (sfid-20081111_062915_511692_3D45F5E1)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081121202734.GC3540@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"make unload" doesn't unload iwlagn, and iwlagn keeps mac80211 in the kernel, which results in make unload failing. Needs to include iwlagn
-in the unload list in script/unload.sh. Should be trivial to fix, and
-probably quicker "just do it" then having a patch from me :-). 
+On Fri, Nov 21, 2008 at 03:27:34PM -0500, John W. Linville wrote:
+> > +static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
+> > +				struct ieee80211_vif *vif,
+> > +				struct ieee80211_bss_conf *bss_conf,
+> > +				u32 changes);
+> 
+> This patch defines ath5k_bss_info_changed, but doesn't use it.
+> Is that really what you meant to do?
 
-There is another annoyance - probably not strictly speaking a bug, but nonetheless, for some unexplainable reasons, I expect "make clean" to do the usual thing, and it doesn't - this is probably easy to fix by having an almost empty libertas_tf/Makefile ? (this shows an older compat-wireless , but current compat-wireless also seem to have this problem 
-if I remember correctly):
----------------
-scripts/Makefile.clean:17: /tmp/compat-wireless-2008-10-23/drivers/net/wireless/libertas_tf/Makefile: No such file or directory
-make[4]: *** No rule to make target `/tmp/compat-wireless-2008-10-23/drivers/net/wireless/libertas_tf/Makefile'.  Stop.
-make[3]: *** [/tmp/compat-wireless-2008-10-23/drivers/net/wireless/libertas_tf] Error 2
-make[2]: *** [/tmp/compat-wireless-2008-10-23/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/tmp/compat-wireless-2008-10-23] Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.27.5-92.fc10.x86_64'
-make: *** [clean] Error 2
----------------
+The first version of this patch set .bss_info_changed but it looks
+like it got lost along the way.  Martin?
 
+-- 
+Bob Copeland %% www.bobcopeland.com
 
-
-      
