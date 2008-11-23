@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36114 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927AbYKZIcW (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:41947 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751723AbYKWSk7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 03:32:22 -0500
-Subject: Re: RFC Patch: Add signal strength to nl80211station info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Henning Rogge <hrogge@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <EA31B699-C803-460C-8D90-9E946CC97A33@linux.intel.com>
-References: <200811252131.30161.hrogge@googlemail.com>
-	 (sfid-20081125_213139_680674_17E7A0BB) <1227646037.4613.46.camel@johannes.berg>
-	 <EA31B699-C803-460C-8D90-9E946CC97A33@linux.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kXnIKrxcdeOlJxMq/8+V"
-Date: Wed, 26 Nov 2008 09:32:16 +0100
-Message-Id: <1227688336.4613.51.camel@johannes.berg> (sfid-20081126_093226_028624_7A01D2E0)
-Mime-Version: 1.0
+	Sun, 23 Nov 2008 13:40:59 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so1409853fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Nov 2008 10:40:58 -0800 (PST)
+Message-ID: <2da21fe50811231040i45c3cda5l16379093b4e85265@mail.gmail.com> (sfid-20081123_194105_172013_C69FF2BD)
+Date: Sun, 23 Nov 2008 19:40:58 +0100
+From: "Davide Pesavento" <davidepesa@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: crda packaging
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e890811171421j3f41234dnf451e25d5e58abdc@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com>
+	 <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com>
+	 <2da21fe50811161258v58efe236r492d59c8b9228b81@mail.gmail.com>
+	 <20081117202749.GB5994@tesla>
+	 <43e72e890811171421j3f41234dnf451e25d5e58abdc@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Nov 17, 2008 at 23:21, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Nov 17, 2008 at 12:27 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Sun, Nov 16, 2008 at 12:58:43PM -0800, Davide Pesavento wrote:
+>>> On Mon, Oct 20, 2008 at 02:28, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>> > On Sun, Oct 19, 2008 at 8:57 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
+>>> >>
+>>> >> Do you think the regulatory database should be split from the package
+>>> >> that contains the crda daemon? If so, regulatory.bin should be
+>>> >> versioned as well...
+>>> >
+>>> > Yes, absolutely, the idea is to split db.txt into a separate git tree
+>>> > too actually so that should help with keeping track of changes
+>>> > separately and thinking of them separately.
+>>> >
+>>> > We just need to get this git tree created. What crda will need though
+>>> > is to wget the RSA public key so it can be built with support for new
+>>> > arbitrary updates to the binary db. Give us a few days, we'll get this
+>>> > setup.
+>>> >
+>>> >  Luis
+>>> >
+>>>
+>>> Any updates on this?
+>>
+>> I think we'll have this done by the end of the day.
+>
+> OK this is now done. We have a new git tree which John maintains for
+> the database:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
+>
+> All you need from that is the regulatory.bin, you don't need to run
+> make or anything, just cp the regulatory.bin to the preferred
+> location. Right now this is built into CRDA and its
+> /usr/lib/crda/regulatory.bin.
+>
+> Then do a git pull on crda and try to build and let us know if you run
+> into any issues for packaging. The documentation on the
+> wireless.kernel.org wiki needs some good updating.
+>
+>  Luis
+>
 
---=-kXnIKrxcdeOlJxMq/8+V
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Great! Thanks a lot!
+Are there any tarballs around? I couldn't find them on
+http://wireless.kernel.org/download/...
 
-On Wed, 2008-11-26 at 06:21 +0100, Marcel Holtmann wrote:
-> Hi Johannes,
->=20
-> >> +	NL80211_STA_INFO_SIGNAL,
-> >> +	NL80211_STA_INFO_NOISE,
-> >> +	NL80211_STA_INFO_QUAL,
-> >
-> > Sorry, no, this WEXT junk is just too undefined to put it into =20
-> > nl80211.
->=20
-> I know that WEXT were pretty bad in describing what to expect from =20
-> these values and every driver did whatever it thought it would be =20
-> best. Can we not just try to define how these values should be filled =20
-> in and then either mark drivers as broken or try to fix them? Just an =20
-> idea.
-
-But it doesn't even physically make sense. The noise is not per station
-but rather per channel, if you know it at all. The "quality" is simply
-not defined, and would usually be "signal", unless you're doing
-something else to estimate "quality", like taking into account
-retransmissions, ... And then signal/noise should be in dBm.
-
-johannes
-
---=-kXnIKrxcdeOlJxMq/8+V
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJLQmNAAoJEKVg1VMiehFY884P/i7bEO9TDsaKq9I4HzpqODqI
-ISz/KyrWIzhZbhHbRpFPxX2jd4BYd8ZqQlVhrdSTSy2Qi3yW7th/g2EMX3nN9To3
-N+keUmb9QvH+BPZHxYUDy3GPdkM9NbvAGoLnP90ioJBSeM4KWn9sLM0oLPvt2rY3
-YSrAVrLMZJ2/AwVjP4n1levMavk8GOMDI0c3FRLBxLyKimZl3mwWmBNvv88+qpm9
-LE7A7sj3oaFfmVwy+bnSmC6X7oFaLN5mJsfAsRe+Tb7ZSdPAioXzDQdW/wAUdKal
-MthXe6Y3Ej8/gTNUVNB0s9LfEiauOVTvoZm1yIuLWe2NhGWk/9O4OG2FuiOV8OTq
-F7jvvoNH7I/sQ54vL3fhytwbJeAHmWApW3c3FBPA6enecUPQ32aosHqUFXKAdbkg
-xxVz9UcvUoWxa3th9pAJtfbDn0/pTxxLSubu8CGR8d2gO6Pivwx3cmzUyLG+MSjG
-stsEJF4gIbGpMs9GJczHLtRgh7Ax0mK50fTdjTd+QKNZVQf7X/0s/hK88DtnTBb7
-Y4KpNYvZPhnK6/45PY0Xdv8GkPYsIjsan0VjzSvA4KyIJixToDrKqHoF4Koa4UmP
-cSvu3VI82B47kA5fTbqAeNlgTg6iWhpHgZh7nDPiQMaD6o5669bJq0g3cEaWfHzw
-5/Iu+3xYqX1FWkchszqZ
-=mJXv
------END PGP SIGNATURE-----
-
---=-kXnIKrxcdeOlJxMq/8+V--
-
+Regards,
+Davide
