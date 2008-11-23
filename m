@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:59188 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751487AbYKJVmP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 16:42:15 -0500
-Subject: Re: wi-fi.org certification with libertas + 8686
-From: Dan Williams <dcbw@redhat.com>
-To: Cliff Brake <cliff.brake@gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.191]:17904 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884AbYKWSJz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2008 13:09:55 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so887064nfc.21
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Nov 2008 10:09:53 -0800 (PST)
+Date: Sun, 23 Nov 2008 19:09:51 +0100
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <f96d234e0811101325u9851ea1l636c46cf38aa2695@mail.gmail.com>
-References: <f96d234e0811101325u9851ea1l636c46cf38aa2695@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 10 Nov 2008 16:40:18 -0500
-Message-Id: <1226353218.8146.21.camel@localhost.localdomain> (sfid-20081110_224218_854607_E2CC249C)
+Subject: [PATCH] Fix warning in info.c with gcc 4.3 (Ubuntu 8.10)
+Message-ID: <20081123190951.686d099a@varda> (sfid-20081123_190959_217904_7A0AF3AB)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-11-10 at 16:25 -0500, Cliff Brake wrote:
-> Hello,
-> 
-> Has anyone been through wifi certification with the libertas driver
-> and the 8686 chipset (or any Linux driver + wpa_supplicant for that
-> matter)?  Just trying to get a rough idea how painful this is.
 
-Marvell has probably certified their libertas vendor driver (which isn't
-the upstream libertas driver).  With the possible exceptions of Intel
-and Atheros (which are both heavily involved in the upstream drivers for
-their hardware), none of the upstream kernel drivers have been through
-validation or certification that I know of.
+ fix this warning i got with last pull
 
-Dan
+info.c: In function 'print_flag':
+info.c:19: warning: format not a string literal and no format arguments
+---
+ info.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
+diff --git a/info.c b/info.c
+index 9b04719..a9c23a4 100644
+--- a/info.c
++++ b/info.c
+@@ -16,7 +16,7 @@ static void print_flag(const char *name, int *open)
+                printf(" (");
+        else
+                printf(", ");
+-       printf(name);
++       printf("%s\n",name);
+        *open = 1;
+ }
+ 
+-- 
+1.6.0.4.766.g6fc4a
