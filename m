@@ -1,84 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:10698 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400AbYKHTLk (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59140 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992AbYKWT6K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2008 14:11:40 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so1880551wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Nov 2008 11:11:39 -0800 (PST)
-Message-ID: <1ba2fa240811081111q72eee389p6afb090cb5c070f5@mail.gmail.com> (sfid-20081108_201145_452206_BBB0A5D3)
-Date: Sat, 8 Nov 2008 21:11:39 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Harvey Harrison" <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 10/13] iwlwifi: move iwl_print_hex_dump to iwl-debug.h
-Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1226081039.11596.20.camel@brick>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
-	 <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
-	 <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
-	 <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
-	 <1226080726-24860-7-git-send-email-reinette.chatre@intel.com>
-	 <1226080726-24860-8-git-send-email-reinette.chatre@intel.com>
-	 <1226080726-24860-9-git-send-email-reinette.chatre@intel.com>
-	 <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
-	 <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
-	 <1226081039.11596.20.camel@brick>
+	Sun, 23 Nov 2008 14:58:10 -0500
+Subject: Re: [PATCH] Fix warning in info.c with gcc 4.3 (Ubuntu 8.10)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alejandro Riveira =?ISO-8859-1?Q?Fern=E1ndez?=
+	<ariveira@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081123190951.686d099a@varda> (sfid-20081123_190954_927279_4E459CD8)
+References: <20081123190951.686d099a@varda>
+	 (sfid-20081123_190954_927279_4E459CD8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9Nfy12Fg0GYcE0mJtTjf"
+Date: Sun, 23 Nov 2008 20:58:07 +0100
+Message-Id: <1227470287.3599.52.camel@johannes.berg> (sfid-20081123_205815_176104_72E73BCC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 7, 2008 at 8:03 PM, Harvey Harrison
-<harvey.harrison@gmail.com> wrote:
-> On Fri, 2008-11-07 at 09:58 -0800, Reinette Chatre wrote:
->> From: Winkler, Tomas <tomas.winkler@intel.com>
->>
->> This patch moves iwl_print_hex_dump to iwl-debug.h
->> where it belongs
->>
->> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
->> ---
->>  drivers/net/wireless/iwlwifi/iwl-debug.h |   10 ++++++++++
->>  drivers/net/wireless/iwlwifi/iwl-dev.h   |   17 -----------------
->>  2 files changed, 10 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
->> index 84b7772..0e79a6a 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-debug.h
->> +++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
->> @@ -40,6 +40,13 @@ do { if ((priv->debug_level & (level)) && net_ratelimit()) \
->>    dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), "%c %s " fmt, \
->>        in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
->>
->> +#define iwl_print_hex_dump(priv, level, p, len)                      \
->> +do {                                                                 \
->> +     if (priv->debug_level & level)                                  \
->> +             print_hex_dump(KERN_DEBUG, "iwl data: ",                \
->> +                            DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);   \
->> +} while (0)
->
-> static inline please.
 
-Won't work in this case priv is not defined in this context, need to
-solve this in another round.
->
->> +
->>  #ifdef CONFIG_IWLWIFI_DEBUGFS
->>  struct iwl_debugfs {
->>       const char *name;
->> @@ -70,6 +77,9 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv);
->>  #else
->>  #define IWL_DEBUG(level, fmt, args...)
->>  #define IWL_DEBUG_LIMIT(level, fmt, args...)
->> +static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
->> +                                   void *p, u32 len)
->> +{}
->>  #endif                               /* CONFIG_IWLWIFI_DEBUG */
->
-> To keep it in sync with this.
+--=-9Nfy12Fg0GYcE0mJtTjf
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-This one can be changed.
-Tomas
+On Sun, 2008-11-23 at 19:09 +0100, Alejandro Riveira Fern=C3=A1ndez wrote:
+> fix this warning i got with last pull
+>=20
+> info.c: In function 'print_flag':
+> info.c:19: warning: format not a string literal and no format arguments
+
+The \n you added shouldn't be there, I've committed an equivalent fix.
+
+johannes
+
+--=-9Nfy12Fg0GYcE0mJtTjf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJKbXMAAoJEKVg1VMiehFY7GwP/A8zHFHNPFbDNJG9JqRADAbY
+8gfstJDNRq2dRLcBjeOgz9GfiExmrYJ07PNViO473k/fqm3tHpNWOBobRNDG1cvt
+1oHqL+iUK9RJQj6jHVIO0ZZ/A9oYnL34ThgJQjvBqzvWvoKGBloRBrP/4SMTzMxv
+H9soP0Grp/YKy5WDyjyHW5L143MkF39Noo+/Z9Zilu4Yv3dkfgPUUwIcZ8uz+Lrb
+MwTvghQItpoguQ+Im8QXRvFS6Qo0b2MPFcSH3g6eoitc5QXDfbskyL2ENO1fLyPr
+jTLIRmq5fRrPaxlJzIuPhq8dngoPyllZTFPD79k5hB3lNy/qbKldEiLxSNP0iXjl
+YYOGUrC8gJa1zQ7O2EEsmEh5LHxhd69jX5FVO94vq5R23jnJe8TE7e1XZA5ZFOtm
+r6oJvuMcSXSQhN28V5BMr2/JHl6z+jjMM/enm3899VR2lQV+f7ExARGMxGqQvyeL
+QM3YoLdenYQTl33Yn62Ncm+YZQB6J/tM/7EffU6IACcHMPFpUbWTfLGgh49POoir
+fQqmfsGwJB+JapQ+9Cppv0QriQFnyC110cq61XtBtEr4EP2k+TGcu7TIpcqJTyBp
+Nm85tU0OlwkjFXFHlcnx2pDWSMHV9louRmDFcsUJS6VVjTdo27kKkXHmVkC5Debn
+dAt7WG4eOmEGyNbKTXvz
+=lYzB
+-----END PGP SIGNATURE-----
+
+--=-9Nfy12Fg0GYcE0mJtTjf--
+
