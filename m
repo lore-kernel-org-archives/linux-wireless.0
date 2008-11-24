@@ -1,44 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3997 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751910AbYKPQw7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Nov 2008 11:52:59 -0500
-Date: Sun, 16 Nov 2008 11:52:13 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Dan McGee <dpmcgee@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Message-ID: <20081116165213.GC14126@hash.localnet> (sfid-20081116_175303_095401_3A028676)
-References: <b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com> <449c10960811151811s32fdd2b6p361d2ec9dd674fcc@mail.gmail.com> <449c10960811151838m3fcae118n65139be735c10665@mail.gmail.com> <43e72e890811152148q5f65aa43u49555a3977c205ff@mail.gmail.com> <20081116055312.GA14126@hash.localnet> <43e72e890811152205k13318ab7yad8695d9f6dd409c@mail.gmail.com> <43e72e890811152206s3683ecabm658fac255112a262@mail.gmail.com> <43e72e890811152215h5cf389a3ufe4dc10b021b0c0f@mail.gmail.com> <20081116162019.GA15851@hash.localnet> <449c10960811160838h70fd1852g66d8a51c7551530b@mail.gmail.com>
+Received: from smtp6-g19.free.fr ([212.27.42.36]:50070 "EHLO smtp6-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751442AbYKXHeu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 02:34:50 -0500
+Message-ID: <492A5913.3070007@free.fr> (sfid-20081124_083455_811898_5B9391D8)
+Date: Mon, 24 Nov 2008 08:34:43 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <449c10960811160838h70fd1852g66d8a51c7551530b@mail.gmail.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+CC: Derek Smithies <derek@indranet.co.nz>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, wally@theblackmoor.net
+Subject: Re: [ath5k-devel] Unusually low speeds with ath5k and iwl3945
+References: <492719ED.5000006@gmail.com> <20081122005240.GA27826@hash.localnet>	<alpine.DEB.2.00.0811221643030.7067@monster> <4927FC0C.10900@gmail.com>
+In-Reply-To: <4927FC0C.10900@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 16, 2008 at 10:38:39AM -0600, Dan McGee wrote:
-> On Sun, Nov 16, 2008 at 10:20 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> > As you can see, the modules think "phy0" should be at offset 164, but
-> > it's really at 160.
-> 
-> > Also I noticed the original config had CONFIG_DYNAMIC_FTRACE=y, unfortunately
-> > turning that off didn't seem to change anything (hmm, I didn't get a build
-> > bug, was the breakage fixed in 2.6.27.y?)
-> 
-> Note that HAVE is set if the architecture supports it; CONFIG_FTRACE
-> itself was turned off (and CONFIG_DYNAMIC_FTRACE is not even present):
-> $ grep FTRACE .config
-> CONFIG_HAVE_FTRACE=y
-> CONFIG_HAVE_DYNAMIC_FTRACE=y
-> # CONFIG_FTRACE is not set
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Oh, you are right.  Thanks.  I probably won't be able to do any more
-testing today but I would suggest trying to turn off wireless-related
-options in the main kernel config and see if you can get it working 
-(start with cfg80211 and its dependencies...)
+Maxim Levitsky a =E9crit :
+> Derek Smithies wrote:
+>> Hi,
+>>  to verify that it is a rate control issue, there is one very simple=
+ and=20
+>> very practical test.
+>>
+>> Take both ends of your link, and set them to fixed rate, and at the =
+rate=20
+>> you think it should be achieving.
+>> If you can achieve significantly higher throughputs with fixed rate,=
+ you=20
+>> know that the rate control algorithm (or interface with rate algorit=
+hm)=20
+>> has failed.
+>>
+>> Derek.
+>>
+>> On Fri, 21 Nov 2008, Bob Copeland wrote:
+>>
+>>> On Fri, Nov 21, 2008 at 10:28:29PM +0200, Maxim Levitsky wrote:
+>>>> I initially blamed iwl3945, then thought it got fixed, but now I h=
+ave
+>>>> ath5k, and speeds are low
+>>>> and I suspect that both drivers has bugs regarding to speed.
+>>> Quite possible, but both use mac80211 for rate control.  Which rate
+>>> control algorithm are you using?
+> Hi,
+>=20
+> Well, iwl3945 was showing 54M all the time in iwconfig,
+> also it doesn't support setting fixed rate, at least not using iwconf=
+ig.
+>=20
+> ath5k never shows higher that 18M, and supports setting fixed rate, b=
+ut if I set it to anything higher that 18M,
+> speeds drop to 0Kbytes/s immediately.
+> Speeds lower that 18M work, and affect throughput accordantly
+> For most of tests speeds are ether 18M or lower, but then when I set =
+them to 18M this didn't increase throughput.
+> =20
+> iwl3945 was always at 54M
+>=20
+>=20
+>=20
+> Best regards,
+> 	Maxim Levitsky
 
--- 
-Bob Copeland %% www.bobcopeland.com
+I did a similar test here and results is very strange. AP was my good
+old linksys WRT54G running an iperf server. Client was a laptop running
+either ath5k or madwifi/trunk and an iperf client. Channel is 5. Both
+drivers show the same behaviour.
 
+At the beginning, throughput was very low : 500 - 600 kbit/s. Suddenly
+(after few minutes), it jumps to 15 - 17 Mbit/s and then few minutes
+later (let's say 10 - 20 minutes maybe), it jumps back to 500 - 600
+kbit/s. Using a fixed rate has no effect.
+
+I used my latest wireless monitoring tools and I did not saw lost of
+duplicates or lost packets. The only difference was the number of
+packets sent by seconds....
+
+Looking a my syslog, I just saw few messages, unrelated in time with th=
+e
+throughput going up or down. They were:
+- - ath5k : unsupported jumbo
+- - switching to short barker preamble
+- - switching to long barker preamble
+
+I can repeat the same test with iwl3945 as well, if needed.
+
+Regards,
+Beno=EEt
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFJKlkTOR6EySwP7oIRAnR1AJ0UCiENM0qtZwQYngkVpiLvrKtgLACfRKPz
+Wi/HreSX4NV+kfyeS+RMFaY=3D
+=3DRKcV
+-----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
