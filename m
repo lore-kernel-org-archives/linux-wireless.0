@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26494 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695AbYKLVNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 16:13:49 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH 4/8] iwlwifi: replace magic constants with define
-Date: Wed, 12 Nov 2008 13:14:07 -0800
-Message-Id: <1226524451-3417-5-git-send-email-reinette.chatre@intel.com> (sfid-20081112_221356_354860_E33F7FD4)
-In-Reply-To: <1226524451-3417-4-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1226524451-3417-1-git-send-email-reinette.chatre@intel.com>
- <1226524451-3417-2-git-send-email-reinette.chatre@intel.com>
- <1226524451-3417-3-git-send-email-reinette.chatre@intel.com>
- <1226524451-3417-4-git-send-email-reinette.chatre@intel.com>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55745 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752935AbYKXQLy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 11:11:54 -0500
+Message-ID: <492AD249.3020309@lwfinger.net> (sfid-20081124_171158_739599_73E6B0B3)
+Date: Mon, 24 Nov 2008 10:11:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Yuval Hager <yuval@avramzon.net>
+CC: Michael Buesch <mb@bu3sch.de>, LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: BCM4312 Fails when xdm is started
+References: <200811151801.02369.yuval@avramzon.net> <4929C68E.6080401@lwfinger.net> <200811241049.45734.yuval@avramzon.net> <200811241155.47079.mb@bu3sch.de>
+In-Reply-To: <200811241155.47079.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chatre, Reinette <reinette.chatre@intel.com>
+Michael Buesch wrote:
+> On Monday 24 November 2008 09:49:38 Yuval Hager wrote:
+>> * Now check this out - the output of lspci -d 14e4:4312 -x
+>> 02:00.0 Network controller: Broadcom Corporation BCM4312 802.11a/b/g (rev ff)
+>> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>>
+>> (I double checked this)
+>>
+>> huh?
+> 
+> Hah, interesting. I think your hardware may be faulty, in fact.
+> To me it really seems like the mainboard has power failures on the PCI bus.
+> 
+> This is a laptop, so you can't pull random hardware? Can you run some
+> hardware burn-in tests like mprime (http://mersenne.org/freesoft/) or memtest?
+> If that doesn't help, can you try with another operating system?
+> 
 
-use IWL_CCK_RATES_MASK and IWL_OFDM_RATES_MASK instead of
-their values directly.
+I also think you are seeing a hardware failure. Another test to try is
+http://freshmeat.net/projects/cpuburn/?topic_id=146, which will exercise the system.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-cc: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b69d77d..d02f82e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -467,9 +467,9 @@ static u8 iwl_rate_get_lowest_plcp(struct iwl_priv *priv)
- 
- 	/* Set rate mask*/
- 	if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK)
--		rate_mask = priv->active_rate_basic & 0xF;
-+		rate_mask = priv->active_rate_basic & IWL_CCK_RATES_MASK;
- 	else
--		rate_mask = priv->active_rate_basic & 0xFF0;
-+		rate_mask = priv->active_rate_basic & IWL_OFDM_RATES_MASK;
- 
- 	/* Find lowest valid rate */
- 	for (i = IWL_RATE_1M_INDEX; i != IWL_RATE_INVALID;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index bf55f34..bee42ef 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1427,9 +1427,9 @@ static u8 iwl3945_rate_get_lowest_plcp(struct iwl3945_priv *priv)
- 
- 	/* Set rate mask*/
- 	if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK)
--		rate_mask = priv->active_rate_basic & 0xF;
-+		rate_mask = priv->active_rate_basic & IWL_CCK_RATES_MASK;
- 	else
--		rate_mask = priv->active_rate_basic & 0xFF0;
-+		rate_mask = priv->active_rate_basic & IWL_OFDM_RATES_MASK;
- 
- 	for (i = IWL_RATE_1M_INDEX; i != IWL_RATE_INVALID;
- 	     i = iwl3945_rates[i].next_ieee) {
--- 
-1.5.4.3
-
+Larry
