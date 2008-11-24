@@ -1,96 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61438 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752347AbYKGR6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 12:58:19 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 11/13] iwl3945 : Simplify iwl3945_send_beacon_cmd
-Date: Fri,  7 Nov 2008 09:58:44 -0800
-Message-Id: <1226080726-24860-12-git-send-email-reinette.chatre@intel.com> (sfid-20081107_190902_491725_EE103FE0)
-In-Reply-To: <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1226080726-24860-1-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-2-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-3-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-4-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-5-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-6-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-7-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-8-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-9-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-10-git-send-email-reinette.chatre@intel.com>
- <1226080726-24860-11-git-send-email-reinette.chatre@intel.com>
+Received: from ey-out-2122.google.com ([74.125.78.27]:56222 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133AbYKXDR1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2008 22:17:27 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so739728eyi.37
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Nov 2008 19:17:26 -0800 (PST)
+Message-ID: <492A1CC5.3080702@gmail.com> (sfid-20081124_041733_556965_47CC8C92)
+Date: Sun, 23 Nov 2008 22:17:25 -0500
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: wireless <linux-wireless@vger.kernel.org>
+CC: mickflemm@gmail.com, mcgrof@gmail.com
+Subject: [RFC][PATCH]Atheros a/b/g Frequency Support
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
+I would like to suggest modifying the ath5k code a bit to more 
+accurately reflect the frequencies that the hardware supports, patch is 
+as follows:
 
-Moved rate_msk calculation to iwl3945_rate_get_lowest_plcp.
+---------------------------------------------------------------------------------------------------------------------------------------
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   26 ++++++++++++++------------
- 1 files changed, 14 insertions(+), 12 deletions(-)
+diff -Naur wireless-testing-orig/drivers/net/wireless/ath5k/caps.c 
+wireless-testing/drivers/net/wireless/ath5k/caps.c
+--- wireless-testing-orig/drivers/net/wireless/ath5k/caps.c     
+2008-11-22 17:28:02.000000000 -0500
++++ wireless-testing/drivers/net/wireless/ath5k/caps.c  2008-11-22 
+17:41:04.000000000 -0500
+@@ -69,9 +69,9 @@
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 51f1c81..dec9e04 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1420,9 +1420,16 @@ unsigned int iwl3945_fill_beacon_frame(struct iwl3945_priv *priv,
- 	return priv->ibss_beacon->len;
- }
- 
--static u8 iwl3945_rate_get_lowest_plcp(int rate_mask)
-+static u8 iwl3945_rate_get_lowest_plcp(struct iwl3945_priv *priv)
- {
- 	u8 i;
-+	int rate_mask;
-+
-+	/* Set rate mask*/
-+	if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK)
-+		rate_mask = priv->active_rate_basic & 0xF;
-+	else
-+		rate_mask = priv->active_rate_basic & 0xFF0;
- 
- 	for (i = IWL_RATE_1M_INDEX; i != IWL_RATE_INVALID;
- 	     i = iwl3945_rates[i].next_ieee) {
-@@ -1430,7 +1437,11 @@ static u8 iwl3945_rate_get_lowest_plcp(int rate_mask)
- 			return iwl3945_rates[i].plcp;
- 	}
- 
--	return IWL_RATE_INVALID;
-+	/* No valid rate was found. Assign the lowest one */
-+	if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK)
-+		return IWL_RATE_1M_PLCP;
-+	else
-+		return IWL_RATE_6M_PLCP;
- }
- 
- static int iwl3945_send_beacon_cmd(struct iwl3945_priv *priv)
-@@ -1448,16 +1459,7 @@ static int iwl3945_send_beacon_cmd(struct iwl3945_priv *priv)
- 		return -ENOMEM;
- 	}
- 
--	if (!(priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK)) {
--		rate = iwl3945_rate_get_lowest_plcp(priv->active_rate_basic &
--						0xFF0);
--		if (rate == IWL_INVALID_RATE)
--			rate = IWL_RATE_6M_PLCP;
--	} else {
--		rate = iwl3945_rate_get_lowest_plcp(priv->active_rate_basic & 0xF);
--		if (rate == IWL_INVALID_RATE)
--			rate = IWL_RATE_1M_PLCP;
--	}
-+	rate = iwl3945_rate_get_lowest_plcp(priv);
- 
- 	frame_size = iwl3945_hw_get_beacon_cmd(priv, frame, rate);
- 
--- 
-1.5.4.3
+                if (AR5K_EEPROM_HDR_11A(ee_header)) {
+                        /* 4920 */
+-                       ah->ah_capabilities.cap_range.range_5ghz_min = 5005;
+-                       ah->ah_capabilities.cap_range.range_5ghz_max = 6100;
+-
++                       ah->ah_capabilities.cap_range.range_5ghz_min = 4800;
++                       ah->ah_capabilities.cap_range.range_5ghz_max = 
+6000; /* 6100 is what the code said but */
++                                                                            
+/* it fried my Ubiquiti SRC       */
+                        /* Set supported modes */
+                        __set_bit(AR5K_MODE_11A,
+                                        ah->ah_capabilities.cap_mode);
+@@ -87,7 +87,7 @@
+                if (AR5K_EEPROM_HDR_11B(ee_header) ||
+                                AR5K_EEPROM_HDR_11G(ee_header)) {
+                        /* 2312 */
+-                       ah->ah_capabilities.cap_range.range_2ghz_min = 2412;
++                       ah->ah_capabilities.cap_range.range_2ghz_min = 
+2192; /* this is the bottom of the registers */
+                        ah->ah_capabilities.cap_range.range_2ghz_max = 2732;
 
+                        if (AR5K_EEPROM_HDR_11B(ee_header))
+
+--------------------------------------------------------------------------------------------------------------------------------------
+Patch signed off by: Rick Farina
+
+This patch modifies the top of the .11a radio DOWN from 6100 to 6000.  
+This was done because after testing several cards with a spectrum 
+analyzer it was found that none of the cards I could find were able to 
+transmit on a frequency higher than 6000MHz and one of them (my Ubiquiti 
+Super Range Cardbus) fried the pre-amp on the board (so no more 
+transmit).  Please note, the original limit was set at 6100MHz and no 
+where that I could find is it legal to transmit on this frequency.
+
+Additionally the patch modifies the bottom end of the .11a radio down 
+from 5005 to 4800.  Expected functionality was confirmed with several 
+different cards against a spectrum analyzer.  My current personal 
+version of the patch allows for the card to be set down to 4000MHz but I 
+am not submitting that number yet because I have yet to confirm it 
+against a spectrum analyzer (hard to borrow that kind of gear for some 
+reason).  If anyone wants to test it for me I'd be glad to provide 
+patches and assist.  Please note, the original limit was set at 5005MHz 
+and no where that I could find is it legal to transmit at this frequency.
+
+The maximum set for the .11b/g radio was originally set at 2732, I found 
+that this was the max at which I could set the .11b/g radio.  On the 
+opposite side, the lower boundary was moved from 2412 to 2192.  At 2192 
+the three registers that are used to set channel are all 0, I was able 
+to set lower frequencies and the registered wrapped around, I could not 
+confirm functionality below 2192MHz.  The original boundary seemed to be 
+clearly set by the boundary of ieee 802.11 channels, kind of funny 
+because the other three boundaries were clearly not set based on ieee 
+802.11 channels...
+
+I would like this patch added to the kernel because it is a good first 
+step towards establishing the fact that the driver should have the same 
+support as the hardware and let crda/oldreg handle the legals.
+
+For general reference, this patch won't actually permit tuning of 
+additional channels, I will submit additional patches based on the 
+responses from this one.
+
+Thank you for your consideration.
+
+-Rick Farina
