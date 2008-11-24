@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:14861 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbYKAPZX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 11:25:23 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so735240nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 08:25:21 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: crash with rt61pci when resuming with card ejected
-Date: Sat, 1 Nov 2008 16:25:18 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1225361553.3690.3.camel@johannes.berg> <200811011129.25387.IvDoorn@gmail.com> <1225541114.3619.2.camel@johannes.berg>
-In-Reply-To: <1225541114.3619.2.camel@johannes.berg>
+Received: from mail.atheros.com ([12.36.123.2]:34908 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750935AbYKXRgk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 12:36:40 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 09:36:40 -0800
+Date: Mon, 24 Nov 2008 09:36:37 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Davide Pesavento <davidepesa@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<rworkman@slackware.com>
+Subject: Re: crda packaging
+Message-ID: <20081124173637.GA6245@tesla> (sfid-20081124_183644_081914_EE468DC1)
+References: <2da21fe50810190857j4dacb612u3a2bba4ab3baa7fd@mail.gmail.com> <43e72e890810191828x44624d4fsa8d56170d2ba4f46@mail.gmail.com> <2da21fe50811161258v58efe236r492d59c8b9228b81@mail.gmail.com> <20081117202749.GB5994@tesla> <43e72e890811171421j3f41234dnf451e25d5e58abdc@mail.gmail.com> <2da21fe50811231040i45c3cda5l16379093b4e85265@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200811011625.18745.IvDoorn@gmail.com> (sfid-20081101_162534_025376_E55A84E5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2da21fe50811231040i45c3cda5l16379093b4e85265@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 01 November 2008, Johannes Berg wrote:
-> On Sat, 2008-11-01 at 11:29 +0100, Ivo van Doorn wrote:
-> > On Saturday 01 November 2008, Johannes Berg wrote:
-> > > On Sat, 2008-11-01 at 09:58 +0100, Ivo van Doorn wrote:
-> > > 
-> > > > Could you try this patch? It doesn't matter if it is on top or as a replacement
-> > > > of my previous patch.
-> > > > 
-> > > > This patch should also fix suspend/resume handling in general, I suddenly realized
-> > > > there was quite a big bug in there regarding EEPROM/CSR handling. 
-> > > 
-> > > Now it just hangs at resume, rather than crashing. At suspend it already
-> > > logs some MCU errors though.
-> > 
-> > Hmm that is strange, those MCU errors could only come from right before the code I
-> > just changed. :S
-> > 
-> > In any case, could you revert the previous patches and try this. This is the same LED patch
-> > as before, but I have added the check for set_key() to return immediately when this is called
-> > while the module is busy unloading.
+On Sun, Nov 23, 2008 at 10:40:58AM -0800, Davide Pesavento wrote:
+> On Mon, Nov 17, 2008 at 23:21, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Mon, Nov 17, 2008 at 12:27 PM, Luis R. Rodriguez
+> > <lrodriguez@atheros.com> wrote:
+> >> On Sun, Nov 16, 2008 at 12:58:43PM -0800, Davide Pesavento wrote:
+> >>> On Mon, Oct 20, 2008 at 02:28, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> >>> > On Sun, Oct 19, 2008 at 8:57 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
+> >>> >>
+> >>> >> Do you think the regulatory database should be split from the package
+> >>> >> that contains the crda daemon? If so, regulatory.bin should be
+> >>> >> versioned as well...
+> >>> >
+> >>> > Yes, absolutely, the idea is to split db.txt into a separate git tree
+> >>> > too actually so that should help with keeping track of changes
+> >>> > separately and thinking of them separately.
+> >>> >
+> >>> > We just need to get this git tree created. What crda will need though
+> >>> > is to wget the RSA public key so it can be built with support for new
+> >>> > arbitrary updates to the binary db. Give us a few days, we'll get this
+> >>> > setup.
+> >>> >
+> >>> >  Luis
+> >>> >
+> >>>
+> >>> Any updates on this?
+> >>
+> >> I think we'll have this done by the end of the day.
+> >
+> > OK this is now done. We have a new git tree which John maintains for
+> > the database:
+> >
+> > git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
+> >
+> > All you need from that is the regulatory.bin, you don't need to run
+> > make or anything, just cp the regulatory.bin to the preferred
+> > location. Right now this is built into CRDA and its
+> > /usr/lib/crda/regulatory.bin.
+> >
+> > Then do a git pull on crda and try to build and let us know if you run
+> > into any issues for packaging. The documentation on the
+> > wireless.kernel.org wiki needs some good updating.
+> >
+> >  Luis
+> >
 > 
-> Now I've upgraded wireless-testing and am running into the BUG_ON you
-> added for antenna diversity...
+> Great! Thanks a lot!
+> Are there any tarballs around? I couldn't find them on
+> http://wireless.kernel.org/download/...
 
-Hmm, that's odd.. I'll look into it. Patches could take some time :(
+I was working on that and now I'm done, heh. I'll send a new post
+announcing these URLs.
 
-Ivo
+  Luis
