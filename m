@@ -1,38 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56552 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754789AbYKDWBp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 17:01:45 -0500
-From: Alexey Fisher <bug-track@fisher-privat.net>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:55963 "EHLO smtp2.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750890AbYKXMBf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 07:01:35 -0500
+Received: from math.ut.ee (math.ut.ee [193.40.36.2])
+	by smtp2.it.da.ut.ee (Postfix) with ESMTP id 5822A73D57E
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 14:01:32 +0200 (EET)
+Received: from localhost (localhost [127.0.0.1])
+	by math.ut.ee (Postfix) with ESMTP id 3F6FBFD79B
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 14:01:32 +0200 (EET)
+Date: Mon, 24 Nov 2008 14:01:32 +0200 (EET)
+From: Meelis Roos <mroos@linux.ee>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, rjw@sisk.pl,
-	kernel-testers@vger.kernel.org,
-	Alexey Fisher <bug-track@fisher-privat.net>
-Subject: [PATCH] make assocaittion only if SSID is known.
-Date: Tue,  4 Nov 2008 23:01:41 +0100
-Message-Id: <1225836101-5723-1-git-send-email-bug-track@fisher-privat.net> (sfid-20081104_230150_680239_C3FE7BE6)
+Subject: RT2500 instability
+Message-ID: <Pine.SOC.4.64.0811241354220.10894@math.ut.ee> (sfid-20081124_130157_509417_8CDC8BC5)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'iwconfig eth1 channel 6' would trigger association to _something_, which is wrong.  Changing the channel should (and does) trigger reassociation, but only if there is an SSID to associate with!
----
- drivers/net/wireless/ipw2200.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+This actually a longstanding problem - I have never gottenr rt2x00 
+driver to work reliably. It looks like it mostly works but often 
+deauthenticates like in dmesg below. I have nerver had time to look more 
+closely into it since when I'm using WiFi it's usually not a good time 
+for debugging. Using 2.6.21 with Ralink vendor driver just works, so I 
+boot into 2.6.21 when I'm in WiFi area. Using pc-card rt2500 from 
+Canyon.
 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index dcce354..d26beed 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -7581,8 +7581,7 @@ static int ipw_associate(void *data)
- 	}
- 
- 	if (!(priv->config & CFG_ASSOCIATE) &&
--	    !(priv->config & (CFG_STATIC_ESSID |
--			      CFG_STATIC_CHANNEL | CFG_STATIC_BSSID))) {
-+	    !(priv->config & (CFG_STATIC_ESSID | CFG_STATIC_BSSID))) {
- 		IPW_DEBUG_ASSOC("Not attempting association (associate=0)\n");
- 		return 0;
- 	}
+What is the best way to debug this?
+
+ADDRCONF(NETDEV_UP): eth1: link is not ready
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authentication with AP 00:1f:6c:ab:db:40 timed out
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authentication with AP 00:1f:6c:ab:db:40 timed out
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX AssocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 aid=13)
+eth1: associated
+ADDRCONF(NETDEV_CHANGE): eth1: link becomes ready
+eth1: no IPv6 routers present
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=13)
+eth1: associated
+eth1: No ProbeResp from current AP 00:1f:9e:28:d9:30 - assume out of 
+range
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authentication with AP 00:1f:9e:28:d9:30 timed out
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authentication with AP 00:1f:6c:ab:db:40 timed out
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authenticate with AP 00:1f:6c:ab:db:40
+eth1: authentication with AP 00:1f:6c:ab:db:40 timed out
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=18)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=18)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=18)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authentication with AP 00:1f:9e:28:d9:30 timed out
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 aid=9)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 
+aid=17)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 aid=9)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 aid=9)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 aid=9)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 aid=9)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 aid=9)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 aid=9)
+eth1: associated
+eth1: deauthenticated
+eth1: authenticate with AP 00:1f:9e:28:d9:30
+eth1: authenticated
+eth1: associate with AP 00:1f:9e:28:d9:30
+eth1: RX ReassocResp from 00:1f:9e:28:d9:30 (capab=0x421 status=0 aid=9)
+eth1: associated
+eth1: deauthenticated
+
+
 -- 
-1.5.6.3
-
+Meelis Roos (mroos@linux.ee)
