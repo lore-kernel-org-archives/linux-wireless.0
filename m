@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.177]:64230 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734AbYKMCZs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 21:25:48 -0500
-Received: by el-out-1112.google.com with SMTP id z25so400892ele.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 18:25:47 -0800 (PST)
-Message-ID: <43e72e890811121825o538fe026md422c560d4090882@mail.gmail.com> (sfid-20081113_032551_523329_FC06639C)
-Date: Wed, 12 Nov 2008 18:25:46 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [otus-devel] [FYI] ar9170 driver
-Cc: "otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890811121824h70cdaci9eefe4fd625aafc9@mail.gmail.com>
+Received: from hostap.isc.org ([149.20.54.63]:60165 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751586AbYKXSaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 13:30:05 -0500
+Date: Mon, 24 Nov 2008 20:29:43 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Fwd: please don't regress ath5k.h]
+Message-ID: <20081124182943.GA9790@jm.kir.nu> (sfid-20081124_193012_389310_EF3F901A)
+References: <492A14A7.4040808@gmail.com> <1205.94.79.146.217.1227505499.squirrel@webmail.madwifi.org> <1227507381.3599.55.camel@johannes.berg> <492AC870.3030103@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1226531034.14186.39.camel@johannes.berg>
-	 <1226531788.14186.41.camel@johannes.berg>
-	 <1226537117.14186.44.camel@johannes.berg>
-	 <1226540559.14186.56.camel@johannes.berg>
-	 <43e72e890811121824h70cdaci9eefe4fd625aafc9@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <492AC870.3030103@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2008 at 6:24 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Nov 12, 2008 at 5:42 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Thu, 2008-11-13 at 01:45 +0100, Johannes Berg wrote:
->>
->>> Better URL is
->>> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-ar9170.patch
->>
->> In addition to that, you will want to apply this patch
->> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-fix-tasklet.patch
->> too because otherwise sometimes mac80211 will schedule a disabled
->> tasklet with the expected dead loop consequence, and then later will
->> even wait for it to finish... I'll submit this proper once I've figured
->> out why it's happening.
+On Mon, Nov 24, 2008 at 10:29:52AM -0500, Richard Farina wrote:
+
+> I actually don't have a problem with removing chan_debug, I was merely  
+> requesting that the size hack it enables not be removed.
 >
-> I get a 404 on the second patch.
+> More specifically in base.h I believe the code I specifically require is:
+>
+> #if CHAN_DEBUG
+> #define ATH_CHAN_MAX    (26+26+26+200+200)
+> #else
+> #define ATH_CHAN_MAX    (14+14+14+252+20)
+> #endif
+>
+>
+> When removing chan_debug just please leave the higher max.
 
-This one works though:
+I would actually prefer to reduce this number _way_ down to something
+reasonable in the upstream kernel. ath5k should not really register more
+than channels 1-14 in 2.4 GHz and 5 GHz channels that are really used
+(i.e., only every fourth and only at ISM bands). The maximum number
+would be somewhere closer to 40 than 500..
 
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/007-mac80211-fix-tasklet.patch
+If you have a license to use other frequencies, you can take care of
+that with your own private patches, but the upstream kernel should not
+do that. Channels in 2.3 GHz or 2.5 GHz or many of the 5 GHz areas that
+are currently registered do not really belong here in the upstream
+kernel no matter what the hardware might be capable of doing.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
