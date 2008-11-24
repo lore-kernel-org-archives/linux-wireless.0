@@ -1,44 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28507 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751902AbYKRDnP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 22:43:15 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 19:43:15 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18722.14630.129243.189672@gargle.gargle.HOWL> (sfid-20081118_044319_230243_76183C0B)
-Date: Tue, 18 Nov 2008 09:10:22 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 17/18] ath9k: Update TX trigger level on a FIFO underrun.
+Received: from senator.holtmann.net ([87.106.208.187]:34936 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751585AbYKXDu7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2008 22:50:59 -0500
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"sfr@canb.auug.org.au" <sfr@canb.auug.org.au>
+Message-Id: <7E134DC0-A86D-460A-B5DC-22E6D9BEED92@linux.intel.com> (sfid-20081124_045118_729193_36CE5617)
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <1227497655.2548.257.camel@debian.sh.intel.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: pull request: wireless-2.6 2008-11-18
+Date: Mon, 24 Nov 2008 04:50:51 +0100
+References: <20081119000719.GA19756@tuxdriver.com> <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com> <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com> <20081119143919.GA3485@tuxdriver.com> <1227497655.2548.257.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/mac.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Hi Yi,
 
-diff --git a/drivers/net/wireless/ath9k/mac.c b/drivers/net/wireless/ath9k/mac.c
-index c344a81..36955e0 100644
---- a/drivers/net/wireless/ath9k/mac.c
-+++ b/drivers/net/wireless/ath9k/mac.c
-@@ -293,8 +293,10 @@ int ath9k_hw_txprocdesc(struct ath_hal *ah, struct ath_desc *ds)
- 		ds->ds_txstat.ts_status |= ATH9K_TXERR_XRETRY;
- 	if (ads->ds_txstatus1 & AR_Filtered)
- 		ds->ds_txstat.ts_status |= ATH9K_TXERR_FILT;
--	if (ads->ds_txstatus1 & AR_FIFOUnderrun)
-+	if (ads->ds_txstatus1 & AR_FIFOUnderrun) {
- 		ds->ds_txstat.ts_status |= ATH9K_TXERR_FIFO;
-+		ath9k_hw_updatetxtriglevel(ah, true);
-+	}
- 	if (ads->ds_txstatus9 & AR_TxOpExceeded)
- 		ds->ds_txstat.ts_status |= ATH9K_TXERR_XTXOP;
- 	if (ads->ds_txstatus1 & AR_TxTimerExpired)
--- 
-1.6.0.3
+>> The iwlwifi drivers have been hitting these problems for months,
+>> and I have seen no effort by your team to address the problems.
+>> It is possible that your team is working on them behind closed doors
+>> and will eventually throw something over the wall to us.  I'm tired
+>> of waiting for that, and I imagine that hordes of iwlagn users are
+>> tired of waiting as well.
+>
+> This is not correct. We are tracing this problem in our bugzilla.  
+> And it
+> is the open place. Much more people have used it for a much longer  
+> time
+> even before the kernel bugzilla existed. If you take a look at the  
+> bug,
+> you know how much effort we put on it:
+> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703
+
+and just relying on Bugzilla is not gonna be good enough. The Linux  
+kernel development has always been done via mailing lists. And while  
+there is a kernel and other Bugzillas, the main authority is still the  
+mailing list. So if you wanna get massive feedback or have testing  
+patches for debugging, then these need to be posted to linux-wireless  
+and not "hidden" into a Bugzilla.
+
+Using Bugzilla for tracking is perfectly fine, but you have to treat  
+it as second citizen when it comes to upstream development. Reinette  
+is trying to bridge the gap between the Bugzilla by pointing people to  
+the patches in the Bugzilla when new reports come to the mailing list.  
+And this has to be done more actively. I prefer if we remove any  
+Bugzilla discussion for complicated issues to the mailing list.
+
+If we really need it, then someone has to start a iwlwifi-debugging  
+kernel tree that derives from wireless-testing where all patches are  
+available via GIT and easy to review. Or ask John to create a iwlwifi- 
+debugging branch in wireless-testing. I am happy to run such tree. And  
+then use WARN() so I can just call kerneloops to push any stack traces.
+
+>> Johannes has presented us with plausible fixes, and people are
+>> reporting that the patches work for them.  I can merge these patches,
+>> or wait/hope/pray for some to come from your team.  Experience
+>> suggests
+>> that if fixes do come from your team that they will either be buried
+>> in some monster patch that largely addresses something else, or
+>> that the patches will arrive with a changelog that is terse and/or
+>> unintelligble.  Subsequently, I am not optimistic about waiting.
+>>
+>> I think Johannes cited four different bugzilla.kernel.org entries
+>> between those two patches.  What is your team doing to address
+>> those bugs?
+>
+> Johannes' effort is great and should certainly be praised. But looking
+> down upon Intel's effort is nonsense. We suspected this alignment  
+> issue
+> in the very beginning. But the set of users helped us to debug with  
+> this
+> problem happened to have a different root cause than Johannes. Thus  
+> came
+> with the alignment BUG_ON assert put into the code in case other  
+> people
+> experience with it (unfortunately, it was a wrong one. As I had
+> appologized for this already.)
+>
+> The problem should at least have two causes. Johannes had resolved one
+> of them. The other one (AFAICS) relates to be in an 11n AP environment
+> (no need to be associated with it) and takes longer time to reproduce.
+> We will keep tracking it whatever we you think us about it.
+
+I do have a perfect environment in Vancouver that allows me to trigger  
+this behavior within a few minutes. So if you really wanna debug this,  
+then just send debug patches to the mailing list and I am happy to run  
+such kernels. Only minor details is that you have to wait until the  
+end of December before I am back there ;)
+
+Regards
+
+Marcel
 
