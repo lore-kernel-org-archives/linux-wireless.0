@@ -1,113 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:61539 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752795AbYK2XVH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2008 18:21:07 -0500
-Message-ID: <4931CE5E.9030402@lwfinger.net> (sfid-20081130_002115_462873_52DFAD3E)
-Date: Sat, 29 Nov 2008 17:21:02 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Stefan Steuerwald <salsasepp@googlemail.com>
-Subject: Re: [PATCH 1/6 v2.1] mac80211: add sta_notify_ps callback
-References: <200811292232.56550.chunkeey@web.de> <1227994897.3542.17.camel@johannes.berg> <200811292309.38521.chunkeey@web.de>
-In-Reply-To: <200811292309.38521.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from c60.cesmail.net ([216.154.195.49]:29377 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752252AbYKXSxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 13:53:15 -0500
+Subject: Re: ath5k: can't browse at all.
+From: Pavel Roskin <proski@gnu.org>
+To: Irwan Siajadi <dev.bahamot@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <978525.69086.qm@web59613.mail.ac4.yahoo.com>
+References: <978525.69086.qm@web59613.mail.ac4.yahoo.com>
+Content-Type: text/plain
+Date: Mon, 24 Nov 2008 13:53:12 -0500
+Message-Id: <1227552792.26229.6.camel@dv> (sfid-20081124_195326_027272_9C5673A3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> This patch is necessary in order to provide a proper Access point support for p54.
->  
-> Unfortunately for us, there is no documented way to disable the interfering
-> power save buffering mechanism in firmware completely.
->  
-> Therefore we give in and notify the driver through our new sta_notify_ps callback, 
-> so that we can update the filter state.
->  
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> the extra patch for mac80211_hwsim is no longer needed...
-> This whole series is all for wireless-testing.
-> 
-> erm... now with a updated documentation!!1one
-> ---
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 6a1d4ea..a6baf37 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -779,6 +779,19 @@ enum sta_notify_cmd {
->  };
->  
->  /**
-> + * enum sta_notify_ps_cmd - sta power save notify command
-> + *
-> + * Used with the sta_notify_ps() callback in &struct ieee80211_ops to
-> + * notify the driver if a station made a power state transition.
-> + *
-> + * @STA_NOTIFY_SLEEP: a station is now sleeping
-> + * @STA_NOTIFY_AWAKE: a sleeping station woke up
-> + */
-> +enum sta_notify_ps_cmd {
-> +	STA_NOTIFY_SLEEP, STA_NOTIFY_AWAKE,
-> +};
-> +
-> +/**
->   * enum ieee80211_tkip_key_type - get tkip key
->   *
->   * Used by drivers which need to get a tkip key for skb. Some drivers need a
-> @@ -1248,6 +1261,9 @@ enum ieee80211_ampdu_mlme_action {
->   * @sta_notify: Notifies low level driver about addition or removal
->   *	of associated station or AP.
->   *
-> + * @sta_ps_notify: Notifies low level driver about the power state transition
-> + *	of a associated station. Must be atomic.
-> + *
->   * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
->   *	bursting) for a hardware TX queue.
->   *
-> @@ -1314,6 +1330,8 @@ struct ieee80211_ops {
->  	int (*set_frag_threshold)(struct ieee80211_hw *hw, u32 value);
->  	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->  			enum sta_notify_cmd, struct ieee80211_sta *sta);
-> +	void (*sta_notify_ps)(struct ieee80211_hw *hw,
-> +			enum sta_notify_ps_cmd, struct ieee80211_sta *sta);
->  	int (*conf_tx)(struct ieee80211_hw *hw, u16 queue,
->  		       const struct ieee80211_tx_queue_params *params);
->  	int (*get_tx_stats)(struct ieee80211_hw *hw,
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 5a1a60f..3bf056e 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -654,10 +654,14 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
->  static void ap_sta_ps_start(struct sta_info *sta)
->  {
->  	struct ieee80211_sub_if_data *sdata = sta->sdata;
-> +	struct ieee80211_local *local = sdata->local;
->  	DECLARE_MAC_BUF(mac);
->  
->  	atomic_inc(&sdata->bss->num_sta_ps);
->  	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL);
-> +	if (local->ops->sta_notify_ps)
-> +		local->ops->sta_notify_ps(local_to_hw(local), STA_WILL_SLEEP,
-> +					  &sta->sta);
->  #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
->  	printk(KERN_DEBUG "%s: STA %s aid %d enters power save mode\n",
->  	       sdata->dev->name, print_mac(mac, sta->sta.addr), sta->sta.aid);
-> @@ -675,6 +679,9 @@ static int ap_sta_ps_end(struct sta_info *sta)
->  	atomic_dec(&sdata->bss->num_sta_ps);
->  
->  	clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
-> +	if (local->ops->sta_notify_ps)
-> +		local->ops->sta_notify_ps(local_to_hw(local), STA_WOKE_UP,
-> +					  &sta->sta);
+On Mon, 2008-11-24 at 09:41 -0800, Irwan Siajadi wrote:
+> The AR2425 is able to obtain IP address from the router, 
+> able to ping with good results, but can't browse at all.
+> Below are the info on my setup, if you need more info please let me know.
 
-With this patch, STA_WILL_SLEEP and STA_WOKE_UP are undefined. Is there a
-prerequisite that I missed?
+That's unlikely to be a driver problem.  The driver doesn't distinguish
+pings from other packets.  The only significant difference could be in
+the packet size.  You can try ping with larger packets to check if
+that's the problem.
 
-Larry
+I suggest that you use normal network troubleshooting procedures and not
+assume the driver to be a problem unless you have a better evidence.
+Check routing, check if the nameservers in /etc/resolv.conf are working.
+I'm sure there are detailed guides how to troubleshoot networks.
+
+-- 
+Regards,
+Pavel Roskin
