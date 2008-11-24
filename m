@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:39445 "EHLO mga03.intel.com"
+Received: from hostap.isc.org ([149.20.54.63]:37609 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753848AbYKWLSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2008 06:18:25 -0500
-Date: Sun, 23 Nov 2008 19:18:12 +0800
-From: Wu Fengguang <fengguang.wu@intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] iwlwifi: fix build warning
-Message-ID: <20081123111812.GA15611@localhost> (sfid-20081123_121840_934709_B7C73186)
+	id S1751083AbYKXVF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 16:05:28 -0500
+Date: Mon, 24 Nov 2008 23:05:10 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Rami Rosen <ramirose@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH 1/2] mac80211: enabling an AP that can't support fully
+	PS clients (wireless-testing).
+Message-ID: <20081124210510.GA12881@jm.kir.nu> (sfid-20081124_220533_526345_BA7EDC23)
+References: <eb3ff54b0811232344m77f979aaj79e9e965eefa325c@mail.gmail.com> <1227558612.28878.1.camel@dv>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1227558612.28878.1.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl_escape_essid() is only used in debugging code for now.
-So define it only with CONFIG_IWL3945_DEBUG enabled.
+On Mon, Nov 24, 2008 at 03:30:12PM -0500, Pavel Roskin wrote:
 
-Signed-off-by: Wu Fengguang <wfg@linux.intel.com>
----
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index c89365e..412f5d2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -70,6 +70,7 @@ static int scan_tx_ant[3] = {
+> Maybe it would be better to require a switch to hostapd to enable
+> support for such devices?  Messages are too easy to ignore.
+
+Well, it would be more obvious to the user, but based on the comments on
+this thread, I'm not that sure that this new flag is really needed at
+this point. If the goal is to implement proper PS support in the driver,
+there should not be need for this type of flag. Only if it is clear that
+this won't work (i.e., hardware/firmware design issue that cannot be
+fixed), should this type of flag be considered.
  
- 
- 
-+#ifdef CONFIG_IWL3945_DEBUG
- static int iwl_is_empty_essid(const char *essid, int essid_len)
- {
- 	/* Single white space is for Linksys APs */
-@@ -111,6 +112,7 @@ static const char *iwl_escape_essid(const char *essid, u8 essid_len)
- 	*d = '\0';
- 	return escaped;
- }
-+#endif
- 
- /**
-  * iwl_scan_cancel - Cancel any currently executing HW scan
+-- 
+Jouni Malinen                                            PGP id EFC895FA
