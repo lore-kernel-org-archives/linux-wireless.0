@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42071 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754002AbYKIJDz (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:34978 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751724AbYKXNwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2008 04:03:55 -0500
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 24 Nov 2008 08:52:51 -0500
+Received: from smtp08.web.de (fmsmtp08.dlan.cinetic.de [172.20.5.216])
+	by fmmailgate02.web.de (Postfix) with ESMTP id 5868DF7066A8
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 14:52:50 +0100 (CET)
+Received: from [129.13.72.197] (helo=blech.mobile)
+	by smtp08.web.de with esmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.109 #226)
+	id 1L4bru-0003Yw-00
+	for linux-wireless@vger.kernel.org; Mon, 24 Nov 2008 14:52:50 +0100
+Received: from localhost (localhost [127.0.0.1])
+	by blech.mobile (Postfix) with ESMTP id 2133B17D030
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 14:52:53 +0100 (CET)
+Received: from blech.mobile ([127.0.0.1])
+	by localhost (blech.mobile [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id FZlqoU8l6Ii9 for <linux-wireless@vger.kernel.org>;
+	Mon, 24 Nov 2008 14:52:52 +0100 (CET)
+Received: from blech.mobile (blech.mobile [127.0.1.1])
+	by blech.mobile (Postfix) with ESMTPS id 4FEAF6C00B
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 14:52:52 +0100 (CET)
 To: linux-wireless@vger.kernel.org
-Cc: Shaddy Baddah <shaddy_baddah@hotmail.com>
-In-Reply-To: <1226220992.3614.16.camel@johannes.berg> (sfid-20081109_095632_336911_F61525F4)
-References: <4902DEBB.3050205@hotmail.com>
-	 <20081025112147.GA12252@Chamillionaire.breakpoint.cc>
-	 <200810251325.07916.mb@bu3sch.de>
-	 <20081025112813.GC12252@Chamillionaire.breakpoint.cc>
-	 <49033782.5040701@hotmail.com>  <491589ED.4090904@hotmail.com>
-	 <1226149894.3610.8.camel@johannes.berg>  <491653A6.20705@hotmail.com>
-	 <1226220992.3614.16.camel@johannes.berg>
-	 (sfid-20081109_095632_336911_F61525F4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F1TwtxbyhoobVSKzW1IS"
-Date: Sun, 09 Nov 2008 10:03:58 +0100
-Message-Id: <1226221438.3614.20.camel@johannes.berg> (sfid-20081109_100411_082442_8D83DAEB)
-Mime-Version: 1.0
+Subject: [PATCH] p54: fix wmm queue settings
+From: Christian Lamparter <chunkeey@web.de>
+Date: Mon, 24 Nov 2008 14:52:51 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200811241452.51655.chunkeey@web.de> (sfid-20081124_145255_579319_7804A1DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch fixes a regression (introduced by 453fae72b2f19
+"p54: more definitions form lmac_longbow.h and pda.h" )
 
---=-F1TwtxbyhoobVSKzW1IS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It turned out that the "ret" variable wasn't initialized and
+this caused the following warnings/errors to appear:
 
-On Sun, 2008-11-09 at 09:56 +0100, Johannes Berg wrote:
+wmaster1: failed to set TX queue parameters for queue 2
+wmaster1: failed to set TX queue parameters for queue 3
+wmaster1: failed to set TX queue parameters for queue 1
+wmaster1: failed to set TX queue parameters for queue 0
 
-> I think you forgot to attach the patch.
-
-Sorry, I missed your second mail. (btw, if you generate patches with -p
-in diff arguments it helps a bit reading them)
-
-Ok so it looks like the buffer you're getting is unaligned. This is
-strange, but I'm too unfamiliar with the code. It seems that there's the
-PLCP 5 byte header in front. Well, try the printk I asked for, because
-at that point zd1211 should avoid "leaking" the alignment problem.
-
-johannes
-
---=-F1TwtxbyhoobVSKzW1IS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJFqd6AAoJEKVg1VMiehFYjPEP/RHiun3+FrYP8SCICMu9h6PR
-mncGFR5XVjpAMB+PHZvcawAanADMkoDD4j7hHNFS/rLBFsIODN1n57z3iVnPHCc9
-35Nc8a1DKMF9kVxWvRGrFceW70oGqc/PmtbYOawUSP3ibtW0wS9FodE8kJBCWirr
-JyHSaN8l+833rGlEesTqa9Mz/Y+CFIBtDrpr3mUxAxA8kZhAPPBKiJ9cHtNCZRDD
-jnOXOpk3yp+rp2m8yN93JcJmn+lgH1Vv+kq4VDwQ1FNdhna2gqzvZDT1GWJ9648U
-RzscXiYotWnLDWlohvu1KaNPc5ZVTFvgbl8qyeHy8gl9IdfTvc3p3udLyAEm1NUx
-6F3TYV98hHEG6p4JZTqsnr0nJDxSKOXXjLBZgsTI4NlB5ajETd1TutMdAtYOCQ9H
-zuCswpuitj8BML5bzyUXm0xAuTboALXKv2p12WqKqBNUNf3mwCM8VjOJkTcqukco
-U3Y111Rorhwq/zWRBB6gilEhj+qcPIbjlbLdbs/P15nP21oF6+RdqsaoFhsFUD2T
-oJathrt+Bt7jexn0TkYzsl/VB6LKvHq4BvMbB2GB6yzQ25XUq7pbO0z2vC8cAO7I
-ie64G718F/H5FFjP+oTRFsXh8cICA8R6ptXPTXKN5j5KI1qX0rTEwRD5WxSpqtze
-+UULMVYu+QEMZeduP3jM
-=oQMm
------END PGP SIGNATURE-----
-
---=-F1TwtxbyhoobVSKzW1IS--
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+arg, got the wrong mailing list... sorry!
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-11-24 00:01:27.899490373 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2008-11-24 13:07:09.053832187 +0100
+@@ -1729,10 +1729,9 @@ static int p54_conf_tx(struct ieee80211_
+ 	if ((params) && !(queue > 4)) {
+ 		P54_SET_QUEUE(priv->qos_params[queue], params->aifs,
+ 			params->cw_min, params->cw_max, params->txop);
++		ret = p54_set_edcf(dev);
+ 	} else
+ 		ret = -EINVAL;
+-	if (!ret)
+-		ret = p54_set_edcf(dev);
+ 	mutex_unlock(&priv->conf_mutex);
+ 	return ret;
+ }
