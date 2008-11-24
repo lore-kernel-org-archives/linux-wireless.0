@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:35759 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752674AbYKEU1i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 15:27:38 -0500
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mA5KQwfH006038
-	for <linux-wireless@vger.kernel.org>; Wed, 5 Nov 2008 14:27:36 -0600
-Received: from tikku (essapo-nirac253251.europe.nokia.com [10.162.253.251])
-	by mgw-int02.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mA5KRUOH029904
-	for <linux-wireless@vger.kernel.org>; Wed, 5 Nov 2008 22:27:31 +0200
-To: linux-wireless@vger.kernel.org
-Subject: Thoughts about mac80211 client PS implementation
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 05 Nov 2008 22:27:30 +0200
-Message-ID: <87k5bhkjf1.fsf@nokia.com> (sfid-20081105_212743_302957_1CBD059B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:39882 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751586AbYKXDdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2008 22:33:55 -0500
+Subject: Re: pull request: wireless-2.6 2008-11-18
+From: Zhu Yi <yi.zhu@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"sfr@canb.auug.org.au" <sfr@canb.auug.org.au>
+In-Reply-To: <20081119143919.GA3485@tuxdriver.com>
+References: <20081119000719.GA19756@tuxdriver.com>
+	 <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com>
+	 <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com>
+	 <20081119143919.GA3485@tuxdriver.com>
+Content-Type: text/plain
+Date: Mon, 24 Nov 2008 11:34:15 +0800
+Message-Id: <1227497655.2548.257.camel@debian.sh.intel.com> (sfid-20081124_043405_779859_BA4D194F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm working on implementing the "dynamic Power Save" (ie. PS enabled
-after an idle period) feature to mac80211. Here are my current
-thoughts:
+On Wed, 2008-11-19 at 22:39 +0800, John W. Linville wrote:
+> Well, thanks for your opinion.  Here is mine:
 
-First of all, I think we should enable CONF_PS only when associated.
-So instead of directly calling hw_config() from
-ieee80211_ioctl_siwpower() we should do that only when associated.
-Otherwise we change it only after association or disassociation. This
-means that we have to add a separate bit/variable for storing what
-user has requested.
+I have to say something here. Although not related to the original
+ieee80211_notify_mac change.
 
-PS should be disabled while associated and running software scan, and
-naturally re-enabled after the scan has finished. I assume hardware
-scanning implementations are clever enough to disable PS when scanning
-and we don't have to worry about that case.
+> The iwlwifi drivers have been hitting these problems for months,
+> and I have seen no effort by your team to address the problems.
+> It is possible that your team is working on them behind closed doors
+> and will eventually throw something over the wall to us.  I'm tired
+> of waiting for that, and I imagine that hordes of iwlagn users are
+> tired of waiting as well.
 
-The dynamic PS implementation is still a bit open issue for me. I have
-been thinking something like that in tx.c frames will be queued if PS
-is enabled, PS will be disabled in a workqueue by calling
-ieee80211_hw_config() and only after that the queued frames are
-transfered. So something similar as sta->ps_tx_buf does in AP mode. No
-idea if this is feasible or not.
+This is not correct. We are tracing this problem in our bugzilla. And it
+is the open place. Much more people have used it for a much longer time
+even before the kernel bugzilla existed. If you take a look at the bug,
+you know how much effort we put on it:
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703
 
-Any comments before I'll start writing code?
+> Johannes has presented us with plausible fixes, and people are
+> reporting that the patches work for them.  I can merge these patches,
+> or wait/hope/pray for some to come from your team.  Experience
+> suggests
+> that if fixes do come from your team that they will either be buried
+> in some monster patch that largely addresses something else, or
+> that the patches will arrive with a changelog that is terse and/or
+> unintelligble.  Subsequently, I am not optimistic about waiting.
+> 
+> I think Johannes cited four different bugzilla.kernel.org entries
+> between those two patches.  What is your team doing to address
+> those bugs?
 
--- 
-Kalle Valo
+Johannes' effort is great and should certainly be praised. But looking
+down upon Intel's effort is nonsense. We suspected this alignment issue
+in the very beginning. But the set of users helped us to debug with this
+problem happened to have a different root cause than Johannes. Thus came
+with the alignment BUG_ON assert put into the code in case other people
+experience with it (unfortunately, it was a wrong one. As I had
+appologized for this already.)
+
+The problem should at least have two causes. Johannes had resolved one
+of them. The other one (AFAICS) relates to be in an 11n AP environment
+(no need to be associated with it) and takes longer time to reproduce.
+We will keep tracking it whatever we you think us about it.
+
+Thanks,
+-yi
+
