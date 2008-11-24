@@ -1,59 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39826 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:35151 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753998AbYKDUVR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 15:21:17 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, "Zhu, Yi" <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/3] iwl3945: fix deadlock on suspend
-Date: Tue,  4 Nov 2008 12:21:36 -0800
-Message-Id: <1225830096-7052-4-git-send-email-reinette.chatre@intel.com> (sfid-20081104_212125_132184_EB082B39)
-In-Reply-To: <1225830096-7052-3-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1225830096-7052-1-git-send-email-reinette.chatre@intel.com>
- <1225830096-7052-2-git-send-email-reinette.chatre@intel.com>
- <1225830096-7052-3-git-send-email-reinette.chatre@intel.com>
+	id S1752801AbYKXXMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 18:12:12 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 15:12:12 -0800
+Date: Mon, 24 Nov 2008 15:12:04 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Richard Farina <sidhayn@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: wireless-regdb: flaw in general functionality
+Message-ID: <20081124231204.GN6245@tesla> (sfid-20081125_001217_270868_1E1BADC1)
+References: <492B2B74.7040404@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <492B2B74.7040404@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu, Yi <yi.zhu@intel.com>
+On Mon, Nov 24, 2008 at 02:32:20PM -0800, Richard Farina wrote:
+> First of all I would like to say that the entire idea and function
+> behind crda is vastly improved from the old regulatory settings hard
+> coded in the kernel.  In light of this, however, we all seem to be
+> avoiding a very clear part of reality.
+> 
+> crda and the regulatory database restrain the channels that a person can
+> legally transmit on based on their (presumed) current regulatory
+> legislation.  Unfortunately, when I learned about radios I was taught
+> that radios can RECEIVE as well as transmit.  In fact, in the USA (the
+> country I live in and hence where I am most familiar with the laws) it
+> is 100% legal to monitor any frequency that you desire.  crda clearly
+> misses that fact and doesn't permit proper legal operation of the radio
+> device.
+> 
+> crda and the regulatory database should be modified so that I can use my
+> cards in the legal manner prescribed by the FCC (my regulatory body here
+> in the USA).
 
-This patch fixes iwl3945 deadlock during suspend by moving notify_mac out
-of iwl3945 mutex. This is a portion of the same fix for iwlwifi by Tomas.
+The reguluatory database is designed with 802.11 in mind, its database
+also provides enablement on frequency, not disablement. By default
+cfg80211 disallows everything except what is listed for the current
+regulatory domain being used.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
-Also applies to 2.6.28.
+Your point about not being able to listen is a good one, and a patch to
+update the the US in consideration of part 15 rules would be
+appreciated. Keep in mind we have flags for such things:
 
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+  -Passive scan
+  -No-IBSS
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index caac74c..5dd53a1 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5714,7 +5714,6 @@ static void iwl3945_alive_start(struct iwl3945_priv *priv)
- 	if (priv->error_recovering)
- 		iwl3945_error_recovery(priv);
- 
--	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
- 	return;
- 
-  restart:
-@@ -5959,6 +5958,7 @@ static void iwl3945_bg_alive_start(struct work_struct *data)
- 	mutex_lock(&priv->mutex);
- 	iwl3945_alive_start(priv);
- 	mutex_unlock(&priv->mutex);
-+	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
- }
- 
- static void iwl3945_bg_rf_kill(struct work_struct *work)
--- 
-1.5.4.3
+We should probably rename no-ibss to no-beaconing though as that is the
+real meaning inention behind it. 
 
+  Luis
