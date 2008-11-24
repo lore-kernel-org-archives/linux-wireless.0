@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13723 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752865AbYKLWWK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 17:22:10 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 14:22:10 -0800
+Received: from rn-out-0910.google.com ([64.233.170.189]:20136 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbYKXXaQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 18:30:16 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so1938837rnd.17
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 15:30:15 -0800 (PST)
+Message-ID: <43e72e890811241530t44245e4ar3fd5797afcc451c0@mail.gmail.com> (sfid-20081125_003021_840688_73B4CF46)
+Date: Mon, 24 Nov 2008 15:30:15 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/10] cfg80211: remove switch from __set_regdom()
-Date: Wed, 12 Nov 2008 14:21:57 -0800
-Message-ID: <1226528524-32678-4-git-send-email-lrodriguez@atheros.com> (sfid-20081112_232215_934210_7DC04853)
-In-Reply-To: <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
-References: <1226528524-32678-1-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-2-git-send-email-lrodriguez@atheros.com>
- <1226528524-32678-3-git-send-email-lrodriguez@atheros.com>
+To: "Richard Farina" <sidhayn@gmail.com>
+Subject: Re: wireless-regdb: update regulatory rules for US 2.3-2.4GHz and 5.65-5.925GHz
+Cc: "John Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"Michael Green" <Michael.Green@atheros.com>
+In-Reply-To: <492B3643.4070904@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+References: <492B2E07.9050105@gmail.com> <20081124230427.GM6245@tesla>
+	 <492B3643.4070904@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have control over the REGDOM_SET_BY_* macros passed
-so remove the switch.
+On Mon, Nov 24, 2008 at 3:18 PM, Richard Farina <sidhayn@gmail.com> wrote:
+> Luis R. Rodriguez wrote:
+>>
+>> On Mon, Nov 24, 2008 at 02:43:19PM -0800, Richard Farina wrote:
+>>
+>>>
+>>> The above frequencies are allowed by FCC part 97 to amateur radio
+>>> operator as primary use, this doesn't even cover the secondary and
+>>> tertiary uses, just where amateurs are primary.
+>>>
+>>
+>> NACK -- For the US we use the wireless regulatory database for Part 15
+>> rules with 802.11 in mind.
+>>
+>>
+>
+> Not only do I understand your reasoning, but I also agree.  Please do
+> consider the following (from that same email):
 
-This patch has no functional changes.
+Thanks :)
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/reg.c |   21 ++++++---------------
- 1 files changed, 6 insertions(+), 15 deletions(-)
+> This also introduces a new issue in crda of setting not only power limits
+> but power limits based on modulation.  It is permitted to use DSSS up to 100
+> watts, however, OFDM is permitted up to 1500 watts.
+>
+> Would it be an unreasonable request to have crda support modulation
+> restrictions and power limit based on modulation restrictions?
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e44f005..290ecec 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -829,21 +829,12 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	reset_regdomains();
- 
- 	/* Country IE parsing coming soon */
--	switch (last_request->initiator) {
--	case REGDOM_SET_BY_CORE:
--	case REGDOM_SET_BY_DRIVER:
--	case REGDOM_SET_BY_USER:
--		if (!is_valid_rd(rd)) {
--			printk(KERN_ERR "cfg80211: Invalid "
--				"regulatory domain detected:\n");
--			print_regdomain_info(rd);
--			return -EINVAL;
--		}
--		break;
--	case REGDOM_SET_BY_COUNTRY_IE: /* Not yet */
--		WARN_ON(1);
--	default:
--		return -EOPNOTSUPP;
-+
-+	if (!is_valid_rd(rd)) {
-+		printk(KERN_ERR "cfg80211: Invalid "
-+			"regulatory domain detected:\n");
-+		print_regdomain_info(rd);
-+		return -EINVAL;
- 	}
- 
- 	if (unlikely(last_request->intersect)) {
--- 
-1.5.6.3
+This is odd, first time I hear about such a thing. Do you have a
+pointer to Part 15 rules which clarifies this?
 
+  Luis
