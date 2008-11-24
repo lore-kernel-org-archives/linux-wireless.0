@@ -1,90 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:55085 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855AbYKXHog (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:38347 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890AbYKXSjl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 02:44:36 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so971884nfc.21
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Nov 2008 23:44:34 -0800 (PST)
-Message-ID: <eb3ff54b0811232344m77f979aaj79e9e965eefa325c@mail.gmail.com> (sfid-20081124_084439_912474_758F910E)
-Date: Mon, 24 Nov 2008 09:44:34 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH 1/2] mac80211: enabling an AP that can't support fully PS clients (wireless-testing).
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net, j@w1.fi
+	Mon, 24 Nov 2008 13:39:41 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so871470eyi.37
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 10:39:39 -0800 (PST)
+Message-ID: <492AF4EC.4060705@gmail.com> (sfid-20081124_193946_741722_BD0C7E37)
+Date: Mon, 24 Nov 2008 13:39:40 -0500
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jouni Malinen <j@w1.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Fwd: please don't regress ath5k.h]
+References: <492A14A7.4040808@gmail.com> <1205.94.79.146.217.1227505499.squirrel@webmail.madwifi.org> <1227507381.3599.55.camel@johannes.berg> <492AC870.3030103@gmail.com> <20081124182943.GA9790@jm.kir.nu>
+In-Reply-To: <20081124182943.GA9790@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables mac80211 to support the PS challenged mode when
-used in master mode.
-A new attribute, NL80211_ATTR_WIPHY_AP_PS_CHALLENGED, was added to
-nl80211_attrs; also a new member (ap_ps_challenged) was added to
-struct wiphy; and nl80211_send_wiphy() was adjusted accordingly.
+Jouni Malinen wrote:
+> On Mon, Nov 24, 2008 at 10:29:52AM -0500, Richard Farina wrote:
+>
+>   
+>> I actually don't have a problem with removing chan_debug, I was merely  
+>> requesting that the size hack it enables not be removed.
+>>
+>> More specifically in base.h I believe the code I specifically require is:
+>>
+>> #if CHAN_DEBUG
+>> #define ATH_CHAN_MAX    (26+26+26+200+200)
+>> #else
+>> #define ATH_CHAN_MAX    (14+14+14+252+20)
+>> #endif
+>>
+>>
+>> When removing chan_debug just please leave the higher max.
+>>     
+>
+> I would actually prefer to reduce this number _way_ down to something
+> reasonable in the upstream kernel. ath5k should not really register more
+> than channels 1-14 in 2.4 GHz and 5 GHz channels that are really used
+> (i.e., only every fourth and only at ISM bands). The maximum number
+> would be somewhere closer to 40 than 500..
+>
+> If you have a license to use other frequencies, you can take care of
+> that with your own private patches, but the upstream kernel should not
+> do that. Channels in 2.3 GHz or 2.5 GHz or many of the 5 GHz areas that
+> are currently registered do not really belong here in the upstream
+> kernel no matter what the hardware might be capable of doing.
+>
+>   
+Your response to my request seems a bit flawed in my eyes.  Drivers are 
+supposed to run the hardware, we have crda to handle limiting the device 
+back to to what is legal in your area.  I'm sure there are places where 
+it is legal to use 2192MHz and even if not, look at the driver, it has a 
+max of 2732MHz set in the driver (for the .11b/g radio), clearly the 
+person who wrote that agrees that drivers should support the hardware.
 
-User space applications (like hostapd) should check the
-NL80211_ATTR_WIPHY_AP_PS_CHALLENGED
-attribute and  display a proper message, if it is set, to inform the
-users.
+Honestly if you want to argue the legality I purposely posted an RFC for 
+that, this change (and this email thread) is to stop a regression that 
+would cause the hardware to no longer be fully and properly supported.
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+Yes, I can maintain my own personal patches to all of the drivers in the 
+kernel (as a matter of fact I likely do) but this kind of thing belongs 
+in the kernel, we are discussing hardware support, nothing more.  
+Limiting the driver to enforce some random regulatory domain is 
+pointless and against kernel policy as reg domain enforcement is 
+supposed to be handled by crda or oldreg.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 7982734..dbe15e0 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -256,6 +256,9 @@ enum nl80211_commands {
-  *	supported interface types, each a flag attribute with the number
-  *	of the interface mode.
-  *
-+ * @NL80211_ATTR_WIPHY_AP_PS_CHALLENGED: indicates that the wiphy support
-+ *  for PS is not full.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -316,6 +319,8 @@ enum nl80211_attrs {
-
- 	NL80211_ATTR_WIPHY_TXQ_PARAMS,
-
-+	NL80211_ATTR_WIPHY_AP_PS_CHALLENGED,
-+
- 	/* add attributes here, update the policy in nl80211.c */
-
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -329,6 +334,7 @@ enum nl80211_attrs {
- #define NL80211_ATTR_HT_CAPABILITY NL80211_ATTR_HT_CAPABILITY
- #define NL80211_ATTR_BSS_BASIC_RATES NL80211_ATTR_BSS_BASIC_RATES
- #define NL80211_ATTR_WIPHY_TXQ_PARAMS NL80211_ATTR_WIPHY_TXQ_PARAMS
-+#define NL80211_ATTR_WIPHY_AP_PS_CHALLENGED NL80211_ATTR_WIPHY_AP_PS_CHALLENGED
-
- #define NL80211_MAX_SUPP_RATES			32
- #define NL80211_MAX_SUPP_REG_RULES		32
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index aedefa5..c7ec68b 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -198,6 +198,8 @@ struct wiphy {
- 	u16 interface_modes;
-
- 	bool fw_handles_regulatory;
-+	/* enable AP (master mode) when the AP is without proper power saving mode */
-+	bool ap_ps_challenged;
-
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 00121ce..73098fe 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -149,6 +149,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg,
-u32 pid, u32 seq, int flags,
- 	}
-
- 	nla_nest_end(msg, nl_modes);
-+	if (dev->wiphy.ap_ps_challenged)
-+	    NLA_PUT_FLAG(msg, NL80211_ATTR_WIPHY_AP_PS_CHALLENGED);
-
- 	nl_bands = nla_nest_start(msg, NL80211_ATTR_WIPHY_BANDS);
- 	if (!nl_bands)
+Thanks,
+Rick
