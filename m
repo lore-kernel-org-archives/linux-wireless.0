@@ -1,97 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23103.mail.ird.yahoo.com ([217.146.189.43]:46274 "HELO
-	web23103.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753445AbYKECCK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 21:02:10 -0500
-Date: Wed, 5 Nov 2008 02:02:07 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:55544 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751995AbYKXCtf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2008 21:49:35 -0500
+From: "Xu, Martin" <martin.xu@intel.com>
+To: Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
+	Vikram Kandukuri <Vikram.Kandukuri@atheros.com>,
+	Jothikumar Mothilal <Jothikumar.Mothilal@atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>
+Date: Mon, 24 Nov 2008 10:49:27 +0800
+Subject: RE: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts
+ per second at idle
+Message-ID: <9F0C1DB20AFA954FA1DA05309350433D4125B42A@pdsmsx503.ccr.corp.intel.com> (sfid-20081124_034944_208145_3DDF647E)
+References: <bug-11749-13098@http.bugzilla.kernel.org/>
+ <20081013150525.884BC108058@picon.linux-foundation.org>
+ <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
+ <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com>
+ <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com>
+ <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com>
+ <9F0C1DB20AFA954FA1DA05309350433D410CD777@pdsmsx503.ccr.corp.intel.com>
+ <20081117133737.GA16412@hash.localnet>
+ <9F0C1DB20AFA954FA1DA05309350433D41183AB4@pdsmsx503.ccr.corp.intel.com>
+ <20081121202734.GC3540@tuxdriver.com> <20081123222735.GB30249@hash.localnet>
+In-Reply-To: <20081123222735.GB30249@hash.localnet>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <970642.22610.qm@web23103.mail.ird.yahoo.com> (sfid-20081105_030215_193458_A43B9638)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Tue, 4/11/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> > Signed-off-by: Herton Ronaldo Krzesinski
-> <herton@mandriva.com.br>
-> 
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-I tried with this combo:
-
-compat-wireless: master-2008-10-31
-wireless-testing: v2.6.28-rc2-4239-gd80fe00
-
-and applying the two patches on top, they applies cleanly and compile okay except for some warnings in a different module about missing symbols (<something>_sta) but the result dies very painfully with a kernel oops:
--------------
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000307
-IP: [<ffffffffa0105988>] rtl8187_probe+0x7f/0x836 [rtl8187]
-PGD 754c4067 PUD 751d5067 PMD 0 
-Oops: 0002 [1] SMP 
-CPU 0 
-Modules linked in: rtl8187(+) snd_page_alloc video firewire_ohci firewire_core shpchp pcspkr eeprom_93cx6 output ac battery joydev r8169 crc_itu_t soundcore 
-i2c_piix4 k8temp hwmon pata_atiixp radeon drm i2c_algo_bit i2c_core
-Pid: 829, comm: modprobe Not tainted 2.6.27.4-73.fc10.x86_64 #1
-RIP: 0010:[<ffffffffa0105988>]  [<ffffffffa0105988>] rtl8187_probe+0x7f/0x836 [rtl8187]
-RSP: 0018:ffff880074de1c48  EFLAGS: 00010246
-RAX: ffffffffa0108520 RBX: ffff880074de1cd0 RCX: 0000000000000001
-RDX: 0000000000000000 RSI: ffff8800754763c8 RDI: 0000000000000040
-RBP: ffff880074de1d08 R08: 00000000000003e8 R09: ffff8800776ed868
-R10: ffff8800754761c4 R11: 000000000000000a R12: 0000000000000000
-R13: ffff8800754762e0 R14: 0000000000000038 R15: ffff880074958000
-FS:  00007f5c8bef66f0(0000) GS:ffffffff8158a100(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 0000000000000307 CR3: 0000000074dc6000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process modprobe (pid: 829, threadinfo ffff880074de0000, task ffff880075420000)
-Stack:  ffff880074de1cb8 ffffffff8110d22f ffff880074de1c78 ffff880074de1c78
- ffff88007402af50 ffff88007402af50 ffffffffa0108520 ffff88007487a000
- ffff880074958000 ffffffff81031023 ffff880074de1ca8 ffffffff81353562
-Call Trace:
- [<ffffffff8110d22f>] ? sysfs_addrm_finish+0x69/0x20e
- [<ffffffff81031023>] ? need_resched+0x1e/0x28
- [<ffffffff81353562>] ? _cond_resched+0x9/0x38
- [<ffffffff81353aee>] ? mutex_lock+0x22/0x33
- [<ffffffff81240d08>] ? usb_match_one_id+0x2b/0x88
- [<ffffffff812412df>] ? usb_autopm_do_device+0xc8/0xd4
- [<ffffffff812418b5>] usb_probe_interface+0x10e/0x14b
- [<ffffffff811f64c4>] driver_probe_device+0xc0/0x16e
- [<ffffffff811f65c1>] __driver_attach+0x4f/0x79
- [<ffffffff811f6572>] ? __driver_attach+0x0/0x79
- [<ffffffff811f5d57>] bus_for_each_dev+0x4f/0x89
- [<ffffffff811f630f>] driver_attach+0x1c/0x1e
- [<ffffffff811f5677>] bus_add_driver+0xb7/0x201
- [<ffffffff811f67b0>] driver_register+0xa8/0x128
- [<ffffffff81241aff>] usb_register_driver+0x80/0xe4
- [<ffffffffa00bb000>] ? rtl8187_init+0x0/0x20 [rtl8187]
- [<ffffffffa00bb01e>] rtl8187_init+0x1e/0x20 [rtl8187]
- [<ffffffff8100a047>] do_one_initcall+0x47/0x12e
- [<ffffffff81065be1>] sys_init_module+0xa9/0x1b6
- [<ffffffff8101024a>] system_call_fastpath+0x16/0x1b
-
-
-Code: 24 e1 e9 98 07 00 00 48 81 eb 88 00 00 00 48 89 5d 80 4c 8b 60 40 48 8d 5d c8 48 8b 85 70 ff ff ff 4d 8d 74 24 38 48 83 78 10 01 <41> 0f 94 84 24 07 03
- 00 00 48 8b 85 78 ff ff ff 49 8b 55 28 48 
-RIP  [<ffffffffa0105988>] rtl8187_probe+0x7f/0x836 [rtl8187]
- RSP <ffff880074de1c48>
-CR2: 0000000000000307
----[ end trace aed852fa39b00f8c ]---
----------
-
-
-Hin-Tak
-
-
-
-      
+Qm9iOg0KWW91IGFyZSByaWdodCwgdGhlIGJzc19pbmZvcl9jaGFuZ2VkIGlzIGxvc3Qgb24gdGhl
+IHdheS4NClBsZWFzZSByZXZpZXcgYmVsb3cgcGF0Y2g6DQoNCkZyb206IE1hcnRpbiBYdSA8bWFy
+dGluLnh1QGludGVsLmNvbT4NClN1YmplY3Q6IGRpc2FibGUgYmVhY29uIGZpbHRlciB3aGVuIHN0
+YXRpb24gaXMgbm90IGFzc29jaWF0ZWQgd2l0aCBhbnkgQVAuDQoNCkF0aDVrIGRyaXZlciBoYXMg
+dG9vIG1hbnkgaW50ZXJydXB0cyBwZXIgc2Vjb25kIGF0IGlkbGUNCmh0dHA6Ly9idWd6aWxsYS5r
+ZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD0xMTc0OQ0KDQpTaWduZWQtb2ZmLWJ5OiBNYXJ0aW4g
+WHUgPG1hcnRpbi54dUBpbnRlbC5jb20+DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJl
+bGVzcy9hdGg1ay9iYXNlLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1ay9iYXNlLmMNCmlu
+ZGV4IDM0Y2QxYTQuLjViNTBmYTMgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9h
+dGg1ay9iYXNlLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrL2Jhc2UuYw0KQEAg
+LTI0MSw2ICsyNDEsMTAgQEAgc3RhdGljIGludCBhdGg1a19nZXRfdHhfc3RhdHMoc3RydWN0IGll
+ZWU4MDIxMV9odyAqaHcsDQogc3RhdGljIHU2NCBhdGg1a19nZXRfdHNmKHN0cnVjdCBpZWVlODAy
+MTFfaHcgKmh3KTsNCiBzdGF0aWMgdm9pZCBhdGg1a19yZXNldF90c2Yoc3RydWN0IGllZWU4MDIx
+MV9odyAqaHcpOw0KIHN0YXRpYyBpbnQgYXRoNWtfYmVhY29uX3VwZGF0ZShzdHJ1Y3QgYXRoNWtf
+c29mdGMgKnNjLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKTsNCitzdGF0aWMgdm9pZCBhdGg1a19ic3Nf
+aW5mb19jaGFuZ2VkKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LA0KKwkJCQlzdHJ1Y3QgaWVlZTgw
+MjExX3ZpZiAqdmlmLA0KKwkJCQlzdHJ1Y3QgaWVlZTgwMjExX2Jzc19jb25mICpic3NfY29uZiwN
+CisJCQkJdTMyIGNoYW5nZXMpOw0KIA0KIHN0YXRpYyBzdHJ1Y3QgaWVlZTgwMjExX29wcyBhdGg1
+a19od19vcHMgPSB7DQogCS50eCAJCT0gYXRoNWtfdHgsDQpAQCAtMjU3LDYgKzI2MSw3IEBAIHN0
+YXRpYyBzdHJ1Y3QgaWVlZTgwMjExX29wcyBhdGg1a19od19vcHMgPSB7DQogCS5nZXRfdHhfc3Rh
+dHMgCT0gYXRoNWtfZ2V0X3R4X3N0YXRzLA0KIAkuZ2V0X3RzZiAJPSBhdGg1a19nZXRfdHNmLA0K
+IAkucmVzZXRfdHNmIAk9IGF0aDVrX3Jlc2V0X3RzZiwNCisJLmJzc19pbmZvX2NoYW5nZWQgPSBh
+dGg1a19ic3NfaW5mb19jaGFuZ2VkLA0KIH07DQogDQogLyoNCkBAIC0yOTUyLDcgKzI5NTcsNyBA
+QCBzdGF0aWMgdm9pZCBhdGg1a19jb25maWd1cmVfZmlsdGVyKHN0cnVjdCBpZWVlODAyMTFfaHcg
+Kmh3LA0KIAkJc2MtPm9wbW9kZSAhPSBOTDgwMjExX0lGVFlQRV9NRVNIX1BPSU5UICYmDQogCQl0
+ZXN0X2JpdChBVEhfU1RBVF9QUk9NSVNDLCBzYy0+c3RhdHVzKSkNCiAJCXJmaWx0IHw9IEFSNUtf
+UlhfRklMVEVSX1BST007DQotCWlmIChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJ
+T04gfHwNCisJaWYgKChzYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04gJiYgc2Mt
+PmFzc29jKSB8fA0KIAkJc2MtPm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9BREhPQyB8fA0KIAkJ
+c2MtPm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9BUCkNCiAJCXJmaWx0IHw9IEFSNUtfUlhfRklM
+VEVSX0JFQUNPTjsNCkBAIC0zMDkyLDQgKzMwOTcsMzIgQEAgYXRoNWtfYmVhY29uX3VwZGF0ZShz
+dHJ1Y3QgYXRoNWtfc29mdGMgKnNjLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQ0KIA0KIAlyZXR1cm4g
+cmV0Ow0KIH0NCitzdGF0aWMgdm9pZA0KK3NldF9iZWFjb25fZmlsdGVyKHN0cnVjdCBpZWVlODAy
+MTFfaHcgKmh3LCBib29sIGVuYWJsZSkNCit7DQorCXN0cnVjdCBhdGg1a19zb2Z0YyAqc2MgPSBo
+dy0+cHJpdjsNCisJc3RydWN0IGF0aDVrX2h3ICphaCA9IHNjLT5haDsNCisJdTMyIHJmaWx0Ow0K
+KwlyZmlsdCA9IGF0aDVrX2h3X2dldF9yeF9maWx0ZXIoYWgpOw0KKwlpZiAoZW5hYmxlKQ0KKwkJ
+cmZpbHQgfD0gQVI1S19SWF9GSUxURVJfQkVBQ09OOw0KKwllbHNlDQorCQlyZmlsdCAmPSB+QVI1
+S19SWF9GSUxURVJfQkVBQ09OOw0KKwlhdGg1a19od19zZXRfcnhfZmlsdGVyKGFoLCByZmlsdCk7
+DQorCXNjLT5maWx0ZXJfZmxhZ3MgPSByZmlsdDsNCit9DQogDQorc3RhdGljIHZvaWQgYXRoNWtf
+YnNzX2luZm9fY2hhbmdlZChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywNCisJCQkJICAgIHN0cnVj
+dCBpZWVlODAyMTFfdmlmICp2aWYsDQorCQkJCSAgICBzdHJ1Y3QgaWVlZTgwMjExX2Jzc19jb25m
+ICpic3NfY29uZiwNCisJCQkJICAgIHUzMiBjaGFuZ2VzKQ0KK3sNCisJc3RydWN0IGF0aDVrX3Nv
+ZnRjICpzYyA9IGh3LT5wcml2Ow0KKwlpZiAoY2hhbmdlcyAmIEJTU19DSEFOR0VEX0FTU09DKSB7
+DQorCQltdXRleF9sb2NrKCZzYy0+bG9jayk7DQorCQlzYy0+YXNzb2MgPSBic3NfY29uZi0+YXNz
+b2M7DQorCQlpZiAoc2MtPm9wbW9kZSA9PSBOTDgwMjExX0lGVFlQRV9TVEFUSU9OKQ0KKwkJCXNl
+dF9iZWFjb25fZmlsdGVyKGh3LCBzYy0+YXNzb2MpOw0KKwkJbXV0ZXhfdW5sb2NrKCZzYy0+bG9j
+ayk7DQorCX0NCit9DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvYmFz
+ZS5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvYmFzZS5oDQppbmRleCAwNmQxMDU0Li5m
+YWNjNjBkIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvYmFzZS5oDQor
+KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1ay9iYXNlLmgNCkBAIC0xNzksNiArMTc5LDcg
+QEAgc3RydWN0IGF0aDVrX3NvZnRjIHsNCiANCiAJc3RydWN0IHRpbWVyX2xpc3QJY2FsaWJfdGlt
+OwkvKiBjYWxpYnJhdGlvbiB0aW1lciAqLw0KIAlpbnQgCQkJcG93ZXJfbGV2ZWw7CS8qIFJlcXVl
+c3RlZCB0eCBwb3dlciBpbiBkYm0gKi8NCisJYm9vbAkJCWFzc29jOwkJLyogYXNzb2NhdGUgc3Rh
+dGUgKi8NCiB9Ow0KIA0KICNkZWZpbmUgYXRoNWtfaHdfaGFzYnNzaWRtYXNrKF9haCkgXA0KDQot
+LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdl
+ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
+XSBPbiBCZWhhbGYgT2YgQm9iIENvcGVsYW5kDQpTZW50OiAyMDA4xOoxMdTCMjTI1SA2OjI4DQpU
+bzogSm9obiBXLiBMaW52aWxsZQ0KQ2M6IFh1LCBNYXJ0aW47IE5pY2sgS29zc2lmaWRpczsgTHVp
+cyBSLiBSb2RyaWd1ZXo7IGxpbnV4LXdpcmVsZXNzOyB5YW5nLnkueWlAZ21haWwuY29tOyBWaWty
+YW0gS2FuZHVrdXJpOyBKb3RoaWt1bWFyIE1vdGhpbGFsOyBhdGg1ay1kZXZlbEBsaXN0cy5hdGg1
+ay5vcmc7IExpdSwgQmluZyBXZWk7IFNlbGJhaywgUm9sbGEgTjsgV2FuZywgWW9uZyBZDQpTdWJq
+ZWN0OiBSZTogW2F0aDVrLWRldmVsXSBbQnVnIDExNzQ5XSBBdGg1ayBkcml2ZXIgaGFzIHRvbyBt
+YW55IGludGVycnVwdHMgcGVyIHNlY29uZCBhdCBpZGxlDQoNCk9uIEZyaSwgTm92IDIxLCAyMDA4
+IGF0IDAzOjI3OjM0UE0gLTA1MDAsIEpvaG4gVy4gTGludmlsbGUgd3JvdGU6DQo+ID4gK3N0YXRp
+YyB2b2lkIGF0aDVrX2Jzc19pbmZvX2NoYW5nZWQoc3RydWN0IGllZWU4MDIxMV9odyAqaHcsDQo+
+ID4gKwkJCQlzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAqdmlmLA0KPiA+ICsJCQkJc3RydWN0IGllZWU4
+MDIxMV9ic3NfY29uZiAqYnNzX2NvbmYsDQo+ID4gKwkJCQl1MzIgY2hhbmdlcyk7DQo+IA0KPiBU
+aGlzIHBhdGNoIGRlZmluZXMgYXRoNWtfYnNzX2luZm9fY2hhbmdlZCwgYnV0IGRvZXNuJ3QgdXNl
+IGl0Lg0KPiBJcyB0aGF0IHJlYWxseSB3aGF0IHlvdSBtZWFudCB0byBkbz8NCg0KVGhlIGZpcnN0
+IHZlcnNpb24gb2YgdGhpcyBwYXRjaCBzZXQgLmJzc19pbmZvX2NoYW5nZWQgYnV0IGl0IGxvb2tz
+DQpsaWtlIGl0IGdvdCBsb3N0IGFsb25nIHRoZSB3YXkuICBNYXJ0aW4/DQoNCi0tIA0KQm9iIENv
+cGVsYW5kICUlIHd3dy5ib2Jjb3BlbGFuZC5jb20NCg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20g
+dGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4N
+CnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQpNb3Jl
+IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
+Lmh0bWwNCg==
