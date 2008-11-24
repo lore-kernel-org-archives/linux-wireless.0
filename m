@@ -1,220 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:58653 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbYK3QTh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2008 11:19:37 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so2394313ugf.37
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Nov 2008 08:19:34 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: [PATCH] rt2x00: Optimize IV/EIV handling
-Date: Sun, 30 Nov 2008 17:19:31 +0100
+Received: from mail.atheros.com ([12.36.123.2]:34383 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751911AbYKXXBu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 18:01:50 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 15:01:50 -0800
+Date: Mon, 24 Nov 2008 15:01:48 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Richard Farina <sidhayn@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>, Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Fwd: please don't regress ath5k.h]
+Message-ID: <20081124230148.GL6245@tesla> (sfid-20081125_000155_147906_35749CA9)
+References: <492A14A7.4040808@gmail.com> <1205.94.79.146.217.1227505499.squirrel@webmail.madwifi.org> <1227507381.3599.55.camel@johannes.berg> <492AC870.3030103@gmail.com> <20081124182943.GA9790@jm.kir.nu> <492AF4EC.4060705@gmail.com> <43e72e890811241335j41515d9an701d76de011efdc8@mail.gmail.com> <492B28F5.5000708@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200811301719.31377.IvDoorn@gmail.com> (sfid-20081130_171942_199077_A9788F27)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <492B28F5.5000708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IV and EIV belong to eachother and don't require
-2 seperate fields. Instead they can logically be
-merged into a single array with size 2.
+On Mon, Nov 24, 2008 at 02:21:41PM -0800, Richard Farina wrote:
+> Considering the fact that multiple companies sell Atheros wireless cards
+> that support 4.9GHz and even down to 4.4GHz I'm going to guess that the
+> hardware is capable just fine.  If it provides poor performance in
+> testing then so be it, but right now, it looks pretty clean on the
+> spectrum analyzer from where I was sitting the day I did my testing.
 
-With this approach we can simplify the code in
-rt2x00crypto.c by using a single memcpy() when
-copying the iv/eiv data. Additionally we can
-move some code out of if-statements because the
-if-statement would always be true.
+IIRC the way some of these frequencies work with Ubiquity cards are to
+use the hardware's actual center of freqs andand these are then actually
+mapped internally to the radio's lower freqs. At least this is how I saw
+it working with the cards I had tried a while back.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00crypto.c |   44 +++++++++-------------------
- drivers/net/wireless/rt2x00/rt2x00queue.h  |   12 ++-----
- drivers/net/wireless/rt2x00/rt61pci.c      |    8 ++--
- drivers/net/wireless/rt2x00/rt73usb.c      |    8 ++--
- 4 files changed, 26 insertions(+), 46 deletions(-)
+> >>  I'm sure there are places where it
+> >> is legal to use 2192MHz and even if not, look at the driver, it has a max of
+> >> 2732MHz set in the driver (for the .11b/g radio), clearly the person who
+> >> wrote that agrees that drivers should support the hardware.
+> >>
+> >
+> > Please send patches to the wireless regulatory database if such places
+> > do exist and please provide documentation of such findings:
+> >
+> > git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
+> >
+> > Once we have listed a country with these settings then it makes sense
+> > to add it to the database and to the card's capabilities. Keep in mind
+> > that the EEPROM will always be respected though (patches pending).
+> >
+> >
+> This seems kind of silly, I was purposely avoiding updating crda because
+> I'm sure that if I do 99% of the people that use these frequencies will
+> be breaking the law.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00crypto.c b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-index 5a858e5..e0fc7c1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-@@ -78,10 +78,7 @@ void rt2x00crypto_tx_remove_iv(struct sk_buff *skb, unsigned int iv_len)
- 		return;
- 
- 	/* Copy IV/EIV data */
--	if (iv_len >= 4)
--		memcpy(&skbdesc->iv, skb->data + header_length, 4);
--	if (iv_len >= 8)
--		memcpy(&skbdesc->eiv, skb->data + header_length + 4, 4);
-+	memcpy(skbdesc->iv, skb->data + header_length, iv_len);
- 
- 	/* Move ieee80211 header */
- 	memmove(skb->data + iv_len, skb->data, header_length);
-@@ -98,7 +95,7 @@ void rt2x00crypto_tx_insert_iv(struct sk_buff *skb)
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
- 	unsigned int header_length = ieee80211_get_hdrlen_from_skb(skb);
- 	const unsigned int iv_len =
--	    ((!!(skbdesc->iv)) * 4) + ((!!(skbdesc->eiv)) * 4);
-+	    ((!!(skbdesc->iv[0])) * 4) + ((!!(skbdesc->iv[1])) * 4);
- 
- 	if (!(skbdesc->flags & FRAME_DESC_IV_STRIPPED))
- 		return;
-@@ -109,10 +106,7 @@ void rt2x00crypto_tx_insert_iv(struct sk_buff *skb)
- 	memmove(skb->data, skb->data + iv_len, header_length);
- 
- 	/* Copy IV/EIV data */
--	if (iv_len >= 4)
--		memcpy(skb->data + header_length, &skbdesc->iv, 4);
--	if (iv_len >= 8)
--		memcpy(skb->data + header_length + 4, &skbdesc->eiv, 4);
-+	memcpy(skb->data + header_length, skbdesc->iv, iv_len);
- 
- 	/* IV/EIV data has returned into the frame */
- 	skbdesc->flags &= ~FRAME_DESC_IV_STRIPPED;
-@@ -172,17 +166,9 @@ void rt2x00crypto_rx_insert_iv(struct sk_buff *skb, unsigned int align,
- 		header_length);
- 	transfer += header_length;
- 
--	/* Copy IV data */
--	if (iv_len >= 4) {
--		memcpy(skb->data + transfer, &rxdesc->iv, 4);
--		transfer += 4;
--	}
--
--	/* Copy EIV data */
--	if (iv_len >= 8) {
--		memcpy(skb->data + transfer, &rxdesc->eiv, 4);
--		transfer += 4;
--	}
-+	/* Copy IV/EIV data */
-+	memcpy(skb->data + transfer, rxdesc->iv, iv_len);
-+	transfer += iv_len;
- 
- 	/* Move payload */
- 	if (align) {
-@@ -198,16 +184,14 @@ void rt2x00crypto_rx_insert_iv(struct sk_buff *skb, unsigned int align,
- 	 */
- 	transfer += payload_len;
- 
--	/* Copy ICV data */
--	if (icv_len >= 4) {
--		memcpy(skb->data + transfer, &rxdesc->icv, 4);
--		/*
--		 * AES appends 8 bytes, we can't fill the upper
--		 * 4 bytes, but mac80211 doesn't care about what
--		 * we provide here anyway and strips it immediately.
--		 */
--		transfer += icv_len;
--	}
-+	/*
-+	 * Copy ICV data
-+	 * AES appends 8 bytes, we can't fill the upper
-+	 * 4 bytes, but mac80211 doesn't care about what
-+	 * we provide here anyway and strips it immediately.
-+	 */
-+	memcpy(skb->data + transfer, &rxdesc->icv, 4);
-+	transfer += icv_len;
- 
- 	/* IV/EIV/ICV has been inserted into frame */
- 	rxdesc->size = transfer;
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 2e99ab5..7889f91 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -109,8 +109,7 @@ enum skb_frame_desc_flags {
-  * @desc: Pointer to descriptor part of the frame.
-  *	Note that this pointer could point to something outside
-  *	of the scope of the skb->data pointer.
-- * @iv: IV data used during encryption/decryption.
-- * @eiv: EIV data used during encryption/decryption.
-+ * @iv: IV/EIV data used during encryption/decryption.
-  * @skb_dma: (PCI-only) the DMA address associated with the sk buffer.
-  * @entry: The entry to which this sk buffer belongs.
-  */
-@@ -123,8 +122,7 @@ struct skb_frame_desc {
- 
- 	void *desc;
- 
--	__le32 iv;
--	__le32 eiv;
-+	__le32 iv[2];
- 
- 	dma_addr_t skb_dma;
- 
-@@ -168,8 +166,7 @@ enum rxdone_entry_desc_flags {
-  * @dev_flags: Ralink receive flags (See &enum rxdone_entry_desc_flags).
-  * @cipher: Cipher type used during decryption.
-  * @cipher_status: Decryption status.
-- * @iv: IV data used during decryption.
-- * @eiv: EIV data used during decryption.
-+ * @iv: IV/EIV data used during decryption.
-  * @icv: ICV data used during decryption.
-  */
- struct rxdone_entry_desc {
-@@ -182,8 +179,7 @@ struct rxdone_entry_desc {
- 	u8 cipher;
- 	u8 cipher_status;
- 
--	__le32 iv;
--	__le32 eiv;
-+	__le32 iv[2];
- 	__le32 icv;
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index a66f80a..ce0fde4 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1778,8 +1778,8 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_desc_write(txd, 2, word);
- 
- 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags)) {
--		_rt2x00_desc_write(txd, 3, skbdesc->iv);
--		_rt2x00_desc_write(txd, 4, skbdesc->eiv);
-+		_rt2x00_desc_write(txd, 3, skbdesc->iv[0]);
-+		_rt2x00_desc_write(txd, 4, skbdesc->iv[1]);
- 	}
- 
- 	rt2x00_desc_read(txd, 5, &word);
-@@ -1949,8 +1949,8 @@ static void rt61pci_fill_rxdone(struct queue_entry *entry,
- 	}
- 
- 	if (rxdesc->cipher != CIPHER_NONE) {
--		_rt2x00_desc_read(entry_priv->desc, 2, &rxdesc->iv);
--		_rt2x00_desc_read(entry_priv->desc, 3, &rxdesc->eiv);
-+		_rt2x00_desc_read(entry_priv->desc, 2, &rxdesc->iv[0]);
-+		_rt2x00_desc_read(entry_priv->desc, 3, &rxdesc->iv[1]);
- 		_rt2x00_desc_read(entry_priv->desc, 4, &rxdesc->icv);
- 
- 		/*
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 0c39384..79475a8 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1428,8 +1428,8 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_desc_write(txd, 2, word);
- 
- 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags)) {
--		_rt2x00_desc_write(txd, 3, skbdesc->iv);
--		_rt2x00_desc_write(txd, 4, skbdesc->eiv);
-+		_rt2x00_desc_write(txd, 3, skbdesc->iv[0]);
-+		_rt2x00_desc_write(txd, 4, skbdesc->iv[1]);
- 	}
- 
- 	rt2x00_desc_read(txd, 5, &word);
-@@ -1618,8 +1618,8 @@ static void rt73usb_fill_rxdone(struct queue_entry *entry,
- 	}
- 
- 	if (rxdesc->cipher != CIPHER_NONE) {
--		_rt2x00_desc_read(rxd, 2, &rxdesc->iv);
--		_rt2x00_desc_read(rxd, 3, &rxdesc->eiv);
-+		_rt2x00_desc_read(rxd, 2, &rxdesc->iv[0]);
-+		_rt2x00_desc_read(rxd, 3, &rxdesc->iv[1]);
- 		_rt2x00_desc_read(rxd, 4, &rxdesc->icv);
- 
- 		/*
--- 
-1.5.6.1
+CRDA should have what *is* allowed for each country. Your driver then
+can use its EEPROM for proper settings for a country. A user can further
+enhance compliance by choosing the country he/she is in. What gets into
+the kernel is code to properly enable your device for what it is
+designed to do. What you end up doing later on (sharks with lasers
+on their head) is up to you.
 
+> At your request, I will send my suggested change
+> set to wireless-regdb.  I only know about the USA but I'm sure if I
+> google hard enough I can expand it at a later time.
+
+Thanks.
+
+> >> Honestly if you want to argue the legality I purposely posted an RFC for
+> >> that, this change (and this email thread) is to stop a regression that would
+> >> cause the hardware to no longer be fully and properly supported.
+> >>
+> >
+> > This part is certainly important, and is greatly appreciated.
+> >
+> >
+> >> Yes, I can maintain my own personal patches to all of the drivers in the
+> >> kernel (as a matter of fact I likely do) but this kind of thing belongs in
+> >> the kernel,
+> >>
+> >
+> > What belongs in the kernel is driver components to make your 802.11
+> > work. The arguments used here are similar to that of disagreeing with
+> > easily allowing mac80211 to allow APs to operate without proper power
+> > save implementation.
+> >
+> >
+> >> we are discussing hardware support, nothing more.
+> >>
+> >
+> > Yes however the channels must be registered too and the EEPROM must be
+> > respected. More work on that area is in the right direction.
+> >
+> >
+> I never said anything about hacking around the eeprom, nor did I even
+> mention allowing people to tx on the channels I am adding.  Frankly I'd
+> like to see half of what I do remain out of kernel because of the
+> obvious problem of abuse, the changes I have outlined so far belong in
+> the kernel to allow the hardware to operate to it's full extent.
+
+I beleive you are missing my point though. I recently reviewed ath9k
+regulatory for example and initially I was going to register every
+single 5MHz step on the radio as a possibly used frequency. This is not
+right because of the point Jouni mentions and a few others:
+
+  * Your active and passive scan will take a lot longer
+  * Calibrated data is tuned and tested for each standard channel
+    the device has been tested for, not every frequency hop the device
+    is capable of.
+  * If you have a custom solution you can customize the driver
+  * Custom solutions sometimes require 1-1 mapping of an intended
+    frequency to a virtual frequency. To know exactly what frequency
+    you really are operating requires customizations and patches for
+    these type of devices.
+
+What we want to support is standard 802.11 operation for the stanard
+user for the regulatory regions in the regulatory database. Experimenters
+and people with licenses to operate in non standard frequencies can go
+ahead and tweak the driver and support it as they see fit, specially if
+the devices have been properly calibrated to do so.
+
+> >> Limiting the
+> >> driver to enforce some random regulatory domain is pointless and against
+> >> kernel policy as reg domain enforcement is supposed to be handled by crda or
+> >> oldreg.
+> >>
+> >
+> > oldreg is just that -- old, and it will be removed. It was there to
+> > help with the migration and to account for the fact distributions may
+> > not have CRDA packaged yet. Drivers should register channels that make
+> > sense to support for 802.11, not every single channel a radio is
+> > capable of tuning into. If not you'd be seeing the channel list
+> > growing for other drivers  as well.
+> >
+> >
+> Exactly why does 4400MHz not make sense to use 802.11 on in your
+> opinion?  NATO disagrees as they have adopted equipment such as this:
+> http://www.belairnetworks.com/solutions/armed_forces.cfm
+
+NATO is not a regulatory agency, the FCC and currently the rules to
+follow for the US follow Part 15 rules, not what a NATO document tells
+you. If you see information on Part 15 rules which indicate you cna use
+4400 MHz then by all means do send a patch to the wireless-regdb and
+document your finding.
+
+  Luis
