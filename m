@@ -1,77 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59978 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbYK2MVi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2008 07:21:38 -0500
-Subject: Re: [PATCH 1/3] mac80211: add power state transition callbacks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Stefan Steuerwald <salsasepp@googlemail.com>
-In-Reply-To: <200811291315.01685.chunkeey@web.de>
-References: <200811282345.48379.chunkeey@web.de>
-	 <1227951709.3542.1.camel@johannes.berg>
-	 <200811291315.01685.chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-p5YwORdEqFNTnDxq3V7J"
-Date: Sat, 29 Nov 2008 13:21:33 +0100
-Message-Id: <1227961293.3542.7.camel@johannes.berg> (sfid-20081129_132149_652362_7060F406)
+Received: from mga02.intel.com ([134.134.136.20]:48965 "EHLO mga02.intel.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751602AbYKXCpE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2008 21:45:04 -0500
+Subject: Re: iwlagn MAC in deep sleep
+From: Zhu Yi <yi.zhu@intel.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Mike Kershaw <dragorn@kismetwireless.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4270E0F0-BE5E-4448-A6B0-2E74113488F6@holtmann.org>
+References: <20081121193348.GA7373@drd1813.lan>
+	 <1227491716.2548.213.camel@debian.sh.intel.com>
+	 <4270E0F0-BE5E-4448-A6B0-2E74113488F6@holtmann.org>
+Content-Type: text/plain
+Date: Mon, 24 Nov 2008 10:45:24 +0800
+Message-Id: <1227494724.2548.223.camel@debian.sh.intel.com> (sfid-20081124_034511_562550_8EA2F49E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-11-24 at 10:34 +0800, Marcel Holtmann wrote:
+> > Can you please look for something called vPRO/AMT in your BIOS and
+> > try to disable it?
+> 
+> what has that to do with it? You need to explain why this should help
+> at all. Just randomly enabling/disabling features of your core system
+> is not a good debugging method. And even if that makes this go away,  
+> it is still a bug that needs fixed.
 
---=-p5YwORdEqFNTnDxq3V7J
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+iwlagn currently doesn't support AMT, which is another user for the same
+hardware. At this time, the only way we can do is to disable it.
 
-On Sat, 2008-11-29 at 13:15 +0100, Christian Lamparter wrote:
+BTW, I assume you ask this question on behalf of other people. Otherwise
+you should involve in our internal discussion as active as the external
+ones.
 
-> > Unless we want to defer RX packet processing to a workqueue rather than
-> > a tasklet?
-
-> Hmm, but if we put the RX packet processing into a workqueue, we have to
-> put the tx status report processing in one too (see comment about rx/tx r=
-ace
-> in main.c line 400)?
-
-Yeah, probably. I don't know all the details all the time, so I write
-such comments ;)
-
-> Or do you mean I should only put ap_sta_ps_end  (& ap_sta_ps_start)=20
-> resending stuff into a workqueue? (Yeah, this makes a lot more sense,
-> and might actually work!, well let's prepare another patch)
-
-No idea!
-
-The only thing I was thinking is that it's not a good plan to have a
-callback that has different locking requirements depending on a
-parameter.
-
-johannes
-
---=-p5YwORdEqFNTnDxq3V7J
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIbBAABAgAGBQJJMTPJAAoJEKVg1VMiehFYlnkP93E0dbwBP2nN2U+4Y/tZOxAc
-rcPzxS8E34PEyxuyZnYns/0AH/xFlpz+6h8XhGCBl/kxO2i7qqsZePCW1iB6PmRk
-K3SHS34odaNoIfAq+Ot1KgJkgU7eYSJnRBCzYaW8CANt/K8acI41ldcfQWEwOLNt
-zUXNiWz8im5uPPmFrvOJte3ctWVMkSYbHTHwI8RFbbHpgzQFuL9cdByXhyTbXmh3
-7d/4uFuTEgTizl+GR2OhfiA9KWG2n6b7uoR5pVBksoqxa3fXdeCYVcbHctTiGvVN
-ZW4hWsnoc8keUqcOFHl20Za9zYMkwK+Mny3vkwcDVhjgOLL7b3HR1CndQLienXeJ
-rL3immZRzwNy3+J+sQxNmJSw+Wet8EGEa3MuApRK6chksVKJe4uS9n24/4dIlCDv
-pAATfeBAgptqddfeSUSDPgMPyF98gMlYYM9F32wfdaCj89/ns2df+Wx4U13iRz0s
-3MoiwXuViKwVHUr57KlGaOO/hmKdIFsl7I/i1KgGgjPX0qofmcJezAF82AJC2i73
-5X6bzrYR+xjhU1bNk7XxhqT1MLYR8FCiYGuASmyVA7RSO4uUjT85mY7dus1VWqH7
-rZ8cBvKfnFkKB3DzUmSBWBnL7F9IalLyZEcmSgtRvpZpeR6fsc39OmTj/I5//DpV
-YxWtpQApsh+EJsTtFUE=
-=8H2l
------END PGP SIGNATURE-----
-
---=-p5YwORdEqFNTnDxq3V7J--
+Thanks,
+-yi
 
