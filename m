@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:1878 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbYKUUxn (ORCPT
+Received: from mail-gx0-f11.google.com ([209.85.217.11]:65324 "EHLO
+	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751741AbYKYRLR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 15:53:43 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so225265ugf.37
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 12:53:41 -0800 (PST)
-Message-ID: <49271FD1.101@gmail.com> (sfid-20081121_215348_093851_B9885AB9)
-Date: Fri, 21 Nov 2008 22:53:37 +0200
-From: Maxim Levitsky <maximlevitsky@gmail.com>
+	Tue, 25 Nov 2008 12:11:17 -0500
+Received: by gxk4 with SMTP id 4so48631gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 09:10:44 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH] ipw2200: increase scan timeout
+Date: Tue, 25 Nov 2008 18:09:54 +0100
+Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, ipw2100-devel@lists.sourceforge.net
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in add_interface
-References: <20081118044037.GA18983@hash.localnet> <492710E6.7020506@gmail.com> <b6c5339f0811211201i384ee31dyb5b3998fe02136af@mail.gmail.com>
-In-Reply-To: <b6c5339f0811211201i384ee31dyb5b3998fe02136af@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200811251809.55461.helmut.schaa@gmail.com> (sfid-20081125_181123_584262_949E6EF9)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> On Fri, Nov 21, 2008 at 2:49 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
->> Bob Copeland wrote:
->>> Hi Maxim,
->>>
->>> Please try this patch.  I didn't have a problem changing the mac address
->>> after it was set to something else.  I did kick it to re-associate with
->>> the AP, though.
->>>
->> Tested it, this still doesn't work:
->>
->> iwconfig wlan0 down
->> macchanger wlan0
->> iwconfig wlan0 up
-> 
-> Wait, don't you want to do ifconfig here?  Or was that just a typo?
-> 
-> I did exactly that (ifconfig down/macchanger/ifconfig up) and it
-> worked here.  In particular if you have mac80211 debugging on it should
-> show the mac address changing.  In my case, it didn't matter whether
-> I'd previously associated or not.  I did have to tell NetworkManager
-> to re-associate though.
-> 
+The current scan timeout is set to 5 seconds. If the timeout is hit because
+the firmware did not respond yet, the adapter gets restarted, which results
+in a disassociation.
 
-Yep, I intended to use ifconfig.
+However, in an environment with lots of access points the scan sometimes takes
+longer than 5 seconds. This patch simply increases the timeout to 10 seconds.
 
-First change after module reload works, second doesn't.
+Signed-off-by: helmut.schaa@googlemail.com
+---
 
-I double check that I use right kernel (install it again).
+I was able to reproduce the issue fairly reliable with a 2915 adapter by 
+periodically triggering scans while associated.
 
-Best regards,
-	Maxim Levitsky
+I have no idea in which situations the scan takes longer than 5 seconds to
+complete but maybe it might even take longer than 10 seconds. Has anybody from
+Intel insight into the firmware scan code?
 
-
-
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index c73173a..a776da3 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -2304,7 +2304,7 @@ static void ipw_bg_adapter_restart(struct work_struct *work)
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+-#define IPW_SCAN_CHECK_WATCHDOG (5 * HZ)
++#define IPW_SCAN_CHECK_WATCHDOG (10 * HZ)
+ 
+ static void ipw_scan_check(void *data)
+ {
