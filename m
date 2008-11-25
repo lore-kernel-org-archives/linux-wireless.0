@@ -1,68 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38409 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51061 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbYKMBnK (ORCPT
+	with ESMTP id S1752086AbYKYTNH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 20:43:10 -0500
-Subject: Re: [FYI] ar9170 driver
+	Tue, 25 Nov 2008 14:13:07 -0500
+Subject: Re: [RFC] nl80211: Add frequency configuration (including HT40)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1226537117.14186.44.camel@johannes.berg> (sfid-20081113_014611_302976_93001DBF)
-References: <1226531034.14186.39.camel@johannes.berg>
-	 (sfid-20081113_000444_962024_07ACD3CC)  <1226531788.14186.41.camel@johannes.berg>
-	 (sfid-20081113_001659_069366_BA2AA5E2)  <1226537117.14186.44.camel@johannes.berg>
-	 (sfid-20081113_014611_302976_93001DBF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0o45f9KtGzeXFqzSSKiU"
-Date: Thu, 13 Nov 2008 02:42:39 +0100
-Message-Id: <1226540559.14186.56.camel@johannes.berg> (sfid-20081113_024315_327480_4AB1362F)
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081125190533.GA27879@jm.kir.nu>
+References: <20081125190533.GA27879@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fhJ5luL5ie2yP5VyS51n"
+Date: Tue, 25 Nov 2008 20:13:04 +0100
+Message-Id: <1227640384.4613.44.camel@johannes.berg> (sfid-20081125_201311_859346_3F8C7315)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-0o45f9KtGzeXFqzSSKiU
+--=-fhJ5luL5ie2yP5VyS51n
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2008-11-13 at 01:45 +0100, Johannes Berg wrote:
+On Tue, 2008-11-25 at 21:05 +0200, Jouni Malinen wrote:
 
-> Better URL is
-> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-ar9170.pat=
-ch
+> +	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
+> +		int sec_chan_offset =3D 0;
+> +
+> +		if (!rdev->ops->set_channel) {
+> +			result =3D -EOPNOTSUPP;
+> +			goto bad_res;
+> +		}
+> +
+> +		if (info->attrs[NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET]) {
+> +			u8 val =3D nla_get_u8(
+> +				info->attrs[
+> +					NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET]);
+> +			if (val =3D=3D NL80211_SEC_CHAN_BELOW)
+> +				sec_chan_offset =3D -1;
+> +			else if (val =3D=3D NL80211_SEC_CHAN_ABOVE)
+> +				sec_chan_offset =3D 1;
+> +		}
+> +		result =3D rdev->ops->set_channel(
+> +			&rdev->wiphy,
+> +			nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
+> +			sec_chan_offset);
 
-In addition to that, you will want to apply this patch
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-fix=
--tasklet.patch
-too because otherwise sometimes mac80211 will schedule a disabled
-tasklet with the expected dead loop consequence, and then later will
-even wait for it to finish... I'll submit this proper once I've figured
-out why it's happening.
+Isn't that missing regulatory enforcement? I'd rather see that in
+cfg80211 than re-implemented in all drivers.
 
 johannes
 
---=-0o45f9KtGzeXFqzSSKiU
+--=-fhJ5luL5ie2yP5VyS51n
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJG4YKAAoJEKVg1VMiehFYfloQAIVoO3GAsbySm0RjATfltXzt
-s1qEHUz2ksOM3KFkfiTmgeWtWFwFPRaMiDIYhV2UZbB1Pn1E1C1dj6H2XwkLOWdM
-EUvebFaqhowc1zgDmTMPJy/O7Hu8df/Mmx2Es/ieVrFXwRAM4jgBYTx3v4Ay7wX2
-TIiM8F+Dsg3IU6BeB9FSDZ+aMmTCq6nLNOsXUxQhGAa4nEJPzfOL03pEz9ZSbJDA
-uVgXCkyhB/I1QWMo5yKe1m2jEj1iNvgxolXLl1JZVMKGQvhtsATlKMkVY4pxLSZd
-2/56nIPUc5N81mbYS49Zqk1GDMivjcgF61swlc0se0VjJg918B1WOkoMAZPAFANQ
-8ZVG9fSv/Lw1rGQBIxC/I8lk6Ec8aNcGzFPG6987cLtQDQ+JwXtaD97OhFxWOwSC
-AUhWaB3Hj9ODHp8JtJ8iSO8LkSXAL/zRQceAOJOl/ZeJZTbUfAU5fHR6HF86O7j9
-GSmelL9Qbp7biUcnMSNcXB7SxDwuor+HID504+u3YxIbnrGpkKIcEg4ASYDWWZ54
-NYNgGfO1y6MWPeJO8OQrMGaKrmQPsho1L1pJ3Fh2dK1454r1SZWORxpem+bsbJGK
-edku55IjBV32oV/EJxVVRKI7mBSCudqVhcND1yRgEN4fnNr8AOeL50OaCbfwfHFk
-cpyV65ZL7wKNakr4ouBe
-=54p4
+iQIcBAABAgAGBQJJLE47AAoJEKVg1VMiehFYi1oP/1vJn4cdhbVfRQuP3prnHKiA
+QpFTB9A2s57eDsFqke6Mp1NFGYOcmy/6JIZmriBwyBlsYJPKtRqKU8e6dsix1NeI
+T/RAL7ocvRkV3T4oBjlO/c/zfHL9eFY1p8+cUtlaRv+DRRN0nv+Gofv5Mi9GuuGD
+f8eNtEEzKw4k+4M0ZNkjfgkLFrauDphI+y/8KkeMylQRDc0aGMxIl1892DKe3Y1V
+wSrCkc8FlKqezcO8Hp+H5hw3cIdQlBvVOhpp5nIs9i8JMo1WWpsp07/9CTsPznxM
+d3x9w9qz5lDRaZDrZGc/qVDymuvUCyuGaKZphTejVzhCBVAq/ZkzublkNjl5XcZM
+KIqekyDmQf+MelEK/dWM9sO9vA6JIJH62rA9rMfLsKyjSHE3Eq27y2wu2Q8MVsbv
+zuRf30lSc2oj4odG66FFoTp+Pkhg9ejw8wehqQ8sjppH5+Lq6SA5C8VyETftT4te
+UJ13XiyKQkzFVHQOL2vKMZjBddtsazAURgdGTw5yndpMZP0UDLuMB7QVsKk8gwQu
+o4x5EYJjP8P+UatcQHjGhfFtGv/MJGq7PuxtbjXqx9EGfcPONRwefNebK0bU6Z/Z
+vufm52CwDJRBYvWIkxaKcXIZQJGAidMt4oJm7QaNtOVonB1djvjXx9CVMgJHE3+E
+V/EQhKXqnmVRoX8ednqY
+=JYxP
 -----END PGP SIGNATURE-----
 
---=-0o45f9KtGzeXFqzSSKiU--
+--=-fhJ5luL5ie2yP5VyS51n--
 
