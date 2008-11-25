@@ -1,96 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:4363 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401AbYKFPdf (ORCPT
+Received: from n2b.bullet.mail.ac4.yahoo.com ([76.13.13.72]:30598 "HELO
+	n2b.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753196AbYKYCgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 10:33:35 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so253487yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 07:33:33 -0800 (PST)
-Message-ID: <49135499.60707@gmail.com> (sfid-20081106_163339_585611_B74CA521)
-Date: Thu, 06 Nov 2008 15:33:29 -0500
-From: Gert Steenssens <gsteenss@gmail.com>
+	Mon, 24 Nov 2008 21:36:54 -0500
+Date: Mon, 24 Nov 2008 18:36:53 -0800 (PST)
+From: Irwan Siajadi <dev.bahamot@yahoo.com>
+Subject: Re: ath5k: can't browse at all.
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1227552792.26229.6.camel@dv>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: error when building Intel compat wireless
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <334331.29428.qm@web59608.mail.ac4.yahoo.com> (sfid-20081125_033656_941240_20EAAA79)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I am trying to build Intel compat wireless drivers for 2.6.22 on Ubuntu
-7.10 but get the errors shown below.
-
-At some point during making ( i guess during or after:
-=2E/scripts/gen-compat-autoconf.sh config.mk ) it reports: 'Fatal: not =
-a
-git repository'
-
-any idea how to fix this?
-
-Thanks,
-Gert
 
 
 
+--- On Mon, 11/24/08, Pavel Roskin <proski@gnu.org> wrote:
 
-make -C /lib/modules/2.6.22-15-generic/build
-M=3D/home/gsteenss/compat-wireless-2.6-old modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.22-15-generic'
-LD /home/gsteenss/compat-wireless-2.6-old/drivers/misc/built-in.o
-CC [M] /home/gsteenss/compat-wireless-2.6-old/drivers/misc/eeprom_93cx6=
-=2Eo
-LD /home/gsteenss/compat-wireless-2.6-old/drivers/net/built-in.o
-CC [M] /home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.o
-In file included from
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:34:
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.h:361: error:
-field =91napi=92 has incomplete type
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
-=91b44_poll=92:
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:849: warning:
-type defaults to =91int=92 in declaration of =91__mptr=92
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:849: warning:
-initialization from incompatible pointer type
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:879: error: to=
-o
-many arguments to function =91netif_rx_complete=92
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
-=91b44_interrupt=92:
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:911: error: to=
-o
-many arguments to function =91netif_rx_schedule_prep=92
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:917: error: to=
-o
-many arguments to function =91__netif_rx_schedule=92
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
-=91b44_open=92:
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:1433: warning:
-implicit declaration of function =91napi_enable=92
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:1442: warning:
-implicit declaration of function =91napi_disable=92
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: At top level:
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:2051: error:
-unknown field =91get_sset_count=92 specified in initializer
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:2051: warning:
-initialization from incompatible pointer type
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c: In function
-=91b44_init_one=92:
-/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.c:2159: warning:
-implicit declaration of function =91netif_napi_add=92
-make[3]: *** [/home/gsteenss/compat-wireless-2.6-old/drivers/net/b44.o]
-Error 1
-make[2]: *** [/home/gsteenss/compat-wireless-2.6-old/drivers/net] Error=
- 2
-make[1]: *** [_module_/home/gsteenss/compat-wireless-2.6-old] Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.22-15-generic'
-make: *** [modules] Error 2
+> From: Pavel Roskin <proski@gnu.org>
+> Subject: Re: ath5k: can't browse at all.
+> To: "Irwan Siajadi" <dev.bahamot@yahoo.com>
+> Cc: linux-wireless@vger.kernel.org
+> Date: Monday, November 24, 2008, 6:53 PM
+> On Mon, 2008-11-24 at 09:41 -0800, Irwan Siajadi wrote:
+> > The AR2425 is able to obtain IP address from the
+> router, 
+> > able to ping with good results, but can't browse
+> at all.
+> > Below are the info on my setup, if you need more info
+> please let me know.
+> 
+> That's unlikely to be a driver problem.  The driver
+> doesn't distinguish
+> pings from other packets.  The only significant difference
+> could be in
+> the packet size.  You can try ping with larger packets to
+> check if
+> that's the problem.
+
+Ping with large packet size doesn't seem to be a problem.
+[root@localhost staff]# ping 192.168.1.254 -s 1500
+PING 192.168.1.254 (192.168.1.254) 1500(1528) bytes of data.
+1508 bytes from 192.168.1.254: icmp_seq=1 ttl=128 time=2.75 ms
+1508 bytes from 192.168.1.254: icmp_seq=2 ttl=128 time=2.61 ms
+...
+1508 bytes from 192.168.1.254: icmp_seq=13 ttl=128 time=2.69 ms
+1508 bytes from 192.168.1.254: icmp_seq=14 ttl=128 time=2.72 ms
+^C
+--- 192.168.1.254 ping statistics ---
+14 packets transmitted, 14 received, 0% packet loss, time 13574ms
+rtt min/avg/max/mdev = 2.586/2.692/2.781/0.091 ms
 
 
+> 
+> I suggest that you use normal network troubleshooting
+> procedures and not
+> assume the driver to be a problem unless you have a better
+> evidence.
+> Check routing, check if the nameservers in /etc/resolv.conf
+> are working.
+> I'm sure there are detailed guides how to troubleshoot
+> networks.
+
+I believe the problem is in the driver because I can browse normally as soon as I change the driver to ndiswrapper. Tracepath shows there's nothing wrong with routing or nameservers.
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> Regards,
+> Pavel Roskin
+
+
+      
+
