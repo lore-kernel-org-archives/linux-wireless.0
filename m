@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:31368 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752879AbYKEUQ6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 15:16:58 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so110798ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2008 12:16:57 -0800 (PST)
-Message-ID: <43e72e890811051216w26acca38t6eb26081509bdf28@mail.gmail.com> (sfid-20081105_211701_152644_F74AC770)
-Date: Wed, 5 Nov 2008 12:16:57 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: Re: [PATCH 0/7] cfg80211/mac80211: Add 802.11d support
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:22137 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751007AbYKYUcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 15:32:45 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 12:32:45 -0800
+Date: Tue, 25 Nov 2008 12:32:44 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Andrey Vul <andrey.vul@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: cannot compile compat-wireless-2.6-old
+Message-ID: <20081125203244.GD5950@tesla> (sfid-20081125_213248_248486_21BADA04)
+References: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com> <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1225853406-16322-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 4, 2008 at 6:49 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> This patch series adds 802.11d support to mac80211 and
-> cfg80211. I've tried to split the required changes as much
-> as possible to make it easier for review. I've tested this
-> on iwlagn with OLD_REG enabled and disable and with /sbin/crda
-> missing and not. I'm sure I've missed a few corner cases, but
-> I think this is a good start.
+On Tue, Nov 25, 2008 at 09:57:57AM -0800, Andrey Vul wrote:
+> I cannot compile the current compat tarball.
+> Make log:
+> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+> make -C /usr/src/linux-2.6.26.6-rt11/ M=/root/compat-wireless-2.6-old modules
+> make[1]: Entering directory `/usr/src/linux-2.6.26.6-rt11'
+>  CC [M]  /root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o
+> In file included from <command-line>:0:
+> /root/compat-wireless-2.6-old/include/net/compat.h:877: error:
+> redefinition of 'list_splice_tail'
+> include/linux/list.h:356: error: previous definition of
+> 'list_splice_tail' was here
+> /root/compat-wireless-2.6-old/include/net/compat.h:892: error:
+> redefinition of 'list_splice_tail_init'
+> include/linux/list.h:379: error: previous definition of
+> 'list_splice_tail_init' was here
 
-OK John here's the review, in case it helps
-
-patch 1-5 are ACKed
-patch 6 is unnecessary
-I'll respin patch 7, and actually I'll split it in two to account for
-the call_crda() return value thing.
+list_splice_tail was added as of 2.6.27, and you have 2.6.26. Which
+means your kernel headers for your box are completely messed up. This
+means you can expect a kernel panic if you were to successfully
+compile external modules. Go fix that first.
 
   Luis
