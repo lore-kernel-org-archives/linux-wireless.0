@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:26758 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754155AbYKBVF6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 16:05:58 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so862558yxm.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 13:05:56 -0800 (PST)
-Message-ID: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com> (sfid-20081102_220602_046736_53F3586B)
-Date: Sun, 2 Nov 2008 13:05:56 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: No ProbeResp - assume out of range
+Received: from mail.atheros.com ([12.36.123.2]:58987 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751281AbYKYFqY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 00:46:24 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 21:46:24 -0800
+Message-ID: <492B9246.9010806@atheros.com> (sfid-20081125_064627_121303_BC165DCE)
+Date: Mon, 24 Nov 2008 21:51:02 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Bluetooth is active on the channel where wifi  is also active
+References: <492B833E.6050202@atheros.com> <EBB1336F-91C9-4ED6-B663-A1C83FF4A35D@holtmann.org>
+In-Reply-To: <EBB1336F-91C9-4ED6-B663-A1C83FF4A35D@holtmann.org>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm curious if others are getting this frequently as I am:
+> if you have an active Bluetooth connection, then you can check with
+> hcitool afh for the actual current channel mapping.
 
-No ProbeResp from current AP 00:DE:AD:BE:EE:FF - assume out of range
+Yeah, I checked this one, it is showing 0xffffffffffffffffff7f. 
+Should we need to configure  with the appropriate channel mask 
+so that it will skip 2.4 Ghz wifi channels?, I dont find any option 
+to set this mask though.
 
-I get this with ath5k and ath9k, can be triggered easily in ath5k by
-doing a lot of consecutive:
 
-iwlist wlan0 scan
+Thanks,
 
-I have to check if I can trigger this with ath9k by scanning too. We
-were seeing this with ath9k but were thinking it was ath9k related as
-it can be triggered on it after doing a large TX. Wondering if this is
-more of a generic and mac80211 issue.
+Vasanth
 
-  Luis
+
+
+
+
+
