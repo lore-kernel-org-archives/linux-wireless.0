@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23106.mail.ird.yahoo.com ([217.146.189.46]:24736 "HELO
-	web23106.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752484AbYKFBCY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 20:02:24 -0500
-Date: Thu, 6 Nov 2008 01:02:22 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-In-Reply-To: <491237C1.4090701@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:55825 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752915AbYKYEmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2008 23:42:16 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 20:42:16 -0800
+Message-ID: <492B833E.6050202@atheros.com> (sfid-20081125_054223_704509_AD37CE69)
+Date: Mon, 24 Nov 2008 20:46:54 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <231945.17136.qm@web23106.mail.ird.yahoo.com> (sfid-20081106_020226_968344_2A276EED)
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Bluetooth is active on the channel where wifi  is also active
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Thu, 6/11/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Marcel,
 
-> On my system is started at 1 Mbs and rapidly moved to
-> 54Mbs. It went so quickly
-> that by the time I started a ping, switched terminals, and
-> issued an ivconfig,
-> it was already at 54 Mbs.
+I'm seeing a weird behavior with Broadcom blue tooth chip where it does not seem to skip 
+the channel which is currently used by WLAN. I'm using 2.6.27-rc8-wl, is there any configuration
+that i'm missing?
 
-Okay, I was writing too soon. My rate does go up and down now (pinging the other end of the wireless link, it varies between 12Mb to 36Mb). I don't know why it was stuck at 1Mb for a while earlier (10-20 minutes while I was doing a fair bit of web browsing, etc), nor why it is go up and down now :-(. 
+hci0:   Type: USB
+        BD Address: 00:16:44:90:1C:3B ACL MTU: 1021:8 SCO MTU: 64:8
+        UP RUNNING PSCAN ISCAN
+        RX bytes:167272 acl:84 sco:0 events:22936 errors:0
+        TX bytes:39460771 acl:45531 sco:0 commands:97 errors:0
+        Features: 0xff 0xff 0x8f 0xfe 0x9b 0xff 0x79 0x83
+        Packet type: DM1 DM3 DM5 DH1 DH3 DH5 HV1 HV2 HV3
+        Link policy: RSWITCH HOLD SNIFF PARK
+        Link mode: SLAVE ACCEPT
+        Name: 'XXXX'
+        Class: 0x18010c
+        Service Classes: Capturing, Object Transfer
+        Device Class: Computer, Laptop
+        HCI Ver: 2.1 (0x4) HCI Rev: 0x5115 LMP Ver: 2.1 (0x4) LMP Subver: 0x423d
+        Manufacturer: Broadcom Corporation (15)
 
-Hin-Tak 
-
-
-
-      
+Thanks,
+Vasanth
