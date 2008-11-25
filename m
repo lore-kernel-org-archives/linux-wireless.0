@@ -1,133 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:62324 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755587AbYKTWBV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 17:01:21 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so313784ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2008 14:01:20 -0800 (PST)
-Message-ID: <b6c5339f0811201401u18aa9e32nef8433c1aaaf8936@mail.gmail.com> (sfid-20081120_230126_823941_B8A336E2)
-Date: Thu, 20 Nov 2008 17:01:19 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Xu, Martin" <martin.xu@intel.com>
-Subject: Re: [ath5k-devel] [Bug 11749] Ath5k driver has too many interrupts per second at idle
-Cc: "Liu, Bing Wei" <bing.wei.liu@intel.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Wang, Yong Y" <yong.y.wang@intel.com>,
-	"Vikram Kandukuri" <Vikram.Kandukuri@atheros.com>,
-	"Jothikumar Mothilal" <Jothikumar.Mothilal@atheros.com>,
-	"Selbak, Rolla N" <rolla.n.selbak@intel.com>,
-	"yang.y.yi@gmail.com" <yang.y.yi@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>
-In-Reply-To: <9F0C1DB20AFA954FA1DA05309350433D41183AB4@pdsmsx503.ccr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <bug-11749-13098@http.bugzilla.kernel.org/>
-	 <20081013150525.884BC108058@picon.linux-foundation.org>
-	 <43e72e890810131206u75fd68e8p5416d7456ff44097@mail.gmail.com>
-	 <40f31dec0810131214j1709534fl2a95bb844d08513b@mail.gmail.com>
-	 <9F0C1DB20AFA954FA1DA05309350433D41083496@pdsmsx503.ccr.corp.intel.com>
-	 <b6c5339f0811130826p138ceae1hc6fc55bf7cf5c595@mail.gmail.com>
-	 <9F0C1DB20AFA954FA1DA05309350433D410CD777@pdsmsx503.ccr.corp.intel.com>
-	 <20081117133737.GA16412@hash.localnet>
-	 <9F0C1DB20AFA954FA1DA05309350433D41183AB4@pdsmsx503.ccr.corp.intel.com>
+Received: from foo.birdnet.se ([213.88.146.6]:45494 "HELO foo.birdnet.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750828AbYKYHSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 02:18:24 -0500
+Message-ID: <20081125071818.9256.qmail@stuge.se> (sfid-20081125_081829_369850_D7688748)
+Date: Tue, 25 Nov 2008 08:18:18 +0100
+From: Peter Stuge <peter@stuge.se>
+To: Yuval Hager <yuval@avramzon.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
+Subject: Re: BCM4312 Fails when xdm is started
+References: <200811151801.02369.yuval@avramzon.net> <200811241155.47079.mb@bu3sch.de> <492AD249.3020309@lwfinger.net> <200811250745.22487.yuval@avramzon.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lMM8JwqTlfDpEaS6"
+In-Reply-To: <200811250745.22487.yuval@avramzon.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Martin,
 
-> From: Martin Xu <martin.xu@intel.com>
-> Subject: disable beacon filter when station is not associated with any AP.
->
-> Ath5k driver has too many interrupts per second at idle
-> http://bugzilla.kernel.org/show_bug.cgi?id=11749
->
-> Signed-off-by: Martin Xu <martin.xu@intel.com>
+--lMM8JwqTlfDpEaS6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the cleanups.  I don't have any objections to the patch.
-Anyone else want to weigh in?
+Yuval Hager wrote:
+> I played around with different video drivers and the results are:
+> * If using the 'via' driver, I lose the PCIe card immediately upon=20
+>   initialization
+> * Using the 'openchrome' (trunk version), It works well in the
+>   beginning.
+>   After first blanking the register reads are all 1's, and then
+>   when the screen is blank I get a different read (some registers
+>   are correct, some are wrong), and when the screen is unblanked, I
+>   get 0xff's again. Very consistent and predictabe (same read every
+>   time).
+> * Using the 'vesa' driver I could not recreate the problem. I could
+>   not get the screen to blank for some reason, but closing the lid,
+>   going on standby/hibernate, restarting X - all didn't matter much
+>   to the PCI and the wireless card kept on working.
 
-Patch reproduced here:
+Good work! You have beyond any doubt established that the X graphics
+driver can cause this problem.
 
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 34cd1a4..37da7cc 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -241,6 +241,10 @@ static int ath5k_get_tx_stats(struct ieee80211_hw *hw,
->  static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
->  static void ath5k_reset_tsf(struct ieee80211_hw *hw);
->  static int ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb);
-> +static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
-> +                               struct ieee80211_vif *vif,
-> +                               struct ieee80211_bss_conf *bss_conf,
-> +                               u32 changes);
->
->  static struct ieee80211_ops ath5k_hw_ops = {
->        .tx             = ath5k_tx,
-> @@ -2952,7 +2956,7 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
->                sc->opmode != NL80211_IFTYPE_MESH_POINT &&
->                test_bit(ATH_STAT_PROMISC, sc->status))
->                rfilt |= AR5K_RX_FILTER_PROM;
-> -       if (sc->opmode == NL80211_IFTYPE_STATION ||
-> +       if ((sc->opmode == NL80211_IFTYPE_STATION && sc->assoc) ||
->                sc->opmode == NL80211_IFTYPE_ADHOC ||
->                sc->opmode == NL80211_IFTYPE_AP)
->                rfilt |= AR5K_RX_FILTER_BEACON;
-> @@ -3092,4 +3096,32 @@ ath5k_beacon_update(struct ath5k_softc *sc, struct sk_buff *skb)
->
->        return ret;
->  }
-> +static void
-> +set_beacon_filter(struct ieee80211_hw *hw, bool enable)
-> +{
-> +       struct ath5k_softc *sc = hw->priv;
-> +       struct ath5k_hw *ah = sc->ah;
-> +       u32 rfilt;
-> +       rfilt = ath5k_hw_get_rx_filter(ah);
-> +       if (enable)
-> +               rfilt |= AR5K_RX_FILTER_BEACON;
-> +       else
-> +               rfilt &= ~AR5K_RX_FILTER_BEACON;
-> +       ath5k_hw_set_rx_filter(ah, rfilt);
-> +       sc->filter_flags = rfilt;
-> +}
->
-> +static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
-> +                                   struct ieee80211_vif *vif,
-> +                                   struct ieee80211_bss_conf *bss_conf,
-> +                                   u32 changes)
-> +{
-> +       struct ath5k_softc *sc = hw->priv;
-> +       if (changes & BSS_CHANGED_ASSOC) {
-> +               mutex_lock(&sc->lock);
-> +               sc->assoc = bss_conf->assoc;
-> +               if (sc->opmode == NL80211_IFTYPE_STATION)
-> +                       set_beacon_filter(hw, sc->assoc);
-> +               mutex_unlock(&sc->lock);
-> +       }
-> +}
-> diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-> index 06d1054..facc60d 100644
-> --- a/drivers/net/wireless/ath5k/base.h
-> +++ b/drivers/net/wireless/ath5k/base.h
-> @@ -179,6 +179,7 @@ struct ath5k_softc {
->
->        struct timer_list       calib_tim;      /* calibration timer */
->        int                     power_level;    /* Requested tx power in dbm */
-> +       bool                    assoc;          /* assocate state */
->  };
->
->  #define ath5k_hw_hasbssidmask(_ah) \
-> _______________________________________________
-> ath5k-devel mailing list
-> ath5k-devel@lists.ath5k.org
-> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
->
+Were you using a kernel framebuffer driver when you saw the problem
+also without running X at all? If not, the cause of trouble then is
+still unidentified.
 
 
+//Peter
 
--- 
-Bob Copeland %% www.bobcopeland.com
+--lMM8JwqTlfDpEaS6
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFJK6a6hR3Q0dhIfEgRAuzFAJsE2hEB28Qq7hGhlGXnB3WDr2d5cwCgkn18
+VaGfWMftljqwwjuAyDc/W/c=
+=Bd8Y
+-----END PGP SIGNATURE-----
+
+--lMM8JwqTlfDpEaS6--
