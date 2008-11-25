@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:34707 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753832AbYKPXJo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Nov 2008 18:09:44 -0500
-Date: Sun, 16 Nov 2008 17:09:25 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix pid rate-setting algorithm to allow rate
- changes
-Message-ID: <4920a825.Othkfehwlj87g6L4%Larry.Finger@lwfinger.net> (sfid-20081117_000949_943241_D7036AE7)
+Received: from mail.atheros.com ([12.36.123.2]:54843 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752234AbYKYWw0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 17:52:26 -0500
+Date: Tue, 25 Nov 2008 14:52:23 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	<zenczykowski@gmail.com>
+Subject: Re: pull request: wireless-2.6 2008-11-25
+Message-ID: <20081125225223.GI5950@tesla> (sfid-20081125_235231_506611_3DCBCD47)
+References: <20081125220824.GB25962@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20081125220824.GB25962@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 9ea2c74 named "mac80211/drivers: rewrite the rate control API",
-the meaning of status.rates[i].count was changed from number of retries
-to total number of tries. As a result, the pid rate-setting algorithm fails
-because every packet appears to have needed a retransmit.
+On Tue, Nov 25, 2008 at 02:08:24PM -0800, John W. Linville wrote:
+> Dave,
+> 
+> These fixes are intended for 2.6.28.  Included are a build fix,
+> a security issue (debugfs permissions), a fixup to a previous patch
+> from Johannes to correct some DMA API usage, a fix to prevent mac80211
+> from allowing the use of IBSS mode on channels that don't allow it,
+> an ath5k fix to limit wakeups when not associate, and some ath9k DMA
+> fixes for a problem that led to disk corruption...
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
----
+BTW, just for the record, the culprit to disk corruption on ath9k
+seems to be a bug in the swiotlb emergency buffer. If bored please
+bugzilla 11811 [1] for more information and also a suggested patch
+for how to fix this by Maciej, which he should be sending to
+linux-kernel soon hopefully.
 
-John,
+The swiotlb issue should not affect us anymore though as we now don't starve
+the swiotlb of bounce buffers and hence no reason to rely on the buggy
+emergency buffer.
 
-The commit that is being fixed has not yet made it to mainline; therefore
-this is 2.6.29 material.
+[1] http://bugzilla.kernel.org/show_bug.cgi?id=11811
 
-Larry
----
-
-Index: wireless-testing/net/mac80211/rc80211_pid_algo.c
-===================================================================
---- wireless-testing.orig/net/mac80211/rc80211_pid_algo.c
-+++ wireless-testing/net/mac80211/rc80211_pid_algo.c
-@@ -256,7 +256,7 @@ static void rate_control_pid_tx_status(v
- 	if (!(info->flags & IEEE80211_TX_STAT_ACK)) {
- 		spinfo->tx_num_failed += 2;
- 		spinfo->tx_num_xmit++;
--	} else if (info->status.rates[0].count) {
-+	} else if (info->status.rates[0].count > 1) {
- 		spinfo->tx_num_failed++;
- 		spinfo->tx_num_xmit++;
- 	}
+  Luis
