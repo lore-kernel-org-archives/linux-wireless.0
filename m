@@ -1,65 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:46777 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751072AbYKWPmd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2008 10:42:33 -0500
-Message-ID: <492979E4.1070606@lwfinger.net> (sfid-20081123_164238_583741_4FA6CAE4)
-Date: Sun, 23 Nov 2008 09:42:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Yuval Hager <yuval@avramzon.net>, bcm43xx-dev@lists.berlios.de,
-	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Peter Stuge <peter@stuge.se>
-Subject: Re: BCM4312 Fails when xdm is started
-References: <200811151801.02369.yuval@avramzon.net> <200811221654.09399.mb@bu3sch.de> <200811231350.00207.yuval@avramzon.net> <200811231320.30289.mb@bu3sch.de>
-In-Reply-To: <200811231320.30289.mb@bu3sch.de>
-Content-Type: text/plain; charset=iso-8859-15
+Received: from mga14.intel.com ([143.182.124.37]:1608 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751007AbYKYV3L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 16:29:11 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, reinette.chatre@intel.com,
+	crmafra2@gmail.com, xhejtman@ics.muni.cz
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1 linux-2.6] iwlwifi: clean key table in iwl_clear_stations_table function
+Date: Tue, 25 Nov 2008 23:29:03 +0200
+Message-Id: <1227648543-28136-1-git-send-email-tomas.winkler@intel.com> (sfid-20081125_222915_823421_A6F349BB)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Sunday 23 November 2008 12:49:55 Yuval Hager wrote:
->> [  182.891400] ****** b43: B43_MMIO_MACCTL 0x840A0503
->> [  182.891409] ****** b43: SSB_TMSLOW 0x20150000
->> [  258.299027] irq 10: nobody cared (try booting with the "irqpoll" option)
-> 
-> 
-> Does the kernel disable the PCI device, if it ignores the IRQ?
+This patch cleans uCode key table bit map iwl_clear_stations_table
+since all stations are cleared also the key table must be.
 
-According to /proc/interrupts that Yuval posted earlier, IRQ 10 is not used.
+Since the keys are not removed properly on suspend by mac80211
+this may result in exhausting key table on resume leading
+to memory corruption during removal
 
-# cat /proc/interrupts
+This patch also fixes a memory corruption problem reported in
+http://marc.info/?l=linux-wireless&m=122641417231586&w=2 and tracked in
+http://bugzilla.kernel.org/show_bug.cgi?id=12040.
 
-           CPU0
-  0:     271998   IO-APIC-edge      timer
-  1:          8   IO-APIC-edge      i8042
-  8:          2   IO-APIC-edge      rtc
-  9:       2796   IO-APIC-fasteoi   acpi
- 12:        132   IO-APIC-edge      i8042
- 14:          0   IO-APIC-edge      ide0
- 15:          0   IO-APIC-edge      ide1
- 16:      29161   IO-APIC-fasteoi   eth0
- 17:        503   IO-APIC-fasteoi   HDA Intel
- 20:          0   IO-APIC-fasteoi   uhci_hcd:usb2
- 21:      11085   IO-APIC-fasteoi   sata_via, ehci_hcd:usb1, uhci_hcd:usb3
- 23:          0   IO-APIC-fasteoi   uhci_hcd:usb4
- 24:      28003   IO-APIC-fasteoi   b43
-NMI:          0   Non-maskable interrupts
-LOC:       2098   Local timer interrupts
-RES:          0   Rescheduling interrupts
-CAL:          0   function call interrupts
-TLB:          0   TLB shootdowns
-TRM:          0   Thermal event interrupts
-SPU:          0   Spurious interrupts
-ERR:          0
-MIS:          0
+When the key is removed a second time the offset is set to 255 - this
+index is not valid for the ucode_key_table and corrupts the eeprom pointer
+(which is 255 bits from ucode_key_table).
 
-After the failure occurs, b43 has disappeared from the IRQ 24 list:
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Reported-by: Carlos R. Mafra <crmafra2@gmail.com>
+Reported-by: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-sta.c  |   24 +++++++++++++++++++++---
+ 2 files changed, 24 insertions(+), 3 deletions(-)
 
- 24:      34154   IO-APIC-fasteoi
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 4c312c5..01a8458 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -290,6 +290,9 @@ void iwl_clear_stations_table(struct iwl_priv *priv)
+ 	priv->num_stations = 0;
+ 	memset(priv->stations, 0, sizeof(priv->stations));
+ 
++	/* clean ucode key table bit map */
++	priv->ucode_key_table = 0;
++
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ }
+ EXPORT_SYMBOL(iwl_clear_stations_table);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 61797f3..26f7084 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -475,7 +475,7 @@ static int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
+ 		if (!test_and_set_bit(i, &priv->ucode_key_table))
+ 			return i;
+ 
+-	return -1;
++	return WEP_INVALID_OFFSET;
+ }
+ 
+ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
+@@ -620,6 +620,9 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+ 	/* else, we are overriding an existing key => no need to allocated room
+ 	 * in uCode. */
+ 
++	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
++		"no space for new kew");
++
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+@@ -637,6 +640,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+ {
+ 	unsigned long flags;
+ 	__le16 key_flags = 0;
++	int ret;
+ 
+ 	key_flags |= (STA_KEY_FLG_CCMP | STA_KEY_FLG_MAP_KEY_MSK);
+ 	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
+@@ -664,14 +668,18 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+ 	/* else, we are overriding an existing key => no need to allocated room
+ 	 * in uCode. */
+ 
++	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
++		"no space for new kew");
++
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 
++	ret = iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
++
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 
+-	IWL_DEBUG_INFO("hwcrypto: modify ucode station key info\n");
+-	return iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
++	return ret;
+ }
+ 
+ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+@@ -696,6 +704,9 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+ 	/* else, we are overriding an existing key => no need to allocated room
+ 	 * in uCode. */
+ 
++	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
++		"no space for new kew");
++
+ 	/* This copy is acutally not needed: we get the key with each TX */
+ 	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
+ 
+@@ -734,6 +745,13 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 		return 0;
+ 	}
+ 
++	if (priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET) {
++		IWL_WARNING("Removing wrong key %d 0x%x\n",
++			    keyconf->keyidx, key_flags);
++		spin_unlock_irqrestore(&priv->sta_lock, flags);
++		return 0;
++	}
++
+ 	if (!test_and_clear_bit(priv->stations[sta_id].sta.key.key_offset,
+ 		&priv->ucode_key_table))
+ 		IWL_ERROR("index %d not used in uCode key table.\n",
+-- 
+1.5.4.3
 
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Larry
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
