@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11979 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753011AbYKTGOo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 01:14:44 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 22:14:44 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<ath9k-devel@lists.ath9k.org>, <zenczykowski@gmail.com>,
-	<Bennyam.Malavazi@atheros.com>
-Subject: [RFC 2/2] ath9k: correct expected max RX buffer size
-Date: Wed, 19 Nov 2008 22:14:40 -0800
-Message-ID: <1227161680-23229-3-git-send-email-lrodriguez@atheros.com> (sfid-20081120_071456_446791_5F05B3E8)
-In-Reply-To: <1227161680-23229-2-git-send-email-lrodriguez@atheros.com>
-References: <1227161680-23229-1-git-send-email-lrodriguez@atheros.com>
- <1227161680-23229-2-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from ns.km10614-05.keymachine.de ([87.118.102.170]:54354 "EHLO
+	km10614-05.keymachine.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750947AbYKYWZQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 17:25:16 -0500
+Date: Tue, 25 Nov 2008 23:17:35 +0100
+From: Harald Braumann <harry@unheit.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linville@tuxdriver.com, ipw2100-devel@lists.sourceforge.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [Ipw2100-devel] [PATCH] ipw2200: increase scan timeout
+Message-ID: <20081125231735.5c9f7a50@sbs173> (sfid-20081125_232521_037108_FAE8DE51)
+In-Reply-To: <200811251809.55461.helmut.schaa@gmail.com>
+References: <200811251809.55461.helmut.schaa@gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/jN55DY0WKCm8M0q6q_3UweJ";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should only tell the hardware its capable of DMA'ing
-to us only what we asked dev_alloc_skb(). Prior to this
-it is possible a large RX'd frame could have corrupted
-DMA data but for us but we were saved only because we
-were previously also pci_map_single()'ing the same large
-value. The issue prior to this though was we were unmapping
-a smaller amount which the prior DMA patch fixed.
+--Sig_/jN55DY0WKCm8M0q6q_3UweJ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Note that we dev_alloc_skb() a cache line size - 1 too
-but this is just to help us offset the skb->data *if and only if*
-needed. Even in that case we should still *only* allow the
-hardware to DMA to us a buffer of size sc->sc_rxbufsize.
+On Tue, 25 Nov 2008 18:09:54 +0100
+Helmut Schaa <helmut.schaa@googlemail.com> wrote:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/recv.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+> The current scan timeout is set to 5 seconds. If the timeout is hit
+> because the firmware did not respond yet, the adapter gets restarted,
+> which results in a disassociation.
 
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index 4355c16..0cd2a91 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -41,9 +41,11 @@ static void ath_rx_buf_link(struct ath_softc *sc, struct ath_buf *bf)
- 	ASSERT(skb != NULL);
- 	ds->ds_vdata = skb->data;
- 
--	/* setup rx descriptors */
-+	/* setup rx descriptors. The sc_rxbufsize here tells the harware
-+	 * how much data it can DMA to us and that we are prepared
-+	 * to process */
- 	ath9k_hw_setuprxdesc(ah, ds,
--			     skb_tailroom(skb), /* buffer size */
-+			     sc->sc_rxbufsize,
- 			     0);
- 
- 	if (sc->sc_rxlink == NULL)
-@@ -66,6 +68,13 @@ static struct sk_buff *ath_rxbuf_alloc(struct ath_softc *sc, u32 len)
- 	 * in rx'd frames.
- 	 */
- 
-+	/* Note: the kernel can allocate a value greater than
-+	 * what we ask it to give us. We really only need 4 KB as that
-+	 * is this hardware supports and in fact we need at least 3849
-+	 * as that is the MAX AMSDU size this hardware supports.
-+	 * Unfortunately this means we may get 8 KB here from the
-+	 * kernel... and that is actually what is observed on some
-+	 * systems :( */
- 	skb = dev_alloc_skb(len + sc->sc_cachelsz - 1);
- 	if (skb != NULL) {
- 		off = ((unsigned long) skb->data) % sc->sc_cachelsz;
--- 
-1.5.6.rc2.15.g457bb.dirty
+Could this be a workaround for my bug as well (disconnects caused by
+scan while associated)? I get the following log entries:
 
+I isr_status_change Scan detected while associated, with no scan
+request.  Restarting firmware.=20
+I schedule_reset wifi0: Scheduling firmware restart (0s).=20
+I isr_status_change Status change: IPW_STATE_SCANNING=20
+I isr_indicate_scanning Scanning...=20
+U ipw2100_reset_adapter : wifi0: Restarting adapter.=20
+U ipw2100_power_cycle_adapter Power cycling the hardware.
+
+> However, in an environment with lots of access points the scan
+> sometimes takes longer than 5 seconds. This patch simply increases
+> the timeout to 10 seconds.
+
+I only have 1 AP, though.
+
+Cheer,
+harry
+
+--Sig_/jN55DY0WKCm8M0q6q_3UweJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkkseX8ACgkQwMFqDB+mz24HIQCeP9XoncQOLY7eL2A+IIFNPzcc
+EkYAoK0rDVTkWMCGZAtun1QpCAmMEnBD
+=nmMX
+-----END PGP SIGNATURE-----
+
+--Sig_/jN55DY0WKCm8M0q6q_3UweJ--
