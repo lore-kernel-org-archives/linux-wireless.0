@@ -1,60 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:30835 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754593AbYKKKS1 (ORCPT
+Received: from sd-green-bigip-207.dreamhost.com ([208.97.132.207]:36023 "EHLO
+	spunkymail-a6.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751281AbYKYFpc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2008 05:18:27 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so3319679muf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2008 02:18:25 -0800 (PST)
-Message-ID: <8e92b4100811110218q2b45f70amdba39159ef9799bd@mail.gmail.com> (sfid-20081111_111831_891321_FF738977)
-Date: Tue, 11 Nov 2008 15:48:24 +0530
-From: "Vivek Natarajan" <vivek.natraj@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: [RFC 2/2] mac80211: implement dynamic power save
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <87zlk6vink.fsf@nokia.com>
+	Tue, 25 Nov 2008 00:45:32 -0500
+From: Yuval Hager <yuval@avramzon.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: BCM4312 Fails when xdm is started
+Date: Tue, 25 Nov 2008 07:43:22 +0200
+Cc: Michael Buesch <mb@bu3sch.de>, LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+References: <200811151801.02369.yuval@avramzon.net> <200811241155.47079.mb@bu3sch.de> <492AD249.3020309@lwfinger.net>
+In-Reply-To: <492AD249.3020309@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1226245439-30329-1-git-send-email-kalle.valo@nokia.com>
-	 <1226245439-30329-3-git-send-email-kalle.valo@nokia.com>
-	 <20081110201444.GI6918@tesla> <87zlk6vink.fsf@nokia.com>
+Content-Type: multipart/signed;
+  boundary="nextPart1314015.9U052YQoBR";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200811250745.22487.yuval@avramzon.net> (sfid-20081125_064537_067452_0D3642EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 11, 2008 at 12:44 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+--nextPart1314015.9U052YQoBR
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> While talking about power save, can you give me any hints how power
-> save in client mode works in ath5k/ath9k? I haven't looked at the
-> drivers yet, but any hints (even how small) always help and save time.
-> I'm trying to understand how power save is implemented in different
-> hardware so that I can take that into account in my patches.
+On Monday 24 November 2008, Larry Finger wrote:
+> Michael Buesch wrote:
+> > On Monday 24 November 2008 09:49:38 Yuval Hager wrote:
+> >> * Now check this out - the output of lspci -d 14e4:4312 -x
+> >> 02:00.0 Network controller: Broadcom Corporation BCM4312 802.11a/b/g
+> >> (rev ff) 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> >> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> >> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> >> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> >>
+> >> (I double checked this)
+> >>
+> >> huh?
+> >
+> > Hah, interesting. I think your hardware may be faulty, in fact.
+> > To me it really seems like the mainboard has power failures on the PCI
+> > bus.
+> >
+> > This is a laptop, so you can't pull random hardware? Can you run some
+> > hardware burn-in tests like mprime (http://mersenne.org/freesoft/) or
+> > memtest? If that doesn't help, can you try with another operating syste=
+m?
+>
+> I also think you are seeing a hardware failure. Another test to try is
+> http://freshmeat.net/projects/cpuburn/?topic_id=3D146, which will exercise
+> the system.
+>
+> Larry
 
-Currently there is no support for powersave in ath9k( Not sure about
-ath5k though). There is a code level implementation for the following
-although we do not enable them:
- Support for network sleep mode:
-     If a request for network sleep comes from higher layers, the
-sleep duration having been configured based on beacon interval and the
-TIM offset in the beacon based on AID is all configured, then the
-chip will happily go to sleep and wake up for the beacon to read TIM.
+I can't argue with what the bits mean, but I must say it doesn't "feel" lik=
+e a=20
+hardware problem. It is very consistent and deterministic.=20
 
-But the code for calulating TIM offset, reading TIM, to decide the power
-level based on TIM, extending awake time based on DTIM needs to be
-done. Since these are common to all drivers, these may get into
-mac80211( Not sure if it is already implemented). Please correct me if
-I am wrong here.
+I've been running mprime & burnBX & burnMMX for over 6 hours and it is all=
+=20
+fine (memtest not ran yet).
 
-I believe all these are done in the firmware for Intel since Tomas mentioned
-sometime back that all the power save features works in iwlwifi.
+However, I have some few interesting findings.=20
+=46irst, this is totally unrelated to b43, but to the PCI. I get the flawed=
+ 1's=20
+read from lspci even without loading b43.
 
->  Actually there are three types of power save now:
-> AP mode buffering for clients in power save, the normal ("static")
-> power save for client mode and the dynamic version. So this will get
-> very confusing.
-I have come across  this dynamic power save(Switch off radio when there
-is no RX/Tx for sometime) and also buffering in AP mode. I would be happy to
-know about the static power save.
+I played around with different video drivers and the results are:
+* If using the 'via' driver, I lose the PCIe card immediately upon=20
+initialization
+* Using the 'openchrome' (trunk version), It works well in the beginning.=20
+After first blanking the register reads are all 1's, and then when the scre=
+en=20
+is blank I get a different read (some registers are correct, some are wrong=
+),=20
+and when the screen is unblanked, I get 0xff's again. Very consistent and=20
+predictabe (same read every time).
+* Using the 'vesa' driver I could not recreate the problem. I could not get=
+=20
+the screen to blank for some reason, but closing the lid, going on=20
+standby/hibernate, restarting X - all didn't matter much to the PCI and the=
+=20
+wireless card kept on working.
 
-Regards,
-Vivek.
+=2D-yuval
+
+--nextPart1314015.9U052YQoBR
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkkrkPIACgkQl7qmwPqEj9+7dwCdHGvq6qzs4k0IfkfVjx5+JEVr
+GSkAoMrmOEclPv9+7lYt8QK4btCwgEIn
+=cjl+
+-----END PGP SIGNATURE-----
+
+--nextPart1314015.9U052YQoBR--
