@@ -1,37 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:50542 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882AbYKEF2L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 00:28:11 -0500
-To: "Dan Williams" <dcbw@redhat.com>
-Cc: Alexey Fisher <bug-track@fisher-privat.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rjw@sisk.pl, kernel-testers@vger.kernel.org
-Subject: Re: [PATCH] make assocaittion only if SSID is known.
-References: <1225836101-5723-1-git-send-email-bug-track@fisher-privat.net>
-	<1225838828.22671.0.camel@localhost.localdomain>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 05 Nov 2008 07:25:51 +0200
-In-Reply-To: <1225838828.22671.0.camel@localhost.localdomain> (ext Dan Williams's message of "Tue\, 04 Nov 2008 17\:47\:08 -0500")
-Message-ID: <871vxq217k.fsf@nokia.com> (sfid-20081105_062818_661513_7D86A747)
+Received: from nbd.name ([88.198.39.176]:60119 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751832AbYKYWrs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 17:47:48 -0500
+Message-ID: <492C808A.20403@openwrt.org> (sfid-20081125_234753_772842_13437823)
+Date: Tue, 25 Nov 2008 23:47:38 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+CC: Maxim Levitsky <maximlevitsky@gmail.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	wally@theblackmoor.net, Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [ath5k-devel] Unusually low speeds with ath5k and iwl3945
+References: <492719ED.5000006@gmail.com> <20081122005240.GA27826@hash.localnet>	<alpine.DEB.2.00.0811221643030.7067@monster> <4927FC0C.10900@gmail.com> <492A5913.3070007@free.fr> <492A7733.2000205@openwrt.org> <492C55FC.2040506@free.fr>
+In-Reply-To: <492C55FC.2040506@free.fr>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams <dcbw@redhat.com> writes:
+Benoit PAPILLAULT wrote:
+> Felix Fietkau a =E9crit :
+>> While reading the code for calculating the frame duration, i noticed
+>> something odd: It doesn't seem to be taking into account the short
+>> vs long preamble distinction for ERP rates. IMHO this might be causi=
+ng
+>> issues like this. I've seen similar behaviour a long time ago when t=
+esting
+>> iwl3945 against a Broadcom AP with exactly the same throughput drop =
+(500-
+>> 600 kbits/s).
+>> When I analyzed the problem with an extra monitor mode card, I found=
+ out
+>> that the throughput drop is caused by a huge number of retransmissio=
+ns,
+>=20
+> In the test I've done, there was no retransmission at all (no
+> duplicates). I don't save a capture file, so I cannot tell for sure.
+Which test specifically? iwl3945 or ath5k?
+If ath5k doesn't show any retransmissions, the problem might not be
+related. Please do make some logs of the throughput issue and then
+some more of the same kind of traffic without throughput issues
+(same card, same driver).
 
-> On Tue, 2008-11-04 at 23:01 +0100, Alexey Fisher wrote:
->> 'iwconfig eth1 channel 6' would trigger association to _something_,
->> which is wrong. Changing the channel should (and does) trigger
->> reassociation, but only if there is an SSID to associate with!
->
-> Heh :)  Need the Signed-off-by: here too though.
+> What is the code computing frame duration you are referring to? How i=
+t
+> could affect the hardware behavior?
+I looked at it again and now I don't think it's the cause anymore. I
+ did some comparisons against other stacks/drivers and this part
+seems correct after all.
 
-And the subject should contain the driver name, for example like this:
-
-[PATCH] ipw2200: associate only when SSID is known
-
--- 
-Kalle Valo
+- Felix
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
