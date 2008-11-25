@@ -1,70 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42385 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:34310 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751403AbYKZBCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 20:02:20 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 17:02:20 -0800
-Date: Tue, 25 Nov 2008 17:02:18 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Pavel Roskin <proski@gnu.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Richard Farina <sidhayn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@Atheros.com>
-Subject: Re: wireless-regdb: flaw in general functionality
-Message-ID: <20081126010218.GP5950@tesla> (sfid-20081126_020224_657388_F5049183)
-References: <492B2B74.7040404@gmail.com> <20081124231204.GN6245@tesla> <1227568883.28878.15.camel@dv> <43e72e890811241526o1ea6ecf7ge05a2319d6ff3641@mail.gmail.com> <492B623E.5030202@gmail.com> <1227580299.32415.2.camel@dv> <20081126001942.GN5950@tesla> <1227659754.2556.11.camel@dv>
-MIME-Version: 1.0
+	id S1752500AbYKYLFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 06:05:48 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	reinette.chatre@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] mac80211: disassociate prior to unlinking AP/station
+Date: Tue, 25 Nov 2008 13:05:44 +0200
+Message-Id: <1227611144-20081-1-git-send-email-tomas.winkler@intel.com> (sfid-20081125_120552_726921_E28D3B32)
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1227659754.2556.11.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 25, 2008 at 04:35:54PM -0800, Pavel Roskin wrote:
-> On Tue, 2008-11-25 at 16:19 -0800, Luis R. Rodriguez wrote:
-> 
-> > This is documented here:
-> >
-> > http://wireless.kernel.org/en/developers/Regulatory#Changingthedatabasefileformat
-> 
-> I mean, I don't know how painful it can be.  Perhaps it's better to
-> anticipate some requirements earlier than to change them later.
+This patch reorders calls during disassociation in
+ieee80211_set_disassoc function.
+Since sta_info_unlink calls sta_notify(REMOVE) it will
+remove the station representing AP from the driver before
+it has disassociated from it using bss_info_changed callback.
 
-Its painful to add anything new. To understand this better it helps to
-understand why some flags were added in the first place to regulatory rules.
-The short and sweet answer is DFS. And the general rule of thumb goes like this:
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/mlme.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
 
-When in a DFS freq, if you don't support DFS in your mode of operation,
-then you cannot TX.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 88b0b4d..2a827eb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -861,16 +861,26 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT)
+ 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
+ 
+-	sta_info_unlink(&sta);
+-
+ 	rcu_read_unlock();
+ 
+-	sta_info_destroy(sta);
+-
+ 	local->hw.conf.ht.enabled = false;
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_HT);
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
++
++	rcu_read_lock();
++
++	sta = sta_info_get(local, ifsta->bssid);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
++	}
++
++	sta_info_unlink(&sta);
++
++	rcu_read_unlock();
++
++	sta_info_destroy(sta);
+ }
+ 
+ static int ieee80211_sta_wep_configured(struct ieee80211_sub_if_data *sdata)
+-- 
+1.5.4.3
 
-So if you don't support DFS in IBSS, you get NO-IBSS. If your AP doesn't
-support DFS then you can't use DFS channels. If you don't support DFS
-then you better not use active scanning on a STA, hence the passive scan
-flag (I guess this should be renamed to NO-ACTIVE-SCAN to be more
-consistent).
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-The NO-HT20 is historical, we're not aware of countries disallowing
-this. No-HT40 is also a bit historical as it seems the countries which
-do not allow this will soon allow for it.
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
-The NO-OFDM and NO-CCK flag is unused and purely historical.
-
-So before adding a flag I think its *really* good to think about it
-thrice and see if there is a need of it, otherwise the answer should
-usually be that its not a good idea to add it.
-
-If anything we can consolidate flags or remove flags, that would be nicer
-if possible.
-
-> I think
-> both "don't transmit" and "don't transmit unless permitted by the AP"
-> could be useful in some jurisdictions.
-
-Don't transmit is implicit, CRDA just "allows", so the flags we have now
-are all negative for special considerations on "allowing", such as NO
-IBSS, etc.
-
-  Luis
