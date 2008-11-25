@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:56843 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:24312 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751345AbYKNDL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 22:11:59 -0500
+	id S1751193AbYKYVEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 16:04:23 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 19:11:59 -0800
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 13:04:23 -0800
+Date: Tue, 25 Nov 2008 13:04:21 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Clarify we only want 32-bit DMA
-Date: Thu, 13 Nov 2008 19:11:56 -0800
-Message-ID: <1226632317-23688-1-git-send-email-lrodriguez@atheros.com> (sfid-20081114_041203_778468_27814957)
+To: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <ath5k-devel@lists.ath5k.org>, <ath9k-devel@lists.ath9k.org>,
+	<bkuhn@softwarefreedom.org>
+Subject: License of changes to ath5k/ath9k
+Message-ID: <20081125210421.GF5950@tesla> (sfid-20081125_220428_459218_591F9A01)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use DMA_32BIT_MASK to clarify we only want 32-bit DMA
-memory. What was there before is also 32-bit but this makes it
-clearer
+Just a friendly reminder:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+For those of you who have not read yet what "Signed-off-by" means,
+specially those who are new to contributing to the Linux kernel on
+linux-wireless I'd like to encourage you to go and review it and
+read what this means. You can find it under Documentation/SubmittingPatches,
+on the: "Developer's Certificate of Origin 1.1"
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 04342ec..e6701b7 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1594,9 +1594,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (pci_enable_device(pdev))
- 		return -EIO;
- 
--	/* XXX 32-bit addressing only */
--	if (pci_set_dma_mask(pdev, 0xffffffff)) {
--		printk(KERN_ERR "ath_pci: 32-bit DMA not available\n");
-+	if (pci_set_dma_mask(pdev, DMA_32BIT_MASK)) {
-+		printk(KERN_ERR "ath9k: 32-bit DMA not available\n");
- 		ret = -ENODEV;
- 		goto bad;
- 	}
--- 
-1.5.6.rc2.15.g457bb.dirty
+Specifically the part that mentions how you right to submit it under
+the same open source license indicated in the file. This is
+particularly important for ath5k/ath9k as these drivers do have
+some files licensed the 3-clause BSD license (only in ath5k) and ISC license
+(ath9k is completely ISC). In the future we would like to point the BSD
+community and even Solaris (yeah they seem interested in such a driver
+it seems) toward ath5k and ath9k updates for the latest updates on INI file
+updates, and hardare access routines so we want to remove any
+legal ambiguity with respect for them to be able to copy+paste code
+(even though that's not likely what they'll do exactly, but this should
+help).
 
+Technically speaking there are also some enhancements that can come our
+way towards that we can use towards our Windows driver too but
+realistically this has been minimal so far. If you could use GPL
+licensed drivers under Windows that would remove all this silly
+ISC/BSD licening preferences but the real reason to this e-mail is
+more towards helping the BSD / Solaris community out. Realistically
+speaking you cannot also expect all OSes to be license compatible,
+at least at this point :).
+
+We have been using the Changes-licensed-under tag [1] for ath5k development
+but for ath9k we tend to ask developers individually if they are willing
+submit their changes and any future ath9k changes under the ISC. We keep
+this for our records just in case you haven't read the Singed-off-by.
+I think it'd be easier too if we ensure developers really read that document
+too and ensure they understand it and also understood why are are doing this.
+
+We'll keep using the ath5k Changes-licensed-under tag until we get
+advice from SFLC if we have done enough to ensure this is no longer
+necessary. For ath9k, if we are not sure if you have read the
+"Developer's Certificate of Origin 1.1" we may ping you with an e-mail
+just to be sure.
+
+While you're at it please subscribe to the wireless.kernel.org
+SubmittingPatches page so you can get updates in case there are changes
+there.
+
+Ps. Please do not open any can of worms here, this is just informational.
+
+[1] http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches#Changes-licensed-undertag
+
+Thanks,
+
+  Luis
