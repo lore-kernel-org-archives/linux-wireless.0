@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:56849 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753275AbYKTQba (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 11:31:30 -0500
-Date: Thu, 20 Nov 2008 16:31:24 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: drago01 <drago01@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	linux-wireless@vger.kernel.org,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: Re: [GIT PATCH] rfkill fixes for 2.6.28-rc3
-Message-ID: <20081120163124.GA10899@srcf.ucam.org> (sfid-20081120_173135_478019_42C7ED2B)
-References: <1225730537-2679-1-git-send-email-hmh@hmh.eng.br> <200811031747.16326.IvDoorn@gmail.com> <20081103170243.GB2417@khazad-dum.debian.net> <200811031820.41165.IvDoorn@gmail.com> <20081112211530.GH2411@tuxdriver.com> <f6ca9fed0811200827y3e07bb6ag8c46e61c44fbc610@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f6ca9fed0811200827y3e07bb6ag8c46e61c44fbc610@mail.gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:55619 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751287AbYKYRQ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 12:16:56 -0500
+Subject: Re: AP (Master Mode) of wireless drivers
+From: Pavel Roskin <proski@gnu.org>
+To: Mark Ryden <markryde@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <dac45060811250735m6922688fn13c03ebe388d3137@mail.gmail.com>
+References: <dac45060811250735m6922688fn13c03ebe388d3137@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 25 Nov 2008 12:16:54 -0500
+Message-Id: <1227633414.15224.6.camel@dv> (sfid-20081125_181659_598212_24A3B86B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 20, 2008 at 05:27:38PM +0100, drago01 wrote:
-> On Wed, Nov 12, 2008 at 10:15 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > So I keep looking at these patches, and I'm not sure about them.
-> > It seems that they restore the rfkill state after resume to what it
-> > was before the suspend.
+On Tue, 2008-11-25 at 17:35 +0200, Mark Ryden wrote:
+> Hello,
 > 
-> Wouldn't this break hw kill switches?
-> If I move the switch while the system is suspended it will ignore this
-> event but the hw will still not work.
+> According to the linux wireless wiki, only four Linux drivers support
+> AP (Master Mode) ; these
+> are  b43/b43legacy (Broadcom chips), Intel ipw2200, and
+> libertas_tf and p54 (Intersil chips).
+> see:
+> http://www.linuxwireless.org/en/users/Drivers
+> 
+> My question is: is this information updated ?
 
-Whichever driver is responsible for listening to the hardware events 
-should handle that in its own resume method. The rfkill state 
-restoration code will only be relevant for restoring state set by 
-sofware.
+If you check the page history, you'll see that the page is being updated
+regularly.  That doesn't mean that it's 100% correct.
 
-> Well the above scenario would be just broken.
-> Unless the driver rereads the real hw state and updates the rfkill
-> state on resume.
+> More specifically, I am particularly interested to know whether Intel
+> iwl3945 and Intel iwl4965 support AP (Master Mode), and in case they
+> do not (as I am afraid is the situation)
+> - is there any intention to add AP (masted mode) support to these drivers
+> in the near future ?
 
-Quite. How else are you going to know if a switch has moved in the 
-intervening time?
+The driver announces AP mode support (look for NL80211_IFTYPE_AP and
+hw->wiphy->interface_modes in iwl-core.c and iwl3945-base.c), so it
+might work, or at least the intention is to make it work.  By the way,
+rt2x00 announces AP mode support too (in some conditions).
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Regards,
+Pavel Roskin
