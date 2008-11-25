@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:46313 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:16829 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751562AbYKYW2Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 17:28:16 -0500
-Date: Tue, 25 Nov 2008 14:28:14 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"bkuhn@softwarefreedom.org" <bkuhn@softwarefreedom.org>
-Subject: Re: [ath5k-devel] License of changes to ath5k/ath9k
-Message-ID: <20081125222814.GG5950@tesla> (sfid-20081125_232820_742843_B6EA7BAC)
-References: <20081125210421.GF5950@tesla> <b6c5339f0811251329h1130fd4aladcbfda52f0542eb@mail.gmail.com>
+	id S1751944AbYKYUPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 15:15:16 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 12:15:16 -0800
+Message-ID: <492C5DEB.3050708@atheros.com> (sfid-20081125_211521_447049_08A9603D)
+Date: Tue, 25 Nov 2008 12:19:55 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <b6c5339f0811251329h1130fd4aladcbfda52f0542eb@mail.gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Bluetooth is active on the channel where wifi  is also active
+References: <492B833E.6050202@atheros.com> <EBB1336F-91C9-4ED6-B663-A1C83FF4A35D@holtmann.org> <492B9246.9010806@atheros.com> <0DF82B8B-D3CE-4347-98C3-F35A27829F50@holtmann.org>
+In-Reply-To: <0DF82B8B-D3CE-4347-98C3-F35A27829F50@holtmann.org>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 25, 2008 at 01:29:55PM -0800, Bob Copeland wrote:
-> On Tue, Nov 25, 2008 at 4:04 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > We'll keep using the ath5k Changes-licensed-under tag until we get
-> > advice from SFLC if we have done enough to ensure this is no longer
-> > necessary. For ath9k, if we are not sure if you have read the
-> > "Developer's Certificate of Origin 1.1" we may ping you with an e-mail
-> > just to be sure.
-> 
-> I don't consider any of my changes significant enough to confer copyright,
-> so by my Signed-off-by, I agree that whatever license the file currently
-> has is alright by me.  Even if the changes were significant, the previous
-> holds.
-> 
-> However, if everyone + SFLC prefers that we strictly use
-> Changes-licensed-under even if we don't claim copyright, then I'll
-> happily add the tag generator script to a git commit hook :)
 
-Sure, BTW I had created such a script a long time ago, the files just
-need to be updated (so update them if you download this thingy):
+> maybe that is a bug in the new Broadcom chips. AFH should be auto-
+> detecting WiFi channels, but there is a HCI command to manually
+> influence this mapping.
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/ath5k-license.pl.txt
+Yeah, hci commands Write_AFH_Channel_Classification_Mode and 
+Set_AFH_Host_Channel_Classification seem to have influence on
+afh channel map. But the problem is, I could not find a way
+to send these commands from hci utils. Is it possible to give
+standard hci commands from any of the hci utilities?. I tried
+'cmd' option in hcitool but it does not seem to work.
 
-Understood.
+Thanks,
 
-  Luis
+Vasanth 
+ 
+
