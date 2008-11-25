@@ -1,103 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45028 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000AbYKXKeQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 05:34:16 -0500
-Subject: Re: [ath5k-devel] Unusually low speeds with ath5k and iwl3945
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	wally@theblackmoor.net
-In-Reply-To: <492A7733.2000205@openwrt.org>
-References: <492719ED.5000006@gmail.com>
-	 <20081122005240.GA27826@hash.localnet>
-	 <alpine.DEB.2.00.0811221643030.7067@monster> <4927FC0C.10900@gmail.com>
-	 <492A5913.3070007@free.fr>  <492A7733.2000205@openwrt.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jL3RWv5L57vxZBEb5dgW"
-Date: Mon, 24 Nov 2008 11:34:06 +0100
-Message-Id: <1227522846.3599.61.camel@johannes.berg> (sfid-20081124_113426_377042_4D98743D)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:35899 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750992AbYKYLJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 06:09:42 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	reinette.chatre@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] iwlwifi: clean key table in iwl_clear_stations_table function
+Date: Tue, 25 Nov 2008 13:09:39 +0200
+Message-Id: <1227611379-20650-1-git-send-email-tomas.winkler@intel.com> (sfid-20081125_120945_898597_097FAABB)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch cleans uCode key table bit map iwl_clear_stations_table
+since all stations are cleared also the key table must be.
 
---=-jL3RWv5L57vxZBEb5dgW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Since the keys are not removed properly on suspend by mac80211
+this may result in exhausting key table on resume leading
+to memory corruption during removal
 
-On Mon, 2008-11-24 at 10:43 +0100, Felix Fietkau wrote:
-> Benoit PAPILLAULT wrote:
-> > I did a similar test here and results is very strange. AP was my good
-> > old linksys WRT54G running an iperf server. Client was a laptop running
-> > either ath5k or madwifi/trunk and an iperf client. Channel is 5. Both
-> > drivers show the same behaviour.
-> >=20
-> > At the beginning, throughput was very low : 500 - 600 kbit/s. Suddenly
-> > (after few minutes), it jumps to 15 - 17 Mbit/s and then few minutes
-> > later (let's say 10 - 20 minutes maybe), it jumps back to 500 - 600
-> > kbit/s. Using a fixed rate has no effect.
-> >=20
-> > I used my latest wireless monitoring tools and I did not saw lost of
-> > duplicates or lost packets. The only difference was the number of
-> > packets sent by seconds....
-> >=20
-> > Looking a my syslog, I just saw few messages, unrelated in time with th=
-e
-> > throughput going up or down. They were:
-> > - ath5k : unsupported jumbo
-> > - switching to short barker preamble
-> > - switching to long barker preamble
-> >=20
-> > I can repeat the same test with iwl3945 as well, if needed.
-> While reading the code for calculating the frame duration, i noticed
-> something odd: It doesn't seem to be taking into account the short
-> vs long preamble distinction for ERP rates. IMHO this might be causing
-> issues like this. I've seen similar behaviour a long time ago when testin=
-g
-> iwl3945 against a Broadcom AP with exactly the same throughput drop (500-
-> 600 kbits/s).
-> When I analyzed the problem with an extra monitor mode card, I found out
-> that the throughput drop is caused by a huge number of retransmissions,
-> and if I remember correctly (I didn't look for this specifically back the=
-n),
-> the retransmissions went down the rate scaling table until they hit the
-> first non-ERP rate and that one worked on the first try.
->=20
-> Johannes, does that sound like a probable cause? If so, it should be easy
-> to fix.
+This patch also fixes a memory corruption problem reported in
+http://marc.info/?l=linux-wireless&m=122641417231586&w=2 and tracked in
+http://bugzilla.kernel.org/show_bug.cgi?id=12040.
 
-I have no idea. Shouldn't that be easy to tell from the monitor? And if
-the short/long switching was _unrelated_ in time it seems like it
-wouldn't be a problem?
+When the key is removed a second time the offset is set to 255 - this
+index is not valid for the ucode_key_table and corrupts the eeprom pointer
+(which is 255 bits from ucode_key_table).
 
-johannes
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Reported-by: Carlos R. Mafra <crmafra2@gmail.com>
+Reported-by: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+---
+ drivers/net/wireless/iwlwifi/iwl-sta.c |   31 +++++++++++++++++++++++++------
+ 1 files changed, 25 insertions(+), 6 deletions(-)
 
---=-jL3RWv5L57vxZBEb5dgW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 0222ef8..2553d4d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -488,6 +488,8 @@ void iwl_clear_stations_table(struct iwl_priv *priv)
+ 
+ 	priv->num_stations = 0;
+ 	memset(priv->stations, 0, sizeof(priv->stations));
++	/* clean ucode key table bit map */
++	priv->ucode_key_table = 0;
+ 
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ }
+@@ -501,7 +503,7 @@ static int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
+ 		if (!test_and_set_bit(i, &priv->ucode_key_table))
+ 			return i;
+ 
+-	return -1;
++	return WEP_INVALID_OFFSET;
+ }
+ 
+ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
+@@ -645,6 +647,8 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+ 				 iwl_get_free_ucode_key_index(priv);
+ 	/* else, we are overriding an existing key => no need to allocated room
+ 	 * in uCode. */
++	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
++		"no space for new kew");
+ 
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+@@ -663,6 +667,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+ {
+ 	unsigned long flags;
+ 	__le16 key_flags = 0;
++	int ret;
+ 
+ 	key_flags |= (STA_KEY_FLG_CCMP | STA_KEY_FLG_MAP_KEY_MSK);
+ 	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
+@@ -690,14 +695,18 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+ 	/* else, we are overriding an existing key => no need to allocated room
+ 	 * in uCode. */
+ 
++	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
++		"no space for new kew");
++
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 
++	ret = iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
++
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 
+-	IWL_DEBUG_INFO("hwcrypto: modify ucode station key info\n");
+-	return iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
++	return ret;
+ }
+ 
+ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+@@ -722,6 +731,9 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+ 	/* else, we are overriding an existing key => no need to allocated room
+ 	 * in uCode. */
+ 
++	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
++		"no space for new kew");
++
+ 	/* This copy is actually not needed: we get the key with each TX */
+ 	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
+ 
+@@ -736,10 +748,10 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
+ 			struct ieee80211_key_conf *keyconf,
+ 			const u8 *addr, u32 iv32, u16 *phase1key)
+ {
+-	u8 sta_id = IWL_INVALID_STATION;
+ 	unsigned long flags;
+-	__le16 key_flags = 0;
+ 	int i;
++	__le16 key_flags = 0;
++	u8 sta_id;
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	sta_id = iwl_find_station(priv, addr);
+@@ -765,7 +777,7 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+ 
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+-	priv->stations[sta_id].sta.key.tkip_rx_tsc_byte2 = (u8) iv32;
++	priv->stations[sta_id].sta.key.tkip_rx_tsc_byte2 = (u8)iv32;
+ 
+ 	for (i = 0; i < 5; i++)
+ 		priv->stations[sta_id].sta.key.tkip_rx_ttak[i] =
+@@ -809,6 +821,13 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 		return 0;
+ 	}
+ 
++	if (priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET) {
++		IWL_WARNING("Removing wrong key %d 0x%x\n",
++			    keyconf->keyidx, key_flags);
++		spin_unlock_irqrestore(&priv->sta_lock, flags);
++		return 0;
++	}
++
+ 	if (!test_and_clear_bit(priv->stations[sta_id].sta.key.key_offset,
+ 		&priv->ucode_key_table))
+ 		IWL_ERROR("index %d not used in uCode key table.\n",
+-- 
+1.5.4.3
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-iQIcBAABAgAGBQJJKoMaAAoJEKVg1VMiehFYSGEQALOd9p4Y+Et73/WcDVfIhy92
-SNYQdW90RXdaW1QIKaPVIWhU2uoy2EATx0enyZowPCIr66iX+Z4kzwMACmhKa2yz
-AsmujCDFCPzBy7W53ZUBDRnFjtGWOTu/t5YbxvP5lY5rAlXbTa24DP2LlFhAOj5A
-GDSeVm/QeRQGn6apugk3tKJt354HO55zl76Iuq5Mdqmu/s09dxRlbAT8bKYKNSms
-Qcfd8brnMtIdjCqteR7kkerF98rGcjpkn2g5U3MQSMzEKGdVIlwiYT8QSWVsn5H6
-CFySyqiPYm5JfUnO+jMNF/xqYh3o2oDzqxYAv2+FsKJmQAVEhZF3xchWcWb6eyOF
-27eSiTtvucCGEpkbWnzjDttLOOsji0UQgS1SsmqFeCarKwaJXQR75HlrzpIwgB8a
-2u1BX8siVy6ne8p0PVJZ5MSmbgosMQeLPZmYttMb8NpwUFTkPOzu3ALf4QjamzjQ
-lPP4g+3TrXNj/v5SiUXHCPmyx1B8sJTGHZXJDtEPtSo41Jno9osNLnYeufMGwaGt
-2rSdHpg6muM5kKWMdzF4y+mGLkLTwDL5ov3tXRtg4uRpPnHPY42C7KgTPrPWjP8N
-FYpxex0wF6mPFDgJPzcFxpruuHfWgqfzo6AR/2eWSUpxTx6buevDLCnNasV2zv60
-L1LkhRCfGwR/1BNYGq4N
-=GqjT
------END PGP SIGNATURE-----
-
---=-jL3RWv5L57vxZBEb5dgW--
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
