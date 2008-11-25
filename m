@@ -1,35 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:9061 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751114AbYKMFW2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 00:22:28 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so636680fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2008 21:22:26 -0800 (PST)
-Message-ID: <3ace41890811122122x682ab40w153d2df34ae91346@mail.gmail.com> (sfid-20081113_062233_937908_D555AD8F)
-Date: Thu, 13 Nov 2008 05:22:26 +0000
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] rtl8187: Update file authorship in comments
-Cc: "John W Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
-In-Reply-To: <491b6768.iqQUkTGJLrREsFyl%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <491b6768.iqQUkTGJLrREsFyl%Larry.Finger@lwfinger.net>
+Received: from mga02.intel.com ([134.134.136.20]:44263 "EHLO mga02.intel.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752028AbYKYScD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 13:32:03 -0500
+Subject: Re: [PATCH] ipw2200: increase scan timeout
+From: reinette chatre <reinette.chatre@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>
+In-Reply-To: <200811251809.55461.helmut.schaa@gmail.com>
+References: <200811251809.55461.helmut.schaa@gmail.com>
+Content-Type: text/plain
+Date: Tue, 25 Nov 2008 10:32:51 -0800
+Message-Id: <1227637971.13619.262.camel@rc-desk> (sfid-20081125_193208_111496_C1532231)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2008 at 11:31 PM, Larry Finger
-<Larry.Finger@lwfinger.net> wrote:
-> Modify the file comments to reflect the current maintainers.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Ack-by Hin-Tak Leung <htl10@users.sourceforge.net>
+On Tue, 2008-11-25 at 09:09 -0800, Helmut Schaa wrote:
+> The current scan timeout is set to 5 seconds. If the timeout is hit because
+> the firmware did not respond yet, the adapter gets restarted, which results
+> in a disassociation.
+> 
+> However, in an environment with lots of access points the scan sometimes takes
+> longer than 5 seconds. This patch simply increases the timeout to 10 seconds.
+> 
+> Signed-off-by: helmut.schaa@googlemail.com
+> ---
+> 
+> I was able to reproduce the issue fairly reliable with a 2915 adapter by 
+> periodically triggering scans while associated.
+> 
+> I have no idea in which situations the scan takes longer than 5 seconds to
+> complete but maybe it might even take longer than 10 seconds. Has anybody from
+> Intel insight into the firmware scan code?
+> 
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+> index c73173a..a776da3 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
+> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+> @@ -2304,7 +2304,7 @@ static void ipw_bg_adapter_restart(struct work_struct *work)
+>  	mutex_unlock(&priv->mutex);
+>  }
+>  
+> -#define IPW_SCAN_CHECK_WATCHDOG (5 * HZ)
+> +#define IPW_SCAN_CHECK_WATCHDOG (10 * HZ)
+>  
+>  static void ipw_scan_check(void *data)
+>  {
 
-I hope I don't get too much spam on this :-).
+I do not have insight into the scan code ... but I can try to find out
+if there is something specific you need to know.
 
-Hin-Tak
+This change seems harmless and if it helps you it may help somebody else
+too.
 
->
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+
+Thank you
+
+Reinette
+
