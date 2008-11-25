@@ -1,138 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46328 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbYKRKxc (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:31909 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750769AbYKYUbf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2008 05:53:32 -0500
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
-	Christophe Dumez <dchris@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
-	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
-	Thomas Witt <witt_th@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andres Freund <andres@anarazel.de>
-In-Reply-To: <1226969241.4014.24.camel@johannes.berg> (sfid-20081118_014839_339263_738F563C)
-References: <1226969241.4014.24.camel@johannes.berg>
-	 (sfid-20081118_014839_339263_738F563C)
-Content-Type: text/plain
-Date: Tue, 18 Nov 2008 11:52:37 +0100
-Message-Id: <1227005557.4014.47.camel@johannes.berg> (sfid-20081118_115335_763774_81140FFA)
-Mime-Version: 1.0
+	Tue, 25 Nov 2008 15:31:35 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so59500eyi.37
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 12:31:33 -0800 (PST)
+From: Henning Rogge <hrogge@googlemail.com>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: RFC Patch: Add signal strength to nl80211station info
+Date: Tue, 25 Nov 2008 21:31:24 +0100
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1407293.meWJ6kxEJo";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200811252131.30161.hrogge@googlemail.com> (sfid-20081125_213139_680674_17E7A0BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--nextPart1407293.meWJ6kxEJo
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_dCGLJj13g5iFFbC"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> I'd like to ask anyone who is CC'ed (those are people I know ran into
-> the bug) to try this patch.
+--Boundary-01=_dCGLJj13g5iFFbC
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Here's an updated version fixing the two errors pointed out by Zhu Yi.
+Hello,
 
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-dev.h |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-rx.c  |   23 +++++++++++++----------
- 3 files changed, 18 insertions(+), 14 deletions(-)
+I have just written a prototype of a patch that adds signal strength inform=
+ation to the nl80211 station info. This allows user space programs to keep =
+track of the signal=20
+strength of each other station in communication range (in adhoc mode) witho=
+ut using radiotap headers (which consume lots of cpu power on embedded syst=
+ems).
 
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-17 23:35:34.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-18 11:45:11.000000000 +0100
-@@ -1229,7 +1229,7 @@ void iwl_rx_handle(struct iwl_priv *priv
- 
- 		rxq->queue[i] = NULL;
- 
--		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->dma_addr,
-+		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->aligned_dma_addr,
- 					    priv->hw_params.rx_buf_size,
- 					    PCI_DMA_FROMDEVICE);
- 		pkt = (struct iwl_rx_packet *)rxb->skb->data;
-@@ -1282,8 +1282,8 @@ void iwl_rx_handle(struct iwl_priv *priv
- 			rxb->skb = NULL;
- 		}
- 
--		pci_unmap_single(priv->pci_dev, rxb->dma_addr,
--				 priv->hw_params.rx_buf_size,
-+		pci_unmap_single(priv->pci_dev, rxb->real_dma_addr,
-+				 priv->hw_params.rx_buf_size + 256,
- 				 PCI_DMA_FROMDEVICE);
- 		spin_lock_irqsave(&rxq->lock, flags);
- 		list_add_tail(&rxb->list, &priv->rxq.rx_used);
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-dev.h	2008-11-11 01:00:58.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-dev.h	2008-11-18 11:45:11.000000000 +0100
-@@ -89,7 +89,8 @@ extern struct iwl_cfg iwl5100_abg_cfg;
- #define	DEFAULT_LONG_RETRY_LIMIT  4U
- 
- struct iwl_rx_mem_buffer {
--	dma_addr_t dma_addr;
-+	dma_addr_t real_dma_addr;
-+	dma_addr_t aligned_dma_addr;
- 	struct sk_buff *skb;
- 	struct list_head list;
+I have tested the patch with a modified iw command on ath5k. I'm still look=
+ing for a way to add the datarate of unicast for each of the stations in ra=
+nge, but would like=20
+to hear comments about the patch.
+
+=2D------------------------------------------
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index e08c8bc..1e20e47 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -413,7 +413,10 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_LLID,
+ 	NL80211_STA_INFO_PLID,
+ 	NL80211_STA_INFO_PLINK_STATE,
+=2D
++	NL80211_STA_INFO_SIGNAL,
++	NL80211_STA_INFO_NOISE,
++	NL80211_STA_INFO_QUAL,
++=09
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+ 	NL80211_STA_INFO_MAX =3D __NL80211_STA_INFO_AFTER_LAST - 1
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1d57835..7fc1aaf 100644
+=2D-- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -175,6 +175,9 @@ enum station_info_flags {
+ 	STATION_INFO_LLID		=3D 1<<3,
+ 	STATION_INFO_PLID		=3D 1<<4,
+ 	STATION_INFO_PLINK_STATE	=3D 1<<5,
++	STATION_INFO_SIGNAL		=3D 1<<6,
++	STATION_INFO_NOISE		=3D 1<<7,
++	STATION_INFO_QUAL		=3D 1<<8,
  };
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-rx.c	2008-11-18 01:50:05.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-rx.c	2008-11-18 11:46:05.000000000 +0100
-@@ -204,7 +204,7 @@ int iwl_rx_queue_restock(struct iwl_priv
- 		list_del(element);
- 
- 		/* Point to Rx buffer via next RBD in circular buffer */
--		rxq->bd[rxq->write] = iwl_dma_addr2rbd_ptr(priv, rxb->dma_addr);
-+		rxq->bd[rxq->write] = iwl_dma_addr2rbd_ptr(priv, rxb->aligned_dma_addr);
- 		rxq->queue[rxq->write] = rxb;
- 		rxq->write = (rxq->write + 1) & RX_QUEUE_MASK;
- 		rxq->free_count--;
-@@ -250,7 +250,7 @@ void iwl_rx_allocate(struct iwl_priv *pr
- 		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
- 
- 		/* Alloc a new receive buffer */
--		rxb->skb = alloc_skb(priv->hw_params.rx_buf_size,
-+		rxb->skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
- 				__GFP_NOWARN | GFP_ATOMIC);
- 		if (!rxb->skb) {
- 			if (net_ratelimit())
-@@ -265,11 +265,14 @@ void iwl_rx_allocate(struct iwl_priv *pr
- 		list_del(element);
- 
- 		/* Get physical address of RB/SKB */
--		rxb->dma_addr = pci_map_single(priv->pci_dev, rxb->skb->data,
--			   priv->hw_params.rx_buf_size, PCI_DMA_FROMDEVICE);
-+		rxb->real_dma_addr = pci_map_single(priv->pci_dev, rxb->skb->data,
-+			   priv->hw_params.rx_buf_size + 256, PCI_DMA_FROMDEVICE);
- 
--		/* RBD must be 256 bytes aligned and no more than 36 bits */
--		BUG_ON(rxb->dma_addr & (~DMA_BIT_MASK(36) & 0xff));
-+		/* dma address must be no more than 36 bits */
-+		BUG_ON(rxb->real_dma_addr & ~DMA_BIT_MASK(36));
-+		/* and also 256 byte aligned! */
-+		rxb->aligned_dma_addr = ALIGN(rxb->real_dma_addr, 256);
-+		skb_reserve(rxb->skb, rxb->aligned_dma_addr - rxb->real_dma_addr);
- 
- 		list_add_tail(&rxb->list, &rxq->rx_free);
- 		rxq->free_count++;
-@@ -302,8 +305,8 @@ void iwl_rx_queue_free(struct iwl_priv *
- 	for (i = 0; i < RX_QUEUE_SIZE + RX_FREE_BUFFERS; i++) {
- 		if (rxq->pool[i].skb != NULL) {
- 			pci_unmap_single(priv->pci_dev,
--					 rxq->pool[i].dma_addr,
--					 priv->hw_params.rx_buf_size,
-+					 rxq->pool[i].real_dma_addr,
-+					 priv->hw_params.rx_buf_size + 256,
- 					 PCI_DMA_FROMDEVICE);
- 			dev_kfree_skb(rxq->pool[i].skb);
- 		}
-@@ -370,8 +373,8 @@ void iwl_rx_queue_reset(struct iwl_priv 
- 		 * to an SKB, so we need to unmap and free potential storage */
- 		if (rxq->pool[i].skb != NULL) {
- 			pci_unmap_single(priv->pci_dev,
--					 rxq->pool[i].dma_addr,
--					 priv->hw_params.rx_buf_size,
-+					 rxq->pool[i].real_dma_addr,
-+					 priv->hw_params.rx_buf_size + 256,
- 					 PCI_DMA_FROMDEVICE);
- 			priv->alloc_rxb_skb--;
- 			dev_kfree_skb(rxq->pool[i].skb);
+=20
+ /**
+@@ -195,6 +198,7 @@ struct station_info {
+ 	u32 inactive_time;
+ 	u32 rx_bytes;
+ 	u32 tx_bytes;
++	u32 signal,noise,qual;
+ 	u16 llid;
+ 	u16 plid;
+ 	u8 plink_state;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 16423f9..8006555 100644
+=2D-- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -310,12 +310,18 @@ static void sta_set_sinfo(struct sta_info *sta, struc=
+t station_info *sinfo)
+=20
+ 	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+=2D			STATION_INFO_TX_BYTES;
++			STATION_INFO_TX_BYTES |
++			STATION_INFO_SIGNAL |
++			STATION_INFO_NOISE |
++			STATION_INFO_QUAL;
+=20
+ 	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes =3D sta->rx_bytes;
+ 	sinfo->tx_bytes =3D sta->tx_bytes;
+=2D
++	sinfo->signal =3D sta->last_signal;
++	sinfo->qual =3D sta->last_qual;
++	sinfo->noise =3D sta->last_noise;
++=09
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |=3D STATION_INFO_LLID |
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c9141e3..de30b1a 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1057,6 +1057,15 @@ static int nl80211_send_station(struct sk_buff *msg,=
+ u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
++	if (sinfo->filled & STATION_INFO_SIGNAL)
++		NLA_PUT_U32(msg, NL80211_STA_INFO_SIGNAL,
++			    sinfo->signal);
++	if (sinfo->filled & STATION_INFO_NOISE)
++		NLA_PUT_U32(msg, NL80211_STA_INFO_NOISE,
++			    sinfo->noise);
++	if (sinfo->filled & STATION_INFO_QUAL)
++		NLA_PUT_U32(msg, NL80211_STA_INFO_QUAL,
++			    sinfo->qual);
+=20
+ 	nla_nest_end(msg, sinfoattr);
+=20
 
 
+--Boundary-01=_dCGLJj13g5iFFbC
+Content-Type: text/x-patch;
+  charset="UTF-8";
+  name="wireless.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="wireless.patch"
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index e08c8bc..1e20e47 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -413,7 +413,10 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_LLID,
+ 	NL80211_STA_INFO_PLID,
+ 	NL80211_STA_INFO_PLINK_STATE,
+=2D
++	NL80211_STA_INFO_SIGNAL,
++	NL80211_STA_INFO_NOISE,
++	NL80211_STA_INFO_QUAL,
++=09
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+ 	NL80211_STA_INFO_MAX =3D __NL80211_STA_INFO_AFTER_LAST - 1
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1d57835..7fc1aaf 100644
+=2D-- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -175,6 +175,9 @@ enum station_info_flags {
+ 	STATION_INFO_LLID		=3D 1<<3,
+ 	STATION_INFO_PLID		=3D 1<<4,
+ 	STATION_INFO_PLINK_STATE	=3D 1<<5,
++	STATION_INFO_SIGNAL		=3D 1<<6,
++	STATION_INFO_NOISE		=3D 1<<7,
++	STATION_INFO_QUAL		=3D 1<<8,
+ };
+=20
+ /**
+@@ -195,6 +198,7 @@ struct station_info {
+ 	u32 inactive_time;
+ 	u32 rx_bytes;
+ 	u32 tx_bytes;
++	u32 signal,noise,qual;
+ 	u16 llid;
+ 	u16 plid;
+ 	u8 plink_state;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 16423f9..8006555 100644
+=2D-- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -310,12 +310,18 @@ static void sta_set_sinfo(struct sta_info *sta, struc=
+t station_info *sinfo)
+=20
+ 	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+=2D			STATION_INFO_TX_BYTES;
++			STATION_INFO_TX_BYTES |
++			STATION_INFO_SIGNAL |
++			STATION_INFO_NOISE |
++			STATION_INFO_QUAL;
+=20
+ 	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes =3D sta->rx_bytes;
+ 	sinfo->tx_bytes =3D sta->tx_bytes;
+=2D
++	sinfo->signal =3D sta->last_signal;
++	sinfo->qual =3D sta->last_qual;
++	sinfo->noise =3D sta->last_noise;
++=09
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |=3D STATION_INFO_LLID |
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c9141e3..de30b1a 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1057,6 +1057,15 @@ static int nl80211_send_station(struct sk_buff *msg,=
+ u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
++	if (sinfo->filled & STATION_INFO_SIGNAL)
++		NLA_PUT_U32(msg, NL80211_STA_INFO_SIGNAL,
++			    sinfo->signal);
++	if (sinfo->filled & STATION_INFO_NOISE)
++		NLA_PUT_U32(msg, NL80211_STA_INFO_NOISE,
++			    sinfo->noise);
++	if (sinfo->filled & STATION_INFO_QUAL)
++		NLA_PUT_U32(msg, NL80211_STA_INFO_QUAL,
++			    sinfo->qual);
+=20
+ 	nla_nest_end(msg, sinfoattr);
+=20
+
+--Boundary-01=_dCGLJj13g5iFFbC--
+
+--nextPart1407293.meWJ6kxEJo
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkksYKIACgkQcenvcwAcHWeL2QCgkfxHQW19hRFQaZ6EFLfd7tus
+DUAAnjvrM3cNfpnSJp04aUJOkfYPPq2t
+=cZuG
+-----END PGP SIGNATURE-----
+
+--nextPart1407293.meWJ6kxEJo--
