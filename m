@@ -1,94 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx30.mail.ru ([194.67.23.238]:32508 "EHLO mx30.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755508AbYKOOP2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2008 09:15:28 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: orinoco-devel@lists.sourceforge.net
-Subject: [PATCH] orinoco: indicate it is using dBm in wireless_stats and spy
-Date: Sat, 15 Nov 2008 17:15:09 +0300
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2488795.h9qR7HVprG";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200811151715.17150.arvidjaar@mail.ru> (sfid-20081115_151724_990052_7E194AC5)
+Received: from xc.sipsolutions.net ([83.246.72.84]:56574 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752276AbYKZTH1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 14:07:27 -0500
+Subject: [PATCH] cfg80211: handle SIOCGIWMODE/SIOCSIWMODE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 26 Nov 2008 20:06:53 +0100
+Message-Id: <1227726413.4613.130.camel@johannes.berg> (sfid-20081126_200731_269115_E243E9A6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2488795.h9qR7HVprG
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+further reducing wext code in mac80211.
 
-Subject: [PATCH] orinoco: indicate it is using dBm in wireless_stats and spy
-=46rom: Andrey Borzenkov <arvidjaar@mail.ru>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h     |    4 ++
+ net/mac80211/wext.c        |   68 +-------------------------------------
+ net/wireless/wext-compat.c |   79 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 85 insertions(+), 66 deletions(-)
 
-Since WE7 /proc/net/wireless checks whether level and noise  are in dBm
-and shows them accordingly. Indicate that we return signal and noice
-levels in dBm.
-
-Before:
-Inter-| sta-|   Quality        |   Discarded packets               | Missed=
- | WE
- face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon=
- | 22
-  eth1: 0000   65.  219.  165.       0      0    148     41      0        0
-
-After:
-Inter-| sta-|   Quality        |   Discarded packets               | Missed=
- | WE
- face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon=
- | 22
-  eth1: 0000   65.  -37.  -91.       0      0      0      0      0        0
-
-While at it, replace raw numbers with appropriate macro.
-
-Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
-
-=2D--
-
- drivers/net/wireless/orinoco.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index bc4f5a2..5038b76 100644
-=2D-- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -821,7 +821,7 @@ static struct iw_statistics *orinoco_get_wireless_stats=
-(struct net_device *dev)
- 			wstats->qual.qual =3D (int)le16_to_cpu(cq.qual);
- 			wstats->qual.level =3D (int)le16_to_cpu(cq.signal) - 0x95;
- 			wstats->qual.noise =3D (int)le16_to_cpu(cq.noise) - 0x95;
-=2D			wstats->qual.updated =3D 7;
-+			wstats->qual.updated =3D IW_QUAL_ALL_UPDATED | IW_QUAL_DBM;
- 		}
- 	}
-=20
-@@ -1179,7 +1179,7 @@ static inline void orinoco_spy_gather(struct net_devi=
-ce *dev, u_char *mac,
- 	wstats.level =3D level - 0x95;
- 	wstats.noise =3D noise - 0x95;
- 	wstats.qual =3D (level > noise) ? (level - noise) : 0;
-=2D	wstats.updated =3D 7;
-+	wstats.updated =3D IW_QUAL_ALL_UPDATED | IW_QUAL_DBM;
- 	/* Update spy records */
- 	wireless_spy_update(dev, mac, &wstats);
+--- everything.orig/include/net/cfg80211.h	2008-11-26 19:30:58.000000000 +0100
++++ everything/include/net/cfg80211.h	2008-11-26 19:59:34.000000000 +0100
+@@ -521,5 +521,9 @@ struct cfg80211_ops {
+ int cfg80211_giwname(struct net_device *dev,
+ 		     struct iw_request_info *info,
+ 		     char *name, char *extra);
++int cfg80211_siwmode(struct net_device *dev, struct iw_request_info *info,
++		     u32 *mode, char *extra);
++int cfg80211_giwmode(struct net_device *dev, struct iw_request_info *info,
++		     u32 *mode, char *extra);
+ 
+ #endif /* __NET_CFG80211_H */
+--- everything.orig/net/mac80211/wext.c	2008-11-26 19:23:17.000000000 +0100
++++ everything/net/mac80211/wext.c	2008-11-26 19:23:39.000000000 +0100
+@@ -224,70 +224,6 @@ static int ieee80211_ioctl_giwrange(stru
  }
+ 
+ 
+-static int ieee80211_ioctl_siwmode(struct net_device *dev,
+-				   struct iw_request_info *info,
+-				   __u32 *mode, char *extra)
+-{
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	int type;
+-
+-	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+-		return -EOPNOTSUPP;
+-
+-	switch (*mode) {
+-	case IW_MODE_INFRA:
+-		type = NL80211_IFTYPE_STATION;
+-		break;
+-	case IW_MODE_ADHOC:
+-		type = NL80211_IFTYPE_ADHOC;
+-		break;
+-	case IW_MODE_REPEAT:
+-		type = NL80211_IFTYPE_WDS;
+-		break;
+-	case IW_MODE_MONITOR:
+-		type = NL80211_IFTYPE_MONITOR;
+-		break;
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	return ieee80211_if_change_type(sdata, type);
+-}
+-
+-
+-static int ieee80211_ioctl_giwmode(struct net_device *dev,
+-				   struct iw_request_info *info,
+-				   __u32 *mode, char *extra)
+-{
+-	struct ieee80211_sub_if_data *sdata;
+-
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	switch (sdata->vif.type) {
+-	case NL80211_IFTYPE_AP:
+-		*mode = IW_MODE_MASTER;
+-		break;
+-	case NL80211_IFTYPE_STATION:
+-		*mode = IW_MODE_INFRA;
+-		break;
+-	case NL80211_IFTYPE_ADHOC:
+-		*mode = IW_MODE_ADHOC;
+-		break;
+-	case NL80211_IFTYPE_MONITOR:
+-		*mode = IW_MODE_MONITOR;
+-		break;
+-	case NL80211_IFTYPE_WDS:
+-		*mode = IW_MODE_REPEAT;
+-		break;
+-	case NL80211_IFTYPE_AP_VLAN:
+-		*mode = IW_MODE_SECOND;		/* FIXME */
+-		break;
+-	default:
+-		*mode = IW_MODE_AUTO;
+-		break;
+-	}
+-	return 0;
+-}
+-
+ static int ieee80211_ioctl_siwfreq(struct net_device *dev,
+ 				   struct iw_request_info *info,
+ 				   struct iw_freq *freq, char *extra)
+@@ -1101,8 +1037,8 @@ static const iw_handler ieee80211_handle
+ 	(iw_handler) NULL,				/* SIOCGIWNWID */
+ 	(iw_handler) ieee80211_ioctl_siwfreq,		/* SIOCSIWFREQ */
+ 	(iw_handler) ieee80211_ioctl_giwfreq,		/* SIOCGIWFREQ */
+-	(iw_handler) ieee80211_ioctl_siwmode,		/* SIOCSIWMODE */
+-	(iw_handler) ieee80211_ioctl_giwmode,		/* SIOCGIWMODE */
++	(iw_handler) cfg80211_siwmode,			/* SIOCSIWMODE */
++	(iw_handler) cfg80211_giwmode,			/* SIOCGIWMODE */
+ 	(iw_handler) NULL,				/* SIOCSIWSENS */
+ 	(iw_handler) NULL,				/* SIOCGIWSENS */
+ 	(iw_handler) NULL /* not used */,		/* SIOCSIWRANGE */
+--- everything.orig/net/wireless/wext-compat.c	2008-11-26 19:23:07.000000000 +0100
++++ everything/net/wireless/wext-compat.c	2008-11-26 20:00:55.000000000 +0100
+@@ -58,3 +58,82 @@ int cfg80211_giwname(struct net_device *
+ 	return 0;
+ }
+ EXPORT_SYMBOL(cfg80211_giwname);
++
++int cfg80211_siwmode(struct net_device *dev, struct iw_request_info *info,
++		     u32 *mode, char *extra)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev;
++	struct vif_params vifparams;
++	enum nl80211_iftype type;
++
++	if (!wdev)
++		return -EOPNOTSUPP;
++
++	rdev = wiphy_to_dev(wdev->wiphy);
++
++	if (!rdev->ops->change_virtual_intf)
++		return -EOPNOTSUPP;
++
++	/* don't support changing VLANs, you just re-create them */
++	if (wdev->iftype == NL80211_IFTYPE_AP_VLAN)
++		return -EOPNOTSUPP;
++
++	switch (*mode) {
++	case IW_MODE_INFRA:
++		type = NL80211_IFTYPE_STATION;
++		break;
++	case IW_MODE_ADHOC:
++		type = NL80211_IFTYPE_ADHOC;
++		break;
++	case IW_MODE_REPEAT:
++		type = NL80211_IFTYPE_WDS;
++		break;
++	case IW_MODE_MONITOR:
++		type = NL80211_IFTYPE_MONITOR;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	memset(&vifparams, 0, sizeof(vifparams));
++
++	return rdev->ops->change_virtual_intf(wdev->wiphy, dev->ifindex, type,
++					      NULL, &vifparams);
++}
++EXPORT_SYMBOL(cfg80211_siwmode);
++
++int cfg80211_giwmode(struct net_device *dev, struct iw_request_info *info,
++		     u32 *mode, char *extra)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	if (!wdev)
++		return -EOPNOTSUPP;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_AP:
++		*mode = IW_MODE_MASTER;
++		break;
++	case NL80211_IFTYPE_STATION:
++		*mode = IW_MODE_INFRA;
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		*mode = IW_MODE_ADHOC;
++		break;
++	case NL80211_IFTYPE_MONITOR:
++		*mode = IW_MODE_MONITOR;
++		break;
++	case NL80211_IFTYPE_WDS:
++		*mode = IW_MODE_REPEAT;
++		break;
++	case NL80211_IFTYPE_AP_VLAN:
++		*mode = IW_MODE_SECOND;		/* FIXME */
++		break;
++	default:
++		*mode = IW_MODE_AUTO;
++		break;
++	}
++	return 0;
++}
++EXPORT_SYMBOL(cfg80211_giwmode);
 
---nextPart2488795.h9qR7HVprG
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkke2W4ACgkQR6LMutpd94w5sgCdF8VQD4TL55ja3027mbAp4cEQ
-uIMAn2P0sMLV6yZfB74SUTF4Ola6j/sc
-=XF5/
------END PGP SIGNATURE-----
-
---nextPart2488795.h9qR7HVprG--
