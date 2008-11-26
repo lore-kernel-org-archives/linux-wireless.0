@@ -1,193 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:38427 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbYKXPT3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41324 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752277AbYKZLXA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 10:19:29 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: p54: AP mode: no data frame despite traffic indication set in TIM
-Date: Mon, 24 Nov 2008 16:19:28 +0100
-Cc: Stefan Steuerwald <salsasepp@googlemail.com>,
-	linux-wireless@vger.kernel.org
-References: <f76a32050811210612i13ee251ewd6c1cab616a62529@mail.gmail.com> <1227533874.2927.2.camel@johannes.berg>
-In-Reply-To: <1227533874.2927.2.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_AYsKJ4BHD3Egug7"
-Message-Id: <200811241619.28606.chunkeey@web.de> (sfid-20081124_161934_533658_CB179304)
+	Wed, 26 Nov 2008 06:23:00 -0500
+Subject: Re: [RFC] nl80211: Add frequency configuration (including HT40)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Sujith <m.sujith@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20081126083841.GC31499@jm.kir.nu>
+References: <20081125190533.GA27879@jm.kir.nu>
+	 <20081126083841.GC31499@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6cAStchEl5r1oDnQ5HCT"
+Date: Wed, 26 Nov 2008 12:04:24 +0100
+Message-Id: <1227697465.4613.95.camel@johannes.berg> (sfid-20081126_122313_245322_BB2DA0AA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_AYsKJ4BHD3Egug7
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-On Monday 24 November 2008 14:37:54 Johannes Berg wrote:
-> On Fri, 2008-11-21 at 15:12 +0100, Stefan Steuerwald wrote:
-> 
-> > - frame 7: http request
-> > - frame 13: iPod goes to sleep
-> > - frame 23: AP beacon indicates traffic for iPod (AID 1 in TIM)
-> 
-> in 24 too, the ipod probably didn't see the beacon in frame 23 even
-> though 23 was a dtim beacon (which is a bit odd, but maybe the ipod
-> doesn't care about mcast at this point)
-> 
-> > - frame 25: iPod wakes up
-> 
-> 26: ack from the AP
-> 
-> > - in between: MISSING DATA ???
-> > - frame 27: AP beacon with no traffic indicated ???
-> > - frame 29: iPod goes to sleep again
-> > - subsequent frames: repetitions of this, until the TCP connection is closed
-> > 
-> > My understanding is that the AP would not indicate any traffic without
-> > actually having some ready to send? Wrong assumption?
-> 
-> Indeed. Christian, is it possible that the p54 device is actually
-> filtering these frames? I'm pretty sure mac80211 behaves correctly, and
-> it unsetting the TIM bit means that it must no longer have traffic
-> buffered.
-As far as I know it works like this:
-If a frame with a the PS-Bit in the FC set is received, the firmware
-will mark the source mac / aid as "sleeping". And every frame from
-this moment on for this device will be buffered.
+--=-6cAStchEl5r1oDnQ5HCT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-To remove the "mark" again, the driver has to call p54_sta_unlock.
-And the firmware will send out all buffered frames.
-Or if we only need for one frame (e.g: probe resp) we have a tx_flag (_NO_CANCEL)
+On Wed, 2008-11-26 at 10:38 +0200, Jouni Malinen wrote:
+> On Tue, Nov 25, 2008 at 09:05:33PM +0200, Jouni Malinen wrote:
+> > This patch adds new NL80211_CMD_SET_WIPHY attributes
+> > NL80211_ATTR_WIPHY_FREQ and NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET to allow
+> > userspace to set the operating channel (e.g., hostapd for AP mode).
+>=20
+> This version addresses the feedback I received by adding regulatory
+> enforcement in net/wireless/nl80211.c and mechanism for indicating
+> non-HT vs. HT20. In addition, the ht_enable/sec_chan_offset values are
+> now handled similarly to local->oper_channel to avoid changing
+> parameters for scan.
 
-If for some reason the "mark" doesn't get removed the firmware will eventually timeout
-the stuck frame and sets a the P54_TX_PSM_CANCELLED flag in tx_status.
-And we pass this on to the mac with IEEE80211_TX_STAT_TX_FILTERED.
+Thanks. A few other things that I just thought of:
 
-one thing: p54 reports the tx_status through the rx-ring-buffer.
-so I hope there's no rx/tx race here since everything is in the same "boat" here.
+> @@ -26,8 +26,9 @@
+>   * @NL80211_CMD_GET_WIPHY: request information about a wiphy or dump req=
+uest
+>   *	to get a list of all present wiphys.
+>   * @NL80211_CMD_SET_WIPHY: set wiphy parameters, needs %NL80211_ATTR_WIP=
+HY or
+> - *	%NL80211_ATTR_IFINDEX; can be used to set %NL80211_ATTR_WIPHY_NAME
+> - *	and/or %NL80211_ATTR_WIPHY_TXQ_PARAMS.
+> + *	%NL80211_ATTR_IFINDEX; can be used to set %NL80211_ATTR_WIPHY_NAME,
+> + *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ, and/or
+> + *	%NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET.
+>   * @NL80211_CMD_NEW_WIPHY: Newly created wiphy, response to get request
+>   *	or rename notification. Has attributes %NL80211_ATTR_WIPHY and
+>   *	%NL80211_ATTR_WIPHY_NAME.
+> @@ -180,6 +181,12 @@
+>   *	/sys/class/ieee80211/<phyname>/index
+>   * @NL80211_ATTR_WIPHY_NAME: wiphy name (used for renaming)
+>   * @NL80211_ATTR_WIPHY_TXQ_PARAMS: a nested array of TX queue parameters
+> + * @NL80211_ATTR_WIPHY_FREQ: frequency of the selected channel in MHz
+> + * @NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET: included with NL80211_ATTR_WIPHY=
+_FREQ
+> + *	if HT20 or HT40 are allowed (i.e., 802.11n disabled if not included):
 
-based on that:
-I made two different patches to address the problem.
+It's also possible to explicitly give the _NO_HT value too.
 
-one fiddles with mac80211 only (set-and-clear.diff).
-It assumes that if a station comes out of PS, we have to set
-the CLEAR_PS_FILT on the same time we clear the WLAN_STA_PS.
+> + *	NL80211_SEC_CHAN_DISABLED =3D HT20 only
+> + *	NL80211_SEC_CHAN_BELOW =3D secondary channel is below the primary cha=
+nnel
+> + *	NL80211_SEC_CHAN_ABOVE =3D secondary channel is above the primary cha=
+nnel
 
-the other one is only for p54 (p54-sta-flags.diff)... Doesn't do very much,
-it just checks if the CLEAR_PS_FILT is set and then sets the
-NO_CANCEL flag on that frame, so the firmware won't buffer it.
 
-Of course you can test both patches on the same time, if it doesn't help.
+> + *
+> + * @set_channel: Set channel (freq =3D frequency in MHz, sec_chan_offset=
+:
+> + *	0 =3D HT40 disabled; 1 =3D HT40 enabled, secondary channel above prim=
+ary;
+> + *	-1 =3D HT40 enabled, secondary channel below primary)
+>   */
+>  struct cfg80211_ops {
+>  	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
+> @@ -513,6 +517,9 @@
+> =20
+>  	int	(*set_txq_params)(struct wiphy *wiphy,
+>  				  struct ieee80211_txq_params *params);
+> +
+> +	int	(*set_channel)(struct wiphy *wiphy, int freq, bool ht_enabled,
+> +			       int sec_chan_offset);
 
-And finally of course, I could be totally wrong and this is all nothing but useless gibberish.
+I wonder if we shouldn't simply pass in the enum nl80211_sec_chan_offset
+value here, that seems easier to understand when you're looking at the
+whole thing from userspace down to a possible non-mac80211 driver. Not
+that I think that'll ever happen, but still? It might even make sense to
+use that value within mac80211's driver API at some point, instead of
+the enabled / +/-1 thing.
+=20
+> +static int ieee80211_set_channel(struct wiphy *wiphy, int freq,
+> +				 bool ht_enabled, int sec_chan_offset)
+> +{
+> +	struct ieee80211_local *local =3D wiphy_priv(wiphy);
+> +	struct ieee80211_channel *chan;
+> +
+> +	chan =3D ieee80211_get_channel(local->hw.wiphy, freq);
+> +	if (!chan)
+> +		return -EINVAL;
+> +
+> +	local->oper_channel =3D chan;
+> +	local->oper_ht_enabled =3D ht_enabled;
+> +	local->oper_sec_chan_offset =3D sec_chan_offset;
 
-Regards,
-	Chr
+And you could even store the enum here, and translate it only in
+_hw_config.
 
-BTW: I couldn't test the patches, so it may OOps
+> +	[NL80211_ATTR_WIPHY_FREQ] =3D { .type =3D NLA_U32 },
+> +	[NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET] =3D { .type =3D NLA_U8 },
 
---Boundary-00=_AYsKJ4BHD3Egug7
-Content-Type: text/x-diff;
-  charset="iso 8859-15";
-  name="set-and-clear.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="set-and-clear.diff"
+I think it's more "normal" to use a u32 for an enum although I don't
+think we'll ever add anything, so I guess it doesn't actually matter.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5a1a60f..077fdb7 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -657,7 +657,8 @@ static void ap_sta_ps_start(struct sta_info *sta)
- 	DECLARE_MAC_BUF(mac);
- 
- 	atomic_inc(&sdata->bss->num_sta_ps);
--	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL);
-+	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL |
-+				WLAN_STA_CLEAR_PS_FILT);
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	printk(KERN_DEBUG "%s: STA %s aid %d enters power save mode\n",
- 	       sdata->dev->name, print_mac(mac, sta->sta.addr), sta->sta.aid);
-@@ -674,7 +675,8 @@ static int ap_sta_ps_end(struct sta_info *sta)
- 
- 	atomic_dec(&sdata->bss->num_sta_ps);
- 
--	clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
-+	set_and_clear_sta_flags(sta, WLAN_STA_CLEAR_PS_FILT,
-+				WLAN_STA_PS | WLAN_STA_PSPOLL);
- 
- 	if (!skb_queue_empty(&sta->ps_tx_buf))
- 		sta_info_clear_tim_bit(sta);
+> +		freq =3D nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
+> +		chan =3D ieee80211_get_channel(&rdev->wiphy, freq);
 
---Boundary-00=_AYsKJ4BHD3Egug7
-Content-Type: text/x-diff;
-  charset="iso 8859-15";
-  name="p54-sta-flags.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="p54-sta-flags.diff"
 
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-11-24 13:07:09.053832187 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-11-24 16:03:26.862045588 +0100
-@@ -1067,9 +1067,15 @@ static int p54_tx_fill(struct ieee80211_
- 			*queue = 3;
- 			return 0;
- 		}
--		if (info->control.sta)
-+		if (info->control.sta) {
-+			if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT) {
-+				ret = p54_sta_unlock(dev, info->control.sta->addr);
-+				if (ret)
-+					return ret;
-+				*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
-+			}
- 			*aid = info->control.sta->aid;
--		else
-+		} else
- 			*flags = P54_HDR_FLAG_DATA_OUT_NOCANCEL;
- 	}
- 	return ret;
-@@ -1083,7 +1089,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	struct p54_hdr *hdr;
- 	struct p54_tx_data *txhdr;
- 	size_t padding, len, tim_len = 0;
--	int i, j, ridx;
-+	int i, j, ridx, ret;
- 	u16 hdr_flags = 0, aid = 0;
- 	u8 rate, queue;
- 	u8 cts_rate = 0x20;
-@@ -1093,7 +1099,10 @@ static int p54_tx(struct ieee80211_hw *d
- 
- 	queue = skb_get_queue_mapping(skb);
- 
--	if (p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid)) {
-+	ret = p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid);
-+	if (ret < 0)
-+		return NETDEV_TX_BUSY;
-+	if (ret) {
- 		current_queue = &priv->tx_stats[queue];
- 		if (unlikely(current_queue->len > current_queue->limit))
- 			return NETDEV_TX_BUSY;
-@@ -1106,17 +1115,6 @@ static int p54_tx(struct ieee80211_hw *d
- 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
- 	len = skb->len;
- 
--	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT) {
--		if (info->control.sta)
--			if (p54_sta_unlock(dev, info->control.sta->addr)) {
--				if (current_queue) {
--					current_queue->len--;
--					current_queue->count--;
--				}
--				return NETDEV_TX_BUSY;
--			}
--	}
--
- 	txhdr = (struct p54_tx_data *) skb_push(skb, sizeof(*txhdr) + padding);
- 	hdr = (struct p54_hdr *) skb_push(skb, sizeof(*hdr));
- 
+> +		result =3D rdev->ops->set_channel(&rdev->wiphy, freq, ht_enabled,
+> +						sec_chan_offset);
 
---Boundary-00=_AYsKJ4BHD3Egug7--
+would it make sense to pass in 'chan'? mac80211 will do the lookup
+again, and if a driver doesn't it can just use chan->center_freq.
+
+johannes
+
+--=-6cAStchEl5r1oDnQ5HCT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJLS0zAAoJEKVg1VMiehFYYTAP/jRuImeclYAm+OChuOiSpbSy
+yIWK9sRoqWPZupQzjh/OUTuYdk/oTREveXcDjqMBd1mdE6kT9EsXg//RKsyHvpOP
+VEks34/Fe5XEzlTq9uC8IsRVmvxaX8BBaKQiKU18uoN6HtTCvklhffWXNEBUOMit
+0/qVovy8+TzLwM5eIMTgylbn8qWf/wwEwppHEaZMd6fEeWsuatqDjXpDkcVT4iQj
+Cmr2cK0nTZeDPcyapdwOH6RVGWjRpl9XUBsARyAHV+TWDDYlTEEQ/cnnZyJOhDjv
+yivluXlEKA2Fhzygp3JWdwMUIfd/p60PyZR84IgPUtfJ4/8ViG14J1jFrp27tZ89
+oAEvwCT9x6XAy72eO8FYEGQeO+YG9iER2idHWP6t92w+w9RyygPXZkM5/4r8afYf
+8cywPQtWo/sdhSverjwTzgS65tc7g3Zp7WM2w5qQPmG1dbGm8PHDTumU6JiWpUA2
+vP2FgZBRybrRJ0zU2U0wsNPQ0N2mdaDm8sQRID7iyuh9EecYNqdeMimG24IXPFUV
+09by5mhe6bZT5/EfC2uIG+S9HnYGiPWqJA7Axyo0DMosFlsNuO7NmeFebrr7baPD
+fgzQtYxzUZVVr51yIDLrhU6WmY9m84GLKn9fSRFNXk045wB+O385sQg7iTJdP0X+
+Sb/3rBUYxngd+b5CI39J
+=d7lA
+-----END PGP SIGNATURE-----
+
+--=-6cAStchEl5r1oDnQ5HCT--
+
