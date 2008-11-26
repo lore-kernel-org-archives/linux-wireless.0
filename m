@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc2-s4.bay0.hotmail.com ([65.54.246.140]:53085 "EHLO
-	bay0-omc2-s4.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750906AbYK1GKz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 01:10:55 -0500
-Message-ID: <BAY104-DAV2759DEF86863A0B2E73A299040@phx.gbl> (sfid-20081128_071058_369940_80CDB262)
-Message-ID: <492F8B65.40400@hotmail.com>
-Date: Fri, 28 Nov 2008 17:10:45 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Reply-To: linux-wireless@vger.kernel.org,
-	  Shaddy Baddah <shaddy_baddah@hotmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:10051 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751189AbYKZVDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 16:03:10 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 13:03:10 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <altape@eden.rutgers.edu>,
+	<luisca@cozybit.com>, <mb@bu3sch.de>, <jouni.malinen@atheros.com>,
+	<colin@cozybit.com>, <javier@cozybit.com>
+Subject: [PATCH] nl80211: relicense nl80211.h under the ISC
+Date: Wed, 26 Nov 2008 13:03:08 -0800
+Message-ID: <1227733388-13182-1-git-send-email-lrodriguez@atheros.com> (sfid-20081126_220316_217738_B738BCA8)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [PATCHv2] zd1211rw: use unaligned safe memcmp() in-place of compare_ether_addr()
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Forgot the sign-off. Take two:
+We have a few BSD/ISC licensed userspace applications which
+include nl80211.h from the kernel. To avoid legal ambiguity
+for usage of the header file in these projects we rather simply
+relicense the header file under the ISC. We've received consent
+from all contributors to it.
 
-Under my 2.6.28-rc6 sparc64, when associating to an AP through my
-zd1211rw device, I was seeing kernel log messages like (not exact output):
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Michael Wu <flamingice@sourmilk.net>
+Acked-by: Luis Carlos Cobo <luisca@cozybit.com>
+Acked-by: Michael Buesch <mb@bu3sch.de>
+Acked-by: Jouni Malinen <jouni.malinen@atheros.com>
+Acked-by: Colin McCabe <colin@cozybit.com>
+Acked-by: Javier Cardona <javier@cozybit.com>
+Cc: johannes@sipsolutions.net
+Cc: altape@eden.rutgers.edu
+Cc: luisca@cozybit.com
+Cc: mb@bu3sch.de
+Cc: jouni.malinen@atheros.com
+Cc: colin@cozybit.com
+Cc: javier@cozybit.com
+---
+ include/linux/nl80211.h |   21 ++++++++++++++++++++-
+ 1 files changed, 20 insertions(+), 1 deletions(-)
 
-  Kernel unaligned access at TPC[10129b68] zd_mac_rx+0x144/0x32c [zd1211rw]
-
-For the zd1211rw module, on RX, the 80211 packet will be located after
-the PLCP header in the skb data buffer. The PLCP header being 5 bytes
-long, the 80211 header will start unaligned from an aligned skb
-buffer.
-
-As per Documentation/unaligned-memory-access.txt, we must replace the
-not unaligned() safe compare_ether_addr() with memcmp() to protect
-architectures that require alignment.
-
-Signed-off-by: Shaddy Baddah <shaddy_baddah@hotmail.com>
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c
-b/drivers/net/wireless/zd1211rw/zd_mac.c
-index e48d605..dd93f23 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -616,7 +616,7 @@ static int filter_ack(struct ieee80211_hw *hw,
-struct ieee80211_hdr *rx_hdr,
-         struct ieee80211_hdr *tx_hdr;
-
-         tx_hdr = (struct ieee80211_hdr *)skb->data;
--        if (likely(!compare_ether_addr(tx_hdr->addr2, rx_hdr->addr1)))
-+        if (likely(!memcmp(tx_hdr->addr2, rx_hdr->addr1, ETH_ALEN)))
-         {
-             __skb_unlink(skb, q);
-             tx_status(hw, skb, IEEE80211_TX_STAT_ACK, stats->signal, 1);
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index e08c8bc..3a7e14c 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -3,7 +3,26 @@
+ /*
+  * 802.11 netlink interface public header
+  *
+- * Copyright 2006, 2007 Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2006, 2007, 2008 Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
++ * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
++ * Copyright 2008 Michael Buesch <mb@bu3sch.de>
++ * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
++ * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
++ * Copyright 2008 Colin McCabe <colin@cozybit.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
+  */
+ 
+ /**
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
