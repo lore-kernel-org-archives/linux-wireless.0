@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52844 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752166AbYKQTrM (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.186]:44359 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbYKZIJh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 14:47:12 -0500
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1ba2fa240811171012je2d5215hc9b3ea870468f4f8@mail.gmail.com> (sfid-20081117_191259_374789_92488A85)
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
-	 <1226933141.3902.19.camel@johannes.berg>
-	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>
-	 <1226942887.3902.30.camel@johannes.berg>
-	 <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com>
-	 <1226944799.3902.52.camel@johannes.berg>
-	 <1ba2fa240811171012je2d5215hc9b3ea870468f4f8@mail.gmail.com>
-	 (sfid-20081117_191259_374789_92488A85)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6/v8KtnW/EjrmUQDY78A"
-Date: Mon, 17 Nov 2008 20:46:35 +0100
-Message-Id: <1226951196.3902.54.camel@johannes.berg> (sfid-20081117_204715_824701_9D863AA0)
-Mime-Version: 1.0
+	Wed, 26 Nov 2008 03:09:37 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so311227fkq.5
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 00:09:35 -0800 (PST)
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Subject: Re: [PATCH] ipw2200: increase scan timeout
+Date: Wed, 26 Nov 2008 09:09:10 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linville@tuxdriver.com, yi.zhu@intel.com,
+	reinette.chatre@intel.com, ipw2100-devel@lists.sourceforge.net
+References: <200811251809.55461.helmut.schaa@gmail.com> <200811260706.03160.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200811260706.03160.hs4233@mail.mn-solutions.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200811260909.11175.helmut.schaa@gmail.com> (sfid-20081126_090941_376439_CD905900)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Mittwoch, 26. November 2008 schrieb Holger Schurig:
+> > The current scan timeout is set to 5 seconds. If the timeout
+> > is hit because the firmware did not respond yet, the adapter
+> > gets restarted, which results in a disassociation.
+> 
+> I have nothing against raising the timeout, but two general 
+> questions.
+> 
+> First thing: why does the adapter get's resetted?
 
---=-6/v8KtnW/EjrmUQDY78A
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I guess the intention was that if the firmware does not get back within the
+timeout it might have been crashed (or something similar) and thus the driver
+simply restarts the card.
 
-On Mon, 2008-11-17 at 20:12 +0200, Tomas Winkler wrote:
+> Even if a  
+> whole scan takes 11 seconds, the scan of one channel takes less. 
+> So if results trickle in during these 11 seconds, nothing should 
+> get resettet.
 
-> I've posted something based on plugging into notification chain. It
-> worked but wasn't accepted I hoped that who rejected will supply
-> alternative solution...
+Right. Could do that too.
 
-Sorry, that's not how it works... Those who want the functionality are
-generally expected to do the work, and if the design phase happens
-behind closed doors they don't get to complain...
+> Second thing: why should the association get's cleared if the 
+> adapter get's reset?  Isn't one a (assoc) at protocol level and 
+> the other (adapter) a hardware thing?
 
-johannes
+No idea!
 
---=-6/v8KtnW/EjrmUQDY78A
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJIcoYAAoJEKVg1VMiehFYCmoP/0Mfm3ya/IQa0Vki6uHAwYgU
-5FQoghiso3GRmEuyqR7DckTovHB+5nmecyan7DKjQ8JhjvAkrkBhrvszg1ouYbec
-nMnUoO5cZe4znP95jyVfwrg3/3htCHbo07WVKkiOUdxQUXjLmAImzuf6bW2xYjrb
-+JqGreJLVdW824WvMPh5ZrdzIym/05ixRKpsdQoXuJEDLxqYwTw9F0oQeFgznwOp
-J5ID5jYmEV2627EA5rCp5CtL0mEO+XPgxNAIOUvIsKaUyaGkqRf7QnDAaFF/OWj9
-jHHE+GzCIP0Iy1jdu/va14zfdel1hN3s2dhiIhZ6zsQCB2wlMsr8s+iMdsPAWk7h
-O1wvJLBcttZ9NmaiOOVxbhggWLSfJyMiC3JdO3qLATLTiC+y8hjGjkMleMadnTt3
-Uenw/xwweGnQZYxHFvo985MlnEXJ3V4J79I4n7+wMp43nyzqT1Oft16xbp52+tqp
-X73wNmUkDikdoOCMj2IUGFBxzuLB+twej3/K1GDOo/a5+r5Ifp+SjOHki89fouwF
-/fLC4lnJkqlALxwjr0LxH19iWZuyqnAXOif7bT9bHV9PbuHMgsPWnSOoI3bEgxNA
-J7elkiTR5M5MhGhYIThdmyEiGX/HJjaKt7qH+HB69zBMhwyPmmYtUbOFBiHK2MXL
-skvtBWPm7aeiwS01Jy6B
-=w4uT
------END PGP SIGNATURE-----
-
---=-6/v8KtnW/EjrmUQDY78A--
-
+Helmut
