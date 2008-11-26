@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56168 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758660AbYKVRSa (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:60567 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750760AbYKZFVt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 12:18:30 -0500
-Subject: Re: ieee80211_wep_encrypt_data_fix_unaligned_access.patch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivan Kuten <ivan.kuten@promwad.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <eaf88bcfcb5b61c24cf1b8b682c5ff3c@promwad.com> (sfid-20081121_234653_121082_4B762D50)
-References: <eaf88bcfcb5b61c24cf1b8b682c5ff3c@promwad.com>
-	 (sfid-20081121_234653_121082_4B762D50)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iwc3mSEiwBBcW3/I6aS6"
-Date: Sat, 22 Nov 2008 18:18:26 +0100
-Message-Id: <1227374306.3599.12.camel@johannes.berg> (sfid-20081122_181834_907517_E055A678)
-Mime-Version: 1.0
+	Wed, 26 Nov 2008 00:21:49 -0500
+Cc: Henning Rogge <hrogge@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Message-Id: <EA31B699-C803-460C-8D90-9E946CC97A33@linux.intel.com> (sfid-20081126_062153_794921_648CAB1D)
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1227646037.4613.46.camel@johannes.berg>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: RFC Patch: Add signal strength to nl80211station info
+Date: Wed, 26 Nov 2008 06:21:40 +0100
+References: <200811252131.30161.hrogge@googlemail.com> (sfid-20081125_213139_680674_17E7A0BB) <1227646037.4613.46.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
---=-iwc3mSEiwBBcW3/I6aS6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>> +	NL80211_STA_INFO_SIGNAL,
+>> +	NL80211_STA_INFO_NOISE,
+>> +	NL80211_STA_INFO_QUAL,
+>
+> Sorry, no, this WEXT junk is just too undefined to put it into  
+> nl80211.
 
-On Sat, 2008-11-22 at 00:46 +0200, Ivan Kuten wrote:
+I know that WEXT were pretty bad in describing what to expect from  
+these values and every driver did whatever it thought it would be  
+best. Can we not just try to define how these values should be filled  
+in and then either mark drivers as broken or try to fix them? Just an  
+idea.
 
-> -       icv =3D (__le32 *)(data + data_len);
-> -       *icv =3D cpu_to_le32(~crc32_le(~0, data, data_len));
-> +       icv =3D cpu_to_le32(~crc32_le(~0, data, data_len));
-> +       put_unaligned(icv, (__le32 *)(data + data_len));
+Regards
 
-Aren't you putting a pointer now??
-
-johannes
-
---=-iwc3mSEiwBBcW3/I6aS6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJKD7eAAoJEKVg1VMiehFYfGgQAMU2krulUOfzzmh3b24wlyTI
-+LE3GCgpem/LMPzjLYmm6ElbwPCoCPCQS0WLTnXFaskJU36DArU4NGlYGcMgkZMI
-TNgDkbVHX/5U70GsUIpwqF5vNMSdsvHi8EuzWKnF1sSp8fN5yFXDWB8dDbDhgmA6
-hAMck4AQZiA8WcuX57RBMFFH23urCZXZrGK2PLXC7LG8AkYENRHsE6mLeCpst/Lt
-zs+48j7nxwslTORABNDGqCnGKA/NCvIcYEqThiCj7pVB6i57k7tUOB2gfs3n0bZ9
-QV3IR/MIlOBjYDP2OYMxk6UWO6OljLdFS+MEcXEYBYJVdI2mrtMzwsla6FkFe98a
-6wwZ4BYHpJ8+eg+5NquhKOBRTkC9O/wU9wb5sjsoj6GNgsFfhdnA4OA45dCjitK9
-zN/9fpcPr1k1I8DY//lpOCIDEV0ZTDE5eAdoDLXMkYp1H/DGlVp5e3DCXkNDdxZ+
-YQ2x11XJsTr4EIEClQCp9vL4som7FldIDa1+sbJGl+GJoOI3ldhvMIs8BXV5lsYe
-rJF9tXhB7wcGvQVytbdIvmTUgp3bQJvNW2cHMGrhrsBJRZg124zh8aMJsdy7EvKC
-pDyMyd7q79wnB+N9eMvx1pdt99tHhtNOC9b61x3vlK7q0FlEegCgE9fwXJcpdmQ6
-mX72iFN6ol6r0pfaL4rB
-=IYke
------END PGP SIGNATURE-----
-
---=-iwc3mSEiwBBcW3/I6aS6--
+Marcel
 
