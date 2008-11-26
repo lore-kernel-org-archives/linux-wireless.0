@@ -1,71 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51175 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753353AbYKSOqN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51423 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752371AbYKZU3W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 09:46:13 -0500
-Date: Wed, 19 Nov 2008 09:39:19 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sfr@canb.auug.org.au
-Subject: Re: pull request: wireless-2.6 2008-11-18
-Message-ID: <20081119143919.GA3485@tuxdriver.com> (sfid-20081119_154619_984974_70983432)
-References: <20081119000719.GA19756@tuxdriver.com> <1ba2fa240811182246m17a6baf0ybde19af030a65819@mail.gmail.com> <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240811190134u7974a840i532e8ed0e18f8c72@mail.gmail.com>
+	Wed, 26 Nov 2008 15:29:22 -0500
+Subject: Re: [PATCH] cfg80211: handle SIOCGIWMODE/SIOCSIWMODE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1227726413.4613.130.camel@johannes.berg> (sfid-20081126_200731_269115_E243E9A6)
+References: <1227726413.4613.130.camel@johannes.berg>
+	 (sfid-20081126_200731_269115_E243E9A6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-52efChgL1+FAwtiU1jZk"
+Date: Wed, 26 Nov 2008 21:28:43 +0100
+Message-Id: <1227731323.4613.134.camel@johannes.berg> (sfid-20081126_212925_786564_A4545744)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2008 at 11:34:37AM +0200, Tomas Winkler wrote:
-> On Wed, Nov 19, 2008 at 8:46 AM, Tomas Winkler <tomasw@gmail.com> wrote:
-> > On Wed, Nov 19, 2008 at 2:07 AM, John W. Linville
-> > <linville@tuxdriver.com> wrote:
 
-> >>      mac80211: remove ieee80211_notify_mac
-> >>      iwlagn: fix RX skb alignment
-> >
-> > IMHO its premature pushing ttese 2 patches up, they came in yestrday
-> > and nobody here has run tthe code
- 
-Well, thanks for your opinion.  Here is mine:
+--=-52efChgL1+FAwtiU1jZk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The iwlwifi drivers have been hitting these problems for months,
-and I have seen no effort by your team to address the problems.
-It is possible that your team is working on them behind closed doors
-and will eventually throw something over the wall to us.  I'm tired
-of waiting for that, and I imagine that hordes of iwlagn users are
-tired of waiting as well.
+Sorry, both these patches need some more work.
 
-Johannes has presented us with plausible fixes, and people are
-reporting that the patches work for them.  I can merge these patches,
-or wait/hope/pray for some to come from your team.  Experience suggests
-that if fixes do come from your team that they will either be buried
-in some monster patch that largely addresses something else, or
-that the patches will arrive with a changelog that is terse and/or
-unintelligble.  Subsequently, I am not optimistic about waiting.
+johannes
 
-I think Johannes cited four different bugzilla.kernel.org entries
-between those two patches.  What is your team doing to address
-those bugs?
+--=-52efChgL1+FAwtiU1jZk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Obviously, I still think that those patches should be merged.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-> Just checked our bug database,  the ieee80211_notify_mac was
-> introduced mainly to overcome HW bug when
-> receiver become deaf  in heavy traffic such as ftp in noisy
-> environment. Otherwise reconnection was too slow to keep ftp going. We
-> need to check whether we are still hitting this before applying
-> removal this function
+iQIcBAABAgAGBQJJLbF3AAoJEKVg1VMiehFYeIQP/0c9HY8AH+53q8q8W2MqupgQ
+yvknZrQb8WYU+fkPkx1Vn5Rsss3PVuqWdABxNJ1FvNkB4P3OoCwbhGUGzUJookIR
+gjHRGgFvEs9Q3OTOXJUCPZTat3IhGX8IT++UDsGpC9XJE2EuWSywW4WUByCuQzID
+4/ozIskXYduWqXMrataa3pDKgu1Y3WivjP/AKGPItL+K7TWADI18IidbVGme2Y9D
+Qy8z9JolGbA+orzB0PIyu5KmrRa6uyBVSxxPshFYZ6ucxKW6krRfTzY+55uoIz8R
+1ZnD/tAImcRSzNddJzPXEH2oeO1EMHTMO74Xltoq6f95m3Fo2Tap2wICyH9ikm9V
+RVLJHQFYmQi1JLphkRs454wClRSrA3kOwM94iTFskuKzacfA/mUUTDTOaoJRh/lM
+2GZNO/MurEhSWPkmsJikFhNi9QYWoRk/qCYyLg3Yml38XTCXaRXHLk5lmw9ahGXd
+j2nnpI+V2LVO52DA2szEhtznf0QThzWk/XIAyL2JTwmAtZ4YfSgEx3WMPTcDsBsN
+KAPQynhhlQBMI6Zqz4p/eAzf6aNbTOdBmvOPIOwYAQRvIdQUkY2faLFYTvXbCwuk
+6qBGdzIYs3Ka5AP05bYdpWzi3nhJnJdw1LzQWssaOfzG6K3iHP9RtRx33urJq5Kv
+72bdHVDCxJ3qNOL1qB6X
+=RGMS
+-----END PGP SIGNATURE-----
 
-You are welcome to submit patches that address your hardware issue
-and which do not introduce locking problems.
+--=-52efChgL1+FAwtiU1jZk--
 
-Thanks,
-
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
