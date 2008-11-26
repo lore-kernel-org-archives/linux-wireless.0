@@ -1,60 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57907 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677AbYK0Ilq (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.234]:44269 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017AbYKZExi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 03:41:46 -0500
-Subject: Re: wifi drops multicast packets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: c4linux c4linux <c4linux@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <14c249940811261718r29d96d00t2b62be3420d7ed74@mail.gmail.com> (sfid-20081127_021813_196084_83A41B5B)
-References: <14c249940811261718r29d96d00t2b62be3420d7ed74@mail.gmail.com>
-	 (sfid-20081127_021813_196084_83A41B5B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5BVlMDuLE0sbXrlt4JrY"
-Date: Thu, 27 Nov 2008 09:41:11 +0100
-Message-Id: <1227775271.3809.2.camel@johannes.berg> (sfid-20081127_094151_968033_D205EFBB)
-Mime-Version: 1.0
+	Tue, 25 Nov 2008 23:53:38 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so288684rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 20:53:37 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18732.54720.739365.435163@localhost.localdomain> (sfid-20081126_055342_327816_7B6916BC)
+Date: Wed, 26 Nov 2008 10:21:12 +0530
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [RFC] nl80211: Add frequency configuration (including HT40)
+In-Reply-To: <20081125190533.GA27879@jm.kir.nu>
+References: <20081125190533.GA27879@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Jouni Malinen wrote:
+> + * @NL80211_ATTR_WIPHY_FREQ: frequency of the selected channel in MHz
+> + * @NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET: included with NL80211_ATTR_WIPHY_FREQ
+> + *	if HT40 (40 MHz channels) are allowed:
+> + *	NL80211_SEC_CHAN_BELOW = secondary channel is below the primary channel
+> + *	NL80211_SEC_CHAN_ABOVE = secondary channel is above the primary channel
 
---=-5BVlMDuLE0sbXrlt4JrY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The driver needs to know if the selected channel is HT or not.
+It receives only HT20/HT40+/HT40- flags, but a HT/non-HT flag is required too.
 
-On Thu, 2008-11-27 at 09:18 +0800, c4linux c4linux wrote:
-> Hi,all
->=20
->    VLC playing multicast video stream to a router's WAN, and using
-> igmpproxy route the multicast packets to router's ath0.
->=20
-
-Nobody cares about madwifi.
-
-johannes
-
---=-5BVlMDuLE0sbXrlt4JrY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJLl0kAAoJEKVg1VMiehFYFFUP/R2sa2F7vNcgAM0Oy5u5B2D9
-7ror0KU5GPwD2l9X4TyI2OuRAusyrY+hoChfeQUmAfZpb2UlMUa0tOI0KDgZMZ2P
-1TzKMZYcbyJVDvsgLNkxgUn7alCNUuZUIUZ0prya73fNW9ZPWD2q4Jyk/tzZddGL
-8zan+ha0QLCzQOhuB3onOO3pAUNFgJLLb58kCTmGPuSZnhT8ICkAtyUQkWYj1vQm
-+s4ozukQkCn1X8Ge1/bnJ4beF8DzORGIXsGgKD6r476nZNG83xZm1qGhyuXHz6mA
-cW43nfh2qv/c3ptoCmNV1O+G2b/ojIh/ZIfideUuS+MCMBtyCiD6hHJjKUEEAAKP
-Wsk83v3Ub9LaTUK31kmO9oMw4D/FGq3RKNnIc1LPkbkGwFzX5h1sPplgNDOT/nUw
-ybQ4VHw2C5VEu5d/mMql92u7FFJa6RC6cpOThgYQMxMxjKCKcEeoITU3qyBdgXd+
-MCO11wjE4DR8KaAdoXuISkq6A/0Ua/GIjqqokWhbaiRLjECFaiSjVC9AtEAovmta
-UBgEUoH4rQgpGnUriLU2BSiyDAmOFupQvtmez64gBOxOnqU1g6dokSShbKk4K/bv
-qQBNgbGVojo+VnTLdJUhYe4haglHMts7WsL0bn1V3ZyXp9RLDFU2hzj1qBja1UrH
-yIeAPgeCKnrpO8XCLB4K
-=0jEH
------END PGP SIGNATURE-----
-
---=-5BVlMDuLE0sbXrlt4JrY--
-
+Sujith
