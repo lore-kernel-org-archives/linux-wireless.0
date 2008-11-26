@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:60119 "EHLO ds10.mine.nu"
+Received: from venema.h4ckr.net ([217.24.1.135]:52587 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832AbYKYWrs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 17:47:48 -0500
-Message-ID: <492C808A.20403@openwrt.org> (sfid-20081125_234753_772842_13437823)
-Date: Tue, 25 Nov 2008 23:47:38 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752636AbYKZTzv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 14:55:51 -0500
+Message-ID: <1527.92.50.109.198.1227729349.squirrel@webmail.madwifi.org> (sfid-20081126_205556_641305_2402EAA9)
+In-Reply-To: <20081126171740.GB6515@tesla>
+References: <492B2B74.7040404@gmail.com> <20081124231204.GN6245@tesla>
+    <1227568883.28878.15.camel@dv>
+    <43e72e890811241526o1ea6ecf7ge05a2319d6ff3641@mail.gmail.com>
+    <492B623E.5030202@gmail.com> <1227580299.32415.2.camel@dv>
+    <20081126001942.GN5950@tesla> <1227659754.2556.11.camel@dv>
+    <20081126010218.GP5950@tesla>
+    <1417.92.50.109.198.1227678824.squirrel@webmail.madwifi.org>
+    <20081126171740.GB6515@tesla>
+Date: Wed, 26 Nov 2008 20:55:49 +0100 (CET)
+Subject: Re: wireless-regdb: flaw in general functionality
+From: "Michael Renzmann" <mrenzmann@madwifi-project.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "Luis Rodriguez" <luis.rodriguez@atheros.com>,
+	"Pavel Roskin" <proski@gnu.org>,
+	"Richard Farina" <sidhayn@gmail.com>,
+	"John Linville" <linville@tuxdriver.com>,
+	"wireless" <linux-wireless@vger.kernel.org>,
+	"Michael Green" <michael.green@atheros.com>
 MIME-Version: 1.0
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-CC: Maxim Levitsky <maximlevitsky@gmail.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	wally@theblackmoor.net, Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [ath5k-devel] Unusually low speeds with ath5k and iwl3945
-References: <492719ED.5000006@gmail.com> <20081122005240.GA27826@hash.localnet>	<alpine.DEB.2.00.0811221643030.7067@monster> <4927FC0C.10900@gmail.com> <492A5913.3070007@free.fr> <492A7733.2000205@openwrt.org> <492C55FC.2040506@free.fr>
-In-Reply-To: <492C55FC.2040506@free.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Benoit PAPILLAULT wrote:
-> Felix Fietkau a =E9crit :
->> While reading the code for calculating the frame duration, i noticed
->> something odd: It doesn't seem to be taking into account the short
->> vs long preamble distinction for ERP rates. IMHO this might be causi=
-ng
->> issues like this. I've seen similar behaviour a long time ago when t=
-esting
->> iwl3945 against a Broadcom AP with exactly the same throughput drop =
-(500-
->> 600 kbits/s).
->> When I analyzed the problem with an extra monitor mode card, I found=
- out
->> that the throughput drop is caused by a huge number of retransmissio=
-ns,
->=20
-> In the test I've done, there was no retransmission at all (no
-> duplicates). I don't save a capture file, so I cannot tell for sure.
-Which test specifically? iwl3945 or ath5k?
-If ath5k doesn't show any retransmissions, the problem might not be
-related. Please do make some logs of the throughput issue and then
-some more of the same kind of traffic without throughput issues
-(same card, same driver).
+Hi Luis.
 
-> What is the code computing frame duration you are referring to? How i=
-t
-> could affect the hardware behavior?
-I looked at it again and now I don't think it's the cause anymore. I
- did some comparisons against other stacks/drivers and this part
-seems correct after all.
+Luis R. Rodriguez wrote:
+>> Side note: this behaviour is not required in all jurisdictions. German
+>> regulatory body for example allows use of non-DFS-compliant gear even on
+>> (at least some) DFS channels, but only with low TX power. Is that
+>> supported already?
+> I reviewed this internally and there is disagreement on your statement
+> about German rules.
 
-- Felix
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Indeed, and that is for a good reason. I have rechecked, and I found that
+I have confused TPC and DFS (doh!).
+
+> For STA devices "DFS" is required for all Europe regdomains including
+> Germany for channels 52 to 140 inclusive.
+
+Ack.
+
+Plus, if I understand the regulatory rules [1] correctly, channels 36 to
+48 don't require DFS in Germany, but may only be used in confined spaces.
+However, given that I was wrong with my understanding before, it would be
+good if someone else could double-check.
+
+Sorry for any caused confusion.
+
+Bye, Mike
+
+[1] http://www.bundesnetzagentur.de/media/archive/5009.pdf (german
+language, )
