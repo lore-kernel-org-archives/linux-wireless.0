@@ -1,66 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.178]:58978 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653AbYKBUkf (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:9456 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751668AbYKZDKJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 15:40:35 -0500
-Received: by el-out-1112.google.com with SMTP id z25so1061568ele.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 12:40:34 -0800 (PST)
-Message-ID: <43e72e890811021240q1709dde4r402162bd590fa444@mail.gmail.com> (sfid-20081102_214040_876051_1DF6202C)
-Date: Sun, 2 Nov 2008 12:40:34 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: wireless-testing commit eb9d4e8399181357cb6f6625ba7f849987432c6c causes stalls
-Cc: tim.gardner@canonical.com, mick@madwifi.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Bob Copeland" <me@bobcopeland.com>
-In-Reply-To: <40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
+	Tue, 25 Nov 2008 22:10:09 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so1284684ugf.37
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 19:10:07 -0800 (PST)
+Message-ID: <492CBE0F.1000500@gmail.com> (sfid-20081126_041015_173666_D68A0577)
+Date: Tue, 25 Nov 2008 22:10:07 -0500
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4908B754.1050400@tpi.com>
-	 <43e72e890811011419k460b11e0he08d66022cbd606e@mail.gmail.com>
-	 <40f31dec0811020132o640afa49u56791b4122013463@mail.gmail.com>
-	 <40f31dec0811020110t6ec94c57gd91adc44f759bf45@mail.gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Pavel Roskin <proski@gnu.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Green <Michael.Green@Atheros.com>
+Subject: Re: wireless-regdb: flaw in general functionality
+References: <492B2B74.7040404@gmail.com> <20081124231204.GN6245@tesla> <1227568883.28878.15.camel@dv> <43e72e890811241526o1ea6ecf7ge05a2319d6ff3641@mail.gmail.com> <492B623E.5030202@gmail.com> <1227580299.32415.2.camel@dv> <20081126001942.GN5950@tesla> <1227659754.2556.11.camel@dv> <20081126010218.GP5950@tesla>
+In-Reply-To: <20081126010218.GP5950@tesla>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 2, 2008 at 1:10 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2008/11/2 Nick Kossifidis <mickflemm@gmail.com>:
->> 2008/11/1 Luis R. Rodriguez <mcgrof@gmail.com>:
->>> On Wed, Oct 29, 2008 at 12:19 PM, Tim Gardner <tcanonical@tpi.com> wrote:
->>>> This commit 'ath5k: Update interrupt masking code' causes stalls under
->>>> load when built using compat-wireless on 2.6.27. There is no output from
->>>> dmesg, but it occasionally recovers and moves a few more packets before
->>>> stalling again. Luis suggested reverting
->>>> eb9d4e8399181357cb6f6625ba7f849987432c6c which I did. Now it appears to
->>>> work normally.
->>>>
->>>> I also think this patch should be broken into multiple pieces. There
->>>> appear to be at least 3 functional changes addressed in this single patch.
->>>
->>> Agreed, I just tested with the latest wireless-testing and the issue
->>> is still present. I reviewed the commit but its a big too large to pin
->>> point the exact issue, my AR5414 goes up but then quickly becomes
->>> unusable. Nick how about we revert this and you can then split this up
->>> into a good number of patches to make the review easier and also to be
->>> able to pin point the exact issue better?
->>>
->>> The SHA1 remains the same but just in case the title of the patch is:
->>>
->>>   ath5k: Update interrupt masking code
->>>
->>> With it reverted I'm cruising and can ditch MadWifi completely, which
->>> is the idea.
->>>
->>>  Luis
->>>
+Luis R. Rodriguez wrote:
+> On Tue, Nov 25, 2008 at 04:35:54PM -0800, Pavel Roskin wrote:
+>   
+>> On Tue, 2008-11-25 at 16:19 -0800, Luis R. Rodriguez wrote:
 >>
+>>     
+>>> This is documented here:
+>>>
+>>> http://wireless.kernel.org/en/developers/Regulatory#Changingthedatabasefileformat
+>>>       
+>> I mean, I don't know how painful it can be.  Perhaps it's better to
+>> anticipate some requirements earlier than to change them later.
+>>     
 >
-> Can you test the attached patch ?
+> Its painful to add anything new. To understand this better it helps to
+> understand why some flags were added in the first place to regulatory rules.
+> The short and sweet answer is DFS. And the general rule of thumb goes like this:
 >
-> It works for me (tested on a AR5413)...
+> When in a DFS freq, if you don't support DFS in your mode of operation,
+> then you cannot TX.
+>
+> So if you don't support DFS in IBSS, you get NO-IBSS. If your AP doesn't
+> support DFS then you can't use DFS channels. If you don't support DFS
+> then you better not use active scanning on a STA, hence the passive scan
+> flag (I guess this should be renamed to NO-ACTIVE-SCAN to be more
+> consistent).
+>
+> The NO-HT20 is historical, we're not aware of countries disallowing
+> this. No-HT40 is also a bit historical as it seems the countries which
+> do not allow this will soon allow for it.
+>
+> The NO-OFDM and NO-CCK flag is unused and purely historical.
+>
+> So before adding a flag I think its *really* good to think about it
+> thrice and see if there is a need of it, otherwise the answer should
+> usually be that its not a good idea to add it.
+>
+> If anything we can consolidate flags or remove flags, that would be nicer
+> if possible.
+>
+>   
+>> I think
+>> both "don't transmit" and "don't transmit unless permitted by the AP"
+>> could be useful in some jurisdictions.
+>>     
+>
+> Don't transmit is implicit, CRDA just "allows", so the flags we have now
+> are all negative for special considerations on "allowing", such as NO
+> IBSS, etc.
+>
+>   
+This is simply not the case.  Implicit is don't tune the radio, this 
+prevents both transmission and reception which needlessly limits useful 
+features of a device for no regulatory reason.  This is why we are 
+discussing it.
 
-Thanks, that fixes it.
+A flag of "no-transmit" is likely accurate in most regulatory domains 
+and would allow driver developers to enable more advanced usage of the 
+devices (if they choose).  I grant, most users really have no reason for 
+this and that is an acceptable reason for someone to refuse to take the 
+time to code it.  If someone is willing to take the time to add the 
+flag, it should not be turned down as it is both accurate and proper to 
+support receive only frequencies.
 
-  Luis
+thanks,
+Rick Farina
+>   Luis
+>
+>   
+
