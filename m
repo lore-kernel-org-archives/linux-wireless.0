@@ -1,43 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f12.google.com ([209.85.217.12]:53992 "EHLO
-	mail-gx0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754118AbYKBVA3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49237 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753594AbYKZRUH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 16:00:29 -0500
-Message-ID: <43e72e890811021300o6bef49b0i515d0f72974cef00@mail.gmail.com> (sfid-20081102_220035_250819_F359EAF9)
-Date: Sun, 2 Nov 2008 13:00:27 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: fix detection of jumbo frames
-Cc: linville@tuxdriver.com, mickflemm@gmail.com, jirislaby@gmail.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linux-kernel@vger.kernel.org, michael+ath5k@stapelberg.de
-In-Reply-To: <1225652938-6244-1-git-send-email-me@bobcopeland.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1225652938-6244-1-git-send-email-me@bobcopeland.com>
+	Wed, 26 Nov 2008 12:20:07 -0500
+Subject: Re: wireless-regdb: flaw in general functionality
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Renzmann <mrenzmann@madwifi-project.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Pavel Roskin <proski@gnu.org>,
+	Richard Farina <sidhayn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Green <michael.green@atheros.com>
+In-Reply-To: <1417.92.50.109.198.1227678824.squirrel@webmail.madwifi.org> (sfid-20081126_065355_127204_2D4457A1)
+References: <492B2B74.7040404@gmail.com> <20081124231204.GN6245@tesla>
+	 <1227568883.28878.15.camel@dv>
+	 <43e72e890811241526o1ea6ecf7ge05a2319d6ff3641@mail.gmail.com>
+	 <492B623E.5030202@gmail.com> <1227580299.32415.2.camel@dv>
+	 <20081126001942.GN5950@tesla> <1227659754.2556.11.camel@dv>
+	 <20081126010218.GP5950@tesla>
+	 <1417.92.50.109.198.1227678824.squirrel@webmail.madwifi.org>
+	 (sfid-20081126_065355_127204_2D4457A1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sbGpk4gZmRPQ/NGkIAg3"
+Date: Wed, 26 Nov 2008 18:19:24 +0100
+Message-Id: <1227719964.4613.121.camel@johannes.berg> (sfid-20081126_182012_795961_45DB9807)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 2, 2008 at 11:08 AM, Bob Copeland <me@bobcopeland.com> wrote:
 
-Nice find.
+--=-sbGpk4gZmRPQ/NGkIAg3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Then, because the hw rate value of such frames is zero
+On Wed, 2008-11-26 at 06:53 +0100, Michael Renzmann wrote:
 
-BTW I believe frames should not go out at hw rate value 0, I did some
-test a while back on this rate and its not exactly reliable, you will
-get very funky behavior on it. Are you seeing that rate being used on
-legacy-hal? Last I asked about it too its not something people know
-about as being desired effect. I could be wrong but it'd be
-interesting to see where this is used correctly.
+> Side note: this behaviour is not required in all jurisdictions. German
+> regulatory body for example allows use of non-DFS-compliant gear even on
+> (at least some) DFS channels, but only with low TX power. Is that
+> supported already?
 
->, and, since
-> 63266a653589e1a237527479f10212ea77ce7844 "ath5k: rates cleanup", we do not fall back to the basic rate, such packets would trigger
-> the following WARN_ON:
+Can you point to the relevant frequency plan numbers? I haven't seen
+such a thing when reviewing it, but I could well have missed it.
 
-So its slow because using rate 0 takes a while? If indeed you don't
-see a valid use for this rate I'd say to completely disallow it and
-use BUG_ON() on it.
+johannes
 
-  Luis
+--=-sbGpk4gZmRPQ/NGkIAg3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJLYUZAAoJEKVg1VMiehFY/2sP/1lSnKxu4Fg+njE+MTWle2iU
+CpPW4+15/Q5h7hBE4myBwVh/B7pscNpYjHjdTqpZ0NS79y0fw01xtjGvvmwKD9rd
+HyTZLvYOwGWaRTrRyv47rx3dgsYY2yo2CJr5z6QzcchI3DrnsL+lLDfUmf/VVYVU
+Jo4R1VWD7fZIL82Loq3sSNveUkIeB5PQIeYKbC8JY4scizt26Ni5xE9LZNdOdDqi
+0snEcl7NhcmmMp9AxL25RrfvXzMDbCJsrY5+hmSdZdh8waL7IhOuJPRp+CHwYSYH
+wJ6P57OFT/gCK3acJPtWduj9JGKZw/rlamNl8Xx7So4+TkCUk0kV5uxXOv9nGEH0
+9BZAa63ZSUGTamuEW/mJ0cquzWOjdFLl9BkLuvFvmgZFyffinclwgYecKECyiIPQ
+mjUfx+Lgkykbr0lE2kqR0KNN8jlIPL/Ad2pWTAp7rLHKpFcVAG0qfmuI+2BYVVnD
+UqKjwAkxXxkpH8ibl2hFQ8c+EOcxi6M6UBw+t2cQ4m4wwgmzjhqkmwd3eSG4eFdg
+pGXW1SmPeoJnJlT4O503Hu7Eb9S31By8CzXAgmp96LMBs25BBnI4oGud/+qejS+4
+87nq8O6Ue7gxJ9nVB/lT6+zLFTF0gElia0X6QOtDfAOLZR4Pbli9Bapl5ydHA9Vu
+x7hSyWBiPKDRGadHW/+7
+=e+FP
+-----END PGP SIGNATURE-----
+
+--=-sbGpk4gZmRPQ/NGkIAg3--
+
