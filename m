@@ -1,76 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f11.google.com ([209.85.217.11]:35879 "EHLO
-	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936AbYKOAZz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 19:25:55 -0500
-Received: by gxk4 with SMTP id 4so899592gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 16:25:54 -0800 (PST)
-Message-ID: <449c10960811141625o171d1e31v974d2f921f5a825@mail.gmail.com> (sfid-20081115_012600_367190_D86C89C5)
-Date: Fri, 14 Nov 2008 18:25:53 -0600
-From: "Dan McGee" <dpmcgee@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-Cc: "Bob Copeland" <me@bobcopeland.com>, Sujith <m.sujith@gmail.com>,
-	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <43e72e890811141313t33b6a3edo86488bea9a7b3371@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
-	 <43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
-	 <18717.49111.572993.44410@localhost.localdomain>
-	 <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com>
-	 <18717.50308.330801.765686@localhost.localdomain>
-	 <43e72e890811141037j5328f71fx7badb6f2b0e0831d@mail.gmail.com>
-	 <449c10960811141133o6d34c53fke3894a32cc1e5b8b@mail.gmail.com>
-	 <b6c5339f0811141233g38086cc0ybb69eebdbab7ae60@mail.gmail.com>
-	 <43e72e890811141241k7ae83fc3qe90e2e42d61b8df6@mail.gmail.com>
-	 <43e72e890811141313t33b6a3edo86488bea9a7b3371@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:49972 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751255AbYKZIE1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 03:04:27 -0500
+Subject: Re: [PATCH] ipw2200: increase scan timeout
+From: Zhu Yi <yi.zhu@intel.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>
+In-Reply-To: <87bpw3ar04.fsf@nokia.com>
+References: <200811251809.55461.helmut.schaa@gmail.com>
+	 <200811260706.03160.hs4233@mail.mn-solutions.de> <87bpw3ar04.fsf@nokia.com>
+Content-Type: text/plain
+Date: Wed, 26 Nov 2008 16:04:34 +0800
+Message-Id: <1227686674.2548.398.camel@debian.sh.intel.com> (sfid-20081126_090431_794109_775566E3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2008 at 3:13 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Nov 14, 2008 at 12:41 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Fri, Nov 14, 2008 at 12:33 PM, Bob Copeland <me@bobcopeland.com> wrote:
->>> On Fri, Nov 14, 2008 at 2:33 PM, Dan McGee <dpmcgee@gmail.com> wrote:
->>>> On Fri, Nov 14, 2008 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>>>> On Fri, Nov 14, 2008 at 10:33 AM, Sujith <m.sujith@gmail.com> wrote:
->>>>>> Luis R. Rodriguez wrote:
->>>>>>> > From the original log:
->>>>>>> > ath5k_pci 0000:01:00.0: registered as ''
->>>>>>>
->>>>>>> That comes from
->>>>>>>
->>>>>>> dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
->>>>>>>
->>>>>>> which means that may be buggy too as wiphy_name() gets
->>>>>>>
->>>>>>> return wiphy->dev.bus_id;
->>>>>>>
->>>>>>> and we only have set at that point wiphy->dev.parent IIRC.
->>>>>>>
->>>>>>
->>>>>> Nope, parent is set after that call in SET_IEEE80211_DEV()
->>>>>> phy[x] gets assigned in alloc_hw().
->>>>>>
->>>>>> So why is it NULL even if alloc_hw() succeeds ?
->>>>>
->>>>> Parent is wiphy->dev.parent not wiphy->dev though
->>>
->>> Sujith is right, wiphy->dev.bus_id should be set by the time that's printed,
->>> since wiphy_new in alloc_hw fills it in.
->>
->> Ah, I see, yes, oh man. Well this is good :)
->
-> OK then try the patch in the other thread. If that doesn't fix it then
-> it has to be another issue.
+On Wed, 2008-11-26 at 15:24 +0800, Kalle Valo wrote:
+> While the firmware was reset
+> association state wasn't changed and I could, for example, run iperf
+> tests while firmware was resetting without userspace noticing anything
+> (expect a slight decreare of throughput of course). This might depend
+> on firmware implementation, but at least with softmac devices it
+> shouldn't be a problem.
 
-Can someone point me to the "other thread"? I don't think I was CCed
-on it since I came late to the party.
+This is fairly easy to be handled by hardmac as well. We didn't do it
+because: 1) this is an unexpected behaviour so we simply put everything
+to the initial state when this happens and didn't put a lot of effort on
+the recovery 2) 'associate=1' used to be the default value, so the
+driver associated automatically after the firmware restart cycle.
 
-Someone also inquired about versions. I'm using stable kernel 2.6.27.6
-and compat-wireless-2008-11-13 (10-28 was doing the same thing
-however).
+Patches are welcome.
 
--Dan
+Thanks,
+-yi
+
