@@ -1,106 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:39652 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753059AbYKEV0I (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:58283 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752655AbYKZVRk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 16:26:08 -0500
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Thoughts about mac80211 client PS implementation
-References: <87k5bhkjf1.fsf@nokia.com>
-	<1225917235.3619.180.camel@johannes.berg> <87fxm5ki6s.fsf@nokia.com>
-	<1225919146.3619.190.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 05 Nov 2008 23:25:56 +0200
-In-Reply-To: <1225919146.3619.190.camel@johannes.berg> (ext Johannes Berg's message of "Wed\, 05 Nov 2008 22\:05\:46 +0100")
-Message-ID: <877i7hkgpn.fsf@nokia.com> (sfid-20081105_222612_799195_B88199A9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 26 Nov 2008 16:17:40 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so337533ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 13:17:39 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: nbd@openwrt.org, lrodriguez@atheros.com, jirislaby@gmail.com,
+	linville@tuxdriver.com, mickflemm@gmail.com
+Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Date: Wed, 26 Nov 2008 16:17:25 -0500
+Message-Id: <20081126211725.16875.27970.sendpatchset@localhost> (sfid-20081126_221743_974919_D0830A0C)
+In-Reply-To: <20081126211711.16875.71258.sendpatchset@localhost>
+References: <20081126211711.16875.71258.sendpatchset@localhost>
+Subject: [PATCH 3/3] ath5k: enable combined michael mic in key cache
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+For mac revisions >= "Griffin," the hardware allows the mic tx and rx
+authenticator keys to share the same cache line, whereas earlier
+hardware can only store the rx.  Enable the combined mic on hardware
+that supports it.
 
-> On Wed, 2008-11-05 at 22:54 +0200, Kalle Valo wrote:
->
->> >> PS should be disabled while associated and running software scan, and
->> >> naturally re-enabled after the scan has finished. I assume hardware
->> >> scanning implementations are clever enough to disable PS when scanning
->> >> and we don't have to worry about that case.
->> >
->> > And on that too. And should there be a monitor flag that disables PS, so
->> > that we can "refcount" the PS bit in a way?
->> 
->> Sorry, I don't follow you here. What do you mean by a monitor flag?
->
-> Well if you add a monitor interface you may want to turn off PS,
+Changes to ath5k.h
+Changes-licensed-under: 3-Clause-BSD
 
-Ok, now I got it. I think your proposal makes sense.
+Changes to attach.c, pcu.c, reg.h
+Changes-licensed-under: ISC
 
-> but I suppose you can just do that on the wlan0 interface you're
-> associated on.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/ath5k.h  |    1 +
+ drivers/net/wireless/ath5k/attach.c |    6 ++++++
+ drivers/net/wireless/ath5k/pcu.c    |   28 ++++++++++++++--------------
+ drivers/net/wireless/ath5k/reg.h    |    1 +
+ 4 files changed, 22 insertions(+), 14 deletions(-)
 
-Yeah, but that's an extra hassle. In my opinion better to do it in
-mac80211.
-
->> > Why would you queue up frames? To reduce the number of radio wakeups
->> > when TX traffic is low?
->> 
->> Just because I assume that invoke_tx_handlers() cannot sleep but
->> ieee80211_hw_config() sleeps. I didn't think of any other way to solve
->> this, but I haven't thought that much about this. What do you think?
->
-> But wouldn't that mean the other way around, i.e. whenever we transmit
-> we disable it and then start a timer that re-enables it? Ah, you're
-> thinking because TX handlers cannot sleep and the config callback may
-> sleep?
-
-Yes, that's what I'm worrying. And I definitely want op_config() to
-sleep, it makes my implementation in stlc45xx a lot easier :)
-
-> Hmm. I suppose then we'd have to defer the actual disable PS mode to
-> a work struct.
-
-Yes, that's what I was thinking. But now that I have thought about
-this more, I think queueing of the frames is not necessary. The first
-frames can be sent while in Power Save mode (ie. PSM bit set in Frame
-Control) and PS disable can happen later when the work struct is
-scheduled. I don't think this being a problem, we just have to be
-careful with race conditions.
-
-> Maybe we don't want to disable PS for a single frame though
-
-Actually I think we do. The reason why I'm interested in dynamic PS is
-the receive latency (transmit latency minimal is in practise). For
-example, let's think about DNS request. In the best scenario only one
-frame is transmitted, and if we don't come out receiving the reply to
-the dns request will take a long time. If DTIM is 3 and beacon
-interval 100 ms, the RTT for the DNS request/reply would be 300 ms.
-That's a long delay to a case where user has pressed a link in the
-browser and the browser starts to load a web page.
-
-> so how about this:
->
->  * When a frame is transmitted, store the current frame counter (do we
->    have one? we could add one) somewhere and arm a timer to fire N
->    milliseconds in the future.
->  * The timer checks that we have transmitted
->    more than M frames in the time since it was started, and if so queues
->    a work struct to disable PS.
->  * The work function also sets a flags somewhere "dynamic PS has
->    disabled PS" and arms another timer to fire after R millisecinds,
->    that timer will queue work to enable PS again
->  * the TX code, when the "dynamic PS has disabled PS" flag is set, mods
->    the re-enable timer to be R milliseconds in the future again
->
-> That way, M frames within a period of N milliseconds will disable PS,
-> and it'll still disabled until R milliseconds elapse without traffic,
-> and no timers are fired unless they are needed.
-
-I think this sounds good. As I said above, I'm not sure about checking
-of M frames, but I'll implement it anyway and test it in practise.
-
-Johannes, thanks a lot for the help, again :)
-
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index 5ee2dd1..13df119 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -1052,6 +1052,7 @@ struct ath5k_hw {
+ 	bool			ah_calibration;
+ 	bool			ah_running;
+ 	bool			ah_single_chip;
++	bool			ah_combined_mic;
+ 	enum ath5k_rfgain	ah_rf_gain;
+ 
+ 	u32			ah_mac_srev;
+diff --git a/drivers/net/wireless/ath5k/attach.c b/drivers/net/wireless/ath5k/attach.c
+index 49d82d7..dea378f 100644
+--- a/drivers/net/wireless/ath5k/attach.c
++++ b/drivers/net/wireless/ath5k/attach.c
+@@ -317,6 +317,12 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 		goto err_free;
+ 	}
+ 
++	if (srev >= AR5K_SREV_AR2414) {
++		ah->ah_combined_mic = true;
++		AR5K_REG_ENABLE_BITS(ah, AR5K_MISC_MODE,
++			AR5K_MISC_MODE_COMBINED_MIC);
++	}
++
+ 	/* MAC address is cleared until add_interface */
+ 	ath5k_hw_set_lladdr(ah, mac);
+ 
+diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
+index 86ca54b..0461ce5 100644
+--- a/drivers/net/wireless/ath5k/pcu.c
++++ b/drivers/net/wireless/ath5k/pcu.c
+@@ -1096,20 +1096,20 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+ 		/* Install rx/tx MIC */
+ 		rxmic = (__le32 *) &key->key[16];
+ 		txmic = (__le32 *) &key->key[24];
+-#if 0
+-		/* MISC_MODE register & 0x04 - for mac srev >= griffin */
+-		key_v[0] = rxmic[0];
+-		key_v[1] = (txmic[0] >> 16) & 0xffff;
+-		key_v[2] = rxmic[1];
+-		key_v[3] = txmic[0] & 0xffff;
+-		key_v[4] = txmic[1];
+-#else
+-		key_v[0] = rxmic[0];
+-		key_v[1] = 0;
+-		key_v[2] = rxmic[1];
+-		key_v[3] = 0;
+-		key_v[4] = 0;
+-#endif
++
++		if (ah->ah_combined_mic) {
++			key_v[0] = rxmic[0];
++			key_v[1] = (txmic[0] >> 16) & 0xffff;
++			key_v[2] = rxmic[1];
++			key_v[3] = txmic[0] & 0xffff;
++			key_v[4] = txmic[1];
++		} else {
++			key_v[0] = rxmic[0];
++			key_v[1] = 0;
++			key_v[2] = rxmic[1];
++			key_v[3] = 0;
++			key_v[4] = 0;
++		}
+ 		for (i = 0; i < ARRAY_SIZE(key_v); i++)
+ 			ath5k_hw_reg_write(ah, le32_to_cpu(key_v[i]),
+ 				AR5K_KEYTABLE_OFF(micentry, i));
+diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
+index 69755fc..91aaeaf 100644
+--- a/drivers/net/wireless/ath5k/reg.h
++++ b/drivers/net/wireless/ath5k/reg.h
+@@ -1729,6 +1729,7 @@
+ #define	AR5K_MISC_MODE			0x8120			/* Register Address */
+ #define	AR5K_MISC_MODE_FBSSID_MATCH	0x00000001	/* Force BSSID match */
+ #define	AR5K_MISC_MODE_ACKSIFS_MEM	0x00000002	/* ACK SIFS memory (?) */
++#define	AR5K_MISC_MODE_COMBINED_MIC	0x00000004	/* use rx/tx MIC key */
+ /* more bits */
+ 
+ /*
 -- 
-Kalle Valo
+1.5.4.2.182.gb3092
+
