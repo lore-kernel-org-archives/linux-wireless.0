@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53695 "EHLO vs166246.vserver.de"
+Received: from element.ksp.sk ([158.195.16.154]:50622 "EHLO element.ksp.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbYKIMCh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2008 07:02:37 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-Date: Sun, 9 Nov 2008 13:02:15 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>
-References: <4902DEBB.3050205@hotmail.com> <1226220992.3614.16.camel@johannes.berg> <1226221438.3614.20.camel@johannes.berg>
-In-Reply-To: <1226221438.3614.20.camel@johannes.berg>
+	id S1751699AbYKZJA3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 04:00:29 -0500
+Message-ID: <492D0A26.9090801@work.ksp.sk> (sfid-20081126_100034_138731_1E1B1C2B)
+Date: Wed, 26 Nov 2008 09:34:46 +0100
+From: Vladimir Koutny <vlado@work.ksp.sk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200811091302.15899.mb@bu3sch.de> (sfid-20081109_130246_639951_F59785AF)
+To: Pavel Roskin <proski@gnu.org>
+CC: Mark Ryden <markryde@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: AP (Master Mode) of wireless drivers
+References: <dac45060811250735m6922688fn13c03ebe388d3137@mail.gmail.com> <1227633414.15224.6.camel@dv>
+In-Reply-To: <1227633414.15224.6.camel@dv>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig700B81955B5D899BF9FB9338"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 09 November 2008 10:03:58 Johannes Berg wrote:
-> On Sun, 2008-11-09 at 09:56 +0100, Johannes Berg wrote:
-> 
-> > I think you forgot to attach the patch.
-> 
-> Sorry, I missed your second mail. (btw, if you generate patches with -p
-> in diff arguments it helps a bit reading them)
-> 
-> Ok so it looks like the buffer you're getting is unaligned. This is
-> strange, but I'm too unfamiliar with the code. It seems that there's the
-> PLCP 5 byte header in front. Well, try the printk I asked for, because
-> at that point zd1211 should avoid "leaking" the alignment problem.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig700B81955B5D899BF9FB9338
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-zd1211rw has some code to align the packet to a 4-byte boundary.
-But the compare_ether_addr() and the other le16 accesses are done before
-that realignment.
-This these blow up if (ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc))
+>> More specifically, I am particularly interested to know whether Intel
+>> iwl3945 and Intel iwl4965 support AP (Master Mode), and in case they
+>> do not (as I am afraid is the situation)
+>> - is there any intention to add AP (masted mode) support to these driv=
+ers
+>> in the near future ?
+>=20
+> The driver announces AP mode support (look for NL80211_IFTYPE_AP and
+> hw->wiphy->interface_modes in iwl-core.c and iwl3945-base.c), so it
+> might work, or at least the intention is to make it work.  By the way,
+> rt2x00 announces AP mode support too (in some conditions).
 
--- 
-Greetings Michael.
+I've tested AP mode on iwl4965 about 2 weeks ago and a very quick test di=
+d
+work (no encryption, just connected a win notebook to it and did some
+browsing). Just be sure to fetch correct (=3Drecent) versions of hostapd =
+and
+libnl..
+
+Regards,
+  Vladimir
+
+
+--------------enig700B81955B5D899BF9FB9338
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iJwEAQECAAYFAkktCi8ACgkQutgEj9ZLuzQf4wP9EU9VBFQG+LHjHxqOFUiXcn0S
+lB+99p4Z2n5zKRXeIZblHfBtdTwUYu6KMW2MRFr0s6hdB79XSk9a4wHLAaCNMTBB
+ELX/AUyKRAV3V2bOQj1SThXW460ipeYEelqMdVzyOizp/sp3RIYD+H0rTKkwyUTy
+Rk2w0oEplaUyAHUOoGo=
+=MGMI
+-----END PGP SIGNATURE-----
+
+--------------enig700B81955B5D899BF9FB9338--
