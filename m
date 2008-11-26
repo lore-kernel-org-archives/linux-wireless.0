@@ -1,29 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:40748 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755752AbYKCQsu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2008 11:48:50 -0500
-Message-ID: <490F2B6C.9090002@openwrt.org> (sfid-20081103_174852_988997_5757C55B)
-Date: Mon, 03 Nov 2008 17:48:44 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mu-out-0910.google.com ([209.85.134.189]:41927 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbYKZIVd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 03:21:33 -0500
+Received: by mu-out-0910.google.com with SMTP id g7so301838muf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 00:21:31 -0800 (PST)
+To: reinette chatre <reinette.chatre@intel.com>
+Subject: Re: [PATCH] ipw2200: increase scan timeout
+Date: Wed, 26 Nov 2008 09:21:06 +0100
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>
+References: <200811251809.55461.helmut.schaa@gmail.com> <1227637971.13619.262.camel@rc-desk>
+In-Reply-To: <1227637971.13619.262.camel@rc-desk>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: No ProbeResp - assume out of range
-References: <43e72e890811021305k19e9a314i6400cd1a759b3d00@mail.gmail.com> <200811022303.54476.mb@bu3sch.de> <1ba2fa240811021442o178c98a1pa920b863b60d9293@mail.gmail.com> <43e72e890811021458h1444d350v33a5e5b984b76495@mail.gmail.com> <20081103002558.GA14153@tesla>
-In-Reply-To: <20081103002558.GA14153@tesla>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200811260921.06779.helmut.schaa@gmail.com> (sfid-20081126_092137_132459_7CE772BA)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> OK I found the issue with ath5k, no beacons were being passed at all, I'll post
-> a patch.
-Why not configure the beacon miss interrupt instead of passing beacons to
-mac80211 in STA mode? That should save some battery on Laptops because it 
-won't cause 10 extra wakeups every second.
+Am Dienstag, 25. November 2008 schrieb reinette chatre:
+> On Tue, 2008-11-25 at 09:09 -0800, Helmut Schaa wrote:
+> > I have no idea in which situations the scan takes longer than 5 seconds to
+> > complete but maybe it might even take longer than 10 seconds. Has anybody from
+> > Intel insight into the firmware scan code?
 
-- Felix
+> I do not have insight into the scan code ... but I can try to find out
+> if there is something specific you need to know.
+
+A worst case runtime estimation of the scan code would be interesting ;)
+
+Helmut
