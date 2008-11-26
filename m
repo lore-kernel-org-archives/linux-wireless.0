@@ -1,75 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:33122 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752513AbYKFBAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2008 20:00:36 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KxtEd-0004Wv-As
-	for linux-wireless@vger.kernel.org; Thu, 06 Nov 2008 01:00:31 +0000
-Received: from ppp-88-217-36-175.dynamic.mnet-online.de ([88.217.36.175])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 01:00:31 +0000
-Received: from berni by ppp-88-217-36-175.dynamic.mnet-online.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 01:00:31 +0000
-To: linux-wireless@vger.kernel.org
-From: Bernhard Schmidt <berni@birkenwald.de>
-Subject: Re: b43: Everybody with PHY TX error, please try
-Date: Thu, 6 Nov 2008 01:00:21 +0000 (UTC)
-Message-ID: <getfj5$vl5$3@ger.gmane.org> (sfid-20081106_020040_888237_D4F2E4C2)
-References: <200810242032.04295.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from qw-out-2122.google.com ([74.125.92.24]:47652 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752749AbYKZOxz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 09:53:55 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so123920qwe.37
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 06:53:54 -0800 (PST)
+Message-ID: <69e28c910811260653mdb6b96ej97d7f6bee30313b0@mail.gmail.com> (sfid-20081126_155401_243833_161933D7)
+Date: Wed, 26 Nov 2008 15:53:54 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: iw needs a permalink on http://wireless.kernel.org/download/iw/
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch <mb@bu3sch.de> wrote:
+Corrently, different versions of iw can be downloaded from
+http://wireless.kernel.org/download/iw/, with the latest being 0.9.6,
+but there is no link that automatically takes users to the latest
+version (e.g. http://wireless.kernel.org/download/iw/iw-latest.tar.bz2
+always redirecting to the most recent release). This prevents me from
+automatically linking to the latest release of iw, so I can only link
+to one specific fixed release.
 
-> Everybody with PHY TX error, please try updated firmware from
-> ftp://ftp.linksys.com/opensourcecode/wrt610n/1.00.00.018/wrt610n_v1.00.00.018_us.tgz
-> (Yeah, big tarball. It's 87MB)
->
-> Extract the file wrt610n_v1.00.00.018_us/release/src/wl/linux/wl.o out of the archive.
-> Get latest b43-tools:
-> git clone http://git.bu3sch.de/git/b43-tools.git
->
-> Build and install fwcutter from latest b43-tools.git
->
-> Extract the firmware from the wl.o file:
-> b43-fwcutter --unsupported -w /lib/firmware/DESTPATH  wl.o
->
-> Try to reproduce the PHY TX error with the new firmware.
+I am in favor of creating a symlink at
+http://wireless.kernel.org/download/iw/iw-latest.tar.bz2.
 
-Still getting them, OpenWRT Kamikaze trunk on a Linksys WRT54G
+Ideas?
 
-b43-phy0: Broadcom 5352 WLAN found
-b43-phy0 debug: Found PHY: Analog 2, Type 2, Revision 7
-b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
-b43-phy0 debug: DebugFS (CONFIG_DEBUG_FS) not enabled in kernel config
-input: b43-phy0 as /devices/virtual/input/input0
-b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
-b43-phy0 debug: Chip initialized
-b43-phy0 debug: 32-bit DMA initialized
-Registered led device: b43-phy0::radio
-b43-phy0 debug: Wireless interface started
-b43-phy0 debug: Adding Interface type 2
-b43-phy0 debug: Removing Interface type 2
-b43-phy0 debug: Wireless interface stopped
-b43-phy0 debug: DMA-32 rx_ring: Used slots 0/64, Failed frames 0/0 =
-0.0%, Average tries 0.00
-b43-phy0 debug: DMA-32 tx_ring_AC_BK: Used slots 0/128, Failed frames
-0/0 = 0.0%, Average tries 0.00
-b43-phy0 debug: DMA-32 tx_ring_AC_BE: Used slots 0/128, Failed frames
-0/0 = 0.0%, Average tries 0.00
-b43-phy0 debug: DMA-32 tx_ring_AC_VI: Used slots 0/128, Failed frames
-0/0 = 0.0%, Average tries 0.00
-b43-phy0 debug: DMA-32 tx_ring_AC_VO: Used slots 0/128, Failed frames
-0/0 = 0.0%, Average tries 0.00
-b43-phy0 debug: DMA-32 tx_ring_mcast: Used slots 0/128, Failed frames
-0/0 = 0.0%, Average tries 0.00
-input: b43-phy0 as /devices/virtual/input/input1
-b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+Thanks,
+G=E1bor Stefanik
 
-Bernhard
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
