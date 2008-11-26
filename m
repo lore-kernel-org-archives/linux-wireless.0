@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:42132 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752665AbYKDHVh (ORCPT
+Received: from cp-out11.libero.it ([212.52.84.111]:51700 "EHLO
+	cp-out11.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121AbYKZWST (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 02:21:37 -0500
-To: "Zhu Yi" <yi.zhu@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.28-rc2-wl: network lockups with iwl3945
-References: <871vxuh70u.fsf@nokia.com> <87iqr5ri67.fsf@nokia.com>
-	<1225697173.3619.23.camel@johannes.berg>
-	<1225698103.2917.312.camel@debian.sh.intel.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 04 Nov 2008 09:21:05 +0200
-In-Reply-To: <1225698103.2917.312.camel@debian.sh.intel.com> (ext Zhu Yi's message of "Mon\, 03 Nov 2008 15\:41\:43 +0800")
-Message-ID: <87d4hcardq.fsf@nokia.com> (sfid-20081104_082141_322979_4A933A2F)
+	Wed, 26 Nov 2008 17:18:19 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: accept empty strings for hidden SSIDs
+Date: Wed, 26 Nov 2008 22:44:23 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200811262244.23980.rossi.f@inwind.it> (sfid-20081126_231825_110899_5C66C6E2)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Zhu Yi" <yi.zhu@intel.com> writes:
+Some access points (e.g. Sitecom WL-174) use an empty string as hidden SSID.
 
-> On Mon, 2008-11-03 at 15:26 +0800, Johannes Berg wrote:
->> I think this has been fixed for iwlagn recently, but I guess iwl3945
->> will always be forgotten ;)
->
-> Yup. Please try attached patch.
+Signed-off-by: Fabio Rossi <rossi.f@inwind.it>
+---
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 88b0b4d..dc59f76 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2023,7 +2023,7 @@ static int ieee80211_sta_match_ssid(struct ieee80211_if_sta *ifsta,
+ 		}
+ 	}
+ 
+-	if (hidden_ssid && ifsta->ssid_len == ssid_len)
++	if (hidden_ssid && (ifsta->ssid_len == ssid_len || ssid_len == 0))
+ 		return 1;
+ 
+ 	if (ssid_len == 1 && ssid[0] == ' ')
 
-Works great. I suspended and resumed five times with wpa_supplicant
-running and did not see any problems, 'ip link' command worked always.
-Earlier it failed every time after a resume.
-
-Thank you for fixing this. Please push this to wireless-testing.
-
--- 
-Kalle Valo
