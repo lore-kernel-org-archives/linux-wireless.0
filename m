@@ -1,45 +1,304 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.179]:61881 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098AbYKSQXp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 11:23:45 -0500
-Received: by ik-out-1112.google.com with SMTP id c29so25591ika.5
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2008 08:23:44 -0800 (PST)
-Message-ID: <f76a32050811190823r51033a4dqa29de6d1e6663388@mail.gmail.com> (sfid-20081119_172352_217619_ED1C4063)
-Date: Wed, 19 Nov 2008 17:23:44 +0100
-From: "Stefan Steuerwald" <salsasepp@googlemail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Fwd: p54: testing AP mode: cannot switch to master mode
+Received: from hostap.isc.org ([149.20.54.63]:50499 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751157AbYKZIi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 03:38:59 -0500
+Date: Wed, 26 Nov 2008 10:38:41 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Sujith <m.sujith@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1227109286.26243.54.camel@johannes.berg>
+Subject: Re: [RFC] nl80211: Add frequency configuration (including HT40)
+Message-ID: <20081126083841.GC31499@jm.kir.nu> (sfid-20081126_093903_530674_FAC700CF)
+References: <20081125190533.GA27879@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <f76a32050811190306s6a86f46dwc245200069ff8a82@mail.gmail.com>
-	 <f76a32050811190316o28a49cddte30214c217877078@mail.gmail.com>
-	 <1227095773.26243.22.camel@johannes.berg>
-	 <f76a32050811190737w37937e17ra361364ed345fd33@mail.gmail.com>
-	 <1227109286.26243.54.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081125190533.GA27879@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> However - data throughput seems low; accessing a webserver I get an
->> update "now and then". I'm aware this can have a lots of causes - I
->> have more time and more cards available (XG-601/ISL3880, and an
->> AR5212/5213 one) and will play with this.
->
-> What rate control algorithm did you compile into the kernel? Minstrel
-> should perform quite well on p54, unless we made a mistake.
+On Tue, Nov 25, 2008 at 09:05:33PM +0200, Jouni Malinen wrote:
+> This patch adds new NL80211_CMD_SET_WIPHY attributes
+> NL80211_ATTR_WIPHY_FREQ and NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET to allow
+> userspace to set the operating channel (e.g., hostapd for AP mode).
 
-I had only compiled in the PID-based thing. Fixed that, made Minstrel
-the default.
+This version addresses the feedback I received by adding regulatory
+enforcement in net/wireless/nl80211.c and mechanism for indicating
+non-HT vs. HT20. In addition, the ht_enable/sec_chan_offset values are
+now handled similarly to local->oper_channel to avoid changing
+parameters for scan.
 
-At first glance this improves things, but not enough. I have an ajax
-application that is polling the web server and which runs into its 5
-sec timeouts fairly regularly. I had this working almost ok before
-with an Atheros card and the latest madwifi driver, but got trashed by
-"stuck beacon" events. I will try this card again with the ath5k
-driver and see how this works.
 
-Thanks for your help,
-  Stefan.
+Index: wireless-testing/include/linux/nl80211.h
+===================================================================
+--- wireless-testing.orig/include/linux/nl80211.h	2008-11-26 09:28:51.000000000 +0200
++++ wireless-testing/include/linux/nl80211.h	2008-11-26 09:36:01.000000000 +0200
+@@ -26,8 +26,9 @@
+  * @NL80211_CMD_GET_WIPHY: request information about a wiphy or dump request
+  *	to get a list of all present wiphys.
+  * @NL80211_CMD_SET_WIPHY: set wiphy parameters, needs %NL80211_ATTR_WIPHY or
+- *	%NL80211_ATTR_IFINDEX; can be used to set %NL80211_ATTR_WIPHY_NAME
+- *	and/or %NL80211_ATTR_WIPHY_TXQ_PARAMS.
++ *	%NL80211_ATTR_IFINDEX; can be used to set %NL80211_ATTR_WIPHY_NAME,
++ *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ, and/or
++ *	%NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET.
+  * @NL80211_CMD_NEW_WIPHY: Newly created wiphy, response to get request
+  *	or rename notification. Has attributes %NL80211_ATTR_WIPHY and
+  *	%NL80211_ATTR_WIPHY_NAME.
+@@ -180,6 +181,12 @@
+  *	/sys/class/ieee80211/<phyname>/index
+  * @NL80211_ATTR_WIPHY_NAME: wiphy name (used for renaming)
+  * @NL80211_ATTR_WIPHY_TXQ_PARAMS: a nested array of TX queue parameters
++ * @NL80211_ATTR_WIPHY_FREQ: frequency of the selected channel in MHz
++ * @NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET: included with NL80211_ATTR_WIPHY_FREQ
++ *	if HT20 or HT40 are allowed (i.e., 802.11n disabled if not included):
++ *	NL80211_SEC_CHAN_DISABLED = HT20 only
++ *	NL80211_SEC_CHAN_BELOW = secondary channel is below the primary channel
++ *	NL80211_SEC_CHAN_ABOVE = secondary channel is above the primary channel
+  *
+  * @NL80211_ATTR_IFINDEX: network interface index of the device to operate on
+  * @NL80211_ATTR_IFNAME: network interface name
+@@ -315,6 +322,8 @@
+ 	NL80211_ATTR_BSS_BASIC_RATES,
+ 
+ 	NL80211_ATTR_WIPHY_TXQ_PARAMS,
++	NL80211_ATTR_WIPHY_FREQ,
++	NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+@@ -329,6 +338,8 @@
+ #define NL80211_ATTR_HT_CAPABILITY NL80211_ATTR_HT_CAPABILITY
+ #define NL80211_ATTR_BSS_BASIC_RATES NL80211_ATTR_BSS_BASIC_RATES
+ #define NL80211_ATTR_WIPHY_TXQ_PARAMS NL80211_ATTR_WIPHY_TXQ_PARAMS
++#define NL80211_ATTR_WIPHY_FREQ NL80211_ATTR_WIPHY_FREQ
++#define NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET
+ 
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_MAX_SUPP_REG_RULES		32
+@@ -742,4 +753,10 @@
+ 	NL80211_TXQ_Q_BK
+ };
+ 
++enum nl80211_sec_chan_offset {
++	NL80211_SEC_CHAN_NO_HT /* No HT */,
++	NL80211_SEC_CHAN_DISABLED /* HT20 only */,
++	NL80211_SEC_CHAN_BELOW /* HT40- */,
++	NL80211_SEC_CHAN_ABOVE /* HT40+ */
++};
+ #endif /* __LINUX_NL80211_H */
+Index: wireless-testing/include/net/cfg80211.h
+===================================================================
+--- wireless-testing.orig/include/net/cfg80211.h	2008-11-26 09:28:51.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2008-11-26 09:38:12.000000000 +0200
+@@ -450,6 +450,10 @@
+  * @change_bss: Modify parameters for a given BSS.
+  *
+  * @set_txq_params: Set TX queue parameters
++ *
++ * @set_channel: Set channel (freq = frequency in MHz, sec_chan_offset:
++ *	0 = HT40 disabled; 1 = HT40 enabled, secondary channel above primary;
++ *	-1 = HT40 enabled, secondary channel below primary)
+  */
+ struct cfg80211_ops {
+ 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
+@@ -513,6 +517,9 @@
+ 
+ 	int	(*set_txq_params)(struct wiphy *wiphy,
+ 				  struct ieee80211_txq_params *params);
++
++	int	(*set_channel)(struct wiphy *wiphy, int freq, bool ht_enabled,
++			       int sec_chan_offset);
+ };
+ 
+ #endif /* __NET_CFG80211_H */
+Index: wireless-testing/net/mac80211/cfg.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/cfg.c	2008-11-26 09:28:52.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2008-11-26 10:12:04.000000000 +0200
+@@ -1095,6 +1095,23 @@
+ 	return 0;
+ }
+ 
++static int ieee80211_set_channel(struct wiphy *wiphy, int freq,
++				 bool ht_enabled, int sec_chan_offset)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_channel *chan;
++
++	chan = ieee80211_get_channel(local->hw.wiphy, freq);
++	if (!chan)
++		return -EINVAL;
++
++	local->oper_channel = chan;
++	local->oper_ht_enabled = ht_enabled;
++	local->oper_sec_chan_offset = sec_chan_offset;
++
++	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1122,4 +1139,5 @@
+ #endif
+ 	.change_bss = ieee80211_change_bss,
+ 	.set_txq_params = ieee80211_set_txq_params,
++	.set_channel = ieee80211_set_channel,
+ };
+Index: wireless-testing/net/wireless/nl80211.c
+===================================================================
+--- wireless-testing.orig/net/wireless/nl80211.c	2008-11-26 09:28:52.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2008-11-26 10:25:36.000000000 +0200
+@@ -59,6 +59,8 @@
+ 	[NL80211_ATTR_WIPHY_NAME] = { .type = NLA_NUL_STRING,
+ 				      .len = BUS_ID_SIZE-1 },
+ 	[NL80211_ATTR_WIPHY_TXQ_PARAMS] = { .type = NLA_NESTED },
++	[NL80211_ATTR_WIPHY_FREQ] = { .type = NLA_U32 },
++	[NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET] = { .type = NLA_U8 },
+ 
+ 	[NL80211_ATTR_IFTYPE] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_IFINDEX] = { .type = NLA_U32 },
+@@ -359,6 +361,60 @@
+ 		}
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
++		int sec_chan_offset = 0;
++		bool ht_enabled = false;
++		struct ieee80211_channel *chan;
++		u32 freq;
++
++		if (!rdev->ops->set_channel) {
++			result = -EOPNOTSUPP;
++			goto bad_res;
++		}
++
++		if (info->attrs[NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET]) {
++			u8 val = nla_get_u8(
++				info->attrs[
++					NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET]);
++			switch (val) {
++			case NL80211_SEC_CHAN_BELOW:
++				ht_enabled = true;
++				sec_chan_offset = -1;
++				break;
++			case NL80211_SEC_CHAN_ABOVE:
++				ht_enabled = true;
++				sec_chan_offset = 1;
++				break;
++			case NL80211_SEC_CHAN_DISABLED:
++				ht_enabled = true;
++				break;
++			}
++		}
++
++		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
++		chan = ieee80211_get_channel(&rdev->wiphy, freq);
++		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED) {
++			/* Primary channel not allowed */
++			result = -EINVAL;
++			goto bad_res;
++		}
++		if (sec_chan_offset) {
++			chan = ieee80211_get_channel(
++				&rdev->wiphy, freq + sec_chan_offset * 20);
++			if (!chan || chan->flags & IEEE80211_CHAN_DISABLED) {
++				/* Secondary channel not allowed */
++				result = -EINVAL;
++				goto bad_res;
++			}
++		}
++
++		result = rdev->ops->set_channel(&rdev->wiphy, freq, ht_enabled,
++						sec_chan_offset);
++		if (result)
++			goto bad_res;
++	}
++
++
+ bad_res:
+ 	cfg80211_put_dev(rdev);
+ 	return result;
+Index: wireless-testing/include/net/mac80211.h
+===================================================================
+--- wireless-testing.orig/include/net/mac80211.h	2008-11-26 09:28:52.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2008-11-26 09:28:54.000000000 +0200
+@@ -507,6 +507,9 @@
+ 
+ struct ieee80211_ht_conf {
+ 	bool enabled;
++	int sec_chan_offset; /* 0 = HT40 disabled; -1 = HT40 enabled, secondary
++			      * channel below primary; 1 = HT40 enabled,
++			      * secondary channel above primary */
+ };
+ 
+ /**
+Index: wireless-testing/net/mac80211/util.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/util.c	2008-11-26 10:00:57.000000000 +0200
++++ wireless-testing/net/mac80211/util.c	2008-11-26 10:09:01.000000000 +0200
+@@ -641,6 +641,8 @@
+ 		    chan->flags & IEEE80211_CHAN_NO_IBSS)
+ 			return ret;
+ 		local->oper_channel = chan;
++		local->oper_ht_enabled = false;
++		local->oper_sec_chan_offset = 0;
+ 
+ 		if (local->sw_scanning || local->hw_scanning)
+ 			ret = 0;
+Index: wireless-testing/net/mac80211/ieee80211_i.h
+===================================================================
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2008-11-26 10:12:16.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2008-11-26 10:12:34.000000000 +0200
+@@ -626,6 +626,8 @@
+ 	struct delayed_work scan_work;
+ 	struct ieee80211_sub_if_data *scan_sdata;
+ 	struct ieee80211_channel *oper_channel, *scan_channel;
++	bool oper_ht_enabled;
++	int oper_sec_chan_offset;
+ 	u8 scan_ssid[IEEE80211_MAX_SSID_LEN];
+ 	size_t scan_ssid_len;
+ 	struct list_head bss_list;
+Index: wireless-testing/net/mac80211/main.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/main.c	2008-11-26 10:09:09.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2008-11-26 10:11:49.000000000 +0200
+@@ -195,20 +195,30 @@
+ 	struct ieee80211_channel *chan;
+ 	int ret = 0;
+ 	int power;
++	bool ht_enabled;
++	int sec_chan_offset;
+ 
+ 	might_sleep();
+ 
+-	if (local->sw_scanning)
++	if (local->sw_scanning) {
+ 		chan = local->scan_channel;
+-	else
++		ht_enabled = false;
++		sec_chan_offset = 0;
++	} else {
+ 		chan = local->oper_channel;
++		ht_enabled = local->oper_ht_enabled;
++		sec_chan_offset = local->oper_sec_chan_offset;
++	}
+ 
+-	if (chan != local->hw.conf.channel) {
++	if (chan != local->hw.conf.channel ||
++	    ht_enabled != local->hw.conf.ht.enabled ||
++	    sec_chan_offset != local->hw.conf.ht.sec_chan_offset) {
+ 		local->hw.conf.channel = chan;
++		local->hw.conf.ht.enabled = ht_enabled;
++		local->hw.conf.ht.sec_chan_offset = sec_chan_offset;
+ 		changed |= IEEE80211_CONF_CHANGE_CHANNEL;
+ 	}
+ 
+-
+ 	if (!local->hw.conf.power_level)
+ 		power = chan->max_power;
+ 	else
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
