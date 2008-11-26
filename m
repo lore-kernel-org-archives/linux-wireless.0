@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39826 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754045AbYKDUVR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 15:21:17 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45847
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752240AbYKZAOw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 19:14:52 -0500
+Date: Tue, 25 Nov 2008 16:14:51 -0800 (PST)
+Message-Id: <20081125.161451.142025705.davem@davemloft.net> (sfid-20081126_011459_790377_949533E4)
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/3] iwl3945: do not send scan command if channel count zero
-Date: Tue,  4 Nov 2008 12:21:35 -0800
-Message-Id: <1225830096-7052-3-git-send-email-reinette.chatre@intel.com> (sfid-20081104_212124_599526_BFE5DC35)
-In-Reply-To: <1225830096-7052-2-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1225830096-7052-1-git-send-email-reinette.chatre@intel.com>
- <1225830096-7052-2-git-send-email-reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-11-25
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20081125221753.GC25962@tuxdriver.com>
+References: <20081125221753.GC25962@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not send scan command if no channels to scan.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 25 Nov 2008 17:17:53 -0500
 
-This avoids a Microcode error as reported in:
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1650
-http://bugzilla.kernel.org/show_bug.cgi?id=11806
-http://marc.info/?l=linux-wireless&m=122437145211886&w=2
+>  arch/arm/configs/eseries_pxa_defconfig         |    7 +-
+>  arch/arm/configs/ezx_defconfig                 |   16 +-
+>  arch/arm/configs/overo_defconfig               |    7 +-
+>  arch/arm/configs/s3c2410_defconfig             |   15 +-
+>  arch/mips/configs/bcm47xx_defconfig            |   18 +-
+>  arch/mips/configs/sb1250-swarm_defconfig       |    6 +-
+>  arch/powerpc/configs/pmac32_defconfig          |   10 +-
+>  arch/powerpc/configs/ppc6xx_defconfig          |   10 +-
+>  arch/powerpc/configs/ps3_defconfig             |    7 +-
+>  arch/sh/configs/ul2_defconfig                  |    9 +-
+>  arch/x86/configs/i386_defconfig                |    7 +-
+>  arch/x86/configs/x86_64_defconfig              |    7 +-
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
-Also applies to 2.6.28.
+Hey John.  We don't muck with arch defconfig files like
+this, even when making Kconfig changes.
 
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+This makes life difficult for arch maintainers.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 88465e4..caac74c 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6196,6 +6196,11 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 					      n_probes,
- 			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
- 
-+	if (scan->channel_count == 0) {
-+		IWL_DEBUG_SCAN("channel count %d\n", scan->channel_count);
-+		goto done;
-+	}
-+
- 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
- 	    scan->channel_count * sizeof(struct iwl3945_scan_channel);
- 	cmd.data = scan;
--- 
-1.5.4.3
+Could you please toss out these parts and send me another
+pull request?
 
+Thanks.
