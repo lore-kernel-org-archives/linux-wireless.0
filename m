@@ -1,38 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:39058 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754927AbYKIPEs (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:53935 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223AbYKZVNG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2008 10:04:48 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so798073eyi.37
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Nov 2008 07:04:47 -0800 (PST)
-To: "David Shwatrz" <dshwatrz@gmail.com>
-Subject: Re: Where is allow-ap-vlan-modes.patch ?
-Date: Sun, 9 Nov 2008 16:04:43 +0100
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com>
-In-Reply-To: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com>
+	Wed, 26 Nov 2008 16:13:06 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: "Stefan Steuerwald" <salsasepp@googlemail.com>
+Subject: Re: p54: AP mode: no data frame despite traffic indication set in TIM
+Date: Wed, 26 Nov 2008 22:13:03 +0100
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+References: <200811242124.16358.chunkeey@web.de> <f76a32050811260538n6f4f03e9qa05dced498e21fd8@mail.gmail.com>
+In-Reply-To: <f76a32050811260538n6f4f03e9qa05dced498e21fd8@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811091604.43705.IvDoorn@gmail.com> (sfid-20081109_160451_593127_54FF7CED)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="utf-8"
+Message-Id: <200811262213.03751.chunkeey@web.de> (sfid-20081126_221323_205174_1F2BD428)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 09 November 2008, David Shwatrz wrote:
-> Hello,
+On Wednesday 26 November 2008 14:38:59 Stefan Steuerwald wrote:
+> console [netcon0] enabled
+> netconsole: network logging started
+> BUG: unable to handle kernel NULL pointer dereference at 00000038
+> IP: [<d08260fa>] p54_assign_address+0x67/0x14b [p54common]
+> *pde = 00000000
+> Oops: 0000 [#1]
+> last sysfs file: /sys/class/net/lo/operstate
+> Modules linked in: netconsole ipv6 loop evdev ehci_hcd ohci_hcd
+> rtc_cmos rtc_core pcspkr rtc_lib p54pci usbcore via_rhine p54common
+> geode_aes mii [last unloaded: netconsole]
 > 
-> I have a question:
-> Why was the allow-ap-vlan-modes.patch removed from
-> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/?
+> Pid: 0, comm: swapper Not tainted (2.6.28-rc6-wl #16)
+> EIP: 0060:[<d08260fa>] EFLAGS: 00010002 CPU: 0
+> EIP is at p54_assign_address+0x67/0x14b [p54common]
+> EAX: cf98b178 EBX: cf86ee40 ECX: 00000000 EDX: 00000000
+> ESI: 000000f8 EDI: 00000000 EBP: 0002027c ESP: c03f9c4c
+>  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
+> Process swapper (pid: 0, ti=c03f8000 task=c03c4380 task.ti=c03f8000)
+> Stack:
+>  00000002 ce4d5880 ce4c48b4 cf86e1a0 00000000 00000038 00020200 00000286
+>  cf86ee40 00000004 ce4d58b2 ce4d588c d0826fd7 00000090 014c48d4 ce4c48b4
+>  cf86e1a0 0086ee40 00000004 02000282 ce4c48d4 cf86ef10 cf86ee40 ce4d5880
+> Call Trace:
+>  [<d0826fd7>] p54_tx+0x416/0x482 [p54common]
+>  [<c02fb7c2>] __ieee80211_tx+0x35/0xf8
+>  [<c02fc235>] ieee80211_master_start_xmit+0x2ab/0x396
+>  [<c01048d3>] common_interrupt+0x23/0x30
+>  [<c0297368>] dev_hard_start_xmit+0x16e/0x1c9
+>  [<c02a3518>] __qdisc_run+0xa2/0x15c
+>  [<c0297796>] dev_queue_xmit+0x2f5/0x3c5
+>  [<c02f8608>] ieee80211_invoke_rx_handlers+0x488/0x1486
+>  [<c02d9d14>] bictcp_cong_avoid+0x10/0x160
+>  [<c02bd904>] tcp_ack+0x16f0/0x1850
+>  [<c01170f0>] enqueue_task_fair+0x12a/0x16b
+>  [<c02c0c37>] tcp_current_mss+0x6b/0xe4
+>  [<c02f9b50>] __ieee80211_rx_handle_packet+0x54a/0x56d
+>  [<c02fa1fe>] __ieee80211_rx+0x491/0x4e3
+>  [<c02ec95d>] ieee80211_tasklet_handler+0x60/0xd6
+>  [<c011cfae>] tasklet_action+0x3e/0x64
+>  [<c011d305>] __do_softirq+0x4a/0xbc
+>  [<c011d399>] do_softirq+0x22/0x26
+>  [<c011d44f>] irq_exit+0x25/0x55
+>  [<c0105996>] do_IRQ+0x5a/0x6c
+>  [<c01048d3>] common_interrupt+0x23/0x30
+>  [<c0108743>] default_idle+0x25/0x38
+>  [<c0102926>] cpu_idle+0x41/0x5b
+> Code: 0f 84 01 01 00 00 9c 8f 44 24 1c fa 8b 53 10 31 ff 89 6c 24 18
+> 89 14 24 31 d2 eb 3f 8b 4c 24 10 83 c1 38 89 4c 24 14 8b 4c 24 10 <8b>
+> 41 38 29 e8 85 d2 75 0d 39 f0 72 09 8b 51 04 29 f0 89 6c 24
+> EIP: [<d08260fa>] p54_assign_address+0x67/0x14b [p54common] SS:ESP 0068:c03f9c4c
+> Kernel panic - not syncing: Fatal exception in interrupt
 > 
-> I see that it was there until recently (to be accurate,
-> 30.10.08 was the last time it was there).
-> 
-> I do not see that it was applied; I have the latest git tree of
-> wireless-2.6 and wireless-next-2.6
+wt*, this bug is "impossible":
 
-It is currently present in the wireless-testing git tree.
+The bug happens when p54_assign_address looks for a free space for a new frame:
+here's the code:
+[...]
+if (!skb)
+	return -EINVAL;   <--- we don't accept "null" skbs
 
-Ivo
+spin_lock_irqsave(&priv->tx_queue.lock, flags); <--- we are under a spin_lock with irq disabled
+left = skb_queue_len(&priv->tx_queue);
+while (left--) {
+		u32 hole_size;
+		info = IEEE80211_SKB_CB(entry);  <--- Here it BUGs,
+[...]
+
+your binary module said that skb->cb is at 0x38,
+so our "entry" is really NULL right when it BUGS.
+And this only happens means that the queue was
+modified "outside" of our driver.
+
+Since we always take the spin_lock_irqsave (of course,
+only of "our" tx_queue). if we need to do anything with the data in the queue, 
+
+Of course, since the package as queued while the station was sleeping
+somewhere mac80211, so maybe it still holds a reference to, but then
+other drivers would have already spotted this misbehaviour long time ago...
+
+So? back to square one... I guess.
+
+Regards,
+	Chr
