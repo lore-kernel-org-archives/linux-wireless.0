@@ -1,55 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:51245 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753856AbYKJIs2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2008 03:48:28 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so2365628rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2008 00:48:27 -0800 (PST)
-Message-ID: <31436f4a0811100048h5c7520d3ga4eedd815f8c793a@mail.gmail.com> (sfid-20081110_094833_040421_3D55E953)
-Date: Mon, 10 Nov 2008 10:48:25 +0200
-From: "David Shwatrz" <dshwatrz@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: Where is allow-ap-vlan-modes.patch ?
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-In-Reply-To: <200811091604.43705.IvDoorn@gmail.com>
+Received: from hostap.isc.org ([149.20.54.63]:33069 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751364AbYKZHwV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 02:52:21 -0500
+Date: Wed, 26 Nov 2008 09:52:09 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] nl80211: Add frequency configuration (including HT40)
+Message-ID: <20081126075209.GA31499@jm.kir.nu> (sfid-20081126_085225_984279_51E917A0)
+References: <20081125190533.GA27879@jm.kir.nu> <1227640384.4613.44.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <31436f4a0811090701r4676409er8f53a32c91bc3ced@mail.gmail.com>
-	 <200811091604.43705.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1227640384.4613.44.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-  Thanks. I got the testing git tree; it is indeed there (though in a
-bit different form; the method in  net/mac80211/cfg.c is called
-nl80211_type_check() and not nl80211_type_to_mac80211_type() as in the
-patch from
- allow-ap-vlan-modes.patch (2008-06-12). But it allows master mode for AP.
+On Tue, Nov 25, 2008 at 08:13:04PM +0100, Johannes Berg wrote:
+ 
+> Isn't that missing regulatory enforcement? I'd rather see that in
+> cfg80211 than re-implemented in all drivers.
 
-In this occasion may I ask - what is the wireless-testing git tree?
-is it based on wireless-next-2.6 or on wireless-2.6 tree?
+Yes, that was supposed to be in ieee80211_get_channel() to match
+ieee80211_set_freq() functionality, but I'll see how this could be done
+in nl80211.c.
 
-Regards,
-DS
-
-
-
-On Sun, Nov 9, 2008 at 5:04 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Sunday 09 November 2008, David Shwatrz wrote:
->> Hello,
->>
->> I have a question:
->> Why was the allow-ap-vlan-modes.patch removed from
->> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/?
->>
->> I see that it was there until recently (to be accurate,
->> 30.10.08 was the last time it was there).
->>
->> I do not see that it was applied; I have the latest git tree of
->> wireless-2.6 and wireless-next-2.6
->
-> It is currently present in the wireless-testing git tree.
->
-> Ivo
->
+-- 
+Jouni Malinen                                            PGP id EFC895FA
