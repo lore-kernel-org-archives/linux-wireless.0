@@ -1,62 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.228]:64453 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754068AbYKCCKa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42858 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651AbYKZLVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 21:10:30 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so2324671rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2008 18:10:30 -0800 (PST)
-Message-ID: <b6c5339f0811021810w229d1d9al2b27bdf4144cde69@mail.gmail.com> (sfid-20081103_031041_000527_EB368874)
-Date: Sun, 2 Nov 2008 21:10:30 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [PATCH] ath5k: enable RXing beacons
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1225676353.13684.2.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1225672612-15106-1-git-send-email-lrodriguez@atheros.com>
-	 <1225676353.13684.2.camel@localhost.localdomain>
+	Wed, 26 Nov 2008 06:21:47 -0500
+Subject: Re: AP (Master Mode) of wireless drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Koutny <vlado@work.ksp.sk>
+Cc: Pavel Roskin <proski@gnu.org>, Mark Ryden <markryde@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <492D0A26.9090801@work.ksp.sk> (sfid-20081126_100034_138731_1E1B1C2B)
+References: <dac45060811250735m6922688fn13c03ebe388d3137@mail.gmail.com>
+	 <1227633414.15224.6.camel@dv>  <492D0A26.9090801@work.ksp.sk>
+	 (sfid-20081126_100034_138731_1E1B1C2B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-04YS7z1Hmx4D7yFFrCHh"
+Date: Wed, 26 Nov 2008 11:03:13 +0100
+Message-Id: <1227693793.4613.57.camel@johannes.berg> (sfid-20081126_122150_747580_A1659B1B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 2, 2008 at 8:39 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Sun, 2008-11-02 at 16:36 -0800, Luis R. Rodriguez wrote:
->> Prior to this we would rely only on probe responses
->> from the AP to keep associated. We now receive beacons
->> on ath5k. This should fix sporadic disassociations.
->>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->
-> Is this also a candidate for -stable?
 
-Don't think so, see below...
+--=-04YS7z1Hmx4D7yFFrCHh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->
->> ---
->>  drivers/net/wireless/ath5k/base.c |    2 ++
->>  1 files changed, 2 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
->> index f5f46fe..5505f45 100644
->> --- a/drivers/net/wireless/ath5k/base.c
->> +++ b/drivers/net/wireless/ath5k/base.c
->> @@ -2948,6 +2948,8 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
->>                       AR5K_RX_FILTER_PROBEREQ | AR5K_RX_FILTER_PROM;
->>       if (sc->opmode != NL80211_IFTYPE_STATION)
->>               rfilt |= AR5K_RX_FILTER_PROBEREQ;
->> +     if (sc->opmode == NL80211_IFTYPE_STATION)
->> +             rfilt |= AR5K_RX_FILTER_BEACON;
->>       if (sc->opmode != NL80211_IFTYPE_AP &&
->>               sc->opmode != NL80211_IFTYPE_MESH_POINT &&
->>               test_bit(ATH_STAT_PROMISC, sc->status))
+On Wed, 2008-11-26 at 09:34 +0100, Vladimir Koutny wrote:
+> >> More specifically, I am particularly interested to know whether Intel
+> >> iwl3945 and Intel iwl4965 support AP (Master Mode), and in case they
+> >> do not (as I am afraid is the situation)
+> >> - is there any intention to add AP (masted mode) support to these driv=
+ers
+> >> in the near future ?
+> >=20
+> > The driver announces AP mode support (look for NL80211_IFTYPE_AP and
+> > hw->wiphy->interface_modes in iwl-core.c and iwl3945-base.c), so it
+> > might work, or at least the intention is to make it work.  By the way,
+> > rt2x00 announces AP mode support too (in some conditions).
+>=20
+> I've tested AP mode on iwl4965 about 2 weeks ago and a very quick test di=
+d
+> work (no encryption, just connected a win notebook to it and did some
+> browsing). Just be sure to fetch correct (=3Drecent) versions of hostapd =
+and
+> libnl..
 
-Sorry, my fault, this was a direct result of
-60c7e22196fb4230b76db1f5fb283e811b8f3fb3 "ath5k: honor
-FIF_BCN_PRBRESP_PROMISC."  The problem remains that we have too many
-interrupts though if PRBRESP_PROMISC is not set.  IIRC my patch made
-ath5k behave same as ath9k.  Any ideas on a proper fix?
+I don't think it'll do mcast buffering correctly.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+johannes
+
+--=-04YS7z1Hmx4D7yFFrCHh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJLR7dAAoJEKVg1VMiehFYT9wP/3UN7CfzskpBai1n47MhTKoW
+bBzSOTdQXii0EtzaE4QaGB3IYe+C9qdC46l8tE7b/7lt2n8PrlVKuzybyhqzygQb
+DuegvqSoEDgissDmziX/9/ZLjaCJPEQ0Ui3N4p0BVTaW4BMclWOnevxuSIJ7mAb0
+tp1ykgEO/JJb16gN+KqkZN7gEfoNUP2j534iIP+oaHgVd0JCFESWtiOUIa47WClk
+xnl8hsCmIE5Nqbi6vjTQyjaMFo8hd0M9xCsdPVzR1PWFzntsRLgCmVuD7MY07cg4
+JjkR516mod/ylsR5RI4r3iK8vNplyfJNEMUtlOdSTAqgqyeK/Oqio9aue8knunRt
+SJf+ZCz2rwufgTodZuTvmvAYDosCzLPOPlAOknbTGcAwEN+OBFtYUmZSFwJ6AJXb
+HklD4hf3UsT4Kj8663nv25wmtKbt9b1WTl3dt5XYpR1eUO1xuDZ0l8yNu1KOxToQ
+g7CO8Wm3bOLl3U3VQqtAaUGNiJEam8u+OGuSHNwXvOGu76udcZpY0aJxixAHJ7KU
+ea+iWNB7DVYsyJFNIWxa7CRUjMFapuGahqRV7knBJO6ViOGSnIdYAtjDpmwk8Cj7
+f4INIijYDZEb7AYy3wz0udgxqJlg6pFtLxgSnZZg101gUePHtMMmkmalJmwXfil4
+9jpvL2txLPGTAz+H2y4u
+=u0wo
+-----END PGP SIGNATURE-----
+
+--=-04YS7z1Hmx4D7yFFrCHh--
+
