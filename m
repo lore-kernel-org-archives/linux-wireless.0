@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.186]:10051 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953AbYKNSgR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39192 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863AbYKZIku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2008 13:36:17 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so922086tic.23
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2008 10:36:15 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18717.50308.330801.765686@localhost.localdomain> (sfid-20081114_193619_710815_B4B097C1)
-Date: Sat, 15 Nov 2008 00:03:40 +0530
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Sujith <m.sujith@gmail.com>, "Bob Copeland" <me@bobcopeland.com>,
-	"Dan McGee" <dpmcgee@gmail.com>, linux-wireless@vger.kernel.org,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Kernel oops when loading ath5k from compat-wireless in 2.6.27
-In-Reply-To: <43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com>
-References: <449c10960811132146s40aef6c6ue8dfeef5ba29812a@mail.gmail.com>
-	<43e72e890811132217k160db63ch77e7d03c38e81d5f@mail.gmail.com>
-	<b6c5339f0811140902t7c7cfc0wa54c3cf578a620ff@mail.gmail.com>
-	<43e72e890811140937h4dc03cf8g50df7f74efcd28b2@mail.gmail.com>
-	<b6c5339f0811140949m462e3eecx49f114f729b33e7c@mail.gmail.com>
-	<43e72e890811141006x1c396c78ube87a526f1435676@mail.gmail.com>
-	<18717.49111.572993.44410@localhost.localdomain>
-	<43e72e890811141029q24ad722fi6a7ae1e7dcd463bd@mail.gmail.com>
+	Wed, 26 Nov 2008 03:40:50 -0500
+Subject: Re: [RFC] nl80211: Add frequency configuration (including HT40)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <m.sujith@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <18732.54720.739365.435163@localhost.localdomain> (sfid-20081126_055341_209295_AA6EF881)
+References: <20081125190533.GA27879@jm.kir.nu>
+	 <18732.54720.739365.435163@localhost.localdomain>
+	 (sfid-20081126_055341_209295_AA6EF881)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6M+b4ABf/A3FLQssjeqQ"
+Date: Wed, 26 Nov 2008 09:40:45 +0100
+Message-Id: <1227688845.4613.53.camel@johannes.berg> (sfid-20081126_094058_766579_B2EA694B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> > From the original log:
-> > ath5k_pci 0000:01:00.0: registered as ''
-> 
-> That comes from
-> 
-> dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
-> 
-> which means that may be buggy too as wiphy_name() gets
-> 
-> return wiphy->dev.bus_id;
-> 
-> and we only have set at that point wiphy->dev.parent IIRC.
-> 
 
-Nope, parent is set after that call in SET_IEEE80211_DEV()
-phy[x] gets assigned in alloc_hw().
+--=-6M+b4ABf/A3FLQssjeqQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-So why is it NULL even if alloc_hw() succeeds ?
+On Wed, 2008-11-26 at 10:21 +0530, Sujith wrote:
+> Jouni Malinen wrote:
+> > + * @NL80211_ATTR_WIPHY_FREQ: frequency of the selected channel in MHz
+> > + * @NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET: included with NL80211_ATTR_WIP=
+HY_FREQ
+> > + *	if HT40 (40 MHz channels) are allowed:
+> > + *	NL80211_SEC_CHAN_BELOW =3D secondary channel is below the primary c=
+hannel
+> > + *	NL80211_SEC_CHAN_ABOVE =3D secondary channel is above the primary c=
+hannel
+>=20
+> The driver needs to know if the selected channel is HT or not.
 
-Sujith
+Can you explain what difference that makes? Is it for running the phy in
+pure legacy mode?
+
+johannes
+
+--=-6M+b4ABf/A3FLQssjeqQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJLQuJAAoJEKVg1VMiehFYLAQQAKf/88Ol8slRHRB8aRKmJjb1
+u6D37rTu9U/MLlm9aOi95p4+zuSsm6M9+tjvwtPYsw44OMIC1tP4fm5c1PbpEDO1
+3b4k5ZyAtGyvudaLFFhUdmUNz6Lg+qfvAIG3jltskCZSc7b2AXdXrFNyBdi2Bl5M
+HZJ0mEAaSiUBzEsWMugCuTVV6OyxJGTAkDpCpq7FmGvHdBxaZp+4A9SIr0UVk/vI
+UhuWTuCIcxtAYhwDJ9+sC4Q0ZzRHRKGPClMUxoqvmUi/X40PMWB2gtjd3C2MUeWq
+KF+KCWJyphEgfeU14ItXzoasQByEgh4aBnmBJI8pREy8ivL84AVH1Yl6Ki5llOL/
+EdRBJML4gK2hH0qLF1bvs6heCrQdbllRie02sutWc6dWiCAYKriQwp5SOsx990nD
+xruyDqcXAqL2PkHQR6xVJoenpif6Qp7DgwWcgdTqIqABZBKc5E/YxVWST1LYR8We
+u4A2vJeKKyEOgm4PVfWrbDYLyUGEzt540laKwFrHojz4SkBip9lPAtTPpquvv2ES
++9438aqCfU/MfjWVZO/E6ydlHKvafCv0MluhsV04QYk/pOuVd14er4H3LO4R8Wwr
+4/YbeHyI9uMFw7iA4J5vOkkzYZSazuiZzl2Fcp6yz+3tnMNSEM2Q7mww22KzUf6B
+kc5ojl9FQcNHyfCjssBY
+=fMXN
+-----END PGP SIGNATURE-----
+
+--=-6M+b4ABf/A3FLQssjeqQ--
+
