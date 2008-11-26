@@ -1,67 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.birdnet.se ([213.88.146.6]:45494 "HELO foo.birdnet.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750828AbYKYHSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 02:18:24 -0500
-Message-ID: <20081125071818.9256.qmail@stuge.se> (sfid-20081125_081829_369850_D7688748)
-Date: Tue, 25 Nov 2008 08:18:18 +0100
-From: Peter Stuge <peter@stuge.se>
-To: Yuval Hager <yuval@avramzon.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-Subject: Re: BCM4312 Fails when xdm is started
-References: <200811151801.02369.yuval@avramzon.net> <200811241155.47079.mb@bu3sch.de> <492AD249.3020309@lwfinger.net> <200811250745.22487.yuval@avramzon.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="lMM8JwqTlfDpEaS6"
-In-Reply-To: <200811250745.22487.yuval@avramzon.net>
+Received: from hostap.isc.org ([149.20.54.63]:50950 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751836AbYKZNPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 08:15:08 -0500
+Date: Wed, 26 Nov 2008 15:14:49 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sujith <m.sujith@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] nl80211: Add frequency configuration (including HT40)
+Message-ID: <20081126131449.GA7452@jm.kir.nu> (sfid-20081126_141514_456616_FF2E396A)
+References: <20081125190533.GA27879@jm.kir.nu> <20081126083841.GC31499@jm.kir.nu> <1227697465.4613.95.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1227697465.4613.95.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Nov 26, 2008 at 12:04:24PM +0100, Johannes Berg wrote:
+> On Wed, 2008-11-26 at 10:38 +0200, Jouni Malinen wrote:
 
---lMM8JwqTlfDpEaS6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> > + * @NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET: included with NL80211_ATTR_WIPHY_FREQ
+> > + *	if HT20 or HT40 are allowed (i.e., 802.11n disabled if not included):
+> 
+> It's also possible to explicitly give the _NO_HT value too.
+> 
+> > + *	NL80211_SEC_CHAN_DISABLED = HT20 only
 
-Yuval Hager wrote:
-> I played around with different video drivers and the results are:
-> * If using the 'via' driver, I lose the PCIe card immediately upon=20
->   initialization
-> * Using the 'openchrome' (trunk version), It works well in the
->   beginning.
->   After first blanking the register reads are all 1's, and then
->   when the screen is blank I get a different read (some registers
->   are correct, some are wrong), and when the screen is unblanked, I
->   get 0xff's again. Very consistent and predictabe (same read every
->   time).
-> * Using the 'vesa' driver I could not recreate the problem. I could
->   not get the screen to blank for some reason, but closing the lid,
->   going on standby/hibernate, restarting X - all didn't matter much
->   to the PCI and the wireless card kept on working.
+Yes, I did not include in documentation, but I can add it here as
+another option for not including the attribute.
 
-Good work! You have beyond any doubt established that the X graphics
-driver can cause this problem.
+> > +
+> > +	int	(*set_channel)(struct wiphy *wiphy, int freq, bool ht_enabled,
+> > +			       int sec_chan_offset);
+> 
+> I wonder if we shouldn't simply pass in the enum nl80211_sec_chan_offset
+> value here, that seems easier to understand when you're looking at the
+> whole thing from userspace down to a possible non-mac80211 driver. Not
+> that I think that'll ever happen, but still? It might even make sense to
+> use that value within mac80211's driver API at some point, instead of
+> the enabled / +/-1 thing.
 
-Were you using a kernel framebuffer driver when you saw the problem
-also without running X at all? If not, the cause of trouble then is
-still unidentified.
+I don't care much either way. nl80211.c uses the +/-1 to get the
+secondary channel frequency and the driver API does not use it yet, so
+conversion is needed somewhere at this point. I can move it somewhere
+else if you want to; just point me to the place where you want it ;-).
+cfg.c::ieee80211_set_channel()? main.c::ieee80211_hw_config()?
 
 
-//Peter
+> > +	[NL80211_ATTR_WIPHY_FREQ] = { .type = NLA_U32 },
+> > +	[NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET] = { .type = NLA_U8 },
+> 
+> I think it's more "normal" to use a u32 for an enum although I don't
+> think we'll ever add anything, so I guess it doesn't actually matter.
 
---lMM8JwqTlfDpEaS6
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+I'm quite sure we won't need more than eight bits to store the possible
+options for this attribute, but I can change this to u32 to be
+consistent with existing attributes if you prefer it.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+> > +		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
+> > +		chan = ieee80211_get_channel(&rdev->wiphy, freq);
 
-iD8DBQFJK6a6hR3Q0dhIfEgRAuzFAJsE2hEB28Qq7hGhlGXnB3WDr2d5cwCgkn18
-VaGfWMftljqwwjuAyDc/W/c=
-=Bd8Y
------END PGP SIGNATURE-----
+> > +		result = rdev->ops->set_channel(&rdev->wiphy, freq, ht_enabled,
+> > +						sec_chan_offset);
+> 
+> would it make sense to pass in 'chan'? mac80211 will do the lookup
+> again, and if a driver doesn't it can just use chan->center_freq.
 
---lMM8JwqTlfDpEaS6--
+Now that chan is here in nl80211.c (was added with regulatory
+enforcement), sure, it could be passed to set_channel() to remove some
+code.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
