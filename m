@@ -1,102 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41618 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751350AbYKALfB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 07:35:01 -0400
-Subject: Re: [PATCH] mac80211: Allow AP mode to be enabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <878ws3ptrh.fsf@nokia.com>
-References: <20081030175030.GD3923@jm.kir.nu>  <878ws3ptrh.fsf@nokia.com>
-Content-Type: text/plain
-Date: Sat, 01 Nov 2008 12:34:49 +0100
-Message-Id: <1225539289.3569.2.camel@johannes.berg> (sfid-20081101_123508_993616_1DEED8B1)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:42385 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751403AbYKZBCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2008 20:02:20 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2008 17:02:20 -0800
+Date: Tue, 25 Nov 2008 17:02:18 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Richard Farina <sidhayn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Green <Michael.Green@Atheros.com>
+Subject: Re: wireless-regdb: flaw in general functionality
+Message-ID: <20081126010218.GP5950@tesla> (sfid-20081126_020224_657388_F5049183)
+References: <492B2B74.7040404@gmail.com> <20081124231204.GN6245@tesla> <1227568883.28878.15.camel@dv> <43e72e890811241526o1ea6ecf7ge05a2319d6ff3641@mail.gmail.com> <492B623E.5030202@gmail.com> <1227580299.32415.2.camel@dv> <20081126001942.GN5950@tesla> <1227659754.2556.11.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1227659754.2556.11.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> I tried to test this with latest hostapd (commit b6a55236) and
-> wireless-testing (commit d80fe0040), but unfortunately I wasn't
-> succesful. Here's the output from hostapd with b43:
+On Tue, Nov 25, 2008 at 04:35:54PM -0800, Pavel Roskin wrote:
+> On Tue, 2008-11-25 at 16:19 -0800, Luis R. Rodriguez wrote:
 > 
-> $ sudo ./hostapd -dd wlan1.conf
-> Configuration file: wlan1.conf
-> ctrl_interface_group=0
-> Opening raw packet socket for ifindex 0
-> BSS count 1, BSSID mask ff:ff:ff:ff:ff:ff (0 bits)
-> SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
-> Failed to update rate sets in kernel module
-> RATE[0] rate=10 flags=0x2
-> RATE[1] rate=20 flags=0x6
-> RATE[2] rate=55 flags=0x6
-> RATE[3] rate=110 flags=0x6
-> RATE[4] rate=60 flags=0x0
-> RATE[5] rate=90 flags=0x0
-> RATE[6] rate=120 flags=0x0
-> RATE[7] rate=180 flags=0x0
-> RATE[8] rate=240 flags=0x0
-> RATE[9] rate=360 flags=0x0
-> RATE[10] rate=480 flags=0x0
-> RATE[11] rate=540 flags=0x0
-> Could not set passive scanning: Unknown error 4294967295
-> Flushing old station entries
-> Deauthenticate all stations
-> Mode: IEEE 802.11g  Channel: 5  Frequency: 2432 MHz
-> Failed to set CTS protect in kernel driver
-> Failed to set Short Slot Time option in kernel driver
-> Could not set preamble for kernel driver
-> Using interface wlan1 with hwaddr 00:11:50:f4:c2:42 and ssid 'test'
-> ioctl[SIOCSIWESSID]: Operation not supported
-> len=4
-> Could not set SSID for kernel driver
+> > This is documented here:
+> >
+> > http://wireless.kernel.org/en/developers/Regulatory#Changingthedatabasefileformat
+> 
+> I mean, I don't know how painful it can be.  Perhaps it's better to
+> anticipate some requirements earlier than to change them later.
 
-John merged all my stuff, and that included removing the SSID, you need
-this hostapd patch:
+Its painful to add anything new. To understand this better it helps to
+understand why some flags were added in the first place to regulatory rules.
+The short and sweet answer is DFS. And the general rule of thumb goes like this:
 
---- a/hostapd/driver_nl80211.c
-+++ b/hostapd/driver_nl80211.c
-@@ -386,28 +386,6 @@ static int i802_set_rate_sets(void *priv, int *supp_rates, int *basic_rates,
- }
- 
- 
--static int i802_set_ssid(const char *ifname, void *priv, const u8 *buf,
--			 int len)
--{
--	struct i802_driver_data *drv = priv;
--	struct iwreq iwr;
--
--	memset(&iwr, 0, sizeof(iwr));
--	os_strlcpy(iwr.ifr_name, ifname, IFNAMSIZ);
--	iwr.u.essid.flags = 1; /* SSID active */
--	iwr.u.essid.pointer = (caddr_t) buf;
--	iwr.u.essid.length = len;
--
--	if (ioctl(drv->ioctl_sock, SIOCSIWESSID, &iwr) < 0) {
--		perror("ioctl[SIOCSIWESSID]");
--		printf("len=%d\n", len);
--		return -1;
--	}
--
--	return 0;
--}
--
--
- static int i802_send_frame(void *priv, const void *data, size_t len,
- 			   int encrypt, int flags)
- {
-@@ -2315,7 +2293,6 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
- 	.sta_deauth = i802_sta_deauth,
- 	.sta_disassoc = i802_sta_disassoc,
- 	.sta_remove = i802_sta_remove,
--	.set_ssid = i802_set_ssid,
- 	.send_mgmt_frame = i802_send_mgmt_frame,
- 	.sta_add2 = i802_sta_add2,
- 	.get_inact_sec = i802_get_inact_sec,
+When in a DFS freq, if you don't support DFS in your mode of operation,
+then you cannot TX.
 
+So if you don't support DFS in IBSS, you get NO-IBSS. If your AP doesn't
+support DFS then you can't use DFS channels. If you don't support DFS
+then you better not use active scanning on a STA, hence the passive scan
+flag (I guess this should be renamed to NO-ACTIVE-SCAN to be more
+consistent).
 
+The NO-HT20 is historical, we're not aware of countries disallowing
+this. No-HT40 is also a bit historical as it seems the countries which
+do not allow this will soon allow for it.
 
+The NO-OFDM and NO-CCK flag is unused and purely historical.
+
+So before adding a flag I think its *really* good to think about it
+thrice and see if there is a need of it, otherwise the answer should
+usually be that its not a good idea to add it.
+
+If anything we can consolidate flags or remove flags, that would be nicer
+if possible.
+
+> I think
+> both "don't transmit" and "don't transmit unless permitted by the AP"
+> could be useful in some jurisdictions.
+
+Don't transmit is implicit, CRDA just "allows", so the flags we have now
+are all negative for special considerations on "allowing", such as NO
+IBSS, etc.
+
+  Luis
