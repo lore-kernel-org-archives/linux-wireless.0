@@ -1,49 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:34234 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbYKROU3 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:63157 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082AbYKZXyR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2008 09:20:29 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so1228175ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Nov 2008 06:20:28 -0800 (PST)
-Message-ID: <1ba2fa240811180620j31e54554w246788f43c14cc88@mail.gmail.com> (sfid-20081118_152033_665546_ED1CA84D)
-Date: Tue, 18 Nov 2008 16:20:28 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <1226951196.3902.54.camel@johannes.berg>
+	Wed, 26 Nov 2008 18:54:17 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so321869eyi.37
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 15:54:15 -0800 (PST)
+Message-ID: <e38d12ff0811261554o1a918853x21bc192e8488be85@mail.gmail.com> (sfid-20081127_005423_939309_557E6765)
+Date: Wed, 26 Nov 2008 18:54:14 -0500
+From: "Andrey Vul" <andrey.vul@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: cannot compile compat-wireless-2.6-old
+Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081126173453.GC6515@tesla>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
-	 <1226933141.3902.19.camel@johannes.berg>
-	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>
-	 <1226942887.3902.30.camel@johannes.berg>
-	 <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com>
-	 <1226944799.3902.52.camel@johannes.berg>
-	 <1ba2fa240811171012je2d5215hc9b3ea870468f4f8@mail.gmail.com>
-	 <1226951196.3902.54.camel@johannes.berg>
+References: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com>
+	 <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com>
+	 <20081125203244.GD5950@tesla>
+	 <e38d12ff0811251330x2b2d9a35h608b1619441f1252@mail.gmail.com>
+	 <e38d12ff0811251651k32a66cd5r3de7f1d504b4723@mail.gmail.com>
+	 <20081126173453.GC6515@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 17, 2008 at 9:46 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-11-17 at 20:12 +0200, Tomas Winkler wrote:
+On Wed, Nov 26, 2008 at 12:34, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+> On Tue, Nov 25, 2008 at 04:51:48PM -0800, Andrey Vul wrote:
+>> On Tue, Nov 25, 2008 at 16:30, Andrey Vul <andrey.vul@gmail.com> wrote:
+>> > On Tue, Nov 25, 2008 at 15:32, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+>> >> On Tue, Nov 25, 2008 at 09:57:57AM -0800, Andrey Vul wrote:
+>> >>> I cannot compile the current compat tarball.
+>> >>> Make log:
+>> >>> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+>> >>> make -C /usr/src/linux-2.6.26.6-rt11/ M=/root/compat-wireless-2.6-old modules
+>> >>> make[1]: Entering directory `/usr/src/linux-2.6.26.6-rt11'
+>> >>>  CC [M]  /root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o
+>> >>> In file included from <command-line>:0:
+>> >>> /root/compat-wireless-2.6-old/include/net/compat.h:877: error:
+>> >>> redefinition of 'list_splice_tail'
+>> >>> include/linux/list.h:356: error: previous definition of
+>> >>> 'list_splice_tail' was here
+>> >>> /root/compat-wireless-2.6-old/include/net/compat.h:892: error:
+>> >>> redefinition of 'list_splice_tail_init'
+>> >>> include/linux/list.h:379: error: previous definition of
+>> >>> 'list_splice_tail_init' was here
+>> >>
+>> >> list_splice_tail was added as of 2.6.27, and you have 2.6.26. Which
+>> >> means your kernel headers for your box are completely messed up. This
+>> >> means you can expect a kernel panic if you were to successfully
+>> >> compile external modules. Go fix that first.
+>> >>
+>> I have $(uname -r)/include/linux/list.h containing list_splice_tail,
+>> where uname -r is 2.6.26.5-rt9.
+>> Frankly, I need rt and the code for my wifi card is only in the compat tarball.
+>> Is this a problem with .[56] or with -rt?
 >
->> I've posted something based on plugging into notification chain. It
->> worked but wasn't accepted I hoped that who rejected will supply
->> alternative solution...
+> Ah, yeah RT had their own list_splice_tail(), try this. BTW what driver
+> are you going to be using?
 >
-> Sorry, that's not how it works... Those who want the functionality are
-> generally expected to do the work,
 
-I didn't get the feeling I'm the only one who wants it there were
-alternative design which shell be backed up by some code.
+I'm going to be using iwl5000 which depends on iwlwifi, iwlcore,
+iwlwifi-leds, and iwlwifi-rfkill .
 
- and if the design phase happens
-> behind closed doors they don't get to complain...
+So, in short, all I have to do is this?
+#!/bin/bash
+for a in `find ~/compat-wireless-2.6-old -name '*.c' -or -name '*.h'`; do
+sed -e 's/list_splice_tail/list_splice_tail27/' -i $a;
+done
 
-RFC patch is a valid design presentation. This is not valid complain of yours.
-Tomas
+The only thing I see as possibly problematic is
+list_splice_tail27_init() (sed is regex after all).
+-- 
+Andrey Vul
