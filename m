@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49927 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198AbYKMQQT (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:15583 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752536AbYK0XKe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 11:16:19 -0500
-Date: Thu, 13 Nov 2008 11:03:49 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Frank Seidel <fseidel@suse.de>
-Cc: linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>, yi.zhu@intel.com,
-	reinette.chatre@intel.com, ipw2100-devel@lists.sourceforge.net,
-	hschaa@suse.de
-Subject: Re: Problem with Kernel Oops in ipw2200
-Message-ID: <20081113160349.GA9827@tuxdriver.com> (sfid-20081113_171625_699392_A511B2B2)
-References: <49130E75.1000903@suse.de> <49131173.3010409@suse.de> <20081112213350.GJ2411@tuxdriver.com> <491BF062.4050705@suse.de>
+	Thu, 27 Nov 2008 18:10:34 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so1843985ugf.37
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2008 15:10:31 -0800 (PST)
+Message-ID: <3ace41890811271510t6879dc6q7022779e985d8f6a@mail.gmail.com> (sfid-20081128_001039_157692_56F39A74)
+Date: Thu, 27 Nov 2008 23:10:31 +0000
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
+Subject: Re: [RFC] rtl8187: Do not wait for an ACK when IEEE80211_TX_CTL_NO_ACK is set
+Cc: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200811271952.21408.herton@mandriva.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <491BF062.4050705@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910811261431u26e341d3p51ebadca807f4b61@mail.gmail.com>
+	 <200811271543.59126.herton@mandriva.com.br>
+	 <69e28c910811271202s295bbf5bo3dc8c04c50b08a01@mail.gmail.com>
+	 <200811271952.21408.herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 13, 2008 at 10:16:18AM +0100, Frank Seidel wrote:
-> Hi,
-> 
-> John W. Linville schrieb:
-> > On Thu, Nov 06, 2008 at 04:46:59PM +0100, Frank Seidel wrote:
-> >> Frank Seidel schrieb:
-> >>> Ever suggestion is very appreciated.
-> >> My first search through the ipw2200 logs pointed
-> >> me to Davids last commit (521c4d96e0840ecce25b956e00f416ed499ef2ba)
-> >> and really after reverting it the problem disappeared here.
-> >> The patch from my last post was the smallest subset of
-> >> the revertion that still works for me here.
-> >> Any comments?
-> > 
-> > I think it would be better to make sure that ipw2200 (and/or
-> > ieee80211) is properly using netif_carrier_{on,off}() instead?
-> 
-> Thanks for your answer. But i am not sure i understand you correctly.
-> Do you propose to let the patch in place like it is?
-> The problem is that before this patch ipw2200 didn't have that problem
-> and now with it is constantly on various machines is running in
-> a kernel oops at ipw_tx_skb called by ipw_net_hard_start_xmit.
-> So imho that patch introduced the bug somehow and even partly reverting
-> it fixes the problem here on my testmachine.
+On Thu, Nov 27, 2008 at 9:52 PM, Herton Ronaldo Krzesinski
+<herton@mandriva.com.br> wrote:
+<snipped>
+>> Also, v26.1010 of the vendor driver does exactly what my patch does.
+>
+> Is this newer than 26.1036.0708.2008 I have here? The version it never sets 0,
+> in code there is this:
+<snipped>
+> I didn't found this version 26.1010 to download, do you know where I can get?
 
-Well, what I am suggesting is that it would be better to fix the
-intended purpose of the original patch rather than to partially
-revert it, thereby partially reintroducing the problem it was trying
-to fix. :-)
+26.1010 is the non-B driver - I happened to have it on my hard disc -
+the url is
+ftp://152.104.238.19/cn/wlan/rtl8187_linux_26.1010.zip .
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+it is quite old - it unpacks to rtl8187_linux_26.1010.0622.2006 -
+which as far as my understanding of the naming goes,
+is for 2.6 kernel, release 1010, on 2006 June 22nd, so it is a lot
+older than every B vendor driver we have.
+
+Hin-Tak
