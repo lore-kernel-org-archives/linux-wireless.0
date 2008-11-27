@@ -1,67 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28767 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751166AbYKFUpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2008 15:45:30 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2008 12:45:30 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/3] cfg80211: call_crda() won't tell us if CRDA was present
-Date: Thu, 6 Nov 2008 12:45:25 -0800
-Message-ID: <1226004327-10290-2-git-send-email-lrodriguez@atheros.com> (sfid-20081106_214539_018811_20C6396B)
-In-Reply-To: <1226004327-10290-1-git-send-email-lrodriguez@atheros.com>
-References: <1226004327-10290-1-git-send-email-lrodriguez@atheros.com>
+Received: from fk-out-0910.google.com ([209.85.128.187]:53458 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746AbYK0FLv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Nov 2008 00:11:51 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so738544fkq.5
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 21:11:49 -0800 (PST)
+Message-ID: <e38d12ff0811262111o49895c9k6c96e75da3a9c947@mail.gmail.com> (sfid-20081127_061221_687962_360B16DA)
+Date: Thu, 27 Nov 2008 00:11:49 -0500
+From: "Andrey Vul" <andrey.vul@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: cannot compile compat-wireless-2.6-old
+Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081127010443.GC13226@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+References: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com>
+	 <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com>
+	 <20081125203244.GD5950@tesla>
+	 <e38d12ff0811251330x2b2d9a35h608b1619441f1252@mail.gmail.com>
+	 <e38d12ff0811251651k32a66cd5r3de7f1d504b4723@mail.gmail.com>
+	 <20081126173453.GC6515@tesla>
+	 <e38d12ff0811261554o1a918853x21bc192e8488be85@mail.gmail.com>
+	 <20081127010443.GC13226@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kobject_uevent_env() can return an error but it just tells us
-if the uvent was built/sent or not, it doesn't tell us anything
-about what happened in userspace, whether the udev rule was present
-nor does it tell us if CRDA was present or not. So remove
-the informative complaint about it assuming it will tell us
-such things.
+On Wed, Nov 26, 2008 at 20:04, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+> On Wed, Nov 26, 2008 at 03:54:14PM -0800, Andrey Vul wrote:
+>> On Wed, Nov 26, 2008 at 12:34, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+>> > On Tue, Nov 25, 2008 at 04:51:48PM -0800, Andrey Vul wrote:
+>> >> On Tue, Nov 25, 2008 at 16:30, Andrey Vul <andrey.vul@gmail.com> wrote:
+>> >> > On Tue, Nov 25, 2008 at 15:32, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+>> >> >> On Tue, Nov 25, 2008 at 09:57:57AM -0800, Andrey Vul wrote:
+>> >> >>> I cannot compile the current compat tarball.
+>> >> >>> Make log:
+>> >> >>> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+>> >> >>> make -C /usr/src/linux-2.6.26.6-rt11/ M=/root/compat-wireless-2.6-old modules
+>> >> >>> make[1]: Entering directory `/usr/src/linux-2.6.26.6-rt11'
+>> >> >>>  CC [M]  /root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o
+>> >> >>> In file included from <command-line>:0:
+>> >> >>> /root/compat-wireless-2.6-old/include/net/compat.h:877: error:
+>> >> >>> redefinition of 'list_splice_tail'
+>> >> >>> include/linux/list.h:356: error: previous definition of
+>> >> >>> 'list_splice_tail' was here
+>> >> >>> /root/compat-wireless-2.6-old/include/net/compat.h:892: error:
+>> >> >>> redefinition of 'list_splice_tail_init'
+>> >> >>> include/linux/list.h:379: error: previous definition of
+>> >> >>> 'list_splice_tail_init' was here
+>> >> >>
+>> >> >> list_splice_tail was added as of 2.6.27, and you have 2.6.26. Which
+>> >> >> means your kernel headers for your box are completely messed up. This
+>> >> >> means you can expect a kernel panic if you were to successfully
+>> >> >> compile external modules. Go fix that first.
+>> >> >>
+>> >> I have $(uname -r)/include/linux/list.h containing list_splice_tail,
+>> >> where uname -r is 2.6.26.5-rt9.
+>> >> Frankly, I need rt and the code for my wifi card is only in the compat tarball.
+>> >> Is this a problem with .[56] or with -rt?
+>> >
+>> > Ah, yeah RT had their own list_splice_tail(), try this. BTW what driver
+>> > are you going to be using?
+>> >
+>>
+>> I'm going to be using iwl5000 which depends on iwlwifi, iwlcore,
+>> iwlwifi-leds, and iwlwifi-rfkill .
+>>
+>> So, in short, all I have to do is this?
+>> #!/bin/bash
+>> for a in `find ~/compat-wireless-2.6-old -name '*.c' -or -name '*.h'`; do
+>> sed -e 's/list_splice_tail/list_splice_tail27/' -i $a;
+>> done
+>>
+>> The only thing I see as possibly problematic is
+>> list_splice_tail27_init() (sed is regex after all).
+>
+> Yup, but since there are some RT 2.6.26 kernels out there if we want
+> this fixed in compat-wireless-old I'd rather apply a patch there too.
+> Anyway list_splice_tail() is only used for ath9k.
+It's used in ath9k but exported to all the drivers via net/compat.h,
+leading to the redefinition errors from gcc when compiling an
+unrelated (to ath9k) wireless driver.
 
-Note that you can determine if CRDA is present after loading cfg80211
-by using:
+So for RT-safety, just do the sed -i in the previous message on
+drivers/net/wirelss/ath9k/xmit.c and on include/net/compat.h .
 
-is_old_static_regdom(cfg80211_regdomain)
+Unless grep found other instances of list_splice_tail, which it didn't.
 
-but this doesn't account for possible user install after initial
-boot, and also for when the user uses the static EU regulatory
-domain.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    9 +--------
- 1 files changed, 1 insertions(+), 8 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f062b8b..f8e7beb 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -711,14 +711,7 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
- 
- 	kfree(last_request);
- 	last_request = request;
--	r = call_crda(alpha2);
--
--#ifndef CONFIG_WIRELESS_OLD_REGULATORY
--	if (r)
--		printk(KERN_ERR "cfg80211: Failed calling CRDA\n");
--#endif
--
--	return r;
-+	return call_crda(alpha2);
- }
- 
- void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
 -- 
-1.5.6.3
-
+Andrey Vul
