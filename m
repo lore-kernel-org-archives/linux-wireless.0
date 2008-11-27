@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50376 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644AbYKLSQJ (ORCPT
+Received: from mail-qy0-f11.google.com ([209.85.221.11]:55246 "EHLO
+	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752773AbYK0UCY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2008 13:16:09 -0500
-Date: Wed, 12 Nov 2008 13:02:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 1/4] lib80211: absorb crypto bits from net/ieee80211
-Message-ID: <20081112180228.GC2411@tuxdriver.com> (sfid-20081112_191620_795769_00B55502)
-References: <1226440265-21240-1-git-send-email-linville@tuxdriver.com> <1226508514.5368.21.camel@brick>
+	Thu, 27 Nov 2008 15:02:24 -0500
+Received: by qyk4 with SMTP id 4so1378978qyk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2008 12:02:22 -0800 (PST)
+Message-ID: <69e28c910811271202s295bbf5bo3dc8c04c50b08a01@mail.gmail.com> (sfid-20081127_210227_870948_B9917443)
+Date: Thu, 27 Nov 2008 21:02:22 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
+Subject: Re: [RFC] rtl8187: Do not wait for an ACK when IEEE80211_TX_CTL_NO_ACK is set
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200811271543.59126.herton@mandriva.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1226508514.5368.21.camel@brick>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910811261431u26e341d3p51ebadca807f4b61@mail.gmail.com>
+	 <200811271543.59126.herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2008 at 08:48:34AM -0800, Harvey Harrison wrote:
-> On Tue, 2008-11-11 at 16:51 -0500, John W. Linville wrote:
-> > These bits are shared already between ipw2x00 and hostap, and could
-> > probably be shared both more cleanly and with other drivers.  This
-> > commit simply relocates the code to lib80211 and adjusts the drivers
-> > appropriately.
-> > 
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> 
-> Wouldn't it have been better to start from the mac80211 crypto bits
-> as lib80211 and modify hostap/ipw2x00 to use the 'new' lib80211
-> crypto bits?
+On Thu, Nov 27, 2008 at 6:43 PM, Herton Ronaldo Krzesinski
+<herton@mandriva.com.br> wrote:
+>
+> nack.
+>
+> I've seen other drivers set just a flag when hardware has a bit field to
+> signalize that there isn't need to ack the tx packet to be sent, but
+> don't saw anyone changing retry in tx hw header. Also setting to 0 in
+> no_ack case looks wrong, for example see ath5k where it even checks for
+> 0 and returns an error if you try to do this.
+>
+> --
+> []'s
+> Herton
+>
 
-I'm sorry, but you forgot to attach your patches...
+IMO the current implementation is even worse - completely disregard
+NO_ACK, and when a packet that should not be ACKed according to IEEE
+802.11:2007 is sent (such as a broadcast), retry repeatedly until
+timeout.
+Also, v26.1010 of the vendor driver does exactly what my patch does.
 
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
