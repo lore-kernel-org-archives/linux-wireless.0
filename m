@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n6.bullet.mud.yahoo.com ([216.252.100.57]:35629 "HELO
-	n6.bullet.mud.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752254AbYKYRbG (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:58177 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750797AbYK0Bvn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2008 12:31:06 -0500
-Date: Tue, 25 Nov 2008 09:24:31 -0800 (PST)
-From: Irwan Siajadi <dev.bahamot@yahoo.com>
-Subject: Re: ath5k: can't browse at all.
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1227552792.26229.6.camel@dv>
+	Wed, 26 Nov 2008 20:51:43 -0500
+Date: Thu, 27 Nov 2008 09:51:32 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-crypto@vger.kernel.org, linux-next@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: linux-next: Tree for November 26 (lib80211 + crypto)
+Message-ID: <20081127015131.GA11493@gondor.apana.org.au> (sfid-20081127_025155_435444_D074951E)
+References: <20081127014949.9b9a69b7.sfr@canb.auug.org.au> <20081126133234.2a8323d0.randy.dunlap@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <790145.29340.qm@web59606.mail.ac4.yahoo.com> (sfid-20081125_183111_963338_28195A93)
+In-Reply-To: <20081126133234.2a8323d0.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Further testing shows that if I change from WPA2/AES to WPA/TIKIP, I can finally browse. But it's still hit and missed, I need to reload the pages once or twice before the pages can load properly. 
-
-Thanks for the reply.
-
---- On Mon, 11/24/08, Pavel Roskin <proski@gnu.org> wrote:
-
-> From: Pavel Roskin <proski@gnu.org>
-> Subject: Re: ath5k: can't browse at all.
-> To: "Irwan Siajadi" <dev.bahamot@yahoo.com>
-> Cc: linux-wireless@vger.kernel.org
-> Date: Monday, November 24, 2008, 6:53 PM
-> On Mon, 2008-11-24 at 09:41 -0800, Irwan Siajadi wrote:
-> > The AR2425 is able to obtain IP address from the
-> router, 
-> > able to ping with good results, but can't browse
-> at all.
-> > Below are the info on my setup, if you need more info
-> please let me know.
+On Wed, Nov 26, 2008 at 01:32:34PM -0800, Randy Dunlap wrote:
+> On Thu, 27 Nov 2008 01:49:49 +1100 Stephen Rothwell wrote:
 > 
-> That's unlikely to be a driver problem.  The driver
-> doesn't distinguish
-> pings from other packets.  The only significant difference
-> could be in
-> the packet size.  You can try ping with larger packets to
-> check if
-> that's the problem.
+> > Hi all,
+> > 
+> > Changes since 20081125:
+> > 
+> > Today's tree fails the powerpc allyesconfig build.
 > 
-> I suggest that you use normal network troubleshooting
-> procedures and not
-> assume the driver to be a problem unless you have a better
-> evidence.
-> Check routing, check if the nameservers in /etc/resolv.conf
-> are working.
-> I'm sure there are detailed guides how to troubleshoot
-> networks.
 > 
-> -- 
-> Regards,
-> Pavel Roskin
+> lib80211_crypt_wep.c:(.text+0x388c7): undefined reference to `crypto_free_tfm'
+> lib80211_crypt_wep.c:(.text+0x388fc): undefined reference to `crypto_alloc_base'
+> lib80211_crypt_ccmp.c:(.text+0x39131): undefined reference to `crypto_alloc_base'
+> lib80211_crypt_ccmp.c:(.text+0x390e7): undefined reference to `crypto_free_tfm'
+> lib80211_crypt_tkip.c:(.text+0x3a219): undefined reference to `crypto_free_tfm'
+> lib80211_crypt_tkip.c:(.text+0x3a21e): undefined reference to `crypto_free_tfm'
+> lib80211_crypt_tkip.c:(.text+0x3a26e): undefined reference to `crypto_alloc_base'
+> lib80211_crypt_tkip.c:(.text+0x3a27c): undefined reference to `crypto_alloc_base'
+> 
+> config attached.  Drivers are built-in, crypto is modular.
 
+John, looks like wireless is missing a select on CRYPTO somewhere.
 
-      
-
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
