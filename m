@@ -1,120 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web28511.mail.ukl.yahoo.com ([87.248.110.190]:23182 "HELO
-	web28511.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751101AbYKAWAn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 18:00:43 -0400
-Date: Sat, 1 Nov 2008 22:00:41 +0000 (GMT)
-From: Julien HENRY <henryju@yahoo.fr>
-Subject: Re : Re : Not associated with Intel 4965
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:57907 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677AbYK0Ilq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Nov 2008 03:41:46 -0500
+Subject: Re: wifi drops multicast packets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: c4linux c4linux <c4linux@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <564175.76346.qm@web28511.mail.ukl.yahoo.com> (sfid-20081101_230053_844398_DF60368B)
+In-Reply-To: <14c249940811261718r29d96d00t2b62be3420d7ed74@mail.gmail.com> (sfid-20081127_021813_196084_83A41B5B)
+References: <14c249940811261718r29d96d00t2b62be3420d7ed74@mail.gmail.com>
+	 (sfid-20081127_021813_196084_83A41B5B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5BVlMDuLE0sbXrlt4JrY"
+Date: Thu, 27 Nov 2008 09:41:11 +0100
+Message-Id: <1227775271.3809.2.camel@johannes.berg> (sfid-20081127_094151_968033_D205EFBB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK, now I can load the module... but nothing better concerning associat=
-ion.
 
-Nov  1 22:39:24 Capgemini kernel: cfg80211: Using static regulatory dom=
-ain info
-Nov  1 22:39:24 Capgemini kernel: cfg80211: Regulatory domain: JP
-Nov  1 22:39:24 Capgemini kernel:     (start_freq - end_freq @ bandwidt=
-h), (max_antenna_gain, max_eirp)
-Nov  1 22:39:24 Capgemini kernel:     (2402000 KHz - 2494000 KHz @ 4000=
-0 KHz), (600 mBi, 2000 mBm)
-Nov  1 22:39:24 Capgemini kernel:     (5160000 KHz - 5250000 KHz @ 4000=
-0 KHz), (600 mBi, 2000 mBm)
-Nov  1 22:39:24 Capgemini kernel:     (5250000 KHz - 5330000 KHz @ 4000=
-0 KHz), (600 mBi, 2000 mBm)
-Nov  1 22:39:24 Capgemini kernel: cfg80211: Calling CRDA for country: J=
-P
-Nov  1 22:39:24 Capgemini kernel: iwlagn: Intel(R) Wireless WiFi Link A=
-GN driver for Linux, 1.3.27ks
-Nov  1 22:39:24 Capgemini kernel: iwlagn: Copyright(c) 2003-2008 Intel =
-Corporation
-Nov  1 22:39:24 Capgemini kernel: iwlagn 0000:03:00.0: PCI INT A -> GSI=
- 17 (level, low) -> IRQ 17
-Nov  1 22:39:24 Capgemini kernel: iwlagn: Detected Intel Wireless WiFi =
-Link 4965AGN REV=3D0x4
-Nov  1 22:39:24 Capgemini kernel: iwlagn: Tunable channels: 13 802.11bg=
-, 19 802.11a channels
-=2E..
-Nov  1 22:39:41 Capgemini kernel: iwlagn 0000:03:00.0: PCI INT A -> GSI=
- 17 (level, low) -> IRQ 17
-Nov  1 22:39:41 Capgemini kernel: firmware: requesting iwlwifi-4965-2.u=
-code
-Nov  1 22:39:41 Capgemini kernel: Registered led device: iwl-phy0:radio
-Nov  1 22:39:41 Capgemini kernel: Registered led device: iwl-phy0:assoc
-Nov  1 22:39:41 Capgemini kernel: Registered led device: iwl-phy0:RX
-Nov  1 22:39:41 Capgemini kernel: Registered led device: iwl-phy0:TX
-Nov  1 22:39:41 Capgemini kernel: ADDRCONF(NETDEV_UP): wlan0: link is n=
-ot ready
-Nov  1 22:39:41 Capgemini kernel: iwlagn: TX Power requested while scan=
-ning!
-Nov  1 22:39:41 Capgemini kernel: iwlagn: Error sending TX power (-11)
+--=-5BVlMDuLE0sbXrlt4JrY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-=2E..
-Nov  1 22:39:47 Capgemini kernel: iwlagn 0000:03:00.0: PCI INT A -> GSI=
- 17 (level, low) -> IRQ 17
-Nov  1 22:39:47 Capgemini kernel: Registered led device: iwl-phy0:radio
-Nov  1 22:39:47 Capgemini kernel: Registered led device: iwl-phy0:assoc
-Nov  1 22:39:47 Capgemini kernel: Registered led device: iwl-phy0:RX
-Nov  1 22:39:47 Capgemini kernel: Registered led device: iwl-phy0:TX
-Nov  1 22:39:47 Capgemini kernel: ADDRCONF(NETDEV_UP): wlan0: link is n=
-ot ready
+On Thu, 2008-11-27 at 09:18 +0800, c4linux c4linux wrote:
+> Hi,all
+>=20
+>    VLC playing multicast video stream to a router's WAN, and using
+> igmpproxy route the multicast packets to router's ath0.
+>=20
 
-Anything I can try?
+Nobody cares about madwifi.
 
-Thanks,
+johannes
 
-Julien
+--=-5BVlMDuLE0sbXrlt4JrY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJJLl0kAAoJEKVg1VMiehFYFFUP/R2sa2F7vNcgAM0Oy5u5B2D9
+7ror0KU5GPwD2l9X4TyI2OuRAusyrY+hoChfeQUmAfZpb2UlMUa0tOI0KDgZMZ2P
+1TzKMZYcbyJVDvsgLNkxgUn7alCNUuZUIUZ0prya73fNW9ZPWD2q4Jyk/tzZddGL
+8zan+ha0QLCzQOhuB3onOO3pAUNFgJLLb58kCTmGPuSZnhT8ICkAtyUQkWYj1vQm
++s4ozukQkCn1X8Ge1/bnJ4beF8DzORGIXsGgKD6r476nZNG83xZm1qGhyuXHz6mA
+cW43nfh2qv/c3ptoCmNV1O+G2b/ojIh/ZIfideUuS+MCMBtyCiD6hHJjKUEEAAKP
+Wsk83v3Ub9LaTUK31kmO9oMw4D/FGq3RKNnIc1LPkbkGwFzX5h1sPplgNDOT/nUw
+ybQ4VHw2C5VEu5d/mMql92u7FFJa6RC6cpOThgYQMxMxjKCKcEeoITU3qyBdgXd+
+MCO11wjE4DR8KaAdoXuISkq6A/0Ua/GIjqqokWhbaiRLjECFaiSjVC9AtEAovmta
+UBgEUoH4rQgpGnUriLU2BSiyDAmOFupQvtmez64gBOxOnqU1g6dokSShbKk4K/bv
+qQBNgbGVojo+VnTLdJUhYe4haglHMts7WsL0bn1V3ZyXp9RLDFU2hzj1qBja1UrH
+yIeAPgeCKnrpO8XCLB4K
+=0jEH
+-----END PGP SIGNATURE-----
 
------ Message d'origine ----
-De : Luis R. Rodriguez <mcgrof@gmail.com>
-=C0 : Julien HENRY <henryju@yahoo.fr>
-Cc : linux-wireless@vger.kernel.org
-Envoy=E9 le : Samedi, 1 Novembre 2008, 22h31mn 07s
-Objet : Re: Re : Not associated with Intel 4965
+--=-5BVlMDuLE0sbXrlt4JrY--
 
-On Sat, Nov 1, 2008 at 1:48 PM, Julien HENRY <henryju@yahoo.fr> wrote:
->> We no longer have iwl4965, the new name is iwlagn, try that.
->
-> Not better (please note that I've upgraded to kernel 2.6.27.4-desktop=
--0.uc1mnb since my last post):
->
-> # modprobe iwlagn
-> WARNING: Error inserting iwlcore (/lib/modules/2.6.27.4-desktop-0.uc1=
-mnb/updates/drivers/net/wireless/iwlwifi/iwlcore.ko): Unknown symbol in=
- module, or unknown parameter (see dmesg)
-> FATAL: Error inserting iwlagn (/lib/modules/2.6.27.4-desktop-0.uc1mnb=
-/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko.gz): Unknown symbol in m=
-odule, or unknown parameter (see dmesg)
-
-I see a discrepancy on the directory where the modules are being
-picked up on. The ones that should be used are the ones in updates for
-compat-wireless, your kernel drivers are under kernel. Lets try this
-to be sure:
-
-cd /lib/modules/2.6.27.4-desktop-0.uc1mnb/kernel/drivers/net/wireless/i=
-wlwifi
-
-rename everything there from foo to foo.ignore, for example, then run
-
-sudo depmod -ae
-
-and finally then try unloading all the wireless modules and then try
-loading iwlagn.
-
-
-
-     =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
