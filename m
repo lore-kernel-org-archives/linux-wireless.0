@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.189]:20136 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbYKXXaQ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38044 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390AbYK0Xep (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2008 18:30:16 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so1938837rnd.17
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2008 15:30:15 -0800 (PST)
-Message-ID: <43e72e890811241530t44245e4ar3fd5797afcc451c0@mail.gmail.com> (sfid-20081125_003021_840688_73B4CF46)
-Date: Mon, 24 Nov 2008 15:30:15 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Richard Farina" <sidhayn@gmail.com>
-Subject: Re: wireless-regdb: update regulatory rules for US 2.3-2.4GHz and 5.65-5.925GHz
-Cc: "John Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"Michael Green" <Michael.Green@atheros.com>
-In-Reply-To: <492B3643.4070904@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <492B2E07.9050105@gmail.com> <20081124230427.GM6245@tesla>
-	 <492B3643.4070904@gmail.com>
+	Thu, 27 Nov 2008 18:34:45 -0500
+Subject: Re: [PATCHv2] nl80211: Add frequency configuration (including HT40)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081126141524.GA8607@jm.kir.nu>
+References: <20081126141524.GA8607@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hbp2rn9mUe+qZtX7ATyN"
+Date: Fri, 28 Nov 2008 00:34:08 +0100
+Message-Id: <1227828848.7559.45.camel@johannes.berg> (sfid-20081128_003448_886038_3F90D54B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 24, 2008 at 3:18 PM, Richard Farina <sidhayn@gmail.com> wrote:
-> Luis R. Rodriguez wrote:
->>
->> On Mon, Nov 24, 2008 at 02:43:19PM -0800, Richard Farina wrote:
->>
->>>
->>> The above frequencies are allowed by FCC part 97 to amateur radio
->>> operator as primary use, this doesn't even cover the secondary and
->>> tertiary uses, just where amateurs are primary.
->>>
->>
->> NACK -- For the US we use the wireless regulatory database for Part 15
->> rules with 802.11 in mind.
->>
->>
->
-> Not only do I understand your reasoning, but I also agree.  Please do
-> consider the following (from that same email):
 
-Thanks :)
+--=-hbp2rn9mUe+qZtX7ATyN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> This also introduces a new issue in crda of setting not only power limits
-> but power limits based on modulation.  It is permitted to use DSSS up to 100
-> watts, however, OFDM is permitted up to 1500 watts.
->
-> Would it be an unreasonable request to have crda support modulation
-> restrictions and power limit based on modulation restrictions?
+On Wed, 2008-11-26 at 16:15 +0200, Jouni Malinen wrote:
+> This patch adds new NL80211_CMD_SET_WIPHY attributes
+> NL80211_ATTR_WIPHY_FREQ and NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET to allow
+> userspace to set the operating channel (e.g., hostapd for AP mode).
 
-This is odd, first time I hear about such a thing. Do you have a
-pointer to Part 15 rules which clarifies this?
+Should we support this in iw so you can, for example, set your card to
+HT40+ mode for monitoring? Not that we can properly support HT
+monitoring yet, but still.
 
-  Luis
+johannes
+
+--=-hbp2rn9mUe+qZtX7ATyN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJLy5sAAoJEKVg1VMiehFYw3EP/ArcQSn1e681tyi2psrQ5Hlb
+CLTZNvW4/R+tKZAOuTGyFUZsoO3WzuNtEVpodt8EgqCIVAAbj6genkGb3doCOSRQ
+sW4PgYZEaCrp8LrLG3i1wqVpUWE4n5u56YoAGTRXUvKa2pPjlH/uqiN3XGcLbAsg
+9IqSJt3kk17c1h27AV7IuYrV0iMbjlm6mnaLSr9otwTTy0rBuUu/8UNcKEutiedq
+EMzVMeNNpO1/fCH4jxHKM+93vBHb4H/ybP/Gh9Oahul7f9fBv0+onVxTzPQtbPnQ
+zS7+c8TzWHh/AFO9NeFw6EkCjbvrutn97XuOyNlzbKL/FgCKs5rSFTiUzI9e5UCb
+IaSvlI5ZhG4bBdgrTqAhjVyaISxeteWvqttlYwLVwZ9mcGz/Z1C7dALGOQXXtkhN
+wElbxbGM6T/t2uBfNj9lMB8mlB3kYil63swIancO5YzhlyuOTGdYUC7uJk5+RDJN
+dV5DTMFxilhuJLwTQyt3Y26iAxOQhC48cB8UInwY20AwoOcxGL22rVbg7q1G0xXl
+eRzAkoM5c9XTvfkGE/1qvNxnYXfJ2HGcW/HqiwY9FQZJtrQ1DCcc3Ma0P6gi7mA3
+yJK24BhikY31Kmq284NVULoBA1jtmlDk647NDvSBtNZpnp7o/Oh1FnhTrwov7As/
+Ps6r2UeezbgBf+AP+/IK
+=Wn8V
+-----END PGP SIGNATURE-----
+
+--=-hbp2rn9mUe+qZtX7ATyN--
+
