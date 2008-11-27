@@ -1,92 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52987 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:42220 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556AbYKTGuZ (ORCPT
+	with ESMTP id S1751330AbYK0XTq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2008 01:50:25 -0500
-Subject: Re: [PATCH] mac80211 : Fix setting ad-hoc mode and non-ibss channel
+	Thu, 27 Nov 2008 18:19:46 -0500
+Subject: Re: wireless-regdb: Update regulatory rules for Czech Republic
+	(CZ) on 5GHz
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1227141512-5636-1-git-send-email-abhijeet.kolekar@intel.com> (sfid-20081120_013837_745962_A235554D)
-References: <> <1227141512-5636-1-git-send-email-abhijeet.kolekar@intel.com>
-	 (sfid-20081120_013837_745962_A235554D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RElN8UKC7NQxIb0NtzF/"
-Date: Thu, 20 Nov 2008 07:49:48 +0100
-Message-Id: <1227163788.17336.14.camel@johannes.berg> (sfid-20081120_075029_344244_0911956A)
+To: Carlos =?ISO-8859-1?Q?Lau=E9?= <CarlosL@seznam.cz>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <610.1477-13200-1232669665-1227820994@seznam.cz> (sfid-20081128_001318_245944_E312D496)
+References: <610.1477-13200-1232669665-1227820994@seznam.cz>
+	 (sfid-20081128_001318_245944_E312D496)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Hr9gmR7S6sks1xlwv6Xr"
+Date: Fri, 28 Nov 2008 00:19:07 +0100
+Message-Id: <1227827947.7559.38.camel@johannes.berg> (sfid-20081128_002002_071829_800216D2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-RElN8UKC7NQxIb0NtzF/
+--=-Hr9gmR7S6sks1xlwv6Xr
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-11-19 at 16:38 -0800, Abhijeet Kolekar wrote:
-> Patch fixes the kernel trace when user tries to set
-> ad-hoc mode on non IBSS channel.
-> e.g iwconfig wlan0 chan 36 mode ad-hoc
+Hi,
+
+> There seems to be outdated information in the regulatory database for
+> CZ. According to the new regulatory laws, which can be found at
+> http://www.ctu.cz/1/download/Opatreni obecne
+> povahy/VO_R_12_08_2005_34.pdf (page 2) and
+> http://www.ctu.cz/1/download/OOP/Rok_2007/VO_R_10_03_2007_4.pdf (page
+> 3), for 5GHz the table should look like this:
 >=20
-> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> ---
->  net/mac80211/wext.c |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-> index 63f36e9..5a9bc8c 100644
-> --- a/net/mac80211/wext.c
-> +++ b/net/mac80211/wext.c
-> @@ -271,6 +271,7 @@ static int ieee80211_ioctl_siwmode(struct net_device =
-*dev,
->  				   __u32 *mode, char *extra)
->  {
->  	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> +	struct ieee80211_local *local =3D sdata->local;
->  	int type;
-> =20
->  	if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP_VLAN)
-> @@ -281,6 +282,15 @@ static int ieee80211_ioctl_siwmode(struct net_device=
- *dev,
->  		type =3D NL80211_IFTYPE_STATION;
->  		break;
->  	case IW_MODE_ADHOC:
-> +		/* Following check added to avoid misconfiguration if
-> +		 * you set mode and frequency at the same time.
-> +		 */
+> 5150.000 - 5250.000 ; 40.000 ; NO-OUTDOOR ; N/A ; 23.00 (200.00 mW)
+> 5250.000 - 5350.000 ; 40.000 ; NO-OUTDOOR,DFS ; N/A ; 23.00 (200.00 mW)
+> 5470.000 - 5725.000 ; 40.000 ; DFS ; N/A ; 30.00 (1000.00 mW)
+> 5725.000 - 5875.000 ; 40.000 ;  ; N/A ; 14.00(25.00 mW)
 
-The way that comment is written it belongs in the changelog.
+Care to send a patch? Download
+http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-regdb.git;a=
+=3Dblob_plain;f=3Ddb.txt;hb=3DHEAD and edit as appropriate.
 
-> +		if (local->oper_channel && local->oper_channel->flags &
-> +					IEEE80211_CHAN_NO_IBSS) {
-> +			printk(KERN_DEBUG "Not a valid IBSS channel\n");
+> if there are any difference between values in dBm and in mW, please
+> consider the value in mW as the right value.=20
 
-And that's some extremely odd indentation/wrapping there. Also, imho the
-printk is unnecessary.
+As you can see in the rules for DE, you can give the values in mW too:
+
+        (2400 - 2483.5 @ 40), (N/A, 100 mW)
+
+I encourage you to add a comment, so that the CZ entry looks like this:
+
+# Data from
+# http://www.ctu.cz/1/download/Opatreni%20obecne%20povahy/VO_R_12_08_2005_3=
+4.pdf
+# and http://www.ctu.cz/1/download/OOP/Rok_2007/VO_R_10_03_2007_4.pdf
+country CZ:
+	(2402 - 2482 @ 40), (N/A, 20)
+...
+	(5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+etc.
+
+> * The values for 5250-5350MHz and 5470-5875MHz are valid only if the
+> device is capable of automatic output power regulation (ie.iwconfig
+> wlan0 power auto). If there isn't a way to assure this, then the
+> maximum power output limit must be set to a value 3dB lower for ranges
+> 5250-5350MHz (20dBm) and 5470-5875MHz.(27dBm).
+
+Hmm. I don't think we have a way to capture this right now, should
+probably use the lower values then.
 
 johannes
 
---=-RElN8UKC7NQxIb0NtzF/
+--=-Hr9gmR7S6sks1xlwv6Xr
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJJQiJAAoJEKVg1VMiehFYD5AQAI+XoaMsRwIFqHwK5BUjiNh6
-qgW/gKPYVatOsiNH41FD0b+jItiI3jlwHRQErmmdO8jT2b18eFuvSQNcPu4CB/bA
-ca054yGYA4560bRuoEGRc8ZfaEDSNjTeMwoGcaeB77bKp/9EYI85kk3yEzaURUJY
-58jIiSLgFJKoWXZVDIrBPcj1yIcMLNkipZteoMKn5U9yVgv9B371BI2Lu1q7cWUe
-SBCMZyTG7a7w9Fyw4aJUkEj0QtJquiXHFeWZyURV5LmJCR3ugxwjVZOk1ONoPtyg
-zenM1tx/yWvUbFiUsq2U5T4KSWXm7sNjZeiLF+1INXm5NZ01Ju7YZR4TwW3qPwIz
-5r4tfKIOJ8Tk/gViegNbbX+Ex0qiAKx5ovqYqw7Drh180R/QTHiIKKe1wYYU7hGG
-pc/kNbsV0izESPlQX8zVrlvWmPRlleK97q8B2MfrqoerK1PwE3UIk52mCLfeKp0H
-1i7Dfe1Yhr6XL+jdZ+ujraLiH/fdOKTpa3M6WW07LAuYxw2cXg4nCfGakxCv2qgO
-SIv80C838HamMltwTUtS7ZjI0tOtlvaSsbQtVbjxqMIl34ULatSHClbMGFLm7Wx7
-kJUtQwx0oUIfoIY5blfxsgdOffXJAEIuy1I/XEPdv0oLQDiZo3F2lYNOsikwclwE
-YhgsKnKt918ZeZaM4sYf
-=iPvb
+iQIcBAABAgAGBQJJLyroAAoJEKVg1VMiehFYSBoP+wc06swiecEuhaF0j8YDc2bf
+QNjdpR4I05y1RWxQl2DXnvJkdjACTtXR8iiDL0tRbLiKnX1TwzB0frXR5ofJ7IDS
+2Idr9fL38nhIdRZZvU/+QFGtIf8nmRvxIf52axWBggb4k3Hq2TSQMYN9v4v2TCDy
+l/mGwwuiVjMsZJWO5AKjp6ULjno+YTv+qqLc1WTB3EpIF9RskPlkCumZp/iapRXd
+qImz4tgJzhxiNl2zXG5Rze2JxUMudngehBjozS1VPA9pdNGitapFcpgakJ69Xo4V
+pWVG3M/PDDokygkrviDg8kzYTh8JXZNNQDTVZUml2THDo/822VIbUzArcnBSjXxF
+XklQwQpEk4/n9cCPEqLJ5GMpNDOan9gRlhdSoy8f6LUfwkwwkgISqnY/IOljhvOb
+1381EpNlEEVvTrOkTujt3ooL2ptrH/7j/Tq0bGlzqhD1rNAqhfGG1DxPiV/Y6tpw
+TxFAzQvMPNsxvXbRzShojJMu7wCczClIMZxspUBcHopXN9ux1wfRHPqAN7Z6ayK8
+5C5IjHhYukg6jt1/D4hd471lBL7NlJPWKRzZmg79+9quS2tSNIylCqhDKT+fsQNA
+199AOelaqTMq7ziaQe8zvPjSuwDRvOrwL4gz4SGTcBT97zWK3XAZaovPnm1NfZ+g
+fPa712H32wybmYHjl2tH
+=sGDm
 -----END PGP SIGNATURE-----
 
---=-RElN8UKC7NQxIb0NtzF/--
+--=-Hr9gmR7S6sks1xlwv6Xr--
 
