@@ -1,64 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23107.mail.ird.yahoo.com ([217.146.189.47]:21603 "HELO
-	web23107.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753794AbYKDU1P convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 15:27:15 -0500
-Date: Tue, 4 Nov 2008 20:27:12 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [RFC/RFT PATCH v2 2/2] rtl8187: feedback transmitted packets using tx close descriptor for 8187B
-To: linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andrea.merello@gmail.com>
-In-Reply-To: <1225806649-10050-3-git-send-email-herton@mandriva.com.br>
+Received: from mail-ew0-f31.google.com ([209.85.219.31]:55384 "EHLO
+	mail-ew0-f31.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751547AbYK0BN3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2008 20:13:29 -0500
+Received: by ewy12 with SMTP id 12so47667ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 17:13:27 -0800 (PST)
+Message-ID: <14c249940811261657l37d9855btc5280cd0e76e4525@mail.gmail.com> (sfid-20081127_021334_356017_7BF98D88)
+Date: Thu, 27 Nov 2008 08:57:49 +0800
+From: "c4linux c4linux" <c4linux@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: one VAP's WEP key overwrites another's
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <244535.27936.qm@web23107.mail.ird.yahoo.com> (sfid-20081104_212725_056619_144F3635)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Tue, 4/11/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
+there is a question about AR2413 and madwifi driver.
 
-> Realtek 8187B has a receive command queue to feedback beacon
-> interrupt
-> and transmitted packet status. Use it to feedback mac80211
-> about status
-> of transmitted packets. Unfortunately in the course of
-> testing I found
-> that the sequence number reported by hardware includes
-> entire sequence
-> control in a 12 bit only field, so a workaround is done to
-> check only
-> lowest bits.
+madwifi can support VAP, so I setup 2 VAPs, one is ath0, another is
+ath1.both of them are set SharedKey authentication and use WEP
+encrypthion. I type the command below to set each of them a password:
 
-> ---
->  v2: fix rate stuck at 1M reported by Larry Finger, Hin-Tak
-> and also seen by me.
->      btw, I noted now with a ralink device that rt2500usb
-> (rt2x00) has same
->      issue currently.
+iwconfig ath0 key [1] s:1111111111111
+iwconfig ath1 key [1] s:2222222222222
 
+two VAPs have the same mac address and their ssid are different.
 
-> -		hdr->retry =
-> cpu_to_le32((info->control.rates[0].count - 1) <<
-> 8);
-> +		hdr->retry =
-> cpu_to_le32(info->control.rates[0].count << 8);
+the strange thing happens, It seems that ath1's password overwrite the
+ath0's, so if I set my sta the ath1's password and select ath0 to
+connect, I connect the ath0 successfully. Why? are the 4 slots for WEP
+Key is shared by all VAPs?  or VAP is not stable?
 
-> -		hdr->retry =
-> cpu_to_le32((info->control.rates[0].count - 1) <<
-> 8);
-> +		hdr->retry =
-> cpu_to_le32(info->control.rates[0].count << 8);
-
-These are the only lines which changed between the two versions of the patch - if removing the two -1's fixes the rate stuck (and these two lines are newly introduced), shouldn't this be a separate commit if it fixes a problem introduced by an earlier commit?
-
-I did *not* (and do not) have a rate-stuck problem, but I am running a slightly mod version of the patch against 2.6.27, which doesn't have "rates[x].count" yet, with the retry_count struct member which seems to have since been removed.
-
-
-      
+Thank you!
