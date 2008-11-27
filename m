@@ -1,58 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:41343 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477AbYKRXIj (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:34991 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755004AbYK0AP6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2008 18:08:39 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so3373920wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Nov 2008 15:08:38 -0800 (PST)
-Message-ID: <1ba2fa240811181508y633be12pd9f2f9bd0e2c81e4@mail.gmail.com> (sfid-20081119_000853_695574_D634E18C)
-Date: Wed, 19 Nov 2008 01:08:38 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081118194652.GD21772@tuxdriver.com>
+	Wed, 26 Nov 2008 19:15:58 -0500
+Message-ID: <492DE6BD.5060206@lwfinger.net> (sfid-20081127_011614_008617_07EA0111)
+Date: Wed, 26 Nov 2008 18:15:57 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
-	 <1226933141.3902.19.camel@johannes.berg>
-	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>
-	 <1226942887.3902.30.camel@johannes.berg>
-	 <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com>
-	 <1226944799.3902.52.camel@johannes.berg>
-	 <20081118194652.GD21772@tuxdriver.com>
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFT][RFC][PATCH] p54: utilize cryptographic accelerator
+References: <200811242215.00475.chunkeey@web.de>
+In-Reply-To: <200811242215.00475.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 18, 2008 at 9:46 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Mon, Nov 17, 2008 at 06:59:59PM +0100, Johannes Berg wrote:
->> On Mon, 2008-11-17 at 19:34 +0200, Tomas Winkler wrote:
->>
->> > There actually complains about slow reconnection,
->>
->> Ok I guess then I haven't seen them for some reason.
->>
->> Either way, here's a quick summary:
->>  * locking issues with the callback are fixed by removing it
->>  * callback is incorrect when you're only suspended for a very short
->>    time
->>  * callback is incorrect when you're in non-STA modes
->>  * suspend/resume cannot be implemented well through this callback, at
->>    least not the way it is written now and needs to do a whole lot more
->>  * there's no "slow" issue when you actually resume in a different
->>    location where the AP is not around any more
->>  * there should be no "slow" issue when the AP properly deauthenticates
->>    when receiving data frames
->>
->> This was an RFC. I'm convinced it should go in, but I don't make those
->> decisions anyway. I've outlined my reasons for it.
->
-> I agree that it seems to solve problems, and there is little benefit
-> tokeeping the callback in question.  I'm going to send this upstream.
->
-I suggest to run this code before going upstream
-Tomas
+Christian Lamparter wrote:
+> This patch allows p54 to utilize its WEP, TKIP and CCMP accelerator.
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
+> diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+> --- a/drivers/net/wireless/p54/p54common.c	2008-11-24 21:05:42.590287518 +0100
+> +++ b/drivers/net/wireless/p54/p54common.c	2008-11-24 22:06:13.951266225 +0100
+> @@ -25,6 +25,9 @@
+>  #include "p54.h"
+>  #include "p54common.h"
+>  
+> +static int modparam_nohwcrypt;
+> +module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
+> +MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+>  MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
+--snip--
+> +
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(p54_parse_firmware);
+> @@ -527,6 +542,11 @@ static int p54_rx_data(struct ieee80211_
+>  			return 0;
+>  	}
+>  
+> +	if (hdr->decrypt_status == P54_DECRYPT_OK)
+> +		rx_status.flag |= RX_FLAG_DECRYPTED;
+> +	if (hdr->decrypt_status == P54_DECRYPT_FAIL_MICHAEL)
+> +		rx_status.flag |= RX_FLAG_MMIC_ERROR;
+> +
+>  	rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);
+>  	rx_status.noise = priv->noise;
+>  	/* XX correct? */
+> @@ -843,6 +863,8 @@ static int p54_assign_address(struct iee
+>  
+>  	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+>  	left = skb_queue_len(&priv->tx_queue);
+> +	if (left > 30)
+> +		return -ENOMEM;
+
+The above returns with tx_queue.lock still set.
+
+>  	while (left--) {
+>  		u32 hole_size;
+>  		info = IEEE80211_SKB_CB(entry);
+> @@ -1082,6 +1104,20 @@ static int p54_tx_fill(struct ieee80211_
+>  	return ret;
+>  }
+>  
+--snip--
+> +		}
+> +	}
+> +
+> +	mutex_lock(&priv->conf_mutex);
+> +	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*rxkey) +
+> +			sizeof(struct p54_hdr),	P54_CONTROL_TYPE_RX_KEYCACHE,
+> +			GFP_ATOMIC);
+> +	if (!skb) {
+> +		mutex_unlock(&priv->conf_mutex);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	rxkey = (struct p54_keycache *)skb_put(skb, sizeof(*rxkey));
+> +	rxkey->entry = cpu_to_le16(key->keyidx);
+> +	rxkey->key_id = cpu_to_le16(key->keyidx);
+
+Sparse objects to the above two statments because key->keyidx is of type s8, and
+both rxkey->entry and rxkey->key_id are of type u8. A conversion to le16 is not
+needed.
+
+A patch for both problems is below:
+
+Larry
+
+=========
+
+Index: wireless-testing/drivers/net/wireless/p54/p54common.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/p54common.c
++++ wireless-testing/drivers/net/wireless/p54/p54common.c
+@@ -862,8 +862,10 @@ static int p54_assign_address(struct iee
+
+ 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+ 	left = skb_queue_len(&priv->tx_queue);
+-	if (left > 30)
++	if (left > 30) {
++		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 		return -ENOMEM;
++	}
+ 	while (left--) {
+ 		u32 hole_size;
+ 		info = IEEE80211_SKB_CB(entry);
+@@ -1944,8 +1946,8 @@ static int p54_set_key(struct ieee80211_
+ 	}
+
+ 	rxkey = (struct p54_keycache *)skb_put(skb, sizeof(*rxkey));
+-	rxkey->entry = cpu_to_le16(key->keyidx);
+-	rxkey->key_id = cpu_to_le16(key->keyidx);
++	rxkey->entry = key->keyidx;
++	rxkey->key_id = key->keyidx;
+ 	rxkey->key_len = min((u8)24, key->keylen);
+ 	rxkey->key_type = algo;
+ 	if (address)
