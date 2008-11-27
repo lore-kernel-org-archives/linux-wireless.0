@@ -1,120 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26849 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751876AbYKRDg3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 22:36:29 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 19:36:29 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from fmmailgate03.web.de ([217.72.192.234]:56420 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841AbYK0OmZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Nov 2008 09:42:25 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: p54: AP mode: no data frame despite traffic indication set in TIM
+Date: Thu, 27 Nov 2008 15:42:23 +0100
+Cc: Stefan Steuerwald <salsasepp@googlemail.com>,
+	linux-wireless@vger.kernel.org
+References: <200811242124.16358.chunkeey@web.de> <f76a32050811270605s606cc0acjd419987235db44f4@mail.gmail.com> <1227795234.3809.94.camel@johannes.berg>
+In-Reply-To: <1227795234.3809.94.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18722.14224.545245.875365@gargle.gargle.HOWL> (sfid-20081118_043632_094739_91FAC1F7)
-Date: Tue, 18 Nov 2008 09:03:36 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 02/18] ath9k: Simplify RC alloc/free functions
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_PHrLJMxuWcpWm7+"
+Message-Id: <200811271542.23390.chunkeey@web.de> (sfid-20081127_154230_108608_56D03838)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/rc.c |   48 +++++---------------------------------
- 1 files changed, 7 insertions(+), 41 deletions(-)
+--Boundary-00=_PHrLJMxuWcpWm7+
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 21116c5..09d622a 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -780,29 +780,6 @@ struct ath_rate_softc *ath_rate_attach(struct ath_hal *ah)
- 	return asc;
- }
- 
--static struct ath_rate_node *ath_rate_node_alloc(struct ath_vap *avp,
--						 struct ath_rate_softc *rsc,
--						 gfp_t gfp)
--{
--	struct ath_rate_node *anode;
--
--	anode = kzalloc(sizeof(struct ath_rate_node), gfp);
--	if (anode == NULL)
--		return NULL;
--
--	anode->avp = avp;
--	anode->asc = rsc;
--	avp->rc_node = anode;
--
--	return anode;
--}
--
--static void ath_rate_node_free(struct ath_rate_node *anode)
--{
--	if (anode != NULL)
--		kfree(anode);
--}
--
- void ath_rate_detach(struct ath_rate_softc *asc)
- {
- 	if (asc != NULL)
-@@ -1778,17 +1755,6 @@ static int ath_rate_newassoc(struct ath_softc *sc,
- 	return 0;
- }
- 
--/*
-- *  This routine is called to initialize the rate control parameters
-- *  in the SIB. It is called initially during system initialization
-- *  or when a station is associated with the AP.
-- */
--static void ath_rc_sib_init(struct ath_rate_node *ath_rc_priv)
--{
--	ath_rc_priv->rssi_down_time = jiffies_to_msecs(jiffies);
--}
--
--
- static void ath_setup_rates(struct ath_softc *sc,
- 			    struct ieee80211_supported_band *sband,
- 			    struct ieee80211_sta *sta,
-@@ -1964,21 +1930,23 @@ static void *ath_rate_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp
- 	struct ath_vap *avp;
- 	struct ath_rate_node *rate_priv;
- 
--	DPRINTF(sc, ATH_DBG_RATE, "%s\n", __func__);
--
- 	vif = sc->sc_vaps[0];
- 	ASSERT(vif);
- 
- 	avp = (void *)vif->drv_priv;
- 
--	rate_priv = ath_rate_node_alloc(avp, sc->sc_rc, gfp);
-+	rate_priv = kzalloc(sizeof(struct ath_rate_node), gfp);
- 	if (!rate_priv) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"%s: Unable to allocate private rc structure\n",
- 			__func__);
- 		return NULL;
- 	}
--	ath_rc_sib_init(rate_priv);
-+
-+	rate_priv->avp = avp;
-+	rate_priv->asc = sc->sc_rc;
-+	avp->rc_node = rate_priv;
-+	rate_priv->rssi_down_time = jiffies_to_msecs(jiffies);
- 
- 	return rate_priv;
- }
-@@ -1987,10 +1955,8 @@ static void ath_rate_free_sta(void *priv, struct ieee80211_sta *sta,
- 			      void *priv_sta)
- {
- 	struct ath_rate_node *rate_priv = priv_sta;
--	struct ath_softc *sc = priv;
- 
--	DPRINTF(sc, ATH_DBG_RATE, "%s", __func__);
--	ath_rate_node_free(rate_priv);
-+	kfree(rate_priv);
- }
- 
- static struct rate_control_ops ath_rate_ops = {
--- 
-1.6.0.3
+On Thursday 27 November 2008 15:13:54 Johannes Berg wrote:
+> On Thu, 2008-11-27 at 15:05 +0100, Stefan Steuerwald wrote:
+> > I'm unfamiliar with kernel dev procedure. I assume you guys are trying
+> > to get confirmation for that and/or submit patches? 
+> 
+> I've already submitted my patch to John, I suppose Christian will submit
+> his and add you as Tested-by.
+p54-sta-flags-v3.diff will be submitted on friday/saturday (probably together
+with the WEP/TKIP & CCMP offload patch, which could be very useful for
+embedded systems accesspoints too)...
 
+But I don't know what to do with set-and-clear.diff 
+(I guess it's still one of the three patches, or?, I've attached it again,
+in case johannes missed it? ).
+Is it really necessary or does your application work without it?
+
+> > If you need me for
+> > any of that, I'll be there anytime. Also, a hint on whether to send
+> > pizzas or iPods would be appreciated ;-) .
+Johannes,
+
+Isn't there a donation page on the wiki yet? I thought there is such
+a thing already?!
+
+Regards,
+	Chr
+
+
+
+--Boundary-00=_PHrLJMxuWcpWm7+
+Content-Type: text/x-diff;
+  charset="iso 8859-15";
+  name="set-and-clear.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="set-and-clear.diff"
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5a1a60f..077fdb7 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -657,7 +657,8 @@ static void ap_sta_ps_start(struct sta_info *sta)
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	atomic_inc(&sdata->bss->num_sta_ps);
+-	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL);
++	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL |
++				WLAN_STA_CLEAR_PS_FILT);
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	printk(KERN_DEBUG "%s: STA %s aid %d enters power save mode\n",
+ 	       sdata->dev->name, print_mac(mac, sta->sta.addr), sta->sta.aid);
+@@ -674,7 +675,8 @@ static int ap_sta_ps_end(struct sta_info *sta)
+ 
+ 	atomic_dec(&sdata->bss->num_sta_ps);
+ 
+-	clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
++	set_and_clear_sta_flags(sta, WLAN_STA_CLEAR_PS_FILT,
++				WLAN_STA_PS | WLAN_STA_PSPOLL);
+ 
+ 	if (!skb_queue_empty(&sta->ps_tx_buf))
+ 		sta_info_clear_tim_bit(sta);
+
+--Boundary-00=_PHrLJMxuWcpWm7+--
