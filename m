@@ -1,54 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s15.bay0.hotmail.com ([65.54.246.215]:29811 "EHLO
-	bay0-omc3-s15.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753221AbYKHMvx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53003 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754115AbYK0WON (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2008 07:51:53 -0500
-Message-ID: <BAY104-DAV4C468E484B2456B3D02B799180@phx.gbl> (sfid-20081108_135158_067215_F443609D)
-Message-ID: <491589ED.4090904@hotmail.com>
-Date: Sat, 08 Nov 2008 23:45:33 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Reply-To: linux-wireless@vger.kernel.org,
-	  Shaddy Baddah <shaddy_baddah@hotmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
-References: <4902DEBB.3050205@hotmail.com> <20081025112147.GA12252@Chamillionaire.breakpoint.cc> <200810251325.07916.mb@bu3sch.de> <20081025112813.GC12252@Chamillionaire.breakpoint.cc> <49033782.5040701@hotmail.com>
-In-Reply-To: <49033782.5040701@hotmail.com>
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
+	Thu, 27 Nov 2008 17:14:13 -0500
+Subject: [PATCH] wireless: clean up radiotap a bit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 27 Nov 2008 23:13:38 +0100
+Message-Id: <1227824018.7559.6.camel@johannes.berg> (sfid-20081127_231416_267107_4AF846B4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi again,
+No need to pad the header so no constant needed for that,
+no need to carry any version number from netbsd nor CVS
+IDs from them.
 
-On 26/10/08 02:13, Shaddy Baddah wrote:
-> After applying this patch, things seem better. I can associate to an 
-> open access point, get an IP address and even ping.
-> 
-> However on association, I am still seeing:
-> 
-> 
-> [  179.249516] zd1211rw 4-3:1.0: zd_usb_rfwrite() value 0x01e6666 bits 24
-> [  179.254524] wlan0: Initial auth_alg=0
-> [  179.254549] wlan0: authenticate with AP XX:XX:XX:XX:XX:XX
-> [  179.256215] Kernel unaligned access at TPC[10129b94] 
-> zd_mac_rx+0x174/0x320 [zd1211rw]
-> [  179.349135] Kernel unaligned access at TPC[10129b9c] 
-> zd_mac_rx+0x17c/0x320 [zd1211rw]
-> [  179.442852] Kernel unaligned access at TPC[10129ba0] 
-> zd_mac_rx+0x180/0x320 [zd1211rw]
-> [  179.536579] Kernel unaligned access at TPC[10129ba4] 
-> zd_mac_rx+0x184/0x320 [zd1211rw]
-> [  179.630306] Kernel unaligned access at TPC[10129ba8] 
-> zd_mac_rx+0x188/0x320 [zd1211rw]
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c   |   24 +++---------------------
+ drivers/net/wireless/libertas/radiotap.h |    3 ---
+ include/net/ieee80211_radiotap.h         |   15 +++------------
+ 3 files changed, 6 insertions(+), 36 deletions(-)
 
-I'm keen on troubleshooting this myself. Could you please tell me how I 
-can get a disassembly intermixed with source. An objdump -S ./zd1211rw.o 
-is not doing the job. I'd rather not re-compile the whole kernel if 
-possible, because it takes long. Should I rm the file, do a build, take 
-the command line and substitute -g for any -O option?
-
-TIA,
-Shaddy
+--- everything.orig/drivers/net/wireless/ipw2x00/ipw2200.c	2008-11-27 23:11:11.000000000 +0100
++++ everything/drivers/net/wireless/ipw2x00/ipw2200.c	2008-11-27 23:11:29.000000000 +0100
+@@ -7810,15 +7810,6 @@ static void ipw_handle_data_packet_monit
+ 	memmove(rxb->skb->data + sizeof(struct ipw_rt_hdr),
+ 		rxb->skb->data + IPW_RX_FRAME_SIZE, len);
+ 
+-	/* Zero the radiotap static buffer  ...  We only need to zero the bytes NOT
+-	 * part of our real header, saves a little time.
+-	 *
+-	 * No longer necessary since we fill in all our data.  Purge before merging
+-	 * patch officially.
+-	 * memset(rxb->skb->data + sizeof(struct ipw_rt_hdr), 0,
+-	 *        IEEE80211_RADIOTAP_HDRLEN - sizeof(struct ipw_rt_hdr));
+-	 */
+-
+ 	ipw_rt = (struct ipw_rt_hdr *)rxb->skb->data;
+ 
+ 	ipw_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
+@@ -8026,15 +8017,6 @@ static void ipw_handle_promiscuous_rx(st
+ 
+ 	memcpy(ipw_rt->payload, hdr, len);
+ 
+-	/* Zero the radiotap static buffer  ...  We only need to zero the bytes
+-	 * NOT part of our real header, saves a little time.
+-	 *
+-	 * No longer necessary since we fill in all our data.  Purge before
+-	 * merging patch officially.
+-	 * memset(rxb->skb->data + sizeof(struct ipw_rt_hdr), 0,
+-	 *        IEEE80211_RADIOTAP_HDRLEN - sizeof(struct ipw_rt_hdr));
+-	 */
+-
+ 	ipw_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
+ 	ipw_rt->rt_hdr.it_pad = 0;	/* always good to zero */
+ 	ipw_rt->rt_hdr.it_len = cpu_to_le16(sizeof(*ipw_rt));	/* total header+data */
+@@ -10435,9 +10417,9 @@ static void ipw_handle_promiscuous_tx(st
+ 		} else
+ 			len = src->len;
+ 
+-		dst = alloc_skb(
+-			len + IEEE80211_RADIOTAP_HDRLEN, GFP_ATOMIC);
+-		if (!dst) continue;
++		dst = alloc_skb(len + sizeof(*rt_hdr), GFP_ATOMIC);
++		if (!dst)
++			continue;
+ 
+ 		rt_hdr = (void *)skb_put(dst, sizeof(*rt_hdr));
+ 
+--- everything.orig/drivers/net/wireless/libertas/radiotap.h	2008-11-27 23:11:28.000000000 +0100
++++ everything/drivers/net/wireless/libertas/radiotap.h	2008-11-27 23:11:36.000000000 +0100
+@@ -6,9 +6,6 @@ struct tx_radiotap_hdr {
+ 	u8 txpower;
+ 	u8 rts_retries;
+ 	u8 data_retries;
+-#if 0
+-	u8 pad[IEEE80211_RADIOTAP_HDRLEN - 12];
+-#endif
+ } __attribute__ ((packed));
+ 
+ #define TX_RADIOTAP_PRESENT (				\
+--- everything.orig/include/net/ieee80211_radiotap.h	2008-11-27 23:11:27.000000000 +0100
++++ everything/include/net/ieee80211_radiotap.h	2008-11-27 23:11:36.000000000 +0100
+@@ -1,7 +1,4 @@
+-/* $FreeBSD: src/sys/net80211/ieee80211_radiotap.h,v 1.5 2005/01/22 20:12:05 sam Exp $ */
+-/* $NetBSD: ieee80211_radiotap.h,v 1.11 2005/06/22 06:16:02 dyoung Exp $ */
+-
+-/*-
++/*
+  * Copyright (c) 2003, 2004 David Young.  All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -42,8 +39,6 @@
+ #include <linux/kernel.h>
+ #include <asm/unaligned.h>
+ 
+-/* Radiotap header version (from official NetBSD feed) */
+-#define IEEE80211RADIOTAP_VERSION	"1.5"
+ /* Base version of the radiotap packet header data */
+ #define PKTHDR_RADIOTAP_VERSION		0
+ 
+@@ -62,12 +57,8 @@
+  * readers.
+  */
+ 
+-/* XXX tcpdump/libpcap do not tolerate variable-length headers,
+- * yet, so we pad every radiotap header to 64 bytes. Ugh.
+- */
+-#define IEEE80211_RADIOTAP_HDRLEN	64
+-
+-/* The radio capture header precedes the 802.11 header.
++/*
++ * The radio capture header precedes the 802.11 header.
+  * All data in the header is little endian on all platforms.
+  */
+ struct ieee80211_radiotap_header {
 
 
