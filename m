@@ -1,123 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:58283 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655AbYKZVRk (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:42505 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752350AbYK0OFb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 16:17:40 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so337533ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 13:17:39 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
-To: nbd@openwrt.org, lrodriguez@atheros.com, jirislaby@gmail.com,
-	linville@tuxdriver.com, mickflemm@gmail.com
-Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	Thu, 27 Nov 2008 09:05:31 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so429528eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2008 06:05:29 -0800 (PST)
+Message-ID: <f76a32050811270605s606cc0acjd419987235db44f4@mail.gmail.com> (sfid-20081127_150536_022334_1C0DA603)
+Date: Thu, 27 Nov 2008 15:05:29 +0100
+From: "Stefan Steuerwald" <salsasepp@googlemail.com>
+To: "Christian Lamparter" <chunkeey@web.de>
+Subject: Re: p54: AP mode: no data frame despite traffic indication set in TIM
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Date: Wed, 26 Nov 2008 16:17:25 -0500
-Message-Id: <20081126211725.16875.27970.sendpatchset@localhost> (sfid-20081126_221743_974919_D0830A0C)
-In-Reply-To: <20081126211711.16875.71258.sendpatchset@localhost>
-References: <20081126211711.16875.71258.sendpatchset@localhost>
-Subject: [PATCH 3/3] ath5k: enable combined michael mic in key cache
+In-Reply-To: <200811271206.30851.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200811242124.16358.chunkeey@web.de>
+	 <200811262213.03751.chunkeey@web.de>
+	 <f76a32050811270057r69df8f38p9cb4129bd98ce575@mail.gmail.com>
+	 <200811271206.30851.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For mac revisions >= "Griffin," the hardware allows the mic tx and rx
-authenticator keys to share the same cache line, whereas earlier
-hardware can only store the rx.  Enable the combined mic on hardware
-that supports it.
+The v3 patch (together with the other two) works flawlessly for 1.5
+hours now, under app-level traffic.
+I will remove 80211 debugging from the kernel and try again for a
+longer period, but looking good.
 
-Changes to ath5k.h
-Changes-licensed-under: 3-Clause-BSD
+I'm unfamiliar with kernel dev procedure. I assume you guys are trying
+to get confirmation for that and/or submit patches? If you need me for
+any of that, I'll be there anytime. Also, a hint on whether to send
+pizzas or iPods would be appreciated ;-) .
 
-Changes to attach.c, pcu.c, reg.h
-Changes-licensed-under: ISC
+Thank you all for this marathon of a helpdesk session!!!
+  Stefan.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/ath5k.h  |    1 +
- drivers/net/wireless/ath5k/attach.c |    6 ++++++
- drivers/net/wireless/ath5k/pcu.c    |   28 ++++++++++++++--------------
- drivers/net/wireless/ath5k/reg.h    |    1 +
- 4 files changed, 22 insertions(+), 14 deletions(-)
+(and - ahem - I'm one of those customers coming back for more...)
 
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index 5ee2dd1..13df119 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -1052,6 +1052,7 @@ struct ath5k_hw {
- 	bool			ah_calibration;
- 	bool			ah_running;
- 	bool			ah_single_chip;
-+	bool			ah_combined_mic;
- 	enum ath5k_rfgain	ah_rf_gain;
- 
- 	u32			ah_mac_srev;
-diff --git a/drivers/net/wireless/ath5k/attach.c b/drivers/net/wireless/ath5k/attach.c
-index 49d82d7..dea378f 100644
---- a/drivers/net/wireless/ath5k/attach.c
-+++ b/drivers/net/wireless/ath5k/attach.c
-@@ -317,6 +317,12 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 		goto err_free;
- 	}
- 
-+	if (srev >= AR5K_SREV_AR2414) {
-+		ah->ah_combined_mic = true;
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_MISC_MODE,
-+			AR5K_MISC_MODE_COMBINED_MIC);
-+	}
-+
- 	/* MAC address is cleared until add_interface */
- 	ath5k_hw_set_lladdr(ah, mac);
- 
-diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
-index 86ca54b..0461ce5 100644
---- a/drivers/net/wireless/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath5k/pcu.c
-@@ -1096,20 +1096,20 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
- 		/* Install rx/tx MIC */
- 		rxmic = (__le32 *) &key->key[16];
- 		txmic = (__le32 *) &key->key[24];
--#if 0
--		/* MISC_MODE register & 0x04 - for mac srev >= griffin */
--		key_v[0] = rxmic[0];
--		key_v[1] = (txmic[0] >> 16) & 0xffff;
--		key_v[2] = rxmic[1];
--		key_v[3] = txmic[0] & 0xffff;
--		key_v[4] = txmic[1];
--#else
--		key_v[0] = rxmic[0];
--		key_v[1] = 0;
--		key_v[2] = rxmic[1];
--		key_v[3] = 0;
--		key_v[4] = 0;
--#endif
-+
-+		if (ah->ah_combined_mic) {
-+			key_v[0] = rxmic[0];
-+			key_v[1] = (txmic[0] >> 16) & 0xffff;
-+			key_v[2] = rxmic[1];
-+			key_v[3] = txmic[0] & 0xffff;
-+			key_v[4] = txmic[1];
-+		} else {
-+			key_v[0] = rxmic[0];
-+			key_v[1] = 0;
-+			key_v[2] = rxmic[1];
-+			key_v[3] = 0;
-+			key_v[4] = 0;
-+		}
- 		for (i = 0; i < ARRAY_SIZE(key_v); i++)
- 			ath5k_hw_reg_write(ah, le32_to_cpu(key_v[i]),
- 				AR5K_KEYTABLE_OFF(micentry, i));
-diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
-index 69755fc..91aaeaf 100644
---- a/drivers/net/wireless/ath5k/reg.h
-+++ b/drivers/net/wireless/ath5k/reg.h
-@@ -1729,6 +1729,7 @@
- #define	AR5K_MISC_MODE			0x8120			/* Register Address */
- #define	AR5K_MISC_MODE_FBSSID_MATCH	0x00000001	/* Force BSSID match */
- #define	AR5K_MISC_MODE_ACKSIFS_MEM	0x00000002	/* ACK SIFS memory (?) */
-+#define	AR5K_MISC_MODE_COMBINED_MIC	0x00000004	/* use rx/tx MIC key */
- /* more bits */
- 
- /*
--- 
-1.5.4.2.182.gb3092
 
+2008/11/27 Christian Lamparter <chunkeey@web.de>:
+> On Thursday 27 November 2008 09:57:11 Stefan Steuerwald wrote:
+>> At least I haven't observed the crash in the last 60 minutes, whereas
+>> before it took only 1-2 minutes every time to turn it up.
+>> Will test this all day.
+>
+> Finally!
+>
+>> The three patches mentioned before are applied, and my app-level
+>> timeout is still gone, and the "dropped filtered TX" messages are gone
+>> as well.
+>>
+>> Christian, should I actually test your p54-sta-flags-v3 patch?
+>>
+> Yes, of course... v1 and v2 had a stupid "full queue" bug in p54_tx/p54_tx_fill.
+> So let me know if your ipod still works with v3.
+>
+> Regards,
+>        Chr
+>
