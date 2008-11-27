@@ -1,52 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:47250 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170AbYKXCms (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57170 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753120AbYK0WAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2008 21:42:48 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so737735eyi.37
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Nov 2008 18:42:46 -0800 (PST)
-Message-ID: <492A14A7.4040808@gmail.com> (sfid-20081124_034253_862151_4D9A6DE9)
-Date: Sun, 23 Nov 2008 21:42:47 -0500
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: [Fwd: please don't regress ath5k.h]
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 27 Nov 2008 17:00:09 -0500
+Subject: Re: [RFC] rtl8187: Do not wait for an ACK when
+	IEEE80211_TX_CTL_NO_ACK is set
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <200811271952.21408.herton@mandriva.com.br>
+References: <69e28c910811261431u26e341d3p51ebadca807f4b61@mail.gmail.com>
+	 <200811271543.59126.herton@mandriva.com.br>
+	 <69e28c910811271202s295bbf5bo3dc8c04c50b08a01@mail.gmail.com>
+	 <200811271952.21408.herton@mandriva.com.br>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bVLC1eg3fkYgSmCLZVb6"
+Date: Thu, 27 Nov 2008 22:59:09 +0100
+Message-Id: <1227823149.7559.1.camel@johannes.berg> (sfid-20081127_230013_746029_A888B297)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sorry for sending twice, accidentally sent to owner instead of list...
 
-wireless-testing.git/drivers/net/wireless/ath5k/ath5k.h
+--=-bVLC1eg3fkYgSmCLZVb6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-/* TODO: Clean up channel debuging -doesn't work anyway- and start
-* working on reg. control code using all available eeprom information
-* -rev. engineering needed- */
-#define CHAN_DEBUG      0
+On Thu, 2008-11-27 at 19:52 -0200, Herton Ronaldo Krzesinski wrote:
 
+> In this case then shouldn't mac80211/rate control alg give a right rates[=
+0].count?
 
-I recently saw this additional comment added to wireless-testing.git and 
-it has me a bit concerned.  I use this feature for a specific patch set 
-that I maintain and it would break it pretty bad to remove this.  I 
-don't believe I need all of the features that chan_debug provides, but 
-when I set chan_debug to 0 it severely limits the number of channels 
-that I can set the driver to.  I currently maintain a patch that 
-supports 471 channels for atheros a/b/g cards and without chan_debug 1 
-it simply cuts the top channels off (because it isn't able to have that 
-many channels).  It is my opinion that the driver should support what 
-the hardware supports and the regulatory requirements should be handled 
-by crda as expected, I will submit some patches to this effect asap but 
-in the mean time please do not remove chan_debug without enabling 
-support for at least 471 channels to be stored (and it would be cool to 
-cc me on that patch so I can follow it and make sure it works for me).
+It probably should put 1 into that value, yes. It doesn't seem to
+enforce that now though, I'll take a look at doing that.
 
-Thanks,
-Rick Farina
+> And other drivers have same bug?
 
-PS> Please note, this is not meant to start a discussion about adding in 
-addition channels that may or may not be legal, I promise I'll start 
-that discussion next, but this mail is to request that a feature I'm not 
-using not be removed from the driver breaking my work.  Thanks.
+possibly.
 
+Another thing: the ".count" is the number of tries you should do, so if
+the hardware expects retries then you need to subtract 1.
+
+johannes
+
+--=-bVLC1eg3fkYgSmCLZVb6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJLxgpAAoJEKVg1VMiehFYEAwQALMTmA38Pmcrh+e+XrLa1r++
+n83LQ+4/ZNm2JU37dw/xClxqB7042UANd5CZmTDEKFIUu1dYcXd2oJbUnxFQJd6H
+qAw5CW0NyIMr3RkXYer6s4919iHusv33C5aCZd7DL1R4arPzkV0/SkweXmgO3/w8
+LuksorHggnvIuHr6j07sgJkpjDCMVN90aPUHt60GnIYAgGdoPWPto38EHDiGycSE
+DA/eDqPKDG6lfivHwgNazL6bSH+L/nL7pHGw/x/99eObNTONKmzfhnFYob9X6ze+
+etbVThn1fPPuta/MlXUiaTbaSV2F3hCmv6B1MJnMpUWU4aErwLLtbQxWXjXh59N8
+9k/BBCdi0dIc91/BJUatAJm+a5zp7pBAYHD7+ozLf6KuSehamtjrPQYKahhiuRfl
+pRRajb0NgoQZDj0fuLcFKdDQrbe/u1IooruOTzOv9KpIfmDAYvminpAcw+cQ4PrN
+m9EkZo+tvvgGcPE1O3ddIeKBC4aVx1NZz9ubxAFHdZ2dZ9XFUKS0YeT0Gw3ZEOhu
+psINEvQKbps6jAu70wbRddALPxdLUqvoyATuv2DUzGXK9PGUwhKPUW9p9OknDLVy
+jzTC1+IEo2HQrW2WnNlzduxufInW7/aoromF2ikYqJDudRjy2MCVim8BX1TwNoVI
+tOBZE/ChTIaKf2iCFswu
+=8TkC
+-----END PGP SIGNATURE-----
+
+--=-bVLC1eg3fkYgSmCLZVb6--
 
