@@ -1,31 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:55803 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753828AbYKIETe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2008 23:19:34 -0500
-Date: Sat, 8 Nov 2008 20:18:08 -0800
-From: Greg KH <greg@kroah.com>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: stable@kernel.org, rjw@sisk.pl, linville@tuxdriver.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [stable] [PATCH 0/2] iwlwifi fixes for stable 2.6.27
-Message-ID: <20081109041808.GA1017@kroah.com> (sfid-20081109_051946_489257_DAD7A74B)
-References: <1226191867-22324-1-git-send-email-tomas.winkler@intel.com>
+Received: from ug-out-1314.google.com ([66.249.92.172]:17585 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751668AbYK0JbK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Nov 2008 04:31:10 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so1645186ugf.37
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2008 01:31:08 -0800 (PST)
+Message-ID: <eb3ff54b0811270131k7348b031j642fde5219ace758@mail.gmail.com> (sfid-20081127_103115_892667_54423101)
+Date: Thu, 27 Nov 2008 11:31:08 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] zd1211rw: enable an AP that can't support fully PS clients (wireless-testing).
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org, j@w1.fi,
+	"Daniel Drake" <dsd@gentoo.org>
+In-Reply-To: <1227776790.3809.5.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1226191867-22324-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <eb3ff54b0811232344t665fe6abp9ca2be85cfcbd855@mail.gmail.com>
+	 <1227522918.3599.63.camel@johannes.berg>
+	 <eb3ff54b0811240309u31944469xa444ee25f8ac8496@mail.gmail.com>
+	 <1227525694.3599.95.camel@johannes.berg>
+	 <eb3ff54b0811240338t7b11a1bam669f1ffa841a5e87@mail.gmail.com>
+	 <1227776790.3809.5.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 09, 2008 at 02:51:05AM +0200, Tomas Winkler wrote:
-> First one didn't make it into the stable due to type in emails
-> Second is important bug fix that was kept out 2.6.27 merging window. 
-> There is no visible kernel bug but w/o this patch the 5000 iwlwifi HW  
-> is left un-calibrated which is critical
+Hello,
+  - Thanks a lot for this info!
 
-Are these already in Linus's tree?  If so, do you have a git commit id
-for them?
+  - I will adjust my patch accordingly and preform tests to see that
+multicast buffering works properly.
 
-thanks,
+Regards,
+Rami Rosen
 
-greg k-h
+
+On Thu, Nov 27, 2008 at 11:06 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-11-24 at 13:38 +0200, Rami Rosen wrote:
+>> Hello,
+>>   I indeed intend to fix the driver to do the buffering and use
+>> _get_buffered_bc() (and also add sequence numbering, which is easier).
+>
+> Sequence numbers are provided by the firmware, I think? At least beacons
+> do have sequence numbers.
+>
+> Anyway, so I got some information, to fix this use _get_buffered_bc()
+> when in zd_process_intr you get INT_CFG_NEXT_BCN; but this indicates
+> that the beacon has _just_ been sent so you need to use _get_beacon()
+> *after* _get_buffered_bc().
+>
+> johannes
+>
