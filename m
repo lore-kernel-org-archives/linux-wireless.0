@@ -1,75 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:38479 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752095AbYK0BEq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 20:04:46 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 17:04:46 -0800
-Date: Wed, 26 Nov 2008 17:04:43 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Andrey Vul <andrey.vul@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: cannot compile compat-wireless-2.6-old
-Message-ID: <20081127010443.GC13226@tesla> (sfid-20081127_020451_774172_07D76456)
-References: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com> <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com> <20081125203244.GD5950@tesla> <e38d12ff0811251330x2b2d9a35h608b1619441f1252@mail.gmail.com> <e38d12ff0811251651k32a66cd5r3de7f1d504b4723@mail.gmail.com> <20081126173453.GC6515@tesla> <e38d12ff0811261554o1a918853x21bc192e8488be85@mail.gmail.com>
+Received: from fmmailgate03.web.de ([217.72.192.234]:47714 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845AbYK1WqG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2008 17:46:06 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] p54: revamp station power save management in access point mode
+Date: Fri, 28 Nov 2008 23:46:12 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <e38d12ff0811261554o1a918853x21bc192e8488be85@mail.gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200811282346.12464.chunkeey@web.de> (sfid-20081128_234611_280357_4950C471)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 26, 2008 at 03:54:14PM -0800, Andrey Vul wrote:
-> On Wed, Nov 26, 2008 at 12:34, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-> > On Tue, Nov 25, 2008 at 04:51:48PM -0800, Andrey Vul wrote:
-> >> On Tue, Nov 25, 2008 at 16:30, Andrey Vul <andrey.vul@gmail.com> wrote:
-> >> > On Tue, Nov 25, 2008 at 15:32, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-> >> >> On Tue, Nov 25, 2008 at 09:57:57AM -0800, Andrey Vul wrote:
-> >> >>> I cannot compile the current compat tarball.
-> >> >>> Make log:
-> >> >>> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-> >> >>> make -C /usr/src/linux-2.6.26.6-rt11/ M=/root/compat-wireless-2.6-old modules
-> >> >>> make[1]: Entering directory `/usr/src/linux-2.6.26.6-rt11'
-> >> >>>  CC [M]  /root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o
-> >> >>> In file included from <command-line>:0:
-> >> >>> /root/compat-wireless-2.6-old/include/net/compat.h:877: error:
-> >> >>> redefinition of 'list_splice_tail'
-> >> >>> include/linux/list.h:356: error: previous definition of
-> >> >>> 'list_splice_tail' was here
-> >> >>> /root/compat-wireless-2.6-old/include/net/compat.h:892: error:
-> >> >>> redefinition of 'list_splice_tail_init'
-> >> >>> include/linux/list.h:379: error: previous definition of
-> >> >>> 'list_splice_tail_init' was here
-> >> >>
-> >> >> list_splice_tail was added as of 2.6.27, and you have 2.6.26. Which
-> >> >> means your kernel headers for your box are completely messed up. This
-> >> >> means you can expect a kernel panic if you were to successfully
-> >> >> compile external modules. Go fix that first.
-> >> >>
-> >> I have $(uname -r)/include/linux/list.h containing list_splice_tail,
-> >> where uname -r is 2.6.26.5-rt9.
-> >> Frankly, I need rt and the code for my wifi card is only in the compat tarball.
-> >> Is this a problem with .[56] or with -rt?
-> >
-> > Ah, yeah RT had their own list_splice_tail(), try this. BTW what driver
-> > are you going to be using?
-> >
-> 
-> I'm going to be using iwl5000 which depends on iwlwifi, iwlcore,
-> iwlwifi-leds, and iwlwifi-rfkill .
-> 
-> So, in short, all I have to do is this?
-> #!/bin/bash
-> for a in `find ~/compat-wireless-2.6-old -name '*.c' -or -name '*.h'`; do
-> sed -e 's/list_splice_tail/list_splice_tail27/' -i $a;
-> done
-> 
-> The only thing I see as possibly problematic is
-> list_splice_tail27_init() (sed is regex after all).
+This patch addresses the problem in:
+http://marc.info/?l=linux-wireless&m=122727674810057&w=2
 
-Yup, but since there are some RT 2.6.26 kernels out there if we want
-this fixed in compat-wireless-old I'd rather apply a patch there too.
-Anyway list_splice_tail() is only used for ath9k.
+Thanks to Stefan Steuerwald <salsasepp@googlemail.com> 
+extensive iPod touch tests. We could finally squash some bugs in 
+p54's master mode / access point implementation.
 
-  Luis
+Let's hope we got everything right this time and all stations
+from now on will wake up on TIM and receive their queued frames
+and go to sleep again without any hiccups. 
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-11-28 20:18:53.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2008-11-28 21:37:45.000000000 +0100
+@@ -653,6 +653,10 @@ static void p54_rx_frame_sent(struct iee
+ 		__skb_unlink(entry, &priv->tx_queue);
+ 		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
++		entry_hdr = (struct p54_hdr *) entry->data;
++		entry_data = (struct p54_tx_data *) entry_hdr->data;
++		priv->tx_stats[entry_data->hw_queue].len--;
++
+ 		if (unlikely(entry == priv->cached_beacon)) {
+ 			kfree_skb(entry);
+ 			priv->cached_beacon = NULL;
+@@ -669,8 +673,6 @@ static void p54_rx_frame_sent(struct iee
+ 		BUILD_BUG_ON(offsetof(struct ieee80211_tx_info,
+ 				      status.ampdu_ack_len) != 23);
+ 
+-		entry_hdr = (struct p54_hdr *) entry->data;
+-		entry_data = (struct p54_tx_data *) entry_hdr->data;
+ 		if (entry_hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN))
+ 			pad = entry_data->align[0];
+ 
+@@ -688,7 +690,6 @@ static void p54_rx_frame_sent(struct iee
+ 			}
+ 		}
+ 
+-		priv->tx_stats[entry_data->hw_queue].len--;
+ 		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+ 		     (!payload->status))
+ 			info->flags |= IEEE80211_TX_STAT_ACK;
+@@ -1005,6 +1006,26 @@ static int p54_sta_unlock(struct ieee802
+ 	return 0;
+ }
+ 
++static void p54_sta_notify(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
++			      enum sta_notify_cmd notify_cmd,
++			      struct ieee80211_sta *sta)
++{
++	switch (notify_cmd) {
++	case STA_NOTIFY_ADD:
++	case STA_NOTIFY_REMOVE:
++	case STA_NOTIFY_AWAKE:
++		/*
++		 * Notify the firmware that we don't want or we don't
++		 * need to buffer frames for this station anymore.
++		 */
++
++		p54_sta_unlock(dev, sta->addr);
++		break;
++	default:
++		break;
++	}
++}
++
+ static int p54_tx_cancel(struct ieee80211_hw *dev, struct sk_buff *entry)
+ {
+ 	struct p54_common *priv = dev->priv;
+@@ -1070,7 +1091,7 @@ static int p54_tx_fill(struct ieee80211_
+ 		if (info->control.sta)
+ 			*aid = info->control.sta->aid;
+ 		else
+-			*flags = P54_HDR_FLAG_DATA_OUT_NOCANCEL;
++			*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
+ 	}
+ 	return ret;
+ }
+@@ -1083,7 +1104,7 @@ static int p54_tx(struct ieee80211_hw *d
+ 	struct p54_hdr *hdr;
+ 	struct p54_tx_data *txhdr;
+ 	size_t padding, len, tim_len = 0;
+-	int i, j, ridx;
++	int i, j, ridx, ret;
+ 	u16 hdr_flags = 0, aid = 0;
+ 	u8 rate, queue;
+ 	u8 cts_rate = 0x20;
+@@ -1093,30 +1114,18 @@ static int p54_tx(struct ieee80211_hw *d
+ 
+ 	queue = skb_get_queue_mapping(skb);
+ 
+-	if (p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid)) {
+-		current_queue = &priv->tx_stats[queue];
+-		if (unlikely(current_queue->len > current_queue->limit))
+-			return NETDEV_TX_BUSY;
+-		current_queue->len++;
+-		current_queue->count++;
+-		if (current_queue->len == current_queue->limit)
+-			ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
+-	}
++	ret = p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid);
++	current_queue = &priv->tx_stats[queue];
++	if (unlikely((current_queue->len > current_queue->limit) && ret))
++		return NETDEV_TX_BUSY;
++	current_queue->len++;
++	current_queue->count++;
++	if ((current_queue->len == current_queue->limit) && ret)
++		ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
+ 
+ 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
+ 	len = skb->len;
+ 
+-	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT) {
+-		if (info->control.sta)
+-			if (p54_sta_unlock(dev, info->control.sta->addr)) {
+-				if (current_queue) {
+-					current_queue->len--;
+-					current_queue->count--;
+-				}
+-				return NETDEV_TX_BUSY;
+-			}
+-	}
+-
+ 	txhdr = (struct p54_tx_data *) skb_push(skb, sizeof(*txhdr) + padding);
+ 	hdr = (struct p54_hdr *) skb_push(skb, sizeof(*hdr));
+ 
+@@ -1835,6 +1844,7 @@ static const struct ieee80211_ops p54_op
+ 	.add_interface		= p54_add_interface,
+ 	.remove_interface	= p54_remove_interface,
+ 	.set_tim		= p54_set_tim,
++	.sta_notify		= p54_sta_notify,
+ 	.config			= p54_config,
+ 	.config_interface	= p54_config_interface,
+ 	.bss_info_changed	= p54_bss_info_changed,
+diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
+--- a/drivers/net/wireless/p54/p54common.h	2008-11-28 20:18:53.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.h	2008-11-28 20:27:59.000000000 +0100
+@@ -302,7 +302,7 @@ enum p54_frame_sent_status {
+ 	P54_TX_OK = 0,
+ 	P54_TX_FAILED,
+ 	P54_TX_PSM,
+-	P54_TX_PSM_CANCELLED
++	P54_TX_PSM_CANCELLED = 4
+ };
+ 
+ struct p54_frame_sent {
+
