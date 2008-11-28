@@ -1,121 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:59566 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752218AbYKATLr (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:34810 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752449AbYK1Adq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 15:11:47 -0400
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Message-Id: <FB3E29C0-9493-4A1C-B725-734C100ADF3D@holtmann.org> (sfid-20081101_201154_385904_67344998)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1ba2fa240810311635t69165473hef0ef64bf4426d3a@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: Still 4965 issues with wireless-testing
-Date: Sat, 1 Nov 2008 20:11:42 +0100
-References: <5A6314C4-958B-43E7-B94D-FE5BABED89EA@linux.intel.com> <DAD31980-B029-46D4-A687-9B0426899853@holtmann.org> <1ba2fa240810310652t351b0b77k819a7e03659503eb@mail.gmail.com> <BF4BAA7D-FEBC-40F7-AE07-D6BBD31A2A0B@holtmann.org> <1ba2fa240810311409i5203bcccu2b944dcc505deb30@mail.gmail.com> <C202FD8E-EB1E-417D-8086-7ADFBC72A1D3@holtmann.org> <1ba2fa240810311635t69165473hef0ef64bf4426d3a@mail.gmail.com>
+	Thu, 27 Nov 2008 19:33:46 -0500
+From: herton <herton@mandriva.com.br>
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: [RFC] rtl8187: Do not wait for an ACK when IEEE80211_TX_CTL_NO_ACK is set
+Date: Thu, 27 Nov 2008 22:33:40 -0200
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Felix Fietkau" <nbd@openwrt.org>
+References: <69e28c910811261431u26e341d3p51ebadca807f4b61@mail.gmail.com> <1227823149.7559.1.camel@johannes.berg> <69e28c910811271439g3f7beaffx431ec1aa7549f7b9@mail.gmail.com>
+In-Reply-To: <69e28c910811271439g3f7beaffx431ec1aa7549f7b9@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200811272233.40908.herton@mandriva.com.br> (sfid-20081128_013357_659527_C06CD82B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
-
->>>>>>> so besides the point that the Ubuntu 8.10 kernel has a broken  
->>>>>>> driver
->>>>>>> for
->>>>>>> the Intel 4965 cards which will crash my X61 after less than one
->>>>>>> minute
->>>>>>> uptime when it connects to my access point, I have my dmesg  
->>>>>>> full with
->>>>>>> warnings from the latest wireless-testing kernel.
->>>>>>>
->>>>>>> I know that we have discussed this before and Johannes' patch  
->>>>>>> at least
->>>>>>> turns it into warnings instead of killing my system  
->>>>>>> completely, but I
->>>>>>> am
->>>>>>> still surprised why this hasn't been fixed.
->>>>>>
->>>>>> so this becomes more and more annoying. I get this WARN_ON now  
->>>>>> multiple
->>>>>> times pre minute. Only the first few minutes after loading the  
->>>>>> firmware
->>>>>> everything is okay and then it keeps filling my dmesg. And on  
->>>>>> top of
->>>>>> that, I
->>>>>> now see these:
->>>>>>
->>>>>> __ratelimit: 1189 callbacks suppressed
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> __ratelimit: 57695 callbacks suppressed
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> __ratelimit: 3345 callbacks suppressed
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>> iwlagn: Can not allocate SKB buffers
->>>>>>
->>>>>> What is going on here? This is a normal setup and nothing  
->>>>>> fancy. Access
->>>>>> point is N-Capable from D-Link btw.
->>>>>
->>>>>
->>>>> I have D-Link too I don't see this. What kernel version is this?  
->>>>> Is
->>>>> this your ubuntu version or wireless-testing?
->>>>> Any more data you can provide (.config. slabinfo)
->>>>
->>>> this is from wireless-testing. The Ubuntu 2.6.27 kernel is totally
->>>> broken.
->>>> It will crash the kernel since we are missing the patch to turn  
->>>> this into
->>>> a
->>>> warning :)
->>>>
->>>> Attached is my config. The slabinfo will follow once the SKB  
->>>> errors come
->>>> up
->>>> again. It normally takes a few hours before they show. Just  
->>>> resumed that
->>>> machine.
->>>
->>> I've downloaded whole moblin last night over 2.6.27.4, it's a bit  
->>> slow
->>> because the missing calibrations but it didn't crashed.
->>>
->>> I will test your config, your machine is T61  am I right?
->>
->> I have a X61 and running the 64-bit version of kernel and userspace.
+On Thursday 27 November 2008 20:39:34 Stefanik G=E1bor wrote:
+> On Thu, Nov 27, 2008 at 10:59 PM, Johannes Berg
 >
-> I found in sky2 driver comment
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2008-11-27 at 19:52 -0200, Herton Ronaldo Krzesinski wrote:
+> >> In this case then shouldn't mac80211/rate control alg give a right
+> >> rates[0].count?
+> >
+> > It probably should put 1 into that value, yes. It doesn't seem to
+> > enforce that now though, I'll take a look at doing that.
+> >
+> >> And other drivers have same bug?
+> >
+> > possibly.
+> >
+> > Another thing: the ".count" is the number of tries you should do, s=
+o if
+> > the hardware expects retries then you need to subtract 1.
+
+Ops sorry, then I did a mistake in a previous patch reverting a subtrac=
+t in=20
+rtl8187_tx. This will fix the code, will submit a patch with proper cha=
+ngelog:
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/w=
+ireless/rtl818x/rtl8187_dev.c
+index ceebeb7..41444e2 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -238,7 +238,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev, str=
+uct sk_buff *skb)
+ 		hdr->flags =3D cpu_to_le32(flags);
+ 		hdr->len =3D 0;
+ 		hdr->rts_duration =3D rts_dur;
+-		hdr->retry =3D cpu_to_le32(info->control.rates[0].count << 8);
++		hdr->retry =3D cpu_to_le32((info->control.rates[0].count - 1) << 8);
+ 		buf =3D hdr;
+=20
+ 		ep =3D 2;
+@@ -256,7 +256,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev, str=
+uct sk_buff *skb)
+ 		memset(hdr, 0, sizeof(*hdr));
+ 		hdr->flags =3D cpu_to_le32(flags);
+ 		hdr->rts_duration =3D rts_dur;
+-		hdr->retry =3D cpu_to_le32(info->control.rates[0].count << 8);
++		hdr->retry =3D cpu_to_le32((info->control.rates[0].count - 1) << 8);
+ 		hdr->tx_duration =3D
+ 			ieee80211_generic_frame_duration(dev, priv->vif,
+ 							 skb->len, txrate);
+
+
+> >
+> > johannes
 >
-> * The buffer returned from netdev_alloc_skb is
-> * aligned except if slab debugging is enabled
->
-> Since you have slub debug enabled, can you run this debug patch on
-> your system (might be withe space broken, I've  just pasted in)
+> I actually tested that 0 is the right setting - I initially tested it
+> with 1, and there was evidence that it was still retrying. Setting it
+> to 0 truly behaved like a NO_ACK bit would on other HW. (I used
+> aireplay-ng to get a view of transmission speed - the "chopchop" and
+> "interactive replay" are good indicators. I used a patch to make all
+> injected frames NO_ACK, then tested the highest rate that results in
+> no multiple tries for the same number in chopchop. With the original
+> code, I could transmit 25 frames per second - anything higher resulte=
+d
+> in chopchop requiring more than 256 packets for each byte. Most
+> drivers start to behave this way over about 600 to 700 packets per
+> second. Setting the retry count to 1 resulted in a max of 220/s befor=
+e
+> producing more-than-256-attempts errors, still lower than what other
+> drivers do with NO_ACK, suggestive of the driver still retrying.
+> Setting to 0 resulted in a 625/s max, on par with other drivers.)
+> This means, hdr->retry is the number of retries, unlike ".count",
+> which is the number of tries, including the initial transmit.
 
-I applied your patch and ran the latest wireless-testing for over 24  
-hours now. The iwl_tx_cmd_complete issues shows up on a regular basis  
-and the allocate SKB buffers, too. However it didn't trigger the extra  
-WARN_ON you added.
+yep, you're right, I wrongly considered the retry field, that also made=
+ me
+introduce a bug that diff above fixes. Your patch was good, could be ap=
+plied
+while count is not enforced by mac80211.
 
-Regards
-
-Marcel
-
+--
+[]'s
+Herton
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
