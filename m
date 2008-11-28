@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:41785 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758250AbYKVPNd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2008 10:13:33 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Yuval Hager <yuval@avramzon.net>
-Subject: Re: BCM4312 Fails when xdm is started
-Date: Sat, 22 Nov 2008 16:13:00 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de, LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Peter Stuge <peter@stuge.se>
-References: <200811151801.02369.yuval@avramzon.net> <4926FDB3.2030701@lwfinger.net> <200811220839.32674.yuval@avramzon.net>
-In-Reply-To: <200811220839.32674.yuval@avramzon.net>
-MIME-Version: 1.0
-Message-Id: <200811221613.00303.mb@bu3sch.de> (sfid-20081122_161338_168014_E495CC31)
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Received: from smtp.nokia.com ([192.100.122.233]:18639 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752655AbYK1TuE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2008 14:50:04 -0500
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx06.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mASJlFe3032398
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:50:02 +0200
+Received: from localhost.localdomain (essapo-nirac25338.europe.nokia.com [10.162.253.38])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mASJnjSj003187
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:49:50 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v3 3/4] mac80211: add IEEE80211_HW_NO_DYNAMIC_PS flag
+Date: Fri, 28 Nov 2008 21:49:43 +0200
+Message-Id: <1227901784-5325-4-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205010_097030_BDDD13FB)
+In-Reply-To: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 22 November 2008 07:39:24 Yuval Hager wrote:
-> On Friday 21 November 2008, Larry Finger wrote:
-> > Yuval,
-> >
-> > Michael Buesch wrote:
-> > > Can you dump PCI config space and SSB registers (TMSLOW, maybe others,
-> > > too). It looks like a random bus write disabled the device.
-> >
-> > Please incorporate the following patch and run your system. In addition,
-> > run the following command when the wireless is working and after it fails:
-> >
-> > sudo lspci -d 14e4:4312 -x
-> >
-> 
-> When the wireless is working:
-> $ lspci -d 14e4:4312 -x
-> 02:00.0 Network controller: Broadcom Corporation BCM4312 802.11a/b/g (rev 02)
-> 00: e4 14 12 43 06 01 10 00 02 00 80 02 08 00 00 00
-> 10: 04 c0 ff fd 00 00 00 00 00 00 00 00 00 00 00 00
-> 20: 00 00 00 00 00 00 00 00 00 00 00 00 3c 10 71 13
-> 30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 01 00 00
-> 
-> After it fails:
-> $ lspci -d 14e4:4312 -x
-> 02:00.0 Network controller: Broadcom Corporation BCM4312 802.11a/b/g (rev 02)
-> 00: e4 14 12 43 00 00 10 00 02 00 80 02 00 00 00 00
-                  ^^                      ^^
-Somebody disabled MMIO and busmastering.
-And somebody cleared the CACHE_LINE_SIZE register.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ include/net/mac80211.h |    1 +
+ net/mac80211/tx.c      |    3 ++-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
-> 10: 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 20: 00 00 00 00 00 00 00 00 00 00 00 00 3c 10 71 13
-> 30: 00 00 00 00 40 00 00 00 00 00 00 00 00 01 00 00
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 6a1d4ea..53a0dc5 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -858,6 +858,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_NOISE_DBM				= 1<<8,
+ 	IEEE80211_HW_SPECTRUM_MGMT			= 1<<9,
+ 	IEEE80211_HW_AMPDU_AGGREGATION			= 1<<10,
++	IEEE80211_HW_NO_DYNAMIC_PS			= 1<<11,
+ };
+ 
+ /**
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 25d4a86..1d7ef18 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1476,7 +1476,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		goto fail;
+ 	}
+ 
+-	if (local->dynamic_ps_timeout > 0) {
++	if (local->hw.flags & IEEE80211_HW_NO_DYNAMIC_PS &&
++	    local->dynamic_ps_timeout > 0) {
+ 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 			netif_tx_stop_all_queues(local->mdev);
+ 			queue_work(local->hw.workqueue,
 -- 
-Greetings Michael.
+1.5.6.5
+
