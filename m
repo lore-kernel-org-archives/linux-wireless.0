@@ -1,83 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx7.mail.ru ([194.67.23.27]:10315 "EHLO mx7.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751570AbYKSTpk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 14:45:40 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH] wireless: sysfs was displaying different values for level and noise than procfs
-Date: Wed, 19 Nov 2008 22:45:21 +0300
+Received: from xc.sipsolutions.net ([83.246.72.84]:60156 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbYK1WSR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2008 17:18:17 -0500
+Subject: Re: [RFC v3 4/4] mac80211: move dynamic_ps_timeout to hw.conf
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
 Cc: linux-wireless@vger.kernel.org
-References: <200811151831.26403.arvidjaar@mail.ru> <1227122019.2196.14.camel@dv>
-In-Reply-To: <1227122019.2196.14.camel@dv>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2551147.YJQcuhAbqm";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200811192245.29487.arvidjaar@mail.ru> (sfid-20081119_204544_575948_4A7516E2)
+In-Reply-To: <1227901784-5325-5-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205007_938345_E176B04D)
+References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+	 <1227901784-5325-5-git-send-email-kalle.valo@nokia.com>
+	 (sfid-20081128_205007_938345_E176B04D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mNtdaaaPFcuY72jEJ4zq"
+Date: Fri, 28 Nov 2008 23:18:13 +0100
+Message-Id: <1227910693.3543.7.camel@johannes.berg> (sfid-20081128_231820_095097_A2D0A7DC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2551147.YJQcuhAbqm
-Content-Type: text/plain;
-  charset="utf-8"
+
+--=-mNtdaaaPFcuY72jEJ4zq
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Wednesday 19 November 2008, Pavel Roskin wrote:
-> On Sat, 2008-11-15 at 18:31 +0300, Andrey Borzenkov wrote:
-> > Subject: [PATCH] wireless: sysfs was displaying different values for le=
-vel and noise than procfs
-> > From: Andrey Borzenkov <arvidjaar@mail.ru>
-> >=20
-> > /proc/net/wireless asjusts display of signal and noise level depending =
-on
-> > whether units are percentage or dBm. Use the same format in sysfs. This
-> > makes it easy to know unit - below zero is dBm, above zero is percent.
+On Fri, 2008-11-28 at 21:49 +0200, Kalle Valo wrote:
+> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+> ---
+>  include/net/mac80211.h     |    1 +
+>  net/mac80211/ieee80211_i.h |    1 -
+>  net/mac80211/mlme.c        |    4 ++--
+>  net/mac80211/tx.c          |    4 ++--
+>  net/mac80211/wext.c        |    8 ++++----
+>  5 files changed, 9 insertions(+), 9 deletions(-)
 >=20
-> I've seen received power up to 3 dBm.  The AP was using an amplifier
-> (it's specialized hardware), and it's possible that the card on the
-> station side was exaggerating the signal.  However, the data we report
-> should not need any guesswork to be interpreted.  It may be parsed by
-> userspace software.
->=20
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 53a0dc5..aae8991 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -560,6 +560,7 @@ struct ieee80211_conf {
+> =20
+>  	u16 listen_interval;
+>  	bool radio_enabled;
+> +	int dynamic_ps_timeout;
 
-But positive dBm is not even possible to represnt right now. It is u8 and
-is displayed as ((s32)level - 256); so it is *always* negative.
+Same here, add documentation please; also, I think you need to call the
+hw_config call when this changes so drivers can upload the new value to
+the firmware or whatever? Which drivers actually will end up using it
+and how?
 
-> Receiving 1 mW out of 200 mW is not impossible in some antenna
-> configurations even with consumer devices.
->=20
-> > Before:
-> > {pts/1}% cat /sys/class/net/eth1/wireless/level
-> > 203
-> > {pts/1}% cat /sys/class/net/eth1/wireless/noise
-> > 166
->=20
-> > +	return sprintf(buf, format_string, (__s32)iw->field -		\
-> > +			((iw->qual.updated & IW_QUAL_DBM) ? 0x100 : 0)); \
->=20
-> I think non-dBm data should be shown in a special format: "203/255"
-> where 255 is the maximal value, and the dBm data should be shown as
-> numbers: "-48".  This way, we encourage use of dBm data by making it
-> easier to parse.
->=20
+johannes
 
-Well, I do not have any strong opinion regarding this; I just noticed
-discrepancy between procfs and sysfs for what effectively is the same raw
-value.
-
---nextPart2551147.YJQcuhAbqm
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+--=-mNtdaaaPFcuY72jEJ4zq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iEYEABECAAYFAkkkbNMACgkQR6LMutpd94yJugCeKQE7k510vdyZzMMdUzDOpiV2
-ZKwAoIWNCcme5AUPjGqnNNBr/cK2aNQu
-=9Ut9
+iQIcBAABAgAGBQJJMG4iAAoJEKVg1VMiehFYnZIP/3pyMRrplpEybcT7np8OwMcz
+hBQouzpp0BolMqRuslOsjKssF2FiQq90n9JPY06fb3rDGVl9oZg2gK2wVNkjCQdG
+UZZdt2tfumFhqbKZsoqG8J/pmIEnBGqAxAW76MfAU7K8dN/JXEmnErWsemWxbLOb
+dDSHH9aGJdEMVck2DudJOWM5LIFHZs82yikD9aMWhg7xLFkaTI7bDqQtVBoBnF3Y
+JAuQcN7US/586uZbC8ir7uowV12s6bK1NxP2CBudI/vROEranIIEwB/lrXXJ7wYb
+Kfj28Dbo7NvNOsF4t7ze4MNDjq5X4EkA8uXSmir79AB//D9Mj86X9Y3fZm3ZdkGe
+iDMUOYEYZWL8sfOYcEqftg6pXRR+slP7XEZA6R3bpcyxqewwF3Lfjk+l2fyBUWE+
+B0hMXQgMgVXVQ1gWBZpgM47IgLwDFlo9LcsvpH+YI/BVFpAyX//F8ZRgqaJe1x3K
++LhyIxE6MQjqmAw41W3J+ymgI3JwFo3AOCxuDewjcQO5UywWDxeEDGOZlpXuCeJ4
+6fHfhn44TNAj31kHKXdpfhQETskFIx5Isv2ue0EmSCfrkDhlGltV4qRWOT3vlJ93
+dEnx0vfcUPJ6bZtGGnQZLfB5cRM2TdKLyjK+NM53fsJRu7dRO4o2m3stuALx+Iok
+2rlOmu1SiqazqXALRKd6
+=Sm41
 -----END PGP SIGNATURE-----
 
---nextPart2551147.YJQcuhAbqm--
+--=-mNtdaaaPFcuY72jEJ4zq--
+
