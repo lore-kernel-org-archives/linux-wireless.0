@@ -1,104 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:29087 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752641AbYKBDdB (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:59495 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751340AbYK1GrT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2008 23:33:01 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1975431rvb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2008 20:33:00 -0700 (PDT)
-Message-ID: <43075fc60811012033t6fdcd1c4h2c4868659afa9ec5@mail.gmail.com> (sfid-20081102_043340_308094_1C49B970)
-Date: Sat, 1 Nov 2008 23:33:00 -0400
-From: "Iordan Iordanov" <iiordanov@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: ath9k driver runs out of TX descriptors
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 28 Nov 2008 01:47:19 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so1320715wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2008 22:47:18 -0800 (PST)
+Subject: Re: zd1211rw (2.6.26 sparc64): unaligned access (zd_mac_rx)
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	Shaddy Baddah <shaddy_baddah@hotmail.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+In-Reply-To: <492F856D.9020200@hotmail.com>
+References: <4902DEBB.3050205@hotmail.com>
+	 <20081025112147.GA12252@Chamillionaire.breakpoint.cc>
+	 <200810251325.07916.mb@bu3sch.de>
+	 <20081025112813.GC12252@Chamillionaire.breakpoint.cc>
+	 <492F856D.9020200@hotmail.com>
+Content-Type: text/plain
+Date: Thu, 27 Nov 2008 22:47:16 -0800
+Message-Id: <1227854836.5880.8.camel@brick> (sfid-20081128_074725_535120_B1E69350)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 2008-11-28 at 16:45 +1100, Shaddy Baddah wrote:
+> On 25/10/08 22:28, Sebastian Andrzej Siewior wrote:
+> > Subject: [PATCH] wireless/zd1211rw: use  get_unaligned_le16 helper (v2)
+> 
+> I'm not too sure about the protocol for updating a patch to claim that 
+> you've verified it, but I hope to get this patch applied to git by 
+> verifying it worked for me on an sparc64 machine.
+> 
+> Subject: [PATCH] wireless/zd1211rw: use  get_unaligned_le16 helper (v2)
+> 
+> Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+> Tested-by: Shaddy Baddah <shaddy_badddah@hotmail.com>
+> ---
+>   drivers/net/wireless/zd1211rw/zd_mac.c |    5 +++--
+>   drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
+>   2 files changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c 
+> b/drivers/net/wireless/zd1211rw/zd_mac.c
+> index 4d7b98b..bf4b4a4 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
+> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+> @@ -25,6 +25,7 @@
+>   #include <linux/usb.h>
+>   #include <linux/jiffies.h>
+>   #include <net/ieee80211_radiotap.h>
+> +#include <asm/unaligned.h>
+> 
+>   #include "zd_def.h"
+>   #include "zd_chip.h"
+> @@ -662,7 +663,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 
+> *buffer, unsigned int length)
+>   			&& !mac->pass_ctrl)
+>   		return 0;
+> 
+> -	fc = *(__le16 *)buffer;
+> +	fc = get_unaligned_le16(buffer);
+>   	need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
+> 
 
-I am not a member of the mailing list yet, so please cc me on any
-communication regarding this bug report. I wanted to get the word out
-as soon as I can. I installed an AR5008 adapter in my laptop tonight.
-lspci shows:
+I think this should be:
 
-0c:00.0 Network controller: Atheros Communications Inc. AR5008
-Wireless Network Adapter (rev 01)
+	fc = get_unaligned((__le16 *)buffer);
 
-I am running Ubuntu 8.10, but I grabbed the latest source code
-(compat-wireless-2008-10-31), built the drivers, installed them, and
-loaded the newly built ath9k.
+As ieee8011_is_data_qos wants a le16 and your use above will swap to cpu-order.
 
-I connected to a WPA2 protected network without a problem. However,
-when I used scp to copy a large file 30 GB) using the wireless
-adapter, the kernel started reporting this:
+> 
+>   	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
+> @@ -758,7 +759,7 @@ void zd_process_intr(struct work_struct *work)
+>   	u16 int_status;
+>   	struct zd_mac *mac = container_of(work, struct zd_mac, process_intr);
+> 
+> -	int_status = le16_to_cpu(*(__le16 *)(mac->intr_buffer+4));
+> +	int_status = get_unaligned_le16(mac->intr_buffer+4);
 
-[18461.865129] ath9k: 0.1
-[18461.865244] ath9k 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[18461.865333] ath9k 0000:0c:00.0: setting latency timer to 64
-[18462.007742] phy0: Selected rate control algorithm 'ath9k_rate_control'
-[18462.010958] Registered led device: ath9k-phy0:radio
-[18462.012169] Registered led device: ath9k-phy0:assoc
-[18462.013374] Registered led device: ath9k-phy0:tx
-[18462.014500] Registered led device: ath9k-phy0:rx
-[18462.016345] phy0: Atheros 5416: mem=0xf90a0000, irq=17
-[18462.026126] udev: renamed network interface wlan0 to wlan3
-[18466.076165] ADDRCONF(NETDEV_UP): wlan3: link is not ready
-[18469.168304] wlan3: authenticate with AP 00:14:bf:20:8e:36
-[18469.170528] wlan3: authenticated
-[18469.170538] wlan3: associate with AP 00:14:bf:20:8e:36
-[18469.174538] wlan3: RX AssocResp from 00:14:bf:20:8e:36 (capab=0x411
-status=0 aid=2)
-[18469.174546] wlan3: associated
-[18469.182436] ADDRCONF(NETDEV_CHANGE): wlan3: link becomes ready
-[18477.579665] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.581659] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.583162] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.585725] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.587235] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.588736] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.592405] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.593970] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.595999] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.597870] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.599936] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.602325] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.604278] ath_tx_prepare: TX queue: 1 is full, depth: 1004
+OK.
 
-.
-.
-.
+>   	if (int_status & INT_CFG_NEXT_BCN) {
+>   		if (net_ratelimit())
+>   			dev_dbg_f(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");
+> diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c 
+> b/drivers/net/wireless/zd1211rw/zd_usb.c
+> index a60ae86..0b27778 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_usb.c
+> +++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+> @@ -355,7 +355,7 @@ static inline void handle_regs_int(struct urb *urb)
+>   	ZD_ASSERT(in_interrupt());
+>   	spin_lock(&intr->lock);
+> 
+> -	int_num = le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
+> +	int_num = get_unaligned_le16(urb->transfer_buffer+2);
+>   	if (int_num == CR_INTERRUPT) {
+>   		struct zd_mac *mac = zd_hw_mac(zd_usb_to_hw(urb->context));
+>   		memcpy(&mac->intr_buffer, urb->transfer_buffer,
 
-[18477.719308] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.720793] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.726773] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.729087] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-[18477.730679] ath_tx_prepare: TX queue: 1 is full, depth: 1004
-etc., etc., etc.
+OK.
 
-At this point, I decided to put a nasty hack into the source code to
-see if the error disappears. In core.h
+So the first hunk needs changing, but other than that, looks OK.
 
-compat-wireless-2008-10-31/drivers/net/wireless/ath9k/core.h
+Harvey
 
-I changed:
-
-#define ATH_TXBUF               512
-
-to
-
-#define ATH_TXBUF               2048
-
-and sure enough, so far I've copied a few GB's and the error has not recurred.
-
-On a lighter note, can anybody enlighten me as to why for an AR5008, I
-had to load the ath9k and not the ath5k driver?!! This really puzzles
-me.
-
-Thanks to all!
-Iordan Iordanov
-
-
--- 
-The conscious mind has only one thread of execution.
