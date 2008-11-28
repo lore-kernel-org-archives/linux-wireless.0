@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:36909 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029AbYKUOEA (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:18638 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752636AbYK1TuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2008 09:04:00 -0500
-Received: from [192.168.1.6] (KHP059129241136.ppp-bb.dion.ne.jp [59.129.241.136])
-	by mail.holtmann.org (Postfix) with ESMTP id C79938B2E5
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2008 15:03:58 +0100 (CET)
-Message-ID: <4926CDEF.4090908@linux.intel.com> (sfid-20081121_150406_993478_90A68C79)
-Date: Fri, 21 Nov 2008 16:04:15 +0100
-From: Marcel Holtmann <holtmann@linux.intel.com>
-MIME-Version: 1.0
+	Fri, 28 Nov 2008 14:50:04 -0500
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx06.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mASJnbic001864
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:50:01 +0200
+Received: from localhost.localdomain (essapo-nirac25338.europe.nokia.com [10.162.253.38])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mASJnjSg003187
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:49:46 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
 To: linux-wireless@vger.kernel.org
-Subject: iwlwifi produces "Can not allocate SKB buffers"
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [RFC v3] mac80211 dynamic power save
+Date: Fri, 28 Nov 2008 21:49:40 +0200
+Message-Id: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205009_436711_4E21FF28)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
+Here is v3 of my dynamic powersave patches. I have tested them only
+with stlc45xx on Nokia N810. I'm also working with iwl3945 and iwlagn
+patches based on these patches, I'll try to send them during this
+weekend.
 
-after the DMA issues got fixed, I am still seeing the SKB allocation
-errors. So I put a WARN() into the code:
+These are RFC patches, not yet to be applied. Hopefully in next round
+they are ready.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c
-b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 8d2b73e..acd9b12 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -252,10 +252,7 @@ void iwl_rx_allocate(struct iwl_priv *priv)
-                 /* Alloc a new receive buffer */
-                 rxb->skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
-                                 __GFP_NOWARN | GFP_ATOMIC);
--               if (!rxb->skb) {
--                       if (net_ratelimit())
--                               printk(KERN_CRIT DRV_NAME
--                                      ": Can not allocate SKB buffers\n");
-+               if (WARN(!rxb->skb, "Can not allocate SKB buffers\n")) {
-                         /* We don't reschedule replenish work here -- we
-will
-                          * call the restock method and if it still needs
-                          * more buffers it will schedule replenish */
+Patch 3 contains a new flag IEEE80211_HW_NO_DYNAMIC_PS. So all drivers
+which firmware doesn't support dynamic power save should use this flag
+to enable the feature in mac80211. This is a separate patch just for
+easier review. If it's ok, I'll fold it to patch 2.
 
-This allows me to record these issue via kerneloops.org. And here is one 
-from my current wireless-testing tree I am running:
+Patch 4 moves the dynamic_ps_timeout to ieee80211_conf struct. That
+way the drivers which have dynamic power save support in firmware can
+use the same timeout provided by user space. If this ok I'll fold this
+to patch 2.
 
-http://www.kerneloops.org/raw.php?rawid=104543&msgid=
+changes in v3:
+o add a hw flag to notify that driver doesn't support dynamic power save and
+  which will enable mac80211 implementation
+o delete dynamic_ps_timer and cancel ps_enable_work during
+  association, hopefully it's race free now
+o provide timeout value to the drivers, for example iwlwifi should use
+  it (example patch under works)
+o fix a bad bug in testing IEEE80211_STA_ASSOCIATED flag with && operator
 
-Regards
+TODO:
+o test with iwlwifi (only in-tree driver using IEEE80211_CONF_PS)
+o documentation for dynamic_ps_timeout and IEEE80211_HW_NO_DYNAMIC_PS
+o prefix ieee80211_ps_[enable|disable]_work with _dynamic
 
-Marcel
+Power save related features which I'll implement later:
+o disable power save when software scanning
+o beacon period (wakeup period) to the drivers, can be set from user
+  space but otherwise is bss's DTIM value
+
+I'll add missing features to the wiki tomorrow.
+
+
