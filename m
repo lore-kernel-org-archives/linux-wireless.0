@@ -1,154 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.240]:43554 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756600AbYKMTmE (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:52879 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753053AbYK1Ax2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2008 14:42:04 -0500
-Received: by hs-out-0708.google.com with SMTP id 4so499084hsl.5
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2008 11:42:02 -0800 (PST)
-Message-ID: <43e72e890811131142p3f72c964t802d424b0ddb3456@mail.gmail.com> (sfid-20081113_204216_366938_F1BD541B)
-Date: Thu, 13 Nov 2008 11:42:02 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [madwifi-project] [RFC] Closing the project
-Cc: "Michael Renzmann" <mrenzmann@madwifi-project.org>,
-	madwifi-project@lists.madwifi-project.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
-In-Reply-To: <1226547092.11785.49.camel@dv>
+	Thu, 27 Nov 2008 19:53:28 -0500
+From: herton <herton@mandriva.com.br>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] rtl8187: fix retry count passed in rtl8187_tx
+Date: Thu, 27 Nov 2008 22:53:24 -0200
+Cc: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2576.194.45.26.221.1226491274.squirrel@webmail.madwifi.org>
-	 <1226511194.9952.38.camel@dv>
-	 <43e72e890811121224w4fc53e1s29080a42111186e9@mail.gmail.com>
-	 <1226547092.11785.49.camel@dv>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200811272253.24604.herton@mandriva.com.br> (sfid-20081128_015331_597712_F78F9170)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2008 at 7:31 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Wed, 2008-11-12 at 12:24 -0800, Luis R. Rodriguez wrote:
->
->> Those who are interested in this should work on it if no one else is,
->> just take it and go. Bureaucracy gets in the way here IMHO.
->
-> It's not about bureaucracy.  I need help with porting the code from one
-> branch to another.  In particular, with fixing SMP locking issues in the
-> 0.9.4 branch.  The trunk doesn't have those issues.
+I mistakenly changed retry count passed in rtl8187_tx in previous change
+"rtl8187: feedback transmitted packets using tx close descriptor for
+8187B". For 8187 it should represent the number of retries (retry count
+limit). As explained by Johannes Berg, .count represents the number of
+tries (not retries), and retries = tries - 1.
 
-If you are not getting help its because there is a lack of interest
-from developers. I expected this once ath5k got upstream and once more
-documentation was available.
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
->> Distributions will soon prefer ath5k over MadWifi. At that point
->> MadWifi becomes a relic. Its surely good to keep MadWifi code
->> somewhere for reference, or maybe for the last few devices maybe not
->> yet supported, but any other effort put into seems like fruitless
->> effort spent IMHO.
->
-> As far as I know, we don't have DFS in mac80211.  In fact, the AP mode
-> in mac80211 has just been enabled.
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index ceebeb7..41444e2 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -238,7 +238,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 		hdr->flags = cpu_to_le32(flags);
+ 		hdr->len = 0;
+ 		hdr->rts_duration = rts_dur;
+-		hdr->retry = cpu_to_le32(info->control.rates[0].count << 8);
++		hdr->retry = cpu_to_le32((info->control.rates[0].count - 1) << 8);
+ 		buf = hdr;
+ 
+ 		ep = 2;
+@@ -256,7 +256,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 		memset(hdr, 0, sizeof(*hdr));
+ 		hdr->flags = cpu_to_le32(flags);
+ 		hdr->rts_duration = rts_dur;
+-		hdr->retry = cpu_to_le32(info->control.rates[0].count << 8);
++		hdr->retry = cpu_to_le32((info->control.rates[0].count - 1) << 8);
+ 		hdr->tx_duration =
+ 			ieee80211_generic_frame_duration(dev, priv->vif,
+ 							 skb->len, txrate);
+-- 
+1.6.0.4
 
-Right, more notes on this below.
-
->> I don't have experience with bounties but I do know I get random
->> requests to support one thing or another for money. I am going to be
->> redirecting these request more to bounties put up for upstream
->> development. I know people will work on things anyway but what I want
->> to try to do is get monetary support one way or another to those
->> working upstream.
->
-> OK, let's consider it on the case-by-case basis.
-
-Well I'm just going to direct people towards bounties myself for
-upstream work. That's the advice I will be giving personally. But I do
-think it would be good for the project to also reward upstream work
-too, wasn't that the whole point behind the project?
-
->> I'd like to encourage the money left for the project for similar
->> purposes. Reward upstream development.
->
-> Maybe we could have a bounty for DFS implementation in mac80211?  Just
-> to try how it would work.  I also this that there should be a strong
-> moral incentive for the winner.  Not just a name in the log, but a web
-> page about the winner on kernel.org.  This way, we would attract people
-> striving to improve their resumes, not just get extra money.
-
-We will be working on DFS on mac80211, I will start first with STA
-DFS. Also expect a lot of work from us on AP support.
-
->> I think MadWifi has become a big bureaucratic entity and this large
->> bureaucracy is simply not needed.
->
-> I agree that we have a lot of documentation that is becoming irrelevant.
-> I prefer to keep documentation to the minimum, as it stimulates
-> developers to write software that just works, without lengthy
-> instructions.
->
-> But the bug tracking system has some important information that we still
-> may need.
->
-> I think the biggest impediment to MadWifi development was not
-> bureaucracy.  It was the non-free HAL.
-
-Not really, even with an alternative people are still used to coding
-with it and find it easier to commit into an svn repository than
-submit  patches upstream. Maybe our process is move involved but there
-its also why Linux code has a certain quality in it. We tend to frown
-upon crap. If MadWifi ever were to touch Linux it would be tainted
-with CRAP.
-
-> Many bugs are too hard or
-> impossible to solve without having access to HAL.  As the easy bugs get
-> fixed, the ratio of HAL-related bugs grows further.
->
-> We have HAL sources, but it's not the sources we could use in Madwifi
-> without losing some functionality.  Sure enough, the HAL sources could
-> help with some issues.  But it's still impossible to put debug
-> statements into the HAL uses in MadWifi.
->
-> I'm thinking of having "MadWifi free edition" with limited hardware
-> support specifically to address the issue of "debuggability".  Also,
-> some users may free code plus MadWifi features.
-
-I really think this is good for those interested and I respect it but
-I am going to be very very honest here: this is a complete fucking
-waste of time. People, MadWifi is dead, stop trying to keep it a live
-by injecting its heart with adrenaline, it won't work, just pull the
-plug already. If any feature is missing I think it would be more
-productive to identify it and point it out and those interested in
-upstream work will add it.
-
->  Some users may want
-> support for exotic CPUs not supported by any non-free HAL.
-
-For that you can use the Linux kernel which will get you support on
-the largest number of CPUs possible.
-
->>  We wanted free drivers, we have them
->> now, we have opened up the HAL and have even opened up more drivers
->> and continue to do so. What I find useful from MadWifi from an
->> upstream perspective is the mailing lists and a central place for
->> people to get information/news regarding Atheros devices supported
->> upstream but I guess we can just keep this in the wireless wiki.
->
-> I agree that it's better to start anew with the documentation for the
-> free drivers.
->
->> Mailing lists are pretty useful though.
->
-> Yes.
->
->> I agree there is some useful information present but a lot of it is
->> purely historical and I don't think much resources is needed to keep
->> that around. I suspect distributions will start preferring ath5k over
->> MadWifi around December if not already so I'm indifferent in closing
->> MadWifi. In my head MadWifi is dead already though and would recommend
->> we only promise users it will be in maintenance mode, meaning the
->> MadWifi driver will only get submitted bug fixes and security fixes.
->
-> I agree with you.  We should fix the code already in MadWifi branches.
-> It means we should not be _closing_ the project now.
-
-Just my advice: let MadWifi die already, stop wasting your time.
-
-  Luis
