@@ -1,53 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:44359 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbYKZIJh (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:18566 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752479AbYK1Tt5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 03:09:37 -0500
-Received: by fk-out-0910.google.com with SMTP id 18so311227fkq.5
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 00:09:35 -0800 (PST)
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Subject: Re: [PATCH] ipw2200: increase scan timeout
-Date: Wed, 26 Nov 2008 09:09:10 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linville@tuxdriver.com, yi.zhu@intel.com,
-	reinette.chatre@intel.com, ipw2100-devel@lists.sourceforge.net
-References: <200811251809.55461.helmut.schaa@gmail.com> <200811260706.03160.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200811260706.03160.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811260909.11175.helmut.schaa@gmail.com> (sfid-20081126_090941_376439_CD905900)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+	Fri, 28 Nov 2008 14:49:57 -0500
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mASJnhLC025375
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 13:49:54 -0600
+Received: from localhost.localdomain (essapo-nirac25338.europe.nokia.com [10.162.253.38])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mASJnjSh003187
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:49:47 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v3 1/4] mac80211: enable IEEE80211_CONF_PS only when associated
+Date: Fri, 28 Nov 2008 21:49:41 +0200
+Message-Id: <1227901784-5325-2-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205002_114359_21347A04)
+In-Reply-To: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 26. November 2008 schrieb Holger Schurig:
-> > The current scan timeout is set to 5 seconds. If the timeout
-> > is hit because the firmware did not respond yet, the adapter
-> > gets restarted, which results in a disassociation.
-> 
-> I have nothing against raising the timeout, but two general 
-> questions.
-> 
-> First thing: why does the adapter get's resetted?
+Also disable power save when disassociated.
 
-I guess the intention was that if the firmware does not get back within the
-timeout it might have been crashed (or something similar) and thus the driver
-simply restarts the card.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   15 +++++++++++++--
+ net/mac80211/wext.c        |   30 ++++++++++++++++++++++++------
+ 3 files changed, 38 insertions(+), 8 deletions(-)
 
-> Even if a  
-> whole scan takes 11 seconds, the scan of one channel takes less. 
-> So if results trickle in during these 11 seconds, nothing should 
-> get resettet.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 155a204..3f25955 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -688,6 +688,7 @@ struct ieee80211_local {
+ 				*/
+ 	int wifi_wme_noack_test;
+ 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
++	bool powersave;
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct local_debugfsdentries {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 88b0b4d..e7ade66 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -746,6 +746,11 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	bss_info_changed |= BSS_CHANGED_BASIC_RATES;
+ 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
+ 
++	if (local->powersave) {
++		local->hw.conf.flags |= IEEE80211_CONF_PS;
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	}
++
+ 	netif_tx_start_all_queues(sdata->dev);
+ 	netif_carrier_on(sdata->dev);
+ 
+@@ -818,7 +823,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+-	u32 changed = 0;
++	u32 changed = 0, config_changed = 0;
+ 
+ 	rcu_read_lock();
+ 
+@@ -868,8 +873,14 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	sta_info_destroy(sta);
+ 
+ 	local->hw.conf.ht.enabled = false;
+-	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_HT);
++	config_changed |= IEEE80211_CONF_CHANGE_HT;
++
++	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
++		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
++		config_changed |= IEEE80211_CONF_PS;
++	}
+ 
++	ieee80211_hw_config(local, config_changed);
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ }
+ 
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index b3ce28d..8329de2 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -953,25 +953,44 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
+ 				    struct iw_param *wrq,
+ 				    char *extra)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 	struct ieee80211_conf *conf = &local->hw.conf;
++	int ret = 0;
++	bool ps;
+ 
+ 	if (wrq->disabled) {
+-		conf->flags &= ~IEEE80211_CONF_PS;
+-		return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++		ps = false;
++		goto set;
+ 	}
+ 
+ 	switch (wrq->flags & IW_POWER_MODE) {
+ 	case IW_POWER_ON:       /* If not specified */
+ 	case IW_POWER_MODE:     /* If set all mask */
+ 	case IW_POWER_ALL_R:    /* If explicitely state all */
+-		conf->flags |= IEEE80211_CONF_PS;
++		ps = true;
+ 		break;
+ 	default:                /* Otherwise we don't support it */
+ 		return -EINVAL;
+ 	}
+ 
+-	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	if (ps == local->powersave)
++		return ret;
++
++set:
++	local->powersave = ps;
++
++	if (ifsta->flags && IEEE80211_STA_ASSOCIATED) {
++		if (local->powersave)
++			conf->flags |= IEEE80211_CONF_PS;
++		else
++			conf->flags &= ~IEEE80211_CONF_PS;
++
++		ret = ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	}
++
++	return ret;
+ }
+ 
+ static int ieee80211_ioctl_giwpower(struct net_device *dev,
+@@ -980,9 +999,8 @@ static int ieee80211_ioctl_giwpower(struct net_device *dev,
+ 				    char *extra)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_conf *conf = &local->hw.conf;
+ 
+-	wrqu->power.disabled = !(conf->flags & IEEE80211_CONF_PS);
++	wrqu->power.disabled = !local->powersave;
+ 
+ 	return 0;
+ }
+-- 
+1.5.6.5
 
-Right. Could do that too.
-
-> Second thing: why should the association get's cleared if the 
-> adapter get's reset?  Isn't one a (assoc) at protocol level and 
-> the other (adapter) a hardware thing?
-
-No idea!
-
-Helmut
