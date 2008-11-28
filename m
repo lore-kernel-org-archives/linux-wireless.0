@@ -1,122 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:34991 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755004AbYK0AP6 (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:50181 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752752AbYK1Wpm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 19:15:58 -0500
-Message-ID: <492DE6BD.5060206@lwfinger.net> (sfid-20081127_011614_008617_07EA0111)
-Date: Wed, 26 Nov 2008 18:15:57 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 28 Nov 2008 17:45:42 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] mac80211: add power state transition callbacks
+Date: Fri, 28 Nov 2008 23:45:48 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Stefan Steuerwald <salsasepp@googlemail.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFT][RFC][PATCH] p54: utilize cryptographic accelerator
-References: <200811242215.00475.chunkeey@web.de>
-In-Reply-To: <200811242215.00475.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200811282345.48379.chunkeey@web.de> (sfid-20081128_234545_476494_A00F7605)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> This patch allows p54 to utilize its WEP, TKIP and CCMP accelerator.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> --- a/drivers/net/wireless/p54/p54common.c	2008-11-24 21:05:42.590287518 +0100
-> +++ b/drivers/net/wireless/p54/p54common.c	2008-11-24 22:06:13.951266225 +0100
-> @@ -25,6 +25,9 @@
->  #include "p54.h"
->  #include "p54common.h"
->  
-> +static int modparam_nohwcrypt;
-> +module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
-> +MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
->  MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
---snip--
-> +
->  	return 0;
->  }
->  EXPORT_SYMBOL_GPL(p54_parse_firmware);
-> @@ -527,6 +542,11 @@ static int p54_rx_data(struct ieee80211_
->  			return 0;
->  	}
->  
-> +	if (hdr->decrypt_status == P54_DECRYPT_OK)
-> +		rx_status.flag |= RX_FLAG_DECRYPTED;
-> +	if (hdr->decrypt_status == P54_DECRYPT_FAIL_MICHAEL)
-> +		rx_status.flag |= RX_FLAG_MMIC_ERROR;
-> +
->  	rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);
->  	rx_status.noise = priv->noise;
->  	/* XX correct? */
-> @@ -843,6 +863,8 @@ static int p54_assign_address(struct iee
->  
->  	spin_lock_irqsave(&priv->tx_queue.lock, flags);
->  	left = skb_queue_len(&priv->tx_queue);
-> +	if (left > 30)
-> +		return -ENOMEM;
+This patch is necessary in order to provide a proper Access point support for p54.
 
-The above returns with tx_queue.lock still set.
+Unfortunatly for us, there is no documented way to disable the interfering
+power save buffering mechanism in firmware completely.
 
->  	while (left--) {
->  		u32 hole_size;
->  		info = IEEE80211_SKB_CB(entry);
-> @@ -1082,6 +1104,20 @@ static int p54_tx_fill(struct ieee80211_
->  	return ret;
->  }
->  
---snip--
-> +		}
-> +	}
-> +
-> +	mutex_lock(&priv->conf_mutex);
-> +	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*rxkey) +
-> +			sizeof(struct p54_hdr),	P54_CONTROL_TYPE_RX_KEYCACHE,
-> +			GFP_ATOMIC);
-> +	if (!skb) {
-> +		mutex_unlock(&priv->conf_mutex);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	rxkey = (struct p54_keycache *)skb_put(skb, sizeof(*rxkey));
-> +	rxkey->entry = cpu_to_le16(key->keyidx);
-> +	rxkey->key_id = cpu_to_le16(key->keyidx);
+Therefore we give in and notify the driver through our new sta_notify callback, 
+so that we can update the filter state.
 
-Sparse objects to the above two statments because key->keyidx is of type s8, and
-both rxkey->entry and rxkey->key_id are of type u8. A conversion to le16 is not
-needed.
-
-A patch for both problems is below:
-
-Larry
-
-=========
-
-Index: wireless-testing/drivers/net/wireless/p54/p54common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54common.c
-+++ wireless-testing/drivers/net/wireless/p54/p54common.c
-@@ -862,8 +862,10 @@ static int p54_assign_address(struct iee
-
- 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
- 	left = skb_queue_len(&priv->tx_queue);
--	if (left > 30)
-+	if (left > 30) {
-+		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
- 		return -ENOMEM;
-+	}
- 	while (left--) {
- 		u32 hole_size;
- 		info = IEEE80211_SKB_CB(entry);
-@@ -1944,8 +1946,8 @@ static int p54_set_key(struct ieee80211_
- 	}
-
- 	rxkey = (struct p54_keycache *)skb_put(skb, sizeof(*rxkey));
--	rxkey->entry = cpu_to_le16(key->keyidx);
--	rxkey->key_id = cpu_to_le16(key->keyidx);
-+	rxkey->entry = key->keyidx;
-+	rxkey->key_id = key->keyidx;
- 	rxkey->key_len = min((u8)24, key->keylen);
- 	rxkey->key_type = algo;
- 	if (address)
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 6a1d4ea..7bd8edc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -768,14 +768,18 @@ struct ieee80211_sta {
+ /**
+  * enum sta_notify_cmd - sta notify command
+  *
+- * Used with the sta_notify() callback in &struct ieee80211_ops, this
+- * indicates addition and removal of a station to station table.
++ * Used with the sta_notify() callback in &struct ieee80211_ops.
++ * this command indicates addition and removal of a station to
++ * station table, or if a station made a power state transition.
+  *
+  * @STA_NOTIFY_ADD: a station was added to the station table
+  * @STA_NOTIFY_REMOVE: a station being removed from the station table
++ * @STA_NOTIFY_SLEEP: a station is now sleeping
++ * @STA_NOTIFY_AWAKE: a sleeping station woke up
+  */
+ enum sta_notify_cmd {
+-	STA_NOTIFY_ADD, STA_NOTIFY_REMOVE
++	STA_NOTIFY_ADD, STA_NOTIFY_REMOVE,
++	STA_NOTIFY_SLEEP, STA_NOTIFY_AWAKE,
+ };
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5a1a60f..2d311a1 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -654,10 +654,14 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ static void ap_sta_ps_start(struct sta_info *sta)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ieee80211_local *local = sdata->local;
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	atomic_inc(&sdata->bss->num_sta_ps);
+ 	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL);
++	if (local->ops->sta_notify)
++		local->ops->sta_notify(local_to_hw(local), &sdata->vif,
++				       STA_NOTIFY_SLEEP, &sta->sta);
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	printk(KERN_DEBUG "%s: STA %s aid %d enters power save mode\n",
+ 	       sdata->dev->name, print_mac(mac, sta->sta.addr), sta->sta.aid);
+@@ -675,6 +679,9 @@ static int ap_sta_ps_end(struct sta_info *sta)
+ 	atomic_dec(&sdata->bss->num_sta_ps);
+ 
+ 	clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
++	if (local->ops->sta_notify)
++		local->ops->sta_notify(local_to_hw(local), &sdata->vif,
++				       STA_NOTIFY_AWAKE, &sta->sta);
+ 
+ 	if (!skb_queue_empty(&sta->ps_tx_buf))
+ 		sta_info_clear_tim_bit(sta);
