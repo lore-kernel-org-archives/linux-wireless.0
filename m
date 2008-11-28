@@ -1,52 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:27985 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752864AbYKQRIQ (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:18567 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538AbYK1Tt6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2008 12:08:16 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so1053975yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2008 09:08:15 -0800 (PST)
-Message-ID: <b6c5339f0811170908u2f5eb552jbc23cd50871186df@mail.gmail.com> (sfid-20081117_180822_305132_359FBB7B)
-Date: Mon, 17 Nov 2008 12:08:14 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1226915999.3599.33.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1226915999.3599.33.camel@johannes.berg>
+	Fri, 28 Nov 2008 14:49:58 -0500
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mASJnhLE025375
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 13:49:56 -0600
+Received: from localhost.localdomain (essapo-nirac25338.europe.nokia.com [10.162.253.38])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mASJnjSk003187
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:49:51 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v3 4/4] mac80211: move dynamic_ps_timeout to hw.conf
+Date: Fri, 28 Nov 2008 21:49:44 +0200
+Message-Id: <1227901784-5325-5-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205007_938345_E176B04D)
+In-Reply-To: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 17, 2008 at 4:59 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> I think, therefore, that we should take a step back, remove it
-> entirely for now and add the small feature it provided properly.
-> For suspend and resume we will need to introduce new hooks, and for
-> the case where the firmware was reset the driver will probably
-> simply just pretend it has done a suspend/resume cycle to get
-> mac80211 to reprogram the hardware completely, not just try to
-> connect to the current AP again in station mode. When doing so, we
-> will need to take into account locking issues and possibly defer
-> to schedule_work from within mac80211 for the resume operation,
-> while the suspend operation must be done directly.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ include/net/mac80211.h     |    1 +
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/mlme.c        |    4 ++--
+ net/mac80211/tx.c          |    4 ++--
+ net/mac80211/wext.c        |    8 ++++----
+ 5 files changed, 9 insertions(+), 9 deletions(-)
 
-I have proto-patches for suspend/resume that I still need to post -- I
-haven't done so yet because, well, it's still a long way from working,
-and I back-burnered it a bit.  I'll try to pull them together and post
-them just for science.
-
-In them, ieee80211_notify_mac is a minor implementation detail so any hook
-back into the mac layer (ieee80211_suspend/ieee80211_resume e.g.) would be
-fine with me.  So I think this is OK.
-
-Deferring stuff in resume until later sounds like a good plan, there can
-be lots of surprising stuff there (e.g. I didn't see this yet in any
-drivers, but if someone happens to request_firmware in ->start() and
-there is no userspace yet, uh oh...)
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 53a0dc5..aae8991 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -560,6 +560,7 @@ struct ieee80211_conf {
+ 
+ 	u16 listen_interval;
+ 	bool radio_enabled;
++	int dynamic_ps_timeout;
+ 
+ 	u8 long_frame_max_tx_count, short_frame_max_tx_count;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ab0e2df..1317c7a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -690,7 +690,6 @@ struct ieee80211_local {
+ 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
+ 
+ 	bool powersave;
+-	int dynamic_ps_timeout;
+ 	struct work_struct ps_enable_work;
+ 	struct work_struct ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1d3c72b..52b2239 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -747,9 +747,9 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
+ 
+ 	if (local->powersave) {
+-		if (local->dynamic_ps_timeout > 0)
++		if (local->hw.conf.dynamic_ps_timeout > 0)
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+-				  msecs_to_jiffies(local->dynamic_ps_timeout));
++				  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+ 		else {
+ 			conf->flags |= IEEE80211_CONF_PS;
+ 			ieee80211_hw_config(local,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1d7ef18..12256bd 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1477,7 +1477,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	}
+ 
+ 	if (local->hw.flags & IEEE80211_HW_NO_DYNAMIC_PS &&
+-	    local->dynamic_ps_timeout > 0) {
++	    local->hw.conf.dynamic_ps_timeout > 0) {
+ 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 			netif_tx_stop_all_queues(local->mdev);
+ 			queue_work(local->hw.workqueue,
+@@ -1485,7 +1485,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		}
+ 
+ 		mod_timer(&local->dynamic_ps_timer, jiffies +
+-			  msecs_to_jiffies(local->dynamic_ps_timeout));
++			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+ 	}
+ 
+ 	nh_pos = skb_network_header(skb) - skb->data;
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index b3ee0dc..95455d0 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -962,7 +962,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
+ 
+ 	if (wrq->disabled) {
+ 		ps = false;
+-		local->dynamic_ps_timeout = 0;
++		local->hw.conf.dynamic_ps_timeout = 0;
+ 		goto set;
+ 	}
+ 
+@@ -977,7 +977,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
+ 	}
+ 
+ 	if (wrq->flags & IW_POWER_TIMEOUT)
+-		local->dynamic_ps_timeout = wrq->value / 1000;
++		local->hw.conf.dynamic_ps_timeout = wrq->value / 1000;
+ 
+ 	if (ps == local->powersave)
+ 		return ret;
+@@ -986,9 +986,9 @@ set:
+ 	local->powersave = ps;
+ 
+ 	if (ifsta->flags & IEEE80211_STA_ASSOCIATED) {
+-		if (local->dynamic_ps_timeout > 0)
++		if (conf->dynamic_ps_timeout > 0)
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+-				  msecs_to_jiffies(local->dynamic_ps_timeout));
++				  msecs_to_jiffies(conf->dynamic_ps_timeout));
+ 		else {
+ 			if (local->powersave)
+ 				conf->flags |= IEEE80211_CONF_PS;
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.5
+
