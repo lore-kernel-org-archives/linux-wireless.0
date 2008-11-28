@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:18639 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655AbYK1TuE (ORCPT
+Received: from bay0-omc3-s31.bay0.hotmail.com ([65.54.246.231]:30713 "EHLO
+	bay0-omc3-s31.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751335AbYK1GIV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2008 14:50:04 -0500
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx06.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mASJlFe3032398
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:50:02 +0200
-Received: from localhost.localdomain (essapo-nirac25338.europe.nokia.com [10.162.253.38])
-	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mASJnjSj003187
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:49:50 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
+	Fri, 28 Nov 2008 01:08:21 -0500
+Message-ID: <BAY104-DAV12C684E461A14C31A996999040@phx.gbl> (sfid-20081128_070823_496875_94C2D125)
+Message-ID: <492F8ACA.5080606@hotmail.com>
+Date: Fri, 28 Nov 2008 17:08:10 +1100
+From: Shaddy Baddah <shaddy_baddah@hotmail.com>
+Reply-To: linux-wireless@vger.kernel.org,
+	  Shaddy Baddah <shaddy_baddah@hotmail.com>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Subject: [RFC v3 3/4] mac80211: add IEEE80211_HW_NO_DYNAMIC_PS flag
-Date: Fri, 28 Nov 2008 21:49:43 +0200
-Message-Id: <1227901784-5325-4-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205010_097030_BDDD13FB)
-In-Reply-To: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
-References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+Subject: [PATCH] mac80211: use unaligned safe memcmp() in-place of compare_ether_addr()
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- include/net/mac80211.h |    1 +
- net/mac80211/tx.c      |    3 ++-
- 2 files changed, 3 insertions(+), 1 deletions(-)
+After fixing zd1211rw: use unaligned safe memcmp() in-place of
+compare_ether_addr(), I started to see kernel log messages detailing
+unaligned access:
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6a1d4ea..53a0dc5 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -858,6 +858,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_NOISE_DBM				= 1<<8,
- 	IEEE80211_HW_SPECTRUM_MGMT			= 1<<9,
- 	IEEE80211_HW_AMPDU_AGGREGATION			= 1<<10,
-+	IEEE80211_HW_NO_DYNAMIC_PS			= 1<<11,
- };
+  Kernel unaligned access at TPC[100f7f44] sta_info_get+0x24/0x68 [mac80211]
+
+As with the aforementioned patch, the unaligned access was eminating
+from a compare_ether_addr() call. Concerned that whilst it was safe to
+assume that unalignment was the norm for the zd1211rw, and take
+preventative measures, it may not be the case or acceptable to use the
+easy fix of changing the call to memcmp().
+
+My research however indicated that it was OK to do this, as there are
+a few instances where memcmp() is the preferred mechanism for doing
+mac address comparisons throughout the module.
+
+Signed-off-by: Shaddy Baddah <shaddy_baddah@hotmail.com>
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 7fef8ea..d254446 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -99,7 +99,7 @@ struct sta_info *sta_info_get(struct ieee80211_local 
+*local, const u8 *addr)
  
- /**
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 25d4a86..1d7ef18 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1476,7 +1476,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		goto fail;
- 	}
- 
--	if (local->dynamic_ps_timeout > 0) {
-+	if (local->hw.flags & IEEE80211_HW_NO_DYNAMIC_PS &&
-+	    local->dynamic_ps_timeout > 0) {
- 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 			netif_tx_stop_all_queues(local->mdev);
- 			queue_work(local->hw.workqueue,
--- 
-1.5.6.5
+     sta = rcu_dereference(local->sta_hash[STA_HASH(addr)]);
+     while (sta) {
+-        if (compare_ether_addr(sta->sta.addr, addr) == 0)
++        if (memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
+             break;
+         sta = rcu_dereference(sta->hnext);
+     }
+
 
