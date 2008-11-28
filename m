@@ -1,106 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:10060 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753210AbYKSXb6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2008 18:31:58 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 6/7] iwlwifi: TX update chicken bits
-Date: Wed, 19 Nov 2008 15:32:27 -0800
-Message-Id: <1227137548-28718-7-git-send-email-reinette.chatre@intel.com> (sfid-20081120_003216_949851_48DCD663)
-In-Reply-To: <1227137548-28718-6-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1227137548-28718-1-git-send-email-reinette.chatre@intel.com>
- <1227137548-28718-2-git-send-email-reinette.chatre@intel.com>
- <1227137548-28718-3-git-send-email-reinette.chatre@intel.com>
- <1227137548-28718-4-git-send-email-reinette.chatre@intel.com>
- <1227137548-28718-5-git-send-email-reinette.chatre@intel.com>
- <1227137548-28718-6-git-send-email-reinette.chatre@intel.com>
+Received: from smtp.nokia.com ([192.100.105.134]:18565 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527AbYK1Tt5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2008 14:49:57 -0500
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mASJne8l025373
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 13:49:54 -0600
+Received: from localhost.localdomain (essapo-nirac25338.europe.nokia.com [10.162.253.38])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mASJnjSi003187
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2008 21:49:48 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v3 2/4] mac80211: implement dynamic power save
+Date: Fri, 28 Nov 2008 21:49:42 +0200
+Message-Id: <1227901784-5325-3-git-send-email-kalle.valo@nokia.com> (sfid-20081128_205007_402908_98B496DF)
+In-Reply-To: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+This patch implements dynamic power save for mac80211. Basically it
+means enabling power save mode after an idle period. Implementing it
+dynamically gives a good compromise of low power consumption and low
+latency. Some hardware have support for this in firmware, but some
+require the host to do it.
 
-This instructs FH to increment the retry count of a packet when
-it is brought from the memory to TX-FIFO to save transactions
-during aggregation flow.
+The dynamic power save is implemented by adding an timeout to
+ieee80211_subif_start_xmit(). The timeout can be enabled from user space
+with Wireless Extensions. For example, the command below enables the
+dynamic power save and sets the time timeout to 500 ms:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+iwconfig wlan0 power timeout 500m
+
+Thanks to Johannes Berg for the help with the design.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-5000.c |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-fh.h   |    5 +++++
- 3 files changed, 17 insertions(+), 0 deletions(-)
+ net/mac80211/ieee80211_i.h |    9 ++++++++
+ net/mac80211/main.c        |    5 ++++
+ net/mac80211/mlme.c        |   47 ++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/tx.c          |   11 ++++++++++
+ net/mac80211/wext.c        |   27 ++++++++++++++++--------
+ 5 files changed, 88 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 60769b1..ab0b405 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -695,6 +695,7 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
- 	unsigned long flags;
- 	int ret;
- 	int i, chan;
-+	u32 reg_val;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-@@ -724,6 +725,11 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
- 				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
- 				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE);
- 
-+	/* Update FH chicken bits */
-+	reg_val = iwl_read_direct32(priv, FH_TX_CHICKEN_BITS_REG);
-+	iwl_write_direct32(priv, FH_TX_CHICKEN_BITS_REG,
-+			   reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3f25955..ab0e2df 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -688,7 +688,12 @@ struct ieee80211_local {
+ 				*/
+ 	int wifi_wme_noack_test;
+ 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
 +
- 	/* Disable chain mode for all queues */
- 	iwl_write_prph(priv, IWL49_SCD_QUEUECHAIN_SEL, 0);
+ 	bool powersave;
++	int dynamic_ps_timeout;
++	struct work_struct ps_enable_work;
++	struct work_struct ps_disable_work;
++	struct timer_list dynamic_ps_timer;
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index d73760c..a738886 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -703,6 +703,7 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
- 	unsigned long flags;
- 	int ret;
- 	int i, chan;
-+	u32 reg_val;
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct local_debugfsdentries {
+@@ -973,6 +978,10 @@ int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
+ u64 ieee80211_mandatory_rates(struct ieee80211_local *local,
+ 			      enum ieee80211_band band);
  
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-@@ -732,6 +733,11 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
- 				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
- 				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE);
- 
-+	/* Update FH chicken bits */
-+	reg_val = iwl_read_direct32(priv, FH_TX_CHICKEN_BITS_REG);
-+	iwl_write_direct32(priv, FH_TX_CHICKEN_BITS_REG,
-+			   reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
++void ieee80211_ps_enable_work(struct work_struct *work);
++void ieee80211_ps_disable_work(struct work_struct *work);
++void ieee80211_dynamic_ps_timer(unsigned long data);
 +
- 	iwl_write_prph(priv, IWL50_SCD_QUEUECHAIN_SEL,
- 		IWL50_SCD_QUEUECHAIN_SEL_ALL(priv->hw_params.max_txq_num));
- 	iwl_write_prph(priv, IWL50_SCD_AGGR_SEL, 0);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index bc20acb..c3dadb0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -396,6 +396,11 @@
- #define FH_SRVC_CHNL_SRAM_ADDR_REG(_chnl) \
- 		(FH_SRVC_LOWER_BOUND + ((_chnl) - 9) * 0x4)
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+ #else
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index cec9b6d..b35bd74 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -701,6 +701,11 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
  
-+#define FH_TX_CHICKEN_BITS_REG	(FH_MEM_LOWER_BOUND + 0xE98)
-+/* Instruct FH to increment the retry count of a packet when
-+ * it is brought from the memory to TX-FIFO
-+ */
-+#define FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN	(0x00000002)
+ 	INIT_DELAYED_WORK(&local->scan_work, ieee80211_scan_work);
  
- /**
-  * struct iwl_rb_status - reseve buffer status
++	INIT_WORK(&local->ps_enable_work, ieee80211_ps_enable_work);
++	INIT_WORK(&local->ps_disable_work, ieee80211_ps_disable_work);
++	setup_timer(&local->dynamic_ps_timer,
++		    ieee80211_dynamic_ps_timer, (unsigned long) local);
++
+ 	sta_info_init(local);
+ 
+ 	tasklet_init(&local->tx_pending_tasklet, ieee80211_tx_pending,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e7ade66..1d3c72b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -747,8 +747,14 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
+ 
+ 	if (local->powersave) {
+-		local->hw.conf.flags |= IEEE80211_CONF_PS;
+-		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++		if (local->dynamic_ps_timeout > 0)
++			mod_timer(&local->dynamic_ps_timer, jiffies +
++				  msecs_to_jiffies(local->dynamic_ps_timeout));
++		else {
++			conf->flags |= IEEE80211_CONF_PS;
++			ieee80211_hw_config(local,
++					    IEEE80211_CONF_CHANGE_PS);
++		}
+ 	}
+ 
+ 	netif_tx_start_all_queues(sdata->dev);
+@@ -875,6 +881,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	local->hw.conf.ht.enabled = false;
+ 	config_changed |= IEEE80211_CONF_CHANGE_HT;
+ 
++	del_timer_sync(&local->dynamic_ps_timer);
++	cancel_work_sync(&local->ps_enable_work);
++
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+ 		config_changed |= IEEE80211_CONF_PS;
+@@ -2608,3 +2617,37 @@ void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
+ 		ieee80211_restart_sta_timer(sdata);
+ 	rcu_read_unlock();
+ }
++
++void ieee80211_ps_disable_work(struct work_struct *work)
++{
++	struct ieee80211_local *local =
++		container_of(work, struct ieee80211_local, ps_disable_work);
++
++	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
++		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	}
++
++	/* always wake queues to avoid having them stopped forever */
++	netif_tx_wake_all_queues(local->mdev);
++}
++
++void ieee80211_ps_enable_work(struct work_struct *work)
++{
++	struct ieee80211_local *local =
++		container_of(work, struct ieee80211_local, ps_enable_work);
++
++	if (local->hw.conf.flags & IEEE80211_CONF_PS)
++		return;
++
++	local->hw.conf.flags |= IEEE80211_CONF_PS;
++
++	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++}
++
++void ieee80211_dynamic_ps_timer(unsigned long data)
++{
++	struct ieee80211_local *local = (void *) data;
++
++	queue_work(local->hw.workqueue, &local->ps_enable_work);
++}
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0855cac..25d4a86 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1476,6 +1476,17 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		goto fail;
+ 	}
+ 
++	if (local->dynamic_ps_timeout > 0) {
++		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
++			netif_tx_stop_all_queues(local->mdev);
++			queue_work(local->hw.workqueue,
++				   &local->ps_disable_work);
++		}
++
++		mod_timer(&local->dynamic_ps_timer, jiffies +
++			  msecs_to_jiffies(local->dynamic_ps_timeout));
++	}
++
+ 	nh_pos = skb_network_header(skb) - skb->data;
+ 	h_pos = skb_transport_header(skb) - skb->data;
+ 
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 8329de2..b3ee0dc 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -962,6 +962,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
+ 
+ 	if (wrq->disabled) {
+ 		ps = false;
++		local->dynamic_ps_timeout = 0;
+ 		goto set;
+ 	}
+ 
+@@ -971,23 +972,31 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
+ 	case IW_POWER_ALL_R:    /* If explicitely state all */
+ 		ps = true;
+ 		break;
+-	default:                /* Otherwise we don't support it */
+-		return -EINVAL;
++	default:                /* Otherwise we ignore */
++		break;
+ 	}
+ 
++	if (wrq->flags & IW_POWER_TIMEOUT)
++		local->dynamic_ps_timeout = wrq->value / 1000;
++
+ 	if (ps == local->powersave)
+ 		return ret;
+ 
+ set:
+ 	local->powersave = ps;
+ 
+-	if (ifsta->flags && IEEE80211_STA_ASSOCIATED) {
+-		if (local->powersave)
+-			conf->flags |= IEEE80211_CONF_PS;
+-		else
+-			conf->flags &= ~IEEE80211_CONF_PS;
+-
+-		ret = ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	if (ifsta->flags & IEEE80211_STA_ASSOCIATED) {
++		if (local->dynamic_ps_timeout > 0)
++			mod_timer(&local->dynamic_ps_timer, jiffies +
++				  msecs_to_jiffies(local->dynamic_ps_timeout));
++		else {
++			if (local->powersave)
++				conf->flags |= IEEE80211_CONF_PS;
++			else
++				conf->flags &= ~IEEE80211_CONF_PS;
++			ret = ieee80211_hw_config(local,
++						  IEEE80211_CONF_CHANGE_PS);
++		}
+ 	}
+ 
+ 	return ret;
 -- 
-1.5.4.3
+1.5.6.5
 
