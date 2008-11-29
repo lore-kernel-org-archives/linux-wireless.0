@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39193 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbYKSBe0 (ORCPT
+Received: from bay0-omc3-s36.bay0.hotmail.com ([65.54.246.236]:61464 "EHLO
+	bay0-omc3-s36.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751306AbYK2NAz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2008 20:34:26 -0500
-Subject: Re: pull request: wireless-2.6 2008-11-18
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sfr@canb.auug.org.au
-In-Reply-To: <20081119000719.GA19756@tuxdriver.com> (sfid-20081119_014629_475391_D51592F4)
-References: <20081119000719.GA19756@tuxdriver.com>
-	 (sfid-20081119_014629_475391_D51592F4)
-Content-Type: text/plain
-Date: Wed, 19 Nov 2008 02:33:38 +0100
-Message-Id: <1227058418.4014.99.camel@johannes.berg> (sfid-20081119_023431_962702_1B01B0BF)
-Mime-Version: 1.0
+	Sat, 29 Nov 2008 08:00:55 -0500
+Message-ID: <BAY104-DAV123037CA3209C851B0946199070@phx.gbl> (sfid-20081129_140059_113748_5F7544F1)
+Message-ID: <49313CFF.4070005@hotmail.com>
+Date: Sun, 30 Nov 2008 00:00:47 +1100
+From: Shaddy Baddah <shaddy_baddah@hotmail.com>
+Reply-To: linux-wireless@vger.kernel.org,
+	  Shaddy Baddah <shaddy_baddah@hotmail.com>
+MIME-Version: 1.0
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2] zd1211rw: use unaligned safe memcmp() in-place of compare_ether_addr()
+References: <BAY104-DAV2759DEF86863A0B2E73A299040@phx.gbl> <200811291240.50958.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200811291240.50958.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> and a final one fixes some mysterious DMA alignment problems
-> that have been plaguing iwlwifi for some time.
+Hi,
 
+On 29/11/08 23:40, Holger Schurig wrote:
+>> -        if (likely(!compare_ether_addr(tx_hdr->addr2,
+>> rx_hdr->addr1))) +        if (likely(!memcmp(tx_hdr->addr2,
+>> rx_hdr->addr1, ETH_ALEN))) {
+>>              __skb_unlink(skb, q);
+> 
+> Wouldn't it be better to fix compile_ether_addr instead?
 
-> The following changes since commit 5f9021cfdc3524a4c5e3d7ae2d049eb7adcd6776:
->   Johannes Berg (1):
->         rtnetlink: propagate error from dev_change_flags in do_setlink()
+ From Documentation/unaligned-memory-access.txt in reference to 
+compare_ether_addr():
 
-heh.
+Despite the potential unaligned access problems with the above function, it
+is included in the kernel anyway but is understood to only work on
+16-bit-aligned addresses. It is up to the caller to ensure this alignment or
+not use this function at all. This alignment-unsafe function is still useful
+as it is a decent optimization for the cases when you can ensure alignment,
+which is true almost all of the time in ethernet networking context.
 
->      iwlagn: fix RX skb alignment
-
-So Luis pointed out a bug in that, it might be useful to squish in this
-patch: http://marc.info/?l=linux-wireless&m=122705425425763&w=2
-
-(also below for reference)
-
-But we can also just add it on top, whichever way you prefer.
-
-johannes
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-19 01:16:12.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-11-19 01:19:13.000000000 +0100
-@@ -1229,9 +1229,11 @@ void iwl_rx_handle(struct iwl_priv *priv
- 
- 		rxq->queue[i] = NULL;
- 
--		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->aligned_dma_addr,
--					    priv->hw_params.rx_buf_size,
--					    PCI_DMA_FROMDEVICE);
-+		dma_sync_single_range_for_cpu(
-+				&priv->pci_dev->dev, rxb->real_dma_addr,
-+				rxb->aligned_dma_addr - rxb->real_dma_addr,
-+				priv->hw_params.rx_buf_size,
-+				PCI_DMA_FROMDEVICE);
- 		pkt = (struct iwl_rx_packet *)rxb->skb->data;
- 
- 		/* Reclaim a command buffer only if this packet is a response
+Hope that helps,
+Shaddy
 
 
