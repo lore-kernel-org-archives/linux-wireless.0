@@ -1,82 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:48871 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753342AbYK0VwJ convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:38730 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750701AbYK2HAP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2008 16:52:09 -0500
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [RFC] rtl8187: Do not wait for an ACK when IEEE80211_TX_CTL_NO_ACK is set
-Date: Thu, 27 Nov 2008 19:52:19 -0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	"Hin-Tak Leung" <hintak.leung@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <69e28c910811261431u26e341d3p51ebadca807f4b61@mail.gmail.com> <200811271543.59126.herton@mandriva.com.br> <69e28c910811271202s295bbf5bo3dc8c04c50b08a01@mail.gmail.com>
-In-Reply-To: <69e28c910811271202s295bbf5bo3dc8c04c50b08a01@mail.gmail.com>
+	Sat, 29 Nov 2008 02:00:15 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC v3 4/4] mac80211: move dynamic_ps_timeout to hw.conf
+References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+	<1227901784-5325-5-git-send-email-kalle.valo@nokia.com>
+	<1227910693.3543.7.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sat, 29 Nov 2008 09:00:03 +0200
+In-Reply-To: <1227910693.3543.7.camel@johannes.berg> (ext Johannes Berg's message of "Fri\, 28 Nov 2008 23\:18\:13 +0100")
+Message-ID: <87myfj10gc.fsf@nokia.com> (sfid-20081129_080026_811413_391D7FEA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200811271952.21408.herton@mandriva.com.br> (sfid-20081127_225215_066688_243428EB)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Quinta 27 Novembro 2008, =E0s 18:02:22, Stefanik G=E1bor escreveu:
-> On Thu, Nov 27, 2008 at 6:43 PM, Herton Ronaldo Krzesinski
+"Johannes Berg" <johannes@sipsolutions.net> writes:
+
+> On Fri, 2008-11-28 at 21:49 +0200, Kalle Valo wrote:
+>> --- a/include/net/mac80211.h
+>> +++ b/include/net/mac80211.h
+>> @@ -560,6 +560,7 @@ struct ieee80211_conf {
+>>  
+>>  	u16 listen_interval;
+>>  	bool radio_enabled;
+>> +	int dynamic_ps_timeout;
 >
-> <herton@mandriva.com.br> wrote:
-> > nack.
-> >
-> > I've seen other drivers set just a flag when hardware has a bit fie=
-ld to
-> > signalize that there isn't need to ack the tx packet to be sent, bu=
-t
-> > don't saw anyone changing retry in tx hw header. Also setting to 0 =
-in
-> > no_ack case looks wrong, for example see ath5k where it even checks=
- for
-> > 0 and returns an error if you try to do this.
-> >
-> > --
-> > []'s
-> > Herton
->
-> IMO the current implementation is even worse - completely disregard
-> NO_ACK, and when a packet that should not be ACKed according to IEEE
-> 802.11:2007 is sent (such as a broadcast), retry repeatedly until
-> timeout.
+> Same here, add documentation please;
 
-In this case then shouldn't mac80211/rate control alg give a right rate=
-s[0].count?
-And other drivers have same bug?
-But I agree that we should set to 0 if to the hardware it means that 0 =
-is the
-same meaning to the no ack bitfield on others; only there is no referen=
-ce/docs
-mentioning this.
+I will.
 
-> Also, v26.1010 of the vendor driver does exactly what my patch does.
+> also, I think you need to call the hw_config call when this changes
+> so drivers can upload the new value to the firmware or whatever?
 
-Is this newer than 26.1036.0708.2008 I have here? The version it never =
-sets 0,
-in code there is this:
+Doh, I missed that. Yes, I think we need to do that.
 
-                if( WLAN_FC_GET_STYPE(le16_to_cpu(frag_hdr->frame_ctl))=
- =3D=3D IEEE80211_STYPE_PROBE_RESP )
-                        tx[5] |=3D (1<<8);//(priv->retry_data<<8); //re=
-try lim ;
-                else
-                        tx[5] |=3D (11<<8);//(priv->retry_data<<8); //r=
-etry lim ;
+> Which drivers actually will end up using it and how?
 
-I didn't found this version 26.1010 to download, do you know where I ca=
-n get?
+Currently I'm only aware of iwl3945 and iwlagn. I have some example
+patches for them, but they aren't ready yet.
 
---
-[]'s
-Herton
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Kalle Valo
