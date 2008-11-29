@@ -1,181 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:57981 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752747AbYK2VeA (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:44243 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103AbYK2KuW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2008 16:34:00 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/6 v2] p54: revamp station power save management in access point mode
-Date: Sat, 29 Nov 2008 22:33:57 +0100
+	Sat, 29 Nov 2008 05:50:22 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so2169538ugf.37
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Nov 2008 02:50:19 -0800 (PST)
+From: Henning Rogge <hrogge@googlemail.com>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
+Date: Sat, 29 Nov 2008 11:50:11 +0100
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Stefan Steuerwald <salsasepp@googlemail.com>
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200811252131.30161.hrogge@googlemail.com> <1227646037.4613.46.camel@johannes.berg> <EA31B699-C803-460C-8D90-9E946CC97A33@linux.intel.com>
+In-Reply-To: <EA31B699-C803-460C-8D90-9E946CC97A33@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200811292233.58204.chunkeey@web.de> (sfid-20081129_223408_914013_737E231A)
+Content-Type: multipart/signed;
+  boundary="nextPart2244641.TaaiOj8kXA";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200811291150.16702.hrogge@googlemail.com> (sfid-20081129_115028_752921_80935A67)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch addresses the problem in:
-http://marc.info/?l=linux-wireless&m=122727674810057&w=2
+--nextPart2244641.TaaiOj8kXA
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_j5RMJNpPK6oFEoF"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Thanks to Stefan Steuerwald <salsasepp@googlemail.com> 
-extensive iPod touch tests. We could finally squash some bugs in 
-p54's master mode / access point implementation.
+--Boundary-01=_j5RMJNpPK6oFEoF
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Let's hope we got everything right this time and all stations
-from now on will wake up on TIM and receive their queued frames
-and go to sleep again without any hiccups. 
+On Wednesday 26 November 2008 06:21:40 Marcel Holtmann wrote:
+> I know that WEXT were pretty bad in describing what to expect from
+> these values and every driver did whatever it thought it would be
+> best. Can we not just try to define how these values should be filled
+> in and then either mark drivers as broken or try to fix them? Just an
+> idea.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-11-28 20:18:53.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-11-29 21:32:59.000000000 +0100
-@@ -653,6 +653,10 @@ static void p54_rx_frame_sent(struct iee
- 		__skb_unlink(entry, &priv->tx_queue);
- 		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
- 
-+		entry_hdr = (struct p54_hdr *) entry->data;
-+		entry_data = (struct p54_tx_data *) entry_hdr->data;
-+		priv->tx_stats[entry_data->hw_queue].len--;
-+
- 		if (unlikely(entry == priv->cached_beacon)) {
- 			kfree_skb(entry);
- 			priv->cached_beacon = NULL;
-@@ -669,8 +673,6 @@ static void p54_rx_frame_sent(struct iee
- 		BUILD_BUG_ON(offsetof(struct ieee80211_tx_info,
- 				      status.ampdu_ack_len) != 23);
- 
--		entry_hdr = (struct p54_hdr *) entry->data;
--		entry_data = (struct p54_tx_data *) entry_hdr->data;
- 		if (entry_hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN))
- 			pad = entry_data->align[0];
- 
-@@ -688,7 +690,6 @@ static void p54_rx_frame_sent(struct iee
- 			}
- 		}
- 
--		priv->tx_stats[entry_data->hw_queue].len--;
- 		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
- 		     (!payload->status))
- 			info->flags |= IEEE80211_TX_STAT_ACK;
-@@ -1005,6 +1006,38 @@ static int p54_sta_unlock(struct ieee802
- 	return 0;
- }
- 
-+static void p54_sta_notify_ps(struct ieee80211_hw *dev,
-+			      enum sta_notify_ps_cmd notify_cmd,
-+			      struct ieee80211_sta *sta)
-+{
-+	switch (notify_cmd) {
-+	case STA_NOTIFY_AWAKE:
-+		p54_sta_unlock(dev, sta->addr);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+static void p54_sta_notify(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
-+			      enum sta_notify_cmd notify_cmd,
-+			      struct ieee80211_sta *sta)
-+{
-+	switch (notify_cmd) {
-+	case STA_NOTIFY_ADD:
-+	case STA_NOTIFY_REMOVE:
-+		/*
-+		 * Notify the firmware that we don't want or we don't
-+		 * need to buffer frames for this station anymore.
-+		 */
-+
-+		p54_sta_unlock(dev, sta->addr);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
- static int p54_tx_cancel(struct ieee80211_hw *dev, struct sk_buff *entry)
- {
- 	struct p54_common *priv = dev->priv;
-@@ -1070,7 +1103,7 @@ static int p54_tx_fill(struct ieee80211_
- 		if (info->control.sta)
- 			*aid = info->control.sta->aid;
- 		else
--			*flags = P54_HDR_FLAG_DATA_OUT_NOCANCEL;
-+			*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
- 	}
- 	return ret;
- }
-@@ -1083,7 +1116,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	struct p54_hdr *hdr;
- 	struct p54_tx_data *txhdr;
- 	size_t padding, len, tim_len = 0;
--	int i, j, ridx;
-+	int i, j, ridx, ret;
- 	u16 hdr_flags = 0, aid = 0;
- 	u8 rate, queue;
- 	u8 cts_rate = 0x20;
-@@ -1093,30 +1126,18 @@ static int p54_tx(struct ieee80211_hw *d
- 
- 	queue = skb_get_queue_mapping(skb);
- 
--	if (p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid)) {
--		current_queue = &priv->tx_stats[queue];
--		if (unlikely(current_queue->len > current_queue->limit))
--			return NETDEV_TX_BUSY;
--		current_queue->len++;
--		current_queue->count++;
--		if (current_queue->len == current_queue->limit)
--			ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
--	}
-+	ret = p54_tx_fill(dev, skb, info, &queue, &tim_len, &hdr_flags, &aid);
-+	current_queue = &priv->tx_stats[queue];
-+	if (unlikely((current_queue->len > current_queue->limit) && ret))
-+		return NETDEV_TX_BUSY;
-+	current_queue->len++;
-+	current_queue->count++;
-+	if ((current_queue->len == current_queue->limit) && ret)
-+		ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
- 
- 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
- 	len = skb->len;
- 
--	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT) {
--		if (info->control.sta)
--			if (p54_sta_unlock(dev, info->control.sta->addr)) {
--				if (current_queue) {
--					current_queue->len--;
--					current_queue->count--;
--				}
--				return NETDEV_TX_BUSY;
--			}
--	}
--
- 	txhdr = (struct p54_tx_data *) skb_push(skb, sizeof(*txhdr) + padding);
- 	hdr = (struct p54_hdr *) skb_push(skb, sizeof(*hdr));
- 
-@@ -1835,6 +1856,8 @@ static const struct ieee80211_ops p54_op
- 	.add_interface		= p54_add_interface,
- 	.remove_interface	= p54_remove_interface,
- 	.set_tim		= p54_set_tim,
-+	.sta_notify_ps		= p54_sta_notify_ps,
-+	.sta_notify		= p54_sta_notify,
- 	.config			= p54_config,
- 	.config_interface	= p54_config_interface,
- 	.bss_info_changed	= p54_bss_info_changed,
-diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
---- a/drivers/net/wireless/p54/p54common.h	2008-11-28 20:18:53.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.h	2008-11-29 18:19:35.000000000 +0100
-@@ -302,7 +302,7 @@ enum p54_frame_sent_status {
- 	P54_TX_OK = 0,
- 	P54_TX_FAILED,
- 	P54_TX_PSM,
--	P54_TX_PSM_CANCELLED
-+	P54_TX_PSM_CANCELLED = 4
+I just created a second patch for station info.
+
+Changes since v1:
+=2D removed noise and quality from station info in NL80211
+=2D added bandwith to station info in NL80211
+=2D changed name of patch file to nl80211ext_v2.patch
+
+The problem of a well defined signal strength value is still not addressed,=
+=20
+but I have not enough knowledge about the driver specific implementations t=
+o=20
+make a good suggestion I think.
+
+Henning
+
+=2D--------------------------------------------------
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index e08c8bc..a9639fa 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -413,6 +413,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_LLID,
+ 	NL80211_STA_INFO_PLID,
+ 	NL80211_STA_INFO_PLINK_STATE,
++	NL80211_STA_INFO_SIGNAL,
++	NL80211_STA_INFO_BANDWITH,
+=20
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1d57835..3621ae2 100644
+=2D-- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -175,6 +175,8 @@ enum station_info_flags {
+ 	STATION_INFO_LLID		=3D 1<<3,
+ 	STATION_INFO_PLID		=3D 1<<4,
+ 	STATION_INFO_PLINK_STATE	=3D 1<<5,
++	STATION_INFO_SIGNAL		=3D 1<<6,
++	STATION_INFO_BANDWITH		=3D 1<<7,
  };
- 
- struct p54_frame_sent {
+=20
+ /**
+@@ -198,6 +200,8 @@ struct station_info {
+ 	u16 llid;
+ 	u16 plid;
+ 	u8 plink_state;
++	u8 signal;
++	u16 bandwith;
+ };
+=20
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 16423f9..14e3457 100644
+=2D-- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -307,14 +307,24 @@ static int ieee80211_config_default_key(struct wiphy=
+=20
+*wiphy,
+ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata =3D sta->sdata;
++  struct ieee80211_supported_band *sband;
+=20
+ 	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+=2D			STATION_INFO_TX_BYTES;
++			STATION_INFO_TX_BYTES |
++			STATION_INFO_SIGNAL |
++			STATION_INFO_BANDWITH;
+=20
+ 	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes =3D sta->rx_bytes;
+ 	sinfo->tx_bytes =3D sta->tx_bytes;
++	sinfo->signal =3D sta->last_signal;
++
++	sband =3D sta->local->hw.wiphy->bands[sta->local->hw.conf.channel->band];
++	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS))
++	  sinfo->bandwith =3D sband->bitrates[sta->last_tx_rate.idx].bitrate;
++	else
++	  sinfo->bandwith =3D 0;
+=20
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c9141e3..225ec26 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1057,6 +1057,12 @@ static int nl80211_send_station(struct sk_buff *msg,=
+=20
+u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
++	if (sinfo->filled & STATION_INFO_SIGNAL)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
++			    sinfo->signal);
++	if (sinfo->filled & STATION_INFO_BANDWITH)
++		NLA_PUT_U16(msg, NL80211_STA_INFO_BANDWITH,
++			    sinfo->bandwith);
+=20
+ 	nla_nest_end(msg, sinfoattr);
+=20
+
+
+--Boundary-01=_j5RMJNpPK6oFEoF
+Content-Type: text/x-patch;
+  charset="UTF-8";
+  name="nl80211ext_v2.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="nl80211ext_v2.patch"
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index e08c8bc..a9639fa 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -413,6 +413,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_LLID,
+ 	NL80211_STA_INFO_PLID,
+ 	NL80211_STA_INFO_PLINK_STATE,
++	NL80211_STA_INFO_SIGNAL,
++	NL80211_STA_INFO_BANDWITH,
+=20
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1d57835..3621ae2 100644
+=2D-- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -175,6 +175,8 @@ enum station_info_flags {
+ 	STATION_INFO_LLID		=3D 1<<3,
+ 	STATION_INFO_PLID		=3D 1<<4,
+ 	STATION_INFO_PLINK_STATE	=3D 1<<5,
++	STATION_INFO_SIGNAL		=3D 1<<6,
++	STATION_INFO_BANDWITH		=3D 1<<7,
+ };
+=20
+ /**
+@@ -198,6 +200,8 @@ struct station_info {
+ 	u16 llid;
+ 	u16 plid;
+ 	u8 plink_state;
++	u8 signal;
++	u16 bandwith;
+ };
+=20
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 16423f9..14e3457 100644
+=2D-- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -307,14 +307,24 @@ static int ieee80211_config_default_key(struct wiphy =
+*wiphy,
+ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata =3D sta->sdata;
++  struct ieee80211_supported_band *sband;
+=20
+ 	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+=2D			STATION_INFO_TX_BYTES;
++			STATION_INFO_TX_BYTES |
++			STATION_INFO_SIGNAL |
++			STATION_INFO_BANDWITH;
+=20
+ 	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes =3D sta->rx_bytes;
+ 	sinfo->tx_bytes =3D sta->tx_bytes;
++	sinfo->signal =3D sta->last_signal;
++
++	sband =3D sta->local->hw.wiphy->bands[sta->local->hw.conf.channel->band];
++	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS))
++	  sinfo->bandwith =3D sband->bitrates[sta->last_tx_rate.idx].bitrate;
++	else
++	  sinfo->bandwith =3D 0;
+=20
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c9141e3..225ec26 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1057,6 +1057,12 @@ static int nl80211_send_station(struct sk_buff *msg,=
+ u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
++	if (sinfo->filled & STATION_INFO_SIGNAL)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
++			    sinfo->signal);
++	if (sinfo->filled & STATION_INFO_BANDWITH)
++		NLA_PUT_U16(msg, NL80211_STA_INFO_BANDWITH,
++			    sinfo->bandwith);
+=20
+ 	nla_nest_end(msg, sinfoattr);
+=20
+
+--Boundary-01=_j5RMJNpPK6oFEoF--
+
+--nextPart2244641.TaaiOj8kXA
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkkxHmgACgkQcenvcwAcHWflIQCeKQueIOjY/56Z9RQuWRjO+d47
+x0sAniN+6b8nRSCzL3D+UExm+pEfzzHa
+=UhKD
+-----END PGP SIGNATURE-----
+
+--nextPart2244641.TaaiOj8kXA--
