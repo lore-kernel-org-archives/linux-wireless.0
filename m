@@ -1,72 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.187]:27377 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995AbYKZQ3L (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:44348 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752887AbYK2Xsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 11:29:11 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so524545rnd.17
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 08:29:09 -0800 (PST)
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ipw2200: increase scan timeout
-Date: Wed, 26 Nov 2008 17:28:43 +0100
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>
-References: <200811251809.55461.helmut.schaa@gmail.com> <1227637971.13619.262.camel@rc-desk>
-In-Reply-To: <1227637971.13619.262.camel@rc-desk>
+	Sat, 29 Nov 2008 18:48:45 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 1/6 v2.2] mac80211: add sta_notify_ps callback
+Date: Sun, 30 Nov 2008 00:48:41 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>
+References: <200811292232.56550.chunkeey@web.de> <200811292309.38521.chunkeey@web.de> <4931CE5E.9030402@lwfinger.net>
+In-Reply-To: <4931CE5E.9030402@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200811261728.44428.helmut.schaa@gmail.com> (sfid-20081126_172918_015990_3C3E643C)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+  charset="iso-8859-15"
+Message-Id: <200811300048.42352.chunkeey@web.de> (sfid-20081130_004848_440335_CD76A346)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 25. November 2008 schrieb reinette chatre:
-> On Tue, 2008-11-25 at 09:09 -0800, Helmut Schaa wrote:
-> > The current scan timeout is set to 5 seconds. If the timeout is hit because
-> > the firmware did not respond yet, the adapter gets restarted, which results
-> > in a disassociation.
-> > 
-> > However, in an environment with lots of access points the scan sometimes takes
-> > longer than 5 seconds. This patch simply increases the timeout to 10 seconds.
-> > 
-> > Signed-off-by: helmut.schaa@googlemail.com
-> > ---
-> > 
-> > I was able to reproduce the issue fairly reliable with a 2915 adapter by 
-> > periodically triggering scans while associated.
-> > 
-> > I have no idea in which situations the scan takes longer than 5 seconds to
-> > complete but maybe it might even take longer than 10 seconds. Has anybody from
-> > Intel insight into the firmware scan code?
-> > 
-> > diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-> > index c73173a..a776da3 100644
-> > --- a/drivers/net/wireless/ipw2x00/ipw2200.c
-> > +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-> > @@ -2304,7 +2304,7 @@ static void ipw_bg_adapter_restart(struct work_struct *work)
-> >  	mutex_unlock(&priv->mutex);
-> >  }
+This patch is necessary in order to provide a proper Access point support for p54.
+Unfortunately for us, there is no documented way to disable the interfering
+power save buffering mechanism in firmware completely.
+  
+Therefore we give in and notify the driver through our new sta_notify_ps callback, 
+so that we can update the filter state.
+  
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ the extra patch for mac80211_hwsim is no longer needed...
+This whole series is all for wireless-testing.
+ 
+erm... now with a updated documentation!!1one
+---
 > >  
-> > -#define IPW_SCAN_CHECK_WATCHDOG (5 * HZ)
-> > +#define IPW_SCAN_CHECK_WATCHDOG (10 * HZ)
-> >  
-> >  static void ipw_scan_check(void *data)
-> >  {
+> >  	clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
+> > +	if (local->ops->sta_notify_ps)
+> > +		local->ops->sta_notify_ps(local_to_hw(local), STA_WOKE_UP,
+> > +					  &sta->sta);
 > 
-> I do not have insight into the scan code ... but I can try to find out
-> if there is something specific you need to know.
-> 
-> This change seems harmless and if it helps you it may help somebody else
-> too.
-> 
-> Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-
-John, please do _not_ merge this patch. It only hides the real problem.
-I'll send another patch (including explanations) in a few minutes.
-
-Helmut
+> With this patch, STA_WILL_SLEEP and STA_WOKE_UP are undefined. Is there a
+> prerequisite that I missed?
+> Larry
+no it's just fsck fallout. one file got synced in time... the other didn't.
+SLUB_DEBUG/SLAB_DEBUG don't work at all with p54usb.
+---
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 6a1d4ea..4b972fc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -779,6 +779,19 @@ enum sta_notify_cmd {
+ };
+ 
+ /**
++ * enum sta_notify_ps_cmd - sta power save notify command
++ *
++ * Used with the sta_notify_ps() callback in &struct ieee80211_ops to
++ * notify the driver if a station made a power state transition.
++ *
++ * @STA_NOTIFY_SLEEP: a station is now sleeping
++ * @STA_NOTIFY_AWAKE: a sleeping station woke up
++ */
++enum sta_notify_ps_cmd {
++	STA_NOTIFY_SLEEP, STA_NOTIFY_AWAKE,
++};
++
++/**
+  * enum ieee80211_tkip_key_type - get tkip key
+  *
+  * Used by drivers which need to get a tkip key for skb. Some drivers need a
+@@ -1248,6 +1261,9 @@ enum ieee80211_ampdu_mlme_action {
+  * @sta_notify: Notifies low level driver about addition or removal
+  *	of associated station or AP.
+  *
++ * @sta_ps_notify: Notifies low level driver about the power state transition
++ *	of a associated station. Must be atomic.
++ *
+  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
+  *	bursting) for a hardware TX queue.
+  *
+@@ -1314,6 +1330,8 @@ struct ieee80211_ops {
+ 	int (*set_frag_threshold)(struct ieee80211_hw *hw, u32 value);
+ 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			enum sta_notify_cmd, struct ieee80211_sta *sta);
++	void (*sta_notify_ps)(struct ieee80211_hw *hw,
++			enum sta_notify_ps_cmd, struct ieee80211_sta *sta);
+ 	int (*conf_tx)(struct ieee80211_hw *hw, u16 queue,
+ 		       const struct ieee80211_tx_queue_params *params);
+ 	int (*get_tx_stats)(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5a1a60f..d2e8cc3 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -654,10 +654,14 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ static void ap_sta_ps_start(struct sta_info *sta)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ieee80211_local *local = sdata->local;
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	atomic_inc(&sdata->bss->num_sta_ps);
+ 	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL);
++	if (local->ops->sta_notify_ps)
++		local->ops->sta_notify_ps(local_to_hw(local), STA_NOTIFY_SLEEP,
++					  &sta->sta);
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	printk(KERN_DEBUG "%s: STA %s aid %d enters power save mode\n",
+ 	       sdata->dev->name, print_mac(mac, sta->sta.addr), sta->sta.aid);
+@@ -675,6 +679,9 @@ static int ap_sta_ps_end(struct sta_info *sta)
+ 	atomic_dec(&sdata->bss->num_sta_ps);
+ 
+ 	clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
++	if (local->ops->sta_notify_ps)
++		local->ops->sta_notify_ps(local_to_hw(local), STA_NOTIFY_AWAKE,
++					  &sta->sta);
+ 
+ 	if (!skb_queue_empty(&sta->ps_tx_buf))
+ 		sta_info_clear_tim_bit(sta);
