@@ -1,74 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:54703 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753354AbYKBNkP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45032 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbYK2Jl4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2008 08:40:15 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFT][PATCH] p54: enable Mesh Point support
-Date: Sun, 2 Nov 2008 14:40:10 +0100
-Cc: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200811021440.10376.chunkeey@web.de> (sfid-20081102_144022_556099_CD89B943)
+	Sat, 29 Nov 2008 04:41:56 -0500
+Subject: Re: [PATCH 1/3] mac80211: add power state transition callbacks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>
+In-Reply-To: <200811282345.48379.chunkeey@web.de>
+References: <200811282345.48379.chunkeey@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HWvImUd/NJZ7RwBfnIny"
+Date: Sat, 29 Nov 2008 10:41:49 +0100
+Message-Id: <1227951709.3542.1.camel@johannes.berg> (sfid-20081129_104201_088320_7934C4ED)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables Mesh Point operation for any p54 device.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-if someone with a p54 & zd1211/b43 is interesed. 
-this patch only works on top of the current wireless-testing tree for now.
+--=-HWvImUd/NJZ7RwBfnIny
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-	Chr
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-11-01 20:41:08.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-11-02 13:34:24.000000000 +0100
-@@ -1059,6 +1059,7 @@ static int p54_tx_fill(struct ieee80211_
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		if (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) {
- 			*aid = 0;
- 			*queue = 3;
-@@ -1571,6 +1572,7 @@ static int p54_add_interface(struct ieee
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		priv->mode = conf->type;
- 		break;
- 	default:
-@@ -1590,6 +1592,7 @@ static int p54_add_interface(struct ieee
- 		p54_setup_mac(dev, P54_FILTER_TYPE_AP, priv->mac_addr);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		p54_setup_mac(dev, P54_FILTER_TYPE_IBSS, NULL);
- 		break;
- 	default:
-@@ -1654,6 +1657,7 @@ static int p54_config_interface(struct i
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		memcpy(priv->bssid, conf->bssid, ETH_ALEN);
- 		ret = p54_set_freq(dev, dev->conf.channel->center_freq);
- 		if (ret)
-@@ -1829,6 +1833,7 @@ struct ieee80211_hw *p54_init_common(siz
- 
- 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION |
- 					  NL80211_IFTYPE_ADHOC |
-+					  NL80211_IFTYPE_MESH_POINT |
- 					  NL80211_IFTYPE_AP);
- 
- 	dev->channel_change_time = 1000;	/* TODO: find actual value */
+On Fri, 2008-11-28 at 23:45 +0100, Christian Lamparter wrote:
+
+>  /**
+>   * enum sta_notify_cmd - sta notify command
+>   *
+> - * Used with the sta_notify() callback in &struct ieee80211_ops, this
+> - * indicates addition and removal of a station to station table.
+> + * Used with the sta_notify() callback in &struct ieee80211_ops.
+> + * this command indicates addition and removal of a station to
+> + * station table, or if a station made a power state transition.
+>   *
+>   * @STA_NOTIFY_ADD: a station was added to the station table
+>   * @STA_NOTIFY_REMOVE: a station being removed from the station table
+> + * @STA_NOTIFY_SLEEP: a station is now sleeping
+> + * @STA_NOTIFY_AWAKE: a sleeping station woke up
+>   */
+>  enum sta_notify_cmd {
+> -	STA_NOTIFY_ADD, STA_NOTIFY_REMOVE
+> +	STA_NOTIFY_ADD, STA_NOTIFY_REMOVE,
+> +	STA_NOTIFY_SLEEP, STA_NOTIFY_AWAKE,
+>  };
+
+You know, I'm sorry, but I've come to realise that adding it to
+sta_notify isn't a good idea after all. The one thing I forgot is that
+this new callback has to be atomic because it's called from the rx path,
+and sta_notify doesn't have to be.
+
+Unless we want to defer RX packet processing to a workqueue rather than
+a tasklet?
+
+johannes
+
+--=-HWvImUd/NJZ7RwBfnIny
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJMQ5UAAoJEKVg1VMiehFYfuMP/08IrdvugLDnxCVYhFHDQH+O
+DeBwDdLajYKzTFOUGLTkCKoqbKTWLWGn6VRvHgexvlNz3wfCPRnWraocw+O87jKu
+5HwjVIZ8joiGc+QvRHdC1/L8NCkCiAa6wYs0n0zDUkxI2CkvigmU8jlIdezYrE6e
+GiuIVqhIVQUAixehRXtMV2dbb85+R0wnBTDDol0bd6mNINg++bXHranyC6vrcSoO
+n/T/r1k+NR2wx3rI2PSV2R6il5ogHI/I+SFPNOxfDv2x+KvqPum5rlLhFmfy3WM3
+ThQHcwcig7lDDGMl9iLNJ7+FDrZ7VkCfiFfv/4XBKqqSWenLPn0lxYgkTEBO9nif
+01e5mtLnz3+AtJS0NIz/BRgYpOPco5vWfWidz4Mt/F/ephAHAdCZODR4T5eFvAGM
+wJ/q4TIKTUbon6KaNEhiW/9SkoHE9hyE/9fufWhOFTGa3GdZrrLibIz08OXcAkK/
+JYV5DYve/w6iNoSjHmler36gA8RjzIlUkU9FMOcJbNZKBoVQULVSWNQ8rYl6LelF
+MT6d1Umquj6yqEH6zzye2Z7CDHhe2RijIcd9DpQtVNQS2NXAbK1Bspl+CM9gnF6P
+NPIrMpdSvW7SpN7LDXcJ7JiJkuBiu02+IRezkbWMRUP1UQ0d1f6C892LVHmzs507
+6hFKUlpiA6qGP7GvUsNR
+=rGZ8
+-----END PGP SIGNATURE-----
+
+--=-HWvImUd/NJZ7RwBfnIny--
+
