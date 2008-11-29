@@ -1,75 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:63157 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082AbYKZXyR (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:58848 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbYK2QXP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 18:54:17 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so321869eyi.37
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2008 15:54:15 -0800 (PST)
-Message-ID: <e38d12ff0811261554o1a918853x21bc192e8488be85@mail.gmail.com> (sfid-20081127_005423_939309_557E6765)
-Date: Wed, 26 Nov 2008 18:54:14 -0500
-From: "Andrey Vul" <andrey.vul@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: cannot compile compat-wireless-2.6-old
-Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081126173453.GC6515@tesla>
+	Sat, 29 Nov 2008 11:23:15 -0500
+Received: from esebh107.NOE.Nokia.com (esebh107.ntc.nokia.com [172.21.143.143])
+	by mgw-mx03.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mATGNBGW020236
+	for <linux-wireless@vger.kernel.org>; Sat, 29 Nov 2008 18:23:12 +0200
+Received: from tikku (essapo-nirac25269.europe.nokia.com [10.162.252.69])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mATGN9QM023606
+	for <linux-wireless@vger.kernel.org>; Sat, 29 Nov 2008 18:23:10 +0200
+To: linux-wireless@vger.kernel.org
+Subject: iwl3945 rate control broken in wireless-testing
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sat, 29 Nov 2008 18:23:09 +0200
+Message-ID: <87zljilcwi.fsf@nokia.com> (sfid-20081129_172322_241156_99456857)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <e38d12ff0811250953p4dca0fe2kbc378f0184d4d4fa@mail.gmail.com>
-	 <e38d12ff0811250957y16078303g8f8346d60c92ff4c@mail.gmail.com>
-	 <20081125203244.GD5950@tesla>
-	 <e38d12ff0811251330x2b2d9a35h608b1619441f1252@mail.gmail.com>
-	 <e38d12ff0811251651k32a66cd5r3de7f1d504b4723@mail.gmail.com>
-	 <20081126173453.GC6515@tesla>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 26, 2008 at 12:34, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-> On Tue, Nov 25, 2008 at 04:51:48PM -0800, Andrey Vul wrote:
->> On Tue, Nov 25, 2008 at 16:30, Andrey Vul <andrey.vul@gmail.com> wrote:
->> > On Tue, Nov 25, 2008 at 15:32, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
->> >> On Tue, Nov 25, 2008 at 09:57:57AM -0800, Andrey Vul wrote:
->> >>> I cannot compile the current compat tarball.
->> >>> Make log:
->> >>> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
->> >>> make -C /usr/src/linux-2.6.26.6-rt11/ M=/root/compat-wireless-2.6-old modules
->> >>> make[1]: Entering directory `/usr/src/linux-2.6.26.6-rt11'
->> >>>  CC [M]  /root/compat-wireless-2.6-old/drivers/net/wireless/mac80211_hwsim.o
->> >>> In file included from <command-line>:0:
->> >>> /root/compat-wireless-2.6-old/include/net/compat.h:877: error:
->> >>> redefinition of 'list_splice_tail'
->> >>> include/linux/list.h:356: error: previous definition of
->> >>> 'list_splice_tail' was here
->> >>> /root/compat-wireless-2.6-old/include/net/compat.h:892: error:
->> >>> redefinition of 'list_splice_tail_init'
->> >>> include/linux/list.h:379: error: previous definition of
->> >>> 'list_splice_tail_init' was here
->> >>
->> >> list_splice_tail was added as of 2.6.27, and you have 2.6.26. Which
->> >> means your kernel headers for your box are completely messed up. This
->> >> means you can expect a kernel panic if you were to successfully
->> >> compile external modules. Go fix that first.
->> >>
->> I have $(uname -r)/include/linux/list.h containing list_splice_tail,
->> where uname -r is 2.6.26.5-rt9.
->> Frankly, I need rt and the code for my wifi card is only in the compat tarball.
->> Is this a problem with .[56] or with -rt?
->
-> Ah, yeah RT had their own list_splice_tail(), try this. BTW what driver
-> are you going to be using?
->
+Hello,
 
-I'm going to be using iwl5000 which depends on iwlwifi, iwlcore,
-iwlwifi-leds, and iwlwifi-rfkill .
+rate control in iwl3945 from wireless-testing seems to have been
+broken for few weeks now, but I do not exactly when it exactly
+happened because my ADSL connection is usually the bottleneck. 
 
-So, in short, all I have to do is this?
-#!/bin/bash
-for a in `find ~/compat-wireless-2.6-old -name '*.c' -or -name '*.h'`; do
-sed -e 's/list_splice_tail/list_splice_tail27/' -i $a;
-done
+If I set the rate manually (for example iwconfig wlan0 rate 54M)
+correct rate is used, but with auto it doesn't rise from 1 Mbps. I
+thought Larry's fix for the pid rate-setting algorithm (commit
+d8dda0d5) would fix the problem, but that doesn't seem to be the case.
 
-The only thing I see as possibly problematic is
-list_splice_tail27_init() (sed is regex after all).
+I'm using iwl3945 and latest wireless-testing (commit 3b329bc4a) on
+Lenovo X60s running debian unstable 32bit. I don't have time to
+investigate this further, but I can test patches.
+
 -- 
-Andrey Vul
+Kalle Valo
