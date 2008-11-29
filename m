@@ -1,183 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53390 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553AbYKZVhP (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:18842 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016AbYK2Xoh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2008 16:37:15 -0500
-Subject: [PATCH v2] cfg80211: handle SIOCGIWNAME
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 26 Nov 2008 22:36:31 +0100
-Message-Id: <1227735391.14269.0.camel@johannes.berg> (sfid-20081126_223721_463748_F9D3E1D4)
-Mime-Version: 1.0
+	Sat, 29 Nov 2008 18:44:37 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so1022107nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Nov 2008 15:44:36 -0800 (PST)
+Message-ID: <b3153e950811291544n409ac4a9vd6560bf7881224ff@mail.gmail.com> (sfid-20081130_004445_461155_0BD30F6D)
+Date: Sat, 29 Nov 2008 15:44:35 -0800
+From: "mohamed salim abbas" <mabbaswireless@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: iwl3945 rate control broken in wireless-testing
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87zljilcwi.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <87zljilcwi.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves the SIOCGIWNAME handling from mac80211 to cfg80211.
+I am looking into this. I will email a patch to fix this soon I hope by Tuesday.
+Mohamed
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h     |    7 +++++
- net/mac80211/wext.c        |   44 ---------------------------------
- net/wireless/Makefile      |    1 
- net/wireless/wext-compat.c |   60 +++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 69 insertions(+), 43 deletions(-)
-
---- everything.orig/net/wireless/Makefile	2008-11-26 21:31:50.000000000 +0100
-+++ everything/net/wireless/Makefile	2008-11-26 21:34:29.000000000 +0100
-@@ -6,6 +6,7 @@ obj-$(CONFIG_LIB80211_CRYPT_CCMP) += lib
- obj-$(CONFIG_LIB80211_CRYPT_TKIP) += lib80211_crypt_tkip.o
- 
- cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o
-+cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o
- cfg80211-$(CONFIG_NL80211) += nl80211.o
- 
- ccflags-y += -D__CHECK_ENDIAN__
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ everything/net/wireless/wext-compat.c	2008-11-26 21:36:55.000000000 +0100
-@@ -0,0 +1,60 @@
-+/*
-+ * cfg80211 - wext compat code
-+ *
-+ * This is temporary code until all wireless functionality is migrated
-+ * into cfg80211, when that happens all the exports here go away and
-+ * we directly assign the wireless handlers of wireless interfaces.
-+ *
-+ * Copyright 2008	Johannes Berg <johannes@sipsolutions.net>
-+ */
-+
-+#include <linux/wireless.h>
-+#include <linux/nl80211.h>
-+#include <net/iw_handler.h>
-+#include <net/wireless.h>
-+#include <net/cfg80211.h>
-+#include "core.h"
-+
-+int cfg80211_wext_giwname(struct net_device *dev,
-+			  struct iw_request_info *info,
-+			  char *name, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct ieee80211_supported_band *sband;
-+	bool is_ht = false, is_a = false, is_b = false, is_g = false;
-+
-+	if (!wdev)
-+		return -EOPNOTSUPP;
-+
-+	sband = wdev->wiphy->bands[IEEE80211_BAND_5GHZ];
-+	if (sband) {
-+		is_a = true;
-+		is_ht |= sband->ht_cap.ht_supported;
-+	}
-+
-+	sband = wdev->wiphy->bands[IEEE80211_BAND_2GHZ];
-+	if (sband) {
-+		int i;
-+		/* Check for mandatory rates */
-+		for (i = 0; i < sband->n_bitrates; i++) {
-+			if (sband->bitrates[i].bitrate == 10)
-+				is_b = true;
-+			if (sband->bitrates[i].bitrate == 60)
-+				is_g = true;
-+		}
-+		is_ht |= sband->ht_cap.ht_supported;
-+	}
-+
-+	strcpy(name, "IEEE 802.11");
-+	if (is_a)
-+		strcat(name, "a");
-+	if (is_b)
-+		strcat(name, "b");
-+	if (is_g)
-+		strcat(name, "g");
-+	if (is_ht)
-+		strcat(name, "n");
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(cfg80211_wext_giwname);
---- everything.orig/include/net/cfg80211.h	2008-11-26 21:31:50.000000000 +0100
-+++ everything/include/net/cfg80211.h	2008-11-26 21:36:39.000000000 +0100
-@@ -5,6 +5,8 @@
- #include <linux/skbuff.h>
- #include <linux/nl80211.h>
- #include <net/genetlink.h>
-+/* remove once we remove the wext stuff */
-+#include <net/iw_handler.h>
- 
- /*
-  * 802.11 configuration in-kernel interface
-@@ -515,4 +517,9 @@ struct cfg80211_ops {
- 				  struct ieee80211_txq_params *params);
- };
- 
-+/* temporary wext handlers */
-+int cfg80211_wext_giwname(struct net_device *dev,
-+			  struct iw_request_info *info,
-+			  char *name, char *extra);
-+
- #endif /* __NET_CFG80211_H */
---- everything.orig/net/mac80211/wext.c	2008-11-26 21:31:51.000000000 +0100
-+++ everything/net/mac80211/wext.c	2008-11-26 21:36:39.000000000 +0100
-@@ -135,48 +135,6 @@ static int ieee80211_ioctl_siwgenie(stru
- 	return -EOPNOTSUPP;
- }
- 
--static int ieee80211_ioctl_giwname(struct net_device *dev,
--				   struct iw_request_info *info,
--				   char *name, char *extra)
--{
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_supported_band *sband;
--	u8 is_ht = 0, is_a = 0, is_b = 0, is_g = 0;
--
--
--	sband = local->hw.wiphy->bands[IEEE80211_BAND_5GHZ];
--	if (sband) {
--		is_a = 1;
--		is_ht |= sband->ht_cap.ht_supported;
--	}
--
--	sband = local->hw.wiphy->bands[IEEE80211_BAND_2GHZ];
--	if (sband) {
--		int i;
--		/* Check for mandatory rates */
--		for (i = 0; i < sband->n_bitrates; i++) {
--			if (sband->bitrates[i].bitrate == 10)
--				is_b = 1;
--			if (sband->bitrates[i].bitrate == 60)
--				is_g = 1;
--		}
--		is_ht |= sband->ht_cap.ht_supported;
--	}
--
--	strcpy(name, "IEEE 802.11");
--	if (is_a)
--		strcat(name, "a");
--	if (is_b)
--		strcat(name, "b");
--	if (is_g)
--		strcat(name, "g");
--	if (is_ht)
--		strcat(name, "n");
--
--	return 0;
--}
--
--
- static int ieee80211_ioctl_giwrange(struct net_device *dev,
- 				 struct iw_request_info *info,
- 				 struct iw_point *data, char *extra)
-@@ -1138,7 +1096,7 @@ static int ieee80211_ioctl_siwencodeext(
- static const iw_handler ieee80211_handler[] =
- {
- 	(iw_handler) NULL,				/* SIOCSIWCOMMIT */
--	(iw_handler) ieee80211_ioctl_giwname,		/* SIOCGIWNAME */
-+	(iw_handler) cfg80211_wext_giwname,		/* SIOCGIWNAME */
- 	(iw_handler) NULL,				/* SIOCSIWNWID */
- 	(iw_handler) NULL,				/* SIOCGIWNWID */
- 	(iw_handler) ieee80211_ioctl_siwfreq,		/* SIOCSIWFREQ */
-
-
+On Sat, Nov 29, 2008 at 8:23 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> Hello,
+>
+> rate control in iwl3945 from wireless-testing seems to have been
+> broken for few weeks now, but I do not exactly when it exactly
+> happened because my ADSL connection is usually the bottleneck.
+>
+> If I set the rate manually (for example iwconfig wlan0 rate 54M)
+> correct rate is used, but with auto it doesn't rise from 1 Mbps. I
+> thought Larry's fix for the pid rate-setting algorithm (commit
+> d8dda0d5) would fix the problem, but that doesn't seem to be the case.
+>
+> I'm using iwl3945 and latest wireless-testing (commit 3b329bc4a) on
+> Lenovo X60s running debian unstable 32bit. I don't have time to
+> investigate this further, but I can test patches.
+>
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
