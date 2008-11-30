@@ -1,59 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26865 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbYKGIEZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2008 03:04:25 -0500
-Subject: Re: [PATCH 3/7] iwlwifi: fix priv->iw_mode setting when multiple
-	vif are configured
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1225967956.3619.199.camel@johannes.berg>
-References: <1225314349-11139-1-git-send-email-reinette.chatre@intel.com>
-	 <1225314349-11139-2-git-send-email-reinette.chatre@intel.com>
-	 <1225314349-11139-3-git-send-email-reinette.chatre@intel.com>
-	 <1225314349-11139-4-git-send-email-reinette.chatre@intel.com>
-	 <ae8368d03d2885c4942e2f9876dcaa60.squirrel@secure.sipsolutions.net>
-	 <20081105000900.GA10671@mail.intel.com>
-	 <1225884472.3619.72.camel@johannes.berg>
-	 <1225938894.2604.140.camel@debian.sh.intel.com>
-	 <1225967956.3619.199.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 07 Nov 2008 16:04:55 +0800
-Message-Id: <1226045096.2604.253.camel@debian.sh.intel.com> (sfid-20081107_090430_532932_29CD551C)
-Mime-Version: 1.0
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:48449 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753037AbYK3Aan (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Nov 2008 19:30:43 -0500
+Message-ID: <4931DEB1.4070603@lwfinger.net> (sfid-20081130_013054_571532_96439F74)
+Date: Sat, 29 Nov 2008 18:30:41 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Stefan Steuerwald <salsasepp@googlemail.com>,
+	John W Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 3/6 v6] p54: utilize cryptographic accelerator
+References: <200811292234.37794.chunkeey@web.de>
+In-Reply-To: <200811292234.37794.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-11-06 at 18:39 +0800, Johannes Berg wrote:
-> Ok, for one, it seems weird that you're saying you handled
->  * other bss
->  * allmulti
->  * bcn/presp promisc
->  * control
-> without doing anything. Does your hw/fw really always pass up control
-> frames? I didn't think it does.
+Christian Lamparter wrote:
+> This patch allows p54 to utilize its WEP, TKIP and CCMP accelerator.
 > 
-> Also, it seems rather odd that you need to reconnect etc. when a monitor
-> interface is added, that would destroy AP and mesh modes completely when
-> somebody adds a new monitor interface on AP mode to see what's going on.
-> 
-> Can you really not actually implement the filter flags but have to
-> completely reprogram the firmware for monitor mode? What exactly does
-> monitor mode do? It seems that at least, the logic in configure_filter
-> should mask out the control/allmulti flags when otherbss is not set,
-> because right now, if I add a monitor interface that _only_ asks for
-> control frames and _not_ other bss frames, it doesn't look like it would
-> work.
+> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
+> incorporates Larry's Fix... So I don't know if you want to add a signed-off as well?!
+> ---
 
-You are right. We don't need to reprogram the firmware completely to
-support these filter flags. Will post a patch to reimplement our
-configure_filter handler early next week.
-
-Thanks,
--yi
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
