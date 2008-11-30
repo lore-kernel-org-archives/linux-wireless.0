@@ -1,38 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:49544 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752981AbYKDSCZ (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:17159 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898AbYK3IsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2008 13:02:25 -0500
-Message-ID: <49108E26.4040205@lwfinger.net> (sfid-20081104_190229_573175_8C1F2950)
-Date: Tue, 04 Nov 2008 10:02:14 -0800
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 30 Nov 2008 03:48:12 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so2135008wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Nov 2008 00:48:11 -0800 (PST)
+Message-ID: <d5b9d7c80811300048l22b99fe3v27b65e5e4962a54b@mail.gmail.com> (sfid-20081130_094818_466075_F345C87B)
+Date: Sun, 30 Nov 2008 18:48:11 +1000
+From: "Vince Barwinski" <vince.barwinski@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Build problem with "compat-wireless-2.6-old"
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
-CC: Wilson Ribeiro <wribjr@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Realtek wireless 8187se
-References: <740646d0811040501w5571d464u757e05399803f768@mail.gmail.com> <69e28c910811040852u7f3f3481t7bf31ad3af8c03ad@mail.gmail.com>
-In-Reply-To: <69e28c910811040852u7f3f3481t7bf31ad3af8c03ad@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefanik G=E1bor wrote:
->=20
-> Can you check the actual print on the chip itself? "RTL8187L" and
-> "RTL8187B" are supported currently. Also, what is the USB device ID o=
-f
-> the chip? 0x8187, 0x8189, 0x8197 and 0x8198 are known to work in the
-> latest preview kernels.
->=20
+Hi there
 
-Both work with 2.6.27.
+I just downloaded compat-wireless-old.tar.bz2 and then after
+extracting it I tried to build it by executing the 'make' command. I
+made sure that I had the kernel headers and kernel source installed
+before running 'make'. I downloaded and installed them with 'apt-get'.
+My machine is an ACER Travelmate 230 Laptop with the Operating System
+being 'Simply Mepis Linux version 7.0' with kernel version
+'2.6.22-1-mepis-smp'. My USB wireless adapter is a 'Lemel LM-WLG600U
+802.11g'. The old story: I am able to get it to work in Microsloth
+Windows XP with the driver CD, but the real problem of course is
+getting it to run in Linux.
 
-Larry
+At first the build seemed to be running OK, but after a minute or so
+it failed with the following output:
 
+root@laptop:/home/vince/downloads/compat-wireless-2.6-old# make
+./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+make -C /lib/modules/2.6.22-1-mepis-smp/build
+M=/home/vince/downloads/compat-wireless-2.6-old modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.22-1-mepis-smp'
+  CC [M]  /home/vince/downloads/compat-wireless-2.6-old/drivers/misc/eeprom_93cx6.o
+  CC [M]  /home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.o
+In file included from
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:34:
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.h:361:
+error: field 'napi' has incomplete type
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c: In
+function 'b44_poll':
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:849:
+warning: type defaults to 'int' in declaration of '__mptr'
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:849:
+warning: initialization from incompatible pointer type
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:879:
+error: too many arguments to function 'netif_rx_complete'
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c: In
+function 'b44_interrupt':
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:911:
+error: too many arguments to function 'netif_rx_schedule_prep'
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:917:
+error: too many arguments to function '__netif_rx_schedule'
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c: In
+function 'b44_open':
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:1433:
+warning: implicit declaration of function 'napi_enable'
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:1442:
+warning: implicit declaration of function 'napi_disable'
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c: At top level:
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:2051:
+error: unknown field 'get_sset_count' specified in initializer
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:2051:
+warning: initialization from incompatible pointer type
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c: In
+function 'b44_init_one':
+/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:2159:
+warning: implicit declaration of function 'netif_napi_add'
+make[3]: *** [/home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.o]
+Error 1
+make[2]: *** [/home/vince/downloads/compat-wireless-2.6-old/drivers/net] Error 2
+make[1]: *** [_module_/home/vince/downloads/compat-wireless-2.6-old] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.22-1-mepis-smp'
+make: *** [modules] Error 2
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Any help would be greatly appreciated.
+
+All the best
+
+Vince Barwinski
