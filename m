@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aa002msb.fastweb.it ([85.18.95.81]:59059 "EHLO
-	aa002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755157AbYLaOKY (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:34046 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244AbYLALLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 09:10:24 -0500
-Received: from [192.168.1.101] (39.234.158.229) by aa002msb.fastweb.it (8.0.013.8)
-        id 493752D305CB0B33 for linux-wireless@vger.kernel.org; Wed, 31 Dec 2008 15:10:23 +0100
-Message-ID: <495B7D4E.80403@techemia.com> (sfid-20081231_151030_523026_84FA36A1)
-Date: Wed, 31 Dec 2008 15:10:22 +0100
-From: techmin <info@techemia.com>
+	Mon, 1 Dec 2008 06:11:12 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so2620639ugf.37
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 03:11:10 -0800 (PST)
+From: Diego 'Flameeyes' =?utf-8?q?Petten=C3=B2?= <flameeyes@gmail.com>
+Subject: [crda PATCH 0/3] Code fixups and optimisation
+To: linux-wireless@vger.kernel.org
+Date: Mon, 01 Dec 2008 12:11:08 +0100
+Message-ID: <20081201111021.20833.42515.stgit@localhost> (sfid-20081201_121115_703095_5353EE46)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: problem on gelic ps3 driver 2.25.2 kernel (used with psubuntu)
-References: <4958C029.7000407@techemia.com>
-In-Reply-To: <4958C029.7000407@techemia.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-techmin ha scritto:
-> If i configure network with tool, the icon show 100% connection (and 
-> it is not possible, maximum is 50% cause the distance to acces point), 
-> wireless is protect (i use wep) but the led not blinck, simply is on. 
-> But ping not work, and is not possible to navigate on the web.
-> If i configure directly from /etc/network/interfaces (with all 
-> network-manager disabled) same problem.
-> If i use simple script to manually pass the iwconfig and ifconfig 
-> command same proble.
-> If i not use protection same problem.
->
-> If i set manage mode:
-> managed mode is not set, operation not permitted
->
-> iwlist scan work.
-> Note: in iwconfig not appear the channel and if i add manually the 
-> channel with iwconfig wlan0 channel numder i have error: operation not 
-> permitted.
->
-> syslog don't have any entry
-> only error is this:
-> gelic_eurus_sync_cmd_worker: cmd issue failed
->
->
-Compiled 2.6.27 kernel from git
-wireless WORK
-a this point i suppose is an issue of 2.6.25-2 kernel
+After fixing the Makefile I have taken a look at the actual code, just
+three simple patches for that.
 
+---
+
+Diego 'Flameeyes' Petten=C3=B2 (3):
+      Avoid implicit declaration of memset() with OpenSSL.
+      Mark constant the generated key tables for libgcrypt.
+      Mark functions static when not used outside their translation uni=
+t.
+
+
+ intersect.c      |    2 +-
+ reglib.c         |    5 +++--
+ reglib.h         |    3 ---
+ utils/key2pub.py |    6 +++---
+ 4 files changed, 7 insertions(+), 9 deletions(-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
