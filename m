@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:60753 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362AbYLaROP convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:42073 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751388AbYLAPa7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 12:14:15 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-Date: Wed, 31 Dec 2008 18:16:34 +0100
-Cc: htl10@users.sourceforge.net,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-References: <348894.23448.qm@web23108.mail.ird.yahoo.com> <495B82CB.6050205@tuffmail.co.uk>
-In-Reply-To: <495B82CB.6050205@tuffmail.co.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200812311816.36670.oliver@neukum.org> (sfid-20081231_181421_738587_337592D2)
+	Mon, 1 Dec 2008 10:30:59 -0500
+Subject: Re: iwlwifi - rfkill only works if the interface is up
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com
+In-Reply-To: <1ba2fa240812010508hcb29699m8bd8b3b0ba8574cd@mail.gmail.com>
+References: <200812011311.17346.helmut.schaa@gmail.com>
+	 <1ba2fa240812010508hcb29699m8bd8b3b0ba8574cd@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 01 Dec 2008 16:30:53 +0100
+Message-Id: <1228145453.31158.140.camel@violet.holtmann.net> (sfid-20081201_163103_242948_E861DACF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 31. Dezember 2008 15:33:47 schrieb Alan Jenkins:
-> Thanks for the patch. =C2=A0I tested STD too, and it doesn't seem to =
-hang
-> anymore. =C2=A0I even tested removing the adaptor while the system wa=
-s
-> hibernated. =C2=A0However, after resume the interface is useless.
+Hi Tomas,
 
-=46or STD you need to implement reset_resume()
+> > Nevertheless, I'm wondering if the current behaviour (even with the patch above)
+> > makes much sense. I mean, the user space cannot rely on the rfkill state
+> > unless an appropriate interface is up. As the device is able to report the
+> > killswitch state without firmware being loaded the following approach could
+> > be feasible:
+> > - iwl_pci_probe enables the device and enables the interrupts
+> > - iwl_mac_start just loads the firmware
+> > - iwl_mac_stop just releases the firmware but leaves the interrupts enabled
+> 
+> In 3495  rfkill interrupt is not available and rfkill state is
+> delivered only when firmware is loaded, therefore this is not
+> possible to bring device down and also expect rfill switch event.
+> There were few threads about this subject.
+> In 4965 and 5000 this will work
 
-	Regards
-		Oliver
+do we unregister the rfkill switch when bringing the adapter down. If
+not, then we might should do that. I don't see a point in exposing a
+rfkill switch if we can't do anything with it.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards
+
+Marcel
+
+
