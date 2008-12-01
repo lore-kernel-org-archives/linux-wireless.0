@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.int-evry.fr ([157.159.10.71]:57733 "EHLO
-	smtp4.int-evry.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758315AbYLDALA (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:27867 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104AbYLAKbR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 19:11:00 -0500
-Received: from smtp2.int-evry.fr (smtp2.int-evry.fr [157.159.10.45])
-	by smtp4.int-evry.fr (Postfix) with ESMTP id 23C32FE2D27
-	for <linux-wireless@vger.kernel.org>; Thu,  4 Dec 2008 01:10:58 +0100 (CET)
-Message-ID: <49371FE4.2050507@telecom-sudparis.eu> (sfid-20081204_011110_497010_01340303)
-Date: Thu, 04 Dec 2008 01:10:12 +0100
-From: Chanthearith HUON <chanthearith.huon@telecom-sudparis.eu>
-MIME-Version: 1.0
+	Mon, 1 Dec 2008 05:31:17 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so1007903eyi.37
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 02:31:16 -0800 (PST)
+From: Diego 'Flameeyes' =?utf-8?q?Petten=C3=B2?= <flameeyes@gmail.com>
+Subject: [crda PATCH 4/5] Don't use recursive make for verify target.
 To: linux-wireless@vger.kernel.org
-CC: Hakima.Chaouchi@it-sudparis.eu
-Subject: failed to create interface: -1
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Mon, 01 Dec 2008 11:31:15 +0100
+Message-ID: <20081201103114.18024.65370.stgit@localhost> (sfid-20081201_113120_077548_84EE48EF)
+In-Reply-To: <20081201103016.18024.80454.stgit@localhost>
+References: <20081201103016.18024.80454.stgit@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+=46rom: Diego E. 'Flameeyes' Petten=C3=B2 <flameeyes@gmail.com>
 
-# iw dev wlan0 interface add mesh type mp mesh_id 10
-failed to create interface: -1
+This makes the build more parallel since regdbdump.o build and link
+can happen in parallel with the keys generation and the build of the
+rest of the units.
 
-I searched the web and read the archives but that did not help.
+Signed-off-by: Diego E. 'Flameeyes' Petten=C3=B2 <flameeyes@gmail.com>
+---
 
-Any ideas of what went wrong?
+ Makefile |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Environment:
-Distribution: ubuntu 8.10 Intrepid Ibex with kernel 2.6.27
-Wireless card: Linksys wmp54g pci with ssb driver (there should be no 
-problem as listed in http://linuxwireless.org/en/users/Devices/PCI)
+diff --git a/Makefile b/Makefile
+index 4ac8495..a8c0a45 100644
+--- a/Makefile
++++ b/Makefile
+@@ -7,8 +7,7 @@ PUBKEY_DIR=3Dpubkeys
+=20
+ CFLAGS +=3D -Wall -g
+=20
+-all: crda intersect
+-	$(Q)$(MAKE) --no-print-directory -f Makefile verify
++all: crda intersect verify
+=20
+ ifeq ($(USE_OPENSSL),1)
+ CFLAGS +=3D -DUSE_OPENSSL `pkg-config --cflags openssl`
 
-Thanks,
-Thierry
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
