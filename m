@@ -1,111 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36622 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510AbYLHTp4 (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:36824 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084AbYLANIm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 14:45:56 -0500
-Subject: Re: [PATCH 1/2] Add signal strength and bandwith to nl80211station
-	info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@googlemail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Henning Rogge <rogge@fgan.de>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812071917.07075.hrogge@googlemail.com> (sfid-20081207_192143_969753_347089B0)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812071832.20533.hrogge@googlemail.com>
-	 <1228671578.22164.48.camel@johannes.berg>
-	 <200812071917.07075.hrogge@googlemail.com>
-	 (sfid-20081207_192143_969753_347089B0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VfFRLUc+RoRz7QuZqKGG"
-Date: Mon, 08 Dec 2008 20:43:35 +0100
-Message-Id: <1228765415.22164.107.camel@johannes.berg> (sfid-20081208_204559_525275_3021B3DA)
-Mime-Version: 1.0
+	Mon, 1 Dec 2008 08:08:42 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so917582ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 05:08:40 -0800 (PST)
+Message-ID: <1ba2fa240812010508hcb29699m8bd8b3b0ba8574cd@mail.gmail.com> (sfid-20081201_140848_270123_52B1F011)
+Date: Mon, 1 Dec 2008 15:08:39 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Helmut Schaa" <helmut.schaa@googlemail.com>
+Subject: Re: iwlwifi - rfkill only works if the interface is up
+Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com
+In-Reply-To: <200812011311.17346.helmut.schaa@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200812011311.17346.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Dec 1, 2008 at 2:11 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Hi,
+>
+> Since the patch "iwlwifi: delay firmware loading from pci_probe to network
+> interface open" was merged, the driver's killswitch does not work anymore
+> when the interface is down. The patch comment contains two arguments for
+> that behaviour:
+>
+> 1) ... Because kernel initializes network devices subsystem before hard disk
+> and SATA subsystem, it is impossible to get the firmware image from hard disk
+> in the PCI probe handler. ...
+>
+> 2) For better power saving ...
+>
+> The current driver behavior is as follows:
+>
+> - iwl_pci_probe initializes the driver but disables the device, at this point
+>  changing the killswitch state will not be noticed by the driver and thus
+>  the killswitch state in sysfs will not reflect the real state
+>
+> - iwl_mac_start (which is called when at least one interface goes up) starts
+>  the device and loads the firmware if the killswitch is disabled. Otherwise
+>  the driver will just enable the interrupts and allows the interface to go
+>  up.
+>
+> However, if the device fires the interrupt CSR_INT_BIT_RF_KILL the code in
+> iwl_irq_tasklet will _not_ restart the card, although the driver already
+> allowed the interface to go up. That should easily be fixable with a patch
+> similar to the following (the comment should be changed too):
+>
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index b935e9d..e2f160b 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -1504,8 +1504,11 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
+>                 * the driver as well won't allow loading if RFKILL is set
+>                 * therefore no need to restart the driver from this handler
+>                 */
+> -               if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status))
+> +               if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
+>                        clear_bit(STATUS_RF_KILL_HW, &priv->status);
+> +                       if (priv->is_open)
+> +                               queue_work(priv->workqueue, &priv->restart);
+> +               }
+>
+>                handled |= CSR_INT_BIT_RF_KILL;
+>        }
 
---=-VfFRLUc+RoRz7QuZqKGG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is strange, this exact code is part of  patch
 
-On Sun, 2008-12-07 at 19:17 +0100, Henning Rogge wrote:
+"""
+Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date:   Sun Jun 22 11:18:52 2008 +0300
+ iwlwifi: clean up HW RF-kill state machine and restarts
+ This patch cleans up HW RF-kill state machine.
+"""
+The two other hunks of this patch are in the current code, this one is
+not, I've probably messed up something on they way. I will track this
+down.
 
-> + * @NL80211_RATE_INFO_LEGACY: bitrate for 802.11abg (u16, 100kbit/s)
+> Nevertheless, I'm wondering if the current behaviour (even with the patch above)
+> makes much sense. I mean, the user space cannot rely on the rfkill state
+> unless an appropriate interface is up. As the device is able to report the
+> killswitch state without firmware being loaded the following approach could
+> be feasible:
+> - iwl_pci_probe enables the device and enables the interrupts
+> - iwl_mac_start just loads the firmware
+> - iwl_mac_stop just releases the firmware but leaves the interrupts enabled
 
-Your other patch named this _TOTAL, can you rename it to _BITRATE
-instead?
+In 3495  rfkill interrupt is not available and rfkill state is
+delivered only when firmware is loaded, therefore this is not
+possible to bring device down and also expect rfill switch event.
+There were few threads about this subject.
+In 4965 and 5000 this will work
 
-> +	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)) {
-> +		struct ieee80211_supported_band *sband;
-> +		sband =3D sta->local->hw.wiphy->bands[sta->local->hw.conf.channel->ban=
-d];
-> +		sinfo->txrate.legacy =3D sband->bitrates[sta->last_tx_rate.idx].bitrat=
-e;
-> +	}
-> +	else {
-> +		sinfo->txrate.mcs =3D sta->last_tx_rate.idx;
-> +	}
 
-Put the else on the same line as the closing brace, please.
-
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -14,6 +14,7 @@
->  #include <linux/nl80211.h>
->  #include <linux/rtnetlink.h>
->  #include <linux/netlink.h>
-> +#include <net/mac80211.h>
->  #include <net/genetlink.h>
->  #include <net/cfg80211.h>
->  #include "core.h"
-
-That has to go.
-
-And on your second patch:
-
-> +static u16 nl80211_calculate_bitrate(struct rate_info *rate)
-> +{
-> +       int modulation, streams, bitrate;
-> +
-> +       if (!(rate->flags & RATE_INFO_FLAGS_MCS))
-> +               return rate->legacy;
-> +
-> +       modulation =3D rate->mcs & 7;
-> +       streams =3D rate->mcs >> 3;
-
-I don't think this gives correct results for MCS rates 32 through 76,
-does it? It should at least not calculate anything then. If we did it in
-userspace then programs could also actually calculate the correct rate
-as a float, rather than this approximation. Not that it'll matter, I
-guess. Doesn't anybody know how to do the actual calculation?
-
-johannes
-
---=-VfFRLUc+RoRz7QuZqKGG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJPXjbAAoJEKVg1VMiehFY0MQP/RFCUlDXHzA8MH+fSjHPRSvi
-BinqjQkvkjFsfv8VCm9QOXJX8Xo9bMdzllAGHRpx0iDrmUlOrPVmvkOO4JvC9HDG
-15OP7EVKK+l48Fu397xrcK5COGB6xJiXZaqL7Fhh+dUXamWE6vmuOwcQOprTTNhE
-bqioDC37KReV1/45+n1HyxFfSrnWl/ccK7OhgGJ5hmBo9AO8F8jSypm3JOLaEQKx
-KLWlcwbngBZTRx+RIF189F4oKtAhTL283VSfcQszftDorKJrlcfN07uX1dngdtgM
-lxThOxxryNEQuFWlm8Uc5QXUKj5c1KgfKoNhH4UHcjfXkLJyFoYV96j6qG8P+aqU
-Xn4xSAyd6r1+/EuLbCbbUpITOpi/j/8QNOf10gZZNIOQ6ZifhLEA+7RaEXyxvvAG
-cWjF1CSk6LXResnO3w5yqLzZvuOr18kMTTgIzHnxxHbCx/Zdh35PriYrUNLTkkTg
-G5pGLvJAvwdRjM7auVljp4oMLzYT/dU20Ap/ERuBPEBeN+8EXcERRPCZjMpPjyFC
-59T/TyC+SSFQOxn3qGfEXUv0hDiYwCWV4f06Uj8QcUmKQ8J3rFmbuy3gi8YK/pYl
-HZuuwFbe6X808+GkrQfj1FtKxTOAGjqlJADjYpPyikAU8/uFlHk+Ws+qZH2u0nwY
-CSMLWRQvnaH65jeprHkn
-=pzp4
------END PGP SIGNATURE-----
-
---=-VfFRLUc+RoRz7QuZqKGG--
-
+Thanks
+Tomas
