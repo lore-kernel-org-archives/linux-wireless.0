@@ -1,76 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48034 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055AbYLLWjW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 17:39:22 -0500
-Subject: Re: [RFC 2/3] mac80211: Make use of the new F_TX_NOACK and
-	F_TX_NOSEQ Radiotap TX flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <69e28c910812121432n6e84de41s94a887110051a1dd@mail.gmail.com> (sfid-20081212_233241_155436_BE5AE965)
-References: <69e28c910812121432n6e84de41s94a887110051a1dd@mail.gmail.com>
-	 (sfid-20081212_233241_155436_BE5AE965)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yW9VbhgvGaGs9pA/+XiI"
-Date: Fri, 12 Dec 2008 23:39:18 +0100
-Message-Id: <1229121558.3565.6.camel@johannes.berg> (sfid-20081212_233925_296359_DEA0CE5E)
+Received: from mga11.intel.com ([192.55.52.93]:65429 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751789AbYLAR3g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 12:29:36 -0500
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
+	Christophe Dumez <dchris@gmail.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
+	Thomas Witt <witt_th@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andres Freund <andres@anarazel.de>
+In-Reply-To: <1226969241.4014.24.camel@johannes.berg>
+References: <1226969241.4014.24.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 01 Dec 2008 09:30:31 -0800
+Message-Id: <1228152631.10900.6.camel@rc-desk> (sfid-20081201_182940_520097_4E659E56)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes,
 
---=-yW9VbhgvGaGs9pA/+XiI
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2008-12-12 at 23:32 +0100, Stefanik G=C3=A1bor wrote:
-> Honor the 2 new flags in the "TX Flags" Radiotap field, introduced in
-> the previous commit.
->=20
-> Signed-off-by: G=C3=A1bor Stefanik <netrolller.3d@gmail.com>
->=20
+On Mon, 2008-11-17 at 16:47 -0800, Johannes Berg wrote:
+> [patch below, sorry for the long list of CCs]
+> 
+> So I dug deeper into the DMA problems I had with iwlagn and a kind soul
+> helped me in that he said something about pci-e alignment and mentioned
+> the iwl_rx_allocate function to check for crossing 4KB boundaries. Since
+> there's 8KB A-MPDU support, crossing 4k boundaries didn't seem like
+> something the device would fail with, but when I looked into the
+> function for a minute anyway I stumbled over this little gem:
+> 
+>         BUG_ON(rxb->dma_addr & (~DMA_BIT_MASK(36) & 0xff));
+> 
+> Clearly, that is a totally bogus check, one would hope the compiler
+> removes it entirely. (Think about it)
+> 
+> After fixing it, I obviously ran into it, nothing guarantees the
+> alignment the way you want it,  because of the way skbs and their
+> headroom are allocated. I won't explain that here nor double-check that
+> I'm right, that goes beyond what most of the CC'ed people care about.
+> 
+> So then I came up with the patch below, and so far my system has
+> survived minutes with 64K pages, when it would previously fail in
+> seconds. And I haven't seen a single instance of the TX bug either. But
+> when you see the patch it'll be pretty obvious to you why.
+> 
+> This should fix the following reported kernel bugs:
+> 
+> http://bugzilla.kernel.org/show_bug.cgi?id=11596
+> http://bugzilla.kernel.org/show_bug.cgi?id=11393
+> http://bugzilla.kernel.org/show_bug.cgi?id=11983
+> 
+> I haven't checked if there are any elsewhere, but I suppose RHBZ will
+> have a few instances too...
+> 
+> I'd like to ask anyone who is CC'ed (those are people I know ran into
+> the bug) to try this patch.
+> 
+> I am convinced that this patch is correct in spirit, but I haven't
+> understood why, for example, there are so many unmap calls. I'm not
+> entirely convinced that this is the only bug leading to the TX reply
+> errors.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > ---
->=20
-> Patch also available as an attachment in case Gmail decides to damage it.
->=20
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 155a204..141099a 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -143,6 +143,8 @@ typedef unsigned __bitwise__ ieee80211_tx_result;
->  #define IEEE80211_TX_FRAGMENTED		BIT(0)
->  #define IEEE80211_TX_UNICAST		BIT(1)
->  #define IEEE80211_TX_PS_BUFFERED	BIT(2)
-> +#define IEEE80211_TX_MON_NO_SEQ		BIT(3)
-> +#define IEEE80211_TX_MON_NO_ACK		BIT(4)
 
-You don't need that, you can directly modify info.
+Above you mention that this patch fixes bug #11596. Could you please
+explain how this patch addresses that problem? A short summary of the
+bug is that no data (ping packets) can be transmitted while station is
+associated. We have, what appears to be, a similar bug in our bug
+tracking system
+(http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1807 ), but
+this patch was not able to resolve this issue.
 
-johannes
+Bug #11596 was recently closed after the user tested with 2.6.27.4,
+which does not have this patch. 
 
---=-yW9VbhgvGaGs9pA/+XiI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Thank you
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Reinette
 
-iQIcBAABAgAGBQJJQugTAAoJEKVg1VMiehFYjYsP/3MLKSMDNeZkG7OHY19giIO1
-xLyy2USGiuD6DI0cEQWNMlu0zxgAaJprVm9Fj5jFXLgI+mYfVxhOuRicAk67F1LO
-3Pqr5zvKbYhOMpVsBoT8q4rct+vZNqom+fPD01nnfiJAmX/WNEVRWxr3+LMCiGzS
-Q3z83K3ec2IyPWdSkxnGqREUjWZ9i7jUpNix1KnQeFm9f+HLzQQXWw2RxaPRNpeP
-foIDgWL1UGpOrFS2nIZJBpO0zCU21Oo/ReJc2zl32V9+dQllKZ69VZIPIJdJwo2y
-H7G8kBQcTW67JoxE6qPlS3yIzMrNaFq01xW7UK3fncfd7pNTh2Xb0i6DRbrMhmWG
-IcembiNZvsSUQGVgHp44z+7mDWi7m7/M7QHSHlFk21LaRkSFS3O2i5pbbyhPNOp0
-C79dOhjC661kw/ggGOgNfpH0phLFPHgBAvReTxN5gr/fyIkAuoLbPc6rgh+uI4WC
-J2CXOBRghhVfE15+LG953WKCIv0JxEJZkGRvvktf/J4tukuxkfFueDZRW5RmXLxN
-bZG0LmaEiBqgKX+5i1HZmzyDInTzmxMJi2HnDbWMFKWHkx3tbz79386R1PMJy9XZ
-1Ggyt+O8hbKvK9vvIcUu+fQMSjJhNeZOtCUAtKImkei0bMYAcI87pIG4KmrYOWGy
-VJ4FOvQxDFf7buswvcv2
-=P2dF
------END PGP SIGNATURE-----
-
---=-yW9VbhgvGaGs9pA/+XiI--
 
