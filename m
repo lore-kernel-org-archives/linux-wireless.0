@@ -1,48 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:50310 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752899AbYLHPuZ (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:62995 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096AbYLAM1H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 10:50:25 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Manuel Lauss <mano@roarinelk.homelinux.net>
-Subject: Re: [p54]: oops in p54_rx
-Date: Mon, 8 Dec 2008 16:50:25 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20081208074904.GA28269@roarinelk.homelinux.net> <200812081624.21964.chunkeey@web.de> <20081208153208.GC4221@roarinelk.homelinux.net>
-In-Reply-To: <20081208153208.GC4221@roarinelk.homelinux.net>
+	Mon, 1 Dec 2008 07:27:07 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so1029871eyi.37
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 04:27:06 -0800 (PST)
+From: Diego 'Flameeyes' =?utf-8?q?Petten=C3=B2?= <flameeyes@gmail.com>
+Subject: [crda PATCH 2/3] Split printing functions to their own translation
+	unit.
+To: linux-wireless@vger.kernel.org
+Date: Mon, 01 Dec 2008 13:27:04 +0100
+Message-ID: <20081201122704.20222.73459.stgit@localhost> (sfid-20081201_132711_417908_64D69900)
+In-Reply-To: <20081201122657.20222.49058.stgit@localhost>
+References: <20081201122657.20222.49058.stgit@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812081650.26024.chunkeey@web.de> (sfid-20081208_165030_099479_D84F22E4)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 December 2008 16:32:08 Manuel Lauss wrote:
-> On Mon, Dec 08, 2008 at 04:24:21PM +0100, Christian Lamparter wrote:
-> > On Monday 08 December 2008 15:47:27 Manuel Lauss wrote:
-> > [...]
-> > > > > But what I can do is to stop the driver from oopsing...
-> > > > >  
-> > > > > I guess a check to see if the device mode is set to something else than 
-> > > > > "NL80211_IFTYPE_UNSPECIFIED" and in p54_rx(_data) should prevent the oops.
-> > > > > maybe we I should add a hex_dump as well.
-> > > > 
-> > > > patch attached... tell me what it does on your dev.
-> > > 
-> > > Thank you,  but I think the card is faulty... it doesn't work even on winxp
-> > > ("device cannot be started Code 10"-error).  Do you still want me to test
-> > > the patch?
-> > Did you try the card in the same system with 4Gb and with the original SMC driver?
-> > Well, either way... you could "confirm" that doesn't crash anymore ;-).
-> 
-> Tested on another machine with 1gb ram. It doesn't crash anymore.  If you're
-> still interested, the log output is here  http://mlau.at/files/p54log
-> 
-interesting, the "logged" data has about the correct size.
-But the data is totally screwed up.
+This allows to avoid linking them in the crda binary where they are
+not used.
+---
 
-So, yes you can kick it into the bin if you want to.
+ Makefile       |    8 ++--
+ print-regdom.c |  122 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ reglib.c       |  119 -------------------------------------------------------
+ 3 files changed, 126 insertions(+), 123 deletions(-)
+ create mode 100644 print-regdom.c
 
-Regards,
-	Chr
+diff --git a/Makefile b/Makefile
+index a8c0a45..2fb94fc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -46,13 +46,13 @@ crda: reglib.o crda.o
+ 	$(NQ) '  LD  ' $@
+ 	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ reglib.o crda.o `pkg-config --libs libnl-1` $(LDLIBS)
+ 
+-regdbdump: reglib.o regdbdump.o
++regdbdump: reglib.o regdbdump.o print-regdom.o
+ 	$(NQ) '  LD  ' $@
+-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ reglib.o regdbdump.o $(LDLIBS)
++	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ reglib.o regdbdump.o print-regdom.o $(LDLIBS)
+ 
+-intersect: reglib.o intersect.o
++intersect: reglib.o intersect.o print-regdom.o
+ 	$(NQ) '  LD  ' $@
+-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ reglib.o intersect.o $(LDLIBS)
++	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ reglib.o intersect.o print-regdom.o $(LDLIBS)
+ 
+ verify: $(REG_BIN) regdbdump
+ 	$(NQ) '  CHK  $(REG_BIN)'
+diff --git a/print-regdom.c b/print-regdom.c
+new file mode 100644
+index 0000000..34b5ed4
+--- /dev/null
++++ b/print-regdom.c
+@@ -0,0 +1,122 @@
++#include <errno.h>
++#include <stdio.h>
++#include <string.h>
++#include <arpa/inet.h>
++#include "reglib.h"
++
++static void reg_rule2rd(__u8 *db, int dblen,
++	__be32 ruleptr, struct ieee80211_reg_rule *rd_reg_rule)
++{
++	struct regdb_file_reg_rule *rule;
++	struct regdb_file_freq_range *freq;
++	struct regdb_file_power_rule *power;
++
++	struct ieee80211_freq_range *rd_freq_range = &rd_reg_rule->freq_range;
++	struct ieee80211_power_rule *rd_power_rule = &rd_reg_rule->power_rule;
++
++	rule  = crda_get_file_ptr(db, dblen, sizeof(*rule), ruleptr);
++	freq  = crda_get_file_ptr(db, dblen, sizeof(*freq), rule->freq_range_ptr);
++	power = crda_get_file_ptr(db, dblen, sizeof(*power), rule->power_rule_ptr);
++
++	rd_freq_range->start_freq_khz = ntohl(freq->start_freq);
++	rd_freq_range->end_freq_khz = ntohl(freq->end_freq);
++	rd_freq_range->max_bandwidth_khz = ntohl(freq->max_bandwidth);
++
++	rd_power_rule->max_antenna_gain = ntohl(power->max_antenna_gain);
++	rd_power_rule->max_eirp = ntohl(power->max_eirp);
++
++	rd_reg_rule->flags = ntohl(rule->flags);
++}
++
++/* Converts a file regdomain to ieee80211_regdomain, easier to manage */
++struct ieee80211_regdomain *country2rd(__u8 *db, int dblen,
++	struct regdb_file_reg_country *country)
++{
++	struct regdb_file_reg_rules_collection *rcoll;
++	struct ieee80211_regdomain *rd;
++	int i, num_rules, size_of_rd;
++
++	rcoll = crda_get_file_ptr(db, dblen, sizeof(*rcoll),
++				country->reg_collection_ptr);
++	num_rules = ntohl(rcoll->reg_rule_num);
++	/* re-get pointer with sanity checking for num_rules */
++	rcoll = crda_get_file_ptr(db, dblen,
++			sizeof(*rcoll) + num_rules * sizeof(__be32),
++			country->reg_collection_ptr);
++
++	size_of_rd = sizeof(struct ieee80211_regdomain) +
++		num_rules * sizeof(struct ieee80211_reg_rule);
++
++	rd = malloc(size_of_rd);
++	if (!rd)
++		return NULL;
++
++	memset(rd, 0, size_of_rd);
++
++	rd->alpha2[0] = country->alpha2[0];
++	rd->alpha2[1] = country->alpha2[1];
++	rd->n_reg_rules = num_rules;
++
++	for (i = 0; i < num_rules; i++) {
++		reg_rule2rd(db, dblen, rcoll->reg_rule_ptrs[i],
++			&rd->reg_rules[i]);
++	}
++
++	return rd;
++}
++
++static void print_reg_rule(struct ieee80211_reg_rule *rule)
++{
++	struct ieee80211_freq_range *freq;
++	struct ieee80211_power_rule *power;
++
++	freq  = &rule->freq_range;
++	power = &rule->power_rule;
++
++	printf("\t(%.3f - %.3f @ %.3f), ",
++	       ((float)(freq->start_freq_khz))/1000.0,
++	       ((float)(freq->end_freq_khz))/1000.0,
++	       ((float)(freq->max_bandwidth_khz))/1000.0);
++
++	printf("(");
++
++	if (power->max_antenna_gain)
++		printf("%.2f, ", ((float)(power->max_antenna_gain)/100.0));
++	else
++		printf("N/A, ");
++
++	if (power->max_eirp)
++		printf("%.2f)", ((float)(power->max_eirp)/100.0));
++	else
++		printf("N/A)");
++
++	if (rule->flags & RRF_NO_OFDM)
++		printf(", NO-OFDM");
++	if (rule->flags & RRF_NO_CCK)
++		printf(", NO-CCK");
++	if (rule->flags & RRF_NO_INDOOR)
++		printf(", NO-INDOOR");
++	if (rule->flags & RRF_NO_OUTDOOR)
++		printf(", NO-OUTDOOR");
++	if (rule->flags & RRF_DFS)
++		printf(", DFS");
++	if (rule->flags & RRF_PTP_ONLY)
++		printf(", PTP-ONLY");
++	if (rule->flags & RRF_PTMP_ONLY)
++		printf(", PTMP-ONLY");
++	if (rule->flags & RRF_PASSIVE_SCAN)
++		printf(", PASSIVE-SCAN");
++	if (rule->flags & RRF_NO_IBSS)
++		printf(", NO-IBSS");
++
++	printf("\n");
++}
++
++void print_regdom(struct ieee80211_regdomain *rd)
++{
++	unsigned int i;
++	printf("country %.2s:\n", rd->alpha2);
++	for (i = 0; i < rd->n_reg_rules; i++)
++		print_reg_rule(&rd->reg_rules[i]);
++	printf("\n");
++}
+diff --git a/reglib.c b/reglib.c
+index e02bd8f..3bc1da9 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -1,6 +1,5 @@
+ #include <errno.h>
+ #include <stdio.h>
+-#include <string.h>
+ #include <arpa/inet.h>
+ #include "reglib.h"
+ 
+@@ -133,121 +132,3 @@ out:
+ 	return 1;
+ #endif
+ }
+-
+-static void reg_rule2rd(__u8 *db, int dblen,
+-	__be32 ruleptr, struct ieee80211_reg_rule *rd_reg_rule)
+-{
+-	struct regdb_file_reg_rule *rule;
+-	struct regdb_file_freq_range *freq;
+-	struct regdb_file_power_rule *power;
+-
+-	struct ieee80211_freq_range *rd_freq_range = &rd_reg_rule->freq_range;
+-	struct ieee80211_power_rule *rd_power_rule = &rd_reg_rule->power_rule;
+-
+-	rule  = crda_get_file_ptr(db, dblen, sizeof(*rule), ruleptr);
+-	freq  = crda_get_file_ptr(db, dblen, sizeof(*freq), rule->freq_range_ptr);
+-	power = crda_get_file_ptr(db, dblen, sizeof(*power), rule->power_rule_ptr);
+-
+-	rd_freq_range->start_freq_khz = ntohl(freq->start_freq);
+-	rd_freq_range->end_freq_khz = ntohl(freq->end_freq);
+-	rd_freq_range->max_bandwidth_khz = ntohl(freq->max_bandwidth);
+-
+-	rd_power_rule->max_antenna_gain = ntohl(power->max_antenna_gain);
+-	rd_power_rule->max_eirp = ntohl(power->max_eirp);
+-
+-	rd_reg_rule->flags = ntohl(rule->flags);
+-}
+-
+-/* Converts a file regdomain to ieee80211_regdomain, easier to manage */
+-struct ieee80211_regdomain *country2rd(__u8 *db, int dblen,
+-	struct regdb_file_reg_country *country)
+-{
+-	struct regdb_file_reg_rules_collection *rcoll;
+-	struct ieee80211_regdomain *rd;
+-	int i, num_rules, size_of_rd;
+-
+-	rcoll = crda_get_file_ptr(db, dblen, sizeof(*rcoll),
+-				country->reg_collection_ptr);
+-	num_rules = ntohl(rcoll->reg_rule_num);
+-	/* re-get pointer with sanity checking for num_rules */
+-	rcoll = crda_get_file_ptr(db, dblen,
+-			sizeof(*rcoll) + num_rules * sizeof(__be32),
+-			country->reg_collection_ptr);
+-
+-	size_of_rd = sizeof(struct ieee80211_regdomain) +
+-		num_rules * sizeof(struct ieee80211_reg_rule);
+-
+-	rd = malloc(size_of_rd);
+-	if (!rd)
+-		return NULL;
+-
+-	memset(rd, 0, size_of_rd);
+-
+-	rd->alpha2[0] = country->alpha2[0];
+-	rd->alpha2[1] = country->alpha2[1];
+-	rd->n_reg_rules = num_rules;
+-
+-	for (i = 0; i < num_rules; i++) {
+-		reg_rule2rd(db, dblen, rcoll->reg_rule_ptrs[i],
+-			&rd->reg_rules[i]);
+-	}
+-
+-	return rd;
+-}
+-
+-static void print_reg_rule(struct ieee80211_reg_rule *rule)
+-{
+-	struct ieee80211_freq_range *freq;
+-	struct ieee80211_power_rule *power;
+-
+-	freq  = &rule->freq_range;
+-	power = &rule->power_rule;
+-
+-	printf("\t(%.3f - %.3f @ %.3f), ",
+-	       ((float)(freq->start_freq_khz))/1000.0,
+-	       ((float)(freq->end_freq_khz))/1000.0,
+-	       ((float)(freq->max_bandwidth_khz))/1000.0);
+-
+-	printf("(");
+-
+-	if (power->max_antenna_gain)
+-		printf("%.2f, ", ((float)(power->max_antenna_gain)/100.0));
+-	else
+-		printf("N/A, ");
+-
+-	if (power->max_eirp)
+-		printf("%.2f)", ((float)(power->max_eirp)/100.0));
+-	else
+-		printf("N/A)");
+-
+-	if (rule->flags & RRF_NO_OFDM)
+-		printf(", NO-OFDM");
+-	if (rule->flags & RRF_NO_CCK)
+-		printf(", NO-CCK");
+-	if (rule->flags & RRF_NO_INDOOR)
+-		printf(", NO-INDOOR");
+-	if (rule->flags & RRF_NO_OUTDOOR)
+-		printf(", NO-OUTDOOR");
+-	if (rule->flags & RRF_DFS)
+-		printf(", DFS");
+-	if (rule->flags & RRF_PTP_ONLY)
+-		printf(", PTP-ONLY");
+-	if (rule->flags & RRF_PTMP_ONLY)
+-		printf(", PTMP-ONLY");
+-	if (rule->flags & RRF_PASSIVE_SCAN)
+-		printf(", PASSIVE-SCAN");
+-	if (rule->flags & RRF_NO_IBSS)
+-		printf(", NO-IBSS");
+-
+-	printf("\n");
+-}
+-
+-void print_regdom(struct ieee80211_regdomain *rd)
+-{
+-	unsigned int i;
+-	printf("country %.2s:\n", rd->alpha2);
+-	for (i = 0; i < rd->n_reg_rules; i++)
+-		print_reg_rule(&rd->reg_rules[i]);
+-	printf("\n");
+-}
+-
+
