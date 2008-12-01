@@ -1,69 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:4276 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbYLSQbP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41303 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234AbYLATdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 11:31:15 -0500
-Received: by fk-out-0910.google.com with SMTP id 18so571986fkq.5
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 08:31:13 -0800 (PST)
-Message-ID: <45e8e6c40812190831k7796e240w55c47d7ca6417437@mail.gmail.com> (sfid-20081219_173121_279920_AFF813AC)
-Date: Fri, 19 Dec 2008 08:31:13 -0800
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Harald Welte" <laforge@gnumonks.org>
-Subject: Re: [PATCH 3/3] libertas: if_spi, driver for libertas GSPI devices
-Cc: "Colin McCabe" <colin@cozybit.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org,
-	"Stefan Schmidt" <stefan@datenfreihafen.org>
-In-Reply-To: <20081219160836.GQ9285@prithivi.gnumonks.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1229398052-27465-1-git-send-email-colin@cozybit.com>
-	 <1229398052-27465-2-git-send-email-colin@cozybit.com>
-	 <1229398052-27465-3-git-send-email-colin@cozybit.com>
-	 <1229398052-27465-4-git-send-email-colin@cozybit.com>
-	 <20081219160836.GQ9285@prithivi.gnumonks.org>
+	Mon, 1 Dec 2008 14:33:25 -0500
+Subject: [PATCH] cfg80211: "fix" 11d oops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain
+Date: Mon, 01 Dec 2008 18:13:05 +0100
+Message-Id: <1228151585.10627.1.camel@johannes.berg> (sfid-20081201_203329_385094_759344CC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Harald,
+This "fixes" the 11d oops I was seeing. This needs some more work but I
+cannot work on it now.
 
-On Fri, Dec 19, 2008 at 8:08 AM, Harald Welte <laforge@gnumonks.org> wrote:
-> Hi Colin,
->
-> thanks a lot for your patch, it is greatly appreciated.
->
-> Stefan Schmidt (see Cc) and myself are currently working on using a 8686
-> attached t o SPI of a S3C2442 SoC.
->
-> Let me make some comments on the actual code:
->
-> On Mon, Dec 15, 2008 at 07:27:32PM -0800, Colin McCabe wrote:
->
->> +struct libertas_spi_platform_data {
->> +     u16 host_irq_num;
->> +
->> +     u16 gpio_cs;
->> +};
->
->> +     gpio_set_value(card->gpio_cs, 0); /* assert CS */
->> +     gpio_set_value(card->gpio_cs, 1); /* drop CS */
->
-> Typically, in the Linux SPI framework, it is the SPI host controller
-> driver that exercises the chipselect GPIO, not the client (device) driver.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/reg.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-The '8686 requires us to assert CS# and then hold it asserted for the
-entire transaction.  The transaction is an arbitrary number of SPI
-transfers.  Most host controllers cannot do this (they'll toggle CS#
-between individual transactions) and therefore we chose to not use the
-controller CS# line and use a GPIO.  Can you suggest a different way
-to do this given the current SPI framework?
+--- everything.orig/net/wireless/reg.c	2008-12-01 18:10:15.000000000 +0100
++++ everything/net/wireless/reg.c	2008-12-01 18:10:24.000000000 +0100
+@@ -989,6 +989,9 @@ void regulatory_hint_11d(struct wiphy *w
+ 	u32 checksum = 0;
+ 	enum environment_cap env = ENVIRON_ANY;
+ 
++	if (!last_request)
++		return;
++
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 
+ 	/* IE len must be evenly divisible by 2 */
 
-> Also, the host_irq_num is typically passed by the '.irq' member of
-> spi_board_info structure, since it is board specific data (see e.g.
-> arch/arm/mach-pxa/spitz.c)
 
-The IRQ in question is a GPIO line asserted by the '8686 and it is not
-otherwise an SPI line, however I see now that it should be set in
-spi_board_info as you mention, we'll fix that.
-
-  -Andrey
