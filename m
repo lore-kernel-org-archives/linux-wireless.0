@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12994 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751736AbYLSUvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 15:51:33 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 12:51:33 -0800
-Date: Fri, 19 Dec 2008 12:51:29 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: drago01 <drago01@gmail.com>
-CC: Zhu Yi <yi.zhu@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [PATCH 00/43] iwl3945 merges into iwlagn (Dec 19)
-Message-ID: <20081219205129.GD15227@tesla> (sfid-20081219_215138_935975_59A4060A)
-References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com> <f6ca9fed0812191132h2f76ce40id20c52bdb6e0681c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <f6ca9fed0812191132h2f76ce40id20c52bdb6e0681c@mail.gmail.com>
+Received: from senator.holtmann.net ([87.106.208.187]:47146 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438AbYLAP0k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 10:26:40 -0500
+Subject: Re: 11d segfault
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1228129742.3478.2.camel@johannes.berg>
+References: <1228129742.3478.2.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 01 Dec 2008 16:26:35 +0100
+Message-Id: <1228145195.31158.137.camel@violet.holtmann.net> (sfid-20081201_162644_495863_C3498999)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 19, 2008 at 11:32:53AM -0800, drago01 wrote:
-> On Fri, Dec 19, 2008 at 3:37 AM, Zhu Yi <yi.zhu@intel.com> wrote:
-> > Hi John,
-> >
-> > Here is the first batch for the iwl3945 -> iwlagn merge. This is for
-> > post .29 kernel.
-> 
-> Well it doesn't really matter but wouldn't it make sense to rename the
-> driver back to iwlwifi ? (as 3945 does not support n mode)
+Hi Johannes,
 
-That would make compat-crap stuff difficult, at least I cannot think of an
-easy way to deal with it. See scripts/iwl-load, part of compat-wireless. This
-is used to simply rename iwl4965 to iwl4965.ignore and let iwlagn kick in
-if you are on an older kernel. If we move iwlagn to iwlwifi... umm.. wait did
-we ever have an "iwlwifi" driver?
+> Dec  1 12:07:00 johannes kernel: [  193.370168] Unable to handle kernel paging request for data at address 0x00000000
+> Dec  1 12:07:00 johannes kernel: [  193.370180] Faulting instruction address: 0xf2794560
+> Dec  1 12:07:00 johannes kernel: [  193.370194] Oops: Kernel access of bad area, sig: 11 [#1]
 
-  Luis
+are you running kerneloops? If not, please do so :)
+
+Regards
+
+Marcel
+
+
