@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:37226 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751869AbYLOXYc (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.190]:3166 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752611AbYLATD0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 18:24:32 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Artur Skawina <art.08.09@gmail.com>
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-Date: Tue, 16 Dec 2008 00:24:27 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <494698AF.4020204@gmail.com> <4946BC0C.3040701@gmail.com> <4946E24E.1020504@gmail.com>
-In-Reply-To: <4946E24E.1020504@gmail.com>
+	Mon, 1 Dec 2008 14:03:26 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so2054170rnd.17
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 11:03:25 -0800 (PST)
+Message-ID: <43e72e890812011103q6e7940cbu22c0281c9559aa63@mail.gmail.com> (sfid-20081201_200329_820261_CBA07BBA)
+Date: Mon, 1 Dec 2008 11:03:25 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: 11d segfault
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1228129742.3478.2.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812160024.27451.chunkeey@web.de> (sfid-20081216_002437_304385_CBA5AB9B)
+Content-Type: text/plain; charset=UTF-8
+References: <1228129742.3478.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 16 December 2008 00:03:42 Artur Skawina wrote:
-> Artur Skawina wrote:
-> > Christian Lamparter wrote:
-> >> On Monday 15 December 2008 19:41:13 Larry Finger wrote:
-> >>> Artur Skawina wrote:
-> >>>> I have a sinus 154 data usb adapter, which used to work w/ p54 in 2.6.27:
-> >>> Can you bisect this problem?
-> >> Naa I guess its "p54: fix memory management".
+On Mon, Dec 1, 2008 at 3:09 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Dec  1 12:07:00 johannes kernel: [  193.370168] Unable to handle kernel paging request for data at address 0x00000000
+> Dec  1 12:07:00 johannes kernel: [  193.370180] Faulting instruction address: 0xf2794560
+> Dec  1 12:07:00 johannes kernel: [  193.370194] Oops: Kernel access of bad area, sig: 11 [#1]
+> Dec  1 12:07:00 johannes kernel: [  193.370196] PREEMPT PowerMac
+> Dec  1 12:07:00 johannes kernel: [  193.370200] Modules linked in: ...
+> Dec  1 12:07:00 johannes kernel: [  193.370266] NIP: f2794560 LR: f27944fc CTR: 00000000
+> Dec  1 12:07:00 johannes kernel: [  193.370270] REGS: eed15ce0 TRAP: 0300   Not tainted  (2.6.28-rc6-wl-dirty)
+> Dec  1 12:07:00 johannes kernel: [  193.370273] MSR: 00009032 <EE,ME,IR,DR>  CR: 22000048  XER: 20000000
+> Dec  1 12:07:00 johannes kernel: [  193.370283] DAR: 00000000, DSISR: 40000000
+> Dec  1 12:07:00 johannes kernel: [  193.370286] TASK = ef145640[1049] 'phy0' THREAD: eed14000
+> Dec  1 12:07:00 johannes kernel: [  193.370289] GPR00: 00000000 eed15d90 ef145640 eed15d38 22222222 00000000 eed15d48 37d38608
+> Dec  1 12:07:00 johannes kernel: [  193.370299] GPR08: 37d38600 00000000 c03f97e0 f279bda0 82000044 00000000 00000000 00000000
+> Dec  1 12:07:00 johannes kernel: [  193.370309] GPR16: 00000000 41400000 01400000 017f4bb4 017f42c0 00000000 c03f9400 c04264e8
+> Dec  1 12:07:00 johannes kernel: [  193.370319] GPR24: c03f9438 00000000 f279c410 eecaa080 f279bd8c f27a0000 ec44a0d6 00000006
+> Dec  1 12:07:00 johannes kernel: [  193.370346] NIP [f2794560] regulatory_hint_11d+0x98/0x14c [cfg80211]
+> Dec  1 12:07:00 johannes kernel: [  193.370352] LR [f27944fc] regulatory_hint_11d+0x34/0x14c [cfg80211]
+> Dec  1 12:07:00 johannes kernel: [  193.370355] Call Trace:
+> Dec  1 12:07:00 johannes kernel: [  193.370361] [eed15d90] [f27944fc] regulatory_hint_11d+0x34/0x14c [cfg80211] (unreliable)
 
-> Done:
-> 78e74789bf2dab82f9539cd46e7f7583ff9516c1 is first bad commit
-> commit 78e74789bf2dab82f9539cd46e7f7583ff9516c1
-> Author: Christian Lamparter <chunkeey@web.de>
-> Date:   Wed Oct 15 04:07:16 2008 +0200
-> 
->     p54: fix memory management
+What is regulatory_hint_11d+0x34 ?
 
-ahh, well there went the 100% chance...
-
-Anyway can you fire up usbmon
-(see Linux-Source/Documentation/usb/usbmon.txt ,
-or right there: http://www.mjmwired.net/kernel/Documentation/usb/usbmon.txt)
-and capture the frames which are sent to the device?
-for the p54usb in 2.6.27 and the not working one in the git tree?
-
-Regards,
-	Chr 
+  Luis
