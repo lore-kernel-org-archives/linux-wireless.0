@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:32852 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756053AbYLMN3B (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.188]:37922 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884AbYLAPx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Dec 2008 08:29:01 -0500
-Date: Sat, 13 Dec 2008 11:28:57 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Tony Vroon <tony@linx.net>
-Cc: Len Brown <lenb@kernel.org>, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
-	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
-Subject: Re: Fuijtsu Lifebook RFKILL support
-Message-ID: <20081213132857.GA11428@khazad-dum.debian.net> (sfid-20081213_142921_503458_ED4963F1)
-References: <1228957506.4045.11.camel@localhost> <20081211165247.GA4844@khazad-dum.debian.net> <1229016827.6446.6.camel@localhost> <20081211194734.GA18132@khazad-dum.debian.net> <1229046602.4030.13.camel@localhost> <20081212195331.GA12679@khazad-dum.debian.net> <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain> <1229172465.4010.11.camel@localhost>
+	Mon, 1 Dec 2008 10:53:56 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so1955184rnd.17
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 07:53:54 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH] iwl3945: remove obsolete irq handling
+Date: Mon, 1 Dec 2008 16:53:28 +0100
+Cc: linux-wireless@vger.kernel.org, tomasw@gmail.com, yi.zhu@intel.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1229172465.4010.11.camel@localhost>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200812011653.29150.helmut.schaa@gmail.com> (sfid-20081201_165359_769867_9433A9DE)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 13 Dec 2008, Tony Vroon wrote:
-> > What is the WLAN driver involved? Is it rfkill-aware?
-> 
-> The driver is iwlagn, which does indeed notice that it is killed.
-> This information does not reach NetworkManager. Relevant log
-> entries: Dec 12 00:59:01 amalthea iwlagn: Radio Frequency Kill
-> Switch is On: Dec 12 00:59:01 amalthea Kill switch must be turned
-> off for wireless networking to work.
+3945 hardware does not emit the interrupts CSR_INT_BIT_RF_KILL (rfkill
+toggled) and CSR_INT_BIT_CT_KILL (adapter too hot). Hence this part of code
+can be removed since iwl3945_irq_tasklet does not handle 4965 hw at all.
 
-Then, it is just a matter of time for it to be working correctly.  In
-fact, it might already be if you use wireless-testing and latest
-network manager.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
 
-Best not to mess with it, any workarounds one adds would just get in
-the way in the future.
-
-> [cutting relevant pieces of text together]
-> > > 1. rfkill actualy is/looks like a hotplug/hotunplug operation
-> > >   1b. You cannot do it at will
-> > >       Attaching it to the rfkill core simply is not supported
-> 
-> Okay, both Bluetooth & WWAN are USB devices following this terminology.
-> So the rfkill framework is not an appropriate tool for this job,
-> understood.
-> 
-> Len, I would still like to export the 3 values learned about in this
-> event to userspace. Is it alright for me to create 3 read-only files on
-> the platform device? (docked, lid, radios)
-> It would if anything simplify the code.
-
-FWIW, I think this is also the way to go.  It is much easier for
-userspace to deal with sysfs attributes.  HAL can deal with more
-complex stuff, but shell script writers often don't know how to, nor
-care to, deal with HAL.
-
-BTW, this also means that it is helpful to shell script writers if you
-also export through read-only sysfs attributes the state of any input
-devices generating EV_SW.  The input layer makes it possible to query
-the switch state easily... through IOCTL after you find out the
-correct input device(s) to query.  Which ain't easy for shell script,
-and nobody wrote a "inputdev" helper in a proper language that can do
-it, for shell script writers to call.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 490bc4a..b32b507 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4321,35 +4321,6 @@ static void iwl3945_irq_tasklet(struct iwl3945_priv *priv)
+ 	/* Safely ignore these bits for debug checks below */
+ 	inta &= ~(CSR_INT_BIT_SCD | CSR_INT_BIT_ALIVE);
+ 
+-	/* HW RF KILL switch toggled (4965 only) */
+-	if (inta & CSR_INT_BIT_RF_KILL) {
+-		int hw_rf_kill = 0;
+-		if (!(iwl3945_read32(priv, CSR_GP_CNTRL) &
+-				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
+-			hw_rf_kill = 1;
+-
+-		IWL_DEBUG(IWL_DL_INFO | IWL_DL_RF_KILL | IWL_DL_ISR,
+-				"RF_KILL bit toggled to %s.\n",
+-				hw_rf_kill ? "disable radio" : "enable radio");
+-
+-		/* Queue restart only if RF_KILL switch was set to "kill"
+-		 *   when we loaded driver, and is now set to "enable".
+-		 * After we're Alive, RF_KILL gets handled by
+-		 *   iwl3945_rx_card_state_notif() */
+-		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
+-			clear_bit(STATUS_RF_KILL_HW, &priv->status);
+-			queue_work(priv->workqueue, &priv->restart);
+-		}
+-
+-		handled |= CSR_INT_BIT_RF_KILL;
+-	}
+-
+-	/* Chip got too hot and stopped itself (4965 only) */
+-	if (inta & CSR_INT_BIT_CT_KILL) {
+-		IWL_ERROR("Microcode CT kill error detected.\n");
+-		handled |= CSR_INT_BIT_CT_KILL;
+-	}
+-
+ 	/* Error detected by uCode */
+ 	if (inta & CSR_INT_BIT_SW_ERR) {
+ 		IWL_ERROR("Microcode SW error detected.  Restarting 0x%X.\n",
