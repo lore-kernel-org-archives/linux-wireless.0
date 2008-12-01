@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.190]:47379 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751229AbYLQQwj (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:6346 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382AbYLAQRM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 11:52:39 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so3063427rnd.17
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2008 08:52:38 -0800 (PST)
-Message-ID: <40f31dec0812170852l63c3f2efl5e1bf41252c03c73@mail.gmail.com> (sfid-20081217_175243_871998_15C743C1)
-Date: Wed, 17 Dec 2008 18:52:38 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Patrick McHardy" <kaber@trash.net>
-Subject: Re: [RFC]: ath5k: enable TXOK IRQ
-Cc: linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
-	mcgrof@gmail.com, me@bobcopeland.com
-In-Reply-To: <493F5010.7030500@trash.net>
+	Mon, 1 Dec 2008 11:17:12 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so964589ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 08:17:10 -0800 (PST)
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Subject: Re: iwlwifi - rfkill only works if the interface is up
+Date: Mon, 1 Dec 2008 17:16:41 +0100
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com
+References: <200812011311.17346.helmut.schaa@gmail.com> <200812011634.37644.helmut.schaa@gmail.com> <1228147151.31158.142.camel@violet.holtmann.net>
+In-Reply-To: <1228147151.31158.142.camel@violet.holtmann.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <493F5010.7030500@trash.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200812011716.43486.helmut.schaa@gmail.com> (sfid-20081201_171715_090645_F647A680)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/12/10 Patrick McHardy <kaber@trash.net>:
-> I tried to use ath5k in AP mode with hostapd, but hostapd never
-> added the authenticated and associated stations to the kernel.
-> The reason is that ath5k didn't invoke the tx tasklet, so it
-> did not call the ieee80211_tx_status() function and userspace
-> didn't receive the radiotap message indicating success.
->
-> The root cause appears to be that the TXOK interrupt is not
-> enabled, so the tasklet is never scheduled. I'm not sure whether
-> TXOK is really the correct one to handle ! IEEE80211_TX_CTL_NO_ACK,
-> but it fixes the problem for me.
->
+Am Montag, 1. Dezember 2008 schrieb Marcel Holtmann:
+> Hi Helmut,
+> 
+> > > > > Nevertheless, I'm wondering if the current behaviour (even with the patch above)
+> > > > > makes much sense. I mean, the user space cannot rely on the rfkill state
+> > > > > unless an appropriate interface is up. As the device is able to report the
+> > > > > killswitch state without firmware being loaded the following approach could
+> > > > > be feasible:
+> > > > > - iwl_pci_probe enables the device and enables the interrupts
+> > > > > - iwl_mac_start just loads the firmware
+> > > > > - iwl_mac_stop just releases the firmware but leaves the interrupts enabled
+> > > > 
+> > > > In 3495  rfkill interrupt is not available and rfkill state is
+> > > > delivered only when firmware is loaded, therefore this is not
+> > > > possible to bring device down and also expect rfill switch event.
+> > > > There were few threads about this subject.
+> > > > In 4965 and 5000 this will work
+> > > 
+> > > do we unregister the rfkill switch when bringing the adapter down.
+> > 
+> > No.
+> > 
+> > > If not, then we might should do that. I don't see a point in exposing a
+> > > rfkill switch if we can't do anything with it.
+> > 
+> > Either that, or make the rfkill usable even when the interface is down.
+> 
+> if the hardware/firmware doesn't allow us to do so, we have no real
+> option.
 
-Can you put a simple printk on get_isr to see what interrupts are you getting ?
+Ah, you're talking about 3945. Missed that.
 
-Your patch sets TXOK interrupt on the secondary interrupt mask
-register but if you don't enable
-TXOK on the primary imr you won't get any...
-
-2236         sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
-2237                 AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
-2238                 AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
-
-...so this is weird, you shouldn't get any txok interrupt even with
-your patch. Txdesc/txeol should be enough.
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Helmut
