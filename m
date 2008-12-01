@@ -1,47 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:40330 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbYLPS31 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 13:29:27 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Memory errors from p54usb
-Date: Tue, 16 Dec 2008 19:29:28 +0100
-Cc: wireless <linux-wireless@vger.kernel.org>
-References: <49466F56.6060805@lwfinger.net> <200812161813.31227.chunkeey@web.de> <4947EA70.3090400@lwfinger.net>
-In-Reply-To: <4947EA70.3090400@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:13764 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753845AbYLARLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 12:11:20 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 09:11:20 -0800
+Date: Mon, 1 Dec 2008 09:11:12 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Irwan Siajadi <dev.bahamot@yahoo.com>
+CC: Pavel Roskin <proski@gnu.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath5k: can't browse at all.
+Message-ID: <20081201171112.GB5992@tesla> (sfid-20081201_181124_699866_32323A53)
+References: <1227643358.4162.4.camel@dv> <892922.93252.qm@web59609.mail.ac4.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812161929.28796.chunkeey@web.de> (sfid-20081216_192937_020672_6D98841A)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <892922.93252.qm@web59609.mail.ac4.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 16 December 2008 18:50:40 Larry Finger wrote:
-> Christian Lamparter wrote:
-> > On Tuesday 16 December 2008 17:55:22 Larry Finger wrote:
-> >> It is in station mode. I don't know how to get the radio_enabled flag.
-> >>> do you see anything else than probe request?
-> >> just probes.
-> > does the AP answer the probe requests?
+On Sun, Nov 30, 2008 at 08:53:36AM -0800, Irwan Siajadi wrote:
+> --- On Tue, 11/25/08, Pavel Roskin <proski@gnu.org> wrote:
 > 
-> My AP didn't respond to any of them, but my neighbor's AP did to one of them.
-> That was on channel 6; whereas my AP is on channel 1.
+> > From: Pavel Roskin <proski@gnu.org>
+> > Subject: Re: ath5k: can't browse at all.
+> > To: "Irwan Siajadi" <dev.bahamot@yahoo.com>
+> > Cc: linux-wireless@vger.kernel.org
+> > Date: Tuesday, November 25, 2008, 8:02 PM
+> > On Tue, 2008-11-25 at 09:24 -0800, Irwan Siajadi wrote:
+> >
+> > > Further testing shows that if I change from WPA2/AES
+> > to WPA/TIKIP, I
+> > > can finally browse. But it's still hit and missed,
+> > I need to reload
+> > > the pages once or twice before the pages can load
+> > properly.
+> >
+> > Try disabling hardware crypto in the driver:
+> >
+> > rmmod ath5k
+> > modprobe ath5k nohwcrypt=1
 > 
-> > Is this with WPA-PSK TKIP on? what happens if you disable the
-> > hardware crypto offload stuff (e.g p54common nohwcrypt=1 )
+> Sorry for the late reply, being busy with other stuffs.
+> Anyway, disabling hardware cyrpto didn't make any changes.
 > 
-> Yes, WPA-PSK TKIP was on. Same thing happens with hardware crypto disabled.
+> >
+> > In any case, check messages from wpa_supplicant.  Maybe
+> > it's
+> > reauthenticating very often.  If you flood ping the router
+> > ("ping -f"),
+> > you would probably see growing dots that represent lost
+> > packets.
 > 
-> This time I discovered that ifdown/ifup restores the connection as well as
-> module unload/load.
+> Flood ping the router doesn't have any lost packets (although only for a
+> minute or so). And my router's log shows that the laptop didn't
+> re-authenticate very often.
 > 
-well, a first it sounds like TKIP countermeasures...
-but since you said it also happens even if you disable the hardware
-crytographic offload... I'm a bit "out of clues".
+> I've also compiled vanilla 2.6.26 and 2.6.27 with ath5k (compat-wireless).
+> 
+> - 2.6.26.8 + ath5k (compat-wireless-old-2008-11-29, files last editted on
+> 2008-09-16):
+> -> ping shows some packets loss.
+> -> can browse any websites.
 
-Do you still have kismets captured pcaps?
+Lets focus on >= 2.6.27.
 
-Regards,
-	Chr
+> 
+> - 2.6.27.7 + ath5k (compat-wireless-2008-11-26):
+> -> ping doesn't have any packet loss.
+> -> can't browse, browser always waiting for the response from the server.
+> Monitoring the traffics shows that there are tx packets, but there's no rx
+> packets.
+> 
+> Anything else I can try?
+
+You say you can ping fine but... browsing doesn't work?? Maybe a
+firewall issue?
+
+/etc/init.d/iptables stop
+
+I agree with Pavel this does not seem like a driver issue. Do you have
+your AP configured to disable :80 TCP communication? Can you try a simple
+netcat server and netcat client on different ports and also on port 80
+just to see if its really firewall/AP configuration.
+
+  Luis
