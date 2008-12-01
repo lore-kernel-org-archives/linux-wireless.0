@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:20257 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756933AbYLLRhX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53400 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754098AbYLAUQX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 12:37:23 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so725291yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2008 09:37:22 -0800 (PST)
-Message-ID: <b6c5339f0812120937y5f2c9323xd3f3c478d3b78525@mail.gmail.com> (sfid-20081212_183734_478432_7A96B84C)
-Date: Fri, 12 Dec 2008 12:37:21 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "mohamed salim abbas" <mabbaswireless@gmail.com>
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <b3153e950812111500x27d3832avb99d84c13e601813@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <1226944799.3902.52.camel@johannes.berg>
-	 <20081118194652.GD21772@tuxdriver.com>
-	 <1ba2fa240811181508y633be12pd9f2f9bd0e2c81e4@mail.gmail.com>
-	 <b3153e950812051553r2035b8aex4f54f6cf704a26b3@mail.gmail.com>
-	 <1228554333.15939.0.camel@johannes.berg>
-	 <b3153e950812062116q340c6b67l4d0c9a162d389cbf@mail.gmail.com>
-	 <b6c5339f0812070619x19919c5dh62fe13085416145c@mail.gmail.com>
-	 <b3153e950812072155t452aacb7p8ccefd1b2ec401ca@mail.gmail.com>
-	 <b3153e950812111500x27d3832avb99d84c13e601813@mail.gmail.com>
+	Mon, 1 Dec 2008 15:16:23 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>, dcbw@redhat.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: deauth when interface is marked down
+Date: Mon,  1 Dec 2008 15:02:04 -0500
+Message-Id: <1228161724-19771-1-git-send-email-linville@tuxdriver.com> (sfid-20081201_211628_927304_9E7C6F59)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 11, 2008 at 6:00 PM, mohamed salim abbas
-<mabbaswireless@gmail.com> wrote:
-> I did try these patches out, I have a problem, sometime, when the
-> card resume from suspend that I am currently tracing but still this
-> patch does not bring me to the same state before the suspend.
+It seems like proper etiquette to let other stations know when we are
+going down in either STA or IBSS mode.  This also notifies userland, so
+wpa_supplicant doesn't get confused.
 
-Thanks for testing.  Yeah, it's still a work in progress.  I plan to
-spend the weekend hacking on this and getting it into shape.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/iface.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 4608212..b557250 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -435,6 +435,9 @@ static int ieee80211_stop(struct net_device *dev)
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
++		/* Announce that we are leaving the network. */
++		ieee80211_sta_deauthenticate(dev, WLAN_REASON_DEAUTH_LEAVING);
++
+ 		sdata->u.sta.state = IEEE80211_STA_MLME_DISABLED;
+ 		memset(sdata->u.sta.bssid, 0, ETH_ALEN);
+ 		del_timer_sync(&sdata->u.sta.timer);
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.4.3
+
