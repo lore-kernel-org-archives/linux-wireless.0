@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelphi.physics.adelaide.edu.au ([129.127.102.1]:52736 "EHLO
-	adelphi.physics.adelaide.edu.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753909AbYLPACB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 19:02:01 -0500
-From: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
-Message-Id: <200812152342.mBFNgQJj028844@sprite.physics.adelaide.edu.au> (sfid-20081216_010206_944721_0BF937A8)
-Subject: Re: Fuijtsu Lifebook RFKILL support
-To: tony@linx.net
-Date: Tue, 16 Dec 2008 10:12:26 +1030 (CST)
-Cc: dcbw@redhat.com (Dan Williams),
-	hmh@hmh.eng.br (Henrique de Moraes Holschuh),
-	lenb@kernel.org (Len Brown), ivdoorn@gmail.com (Ivo van Doorn),
-	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
-	nokos@gmx.net (Peter Gruber), linux-wireless@vger.kernel.org
-In-Reply-To: <1229361241.13400.1.camel@localhost> from "Tony Vroon" at Dec 15, 2008 05:14:01 PM
+Received: from mail.atheros.com ([12.36.123.2]:32530 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752559AbYLAXxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 18:53:34 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 15:53:34 -0800
+Date: Mon, 1 Dec 2008 15:53:32 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@nokia.com>
+Subject: Re: [RFC] mac80211: Enhancements to dynamic power save.
+Message-ID: <20081201235331.GU5992@tesla> (sfid-20081202_005337_352115_A51A0172)
+References: <20081202011754.GA9382@myhost.users.atheros.com> <1228132431.3478.21.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1228132431.3478.21.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tony
-
-> On Mon, 2008-12-15 at 10:19 -0500, Dan Williams wrote:
-> > I plan to beat the .... out of the hal killswitch support pretty soon.
-> > AFAIK it still doesn't know about softblock, which is part of the whole
-> > reason for the rfkill rewrite in 2.6.26 anyway.  It also doesn't yet
-> > (AFAIK) support uevents from killswitches either, which sucks.
+On Mon, Dec 01, 2008 at 03:53:51AM -0800, Johannes Berg wrote:
+> On Mon, 2008-12-01 at 17:17 -0800, Vivek Natarajan wrote:
+> > This patch is based on Kalle's initial RFC patches on dynamic power save.
+> > Since ath9k/ath5k,stlc45xx and b43 need the driver to send the null
+> > frame, it is appropriate to do it from mac80211. 
+> > This patch enables mac80211 to send a null frame and also to
+> > check for tim in the beacon if power save is enabled.
 > 
-> Could you let me know when you've committed this code so I have another
-> shot at implementing rfkill reporting in fujitsu-laptop?
+> Nice! Looks pretty much good to me, but could use some documentation
+> (Kalle will hopefully add some too). For instance, a casual observer
+> might wonder how the hardware can be saving power when the host software
+> has to parse beacons -- obviously things will only fall into place once
+> we support beacon miss offload.
 
-This is to let you know that I'm still following this discussion but haven't
-had anything sensible to add to the basic infrastructure issues being worked
-through at present.  It's probably sensible for me to pick up on the next
-version of your patch.
+BTW does broadcom hw support beacon miss stuff? We need to consider
+carefully how we add beacon miss support because if we want to rely on
+it *and* also disable say the beacon filter we will be missing out on
+DFS channel switch announcements and HT channel badwidth changes from
+the AP.
 
-Also, over the Christmas period (ie: after this week) my responses are
-likely to be slow due to intermittant network access in that time.
-
-I also haven't forgotten about getting you the DSDT from the S7020 - I just
-haven't had a chance to get to that yet.  I hope to get to this before the
-end of the week.
-
-Regards
-  jonathan
+  Luis
