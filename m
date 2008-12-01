@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:62213 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144AbYLHN1D (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:39613 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751275AbYLALLd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 08:27:03 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so530314wah.21
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2008 05:27:02 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 1 Dec 2008 06:11:33 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so1015296eyi.37
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 03:11:32 -0800 (PST)
+From: Diego 'Flameeyes' =?utf-8?q?Petten=C3=B2?= <flameeyes@gmail.com>
+Subject: [crda PATCH 3/3] Avoid implicit declaration of memset() with OpenSSL.
+To: linux-wireless@vger.kernel.org
+Date: Mon, 01 Dec 2008 12:11:31 +0100
+Message-ID: <20081201111131.20833.81819.stgit@localhost> (sfid-20081201_121136_382134_2851788B)
+In-Reply-To: <20081201111021.20833.42515.stgit@localhost>
+References: <20081201111021.20833.42515.stgit@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18749.8223.628121.271121@localhost.localdomain> (sfid-20081208_142708_360752_09344A8E)
-Date: Mon, 8 Dec 2008 18:54:47 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, Jouni.Malinen@atheros.com,
-	Luis.Rodriguez@atheros.com, tomas.winkler@intel.com
-Subject: Re: [RFC v2] mac80211: fix HT channel selection
-In-Reply-To: <1228742349.22164.82.camel@johannes.berg>
-References: <18748.62215.331271.141163@gargle.gargle.HOWL>
-	<20081208131440.GA7365@jm.kir.nu>
-	<1228742349.22164.82.camel@johannes.berg>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2008-12-08 at 15:14 +0200, Jouni Malinen wrote:
-> > On Mon, Dec 08, 2008 at 03:42:23PM +0530, Sujith wrote:
-> > 
-> > > HT management is done differently for AP and STA modes, unify
-> > > to just the ->config() callback since HT is fundamentally a
-> > > PHY property and cannot be per-BSS.
-> > > 
-> > > Add a new NL80211 attribute to enable/disable HT (NL80211_ATTR_WIPHY_HT).
-> > > NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET now has only the secondary channel
-> > > offsets.
-> > 
-> > Looks reasonable to me. Please just make sure this gets in before
-> > NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET additions get included in any
-> > official kernel release since otherwise this would change the userspace
-> > API..
-> 
-> I don't like it because it allows specifying "disabled/_above" and a
-> bunch of other invalid combinations.
-> 
+When building the libgcrypt-based code, string.h is included through
+libgcrypt itself, but when building with OpenSSL it's missing.
 
-Ok, I'll remove this attribute and just rename enum nl80211_sec_chan_offset to
-something else.
+Include it explicitly so that it's always safe.
+---
 
-Sujith
+ reglib.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/reglib.c b/reglib.c
+index c173818..2f10d23 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -1,5 +1,6 @@
+ #include <errno.h>
+ #include <stdio.h>
++#include <string.h>
+ #include <arpa/inet.h>
+ #include "reglib.h"
+ 
+
