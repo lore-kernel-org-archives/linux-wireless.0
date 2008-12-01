@@ -1,53 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53824 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752659AbYLRWYs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 17:24:48 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Werner Almesberger <werner@openmoko.org>
-Subject: Re: AR6k: to rfkill or not to rfkill ?
-Date: Thu, 18 Dec 2008 23:20:17 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20081218212234.GI5019@almesberger.net>
-In-Reply-To: <20081218212234.GI5019@almesberger.net>
+Received: from mail-gx0-f18.google.com ([209.85.217.18]:43533 "EHLO
+	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752558AbYLATCY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 14:02:24 -0500
+Received: by gxk11 with SMTP id 11so57100gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 11:02:09 -0800 (PST)
+Message-ID: <43e72e890812011101r3ad8225aofafdada8b5699535@mail.gmail.com> (sfid-20081201_200228_937457_A9917803)
+Date: Mon, 1 Dec 2008 11:01:52 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: fix wiphy remove if no regulatory request
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1228129676.3478.0.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812182320.17457.mb@bu3sch.de> (sfid-20081218_232451_711545_B509F744)
+Content-Type: text/plain; charset=UTF-8
+References: <1228129676.3478.0.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 18 December 2008 22:22:34 Werner Almesberger wrote:
-> So, first of all, given that TX power is controlled only indirectly
-> anyway, should we implement rfkill control or not ? There is no kill
-> switch, so there would be no rfkill input.
-> 
-> If the answer is "yes", would the following semantics be right for
-> the disabled state ?
+On Mon, Dec 1, 2008 at 3:07 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Fixes the segfault I just pointed out.
 
-I think you should probably implement it.
-Rfkill is supposed to be a central place for userspace to turn the radios
-off. So if your radio doesn't register an rfkill device, it will result in
-inconsistent userspace state. Userspace (network manager, or whatever app)
-thinks that it disabled all radios, but it didn't, in fact.
+Thanks, the commit log should include the panic I guess though right?
 
-So yes, I think you should implement rfkill by stopping any TX actions
-immediately if it hits. The state callback would simply be emulated in software.
-
-> - we de-associate
-
-Rfkill is supposed to stop TX _immediately_.
-So no MAC cleanup, etc...
-
-> - we stop scanning
-> - all ioctls still work as usual, but they have no effect on
->   association and scanning until rfkill re-enables the device
-
-basically, yes.
-
-
-Note that current rfkill subsystem implementation is not that nice and you
-might get some headache from it. ;)
-
--- 
-Greetings, Michael.
+  Luis
