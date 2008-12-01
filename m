@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:55435 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752697AbYLDCca (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 21:32:30 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 18:32:30 -0800
-Date: Wed, 3 Dec 2008 18:32:28 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Brian <bnc@astronomicalresearchaustralia.org>
-CC: "ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [stable] [PATCH 1/3] ath9k: Handle -ENOMEM on RX
-	gracefully
-Message-ID: <20081204023228.GT6522@tesla> (sfid-20081204_033234_231441_E9446109)
-References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com> <1228251082-11677-2-git-send-email-lrodriguez@atheros.com> <1228251082-11677-3-git-send-email-lrodriguez@atheros.com> <1228251082-11677-4-git-send-email-lrodriguez@atheros.com> <20081203001253.GC14943@kroah.com> <43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com> <20081203002404.GA22789@tuxdriver.com> <20081203212255.GB4263@tuxdriver.com> <43e72e890812031414m6a5782e7ga8eed8d91fe056b2@mail.gmail.com> <49370F49.2090602@astronomicalresearchaustralia.org>
+Received: from mail-gx0-f18.google.com ([209.85.217.18]:59163 "EHLO
+	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243AbYLAT0q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 14:26:46 -0500
+Received: by gxk11 with SMTP id 11so90929gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 11:26:44 -0800 (PST)
+Message-ID: <43e72e890812011126sd65799fvf478e08e2b82dfe9@mail.gmail.com> (sfid-20081201_202650_188043_9A64FED6)
+Date: Mon, 1 Dec 2008 11:26:43 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Vince Barwinski" <vince.barwinski@gmail.com>
+Subject: Re: Build problem with "compat-wireless-2.6-old"
+Cc: linux-wireless@vger.kernel.org,
+	"Tim Gardner" <tim.gardner@canonical.com>
+In-Reply-To: <d5b9d7c80811300048l22b99fe3v27b65e5e4962a54b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <49370F49.2090602@astronomicalresearchaustralia.org>
+Content-Type: text/plain; charset=UTF-8
+References: <d5b9d7c80811300048l22b99fe3v27b65e5e4962a54b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 03, 2008 at 02:59:21PM -0800, Brian wrote:
-> Luis,
-> I tried to respond to your comment in bug 12110 but do not have a id yet.
-> 
-> Does this patch fix this bug?
-> 
-> 
-> Here is my response
-> 
-> 
-> I have the same problem but with wireless testing on a 2.6.28-rc6-wl kernel.
-> I can run for hours if I do not use the wireless heavily.
-> But will crash within 10mins if I use NX.
-> (I have the NX parm turned on in the kernel)
-> I also get the same symptoms re a ping that will just stop/start,
-> directly before a crash. Also it starts to use my swap file. I NEVER use
-> swap normally.
-> Would you like me to apply the same patch and see if I can get some message?
-> 
-> 
-> Can I get a patch for 2.6.28-rc6-wl ?
+On Sun, Nov 30, 2008 at 12:48 AM, Vince Barwinski
+<vince.barwinski@gmail.com> wrote:
+> Hi there
+>
+> I just downloaded compat-wireless-old.tar.bz2 and then after
+> extracting it I tried to build it by executing the 'make' command. I
+> made sure that I had the kernel headers and kernel source installed
+> before running 'make'. I downloaded and installed them with 'apt-get'.
+> My machine is an ACER Travelmate 230 Laptop with the Operating System
+> being 'Simply Mepis Linux version 7.0' with kernel version
+> '2.6.22-1-mepis-smp'. My USB wireless adapter is a 'Lemel LM-WLG600U
+> 802.11g'. The old story: I am able to get it to work in Microsloth
+> Windows XP with the driver CD, but the real problem of course is
+> getting it to run in Linux.
+>
+> At first the build seemed to be running OK, but after a minute or so
+> it failed with the following output:
+>
+> root@laptop:/home/vince/downloads/compat-wireless-2.6-old# make
+> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+> make -C /lib/modules/2.6.22-1-mepis-smp/build
+> M=/home/vince/downloads/compat-wireless-2.6-old modules
+> make[1]: Entering directory `/usr/src/linux-headers-2.6.22-1-mepis-smp'
+>  CC [M]  /home/vince/downloads/compat-wireless-2.6-old/drivers/misc/eeprom_93cx6.o
+>  CC [M]  /home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.o
+> In file included from
+> /home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:34:
+> /home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.h:361:
+> error: field 'napi' has incomplete type
+> /home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c: In
+> function 'b44_poll':
 
-wireless-testing is now on 2.6.28-rc7, please do a git pull and
-recompile and test that. It has some critical fixes for ath9k.
+seems b44 needs backporting of napi stuff. I have it b44 disabled if
+you are not on > 2.6.22 but your kernel config is still respected so
+it fails. You can simply remove it from being compile be removing the
+line indicated below:
+
+diff --git a/Makefile b/Makefile
+index e1cd54e..a1d1e59 100644
+--- a/Makefile
++++ b/Makefile
+@@ -21,7 +21,6 @@ ifeq ($(ONLY_CORE),)
+ obj-y += net/ieee80211/ \
+        drivers/ssb/ \
+        drivers/misc/ \
+-       drivers/net/ \
+        drivers/net/usb/ \
+        drivers/net/wireless/
+ endif
+
+
+A patch to backport napi stuff to get this to compile correctly on
+2.6.22 is welcomed though.
 
   Luis
