@@ -1,36 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.brikks.com ([82.209.166.4]:23972 "EHLO smtp.bredband2.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753177AbYLIPQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 10:16:58 -0500
-Date: Tue, 9 Dec 2008 16:16:55 +0100
-From: Mats Johannesson <spamcan1@abrasax.se>
-To: Sujith <m.sujith@gmail.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
+Received: from fmmailgate01.web.de ([217.72.192.221]:45697 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268AbYLAWAv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 17:00:51 -0500
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH 1/6 v2.2] mac80211: add sta_notify_ps callback
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni.Malinen@atheros.com
-Subject: Re: [RFC v2] mac80211: Fix HT channel selection
-Message-ID: <20081209161655.28b66802@loke.fish.not> (sfid-20081209_161701_305390_8CF072B8)
-In-Reply-To: <18750.29471.106723.987402@localhost.localdomain>
-References: <20081209135456.68778e51@loke.fish.not>
-	<200812091314.34169.hs4233@mail.mn-solutions.de>
-	<18750.29471.106723.987402@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>
+From: Christian Lamparter <chunkeey@web.de>
+Date: Mon, 1 Dec 2008 23:00:52 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200812012300.52218.chunkeey@web.de> (sfid-20081201_230055_635973_B2232726)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 01 December 2008 20:17:23 Luis R. Rodriguez wrote:
+> On Sat, Nov 29, 2008 at 03:48:41PM -0800, Christian Lamparter wrote:
+> > This patch is necessary in order to provide a proper Access point support for p54.
+> > Unfortunately for us, there is no documented way to disable the interfering
+> > power save buffering mechanism in firmware completely.
+> > 
+> > Therefore we give in and notify the driver through our new sta_notify_ps callback,
+> > so that we can update the filter state.
+> > 
+> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> > Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> > ---
+> >  the extra patch for mac80211_hwsim is no longer needed...
+> > This whole series is all for wireless-testing.
+> > 
+> > erm... now with a updated documentation!!1one
+> > ---
+> > > >
+> > > >     clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
+> > > > +   if (local->ops->sta_notify_ps)
+> > > > +           local->ops->sta_notify_ps(local_to_hw(local), STA_WOKE_UP,
+> > > > +                                     &sta->sta);
+> > >
+> > > With this patch, STA_WILL_SLEEP and STA_WOKE_UP are undefined. Is there a
+> > > prerequisite that I missed?
+> > > Larry
+> > no it's just fsck fallout. one file got synced in time... the other didn't.
+> > SLUB_DEBUG/SLAB_DEBUG don't work at all with p54usb.
+> > ---
+> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> > index 6a1d4ea..4b972fc 100644
+> > --- a/include/net/mac80211.h
+> > +++ b/include/net/mac80211.h
+> > @@ -779,6 +779,19 @@ enum sta_notify_cmd {
+> >  };
+> > 
+> >  /**
+> > + * enum sta_notify_ps_cmd - sta power save notify command
+> > + *
+> > + * Used with the sta_notify_ps() callback in &struct ieee80211_ops to
+> > + * notify the driver if a station made a power state transition.
+> > + *
+> > + * @STA_NOTIFY_SLEEP: a station is now sleeping
+> > + * @STA_NOTIFY_AWAKE: a sleeping station woke up
+> > + */
+> > +enum sta_notify_ps_cmd {
+> > +       STA_NOTIFY_SLEEP, STA_NOTIFY_AWAKE,
+> > +};
+> > +
+> > +/**
+> >   * enum ieee80211_tkip_key_type - get tkip key
+> >   *
+> >   * Used by drivers which need to get a tkip key for skb. Some drivers need a
+> > @@ -1248,6 +1261,9 @@ enum ieee80211_ampdu_mlme_action {
+> >   * @sta_notify: Notifies low level driver about addition or removal
+> >   *     of associated station or AP.
+> >   *
+> > + * @sta_ps_notify: Notifies low level driver about the power state transition
+> > + *     of a associated station. Must be atomic.
+> > + *
+> 
+> Can we add documentation that this is only required when the AP cannot
+> figure this out by itself? This can help people working on AP support to
+> not think they need to implement this for all drivers.
+> 
+Hmm, yeah... should I edit the documentation for sta_notify as well?
 
-Sujith, there seems to be a slight issue. After having done a scan (one
-is enough) DNS lookups start to be delayed. Prior to a scan I get
-maximum 1 seconds DNS lookups, after scan it can be like 5 seconds up
-to 25 and even to the point of timeout.
+Regards,
+	Chr
 
-I've tested this several times now, for some hours, and am rather
-confident that the scan is the culprit. It is very obvious at marc.info
-where the DNS in addition seems to be forgotten within minutes,
-requiring a new lookup. Possibly the DNS is forgotten normally as well,
-but the lookup is so quick that I don't notice it...
-
-/Mats
