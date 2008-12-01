@@ -1,105 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2023 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbYLODun (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:60843 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752758AbYLAWfq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Dec 2008 22:50:43 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mabbaswireless@gmail.com,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH v2 1/3] cfg80211: add PM hooks
-Date: Sun, 14 Dec 2008 22:50:37 -0500
-Message-Id: <1229313039-5544-2-git-send-email-me@bobcopeland.com> (sfid-20081215_045052_167136_6B695C2E)
+	Mon, 1 Dec 2008 17:35:46 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 14:35:46 -0800
+Date: Mon, 1 Dec 2008 14:35:45 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Diego 'Flameeyes' =?iso-8859-1?Q?Petten=F2?= <flameeyes@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [crda PATCH 0/3] Code fixups and optimisation
+Message-ID: <20081201223544.GQ5992@tesla> (sfid-20081201_233550_550312_318467C7)
+References: <20081201111021.20833.42515.stgit@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20081201111021.20833.42515.stgit@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+On Mon, Dec 01, 2008 at 03:11:08AM -0800, Diego 'Flameeyes' Petten=F2 w=
+rote:
+> After fixing the Makefile I have taken a look at the actual code, jus=
+t
+> three simple patches for that.
 
-This should help implement suspend/resume in mac80211, these
-hooks will be run before the device is suspended and after it
-resumes. Therefore, they can touch the hardware as much as
-they want to.
+Thanks, applied.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h |    6 ++++++
- net/wireless/sysfs.c   |   30 ++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+), 0 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 23c0ab7..0432eb6 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -450,6 +450,9 @@ struct ieee80211_channel;
-  * wireless extensions but this is subject to reevaluation as soon as this
-  * code is used more widely and we have a first user without wext.
-  *
-+ * @suspend: wiphy device needs to be suspended
-+ * @resume: wiphy device needs to be resumed
-+ *
-  * @add_virtual_intf: create a new virtual interface with the given name,
-  *	must set the struct wireless_dev's iftype.
-  *
-@@ -499,6 +502,9 @@ struct ieee80211_channel;
-  * @set_channel: Set channel
-  */
- struct cfg80211_ops {
-+	int	(*suspend)(struct wiphy *wiphy);
-+	int	(*resume)(struct wiphy *wiphy);
-+
- 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
- 				    enum nl80211_iftype type, u32 *flags,
- 				    struct vif_params *params);
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index 29f820e..021cda6 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -60,6 +60,34 @@ static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
- }
- #endif
- 
-+static int wiphy_suspend(struct device *dev, pm_message_t state)
-+{
-+	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
-+	int ret = 0;
-+
-+	if (rdev->ops->suspend) {
-+		rtnl_lock();
-+		ret = rdev->ops->suspend(&rdev->wiphy);
-+		rtnl_unlock();
-+	}
-+
-+	return ret;
-+}
-+
-+static int wiphy_resume(struct device *dev)
-+{
-+	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
-+	int ret = 0;
-+
-+	if (rdev->ops->resume) {
-+		rtnl_lock();
-+		ret = rdev->ops->resume(&rdev->wiphy);
-+		rtnl_unlock();
-+	}
-+
-+	return ret;
-+}
-+
- struct class ieee80211_class = {
- 	.name = "ieee80211",
- 	.owner = THIS_MODULE,
-@@ -68,6 +96,8 @@ struct class ieee80211_class = {
- #ifdef CONFIG_HOTPLUG
- 	.dev_uevent = wiphy_uevent,
- #endif
-+	.suspend = wiphy_suspend,
-+	.resume = wiphy_resume,
- };
- 
- int wiphy_sysfs_init(void)
--- 
-1.6.0.4
-
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
