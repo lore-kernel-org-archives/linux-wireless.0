@@ -1,36 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:44883 "EHLO smtp2.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753647AbYLZLCr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2008 06:02:47 -0500
-Received: from math.ut.ee (math.ut.ee [193.40.36.2])
-	by smtp2.it.da.ut.ee (Postfix) with ESMTP id 11BA373D5DD
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2008 13:02:44 +0200 (EET)
-Received: from localhost (localhost [127.0.0.1])
-	by math.ut.ee (Postfix) with ESMTP id 13398FD79B
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2008 13:02:44 +0200 (EET)
-Date: Fri, 26 Dec 2008 13:02:43 +0200 (EET)
-From: Meelis Roos <mroos@ut.ee>
-To: linux-wireless@vger.kernel.org
-Subject: RT2500 scan problem in 2.6.28
-Message-ID: <Pine.SOC.4.64.0812261259030.13693@math.ut.ee> (sfid-20081226_120259_892575_8C162ACA)
+Received: from smtp.nokia.com ([192.100.105.134]:18967 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753836AbYLAUwH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 15:52:07 -0500
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>, dcbw@redhat.com
+Subject: Re: [PATCH] mac80211: deauth when interface is marked down
+References: <1228161724-19771-1-git-send-email-linville@tuxdriver.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 01 Dec 2008 22:51:14 +0200
+In-Reply-To: <1228161724-19771-1-git-send-email-linville@tuxdriver.com> (ext John W. Linville's message of "Mon\,  1 Dec 2008 15\:02\:04 -0500")
+Message-ID: <87d4gbbovx.fsf@nokia.com> (sfid-20081201_215213_371875_C76BA5DE)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+John W. Linville <linville@tuxdriver.com> writes:
 
-I finally found a network where rt2x00 driver works reliably (using 
-2.6.27). However, it does not work anymore with 2.6.28.
+> It seems like proper etiquette to let other stations know when we are
+> going down in either STA or IBSS mode.  This also notifies userland, so
+> wpa_supplicant doesn't get confused.
 
-The network uses hidden SSID so wpa_supplicant is configured with 
-ap_scan to find it. This works fine in 2.6.27 but the scan fails with 
-2.6.28. Rugging wpa_supplicant in debug mode tells the scan finds a 
-network with ssid='' and it does not match.
+I noticed a problem while I was testing my dynamic power save patches,
+power save settings were not correctly sent to the driver because
+ieee80211_stop() didn't notify mlme. I think this patch will fix this
+but I didn't test it, yet.
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  net/mac80211/iface.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+> index 4608212..b557250 100644
+> --- a/net/mac80211/iface.c
+> +++ b/net/mac80211/iface.c
+> @@ -435,6 +435,9 @@ static int ieee80211_stop(struct net_device *dev)
+>  		break;
+>  	case NL80211_IFTYPE_STATION:
+>  	case NL80211_IFTYPE_ADHOC:
+> +		/* Announce that we are leaving the network. */
+> +		ieee80211_sta_deauthenticate(dev, WLAN_REASON_DEAUTH_LEAVING);
+> +
+>  		sdata->u.sta.state = IEEE80211_STA_MLME_DISABLED;
 
-How can I debug it some more? I'm here with the network today and 
-tomorrow, then I will leav for home.
+I think manually setting u.sta.state can be removed now because
+ieee80211_sta_deauthenticate() calls ieee80211_set_disassoc() which
+again has this:
+
+	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT)
+		ifsta->state = IEEE80211_STA_MLME_DISABLED;
 
 -- 
-Meelis Roos (mroos@ut.ee)      http://www.cs.ut.ee/~mroos/
+Kalle Valo
