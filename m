@@ -1,51 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39393 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752742AbYLHXLI (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:36262 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbYLAUap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 18:11:08 -0500
-Subject: [PATCH] mac80211: only create default STA interface if supported
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Kalle Valo <kalle.valo@nokia.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 09 Dec 2008 00:10:30 +0100
-Message-Id: <1228777830.22164.152.camel@johannes.berg> (sfid-20081209_001113_388011_1C46594F)
-Mime-Version: 1.0
+	Mon, 1 Dec 2008 15:30:45 -0500
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC v3 4/4] mac80211: move dynamic_ps_timeout to hw.conf
+References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
+	<1227901784-5325-5-git-send-email-kalle.valo@nokia.com>
+	<43e72e890812011111h53553a18x2d17c9cf267331dd@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 01 Dec 2008 22:30:37 +0200
+In-Reply-To: <43e72e890812011111h53553a18x2d17c9cf267331dd@mail.gmail.com> (ext Luis R. Rodriguez's message of "Mon\, 1 Dec 2008 11\:11\:48 -0800")
+Message-ID: <87hc5nbpua.fsf@nokia.com> (sfid-20081201_213049_564735_9CB91ECB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers will support this, obviously, but this forces them to
-set it up properly.
+Luis R. Rodriguez <mcgrof@gmail.com> writes:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/main.c |   14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+> On Fri, Nov 28, 2008 at 11:49 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+>
+>> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+>> index b3ee0dc..95455d0 100644
+>> --- a/net/mac80211/wext.c
+>> +++ b/net/mac80211/wext.c
+>> @@ -962,7 +962,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
+>>
+>>        if (wrq->disabled) {
+>>                ps = false;
+>> -               local->dynamic_ps_timeout = 0;
+>> +               local->hw.conf.dynamic_ps_timeout = 0;
+>>                goto set;
+>>        }
+>>
+>> @@ -977,7 +977,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
+>>        }
+>>
+>>        if (wrq->flags & IW_POWER_TIMEOUT)
+>> -               local->dynamic_ps_timeout = wrq->value / 1000;
+>> +               local->hw.conf.dynamic_ps_timeout = wrq->value / 1000;
+>>
+>>        if (ps == local->powersave)
+>>                return ret;
+>> @@ -986,9 +986,9 @@ set:
+>>        local->powersave = ps;
+>>
+>>        if (ifsta->flags & IEEE80211_STA_ASSOCIATED) {
+>> -               if (local->dynamic_ps_timeout > 0)
+>> +               if (conf->dynamic_ps_timeout > 0)
+>>                        mod_timer(&local->dynamic_ps_timer, jiffies +
+>> -                                 msecs_to_jiffies(local->dynamic_ps_timeout));
+>> +                                 msecs_to_jiffies(conf->dynamic_ps_timeout));
+>>                else {
+>>                        if (local->powersave)
+>>                                conf->flags |= IEEE80211_CONF_PS;
+>
+> Would it be too much trouble to add this via cfg80211/nl80211 instead
+> or at least add both? The more we can push in that direction the
+> better.
 
---- everything.orig/net/mac80211/main.c	2008-12-09 00:07:37.000000000 +0100
-+++ everything/net/mac80211/main.c	2008-12-09 00:09:00.000000000 +0100
-@@ -892,12 +892,14 @@ int ieee80211_register_hw(struct ieee802
- 
- 	local->mdev->select_queue = ieee80211_select_queue;
- 
--	/* add one default STA interface */
--	result = ieee80211_if_add(local, "wlan%d", NULL,
--				  NL80211_IFTYPE_STATION, NULL);
--	if (result)
--		printk(KERN_WARNING "%s: Failed to add default virtual iface\n",
--		       wiphy_name(local->hw.wiphy));
-+	/* add one default STA interface if supported */
-+	if (local->hw.wiphy->interface_modes & NL80211_IFTYPE_STATION) {
-+		result = ieee80211_if_add(local, "wlan%d", NULL,
-+					  NL80211_IFTYPE_STATION, NULL);
-+		if (result)
-+			printk(KERN_WARNING "%s: Failed to add default virtual iface\n",
-+			       wiphy_name(local->hw.wiphy));
-+	}
- 
- 	rtnl_unlock();
- 
+I definitely would like to see nl80211 support for power save. For
+example, I think currently there's no way for the user space to know
+dtim period of the bss. (If I'm wrong here, please let me know). We
+definitely should fix that in nl80211 to make it easier for the user
+space decide on correct power save settings.
 
+Let's start to work on nl80211 after client power save features in
+mac80211 are in better shape. At that time we also have a better
+understanding of what's needed for the user space interface. Now
+things are a bit sketchy still.
 
+-- 
+Kalle Valo
