@@ -1,45 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:47131 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753534AbYLBNAD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41343 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160AbYLATeP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 08:00:03 -0500
-Date: Tue, 2 Dec 2008 10:59:59 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+	Mon, 1 Dec 2008 14:34:15 -0500
+Subject: Re: 11d segfault
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com
-Subject: Re: iwlwifi - rfkill only works if the interface is up
-Message-ID: <20081202125959.GC1668@khazad-dum.debian.net> (sfid-20081202_140013_748588_5F4F6229)
-References: <200812011311.17346.helmut.schaa@gmail.com> <1ba2fa240812010508hcb29699m8bd8b3b0ba8574cd@mail.gmail.com> <1228145453.31158.140.camel@violet.holtmann.net> <200812011634.37644.helmut.schaa@gmail.com> <1228147151.31158.142.camel@violet.holtmann.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1228147151.31158.142.camel@violet.holtmann.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1228145195.31158.137.camel@violet.holtmann.net>
+References: <1228129742.3478.2.camel@johannes.berg>
+	 <1228145195.31158.137.camel@violet.holtmann.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1JpYfoc6yFIXUmI34lYo"
+Date: Mon, 01 Dec 2008 20:34:12 +0100
+Message-Id: <1228160052.10627.33.camel@johannes.berg> (sfid-20081201_203419_568438_5067AEC1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 01 Dec 2008, Marcel Holtmann wrote:
-> if the hardware/firmware doesn't allow us to do so, we have no real
-> option. I think that nobody thought about this use case so far. I am not
-> sure if we should unregister it or just fix rfkill to add an invalid
-> state. It is also possible to tie rfkill with ifup/ifdown.
 
-Please don't register/unregister rfkill classes like that, it is extremely
-broken from userspace's point-of-view, and it is not how the rfkill core
-subsystem expects things to be used either.    If there is no way to avoid
-register/unregister at interface up/down, it is better to never register any
-rfkill classes at all, and remove the functionality.
+--=-1JpYfoc6yFIXUmI34lYo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Now, I hate when people use the term "rfkill switch" when dealing with the
-kernel rfkill subsystem, because we can't really always be sure we
-understood what the person means, so please bear with me...
+On Mon, 2008-12-01 at 16:26 +0100, Marcel Holtmann wrote:
+> Hi Johannes,
+>=20
+> > Dec  1 12:07:00 johannes kernel: [  193.370168] Unable to handle kernel=
+ paging request for data at address 0x00000000
+> > Dec  1 12:07:00 johannes kernel: [  193.370180] Faulting instruction ad=
+dress: 0xf2794560
+> > Dec  1 12:07:00 johannes kernel: [  193.370194] Oops: Kernel access of =
+bad area, sig: 11 [#1]
+>=20
+> are you running kerneloops? If not, please do so :)
 
-Are you talking about the hardware rfkill line (the input pin where one
-might have hooked an input device)?  Or about something else?
+Heh, I don't think you want to see all the ways I manage to crash my
+machine ;)
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+johannes
+
+--=-1JpYfoc6yFIXUmI34lYo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJNDwwAAoJEKVg1VMiehFY2nkQALRuQExJ/f8TRkrsIO3j5v4c
+Iam+KZc2mtlXYzpt1LE3r54zOJXMl0YxDWho4lp9C52L2EEAtEkYFVU6lG6vEnnJ
+slzHBXLfORKzatG6u8TQzaM7SsF8orNcYb1ytifbAIUejRM31vjOerrXmGFHhR/P
+rhUSOnO9hbO4maBMGw8r1ZZPT8kZl8vGaikSx64JlMCaGjoM3fJAQTwNd9losPTU
+4i8OJzd4OqXqJt3W7eUa0qImcdhYJg5YuXsJF+PQJPTU+LSi6toqd4/yNEatz4JR
+kUBtGrc79Qh628txcKjjKAnG0C9awu56i2glKBBvJZfx9Ph4Xa3jco80SBAmtL2d
+ovolKp4yQlr6iCQxA8qI+hrRvILC262cY33P4gE5bYORybUwIbgJtxsweuYb0Ob9
+DoDxMLN6QBa+nY746sk7KSzSkhpKnw03glFIOjcf+VdzM6DsgZTW+KMlnwCHOCyt
+RYOD4lzUXxnEyinn5zrebw9Oy2m7F7qQIzKDSHj5Nehg1IXLlEdwxHIxldLVwbzr
+TijLZDsMs18zLkxddgtVqmqXFu+AZPKrM6rOC3lQRORTkvwriuAtqvvADSmu6mGw
+IbcG7JVnFD0a1VjuR7KkEnZEdrGjTyLVJFGl2lJ/skyowqaGsAXLeQ0hK+wEOyTg
+ReoqangCswX8jmce3yss
+=CJxM
+-----END PGP SIGNATURE-----
+
+--=-1JpYfoc6yFIXUmI34lYo--
+
