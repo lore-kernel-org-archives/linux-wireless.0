@@ -1,30 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:39649 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383AbYLINOw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 08:14:52 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: Fix HT channel selection
-Date: Tue, 9 Dec 2008 13:14:34 +0000
-Cc: Mats Johannesson <spamcan1@abrasax.se>,
-	Sujith <m.sujith@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni.Malinen@atheros.com
-References: <20081209135456.68778e51@loke.fish.not>
-In-Reply-To: <20081209135456.68778e51@loke.fish.not>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812091314.34169.hs4233@mail.mn-solutions.de> (sfid-20081209_141457_891863_044EE048)
+Received: from mga01.intel.com ([192.55.52.88]:39785 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751374AbYLAX3e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 18:29:34 -0500
+Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
+	Christophe Dumez <dchris@gmail.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
+	Thomas Witt <witt_th@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andres Freund <andres@anarazel.de>
+In-Reply-To: <1228160229.10627.38.camel@johannes.berg>
+References: <1226969241.4014.24.camel@johannes.berg>
+	 <1228152631.10900.6.camel@rc-desk>
+	 <1228160229.10627.38.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 01 Dec 2008 15:30:29 -0800
+Message-Id: <1228174229.10900.38.camel@rc-desk> (sfid-20081202_002938_474521_9B8D4868)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 13:30:16 : ath9k: (2452 MHz) -> (2457 MHz), cflags:500e0, chanwidth: 0
+On Mon, 2008-12-01 at 11:37 -0800, Johannes Berg wrote:
+> Reinette,
+> 
+> > Above you mention that this patch fixes bug #11596. Could you please
+> > explain how this patch addresses that problem?
+> 
+> That looks like a mistake, I don't think it can fix that bug. I probably
+> pasted the wrong URL, I had a whole bunch of iwlwifi bugs open
+> everywhere around. I apologise for any problems caused by this, was this
+> bug closed erroneously?
 
-Why the useless brackets?
+No problem was caused. The kernel.org bug was closed because one of the
+reporters was unable to reproduce the issue after upgrading the kernel.
+Unfortunately no particular patch was identified that specifically
+addresses the problem. 
 
-And is it by intent that this uses frequencies and not channel numbers?
-I personally tend to be much more able to remember channels, but
-frequencies are more versatile.
+The bug in our system is still open because we still see the issue in
+our test environment. We will keep digging.
+
+Reinette
+
