@@ -1,82 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:2242 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752957AbYLaJbP convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:58604 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbYLAPm4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 04:31:15 -0500
-Message-ID: <a32f33a40812310131o3207f10p2499b129d2701f3a@mail.gmail.com> (sfid-20081231_103121_542062_83D639EA)
-Date: Wed, 31 Dec 2008 10:31:13 +0100
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "=?ISO-8859-1?Q?Simon_Holm_Th=F8gersen?=" <odie@cs.aau.dk>
-Subject: Re: [PATCH] net/rfkill/rfkill.c: fix unused rfkill_led_trigger() warning
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <1230714558.24416.1.camel@odie.local>
+	Mon, 1 Dec 2008 10:42:56 -0500
+To: "Vivek Natarajan" <vnatarajan@atheros.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: Enhancements to dynamic power save.
+References: <20081202011754.GA9382@myhost.users.atheros.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 01 Dec 2008 17:42:35 +0200
+In-Reply-To: <20081202011754.GA9382@myhost.users.atheros.com> (ext Vivek Natarajan's message of "Mon\, 1 Dec 2008 17\:17\:54 -0800")
+Message-ID: <87wsej6gwk.fsf@nokia.com> (sfid-20081201_164259_068520_00CF0430)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1230714558.24416.1.camel@odie.local>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 31, 2008 at 10:09 AM, Simon Holm Th=F8gersen <odie@cs.aau.d=
-k> wrote:
-> commit 4dec9b807be757780ca3611a959ac22c28d292a7 ("rfkill: strip point=
-less
-> notifier chain") removed the only user of rfkill_led_trigger() that w=
-as not
-> guarded by #ifdef CONFIG_RFKILL_LEDS. Therefore, move rfkill_led_trig=
-ger()
-> completely inside #ifdef CONFIG_RFKILL_LEDS and avoid the compile tim=
-e
-> warning:
->
-> net/rfkill/rfkill.c:59: warning: 'rfkill_led_trigger' defined but not=
- used
->
-> Signed-off-by: Simon Holm Th=F8gersen <odie@cs.aau.dk>
+Vivek Natarajan <vnatarajan@atheros.com> writes:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> This patch is based on Kalle's initial RFC patches on dynamic power save.
+> Since ath9k/ath5k,stlc45xx and b43 need the driver to send the null
+> frame, it is appropriate to do it from mac80211. 
 
-> ---
->  net/rfkill/rfkill.c |    4 +---
->  1 files changed, 1 insertions(+), 3 deletions(-)
->
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index 3c94f76..3eaa394 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -54,10 +54,10 @@ static unsigned long rfkill_states_lockdflt[BITS_=
-TO_LONGS(RFKILL_TYPE_MAX)];
->  static bool rfkill_epo_lock_active;
->
->
-> +#ifdef CONFIG_RFKILL_LEDS
->  static void rfkill_led_trigger(struct rfkill *rfkill,
->                               enum rfkill_state state)
->  {
-> -#ifdef CONFIG_RFKILL_LEDS
->        struct led_trigger *led =3D &rfkill->led_trigger;
->
->        if (!led->name)
-> @@ -66,10 +66,8 @@ static void rfkill_led_trigger(struct rfkill *rfki=
-ll,
->                led_trigger_event(led, LED_OFF);
->        else
->                led_trigger_event(led, LED_FULL);
-> -#endif /* CONFIG_RFKILL_LEDS */
->  }
->
-> -#ifdef CONFIG_RFKILL_LEDS
->  static void rfkill_led_trigger_activate(struct led_classdev *led)
->  {
->        struct rfkill *rfkill =3D container_of(led->trigger,
-> --
-> 1.6.0.2.526.g5c283
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, I agree. Actually the way I implemented this in stlc45xx was to
+use PS-Poll. In future, it would be nice to have it supported as well,
+but we can add it later.
+
+> +	directed_tim = check_tim(&elems, ifsta->aid, &is_mc);
+> +
+> +	if (directed_tim || is_mc) {
+> +		if (local->hw.conf.flags && IEEE80211_CONF_PS) {
+> +			local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+> +			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+> +			ieee80211_send_nullfunc(local, sdata, 0);
+> +		}
+> +	}
+
+Maybe I have been working too much with slow embedded hardware, but can
+ath5k really wake up for the beacon, send the beacon to the host,
+mac80211 read the beacon and then wakeup the hardware to listen for
+multicast frames following the beacon? The multicast frames are sent
+immeaditely after the dtim beacon, so this should happen really quick.
+But most probably I'm just missing something here.
+
+In stlc45xx the firmware listens automatically for the multicast
+beacons following dtim beacons and mac80211 doesn't have to do
+anything for them.
+
+> -		ret = ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+> +			ret = ieee80211_hw_config(local,
+> +						  IEEE80211_CONF_CHANGE_PS);
+> +			ieee80211_send_nullfunc(local, sdata, 0);
+
+Maybe we should have a seperate function for enabling and disabling
+power save mode. So that we don't forget sending of the null frame.
+
+-- 
+Kalle Valo
