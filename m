@@ -1,91 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65429 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:34913 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751789AbYLAR3g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 12:29:36 -0500
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
-	Christophe Dumez <dchris@gmail.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
-	Thomas Witt <witt_th@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andres Freund <andres@anarazel.de>
-In-Reply-To: <1226969241.4014.24.camel@johannes.berg>
-References: <1226969241.4014.24.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 01 Dec 2008 09:30:31 -0800
-Message-Id: <1228152631.10900.6.camel@rc-desk> (sfid-20081201_182940_520097_4E659E56)
-Mime-Version: 1.0
+	id S1751305AbYLBFga (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 00:36:30 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 21:36:30 -0800
+Date: Mon, 1 Dec 2008 13:36:40 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Irwan Siajadi <dev.bahamot@yahoo.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Pavel Roskin <proski@gnu.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath5k: can't browse at all.
+Message-ID: <20081201213640.GB6997@tesla> (sfid-20081202_063649_287300_85FA9227)
+References: <63885.52788.qm@web59615.mail.ac4.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <63885.52788.qm@web59615.mail.ac4.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+On Mon, Dec 01, 2008 at 07:11:55PM -0800, Irwan Siajadi wrote:
+> 
+> 
+> 
+> --- On Mon, 12/1/08, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+> 
+> > From: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > Subject: Re: ath5k: can't browse at all.
+> > To: "Irwan Siajadi" <dev.bahamot@yahoo.com>
+> > Cc: "Pavel Roskin" <proski@gnu.org>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+> > Date: Monday, December 1, 2008, 5:11 PM
+> > On Sun, Nov 30, 2008 at 08:53:36AM -0800, Irwan Siajadi
+> > wrote:
+> > > --- On Tue, 11/25/08, Pavel Roskin
+> > <proski@gnu.org> wrote:
+> > >
+> > > > From: Pavel Roskin <proski@gnu.org>
+> > > > Subject: Re: ath5k: can't browse at all.
+> > > > To: "Irwan Siajadi"
+> > <dev.bahamot@yahoo.com>
+> > > > Cc: linux-wireless@vger.kernel.org
+> > > > Date: Tuesday, November 25, 2008, 8:02 PM
+> > > > On Tue, 2008-11-25 at 09:24 -0800, Irwan Siajadi
+> > wrote:
+> > > >
+> > > > > Further testing shows that if I change from
+> > WPA2/AES
+> > > > to WPA/TIKIP, I
+> > > > > can finally browse. But it's still hit
+> > and missed,
+> > > > I need to reload
+> > > > > the pages once or twice before the pages can
+> > load
+> > > > properly.
+> > > >
+> > > > Try disabling hardware crypto in the driver:
+> > > >
+> > > > rmmod ath5k
+> > > > modprobe ath5k nohwcrypt=1
+> > >
+> > > Sorry for the late reply, being busy with other
+> > stuffs.
+> > > Anyway, disabling hardware cyrpto didn't make any
+> > changes.
+> > >
+> > > >
+> > > > In any case, check messages from wpa_supplicant.
+> > Maybe
+> > > > it's
+> > > > reauthenticating very often.  If you flood ping
+> > the router
+> > > > ("ping -f"),
+> > > > you would probably see growing dots that
+> > represent lost
+> > > > packets.
+> > >
+> > > Flood ping the router doesn't have any lost
+> > packets (although only for a
+> > > minute or so). And my router's log shows that the
+> > laptop didn't
+> > > re-authenticate very often.
+> > >
+> > > I've also compiled vanilla 2.6.26 and 2.6.27 with
+> > ath5k (compat-wireless).
+> > >
+> > > - 2.6.26.8 + ath5k (compat-wireless-old-2008-11-29,
+> > files last editted on
+> > > 2008-09-16):
+> > > -> ping shows some packets loss.
+> > > -> can browse any websites.
+> >
+> > Lets focus on >= 2.6.27.
+> >
+> > >
+> > > - 2.6.27.7 + ath5k (compat-wireless-2008-11-26):
+> > > -> ping doesn't have any packet loss.
+> > > -> can't browse, browser always waiting for the
+> > response from the server.
+> > > Monitoring the traffics shows that there are tx
+> > packets, but there's no rx
+> > > packets.
+> > >
+> > > Anything else I can try?
+> >
+> > You say you can ping fine but... browsing doesn't
+> > work?? Maybe a
+> > firewall issue?
+> >
+> > /etc/init.d/iptables stop
+> >
+> > I agree with Pavel this does not seem like a driver issue.
+> > Do you have
+> > your AP configured to disable :80 TCP communication? Can
+> > you try a simple
+> > netcat server and netcat client on different ports and also
+> > on port 80
+> > just to see if its really firewall/AP configuration.
+> 
+> 
+> Firewall on both end (router-ap and laptop) is disabled.
+> I can't do netcat on the server since it's not a PC box. It's an all in
+> one unit (ADSL modem+AP+router). But I did wireshark on the laptop before
+> reading your email. And I can see many TCP retransmission while trying to
+> browse. If you like I can attach the log and send it to you.
+> 
+> 
+> As comparison, I also do wireshark while using ndiswrapper. I can find TCP
+> retransmission while using ndiswrapper, but doesn't really affect browsing
+> or large file transfer through SMB.
+> 
+> 
+> PS: If you prefer netcat, please tell me, I'll do that and send the log if
+> you like.
 
-On Mon, 2008-11-17 at 16:47 -0800, Johannes Berg wrote:
-> [patch below, sorry for the long list of CCs]
-> 
-> So I dug deeper into the DMA problems I had with iwlagn and a kind soul
-> helped me in that he said something about pci-e alignment and mentioned
-> the iwl_rx_allocate function to check for crossing 4KB boundaries. Since
-> there's 8KB A-MPDU support, crossing 4k boundaries didn't seem like
-> something the device would fail with, but when I looked into the
-> function for a minute anyway I stumbled over this little gem:
-> 
->         BUG_ON(rxb->dma_addr & (~DMA_BIT_MASK(36) & 0xff));
-> 
-> Clearly, that is a totally bogus check, one would hope the compiler
-> removes it entirely. (Think about it)
-> 
-> After fixing it, I obviously ran into it, nothing guarantees the
-> alignment the way you want it,  because of the way skbs and their
-> headroom are allocated. I won't explain that here nor double-check that
-> I'm right, that goes beyond what most of the CC'ed people care about.
-> 
-> So then I came up with the patch below, and so far my system has
-> survived minutes with 64K pages, when it would previously fail in
-> seconds. And I haven't seen a single instance of the TX bug either. But
-> when you see the patch it'll be pretty obvious to you why.
-> 
-> This should fix the following reported kernel bugs:
-> 
-> http://bugzilla.kernel.org/show_bug.cgi?id=11596
-> http://bugzilla.kernel.org/show_bug.cgi?id=11393
-> http://bugzilla.kernel.org/show_bug.cgi?id=11983
-> 
-> I haven't checked if there are any elsewhere, but I suppose RHBZ will
-> have a few instances too...
-> 
-> I'd like to ask anyone who is CC'ed (those are people I know ran into
-> the bug) to try this patch.
-> 
-> I am convinced that this patch is correct in spirit, but I haven't
-> understood why, for example, there are so many unmap calls. I'm not
-> entirely convinced that this is the only bug leading to the TX reply
-> errors.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
+I'll prefer a very simple netcat log. Do you understand why we find this so
+strange? It may help to debug the issue at hand.
 
-Above you mention that this patch fixes bug #11596. Could you please
-explain how this patch addresses that problem? A short summary of the
-bug is that no data (ping packets) can be transmitted while station is
-associated. We have, what appears to be, a similar bug in our bug
-tracking system
-(http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1807 ), but
-this patch was not able to resolve this issue.
-
-Bug #11596 was recently closed after the user tested with 2.6.27.4,
-which does not have this patch. 
-
-Thank you
-
-Reinette
-
-
+  Luis
