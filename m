@@ -1,91 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:48706 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752213AbYLFOy3 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:58094 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752822AbYLBVuh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 09:54:29 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so310521tic.23
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Dec 2008 06:54:27 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Tue, 2 Dec 2008 16:50:37 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so1379623eyi.37
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 13:50:35 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Add RXDONE_CRYPTO_IV/ICV flags
+Date: Tue, 2 Dec 2008 22:50:33 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18746.37273.989918.333164@localhost.localdomain> (sfid-20081206_155434_351378_12894E5F)
-Date: Sat, 6 Dec 2008 20:22:09 +0530
-To: Mats Johannesson <spamcan1@abrasax.se>
-Cc: linux-wireless@vger.kernel.org
-Subject: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as root
-In-Reply-To: <20081206113406.734f1d94@loke.fish.not>
-References: <20081206113406.734f1d94@loke.fish.not>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812022250.33357.IvDoorn@gmail.com> (sfid-20081202_225052_212272_519A0FBC)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mats Johannesson wrote:
-> As the subject says, 2.6.28-rc7-wl git pulled Dec 6 exhibits a kernel
-> panic when doing "iwlist ath0 scan" as root under the ath9k driver.
-> Machine dead, panic LED blinking.
-> 
-> Scan as normal user is OK.
-> 
+Drivers should notify rt2x00lib when they provide
+the IV/ICV data. This adds some flexibility to drivers
+which can't provide all information.
+	* rt2500usb provides ICV inside the frame
+	* rt2800pci doesn't provide IV/ICV
+	* rt2800usb doesn't provide IV/ICV
 
-Can you check if this makes any difference ? Thanks.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+John, this is on top of the merge request from earlier today.
+---
+ drivers/net/wireless/rt2x00/rt2500usb.c   |    2 ++
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |    3 ++-
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    4 ++++
+ drivers/net/wireless/rt2x00/rt61pci.c     |    3 +++
+ drivers/net/wireless/rt2x00/rt73usb.c     |    3 +++
+ 5 files changed, 14 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index ca8ed7d..726d0a3 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -702,6 +702,7 @@ struct ath_softc {
- 	/* Rate */
- 	struct ieee80211_rate rates[IEEE80211_NUM_BANDS][ATH_RATE_MAX];
- 	struct ath_rate_table *hw_rate_table[ATH9K_MODE_MAX];
-+	struct ath_rate_table *cur_rate_table;
- 	u8 sc_protrix;
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 5f65b7e..d8c48fd 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1330,6 +1330,8 @@ static void rt2500usb_fill_rxdone(struct queue_entry *entry,
+ 	if (rxdesc->cipher != CIPHER_NONE) {
+ 		_rt2x00_desc_read(rxd, 2, &rxdesc->iv[0]);
+ 		_rt2x00_desc_read(rxd, 3, &rxdesc->iv[1]);
++		rxdesc->dev_flags |= RXDONE_CRYPTO_IV;
++
+ 		/* ICV is located at the end of frame */
  
- 	/* Channel, Band */
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 76acd2b..8eec667 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -817,7 +817,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 	struct ath_rate_table *rate_table;
- 	struct ieee80211_tx_rate *rates = tx_info->control.rates;
+ 		/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 7fc1d76..6d92542 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -636,7 +636,8 @@ void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
+ 	 * provided seperately (through hardware descriptor)
+ 	 * in which case we should reinsert the data into the frame.
+ 	 */
+-	if ((rxdesc.flags & RX_FLAG_IV_STRIPPED)) {
++	if ((rxdesc.dev_flags & RXDONE_CRYPTO_IV) &&
++	    (rxdesc.flags & RX_FLAG_IV_STRIPPED)) {
+ 		rt2x00crypto_rx_insert_iv(entry->skb, align,
+ 					  header_length, &rxdesc);
+ 	} else if (align) {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 7889f91..2829371 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -146,11 +146,15 @@ static inline struct skb_frame_desc* get_skb_frame_desc(struct sk_buff *skb)
+  * @RXDONE_SIGNAL_PLCP: Signal field contains the plcp value.
+  * @RXDONE_SIGNAL_BITRATE: Signal field contains the bitrate value.
+  * @RXDONE_MY_BSS: Does this frame originate from device's BSS.
++ * @RXDONE_CRYPTO_IV: Driver provided IV/EIV data.
++ * @RXDONE_CRYPTO_ICV: Driver provided ICV data.
+  */
+ enum rxdone_entry_desc_flags {
+ 	RXDONE_SIGNAL_PLCP = 1 << 0,
+ 	RXDONE_SIGNAL_BITRATE = 1 << 1,
+ 	RXDONE_MY_BSS = 1 << 2,
++	RXDONE_CRYPTO_IV = 1 << 3,
++	RXDONE_CRYPTO_ICV = 1 << 4,
+ };
  
--	rate_table = sc->hw_rate_table[sc->sc_curmode];
-+	rate_table = sc->cur_rate_table;
- 	rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, 1,
- 				 is_probe, is_retry);
- 	nrix = rix;
-@@ -877,7 +877,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 	if ((sc->sc_curmode == ATH9K_MODE_11NG_HT20) ||
- 	    (sc->sc_curmode == ATH9K_MODE_11NG_HT40PLUS) ||
- 	    (sc->sc_curmode == ATH9K_MODE_11NG_HT40MINUS)) {
--		u8  dot11rate = rate_table->info[rix].dot11rate;
-+		u8 dot11rate = rate_table->info[rix].dot11rate;
- 		u8 phy = rate_table->info[rix].phy;
- 		if (i == 4 &&
- 		    ((dot11rate == 2 && phy == WLAN_RC_PHY_HT_40_SS) ||
-@@ -1094,7 +1094,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	int rate;
- 	u8 last_per;
- 	bool state_change = false;
--	struct ath_rate_table *rate_table = sc->hw_rate_table[sc->sc_curmode];
-+	struct ath_rate_table *rate_table = sc->cur_rate_table;
- 	int size = ath_rc_priv->rate_table_size;
+ /**
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index ce0fde4..3b9015a 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1951,7 +1951,10 @@ static void rt61pci_fill_rxdone(struct queue_entry *entry,
+ 	if (rxdesc->cipher != CIPHER_NONE) {
+ 		_rt2x00_desc_read(entry_priv->desc, 2, &rxdesc->iv[0]);
+ 		_rt2x00_desc_read(entry_priv->desc, 3, &rxdesc->iv[1]);
++		rxdesc->dev_flags |= RXDONE_CRYPTO_IV;
++
+ 		_rt2x00_desc_read(entry_priv->desc, 4, &rxdesc->icv);
++		rxdesc->dev_flags |= RXDONE_CRYPTO_ICV;
  
- 	if ((tx_rate < 0) || (tx_rate > rate_table->rate_cnt))
-@@ -1254,7 +1254,7 @@ static void ath_rc_tx_status(struct ath_softc *sc,
- 	u8 flags;
- 	u32 i = 0, rix;
+ 		/*
+ 		 * Hardware has stripped IV/EIV data from 802.11 frame during
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 79475a8..563be0b 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1620,7 +1620,10 @@ static void rt73usb_fill_rxdone(struct queue_entry *entry,
+ 	if (rxdesc->cipher != CIPHER_NONE) {
+ 		_rt2x00_desc_read(rxd, 2, &rxdesc->iv[0]);
+ 		_rt2x00_desc_read(rxd, 3, &rxdesc->iv[1]);
++		rxdesc->dev_flags |= RXDONE_CRYPTO_IV;
++
+ 		_rt2x00_desc_read(rxd, 4, &rxdesc->icv);
++		rxdesc->dev_flags |= RXDONE_CRYPTO_ICV;
  
--	rate_table = sc->hw_rate_table[sc->sc_curmode];
-+	rate_table = sc->cur_rate_table;
- 
- 	/*
- 	 * If the first rate is not the final index, there
-@@ -1432,6 +1432,7 @@ static void ath_rc_init(struct ath_softc *sc,
- 	ath_rc_priv->max_valid_rate = k;
- 	ath_rc_sort_validrates(rate_table, ath_rc_priv);
- 	ath_rc_priv->rate_max_phy = ath_rc_priv->valid_rate_index[k-4];
-+	sc->cur_rate_table = rate_table;
- }
- 
- /* Rate Control callbacks */
+ 		/*
+ 		 * Hardware has stripped IV/EIV data from 802.11 frame during
+-- 
+1.5.6.1
+
