@@ -1,174 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:43317 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540AbYLTKCQ (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:38575 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbYLBVT1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 05:02:16 -0500
-Received: by mail-ew0-f17.google.com with SMTP id 10so1457082ewy.13
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2008 02:02:15 -0800 (PST)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 11/15] rt2x00: Remove ENTRY_TXD_OFDM_RATE
-Date: Sat, 20 Dec 2008 10:59:02 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200812201052.00655.IvDoorn@gmail.com> <200812201057.47712.IvDoorn@gmail.com> <200812201058.33821.IvDoorn@gmail.com>
-In-Reply-To: <200812201058.33821.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812201059.02959.IvDoorn@gmail.com> (sfid-20081220_110900_878006_8BE55E2C)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 2 Dec 2008 16:19:27 -0500
+Subject: Re: [PATCH 10/11] iwlwifi: rely on API version read from firmware
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1228248847-10424-11-git-send-email-reinette.chatre@intel.com>
+References: <> <1228248847-10424-1-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-3-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-4-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-5-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-6-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-7-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-8-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-9-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-10-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-11-git-send-email-reinette.chatre@intel.com>
+Content-Type: text/plain
+Date: Tue, 02 Dec 2008 22:19:18 +0100
+Message-Id: <1228252758.31158.252.camel@violet.holtmann.net> (sfid-20081202_221930_765339_A69AE8D9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The flag ENTRY_TXD_OFDM_RATE isn't flexible enough
-to indicate which rate modulation should be used for
-a frame. This will become a problem when 11n support
-is added.
+Hi Reinette,
 
-Remove the flag and replace it with an enum value which
-can better indicate the exact rate modulation.
+> This adds the infrastructure to support older firmware APIs.
+> The API version number is stored as part of the filename, we first try to
+> load the most recent firmware and progressively try lower versions.
+> The API version is also read from the firmware self and stored as part
+> of the iwl_priv structure. Only firmware that is supported by driver will
+> be loaded. The version number read from firmware is compared
+> to supported versions in the driver not the API version used as part of
+> filename.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500pci.c   |    2 +-
- drivers/net/wireless/rt2x00/rt2500usb.c   |    2 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +++++-
- drivers/net/wireless/rt2x00/rt2x00queue.h |    5 +++--
- drivers/net/wireless/rt2x00/rt2x00reg.h   |   10 ++++++++++
- drivers/net/wireless/rt2x00/rt61pci.c     |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.c     |    2 +-
- 7 files changed, 22 insertions(+), 7 deletions(-)
+thanks for doing this. This can really help smooth upgrade path in case
+the firmware API changes.
+ 
+> -MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE);
+> -MODULE_FIRMWARE(IWL5150_MODULE_FIRMWARE);
+> +MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
+> +MODULE_FIRMWARE(IWL5150_MODULE_FIRMWARE(IWL5150_UCODE_API_MAX));
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 90333ee..76f016d 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1233,7 +1233,7 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
- 			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W0_OFDM,
--			   test_bit(ENTRY_TXD_OFDM_RATE, &txdesc->flags));
-+			   (txdesc->rate_mode == RATE_MODE_OFDM));
- 	rt2x00_set_field32(&word, TXD_W0_CIPHER_OWNER, 1);
- 	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
- 	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 8a53f9b..81400ea 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1217,7 +1217,7 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
- 			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W0_OFDM,
--			   test_bit(ENTRY_TXD_OFDM_RATE, &txdesc->flags));
-+			   (txdesc->rate_mode == RATE_MODE_OFDM));
- 	rt2x00_set_field32(&word, TXD_W0_NEW_SEQ,
- 			   test_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index efb2875..fc28e23 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -313,9 +313,13 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	} else
- 		txdesc->ifs = IFS_SIFS;
- 
-+	/*
-+	 * Determine rate modulation.
-+	 */
- 	hwrate = rt2x00_get_rate(rate->hw_value);
-+	txdesc->rate_mode = RATE_MODE_CCK;
- 	if (hwrate->flags & DEV_RATE_OFDM)
--		__set_bit(ENTRY_TXD_OFDM_RATE, &txdesc->flags);
-+		txdesc->rate_mode = RATE_MODE_OFDM;
- 
- 	/*
- 	 * Apply TX descriptor handling by components
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 2829371..5a9d2c3 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -222,7 +222,6 @@ struct txdone_entry_desc {
-  *
-  * @ENTRY_TXD_RTS_FRAME: This frame is a RTS frame.
-  * @ENTRY_TXD_CTS_FRAME: This frame is a CTS-to-self frame.
-- * @ENTRY_TXD_OFDM_RATE: This frame is send out with an OFDM rate.
-  * @ENTRY_TXD_GENERATE_SEQ: This frame requires sequence counter.
-  * @ENTRY_TXD_FIRST_FRAGMENT: This is the first frame.
-  * @ENTRY_TXD_MORE_FRAG: This frame is followed by another fragment.
-@@ -238,7 +237,6 @@ struct txdone_entry_desc {
- enum txentry_desc_flags {
- 	ENTRY_TXD_RTS_FRAME,
- 	ENTRY_TXD_CTS_FRAME,
--	ENTRY_TXD_OFDM_RATE,
- 	ENTRY_TXD_GENERATE_SEQ,
- 	ENTRY_TXD_FIRST_FRAGMENT,
- 	ENTRY_TXD_MORE_FRAG,
-@@ -263,6 +261,7 @@ enum txentry_desc_flags {
-  * @length_low: PLCP length low word.
-  * @signal: PLCP signal.
-  * @service: PLCP service.
-+ * @rate_mode: Rate mode (See @enum rate_modulation).
-  * @retry_limit: Max number of retries.
-  * @aifs: AIFS value.
-  * @ifs: IFS value.
-@@ -282,6 +281,8 @@ struct txentry_desc {
- 	u16 signal;
- 	u16 service;
- 
-+	u16 rate_mode;
-+
- 	short retry_limit;
- 	short aifs;
- 	short ifs;
-diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
-index c2fba7c..93f8427 100644
---- a/drivers/net/wireless/rt2x00/rt2x00reg.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
-@@ -125,6 +125,16 @@ enum cipher {
- };
- 
- /*
-+ * Rate modulations
-+ */
-+enum rate_modulation {
-+	RATE_MODE_CCK = 0,
-+	RATE_MODE_OFDM = 1,
-+	RATE_MODE_HT_MIX = 2,
-+	RATE_MODE_HT_GREENFIELD = 3,
-+};
-+
-+/*
-  * Register handlers.
-  * We store the position of a register field inside a field structure,
-  * This will simplify the process of setting and reading a certain field
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 875acb3..f1150a7 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1847,7 +1847,7 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
- 			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W0_OFDM,
--			   test_bit(ENTRY_TXD_OFDM_RATE, &txdesc->flags));
-+			   (txdesc->rate_mode == RATE_MODE_OFDM));
- 	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
- 	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
- 			   test_bit(ENTRY_TXD_RETRY_MODE, &txdesc->flags));
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 2268d5c..891554e 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1498,7 +1498,7 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
- 			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W0_OFDM,
--			   test_bit(ENTRY_TXD_OFDM_RATE, &txdesc->flags));
-+			   (txdesc->rate_mode == RATE_MODE_OFDM));
- 	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
- 	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
- 			   test_bit(ENTRY_TXD_RETRY_MODE, &txdesc->flags));
--- 
-1.5.6.1
+So we don't have clear semantics on how MODULE_FIRMWARE should be used.
+The current way is that it list all potential firmware versions. So in
+cases it support API -1 and -2, then it has to list both. And not only
+the latest.
+
+Personally I think we should not create too many macros here and just
+list all the firmware files manually.
+
+Regards
+
+Marcel
+
 
