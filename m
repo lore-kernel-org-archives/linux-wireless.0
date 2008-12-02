@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:51062 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754239AbYLVVhI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 16:37:08 -0500
-Message-ID: <4950087E.3080505@gmail.com> (sfid-20081222_223714_279538_933F97E7)
-Date: Mon, 22 Dec 2008 22:37:02 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:56905 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753695AbYLBNLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 08:11:00 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 05:11:00 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: Soeren Sonnenburg <kernel@nn7.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: Re: ath5k_pci: gain calibration timeout / unable to reset hardware
- -11
-References: <1229923913.3886.7.camel@localhost> <20081222125819.7353d172.akpm@linux-foundation.org>
-In-Reply-To: <20081222125819.7353d172.akpm@linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18741.13098.251906.342409@gargle.gargle.HOWL> (sfid-20081202_141105_054498_D0BB4400)
+Date: Tue, 2 Dec 2008 18:37:54 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>, <johannes@sipsolutions.net>
+Subject: [PATCH] ath9k: Choose correct ANI calibration period
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/22/2008 09:58 PM, Andrew Morton wrote:
-> (cc linux-wireless)
-> 
-> On Mon, 22 Dec 2008 06:31:53 +0100
-> Soeren Sonnenburg <kernel@nn7.de> wrote:
-> 
->> Hi,
->>
->> I was using the ath5k_pci driver on a macbook pro 1,1 and it is working
->> for some time but then suddenly messages like the ones below appear and
->> I have to *turn off* the machine to get it back working (even booting to
->> osx is not sufficient - osx won't have network when things go wrong as
->> they do after a couple of hours). Note that this happens with both
->> 2.6.27 and .28.
+ANI can't be turned on/off dynamically yet, but the calculation
+of the calibration period is wrong anyway. This patch fixes it.
 
-Does the _HW lockup_ happen even with 2.6.28? The lockup should be gone there
-(with the messages still present).
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index c590e9d..8b67708 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -421,8 +421,9 @@ static void ath_ani_calibrate(unsigned long data)
+ 	* The interval must be the shortest necessary to satisfy ANI,
+ 	* short calibration and long calibration.
+ 	*/
+-
+-	cal_interval = ATH_ANI_POLLINTERVAL;
++	cal_interval = ATH_LONG_CALINTERVAL;
++	if (sc->sc_ah->ah_config.enable_ani)
++		cal_interval = min(cal_interval, (u32)ATH_ANI_POLLINTERVAL);
+ 	if (!sc->sc_ani.sc_caldone)
+ 		cal_interval = min(cal_interval, (u32)ATH_SHORT_CALINTERVAL);
+ 
+-- 
+1.6.0.3
+
