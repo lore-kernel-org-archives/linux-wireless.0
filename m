@@ -1,102 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51559 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079AbYLALJx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 06:09:53 -0500
-Subject: 11d segfault
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MMU9oV15nk4WVEJAsrRD"
-Date: Mon, 01 Dec 2008 12:09:02 +0100
-Message-Id: <1228129742.3478.2.camel@johannes.berg> (sfid-20081201_120955_727401_027AF42F)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:2104 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752075AbYLBAb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 19:31:29 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/5] iwlwifi: 5150 add support for 5150
+Date: Mon,  1 Dec 2008 16:32:18 -0800
+Message-Id: <1228177942-25137-2-git-send-email-reinette.chatre@intel.com> (sfid-20081202_013135_185594_2F763265)
+In-Reply-To: <1228177942-25137-1-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1228177942-25137-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-MMU9oV15nk4WVEJAsrRD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   12 ++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 +
+ 3 files changed, 17 insertions(+), 0 deletions(-)
 
-Dec  1 12:07:00 johannes kernel: [  193.370168] Unable to handle kernel pag=
-ing request for data at address 0x00000000
-Dec  1 12:07:00 johannes kernel: [  193.370180] Faulting instruction addres=
-s: 0xf2794560
-Dec  1 12:07:00 johannes kernel: [  193.370194] Oops: Kernel access of bad =
-area, sig: 11 [#1]
-Dec  1 12:07:00 johannes kernel: [  193.370196] PREEMPT PowerMac
-Dec  1 12:07:00 johannes kernel: [  193.370200] Modules linked in: ...
-Dec  1 12:07:00 johannes kernel: [  193.370266] NIP: f2794560 LR: f27944fc =
-CTR: 00000000
-Dec  1 12:07:00 johannes kernel: [  193.370270] REGS: eed15ce0 TRAP: 0300  =
- Not tainted  (2.6.28-rc6-wl-dirty)
-Dec  1 12:07:00 johannes kernel: [  193.370273] MSR: 00009032 <EE,ME,IR,DR>=
-  CR: 22000048  XER: 20000000
-Dec  1 12:07:00 johannes kernel: [  193.370283] DAR: 00000000, DSISR: 40000=
-000
-Dec  1 12:07:00 johannes kernel: [  193.370286] TASK =3D ef145640[1049] 'ph=
-y0' THREAD: eed14000
-Dec  1 12:07:00 johannes kernel: [  193.370289] GPR00: 00000000 eed15d90 ef=
-145640 eed15d38 22222222 00000000 eed15d48 37d38608=20
-Dec  1 12:07:00 johannes kernel: [  193.370299] GPR08: 37d38600 00000000 c0=
-3f97e0 f279bda0 82000044 00000000 00000000 00000000=20
-Dec  1 12:07:00 johannes kernel: [  193.370309] GPR16: 00000000 41400000 01=
-400000 017f4bb4 017f42c0 00000000 c03f9400 c04264e8=20
-Dec  1 12:07:00 johannes kernel: [  193.370319] GPR24: c03f9438 00000000 f2=
-79c410 eecaa080 f279bd8c f27a0000 ec44a0d6 00000006=20
-Dec  1 12:07:00 johannes kernel: [  193.370346] NIP [f2794560] regulatory_h=
-int_11d+0x98/0x14c [cfg80211]
-Dec  1 12:07:00 johannes kernel: [  193.370352] LR [f27944fc] regulatory_hi=
-nt_11d+0x34/0x14c [cfg80211]
-Dec  1 12:07:00 johannes kernel: [  193.370355] Call Trace:
-Dec  1 12:07:00 johannes kernel: [  193.370361] [eed15d90] [f27944fc] regul=
-atory_hint_11d+0x34/0x14c [cfg80211] (unreliable)
-Dec  1 12:07:00 johannes kernel: [  193.370418] [eed15dd0] [f27f7adc] ieee8=
-0211_rx_mgmt_beacon+0x1a8/0x1ec [mac80211]
-Dec  1 12:07:00 johannes kernel: [  193.370432] [eed15e80] [f27f86f4] ieee8=
-0211_sta_rx_queued_mgmt+0x150/0x344 [mac80211]
-Dec  1 12:07:00 johannes kernel: [  193.370446] [eed15f40] [f27f8970] ieee8=
-0211_sta_work+0x88/0x260 [mac80211]
-Dec  1 12:07:00 johannes kernel: [  193.370455] [eed15f60] [c0047120] run_w=
-orkqueue+0xc0/0x164
-Dec  1 12:07:00 johannes kernel: [  193.370460] [eed15f90] [c0047544] worke=
-r_thread+0xb0/0x134
-Dec  1 12:07:00 johannes kernel: [  193.370468] [eed15fd0] [c004bb24] kthre=
-ad+0x50/0x88
-Dec  1 12:07:00 johannes kernel: [  193.370473] [eed15ff0] [c0013cf4] kerne=
-l_thread+0x4c/0x68
-Dec  1 12:07:00 johannes kernel: [  193.370476] Instruction dump:
-Dec  1 12:07:00 johannes kernel: [  193.370481] 38210040 7c0803a6 4e800020 =
-881e0002 3b200001 2f800049 419e0014 6800004f=20
-Dec  1 12:07:00 johannes kernel: [  193.370493] 7c000034 5400d97e 5419083c =
-813dc410 <80090000> 2f800000 409effb8 7fc3f378=20
-Dec  1 12:07:00 johannes kernel: [  193.374781] ---[ end trace d7369ca97f59=
-3d84 ]---
-
-
---=-MMU9oV15nk4WVEJAsrRD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJM8XKAAoJEKVg1VMiehFYzTAQALWVxrqf9BKorEpDsyT2PRzc
-50eEzD7naJyPUn5RFEgFP1KzL+jT2ocQtBHIrvAmkI80jfE1G3k7kc78CAEHv+L5
-xirGp6pQ0kk5PUmUYDzhFoXhdLSRwy/rIrSD8RVGfSudtduCJHweAD2FooXrdUyB
-eo/kLyH8mTTK5m1m+823SgvlT8uZJH+M2w2oYkLOKoTnK058+isjSgRG1zntagAO
-G22S0KoJIb5Xywx/N1EGXaQX1F6Hb6kTrI4HiLmCsA29ve2QZ2ThOVJHlNIGC5OZ
-x8Tm3IAHJPsaucMGLIW3H2ynru6FlHfFcFe5W42RSfzgzc71PkTRVhI5G8kWm9Lu
-LcK5977zWNbzUiyUIIJY/KCi5i+75hPK80jmGf2p8oBpgI9Db2oKm9sd4UUeU64P
-W5P3OvjkwDuh544MXneR9s1TJd1BpwF7o7fVTxv11ie+C1Coo+KftQWTezlN7W1t
-HLyTnZlSeWc/bVDKJyV+PE2GuxX5Kd7sfmJQ27md23FWBVu3DP1jV7ScQ0NKSZ78
-NeRGgHfUg7HzUcU/D4SwAYtPR9Zsbq1HGjKOCDa+Q+SVwZzIGNQCYeBrwmpDim9+
-sjApT+yuLdOwc1RIHoxTiF+qJvy9jZJdkkS6pL4Mkdj7nx4EUN2fVNIdRghRltU+
-DJxfVPyK6mAxy47E+2sI
-=tJxe
------END PGP SIGNATURE-----
-
---=-MMU9oV15nk4WVEJAsrRD--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index c3dce81..8f92ab0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -45,8 +45,10 @@
+ #include "iwl-5000-hw.h"
+ 
+ #define IWL5000_UCODE_API  "-1"
++#define IWL5150_UCODE_API  "-1"
+ 
+ #define IWL5000_MODULE_FIRMWARE "iwlwifi-5000" IWL5000_UCODE_API ".ucode"
++#define IWL5150_MODULE_FIRMWARE "iwlwifi-5150" IWL5150_UCODE_API ".ucode"
+ 
+ static const u16 iwl5000_default_queue_to_tx_fifo[] = {
+ 	IWL_TX_FIFO_AC3,
+@@ -1563,7 +1565,17 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.mod_params = &iwl50_mod_params,
+ };
+ 
++struct iwl_cfg iwl5150_agn_cfg = {
++	.name = "5150AGN",
++	.fw_name = IWL5150_MODULE_FIRMWARE,
++	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
++	.ops = &iwl5000_ops,
++	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
++	.mod_params = &iwl50_mod_params,
++};
++
+ MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE);
++MODULE_FIRMWARE(IWL5150_MODULE_FIRMWARE);
+ 
+ module_param_named(disable50, iwl50_mod_params.disable, int, 0444);
+ MODULE_PARM_DESC(disable50,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8008b10..247b54d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4220,7 +4220,11 @@ static struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x423A, 0x1001, iwl5350_agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x423A, 0x1021, iwl5350_agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x423B, 0x1011, iwl5350_agn_cfg)},
++/* 5150 Wifi/WiMax */
++	{IWL_PCI_DEVICE(0x423C, PCI_ANY_ID, iwl5150_agn_cfg)},
++	{IWL_PCI_DEVICE(0x423D, PCI_ANY_ID, iwl5150_agn_cfg)},
+ #endif /* CONFIG_IWL5000 */
++
+ 	{0}
+ };
+ MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 4da988e..cb6edfd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -54,6 +54,7 @@ extern struct iwl_cfg iwl5100_agn_cfg;
+ extern struct iwl_cfg iwl5350_agn_cfg;
+ extern struct iwl_cfg iwl5100_bg_cfg;
+ extern struct iwl_cfg iwl5100_abg_cfg;
++extern struct iwl_cfg iwl5150_agn_cfg;
+ 
+ /* CT-KILL constants */
+ #define CT_KILL_THRESHOLD	110 /* in Celsius */
+-- 
+1.5.4.3
 
