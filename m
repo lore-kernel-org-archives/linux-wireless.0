@@ -1,81 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 29.mail-out.ovh.net ([87.98.216.213]:50267 "HELO
-	29.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754791AbYLEPZH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2008 10:25:07 -0500
-Date: Fri, 5 Dec 2008 16:20:58 +0100
-From: Samuel Ortiz <samuel@sortiz.org>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	tomasw@gmail.com, yi.zhu@intel.com
-Subject: Re: [PATCH] iwl3945: remove obsolete irq handling
-Message-ID: <20081205152058.GA4590@sortiz.org> (sfid-20081205_162512_677509_9E6C31ED)
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-References: <200812011653.29150.helmut.schaa@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200812011653.29150.helmut.schaa@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:37010 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751015AbYLBUNO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 15:13:14 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/11] iwlwifi: move channels sysfs to debugfs
+Date: Tue,  2 Dec 2008 12:14:01 -0800
+Message-Id: <1228248847-10424-6-git-send-email-reinette.chatre@intel.com> (sfid-20081202_211324_256278_DB37A750)
+In-Reply-To: <1228248847-10424-5-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1228248847-10424-1-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-3-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-4-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 01, 2008 at 04:53:28PM +0100, Helmut Schaa wrote:
-> 3945 hardware does not emit the interrupts CSR_INT_BIT_RF_KILL (rfkill
-> toggled) and CSR_INT_BIT_CT_KILL (adapter too hot). Hence this part of code
-> can be removed since iwl3945_irq_tasklet does not handle 4965 hw at all.
-That's correct.
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
+This patch moves channels info display from sysfs to debugfs.
+This shows channel information as stored in NIC EEPROM. This
+is useful in debugging CRDA or iwl goes setting so it belongs
+rather to debugfs then to sysfs.
 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |   63 -----------------------
+ drivers/net/wireless/iwlwifi/iwl-debug.h   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   76 ++++++++++++++++++++++++++++
+ 3 files changed, 77 insertions(+), 63 deletions(-)
 
-> ---
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 490bc4a..b32b507 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -4321,35 +4321,6 @@ static void iwl3945_irq_tasklet(struct iwl3945_priv *priv)
->  	/* Safely ignore these bits for debug checks below */
->  	inta &= ~(CSR_INT_BIT_SCD | CSR_INT_BIT_ALIVE);
->  
-> -	/* HW RF KILL switch toggled (4965 only) */
-> -	if (inta & CSR_INT_BIT_RF_KILL) {
-> -		int hw_rf_kill = 0;
-> -		if (!(iwl3945_read32(priv, CSR_GP_CNTRL) &
-> -				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
-> -			hw_rf_kill = 1;
-> -
-> -		IWL_DEBUG(IWL_DL_INFO | IWL_DL_RF_KILL | IWL_DL_ISR,
-> -				"RF_KILL bit toggled to %s.\n",
-> -				hw_rf_kill ? "disable radio" : "enable radio");
-> -
-> -		/* Queue restart only if RF_KILL switch was set to "kill"
-> -		 *   when we loaded driver, and is now set to "enable".
-> -		 * After we're Alive, RF_KILL gets handled by
-> -		 *   iwl3945_rx_card_state_notif() */
-> -		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
-> -			clear_bit(STATUS_RF_KILL_HW, &priv->status);
-> -			queue_work(priv->workqueue, &priv->restart);
-> -		}
-> -
-> -		handled |= CSR_INT_BIT_RF_KILL;
-> -	}
-> -
-> -	/* Chip got too hot and stopped itself (4965 only) */
-> -	if (inta & CSR_INT_BIT_CT_KILL) {
-> -		IWL_ERROR("Microcode CT kill error detected.\n");
-> -		handled |= CSR_INT_BIT_CT_KILL;
-> -	}
-> -
->  	/* Error detected by uCode */
->  	if (inta & CSR_INT_BIT_SW_ERR) {
->  		IWL_ERROR("Microcode SW error detected.  Restarting 0x%X.\n",
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 9e1d57f..4bdd33b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3591,68 +3591,6 @@ static ssize_t show_power_level(struct device *d,
+ static DEVICE_ATTR(power_level, S_IWUSR | S_IRUSR, show_power_level,
+ 		   store_power_level);
+ 
+-static ssize_t show_channels(struct device *d,
+-			     struct device_attribute *attr, char *buf)
+-{
+-
+-	struct iwl_priv *priv = dev_get_drvdata(d);
+-	struct ieee80211_channel *channels = NULL;
+-	const struct ieee80211_supported_band *supp_band = NULL;
+-	int len = 0, i;
+-	int count = 0;
+-
+-	if (!test_bit(STATUS_GEO_CONFIGURED, &priv->status))
+-		return -EAGAIN;
+-
+-	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_2GHZ);
+-	channels = supp_band->channels;
+-	count = supp_band->n_channels;
+-
+-	len += sprintf(&buf[len],
+-			"Displaying %d channels in 2.4GHz band "
+-			"(802.11bg):\n", count);
+-
+-	for (i = 0; i < count; i++)
+-		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
+-				ieee80211_frequency_to_channel(
+-				channels[i].center_freq),
+-				channels[i].max_power,
+-				channels[i].flags & IEEE80211_CHAN_RADAR ?
+-				" (IEEE 802.11h required)" : "",
+-				(!(channels[i].flags & IEEE80211_CHAN_NO_IBSS)
+-				|| (channels[i].flags &
+-				IEEE80211_CHAN_RADAR)) ? "" :
+-				", IBSS",
+-				channels[i].flags &
+-				IEEE80211_CHAN_PASSIVE_SCAN ?
+-				"passive only" : "active/passive");
+-
+-	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_5GHZ);
+-	channels = supp_band->channels;
+-	count = supp_band->n_channels;
+-
+-	len += sprintf(&buf[len], "Displaying %d channels in 5.2GHz band "
+-			"(802.11a):\n", count);
+-
+-	for (i = 0; i < count; i++)
+-		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
+-				ieee80211_frequency_to_channel(
+-				channels[i].center_freq),
+-				channels[i].max_power,
+-				channels[i].flags & IEEE80211_CHAN_RADAR ?
+-				" (IEEE 802.11h required)" : "",
+-				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
+-				|| (channels[i].flags &
+-				IEEE80211_CHAN_RADAR)) ? "" :
+-				", IBSS",
+-				channels[i].flags &
+-				IEEE80211_CHAN_PASSIVE_SCAN ?
+-				"passive only" : "active/passive");
+-
+-	return len;
+-}
+-
+-static DEVICE_ATTR(channels, S_IRUSR, show_channels, NULL);
+ 
+ static ssize_t show_statistics(struct device *d,
+ 			       struct device_attribute *attr, char *buf)
+@@ -3752,7 +3690,6 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
+ }
+ 
+ static struct attribute *iwl_sysfs_entries[] = {
+-	&dev_attr_channels.attr,
+ 	&dev_attr_flags.attr,
+ 	&dev_attr_filter_flags.attr,
+ 	&dev_attr_power_level.attr,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 0e79a6a..a115dc6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -60,6 +60,7 @@ struct iwl_debugfs {
+ 		struct dentry *file_rx_statistics;
+ 		struct dentry *file_tx_statistics;
+ 		struct dentry *file_log_event;
++		struct dentry *file_channels;
+ 	} dbgfs_data_files;
+ 	struct dir_rf_files {
+ 		struct dentry *file_disable_sensitivity;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 5346ed5..84053d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -350,12 +350,86 @@ static ssize_t iwl_dbgfs_log_event_write(struct file *file,
+ 	return count;
+ }
+ 
++
++
++static ssize_t iwl_dbgfs_channels_read(struct file *file, char __user *user_buf,
++				       size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
++	struct ieee80211_channel *channels = NULL;
++	const struct ieee80211_supported_band *supp_band = NULL;
++	int pos = 0, i, bufsz = PAGE_SIZE;
++	char *buf;
++	ssize_t ret;
++
++	if (!test_bit(STATUS_GEO_CONFIGURED, &priv->status))
++		return -EAGAIN;
++
++	buf = kzalloc(bufsz, GFP_KERNEL);
++	if (!buf) {
++		IWL_ERROR("Can not allocate Buffer\n");
++		return -ENOMEM;
++	}
++
++	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_2GHZ);
++	channels = supp_band->channels;
++
++	pos += scnprintf(buf + pos, bufsz - pos,
++			"Displaying %d channels in 2.4GHz band 802.11bg):\n",
++			 supp_band->n_channels);
++
++	for (i = 0; i < supp_band->n_channels; i++)
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"%d: %ddBm: BSS%s%s, %s.\n",
++				ieee80211_frequency_to_channel(
++				channels[i].center_freq),
++				channels[i].max_power,
++				channels[i].flags & IEEE80211_CHAN_RADAR ?
++				" (IEEE 802.11h required)" : "",
++				(!(channels[i].flags & IEEE80211_CHAN_NO_IBSS)
++				|| (channels[i].flags &
++				IEEE80211_CHAN_RADAR)) ? "" :
++				", IBSS",
++				channels[i].flags &
++				IEEE80211_CHAN_PASSIVE_SCAN ?
++				"passive only" : "active/passive");
++
++	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_5GHZ);
++	channels = supp_band->channels;
++
++	pos += scnprintf(buf + pos, bufsz - pos,
++			"Displaying %d channels in 5.2GHz band (802.11a)\n",
++			supp_band->n_channels);
++
++	for (i = 0; i < supp_band->n_channels; i++)
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"%d: %ddBm: BSS%s%s, %s.\n",
++				ieee80211_frequency_to_channel(
++				channels[i].center_freq),
++				channels[i].max_power,
++				channels[i].flags & IEEE80211_CHAN_RADAR ?
++				" (IEEE 802.11h required)" : "",
++				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
++				|| (channels[i].flags &
++				IEEE80211_CHAN_RADAR)) ? "" :
++				", IBSS",
++				channels[i].flags &
++				IEEE80211_CHAN_PASSIVE_SCAN ?
++				"passive only" : "active/passive");
++
++	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++	kfree(buf);
++	return ret;
++}
++
++
+ DEBUGFS_READ_WRITE_FILE_OPS(sram);
+ DEBUGFS_WRITE_FILE_OPS(log_event);
+ DEBUGFS_READ_FILE_OPS(eeprom);
+ DEBUGFS_READ_FILE_OPS(stations);
+ DEBUGFS_READ_FILE_OPS(rx_statistics);
+ DEBUGFS_READ_FILE_OPS(tx_statistics);
++DEBUGFS_READ_FILE_OPS(channels);
+ 
+ /*
+  * Create the debugfs files and directories
+@@ -389,6 +463,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(stations, data);
+ 	DEBUGFS_ADD_FILE(rx_statistics, data);
+ 	DEBUGFS_ADD_FILE(tx_statistics, data);
++	DEBUGFS_ADD_FILE(channels, data);
+ 	DEBUGFS_ADD_BOOL(disable_sensitivity, rf, &priv->disable_sens_cal);
+ 	DEBUGFS_ADD_BOOL(disable_chain_noise, rf,
+ 			 &priv->disable_chain_noise_cal);
+@@ -417,6 +492,7 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_sram);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_log_event);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_stations);
++	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_channels);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dir_data);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_sensitivity);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_chain_noise);
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.5.4.3
+
