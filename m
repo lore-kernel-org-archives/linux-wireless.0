@@ -1,78 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11999 "EHLO mail.atheros.com"
+Received: from mga14.intel.com ([143.182.124.37]:29177 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751557AbYLTFz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 00:55:58 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 21:55:58 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 12/16] ath9k: remove mode specific default noise floor values
-Date: Fri, 19 Dec 2008 21:55:18 -0800
-Message-ID: <1229752522-1917-13-git-send-email-lrodriguez@atheros.com> (sfid-20081220_065610_939887_450755A9)
-In-Reply-To: <1229752522-1917-12-git-send-email-lrodriguez@atheros.com>
-References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-3-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-4-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-5-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-6-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-7-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-8-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-9-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-10-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-11-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-12-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1751638AbYLBWuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 17:50:14 -0500
+Subject: Re: [PATCH 10/11] iwlwifi: rely on API version read from firmware
+From: reinette chatre <reinette.chatre@intel.com>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1228254668.31158.257.camel@violet.holtmann.net>
+References: <> <1228248847-10424-1-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-3-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-4-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-5-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-6-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-7-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-8-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-9-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-10-git-send-email-reinette.chatre@intel.com>
+	 <1228248847-10424-11-git-send-email-reinette.chatre@intel.com>
+	 <1228252758.31158.252.camel@violet.holtmann.net>
+	 <1228254303.10900.90.camel@rc-desk>
+	 <1228254668.31158.257.camel@violet.holtmann.net>
 Content-Type: text/plain
+Date: Tue, 02 Dec 2008 14:51:08 -0800
+Message-Id: <1228258268.10900.99.camel@rc-desk> (sfid-20081202_235018_602298_41EB1298)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The NOISE_FLOOR array we have is mode specific, and the only
-possible indexed values are A, B and G. The mode routine only
-can return G or A, so this is band specific. Then since the
-values for A and G (5ghz or 2ghz) are the same (-96) we simply
-remove the array and use a static value.
+On Tue, 2008-12-02 at 13:51 -0800, Marcel Holtmann wrote:
+> Hi Reinette,
+> 
+> > > > This adds the infrastructure to support older firmware APIs.
+> > > > The API version number is stored as part of the filename, we first try to
+> > > > load the most recent firmware and progressively try lower versions.
+> > > > The API version is also read from the firmware self and stored as part
+> > > > of the iwl_priv structure. Only firmware that is supported by driver will
+> > > > be loaded. The version number read from firmware is compared
+> > > > to supported versions in the driver not the API version used as part of
+> > > > filename.
+> > > 
+> > > thanks for doing this. This can really help smooth upgrade path in case
+> > > the firmware API changes.
+> > >  
+> > > > -MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE);
+> > > > -MODULE_FIRMWARE(IWL5150_MODULE_FIRMWARE);
+> > > > +MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
+> > > > +MODULE_FIRMWARE(IWL5150_MODULE_FIRMWARE(IWL5150_UCODE_API_MAX));
+> > > 
+> > > So we don't have clear semantics on how MODULE_FIRMWARE should be used.
+> > > The current way is that it list all potential firmware versions. So in
+> > > cases it support API -1 and -2, then it has to list both. And not only
+> > > the latest.
+> > 
+> > Even though the driver supports older firmware we really want the user
+> > to use the latest firmware. The driver will also print a clear error if
+> > the user is using API -1 and the latest available is -2. For this reason
+> > we do want to make clear through MODULE_FIRMWARE which firmware the
+> > driver would like to work with: the latest.
+> 
+> as I said, we never clearly defined the semantics of MODULE_FIRMWARE for
+> these cases. The only problem that I see is that some initrd tools are
+> actually using MODULE_FIRMWARE to figure which files need to be included
+> for the builtin kernel drivers. So on a system with old firmware only,
+> it will not include these.
 
-If we later determine we want to use special values for
-HT configurations we can use the new mac80211 conf_is_ht*()
-helpers.
+This seems to fit in with the other suggestion you had to add a big
+warning to modules_install when MODULE_FIRMWARE is not present on the
+filesystem. We want users to have a working wireless system at the time
+they find out they need new firmware. So, if initrd figures out it needs
+new firmware the user can just go and download it at that time.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/calib.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+> 
+> Maybe we need to extend MODULE_FIRMWARE. Maybe something like
+> MODULE_ALTERNATE_FIRMWARE or some extra flags.
 
-diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
-index 74369c1..f82554b 100644
---- a/drivers/net/wireless/ath9k/calib.c
-+++ b/drivers/net/wireless/ath9k/calib.c
-@@ -19,8 +19,6 @@
- #include "reg.h"
- #include "phy.h"
- 
--static const int16_t NOISE_FLOOR[] = { -96, -93, -98, -96, -93, -96 };
--
- /* We can tune this as we go by monitoring really low values */
- #define ATH9K_NF_TOO_LOW	-60
- 
-@@ -752,10 +750,9 @@ s16 ath9k_hw_getchan_noise(struct ath_hal *ah, struct ath9k_channel *chan)
- 			chan->channel, chan->channelFlags);
- 		return ATH_DEFAULT_NOISE_FLOOR;
- 	}
--	if (ichan->rawNoiseFloor == 0) {
--		enum wireless_mode mode = ath9k_hw_chan2wmode(ah, chan);
--		nf = NOISE_FLOOR[mode];
--	} else
-+	if (ichan->rawNoiseFloor == 0)
-+		nf = -96;
-+	else
- 		nf = ichan->rawNoiseFloor;
- 
- 	if (!ath9k_hw_nf_in_range(ah, nf))
--- 
-1.5.6.rc2.15.g457bb.dirty
+I don't think this is necessary.  
+
+Reinette
 
