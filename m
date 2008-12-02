@@ -1,91 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:47014 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbYL3PIS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 10:08:18 -0500
-Received: by bwz14 with SMTP id 14so17414033bwz.13
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2008 07:08:15 -0800 (PST)
-Message-ID: <1ba2fa240812300708o40717c87x13697c180be19913@mail.gmail.com> (sfid-20081230_160822_905721_F926673C)
-Date: Tue, 30 Dec 2008 17:08:15 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Vasanthakumar Thiagarajan" <vasanth@atheros.com>
-Subject: Re: [RFC] mac80211: Handle power constraint level advertised in 11d+h beacon
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1230641555-13425-1-git-send-email-vasanth@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:65365 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751510AbYLBRfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 12:35:06 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 09:35:06 -0800
+Date: Tue, 2 Dec 2008 01:35:16 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Christian Lamparter <chunkeey@web.de>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>
+Subject: Re: [PATCH 1/6 v2.2] mac80211: add sta_notify_ps callback
+Message-ID: <20081202093516.GA5926@tesla> (sfid-20081202_183512_107895_9B19CCA5)
+References: <200811292232.56550.chunkeey@web.de> <200811300048.42352.chunkeey@web.de> <20081201191723.GI5992@tesla> <200812021655.53141.chunkeey@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1230641555-13425-1-git-send-email-vasanth@atheros.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <200812021655.53141.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 30, 2008 at 2:52 PM, Vasanthakumar Thiagarajan
-<vasanth@atheros.com> wrote:
-> This patch uses power constraint level while determining the maximum
-> transmit power, there by it makes sure that any power mitigation
-> requirement for the channel in the current regulatory domain is met.
+On Tue, Dec 02, 2008 at 07:55:53AM -0800, Christian Lamparter wrote:
+> On Monday 01 December 2008 20:17:23 Luis R. Rodriguez wrote:
+> > On Sat, Nov 29, 2008 at 03:48:41PM -0800, Christian Lamparter wrote:
+> > > This patch is necessary in order to provide a proper Access point support for p54.
+> > > Unfortunately for us, there is no documented way to disable the interfering
+> > > power save buffering mechanism in firmware completely.
+> > >
+> > > Therefore we give in and notify the driver through our new sta_notify_ps callback,
+> > > so that we can update the filter state.
+> > >
+> > > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> > > Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> > > ---
+> > > +/**
+> > >   * enum ieee80211_tkip_key_type - get tkip key
+> > >   *
+> > >   * Used by drivers which need to get a tkip key for skb. Some drivers need a
+> > > @@ -1248,6 +1261,9 @@ enum ieee80211_ampdu_mlme_action {
+> > >   * @sta_notify: Notifies low level driver about addition or removal
+> > >   *     of associated station or AP.
+> > >   *
+> > > + * @sta_ps_notify: Notifies low level driver about the power state transition
+> > > + *     of a associated station. Must be atomic.
+> > > + *
+> >
+> > Can we add documentation that this is only required when the AP cannot
+> > figure this out by itself? This can help people working on AP support to
+> > not think they need to implement this for all drivers.
+> 
+> Do you think "This callback is optional. Only use it, if your hardware/
+> firmware really implements a station filter table" 
 
-> +
-> +       /* TODO: for IBSS */
+You would know better, I don't know why this callback was needed in
+terms of hardware, but from reading the reason why it came up it seems
+it was specific to p54. I just wanted that to be pointed out so new
+developers reading the kdoc for it would know it maybe optional.
 
-IIRC this particular feature of 11h is not supported in IBSS
+So atheros hardware supports a BSSID mask and we use this to know which
+STAs to send ACKs to. Is this what the p54 "station filter table" is
+used for? If not what is meant by a "station filter table"?
 
-> +       if ((sdata->vif.type == NL80211_IFTYPE_STATION) &&
-> +           (ifsta->flags & IEEE80211_STA_ASSOCIATED) &&
-> +           (memcmp(ifsta->bssid, mgmt->bssid, ETH_ALEN) == 0) &&
-> +           elems.pwr_constr_elem)
-> +               ieee80211_handle_pwr_constr(sdata,
-> +                               le16_to_cpu(mgmt->u.probe_resp.capab_info),
-> +                               elems.pwr_constr_elem,
-> +                               elems.pwr_constr_elem_len);
->  }
->
->
-> @@ -1841,6 +1852,13 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
->                        elems.country_elem, elems.country_elem_len);
->        }
->
-> +       /* TODO: IBSS also needs this */
-> +       if (elems.pwr_constr_elem)
-> +               ieee80211_handle_pwr_constr(sdata,
-> +                               le16_to_cpu(mgmt->u.probe_resp.capab_info),
-> +                               elems.pwr_constr_elem,
-> +                               elems.pwr_constr_elem_len);
-> +
->        ieee80211_bss_info_change_notify(sdata, changed);
->  }
->
-> diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-> index f72bad6..f7ffec1 100644
-> --- a/net/mac80211/spectmgmt.c
-> +++ b/net/mac80211/spectmgmt.c
-> @@ -84,3 +84,25 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
->                        mgmt->sa, mgmt->bssid,
->                        mgmt->u.action.u.measurement.dialog_token);
->  }
-> +
-> +void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
-> +                                u16 capab_info, u8 *pwr_constr_elem,
-> +                                u8 pwr_constr_elem_len)
-> +{
-> +       struct ieee80211_conf *conf = &sdata->local->hw.conf;
-> +
-> +       if ((conf->channel->band != IEEE80211_BAND_5GHZ) ||
-> +           !(capab_info & WLAN_CAPABILITY_SPECTRUM_MGMT))
-> +               return;
+> is enough (and correct spelled btw?)
+> Or do you volunteer for adding one or two DOC entries about APs, BC & MC Buffering,
+> TIM and station filters mechanism, caveats, and available callbacks or solutions?
 
-I think our original patch removed need of IEEE80211_BAND_5GHZ as
-WLAN_CAPABILITY_SPECTRUM_MGMT
-is sufficient condition.
+Well I did add this but to the wiki (with Ivan's help on the TIM stuff
+and image):
 
-> +       /* Power constraint IE length should be 1 octet */
-> +       if (pwr_constr_elem_len != 1)
-> +               return;
-> +
-> +       if ((*pwr_constr_elem <= conf->channel->max_power) &&
-> +           (*pwr_constr_elem != conf->power_constr_level)) {
+http://wireless.kernel.org/en/developers/Documentation/ieee80211/power-savings
 
-This is defined only when you receive country IE, how do you check for it?
+And unfortunately it is not very hardware design specifics, and has
+nothing about caveats, or filter mechanisms. But feel free to take as
+you like/refer to it/edit as you see fit.
 
-Thanks
-Tomas
+  Luis
