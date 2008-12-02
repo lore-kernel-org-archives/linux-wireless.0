@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:26259 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649AbYLDNNV convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f11.google.com ([209.85.221.11]:49180 "EHLO
+	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753573AbYLBRTs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 08:13:21 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2822151fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 05:13:20 -0800 (PST)
-Message-ID: <2c6c0b0812040513g3bb7e315mec91090f17e79bbd@mail.gmail.com> (sfid-20081204_141326_022622_2F23A5D1)
-Date: Thu, 4 Dec 2008 13:13:19 +0000
-From: "=?ISO-8859-1?Q?Zolt=E1n_Balogh?=" <baloghmail@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: iwl3945 bug-report
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1228270479.2558.216.camel@debian.sh.intel.com>
+	Tue, 2 Dec 2008 12:19:48 -0500
+Received: by qyk4 with SMTP id 4so3545479qyk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 09:19:46 -0800 (PST)
+Message-ID: <e27b78a40812020919l2d5acedbld4e853159a6a7a01@mail.gmail.com> (sfid-20081202_182005_344120_6A5EF137)
+Date: Tue, 2 Dec 2008 17:19:46 +0000
+From: Keir <keirlawson@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"Andrey Yurovsky" <andrey@cozybit.com>
+Subject: Fwd: Problems with o11s
+In-Reply-To: <e27b78a40812020752o396b2542kfc26b55caeade8df@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <2c6c0b0812020438y7712844ah6b2238b8ef1500b4@mail.gmail.com>
-	 <1228270479.2558.216.camel@debian.sh.intel.com>
+References: <e27b78a40812020752o396b2542kfc26b55caeade8df@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Yi,
+Hi,
 
-Please check my bugreport again as I managed to dump the Oops output to=
-day:
+I've had o11s working for a while now, but I seem to get a strange
+problem whereby pinging between MPs works for the first few pings, and
+then I start getting packet loss (Destination Host Unreachable)  and
+nothing gets through, despite the other station being listed as
+"ESTAB" by iw.  I'm not sure if there is something strange about my
+setup, or this is a bug somewhere, anyone got any ideas? I'm using
+revision d059b2aed9e93cb94364e01374bca90ce3dc0ef9
 
-https://bugzilla.redhat.com/show_bug.cgi?id=3D473507#c10
+Cheers
 
-Hope this will be a useful resource to you. Let me know if you need
-anything else or if I could help you in any way.
-
-With thanks and regards,
-
-Zoltan Balogh
-
-2008/12/3 Zhu Yi <yi.zhu@intel.com>:
-> On Tue, 2008-12-02 at 20:38 +0800, Zolt=E1n Balogh wrote:
->> Have a look at my bugreport at the Fedora bugzilla and please see if
->> you can help me determining the exact source of the error. Please re=
-ad
->> all of my comments as they contain vital information. I'm trying to
->> obfuscate my link as it is
->>
->> http://bugzilla.redhat.com/show_bug.cgi?id=3D473507
->
-> Please provide the oops log as John required in the bug.
->
-> Thanks,
-> -yi
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Keir
