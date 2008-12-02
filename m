@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hapkido.dreamhost.com ([66.33.216.122]:57568 "EHLO
-	hapkido.dreamhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725AbYLPLHY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 06:07:24 -0500
-Received: from homiemail-a1.g.dreamhost.com (sd-green-bigip-207.dreamhost.com [208.97.132.207])
-	by hapkido.dreamhost.com (Postfix) with ESMTP id C2FFB17C0E5
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 03:07:23 -0800 (PST)
-Received: from [192.168.1.65] (host-84-221-209-190.cust-adsl.tiscali.it [84.221.209.190])
-	by homiemail-a1.g.dreamhost.com (Postfix) with ESMTP id 3767A119E1E
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 03:05:51 -0800 (PST)
-Message-ID: <49478B8E.7050906@iacchi.org> (sfid-20081216_120728_487006_CC709CAE)
-Date: Tue, 16 Dec 2008 12:05:50 +0100
-From: iacchi <registrazioni@iacchi.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Kernel panic while loadind ipw2200 module
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:9103 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751082AbYLBUNM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 15:13:12 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 02/11] iwlwifi: fix printk size format error
+Date: Tue,  2 Dec 2008 12:13:58 -0800
+Message-Id: <1228248847-10424-3-git-send-email-reinette.chatre@intel.com> (sfid-20081202_211319_655538_7F32ABE1)
+In-Reply-To: <1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1228248847-10424-1-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I don't know if I shoul report this error (bug?) here or to kernel 
-bugzilla, but let's try here first!
-First of all, this: http://bugzilla.kernel.org/show_bug.cgi?id=12234 is 
-what I tried to do before looking at compat-wireless and since it wasn't 
-working, I tried with compat-wireless.
-I made to tries with compat-wireless, version 2008-12-10 and 2008-12-11. 
-In the first try I used the default config.mk (except 
-CONFIG_MAC80211_LEDS set to "n" because it gave me problems compiling), 
-the second one compiling only the ipw2200 driver (I don't need all the 
-others!).
-In both tries, I was able to "make" and "make install" it, but during 
-"make load" the kernel panics and it doesn't reboot (I can take a 
-picture of the error). In the second try, make load was triing to load 
-ipw2100, too, giving a fatal error because I didn't compile it (I don't 
-need it!).
+From: Zhu Yi <yi.zhu@intel.com>
 
-The console output of make load is something like:
-loading ipw2100
-loading ipw2200
+The patch fixes a printk size format error.
 
-and then the kernel panic.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Is this a peculiar problem of mine or a module problem? If the first is 
-true, may you help me?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 4f45894..de1ec54 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1539,7 +1539,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
+ 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
+ 		/* Hardware disappeared. It might have already raised
+ 		 * an interrupt */
+-		IWL_WARNING("HARDWARE GONE?? INTA == 0x%080x\n", inta);
++		IWL_WARNING("HARDWARE GONE?? INTA == 0x%08x\n", inta);
+ 		goto unplugged;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 7902339..074b43c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4450,7 +4450,7 @@ static irqreturn_t iwl3945_isr(int irq, void *data)
+ 
+ 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
+ 		/* Hardware disappeared */
+-		IWL_WARNING("HARDWARE GONE?? INTA == 0x%080x\n", inta);
++		IWL_WARNING("HARDWARE GONE?? INTA == 0x%08x\n", inta);
+ 		goto unplugged;
+ 	}
+ 
+-- 
+1.5.4.3
 
-thanks,
-Iacopo
