@@ -1,109 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33262 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752613AbYLSCpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 21:45:20 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 22/43] iwl3945: replace iwl3945_broadcast_addr with iwl_bcast_addr
-Date: Fri, 19 Dec 2008 10:37:22 +0800
-Message-Id: <1229654263-21454-23-git-send-email-yi.zhu@intel.com> (sfid-20081219_034608_378728_A71B3A2B)
-In-Reply-To: <1229654263-21454-22-git-send-email-yi.zhu@intel.com>
-References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-4-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-5-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-7-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-8-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-9-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-10-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-11-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-12-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-13-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-14-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-15-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-16-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-17-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-18-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-19-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-20-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-21-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-22-git-send-email-yi.zhu@intel.com>
+Received: from smtp.nokia.com ([192.100.122.230]:43869 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750763AbYLBUD6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 15:03:58 -0500
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mB2K3qBk007929
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Dec 2008 22:03:55 +0200
+Received: from [127.0.1.1] (essapo-nirac253161.europe.nokia.com [10.162.253.161])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mB2K3pP3027142
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Dec 2008 22:03:52 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [RFC PATCH v4 0/5] mac80211 dynamic power save
+To: linux-wireless@vger.kernel.org
+Date: Tue, 02 Dec 2008 22:03:51 +0200
+Message-ID: <20081202200219.5507.83250.stgit@tikku> (sfid-20081202_210402_396981_3F1ED037)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
+Here is v4 of my dynamic powersave patches. I have tested them only
+with stlc45xx on Nokia N810. I'm also working with iwl3945 and iwlagn
+patches based on these patches, but I haven't finished them yet.
 
-The patch replaces iwl3945_broadcast_addr with iwl_bcast_addr for 3945.
+These are RFC patches, not yet to be applied.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Patch 3 contains a new flag IEEE80211_HW_NO_DYNAMIC_PS. So all drivers
+which firmware doesn't support dynamic power save should use this flag
+to enable the feature in mac80211. This is a separate patch just for
+easier review. If it's ok, I'll fold it to patch 2.
+
+Patch 4 moves the dynamic_ps_timeout to ieee80211_conf struct. That
+way the drivers which have dynamic power save support in firmware can
+use the same timeout provided by user space. If this ok I'll fold this
+to patch 2.
+
+Patch 5 contains internal interface mac80211 to enable and disable
+queues. The original idea and design is from Johannes Berg, I just did
+the implementation based on those. All the bugs are mine, of course.
+
+changes in v4:
+o add check for station interface to siwpower()
+o call hw_config() also for dynamic timeout changes
+o add dynamic_ prefix to workqueues
+o test for IEEE80211_HW_NO_DYNAMIC_PS in siwpower()
+o wrote documentation for IEEE80211_HW_NO_DYNAMIC_PS
+o wrote documentation for conf->dynamic_ps_timeout
+
+changes in v3:
+o add a hw flag to notify that driver doesn't support dynamic power save and
+  which will enable mac80211 implementation
+o delete dynamic_ps_timer and cancel ps_enable_work during
+  association, hopefully it's race free now
+o provide timeout value to the drivers, for example iwlwifi should use
+  it (example patch under works)
+o fix a bad bug in testing IEEE80211_STA_ASSOCIATED flag with && operator
+
+TODO:
+o test with iwlwifi (only in-tree driver using IEEE80211_CONF_PS)
+
+Power save related features which I'll implement later:
+o disable power save when software scanning
+o beacon period (wakeup period) to the drivers, can be set from user
+  space but otherwise is bss's DTIM value
+
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   10 ++++------
- 2 files changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 4f8e6b8..e794cd5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -358,7 +358,6 @@ extern int iwl3945_send_statistics_request(struct iwl3945_priv *priv);
- extern void iwl3945_set_decrypted_flag(struct iwl3945_priv *priv, struct sk_buff *skb,
- 				   u32 decrypt_res,
- 				   struct ieee80211_rx_status *stats);
--extern const u8 iwl3945_broadcast_addr[ETH_ALEN];
- 
- /*
-  * Currently used by iwl-3945-rs... look at restructuring so that it doesn't
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index e37a28f..44777fa 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -303,8 +303,6 @@ void iwl3945_tx_queue_free(struct iwl3945_priv *priv, struct iwl3945_tx_queue *t
- 	memset(txq, 0, sizeof(*txq));
- }
- 
--const u8 iwl3945_broadcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
--
- /*************** STATION TABLE MANAGEMENT ****
-  * mac80211 should be examined to determine if sta_info is duplicating
-  * the functionality provided here
-@@ -1034,7 +1032,7 @@ static int iwl3945_commit_rxon(struct iwl3945_priv *priv)
- 	}
- 
- 	/* Add the broadcast address so we can send broadcast frames */
--	if (iwl3945_add_station(priv, iwl3945_broadcast_addr, 0, 0) ==
-+	if (iwl3945_add_station(priv, iwl_bcast_addr, 0, 0) ==
- 	    IWL_INVALID_STATION) {
- 		IWL_ERROR("Error adding BROADCAST address for transmit.\n");
- 		return -EIO;
-@@ -1531,9 +1529,9 @@ static u16 iwl3945_fill_probe_req(struct iwl3945_priv *priv,
- 	len += 24;
- 
- 	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
--	memcpy(frame->da, iwl3945_broadcast_addr, ETH_ALEN);
-+	memcpy(frame->da, iwl_bcast_addr, ETH_ALEN);
- 	memcpy(frame->sa, priv->mac_addr, ETH_ALEN);
--	memcpy(frame->bssid, iwl3945_broadcast_addr, ETH_ALEN);
-+	memcpy(frame->bssid, iwl_bcast_addr, ETH_ALEN);
- 	frame->seq_ctrl = 0;
- 
- 	/* fill in our indirect SSID IE */
-@@ -6653,7 +6651,7 @@ static void iwl3945_config_ap(struct iwl3945_priv *priv)
- 		/* restore RXON assoc */
- 		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
- 		iwl3945_commit_rxon(priv);
--		iwl3945_add_station(priv, iwl3945_broadcast_addr, 0, 0);
-+		iwl3945_add_station(priv, iwl_bcast_addr, 0, 0);
- 	}
- 	iwl3945_send_beacon_cmd(priv);
- 
--- 
-1.5.3.6
+Kalle Valo (5):
+      mac80211: track master queue status
+      mac80211: move dynamic_ps_timeout to hw.conf
+      mac80211: add IEEE80211_HW_NO_DYNAMIC_PS flag
+      mac80211: implement dynamic power save
+      mac80211: enable IEEE80211_CONF_PS only when associated
+
+
+ include/net/mac80211.h     |   10 +++++++
+ net/mac80211/ieee80211_i.h |   22 +++++++++++++++-
+ net/mac80211/main.c        |    9 +++++++
+ net/mac80211/mlme.c        |   60 +++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/tx.c          |   13 ++++++++++
+ net/mac80211/util.c        |   60 ++++++++++++++++++++++++++++++++++++++++----
+ net/mac80211/wext.c        |   46 ++++++++++++++++++++++++++++------
+ 7 files changed, 203 insertions(+), 17 deletions(-)
 
