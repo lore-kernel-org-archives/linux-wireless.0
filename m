@@ -1,80 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:65414 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751041AbYLSPjb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 10:39:31 -0500
-Message-ID: <494BC02B.4000906@lwfinger.net> (sfid-20081219_163935_808912_A48970A5)
-Date: Fri, 19 Dec 2008 09:39:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: linville@tuxdriver.com, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Fix some MAC locking
-References: <200812182213.39260.mb@bu3sch.de>
-In-Reply-To: <200812182213.39260.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:17554 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751065AbYLBUNO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 15:13:14 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/11] iwl3945: add debugfs support
+Date: Tue,  2 Dec 2008 12:14:02 -0800
+Message-Id: <1228248847-10424-7-git-send-email-reinette.chatre@intel.com> (sfid-20081202_211324_974607_0EC0FFED)
+In-Reply-To: <1228248847-10424-6-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1228248847-10424-1-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-3-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-4-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-5-git-send-email-reinette.chatre@intel.com>
+ <1228248847-10424-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> This fixes some locking w.r.t. the lower MAC (firmware).
-> It also removes a lot of ancient IRQ-locking that's not needed anymore.
-> We simply suspend the MAC. That's easier and causes less trouble.
+From: Abbas, Mohamed <mohamed.abbas@intel.com>
 
-When booting with this patch and the RFKILL switch off, I got these b43dbg messages:
+Add debugfs support to 3945 driver to display rs info.
 
-kernel: b43-phy0 debug: PHY/RADIO register access with enabled MAC.
-kernel: Pid: 7, comm: events/0 Not tainted 2.6.28-rc8-wl #55
-kernel: Call Trace:
-kernel:  [<ffffffffa02d6b15>] b43_phy_read+0x33/0x46 [b43]
-kernel:  [<ffffffffa02d8350>] b43_gphy_op_software_rfkill+0xde/0x131 [b43]
-kernel:  [<ffffffffa02d66d8>] b43_software_rfkill+0x20/0x2d [b43]
-kernel:  [<ffffffffa02e5609>] b43_rfkill_soft_toggle+0x71/0xa8 [b43]
-kernel:  [<ffffffffa02c61c0>] rfkill_toggle_radio+0xc6/0x10e [rfkill]
-kernel:  [<ffffffffa02c681d>] __rfkill_switch_all+0x6c/0xbb [rfkill]
-kernel:  [<ffffffffa02c68e5>] rfkill_switch_all+0x2d/0x3e [rfkill]
-kernel:  [<ffffffffa04bc165>] rfkill_task_handler+0x165/0x1ae [rfkill_input]
-kernel:  [<ffffffff8024ac90>] run_workqueue+0x103/0x20a
-kernel:  [<ffffffff8024ac3e>] ? run_workqueue+0xb1/0x20a
-kernel:  [<ffffffffa04bc000>] ? rfkill_task_handler+0x0/0x1ae [rfkill_input]
-kernel:  [<ffffffff8024ae77>] worker_thread+0xe0/0xf1
-kernel:  [<ffffffff8024e9fc>] ? autoremove_wake_function+0x0/0x38
-kernel:  [<ffffffff8024ad97>] ? worker_thread+0x0/0xf1
-kernel:  [<ffffffff8024e6a0>] kthread+0x49/0x76
-kernel:  [<ffffffff8020d0d9>] child_rip+0xa/0x11
-kernel:  [<ffffffff80236bd4>] ? finish_task_switch+0x0/0xb9
-kernel:  [<ffffffff8020c5f4>] ? restore_args+0x0/0x30
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   62 ++++++++++++++++++++++++++++
+ 1 files changed, 62 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+index e0ea2fe..e5f4b71 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -63,6 +63,9 @@ struct iwl3945_rs_sta {
+ 	u8 ibss_sta_added;
+ 	struct timer_list rate_scale_flush;
+ 	struct iwl3945_rate_scale_data win[IWL_RATE_COUNT];
++#ifdef CONFIG_MAC80211_DEBUGFS
++	struct dentry *rs_sta_dbgfs_stats_table_file;
++#endif
+ 
+ 	/* used to be in sta_info */
+ 	int last_txrate_idx;
+@@ -773,6 +776,60 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 	IWL_DEBUG_RATE("leave: %d\n", index);
+ }
+ 
++#ifdef CONFIG_MAC80211_DEBUGFS
++static int iwl3945_open_file_generic(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++	return 0;
++}
++
++static ssize_t iwl3945_sta_dbgfs_stats_table_read(struct file *file,
++						  char __user *user_buf,
++						  size_t count, loff_t *ppos)
++{
++	char buff[1024];
++	int desc = 0;
++	int j;
++	struct iwl3945_rs_sta *lq_sta = file->private_data;
++
++	desc += sprintf(buff + desc, "tx packets=%d last rate index=%d\n"
++			"rate=0x%X flush time %d\n",
++			lq_sta->tx_packets,
++			lq_sta->last_txrate_idx,
++			lq_sta->start_rate, jiffies_to_msecs(lq_sta->flush_time));
++	for (j = 0; j < IWL_RATE_COUNT; j++) {
++		desc += sprintf(buff+desc,
++				"counter=%d success=%d %%=%d\n",
++				lq_sta->win[j].counter,
++				lq_sta->win[j].success_counter,
++				lq_sta->win[j].success_ratio);
++	}
++	return simple_read_from_buffer(user_buf, count, ppos, buff, desc);
++}
++
++static const struct file_operations rs_sta_dbgfs_stats_table_ops = {
++	.read = iwl3945_sta_dbgfs_stats_table_read,
++	.open = iwl3945_open_file_generic,
++};
++
++static void iwl3945_add_debugfs(void *priv, void *priv_sta,
++				struct dentry *dir)
++{
++	struct iwl3945_rs_sta *lq_sta = priv_sta;
++
++	lq_sta->rs_sta_dbgfs_stats_table_file =
++		debugfs_create_file("rate_stats_table", 0600, dir,
++		lq_sta, &rs_sta_dbgfs_stats_table_ops);
++
++}
++
++static void iwl3945_remove_debugfs(void *priv, void *priv_sta)
++{
++	struct iwl3945_rs_sta *lq_sta = priv_sta;
++	debugfs_remove(lq_sta->rs_sta_dbgfs_stats_table_file);
++}
++#endif
++
+ static struct rate_control_ops rs_ops = {
+ 	.module = NULL,
+ 	.name = RS_NAME,
+@@ -783,6 +840,11 @@ static struct rate_control_ops rs_ops = {
+ 	.free = rs_free,
+ 	.alloc_sta = rs_alloc_sta,
+ 	.free_sta = rs_free_sta,
++#ifdef CONFIG_MAC80211_DEBUGFS
++	.add_sta_debugfs = iwl3945_add_debugfs,
++	.remove_sta_debugfs = iwl3945_remove_debugfs,
++#endif
++
+ };
+ 
+ void iwl3945_rate_scale_init(struct ieee80211_hw *hw, s32 sta_id)
+-- 
+1.5.4.3
 
-kernel: b43-phy0 debug: PHY/RADIO register access with enabled MAC.
-kernel: Pid: 7, comm: events/0 Not tainted 2.6.28-rc8-wl #55
-kernel: Call Trace:
-kernel:  [<ffffffffa02d6f93>] ? b43_gphy_op_read+0x2b/0x2f [b43]
-kernel:  [<ffffffffa02d6b15>] b43_phy_read+0x33/0x46 [b43]
-kernel:  [<ffffffffa02d835f>] b43_gphy_op_software_rfkill+0xed/0x131 [b43]
-kernel:  [<ffffffffa02d66d8>] b43_software_rfkill+0x20/0x2d [b43]
-...
-
-kernel: b43-phy0 debug: PHY/RADIO register access with enabled MAC.
-kernel: Pid: 7, comm: events/0 Not tainted 2.6.28-rc8-wl #55
-kernel: Call Trace:
-kernel:  [<ffffffffa02d6ac8>] b43_phy_write+0x3c/0x56 [b43]
-kernel:  [<ffffffffa02d8384>] b43_gphy_op_software_rfkill+0x112/0x131 [b43]
-kernel:  [<ffffffffa02d66d8>] b43_software_rfkill+0x20/0x2d [b43]
-...
-
-kernel: b43-phy0 debug: PHY/RADIO register access with enabled MAC.
-kernel: Pid: 7, comm: events/0 Not tainted 2.6.28-rc8-wl #55
-kernel: Call Trace:
-kernel:  [<ffffffffa02d6fc7>] ? b43_gphy_op_write+0x30/0x35 [b43]
-kernel:  [<ffffffffa02d6ac8>] b43_phy_write+0x3c/0x56 [b43]
-kernel:  [<ffffffffa02d839a>] b43_gphy_op_software_rfkill+0x128/0x131 [b43]
-kernel:  [<ffffffffa02d66d8>] b43_software_rfkill+0x20/0x2d [b43]
-...
-
-These were on an x86_64 system running wireless testing that git-describe shows
-as v2.6.28-rc8-8079-g3af3a24.
-
-Larry
