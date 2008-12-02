@@ -1,137 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10380 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751642AbYLTF4B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 00:56:01 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 21:56:00 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 13/16] ath9k: remove ath9k_hw_chan2wmode()
-Date: Fri, 19 Dec 2008 21:55:19 -0800
-Message-ID: <1229752522-1917-14-git-send-email-lrodriguez@atheros.com> (sfid-20081220_065611_648635_52CB5EA4)
-In-Reply-To: <1229752522-1917-13-git-send-email-lrodriguez@atheros.com>
-References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-3-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-4-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-5-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-6-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-7-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-8-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-9-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-10-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-11-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-12-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-13-git-send-email-lrodriguez@atheros.com>
+Received: from n13b.bullet.mail.mud.yahoo.com ([68.142.207.222]:29247 "HELO
+	n13b.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753225AbYLBDSM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 22:18:12 -0500
+Date: Mon, 1 Dec 2008 19:11:55 -0800 (PST)
+From: Irwan Siajadi <dev.bahamot@yahoo.com>
+Subject: Re: ath5k: can't browse at all.
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <63885.52788.qm@web59615.mail.ac4.yahoo.com> (sfid-20081202_041826_868750_DD101C85)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The only left users are for timing for ACK timeout, slotime and
-CTS timeout. We currently use an array CLOCK_RATE to keep
-these values per mode and since as only will use A and G
-we can depend on the band to get the appropriate values.
 
-We note that we should be using a different clock rate value
-for CCK, we can do this in separate patch, currently this is
-being disregarded and should only affect when we want to
-change the default ACK/CTS timeout or slot time and stuck
-with using using 802.11b.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/hw.c |   46 ++++++++++++++++----------------------
- 1 files changed, 19 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index eb0ec06..436fbc8 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -23,7 +23,9 @@
- #include "phy.h"
- #include "initvals.h"
- 
--static const u8 CLOCK_RATE[] = { 40, 80, 22, 44, 88, 40 };
-+#define ATH9K_CLOCK_RATE_CCK		22
-+#define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
-+#define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
- 
- extern struct hal_percal_data iq_cal_multi_sample;
- extern struct hal_percal_data iq_cal_single_sample;
-@@ -48,17 +50,18 @@ static void ath9k_hw_spur_mitigate(struct ath_hal *ah, struct ath9k_channel *cha
- 
- static u32 ath9k_hw_mac_usec(struct ath_hal *ah, u32 clks)
- {
--	if (ah->ah_curchan != NULL)
--		return clks / CLOCK_RATE[ath9k_hw_chan2wmode(ah, ah->ah_curchan)];
--	else
--		return clks / CLOCK_RATE[ATH9K_MODE_11B];
-+	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
-+	if (!ah->ah_curchan) /* should really check for CCK instead */
-+		return clks / ATH9K_CLOCK_RATE_CCK;
-+	if (conf->channel->band == IEEE80211_BAND_2GHZ)
-+		return clks / ATH9K_CLOCK_RATE_2GHZ_OFDM;
-+	return clks / ATH9K_CLOCK_RATE_5GHZ_OFDM;
- }
- 
- static u32 ath9k_hw_mac_to_usec(struct ath_hal *ah, u32 clks)
- {
--	struct ath9k_channel *chan = ah->ah_curchan;
--
--	if (chan && IS_CHAN_HT40(chan))
-+	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
-+	if (conf_is_ht40(conf))
- 		return ath9k_hw_mac_usec(ah, clks) / 2;
- 	else
- 		return ath9k_hw_mac_usec(ah, clks);
-@@ -66,34 +69,23 @@ static u32 ath9k_hw_mac_to_usec(struct ath_hal *ah, u32 clks)
- 
- static u32 ath9k_hw_mac_clks(struct ath_hal *ah, u32 usecs)
- {
--	if (ah->ah_curchan != NULL)
--		return usecs * CLOCK_RATE[ath9k_hw_chan2wmode(ah,
--			ah->ah_curchan)];
--	else
--		return usecs * CLOCK_RATE[ATH9K_MODE_11B];
-+	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
-+	if (!ah->ah_curchan) /* should really check for CCK instead */
-+		return usecs *ATH9K_CLOCK_RATE_CCK;
-+	if (conf->channel->band == IEEE80211_BAND_2GHZ)
-+		return usecs *ATH9K_CLOCK_RATE_2GHZ_OFDM;
-+	return usecs *ATH9K_CLOCK_RATE_5GHZ_OFDM;
- }
- 
- static u32 ath9k_hw_mac_to_clks(struct ath_hal *ah, u32 usecs)
- {
--	struct ath9k_channel *chan = ah->ah_curchan;
--
--	if (chan && IS_CHAN_HT40(chan))
-+	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
-+	if (conf_is_ht40(conf))
- 		return ath9k_hw_mac_clks(ah, usecs) * 2;
- 	else
- 		return ath9k_hw_mac_clks(ah, usecs);
- }
- 
--enum wireless_mode ath9k_hw_chan2wmode(struct ath_hal *ah,
--			       const struct ath9k_channel *chan)
--{
--	if (IS_CHAN_B(chan))
--		return ATH9K_MODE_11B;
--	if (IS_CHAN_G(chan))
--		return ATH9K_MODE_11G;
--
--	return ATH9K_MODE_11A;
--}
--
- bool ath9k_hw_wait(struct ath_hal *ah, u32 reg, u32 mask, u32 val)
- {
- 	int i;
--- 
-1.5.6.rc2.15.g457bb.dirty
+--- On Mon, 12/1/08, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+
+> From: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Subject: Re: ath5k: can't browse at all.
+> To: "Irwan Siajadi" <dev.bahamot@yahoo.com>
+> Cc: "Pavel Roskin" <proski@gnu.org>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+> Date: Monday, December 1, 2008, 5:11 PM
+> On Sun, Nov 30, 2008 at 08:53:36AM -0800, Irwan Siajadi
+> wrote:
+> > --- On Tue, 11/25/08, Pavel Roskin
+> <proski@gnu.org> wrote:
+> > 
+> > > From: Pavel Roskin <proski@gnu.org>
+> > > Subject: Re: ath5k: can't browse at all.
+> > > To: "Irwan Siajadi"
+> <dev.bahamot@yahoo.com>
+> > > Cc: linux-wireless@vger.kernel.org
+> > > Date: Tuesday, November 25, 2008, 8:02 PM
+> > > On Tue, 2008-11-25 at 09:24 -0800, Irwan Siajadi
+> wrote:
+> > >
+> > > > Further testing shows that if I change from
+> WPA2/AES
+> > > to WPA/TIKIP, I
+> > > > can finally browse. But it's still hit
+> and missed,
+> > > I need to reload
+> > > > the pages once or twice before the pages can
+> load
+> > > properly.
+> > >
+> > > Try disabling hardware crypto in the driver:
+> > >
+> > > rmmod ath5k
+> > > modprobe ath5k nohwcrypt=1
+> > 
+> > Sorry for the late reply, being busy with other
+> stuffs.
+> > Anyway, disabling hardware cyrpto didn't make any
+> changes.
+> > 
+> > >
+> > > In any case, check messages from wpa_supplicant. 
+> Maybe
+> > > it's
+> > > reauthenticating very often.  If you flood ping
+> the router
+> > > ("ping -f"),
+> > > you would probably see growing dots that
+> represent lost
+> > > packets.
+> > 
+> > Flood ping the router doesn't have any lost
+> packets (although only for a
+> > minute or so). And my router's log shows that the
+> laptop didn't
+> > re-authenticate very often.
+> > 
+> > I've also compiled vanilla 2.6.26 and 2.6.27 with
+> ath5k (compat-wireless).
+> > 
+> > - 2.6.26.8 + ath5k (compat-wireless-old-2008-11-29,
+> files last editted on
+> > 2008-09-16):
+> > -> ping shows some packets loss.
+> > -> can browse any websites.
+> 
+> Lets focus on >= 2.6.27.
+> 
+> > 
+> > - 2.6.27.7 + ath5k (compat-wireless-2008-11-26):
+> > -> ping doesn't have any packet loss.
+> > -> can't browse, browser always waiting for the
+> response from the server.
+> > Monitoring the traffics shows that there are tx
+> packets, but there's no rx
+> > packets.
+> > 
+> > Anything else I can try?
+> 
+> You say you can ping fine but... browsing doesn't
+> work?? Maybe a
+> firewall issue?
+> 
+> /etc/init.d/iptables stop
+> 
+> I agree with Pavel this does not seem like a driver issue.
+> Do you have
+> your AP configured to disable :80 TCP communication? Can
+> you try a simple
+> netcat server and netcat client on different ports and also
+> on port 80
+> just to see if its really firewall/AP configuration.
+
+
+Firewall on both end (router-ap and laptop) is disabled.
+I can't do netcat on the server since it's not a PC box. It's an all in 
+one unit (ADSL modem+AP+router). But I did wireshark on the laptop before 
+reading your email. And I can see many TCP retransmission while trying to 
+browse. If you like I can attach the log and send it to you. 
+
+
+As comparison, I also do wireshark while using ndiswrapper. I can find TCP 
+retransmission while using ndiswrapper, but doesn't really affect browsing 
+or large file transfer through SMB.
+
+
+PS: If you prefer netcat, please tell me, I'll do that and send the log if 
+you like.
+
+
+> 
+>   Luis
+
+Irwan.
+
+
+
+      
 
