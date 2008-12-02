@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54281 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751237AbYLQVcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 16:32:24 -0500
-Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: mohamed salim abbas <mabbaswireless@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
-	yi.zhu@intel.com, reinette.chatre@intel.com
-In-Reply-To: <20081217202943.GB3516@tuxdriver.com>
-References: <200812161307.07193.helmut.schaa@gmail.com>
-	 <b3153e950812171210n7247bevc9470fa47942ce92@mail.gmail.com>
-	 <20081217202943.GB3516@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 17 Dec 2008 16:31:25 -0500
-Message-Id: <1229549485.26406.12.camel@localhost.localdomain> (sfid-20081217_223228_510362_2087909C)
-Mime-Version: 1.0
+Received: from yx-out-2324.google.com ([74.125.44.28]:56334 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750955AbYLBU5J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 15:57:09 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so1300755yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 12:57:08 -0800 (PST)
+Message-ID: <43e72e890812021257p761ab16dqa2058c711349a462@mail.gmail.com> (sfid-20081202_215715_126639_F0322A92)
+Date: Tue, 2 Dec 2008 12:57:07 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: stable@kernel.org
+Subject: Re: [ath9k-devel] [PATCH 0/3] ath9k: several fixes ported to 2.6.27
+Cc: sfr@canb.auug.org.au, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-17 at 15:29 -0500, John W. Linville wrote:
-> On Wed, Dec 17, 2008 at 12:10:11PM -0800, mohamed salim abbas wrote:
-> > the interrupt moved from pci_probe to mac_start for power saving. once
-> > the interface is up the driver will read some register to know rfkill
-> > status, if the interface in down the driver don't care to keep track
-> > of rfkill switch. I wonder what the purpose of changing this behavior?
-> 
-> I think it still isn't settled in everyone's minds whether rfkill
-> only matters if the device is "up" or if it is something that
-> e.g. NetworkManager might want to monitor as a clue to bring the
-> device up or down in response to rfkill changes.
+On Tue, Dec 2, 2008 at 12:51 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> This fixes a few issues seen on MacBook Pros:
+>
+> http://bugzilla.kernel.org/show_bug.cgi?id=11811
+>
+> I've ported them to 2.6.27 to help with them being applied sooner.
+> I've tried to keep them as small as possible. I don't have the
+> ports for 2.6.28 though I think John will be sending them soon
+> through his pending-fixes branch.
+>
+> These are already applied on wireless-testing.
 
-The question is:  does NetworkManager just always keep the device 'up'
-irregardless of whether it's supposed to be associated with anything
-just so we can get rfkill events?
+Oh sorry, I noticed patch 2 and 3 didn't go with the subject to
+indicate their order. The order they should be applied in is:
 
-We have to keep ethernet devices up because some don't report carrier
-status unless they are up (when the PHY is powered on).  Yeah, that
-consumes a trivial amount of power.  But lots better to get
-notifications of ethernet carrier events dynamically than having to
-either (a) poll the carrier by IFF_UP every 5 seconds or (b) not getting
-carrier events at all.
+0001-ath9k-Fix-SW-IOMMU-bounce-buffer-starvation.patch
+0002-ath9k-correct-expected-max-RX-buffer-size.patch
+0003-ath9k-Handle-ENOMEM-on-RX-gracefully.patch
 
-I guess I'll treat rfkill the same as ethernet carrier.  If we cannot
-rely on rfkill notifications when the device is down (we already can't,
-since iwl3945 simply can't do it) then I guess we just have to keep the
-wifi device up all the time, even when it's rfkilled, and set the tx
-power off when wireless is supposed to be disabled.
+You can also find these here:
 
-It is simply a hard requirement to be able to get rfkill events when the
-switch gets flipped, irrespective of whether some blocks of the silicon
-are still powered or not (which I assume is the motivation for
-completely unloading the firmware in the first place).  We're not going
-to special-case a certain chips in NetworkManager; if there are quirks
-for devices, those quirks need to live in the driver, not worked around
-in userspace.
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2008-11-22/27-IOMMU-01/
 
-Dan
-
-
+  Luis
