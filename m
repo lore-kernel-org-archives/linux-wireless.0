@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:27867 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104AbYLAKbR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 05:31:17 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so1007903eyi.37
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 02:31:16 -0800 (PST)
-From: Diego 'Flameeyes' =?utf-8?q?Petten=C3=B2?= <flameeyes@gmail.com>
-Subject: [crda PATCH 4/5] Don't use recursive make for verify target.
-To: linux-wireless@vger.kernel.org
-Date: Mon, 01 Dec 2008 11:31:15 +0100
-Message-ID: <20081201103114.18024.65370.stgit@localhost> (sfid-20081201_113120_077548_84EE48EF)
-In-Reply-To: <20081201103016.18024.80454.stgit@localhost>
-References: <20081201103016.18024.80454.stgit@localhost>
+Received: from mail.atheros.com ([12.36.123.2]:24771 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752082AbYLBUvg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 15:51:36 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <stable@kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <sfr@canb.auug.org.au>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bennyam Malavazi <Bennyam.Malavazi@atheros.com>
+Subject: [PATCH] ath9k: correct expected max RX buffer size
+Date: Tue, 2 Dec 2008 12:51:21 -0800
+Message-ID: <1228251082-11677-3-git-send-email-lrodriguez@atheros.com> (sfid-20081202_215144_558839_00FD0945)
+In-Reply-To: <1228251082-11677-2-git-send-email-lrodriguez@atheros.com>
+References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
+ <1228251082-11677-2-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=46rom: Diego E. 'Flameeyes' Petten=C3=B2 <flameeyes@gmail.com>
+We should only tell the hardware its capable of DMA'ing
+to us only what we asked dev_alloc_skb(). Prior to this
+it is possible a large RX'd frame could have corrupted
+DMA data but for us but we were saved only because we
+were previously also pci_map_single()'ing the same large
+value. The issue prior to this though was we were unmapping
+a smaller amount which the prior DMA patch fixed.
 
-This makes the build more parallel since regdbdump.o build and link
-can happen in parallel with the keys generation and the build of the
-rest of the units.
-
-Signed-off-by: Diego E. 'Flameeyes' Petten=C3=B2 <flameeyes@gmail.com>
+Signed-off-by: Bennyam Malavazi <Bennyam.Malavazi@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath9k/recv.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
- Makefile |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 4d23827..0941589 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -52,7 +52,7 @@ static void ath_rx_buf_link(struct ath_softc *sc, struct ath_buf *bf)
+ 	/* setup rx descriptors */
+ 	ath9k_hw_setuprxdesc(ah,
+ 			     ds,
+-			     skb_tailroom(skb),   /* buffer size */
++			     sc->sc_rxbufsize,
+ 			     0);
+ 
+ 	if (sc->sc_rxlink == NULL)
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
-diff --git a/Makefile b/Makefile
-index 4ac8495..a8c0a45 100644
---- a/Makefile
-+++ b/Makefile
-@@ -7,8 +7,7 @@ PUBKEY_DIR=3Dpubkeys
-=20
- CFLAGS +=3D -Wall -g
-=20
--all: crda intersect
--	$(Q)$(MAKE) --no-print-directory -f Makefile verify
-+all: crda intersect verify
-=20
- ifeq ($(USE_OPENSSL),1)
- CFLAGS +=3D -DUSE_OPENSSL `pkg-config --cflags openssl`
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
