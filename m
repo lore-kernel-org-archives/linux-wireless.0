@@ -1,69 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33884 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756102AbYLDR1k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 12:27:40 -0500
-Subject: Re: [RFC PATCH v4 1/5] mac80211: enable IEEE80211_CONF_PS only
-	when associated
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081202200359.5507.40576.stgit@tikku> (sfid-20081202_210409_204193_1599C0A5)
-References: <20081202200219.5507.83250.stgit@tikku>
-	 <20081202200359.5507.40576.stgit@tikku>
-	 (sfid-20081202_210409_204193_1599C0A5)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UTAuUC8YgBI/Yqx/1CDx"
-Date: Thu, 04 Dec 2008 18:27:38 +0100
-Message-Id: <1228411658.5692.19.camel@johannes.berg> (sfid-20081204_182748_018418_EBB580A3)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:24786 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752260AbYLBUvi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 15:51:38 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <stable@kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <sfr@canb.auug.org.au>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/3] ath9k: Handle -ENOMEM on RX gracefully
+Date: Tue, 2 Dec 2008 12:51:22 -0800
+Message-ID: <1228251082-11677-4-git-send-email-lrodriguez@atheros.com> (sfid-20081202_215142_945337_99ED3EC3)
+In-Reply-To: <1228251082-11677-3-git-send-email-lrodriguez@atheros.com>
+References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
+ <1228251082-11677-2-git-send-email-lrodriguez@atheros.com>
+ <1228251082-11677-3-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We would get an oops on RX on -ENOMEM by passing
+NULL to the hardware on ath_rx_buf_link(). The oops
+would look something like this:
 
---=-UTAuUC8YgBI/Yqx/1CDx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ath_rx_tasklet
+...
+RIP: ath_rx_buf_link
 
-On Tue, 2008-12-02 at 22:03 +0200, Kalle Valo wrote:
+We correct this by handling the allocation for the next
+skb we will put in our RX tail directly on the ath_rx_tasklet()
+*prior* to sending up the last hardware processed
+skb. If we run out of memory this gauranteees we have
+skbs to work with while it simply drops new received
+frames.
 
-> -	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-> +	if (ps =3D=3D local->powersave)
-> +		return ret;
-> +
-> +set:
-> +	local->powersave =3D ps;
-> +
-> +	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
-> +		return ret;
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/recv.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
 
-Shouldn't that test be earlier? There's little sense in supporting PS if
-you have a non-STA interface. In fact, it might make sense to check that
-there's no other interface (except monitor) open?
-
-johannes
-
---=-UTAuUC8YgBI/Yqx/1CDx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJOBMGAAoJEKVg1VMiehFYmRMP/jylvZdwXrLjITRNF77xOSy9
-1ug+zCZZtvk4oJ6wZ4jsf2HWPMkmaqMhKIZIy+SwnZ3qLOedl8rwTTdlz8y3kyt/
-1eXTCxZMQvQf8/BNY0qmbp48NprVcM4nNixnhKYdKXIWXDXFIAtWMGqMcVXW3wZN
-xfwEoU2TW4qfCJfhq4iouzQQ8KPmN7F6ZYViwBLZvDlDLTCHzqm67KeN/MkKd0yG
-RSJdTZfTaFuxQTNHmZJ7nKsCgF5m+pIAcDyGFVzSGTTI3qd+/QhDNV0Q5gvZeo7t
-zuTB5sKeXbnHeM2qa3JGZbPpjUh6uApChnFaeCztN6IGGQvLUHn1PWRdJ7Fb2MhM
-7grfhy/fobekyP4S9VxWICuthG+ECM0lxSPMTMoGP2GCbZA3hYhGechGhdcI+8L0
-3CfmU7L2doKYql0KB5KIS63/gSpDKuGbXYigr9eO3DYvxyb6/HplTvOQe2PT2cfX
-obGEPmCYXdsBgJcfOzl6BeJlVJ0LcXqYKPBZ7Xoo/1x/eq7wfn5GKPoyXZUk2rOK
-KTbpQSNwdppFSvSjn6DGinPqrz2YtHqqepUp2FG9C90VwYxf+NDPfEuhA3OVTk+f
-ALjj0quVQs9P44RFDZBDjcyENWYpTY/i5eDgj1EQLF/rAzprc6DrjLSZhPfXcbFO
-PE1ocpqtc8tA3dLkmvA6
-=mFTl
------END PGP SIGNATURE-----
-
---=-UTAuUC8YgBI/Yqx/1CDx--
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 0941589..a4f92b2 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -441,18 +441,16 @@ static void ath_rx_requeue(struct ath_softc *sc, struct sk_buff *skb)
+  */
+ static int ath_rx_indicate(struct ath_softc *sc,
+ 			   struct sk_buff *skb,
++			   struct sk_buff *nskb,
+ 			   struct ath_recv_status *status,
+ 			   u16 keyix)
+ {
+ 	struct ath_buf *bf = ATH_RX_CONTEXT(skb)->ctx_rxbuf;
+-	struct sk_buff *nskb;
+ 	int type;
+ 
+ 	/* indicate frame to the stack, which will free the old skb. */
+ 	type = ath__rx_indicate(sc, skb, status, keyix);
+ 
+-	/* allocate a new skb and queue it to for H/W processing */
+-	nskb = ath_rxbuf_alloc(sc, sc->sc_rxbufsize);
+ 	if (nskb != NULL) {
+ 		bf->bf_mpdu = nskb;
+ 		bf->bf_buf_addr = ath_skb_map_single(sc,
+@@ -741,6 +739,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 	struct ath_desc *ds;
+ 	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *skb = NULL;
++	struct sk_buff *nskb = NULL;
+ 	struct ath_recv_status rx_status;
+ 	struct ath_hal *ah = sc->sc_ah;
+ 	int type, rx_processed = 0;
+@@ -963,6 +962,17 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		 */
+ 		if (sc->sc_rxbufsize < ds->ds_rxstat.rs_datalen)
+ 			goto rx_next;
++
++		/* allocate a new skb and queue it to for H/W processing */
++		nskb = ath_rxbuf_alloc(sc, sc->sc_rxbufsize);
++
++		/* Diregard current RX'd frame and reuse the old skb */
++		if (!nskb) {
++			list_move_tail(&bf->list, &sc->sc_rxbuf);
++			ath_rx_buf_link(sc, bf);
++			goto rx_next;
++		}
++
+ 		/*
+ 		 * Sync and unmap the frame.  At this point we're
+ 		 * committed to passing the sk_buff somewhere so
+@@ -1052,7 +1062,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 
+ 		/* Pass frames up to the stack. */
+ 
+-		type = ath_rx_indicate(sc, skb,
++		type = ath_rx_indicate(sc, skb, nskb,
+ 			&rx_status, ds->ds_rxstat.rs_keyix);
+ 
+ 		/*
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
