@@ -1,65 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39797 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751215AbYLXHPZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 02:15:25 -0500
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	mabbaswireless@gmail.com
-In-Reply-To: <20081224054951.GA32398@hash.localnet>
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
-	 <1229336057.4471.9.camel@johannes.berg>
-	 <1229354532.12163.24.camel@localhost.localdomain>
-	 <20081217174244.M36761@bobcopeland.com>
-	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
-Content-Type: text/plain
-Date: Wed, 24 Dec 2008 08:16:29 +0100
-Message-Id: <1230102989.16960.14.camel@californication> (sfid-20081224_081534_551626_74B015DC)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:2104 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752282AbYLBAba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2008 19:31:30 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/5] iwlwifi: 5150 compute ct kill threshold
+Date: Mon,  1 Dec 2008 16:32:20 -0800
+Message-Id: <1228177942-25137-4-git-send-email-reinette.chatre@intel.com> (sfid-20081202_013136_642151_87137366)
+In-Reply-To: <1228177942-25137-3-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1228177942-25137-1-git-send-email-reinette.chatre@intel.com>
+ <1228177942-25137-2-git-send-email-reinette.chatre@intel.com>
+ <1228177942-25137-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bob,
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-> > > Running pm-suspend from pm-utils directly also triggers the problem, 
-> > > so that would seem to excuse gnome-power-manager at least.
-> > 
-> > What's the status of this? Should I look into things a bit?
-> 
-> Well, I guess I should have noticed this a lot earlier, but anyway the 
-> problem was pm-utils on Fedora 10:
-> 
-> /usr/lib/pm-utils/sleep.d/55NetworkManager:
-> 
->     suspend_nm()
->     {
->         # Tell NetworkManager to shut down networking
->         dbus-send --system                         \
->             --dest=org.freedesktop.NetworkManager  \
->             /org/freedesktop/NetworkManager        \
->             org.freedesktop.NetworkManager.sleep
->     }
-> 
-> I really don't think this is necessary (g-p-m will also do it if you 
-> set the proper gconf setting.)
+This patch adds computation of ct kill threshold
+for 5150. Threshold is computed from calibration
+data in the EEPROM.
 
-this should not be needed at all. I have systems running wpa_supplicant
-and not any of the pm-utils scripts messing with it. During suspend and
-later resume it indicates normally just only a new handshake with the AP
-or a disconnect if the AP got out of range.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c   |   13 ++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    1 +
+ 2 files changed, 13 insertions(+), 1 deletions(-)
 
-I think Network Manager is perfectly capable of handling state changes
-from wpa_supplicant. I really do think that this hack only exists of
-some broken drivers from really old kernels or for the 0.6 version of
-Network Manager. Remember that Ubuntu's suspend/resume solution used to
-be to unload all networking drivers on suspend.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index c1e7a42..26e04ec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -426,6 +426,17 @@ static const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
+ 	return &priv->eeprom[address];
+ }
+ 
++static s32 iwl5150_get_ct_threshold(struct iwl_priv *priv)
++{
++	const s32 volt2temp_coef = -5;
++	u16 *temp_calib = (u16 *)iwl_eeprom_query_addr(priv,
++						EEPROM_5000_TEMPERATURE);
++	/* offset =  temperate -  voltage / coef */
++	s32 offset = temp_calib[0] - temp_calib[1] / volt2temp_coef;
++	s32 threshold = (s32)CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD) - offset;
++	return threshold * volt2temp_coef;
++}
++
+ /*
+  *  Calibration
+  */
+@@ -859,7 +870,7 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 	case CSR_HW_REV_TYPE_5150:
+ 		/* 5150 wants in Kelvin */
+ 		priv->hw_params.ct_kill_threshold =
+-				CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD);
++				iwl5150_get_ct_threshold(priv);
+ 		break;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 997f23c..8f6b05f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -147,6 +147,7 @@ struct iwl_eeprom_channel {
+ /*5000 calibrations */
+ #define EEPROM_5000_CALIB_ALL	(INDIRECT_ADDRESS | INDIRECT_CALIBRATION)
+ #define EEPROM_5000_XTAL	((2*0x128) | EEPROM_5000_CALIB_ALL)
++#define EEPROM_5000_TEMPERATURE ((2*0x12A) | EEPROM_5000_CALIB_ALL)
+ 
+ /* 5000 links */
+ #define EEPROM_5000_LINK_HOST             (2*0x64)
+-- 
+1.5.4.3
 
