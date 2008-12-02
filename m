@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26637 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750836AbYLQI7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 03:59:42 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Wu, Fengguang" <fengguang.wu@intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/8] iwlwifi: add line feed to printk
-Date: Wed, 17 Dec 2008 16:52:28 +0800
-Message-Id: <1229503954-30347-3-git-send-email-yi.zhu@intel.com> (sfid-20081217_095948_438512_6D925462)
-In-Reply-To: <1229503954-30347-2-git-send-email-yi.zhu@intel.com>
-References: <1229503954-30347-1-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-2-git-send-email-yi.zhu@intel.com>
+Received: from senator.holtmann.net ([87.106.208.187]:59900 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246AbYLBNPD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 08:15:03 -0500
+Subject: Re: iwlwifi - rfkill only works if the interface is up
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com
+In-Reply-To: <20081202125959.GC1668@khazad-dum.debian.net>
+References: <200812011311.17346.helmut.schaa@gmail.com>
+	 <1ba2fa240812010508hcb29699m8bd8b3b0ba8574cd@mail.gmail.com>
+	 <1228145453.31158.140.camel@violet.holtmann.net>
+	 <200812011634.37644.helmut.schaa@gmail.com>
+	 <1228147151.31158.142.camel@violet.holtmann.net>
+	 <20081202125959.GC1668@khazad-dum.debian.net>
+Content-Type: text/plain
+Date: Tue, 02 Dec 2008 14:14:53 +0100
+Message-Id: <1228223693.31158.240.camel@violet.holtmann.net> (sfid-20081202_141507_657627_A803DD8D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wu, Fengguang <fengguang.wu@intel.com>
+Hi Henrique,
 
-This adds line feed to printk.
+> > if the hardware/firmware doesn't allow us to do so, we have no real
+> > option. I think that nobody thought about this use case so far. I am not
+> > sure if we should unregister it or just fix rfkill to add an invalid
+> > state. It is also possible to tie rfkill with ifup/ifdown.
+> 
+> Please don't register/unregister rfkill classes like that, it is extremely
+> broken from userspace's point-of-view, and it is not how the rfkill core
+> subsystem expects things to be used either.    If there is no way to avoid
+> register/unregister at interface up/down, it is better to never register any
+> rfkill classes at all, and remove the functionality.
+> 
+> Now, I hate when people use the term "rfkill switch" when dealing with the
+> kernel rfkill subsystem, because we can't really always be sure we
+> understood what the person means, so please bear with me...
+> 
+> Are you talking about the hardware rfkill line (the input pin where one
+> might have hooked an input device)?  Or about something else?
 
-Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-led.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+so this case is that we are not getting any updates about the rfkill
+line status if the firmware is not loaded (happens at ifdown case). How
+do you propose this should be handled?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index dce32ff..11eccd7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -292,7 +292,7 @@ static int iwl_get_blink_rate(struct iwl_priv *priv)
- 			if (tpt  > (blink_tbl[i].tpt * IWL_1MB_RATE))
- 				break;
- 
--	IWL_DEBUG_LED("LED BLINK IDX=%d", i);
-+	IWL_DEBUG_LED("LED BLINK IDX=%d\n", i);
- 	return i;
- }
- 
--- 
-1.5.3.6
+Regards
+
+Marcel
+
 
