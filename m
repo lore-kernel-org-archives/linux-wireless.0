@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:22506 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755520AbYLKN3y (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.185]:44798 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278AbYLCQtl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 08:29:54 -0500
-To: "Michael Buesch" <mb@bu3sch.de>
-Cc: "Julian Calaby" <julian.calaby@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Matthew Garrett" <mjg59@srcf.ucam.org>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	hmh@hmh.eng.br
-Subject: Re: [RFC] b43: rework rfkill code
-References: <20081210150935.GA10927@srcf.ucam.org>
-	<1228922997.15837.6.camel@johannes.berg>
-	<646765f40812101632u76847935l2405482aabe1c1f8@mail.gmail.com>
-	<200812110227.26909.mb@bu3sch.de>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Thu, 11 Dec 2008 15:28:38 +0200
-In-Reply-To: <200812110227.26909.mb@bu3sch.de> (ext Michael Buesch's message of "Thu\, 11 Dec 2008 02\:27\:25 +0100")
-Message-ID: <87y6ymkfi1.fsf@nokia.com> (sfid-20081211_143002_579284_316037B6)
+	Wed, 3 Dec 2008 11:49:41 -0500
+Received: by gv-out-0910.google.com with SMTP id e6so677542gvc.37
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 08:49:40 -0800 (PST)
+To: Reinette Chatre <reinette.chatre@intel.com>
+Subject: Re: [ipw3945-devel] [PATCH 11/11] iwl3945 : Fix a-band association for passive channels
+Date: Wed, 3 Dec 2008 17:49:15 +0100
+Cc: ipw3945-devel@lists.sourceforge.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+References: <> <1228248847-10424-11-git-send-email-reinette.chatre@intel.com> <1228248847-10424-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1228248847-10424-12-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200812031749.16251.helmut.schaa@gmail.com> (sfid-20081203_174945_482642_BCC996E4)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch <mb@bu3sch.de> writes:
+Hi,
 
-> On Thursday 11 December 2008 01:32:37 Julian Calaby wrote:
->
->> What strikes me, watching this from the outside - is that rfkill and
->> power saving seem to be doing essentially the same thing: temporarily
->> powering down the radio / card.
->
-> I think it's essentially a different thing. rfkill means -> turn off
-> the radio; no matter what. PS means -> turn off the radio for
-> whatever amount of microseconds and periodically wake up to see
-> what's up. PS-core also takes place in the firmware of the device,
-> where rfkill is a much higher layer thing.
+Am Dienstag, 2. Dezember 2008 schrieb Reinette Chatre:
+>     2) This fix will only work with uCode version 15.28.2.8 and above.
 
-I agree, they shouldn't be intermixed at all.
+Where can I find the ucode version 15.28.2.8? I could only find
+15.28.1.8 at [1].
 
--- 
-Kalle Valo
+Thanks,
+Helmut
+
+[1] http://www.intellinuxwireless.org/?n=downloads&f=ucodes_3945
