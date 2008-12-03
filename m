@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:50245 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750734AbYLTFrv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 00:47:51 -0500
-Message-ID: <494C8705.2030407@lwfinger.net> (sfid-20081220_064811_762774_DFDBF24E)
-Date: Fri, 19 Dec 2008 23:47:49 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:16605 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752812AbYLCCVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 21:21:08 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 18:21:08 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: <Sujith.Manoharan@atheros.com>, <senthilkumar@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 0/2] ath9k: few memory fixes
+Date: Tue, 2 Dec 2008 18:21:04 -0800
+Message-ID: <1228270866-21516-1-git-send-email-lrodriguez@atheros.com> (sfid-20081203_032113_104029_53F6F94B)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/2] p54usb: fix random traffic stalls (LM87)
-References: <200812200221.56534.chunkeey@web.de>
-In-Reply-To: <200812200221.56534.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> All LM87 firmwares need a explicit termination "packet",
-> in oder to finish the pending transfer properly.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> Larry,
-> 
-> Does your test case still fail with this one?
+This series addresses some memory issues present on ath9k
+regarding allocation and not handling failed DMA maps. These
+two patches replace the patch titled:
 
-No, it seems to be fixed. I still have a failure, but the symptoms are different.
+[PATCH] ath9k: Use GFP_ATOMIC when allocating private area
 
-Today I had created the following script:
+But also adds the failed DMA checks.
 
-#! /usr/bin/perl
-#
-for ($i = 30; $i < 1600 ; $i++) {
-        `ping -c 1 -s $i my_server`;
-        printf ("%d\n ", $i);
-}
+I've merged the ath_tx_setup_buffer() failure case into the DMA checks.
 
-I found that this script stalled for i of 372, 884 and 1396. I was still trying
-to find it it was a transmit or receive problem when your patch arrived. With
-this change, the ping script runs to completion, and my NFS compile ran a lot
-longer than previously.
-
-When the connection failed, unloading the driver and reloading it yielded the lines
-
-usb 1-5: (p54usb) reset failed! (-22)
-p54usb: probe of 1-5:1.0 failed with error -22
-
-In my estimation, I think the patch is clearly needed and should be pushed.
-
-Larry
-
+  Luis
