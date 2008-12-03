@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44553 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756865AbYLKWGU (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:40811 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751098AbYLCQab (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 17:06:20 -0500
-Subject: Re: [PATCH] ath5k : Fix correct padding
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <200812112258.25007.mb@bu3sch.de> (sfid-20081211_230212_942339_6F33AB66)
-References: <49418D23.8060905@free.fr>  <200812112258.25007.mb@bu3sch.de>
-	 (sfid-20081211_230212_942339_6F33AB66)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pocwXQJ7IiulXFI0zUcz"
-Date: Thu, 11 Dec 2008 23:05:41 +0100
-Message-Id: <1229033141.8081.87.camel@johannes.berg> (sfid-20081211_230623_051113_E95EC9BD)
-Mime-Version: 1.0
+	Wed, 3 Dec 2008 11:30:31 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so1538556eyi.37
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 08:30:29 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/3] rt2x00: Fix check for BSS info changes
+Date: Wed, 3 Dec 2008 17:29:21 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812031729.21220.IvDoorn@gmail.com> (sfid-20081203_173035_468611_DE4E791F)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix ERP configuration, due to a too strict changes
+flags checking we never updated the short slot time
+or basic rate mask when no other changes were made
+at the same time.
 
---=-pocwXQJ7IiulXFI0zUcz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Thu, 2008-12-11 at 22:58 +0100, Michael Buesch wrote:
-> On Thursday 11 December 2008 22:58:59 Benoit PAPILLAULT wrote:
-> > Padding the 802.11 header to a multiple of 4 bytes needs to be done onl=
-y
-> > for DATA frames.
->=20
-> Uhm, can you explain _why_ it's only needed for data frames?
-
-Well, it's only _needed_ for data frames because the alignment is
-something the IP stack needs. That doesn't answer the question, of
-course, the answer to that would have to be something like "because the
-hardware uses the same algorithm to insert the padding"
-
-johannes
-
---=-pocwXQJ7IiulXFI0zUcz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQY6yAAoJEKVg1VMiehFYX/MQAKYOvDZ1AllHPcDvOwLYQY8R
-25Lv+EfJtxkwEoKWN4+PvbIAGDkm+LxzvyiZuCQS4E1DZLxhUyXCCN8YWuBMtfhI
-HCTgdpwUm5G9HzwyIIBXhCDGU200kype1cnZ9z/dquzb8PjRyoOwquCl/ugW2/4P
-JFNMzwEu2y1mQxwBghaASH81LqOm+ZcExfW1RrbTanfjZb8VwLL1RLVHKihtRhf/
-/qlucygtvB6wOfmKEOzxlXERl2G050toXijSWJf5PBOSCVcl0suU/hsKAwzt2N49
-pWMsT9BP8gdWw/Nxafx2NgB4TJvbG918ywVH1E8DcUcGrpiVR2/SoMF1G8pr4cvr
-u/7BNIubyvnQ8XekHZP10ZojhM5OqR453aIBwP5YN7Oz4ioM13I64yrTc2cPUWPf
-wmhzMIsJhhYVst+9bXl47BhtoTIYdla5O+KL3VcmItPtna2JTl/JHaiyLAlAw5J7
-OAcbcU4kr1yVedFm/vmrAD6dnyNsYV9JdkYipTWEZ5g8cSKJbnRrKqy9KaifJ9m5
-fiiW+QzDUiRZMFQk1PdvG5i3h34E4xcx+yBMOEF/qncsaGmZRWu0IPTwkji1XLRP
-XwCYBjh4GGodAVJesNECPAv4zgE5HcdhRHvRO2Vn9/nB16U6XKMg+ewUsfz6c4NB
-VvQVBNNf+go3WTSd7v1H
-=y3yg
------END PGP SIGNATURE-----
-
---=-pocwXQJ7IiulXFI0zUcz--
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index fa91ca5..dded680 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -634,7 +634,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 	 * When the erp information has changed, we should perform
+ 	 * additional configuration steps. For all other changes we are done.
+ 	 */
+-	if (changes & (BSS_CHANGED_ERP_PREAMBLE | BSS_CHANGED_ERP_CTS_PROT)) {
++	if (changes & ~(BSS_CHANGED_ASSOC | BSS_CHANGED_HT)) {
+ 		if (!test_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags))
+ 			rt2x00lib_config_erp(rt2x00dev, intf, bss_conf);
+ 		else
+-- 
+1.5.6.1
 
