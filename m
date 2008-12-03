@@ -1,71 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542AbYLKUYK (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:10407 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755438AbYLCCOX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 15:24:10 -0500
-Subject: Re: [Patch] nl80211: Add signal strength and bandwith to
-	nl80211station info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@googlemail.com>
-Cc: Henning Rogge <rogge@fgan.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812112112.30509.hrogge@googlemail.com> (sfid-20081211_211613_833666_16F1FA2E)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812111922.49439.hrogge@googlemail.com>
-	 <1229020101.8081.55.camel@johannes.berg>
-	 <200812112112.30509.hrogge@googlemail.com>
-	 (sfid-20081211_211613_833666_16F1FA2E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-N3xLF+ZL4tGOr26omM/X"
-Date: Thu, 11 Dec 2008 21:23:31 +0100
-Message-Id: <1229027011.8081.70.camel@johannes.berg> (sfid-20081211_212415_792809_CF021DD1)
-Mime-Version: 1.0
+	Tue, 2 Dec 2008 21:14:23 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1560444wah.21
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 18:14:23 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18741.60148.86455.854634@localhost.localdomain> (sfid-20081203_031427_176611_B79936DC)
+Date: Wed, 3 Dec 2008 07:42:04 +0530
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@atheros.com, Luis.Rodriguez@atheros.com,
+	Senthilkumar.Balasubramanian@atheros.com
+Subject: Re: [PATCH] ath9k: Use GFP_ATOMIC when allocating private area
+In-Reply-To: <43e72e890812021809h3bc371d0t23e1c14d79a36617@mail.gmail.com>
+References: <18741.12999.753996.233483@gargle.gargle.HOWL>
+	<43e72e890812021614i103235few3a19721c6ca1d0cc@mail.gmail.com>
+	<18741.59362.77483.600612@localhost.localdomain>
+	<43e72e890812021809h3bc371d0t23e1c14d79a36617@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis R. Rodriguez wrote:
+> Interesting, I hadn't thought about stopping the queues, when would
+> they be resumed then though, or rather who? I'll a rework of this
+> ontop of more DMA fun, let me know what you think. I just tested this.
+> 
 
---=-N3xLF+ZL4tGOr26omM/X
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+In TX completion, when we see that a queue is stopped, we wake up that queue
+if the depth is less than a threshold.
 
-On Thu, 2008-12-11 at 21:12 +0100, Henning Rogge wrote:
-> This patch adds signal strength and transmission bitrate
-> to the station_info of nl80211.
->=20
-> Signed-off-by: Henning Rogge <rogge@fgan.de>
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-You should probably send this with just [PATCH v14] (no Re:), CC John
-and not attach the file but make sure the inline version is ok (if
-possible)
-
-johannes
-
---=-N3xLF+ZL4tGOr26omM/X
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQXa/AAoJEKVg1VMiehFYJIkP/3DwVBKo6fGPR99UQ3jiZQcI
-Cw9OciJo2pxsQH7MeQXLDgdXAsWqUp6nbc9qNmtAZf4zjURNs3jwAW+UlS9sMIT1
-CUlfe44JiC5V9JQStBrbmLzlyvutMNDOWXbL4mxYLS99ne9827Ya5xDEgWNL4KOm
-Hxk66dLDhxDMO+pFScFwhddd2IGlCGfbWGSsjTx742x1ivA+rBuT49mNjrIKL4Y6
-WGpujys1OGCjwE+vnFDwZqBBw4E2Ny3bKahJjHhxhyej3vJryUc+Zf5RpLxmwGiI
-5tfhLqCFl86sy6bS/xTq53VpmWuwoRLoB1v0NuiQQW9fp/fj0nz9VI24l3+pMyPz
-GJ+epxo3FdVtigTxzteje+qqj3C/AFieRgwxha0DxGRwYByhrjbIDuhBViSq2aWs
-D847pV8bw9G74tu17fSU0+T9Hi48yavT5WGrc8VYqBYD40nqFlPT7NtFXywpK22Z
-ERvcefm9tQ3w6Y2WVPvbxNg42/n5pvRKj3lsbh0su1fZZHudWKWely9Pp7ilXwEG
-/rXo/eAQbTIHmV+cDR0/E93LP3stu5SjltxMcPxqn4SRkQPKczBbz3tdX0XZMVsG
-uSLkYKFDa/P/L/i3VfJRmmoqF+pWRU47asMW2mmOkSW1B8/Z9lJ8dI4Pk43eX2G3
-kBlOor6RCyrJaJcDnlwQ
-=e/v6
------END PGP SIGNATURE-----
-
---=-N3xLF+ZL4tGOr26omM/X--
-
+Sujith
