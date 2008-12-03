@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46848 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755942AbYLaPmp (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59005 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754934AbYLCVaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 10:42:45 -0500
-Message-Id: <20081231154237.228873645@w1.fi> (sfid-20081231_170904_289071_5B6A0F9B)
-References: <20081231153834.840526845@w1.fi>
-Date: Wed, 31 Dec 2008 17:38:44 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [RFC 10/11] mac80211: 802.11w - Drop unprotected robust management frames if MFP is used
+	Wed, 3 Dec 2008 16:30:13 -0500
+Date: Wed, 3 Dec 2008 16:22:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Greg KH <greg@kroah.com>, stable@kernel.org, sfr@canb.auug.org.au,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [stable] [PATCH 1/3] ath9k: Handle -ENOMEM on RX gracefully
+Message-ID: <20081203212255.GB4263@tuxdriver.com> (sfid-20081203_223041_672236_AB64FD45)
+References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com> <1228251082-11677-2-git-send-email-lrodriguez@atheros.com> <1228251082-11677-3-git-send-email-lrodriguez@atheros.com> <1228251082-11677-4-git-send-email-lrodriguez@atheros.com> <20081203001253.GC14943@kroah.com> <43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com> <20081203002404.GA22789@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081203002404.GA22789@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use ieee80211_drop_unencrypted() to decide whether a received frame
-should be dropped with management frames, too. If MFP is negotiated,
-unprotected robust management frames will be dropped.
+On Tue, Dec 02, 2008 at 07:24:04PM -0500, John W. Linville wrote:
+> On Tue, Dec 02, 2008 at 04:20:32PM -0800, Luis R. Rodriguez wrote:
+> > On Tue, Dec 2, 2008 at 4:12 PM, Greg KH <greg@kroah.com> wrote:
+> > > I don't see this patch upstream in Linus's tree.  Am I just missing it
+> > > and if so, do you know the git commit id?
+> > 
+> > Nope sorry, John has yet to send his pending-fixes branch to davem and
+> > so forth, which would contain it AFAICT. Please correct me if I'm
+> > wrong John.
+> 
+> It has been sent, and Dave sent his pull request to Linus today
+> (or maybe yesterday).  I'll try to dig-up the commit IDs tomorrow.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Hmmm...I seem to have sent this to -next instead.  Since it fixes an
+Oops, I guess I can requeue for 2.6.28.
 
-
----
- net/mac80211/rx.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
---- wireless-testing.orig/net/mac80211/rx.c	2008-12-31 17:17:04.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2008-12-31 17:20:37.000000000 +0200
-@@ -1703,6 +1703,9 @@ ieee80211_rx_h_action(struct ieee80211_r
- 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
- 		return RX_DROP_MONITOR;
- 
-+	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
-+		return RX_DROP_MONITOR;
-+
- 	/* all categories we currently handle have action_code */
- 	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
- 		return RX_DROP_MONITOR;
-@@ -1773,10 +1776,14 @@ static ieee80211_rx_result debug_noinlin
- ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
- 
- 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
- 		return RX_DROP_MONITOR;
- 
-+	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
-+		return RX_DROP_MONITOR;
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		return ieee80211_mesh_rx_mgmt(sdata, rx->skb, rx->status);
- 
-
+John
 -- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
