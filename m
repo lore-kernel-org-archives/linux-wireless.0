@@ -1,46 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51163 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:27730 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752214AbYLZDGC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Dec 2008 22:06:02 -0500
-Subject: Re: Firmware errors with ipw2200 when connected to an WPA-enabled
-	AP
-From: Zhu Yi <yi.zhu@intel.com>
-To: Mihai Moldovan <ionic@ionic.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <495443E6.404@ionic.de>
-References: <495443E6.404@ionic.de>
+	id S1752653AbYLCDP2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 22:15:28 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 19:15:28 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Sujith <Sujith.Manoharan@atheros.com>
+Subject: [PATCH v2 2/2] ath9k: Use GFP_ATOMIC when allocating TX private area
+Date: Tue, 2 Dec 2008 19:15:24 -0800
+Message-ID: <1228274124-25140-3-git-send-email-lrodriguez@atheros.com> (sfid-20081203_041532_088187_7AE2BE72)
+In-Reply-To: <1228274124-25140-2-git-send-email-lrodriguez@atheros.com>
+References: <1228274124-25140-1-git-send-email-lrodriguez@atheros.com>
+ <1228274124-25140-2-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Fri, 26 Dec 2008 11:05:06 +0800
-Message-Id: <1230260706.27521.15.camel@debian> (sfid-20081226_040608_292317_E8A4E388)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-12-26 at 10:39 +0800, Mihai Moldovan wrote:
-> So, I am really curious about this, although not being fatal in
-> itself,
-> the errors are pretty annoying.
+Using GFP_KERNEL was wrong and produces a 'scheduling while atomic'
+bug as we're in a tasklet. Also, check for proper return values
+now, in case allocation fails and be sure to stop the TX queue
+in case of memory issues but gaurantee the TX queue will
+eventually be woken up.
 
-The fatal error is from the perspective of the driver. It is handled
-transparent to the users now except the error logs.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/xmit.c |   26 ++++++++++++++++++++++++--
+ 1 files changed, 24 insertions(+), 2 deletions(-)
 
-> Another little question: will the card be supported by the new
-> iwlwifi/iwlcore/iwlagn drivers anytime soon, or will the "old" ipw2200
-> driver be the only one for this card?
-
-No, iwlagn won't support ipw2200 because of the design difference.
-
-> Someone really should update the
-> documentation, at least in the kernel build system regarding this,
-> currently "There is no help available." :)
-
-I think John is working on reordering the ipw2100/2200 to ipw2x00 folder
-which is parallel to iwlwifi.
-
-Thanks,
--yi
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index ef209b5..435af61 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -1663,7 +1663,9 @@ static int ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
+ 	int hdrlen;
+ 	__le16 fc;
+ 
+-	tx_info_priv = kzalloc(sizeof(*tx_info_priv), GFP_KERNEL);
++	tx_info_priv = kzalloc(sizeof(*tx_info_priv), GFP_ATOMIC);
++	if (!tx_info_priv)
++		return -ENOMEM;
+ 	tx_info->rate_driver_data[0] = tx_info_priv;
+ 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+ 	fc = hdr->frame_control;
+@@ -1813,10 +1815,30 @@ int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb,
+ 
+ 	r = ath_tx_setup_buffer(sc, bf, skb, txctl);
+ 	if (r) {
+-		spin_lock_bh(&sc->sc_txbuflock);
++		struct ath_txq *txq = NULL;
++		int qnum;
++
++		qnum = ath_get_hal_qnum(skb_get_queue_mapping(skb), sc);
++		txq = &sc->sc_txq[qnum];
++
+ 		DPRINTF(sc, ATH_DBG_FATAL, "TX mem alloc failure\n");
++
++		/* upon ath_tx_processq() this TX queue will be resumed, we
++		 * guarantee this will happen by knowing beforehand that
++		 * we will at least have to run TX completionon one buffer
++		 * on the queue */
++		spin_lock_bh(&txq->axq_lock);
++		if (ath_txq_depth(sc, txq->axq_qnum) > 1) {
++			ieee80211_stop_queue(sc->hw,
++				skb_get_queue_mapping(skb));
++			txq->stopped = 1;
++		}
++		spin_unlock_bh(&txq->axq_lock);
++
++		spin_lock_bh(&sc->sc_txbuflock);
+ 		list_add_tail(&bf->list, &sc->sc_txbuf);
+ 		spin_unlock_bh(&sc->sc_txbuflock);
++
+ 		return r;
+ 	}
+ 
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
