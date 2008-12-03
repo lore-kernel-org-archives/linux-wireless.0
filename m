@@ -1,88 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24760 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:39210 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751848AbYLBUvf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 15:51:35 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <stable@kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <sfr@canb.auug.org.au>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Maciej Zenczykowski <zenczykowski@gmail.com>,
-	Bennyam Malavazi <Bennyam.Malavazi@atheros.com>
-Subject: [PATCH] ath9k: Fix SW-IOMMU bounce buffer starvation
-Date: Tue, 2 Dec 2008 12:51:20 -0800
-Message-ID: <1228251082-11677-2-git-send-email-lrodriguez@atheros.com> (sfid-20081202_215138_802370_88E6770E)
-In-Reply-To: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
-References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1753609AbYLCWt6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Dec 2008 17:49:58 -0500
+Subject: Re: iwlwifi - rfkill only works if the interface is up
+From: Dan Williams <dcbw@redhat.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com
+In-Reply-To: <200812012250.37587.helmut.schaa@gmail.com>
+References: <200812011311.17346.helmut.schaa@gmail.com>
+	 <1228147151.31158.142.camel@violet.holtmann.net>
+	 <20081201211231.GC3479@tuxdriver.com>
+	 <200812012250.37587.helmut.schaa@gmail.com>
 Content-Type: text/plain
+Date: Wed, 03 Dec 2008 17:48:40 -0500
+Message-Id: <1228344520.25647.27.camel@localhost.localdomain> (sfid-20081203_235003_321234_C257ED58)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should fix the SW-IOMMU bounce buffer starvation
-seen ok kernel.org bugzilla 11811:
+On Mon, 2008-12-01 at 22:50 +0100, Helmut Schaa wrote:
+> Am Montag, 1. Dezember 2008 schrieb John W. Linville:
+> > FWIW, I'm not sure what the point of checking rfkill state would be if the
+> > adapter is down anyway.  Hmmm...maybe management of the rfkill LED?
+> 
+> The main intention was that user space programs might want to listen to rfkill
+> events in order to bring the interface up once the killswitch is disabled.
+> 
+> AFAIK NetworkManager takes an interface down once it recognises that the
+> device is disabled through a killswitch. If the device is not able to notify
+> a rfkill state change if it is down NM cannot recognise when the device can
+> be brought up again.
+> 
+> Dan, is that correct?
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11811
+Yes, but *only* because the rfkill layer < 2.6.27 (and still HAL
+doesn't) didn't have any support for SOFT_BLOCK.  Once HAL grows support
+for 3 states (HW_BLOCK, SW_BLOCK, UNBLOCKED) in its killswitch objects,
+then I'll:
 
-Users on MacBook Pro 3.1/MacBook v2 would see something like:
+1) switch NM over to use SOFT_BLOCK when "disabling wireless", or if
+there is no killswitch then just turn off the TX power with SIOCSIWTXPOW
 
-DMA: Out of SW-IOMMU space for 4224 bytes at device 0000:0b:00.0
+2) Not take the interface down at all, but ensure that rfkill has
+occurred
 
-Unfortunately its only easy to trigger on MacBook Pro 3.1/MacBook v2
-so far so its difficult to debug (even with swiotlb=force).
+The only reason that NM takes the interface down is that previously,
+this was the way to ensure that the radio was not transmitting.
+Unfortunately, that also unloads firmware on iwl3945, meaning that the
+3945 (and thus NM) cannot detect unblocking of the 3945 radio.
 
-We were pci_unmap_single()'ing less bytes than what we called
-for with pci_map_single() and as such we were starving
-the swiotlb from its 64MB amount of bounce buffers. We remain
-consistent and now always use sc->rxbufsize for RX. While at
-it we update the beacon DMA maps as well to only use the data
-portion of the skb, previous to this we were pci_map_single()'ing
-more data for beaconing than what we tell the hardware it can use,
-therefore pushing more iotlb abuse.
+The reason we cannot use SIOCSIWTXPOW today is that with ipw2100,
+ipw2200, and ipw2915, HAL reports that the radio is HW_BLOCKed and thus
+there's no way to know that the radio can be unblocked via software
+(like the applet menu).
 
-Still not sure why this is so easily triggerable on
-MacBook Pro 3.1, it may be the hardware configuration
-tends to use more memory > 3GB mark for DMA.
+Dan
 
-Signed-off-by: Maciej Zenczykowski <zenczykowski@gmail.com>
-Signed-off-by: Bennyam Malavazi <Bennyam.Malavazi@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/recv.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index 20ddb7a..4d23827 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -1011,7 +1011,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 
- 		pci_dma_sync_single_for_cpu(sc->pdev,
- 					    bf->bf_buf_addr,
--					    skb_tailroom(skb),
-+					    sc->sc_rxbufsize,
- 					    PCI_DMA_FROMDEVICE);
- 		pci_unmap_single(sc->pdev,
- 				 bf->bf_buf_addr,
-@@ -1303,8 +1303,7 @@ dma_addr_t ath_skb_map_single(struct ath_softc *sc,
- 	 * NB: do NOT use skb->len, which is 0 on initialization.
- 	 * Use skb's entire data area instead.
- 	 */
--	*pa = pci_map_single(sc->pdev, skb->data,
--		skb_end_pointer(skb) - skb->head, direction);
-+	*pa = pci_map_single(sc->pdev, skb->data, sc->sc_rxbufsize, direction);
- 	return *pa;
- }
- 
-@@ -1314,6 +1313,5 @@ void ath_skb_unmap_single(struct ath_softc *sc,
- 			  dma_addr_t *pa)
- {
- 	/* Unmap skb's entire data area */
--	pci_unmap_single(sc->pdev, *pa,
--		skb_end_pointer(skb) - skb->head, direction);
-+	pci_unmap_single(sc->pdev, *pa, sc->sc_rxbufsize, direction);
- }
--- 
-1.5.6.rc2.15.g457bb.dirty
 
