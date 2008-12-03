@@ -1,89 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yorgi.telenet-ops.be ([195.130.133.69]:53225 "EHLO
-	yorgi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753115AbYLHQEE (ORCPT
+Received: from mail-gx0-f18.google.com ([209.85.217.18]:47285 "EHLO
+	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752730AbYLCWOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 11:04:04 -0500
-Received: from nelson.telenet-ops.be (nelson.telenet-ops.be [195.130.133.66])
-	by yorgi.telenet-ops.be (Postfix) with ESMTP id D89DF681E65
-	for <linux-wireless@vger.kernel.org>; Mon,  8 Dec 2008 17:04:02 +0100 (CET)
-Message-ID: <493D454A.7000901@telenet.be> (sfid-20081208_170410_463891_4885052B)
-Date: Mon, 08 Dec 2008 17:03:22 +0100
-From: Ian Schram <ischram@telenet.be>
+	Wed, 3 Dec 2008 17:14:17 -0500
+Received: by gxk11 with SMTP id 11so935339gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 14:14:15 -0800 (PST)
+Message-ID: <43e72e890812031414m6a5782e7ga8eed8d91fe056b2@mail.gmail.com> (sfid-20081203_231421_804863_562C970C)
+Date: Wed, 3 Dec 2008 14:14:14 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ath9k-devel] [stable] [PATCH 1/3] ath9k: Handle -ENOMEM on RX gracefully
+Cc: sfr@canb.auug.org.au, ath9k-devel@venema.h4ckr.net,
+	"Greg KH" <greg@kroah.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@kernel.org
+In-Reply-To: <20081203212255.GB4263@tuxdriver.com>
 MIME-Version: 1.0
-To: David Shwatrz <dshwatrz@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Three short questions about iwlwifi
-References: <31436f4a0812072238x5d7a2cc8saeec3eb44726b0c7@mail.gmail.com>
-In-Reply-To: <31436f4a0812072238x5d7a2cc8saeec3eb44726b0c7@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
+	 <1228251082-11677-2-git-send-email-lrodriguez@atheros.com>
+	 <1228251082-11677-3-git-send-email-lrodriguez@atheros.com>
+	 <1228251082-11677-4-git-send-email-lrodriguez@atheros.com>
+	 <20081203001253.GC14943@kroah.com>
+	 <43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com>
+	 <20081203002404.GA22789@tuxdriver.com>
+	 <20081203212255.GB4263@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-David Shwatrz wrote:
-> Hello,
-> 
-> I tried to delve into the iwlwifi code and I have
-> 3 short questions about iwlwifi; I hope that I can get some advice here.
+On Wed, Dec 3, 2008 at 1:22 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Tue, Dec 02, 2008 at 07:24:04PM -0500, John W. Linville wrote:
+>> On Tue, Dec 02, 2008 at 04:20:32PM -0800, Luis R. Rodriguez wrote:
+>> > On Tue, Dec 2, 2008 at 4:12 PM, Greg KH <greg@kroah.com> wrote:
+>> > > I don't see this patch upstream in Linus's tree.  Am I just missing it
+>> > > and if so, do you know the git commit id?
+>> >
+>> > Nope sorry, John has yet to send his pending-fixes branch to davem and
+>> > so forth, which would contain it AFAICT. Please correct me if I'm
+>> > wrong John.
+>>
+>> It has been sent, and Dave sent his pull request to Linus today
+>> (or maybe yesterday).  I'll try to dig-up the commit IDs tomorrow.
 >
-what i have picked up. In no way the best possible answers.
- 	
-> 
-> 1) I see that there seems to be common code in 3945 and agn.
-> Are there intentions to make use of agn in 3945 in the future to avoid
-> code duplication, or is it a design decision to make a full separation between
-> 3945 and agn (so even when it is possible to use common code, to avoid
-> it in order
-> not to cause possible problems in the future).
-The codebase has taken on quite a few forms. There used to be a somewhat unified
-codebase, which through quite a few of defines was expanded at compile time.
-For several reasons it was split. Then
-some states where iwl3945 was split off and the 4965 later got the 5xxx parts
-'added on' ;-). There have been several mentions of a desire to turn a large part of
-the common code in a sort of library. However this will still require lots of work.
-The current way the code is split up with the iwl-* files which were -afaik- meant
-to be the start of a library requires all callers to have the same priv struct.
-which makes it harder to extend for 3945(unless once again creating a compile time split).
+> Hmmm...I seem to have sent this to -next instead.  Since it fixes an
+> Oops, I guess I can requeue for 2.6.28.
 
-So intention yes, but...
-> 
-> 2)  In some places in iwlwifi we have:
-> #ifdef IEEE80211_CONF_CHANNEL_SWITCH.
-> 
-> For example, iwl-agn.c or iwl3945-base.c.
-> What is this define ? is it not (an uneeded) legacy from when the drivers
-> were not part of the tree?
-O wow, that took me back :-), the feature indeeds appears to be removed entirely
-from mac80211 so this is probably dead code. Or code waiting for the return of the
-feature. It's probably past the point where it makes sense to keep the code for
-backwards compatibilities sake.
+Pretty please :)
 
-> 
-> 3) Little question about implementation:
-> 
-> In iwl3945-base.c:
-> iwl3945_commit_rxon() calls iwl3945_clear_stations_table(priv);
-> so is it necessary in iwl3945_set_mode() to call also
-> iwl3945_clear_stations_table() , since we anyhow call iwl3945_commit_rxon()
-> afterwards ?
-> the only thing iwl3945_clear_stations_table() does is zeros
-> priv->num_stations and zeros priv->stations.
-> 
-This is pretty volatile code. And you're assumption doesn't take into account
-what happens when iwl3945_commit_rxon() takes an early out due to some error.
-
-for example, during rfkill is on set_mode() will clear its station table, but the rxon
-command is never commited.
-
-However i can't say for sure that we can't do without that line. But it probably
-isn't a bad idea to give it extra thought.
-
-> David S
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+ Luis
