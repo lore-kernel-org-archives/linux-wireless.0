@@ -1,70 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:6428 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756987AbYLFQIh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 11:08:37 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so256868ugf.37
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Dec 2008 08:08:35 -0800 (PST)
-From: Henning Rogge <hrogge@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
-Date: Sat, 6 Dec 2008 17:08:27 +0100
-Cc: Henning Rogge <rogge@fgan.de>,
+Received: from mail.atheros.com ([12.36.123.2]:16614 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754369AbYLCCVK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 21:21:10 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 18:21:10 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: <Sujith.Manoharan@atheros.com>, <senthilkumar@atheros.com>,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-References: <200811252131.30161.hrogge@googlemail.com> <200812061646.36044.hrogge@googlemail.com> <1228579172.16752.21.camel@johannes.berg>
-In-Reply-To: <1228579172.16752.21.camel@johannes.berg>
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 1/2] ath9k: Check for pci_map_single() errors
+Date: Tue, 2 Dec 2008 18:21:05 -0800
+Message-ID: <1228270866-21516-2-git-send-email-lrodriguez@atheros.com> (sfid-20081203_032114_542864_1CA86ADF)
+In-Reply-To: <1228270866-21516-1-git-send-email-lrodriguez@atheros.com>
+References: <1228270866-21516-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1843119.EvLoY9NGTz";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200812061708.32369.hrogge@googlemail.com> (sfid-20081206_170843_429278_204B5185)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1843119.EvLoY9NGTz
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+pci_map_single() can fail so detect those errors with
+pci_dma_mapping_error() and deal with them accordingly.
 
-On Saturday 06 December 2008 16:59:32 Johannes Berg wrote:
-> For one, I'm a bit concerned that the calculation is fairly complex, and
-> may not always be necessary; especially divisions can be expensive on
-> some CPUs.
-What if I push the calculation into nl80211.c, so it will be only called wh=
-en=20
-the a userspace process requests the station info ? This would mean the=20
-calculation is not done at all until someone needs the rate info.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/beacon.c |   16 +++++++++++++++-
+ drivers/net/wireless/ath9k/recv.c   |   15 +++++++++++++++
+ drivers/net/wireless/ath9k/xmit.c   |   23 +++++++++++++++++++++--
+ 3 files changed, 51 insertions(+), 3 deletions(-)
 
-> Also, there are duplicate numbers possible, so just the pure bitrate
-> will _not_ actually be "the typical information" because it's not
-> specific enough, when debugging, for example, you will probably need to
-> know whether it's short-gi or not.
-Don't you think the normal nl80211 use will just be a display of "how fast =
-are=20
-we doing at the moment" ? Most applications don't even need to set a rate,=
-=20
-they just want to show the user some feedback.
+diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
+index e80d9b9..a393761 100644
+--- a/drivers/net/wireless/ath9k/beacon.c
++++ b/drivers/net/wireless/ath9k/beacon.c
+@@ -192,6 +192,13 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
+ 		pci_map_single(sc->pdev, skb->data,
+ 			       skb->len,
+ 			       PCI_DMA_TODEVICE);
++	if (unlikely(pci_dma_mapping_error(sc->pdev, bf->bf_buf_addr))) {
++		dev_kfree_skb(skb);
++		bf->bf_mpdu = NULL;
++		DPRINTF(sc, ATH_DBG_CONFIG,
++			"pci_dma_mapping_error() on beaconing\n");
++		return NULL;
++	}
+ 
+ 	skb = ieee80211_get_buffered_bc(sc->hw, vif);
+ 
+@@ -396,11 +403,18 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
+ 		memcpy(&hdr[1], &val, sizeof(val));
+ 	}
+ 
++	bf->bf_mpdu = skb;
+ 	bf->bf_buf_addr = bf->bf_dmacontext =
+ 		pci_map_single(sc->pdev, skb->data,
+ 			       skb->len,
+ 			       PCI_DMA_TODEVICE);
+-	bf->bf_mpdu = skb;
++	if (unlikely(pci_dma_mapping_error(sc->pdev, bf->bf_buf_addr))) {
++		dev_kfree_skb(skb);
++		bf->bf_mpdu = NULL;
++		DPRINTF(sc, ATH_DBG_CONFIG,
++			"pci_dma_mapping_error() on beacon alloc\n");
++		return -ENOMEM;
++	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index ba6194a..63d34fd 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -309,6 +309,14 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 			bf->bf_buf_addr = pci_map_single(sc->pdev, skb->data,
+ 					 sc->sc_rxbufsize,
+ 					 PCI_DMA_FROMDEVICE);
++			if (unlikely(pci_dma_mapping_error(sc->pdev, bf->bf_buf_addr))) {
++				dev_kfree_skb(skb);
++				bf->bf_mpdu = NULL;
++				DPRINTF(sc, ATH_DBG_CONFIG,
++					"pci_dma_mapping_error() on RX init\n");
++				error = -ENOMEM;
++				break;
++			}
+ 			bf->bf_dmacontext = bf->bf_buf_addr;
+ 		}
+ 		sc->sc_rxlink = NULL;
+@@ -594,6 +602,13 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		bf->bf_buf_addr = pci_map_single(sc->pdev, requeue_skb->data,
+ 					 sc->sc_rxbufsize,
+ 					 PCI_DMA_FROMDEVICE);
++		if (unlikely(pci_dma_mapping_error(sc->pdev, bf->bf_buf_addr))) {
++			dev_kfree_skb(requeue_skb);
++			bf->bf_mpdu = NULL;
++			DPRINTF(sc, ATH_DBG_CONFIG,
++				"pci_dma_mapping_error() on RX\n");
++			break;
++		}
+ 		bf->bf_dmacontext = bf->bf_buf_addr;
+ 
+ 		/*
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 413fbdd..ef209b5 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -1653,7 +1653,7 @@ static void ath_txq_drain_pending_buffers(struct ath_softc *sc,
+ 	}
+ }
+ 
+-static void ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
++static int ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
+ 				struct sk_buff *skb,
+ 				struct ath_tx_control *txctl)
+ {
+@@ -1712,9 +1712,18 @@ static void ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
+ 	/* DMA setup */
+ 
+ 	bf->bf_mpdu = skb;
++
+ 	bf->bf_dmacontext = pci_map_single(sc->pdev, skb->data,
+ 					   skb->len, PCI_DMA_TODEVICE);
++	if (unlikely(pci_dma_mapping_error(sc->pdev, bf->bf_dmacontext))) {
++		bf->bf_mpdu = NULL;
++		DPRINTF(sc, ATH_DBG_CONFIG,
++			"pci_dma_mapping_error() on TX\n");
++		return -ENOMEM;
++	}
++
+ 	bf->bf_buf_addr = bf->bf_dmacontext;
++	return 0;
+ }
+ 
+ /* FIXME: tx power */
+@@ -1786,10 +1795,12 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 	spin_unlock_bh(&txctl->txq->axq_lock);
+ }
+ 
++/* Upon failure caller should free skb */
+ int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb,
+ 		 struct ath_tx_control *txctl)
+ {
+ 	struct ath_buf *bf;
++	int r;
+ 
+ 	/* Check if a tx buffer is available */
+ 
+@@ -1800,7 +1811,15 @@ int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb,
+ 		return -1;
+ 	}
+ 
+-	ath_tx_setup_buffer(sc, bf, skb, txctl);
++	r = ath_tx_setup_buffer(sc, bf, skb, txctl);
++	if (r) {
++		spin_lock_bh(&sc->sc_txbuflock);
++		DPRINTF(sc, ATH_DBG_FATAL, "TX mem alloc failure\n");
++		list_add_tail(&bf->list, &sc->sc_txbuf);
++		spin_unlock_bh(&sc->sc_txbuflock);
++		return r;
++	}
++
+ 	ath_tx_start_dma(sc, bf, txctl);
+ 
+ 	return 0;
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
-Henning
-
-
---nextPart1843119.EvLoY9NGTz
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkk6o4AACgkQcenvcwAcHWc7cwCfQwh1XjgCpVAAIyghb5hAkXAk
-cjEAoImQZb+MMVUycDfZYh1U5UR8P64q
-=WKO/
------END PGP SIGNATURE-----
-
---nextPart1843119.EvLoY9NGTz--
