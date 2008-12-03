@@ -1,42 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:46397 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754221AbYLPPWm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 10:22:42 -0500
-Received: by ewy10 with SMTP id 10so3720763ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 07:22:40 -0800 (PST)
-Message-ID: <b6c5339f0812160722nab8516cj1ed4e6d397060d9d@mail.gmail.com> (sfid-20081216_162248_341305_691B3AA2)
-Date: Tue, 16 Dec 2008 10:22:39 -0500
-From: "Bob Copeland" <bcopeland@gmail.com>
-To: "Benoit PAPILLAULT" <benoit.papillault@free.fr>
-Subject: Re: [PATCH] ath5k: Updated padding stuff for the RX and TX side. TX side has been 100%
-Cc: "Jouni Malinen" <j@w1.fi>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-In-Reply-To: <4946C6D9.1060101@free.fr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1229351698-21116-1-git-send-email-benoit.papillault@free.fr>
-	 <20081215170613.GA22627@jm.kir.nu> <4946C6D9.1060101@free.fr>
+Received: from mga11.intel.com ([192.55.52.93]:53617 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750920AbYLCJcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Dec 2008 04:32:50 -0500
+Subject: Re: [Ipw2100-devel] [PATCH] ipw2200: rework scan handling while
+	associated
+From: Zhu Yi <yi.zhu@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>
+In-Reply-To: <200812011110.02974.helmut.schaa@gmail.com>
+References: <200811261805.39953.helmut.schaa@gmail.com>
+	 <200811281031.04996.helmut.schaa@gmail.com>
+	 <1228100318.2558.152.camel@debian.sh.intel.com>
+	 <200812011110.02974.helmut.schaa@gmail.com>
+Content-Type: text/plain
+Date: Wed, 03 Dec 2008 17:33:13 +0800
+Message-Id: <1228296794.2558.324.camel@debian.sh.intel.com> (sfid-20081203_103256_028002_BEE3C322)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 15, 2008 at 4:06 PM, Benoit PAPILLAULT
-<benoit.papillault@free.fr> wrote:
+On Mon, 2008-12-01 at 18:10 +0800, Helmut Schaa wrote:
+> That only happens while associated. Scanning while not associated
+> works like
+> a charm.
+> 
+> Here are some more informations:
+> If I load the unmodified module with debug=0x3FFF I get the following
+> log
+> when triggering a scan while associated:
+> 
+> ipw2200: U ipw_wx_set_scan Start scan
+> 00000000 03 00 00 00 0D 24 28 2C  30 34 38 3C 40 95 99 9D   .....$(,
+> 048<@...
+> 00000010 A1 A5 4A 02 03 04 05 06  07 08 09 0A 0B 00 00
+> 00   ..J..... ........
+> 00000020 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00
+> 00   ........ ........
+> 00000030 00 00 00 00 00 00 00 00  00 00 03 33 31 11 13
+> 33   ........ ...31..3
+> 00000040 33 03 33 33 33 33 30 00  00 00 00 00 00 00 00 00
+> 3.33330. ........
+> 00000050 00 00 00 00 00 00 00 00  78 00 14 00 14 00 14 00   ........
+> x.......
+> martian source 255.255.255.255 from 149.44.170.156, on dev eth1
+> ll header: ff:ff:ff:ff:ff:ff:00:19:99:28:58:5b:08:00
+> ipw2200: I ipw_rx_notification type = 12 (46 bytes)
+> ipw2200: I ipw_rx_notification Scan result for channel 36
+> ipw2200: I ipw_rx_notification type = 12 (46 bytes)
+> ipw2200: I ipw_rx_notification Scan result for channel 40
+> ipw2200: I ipw_rx_notification type = 12 (46 bytes)
+> ipw2200: I ipw_rx_notification Scan result for channel 44
+> ipw2200: I ipw_rx_notification type = 25 (4 bytes)
+> ipw2200: I ipw_rx_notification type = 12 (46 bytes)
+> ipw2200: I ipw_rx_notification Scan result for channel 48
+> 
+> The channels 36-48 are active 11a channels. The next channel would be
+> 52 which
+> is a passive channel.
+> 
+> martian source 255.255.255.255 from 149.44.170.66, on dev eth1
+> ll header: ff:ff:ff:ff:ff:ff:00:0e:0c:aa:5c:c5:08:00
+> ipw2200: I ipw_rx_notification type = 25 (4 bytes)
+> ipw2200: I ipw_rx_notification type = 25 (4 bytes)
+> ipw2200: I ipw_rx_notification type = 25 (4 bytes)
+> ipw2200: I ipw_rx_notification type = 25 (4 bytes)
+> ipw2200: I ipw_rx_notification type = 25 (4 bytes)
+> ipw2200: I ipw_rx_notification type = 25 (4 bytes)
+> ipw2200: I ipw_rx_notification type = 17 (8 bytes)
+> ipw2200: I ipw_handle_missed_beacon Aborting scan with missed beacon.
+> ipw2200: I ipw_handle_missed_beacon Missed beacon: 1
+> 
+> Aha, the firmware noticed a beacon miss before the scan watchdog
+> restarts the firmware (the log is without timestamps, sorry).
+> 
+> ipw2200: I ipw_rx_notification type = 13 (4 bytes)
+> ipw2200: I ipw_rx_notification Scan completed: type 1, 5 channels, 2
+> status
+> 
+> Status 2 -> Scan aborted.
 
-> frames. To me, the bug we have seen when receiving a ACK frame in
-> monitor mode was not because "ACK is a small control frame", it was
-> because the header length we computed was smaller than what the hardware
-> considered.
+We will look at this.
 
-It's because data frames have a payload and ACKs do not.
+Thanks,
+-yi
 
-> To reply to Bob as well, we need to compute the number of padded bytes +
-> the position at which the padding occurs, so proper "header" length is
-> required.
-
-Well, anyway John already picked up your earlier (better, IMHO) patch.
-Now we just need to fix the tx descriptors :)
-
--- 
-Bob Copeland %% www.bobcopeland.com
