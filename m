@@ -1,97 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25148 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752434AbYLVSVP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 13:21:15 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:21:14 -0800
+Received: from yx-out-2324.google.com ([74.125.44.28]:56320 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752487AbYLCEMf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 23:12:35 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so1374117yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 20:12:33 -0800 (PST)
+Message-ID: <43e72e890812022012o7759400mf002f51c0a3f0eb@mail.gmail.com> (sfid-20081203_051241_197898_45D77BEB)
+Date: Tue, 2 Dec 2008 20:12:33 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v2 11/18] iwlwifi: make use of conf_is_ht*() helpers
-Date: Mon, 22 Dec 2008 10:20:32 -0800
-Message-ID: <1229970039-10561-12-git-send-email-lrodriguez@atheros.com> (sfid-20081222_193905_285144_CC60A7AE)
-In-Reply-To: <1229970039-10561-11-git-send-email-lrodriguez@atheros.com>
-References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-4-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-6-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-7-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-8-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-9-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-10-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-11-git-send-email-lrodriguez@atheros.com>
+To: Sujith <m.sujith@gmail.com>
+Subject: Re: [ath9k-devel] [PATCH v2 2/2] ath9k: Use GFP_ATOMIC when allocating TX private area
+Cc: "Senthil Balasubramanian" <senthilkumar@atheros.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <18742.299.281327.259785@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+References: <1228274124-25140-1-git-send-email-lrodriguez@atheros.com>
+	 <1228274124-25140-2-git-send-email-lrodriguez@atheros.com>
+	 <1228274124-25140-3-git-send-email-lrodriguez@atheros.com>
+	 <18742.299.281327.259785@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+On Tue, Dec 2, 2008 at 7:46 PM, Sujith <m.sujith@gmail.com> wrote:
+> Luis R. Rodriguez wrote:
+>> @@ -1813,10 +1815,30 @@ int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb,
+>>
+>>       r = ath_tx_setup_buffer(sc, bf, skb, txctl);
+>>       if (r) {
+>> -             spin_lock_bh(&sc->sc_txbuflock);
+>> +             struct ath_txq *txq = NULL;
+>> +             int qnum;
+>> +
+>> +             qnum = ath_get_hal_qnum(skb_get_queue_mapping(skb), sc);
+>> +             txq = &sc->sc_txq[qnum];
+>> +
+>>               DPRINTF(sc, ATH_DBG_FATAL, "TX mem alloc failure\n");
+>> +
+>> +             /* upon ath_tx_processq() this TX queue will be resumed, we
+>> +              * guarantee this will happen by knowing beforehand that
+>> +              * we will at least have to run TX completionon one buffer
+>> +              * on the queue */
+>> +             spin_lock_bh(&txq->axq_lock);
+>> +             if (ath_txq_depth(sc, txq->axq_qnum) > 1) {
+>> +                     ieee80211_stop_queue(sc->hw,
+>> +                             skb_get_queue_mapping(skb));
+>> +                     txq->stopped = 1;
+>> +             }
+>> +             spin_unlock_bh(&txq->axq_lock);
+>> +
+>> +             spin_lock_bh(&sc->sc_txbuflock);
+>>               list_add_tail(&bf->list, &sc->sc_txbuf);
+>>               spin_unlock_bh(&sc->sc_txbuflock);
+>> +
+>
+> The queue is already available, we make sure of that before calling ath_tx_start().
+> And the queue is sent through txctl.txq, you don't have to calculate the queue number again.
+>
+> So, just stopping the queue and moving the buffer back to the free list would be enough.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index f032167..59d4e11 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -1131,7 +1131,7 @@ static int rs_switch_to_mimo2(struct iwl_priv *priv,
- 	s32 rate;
- 	s8 is_green = lq_sta->is_green;
- 
--	if (!conf->ht.enabled || !sta->ht_cap.ht_supported)
-+	if (!conf_is_ht(conf) || !sta->ht_cap.ht_supported)
- 		return -1;
- 
- 	if (((sta->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >> 2)
-@@ -1198,7 +1198,7 @@ static int rs_switch_to_siso(struct iwl_priv *priv,
- 	u8 is_green = lq_sta->is_green;
- 	s32 rate;
- 
--	if (!conf->ht.enabled || !sta->ht_cap.ht_supported)
-+	if (!conf_is_ht(conf) || !sta->ht_cap.ht_supported)
- 		return -1;
- 
- 	IWL_DEBUG_RATE("LQ: try to switch to SISO\n");
-@@ -1998,7 +1998,7 @@ lq_update:
- 		 * stay with best antenna legacy modulation for a while
- 		 * before next round of mode comparisons. */
- 		tbl1 = &(lq_sta->lq_info[lq_sta->active_tbl]);
--		if (is_legacy(tbl1->lq_type) && !conf->ht.enabled &&
-+		if (is_legacy(tbl1->lq_type) && !conf_is_ht(conf) &&
- 		    lq_sta->action_counter >= 1) {
- 			lq_sta->action_counter = 0;
- 			IWL_DEBUG_RATE("LQ: STAY in legacy table\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 05cd04c..99a17d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -523,9 +523,9 @@ static void iwl_ht_conf(struct iwl_priv *priv,
- 	 */
- 
- 	iwl_conf->extension_chan_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
--	if (priv->hw->conf.ht.channel_type == NL80211_CHAN_HT40MINUS)
-+	if (conf_is_ht40_minus(&priv->hw->conf))
- 		iwl_conf->extension_chan_offset = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
--	else if(priv->hw->conf.ht.channel_type == NL80211_CHAN_HT40PLUS)
-+	else if (conf_is_ht40_plus(&priv->hw->conf))
- 		iwl_conf->extension_chan_offset = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
- 
- 	/* If no above or below channel supplied disable FAT channel */
-@@ -2553,7 +2553,7 @@ static int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 	mutex_lock(&priv->mutex);
- 	IWL_DEBUG_MAC80211("enter to channel %d\n", conf->channel->hw_value);
- 
--	priv->current_ht_config.is_ht = conf->ht.enabled;
-+	priv->current_ht_config.is_ht = conf_is_ht(conf);
- 
- 	if (conf->radio_enabled && iwl_radio_kill_sw_enable_radio(priv)) {
- 		IWL_DEBUG_MAC80211("leave - RF-KILL - waiting for uCode\n");
--- 
-1.6.1.rc3.51.g5832d
+ath_test_get_txq() will not return the queue only if the queue is
+getting full. What the check above guarantees is we have at least one
+buffer to run through procesq before disabling the TX queue, otherwise
+the queue won't be be woken up. Or am I missing something? That is,
+say you just have to TX one skb and we hit -ENOMEM on
+ath_tx_setup_buffer() and you disable the queue. How will this queue
+be awoken if this is true in ath_tx_processq():
 
+list_empty(&txq->axq_q)
+
+  Luis
