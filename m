@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:47032 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751135AbYL2S1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 13:27:40 -0500
-Subject: Re: Hostapd doesn't like crda
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Dan E <trg_info@mailhaven.com>, Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081229161828.GT5944@tesla>
-References: <200812272208.20153.mb@bu3sch.de>
-	 <200812291128.00512.mb@bu3sch.de> <20081229155613.GR5944@tesla>
-	 <200812291704.28163.mb@bu3sch.de>  <20081229161828.GT5944@tesla>
-Content-Type: text/plain
-Date: Mon, 29 Dec 2008 13:27:36 -0500
-Message-Id: <1230575256.22537.3.camel@dv> (sfid-20081229_192743_597498_819BE2B5)
-Mime-Version: 1.0
+Received: from rn-out-0910.google.com ([64.233.170.188]:65432 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753795AbYLCAOc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2008 19:14:32 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so2718723rnd.17
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 16:14:30 -0800 (PST)
+Message-ID: <43e72e890812021614i103235few3a19721c6ca1d0cc@mail.gmail.com> (sfid-20081203_011445_943399_795D4F1C)
+Date: Tue, 2 Dec 2008 16:14:30 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Subject: Re: [PATCH] ath9k: Use GFP_ATOMIC when allocating private area
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@atheros.com, Luis.Rodriguez@atheros.com,
+	Senthilkumar.Balasubramanian@atheros.com
+In-Reply-To: <18741.12999.753996.233483@gargle.gargle.HOWL>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <18741.12999.753996.233483@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-12-29 at 08:18 -0800, Luis R. Rodriguez wrote:
-> > I think this wouldn't be hackish, but do we actually _know_ when crda has finished
-> > uploading regulatory information? Does it do it all in one step?
-> 
-> It would go in through another nl80211 command, NL80211_CMD_SET_REG. nl80211 eventually
-> calls set_regdom() and this will set it, so if all goes well we can remove the timer
-> at the end if its active (other means can call CRDA like for 802.11d or the wireless core
-> upon initialization).
+On Tue, Dec 2, 2008 at 5:06 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
 
-Can we have a command to _get_ regulatory settings?  I think it would be
-useful.  Then hostapd could wait until the correct settings are active.
-If it doesn't happen after some time, hostapd should exit with an error.
+> --- a/drivers/net/wireless/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath9k/xmit.c
+> @@ -1787,7 +1793,12 @@ int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb,
+>                return -1;
+>        }
+>
+> -       ath_tx_setup_buffer(sc, bf, skb, txctl);
+> +       ret = ath_tx_setup_buffer(sc, bf, skb, txctl);
+> +       if (ret) {
+> +               DPRINTF(sc, ATH_DBG_FATAL, "TX mem alloc failure\n");
+> +               return ret;
 
-It would be even better if hostapd could wait for an event notifying of
-the regulatory settings change.
+Hm, this doesn't add the bf back to the txq, so we'd run out of bf's
+completely when on low memory, eventually leaving the list always
+empty. I'll resend with that added and a few more changes.
 
--- 
-Regards,
-Pavel Roskin
+  Luis
