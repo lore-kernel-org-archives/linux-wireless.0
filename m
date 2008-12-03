@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41681 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250AbYL3Wjn (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.185]:52072 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193AbYLCCBY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 17:39:43 -0500
-Subject: Re: mac80211 (ath9k, ath5k, etc.) set BSSID Patch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
-	berlin@berlin.freifunk.net
-In-Reply-To: <20081230223611.163110@gmx.net> (sfid-20081230_233642_601178_E4AB42EE)
-References: <20081230025651.6500@gmx.net>
-	 (sfid-20081230_035657_768921_742B8565) <1230633565.3850.7.camel@johannes>
-	 <20081230223611.163110@gmx.net> (sfid-20081230_233642_601178_E4AB42EE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LARFSvx3Uj/NlXeEn2Jt"
-Date: Tue, 30 Dec 2008 23:40:11 +0100
-Message-Id: <1230676811.3850.22.camel@johannes> (sfid-20081230_233948_041685_97671A2D)
-Mime-Version: 1.0
+	Tue, 2 Dec 2008 21:01:24 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so2085257tic.23
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 18:01:21 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18741.59362.77483.600612@localhost.localdomain> (sfid-20081203_030130_770934_BF07EF96)
+Date: Wed, 3 Dec 2008 07:28:58 +0530
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@atheros.com, Luis.Rodriguez@atheros.com,
+	Senthilkumar.Balasubramanian@atheros.com
+Subject: Re: [PATCH] ath9k: Use GFP_ATOMIC when allocating private area
+In-Reply-To: <43e72e890812021614i103235few3a19721c6ca1d0cc@mail.gmail.com>
+References: <18741.12999.753996.233483@gargle.gargle.HOWL>
+	<43e72e890812021614i103235few3a19721c6ca1d0cc@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis R. Rodriguez wrote:
+> On Tue, Dec 2, 2008 at 5:06 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> 
+> > --- a/drivers/net/wireless/ath9k/xmit.c
+> > +++ b/drivers/net/wireless/ath9k/xmit.c
+> > @@ -1787,7 +1793,12 @@ int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb,
+> >                return -1;
+> >        }
+> >
+> > -       ath_tx_setup_buffer(sc, bf, skb, txctl);
+> > +       ret = ath_tx_setup_buffer(sc, bf, skb, txctl);
+> > +       if (ret) {
+> > +               DPRINTF(sc, ATH_DBG_FATAL, "TX mem alloc failure\n");
+> > +               return ret;
+> 
+> Hm, this doesn't add the bf back to the txq, so we'd run out of bf's
+> completely when on low memory, eventually leaving the list always
+> empty. I'll resend with that added and a few more changes.
+> 
 
---=-LARFSvx3Uj/NlXeEn2Jt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Right.
 
-Hi Alina,
+I think the queue has to be stopped too (ieee80211_stop_queue()),
+and resumed when memory is available again.
 
-> > please use a bool for that
->=20
-> Yes, but the called function is written in the old C style before C99, so=
- I think I should use the same type.
+What do you think ?
 
-I disagree, even if the function doesn't use the proper types
-pervasively, we shouldn't be adding old-style stuff.
-
-What Jouni pointed out still stands, you should separate the bugfix and
-the 'disregard ibss join' feature into two patches.
-
-johannes
-
---=-LARFSvx3Uj/NlXeEn2Jt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJWqNJAAoJEKVg1VMiehFYJlUQALKUjNo32k7Sm/1MR9r43NVV
-osdGSV7JXnqhpDwTyReJteL3YyBugwlGPBaZoNoHQUCtzA+XmP4JDvfMfFyWw2+u
-vCONGf0jzEKEzVi/mXImQHcfk5QLVvVlmas5b9wsleYiVs2N9TqN0LG/GZpEfXpp
-qZmJ62EJjOkK8nZy0Ou2BYK1IWkkNCZtkizw6BjFvVOtQNmpTABHm58dhIU3yeWx
-lqNi+YFUJfGFdG8bBAYloCvFMIHBhYVpounie17d1IWmbld295EcOywYHY7y6FHQ
-vnK2TQdEPtp1FMq5UE2TKavIhX2ma/WfB1hshMvuMqsAHXw4q9khlEGfx0FnqBva
-zBWgRkDG6yAntBZfL7ZGyf2PyAIxoT88z+fopNKjRxFxxVZzdzIiqw0MDEJzS+z1
-vYfLFTSx2mmmxWzH9gCtsJlZcRy1eCbGXolI4xU8/9oM/sOXqwGWJjJRWxetuQD6
-GwgGI03ukON2jO5duN9npngYJpoWqS9eT4n+2t44/2U1fhiUN+CrGgJYIwK2twZE
-kAs8LT7g8OfPKoK4HUIrT0VlloMAgghkLcJ0DN3hVXvUHxLpgjvdXheVaxLJThK6
-qhqSnLyY+mT1/QbGBl8UR8pQOhWVyqepA1IXtq7hfzLemluLNZEYcEJ0R4izoogE
-4ZV6E+vAeX7rBJXuoSb6
-=Xa6+
------END PGP SIGNATURE-----
-
---=-LARFSvx3Uj/NlXeEn2Jt--
-
+Sujith
