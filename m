@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37960 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260AbYLQQAV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 11:00:21 -0500
-Date: Wed, 17 Dec 2008 10:55:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bob Copeland <bcopeland@gmail.com>
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath5k: Updated padding stuff for the RX and TX side.
-	TX side has been 100%
-Message-ID: <20081217155533.GB12679@tuxdriver.com> (sfid-20081217_170026_870988_1C5B69A7)
-References: <1229351698-21116-1-git-send-email-benoit.papillault@free.fr> <20081215170613.GA22627@jm.kir.nu> <4946C6D9.1060101@free.fr> <b6c5339f0812160722nab8516cj1ed4e6d397060d9d@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b6c5339f0812160722nab8516cj1ed4e6d397060d9d@mail.gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:32516 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756209AbYLDWXY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2008 17:23:24 -0500
+Subject: Re: [RFC] mac80211: remove WARN_ON() from ieee80211_hw_config
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1228427824.5692.52.camel@johannes.berg>
+References: <> <1228425905-15666-1-git-send-email-reinette.chatre@intel.com>
+	 <1228427824.5692.52.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 04 Dec 2008 14:24:22 -0800
+Message-Id: <1228429462.28477.77.camel@rc-desk> (sfid-20081204_232328_303610_8EC84DC7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 16, 2008 at 10:22:39AM -0500, Bob Copeland wrote:
-> On Mon, Dec 15, 2008 at 4:06 PM, Benoit PAPILLAULT
-> <benoit.papillault@free.fr> wrote:
+On Thu, 2008-12-04 at 13:57 -0800, Johannes Berg wrote:
+> On Thu, 2008-12-04 at 13:25 -0800, Reinette Chatre wrote:
+> > ieee80211_hw_config can return an error when the hardware
+> > has rfkill enabled. A WARN_ON() is too harsh for this
+> > failure as it is a valid scenario. Only comment this warning
+> > as we would like to have it back when rfkill is integrated into
+> > mac80211.
+> > 
+> > Also reintroduce number of printks that will happen in this case.
+> > 
+> > This patch essentially reverts patch:
+> > 5f0387fc3337ca26f0745f945f550f0c3734960f
+> > "mac80211: clean up ieee80211_hw_config errors"
+> > 
+> > Things not reverted is the reintroduction of a comment
+> > and debug statement.
+> > 
+> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> > ---
+> > There are several places where ieee80211_hw_config's return code is not
+> > checked. I did not change those as it appears to be intended considering
+> > that the patch being reverted had nothing to do with them not using the
+> > return code.
+> > 
+> > It may also be that in this patch only the second hunk be necessary. Please
+> > provide feedback in this regard.
 > 
-> > frames. To me, the bug we have seen when receiving a ACK frame in
-> > monitor mode was not because "ACK is a small control frame", it was
-> > because the header length we computed was smaller than what the hardware
-> > considered.
-> 
-> It's because data frames have a payload and ACKs do not.
-> 
-> > To reply to Bob as well, we need to compute the number of padded bytes +
-> > the position at which the padding occurs, so proper "header" length is
-> > required.
-> 
-> Well, anyway John already picked up your earlier (better, IMHO) patch.
-> Now we just need to fix the tx descriptors :)
+> I suppose the probability of the beacon interval changing is rather low,
+> but should we propagate the error in that case rather than just using
+> -EINVAL?
 
-Based on that comment, I'm dropping this version of the patch.
-Feel free to submit additional patches to implement whatever might
-be missing now.
+I do not understand. By returning -EINVAL the error is propagated up to
+nl80211 from where the call came.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+> 
+> The scanning hunks I don't really care about, though it does seem a
+> little pointless to print something when changing channel fails, that
+> must be one of the most obvious failure modes and also rather unlikely.
+> Also, that might actually trigger with iwlwifi too in which case every
+> scan would log it, and there can be lots of scans with NM over time.
+
+I will remove these hunks.
+
+Thank you
+
+Reinette
+
