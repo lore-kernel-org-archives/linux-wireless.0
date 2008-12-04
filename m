@@ -1,75 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:46968 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751325AbYLQQhp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 11:37:45 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Memory errors from p54usb
-Date: Wed, 17 Dec 2008 17:36:37 +0100
-Cc: wireless <linux-wireless@vger.kernel.org>
-References: <49466F56.6060805@lwfinger.net> <200812171520.40104.chunkeey@web.de> <49492245.9010500@lwfinger.net>
-In-Reply-To: <49492245.9010500@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_WqSSJt8e/JCHwsK"
-Message-Id: <200812171736.38289.chunkeey@web.de> (sfid-20081217_173750_688958_52DEBC97)
+Received: from mga14.intel.com ([143.182.124.37]:30397 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754134AbYLDRWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2008 12:22:49 -0500
+Subject: Re: Issue with ifconfig down and 4965 driver
+From: reinette chatre <reinette.chatre@intel.com>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1228389591.28839.1.camel@violet.holtmann.net>
+References: <BCB72601-9DA2-4D89-BDF1-7B96254DA17C@linux.intel.com>
+	 <1226555293.1115.939.camel@rc-desk>  <491BF73B.4080403@linux.intel.com>
+	 <1228249643.10900.59.camel@rc-desk>
+	 <1228347518.9181.15.camel@violet.holtmann.net>
+	 <1228348615.13338.83.camel@rc-desk>
+	 <1228389591.28839.1.camel@violet.holtmann.net>
+Content-Type: text/plain
+Date: Thu, 04 Dec 2008 09:23:46 -0800
+Message-Id: <1228411426.28477.13.camel@rc-desk> (sfid-20081204_182253_040747_1B9FEA15)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_WqSSJt8e/JCHwsK
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-On Wednesday 17 December 2008 17:01:09 Larry Finger wrote:
-> Christian Lamparter wrote:
-> > Ohh, it always gets better. ;)
-> > Anyway, I'll see what I can do tomorrow. 
-> > 
-> > In the meantime, I remembered that I put a heat sink on my chip a while ago,
-> > but I'm not sure if this had any effect here... But back in the summer, it allowed me
-> > fix the iperf stalls I had, but that was after days with 60Gb traffic...
+On Thu, 2008-12-04 at 03:19 -0800, Marcel Holtmann wrote:
+> Hi Reinette,
 > 
-> That would be a good idea; however, it is winter in my hemisphere (I don't care
-> what the calender says.), and the room is cool. In addition, my device is a Dell
-> Wireless 1450, which comes with a pretty hefty heat sink on its own.
+> > > > > >> so I am running a 2.6.28-rc4 kernel and every time I stop
+> > > > > >> wpa_supplicant or call ifconfig down on the 4965 card, I get a user
+> > > > > >> noticeable delay (mouse freezes). Seems that some part inside the
+> > > > > >> driver is actively sleeping with a busy-loop. This is really not an
+> > > > > >> acceptable behavior since it is a day-to-day task to bring the device
+> > > > > >> down. And for power concerns, we really wanna allow to bring down the
+> > > > > >> interface.
+> > > > > >>
+> > > > > >
+> > > > > > Please add your information to
+> > > > > > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790
+> > > > > 
+> > > > > all information are already in the Bugzilla. It is nothing fancy and
+> > > > > easy to reproduce. Do we have a patch for it?
+> > > > > 
+> > > > 
+> > > > http://marc.info/?l=linux-wireless&m=122824886623698&w=2
+> > > 
+> > > so I finally got around testing the patch. It is great that it reduces
+> > > the time drastically, but I think that it is still not good enough. So I
+> > > don't care how long it takes to bring the device down. My concern is
+> > > that we are busy-looping during this time. Meaning the kernel is not
+> > > responding to anything. Simple symptom is that the mouse is stuck.
+> > > 
+> > 
+> > We have found that this one patch is not the full solution. More work is
+> > currently being done with activity tracked at
+> > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790
+> 
+> I quickly checked Mohamed's last patch. It actually makes it worse on my
+> system.
 
-Your had already one? Perhaps, I got a very old one then. (Rev A01)
- 
-> I'll throw printk's into every place I can think of and try to provide more info.
-maybe this printk could shed some light into the dark... 
-(In station mode: "status" should be either 0(ACKed) or 1(not ACKed/timeout)
-and (2 [ device is sleeping -  but we don't set the PSM yet, so this is not expected])
+Thank you very much for testing - I will let him know. Would it be
+possible to add your feedback to that bug report for visibility to
+everybody tracking that problem? Not everybody there are subscribed to
+linux-wireless and other people testing the patch (see last comment #12)
+reports that the issue is solved for them.
 
-Regards,
-	Chr
+Thank you very much
 
---Boundary-00=_WqSSJt8e/JCHwsK
-Content-Type: text/x-diff;
-  charset="iso 8859-15";
-  name="p54test.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="p54test.diff"
+Reinette
 
-diff -Nurp p54-free-on-tx/p54common.c p54-eee/p54common.c
---- p54-free-on-tx/p54common.c	2008-12-14 14:49:03.000000000 +0100
-+++ p54-eee/p54common.c	2008-12-17 17:28:44.153744168 +0100
-@@ -800,6 +800,12 @@ static void p54_rx_frame_sent(struct iee
- 		info->status.ack_signal = p54_rssi_to_dbm(dev,
- 				(int)payload->ack_rssi);
- 		skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
-+		if (payload->status) {
-+			struct ieee80211_hdr *hd = (void*) skb->data; 
-+			printk(KERN_DEBUG "frame_control:%x status %d\n",
-+			       hd->frame_control,
-+			       payload->status);
-+			}
- 		ieee80211_tx_status_irqsafe(dev, entry);
- 		goto out;
- 	}
 
---Boundary-00=_WqSSJt8e/JCHwsK--
