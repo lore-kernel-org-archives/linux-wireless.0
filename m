@@ -1,90 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f13.google.com ([209.85.217.13]:40961 "EHLO
-	mail-gx0-f13.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbYLWO5t (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59827 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758961AbYLDReh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 09:57:49 -0500
-Received: by gxk6 with SMTP id 6so2204170gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 06:57:48 -0800 (PST)
-Message-ID: <43e72e890812230657w58dd2f9an5d1bf7e7a824ff57@mail.gmail.com> (sfid-20081223_155754_043094_26FB22FA)
-Date: Tue, 23 Dec 2008 06:57:47 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [PATCH] crda: use strerror() to report error code verbosely
-Cc: "Davide Pesavento" <davidepesa@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W Linville" <linville@tuxdriver.com>
-In-Reply-To: <20081223094138.jlokt6sr40w448o0-cebfxv@webmail.spamcop.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081223050006.3710.98311.stgit@ct.roinet.com>
-	 <43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com>
-	 <20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net>
-	 <43e72e890812222157s5d410d39ye9ac0840eef5331a@mail.gmail.com>
-	 <20081223012037.otw1xe4tc084coc8-cebfxv@webmail.spamcop.net>
-	 <2da21fe50812230041q1d844215o589c79c351966e50@mail.gmail.com>
-	 <20081223094138.jlokt6sr40w448o0-cebfxv@webmail.spamcop.net>
+	Thu, 4 Dec 2008 12:34:37 -0500
+Subject: Re: [RFC PATCH v4 5/5] mac80211: track master queue status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081202200426.5507.44042.stgit@tikku> (sfid-20081202_210437_005505_E84F6109)
+References: <20081202200219.5507.83250.stgit@tikku>
+	 <20081202200426.5507.44042.stgit@tikku>
+	 (sfid-20081202_210437_005505_E84F6109)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JNzxRF7HDJDJQS9pxvu6"
+Date: Thu, 04 Dec 2008 18:34:35 +0100
+Message-Id: <1228412076.5692.25.camel@johannes.berg> (sfid-20081204_183453_109147_266CE3E1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 23, 2008 at 6:41 AM, Pavel Roskin <proski@gnu.org> wrote:
-> Quoting Davide Pesavento <davidepesa@gmail.com>:
->
->>> [root@ct proski]# COUNTRY=00 crda
->>> Failed to set regulatory domain: -22
->>> [root@ct proski]# COUNTRY=US crda
->>> Failed to set regulatory domain: -22
->>> [root@ct proski]# COUNTRY=DE crda
->>> Failed to set regulatory domain: -22
->>> [root@ct proski]#
->>>
->>> Maybe it can only be set once?  But then -EBUSY would be more reasonable.
->>>
->>
->> AFAIK, you have to use `iw reg set <country>` to manually change it.
->
-> That works.  As I understand now, crda should never be run manually.
 
-That is correct.
+--=-JNzxRF7HDJDJQS9pxvu6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->  It
-> should only run by the kernel through udev.  If that is correct, it should
-> be written clearly in the crda README.
+On Tue, 2008-12-02 at 22:04 +0200, Kalle Valo wrote:
 
-Apologies if it is not clear. How's this:
+> +void __ieee80211_stop_queues(struct ieee80211_hw *hw,
+> +			     enum queue_stop_reason reason)
+>  {
+>  	int i;
+> =20
+>  	for (i =3D 0; i < ieee80211_num_queues(hw); i++)
+> -		ieee80211_stop_queue(hw, i);
+> +		__ieee80211_stop_queue(hw, i, reason);
+> +}
+> +
+> +void ieee80211_stop_queues(struct ieee80211_hw *hw)
+> +{
+> +	__ieee80211_stop_queues(hw, IEEE80211_QUEUE_STOP_REASON_DRIVER);
+>  }
+>  EXPORT_SYMBOL(ieee80211_stop_queues);
+> =20
+> @@ -367,12 +409,18 @@ int ieee80211_queue_stopped(struct ieee80211_hw *hw=
+, int queue)
+>  }
+>  EXPORT_SYMBOL(ieee80211_queue_stopped);
+> =20
+> -void ieee80211_wake_queues(struct ieee80211_hw *hw)
+> +void __ieee80211_wake_queues(struct ieee80211_hw *hw,
+> +			     enum queue_stop_reason reason)
+>  {
+>  	int i;
+> =20
+>  	for (i =3D 0; i < hw->queues + hw->ampdu_queues; i++)
+> -		ieee80211_wake_queue(hw, i);
+> +		__ieee80211_wake_queue(hw, i, reason);
+> +}
+> +
+> +void ieee80211_wake_queues(struct ieee80211_hw *hw)
+> +{
+> +	__ieee80211_wake_queues(hw, IEEE80211_QUEUE_STOP_REASON_DRIVER);
+>  }
+>  EXPORT_SYMBOL(ieee80211_wake_queues);
 
----
- CALLING CRDA -- UDEV
-======================
+I wonder if we should optimise the spinlock here?
 
-Distributions can set up a udev rule to allow the kernel's regulatory
-domain change request to be reviewed by CRDA so CRDA can pass an
-appropriate regulatory domain. An example regulatory rule is provided
-with this package as regulatory.rules
----
+Also, I'd prefer to first add this with just a single DRIVER reason
+first, and then add the PS patches that add and use the second reason.
+Other than that, it looks good to me, thanks!
 
-Or the giant diagram here:
+johannes
 
-http://wireless.kernel.org/en/developers/Regulatory
+--=-JNzxRF7HDJDJQS9pxvu6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-This also mentions:
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
----
-CRDA
+iQIcBAABAgAGBQJJOBSoAAoJEKVg1VMiehFYYXoP/RffVcfg7CXVwyjc42FsXmy1
+Wi/37WQOjrTti30WumARGymeOXTujH+P60PLohWNTV6aZP7L0u2ajuzaz0CAsK3Y
+pppgR7ZLf4A9wwjiqGx810XUd8KVpLwQxhK/uPTxgjbWVAPzkqtt+tS2k3zH4yIw
+Gi5vFuKsN+CB1N3ipk1ekJFoItoRwMttL1+HMolB2fevqI7opN7g5J/gUm5TLJSe
+XvO461Modk5QECNqCpH6+7y4A6CDX3bCDZGO0cYJO3NX2FHcGgOyDnW9nHXVFL0g
+2V1BfWLAqBjMqlLocAg1ONNvOof2/XBruAxuWwB/kgOuDNTg9SgvtFgekdU+pd8r
+QqxBO+pwcjFPdaSs58RB0bCoZL0q/nMf3d/eG4cP7T67PKbojINB7ZR+u2wlToV0
+sU6qKvga2tgSNg9LHO2PUutqn/hfQVSXImjMlb01oisVdu58Ryyyc3e9BqPEUoY8
+F/UYlTIDdT73MhKg80003VN/AVjqmfBOPPqHd1vRaTOWe2hYPXDyYrB+O+T8ov8i
+aQ89YKgds/nq0K9LWiM7wQh+bO4iOpxJDNAZw2HZb4/As0XWCEa4yvaa75221NC7
+Ftj6CPjT+Vib1XQd0oDMH9El/SxHyp3PAdXhoNxY13swcJmxhA3MoEUOIQxiRa+n
+h/wjQvm879K7trLPIQbS
+=7vtd
+-----END PGP SIGNATURE-----
 
-CRDA is our userspace agent which uploads regulatory domains into the
-kernel, it acts as a udev helper.
----
+--=-JNzxRF7HDJDJQS9pxvu6--
 
-Then the CRDA section on the CRDA page has a section:
-
-http://wireless.kernel.org/en/developers/Regulatory/CRDA#LettingthekernelcallCRDA
-
-We also have iw's documentation:
-
-http://wireless.kernel.org/en/users/Documentation/iw#Updatingyourregulatorydomain
-
-The wiki is editable by everyone so feel free to update that, and also
-feel free to send patches to the README as you see fit.
-
-  Luis
