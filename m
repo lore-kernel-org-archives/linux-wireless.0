@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:52334 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751515AbYL3Q4S (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:26259 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbYLDNNV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 11:56:18 -0500
-Date: Tue, 30 Dec 2008 18:56:09 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
-	berlin@berlin.freifunk.net
-Subject: Re: mac80211 (ath9k, ath5k, etc.) set BSSID Patch
-Message-ID: <20081230165609.GA6324@jm.kir.nu> (sfid-20081230_175621_631185_BB74543C)
-References: <20081230025651.6500@gmx.net> <20081230113714.GA31451@jm.kir.nu> <20081230161539.184750@gmx.net>
+	Thu, 4 Dec 2008 08:13:21 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2822151fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 05:13:20 -0800 (PST)
+Message-ID: <2c6c0b0812040513g3bb7e315mec91090f17e79bbd@mail.gmail.com> (sfid-20081204_141326_022622_2F23A5D1)
+Date: Thu, 4 Dec 2008 13:13:19 +0000
+From: "=?ISO-8859-1?Q?Zolt=E1n_Balogh?=" <baloghmail@gmail.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: iwl3945 bug-report
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1228270479.2558.216.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081230161539.184750@gmx.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <2c6c0b0812020438y7712844ah6b2238b8ef1500b4@mail.gmail.com>
+	 <1228270479.2558.216.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 30, 2008 at 05:15:39PM +0100, Alina Friedrichsen wrote:
+Hello Yi,
 
-> This breaks nothing. I think if you set your BSSID manually, you really don't want that the driver changed it back. If you want this behavior, you don't set it.
+Please check my bugreport again as I managed to dump the Oops output to=
+day:
 
-But it _does_ break interoperability with standard compliant IBSS
-implementations if the forced BSSID means that the STA does not merge
-with another part of the IBSS when this should happen by the STA
-changing its BSSID to match with the other part. If you do not want the
-code behave as described for IBSS, use something else than IBSS..
+https://bugzilla.redhat.com/show_bug.cgi?id=3D473507#c10
 
-> Handle BSSID splits in a mile width city mesh network with 500 or more nodes is impossible in a other way, I think. The standard was never written for that dimensions.
+Hope this will be a useful resource to you. Let me know if you need
+anything else or if I could help you in any way.
 
-Agreed, but we should not claim that the behavior with hardcoded BSSID
-would be standard IBSS. It is something different and we should not
-confuse users by calling it the same. I would have nothing against
-this type of optional feature if it were called something else than IBSS
-(or "adhoc" which iwconfig uses for IBSS).
+With thanks and regards,
 
-> Besides it fixes a bug that driver want to try to merge with the same BSSID, which is unnecessary and causes problems.
+Zoltan Balogh
 
-If that fix is separate from the change that introduces hardcoding of
-the BSSID, it would be better to bring that in as a separate patch.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+2008/12/3 Zhu Yi <yi.zhu@intel.com>:
+> On Tue, 2008-12-02 at 20:38 +0800, Zolt=E1n Balogh wrote:
+>> Have a look at my bugreport at the Fedora bugzilla and please see if
+>> you can help me determining the exact source of the error. Please re=
+ad
+>> all of my comments as they contain vital information. I'm trying to
+>> obfuscate my link as it is
+>>
+>> http://bugzilla.redhat.com/show_bug.cgi?id=3D473507
+>
+> Please provide the oops log as John required in the bug.
+>
+> Thanks,
+> -yi
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
