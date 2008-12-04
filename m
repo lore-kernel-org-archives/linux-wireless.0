@@ -1,99 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:61458 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbYLRQ1U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 11:27:20 -0500
-Received: by bwz14 with SMTP id 14so1906548bwz.13
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 08:27:18 -0800 (PST)
-Message-ID: <1ba2fa240812180827nf1c27d1jb20ee8b0b1f04b62@mail.gmail.com> (sfid-20081218_172725_363773_6D4AF583)
-Date: Thu, 18 Dec 2008 18:27:17 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Rami Rosen" <ramirose@gmail.com>
-Subject: Re: [PATCH] [v4] iwlwifi: iwl-tx.c cleanup (remove unused parameter and unused local variable).
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, reinette.chatre@intel.com
-In-Reply-To: <eb3ff54b0812180804i3a782509oa009ff138e3f055c@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:55957 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754832AbYLDVMF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2008 16:12:05 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 13:12:05 -0800
+Date: Thu, 4 Dec 2008 13:12:01 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Henning Rogge <rogge@fgan.de>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Henning Rogge <hrogge@googlemail.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
+Message-ID: <20081204211201.GL5970@tesla> (sfid-20081204_221209_818963_B4C38297)
+References: <200811252131.30161.hrogge@googlemail.com> <200812022146.12363.hrogge@googlemail.com> <20081203014430.GH9351@tesla> <200812031131.34936.rogge@fgan.de> <1228422387.5692.45.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <eb3ff54b0812180804i3a782509oa009ff138e3f055c@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1228422387.5692.45.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 18, 2008 at 6:04 PM, Rami Rosen <ramirose@gmail.com> wrote:
-> This patch removes unused parameter and unused local variable in
-> methods in iwl-tx.c:
->
-> - Remove a parameter (is_unicast) from iwl_tx_cmd_build_basic().
->
-> - Remove an unused variable name unicast from iwl_tx_skb().
->
-> (wireless-testing).
->
-> Signed-off-by: Rami Rosen <ramirose@gmail.com>
-Ack
-Tomas
+On Thu, Dec 04, 2008 at 12:26:27PM -0800, Johannes Berg wrote:
+> On Wed, 2008-12-03 at 11:31 +0100, Henning Rogge wrote:
+> 
+> > Changes since v3:
+> > - added rx_bitrate to station info and sta_info
+> > - remember bitrate of last received unicast packet to this station
+> 
+> Please remove the RX bitrate for now, the drivers are not currently
+> reporting HT information appropriately.
 
->
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> index 3cb4363..43dcfe3 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> @@ -645,7 +645,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
->                                  struct iwl_tx_cmd *tx_cmd,
->                                  struct ieee80211_tx_info *info,
->                                  struct ieee80211_hdr *hdr,
-> -                                 int is_unicast, u8 std_id)
-> +                                 u8 std_id)
->  {
->        __le16 fc = hdr->frame_control;
->        __le32 tx_flags = tx_cmd->tx_flags;
-> @@ -834,7 +834,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
->        u16 len, len_org;
->        u16 seq_number = 0;
->        __le16 fc;
-> -       u8 hdr_len, unicast;
-> +       u8 hdr_len;
->        u8 sta_id;
->        u8 wait_write_ptr = 0;
->        u8 tid = 0;
-> @@ -854,8 +854,6 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
->                goto drop_unlock;
->        }
->
-> -       unicast = !is_multicast_ether_addr(hdr->addr1);
-> -
->        fc = hdr->frame_control;
->
->  #ifdef CONFIG_IWLWIFI_DEBUG
-> @@ -996,7 +994,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
->        len = (u16)skb->len;
->        tx_cmd->len = cpu_to_le16(len);
->        /* TODO need this for burst mode later on */
-> -       iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, unicast, sta_id);
-> +       iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, sta_id);
->
->        /* set is_hcca to 0; it probably will never be implemented */
->        iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, sta_id, 0);
->
->
-> On Thu, Dec 18, 2008 at 5:31 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
->> On Thu, Dec 18, 2008 at 12:42:37AM +0200, Tomas Winkler wrote:
->>> On Wed, Dec 17, 2008 at 11:51 PM, Rami Rosen <ramirose@gmail.com> wrote:
->>> > This patch removes unused parameters in methods in iwl-tx.c:
->>> > remove a parameter (is_unicast) from iwl_tx_cmd_build_basic()
->>> > remove a parameter (sta_id) from iwl_tx_cmd_build_rate()
->>> > remove a parameter (sta_id ) from iwl_tx_cmd_build_hwcrypto()
->>>
->>> Unicast can go sta_id has to stay, we need it for merging 3945 back
->>
->> OK, I'll drop this patch and wait for a new submission.
->>
->> John
->> --
->> John W. Linville                Linux should be at the core
->> linville@tuxdriver.com                  of your literate lifestyle.
->>
->
+It seems that's the case for ath9k, at least Jouni had pointed out to me.
+
+> > - decode 802.11n MCS index for nl80211
+> >   (maybe this should be ported to WEXT too ?)
+> 
+> I don't like all the tables in the kernel, please move those to
+> userspace. If we used more accurate values (these rates are fractional)
+
+So the rate stuff in the 11n wiki page is rounded up, so yeah it would
+technically be a bit off so its technically better to let us figure it
+out in userspace.. sorry about that Henning... And Johannes also pointed
+out to me we actually do have duplicate rates, I failed to catch them.
+
+> then we also don't need the values for the number of streams since those
+> are perfect multiples (1x, 2x, 3x, 4x for up to 4 streams).
+
+Well if you have the MCS index and HT mode you get the # of streams. Not
+sure I understood the perfect multiple stuff.
+
+> > Changes since v4:
+> > - added tx_bitrate_flags adn tx_bitrate_mcs field to station info
+> > - added flags for 40Mhz and small guard interval to NL80211 station info
+> > - added mcs field to NL80211 station info
+> > 
+> > The IEEE80211_TX_RC_40_MHZ_WIDTH flag in nl80211 should work for 802.11g 
+> > "turbomodes"
+> 
+> I don't think we should ever go there. But that's just me maybe.
+
+I don't think we want to support this either and I doubt bug reports
+for it would get attention from us.
+
+> > + * @NL80211_STA_INFO_SIGNAL: signal strength of last received package (u8, 
+> > dBm)
+> > + * @NL80211_STA_INFO_RX_BITRATE: bitrate of last received unicast packet
+> > + *  (u16, 100 kbit/s)
+> > + * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate (u16, 100 kbit/s)
+> > + * @NL80211_STA_INFO_TX_BITRATE_40_MHZ: dual channel transmission (flag)
+> > + * @NL80211_STA_INFO_TX_BITRATE_MCS: 802.11n MCS index of tx rate (u8)
+> > + * @NL80211_STA_INFO_TX_BITRATE_SHORT_GI: 802.11n with 400ns GI, 800ns
+> > + *  otherwise, should be ignored if TX_BITRATE_MCS is not set (flag)
+> >   */
+> >  enum nl80211_sta_info {
+> >  	__NL80211_STA_INFO_INVALID,
+> > @@ -413,6 +421,12 @@ enum nl80211_sta_info {
+> >  	NL80211_STA_INFO_LLID,
+> >  	NL80211_STA_INFO_PLID,
+> >  	NL80211_STA_INFO_PLINK_STATE,
+> > +	NL80211_STA_INFO_SIGNAL,
+> > +	NL80211_STA_INFO_RX_BITRATE,
+> > +	NL80211_STA_INFO_TX_BITRATE,
+> > +	NL80211_STA_INFO_TX_BITRATE_40_MHZ,
+> > +	NL80211_STA_INFO_TX_BITRATE_MCS,
+> > +	NL80211_STA_INFO_TX_BITRATE_SHORT_GI,
+> 
+> Just had another idea. Since we'll end up duplicating these for TX and
+> RX (ultimately we'll need RX_BITRATE_40_MHZ/MCS/SGI etc too) we should
+> actually do this differently:
+> 
+>  1) define NL80211_STA_INFO_RATE,
+>  2) define NL80211_RATE_INFO_BITRATE/40/MCS/SGI
+> 
+> and then nest the bitrate information into the STA_INFO_RATE, just like
+> station flags are nested etc. That way the RATE_INFO things could also
+> be used elsewhere.
+
+So we'll have to add an enum then too to distinguish which rate this is
+for.
+
+> >   * Used by the driver to indicate which info in &struct station_info
+> >   * it has filled in during get_station() or dump_station().
+> > + * Signal strength is only available if driver supports dBm signal
+> > + * strength.
+> 
+> That comment is wrong here since cfg80211 drivers are expected to fill
+> this correctly. This comment is about _mac80211_ drivers and thus
+> inappropriate in cfg80211.h.
+
+adm8211 is a cfg80211 driver and does not report dBm. So it seems we
+currently allow cfg80211 drivers to *not* fill this in properly.
+The RTL drivers are some others ones as well as zd1211rw but it seems
+we'll be able to correct zd1211rw.
+
+  Luis
