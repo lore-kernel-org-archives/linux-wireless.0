@@ -1,88 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26637 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:25482 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751577AbYLQI7n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 03:59:43 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Wu, Fengguang" <fengguang.wu@intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 3/8] iwlwifi: update comments on the debug interface
-Date: Wed, 17 Dec 2008 16:52:29 +0800
-Message-Id: <1229503954-30347-4-git-send-email-yi.zhu@intel.com> (sfid-20081217_095948_775054_F3477080)
-In-Reply-To: <1229503954-30347-3-git-send-email-yi.zhu@intel.com>
-References: <1229503954-30347-1-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-2-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-3-git-send-email-yi.zhu@intel.com>
+	id S1753122AbYLDPIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2008 10:08:17 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 07:08:17 -0800
+Date: Thu, 4 Dec 2008 20:38:13 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	Luis Rodriguez <lrodriguez@atheros.com>
+Subject: [PATCH] wireless: Incorrect LEAP authentication algorithm
+	identifier.
+Message-ID: <20081204150813.GA7816@senthil-lnx.users.atheros.com> (sfid-20081204_160821_653972_71E0ECD4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wu, Fengguang <fengguang.wu@intel.com>
+This patch fixes a regression introduced by
+"wireless: avoid some net/ieee80211.h vs. linux/ieee80211.h conflicts"
+LEAP authentication algorithm identifier should be 128.
 
-Bring up-to-date some comments on the location of debug files.
-
-Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
-Acked-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h |   17 +++++++----------
- 2 files changed, 8 insertions(+), 11 deletions(-)
+ include/linux/ieee80211.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 9d50fad..d0fb7a3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3354,7 +3354,7 @@ static int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index a6ec928..c4e6ca1 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -836,7 +836,7 @@ struct ieee80211_ht_info {
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+ #define WLAN_AUTH_SHARED_KEY 1
+-#define WLAN_AUTH_LEAP 2
++#define WLAN_AUTH_LEAP 128
  
- /*
-  * The following adds a new attribute to the sysfs representation
-- * of this device driver (i.e. a new file in /sys/bus/pci/drivers/iwl/)
-+ * of this device driver (i.e. a new file in /sys/class/net/wlan0/device/)
-  * used for controlling the debug level.
-  *
-  * See the level definitions in iwl for details.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index e4c264b..56c13b4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -96,28 +96,25 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
- #endif				/* CONFIG_IWLWIFI_DEBUGFS */
+ #define WLAN_AUTH_CHALLENGE_LEN 128
  
- /*
-- * To use the debug system;
-+ * To use the debug system:
-  *
-  * If you are defining a new debug classification, simply add it to the #define
-- * list here in the form of:
-+ * list here in the form of
-  *
-  * #define IWL_DL_xxxx VALUE
-  *
-- * shifting value to the left one bit from the previous entry.  xxxx should be
-- * the name of the classification (for example, WEP)
-+ * where xxxx should be the name of the classification (for example, WEP).
-  *
-  * You then need to either add a IWL_xxxx_DEBUG() macro definition for your
-  * classification, or use IWL_DEBUG(IWL_DL_xxxx, ...) whenever you want
-  * to send output to that classification.
-  *
-- * To add your debug level to the list of levels seen when you perform
-+ * The active debug levels can be accessed via files
-  *
-- * % cat /sys/class/net/wlanX/device/debug_level
-+ * 	/sys/module/iwlagn/parameters/debug{50}
-+ * 	/sys/class/net/wlan0/device/debug_level
-  *
-- * you simply need to add your entry to the iwl_debug_levels array.
-- *
-- * If you do not see debug_level in  /sys/class/net/wlanX/device/debug_level
-- * then you do not have CONFIG_IWLWIFI_DEBUG defined in your kernel config file
-+ * when CONFIG_IWLWIFI_DEBUG=y.
-  */
- 
- #define IWL_DL_INFO		(1 << 0)
 -- 
-1.5.3.6
+1.6.0.4
 
