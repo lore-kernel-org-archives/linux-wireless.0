@@ -1,64 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49682 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753456AbYLLVsw (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:40907 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752507AbYLDBuD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 16:48:52 -0500
-Subject: Re: [RFC v2] mac80211: Fix HT channel selection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <m.sujith@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	jouni.malinen@atheros.com, lrodriguez@atheros.com,
-	tomas.winkler@intel.com
-In-Reply-To: <18750.13163.213759.181839@localhost.localdomain> (sfid-20081209_100146_066280_ECCEC8C9)
-References: <18750.13163.213759.181839@localhost.localdomain>
-	 (sfid-20081209_100146_066280_ECCEC8C9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ysQYOiXL7n0rYj6YyNca"
-Date: Fri, 12 Dec 2008 22:48:45 +0100
-Message-Id: <1229118525.3572.2.camel@johannes.berg> (sfid-20081212_224856_170159_653D3740)
-Mime-Version: 1.0
+	Wed, 3 Dec 2008 20:50:03 -0500
+Date: Wed, 03 Dec 2008 19:50:00 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8187: Improve wireless statistics for RTL8187
+Message-ID: <49373748.Wmr8pTF2+oHOugNN%Larry.Finger@lwfinger.net> (sfid-20081204_025008_800351_26A9E115)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The current wireless statistics for the RTL8187 poorly indicate the sig=
+nal
+strength and quality. With testing, I found that the AGC value is inver=
+sely
+correlated with the strength as in the RTL8187B. By implementing a simi=
+lar
+calculation, much more code becomes common to the two devices.
 
---=-ysQYOiXL7n0rYj6YyNca
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Tested by: Mart=C3=ADn Ernesto Barreyro <barreyromartin@gmail.com>
+---
 
-On Tue, 2008-12-09 at 14:29 +0530, Sujith wrote:
-> HT management is done differently for AP and STA modes, unify
-> to just the ->config() callback since HT is fundamentally a
-> PHY property and cannot be per-BSS.
->=20
-> Rename enum nl80211_sec_chan_offset as nl80211_channel_type to denote
-> the channel type ( NO_HT, HT20, HT40+, HT40- ).
+John,
 
-I've updated iw accordingly (but it didn't matter since iw ships its own
-header file and it was still binary compatible)
+This is 2.6.29 material.
 
-johannes
+Larry
+---
 
---=-ysQYOiXL7n0rYj6YyNca
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQtw5AAoJEKVg1VMiehFY9IsP/2HeTrKQHiWB4Sz95mNU0da7
-gyLR26GuKFjAZjNp7VVEOSj56Xk3uAO4YKR6gVOBTGgw1J6X1axpV2b+T3OoKafy
-3a4X+7h4hwwG7ruLScnUjB0GHdRF2jvsIgTVfc9xeW2ZF3uBueePnP31rBcQc/pu
-Lw2pJ10wZbvRY3DDsrcKVEsJwdZCs7wAyPC3e0BXKvkQvahL3t8fm+wcTp+daMAA
-+BZEExwxGCZK56WRqnwdtYsEa6RXaUuxufIuHkfP06C16M5h8nxHCt6wJKT251lP
-wUYrtKAK88gBU1cDky2mYO6s6jTUFyjxvPeoHNxF4h10ekgzVj0+LSXAm7WDW+9Z
-jqmPZbfm5x75QBJHWeAnE1RVBYAZdYlUuqHvOhJQn8OMszoRHx8sxGNSEewVm03W
-tn0J/HpAYhG59AjtgjVmH5+qRpKwgLFuZnjTpLV4+1rhfOr51WzbIBT2V9Q0apT0
-aEyNQXJPSl5jF/imZ+J2y22R1HSAd3YM7lbRK3WEhe+RrtpuQRNt1Cb9Q6PcXTJ+
-3h4rUVJIDKEGg8i+X1pcmzuLTN3Hm7VsHNusfeejPoPH7GRruiXQ4hDnkzYEaRtI
-7mEXUqRTanbx7Z3uyBAG1bnbF8GRVyVSU+u3ukyeVuwJZEYHTlXCFUTePv2z+Vwp
-j+XThaE7A+KaFAkHtW4x
-=l9kM
------END PGP SIGNATURE-----
-
---=-ysQYOiXL7n0rYj6YyNca--
-
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -313,29 +313,17 @@ static void rtl8187_rx_cb(struct urb *ur
+ 		struct rtl8187_rx_hdr *hdr =3D
+ 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
+ 		flags =3D le32_to_cpu(hdr->flags);
+-		signal =3D hdr->signal & 0x7f;
++		/* As with the RTL8187B below, the AGC is used to calculate
++		 * signal strength and quality. In this case, the scaling
++		 * constants are derived from the output of p54usb.
++		 */
++		quality =3D 130 - ((41 * hdr->agc) >> 6);
++		if (quality > 100)
++			quality =3D 100;
++		signal =3D -4 - ((27 * hdr->agc) >> 6);
++		rx_status.qual =3D quality;
+ 		rx_status.antenna =3D (hdr->signal >> 7) & 1;
+-		rx_status.noise =3D hdr->noise;
+ 		rx_status.mactime =3D le64_to_cpu(hdr->mac_time);
+-		priv->quality =3D signal;
+-		rx_status.qual =3D priv->quality;
+-		priv->noise =3D hdr->noise;
+-		rate =3D (flags >> 20) & 0xF;
+-		if (rate > 3) { /* OFDM rate */
+-			if (signal > 90)
+-				signal =3D 90;
+-			else if (signal < 25)
+-				signal =3D 25;
+-			signal =3D 90 - signal;
+-		} else {	/* CCK rate */
+-			if (signal > 95)
+-				signal =3D 95;
+-			else if (signal < 30)
+-				signal =3D 30;
+-			signal =3D 95 - signal;
+-		}
+-		rx_status.signal =3D signal;
+-		priv->signal =3D signal;
+ 	} else {
+ 		struct rtl8187b_rx_hdr *hdr =3D
+ 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
+@@ -356,15 +344,15 @@ static void rtl8187_rx_cb(struct urb *ur
+ 		if (quality > 100)
+ 			quality =3D 100;
+ 		signal =3D 14 - hdr->agc / 2;
+-		rx_status.qual =3D quality;
+-		priv->quality =3D quality;
+ 		rx_status.signal =3D signal;
+-		priv->signal =3D signal;
+ 		rx_status.antenna =3D (hdr->rssi >> 7) & 1;
+ 		rx_status.mactime =3D le64_to_cpu(hdr->mac_time);
+-		rate =3D (flags >> 20) & 0xF;
+ 	}
+=20
++	priv->quality =3D quality;
++	rx_status.signal =3D signal;
++	priv->signal =3D signal;
++	rate =3D (flags >> 20) & 0xF;
+ 	skb_trim(skb, flags & 0x0FFF);
+ 	rx_status.rate_idx =3D rate;
+ 	rx_status.freq =3D dev->conf.channel->center_freq;
+@@ -1294,6 +1282,7 @@ static int __devinit rtl8187_probe(struc
+=20
+ 	priv->mode =3D NL80211_IFTYPE_MONITOR;
+ 	dev->flags =3D IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
++		     IEEE80211_HW_SIGNAL_DBM |
+ 		     IEEE80211_HW_RX_INCLUDES_FCS;
+=20
+ 	eeprom.data =3D dev;
+@@ -1409,13 +1398,8 @@ static int __devinit rtl8187_probe(struc
+ 		(*channel++).hw_value =3D txpwr >> 8;
+ 	}
+=20
+-	if (priv->is_rtl8187b) {
++	if (priv->is_rtl8187b)
+ 		printk(KERN_WARNING "rtl8187: 8187B chip detected.\n");
+-		dev->flags |=3D IEEE80211_HW_SIGNAL_DBM;
+-	} else {
+-		dev->flags |=3D IEEE80211_HW_SIGNAL_UNSPEC;
+-		dev->max_signal =3D 65;
+-	}
+=20
+ 	/*
+ 	 * XXX: Once this driver supports anything that requires
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
