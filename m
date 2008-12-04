@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:18360 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755449AbYLPO6X convert rfc822-to-8bit (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:48127 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754993AbYLDT21 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 09:58:23 -0500
-Received: by an-out-0708.google.com with SMTP id d40so1308035and.1
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 06:58:21 -0800 (PST)
-Message-ID: <b6c5339f0812160658y5ed2ceb4qdbb4b2ddf1fe07a5@mail.gmail.com> (sfid-20081216_155826_911157_CE1A0E9E)
-Date: Tue, 16 Dec 2008 09:58:21 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in add_interface
-Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net
-In-Reply-To: <b6c5339f0812150916k521fa7a4l4fc3aa560d08c1db@mail.gmail.com>
+	Thu, 4 Dec 2008 14:28:27 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 11:28:27 -0800
+Date: Thu, 4 Dec 2008 11:28:26 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	pat-lkml <pat-lkml@erley.org>,
+	Henning Rogge <hrogge@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Looking for a 802.11n card
+Message-ID: <20081204192826.GD5970@tesla> (sfid-20081204_202831_542549_E6BCCB9B)
+References: <200812032129.16740.hrogge@googlemail.com> <45e8e6c40812031609h50926100xfa616a5bdb9be93e@mail.gmail.com> <49372568.2070404@erley.org> <20081204023512.GU6522@tesla> <69e28c910812040451p231b41e1t63893d23f373bf0c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081118044037.GA18983@hash.localnet>
-	 <69e28c910812150747j60cf17d9nc2e24aabb991d2a9@mail.gmail.com>
-	 <1229357080.12163.47.camel@localhost.localdomain>
-	 <69e28c910812150812h4a316327u67aad1b225262816@mail.gmail.com>
-	 <b6c5339f0812150916k521fa7a4l4fc3aa560d08c1db@mail.gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c910812040451p231b41e1t63893d23f373bf0c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 15, 2008 at 12:16 PM, Bob Copeland <me@bobcopeland.com> wro=
-te:
-> On Mon, Dec 15, 2008 at 11:12 AM, Stefanik G=E1bor
-> <netrolller.3d@gmail.com> wrote:
->> That is not the problem - aireplay-ng operates on a monitor interfac=
+On Thu, Dec 04, 2008 at 04:51:48AM -0800, Stefanik G=E1bor wrote:
+> On Thu, Dec 4, 2008 at 3:35 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > First some alphabet soup for you (this is on the wiki now):
+> >
+> > HB: PCIe Half MiniCard
+> > XB: PCIe Full MiniCard
+> > MB: Mini PCI card
+> > CB: PCI Cardbus card
+> > SB: Single band, 1x1, 1x2, 2x2 configuration
+> > DB: Dual band, 2x2 configuration
+> >
+> > We do have DB HB, HB92/AR9280. HP, Toshiba, Dell, FJ ships with it,=
+ and
+> > product name is under ath9K site as mentioned above. Also,
+> > XB72 (Owl/Fowl, AR5218+AR5133) is dual band XB (see the site).
+>=20
+> Hennig is looking for a card usable in a desktop (not a laptop). Thes=
 e
->> that is already up. Likely this patch somehow misses monitor
->> interfaces.
->
-> Agreed, that is probably the case.  Reverting that hunk makes it come=
- up
-> with the eeprom mac without adding any interface.  Looking at the
-> add_interface() code, it 'should' program the mac for monitor interfa=
-ces
-> too, so offhand I'm not sure, will take a look tonight.
+> are all laptop cards.
 
-Okay, so that I understand the problem a bit better: what used to happe=
-n
-and what does not happen now?  Is the ath5k device not sending ACKs, or
-not passing any frames back to the host?
+This seems to work then:
 
-The code, for mac address setting at least, looks to be working as
-designed: the mac address is only set up at add_interface time to avoid
-automatically acking packets before an interface is brought up (see the
-kerneldoc comments in mac80211 on add/remove_interface).
+NEC
+<AR5416+AR5133/CB72, 2x3 DB>
 
-The ath5k rx filter for unicast frames requires mac addresses to match =
-in
-order to accept or ack frames.  However, in monitor mode, mac80211 will
-never call add_interface().  Instead, it should configure the filter to
-put the card in promiscuous mode which then should enable all packets
-to be passed back to the host.
+    * WL300NC=20
 
-Does the fragmentation attack also work with e.g. b43 (which also only
-sets up the mac at add_interface time)?
+But its not AR9xx, but should do.
 
---=20
-Bob Copeland %% www.bobcopeland.com
+  Luis
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
