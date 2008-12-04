@@ -1,65 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37017 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328AbYLHTv1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 14:51:27 -0500
-Subject: Re: Monitor number of packages sent and ACK'ed by AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Lars Ericsson <Lars_Ericsson@telia.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200812081932.40499.IvDoorn@gmail.com> (sfid-20081208_193244_484980_62238B59)
-References: <0161CC9B2A3341A19CED21A365A90FE4@gotws1589>
-	 <200812081932.40499.IvDoorn@gmail.com>
-	 (sfid-20081208_193244_484980_62238B59)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5MynfAUYkx+C/bqy7P9h"
-Date: Mon, 08 Dec 2008 20:50:56 +0100
-Message-Id: <1228765856.22164.114.camel@johannes.berg> (sfid-20081208_205131_231811_98487455)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:18556 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756529AbYLDWsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2008 17:48:12 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] mac80211: remove WARN_ON() from ieee80211_hw_config
+Date: Thu,  4 Dec 2008 14:49:08 -0800
+Message-Id: <1228430948-25509-1-git-send-email-reinette.chatre@intel.com> (sfid-20081204_234815_917846_CE3F184C)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ieee80211_hw_config can return an error when the hardware
+has rfkill enabled. A WARN_ON() is too harsh for this
+failure as it is a valid scenario. Only comment this warning
+as we would like to have it back when rfkill is integrated into
+mac80211.
 
---=-5MynfAUYkx+C/bqy7P9h
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Also reintroduce propagation of error if ieee80211_hw_config fails
+in ieee80211_config_beacon.
 
-On Mon, 2008-12-08 at 19:32 +0100, Ivo van Doorn wrote:
+This patch partially reverts patch:
+5f0387fc3337ca26f0745f945f550f0c3734960f
+"mac80211: clean up ieee80211_hw_config errors"
 
-> Right, because mac80211 doesn't send the control filter to the driver by =
-default,
-> it does when using monitor mode. (Not sure if it also does this when havi=
-ng
-> a secondary virtual interface running in monitor mode, but for full-monit=
-or
-> mode it does).
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ net/mac80211/cfg.c  |    6 ++++--
+ net/mac80211/main.c |   12 +++++++++++-
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
-It does, depending on the flags you set with iw.
-
-johannes
-
---=-5MynfAUYkx+C/bqy7P9h
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJPXqcAAoJEKVg1VMiehFYdhsP/REb7bC3ugUDqPmfQSGq5f5N
-VwZBkhJzGgy5EMk5y04N4upfXHFI16rdJM3z3xRCJQwXehi6HYFA1/45uMBNGdO9
-Kn5zw+KAIxEUtP3YCsmKtzEawsoGS7a6DbAQdS5+SU53XvHhFZEiDiserElxFsBm
-Sj4m4IEHkYwxXVnXieCtbr2oxR5hw0D+t23UliCimJ474VQwabCnVOy7CJJO4o4E
-NGJnJeYvHYSM9RdVxdZR/onijPXWMaBNySL63LN+J/wdGTEeKB0CASH508/a+lcI
-/w9wjsGZSwS6neFgH3K+y3a9DWwVyphrrkT9uzGFAfvgcUA/woKGzk3LvDNN7Xxz
-gpM+QNhB+PMwa6Vmce7QHX9tqhfAyGipg47tpkrHZqfuXcQCwGOKexXpaxpS748J
-e95XSPwx3YtfQlro5mnjCvA1JGxdV0BhK7xnn6Vcic4PUGNI1VE4z/fYGfSE8zZv
-JSVaK0a570bExmvSFbMoj2VFeB/0tecUBm8pcPQZLEW4RkdhlOYenZCLwl5d3SSF
-LflAVlxs5mL2jD5X2KW5fx5JEOauhm7DPjkm1B1oeef2pbI7b4l+IYSAAiLZdjyh
-jtKkbLQ35/W6oA4rYQ2W10b69IoLsHH1C8UO0rJbPBk3JcJ0vkNEoYnnGTSjMfK+
-2JKqDUuW6C8YyMiEdT6/
-=XgPH
------END PGP SIGNATURE-----
-
---=-5MynfAUYkx+C/bqy7P9h--
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7a7a6c1..7912eb1 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -396,8 +396,10 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
+ 	 */
+ 	if (params->interval) {
+ 		sdata->local->hw.conf.beacon_int = params->interval;
+-		ieee80211_hw_config(sdata->local,
+-				    IEEE80211_CONF_CHANGE_BEACON_INTERVAL);
++		err = ieee80211_hw_config(sdata->local,
++					IEEE80211_CONF_CHANGE_BEACON_INTERVAL);
++		if (err < 0)
++			return err;
+ 		/*
+ 		 * We updated some parameter so if below bails out
+ 		 * it's not an error.
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 29c3ecf..df7e9a8 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -243,10 +243,20 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ 	if (changed && local->open_count) {
+ 		ret = local->ops->config(local_to_hw(local), changed);
+ 		/*
++		 * Goal:
+ 		 * HW reconfiguration should never fail, the driver has told
+ 		 * us what it can support so it should live up to that promise.
++		 *
++		 * Current status:
++		 * rfkill is not integrated with mac80211 and a
++		 * configuration command can thus fail if hardware rfkill
++		 * is enabled
++		 *
++		 * FIXME: integrate rfkill with mac80211 and then add this
++		 * WARN_ON() back
++		 *
+ 		 */
+-		WARN_ON(ret);
++		/* WARN_ON(ret); */
+ 	}
+ 
+ 	return ret;
+-- 
+1.5.4.3
 
