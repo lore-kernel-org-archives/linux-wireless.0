@@ -1,85 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54879 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752139AbYLKUYw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 15:24:52 -0500
-Subject: Re: [Patch] nl80211: Add signal strength and bandwith to
-	nl80211station info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@googlemail.com>
-Cc: Henning Rogge <rogge@fgan.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812112110.59679.hrogge@googlemail.com> (sfid-20081211_211843_587270_BF9F41DB)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812111922.49439.hrogge@googlemail.com>
-	 <1229020101.8081.55.camel@johannes.berg>
-	 <200812112110.59679.hrogge@googlemail.com>
-	 (sfid-20081211_211843_587270_BF9F41DB)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kjssKXSk7uV3U1azDGDx"
-Date: Thu, 11 Dec 2008 21:24:01 +0100
-Message-Id: <1229027041.8081.72.camel@johannes.berg> (sfid-20081211_212455_068931_B1863423)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:55435 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752697AbYLDCca (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Dec 2008 21:32:30 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 18:32:30 -0800
+Date: Wed, 3 Dec 2008 18:32:28 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Brian <bnc@astronomicalresearchaustralia.org>
+CC: "ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [stable] [PATCH 1/3] ath9k: Handle -ENOMEM on RX
+	gracefully
+Message-ID: <20081204023228.GT6522@tesla> (sfid-20081204_033234_231441_E9446109)
+References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com> <1228251082-11677-2-git-send-email-lrodriguez@atheros.com> <1228251082-11677-3-git-send-email-lrodriguez@atheros.com> <1228251082-11677-4-git-send-email-lrodriguez@atheros.com> <20081203001253.GC14943@kroah.com> <43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com> <20081203002404.GA22789@tuxdriver.com> <20081203212255.GB4263@tuxdriver.com> <43e72e890812031414m6a5782e7ga8eed8d91fe056b2@mail.gmail.com> <49370F49.2090602@astronomicalresearchaustralia.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <49370F49.2090602@astronomicalresearchaustralia.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Dec 03, 2008 at 02:59:21PM -0800, Brian wrote:
+> Luis,
+> I tried to respond to your comment in bug 12110 but do not have a id yet.
+> 
+> Does this patch fix this bug?
+> 
+> 
+> Here is my response
+> 
+> 
+> I have the same problem but with wireless testing on a 2.6.28-rc6-wl kernel.
+> I can run for hours if I do not use the wireless heavily.
+> But will crash within 10mins if I use NX.
+> (I have the NX parm turned on in the kernel)
+> I also get the same symptoms re a ping that will just stop/start,
+> directly before a crash. Also it starts to use my swap file. I NEVER use
+> swap normally.
+> Would you like me to apply the same patch and see if I can get some message?
+> 
+> 
+> Can I get a patch for 2.6.28-rc6-wl ?
 
---=-kjssKXSk7uV3U1azDGDx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+wireless-testing is now on 2.6.28-rc7, please do a git pull and
+recompile and test that. It has some critical fixes for ath9k.
 
-On Thu, 2008-12-11 at 21:10 +0100, Henning Rogge wrote:
-> I noticed the MAX/AFTER_LAST comments are missing for most nl80211 enums.=
- ;)
-
-Hah
-
-> But I get this output on my local (2 card) ad-hoc network:
-> # ./iw dev wlan0 station dump
-> Station 00:1b:fc:91:7d:d2 (on wlan0)
->         inactive time:  52 ms
->         rx bytes:       207220
->         tx bytes:       1396
->         signal:         -66 dBm
->         tx bitrate:     18.0 MBit/s
->=20
-> Patch for iw attached (based on git tree an hour ago). Of course the 802.=
-11n=20
-> output part is only compile tested. Most of the patch is to put the new c=
-opy=20
-> of nl80211.h into iw (why does iw carry a copy of this file ?)
-
-Because it's easier to build that way if you don't have a current tree.
-
-I'll take the patch once the other one gets into the kernel tree.
-
-johannes
-
---=-kjssKXSk7uV3U1azDGDx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQXbeAAoJEKVg1VMiehFYSnIP/RUQUjWTGTyGUOpdJcEoDsP+
-ff8ONYe2nFwEbC6+9oyWRaRz1iLtW4R31Ma99LFrwArFCargqKaFQmfnAYXY/WWm
-lDBsSNgmGMMXtv4ckBvCS3jrCY98MKLbBd0llrHxQml+1ia+ZPJbggreBuwiYptP
-pp23BSFCTGfQ5KLLwtyRbcPNlgtKRxPguzQz0BblUiFCSFfDjK08lTqcUH97Cqwl
-B3XVtTtEeum+ton4dWGegH3dh20iKOdkrt5lhn2VZV3ON5HDGYU871v8r0B1iofe
-683zwCT3h0Aq/R1INXkeNyyrEwxf8udfTe2J/axPq4NzoBd6t9Bwlxe2B0sbrNTM
-EwG+ybI2S/H4HtO+7vx/AhEyRQY3h5j5zchBkrTxOYdISEBlcrbmaMiMBGU1TAbn
-+T1z5lRNN4kImuC5jrSNHSCif8Gy2UvOU3cyxqsY71Iwtq6pO4Zz8/WDGHDKiY9P
-Orwm/wiwYric8b7prT+/TMKdfWExO8LpUnJCsC1Aiou9g+21mcq15rBj7lnSmK6S
-RqWadRVevpNXU/K+IdU0TTfBAjAic6jCOPxsLKpQAkH/wSd0o5aUsY25pvg6cc0N
-cZZ0+Epo9vsM2NFBnWuqDGn81hh0xAHbtyCc7moWbt7eO2kDwRKR+bDcvPjdnW73
-KrIWh23UtbARCSInUJBW
-=RNDV
------END PGP SIGNATURE-----
-
---=-kjssKXSk7uV3U1azDGDx--
-
+  Luis
