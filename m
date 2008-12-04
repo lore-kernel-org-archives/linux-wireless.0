@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51161 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbYLRPpP (ORCPT
+Received: from ironport.netspeed.com.au ([203.31.48.201]:57864 "EHLO
+	ironport.netspeed.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752060AbYLDH7K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 10:45:15 -0500
-Date: Thu, 18 Dec 2008 10:30:42 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
-	mabbaswireless@gmail.com
-Subject: Re: [PATCH v2 1/3] cfg80211: add PM hooks
-Message-ID: <20081218153042.GD4121@tuxdriver.com> (sfid-20081218_164522_043842_FF80B154)
-References: <1229313039-5544-2-git-send-email-me@bobcopeland.com> <20081217153524.GA3539@tuxdriver.com> <1229537449.4268.10.camel@localhost>
+	Thu, 4 Dec 2008 02:59:10 -0500
+Message-ID: <49378DCB.3080401@astronomicalresearchaustralia.org> (sfid-20081204_085915_601185_5B71EBF9)
+Date: Thu, 04 Dec 2008 17:59:07 +1000
+From: Brian <bnc@astronomicalresearchaustralia.org>
+Reply-To: bnc@astronomicalresearchaustralia.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1229537449.4268.10.camel@localhost>
+CC: "ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: 2.6.28-rc7-wl
+References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>	<1228251082-11677-2-git-send-email-lrodriguez@atheros.com>	<1228251082-11677-3-git-send-email-lrodriguez@atheros.com>	<1228251082-11677-4-git-send-email-lrodriguez@atheros.com>	<20081203001253.GC14943@kroah.com>	<43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com>	<20081203002404.GA22789@tuxdriver.com>	<20081203212255.GB4263@tuxdriver.com>	<43e72e890812031414m6a5782e7ga8eed8d91fe056b2@mail.gmail.com>	<49370F49.2090602@astronomicalresearchaustralia.org> <20081204023228.GT6522@tesla>
+In-Reply-To: <20081204023228.GT6522@tesla>
+Content-Type: text/plain; charset=ISO-8859-1
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 17, 2008 at 07:10:49PM +0100, Johannes Berg wrote:
-> On Wed, 2008-12-17 at 10:35 -0500, John W. Linville wrote:
-> > On Sun, Dec 14, 2008 at 10:50:37PM -0500, Bob Copeland wrote:
-> > > From: Johannes Berg <johannes@sipsolutions.net>
-> > > 
-> > > This should help implement suspend/resume in mac80211, these
-> > > hooks will be run before the device is suspended and after it
-> > > resumes. Therefore, they can touch the hardware as much as
-> > > they want to.
-> > > 
-> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > 
-> > Is cfg80211 the right place for these?  Is it likely that any
-> > non-mac80211 users of cfg80211 will ever want to use these hooks?
+
+
+Luis,
 > 
-> That's a good question. But even if non-mac80211 won't use this, I don't
-> see how to get notifications in mac80211 w/o involving cfg80211, since
-> mac80211 doesn't really have a way to get at the ops there without this,
-> does it?
+> wireless-testing is now on 2.6.28-rc7, please do a git pull and
+> recompile and test that. It has some critical fixes for ath9k.
+> 
+Downloaded and installed, I had done a git-pull a few hours before and
+it was not there:)
 
-No, I suppose not.
+I set up my system with NX running and was waiting to be up 2hours.
+Unfortunately it only made 1:50.
+Still this is bundles better than the 10mins I was getting.
 
-I'm not too familiar with the internals of the PM stuff.  Is there
-any guarantee that the cfg80211 suspend stuff will run before the
-bus-specific suspend stuff?  Is this a concern?
+Some observations:
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+1) wpa_supplicant no longer chews up cpu/mem. It started and then did
+nothing from then on. It used to be in the top 5 on htop.
+
+2) I used to get a huge number of receive errors
+ This is what I started with Errors :3708
+ After an hour I had         Errors :3746
+
+3) Towards the end the memory usage was creeping, slightly, up but no
+where near the swap file.
+
+
+As suggested by others I did have a console running, but I was
+monitoring htop(to see if it started to use the swap) when it went.
+So I have no further diagnostics.
+
+When I did the compile it came up and asked me if I wanted the new
+diagnostic facility for the driver and I just pressed enter.
+Happy to go back and recompile(or can I turn it on).
+
+If I turn it on do you have a methodology to use it?
+
+Thanks for the great improvement,
+Brian
+
+
+
+
