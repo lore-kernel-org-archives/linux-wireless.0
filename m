@@ -1,72 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.185]:7581 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751085AbYLZSv1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2008 13:51:27 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so2642567rnd.17
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2008 10:51:25 -0800 (PST)
-Message-ID: <fd38e5150812261051y29851b18sf5638c57e355d6f2@mail.gmail.com> (sfid-20081226_195129_757498_650DEE93)
-Date: Sat, 27 Dec 2008 00:21:25 +0530
-From: "rajith pr" <rajithpr@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: How to install Ath5 driver?
-In-Reply-To: <1230245303.16253.8.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <fd38e5150812251125n62086e63y64584282fbe9dbe4@mail.gmail.com>
-	 <1230245303.16253.8.camel@dv>
+Received: from mga02.intel.com ([134.134.136.20]:50799 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754163AbYLDVYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2008 16:24:08 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [RFC] mac80211: remove WARN_ON() from ieee80211_hw_config
+Date: Thu,  4 Dec 2008 13:25:05 -0800
+Message-Id: <1228425905-15666-1-git-send-email-reinette.chatre@intel.com> (sfid-20081204_222414_090451_35DA339F)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Pavel,
+ieee80211_hw_config can return an error when the hardware
+has rfkill enabled. A WARN_ON() is too harsh for this
+failure as it is a valid scenario. Only comment this warning
+as we would like to have it back when rfkill is integrated into
+mac80211.
 
-I intend to work on the ath5k driver only. Iam actually stuck with the
-Enabling ath5k section of
-http://wireless.kernel.org/en/users/Drivers/ath5k. May be a trivial
-think but i dont have an option but ask :-)
+Also reintroduce number of printks that will happen in this case.
 
-Enabling ath5k section talks about some configuration but i dont know
-where to configure these. Should i run some configuration tool and
-follow the steps ??
+This patch essentially reverts patch:
+5f0387fc3337ca26f0745f945f550f0c3734960f
+"mac80211: clean up ieee80211_hw_config errors"
 
-Thanks in advance,
+Things not reverted is the reintroduction of a comment
+and debug statement.
 
-Regards,
-Rajith.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+There are several places where ieee80211_hw_config's return code is not
+checked. I did not change those as it appears to be intended considering
+that the patch being reverted had nothing to do with them not using the
+return code.
 
-On Fri, Dec 26, 2008 at 4:18 AM, Pavel Roskin <proski@gnu.org> wrote:
-> On Fri, 2008-12-26 at 02:25 +0700, rajith pr wrote:
->> Hi all,
->>
->> Iam a wireless LAN developer over 4 Yrs of experience. Have worked on
->> wireless LAN AP, Routers and switches.
->> Have a passion to work on linux but never had the chance to do so. So,
->> i though this would be the rite time to start working on it. WLAN
->> being something i have expertise in i would like to do some feature
->> development on madwifi drivers.
->
-> MadWifi is not the same thing as ath5k.  If you want to work on MadWifi,
-> please look at https://madwifi-project.org/ and write to
-> madwifi-devel@lists.sourceforge.net if you have any questions.
->
->> After reading the developer notes from wiki i have been able to
->> download the sources. Now i want to build the sources, install the
->> driver and try it on wireless card.
->
-> Please be specific want you read, what you downloaded (including the
-> version) and what kind of problems you have with the code.
->
->> Can anyone guide me on this.
->
-> It would be better if you follow the existing documentation and ask only
-> about thing that are unclear or about problems that are not described in
-> the documentation.  Asking for guidance is an "open-ended question".
-> More details here:
->
-> http://www.catb.org/~esr/faqs/smart-questions.html#explicit
->
-> --
-> Regards,
-> Pavel Roskin
->
+It may also be that in this patch only the second hunk be necessary. Please
+provide feedback in this regard.
+
+When a user has rfkill enabled (and using this patch) iwlwifi's log does
+indicate to user what problem can be without needing the WARN:
+
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+iwlagn: Radio Frequency Kill Switch is On:
+Kill switch must be turned off for wireless networking to work.
+
+ net/mac80211/cfg.c  |    5 +++--
+ net/mac80211/main.c |   12 +++++++++++-
+ net/mac80211/scan.c |   14 +++++++++++---
+ 3 files changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7a7a6c1..1c0bb98 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -396,8 +396,9 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
+ 	 */
+ 	if (params->interval) {
+ 		sdata->local->hw.conf.beacon_int = params->interval;
+-		ieee80211_hw_config(sdata->local,
+-				    IEEE80211_CONF_CHANGE_BEACON_INTERVAL);
++		if (ieee80211_hw_config(sdata->local,
++					IEEE80211_CONF_CHANGE_BEACON_INTERVAL))
++			return -EINVAL;
+ 		/*
+ 		 * We updated some parameter so if below bails out
+ 		 * it's not an error.
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 29c3ecf..df7e9a8 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -243,10 +243,20 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ 	if (changed && local->open_count) {
+ 		ret = local->ops->config(local_to_hw(local), changed);
+ 		/*
++		 * Goal:
+ 		 * HW reconfiguration should never fail, the driver has told
+ 		 * us what it can support so it should live up to that promise.
++		 *
++		 * Current status:
++		 * rfkill is not integrated with mac80211 and a
++		 * configuration command can thus fail if hardware rfkill
++		 * is enabled
++		 *
++		 * FIXME: integrate rfkill with mac80211 and then add this
++		 * WARN_ON() back
++		 *
+ 		 */
+-		WARN_ON(ret);
++		/* WARN_ON(ret); */
+ 	}
+ 
+ 	return ret;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index f5c7c33..2b897f6 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -453,12 +453,16 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 		 * that we won't have acted upon, try now. ieee80211_hw_config
+ 		 * will set the flag based on actual changes.
+ 		 */
+-		ieee80211_hw_config(local, 0);
++		if (ieee80211_hw_config(local, 0))
++			printk(KERN_DEBUG "%s: failed to restore operational "
++			       "channel after scan\n", wiphy_name(local->hw.wiphy));
+ 		goto done;
+ 	}
+ 
+ 	local->sw_scanning = false;
+-	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
++	if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
++		printk(KERN_DEBUG "%s: failed to restore operational "
++		       "channel after scan\n", wiphy_name(local->hw.wiphy));
+ 
+ 	netif_tx_lock_bh(local->mdev);
+ 	netif_addr_lock(local->mdev);
+@@ -546,8 +550,12 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		if (!skip) {
+ 			local->scan_channel = chan;
+ 			if (ieee80211_hw_config(local,
+-						IEEE80211_CONF_CHANGE_CHANNEL))
++						IEEE80211_CONF_CHANGE_CHANNEL)) {
++				printk(KERN_DEBUG "%s: failed to set freq to "
++				       "%d MHz for scan\n", wiphy_name(local->hw.wiphy),
++				       chan->center_freq);
+ 				skip = 1;
++			}
+ 		}
+ 
+ 		/* advance state machine to next channel/band */
+-- 
+1.5.4.3
+
