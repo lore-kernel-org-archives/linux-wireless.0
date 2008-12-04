@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:40183 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752340AbYLOXEJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 18:04:09 -0500
-Received: by ewy10 with SMTP id 10so3360713ewy.13
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 15:04:07 -0800 (PST)
-Message-ID: <4946E24E.1020504@gmail.com> (sfid-20081216_000413_440749_1E4DB23B)
-Date: Tue, 16 Dec 2008 00:03:42 +0100
-From: Artur Skawina <art.08.09@gmail.com>
+Received: from web23105.mail.ird.yahoo.com ([217.146.189.45]:45765 "HELO
+	web23105.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755544AbYLDStj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2008 13:49:39 -0500
+Date: Thu, 4 Dec 2008 18:49:36 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH V2] rtl8187: Improve wireless statistics for RTL8187
+To: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
+In-Reply-To: <49375ac0.z1uZDBLv3IxmmMgD%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-References: <494698AF.4020204@gmail.com> <4946A4C9.7040304@lwfinger.net> <200812152043.21971.chunkeey@web.de> <4946BC0C.3040701@gmail.com>
-In-Reply-To: <4946BC0C.3040701@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Message-ID: <878078.93089.qm@web23105.mail.ird.yahoo.com> (sfid-20081204_194942_548936_C9C1113D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Artur Skawina wrote:
-> Christian Lamparter wrote:
->> On Monday 15 December 2008 19:41:13 Larry Finger wrote:
->>> Artur Skawina wrote:
->>>> I have a sinus 154 data usb adapter, which used to work w/ p54 in 2.6.27:
->>> Can you bisect this problem?
->> Naa I guess its "p54: fix memory management".
->> 872037115977dc07ae05e4b6b769bf8726da4e87
->>
->> so tell us if this patch works.
-> 
-> Nope, the attached patch did not improve things, as the log below shows.
-> I'll try bisecting.
 
-Done:
-78e74789bf2dab82f9539cd46e7f7583ff9516c1 is first bad commit
-commit 78e74789bf2dab82f9539cd46e7f7583ff9516c1
-Author: Christian Lamparter <chunkeey@web.de>
-Date:   Wed Oct 15 04:07:16 2008 +0200
 
-    p54: fix memory management
 
-artur 
+--- On Thu, 4/12/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+> From: Larry Finger <Larry.Finger@lwfinger.net>
+> Subject: [PATCH V2] rtl8187: Improve wireless statistics for RTL8187
+> To: "John W Linville" <linville@tuxdriver.com>
+> Cc: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>, "Hin-Tak Le=
+ung" <htl10@users.sourceforge.net>, barreyromartin@gmail.com, linux-wir=
+eless@vger.kernel.org
+> Date: Thursday, 4 December, 2008, 4:21 AM
+> The current wireless statistics for the RTL8187 poorly
+> indicate the signal
+> strength and quality. With testing, I found that the AGC
+> value is inversely
+> correlated with the strength as in the RTL8187B. By
+> implementing a similar
+> calculation, much more code becomes common to the two
+> devices.
+>=20
+> Signed-off-by: Larry Finger
+> <Larry.Finger@lwfinger.net>
+> Tested by: Mart=EDn Ernesto Barreyro
+> <barreyromartin@gmail.com>
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+
+Looks cleaner.
+
+Hin-Tak
+
+
+     =20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
