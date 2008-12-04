@@ -1,71 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33595 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752649AbYLAThp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 14:37:45 -0500
-Subject: Re: [PATCH/RFT] iwlagn: fix RX skb alignment
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Matt Mackall <mpm@selenic.com>,
-	Christophe Dumez <dchris@gmail.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	Jan =?UTF-8?Q?V=C4=8Del=C3=A1k?= <vcelak.jan@seznam.cz>,
-	Thomas Witt <witt_th@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andres Freund <andres@anarazel.de>
-In-Reply-To: <1228152631.10900.6.camel@rc-desk>
-References: <1226969241.4014.24.camel@johannes.berg>
-	 <1228152631.10900.6.camel@rc-desk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-H/z0b+k2hrzX/fAEy6XY"
-Date: Mon, 01 Dec 2008 20:37:09 +0100
-Message-Id: <1228160229.10627.38.camel@johannes.berg> (sfid-20081201_203748_832753_964D3BEE)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:45979 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757332AbYLDTTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2008 14:19:35 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 11:19:35 -0800
+Date: Thu, 4 Dec 2008 11:19:33 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Brian <bnc@astronomicalresearchaustralia.org>
+CC: "ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 2.6.28-rc7-wl
+Message-ID: <20081204191933.GB5970@tesla> (sfid-20081204_201954_702544_E4656F30)
+References: <1228251082-11677-3-git-send-email-lrodriguez@atheros.com> <1228251082-11677-4-git-send-email-lrodriguez@atheros.com> <20081203001253.GC14943@kroah.com> <43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com> <20081203002404.GA22789@tuxdriver.com> <20081203212255.GB4263@tuxdriver.com> <43e72e890812031414m6a5782e7ga8eed8d91fe056b2@mail.gmail.com> <49370F49.2090602@astronomicalresearchaustralia.org> <20081204023228.GT6522@tesla> <49378DCB.3080401@astronomicalresearchaustralia.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <49378DCB.3080401@astronomicalresearchaustralia.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Dec 03, 2008 at 11:59:07PM -0800, Brian wrote:
+> 
+> 
+> Luis,
+> >
+> > wireless-testing is now on 2.6.28-rc7, please do a git pull and
+> > recompile and test that. It has some critical fixes for ath9k.
+> >
+> Downloaded and installed, I had done a git-pull a few hours before and
+> it was not there:)
+> 
+> I set up my system with NX running and was waiting to be up 2hours.
+> Unfortunately it only made 1:50.
 
---=-H/z0b+k2hrzX/fAEy6XY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What do you mean Brian, did it crash? What happened?
 
-Reinette,
-
-> Above you mention that this patch fixes bug #11596. Could you please
-> explain how this patch addresses that problem?
-
-That looks like a mistake, I don't think it can fix that bug. I probably
-pasted the wrong URL, I had a whole bunch of iwlwifi bugs open
-everywhere around. I apologise for any problems caused by this, was this
-bug closed erroneously?
-
-johannes
-
---=-H/z0b+k2hrzX/fAEy6XY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJNDzhAAoJEKVg1VMiehFYqqIP/2RDfMdaHklkSUzI7ekwVPiU
-5OJgX3YlzNG/xHRwerVyC9BSadIE9cjqXpcfB5QIYipd5l2P9qcMa6U+vZV9lZox
-/wR57tk2M3Pb3rCE7I8sluGjNL7fh9xxqtXeT7vHRJaFbtJhxtWBbOB1TyWtH8/t
-m305j/ZLS3YK4pFM8S4ysA6apn44uhAmKAMyB0RTbYmi4MVKDzpzXGlM9WRsXd9E
-8SRUmfYJgLtg1qfwzdEMs2ykd6uMEPI1ZX/gUMyTPbQwBnIeZ3ok+1n2rn7hyaYA
-qNXv1C8xK+y2nCXvQvgr3oe6poyvsHKoYfoRXU4+t6NzNnkRAX5Z5pxjWvwmEiZ3
-+aCT6SAYKSVpMkxhG9WHhIhyh2MO/4iKCO180TpYxD0Pw15fUFyiPtzRiB6nENPU
-Pct8SgBggCSN7hBtJAMQTqEonf4Jazntw1/fQ3t9CB904Zem9c7IqOHIqO7tPfeD
-7iO/d7bs0CECzSftbk9osFEKxfMNsDNRUQNOTJHXlZLUXIUn7KjnHdejjyH7xc7h
-ZbT6ydCMp+FYRpXI+eTT0Gz0zGCQ+xwiJ/DBGXoTeM3CCWOdzhfCy1LzOaYjZyoa
-ZYb9YizkqY60wPFTrOoiyfCnfQmWNe4VYM7XK4b9fpLAX+H+kTEgrZqzeUJ1JVTc
-RNXzS4+q0/z5I7ja5jWl
-=nuUe
------END PGP SIGNATURE-----
-
---=-H/z0b+k2hrzX/fAEy6XY--
-
+  Luis
