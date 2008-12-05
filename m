@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:53948 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540AbYLTKCU (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:48719 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924AbYLEFrQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 05:02:20 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so125886eye.37
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2008 02:02:19 -0800 (PST)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 14/15] rt2x00: Fix segementation fault
-Date: Sat, 20 Dec 2008 11:00:23 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200812201052.00655.IvDoorn@gmail.com> <200812201059.30095.IvDoorn@gmail.com> <200812201059.55767.IvDoorn@gmail.com>
-In-Reply-To: <200812201059.55767.IvDoorn@gmail.com>
+	Fri, 5 Dec 2008 00:47:16 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH v4 1/5] mac80211: enable IEEE80211_CONF_PS only when associated
+References: <20081202200219.5507.83250.stgit@tikku>
+	<20081202200359.5507.40576.stgit@tikku>
+	<1228411658.5692.19.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Fri, 05 Dec 2008 07:47:02 +0200
+In-Reply-To: <1228411658.5692.19.camel@johannes.berg> (ext Johannes Berg's message of "Thu\, 04 Dec 2008 18\:27\:38 +0100")
+Message-ID: <87vdtzi36x.fsf@nokia.com> (sfid-20081205_064721_521566_4501B9DF)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812201100.24069.IvDoorn@gmail.com> (sfid-20081220_110904_831174_DE9B4256)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The queue_end() macro points to 1 position after the
-queue, which means that if we want to know if queue
-is at the end of the queue we should first increment
-the position and then check if it is a valid entry.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-This fixes a segmentation fault which only occurs when
-the device has enough endpoints to provide a dedicated
-endpoint for all TX queues (which likely won't happen
-for rt2500usb and rt73usb, but will happen for rt2800usb).
+> On Tue, 2008-12-02 at 22:03 +0200, Kalle Valo wrote:
+>
+>> -	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+>> +	if (ps == local->powersave)
+>> +		return ret;
+>> +
+>> +set:
+>> +	local->powersave = ps;
+>> +
+>> +	if (sdata->vif.type != NL80211_IFTYPE_STATION)
+>> +		return ret;
+>
+> Shouldn't that test be earlier? There's little sense in supporting PS if
+> you have a non-STA interface. 
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+I'll move the test.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 83df312..0b29d76 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -434,11 +434,11 @@ static int rt2x00usb_find_endpoints(struct rt2x00_dev *rt2x00dev)
- 
- 		if (usb_endpoint_is_bulk_in(ep_desc)) {
- 			rt2x00usb_assign_endpoint(rt2x00dev->rx, ep_desc);
--		} else if (usb_endpoint_is_bulk_out(ep_desc)) {
-+		} else if (usb_endpoint_is_bulk_out(ep_desc) &&
-+			   (queue != queue_end(rt2x00dev))) {
- 			rt2x00usb_assign_endpoint(queue, ep_desc);
-+			queue = queue_next(queue);
- 
--			if (queue != queue_end(rt2x00dev))
--				queue = queue_next(queue);
- 			tx_ep_desc = ep_desc;
- 		}
- 	}
+> In fact, it might make sense to check that there's no other
+> interface (except monitor) open?
+
+I'll add this check as well.
+
+Thank you for the comments.
+
 -- 
-1.5.6.1
-
+Kalle Valo
