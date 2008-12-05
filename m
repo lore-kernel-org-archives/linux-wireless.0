@@ -1,320 +1,447 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39923 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756240AbYLKQRu (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:22756 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753414AbYLETVn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 11:17:50 -0500
-Received: from jm (a91-155-82-88.elisa-laajakaista.fi [91.155.82.88])
-	(authenticated bits=0)
-	by jmalinen.user.openhosting.com (8.13.8/8.13.8) with ESMTP id mBBGHfWO007826
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 11:17:43 -0500
-Date: Thu, 11 Dec 2008 18:17:41 +0200
-From: Jouni Malinen <j@w1.fi>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC] mac80211: Add HT rates into RX status reporting
-Message-ID: <20081211161741.GA27460@jm.kir.nu> (sfid-20081211_171755_461467_12BBE0E8)
+	Fri, 5 Dec 2008 14:21:43 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	stlc45xx-devel@garage.maemo.org
+Subject: Re: stlc45xx: mac80211 driver for N800 and N810
+References: <877i98iw4h.fsf@nokia.com>
+	<1221819119.10419.75.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Fri, 05 Dec 2008 21:20:15 +0200
+In-Reply-To: <1221819119.10419.75.camel@johannes.berg> (ext Johannes Berg's message of "Fri\, 19 Sep 2008 12\:11\:59 +0200")
+Message-ID: <87wsee5t00.fsf@nokia.com> (sfid-20081205_202149_697629_B92B3613)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds option for HT-enabled drivers to report HT rates
-(HT20/HT40, short GI, MCS index) to mac80211. These rates are
-currently not in the rate table, so the rate_idx is used to indicate
-MCS index.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Radiotap code gets some of the additional knowledge so that it can
-determine the used bitrate for HT rates, too (though, the rate field
-is not large enough to fit all rates). It would be useful to add MCS
-index, HT20/HT40, and short GI information into radiotap definition at
-some point, too, and the needed information for filling in those field
-is now available in mac80211.
+> On Fri, 2008-09-19 at 07:43 +0300, Kalle Valo wrote:
+>> Hello all,
+>> 
+>> Nokia yesterday published stlc45xx, which is a mac80211 driver for
+>> N800 and N810. Webpage here:
+>> 
+>> http://stlc45xx.garage.maemo.org/
+>
+> quick look at the code
 
-The ath9k change fixes and cleans up the RX status reporting by
-getting rid of code that used internal rate tables and ratekbps
-calculation. The correct value is now reported with MCS index instead
-of the old mechanism that defaulted to using the highest legacy rate.
+And a VERY late reply, sorry for taking so long.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+>> 	if (mutex_lock_interruptible(&stlc->mutex) < 0) {
+>> 		len = 0;
+>> 		goto out;
+>> 	}
+>
+> The interruptible seems fairly useless, I don't see the mutex being held
+> for very long periods of time anywhere?
 
----
- drivers/net/wireless/ath9k/recv.c |   62 ++++++++++++-----------------
- include/net/mac80211.h            |   11 ++++-
- net/mac80211/mlme.c               |    7 ++-
- net/mac80211/rx.c                 |   79 +++++++++++++++++++++++++++++++++-----
- 5 files changed, 112 insertions(+), 48 deletions(-)
+I added basically for bailing out deadlocks, so that I wouldn't have
+to reboot the device during deadlock. But I removed the interruptible
+versions now.
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/recv.c	2008-12-11 15:53:19.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/recv.c	2008-12-11 16:46:46.000000000 +0200
-@@ -111,33 +111,6 @@ static struct sk_buff *ath_rxbuf_alloc(s
- 	return skb;
- }
- 
--static int ath_rate2idx(struct ath_softc *sc, int rate)
--{
--	int i = 0, cur_band, n_rates;
--	struct ieee80211_hw *hw = sc->hw;
--
--	cur_band = hw->conf.channel->band;
--	n_rates = sc->sbands[cur_band].n_bitrates;
--
--	for (i = 0; i < n_rates; i++) {
--		if (sc->sbands[cur_band].bitrates[i].bitrate == rate)
--			break;
--	}
--
--	/*
--	 * NB:mac80211 validates rx rate index against the supported legacy rate
--	 * index only (should be done against ht rates also), return the highest
--	 * legacy rate index for rx rate which does not match any one of the
--	 * supported basic and extended rates to make mac80211 happy.
--	 * The following hack will be cleaned up once the issue with
--	 * the rx rate index validation in mac80211 is fixed.
--	 */
--	if (i == n_rates)
--		return n_rates - 1;
--
--	return i;
--}
--
- /*
-  * For Decrypt or Demic errors, we only mark packet status here and always push
-  * up the frame up to let mac80211 handle the actual error case, be it no
-@@ -147,9 +120,7 @@ static int ath_rx_prepare(struct sk_buff
- 			  struct ieee80211_rx_status *rx_status, bool *decrypt_error,
- 			  struct ath_softc *sc)
- {
--	struct ath_rate_table *rate_table = sc->cur_rate_table;
- 	struct ieee80211_hdr *hdr;
--	int ratekbps, rix;
- 	u8 ratecode;
- 	__le16 fc;
- 
-@@ -204,15 +175,37 @@ static int ath_rx_prepare(struct sk_buff
- 	}
- 
- 	ratecode = ds->ds_rxstat.rs_rate;
--	rix = rate_table->rateCodeToIndex[ratecode];
--	ratekbps = rate_table->info[rix].ratekbps;
- 
--	/* HT rate */
- 	if (ratecode & 0x80) {
-+		/* HT rate */
- 		if (ds->ds_rxstat.rs_flags & ATH9K_RX_2040)
--			ratekbps = (ratekbps * 27) / 13;
-+			rx_status->flag |= RX_FLAG_HT40;
-+		else
-+			rx_status->flag |= RX_FLAG_HT20;
- 		if (ds->ds_rxstat.rs_flags & ATH9K_RX_GI)
--			ratekbps = (ratekbps * 10) / 9;
-+			rx_status->flag |= RX_FLAG_SHORT_GI;
-+		rx_status->rate_idx = ratecode & 0x7f;
-+	} else {
-+		int i = 0, cur_band, n_rates;
-+		struct ieee80211_hw *hw = sc->hw;
-+
-+		cur_band = hw->conf.channel->band;
-+		n_rates = sc->sbands[cur_band].n_bitrates;
-+
-+		for (i = 0; i < n_rates; i++) {
-+			if (sc->sbands[cur_band].bitrates[i].hw_value ==
-+			    ratecode) {
-+				rx_status->rate_idx = i;
-+				break;
-+			}
-+
-+			if (sc->sbands[cur_band].bitrates[i].hw_value_short ==
-+			    ratecode) {
-+				rx_status->rate_idx = i;
-+				rx_status->flag |= RX_FLAG_SHORTPRE;
-+				break;
-+			}
-+		}
- 	}
- 
- 	rx_status->mactime = ath_extend_tsf(sc, ds->ds_rxstat.rs_tstamp);
-@@ -220,7 +213,6 @@ static int ath_rx_prepare(struct sk_buff
- 	rx_status->freq =  sc->hw->conf.channel->center_freq;
- 	rx_status->noise = sc->sc_ani.sc_noise_floor;
- 	rx_status->signal = rx_status->noise + ds->ds_rxstat.rs_rssi;
--	rx_status->rate_idx = ath_rate2idx(sc, (ratekbps / 100));
- 	rx_status->antenna = ds->ds_rxstat.rs_antenna;
- 
- 	/* at 45 you will be able to use MCS 15 reliably. A more elaborate
---- wireless-testing.orig/include/net/mac80211.h	2008-12-11 16:25:19.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2008-12-11 16:30:33.000000000 +0200
-@@ -436,6 +436,9 @@ ieee80211_tx_info_clear_status(struct ie
-  *	is valid. This is useful in monitor mode and necessary for beacon frames
-  *	to enable IBSS merging.
-  * @RX_FLAG_SHORTPRE: Short preamble was used for this frame
-+ * @RX_FLAG_HT20: HT20 MCS was used and rate_idx is MCS index
-+ * @RX_FLAG_HT40: HT40 MCS was used and rate_idx is MCS index
-+ * @RX_FLAG_SHORT_GI: Short guard interval was used
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR	= 1<<0,
-@@ -446,7 +449,10 @@ enum mac80211_rx_flags {
- 	RX_FLAG_FAILED_FCS_CRC	= 1<<5,
- 	RX_FLAG_FAILED_PLCP_CRC = 1<<6,
- 	RX_FLAG_TSFT		= 1<<7,
--	RX_FLAG_SHORTPRE	= 1<<8
-+	RX_FLAG_SHORTPRE	= 1<<8,
-+	RX_FLAG_HT20		= 1<<9,
-+	RX_FLAG_HT40		= 1<<10,
-+	RX_FLAG_SHORT_GI	= 1<<11,
- };
- 
- /**
-@@ -466,7 +472,8 @@ enum mac80211_rx_flags {
-  * @noise: noise when receiving this frame, in dBm.
-  * @qual: overall signal quality indication, in percent (0-100).
-  * @antenna: antenna used
-- * @rate_idx: index of data rate into band's supported rates
-+ * @rate_idx: index of data rate into band's supported rates or MCS index if
-+ *	HT rates are use (RX_FLAG_HT20 or RX_FLAG_HT40)
-  * @flag: %RX_FLAG_*
-  */
- struct ieee80211_rx_status {
---- wireless-testing.orig/net/mac80211/mlme.c	2008-12-11 16:48:40.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2008-12-11 16:59:01.000000000 +0200
-@@ -1629,8 +1629,13 @@ static void ieee80211_rx_bss_info(struct
- 			 * e.g: at 1 MBit that means mactime is 192 usec earlier
- 			 * (=24 bytes * 8 usecs/byte) than the beacon timestamp.
- 			 */
--			int rate = local->hw.wiphy->bands[band]->
-+			int rate;
-+			if (rx_status->flag & (RX_FLAG_HT20 | RX_FLAG_HT40)) {
-+				rate = 65; /* TODO: HT rates */
-+			} else {
-+				rate = local->hw.wiphy->bands[band]->
- 					bitrates[rx_status->rate_idx].bitrate;
-+			}
- 			rx_timestamp = rx_status->mactime + (24 * 8 * 10 / rate);
- 		} else if (local && local->ops && local->ops->get_tsf)
- 			/* second best option: get current TSF */
---- wireless-testing.orig/net/mac80211/rx.c	2008-12-11 16:48:43.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2008-12-11 18:05:31.000000000 +0200
-@@ -149,7 +149,41 @@ ieee80211_add_rx_radiotap_header(struct 
- 	pos++;
- 
- 	/* IEEE80211_RADIOTAP_RATE */
--	*pos = rate->bitrate / 5;
-+	if (status->flag & (RX_FLAG_HT20 | RX_FLAG_HT40)) {
-+		int mcs_idx = status->rate_idx;
-+		if (mcs_idx >= 16) {
-+			/* TODO: MCS index 16.. */
-+			*pos = 0;
-+		} else {
-+			int mcs2rate_ht40[16] = {
-+				13500, 27500, 40500, 54000,
-+				81500, 108000, 121500, 135000,
-+				27000, 54000, 81000, 108000,
-+				162000, 216000, 243000, 270000
-+			};
-+			int mcs2rate[16] = {
-+				6500, 13000, 19500, 26000,
-+				39000, 52000, 58500, 65000,
-+				13000, 26000, 39000, 52000,
-+				78000, 104000, 117000, 130000
-+			};
-+			int rate;
-+			if (status->flag & RX_FLAG_HT40)
-+				rate = mcs2rate_ht40[mcs_idx];
-+			else
-+				rate = mcs2rate[mcs_idx];
-+
-+			if (status->flag & RX_FLAG_SHORT_GI)
-+				rate = rate * 10 / 9;
-+
-+			rate /= 500;
-+			if (rate > 255)
-+				rate = 255;
-+
-+			*pos = rate;
-+		}
-+	} else
-+		*pos = rate->bitrate / 5;
- 	pos++;
- 
- 	/* IEEE80211_RADIOTAP_CHANNEL */
-@@ -1863,10 +1897,16 @@ static int prepare_for_handlers(struct i
- 			if (!(sdata->dev->flags & IFF_PROMISC))
- 				return 0;
- 			rx->flags &= ~IEEE80211_RX_RA_MATCH;
--		} else if (!rx->sta)
-+		} else if (!rx->sta) {
-+			int rate_idx;
-+			if (rx->status->flag & (RX_FLAG_HT20 | RX_FLAG_HT40))
-+				rate_idx = 0; /* TODO: HT rates */
-+			else
-+				rate_idx = rx->status->rate_idx;
- 			rx->sta = ieee80211_ibss_add_sta(sdata, rx->skb,
- 						bssid, hdr->addr2,
--						BIT(rx->status->rate_idx));
-+						BIT(rate_idx));
-+		}
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
- 		if (!multicast &&
-@@ -2072,7 +2112,14 @@ static u8 ieee80211_sta_manage_reorder_b
- 					tid_agg_rx->reorder_buf[index]->cb,
- 					sizeof(status));
- 				sband = local->hw.wiphy->bands[status.band];
--				rate = &sband->bitrates[status.rate_idx];
-+				if (status.flag &
-+				    (RX_FLAG_HT20 | RX_FLAG_HT40)) {
-+					/* TODO: HT rates */
-+					rate = sband->bitrates;
-+				} else {
-+					rate = &sband->bitrates
-+						[status.rate_idx];
-+				}
- 				__ieee80211_rx_handle_packet(hw,
- 					tid_agg_rx->reorder_buf[index],
- 					&status, rate);
-@@ -2116,7 +2163,10 @@ static u8 ieee80211_sta_manage_reorder_b
- 		memcpy(&status, tid_agg_rx->reorder_buf[index]->cb,
- 			sizeof(status));
- 		sband = local->hw.wiphy->bands[status.band];
--		rate = &sband->bitrates[status.rate_idx];
-+		if (status.flag & (RX_FLAG_HT20 | RX_FLAG_HT40))
-+			rate = sband->bitrates; /* TODO: HT rates */
-+		else
-+			rate = &sband->bitrates[status.rate_idx];
- 		__ieee80211_rx_handle_packet(hw, tid_agg_rx->reorder_buf[index],
- 					     &status, rate);
- 		tid_agg_rx->stored_mpdu_num--;
-@@ -2204,15 +2254,24 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	}
- 
- 	sband = local->hw.wiphy->bands[status->band];
--
--	if (!sband ||
--	    status->rate_idx < 0 ||
--	    status->rate_idx >= sband->n_bitrates) {
-+	if (!sband) {
- 		WARN_ON(1);
- 		return;
- 	}
- 
--	rate = &sband->bitrates[status->rate_idx];
-+	if (status->flag & (RX_FLAG_HT20 | RX_FLAG_HT40)) {
-+		/* HT rates are not in the table - use the highest legacy rate
-+		 * for now since other parts of mac80211 may not yet be fully
-+		 * MCS aware. */
-+		rate = &sband->bitrates[sband->n_bitrates - 1];
-+	} else {
-+		if (status->rate_idx < 0 ||
-+		    status->rate_idx >= sband->n_bitrates) {
-+			WARN_ON(1);
-+			return;
-+		}
-+		rate = &sband->bitrates[status->rate_idx];
-+	}
- 
- 	/*
- 	 * key references and virtual interfaces are protected using RCU
+>
+>> 		stlc45xx_error("invalid cal_rssi lenght: %d", count);
+>
+> typo. I love reviewing in a program with spell checking ;)
+
+Fixed.
+
+>> 	stlc->cal_rssi_ready = 1;
+>
+> that variable is unneeded
+
+Actually it's still used:
+
+	if (!stlc->cal_rssi_ready) {
+		stlc45xx_error("rssi calibration data missing");
+		ret = -ENOENT;
+		goto out_unlock;
+	}
+
+But I'll remove it in upcoming patches.
+
+>> 	if (count != CHANNEL_CAL_ARRAY_LEN) {
+>
+> I'd suspect that is not a constant, in the US you have 11 channels? Or
+> are they in there but disabled?
+
+It's a constant.
+
+>> 	stlc->cal_channels_ready = 1;
+
+Same comment as with cal_rssi_ready
+
+> another pointless variable
+>
+>> 	ssize_t len;
+>
+> trailing whitespace in a number of places, run sed 's/\s*$//' or
+> something like that :)
+
+I now run checkpatch and all whitespace problems should be fixed.
+
+>> 	/* FIXME: what's the maximum length of buf? page size? */
+>> 	len = 500;
+>
+> Oh, yes, as far as I know.
+
+Ok, I used PAGE_SIZE.
+
+>> 	len = snprintf(buf, len, "%i\n", stlc->psm);
+>
+> but really, there's little use for snprintf for something that can at
+> most get like 13 characters.
+
+Think it more like academic interest :)
+
+>> static ssize_t stlc45xx_sysfs_store_psm(struct device *dev,
+>> 					struct device_attribute *attr, 
+>> 					const char *buf, size_t count)
+>> {
+>> 	struct stlc45xx *stlc = dev_get_drvdata(dev);
+>> 	int val, ret;
+>> 
+>> 	ret = sscanf(buf, "%d", &val);
+>
+> I think you may want strict_strtoul.
+
+I removed entire function and used CONF_PS instead.
+
+>> static u16 stlc45xx_read16(struct stlc45xx *stlc, unsigned long addr)
+>
+>> static u32 stlc45xx_read32(struct stlc45xx *stlc, unsigned long addr)
+>
+>> static void stlc45xx_write16(struct stlc45xx *stlc, unsigned long addr, u16 val)
+>
+>> static void stlc45xx_write32(struct stlc45xx *stlc, unsigned long addr, u32 val)
+>
+> I'd almost think those should be declared inline, although the compiler
+> might?
+
+Compiler should do it automatically.
+
+>> static void stlc45xx_dump_registers(struct stlc45xx *stlc)
+>
+> Do we need this? It looks unused.
+
+Removed.
+
+>> 	list_for_each_entry(txbuffer, &stlc->txbuffer, buffer_list) {
+>> 		if (pos + len < txbuffer->start) {
+>> 			found = 1;
+>> 			break;
+>> 		}
+>>                 pos = ALIGN(txbuffer->end + 1, 4);
+>> 	}
+>> 
+>> 	if (!found && (pos + len > FIRMWARE_TXBUFFER_END))
+>> 		/* not enough room */
+>> 		pos = -1;
+>
+> Afaict the found variable can be removed since the txbuffer->start will
+> be < FIRMWARE_TXBUFFER_END of course.
+
+You are right (as usual), removed the variable.
+
+> This code is actually rather subtle, comments would be good since the
+> list must always contain the entries in the order that they're in in the
+> firmware buffer too.
+
+I added some comments, but I'll try to add more later.
+
+>> static int stlc45xx_txbuffer_add(struct stlc45xx *stlc,
+>> 				 struct txbuffer *txbuffer) 
+>> {
+>> 	struct txbuffer *r, *prev = NULL;
+>> 	int ret = -1;
+>> 	
+>> 	stlc45xx_debug(DEBUG_FUNC, "%s()", __func__);
+>> 
+>> 	if (list_empty(&stlc->txbuffer)) {
+>> 		list_add(&txbuffer->buffer_list, &stlc->txbuffer);
+>> 		ret = 0;
+>> 		goto out;
+>
+> you can just return since there is no cleanup :)
+
+Changed.
+
+>> 	r = list_first_entry(&stlc->txbuffer, struct txbuffer, buffer_list);
+>> 	
+>> 	if (txbuffer->start < r->start) {
+>> 		list_add_tail(&txbuffer->buffer_list, &r->buffer_list);
+>> 		ret = 0;
+>> 		goto out;
+>> 	}
+>
+> list_add_tail? This seems like it should be list_add() since it's before
+> the first item.
+
+Definitely, fixed.
+
+>> 	prev = NULL;
+>> 	list_for_each_entry(r, &stlc->txbuffer, buffer_list) {
+>> 		WARN_ON_ONCE(txbuffer->start >= r->start
+>> 			     && txbuffer->start <= r->end);
+>> 		WARN_ON_ONCE(txbuffer->end >= r->start
+>> 			     && txbuffer->end <= r->end);
+>> 		if (prev && prev->end < txbuffer->start &&
+>> 		    txbuffer->start < r->start) {                <---****** txbuffer->end??
+>> 			list_add_tail(&txbuffer->buffer_list, &r->buffer_list);
+>> 			ret = 0;
+>> 			goto out;
+>> 		}
+>> 		prev = r;
+>> 	}
+>
+> This looks complicated and buggy, how about this instead:
+
+Yeah, I'm not very proud of that buffer allocation code.
+
+> 	prev = NULL;
+> 	list_for_each_entry(r, &stlc->txbuffer, buffer_list) {
+> 		/* skip first entry, we checked for that above */
+> 		if (!prev)
+> 			continue;
+
+Expect that we have to update prev, I did it like this:
+
+		/* skip first entry, we checked for that above */
+		if (!prev) {
+			prev = r;
+			continue;
+		}
+
+> 		/* double-check overlaps */
+> 		WARN_ON_ONCE(txbuffer->start >= r->start &&
+> 			     txbuffer->start <= r->end);
+> 		WARN_ON_ONCE(txbuffer->end >= r->start &&
+> 			     txbuffer->end <= r->end);
+>
+> 		if (prev->end < txbuffer->start &&
+> 		    txbuffer->end < r->start) {
+> 			/* insert at this spot */
+> 			list_add_tail(&txbuffer->buffer_list, &r->buffer_list);
+> 			return 0;
+> 		}
+> 		prev = r;
+> 	}
+>
+
+[...]
+
+>>         if (pos < 0) {
+>> 		return NULL;
+>>         }
+>
+> useless braces
+
+Fixed.
+
+>> 	WARN_ON_ONCE(pos + len > FIRMWARE_TXBUFFER_END);
+>> 	WARN_ON_ONCE(pos < FIRMWARE_TXBUFFER_START);
+>> 
+>> 	entry = kmalloc(sizeof(*entry), GFP_ATOMIC);
+>> 	entry->start = pos;
+>> 	entry->frame_start = pos + FIRMWARE_TXBUFFER_HEADER;
+>> 	entry->end = entry->start + len;
+>
+> I think this can be
+> 	entry->end = entry->start + len - 1
+> since you treat it as such in all the other code afaict. Might pack the
+> buffers a bit better and require less padding.
+
+I think you are right, though didn't check that throughly. Seems to
+work with iperf still, I'm satisfied.
+
+>> /* caller must hold tx_lock */
+>> static void stlc45xx_check_txsent(struct stlc45xx *stlc) 
+>> {
+>> 	struct txbuffer *entry, *n;
+>> 
+>> 	/* FIXME: notify mac80211? */
+>
+> Yeah, you'd probably want to.
+
+Fixed.
+
+>> static void stlc45xx_power_on(struct stlc45xx *stlc)
+>> {
+>> 	omap_set_gpio_dataout(stlc->config->power_gpio, 1);
+>> 	enable_irq(OMAP_GPIO_IRQ(stlc->config->irq_gpio));
+>> 
+>> 	/*
+>> 	 * need to wait a while before device can be accessed, the lenght
+>
+> another typo
+
+Fixed.
+
+>> /* caller must hold tx_lock */
+>> static void stlc45xx_flush_queues(struct stlc45xx *stlc) 
+>> {
+>> 	struct txbuffer *entry;
+>> 
+>> 	/* FIXME: notify mac80211? */
+>
+> given that reset shouldn't happen and on stop mac80211 doesn't care, I
+> wouldn't bother.
+
+Ok, fixme removed.
+
+>> static void stlc45xx_work_reset(struct work_struct *work)
+>> {
+>> 	struct stlc45xx *stlc = container_of(work, struct stlc45xx,
+>> 					     work_reset);
+>
+> If reset _does_ happen you could use the mac80211 notification callback
+> to tell it to associate again.
+
+Actually that's not needed, in practise the firmware reset happens so
+fast that the AP doesn't notice anything. We just need to give exactly
+same settings back to the firmware after reset, and then we can
+continue as before the reset.
+
+>> static int stlc45xx_rx_txack(struct stlc45xx *stlc, struct sk_buff *skb)
+>> {
+>
+>
+>> 	stlc45xx_check_txsent(stlc);
+>> 	if (list_empty(&stlc->tx_sent))
+>> 		/* there are pending frames, we can stop the tx timeout
+>> 		 * timer */
+>> 		cancel_delayed_work(&stlc->work_tx_timeout);
+>
+> there are _no_ pending frames [...]
+
+Oops, fixed.
+
+>> 	memset(&status, 0, sizeof(status));
+>> 
+>> 	status.freq = data->frequency;
+>> 	status.signal = data->rcpi / 2 - 110;
+>> 
+>> 	/* let's assume that maximum rcpi value is 140 (= 35 dBm) */
+>> 	status.qual = data->rcpi * 100 / 140;
+>> 
+>> 	status.band = IEEE80211_BAND_2GHZ;
+>> 
+>> 	/*
+>> 	 * FIXME: this gives warning from __ieee80211_rx()
+>> 	 *
+>> 	 * status.rate_idx = data->rate;
+>> 	 */
+>
+> That's strange, you should print out the index and see why it warns, it
+> shouldn't afaict. Unless the docs are wrong...
+
+I'll check it later.
+
+>> 	__ieee80211_rx(stlc->hw, skb, &status);
+>
+> Use ieee80211_rx() without the underscores, the __ is just a hack to
+> make the symbol clash go away... Jiri never should have let it escape
+> the header file.
+
+Fixed.
+
+>> 	setup->antenna = 2;
+>> 	setup->rx_align = 0;
+>> 	setup->rx_buffer = FIRMWARE_RXBUFFER_START;
+>> 	setup->rx_mtu = FIRMWARE_MTU;
+>> 	setup->frontend = 5;
+>
+> There are #defines in the header file for some of these
+
+Added an entry to TODO file.
+
+>> static int stlc45xx_op_add_interface(struct ieee80211_hw *hw,
+>> 				     struct ieee80211_if_init_conf *conf)
+>> {
+>> 	struct stlc45xx *stlc = hw->priv;
+>> 
+>> 	stlc45xx_debug(DEBUG_FUNC, "%s", __func__);
+>> 	
+>> 	switch (conf->type) {
+>> 	case IEEE80211_IF_TYPE_STA:
+>> 		break;
+>> 	default:
+>> 		return -EOPNOTSUPP;
+>> 	}
+>
+> You need to keep track whether you're already up or not, right now
+> you're allowing multiple STA interfaces.
+
+Again added added to TODO file, will fix it later.
+
+>> static void stlc45xx_op_remove_interface(struct ieee80211_hw *hw,
+>> 					 struct ieee80211_if_init_conf *conf)
+>> {
+>> 	stlc45xx_debug(DEBUG_FUNC, "%s", __func__);
+>> }
+>
+> That's why you need _remove_interface in any case and it isn't
+> optional :) Also you really should clear the MAC address or go into the
+> no-ack mode so pure monitoring works.
+
+Ack.
+
+>> static void stlc45xx_op_configure_filter(struct ieee80211_hw *hw,
+>> 				      unsigned int changed_flags,
+>> 				      unsigned int *total_flags,
+>> 				      int mc_count,
+>> 				      struct dev_addr_list *mc_list) 
+>> {
+>> 	*total_flags = 0;
+>> }
+>
+> If I understand the documentation correctly you can actually support a
+> few things here.
+
+Sure does, never just found the time to implement them.
+
+>> /* can't be const, mac80211 writes to this */
+>> static struct ieee80211_supported_band stlc45xx_band_2ghz = {
+>
+> I don't think that's true for this one? Not that it matters. const is a
+> pure compiler thing anyway.
+
+Haven't checked for a long time.
+
+>> static int stlc45xx_register_mac80211(struct stlc45xx *stlc)
+>> {
+>> 	/* FIXME: SET_IEEE80211_PERM_ADDR() requires default_mac_addr
+>> 	   to be non-const for some strange reason */
+>
+> Bug I guess :)
+
+Ok, I'll try to remember to send a patch for this.
+
+>> 	stlc = hw->priv;
+>> 	memset(stlc, 0, sizeof(*stlc));
+>
+> should already be cleared, but you can do it again of course :)
+
+Removed memset().
+
+Thanks a lot for the comments, they were very valuable. Your comments
+are also a very good example to show people in our company why open
+source really works.
+
+I pushed all the changes to the stlc45xx git repository now:
+
+http://gitorious.org/projects/stlc45xx
+
+gitorious.org doesn't seem to understand about branches and the commit
+log looks confusing. Do a git checkout if you want to look at the
+changes in more detail.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Kalle Valo
