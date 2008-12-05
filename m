@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:35485 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750764AbYLEFRd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2008 00:17:33 -0500
-Received: from compute1.internal (compute1.internal [10.202.2.41])
-	by out1.messagingengine.com (Postfix) with ESMTP id 149FB1CBF24
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Dec 2008 00:17:30 -0500 (EST)
-Message-Id: <1228454249.2652.1288380409@webmail.messagingengine.com> (sfid-20081205_061749_224487_3E32D4B6)
-From: "Dan E" <trg_info@mailhaven.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="ISO-8859-1"
-MIME-Version: 1.0
-Subject: CRDA question
-Date: Fri, 05 Dec 2008 00:17:29 -0500
+Received: from mga02.intel.com ([134.134.136.20]:61539 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750877AbYLEP5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2008 10:57:44 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/6] iwlwifi driver updates
+Date: Fri,  5 Dec 2008 07:58:35 -0800
+Message-Id: <1228492721-27381-1-git-send-email-reinette.chatre@intel.com> (sfid-20081205_165752_470431_6D0D03A1)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What is the purpose of the "intersect" program in CRDA? It builds but it
-doesn't seem to be used anywhere. I also notice the CRDA source has its
-own nl80211.h header file, as does the source tree for "iw". Shouldn't
-userspace tools just include the sanitized kernel header from the
-standard gcc include-file locations? Having multiple copies (and
-versions) of nl80211.h everywhere seems like a bad idea.
+This series contains a few cleanups and the following fixes:
+- patch 2 continues work on 3945 rate scaling
+- patch 4 fixes the "MAC in deep sleep" problem that was reported in 
+http://marc.info/?l=linux-wireless&m=122729668410075&w=2 and also tracked
+in http://bugzilla.kernel.org/show_bug.cgi?id=11818 and
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1834
+- patch 5 continues work on the latency issue when bringing down the
+interface. This problem is tracked in
+http://bugzilla.kernel.org/show_bug.cgi?id=11956 and
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790
 
-Will CRDA work with AP mode? That's where my primary interest lies (I'm
-writing a new driver for an as-yet unsupported chipset). I can see the
-usefulness of CRDA in a laptop. I have a much harder time seeing the
-benefit of a 250K application to process 3,000 bytes of data
-(regulatory.bin) in an embedded AP context where filesystem space is at
-a premium.
+[PATCH 1/6] iwlwifi: implement iwl_debug_report_frame for iwlagn
+[PATCH 2/6] iwl3945: Fix rate scale for B-mode connection
+[PATCH 3/6] iwlwifi: fix time interval misuse in iwl_poll_{direct_}bit
+[PATCH 4/6] iwlwifi: fix "MAC in deep sleep" error
+[PATCH 5/6] iwlwifi: iwl_poll_{direct_}bit cleanup
+[PATCH 6/6] iwlwifi: use rmb/wmb to protect indirect mmio operation
 
--- 
-http://www.fastmail.fm - A no graphics, no pop-ups email service
+
+Thank you
+
+Reinette
 
