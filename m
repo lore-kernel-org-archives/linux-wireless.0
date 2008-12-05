@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out12.libero.it ([212.52.84.112]:34871 "EHLO
-	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbYLXVEu (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:48144 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754061AbYLESne (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 16:04:50 -0500
-From: Fabio Rossi <rossi.f@inwind.it>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: p54: ad-hoc mode doesn't work
-Date: Wed, 24 Dec 2008 22:03:22 +0100
-Cc: "Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-References: <200812230132.21839.rossi.f@inwind.it> <200812241828.49679.rossi.f@inwind.it> <43e72e890812240940oa599bdds7db3682bfbf95a49@mail.gmail.com>
-In-Reply-To: <43e72e890812240940oa599bdds7db3682bfbf95a49@mail.gmail.com>
-MIME-Version: 1.0
-Message-Id: <200812242203.22987.rossi.f@inwind.it> (sfid-20081224_220457_555311_C5E9675E)
-Content-Type: text/plain;
-  charset="utf-8"
+	Fri, 5 Dec 2008 13:43:34 -0500
+Subject: Re: [PATCH 3/6] iwlwifi: fix time interval misuse in
+ iwl_poll_{direct_}bit
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, "Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1228492721-27381-4-git-send-email-reinette.chatre@intel.com>
+References: <> <1228492721-27381-1-git-send-email-reinette.chatre@intel.com>
+	 <1228492721-27381-2-git-send-email-reinette.chatre@intel.com>
+	 <1228492721-27381-3-git-send-email-reinette.chatre@intel.com>
+	 <1228492721-27381-4-git-send-email-reinette.chatre@intel.com>
+Content-Type: text/plain
+Date: Fri, 05 Dec 2008 19:43:31 +0100
+Message-Id: <1228502611.28839.35.camel@violet.holtmann.net> (sfid-20081205_194336_742952_B95569FE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 24 December 2008, Luis R. Rodriguez wrote:
+Hi Reinette,
 
-> Most distributions are using >= 2.6.28 kernels with
-> CONFIG_WIRELESS_OLD_REGULATORY which means the US is the default
-> regulatory domain and its built statically into the kernel so the
-> values are used CRDA does not have to be queried. If CRDA is present
-> the regulatory domain is just updated with
-> CONFIG_WIRELESS_OLD_REGULATORY.
+> The patch fixes the misuse of microsecond with millisecond in the
+> polling mechanism of the iwlwifi driver. The impact of this problem
+> is the unacceptable latency for the whole system (especially during
+> bringing down the wlan interface).
 
-Thank you for the explanation! Now I have disabled 
-CONFIG_WIRELESS_OLD_REGULATORY and I have installed CRDA and iw. After 
-setting the country I'm able to create the ad-hoc IBSS between the two PCs.
+I will test the whole set of patches again, but as already mentioned
+this is making the situation worse than better.
 
-According to my opinion the error message posted in the original message of 
-this thread might be misleading for the user: the network card doesn't enter 
-in ad-hoc mode because the country for the CRDA is not set while the error 
-says that the ad-hoc mode is not supported. What do you think about?
+Regards
 
-Regards,
-Fabio
+Marcel
+
+
