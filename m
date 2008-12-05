@@ -1,79 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:1558 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961AbYLAMLo (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:39717 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751768AbYLEXSN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 07:11:44 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so1273215nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 04:11:42 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Subject: iwlwifi - rfkill only works if the interface is up
-Date: Mon, 1 Dec 2008 13:11:17 +0100
-Cc: tomas.winkler@intel.com, yi.zhu@intel.com
+	Fri, 5 Dec 2008 18:18:13 -0500
+Message-ID: <4939B6AF.2060901@lwfinger.net> (sfid-20081206_001825_504258_2FC1588F)
+Date: Fri, 05 Dec 2008 17:18:07 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812011311.17346.helmut.schaa@gmail.com> (sfid-20081201_131150_825506_52088550)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Greg KH <gregkh@suse.de>
+CC: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] p54usb: fix usb_kill_urb hang with slub_debug=P
+References: <200812051547.45790.chunkeey@web.de> <20081205155356.GC28030@suse.de>
+In-Reply-To: <20081205155356.GC28030@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Greg KH wrote:
+> On Fri, Dec 05, 2008 at 03:47:45PM +0100, Christian Lamparter wrote:
+>> This patch fixes a problem identified by Johannes Berg.
+> 
+> No, it only papers over the real problem here, let's work on a correct
+> patch please.
 
-Since the patch "iwlwifi: delay firmware loading from pci_probe to network
-interface open" was merged, the driver's killswitch does not work anymore
-when the interface is down. The patch comment contains two arguments for 
-that behaviour:
+I can contribute a little info. If SLUB debugging is enabled, and the boot
+command includes 'slub_debug=P', I get a GPF in kref_get(), which is called from
+kobject_get() with the following code:
 
-1) ... Because kernel initializes network devices subsystem before hard disk
-and SATA subsystem, it is impossible to get the firmware image from hard disk
-in the PCI probe handler. ...
+        if (kobj)
+                kref_get(&kobj->kref);
 
-2) For better power saving ...
+>From the dump, &kobj->kref is 0x6b6b6b6b6b6b6dbb, a poisoned value.
 
-The current driver behavior is as follows:
+Somewhere, the "struct urb" has been freed, but kobj has not been set to NULL.
 
-- iwl_pci_probe initializes the driver but disables the device, at this point
-  changing the killswitch state will not be noticed by the driver and thus
-  the killswitch state in sysfs will not reflect the real state
+As everything I've found is a symptom, I'm still looking for the real cause.
 
-- iwl_mac_start (which is called when at least one interface goes up) starts
-  the device and loads the firmware if the killswitch is disabled. Otherwise
-  the driver will just enable the interrupts and allows the interface to go
-  up.
+Larry
 
-However, if the device fires the interrupt CSR_INT_BIT_RF_KILL the code in
-iwl_irq_tasklet will _not_ restart the card, although the driver already
-allowed the interface to go up. That should easily be fixable with a patch
-similar to the following (the comment should be changed too):
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b935e9d..e2f160b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1504,8 +1504,11 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
- 		 * the driver as well won't allow loading if RFKILL is set
- 		 * therefore no need to restart the driver from this handler
- 		 */
--		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status))
-+		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
- 			clear_bit(STATUS_RF_KILL_HW, &priv->status);
-+			if (priv->is_open)
-+				queue_work(priv->workqueue, &priv->restart);
-+		}
- 
- 		handled |= CSR_INT_BIT_RF_KILL;
- 	}
 
-Nevertheless, I'm wondering if the current behaviour (even with the patch above)
-makes much sense. I mean, the user space cannot rely on the rfkill state
-unless an appropriate interface is up. As the device is able to report the
-killswitch state without firmware being loaded the following approach could
-be feasible:
-
-- iwl_pci_probe enables the device and enables the interrupts
-- iwl_mac_start just loads the firmware
-- iwl_mac_stop just releases the firmware but leaves the interrupts enabled
-
-Thanks,
-Helmut
