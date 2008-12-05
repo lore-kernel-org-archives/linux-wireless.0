@@ -1,182 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:55694 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752818AbYLTFzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 00:55:47 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 21:55:47 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 08/16] ath9k: make request to get the noisefloor threshold band specific
-Date: Fri, 19 Dec 2008 21:55:14 -0800
-Message-ID: <1229752522-1917-9-git-send-email-lrodriguez@atheros.com> (sfid-20081220_065607_985086_41E2EE8B)
-In-Reply-To: <1229752522-1917-8-git-send-email-lrodriguez@atheros.com>
-References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-3-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-4-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-5-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-6-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-7-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-8-git-send-email-lrodriguez@atheros.com>
+Received: from 29.mail-out.ovh.net ([87.98.216.213]:50267 "HELO
+	29.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754791AbYLEPZH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2008 10:25:07 -0500
+Date: Fri, 5 Dec 2008 16:20:58 +0100
+From: Samuel Ortiz <samuel@sortiz.org>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tomasw@gmail.com, yi.zhu@intel.com
+Subject: Re: [PATCH] iwl3945: remove obsolete irq handling
+Message-ID: <20081205152058.GA4590@sortiz.org> (sfid-20081205_162512_677509_9E6C31ED)
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+References: <200812011653.29150.helmut.schaa@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200812011653.29150.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lets make the request to get the current noise floor threshold
-from the EEPROM band specific as it is band specific, not mode
-specific.
+On Mon, Dec 01, 2008 at 04:53:28PM +0100, Helmut Schaa wrote:
+> 3945 hardware does not emit the interrupts CSR_INT_BIT_RF_KILL (rfkill
+> toggled) and CSR_INT_BIT_CT_KILL (adapter too hot). Hence this part of code
+> can be removed since iwl3945_irq_tasklet does not handle 4965 hw at all.
+That's correct.
 
-This also adds a backpointer on the private channel structure
-back to the ieee80211_channel structure as this is now needed during
-hw reset when it tries to get the current EEPROM noise floor threshold.
 
-Finally we note that calibration always works on the current channel
-and because of this the "internal" channel will always be the current
-channel. Because this is true we don't need to clear the CHANNEL_CW_INT
-flag anymore. This is currently unused but can be used later in AP mode.
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/ath9k.h |    3 ++-
- drivers/net/wireless/ath9k/calib.c |   27 ++++++++++-----------------
- drivers/net/wireless/ath9k/hw.c    |    2 +-
- drivers/net/wireless/ath9k/main.c  |    2 ++
- 4 files changed, 15 insertions(+), 19 deletions(-)
+> ---
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index 490bc4a..b32b507 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -4321,35 +4321,6 @@ static void iwl3945_irq_tasklet(struct iwl3945_priv *priv)
+>  	/* Safely ignore these bits for debug checks below */
+>  	inta &= ~(CSR_INT_BIT_SCD | CSR_INT_BIT_ALIVE);
+>  
+> -	/* HW RF KILL switch toggled (4965 only) */
+> -	if (inta & CSR_INT_BIT_RF_KILL) {
+> -		int hw_rf_kill = 0;
+> -		if (!(iwl3945_read32(priv, CSR_GP_CNTRL) &
+> -				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
+> -			hw_rf_kill = 1;
+> -
+> -		IWL_DEBUG(IWL_DL_INFO | IWL_DL_RF_KILL | IWL_DL_ISR,
+> -				"RF_KILL bit toggled to %s.\n",
+> -				hw_rf_kill ? "disable radio" : "enable radio");
+> -
+> -		/* Queue restart only if RF_KILL switch was set to "kill"
+> -		 *   when we loaded driver, and is now set to "enable".
+> -		 * After we're Alive, RF_KILL gets handled by
+> -		 *   iwl3945_rx_card_state_notif() */
+> -		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
+> -			clear_bit(STATUS_RF_KILL_HW, &priv->status);
+> -			queue_work(priv->workqueue, &priv->restart);
+> -		}
+> -
+> -		handled |= CSR_INT_BIT_RF_KILL;
+> -	}
+> -
+> -	/* Chip got too hot and stopped itself (4965 only) */
+> -	if (inta & CSR_INT_BIT_CT_KILL) {
+> -		IWL_ERROR("Microcode CT kill error detected.\n");
+> -		handled |= CSR_INT_BIT_CT_KILL;
+> -	}
+> -
+>  	/* Error detected by uCode */
+>  	if (inta & CSR_INT_BIT_SW_ERR) {
+>  		IWL_ERROR("Microcode SW error detected.  Restarting 0x%X.\n",
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index 823f1d6..8e47802 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -453,6 +453,7 @@ struct ath9k_11n_rate_series {
- 	 CHANNEL_HT40MINUS)
- 
- struct ath9k_channel {
-+	struct ieee80211_channel *chan;
- 	u16 channel;
- 	u32 channelFlags;
- 	u8 privFlags;
-@@ -951,7 +952,7 @@ void ath9k_hw_reset_calvalid(struct ath_hal *ah, struct ath9k_channel *chan,
- void ath9k_hw_start_nfcal(struct ath_hal *ah);
- void ath9k_hw_loadnf(struct ath_hal *ah, struct ath9k_channel *chan);
- int16_t ath9k_hw_getnf(struct ath_hal *ah,
--		       struct ath9k_channel *chan);
-+		       struct ieee80211_channel *c);
- void ath9k_init_nfcal_hist_buffer(struct ath_hal *ah);
- s16 ath9k_hw_getchan_noise(struct ath_hal *ah, struct ath9k_channel *chan);
- bool ath9k_hw_calibrate(struct ath_hal *ah, struct ath9k_channel *chan,
-diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
-index 3c7454f..c72bf10 100644
---- a/drivers/net/wireless/ath9k/calib.c
-+++ b/drivers/net/wireless/ath9k/calib.c
-@@ -168,26 +168,18 @@ static void ath9k_hw_do_getnf(struct ath_hal *ah,
- }
- 
- static bool getNoiseFloorThresh(struct ath_hal *ah,
--				const struct ath9k_channel *chan,
-+				enum ieee80211_band band,
- 				int16_t *nft)
- {
--	switch (chan->chanmode) {
--	case CHANNEL_A:
--	case CHANNEL_A_HT20:
--	case CHANNEL_A_HT40PLUS:
--	case CHANNEL_A_HT40MINUS:
-+	switch (band) {
-+	case IEEE80211_BAND_5GHZ:
- 		*nft = (int8_t)ath9k_hw_get_eeprom(ah, EEP_NFTHRESH_5);
- 		break;
--	case CHANNEL_B:
--	case CHANNEL_G:
--	case CHANNEL_G_HT20:
--	case CHANNEL_G_HT40PLUS:
--	case CHANNEL_G_HT40MINUS:
-+	case IEEE80211_BAND_2GHZ:
- 		*nft = (int8_t)ath9k_hw_get_eeprom(ah, EEP_NFTHRESH_2);
- 		break;
- 	default:
--		DPRINTF(ah->ah_sc, ATH_DBG_CHANNEL,
--			"invalid channel flags 0x%x\n", chan->channelFlags);
-+		BUG_ON(1);
- 		return false;
- 	}
- 
-@@ -687,11 +679,12 @@ void ath9k_hw_loadnf(struct ath_hal *ah, struct ath9k_channel *chan)
- }
- 
- int16_t ath9k_hw_getnf(struct ath_hal *ah,
--		       struct ath9k_channel *chan)
-+		       struct ieee80211_channel *c)
- {
- 	int16_t nf, nfThresh;
- 	int16_t nfarray[NUM_NF_READINGS] = { 0 };
- 	struct ath9k_nfcal_hist *h;
-+	struct ath9k_channel *chan = (struct ath9k_channel *) c->priv;
- 	u8 chainmask;
- 
- 	if (AR_SREV_9280(ah))
-@@ -709,7 +702,7 @@ int16_t ath9k_hw_getnf(struct ath_hal *ah,
- 	} else {
- 		ath9k_hw_do_getnf(ah, nfarray);
- 		nf = nfarray[0];
--		if (getNoiseFloorThresh(ah, chan, &nfThresh)
-+		if (getNoiseFloorThresh(ah, c->band, &nfThresh)
- 		    && nf > nfThresh) {
- 			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
- 				"noise floor failed detected; "
-@@ -805,13 +798,13 @@ bool ath9k_hw_calibrate(struct ath_hal *ah, struct ath9k_channel *chan,
- 	}
- 
- 	if (longcal) {
--		ath9k_hw_getnf(ah, ichan);
-+		BUG_ON(chan != ichan);
-+		ath9k_hw_getnf(ah, ichan->chan);
- 		ath9k_hw_loadnf(ah, ah->ah_curchan);
- 		ath9k_hw_start_nfcal(ah);
- 
- 		if ((ichan->channelFlags & CHANNEL_CW_INT) != 0) {
- 			chan->channelFlags |= CHANNEL_CW_INT;
--			ichan->channelFlags &= ~CHANNEL_CW_INT;
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index 60cc0ba..eb0ec06 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -2222,7 +2222,7 @@ int ath9k_hw_reset(struct ath_hal *ah, bool bChannelChange)
- 		return -EIO;
- 
- 	if (curchan)
--		ath9k_hw_getnf(ah, curchan);
-+		ath9k_hw_getnf(ah, curchan->chan);
- 
- 	if (bChannelChange &&
- 	    (ahp->ah_chipFullSleep != true) &&
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 57d5178..0d47936 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -216,6 +216,7 @@ static int ath_setup_channels(struct ath_softc *sc)
- 			chan_2ghz[a].center_freq = c->channel;
- 			chan_2ghz[a].max_power = c->maxTxPower;
- 			chan_2ghz[a].priv = c;
-+			c->chan = &chan_2ghz[a];
- 
- 			if (c->privFlags & CHANNEL_DISALLOW_ADHOC)
- 				chan_2ghz[a].flags |= IEEE80211_CHAN_NO_IBSS;
-@@ -231,6 +232,7 @@ static int ath_setup_channels(struct ath_softc *sc)
- 			chan_5ghz[b].center_freq = c->channel;
- 			chan_5ghz[b].max_power = c->maxTxPower;
- 			chan_5ghz[b].priv = c;
-+			c->chan = &chan_5ghz[a];
- 
- 			if (c->privFlags & CHANNEL_DISALLOW_ADHOC)
- 				chan_5ghz[b].flags |= IEEE80211_CHAN_NO_IBSS;
 -- 
-1.5.6.rc2.15.g457bb.dirty
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
