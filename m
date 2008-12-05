@@ -1,44 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:59195 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832AbYLaKqO (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:56355 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755819AbYLEWPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 05:46:14 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so8332722tic.23
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2008 02:46:12 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Fri, 5 Dec 2008 17:15:15 -0500
+Message-Id: <1228515313.30577.1288527655@webmail.messagingengine.com> (sfid-20081205_231521_865484_500B8F8F)
+From: "Dan E" <trg_info@mailhaven.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18779.19704.610896.408907@localhost.localdomain> (sfid-20081231_114616_992881_52EF71F4)
-Date: Wed, 31 Dec 2008 16:14:08 +0530
-To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni.Malinen@atheros.com,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Add 802.11h CSA support
-In-Reply-To: <1ba2fa240812310224m15c1f32brb06cc6aa1a607962@mail.gmail.com>
-References: <18779.17630.122619.462997@gargle.gargle.HOWL>
-	<1ba2fa240812310224m15c1f32brb06cc6aa1a607962@mail.gmail.com>
+References: <1228454249.2652.1288380409@webmail.messagingengine.com>
+ <43e72e890812042132y6b676a1ucf446a678e1d8a81@mail.gmail.com>
+Subject: Re: CRDA question
+In-Reply-To: <43e72e890812042132y6b676a1ucf446a678e1d8a81@mail.gmail.com>
+Date: Fri, 05 Dec 2008 17:15:13 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
-> > +       } else {
-> > +               ieee80211_stop_queues_by_reason(&sdata->local->hw,
-> > +                                               IEEE80211_QUEUE_STOP_REASON_CSA);
-> Why to stop the queues before the switching time
+
+On Thu, 4 Dec 2008 21:32:48 -0800, "Luis R. Rodriguez"
+<mcgrof@gmail.com> said:
+> On Thu, Dec 4, 2008 at 9:17 PM, Dan E <trg_info@mailhaven.com> wrote:
+> > What is the purpose of the "intersect" program in CRDA? It builds but it
+> > doesn't seem to be used anywhere.
 > 
+> We use it to check to see if we have to update the world regulatory
+> domain. You run intersect against the regulatory.bin for example to
+> get the intersection of all regulatory domains.
 
-Transmission of frames has to be stopped until the channel is switched.
+Now it makes sense.
 
-> > +               ifsta->flags |= IEEE80211_STA_CSA_RECEIVED;
-> > +               exp = sw_elem->count * (1024 * bss->beacon_int / 1000 * HZ / 1000);
-> > +               mod_timer(&ifsta->chswitch_timer, jiffies + exp);
-> What about:
->       mod_timer(&ifsta->chswitch_timer, jiffies +
->         msecs_to_jiffies(sw_elm->count * local->hw.conf.beacon_int));
+> > I also notice the CRDA source has its
+> > own nl80211.h header file, as does the source tree for "iw". Shouldn't
+> > userspace tools just include the sanitized kernel header from the
+> > standard gcc include-file locations? Having multiple copies (and
+> > versions) of nl80211.h everywhere seems like a bad idea.
 > 
+> Yes and no.
+> 
+> We keep the latest header in crda and iw so we can get it to compile
+> to work with the latest stuff, even if you don't have support for the
+> new stuff on your old kernel.
 
-This is cleaner, I'll add this, thanks.
+But with an old kernel none of that shiny new stuff is going to work
+anyway.
 
-Sujith
+> So although iw and crda are built with support for the shiny new stuff
+> the kernel netlink messages which apply to the new stuff simply won't
+> work. This lets you have, for example, an iw and crda for 2.6.28 and
+> still have it working in case you want to test drive wireless-testing
+> (which as stuff for 2.6.29) or compat-wireless (which has
+> wireless-testing stuff backported).
+
+Which is why I kept getting -22 (-EINVAL) return codes when I tried to
+run the crda I built on a 2.6.27.7 kernel.  I then went through the
+somewhat painful procedure of setting up my environment to build against
+wireless-testing HEAD.  If crda used <linux/nl80211.h> in the first
+place I could have avoided finding that out the hard way.
+
+It makes zero sense IMO to build a userspace tool that's going to
+netlink messages to the kernel which it doesn't understand or, even
+worse, will misinterpret if the various tools are built using
+out-of-sync 'enum nl80211_commmands'.  Doing that is like re-inventing
+wireless extensions all over again.  So now I have to maintain my own
+branches to replace 'include "nl80211.h"' with 'include
+<linux/nl80211.h>' everywhere.  Wonderful.  IW is especially tedious
+because even though the common iw.h includes its own private nl80211
+header, every one of its C source code file also includes it.  From my
+perspective as a developer it's cruft that doesn't need to be there and
+which causes unnecessary headaches and maintenance concerns.
+
+> > Will CRDA work with AP mode? That's where my primary interest lies (I'm
+> > writing a new driver for an as-yet unsupported chipset). I can see the
+> > usefulness of CRDA in a laptop. I have a much harder time seeing the
+> > benefit of a 250K application to process 3,000 bytes of data
+> > (regulatory.bin) in an embedded AP context where filesystem space is at
+> > a premium.
+> 
+> Would you prefer that being duplicated in kernel space by each driver?
+> That's sort of what we had before. Each driver had their own
+> regulatory solution.
+
+Each driver doing its own implementation is orthogonal to kernel vs
+userspace.  It could be both common and in the kernel, available for
+every driver to use.  I do understand, at a bigger-picture level, why
+it's desirable to put this stuff in userspace.  I'll use it for now, but
+I still think it's a solution looking for a problem.
+
+-- 
+http://www.fastmail.fm - Email service worth paying for. Try it for free
+
