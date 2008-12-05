@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:51820 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755331AbYLBRXU (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39003 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756428AbYLEJlf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 12:23:20 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so3119846ugf.37
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 09:23:18 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 5/5] rt2x00: Release rt2x00 2.2.3
-Date: Tue, 2 Dec 2008 18:20:59 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200812021819.23756.IvDoorn@gmail.com> <200812021820.22750.IvDoorn@gmail.com> <200812021820.42808.IvDoorn@gmail.com>
-In-Reply-To: <200812021820.42808.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812021820.59537.IvDoorn@gmail.com> (sfid-20081202_182333_130208_9A15D17F)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 5 Dec 2008 04:41:35 -0500
+Subject: Re: [RFC PATCH v4 5/5] mac80211: track master queue status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87r64ni2yr.fsf@nokia.com>
+References: <20081202200219.5507.83250.stgit@tikku>
+	 <20081202200426.5507.44042.stgit@tikku>
+	 <1228412076.5692.25.camel@johannes.berg>  <87r64ni2yr.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cPvR9s4Kx9+PJUq5FVIH"
+Date: Fri, 05 Dec 2008 10:41:33 +0100
+Message-Id: <1228470093.3970.8.camel@johannes.berg> (sfid-20081205_104154_464024_20D01E25)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+--=-cPvR9s4Kx9+PJUq5FVIH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 03d34bb..39ecf3b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -44,7 +44,7 @@
- /*
-  * Module information.
-  */
--#define DRV_VERSION	"2.2.2"
-+#define DRV_VERSION	"2.2.3"
- #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
- 
- /*
--- 
-1.5.6.1
+On Fri, 2008-12-05 at 07:51 +0200, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>=20
+> > I wonder if we should optimise the spinlock here?
+>=20
+> That would be nice, but how to do that?
+
+I only meant to lock/unlock it just once instead of for each possible
+queue.
+
+johannes
+
+--=-cPvR9s4Kx9+PJUq5FVIH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJOPdJAAoJEKVg1VMiehFYzz8QAJ0zBQT6BaLPGzXLZLw+lOu6
+K+iYT9XNKl7sWywNoInLdWBXgFcCkl8wWaBYvNZUrPb00EmbA2KOWuVyjwokj0GF
+/vfV6St39pclBoHJX7IKZ6PCYjjfvSdToDrSkNn0jtVGvaF49ED+G5SwJ3XbOXCO
+C5tz0s0xuAF7azY/QhQFCFCcxSEZ0L/D1ZOO5OXfXAmCOvDB1VFo7pbCOLkJG82+
+EHP+I5qH+bkWjCJedsln9KAiSnuDX2MsYx1pM2BJAcwnM8QrvFvd7l8ytnFl85s0
+YGYz+Cr3GZ2VJNo+QQInIzymV3WJyTeqlqWsMMuMBwu/ls9FszbevdTHi+CLiFT6
+noxiCirsbmpnXzP4f7oQmTeoaYFcMrry2kiJQc/4a6PZXXpUeHYvZeYFJjcQmZoL
+mF07bv4Jcvm5//M0V0i5mxxzH8hZrgcLPrrOwB6vpZuPRnl4bhiC/IgjoWvNBsSr
+g+kZoGBkoTl5T8FRcdXgmycpfi3qFlcmSY4riivPQZoYGMN0N+cGBcBPmWLSmXnb
+M+9UARMX9VyghrbQruzoYF9/nyRZ/oCNJ9DGK+VPUkUwArIEAZBcFkCBMLDe+uan
+M0JwrbWSzuaKxu1tMNQGF6/RuG2WlgG4O7nkFquCN0rUWTb6BMwXOO5g0uHoIjii
+IMDNEc060k41wt+KTFLR
+=ZHbW
+-----END PGP SIGNATURE-----
+
+--=-cPvR9s4Kx9+PJUq5FVIH--
 
