@@ -1,62 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39003 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756428AbYLEJlf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2008 04:41:35 -0500
-Subject: Re: [RFC PATCH v4 5/5] mac80211: track master queue status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <87r64ni2yr.fsf@nokia.com>
-References: <20081202200219.5507.83250.stgit@tikku>
-	 <20081202200426.5507.44042.stgit@tikku>
-	 <1228412076.5692.25.camel@johannes.berg>  <87r64ni2yr.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cPvR9s4Kx9+PJUq5FVIH"
-Date: Fri, 05 Dec 2008 10:41:33 +0100
-Message-Id: <1228470093.3970.8.camel@johannes.berg> (sfid-20081205_104154_464024_20D01E25)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:49805 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751439AbYLEP5p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2008 10:57:45 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, "Zhu, Yi" <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 6/6] iwlwifi: use rmb/wmb to protect indirect mmio operation
+Date: Fri,  5 Dec 2008 07:58:41 -0800
+Message-Id: <1228492721-27381-7-git-send-email-reinette.chatre@intel.com> (sfid-20081205_165754_769888_2D3A41CE)
+In-Reply-To: <1228492721-27381-6-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1228492721-27381-1-git-send-email-reinette.chatre@intel.com>
+ <1228492721-27381-2-git-send-email-reinette.chatre@intel.com>
+ <1228492721-27381-3-git-send-email-reinette.chatre@intel.com>
+ <1228492721-27381-4-git-send-email-reinette.chatre@intel.com>
+ <1228492721-27381-5-git-send-email-reinette.chatre@intel.com>
+ <1228492721-27381-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Zhu, Yi <yi.zhu@intel.com>
 
---=-cPvR9s4Kx9+PJUq5FVIH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch protects iwlwifi indirect mmio operations with rmb() and
+wmb(). It makes sure CPU reordering won't affect our indirect mmio
+access.
 
-On Fri, 2008-12-05 at 07:51 +0200, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->=20
-> > I wonder if we should optimise the spinlock here?
->=20
-> That would be nice, but how to do that?
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-io.h |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-io.h      |    5 +++++
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
-I only meant to lock/unlock it just once instead of for each possible
-queue.
-
-johannes
-
---=-cPvR9s4Kx9+PJUq5FVIH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJOPdJAAoJEKVg1VMiehFYzz8QAJ0zBQT6BaLPGzXLZLw+lOu6
-K+iYT9XNKl7sWywNoInLdWBXgFcCkl8wWaBYvNZUrPb00EmbA2KOWuVyjwokj0GF
-/vfV6St39pclBoHJX7IKZ6PCYjjfvSdToDrSkNn0jtVGvaF49ED+G5SwJ3XbOXCO
-C5tz0s0xuAF7azY/QhQFCFCcxSEZ0L/D1ZOO5OXfXAmCOvDB1VFo7pbCOLkJG82+
-EHP+I5qH+bkWjCJedsln9KAiSnuDX2MsYx1pM2BJAcwnM8QrvFvd7l8ytnFl85s0
-YGYz+Cr3GZ2VJNo+QQInIzymV3WJyTeqlqWsMMuMBwu/ls9FszbevdTHi+CLiFT6
-noxiCirsbmpnXzP4f7oQmTeoaYFcMrry2kiJQc/4a6PZXXpUeHYvZeYFJjcQmZoL
-mF07bv4Jcvm5//M0V0i5mxxzH8hZrgcLPrrOwB6vpZuPRnl4bhiC/IgjoWvNBsSr
-g+kZoGBkoTl5T8FRcdXgmycpfi3qFlcmSY4riivPQZoYGMN0N+cGBcBPmWLSmXnb
-M+9UARMX9VyghrbQruzoYF9/nyRZ/oCNJ9DGK+VPUkUwArIEAZBcFkCBMLDe+uan
-M0JwrbWSzuaKxu1tMNQGF6/RuG2WlgG4O7nkFquCN0rUWTb6BMwXOO5g0uHoIjii
-IMDNEc060k41wt+KTFLR
-=ZHbW
------END PGP SIGNATURE-----
-
---=-cPvR9s4Kx9+PJUq5FVIH--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-io.h b/drivers/net/wireless/iwlwifi/iwl-3945-io.h
+index 994f8ba..d381b82 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-io.h
+@@ -298,6 +298,7 @@ static inline int __iwl3945_poll_direct_bit(const char *f, u32 l,
+ static inline u32 _iwl3945_read_prph(struct iwl3945_priv *priv, u32 reg)
+ {
+ 	_iwl3945_write_direct32(priv, HBUS_TARG_PRPH_RADDR, reg | (3 << 24));
++	rmb();
+ 	return _iwl3945_read_direct32(priv, HBUS_TARG_PRPH_RDAT);
+ }
+ #ifdef CONFIG_IWL3945_DEBUG
+@@ -319,6 +320,7 @@ static inline void _iwl3945_write_prph(struct iwl3945_priv *priv,
+ {
+ 	_iwl3945_write_direct32(priv, HBUS_TARG_PRPH_WADDR,
+ 			      ((addr & 0x0000FFFF) | (3 << 24)));
++	wmb();
+ 	_iwl3945_write_direct32(priv, HBUS_TARG_PRPH_WDAT, val);
+ }
+ #ifdef CONFIG_IWL3945_DEBUG
+@@ -380,12 +382,14 @@ static inline void iwl3945_clear_bits_prph(struct iwl3945_priv
+ static inline u32 iwl3945_read_targ_mem(struct iwl3945_priv *priv, u32 addr)
+ {
+ 	iwl3945_write_direct32(priv, HBUS_TARG_MEM_RADDR, addr);
++	rmb();
+ 	return iwl3945_read_direct32(priv, HBUS_TARG_MEM_RDAT);
+ }
+ 
+ static inline void iwl3945_write_targ_mem(struct iwl3945_priv *priv, u32 addr, u32 val)
+ {
+ 	iwl3945_write_direct32(priv, HBUS_TARG_MEM_WADDR, addr);
++	wmb();
+ 	iwl3945_write_direct32(priv, HBUS_TARG_MEM_WDAT, val);
+ }
+ 
+@@ -393,6 +397,7 @@ static inline void iwl3945_write_targ_mem_buf(struct iwl3945_priv *priv, u32 add
+ 					  u32 len, u32 *values)
+ {
+ 	iwl3945_write_direct32(priv, HBUS_TARG_MEM_WADDR, addr);
++	wmb();
+ 	for (; 0 < len; len -= sizeof(u32), values++)
+ 		iwl3945_write_direct32(priv, HBUS_TARG_MEM_WDAT, *values);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index c56dc21..10ca032 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -299,6 +299,7 @@ static inline int __iwl_poll_direct_bit(const char *f, u32 l,
+ static inline u32 _iwl_read_prph(struct iwl_priv *priv, u32 reg)
+ {
+ 	_iwl_write_direct32(priv, HBUS_TARG_PRPH_RADDR, reg | (3 << 24));
++	rmb();
+ 	return _iwl_read_direct32(priv, HBUS_TARG_PRPH_RDAT);
+ }
+ #ifdef CONFIG_IWLWIFI_DEBUG
+@@ -321,6 +322,7 @@ static inline void _iwl_write_prph(struct iwl_priv *priv,
+ {
+ 	_iwl_write_direct32(priv, HBUS_TARG_PRPH_WADDR,
+ 			      ((addr & 0x0000FFFF) | (3 << 24)));
++	wmb();
+ 	_iwl_write_direct32(priv, HBUS_TARG_PRPH_WDAT, val);
+ }
+ #ifdef CONFIG_IWLWIFI_DEBUG
+@@ -383,12 +385,14 @@ static inline void iwl_clear_bits_prph(struct iwl_priv
+ static inline u32 iwl_read_targ_mem(struct iwl_priv *priv, u32 addr)
+ {
+ 	iwl_write_direct32(priv, HBUS_TARG_MEM_RADDR, addr);
++	rmb();
+ 	return iwl_read_direct32(priv, HBUS_TARG_MEM_RDAT);
+ }
+ 
+ static inline void iwl_write_targ_mem(struct iwl_priv *priv, u32 addr, u32 val)
+ {
+ 	iwl_write_direct32(priv, HBUS_TARG_MEM_WADDR, addr);
++	wmb();
+ 	iwl_write_direct32(priv, HBUS_TARG_MEM_WDAT, val);
+ }
+ 
+@@ -396,6 +400,7 @@ static inline void iwl_write_targ_mem_buf(struct iwl_priv *priv, u32 addr,
+ 					  u32 len, u32 *values)
+ {
+ 	iwl_write_direct32(priv, HBUS_TARG_MEM_WADDR, addr);
++	wmb();
+ 	for (; 0 < len; len -= sizeof(u32), values++)
+ 		iwl_write_direct32(priv, HBUS_TARG_MEM_WDAT, *values);
+ }
+-- 
+1.5.4.3
 
