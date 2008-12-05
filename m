@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:44047 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751029AbYLPRiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 12:38:20 -0500
-Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081216161658.GC3636@tuxdriver.com>
-References: <20081216025542.GO18056@xi.wantstofly.org>
-	 <1229443806.7307.34.camel@localhost.localdomain>
-	 <20081216161658.GC3636@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 16 Dec 2008 12:37:21 -0500
-Message-Id: <1229449041.7307.49.camel@localhost.localdomain> (sfid-20081216_183823_582724_726D8B0A)
+Received: from xc.sipsolutions.net ([83.246.72.84]:38563 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537AbYLEJlD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2008 04:41:03 -0500
+Subject: Re: [RFC PATCH v4 1/5] mac80211: enable IEEE80211_CONF_PS only
+	when associated
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87vdtzi36x.fsf@nokia.com>
+References: <20081202200219.5507.83250.stgit@tikku>
+	 <20081202200359.5507.40576.stgit@tikku>
+	 <1228411658.5692.19.camel@johannes.berg>  <87vdtzi36x.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-q0ope27HEZCKf0Vy42I5"
+Date: Fri, 05 Dec 2008 10:40:58 +0100
+Message-Id: <1228470058.3970.6.camel@johannes.berg> (sfid-20081205_104108_936911_1198C954)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-12-16 at 11:16 -0500, John W. Linville wrote:
-> On Tue, Dec 16, 2008 at 11:10:06AM -0500, Dan Williams wrote:
-> > On Tue, 2008-12-16 at 03:55 +0100, Lennert Buytenhek wrote:
-> > > Hi all,
-> > > 
-> > > Attached is an initial version of the mwl8k driver for Marvell 88w8xxx
-> > > PCI/PCIe wireless parts (against 2.6.27.1).  This version was written
-> > > and tested against the 88w8687 (802.11b/g), but it shouldn't be hard to
-> > > extend the support to other parts in the 8xxx series, since the firmware
-> > > interface is very similar between parts.
-> > > 
-> > > There's an occasional timeout warning with mwl8k_stop(), and hardware
-> > > crypto is still a work-in-progress, but other than that it looks pretty
-> > > stable.
-> > > 
-> > > Feedback appreciated!
-> > 
-> > Oooh, thanks for the Christmas present.  Just in time for the holidays.
-> > Is there a git repo somewhere that we could all base off of, so we don't
-> > have to deal with patches to patches to patches until it gets into
-> > wireless-testing?
-> 
-> I wouldn't worry too much about that.  The better questions is where
-> do we get firmware?
 
-I believe I can post it.  Marvell recently changed the license terms on
-at least some of their firmware to be comparable to other freely
-available firmware (like Intel's).  Unfortunately you must have an
-extranet account to get it (they are working on fixing this too) but
-once you have it, the firmware blobs themselves are under a nice
-license.  I'll try to get something together today.
+--=-q0ope27HEZCKf0Vy42I5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Dan
+On Fri, 2008-12-05 at 07:47 +0200, Kalle Valo wrote:
 
+> > In fact, it might make sense to check that there's no other
+> > interface (except monitor) open?
+>=20
+> I'll add this check as well.
+
+Actually, come to think of it, this doesn't make sense unless we also
+add a check into the interface start() and then disable PS when another
+interface was brought up, let's just leave it at "only on STA
+interfaces" and if you manage to screw it up then tough luck.
+
+johannes
+
+--=-q0ope27HEZCKf0Vy42I5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJOPcmAAoJEKVg1VMiehFYEPYP/1oXb/2WLIrok5324d7AbyXV
+5sI0AKS+At4eGry57XFY8tlqQhpV2r4UETGi5km4JMqVOu86N5h9fHAQXhDGXGNN
+GjD5pBzHHJlrVKpjGGad7Dr1nQMVwZ/YYeWLrn5KD+DsW5bJ8BANbIl7mjT07onb
+gqKntNQ/DI2Wa6v7R6eDnb4M985UkK24/cYJg2eBD4XVECebIuPO0dc/RNC1l+sm
+NXPXHY8ukWr3KdJzzKP4paq6yHinnypRtGW74ziIUjtCkqxldocMh7m5Ex/LordT
+RwS4aG78sdQGelTgNlTgq61Zbc0mt+AfxEGVVaYsLTGi3vw56fnKV31cn7wLSh3A
+F2Pbs0uzhDRD3DIiHG7WTlXmofz9aU446NUpXFwATydo8pV9tOMq6kwW5ezQYO9B
+m0i5fYE0grkpQbLC3JxbBum/xo40m4ivCQ+QNnzwz3FdgTLwQBu/AstBgtjJpPFW
+tmsINKNB7cWeatpqbl5X6kqJVU2cx0QEfO/Tri3Ak/7SFpUGtzzDwUpkmnEEs6k4
+4iTQv9FKa5cef6gGAVHkV+JKjlKGY56kYdUeoOQkhudqbccWxkTyXf9KDJUpSG7R
+mLoxSA/mm1U50lS9PP2hAkpNITkkIf868JDHMZ+6aP4LplNfDoO6OuP3zSl5GQnZ
+ODjyk1JCbZVRF1MtKjbK
+=SuhM
+-----END PGP SIGNATURE-----
+
+--=-q0ope27HEZCKf0Vy42I5--
 
