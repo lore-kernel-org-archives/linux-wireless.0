@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:59947 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757470AbYLLE2X (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:42855 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903AbYLEOrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 23:28:23 -0500
-Message-ID: <4941E863.50703@lwfinger.net> (sfid-20081212_052846_040732_869E9D61)
-Date: Thu, 11 Dec 2008 22:28:19 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 5 Dec 2008 09:47:49 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54usb: fix usb_kill_urb hang with slub_debug=P
+Date: Fri, 5 Dec 2008 15:47:45 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-usb@vger.kernel.org, gregkh@suse.de,
+	linux-kernel@vger.kernel.org
 MIME-Version: 1.0
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	hmh@hmh.eng.br
-Subject: Re: [RFC] b43: rework rfkill code
-References: <20081210150935.GA10927@srcf.ucam.org>
-In-Reply-To: <20081210150935.GA10927@srcf.ucam.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200812051547.45790.chunkeey@web.de> (sfid-20081205_154754_659087_A9B5593C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthew Garrett wrote:
-> I've reworked the rfkill code in b43. This ought to be more consistent 
-> with the other drivers and it seems to work on the machines I've tested 
-> it on here, but it'd be good to get some feedback.
-> 
-> Firstly, I've replaced the polled input device. It's just some delayed 
-> work now. It polls the hardware every second to determine whether the 
-> radio has been hardware killed or not. If it has, it sets the rfkill 
-> state to HARD_BLOCKED. If the radio is enabled and the previous state 
-> was HARD_BLOCKED, it resets the state to UNBLOCKED. If the radio is 
-> enabled and the previous state was SOFT_BLOCKED, it leaves the state as 
-> is.
-> 
-> I also removed some of the complexity from the rfkill toggle function, 
-> since the rfkill core will handle the case of the user requesting a 
-> change from HARD_BLOCKED without the driver needing to care.
-> 
-> The final change is that I removed the code for changing the wireless 
-> state in response to the txpower configuration in mac80211. Right now, I 
-> can't see any way for this to work correctly - if the user disables the 
-> radio via rfkill, mac80211 doesn't flag the radio as disabled. As a 
-> result, the next time the configuration callback is called, b43 
-> reenables the radio again, even though the user has explicitly disabled 
-> it. I don't think any of the other drivers handle this case, so I'm not 
-> really sure what the best way to handle this in future is. The current 
-> situation certainly seems broken.
-> 
-> How does this look to people?
+This patch fixes a problem identified by Johannes Berg.
 
-All this discussion about hard vs soft rfkill makes my head hurt and I have
-stopped reading those posts.
+It looks like this is a classic case of "use-after-freed". 
+A module which should reproduce the problem on
+any other USB device can be found right here:
+http://kerneltrap.org/mailarchive/linux-usb/2008/12/4/4317064
 
-Correction to my earlier post. If the system is booted with the RF switch off,
-the LED is on, whereas it should be off. The original code works correctly.
-
-Larry
-
-
-
+Tested-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+CC: stable@vger.kernel.org
+---
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 3444f52..0b9a922 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -209,7 +209,14 @@ static void p54u_free_urbs(struct ieee80211_hw *dev)
+ 		if (!info->urb)
+ 			continue;
+ 
++		/*
++		 * usb_get_urb and usb_free_urb are part of a temporary
++		 * workaround. Otherwise we get a pretty bad freeze,
++		 * if SLUB's poisoning debug option is enabled.
++		 */
++		usb_get_urb(info->urb);
+ 		usb_kill_urb(info->urb);
++		usb_free_urb(info->urb);
+ 		kfree_skb(skb);
+ 	}
+ }
 
