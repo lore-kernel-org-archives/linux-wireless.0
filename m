@@ -1,162 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25118 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751860AbYLVSUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 13:20:50 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:20:50 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v2 02/18] ath9k: use hw->conf on ath_setcurmode()
-Date: Mon, 22 Dec 2008 10:20:23 -0800
-Message-ID: <1229970039-10561-3-git-send-email-lrodriguez@atheros.com> (sfid-20081222_192054_033634_D15E5BAD)
-In-Reply-To: <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
-References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
+Received: from wf-out-1314.google.com ([209.85.200.174]:37981 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbYLECUa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2008 21:20:30 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so4534581wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 18:20:30 -0800 (PST)
+Message-ID: <1197ff4c0812041820j4841c842x647b3e6eeb5f5537@mail.gmail.com> (sfid-20081205_032035_715108_AE71635A)
+Date: Fri, 5 Dec 2008 10:20:29 +0800
+From: YanBo <dreamfly281@gmail.com>
+To: "Henning Rogge" <hrogge@googlemail.com>
+Subject: Re: Looking for a 802.11n card
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"=?UTF-8?Q?Stefanik_G=C3=A1bor?=" <netrolller.3d@gmail.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	pat-lkml <pat-lkml@erley.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200812042124.54533.hrogge@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+References: <200812032129.16740.hrogge@googlemail.com>
+	 <69e28c910812040451p231b41e1t63893d23f373bf0c@mail.gmail.com>
+	 <20081204192826.GD5970@tesla>
+	 <200812042124.54533.hrogge@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't need to use our own mode for setting the
-the routine tries to do, in fact lets remove ath_chan2mode() now as
-we can simply use the currently set band and the HT configuration
-provided by mac80211 through the ieee80211_conf. This works on
-changing channels as well as the internal ath9k_channel we use is
-based on the ieee80211_channel in the config.
+On Fri, Dec 5, 2008 at 4:24 AM, Henning Rogge <hrogge@googlemail.com> wrote:
+> On Thursday 04 December 2008 20:28:26 Luis R. Rodriguez wrote:
+>> This seems to work then:
+>>
+>> NEC
+>> <AR5416+AR5133/CB72, 2x3 DB>
+>>
+>>     * WL300NC
+>>
+>> But its not AR9xx, but should do.
+> According to google the WL300NC by NEC is a PCMCIA card too...
+>
+> I'm thinking about buying a mini-pci adapter card for my desktop and put this
+> one inside:
+> http://www.sparklan.com/product_details.php?prod_id=174
+>
+> Henning
+>
+>
+Maybe this is what your wanted, the Atheros MB82
+it is a mini-pci card contain the ar9160 chipset with dual band,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |   72 ++++++++++++++++++++----------------
- 1 files changed, 40 insertions(+), 32 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 70affb7..2bf2b3f 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -59,41 +59,47 @@ static void bus_read_cachesize(struct ath_softc *sc, int *csz)
- 		*csz = DEFAULT_CACHELINE >> 2;   /* Use the default size */
- }
- 
--static void ath_setcurmode(struct ath_softc *sc, enum wireless_mode mode)
-+static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
- {
--	sc->cur_rate_table = sc->hw_rate_table[mode];
- 	/*
- 	 * All protection frames are transmited at 2Mb/s for
- 	 * 11g, otherwise at 1Mb/s.
- 	 * XXX select protection rate index from rate table.
- 	 */
--	sc->sc_protrix = (mode == ATH9K_MODE_11G ? 1 : 0);
--}
--
--static enum wireless_mode ath_chan2mode(struct ath9k_channel *chan)
--{
--	if (chan->chanmode == CHANNEL_A)
--		return ATH9K_MODE_11A;
--	else if (chan->chanmode == CHANNEL_G)
--		return ATH9K_MODE_11G;
--	else if (chan->chanmode == CHANNEL_B)
--		return ATH9K_MODE_11B;
--	else if (chan->chanmode == CHANNEL_A_HT20)
--		return ATH9K_MODE_11NA_HT20;
--	else if (chan->chanmode == CHANNEL_G_HT20)
--		return ATH9K_MODE_11NG_HT20;
--	else if (chan->chanmode == CHANNEL_A_HT40PLUS)
--		return ATH9K_MODE_11NA_HT40PLUS;
--	else if (chan->chanmode == CHANNEL_A_HT40MINUS)
--		return ATH9K_MODE_11NA_HT40MINUS;
--	else if (chan->chanmode == CHANNEL_G_HT40PLUS)
--		return ATH9K_MODE_11NG_HT40PLUS;
--	else if (chan->chanmode == CHANNEL_G_HT40MINUS)
--		return ATH9K_MODE_11NG_HT40MINUS;
--
--	WARN_ON(1); /* should not get here */
--
--	return ATH9K_MODE_11B;
-+	sc->sc_protrix = 0;
-+	switch (conf->channel->band) {
-+	case IEEE80211_BAND_2GHZ:
-+		if (conf_is_ht20(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NG_HT20];
-+		else if (conf_is_ht40_minus(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NG_HT40MINUS];
-+		else if (conf_is_ht40_plus(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NG_HT40PLUS];
-+		else {
-+			sc->sc_protrix = 1;
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11G];
-+		}
-+		break;
-+	case IEEE80211_BAND_5GHZ:
-+		if (conf_is_ht20(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NA_HT20];
-+		else if (conf_is_ht40_minus(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NA_HT40MINUS];
-+		else if (conf_is_ht40_plus(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NA_HT40PLUS];
-+		else
-+			sc->cur_rate_table = sc->hw_rate_table[ATH9K_MODE_11A];
-+		break;
-+	default:
-+		break;
-+	}
- }
- 
- static void ath_update_txpow(struct ath_softc *sc)
-@@ -258,6 +264,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
- {
- 	struct ath_hal *ah = sc->sc_ah;
- 	bool fastcc = true, stopped;
-+	struct ieee80211_hw *hw = sc->hw;
- 
- 	if (sc->sc_flags & SC_OP_INVALID)
- 		return -EIO;
-@@ -316,7 +323,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
- 			return -EIO;
- 		}
- 
--		ath_setcurmode(sc, ath_chan2mode(hchan));
-+		ath_setcurmode(sc, &hw->conf);
- 		ath_update_txpow(sc);
- 		ath9k_hw_set_interrupts(ah, sc->sc_imask);
- 	}
-@@ -1621,6 +1628,7 @@ detach:
- int ath_reset(struct ath_softc *sc, bool retry_tx)
- {
- 	struct ath_hal *ah = sc->sc_ah;
-+	struct ieee80211_hw *hw = sc->hw;
- 	int status;
- 	int error = 0;
- 
-@@ -1648,7 +1656,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	 * that changes the channel so update any state that
- 	 * might change as a result.
- 	 */
--	ath_setcurmode(sc, ath_chan2mode(sc->sc_ah->ah_curchan));
-+	ath_setcurmode(sc, &hw->conf);
- 
- 	ath_update_txpow(sc);
- 
-@@ -1945,7 +1953,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	    !sc->sc_config.swBeaconProcess)
- 		sc->sc_imask |= ATH9K_INT_TIM;
- 
--	ath_setcurmode(sc, ath_chan2mode(init_channel));
-+	ath_setcurmode(sc, &hw->conf);
- 
- 	sc->sc_flags &= ~SC_OP_INVALID;
- 
--- 
-1.6.1.rc3.51.g5832d
-
+Yanbo
