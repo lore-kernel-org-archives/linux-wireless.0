@@ -1,82 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:40820 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750825AbYLUSEd (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:21556 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752094AbYLEJ7E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 13:04:33 -0500
-Message-ID: <494E852E.4070002@lwfinger.net> (sfid-20081221_190448_385691_AF830A3F)
-Date: Sun, 21 Dec 2008 12:04:30 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 5 Dec 2008 04:59:04 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH v4 5/5] mac80211: track master queue status
+References: <20081202200219.5507.83250.stgit@tikku>
+	<20081202200426.5507.44042.stgit@tikku>
+	<1228412076.5692.25.camel@johannes.berg> <87r64ni2yr.fsf@nokia.com>
+	<1228470093.3970.8.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Fri, 05 Dec 2008 11:57:54 +0200
+In-Reply-To: <1228470093.3970.8.camel@johannes.berg> (ext Johannes Berg's message of "Fri\, 05 Dec 2008 10\:41\:33 +0100")
+Message-ID: <87ej0neyfx.fsf@nokia.com> (sfid-20081205_105909_833607_8A8D7A31)
 MIME-Version: 1.0
-To: Fabio Rossi <rossi.f@inwind.it>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-Subject: Re: rtl8180: the network interface is not anymore created
-References: <200812211710.23846.rossi.f@inwind.it>
-In-Reply-To: <200812211710.23846.rossi.f@inwind.it>
-Content-Type: multipart/mixed;
- boundary="------------030507070608090304060304"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030507070608090304060304
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Fabio Rossi wrote:
-> I was using successfully the rtl8180 driver but after last git-pull the 
-> network interface (wlan0) is not anymore created.
-> 
-> I have discovered the problem: there has been a change in mac80211, commit 
-> 3fc7826b95521e40cf53f63437a5fdcc24e54ac4. The problem is that the bit 
-> NL80211_IFTYPE_STATION is not set during the hardware initialization.
-> 
-> I guess that the problem might be solved inserting the following line of code
-> 
->     dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-> 
-> somewhere in rtl8180_dev.c but I don't know which is the right point to do so.
+> On Fri, 2008-12-05 at 07:51 +0200, Kalle Valo wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>> 
+>> > I wonder if we should optimise the spinlock here?
+>> 
+>> That would be nice, but how to do that?
+>
+> I only meant to lock/unlock it just once instead of for each possible
+> queue.
 
-Fabio,
+Ah, of course, stupid of me. I'll fix that.
 
-Does this patch fix it for you?
-
-Larry
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -898,6 +898,7 @@ static int __devinit rtl8180_probe(struc
- 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 		     IEEE80211_HW_RX_INCLUDES_FCS |
- 		     IEEE80211_HW_SIGNAL_UNSPEC;
-+	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 	dev->queues = 1;
- 	dev->max_signal = 65;
-
-
-
---------------030507070608090304060304
-Content-Type: text/plain;
- name="rtl8180_STA_init"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="rtl8180_STA_init"
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -898,6 +898,7 @@ static int __devinit rtl8180_probe(struc
- 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 		     IEEE80211_HW_RX_INCLUDES_FCS |
- 		     IEEE80211_HW_SIGNAL_UNSPEC;
-+	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 	dev->queues = 1;
- 	dev->max_signal = 65;
- 
-
-
---------------030507070608090304060304--
+-- 
+Kalle Valo
