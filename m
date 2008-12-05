@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34093 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750820AbYLREC7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 23:02:59 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2008 20:02:59 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from yx-out-1718.google.com ([74.125.44.157]:35578 "EHLO
+	yx-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbYLEFcu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2008 00:32:50 -0500
+Received: by yx-out-1718.google.com with SMTP id 4so1889520yxp.14
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 21:32:48 -0800 (PST)
+Message-ID: <43e72e890812042132y6b676a1ucf446a678e1d8a81@mail.gmail.com> (sfid-20081205_063254_599614_49FFD2E2)
+Date: Thu, 4 Dec 2008 21:32:48 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Dan E" <trg_info@mailhaven.com>
+Subject: Re: CRDA question
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1228454249.2652.1288380409@webmail.messagingengine.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18761.51883.237457.147053@gargle.gargle.HOWL> (sfid-20081218_050302_968577_94DF536E)
-Date: Thu, 18 Dec 2008 09:29:39 +0530
-To: Jouni Malinen <j@w1.fi>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>
-Subject: Re: [RFC] Handle Channel Switch Announcement
-In-Reply-To: <18761.43079.702658.733757@localhost.localdomain>
-References: <18761.4838.509784.281821@localhost.localdomain>
-	<20081217162017.GA28712@jm.kir.nu>
-	<18761.43079.702658.733757@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8
+References: <1228454249.2652.1288380409@webmail.messagingengine.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith wrote:
-> Jouni Malinen wrote:
-> > Why is this flag needed? Or well, the better question: Why is the
-> > channel disabled? CSA may request the STA to stop transmitting _within
-> > the BSS_ until the AP has changed channels (i.e., it could be possible
-> > to use other BSSes even on the same channel). This notification can be
-> > used for other things than just reporting a radar on the channel (e.g.,
-> > the AP could move to a channel that has less traffic on it).
-> >
-> 
-> Ok, agreed. I'll remove this flag.
-> 
-> But after receiving a CSA on the current frequency, and having moved to the new
-> advertised frequency, can the STA send out probe requests in the earlier frequency ?
-> (In case of a scan run or something)
+On Thu, Dec 4, 2008 at 9:17 PM, Dan E <trg_info@mailhaven.com> wrote:
+> What is the purpose of the "intersect" program in CRDA? It builds but it
+> doesn't seem to be used anywhere.
 
-If that is the case, then we should probably check for CSA received on a frequency
-and not send out probe requests in that frequency during a scan run.
+We use it to check to see if we have to update the world regulatory
+domain. You run intersect against the regulatory.bin for example to
+get the intersection of all regulatory domains.
 
-Something like:
+> I also notice the CRDA source has its
+> own nl80211.h header file, as does the source tree for "iw". Shouldn't
+> userspace tools just include the sanitized kernel header from the
+> standard gcc include-file locations? Having multiple copies (and
+> versions) of nl80211.h everywhere seems like a bad idea.
 
-	case SCAN_SEND_PROBE:
-		next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
-		local->scan_state = SCAN_SET_CHANNEL;
+Yes and no.
 
-		if (local->scan_channel->flags & (IEEE80211_CHAN_PASSIVE_SCAN |
-						  IEEE80211_CHAN_CSA_DISABLED))
-			break;
-		ieee80211_send_probe_req(sdata, NULL, local->scan_ssid,
-					 local->scan_ssid_len);
-		next_delay = IEEE80211_CHANNEL_TIME;
-		break;
+We keep the latest header in crda and iw so we can get it to compile
+to work with the latest stuff, even if you don't have support for the
+new stuff on your old kernel.
 
-But am not sure what constraints are imposed on the station on reception of a CSA.
+So although iw and crda are built with support for the shiny new stuff
+the kernel netlink messages which apply to the new stuff simply won't
+work. This lets you have, for example, an iw and crda for 2.6.28 and
+still have it working in case you want to test drive wireless-testing
+(which as stuff for 2.6.29) or compat-wireless (which has
+wireless-testing stuff backported).
 
-Sujith
+> Will CRDA work with AP mode? That's where my primary interest lies (I'm
+> writing a new driver for an as-yet unsupported chipset). I can see the
+> usefulness of CRDA in a laptop. I have a much harder time seeing the
+> benefit of a 250K application to process 3,000 bytes of data
+> (regulatory.bin) in an embedded AP context where filesystem space is at
+> a premium.
+
+Would you prefer that being duplicated in kernel space by each driver?
+That's sort of what we had before. Each driver had their own
+regulatory solution.
+
+  Luis
