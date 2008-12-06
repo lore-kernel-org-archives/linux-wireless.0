@@ -1,178 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:26265 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034AbYLNHys (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Dec 2008 02:54:48 -0500
-Message-ID: <3f9a31f40812132354k6f9e7b80o30d3236687dffba0@mail.gmail.com> (sfid-20081214_085516_112554_8FA4AE92)
-Date: Sun, 14 Dec 2008 13:24:47 +0530
-From: "Jaswinder Singh" <jaswinderlinux@gmail.com>
-To: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	lrodriguez@atheros.com, jmalinen@atheros.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: BUG - ath9k keep on disconnecting in 2.6.28-rc8
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail3.brikks.com ([82.209.166.4]:4849 "EHLO smtp.bredband2.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751963AbYLFTWj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Dec 2008 14:22:39 -0500
+Date: Sat, 6 Dec 2008 20:22:37 +0100
+From: Mats Johannesson <spamcan1@abrasax.se>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
+ root
+Message-ID: <20081206202237.578b3783@loke.fish.not> (sfid-20081206_202331_663096_06A293D1)
+In-Reply-To: <18746.48068.593834.660064@localhost.localdomain>
+References: <20081206113406.734f1d94@loke.fish.not>
+	<18746.37273.989918.333164@localhost.localdomain>
+	<20081206180537.717d1791@loke.fish.not>
+	<18746.48068.593834.660064@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+On Sat, 6 Dec 2008 23:22:04 +0530 Sujith wrote:
+> Mats Johannesson wrote:
+> > It fixes the kernel panic with root "iwlist ath0 scan" but after
+> > that the network dies without a sign of any kind (iwlist, ifconfig
+> > etc is normal, nothing in logs). Tried several times. Boot -> ping
+> > local and remote machine OK -> "iwlist ath0 scan" -> ping
+> > nonfunctional: 'no route to host' or some such message.
+> > 
+> 
+> Ok, thanks for testing.
+> 
+> Can you check if this patch makes the connection stable ?
+> Please apply on top of the earlier patch.
 
-I am facing problem with 2.6.28-rc8, ath9k keep on disconnecting.
+Sorry to say, no change. After root scan telnet gives "no route to
+host" and ping just reports 100% packet loss. But iwconfig keeps
+updating its info regarding link quality and signal strength, like:
+Link Quality=82/100  Signal level:-42 dBm
 
-dmesg :
-ath9k: 0.1
-ath9k 0000:08:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-ath9k 0000:08:00.0: setting latency timer to 64
-phy0: Selected rate control algorithm 'ath9k_rate_control'
-Registered led device: ath9k-phy0:radio
-Registered led device: ath9k-phy0:assoc
-Registered led device: ath9k-phy0:tx
-Registered led device: ath9k-phy0:rx
-phy0: Atheros 9280: mem=0xffffc20006200000, irq=17
-
-/sbin/lspci -vv :
-08:00.0 Network controller: Atheros Communications Inc. Device 002a (rev 01)
-	Subsystem: Hewlett-Packard Company Device 1381
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 128 bytes
-	Interrupt: pin A routed to IRQ 17
-	Region 0: Memory at d1100000 (64-bit, non-prefetchable) [size=64K]
-	Capabilities: [40] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Count=1/1 Enable-
-		Address: 00000000  Data: 0000
-	Capabilities: [60] Express (v1) Legacy Endpoint, MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
-		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM unknown, Latency L0
-<512ns, L1 <64us
-			ClockPM- Suprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
-BWMgmt- ABWMgmt-
-	Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
-		Vector table: BAR=0 offset=00000000
-		PBA: BAR=0 offset=00000000
-	Capabilities: [100] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-MalfTLP- ECRC- UnsupReq+ ACSVoil-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-MalfTLP- ECRC- UnsupReq- ACSVoil-
-		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
-MalfTLP+ ECRC- UnsupReq- ACSVoil-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
-	Capabilities: [140] Virtual Channel <?>
-	Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
-	Kernel driver in use: ath9k
-	Kernel modules: ath9k
-
-Here are kernel messages telling disconnecting info :
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-ForceXPAon: 0
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-ForceXPAon: 0
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-ForceXPAon: 0
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-ForceXPAon: 0
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-wlan0: authenticate with AP 00:11:95:9e:df:f6
-wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
-wlan0: direct probe to AP 00:11:95:9e:df:f6 try 1
-ForceXPAon: 0
-
-If you need more information please let me know.
-
-Thank you,
-
-Jaswinder Singh.
+/Mats
