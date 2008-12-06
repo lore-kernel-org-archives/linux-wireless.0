@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:59900 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbYLBNPD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 08:15:03 -0500
-Subject: Re: iwlwifi - rfkill only works if the interface is up
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com
-In-Reply-To: <20081202125959.GC1668@khazad-dum.debian.net>
-References: <200812011311.17346.helmut.schaa@gmail.com>
-	 <1ba2fa240812010508hcb29699m8bd8b3b0ba8574cd@mail.gmail.com>
-	 <1228145453.31158.140.camel@violet.holtmann.net>
-	 <200812011634.37644.helmut.schaa@gmail.com>
-	 <1228147151.31158.142.camel@violet.holtmann.net>
-	 <20081202125959.GC1668@khazad-dum.debian.net>
+Received: from mga03.intel.com ([143.182.124.21]:27186 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751048AbYLFHZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Dec 2008 02:25:25 -0500
+Subject: Re: [PATCH 3/6] iwlwifi: fix time interval misuse in
+	iwl_poll_{direct_}bit
+From: reinette chatre <reinette.chatre@intel.com>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>, "Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1228502611.28839.35.camel@violet.holtmann.net>
+References: <> <1228492721-27381-1-git-send-email-reinette.chatre@intel.com>
+	 <1228492721-27381-2-git-send-email-reinette.chatre@intel.com>
+	 <1228492721-27381-3-git-send-email-reinette.chatre@intel.com>
+	 <1228492721-27381-4-git-send-email-reinette.chatre@intel.com>
+	 <1228502611.28839.35.camel@violet.holtmann.net>
 Content-Type: text/plain
-Date: Tue, 02 Dec 2008 14:14:53 +0100
-Message-Id: <1228223693.31158.240.camel@violet.holtmann.net> (sfid-20081202_141507_657627_A803DD8D)
+Date: Fri, 05 Dec 2008 23:26:23 -0800
+Message-Id: <1228548383.26014.43.camel@rc-desk> (sfid-20081206_082529_715001_D12ABFC4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Henrique,
-
-> > if the hardware/firmware doesn't allow us to do so, we have no real
-> > option. I think that nobody thought about this use case so far. I am not
-> > sure if we should unregister it or just fix rfkill to add an invalid
-> > state. It is also possible to tie rfkill with ifup/ifdown.
+On Fri, 2008-12-05 at 10:43 -0800, Marcel Holtmann wrote:
+> Hi Reinette,
 > 
-> Please don't register/unregister rfkill classes like that, it is extremely
-> broken from userspace's point-of-view, and it is not how the rfkill core
-> subsystem expects things to be used either.    If there is no way to avoid
-> register/unregister at interface up/down, it is better to never register any
-> rfkill classes at all, and remove the functionality.
+> > The patch fixes the misuse of microsecond with millisecond in the
+> > polling mechanism of the iwlwifi driver. The impact of this problem
+> > is the unacceptable latency for the whole system (especially during
+> > bringing down the wlan interface).
 > 
-> Now, I hate when people use the term "rfkill switch" when dealing with the
-> kernel rfkill subsystem, because we can't really always be sure we
-> understood what the person means, so please bear with me...
+> I will test the whole set of patches again, but as already mentioned
+> this is making the situation worse than better.
 > 
-> Are you talking about the hardware rfkill line (the input pin where one
-> might have hooked an input device)?  Or about something else?
 
-so this case is that we are not getting any updates about the rfkill
-line status if the firmware is not loaded (happens at ifdown case). How
-do you propose this should be handled?
+Please let us know the test results. These patches are necessary and the
+system latency issue has improved significantly for other users (please
+see feedback in
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790 ). There
+may thus be other problems in your system that still needs to be
+addressed.
 
-Regards
-
-Marcel
-
+Reinette
 
