@@ -1,99 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:44617 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145AbYLBRXQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 12:23:16 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so1328697eyi.37
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 09:23:14 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/5] rt2x00: Remove duplicate code
-Date: Tue, 2 Dec 2008 18:20:22 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200812021819.23756.IvDoorn@gmail.com> <200812021819.48603.IvDoorn@gmail.com> <200812021820.05124.IvDoorn@gmail.com>
-In-Reply-To: <200812021820.05124.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812021820.22750.IvDoorn@gmail.com> (sfid-20081202_182327_620368_97C4AD52)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mail3.brikks.com ([82.209.166.4]:18655 "EHLO smtp.bredband2.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752331AbYLFMps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Dec 2008 07:45:48 -0500
+Received: from unknown (HELO loke.fish.not) ([83.233.19.199])
+          (envelope-sender <spamcan1@abrasax.se>)
+          by smtp.bredband2.net (qmail-ldap-1.03) with SMTP
+          for <linux-wireless@vger.kernel.org>; 6 Dec 2008 12:50:34 -0000
+Received: from loke.fish.not (localhost [127.0.0.1])
+	by loke.fish.not (Postfix) with ESMTP id D23C812B94
+	for <linux-wireless@vger.kernel.org>; Sat,  6 Dec 2008 13:45:42 +0100 (CET)
+Date: Sat, 6 Dec 2008 13:45:42 +0100
+From: Mats Johannesson <spamcan1@abrasax.se>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
+ root
+Message-ID: <20081206134542.05cd9664@loke.fish.not> (sfid-20081206_134606_815468_365559F2)
+In-Reply-To: <20081206113406.734f1d94@loke.fish.not>
+References: <20081206113406.734f1d94@loke.fish.not>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify rt2x00lib_config_antenna() by moving
-duplicate code into a seperate static inlined
-function.
+On Sat, 6 Dec 2008 11:34:06 +0100 Mats Johannesson wrote:
+> 
+> As the subject says, 2.6.28-rc7-wl git pulled Dec 6 exhibits a kernel
+> panic when doing "iwlist ath0 scan" as root under the ath9k driver.
+> Machine dead, panic LED blinking.
+> 
+> Scan as normal user is OK.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00config.c |   37 ++++++++++++++-------------
- 1 files changed, 19 insertions(+), 18 deletions(-)
+Ick! Panic as normal user as well when using the graphical "Wicd
+Manager" to Refresh (ie scan). Possibly it does its thing as root?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index b3bc8b4..e66fb31 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -108,33 +108,34 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
- 	rt2x00dev->ops->lib->config_erp(rt2x00dev, &erp);
- }
- 
-+static inline
-+enum antenna rt2x00lib_config_antenna_check(enum antenna current_ant,
-+					    enum antenna default_ant)
-+{
-+	if (current_ant != ANTENNA_SW_DIVERSITY)
-+		return current_ant;
-+	return (default_ant != ANTENNA_SW_DIVERSITY) ? default_ant : ANTENNA_B;
-+}
-+
- void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
- 			      struct antenna_setup *ant)
- {
-+	struct antenna_setup *def = &rt2x00dev->default_ant;
-+	struct antenna_setup *active = &rt2x00dev->link.ant.active;
-+
- 	/*
- 	 * Failsafe: Make sure we are not sending the
- 	 * ANTENNA_SW_DIVERSITY state to the driver.
- 	 * If that happes fallback to hardware default,
- 	 * or our own default.
-+	 * The calls to rt2x00lib_config_antenna_check()
-+	 * might have caused that we restore back to the already
-+	 * active setting. If that has happened we can quit.
- 	 */
--	if (ant->rx == ANTENNA_SW_DIVERSITY) {
--		if (rt2x00dev->default_ant.rx == ANTENNA_SW_DIVERSITY)
--			ant->rx = ANTENNA_B;
--		else
--			ant->rx = rt2x00dev->default_ant.rx;
--	}
--	if (ant->tx == ANTENNA_SW_DIVERSITY) {
--		if (rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY)
--			ant->tx = ANTENNA_B;
--		else
--			ant->tx = rt2x00dev->default_ant.tx;
--	}
-+	ant->rx = rt2x00lib_config_antenna_check(ant->rx, def->rx);
-+	ant->tx = rt2x00lib_config_antenna_check(ant->tx, def->tx);
- 
--	/*
--	 * Only reconfigure when something has changed.
--	 */
--	if (ant->rx == rt2x00dev->link.ant.active.rx &&
--	    ant->tx == rt2x00dev->link.ant.active.tx)
-+	if (ant->rx == active->rx && ant->tx == active->tx)
- 		return;
- 
- 	/*
-@@ -154,7 +155,7 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	rt2x00lib_reset_link_tuner(rt2x00dev);
- 	rt2x00_reset_link_ant_rssi(&rt2x00dev->link);
- 
--	memcpy(&rt2x00dev->link.ant.active, ant, sizeof(*ant));
-+	memcpy(active, ant, sizeof(*ant));
- 
- 	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON_LINK);
--- 
-1.5.6.1
+First panic was as root on a fresh kernel without any graphics driver
+(plain terminal). Second try was as a normal user in said plain
+terminal - was OK. Logged out and in as root to scan -> panic.
 
+Installed graphics driver and ran as normal user under X. Wicd handles
+the wpa_supplicant etc. Scanning in an xterm as myself was OK. Later
+tried the Wicd Manager Refresh thing out of curiosity. Panic.
+
+/Mats
