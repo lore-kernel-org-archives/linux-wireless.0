@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3856 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752753AbYLIQbv (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:55869 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754258AbYLFLNA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 11:31:51 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
+	Sat, 6 Dec 2008 06:13:00 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so160090eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Dec 2008 03:12:58 -0800 (PST)
+From: Henning Rogge <hrogge@googlemail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
-Subject: Re: [PATCH 1/2] mac80211: add suspend/resume callbacks
-Date: Tue, 9 Dec 2008 11:29:31 -0500
-Message-Id: <20081209161636.M22933@bobcopeland.com> (sfid-20081209_173156_452704_79F08123)
-In-Reply-To: <1228838346.1029.10.camel@johannes.berg>
-References: <1227415286-30179-2-git-send-email-me@bobcopeland.com> (sfid-20081123_054218_217354_D63E2DF4) <1227431953.3599.37.camel@johannes.berg> <20081209152908.M73523@bobcopeland.com> <1228838346.1029.10.camel@johannes.berg>
+Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
+Date: Sat, 6 Dec 2008 12:12:50 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200811252131.30161.hrogge@googlemail.com> <200812060026.50636.hrogge@googlemail.com> <1228554920.15939.2.camel@johannes.berg>
+In-Reply-To: <1228554920.15939.2.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+Content-Type: multipart/signed;
+  boundary="nextPart122860125.EtH9Ki5sAP";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200812061212.55491.hrogge@googlemail.com> (sfid-20081206_121313_522809_2C5882DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 09 Dec 2008 16:59:06 +0100, Johannes Berg wrote
-> > Is this what you had in mind? (now on top of your cfg80211 patch, btw
-> > it called ->suspend() in the resume hook)
-> 
-> Can you adopt that patch too?
+--nextPart122860125.EtH9Ki5sAP
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Yeah, I already have it in my tree, I just didn't repost it because my 
-webmail sucks.
+On Saturday 06 December 2008 10:15:20 Johannes Berg wrote:
+> Yes, well, depending on which values you used you might have run into
+> the fact that the values from the tables were already rounded.
+Both  errors happen for 20 Mhz channels... one of them is definitely a typo=
+ in=20
+the wiki.
 
-> > +	/* remove all interfaces */
-> > +	list_for_each_entry(sdata, &local->interfaces, list) {
-> > +
-> > +		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-> > +		    sdata->vif.type == NL80211_IFTYPE_MONITOR &&
-> > +		    netif_running(sdata->dev)) {
-> 
-> But shouldn't that be != _AP_VLAN && != _MONITOR && running?
+I get 144.4 MBit/s (wiki says 144.0) for MCS 15 (long GI)
+and 115.6 MBit/s (wiki says 173.3, which is a typo !) for MCS 27(short GI).
 
-Oops, of course it should; that if() started life as continue.  
-But that would just mean a missed call to remove_interface()... 
-in the driver, which for ath5k just clears the mac, so I don't 
-know why it would affect the running state of the interface.
+in pseudocode:
+=2D----------------
 
-> I'd just add those to ieee80211_i.h, and I don't think you really need
-> to protect them with #ifdef CONFIG_PM
+int modulation =3D mcs & 7;
+int streams =3D mcs / 8;
 
-Will do, thanks for the review.
+int bitrate =3D (flags & 40MHZ) ? 13500000 : 6500000;
 
--- 
-Bob Copeland %% www.bobcopeland.com
+if (modulation < 4)
+    bitrate *=3D (modulation + 1);
+else if (modulation =3D=3D 4)
+    bitrate *=3D (modulation + 2);
+else
+    bitrate *=3D (modulation + 3);
+
+bitrate *=3D streams;
+
+if (flags & SHORT_GI)
+    bitrate =3D (bitrate * 10) / 9;
+
+return (bitrate + 50000) / 100000; // do NOT just round down
+
+Henning
 
 
+--nextPart122860125.EtH9Ki5sAP
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkk6XjcACgkQcenvcwAcHWczQwCgiwMouQqpfni5bbTxcN49G3SI
+HsgAn0VOiLObtbqtdW4LNl9EcCfzEHlT
+=Baak
+-----END PGP SIGNATURE-----
+
+--nextPart122860125.EtH9Ki5sAP--
