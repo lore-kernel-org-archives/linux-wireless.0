@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:17723 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752932AbYLDUZB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 15:25:01 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so3879415ugf.37
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 12:24:58 -0800 (PST)
-From: Henning Rogge <hrogge@googlemail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: Looking for a 802.11n card
-Date: Thu, 4 Dec 2008 21:24:47 +0100
-Cc: Stefanik =?iso-8859-1?q?G=E1bor?= <netrolller.3d@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"pat-lkml" <pat-lkml@erley.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200812032129.16740.hrogge@googlemail.com> <69e28c910812040451p231b41e1t63893d23f373bf0c@mail.gmail.com> <20081204192826.GD5970@tesla>
-In-Reply-To: <20081204192826.GD5970@tesla>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2928750.HS8PzH9JgO";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200812042124.54533.hrogge@googlemail.com> (sfid-20081204_212507_036457_43AADBB3)
+Received: from mail3.brikks.com ([82.209.166.4]:13976 "EHLO smtp.bredband2.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751585AbYLFRFo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Dec 2008 12:05:44 -0500
+Date: Sat, 6 Dec 2008 18:05:37 +0100
+From: Mats Johannesson <spamcan1@abrasax.se>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
+ root
+Message-ID: <20081206180537.717d1791@loke.fish.not> (sfid-20081206_180548_605262_1C5C8A12)
+In-Reply-To: <18746.37273.989918.333164@localhost.localdomain>
+References: <20081206113406.734f1d94@loke.fish.not>
+	<18746.37273.989918.333164@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2928750.HS8PzH9JgO
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sat, 6 Dec 2008 20:22:09 +0530 Sujith wrote:
+> Mats Johannesson wrote:
+> > As the subject says, 2.6.28-rc7-wl git pulled Dec 6 exhibits a
+> > kernel panic when doing "iwlist ath0 scan" as root under the ath9k
+> > driver. Machine dead, panic LED blinking.
+> > 
+> > Scan as normal user is OK.
+> > 
+> 
+> Can you check if this makes any difference ? Thanks.
+[patch snipped]
 
-On Thursday 04 December 2008 20:28:26 Luis R. Rodriguez wrote:
-> This seems to work then:
->
-> NEC
-> <AR5416+AR5133/CB72, 2x3 DB>
->
->     * WL300NC
->
-> But its not AR9xx, but should do.
-According to google the WL300NC by NEC is a PCMCIA card too...
+It fixes the kernel panic with root "iwlist ath0 scan" but after that
+the network dies without a sign of any kind (iwlist, ifconfig etc is
+normal, nothing in logs). Tried several times. Boot -> ping local and
+remote machine OK -> "iwlist ath0 scan" -> ping nonfunctional: 'no
+route to host' or some such message.
 
-I'm thinking about buying a mini-pci adapter card for my desktop and put th=
-is=20
-one inside:
-http://www.sparklan.com/product_details.php?prod_id=3D174
+Sending you a picture of the panic in a personal letter. Don't know if
+it will do any good since only the last part is visible on screen.
+Taken outside of X in plain terminal. Tried to snap from inside X in
+both an xterm and a kterm but the panic message never reaches that
+high in the chain. Instant death!
 
-Henning
-
-
---nextPart2928750.HS8PzH9JgO
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkk4PJYACgkQcenvcwAcHWeNrwCfYMvBdC/u2lFzwoADkkZBTRpJ
-KMkAn0YDUAEmCOFHNRS4H+7rBZy4u3sm
-=GIhV
------END PGP SIGNATURE-----
-
---nextPart2928750.HS8PzH9JgO--
+/Mats
