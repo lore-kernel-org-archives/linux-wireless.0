@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:47879 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418AbYL3MuF (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:56484 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753220AbYLFVra (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 07:50:05 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] p54: implement FIF_OTHER_BSS filter setting
-Date: Tue, 30 Dec 2008 13:48:29 +0100
-Cc: John W Linville <linville@tuxdriver.com>
+	Sat, 6 Dec 2008 16:47:30 -0500
+Message-ID: <493AF2EE.20605@lwfinger.net> (sfid-20081206_224736_750362_CCBF2F01)
+Date: Sat, 06 Dec 2008 15:47:26 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812301348.29992.chunkeey@web.de> (sfid-20081230_135014_152585_B9494DBA)
+To: Christian Lamparter <chunkeey@web.de>
+CC: Greg KH <gregkh@suse.de>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC][PATCH] p54usb: rewriting rx/tx routines to make use of
+ usb_anchor's facilities
+References: <200812051547.45790.chunkeey@web.de> <4939B6AF.2060901@lwfinger.net> <20081205232321.GA8557@suse.de> <200812062109.40590.chunkeey@web.de>
+In-Reply-To: <200812062109.40590.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to STMicroelectronics' LMAC documentation, the P54_FILTER_TYPE_TRANSPARENT flag
-"configures the receive frame filter to pass all frames without regard to type and address matching."
+Christian Lamparter wrote:
+> 
+> Alan, I've got a question about:
+> "Create and initialize a usb_anchor structure, and each time you create
+> a new URB, call usb_anchor_urb().  Then you can free the URB as soon as
+> it is submitted; the anchor will keep it pinned until it completes, and
+> it is automatically removed from the anchor when the completion routine
+> is called."
+> 
+> Do we have to call usb_free_urb again, if we're resubmitting the urb in the
+> complete callback? (the code what I'm referring to is p54u_rx_cb in p54usb.c)
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-12-27 00:27:49.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-12-30 13:21:07.000000000 +0100
-@@ -1555,7 +1555,8 @@ static int p54_setup_mac(struct ieee8021
- 		 * "TRANSPARENT and PROMISCUOUS are mutually exclusive"
- 		 * STSW45X0C LMAC API - page 12
- 		 */
--		if ((priv->filter_flags & FIF_PROMISC_IN_BSS) &&
-+		if (((priv->filter_flags & FIF_PROMISC_IN_BSS) ||
-+		     (priv->filter_flags & FIF_OTHER_BSS)) &&
- 		    (mode != P54_FILTER_TYPE_PROMISCUOUS))
- 			mode |= P54_FILTER_TYPE_TRANSPARENT;
- 	} else
-@@ -1983,12 +1984,13 @@ static void p54_configure_filter(struct 
- 	struct p54_common *priv = dev->priv;
- 
- 	*total_flags &= FIF_PROMISC_IN_BSS |
-+			FIF_OTHER_BSS |
- 			(*total_flags & FIF_PROMISC_IN_BSS) ?
- 				FIF_FCSFAIL : 0;
- 
- 	priv->filter_flags = *total_flags;
- 
--	if (changed_flags & FIF_PROMISC_IN_BSS)
-+	if (changed_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS))
- 		p54_setup_mac(dev);
- }
- 
+I am very interested in the answer to this question. My interpretation is that
+you cannot resubmit the urb after it has been posted to usb_anchor_usb() because
+the USB core will have deleted it, and that the callback routine will have to
+allocate a new urb, anchor it, and then free it as well.
+
+Larry
