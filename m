@@ -1,67 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49655 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753531AbYLLVsJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 16:48:09 -0500
-Subject: Re: iw Makefile patch to allow compilation using --as-needed
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mike Auty <mike.auty@gmail.com>
+Received: from mail3.brikks.com ([82.209.166.4]:15598 "EHLO smtp.bredband2.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753035AbYLFPNb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Dec 2008 10:13:31 -0500
+Date: Sat, 6 Dec 2008 16:13:28 +0100
+From: Mats Johannesson <spamcan1@abrasax.se>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4942D853.10105@gmail.com>
-References: <4942D853.10105@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mUWFMhdpZALvc3yXsCx9"
-Date: Fri, 12 Dec 2008 22:48:02 +0100
-Message-Id: <1229118482.3572.0.camel@johannes.berg> (sfid-20081212_224813_940066_F284E17F)
+Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
+ root
+Message-ID: <20081206161328.4ac324e4@loke.fish.not> (sfid-20081206_161345_019067_F8E621CA)
+In-Reply-To: <20081206142517.GA26624@tuxdriver.com>
+References: <20081206113406.734f1d94@loke.fish.not>
+	<20081206134542.05cd9664@loke.fish.not>
+	<20081206142517.GA26624@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 6 Dec 2008 09:25:17 -0500 John W. Linville wrote:
+[...]
+> It would be helpful if you could capture the oops messages using a
+> serial console, netconsole, or even with a digital camera.  You may
+> also want to open a bug at bugzilla.kernel.org.
 
---=-mUWFMhdpZALvc3yXsCx9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm currently a bit miffed with the linux dev community since the
+address I'm using won't get through spam filters at lkml (and a letter
+to vger admins has had no effect), so not too keen on putting work
+into debugging.
 
-On Fri, 2008-12-12 at 21:32 +0000, Mike Auty wrote:
-> Hiya,
-> 	I've got a patch for the iw program to allow it to compile properly
-> with the --as-needed linker flag.  This flag requires that files and
-> libraries are listed in a particular order, with required libraries
-> listed after the functions that call them.
-> 	The original Makefile for iw adds the libraries to the LDFLAGS
-> variable, which is processed before the OBJS are listed (so the
-> libraries are removed).  This patch adds a LIBS variable and applies it
-> after the OBJS variable.
-> 	For more information on as-needed, please see
-> http://www.gentoo.org/proj/en/qa/asneeded.xml.  If you have any problems
-> or issues with the patch, please let me know, thanks...  5:)
-> 	Mike  5:)
+Wireless accepts my mail obviously but I still wanted to see if anyone
+was interested (or a dev could trigger it) before rolling up the
+sleeves.
 
-Applied, thanks.
+My oops transcribing days are looong gone but I'll take a low res
+picture and pastebin somewhere - or attach in a separate letter directly
+to a dev.
 
-johannes
-
---=-mUWFMhdpZALvc3yXsCx9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQtwPAAoJEKVg1VMiehFYvDYQALks4BfDcYHXgajrGg9XaGCf
-hmPUdCp+cycqYJcmjDa0vtjDgziS/f3ZmLuw2hR6K2pGK5trIu0lfjRO/Fpc1V/g
-q0v8Ve/6vmrfISF5UAEczmTBZBnc04TtAbVwKWMzH6/GEd4ClNy9HUwKq2W4KB6f
-b0MeuCkb369hE8GTqhgu+FjyY/cYNj/bt4ec1UQrfHJUJEZRE3MRHxymLwt/2OtQ
-4OckbG2K4AfhkapTtCDEpHIdoPeN6UXJSwclGqQnJ4hfBkViw/EaaHm6qbYnhCCx
-NpQ7jwGxSC6muqtDcKhiZOf4SrJ8guVPy5k6yGzPFadU/li2m2C/ZRtfzaxCxTdX
-WQIXm5WfDukPZTNHpf/F/6uKeJL2ZX8AkCiV++6nH8bYYjo72X/2DZNYoP676wob
-Rp72Vr0snusYGEj5seChGHhoOomHs+NTbtBGFxvioK8i46ga0e/w/X1or0uNUIbb
-9MqplVfggRLfcJpwTamd0rBF1iBoWAcIHhMhUifY+7CaSFcg3xQrdZzifL9/V/d8
-53YyiNUlpUqkM0dmkwWTgSr5mkcrwQa9BFfs1x6UflHwlfPg4e/0F83/ci3A9Rp+
-o2+FfLrFvmro1up/WSjQ3croc6rro6iP1wS/wEKFpzo/+cyyk+nKOzlz5XyRnPxB
-m+T94ZPe/GxcHG8J2lOM
-=xI7F
------END PGP SIGNATURE-----
-
---=-mUWFMhdpZALvc3yXsCx9--
-
+/Mats
