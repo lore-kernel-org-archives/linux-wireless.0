@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:38604 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753900AbYL1NAA (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:41242 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754246AbYLGQlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2008 08:00:00 -0500
-To: "Matthew Garrett" <mjg59@srcf.ucam.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5 3/3] mac80211: implement dynamic power save
-References: <20081218211532.6842.88104.stgit@tikku>
-	<20081218211712.6842.98402.stgit@tikku>
-	<20081224132432.GA27658@srcf.ucam.org>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Sun, 28 Dec 2008 14:59:35 +0200
-In-Reply-To: <20081224132432.GA27658@srcf.ucam.org> (ext Matthew Garrett's message of "Wed\, 24 Dec 2008 13\:24\:32 +0000")
-Message-ID: <87wsdkmp54.fsf@nokia.com> (sfid-20081228_140003_499416_E1AC46C3)
+	Sun, 7 Dec 2008 11:41:51 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so308131eyi.37
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2008 08:41:49 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFT] mac80211: fix HT channel selection
+Date: Sun, 7 Dec 2008 17:41:46 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Mats Johannesson <spamcan1@abrasax.se>,
+	Tomas Winkler <tomasw@gmail.com>
+References: <1228667447.22164.46.camel@johannes.berg>
+In-Reply-To: <1228667447.22164.46.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200812071741.46741.IvDoorn@gmail.com> (sfid-20081207_174201_809112_99E689B3)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthew Garrett <mjg59@srcf.ucam.org> writes:
+On Sunday 07 December 2008, Johannes Berg wrote:
+> HT management is done differently for AP and STA modes, unify
+> to just the ->config() callback since HT is fundamentally a
+> PHY property and cannot be per-BSS.
 
-> Are we able to estimate the worst-case latency that will be introduced 
-> by this? If so, it would be helpful to tie it into the pm_qos framework.
+Ah very nice, I was recently hit this for the rt2x00 implementation,
+intended to send a mail about it when I had done some more research. :)
 
-I'm not familiar with pm_qos framework, unfortunately, but there's
-some work to do still to get mac80211 client power save implemention
-into shape and I would like get the basics implemented first. After
-that is done, we could start looking at the pm_qos framework and see
-if it makes sense to use it.
+Thanks!
 
--- 
-Kalle Valo
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> Please test. Mats, this might fix your problem (if it applies on top of
+> the patch that fixes the panic)
+> 
+>  drivers/net/wireless/ath9k/main.c      |   71 ---------------------------------
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |   21 ++++++---
+>  drivers/net/wireless/mac80211_hwsim.c  |    7 ---
+>  include/net/mac80211.h                 |    5 --
+>  net/mac80211/ht.c                      |   57 --------------------------
+>  net/mac80211/ieee80211_i.h             |    3 -
+>  net/mac80211/mlme.c                    |   67 +++++++++++++++++++++++++++++++
+>  7 files changed, 85 insertions(+), 146 deletions(-)
+
+
+
