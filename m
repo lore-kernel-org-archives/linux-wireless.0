@@ -1,66 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52989 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751730AbYLMA07 (ORCPT
+Received: from netrider.rowland.org ([192.131.102.5]:4829 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753526AbYLGEPJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 19:26:59 -0500
-Subject: Re: [RFC 0/3] cfg80211, mac80211: Introduce radiotap flags
-	for	finer userspace control of injection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Richard Farina <sidhayn@gmail.com>
-Cc: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4942FFB8.4060608@gmail.com> (sfid-20081213_012014_147072_22C43F21)
-References: <69e28c910812121432k1e8732bcma77e489d247ecdf4@mail.gmail.com>
-	 (sfid-20081212_233239_864570_76D3B7E9) <1229121467.3565.2.camel@johannes.berg>
-	 <4942FFB8.4060608@gmail.com> (sfid-20081213_012014_147072_22C43F21)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HY6DYpPTbzS6WepGi0Hy"
-Date: Sat, 13 Dec 2008 01:26:52 +0100
-Message-Id: <1229128012.3565.38.camel@johannes.berg> (sfid-20081213_012708_529464_06B68AFE)
-Mime-Version: 1.0
+	Sat, 6 Dec 2008 23:15:09 -0500
+Date: Sat, 6 Dec 2008 23:15:06 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+cc: Christian Lamparter <chunkeey@web.de>, Greg KH <gregkh@suse.de>,
+	<linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>,
+	<linux-usb@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC][PATCH] p54usb: rewriting rx/tx routines to make use of
+ usb_anchor's facilities
+In-Reply-To: <493AF2EE.20605@lwfinger.net>
+Message-ID: <Pine.LNX.4.44L0.0812061919480.16554-100000@netrider.rowland.org> (sfid-20081207_051538_420258_EC013D2B)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 6 Dec 2008, Larry Finger wrote:
 
---=-HY6DYpPTbzS6WepGi0Hy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Christian Lamparter wrote:
+> > 
+> > Alan, I've got a question about:
+> > "Create and initialize a usb_anchor structure, and each time you create
+> > a new URB, call usb_anchor_urb().  Then you can free the URB as soon as
+> > it is submitted; the anchor will keep it pinned until it completes, and
+> > it is automatically removed from the anchor when the completion routine
+> > is called."
+> > 
+> > Do we have to call usb_free_urb again, if we're resubmitting the urb in the
+> > complete callback? (the code what I'm referring to is p54u_rx_cb in p54usb.c)
+> 
+> I am very interested in the answer to this question. My interpretation is that
+> you cannot resubmit the urb after it has been posted to usb_anchor_usb() because
+> the USB core will have deleted it, and that the callback routine will have to
+> allocate a new urb, anchor it, and then free it as well.
 
-On Fri, 2008-12-12 at 19:20 -0500, Richard Farina wrote:
+I looked quickly at your new code.  It seems basically right, but there
+are few things that still need attention.  For instance, you removed a
+line to free an URB's transfer buffer.  The USB core will automatically
+call kfree(urb->transfer_buffer) for you when the URB is deallocated,
+but only if you have set the URB_FREE_BUFFER bit in
+urb->transfer_flags.  I didn't check to see whether the driver does 
+this.
 
-> > Umm, these aren't really defined by radiotap yet. Does all of this have
-> > to be NOW?
+To answer your questions about anchors...  The main idea is simple
+enough.  When you create an URB, its refcount is 1.  Each call to
+usb_get_urb() increments the refcount and each call to usb_put_urb()  
+or usb_free_urb() decrements it; when the refcount reaches 0 the URB is
+deallocated.  When you successfully submit an URB, the core increments
+its refcount; the refcount is then decremented when the completion
+routine returns.
 
-> Is there a compelling reason to prohibit progress?
+When you add an URB to an anchor, its refcount is incremented.  When it
+is removed from the anchor, the refcount is decremented again.  An
+anchored URB is automatically removed from its anchor just before the
+completion routine is called.  So if your completion routine wants to
+resubmit an URB, it has to add the URB back to the anchor.  And if
+the submission fails then you have to decide what to do (usually you 
+would unanchor the URB, which would cause it to be deallocated later).
 
-Well, it should be done with radiotap.org...
+As a sketch: (1) Initially:
 
-Incidentally, the new list is there. radiotap@radiotap.org.
+	usb_alloc_urb			=> refcount = 1
+	usb_anchor_urb			=> refcount = 2
+	usb_submit_urb			=> refcount = 3
+	usb_free_urb			=> refcount = 2
 
-johannes
+(2) Later on:
 
---=-HY6DYpPTbzS6WepGi0Hy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+	URB completes
+	URB is removed from anchor	=> refcount = 1
+	Completion routine is called
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+(3a) If the completion routine doesn't resubmit:
 
-iQIcBAABAgAGBQJJQwFJAAoJEKVg1VMiehFYAHUQAJmaVFT/x0alHOMAcdRgq2kb
-zb/1IOkStEGofnMe+MnBEvMgtQwl7OMUBKIA1uk9avEtvRAVmyZVlwjwFnVSLemB
-FeETA5ariPXNnDBs1MOuqZcIIOEGkZ2eEgYGCEiudLgMD5Y10VabS2c6DkiG492r
-RYHiMIpuiwzfKByaftZVovEjlT0XuJZf86VoyMdK0jxTfU4z62QBJEXpz0DDZB0i
-//j8Pp8JK+wlO+Sj9AhGm+5XsKAsvs6OU4XprCtG8u8g3Y/YuKGslU9LO1jviWId
-79M8NaRM7vbeIrcr8N6Q38UDe8i8ZaYAvLMbXMKxZF/qHRvqqde2Qqz3lpb6IM5y
-sZaNwSlDhGmnwGPKNtQ5H7yEdBs2jJGhpojztGuPj3yy14Yhr2jN8AbKS/MTip2l
-dRisOuRbBB0aUiMhJQR5W7PzC7ohnQpJr2X10a0DXd9WmeoFbOallznRpTtVvhQz
-SfGFlym/5Z9RlhoTMHqfhRRhaFQ5tzdAnR/6bb23uUP3SUaeonxJGBlVhD/FLO1S
-RFU7JTUu/YKDHa4QSfkW9ER/lcpdaZ8uNKPfsdAwg+zDx+F2OLaH6tXBiyONrBDh
-kG+BghdxLmq3i8WxkN11XSV4yf6H0A3DZATzhonXWEV/ShHPv5CQYyPFFwFv9fJD
-5XMLK61mLxx7MAYl7yYX
-=zvS9
------END PGP SIGNATURE-----
+	Completion routine returns	=> refcount = 0,
+					URB is deallocated
 
---=-HY6DYpPTbzS6WepGi0Hy--
+(3b) If the completion routine does resubmit:
+
+	usb_anchor_urb			=> refcount = 2
+	usb_submit_urb			=> refcount = 3
+	Completion routine returns	=> refcount = 2
+	Go back to (2)...
+
+Hopefully this clarifies things.
+
+Alan Stern
 
