@@ -1,70 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53590 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751985AbYLFJFo (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:1422 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753957AbYLGSVq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 04:05:44 -0500
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mohamed salim abbas <mabbaswireless@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <b3153e950812051553r2035b8aex4f54f6cf704a26b3@mail.gmail.com> (sfid-20081206_005321_937743_7F6AE4A8)
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <1ba2fa240811170632s49c38320y18da189bf2432d54@mail.gmail.com>
-	 <1226933141.3902.19.camel@johannes.berg>
-	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>
-	 <1226942887.3902.30.camel@johannes.berg>
-	 <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com>
-	 <1226944799.3902.52.camel@johannes.berg>
-	 <20081118194652.GD21772@tuxdriver.com>
-	 <1ba2fa240811181508y633be12pd9f2f9bd0e2c81e4@mail.gmail.com>
-	 <b3153e950812051553r2035b8aex4f54f6cf704a26b3@mail.gmail.com>
-	 (sfid-20081206_005321_937743_7F6AE4A8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JavIrmxdnN5L1CLiaQt8"
-Date: Sat, 06 Dec 2008 10:05:33 +0100
-Message-Id: <1228554333.15939.0.camel@johannes.berg> (sfid-20081206_100551_734643_10F738B5)
-Mime-Version: 1.0
+	Sun, 7 Dec 2008 13:21:46 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so380210nfc.21
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2008 10:21:44 -0800 (PST)
+From: Henning Rogge <hrogge@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 2/2] Add signal strength and bandwith to nl80211station info
+Date: Sun, 7 Dec 2008 19:19:01 +0100
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Henning Rogge <rogge@fgan.de>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+References: <200811252131.30161.hrogge@googlemail.com> <200812071832.20533.hrogge@googlemail.com> <1228671578.22164.48.camel@johannes.berg>
+In-Reply-To: <1228671578.22164.48.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1912631.2fcsvss6Cj";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200812071919.07680.hrogge@googlemail.com> (sfid-20081207_192157_837395_FB0672A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--nextPart1912631.2fcsvss6Cj
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_WOBPJzwEa3QnK8k"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
---=-JavIrmxdnN5L1CLiaQt8
-Content-Type: text/plain
+--Boundary-01=_WOBPJzwEa3QnK8k
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Fri, 2008-12-05 at 15:53 -0800, mohamed salim abbas wrote:
-> some bugs related to coming from resume is filed caused by removing
-> this callback function, any body looking into alternatives to share
-> how to fix this problem.
+This patch adds the total transmission bitrate for adhoc station even for=20
+802.11n transmissions. It must be applied after the first patch of this=20
+series.
 
-Yes, in fact, somebody _is_ looking into implementing _proper_
-suspend/resume support. You'll either have to wait or help out.
+=2D------------------------
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 56450b4..b5abe36 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -431,14 +431,14 @@ enum nl80211_sta_flags {
+  * when getting information about the bitrate of a station.
+  *
+  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
+=2D * @NL80211_RATE_INFO_LEGACY: bitrate for 802.11abg (u16, 100kbit/s)
++ * @NL80211_RATE_INFO_TOTAL: total bitrate (u16, 100kbit/s)
+  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
+  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
+  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
+  */
+ enum nl80211_rate_info {
+ 	__NL80211_RATE_INFO_INVALID,
+=2D	NL80211_RATE_INFO_LEGACY,
++	NL80211_RATE_INFO_TOTAL,
+ 	NL80211_RATE_INFO_MCS,
+ 	NL80211_RATE_INFO_40_MHZ_WIDTH,
+ 	NL80211_RATE_INFO_SHORT_GI,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c9268b2..8689744 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1080,6 +1080,35 @@ static int parse_station_flags(struct nlattr *nla, u=
+32=20
+*staflags)
+ 	return 0;
+ }
+=20
++static u16 nl80211_calculate_bitrate(struct rate_info *rate)
++{
++	int modulation, streams, bitrate;
++
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
++		return rate->legacy;
++
++	modulation =3D rate->mcs & 7;
++	streams =3D rate->mcs >> 3;
++
++	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
++			13500000 : 6500000;
++
++	if (modulation < 4)
++		bitrate *=3D (modulation + 1);
++	else if (modulation =3D=3D 4)
++		bitrate *=3D (modulation + 2);
++	else
++		bitrate *=3D (modulation + 3);
++
++	bitrate *=3D streams;
++
++	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
++		bitrate =3D (bitrate * 10) / 9;
++
++	/* do NOT round down here */
++	return (bitrate + 50000) / 100000;
++}
++
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+ 				u8 *mac_addr, struct station_info *sinfo)
+@@ -1123,13 +1152,12 @@ static int nl80211_send_station(struct sk_buff *msg=
+,=20
+u32 pid, u32 seq,
+ 		if (!txrate)
+ 			goto nla_put_failure;
+=20
+=2D
+=2D		if (!(sinfo->txrate.flags & RATE_INFO_FLAGS_MCS))
+=2D			NLA_PUT_U16(msg, NL80211_RATE_INFO_LEGACY,
+=2D				    sinfo->txrate.legacy);
+=2D		else
++		NLA_PUT_U16(msg, NL80211_RATE_INFO_TOTAL,
++				nl80211_calculate_bitrate(&sinfo->txrate));
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
+ 			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
+ 				    sinfo->txrate.mcs);
++
+ 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
+ 			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
+ 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
 
-johannes
 
---=-JavIrmxdnN5L1CLiaQt8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--Boundary-01=_WOBPJzwEa3QnK8k
+Content-Type: text/x-patch;
+  charset="ISO-8859-15";
+  name="nl80211ext_v8_2.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="nl80211ext_v8_2.patch"
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 56450b4..b5abe36 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -431,14 +431,14 @@ enum nl80211_sta_flags {
+  * when getting information about the bitrate of a station.
+  *
+  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
+=2D * @NL80211_RATE_INFO_LEGACY: bitrate for 802.11abg (u16, 100kbit/s)
++ * @NL80211_RATE_INFO_TOTAL: total bitrate (u16, 100kbit/s)
+  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
+  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
+  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
+  */
+ enum nl80211_rate_info {
+ 	__NL80211_RATE_INFO_INVALID,
+=2D	NL80211_RATE_INFO_LEGACY,
++	NL80211_RATE_INFO_TOTAL,
+ 	NL80211_RATE_INFO_MCS,
+ 	NL80211_RATE_INFO_40_MHZ_WIDTH,
+ 	NL80211_RATE_INFO_SHORT_GI,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c9268b2..8689744 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1080,6 +1080,35 @@ static int parse_station_flags(struct nlattr *nla, u=
+32 *staflags)
+ 	return 0;
+ }
+=20
++static u16 nl80211_calculate_bitrate(struct rate_info *rate)
++{
++	int modulation, streams, bitrate;
++
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
++		return rate->legacy;
++
++	modulation =3D rate->mcs & 7;
++	streams =3D rate->mcs >> 3;
++
++	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
++			13500000 : 6500000;
++
++	if (modulation < 4)
++		bitrate *=3D (modulation + 1);
++	else if (modulation =3D=3D 4)
++		bitrate *=3D (modulation + 2);
++	else
++		bitrate *=3D (modulation + 3);
++
++	bitrate *=3D streams;
++
++	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
++		bitrate =3D (bitrate * 10) / 9;
++
++	/* do NOT round down here */
++	return (bitrate + 50000) / 100000;
++}
++
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+ 				u8 *mac_addr, struct station_info *sinfo)
+@@ -1123,13 +1152,12 @@ static int nl80211_send_station(struct sk_buff *msg=
+, u32 pid, u32 seq,
+ 		if (!txrate)
+ 			goto nla_put_failure;
+=20
+=2D
+=2D		if (!(sinfo->txrate.flags & RATE_INFO_FLAGS_MCS))
+=2D			NLA_PUT_U16(msg, NL80211_RATE_INFO_LEGACY,
+=2D				    sinfo->txrate.legacy);
+=2D		else
++		NLA_PUT_U16(msg, NL80211_RATE_INFO_TOTAL,
++				nl80211_calculate_bitrate(&sinfo->txrate));
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
+ 			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
+ 				    sinfo->txrate.mcs);
++
+ 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
+ 			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
+ 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
+
+--Boundary-01=_WOBPJzwEa3QnK8k--
+
+--nextPart1912631.2fcsvss6Cj
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJJOkBZAAoJEKVg1VMiehFYyNMP/RpG8dVIkffA31/sHKOXE6zd
-vMhIEIULwB9Q6qGwQq5XHlpDsBgEWp1uABN1mLA005YKz/MNw30Cx4ou0CtZOi/R
-EFhjdulU+oRqUktT6PJ4K9cW/8bnuCv8eqTcaBJxB6pu0WMA1tYc/P7FQ92Hue3W
-usbtTXX4ahGpQPbE6zNVp19h8dQKylGrD4fVWv9DmoB3rrjkYK8P7478ne20F5tx
-QfLCDHmo0Wjk3sFXwBeSD5ZItYGStjQBcr/7IOZJ5B5F6UVV5po+k4ZfXze6NmVz
-Eem966Wuf0JnLDOdeHyx/dZrrfjdvBliFb3+9sXkGshOgmFetll8MmmP4FL7oc4+
-SyRY8HvRH+hhbv4ZNOMmjPQFkDWA54GZV/6jfTepDzPDRGNvhvo4bmlxj6pnfSgq
-9AXlIM/rDu2YBEV6sDDzboeMZOpF79HbUWZmXsvAw8reG4QM/pcA15+C/e3MOzwE
-d4bbvPCRy9KrARBGUCrTbODg6j/cmSGN13SBO18IVbs2Y/OoRktgB2wLUgM7tNMQ
-LcuJDkS9TvFfXhiADQHsid4KZGPdwDcweVeYayP1J2N3gfyimV/toJH+j9Kouj8u
-wLDAoPJ64F5hb3dHvwXb7Gy5rctkWXm01b7Ia1odJn4eI1Ob99IigBq040caILlS
-IMP0l7tg8KGNYf19mu/r
-=0AI8
+iEYEABECAAYFAkk8E5sACgkQcenvcwAcHWcV8ACfQJN+bMAv5u2kNUsci6JzFfiD
+w94AoIUmpgvVBUtgxiyXyj5vrC06pKo3
+=4Twl
 -----END PGP SIGNATURE-----
 
---=-JavIrmxdnN5L1CLiaQt8--
-
+--nextPart1912631.2fcsvss6Cj--
