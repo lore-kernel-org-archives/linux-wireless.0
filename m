@@ -1,115 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:41567 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751029AbYLPTLu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 14:11:50 -0500
-Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
-From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081216095039.GA6358@tesla>
-References: <20081216025542.GO18056@xi.wantstofly.org>
-	 <1229443806.7307.34.camel@localhost.localdomain>
-	 <20081216161658.GC3636@tuxdriver.com>
-	 <1229449041.7307.49.camel@localhost.localdomain>
-	 <20081216095039.GA6358@tesla>
-Content-Type: text/plain
-Date: Tue, 16 Dec 2008 14:10:48 -0500
-Message-Id: <1229454648.7307.67.camel@localhost.localdomain> (sfid-20081216_201154_994034_F220788E)
+Received: from mail3.brikks.com ([82.209.166.4]:7421 "EHLO smtp.bredband2.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754234AbYLGQaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Dec 2008 11:30:07 -0500
+Date: Sun, 7 Dec 2008 17:29:58 +0100
+From: Mats Johannesson <spamcan1@abrasax.se>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
+ root
+Message-ID: <20081207172958.333e88e4@loke.fish.not> (sfid-20081207_173022_495784_CD329A0B)
+In-Reply-To: <18747.60039.401701.441103@localhost.localdomain>
+References: <20081206113406.734f1d94@loke.fish.not>
+	<18746.37273.989918.333164@localhost.localdomain>
+	<20081206180537.717d1791@loke.fish.not>
+	<18746.48068.593834.660064@localhost.localdomain>
+	<20081206202237.578b3783@loke.fish.not>
+	<18747.15541.811292.500184@localhost.localdomain>
+	<20081207150420.0f688772@loke.fish.not>
+	<18747.60039.401701.441103@localhost.localdomain>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-12-16 at 01:50 -0800, Luis R. Rodriguez wrote:
-> On Tue, Dec 16, 2008 at 09:37:21AM -0800, Dan Williams wrote:
-> > On Tue, 2008-12-16 at 11:16 -0500, John W. Linville wrote:
-> > > On Tue, Dec 16, 2008 at 11:10:06AM -0500, Dan Williams wrote:
-> > > > On Tue, 2008-12-16 at 03:55 +0100, Lennert Buytenhek wrote:
-> > > > > Hi all,
-> > > > >
-> > > > > Attached is an initial version of the mwl8k driver for Marvell 88w8xxx
-> > > > > PCI/PCIe wireless parts (against 2.6.27.1).  This version was written
-> > > > > and tested against the 88w8687 (802.11b/g), but it shouldn't be hard to
-> > > > > extend the support to other parts in the 8xxx series, since the firmware
-> > > > > interface is very similar between parts.
-> > > > >
-> > > > > There's an occasional timeout warning with mwl8k_stop(), and hardware
-> > > > > crypto is still a work-in-progress, but other than that it looks pretty
-> > > > > stable.
-> > > > >
-> > > > > Feedback appreciated!
-> > > >
-> > > > Oooh, thanks for the Christmas present.  Just in time for the holidays.
-> > > > Is there a git repo somewhere that we could all base off of, so we don't
-> > > > have to deal with patches to patches to patches until it gets into
-> > > > wireless-testing?
-> > >
-> > > I wouldn't worry too much about that.  The better questions is where
-> > > do we get firmware?
-> > 
-> > I believe I can post it.  Marvell recently changed the license terms on
-> > at least some of their firmware to be comparable to other freely
-> > available firmware (like Intel's).  Unfortunately you must have an
-> > extranet account to get it (they are working on fixing this too) but
-> > once you have it, the firmware blobs themselves are under a nice
-> > license.  I'll try to get something together today.
+On Sun, 7 Dec 2008 20:53:51 +0530 Sujith wrote:
+[...]
+["This" snipped since I couldn't identify the line/lines doing it]
+
+> This indicates that HT40 has been chosen.
 > 
-> The right thing to do (tm) would be to post the firmware along with a
-> friendly license by the vendor to the linux-firmware git tree.
+> The problem is this:
 > 
-> Lennert is this possible?
+> After association, ath9k has to set the appropriate channel width on
+> doing a scan and mac80211 comes back to the home channel. Currently
+> there is no such means to do that, and this why pinging fails.
+> 
+> We'll work on a solution, but until then you would have to choose
+> HT20 in your AP.
 
-If Lennert doesn't get to it, I believe that I have to power to do so.
-New Marvell firmware license (at least for 8687 and 8686 sdio) is below.
-It clears Fedora Legal, which is quite stringent.
+All protocols are affected ping, whatever lies below telnet and http
+through lynx was dead as well.
 
-Dan
+Ok, I'll try this version out a bit first with heavy p2p-transfers. If
+it survives I might stick with it (2.6.28-rc6-wl died after awhile)
+otherwise I'll go back to my all time favourite 2.6.27-rc5.
 
-----------------------
-FIRMWARE LICENSE TERMS
+Wicd manager seems to keep a static list of APs in the environment I've
+already scanned, so the issue is normally of no concern.
 
-
-Copyright (c) Marvell International Ltd.
-
-All rights reserved.
-
-Redistribution. Redistribution and use in binary form, without
-modification, are permitted provided that the following conditions are
-met:
-
-* Redistributions must reproduce the above copyright notice and the
-following disclaimer in the documentation and/or other materials
-provided with the distribution. 
-
-* Neither the name of Marvell International Ltd. nor the names of its
-suppliers may be used to endorse or promote products derived from this
-software without specific prior written permission. 
-
-* No reverse engineering, decompilation, or disassembly of this software
-is permitted.
-
-Limited patent license. Marvell International Ltd. grants a world-wide,
-royalty-free, non-exclusive license under patents it now or hereafter
-owns or controls to make, have made, use, import, offer to sell and sell
-("Utilize") this software, but solely to the extent that any such patent
-is necessary to Utilize the software alone, or in combination with an
-operating system licensed under an approved Open Source license as
-listed by the Open Source Initiative at http://opensource.org/licenses.
-The patent license shall not apply to any other combinations which
-include this software. No hardware per se is licensed hereunder.
-
-DISCLAIMER. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
-CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
-BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
-FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
-USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
+/Mats
