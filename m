@@ -1,58 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:44770 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487AbYLQMZ2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 07:25:28 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH] ath9k: Fix a NULL pointer dereference in ath_rate_get
-Date: Wed, 17 Dec 2008 13:25:26 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20081217113031.GA18060@jm.kir.nu> <1229513456.4566.2.camel@localhost> <20081217120250.GA19453@jm.kir.nu>
-In-Reply-To: <20081217120250.GA19453@jm.kir.nu>
+Received: from mail.atheros.com ([12.36.123.2]:34747 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754185AbYLGQOt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Dec 2008 11:14:49 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2008 08:14:49 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812171325.26310.chunkeey@web.de> (sfid-20081217_132532_929526_DFDB9B5B)
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18747.62905.202648.225086@gargle.gargle.HOWL> (sfid-20081207_171453_882422_70AD13D9)
+Date: Sun, 7 Dec 2008 21:41:37 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 1/6] ath9k: Fix bug in rate table management
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 17 December 2008 13:02:50 Jouni Malinen wrote:
-> On Wed, Dec 17, 2008 at 12:30:56PM +0100, Johannes Berg wrote:
-> > On Wed, 2008-12-17 at 13:30 +0200, Jouni Malinen wrote:
-> > > It looks like mac80211 may try to send unicast frames to a STA that
-> > > does not have a STA entry. We need to make sure that that is caught in
-> > > the rate control code before dereferencing STA data.
-> > 
-> > This should only happen for injected packets, can you verify? OTOH, AP
-> > mode obviously has injected packets (auth response, ...)
-> 
-> I did not check what the exact frame was, but this was indeed in AP mode
-> and the frame was most likely from hostapd and as such, an injected
-> packet.
-> 
+The proper rate table wouldn't be used if a disassoc
+happens and a new attempt is made to associate using
+wpa_supplicant. This patch fixes it by storing the rate
+table to be used on association.
 
-hostapd: wlan1: STA XX:XX:XX:XX:0d IEEE 802.11: authenticated
-kernel: [ 3130.431067] ------------[ cut here ]------------
-kernel: [ 3130.431076] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0xb8/0x320 [mac80211]()
-kernel: [ 3130.431081] Modules linked in: p54usb p54pci p54common [...]
-kernel: [ 3130.431300] Pid: 16961, comm: hostapd2 Tainted: P           2.6.28-rc7-wl #3
-[ 3130.431305] Call Trace:
-[ 3130.431318]  [<ffffffff802343c1>] warn_on_slowpath+0x51/0x75
-[ 3130.431329]  [<ffffffff803d74b0>] rb_insert_color+0xba/0xe2
-[ 3130.431338]  [<ffffffff802480ef>] __remove_hrtimer+0x7c/0x88
-[ 3130.431375]  [<ffffffffa00bd30e>] minstrel_rate_init+0xb8/0x320 [mac80211]
-[ 3130.431417]  [<ffffffffa00ae713>] ieee80211_add_station+0x145/0x17d [mac80211]
-hostapd: wlan1: STA XX:XX:XX:XX:0d IEEE 802.11: associated (aid 1, accounting session 494187DD-00000000)
-kernel: [ 3130.431440]  [<ffffffffa00897af>] nl80211_new_station+0x1b3/0x20b [cfg80211]
-kernel: [ 3130.431450]  [<ffffffff80595691>] mutex_lock+0xd/0x1e
-kernel: [ 3130.431459]  [<ffffffff804f6f86>] nla_parse+0x4b/0xb2
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/core.h |    1 +
+ drivers/net/wireless/ath9k/rc.c   |    9 +++++----
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-yup, the Warning just happend right between auth and assoc
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index ca8ed7d..726d0a3 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -702,6 +702,7 @@ struct ath_softc {
+ 	/* Rate */
+ 	struct ieee80211_rate rates[IEEE80211_NUM_BANDS][ATH_RATE_MAX];
+ 	struct ath_rate_table *hw_rate_table[ATH9K_MODE_MAX];
++	struct ath_rate_table *cur_rate_table;
+ 	u8 sc_protrix;
+ 
+ 	/* Channel, Band */
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index 76acd2b..8eec667 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -817,7 +817,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 	struct ath_rate_table *rate_table;
+ 	struct ieee80211_tx_rate *rates = tx_info->control.rates;
+ 
+-	rate_table = sc->hw_rate_table[sc->sc_curmode];
++	rate_table = sc->cur_rate_table;
+ 	rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, 1,
+ 				 is_probe, is_retry);
+ 	nrix = rix;
+@@ -877,7 +877,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 	if ((sc->sc_curmode == ATH9K_MODE_11NG_HT20) ||
+ 	    (sc->sc_curmode == ATH9K_MODE_11NG_HT40PLUS) ||
+ 	    (sc->sc_curmode == ATH9K_MODE_11NG_HT40MINUS)) {
+-		u8  dot11rate = rate_table->info[rix].dot11rate;
++		u8 dot11rate = rate_table->info[rix].dot11rate;
+ 		u8 phy = rate_table->info[rix].phy;
+ 		if (i == 4 &&
+ 		    ((dot11rate == 2 && phy == WLAN_RC_PHY_HT_40_SS) ||
+@@ -1094,7 +1094,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	int rate;
+ 	u8 last_per;
+ 	bool state_change = false;
+-	struct ath_rate_table *rate_table = sc->hw_rate_table[sc->sc_curmode];
++	struct ath_rate_table *rate_table = sc->cur_rate_table;
+ 	int size = ath_rc_priv->rate_table_size;
+ 
+ 	if ((tx_rate < 0) || (tx_rate > rate_table->rate_cnt))
+@@ -1254,7 +1254,7 @@ static void ath_rc_tx_status(struct ath_softc *sc,
+ 	u8 flags;
+ 	u32 i = 0, rix;
+ 
+-	rate_table = sc->hw_rate_table[sc->sc_curmode];
++	rate_table = sc->cur_rate_table;
+ 
+ 	/*
+ 	 * If the first rate is not the final index, there
+@@ -1432,6 +1432,7 @@ static void ath_rc_init(struct ath_softc *sc,
+ 	ath_rc_priv->max_valid_rate = k;
+ 	ath_rc_sort_validrates(rate_table, ath_rc_priv);
+ 	ath_rc_priv->rate_max_phy = ath_rc_priv->valid_rate_index[k-4];
++	sc->cur_rate_table = rate_table;
+ }
+ 
+ /* Rate Control callbacks */
+-- 
+1.6.0.3
 
-Regards,
-	Chr
