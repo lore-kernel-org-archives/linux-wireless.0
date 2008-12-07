@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:38289 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752168AbYLPOKG (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:58377 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753514AbYLGLwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 09:10:06 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Artur Skawina <art.08.09@gmail.com>
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-Date: Tue, 16 Dec 2008 15:10:09 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <494698AF.4020204@gmail.com> <200812161415.09365.chunkeey@web.de> <4947B1E3.4080008@gmail.com>
-In-Reply-To: <4947B1E3.4080008@gmail.com>
+	Sun, 7 Dec 2008 06:52:50 -0500
+Date: Sun, 7 Dec 2008 12:03:49 +0100
+To: linux-wireless@vger.kernel.org
+Subject: compat-wireless-2008-12-06 and =?utf-8?Q?n?=
+	=?utf-8?Q?o_member_named_=E2=80=98requeue=E2=80=99?=
+Message-ID: <20081207110349.GA11803@gandalf.dynalias.org> (sfid-20081207_125256_357288_A3A15719)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812161510.09499.chunkeey@web.de> (sfid-20081216_151011_458063_33709C68)
+Content-Type: text/plain; charset=utf-8
+From: Norbert Preining <preining@logic.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 16 December 2008 14:49:23 Artur Skawina wrote:
-> 
-> I've looked at that commit more closely in the mean time;
-> this patch makes the card reappear:
+Hi all,
 
-> -	hdr->len = cpu_to_le16(skb->len + sizeof(struct p54_hdr));
-> +	hdr->len = cpu_to_le16(skb->len - sizeof(*hdr));
+(please Cc)
 
-right.
+I am trying to compile compat-wireless for 2.6.28-rc7, but it bails out
+with:
+  CC [M]  /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.o
+  /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.c: In function=
+ =E2=80=98ieee80211_handle_filtered_frame=E2=80=99:
+  /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.c:449: error: =
+=E2=80=98struct sk_buff=E2=80=99 has no member named =E2=80=98requeue=E2=
+=80=99
+  /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.c:451: error: =
+=E2=80=98struct sk_buff=E2=80=99 has no member named =E2=80=98requeue=E2=
+=80=99
+  make[3]: *** [/src/wlan/compat-wireless-2008-12-06/net/mac80211/main.=
+o] Error
 
-> > Dec 16 14:32:44 kernel: usb 1-7: new high speed USB device using ehci_hcd and address 14
-> > Dec 16 14:32:44 kernel: usb 1-7: configuration #1 chosen from 1 choice
-> > Dec 16 14:32:44 kernel: usb 1-7: firmware: requesting isl3886usb
-> > Dec 16 14:32:44 kernel: usb 1-7: New USB device found, idVendor=0846, idProduct=4200
-> > Dec 16 14:32:44 kernel: usb 1-7: New USB device strings: Mfr=0, Product=0, SerialNumber=0
-> > Dec 16 14:32:44 kernel: phy1: p54 detected a LM86 firmware
-> > Dec 16 14:32:44 kernel: phy1: FW rev 2.5.6.0 - Softmac protocol 3.0
-> > Dec 16 14:32:44 kernel: phy1: you are using an obsolete firmware. visit http://wireless.kernel.org/en/users/Drivers/p54 and grab one for "kernel >= 2.6.28"!
-> > Dec 16 14:32:44 kernel: phy1: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:no
-> > Dec 16 14:32:47 kernel: phy1: hwaddr 00:30:f1:12:34:56, MAC:isl3886 RF:Frisbee
-> > Dec 16 14:32:47 kernel: phy1: Selected rate control algorithm 'minstrel'
-> > Dec 16 14:32:47 kernel: usbcore: registered new interface driver p54usb
-> > Dec 16 14:32:47 kernel: udev: renamed network interface wlan0 to wlan1
-> 
-> Did not do any further testing yet.
 
-Do the new firmwares work as well?
-Because I'll dropping support for the old firmwares in the future.
-The reason are bugs which can be triggered remotely...
-(e.g.: frames with a "special" length etc...)
+Is there a way to fix that? Thanks
 
-> > Can you please revert it and add this one?
-> > it adds a few printks that should help.
-> 
-> I assume this is no longer needed, but i'll be happy test any p54usb/2280 related patches.
-> 
-while you're on it, can you please enable slub/slab debug (e.g: slub_debug=ZUPF )
-and check if the device still works, or if you pc freeze/crash/burn ?
+Best wishes
 
-Regards,
-	Chr
+Norbert
+
+-----------------------------------------------------------------------=
+--------
+Dr. Norbert Preining <preining@logic.at>        Vienna University of Te=
+chnology
+Debian Developer <preining@debian.org>                         Debian T=
+eX Group
+gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 0=
+9C5 B094
+-----------------------------------------------------------------------=
+--------
+LUDLOW (n.)
+A wad of newspaper, folded tablenapkin or lump of cardboard put under
+a wobbly table or chair to make it stand-up straight. It is perhaps
+not widely known that air-ace Sir Douglas Bader used to get about on
+an enormous pair of ludlows before he had his artificial legs fitted.
+			--- Douglas Adams, The Meaning of Liff
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
