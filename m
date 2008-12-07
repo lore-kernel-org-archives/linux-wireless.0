@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:60443 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753025AbYLJNsO (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.239]:38657 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbYLGFQ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 08:48:14 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so89010eyi.37
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 05:48:12 -0800 (PST)
-To: rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] rt2860/wpa dev status
-Date: Wed, 10 Dec 2008 14:48:08 +0100
-Cc: "Mark Asselstine" <asselsm@gmail.com>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <919fe2b30810020637n2c9e857ak4ce55bcbf8a50ccb@mail.gmail.com>
-In-Reply-To: <919fe2b30810020637n2c9e857ak4ce55bcbf8a50ccb@mail.gmail.com>
+	Sun, 7 Dec 2008 00:16:57 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so654185rvb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Dec 2008 21:16:56 -0800 (PST)
+Message-ID: <b3153e950812062116q340c6b67l4d0c9a162d389cbf@mail.gmail.com> (sfid-20081207_061741_110236_A4FE6080)
+Date: Sat, 6 Dec 2008 21:16:56 -0800
+From: "mohamed salim abbas" <mabbaswireless@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
+Cc: "Tomas Winkler" <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1228554333.15939.0.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812101448.08990.IvDoorn@gmail.com> (sfid-20081210_144820_473185_23920AE2)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1226915999.3599.33.camel@johannes.berg>
+	 <1226933141.3902.19.camel@johannes.berg>
+	 <1ba2fa240811170714j7d0daf5xe718ffa1d4de8f40@mail.gmail.com>
+	 <1226942887.3902.30.camel@johannes.berg>
+	 <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com>
+	 <1226944799.3902.52.camel@johannes.berg>
+	 <20081118194652.GD21772@tuxdriver.com>
+	 <1ba2fa240811181508y633be12pd9f2f9bd0e2c81e4@mail.gmail.com>
+	 <b3153e950812051553r2035b8aex4f54f6cf704a26b3@mail.gmail.com>
+	 <1228554333.15939.0.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I will be happy to help if extra help need it. below is the link to the bug.
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1845
 
-Ralink has provided a new driver for the rt2860 hardware,
-I haven't tested it yet but it deserves the attention for one simple reason:
-it hooks into mac80211.
-It doesn't hook into rt2x00lib yet, and neither does it support everything
-mac80211 could do, but it can be used as base for further developing
-the rt2800pci drivers by filling the last remaining gaps.
-
-The driver can be found here:
-http://kernel.org/pub/linux/kernel/people/ivd/RT28xx_Linux_mac80211_20081203_V2.0-GPL.tgz
-
-Mark, Matthias and Felix you offered/provided help with the rt2800 developers
-before. I would really appreciate if you could help me with merging this drivers
-into the rt2800pci/rt2800usb drivers. :)
-(Other developers are off course welcome as well!)
-
-Ivo
-
-On Thursday 02 October 2008, Mark Asselstine wrote:
-> Hello,
-> 
-> I have some free cycles and would love to help out in getting support
-> for rt2860 and wpa support into this project. I can see that such
-> support was discussed some at the last development meeting as well as
-> in Bug 10754. I have cloned the tree and am ready to go, anyone have
-> any pointers to areas I can help out with?
-> 
-> Regards,
-> Mark
-> 
-> -------------------------------------------------------------------------
-> This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
-> Build the coolest Linux based applications with Moblin SDK & win great prizes
-> Grand prize is a trip for two to an Open Source event anywhere in the world
-> http://moblin-contest.org/redirect.php?banner_id=100&url=/
-> _______________________________________________
-> Rt2400-devel mailing list
-> Rt2400-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/rt2400-devel
-> 
-
-
+On Sat, Dec 6, 2008 at 1:05 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2008-12-05 at 15:53 -0800, mohamed salim abbas wrote:
+>> some bugs related to coming from resume is filed caused by removing
+>> this callback function, any body looking into alternatives to share
+>> how to fix this problem.
+>
+> Yes, in fact, somebody _is_ looking into implementing _proper_
+> suspend/resume support. You'll either have to wait or help out.
+>
+> johannes
+>
