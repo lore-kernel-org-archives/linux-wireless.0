@@ -1,99 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26637 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754960AbYLQI7q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 03:59:46 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wu Fengguang <fengguang.wu@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 5/8] iwlwifi: remove useless goto
-Date: Wed, 17 Dec 2008 16:52:31 +0800
-Message-Id: <1229503954-30347-6-git-send-email-yi.zhu@intel.com> (sfid-20081217_095950_206467_6BE68708)
-In-Reply-To: <1229503954-30347-5-git-send-email-yi.zhu@intel.com>
-References: <1229503954-30347-1-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-2-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-3-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-5-git-send-email-yi.zhu@intel.com>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:39199 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751471AbYLGV4z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Dec 2008 16:56:55 -0500
+Message-Id: <1228687013.25070.1288752601@webmail.messagingengine.com> (sfid-20081207_225659_734197_3B46C1DF)
+From: "Dan E" <trg_info@mailhaven.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+MIME-Version: 1.0
+References: <1228454249.2652.1288380409@webmail.messagingengine.com>
+ <43e72e890812042132y6b676a1ucf446a678e1d8a81@mail.gmail.com>
+ <1228515313.30577.1288527655@webmail.messagingengine.com>
+ <20081206001956.GE5926@tesla>
+Subject: Re: CRDA question
+In-Reply-To: <20081206001956.GE5926@tesla>
+Date: Sun, 07 Dec 2008 16:56:53 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wu Fengguang <fengguang.wu@intel.com>
 
-The patch removes some useless goto in code cleanup.
+On Fri, 5 Dec 2008 16:19:56 -0800, "Luis R. Rodriguez" wrote:
+> 
+> <snip>
+> 
+> It makes zero sense for you to package CRDA for 2.6.27 unless you want
+> to help users of compat-wireless or wireless-testing.
 
-Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    8 ++------
- drivers/net/wireless/iwlwifi/iwl-5000.c |    8 ++------
- 2 files changed, 4 insertions(+), 12 deletions(-)
+True, but I'm new to this bleeding-edge development stuff so give me a
+break :)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 3a78d86..5a72bc0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -426,7 +426,6 @@ static void iwl4965_nic_config(struct iwl_priv *priv)
- 
- static int iwl4965_apm_stop_master(struct iwl_priv *priv)
- {
--	int ret = 0;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
-@@ -434,16 +433,13 @@ static int iwl4965_apm_stop_master(struct iwl_priv *priv)
- 	/* set stop master bit */
- 	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
- 
--	ret = iwl_poll_direct_bit(priv, CSR_RESET,
-+	iwl_poll_direct_bit(priv, CSR_RESET,
- 			CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
--	if (ret < 0)
--		goto out;
- 
--out:
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 	IWL_DEBUG_INFO("stop master\n");
- 
--	return ret;
-+	return 0;
- }
- 
- static void iwl4965_apm_stop(struct iwl_priv *priv)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 7f3a921..66d053d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -73,7 +73,6 @@ static const u16 iwl5000_default_queue_to_tx_fifo[] = {
- /* FIXME: same implementation as 4965 */
- static int iwl5000_apm_stop_master(struct iwl_priv *priv)
- {
--	int ret = 0;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
-@@ -81,16 +80,13 @@ static int iwl5000_apm_stop_master(struct iwl_priv *priv)
- 	/* set stop master bit */
- 	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
- 
--	ret = iwl_poll_direct_bit(priv, CSR_RESET,
-+	iwl_poll_direct_bit(priv, CSR_RESET,
- 				  CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
--	if (ret < 0)
--		goto out;
- 
--out:
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 	IWL_DEBUG_INFO("stop master\n");
- 
--	return ret;
-+	return 0;
- }
- 
- 
+> 
+> <snip>
+> 
+> Userspace applications which *do* want to test against a feature can do
+> tests
+> like:
+> 
+> #ifdef NL80211_NEW_STUFF
+> #endif
+> 
+> as wpa_supplicant does it, but that's up to each developer.
+
+My goal is writing a new driver for an unsupported chipset and advancing
+the mac80211 effort so that things like wpa_supplicant can be made
+obsolete sooner rather than later.
+
+> Here are the #ifdef'able features:
+> 
+> NL80211_CMD_SET_BSS
+> 
+> NL80211_ATTR_HT_CAPABILITY
+> NL80211_ATTR_BSS_BASIC_RATES
+> NL80211_ATTR_WIPHY_TXQ_PARAMS
+> NL80211_ATTR_WIPHY_FREQ
+> NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET
+> 
+> In CRDA's case I'm sticking to the packaged nl80211.h.
+
+Thanks for the list.  As for CRDA and IW, I'm sticking to my local
+patches that get rid of that local header file.  I can think of no other
+project that does that, save for the old wireless extensions.
+
+> 
+> <snip>
+> 
+> We had a long discussion about this a long time ago and my first
+> approach was to do it all in-kernel, then people complained and we moved
+> it to userspace. Now its there and it works well. If you are so
+> concerned about the size of the database then trim it yourself, make
+> your let CRDA use it, or go ahead and customize the kernel and define
+> statically your *one* single regulatory domain.
+> 
+> Supporting regulatory considerations on STA/AP for different countries
+> requires that you do have some sort of regulatory information somewhere.
+> Some people keep it in firmware, some in the driver, and some in a
+> combination of EEPROM and driver or even some info from Windows registry
+> files.
+> We've generalized what we can from all drivers. If you think you can do a
+> better job please send patches and go through the review cycle.
+
+I have read all those discussions in the archives.  My intent isn't to
+re-hash old arguments or open up that debate again.  For now I'm going
+to accept it for what it is since my development system isn't as
+constrained for resources as the ultimate embedded Linux system will be.
+ The CRDA code itself is excellent and makes a great example for how to
+do things with nl80211 and cfg80211.
+
+> If you have actual issues to point out then please point them out or
+> better yet just send a patch for the solution.
+
+Indeed.  I envision an alternative scheme that can be optionally
+selected as part of a "reduced footprint for embedded systems" patch
+set/git branch, but that's a ways off.  Right now I just want to get my
+driver working and advance the userspace tools needed to help develop,
+test, and validate its operation.  Hopefully I can contribute along the
+way to the cfg80211/nl80211 development effort.
+
+Thanks for your comments.  You've obviously been doing a lot of work in
+this area.  I'm still climbing the learning curve, so I value your
+insight and experience tremendously.
+
+[OT: Is it correct to reply TO your email addy and CC the list address,
+or is it better to "Reply All"?  I have to install a real email client
+and ditch the webmail interface soon for git purposes.]
+
+--
+Dan
+
 -- 
-1.5.3.6
+http://www.fastmail.fm - IMAP accessible web-mail
 
