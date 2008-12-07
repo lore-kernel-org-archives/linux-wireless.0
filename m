@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:29278 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751381AbYLAVKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 16:10:16 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 13:10:16 -0800
-Date: Mon, 1 Dec 2008 13:10:14 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Tony Vroon <tony@linx.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Allow CRDA to be compiled with -Wl,--as-needed
-Message-ID: <20081201211014.GO5992@tesla> (sfid-20081201_221021_807674_63334D8B)
-References: <20081130161758.883321007B@gold.linx.net>
+Received: from ti-out-0910.google.com ([209.85.142.184]:39441 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753255AbYLGDE0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Dec 2008 22:04:26 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so412026tic.23
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Dec 2008 19:04:24 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20081130161758.883321007B@gold.linx.net>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18747.15541.811292.500184@localhost.localdomain> (sfid-20081207_040437_042806_640A0EAF)
+Date: Sun, 7 Dec 2008 08:32:13 +0530
+To: Mats Johannesson <spamcan1@abrasax.se>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
+ root
+In-Reply-To: <20081206202237.578b3783@loke.fish.not>
+References: <20081206113406.734f1d94@loke.fish.not>
+	<18746.37273.989918.333164@localhost.localdomain>
+	<20081206180537.717d1791@loke.fish.not>
+	<18746.48068.593834.660064@localhost.localdomain>
+	<20081206202237.578b3783@loke.fish.not>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 30, 2008 at 08:17:58AM -0800, Tony Vroon wrote:
-> As libraries are passed in LDFLAGS, it is vital that they be specified after the object
-> files. Otherwise, --as-needed will discard the libraries as unused and linking will fail.
+Mats Johannesson wrote:
+> Sorry to say, no change. After root scan telnet gives "no route to
+> host" and ping just reports 100% packet loss. But iwconfig keeps
+> updating its info regarding link quality and signal strength, like:
+> Link Quality=82/100  Signal level:-42 dBm
 > 
-> Signed-off-by: Tony Vroon <tony@linx.net>
-> 
-> --- crda-0.9.4/Makefile.orig    2008-11-27 14:44:02.000000000 +0000
-> +++ crda-0.9.4/Makefile 2008-11-27 14:45:59.000000000 +0000
-> @@ -35,15 +35,15 @@
-> 
->  crda: keys-ssl.c keys-gcrypt.c reglib.o crda.o
->         $(NQ) '  LD  ' $@
-> -       $(Q)$(CC) $(CFLAGS) $(LDFLAGS) `pkg-config --libs libnl-1` -o $@ reglib.o crda.o
-> +       $(Q)$(CC) $(CFLAGS) `pkg-config --libs libnl-1` -o $@ reglib.o crda.o $(LDFLAGS)
-> 
->  regdbdump: keys-ssl.c keys-gcrypt.c reglib.o regdbdump.o
->         $(NQ) '  LD  ' $@
-> -       $(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ reglib.o regdbdump.o
-> +       $(Q)$(CC) $(CFLAGS) -o $@ reglib.o regdbdump.o $(LDFLAGS)
-> 
->  intersect: keys-ssl.c keys-gcrypt.c reglib.o intersect.o
->         $(NQ) '  LD  ' $@
-> -       $(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ reglib.o intersect.o
-> +       $(Q)$(CC) $(CFLAGS) -o $@ reglib.o intersect.o $(LDFLAGS)
-> 
->  verify: $(REG_BIN) regdbdump
->         $(NQ) '  CHK  $(REG_BIN)'
 
-Thanks Diego's patch came in first, I'll apply that, please pull in few
-minutes to get all the new updates.
+Which channel are you using ? And is it HT40 ?
+Also please post the debug log, you can do 'insmod ath9k debug=0x00002000'
+to get a fair amount of debug information.
 
-  Luis
+Thanks.
+
+Sujith
