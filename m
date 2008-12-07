@@ -1,108 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f11.google.com ([209.85.221.11]:54750 "EHLO
-	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbYLARnb (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:59035 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752878AbYLGX3I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 12:43:31 -0500
-Received: by qyk4 with SMTP id 4so2804266qyk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 09:43:29 -0800 (PST)
-Message-ID: <1ba2fa240812010943p4cc1617asbe66d090ee8f4aa0@mail.gmail.com> (sfid-20081201_184334_553717_15DB06A3)
-Date: Mon, 1 Dec 2008 19:43:28 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Helmut Schaa" <helmut.schaa@googlemail.com>
-Subject: Re: iwlwifi - rfkill only works if the interface is up
-Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	"reinette chatre" <reinette.chatre@intel.com>
-In-Reply-To: <200812011604.05700.helmut.schaa@gmail.com>
+	Sun, 7 Dec 2008 18:29:08 -0500
+Received: from compute2.internal (compute2.internal [10.202.2.42])
+	by out1.messagingengine.com (Postfix) with ESMTP id E41BA1CF618
+	for <linux-wireless@vger.kernel.org>; Sun,  7 Dec 2008 18:29:06 -0500 (EST)
+Message-Id: <1228692546.8826.1288759933@webmail.messagingengine.com> (sfid-20081208_002919_244971_30E436F9)
+From: "Dan E" <trg_info@mailhaven.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200812011311.17346.helmut.schaa@gmail.com>
-	 <1ba2fa240812010508hcb29699m8bd8b3b0ba8574cd@mail.gmail.com>
-	 <200812011604.05700.helmut.schaa@gmail.com>
+Subject: Userspace tools: Roadmap?
+Date: Sun, 07 Dec 2008 18:29:06 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 1, 2008 at 5:04 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Am Montag, 1. Dezember 2008 schrieb Tomas Winkler:
->> On Mon, Dec 1, 2008 at 2:11 PM, Helmut Schaa
->> <helmut.schaa@googlemail.com> wrote:
->
-> ...
->
->> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
->> > index b935e9d..e2f160b 100644
->> > --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
->> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
->> > @@ -1504,8 +1504,11 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
->> >                 * the driver as well won't allow loading if RFKILL is set
->> >                 * therefore no need to restart the driver from this handler
->> >                 */
->> > -               if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status))
->> > +               if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
->> >                        clear_bit(STATUS_RF_KILL_HW, &priv->status);
->> > +                       if (priv->is_open)
->> > +                               queue_work(priv->workqueue, &priv->restart);
->> > +               }
->> >
->> >                handled |= CSR_INT_BIT_RF_KILL;
->> >        }
->>
->> This is strange, this exact code is part of  patch
+Looking at some of the Linux Wireless website pages it appears as though
+"iw" is meant to be the successor to the older pre-mac80211 userspace
+tools.  In that category we have ifconfig, iproute2, iwconfig and
+iwpriv.  For an AP there's also hostapd and wpa_supplicant.  Probably
+some others I've missed, not to mention Network Manager.  I can see how
+configuration and setup wouldn't necessarily be limited to "iw" using
+nl/cfg80211, but in the short term is that the tool of choice for
+migrating the functionality of the old tools to the new mac80211
+infrastructure?
 
->> """
->> Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> Date:   Sun Jun 22 11:18:52 2008 +0300
->>  iwlwifi: clean up HW RF-kill state machine and restarts
->>  This patch cleans up HW RF-kill state machine.
->> """
->> The two other hunks of this patch are in the current code, this one is
->> not, I've probably messed up something on they way. I will track this
->> down.
->
-> Thanks, should I respin the above patch?
+Here's my situation: I'm developing a driver for an old 80211 b/g
+chipset.  It's ancient by modern standards.  It operates only in the 2.4
+GHz band, it doesn't have any mesh capabilities, it has a "broken"
+EEPROM, it supports only single RX and TX queues, and it's an ASIC
+design that doesn't use firmware.  It has no "turbo" modes.  The company
+that manufactured it went bust in 2005.  It was used in a wide array of
+soho routers and access points several years ago but never caught on as
+a very popular" chip.
 
-Sorry I was wrong about the patch. The correct one is
-http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commitdiff;h=a91ad840c23a70bc0eabe239e178e0d979a6d44e;hp=5ef81ff85d135e83eff581237de41a362cbdb167
+I want to write, from scratch, a mac80211 driver for this chipset using
+information I've gained over the last few years from specs and reverse
+engineering the binary-only driver that shipped with it (with a Linux
+2.4.18 kernel).  I have the framework of the driver set up and working. 
+It loads, detects and initializes the hardware on the PCI bus, reads the
+hardware MAC address, sets up the TX and RX queues, and registers with
+the mac80211 stack.  I see devices wmaster0 and wlan0 when I modprobe
+the driver.  So far, so good.  Eventually I want to support AP and
+MONITOR modes, too, but STA mode seems to be in a more advanced state
+right now so I am starting with that.
 
-It few problems and I've actually I had it rebased over current code
-and started to clean it up but then there were series of unexpected
-events which brought it to darkness.
-One think for sure what need to be removed form the patch is setting
-radio_enabled within the driver code Although mac80211 awareness of
-rfkill is still not addressed.
-Anyhow If you have free afternoon you can pick  up the patch otherwise
-somebody from intel will
+Userspace tools.  I want to proceed as if Wireless Extensions never
+existed.  Is that even possible?  For instance, how do I command a
+channel change from userspace?  iw doesn't have that.  Should it?  Or do
+I need to drop back to iwconfig?  Is iw the preferred command-line way
+to do everything the old tools did, but using nl/cfg80211 instead of
+ioctls?  When we get to AP mode, will hostapd be re-written to speak
+nl/cfg80211, or is a new config tool needed?  The same questions apply
+to wpa_supplicant.
 
->
->> > Nevertheless, I'm wondering if the current behaviour (even with the patch above)
->> > makes much sense. I mean, the user space cannot rely on the rfkill state
->> > unless an appropriate interface is up. As the device is able to report the
->> > killswitch state without firmware being loaded the following approach could
->> > be feasible:
->> > - iwl_pci_probe enables the device and enables the interrupts
->> > - iwl_mac_start just loads the firmware
->> > - iwl_mac_stop just releases the firmware but leaves the interrupts enabled
->>
->> In 3495  rfkill interrupt is not available and rfkill state is
->> delivered only when firmware is loaded, therefore this is not
->> possible to bring device down and also expect rfill switch event.
->
-> Would it be possible to poll CSR_GP_CNTRL for that information on iwl3945?
+In general, what's the way forward for new userspace tools?  nl80211 and
+cfg80211 are a given, I understand that, but what's the recommended
+approach from the perspective of a developer looking to make a clean
+break from Wireless Extensions with a new cleanroom driver written from
+scratch with no pre-existing baggage to worry about?  Start making
+additions to iw's capabilities?  Adapt some other existing tool to use
+nl/cfg80211, or write something completely new?
 
-Not sure, need to run and check
+I've been following linux wireless developments since the big Summit of
+'06, but this is my first attempt at jumping in.  Getting a handle on
+the "big picture view" of what everything is going to look like when
+mac80211 is a mature implementation is a bit difficult.  I've noticed a
+lot of recent changes to the Linux Wireless website.  All good stuff but
+not very comprehensive in scope.  I realize nobody likes to write
+documentation :)
 
->
->> There were few threads about this subject.
->
-> Searching for these now ...
->
->> In 4965 and 5000 this will work
->
-> Would you agree on that behavior?
-> Any objections I did not think of yet?
+If somone could answer only 1 question (okay, it's a two-parter) the one
+I would most like answered is this:  How does one, from userspace, ask
+the driver to switch to a specific channel, and what callback(s) from
+mac80211 should my driver expect to receive as a result?  I think my
+driver can handle the task of changing the channel on the hardware and
+manage all the housekeeping that goes along with that; I just don't get
+how to issue that command from userspace.
 
-This is definitely the way but it seems that patch is  just it's not enough.
+TIA for any help, advice, pointers, flames, etc.
 
-Thanks
-Tomas
+--
+Dan
+
+-- 
+http://www.fastmail.fm - Send your email first class
+
