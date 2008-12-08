@@ -1,58 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4882 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751820AbYLJEFn (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:45799 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752050AbYLHNIf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 23:05:43 -0500
-Date: Tue, 9 Dec 2008 23:05:38 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, ath5k-devel@lists.ath5k.org
-Subject: [PATCH] ath5k: fix endianness of bitwise ops when installing mic
-Message-ID: <20081210040538.GA11810@hash.localnet> (sfid-20081210_050605_521920_6011A98E)
+	Mon, 8 Dec 2008 08:08:35 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Manuel Lauss <mano@roarinelk.homelinux.net>
+Subject: Re: [p54]: oops in p54_rx
+Date: Mon, 8 Dec 2008 14:08:36 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <20081208074904.GA28269@roarinelk.homelinux.net>
+In-Reply-To: <20081208074904.GA28269@roarinelk.homelinux.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200812081408.36621.chunkeey@web.de> (sfid-20081208_140839_346242_958DEA80)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix these bugs found by sparse:
+On Monday 08 December 2008 08:49:04 Manuel Lauss wrote:
+> Hello,
 
-    ath5k/pcu.c:1102:21: warning: restricted __le32 degrades to integer
-    ath5k/pcu.c:1102:13: warning: incorrect type in assignment (different base types)
-    ath5k/pcu.c:1102:13:    expected restricted __le32 <noident>
-    ath5k/pcu.c:1102:13:    got unsigned int
-    ath5k/pcu.c:1104:20: warning: restricted __le32 degrades to integer
-    ath5k/pcu.c:1104:13: warning: incorrect type in assignment (different base types)
-    ath5k/pcu.c:1104:13:    expected restricted __le32 <noident>
-    ath5k/pcu.c:1104:13:    got unsigned int
+Hello!
 
-Changes-licensed-under: ISC
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/pcu.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
-index dabe422..0cac05c 100644
---- a/drivers/net/wireless/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath5k/pcu.c
-@@ -1099,9 +1099,9 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+> The following oops occurs when udev loads p54pci driver (device is an early
+> SM2802W V2 PCI with the isl3886 "softmac" chip;  2.6.28-rc7, firmware
+> 2.13.1.0.arm).  This is transcribed from a rather bad photo (please see
+>  http://mlau.at/pix/p54oops.jpg ):
+> 
+> BUG: Unable to handle kernel NULL pointer dereference at 0000000000000000
+> IP: [<ffffffffa0016b66>] p54_rx+0xc6/0x490 [p54common]
+> PGD 12e433067 PUD 12e46f067 PMD 0
+> Oops: 0000 [#1] PREEMPT SMP
+> last sysfs file: /sys/devices/pci0000:00/0000:00:1f.2/host0/target0:0:0:0/....
+> CPU 0
+> Modules linked in: usb_storage ohci1394(+) ieee1394 p54pci(+) p54common ahci...
+> Pid: 0, comm: swapper Not tainted 2.6.28-rc7-00091-gf6f7b52 #1
+> RIP: 0010:[<ffffffffa0016b66>]  [<ffffffffa0016b66>] p54_rx+0xc6/0x490 [p54common]
+> RSP: 0018:ffffffff80ab3df0  EFLAGS: 00010207
+> RAX: 0000000074e9fed0 RBX: ffff08012e4f1940 RCX: 0000000000002e10
+> RDX: 0000000000000000 RSI: 00000000000000f1 RDI: ffff80012e4f0000
+> RBP: ffff80012e077010 R08: ffff80012e077000 R09: ffff80012e04?000
+> R10: 0000000000000001 R11: ffffffff00221320 R12: ffff80012e4f1900
+> R13: ffff80012e4f0300 R14: 000000000000732e R15: ffff80012e4f19??
+> 
+> (gdb) list *p54_rx+0xc6                                                                                                                                                                                                                      
+> 0x1b66 is in p54_rx (/usr/src/linux-2.6.git/drivers/net/wireless/p54/p54common.c:502).                                                                                                                                                       
+> 497                                                                                                                                                                                                                                          
+> 498             rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);                                                                                                                                                                          
+> 499             rx_status.noise = priv->noise;                                                                                                                                                                                               
+> 500             /* XX correct? */                                                                                                                                                                                                            
+> 501             rx_status.qual = (100 * hdr->rssi) / 127;                                                                                                                                                                                    
+> 502             rx_status.rate_idx = (dev->conf.channel->band == IEEE80211_BAND_2GHZ ?                                                                                                                                                       
+> 503                             hdr->rate : (hdr->rate - 4)) & 0xf;                                                                                                                                                                          
+That's right, dev->conf.channel isn't set at the time we're reading the eeprom.
+But, then we didn't initialize the radio, dcf and mac/bb yet, so where did the data frames came
+from?
  
- 		if (ah->ah_combined_mic) {
- 			key_v[0] = rxmic[0];
--			key_v[1] = (txmic[0] >> 16) & 0xffff;
-+			key_v[1] = cpu_to_le32(le32_to_cpu(txmic[0]) >> 16);
- 			key_v[2] = rxmic[1];
--			key_v[3] = txmic[0] & 0xffff;
-+			key_v[3] = cpu_to_le32(le32_to_cpu(txmic[0]) & 0xffff);
- 			key_v[4] = txmic[1];
- 		} else {
- 			key_v[0] = rxmic[0];
--- 
-1.6.0.4
+> Loading the module manually gets a bit further:
+> 
+> p54pci 0000:05:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> p54pci 0000:05:01.0: firmware: requesting isl3886
+> p54: LM86 firmware
+> p54: FW rev 2.13.1.0 - Softmac protocol 5.5
+> phy2: device does not respond!
+--- no, this time it just doesn't respond at all => crashed
+> p54pci 0000:05:01.0: PCI INT A disabled
+> p54pci: probe of 0000:05:01.0 failed with error -16
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Did it work with an older firmware? (and then which one?)
+Or do you have >= 4GB Ram/iommu etc.?
 
+Regards,
+	Chr
