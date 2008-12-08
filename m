@@ -1,44 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:40805 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920AbYLaRKI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 12:10:08 -0500
-Message-ID: <495BA769.4060702@tuffmail.co.uk> (sfid-20081231_181036_440832_908480D5)
-Date: Wed, 31 Dec 2008 17:10:01 +0000
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Received: from bu3sch.de ([62.75.166.246]:52455 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751667AbYLHULu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2008 15:11:50 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFT] mac80211: clean up set_key callback
+Date: Mon, 8 Dec 2008 21:11:22 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>, Chr <chunkeey@web.de>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Kalle Valo <kalle.valo@nokia.com>
+References: <1228757035.22164.94.camel@johannes.berg>
+In-Reply-To: <1228757035.22164.94.camel@johannes.berg>
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: htl10@users.sourceforge.net,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-References: <348894.23448.qm@web23108.mail.ird.yahoo.com> <495B82CB.6050205@tuffmail.co.uk> <20081231155757.GA26806@hash.localnet>
-In-Reply-To: <20081231155757.GA26806@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200812082111.22996.mb@bu3sch.de> (sfid-20081208_211154_094553_ADE98E26)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> On Wed, Dec 31, 2008 at 02:33:47PM +0000, Alan Jenkins wrote:
->   
->> Thanks for the patch.  I tested STD too, and it doesn't seem to hang
->> anymore.  I even tested removing the adaptor while the system was
->> hibernated.  However, after resume the interface is useless.
->>     
->
-> Kind of sounds like the hardware is not responding... so this probably
-> won't help, but you can always give my patches a spin:
->
->     http://bobcopeland.com/kernel/wl/20081214/
->
-> Should apply with fuzz.  Just ignore patch 3, also you don't need 
-> anything special for rtl8187 since the classdev will suspend/resume
-> on its own and rtl8187 already didn't do anything special for PM.
->   
+On Monday 08 December 2008 18:23:55 Johannes Berg wrote:
+> --- everything.orig/drivers/net/wireless/b43/main.c	2008-12-08 17:42:05.000000000 +0100
+> +++ everything/drivers/net/wireless/b43/main.c	2008-12-08 17:49:40.000000000 +0100
+> @@ -3508,8 +3508,8 @@ static void b43_op_bss_info_changed(stru
+>  }
+>  
+>  static int b43_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+> -			   const u8 *local_addr, const u8 *addr,
+> -			   struct ieee80211_key_conf *key)
+> +			  struct ieee80211_vif *vif, struct ieee80211_sta *sta,
+> +			  struct ieee80211_key_conf *key)
+>  {
+>  	struct b43_wl *wl = hw_to_b43_wl(hw);
+>  	struct b43_wldev *dev;
+> @@ -3567,17 +3567,13 @@ static int b43_op_set_key(struct ieee802
+>  			goto out_unlock;
+>  		}
+>  
+> -		if (is_broadcast_ether_addr(addr)) {
+> +		if (!sta) {
+>  			/* addr is FF:FF:FF:FF:FF:FF for default keys */
 
-You were right, they didn't help :-).  Thanks anyway.
+Please also remove this comment.
+
+>  			err = b43_key_write(dev, index, algorithm,
+>  					    key->key, key->keylen, NULL, key);
+>  		} else {
+> -			/*
+> -			 * either pairwise key or address is 00:00:00:00:00:00
+> -			 * for transmit-only keys
+> -			 */
+> -			err = b43_key_write(dev, -1, algorithm,
+> -					    key->key, key->keylen, addr, key);
+> +			err = b43_key_write(dev, -1, algorithm, key->key,
+> +					    key->keylen, sta->addr, key);
+>  		}
+>  		if (err)
+>  			goto out_unlock;
+> @@ -3604,10 +3600,12 @@ out_unlock:
+>  	spin_unlock_irqrestore(&wl->irq_lock, flags);
+>  	mutex_unlock(&wl->mutex);
+>  	if (!err) {
+> +		static const u8 bcast_addr[ETH_ALEN] =
+> +			{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+>  		b43dbg(wl, "%s hardware based encryption for keyidx: %d, "
+>  		       "mac: %s\n",
+>  		       cmd == SET_KEY ? "Using" : "Disabling", key->keyidx,
+> -		       print_mac(mac, addr));
+> +		       print_mac(mac, sta ? sta->addr : bcast_addr));
+
+Will throw "unused variable bcast_addr" for !DEBUG.
+Use something like
+		sta ? print_mac(mac, sta->addr) : "group/tx-only");
+
+-- 
+Greetings Michael.
