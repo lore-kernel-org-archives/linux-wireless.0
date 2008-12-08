@@ -1,255 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:58011 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755237AbYLGQPz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2008 11:15:55 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2008 08:15:55 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from nf-out-0910.google.com ([64.233.182.185]:53482 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756535AbYLHHCy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2008 02:02:54 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so469985nfc.21
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2008 23:02:52 -0800 (PST)
+Message-ID: <b25312890812072302iaa5b84y1abe590c36d44d50@mail.gmail.com> (sfid-20081208_080305_284624_E3639C8E)
+Date: Mon, 8 Dec 2008 09:02:52 +0200
+From: "Rami Rosen" <roszenrami@gmail.com>
+To: "Dan E" <trg_info@mailhaven.com>
+Subject: Re: Userspace tools: Roadmap?
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1228692546.8826.1288759933@webmail.messagingengine.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18747.62973.573.264948@gargle.gargle.HOWL> (sfid-20081207_171612_151241_C590FC6A)
-Date: Sun, 7 Dec 2008 21:42:44 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 3/6] ath9k: Add a debugfs file to show interrupt statistics
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1228692546.8826.1288759933@webmail.messagingengine.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Location: ath9k/<phy>/interrupt
+Hello,
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/core.h  |   55 +++++++++++++++++++
- drivers/net/wireless/ath9k/debug.c |  102 ++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/main.c  |    2 +
- 3 files changed, 159 insertions(+), 0 deletions(-)
+> will hostapd be re-written to speak
+> nl/cfg80211, or is a new config tool needed?
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 23844e0..9abdbd8 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -88,16 +88,66 @@ enum ATH_DEBUG {
- 
- #ifdef CONFIG_ATH9K_DEBUG
- 
-+/**
-+ * struct ath_interrupt_stats - Contains statistics about interrupts
-+ * @total: Total no. of interrupts generated so far
-+ * @rxok: RX with no errors
-+ * @rxeol: RX with no more RXDESC available
-+ * @rxorn: RX FIFO overrun
-+ * @txok: TX completed at the requested rate
-+ * @txurn: TX FIFO underrun
-+ * @mib: MIB regs reaching its threshold
-+ * @rxphyerr: RX with phy errors
-+ * @rx_keycache_miss: RX with key cache misses
-+ * @swba: Software Beacon Alert
-+ * @bmiss: Beacon Miss
-+ * @bnr: Beacon Not Ready
-+ * @cst: Carrier Sense TImeout
-+ * @gtt: Global TX Timeout
-+ * @tim: RX beacon TIM occurrence
-+ * @cabend: RX End of CAB traffic
-+ * @dtimsync: DTIM sync lossage
-+ * @dtim: RX Beacon with DTIM
-+ */
-+struct ath_interrupt_stats {
-+	u32 total;
-+	u32 rxok;
-+	u32 rxeol;
-+	u32 rxorn;
-+	u32 txok;
-+	u32 txeol;
-+	u32 txurn;
-+	u32 mib;
-+	u32 rxphyerr;
-+	u32 rx_keycache_miss;
-+	u32 swba;
-+	u32 bmiss;
-+	u32 bnr;
-+	u32 cst;
-+	u32 gtt;
-+	u32 tim;
-+	u32 cabend;
-+	u32 dtimsync;
-+	u32 dtim;
-+};
-+
-+struct ath_stats {
-+	struct ath_interrupt_stats istats;
-+};
-+
- struct ath9k_debug {
- 	int debug_mask;
- 	struct dentry *debugfs_root;
- 	struct dentry *debugfs_phy;
- 	struct dentry *debugfs_dma;
-+	struct dentry *debugfs_interrupt;
-+	struct ath_stats stats;
- };
- 
- void DPRINTF(struct ath_softc *sc, int dbg_mask, const char *fmt, ...);
- int ath9k_init_debug(struct ath_softc *sc);
- void ath9k_exit_debug(struct ath_softc *sc);
-+void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status);
- 
- #else
- 
-@@ -115,6 +165,11 @@ static inline void ath9k_exit_debug(struct ath_softc *sc)
- {
- }
- 
-+static inline void ath_debug_stat_interrupt(struct ath_softc *sc,
-+					    enum ath9k_int status)
-+{
-+}
-+
- #endif /* CONFIG_ATH9K_DEBUG */
- 
- struct ath_config {
-diff --git a/drivers/net/wireless/ath9k/debug.c b/drivers/net/wireless/ath9k/debug.c
-index da52812..a80ed57 100644
---- a/drivers/net/wireless/ath9k/debug.c
-+++ b/drivers/net/wireless/ath9k/debug.c
-@@ -128,6 +128,100 @@ static const struct file_operations fops_dma = {
- 	.owner = THIS_MODULE
- };
- 
-+
-+void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
-+{
-+	if (status)
-+		sc->sc_debug.stats.istats.total++;
-+	if (status & ATH9K_INT_RX)
-+		sc->sc_debug.stats.istats.rxok++;
-+	if (status & ATH9K_INT_RXEOL)
-+		sc->sc_debug.stats.istats.rxeol++;
-+	if (status & ATH9K_INT_RXORN)
-+		sc->sc_debug.stats.istats.rxorn++;
-+	if (status & ATH9K_INT_TX)
-+		sc->sc_debug.stats.istats.txok++;
-+	if (status & ATH9K_INT_TXURN)
-+		sc->sc_debug.stats.istats.txurn++;
-+	if (status & ATH9K_INT_MIB)
-+		sc->sc_debug.stats.istats.mib++;
-+	if (status & ATH9K_INT_RXPHY)
-+		sc->sc_debug.stats.istats.rxphyerr++;
-+	if (status & ATH9K_INT_RXKCM)
-+		sc->sc_debug.stats.istats.rx_keycache_miss++;
-+	if (status & ATH9K_INT_SWBA)
-+		sc->sc_debug.stats.istats.swba++;
-+	if (status & ATH9K_INT_BMISS)
-+		sc->sc_debug.stats.istats.bmiss++;
-+	if (status & ATH9K_INT_BNR)
-+		sc->sc_debug.stats.istats.bnr++;
-+	if (status & ATH9K_INT_CST)
-+		sc->sc_debug.stats.istats.cst++;
-+	if (status & ATH9K_INT_GTT)
-+		sc->sc_debug.stats.istats.gtt++;
-+	if (status & ATH9K_INT_TIM)
-+		sc->sc_debug.stats.istats.tim++;
-+	if (status & ATH9K_INT_CABEND)
-+		sc->sc_debug.stats.istats.cabend++;
-+	if (status & ATH9K_INT_DTIMSYNC)
-+		sc->sc_debug.stats.istats.dtimsync++;
-+	if (status & ATH9K_INT_DTIM)
-+		sc->sc_debug.stats.istats.dtim++;
-+}
-+
-+static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	char buf[512];
-+	unsigned int len = 0;
-+
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "RX", sc->sc_debug.stats.istats.rxok);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "RXEOL", sc->sc_debug.stats.istats.rxeol);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "RXORN", sc->sc_debug.stats.istats.rxorn);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "TX", sc->sc_debug.stats.istats.txok);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "TXURN", sc->sc_debug.stats.istats.txurn);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "MIB", sc->sc_debug.stats.istats.mib);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "RXPHY", sc->sc_debug.stats.istats.rxphyerr);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "RXKCM", sc->sc_debug.stats.istats.rx_keycache_miss);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "SWBA", sc->sc_debug.stats.istats.swba);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "BMISS", sc->sc_debug.stats.istats.bmiss);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "BNR", sc->sc_debug.stats.istats.bnr);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "CST", sc->sc_debug.stats.istats.cst);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "GTT", sc->sc_debug.stats.istats.gtt);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "TIM", sc->sc_debug.stats.istats.tim);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "CABEND", sc->sc_debug.stats.istats.cabend);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "DTIMSYNC", sc->sc_debug.stats.istats.dtimsync);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "DTIM", sc->sc_debug.stats.istats.dtim);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "TOTAL", sc->sc_debug.stats.istats.total);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static const struct file_operations fops_interrupt = {
-+	.read = read_file_interrupt,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE
-+};
-+
- int ath9k_init_debug(struct ath_softc *sc)
- {
- 	sc->sc_debug.debug_mask = ath9k_debug;
-@@ -146,6 +240,13 @@ int ath9k_init_debug(struct ath_softc *sc)
- 	if (!sc->sc_debug.debugfs_dma)
- 		goto err;
- 
-+	sc->sc_debug.debugfs_interrupt = debugfs_create_file("interrupt",
-+						     S_IRUGO,
-+						     sc->sc_debug.debugfs_phy,
-+						     sc, &fops_interrupt);
-+	if (!sc->sc_debug.debugfs_interrupt)
-+		goto err;
-+
- 	return 0;
- err:
- 	ath9k_exit_debug(sc);
-@@ -154,6 +255,7 @@ err:
- 
- void ath9k_exit_debug(struct ath_softc *sc)
- {
-+	debugfs_remove(sc->sc_debug.debugfs_interrupt);
- 	debugfs_remove(sc->sc_debug.debugfs_dma);
- 	debugfs_remove(sc->sc_debug.debugfs_phy);
- 	debugfs_remove(sc->sc_debug.debugfs_root);
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 5c6a1b0..11cd52e 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -598,6 +598,8 @@ static irqreturn_t ath_isr(int irq, void *dev)
- 		}
- 	} while (0);
- 
-+	ath_debug_stat_interrupt(sc, status);
-+
- 	if (sched) {
- 		/* turn off every interrupt except SWBA */
- 		ath9k_hw_set_interrupts(ah, (sc->sc_imask & ATH9K_INT_SWBA));
--- 
-1.6.0.3
+  Just one little thing, regarding hostapd:
 
+You can use hostapd with nl80211.
+
+Adding this entry:
+ driver=nl8021
+to hostapd.conf will cause it to work with nl80211 API
+(driver_nl80211.c)
+
+You should also build hostapd with
+CONFIG_DRIVER_NL80211 set in the Makefile.
+
+This is a known way to work with hostapd and master mode; see for example,
+http://acx100.erley.org/nl80211_master_mode.html
+
+(BTW, I am using the latest git of hostapd, but it could be relevant
+also for older versions).
+
+Regarding iw:  I think that adding support for changing
+channel in iw is possible and that there is no inherent reason not to
+do so. Are there any other things you should do with iw which do not
+exist (and exist with iwcofig) ?
+
+Regards,
+Rami Rosen
+
+
+
+
+
+On Mon, Dec 8, 2008 at 1:29 AM, Dan E <trg_info@mailhaven.com> wrote:
+> Looking at some of the Linux Wireless website pages it appears as though
+> "iw" is meant to be the successor to the older pre-mac80211 userspace
+> tools.  In that category we have ifconfig, iproute2, iwconfig and
+> iwpriv.  For an AP there's also hostapd and wpa_supplicant.  Probably
+> some others I've missed, not to mention Network Manager.  I can see how
+> configuration and setup wouldn't necessarily be limited to "iw" using
+> nl/cfg80211, but in the short term is that the tool of choice for
+> migrating the functionality of the old tools to the new mac80211
+> infrastructure?
+>
+> Here's my situation: I'm developing a driver for an old 80211 b/g
+> chipset.  It's ancient by modern standards.  It operates only in the 2.4
+> GHz band, it doesn't have any mesh capabilities, it has a "broken"
+> EEPROM, it supports only single RX and TX queues, and it's an ASIC
+> design that doesn't use firmware.  It has no "turbo" modes.  The company
+> that manufactured it went bust in 2005.  It was used in a wide array of
+> soho routers and access points several years ago but never caught on as
+> a very popular" chip.
+>
+> I want to write, from scratch, a mac80211 driver for this chipset using
+> information I've gained over the last few years from specs and reverse
+> engineering the binary-only driver that shipped with it (with a Linux
+> 2.4.18 kernel).  I have the framework of the driver set up and working.
+> It loads, detects and initializes the hardware on the PCI bus, reads the
+> hardware MAC address, sets up the TX and RX queues, and registers with
+> the mac80211 stack.  I see devices wmaster0 and wlan0 when I modprobe
+> the driver.  So far, so good.  Eventually I want to support AP and
+> MONITOR modes, too, but STA mode seems to be in a more advanced state
+> right now so I am starting with that.
+>
+> Userspace tools.  I want to proceed as if Wireless Extensions never
+> existed.  Is that even possible?  For instance, how do I command a
+> channel change from userspace?  iw doesn't have that.  Should it?  Or do
+> I need to drop back to iwconfig?  Is iw the preferred command-line way
+> to do everything the old tools did, but using nl/cfg80211 instead of
+> ioctls?  When we get to AP mode, will hostapd be re-written to speak
+> nl/cfg80211, or is a new config tool needed?  The same questions apply
+> to wpa_supplicant.
+>
+> In general, what's the way forward for new userspace tools?  nl80211 and
+> cfg80211 are a given, I understand that, but what's the recommended
+> approach from the perspective of a developer looking to make a clean
+> break from Wireless Extensions with a new cleanroom driver written from
+> scratch with no pre-existing baggage to worry about?  Start making
+> additions to iw's capabilities?  Adapt some other existing tool to use
+> nl/cfg80211, or write something completely new?
+>
+> I've been following linux wireless developments since the big Summit of
+> '06, but this is my first attempt at jumping in.  Getting a handle on
+> the "big picture view" of what everything is going to look like when
+> mac80211 is a mature implementation is a bit difficult.  I've noticed a
+> lot of recent changes to the Linux Wireless website.  All good stuff but
+> not very comprehensive in scope.  I realize nobody likes to write
+> documentation :)
+>
+> If somone could answer only 1 question (okay, it's a two-parter) the one
+> I would most like answered is this:  How does one, from userspace, ask
+> the driver to switch to a specific channel, and what callback(s) from
+> mac80211 should my driver expect to receive as a result?  I think my
+> driver can handle the task of changing the channel on the hardware and
+> manage all the housekeeping that goes along with that; I just don't get
+> how to issue that command from userspace.
+>
+> TIA for any help, advice, pointers, flames, etc.
+>
+> --
+> Dan
+>
+> --
+> http://www.fastmail.fm - Send your email first class
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
