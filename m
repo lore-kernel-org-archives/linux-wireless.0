@@ -1,135 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25120 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751860AbYLVSUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 13:20:53 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:20:53 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v2 03/18] ath9k: remove cache of rate preference when using 11g protection
-Date: Mon, 22 Dec 2008 10:20:24 -0800
-Message-ID: <1229970039-10561-4-git-send-email-lrodriguez@atheros.com> (sfid-20081222_192056_088357_21D8C704)
-In-Reply-To: <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
-References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:47325 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751810AbYLHUcy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2008 15:32:54 -0500
+Subject: Re: mac80211 user space
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: igor_trindade@yahoo.com.br, Jouni Malinen <j@w1.fi>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <445f43ac0812081225o516ad4a9ye86557b720e1b81@mail.gmail.com> (sfid-20081208_212546_395656_BCBF9145)
+References: <456087.50493.qm@web59308.mail.re1.yahoo.com>
+	 <1228658260.22164.41.camel@johannes.berg>
+	 <445f43ac0812081017q2ac6ae1h84a86099518773cc@mail.gmail.com>
+	 <1228765954.22164.117.camel@johannes.berg>
+	 <445f43ac0812081225o516ad4a9ye86557b720e1b81@mail.gmail.com>
+	 (sfid-20081208_212546_395656_BCBF9145)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+paLlOx76aXM3HpXtx//"
+Date: Mon, 08 Dec 2008 21:32:19 +0100
+Message-Id: <1228768339.22164.133.camel@johannes.berg> (sfid-20081208_213257_268157_30445240)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to cache when we want to use 2Mbit/s for all protection
-frames for 802.11g as we can determine that dynamically on
-ath_buf_set_rate() itself.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/core.h |    1 -
- drivers/net/wireless/ath9k/main.c |   13 +++----------
- drivers/net/wireless/ath9k/xmit.c |   13 ++++++++++---
- 3 files changed, 13 insertions(+), 14 deletions(-)
+--=-+paLlOx76aXM3HpXtx//
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 4ca2aed..2bb35dd 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -718,7 +718,6 @@ struct ath_softc {
- 	u32 sc_keymax;
- 	DECLARE_BITMAP(sc_keymap, ATH_KEYMAX);
- 	u8 sc_splitmic;
--	u8 sc_protrix;
- 	enum ath9k_int sc_imask;
- 	enum PROT_MODE sc_protmode;
- 	enum ath9k_ht_extprotspacing sc_ht_extprotspacing;
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 2bf2b3f..28d9de1 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -61,12 +61,6 @@ static void bus_read_cachesize(struct ath_softc *sc, int *csz)
- 
- static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
- {
--	/*
--	 * All protection frames are transmited at 2Mb/s for
--	 * 11g, otherwise at 1Mb/s.
--	 * XXX select protection rate index from rate table.
--	 */
--	sc->sc_protrix = 0;
- 	switch (conf->channel->band) {
- 	case IEEE80211_BAND_2GHZ:
- 		if (conf_is_ht20(conf))
-@@ -78,11 +72,9 @@ static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
- 		else if (conf_is_ht40_plus(conf))
- 			sc->cur_rate_table =
- 			  sc->hw_rate_table[ATH9K_MODE_11NG_HT40PLUS];
--		else {
--			sc->sc_protrix = 1;
-+		else
- 			sc->cur_rate_table =
- 			  sc->hw_rate_table[ATH9K_MODE_11G];
--		}
- 		break;
- 	case IEEE80211_BAND_5GHZ:
- 		if (conf_is_ht20(conf))
-@@ -95,7 +87,8 @@ static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
- 			sc->cur_rate_table =
- 			  sc->hw_rate_table[ATH9K_MODE_11NA_HT40PLUS];
- 		else
--			sc->cur_rate_table = sc->hw_rate_table[ATH9K_MODE_11A];
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11A];
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 3bfc3b9..b724ca2 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -557,7 +557,8 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
- 	struct ieee80211_tx_info *tx_info;
- 	struct ieee80211_tx_rate *rates;
- 	struct ieee80211_hdr *hdr;
--	int i, flags, rtsctsena = 0;
-+	struct ieee80211_hw *hw = sc->hw;
-+	int i, flags, rtsctsena = 0, enable_g_protection = 0;
- 	u32 ctsduration = 0;
- 	u8 rix = 0, cix, ctsrate = 0;
- 	__le16 fc;
-@@ -589,6 +590,12 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
- 	flags = (bf->bf_flags & (ATH9K_TXDESC_RTSENA | ATH9K_TXDESC_CTSENA));
- 	cix = rt->info[rix].ctrl_rate;
- 
-+	/* All protection frames are transmited at 2Mb/s for 802.11g,
-+	 * otherwise we transmit them at 1Mb/s */
-+	if (hw->conf.channel->band == IEEE80211_BAND_2GHZ &&
-+	  !conf_is_ht(&hw->conf))
-+		enable_g_protection = 1;
-+
- 	/*
- 	 * If 802.11g protection is enabled, determine whether to use RTS/CTS or
- 	 * just CTS.  Note that this is only done for OFDM/HT unicast frames.
-@@ -601,7 +608,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
- 		else if (sc->sc_protmode == PROT_M_CTSONLY)
- 			flags = ATH9K_TXDESC_CTSENA;
- 
--		cix = rt->info[sc->sc_protrix].ctrl_rate;
-+		cix = rt->info[enable_g_protection].ctrl_rate;
- 		rtsctsena = 1;
- 	}
- 
-@@ -619,7 +626,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
- 	if (sc->sc_config.ath_aggr_prot &&
- 	    (!bf_isaggr(bf) || (bf_isaggr(bf) && bf->bf_al < 8192))) {
- 		flags = ATH9K_TXDESC_RTSENA;
--		cix = rt->info[sc->sc_protrix].ctrl_rate;
-+		cix = rt->info[enable_g_protection].ctrl_rate;
- 		rtsctsena = 1;
- 	}
- 
--- 
-1.6.1.rc3.51.g5832d
+On Mon, 2008-12-08 at 12:25 -0800, Javier Cardona wrote:
+
+> > That's something we can't actually simulate since you're trying to see
+> > whether they do NAV updates correctly, right?
+>=20
+> I was trying to simulate hidden nodes, which are unavoidable given the
+> distributed nature of the mesh.
+> Also trying to simulate "starvation at the edges", which varies
+> greatly with the collision avoidance threshold.
+> But, hey, I was just day dreaming.  Even the simpler air groups that
+> you proposed would be very useful.
+
+:)
+
+Makes a lot of sense, and you can maybe even implement that when a
+userspace program is doing the packet propagation, but for topology
+testing I think we should start with the simpler groups thing. And as I
+said, the userspace propagation will actually need to turn off in-kernel
+propagation which fits setting airgroups to 0.
+
+johannes
+
+--=-+paLlOx76aXM3HpXtx//
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJPYRMAAoJEKVg1VMiehFYI/UQAJF6Rf8iNBYrS3+4ckhdNaDv
+L3cEk030jiYXrRgn0D9EiVGZFpMmiAXDHlyr5QZFqkub8vwO6WIGYJJuNcRWu5g3
+7TLK2ToPCTmiM/DpSrNQjFLCd4Hty+hucAsusgTgMUPmvbUvHL4MX+ZxwyfmiwA1
+AadmU4kBBMDI2qSJxHLlTjEMspgRrZaWWqTK6g8kSDbEe2B6tFUC2IPregyGQxat
+1z6tAD7gM3K+VzyLh4THeTYGVNgeQVFMohqO76nvQQMRV1Oma7w4Rmjov/4UnvCd
+xDj9dfhLIg7yTdQtxPbS8p5/cZ1BwSbmHwHOoUHUnzHMGmNYcJdj44qBPB9BYYp3
+UzyVgwpp0vZelBXIFaSq1XiN6Bzs+LXTz/aBevFa2vGdcrCbdmSE3d438JXSjOIP
+HttSAn+GU5t97qLOw5ZGz0enRgO4nRPYDps3nLffW3JU+yzcbdUEYE4vl8hfZSPP
+ggUaiPSlifrEv90nHrRuuyvLId7IFQPCes0NfnZ8Zto2xx/lDSpmmdWgTLHeAaPk
+xuG5cgOcfkjLIga3L8xrMrZpe04hsmBkqE1DvTqN3fdwZBvpyhD8Naiu/V9aO5V3
+YshUbjjUVTv0yJRkMCRZimVOHDKsU5i8MDbadmxCwUaRgwaL3G0ZiKND/fupyoT2
+1aoJM6hzga+gE2xsmYTr
+=Nw8M
+-----END PGP SIGNATURE-----
+
+--=-+paLlOx76aXM3HpXtx//--
 
