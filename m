@@ -1,36 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55415 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148AbYLSOaM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37101 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592AbYLHTxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 09:30:12 -0500
-Date: Fri, 19 Dec 2008 09:28:22 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	Jouni.Malinen@atheros.com
-Subject: Re: [PATCH] [RFC] mac80211: Disable HT negotiation with TKIP/WEP
-	as pairwise cipher
-Message-ID: <20081219142822.GA4041@tuxdriver.com> (sfid-20081219_153017_468370_CCF68135)
-References: <1229692235-21734-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1229692235-21734-1-git-send-email-vasanth@atheros.com>
+	Mon, 8 Dec 2008 14:53:45 -0500
+Subject: Re: [PATCH 1/6 v2.2] mac80211: add sta_notify_ps callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>
+In-Reply-To: <200812081520.20666.chunkeey@web.de>
+References: <200811292232.56550.chunkeey@web.de>
+	 <200812021655.53141.chunkeey@web.de>
+	 <1228731369.22164.70.camel@johannes.berg>
+	 <200812081520.20666.chunkeey@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d/wjMj/P64K+VxcYr5RV"
+Date: Mon, 08 Dec 2008 20:53:10 +0100
+Message-Id: <1228765990.22164.119.camel@johannes.berg> (sfid-20081208_205347_744900_3A8F8AE8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 19, 2008 at 06:40:35PM +0530, Vasanthakumar Thiagarajan wrote:
-> IEEE802.11n does not allow TKIP/WEP as pairwise cipher in HT mode.
-> Connect in non-ht mode if either of these ciphers is cofigured as
-> pairwise.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Are there perhaps any broken APs out there that support such a
-configuration?  I would hate to prevent users from connecting simply
-out of blind obedience to the standard.
+--=-d/wjMj/P64K+VxcYr5RV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+On Mon, 2008-12-08 at 15:20 +0100, Christian Lamparter wrote:
+> On Monday 08 December 2008 11:16:09 Johannes Berg wrote:
+> > On Tue, 2008-12-02 at 16:55 +0100, Christian Lamparter wrote:
+> >=20
+> > > Do you think "This callback is optional. Only use it, if your hardwar=
+e/
+> > > firmware really implements a station filter table" is enough (and cor=
+rect spelled btw?)
+> > > Or do you volunteer for adding one or two DOC entries about APs, BC &=
+ MC Buffering,
+> > > TIM and station filters mechanism, caveats, and available callbacks o=
+r solutions?
+> >=20
+> > Incidentally, I was entirely wrong about the sta_notify callback being
+> > allowed to sleep, it's not, it's under a spinlock, and, more
+> > importantly, RCU read lock for station removal (and this cannot be
+> > changed). Must have been wishful thinking...
+> >=20
+> So?
+> can I move the notification enums STA_NOTIFY_SLEEP/STA_NOTIFY_AWAKE
+> to the sta_notify callback again, or is this wishful thinking as well?
+> After all, sta_notify wasn't intended to be used to tell the driver about
+> power state transitions but it does fit the bill...
+
+Don't bother, I just wanted to point out I had been wrong.
+
+johannes
+
+--=-d/wjMj/P64K+VxcYr5RV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJPXsjAAoJEKVg1VMiehFYIaAP/2SXiRFJy2+PfcqckujvtVD2
+yRSHjYnLfVTFabtjk6zqPTJExNoeshZWpoFGgzbb0L4t+Cxp2IZ05qvEqD8ml0aL
+94F/+PCjUCPb6VkNLBtsFiU/DCVgefRNmSLKn8fKEZP7GE40gIdGh6TWaPT4zgCx
+BARk+ZvLMIinvjN4m/zneN80xzT+nHnLG3aCYr1f/2XHEa4nh+/GACR0qhUEOxwM
+4hFrzNPLjIv+/wkHV5t4y0+Gl51VGHkDIqg+YDsa96VfBBXE0cKOUJAl4J84DZKc
+eOidontufcDR9c+a7yF/+jyUMKvxtwydeMXL2Btpq7ik0w0o150VkPeI9J9RXk+o
+JRfRdqOq/RPANw2bPivHS85mRnUkIcrJNKE8kmA0gggvOY4Vfka2FvEMCFW5yXfE
+Os8tz1rk+kap8KdzL53Ir9HlE9iEpfYtUeDFFR+gKtmLZ/vm6KjYBpdmtfd+iGfn
+KqTiIJicq2QAC2NTLtHa5fgHLYW5ABkwrSpeCoDLOvnsJqWPNMdk77TsvdFw0jiF
+3UbdXE5wQNfHD881M7hqXryVGGmoJYdMqxV8j963gyjuOSvUzVnBW6pFq/Oz4WlW
+qONjcuUuuoRrCsNXHhr3FnFsRT6VJ7Md+7iGw792GIyRaVBiKOCy77JFyHk0MYCq
+wi9uQl/6tXiIq3cVFY89
+=/ak6
+-----END PGP SIGNATURE-----
+
+--=-d/wjMj/P64K+VxcYr5RV--
+
