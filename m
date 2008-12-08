@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:33762 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754481AbYLIT2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 14:28:00 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/4] iwlifi: remove twice defined SINGLE_FRAME RX FH MASK
-Date: Tue,  9 Dec 2008 11:28:59 -0800
-Message-Id: <1228850941-16677-3-git-send-email-reinette.chatre@intel.com> (sfid-20081209_202808_807200_152D01F4)
-In-Reply-To: <1228850941-16677-2-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1228850941-16677-1-git-send-email-reinette.chatre@intel.com>
- <1228850941-16677-2-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:43603 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751739AbYLHNBM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2008 08:01:12 -0500
+Subject: Re: [PATCH 1/6 v2.2] mac80211: add sta_notify_ps callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>
+In-Reply-To: <200812021655.53141.chunkeey@web.de>
+References: <200811292232.56550.chunkeey@web.de>
+	 <200811300048.42352.chunkeey@web.de> <20081201191723.GI5992@tesla>
+	 <200812021655.53141.chunkeey@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Tu0ZkapIKuh9hvWZV315"
+Date: Mon, 08 Dec 2008 11:16:09 +0100
+Message-Id: <1228731369.22164.70.camel@johannes.berg> (sfid-20081208_140116_647590_4C0A7894)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
 
-This patch removes second definition of FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME
-in iwl-fh.h
+--=-Tu0ZkapIKuh9hvWZV315
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fh.h |    3 ---
- drivers/net/wireless/iwlwifi/iwl-rx.c |    2 +-
- 2 files changed, 1 insertions(+), 4 deletions(-)
+On Tue, 2008-12-02 at 16:55 +0100, Christian Lamparter wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index 2ff9434..d7da198 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -266,11 +266,8 @@
- #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL    (0x00000000)
- #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL  (0x00001000)
- 
--#define FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME	(0x00008000)
--
- #define FH_RSCSR_FRAME_SIZE_MSK	(0x00003FFF)	/* bits 0-13 */
- 
--
- /**
-  * Rx Shared Status Registers (RSSR)
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 58d339e..6ae767d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -439,7 +439,7 @@ int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 			   FH_RCSR_RX_CONFIG_CHNL_EN_ENABLE_VAL |
- 			   FH_RCSR_CHNL0_RX_IGNORE_RXF_EMPTY |
- 			   FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL |
--			   FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME |
-+			   FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME_MSK |
- 			   rb_size|
- 			   (rb_timeout << FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_POS)|
- 			   (rfdnlog << FH_RCSR_RX_CONFIG_RBDCB_SIZE_POS));
--- 
-1.5.4.3
+> Do you think "This callback is optional. Only use it, if your hardware/
+> firmware really implements a station filter table" is enough (and correct=
+ spelled btw?)
+> Or do you volunteer for adding one or two DOC entries about APs, BC & MC =
+Buffering,
+> TIM and station filters mechanism, caveats, and available callbacks or so=
+lutions?
+
+Incidentally, I was entirely wrong about the sta_notify callback being
+allowed to sleep, it's not, it's under a spinlock, and, more
+importantly, RCU read lock for station removal (and this cannot be
+changed). Must have been wishful thinking...
+
+johannes
+
+--=-Tu0ZkapIKuh9hvWZV315
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJPPPlAAoJEKVg1VMiehFYQfcP/0lKNOZ1+ENukit31dp/bwZi
+eiYrq1sjVThWVFmTtUGq3zVna3n+k3If0DUfeBjza+ayWsTzqNY8BmxyN+6neALl
+1O6R/4l4aySQAvALf4p8lYbooLJCAeaUSH58/Rs4QsZQ0+C5emV+vRtJbIK4dOGi
+tQpadNyNYNxsThVHBdCDdqDrEjHh2xEjZD0afv8210MBt9KGPFT4/siu2ags7LMU
+oHCD/KknAcfJNMxwztNfSjvJvATJMahSUrEZJsdpc2M3RpiMkmSRzA85QYRvzlht
+IVku3xUw1tHNvIQz/FdCM5WQTIBgJHSjsJ7RPpdYW6VjZWS9OUKaZ20GBO6PtL+I
+LLTO4qOuTK2h1nU6BklcnC8WJAIJzjB2N2teh7ymrbmoI+K9SYHlB7rbVPaI7gT7
+by2PjaxJIZvDhazH2Fla896SXUmS/uODvtOH/JnzpdphGpUYHz8GZpIhbqq1vSCS
+qf/o9Xs6iSIkV/KHEqciwfcM1b4lb+ywPawyPVGGm5feOg/t+MufeCVGTwWYju8m
+jUujZ4kMS2cTfMICvk6Mdv5/ZJgm9/3Ew0obj7CeKijF0GhMVAw2CfbYdDgESz6I
+zsy0ddn9v+i2XYU63/tF7uHxasrqoys4rI6bNMbumLdZPMd2A7evFNHImgN0MIwl
+DNzV30nODs7uLtOuPFpo
+=kSM+
+-----END PGP SIGNATURE-----
+
+--=-Tu0ZkapIKuh9hvWZV315--
 
