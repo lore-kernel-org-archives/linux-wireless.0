@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:32803 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751082AbYLUXRx (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:29561 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968AbYLHQeT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 18:17:53 -0500
-Message-ID: <494ECE9E.9020100@lwfinger.net> (sfid-20081222_001757_409296_2D33B252)
-Date: Sun, 21 Dec 2008 17:17:50 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 8 Dec 2008 11:34:19 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so582419nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2008 08:34:17 -0800 (PST)
+To: "Lars Ericsson" <Lars_Ericsson@telia.com>
+Subject: Re: Monitor number of packages sent and ACK'ed by AP
+Date: Mon, 8 Dec 2008 17:34:14 +0100
+Cc: "'Johannes Berg'" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <2302AE261F8F40829ECF8CCCB6DD612B@gotws1589>
+In-Reply-To: <2302AE261F8F40829ECF8CCCB6DD612B@gotws1589>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [RFC/RFT] p54: regulatory domain hint
-References: <200812212336.31267.chunkeey@web.de>
-In-Reply-To: <200812212336.31267.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200812081734.14920.IvDoorn@gmail.com> (sfid-20081208_173422_917069_8391DA88)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> This patch adds a sub-routine that parses the default country eeprom entry
-> and forwards the obtained Alpha2 identifier to the regulatory sub-system.
+On Monday 08 December 2008, Lars Ericsson wrote:
+> > 
+> > On Mon, 2008-12-08 at 11:50 +0100, Lars Ericsson wrote:
+> > > Hi Johannes,
+> > > 
+> > > I would like to monitor number of packages properly 
+> > transmitted and ACK'ed
+> > > by the AP.
+> > > Is the a single point where this can be done ?
+> > 
+> > Not really, some drivers don't even give you that information,
+> > unfortunately.
+> > 
+> > johannes
+> > 
+> 
+> OK, thanks. 
+> I just discovered that Ralink rt61 does filter all ACK frames.
+> /Lars
 
-My p54usb now recognizes that the US domain should be used, not the world value.
+Did you look during monitor mode?
+When monitor mode is not enabled, the RX filter can be quite strict.
 
-ACK.
-
-Larry
-
+Ivo
