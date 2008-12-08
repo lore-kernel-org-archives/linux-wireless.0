@@ -1,164 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-147-71.gdrpmi.dsl-w.verizon.net ([71.115.147.71]:48841
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752702AbYLLXs7 (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.245]:18895 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371AbYLHPfS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 18:48:59 -0500
-Message-ID: <4942F867.5020203@erley.org> (sfid-20081213_004911_172894_1F4E2C80)
-Date: Fri, 12 Dec 2008 18:48:55 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Mon, 8 Dec 2008 10:35:18 -0500
+Received: by an-out-0708.google.com with SMTP id d40so474229and.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2008 07:35:16 -0800 (PST)
+Message-ID: <e27b78a40812080735n465186a0s8a43a40817789826@mail.gmail.com> (sfid-20081208_163523_480280_36244A10)
+Date: Mon, 8 Dec 2008 15:35:16 +0000
+From: Keir <keirlawson@gmail.com>
+To: "Andrey Yurovsky" <andrey@cozybit.com>
+Subject: Re: Problems with o11s
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <45e8e6c40812021127s4db52598n5541ea78f583013e@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Userspace tools: Roadmap?
-References: <1228692546.8826.1288759933@webmail.messagingengine.com>	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>	 <1228778295.10662.1288975589@webmail.messagingengine.com>	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org>	 <1228780960.22164.162.camel@johannes.berg>  <4941EF69.5040108@erley.org>	 <1229099080.14423.15.camel@dv> <1229119118.3572.6.camel@johannes.berg>	 <4942E7A4.3050206@erley.org> <1229121535.3565.4.camel@johannes.berg>
-In-Reply-To: <1229121535.3565.4.camel@johannes.berg>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <e27b78a40812020752o396b2542kfc26b55caeade8df@mail.gmail.com>
+	 <45e8e6c40812021127s4db52598n5541ea78f583013e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This converts iw to use libnl-2, and adds compatibility with libnl-1.
-There is not currently a good way to detect the libnl version during
-compilation, as the versioning in the netlink/version.h is defined as a
-string "2.0" rather than a major and a minor number, so we must detect
-it in the Makefile.
+Hi Andrey,
 
-Signed-off-by: Pat Erley <pat-lkml@erley.org>
+Using the commit directly before
+dc300b5c5291d779a53d83af960fdf9388bf0544 (I'm pretty sure).  Don't
+know how to test IBSS.  I'm guessing the problem  here is the
+plink_close messages arent getting through somehow?
 
----
+Cheers for all your help
 
-I'm still not very familiar with Makefile magic, so if there's a better
-way to do what I'm doing in the Makefile, just let me know.  Also, I'm
-preparing a similar patch for crda.  I'm not 100% certain on the
-libnl-1.1 compatibility part as I can't get iw to build with libnl-1.1
-on my system.  However, with and without this patch error out in an
-identical manner
+Keir
 
----
-
-diff --git a/Makefile b/Makefile
-index df59b51..5b359f3 100644
---- a/Makefile
-+++ b/Makefile
-@@ -10,14 +10,28 @@ MKDIR ?= mkdir -p
- INSTALL ?= install
- CC ?= "gcc"
-
--CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
--fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
-`pkg-config --cflags libnl-1`
-+CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
--fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
- CFLAGS += -O2 -g
--LDFLAGS += `pkg-config --libs libnl-1`
--NLVERSION = 1.0
-
- OBJS = iw.o info.o phy.o interface.o station.o util.o mpath.o reg.o
-mesh.o genl.o
- ALL = iw
-
-+NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
-+NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
-+
-+ifeq ($(NL1FOUND),Y)
-+NLLIBNAME = libnl-1
-+endif
-+
-+ifeq ($(NL2FOUND),Y)
-+CFLAGS += -DCONFIG_LIBNL20
-+LIBS += -lnl-genl
-+NLLIBNAME = libnl-2.0
-+endif
-+
-+LDFLAGS += `pkg-config --libs $(NLLIBNAME)`
-+CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
-+
- ifeq ($(V),1)
- Q=
- NQ=true
-@@ -29,8 +43,15 @@ endif
- all: version_check $(ALL)
-
- version_check:
--	@if ! pkg-config --atleast-version=$(NLVERSION) libnl-1; then echo
-"You need at least libnl version $(NLVERSION)"; exit 1; fi
--
-+ifeq ($(NL2FOUND),Y)
-+	@echo "Found libnl-2.0"
-+else
-+ifeq ($(NL1FOUND),Y)
-+	@echo "Found libnl-1"
-+else
-+	$(error No libnl found)
-+endif
-+endif
-
- version.h: version.sh
- 	@$(NQ) ' GEN  version.h'
-@@ -42,7 +63,7 @@ version.h: version.sh
-
- iw:	$(OBJS)
- 	@$(NQ) ' CC  ' iw
--	$(Q)$(CC) $(LDFLAGS) $(OBJS) -o iw
-+	$(Q)$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o iw
-
- check:
- 	$(Q)$(MAKE) all CC="REAL_CC=$(CC) CHECK=\"sparse -Wall\" cgcc"
-diff --git a/iw.c b/iw.c
-index afae643..e9cc7f6 100644
---- a/iw.c
-+++ b/iw.c
-@@ -23,13 +23,24 @@
- #include "iw.h"
- #include "version.h"
-
-+#ifndef CONFIG_LIBNL20
-+/* libnl 2.0 compatibility code */
-+
-+#define nl_socket_alloc(_h) nl_handle_alloc(_h)
-+#define nl_socket_free(_h)  nl_handle_destroy(_h)
-+#define compat_genl_ctrl_alloc_cache(_nl_handle, _nl_cache) \
-+        (_nl_cache = genl_ctrl_alloc_cache(_nl_handle)) == NULL
-+
-+#define genl_ctrl_alloc_cache(_h,_i) compat_genl_ctrl_alloc_cache(_h,_i)
-+#endif /* CONFIG_LIBNL20 */
-+
- static int debug = 0;
-
- static int nl80211_init(struct nl80211_state *state)
- {
- 	int err;
-
--	state->nl_handle = nl_handle_alloc();
-+	state->nl_handle = nl_socket_alloc();
- 	if (!state->nl_handle) {
- 		fprintf(stderr, "Failed to allocate netlink handle.\n");
- 		return -ENOMEM;
-@@ -41,8 +52,7 @@ static int nl80211_init(struct nl80211_state *state)
- 		goto out_handle_destroy;
- 	}
-
--	state->nl_cache = genl_ctrl_alloc_cache(state->nl_handle);
--	if (!state->nl_cache) {
-+	if (genl_ctrl_alloc_cache(state->nl_handle, &(state->nl_cache))) {
- 		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
- 		err = -ENOMEM;
- 		goto out_handle_destroy;
-@@ -60,7 +70,7 @@ static int nl80211_init(struct nl80211_state *state)
-  out_cache_free:
- 	nl_cache_free(state->nl_cache);
-  out_handle_destroy:
--	nl_handle_destroy(state->nl_handle);
-+	nl_socket_free(state->nl_handle);
- 	return err;
- }
-
-@@ -68,7 +78,7 @@ static void nl80211_cleanup(struct nl80211_state *state)
- {
- 	genl_family_put(state->nl80211);
- 	nl_cache_free(state->nl_cache);
--	nl_handle_destroy(state->nl_handle);
-+	nl_socket_free(state->nl_handle);
- }
-
- __COMMAND(NULL, NULL, NULL, 0, 0, 0, CIB_NONE, NULL);
+2008/12/2 Andrey Yurovsky <andrey@cozybit.com>:
+> Hi Keir.  I believe you're using ath5k?  You can use, at this time, up
+> to (but not including) commit
+> dc300b5c5291d779a53d83af960fdf9388bf0544, where we have a regression
+> in the driver when the PCU-related code was updated.  Have you tried
+> testing IBSS mode in your setup?
+>
+>  -Andrey
+>
+> On Tue, Dec 2, 2008 at 7:52 AM, Keir <keirlawson@gmail.com> wrote:
+>> Hi,
+>>
+>> I've had o11s working for a while now, but I seem to get a strange problem
+>> whereby pinging between MPs works for the first few pings, and then I start
+>> getting packet loss (Destination Host Unreachable)  and nothing gets
+>> through, despite the other station being listed as "ESTAB" by iw.  I'm not
+>> sure if there is something strange about my setup, or this is a bug
+>> somewhere, anyone got any ideas? I'm using revision
+>> d059b2aed9e93cb94364e01374bca90ce3dc0ef9
+>>
+>> Cheers
+>>
+>> Keir
+>>
+>
