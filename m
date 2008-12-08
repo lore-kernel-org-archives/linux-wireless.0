@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:60109 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752580AbYLTUPs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37017 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751328AbYLHTv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 15:15:48 -0500
-Date: Sat, 20 Dec 2008 18:15:41 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Werner Almesberger <werner@openmoko.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: AR6k: to rfkill or not to rfkill ?
-Message-ID: <20081220201541.GD25001@khazad-dum.debian.net> (sfid-20081220_211553_689184_4F0B2BDA)
-References: <20081218212234.GI5019@almesberger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081218212234.GI5019@almesberger.net>
+	Mon, 8 Dec 2008 14:51:27 -0500
+Subject: Re: Monitor number of packages sent and ACK'ed by AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Lars Ericsson <Lars_Ericsson@telia.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200812081932.40499.IvDoorn@gmail.com> (sfid-20081208_193244_484980_62238B59)
+References: <0161CC9B2A3341A19CED21A365A90FE4@gotws1589>
+	 <200812081932.40499.IvDoorn@gmail.com>
+	 (sfid-20081208_193244_484980_62238B59)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5MynfAUYkx+C/bqy7P9h"
+Date: Mon, 08 Dec 2008 20:50:56 +0100
+Message-Id: <1228765856.22164.114.camel@johannes.berg> (sfid-20081208_205131_231811_98487455)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Dec 2008, Werner Almesberger wrote:
-> In Openmoko, we're wondering whether we should make the Atheros AR6k
-> driver register as an rfkill controller or not, and if we do it,
-> what semantics this should have. I'm looking for advice here.
 
-There is one screening rule that does help:
+--=-5MynfAUYkx+C/bqy7P9h
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Is that a way you can program the device that *ENSURES* without any doubt,
-that it will never emit energy off the transmitter?
+On Mon, 2008-12-08 at 19:32 +0100, Ivo van Doorn wrote:
 
-If the answer is no, you are not to add an rfkill controller. It is that
-simple (at least with the current rfkill core).
+> Right, because mac80211 doesn't send the control filter to the driver by =
+default,
+> it does when using monitor mode. (Not sure if it also does this when havi=
+ng
+> a secondary virtual interface running in monitor mode, but for full-monit=
+or
+> mode it does).
 
-If the answer is yes, then you can consider adding an rfkill controller.
+It does, depending on the flags you set with iw.
 
-> If the answer is "yes", would the following semantics be right for
-> the disabled state ?
-> 
-> - we de-associate
-> - we stop scanning
-> - all ioctls still work as usual, but they have no effect on
->   association and scanning until rfkill re-enables the device
+johannes
 
-If your rfkill controller has been set to "block the radio", you must NOT
-allow any energy to be emmited by the transmitter.  This is all that
-matters.
+--=-5MynfAUYkx+C/bqy7P9h
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJPXqcAAoJEKVg1VMiehFYdhsP/REb7bC3ugUDqPmfQSGq5f5N
+VwZBkhJzGgy5EMk5y04N4upfXHFI16rdJM3z3xRCJQwXehi6HYFA1/45uMBNGdO9
+Kn5zw+KAIxEUtP3YCsmKtzEawsoGS7a6DbAQdS5+SU53XvHhFZEiDiserElxFsBm
+Sj4m4IEHkYwxXVnXieCtbr2oxR5hw0D+t23UliCimJ474VQwabCnVOy7CJJO4o4E
+NGJnJeYvHYSM9RdVxdZR/onijPXWMaBNySL63LN+J/wdGTEeKB0CASH508/a+lcI
+/w9wjsGZSwS6neFgH3K+y3a9DWwVyphrrkT9uzGFAfvgcUA/woKGzk3LvDNN7Xxz
+gpM+QNhB+PMwa6Vmce7QHX9tqhfAyGipg47tpkrHZqfuXcQCwGOKexXpaxpS748J
+e95XSPwx3YtfQlro5mnjCvA1JGxdV0BhK7xnn6Vcic4PUGNI1VE4z/fYGfSE8zZv
+JSVaK0a570bExmvSFbMoj2VFeB/0tecUBm8pcPQZLEW4RkdhlOYenZCLwl5d3SSF
+LflAVlxs5mL2jD5X2KW5fx5JEOauhm7DPjkm1B1oeef2pbI7b4l+IYSAAiLZdjyh
+jtKkbLQ35/W6oA4rYQ2W10b69IoLsHH1C8UO0rJbPBk3JcJ0vkNEoYnnGTSjMfK+
+2JKqDUuW6C8YyMiEdT6/
+=XgPH
+-----END PGP SIGNATURE-----
+
+--=-5MynfAUYkx+C/bqy7P9h--
+
