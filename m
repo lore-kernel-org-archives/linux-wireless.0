@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44053 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753289AbYLSOpM (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:26886 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752041AbYLICdM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 09:45:12 -0500
-Date: Fri, 19 Dec 2008 09:42:56 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>
-Subject: Re: [PATCH] [RFC] mac80211: Disable HT negotiation with TKIP/WEP
-	as pairwise cipher
-Message-ID: <20081219144256.GB4041@tuxdriver.com> (sfid-20081219_154530_033418_2087BF52)
-References: <1229692235-21734-1-git-send-email-vasanth@atheros.com> <20081219142822.GA4041@tuxdriver.com> <494BB0BE.3030705@atheros.com>
+	Mon, 8 Dec 2008 21:33:12 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2008 18:33:12 -0800
+Date: Mon, 8 Dec 2008 10:33:27 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Norbert Preining <preining@logic.at>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: compat-wireless-2008-12-06 =?utf-8?Q?a?=
+	=?utf-8?Q?nd_no_member_named_=E2=80=98requeue=E2=80=99?=
+Message-ID: <20081208183327.GC6035@tesla> (sfid-20081209_033325_981564_5949E34F)
+References: <20081207110349.GA11803@gandalf.dynalias.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <494BB0BE.3030705@atheros.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20081207110349.GA11803@gandalf.dynalias.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 19, 2008 at 08:03:34PM +0530, Vasanthakumar Thiagarajan wrote:
-> John W. Linville wrote:
-> > On Fri, Dec 19, 2008 at 06:40:35PM +0530, Vasanthakumar Thiagarajan wrote:
-> >> IEEE802.11n does not allow TKIP/WEP as pairwise cipher in HT mode.
-> >> Connect in non-ht mode if either of these ciphers is cofigured as
-> >> pairwise.
-> >>
-> >> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> > 
-> > Are there perhaps any broken APs out there that support such a
-> > configuration?  I would hate to prevent users from connecting simply
-> > out of blind obedience to the standard.
-> 
-> This particular configuration is not allowed in the latest 11n draft (7.0).
-> Yes, we have quite a few AP's around which support this configuration. 
+On Sun, Dec 07, 2008 at 03:03:49AM -0800, Norbert Preining wrote:
+> Hi all,
+>=20
+> (please Cc)
+>=20
+> I am trying to compile compat-wireless for 2.6.28-rc7, but it bails o=
+ut
+> with:
+>   CC [M]  /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.o
+>   /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.c: In functi=
+on =E2=80=98ieee80211_handle_filtered_frame=E2=80=99:
+>   /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.c:449: error=
+: =E2=80=98struct sk_buff=E2=80=99 has no member named =E2=80=98requeue=
+=E2=80=99
+>   /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.c:451: error=
+: =E2=80=98struct sk_buff=E2=80=99 has no member named =E2=80=98requeue=
+=E2=80=99
+>   make[3]: *** [/src/wlan/compat-wireless-2008-12-06/net/mac80211/mai=
+n.o] Error
+>=20
+>=20
+> Is there a way to fix that? Thanks
 
-Honestly, as a STA I would rather violate the standard and connect
-to the coffee shop's broken/misconfigured pre-draft7 .11n AP than stand
-on principle and have to fall back on my cell phone's data plan or sip
-my latte in internet silence... :-)
-
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Thanks for reporting it, its now fixed.
+=20
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
