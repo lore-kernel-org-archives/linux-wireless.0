@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59005 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754934AbYLCVaN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55885 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775AbYLHNBS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 16:30:13 -0500
-Date: Wed, 3 Dec 2008 16:22:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Greg KH <greg@kroah.com>, stable@kernel.org, sfr@canb.auug.org.au,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [stable] [PATCH 1/3] ath9k: Handle -ENOMEM on RX gracefully
-Message-ID: <20081203212255.GB4263@tuxdriver.com> (sfid-20081203_223041_672236_AB64FD45)
-References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com> <1228251082-11677-2-git-send-email-lrodriguez@atheros.com> <1228251082-11677-3-git-send-email-lrodriguez@atheros.com> <1228251082-11677-4-git-send-email-lrodriguez@atheros.com> <20081203001253.GC14943@kroah.com> <43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com> <20081203002404.GA22789@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081203002404.GA22789@tuxdriver.com>
+	Mon, 8 Dec 2008 08:01:18 -0500
+Subject: [PATCH] mac80211: improve sta_notify documentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 08 Dec 2008 11:18:32 +0100
+Message-Id: <1228731512.22164.72.camel@johannes.berg> (sfid-20081208_140120_799731_4325B51B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 02, 2008 at 07:24:04PM -0500, John W. Linville wrote:
-> On Tue, Dec 02, 2008 at 04:20:32PM -0800, Luis R. Rodriguez wrote:
-> > On Tue, Dec 2, 2008 at 4:12 PM, Greg KH <greg@kroah.com> wrote:
-> > > I don't see this patch upstream in Linus's tree.  Am I just missing it
-> > > and if so, do you know the git commit id?
-> > 
-> > Nope sorry, John has yet to send his pending-fixes branch to davem and
-> > so forth, which would contain it AFAICT. Please correct me if I'm
-> > wrong John.
-> 
-> It has been sent, and Dave sent his pull request to Linus today
-> (or maybe yesterday).  I'll try to dig-up the commit IDs tomorrow.
+Mention more possible STA entries and document the atomic requirement.
 
-Hmmm...I seem to have sent this to -next instead.  Since it fixes an
-Oops, I guess I can requeue for 2.6.28.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+--- everything.orig/include/net/mac80211.h	2008-12-08 11:16:25.000000000 +0100
++++ everything/include/net/mac80211.h	2008-12-08 11:17:24.000000000 +0100
+@@ -1257,8 +1257,8 @@ enum ieee80211_ampdu_mlme_action {
+  *	the device does fragmentation by itself; if this method is assigned then
+  *	the stack will not do fragmentation.
+  *
+- * @sta_notify: Notifies low level driver about addition or removal
+- *	of associated station or AP.
++ * @sta_notify: Notifies low level driver about addition or removal of an
++ *	associated station, AP, IBSS/WDS/mesh peer etc. Must be atomic.
+  *
+  * @sta_ps_notify: Notifies low level driver about the power state transition
+  *	of a associated station. Must be atomic.
+
+
