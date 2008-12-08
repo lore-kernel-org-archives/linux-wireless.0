@@ -1,54 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53594 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756416AbYLKQyL (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:34248 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752887AbYLHXSQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 11:54:11 -0500
-Date: Thu, 11 Dec 2008 18:22:13 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: [PATCH] ath9k: Do not remove header padding on RX from short frames
-Message-ID: <20081211162213.GA28193@jm.kir.nu> (sfid-20081211_175428_927129_C92B2A02)
+	Mon, 8 Dec 2008 18:18:16 -0500
+Message-Id: <1228778295.10662.1288975589@webmail.messagingengine.com> (sfid-20081209_001824_312714_9872DB43)
+From: "Dan E" <trg_info@mailhaven.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+References: <1228692546.8826.1288759933@webmail.messagingengine.com>
+ (sfid-20081208_002919_244971_30E436F9)
+ <1228723993.22164.65.camel@johannes.berg>
+Subject: Re: Userspace tools: Roadmap?
+In-Reply-To: <1228723993.22164.65.camel@johannes.berg>
+Date: Mon, 08 Dec 2008 18:18:15 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 802.11 header is only padded to 32-bit boundary when the frame has
-a non-zero length payload. In other words, control frames (e.g., ACK)
-do not have a padding and we should not try to remove it. This fixes
-monitor mode for short control frames. In addition, the hdrlen&3 use
-is described in more detail to make it easier to understand how the
-padding length is calculated.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+On Mon, 08 Dec 2008 09:13:13 +0100, "Johannes Berg"
+<johannes@sipsolutions.net> said:
+> 
+> Not really, in the short term, you still are using iwconfig (wireless
+> extensions) with anything but hostapd.
 
----
- drivers/net/wireless/ath9k/recv.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+Ugh.  I was afraid you were going to say that.
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/recv.c	2008-12-11 11:35:56.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/recv.c	2008-12-11 12:18:02.000000000 +0200
-@@ -571,8 +571,16 @@ int ath_rx_tasklet(struct ath_softc *sc,
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
- 
--		if (hdrlen & 3) {
--			padsize = hdrlen % 4;
-+		/* The MAC header is padded to have 32-bit boundary if the
-+		 * packet payload is non-zero. The general calculation for
-+		 * padsize would take into account odd header lengths:
-+		 * padsize = (4 - hdrlen % 4) % 4; However, since only
-+		 * even-length headers are used, padding can only be 0 or 2
-+		 * bytes and we can optimize this a bit. In addition, we must
-+		 * not try to remove padding from short control frames that do
-+		 * not have payload. */
-+		padsize = hdrlen & 3;
-+		if (padsize && hdrlen >= 24) {
- 			memmove(skb->data + padsize, skb->data, hdrlen);
- 			skb_pull(skb, padsize);
- 		}
+> > Userspace tools.  I want to proceed as if Wireless Extensions never
+> > existed.  Is that even possible?
+> 
+> No, it's not.
+
+My fault for assuming too much about the urgency to get away from WE.
+
+> Yes, it should, and nl80211 even supports it, but iw itself doesn't yet.
+> That's fairly easy to fix, too, but then iw won't support actually
+> telling mac80211 to scan and associate etc.
+
+Right.  I had a few early problems with iw.  For instance, the Linux
+Wireless web pages say you need "at least" libnl-1.0-pre8, but it won't
+build with libnl-1.2 or 2.0.  I had to go with libnl-1.1 to make it
+happy.  iw seems to be like a redheaded stepchild.
+
+> If you're writing a mac80211-based driver, there's no point where you
+> could possibly get in touch with the userspace API. You're writing the
+> driver completely to mac80211's internal driver API, and mac80211
+> completely shields you from the userspace API. You'll never interact
+> with either wireless extensions or nl80211.
+> 
+> > If somone could answer only 1 question (okay, it's a two-parter) the one
+> > I would most like answered is this:  How does one, from userspace, ask
+> > the driver to switch to a specific channel, and what callback(s) from
+> > mac80211 should my driver expect to receive as a result?  
+> 
+> iwconfig wlan0 channel 7
+> 
+> then mac80211 calls your _ops->config() with the channel flag. Have you
+> looked at the mac80211 book and the other documentation on
+> http://wireless.kernel.org/?
+
+That's what I thought but I wasn't seeing any callbacks at all through
+my ieee80211_ops pointers.  I did see the channel frequency change with
+'iwconfig wlan0', but no callbacks.  My fault, again, for not RTFM.  I
+haven't gotten to the point yet on my driver where I expect 'ip link set
+up dev wlan0' (or 'ifconfig wlan0 up', if you prefer) and now I see
+that's why the config callback never happened.  If I had RTFM I might
+have noticed adding 'commit' at the end of the iwconfig command would
+have done it without the 'up'.
+
+Thanks for the info, Johannes.  It answers a lot of my questions.
+
+--
+Dan
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+http://www.fastmail.fm - Access your email from home and the web
+
