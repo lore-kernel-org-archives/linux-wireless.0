@@ -1,127 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f11.google.com ([209.85.221.11]:40107 "EHLO
-	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429AbYLIXbD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42243 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752561AbYLIOrP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 18:31:03 -0500
-Received: by qyk4 with SMTP id 4so396424qyk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Dec 2008 15:30:58 -0800 (PST)
-Message-ID: <493effb1.0610c00a.3f59.7990@mx.google.com> (sfid-20081210_003106_447798_714E22AE)
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-From: Anna Neal <anna@cozybit.com>
-Date: Tue, 9 Dec 2008 13:23:45 -0800
-Subject: [PATCH] libertas: Create sysfs entry for changing the mesh probe response limit
+	Tue, 9 Dec 2008 09:47:15 -0500
+Subject: Re: [PATCH v2] p54usb: rewriting rx/tx routines to make use of
+	usb_anchor's facilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <20081209143530.GA3653@tuxdriver.com>
+References: <200812091514.37634.chunkeey@web.de>
+	 <20081209143530.GA3653@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v0zdultIiSYu9mzERsjO"
+Date: Tue, 09 Dec 2008 15:46:39 +0100
+Message-Id: <1228833999.1029.0.camel@johannes.berg> (sfid-20081209_154718_362388_6FE7EF63)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the ability to change the number of probe response retries sent
-by the mesh interface.
 
-In dense networks it is recommended to change this value to zero to reduce
-traffic congestion.
+--=-v0zdultIiSYu9mzERsjO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Anna Neal <anna@cozybit.com>
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
----
- drivers/net/wireless/libertas/host.h |    1 +
- drivers/net/wireless/libertas/main.c |   60 ++++++++++++++++++++++++++++++++++
- 2 files changed, 61 insertions(+), 0 deletions(-)
+On Tue, 2008-12-09 at 09:35 -0500, John W. Linville wrote:
+> On Tue, Dec 09, 2008 at 03:14:37PM +0100, Christian Lamparter wrote:
+> > Alan Stern found several flaws in p54usb's implementation and annotated=
+:=20
+> > "usb_kill_urb() and similar routines do not expect an URB's completion
+> > routine to deallocate it.  This is almost obvious -- if the URB is deal=
+located
+> > before the completion routine returns then there's no way for usb_kill_=
+urb
+> > to detect when the URB actually is complete."
+> >=20
+> > This patch addresses all known limitations in the old implementation an=
+d fixes
+> > khub's "use-after-freed" hang, when SLUB debug's poisoning option is en=
+abled.
+> >=20
+> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> > Cc: stable@kernel.org
+>=20
+> That's a big patch for so late in the cycle.  Is there a bugzilla open fo=
+r it?
 
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index a17b778..277ff19 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -245,6 +245,7 @@ enum cmd_mesh_access_opts {
- 	CMD_ACT_MESH_GET_ROUTE_EXP,
- 	CMD_ACT_MESH_SET_AUTOSTART_ENABLED,
- 	CMD_ACT_MESH_GET_AUTOSTART_ENABLED,
-+	CMD_ACT_MESH_SET_GET_PRB_RSP_LIMIT = 17,
- };
- 
- /* Define actions and types for CMD_MESH_CONFIG */
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index c320264..f7caef9 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -257,6 +257,58 @@ static ssize_t lbs_anycast_set(struct device *dev,
- 	return strlen(buf);
- }
- 
-+/**
-+ * @brief Get function for sysfs attribute prb_rsp_limit
-+ */
-+static ssize_t lbs_prb_rsp_limit_get(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct lbs_private *priv = to_net_dev(dev)->priv;
-+	struct cmd_ds_mesh_access mesh_access;
-+	int ret;
-+	u32 retry_limit;
-+
-+	memset(&mesh_access, 0, sizeof(mesh_access));
-+	mesh_access.data[0] = cpu_to_le32(CMD_ACT_GET);
-+
-+	ret = lbs_mesh_access(priv, CMD_ACT_MESH_SET_GET_PRB_RSP_LIMIT,
-+			&mesh_access);
-+	if (ret)
-+		return ret;
-+
-+	retry_limit = le32_to_cpu(mesh_access.data[1]);
-+	return snprintf(buf, 10, "%d\n", retry_limit);
-+}
-+
-+/**
-+ * @brief Set function for sysfs attribute prb_rsp_limit
-+ */
-+static ssize_t lbs_prb_rsp_limit_set(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count)
-+{
-+	struct lbs_private *priv = to_net_dev(dev)->priv;
-+	struct cmd_ds_mesh_access mesh_access;
-+	int ret;
-+	unsigned long retry_limit;
-+
-+	memset(&mesh_access, 0, sizeof(mesh_access));
-+	mesh_access.data[0] = cpu_to_le32(CMD_ACT_SET);
-+
-+	if (!strict_strtoul(buf, 10, &retry_limit))
-+		return -ENOTSUPP;
-+	if (retry_limit > 15)
-+		return -ENOTSUPP;
-+
-+	mesh_access.data[1] = cpu_to_le32(retry_limit);
-+
-+	ret = lbs_mesh_access(priv, CMD_ACT_MESH_SET_GET_PRB_RSP_LIMIT,
-+			&mesh_access);
-+	if (ret)
-+		return ret;
-+
-+	return strlen(buf);
-+}
-+
- static int lbs_add_rtap(struct lbs_private *priv);
- static void lbs_remove_rtap(struct lbs_private *priv);
- static int lbs_add_mesh(struct lbs_private *priv);
-@@ -375,8 +427,16 @@ static DEVICE_ATTR(lbs_mesh, 0644, lbs_mesh_get, lbs_mesh_set);
-  */
- static DEVICE_ATTR(anycast_mask, 0644, lbs_anycast_get, lbs_anycast_set);
- 
-+/**
-+ * prb_rsp_limit attribute to be exported per mshX interface
-+ * through sysfs (/sys/class/net/mshX/prb_rsp_limit)
-+ */
-+static DEVICE_ATTR(prb_rsp_limit, 0644, lbs_prb_rsp_limit_get,
-+		lbs_prb_rsp_limit_set);
-+
- static struct attribute *lbs_mesh_sysfs_entries[] = {
- 	&dev_attr_anycast_mask.attr,
-+	&dev_attr_prb_rsp_limit.attr,
- 	NULL,
- };
- 
--- 
-1.5.6.3
+No, but we can open one ;) It's strange, but nobody but me apparently
+found the bug so far, even though it has been in there forever. Might be
+due to slub debugging being disabled by default even if you enable
+SLUB_DEBUG in Kconfig (you also need to enable SLUB_DEBUG_ON)
 
+johannes
 
+--=-v0zdultIiSYu9mzERsjO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJPoTKAAoJEKVg1VMiehFYSdUP/R4ei99b9KAguzjdzXZphnHS
+RApr0r35R8BM9/zQOjRgnkppsTPUpi/rpsnQG4ggZZNJ5iq1/9FqRzXZoQZxgwuz
+uLY7ID9wvZJTH6Ajt7eUgr44N/0u9x766/2OgX63olMkx4gk/z0iCn+w6OYfha5T
+eXKJcVLHY1DZs8J4FPAI9NVsj55qR6oV2GX2YhS6A5Aweilp0qelRh5xBfHIcwL6
+760rf8yuT4W2+CAX+gxyZANh4NOA6Uxz/jKUWWFqwWpY8cikZRLx/vJqTfOPWe8q
+HBHuoz0z3D6faTOlUULyO/zVFsGrhccWpf1rI6CbMHgCGmus/iiml+RjSLZUwur0
+mb/QdjWWVT8/0bpMfcr+NcCOz1PBAA+LejXCXlp45+65sfm6zdj0nqiQ9VowaujW
+pfAQ4ZWUflaDl+i51TL1Uqcc2OgnP7InufTsbdVifo4nq9TlhF5Xcf6p7swUMGCF
+smvp7BvXbcJpDzWyo5wlv6AgNpNt8cWA3Nq681i8eCOrE32w/0xRZceHndw4x2dD
+omB8ORb5oJS98n0C6IYqDYKz0edO5N197chbH7inSpMmx1RuqhMRbangmBGSwuWQ
+kZaR+du07qUA30ujJGufgLcG1sT0MLnxm/LoDRPmdYnWcCDqDIkZmXL87Hin0RRt
+MPVO3+GF1wKiDHrphmX0
+=6p+6
+-----END PGP SIGNATURE-----
+
+--=-v0zdultIiSYu9mzERsjO--
 
