@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:56019 "EHLO mx2.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:13209 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751456AbYLOSBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 13:01:04 -0500
-Subject: Re: Fuijtsu Lifebook RFKILL support
-From: Dan Williams <dcbw@redhat.com>
-To: tony@linx.net
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Len Brown <lenb@kernel.org>, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
-	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
-In-Reply-To: <1229361241.13400.1.camel@localhost>
-References: <1228957506.4045.11.camel@localhost>
-	 <20081211165247.GA4844@khazad-dum.debian.net>
-	 <1229016827.6446.6.camel@localhost>
-	 <20081211194734.GA18132@khazad-dum.debian.net>
-	 <1229046602.4030.13.camel@localhost>
-	 <20081212195331.GA12679@khazad-dum.debian.net>
-	 <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain>
-	 <1229172465.4010.11.camel@localhost>
-	 <20081213132857.GA11428@khazad-dum.debian.net>
-	 <1229274343.6775.15.camel@localhost.localdomain>
-	 <20081215115336.GD17648@khazad-dum.debian.net>
-	 <1229354348.12163.20.camel@localhost.localdomain>
-	 <1229361241.13400.1.camel@localhost>
+	id S1753049AbYLIABZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2008 19:01:25 -0500
+Subject: Re: [PATCH] iwlwifi: cleanup (remove pm_state)
+From: reinette chatre <reinette.chatre@intel.com>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <eb3ff54b0812050816i5ee503b6o6c107ace966b204c@mail.gmail.com>
+References: <eb3ff54b0812050816i5ee503b6o6c107ace966b204c@mail.gmail.com>
 Content-Type: text/plain
-Date: Mon, 15 Dec 2008 12:59:44 -0500
-Message-Id: <1229363984.12163.114.camel@localhost.localdomain> (sfid-20081215_190109_958887_3179D2C6)
+Date: Mon, 08 Dec 2008 16:02:26 -0800
+Message-Id: <1228780946.8341.17.camel@rc-desk> (sfid-20081209_010131_117898_85F45CBE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-12-15 at 17:14 +0000, Tony Vroon wrote:
-> On Mon, 2008-12-15 at 10:19 -0500, Dan Williams wrote:
-> > I plan to beat the shit out of the hal killswitch support pretty soon.
-> > AFAIK it still doesn't know about softblock, which is part of the whole
-> > reason for the rfkill rewrite in 2.6.26 anyway.  It also doesn't yet
-> > (AFAIK) support uevents from killswitches either, which sucks.
+On Fri, 2008-12-05 at 08:16 -0800, Rami Rosen wrote:
+> This patches removes unused variable (pm_state) from iwl-dev.h and
+> from iwl-3945.h. (wireless-testing tree)
 > 
-> Thanks Dan.
-> Could you let me know when you've committed this code so I have another
-> shot at implementing rfkill reporting in fujitsu-laptop?
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+> 
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h
+> b/drivers/net/wireless/iwlwifi/iwl-3945.h
+> index 5c2c15e..b7f31d6 100644
 
-Yeah, though the HAL support will be coded to the kernel rfkill devices,
-so if the platform or the wifi driver supports the kernel rfkill
-interface, the HAL bits should work.
+Thank you.
 
-> P.S. Did you get my e-mail about the Sierra Wireless MC8790?
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
-Yes; it's hal-info commit 8912ec2b5d0a221a74156c047b18a26b2d916e13.
-
-Dan
+Reinette
 
 
