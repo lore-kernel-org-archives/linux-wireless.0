@@ -1,152 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:14429 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbYLOPrt (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2541 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361AbYLIPnM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 10:47:49 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1275712wah.21
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 07:47:48 -0800 (PST)
-Message-ID: <69e28c910812150747j60cf17d9nc2e24aabb991d2a9@mail.gmail.com> (sfid-20081215_164753_893383_9E7F4D74)
-Date: Mon, 15 Dec 2008 16:47:48 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [PATCH] ath5k: set mac address in add_interface
-Cc: maximlevitsky@gmail.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081118044037.GA18983@hash.localnet>
+	Tue, 9 Dec 2008 10:43:12 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+Subject: Re: [PATCH 1/2] mac80211: add suspend/resume callbacks
+Date: Tue, 9 Dec 2008 10:40:49 -0500
+Message-Id: <20081209152908.M73523@bobcopeland.com> (sfid-20081209_164316_957560_02961935)
+In-Reply-To: <1227431953.3599.37.camel@johannes.berg>
+References: <1227415286-30179-2-git-send-email-me@bobcopeland.com> (sfid-20081123_054218_217354_D63E2DF4) <1227431953.3599.37.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081118044037.GA18983@hash.localnet>
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch regressed support for aireplay-ng's "fragmentation attack" feature!
+On Sun, 23 Nov 2008 10:19:13 +0100, Johannes Berg wrote
+> I think this should run through interfaces twice, in the first run to
+> remove keys, then remove stas and then in the second run remove the
+> interfaces, because otherwise you may be having keys left when the sta
+> for which the key was has been removed.
 
-Prior to the landing of this patch (as commit
-caeb36d73b23b52a0ea2a8368502ef8230fa67b3), applying the patch @
-http://patches.aircrack-ng.org/mac80211_2.6.28-rc4-wl_frag+ack_v2.patch
-allowed aireplay-ng's fragmentation attack to work with almost all
-mac80211 drivers, including ath5k. After the landing of this patch,
-the attack fails with "No answer, repeating...". (Regression found
-using git bisect, and verified by local backout of commit
-caeb36d73b23b52a0ea2a8368502ef8230fa67b3.)
+Is this what you had in mind? (now on top of your cfg80211 patch, btw
+it called ->suspend() in the resume hook)
 
+I tested this with ath5k, it works in the sense that device suspends and
+resumes without any hangs or errors.
 
-On Tue, Nov 18, 2008 at 5:40 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> Hi Maxim,
->
-> Please try this patch.  I didn't have a problem changing the mac address
-> after it was set to something else.  I did kick it to re-associate with
-> the AP, though.
->
-> Subject: [PATCH] ath5k: set mac address in add_interface
->
-> Configure the mac address in add_interface and clear it in
-> remove_interface so that users can change the mac address
-> to something other than the one in the eeprom.  Also avoid
-> setting it at attach time so that we won't ack packets
-> until fully set up.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  drivers/net/wireless/ath5k/attach.c |   12 +++---------
->  drivers/net/wireless/ath5k/base.c   |   13 +++++++++++--
->  2 files changed, 14 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/attach.c b/drivers/net/wireless/ath5k/attach.c
-> index 51d5698..49d82d7 100644
-> --- a/drivers/net/wireless/ath5k/attach.c
-> +++ b/drivers/net/wireless/ath5k/attach.c
-> @@ -106,7 +106,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
->  {
->        struct ath5k_hw *ah;
->        struct pci_dev *pdev = sc->pdev;
-> -       u8 mac[ETH_ALEN];
-> +       u8 mac[ETH_ALEN] = {};
->        int ret;
->        u32 srev;
->
-> @@ -317,15 +317,9 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
->                goto err_free;
->        }
->
-> -       /* Set MAC address */
-> -       ret = ath5k_eeprom_read_mac(ah, mac);
-> -       if (ret) {
-> -               ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
-> -                       sc->pdev->device);
-> -               goto err_free;
-> -       }
-> -
-> +       /* MAC address is cleared until add_interface */
->        ath5k_hw_set_lladdr(ah, mac);
-> +
->        /* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
->        memset(ah->ah_bssid, 0xff, ETH_ALEN);
->        ath5k_hw_set_associd(ah, ah->ah_bssid, 0);
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 34cd1a4..d5bf62a 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -707,7 +707,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
->  {
->        struct ath5k_softc *sc = hw->priv;
->        struct ath5k_hw *ah = sc->ah;
-> -       u8 mac[ETH_ALEN];
-> +       u8 mac[ETH_ALEN] = {};
->        int ret;
->
->        ATH5K_DBG(sc, ATH5K_DEBUG_ANY, "devid 0x%x\n", pdev->device);
-> @@ -777,7 +777,13 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
->        tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
->        setup_timer(&sc->calib_tim, ath5k_calibrate, (unsigned long)sc);
->
-> -       ath5k_hw_get_lladdr(ah, mac);
-> +       ret = ath5k_eeprom_read_mac(ah, mac);
-> +       if (ret) {
-> +               ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
-> +                       sc->pdev->device);
-> +               goto err_queues;
-> +       }
-> +
->        SET_IEEE80211_PERM_ADDR(hw, mac);
->        /* All MAC address bits matter for ACKs */
->        memset(sc->bssidmask, 0xff, ETH_ALEN);
-> @@ -2765,6 +2771,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
->        /* Set to a reasonable value. Note that this will
->         * be set to mac80211's value at ath5k_config(). */
->        sc->bintval = 1000;
-> +       ath5k_hw_set_lladdr(sc->ah, conf->mac_addr);
->
->        ret = 0;
->  end:
-> @@ -2777,11 +2784,13 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
->                        struct ieee80211_if_init_conf *conf)
->  {
->        struct ath5k_softc *sc = hw->priv;
-> +       u8 mac[ETH_ALEN] = {};
->
->        mutex_lock(&sc->lock);
->        if (sc->vif != conf->vif)
->                goto end;
->
-> +       ath5k_hw_set_lladdr(sc->ah, mac);
->        sc->vif = NULL;
->  end:
->        mutex_unlock(&sc->lock);
-> --
-> 1.5.4.2.182.gb3092
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+However, netif_running(sdata->dev) seems to randomly be false for wlan0 on
+the resume side so the interface doesn't always come up.  I haven't had
+time to track that down but it's not consistent.
 
+>From ec2f9fb1db1f98caf28e90f9838a42f0508a3a80 Mon Sep 17 00:00:00 2001
+From: Bob Copeland <me@bobcopeland.com>
+Date: Mon, 27 Oct 2008 09:17:46 -0400
+Subject: [PATCH] mac80211: add suspend/resume callbacks
 
+This patch introduces suspend and resume callbacks to mac80211,
+allowing mac80211 to quiesce its state (bringing down interfaces,
+removing keys, etc) in preparation for suspend.  cfg80211 will call
+the suspend hook before the device suspend, and resume hook after
+the device resume.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ net/mac80211/Makefile |    2 +
+ net/mac80211/cfg.c    |   18 +++++++
+ net/mac80211/pm.c     |  125 +++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/pm.h     |    9 ++++
+ 4 files changed, 154 insertions(+), 0 deletions(-)
+ create mode 100644 net/mac80211/pm.c
+ create mode 100644 net/mac80211/pm.h
+
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 31cfd1f..0ecbc93 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -37,6 +37,8 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
+ 	mesh_plink.o \
+ 	mesh_hwmp.o
+ 
++mac80211-$(CONFIG_PM) += pm.o
++
+ # objects for PID algorithm
+ rc80211_pid-y := rc80211_pid_algo.o
+ rc80211_pid-$(CONFIG_MAC80211_DEBUGFS) += rc80211_pid_debugfs.o
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7a7a6c1..5607045 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -16,6 +16,7 @@
+ #include "cfg.h"
+ #include "rate.h"
+ #include "mesh.h"
++#include "pm.h"
+ 
+ static bool nl80211_type_check(enum nl80211_iftype type)
+ {
+@@ -1107,6 +1108,21 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
+ 	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ }
+ 
++#ifdef CONFIG_PM
++static int ieee80211_suspend(struct wiphy *wiphy)
++{
++	return __ieee80211_suspend(wiphy_priv(wiphy));
++}
++
++static int ieee80211_resume(struct wiphy *wiphy)
++{
++	return __ieee80211_resume(wiphy_priv(wiphy));
++}
++#else
++#define ieee80211_suspend NULL
++#define ieee80211_resume NULL
++#endif
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1135,4 +1151,6 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.change_bss = ieee80211_change_bss,
+ 	.set_txq_params = ieee80211_set_txq_params,
+ 	.set_channel = ieee80211_set_channel,
++	.suspend = ieee80211_suspend,
++	.resume = ieee80211_resume,
+ };
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+new file mode 100644
+index 0000000..2fc96f9
+--- /dev/null
++++ b/net/mac80211/pm.c
+@@ -0,0 +1,125 @@
++#include <net/mac80211.h>
++#include <net/rtnetlink.h>
++
++#include "ieee80211_i.h"
++#include "pm.h"
++#include "led.h"
++
++int __ieee80211_suspend(struct ieee80211_hw *hw)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_if_init_conf conf;
++	struct sta_info *sta;
++
++	printk(KERN_DEBUG "mac80211: suspending\n");
++
++	flush_workqueue(local->hw.workqueue);
++
++	/* disable keys */
++	list_for_each_entry(sdata, &local->interfaces, list)
++		ieee80211_disable_keys(sdata);
++
++	/* remove STAs */
++	list_for_each_entry(sta, &local->sta_list, list) {
++
++		/* disable aggregation */
++		ieee80211_sta_tear_down_BA_sessions(sdata, sta->sta.addr);
++
++		if (local->ops->sta_notify) {
++			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++				sdata = container_of(sdata->bss,
++					     struct ieee80211_sub_if_data,
++					     u.ap);
++
++			local->ops->sta_notify(hw, &sdata->vif,
++				STA_NOTIFY_REMOVE, &sta->sta);
++		}
++	}
++
++	/* remove all interfaces */
++	list_for_each_entry(sdata, &local->interfaces, list) {
++
++		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++		    sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++		    netif_running(sdata->dev)) {
++			conf.vif = &sdata->vif;
++			conf.type = sdata->vif.type;
++			conf.mac_addr = sdata->dev->dev_addr;
++			local->ops->remove_interface(hw, &conf);
++		}
++	}
++
++	/* stop hardware */
++	if (local->open_count) {
++		ieee80211_led_radio(local, false);
++		local->ops->stop(hw);
++	}
++	return 0;
++}
++
++int __ieee80211_resume(struct ieee80211_hw *hw)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_if_init_conf conf;
++	struct sta_info *sta;
++	int res;
++
++	printk(KERN_DEBUG "mac80211: resuming\n");
++
++	/* restart hardware */
++	if (local->open_count) {
++		res = local->ops->start(hw);
++
++		ieee80211_led_radio(local, hw->conf.radio_enabled);
++	}
++
++	/* add interfaces */
++	list_for_each_entry(sdata, &local->interfaces, list) {
++
++		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
++		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
++		    netif_running(sdata->dev)) {
++			conf.vif = &sdata->vif;
++			conf.type = sdata->vif.type;
++			conf.mac_addr = sdata->dev->dev_addr;
++			res = local->ops->add_interface(hw, &conf);
++		}
++	}
++
++	/* add STAs back */
++	list_for_each_entry(sta, &local->sta_list, list) {
++
++		if (local->ops->sta_notify) {
++			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++				sdata = container_of(sdata->bss,
++					     struct ieee80211_sub_if_data,
++					     u.ap);
++
++			local->ops->sta_notify(hw, &sdata->vif,
++				STA_NOTIFY_ADD, &sta->sta);
++		}
++	}
++
++	/* add back keys */
++	list_for_each_entry(sdata, &local->interfaces, list)
++		if (netif_running(sdata->dev))
++			ieee80211_enable_keys(sdata);
++
++	/* setup RTS and frag thresholds */
++	if (local->ops->set_rts_threshold)
++		local->ops->set_rts_threshold(hw, local->rts_threshold);
++
++	if (local->ops->set_frag_threshold)
++		local->ops->set_frag_threshold(hw,
++			local->fragmentation_threshold);
++
++	/* reconfigure hardware */
++	ieee80211_hw_config(local, ~0);
++
++	netif_addr_lock_bh(local->mdev);
++	ieee80211_configure_filter(local);
++	netif_addr_unlock_bh(local->mdev);
++	return 0;
++}
+diff --git a/net/mac80211/pm.h b/net/mac80211/pm.h
+new file mode 100644
+index 0000000..3d5ff02
+--- /dev/null
++++ b/net/mac80211/pm.h
+@@ -0,0 +1,9 @@
++#ifndef __MAC80211_PM_H
++#define __MAC80211_PM_H
++
++#ifdef CONFIG_PM
++int __ieee80211_suspend(struct ieee80211_hw *hw);
++int __ieee80211_resume(struct ieee80211_hw *hw);
++#endif
++
++#endif
+-- 
+1.6.0.4
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Bob Copeland %% www.bobcopeland.com
+
+
