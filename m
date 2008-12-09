@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:57673 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190AbYLCQyX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 11:54:23 -0500
-Subject: Re: Unusually low speeds with ath5k and iwl3945
-From: reinette chatre <reinette.chatre@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"wally@theblackmoor.net" <wally@theblackmoor.net>
-In-Reply-To: <492719ED.5000006@gmail.com>
-References: <492719ED.5000006@gmail.com>
-Content-Type: text/plain
-Date: Wed, 03 Dec 2008 08:55:19 -0800
-Message-Id: <1228323319.12006.3.camel@rc-desk> (sfid-20081203_175428_083445_9FF8226C)
-Mime-Version: 1.0
+Received: from ik-out-1112.google.com ([66.249.90.176]:57596 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751826AbYLIGha (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Dec 2008 01:37:30 -0500
+Received: by ik-out-1112.google.com with SMTP id c29so1201936ika.5
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2008 22:37:28 -0800 (PST)
+Message-ID: <eb3ff54b0812082237v35bdd49jbce0ad59c218bc26@mail.gmail.com> (sfid-20081209_073735_148095_BF73E8CD)
+Date: Tue, 9 Dec 2008 08:37:28 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH ] iwlwifi: fix build error (iwl-rx.c).
+Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com,
+	m.sujith@gmail.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-11-21 at 12:28 -0800, Maxim Levitsky wrote:
+This patch adds #ifdef CONFIG_IWLWIFI_DEBUG in iwl_rx_reply_rx() method
+in iwlwifi/iwl-rx.c) to avoid build error.
+,caused by commit c778f6d6b339bb4981d5d2dd8716286f756b8474.
 
-> sorry for cross-posting, but this issue really spans both iwl3945 and ath5k.
-> 
-> I have two laptops (acer 5720, and aspire one) and I see some strange speed issues.
-> 
-> I initially blamed iwl3945, then thought it got fixed, but now I have ath5k, and speeds are low
-> and I suspect that both drivers has bugs regarding to speed.
+(wireless-testing tree.)
 
-We just posted some fixes to iwl3945 rate scaling. Could you please test
-with http://marc.info/?l=linux-wireless&m=122824880823630&w=2 ?
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-Thank you
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c
+b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 1938e6d..2a008b1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -1071,9 +1071,10 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
+ 		priv->last_rx_noise = IWL_NOISE_MEAS_NOT_AVAILABLE;
 
-Reinette
-
-
+ 	/* Set "1" to report good data frames in groups of 100 */
++#ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (unlikely(priv->debug_level & IWL_DL_RX))
+ 		iwl_dbg_report_frame(priv, rx_start, len, header, 1);
+-
++#endif
+ 	IWL_DEBUG_STATS_LIMIT("Rssi %d, noise %d, qual %d, TSF %llu\n",
+ 		rx_status.signal, rx_status.noise, rx_status.signal,
+ 		(unsigned long long)rx_status.mactime);
