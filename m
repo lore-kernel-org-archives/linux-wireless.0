@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:28787 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbYLWUnQ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44129 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753727AbYLIAwR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 15:43:16 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so1023020fgg.17
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 12:43:14 -0800 (PST)
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "linville\@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel\@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Winkler\, Tomas" <tomas.winkler@intel.com>
-Subject: Re: [PATCH 10/10] iwl3945: use rx queue management infrastructure from iwlcore
-References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-2-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-3-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-4-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-5-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-6-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-7-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-8-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-9-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-10-git-send-email-yi.zhu@intel.com>
-	<1229916683-9772-11-git-send-email-yi.zhu@intel.com>
-	<87r640s3ph.fsf@litku.valot.fi>
-	<1230001118.2570.35.camel@debian.sh.intel.com>
-Date: Tue, 23 Dec 2008 22:43:10 +0200
-In-Reply-To: <1230001118.2570.35.camel@debian.sh.intel.com> (Zhu Yi's message of "Tue\, 23 Dec 2008 10\:58\:37 +0800")
-Message-ID: <87tz8ur5b5.fsf@litku.valot.fi> (sfid-20081223_214323_592120_83F3FCB6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-From: Kalle Valo <kalle.valo@iki.fi>
+	Mon, 8 Dec 2008 19:52:17 -0500
+Subject: Re: Userspace tools: Roadmap?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan E <trg_info@mailhaven.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1228783416.25383.1288982771@webmail.messagingengine.com>
+References: <1228692546.8826.1288759933@webmail.messagingengine.com>
+	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>
+	 <1228778295.10662.1288975589@webmail.messagingengine.com>
+	 <1228778801.22164.156.camel@johannes.berg>
+	 <1228783416.25383.1288982771@webmail.messagingengine.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nfkR1U6tv6K9+dnEiDE8"
+Date: Tue, 09 Dec 2008 01:51:43 +0100
+Message-Id: <1228783903.22164.166.camel@johannes.berg> (sfid-20081209_015222_761989_1C3CB0A7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zhu Yi <yi.zhu@intel.com> writes:
 
-> On Mon, 2008-12-22 at 22:07 +0800, Kalle Valo wrote:
->> Yes, ifconfig up works but now iwlist wlan0 scan crashes. I just
->> tested this once due to lack of time.
->> 
->> I hope I get my wifi working before Christmas ;)
->
-> http://marc.info/?l=linux-wireless&m=123000088608330&w=2 should fix the
-> problem. Thanks a lot for your testing.
+--=-nfkR1U6tv6K9+dnEiDE8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Yes, that patch fixed it. Now my wifi is working again, thank you for
-the present! :)
+On Mon, 2008-12-08 at 19:43 -0500, Dan E wrote:
 
-Just to be clear, these are the patches I have applied on top of
-current wireless-testing:
+> When I reboot, modprobe the driver, and do 'iwconfig wlan0 channel 9
+> commit' the .config callback does run.  If I leave off the 'commit' it
+> does not. =20
 
-Revert "iwl3945: remove iwl-3945-led.[ch]"
-iwl3945: use rx queue management infrastructure from iwlcore
-iwlwifi: fix warning 'Should it be static'
-iwlwifi: kill retry_rate sysfs for iwlagn
-iwlwifi: move sysfs status entry to debugfs
-iwl3945: use iwl3945_tx_cmd instead of iwl_tx_cmd
-iwl3945: switch to the iwl-core send_card_state routine
-iwl3945: remove iwl-3945-led.[ch]
-iwl3945: sync tx queue data structure with iwlagn
-iwl3945: adding utils ops
-iwl3945: rearrange 3945 tfd
+Strange. But .start also runs, right? Something must be turning up the
+interface.
 
-If I spot any regressions, you will hear from me ;)
+> I'm trying to validate as many callbacks as I can before
+> moving on to the next step, enabling the interface.
+>=20
+> An additional question, if I may... Is wlan0 considered a "virtual
+> interface" or does that term only apply to additional interfaces created
+> with iw?  The whole vif thing has me a little confused.
 
--- 
-Kalle Valo
+Yes, wlan0 is a virtual interface too, the first one.
+
+johannes
+
+--=-nfkR1U6tv6K9+dnEiDE8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJPcEbAAoJEKVg1VMiehFYRxgP/2oqKncq5D6G6G9itk+l27cr
+qU6ehXbjP5QS4z+q5try4sOaeynlJXE7CkLP1jPQq1LclPFVjugVTwN6qX/yvMNd
+pZ8wiJa6T6BRPRwTuyVSkT6m4q978zral1UTsW8thH86imbZH/UTJ+PyQXjnh4RQ
++7GHIvuZWCdxhdTdSHsdKxdPE8CVbHlRJTvPH8SRQ+a5AgCHqbmIdIAwL3plHQvz
+6r4lGGOr3cU1ilbWK/jK4Rj9LyV1SyI0t5X7C5JDDT/3Kx9o/aJLf+kns2XTLPrn
+wOpOJlrT8E9quP80YGHeQq+pUCFm1r1EiEIod/uadjXawqJuiTZJkC0PTiu+eOz2
+5TxpMoEQJ9m5ooujTZ/SPXpj6Dn4pv4cjh73wUzvbQSBNipeNy89gcU2WzP7PpRR
+9oFqQ6qxcPMRS7KG9mAm6NV7uw7XrDRndOtXHmHZRtChXWPjbBWdmlTQ+woKnmDr
+IK3UnKuGkjWhm9ODtKADelCq6Mag1GH7MrbLSiKQvMFnRwbtVTaCqtjguRbs0n9i
+zeQtgaA+FrQJfkUvYiPGpvfVfoCBp5o1hUr+rxVM3UZGKt06NwE8AYGD4uj8w3x/
+LZNp2Eh9cKBVpo6J7spiyb9G+vFVBHpZSo0qhBe7HOG+SNt48xdjlRWbAjTnhiNR
+Ag+q5KD4ukPv9vlISSrU
+=pqjF
+-----END PGP SIGNATURE-----
+
+--=-nfkR1U6tv6K9+dnEiDE8--
+
