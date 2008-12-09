@@ -1,80 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:55180 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754399AbYLIUI7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42721 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbYLIBH5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 15:08:59 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] p54: enforce strict tx_queue limits
-Date: Tue, 9 Dec 2008 21:09:00 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812092109.00988.chunkeey@web.de> (sfid-20081209_210901_896878_1D486ED4)
+	Mon, 8 Dec 2008 20:07:57 -0500
+Subject: Re: [RFT] mac80211: clean up set_key callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>, Chr <chunkeey@web.de>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Kalle Valo <kalle.valo@nokia.com>
+In-Reply-To: <20081209010144.GA8828@hash.localnet>
+References: <1228757035.22164.94.camel@johannes.berg>
+	 <20081209010144.GA8828@hash.localnet>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8LeNlGswjEFDflLlB651"
+Date: Tue, 09 Dec 2008 02:07:25 +0100
+Message-Id: <1228784845.22164.170.camel@johannes.berg> (sfid-20081209_020800_805523_9FD1EEE5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch fixes an old FIXME in p54pci.c by moving the "queue full" 
-check into the common library, where we can deal with it properly.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-12-09 20:13:56.467888032 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-12-09 20:49:21.235888230 +0100
-@@ -889,7 +889,27 @@ static int p54_assign_address(struct iee
- 		return -EINVAL;
- 
- 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
-+
- 	left = skb_queue_len(&priv->tx_queue);
-+	if (unlikely(left >= 28)) {
-+		/*
-+		 * The tx_queue is nearly full!
-+		 * We have throttle normal data traffic, because we must
-+		 * have a few spare slots for control frames left.
-+		 */
-+		ieee80211_stop_queues(dev);
-+
-+		if (unlikely(left == 32)) {
-+			/*
-+			 * The tx_queue is now really full.
-+			 *
-+			 * TODO: check if the device has crashed and reset it.
-+			 */
-+			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
-+			return -ENOSPC;
-+		}
-+	}
-+
- 	while (left--) {
- 		u32 hole_size;
- 		info = IEEE80211_SKB_CB(entry);
-@@ -918,7 +938,7 @@ static int p54_assign_address(struct iee
- 	if (!target_skb) {
- 		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
- 		ieee80211_stop_queues(dev);
--		return -ENOMEM;
-+		return -ENOSPC;
- 	}
- 
- 	info = IEEE80211_SKB_CB(skb);
-diff -Nurp a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
---- a/drivers/net/wireless/p54/p54pci.c	2008-12-09 20:05:21.251888445 +0100
-+++ b/drivers/net/wireless/p54/p54pci.c	2008-12-07 22:04:45.952897552 +0100
-@@ -332,13 +332,6 @@ static void p54p_tx(struct ieee80211_hw 
- 
- 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
- 	P54P_READ(dev_int);
--
--	/* FIXME: unlikely to happen because the device usually runs out of
--	   memory before we fill the ring up, but we can make it impossible */
--	if (idx - device_idx > ARRAY_SIZE(ring_control->tx_data) - 2) {
--		p54_free_skb(dev, skb);
--		printk(KERN_INFO "%s: tx overflow.\n", wiphy_name(dev->wiphy));
--	}
- }
- 
- static void p54p_stop(struct ieee80211_hw *dev)
+--=-8LeNlGswjEFDflLlB651
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2008-12-08 at 20:01 -0500, Bob Copeland wrote:
+> On Mon, Dec 08, 2008 at 06:23:55PM +0100, Johannes Berg wrote:
+> > The set_key callback now seems rather odd, passing a MAC address
+> > instead of a station struct, and a local address instead of a
+> > vif struct. Change that.
+> >=20
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> Works here... ath5k changes:
+>=20
+>     Acked-by: Bob Copeland <me@bobcopeland.com>
+
+Thanks for testing.
+
+> But ath5k probably wants this one-liner too (feel free to just=20
+> roll it up into yours):
+
+Right, I'll roll it up so you don't have to resend it.
+
+johannes
+
+--=-8LeNlGswjEFDflLlB651
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJPcTJAAoJEKVg1VMiehFYXdQP/je/JrlZEgnLBraLrQwwqEzF
+vCXCuKPOCWe2JJs6J0SBko79Moj8dgFzdZXg3RZDg6b5BE/ahsCIV6KZU0lk7Uzm
+Yd92ItrUJ/nYffMtAM9byhRk4CCPS49TLKl9WlOLEclXqWmmAA66eDPrb0s6aivc
+Ri1g3GDc/eR+zmpoRk8JsfHCs5ilrbdcaB2QsaIap5LtJ8xV3vdCE9dpqiV8gqBZ
+J+WTMYhc1LY6Lz/WIENWeYlLWYZBjyN75YCwC4JTWWoS74zj6rG8EM80aJGndyl+
+Z9PJt47+c93G3mIP0vR8Zoa6TyYzTWnrZVaxYBP8LR4VZhnuOokZVsQ0+XWPrO0r
+O2OMlDnP6giXkGHsALvXNHgTK5I702xJlNuGVwuVoLn7VLEBydg+zjD6lIUSN7CO
+qf4d+RCtUXR1ZDko8pKQfKAkEk54qCquc/5lYql4mi853lUjYPyRX56Lif9qKebA
+dyOlOhtUZ4NqqZMkGnGIXQYP1vKYgB9LM17nzWLflO4MWTNYENPJSi/+BEyLKJea
+LpL3duxzFBLsSFcCSPNkvD+lTBZRTDsPpJxQoQN2bEI6R2FT0wkqyecuNDb5AO7L
+UfMRsxWmwkFXB3dXb1A7XGAZ1mfOwea7R06HFpNPC9OeMCiHsj4sXM7yB2VOLd9S
+R/6jIHGSZcSasBGbaYC+
+=1NvS
+-----END PGP SIGNATURE-----
+
+--=-8LeNlGswjEFDflLlB651--
+
