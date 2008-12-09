@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33795 "EHLO
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:40067 "EHLO
 	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752128AbYLHNPD (ORCPT
+	by vger.kernel.org with ESMTP id S1750891AbYLIQkD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 08:15:03 -0500
-Date: Mon, 8 Dec 2008 15:14:40 +0200
+	Tue, 9 Dec 2008 11:40:03 -0500
+Date: Tue, 9 Dec 2008 18:39:39 +0200
 From: Jouni Malinen <j@w1.fi>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni.Malinen@atheros.com, Luis.Rodriguez@atheros.com,
-	johannes@sipsolutions.net, tomas.winkler@intel.com
-Subject: Re: [RFC v2] mac80211: fix HT channel selection
-Message-ID: <20081208131440.GA7365@jm.kir.nu> (sfid-20081208_141513_953414_5FAA4390)
-References: <18748.62215.331271.141163@gargle.gargle.HOWL>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Subject: Re: [PATCH] ath9k: remove fragmentation workaround again
+Message-ID: <20081209163939.GA7947@jm.kir.nu> (sfid-20081209_174007_214157_057035BB)
+References: <1228821974.22164.201.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <18748.62215.331271.141163@gargle.gargle.HOWL>
+In-Reply-To: <1228821974.22164.201.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 08, 2008 at 03:42:23PM +0530, Sujith wrote:
+On Tue, Dec 09, 2008 at 12:26:14PM +0100, Johannes Berg wrote:
+> Looking at the RC algorithm this is no longer necessary.
 
-> HT management is done differently for AP and STA modes, unify
-> to just the ->config() callback since HT is fundamentally a
-> PHY property and cannot be per-BSS.
-> 
-> Add a new NL80211 attribute to enable/disable HT (NL80211_ATTR_WIPHY_HT).
-> NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET now has only the secondary channel
-> offsets.
+> Untested, but the error that used to happen will no longer happen since
+> now the sub-structure is assigned by the driver, in rate_driver_data,
+> per fragment.
 
-Looks reasonable to me. Please just make sure this gets in before
-NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET additions get included in any
-official kernel release since otherwise this would change the userspace
-API..
+Thanks! Based on a quick test, fragmentation was working with this
+patch. I never tested the old issue, so I'm not sure what exactly was
+failing, but anyway, I do see fragments in a sniffer log and the device
+did not crash ;-).
 
 -- 
 Jouni Malinen                                            PGP id EFC895FA
