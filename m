@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:58604 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512AbYLAPm4 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53574 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752152AbYLILk0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 10:42:56 -0500
-To: "Vivek Natarajan" <vnatarajan@atheros.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: Enhancements to dynamic power save.
-References: <20081202011754.GA9382@myhost.users.atheros.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 01 Dec 2008 17:42:35 +0200
-In-Reply-To: <20081202011754.GA9382@myhost.users.atheros.com> (ext Vivek Natarajan's message of "Mon\, 1 Dec 2008 17\:17\:54 -0800")
-Message-ID: <87wsej6gwk.fsf@nokia.com> (sfid-20081201_164259_068520_00CF0430)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 9 Dec 2008 06:40:26 -0500
+Subject: [PATCH] mac80211/cfg80211: check endianness in sparse runs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Sam Ravnborg <sam@ravnborg.org>
+Content-Type: text/plain
+Date: Tue, 09 Dec 2008 12:39:52 +0100
+Message-Id: <1228822793.22164.210.camel@johannes.berg> (sfid-20081209_124030_201406_D7FD6C5C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan <vnatarajan@atheros.com> writes:
+Make sure sparse checks endianness when run on mac80211/cfg80211.
 
-> This patch is based on Kalle's initial RFC patches on dynamic power save.
-> Since ath9k/ath5k,stlc45xx and b43 need the driver to send the null
-> frame, it is appropriate to do it from mac80211. 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sam Ravnborg <sam@ravnborg.org>
+---
+It doesn't hurt setting this for the compiler as well.
 
-Yes, I agree. Actually the way I implemented this in stlc45xx was to
-use PS-Poll. In future, it would be nice to have it supported as well,
-but we can add it later.
+ net/mac80211/Makefile |    2 ++
+ net/wireless/Makefile |    2 ++
+ 2 files changed, 4 insertions(+)
 
-> +	directed_tim = check_tim(&elems, ifsta->aid, &is_mc);
-> +
-> +	if (directed_tim || is_mc) {
-> +		if (local->hw.conf.flags && IEEE80211_CONF_PS) {
-> +			local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-> +			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-> +			ieee80211_send_nullfunc(local, sdata, 0);
-> +		}
-> +	}
+--- everything.orig/net/mac80211/Makefile	2008-12-08 21:53:02.000000000 +0100
++++ everything/net/mac80211/Makefile	2008-12-08 21:54:02.000000000 +0100
+@@ -46,3 +46,5 @@ rc80211_minstrel-$(CONFIG_MAC80211_DEBUG
+ 
+ mac80211-$(CONFIG_MAC80211_RC_PID) += $(rc80211_pid-y)
+ mac80211-$(CONFIG_MAC80211_RC_MINSTREL) += $(rc80211_minstrel-y)
++
++ccflags-y += -D__CHECK_ENDIAN__
+--- everything.orig/net/wireless/Makefile	2008-12-08 21:53:02.000000000 +0100
++++ everything/net/wireless/Makefile	2008-12-08 21:54:02.000000000 +0100
+@@ -8,3 +8,5 @@ obj-$(CONFIG_LIB80211_CRYPT_TKIP) += lib
+ cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o
+ cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o
+ cfg80211-$(CONFIG_NL80211) += nl80211.o
++
++ccflags-y += -D__CHECK_ENDIAN__
 
-Maybe I have been working too much with slow embedded hardware, but can
-ath5k really wake up for the beacon, send the beacon to the host,
-mac80211 read the beacon and then wakeup the hardware to listen for
-multicast frames following the beacon? The multicast frames are sent
-immeaditely after the dtim beacon, so this should happen really quick.
-But most probably I'm just missing something here.
 
-In stlc45xx the firmware listens automatically for the multicast
-beacons following dtim beacons and mac80211 doesn't have to do
-anything for them.
-
-> -		ret = ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-> +			ret = ieee80211_hw_config(local,
-> +						  IEEE80211_CONF_CHANGE_PS);
-> +			ieee80211_send_nullfunc(local, sdata, 0);
-
-Maybe we should have a seperate function for enabling and disabling
-power save mode. So that we don't forget sending of the null frame.
-
--- 
-Kalle Valo
