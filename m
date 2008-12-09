@@ -1,71 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48592 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188AbYLWUag (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35737 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752215AbYLIO51 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 15:30:36 -0500
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	mabbaswireless@gmail.com
-In-Reply-To: <20081217174244.M36761@bobcopeland.com>
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
-	 <1229336057.4471.9.camel@johannes.berg>
-	 <1229354532.12163.24.camel@localhost.localdomain>
-	 <20081217174244.M36761@bobcopeland.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ergYgXb5KP8LVtI+kz9h"
-Date: Tue, 23 Dec 2008 21:30:16 +0100
-Message-Id: <1230064216.31228.46.camel@johannes> (sfid-20081223_213039_150741_3B12BD9A)
-Mime-Version: 1.0
+	Tue, 9 Dec 2008 09:57:27 -0500
+Received: from jm (a91-155-82-88.elisa-laajakaista.fi [91.155.82.88])
+	(authenticated bits=0)
+	by jmalinen.user.openhosting.com (8.13.8/8.13.8) with ESMTP id mB9EvNr6017081
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 9 Dec 2008 09:57:24 -0500
+Date: Tue, 9 Dec 2008 16:57:22 +0200
+From: Jouni Malinen <j@w1.fi>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: Disable requests for new scans in AP mode
+Message-ID: <20081209145722.GA2285@jm.kir.nu> (sfid-20081209_155731_121545_5A093E5A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+AP mode operations are seriously affected if mac80211 runs through a
+multi-second scan while the AP is trying to send Beacon frames on the
+operation channel. While this could be implemented in a way that does
+not cause too many problems, it is not very simple and will require
+synchronization with Beacon frame scheduling in the drivers (scan one
+channel at a time between Beacon frames). Furthermore, such scanning
+takes quite a bit longer time and existing userspace applications
+would be likely to timeout while waiting for the results.
 
---=-ergYgXb5KP8LVtI+kz9h
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+For now, just refuse requests for new scans (SIOCSIWSCAN) when in AP
+mode. In practice, this moves the rejection from iwl* drivers into
+mac80211 to make it apply to every mac80211-based driver.
 
-On Wed, 2008-12-17 at 13:21 -0500, Bob Copeland wrote:
-> On Mon, 15 Dec 2008 10:22:12 -0500, Dan Williams wrote
-> > Could be udev event ordering?  We do need to track this down, otherwise
-> > stuff simply won't work when we come back. =20
->=20
-> Sorry for not following up on this so far; I don't usually have a lot
-> of time on weeknights.  I haven't done any exhaustive testing yet but
-> so far, I don't see anything having to do with networking in udev=20
-> monitor, just input, cpus, and virtual consoles.
->=20
-> logs here: http://bobcopeland.com/kernel/wl/ {udev,dbus,hal}.log
->=20
-> Running pm-suspend from pm-utils directly also triggers the problem,=20
-> so that would seem to excuse gnome-power-manager at least.
+This issue shows up in associated stations getting disconnected when
+something (e.g., Network Manager) requests a scan while the interface
+is in AP mode. When doing this continuously (e.g., NM does it every 60
+seconds), the network gets close to useless.
 
-What's the status of this? Should I look into things a bit?
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-johannes
 
---=-ergYgXb5KP8LVtI+kz9h
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Index: wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-12-09 16:27:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn.c	2008-12-09 16:31:25.000000000 +0200
+@@ -2972,12 +2972,6 @@ static int iwl_mac_hw_scan(struct ieee80
+ 		goto out_unlock;
+ 	}
+ 
+-	if (priv->iw_mode == NL80211_IFTYPE_AP) {	/* APs don't scan */
+-		ret = -EIO;
+-		IWL_ERROR("ERROR: APs don't scan\n");
+-		goto out_unlock;
+-	}
+-
+ 	/* We don't schedule scan within next_scan_jiffies period.
+ 	 * Avoid scanning during possible EAPOL exchange, return
+ 	 * success immediately.
+Index: wireless-testing/drivers/net/wireless/iwlwifi/iwl3945-base.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-12-09 16:34:51.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-12-09 16:35:14.000000000 +0200
+@@ -2105,11 +2105,6 @@ static void iwl3945_setup_rxon_timing(st
+ 
+ static int iwl3945_scan_initiate(struct iwl3945_priv *priv)
+ {
+-	if (priv->iw_mode == NL80211_IFTYPE_AP) {
+-		IWL_ERROR("APs don't scan.\n");
+-		return 0;
+-	}
+-
+ 	if (!iwl3945_is_ready_rf(priv)) {
+ 		IWL_DEBUG_SCAN("Aborting scan due to not ready.\n");
+ 		return -EIO;
+@@ -6991,12 +6986,6 @@ static int iwl3945_mac_hw_scan(struct ie
+ 		goto out_unlock;
+ 	}
+ 
+-	if (priv->iw_mode == NL80211_IFTYPE_AP) {	/* APs don't scan */
+-		rc = -EIO;
+-		IWL_ERROR("ERROR: APs don't scan\n");
+-		goto out_unlock;
+-	}
+-
+ 	/* we don't schedule scan within next_scan_jiffies period */
+ 	if (priv->next_scan_jiffies &&
+ 			time_after(priv->next_scan_jiffies, jiffies)) {
+Index: wireless-testing/net/mac80211/wext.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/wext.c	2008-12-09 16:31:01.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2008-12-09 16:31:13.000000000 +0200
+@@ -418,8 +418,7 @@ static int ieee80211_ioctl_siwscan(struc
+ 
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+ 	    sdata->vif.type != NL80211_IFTYPE_ADHOC &&
+-	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
+-	    sdata->vif.type != NL80211_IFTYPE_AP)
++	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
+ 		return -EOPNOTSUPP;
+ 
+ 	/* if SSID was specified explicitly then use that */
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJUUpVAAoJEKVg1VMiehFYD1QQALr9JgHXF8lV8dmPlbxLCpxH
-8vumhnh/nJRw+CLYpYCUslCQmhRnZ8+VPMxeyg6ii8DuvFLNPz636sGHMUTEEumT
-COEZY6BReALHm0lfrzsOtOT7xXo1xaJJ0rJoCWV+mqgzkg+ib0nIfmwOJZImnuZJ
-cD+5179rZXd1qqk4+Ib/nZ2dqSAq217MQFHzIladVppj/Bw2HFDMEkRa9obz30WN
-OOeJXAmIHwLGH5u890US7nukdaXiO2XW9hbzBoyB+ZBERtxq+Mkz2UrKwXPMsOW2
-Gd4a3/4i25O3Vep4N9FM12Rc6DQJzUxV1ekFoFaoSXTm2rOBXGjkrOuc7gvLLoFQ
-+7tJSwuATWnzs/X37ugvYWMg+C7CU2SKlu5rFt/OP+o8PCT9QwmIV4yhz0EViU6d
-gHCXu838aVq1DZUpua5pH2LrK+gUSrtNGneJFRqNUirYS0n3lgocQTRE7hP5XMHH
-C9FoQHjBodWNEv18Uf1hcmnTTI5kH4y9nQ9w25BuR0yis/WKm26J7e+qY8EKLLz7
-+gHlpqfC3MmTicE9qy0nGx6LaY1AaGx6H6Dzs3yG4DWF/DnhrtLCob88W/EVtfUO
-wx4+q6dkjFtyJu2wPI1Gw5JMIIWj6LQ+ZVJQvBZ9ITYsf/EU8ol2cjykVUPC3xDZ
-DYWhx38tik4bK6YAT5tx
-=cH4Y
------END PGP SIGNATURE-----
-
---=-ergYgXb5KP8LVtI+kz9h--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
