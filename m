@@ -1,115 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:37300 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754230AbYLCAOk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 19:14:40 -0500
-Date: Tue, 2 Dec 2008 16:12:53 -0800
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: stable@kernel.org, sfr@canb.auug.org.au,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [stable] [PATCH 1/3] ath9k: Handle -ENOMEM on RX gracefully
-Message-ID: <20081203001253.GC14943@kroah.com> (sfid-20081203_011449_117377_9709A253)
-References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com> <1228251082-11677-2-git-send-email-lrodriguez@atheros.com> <1228251082-11677-3-git-send-email-lrodriguez@atheros.com> <1228251082-11677-4-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1228251082-11677-4-git-send-email-lrodriguez@atheros.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:50530 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789AbYLIQwV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Dec 2008 11:52:21 -0500
+Subject: Re: [PATCH] ath9k: remove fragmentation workaround again
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>
+In-Reply-To: <20081209163939.GA7947@jm.kir.nu>
+References: <1228821974.22164.201.camel@johannes.berg>
+	 <20081209163939.GA7947@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nsW1Uw/gaD4C/nBPB8IG"
+Date: Tue, 09 Dec 2008 17:51:25 +0100
+Message-Id: <1228841485.1029.16.camel@johannes.berg> (sfid-20081209_175224_736831_3B608D04)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't see this patch upstream in Linus's tree.  Am I just missing it
-and if so, do you know the git commit id?
 
-thanks,
+--=-nsW1Uw/gaD4C/nBPB8IG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-greg k-h
+On Tue, 2008-12-09 at 18:39 +0200, Jouni Malinen wrote:
+> On Tue, Dec 09, 2008 at 12:26:14PM +0100, Johannes Berg wrote:
+> > Looking at the RC algorithm this is no longer necessary.
+>=20
+> > Untested, but the error that used to happen will no longer happen since
+> > now the sub-structure is assigned by the driver, in rate_driver_data,
+> > per fragment.
+>=20
+> Thanks! Based on a quick test, fragmentation was working with this
+> patch. I never tested the old issue, so I'm not sure what exactly was
+> failing, but anyway, I do see fragments in a sniffer log and the device
+> did not crash ;-).
 
+Heh, well, the broken rc algorithm would end up with a double-free and
+slub/slab/slob being very unhappy.
 
-On Tue, Dec 02, 2008 at 12:51:22PM -0800, Luis R. Rodriguez wrote:
-> We would get an oops on RX on -ENOMEM by passing
-> NULL to the hardware on ath_rx_buf_link(). The oops
-> would look something like this:
-> 
-> ath_rx_tasklet
-> ...
-> RIP: ath_rx_buf_link
-> 
-> We correct this by handling the allocation for the next
-> skb we will put in our RX tail directly on the ath_rx_tasklet()
-> *prior* to sending up the last hardware processed
-> skb. If we run out of memory this gauranteees we have
-> skbs to work with while it simply drops new received
-> frames.
-> 
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/ath9k/recv.c |   18 ++++++++++++++----
->  1 files changed, 14 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-> index 0941589..a4f92b2 100644
-> --- a/drivers/net/wireless/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath9k/recv.c
-> @@ -441,18 +441,16 @@ static void ath_rx_requeue(struct ath_softc *sc, struct sk_buff *skb)
->   */
->  static int ath_rx_indicate(struct ath_softc *sc,
->  			   struct sk_buff *skb,
-> +			   struct sk_buff *nskb,
->  			   struct ath_recv_status *status,
->  			   u16 keyix)
->  {
->  	struct ath_buf *bf = ATH_RX_CONTEXT(skb)->ctx_rxbuf;
-> -	struct sk_buff *nskb;
->  	int type;
->  
->  	/* indicate frame to the stack, which will free the old skb. */
->  	type = ath__rx_indicate(sc, skb, status, keyix);
->  
-> -	/* allocate a new skb and queue it to for H/W processing */
-> -	nskb = ath_rxbuf_alloc(sc, sc->sc_rxbufsize);
->  	if (nskb != NULL) {
->  		bf->bf_mpdu = nskb;
->  		bf->bf_buf_addr = ath_skb_map_single(sc,
-> @@ -741,6 +739,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
->  	struct ath_desc *ds;
->  	struct ieee80211_hdr *hdr;
->  	struct sk_buff *skb = NULL;
-> +	struct sk_buff *nskb = NULL;
->  	struct ath_recv_status rx_status;
->  	struct ath_hal *ah = sc->sc_ah;
->  	int type, rx_processed = 0;
-> @@ -963,6 +962,17 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
->  		 */
->  		if (sc->sc_rxbufsize < ds->ds_rxstat.rs_datalen)
->  			goto rx_next;
-> +
-> +		/* allocate a new skb and queue it to for H/W processing */
-> +		nskb = ath_rxbuf_alloc(sc, sc->sc_rxbufsize);
-> +
-> +		/* Diregard current RX'd frame and reuse the old skb */
-> +		if (!nskb) {
-> +			list_move_tail(&bf->list, &sc->sc_rxbuf);
-> +			ath_rx_buf_link(sc, bf);
-> +			goto rx_next;
-> +		}
-> +
->  		/*
->  		 * Sync and unmap the frame.  At this point we're
->  		 * committed to passing the sk_buff somewhere so
-> @@ -1052,7 +1062,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
->  
->  		/* Pass frames up to the stack. */
->  
-> -		type = ath_rx_indicate(sc, skb,
-> +		type = ath_rx_indicate(sc, skb, nskb,
->  			&rx_status, ds->ds_rxstat.rs_keyix);
->  
->  		/*
-> -- 
-> 1.5.6.rc2.15.g457bb.dirty
-> 
-> _______________________________________________
-> stable mailing list
-> stable@linux.kernel.org
-> http://linux.kernel.org/mailman/listinfo/stable
+johannes
+
+--=-nsW1Uw/gaD4C/nBPB8IG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJPqIJAAoJEKVg1VMiehFYoG8P/RSMn91Cky23SahIDogvbtMR
+hZHAZMm9ckmtD8N8IqOL3SfXzIWFwlhhS0+fUGXf4iK4/2ZOqjxD1Z7/4GdTz+tx
+vZG1nxB8myWxGalc4abyUBXjiAx/TLCjpHJWX9PKyDqvTG9kA3mBNn+z3mSk7oKK
+hZQzcZixbluqcqncO4vnv75lU4GGNDpY8RgqFnwAFSlY28mR05hHctO+2Dxe4EQi
+V9ACsbM9bD+x8VCj7FKp2MhOHbmd5OCcIVaiKT/GGlpDnZYolRa4gTuZlphDJYa4
+JUrPEylyCKHoEg7CAPb4SMmmiIZVtTWrLvatmZmyyoXF5sEJlMyiF/bUW5tZ3lJh
++LyD7gZ+wxGe3/jEb+hlOyJxEK/0bMwCs5N6rIrA8VSNuTIbM8YswAL3JQamcwUi
+ZFlHocX937dbb9OczR4Rq/XuhCpCk1XOe5Eqlkehtm3Epd/HuTBAnZ7wizN6Ecqi
+Aj4kUCrjwk6jPlj1vQKQenZkXPRo9B43vL6TGG6E8l/IqaFNVtP6rOCoXIyUXn9n
+Q5Br2wOUqO4Yv4sjiW7chXOROTf4+pInG03nwDzo8TYrzzzhBnTILTk2cfzKx96+
+VJFBLs2uTLuQI5Uz15stBY7Lg3iWplPZWJY4S+BzwHln7czDoVqgVMBz9zQ+ih6j
+/LUhOa5eOLmcPBTwk1fY
+=FbNK
+-----END PGP SIGNATURE-----
+
+--=-nsW1Uw/gaD4C/nBPB8IG--
+
