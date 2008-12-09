@@ -1,166 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46671 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756746AbYLaPmM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 10:42:12 -0500
-Message-Id: <20081231154203.845811912@w1.fi> (sfid-20081231_164220_866308_493A6ED7)
-References: <20081231153834.840526845@w1.fi>
-Date: Wed, 31 Dec 2008 17:38:36 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [RFC 02/11] mac80211: 802.11w - CCMP for management frames
+Received: from mail3.brikks.com ([82.209.166.4]:18135 "EHLO smtp.bredband2.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753887AbYLIMzE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Dec 2008 07:55:04 -0500
+Date: Tue, 9 Dec 2008 13:54:56 +0100
+From: Mats Johannesson <spamcan1@abrasax.se>
+To: Sujith <m.sujith@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni.Malinen@Atheros.com
+Subject: Re: [RFC v2] mac80211: Fix HT channel selection
+Message-ID: <20081209135456.68778e51@loke.fish.not> (sfid-20081209_135524_315350_87464E2E)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extend CCMP to support encryption and decryption of unicast management
-frames.
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+Confirmation from one userland of ath9k. This patch on top of latest
+wireless-testing (pulled an hour ago) allows me to scan (root or normal
+user) without loss of connectivity or Kernel panic in "Channel Width:
+Auto 20/40 MHz" mode. Thank you devs.
 
+Boot finished at 13:25, scan with Wicd Manager at 13:30:
 
----
- include/linux/ieee80211.h |   23 +++++++++++++++++++++++
- net/mac80211/tx.c         |   23 ++++++++++++++++++++++-
- net/mac80211/wpa.c        |   18 ++++++++++++------
- 3 files changed, 57 insertions(+), 7 deletions(-)
+13:24:46 : ath0: authenticate with AP 00:1b:11:60:7a:3d
+13:24:46 : ath0: authenticated
+13:24:46 : ath0: associate with AP 00:1b:11:60:7a:3d
+13:24:46 : ath0: RX AssocResp from 00:1b:11:60:7a:3d (capab=0x431 status=0 aid=4)
+13:24:46 : ath0: associated
+13:24:46 : ath9k: Choosing rate table for mode: 10
+13:24:46 : ath9k: Configure tx [queue/halq] [2/1],  aifs: 3, cw_min: 15, cw_max: 1023, txop: 0
+13:24:46 : ath9k: Configure tx [queue/halq] [3/0],  aifs: 7, cw_min: 15, cw_max: 1023, txop: 0
+13:24:46 : ath9k: Configure tx [queue/halq] [1/2],  aifs: 2, cw_min: 7, cw_max: 15, txop: 94
+13:24:46 : ath9k: Configure tx [queue/halq] [0/3],  aifs: 2, cw_min: 3, cw_max: 7, txop: 47
+13:24:46 : ath9k: Set channel: 2412 MHz
+13:24:46 : ath9k: (2412 MHz) -> (2412 MHz), cflags:300e0, chanwidth: 1
+13:24:46 : ath9k: tx chmask: 5, rx chmask: 5
+13:24:46 : ath9k: BSS Changed PREAMBLE 1
+13:24:46 : ath9k: BSS Changed ASSOC 1
+13:24:46 : ath9k: Bss Info ASSOC 4, bssid: 00:1b:11:60:7a:3d
+13:24:46 : ADDRCONF(NETDEV_CHANGE): ath0: link becomes ready
+13:24:46 : ath9k: Set HW RX filter: 0x0
+13:24:46 : ath9k: Set HW RX filter: 0x0
+13:24:46 : Clocksource tsc unstable (delta = -87796076 ns)
+13:24:54 : ath9k: Set HW RX filter: 0x0
+13:24:54 : ath9k: Set HW RX filter: 0x0
+13:24:56 : ath0: no IPv6 routers present
+13:25:07 : ACPI: EC: missing confirmations, switch off interrupt mode.
+13:30:15 : ath9k: Set HW RX filter: 0x0
+13:30:15 : ath9k: Set HW RX filter: 0x10
+13:30:15 : ath9k: Set channel: 2412 MHz
+13:30:15 : ath9k: (2412 MHz) -> (2412 MHz), cflags:300e0, chanwidth: 0
+13:30:15 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:15 : ath9k: Set channel: 2417 MHz
+13:30:15 : ath9k: (2412 MHz) -> (2417 MHz), cflags:300e0, chanwidth: 0
+13:30:15 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:15 : ath9k: Set channel: 2422 MHz
+13:30:15 : ath9k: (2417 MHz) -> (2422 MHz), cflags:300e0, chanwidth: 0
+13:30:15 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:15 : ath9k: Set channel: 2427 MHz
+13:30:15 : ath9k: (2422 MHz) -> (2427 MHz), cflags:300e0, chanwidth: 0
+13:30:15 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:16 : ath9k: Set channel: 2432 MHz
+13:30:16 : ath9k: (2427 MHz) -> (2432 MHz), cflags:700e0, chanwidth: 0
+13:30:16 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:16 : ath9k: Set channel: 2437 MHz
+13:30:16 : ath9k: (2432 MHz) -> (2437 MHz), cflags:700e0, chanwidth: 0
+13:30:16 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:16 : ath9k: Set channel: 2442 MHz
+13:30:16 : ath9k: (2437 MHz) -> (2442 MHz), cflags:700e0, chanwidth: 0
+13:30:16 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:16 : ath9k: Set channel: 2447 MHz
+13:30:16 : ath9k: (2442 MHz) -> (2447 MHz), cflags:500e0, chanwidth: 0
+13:30:16 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:16 : ath9k: Set channel: 2452 MHz
+13:30:16 : ath9k: (2447 MHz) -> (2452 MHz), cflags:500e0, chanwidth: 0
+13:30:16 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:16 : ath9k: Set channel: 2457 MHz
+13:30:16 : ath9k: (2452 MHz) -> (2457 MHz), cflags:500e0, chanwidth: 0
+13:30:16 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:16 : ath9k: Set channel: 2462 MHz
+13:30:16 : ath9k: (2457 MHz) -> (2462 MHz), cflags:500e0, chanwidth: 0
+13:30:16 : ath9k: tx chmask: 1, rx chmask: 1
+13:30:16 : ath9k: Set channel: 2412 MHz
+13:30:16 : ath9k: (2462 MHz) -> (2412 MHz), cflags:300e0, chanwidth: 1
+13:30:16 : ath9k: tx chmask: 5, rx chmask: 5
+13:30:16 : ath9k: Set HW RX filter: 0x0
 
---- wireless-testing.orig/net/mac80211/tx.c	2008-12-31 16:46:11.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2008-12-31 16:54:08.000000000 +0200
-@@ -331,6 +331,22 @@ ieee80211_tx_h_multicast_ps_buf(struct i
- 	return TX_CONTINUE;
- }
- 
-+static int ieee80211_use_mfp(__le16 fc, struct sta_info *sta,
-+			     struct sk_buff *skb)
-+{
-+	if (!ieee80211_is_mgmt(fc))
-+		return 0;
-+
-+	if (sta == NULL || !test_sta_flags(sta, WLAN_STA_MFP))
-+		return 0;
-+
-+	if (!ieee80211_is_robust_mgmt_frame((struct ieee80211_hdr *)
-+					    skb->data))
-+		return 0;
-+
-+	return 1;
-+}
-+
- static ieee80211_tx_result
- ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- {
-@@ -430,10 +446,15 @@ ieee80211_tx_h_select_key(struct ieee802
- 			if (ieee80211_is_auth(hdr->frame_control))
- 				break;
- 		case ALG_TKIP:
--		case ALG_CCMP:
- 			if (!ieee80211_is_data_present(hdr->frame_control))
- 				tx->key = NULL;
- 			break;
-+		case ALG_CCMP:
-+			if (!ieee80211_is_data_present(hdr->frame_control) &&
-+			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
-+					       tx->skb))
-+				tx->key = NULL;
-+			break;
- 		}
- 	}
- 
---- wireless-testing.orig/net/mac80211/wpa.c	2008-12-31 16:46:11.000000000 +0200
-+++ wireless-testing/net/mac80211/wpa.c	2008-12-31 16:54:27.000000000 +0200
-@@ -268,7 +268,7 @@ static void ccmp_special_blocks(struct s
- 				int encrypted)
- {
- 	__le16 mask_fc;
--	int a4_included;
-+	int a4_included, mgmt;
- 	u8 qos_tid;
- 	u8 *b_0, *aad;
- 	u16 data_len, len_a;
-@@ -279,12 +279,15 @@ static void ccmp_special_blocks(struct s
- 	aad = scratch + 4 * AES_BLOCK_LEN;
- 
- 	/*
--	 * Mask FC: zero subtype b4 b5 b6
-+	 * Mask FC: zero subtype b4 b5 b6 (if not mgmt)
- 	 * Retry, PwrMgt, MoreData; set Protected
- 	 */
-+	mgmt = ieee80211_is_mgmt(hdr->frame_control);
- 	mask_fc = hdr->frame_control;
--	mask_fc &= ~cpu_to_le16(0x0070 | IEEE80211_FCTL_RETRY |
-+	mask_fc &= ~cpu_to_le16(IEEE80211_FCTL_RETRY |
- 				IEEE80211_FCTL_PM | IEEE80211_FCTL_MOREDATA);
-+	if (!mgmt)
-+		mask_fc &= ~cpu_to_le16(0x0070);
- 	mask_fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-@@ -302,8 +305,10 @@ static void ccmp_special_blocks(struct s
- 
- 	/* First block, b_0 */
- 	b_0[0] = 0x59; /* flags: Adata: 1, M: 011, L: 001 */
--	/* Nonce: QoS Priority | A2 | PN */
--	b_0[1] = qos_tid;
-+	/* Nonce: Nonce Flags | A2 | PN
-+	 * Nonce Flags: Priority (b0..b3) | Management (b4) | Reserved (b5..b7)
-+	 */
-+	b_0[1] = qos_tid | (mgmt << 4);
- 	memcpy(&b_0[2], hdr->addr2, ETH_ALEN);
- 	memcpy(&b_0[8], pn, CCMP_PN_LEN);
- 	/* l(m) */
-@@ -449,7 +454,8 @@ ieee80211_crypto_ccmp_decrypt(struct iee
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
--	if (!ieee80211_is_data(hdr->frame_control))
-+	if (!ieee80211_is_data(hdr->frame_control) &&
-+	    !ieee80211_is_robust_mgmt_frame(hdr))
- 		return RX_CONTINUE;
- 
- 	data_len = skb->len - hdrlen - CCMP_HDR_LEN - CCMP_MIC_LEN;
---- wireless-testing.orig/include/linux/ieee80211.h	2008-12-31 16:46:11.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2008-12-31 17:00:34.000000000 +0200
-@@ -1030,6 +1030,7 @@ enum ieee80211_category {
- 	WLAN_CATEGORY_QOS = 1,
- 	WLAN_CATEGORY_DLS = 2,
- 	WLAN_CATEGORY_BACK = 3,
-+	WLAN_CATEGORY_PUBLIC = 4,
- 	WLAN_CATEGORY_WMM = 17,
- };
- 
-@@ -1186,6 +1187,28 @@ static inline u8 *ieee80211_get_DA(struc
- }
- 
- /**
-+ * ieee80211_is_robust_mgmt_frame - check if frame is a robust management frame
-+ * @hdr: the frame (buffer must include at least the first octet of payload)
-+ */
-+static inline bool ieee80211_is_robust_mgmt_frame(struct ieee80211_hdr *hdr)
-+{
-+	if (ieee80211_is_disassoc(hdr->frame_control) ||
-+	    ieee80211_is_deauth(hdr->frame_control))
-+		return true;
-+
-+	if (ieee80211_is_action(hdr->frame_control)) {
-+		/*
-+		 * Action frames, excluding Public Action frames, are Robust
-+		 * Management Frames.
-+		 */
-+		u8 *category = ((u8 *) hdr) + 24;
-+		return *category != WLAN_CATEGORY_PUBLIC;
-+	}
-+
-+	return false;
-+}
-+
-+/**
-  * ieee80211_fhss_chan_to_freq - get channel frequency
-  * @channel: the FHSS channel
-  *
-
--- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+/Mats
