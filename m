@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47458 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752627AbYLOOCL (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:50986 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752533AbYLIQLX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 09:02:11 -0500
-Date: Mon, 15 Dec 2008 16:02:04 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Remove MAC header pad before reporting TX status
-Message-ID: <20081215140204.GA16197@jm.kir.nu> (sfid-20081215_150215_444374_BD750901)
+	Tue, 9 Dec 2008 11:11:23 -0500
+Message-ID: <493E98A9.4070601@lwfinger.net> (sfid-20081209_171129_610966_CD069600)
+Date: Tue, 09 Dec 2008 10:11:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] p54usb: rewriting rx/tx routines to make use of usb_anchor's
+ facilities
+References: <200812091514.37634.chunkeey@web.de> <493E92B5.90803@lwfinger.net>
+In-Reply-To: <493E92B5.90803@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the possible MAC header pad before reporting TX status to
-mac80211. This pad is hardware specific operation and should not be
-exposed outside the driver. This fixes the frame body in monitor
-interfaces that could be used to check on TX status for transmitted
-frames.
+Larry Finger wrote:
+> Christian Lamparter wrote:
+>> Alan Stern found several flaws in p54usb's implementation and annotated: 
+>> "usb_kill_urb() and similar routines do not expect an URB's completion
+>> routine to deallocate it.  This is almost obvious -- if the URB is deallocated
+>> before the completion routine returns then there's no way for usb_kill_urb
+>> to detect when the URB actually is complete."
+>>
+>> This patch addresses all known limitations in the old implementation and fixes
+>> khub's "use-after-freed" hang, when SLUB debug's poisoning option is enabled.
+>>
+>> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+>> Cc: stable@kernel.org
+>> ---
+> 
+> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
----
- drivers/net/wireless/ath9k/xmit.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+For reference, the Bugzilla Entry for the p54usb problem is #12186. On my system
+without the patch, 'modprobe -r p54usb' just hangs. There is no crash dump and
+the process can be killed.
 
-(the context in the patch depends on the previous ath9k: Fix TX status
-reporting for retries and MCS index patch, but other than that, this is
-an independent change)
-
---- wireless-testing.orig/drivers/net/wireless/ath9k/xmit.c	2008-12-15 15:48:49.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/xmit.c	2008-12-15 15:54:37.000000000 +0200
-@@ -106,6 +106,7 @@ static void ath_tx_complete(struct ath_s
- 	struct ieee80211_hw *hw = sc->hw;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ath_tx_info_priv *tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
-+	int hdrlen, padsize;
- 
- 	DPRINTF(sc, ATH_DBG_XMIT, "TX complete: skb: %p\n", skb);
- 
-@@ -135,6 +136,17 @@ static void ath_tx_complete(struct ath_s
- 				rate_table->info[idx].ratecode & 0x7f;
- 	}
- 
-+	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-+	padsize = hdrlen & 3;
-+	if (padsize && hdrlen >= 24) {
-+		/*
-+		 * Remove MAC header padding before giving the frame back to
-+		 * mac80211.
-+		 */
-+		memmove(skb->data + padsize, skb->data, hdrlen);
-+		skb_pull(skb, padsize);
-+	}
-+
- 	ieee80211_tx_status(hw, skb);
- }
- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Larry
