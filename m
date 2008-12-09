@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:56776 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbYLMTdP (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3856 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753AbYLIQbv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Dec 2008 14:33:15 -0500
-Date: Sat, 13 Dec 2008 21:33:13 +0200 (EET)
-From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
-To: dcbw@redhat.com
-cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: use roundup instead of opencoding
-Message-ID: <Pine.LNX.4.64.0812132130550.4160@wrl-59.cs.helsinki.fi> (sfid-20081213_203318_937153_70D1B48D)
+	Tue, 9 Dec 2008 11:31:51 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+Subject: Re: [PATCH 1/2] mac80211: add suspend/resume callbacks
+Date: Tue, 9 Dec 2008 11:29:31 -0500
+Message-Id: <20081209161636.M22933@bobcopeland.com> (sfid-20081209_173156_452704_79F08123)
+In-Reply-To: <1228838346.1029.10.camel@johannes.berg>
+References: <1227415286-30179-2-git-send-email-me@bobcopeland.com> (sfid-20081123_054218_217354_D63E2DF4) <1227431953.3599.37.camel@johannes.berg> <20081209152908.M73523@bobcopeland.com> <1228838346.1029.10.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-696208474-1081507156-1229196793=:4160"
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Tue, 09 Dec 2008 16:59:06 +0100, Johannes Berg wrote
+> > Is this what you had in mind? (now on top of your cfg80211 patch, btw
+> > it called ->suspend() in the resume hook)
+> 
+> Can you adopt that patch too?
 
----696208474-1081507156-1229196793=:4160
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
+Yeah, I already have it in my tree, I just didn't repost it because my 
+webmail sucks.
 
+> > +	/* remove all interfaces */
+> > +	list_for_each_entry(sdata, &local->interfaces, list) {
+> > +
+> > +		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+> > +		    sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+> > +		    netif_running(sdata->dev)) {
+> 
+> But shouldn't that be != _AP_VLAN && != _MONITOR && running?
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@helsinki.fi>
----
- drivers/net/wireless/libertas/if_sdio.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Oops, of course it should; that if() started life as continue.  
+But that would just mean a missed call to remove_interface()... 
+in the driver, which for ath5k just clears the mac, so I don't 
+know why it would affect the running state of the interface.
 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index b54e2ea..4519d73 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -26,6 +26,7 @@
-  * if_sdio_card_to_host() to pad the data.
-  */
- 
-+#include <linux/kernel.h>
- #include <linux/moduleparam.h>
- #include <linux/firmware.h>
- #include <linux/netdevice.h>
-@@ -581,7 +582,7 @@ static int if_sdio_prog_real(struct if_sdio_card *card)
- 				chunk_size, (chunk_size + 31) / 32 * 32);
- */
- 			ret = sdio_writesb(card->func, card->ioport,
--				chunk_buffer, (chunk_size + 31) / 32 * 32);
-+				chunk_buffer, roundup(chunk_size, 32));
- 			if (ret)
- 				goto release;
- 
+> I'd just add those to ieee80211_i.h, and I don't think you really need
+> to protect them with #ifdef CONFIG_PM
+
+Will do, thanks for the review.
+
 -- 
-1.5.2.2
+Bob Copeland %% www.bobcopeland.com
 
----696208474-1081507156-1229196793=:4160--
+
