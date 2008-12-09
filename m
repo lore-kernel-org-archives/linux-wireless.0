@@ -1,92 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:59833 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:43459 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751472AbYLATRZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 14:17:25 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 11:17:25 -0800
-Date: Mon, 1 Dec 2008 11:17:23 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Christian Lamparter <chunkeey@web.de>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>,
-	Stefan Steuerwald <salsasepp@googlemail.com>
-Subject: Re: [PATCH 1/6 v2.2] mac80211: add sta_notify_ps callback
-Message-ID: <20081201191723.GI5992@tesla> (sfid-20081201_201729_965722_3592FEDA)
-References: <200811292232.56550.chunkeey@web.de> <200811292309.38521.chunkeey@web.de> <4931CE5E.9030402@lwfinger.net> <200811300048.42352.chunkeey@web.de>
-MIME-Version: 1.0
+	id S1751275AbYLIBqU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2008 20:46:20 -0500
+From: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
+To: David Shwatrz <dshwatrz@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 8 Dec 2008 17:45:43 -0800
+Subject: RE: Three short questions about iwlwifi
+Message-ID: <7C88852EF6F99F4EB538472FCFEBE2220422435C@orsmsx509.amr.corp.intel.com> (sfid-20081209_024625_221703_E7B0E436)
+References: <31436f4a0812072238x5d7a2cc8saeec3eb44726b0c7@mail.gmail.com>
+In-Reply-To: <31436f4a0812072238x5d7a2cc8saeec3eb44726b0c7@mail.gmail.com>
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <200811300048.42352.chunkeey@web.de>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 29, 2008 at 03:48:41PM -0800, Christian Lamparter wrote:
-> This patch is necessary in order to provide a proper Access point support for p54.
-> Unfortunately for us, there is no documented way to disable the interfering
-> power save buffering mechanism in firmware completely.
-> 
-> Therefore we give in and notify the driver through our new sta_notify_ps callback,
-> so that we can update the filter state.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  the extra patch for mac80211_hwsim is no longer needed...
-> This whole series is all for wireless-testing.
-> 
-> erm... now with a updated documentation!!1one
-> ---
-> > >
-> > >     clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
-> > > +   if (local->ops->sta_notify_ps)
-> > > +           local->ops->sta_notify_ps(local_to_hw(local), STA_WOKE_UP,
-> > > +                                     &sta->sta);
-> >
-> > With this patch, STA_WILL_SLEEP and STA_WOKE_UP are undefined. Is there a
-> > prerequisite that I missed?
-> > Larry
-> no it's just fsck fallout. one file got synced in time... the other didn't.
-> SLUB_DEBUG/SLAB_DEBUG don't work at all with p54usb.
-> ---
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 6a1d4ea..4b972fc 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -779,6 +779,19 @@ enum sta_notify_cmd {
->  };
-> 
->  /**
-> + * enum sta_notify_ps_cmd - sta power save notify command
-> + *
-> + * Used with the sta_notify_ps() callback in &struct ieee80211_ops to
-> + * notify the driver if a station made a power state transition.
-> + *
-> + * @STA_NOTIFY_SLEEP: a station is now sleeping
-> + * @STA_NOTIFY_AWAKE: a sleeping station woke up
-> + */
-> +enum sta_notify_ps_cmd {
-> +       STA_NOTIFY_SLEEP, STA_NOTIFY_AWAKE,
-> +};
-> +
-> +/**
->   * enum ieee80211_tkip_key_type - get tkip key
->   *
->   * Used by drivers which need to get a tkip key for skb. Some drivers need a
-> @@ -1248,6 +1261,9 @@ enum ieee80211_ampdu_mlme_action {
->   * @sta_notify: Notifies low level driver about addition or removal
->   *     of associated station or AP.
->   *
-> + * @sta_ps_notify: Notifies low level driver about the power state transition
-> + *     of a associated station. Must be atomic.
-> + *
+Hello David,
 
-Can we add documentation that this is only required when the AP cannot
-figure this out by itself? This can help people working on AP support to
-not think they need to implement this for all drivers.
+  We are currently working on porting the iwl3945 driver to iwlwifi driver.
+You can expect few patches in couple of days.
 
-A patch can go on top of this I suppose.
 
-  Luis
+Abhijeet
+
+
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of David Shwatrz
+Sent: Sunday, December 07, 2008 10:38 PM
+To: linux-wireless@vger.kernel.org
+Subject: Three short questions about iwlwifi
+
+Hello,
+
+I tried to delve into the iwlwifi code and I have
+3 short questions about iwlwifi; I hope that I can get some advice here.
+
+
+1) I see that there seems to be common code in 3945 and agn.
+Are there intentions to make use of agn in 3945 in the future to avoid
+code duplication, or is it a design decision to make a full separation between
+3945 and agn (so even when it is possible to use common code, to avoid
+it in order
+not to cause possible problems in the future).
+
+2)  In some places in iwlwifi we have:
+#ifdef IEEE80211_CONF_CHANNEL_SWITCH.
+
+For example, iwl-agn.c or iwl3945-base.c.
+What is this define ? is it not (an uneeded) legacy from when the drivers
+were not part of the tree?
+
+3) Little question about implementation:
+
+In iwl3945-base.c:
+iwl3945_commit_rxon() calls iwl3945_clear_stations_table(priv);
+so is it necessary in iwl3945_set_mode() to call also
+iwl3945_clear_stations_table() , since we anyhow call iwl3945_commit_rxon()
+afterwards ?
+the only thing iwl3945_clear_stations_table() does is zeros
+priv->num_stations and zeros priv->stations.
+
+David S
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
