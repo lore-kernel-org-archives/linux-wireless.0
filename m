@@ -1,131 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:40907 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507AbYLDBuD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 20:50:03 -0500
-Date: Wed, 03 Dec 2008 19:50:00 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8187: Improve wireless statistics for RTL8187
-Message-ID: <49373748.Wmr8pTF2+oHOugNN%Larry.Finger@lwfinger.net> (sfid-20081204_025008_800351_26A9E115)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mx2.redhat.com ([66.187.237.31]:59013 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754577AbYLIUIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Dec 2008 15:08:10 -0500
+Subject: Re: [RFC] mac80211: Disable requests for new scans in AP mode
+From: Dan Williams <dcbw@redhat.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081209193351.GB16905@jm.kir.nu>
+References: <20081209145722.GA2285@jm.kir.nu>
+	 <1228844410.17539.1.camel@localhost.localdomain>
+	 <20081209193351.GB16905@jm.kir.nu>
+Content-Type: text/plain
+Date: Tue, 09 Dec 2008 15:07:16 -0500
+Message-Id: <1228853236.18616.1.camel@localhost.localdomain> (sfid-20081209_210814_025117_B90F808F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current wireless statistics for the RTL8187 poorly indicate the sig=
-nal
-strength and quality. With testing, I found that the AGC value is inver=
-sely
-correlated with the strength as in the RTL8187B. By implementing a simi=
-lar
-calculation, much more code becomes common to the two devices.
+On Tue, 2008-12-09 at 21:33 +0200, Jouni Malinen wrote:
+> On Tue, Dec 09, 2008 at 12:40:10PM -0500, Dan Williams wrote:
+> 
+> > Every 120 seconds usually (it uses a simple backoff algorithm), but
+> > yeah, this is a good thing to do.  You probably want to make NM ignore
+> > the device if you're configuring it as an AP though, since obviously NM
+> > shouldn't be driving an AP mode interface.
+> 
+> Actually, I would like to be able to NM to set up a simple AP similarly
+> to IBSS configuration.. If I'm setting up the interface manually (either
+> for AP or even for client modes), I would like NM to ignore the device
+> from that point on, but that is a separate point.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Tested by: Mart=C3=ADn Ernesto Barreyro <barreyromartin@gmail.com>
----
+NM only knows about devices that NM controls, thus we can't have NM set
+up the device and then subsequently ignore it...  However, at some point
+in the near future, if we can get reliable information as to whether the
+driver *does* in fact support AP mode, we can make NM drive the
+interface in AP mode instead of IBSS.  The only reason it's using IBSS
+right now is that the driver support for AP mode was so inconsistent and
+buggy.
 
-John,
+Dan
 
-This is 2.6.29 material.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -313,29 +313,17 @@ static void rtl8187_rx_cb(struct urb *ur
- 		struct rtl8187_rx_hdr *hdr =3D
- 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
- 		flags =3D le32_to_cpu(hdr->flags);
--		signal =3D hdr->signal & 0x7f;
-+		/* As with the RTL8187B below, the AGC is used to calculate
-+		 * signal strength and quality. In this case, the scaling
-+		 * constants are derived from the output of p54usb.
-+		 */
-+		quality =3D 130 - ((41 * hdr->agc) >> 6);
-+		if (quality > 100)
-+			quality =3D 100;
-+		signal =3D -4 - ((27 * hdr->agc) >> 6);
-+		rx_status.qual =3D quality;
- 		rx_status.antenna =3D (hdr->signal >> 7) & 1;
--		rx_status.noise =3D hdr->noise;
- 		rx_status.mactime =3D le64_to_cpu(hdr->mac_time);
--		priv->quality =3D signal;
--		rx_status.qual =3D priv->quality;
--		priv->noise =3D hdr->noise;
--		rate =3D (flags >> 20) & 0xF;
--		if (rate > 3) { /* OFDM rate */
--			if (signal > 90)
--				signal =3D 90;
--			else if (signal < 25)
--				signal =3D 25;
--			signal =3D 90 - signal;
--		} else {	/* CCK rate */
--			if (signal > 95)
--				signal =3D 95;
--			else if (signal < 30)
--				signal =3D 30;
--			signal =3D 95 - signal;
--		}
--		rx_status.signal =3D signal;
--		priv->signal =3D signal;
- 	} else {
- 		struct rtl8187b_rx_hdr *hdr =3D
- 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
-@@ -356,15 +344,15 @@ static void rtl8187_rx_cb(struct urb *ur
- 		if (quality > 100)
- 			quality =3D 100;
- 		signal =3D 14 - hdr->agc / 2;
--		rx_status.qual =3D quality;
--		priv->quality =3D quality;
- 		rx_status.signal =3D signal;
--		priv->signal =3D signal;
- 		rx_status.antenna =3D (hdr->rssi >> 7) & 1;
- 		rx_status.mactime =3D le64_to_cpu(hdr->mac_time);
--		rate =3D (flags >> 20) & 0xF;
- 	}
-=20
-+	priv->quality =3D quality;
-+	rx_status.signal =3D signal;
-+	priv->signal =3D signal;
-+	rate =3D (flags >> 20) & 0xF;
- 	skb_trim(skb, flags & 0x0FFF);
- 	rx_status.rate_idx =3D rate;
- 	rx_status.freq =3D dev->conf.channel->center_freq;
-@@ -1294,6 +1282,7 @@ static int __devinit rtl8187_probe(struc
-=20
- 	priv->mode =3D NL80211_IFTYPE_MONITOR;
- 	dev->flags =3D IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-+		     IEEE80211_HW_SIGNAL_DBM |
- 		     IEEE80211_HW_RX_INCLUDES_FCS;
-=20
- 	eeprom.data =3D dev;
-@@ -1409,13 +1398,8 @@ static int __devinit rtl8187_probe(struc
- 		(*channel++).hw_value =3D txpwr >> 8;
- 	}
-=20
--	if (priv->is_rtl8187b) {
-+	if (priv->is_rtl8187b)
- 		printk(KERN_WARNING "rtl8187: 8187B chip detected.\n");
--		dev->flags |=3D IEEE80211_HW_SIGNAL_DBM;
--	} else {
--		dev->flags |=3D IEEE80211_HW_SIGNAL_UNSPEC;
--		dev->max_signal =3D 65;
--	}
-=20
- 	/*
- 	 * XXX: Once this driver supports anything that requires
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
