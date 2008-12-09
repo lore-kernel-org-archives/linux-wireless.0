@@ -1,64 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:48371 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859AbYLQLEo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 06:04:44 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54usb: bring first generation devices back to life
-Date: Wed, 17 Dec 2008 12:04:43 +0100
-Cc: Artur Skawina <art.08.09@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
+Received: from c60.cesmail.net ([216.154.195.49]:11104 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751879AbYLIRcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Dec 2008 12:32:17 -0500
+Subject: [PATCH] airport: remove useless return in a function returning void
+To: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Tue, 09 Dec 2008 12:32:15 -0500
+Message-ID: <20081209173214.16159.68925.stgit@dv.roinet.com> (sfid-20081209_183220_038188_3A3BB3B3)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812171204.43946.chunkeey@web.de> (sfid-20081217_120449_608016_CDD82DE9)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a serious regression (introduced by:
-"p54: fix memory management" 872037115977dc0 )
-that affected isl3886+net2280 usb devices operation.
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
-Artur, can you please test the attached patch.
-if it works, please add a tested-by/acked/signed-off (whatever you want) line.
----
-John,
+ drivers/net/wireless/orinoco/airport.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-This patch is made against the current wireless-testing.
-(so I hope you don't get any rejects if you merge put it into wireless-2.6 straight away).
-Of course, I tried to apply them on top of the last patch (free after tx) and all you
-get is little complaint about offsets.. e.g:
-
-patching file p54usb.c
-Hunk #1 succeeded at 301 (offset -13 lines).
-Hunk #2 succeeded at 327 (offset -13 lines).
----
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index 9c2c651..62c2ad4 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -314,6 +314,8 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb,
- 	struct net2280_tx_hdr *hdr;
- 	struct net2280_reg_write *reg;
- 	int err = 0;
-+	__le32 addr = ((struct p54_hdr *) skb->data)->req_id;
-+	__le16 len = cpu_to_le16(skb->len);
+diff --git a/drivers/net/wireless/orinoco/airport.c b/drivers/net/wireless/orinoco/airport.c
+index ce03a2e..28f1cae 100644
+--- a/drivers/net/wireless/orinoco/airport.c
++++ b/drivers/net/wireless/orinoco/airport.c
+@@ -279,7 +279,7 @@ init_airport(void)
+ static void __exit
+ exit_airport(void)
+ {
+-	return macio_unregister_driver(&airport_driver);
++	macio_unregister_driver(&airport_driver);
+ }
  
- 	reg = kmalloc(sizeof(*reg), GFP_ATOMIC);
- 	if (!reg)
-@@ -338,8 +340,8 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb,
- 
- 	hdr = (void *)skb_push(skb, sizeof(*hdr));
- 	memset(hdr, 0, sizeof(*hdr));
--	hdr->device_addr = ((struct p54_hdr *)skb->data)->req_id;
--	hdr->len = cpu_to_le16(skb->len + sizeof(struct p54_hdr));
-+	hdr->len = len;
-+	hdr->device_addr = addr;
- 
- 	usb_fill_bulk_urb(int_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DEV), reg, sizeof(*reg),
-
+ module_init(init_airport);
