@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:42634 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355AbYLSGVZ (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:1405 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752224AbYLIOyt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 01:21:25 -0500
-Received: by bwz14 with SMTP id 14so3078449bwz.13
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 22:21:24 -0800 (PST)
-Message-ID: <8e92b4100812182221n747661b5pe4d18e8c564f871b@mail.gmail.com> (sfid-20081219_072129_373186_A115EF74)
-Date: Fri, 19 Dec 2008 11:51:24 +0530
-From: "Vivek Natarajan" <vivek.natraj@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: [PATCH v6 3/3] mac80211: implement dynamic power save
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <8e92b4100812182217q6f8e6014s3f28ab79c5bc2ba3@mail.gmail.com>
+	Tue, 9 Dec 2008 09:54:49 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Dan Williams <dcbw@redhat.com>, simon@thekelleys.org.uk,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Pavel Roskin <proski@gnu.org>, David Gibson <dwg@au1.ibm.com>,
+	Daniel Drake <dsd@gentoo.org>
+Subject: Re: wireless drivers sparse warnings
+Date: Tue, 9 Dec 2008 09:51:39 -0500
+Message-Id: <20081209145036.M4166@bobcopeland.com> (sfid-20081209_155452_717134_C2B0EB0C)
+In-Reply-To: <1228823435.22164.216.camel@johannes.berg>
+References: <1228823435.22164.216.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081218213306.7248.64398.stgit@tikku>
-	 <20081218213527.7248.65697.stgit@tikku>
-	 <8e92b4100812182217q6f8e6014s3f28ab79c5bc2ba3@mail.gmail.com>
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 19, 2008 at 11:47 AM, Vivek Natarajan
-<vivek.natraj@gmail.com> wrote:
-> On Fri, Dec 19, 2008 at 3:05 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
->> @@ -872,6 +878,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
->>        local->oper_channel_type = NL80211_CHAN_NO_HT;
->>        config_changed |= IEEE80211_CONF_CHANGE_HT;
->>
->> +       del_timer_sync(&local->dynamic_ps_timer);
->> +       cancel_work_sync(&local->dynamic_ps_enable_work);
->
-> In addition, shouldn't we have this 'cancel_work'  in ieee80211_stop
-> or where ever in the stop/detach path since the ps timer may be
-> triggered even after the interface is brought down.
+On Tue, 09 Dec 2008 12:50:35 +0100, Johannes Berg wrote
+> drivers/net/wireless/ath5k/pcu.c:1102:21: warning: restricted __le32
+> degrades to integer
 
-Sorry, ieee80211_set_disassoc is called from ieee80211_stop too...
+Oops, thanks for the heads up.  I'll do a patch for that tonight.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
 
-Vivek.
