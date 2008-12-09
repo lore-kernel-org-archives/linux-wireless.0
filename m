@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:62006 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753304AbYLTVGn (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:59564 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755342AbYLIWx3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 16:06:43 -0500
-Received: by bwz14 with SMTP id 14so5773729bwz.13
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2008 13:06:40 -0800 (PST)
-Message-ID: <1ba2fa240812201306j5429b86fv3053e1ae65004854@mail.gmail.com> (sfid-20081220_220648_068485_07672103)
-Date: Sat, 20 Dec 2008 23:06:40 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH 01/16] mac80211: add HT conf helpers
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	buytenh@wantstofly.org
-In-Reply-To: <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
+	Tue, 9 Dec 2008 17:53:29 -0500
+Received: by ewy10 with SMTP id 10so296921ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Dec 2008 14:53:27 -0800 (PST)
+Message-ID: <493EF6E4.5080605@gmail.com> (sfid-20081209_235334_770603_E48EB742)
+Date: Tue, 09 Dec 2008 22:53:24 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
-	 <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Subject: Re: [PATCH 1/2] orinoco: Fix function names used in debug strings
+References: <1228859189-12867-1-git-send-email-kilroyd@googlemail.com> <1228861585.2567.1.camel@dv>
+In-Reply-To: <1228861585.2567.1.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-1
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 20, 2008 at 7:55 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> In HT capable drivers you often need to check if you
-> are currently using HT20 or HT40. This adds a few small
-> helpers to let drivers figure that out.
->
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  include/net/mac80211.h |   40 ++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 40 insertions(+), 0 deletions(-)
->
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index b3bd00a..33891f9 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1963,4 +1963,44 @@ rate_lowest_index(struct ieee80211_supported_band *sband,
->  int ieee80211_rate_control_register(struct rate_control_ops *ops);
->  void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
->
-> +static inline bool
-> +conf_is_ht20(struct ieee80211_conf *conf)
-> +{
-> +       if (conf->ht.channel_type == NL80211_CHAN_HT20)
+Pavel Roskin wrote:
+> On Tue, 2008-12-09 at 21:46 +0000, David Kilroy wrote:
+>> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+> 
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> 
+> Please consider doing the same in spectrum_cs.c, just for consistency.
 
-why not just
-          return (conf->ht.channel_type == NL80211_CHAN_HT20);
-
-Tomas
-
->
+Coming up. Don't know why I didn't think to check it...
