@@ -1,92 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:45697 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268AbYLAWAv (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55309 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754276AbYLITeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 17:00:51 -0500
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH 1/6 v2.2] mac80211: add sta_notify_ps callback
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>,
-	Stefan Steuerwald <salsasepp@googlemail.com>
-From: Christian Lamparter <chunkeey@web.de>
-Date: Mon, 1 Dec 2008 23:00:52 +0100
+	Tue, 9 Dec 2008 14:34:14 -0500
+Date: Tue, 9 Dec 2008 21:33:51 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: Disable requests for new scans in AP mode
+Message-ID: <20081209193351.GB16905@jm.kir.nu> (sfid-20081209_203417_826096_4F190EC0)
+References: <20081209145722.GA2285@jm.kir.nu> <1228844410.17539.1.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812012300.52218.chunkeey@web.de> (sfid-20081201_230055_635973_B2232726)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1228844410.17539.1.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 01 December 2008 20:17:23 Luis R. Rodriguez wrote:
-> On Sat, Nov 29, 2008 at 03:48:41PM -0800, Christian Lamparter wrote:
-> > This patch is necessary in order to provide a proper Access point support for p54.
-> > Unfortunately for us, there is no documented way to disable the interfering
-> > power save buffering mechanism in firmware completely.
-> > 
-> > Therefore we give in and notify the driver through our new sta_notify_ps callback,
-> > so that we can update the filter state.
-> > 
-> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> > Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
-> >  the extra patch for mac80211_hwsim is no longer needed...
-> > This whole series is all for wireless-testing.
-> > 
-> > erm... now with a updated documentation!!1one
-> > ---
-> > > >
-> > > >     clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
-> > > > +   if (local->ops->sta_notify_ps)
-> > > > +           local->ops->sta_notify_ps(local_to_hw(local), STA_WOKE_UP,
-> > > > +                                     &sta->sta);
-> > >
-> > > With this patch, STA_WILL_SLEEP and STA_WOKE_UP are undefined. Is there a
-> > > prerequisite that I missed?
-> > > Larry
-> > no it's just fsck fallout. one file got synced in time... the other didn't.
-> > SLUB_DEBUG/SLAB_DEBUG don't work at all with p54usb.
-> > ---
-> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> > index 6a1d4ea..4b972fc 100644
-> > --- a/include/net/mac80211.h
-> > +++ b/include/net/mac80211.h
-> > @@ -779,6 +779,19 @@ enum sta_notify_cmd {
-> >  };
-> > 
-> >  /**
-> > + * enum sta_notify_ps_cmd - sta power save notify command
-> > + *
-> > + * Used with the sta_notify_ps() callback in &struct ieee80211_ops to
-> > + * notify the driver if a station made a power state transition.
-> > + *
-> > + * @STA_NOTIFY_SLEEP: a station is now sleeping
-> > + * @STA_NOTIFY_AWAKE: a sleeping station woke up
-> > + */
-> > +enum sta_notify_ps_cmd {
-> > +       STA_NOTIFY_SLEEP, STA_NOTIFY_AWAKE,
-> > +};
-> > +
-> > +/**
-> >   * enum ieee80211_tkip_key_type - get tkip key
-> >   *
-> >   * Used by drivers which need to get a tkip key for skb. Some drivers need a
-> > @@ -1248,6 +1261,9 @@ enum ieee80211_ampdu_mlme_action {
-> >   * @sta_notify: Notifies low level driver about addition or removal
-> >   *     of associated station or AP.
-> >   *
-> > + * @sta_ps_notify: Notifies low level driver about the power state transition
-> > + *     of a associated station. Must be atomic.
-> > + *
-> 
-> Can we add documentation that this is only required when the AP cannot
-> figure this out by itself? This can help people working on AP support to
-> not think they need to implement this for all drivers.
-> 
-Hmm, yeah... should I edit the documentation for sta_notify as well?
+On Tue, Dec 09, 2008 at 12:40:10PM -0500, Dan Williams wrote:
 
-Regards,
-	Chr
+> Every 120 seconds usually (it uses a simple backoff algorithm), but
+> yeah, this is a good thing to do.  You probably want to make NM ignore
+> the device if you're configuring it as an AP though, since obviously NM
+> shouldn't be driving an AP mode interface.
 
+Actually, I would like to be able to NM to set up a simple AP similarly
+to IBSS configuration.. If I'm setting up the interface manually (either
+for AP or even for client modes), I would like NM to ignore the device
+from that point on, but that is a separate point.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
