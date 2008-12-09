@@ -1,76 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:63599 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbYL1N1B (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35537 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752660AbYLIVUI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2008 08:27:01 -0500
-Received: by bwz14 with SMTP id 14so15332144bwz.13
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2008 05:26:58 -0800 (PST)
-To: Claudio <der.claudio@aon.at>
-Cc: linux-wireless@vger.kernel.org, Greg KH <gregkh@suse.de>
-Subject: Re: status of at76-usb driver
-References: <1230411118.4956956ecb911@webmail.aon.at>
-Date: Sun, 28 Dec 2008 15:26:55 +0200
-In-Reply-To: <1230411118.4956956ecb911@webmail.aon.at> (Claudio's message of "Sat\, 27 Dec 2008 21\:51\:58 +0100 \(CET\)")
-Message-ID: <87fxk8o2g0.fsf@litku.valot.fi> (sfid-20081228_142708_210834_36ECBF5C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-From: Kalle Valo <kalle.valo@iki.fi>
+	Tue, 9 Dec 2008 16:20:08 -0500
+Subject: Re: [Patch 2/2 v2] Add signal strength and bandwith to
+	nl80211station info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henning Rogge <hrogge@googlemail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Henning Rogge <rogge@fgan.de>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+In-Reply-To: <200812092058.32251.hrogge@googlemail.com> (sfid-20081209_205836_039420_8AF1B951)
+References: <200811252131.30161.hrogge@googlemail.com>
+	 <200812071917.07075.hrogge@googlemail.com>
+	 <1228765415.22164.107.camel@johannes.berg>
+	 <200812092058.32251.hrogge@googlemail.com>
+	 (sfid-20081209_205836_039420_8AF1B951)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X88J44czKYopA14VEFeQ"
+Date: Tue, 09 Dec 2008 22:19:32 +0100
+Message-Id: <1228857572.1029.28.camel@johannes.berg> (sfid-20081209_222012_008976_EAEF0DF6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Claudio <der.claudio@aon.at> writes:
 
-> Hi!
+--=-X88J44czKYopA14VEFeQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Hello,
+On Tue, 2008-12-09 at 20:58 +0100, Henning Rogge wrote:
 
-> Since my hardware stopped working properly due to a distro (ubuntu
-> btw) upgrade and I was not able to quickly fix it
+> -		if (!(sinfo->txrate.flags & RATE_INFO_FLAGS_MCS))
+> -			NLA_PUT_U16(msg, NL80211_RATE_INFO_LEGACY,
+> -				    sinfo->txrate.legacy);
+> -		else
+> +		NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE,
+> +				nl80211_calculate_bitrate(&sinfo->txrate));
 
-I'm sorry to hear this. Can you tell me what Ubuntu version and at76
-hardware you have? I have Ubuntu running on one of my test laptops, I
-could test it myself.
+If you do:
 
-> I started investigating (again) in \"the case of at76-usb\" and read
-> through this mailing-list, the wiki and had a look at the changes in
-> the git tree. I am not sure if I understood everything correctly.
->
-> Can anyone sum up what the current state for users of at76-usb devices
-> is please?
->
-> It seems like the working code has been removed from the kernel in
-> order to rewrite it anywhere in the future and adapt it to this new
-> mac80211 thing. Which means that currently users (like me) have to use
-> an old version of linux (like 2.4.22) to make use of their devices.
-> Hopefully I am wrong...
+if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS) {
+	if (sinfo->txrate.mcs < 32)
+		NLA_PUT_U16(msg, ..., calculate());
+} else
+	NLA_PUT_U16(msg, ..., legacy);
 
-The current state is this:
 
-A long time ago I started porting at76_usb to use mac80211, the IEEE
-802.11 stack in Linux. It's still buggy, biggest problem is that for
-some reason I have to replug the device constantly. I guess firmware
-is crashing because of a driver bug, or something like that.
-Unfortunately I haven't worked that much on the problem and haven't
-been able to solve it yet. As soon as I get good enough stability I
-will resubmit it to wireless-testing tree, but I'm not there quite
-yet.
+and add a big comment to the calculate function that it only works for
+MCS < 32, I'm fine with it.
 
-Fortunately Greg created staging tree some time ago and included the
-original at76_usb driver to the tree:
+johannes
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=tree;f=drivers/staging/at76_usb;hb=HEAD
+--=-X88J44czKYopA14VEFeQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-So starting from 2.6.28 (please correct me if I'm wrong here) the
-original (and working!) at76_usb driver should be included already in
-the kernel, it's just up to the distributions to enable it.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Grep, I noticed that the TODO file in your tree doesn't mention
-anything about my mac80211 port. I'll send you a patch fixing that.
+iQIcBAABAgAGBQJJPuDgAAoJEKVg1VMiehFYB9AP+wa1LrpOn+pVvkfNRgxnuzly
+lSUfunCpFgO40q/0vGZ4cPY5sV3ppLGL4HJTQh9FKP1ce7gEL1IMx76cxMASZJvW
+ATLq44kRSbkcI3qZziNti8r4IjvGrIHCjIM2no34kw0A8xk+NAoQPSN4UtEx5iwB
+NunJhYulRc/deVBAJoYv+Vil5HMqjZUNWO2A6f3LpKYcYCXJAY4nMaTMXQ+zVvHf
+beIhPSW7/Vc10oCDtMGPRHupdV+XfiR9bcPeK03eaPiUVXcQ3d9ThvAZW7lJkzNs
+KZR+181t5wtE7mt7dCNF6HCLdhS7I7u+DQIZ7qxpdPo/JCrnEBPKZPdrxoMv8fW6
+IFMRi2sFgSIxuFjNMoyS7sbD7Flg/dPiBbZeSa/apCpwE93wVRKjy9QOtYBzmWfs
+ZvlhXwGHtkmfqzMSQm3HS7ZbfjnixqCXZjktipsGYs3pIBlTHk8o+0KITtDSyokM
+humt68t4NGNlNiLLr4Is+O7seLcvqL68eARE6uJGPgClLZfYnCWfY4GAJxf0TczO
+IUnT4lrtmB/iZry+nHMyqyFvdJJI56XgCMdTPp6PTKXuooh8Ayv4UbKezgw55VOw
+UbyhUc+yM4XcP88AzqYB4bign9eSzBC7ZztcDGJ+Tb3MpQiJScMn4FBblGCJU7DJ
+9Q5FIi7xNbWQnIEfzCsM
+=Npue
+-----END PGP SIGNATURE-----
 
-Also I'm going to rename the mac80211 port to something else for just
-to avoid the confusion with the original driver. Last thing I want to
-see is having two in-tree drivers with identical names.
+--=-X88J44czKYopA14VEFeQ--
 
--- 
-Kalle Valo
