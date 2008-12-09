@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40717 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751585AbYLUK2V (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:42110 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753809AbYLIAni (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 05:28:21 -0500
-Subject: new sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Tomas Winkler <tomasw@gmail.com>, Kalle Valo <kalle.valo@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-faQCRTGQFQGYI06NZubb"
-Date: Sun, 21 Dec 2008 11:28:15 +0100
-Message-Id: <1229855295.4953.0.camel@johannes> (sfid-20081221_112833_601503_A49B0E45)
-Mime-Version: 1.0
+	Mon, 8 Dec 2008 19:43:38 -0500
+Message-Id: <1228783416.25383.1288982771@webmail.messagingengine.com> (sfid-20081209_014342_980615_7796A90D)
+From: "Dan E" <trg_info@mailhaven.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+MIME-Version: 1.0
+References: <1228692546.8826.1288759933@webmail.messagingengine.com>
+ (sfid-20081208_002919_244971_30E436F9)
+ <1228723993.22164.65.camel@johannes.berg>
+ <1228778295.10662.1288975589@webmail.messagingengine.com>
+ <1228778801.22164.156.camel@johannes.berg>
+Subject: Re: Userspace tools: Roadmap?
+In-Reply-To: <1228778801.22164.156.camel@johannes.berg>
+Date: Mon, 08 Dec 2008 19:43:36 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-faQCRTGQFQGYI06NZubb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Tue, 09 Dec 2008 00:26:41 +0100, "Johannes Berg"
+<johannes@sipsolutions.net> said:
+> There's libnl 1.2 and 2.0? That's news to me! Patches welcome. Sorry, I
+> guess it needs 1.0 or 1.1, will fix the page.
 
-These showed up in the nightly pull from yesterday:
+Well at http://people.suug.ch/~tgr/libnl/ it still only lists 1.1 but
+the git repository shows a clear move to 2.0 (forget I mentioned 1.2,
+that was my own tracking label).  The code had a bunch of commits in
+October.  In retrospect, if I just downloaded the 1.1 tarball from that
+webpage instead of using the git HEAD everything would have been fine. 
+Patches can probably wait until 2.0 is officially released.
 
-> +drivers/net/wireless/iwlwifi/iwl3945-base.c:7436:5: warning: symbol 'iwl=
-3945_init_drv' was not declared. Should it be static?
-> +drivers/net/wireless/iwlwifi/iwl-3945.c:1325:5: warning: symbol 'iwl3945=
-_apm_reset' was not declared. Should it be static?
-> +net/mac80211/util.c:355:6: warning: symbol 'ieee80211_wake_queue_by_reas=
-on' was not declared. Should it be static?
-> +net/mac80211/util.c:385:6: warning: symbol 'ieee80211_stop_queue_by_reas=
-on' was not declared. Should it be static?
->=20
+> 
+> > That's what I thought but I wasn't seeing any callbacks at all through
+> > my ieee80211_ops pointers.  I did see the channel frequency change with
+> > 'iwconfig wlan0', but no callbacks.  My fault, again, for not RTFM.  I
+> > haven't gotten to the point yet on my driver where I expect 'ip link set
+> > up dev wlan0' (or 'ifconfig wlan0 up', if you prefer) and now I see
+> > that's why the config callback never happened.  
+> 
+> Ah. Yes, if the hw isn't started mac80211 won't try to configure it :)
+> 
+> > If I had RTFM I might
+> > have noticed adding 'commit' at the end of the iwconfig command would
+> > have done it without the 'up'.
+> 
+> No, it wouldn't, commit is pointless, don't worry about it, you'll never
+> need to use it with mac80211.
 
---=-faQCRTGQFQGYI06NZubb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+When I reboot, modprobe the driver, and do 'iwconfig wlan0 channel 9
+commit' the .config callback does run.  If I leave off the 'commit' it
+does not.  I'm trying to validate as many callbacks as I can before
+moving on to the next step, enabling the interface.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+An additional question, if I may... Is wlan0 considered a "virtual
+interface" or does that term only apply to additional interfaces created
+with iw?  The whole vif thing has me a little confused.
 
-iQIcBAABAgAGBQJJTho8AAoJEKVg1VMiehFYCGwP/24AfUuNxJRtI7drHS+dXAqK
-zgDwx82v+77lhimhfAGo7Z7m7IWP7GgfqMf755xpr9KK2Dz36JfsdzeXmRKRUOqT
-AkNfQojRedXcV+cpgI5+/6y8w0H+em58IgqgIE0ZvGmkB/J6XPjc7xK3pxlsib5m
-KNLWtC8mBZHNiZDMT0pJBmUUwXLiCPoe0Mp0DmmahhPi5TmNXLh3GU5IFzhgE/+L
-OySk6aVW+9S4QgIApj7bQjzulVuoXSlOiviai3BG0TBvtJgaGeas1L9m6Drf+BUy
-Te0IKG7uumeAV8FQlARS1SpDngNPrr5in8u0M/Xlif5laownekWvef61/I//d4X6
-d/ODrvbbngsZ8qYaKoVuqSl8JfaV4izzlp9Y9i9m2h3B3RG/dJj+JhxUcK7sNQRX
-B5ZxhbhZ84b/4L7qSOlBeSXmqVz/hvXThlr7BG5joDrxDD0dCL7648jNf2yHXzKZ
-c0fOR/owD0Lj44ZOlof+h7zHbZt8LtGBfHBGCYsbrzGHSSkkSXePwEQtnXL5Tj4R
-o5vgcX2bVcb4IgZVBahPrgk2PbJX065d35N6JyUqoglEZGex+7yz9TUD3wxRmHOl
-WJG89co5DWcse0ui/+OkN6xD3QO4HMfk5Ureb6V7wZyzBL5Xo/mFa6iZEbsqHCtA
-0oXinOrtFrf5aQ3fmRp5
-=qE9w
------END PGP SIGNATURE-----
+Thanks for the help.
 
---=-faQCRTGQFQGYI06NZubb--
+--
+Dan
+
+-- 
+http://www.fastmail.fm - Accessible with your email software
+                          or over the web
 
