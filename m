@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45742 "EHLO mail.atheros.com"
+Received: from mailguard.fgan.de ([128.7.3.5]:39909 "EHLO mailguard.fgan.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754043AbYLCExa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 23:53:30 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 20:53:30 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1754078AbYLJGyD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Dec 2008 01:54:03 -0500
+From: Henning Rogge <rogge@fgan.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/2] Add signal strength and bandwith to nl80211station info
+Date: Wed, 10 Dec 2008 07:53:50 +0100
+Cc: Henning Rogge <hrogge@googlemail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+References: <200811252131.30161.hrogge@googlemail.com> <200812092050.29545.hrogge@googlemail.com> <1228857372.1029.25.camel@johannes.berg>
+In-Reply-To: <1228857372.1029.25.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18742.4112.665927.756930@gargle.gargle.HOWL> (sfid-20081203_055339_377399_D889216E)
-Date: Wed, 3 Dec 2008 10:20:24 +0530
-To: Luis Rodriguez <lrodriguez@atheros.com>
-CC: Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [PATCH v2 2/2] ath9k: Use GFP_ATOMIC when
- allocating TX private area
-In-Reply-To: <43e72e890812022012o7759400mf002f51c0a3f0eb@mail.gmail.com>
-References: <1228274124-25140-1-git-send-email-lrodriguez@atheros.com>
-	<1228274124-25140-2-git-send-email-lrodriguez@atheros.com>
-	<1228274124-25140-3-git-send-email-lrodriguez@atheros.com>
-	<18742.299.281327.259785@localhost.localdomain>
-	<43e72e890812022012o7759400mf002f51c0a3f0eb@mail.gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart2775973.zFxvxpJi0C";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200812100753.58590.rogge@fgan.de> (sfid-20081210_075407_745035_10B82D27)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis Rodriguez wrote:
-> ath_test_get_txq() will not return the queue only if the queue is
-> getting full. What the check above guarantees is we have at least one
-> buffer to run through procesq before disabling the TX queue, otherwise
-> the queue won't be be woken up. Or am I missing something? That is,
-> say you just have to TX one skb and we hit -ENOMEM on
-> ath_tx_setup_buffer() and you disable the queue. How will this queue
-> be awoken if this is true in ath_tx_processq():
-> 
-> list_empty(&txq->axq_q)
+--nextPart2775973.zFxvxpJi0C
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Ok, makes sense.
-But the queue can be obtained from txctl, so that code can be removed.
+Am Tuesday 09 December 2008 22:16:12 schrieb Johannes Berg:
+> No, that's the thing, for 32 through 76 the calculated values are
+> totally wrong, that isn't a logical extension of the scheme, MCS 73 for
+> 20 MHz for example is:
+>
+> four streams, using 64-qam, 64-qam, 16-qam, qpsk with a coding rate of
+> 3/4 for a net bitrate of 195.0 MBits
 
-Sujith
+Maybe you can just post the whole mcs 32-76 table, so I can look at it. I c=
+an=20
+only work with the values in the wiki, and at the moment the calculation=20
+matchs them very well.
+
+Henning
+
+*************************************************
+Diplom Informatiker Henning Rogge
+=46orschungsgesellschaft f=FCr
+Angewandte Naturwissenschaften e. V. (FGAN)=20
+Neuenahrer Str. 20, 53343 Wachtberg, Germany
+Tel.: 0049 (0)228 9435-961
+=46ax: 0049 (0)228 9435-685
+E-Mail: rogge@fgan.de
+Web: www.fgan.de
+************************************************
+Sitz der Gesellschaft: Bonn
+Registergericht: Amtsgericht Bonn VR 2530
+Vorstand: Dr. rer. nat. Ralf Dornhaus (Vors.), Prof. Dr. Joachim Ender=20
+(Stellv.)
+
+
+--nextPart2775973.zFxvxpJi0C
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkk/Z34ACgkQRIfGfFXsz+BI1wCfeg6iIwmhiqC13zKIA14LGwiv
+8D4An2RpPgeAqmv+WVlmck+j+YII9HE2
+=pbwN
+-----END PGP SIGNATURE-----
+
+--nextPart2775973.zFxvxpJi0C--
