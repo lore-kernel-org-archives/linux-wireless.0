@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:54946 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753715AbYLGOxL (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:47907 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017AbYLJSJX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2008 09:53:11 -0500
-Date: Sun, 7 Dec 2008 15:53:02 +0100
+	Wed, 10 Dec 2008 13:09:23 -0500
+Date: Wed, 10 Dec 2008 18:09:18 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: compat-wireless-2008-12-06 =?utf-8?Q?a?=
-	=?utf-8?Q?nd_no_member_named_=E2=80=98requeue=E2=80=99?=
-Message-ID: <20081207145302.GA6357@gandalf.dynalias.org> (sfid-20081207_155314_359100_F922C592)
-References: <20081207110349.GA11803@gandalf.dynalias.org> <1228652064.22164.4.camel@johannes.berg>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	hmh@hmh.eng.br
+Subject: Re: [RFC] b43: rework rfkill code
+Message-ID: <20081210180918.GA14782@srcf.ucam.org> (sfid-20081210_190926_668063_F283BFF1)
+References: <20081210150935.GA10927@srcf.ucam.org> <1228929529.15837.34.camel@johannes.berg> <1228929820.15837.40.camel@johannes.berg> <200812101831.13526.mb@bu3sch.de> <1228930643.15837.48.camel@johannes.berg> <20081210175102.GA14282@srcf.ucam.org> <1228932343.15837.57.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1228652064.22164.4.camel@johannes.berg>
-From: Norbert Preining <preining@logic.at>
+In-Reply-To: <1228932343.15837.57.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 07 Dec 2008, Johannes Berg wrote:
-> No easy way, no, but if you're using .28-rc7 anyway why not just use
-> wireless-testing instead, which is wireless + .28-rc7?
+On Wed, Dec 10, 2008 at 07:05:43PM +0100, Johannes Berg wrote:
 
-Ok, did that. And included already the patch I wanted to test. Thanks.
-(Only problem, downloading the whole git tree ;-)
+> Does the wireless driver get the notification about this from the
+> hardware, like it would if this was a real physical switch?
 
-Best wishes
+Yes.
 
-Norbert
+> Then it's probably pretty simple: provide a rfkill struct from the 
+> driver that updates hard-kill and provide a second rfkill struct for 
+> the platform device that doesn't get hard-killed, but also provide a 
+> soft-kill input form the platform device. That way, you can toggle 
+> that button, but you can also software-enable the platform rfkill 
+> device and that in turn re-enables the wifi-rfkill "hw" switch device.
 
--------------------------------------------------------------------------------
-Dr. Norbert Preining <preining@logic.at>        Vienna University of Technology
-Debian Developer <preining@debian.org>                         Debian TeX Group
-gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
--------------------------------------------------------------------------------
-LUSBY (n.)
-The fold of flesh pushing forward over the top of a bra which is too
-small for the lady inside it.
-			--- Douglas Adams, The Meaning of Liff
+Right. That's prety close to the current situation.
+ 
+> If we need to tie them together in software it gets more complicated
+> though.
+
+I think we can avoid that, thankfully.
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
