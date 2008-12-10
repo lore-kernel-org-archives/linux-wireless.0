@@ -1,77 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42721 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752000AbYLIBH5 (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:56284 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752125AbYLJOi1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 20:07:57 -0500
-Subject: Re: [RFT] mac80211: clean up set_key callback
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>, Chr <chunkeey@web.de>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Kalle Valo <kalle.valo@nokia.com>
-In-Reply-To: <20081209010144.GA8828@hash.localnet>
-References: <1228757035.22164.94.camel@johannes.berg>
-	 <20081209010144.GA8828@hash.localnet>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8LeNlGswjEFDflLlB651"
-Date: Tue, 09 Dec 2008 02:07:25 +0100
-Message-Id: <1228784845.22164.170.camel@johannes.berg> (sfid-20081209_020800_805523_9FD1EEE5)
-Mime-Version: 1.0
+	Wed, 10 Dec 2008 09:38:27 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so245800ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 06:38:26 -0800 (PST)
+Message-ID: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com> (sfid-20081210_153830_650761_B6E9C11D)
+Date: Wed, 10 Dec 2008 19:38:25 +0500
+From: "Alexander E. Patrakov" <patrakov@gmail.com>
+To: lkml@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: iwlagn interrupt problem
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello. My kernel is 2.6.27.6, and at work, I sit in a place with
+unreliable wireless connection. The problematic piece of dmesg looks
+like this:
 
---=-8LeNlGswjEFDflLlB651
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+[17454.155855] wlan0: deauthenticated
+[17456.509322] iwlagn 0000:0c:00.0: PCI INT A disabled
+[17456.557701] iwlagn 0000:0c:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[17456.557814] iwlagn 0000:0c:00.0: restoring config space at offset
+0x1 (was 0x100102, writing 0x100106)
+[17456.756926] Registered led device: iwl-phy0:radio
+[17456.756976] Registered led device: iwl-phy0:assoc
+[17456.757028] Registered led device: iwl-phy0:RX
+[17456.757065] Registered led device: iwl-phy0:TX
+[17456.766141] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[17460.329937] wlan0: authenticate with AP 00:19:5b:ba:53:b7
+[17460.335391] wlan0: authenticated
+[17460.335401] wlan0: associate with AP 00:19:5b:ba:53:b7
+[17460.532088] wlan0: associate with AP 00:19:5b:ba:53:b7
+[17460.534523] wlan0: RX AssocResp from 00:19:5b:ba:53:b7 (capab=0x431
+status=0 aid=2)
+[17460.534533] wlan0: associated
+[17460.541523] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[17471.476059] wlan0: no IPv6 routers present
+[17821.193753] wlan0: deauthenticated
+[17823.550303] iwlagn 0000:0c:00.0: PCI INT A disabled
+[17823.612978] iwlagn 0000:0c:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[17823.613110] iwlagn 0000:0c:00.0: restoring config space at offset
+0x1 (was 0x100102, writing 0x100106)
+[17823.812945] Registered led device: iwl-phy0:radio
+[17823.812995] Registered led device: iwl-phy0:assoc
+[17823.813048] Registered led device: iwl-phy0:RX
+[17823.813085] Registered led device: iwl-phy0:TX
+[17823.823450] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[17827.380770] wlan0: authenticate with AP 00:19:5b:ba:53:b7
+[17827.382603] wlan0: authenticated
+[17827.382613] wlan0: associate with AP 00:19:5b:ba:53:b7
+[17827.581037] wlan0: associate with AP 00:19:5b:ba:53:b7
+[17827.583418] wlan0: RX AssocResp from 00:19:5b:ba:53:b7 (capab=0x431
+status=0 aid=2)
+[17827.583429] wlan0: associated
+[17827.591080] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[17838.392089] wlan0: no IPv6 routers present
 
-On Mon, 2008-12-08 at 20:01 -0500, Bob Copeland wrote:
-> On Mon, Dec 08, 2008 at 06:23:55PM +0100, Johannes Berg wrote:
-> > The set_key callback now seems rather odd, passing a MAC address
-> > instead of a station struct, and a local address instead of a
-> > vif struct. Change that.
-> >=20
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->=20
-> Works here... ath5k changes:
->=20
->     Acked-by: Bob Copeland <me@bobcopeland.com>
+Prevois kernels panicked in this place, see description and photo at
+http://patrakov.blogspot.com/2008/09/kernel-panic.html
 
-Thanks for testing.
+The messages about "PCI INT A" are still a problem, because at this
+time, the audio loops and the mouse is unresponsive (i.e., the system
+locks up for a brief period of time, but eventually recovers). Here is
+/proc/interrupts:
 
-> But ath5k probably wants this one-liner too (feel free to just=20
-> roll it up into yours):
+           CPU0       CPU1
+  0:    2600610    2598665   IO-APIC-edge      timer
+  1:        173        181   IO-APIC-edge      i8042
+  3:          1          1   IO-APIC-edge
+  4:          1          1   IO-APIC-edge
+  7:          0          0   IO-APIC-edge      parport0
+  8:         42         32   IO-APIC-edge      rtc0
+  9:       2229       2204   IO-APIC-fasteoi   acpi
+ 12:         72         66   IO-APIC-edge      i8042
+ 14:      92707      91972   IO-APIC-edge      ata_piix
+ 15:          0          0   IO-APIC-edge      ata_piix
+ 16:        255        247   IO-APIC-fasteoi   firewire_ohci, yenta,
+i915@pci:0000:00:02.0
+ 21:     357656     360896   IO-APIC-fasteoi   HDA Intel
+ 22:        110         97   IO-APIC-fasteoi   uhci_hcd:usb1,
+uhci_hcd:usb2, uhci_hcd:usb4, uhci_hcd:usb5, uhci_hcd:usb6
+ 23:      70327      69245   IO-APIC-fasteoi   ehci_hcd:usb3, ehci_hcd:usb7
+219:     126299     126470   PCI-MSI-edge      iwlagn
+220:      29297      29382   PCI-MSI-edge      eth0
+221:      41694      41968   PCI-MSI-edge      ahci
+NMI:          0          0   Non-maskable interrupts
+LOC:    1584309    2655947   Local timer interrupts
+RES:     461218     469590   Rescheduling interrupts
+CAL:        987      67106   function call interrupts
+TLB:        987       1027   TLB shootdowns
+TRM:          0          0   Thermal event interrupts
+SPU:          0          0   Spurious interrupts
+ERR:          0
+MIS:          0
 
-Right, I'll roll it up so you don't have to resend it.
+Here is lspci && lspci -n:
 
-johannes
+00:00.0 Host bridge: Intel Corporation Mobile PM965/GM965/GL960 Memory
+Controller Hub (rev 03)
+00:02.0 VGA compatible controller: Intel Corporation Mobile
+GM965/GL960 Integrated Graphics Controller (rev 03)
+00:02.1 Display controller: Intel Corporation Mobile GM965/GL960
+Integrated Graphics Controller (rev 03)
+00:1a.0 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
+UHCI Controller #4 (rev 03)
+00:1a.1 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
+UHCI Controller #5 (rev 03)
+00:1a.7 USB Controller: Intel Corporation 82801H (ICH8 Family) USB2
+EHCI Controller #2 (rev 03)
+00:1b.0 Audio device: Intel Corporation 82801H (ICH8 Family) HD Audio
+Controller (rev 03)
+00:1c.0 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express
+Port 1 (rev 03)
+00:1c.2 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express
+Port 3 (rev 03)
+00:1d.0 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
+UHCI Controller #1 (rev 03)
+00:1d.1 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
+UHCI Controller #2 (rev 03)
+00:1d.2 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
+UHCI Controller #3 (rev 03)
+00:1d.7 USB Controller: Intel Corporation 82801H (ICH8 Family) USB2
+EHCI Controller #1 (rev 03)
+00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev f3)
+00:1f.0 ISA bridge: Intel Corporation 82801HEM (ICH8M) LPC Interface
+Controller (rev 03)
+00:1f.1 IDE interface: Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E)
+IDE Controller (rev 03)
+00:1f.2 SATA controller: Intel Corporation 82801HBM/HEM
+(ICH8M/ICH8M-E) SATA AHCI Controller (rev 03)
+00:1f.3 SMBus: Intel Corporation 82801H (ICH8 Family) SMBus Controller (rev 03)
+04:00.0 Ethernet controller: Marvell Technology Group Ltd. 88E8055
+PCI-E Gigabit Ethernet Controller (rev 14)
+0c:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or
+AGN [Kedron] Network Connection (rev 61)
+1c:03.0 CardBus bridge: O2 Micro, Inc. OZ711SP1 Memory CardBus
+Controller (rev 01)
+1c:03.2 SD Host controller: O2 Micro, Inc. Integrated MMC/SD Controller (rev 02)
+1c:03.3 Mass storage controller: O2 Micro, Inc. Integrated MS/xD
+Controller (rev 01)
+1c:03.4 FireWire (IEEE 1394): O2 Micro, Inc. Firewire (IEEE 1394) (rev 02)
+00:00.0 0600: 8086:2a00 (rev 03)
+00:02.0 0300: 8086:2a02 (rev 03)
+00:02.1 0380: 8086:2a03 (rev 03)
+00:1a.0 0c03: 8086:2834 (rev 03)
+00:1a.1 0c03: 8086:2835 (rev 03)
+00:1a.7 0c03: 8086:283a (rev 03)
+00:1b.0 0403: 8086:284b (rev 03)
+00:1c.0 0604: 8086:283f (rev 03)
+00:1c.2 0604: 8086:2843 (rev 03)
+00:1d.0 0c03: 8086:2830 (rev 03)
+00:1d.1 0c03: 8086:2831 (rev 03)
+00:1d.2 0c03: 8086:2832 (rev 03)
+00:1d.7 0c03: 8086:2836 (rev 03)
+00:1e.0 0604: 8086:2448 (rev f3)
+00:1f.0 0601: 8086:2815 (rev 03)
+00:1f.1 0101: 8086:2850 (rev 03)
+00:1f.2 0106: 8086:2829 (rev 03)
+00:1f.3 0c05: 8086:283e (rev 03)
+04:00.0 0200: 11ab:4363 (rev 14)
+0c:00.0 0280: 8086:4229 (rev 61)
+1c:03.0 0607: 1217:7136 (rev 01)
+1c:03.2 0805: 1217:7120 (rev 02)
+1c:03.3 0180: 1217:7130 (rev 01)
+1c:03.4 0c00: 1217:00f7 (rev 02)
 
---=-8LeNlGswjEFDflLlB651
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Here is /proc/cmdline (nomsi is needed in order to work around the
+erratum in the GM965 graphics chipset without upgrading the driver).
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+root=/dev/mapper/aep-root ro nomsi quiet resume=/dev/mapper/aep-swap_1
 
-iQIcBAABAgAGBQJJPcTJAAoJEKVg1VMiehFYXdQP/je/JrlZEgnLBraLrQwwqEzF
-vCXCuKPOCWe2JJs6J0SBko79Moj8dgFzdZXg3RZDg6b5BE/ahsCIV6KZU0lk7Uzm
-Yd92ItrUJ/nYffMtAM9byhRk4CCPS49TLKl9WlOLEclXqWmmAA66eDPrb0s6aivc
-Ri1g3GDc/eR+zmpoRk8JsfHCs5ilrbdcaB2QsaIap5LtJ8xV3vdCE9dpqiV8gqBZ
-J+WTMYhc1LY6Lz/WIENWeYlLWYZBjyN75YCwC4JTWWoS74zj6rG8EM80aJGndyl+
-Z9PJt47+c93G3mIP0vR8Zoa6TyYzTWnrZVaxYBP8LR4VZhnuOokZVsQ0+XWPrO0r
-O2OMlDnP6giXkGHsALvXNHgTK5I702xJlNuGVwuVoLn7VLEBydg+zjD6lIUSN7CO
-qf4d+RCtUXR1ZDko8pKQfKAkEk54qCquc/5lYql4mi853lUjYPyRX56Lif9qKebA
-dyOlOhtUZ4NqqZMkGnGIXQYP1vKYgB9LM17nzWLflO4MWTNYENPJSi/+BEyLKJea
-LpL3duxzFBLsSFcCSPNkvD+lTBZRTDsPpJxQoQN2bEI6R2FT0wkqyecuNDb5AO7L
-UfMRsxWmwkFXB3dXb1A7XGAZ1mfOwea7R06HFpNPC9OeMCiHsj4sXM7yB2VOLd9S
-R/6jIHGSZcSasBGbaYC+
-=1NvS
------END PGP SIGNATURE-----
+If more information is needed, just ask.
 
---=-8LeNlGswjEFDflLlB651--
-
+-- 
+Alexander E. Patrakov
