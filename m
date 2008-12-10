@@ -1,58 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:47328 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758685AbYLKQzp (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:40328 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326AbYLJRBk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 11:55:45 -0500
-Message-ID: <4941460E.9000506@lwfinger.net> (sfid-20081211_175554_997559_F4C29EFC)
-Date: Thu, 11 Dec 2008 10:55:42 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 10 Dec 2008 12:01:40 -0500
+Received: by ewy10 with SMTP id 10so850839ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 09:01:38 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] rfkill: strip pointless notifier chain
+Date: Wed, 10 Dec 2008 18:01:35 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1228927728.15837.10.camel@johannes.berg>
+In-Reply-To: <1228927728.15837.10.camel@johannes.berg>
 MIME-Version: 1.0
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	hmh@hmh.eng.br
-Subject: Re: [RFC] b43: rework rfkill code
-References: <20081210150935.GA10927@srcf.ucam.org>
-In-Reply-To: <20081210150935.GA10927@srcf.ucam.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200812101801.35735.IvDoorn@gmail.com> (sfid-20081210_180144_999569_6B5605F9)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthew Garrett wrote:
-> I've reworked the rfkill code in b43. This ought to be more consistent 
-> with the other drivers and it seems to work on the machines I've tested 
-> it on here, but it'd be good to get some feedback.
-> 
-> Firstly, I've replaced the polled input device. It's just some delayed 
-> work now. It polls the hardware every second to determine whether the 
-> radio has been hardware killed or not. If it has, it sets the rfkill 
-> state to HARD_BLOCKED. If the radio is enabled and the previous state 
-> was HARD_BLOCKED, it resets the state to UNBLOCKED. If the radio is 
-> enabled and the previous state was SOFT_BLOCKED, it leaves the state as 
-> is.
-> 
-> I also removed some of the complexity from the rfkill toggle function, 
-> since the rfkill core will handle the case of the user requesting a 
-> change from HARD_BLOCKED without the driver needing to care.
-> 
-> The final change is that I removed the code for changing the wireless 
-> state in response to the txpower configuration in mac80211. Right now, I 
-> can't see any way for this to work correctly - if the user disables the 
-> radio via rfkill, mac80211 doesn't flag the radio as disabled. As a 
-> result, the next time the configuration callback is called, b43 
-> reenables the radio again, even though the user has explicitly disabled 
-> it. I don't think any of the other drivers handle this case, so I'm not 
-> really sure what the best way to handle this in future is. The current 
-> situation certainly seems broken.
-> 
-> How does this look to people?
+On Wednesday 10 December 2008, Johannes Berg wrote:
+> No users, so no reason to have it.
 
-All this discussion about hard vs soft rfkill makes my head hurt and I have
-stopped reading those posts.
+Henrique, you introduced the notifier chain, are there any upcoming
+users for it or can it indeed be removed?
 
-With this patch, my b43 device and its LED still work.
+Ivo
 
-Larry
-
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  include/linux/rfkill.h |    7 ----
+>  net/rfkill/rfkill.c    |   83 ++-----------------------------------------------
+>  2 files changed, 5 insertions(+), 85 deletions(-)
+> 
+> --- everything.orig/include/linux/rfkill.h	2008-12-10 17:30:35.000000000 +0100
+> +++ everything/include/linux/rfkill.h	2008-12-10 17:30:39.000000000 +0100
+> @@ -149,11 +149,4 @@ static inline char *rfkill_get_led_name(
+>  #endif
+>  }
+>  
+> -/* rfkill notification chain */
+> -#define RFKILL_STATE_CHANGED		0x0001	/* state of a normal rfkill
+> -						   switch has changed */
+> -
+> -int register_rfkill_notifier(struct notifier_block *nb);
+> -int unregister_rfkill_notifier(struct notifier_block *nb);
+> -
+>  #endif /* RFKILL_H */
+> --- everything.orig/net/rfkill/rfkill.c	2008-12-10 17:32:17.000000000 +0100
+> +++ everything/net/rfkill/rfkill.c	2008-12-10 17:35:38.000000000 +0100
+> @@ -53,51 +53,6 @@ static struct rfkill_gsw_state rfkill_gl
+>  static unsigned long rfkill_states_lockdflt[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
+>  static bool rfkill_epo_lock_active;
+>  
+> -static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
+> -
+> -
+> -/**
+> - * register_rfkill_notifier - Add notifier to rfkill notifier chain
+> - * @nb: pointer to the new entry to add to the chain
+> - *
+> - * See blocking_notifier_chain_register() for return value and further
+> - * observations.
+> - *
+> - * Adds a notifier to the rfkill notifier chain.  The chain will be
+> - * called with a pointer to the relevant rfkill structure as a parameter,
+> - * refer to include/linux/rfkill.h for the possible events.
+> - *
+> - * Notifiers added to this chain are to always return NOTIFY_DONE.  This
+> - * chain is a blocking notifier chain: notifiers can sleep.
+> - *
+> - * Calls to this chain may have been done through a workqueue.  One must
+> - * assume unordered asynchronous behaviour, there is no way to know if
+> - * actions related to the event that generated the notification have been
+> - * carried out already.
+> - */
+> -int register_rfkill_notifier(struct notifier_block *nb)
+> -{
+> -	BUG_ON(!nb);
+> -	return blocking_notifier_chain_register(&rfkill_notifier_list, nb);
+> -}
+> -EXPORT_SYMBOL_GPL(register_rfkill_notifier);
+> -
+> -/**
+> - * unregister_rfkill_notifier - remove notifier from rfkill notifier chain
+> - * @nb: pointer to the entry to remove from the chain
+> - *
+> - * See blocking_notifier_chain_unregister() for return value and further
+> - * observations.
+> - *
+> - * Removes a notifier from the rfkill notifier chain.
+> - */
+> -int unregister_rfkill_notifier(struct notifier_block *nb)
+> -{
+> -	BUG_ON(!nb);
+> -	return blocking_notifier_chain_unregister(&rfkill_notifier_list, nb);
+> -}
+> -EXPORT_SYMBOL_GPL(unregister_rfkill_notifier);
+> -
+>  
+>  static void rfkill_led_trigger(struct rfkill *rfkill,
+>  			       enum rfkill_state state)
+> @@ -124,12 +79,9 @@ static void rfkill_led_trigger_activate(
+>  }
+>  #endif /* CONFIG_RFKILL_LEDS */
+>  
+> -static void notify_rfkill_state_change(struct rfkill *rfkill)
+> +static void rfkill_uevent(struct rfkill *rfkill)
+>  {
+> -	rfkill_led_trigger(rfkill, rfkill->state);
+> -	blocking_notifier_call_chain(&rfkill_notifier_list,
+> -			RFKILL_STATE_CHANGED,
+> -			rfkill);
+> +	kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
+>  }
+>  
+>  static void update_rfkill_state(struct rfkill *rfkill)
+> @@ -142,7 +94,7 @@ static void update_rfkill_state(struct r
+>  			oldstate = rfkill->state;
+>  			rfkill->state = newstate;
+>  			if (oldstate != newstate)
+> -				notify_rfkill_state_change(rfkill);
+> +				rfkill_uevent(rfkill);
+>  		}
+>  		mutex_unlock(&rfkill->mutex);
+>  	}
+> @@ -220,7 +172,7 @@ static int rfkill_toggle_radio(struct rf
+>  	}
+>  
+>  	if (force || rfkill->state != oldstate)
+> -		notify_rfkill_state_change(rfkill);
+> +		rfkill_uevent(rfkill);
+>  
+>  	return retval;
+>  }
+> @@ -405,7 +357,7 @@ int rfkill_force_state(struct rfkill *rf
+>  	rfkill->state = state;
+>  
+>  	if (state != oldstate)
+> -		notify_rfkill_state_change(rfkill);
+> +		rfkill_uevent(rfkill);
+>  
+>  	mutex_unlock(&rfkill->mutex);
+>  
+> @@ -618,28 +570,6 @@ static int rfkill_resume(struct device *
+>  #define rfkill_resume NULL
+>  #endif
+>  
+> -static int rfkill_blocking_uevent_notifier(struct notifier_block *nb,
+> -					unsigned long eventid,
+> -					void *data)
+> -{
+> -	struct rfkill *rfkill = (struct rfkill *)data;
+> -
+> -	switch (eventid) {
+> -	case RFKILL_STATE_CHANGED:
+> -		kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
+> -		break;
+> -	default:
+> -		break;
+> -	}
+> -
+> -	return NOTIFY_DONE;
+> -}
+> -
+> -static struct notifier_block rfkill_blocking_uevent_nb = {
+> -	.notifier_call	= rfkill_blocking_uevent_notifier,
+> -	.priority	= 0,
+> -};
+> -
+>  static int rfkill_dev_uevent(struct device *dev, struct kobj_uevent_env *env)
+>  {
+>  	struct rfkill *rfkill = to_rfkill(dev);
+> @@ -943,14 +873,11 @@ static int __init rfkill_init(void)
+>  		return error;
+>  	}
+>  
+> -	register_rfkill_notifier(&rfkill_blocking_uevent_nb);
+> -
+>  	return 0;
+>  }
+>  
+>  static void __exit rfkill_exit(void)
+>  {
+> -	unregister_rfkill_notifier(&rfkill_blocking_uevent_nb);
+>  	class_unregister(&rfkill_class);
+>  }
+>  
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
