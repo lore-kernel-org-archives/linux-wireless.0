@@ -1,59 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:58046 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbYLAP7R (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51211 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752819AbYLJQt0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 10:59:17 -0500
-Subject: Re: iwlwifi - rfkill only works if the interface is up
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>, linux-wireless@vger.kernel.org,
-	yi.zhu@intel.com
-In-Reply-To: <200812011634.37644.helmut.schaa@gmail.com>
-References: <200812011311.17346.helmut.schaa@gmail.com>
-	 <1ba2fa240812010508hcb29699m8bd8b3b0ba8574cd@mail.gmail.com>
-	 <1228145453.31158.140.camel@violet.holtmann.net>
-	 <200812011634.37644.helmut.schaa@gmail.com>
+	Wed, 10 Dec 2008 11:49:26 -0500
+Subject: [PATCH] rfkill: strip pointless notifier chain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Mon, 01 Dec 2008 16:59:11 +0100
-Message-Id: <1228147151.31158.142.camel@violet.holtmann.net> (sfid-20081201_165921_181471_4E2273E9)
+Date: Wed, 10 Dec 2008 17:48:48 +0100
+Message-Id: <1228927728.15837.10.camel@johannes.berg> (sfid-20081210_174930_274066_2EC33CDF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Helmut,
+No users, so no reason to have it.
 
-> > > > Nevertheless, I'm wondering if the current behaviour (even with the patch above)
-> > > > makes much sense. I mean, the user space cannot rely on the rfkill state
-> > > > unless an appropriate interface is up. As the device is able to report the
-> > > > killswitch state without firmware being loaded the following approach could
-> > > > be feasible:
-> > > > - iwl_pci_probe enables the device and enables the interrupts
-> > > > - iwl_mac_start just loads the firmware
-> > > > - iwl_mac_stop just releases the firmware but leaves the interrupts enabled
-> > > 
-> > > In 3495  rfkill interrupt is not available and rfkill state is
-> > > delivered only when firmware is loaded, therefore this is not
-> > > possible to bring device down and also expect rfill switch event.
-> > > There were few threads about this subject.
-> > > In 4965 and 5000 this will work
-> > 
-> > do we unregister the rfkill switch when bringing the adapter down.
-> 
-> No.
-> 
-> > If not, then we might should do that. I don't see a point in exposing a
-> > rfkill switch if we can't do anything with it.
-> 
-> Either that, or make the rfkill usable even when the interface is down.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/rfkill.h |    7 ----
+ net/rfkill/rfkill.c    |   83 ++-----------------------------------------------
+ 2 files changed, 5 insertions(+), 85 deletions(-)
 
-if the hardware/firmware doesn't allow us to do so, we have no real
-option. I think that nobody thought about this use case so far. I am not
-sure if we should unregister it or just fix rfkill to add an invalid
-state. It is also possible to tie rfkill with ifup/ifdown.
-
-Regards
-
-Marcel
+--- everything.orig/include/linux/rfkill.h	2008-12-10 17:30:35.000000000 +0100
++++ everything/include/linux/rfkill.h	2008-12-10 17:30:39.000000000 +0100
+@@ -149,11 +149,4 @@ static inline char *rfkill_get_led_name(
+ #endif
+ }
+ 
+-/* rfkill notification chain */
+-#define RFKILL_STATE_CHANGED		0x0001	/* state of a normal rfkill
+-						   switch has changed */
+-
+-int register_rfkill_notifier(struct notifier_block *nb);
+-int unregister_rfkill_notifier(struct notifier_block *nb);
+-
+ #endif /* RFKILL_H */
+--- everything.orig/net/rfkill/rfkill.c	2008-12-10 17:32:17.000000000 +0100
++++ everything/net/rfkill/rfkill.c	2008-12-10 17:35:38.000000000 +0100
+@@ -53,51 +53,6 @@ static struct rfkill_gsw_state rfkill_gl
+ static unsigned long rfkill_states_lockdflt[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
+ static bool rfkill_epo_lock_active;
+ 
+-static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
+-
+-
+-/**
+- * register_rfkill_notifier - Add notifier to rfkill notifier chain
+- * @nb: pointer to the new entry to add to the chain
+- *
+- * See blocking_notifier_chain_register() for return value and further
+- * observations.
+- *
+- * Adds a notifier to the rfkill notifier chain.  The chain will be
+- * called with a pointer to the relevant rfkill structure as a parameter,
+- * refer to include/linux/rfkill.h for the possible events.
+- *
+- * Notifiers added to this chain are to always return NOTIFY_DONE.  This
+- * chain is a blocking notifier chain: notifiers can sleep.
+- *
+- * Calls to this chain may have been done through a workqueue.  One must
+- * assume unordered asynchronous behaviour, there is no way to know if
+- * actions related to the event that generated the notification have been
+- * carried out already.
+- */
+-int register_rfkill_notifier(struct notifier_block *nb)
+-{
+-	BUG_ON(!nb);
+-	return blocking_notifier_chain_register(&rfkill_notifier_list, nb);
+-}
+-EXPORT_SYMBOL_GPL(register_rfkill_notifier);
+-
+-/**
+- * unregister_rfkill_notifier - remove notifier from rfkill notifier chain
+- * @nb: pointer to the entry to remove from the chain
+- *
+- * See blocking_notifier_chain_unregister() for return value and further
+- * observations.
+- *
+- * Removes a notifier from the rfkill notifier chain.
+- */
+-int unregister_rfkill_notifier(struct notifier_block *nb)
+-{
+-	BUG_ON(!nb);
+-	return blocking_notifier_chain_unregister(&rfkill_notifier_list, nb);
+-}
+-EXPORT_SYMBOL_GPL(unregister_rfkill_notifier);
+-
+ 
+ static void rfkill_led_trigger(struct rfkill *rfkill,
+ 			       enum rfkill_state state)
+@@ -124,12 +79,9 @@ static void rfkill_led_trigger_activate(
+ }
+ #endif /* CONFIG_RFKILL_LEDS */
+ 
+-static void notify_rfkill_state_change(struct rfkill *rfkill)
++static void rfkill_uevent(struct rfkill *rfkill)
+ {
+-	rfkill_led_trigger(rfkill, rfkill->state);
+-	blocking_notifier_call_chain(&rfkill_notifier_list,
+-			RFKILL_STATE_CHANGED,
+-			rfkill);
++	kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
+ }
+ 
+ static void update_rfkill_state(struct rfkill *rfkill)
+@@ -142,7 +94,7 @@ static void update_rfkill_state(struct r
+ 			oldstate = rfkill->state;
+ 			rfkill->state = newstate;
+ 			if (oldstate != newstate)
+-				notify_rfkill_state_change(rfkill);
++				rfkill_uevent(rfkill);
+ 		}
+ 		mutex_unlock(&rfkill->mutex);
+ 	}
+@@ -220,7 +172,7 @@ static int rfkill_toggle_radio(struct rf
+ 	}
+ 
+ 	if (force || rfkill->state != oldstate)
+-		notify_rfkill_state_change(rfkill);
++		rfkill_uevent(rfkill);
+ 
+ 	return retval;
+ }
+@@ -405,7 +357,7 @@ int rfkill_force_state(struct rfkill *rf
+ 	rfkill->state = state;
+ 
+ 	if (state != oldstate)
+-		notify_rfkill_state_change(rfkill);
++		rfkill_uevent(rfkill);
+ 
+ 	mutex_unlock(&rfkill->mutex);
+ 
+@@ -618,28 +570,6 @@ static int rfkill_resume(struct device *
+ #define rfkill_resume NULL
+ #endif
+ 
+-static int rfkill_blocking_uevent_notifier(struct notifier_block *nb,
+-					unsigned long eventid,
+-					void *data)
+-{
+-	struct rfkill *rfkill = (struct rfkill *)data;
+-
+-	switch (eventid) {
+-	case RFKILL_STATE_CHANGED:
+-		kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	return NOTIFY_DONE;
+-}
+-
+-static struct notifier_block rfkill_blocking_uevent_nb = {
+-	.notifier_call	= rfkill_blocking_uevent_notifier,
+-	.priority	= 0,
+-};
+-
+ static int rfkill_dev_uevent(struct device *dev, struct kobj_uevent_env *env)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+@@ -943,14 +873,11 @@ static int __init rfkill_init(void)
+ 		return error;
+ 	}
+ 
+-	register_rfkill_notifier(&rfkill_blocking_uevent_nb);
+-
+ 	return 0;
+ }
+ 
+ static void __exit rfkill_exit(void)
+ {
+-	unregister_rfkill_notifier(&rfkill_blocking_uevent_nb);
+ 	class_unregister(&rfkill_class);
+ }
+ 
 
 
