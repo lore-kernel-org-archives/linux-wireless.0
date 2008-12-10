@@ -1,74 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19329 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755728AbYLKScn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 13:32:43 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/6] iwlwifi: fix resume while txpower off
-Date: Thu, 11 Dec 2008 10:33:37 -0800
-Message-Id: <1229020421-4823-3-git-send-email-reinette.chatre@intel.com> (sfid-20081211_193251_729045_1F210006)
-In-Reply-To: <1229020421-4823-2-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1229020421-4823-1-git-send-email-reinette.chatre@intel.com>
- <1229020421-4823-2-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:38428 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754377AbYLJRUo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Dec 2008 12:20:44 -0500
+Subject: Re: [PATCH] rfkill: strip pointless notifier chain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200812101801.35735.IvDoorn@gmail.com> (sfid-20081210_180139_130277_7A89B7B4)
+References: <1228927728.15837.10.camel@johannes.berg>
+	 <200812101801.35735.IvDoorn@gmail.com>
+	 (sfid-20081210_180139_130277_7A89B7B4)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-evFmBbvvBXxNOBkdfla1"
+Date: Wed, 10 Dec 2008 18:20:09 +0100
+Message-Id: <1228929609.15837.36.camel@johannes.berg> (sfid-20081210_182046_981759_46ACF6C2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-This patch take care of coming out rfkill when the driver is up while
-rfkill is on by restarting interface.
+--=-evFmBbvvBXxNOBkdfla1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    5 ++++-
- drivers/net/wireless/iwlwifi/iwl-core.c |   10 ++++++++++
- 2 files changed, 14 insertions(+), 1 deletions(-)
+On Wed, 2008-12-10 at 18:01 +0100, Ivo van Doorn wrote:
+> On Wednesday 10 December 2008, Johannes Berg wrote:
+> > No users, so no reason to have it.
+>=20
+> Henrique, you introduced the notifier chain, are there any upcoming
+> users for it or can it indeed be removed?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 5f99003..c6857dd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1406,8 +1406,11 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
- 		 * the driver as well won't allow loading if RFKILL is set
- 		 * therefore no need to restart the driver from this handler
- 		 */
--		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status))
-+		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
- 			clear_bit(STATUS_RF_KILL_HW, &priv->status);
-+			if (priv->is_open && !iwl_is_rfkill(priv))
-+				queue_work(priv->workqueue, &priv->up);
-+		}
- 
- 		handled |= CSR_INT_BIT_RF_KILL;
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 1c0d439..a3b9605 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1447,6 +1447,16 @@ int iwl_radio_kill_sw_enable_radio(struct iwl_priv *priv)
- 		return 0;
- 	}
- 
-+	/* when driver is up while rfkill is on, it wont receive
-+	 * any CARD_STATE_NOTIFICATION notifications so we have to
-+	 * restart it in here
-+	 */
-+	if (priv->is_open && !test_bit(STATUS_ALIVE, &priv->status)) {
-+		clear_bit(STATUS_RF_KILL_SW, &priv->status);
-+		if (!iwl_is_rfkill(priv))
-+			queue_work(priv->workqueue, &priv->up);
-+	}
-+
- 	/* If the driver is already loaded, it will receive
- 	 * CARD_STATE_NOTIFICATION notifications and the handler will
- 	 * call restart to reload the driver.
--- 
-1.5.4.3
+It can be added back with the users when needed.
+
+johannes
+
+--=-evFmBbvvBXxNOBkdfla1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJP/pFAAoJEKVg1VMiehFYHI0P/ivaS3tFHad3xNzqq7suMEN8
+Sy8vXln2h4PDvEdDpye+yZ0VIE0GNdbi9SDpiWTyT0n99fUGVd+lT3YVsCNWXCaB
+Ubx8XAsxYclv1EqnCcCBMPQa9DFycAcXABQ7XsvHaDN5uDvnuVvMlb7cvbIyAd1F
+jSEpZLyDcMc3pe1M6lnxSn1NS7LZuiIwkasqQI2hrK32/vqYTX6hpUCO9hhGOfS/
+zmDD9zGPFFLnIou/Ler+kAaPk0We2eI7A7M3fgf+EW5MtTkA2Uk91zvg42W06NZG
+sB0031wGb5kSrXzHASisJs2Lzw3DBCspdsa2j87EHelKFPFvT64FvioyaochQ4EW
+Krk76xHT8XY9qp8cu/kbrshZYwBK9XkG8n4SjuwDReZ2PVq6oVEuY+DUbY3K4rC7
+R/YR89ElbGsGB4nzLWs1PE+3nJIQ7oarikrsQEteVS162z8C6kTgwnVGJAeAs0h9
+ft+QKekbhq+Wo8Xogd000gwNCVrmmGrqjlaM92/Z7MXT0fW5wDWsPRw9SXeXAMLS
+VQPHErb7cz4u4St7oX0PnXmN7H5F3t8up1RHvsNVUf9B7YsTw24+0qAVE+bSQ+dd
+mf7Ogo9gZBxdUk65avE4/JZx6f1T8Tcx71/r7GU6SsuMHUbM99TaCAzDACaiuiLM
+0egFyX5KYTfaoCHT9a6a
+=wUg3
+-----END PGP SIGNATURE-----
+
+--=-evFmBbvvBXxNOBkdfla1--
 
