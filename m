@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60657 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752269AbYLAWfI convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:4882 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820AbYLJEFn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 17:35:08 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 14:35:08 -0800
-Date: Mon, 1 Dec 2008 14:35:05 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Diego 'Flameeyes' =?iso-8859-1?Q?Petten=F2?= <flameeyes@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [crda PATCH 0/5] Makefile improvement and fixes
-Message-ID: <20081201223505.GP5992@tesla> (sfid-20081201_233512_950815_AFADCE4F)
-References: <20081201103016.18024.80454.stgit@localhost>
+	Tue, 9 Dec 2008 23:05:43 -0500
+Date: Tue, 9 Dec 2008 23:05:38 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, ath5k-devel@lists.ath5k.org
+Subject: [PATCH] ath5k: fix endianness of bitwise ops when installing mic
+Message-ID: <20081210040538.GA11810@hash.localnet> (sfid-20081210_050605_521920_6011A98E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20081201103016.18024.80454.stgit@localhost>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 01, 2008 at 02:30:44AM -0800, Diego 'Flameeyes' Petten=F2 w=
-rote:
->=20
->=20
-> I've been asked by a colleague Gentoo developer (Tony Vroon) to look
-> at a build failure with parallel make[1] in crda, and I decided to
-> take a closer look to the Makefile.
->=20
-> With these patches applied, --as-needed build works, as well as
-> parallel make, the dependencies are properly handle so that changing =
-a
-> file will only rebuild the correct one, and it's as parallel as
-> feasible with no recursive make.
+Fix these bugs found by sparse:
 
-Thanks applied.
+    ath5k/pcu.c:1102:21: warning: restricted __le32 degrades to integer
+    ath5k/pcu.c:1102:13: warning: incorrect type in assignment (different base types)
+    ath5k/pcu.c:1102:13:    expected restricted __le32 <noident>
+    ath5k/pcu.c:1102:13:    got unsigned int
+    ath5k/pcu.c:1104:20: warning: restricted __le32 degrades to integer
+    ath5k/pcu.c:1104:13: warning: incorrect type in assignment (different base types)
+    ath5k/pcu.c:1104:13:    expected restricted __le32 <noident>
+    ath5k/pcu.c:1104:13:    got unsigned int
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changes-licensed-under: ISC
+
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/pcu.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
+index dabe422..0cac05c 100644
+--- a/drivers/net/wireless/ath5k/pcu.c
++++ b/drivers/net/wireless/ath5k/pcu.c
+@@ -1099,9 +1099,9 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+ 
+ 		if (ah->ah_combined_mic) {
+ 			key_v[0] = rxmic[0];
+-			key_v[1] = (txmic[0] >> 16) & 0xffff;
++			key_v[1] = cpu_to_le32(le32_to_cpu(txmic[0]) >> 16);
+ 			key_v[2] = rxmic[1];
+-			key_v[3] = txmic[0] & 0xffff;
++			key_v[3] = cpu_to_le32(le32_to_cpu(txmic[0]) & 0xffff);
+ 			key_v[4] = txmic[1];
+ 		} else {
+ 			key_v[0] = rxmic[0];
+-- 
+1.6.0.4
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
