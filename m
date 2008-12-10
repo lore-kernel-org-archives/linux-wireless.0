@@ -1,86 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:54174 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752821AbYLRRSl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 12:18:41 -0500
-Date: Thu, 18 Dec 2008 18:18:36 +0100 (CET)
-From: Julia Lawall <julia@diku.dk>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: lrodriguez@atheros.com, jmalinen@atheros.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 7/11] drivers/net/wireless/ath9k: Move a dereference
- below a NULL test
-In-Reply-To: <20081218155042.GF4121@tuxdriver.com>
-Message-ID: <Pine.LNX.4.64.0812181818170.23988@ask.diku.dk> (sfid-20081218_181848_586056_626F1DF6)
-References: <Pine.LNX.4.64.0812161613510.20444@pc-004.diku.dk>
- <20081218155042.GF4121@tuxdriver.com>
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:45553 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751730AbYLJEaL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Dec 2008 23:30:11 -0500
+Message-ID: <493F45C9.6010703@lwfinger.net> (sfid-20081210_053027_471385_D4219374)
+Date: Tue, 09 Dec 2008 22:30:01 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Bob Copeland <me@bobcopeland.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH] ath5k: fix endianness of bitwise ops when installing
+ mic
+References: <20081210040538.GA11810@hash.localnet>
+In-Reply-To: <20081210040538.GA11810@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indeed the code seems to have complete changed.
-
-julia
-
-
-On Thu, 18 Dec 2008, John W. Linville wrote:
-
-> On Tue, Dec 16, 2008 at 04:14:28PM +0100, Julia Lawall wrote:
-> > From: Julia Lawall <julia@diku.dk>
-> > 
-> > In each case, if the NULL test is necessary, then the dereference should be
-> > moved below the NULL test.
-> > 
-> > The semantic patch that makes this change is as follows:
-> > (http://www.emn.fr/x-info/coccinelle/)
-> > 
-> > // <smpl>
-> > @@
-> > type T;
-> > expression E;
-> > identifier i,fld;
-> > statement S;
-> > @@
-> > 
-> > - T i = E->fld;
-> > + T i;
-> >   ... when != E
-> >       when != i
-> >   if (E == NULL) S
-> > + i = E->fld;
-> > // </smpl>
-> > 
-> > Signed-off-by: Julia Lawall <julia@diku.dk>
-> > 
-> > ---
-> >  drivers/net/wireless/ath9k/hw.c     |    3 ++-
-> >  1 files changed, 2 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-> > index 98bc25c..7d1dac6 100644
-> > --- a/drivers/net/wireless/ath9k/hw.c
-> > +++ b/drivers/net/wireless/ath9k/hw.c
-> > @@ -5581,11 +5581,12 @@ static inline bool ath9k_hw_run_init_cals(struct ath_hal *ah,
-> >  	struct ath9k_channel ichan;
-> >  	bool isCalDone;
-> >  	struct hal_cal_list *currCal = ahp->ah_cal_list_curr;
-> > -	const struct hal_percal_data *calData = currCal->calData;
-> > +	const struct hal_percal_data *calData;
-> >  	int i;
-> >  
-> >  	if (currCal == NULL)
-> >  		return false;
-> > +	calData = currCal->calData;
-> >  
-> >  	ichan.CalValid = 0;
+Bob Copeland wrote:
+> Fix these bugs found by sparse:
 > 
-> This patch doesn't seem to apply.  I don't see this code anywhere.
-> Perhaps this is against some older version?
+>     ath5k/pcu.c:1102:21: warning: restricted __le32 degrades to integer
+>     ath5k/pcu.c:1102:13: warning: incorrect type in assignment (different base types)
+>     ath5k/pcu.c:1102:13:    expected restricted __le32 <noident>
+>     ath5k/pcu.c:1102:13:    got unsigned int
+>     ath5k/pcu.c:1104:20: warning: restricted __le32 degrades to integer
+>     ath5k/pcu.c:1104:13: warning: incorrect type in assignment (different base types)
+>     ath5k/pcu.c:1104:13:    expected restricted __le32 <noident>
+>     ath5k/pcu.c:1104:13:    got unsigned int
 > 
-> John
-> -- 
-> John W. Linville		Linux should be at the core
-> linville@tuxdriver.com			of your literate lifestyle.
+> Changes-licensed-under: ISC
 > 
+> Reported-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath5k/pcu.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
+> index dabe422..0cac05c 100644
+> --- a/drivers/net/wireless/ath5k/pcu.c
+> +++ b/drivers/net/wireless/ath5k/pcu.c
+> @@ -1099,9 +1099,9 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+>  
+>  		if (ah->ah_combined_mic) {
+>  			key_v[0] = rxmic[0];
+> -			key_v[1] = (txmic[0] >> 16) & 0xffff;
+> +			key_v[1] = cpu_to_le32(le32_to_cpu(txmic[0]) >> 16);
+
+Is it certain that txmic[0] will not sign extend with the >> 16 operation? Is
+that why you dropped the mask with 0xffff?
+
+Larry
+
