@@ -1,39 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:31372 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696AbYLRBe5 (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:50127 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbYLJFN5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 20:34:57 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so102698wah.21
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2008 17:34:56 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Wed, 10 Dec 2008 00:13:57 -0500
+Message-ID: <493F5010.7030500@trash.net> (sfid-20081210_061401_587920_C283DF2C)
+Date: Wed, 10 Dec 2008 06:13:52 +0100
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18761.43079.702658.733757@localhost.localdomain> (sfid-20081218_023505_825678_AA4AAF64)
-Date: Thu, 18 Dec 2008 07:02:55 +0530
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	mcgrof@gmail.com, jouni.malinen@atheros.com
-Subject: Re: [RFC] Handle Channel Switch Announcement
-In-Reply-To: <20081217162017.GA28712@jm.kir.nu>
-References: <18761.4838.509784.281821@localhost.localdomain>
-	<20081217162017.GA28712@jm.kir.nu>
+To: linux-wireless@vger.kernel.org
+CC: Jiri Slaby <jirislaby@gmail.com>, mickflemm@gmail.com,
+	mcgrof@gmail.com, me@bobcopeland.com
+Subject: [RFC]: ath5k: enable TXOK IRQ
+Content-Type: multipart/mixed;
+ boundary="------------030808060902030109070106"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen wrote:
-> Why is this flag needed? Or well, the better question: Why is the
-> channel disabled? CSA may request the STA to stop transmitting _within
-> the BSS_ until the AP has changed channels (i.e., it could be possible
-> to use other BSSes even on the same channel). This notification can be
-> used for other things than just reporting a radar on the channel (e.g.,
-> the AP could move to a channel that has less traffic on it).
-> 
+This is a multi-part message in MIME format.
+--------------030808060902030109070106
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Ok, agreed. I'll remove this flag.
+I tried to use ath5k in AP mode with hostapd, but hostapd never
+added the authenticated and associated stations to the kernel.
+The reason is that ath5k didn't invoke the tx tasklet, so it
+did not call the ieee80211_tx_status() function and userspace
+didn't receive the radiotap message indicating success.
 
-But after receiving a CSA on the current frequency, and having moved to the new
-advertised frequency, can the STA send out probe requests in the earlier frequency ?
-(In case of a scan run or something)
+The root cause appears to be that the TXOK interrupt is not
+enabled, so the tasklet is never scheduled. I'm not sure whether
+TXOK is really the correct one to handle ! IEEE80211_TX_CTL_NO_ACK,
+but it fixes the problem for me.
 
-Sujith
+
+
+--------------030808060902030109070106
+Content-Type: text/x-patch;
+ name="02.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="02.diff"
+
+commit 5ecbb104a7202a6ed9bcfa8b8ef46474d1003600
+Author: Patrick McHardy <kaber@trash.net>
+Date:   Tue Dec 9 21:54:51 2008 +0100
+
+    ath5k: enable TXOK IRQ
+    
+    Without the IRQ, the tx tasklet is not scheduled, which is necessary
+    to invoke ieee80211_tx_status() to notify userspace of successfully
+    sent frames.
+    
+    Signed-off-by: Patrick McHardy <kaber@trash.net>
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 940c724..291a334 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1348,7 +1348,8 @@ ath5k_txq_setup(struct ath5k_softc *sc,
+ 	 * up in which case the top half of the kernel may backup
+ 	 * due to a lack of tx descriptors.
+ 	 */
+-	qi.tqi_flags = AR5K_TXQ_FLAG_TXEOLINT_ENABLE |
++	qi.tqi_flags = AR5K_TXQ_FLAG_TXOKINT_ENABLE |
++				AR5K_TXQ_FLAG_TXEOLINT_ENABLE |
+ 				AR5K_TXQ_FLAG_TXDESCINT_ENABLE;
+ 	qnum = ath5k_hw_setup_tx_queue(ah, qtype, &qi);
+ 	if (qnum < 0) {
+
+--------------030808060902030109070106--
