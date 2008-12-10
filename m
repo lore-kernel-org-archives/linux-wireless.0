@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19321 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755548AbYLKScm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 13:32:42 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/6] iwlwifi driver updates
-Date: Thu, 11 Dec 2008 10:33:35 -0800
-Message-Id: <1229020421-4823-1-git-send-email-reinette.chatre@intel.com> (sfid-20081211_193246_251570_31E07F43)
-In-Reply-To: <>
-References: <>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:42875 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755357AbYLJVdj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Dec 2008 16:33:39 -0500
+Date: Wed, 10 Dec 2008 19:33:34 -0200
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFC] b43: rework rfkill code
+Message-ID: <20081210213334.GA7589@khazad-dum.debian.net> (sfid-20081210_223344_305330_EE710E0C)
+References: <20081210150935.GA10927@srcf.ucam.org> <1228922997.15837.6.camel@johannes.berg> <1228927898.19553.164.camel@violet.holtmann.net> <1228929529.15837.34.camel@johannes.berg> <1228929820.15837.40.camel@johannes.berg> <1228930083.15837.44.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1228930083.15837.44.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are mostly cleanup and reorganization patches except for one fix
-(patch 2).
+On Wed, 10 Dec 2008, Johannes Berg wrote:
+> On Wed, 2008-12-10 at 18:23 +0100, Johannes Berg wrote:
+> > Then there's user_claim_unsupported which is set by all drivers but
+> > rt2x00, probably because they have hardware kill switches and thus they
+> > have to set it even if it's not strictly true, because of the lacking
+> > separation between these things (that I pointed out)
+> 
+> IOW, correct me if I'm wrong, it seems to me that user_claim_unsupported
+> really is a wrong name for "has hw kill", which could be avoided if sw
 
-[PATCH 1/6] iwlwifi: use iwl_poll_direct_bit in EEPROM reading
-[PATCH 2/6] iwlwifi: fix resume while txpower off
-[PATCH 3/6] iwlwifi: remove unused clip_groups priv member
-[PATCH 4/6] iwlwifi: remove includes of iwl-helpers.h where not needed
-[PATCH 5/6] iwlwifi: remove 4965 from common uCode API structures
-[PATCH 6/6] iwlwifi: add contact email to MODULE_AUTHOR
+I never understood what user_claim_unsupported is for.  I left it alone
+because of that, but it looks like some artifact of the old rfkill that did
+horrible things to the input layer.
 
-
-Thank you
-
-Reinette
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
