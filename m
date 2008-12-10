@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:42047 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753843AbYLBXGf (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:1305 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753241AbYLJNYp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 18:06:35 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so3222254ugf.37
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 15:06:33 -0800 (PST)
-Message-ID: <4935BF7F.4080109@gmail.com> (sfid-20081203_000643_014098_DE023235)
-Date: Wed, 03 Dec 2008 00:06:39 +0100
-From: Roel Kluin <roel.kluin@gmail.com>
+	Wed, 10 Dec 2008 08:24:45 -0500
+Date: Wed, 10 Dec 2008 08:24:40 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Patrick McHardy <kaber@trash.net>
+Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	mickflemm@gmail.com, mcgrof@gmail.com
+Subject: Re: [RFC]: atk5k: fix FCS corruption for ACKs
+Message-ID: <20081210132440.GA12873@hash.localnet> (sfid-20081210_142450_421041_6465C830)
+References: <493F4DC5.9090801@trash.net>
 MIME-Version: 1.0
-To: Greg KH <gregkh@suse.de>, linux-wireless@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>
-Subject: [PATCH] wlan: skb_p80211_to_ether() - payload_length is unsigned,
- check before subtraction
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <493F4DC5.9090801@trash.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-payload_length is unsigned, check before subtraction
+On Wed, Dec 10, 2008 at 06:04:05AM +0100, Patrick McHardy wrote:
+> This might not be fully correct or not handle other cases where
+> this can occur, but it doesn't seem too hackish and fixes the
+> problem for me :)
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-diff --git a/drivers/staging/wlan-ng/p80211conv.c b/drivers/staging/wlan-ng/p80211conv.c
-index 68121b9..9dd8b77 100644
---- a/drivers/staging/wlan-ng/p80211conv.c
-+++ b/drivers/staging/wlan-ng/p80211conv.c
-@@ -333,11 +333,11 @@ int skb_p80211_to_ether( wlandevice_t *wlandev, UINT32 ethconv, struct sk_buff *
- 		memcpy(saddr, w_hdr->a3.a2, WLAN_ETHADDR_LEN);
- 	} else {
- 		payload_offset = WLAN_HDR_A4_LEN;
--		payload_length -= ( WLAN_HDR_A4_LEN - WLAN_HDR_A3_LEN );
--		if (payload_length < 0 ) {
-+		if (payload_length < WLAN_HDR_A4_LEN - WLAN_HDR_A3_LEN) {
- 			WLAN_LOG_ERROR("A4 frame too short!\n");
- 			return 1;
- 		}
-+		payload_length -= (WLAN_HDR_A4_LEN - WLAN_HDR_A3_LEN);
- 		memcpy(daddr, w_hdr->a4.a3, WLAN_ETHADDR_LEN);
- 		memcpy(saddr, w_hdr->a4.a4, WLAN_ETHADDR_LEN);
- 	}
+> -		if (hdrlen & 3) {
+> +		if (hdrlen & 3 && hdrlen != rs.rs_datalen - FCS_LEN) {
+>  			pad = hdrlen % 4;
+>  			memmove(skb->data + pad, skb->data, hdrlen);
+>  			skb_pull(skb, pad);
+
+It seems very plausible to me.  Though, why doesn't ath9k also have this
+problem?  Luis, it looks like in that case ath9k could trim two extra
+bytes if ath9k hw behaves the same.
+
+main.c:
+
+   951          /* see if any padding is done by the hw and remove it */
+   952          if (hdrlen & 3) {
+   953                  padsize = hdrlen % 4;
+   954                  memmove(skb->data + padsize, skb->data, hdrlen);
+   955                  skb_pull(skb, padsize);
+   956          }
+
+   957          /* remove FCS before passing up to protocol stack */
+   958          skb_trim(skb, (skb->len - FCS_LEN));
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
