@@ -1,53 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:56370 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752064AbYLOIiI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57743 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731AbYLJJGe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 03:38:08 -0500
-Date: Mon, 15 Dec 2008 10:37:50 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Remove radiotap rate-present flag for HT
-Message-ID: <20081215083750.GA2747@jm.kir.nu> (sfid-20081215_093813_027483_CA2F166A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 10 Dec 2008 04:06:34 -0500
+Subject: Re: [PATCH 1/2] Add signal strength and bandwith to nl80211station
+	info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henning Rogge <rogge@fgan.de>
+Cc: Henning Rogge <hrogge@googlemail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+In-Reply-To: <200812100753.58590.rogge@fgan.de>
+References: <200811252131.30161.hrogge@googlemail.com>
+	 <200812092050.29545.hrogge@googlemail.com>
+	 <1228857372.1029.25.camel@johannes.berg> <200812100753.58590.rogge@fgan.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PlwBvGtxEjFRAgp2xX21"
+Date: Wed, 10 Dec 2008 10:05:50 +0100
+Message-Id: <1228899950.1029.33.camel@johannes.berg> (sfid-20081210_100638_184114_208757C9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we do not currently report HT rates (MCS index) in radiotap
-header for HT rates, we should not claim the rate is present. The rate
-octet itself is used as padding in this case, so only the it_present
-flag needs to be removed in case of HT rates.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
----
- net/mac80211/rx.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+--=-PlwBvGtxEjFRAgp2xX21
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/net/mac80211/rx.c	2008-12-15 10:15:17.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2008-12-15 10:16:14.000000000 +0200
-@@ -123,7 +123,6 @@ ieee80211_add_rx_radiotap_header(struct 
- 	/* radiotap header, set always present flags */
- 	rthdr->it_present =
- 		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
--			    (1 << IEEE80211_RADIOTAP_RATE) |
- 			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
- 			    (1 << IEEE80211_RADIOTAP_ANTENNA) |
- 			    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
-@@ -158,8 +157,10 @@ ieee80211_add_rx_radiotap_header(struct 
- 		 * - short-GI (status->flag & RX_FLAG_SHORT_GI)
- 		 */
- 		*pos = 0;
--	} else
-+	} else {
-+		rthdr->it_present |= (1 << IEEE80211_RADIOTAP_RATE);
- 		*pos = rate->bitrate / 5;
-+	}
- 	pos++;
- 
- 	/* IEEE80211_RADIOTAP_CHANNEL */
+On Wed, 2008-12-10 at 07:53 +0100, Henning Rogge wrote:
+> Am Tuesday 09 December 2008 22:16:12 schrieb Johannes Berg:
+> > No, that's the thing, for 32 through 76 the calculated values are
+> > totally wrong, that isn't a logical extension of the scheme, MCS 73 for
+> > 20 MHz for example is:
+> >
+> > four streams, using 64-qam, 64-qam, 16-qam, qpsk with a coding rate of
+> > 3/4 for a net bitrate of 195.0 MBits
+>=20
+> Maybe you can just post the whole mcs 32-76 table, so I can look at it. I=
+ can=20
+> only work with the values in the wiki, and at the moment the calculation=20
+> matchs them very well.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Uh huh, it's a huge table, and very irregular. Not very inclined to copy
+that right now. What's wrong with deferring it until somebody actually
+implements these rates?
+
+johannes
+
+--=-PlwBvGtxEjFRAgp2xX21
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJP4ZqAAoJEKVg1VMiehFYdIEQAI85aQU3c4x9S4y9EIJNSMWC
+ifDhnLGfVaIKrn3H/cFjlw6gciWV1M02gld5JogCFfFVg9HfsgVQHu30LcFFsW8T
+99T22HeYwWm0uTrUG/tXHo+VJvfV+AzZxdLQyAUt/mVxZ5NbAJbl25K7SqS8kP4k
+MBe0XSAvzvg0NtEONELJj5j8n4H/hf9my+scebqihM+wuZKZgHm5m08Wot8QQCUi
+NRO/NIBMU3HU6gUAxHG8GjKjdtcLQmXKtHaJUoWrqoO81ZZIRtYL+1nm6pffw1oB
+XcBYoQlaI4Zn7OF7uWjYByLbVMWftNwZEZxkQvH++VGzcPDgo9CIoV0illiO4xNa
+zZugVZBdwQKIAukDYd6eEU2oeiILYz7TxuF6Q7IWhkq/B6OEg30NID8PCx5HD6JF
+4JkOq/t+Abq/9gt7+0G8jaztI6kr8EGc8ItTFTqMON9qkUDBK9J+xfQ4cByzIXc3
+uxlmumU/F/pCG3w0+sy1DjhdeEzwDQtEftGuDkLRtFszUSCRICxcQ+MS4bI6Msjh
+vdTyRTZ84kO/DLw2r6eSZbZxcijfC0Y/gGL0bTim65YJ7BJm48ndLbD1oLF8bPZ2
+qnCbPjqg2ImMOwM38EX0rketjVDZwZ2AwgH2rqFNam1u/37gWhYO6ff3cTs3vsUT
+OCkJ70LQ03ODN5uLjv/1
+=GLMU
+-----END PGP SIGNATURE-----
+
+--=-PlwBvGtxEjFRAgp2xX21--
+
