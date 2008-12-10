@@ -1,61 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43907 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750867AbYL2KtN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 05:49:13 -0500
-Subject: Re: subdirs under drivers/net/wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081229101138.GA15022@infradead.org> (sfid-20081229_111142_550654_AFAD09B2)
-References: <20081229101138.GA15022@infradead.org>
-	 (sfid-20081229_111142_550654_AFAD09B2)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6xU42IbDT+P7VDDeP0pS"
-Date: Mon, 29 Dec 2008 11:49:35 +0100
-Message-Id: <1230547775.3116.6.camel@johannes> (sfid-20081229_114938_310960_3882389B)
+Received: from mx2.redhat.com ([66.187.237.31]:56928 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753805AbYLJREG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Dec 2008 12:04:06 -0500
+Subject: Re: [PATCH] libertas: Create sysfs entry for changing the mesh
+	probe response limit
+From: Dan Williams <dcbw@redhat.com>
+To: Anna Neal <anna@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <493effb1.0610c00a.3f59.7990@mx.google.com>
+References: <493effb1.0610c00a.3f59.7990@mx.google.com>
+Content-Type: text/plain
+Date: Wed, 10 Dec 2008 12:03:11 -0500
+Message-Id: <1228928591.28590.13.camel@localhost.localdomain> (sfid-20081210_180409_381779_C7DC014C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2008-12-09 at 13:23 -0800, Anna Neal wrote:
+> This patch adds the ability to change the number of probe response retries sent
+> by the mesh interface.
+> 
+> In dense networks it is recommended to change this value to zero to reduce
+> traffic congestion.
 
---=-6xU42IbDT+P7VDDeP0pS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Does this sort of thing also apply to the mesh functionality in
+mac80211?  Just trying to figure out if this is usb8388 mesh specific,
+or general functionality.
 
-On Mon, 2008-12-29 at 05:11 -0500, Christoph Hellwig wrote:
-> It looks like most multi-file drivers moved into subdirs in current git.
->=20
-> Any reason wavelan didn't get the same treatment?  Or do you plan to
-> kill that driver because it seems mostly dead..
+Dan
 
-Nobody cared enough to do it, it'd probably be a good idea regardless.
-But those drivers that did get the treatment are, afaik, those that are
-actively maintained, and not just sticking around for historic reasons.
-
-johannes
-
---=-6xU42IbDT+P7VDDeP0pS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJWKs9AAoJEKVg1VMiehFYxngQAJ9yhe0L0LJJcFwOeDQwyMgT
-iBjKcgL8dFul/6wpcPTgG8REJj49ikVOEoQj/e0LOtve6+BPyO30H2cx2gvHViFX
-ozwRy/1pmwAYz63eqXC+cR75AohoS9J5APcrAQtpHPaHXp3/rPUjael1GPqJK1Oa
-4lrpoq1PcEmdGSlOkaW75kJNXmgrJjjcHQZ8LefN/471C1uXYFQ08CRHSTEG6t+o
-0v9ogQ7aKqkfzO07vp1Es31Rs4INO1BR8gvogMTQ8ctalX6gHC3L/307z17RZSTM
-S5VbctJqlbX67U0lYub809DBtV33EINuS2cfFlPOkv7btOD+LdCKbyYGVi5XLW/U
-dDjGGXSTTwlmsVgPyGEz80G0/c0+D3e+ITkEzqS7JBz/ifj3CGNJ6pIxnIQGpBw9
-RcpjkjVAFYoT3HtfMsWHNDZmIKeMMrHLdDqrr62YIozg8nAlZSi0Jll/oTkbi3MR
-lCDfjb1J0Wqi9HSLGNxWFZR20ectVtNHsqTrIE5ubboirhCJd6VhUrwHcyQptEKY
-1CvABxaqxRKsS/GU6DDzxLIJOuzL/5dmYodj7pJwN9tLJXrUDi0dQIF+cR1jC1MZ
-uLRvjZo+p9sf4br3Fm682HKWBW7uOc7y+5nnnJrfuf0DngsLOR4dgIMwLjWsaX+h
-KIthPTjrT0pZTjxLn2xl
-=RA2l
------END PGP SIGNATURE-----
-
---=-6xU42IbDT+P7VDDeP0pS--
+> Signed-off-by: Anna Neal <anna@cozybit.com>
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+> ---
+>  drivers/net/wireless/libertas/host.h |    1 +
+>  drivers/net/wireless/libertas/main.c |   60 ++++++++++++++++++++++++++++++++++
+>  2 files changed, 61 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+> index a17b778..277ff19 100644
+> --- a/drivers/net/wireless/libertas/host.h
+> +++ b/drivers/net/wireless/libertas/host.h
+> @@ -245,6 +245,7 @@ enum cmd_mesh_access_opts {
+>  	CMD_ACT_MESH_GET_ROUTE_EXP,
+>  	CMD_ACT_MESH_SET_AUTOSTART_ENABLED,
+>  	CMD_ACT_MESH_GET_AUTOSTART_ENABLED,
+> +	CMD_ACT_MESH_SET_GET_PRB_RSP_LIMIT = 17,
+>  };
+>  
+>  /* Define actions and types for CMD_MESH_CONFIG */
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index c320264..f7caef9 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -257,6 +257,58 @@ static ssize_t lbs_anycast_set(struct device *dev,
+>  	return strlen(buf);
+>  }
+>  
+> +/**
+> + * @brief Get function for sysfs attribute prb_rsp_limit
+> + */
+> +static ssize_t lbs_prb_rsp_limit_get(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct lbs_private *priv = to_net_dev(dev)->priv;
+> +	struct cmd_ds_mesh_access mesh_access;
+> +	int ret;
+> +	u32 retry_limit;
+> +
+> +	memset(&mesh_access, 0, sizeof(mesh_access));
+> +	mesh_access.data[0] = cpu_to_le32(CMD_ACT_GET);
+> +
+> +	ret = lbs_mesh_access(priv, CMD_ACT_MESH_SET_GET_PRB_RSP_LIMIT,
+> +			&mesh_access);
+> +	if (ret)
+> +		return ret;
+> +
+> +	retry_limit = le32_to_cpu(mesh_access.data[1]);
+> +	return snprintf(buf, 10, "%d\n", retry_limit);
+> +}
+> +
+> +/**
+> + * @brief Set function for sysfs attribute prb_rsp_limit
+> + */
+> +static ssize_t lbs_prb_rsp_limit_set(struct device *dev,
+> +		struct device_attribute *attr, const char *buf, size_t count)
+> +{
+> +	struct lbs_private *priv = to_net_dev(dev)->priv;
+> +	struct cmd_ds_mesh_access mesh_access;
+> +	int ret;
+> +	unsigned long retry_limit;
+> +
+> +	memset(&mesh_access, 0, sizeof(mesh_access));
+> +	mesh_access.data[0] = cpu_to_le32(CMD_ACT_SET);
+> +
+> +	if (!strict_strtoul(buf, 10, &retry_limit))
+> +		return -ENOTSUPP;
+> +	if (retry_limit > 15)
+> +		return -ENOTSUPP;
+> +
+> +	mesh_access.data[1] = cpu_to_le32(retry_limit);
+> +
+> +	ret = lbs_mesh_access(priv, CMD_ACT_MESH_SET_GET_PRB_RSP_LIMIT,
+> +			&mesh_access);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return strlen(buf);
+> +}
+> +
+>  static int lbs_add_rtap(struct lbs_private *priv);
+>  static void lbs_remove_rtap(struct lbs_private *priv);
+>  static int lbs_add_mesh(struct lbs_private *priv);
+> @@ -375,8 +427,16 @@ static DEVICE_ATTR(lbs_mesh, 0644, lbs_mesh_get, lbs_mesh_set);
+>   */
+>  static DEVICE_ATTR(anycast_mask, 0644, lbs_anycast_get, lbs_anycast_set);
+>  
+> +/**
+> + * prb_rsp_limit attribute to be exported per mshX interface
+> + * through sysfs (/sys/class/net/mshX/prb_rsp_limit)
+> + */
+> +static DEVICE_ATTR(prb_rsp_limit, 0644, lbs_prb_rsp_limit_get,
+> +		lbs_prb_rsp_limit_set);
+> +
+>  static struct attribute *lbs_mesh_sysfs_entries[] = {
+>  	&dev_attr_anycast_mask.attr,
+> +	&dev_attr_prb_rsp_limit.attr,
+>  	NULL,
+>  };
+>  
 
