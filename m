@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f13.google.com ([209.85.218.13]:52663 "EHLO
-	mail-bw0-f13.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbYLJJNh (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:63980 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561AbYLJFfm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 04:13:37 -0500
-Received: by bwz6 with SMTP id 6so948011bwz.13
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 01:13:35 -0800 (PST)
-Message-ID: <8f6a4c2e0812100113l7802fd31qb295400a91e063f8@mail.gmail.com> (sfid-20081210_101340_903923_5476DA90)
-Date: Wed, 10 Dec 2008 11:13:25 +0200
-From: "Elmer Joandi" <elmersoft@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless drivers sparse warnings
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1228829427.22164.227.camel@johannes.berg>
+	Wed, 10 Dec 2008 00:35:42 -0500
+Date: Tue, 09 Dec 2008 23:35:41 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43legacy: Fix sparse warnings
+Message-ID: <493f552d.zivnzjivWDMPej+O%Larry.Finger@lwfinger.net> (sfid-20081210_063601_735621_7AB49E32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1228823435.22164.216.camel@johannes.berg>
-	 <1228829427.22164.227.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well, about arlan driver - I am sorry, but :
-1. I lack the device and I even lack an installed 32-bit linux to compile it.
-2. The card has been out of production for 10 years
-3. I can not imagine anybody using it for anything sensible anymore.
+Sparse yields the following warnings for b43legacy:
 
+  CHECK   drivers/net/wireless/b43legacy/phy.c
+drivers/net/wireless/b43legacy/phy.c:1304:31: warning: potentially expensive pointer subtraction
+drivers/net/wireless/b43legacy/phy.c:1304:31: warning: potentially expensive pointer subtraction
+drivers/net/wireless/b43legacy/phy.c:1304:31: warning: potentially expensive pointer subtraction
+  CHECK   drivers/net/wireless/b43legacy/debugfs.c
+drivers/net/wireless/b43legacy/debugfs.c:243:9: warning: memset with byte count of 131072
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-To get rid of warnings the seems a need for a correct typecast to be
-used in 2 places and a "static" added to a declaration.
+John,
 
-However, as use of this driver seems to be so rare, I would suggest
-marking it experimental or something like that, i.e. retire it at slow
-rate.
+This is 2.6.29 material.
 
+Larry
+---
 
-
-
--- 
-Elmer Joandi
-+3725185428
+Index: wireless-testing/drivers/net/wireless/b43legacy/debugfs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/debugfs.c
++++ wireless-testing/drivers/net/wireless/b43legacy/debugfs.c
+@@ -211,7 +211,7 @@ static ssize_t b43legacy_debugfs_read(st
+ 	struct b43legacy_dfs_file *dfile;
+ 	ssize_t uninitialized_var(ret);
+ 	char *buf;
+-	const size_t bufsize = 1024 * 128;
++	const size_t bufsize = 1024 * 16; /* 16 KiB buffer */
+ 	const size_t buforder = get_order(bufsize);
+ 	int err = 0;
+ 
+Index: wireless-testing/drivers/net/wireless/b43legacy/phy.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/phy.c
++++ wireless-testing/drivers/net/wireless/b43legacy/phy.c
+@@ -1296,12 +1296,10 @@ void b43legacy_lo_write(struct b43legacy
+ 	/* Sanity check. */
+ 	if (pair->low < -8 || pair->low > 8 ||
+ 	    pair->high < -8 || pair->high > 8) {
+-		struct b43legacy_phy *phy = &dev->phy;
+ 		b43legacydbg(dev->wl,
+ 		       "WARNING: Writing invalid LOpair "
+-		       "(low: %d, high: %d, index: %lu)\n",
+-		       pair->low, pair->high,
+-		       (unsigned long)(pair - phy->_lo_pairs));
++		       "(low: %d, high: %d)\n",
++		       pair->low, pair->high);
+ 		dump_stack();
+ 	}
+ #endif
