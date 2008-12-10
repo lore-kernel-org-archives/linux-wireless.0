@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:38856 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944AbYLMR54 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:57517 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751228AbYLJOsv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Dec 2008 12:57:56 -0500
-Date: Sat, 13 Dec 2008 17:57:45 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Tony Vroon <tony@linx.net>, Len Brown <lenb@kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
-	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
-Subject: Re: Fuijtsu Lifebook RFKILL support
-Message-ID: <20081213175745.GA6825@srcf.ucam.org> (sfid-20081213_185805_425142_1A44889F)
-References: <1228957506.4045.11.camel@localhost> <20081211165247.GA4844@khazad-dum.debian.net> <1229016827.6446.6.camel@localhost> <20081211194734.GA18132@khazad-dum.debian.net> <1229046602.4030.13.camel@localhost> <20081212195331.GA12679@khazad-dum.debian.net> <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain> <1229172465.4010.11.camel@localhost> <20081213132857.GA11428@khazad-dum.debian.net>
+	Wed, 10 Dec 2008 09:48:51 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so210465wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 06:48:50 -0800 (PST)
+Message-ID: <b6c5339f0812100648i4c6c6fdar1dcd7590e18efec3@mail.gmail.com> (sfid-20081210_154855_366262_0EAB9307)
+Date: Wed, 10 Dec 2008 09:48:50 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Sujith <m.sujith@gmail.com>
+Subject: Re: [RFC]: atk5k: fix FCS corruption for ACKs
+Cc: "Patrick McHardy" <kaber@trash.net>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	mickflemm@gmail.com, mcgrof@gmail.com
+In-Reply-To: <18751.51078.25636.672867@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081213132857.GA11428@khazad-dum.debian.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <493F4DC5.9090801@trash.net> <20081210132440.GA12873@hash.localnet>
+	 <18751.51078.25636.672867@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 13, 2008 at 11:28:57AM -0200, Henrique de Moraes Holschuh wrote:
-> > Len, I would still like to export the 3 values learned about in this
-> > event to userspace. Is it alright for me to create 3 read-only files on
-> > the platform device? (docked, lid, radios)
-> > It would if anything simplify the code.
-> 
-> FWIW, I think this is also the way to go.  It is much easier for
-> userspace to deal with sysfs attributes.  HAL can deal with more
-> complex stuff, but shell script writers often don't know how to, nor
-> care to, deal with HAL.
+On Wed, Dec 10, 2008 at 8:43 AM, Sujith <m.sujith@gmail.com> wrote:
+>>    957          /* remove FCS before passing up to protocol stack */
+>>    958          skb_trim(skb, (skb->len - FCS_LEN));
+>>
+>
+> I remember removing this piece of code...
 
-I feel like I'm missing something here, but surely what we're talking 
-about is simply a single rfkill device that affects all radios and as 
-such should have a new RFKILL_TYPE_ALL type associated with it? I'd read 
-this as there being a software control that affected all radios. If 
-there's no software control at all then I agree that providing an rfkill 
-class here isn't appropriate.
+Hmm, you're right.  I must've been looking at 2.6.27.  Sorry for the noise.
+
+The padding still gets removed regardless of whether there is a payload;
+does that truncate the FCS for ACK/CTS frames on ath9k?
+
+>>    952          if (hdrlen & 3) {
+>>    953                  padsize = hdrlen % 4;
+
+While we're at it, (for ath5k also) -- hdrlen % 4 can just be hdrlen & 3
+again.
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Bob Copeland %% www.bobcopeland.com
