@@ -1,63 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:39380 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751179AbYL0HiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Dec 2008 02:38:22 -0500
-Subject: Re: How to install Ath5 driver?
-From: Pavel Roskin <proski@gnu.org>
-To: rajith pr <rajithpr@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <fd38e5150812261051y29851b18sf5638c57e355d6f2@mail.gmail.com>
-References: <fd38e5150812251125n62086e63y64584282fbe9dbe4@mail.gmail.com>
-	 <1230245303.16253.8.camel@dv>
-	 <fd38e5150812261051y29851b18sf5638c57e355d6f2@mail.gmail.com>
-Content-Type: text/plain
-Date: Sat, 27 Dec 2008 02:38:19 -0500
-Message-Id: <1230363499.2633.54.camel@dv> (sfid-20081227_083833_342181_5E9B7602)
+Received: from xc.sipsolutions.net ([83.246.72.84]:39709 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752467AbYLJNgq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Dec 2008 08:36:46 -0500
+Subject: Re: [RFC]: atk5k: fix FCS corruption for ACKs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Patrick McHardy <kaber@trash.net>, linux-wireless@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>, mickflemm@gmail.com,
+	mcgrof@gmail.com
+In-Reply-To: <20081210132440.GA12873@hash.localnet> (sfid-20081210_142450_421041_6465C830)
+References: <493F4DC5.9090801@trash.net>
+	 <20081210132440.GA12873@hash.localnet>
+	 (sfid-20081210_142450_421041_6465C830)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1bAmtDWquLuvFhWvWqnT"
+Date: Wed, 10 Dec 2008 14:36:06 +0100
+Message-Id: <1228916166.15837.0.camel@johannes.berg> (sfid-20081210_143650_535546_FE505D3C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-12-27 at 00:21 +0530, rajith pr wrote:
-> Hi Pavel,
-> 
-> I intend to work on the ath5k driver only. Iam actually stuck with the
-> Enabling ath5k section of
-> http://wireless.kernel.org/en/users/Drivers/ath5k. May be a trivial
-> think but i dont have an option but ask :-)
-> 
-> Enabling ath5k section talks about some configuration but i dont know
-> where to configure these. Should i run some configuration tool and
-> follow the steps ??
 
-I've edited that text slightly to mention kernel configuration in the
-beginning.  It's mentioned later in the text.
+--=-1bAmtDWquLuvFhWvWqnT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The kernel configuration is described in the README file in the Linux
-sources.  There are several ways to configure the kernel, such as "make
-menuconfig" and "make xconfig", but they all edit the ".config" file in
-the directory where the kernel is going to be compiled.
+On Wed, 2008-12-10 at 08:24 -0500, Bob Copeland wrote:
 
-In my opinion, "make menuconfig" is more intuitive that the X based
-configuration tools.
+> It seems very plausible to me.  Though, why doesn't ath9k also have this
+> problem?  Luis, it looks like in that case ath9k could trim two extra
+> bytes if ath9k hw behaves the same.
+>=20
+> main.c:
+>=20
+>    951          /* see if any padding is done by the hw and remove it */
+>    952          if (hdrlen & 3) {
+>    953                  padsize =3D hdrlen % 4;
+>    954                  memmove(skb->data + padsize, skb->data, hdrlen);
+>    955                  skb_pull(skb, padsize);
+>    956          }
+>=20
+>    957          /* remove FCS before passing up to protocol stack */
+>    958          skb_trim(skb, (skb->len - FCS_LEN));
 
-To enable ath5k, you need "CONFIG_ATH5K=m" or "CONFIG_ATH5K=y" to appear
-in .config along with the required dependencies of the driver.  "m" is
-for compiling ath5k as a module, "y" is for compiling into the kernel.
-I think compiling as module is more convenient in most cases.
+It also shouldn't remove the FCS, sometimes you want to see that on
+wireshark and mac80211 handles removing the FCS itself just fine, just
+set the HW flag.
 
-I don't know any automatic way to enable a particular option and its
-dependencies, so you'll need to go through the configuration and enable
-the dependencies manually.  The link you referred to tells you what
-options to enable.
+johannes
 
-Actually, that page is becoming obsolete.  SoftMAC is gone from the
-current git repository.  ath5k has other dependencies, such as PCI.  But
-I was reluctant to edit that text, as some users may be compiling older
-kernel, where SoftMAC is present.  As for PCI and some other
-dependencies, they are most likely already enabled, so mentioning them
-could confuse some users.
+--=-1bAmtDWquLuvFhWvWqnT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-Regards,
-Pavel Roskin
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJP8XCAAoJEKVg1VMiehFYqe0P/iwZ/t1DEaB93DwRs46RoHJv
+bAFiMgDgG78NnRUynqVE+42EevBhp4Z/EzgstkfB5batJ+lQAC7Utz2CsAgPGyUG
+iLHb77+M+Kx0/sCXOfhqDa9exNjEtKRExsjXdbwxZbSf9PfQh8PgXqmcO5OVu6JN
+fqe8Lh2GoDaK9iSiPtn44hHEpQ3chayfeDKXKrRBrPT8651ibh+RXnIdFFfkzg4h
+2vnV/siPaKchzxxna93VZ6IiOSj7ZqnkubBoqOGSiGATDUXFXlQUIIyC1QccEvO+
+XSndrw9yjT5PiWJ1ZJJHNzlZFAOdACi/96frCVbO4HsmbUAWLUGzIFLuDcP8ZD12
+uA22gGQx/nSH6DJfIMZPMUfo4RRPtS3H0L+cmH5tmCyv5DySIHNgWApS10EQ0SgY
+eD2BaVqzCK25DzNTp41eD0k9Ttj3UsCiDX/2X7rcESEw2w9trDkWvVaFYbPsf0f1
+k3cPAt+tKBqYV/ieNLVd6n7G/ou485YIsNOuPda7nLk0U/W0UKsq/VTMDl96IHos
+K4AfdgCd+w/tsiYn4/OAdTI9yszAGhaklkYDBSzmmvOxgAEVQDF3C2Rr6Z1EKH33
+oFKQH/JX+ZIlPvQLwtZBRlZNV4NOpLb9qvNug/O/+M9OQco5lgO2xR+CTiAn0mAp
+nbqXbWjhwrypbG4PEH+P
+=ezod
+-----END PGP SIGNATURE-----
+
+--=-1bAmtDWquLuvFhWvWqnT--
+
