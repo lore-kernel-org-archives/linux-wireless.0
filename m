@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:44339 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753913AbYLJQNG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 11:13:06 -0500
-Date: Wed, 10 Dec 2008 16:12:59 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	hmh@hmh.eng.br
-Subject: Re: [RFC] b43: rework rfkill code
-Message-ID: <20081210161259.GA12069@srcf.ucam.org> (sfid-20081210_171311_474472_B6EAD065)
-References: <20081210150935.GA10927@srcf.ucam.org> <200812101648.30161.mb@bu3sch.de>
+Received: from bu3sch.de ([62.75.166.246]:40878 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754804AbYLJKeV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Dec 2008 05:34:21 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] b43legacy: Fix sparse warnings
+Date: Wed, 10 Dec 2008 11:33:53 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <493f552d.zivnzjivWDMPej+O%Larry.Finger@lwfinger.net>
+In-Reply-To: <493f552d.zivnzjivWDMPej+O%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200812101648.30161.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200812101133.54173.mb@bu3sch.de> (sfid-20081210_113428_009637_4E8CE094)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 10, 2008 at 04:48:29PM +0100, Michael Buesch wrote:
-> On Wednesday 10 December 2008 16:09:35 Matthew Garrett wrote:
-> > I've reworked the rfkill code in b43. This ought to be more consistent 
-> ...
-> 
-> I'm fine with this, as long as you take over the responsibility for the whole b43-rfkill code.
-> I'm not going to touch it anymore. I'm only going to fix it by either forwarding bugreports
-> to somebody else (you, in that case) or by reverting patches until it starts working again.
+On Wednesday 10 December 2008 06:35:41 Larry Finger wrote:
+>   CHECK   drivers/net/wireless/b43legacy/debugfs.c
+> drivers/net/wireless/b43legacy/debugfs.c:243:9: warning: memset with byte count of 131072
 
-Works for me, though I'd appreciate it if people could give it a quick 
-sanity test. The main thing I'm worried about is LED control, which I 
-think /ought/ to still work but is dependent on everything in the rfkill 
-core working properly.
+I know about this error and I think it's a damn stupid error.
+There is a reason why the value was so high in b43. I don't know about b43legacy.
+Did you check if all callbacks still work properly?
+
+> Index: wireless-testing/drivers/net/wireless/b43legacy/debugfs.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43legacy/debugfs.c
+> +++ wireless-testing/drivers/net/wireless/b43legacy/debugfs.c
+> @@ -211,7 +211,7 @@ static ssize_t b43legacy_debugfs_read(st
+>  	struct b43legacy_dfs_file *dfile;
+>  	ssize_t uninitialized_var(ret);
+>  	char *buf;
+> -	const size_t bufsize = 1024 * 128;
+> +	const size_t bufsize = 1024 * 16; /* 16 KiB buffer */
+>  	const size_t buforder = get_order(bufsize);
+>  	int err = 0;
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Greetings, Michael.
