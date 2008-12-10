@@ -1,40 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:59796 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752270AbYL0CFf (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:49944 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1749667AbYLJFEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2008 21:05:35 -0500
-Message-ID: <49558D65.1060008@lwfinger.net> (sfid-20081227_030550_133482_37D2B2A2)
-Date: Fri, 26 Dec 2008 20:05:25 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 10 Dec 2008 00:04:10 -0500
+Message-ID: <493F4DC5.9090801@trash.net> (sfid-20081210_060414_951498_875D97D4)
+Date: Wed, 10 Dec 2008 06:04:05 +0100
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43/ssb: Add SPROM8 extraction and LP-PHY detection
-References: <200812250039.28824.mb@bu3sch.de>	 (sfid-20081225_004044_707129_A1975627) <1230162724.3162.3.camel@johannes>
-In-Reply-To: <1230162724.3162.3.camel@johannes>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+CC: Jiri Slaby <jirislaby@gmail.com>, mickflemm@gmail.com,
+	mcgrof@gmail.com, me@bobcopeland.com
+Subject: [RFC]: atk5k: fix FCS corruption for ACKs
+Content-Type: multipart/mixed;
+ boundary="------------050603010209020501060100"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2008-12-25 at 00:39 +0100, Michael Buesch wrote:
->> This adds detection code for the LP-PHY and SPROM
->> extraction code for version 8, which is needed by the LP-PHY and
->> newer N-PHY.
-> 
-> I still get mac address ff:ff:ff:ff:ff:ff with this, but it might just
-> be that we need to use a different address or something, will double
-> check. We can fix that, so don't take this as a nack, the patch lays the
-> foundation, and the devices aren't supported anyway.
+This is a multi-part message in MIME format.
+--------------050603010209020501060100
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Johannes,
+When running a monitor interface with ath5k, the FCS of ACK
+frames is two bytes short. The reason is that unlike the
+payload, the FCS doesn't seem to aligned to a 4 byte boundary
+by the chip, the attempt to remove the padding corrupts it.
 
-Could you extract the SPROM contents from /sys and send me the data? I'm nearly
-completed with a pretty extensive rewrite of ssb-sprom, and I would like an
-additional sample of a rev 8 device.
+This patch checks whether there actually is any payload after
+the header (besides the FCS) before removing the padding.
 
-Thanks,
+This might not be fully correct or not handle other cases where
+this can occur, but it doesn't seem too hackish and fixes the
+problem for me :)
 
-Larry
+http://bugzilla.kernel.org/show_bug.cgi?id=12101
+
+
+--------------050603010209020501060100
+Content-Type: text/x-patch;
+ name="01.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="01.diff"
+
+commit 8c1d598338077d397aed25fe4840e4d4b51ba79c
+Author: Patrick McHardy <kaber@trash.net>
+Date:   Tue Dec 9 21:52:00 2008 +0100
+
+    atk5k: fix FCS corruption for ACKs
+    
+    The trailing FCS value is not aliged when no payload is present. Don't try
+    to remove padding to avoid corrupting it.
+
+    Kernel Bugzilla #12101
+    
+    Signed-off-by: Patrick McHardy <kaber@trash.net>
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index d9e1980..940c724 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1752,7 +1752,7 @@ accept:
+ 		 * not multiples of 4 - remove it
+ 		 */
+ 		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+-		if (hdrlen & 3) {
++		if (hdrlen & 3 && hdrlen != rs.rs_datalen - FCS_LEN) {
+ 			pad = hdrlen % 4;
+ 			memmove(skb->data + pad, skb->data, hdrlen);
+ 			skb_pull(skb, pad);
+
+--------------050603010209020501060100--
