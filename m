@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53291 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755969AbYLPQaL (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:44339 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753913AbYLJQNG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 11:30:11 -0500
-Date: Tue, 16 Dec 2008 11:16:58 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
-Message-ID: <20081216161658.GC3636@tuxdriver.com> (sfid-20081216_173015_245187_3F58C4A0)
-References: <20081216025542.GO18056@xi.wantstofly.org> <1229443806.7307.34.camel@localhost.localdomain>
+	Wed, 10 Dec 2008 11:13:06 -0500
+Date: Wed, 10 Dec 2008 16:12:59 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	hmh@hmh.eng.br
+Subject: Re: [RFC] b43: rework rfkill code
+Message-ID: <20081210161259.GA12069@srcf.ucam.org> (sfid-20081210_171311_474472_B6EAD065)
+References: <20081210150935.GA10927@srcf.ucam.org> <200812101648.30161.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1229443806.7307.34.camel@localhost.localdomain>
+In-Reply-To: <200812101648.30161.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 16, 2008 at 11:10:06AM -0500, Dan Williams wrote:
-> On Tue, 2008-12-16 at 03:55 +0100, Lennert Buytenhek wrote:
-> > Hi all,
-> > 
-> > Attached is an initial version of the mwl8k driver for Marvell 88w8xxx
-> > PCI/PCIe wireless parts (against 2.6.27.1).  This version was written
-> > and tested against the 88w8687 (802.11b/g), but it shouldn't be hard to
-> > extend the support to other parts in the 8xxx series, since the firmware
-> > interface is very similar between parts.
-> > 
-> > There's an occasional timeout warning with mwl8k_stop(), and hardware
-> > crypto is still a work-in-progress, but other than that it looks pretty
-> > stable.
-> > 
-> > Feedback appreciated!
+On Wed, Dec 10, 2008 at 04:48:29PM +0100, Michael Buesch wrote:
+> On Wednesday 10 December 2008 16:09:35 Matthew Garrett wrote:
+> > I've reworked the rfkill code in b43. This ought to be more consistent 
+> ...
 > 
-> Oooh, thanks for the Christmas present.  Just in time for the holidays.
-> Is there a git repo somewhere that we could all base off of, so we don't
-> have to deal with patches to patches to patches until it gets into
-> wireless-testing?
+> I'm fine with this, as long as you take over the responsibility for the whole b43-rfkill code.
+> I'm not going to touch it anymore. I'm only going to fix it by either forwarding bugreports
+> to somebody else (you, in that case) or by reverting patches until it starts working again.
 
-I wouldn't worry too much about that.  The better questions is where
-do we get firmware?
+Works for me, though I'd appreciate it if people could give it a quick 
+sanity test. The main thing I'm worried about is LED control, which I 
+think /ought/ to still work but is dependent on everything in the rfkill 
+core working properly.
 
-John
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Matthew Garrett | mjg59@srcf.ucam.org
