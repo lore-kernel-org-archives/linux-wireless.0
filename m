@@ -1,81 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:39010 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801AbYLRVRr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47437 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbYLJAR0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 16:17:47 -0500
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mBILGOVp028172
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 15:17:45 -0600
-Received: from [127.0.1.1] (essapo-nirac25252.europe.nokia.com [10.162.252.52])
-	by mgw-int02.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mBILGqSE001468
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 23:16:52 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH v5 0/3] mac80211 dynamic power save
-To: linux-wireless@vger.kernel.org
-Date: Thu, 18 Dec 2008 23:16:51 +0200
-Message-ID: <20081218211532.6842.88104.stgit@tikku> (sfid-20081218_221750_551441_71A951B7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 9 Dec 2008 19:17:26 -0500
+Subject: Re: [RFC/RFT] rtl8187: Use usb anchor facilities to manage urbs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <493F0B11.9030503@yahoo.co.uk> (sfid-20081210_011314_137479_CE755EA0)
+References: <493d9c06.XJn1gNkms3JqErgr%Larry.Finger@lwfinger.net>
+	 <493DEF32.5070403@yahoo.co.uk> <493E8B27.3000404@lwfinger.net>
+	 <493F0B11.9030503@yahoo.co.uk> (sfid-20081210_011314_137479_CE755EA0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NdG7CCbumZJmuYcAlC+5"
+Date: Wed, 10 Dec 2008 01:16:49 +0100
+Message-Id: <1228868209.1029.30.camel@johannes.berg> (sfid-20081210_011729_653981_0FBB579F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is v5 of my dynamic powersave patches. I have tested them with
-stlc45xx on Nokia N810.
 
-I think (and hope) that the patches are close to inclusion now. Please
-review.
+--=-NdG7CCbumZJmuYcAlC+5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-changes in v5:
+On Wed, 2008-12-10 at 00:19 +0000, Hin-Tak Leung wrote:
+> Larry Finger wrote:
+> > Hin-Tak Leung wrote:
+> >> Just built it and using it right now.
+> >=20
+> > Does this patch have any effect on bugzilla entry
+> > 11887(http://bugzilla.kernel.org/show_bug.cgi?id=3D11887)?
+>=20
+> No, still requires manually unloading. (i.e. I removed my current=20
+> SUSPEND_MODULES pm defines, and it hangs on suspend). Need to look elsewh=
+ere
+> or fill in some suspend()/resume() routines, I guess.
 
-o check STA interface earlier in siwpower()
-o moved queue track patch before dynamic power save patch
-o add new functions ieee80211_wake_queues_by_reason() and
-  ieee80211_stop_queues_by_reason() for optimised locking
-o dropped "move dynamic_ps_timeout to hw.conf" for now, will resubmit
-  it later when I have example driver implementation
-o renamed the hw flag to IEEE80211_HW_NO_STACK_DYNAMIC_PS and inverted
-  it's functionality, now drivers need to explicitly disable the feature
-o folded hw flag patch to the main dynamic power save patch
+The same happens for ar9170 right now, I was putting the blame on the
+firmware loading but I'm not entirely sure. If you find anything here
+I'd be interested, no time right now try finding the bug myself
+unfortunately.
 
-changes in v4:
-o add check for station interface to siwpower()
-o call hw_config() also for dynamic timeout changes
-o add dynamic_ prefix to workqueues
-o test for IEEE80211_HW_NO_DYNAMIC_PS in siwpower()
-o wrote documentation for IEEE80211_HW_NO_DYNAMIC_PS
-o wrote documentation for conf->dynamic_ps_timeout
+johannes
 
-changes in v3:
-o add a hw flag to notify that driver doesn't support dynamic power save and
-  which will enable mac80211 implementation
-o delete dynamic_ps_timer and cancel ps_enable_work during
-  association, hopefully it's race free now
-o provide timeout value to the drivers, for example iwlwifi should use
-  it (example patch under works)
-o fix a bad bug in testing IEEE80211_STA_ASSOCIATED flag with && operator
+--=-NdG7CCbumZJmuYcAlC+5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Power save related features which I'll implement later:
-o disable power save when software scanning
-o move dynamic_ps_timeout to hw.conf so that drivers can use it in
-  case they need to
-o beacon period (wakeup period) to the drivers, can be set from user
-  space but otherwise is bss's DTIM value
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
----
+iQIcBAABAgAGBQJJPwptAAoJEKVg1VMiehFYjO0P/03yS0d4FPHOSnfj5ZMDKxef
+KTr2S61VsUeHr6Sgops7iGtqsFzn3vyxo5c7Ihtrgv1UT4WlKSnbiUwa/RPRH0ci
+jZA97m36CPEzVvuk7jhbNnwtdfQ5rlI9OTTCcOoHuUTo5KVFjVqoDRKd8l48oR/S
+PjTO97+1FErtovwBw7JTF3pP6Vz7JCxfcHvVGKSSMNWhZZ+5WTDCpE4QhLGvUjOA
+AlZCcr/fdHgQ2e3OE0uA6c8T6QnJt210mod9kDlayDYM3w33rhysQYvKh2CWeLmX
+iRzhTQ4lf7KHwz0owtzDRS27wgjOIGYZjA/sJPTppy1POCFsovMPAjgomYsAJMga
+zz/oyPR88Nyt1Ht4dd9sLQuXigZ5l5lcWriyEszKIuKSoFKo0KnCT529RCCdgHLU
+1yAAKFUxMkAugv+YdGmh3O9MSxjVpErc8QKAL3NAfVlgT3uMg/zrAL7FfgJps9Cr
+88X5ki8jILqSuGDG7uMMb6SSXEzOqrNykYiTFDnoT23XXOVDFCplEc0/ywSPnjoX
+wkzGYxCQrwZALwSLKadAZvxWlyfq7C1drl2ZrV/xzhJMbJ7VTpr0oQoNJJP7mWSg
+6Hv2kMq3S16bBnJodsEm3/KHtllaEZFf2M5v76rQV5aWOrt3Hw+qQgZu/rlsTOjE
+/dAIq1ejPiT/ILhAFJFa
+=EzOl
+-----END PGP SIGNATURE-----
 
-Kalle Valo (3):
-      mac80211: implement dynamic power save
-      mac80211: track master queue status
-      mac80211: enable IEEE80211_CONF_PS only when associated
-
-
- include/net/mac80211.h     |    6 +++
- net/mac80211/ieee80211_i.h |   23 +++++++++++-
- net/mac80211/main.c        |    9 +++++
- net/mac80211/mlme.c        |   60 ++++++++++++++++++++++++++++++-
- net/mac80211/tx.c          |   13 +++++++
- net/mac80211/util.c        |   86 +++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/wext.c        |   46 +++++++++++++++++++-----
- 7 files changed, 226 insertions(+), 17 deletions(-)
+--=-NdG7CCbumZJmuYcAlC+5--
 
