@@ -1,81 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35537 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752660AbYLIVUI (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:1844 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751748AbYLJEyQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 16:20:08 -0500
-Subject: Re: [Patch 2/2 v2] Add signal strength and bandwith to
-	nl80211station info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@googlemail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Henning Rogge <rogge@fgan.de>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812092058.32251.hrogge@googlemail.com> (sfid-20081209_205836_039420_8AF1B951)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812071917.07075.hrogge@googlemail.com>
-	 <1228765415.22164.107.camel@johannes.berg>
-	 <200812092058.32251.hrogge@googlemail.com>
-	 (sfid-20081209_205836_039420_8AF1B951)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X88J44czKYopA14VEFeQ"
-Date: Tue, 09 Dec 2008 22:19:32 +0100
-Message-Id: <1228857572.1029.28.camel@johannes.berg> (sfid-20081209_222012_008976_EAEF0DF6)
-Mime-Version: 1.0
+	Tue, 9 Dec 2008 23:54:16 -0500
+Date: Tue, 9 Dec 2008 23:54:04 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH] ath5k: fix endianness of bitwise ops when installing mic
+Message-ID: <20081210045404.GB11899@hash.localnet> (sfid-20081210_055421_623492_17B7245C)
+References: <20081210040538.GA11810@hash.localnet> <493F45C9.6010703@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <493F45C9.6010703@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Dec 09, 2008 at 10:30:01PM -0600, Larry Finger wrote:
+> >  			key_v[0] = rxmic[0];
+> > -			key_v[1] = (txmic[0] >> 16) & 0xffff;
+> > +			key_v[1] = cpu_to_le32(le32_to_cpu(txmic[0]) >> 16);
+> 
+> Is it certain that txmic[0] will not sign extend with the >> 16 operation? Is
+> that why you dropped the mask with 0xffff?
 
---=-X88J44czKYopA14VEFeQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, I added the mask in the first place, but dropped it here because 
+txmic is an __le32, and as far as I can tell all __le types are also 
+unsigned, so it shouldn't sign extend.
 
-On Tue, 2008-12-09 at 20:58 +0100, Henning Rogge wrote:
+I'm not a language lawyer though so if anyone knows better, chime in
+(I just wrote a simple C program to convince myself).
 
-> -		if (!(sinfo->txrate.flags & RATE_INFO_FLAGS_MCS))
-> -			NLA_PUT_U16(msg, NL80211_RATE_INFO_LEGACY,
-> -				    sinfo->txrate.legacy);
-> -		else
-> +		NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE,
-> +				nl80211_calculate_bitrate(&sinfo->txrate));
-
-If you do:
-
-if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS) {
-	if (sinfo->txrate.mcs < 32)
-		NLA_PUT_U16(msg, ..., calculate());
-} else
-	NLA_PUT_U16(msg, ..., legacy);
-
-
-and add a big comment to the calculate function that it only works for
-MCS < 32, I'm fine with it.
-
-johannes
-
---=-X88J44czKYopA14VEFeQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJPuDgAAoJEKVg1VMiehFYB9AP+wa1LrpOn+pVvkfNRgxnuzly
-lSUfunCpFgO40q/0vGZ4cPY5sV3ppLGL4HJTQh9FKP1ce7gEL1IMx76cxMASZJvW
-ATLq44kRSbkcI3qZziNti8r4IjvGrIHCjIM2no34kw0A8xk+NAoQPSN4UtEx5iwB
-NunJhYulRc/deVBAJoYv+Vil5HMqjZUNWO2A6f3LpKYcYCXJAY4nMaTMXQ+zVvHf
-beIhPSW7/Vc10oCDtMGPRHupdV+XfiR9bcPeK03eaPiUVXcQ3d9ThvAZW7lJkzNs
-KZR+181t5wtE7mt7dCNF6HCLdhS7I7u+DQIZ7qxpdPo/JCrnEBPKZPdrxoMv8fW6
-IFMRi2sFgSIxuFjNMoyS7sbD7Flg/dPiBbZeSa/apCpwE93wVRKjy9QOtYBzmWfs
-ZvlhXwGHtkmfqzMSQm3HS7ZbfjnixqCXZjktipsGYs3pIBlTHk8o+0KITtDSyokM
-humt68t4NGNlNiLLr4Is+O7seLcvqL68eARE6uJGPgClLZfYnCWfY4GAJxf0TczO
-IUnT4lrtmB/iZry+nHMyqyFvdJJI56XgCMdTPp6PTKXuooh8Ayv4UbKezgw55VOw
-UbyhUc+yM4XcP88AzqYB4bign9eSzBC7ZztcDGJ+Tb3MpQiJScMn4FBblGCJU7DJ
-9Q5FIi7xNbWQnIEfzCsM
-=Npue
------END PGP SIGNATURE-----
-
---=-X88J44czKYopA14VEFeQ--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
