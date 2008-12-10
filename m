@@ -1,160 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55837 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755313AbYLQI7s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 03:59:48 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 7/8] iwlwifi: use GFP_KERNEL to allocate Rx SKB memory
-Date: Wed, 17 Dec 2008 16:52:33 +0800
-Message-Id: <1229503954-30347-8-git-send-email-yi.zhu@intel.com> (sfid-20081217_095953_071913_5BC8B2E1)
-In-Reply-To: <1229503954-30347-7-git-send-email-yi.zhu@intel.com>
-References: <1229503954-30347-1-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-2-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-3-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-5-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-6-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-7-git-send-email-yi.zhu@intel.com>
+Received: from qw-out-2122.google.com ([74.125.92.27]:10849 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751959AbYLJPNq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Dec 2008 10:13:46 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so155278qwe.37
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 07:13:45 -0800 (PST)
+Message-ID: <e27b78a40812100713l588e5cfch952c3d909c1dea19@mail.gmail.com> (sfid-20081210_161349_313917_9BFFAA0F)
+Date: Wed, 10 Dec 2008 15:13:45 +0000
+From: Keir <keirlawson@gmail.com>
+To: "Andrey Yurovsky" <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Subject: Listing established mesh connections
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously we allocate Rx SKB with GFP_ATOMIC flag. This is because we need
-to hold a spinlock to protect the two rx_used and rx_free lists operation
-in the rxq.
+Hi,
 
-	spin_lock();
-	...
-	element = rxq->rx_used.next;
-	element->skb = alloc_skb(..., GFP_ATOMIC);
-	list_del(element);
-	list_add_tail(&element->list, &rxq->rx_free);
-	...
-	spin_unlock();
+I was wondering if there was an efficient way to get a list of
+established mesh connections for a given mesh network?  I'm working on
+a custom link metric (Packet pair) for the o11s stack and want to
+unicast a packet to each established connection.  I have been reading
+through the HWMP code, but it doesn't seem clear to me how this code
+gets a list of its neighbors.
 
-After spliting the rx_used delete and rx_free insert into two operations,
-we don't require the skb allocation in an atomic context any more (the
-function itself is scheduled in a workqueue).
+Cheers
 
-	spin_lock();
-	...
-	element = rxq->rx_used.next;
-	list_del(element);
-	...
-	spin_unlock();
-	...
-	element->skb = alloc_skb(..., GFP_KERNEL);
-	...
-	spin_lock()
-	...
-	list_add_tail(&element->list, &rxq->rx_free);
-	...
-	spin_unlock();
-
-This patch should fix the "iwlagn: Can not allocate SKB buffers" warning
-we see recently.
-
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Acked-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   12 +-----------
- drivers/net/wireless/iwlwifi/iwl-rx.c  |   29 +++++++++++++++++++----------
- 2 files changed, 20 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index d0fb7a3..8102815 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1112,16 +1112,6 @@ static void iwl_setup_rx_handlers(struct iwl_priv *priv)
- 	priv->cfg->ops->lib->rx_handler_setup(priv);
- }
- 
--/*
-- * this should be called while priv->lock is locked
--*/
--static void __iwl_rx_replenish(struct iwl_priv *priv)
--{
--	iwl_rx_allocate(priv);
--	iwl_rx_queue_restock(priv);
--}
--
--
- /**
-  * iwl_rx_handle - Main entry function for receiving responses from uCode
-  *
-@@ -1230,7 +1220,7 @@ void iwl_rx_handle(struct iwl_priv *priv)
- 			count++;
- 			if (count >= 8) {
- 				priv->rxq.read = i;
--				__iwl_rx_replenish(priv);
-+				iwl_rx_queue_restock(priv);
- 				count = 0;
- 			}
- 		}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 919a775..c5f1aa0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -244,25 +244,31 @@ void iwl_rx_allocate(struct iwl_priv *priv)
- 	struct list_head *element;
- 	struct iwl_rx_mem_buffer *rxb;
- 	unsigned long flags;
--	spin_lock_irqsave(&rxq->lock, flags);
--	while (!list_empty(&rxq->rx_used)) {
-+
-+	while (1) {
-+		spin_lock_irqsave(&rxq->lock, flags);
-+
-+		if (list_empty(&rxq->rx_used)) {
-+			spin_unlock_irqrestore(&rxq->lock, flags);
-+			return;
-+		}
- 		element = rxq->rx_used.next;
- 		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
-+		list_del(element);
-+
-+		spin_unlock_irqrestore(&rxq->lock, flags);
- 
- 		/* Alloc a new receive buffer */
- 		rxb->skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
--				__GFP_NOWARN | GFP_ATOMIC);
-+				     GFP_KERNEL);
- 		if (!rxb->skb) {
--			if (net_ratelimit())
--				printk(KERN_CRIT DRV_NAME
--				       ": Can not allocate SKB buffers\n");
-+			printk(KERN_CRIT DRV_NAME
-+				   "Can not allocate SKB buffers\n");
- 			/* We don't reschedule replenish work here -- we will
- 			 * call the restock method and if it still needs
- 			 * more buffers it will schedule replenish */
- 			break;
- 		}
--		priv->alloc_rxb_skb++;
--		list_del(element);
- 
- 		/* Get physical address of RB/SKB */
- 		rxb->real_dma_addr = pci_map_single(
-@@ -276,12 +282,15 @@ void iwl_rx_allocate(struct iwl_priv *priv)
- 		rxb->aligned_dma_addr = ALIGN(rxb->real_dma_addr, 256);
- 		skb_reserve(rxb->skb, rxb->aligned_dma_addr - rxb->real_dma_addr);
- 
-+		spin_lock_irqsave(&rxq->lock, flags);
-+
- 		list_add_tail(&rxb->list, &rxq->rx_free);
- 		rxq->free_count++;
-+		priv->alloc_rxb_skb++;
-+
-+		spin_unlock_irqrestore(&rxq->lock, flags);
- 	}
--	spin_unlock_irqrestore(&rxq->lock, flags);
- }
--EXPORT_SYMBOL(iwl_rx_allocate);
- 
- void iwl_rx_replenish(struct iwl_priv *priv)
- {
--- 
-1.5.3.6
-
+Keir
