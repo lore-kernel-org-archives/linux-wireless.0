@@ -1,188 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:51552 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751063AbYLXTVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 14:21:42 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Dec 2008 11:21:42 -0800
-Date: Wed, 24 Dec 2008 11:21:32 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mmotm 2008-12-24-01-20 uploaded (ath9k)
-Message-ID: <20081224192132.GO5944@tesla> (sfid-20081224_202156_122830_5DC017C9)
-References: <200812240930.mBO9U3e6030301@imap1.linux-foundation.org> <495279BB.1090703@oracle.com>
+Received: from mail-bw0-f13.google.com ([209.85.218.13]:43920 "EHLO
+	mail-bw0-f13.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757372AbYLKUlI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 15:41:08 -0500
+Received: by bwz6 with SMTP id 6so2712047bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 12:41:05 -0800 (PST)
+From: Henning Rogge <hrogge@googlemail.com>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [Patch v14] nl80211: Add signal strength and bandwith to nl80211station info
+Date: Thu, 11 Dec 2008 21:34:38 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <495279BB.1090703@oracle.com>
+Content-Type: multipart/signed;
+  boundary="nextPart1383140.C9BsG7JMiy";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200812112135.02656.hrogge@googlemail.com> (sfid-20081211_214117_865308_559C244F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 24, 2008 at 10:04:43AM -0800, Randy Dunlap wrote:
-> akpm@linux-foundation.org wrote:
-> > The mm-of-the-moment snapshot 2008-12-24-01-20 has been uploaded to
-> >
-> >    http://userweb.kernel.org/~akpm/mmotm/
-> >
-> > and will soon be available at
-> >
-> >    git://git.zen-sources.org/zen/mmotm.git
-> 
-> 
-> ath9k build fails with:
-> 
-> drivers/built-in.o: In function `ath_detach':
-> main.c:(.text+0xee655): undefined reference to `rfkill_unregister'
-> drivers/built-in.o: In function `ath_rfkill_poll':
-> main.c:(.text+0xeedfa): undefined reference to `rfkill_force_state'
-> drivers/built-in.o: In function `ath9k_start':
-> main.c:(.text+0xefe79): undefined reference to `rfkill_register'
-> main.c:(.text+0xeff20): undefined reference to `rfkill_free'
-> drivers/built-in.o: In function `ath_pci_probe':
-> main.c:(.text+0xf0f73): undefined reference to `rfkill_allocate'
-> 
-> when ath9k is built-in and CONFIG_RFKILL=m.
-> 
-> config attached.
+--nextPart1383140.C9BsG7JMiy
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-<-- snip -->
+This patch adds signal strength and transmission bitrate
+to the station_info of nl80211.
 
-> # CONFIG_MAC80211_DEBUGFS is not set
-> # CONFIG_MAC80211_DEBUG_MENU is not set
-> CONFIG_RFKILL=m
-> CONFIG_RFKILL_INPUT=m
-> CONFIG_RFKILL_LEDS=y
-
-Try this (already merged into wireless-testing):
-
-commit bb2476392c584a769f88421fcc9de3408656d05d
-Author: Senthil Balasubramanian <senthilkumar@atheros.com>
-Date:   Thu Nov 13 18:00:02 2008 +0530
-
-    ath9k: Build RFKILL feature even when RFKILL subsystem is a MODULE
-    
-    Currently, ath9k builds RFKILL feature only when the RFKILL subsystem
-    is built part of the kernel. Build RFKILL feature regardless of whether
-    RFKILL subsystem is built as a MODULE or part of the kernel.
-    
-    Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index 3a180ce..6be2b94 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -904,7 +904,7 @@ u32 ath9k_hw_gpio_get(struct ath_hal *ah, u32 gpio);
- void ath9k_hw_cfg_output(struct ath_hal *ah, u32 gpio,
- 			 u32 ah_signal_type);
- void ath9k_hw_set_gpio(struct ath_hal *ah, u32 gpio, u32 val);
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- void ath9k_enable_rfkill(struct ath_hal *ah);
- #endif
- int ath9k_hw_select_antconfig(struct ath_hal *ah, u32 cfg);
-diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
-index 5f5184a..3e94dab 100644
---- a/drivers/net/wireless/ath9k/core.c
-+++ b/drivers/net/wireless/ath9k/core.c
-@@ -705,7 +705,7 @@ void ath_stop(struct ath_softc *sc)
- 	} else
- 		sc->sc_rxlink = NULL;
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
- 		cancel_delayed_work_sync(&sc->rf_kill.rfkill_poll);
- #endif
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index 7ca2efa..dc30703 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -2341,7 +2341,7 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
- 	ath9k_hw_init_interrupt_masks(ah, ah->ah_opmode);
- 	ath9k_hw_init_qos(ah);
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	if (ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
- 		ath9k_enable_rfkill(ah);
- #endif
-@@ -3516,7 +3516,7 @@ bool ath9k_hw_fill_cap_info(struct ath_hal *ah)
- 
- 	pCap->hw_caps |= ATH9K_HW_CAP_ENHANCEDPM;
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	ah->ah_rfsilent = ath9k_hw_get_eeprom(ah, EEP_RF_SILENT);
- 	if (ah->ah_rfsilent & EEP_RFSILENT_ENABLED) {
- 		ah->ah_rfkill_gpio =
-@@ -3773,7 +3773,7 @@ void ath9k_hw_set_gpio(struct ath_hal *ah, u32 gpio, u32 val)
- 		AR_GPIO_BIT(gpio));
+Signed-off-by: Henning Rogge <rogge@fgan.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+=2D--
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 04d4516..7501acf 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -425,6 +425,32 @@ enum nl80211_sta_flags {
+ };
+=20
+ /**
++ * enum nl80211_rate_info - bitrate information
++ *
++ * These attribute types are used with %NL80211_STA_INFO_TXRATE
++ * when getting information about the bitrate of a station.
++ *
++ * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
++ * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
++ * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
++ * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
++ * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
++ * @NL80211_RATE_INFO_MAX: highest rate_info number currently defined
++ * @__NL80211_RATE_INFO_AFTER_LAST: internal use
++ */
++enum nl80211_rate_info {
++	__NL80211_RATE_INFO_INVALID,
++	NL80211_RATE_INFO_BITRATE,
++	NL80211_RATE_INFO_MCS,
++	NL80211_RATE_INFO_40_MHZ_WIDTH,
++	NL80211_RATE_INFO_SHORT_GI,
++
++	/* keep last */
++	__NL80211_RATE_INFO_AFTER_LAST,
++	NL80211_RATE_INFO_MAX =3D __NL80211_RATE_INFO_AFTER_LAST - 1
++};
++
++/**
+  * enum nl80211_sta_info - station information
+  *
+  * These attribute types are used with %NL80211_ATTR_STA_INFO
+@@ -436,6 +462,9 @@ enum nl80211_sta_flags {
+  * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this stati=
+on)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
++ * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dB=
+m)
++ * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
++ * 	containing info as possible, see &enum nl80211_sta_info_txrate.
+  */
+ enum nl80211_sta_info {
+ 	__NL80211_STA_INFO_INVALID,
+@@ -445,6 +474,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_LLID,
+ 	NL80211_STA_INFO_PLID,
+ 	NL80211_STA_INFO_PLINK_STATE,
++	NL80211_STA_INFO_SIGNAL,
++	NL80211_STA_INFO_TX_BITRATE,
+=20
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a0c0bf1..65e03ac 100644
+=2D-- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -169,6 +169,9 @@ struct station_parameters {
+  * @STATION_INFO_LLID: @llid filled
+  * @STATION_INFO_PLID: @plid filled
+  * @STATION_INFO_PLINK_STATE: @plink_state filled
++ * @STATION_INFO_SIGNAL: @signal filled
++ * @STATION_INFO_TX_BITRATE: @tx_bitrate fields are filled
++ *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	=3D 1<<0,
+@@ -177,6 +180,39 @@ enum station_info_flags {
+ 	STATION_INFO_LLID		=3D 1<<3,
+ 	STATION_INFO_PLID		=3D 1<<4,
+ 	STATION_INFO_PLINK_STATE	=3D 1<<5,
++	STATION_INFO_SIGNAL		=3D 1<<6,
++	STATION_INFO_TX_BITRATE		=3D 1<<7,
++};
++
++/**
++ * enum station_info_rate_flags - bitrate info flags
++ *
++ * Used by the driver to indicate the specific rate transmission
++ * type for 802.11n transmissions.
++ *
++ * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
++ * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
++ * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
++ */
++enum rate_info_flags {
++	RATE_INFO_FLAGS_MCS		=3D 1<<0,
++	RATE_INFO_FLAGS_40_MHZ_WIDTH	=3D 1<<1,
++	RATE_INFO_FLAGS_SHORT_GI	=3D 1<<2,
++};
++
++/**
++ * struct rate_info - bitrate information
++ *
++ * Information about a receiving or transmitting bitrate
++ *
++ * @flags: bitflag of flags from &enum rate_info_flags
++ * @mcs: mcs index if struct describes a 802.11n bitrate
++ * @legacy: bitrate in 100kbit/s for 802.11abg
++ */
++struct rate_info {
++	u8 flags;
++	u8 mcs;
++	u16 legacy;
+ };
+=20
+ /**
+@@ -191,6 +227,8 @@ enum station_info_flags {
+  * @llid: mesh local link id
+  * @plid: mesh peer link id
+  * @plink_state: mesh peer link state
++ * @signal: signal strength of last received packet in dBm
++ * @txrate: current unicast bitrate to this station
+  */
+ struct station_info {
+ 	u32 filled;
+@@ -200,6 +238,8 @@ struct station_info {
+ 	u16 llid;
+ 	u16 plid;
+ 	u8 plink_state;
++	s8 signal;
++	struct rate_info txrate;
+ };
+=20
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7912eb1..23b5eea 100644
+=2D-- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -310,12 +310,35 @@ static void sta_set_sinfo(struct sta_info *sta, struc=
+t station_info *sinfo)
+=20
+ 	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+=2D			STATION_INFO_TX_BYTES;
++			STATION_INFO_TX_BYTES |
++			STATION_INFO_TX_BITRATE;
+=20
+ 	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes =3D sta->rx_bytes;
+ 	sinfo->tx_bytes =3D sta->tx_bytes;
+=20
++	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
++		sinfo->filled |=3D STATION_INFO_SIGNAL;
++		sinfo->signal =3D (s8)sta->last_signal;
++	}
++
++	sinfo->txrate.flags =3D 0;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_MCS;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_SHORT_GI;
++
++	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)) {
++		struct ieee80211_supported_band *sband;
++		sband =3D sta->local->hw.wiphy->bands[
++				sta->local->hw.conf.channel->band];
++		sinfo->txrate.legacy =3D
++			sband->bitrates[sta->last_tx_rate.idx].bitrate;
++	} else
++		sinfo->txrate.mcs =3D sta->last_tx_rate.idx;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |=3D STATION_INFO_LLID |
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4335f76..93c9b98 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1091,12 +1091,46 @@ static int parse_station_flags(struct nlattr *nla, =
+u32 *staflags)
+ 	return 0;
  }
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- void ath9k_enable_rfkill(struct ath_hal *ah)
+=20
++static u16 nl80211_calculate_bitrate(struct rate_info *rate)
++{
++	int modulation, streams, bitrate;
++
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
++		return rate->legacy;
++
++	/* the formula below does only work for MCS values smaller than 32 */
++	if (rate->mcs >=3D 32)
++		return 0;
++
++	modulation =3D rate->mcs & 7;
++	streams =3D (rate->mcs >> 3) + 1;
++
++	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
++			13500000 : 6500000;
++
++	if (modulation < 4)
++		bitrate *=3D (modulation + 1);
++	else if (modulation =3D=3D 4)
++		bitrate *=3D (modulation + 2);
++	else
++		bitrate *=3D (modulation + 3);
++
++	bitrate *=3D streams;
++
++	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
++		bitrate =3D (bitrate / 9) * 10;
++
++	/* do NOT round down here */
++	return (bitrate + 50000) / 100000;
++}
++
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+ 				u8 *mac_addr, struct station_info *sinfo)
  {
- 	REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL,
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 04342ec..97f0b47 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -595,7 +595,7 @@ fail:
- 	ath_deinit_leds(sc);
- }
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 
- /*******************/
- /*	Rfkill	   */
-@@ -839,7 +839,7 @@ static void ath_detach(struct ath_softc *sc)
- 
- 	ath_deinit_leds(sc);
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	ath_deinit_rfkill(sc);
- #endif
- 	ath_rate_control_unregister();
-@@ -922,7 +922,7 @@ static int ath_attach(u16 devid, struct ath_softc *sc)
- 	/* Initialize LED control */
- 	ath_init_leds(sc);
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	/* Initialze h/w Rfkill */
- 	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
- 		INIT_DELAYED_WORK(&sc->rf_kill.rfkill_poll, ath_rfkill_poll);
-@@ -979,7 +979,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 		goto exit;
- 	}
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	error = ath_start_rfkill_poll(sc);
- #endif
- 
-@@ -1724,7 +1724,7 @@ static int ath_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 
- 	ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN, 1);
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
- 		cancel_delayed_work_sync(&sc->rf_kill.rfkill_poll);
- #endif
-@@ -1761,7 +1761,7 @@ static int ath_pci_resume(struct pci_dev *pdev)
- 			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 	ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN, 1);
- 
--#ifdef CONFIG_RFKILL
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	/*
- 	 * check the h/w rfkill state on resume
- 	 * and start the rfkill poll timer
+ 	void *hdr;
+=2D	struct nlattr *sinfoattr;
++	struct nlattr *sinfoattr, *txrate;
++	u16 bitrate;
+=20
+ 	hdr =3D nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_STATION);
+ 	if (!hdr)
+@@ -1126,7 +1160,29 @@ static int nl80211_send_station(struct sk_buff *msg,=
+ u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
++	if (sinfo->filled & STATION_INFO_SIGNAL)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
++			   sinfo->signal);
++	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
++		txrate =3D nla_nest_start(msg, NL80211_STA_INFO_TX_BITRATE);
++		if (!txrate)
++			goto nla_put_failure;
++
++		/* nl80211_calculate_bitrate will return 0 for mcs >=3D 32 */
++		bitrate =3D nl80211_calculate_bitrate(&sinfo->txrate);
++		if (bitrate > 0)
++			NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE, bitrate);
+=20
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
++			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
++				    sinfo->txrate.mcs);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_SHORT_GI);
++
++		nla_nest_end(msg, txrate);
++	}
+ 	nla_nest_end(msg, sinfoattr);
+=20
+ 	return genlmsg_end(msg, hdr);
+
+
+--nextPart1383140.C9BsG7JMiy
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAklBeXYACgkQcenvcwAcHWcayQCeNs5DwTAftc0kgalisnSH1GM0
+V+YAnRK7D3pZfZuMRD7vdJaYx8wsfbH0
+=mV48
+-----END PGP SIGNATURE-----
+
+--nextPart1383140.C9BsG7JMiy--
