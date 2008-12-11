@@ -1,100 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46802 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755914AbYLaPmd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 10:42:33 -0500
-Message-Id: <20081231154224.895735911@w1.fi> (sfid-20081231_164236_937324_6C9976A7)
-References: <20081231153834.840526845@w1.fi>
-Date: Wed, 31 Dec 2008 17:38:41 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [RFC 07/11] mac80211: 802.11w - Configuration of MFP disabled/optional/required
+Received: from mga01.intel.com ([192.55.52.88]:19332 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755840AbYLKScp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 13:32:45 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 6/6] iwlwifi: add contact email to MODULE_AUTHOR
+Date: Thu, 11 Dec 2008 10:33:41 -0800
+Message-Id: <1229020421-4823-7-git-send-email-reinette.chatre@intel.com> (sfid-20081211_193253_427392_EDA3E040)
+In-Reply-To: <1229020421-4823-6-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1229020421-4823-1-git-send-email-reinette.chatre@intel.com>
+ <1229020421-4823-2-git-send-email-reinette.chatre@intel.com>
+ <1229020421-4823-3-git-send-email-reinette.chatre@intel.com>
+ <1229020421-4823-4-git-send-email-reinette.chatre@intel.com>
+ <1229020421-4823-5-git-send-email-reinette.chatre@intel.com>
+ <1229020421-4823-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new WEXT IW_AUTH_* parameter for setting MFP
-disabled/optional/required.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
-
-
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- include/linux/wireless.h   |    6 ++++++
- net/mac80211/ieee80211_i.h |    6 ++++++
- net/mac80211/mlme.c        |    4 ++++
- net/mac80211/wext.c        |    7 +++++++
- 4 files changed, 23 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
---- wireless-testing.orig/include/linux/wireless.h	2008-12-31 17:11:41.000000000 +0200
-+++ wireless-testing/include/linux/wireless.h	2008-12-31 17:12:37.000000000 +0200
-@@ -578,6 +578,7 @@
- #define IW_AUTH_ROAMING_CONTROL		9
- #define IW_AUTH_PRIVACY_INVOKED		10
- #define IW_AUTH_CIPHER_GROUP_MGMT	11
-+#define IW_AUTH_MFP			12
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3680570..47aecf7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -83,7 +83,7 @@
  
- /* IW_AUTH_WPA_VERSION values (bit field) */
- #define IW_AUTH_WPA_VERSION_DISABLED	0x00000001
-@@ -607,6 +608,11 @@
- #define IW_AUTH_ROAMING_DISABLE	1	/* user space program used for roaming
- 					 * control */
+ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_VERSION(DRV_VERSION);
+-MODULE_AUTHOR(DRV_COPYRIGHT);
++MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS("iwl4965");
  
-+/* IW_AUTH_MFP (management frame protection) values */
-+#define IW_AUTH_MFP_DISABLED	0	/* MFP disabled */
-+#define IW_AUTH_MFP_OPTIONAL	1	/* MFP optional */
-+#define IW_AUTH_MFP_REQUIRED	2	/* MFP required */
-+
- /* SIOCSIWENCODEEXT definitions */
- #define IW_ENCODE_SEQ_MAX_SIZE	8
- /* struct iw_encode_ext ->alg */
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2008-12-31 17:04:36.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2008-12-31 17:12:37.000000000 +0200
-@@ -317,6 +317,12 @@ struct ieee80211_if_sta {
- 	int auth_alg; /* currently used IEEE 802.11 authentication algorithm */
- 	int auth_transaction;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index a3b9605..67fd6e1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -42,7 +42,7 @@
  
-+	enum {
-+		IEEE80211_MFP_DISABLED,
-+		IEEE80211_MFP_OPTIONAL,
-+		IEEE80211_MFP_REQUIRED
-+	} mfp; /* management frame protection */
-+
- 	unsigned long ibss_join_req;
- 	struct sk_buff *probe_resp; /* ProbeResp template for IBSS */
- 	u32 supp_rates_bits[IEEE80211_NUM_BANDS];
---- wireless-testing.orig/net/mac80211/wext.c	2008-12-31 17:11:41.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2008-12-31 17:12:37.000000000 +0200
-@@ -961,6 +961,13 @@ static int ieee80211_ioctl_siwauth(struc
- 		else
- 			ret = -EOPNOTSUPP;
- 		break;
-+	case IW_AUTH_MFP:
-+		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
-+		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+			sdata->u.sta.mfp = data->value;
-+		else
-+			ret = -EOPNOTSUPP;
-+		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		break;
---- wireless-testing.orig/net/mac80211/mlme.c	2008-12-31 16:48:01.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2008-12-31 17:12:37.000000000 +0200
-@@ -2332,6 +2332,10 @@ static int ieee80211_sta_config_auth(str
- 					       selected->ssid_len);
- 		ieee80211_sta_set_bssid(sdata, selected->bssid);
- 		ieee80211_sta_def_wmm_params(sdata, selected);
-+		if (sdata->u.sta.mfp == IEEE80211_MFP_REQUIRED)
-+			sdata->u.sta.flags |= IEEE80211_STA_MFP_ENABLED;
-+		else
-+			sdata->u.sta.flags &= ~IEEE80211_STA_MFP_ENABLED;
+ MODULE_DESCRIPTION("iwl core");
+ MODULE_VERSION(IWLWIFI_VERSION);
+-MODULE_AUTHOR(DRV_COPYRIGHT);
++MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
+ MODULE_LICENSE("GPL");
  
- 		/* Send out direct probe if no probe resp was received or
- 		 * the one we have is outdated
-
+ #define IWL_DECLARE_RATE_INFO(r, s, ip, in, rp, rn, pp, np)    \
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 72f82ec..08b842f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -72,6 +72,7 @@ struct iwl_cmd;
+ 
+ #define IWLWIFI_VERSION "1.3.27k"
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2008 Intel Corporation"
++#define DRV_AUTHOR     "<ilw@linux.intel.com>"
+ 
+ #define IWL_PCI_DEVICE(dev, subdev, cfg) \
+ 	.vendor = PCI_VENDOR_ID_INTEL,  .device = (dev), \
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 3f41836..161d812 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -93,12 +93,13 @@ int iwl3945_param_queues_num = IWL39_MAX_NUM_QUEUES; /* def: 8 Tx queues */
+ 
+ #define IWLWIFI_VERSION "1.2.26k" VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2008 Intel Corporation"
++#define DRV_AUTHOR     "<ilw@linux.intel.com>"
+ #define DRV_VERSION     IWLWIFI_VERSION
+ 
+ 
+ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_VERSION(DRV_VERSION);
+-MODULE_AUTHOR(DRV_COPYRIGHT);
++MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
+ MODULE_LICENSE("GPL");
+ 
+ static const struct ieee80211_supported_band *iwl3945_get_band(
 -- 
+1.5.4.3
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
