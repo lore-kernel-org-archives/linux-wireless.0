@@ -1,67 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39839 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:60772 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752291AbYLFJPX (ORCPT
+	with ESMTP id S1755510AbYLKS27 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 04:15:23 -0500
-Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
+	Thu, 11 Dec 2008 13:28:59 -0500
+Subject: Re: [Patch] nl80211: Add signal strength and bandwith to
+	nl80211station info
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Henning Rogge <hrogge@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200812060026.50636.hrogge@googlemail.com> (sfid-20081206_002659_429846_D1715CE3)
+Cc: Henning Rogge <rogge@fgan.de>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+In-Reply-To: <200812111922.49439.hrogge@googlemail.com> (sfid-20081211_192652_073998_62A7776A)
 References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812051051.52908.rogge@fgan.de> <1228470840.3970.15.camel@johannes.berg>
-	 <200812060026.50636.hrogge@googlemail.com>
-	 (sfid-20081206_002659_429846_D1715CE3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-91Qf6+J+wpOXfbtAphnn"
-Date: Sat, 06 Dec 2008 10:15:20 +0100
-Message-Id: <1228554920.15939.2.camel@johannes.berg> (sfid-20081206_101528_730692_4667D534)
+	 <200812111902.24289.hrogge@googlemail.com>
+	 <1229019287.8081.49.camel@johannes.berg>
+	 <200812111922.49439.hrogge@googlemail.com>
+	 (sfid-20081211_192652_073998_62A7776A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6n3hL9B2LKhJ2/AJjI/d"
+Date: Thu, 11 Dec 2008 19:28:21 +0100
+Message-Id: <1229020101.8081.55.camel@johannes.berg> (sfid-20081211_192902_642305_2B659E04)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-91Qf6+J+wpOXfbtAphnn
+--=-6n3hL9B2LKhJ2/AJjI/d
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-12-06 at 00:26 +0100, Henning Rogge wrote:
-> I just did a few calculations about the tx/rx rates in 802.11n and I thin=
-k I=20
-> can replace all of them with simple integer arithmetics. Only the 20Mhz r=
-ates=20
-> with short guard interval are a little bit off (I think I miss two of the=
-m by=20
-> 0.1 MBit/s and one of them by 0.2 MBit/s)...
->=20
-> do you think that's accurate enough ?
+On Thu, 2008-12-11 at 19:22 +0100, Henning Rogge wrote:
 
-Yes, well, depending on which values you used you might have run into
-the fact that the values from the tables were already rounded.
+> > This needs documentation for __...after_last and ..._max too, I think,
+> > or kernel-doc will complain, and then I get email on the next daily git
+> > update and complain ;)
+> Is there a script to check for mistakes like this ? I used checkpatch.pl =
+and=20
+> it did not complain...=20
+
+well, apply the patch and do
+
+make htmldocs DOCBOOKS=3Dmac80211.xml
+
+Actually, hmm, I think, that won't help, because these files aren't
+included yet. Heh.
 
 johannes
 
---=-91Qf6+J+wpOXfbtAphnn
+--=-6n3hL9B2LKhJ2/AJjI/d
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJOkKlAAoJEKVg1VMiehFYezsP+gN8snrYJfIFky1eIjzzsf53
-BaUhPE62Zd2Sj6p6S4h0GijDDaeDqIVtDAgtpF5f4Otw+dFfoymesnlqKhs7oUJP
-nezBWP0Fdr/vWIqFpZ3cktazDlsLYD30HWdpvDMI9AXtdkIIs531eq+7MDEQ4jQd
-Bw2wDT48/yqnG8fH46K2KNl/lvSWzKfH1TtfDjdfPITqF0s68k60b42AecvfIdkK
-QXTIaaky8RN/uFNkTrFAtw3iJhIsgDUcboTlf1F/OEh3AYZH0snSfve4wU0Ln6ky
-xNCGxLaXklD4jipWy9yygPUERAV2Kbz+iAaayQMZW3VtByLwgBZ0MgV1WxFAANPb
-8AlkDkqrxYBH/+wokozdEf6cQKylkeunD/2riOqwmr8tqKNRwGhA6VBj7p7a7YYa
-1+lcefZVnMxN2JNKOIV3mh9eqShu4csVRrpv2QWqjUvQ6RpOKQom13KnvXNu/UbM
-hUj1324CcObtGkFuJMIJeI4asAWb/Rw35CMXNQQVUooZPG32m0R8afePdbdOGmnb
-vnxfFkXyTa1EQjZPRkcSQ7YfK9TOC5HFKCf/ATn2xf786wuiVE1D+jsuH+m0yfj6
-HsmLvngM6m6hWQtpUDU2lFQIC0lmd0DV3UmFBDSVIVlhpIT7tRBMyXUresWjoeei
-jZUEMw7OZWVIJ1Ypmofg
-=i+Wi
+iQIcBAABAgAGBQJJQVvBAAoJEKVg1VMiehFYDW4P/RNYcWPEld9AQ2Rp1yDQ71P/
+ZWlpfQDGQohOy/pPMlzzZRq6Ek5lvBXar/8sziIKl4vBdKVNRsm/+8QAgAMJ3zlu
+htfxIP8Ln6J6PxOmPw8NGukVeKe75qAuYBdvyel93TmHsgY7+QSeP+cAb648bvBa
+uYae/LDX0mUEHtKTJu2wrHWxVt3VjJz9pUyTzs9EVE9khY54SSrKwRfD6xLjrp65
+mYLIWd/reXV4fCyRS36mT86oJgap2exr15Edkyrqarj3b6gG2+86ENAXmcDVXdOj
+TqPFVM3MkH6XTpMnThrKRR8lh2VCOPC1wSrvtrSh3zcjHHGM5lBJQfP+ghj8Qpog
+wRe/wivYHAMk9p8av9SKa9Sl2Y4Uhk/+2PGzRD1sCWNG8qKsO0ah790o6NPYMRHW
+Jq0mzIqPIMAdGoNjsTsgqPW0Js83Rqyf35e6Ebg6FPrqCz0nwKckTBRuBZRUrcvQ
+kbvs61b/BaDTRMgOPpGEgF3VheEpQVd5P/KqwaDe36EkSvn5FDocMG5hdM2E1290
+rFdh9Ylk0g/ijD/cjd8fLxEeJZ2zK73FZsWEJt8+EYzy/RHZSQ5/AQxm5kjiA5e9
+VPg3cD1WDJHSZEZTbQuwIUfAU3W+PdQfK2aCNOnTLmy3V3WgchIwKw9yrsr+4TcB
+LMHvx9IAUGffDxdt/sne
+=aVSm
 -----END PGP SIGNATURE-----
 
---=-91Qf6+J+wpOXfbtAphnn--
+--=-6n3hL9B2LKhJ2/AJjI/d--
 
