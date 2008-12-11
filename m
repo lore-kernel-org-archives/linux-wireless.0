@@ -1,48 +1,657 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:39312 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754607AbYLDOG0 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48678 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755082AbYLKTKn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 09:06:26 -0500
-Message-ID: <4937E3DF.4030407@lwfinger.net> (sfid-20081204_150630_690068_5D16784D)
-Date: Thu, 04 Dec 2008 08:06:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
-CC: Christian Lamparter <chunkeey@web.de>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] rtl8187: Improve wireless statistics for RTL8187
-References: <49375ac0.z1uZDBLv3IxmmMgD%Larry.Finger@lwfinger.net>	 <69e28c910812040444l5d76632ah288078bd3db172d4@mail.gmail.com>	 <200812041357.00103.chunkeey@web.de> <69e28c910812040514l2d325eeekef3decbcce2520b2@mail.gmail.com>
-In-Reply-To: <69e28c910812040514l2d325eeekef3decbcce2520b2@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 11 Dec 2008 14:10:43 -0500
+Subject: Re: [RFC v2] mac80211: Fix HT channel selection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <m.sujith@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	jouni.malinen@atheros.com, lrodriguez@atheros.com,
+	tomas.winkler@intel.com
+In-Reply-To: <18750.46333.603462.143624@localhost.localdomain> (sfid-20081209_191424_488127_F7264BFA)
+References: <18750.13163.213759.181839@localhost.localdomain>
+	 <1228818258.22164.178.camel@johannes.berg>
+	 <18750.46333.603462.143624@localhost.localdomain>
+	 (sfid-20081209_191424_488127_F7264BFA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+4JU0a48DM8QVbigW6o1"
+Date: Thu, 11 Dec 2008 20:07:50 +0100
+Message-Id: <1229022470.8081.65.camel@johannes.berg> (sfid-20081211_201051_748597_FCD3EAFA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefanik G=E1bor wrote:
+
+--=-+4JU0a48DM8QVbigW6o1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2008-12-09 at 23:42 +0530, Sujith wrote:
+> Johannes Berg wrote:
+> > Thanks, also for rebasing to the current tree. For all I care, we can
+> > apply this, but should maybe test on Intel hw?
 >=20
->>From an AP ~5M from my antenna, both cards report around -45dBm. I
-> haven't tested the p54usb-based algorithm yet.
+> Thanks for reviewing.
+> Yep, I think testing with Intel hw would be prudent. I'll do it tomorrow
+> (if I can find a 4965) and send out a patch.
 
-Both the RTL8187 and the RTL8187B "calibrations" were done using a sing=
-le sample
-of each device, which is probably risky, but the best I could do.
+tried, it pushed ~2.9 MByte/sec TCP from my AP which isn't a lot... Then
+it crashed (see below). I say we put the patch in.
 
-Is it possible for you to send me the quality and signal strength that =
-you
-obtain for the RTL8187 at distances of a few cm, 3m and 10m from the AP=
-? Please
-include which algorithm was used in the conversion.
+johannes
 
-Thanks,
+[  681.733255] wlan0: authenticate with AP 00:1d:7e:4a:a1:ab
+[  681.735567] wlan0: authenticated
+[  681.735584] wlan0: associate with AP 00:1d:7e:4a:a1:ab
+[  681.740386] wlan0: RX AssocResp from 00:1d:7e:4a:a1:ab (capab=3D0x401 st=
+atus=3D0 aid=3D1)
+[  681.740403] wlan0: associated
+[  681.748913] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[  698.110602] wlan0: no IPv6 routers present
+[  714.920520] tg3: eth0: Link is down.
+[  787.694171] Rx A-MPDU request on tid 0 result 0
+[  787.698548] ------------[ cut here ]------------
+[  787.698557] Badness at net/mac80211/rx.c:395
+[  787.698563] NIP: d000000001a68ff0 LR: d000000001a68fac CTR: 000000000000=
+0000
+[  787.698572] REGS: c00000020029b330 TRAP: 0700   Tainted: G        W   (2=
+.6.28-rc7-wl-dirty)
+[  787.698579] MSR: 9000000000029032 <EE,ME,IR,DR>  CR: 44ffff22  XER: 2000=
+0000
+[  787.698607] TASK =3D c000000200246ea0[0] 'swapper' THREAD: c000000200298=
+000 CPU: 2
+[  787.698616] GPR00: 0000000000000001 c00000020029b5b0 d000000001aa7170 00=
+0000000000001a=20
+[  787.698634] GPR04: c0000002009f081b 0000000000000006 c0000001c9afec05 c0=
+00000201e07380=20
+[  787.698653] GPR08: 0000000000000000 d000000001a9f2ec 0000000000008802 00=
+00000000000002=20
+[  787.698671] GPR12: d000000001a7b498 c000000000c43780 00000000f8000000 00=
+00000000000000=20
+[  787.698690] GPR16: 00000000fff03244 0000000000000000 0000000000000000 00=
+00000000000000=20
+[  787.698708] GPR20: 0000000000000000 0000000000000000 0000000000000000 00=
+00000000000001=20
+[  787.698726] GPR24: 0000000000000440 c000000150c20580 c0000002009f080c c0=
+0000020029b7d0=20
+[  787.698745] GPR28: c000000200cf7728 c000000201e07380 d000000001aa30c8 c0=
+0000020029b7d0=20
+[  787.698811] NIP [d000000001a68ff0] .__ieee80211_rx_handle_packet+0x250/0=
+x3ac [mac80211]
+[  787.698852] LR [d000000001a68fac] .__ieee80211_rx_handle_packet+0x20c/0x=
+3ac [mac80211]
+[  787.698859] Call Trace:
+[  787.698898] [c00000020029b5b0] [d000000001a68e38] .__ieee80211_rx_handle=
+_packet+0x98/0x3ac [mac80211] (unreliable)
+[  787.698944] [c00000020029b6c0] [d000000001a69888] .__ieee80211_rx+0x12c/=
+0x18c [mac80211]
+[  787.698978] [c00000020029b760] [d000000001a515f4] .ieee80211_tasklet_han=
+dler+0xb8/0x168 [mac80211]
+[  787.698995] [c00000020029b840] [c000000000058f60] .tasklet_action+0x14c/=
+0x244
+[  787.699007] [c00000020029b8f0] [c00000000005a058] .__do_softirq+0xf4/0x2=
+18
+[  787.699019] [c00000020029b9b0] [c00000000000c0ec] .do_softirq+0x5c/0xb8
+[  787.699031] [c00000020029ba30] [c000000000059a68] .irq_exit+0x74/0xe0
+[  787.699042] [c00000020029bab0] [c00000000000c268] .do_IRQ+0x120/0x164
+[  787.699053] [c00000020029bb40] [c000000000004714] hardware_interrupt_ent=
+ry+0x1c/0x20
+[  787.699068] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  787.699070]     LR =3D .cpu_idle+0x118/0x200
+[  787.699080] [c00000020029be30] [c000000000011fa8] .cpu_idle+0xd0/0x200 (=
+unreliable)
+[  787.699096] [c00000020029bed0] [c000000000419ea4] .start_secondary+0x378=
+/0x3b4
+[  787.699108] [c00000020029bf90] [c0000000000072b4] .start_secondary_prolo=
+g+0x10/0x14
+[  787.699116] Instruction dump:
+[  787.699125] 3803000e 7c0307b4 e9210070 e80900b8 7c001a14 780b07a1 418200=
+30 e93e8078=20
+[  787.699154] 80090000 7c000034 5400d97e 78000020 <0b000000> 2fa00000 419e=
+0010 e93e8078=20
+[  787.798375] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  787.798392] BA request denied - queue unavailable for tid 0
+[  804.616225] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  804.616241] BA request denied - queue unavailable for tid 0
+[  849.615526] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  849.615543] BA request denied - queue unavailable for tid 0
+[  932.033429] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  932.033447] BA request denied - queue unavailable for tid 0
+[  934.043577] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  934.043597] BA request denied - queue unavailable for tid 0
+[  934.111624] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  934.111644] BA request denied - queue unavailable for tid 0
+[  934.200870] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  934.200890] BA request denied - queue unavailable for tid 0
+[  934.295039] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  934.295057] BA request denied - queue unavailable for tid 0
+[  934.368822] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  934.368842] BA request denied - queue unavailable for tid 0
+[  934.552240] Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+[  934.552259] BA request denied - queue unavailable for tid 0
+[  934.690190] wrong command queue 11, sequence 0x6B6B readp=3D34 writep=3D=
+34
+[  934.690238] ------------[ cut here ]------------
+[  934.690245] Badness at drivers/net/wireless/iwlwifi/iwl-tx.c:1258
+[  934.690252] NIP: d000000001b2b3c4 LR: d000000001b2b3c0 CTR: c0000000002f=
+6208
+[  934.690261] REGS: c00000020029b360 TRAP: 0700   Tainted: G        W   (2=
+.6.28-rc7-wl-dirty)
+[  934.690268] MSR: 9000000000029032 <EE,ME,IR,DR>  CR: 28ff8f84  XER: 0000=
+0000
+[  934.690296] TASK =3D c000000200246ea0[0] 'swapper' THREAD: c000000200298=
+000 CPU: 2
+[  934.690305] GPR00: d000000001b2b3c0 c00000020029b5e0 d000000001b540b8 00=
+0000000000004d=20
+[  934.690324] GPR04: 0000000000000001 c000000000052930 0000000000000000 00=
+00000000000002=20
+[  934.690343] GPR08: 0000000000000000 c000000200298000 c000000000b93a60 00=
+00000000000000=20
+[  934.690361] GPR12: 00000000000186a0 c000000000c43780 00000000f8000000 00=
+00000000000000=20
+[  934.690380] GPR16: 0000000000000000 c000000150c266a0 c000000200298000 c0=
+00000150c266c8=20
+[  934.690399] GPR20: 0000000000000001 c000000150c31d60 00000000000000e0 00=
+00000000000008=20
+[  934.690418] GPR24: 00000000000000d8 c000000150c23a40 c000000150c21d60 c0=
+00000150c23a40=20
+[  934.690436] GPR28: ffffffff80000008 c000000150c21d60 d000000001b52680 c0=
+000001579dc700=20
+[  934.690485] NIP [d000000001b2b3c4] .iwl_tx_cmd_complete+0x68/0x294 [iwlc=
+ore]
+[  934.690508] LR [d000000001b2b3c0] .iwl_tx_cmd_complete+0x64/0x294 [iwlco=
+re]
+[  934.690514] Call Trace:
+[  934.690536] [c00000020029b5e0] [d000000001b2b3c0] .iwl_tx_cmd_complete+0=
+x64/0x294 [iwlcore] (unreliable)
+[  934.690570] [c00000020029b680] [d000000001beb6ec] .iwl_rx_handle+0x318/0=
+x4a0 [iwlagn]
+[  934.690595] [c00000020029b780] [d000000001bebfc0] .iwl_irq_tasklet+0x74c=
+/0xaa0 [iwlagn]
+[  934.690613] [c00000020029b840] [c000000000058f60] .tasklet_action+0x14c/=
+0x244
+[  934.690626] [c00000020029b8f0] [c00000000005a058] .__do_softirq+0xf4/0x2=
+18
+[  934.690639] [c00000020029b9b0] [c00000000000c0ec] .do_softirq+0x5c/0xb8
+[  934.690650] [c00000020029ba30] [c000000000059a68] .irq_exit+0x74/0xe0
+[  934.690662] [c00000020029bab0] [c00000000000c268] .do_IRQ+0x120/0x164
+[  934.690675] [c00000020029bb40] [c000000000004714] hardware_interrupt_ent=
+ry+0x1c/0x20
+[  934.690691] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  934.690693]     LR =3D .cpu_idle+0x118/0x200
+[  934.690702] [c00000020029be30] [c000000000011fa8] .cpu_idle+0xd0/0x200 (=
+unreliable)
+[  934.690719] [c00000020029bed0] [c000000000419ea4] .start_secondary+0x378=
+/0x3b4
 
-Larry
+<7>Open BA session requested for 00:1d:7e:4a:a1:ab tid 0
+
+[  934.690734]=20
+[  934.690741] [c00000020029bf90] [c0000000000072b4] .start_secondary_prolo=
+g+0x10/0x14
+
+<7>BA request denied - queue unavailable for tid 0
+
+[  934.690752]=20
+[  934.690756] Instruction dump:
+[  934.690764] a1290006 5520c23e 5120442e 78050420 78a4c6e2 2f840004 41be02=
+08 e8dd6aaa=20
+[  934.690793] e8fd6aa6 e87e8140 4800ce95 e8410028 <0fe00000> 3d3d0001 8009=
+310c 780907e1=20
+[  934.690834] wrong command queue 11, sequence 0x6B6B readp=3D34 writep=3D=
+35
+[  934.690851] ------------[ cut here ]------------
+[  934.690857] Badness at drivers/net/wireless/iwlwifi/iwl-tx.c:1258
+[  934.690863] NIP: d000000001b2b3c4 LR: d000000001b2b3c0 CTR: c0000000002f=
+6208
+[  934.690871] REGS: c00000020029b360 TRAP: 0700   Tainted: G        W   (2=
+.6.28-rc7-wl-dirty)
+[  934.690877] MSR: 9000000000021032 <ME,IR,DR>  CR: 28ff8f84  XER: 0000000=
+0
+[  934.690902] TASK =3D c000000200246ea0[0] 'swapper' THREAD: c000000200298=
+000 CPU: 2
+[  934.690911] GPR00: d000000001b2b3c0 c00000020029b5e0 d000000001b540b8 00=
+0000000000004d=20
+[  934.690933] GPR04: 0000000000000001 c000000000052930 0000000000000000 00=
+00000000000002=20
+[  934.690952] GPR08: 0000000000000000 c000000200298000 c000000000b93a60 00=
+00000000000000=20
+[  934.690972] GPR12: 00000000000186a0 c000000000c43780 00000000f8000000 00=
+00000000000000=20
+[  934.690991] GPR16: 0000000000000000 c000000150c266a0 c000000200298000 c0=
+00000150c266c8=20
+[  934.691011] GPR20: 0000000000000001 c000000150c31d60 00000000000000e0 00=
+00000000000008=20
+[  934.691030] GPR24: 00000000000000d9 c000000150c23a68 c000000150c21d60 c0=
+00000150c23a68=20
+[  934.691051] GPR28: ffffffff80000008 c000000150c21d60 d000000001b52680 c0=
+00000157998200=20
+[  934.691089] NIP [d000000001b2b3c4] .iwl_tx_cmd_complete+0x68/0x294 [iwlc=
+ore]
+[  934.691112] LR [d000000001b2b3c0] .iwl_tx_cmd_complete+0x64/0x294 [iwlco=
+re]
+[  934.691118] Call Trace:
+[  934.691140] [c00000020029b5e0] [d000000001b2b3c0] .iwl_tx_cmd_complete+0=
+x64/0x294 [iwlcore] (unreliable)
+[  934.691169] [c00000020029b680] [d000000001beb6ec] .iwl_rx_handle+0x318/0=
+x4a0 [iwlagn]
+[  934.691194] [c00000020029b780] [d000000001bebfc0] .iwl_irq_tasklet+0x74c=
+/0xaa0 [iwlagn]
+[  934.691206] [c00000020029b840] [c000000000058f60] .tasklet_action+0x14c/=
+0x244
+[  934.691218] [c00000020029b8f0] [c00000000005a058] .__do_softirq+0xf4/0x2=
+18
+[  934.691229] [c00000020029b9b0] [c00000000000c0ec] .do_softirq+0x5c/0xb8
+[  934.691241] [c00000020029ba30] [c000000000059a68] .irq_exit+0x74/0xe0
+[  934.691254] [c00000020029bab0] [c00000000000c268] .do_IRQ+0x120/0x164
+[  934.691266] [c00000020029bb40] [c000000000004714] hardware_interrupt_ent=
+ry+0x1c/0x20
+[  934.691281] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  934.691283]     LR =3D .cpu_idle+0x118/0x200
+[  934.691293] [c00000020029be30] [c000000000011fa8] .cpu_idle+0xd0/0x200 (=
+unreliable)
+[  934.691306] [c00000020029bed0] [c000000000419ea4] .start_secondary+0x378=
+/0x3b4
+[  934.691318] [c00000020029bf90] [c0000000000072b4] .start_secondary_prolo=
+g+0x10/0x14
+[  934.691327] Instruction dump:
+[  934.691334] a1290006 5520c23e 5120442e 78050420 78a4c6e2 2f840004 41be02=
+08 e8dd6aaa=20
+[  934.691365] e8fd6aa6 e87e8140 4800ce95 e8410028 <0fe00000> 3d3d0001 8009=
+310c 780907e1=20
+[  934.691402] wrong command queue 11, sequence 0x6B6B readp=3D34 writep=3D=
+35
+[  934.691419] ------------[ cut here ]------------
+[  934.691425] Badness at drivers/net/wireless/iwlwifi/iwl-tx.c:1258
+[  934.691432] NIP: d000000001b2b3c4 LR: d000000001b2b3c0 CTR: c0000000002f=
+6208
+[  934.691440] REGS: c00000020029b360 TRAP: 0700   Tainted: G        W   (2=
+.6.28-rc7-wl-dirty)
+[  934.691446] MSR: 9000000000021032 <ME,IR,DR>  CR: 28ff8f84  XER: 0000000=
+0
+[  934.691472] TASK =3D c000000200246ea0[0] 'swapper' THREAD: c000000200298=
+000 CPU: 2
+[  934.691483] GPR00: d000000001b2b3c0 c00000020029b5e0 d000000001b540b8 00=
+0000000000004d=20
+[  934.691504] GPR04: 0000000000000001 c000000000052930 0000000000000000 00=
+00000000000002=20
+[  934.691525] GPR08: 0000000000000000 c000000200298000 c000000000b93a60 00=
+00000000000000=20
+[  934.691547] GPR12: 00000000000186a0 c000000000c43780 00000000f8000000 00=
+00000000000000=20
+[  934.691568] GPR16: 0000000000000000 c000000150c266a0 c000000200298000 c0=
+00000150c266c8=20
+[  934.691589] GPR20: 0000000000000001 c000000150c31d60 00000000000000e0 00=
+00000000000008=20
+[  934.691610] GPR24: 00000000000000da c000000150c23a90 c000000150c21d60 c0=
+00000150c23a90=20
+[  934.691631] GPR28: ffffffff80000008 c000000150c21d60 d000000001b52680 c0=
+000001579c8600=20
+[  934.691672] NIP [d000000001b2b3c4] .iwl_tx_cmd_complete+0x68/0x294 [iwlc=
+ore]
+[  934.691695] LR [d000000001b2b3c0] .iwl_tx_cmd_complete+0x64/0x294 [iwlco=
+re]
+[  934.691702] Call Trace:
+[  934.691724] [c00000020029b5e0] [d000000001b2b3c0] .iwl_tx_cmd_complete+0=
+x64/0x294 [iwlcore] (unreliable)
+[  934.691752] [c00000020029b680] [d000000001beb6ec] .iwl_rx_handle+0x318/0=
+x4a0 [iwlagn]
+[  934.691776] [c00000020029b780] [d000000001bebfc0] .iwl_irq_tasklet+0x74c=
+/0xaa0 [iwlagn]
+[  934.691789] [c00000020029b840] [c000000000058f60] .tasklet_action+0x14c/=
+0x244
+[  934.691801] [c00000020029b8f0] [c00000000005a058] .__do_softirq+0xf4/0x2=
+18
+[  934.691812] [c00000020029b9b0] [c00000000000c0ec] .do_softirq+0x5c/0xb8
+[  934.691825] [c00000020029ba30] [c000000000059a68] .irq_exit+0x74/0xe0
+[  934.691838] [c00000020029bab0] [c00000000000c268] .do_IRQ+0x120/0x164
+[  934.691849] [c00000020029bb40] [c000000000004714] hardware_interrupt_ent=
+ry+0x1c/0x20
+[  934.691864] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  934.691866]     LR =3D .cpu_idle+0x118/0x200
+[  934.691876] [c00000020029be30] [c000000000011fa8] .cpu_idle+0xd0/0x200 (=
+unreliable)
+[  934.691890] [c00000020029bed0] [c000000000419ea4] .start_secondary+0x378=
+/0x3b4
+[  934.691902] [c00000020029bf90] [c0000000000072b4] .start_secondary_prolo=
+g+0x10/0x14
+[  934.691911] Instruction dump:
+[  934.691919] a1290006 5520c23e 5120442e 78050420 78a4c6e2 2f840004 41be02=
+08 e8dd6aaa=20
+[  934.691948] e8fd6aa6 e87e8140 4800ce95 e8410028 <0fe00000> 3d3d0001 8009=
+310c 780907e1=20
+[  934.691983] wrong command queue 11, sequence 0x6B6B readp=3D34 writep=3D=
+35
+[  934.692000] ------------[ cut here ]------------
+[  934.692006] Badness at drivers/net/wireless/iwlwifi/iwl-tx.c:1258
+[  934.692012] NIP: d000000001b2b3c4 LR: d000000001b2b3c0 CTR: c0000000002f=
+6208
+[  934.692020] REGS: c00000020029b360 TRAP: 0700   Tainted: G        W   (2=
+.6.28-rc7-wl-dirty)
+[  934.692026] MSR: 9000000000021032 <ME,IR,DR>  CR: 28ff8f84  XER: 0000000=
+0
+[  934.692051] TASK =3D c000000200246ea0[0] 'swapper' THREAD: c000000200298=
+000 CPU: 2
+[  934.692060] GPR00: d000000001b2b3c0 c00000020029b5e0 d000000001b540b8 00=
+0000000000004d=20
+[  934.692079] GPR04: 0000000000000001 c000000000052930 0000000000000000 00=
+00000000000002=20
+[  934.692098] GPR08: 0000000000000000 c000000200298000 c000000000b93a60 00=
+00000000000000=20
+[  934.692117] GPR12: 00000000000186a0 c000000000c43780 00000000f8000000 00=
+00000000000000=20
+[  934.692136] GPR16: 0000000000000000 c000000150c266a0 c000000200298000 c0=
+00000150c266c8=20
+[  934.692155] GPR20: 0000000000000001 c000000150c31d60 00000000000000e0 00=
+00000000000008=20
+[  934.692174] GPR24: 00000000000000db c000000150c23ab8 c000000150c21d60 c0=
+00000150c23ab8=20
+[  934.692193] GPR28: ffffffff80000008 c000000150c21d60 d000000001b52680 c0=
+00000157990200=20
+[  934.692232] NIP [d000000001b2b3c4] .iwl_tx_cmd_complete+0x68/0x294 [iwlc=
+ore]
+[  934.692255] LR [d000000001b2b3c0] .iwl_tx_cmd_complete+0x64/0x294 [iwlco=
+re]
+[  934.692261] Call Trace:
+[  934.692282] [c00000020029b5e0] [d000000001b2b3c0] .iwl_tx_cmd_complete+0=
+x64/0x294 [iwlcore] (unreliable)
+[  934.692310] [c00000020029b680] [d000000001beb6ec] .iwl_rx_handle+0x318/0=
+x4a0 [iwlagn]
+[  934.692335] [c00000020029b780] [d000000001bebfc0] .iwl_irq_tasklet+0x74c=
+/0xaa0 [iwlagn]
+[  934.692347] [c00000020029b840] [c000000000058f60] .tasklet_action+0x14c/=
+0x244
+[  934.692359] [c00000020029b8f0] [c00000000005a058] .__do_softirq+0xf4/0x2=
+18
+[  934.692371] [c00000020029b9b0] [c00000000000c0ec] .do_softirq+0x5c/0xb8
+[  934.692383] [c00000020029ba30] [c000000000059a68] .irq_exit+0x74/0xe0
+[  934.692394] [c00000020029bab0] [c00000000000c268] .do_IRQ+0x120/0x164
+[  934.692406] [c00000020029bb40] [c000000000004714] hardware_interrupt_ent=
+ry+0x1c/0x20
+[  934.692421] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  934.692423]     LR =3D .cpu_idle+0x118/0x200
+[  934.692433] [c00000020029be30] [c000000000011fa8] .cpu_idle+0xd0/0x200 (=
+unreliable)
+[  934.692447] [c00000020029bed0] [c000000000419ea4] .start_secondary+0x378=
+/0x3b4
+[  934.692459] [c00000020029bf90] [c0000000000072b4] .start_secondary_prolo=
+g+0x10/0x14
+[  934.692468] Instruction dump:
+[  934.692475] a1290006 5520c23e 5120442e 78050420 78a4c6e2 2f840004 41be02=
+08 e8dd6aaa=20
+[  934.692505] e8fd6aa6 e87e8140 4800ce95 e8410028 <0fe00000> 3d3d0001 8009=
+310c 780907e1=20
+[  934.692540] wrong command queue 11, sequence 0x6B6B readp=3D34 writep=3D=
+35
+[  934.692557] ------------[ cut here ]------------
+[  934.692564] Badness at drivers/net/wireless/iwlwifi/iwl-tx.c:1258
+[  934.692570] NIP: d000000001b2b3c4 LR: d000000001b2b3c0 CTR: c0000000002f=
+6208
+[  934.692578] REGS: c00000020029b360 TRAP: 0700   Tainted: G        W   (2=
+.6.28-rc7-wl-dirty)
+[  934.692584] MSR: 9000000000021032 <ME,IR,DR>  CR: 28ff8f84  XER: 0000000=
+0
+[  934.692610] TASK =3D c000000200246ea0[0] 'swapper' THREAD: c000000200298=
+000 CPU: 2
+[  934.692619] GPR00: d000000001b2b3c0 c00000020029b5e0 d000000001b540b8 00=
+0000000000004d=20
+[  934.692639] GPR04: 0000000000000001 c000000000052930 0000000000000000 00=
+00000000000002=20
+[  934.692657] GPR08: 0000000000000000 c000000200298000 c000000000b93a60 00=
+00000000000000=20
+[  934.692677] GPR12: 00000000000186a0 c000000000c43780 00000000f8000000 00=
+00000000000000=20
+[  934.692696] GPR16: 0000000000000000 c000000150c266a0 c000000200298000 c0=
+00000150c266c8=20
+[  934.692715] GPR20: 0000000000000001 c000000150c31d60 00000000000000e0 00=
+00000000000008=20
+[  934.692734] GPR24: 00000000000000dc c000000150c23ae0 c000000150c21d60 c0=
+00000150c23ae0=20
+[  934.692753] GPR28: ffffffff80000008 c000000150c21d60 d000000001b52680 c0=
+000001579b8400=20
+[  934.692792] NIP [d000000001b2b3c4] .iwl_tx_cmd_complete+0x68/0x294 [iwlc=
+ore]
+[  934.692815] LR [d000000001b2b3c0] .iwl_tx_cmd_complete+0x64/0x294 [iwlco=
+re]
+[  934.692821] Call Trace:
+[  934.692843] [c00000020029b5e0] [d000000001b2b3c0] .iwl_tx_cmd_complete+0=
+x64/0x294 [iwlcore] (unreliable)
+[  934.692871] [c00000020029b680] [d000000001beb6ec] .iwl_rx_handle+0x318/0=
+x4a0 [iwlagn]
+[  934.692896] [c00000020029b780] [d000000001bebfc0] .iwl_irq_tasklet+0x74c=
+/0xaa0 [iwlagn]
+[  934.692908] [c00000020029b840] [c000000000058f60] .tasklet_action+0x14c/=
+0x244
+[  934.692920] [c00000020029b8f0] [c00000000005a058] .__do_softirq+0xf4/0x2=
+18
+[  934.692932] [c00000020029b9b0] [c00000000000c0ec] .do_softirq+0x5c/0xb8
+[  934.692943] [c00000020029ba30] [c000000000059a68] .irq_exit+0x74/0xe0
+[  934.692955] [c00000020029bab0] [c00000000000c268] .do_IRQ+0x120/0x164
+[  934.692966] [c00000020029bb40] [c000000000004714] hardware_interrupt_ent=
+ry+0x1c/0x20
+[  934.692981] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  934.692984]     LR =3D .cpu_idle+0x118/0x200
+[  934.692993] [c00000020029be30] [c000000000011fa8] .cpu_idle+0xd0/0x200 (=
+unreliable)
+[  934.693007] [c00000020029bed0] [c000000000419ea4] .start_secondary+0x378=
+/0x3b4
+[  934.693019] [c00000020029bf90] [c0000000000072b4] .start_secondary_prolo=
+g+0x10/0x14
+[  934.693028] Instruction dump:
+[  934.693035] a1290006 5520c23e 5120442e 78050420 78a4c6e2 2f840004 41be02=
+08 e8dd6aaa=20
+[  934.693066] e8fd6aa6 e87e8140 4800ce95 e8410028 <0fe00000> 3d3d0001 8009=
+310c 780907e1=20
+[  934.693100] wrong command queue 11, sequence 0x6B6B readp=3D34 writep=3D=
+35
+[  934.693117] ------------[ cut here ]------------
+[  934.693123] Badness at drivers/net/wireless/iwlwifi/iwl-tx.c:1258
+[  934.693130] NIP: d000000001b2b3c4 LR: d000000001b2b3c0 CTR: c0000000002f=
+6208
+[  934.693138] REGS: c00000020029b360 TRAP: 0700   Tainted: G        W   (2=
+.6.28-rc7-wl-dirty)
+[  934.693144] MSR: 9000000000021032 <ME,IR,DR>  CR: 28ff8f84  XER: 0000000=
+0
+[  934.693169] TASK =3D c000000200246ea0[0] 'swapper' THREAD: c000000200298=
+000 CPU: 2
+[  934.693178] GPR00: d000000001b2b3c0 c00000020029b5e0 d000000001b540b8 00=
+0000000000004d=20
+[  934.693197] GPR04: 0000000000000001 c000000000052930 0000000000000000 00=
+00000000000002=20
+[  934.693216] GPR08: 0000000000000000 c000000200298000 c000000000b93a60 00=
+00000000000000=20
+[  934.693235] GPR12: 00000000000186a0 c000000000c43780 00000000f8000000 00=
+00000000000000=20
+[  934.693254] GPR16: 0000000000000000 c000000150c266a0 c000000200298000 c0=
+00000150c266c8=20
+[  934.693272] GPR20: 0000000000000001 c000000150c31d60 00000000000000e0 00=
+00000000000008=20
+[  934.693291] GPR24: 00000000000000dd c000000150c23b08 c000000150c21d60 c0=
+00000150c23b08=20
+[  934.693309] GPR28: ffffffff80000008 c000000150c21d60 d000000001b52680 c0=
+0000015798c100=20
+[  934.693347] NIP [d000000001b2b3c4] .iwl_tx_cmd_complete+0x68/0x294 [iwlc=
+ore]
+[  934.693370] LR [d000000001b2b3c0] .iwl_tx_cmd_complete+0x64/0x294 [iwlco=
+re]
+[  934.693376] Call Trace:
+[  934.693397] [c00000020029b5e0] [d000000001b2b3c0] .iwl_tx_cmd_complete+0=
+x64/0x294 [iwlcore] (unreliable)
+[  934.693425] [c00000020029b680] [d000000001beb6ec] .iwl_rx_handle+0x318/0=
+x4a0 [iwlagn]
+[  934.693450] [c00000020029b780] [d000000001bebfc0] .iwl_irq_tasklet+0x74c=
+/0xaa0 [iwlagn]
+[  934.693462] [c00000020029b840] [c000000000058f60] .tasklet_action+0x14c/=
+0x244
+[  934.693474] [c00000020029b8f0] [c00000000005a058] .__do_softirq+0xf4/0x2=
+18
+[  934.693485] [c00000020029b9b0] [c00000000000c0ec] .do_softirq+0x5c/0xb8
+[  934.693497] [c00000020029ba30] [c000000000059a68] .irq_exit+0x74/0xe0
+[  934.693508] [c00000020029bab0] [c00000000000c268] .do_IRQ+0x120/0x164
+[  934.693520] [c00000020029bb40] [c000000000004714] hardware_interrupt_ent=
+ry+0x1c/0x20
+[  934.693535] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  934.693537]     LR =3D .cpu_idle+0x118/0x200
+[  934.693546] [c00000020029be30] [c000000000011fa8] .cpu_idle+0xd0/0x200 (=
+unreliable)
+[  934.693561] [c00000020029bed0] [c000000000419ea4] .start_secondary+0x378=
+/0x3b4
+[  934.693573] [c00000020029bf90] [c0000000000072b4] .start_secondary_prolo=
+g+0x10/0x14
+[  934.693581] Instruction dump:
+[  934.693588] a1290006 5520c23e 5120442e 78050420 78a4c6e2 2f840004 41be02=
+08 e8dd6aaa=20
+[  934.693619] e8fd6aa6 e87e8140 4800ce95 e8410028 <0fe00000> 3d3d0001 8009=
+310c 780907e1=20
+[  934.693653] wrong command queue 11, sequence 0x6B6B readp=3D34 writep=3D=
+35
+[  934.693669] ------------[ cut here ]------------
+[  934.693675] Badness at drivers/net/wireless/iwlwifi/iwl-tx.c:1258
+[  934.693682] NIP: d000000001b2b3c4 LR: d000000001b2b3c0 CTR: c0000000002f=
+6208
+[  934.693690] REGS: c00000020029b360 TRAP: 0700   Tainted: G        W   (2=
+.6.28-rc7-wl-dirty)
+[  934.693696] MSR: 9000000000021032 <ME,IR,DR>  CR: 28ff8f84  XER: 0000000=
+0
+[  934.693720] TASK =3D c000000200246ea0[0] 'swapper' THREAD: c000000200298=
+000 CPU: 2
+[  934.693729] GPR00: d000000001b2b3c0 c00000020029b5e0 d000000001b540b8 00=
+0000000000004d=20
+[  934.693748] GPR04: 0000000000000001 c000000000052930 0000000000000000 00=
+00000000000002=20
+[  934.693766] GPR08: 0000000000000000 c000000200298000 c000000000b93a60 00=
+00000000000000=20
+[  934.693784] GPR12: 00000000000186a0 c000000000c43780 00000000f8000000 00=
+00000000000000=20
+[  934.693803] GPR16: 0000000000000000 c000000150c266a0 c000000200298000 c0=
+00000150c266c8=20
+[  934.693822] GPR20: 0000000000000001 c000000150c31d60 00000000000000e0 00=
+00000000000008=20
+[  934.693840] GPR24: 00000000000000de c000000150c23b30 c000000150c21d60 c0=
+00000150c23b30=20
+[  934.693859] GPR28: ffffffff80000008 c000000150c21d60 d000000001b52680 c0=
+000001579f4900=20
+[  934.693897] NIP [d000000001b2b3c4] .iwl_tx_cmd_complete+0x68/0x294 [iwlc=
+ore]
+[  934.693920] LR [d000000001b2b3c0] .iwl_tx_cmd_complete+0x64/0x294 [iwlco=
+re]
+[  934.693925] Call Trace:
+[  934.693947] [c00000020029b5e0] [d000000001b2b3c0] .iwl_tx_cmd_complete+0=
+x64/0x294 [iwlcore] (unreliable)
+[  934.693975] [c00000020029b680] [d000000001beb6ec] .iwl_rx_handle+0x318/0=
+x4a0 [iwlagn]
+[  934.694000] [c00000020029b780] [d000000001bebfc0] .iwl_irq_tasklet+0x74c=
+/0xaa0 [iwlagn]
+[  934.694012] [c00000020029b840] [c000000000058f60] .tasklet_action+0x14c/=
+0x244
+[  934.694023] [c00000020029b8f0] [c00000000005a058] .__do_softirq+0xf4/0x2=
+18
+[  934.694035] [c00000020029b9b0] [c00000000000c0ec] .do_softirq+0x5c/0xb8
+[  934.694046] [c00000020029ba30] [c000000000059a68] .irq_exit+0x74/0xe0
+[  934.694057] [c00000020029bab0] [c00000000000c268] .do_IRQ+0x120/0x164
+[  934.694068] [c00000020029bb40] [c000000000004714] hardware_interrupt_ent=
+ry+0x1c/0x20
+[  934.694083] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  934.694085]     LR =3D .cpu_idle+0x118/0x200
+[  934.694094] [c00000020029be30] [c000000000011fa8] .cpu_idle+0xd0/0x200 (=
+unreliable)
+[  934.694108] [c00000020029bed0] [c000000000419ea4] .start_secondary+0x378=
+/0x3b4
+[  934.694120] [c00000020029bf90] [c0000000000072b4] .start_secondary_prolo=
+g+0x10/0x14
+[  934.694128] Instruction dump:
+[  934.694135] a1290006 5520c23e 5120442e 78050420 78a4c6e2 2f840004 41be02=
+08 e8dd6aaa=20
+[  934.694164] e8fd6aa6 e87e8140 4800ce95 e8410028 <0fe00000> 3d3d0001 8009=
+310c 780907e1=20
+[  934.714333] wrong command queue 11, sequence 0x6B6B readp=3D34 writep=3D=
+35
+[  934.714350] ------------[ cut here ]------------
+[  934.714356] Badness at drivers/net/wireless/iwlwifi/iwl-tx.c:1258
+[  934.714363] NIP: d000000001b2b3c4 LR: d000000001b2b3c0 CTR: c0000000002f=
+6208
+[  934.714370] REGS: c00000020029b360 TRAP: 0700   Tainted: G        W   (2=
+.6.28-rc7-wl-dirty)
+[  934.714377] MSR: 9000000000021032 <ME,IR,DR>  CR: 28ff8f84  XER: 0000000=
+0
+[  934.714401] TASK =3D c000000200246ea0[0] 'swapper' THREAD: c000000200298=
+000 CPU: 2
+[  934.714410] GPR00: d000000001b2b3c0 c00000020029b5e0 d000000001b540b8 00=
+0000000000004d=20
+[  934.714428] GPR04: 0000000000000001 c000000000052930 0000000000000000 00=
+00000000000002=20
+[  934.714446] GPR08: 0000000000000000 c000000200298000 c000000000b93a60 00=
+00000000000000=20
+[  934.714465] GPR12: 00000000000186a0 c000000000c43780 00000000f8000000 00=
+00000000000000=20
+[  934.714483] GPR16: 0000000000000000 c000000150c266a0 c000000200298000 c0=
+00000150c266c8=20
+[  934.714501] GPR20: 0000000000000001 c000000150c31d60 00000000000000e0 00=
+00000000000008=20
+[  934.714519] GPR24: 00000000000000df c000000150c23b58 c000000150c21d60 c0=
+00000150c23b58=20
+[  934.714538] GPR28: ffffffff80000008 c000000150c21d60 d000000001b52680 c0=
+000001579bc500=20
+[  934.714576] NIP [d000000001b2b3c4] .iwl_tx_cmd_complete+0x68/0x294 [iwlc=
+ore]
+[  934.714598] LR [d000000001b2b3c0] .iwl_tx_cmd_complete+0x64/0x294 [iwlco=
+re]
+[  934.714604] Call Trace:
+[  934.714625] [c00000020029b5e0] [d000000001b2b3c0] .iwl_tx_cmd_complete+0=
+x64/0x294 [iwlcore] (unreliable)
+[  934.714653] [c00000020029b680] [d000000001beb6ec] .iwl_rx_handle+0x318/0=
+x4a0 [iwlagn]
+[  934.714677] [c00000020029b780] [d000000001bebfc0] .iwl_irq_tasklet+0x74c=
+/0xaa0 [iwlagn]
+[  934.714689] [c00000020029b840] [c000000000058f60] .tasklet_action+0x14c/=
+0x244
+[  934.714700] [c00000020029b8f0] [c00000000005a058] .__do_softirq+0xf4/0x2=
+18
+[  934.714712] [c00000020029b9b0] [c00000000000c0ec] .do_softirq+0x5c/0xb8
+[  934.714723] [c00000020029ba30] [c000000000059a68] .irq_exit+0x74/0xe0
+[  934.714734] [c00000020029bab0] [c00000000000c268] .do_IRQ+0x120/0x164
+[  934.714745] [c00000020029bb40] [c000000000004714] hardware_interrupt_ent=
+ry+0x1c/0x20
+[  934.714760] --- Exception: 501 at .cpu_idle+0x118/0x200
+[  934.714762]     LR =3D .cpu_idle+0x118/0x200
+[  934.714771] [c00000020029be30] [c000000000011fa8] .cpu_idle+0xd0/0x200 (=
+unreliable)
+[  934.714785] [c00000020029bed0] [c000000000419ea4] .start_secondary+0x378=
+/0x3b4
+[  934.714796] [c00000020029bf90] [c0000000000072b4] .start_secondary_prolo=
+g+0x10/0x14
+[  934.714805] Instruction dump:
+[  934.714812] a1290006 5520c23e 5120442e 78050420 78a4c6e2 2f840004 41be02=
+08 e8dd6aaa=20
+[  934.714841] e8fd6aa6 e87e8140 4800ce95 e8410028 <0fe00000> 3d3d0001 8009=
+310c 780907e1=20
+[  939.746085] wlan0: No ProbeResp from current AP 00:1d:7e:4a:a1:ab - assu=
+me out of range
+[  939.746114] Rx BA session stop requested for 00:1d:7e:4a:a1:ab tid 0
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-+4JU0a48DM8QVbigW6o1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQWUDAAoJEKVg1VMiehFY0woP/2lfzEu02LqP2AOwJu8SOImo
+Fl//tklMBQgD5Agk4N05QcGN0lU6Oa+m+h4qZDlv6mjjNwUcuMz5Y3tVIU3gIhne
+yh47ZuIe6YkyrmkUevEFNMGpShmeXrCbraH+R17GsO8qUTuikI3OV3/8EsldjbiA
+40UGODKvfllahRVJao2u/97d/wST7gvVve8DUOWMMXeTzylRTdx1PntWvWIu8xYE
+I88rtr7AQJTjfgdtLKbDmZ8q2rbv2jHtht7R/COhDvNu7gqlVLeaz8wDCg9+xbF6
+fwFTTfavUdcu+Jf+XGOQ4eWUC500t1rXTqvRvrpQq4vlP8zEz6sdZpCi6cSEaZ6m
+QYb+bGNQV90XbNL1FgvkcQ6Stcl7hcwNUdz4D6Evm+u7RCtfXt4U8TzD6HNL2xe5
+gx4PVlOiAS8I/4hS/XLXP67xf4vY6BPSkNn3xW52NSGU3KMC+zzThaXn4+mSFFTo
+yN9Klcn3uxJL/dyASqUZqkIVU0JXi60in9AwLVluTtLUJSByqlkukq7/gzx/1dOa
+vhKkjQAsEXgUwoUphPOI5lZXSe7rwdoH01uhsoJq/HVjw06AwWlZS6TYXYk7n4fw
++297NCB/YYEqXmHzBuPd/lIReDNYQJN+EVWM6GQXKpouUJqESLcsPqEjw5IORUOd
+uz8mPqZ+8xu2lPAXy33n
+=xqFq
+-----END PGP SIGNATURE-----
+
+--=-+4JU0a48DM8QVbigW6o1--
+
