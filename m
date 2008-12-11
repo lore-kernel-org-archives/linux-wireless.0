@@ -1,474 +1,588 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22668 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751459AbYLWX7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 18:59:13 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 15:59:13 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v3 05/16] ath9k: consolidate arguments on hw reset
-Date: Tue, 23 Dec 2008 15:58:40 -0800
-Message-ID: <1230076731-22946-6-git-send-email-lrodriguez@atheros.com> (sfid-20081224_005917_986195_899A4AC5)
-In-Reply-To: <1230076731-22946-5-git-send-email-lrodriguez@atheros.com>
-References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-5-git-send-email-lrodriguez@atheros.com>
+Received: from mail-bw0-f13.google.com ([209.85.218.13]:49735 "EHLO
+	mail-bw0-f13.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756462AbYLKRNp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 12:13:45 -0500
+Received: by bwz6 with SMTP id 6so2516825bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 09:13:43 -0800 (PST)
+From: Henning Rogge <hrogge@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [Patch] nl80211: Add signal strength and bandwith to nl80211station info
+Date: Thu, 11 Dec 2008 18:07:17 +0100
+Cc: Henning Rogge <rogge@fgan.de>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+References: <200811252131.30161.hrogge@googlemail.com> <200812102158.56201.hrogge@googlemail.com> <1228942863.15837.73.camel@johannes.berg>
+In-Reply-To: <1228942863.15837.73.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed;
+  boundary="nextPart1515463.UQll782Z6J";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200812111807.24168.hrogge@googlemail.com> (sfid-20081211_181350_528464_4787F2EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HW reset calls pass the same variables or structs
-which we can obtain easily from ah. Although this also applies
-during channel changes as we will keep around the ath9k_channel
-passed as an argument for now.
+--nextPart1515463.UQll782Z6J
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_FjUQJMe4Rf/iZI6"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-We now also now propagate the hw reset errors down.
+--Boundary-01=_FjUQJMe4Rf/iZI6
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/ath9k.h |    7 +--
- drivers/net/wireless/ath9k/hw.c    |   68 ++++++++--------------
- drivers/net/wireless/ath9k/main.c  |  110 ++++++++++++++----------------------
- drivers/net/wireless/ath9k/xmit.c  |   16 ++---
- 4 files changed, 74 insertions(+), 127 deletions(-)
+This patch adds signal strength and transmission bitrate
+to the station_info of nl80211.
 
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index d278135..0f6a99a 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -843,11 +843,8 @@ void ath9k_hw_rfdetach(struct ath_hal *ah);
- 
- /* HW Reset */
- 
--bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
--		    enum ath9k_ht_macmode macmode,
--		    u8 txchainmask, u8 rxchainmask,
--		    enum ath9k_ht_extprotspacing extprotspacing,
--		    bool bChannelChange, int *status);
-+int ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
-+		    bool bChannelChange);
- 
- /* Key Cache Management */
- 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index d2b0ecf..85da799 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -2223,23 +2223,20 @@ static void ath9k_hw_spur_mitigate(struct ath_hal *ah, struct ath9k_channel *cha
- 	REG_WRITE(ah, AR_PHY_MASK2_P_61_45, tmp_mask);
- }
- 
--bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
--		    enum ath9k_ht_macmode macmode,
--		    u8 txchainmask, u8 rxchainmask,
--		    enum ath9k_ht_extprotspacing extprotspacing,
--		    bool bChannelChange, int *status)
-+int ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
-+		    bool bChannelChange)
- {
- 	u32 saveLedState;
-+	struct ath_softc *sc = ah->ah_sc;
- 	struct ath_hal_5416 *ahp = AH5416(ah);
- 	struct ath9k_channel *curchan = ah->ah_curchan;
- 	u32 saveDefAntenna;
- 	u32 macStaId1;
--	int ecode;
--	int i, rx_chainmask;
-+	int i, rx_chainmask, r;
- 
--	ahp->ah_extprotspacing = extprotspacing;
--	ahp->ah_txchainmask = txchainmask;
--	ahp->ah_rxchainmask = rxchainmask;
-+	ahp->ah_extprotspacing = sc->sc_ht_extprotspacing;
-+	ahp->ah_txchainmask = sc->sc_tx_chainmask;
-+	ahp->ah_rxchainmask = sc->sc_rx_chainmask;
- 
- 	if (AR_SREV_9280(ah)) {
- 		ahp->ah_txchainmask &= 0x3;
-@@ -2250,14 +2247,11 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
- 		DPRINTF(ah->ah_sc, ATH_DBG_CHANNEL,
- 			"invalid channel %u/0x%x; no mapping\n",
- 			chan->channel, chan->channelFlags);
--		ecode = -EINVAL;
--		goto bad;
-+		return -EINVAL;
- 	}
- 
--	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
--		ecode = -EIO;
--		goto bad;
--	}
-+	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
-+		return -EIO;
- 
- 	if (curchan)
- 		ath9k_hw_getnf(ah, curchan);
-@@ -2271,10 +2265,10 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
- 	    (!AR_SREV_9280(ah) || (!IS_CHAN_A_5MHZ_SPACED(chan) &&
- 				   !IS_CHAN_A_5MHZ_SPACED(ah->ah_curchan)))) {
- 
--		if (ath9k_hw_channel_change(ah, chan, macmode)) {
-+		if (ath9k_hw_channel_change(ah, chan, sc->tx_chan_width)) {
- 			ath9k_hw_loadnf(ah, ah->ah_curchan);
- 			ath9k_hw_start_nfcal(ah);
--			return true;
-+			return 0;
- 		}
- 	}
- 
-@@ -2292,8 +2286,7 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
- 
- 	if (!ath9k_hw_chip_reset(ah, chan)) {
- 		DPRINTF(ah->ah_sc, ATH_DBG_RESET, "chip reset failed\n");
--		ecode = -EINVAL;
--		goto bad;
-+		return -EINVAL;
- 	}
- 
- 	if (AR_SREV_9280(ah)) {
-@@ -2309,11 +2302,9 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
- 		ath9k_hw_cfg_output(ah, 9, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 	}
- 
--	ecode = ath9k_hw_process_ini(ah, chan, macmode);
--	if (ecode != 0) {
--		ecode = -EINVAL;
--		goto bad;
--	}
-+	r = ath9k_hw_process_ini(ah, chan, sc->tx_chan_width);
-+	if (r)
-+		return r;
- 
- 	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
- 		ath9k_hw_set_delta_slope(ah, chan);
-@@ -2326,8 +2317,7 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
- 	if (!ath9k_hw_eeprom_set_board_values(ah, chan)) {
- 		DPRINTF(ah->ah_sc, ATH_DBG_EEPROM,
- 			"error setting board options\n");
--		ecode = -EIO;
--		goto bad;
-+		return -EIO;
- 	}
- 
- 	ath9k_hw_decrease_chain_power(ah, chan);
-@@ -2355,15 +2345,11 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
- 	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
- 
- 	if (AR_SREV_9280_10_OR_LATER(ah)) {
--		if (!(ath9k_hw_ar9280_set_channel(ah, chan))) {
--			ecode = -EIO;
--			goto bad;
--		}
-+		if (!(ath9k_hw_ar9280_set_channel(ah, chan)))
-+			return -EIO;
- 	} else {
--		if (!(ath9k_hw_set_channel(ah, chan))) {
--			ecode = -EIO;
--			goto bad;
--		}
-+		if (!(ath9k_hw_set_channel(ah, chan)))
-+			return -EIO;
- 	}
- 
- 	for (i = 0; i < AR_NUM_DCU; i++)
-@@ -2397,10 +2383,8 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
- 
- 	ath9k_hw_init_bb(ah, chan);
- 
--	if (!ath9k_hw_init_cal(ah, chan)){
--		ecode = -EIO;;
--		goto bad;
--	}
-+	if (!ath9k_hw_init_cal(ah, chan))
-+		return -EIO;;
- 
- 	rx_chainmask = ahp->ah_rxchainmask;
- 	if ((rx_chainmask == 0x5) || (rx_chainmask == 0x3)) {
-@@ -2429,11 +2413,7 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
- #endif
- 	}
- 
--	return true;
--bad:
--	if (status)
--		*status = ecode;
--	return false;
-+	return 0;
- }
- 
- /************************/
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 8127257..bbd7d06 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -260,6 +260,8 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
- 	struct ath_hal *ah = sc->sc_ah;
- 	bool fastcc = true, stopped;
- 	struct ieee80211_hw *hw = sc->hw;
-+	struct ieee80211_channel *channel = hw->conf.channel;
-+	int r;
- 
- 	if (sc->sc_flags & SC_OP_INVALID)
- 		return -EIO;
-@@ -268,7 +270,6 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
- 	    hchan->channelFlags != sc->sc_ah->ah_curchan->channelFlags ||
- 	    (sc->sc_flags & SC_OP_CHAINMASK_UPDATE) ||
- 	    (sc->sc_flags & SC_OP_FULL_RESET)) {
--		int status;
- 		/*
- 		 * This is only performed if the channel settings have
- 		 * actually changed.
-@@ -290,22 +291,20 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
- 			fastcc = false;
- 
- 		DPRINTF(sc, ATH_DBG_CONFIG,
--			"(%u MHz) -> (%u MHz), cflags:%x, chanwidth: %d\n",
-+			"(%u MHz) -> (%u MHz), chanwidth: %d\n",
- 			sc->sc_ah->ah_curchan->channel,
--			hchan->channel, hchan->channelFlags, sc->tx_chan_width);
-+			channel->center_freq, sc->tx_chan_width);
- 
- 		spin_lock_bh(&sc->sc_resetlock);
--		if (!ath9k_hw_reset(ah, hchan, sc->tx_chan_width,
--				    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
--				    sc->sc_ht_extprotspacing, fastcc, &status)) {
+Signed-off-by: Henning Rogge <rogge@fgan.de>
+=2D--
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 04d4516..cc93e7a 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -425,6 +425,30 @@ enum nl80211_sta_flags {
+ };
+=20
+ /**
++ * enum nl80211_rate_info - bitrate information
++ *
++ * These attribute types are used with %NL80211_STA_INFO_TXRATE
++ * when getting information about the bitrate of a station.
++ *
++ * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
++ * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
++ * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
++ * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
++ * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
++ */
++enum nl80211_rate_info {
++	__NL80211_RATE_INFO_INVALID,
++	NL80211_RATE_INFO_BITRATE,
++	NL80211_RATE_INFO_MCS,
++	NL80211_RATE_INFO_40_MHZ_WIDTH,
++	NL80211_RATE_INFO_SHORT_GI,
 +
-+		r = ath9k_hw_reset(ah, hchan, fastcc);
-+		if (r) {
- 			DPRINTF(sc, ATH_DBG_FATAL,
--				"Unable to reset channel %u (%uMhz) "
--				"flags 0x%x hal status %u\n",
--				ath9k_hw_mhz2ieee(ah, hchan->channel,
--						  hchan->channelFlags),
--				hchan->channel, hchan->channelFlags, status);
-+				"Unable to reset channel (%u Mhz) "
-+				"reset status %u\n",
-+				channel->center_freq, r);
- 			spin_unlock_bh(&sc->sc_resetlock);
--			return -EIO;
-+			return r;
- 		}
- 		spin_unlock_bh(&sc->sc_resetlock);
- 
-@@ -1071,23 +1070,18 @@ fail:
- static void ath_radio_enable(struct ath_softc *sc)
- {
- 	struct ath_hal *ah = sc->sc_ah;
--	int status;
-+	struct ieee80211_channel *channel = sc->hw->conf.channel;
-+	int r;
- 
- 	spin_lock_bh(&sc->sc_resetlock);
--	if (!ath9k_hw_reset(ah, ah->ah_curchan,
--			    sc->tx_chan_width,
--			    sc->sc_tx_chainmask,
--			    sc->sc_rx_chainmask,
--			    sc->sc_ht_extprotspacing,
--			    false, &status)) {
++	/* keep last */
++	__NL80211_RATE_INFO_AFTER_LAST,
++	NL80211_RATE_INFO_MAX =3D __NL80211_RATE_INFO_AFTER_LAST - 1
++};
 +
-+	r = ath9k_hw_reset(ah, ah->ah_curchan, false);
++/**
+  * enum nl80211_sta_info - station information
+  *
+  * These attribute types are used with %NL80211_ATTR_STA_INFO
+@@ -436,6 +460,9 @@ enum nl80211_sta_flags {
+  * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this stati=
+on)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
++ * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dB=
+m)
++ * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
++ * 	containing info as possible, see &enum nl80211_sta_info_txrate.
+  */
+ enum nl80211_sta_info {
+ 	__NL80211_STA_INFO_INVALID,
+@@ -445,6 +472,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_LLID,
+ 	NL80211_STA_INFO_PLID,
+ 	NL80211_STA_INFO_PLINK_STATE,
++	NL80211_STA_INFO_SIGNAL,
++	NL80211_STA_INFO_TX_BITRATE,
+=20
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a0c0bf1..d9ce51e 100644
+=2D-- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -169,6 +169,9 @@ struct station_parameters {
+  * @STATION_INFO_LLID: @llid filled
+  * @STATION_INFO_PLID: @plid filled
+  * @STATION_INFO_PLINK_STATE: @plink_state filled
++ * @STATION_INFO_SIGNAL: @signal filled
++ * @STATION_INFO_TX_BITRATE: @tx_bitrate fields are filled
++ *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	=3D 1<<0,
+@@ -177,6 +180,39 @@ enum station_info_flags {
+ 	STATION_INFO_LLID		=3D 1<<3,
+ 	STATION_INFO_PLID		=3D 1<<4,
+ 	STATION_INFO_PLINK_STATE	=3D 1<<5,
++	STATION_INFO_SIGNAL		=3D 1<<6,
++	STATION_INFO_TX_BITRATE		=3D 1<<7,
++};
 +
-+	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
--			"Unable to reset channel %u (%uMhz) "
--			"flags 0x%x hal status %u\n",
--			ath9k_hw_mhz2ieee(ah,
--					  ah->ah_curchan->channel,
--					  ah->ah_curchan->channelFlags),
--			ah->ah_curchan->channel,
--			ah->ah_curchan->channelFlags, status);
-+			"Unable to reset channel %u (%uMhz) ",
-+			"reset status %u\n",
-+			channel->center_freq, r);
- 	}
- 	spin_unlock_bh(&sc->sc_resetlock);
- 
-@@ -1115,8 +1109,8 @@ static void ath_radio_enable(struct ath_softc *sc)
- static void ath_radio_disable(struct ath_softc *sc)
- {
- 	struct ath_hal *ah = sc->sc_ah;
--	int status;
--
-+	struct ieee80211_channel *channel = sc->hw->conf.channel;
-+	int r;
- 
- 	ieee80211_stop_queues(sc->hw);
- 
-@@ -1132,20 +1126,12 @@ static void ath_radio_disable(struct ath_softc *sc)
- 	ath_flushrecv(sc);		/* flush recv queue */
- 
- 	spin_lock_bh(&sc->sc_resetlock);
--	if (!ath9k_hw_reset(ah, ah->ah_curchan,
--			    sc->tx_chan_width,
--			    sc->sc_tx_chainmask,
--			    sc->sc_rx_chainmask,
--			    sc->sc_ht_extprotspacing,
--			    false, &status)) {
-+	r = ath9k_hw_reset(ah, ah->ah_curchan, false);
-+	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to reset channel %u (%uMhz) "
--			"flags 0x%x hal status %u\n",
--			ath9k_hw_mhz2ieee(ah,
--				ah->ah_curchan->channel,
--				ah->ah_curchan->channelFlags),
--			ah->ah_curchan->channel,
--			ah->ah_curchan->channelFlags, status);
-+			"reset status %u\n",
-+			channel->center_freq, r);
- 	}
- 	spin_unlock_bh(&sc->sc_resetlock);
- 
-@@ -1624,8 +1610,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- {
- 	struct ath_hal *ah = sc->sc_ah;
- 	struct ieee80211_hw *hw = sc->hw;
--	int status;
--	int error = 0;
-+	int r;
- 
- 	ath9k_hw_set_interrupts(ah, 0);
- 	ath_draintxq(sc, retry_tx);
-@@ -1633,14 +1618,10 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	ath_flushrecv(sc);
- 
- 	spin_lock_bh(&sc->sc_resetlock);
--	if (!ath9k_hw_reset(ah, sc->sc_ah->ah_curchan,
--			    sc->tx_chan_width,
--			    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
--			    sc->sc_ht_extprotspacing, false, &status)) {
-+	r = ath9k_hw_reset(ah, sc->sc_ah->ah_curchan, false);
-+	if (r)
- 		DPRINTF(sc, ATH_DBG_FATAL,
--			"Unable to reset hardware; hal status %u\n", status);
--		error = -EIO;
--	}
-+			"Unable to reset hardware; reset status %u\n", r);
- 	spin_unlock_bh(&sc->sc_resetlock);
- 
- 	if (ath_startrecv(sc) != 0)
-@@ -1671,7 +1652,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 		}
- 	}
- 
--	return error;
-+	return r;
++/**
++ * enum station_info_rate_flags - bitrate info flags
++ *
++ * Used by the driver to indicate the specific rate transmission
++ * type for 802.11n transmissions.
++ *
++ * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
++ * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
++ * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
++ */
++enum rate_info_flags {
++	RATE_INFO_FLAGS_MCS		=3D 1<<0,
++	RATE_INFO_FLAGS_40_MHZ_WIDTH	=3D 1<<1,
++	RATE_INFO_FLAGS_SHORT_GI	=3D 1<<2,
++};
++
++/**
++ * struct rate_info - bitrate information
++ *
++ * Information about a receiving or transmitting bitrate
++ *
++ * @flags: bitflag of flags from &enum rate_info_flags
++ * @mcs: mcs index if struct describes a 802.11n bitrate
++ * @legacy: bitrate in 100kbit/s for 802.11abg
++ */
++struct rate_info {
++	u8 flags;
++	u8 mcs;
++	u16 legacy;
+ };
+=20
+ /**
+@@ -191,6 +227,8 @@ enum station_info_flags {
+  * @llid: mesh local link id
+  * @plid: mesh peer link id
+  * @plink_state: mesh peer link state
++ * @signal: signal strength of last received package in dBm
++ * @txrate: current unicast bitrate to this station
+  */
+ struct station_info {
+ 	u32 filled;
+@@ -200,6 +238,8 @@ struct station_info {
+ 	u16 llid;
+ 	u16 plid;
+ 	u8 plink_state;
++	u8 signal;
++	struct rate_info txrate;
+ };
+=20
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7912eb1..6778fe0 100644
+=2D-- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -310,12 +310,35 @@ static void sta_set_sinfo(struct sta_info *sta, struc=
+t=20
+station_info *sinfo)
+=20
+ 	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+=2D			STATION_INFO_TX_BYTES;
++			STATION_INFO_TX_BYTES |
++			STATION_INFO_TX_BITRATE;
+=20
+ 	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes =3D sta->rx_bytes;
+ 	sinfo->tx_bytes =3D sta->tx_bytes;
+=20
++	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
++		sinfo->filled |=3D STATION_INFO_SIGNAL;
++		sinfo->signal =3D sta->last_signal;
++	}
++
++	sinfo->txrate.flags =3D 0;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_MCS;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_SHORT_GI;
++
++	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)) {
++		struct ieee80211_supported_band *sband;
++		sband =3D sta->local->hw.wiphy->bands[
++				sta->local->hw.conf.channel->band];
++		sinfo->txrate.legacy =3D
++			sband->bitrates[sta->last_tx_rate.idx].bitrate;
++	} else
++		sinfo->txrate.mcs =3D sta->last_tx_rate.idx;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |=3D STATION_INFO_LLID |
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4335f76..93c9b98 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1091,12 +1091,46 @@ static int parse_station_flags(struct nlattr *nla, =
+u32=20
+*staflags)
+ 	return 0;
  }
- 
- /*
-@@ -1854,7 +1835,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	struct ath_softc *sc = hw->priv;
- 	struct ieee80211_channel *curchan = hw->conf.channel;
- 	struct ath9k_channel *init_channel;
--	int error = 0, pos, status;
-+	int r, pos;
- 
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Starting driver with "
- 		"initial channel: %d MHz\n", curchan->center_freq);
-@@ -1864,8 +1845,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	pos = ath_get_channel(sc, curchan);
- 	if (pos == -1) {
- 		DPRINTF(sc, ATH_DBG_FATAL, "Invalid channel: %d\n", curchan->center_freq);
--		error = -EINVAL;
--		goto error;
-+		return -EINVAL;
- 	}
- 
- 	sc->tx_chan_width = ATH9K_HT_MACMODE_20;
-@@ -1884,17 +1864,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	 * and then setup of the interrupt mask.
- 	 */
- 	spin_lock_bh(&sc->sc_resetlock);
--	if (!ath9k_hw_reset(sc->sc_ah, init_channel,
--			    sc->tx_chan_width,
--			    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
--			    sc->sc_ht_extprotspacing, false, &status)) {
-+	r = ath9k_hw_reset(sc->sc_ah, init_channel, false);
-+	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
--			"Unable to reset hardware; hal status %u "
--			"(freq %u flags 0x%x)\n", status,
--			init_channel->channel, init_channel->channelFlags);
--		error = -EIO;
-+			"Unable to reset hardware; reset status %u "
-+			"(freq %u MHz)\n", r,
-+			curchan->center_freq);
- 		spin_unlock_bh(&sc->sc_resetlock);
--		goto error;
-+		return r;
- 	}
- 	spin_unlock_bh(&sc->sc_resetlock);
- 
-@@ -1914,8 +1891,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	if (ath_startrecv(sc) != 0) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to start recv logic\n");
--		error = -EIO;
--		goto error;
-+		return -EIO;
- 	}
- 
- 	/* Setup our intr mask. */
-@@ -1959,11 +1935,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	ieee80211_wake_queues(sc->hw);
- 
- #if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
--	error = ath_start_rfkill_poll(sc);
-+	r = ath_start_rfkill_poll(sc);
- #endif
--
--error:
--	return error;
-+	return r;
- }
- 
- static int ath9k_tx(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 3e192fd..e28889b 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -1140,7 +1140,7 @@ static void ath_tx_stopdma(struct ath_softc *sc, struct ath_txq *txq)
- static void ath_drain_txdataq(struct ath_softc *sc, bool retry_tx)
+=20
++static u16 nl80211_calculate_bitrate(struct rate_info *rate)
++{
++	int modulation, streams, bitrate;
++
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
++		return rate->legacy;
++
++	/* the formula below does only work for MCS values smaller than 32 */
++	if (rate->mcs >=3D 32)
++		return 0;
++
++	modulation =3D rate->mcs & 7;
++	streams =3D (rate->mcs >> 3) + 1;
++
++	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
++			13500000 : 6500000;
++
++	if (modulation < 4)
++		bitrate *=3D (modulation + 1);
++	else if (modulation =3D=3D 4)
++		bitrate *=3D (modulation + 2);
++	else
++		bitrate *=3D (modulation + 3);
++
++	bitrate *=3D streams;
++
++	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
++		bitrate =3D (bitrate / 9) * 10;
++
++	/* do NOT round down here */
++	return (bitrate + 50000) / 100000;
++}
++
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+ 				u8 *mac_addr, struct station_info *sinfo)
  {
- 	struct ath_hal *ah = sc->sc_ah;
--	int i, status, npend = 0;
-+	int i, npend = 0;
- 
- 	if (!(sc->sc_flags & SC_OP_INVALID)) {
- 		for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
-@@ -1155,20 +1155,16 @@ static void ath_drain_txdataq(struct ath_softc *sc, bool retry_tx)
- 	}
- 
- 	if (npend) {
-+		int r;
- 		/* TxDMA not stopped, reset the hal */
- 		DPRINTF(sc, ATH_DBG_XMIT, "Unable to stop TxDMA. Reset HAL!\n");
- 
- 		spin_lock_bh(&sc->sc_resetlock);
--		if (!ath9k_hw_reset(ah,
--				    sc->sc_ah->ah_curchan,
--				    sc->tx_chan_width,
--				    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
--				    sc->sc_ht_extprotspacing, true, &status)) {
--
-+		r = ath9k_hw_reset(ah, sc->sc_ah->ah_curchan, true);
-+		if (r)
- 			DPRINTF(sc, ATH_DBG_FATAL,
--				"Unable to reset hardware; hal status %u\n",
--				status);
--		}
-+				"Unable to reset hardware; reset status %u\n",
-+				r);
- 		spin_unlock_bh(&sc->sc_resetlock);
- 	}
- 
--- 
-1.6.1.rc3.51.g5832d
+ 	void *hdr;
+=2D	struct nlattr *sinfoattr;
++	struct nlattr *sinfoattr, *txrate;
++	u16 bitrate;
+=20
+ 	hdr =3D nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_STATION);
+ 	if (!hdr)
+@@ -1126,7 +1160,29 @@ static int nl80211_send_station(struct sk_buff *msg,=
+=20
+u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
++	if (sinfo->filled & STATION_INFO_SIGNAL)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
++			   sinfo->signal);
++	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
++		txrate =3D nla_nest_start(msg, NL80211_STA_INFO_TX_BITRATE);
++		if (!txrate)
++			goto nla_put_failure;
++
++		/* nl80211_calculate_bitrate will return 0 for mcs >=3D 32 */
++		bitrate =3D nl80211_calculate_bitrate(&sinfo->txrate);
++		if (bitrate > 0)
++			NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE, bitrate);
+=20
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
++			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
++				    sinfo->txrate.mcs);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_SHORT_GI);
++
++		nla_nest_end(msg, txrate);
++	}
+ 	nla_nest_end(msg, sinfoattr);
+=20
+ 	return genlmsg_end(msg, hdr);
 
+
+--Boundary-01=_FjUQJMe4Rf/iZI6
+Content-Type: text/x-patch;
+  charset="ISO-8859-15";
+  name="nl80211ext_v12.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="nl80211ext_v12.patch"
+
+This patch adds signal strength and transmission bitrate
+to the station_info of nl80211.
+
+Signed-off-by: Henning Rogge <rogge@fgan.de>
+=2D--
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 04d4516..cc93e7a 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -425,6 +425,30 @@ enum nl80211_sta_flags {
+ };
+=20
+ /**
++ * enum nl80211_rate_info - bitrate information
++ *
++ * These attribute types are used with %NL80211_STA_INFO_TXRATE
++ * when getting information about the bitrate of a station.
++ *
++ * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
++ * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
++ * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
++ * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
++ * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
++ */
++enum nl80211_rate_info {
++	__NL80211_RATE_INFO_INVALID,
++	NL80211_RATE_INFO_BITRATE,
++	NL80211_RATE_INFO_MCS,
++	NL80211_RATE_INFO_40_MHZ_WIDTH,
++	NL80211_RATE_INFO_SHORT_GI,
++
++	/* keep last */
++	__NL80211_RATE_INFO_AFTER_LAST,
++	NL80211_RATE_INFO_MAX =3D __NL80211_RATE_INFO_AFTER_LAST - 1
++};
++
++/**
+  * enum nl80211_sta_info - station information
+  *
+  * These attribute types are used with %NL80211_ATTR_STA_INFO
+@@ -436,6 +460,9 @@ enum nl80211_sta_flags {
+  * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this stati=
+on)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
++ * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dB=
+m)
++ * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
++ * 	containing info as possible, see &enum nl80211_sta_info_txrate.
+  */
+ enum nl80211_sta_info {
+ 	__NL80211_STA_INFO_INVALID,
+@@ -445,6 +472,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_LLID,
+ 	NL80211_STA_INFO_PLID,
+ 	NL80211_STA_INFO_PLINK_STATE,
++	NL80211_STA_INFO_SIGNAL,
++	NL80211_STA_INFO_TX_BITRATE,
+=20
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a0c0bf1..d9ce51e 100644
+=2D-- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -169,6 +169,9 @@ struct station_parameters {
+  * @STATION_INFO_LLID: @llid filled
+  * @STATION_INFO_PLID: @plid filled
+  * @STATION_INFO_PLINK_STATE: @plink_state filled
++ * @STATION_INFO_SIGNAL: @signal filled
++ * @STATION_INFO_TX_BITRATE: @tx_bitrate fields are filled
++ *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	=3D 1<<0,
+@@ -177,6 +180,39 @@ enum station_info_flags {
+ 	STATION_INFO_LLID		=3D 1<<3,
+ 	STATION_INFO_PLID		=3D 1<<4,
+ 	STATION_INFO_PLINK_STATE	=3D 1<<5,
++	STATION_INFO_SIGNAL		=3D 1<<6,
++	STATION_INFO_TX_BITRATE		=3D 1<<7,
++};
++
++/**
++ * enum station_info_rate_flags - bitrate info flags
++ *
++ * Used by the driver to indicate the specific rate transmission
++ * type for 802.11n transmissions.
++ *
++ * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
++ * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
++ * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
++ */
++enum rate_info_flags {
++	RATE_INFO_FLAGS_MCS		=3D 1<<0,
++	RATE_INFO_FLAGS_40_MHZ_WIDTH	=3D 1<<1,
++	RATE_INFO_FLAGS_SHORT_GI	=3D 1<<2,
++};
++
++/**
++ * struct rate_info - bitrate information
++ *
++ * Information about a receiving or transmitting bitrate
++ *
++ * @flags: bitflag of flags from &enum rate_info_flags
++ * @mcs: mcs index if struct describes a 802.11n bitrate
++ * @legacy: bitrate in 100kbit/s for 802.11abg
++ */
++struct rate_info {
++	u8 flags;
++	u8 mcs;
++	u16 legacy;
+ };
+=20
+ /**
+@@ -191,6 +227,8 @@ enum station_info_flags {
+  * @llid: mesh local link id
+  * @plid: mesh peer link id
+  * @plink_state: mesh peer link state
++ * @signal: signal strength of last received package in dBm
++ * @txrate: current unicast bitrate to this station
+  */
+ struct station_info {
+ 	u32 filled;
+@@ -200,6 +238,8 @@ struct station_info {
+ 	u16 llid;
+ 	u16 plid;
+ 	u8 plink_state;
++	u8 signal;
++	struct rate_info txrate;
+ };
+=20
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7912eb1..6778fe0 100644
+=2D-- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -310,12 +310,35 @@ static void sta_set_sinfo(struct sta_info *sta, struc=
+t station_info *sinfo)
+=20
+ 	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+=2D			STATION_INFO_TX_BYTES;
++			STATION_INFO_TX_BYTES |
++			STATION_INFO_TX_BITRATE;
+=20
+ 	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes =3D sta->rx_bytes;
+ 	sinfo->tx_bytes =3D sta->tx_bytes;
+=20
++	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
++		sinfo->filled |=3D STATION_INFO_SIGNAL;
++		sinfo->signal =3D sta->last_signal;
++	}
++
++	sinfo->txrate.flags =3D 0;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_MCS;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_SHORT_GI;
++
++	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)) {
++		struct ieee80211_supported_band *sband;
++		sband =3D sta->local->hw.wiphy->bands[
++				sta->local->hw.conf.channel->band];
++		sinfo->txrate.legacy =3D
++			sband->bitrates[sta->last_tx_rate.idx].bitrate;
++	} else
++		sinfo->txrate.mcs =3D sta->last_tx_rate.idx;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |=3D STATION_INFO_LLID |
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4335f76..93c9b98 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1091,12 +1091,46 @@ static int parse_station_flags(struct nlattr *nla, =
+u32 *staflags)
+ 	return 0;
+ }
+=20
++static u16 nl80211_calculate_bitrate(struct rate_info *rate)
++{
++	int modulation, streams, bitrate;
++
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
++		return rate->legacy;
++
++	/* the formula below does only work for MCS values smaller than 32 */
++	if (rate->mcs >=3D 32)
++		return 0;
++
++	modulation =3D rate->mcs & 7;
++	streams =3D (rate->mcs >> 3) + 1;
++
++	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
++			13500000 : 6500000;
++
++	if (modulation < 4)
++		bitrate *=3D (modulation + 1);
++	else if (modulation =3D=3D 4)
++		bitrate *=3D (modulation + 2);
++	else
++		bitrate *=3D (modulation + 3);
++
++	bitrate *=3D streams;
++
++	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
++		bitrate =3D (bitrate / 9) * 10;
++
++	/* do NOT round down here */
++	return (bitrate + 50000) / 100000;
++}
++
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+ 				u8 *mac_addr, struct station_info *sinfo)
+ {
+ 	void *hdr;
+=2D	struct nlattr *sinfoattr;
++	struct nlattr *sinfoattr, *txrate;
++	u16 bitrate;
+=20
+ 	hdr =3D nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_STATION);
+ 	if (!hdr)
+@@ -1126,7 +1160,29 @@ static int nl80211_send_station(struct sk_buff *msg,=
+ u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
++	if (sinfo->filled & STATION_INFO_SIGNAL)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
++			   sinfo->signal);
++	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
++		txrate =3D nla_nest_start(msg, NL80211_STA_INFO_TX_BITRATE);
++		if (!txrate)
++			goto nla_put_failure;
++
++		/* nl80211_calculate_bitrate will return 0 for mcs >=3D 32 */
++		bitrate =3D nl80211_calculate_bitrate(&sinfo->txrate);
++		if (bitrate > 0)
++			NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE, bitrate);
+=20
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
++			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
++				    sinfo->txrate.mcs);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_SHORT_GI);
++
++		nla_nest_end(msg, txrate);
++	}
+ 	nla_nest_end(msg, sinfoattr);
+=20
+ 	return genlmsg_end(msg, hdr);
+
+--Boundary-01=_FjUQJMe4Rf/iZI6--
+
+--nextPart1515463.UQll782Z6J
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAklBSMwACgkQcenvcwAcHWf7eQCfXprlDe7ESDiu8BS+YYJFBA8Q
+rUkAnj2k3OzgU4N/2YSLFvR0v7Qn1Cak
+=5IDw
+-----END PGP SIGNATURE-----
+
+--nextPart1515463.UQll782Z6J--
