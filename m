@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:7981 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805AbYLMA21 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44625 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755693AbYLKWIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 19:28:27 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so1615690rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2008 16:28:26 -0800 (PST)
-Message-ID: <b3153e950812121628y53e5cef7s596324cb48450b36@mail.gmail.com> (sfid-20081213_012830_571338_DEB9F4C3)
-Date: Fri, 12 Dec 2008 16:28:26 -0800
-From: "mohamed salim abbas" <mabbaswireless@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <b6c5339f0812120937y5f2c9323xd3f3c478d3b78525@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1226915999.3599.33.camel@johannes.berg>
-	 <20081118194652.GD21772@tuxdriver.com>
-	 <1ba2fa240811181508y633be12pd9f2f9bd0e2c81e4@mail.gmail.com>
-	 <b3153e950812051553r2035b8aex4f54f6cf704a26b3@mail.gmail.com>
-	 <1228554333.15939.0.camel@johannes.berg>
-	 <b3153e950812062116q340c6b67l4d0c9a162d389cbf@mail.gmail.com>
-	 <b6c5339f0812070619x19919c5dh62fe13085416145c@mail.gmail.com>
-	 <b3153e950812072155t452aacb7p8ccefd1b2ec401ca@mail.gmail.com>
-	 <b3153e950812111500x27d3832avb99d84c13e601813@mail.gmail.com>
-	 <b6c5339f0812120937y5f2c9323xd3f3c478d3b78525@mail.gmail.com>
+	Thu, 11 Dec 2008 17:08:18 -0500
+Subject: Re: [PATCH] ath5k : Fix correct padding
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <49418D23.8060905@free.fr> (sfid-20081211_225920_318663_0EE458F5)
+References: <49418D23.8060905@free.fr>
+	 (sfid-20081211_225920_318663_0EE458F5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9voV1bFFNl7lUueMC2/w"
+Date: Thu, 11 Dec 2008 23:07:42 +0100
+Message-Id: <1229033262.8081.89.camel@johannes.berg> (sfid-20081211_230821_697170_8725450B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Great let me know once you want me try anything or any help needed.
-Mohamed
 
-On Fri, Dec 12, 2008 at 9:37 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Thu, Dec 11, 2008 at 6:00 PM, mohamed salim abbas
-> <mabbaswireless@gmail.com> wrote:
->> I did try these patches out, I have a problem, sometime, when the
->> card resume from suspend that I am currently tracing but still this
->> patch does not bring me to the same state before the suspend.
->
-> Thanks for testing.  Yeah, it's still a work in progress.  I plan to
-> spend the weekend hacking on this and getting it into shape.
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
+--=-9voV1bFFNl7lUueMC2/w
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2008-12-11 at 22:58 +0100, Benoit PAPILLAULT wrote:
+> Padding the 802.11 header to a multiple of 4 bytes needs to be done only
+> for DATA frames. This fixes a bug where 2 bytes were missing in monitor
+> mode for ACK frames.
+
+That's the wrong way around, you're not padding anything, you're
+unpadding it.
+
+Your patch is also line-wrapped.
+
+johannes
+
+--=-9voV1bFFNl7lUueMC2/w
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQY8rAAoJEKVg1VMiehFY3LIQAI005UCGVbLk/T8Do20qdxNn
+4AzoDi4hTJlUvNPzDANwYAhtbE74a3tM7Mxg5Rr+fIfhulwUETiMR2w3s/iLVOS0
+4UNcnQZW9bPwtm8mZR++eb6a/huTJBRBRQ/A3HQQif8dy6gSOqCJuuku6TVAAgBL
+2h+EdajBfzIoDiT2dk4r92GVJxsJZUSGyKzTB3RgHltsJnUCcDAuy87AvY5NPJ+L
+/De25gBuU9v6sHOzqd6FjTszPOu/fPAnh7HvsJv5CGcNPFfsI9LXI8v/AVq46XKH
+amJYn5HUcWOml3XB/KDTRdeF/40FkEf7tefbu6FvZEVGT1RPwRFrZtNBT80k9Y5U
+Lh5RmqZafxgP2S/cAQ0yYk4ALohZ44Y/VcW4fNlLonDF1U5DzOQI6U7o+DvXUJP/
+05T/vukD7b55nnpT+sxsNGHl8tdw/vGx0hV6B9zloc66EwLYoFKFVaIEQEjorGNL
+ZgAxeRbX9HHzjnIg9gKpo9eueuh2tvKto34XE09HoA3t3ODp0/DM4dcmUcW0V/+m
+IeL9WApjqjIEpWMYptnj6JIP3EKNjb6b2W8enkkKn7inZ3pLZlcpIIldO8uPvUYu
+HmtU0sCLFvxk/dKNYL6noHBK3zbT5hhfRB0AgLvUR8PtHdalMpIz1Rnz+qjjO9EG
+FreTchiQHPOjkuNeZ9dM
+=8vQ6
+-----END PGP SIGNATURE-----
+
+--=-9voV1bFFNl7lUueMC2/w--
+
