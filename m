@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:55541 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753400AbYLDCfO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 21:35:14 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 18:35:14 -0800
-Date: Wed, 3 Dec 2008 18:35:12 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: pat-lkml <pat-lkml@erley.org>
-CC: Henning Rogge <hrogge@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for a 802.11n card
-Message-ID: <20081204023512.GU6522@tesla> (sfid-20081204_033518_286369_431989EB)
-References: <200812032129.16740.hrogge@googlemail.com> <45e8e6c40812031609h50926100xfa616a5bdb9be93e@mail.gmail.com> <49372568.2070404@erley.org>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:47328 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758685AbYLKQzp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 11:55:45 -0500
+Message-ID: <4941460E.9000506@lwfinger.net> (sfid-20081211_175554_997559_F4C29EFC)
+Date: Thu, 11 Dec 2008 10:55:42 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <49372568.2070404@erley.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	hmh@hmh.eng.br
+Subject: Re: [RFC] b43: rework rfkill code
+References: <20081210150935.GA10927@srcf.ucam.org>
+In-Reply-To: <20081210150935.GA10927@srcf.ucam.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 03, 2008 at 04:33:44PM -0800, pat-lkml wrote:
-> Andrey Yurovsky wrote:
-> > There are a number of options listed here:
-> > http://linuxwireless.org/en/users/Drivers/ath9k#supportedchips
-> >
-> > On Wed, Dec 3, 2008 at 12:29 PM, Henning Rogge <hrogge@googlemail.com> wrote:
-> >> Hi,
-> >>
-> >> I'm looking for a dualband (2,4 Ghz and 5 Ghz) 802.11n card for my desktop,
-> >> but was unable to find one. Can you suggest a good card for testing 802.11n
-> >> with Linux ?
-> >>
-> >> Henning Rogge
-> >>
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Matthew Garrett wrote:
+> I've reworked the rfkill code in b43. This ought to be more consistent 
+> with the other drivers and it seems to work on the machines I've tested 
+> it on here, but it'd be good to get some feedback.
 > 
-> Specifically:
+> Firstly, I've replaced the polled input device. It's just some delayed 
+> work now. It polls the hardware every second to determine whether the 
+> radio has been hardware killed or not. If it has, it sets the rfkill 
+> state to HARD_BLOCKED. If the radio is enabled and the previous state 
+> was HARD_BLOCKED, it resets the state to UNBLOCKED. If the radio is 
+> enabled and the previous state was SOFT_BLOCKED, it leaves the state as 
+> is.
 > 
-> AR5418+AR5133 [1]
-> AR5416+AR5133 [1]
-> AR9160 [2]
-> AR9280 [3]
+> I also removed some of the complexity from the rfkill toggle function, 
+> since the rfkill core will handle the case of the user requesting a 
+> change from HARD_BLOCKED without the driver needing to care.
 > 
-> Support dual band
+> The final change is that I removed the code for changing the wireless 
+> state in response to the txpower configuration in mac80211. Right now, I 
+> can't see any way for this to work correctly - if the user disables the 
+> radio via rfkill, mac80211 doesn't flag the radio as disabled. As a 
+> result, the next time the configuration callback is called, b43 
+> reenables the radio again, even though the user has explicitly disabled 
+> it. I don't think any of the other drivers handle this case, so I'm not 
+> really sure what the best way to handle this in future is. The current 
+> situation certainly seems broken.
 > 
-> [1] http://www.atheros.com/news/xspan.html
-> [2] http://www.atheros.com/pt/AR9001AP-3NX2.htm
-> [3] http://www.atheros.com/news/AR9280_AR9281.htm3
+> How does this look to people?
 
-Also,
+All this discussion about hard vs soft rfkill makes my head hurt and I have
+stopped reading those posts.
 
-First some alphabet soup for you (this is on the wiki now):
+With this patch, my b43 device and its LED still work.
 
-HB: PCIe Half MiniCard
-XB: PCIe Full MiniCard
-MB: Mini PCI card
-CB: PCI Cardbus card
-SB: Single band, 1x1, 1x2, 2x2 configuration
-DB: Dual band, 2x2 configuration 
+Larry
 
-We do have DB HB, HB92/AR9280. HP, Toshiba, Dell, FJ ships with it, and
-product name is under ath9K site as mentioned above. Also,
-XB72 (Owl/Fowl, AR5218+AR5133) is dual band XB (see the site).
 
-  Luis
+
