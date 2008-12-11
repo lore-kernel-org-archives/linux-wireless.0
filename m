@@ -1,59 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:48820 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756299AbYLPQ4w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 11:56:52 -0500
-Received: by bwz14 with SMTP id 14so4121591bwz.13
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 08:56:51 -0800 (PST)
-Message-ID: <45e8e6c40812160856k37cc7e44mc9f512baec0f888e@mail.gmail.com> (sfid-20081216_175656_151204_F2783458)
-Date: Tue, 16 Dec 2008 08:56:50 -0800
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Peter Wippich" <pewi@gw-instruments.de>
-Subject: Re: [PATCH 0/3] libertas: driver for GSPI devices
-Cc: "Colin McCabe" <colin@cozybit.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <Pine.LNX.4.63.0812161654310.7559@redbean.intranet.gw-instruments.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1229398052-27465-1-git-send-email-colin@cozybit.com>
-	 <Pine.LNX.4.63.0812161654310.7559@redbean.intranet.gw-instruments.de>
+Received: from mga01.intel.com ([192.55.52.88]:27324 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752223AbYLKAyq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Dec 2008 19:54:46 -0500
+Subject: Re: [PATCHv2] ipw2200: fix scanning while associated
+From: Zhu Yi <yi.zhu@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <200812101317.26454.helmut.schaa@gmail.com>
+References: <200812101317.26454.helmut.schaa@gmail.com>
+Content-Type: text/plain
+Date: Thu, 11 Dec 2008 08:54:36 +0800
+Message-Id: <1228956876.2558.647.camel@debian.sh.intel.com> (sfid-20081211_015453_263628_95DF9E16)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Peter.  The firmware we used is fw 9.70.3p37 and its cap mask is 0x303.
+On Wed, 2008-12-10 at 05:17 -0700, Helmut Schaa wrote:
+> This patch fixes sporadic firmware restarts when scanning while associated.
+> 
+> The firmware will quietly cancel a scan (while associated) if the dwell time
+> for a channel to be scanned is larger than the time it may stay away from the
+> operating channel (because of DTIM catching). Unfortunately the driver is not
+> notified about the canceled scan and therefore the scan watchdog timeout will
+> be hit and the driver causes a firmware restart which results in
+> disassociation. This mainly happens on passive channels which use a dwell time
+> of 120 whereas a typical beacon interval is around 100.
+> 
+> The patch changes the dwell time for passive channels to be slightly smaller
+> than the actual beacon interval to work around the firmware issue. Furthermore
+> the number of allowed beacon misses is increased from one to three as otherwise
+> most scans (while associated) won't complete successfully.
+> 
+> However scanning while associated will still fail in corner cases such as a
+> beacon intervals below 30.
+> 
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-We expect this firmware to be available for download soon.  Thanks,
+Acked-by: Zhu Yi <yi.zhu@intel.com>
 
-On Tue, Dec 16, 2008 at 7:56 AM, Peter Wippich <pewi@gw-instruments.de> wrote:
->
-> Hi Colin,
->
->> This patch series adds support for GSPI devices to libertas.
->> These devices are found in some embedded systems. We used a blackfin-based
->> board for development.
->>
->> Since the blackfin has specific alignment requirements, this patch set
->> includes  alignment fixes.
->
-> Thanks for this one. As you mentioned somewhere else SPI Firmware for 8686
-> is not publicly available. However, can you tell me with which firmware
-> Version you tested this ??
->
-> Thank you and best regards,
->
-> Peter
->
->
-> |       Peter Wippich                   Voice: +49 30 46776411          |
-> |       G&W Instruments GmbH            fax:   +49 30 46776419          |
-> |       Gustav-Meyer-Allee 25, Geb. 12  Email: pewi@gw-instruments.de   |
-> |       D-13355 Berlin  / Germany                                       |
->
->
+Thanks,
+-yi
 
+> ---
+> 
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+> index dc6eb49..8e7affa 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
+> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+> @@ -4347,7 +4347,8 @@ static void ipw_handle_missed_beacon(struct ipw_priv *priv,
+>  		return;
+>  	}
+>  
+> -	if (priv->status & STATUS_SCANNING) {
+> +	if (priv->status & STATUS_SCANNING &&
+> +	    missed_count > IPW_MB_SCAN_CANCEL_THRESHOLD) {
+>  		/* Stop scan to keep fw from getting
+>  		 * stuck (only if we aren't roaming --
+>  		 * otherwise we'll never scan more than 2 or 3
+> @@ -6282,6 +6283,20 @@ static void ipw_add_scan_channels(struct ipw_priv *priv,
+>  	}
+>  }
+>  
+> +static int ipw_passive_dwell_time(struct ipw_priv *priv)
+> +{
+> +	/* staying on passive channels longer than the DTIM interval during a
+> +	 * scan, while associated, causes the firmware to cancel the scan
+> +	 * without notification. Hence, don't stay on passive channels longer
+> +	 * than the beacon interval.
+> +	 */
+> +	if (priv->status & STATUS_ASSOCIATED
+> +	    && priv->assoc_network->beacon_interval > 10)
+> +		return priv->assoc_network->beacon_interval - 10;
+> +	else
+> +		return 120;
+> +}
+> +
+>  static int ipw_request_scan_helper(struct ipw_priv *priv, int type, int direct)
+>  {
+>  	struct ipw_scan_request_ext scan;
+> @@ -6328,7 +6343,7 @@ static int ipw_request_scan_helper(struct ipw_priv *priv, int type, int direct)
+>  	  	IPW_DEBUG_WX("use passive scanning\n");
+>  	  	scan_type = IPW_SCAN_PASSIVE_FULL_DWELL_SCAN;
+>  		scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] =
+> -			cpu_to_le16(120);
+> +			cpu_to_le16(ipw_passive_dwell_time(priv));
+>  		ipw_add_scan_channels(priv, &scan, scan_type);
+>  		goto send_request;
+>  	}
+> @@ -6344,7 +6359,8 @@ static int ipw_request_scan_helper(struct ipw_priv *priv, int type, int direct)
+>  	scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_AND_DIRECT_SCAN] =
+>  		cpu_to_le16(20);
+>  
+> -  	scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] = cpu_to_le16(120);
+> +  	scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] =
+> +		cpu_to_le16(ipw_passive_dwell_time(priv));
+>  	scan.dwell_time[IPW_SCAN_ACTIVE_DIRECT_SCAN] = cpu_to_le16(20);
+>  
+>  #ifdef CONFIG_IPW2200_MONITOR
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.h b/drivers/net/wireless/ipw2x00/ipw2200.h
+> index 0a84d52..277b274 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2200.h
+> +++ b/drivers/net/wireless/ipw2x00/ipw2200.h
+> @@ -245,6 +245,7 @@ enum connection_manager_assoc_states {
+>  #define HOST_NOTIFICATION_S36_MEASUREMENT_REFUSED       31
+>  
+>  #define HOST_NOTIFICATION_STATUS_BEACON_MISSING         1
+> +#define IPW_MB_SCAN_CANCEL_THRESHOLD                    3
+>  #define IPW_MB_ROAMING_THRESHOLD_MIN                    1
+>  #define IPW_MB_ROAMING_THRESHOLD_DEFAULT                8
+>  #define IPW_MB_ROAMING_THRESHOLD_MAX                    30
 
-
--- 
-Andrey Yurovsky
-cozybit Inc.
