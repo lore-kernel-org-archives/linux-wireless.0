@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:57472 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754558AbYLRWov (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:48143 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753683AbYLKCNe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 17:44:51 -0500
-Message-ID: <494AD243.5070602@warmcat.com> (sfid-20081218_234511_745442_5628FD9D)
-Date: Thu, 18 Dec 2008 22:44:19 +0000
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Werner Almesberger <werner@openmoko.org>,
+	Wed, 10 Dec 2008 21:13:34 -0500
+Date: Wed, 10 Dec 2008 19:59:32 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: AR6k: to rfkill
-References: <20081218212234.GI5019@almesberger.net> <494ACE9B.8010709@warmcat.com> <200812182337.56050.mb@bu3sch.de>
-In-Reply-To: <200812182337.56050.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [PATCH] rtl8187: Fix for change in STA handling in mac80211
+Message-ID: <49407404.WzMzB28hDBCaCLlQ%Larry.Finger@lwfinger.net> (sfid-20081211_031340_832983_5B332120)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
-> On Thursday 18 December 2008 23:28:43 Andy Green wrote:
->> Somebody in the thread at some point said:
->>
->>> In Openmoko, we're wondering whether we should make the Atheros AR6k
->> Let me put that simpler for you Werner :-)
->>
->> "In Openmoko" we already use the nice rfkill interface to turn our USB 
->> bluetooth device on and off... it certainly stops RF emissions from it.
->>
->> Now we plan to do the same for our AR6001 implementation... it has no 
->> switched power to the module, it is "always on".  It seems the only way 
->> to get it to a low power state is an IOCTL that currently needs to be 
->> set by a userspace app.
->>
->> In the same manner as we switch bluetooth, I have asked Werner to write 
->> a patch that will use rfkill to issue the IOCTL to switch the AR6001 
->> into low power / no RF mode.
->>
->> Does that raise any eyebrows?
-> 
-> Is the wireless kernel driver a binary blob?
+After commit ca247d5f50acd4fc6fdc1dec770e726b0d7eda60 "mac80211: only create
+default STA interface if supported", rtl8187 stopped working because the
+add_interface callback was not called. For reasons that I do not understand,
+the IFTYPE_ADHOC bit, as well as the IFTYPE_STATION bit, must be set in the
+interface_modes variable.
 
-No, Openmoko won't have anything to do with in-kernel binary blobs. 
-There is binary firmware in it in flash though.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-It's not very kernel style C:
+John,
 
-http://git.openmoko.org/?p=kernel.git;a=tree;f=drivers/ar6000;h=ab7abd9222054919a3cd0ce6ecbec64b6057cbed;hb=andy-tracking
+This should be added to wireless-testing as soon as possible.
 
--Andy
+Larry
+---
 
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1429,7 +1429,10 @@ static int __devinit rtl8187_probe(struc
+ 	 * XXX: Once this driver supports anything that requires
+ 	 *	beacons it must implement IEEE80211_TX_CTL_ASSIGN_SEQ.
+ 	 */
+-	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
++	dev->wiphy->interface_modes =
++		BIT(NL80211_IFTYPE_STATION) |
++		BIT(NL80211_IFTYPE_ADHOC);
++
+ 
+ 	if ((id->driver_info == DEVICE_RTL8187) && priv->is_rtl8187b)
+ 		printk(KERN_INFO "rtl8187: inconsistency between id with OEM"
