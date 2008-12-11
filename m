@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60772 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755510AbYLKS27 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.233]:2704 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759304AbYLKXA7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 13:28:59 -0500
-Subject: Re: [Patch] nl80211: Add signal strength and bandwith to
-	nl80211station info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@googlemail.com>
-Cc: Henning Rogge <rogge@fgan.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812111922.49439.hrogge@googlemail.com> (sfid-20081211_192652_073998_62A7776A)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812111902.24289.hrogge@googlemail.com>
-	 <1229019287.8081.49.camel@johannes.berg>
-	 <200812111922.49439.hrogge@googlemail.com>
-	 (sfid-20081211_192652_073998_62A7776A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6n3hL9B2LKhJ2/AJjI/d"
-Date: Thu, 11 Dec 2008 19:28:21 +0100
-Message-Id: <1229020101.8081.55.camel@johannes.berg> (sfid-20081211_192902_642305_2B659E04)
-Mime-Version: 1.0
+	Thu, 11 Dec 2008 18:00:59 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so1096003rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 15:00:58 -0800 (PST)
+Message-ID: <b3153e950812111500x27d3832avb99d84c13e601813@mail.gmail.com> (sfid-20081212_000109_013227_F06843C7)
+Date: Thu, 11 Dec 2008 15:00:57 -0800
+From: "mohamed salim abbas" <mabbaswireless@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [RFC] mac80211: remove ieee80211_notify_mac
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <b3153e950812072155t452aacb7p8ccefd1b2ec401ca@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1226915999.3599.33.camel@johannes.berg>
+	 <1ba2fa240811170934u34fa6e28m1411715690fd24b9@mail.gmail.com>
+	 <1226944799.3902.52.camel@johannes.berg>
+	 <20081118194652.GD21772@tuxdriver.com>
+	 <1ba2fa240811181508y633be12pd9f2f9bd0e2c81e4@mail.gmail.com>
+	 <b3153e950812051553r2035b8aex4f54f6cf704a26b3@mail.gmail.com>
+	 <1228554333.15939.0.camel@johannes.berg>
+	 <b3153e950812062116q340c6b67l4d0c9a162d389cbf@mail.gmail.com>
+	 <b6c5339f0812070619x19919c5dh62fe13085416145c@mail.gmail.com>
+	 <b3153e950812072155t452aacb7p8ccefd1b2ec401ca@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I did try these patches out, I have a problem, sometime, when the
+card resume from suspend that I am currently tracing but still this
+patch does not bring me to the same state before the suspend. If I am
+currently pinging and I suspend then resumed the ping program should
+resume ping as it was before suspend. I know you still working on this
+but I am not sure if this what will see in final solution. The
+ieee80211_notify_mac callback function was used to make sure we return
+to exact state right when driver resume or driver assert and recovered
+or coming from rfkill.
 
---=-6n3hL9B2LKhJ2/AJjI/d
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-12-11 at 19:22 +0100, Henning Rogge wrote:
-
-> > This needs documentation for __...after_last and ..._max too, I think,
-> > or kernel-doc will complain, and then I get email on the next daily git
-> > update and complain ;)
-> Is there a script to check for mistakes like this ? I used checkpatch.pl =
-and=20
-> it did not complain...=20
-
-well, apply the patch and do
-
-make htmldocs DOCBOOKS=3Dmac80211.xml
-
-Actually, hmm, I think, that won't help, because these files aren't
-included yet. Heh.
-
-johannes
-
---=-6n3hL9B2LKhJ2/AJjI/d
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQVvBAAoJEKVg1VMiehFYDW4P/RNYcWPEld9AQ2Rp1yDQ71P/
-ZWlpfQDGQohOy/pPMlzzZRq6Ek5lvBXar/8sziIKl4vBdKVNRsm/+8QAgAMJ3zlu
-htfxIP8Ln6J6PxOmPw8NGukVeKe75qAuYBdvyel93TmHsgY7+QSeP+cAb648bvBa
-uYae/LDX0mUEHtKTJu2wrHWxVt3VjJz9pUyTzs9EVE9khY54SSrKwRfD6xLjrp65
-mYLIWd/reXV4fCyRS36mT86oJgap2exr15Edkyrqarj3b6gG2+86ENAXmcDVXdOj
-TqPFVM3MkH6XTpMnThrKRR8lh2VCOPC1wSrvtrSh3zcjHHGM5lBJQfP+ghj8Qpog
-wRe/wivYHAMk9p8av9SKa9Sl2Y4Uhk/+2PGzRD1sCWNG8qKsO0ah790o6NPYMRHW
-Jq0mzIqPIMAdGoNjsTsgqPW0Js83Rqyf35e6Ebg6FPrqCz0nwKckTBRuBZRUrcvQ
-kbvs61b/BaDTRMgOPpGEgF3VheEpQVd5P/KqwaDe36EkSvn5FDocMG5hdM2E1290
-rFdh9Ylk0g/ijD/cjd8fLxEeJZ2zK73FZsWEJt8+EYzy/RHZSQ5/AQxm5kjiA5e9
-VPg3cD1WDJHSZEZTbQuwIUfAU3W+PdQfK2aCNOnTLmy3V3WgchIwKw9yrsr+4TcB
-LMHvx9IAUGffDxdt/sne
-=aVSm
------END PGP SIGNATURE-----
-
---=-6n3hL9B2LKhJ2/AJjI/d--
-
+On Sun, Dec 7, 2008 at 9:55 PM, mohamed salim abbas
+<mabbaswireless@gmail.com> wrote:
+> I will review these patches and try them out.
+>
+> On Sun, Dec 7, 2008 at 6:19 AM, Bob Copeland <me@bobcopeland.com> wrote:
+>> On Sun, Dec 7, 2008 at 12:16 AM, mohamed salim abbas
+>> <mabbaswireless@gmail.com> wrote:
+>>> I will be happy to help if extra help need it. below is the link to the bug.
+>>> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1845
+>>
+>> Thanks Mohamed, I'd appreciate any help.  Give me a couple of days to
+>> square away my current changes, then I'll post the full series.  My
+>> last changeset was at:
+>>
+>>    http://bobcopeland.com/kernel/wl/
+>>
+>> --
+>> Bob Copeland %% www.bobcopeland.com
+>>
+>
