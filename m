@@ -1,74 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51566 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752609AbYLJRmW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 12:42:22 -0500
-Subject: Re: [PATCH] rfkill: strip pointless notifier chain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200812101840.00480.IvDoorn@gmail.com> (sfid-20081210_184034_054500_8F394307)
-References: <1228927728.15837.10.camel@johannes.berg>
-	 <200812101801.35735.IvDoorn@gmail.com>
-	 <1228929609.15837.36.camel@johannes.berg>
-	 <200812101840.00480.IvDoorn@gmail.com>
-	 (sfid-20081210_184034_054500_8F394307)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5rBa0Uh84xBaB08JBrI6"
-Date: Wed, 10 Dec 2008 18:41:47 +0100
-Message-Id: <1228930907.15837.50.camel@johannes.berg> (sfid-20081210_184225_170881_95C2D0A2)
-Mime-Version: 1.0
+Received: from smtp7-g19.free.fr ([212.27.42.64]:38039 "EHLO smtp7-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758599AbYLKV7D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 16:59:03 -0500
+Message-ID: <49418D23.8060905@free.fr> (sfid-20081211_225920_318663_0EE458F5)
+Date: Thu, 11 Dec 2008 22:58:59 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: [PATCH] ath5k : Fix correct padding
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Padding the 802.11 header to a multiple of 4 bytes needs to be done only
+for DATA frames. This fixes a bug where 2 bytes were missing in monitor
+mode for ACK frames.
 
---=-5rBa0Uh84xBaB08JBrI6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ref: http://bugzilla.kernel.org/show_bug.cgi?id=12101 :
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+---
+  drivers/net/wireless/ath5k/base.c |   49
++++++++++++++++++++++++-------------
+  1 files changed, 31 insertions(+), 18 deletions(-)
 
-On Wed, 2008-12-10 at 18:40 +0100, Ivo van Doorn wrote:
-> On Wednesday 10 December 2008, Johannes Berg wrote:
-> > On Wed, 2008-12-10 at 18:01 +0100, Ivo van Doorn wrote:
-> > > On Wednesday 10 December 2008, Johannes Berg wrote:
-> > > > No users, so no reason to have it.
-> > >=20
-> > > Henrique, you introduced the notifier chain, are there any upcoming
-> > > users for it or can it indeed be removed?
-> >=20
-> > It can be added back with the users when needed.
->=20
-> Fine, but I was more thinking about how soon would such an upcoming
-> user arrive. There is no point in deleting the interface when it will
-> be added within a couple of days.
+diff --git a/drivers/net/wireless/ath5k/base.c
+b/drivers/net/wireless/ath5k/base.c
+index bfb0c49..2318b1c 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1668,6 +1668,7 @@ ath5k_tasklet_rx(unsigned long data)
+  	int ret;
+  	int hdrlen;
+  	int pad;
++	struct ieee80211_hdr * hdr;
 
-Yeah, but it's been in there for a long time without users already, not
-like it was added yesterday and the user will show up tomorrow.
+  	spin_lock(&sc->rxbuflock);
+  	if (list_empty(&sc->rxbuf)) {
+@@ -1754,14 +1755,19 @@ accept:
 
-johannes
+  		/*
+  		 * the hardware adds a padding to 4 byte boundaries between
+-		 * the header and the payload data if the header length is
+-		 * not multiples of 4 - remove it
++		 * the header and the payload data if the header length is not
++		 * multiple of 4 - remove it. This only affect data frames.
+  		 */
+-		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+-		if (hdrlen & 3) {
+-			pad = hdrlen % 4;
+-			memmove(skb->data + pad, skb->data, hdrlen);
+-			skb_pull(skb, pad);
++
++		hdr = (struct ieee80211_hdr *) skb;
++		if ((skb->len >= 2) && ieee80211_is_data(hdr->frame_control)) {
++
++			hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++			if (hdrlen & 3) {
++				pad = hdrlen % 4;
++				memmove(skb->data + pad, skb->data, hdrlen);
++				skb_pull(skb, pad);
++			}
+  		}
 
---=-5rBa0Uh84xBaB08JBrI6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+  		/*
+@@ -2623,6 +2629,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+  	unsigned long flags;
+  	int hdrlen;
+  	int pad;
++	const struct ieee80211_hdr * hdr = (const struct ieee80211_hdr *)skb;
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+  	ath5k_debug_dump_skb(sc, skb, "TX  ", 1);
 
-iQIcBAABAgAGBQJJP/9YAAoJEKVg1VMiehFYqqgP/jE3tLs29/Etn8dyJ3PcaSIl
-7S6N7NbvMHv2w4iIXIKBF2pKlWPoNDX5xptyT117vG0rnisuzV4i7QdVrrilfrP/
-ss0prayaz+F/pe+oQ3HCy/ASPHH3Zc1uweqI2OYvHBjfsHz4jmA8dfQJMhQGcBAS
-qQizxpj79HeDwXNP507BSh4SQ4PNT4/w0h9Yn+KZLzWV+Q7Q9EspZJHeGOGy0Ya7
-NrRpOl32VBcY1Okpl6wpmXSC3nOCfxtx7JJXLFjpC0a5dfhZRJ3qPyNypX4kGNuH
-PvLA9+LEA7Ruk+tuzi/7GGi+RN3WubX1BVg01VnIXeXECB420c4i88kuPoPQIeQs
-7zJLtKPjBXxsXKzwmrsbwKXwr21q+2sKyjeRleRnzsWglFvsnzjPnMgpSZpT9nML
-viTOcqESbnk1jtzpwwYevaRxq7kmvCD7tOWuKtyKLS+uXsD3IJ45wfASI7XHMKdu
-srnozYxotNJH5d0EfQdV7qu6pqUQBJnD+FfGhK7/AuaqQFcpBfaJqFMQe9sefwoz
-wf6pikm2I+EUKfBNa3KgRU83MQJlB8DFD9shdCuDXWxW8xNJP7foExYpE5d1h1eP
-2H24j1f9oI3oE/51VARF2q5EQqv+NwKFxys+YUpyVxd2UAwxeKS54IJlgMam0Dob
-eb9czv/+Kbyb3hL9gJNT
-=xTLd
------END PGP SIGNATURE-----
+@@ -2630,19 +2637,25 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff
+*skb)
+  		ATH5K_DBG(sc, ATH5K_DEBUG_XMIT, "tx in monitor (scan?)\n");
 
---=-5rBa0Uh84xBaB08JBrI6--
+  	/*
+-	 * the hardware expects the header padded to 4 byte boundaries
+-	 * if this is not the case we add the padding after the header
++	 * the hardware expects the header padded to 4 byte boundaries for
++	 * data frames, if this is not the case we add the padding after the
++	 * header
+  	 */
+-	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+-	if (hdrlen & 3) {
+-		pad = hdrlen % 4;
+-		if (skb_headroom(skb) < pad) {
+-			ATH5K_ERR(sc, "tx hdrlen not %%4: %d not enough"
+-				" headroom to pad %d\n", hdrlen, pad);
+-			return -1;
++
++	if ((skb->len >= 2) && ieee80211_is_data(hdr->frame_control)) {
++
++		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++		if (hdrlen & 3) {
++			pad = hdrlen % 4;
++			if (skb_headroom(skb) < pad) {
++				ATH5K_ERR(sc,
++					  "tx hdrlen not %%4: %d not enough"
++					  " headroom to pad %d\n", hdrlen, pad);
++				return -1;
++			}
++			skb_push(skb, pad);
++			memmove(skb->data, skb->data+pad, hdrlen);
+  		}
+-		skb_push(skb, pad);
+-		memmove(skb->data, skb->data+pad, hdrlen);
+  	}
+
+  	spin_lock_irqsave(&sc->txbuflock, flags);
+-- 1.5.6.5
 
