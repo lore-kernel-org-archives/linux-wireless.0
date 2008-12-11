@@ -1,70 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:64308 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473AbYLYCfc (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:55414 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760558AbYLKTtz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 21:35:32 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so3398738wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Dec 2008 18:35:31 -0800 (PST)
-Message-ID: <1197ff4c0812241835u70bb55e3i713103946148c2f1@mail.gmail.com> (sfid-20081225_033633_345484_3233E24A)
-Date: Thu, 25 Dec 2008 10:35:31 +0800
-From: YanBo <dreamfly281@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: Broadcom 11n implementation
-Cc: bcm43xx-dev@lists.berlios.de,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200812250115.45283.mb@bu3sch.de>
+	Thu, 11 Dec 2008 14:49:55 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so547069yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 11:49:54 -0800 (PST)
+Message-ID: <b6c5339f0812111149h6f243682t9a34691f80b4cfe5@mail.gmail.com> (sfid-20081211_205006_865046_91FC1717)
+Date: Thu, 11 Dec 2008 14:49:53 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Jouni Malinen" <jouni.malinen@atheros.com>
+Subject: Re: [PATCH] ath9k: Do not remove header padding on RX from short frames
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	"Patrick McHardy" <kaber@trash.net>
+In-Reply-To: <20081211162213.GA28193@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1230163530.3162.10.camel@johannes>
-	 <200812250115.45283.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081211162213.GA28193@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/25/08, Michael Buesch <mb@bu3sch.de> wrote:
-> On Thursday 25 December 2008 01:05:30 Johannes Berg wrote:
->> Hey,
->>
->> I hope those of you who got their presents today enjoyed that. Here's
->> one from me for the poor souls like myself who have a Broadcom 11n chip:
->>
->> I've been publishing specifications for things we have reverse
->> engineered, is anyone interested in implementing this? If so, go wild,
->> but synchronise on the list if there are multiple people. John, I think
->> you had somebody who was interested, but I can't find the email right
->> now.
->>
->> Michael has said that he might be able to help a bit (review maybe), but
->> won't implement the bulk of it. And I actually need this code ASAP since
->> I failed to replace the wireless card in my new MacBook (I couldn't even
->> find it).
->
-> Of course, I will always be available to give advise and help on the
-> technical details.
-> With the recent merge of the PHY abstraction in b43 it shouldn't be that
-> hard
-> anymore to understand the basics of the code. I think stuff is clearly
-> modulised now
-> and fairly easy to understand, after you once understood the basics of the
-> device.
->
-> So for implementing N-PHY, you'll basically work inside of the phy_n.c and
-> phy_n.h files only (maybe 98% of the work will be there).
->
-> So, you could probably look into phy_g.c to get an idea of how this could
-> probably
-> look like.
->
-> Please contact us before you start writing patches, so we can give some
-> additional
-> advise on coding conventions used in the driver.
->
-Consider the currently AGNX project in logjam cause lack of some RF
-specs detail,  I think I have some time to do this. or with other guys
-who also interesting with it.
+On Thu, Dec 11, 2008 at 11:22 AM, Jouni Malinen
+<jouni.malinen@atheros.com> wrote:
+> The 802.11 header is only padded to 32-bit boundary when the frame has
+> a non-zero length payload. In other words, control frames (e.g., ACK)
+> do not have a padding and we should not try to remove it. This fixes
+> monitor mode for short control frames.
 
-Merry Christmas to everybody! :)
+Thanks Jouni, that clears up the question of the same code in ath5k
+(http://marc.info/?l=linux-wireless&m=122888546315200&w=2).
 
-BR
-Yanbo
+-- 
+Bob Copeland %% www.bobcopeland.com
