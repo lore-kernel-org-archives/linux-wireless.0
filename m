@@ -1,69 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:30397 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754134AbYLDRWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 12:22:49 -0500
-Subject: Re: Issue with ifconfig down and 4965 driver
-From: reinette chatre <reinette.chatre@intel.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1228389591.28839.1.camel@violet.holtmann.net>
-References: <BCB72601-9DA2-4D89-BDF1-7B96254DA17C@linux.intel.com>
-	 <1226555293.1115.939.camel@rc-desk>  <491BF73B.4080403@linux.intel.com>
-	 <1228249643.10900.59.camel@rc-desk>
-	 <1228347518.9181.15.camel@violet.holtmann.net>
-	 <1228348615.13338.83.camel@rc-desk>
-	 <1228389591.28839.1.camel@violet.holtmann.net>
-Content-Type: text/plain
-Date: Thu, 04 Dec 2008 09:23:46 -0800
-Message-Id: <1228411426.28477.13.camel@rc-desk> (sfid-20081204_182253_040747_1B9FEA15)
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53594 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756416AbYLKQyL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 11:54:11 -0500
+Date: Thu, 11 Dec 2008 18:22:13 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: [PATCH] ath9k: Do not remove header padding on RX from short frames
+Message-ID: <20081211162213.GA28193@jm.kir.nu> (sfid-20081211_175428_927129_C92B2A02)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-12-04 at 03:19 -0800, Marcel Holtmann wrote:
-> Hi Reinette,
-> 
-> > > > > >> so I am running a 2.6.28-rc4 kernel and every time I stop
-> > > > > >> wpa_supplicant or call ifconfig down on the 4965 card, I get a user
-> > > > > >> noticeable delay (mouse freezes). Seems that some part inside the
-> > > > > >> driver is actively sleeping with a busy-loop. This is really not an
-> > > > > >> acceptable behavior since it is a day-to-day task to bring the device
-> > > > > >> down. And for power concerns, we really wanna allow to bring down the
-> > > > > >> interface.
-> > > > > >>
-> > > > > >
-> > > > > > Please add your information to
-> > > > > > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790
-> > > > > 
-> > > > > all information are already in the Bugzilla. It is nothing fancy and
-> > > > > easy to reproduce. Do we have a patch for it?
-> > > > > 
-> > > > 
-> > > > http://marc.info/?l=linux-wireless&m=122824886623698&w=2
-> > > 
-> > > so I finally got around testing the patch. It is great that it reduces
-> > > the time drastically, but I think that it is still not good enough. So I
-> > > don't care how long it takes to bring the device down. My concern is
-> > > that we are busy-looping during this time. Meaning the kernel is not
-> > > responding to anything. Simple symptom is that the mouse is stuck.
-> > > 
-> > 
-> > We have found that this one patch is not the full solution. More work is
-> > currently being done with activity tracked at
-> > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790
-> 
-> I quickly checked Mohamed's last patch. It actually makes it worse on my
-> system.
+The 802.11 header is only padded to 32-bit boundary when the frame has
+a non-zero length payload. In other words, control frames (e.g., ACK)
+do not have a padding and we should not try to remove it. This fixes
+monitor mode for short control frames. In addition, the hdrlen&3 use
+is described in more detail to make it easier to understand how the
+padding length is calculated.
 
-Thank you very much for testing - I will let him know. Would it be
-possible to add your feedback to that bug report for visibility to
-everybody tracking that problem? Not everybody there are subscribed to
-linux-wireless and other people testing the patch (see last comment #12)
-reports that the issue is solved for them.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Thank you very much
+---
+ drivers/net/wireless/ath9k/recv.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-Reinette
+--- wireless-testing.orig/drivers/net/wireless/ath9k/recv.c	2008-12-11 11:35:56.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/recv.c	2008-12-11 12:18:02.000000000 +0200
+@@ -571,8 +571,16 @@ int ath_rx_tasklet(struct ath_softc *sc,
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+ 
+-		if (hdrlen & 3) {
+-			padsize = hdrlen % 4;
++		/* The MAC header is padded to have 32-bit boundary if the
++		 * packet payload is non-zero. The general calculation for
++		 * padsize would take into account odd header lengths:
++		 * padsize = (4 - hdrlen % 4) % 4; However, since only
++		 * even-length headers are used, padding can only be 0 or 2
++		 * bytes and we can optimize this a bit. In addition, we must
++		 * not try to remove padding from short control frames that do
++		 * not have payload. */
++		padsize = hdrlen & 3;
++		if (padsize && hdrlen >= 24) {
+ 			memmove(skb->data + padsize, skb->data, hdrlen);
+ 			skb_pull(skb, padsize);
+ 		}
 
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
