@@ -1,184 +1,594 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f11.google.com ([209.85.221.11]:41933 "EHLO
-	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169AbYLJPKp (ORCPT
+Received: from mail-bw0-f13.google.com ([209.85.218.13]:64496 "EHLO
+	mail-bw0-f13.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757328AbYLKUSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 10:10:45 -0500
-Received: by qyk4 with SMTP id 4so736991qyk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 07:10:43 -0800 (PST)
-Message-ID: <c072ca310812100710o58c38a27rba16ad2318a1cb95@mail.gmail.com> (sfid-20081210_161058_130522_3BDF3AB8)
-Date: Wed, 10 Dec 2008 20:10:42 +0500
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: iwlagn interrupt problem
-In-Reply-To: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com>
+	Thu, 11 Dec 2008 15:18:40 -0500
+Received: by bwz6 with SMTP id 6so2692290bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 12:18:38 -0800 (PST)
+From: Henning Rogge <hrogge@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [Patch] nl80211: Add signal strength and bandwith to nl80211station info
+Date: Thu, 11 Dec 2008 21:12:25 +0100
+Cc: Henning Rogge <rogge@fgan.de>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+References: <200811252131.30161.hrogge@googlemail.com> <200812111922.49439.hrogge@googlemail.com> <1229020101.8081.55.camel@johannes.berg>
+In-Reply-To: <1229020101.8081.55.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart2358216.fFn3XW4F9j";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200812112112.30509.hrogge@googlemail.com> (sfid-20081211_211901_128198_84DACBC7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[linux-wireless: sorry for the duplicate, I didn't use the correct
-address for LKML, as this is my first LKML post from work]
+--nextPart2358216.fFn3XW4F9j
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_pQXQJ6dRBhZIuc4"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Hello. My kernel is 2.6.27.6, and at work, I sit in a place with
-unreliable wireless connection. The problematic piece of dmesg looks
-like this:
+--Boundary-01=_pQXQJ6dRBhZIuc4
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-[17454.155855] wlan0: deauthenticated
-[17456.509322] iwlagn 0000:0c:00.0: PCI INT A disabled
-[17456.557701] iwlagn 0000:0c:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-[17456.557814] iwlagn 0000:0c:00.0: restoring config space at offset
-0x1 (was 0x100102, writing 0x100106)
-[17456.756926] Registered led device: iwl-phy0:radio
-[17456.756976] Registered led device: iwl-phy0:assoc
-[17456.757028] Registered led device: iwl-phy0:RX
-[17456.757065] Registered led device: iwl-phy0:TX
-[17456.766141] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[17460.329937] wlan0: authenticate with AP 00:19:5b:ba:53:b7
-[17460.335391] wlan0: authenticated
-[17460.335401] wlan0: associate with AP 00:19:5b:ba:53:b7
-[17460.532088] wlan0: associate with AP 00:19:5b:ba:53:b7
-[17460.534523] wlan0: RX AssocResp from 00:19:5b:ba:53:b7 (capab=0x431
-status=0 aid=2)
-[17460.534533] wlan0: associated
-[17460.541523] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[17471.476059] wlan0: no IPv6 routers present
-[17821.193753] wlan0: deauthenticated
-[17823.550303] iwlagn 0000:0c:00.0: PCI INT A disabled
-[17823.612978] iwlagn 0000:0c:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-[17823.613110] iwlagn 0000:0c:00.0: restoring config space at offset
-0x1 (was 0x100102, writing 0x100106)
-[17823.812945] Registered led device: iwl-phy0:radio
-[17823.812995] Registered led device: iwl-phy0:assoc
-[17823.813048] Registered led device: iwl-phy0:RX
-[17823.813085] Registered led device: iwl-phy0:TX
-[17823.823450] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[17827.380770] wlan0: authenticate with AP 00:19:5b:ba:53:b7
-[17827.382603] wlan0: authenticated
-[17827.382613] wlan0: associate with AP 00:19:5b:ba:53:b7
-[17827.581037] wlan0: associate with AP 00:19:5b:ba:53:b7
-[17827.583418] wlan0: RX AssocResp from 00:19:5b:ba:53:b7 (capab=0x431
-status=0 aid=2)
-[17827.583429] wlan0: associated
-[17827.591080] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[17838.392089] wlan0: no IPv6 routers present
+This patch adds signal strength and transmission bitrate
+to the station_info of nl80211.
 
-Prevois kernels panicked in this place, see description and photo at
-http://patrakov.blogspot.com/2008/09/kernel-panic.html
+Signed-off-by: Henning Rogge <rogge@fgan.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+=2D--
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 04d4516..7501acf 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -425,6 +425,32 @@ enum nl80211_sta_flags {
+ };
+=20
+ /**
++ * enum nl80211_rate_info - bitrate information
++ *
++ * These attribute types are used with %NL80211_STA_INFO_TXRATE
++ * when getting information about the bitrate of a station.
++ *
++ * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
++ * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
++ * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
++ * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
++ * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
++ * @NL80211_RATE_INFO_MAX: highest rate_info number currently defined
++ * @__NL80211_RATE_INFO_AFTER_LAST: internal use
++ */
++enum nl80211_rate_info {
++	__NL80211_RATE_INFO_INVALID,
++	NL80211_RATE_INFO_BITRATE,
++	NL80211_RATE_INFO_MCS,
++	NL80211_RATE_INFO_40_MHZ_WIDTH,
++	NL80211_RATE_INFO_SHORT_GI,
++
++	/* keep last */
++	__NL80211_RATE_INFO_AFTER_LAST,
++	NL80211_RATE_INFO_MAX =3D __NL80211_RATE_INFO_AFTER_LAST - 1
++};
++
++/**
+  * enum nl80211_sta_info - station information
+  *
+  * These attribute types are used with %NL80211_ATTR_STA_INFO
+@@ -436,6 +462,9 @@ enum nl80211_sta_flags {
+  * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this stati=
+on)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
++ * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dB=
+m)
++ * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
++ * 	containing info as possible, see &enum nl80211_sta_info_txrate.
+  */
+ enum nl80211_sta_info {
+ 	__NL80211_STA_INFO_INVALID,
+@@ -445,6 +474,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_LLID,
+ 	NL80211_STA_INFO_PLID,
+ 	NL80211_STA_INFO_PLINK_STATE,
++	NL80211_STA_INFO_SIGNAL,
++	NL80211_STA_INFO_TX_BITRATE,
+=20
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a0c0bf1..65e03ac 100644
+=2D-- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -169,6 +169,9 @@ struct station_parameters {
+  * @STATION_INFO_LLID: @llid filled
+  * @STATION_INFO_PLID: @plid filled
+  * @STATION_INFO_PLINK_STATE: @plink_state filled
++ * @STATION_INFO_SIGNAL: @signal filled
++ * @STATION_INFO_TX_BITRATE: @tx_bitrate fields are filled
++ *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	=3D 1<<0,
+@@ -177,6 +180,39 @@ enum station_info_flags {
+ 	STATION_INFO_LLID		=3D 1<<3,
+ 	STATION_INFO_PLID		=3D 1<<4,
+ 	STATION_INFO_PLINK_STATE	=3D 1<<5,
++	STATION_INFO_SIGNAL		=3D 1<<6,
++	STATION_INFO_TX_BITRATE		=3D 1<<7,
++};
++
++/**
++ * enum station_info_rate_flags - bitrate info flags
++ *
++ * Used by the driver to indicate the specific rate transmission
++ * type for 802.11n transmissions.
++ *
++ * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
++ * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
++ * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
++ */
++enum rate_info_flags {
++	RATE_INFO_FLAGS_MCS		=3D 1<<0,
++	RATE_INFO_FLAGS_40_MHZ_WIDTH	=3D 1<<1,
++	RATE_INFO_FLAGS_SHORT_GI	=3D 1<<2,
++};
++
++/**
++ * struct rate_info - bitrate information
++ *
++ * Information about a receiving or transmitting bitrate
++ *
++ * @flags: bitflag of flags from &enum rate_info_flags
++ * @mcs: mcs index if struct describes a 802.11n bitrate
++ * @legacy: bitrate in 100kbit/s for 802.11abg
++ */
++struct rate_info {
++	u8 flags;
++	u8 mcs;
++	u16 legacy;
+ };
+=20
+ /**
+@@ -191,6 +227,8 @@ enum station_info_flags {
+  * @llid: mesh local link id
+  * @plid: mesh peer link id
+  * @plink_state: mesh peer link state
++ * @signal: signal strength of last received packet in dBm
++ * @txrate: current unicast bitrate to this station
+  */
+ struct station_info {
+ 	u32 filled;
+@@ -200,6 +238,8 @@ struct station_info {
+ 	u16 llid;
+ 	u16 plid;
+ 	u8 plink_state;
++	s8 signal;
++	struct rate_info txrate;
+ };
+=20
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7912eb1..23b5eea 100644
+=2D-- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -310,12 +310,35 @@ static void sta_set_sinfo(struct sta_info *sta, struc=
+t=20
+station_info *sinfo)
+=20
+ 	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+=2D			STATION_INFO_TX_BYTES;
++			STATION_INFO_TX_BYTES |
++			STATION_INFO_TX_BITRATE;
+=20
+ 	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes =3D sta->rx_bytes;
+ 	sinfo->tx_bytes =3D sta->tx_bytes;
+=20
++	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
++		sinfo->filled |=3D STATION_INFO_SIGNAL;
++		sinfo->signal =3D (s8)sta->last_signal;
++	}
++
++	sinfo->txrate.flags =3D 0;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_MCS;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_SHORT_GI;
++
++	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)) {
++		struct ieee80211_supported_band *sband;
++		sband =3D sta->local->hw.wiphy->bands[
++				sta->local->hw.conf.channel->band];
++		sinfo->txrate.legacy =3D
++			sband->bitrates[sta->last_tx_rate.idx].bitrate;
++	} else
++		sinfo->txrate.mcs =3D sta->last_tx_rate.idx;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |=3D STATION_INFO_LLID |
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4335f76..93c9b98 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1091,12 +1091,46 @@ static int parse_station_flags(struct nlattr *nla, =
+u32=20
+*staflags)
+ 	return 0;
+ }
+=20
++static u16 nl80211_calculate_bitrate(struct rate_info *rate)
++{
++	int modulation, streams, bitrate;
++
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
++		return rate->legacy;
++
++	/* the formula below does only work for MCS values smaller than 32 */
++	if (rate->mcs >=3D 32)
++		return 0;
++
++	modulation =3D rate->mcs & 7;
++	streams =3D (rate->mcs >> 3) + 1;
++
++	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
++			13500000 : 6500000;
++
++	if (modulation < 4)
++		bitrate *=3D (modulation + 1);
++	else if (modulation =3D=3D 4)
++		bitrate *=3D (modulation + 2);
++	else
++		bitrate *=3D (modulation + 3);
++
++	bitrate *=3D streams;
++
++	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
++		bitrate =3D (bitrate / 9) * 10;
++
++	/* do NOT round down here */
++	return (bitrate + 50000) / 100000;
++}
++
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+ 				u8 *mac_addr, struct station_info *sinfo)
+ {
+ 	void *hdr;
+=2D	struct nlattr *sinfoattr;
++	struct nlattr *sinfoattr, *txrate;
++	u16 bitrate;
+=20
+ 	hdr =3D nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_STATION);
+ 	if (!hdr)
+@@ -1126,7 +1160,29 @@ static int nl80211_send_station(struct sk_buff *msg,=
+=20
+u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
++	if (sinfo->filled & STATION_INFO_SIGNAL)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
++			   sinfo->signal);
++	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
++		txrate =3D nla_nest_start(msg, NL80211_STA_INFO_TX_BITRATE);
++		if (!txrate)
++			goto nla_put_failure;
++
++		/* nl80211_calculate_bitrate will return 0 for mcs >=3D 32 */
++		bitrate =3D nl80211_calculate_bitrate(&sinfo->txrate);
++		if (bitrate > 0)
++			NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE, bitrate);
+=20
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
++			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
++				    sinfo->txrate.mcs);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_SHORT_GI);
++
++		nla_nest_end(msg, txrate);
++	}
+ 	nla_nest_end(msg, sinfoattr);
+=20
+ 	return genlmsg_end(msg, hdr);
 
-The messages about "PCI INT A" are still a problem, because at this
-time, the audio loops and the mouse is unresponsive (i.e., the system
-locks up for a brief period of time, but eventually recovers). Here is
-/proc/interrupts:
 
-          CPU0       CPU1
- 0:    2600610    2598665   IO-APIC-edge      timer
- 1:        173        181   IO-APIC-edge      i8042
- 3:          1          1   IO-APIC-edge
- 4:          1          1   IO-APIC-edge
- 7:          0          0   IO-APIC-edge      parport0
- 8:         42         32   IO-APIC-edge      rtc0
- 9:       2229       2204   IO-APIC-fasteoi   acpi
- 12:         72         66   IO-APIC-edge      i8042
- 14:      92707      91972   IO-APIC-edge      ata_piix
- 15:          0          0   IO-APIC-edge      ata_piix
- 16:        255        247   IO-APIC-fasteoi   firewire_ohci, yenta,
-i915@pci:0000:00:02.0
- 21:     357656     360896   IO-APIC-fasteoi   HDA Intel
- 22:        110         97   IO-APIC-fasteoi   uhci_hcd:usb1,
-uhci_hcd:usb2, uhci_hcd:usb4, uhci_hcd:usb5, uhci_hcd:usb6
- 23:      70327      69245   IO-APIC-fasteoi   ehci_hcd:usb3, ehci_hcd:usb7
-219:     126299     126470   PCI-MSI-edge      iwlagn
-220:      29297      29382   PCI-MSI-edge      eth0
-221:      41694      41968   PCI-MSI-edge      ahci
-NMI:          0          0   Non-maskable interrupts
-LOC:    1584309    2655947   Local timer interrupts
-RES:     461218     469590   Rescheduling interrupts
-CAL:        987      67106   function call interrupts
-TLB:        987       1027   TLB shootdowns
-TRM:          0          0   Thermal event interrupts
-SPU:          0          0   Spurious interrupts
-ERR:          0
-MIS:          0
+--Boundary-01=_pQXQJ6dRBhZIuc4
+Content-Type: text/x-patch;
+  charset="ISO-8859-15";
+  name="nl80211ext_v14.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="nl80211ext_v14.patch"
 
-Here is lspci && lspci -n:
+This patch adds signal strength and transmission bitrate
+to the station_info of nl80211.
 
-00:00.0 Host bridge: Intel Corporation Mobile PM965/GM965/GL960 Memory
-Controller Hub (rev 03)
-00:02.0 VGA compatible controller: Intel Corporation Mobile
-GM965/GL960 Integrated Graphics Controller (rev 03)
-00:02.1 Display controller: Intel Corporation Mobile GM965/GL960
-Integrated Graphics Controller (rev 03)
-00:1a.0 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
-UHCI Controller #4 (rev 03)
-00:1a.1 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
-UHCI Controller #5 (rev 03)
-00:1a.7 USB Controller: Intel Corporation 82801H (ICH8 Family) USB2
-EHCI Controller #2 (rev 03)
-00:1b.0 Audio device: Intel Corporation 82801H (ICH8 Family) HD Audio
-Controller (rev 03)
-00:1c.0 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express
-Port 1 (rev 03)
-00:1c.2 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express
-Port 3 (rev 03)
-00:1d.0 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
-UHCI Controller #1 (rev 03)
-00:1d.1 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
-UHCI Controller #2 (rev 03)
-00:1d.2 USB Controller: Intel Corporation 82801H (ICH8 Family) USB
-UHCI Controller #3 (rev 03)
-00:1d.7 USB Controller: Intel Corporation 82801H (ICH8 Family) USB2
-EHCI Controller #1 (rev 03)
-00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev f3)
-00:1f.0 ISA bridge: Intel Corporation 82801HEM (ICH8M) LPC Interface
-Controller (rev 03)
-00:1f.1 IDE interface: Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E)
-IDE Controller (rev 03)
-00:1f.2 SATA controller: Intel Corporation 82801HBM/HEM
-(ICH8M/ICH8M-E) SATA AHCI Controller (rev 03)
-00:1f.3 SMBus: Intel Corporation 82801H (ICH8 Family) SMBus Controller (rev 03)
-04:00.0 Ethernet controller: Marvell Technology Group Ltd. 88E8055
-PCI-E Gigabit Ethernet Controller (rev 14)
-0c:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or
-AGN [Kedron] Network Connection (rev 61)
-1c:03.0 CardBus bridge: O2 Micro, Inc. OZ711SP1 Memory CardBus
-Controller (rev 01)
-1c:03.2 SD Host controller: O2 Micro, Inc. Integrated MMC/SD Controller (rev 02)
-1c:03.3 Mass storage controller: O2 Micro, Inc. Integrated MS/xD
-Controller (rev 01)
-1c:03.4 FireWire (IEEE 1394): O2 Micro, Inc. Firewire (IEEE 1394) (rev 02)
-00:00.0 0600: 8086:2a00 (rev 03)
-00:02.0 0300: 8086:2a02 (rev 03)
-00:02.1 0380: 8086:2a03 (rev 03)
-00:1a.0 0c03: 8086:2834 (rev 03)
-00:1a.1 0c03: 8086:2835 (rev 03)
-00:1a.7 0c03: 8086:283a (rev 03)
-00:1b.0 0403: 8086:284b (rev 03)
-00:1c.0 0604: 8086:283f (rev 03)
-00:1c.2 0604: 8086:2843 (rev 03)
-00:1d.0 0c03: 8086:2830 (rev 03)
-00:1d.1 0c03: 8086:2831 (rev 03)
-00:1d.2 0c03: 8086:2832 (rev 03)
-00:1d.7 0c03: 8086:2836 (rev 03)
-00:1e.0 0604: 8086:2448 (rev f3)
-00:1f.0 0601: 8086:2815 (rev 03)
-00:1f.1 0101: 8086:2850 (rev 03)
-00:1f.2 0106: 8086:2829 (rev 03)
-00:1f.3 0c05: 8086:283e (rev 03)
-04:00.0 0200: 11ab:4363 (rev 14)
-0c:00.0 0280: 8086:4229 (rev 61)
-1c:03.0 0607: 1217:7136 (rev 01)
-1c:03.2 0805: 1217:7120 (rev 02)
-1c:03.3 0180: 1217:7130 (rev 01)
-1c:03.4 0c00: 1217:00f7 (rev 02)
+Signed-off-by: Henning Rogge <rogge@fgan.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+=2D--
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 04d4516..7501acf 100644
+=2D-- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -425,6 +425,32 @@ enum nl80211_sta_flags {
+ };
+=20
+ /**
++ * enum nl80211_rate_info - bitrate information
++ *
++ * These attribute types are used with %NL80211_STA_INFO_TXRATE
++ * when getting information about the bitrate of a station.
++ *
++ * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
++ * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
++ * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
++ * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
++ * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
++ * @NL80211_RATE_INFO_MAX: highest rate_info number currently defined
++ * @__NL80211_RATE_INFO_AFTER_LAST: internal use
++ */
++enum nl80211_rate_info {
++	__NL80211_RATE_INFO_INVALID,
++	NL80211_RATE_INFO_BITRATE,
++	NL80211_RATE_INFO_MCS,
++	NL80211_RATE_INFO_40_MHZ_WIDTH,
++	NL80211_RATE_INFO_SHORT_GI,
++
++	/* keep last */
++	__NL80211_RATE_INFO_AFTER_LAST,
++	NL80211_RATE_INFO_MAX =3D __NL80211_RATE_INFO_AFTER_LAST - 1
++};
++
++/**
+  * enum nl80211_sta_info - station information
+  *
+  * These attribute types are used with %NL80211_ATTR_STA_INFO
+@@ -436,6 +462,9 @@ enum nl80211_sta_flags {
+  * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this stati=
+on)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
++ * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dB=
+m)
++ * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
++ * 	containing info as possible, see &enum nl80211_sta_info_txrate.
+  */
+ enum nl80211_sta_info {
+ 	__NL80211_STA_INFO_INVALID,
+@@ -445,6 +474,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_LLID,
+ 	NL80211_STA_INFO_PLID,
+ 	NL80211_STA_INFO_PLINK_STATE,
++	NL80211_STA_INFO_SIGNAL,
++	NL80211_STA_INFO_TX_BITRATE,
+=20
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a0c0bf1..65e03ac 100644
+=2D-- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -169,6 +169,9 @@ struct station_parameters {
+  * @STATION_INFO_LLID: @llid filled
+  * @STATION_INFO_PLID: @plid filled
+  * @STATION_INFO_PLINK_STATE: @plink_state filled
++ * @STATION_INFO_SIGNAL: @signal filled
++ * @STATION_INFO_TX_BITRATE: @tx_bitrate fields are filled
++ *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	=3D 1<<0,
+@@ -177,6 +180,39 @@ enum station_info_flags {
+ 	STATION_INFO_LLID		=3D 1<<3,
+ 	STATION_INFO_PLID		=3D 1<<4,
+ 	STATION_INFO_PLINK_STATE	=3D 1<<5,
++	STATION_INFO_SIGNAL		=3D 1<<6,
++	STATION_INFO_TX_BITRATE		=3D 1<<7,
++};
++
++/**
++ * enum station_info_rate_flags - bitrate info flags
++ *
++ * Used by the driver to indicate the specific rate transmission
++ * type for 802.11n transmissions.
++ *
++ * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
++ * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
++ * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
++ */
++enum rate_info_flags {
++	RATE_INFO_FLAGS_MCS		=3D 1<<0,
++	RATE_INFO_FLAGS_40_MHZ_WIDTH	=3D 1<<1,
++	RATE_INFO_FLAGS_SHORT_GI	=3D 1<<2,
++};
++
++/**
++ * struct rate_info - bitrate information
++ *
++ * Information about a receiving or transmitting bitrate
++ *
++ * @flags: bitflag of flags from &enum rate_info_flags
++ * @mcs: mcs index if struct describes a 802.11n bitrate
++ * @legacy: bitrate in 100kbit/s for 802.11abg
++ */
++struct rate_info {
++	u8 flags;
++	u8 mcs;
++	u16 legacy;
+ };
+=20
+ /**
+@@ -191,6 +227,8 @@ enum station_info_flags {
+  * @llid: mesh local link id
+  * @plid: mesh peer link id
+  * @plink_state: mesh peer link state
++ * @signal: signal strength of last received packet in dBm
++ * @txrate: current unicast bitrate to this station
+  */
+ struct station_info {
+ 	u32 filled;
+@@ -200,6 +238,8 @@ struct station_info {
+ 	u16 llid;
+ 	u16 plid;
+ 	u8 plink_state;
++	s8 signal;
++	struct rate_info txrate;
+ };
+=20
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7912eb1..23b5eea 100644
+=2D-- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -310,12 +310,35 @@ static void sta_set_sinfo(struct sta_info *sta, struc=
+t station_info *sinfo)
+=20
+ 	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+=2D			STATION_INFO_TX_BYTES;
++			STATION_INFO_TX_BYTES |
++			STATION_INFO_TX_BITRATE;
+=20
+ 	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes =3D sta->rx_bytes;
+ 	sinfo->tx_bytes =3D sta->tx_bytes;
+=20
++	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
++		sinfo->filled |=3D STATION_INFO_SIGNAL;
++		sinfo->signal =3D (s8)sta->last_signal;
++	}
++
++	sinfo->txrate.flags =3D 0;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_MCS;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
++		sinfo->txrate.flags |=3D RATE_INFO_FLAGS_SHORT_GI;
++
++	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)) {
++		struct ieee80211_supported_band *sband;
++		sband =3D sta->local->hw.wiphy->bands[
++				sta->local->hw.conf.channel->band];
++		sinfo->txrate.legacy =3D
++			sband->bitrates[sta->last_tx_rate.idx].bitrate;
++	} else
++		sinfo->txrate.mcs =3D sta->last_tx_rate.idx;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |=3D STATION_INFO_LLID |
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4335f76..93c9b98 100644
+=2D-- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1091,12 +1091,46 @@ static int parse_station_flags(struct nlattr *nla, =
+u32 *staflags)
+ 	return 0;
+ }
+=20
++static u16 nl80211_calculate_bitrate(struct rate_info *rate)
++{
++	int modulation, streams, bitrate;
++
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
++		return rate->legacy;
++
++	/* the formula below does only work for MCS values smaller than 32 */
++	if (rate->mcs >=3D 32)
++		return 0;
++
++	modulation =3D rate->mcs & 7;
++	streams =3D (rate->mcs >> 3) + 1;
++
++	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
++			13500000 : 6500000;
++
++	if (modulation < 4)
++		bitrate *=3D (modulation + 1);
++	else if (modulation =3D=3D 4)
++		bitrate *=3D (modulation + 2);
++	else
++		bitrate *=3D (modulation + 3);
++
++	bitrate *=3D streams;
++
++	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
++		bitrate =3D (bitrate / 9) * 10;
++
++	/* do NOT round down here */
++	return (bitrate + 50000) / 100000;
++}
++
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+ 				u8 *mac_addr, struct station_info *sinfo)
+ {
+ 	void *hdr;
+=2D	struct nlattr *sinfoattr;
++	struct nlattr *sinfoattr, *txrate;
++	u16 bitrate;
+=20
+ 	hdr =3D nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_STATION);
+ 	if (!hdr)
+@@ -1126,7 +1160,29 @@ static int nl80211_send_station(struct sk_buff *msg,=
+ u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
++	if (sinfo->filled & STATION_INFO_SIGNAL)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
++			   sinfo->signal);
++	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
++		txrate =3D nla_nest_start(msg, NL80211_STA_INFO_TX_BITRATE);
++		if (!txrate)
++			goto nla_put_failure;
++
++		/* nl80211_calculate_bitrate will return 0 for mcs >=3D 32 */
++		bitrate =3D nl80211_calculate_bitrate(&sinfo->txrate);
++		if (bitrate > 0)
++			NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE, bitrate);
+=20
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
++			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
++				    sinfo->txrate.mcs);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
++		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
++			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_SHORT_GI);
++
++		nla_nest_end(msg, txrate);
++	}
+ 	nla_nest_end(msg, sinfoattr);
+=20
+ 	return genlmsg_end(msg, hdr);
 
-Here is /proc/cmdline (nomsi is needed in order to work around the
-erratum in the GM965 graphics chipset without upgrading the driver).
+--Boundary-01=_pQXQJ6dRBhZIuc4--
 
-root=/dev/mapper/aep-root ro nomsi quiet resume=/dev/mapper/aep-swap_1
+--nextPart2358216.fFn3XW4F9j
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-If more information is needed, just ask.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
---
-Alexander E. Patrakov
+iEYEABECAAYFAklBdC4ACgkQcenvcwAcHWc3ygCcDQWs+nCAVmPOSrpeRcGq6WhS
+EBEAniKew9E1cbV+xn6mCjMZU1EliNaW
+=UZdO
+-----END PGP SIGNATURE-----
+
+--nextPart2358216.fFn3XW4F9j--
