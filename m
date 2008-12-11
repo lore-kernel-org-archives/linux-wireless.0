@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:58318 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751276AbYLQVzJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 16:55:09 -0500
-Message-ID: <4949753B.9000505@lwfinger.net> (sfid-20081217_225513_653467_9B2F2518)
-Date: Wed, 17 Dec 2008 15:55:07 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: p54usb problems
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:18207 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756330AbYLKRNM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 12:13:12 -0500
+Subject: Re: iwlagn interrupt problem
+From: reinette chatre <reinette.chatre@intel.com>
+To: "Alexander E. Patrakov" <patrakov@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <c072ca310812110548s64612ac7icd6e9187aa4af75a@mail.gmail.com>
+References: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com>
+	 <c072ca310812100710o58c38a27rba16ad2318a1cb95@mail.gmail.com>
+	 <1228929548.18730.21.camel@rc-desk>
+	 <c072ca310812110548s64612ac7icd6e9187aa4af75a@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 11 Dec 2008 09:14:15 -0800
+Message-Id: <1229015655.18730.210.camel@rc-desk> (sfid-20081211_181316_576745_4B60602D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian,
+On Thu, 2008-12-11 at 05:48 -0800, Alexander E. Patrakov wrote:
+> 2008/12/10 reinette chatre <reinette.chatre@intel.com>:
+> > The unresponsiveness is due to a bug that was fixed recently. The
+> > patches have been merged into wireless-testing repo and will be included
+> > in 2.6.29. If you want to try
+> > the individual patches, please try:
+> > http://marc.info/?l=linux-wireless&m=122824886623698&w=2
+> > http://marc.info/?l=linux-wireless&m=122849275528102&w=2
+> 
+> These individual patches don't apply to 2.6.27.6, so I installed
+> today's compat-wireless-2.6, and it seems to work. Thanks!
+> 
+> OTOH, are these patches a material for backporting into -stable?
 
-As you may have seen, one of my failed p54usb runs hit a WARN_ON in mac80211 due
-to a faulty pkt_type in the skb. Johannes thinks this is most likely caused by
-memory corruption. When I looked at the RX callback, I don't see any locking. Is
-that correct?
+We are not planning to do so, but you are welcome to.
 
-On a different run, I had a failure to allocate a new skb because there was not
-a free memory chunk of order(1). When I hit that, I remembered your suggestion
-for reducing rx_mtu to keep the skb of order(0). What is your reaction to the
-following patch? On my x86_64 system, the message that prints is "p54:
-Calculated rx_mtu of 3240 reduced to 2356".
-
-I have not hit the frame control patch you sent, at least not yet.
-
-Larry
-
-
-Index: wireless-testing/drivers/net/wireless/p54/p54common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54common.c
-+++ wireless-testing/drivers/net/wireless/p54/p54common.c
-@@ -195,6 +195,11 @@ int p54_parse_firmware(struct ieee80211_
- 			else
- 				priv->rx_mtu = (size_t)
- 					0x620 - priv->tx_hdr_len;
-+			if (priv->rx_mtu > 2356 && PAGE_SIZE == 4096) {
-+				printk(KERN_INFO "p54: Calculated rx_mtu of %d"
-+				       " reduced to 2356\n", priv->rx_mtu);
-+				priv->rx_mtu = 2356;
-+			}
- 			break;
- 			}
- 		case BR_CODE_EXPOSED_IF:
+Reinette
 
