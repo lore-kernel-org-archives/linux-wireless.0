@@ -1,122 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:44598 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752337AbYLZBAk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Dec 2008 20:00:40 -0500
-Subject: Re: 4965AGN Not Associating
-From: Pavel Roskin <proski@gnu.org>
-To: Delphi Real Estate <Info@delphi-real-estate.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200812241002.12787.Info@delphi-real-estate.com>
-References: <200812241002.12787.Info@delphi-real-estate.com>
-Content-Type: text/plain
-Date: Thu, 25 Dec 2008 20:00:38 -0500
-Message-Id: <1230253238.17014.18.camel@dv> (sfid-20081226_020044_417131_99CE09C1)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.239]:11277 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755417AbYLKMA0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 07:00:26 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so853762rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 04:00:25 -0800 (PST)
+Message-ID: <eb3ff54b0812110400y2305c5abp9955a325b3372215@mail.gmail.com> (sfid-20081211_130029_330475_C5AE4BDD)
+Date: Thu, 11 Dec 2008 14:00:25 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH 1/2] mac80211: misc cleanups
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-24 at 10:02 -0800, Delphi Real Estate wrote:
-> I was running the iwl4965 git driver successfully from 6 June up until
-> two days ago, when I decided to be a smart-aleck and try to get
-> 802.11n working.  After two 12 hour days of struggle, I now have no
-> wifi.
-> 
-> Running Kubuntu Hardy and typically compile a custom kernel.  First I
-> downloaded and compiled compat-wireless-old.tar.bz2 and compiled it to
-> my kernel 2.6.24.  Driver loaded fine and the wlan0 interface came up,
-> but would no longer associate as the old driver did.  Rebooted, but a
-> second or so after the blue wireless light came on, the kernel crashed
-> with an Aieeee!  No way to see exactly where or why, as it'd scrolled
-> off the screen and there's nothing in the logs.
+This patch removes unneeded member (skbuff) from
+ieee80211_ibss_add_sta() method in its declaration (in ieee80211_i.h)
+and its callers (in rx.c and mlme.c)
 
-Capturing kernel messages is described in Documentation/oops-tracing.txt
-in the kernel sources.
+(wireless-testing).
 
-> So I tried just compiling kernels 2.6.27 and .28 to test their iwlagn
-> functionality, but unfortunately no version of .27 or .28 will compile
-> on my laptop.  .27 does compile on my HTPC, but not where it counts:
->   OFFSETS arch/x86/boot/offsets.h
->   OBJCOPY arch/x86/boot/vmlinux.bin
->   AS      arch/x86/boot/header.o
->   LD      arch/x86/boot/setup.elf
->   OBJCOPY arch/x86/boot/setup.bin
->   BUILD   arch/x86/boot/bzImage
-> Root device is (8, 1)
-> Setup is 11916 bytes (padded to 12288 bytes).
-> System is 2904 kB
-> CRC 30db084d
-> Kernel: arch/x86/boot/bzImage is ready  (#1)
-> ERROR: "snd_hwdep_new" [ubuntu/misc/media/snd-bt-sco.ko] undefined!
-> WARNING: modpost: Found 4 section mismatch(es).
-> To see full details build your kernel with:
-> 'make CONFIG_DEBUG_SECTION_MISMATCH=y'
-> make[1]: *** [__modpost] Error 1
-> make: *** [modules] Error 2
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-You must be compiling kernel sources patched by Ubuntu.  There is an
-unresolved symbol in on of the sound driver provided by Ubuntu.  You can
-disable that driver or enable sound option that would provide
-"snd_hwdep_new".  I think you can even ignore this error.  It should not
-prevent wireless drivers from working.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 527205f..a3858e7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -864,8 +864,7 @@ int ieee80211_sta_set_bssid(struct
+ieee80211_sub_if_data *sdata, u8 *bssid);
+ void ieee80211_sta_req_auth(struct ieee80211_sub_if_data *sdata,
+ 			    struct ieee80211_if_sta *ifsta);
+ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+-					struct sk_buff *skb, u8 *bssid,
+-					u8 *addr, u64 supp_rates);
++					u8 *bssid, u8 *addr, u64 supp_rates);
+ int ieee80211_sta_deauthenticate(struct ieee80211_sub_if_data *sdata,
+u16 reason);
+ int ieee80211_sta_disassociate(struct ieee80211_sub_if_data *sdata,
+u16 reason);
+ u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 07b0cc3..98e03e3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1580,8 +1580,7 @@ static void ieee80211_rx_bss_info(struct
+ieee80211_sub_if_data *sdata,
+ 				    (unsigned long long) sta->sta.supp_rates[band]);
+ #endif
+ 		} else {
+-			ieee80211_ibss_add_sta(sdata, NULL, mgmt->bssid,
+-					       mgmt->sa, supp_rates);
++			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, supp_rates);
+ 		}
 
-> So I gave up on a new kernel and compiled 2.6.22, booted, and compiled
-> compat-wireless-old.tar.bz2 to it, which went fine.
+ 		rcu_read_unlock();
+@@ -1654,9 +1653,7 @@ static void ieee80211_rx_bss_info(struct
+ieee80211_sub_if_data *sdata,
+ 			       sdata->dev->name, print_mac(mac, mgmt->bssid));
+ #endif
+ 			ieee80211_sta_join_ibss(sdata, &sdata->u.sta, bss);
+-			ieee80211_ibss_add_sta(sdata, NULL,
+-					       mgmt->bssid, mgmt->sa,
+-					       supp_rates);
++			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, supp_rates);
+ 		}
+ 	}
 
-IMHO it's a major overkill to downgrade the kernel so much because of
-some external sound module, especially when the userspace is not exactly
-conservative!
-
->   I even get a blue light for the radio switch now.  But it will not
-> associate.  I am using the exact same interfaces file as before.  I
-> tried network manager, but it doesn't even recognize this as a
-> wireless device.
-> 
->  # iwconfig
-> wlan0     IEEE 802.11abgn  ESSID:"Hex"
->           Mode:Managed  Frequency:2.462 GHz  Access Point: Not-Associated
->           Tx-Power=14 dBm
->           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
->           Encryption key:off
-
-It looks like WPA is not being used.
-
->           Power Management:off
->           Link Quality:0  Signal level:0  Noise level:0
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-> 
-> # iwpriv
-> wlan0     no private ioctls.
-> 
-> # iwpriv wlan0 network_type g
-> wlan0     no private ioctls.
-
-I don't think it's supposed to work.
-
-> # iwlist wlan0 auth
-> wlan0     Authentication capabilities :
->                 WPA
->                 WPA2
->                 CIPHER-TKIP
->                 CIPHER-CCMP
->           Current Authentication algorithm :
->                 open
-> 
-> So for some reason it is not recognizing my WPA commands
-> in /etc/network/interfaces (which worked before).  Or maybe it's in
-> 'n' or 'a' mode, rather than g.  I've searched everywhere and can not
-> find how to set it to g mode now that it has no private ioctls.
-
-I don't think you need to do anything like that.  Try scanning to see if
-the card sees the AP.
-
-I don't know much about Ubuntu (or Debian) specific network
-configuration, but I suggest that you try running wpa_supplicant
-manually.  Upgrading to a recent kernel may help too.  If you want to
-try the bleeding edge 802.11n support, perhaps you should check out the
-wireless-testing branch from git.
-
--- 
-Regards,
-Pavel Roskin
+@@ -2399,8 +2396,7 @@ void ieee80211_sta_setup_sdata(struct
+ieee80211_sub_if_data *sdata)
+  * must be callable in atomic context.
+  */
+ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+-					struct sk_buff *skb, u8 *bssid,
+-					u8 *addr, u64 supp_rates)
++					u8 *bssid,u8 *addr, u64 supp_rates)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 59f356a..3d931a8 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1864,9 +1864,8 @@ static int prepare_for_handlers(struct
+ieee80211_sub_if_data *sdata,
+ 				return 0;
+ 			rx->flags &= ~IEEE80211_RX_RA_MATCH;
+ 		} else if (!rx->sta)
+-			rx->sta = ieee80211_ibss_add_sta(sdata, rx->skb,
+-						bssid, hdr->addr2,
+-						BIT(rx->status->rate_idx));
++			rx->sta = ieee80211_ibss_add_sta(sdata, bssid, hdr->addr2,
++				BIT(rx->status->rate_idx));
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		if (!multicast &&
