@@ -1,61 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25125 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:19329 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751983AbYLVSU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 13:20:58 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:20:58 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v2 05/18] wireless: allow for private channel area
-Date: Mon, 22 Dec 2008 10:20:26 -0800
-Message-ID: <1229970039-10561-6-git-send-email-lrodriguez@atheros.com> (sfid-20081222_192101_399448_1D6FAB89)
-In-Reply-To: <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
-References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-4-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755765AbYLKScp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 13:32:45 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/6] iwlwifi: remove includes of iwl-helpers.h where not needed
+Date: Thu, 11 Dec 2008 10:33:39 -0800
+Message-Id: <1229020421-4823-5-git-send-email-reinette.chatre@intel.com> (sfid-20081211_193251_860602_BECEFAC2)
+In-Reply-To: <1229020421-4823-4-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1229020421-4823-1-git-send-email-reinette.chatre@intel.com>
+ <1229020421-4823-2-git-send-email-reinette.chatre@intel.com>
+ <1229020421-4823-3-git-send-email-reinette.chatre@intel.com>
+ <1229020421-4823-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless drivers tend to require calibration or noise floor
-checks. Some of these operations are channel specific. Instead
-of forcing each driver to keep a separate map for these values
-per channel allow for a private area on the ieee80211_channel to
-reduce code overhead and size.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+This patch removes includes of iwl-helpers.h where not needed
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- include/net/wireless.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |    1 -
+ drivers/net/wireless/iwlwifi/iwl-dev.h     |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-helpers.h |    2 --
+ drivers/net/wireless/iwlwifi/iwl-led.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-power.c   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-rfkill.c  |    2 --
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    2 --
+ 7 files changed, 4 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index aedefa5..ecb5cf1 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -71,6 +71,8 @@ enum ieee80211_channel_flags {
-  * @max_power: maximum transmission power (in dBm)
-  * @orig_mag: internal use
-  * @orig_mpwr: internal use
-+ * @priv: used by the driver for any of its own needs,
-+ * 	could be used for example for calibration data.
-  */
- struct ieee80211_channel {
- 	enum ieee80211_band band;
-@@ -82,6 +84,7 @@ struct ieee80211_channel {
- 	int max_power;
- 	u32 orig_flags;
- 	int orig_mag, orig_mpwr;
-+	void *priv;
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 1fdf5f4..025fb78 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -38,7 +38,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-sta.h"
+ #include "iwl-core.h"
+-#include "iwl-helpers.h"
  
+ #define RS_NAME "iwl-agn-rs"
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index a520e47..664a983 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -498,6 +498,10 @@ struct iwl_sensitivity_ranges {
+ 
+ #define IWL_FAT_CHANNEL_52 BIT(IEEE80211_BAND_5GHZ)
+ 
++#define KELVIN_TO_CELSIUS(x) ((x)-273)
++#define CELSIUS_TO_KELVIN(x) ((x)+273)
++
++
  /**
+  * struct iwl_hw_params
+  * @max_txq_num: Max # Tx queues supported
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index d4d2829..ca4f638 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -32,8 +32,6 @@
+ 
+ #include <linux/ctype.h>
+ 
+-#define KELVIN_TO_CELSIUS(x) ((x)-273)
+-#define CELSIUS_TO_KELVIN(x) ((x)+273)
+ #define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
+ 
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index e8ce188..dce32ff 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -41,7 +41,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-helpers.h"
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ static const char *led_type_str[] = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index be8eb95..75ca6a5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -39,7 +39,6 @@
+ #include "iwl-commands.h"
+ #include "iwl-debug.h"
+ #include "iwl-power.h"
+-#include "iwl-helpers.h"
+ 
+ /*
+  * Setting power level allow the card to go to sleep when not busy
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+index 7894f2d..4b69da3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+@@ -34,8 +34,6 @@
+ #include "iwl-eeprom.h"
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+-#include "iwl-helpers.h"
+-
+ 
+ /* software rf-kill from user */
+ static int iwl_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 06e1808..91a1376 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -33,8 +33,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-sta.h"
+-#include "iwl-helpers.h"
+-
+ 
+ #define IWL_STA_DRIVER_ACTIVE BIT(0) /* driver entry is active */
+ #define IWL_STA_UCODE_ACTIVE  BIT(1) /* ucode entry is active */
 -- 
-1.6.1.rc3.51.g5832d
+1.5.4.3
 
