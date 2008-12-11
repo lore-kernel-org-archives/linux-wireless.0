@@ -1,295 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33262 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752591AbYLSCpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 21:45:15 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 18/43] iwl3945: include iwl-core.h
-Date: Fri, 19 Dec 2008 10:37:18 +0800
-Message-Id: <1229654263-21454-19-git-send-email-yi.zhu@intel.com> (sfid-20081219_034550_847478_99C41BAA)
-In-Reply-To: <1229654263-21454-18-git-send-email-yi.zhu@intel.com>
-References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-4-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-5-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-7-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-8-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-9-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-10-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-11-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-12-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-13-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-14-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-15-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-16-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-17-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-18-git-send-email-yi.zhu@intel.com>
+Received: from fg-out-1718.google.com ([72.14.220.157]:30081 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755480AbYLKNv3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 08:51:29 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so459936fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 05:51:27 -0800 (PST)
+Message-ID: <c6e12a010812110551o2ba3dc86j41cb911f13c2f12@mail.gmail.com> (sfid-20081211_145133_271892_26DF2ED9)
+Date: Thu, 11 Dec 2008 14:51:27 +0100
+From: "=?ISO-8859-1?Q?G=E1bor_Moln=E1r?=" <csirkus@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: rt2x00 vs hostapd
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
+Hi!
+I am not a developer, just an user, but i have a problem that has to
+be solved in a higher level than the rt2x00 driver or hostapd, maybe
+in the new common wifi stack.
 
-Use iwl-core.h instead of iwl-3945-core.h.
+So the problem: I wanted to use my rt73-based usb dongle as an AP,
+with hostapd. Therefore i checked out the rt2x00 git tree, and built a
+custom kernel, with the newest rt2x00 driver. Then i compiled the
+newest hostapd (v0.6.5) with nl80211 support. When i start the hostapd
+(with verbose debugging), it drops the following debug message:
+"wlan1: STA 00:14:a5:29:e0:98 IEEE 802.11: did not acknowledge
+association response". The client associates and everything seems to
+be fine, but when i try to send packages, ping or anything, the
+hostapd drops messages that say that the client reassociates and
+reassociates again, and it repeats. The problem like in this mail on
+the hostapd mailing list:
+http://readlist.com/lists/shmoo.com/hostap/1/5106.html .
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-core.h |  104 --------------------------
- drivers/net/wireless/iwlwifi/iwl-3945.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h      |   30 ++++++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c  |   52 +-------------
- 4 files changed, 32 insertions(+), 156 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-core.h
+The hostapd side of the story:
+The hostapd wants to receive an acknowledge of the association frames
+from the rt2x00 driver. They say that it must be handled by the
+driver.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-core.h b/drivers/net/wireless/iwlwifi/iwl-3945-core.h
-deleted file mode 100644
-index 6f46355..0000000
---- a/drivers/net/wireless/iwlwifi/iwl-3945-core.h
-+++ /dev/null
-@@ -1,104 +0,0 @@
--/******************************************************************************
-- *
-- * This file is provided under a dual BSD/GPLv2 license.  When using or
-- * redistributing this file, you may do so under either license.
-- *
-- * GPL LICENSE SUMMARY
-- *
-- * Copyright(c) 2008 Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-- *
-- * The full GNU General Public License is included in this distribution
-- * in the file called LICENSE.GPL.
-- *
-- * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-- *
-- * BSD LICENSE
-- *
-- * Copyright(c) 2005 - 2008 Intel Corporation. All rights reserved.
-- * All rights reserved.
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that the following conditions
-- * are met:
-- *
-- *  * Redistributions of source code must retain the above copyright
-- *    notice, this list of conditions and the following disclaimer.
-- *  * Redistributions in binary form must reproduce the above copyright
-- *    notice, this list of conditions and the following disclaimer in
-- *    the documentation and/or other materials provided with the
-- *    distribution.
-- *  * Neither the name Intel Corporation nor the names of its
-- *    contributors may be used to endorse or promote products derived
-- *    from this software without specific prior written permission.
-- *
-- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-- *****************************************************************************/
--
--#ifndef __iwl_3945_dev_h__
--#define __iwl_3945_dev_h__
--
--#define IWL_PCI_DEVICE(dev, subdev, cfg) \
--	.vendor = PCI_VENDOR_ID_INTEL,  .device = (dev), \
--	.subvendor = PCI_ANY_ID, .subdevice = (subdev), \
--	.driver_data = (kernel_ulong_t)&(cfg)
--
--#define IWL_SKU_G       0x1
--#define IWL_SKU_A       0x2
--
--/**
-- * struct iwl_3945_cfg
-- * @fw_name_pre: Firmware filename prefix. The api version and extension
-- * 	(.ucode) will be added to filename before loading from disk. The
-- * 	filename is constructed as fw_name_pre<api>.ucode.
-- * @ucode_api_max: Highest version of uCode API supported by driver.
-- * @ucode_api_min: Lowest version of uCode API supported by driver.
-- *
-- * We enable the driver to be backward compatible wrt API version. The
-- * driver specifies which APIs it supports (with @ucode_api_max being the
-- * highest and @ucode_api_min the lowest). Firmware will only be loaded if
-- * it has a supported API version. The firmware's API version will be
-- * stored in @iwl_priv, enabling the driver to make runtime changes based
-- * on firmware version used.
-- *
-- * For example,
-- * if (IWL_UCODE_API(priv->ucode_ver) >= 2) {
-- * 	Driver interacts with Firmware API version >= 2.
-- * } else {
-- * 	Driver interacts with Firmware API version 1.
-- * }
-- */
--struct iwl_3945_cfg {
--	const char *name;
--	const char *fw_name_pre;
--	const unsigned int ucode_api_max;
--	const unsigned int ucode_api_min;
--	unsigned int sku;
--};
--
--#endif /* __iwl_dev_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index d4f49fd..bb75eaf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -38,11 +38,11 @@
- #include <asm/unaligned.h>
- #include <net/mac80211.h>
- 
--#include "iwl-3945-core.h"
- #include "iwl-3945-fh.h"
- #include "iwl-commands.h"
- #include "iwl-3945.h"
- #include "iwl-helpers.h"
-+#include "iwl-core.h"
- #include "iwl-agn-rs.h"
- 
- #define IWL_DECLARE_RATE_INFO(r, ip, in, rp, rn, pp, np)    \
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 7c3a20a..a3cc43d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -205,6 +205,36 @@ struct iwl_cfg {
- 	const struct iwl_mod_params *mod_params;
- };
- 
-+/**
-+ * struct iwl_3945_cfg
-+ * @fw_name_pre: Firmware filename prefix. The api version and extension
-+ * 	(.ucode) will be added to filename before loading from disk. The
-+ * 	filename is constructed as fw_name_pre<api>.ucode.
-+ * @ucode_api_max: Highest version of uCode API supported by driver.
-+ * @ucode_api_min: Lowest version of uCode API supported by driver.
-+ *
-+ * We enable the driver to be backward compatible wrt API version. The
-+ * driver specifies which APIs it supports (with @ucode_api_max being the
-+ * highest and @ucode_api_min the lowest). Firmware will only be loaded if
-+ * it has a supported API version. The firmware's API version will be
-+ * stored in @iwl_priv, enabling the driver to make runtime changes based
-+ * on firmware version used.
-+ *
-+ * For example,
-+ * if (IWL_UCODE_API(priv->ucode_ver) >= 2) {
-+ * 	Driver interacts with Firmware API version >= 2.
-+ * } else {
-+ * 	Driver interacts with Firmware API version 1.
-+ * }
-+ */
-+struct iwl_3945_cfg {
-+	const char *name;
-+	const char *fw_name_pre;
-+	const unsigned int ucode_api_max;
-+	const unsigned int ucode_api_min;
-+	unsigned int sku;
-+};
-+
- /***************************
-  *   L i b                 *
-  ***************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index f62fd6a..2f1d434 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -48,11 +48,11 @@
- 
- #define DRV_NAME	"iwl3945"
- 
--#include "iwl-3945-core.h"
- #include "iwl-commands.h"
- #include "iwl-3945.h"
- #include "iwl-3945-fh.h"
- #include "iwl-helpers.h"
-+#include "iwl-core.h"
- #include "iwl-dev.h"
- 
- static int iwl3945_tx_queue_update_write_ptr(struct iwl3945_priv *priv,
-@@ -492,56 +492,6 @@ static inline int iwl3945_is_ready_rf(struct iwl3945_priv *priv)
- /*************** HOST COMMAND QUEUE FUNCTIONS   *****/
- 
- #define IWL_CMD(x) case x: return #x
--
--static const char *get_cmd_string(u8 cmd)
--{
--	switch (cmd) {
--		IWL_CMD(REPLY_ALIVE);
--		IWL_CMD(REPLY_ERROR);
--		IWL_CMD(REPLY_RXON);
--		IWL_CMD(REPLY_RXON_ASSOC);
--		IWL_CMD(REPLY_QOS_PARAM);
--		IWL_CMD(REPLY_RXON_TIMING);
--		IWL_CMD(REPLY_ADD_STA);
--		IWL_CMD(REPLY_REMOVE_STA);
--		IWL_CMD(REPLY_REMOVE_ALL_STA);
--		IWL_CMD(REPLY_3945_RX);
--		IWL_CMD(REPLY_TX);
--		IWL_CMD(REPLY_RATE_SCALE);
--		IWL_CMD(REPLY_LEDS_CMD);
--		IWL_CMD(REPLY_TX_LINK_QUALITY_CMD);
--		IWL_CMD(RADAR_NOTIFICATION);
--		IWL_CMD(REPLY_QUIET_CMD);
--		IWL_CMD(REPLY_CHANNEL_SWITCH);
--		IWL_CMD(CHANNEL_SWITCH_NOTIFICATION);
--		IWL_CMD(REPLY_SPECTRUM_MEASUREMENT_CMD);
--		IWL_CMD(SPECTRUM_MEASURE_NOTIFICATION);
--		IWL_CMD(POWER_TABLE_CMD);
--		IWL_CMD(PM_SLEEP_NOTIFICATION);
--		IWL_CMD(PM_DEBUG_STATISTIC_NOTIFIC);
--		IWL_CMD(REPLY_SCAN_CMD);
--		IWL_CMD(REPLY_SCAN_ABORT_CMD);
--		IWL_CMD(SCAN_START_NOTIFICATION);
--		IWL_CMD(SCAN_RESULTS_NOTIFICATION);
--		IWL_CMD(SCAN_COMPLETE_NOTIFICATION);
--		IWL_CMD(BEACON_NOTIFICATION);
--		IWL_CMD(REPLY_TX_BEACON);
--		IWL_CMD(WHO_IS_AWAKE_NOTIFICATION);
--		IWL_CMD(QUIET_NOTIFICATION);
--		IWL_CMD(REPLY_TX_PWR_TABLE_CMD);
--		IWL_CMD(MEASURE_ABORT_NOTIFICATION);
--		IWL_CMD(REPLY_BT_CONFIG);
--		IWL_CMD(REPLY_STATISTICS_CMD);
--		IWL_CMD(STATISTICS_NOTIFICATION);
--		IWL_CMD(REPLY_CARD_STATE_CMD);
--		IWL_CMD(CARD_STATE_NOTIFICATION);
--		IWL_CMD(MISSED_BEACONS_NOTIFICATION);
--	default:
--		return "UNKNOWN";
--
--	}
--}
--
- #define HOST_COMPLETE_TIMEOUT (HZ / 2)
- 
- /**
--- 
-1.5.3.6
+The rt2x00 side of the story:
+They say, that the driver cannot acknowledge these frames because of
+limitations of the hardware, and therefore it returns TXDONE_UNKNOWN
+instead of TXDONE_SUCCESS. So the driver cant say that the operation
+suceeded, but it cant say that it didnt succeeded.
 
+As a workaround i patched the hostapd to bypass checking the return
+value of this function. The other workaround is to change the driver
+to give a TXDONE_SUCCESS return value instead of TXDONE_UNKNOWN. Both
+solution works, and the hostapd does its job very well, i tested it
+with WPA2 etc... But the problem should be solved somehow, because now
+the hostapd people say they dont want to handle this issue, its the
+responsibility of the driver, and rt2x00 team says it should be
+handled in userspace by hostapd (see this thread:
+http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=3D5&t=3D4790&p=3D3=
+0366
+-> the first discussed patch is the interesting one, it wasnt
+accepted). So what is the solution? Any idea? Who is responsible for
+the problem and solution?
+
+regards,
+   G=E1bor Moln=E1r
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
