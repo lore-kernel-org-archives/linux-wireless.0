@@ -1,87 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:57530 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842AbYLBVvR (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:47220 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756668AbYLKRhi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 16:51:17 -0500
-Subject: Re: [PATCH 10/11] iwlwifi: rely on API version read from firmware
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1228254303.10900.90.camel@rc-desk>
-References: <> <1228248847-10424-1-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-3-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-4-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-5-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-6-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-7-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-8-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-9-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-10-git-send-email-reinette.chatre@intel.com>
-	 <1228248847-10424-11-git-send-email-reinette.chatre@intel.com>
-	 <1228252758.31158.252.camel@violet.holtmann.net>
-	 <1228254303.10900.90.camel@rc-desk>
-Content-Type: text/plain
-Date: Tue, 02 Dec 2008 22:51:08 +0100
-Message-Id: <1228254668.31158.257.camel@violet.holtmann.net> (sfid-20081202_225126_072769_9852D4DE)
-Mime-Version: 1.0
+	Thu, 11 Dec 2008 12:37:38 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so486072wah.21
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 09:37:38 -0800 (PST)
+Message-ID: <69e28c910812110937k1b608f25xea17b1e446c76b3b@mail.gmail.com> (sfid-20081211_183750_461295_49791DFD)
+Date: Thu, 11 Dec 2008 18:37:37 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl8187: Fix for change in STA handling in mac80211
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"John W Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <103016.83139.qm@web23103.mail.ird.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <494132C3.5070907@lwfinger.net>
+	 <103016.83139.qm@web23103.mail.ird.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Reinette,
+On Thu, Dec 11, 2008 at 6:33 PM, Hin-Tak Leung
+<htl10@users.sourceforge.net> wrote:
+> --- On Thu, 11/12/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> Hin-Tak Leung wrote:
+>> >
+>> > I don't know the verdict yet - but I think we need
+>> to either revert Johannes's earlier patch, or have this
+>> change from Larry incoporated, ASAP.
+>> >
+>> > Hin-Tak
+>>
+>> No, the best solution is to incorporate Johannes patch of
+>> today. Now that I
+>> understand what happened, my patch just wallpapers over his
+>> mistake.
+>>
+>> To explain how that happened, he used
+>> NL80211_IFTYPE_STATION (2) when he meant
+>> BIT(NL80211_IFTYPE_STATION)(4). My "fix" works
+>> because BIT(NL80211_IFTYPE_ADHOC)
+>> == NL80211_IFTYPE_STATION.
+>
+> okay, I like my wlan* device not to disappear. One way or the other, this needs fixing ASAP. It was very weird to put the latest wireless-testing on and wlanX is nowhere to be found :-). I'll dig through the archive for the patch. (still not subscribe to linux-wireless - maybe I should when I figure out gmail's filtering system).
+>
+> Hin-Tak
 
-> > > This adds the infrastructure to support older firmware APIs.
-> > > The API version number is stored as part of the filename, we first try to
-> > > load the most recent firmware and progressively try lower versions.
-> > > The API version is also read from the firmware self and stored as part
-> > > of the iwl_priv structure. Only firmware that is supported by driver will
-> > > be loaded. The version number read from firmware is compared
-> > > to supported versions in the driver not the API version used as part of
-> > > filename.
-> > 
-> > thanks for doing this. This can really help smooth upgrade path in case
-> > the firmware API changes.
-> >  
-> > > -MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE);
-> > > -MODULE_FIRMWARE(IWL5150_MODULE_FIRMWARE);
-> > > +MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
-> > > +MODULE_FIRMWARE(IWL5150_MODULE_FIRMWARE(IWL5150_UCODE_API_MAX));
-> > 
-> > So we don't have clear semantics on how MODULE_FIRMWARE should be used.
-> > The current way is that it list all potential firmware versions. So in
-> > cases it support API -1 and -2, then it has to list both. And not only
-> > the latest.
-> 
-> Even though the driver supports older firmware we really want the user
-> to use the latest firmware. The driver will also print a clear error if
-> the user is using API -1 and the latest available is -2. For this reason
-> we do want to make clear through MODULE_FIRMWARE which firmware the
-> driver would like to work with: the latest.
+A little help: Subscribe, and when you get the first message from the
+list, click "Show details", then click "Filter messages from this
+mailing list". Gmail will configure the filter criteria for you.
 
-as I said, we never clearly defined the semantics of MODULE_FIRMWARE for
-these cases. The only problem that I see is that some initrd tools are
-actually using MODULE_FIRMWARE to figure which files need to be included
-for the builtin kernel drivers. So on a system with old firmware only,
-it will not include these.
-
-Maybe we need to extend MODULE_FIRMWARE. Maybe something like
-MODULE_ALTERNATE_FIRMWARE or some extra flags.
-
-> > Personally I think we should not create too many macros here and just
-> > list all the firmware files manually.
-> 
-> Having one spot to change when a new API is supported makes the code
-> less error prone.
-
-I agree on that, but it doesn't make it easier to read through the
-source code.
-
-Regards
-
-Marcel
-
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
