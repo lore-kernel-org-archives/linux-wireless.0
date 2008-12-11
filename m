@@ -1,81 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:2104 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752282AbYLBAba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 19:31:30 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/5] iwlwifi: 5150 compute ct kill threshold
-Date: Mon,  1 Dec 2008 16:32:20 -0800
-Message-Id: <1228177942-25137-4-git-send-email-reinette.chatre@intel.com> (sfid-20081202_013136_642151_87137366)
-In-Reply-To: <1228177942-25137-3-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1228177942-25137-1-git-send-email-reinette.chatre@intel.com>
- <1228177942-25137-2-git-send-email-reinette.chatre@intel.com>
- <1228177942-25137-3-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:54879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752139AbYLKUYw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 15:24:52 -0500
+Subject: Re: [Patch] nl80211: Add signal strength and bandwith to
+	nl80211station info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henning Rogge <hrogge@googlemail.com>
+Cc: Henning Rogge <rogge@fgan.de>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+In-Reply-To: <200812112110.59679.hrogge@googlemail.com> (sfid-20081211_211843_587270_BF9F41DB)
+References: <200811252131.30161.hrogge@googlemail.com>
+	 <200812111922.49439.hrogge@googlemail.com>
+	 <1229020101.8081.55.camel@johannes.berg>
+	 <200812112110.59679.hrogge@googlemail.com>
+	 (sfid-20081211_211843_587270_BF9F41DB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kjssKXSk7uV3U1azDGDx"
+Date: Thu, 11 Dec 2008 21:24:01 +0100
+Message-Id: <1229027041.8081.72.camel@johannes.berg> (sfid-20081211_212455_068931_B1863423)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch adds computation of ct kill threshold
-for 5150. Threshold is computed from calibration
-data in the EEPROM.
+--=-kjssKXSk7uV3U1azDGDx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c   |   13 ++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    1 +
- 2 files changed, 13 insertions(+), 1 deletions(-)
+On Thu, 2008-12-11 at 21:10 +0100, Henning Rogge wrote:
+> I noticed the MAX/AFTER_LAST comments are missing for most nl80211 enums.=
+ ;)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index c1e7a42..26e04ec 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -426,6 +426,17 @@ static const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
- 	return &priv->eeprom[address];
- }
- 
-+static s32 iwl5150_get_ct_threshold(struct iwl_priv *priv)
-+{
-+	const s32 volt2temp_coef = -5;
-+	u16 *temp_calib = (u16 *)iwl_eeprom_query_addr(priv,
-+						EEPROM_5000_TEMPERATURE);
-+	/* offset =  temperate -  voltage / coef */
-+	s32 offset = temp_calib[0] - temp_calib[1] / volt2temp_coef;
-+	s32 threshold = (s32)CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD) - offset;
-+	return threshold * volt2temp_coef;
-+}
-+
- /*
-  *  Calibration
-  */
-@@ -859,7 +870,7 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 	case CSR_HW_REV_TYPE_5150:
- 		/* 5150 wants in Kelvin */
- 		priv->hw_params.ct_kill_threshold =
--				CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD);
-+				iwl5150_get_ct_threshold(priv);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 997f23c..8f6b05f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -147,6 +147,7 @@ struct iwl_eeprom_channel {
- /*5000 calibrations */
- #define EEPROM_5000_CALIB_ALL	(INDIRECT_ADDRESS | INDIRECT_CALIBRATION)
- #define EEPROM_5000_XTAL	((2*0x128) | EEPROM_5000_CALIB_ALL)
-+#define EEPROM_5000_TEMPERATURE ((2*0x12A) | EEPROM_5000_CALIB_ALL)
- 
- /* 5000 links */
- #define EEPROM_5000_LINK_HOST             (2*0x64)
--- 
-1.5.4.3
+Hah
+
+> But I get this output on my local (2 card) ad-hoc network:
+> # ./iw dev wlan0 station dump
+> Station 00:1b:fc:91:7d:d2 (on wlan0)
+>         inactive time:  52 ms
+>         rx bytes:       207220
+>         tx bytes:       1396
+>         signal:         -66 dBm
+>         tx bitrate:     18.0 MBit/s
+>=20
+> Patch for iw attached (based on git tree an hour ago). Of course the 802.=
+11n=20
+> output part is only compile tested. Most of the patch is to put the new c=
+opy=20
+> of nl80211.h into iw (why does iw carry a copy of this file ?)
+
+Because it's easier to build that way if you don't have a current tree.
+
+I'll take the patch once the other one gets into the kernel tree.
+
+johannes
+
+--=-kjssKXSk7uV3U1azDGDx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQXbeAAoJEKVg1VMiehFYSnIP/RUQUjWTGTyGUOpdJcEoDsP+
+ff8ONYe2nFwEbC6+9oyWRaRz1iLtW4R31Ma99LFrwArFCargqKaFQmfnAYXY/WWm
+lDBsSNgmGMMXtv4ckBvCS3jrCY98MKLbBd0llrHxQml+1ia+ZPJbggreBuwiYptP
+pp23BSFCTGfQ5KLLwtyRbcPNlgtKRxPguzQz0BblUiFCSFfDjK08lTqcUH97Cqwl
+B3XVtTtEeum+ton4dWGegH3dh20iKOdkrt5lhn2VZV3ON5HDGYU871v8r0B1iofe
+683zwCT3h0Aq/R1INXkeNyyrEwxf8udfTe2J/axPq4NzoBd6t9Bwlxe2B0sbrNTM
+EwG+ybI2S/H4HtO+7vx/AhEyRQY3h5j5zchBkrTxOYdISEBlcrbmaMiMBGU1TAbn
++T1z5lRNN4kImuC5jrSNHSCif8Gy2UvOU3cyxqsY71Iwtq6pO4Zz8/WDGHDKiY9P
+Orwm/wiwYric8b7prT+/TMKdfWExO8LpUnJCsC1Aiou9g+21mcq15rBj7lnSmK6S
+RqWadRVevpNXU/K+IdU0TTfBAjAic6jCOPxsLKpQAkH/wSd0o5aUsY25pvg6cc0N
+cZZ0+Epo9vsM2NFBnWuqDGn81hh0xAHbtyCc7moWbt7eO2kDwRKR+bDcvPjdnW73
+KrIWh23UtbARCSInUJBW
+=RNDV
+-----END PGP SIGNATURE-----
+
+--=-kjssKXSk7uV3U1azDGDx--
 
