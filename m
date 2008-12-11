@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41190 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:54849 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754594AbYLGSn4 (ORCPT
+	with ESMTP id S1751542AbYLKUYK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2008 13:43:56 -0500
-Subject: Re: [RFT] mac80211: fix HT channel selection
+	Thu, 11 Dec 2008 15:24:10 -0500
+Subject: Re: [Patch] nl80211: Add signal strength and bandwith to
+	nl80211station info
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mats Johannesson <spamcan1@abrasax.se>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <20081207193826.3f2e1772@loke.fish.not>
-References: <1228667447.22164.46.camel@johannes.berg>
-	 <20081207193826.3f2e1772@loke.fish.not>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QDFSnMm+S892rGAveB9x"
-Date: Sun, 07 Dec 2008 19:43:53 +0100
-Message-Id: <1228675433.22164.56.camel@johannes.berg> (sfid-20081207_194404_571238_1906BA1E)
+To: Henning Rogge <hrogge@googlemail.com>
+Cc: Henning Rogge <rogge@fgan.de>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+In-Reply-To: <200812112112.30509.hrogge@googlemail.com> (sfid-20081211_211613_833666_16F1FA2E)
+References: <200811252131.30161.hrogge@googlemail.com>
+	 <200812111922.49439.hrogge@googlemail.com>
+	 <1229020101.8081.55.camel@johannes.berg>
+	 <200812112112.30509.hrogge@googlemail.com>
+	 (sfid-20081211_211613_833666_16F1FA2E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-N3xLF+ZL4tGOr26omM/X"
+Date: Thu, 11 Dec 2008 21:23:31 +0100
+Message-Id: <1229027011.8081.70.camel@johannes.berg> (sfid-20081211_212415_792809_CF021DD1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-QDFSnMm+S892rGAveB9x
+--=-N3xLF+ZL4tGOr26omM/X
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2008-12-07 at 19:38 +0100, Mats Johannesson wrote:
-> On Sun, 07 Dec 2008 17:30:46 +0100 Johannes Berg wrote:
-> > HT management is done differently for AP and STA modes, unify
-> > to just the ->config() callback since HT is fundamentally a
-> > PHY property and cannot be per-BSS.
-> >=20
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
-> > Please test. Mats, this might fix your problem (if it applies on top
-> > of the patch that fixes the panic)
+On Thu, 2008-12-11 at 21:12 +0100, Henning Rogge wrote:
+> This patch adds signal strength and transmission bitrate
+> to the station_info of nl80211.
 >=20
-> Crazy results. Made two 2.6.28-rc7-wl kernels with different outcomes:
+> Signed-off-by: Henning Rogge <rogge@fgan.de>
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Ok, strange, but I don't know enough about ath9k to help you, sorry.
+You should probably send this with just [PATCH v14] (no Re:), CC John
+and not attach the file but make sure the inline version is ok (if
+possible)
 
 johannes
 
---=-QDFSnMm+S892rGAveB9x
+--=-N3xLF+ZL4tGOr26omM/X
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJPBllAAoJEKVg1VMiehFYmHYP/iOxkQdlmtl8Aj7YmOm+OXEh
-XuHhhuvpdIS0lRlbLZzEipK4ch52i9LlOhop+q1dHvxG7tyJYuapZ91lAU6RFP63
-Oqy9RxPPqxr8iiSRtooluGMqPkwBMI6b9onlTza4ptPdzW5sNBMFdtSiHB3JnH41
-fCyY2Ctdrqx/rlGM5TlN/cfkxa4PBR4boGNi77JNl0dY0bhHQN1QeOJNMdh+Dt39
-TLQhJ36kKMPNl3WIl9bO+ciFa97RRFxJ9oCVkSCdpxbwwUfOoXlttvFT6GdOisZF
-JqOVH/1uh6ROsyDFV6fNSnS7/c4a+1N8VgVsfka8/eTOaq2RNlysfP3LrIYF8gBH
-KoJFcHVLKwGUOdAbCGCZRnAnZMZLzkKymyC8ks/8/3OMZ3Ko2B1PEdz9OOWU5q+g
-RTHckNQkbeiyHkghZUUwMkEsW6HejGfFoOQsTYmk7iyW/aI1iRmazMeBMQqoHplF
-IQ4drl1+M+btHR4zXjbmKpgCd+0HT3h8gvz4g8Nyh2+VxapPWMah2UH1TzZrv/z3
-V7LQPH/CIpaRfwSwsUdhoKEGlEln0IOK8Aze8tJbZYhcDZeRuvZxcDptsc+J3lFG
-XVKUiZ4zBQJ/mXA/kUbxR9ZyaOC2Q4d+ODuoS83vwmzLLx57OY/cG0/kst5HQdEf
-2P/+MNkHwL8HFndgGyj/
-=JI1F
+iQIcBAABAgAGBQJJQXa/AAoJEKVg1VMiehFYJIkP/3DwVBKo6fGPR99UQ3jiZQcI
+Cw9OciJo2pxsQH7MeQXLDgdXAsWqUp6nbc9qNmtAZf4zjURNs3jwAW+UlS9sMIT1
+CUlfe44JiC5V9JQStBrbmLzlyvutMNDOWXbL4mxYLS99ne9827Ya5xDEgWNL4KOm
+Hxk66dLDhxDMO+pFScFwhddd2IGlCGfbWGSsjTx742x1ivA+rBuT49mNjrIKL4Y6
+WGpujys1OGCjwE+vnFDwZqBBw4E2Ny3bKahJjHhxhyej3vJryUc+Zf5RpLxmwGiI
+5tfhLqCFl86sy6bS/xTq53VpmWuwoRLoB1v0NuiQQW9fp/fj0nz9VI24l3+pMyPz
+GJ+epxo3FdVtigTxzteje+qqj3C/AFieRgwxha0DxGRwYByhrjbIDuhBViSq2aWs
+D847pV8bw9G74tu17fSU0+T9Hi48yavT5WGrc8VYqBYD40nqFlPT7NtFXywpK22Z
+ERvcefm9tQ3w6Y2WVPvbxNg42/n5pvRKj3lsbh0su1fZZHudWKWely9Pp7ilXwEG
+/rXo/eAQbTIHmV+cDR0/E93LP3stu5SjltxMcPxqn4SRkQPKczBbz3tdX0XZMVsG
+uSLkYKFDa/P/L/i3VfJRmmoqF+pWRU47asMW2mmOkSW1B8/Z9lJ8dI4Pk43eX2G3
+kBlOor6RCyrJaJcDnlwQ
+=e/v6
 -----END PGP SIGNATURE-----
 
---=-QDFSnMm+S892rGAveB9x--
+--=-N3xLF+ZL4tGOr26omM/X--
 
