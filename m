@@ -1,74 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53219 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbYLQSWu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 13:22:50 -0500
-Subject: Re: [RFC] Handle Channel Switch Announcement
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <m.sujith@gmail.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
-	jouni.malinen@atheros.com
-In-Reply-To: <18761.4838.509784.281821@localhost.localdomain> (sfid-20081217_155745_335359_22B180E6)
-References: <18761.4838.509784.281821@localhost.localdomain>
-	 (sfid-20081217_155745_335359_22B180E6)
+Received: from mail.atheros.com ([12.36.123.2]:59050 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755164AbYLKUKZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 15:10:25 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 12:10:25 -0800
+Subject: Re: [PATCH] ath9k: Do not remove header padding on RX from short
+ frames
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	Patrick McHardy <kaber@trash.net>
+In-Reply-To: <b6c5339f0812111149h6f243682t9a34691f80b4cfe5@mail.gmail.com>
+References: <20081211162213.GA28193@jm.kir.nu>
+	 <b6c5339f0812111149h6f243682t9a34691f80b4cfe5@mail.gmail.com>
 Content-Type: text/plain
-Date: Wed, 17 Dec 2008 19:07:52 +0100
-Message-Id: <1229537272.4268.7.camel@localhost> (sfid-20081217_192253_754908_A8F4FCCC)
-Mime-Version: 1.0
+Date: Thu, 11 Dec 2008 22:10:21 +0200
+Message-ID: <1229026221.6240.11.camel@jm-desktop> (sfid-20081211_211030_015614_1FFB6ECF)
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-17 at 20:25 +0530, Sujith wrote:
+On Thu, 2008-12-11 at 11:49 -0800, Bob Copeland wrote:
+> On Thu, Dec 11, 2008 at 11:22 AM, Jouni Malinen
+> <jouni.malinen@atheros.com> wrote:
+> > The 802.11 header is only padded to 32-bit boundary when the frame has
+> > a non-zero length payload.
 
-> + * @IEEE80211_CHAN_CSA_DISABLED: Disabled because a
-> +	Channel Switch Announcement was received on this channel.
+> Thanks Jouni, that clears up the question of the same code in ath5k
+> (http://marc.info/?l=linux-wireless&m=122888546315200&w=2).
 
-I agree with Jouni, this is probably not a good idea, especially since
-this flag would be shared between hardware for those drivers that have
-the channel structs allocated statically. We should probably just stick
-a struct ieee80211_channel *switch_from; pointer somewhere into the
-sdata struct or so.
+Yes, the same rules on 802.11 header padding applies to ath5k.
 
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1612,6 +1612,13 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
->  				return RX_DROP_MONITOR;
->  			ieee80211_process_measurement_req(sdata, mgmt, len);
->  			break;
-> +		case WLAN_ACTION_SPCT_CHL_SWITCH:
-> +			if (len < (IEEE80211_MIN_ACTION_SIZE +
-> +				   sizeof(mgmt->u.action.u.chan_switch)))
-> +				return RX_DROP_MONITOR;
-> +			ieee80211_process_chanswitch(sdata,
-> +				     &mgmt->u.action.u.chan_switch.sw_elem);
+- Jouni
 
-I think I'd like to have them dropped to monitor for !station here,
-instead of silently in the processing function.
-
-> +
-> +void ieee80211_chswitch_timer(unsigned long data)
-> +{
-> +	struct ieee80211_bss *bss;
-> +	struct ieee80211_sub_if_data *sdata =
-> +		(struct ieee80211_sub_if_data *) data;
-> +	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-> +
-> +	printk("expire\n");
-
-That should probably be removed or be more specific & protected by some
-debug #ifdef.
-
-> +void ieee80211_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-> +				  struct ieee80211_channel_sw_ie *sw_elem)
-
-
-> +	} else {
-> +		ieee80211_stop_queues(&sdata->local->hw);
-
-Can you rebase this on top of Kalle's patch that adds the "stop reasons"
-for each queue? As it is now, the driver could wake up the queues again
-if one was full.
-
-johannes
 
