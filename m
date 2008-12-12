@@ -1,139 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2019 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbYLODum (ORCPT
+Received: from vms042pub.verizon.net ([206.46.252.42]:49662 "EHLO
+	vms042pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613AbYLLUtN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Dec 2008 22:50:42 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mabbaswireless@gmail.com,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH v2 3/3] ath5k: use mac80211 pm callbacks
-Date: Sun, 14 Dec 2008 22:50:39 -0500
-Message-Id: <1229313039-5544-4-git-send-email-me@bobcopeland.com> (sfid-20081215_045048_876366_745C77DF)
+	Fri, 12 Dec 2008 15:49:13 -0500
+Date: Fri, 12 Dec 2008 15:33:41 -0500 (EST)
+From: Len Brown <lenb@kernel.org>
+Subject: Re: Fuijtsu Lifebook RFKILL support
+In-reply-to: <20081212195331.GA12679@khazad-dum.debian.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Tony Vroon <tony@linx.net>, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
+	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
+Message-id: <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain> (sfid-20081212_214919_992216_FF869E34)
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; charset=US-ASCII
+References: <1228957506.4045.11.camel@localhost>
+ <20081211165247.GA4844@khazad-dum.debian.net>
+ <1229016827.6446.6.camel@localhost>
+ <20081211194734.GA18132@khazad-dum.debian.net>
+ <1229046602.4030.13.camel@localhost>
+ <20081212195331.GA12679@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let mac80211 take care of stopping/starting device in PM hooks.
+adding linux-wireless@vger.kernel.org
+i expect somebody there may know a thing or two about the
+proper way to do rfkill...
 
-Changes-licensed-under: 3-Clause-BSD
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/base.c |   31 +++++++------------------------
- 1 files changed, 7 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 9d2c597..f222b4a 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -346,9 +346,9 @@ static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
- }
- 
- /* Interrupt handling */
--static int 	ath5k_init(struct ath5k_softc *sc, bool is_resume);
-+static int 	ath5k_init(struct ath5k_softc *sc);
- static int 	ath5k_stop_locked(struct ath5k_softc *sc);
--static int 	ath5k_stop_hw(struct ath5k_softc *sc, bool is_suspend);
-+static int 	ath5k_stop_hw(struct ath5k_softc *sc);
- static irqreturn_t ath5k_intr(int irq, void *dev_id);
- static void 	ath5k_tasklet_reset(unsigned long data);
- 
-@@ -652,8 +652,6 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 
- 	ath5k_led_off(sc);
- 
--	ath5k_stop_hw(sc, true);
--
- 	free_irq(pdev->irq, sc);
- 	pci_save_state(pdev);
- 	pci_disable_device(pdev);
-@@ -688,14 +686,9 @@ ath5k_pci_resume(struct pci_dev *pdev)
- 		goto err_no_irq;
- 	}
- 
--	err = ath5k_init(sc, true);
--	if (err)
--		goto err_irq;
- 	ath5k_led_enable(sc);
--
- 	return 0;
--err_irq:
--	free_irq(pdev->irq, sc);
-+
- err_no_irq:
- 	pci_disable_device(pdev);
- 	return err;
-@@ -2204,18 +2197,13 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- \********************/
- 
- static int
--ath5k_init(struct ath5k_softc *sc, bool is_resume)
-+ath5k_init(struct ath5k_softc *sc)
- {
- 	struct ath5k_hw *ah = sc->ah;
- 	int ret, i;
- 
- 	mutex_lock(&sc->lock);
- 
--	if (is_resume && !test_bit(ATH_STAT_STARTED, sc->status))
--		goto out_ok;
--
--	__clear_bit(ATH_STAT_STARTED, sc->status);
--
- 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "mode %d\n", sc->opmode);
- 
- 	/*
-@@ -2247,15 +2235,12 @@ ath5k_init(struct ath5k_softc *sc, bool is_resume)
- 	for (i = 0; i < AR5K_KEYTABLE_SIZE; i++)
- 		ath5k_hw_reset_key(ah, i);
- 
--	__set_bit(ATH_STAT_STARTED, sc->status);
--
- 	/* Set ack to be sent at low bit-rates */
- 	ath5k_hw_set_ack_bitrate_high(ah, false);
- 
- 	mod_timer(&sc->calib_tim, round_jiffies(jiffies +
- 			msecs_to_jiffies(ath5k_calinterval * 1000)));
- 
--out_ok:
- 	ret = 0;
- done:
- 	mmiowb();
-@@ -2310,7 +2295,7 @@ ath5k_stop_locked(struct ath5k_softc *sc)
-  * stop is preempted).
-  */
- static int
--ath5k_stop_hw(struct ath5k_softc *sc, bool is_suspend)
-+ath5k_stop_hw(struct ath5k_softc *sc)
- {
- 	int ret;
- 
-@@ -2341,8 +2326,6 @@ ath5k_stop_hw(struct ath5k_softc *sc, bool is_suspend)
- 		}
- 	}
- 	ath5k_txbuf_free(sc, sc->bbuf);
--	if (!is_suspend)
--		__clear_bit(ATH_STAT_STARTED, sc->status);
- 
- 	mmiowb();
- 	mutex_unlock(&sc->lock);
-@@ -2742,12 +2725,12 @@ ath5k_reset_wake(struct ath5k_softc *sc)
- 
- static int ath5k_start(struct ieee80211_hw *hw)
- {
--	return ath5k_init(hw->priv, false);
-+	return ath5k_init(hw->priv);
- }
- 
- static void ath5k_stop(struct ieee80211_hw *hw)
- {
--	ath5k_stop_hw(hw->priv, false);
-+	ath5k_stop_hw(hw->priv);
- }
- 
- static int ath5k_add_interface(struct ieee80211_hw *hw,
 -- 
-1.6.0.4
+Len Brown, Intel Open Source Technology Center
 
+On Fri, 12 Dec 2008, Henrique de Moraes Holschuh wrote:
 
+> On Fri, 12 Dec 2008, Tony Vroon wrote:
+> > On Thu, 2008-12-11 at 17:47 -0200, Henrique de Moraes Holschuh
+> > wrote:
+> > > I don't think so if you mean Gnome knowing what to do with EV_SW
+> > > SW_RFKILL_ALL.  That is not a report that radios got rfkilled, but
+> > > rather a COMMAND to rfkill all radios.
+> > 
+> > Right, so are we talking across purposes here?
+> 
+> Probably.  You still need to generate that SW_RFKILL_ALL input event
+> anyway, btw, so that the rest of rfkill can know when the user wants
+> all radios killed.
+> 
+> > I want to report radio status to userland so NetworkManager can stop
+> > helplessly flailing around asking me for a WPA2 password in a loop
+> > if I kill the radios.
+> 
+> That is a bug somewhere, and at first glance it looks to be either in
+> the wireless network driver, wpa_supplicant, or network manager.  It
+> needs to be fixed, not worked around.
+> 
+> What is the WLAN driver involved? Is it rfkill-aware?
+> 
+> > What I have is an event-driven report that includes radio killswitch
+> > status, HARD_BLOCKED or UNBLOCKED in rfkill terminology. There is no
+> > SOFT_BLOCKED as I have no ability to turn individual radios on/off
+> > in software.
+> 
+> Whatever WLAN driver you use (which is not your Fujitsu Lifebook
+> platform driver) should just get complete rfkill support, and Network
+> Manager and wpa_supplicant have to do nonbraindamaged things when the
+> radio is rfkilled.  So let's ignore it.
+> 
+> Just to make a point clear, you CAN ask HAL people to provide an OSD
+> notification keyed on uevents sent by rfkill-input.  It is completely
+> correct to say "Radio kill switch active" and "Radio kill switch
+> inactive" from some uevents rfkill-input generates (or will generate,
+> I will check if I sent the patch already).  It would still not mean
+> all devices have been rfkilled, but at least it shows the truth from
+> the point of view of the rfkill core and that has a higher chance of
+> being true than keying OSD on input events that nobody might be
+> listening to.
+> 
+> I hope the above takes care of the "I want user feedback when the
+> rfkill switch changes state" side.  That leaves your question about
+> attaching rfkill classes to phantom BT and WWAN devices inside your
+> platform driver.
+> 
+> BT and WWAN rfkilling are basically implemented in two possible ways,
+> AFAIK:
+> 
+> WARNING: THE STUFF BELOW IS FOR PLATFORM DRIVERS, NOT NETWORK DEVICE
+> DRIVERS.  NETWORK DEVICE DRIVERS DO IT SLIGHTLY DIFFERENT.
+> 
+> 1. rfkill actualy is/looks like a hotplug/hotunplug operation
+> 
+>   1a. You can do it at will (or you can do it at will except when the
+> hardware switch is enforcing that they remain rfkilled):
+> 
+>       Attach rfkill classes to platform devices if you know this is
+>       the best way to software-command this functionality.
+> 
+>       Most notebooks go here for Bluetooth and WWAN.  It is a pity
+>       Fujitsu Lifebooks don't.
+> 
+>   1b. You cannot do it at will
+> 
+>       Attaching it to the rfkill core simply is not supported, and
+>       even if you force the issue with a weird toggle_radio(), you'd
+>       end up with a device that causes annoying behaviour every time
+>       you want to change its rfkill state.  So, I cannot recommend
+>       it.
+> 
+>       The user knows if the radios are around or not from whatever
+>       hotplug subsystem they are tied to (PCI, USB), and that's what
+>       should be issuing events the user can see (only they will be of
+>       the "hardware connected/disconnected" sort, and not of the
+>       "radio killed" sort.
+> 
+> 2. rfkill doesn't mess with the device existence, it just disables
+> energy output:
+> 
+>   2a. You can do it at will (or you can do it at will except when the
+> hardware switch is enforcing that they remain rfkilled):
+> 
+>       You attach it to the rfkill core using a rfkill class, unless
+>       there is a better place to do it.  Usually, there isn't.
+> 
+>       This is rare, as BT and WWAN are usually of type 1a, and WLAN
+>       is usually of type 2b.
+> 
+>   2b. You cannot do it at will
+> 
+>       The rfkill class is to be attached to the device driver for that
+>       device, i.e. something in the bluetooth subsystem, USB subsystem
+>       or a wireless network driver.
+> 
+> > Should I be creating individual Bluetooth/WLAN/WWAN rfkills that flip
+> > between HARD_BLOCKED & UNBLOCKED with force status and return failure
+> > for a radio state change attempt?
+> 
+> Like I said, that's probably quite not nice for the user, and might
+> cause very annoying behaviour on userspace applications.  The rfkill
+> core won't care for it either, but it won't break.
+> 
+> However do NOT do it for WLAN.  Almost every WLAN device knows quite
+> well if it is being rfkilled or not by a hardware rfkill line, and it
+> is their business to report it.  And the wireless network drivers are
+> being ported to connect to the rfkill core.
+> 
+> > But perhaps code talks, let me just attach what I have right now. Both
+> 
+> Not really in this case, no.  It is not a case of coding it right,
+> after all...  I will look over the input device stuff in a separate
+> reply.
+> 
+> -- 
+>   "One disk to rule them all, One disk to find them. One disk to bring
+>   them all and in the darkness grind them. In the Land of Redmond
+>   where the shadows lie." -- The Silicon Valley Tarot
+>   Henrique Holschuh
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
