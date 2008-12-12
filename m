@@ -1,71 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:20025 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078AbYLWM5K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 07:57:10 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so1575982qwe.37
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 04:57:09 -0800 (PST)
-Message-ID: <4950E021.9000506@cortland.com> (sfid-20081223_135714_535845_C0B85889)
-Date: Tue, 23 Dec 2008 07:57:05 -0500
-From: Steve Brown <sbrown@cortland.com>
-Reply-To: sbrown@cortland.com
+Received: from blaine.gmane.org ([80.91.229.8]:55211 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756771AbYLLLNp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2008 06:13:45 -0500
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1LB5xe-0007Ic-UW
+	for linux-wireless@vger.kernel.org; Fri, 12 Dec 2008 12:13:34 +0100
+Message-ID: <49424419.1090103@redhat.com> (sfid-20081212_121350_765844_CBC5AEF5)
+Date: Fri, 12 Dec 2008 11:59:37 +0100
+From: Zdenek Kabelac <zkabelac@redhat.com>
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: linux-wireless@vger.kernel.org, Bob Copeland <bcopeland@gmail.com>
-Subject: [PATCH V2] ath5k: Correct usage of AR5K_CFG_ADHOC
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Alexander E. Patrakov"
+	<public-patrakov-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>
+CC: reinette chatre
+	<public-reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@hugh.gmane.org>,
+	"linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org"
+	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	"linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org"
+	<public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>
+Subject: Re: iwlagn interrupt problem
+References: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com>	 <c072ca310812100710o58c38a27rba16ad2318a1cb95@mail.gmail.com>	 <1228929548.18730.21.camel@rc-desk> <c072ca310812110548s64612ac7icd6e9187aa4af75a@mail.gmail.com>
+In-Reply-To: <c072ca310812110548s64612ac7icd6e9187aa4af75a@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This corrects usage of AR5K_CFG_ADHOC introduced in 
-731818f956854fa3866f14107867969cf6e9b0cb (Update PCU code). Also,
-the name of the indicator is changed to AR5K_CFG_IBSS to more
-accurately reflect its function. This change restores 
-beaconing in AP and mesh modes.
 
-Signed-off-by: Steve Brown <sbrown@cortland.com>
----
 
-Nick,
 
-Is this what you had in mind?
+Alexander E. Patrakov napsal(a):
+> 2008/12/10 reinette chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>:
+>> The messages you refer to are printed because a user space app
+>> (wpa_supplicant or network manager) brings the wireless interface down
+>> and up. Interrupts are disabled when interface is brought down and
+>> reenabled when interface is brought up.
+> 
+> OK.
+> 
+>> The unresponsiveness is due to a bug that was fixed recently. The
+>> patches have been merged into wireless-testing repo and will be included
+>> in 2.6.29. If you want to try
+>> the individual patches, please try:
+>> http://marc.info/?l=linux-wireless&m=122824886623698&w=2
+>> http://marc.info/?l=linux-wireless&m=122849275528102&w=2
+> 
+> These individual patches don't apply to 2.6.27.6, so I installed
+> today's compat-wireless-2.6, and it seems to work. Thanks!
+> 
+> OTOH, are these patches a material for backporting into -stable?
+> 
 
-Steve
+Hi
 
-diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
-index 0cac05c..b6e27a9 100644
---- a/drivers/net/wireless/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath5k/pcu.c
-@@ -65,7 +65,7 @@ int ath5k_hw_set_opmode(struct ath5k_hw *ah)
- 		if (ah->ah_version == AR5K_AR5210)
- 			pcu_reg |= AR5K_STA_ID1_NO_PSPOLL;
- 		else
--			AR5K_REG_DISABLE_BITS(ah, AR5K_CFG, AR5K_CFG_ADHOC);
-+			AR5K_REG_ENABLE_BITS(ah, AR5K_CFG, AR5K_CFG_IBSS);
- 		break;
- 
- 	case NL80211_IFTYPE_AP:
-@@ -75,7 +75,7 @@ int ath5k_hw_set_opmode(struct ath5k_hw *ah)
- 		if (ah->ah_version == AR5K_AR5210)
- 			pcu_reg |= AR5K_STA_ID1_NO_PSPOLL;
- 		else
--			AR5K_REG_ENABLE_BITS(ah, AR5K_CFG, AR5K_CFG_ADHOC);
-+			AR5K_REG_DISABLE_BITS(ah, AR5K_CFG, AR5K_CFG_IBSS);
- 		break;
- 
- 	case NL80211_IFTYPE_STATION:
-diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
-index 91aaeaf..b709ad1 100644
---- a/drivers/net/wireless/ath5k/reg.h
-+++ b/drivers/net/wireless/ath5k/reg.h
-@@ -73,7 +73,7 @@
- #define	AR5K_CFG_SWRD		0x00000004	/* Byte-swap RX descriptor */
- #define	AR5K_CFG_SWRB		0x00000008	/* Byte-swap RX buffer */
- #define	AR5K_CFG_SWRG		0x00000010	/* Byte-swap Register access */
--#define AR5K_CFG_ADHOC		0x00000020 	/* AP/Adhoc indication [5211+] */
-+#define AR5K_CFG_IBSS		0x00000020 	/* 0-BSS, 1-IBSS [5211+] */
- #define AR5K_CFG_PHY_OK		0x00000100	/* [5211+] */
- #define AR5K_CFG_EEBS		0x00000200	/* EEPROM is busy */
- #define	AR5K_CFG_CLKGD		0x00000400	/* Clock gated (Disable dynamic clock) */
+I assume that this backtrace I've got with 2.6.28-rc7 is the same issue ?
+(If I get it right - this issue will not be fixed in 2.6.28 and is delay for 
+2.6.29 ?))
+
+usb 3-2: reset full speed USB device using uhci_hcd and address 9
+Restarting tasks ... done.
+e1000e 0000:00:19.0: irq 377 for MSI/MSI-X
+e1000e 0000:00:19.0: irq 377 for MSI/MSI-X
+ADDRCONF(NETDEV_UP): eth0: link is not ready
+iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwl3945 0000:03:00.0: irq 376 for MSI/MSI-X
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 1
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 1
+wlan0 direct probe responded
+wlan0: authenticate with AP 00:11:d8:da:65:40
+wlan0: authenticated
+wlan0: associate with AP 00:11:d8:da:65:40
+wlan0: RX AssocResp from 00:11:d8:da:65:40 (capab=0x401 status=0 aid=8)
+wlan0: associated
+ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+wlan0: disassociating by local choice (reason=3)
+wlan0: no IPv6 routers present
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 1
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 1
+wlan0 direct probe responded
+wlan0: authenticate with AP 00:11:d8:da:65:40
+wlan0: authenticated
+wlan0: associate with AP 00:11:d8:da:65:40
+wlan0: RX ReassocResp from 00:11:d8:da:65:40 (capab=0x401 status=0 aid=8)
+wlan0: associated
+wlan0: No ProbeResp from current AP 00:11:d8:da:65:40 - assume out of range
+iwl3945: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_RXON_ASSOC: time out after 500ms.
+iwl3945: Error setting RXON_ASSOC configuration (-110).
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_RXON_ASSOC: time out after 500ms.
+iwl3945: Error setting RXON_ASSOC configuration (-110).
+iwl3945: Error sending REPLY_RXON_ASSOC: time out after 500ms.
+iwl3945: Error setting RXON_ASSOC configuration (-110).
+iwl3945: Error sending REPLY_QOS_PARAM: time out after 500ms.
+iwl3945: Error sending REPLY_QOS_PARAM: time out after 500ms.
+iwl3945: Error sending REPLY_QOS_PARAM: time out after 500ms.
+iwl3945: Error sending REPLY_QOS_PARAM: time out after 500ms.
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 1
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 1
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 2
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 3
+wlan0: direct probe to AP 00:11:d8:da:65:40 timed out
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 1
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 2
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 3
+wlan0: direct probe to AP 00:11:d8:da:65:40 timed out
+iwl3945: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 1
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 2
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 3
+wlan0: direct probe to AP 00:11:d8:da:65:40 timed out
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_SCAN_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_SCAN_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_SCAN_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_SCAN_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_SCAN_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 1
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 2
+wlan0: direct probe to AP 00:11:d8:da:65:40 try 3
+wlan0: direct probe to AP 00:11:d8:da:65:40 timed out
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_SCAN_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_SCAN_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_SCAN_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_SCAN_CMD: iwl3945_enqueue_hcmd failed: -28
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_RXON: iwl3945_enqueue_hcmd failed: -28
+iwl3945: Error setting new configuration (-28).
+iwl3945: No space for Tx
+iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: iwl3945_enqueue_hcmd failed: -28
+
+
+Zdenek
+
 
