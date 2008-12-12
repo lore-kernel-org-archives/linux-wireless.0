@@ -1,95 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:4718 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580AbYLTKCD (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:39551 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753055AbYLLWke convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 05:02:03 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so125894eye.37
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2008 02:02:02 -0800 (PST)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 8/15] rt2x00: Implement WDS support
-Date: Sat, 20 Dec 2008 10:57:02 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200812201052.00655.IvDoorn@gmail.com> <200812201055.58126.IvDoorn@gmail.com> <200812201056.36218.IvDoorn@gmail.com>
-In-Reply-To: <200812201056.36218.IvDoorn@gmail.com>
+	Fri, 12 Dec 2008 17:40:34 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so797676wah.21
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2008 14:40:33 -0800 (PST)
+Message-ID: <69e28c910812121440j6e010ac0j6e08cd6a53f58bcb@mail.gmail.com> (sfid-20081212_234038_830004_C1D87925)
+Date: Fri, 12 Dec 2008 23:40:33 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC 0/3] cfg80211, mac80211: Introduce radiotap flags for finer userspace control of injection
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1229121467.3565.2.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812201057.02583.IvDoorn@gmail.com> (sfid-20081220_110214_294570_9C2013C2)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910812121432k1e8732bcma77e489d247ecdf4@mail.gmail.com>
+	 <1229121467.3565.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WDS support should be very easy to handle, mac80211 handles
-everything for us, so all that is needed is to set the
-support flags and handle it in the add_interface() callback.
+On Fri, Dec 12, 2008 at 11:37 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2008-12-12 at 23:32 +0100, Stefanik G=E1bor wrote:
+>> Userspace packet injector applications might want to transmit packet=
+s
+>> that are, by design, not supposed to be acked. In other cases, an
+>> injector application may need to control the sequence number of the
+>> packets it transmits. Introduce 2 new flags in the "TX flags" Radiot=
+ap
+>> fields, controlling these 2 behaviors.
+>>
+>> The new fields are as follows:
+>>
+>>  * IEEE80211_RADIOTAP_TX_FLAGS
+>>
+>>    IEEE80211_RADIOTAP_F_TX_NO_ACK: Transmit the packet once with no =
+waiting for
+>>                                  an ACK and no retrying if no ACK re=
+ceived
+>>    IEEE80211_RADIOTAP_F_TX_NO_SEQ: Use the sequence number already p=
+resent in
+>>                                  the 802.11 header, do not generate =
+a new one
+>>                                  in the driver/stack. Useful when in=
+jecting
+>>                                  fragments with the same sequence nu=
+mber.
+>
+> Umm, these aren't really defined by radiotap yet. Does all of this ha=
+ve
+> to be NOW?
+>
+> johannes
+>
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00config.c |    1 +
- drivers/net/wireless/rt2x00/rt2x00dev.c    |    9 ++++++---
- drivers/net/wireless/rt2x00/rt2x00mac.c    |    1 +
- 3 files changed, 8 insertions(+), 3 deletions(-)
+No, that's why I submitted it as an RFC.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index a35265c..ab139f2 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -43,6 +43,7 @@ void rt2x00lib_config_intf(struct rt2x00_dev *rt2x00dev,
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_MESH_POINT:
-+	case NL80211_IFTYPE_WDS:
- 		conf.sync = TSF_SYNC_BEACON;
- 		break;
- 	case NL80211_IFTYPE_STATION:
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index b484197..3cb417f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -191,7 +191,8 @@ static void rt2x00lib_beacondone_iter(void *data, u8 *mac,
- 
- 	if (vif->type != NL80211_IFTYPE_AP &&
- 	    vif->type != NL80211_IFTYPE_ADHOC &&
--	    vif->type != NL80211_IFTYPE_MESH_POINT)
-+	    vif->type != NL80211_IFTYPE_MESH_POINT &&
-+	    vif->type != NL80211_IFTYPE_WDS)
- 		return;
- 
- 	/*
-@@ -784,7 +785,8 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 		rt2x00dev->hw->wiphy->interface_modes |=
- 		    BIT(NL80211_IFTYPE_ADHOC) |
- 		    BIT(NL80211_IFTYPE_AP) |
--		    BIT(NL80211_IFTYPE_MESH_POINT);
-+		    BIT(NL80211_IFTYPE_MESH_POINT) |
-+		    BIT(NL80211_IFTYPE_WDS);
- 
- 	/*
- 	 * Let the driver probe the device to detect the capabilities.
-@@ -943,7 +945,8 @@ static void rt2x00lib_resume_intf(void *data, u8 *mac,
- 	 */
- 	if (vif->type == NL80211_IFTYPE_AP ||
- 	    vif->type == NL80211_IFTYPE_ADHOC ||
--	    vif->type == NL80211_IFTYPE_MESH_POINT)
-+	    vif->type == NL80211_IFTYPE_MESH_POINT ||
-+	    vif->type == NL80211_IFTYPE_WDS)
- 		intf->delayed_flags |= DELAYED_UPDATE_BEACON;
- 
- 	spin_unlock(&intf->lock);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 137386e..e6fba83 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -227,6 +227,7 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_MESH_POINT:
-+	case NL80211_IFTYPE_WDS:
- 		/*
- 		 * We don't support mixed combinations of
- 		 * sta and ap interfaces.
--- 
-1.5.6.1
+By the way, what is the preferred method of contacting the Radiotap
+staff now that the mailing list seems to be permanently down?
 
+--G=E1bor
+
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
