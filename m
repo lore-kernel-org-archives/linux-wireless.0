@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41343 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46269 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160AbYLATeP (ORCPT
+	with ESMTP id S1754223AbYLLWwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 14:34:15 -0500
-Subject: Re: 11d segfault
+	Fri, 12 Dec 2008 17:52:23 -0500
+Subject: Re: [RFC 2/3] mac80211: Make use of the new F_TX_NOACK and
+	F_TX_NOSEQ Radiotap TX flags
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1228145195.31158.137.camel@violet.holtmann.net>
-References: <1228129742.3478.2.camel@johannes.berg>
-	 <1228145195.31158.137.camel@violet.holtmann.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1JpYfoc6yFIXUmI34lYo"
-Date: Mon, 01 Dec 2008 20:34:12 +0100
-Message-Id: <1228160052.10627.33.camel@johannes.berg> (sfid-20081201_203419_568438_5067AEC1)
+In-Reply-To: <69e28c910812121451u25713c82o229a56006089edd6@mail.gmail.com> (sfid-20081212_235104_744345_FF8EB7B3)
+References: <69e28c910812121432n6e84de41s94a887110051a1dd@mail.gmail.com>
+	 <1229121558.3565.6.camel@johannes.berg>
+	 <69e28c910812121443h1fae52e6uc88749d7e9baf529@mail.gmail.com>
+	 <1229121947.3565.13.camel@johannes.berg>
+	 <69e28c910812121451u25713c82o229a56006089edd6@mail.gmail.com>
+	 (sfid-20081212_235104_744345_FF8EB7B3)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CUmURFnExU3JTiDQXprR"
+Date: Fri, 12 Dec 2008 23:52:19 +0100
+Message-Id: <1229122339.3565.18.camel@johannes.berg> (sfid-20081212_235227_178091_6D88C305)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-1JpYfoc6yFIXUmI34lYo
-Content-Type: text/plain
+--=-CUmURFnExU3JTiDQXprR
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-12-01 at 16:26 +0100, Marcel Holtmann wrote:
-> Hi Johannes,
->=20
-> > Dec  1 12:07:00 johannes kernel: [  193.370168] Unable to handle kernel=
- paging request for data at address 0x00000000
-> > Dec  1 12:07:00 johannes kernel: [  193.370180] Faulting instruction ad=
-dress: 0xf2794560
-> > Dec  1 12:07:00 johannes kernel: [  193.370194] Oops: Kernel access of =
-bad area, sig: 11 [#1]
->=20
-> are you running kerneloops? If not, please do so :)
+On Fri, 2008-12-12 at 23:51 +0100, Stefanik G=C3=A1bor wrote:
 
-Heh, I don't think you want to see all the ways I manage to crash my
-machine ;)
+> But if we redefine !ASSIGN_SEQ to mean "use the sequence number
+> supplied by userspace", we will need a new flag to distinguish between
+> driver-level vs. stack-level sequence number assignments, which is
+> essentially the same as this patch. There is no way to switch between
+> 3 states (control in driver, stack or userspace) using only one bit.
+
+Good point, I forgot about that. But that isn't true for no-ack :)
 
 johannes
 
---=-1JpYfoc6yFIXUmI34lYo
+--=-CUmURFnExU3JTiDQXprR
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJNDwwAAoJEKVg1VMiehFY2nkQALRuQExJ/f8TRkrsIO3j5v4c
-Iam+KZc2mtlXYzpt1LE3r54zOJXMl0YxDWho4lp9C52L2EEAtEkYFVU6lG6vEnnJ
-slzHBXLfORKzatG6u8TQzaM7SsF8orNcYb1ytifbAIUejRM31vjOerrXmGFHhR/P
-rhUSOnO9hbO4maBMGw8r1ZZPT8kZl8vGaikSx64JlMCaGjoM3fJAQTwNd9losPTU
-4i8OJzd4OqXqJt3W7eUa0qImcdhYJg5YuXsJF+PQJPTU+LSi6toqd4/yNEatz4JR
-kUBtGrc79Qh628txcKjjKAnG0C9awu56i2glKBBvJZfx9Ph4Xa3jco80SBAmtL2d
-ovolKp4yQlr6iCQxA8qI+hrRvILC262cY33P4gE5bYORybUwIbgJtxsweuYb0Ob9
-DoDxMLN6QBa+nY746sk7KSzSkhpKnw03glFIOjcf+VdzM6DsgZTW+KMlnwCHOCyt
-RYOD4lzUXxnEyinn5zrebw9Oy2m7F7qQIzKDSHj5Nehg1IXLlEdwxHIxldLVwbzr
-TijLZDsMs18zLkxddgtVqmqXFu+AZPKrM6rOC3lQRORTkvwriuAtqvvADSmu6mGw
-IbcG7JVnFD0a1VjuR7KkEnZEdrGjTyLVJFGl2lJ/skyowqaGsAXLeQ0hK+wEOyTg
-ReoqangCswX8jmce3yss
-=CJxM
+iQIcBAABAgAGBQJJQusdAAoJEKVg1VMiehFYBJsP/RVCg00jSZEAtZmet6kENOau
+L6jnzRAJ7wotVAUabu2FX61cZzxcHok1KAwQrjisTPkypVSMlWFwsGfKJBGb1ou+
+pWI5PCeouirfk09bYOTk0s3NoFwDwiI3l/AEep2nKAG8bTaitReWVdQEBvYVDZbI
+HBhRHCBiP7997kQIc3KG88emPcft//6D8V3bcxYabrscryIJ2s198gqnhqWQhoiu
+5FnPTqLTOoWZ/nSZqsJTaA4zV4Y33iCJlwWepbQkZCpvtpBAiKtSboA6O4oNfFTs
+DksUqSNAqqnWVyKsmuc91li/hdrJZWEIMkdU7wTafjgi4oHKiuptEtTX+U+w3r6a
+ffqKZJ+RICaaRmxPUdyJCr5aT+Q9bvSAvbQJhvkT4FyuUKD+AAU4KTayswYFUM/h
+Z0Q2VKluvX0TzdoAkmamuTStSjJb5xH8f9Rf4DSrBm6L8522CJ4D7cwG4LawK4oU
+apqBW4OZwOHyrrKj1eUNcG3Tboj8m2fNJv0OoIqrwoxWkvQMP8otZg7YXgwCMGwF
+n44cBIz7dzs4yi5BFYXMlbncubwTl8Gi9Yl7Q7fMTheIKtfPGsK7rIWk+1fPQiqS
+91Z0cf2XbJ/MZE/d+TF1K2pQwCRi6y3YKmj5UUbZD/M0KtIGCDH6OdPCkcF8W+Cj
+xmX/LxPBRWExKaTLFnYe
+=y7XB
 -----END PGP SIGNATURE-----
 
---=-1JpYfoc6yFIXUmI34lYo--
+--=-CUmURFnExU3JTiDQXprR--
 
