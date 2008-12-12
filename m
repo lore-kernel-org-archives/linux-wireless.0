@@ -1,191 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54843 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752532AbYLSCpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 21:45:00 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 06/43] iwlwifi: 3945 drop usage of union tsf
-Date: Fri, 19 Dec 2008 10:37:06 +0800
-Message-Id: <1229654263-21454-7-git-send-email-yi.zhu@intel.com> (sfid-20081219_034507_822758_DE60B225)
-In-Reply-To: <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
-References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-4-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-5-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48294 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756981AbYLLOsx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2008 09:48:53 -0500
+Subject: Re: [PATCH 3/3] mac80211: Add HT rates into radiotap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Thomas d'Otreppe <tdotreppe@aircrack-ng.org>
+In-Reply-To: <69e28c910812120647l69b317daxfdbeb914d61ba7e3@mail.gmail.com> (sfid-20081212_154759_650888_6EE1B3D8)
+References: <20081212123832.506588839@atheros.com>
+	 <20081212123918.723191687@atheros.com>
+	 <69e28c910812120647l69b317daxfdbeb914d61ba7e3@mail.gmail.com>
+	 (sfid-20081212_154759_650888_6EE1B3D8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YQNQZRV8PGzo1apxUGPy"
+Date: Fri, 12 Dec 2008 15:48:47 +0100
+Message-Id: <1229093327.3600.12.camel@johannes.berg> (sfid-20081212_154857_008673_F01C12B3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch replaces union tsf with u64
-This also allows to use iwl_error_res
-and iwl_rxon_time_cmd instead of 3945 structures
+--=-YQNQZRV8PGzo1apxUGPy
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-commands.h |   33 +---------------------
- drivers/net/wireless/iwlwifi/iwl-3945.h          |    7 ++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c      |   18 ++++--------
- 3 files changed, 10 insertions(+), 48 deletions(-)
+On Fri, 2008-12-12 at 15:47 +0100, Stefanik G=C3=A1bor wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-index fe71e0a..42ef51f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-@@ -173,25 +173,6 @@ struct iwl3945_alive_resp {
- 	__le32 is_valid;
- } __attribute__ ((packed));
- 
--union tsf {
--	u8 byte[8];
--	__le16 word[4];
--	__le32 dw[2];
--};
--
--/*
-- * REPLY_ERROR = 0x2 (response only, not a command)
-- */
--struct iwl3945_error_resp {
--	__le32 error_type;
--	u8 cmd_id;
--	u8 reserved1;
--	__le16 bad_cmd_seq_num;
--	__le16 reserved2;
--	__le32 error_info;
--	union tsf timestamp;
--} __attribute__ ((packed));
--
- /******************************************************************************
-  * (1)
-  * RXON Commands & Responses:
-@@ -246,18 +227,6 @@ struct iwl3945_rxon_assoc_cmd {
- } __attribute__ ((packed));
- 
- /*
-- * REPLY_RXON_TIMING = 0x14 (command, has simple generic response)
-- */
--struct iwl3945_rxon_time_cmd {
--	union tsf timestamp;
--	__le16 beacon_interval;
--	__le16 atim_window;
--	__le32 beacon_init_val;
--	__le16 listen_interval;
--	__le16 reserved;
--} __attribute__ ((packed));
--
--/*
-  * REPLY_CHANNEL_SWITCH = 0x72 (command, has simple generic response)
-  */
- struct iwl3945_channel_switch_cmd {
-@@ -783,7 +752,7 @@ struct iwl3945_rx_packet {
- 		struct iwl3945_tx_resp tx_resp;
- 		struct iwl_spectrum_notification spectrum_notif;
- 		struct iwl_csa_notification csa_notif;
--		struct iwl3945_error_resp err_resp;
-+		struct iwl_error_resp err_resp;
- 		struct iwl_card_state_notif card_state_notif;
- 		struct iwl3945_beacon_notif beacon_status;
- 		struct iwl_add_sta_resp add_sta;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 1c9e126..12ead38 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -337,7 +337,7 @@ struct iwl3945_cmd {
- 		u16 val16;
- 		u32 val32;
- 		struct iwl_bt_cmd bt;
--		struct iwl3945_rxon_time_cmd rxon_time;
-+		struct iwl_rxon_time_cmd rxon_time;
- 		struct iwl_powertable_cmd powertable;
- 		struct iwl_qosparam_cmd qosparam;
- 		struct iwl3945_tx_cmd tx;
-@@ -754,7 +754,7 @@ struct iwl3945_priv {
- 	struct fw_desc ucode_boot;	/* bootstrap inst */
- 
- 
--	struct iwl3945_rxon_time_cmd rxon_timing;
-+	struct iwl_rxon_time_cmd rxon_timing;
- 
- 	/* We declare this const so it can only be
- 	 * changed via explicit cast within the
-@@ -844,8 +844,7 @@ struct iwl3945_priv {
- 	struct sk_buff *ibss_beacon;
- 
- 	/* Last Rx'd beacon timestamp */
--	u32 timestamp0;
--	u32 timestamp1;
-+	u64 timestamp;
- 	u16 beacon_int;
- 	struct iwl3945_driver_hw_info hw_setting;
- 	struct ieee80211_vif *vif;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 0764f37..5f90445 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2060,13 +2060,10 @@ static void iwl3945_setup_rxon_timing(struct iwl3945_priv *priv)
- 	conf = ieee80211_get_hw_conf(priv->hw);
- 
- 	spin_lock_irqsave(&priv->lock, flags);
--	priv->rxon_timing.timestamp.dw[1] = cpu_to_le32(priv->timestamp1);
--	priv->rxon_timing.timestamp.dw[0] = cpu_to_le32(priv->timestamp0);
--
-+	priv->rxon_timing.timestamp = cpu_to_le64(priv->timestamp);
- 	priv->rxon_timing.listen_interval = INTEL_CONN_LISTEN_INTERVAL;
- 
--	tsf = priv->timestamp1;
--	tsf = ((tsf << 32) | priv->timestamp0);
-+	tsf = priv->timestamp;
- 
- 	beacon_int = priv->beacon_int;
- 	spin_unlock_irqrestore(&priv->lock, flags);
-@@ -6318,7 +6315,7 @@ static void iwl3945_post_associate(struct iwl3945_priv *priv)
- 	priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	iwl3945_commit_rxon(priv);
- 
--	memset(&priv->rxon_timing, 0, sizeof(struct iwl3945_rxon_time_cmd));
-+	memset(&priv->rxon_timing, 0, sizeof(struct iwl_rxon_time_cmd));
- 	iwl3945_setup_rxon_timing(priv);
- 	rc = iwl3945_send_cmd_pdu(priv, REPLY_RXON_TIMING,
- 			      sizeof(priv->rxon_timing), &priv->rxon_timing);
-@@ -6699,7 +6696,7 @@ static void iwl3945_config_ap(struct iwl3945_priv *priv)
- 		iwl3945_commit_rxon(priv);
- 
- 		/* RXON Timing */
--		memset(&priv->rxon_timing, 0, sizeof(struct iwl3945_rxon_time_cmd));
-+		memset(&priv->rxon_timing, 0, sizeof(struct iwl_rxon_time_cmd));
- 		iwl3945_setup_rxon_timing(priv);
- 		rc = iwl3945_send_cmd_pdu(priv, REPLY_RXON_TIMING,
- 				sizeof(priv->rxon_timing), &priv->rxon_timing);
-@@ -6949,9 +6946,7 @@ static void iwl3945_bss_info_changed(struct ieee80211_hw *hw,
- 		if (bss_conf->assoc) {
- 			priv->assoc_id = bss_conf->aid;
- 			priv->beacon_int = bss_conf->beacon_int;
--			priv->timestamp0 = bss_conf->timestamp & 0xFFFFFFFF;
--			priv->timestamp1 = (bss_conf->timestamp >> 32) &
--					     0xFFFFFFFF;
-+			priv->timestamp = bss_conf->timestamp;
- 			priv->assoc_capability = bss_conf->assoc_capability;
- 			priv->next_scan_jiffies = jiffies +
- 					IWL_DELAY_NEXT_SCAN_AFTER_ASSOC;
-@@ -7195,8 +7190,7 @@ static void iwl3945_mac_reset_tsf(struct ieee80211_hw *hw)
- 	priv->ibss_beacon = NULL;
- 
- 	priv->beacon_int = priv->hw->conf.beacon_int;
--	priv->timestamp1 = 0;
--	priv->timestamp0 = 0;
-+	priv->timestamp = 0;
- 	if ((priv->iw_mode == NL80211_IFTYPE_STATION))
- 		priv->beacon_int = 0;
- 
--- 
-1.5.3.6
+> Thanks for the heads up, mail forwarded to Thomas d'Otreppe, as this
+> will need changes in airodump-ng.
+
+Guys! This format is brain-dead, it means we don't know 40MHz or SGI,
+let's define something proper in radiotap instead!
+
+johannes
+
+--=-YQNQZRV8PGzo1apxUGPy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQnnMAAoJEKVg1VMiehFY2YQP/iFteAHIwH3m5AyuTYc7MFGv
+axurRi8VUkKLC1HJsrYDJVoEsfny6ZDqKsTpQa94wcQhWGbBNjBFCpYNYRJQtEWm
+l029VOC2v1zIdk/i5aLaohHmoRHTqb43DZuUvlCIwy8mX0r2SR6YjMJ5Ntj8Dlpx
++Sg/HHVPoNLKRss4sqO7SCGLkLWrj7n1Uhbel78SgvFXs52WH4Ap37AIiiGc0jVj
+GHOO5QA+iYcPHuXglzVh5mwW2hu5UdbdKLxQkjKg0zBBt8dj8XMWh0D1zf4LO6j0
+jkzBLDwIkhJ/lt0SvsKATLEmlikCtoHDenXXqVPIAa4BwqFtiBM1TQ+5C6FIjP/q
+Rm+FDbD3AndIkQ+xweXSejjy07m4Z2TmBb5+jU8NjHHvsRGEdtIll4NyR1kiZ7oa
+6QF2ptvsRTG8QjLirVbW/so1JkgwSIh70Opx5wBnnXp/9M00oJUTd7hdwpMTNPcE
+H9gGi+R+5V5Xl05S3/cWsz0qHLtX9OQmiLU0bqhB+X7zlWPaMsDcNeq1Daq+UVhB
+2Q38SBaVfTI4LX4o+ZVUiC0f264ghbVbE/z1bpYwkS6wpwpZd5333LOfWoSRwt2v
+ToMAfe26uNJHB7FkHm9EX0bHJcku/Sdyok1TYPraEWpoa1+xvyIWz8HA/W1PNhao
+4pQSBXwQwMPQ20EOi1YL
+=q6YZ
+-----END PGP SIGNATURE-----
+
+--=-YQNQZRV8PGzo1apxUGPy--
 
