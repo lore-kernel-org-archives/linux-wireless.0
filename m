@@ -1,255 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25163 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751803AbYLVSVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 13:21:33 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:21:33 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v2 18/18] ath9k: fix sparse warnings
-Date: Mon, 22 Dec 2008 10:20:39 -0800
-Message-ID: <1229970039-10561-19-git-send-email-lrodriguez@atheros.com> (sfid-20081222_193905_569691_362560FA)
-In-Reply-To: <1229970039-10561-18-git-send-email-lrodriguez@atheros.com>
-References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-4-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-6-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-7-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-8-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-9-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-10-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-11-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-12-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-13-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-14-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-15-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-16-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-17-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-18-git-send-email-lrodriguez@atheros.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:44538 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758962AbYLLQhW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2008 11:37:22 -0500
+Date: Fri, 12 Dec 2008 18:34:29 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Henning Rogge <hrogge@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stefanik =?utf-8?B?R8OhYm9y?= <netrolller.3d@gmail.com>,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Thomas d'Otreppe" <tdotreppe@aircrack-ng.org>
+Subject: Re: [PATCH 3/3] mac80211: Add HT rates into radiotap
+Message-ID: <20081212163429.GA19806@jm.kir.nu> (sfid-20081212_173728_683184_6A3B56B0)
+References: <20081212123832.506588839@atheros.com> <1229093327.3600.12.camel@johannes.berg> <20081212151619.GA16981@jm.kir.nu> <200812121631.56952.hrogge@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200812121631.56952.hrogge@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix sparse warnings:
+On Fri, Dec 12, 2008 at 04:31:51PM +0100, Henning Rogge wrote:
+> On Friday 12 December 2008 16:16:19 Jouni Malinen wrote:
 
-drivers/net/wireless/ath9k/hw.c:1850:17: warning: symbol 'tmp' shadows an earlier one
-drivers/net/wireless/ath9k/hw.c:1713:6: originally declared here
-drivers/net/wireless/ath9k/hw.c:2051:17: warning: symbol 'tmp' shadows an earlier one
-drivers/net/wireless/ath9k/hw.c:1961:6: originally declared here
+> Changing the meaning of the old "txrate" field (by putting an index inside) is 
+> a great way to break the userspace interface to any existing program. :(
 
-drivers/net/wireless/ath9k/eeprom.c:195:6: warning: symbol 'ath9k_fill_eeprom' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:463:5: warning: symbol 'ath9k_check_eeprom' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:1219:6: warning: symbol 'ath9k_hw_set_def_power_per_rate_table' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:1510:6: warning: symbol 'ath9k_hw_set_4k_power_per_rate_table' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2007:5: warning: symbol 'ath9k_set_txpower' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2106:6: warning: symbol 'ath9k_set_addac' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2543:6: warning: symbol 'ath9k_eeprom_set_board_values' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2606:5: warning: symbol 'ath9k_get_eeprom_antenna_cfg' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2622:4: warning: symbol 'ath9k_hw_get_4k_num_ant_config' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2628:4: warning: symbol 'ath9k_hw_get_def_num_ant_config' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2647:4: warning: symbol 'ath9k_get_num_ant_config' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2790:5: warning: symbol 'ath9k_get_eeprom' was not declared. Should it be static?
+Well, depends on what you mean with breaking ;-). In this particular
+case, the output may show incorrect rate in a case where the previous
+version showed incorrect rate (e.g., ath9k just reported the highest
+legacy rate when HT rates were used). In context of Linux and radiotap,
+there wasn't really anything working before that this would break.
 
-drivers/net/wireless/ath9k/calib.c:962:30: warning: symbol 'iq_cal_multi_sample' was not declared. Should it be static?
-drivers/net/wireless/ath9k/calib.c:969:30: warning: symbol 'iq_cal_single_sample' was not declared. Should it be static?
-drivers/net/wireless/ath9k/calib.c:976:30: warning: symbol 'adc_gain_cal_multi_sample' was not declared. Should it be static?
-drivers/net/wireless/ath9k/calib.c:983:30: warning: symbol 'adc_gain_cal_single_sample' was not declared. Should it be static?
-drivers/net/wireless/ath9k/calib.c:990:30: warning: symbol 'adc_dc_cal_multi_sample' was not declared. Should it be static?
-drivers/net/wireless/ath9k/calib.c:997:30: warning: symbol 'adc_dc_cal_single_sample' was not declared. Should it be static?
-drivers/net/wireless/ath9k/calib.c:1004:30: warning: symbol 'adc_init_dc_cal' was not declared. Should it be static?
+> Just get a new field for the mcs index.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/eeprom.c |   30 ++++++++++++++++--------------
- drivers/net/wireless/ath9k/hw.c     |   16 ++++------------
- drivers/net/wireless/ath9k/hw.h     |    8 ++++++++
- 3 files changed, 28 insertions(+), 26 deletions(-)
+Unfortunately, that does not seem to be that easy a task.. I tried to
+subscribe to the radiotap mailing list, but the info page is returning
+403 Forbidden. Then I tried looking at the archive, and that returned
+404.. If I've understood correctly, that has been the state of the
+mailing list for a long time. Furthermore, many (most?) people working
+with radiotap for Linux/*BSD/wireshark/tcpdump seem to have more or less
+given up on the effort to come up with a shared specification for the
+format.
 
-diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
-index 14f8d40..ccf57c3 100644
---- a/drivers/net/wireless/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath9k/eeprom.c
-@@ -192,7 +192,7 @@ static bool ath9k_hw_fill_def_eeprom(struct ath_hal *ah)
- #undef SIZE_EEPROM_DEF
- }
- 
--bool (*ath9k_fill_eeprom[]) (struct ath_hal *) = {
-+static bool (*ath9k_fill_eeprom[]) (struct ath_hal *) = {
- 	ath9k_hw_fill_def_eeprom,
- 	ath9k_hw_fill_4k_eeprom
- };
-@@ -460,7 +460,7 @@ static int ath9k_hw_check_4k_eeprom(struct ath_hal *ah)
- #undef EEPROM_4K_SIZE
- }
- 
--int (*ath9k_check_eeprom[]) (struct ath_hal *) = {
-+static int (*ath9k_check_eeprom[]) (struct ath_hal *) = {
- 	ath9k_hw_check_def_eeprom,
- 	ath9k_hw_check_4k_eeprom
- };
-@@ -1216,7 +1216,7 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hal *ah,
- 	return true;
- }
- 
--bool ath9k_hw_set_def_power_per_rate_table(struct ath_hal *ah,
-+static bool ath9k_hw_set_def_power_per_rate_table(struct ath_hal *ah,
- 				       struct ath9k_channel *chan,
- 				       int16_t *ratesArray,
- 				       u16 cfgCtl,
-@@ -1507,7 +1507,7 @@ bool ath9k_hw_set_def_power_per_rate_table(struct ath_hal *ah,
- 	return true;
- }
- 
--bool ath9k_hw_set_4k_power_per_rate_table(struct ath_hal *ah,
-+static bool ath9k_hw_set_4k_power_per_rate_table(struct ath_hal *ah,
- 				       struct ath9k_channel *chan,
- 				       int16_t *ratesArray,
- 				       u16 cfgCtl,
-@@ -2004,7 +2004,7 @@ static int ath9k_hw_4k_set_txpower(struct ath_hal *ah,
- 	return 0;
- }
- 
--int (*ath9k_set_txpower[]) (struct ath_hal *,
-+static int (*ath9k_set_txpower[]) (struct ath_hal *,
- 			    struct ath9k_channel *,
- 			    u16, u8, u8, u8) = {
- 	ath9k_hw_def_set_txpower,
-@@ -2103,7 +2103,7 @@ static void ath9k_hw_set_4k_addac(struct ath_hal *ah,
- 	}
- }
- 
--void (*ath9k_set_addac[]) (struct ath_hal *, struct ath9k_channel *) = {
-+static void (*ath9k_set_addac[]) (struct ath_hal *, struct ath9k_channel *) = {
- 	ath9k_hw_set_def_addac,
- 	ath9k_hw_set_4k_addac
- };
-@@ -2540,7 +2540,7 @@ static bool ath9k_hw_eeprom_set_4k_board_values(struct ath_hal *ah,
- 	return true;
- }
- 
--bool (*ath9k_eeprom_set_board_values[])(struct ath_hal *,
-+static bool (*ath9k_eeprom_set_board_values[])(struct ath_hal *,
- 					struct ath9k_channel *) = {
- 	ath9k_hw_eeprom_set_def_board_values,
- 	ath9k_hw_eeprom_set_4k_board_values
-@@ -2603,7 +2603,8 @@ static int ath9k_hw_get_4k_eeprom_antenna_cfg(struct ath_hal *ah,
- 	return -EINVAL;
- }
- 
--int (*ath9k_get_eeprom_antenna_cfg[])(struct ath_hal *, struct ath9k_channel *,
-+static int (*ath9k_get_eeprom_antenna_cfg[])(struct ath_hal *,
-+				      struct ath9k_channel *,
- 				      u8, u16 *) = {
- 	ath9k_hw_get_def_eeprom_antenna_cfg,
- 	ath9k_hw_get_4k_eeprom_antenna_cfg
-@@ -2619,13 +2620,13 @@ int ath9k_hw_get_eeprom_antenna_cfg(struct ath_hal *ah,
- 							     index, config);
- }
- 
--u8 ath9k_hw_get_4k_num_ant_config(struct ath_hal *ah,
-+static u8 ath9k_hw_get_4k_num_ant_config(struct ath_hal *ah,
- 			       enum ieee80211_band freq_band)
- {
- 	return 1;
- }
- 
--u8 ath9k_hw_get_def_num_ant_config(struct ath_hal *ah,
-+static u8 ath9k_hw_get_def_num_ant_config(struct ath_hal *ah,
- 			       enum ieee80211_band freq_band)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
-@@ -2644,9 +2645,10 @@ u8 ath9k_hw_get_def_num_ant_config(struct ath_hal *ah,
- 	return num_ant_config;
- }
- 
--u8 (*ath9k_get_num_ant_config[])(struct ath_hal *, enum ieee80211_band) = {
--	ath9k_hw_get_def_num_ant_config,
--	ath9k_hw_get_4k_num_ant_config
-+static u8 (*ath9k_get_num_ant_config[])(struct ath_hal *,
-+	enum ieee80211_band) = {
-+	  ath9k_hw_get_def_num_ant_config,
-+	  ath9k_hw_get_4k_num_ant_config
- };
- 
- u8 ath9k_hw_get_num_ant_config(struct ath_hal *ah,
-@@ -2787,7 +2789,7 @@ static u32 ath9k_hw_get_eeprom_def(struct ath_hal *ah,
- 	}
- }
- 
--u32 (*ath9k_get_eeprom[])(struct ath_hal *, enum eeprom_param) = {
-+static u32 (*ath9k_get_eeprom[])(struct ath_hal *, enum eeprom_param) = {
- 	ath9k_hw_get_eeprom_def,
- 	ath9k_hw_get_eeprom_4k
- };
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index 7d5ca81..75ab052 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -27,14 +27,6 @@
- #define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
- #define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
- 
--extern struct hal_percal_data iq_cal_multi_sample;
--extern struct hal_percal_data iq_cal_single_sample;
--extern struct hal_percal_data adc_gain_cal_multi_sample;
--extern struct hal_percal_data adc_gain_cal_single_sample;
--extern struct hal_percal_data adc_dc_cal_multi_sample;
--extern struct hal_percal_data adc_dc_cal_single_sample;
--extern struct hal_percal_data adc_init_dc_cal;
--
- static bool ath9k_hw_set_reset_reg(struct ath_hal *ah, u32 type);
- static void ath9k_hw_set_regs(struct ath_hal *ah, struct ath9k_channel *chan,
- 			      enum ath9k_ht_macmode macmode);
-@@ -1847,9 +1839,9 @@ static void ath9k_hw_9280_spur_mitigate(struct ath_hal *ah, struct ath9k_channel
- 		if ((cur_vit_mask > lower) && (cur_vit_mask < upper)) {
- 
- 			/* workaround for gcc bug #37014 */
--			volatile int tmp = abs(cur_vit_mask - bin);
-+			volatile int tmp_v = abs(cur_vit_mask - bin);
- 
--			if (tmp < 75)
-+			if (tmp_v < 75)
- 				mask_amt = 1;
- 			else
- 				mask_amt = 0;
-@@ -2048,9 +2040,9 @@ static void ath9k_hw_spur_mitigate(struct ath_hal *ah, struct ath9k_channel *cha
- 		if ((cur_vit_mask > lower) && (cur_vit_mask < upper)) {
- 
- 			/* workaround for gcc bug #37014 */
--			volatile int tmp = abs(cur_vit_mask - bin);
-+			volatile int tmp_v = abs(cur_vit_mask - bin);
- 
--			if (tmp < 75)
-+			if (tmp_v < 75)
- 				mask_amt = 1;
- 			else
- 				mask_amt = 0;
-diff --git a/drivers/net/wireless/ath9k/hw.h b/drivers/net/wireless/ath9k/hw.h
-index 91d8f59..3ae3b88 100644
---- a/drivers/net/wireless/ath9k/hw.h
-+++ b/drivers/net/wireless/ath9k/hw.h
-@@ -20,6 +20,14 @@
- #include <linux/if_ether.h>
- #include <linux/delay.h>
- 
-+extern const struct hal_percal_data iq_cal_multi_sample;
-+extern const struct hal_percal_data iq_cal_single_sample;
-+extern const struct hal_percal_data adc_gain_cal_multi_sample;
-+extern const struct hal_percal_data adc_gain_cal_single_sample;
-+extern const struct hal_percal_data adc_dc_cal_multi_sample;
-+extern const struct hal_percal_data adc_dc_cal_single_sample;
-+extern const struct hal_percal_data adc_init_dc_cal;
-+
- struct ar5416_desc {
- 	u32 ds_link;
- 	u32 ds_data;
 -- 
-1.6.1.rc3.51.g5832d
-
+Jouni Malinen                                            PGP id EFC895FA
