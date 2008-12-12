@@ -1,79 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:60424 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754396AbYLIUHs (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.189]:27498 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756233AbYLLBsB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 15:07:48 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] p54: fix oops on faulty devices
-Date: Tue, 9 Dec 2008 21:07:50 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>
+	Thu, 11 Dec 2008 20:48:01 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so810616tic.23
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 17:47:58 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812092107.50174.chunkeey@web.de> (sfid-20081209_210752_395713_CD9A22DE)
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18753.49741.50254.587004@localhost.localdomain> (sfid-20081212_024811_053296_0B6FDAEB)
+Date: Fri, 12 Dec 2008 07:15:49 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	jouni.malinen@atheros.com, lrodriguez@atheros.com,
+	tomas.winkler@intel.com
+Subject: Re: [RFC v2] mac80211: Fix HT channel selection
+In-Reply-To: <1229022470.8081.65.camel@johannes.berg>
+References: <18750.13163.213759.181839@localhost.localdomain>
+	<1228818258.22164.178.camel@johannes.berg>
+	<18750.46333.603462.143624@localhost.localdomain>
+	<1229022470.8081.65.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an oops when the devices suddenly starts
-to receive martian data frames.
+Johannes Berg wrote:
+> tried, it pushed ~2.9 MByte/sec TCP from my AP which isn't a lot... Then
+> it crashed (see below). I say we put the patch in.
+> 
 
-bug reference:
-http://marc.info/?l=linux-wireless&m=122872280317635&w=2
+No wait, I really don't want to introduce a regression in iwlwifi, will
+look into this and see if moving their ht conf to config() causes trouble.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-12-09 19:13:06.867910376 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-12-09 20:13:56.467888032 +0100
-@@ -541,6 +541,14 @@ static int p54_rx_data(struct ieee80211_
- 	size_t header_len = sizeof(*hdr);
- 	u32 tsf32;
- 
-+	/*
-+	 * If the device is in a unspecified state we have to
-+	 * ignore all data frames. Else we could end up with a
-+	 * nasty crash.
-+	 */
-+	if (unlikely(priv->mode == NL80211_IFTYPE_UNSPECIFIED))
-+		return 0;
-+
- 	if (!(hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_IN_FCS_GOOD))) {
- 		if (priv->filter_flags & FIF_FCSFAIL)
- 			rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
-@@ -609,6 +617,12 @@ void p54_free_skb(struct ieee80211_hw *d
- 	if (unlikely(!skb || !dev || !skb_queue_len(&priv->tx_queue)))
- 		return;
- 
-+	/*
-+	 * don't try to free an already unlinked skb
-+	 */
-+	if (unlikely((!skb->next) || (!skb->prev)))
-+		return;
-+
- 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
- 	info = IEEE80211_SKB_CB(skb);
- 	range = (void *)info->rate_driver_data;
-@@ -1676,19 +1690,18 @@ static void p54_stop(struct ieee80211_hw
- 	struct sk_buff *skb;
- 
- 	mutex_lock(&priv->conf_mutex);
-+	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
- 	del_timer(&priv->stats_timer);
- 	p54_free_skb(dev, priv->cached_stats);
- 	priv->cached_stats = NULL;
- 	if (priv->cached_beacon)
- 		p54_tx_cancel(dev, priv->cached_beacon);
- 
-+	priv->stop(dev);
- 	while ((skb = skb_dequeue(&priv->tx_queue)))
- 		kfree_skb(skb);
--
- 	priv->cached_beacon = NULL;
--	priv->stop(dev);
- 	priv->tsf_high32 = priv->tsf_low32 = 0;
--	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
- 	mutex_unlock(&priv->conf_mutex);
- }
- 
+Sujith
