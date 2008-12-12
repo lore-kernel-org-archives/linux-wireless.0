@@ -1,64 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44051 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753572AbYLLWub (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 17:50:31 -0500
-Subject: Re: [RFC 0/3] cfg80211, mac80211: Introduce radiotap flags for
-	finer userspace control of injection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <69e28c910812121440j6e010ac0j6e08cd6a53f58bcb@mail.gmail.com> (sfid-20081212_234036_335109_607659A0)
-References: <69e28c910812121432k1e8732bcma77e489d247ecdf4@mail.gmail.com>
-	 <1229121467.3565.2.camel@johannes.berg>
-	 <69e28c910812121440j6e010ac0j6e08cd6a53f58bcb@mail.gmail.com>
-	 (sfid-20081212_234036_335109_607659A0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/pCzRBFv2DFm4cCn8Aqe"
-Date: Fri, 12 Dec 2008 23:50:25 +0100
-Message-Id: <1229122225.3565.16.camel@johannes.berg> (sfid-20081212_235034_121177_CCD47E98)
-Mime-Version: 1.0
+Received: from blaine.gmane.org ([80.91.229.8]:35134 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758638AbYLLOFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2008 09:05:08 -0500
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1LB8dd-0007DX-MQ
+	for linux-wireless@vger.kernel.org; Fri, 12 Dec 2008 15:05:05 +0100
+Message-ID: <49426F6B.3040109@redhat.com> (sfid-20081212_150515_763763_BF411CFE)
+Date: Fri, 12 Dec 2008 15:04:27 +0100
+From: Zdenek Kabelac <zkabelac@redhat.com>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: "Alexander E. Patrakov" <patrakov@gmail.com>,
+	reinette chatre
+	<public-reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@hugh.gmane.org>,
+	"linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org"
+	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	"linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org"
+	<public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>
+Subject: Re: iwlagn interrupt problem
+References: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com>	 <c072ca310812100710o58c38a27rba16ad2318a1cb95@mail.gmail.com>	 <1228929548.18730.21.camel@rc-desk>	 <c072ca310812110548s64612ac7icd6e9187aa4af75a@mail.gmail.com>	 <49424419.1090103@redhat.com>	 <c072ca310812120323r2c92420di5a138ae6265d567f@mail.gmail.com>	 <49424B7A.9060700@redhat.com> <1229086999.32038.6.camel@localhost.localdomain>
+In-Reply-To: <1229086999.32038.6.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-/pCzRBFv2DFm4cCn8Aqe
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2008-12-12 at 23:40 +0100, Stefanik G=C3=A1bor wrote:
+Dan Williams napsal(a):
+> On Fri, 2008-12-12 at 12:31 +0100, Zdenek Kabelac wrote:
+>> Alexander E. Patrakov napsal(a):
+>>> 2008/12/12 Zdenek Kabelac <zkabelac@redhat.com>:
+>>>> I assume that this backtrace I've got with 2.6.28-rc7 is the same issue ?
+>>> No, this is different. My issue is with unacceptable latency when
+>>> bringing the interface down. In your dmesg, the interface was never
+>>> brought up or down.
+>>>
+>> Hmm - it was something like an hour after resume when the problem started,
+>>
+>> Here is timed part of the same backtrace:
+>>
+>> [65627.782972] wlan0: associate with AP 00:11:d8:da:65:40
+>> [65627.785569] wlan0: RX ReassocResp from 00:11:d8:da:65:40 (capab=0x401 
+>> status=0 aid=8)
+>> [65627.785576] wlan0: associated
+>> [69541.209873] wlan0: No ProbeResp from current AP 00:11:d8:da:65:40 - assume 
+>> out of range
+>> [69541.810104] iwl3945: Error sending REPLY_SCAN_CMD: time out after 500ms.
+>> [69542.309861] iwl3945: Error sending REPLY_RXON_ASSOC: time out after 500ms.
+>>
+>>
+>> The begging of my trace looked similar.
+>>
+>> Should I open new bugzilla separately ?
+> 
+> If you can reproduce this, it sounds more like a firmware problem, so
+> Reinette is probably going to want you to enable firmware debugging in
+> the driver.  Try removing the iwl3945 module with rmmod, then "modprobe
+> iwl3945 debug=0x43fff", reproduce this command timeout, and attach the
+> logs to whatever bug report you file.
+> 
 
-> [...]
+Unfortunately I do not have a reproducing case and it happened just once on 
+Wednesday after resume.
 
-Incidentally, as for the radiotap changes, I'm wondering whether the
-flag really should be "no seqno" or should be "assign seqno" instead. It
-seems injection should be "as raw as possible" by default. But things
-like that really need to be worked out with people from other systems.
+But when (if) it will repeat I'll try to reinsert module with debug - I think 
+without this my bug is not resolvable right ?
 
-johannes
-
---=-/pCzRBFv2DFm4cCn8Aqe
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQuquAAoJEKVg1VMiehFYNYsP/isp8+8NGJ+ZTH0IQMyKmlFQ
-bPgGuc7AlFpHo49TB6n6x+8yeRFcMlPj/VYD6WRu//VKaiOLjtSxJkPaiHFuPjEw
-Ord0zSB3tUtARCI8nqmmg8MGieQmYKxPBRBSJO66RCu8wxrX9FrxCDwfIeVkY3uz
-yTcKIlnCQ48zQTSQ0lfe6fQlI/d4MBMw6v0vn2MkvH6tqotP+TmL5tq3MhGSX7lK
-zssbJ57jlxie/QKu9TxusoVOJkYgAYDPafD1fY4nR0Lac7UMqtcVBBEYwPIOwkr8
-wS52iiB7SPsxZecQFCGUsl6myPEVGqVQ7XGsdo6soOKL6TGFF2IKfYNc+GgrQ79B
-eU9acA+3xOcgOsJPhv/GqhSr7naV0nFgM5TxAJwGzLsKx9fYWAtnTRsanVEC28kh
-IpQuALUM3t7cslebsVwN101NWIQhgqR4JZu0H2l0WHBfEMFsQYqVD+HZ52lpWRvU
-nEVTfyIuK8FTeltIHO658Flg712Jw4z9UUgEM3iPO2YvV4GVTfe9g0VOMrFGBJOJ
-uL2IMn2heIyzLh/bhkH4n2y4vDv4arjIEo365PgU6DS8sUfRCT/b0/1oV6J/WMez
-Xy/a7Xkn+ZYiEIJHbmIMM794uF2MIRT3dAI+2hFTkj4p9txHHLG+/ly7ahk0Zevc
-NInoNvBhvZHjN0FuZnvS
-=8Twg
------END PGP SIGNATURE-----
-
---=-/pCzRBFv2DFm4cCn8Aqe--
+Zdenek
 
