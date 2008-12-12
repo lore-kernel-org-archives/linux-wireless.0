@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37081 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752135AbYLVDil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 22:38:41 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 02/10] iwl3945: adding utils ops
-Date: Mon, 22 Dec 2008 11:31:15 +0800
-Message-Id: <1229916683-9772-3-git-send-email-yi.zhu@intel.com> (sfid-20081222_043853_401694_4D88A9AE)
-In-Reply-To: <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
-References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:59947 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757470AbYLLE2X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2008 23:28:23 -0500
+Message-ID: <4941E863.50703@lwfinger.net> (sfid-20081212_052846_040732_869E9D61)
+Date: Thu, 11 Dec 2008 22:28:19 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	hmh@hmh.eng.br
+Subject: Re: [RFC] b43: rework rfkill code
+References: <20081210150935.GA10927@srcf.ucam.org>
+In-Reply-To: <20081210150935.GA10927@srcf.ucam.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
+Matthew Garrett wrote:
+> I've reworked the rfkill code in b43. This ought to be more consistent 
+> with the other drivers and it seems to work on the machines I've tested 
+> it on here, but it'd be good to get some feedback.
+> 
+> Firstly, I've replaced the polled input device. It's just some delayed 
+> work now. It polls the hardware every second to determine whether the 
+> radio has been hardware killed or not. If it has, it sets the rfkill 
+> state to HARD_BLOCKED. If the radio is enabled and the previous state 
+> was HARD_BLOCKED, it resets the state to UNBLOCKED. If the radio is 
+> enabled and the previous state was SOFT_BLOCKED, it leaves the state as 
+> is.
+> 
+> I also removed some of the complexity from the rfkill toggle function, 
+> since the rfkill core will handle the case of the user requesting a 
+> change from HARD_BLOCKED without the driver needing to care.
+> 
+> The final change is that I removed the code for changing the wireless 
+> state in response to the txpower configuration in mac80211. Right now, I 
+> can't see any way for this to work correctly - if the user disables the 
+> radio via rfkill, mac80211 doesn't flag the radio as disabled. As a 
+> result, the next time the configuration callback is called, b43 
+> reenables the radio again, even though the user has explicitly disabled 
+> it. I don't think any of the other drivers handle this case, so I'm not 
+> really sure what the best way to handle this in future is. The current 
+> situation certainly seems broken.
+> 
+> How does this look to people?
 
-The patch implements iwl_hcmd_utils_ops for 3945.
+All this discussion about hard vs soft rfkill makes my head hurt and I have
+stopped reading those posts.
 
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+Correction to my earlier post. If the system is booted with the RF switch off,
+the LED is on, whereas it should be off. The original code works correctly.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 24cdc5c..a0aea81 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2377,6 +2377,19 @@ int iwl3945_hw_tx_queue_init(struct iwl_priv *priv, struct iwl3945_tx_queue *txq
- 	return 0;
- }
- 
-+/*
-+ * HCMD utils
-+ */
-+static u16 iwl3945_get_hcmd_size(u8 cmd_id, u16 len)
-+{
-+	switch (cmd_id) {
-+	case REPLY_RXON:
-+		return (u16) sizeof(struct iwl3945_rxon_cmd);
-+	default:
-+		return len;
-+	}
-+}
-+
- /**
-  * iwl3945_init_hw_rate_table - Initialize the hardware rate fallback table
-  */
-@@ -2694,8 +2707,13 @@ static struct iwl_lib_ops iwl3945_lib = {
- 	},
- };
- 
-+static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
-+	.get_hcmd_size = iwl3945_get_hcmd_size,
-+};
-+
- static struct iwl_ops iwl3945_ops = {
- 	.lib = &iwl3945_lib,
-+	.utils = &iwl3945_hcmd_utils,
- };
- 
- static struct iwl_cfg iwl3945_bg_cfg = {
--- 
-1.5.3.6
+Larry
+
+
+
 
