@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out8.libero.it ([212.52.84.108]:58292 "EHLO
-	cp-out8.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbYLXR3U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 12:29:20 -0500
-From: Fabio Rossi <rossi.f@inwind.it>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: p54: ad-hoc mode doesn't work
-Date: Wed, 24 Dec 2008 18:28:49 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200812230132.21839.rossi.f@inwind.it> <1230072758.5692.2.camel@dv>
-In-Reply-To: <1230072758.5692.2.camel@dv>
+Received: from blaine.gmane.org ([80.91.229.8]:39460 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755785AbYLMGUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Dec 2008 01:20:35 -0500
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1LBNrc-0001GI-RU
+	for linux-wireless@vger.kernel.org; Sat, 13 Dec 2008 07:20:32 +0100
+Message-ID: <c072ca310812120323r2c92420di5a138ae6265d567f@mail.gmail.com> (sfid-20081213_072109_337226_5AC17EF9)
+Date: Fri, 12 Dec 2008 16:23:49 +0500
+From: "Alexander E. Patrakov" <patrakov@gmail.com>
+To: "Zdenek Kabelac" <zkabelac@redhat.com>
+Subject: Re: iwlagn interrupt problem
+Cc: "reinette chatre"
+	<public-reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@hugh.gmane.org>,
+	"linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org"
+	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	"linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org"
+	<public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>
+In-Reply-To: <49424419.1090103@redhat.com>
 MIME-Version: 1.0
-Message-Id: <200812241828.49679.rossi.f@inwind.it> (sfid-20081224_182929_094717_66D4541B)
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=UTF-8
+References: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com>
+	 <c072ca310812100710o58c38a27rba16ad2318a1cb95@mail.gmail.com>
+	 <1228929548.18730.21.camel@rc-desk>
+	 <c072ca310812110548s64612ac7icd6e9187aa4af75a@mail.gmail.com>
+	 <49424419.1090103@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems strange to me, on the other PC I'm using the ath5k driver with a PCI 
-wireless NIC and the interface enters in ad-hoc mode without complaining 
-(CRDA is not installed).
 
-I'll try to install also CRDA to see if something changes, maybe there is a 
-difference between the ath5k and p54 drivers.
 
-Thanks,
-Fabio
 
-On Tuesday 23 December 2008, Pavel Roskin wrote:
+2008/12/12 Zdenek Kabelac <zkabelac@redhat.com>:
+> I assume that this backtrace I've got with 2.6.28-rc7 is the same issue ?
 
-> Once CRDA is installed, use "iw" to set your regulatory domain.  Without
-> CRDA, the kernel uses very conservative rules that don't allow beaconing
-> and thus the ad-hoc mode.
+No, this is different. My issue is with unacceptable latency when
+bringing the interface down. In your dmesg, the interface was never
+brought up or down.
+
+-- 
+Alexander E. Patrakov
+
+
