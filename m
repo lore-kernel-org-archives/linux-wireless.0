@@ -1,113 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:2125 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751488AbYLWFtw convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.233]:62572 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753368AbYLLWcn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 00:49:52 -0500
-Message-ID: <20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net> (sfid-20081223_064958_213886_E71614CD)
-Date: Tue, 23 Dec 2008 00:49:45 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] crda: use strerror() to report error code verbosely
-References: <20081223050006.3710.98311.stgit@ct.roinet.com>
-	<43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com>
-In-Reply-To: <43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com>
+	Fri, 12 Dec 2008 17:32:43 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so1578824rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2008 14:32:43 -0800 (PST)
+Message-ID: <69e28c910812121432h62ff39a4h45d4183d457a4a20@mail.gmail.com> (sfid-20081212_233246_286194_13E0A7B9)
+Date: Fri, 12 Dec 2008 23:32:42 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC 3/3] mac80211: Document the new Radiotap TX flags in Documentation/networking/mac80211-injection.txt
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: multipart/mixed;
+	boundary="----=_Part_27835_13947873.1229121163066"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
+------=_Part_27835_13947873.1229121163066
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> I've been trying to avoid string.h on crda.c, granted it only
-> increases the final crda binary by about 30 bytes, but do we really
-> need it? In fact it'd be nice to further trim crda further to save
-> even more space. Thoughts?
+Update Documentation/networking/mac80211-injection.txt to include the
+following 2 new flags:
 
-OK, maybe we don't need this patch if CDRA works correctly.  I'm  
-having bad luck with it.
+ * IEEE80211_RADIOTAP_TX_FLAGS
 
-First of all, I cannot generate regulatory.bin that crda would accept.
+   IEEE80211_RADIOTAP_F_TX_NO_ACK: Transmit the packet once with no waiting=
+ for
+=09=09=09=09   an ACK and no retrying if no ACK received
+   IEEE80211_RADIOTAP_F_TX_NO_SEQ: Use the sequence number already present =
+in
+=09=09=09=09   the 802.11 header, do not generate a new one
+=09=09=09=09   in the driver/stack. Useful when injecting
+=09=09=09=09   fragments with the same sequence number.
 
-[proski@dv wireless-regdb]$ make
-./db2bin.py regulatory.bin db.txt key.priv.pem
-openssl rsa -in key.priv.pem -out key.pub.pem -pubout -outform PEM
-writing RSA key
+In addition, update the language somewhat to stop refering to "three
+parameters" (there are more than 3, even without this patch).
 
-[proski@dv crda]$ make
-   GEN  keys-gcrypt.c
-   CC   reglib.o
-   CC   crda.o
-   LD   crda
-   CC   intersect.o
-   CC   print-regdom.o
-   LD   intersect
-   CC   regdbdump.o
-   LD   regdbdump
-   CHK  /home/proski/src/wireless-regdb/regulatory.bin
-Database signature verification failed.
-make: *** [verify] Error 234
+Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
 
-wireless-regdb and crda are current from git.  The system is Fedora  
-10, x86_64 with a custom kernel.
+---
 
-Only regulatory.bin from wireless-regdb-master is OK.  It is indeed different.
+Patch also available as an attachment in case Gmail decides to damage it.
 
-[proski@dv wireless-regdb]$ cmp -b regulatory.bin /usr/lib/crda/regulatory.bin
-regulatory.bin /usr/lib/crda/regulatory.bin differ: byte 2685, line 3  
-is  36 ^^ 130 X
+diff --git a/Documentation/networking/mac80211-injection.txt
+b/Documentation/networking/mac80211-injection.txt
+index 84906ef..c6e35ff 100644
+--- a/Documentation/networking/mac80211-injection.txt
++++ b/Documentation/networking/mac80211-injection.txt
+@@ -12,7 +12,7 @@ following format:
+ The radiotap format is discussed in
+ ./Documentation/networking/radiotap-headers.txt.
 
-Once I install the working regulatory.bin, I can compile crda.  It  
-appears that crda needs COUNTRY in the environment, but it's not  
-documented anywhere and there is no sample file whre to set it.  I  
-tried adding "export COUNTRY=US" to /etc/sysconfig/i18n, and it  
-appears in the environment when logged in on the console.  However,  
-crda doesn't apprear to see it:
+-Despite 13 radiotap argument types are currently defined, most only make s=
+ense
++Of the 13 radiotap argument types currently defined, most only make sense
+ to appear on received packets.  The following information is parsed from t=
+he
+ radiotap headers and used to control injection:
 
-[    0.720023] cfg80211: Calling CRDA to update world regulatory domain
-[    0.720065] cfg80211: calling CRDA failed - unable to update world  
-regulatory domain, using static definition
+@@ -40,10 +40,20 @@ radiotap headers and used to control injection:
+ =09=09=09      this flag is only reliable when software
+ =09=09=09      fragmentation is enabled)
 
-Not only did it try to set the world domain, it failed at that.   
-However, running crda on the command line is successful:
++
++ * IEEE80211_RADIOTAP_TX_FLAGS
++
++   IEEE80211_RADIOTAP_F_TX_NO_ACK: Transmit the packet once with no waitin=
+g for
++=09=09=09=09   an ACK and no retrying if no ACK received
++   IEEE80211_RADIOTAP_F_TX_NO_SEQ: Use the sequence number already present=
+ in
++=09=09=09=09   the 802.11 header, do not generate a new one
++=09=09=09=09   in the driver/stack. Useful when injecting
++=09=09=09=09   fragments with the same sequence number.
++
+ The injection code can also skip all other currently defined radiotap fiel=
+ds
+ facilitating replay of captured radiotap headers directly.
 
-COUNTRY=00 crda
+-Here is an example valid radiotap header defining these three parameters
++Here is an example valid radiotap header defining three of these parameter=
+s:
 
- From the kernel log:
+ =090x00, 0x00, // <-- radiotap version
+ =090x0b, 0x00, // <- radiotap header length
 
-[ 3579.145902] cfg80211: World regulatory domain updated:
-[ 3579.145905]  (start_freq - end_freq @ bandwidth),  
-(max_antenna_gain, max_eirp)
-[ 3579.145907]  (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+------=_Part_27835_13947873.1229121163066
+Content-Type: application/octet-stream;
+ name=0003-mac80211-document-the-new-radiotap-tx-flags-in-mac80211-injection-txt.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_foneznav0
+Content-Disposition: attachment;
+ filename=0003-mac80211-document-the-new-radiotap-tx-flags-in-mac80211-injection-txt.patch
 
-But setting any specific country fails:
-
-[root@ct crda]# COUNTRY=US crda
-Failed to set regulatory domain: -22
-[root@ct crda]# COUNTRY=DE crda
-Failed to set regulatory domain: -22
-[root@ct crda]# COUNTRY=RU crda
-Failed to set regulatory domain: -22
-[root@ct crda]# COUNTRY=QW crda
-No country match in regulatory database.
-[root@ct crda]#
-
--22 is -EINVAL, "invalid argument".
-
-At this point I want that crda at least gives me errors in a readable  
-form.  But maybe I want too little :-)
-
-The kernel is current from wireless-testing.git.   
-CONFIG_WIRELESS_OLD_REGULATORY is disabled.  CONFIG_CFG80211_REG_DEBUG  
-is disabled (I guess I'll try enabling it now).  CONFIG_CFG80211 is  
-enabled.  mac80211 is compiled into the kernel.  The only modules are  
-wireless drivers (b43, hostap, rt61).
-
--- 
-Regards,
-Pavel Roskin
+ZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vbmV0d29ya2luZy9tYWM4MDIxMS1pbmplY3Rpb24u
+dHh0IGIvRG9jdW1lbnRhdGlvbi9uZXR3b3JraW5nL21hYzgwMjExLWluamVjdGlvbi50eHQKaW5k
+ZXggODQ5MDZlZi4uYzZlMzVmZiAxMDA2NDQKLS0tIGEvRG9jdW1lbnRhdGlvbi9uZXR3b3JraW5n
+L21hYzgwMjExLWluamVjdGlvbi50eHQKKysrIGIvRG9jdW1lbnRhdGlvbi9uZXR3b3JraW5nL21h
+YzgwMjExLWluamVjdGlvbi50eHQKQEAgLTEyLDcgKzEyLDcgQEAgZm9sbG93aW5nIGZvcm1hdDoK
+IFRoZSByYWRpb3RhcCBmb3JtYXQgaXMgZGlzY3Vzc2VkIGluCiAuL0RvY3VtZW50YXRpb24vbmV0
+d29ya2luZy9yYWRpb3RhcC1oZWFkZXJzLnR4dC4KIAotRGVzcGl0ZSAxMyByYWRpb3RhcCBhcmd1
+bWVudCB0eXBlcyBhcmUgY3VycmVudGx5IGRlZmluZWQsIG1vc3Qgb25seSBtYWtlIHNlbnNlCitP
+ZiB0aGUgMTMgcmFkaW90YXAgYXJndW1lbnQgdHlwZXMgY3VycmVudGx5IGRlZmluZWQsIG1vc3Qg
+b25seSBtYWtlIHNlbnNlCiB0byBhcHBlYXIgb24gcmVjZWl2ZWQgcGFja2V0cy4gIFRoZSBmb2xs
+b3dpbmcgaW5mb3JtYXRpb24gaXMgcGFyc2VkIGZyb20gdGhlCiByYWRpb3RhcCBoZWFkZXJzIGFu
+ZCB1c2VkIHRvIGNvbnRyb2wgaW5qZWN0aW9uOgogCkBAIC00MCwxMCArNDAsMjAgQEAgcmFkaW90
+YXAgaGVhZGVycyBhbmQgdXNlZCB0byBjb250cm9sIGluamVjdGlvbjoKIAkJCSAgICAgIHRoaXMg
+ZmxhZyBpcyBvbmx5IHJlbGlhYmxlIHdoZW4gc29mdHdhcmUKIAkJCSAgICAgIGZyYWdtZW50YXRp
+b24gaXMgZW5hYmxlZCkKIAorCisgKiBJRUVFODAyMTFfUkFESU9UQVBfVFhfRkxBR1MKKworICAg
+SUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9fQUNLOiBUcmFuc21pdCB0aGUgcGFja2V0IG9uY2Ug
+d2l0aCBubyB3YWl0aW5nIGZvcgorCQkJCSAgIGFuIEFDSyBhbmQgbm8gcmV0cnlpbmcgaWYgbm8g
+QUNLIHJlY2VpdmVkCisgICBJRUVFODAyMTFfUkFESU9UQVBfRl9UWF9OT19TRVE6IFVzZSB0aGUg
+c2VxdWVuY2UgbnVtYmVyIGFscmVhZHkgcHJlc2VudCBpbgorCQkJCSAgIHRoZSA4MDIuMTEgaGVh
+ZGVyLCBkbyBub3QgZ2VuZXJhdGUgYSBuZXcgb25lCisJCQkJICAgaW4gdGhlIGRyaXZlci9zdGFj
+ay4gVXNlZnVsIHdoZW4gaW5qZWN0aW5nCisJCQkJICAgZnJhZ21lbnRzIHdpdGggdGhlIHNhbWUg
+c2VxdWVuY2UgbnVtYmVyLgorCiBUaGUgaW5qZWN0aW9uIGNvZGUgY2FuIGFsc28gc2tpcCBhbGwg
+b3RoZXIgY3VycmVudGx5IGRlZmluZWQgcmFkaW90YXAgZmllbGRzCiBmYWNpbGl0YXRpbmcgcmVw
+bGF5IG9mIGNhcHR1cmVkIHJhZGlvdGFwIGhlYWRlcnMgZGlyZWN0bHkuCiAKLUhlcmUgaXMgYW4g
+ZXhhbXBsZSB2YWxpZCByYWRpb3RhcCBoZWFkZXIgZGVmaW5pbmcgdGhlc2UgdGhyZWUgcGFyYW1l
+dGVycworSGVyZSBpcyBhbiBleGFtcGxlIHZhbGlkIHJhZGlvdGFwIGhlYWRlciBkZWZpbmluZyB0
+aHJlZSBvZiB0aGVzZSBwYXJhbWV0ZXJzOgogCiAJMHgwMCwgMHgwMCwgLy8gPC0tIHJhZGlvdGFw
+IHZlcnNpb24KIAkweDBiLCAweDAwLCAvLyA8LSByYWRpb3RhcCBoZWFkZXIgbGVuZ3RoCg==
+------=_Part_27835_13947873.1229121163066--
