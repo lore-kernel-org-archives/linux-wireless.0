@@ -1,82 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:52455 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751667AbYLHULu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 15:11:50 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFT] mac80211: clean up set_key callback
-Date: Mon, 8 Dec 2008 21:11:22 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>, Chr <chunkeey@web.de>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Kalle Valo <kalle.valo@nokia.com>
-References: <1228757035.22164.94.camel@johannes.berg>
-In-Reply-To: <1228757035.22164.94.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200812082111.22996.mb@bu3sch.de> (sfid-20081208_211154_094553_ADE98E26)
+Received: from xc.sipsolutions.net ([83.246.72.84]:55670 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753365AbYLLWpw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2008 17:45:52 -0500
+Subject: Re: [RFC 2/3] mac80211: Make use of the new F_TX_NOACK and
+	F_TX_NOSEQ Radiotap TX flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910812121443h1fae52e6uc88749d7e9baf529@mail.gmail.com> (sfid-20081212_234356_997724_240E2F15)
+References: <69e28c910812121432n6e84de41s94a887110051a1dd@mail.gmail.com>
+	 <1229121558.3565.6.camel@johannes.berg>
+	 <69e28c910812121443h1fae52e6uc88749d7e9baf529@mail.gmail.com>
+	 (sfid-20081212_234356_997724_240E2F15)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wksEJvVkXo1g4DxQRalA"
+Date: Fri, 12 Dec 2008 23:45:47 +0100
+Message-Id: <1229121947.3565.13.camel@johannes.berg> (sfid-20081212_234554_759297_6C34362E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 December 2008 18:23:55 Johannes Berg wrote:
-> --- everything.orig/drivers/net/wireless/b43/main.c	2008-12-08 17:42:05.000000000 +0100
-> +++ everything/drivers/net/wireless/b43/main.c	2008-12-08 17:49:40.000000000 +0100
-> @@ -3508,8 +3508,8 @@ static void b43_op_bss_info_changed(stru
->  }
->  
->  static int b43_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-> -			   const u8 *local_addr, const u8 *addr,
-> -			   struct ieee80211_key_conf *key)
-> +			  struct ieee80211_vif *vif, struct ieee80211_sta *sta,
-> +			  struct ieee80211_key_conf *key)
->  {
->  	struct b43_wl *wl = hw_to_b43_wl(hw);
->  	struct b43_wldev *dev;
-> @@ -3567,17 +3567,13 @@ static int b43_op_set_key(struct ieee802
->  			goto out_unlock;
->  		}
->  
-> -		if (is_broadcast_ether_addr(addr)) {
-> +		if (!sta) {
->  			/* addr is FF:FF:FF:FF:FF:FF for default keys */
 
-Please also remove this comment.
+--=-wksEJvVkXo1g4DxQRalA
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
->  			err = b43_key_write(dev, index, algorithm,
->  					    key->key, key->keylen, NULL, key);
->  		} else {
-> -			/*
-> -			 * either pairwise key or address is 00:00:00:00:00:00
-> -			 * for transmit-only keys
-> -			 */
-> -			err = b43_key_write(dev, -1, algorithm,
-> -					    key->key, key->keylen, addr, key);
-> +			err = b43_key_write(dev, -1, algorithm, key->key,
-> +					    key->keylen, sta->addr, key);
->  		}
->  		if (err)
->  			goto out_unlock;
-> @@ -3604,10 +3600,12 @@ out_unlock:
->  	spin_unlock_irqrestore(&wl->irq_lock, flags);
->  	mutex_unlock(&wl->mutex);
->  	if (!err) {
-> +		static const u8 bcast_addr[ETH_ALEN] =
-> +			{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
->  		b43dbg(wl, "%s hardware based encryption for keyidx: %d, "
->  		       "mac: %s\n",
->  		       cmd == SET_KEY ? "Using" : "Disabling", key->keyidx,
-> -		       print_mac(mac, addr));
-> +		       print_mac(mac, sta ? sta->addr : bcast_addr));
+On Fri, 2008-12-12 at 23:43 +0100, Stefanik G=C3=A1bor wrote:
 
-Will throw "unused variable bcast_addr" for !DEBUG.
-Use something like
-		sta ? print_mac(mac, sta->addr) : "group/tx-only");
+> I tried, but for some reason setting IEEE80211_TX_CTL_NO_ACK directly
+> in __ieee80211_parse_tx_radiotap resulted in an oops upon unloading
+> the driver module.
 
--- 
-Greetings Michael.
+Huh? That doesn't make sense. Do you have more information on that?
+
+> Note that IEEE80211_TX_MON_NO_ACK is not equivalent to
+> !(IEEE80211_TX_CTL_ASSIGN_SEQ), as it also disables mac80211's built
+> in sequence numbering.
+
+Ah. But there's precedence for just doing
+
+if (unlikely(!(info->flags & ASSIGN_SEQ)))
+	return;
+
+in the handler that assigns the seq, and I prefer that over adding a new
+flag.
+
+johannes
+
+--=-wksEJvVkXo1g4DxQRalA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQumYAAoJEKVg1VMiehFYO0kQAKYUaYr1MrFHW9y0LGcKKR13
+kdKtefcpIUfNmkk6cbWaoUO0yLHrMR7aPvufUTt3zNgPrM6lK8zZjyNMVAPAjxAH
+vV6YH0suf4kW5M9ddFqHqX4pjhB2JVIDpMuI4pXJQudxpvR0ilrgPGq3k5KK482S
+0Rt1RDx2+LXOtxxjgJLgl1ykR3Q3WQ682c68wto0pFzXwqoFZtHoEJ59tpXrQqi4
+/82fPrPwEyZ/mTGapI9ybWydslqFP4Wl8U5aFHyWAMXxysg9F8MZeoUU1hOZ7hAr
+MpvOgkP1ppK0gP1yLZkuoynISN3FNU61AJ853Fe3rhH6HXJK1QvWhnzUe1w2H9AY
+InR80azg1Ae2AUDjYiKeNTOz7Wmqpkj/ZNATVyvFEu+XOYp0oV1w1YJbpPxs1cfz
+fglmAqWkvAZmmJ3uxZTCgMMGA0X8Nu2oz+ocIJOvzCL0uAlobYi7h37O9Z0jRITF
+A0agdZoKJeumKHd5lLquzqZNOLI6ysG3ANj33IozoiwO8hxBAVCeWgtYkTiBaw+2
+8GvZH/DA/OP7RHebpO3mDK7zZ5UnL8X+eUN9logQ+r2YmWFuh4H8LlnvePsJXS/7
+pzHFq98pJPAI+Y4J0Wrjlq/8Q2liw6qjxElcCKYySdlYHFS2RuEds8k4MQeM7vKH
+Bf4QUh2p2nkqLmoQomsS
+=EOKj
+-----END PGP SIGNATURE-----
+
+--=-wksEJvVkXo1g4DxQRalA--
+
