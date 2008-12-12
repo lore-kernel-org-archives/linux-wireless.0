@@ -1,66 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:61571 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751719AbYLSVUF (ORCPT
+Received: from pool-71-115-155-244.gdrpmi.dsl-w.verizon.net ([71.115.155.244]:35914
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784AbYLLFFz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 16:20:05 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so343216qwe.37
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 13:20:04 -0800 (PST)
-Message-ID: <69e28c910812191320m13ed4838of11d3d2c51f797c4@mail.gmail.com> (sfid-20081219_222025_377760_8F6A3553)
-Date: Fri, 19 Dec 2008 22:20:04 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: [PATCH 00/43] iwl3945 merges into iwlagn (Dec 19)
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <f6ca9fed0812191315l66cf6bd8y9630f4057dc076a5@mail.gmail.com>
+	Fri, 12 Dec 2008 00:05:55 -0500
+Message-ID: <4941EF69.5040108@erley.org> (sfid-20081212_060605_072932_84AE3C16)
+Date: Thu, 11 Dec 2008 23:58:17 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Userspace tools: Roadmap?
+References: <1228692546.8826.1288759933@webmail.messagingengine.com>	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>	 <1228778295.10662.1288975589@webmail.messagingengine.com>	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org> <1228780960.22164.162.camel@johannes.berg>
+In-Reply-To: <1228780960.22164.162.camel@johannes.berg>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
-	 <f6ca9fed0812191132h2f76ce40id20c52bdb6e0681c@mail.gmail.com>
-	 <20081219205129.GD15227@tesla>
-	 <f6ca9fed0812191315l66cf6bd8y9630f4057dc076a5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 19, 2008 at 10:15 PM, drago01 <drago01@gmail.com> wrote:
-> On Fri, Dec 19, 2008 at 9:51 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Fri, Dec 19, 2008 at 11:32:53AM -0800, drago01 wrote:
->>> On Fri, Dec 19, 2008 at 3:37 AM, Zhu Yi <yi.zhu@intel.com> wrote:
->>> > Hi John,
->>> >
->>> > Here is the first batch for the iwl3945 -> iwlagn merge. This is for
->>> > post .29 kernel.
->>>
->>> Well it doesn't really matter but wouldn't it make sense to rename the
->>> driver back to iwlwifi ? (as 3945 does not support n mode)
->>
->> That would make compat-crap stuff difficult, at least I cannot think of an
->> easy way to deal with it. See scripts/iwl-load, part of compat-wireless. This
->> is used to simply rename iwl4965 to iwl4965.ignore and let iwlagn kick in
->> if you are on an older kernel.
->
-> MODULE_ALIAS("iwlagn")
->
->> If we move iwlagn to iwlwifi... umm.. wait did
->> we ever have an "iwlwifi" driver?
->
-> yes that was the original name of the driver before it was split into
-> iwl3945  and iwl4965  (if I remember correctly iwlwifi was 3945 only
-> and the split happend when 4965 support was added).
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Attached is a newer 'better' version based off of how hostapd is
+handling this.  This patch adds an option, CONFIG_LIBNL20, which enables
+LIBNL20 compatibility.  I haven't ever been able to get iw to build with
+libnl-1.0 or libnl-1.1 on my system, so I haven't been able to test
+that, but it should work.
 
-What about using "iwl" or "iwl80211" as the new name? IMO "iwl" is not
-too short, given that it is the same length as "b43".
+Signed-off-by: Pat Erley <pat-lkml@erley.org>
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+---
+diff --git a/Makefile b/Makefile
+index df59b51..a10f72f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -10,14 +10,25 @@ MKDIR ?= mkdir -p
+ INSTALL ?= install
+ CC ?= "gcc"
+
+-CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
+-fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
+`pkg-config --cflags libnl-1`
++CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
+-fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
+ CFLAGS += -O2 -g
+-LDFLAGS += `pkg-config --libs libnl-1`
+-NLVERSION = 1.0
++NLVERSION = 2.0
+
+ OBJS = iw.o info.o phy.o interface.o station.o util.o mpath.o reg.o
+mesh.o genl.o
+ ALL = iw
+
++ifeq ($(NLVERSION), 2.0)
++CFLAGS += `pkg-config --cflags libnl-2.0` -DCONFIG_LIBNL20
++LDFLAGS += `pkg-config --libs libnl-2.0`
++LIBS += -lnl -lnl-genl -lnl-nf -lnl-route
++NLTESTVERSION = 2.0
++else
++CFLAGS += `pkg-config --cflags libnl-1`
++LDFLAGS += `pkg-config --libs libnl-1.0`
++LIBS += -lnl
++NLTESTVERSION = 1
++endif
++
+ ifeq ($(V),1)
+ Q=
+ NQ=true
+@@ -29,7 +40,7 @@ endif
+ all: version_check $(ALL)
+
+ version_check:
+-	@if ! pkg-config --atleast-version=$(NLVERSION) libnl-1; then echo
+"You need at least libnl version $(NLVERSION)"; exit 1; fi
++	@if ! pkg-config --atleast-version=$(NLVERSION)
+libnl-$(NLTESTVERSION); then echo "You need at least libnl version
+$(NLVERSION)"; exit 1; fi
+
+
+ version.h: version.sh
+@@ -42,7 +53,7 @@ version.h: version.sh
+
+ iw:	$(OBJS)
+ 	@$(NQ) ' CC  ' iw
+-	$(Q)$(CC) $(LDFLAGS) $(OBJS) -o iw
++	$(Q)$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o iw
+
+ check:
+ 	$(Q)$(MAKE) all CC="REAL_CC=$(CC) CHECK=\"sparse -Wall\" cgcc"
+diff --git a/iw.c b/iw.c
+index afae643..7038973 100644
+--- a/iw.c
++++ b/iw.c
+@@ -23,6 +23,13 @@
+ #include "iw.h"
+ #include "version.h"
+
++#ifdef CONFIG_LIBNL20
++/* libnl 2.0 compatibility code */
++#define nl_handle_alloc_cb nl_socket_alloc_cb
++#define nl_handle_alloc nl_socket_alloc
++#define nl_handle_destroy nl_socket_free
++#endif /* CONFIG_LIBNL20 */
++
+ static int debug = 0;
+
+ static int nl80211_init(struct nl80211_state *state)
+@@ -40,9 +47,12 @@ static int nl80211_init(struct nl80211_state *state)
+ 		err = -ENOLINK;
+ 		goto out_handle_destroy;
+ 	}
+-
++#ifdef CONFIG_LIBNL20
++	if (genl_ctrl_alloc_cache(state->nl_handle, &(state->nl_cache))) {
++#else
+ 	state->nl_cache = genl_ctrl_alloc_cache(state->nl_handle);
+ 	if (!state->nl_cache) {
++#endif
+ 		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
+ 		err = -ENOMEM;
+ 		goto out_handle_destroy;
+
