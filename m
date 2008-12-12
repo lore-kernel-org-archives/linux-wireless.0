@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:5561 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751158AbYLWO6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 09:58:08 -0500
-Message-ID: <20081223095811.lmog5le728wccowc-cebfxv@webmail.spamcop.net> (sfid-20081223_155811_691379_2FBE5315)
-Date: Tue, 23 Dec 2008 09:58:11 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] crda: use strerror() to report error code verbosely
-References: <20081223050006.3710.98311.stgit@ct.roinet.com>
-	<43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com>
-	<20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net>
-	<43e72e890812222157s5d410d39ye9ac0840eef5331a@mail.gmail.com>
-	<20081223012037.otw1xe4tc084coc8-cebfxv@webmail.spamcop.net>
-	<20081223062219.GT10807@tesla>
-In-Reply-To: <20081223062219.GT10807@tesla>
+Received: from yw-out-2324.google.com ([74.125.46.28]:8530 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752495AbYLLTtO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2008 14:49:14 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so752607ywe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2008 11:49:13 -0800 (PST)
+Message-ID: <b6c5339f0812121149h10a684b6v5b9815148da9541@mail.gmail.com> (sfid-20081212_204921_009671_C9602DA0)
+Date: Fri, 12 Dec 2008 14:49:13 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Maxim Levitsky" <maximlevitsky@gmail.com>
+Subject: Re: [ath5k-devel] Bugs in ath5k on aspire one (AR2425)
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1229110842.14247.27.camel@maxim-laptop>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <492712D9.7080004@gmail.com>
+	 <1229110842.14247.27.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "Luis R. Rodriguez" <lrodriguez@atheros.com>:
+On Fri, Dec 12, 2008 at 2:40 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> It sometimes happen on resume from ram.
+>
+> It is NOT noise calibration, but a gain calibration timeout
+> Only fix is to reboot the system, as module reload doesn't help.
 
-> rm -rf on your wireless-regdb git tree and then git checkout -f.   
-> Then cp that regulatory.bin
-> to the REG_BIN location and try to build that CRDA. Then try that CRDA.
+I really think it is various sides of the same coin with multiple
+manifestations.  There are bugzilla bugs now:
 
-I remember I tried "make" in wireless-regdb without having M2Crypto  
-installed.  Then I installed M2Crypto and ran "make clean" followed by  
-"make".  "make clean" removed the original regulatory.bin.
-
-The "clean" target doesn't normally remove files under version  
-control.  It only removes files that everybody can generate.  For  
-files that are harder to create, there is "make distclean" and "make  
-maintainer-clean".
+http://bugzilla.kernel.org/show_bug.cgi?id=12080
+http://bugzilla.kernel.org/show_bug.cgi?id=12068
 
 -- 
-Regards,
-Pavel Roskin
+Bob Copeland %% www.bobcopeland.com
