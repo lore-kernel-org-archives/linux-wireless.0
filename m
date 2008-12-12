@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:44041 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756621AbYLKNsy (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:61124 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753167AbYLLWyD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 08:48:54 -0500
-Message-ID: <c072ca310812110548s64612ac7icd6e9187aa4af75a@mail.gmail.com> (sfid-20081211_144901_601922_AD8212B2)
-Date: Thu, 11 Dec 2008 18:48:52 +0500
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: "reinette chatre" <reinette.chatre@intel.com>
-Subject: Re: iwlagn interrupt problem
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1228929548.18730.21.camel@rc-desk>
+	Fri, 12 Dec 2008 17:54:03 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so1585499rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2008 14:54:03 -0800 (PST)
+Message-ID: <69e28c910812121454t7d765b27l918e2f6162bd3f08@mail.gmail.com> (sfid-20081212_235408_633296_F7DF473B)
+Date: Fri, 12 Dec 2008 23:54:03 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC 0/3] cfg80211, mac80211: Introduce radiotap flags for finer userspace control of injection
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1229122225.3565.16.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com>
-	 <c072ca310812100710o58c38a27rba16ad2318a1cb95@mail.gmail.com>
-	 <1228929548.18730.21.camel@rc-desk>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910812121432k1e8732bcma77e489d247ecdf4@mail.gmail.com>
+	 <1229121467.3565.2.camel@johannes.berg>
+	 <69e28c910812121440j6e010ac0j6e08cd6a53f58bcb@mail.gmail.com>
+	 <1229122225.3565.16.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/12/10 reinette chatre <reinette.chatre@intel.com>:
-> The messages you refer to are printed because a user space app
-> (wpa_supplicant or network manager) brings the wireless interface down
-> and up. Interrupts are disabled when interface is brought down and
-> reenabled when interface is brought up.
+On Fri, Dec 12, 2008 at 11:50 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2008-12-12 at 23:40 +0100, Stefanik G=E1bor wrote:
+>
+>> [...]
+>
+> Incidentally, as for the radiotap changes, I'm wondering whether the
+> flag really should be "no seqno" or should be "assign seqno" instead.=
+ It
+> seems injection should be "as raw as possible" by default. But things
+> like that really need to be worked out with people from other systems=
+=2E
+>
+> johannes
+>
 
-OK.
+Using an "assign seqno" flag would cause existing injectors that
+expect the kernel to do seq numbering for them to fail. This possibly
+includes hostap and penumbra.
 
-> The unresponsiveness is due to a bug that was fixed recently. The
-> patches have been merged into wireless-testing repo and will be included
-> in 2.6.29. If you want to try
-> the individual patches, please try:
-> http://marc.info/?l=linux-wireless&m=122824886623698&w=2
-> http://marc.info/?l=linux-wireless&m=122849275528102&w=2
-
-These individual patches don't apply to 2.6.27.6, so I installed
-today's compat-wireless-2.6, and it seems to work. Thanks!
-
-OTOH, are these patches a material for backporting into -stable?
-
--- 
-Alexander E. Patrakov
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
