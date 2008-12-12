@@ -1,107 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:59855 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400AbYLOHA1 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48257 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757533AbYLLPty (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 02:00:27 -0500
-Received: by ewy10 with SMTP id 10so2850569ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Dec 2008 23:00:25 -0800 (PST)
-Message-ID: <eb3ff54b0812142300w211f08ek51dc24de85e7c85@mail.gmail.com> (sfid-20081215_080031_058557_FCE81346)
-Date: Mon, 15 Dec 2008 09:00:25 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH 1/2] iwlwifi: misc cleanups.
-Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 12 Dec 2008 10:49:54 -0500
+Subject: Re: [PATCH 3/3] mac80211: Add HT rates into radiotap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20081212123918.723191687@atheros.com>
+References: <20081212123832.506588839@atheros.com>
+	 <20081212123918.723191687@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jx3+fofIb6Vwv2UQ7wGK"
+Date: Fri, 12 Dec 2008 16:49:48 +0100
+Message-Id: <1229096988.3600.19.camel@johannes.berg> (sfid-20081212_164958_139726_AD743D2A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused parameters in methods in iwl-tx.c:
 
-- remove a parameter (is_unicast) from iwl_tx_cmd_build_basic()
-- remove a parameter (sta_id) from iwl_tx_cmd_build_rate()
-- remove two parameters (sta_id and priv) from iwl_tx_cmd_build_hwcrypto()
+--=-jx3+fofIb6Vwv2UQ7wGK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-(wireless-testing).
+On Fri, 2008-12-12 at 14:38 +0200, Jouni Malinen wrote:
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+> - *      Tx/Rx data rate
+> + *      Tx/Rx data rate.  If bit 0x80 is set then it represents an
+> + *      an MCS index and not an IEEE rate.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c
-b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 3cb4363..ffede8b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -645,7 +645,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
- 				  struct iwl_tx_cmd *tx_cmd,
- 				  struct ieee80211_tx_info *info,
- 				  struct ieee80211_hdr *hdr,
--				  int is_unicast, u8 std_id)
-+				  u8 std_id)
- {
- 	__le16 fc = hdr->frame_control;
- 	__le32 tx_flags = tx_cmd->tx_flags;
-@@ -705,7 +705,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
- static void iwl_tx_cmd_build_rate(struct iwl_priv *priv,
- 			      struct iwl_tx_cmd *tx_cmd,
- 			      struct ieee80211_tx_info *info,
--			      __le16 fc, int sta_id,
-+			      __le16 fc,
- 			      int is_hcca)
- {
- 	u32 rate_flags = 0;
-@@ -764,11 +764,10 @@ static void iwl_tx_cmd_build_rate(struct iwl_priv *priv,
- 	tx_cmd->rate_n_flags = iwl_hw_set_rate_n_flags(rate_plcp, rate_flags);
- }
+I really don't like this much because it means that old dissectors will
+be confused, and the HT information is at like three different places...
 
--static void iwl_tx_cmd_build_hwcrypto(struct iwl_priv *priv,
--				      struct ieee80211_tx_info *info,
-+static void iwl_tx_cmd_build_hwcrypto(struct ieee80211_tx_info *info,
- 				      struct iwl_tx_cmd *tx_cmd,
--				      struct sk_buff *skb_frag,
--				      int sta_id)
-+				      struct sk_buff *skb_frag)
-+				
- {
- 	struct ieee80211_key_conf *keyconf = info->control.hw_key;
+We really should make an HT amendment for radiotap on the radiotap list.
+Once that works again. grmbl.
 
-@@ -834,7 +833,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	u16 len, len_org;
- 	u16 seq_number = 0;
- 	__le16 fc;
--	u8 hdr_len, unicast;
-+	u8 hdr_len;
- 	u8 sta_id;
- 	u8 wait_write_ptr = 0;
- 	u8 tid = 0;
-@@ -854,8 +853,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 		goto drop_unlock;
- 	}
+For now I guess we can put this patch into -testing but I'd prefer not
+letting it migrate to the official tree, so that we avoid tools starting
+to rely on this totally weird information.
 
--	unicast = !is_multicast_ether_addr(hdr->addr1);
--
-+	
- 	fc = hdr->frame_control;
+johannes
 
- #ifdef CONFIG_IWLWIFI_DEBUG
-@@ -977,7 +975,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	iwl_hw_txq_attach_buf_to_tfd(priv, tfd, txcmd_phys, len);
+--=-jx3+fofIb6Vwv2UQ7wGK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
- 	if (info->control.hw_key)
--		iwl_tx_cmd_build_hwcrypto(priv, info, tx_cmd, skb, sta_id);
-+		iwl_tx_cmd_build_hwcrypto(info, tx_cmd, skb);
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
- 	/* Set up TFD's 2nd entry to point directly to remainder of skb,
- 	 * if any (802.11 null frames have no payload). */
-@@ -996,10 +994,10 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	len = (u16)skb->len;
- 	tx_cmd->len = cpu_to_le16(len);
- 	/* TODO need this for burst mode later on */
--	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, unicast, sta_id);
-+	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, sta_id);
+iQIcBAABAgAGBQJJQogZAAoJEKVg1VMiehFYq+MP/3P6aUNjA0E5lDquhc/DQXro
+4rLPl8RvjS5qH0V7AsujMpdKrmNwe0aDFs56xqvu3EG53zhQeb25emaNBzy85Qlb
+LZUEP0pK3vu7mNNBVbwvIK/kmXlcbYbiRJIgv6cb5xID1hl+orrKLzekbZPAazTI
+l4t2sXM/z//Y96fsORHNasqrOxL/HgKovbB1G7FRYPZhd88eRqM5TdneDnyiSuSb
+idmfjv0LZWfXAj6sXINvXOzkLNtDY3diT8uiGKGCQeBtWVF0bNcXJo7fwLBS0GYu
+roVQtLDoi1VqQ+hXwTpgDUI/Ww1RZVSXaEXFLkKssqJNEWvJNGOKtlWr74pFh374
+aWygimpisQf84tYPzxCFFpa2yKzMpSRmLUw/90bZorYZI3cTKIQgihc6A2uF1l9d
+HLbTVFqxCjBsB/BTvHC0fs+VPWcG9cRV8O5fiB529Jrmrb4LDlq/wKhn6IlHbgru
+5rZzskjNZHmQcV1z18XA/ld215RNnbUyE305UwsKSfRlCSwR4lOx2VpVcc7OvLya
+4HrypRTMCIOTB31A+uFqn/Bdxq95QU0Ku9NrKKXN4EOaPkg+bxhIzVk5oL9uKUNb
+EApUehdbGC84c2N95ltdp/cyG5mkhK8864AIWQr11blUEO/Iq5/2bffYlFjWlA1m
+JQ2/WJa0YJ9KW8I/P/hL
+=t0dp
+-----END PGP SIGNATURE-----
 
- 	/* set is_hcca to 0; it probably will never be implemented */
--	iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, sta_id, 0);
-+	iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, 0);
+--=-jx3+fofIb6Vwv2UQ7wGK--
 
- 	iwl_update_tx_stats(priv, le16_to_cpu(fc), len);
