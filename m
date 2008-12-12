@@ -1,96 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37081 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752203AbYLVDit (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 22:38:49 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 08/10] iwlwifi: kill retry_rate sysfs for iwlagn
-Date: Mon, 22 Dec 2008 11:31:21 +0800
-Message-Id: <1229916683-9772-9-git-send-email-yi.zhu@intel.com> (sfid-20081222_043857_492228_E745AF2E)
-In-Reply-To: <1229916683-9772-8-git-send-email-yi.zhu@intel.com>
-References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-3-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-4-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-5-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-6-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-7-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-8-git-send-email-yi.zhu@intel.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59244 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756645AbYLLPIo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2008 10:08:44 -0500
+Date: Fri, 12 Dec 2008 17:08:31 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Send Layer 2 Update frame on reassociation
+Message-ID: <20081212150831.GA16586@jm.kir.nu> (sfid-20081212_160852_171436_95AECB3E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+When a STA roams back to the same AP before the previous STA entry has
+expired, a new STA entry is not added in mac80211. However, a Layer 2
+Update frame still needs to be transmitted to update layer 2 devices
+about the new location for the STA. Without this, switches may
+continue to forward frames to the previous (now incorrect) port when
+STA roams between APs.
 
-This patch kills retry_rate in sysfs for iwlagn. It's not used.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c  |   26 --------------------------
- drivers/net/wireless/iwlwifi/iwl-core.c |    1 -
- 2 files changed, 0 insertions(+), 27 deletions(-)
+ net/mac80211/cfg.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ecf8141..002a151 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3540,31 +3540,6 @@ static ssize_t store_filter_flags(struct device *d,
- static DEVICE_ATTR(filter_flags, S_IWUSR | S_IRUGO, show_filter_flags,
- 		   store_filter_flags);
+--- wireless-testing.orig/net/mac80211/cfg.c	2008-12-12 16:39:39.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2008-12-12 17:06:27.000000000 +0200
+@@ -663,6 +663,7 @@ static int ieee80211_add_station(struct 
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int err;
++	int layer2_update;
  
--static ssize_t store_retry_rate(struct device *d,
--				struct device_attribute *attr,
--				const char *buf, size_t count)
--{
--	struct iwl_priv *priv = dev_get_drvdata(d);
--	long val;
--	int ret  = strict_strtol(buf, 10, &val);
--	if (!ret)
--		return ret;
--
--	priv->retry_rate = (val > 0) ? val : 1;
--
--	return count;
--}
--
--static ssize_t show_retry_rate(struct device *d,
--			       struct device_attribute *attr, char *buf)
--{
--	struct iwl_priv *priv = dev_get_drvdata(d);
--	return sprintf(buf, "%d", priv->retry_rate);
--}
--
--static DEVICE_ATTR(retry_rate, S_IWUSR | S_IRUSR, show_retry_rate,
--		   store_retry_rate);
--
- static ssize_t store_power_level(struct device *d,
- 				 struct device_attribute *attr,
- 				 const char *buf, size_t count)
-@@ -3720,7 +3695,6 @@ static struct attribute *iwl_sysfs_entries[] = {
- 	&dev_attr_flags.attr,
- 	&dev_attr_filter_flags.attr,
- 	&dev_attr_power_level.attr,
--	&dev_attr_retry_rate.attr,
- 	&dev_attr_statistics.attr,
- 	&dev_attr_temperature.attr,
- 	&dev_attr_tx_power.attr,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index eaae79b..44e27fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -863,7 +863,6 @@ int iwl_init_drv(struct iwl_priv *priv)
- {
- 	int ret;
+ 	/* Prevent a race with changing the rate control algorithm */
+ 	if (!netif_running(dev))
+@@ -693,17 +694,25 @@ static int ieee80211_add_station(struct 
  
--	priv->retry_rate = 1;
- 	priv->ibss_beacon = NULL;
+ 	rate_control_rate_init(sta);
  
- 	spin_lock_init(&priv->lock);
++	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++		sdata->vif.type == NL80211_IFTYPE_AP;
++
+ 	rcu_read_lock();
+ 
+ 	err = sta_info_insert(sta);
+ 	if (err) {
+ 		/* STA has been freed */
++		if (err == -EEXIST && layer2_update) {
++			/* Need to update layer 2 devices on reassociation */
++			sta = sta_info_get(local, mac);
++			if (sta)
++				ieee80211_send_layer2_update(sta);
++		}
+ 		rcu_read_unlock();
+ 		return err;
+ 	}
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP)
++	if (layer2_update)
+ 		ieee80211_send_layer2_update(sta);
+ 
+ 	rcu_read_unlock();
+
 -- 
-1.5.3.6
-
+Jouni Malinen                                            PGP id EFC895FA
