@@ -1,262 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.185]:60909 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751756AbYL3LR4 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.233]:62572 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753387AbYLLWcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 06:17:56 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so8044223tic.23
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2008 03:17:54 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Fri, 12 Dec 2008 17:32:39 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so1578824rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2008 14:32:38 -0800 (PST)
+Message-ID: <69e28c910812121432n6e84de41s94a887110051a1dd@mail.gmail.com> (sfid-20081212_233243_152618_26CBFAA2)
+Date: Fri, 12 Dec 2008 23:32:38 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC 2/3] mac80211: Make use of the new F_TX_NOACK and F_TX_NOSEQ Radiotap TX flags
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18778.728.988696.502699@localhost.localdomain> (sfid-20081230_121801_396584_E5D0EFEC)
-Date: Tue, 30 Dec 2008 16:45:36 +0530
-To: linux-wireless@vger.kernel.org
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	jouni.malinen@atheros.com
-Subject: [RFC v3] mac80211: Add 802.11h CSA support
+Content-Type: multipart/mixed;
+	boundary="----=_Part_27832_32783571.1229121158894"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move to the advertised channel on reception of
-a CSA element. This is needed for 802.11h compliance.
+------=_Part_27832_32783571.1229121158894
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Honor the 2 new flags in the "TX Flags" Radiotap field, introduced in
+the previous commit.
+
+Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
+
 ---
-v2
---
-* Drivers might use a mutex in the config() callback, so use a
-  workqueue to call ieee80211_hw_config().
 
-Address initial review comments:
-
-* Remove CSA_DISABLED channel flag
-* Use new queue stop/wake helpers, with a new reason code
-
-v3
---
-* Pass bss to ieee80211_process_chanswitch()
-* Always use the workqueue to call ieee80211_hw_config()
-
- net/mac80211/ieee80211_i.h |    9 +++++
- net/mac80211/iface.c       |    2 +
- net/mac80211/mlme.c        |    9 +++++
- net/mac80211/rx.c          |   17 ++++++++++
- net/mac80211/spectmgmt.c   |   77 ++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 114 insertions(+), 0 deletions(-)
+Patch also available as an attachment in case Gmail decides to damage it.
 
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 117718b..a238a1d 100644
+index 155a204..141099a 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -259,6 +259,7 @@ struct mesh_preq_queue {
- #define IEEE80211_STA_AUTO_CHANNEL_SEL	BIT(12)
- #define IEEE80211_STA_PRIVACY_INVOKED	BIT(13)
- #define IEEE80211_STA_TKIP_WEP_USED	BIT(14)
-+#define IEEE80211_STA_CSA_RECEIVED	BIT(15)
- /* flags for MLME request */
- #define IEEE80211_STA_REQ_SCAN 0
- #define IEEE80211_STA_REQ_DIRECT_PROBE 1
-@@ -283,7 +284,9 @@ enum ieee80211_sta_mlme_state {
- 
- struct ieee80211_if_sta {
- 	struct timer_list timer;
-+	struct timer_list chswitch_timer;
- 	struct work_struct work;
-+	struct work_struct chswitch_work;
- 	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
- 	enum ieee80211_sta_mlme_state state;
-@@ -542,6 +545,7 @@ enum {
- enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_DRIVER,
- 	IEEE80211_QUEUE_STOP_REASON_PS,
-+	IEEE80211_QUEUE_STOP_REASON_CSA
- };
- 
- /* maximum number of hardware queues we support. */
-@@ -964,6 +968,11 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_mgmt *mgmt,
- 				       size_t len);
-+void ieee80211_chswitch_timer(unsigned long data);
-+void ieee80211_chswitch_work(struct work_struct *work);
-+void ieee80211_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-+				  struct ieee80211_channel_sw_ie *sw_elem,
-+				  struct ieee80211_bss *bss);
- 
- /* utility functions/constants */
- extern void *mac80211_wiphy_privid; /* for wiphy privid */
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 2c7a87d..f927641 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -443,6 +443,7 @@ static int ieee80211_stop(struct net_device *dev)
- 						WLAN_REASON_DEAUTH_LEAVING);
- 
- 		memset(sdata->u.sta.bssid, 0, ETH_ALEN);
-+		del_timer_sync(&sdata->u.sta.chswitch_timer);
- 		del_timer_sync(&sdata->u.sta.timer);
- 		/*
- 		 * If the timer fired while we waited for it, it will have
-@@ -452,6 +453,7 @@ static int ieee80211_stop(struct net_device *dev)
- 		 * it no longer is.
- 		 */
- 		cancel_work_sync(&sdata->u.sta.work);
-+		cancel_work_sync(&sdata->u.sta.chswitch_work);
- 		/*
- 		 * When we get here, the interface is marked down.
- 		 * Call synchronize_rcu() to wait for the RX path
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e317c6d..5bf43ab 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1645,6 +1645,12 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	if (!bss)
- 		return;
- 
-+	if (elems->ch_switch_elem && (elems->ch_switch_elem_len == 3)) {
-+		struct ieee80211_channel_sw_ie *sw_elem =
-+			(struct ieee80211_channel_sw_ie *)elems->ch_switch_elem;
-+		ieee80211_process_chanswitch(sdata, sw_elem, bss);
-+	}
-+
- 	/* was just updated in ieee80211_bss_info_update */
- 	beacon_timestamp = bss->timestamp;
- 
-@@ -2447,8 +2453,11 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 
- 	ifsta = &sdata->u.sta;
- 	INIT_WORK(&ifsta->work, ieee80211_sta_work);
-+	INIT_WORK(&ifsta->chswitch_work, ieee80211_chswitch_work);
- 	setup_timer(&ifsta->timer, ieee80211_sta_timer,
- 		    (unsigned long) sdata);
-+	setup_timer(&ifsta->chswitch_timer, ieee80211_chswitch_timer,
-+		    (unsigned long) sdata);
- 	skb_queue_head_init(&ifsta->skb_queue);
- 
- 	ifsta->capab = WLAN_CAPABILITY_ESS;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 384cb3b..c8daf8a 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1564,7 +1564,9 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_local *local = rx->local;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
-+	struct ieee80211_bss *bss;
- 	int len = rx->skb->len;
- 
- 	if (!ieee80211_is_action(mgmt->frame_control))
-@@ -1613,6 +1615,21 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 				return RX_DROP_MONITOR;
- 			ieee80211_process_measurement_req(sdata, mgmt, len);
- 			break;
-+		case WLAN_ACTION_SPCT_CHL_SWITCH:
-+			if (len < (IEEE80211_MIN_ACTION_SIZE +
-+				   sizeof(mgmt->u.action.u.chan_switch)))
-+				return RX_DROP_MONITOR;
-+
-+			bss = ieee80211_rx_bss_get(local, ifsta->bssid,
-+					   local->hw.conf.channel->center_freq,
-+					   ifsta->ssid, ifsta->ssid_len);
-+			if (!bss)
-+				return RX_DROP_MONITOR;
-+
-+			ieee80211_process_chanswitch(sdata,
-+				     &mgmt->u.action.u.chan_switch.sw_elem, bss);
-+			ieee80211_rx_bss_put(local, bss);
-+			break;
- 		}
- 		break;
- 	default:
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index f72bad6..3977050 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -84,3 +84,80 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 			mgmt->sa, mgmt->bssid,
- 			mgmt->u.action.u.measurement.dialog_token);
- }
-+
-+void ieee80211_chswitch_work(struct work_struct *work)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		container_of(work, struct ieee80211_sub_if_data, u.sta.chswitch_work);
-+	struct ieee80211_bss *bss;
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+
-+	if (!netif_running(sdata->dev))
-+		return;
-+
-+	bss = ieee80211_rx_bss_get(sdata->local, ifsta->bssid,
-+				   sdata->local->hw.conf.channel->center_freq,
-+				   ifsta->ssid, ifsta->ssid_len);
-+	if (!bss)
-+		goto exit;
-+
-+	if (!ieee80211_hw_config(sdata->local, IEEE80211_CONF_CHANGE_CHANNEL))
-+		bss->freq = sdata->local->oper_channel->center_freq;
-+
-+	ieee80211_rx_bss_put(sdata->local, bss);
-+exit:
-+	ifsta->flags &= ~IEEE80211_STA_CSA_RECEIVED;
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+					IEEE80211_QUEUE_STOP_REASON_CSA);
-+}
-+
-+void ieee80211_chswitch_timer(unsigned long data)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		(struct ieee80211_sub_if_data *) data;
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+
-+	queue_work(sdata->local->hw.workqueue, &ifsta->chswitch_work);
-+}
-+
-+void ieee80211_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-+				  struct ieee80211_channel_sw_ie *sw_elem,
-+				  struct ieee80211_bss *bss)
-+{
-+	struct ieee80211_channel *new_ch;
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+	int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num);
-+	int exp;
-+
-+	/* FIXME: Handle ADHOC later */
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	if (ifsta->state != IEEE80211_STA_MLME_ASSOCIATED)
-+		return;
-+
-+	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
-+		return;
-+
-+	/* Disregard subsequent beacons if we are already running a timer
-+	   processing a CSA */
-+
-+	if (ifsta->flags & IEEE80211_STA_CSA_RECEIVED)
-+		return;
-+
-+	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
-+	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED)
-+		return;
-+
-+	sdata->local->oper_channel = new_ch;
-+
-+	if (sw_elem->count <= 1) {
-+		queue_work(sdata->local->hw.workqueue, &ifsta->chswitch_work);
-+	} else {
-+		ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+						IEEE80211_QUEUE_STOP_REASON_CSA);
-+		ifsta->flags |= IEEE80211_STA_CSA_RECEIVED;
-+		exp = sw_elem->count * (1024 * bss->beacon_int / 1000 * HZ / 1000);
-+		mod_timer(&ifsta->chswitch_timer, jiffies + exp);
-+	}
-+}
--- 
-1.6.1
+@@ -143,6 +143,8 @@ typedef unsigned __bitwise__ ieee80211_tx_result;
+ #define IEEE80211_TX_FRAGMENTED=09=09BIT(0)
+ #define IEEE80211_TX_UNICAST=09=09BIT(1)
+ #define IEEE80211_TX_PS_BUFFERED=09BIT(2)
++#define IEEE80211_TX_MON_NO_SEQ=09=09BIT(3)
++#define IEEE80211_TX_MON_NO_ACK=09=09BIT(4)
 
+ struct ieee80211_tx_data {
+ =09struct sk_buff *skb;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0855cac..d08a25e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -614,14 +614,12 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
+ =09 * number, if we have no matching interface then we
+ =09 * neither assign one ourselves nor ask the driver to.
+ =09 */
+-=09if (unlikely(!info->control.vif))
++=09if (unlikely(!info->control.vif ||
++=09=09     tx->flags & IEEE80211_TX_MON_NO_SEQ ||
++=09=09     ieee80211_is_ctl(hdr->frame_control)) ||
++=09=09     ieee80211_hdrlen(hdr->frame_control) < 24)
+ =09=09return TX_CONTINUE;
+
+-=09if (unlikely(ieee80211_is_ctl(hdr->frame_control)))
+-=09=09return TX_CONTINUE;
+-
+-=09if (ieee80211_hdrlen(hdr->frame_control) < 24)
+-=09=09return TX_CONTINUE;
+
+ =09/*
+ =09 * Anything but QoS data that has a sequence number field
+@@ -913,13 +911,17 @@ __ieee80211_parse_tx_radiotap(struct
+ieee80211_tx_data *tx,
+ =09=09=09if (*iterator.this_arg & IEEE80211_RADIOTAP_F_FRAG)
+ =09=09=09=09tx->flags |=3D IEEE80211_TX_FRAGMENTED;
+ =09=09=09break;
+-
++=09=09case IEEE80211_RADIOTAP_TX_FLAGS:
++=09=09=09if (*iterator.this_arg & IEEE80211_RADIOTAP_F_TX_NOACK)
++=09=09=09=09tx->flags |=3D IEEE80211_TX_MON_NO_ACK;
++=09=09=09if (*iterator.this_arg & IEEE80211_RADIOTAP_F_TX_NOSEQ)
++=09=09=09=09tx->flags |=3D IEEE80211_TX_MON_NO_SEQ;
++=09=09=09break;
+ =09=09/*
+ =09=09 * Please update the file
+ =09=09 * Documentation/networking/mac80211-injection.txt
+ =09=09 * when parsing new fields here.
+ =09=09 */
+-
+ =09=09default:
+ =09=09=09break;
+ =09=09}
+@@ -1000,6 +1002,9 @@ __ieee80211_tx_prepare(struct ieee80211_tx_data *tx,
+ =09=09info->flags &=3D ~IEEE80211_TX_CTL_NO_ACK;
+ =09}
+
++=09if (tx->flags & IEEE80211_TX_MON_NO_ACK)
++=09=09info->flags |=3D IEEE80211_TX_CTL_NO_ACK;
++
+ =09if (tx->flags & IEEE80211_TX_FRAGMENTED) {
+ =09=09if ((tx->flags & IEEE80211_TX_UNICAST) &&
+ =09=09    skb->len + FCS_LEN > local->fragmentation_threshold &&
+
+------=_Part_27832_32783571.1229121158894
+Content-Type: application/octet-stream;
+ name=0002-mac80211-make-use-of-the-new-no-ack-and-no-seq-renumbering-tx-flags.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fones71w0
+Content-Disposition: attachment;
+ filename=0002-mac80211-make-use-of-the-new-no-ack-and-no-seq-renumbering-tx-flags.patch
+
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9pZWVlODAyMTFfaS5oIGIvbmV0L21hYzgwMjExL2ll
+ZWU4MDIxMV9pLmgKaW5kZXggMTU1YTIwNC4uMTQxMDk5YSAxMDA2NDQKLS0tIGEvbmV0L21hYzgw
+MjExL2llZWU4MDIxMV9pLmgKKysrIGIvbmV0L21hYzgwMjExL2llZWU4MDIxMV9pLmgKQEAgLTE0
+Myw2ICsxNDMsOCBAQCB0eXBlZGVmIHVuc2lnbmVkIF9fYml0d2lzZV9fIGllZWU4MDIxMV90eF9y
+ZXN1bHQ7CiAjZGVmaW5lIElFRUU4MDIxMV9UWF9GUkFHTUVOVEVECQlCSVQoMCkKICNkZWZpbmUg
+SUVFRTgwMjExX1RYX1VOSUNBU1QJCUJJVCgxKQogI2RlZmluZSBJRUVFODAyMTFfVFhfUFNfQlVG
+RkVSRUQJQklUKDIpCisjZGVmaW5lIElFRUU4MDIxMV9UWF9NT05fTk9fU0VRCQlCSVQoMykKKyNk
+ZWZpbmUgSUVFRTgwMjExX1RYX01PTl9OT19BQ0sJCUJJVCg0KQogCiBzdHJ1Y3QgaWVlZTgwMjEx
+X3R4X2RhdGEgewogCXN0cnVjdCBza19idWZmICpza2I7CmRpZmYgLS1naXQgYS9uZXQvbWFjODAy
+MTEvdHguYyBiL25ldC9tYWM4MDIxMS90eC5jCmluZGV4IDA4NTVjYWMuLmQwOGEyNWUgMTAwNjQ0
+Ci0tLSBhL25ldC9tYWM4MDIxMS90eC5jCisrKyBiL25ldC9tYWM4MDIxMS90eC5jCkBAIC02MTQs
+MTQgKzYxNCwxMiBAQCBpZWVlODAyMTFfdHhfaF9zZXF1ZW5jZShzdHJ1Y3QgaWVlZTgwMjExX3R4
+X2RhdGEgKnR4KQogCSAqIG51bWJlciwgaWYgd2UgaGF2ZSBubyBtYXRjaGluZyBpbnRlcmZhY2Ug
+dGhlbiB3ZQogCSAqIG5laXRoZXIgYXNzaWduIG9uZSBvdXJzZWx2ZXMgbm9yIGFzayB0aGUgZHJp
+dmVyIHRvLgogCSAqLwotCWlmICh1bmxpa2VseSghaW5mby0+Y29udHJvbC52aWYpKQorCWlmICh1
+bmxpa2VseSghaW5mby0+Y29udHJvbC52aWYgfHwKKwkJICAgICB0eC0+ZmxhZ3MgJiBJRUVFODAy
+MTFfVFhfTU9OX05PX1NFUSB8fAorCQkgICAgIGllZWU4MDIxMV9pc19jdGwoaGRyLT5mcmFtZV9j
+b250cm9sKSkgfHwKKwkJICAgICBpZWVlODAyMTFfaGRybGVuKGhkci0+ZnJhbWVfY29udHJvbCkg
+PCAyNCkKIAkJcmV0dXJuIFRYX0NPTlRJTlVFOwogCi0JaWYgKHVubGlrZWx5KGllZWU4MDIxMV9p
+c19jdGwoaGRyLT5mcmFtZV9jb250cm9sKSkpCi0JCXJldHVybiBUWF9DT05USU5VRTsKLQotCWlm
+IChpZWVlODAyMTFfaGRybGVuKGhkci0+ZnJhbWVfY29udHJvbCkgPCAyNCkKLQkJcmV0dXJuIFRY
+X0NPTlRJTlVFOwogCiAJLyoKIAkgKiBBbnl0aGluZyBidXQgUW9TIGRhdGEgdGhhdCBoYXMgYSBz
+ZXF1ZW5jZSBudW1iZXIgZmllbGQKQEAgLTkxMywxMyArOTExLDE3IEBAIF9faWVlZTgwMjExX3Bh
+cnNlX3R4X3JhZGlvdGFwKHN0cnVjdCBpZWVlODAyMTFfdHhfZGF0YSAqdHgsCiAJCQlpZiAoKml0
+ZXJhdG9yLnRoaXNfYXJnICYgSUVFRTgwMjExX1JBRElPVEFQX0ZfRlJBRykKIAkJCQl0eC0+Zmxh
+Z3MgfD0gSUVFRTgwMjExX1RYX0ZSQUdNRU5URUQ7CiAJCQlicmVhazsKLQorCQljYXNlIElFRUU4
+MDIxMV9SQURJT1RBUF9UWF9GTEFHUzoKKwkJCWlmICgqaXRlcmF0b3IudGhpc19hcmcgJiBJRUVF
+ODAyMTFfUkFESU9UQVBfRl9UWF9OT0FDSykKKwkJCQl0eC0+ZmxhZ3MgfD0gSUVFRTgwMjExX1RY
+X01PTl9OT19BQ0s7CisJCQlpZiAoKml0ZXJhdG9yLnRoaXNfYXJnICYgSUVFRTgwMjExX1JBRElP
+VEFQX0ZfVFhfTk9TRVEpCisJCQkJdHgtPmZsYWdzIHw9IElFRUU4MDIxMV9UWF9NT05fTk9fU0VR
+OworCQkJYnJlYWs7CiAJCS8qCiAJCSAqIFBsZWFzZSB1cGRhdGUgdGhlIGZpbGUKIAkJICogRG9j
+dW1lbnRhdGlvbi9uZXR3b3JraW5nL21hYzgwMjExLWluamVjdGlvbi50eHQKIAkJICogd2hlbiBw
+YXJzaW5nIG5ldyBmaWVsZHMgaGVyZS4KIAkJICovCi0KIAkJZGVmYXVsdDoKIAkJCWJyZWFrOwog
+CQl9CkBAIC0xMDAwLDYgKzEwMDIsOSBAQCBfX2llZWU4MDIxMV90eF9wcmVwYXJlKHN0cnVjdCBp
+ZWVlODAyMTFfdHhfZGF0YSAqdHgsCiAJCWluZm8tPmZsYWdzICY9IH5JRUVFODAyMTFfVFhfQ1RM
+X05PX0FDSzsKIAl9CiAKKwlpZiAodHgtPmZsYWdzICYgSUVFRTgwMjExX1RYX01PTl9OT19BQ0sp
+CisJCWluZm8tPmZsYWdzIHw9IElFRUU4MDIxMV9UWF9DVExfTk9fQUNLOworCiAJaWYgKHR4LT5m
+bGFncyAmIElFRUU4MDIxMV9UWF9GUkFHTUVOVEVEKSB7CiAJCWlmICgodHgtPmZsYWdzICYgSUVF
+RTgwMjExX1RYX1VOSUNBU1QpICYmCiAJCSAgICBza2ItPmxlbiArIEZDU19MRU4gPiBsb2NhbC0+
+ZnJhZ21lbnRhdGlvbl90aHJlc2hvbGQgJiYK
+------=_Part_27832_32783571.1229121158894--
