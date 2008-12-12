@@ -1,46 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:47389 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755167AbYLJVnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 16:43:12 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [RFC] b43: rework rfkill code
-Date: Wed, 10 Dec 2008 22:42:33 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <20081210150935.GA10927@srcf.ucam.org> <1228930083.15837.44.camel@johannes.berg> <20081210213334.GA7589@khazad-dum.debian.net>
-In-Reply-To: <20081210213334.GA7589@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812102242.35995.mb@bu3sch.de> (sfid-20081210_224317_559890_F8AD6D74)
+Received: from xc.sipsolutions.net ([83.246.72.84]:55541 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753165AbYLLWmu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2008 17:42:50 -0500
+Subject: Re: [RFC 0/3] cfg80211, mac80211: Introduce radiotap flags for
+	finer userspace control of injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910812121440j6e010ac0j6e08cd6a53f58bcb@mail.gmail.com> (sfid-20081212_234036_335109_607659A0)
+References: <69e28c910812121432k1e8732bcma77e489d247ecdf4@mail.gmail.com>
+	 <1229121467.3565.2.camel@johannes.berg>
+	 <69e28c910812121440j6e010ac0j6e08cd6a53f58bcb@mail.gmail.com>
+	 (sfid-20081212_234036_335109_607659A0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-85tZLwJpkxRXyMtP2RTv"
+Date: Fri, 12 Dec 2008 23:42:46 +0100
+Message-Id: <1229121766.3565.10.camel@johannes.berg> (sfid-20081212_234253_050634_79A5757D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 10 December 2008 22:33:34 Henrique de Moraes Holschuh wrote:
-> On Wed, 10 Dec 2008, Johannes Berg wrote:
-> > On Wed, 2008-12-10 at 18:23 +0100, Johannes Berg wrote:
-> > > Then there's user_claim_unsupported which is set by all drivers but
-> > > rt2x00, probably because they have hardware kill switches and thus they
-> > > have to set it even if it's not strictly true, because of the lacking
-> > > separation between these things (that I pointed out)
-> > 
-> > IOW, correct me if I'm wrong, it seems to me that user_claim_unsupported
-> > really is a wrong name for "has hw kill", which could be avoided if sw
-> 
-> I never understood what user_claim_unsupported is for.  I left it alone
-> because of that, but it looks like some artifact of the old rfkill that did
-> horrible things to the input layer.
 
-No, as I just explained. It comes from a time when we didn't have all that input stuff at all.
-It was a workaround. rfkill basically had a facility to change the hardware rfkill state from
-userspace. As b43 does not support that, I introduced the flag.
-Today we have three states (which is still broken, but you saw the rest of the thread...), so I guess
-we can remove it again.
-We cannot change the hardware state. That's what the flag is (was) for.
+--=-85tZLwJpkxRXyMtP2RTv
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings, Michael.
+On Fri, 2008-12-12 at 23:40 +0100, Stefanik G=C3=A1bor wrote:
+
+> No, that's why I submitted it as an RFC.
+
+Phew. FWIW, except that the no-seq isn't defined by any other OS yet, it
+seems at least compatible.
+
+> By the way, what is the preferred method of contacting the Radiotap
+> staff now that the mailing list seems to be permanently down?
+
+I'm trying to convince David Young to get a new list. Netbsd seemed
+willing to host it, but I haven't heard back yet (he wanted to have it
+done a week ago)
+
+johannes
+
+--=-85tZLwJpkxRXyMtP2RTv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQujiAAoJEKVg1VMiehFY/AkP/3SgZwoTy3Qn9ZutCelA0Wq5
+a3culrs+WtZT8EE36Be8UZvVC7NqQ9bthytP8T7X90RqNqSIBOCafuur1by0cwgJ
+IUaYQOlt2rKhJVLTRD2/QbeZPEFKBqoy3r+HgIFfKUOS4OFNemnigWTDKPKzlGAD
+j3C8JReGR8QchMYnRL1pID/CcxWAYkQrF8Fi8LY0IKERqgpn32ToKZaY6Sr0rzve
+s8iAka227QlvOH9dn7MQBtnVBSNqzBt5PY7HJveMP/S57qgF3wVPKgl0zYBeUOIG
+EqX+D1klppK3S5ZeoaNz9Pv2gJVAy/bStRJFsJgKRTCsO3l5vWDBEKyXIegNCNhn
+Lhz+ovXg1RxaeRTr+N3EHnc11j0kFbeqWdJdY+M5BLlnQcaf0Oqc2UPO+TU/Oi1i
+NN56u4t0KeaHNGNUDotrvLLP3655H0rNMOfDOIgln7Yc5q4movyBJtMK3fLfolPU
+sSur/catF/7EPMYpMObFAKDM2epcz2Xd48uB2BeFExc0r6gucw5Y14+/Uy2FRbb1
+C+Mj4/Rrn8tWfVmo3NqlwX+uBIRWj69dmJ+mwHjsaGZxrRcT4nDJm/8tTjeGUunz
+Ag9WK4tVpLAGNCnp+2uzv1zefg2t83KF/6/InUncr0bPW/xbOOx8Hf8plpgxC9Br
+h+FPYB+c8H7KYiSWoLhC
+=B6eI
+-----END PGP SIGNATURE-----
+
+--=-85tZLwJpkxRXyMtP2RTv--
+
