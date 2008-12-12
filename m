@@ -1,35 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47273 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:49655 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277AbYLTJq6 (ORCPT
+	with ESMTP id S1753531AbYLLVsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 04:46:58 -0500
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in
- =?UTF-8?Q?add=5Finterface?=
-MIME-Version: 1.0
-Date: Sat, 20 Dec 2008 10:46:39 +0100
+	Fri, 12 Dec 2008 16:48:09 -0500
+Subject: Re: iw Makefile patch to allow compilation using --as-needed
 From: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?UTF-8?Q?Stefanik_G=C3=A1bor?= <netrolller.3d@gmail.com>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20081219151036.M48373@bobcopeland.com>
-References: <20081118044037.GA18983@hash.localnet> <69e28c910812150747j60cf17d9nc2e24aabb991d2a9@mail.gmail.com> <1229357080.12163.47.camel@localhost.localdomain> <69e28c910812150812h4a316327u67aad1b225262816@mail.gmail.com> <b6c5339f0812150916k521fa7a4l4fc3aa560d08c1db@mail.gmail.com> <b6c5339f0812160658y5ed2ceb4qdbb4b2ddf1fe07a5@mail.gmail.com> (sfid-20081216_155826_911157_CE1A0E9E) <1229439670.4471.41.camel@johannes.berg> <20081219151036.M48373@bobcopeland.com>
-Message-ID: <acdcd5985c5286b7936dd776618e4937@localhost>
-Content-Type: text/plain; charset="UTF-8"
+To: Mike Auty <mike.auty@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4942D853.10105@gmail.com>
+References: <4942D853.10105@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mUWFMhdpZALvc3yXsCx9"
+Date: Fri, 12 Dec 2008 22:48:02 +0100
+Message-Id: <1229118482.3572.0.camel@johannes.berg> (sfid-20081212_224813_940066_F284E17F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> So in that case, ath5k definitely should not upload a mac until a normal
-> interface is brought up, i.e. we should keep the current functionality?
+--=-mUWFMhdpZALvc3yXsCx9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-yes.
+On Fri, 2008-12-12 at 21:32 +0000, Mike Auty wrote:
+> Hiya,
+> 	I've got a patch for the iw program to allow it to compile properly
+> with the --as-needed linker flag.  This flag requires that files and
+> libraries are listed in a particular order, with required libraries
+> listed after the functions that call them.
+> 	The original Makefile for iw adds the libraries to the LDFLAGS
+> variable, which is processed before the OBJS are listed (so the
+> libraries are removed).  This patch adds a LIBS variable and applies it
+> after the OBJS variable.
+> 	For more information on as-needed, please see
+> http://www.gentoo.org/proj/en/qa/asneeded.xml.  If you have any problems
+> or issues with the patch, please let me know, thanks...  5:)
+> 	Mike  5:)
 
-> It's interesting that b43 works without a regular interface, by my
-reading
-> of
-> its code the mac is also loaded and cleared at add/remove interface time.
-
-I suspect there's some filtering going wrong.
+Applied, thanks.
 
 johannes
+
+--=-mUWFMhdpZALvc3yXsCx9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQtwPAAoJEKVg1VMiehFYvDYQALks4BfDcYHXgajrGg9XaGCf
+hmPUdCp+cycqYJcmjDa0vtjDgziS/f3ZmLuw2hR6K2pGK5trIu0lfjRO/Fpc1V/g
+q0v8Ve/6vmrfISF5UAEczmTBZBnc04TtAbVwKWMzH6/GEd4ClNy9HUwKq2W4KB6f
+b0MeuCkb369hE8GTqhgu+FjyY/cYNj/bt4ec1UQrfHJUJEZRE3MRHxymLwt/2OtQ
+4OckbG2K4AfhkapTtCDEpHIdoPeN6UXJSwclGqQnJ4hfBkViw/EaaHm6qbYnhCCx
+NpQ7jwGxSC6muqtDcKhiZOf4SrJ8guVPy5k6yGzPFadU/li2m2C/ZRtfzaxCxTdX
+WQIXm5WfDukPZTNHpf/F/6uKeJL2ZX8AkCiV++6nH8bYYjo72X/2DZNYoP676wob
+Rp72Vr0snusYGEj5seChGHhoOomHs+NTbtBGFxvioK8i46ga0e/w/X1or0uNUIbb
+9MqplVfggRLfcJpwTamd0rBF1iBoWAcIHhMhUifY+7CaSFcg3xQrdZzifL9/V/d8
+53YyiNUlpUqkM0dmkwWTgSr5mkcrwQa9BFfs1x6UflHwlfPg4e/0F83/ci3A9Rp+
+o2+FfLrFvmro1up/WSjQ3croc6rro6iP1wS/wEKFpzo/+cyyk+nKOzlz5XyRnPxB
+m+T94ZPe/GxcHG8J2lOM
+=xI7F
+-----END PGP SIGNATURE-----
+
+--=-mUWFMhdpZALvc3yXsCx9--
+
